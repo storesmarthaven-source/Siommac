@@ -8,6 +8,8 @@
  *   POST /api/layout/saveDefault   — set the org-wide default order (admin)
  *   POST /api/layout/saveOverride  — set the calling user's personal order
  *   POST /api/layout/resetOverride — clear the calling user's personal order
+ *   POST /api/ui-preferences/get    — read the calling user's typed UI preference
+ *   POST /api/ui-preferences/save   — upsert the calling user's typed UI preference
  *
  * Backed by app_theme / ui_layout (see 20260623000000_ui_theme_layout.sql).
  */
@@ -18,6 +20,12 @@ import { sb } from '../lib/db';
 import { requireUser, requireRole, requirePermission, log_ } from '../lib/auth';
 import { emitAppEvent } from '../lib/appEvents';
 import type { HonoVariables } from '../../../types/api';
+import {
+  EMPLOYEE_REGISTER_COLUMN_KEYS,
+  EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_KEY,
+  EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_VERSION,
+  sanitizeEmployeeRegisterColumnKeys,
+} from '../../../types/uiPreferences';
 
 type Ctx = Context<{ Variables: HonoVariables }>;
 
@@ -41,6 +49,25 @@ function cleanTokens(v: unknown): Record<string, string> | null {
 function cleanOrder(v: unknown): string[] | null {
   if (!Array.isArray(v)) return null;
   return v.filter(x => typeof x === 'string').map(x => (x).slice(0, 80)).slice(0, 24);
+}
+
+interface UiPreferenceEnvelope {
+  key: string;
+  version: number;
+  value: unknown;
+  updatedAt: string | null;
+}
+
+function knownUiPreferenceKey(key: string): boolean {
+  return key === EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_KEY;
+}
+
+function cleanUiPreference(key: string, value: unknown): { version: number; value: unknown } | null {
+  if (!knownUiPreferenceKey(key) || !Array.isArray(value) || value.length > EMPLOYEE_REGISTER_COLUMN_KEYS.length) return null;
+  const allowed = new Set<string>(EMPLOYEE_REGISTER_COLUMN_KEYS);
+  if (value.some(item => typeof item !== 'string' || !allowed.has(item))) return null;
+  const columns = sanitizeEmployeeRegisterColumnKeys(value);
+  return columns ? { version: EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_VERSION, value: columns } : null;
 }
 
 // ── Theme ───────────────────────────────────────────────────────────────────────
@@ -68,6 +95,58 @@ router.post('/theme/save', async c => {
     actorUserId: actor.id, payload: { tokenCount: Object.keys(tokens).length },
   });
   return c.json({ success: true });
+});
+
+// ── Per-user UI preferences ───────────────────────────────────────────────────
+
+router.post('/ui-preferences/get', async c => {
+  const user = await requireUser(c);
+  const key = String(getArgs(c).key ?? '');
+  if (!knownUiPreferenceKey(key)) return c.json({ success: false, message: 'Unknown UI preference key' }, 400 as 200);
+
+  const { data, error } = await sb.from('ui_user_preferences')
+    .select('preference_key, preference_value, version, updated_at')
+    .eq('user_id', user.id)
+    .eq('preference_key', key)
+    .maybeSingle();
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  const preference: UiPreferenceEnvelope | null = data ? {
+    key: String(data.preference_key),
+    version: Number(data.version),
+    value: data.preference_value,
+    updatedAt: data.updated_at ? String(data.updated_at) : null,
+  } : null;
+  return c.json({ success: true, data: { preference } });
+});
+
+router.post('/ui-preferences/save', async c => {
+  const user = await requireUser(c);
+  const args = getArgs(c);
+  const key = String(args.key ?? '');
+  if (!knownUiPreferenceKey(key)) return c.json({ success: false, message: 'Unknown UI preference key' }, 400 as 200);
+  const cleaned = cleanUiPreference(key, args.value);
+  if (!cleaned) return c.json({ success: false, message: 'Invalid UI preference value' }, 400 as 200);
+
+  const { data, error } = await sb.from('ui_user_preferences').upsert({
+    user_id: user.id,
+    preference_key: key,
+    preference_value: cleaned.value,
+    version: cleaned.version,
+    updated_by: user.id,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'user_id,preference_key' })
+    .select('preference_key, preference_value, version, updated_at')
+    .single();
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  const preference: UiPreferenceEnvelope = {
+    key: String(data.preference_key),
+    version: Number(data.version),
+    value: data.preference_value,
+    updatedAt: data.updated_at ? String(data.updated_at) : null,
+  };
+  return c.json({ success: true, data: { preference } });
 });
 
 // ── Layout ──────────────────────────────────────────────────────────────────────

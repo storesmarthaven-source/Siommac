@@ -19,6 +19,14 @@ describe('widget registry mechanics', () => {
     expect(getWidgetsForPage('hr.employees.overview').map(widget => widget.id)).toEqual([
       'enterprise.calendar.upcomingDeadlines',
       'enterprise.calendar.taskPlanner',
+      'hr.employeeMaster.activeWorkforce',
+      'hr.employeeMaster.recordReadiness',
+      'hr.employeeMaster.hrWorkQueue',
+      'hr.employeeMaster.exceptions',
+      'hr.employeeMaster.workforceTrend',
+      'hr.employeeMaster.workforceDistribution',
+      'hr.employeeMaster.lifecycleMovement',
+      'hr.employeeMaster.masterDataWorkload',
       'hr.employeeMaster.blockedActions',
       'hr.employeeMaster.readinessGoal',
       'hr.employeeMaster.quickContact',
@@ -32,7 +40,7 @@ describe('widget registry mechanics', () => {
   });
 
   it('registers the nine approved Employee Master design previews', () => {
-    const employeeMaster = WIDGET_REGISTRY.filter(widget => widget.area === 'Employee Master');
+    const employeeMaster = WIDGET_REGISTRY.filter(widget => widget.area === 'Employee Master' && widget.runtimeState === 'static-preview');
     expect(employeeMaster).toHaveLength(9);
     for (const widget of employeeMaster) {
       expect(widget.runtimeState).toBe('static-preview');
@@ -49,6 +57,37 @@ describe('widget registry mechanics', () => {
       expect(widget.sizeConstraints?.minWidth).toBeGreaterThanOrEqual(240);
       expect(widget.sizeConstraints?.minHeight).toBeGreaterThanOrEqual(260);
     }
+  });
+
+  it('registers the live Employee Master workspace against one authenticated API contract', () => {
+    const ids = [
+      'hr.employeeMaster.activeWorkforce', 'hr.employeeMaster.recordReadiness',
+      'hr.employeeMaster.hrWorkQueue', 'hr.employeeMaster.exceptions',
+      'hr.employeeMaster.workforceTrend', 'hr.employeeMaster.workforceDistribution',
+      'hr.employeeMaster.lifecycleMovement', 'hr.employeeMaster.masterDataWorkload',
+    ];
+    const live = WIDGET_REGISTRY.filter(widget => ids.includes(widget.id));
+    expect(live).toHaveLength(ids.length);
+    for (const widget of live) {
+      expect(widget).toMatchObject({
+        runtimeState: 'live-api', dataSourceKey: 'hr.employee-master.dashboard',
+        governance: { state: 'enabled', discoverable: true, requiredCapabilities: ['hr.employees.view'] },
+        permissions: { requiredPermissions: ['hr.employees.view'] },
+      });
+      expect(widget.renderPreview).not.toBe(widget.render);
+      expect(widget.recommendedFor).toEqual(['hr.employees.overview']);
+    }
+    const kpis = live.filter(widget => widget.category === 'Key metrics');
+    expect(kpis).toHaveLength(4);
+    for (const widget of kpis) {
+      expect(widget.resizable).toBe(false);
+      expect(widget.allowedSizes).toEqual([{ key: 'compact', label: 'Fixed', grid: { w: 6, h: 2 }, min: { w: 6, h: 2 }, max: { w: 6, h: 2 }, description: 'Uniform Employee Master KPI tile' }]);
+      expect(widget.sizeConstraints).toMatchObject({ defaultColumns: 6, defaultRows: 2, minColumns: 6, minRows: 2, resizeStrategy: 'fixed-minimum' });
+    }
+    const trend = live.find(widget => widget.id === 'hr.employeeMaster.workforceTrend');
+    expect(trend?.resizable).toBe(true);
+    expect(trend?.allowedSizes).toHaveLength(3);
+    expect(trend?.sizeConstraints).toMatchObject({ defaultColumns: 12, defaultRows: 4, minColumns: 8, minRows: 4, resizeStrategy: 'content-measured' });
   });
 
   it('registers calendar-backed deadlines and task planning with separate action gates', () => {
@@ -99,15 +138,17 @@ describe('widget registry mechanics', () => {
 
   it('groups the catalogue and curates a smaller recommended starting set', () => {
     const categories = new Set(WIDGET_REGISTRY.map(widget => widget.category));
-    expect(categories).toEqual(new Set(['Calendar & deadlines', 'Actions & workload', 'Health & readiness', 'People & contact', 'Activity & trends', 'Work management']));
+    expect(categories).toEqual(new Set(['Calendar & deadlines', 'Actions & workload', 'Health & readiness', 'People & contact', 'Activity & trends', 'Work management', 'Workforce overview', 'Key metrics']));
     expect(WIDGET_REGISTRY.filter(widget => widget.recommendedFor?.includes('hr.employees.overview')).map(widget => widget.id)).toEqual([
       'enterprise.calendar.upcomingDeadlines',
-      'enterprise.calendar.taskPlanner',
-      'hr.employeeMaster.blockedActions',
-      'hr.employeeMaster.readinessGoal',
-      'hr.employeeMaster.recordHealth',
-      'hr.employeeMaster.weeklyActivity',
-      'hr.employeeMaster.adminWorkload',
+      'hr.employeeMaster.activeWorkforce',
+      'hr.employeeMaster.recordReadiness',
+      'hr.employeeMaster.hrWorkQueue',
+      'hr.employeeMaster.exceptions',
+      'hr.employeeMaster.workforceTrend',
+      'hr.employeeMaster.workforceDistribution',
+      'hr.employeeMaster.lifecycleMovement',
+      'hr.employeeMaster.masterDataWorkload',
     ]);
   });
 

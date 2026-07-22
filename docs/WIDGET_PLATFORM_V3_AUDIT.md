@@ -22,8 +22,13 @@ Audit date: 2026-07-21. Scope: the existing `src/ui/widgets` engine and its auth
 - Added the approved Employee Master A, D, E, F, H, and L-O catalogue previews with content-safe minimum sizes and responsive internal layouts.
 - Added authenticated Calendar-backed Upcoming Deadlines and Task Planner widgets; Upcoming Deadlines reuses the Statutory Configuration presentation rather than maintaining a duplicate.
 
-## Deferred by scope
+## Follow-on approved after this audit
+
+- The user subsequently approved Employee Master production improvements. Eight live widgets now consume one authenticated, server-scoped dashboard contract; this is a follow-on consumer of the platform rather than a second widget engine.
+- Employee register column visibility is persisted per user through a typed JWT API and a service-only, RLS-enabled `ui_user_preferences` table. No direct browser database access was introduced.
+
+## Still deferred by scope
 
 - Persisted organization governance/source authoring APIs. v3 currently consumes first-party/package policy declarations; it does not expose a fake editor.
 - Converting legacy 10/24-column page-specific layouts to 12 columns. New layouts default to 12; legacy column metadata and geometry remain intact to prevent data loss.
-- Employee Master production business-data implementation and broader page improvements, Contracts, Reports Center, Payroll/HSE/Messenger/Ticket/Notification work, and unrelated module refactors. The approved static catalogue previews are present, but production Employee Master work has not started.
+- Employee Master modules outside the approved overview/register slice, Contracts, Reports Center, Payroll/HSE/Messenger/Ticket/Notification work, and unrelated module refactors.

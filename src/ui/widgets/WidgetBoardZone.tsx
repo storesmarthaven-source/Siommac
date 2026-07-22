@@ -91,6 +91,10 @@ function sizeConstraintsFor(widgetId: string, localWidgets?: LocalWidgetMap) {
   return localWidgets?.[widgetId]?.sizeConstraints ?? findWidgetDef(widgetId)?.sizeConstraints;
 }
 
+function widgetResizable(widgetId: string, localWidgets?: LocalWidgetMap): boolean {
+  return localWidgets?.[widgetId]?.resizable ?? findWidgetDef(widgetId)?.resizable ?? true;
+}
+
 export function resizeGridElement(callbackElement: HTMLElement): HTMLElement {
   return callbackElement.closest<HTMLElement>('.react-grid-item') ?? callbackElement;
 }
@@ -119,7 +123,7 @@ export function isResizeProgressTowardFit(
 // `h` can't be dragged away, and the code default it should follow is masked by the saved override).
 export function clampWidgetInstanceToMinimum(item: WidgetInstance, localWidgets?: LocalWidgetMap): WidgetInstance {
   const min = widgetMinGrid(item.widgetId, localWidgets);
-  const fixed = localWidgets?.[item.widgetId]?.resizable === false;
+  const fixed = !widgetResizable(item.widgetId, localWidgets);
   const w = fixed ? min.w : Math.max(item.w, min.w);
   const h = fixed ? min.h : Math.max(item.h, min.h);
   return (w === item.w && h === item.h) ? item : { ...item, w, h };
@@ -171,7 +175,7 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
       // opt out (`resizable:false`) or be fully pinned (`locked:true`).
       static: !inter || lw?.locked === true,
       isDraggable: inter && lw?.locked !== true,
-      isResizable: inter && resizable && lw?.resizable !== false && lw?.locked !== true,
+      isResizable: inter && resizable && widgetResizable(it.widgetId, localWidgets) && lw?.locked !== true,
     };
   });
 

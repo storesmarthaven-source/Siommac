@@ -204,6 +204,10 @@ export interface WidgetDef<TConfig = Record<string, unknown>> {
    *  widgets that intentionally scroll inside a fixed tile (e.g. the employee register). */
   sizeToContent?: boolean;
 
+  /** Fixed-size catalogue widget. It remains draggable in edit mode but has no resize
+   * handle; its single declared size is code-owned and stale saved geometry self-heals. */
+  resizable?: boolean;
+
   supportedPages: string[];
   supportedZones: string[];
 

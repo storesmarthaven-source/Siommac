@@ -161,7 +161,7 @@ export function AdvancedFilter({ tabs, onReset, openId, setOpenId, id = 'advance
         onClick={e => { e.stopPropagation(); setOpenId(isOpen ? null : id); }}>
         <span class="tf-adv-left">
           <span class="tf-sliders" aria-hidden="true"><LucideIcon name="SlidersHorizontal" size={18} strokeWidth={2} /></span>
-          <span><small>Advanced</small><strong>{count ? `${count} filters active` : 'Advanced filters'}</strong></span>
+          <span><small>Advanced</small><strong>{count ? `${count} Filters Active` : 'Advanced Filters'}</strong></span>
         </span>
         <span class="tf-adv-right">
           {count ? <span class="tf-adv-count">{count}</span> : null}
@@ -170,7 +170,7 @@ export function AdvancedFilter({ tabs, onReset, openId, setOpenId, id = 'advance
       </button>
       {isOpen && (
         <div class="tf-menu tf-adv-menu tf-right" role="menu" aria-label="Advanced filters" onClick={e => e.stopPropagation()}>
-          <div class="tf-menu-head"><strong>Advanced filters</strong><span>Refine by the fields below.</span></div>
+          <div class="tf-menu-head"><strong>Advanced Filters</strong><span>Refine by the fields below.</span></div>
           <div class="tf-adv-panel">
             <div class="tf-adv-tabs" role="tablist">
               {tabs.map((t, i) => (
@@ -186,8 +186,8 @@ export function AdvancedFilter({ tabs, onReset, openId, setOpenId, id = 'advance
               )}
             </div>
             <div class="tf-adv-footer">
-              <button type="button" onClick={e => { e.stopPropagation(); onReset(); }}>Reset advanced</button>
-              <button type="button" class="tf-apply" onClick={() => setOpenId(null)}>Apply filters</button>
+              <button type="button" onClick={e => { e.stopPropagation(); onReset(); }}>Reset Advanced</button>
+              <button type="button" class="tf-apply" onClick={() => setOpenId(null)}>Apply Filters</button>
             </div>
           </div>
         </div>

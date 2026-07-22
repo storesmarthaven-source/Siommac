@@ -40,6 +40,7 @@ import { EmployeeOnboardingSummary } from './EmployeeOnboardingSummary';
 import {
   humanize, initials, statusTone, TRAINING_TONE, TRAINING_LABEL, type PillTone,
 } from './shared';
+import type { EmployeeMasterAccess } from './employeeMasterAccess';
 
 /** Employee Master only launches/shows onboarding — the full case workspace lives on
  *  the Onboarding page. Switches the HR nav section AND tells it which case to land
@@ -157,16 +158,17 @@ function TrainingSnapshot(
 }
 
 function OverviewTab(
-  { d, trainQ, auditQ, onEditContact, onViewHistory, onViewTraining, onViewTimeline }:
+  { d, trainQ, auditQ, onEditContact, onViewHistory, onViewTraining, onViewTimeline, showTraining, showAudit }:
   { d: HrEmployeeDetail; trainQ: ReturnType<typeof useHrTrainingSummary>; auditQ: ReturnType<typeof useHrAudit>;
-    onEditContact: () => void; onViewHistory: () => void; onViewTraining: () => void; onViewTimeline: () => void },
+    onEditContact?: () => void; onViewHistory: () => void; onViewTraining: () => void; onViewTimeline: () => void;
+    showTraining: boolean; showAudit: boolean },
 ): VNode {
   const e = d.employee;
   const riskRed = e.trainingStatus === 'expired';
   return (
     <>
       <InfoCard title="Personal Summary"
-        action={<button class="ui-mini-btn" type="button" onClick={onEditContact}>Edit Contact</button>}>
+        action={onEditContact ? <button class="ui-mini-btn" type="button" onClick={onEditContact}>Edit Contact</button> : undefined}>
         <FieldList>
           <FieldRow icon="fa-user"        label="Full Name"      value={e.full_name ?? e.username} />
           <FieldRow icon="fa-envelope"    label="Email"          value={e.email ?? '—'} />
@@ -197,8 +199,8 @@ function OverviewTab(
           ? 'This employee has a training or assignment blocker that should be reviewed.'
           : 'This employee has no workforce risks.'}
       </Callout>
-      <TrainingSnapshot trainQ={trainQ} onViewTraining={onViewTraining} />
-      <InfoCard title="Recent Activity"
+      {showTraining && <TrainingSnapshot trainQ={trainQ} onViewTraining={onViewTraining} />}
+      {showAudit && <InfoCard title="Recent Activity"
         action={<button class="ui-mini-btn" type="button" onClick={onViewTimeline}>View full timeline</button>}>
         {auditQ.isLoading && !auditQ.data
           ? <Spinner center label="Loading activity…" />
@@ -210,7 +212,7 @@ function OverviewTab(
                 time: relativeTime(a.created_at),
               }))} />
             : <PanelEmpty>{gated(auditQ, 'No recent activity.')}</PanelEmpty>}
-      </InfoCard>
+      </InfoCard>}
     </>
   );
 }
@@ -271,7 +273,7 @@ function AssignmentsTab({ d }: { d: HrEmployeeDetail }): VNode {
   );
 }
 
-function DocumentsTab({ docsQ, employeeId, onUpload }: { docsQ: ReturnType<typeof useHrDocuments>; employeeId: string; onUpload: () => void }): VNode {
+function DocumentsTab({ docsQ, employeeId, onUpload, access }: { docsQ: ReturnType<typeof useHrDocuments>; employeeId: string; onUpload?: () => void; access: EmployeeMasterAccess }): VNode {
   const rows = docsQ.data ?? [];
   const verify = useVerifyHrDocument(employeeId);
   const archive = useArchiveHrDocument(employeeId);
@@ -284,7 +286,7 @@ function DocumentsTab({ docsQ, employeeId, onUpload }: { docsQ: ReturnType<typeo
   }
   return (
     <InfoCard title="Employee Documents"
-      action={<button class="ui-mini-btn" type="button" onClick={onUpload}>Upload Document</button>}>
+      action={onUpload ? <button class="ui-mini-btn" type="button" onClick={onUpload}>Upload Document</button> : undefined}>
       {docErr ? <div class="ui-warn">{docErr}</div> : null}
       {actErr ? <div class="ui-warn">{actErr instanceof Error ? actErr.message : 'Action failed'}</div> : null}
       {docsQ.isLoading && !docsQ.data
@@ -305,10 +307,10 @@ function DocumentsTab({ docsQ, employeeId, onUpload }: { docsQ: ReturnType<typeo
                   <td>{fmtDate(doc.expiry_date)}</td>
                   <td>
                     <div class="ui-mini-btn-row">
-                      <button class="ui-mini-btn" type="button" onClick={() => void download(doc.id)}>Download</button>
-                      {pending && <button class="ui-mini-btn" type="button" disabled={verify.isPending} onClick={() => verify.mutate({ documentId: doc.id, decision: 'approve' })}>Verify</button>}
-                      {pending && <button class="ui-mini-btn" type="button" disabled={verify.isPending} onClick={() => verify.mutate({ documentId: doc.id, decision: 'reject' })}>Reject</button>}
-                      {doc.status !== 'archived' && <button class="ui-mini-btn" type="button" disabled={archive.isPending} onClick={() => archive.mutate(doc.id)}>Archive</button>}
+                      {access.downloadDocument && <button class="ui-mini-btn" type="button" onClick={() => void download(doc.id)}>Download</button>}
+                      {access.verifyDocument && pending && <button class="ui-mini-btn" type="button" disabled={verify.isPending} onClick={() => verify.mutate({ documentId: doc.id, decision: 'approve' })}>Verify</button>}
+                      {access.verifyDocument && pending && <button class="ui-mini-btn" type="button" disabled={verify.isPending} onClick={() => verify.mutate({ documentId: doc.id, decision: 'reject' })}>Reject</button>}
+                      {access.archiveDocument && doc.status !== 'archived' && <button class="ui-mini-btn" type="button" disabled={archive.isPending} onClick={() => archive.mutate(doc.id)}>Archive</button>}
                     </div>
                   </td>
                 </tr>
@@ -347,7 +349,7 @@ function TrainingTab(
   );
 }
 
-function StatutoryTab({ d, onEdit }: { d: HrEmployeeDetail; onEdit: () => void }): VNode {
+function StatutoryTab({ d, onEdit }: { d: HrEmployeeDetail; onEdit?: () => void }): VNode {
   const s: HrStatutoryRow | null = d.statutory;
   const readiness = d.payrollReadiness;
   if (!s) {
@@ -362,7 +364,7 @@ function StatutoryTab({ d, onEdit }: { d: HrEmployeeDetail; onEdit: () => void }
   return (
     <>
       <InfoCard title="Trinidad & Tobago Statutory Profile"
-        action={<button class="ui-mini-btn" type="button" onClick={onEdit}>Edit Statutory Profile</button>}>
+        action={onEdit ? <button class="ui-mini-btn" type="button" onClick={onEdit}>Edit Statutory Profile</button> : undefined}>
         <div class="ui-stat-tiles">
           <div class="ui-stat-tile"><small>Payroll Readiness</small><strong>{readyLabel}</strong><span>{readySub}</span></div>
           <div class="ui-stat-tile"><small>NIS Profile</small><strong>{humanize(s.nis_status)}</strong><span>{s.nis_number ? `NIS No. ${s.nis_number}` : 'No NIS number on file'}</span></div>
@@ -480,16 +482,16 @@ function DrawerSkeleton(): VNode {
 }
 
 export function ProfileDrawer(
-  { employeeId, onClose, onAction }:
-  { employeeId: string | null; onClose: () => void; onAction: (label: string) => void },
+  { employeeId, onClose, onAction, access }:
+  { employeeId: string | null; onClose: () => void; onAction: (label: string) => void; access: EmployeeMasterAccess },
 ): VNode {
   const [tab, setTab] = useState('Overview');
 
   const detailQ = useHrEmployee(employeeId);
   const wfQ     = useHrWorkflowSummary(employeeId);
-  const trainQ  = useHrTrainingSummary((tab === 'Overview' || tab === 'Training') ? employeeId : null);
-  const auditQ  = useHrAudit((tab === 'Overview' || tab === 'Audit') ? employeeId : null);
-  const docsQ   = useHrDocuments(tab === 'Documents' ? employeeId : null);
+  const trainQ  = useHrTrainingSummary(access.viewTraining && (tab === 'Overview' || tab === 'Training') ? employeeId : null);
+  const auditQ  = useHrAudit(access.viewAudit && (tab === 'Overview' || tab === 'Audit') ? employeeId : null);
+  const docsQ   = useHrDocuments(access.viewDocuments && tab === 'Documents' ? employeeId : null);
   const decidePhoto = useDecideHrEmployeePhoto();
 
   const handlePhotoDecision = (approve: boolean): void => {
@@ -510,16 +512,29 @@ export function ProfileDrawer(
   const wfReady = wfQ.data?.employee_id === employeeId;
   const openWf = wfReady ? (wfQ.data?.open_count ?? 0) : 0;
 
-  const headMenu = (
-    <Menu align="right" items={[
-      { label: 'Request Change', icon: 'fa-pen', onSelect: () => onAction('Request Change') },
-      { label: 'Upload HR Document', icon: 'fa-file', onSelect: () => onAction('Upload HR Document') },
-      { label: 'View Audit', icon: 'fa-clock-rotate-left', onSelect: () => setTab('Audit') },
-      { label: 'Start Offboarding', icon: 'fa-triangle-exclamation', danger: true, onSelect: () => onAction('Start Offboarding') },
-    ]} trigger={({ toggle }) => (
+  const headMenuItems = [
+    ...(access.requestChange ? [{ label: 'Request Change', icon: 'fa-pen', onSelect: () => onAction('Request Change') }] : []),
+    ...(access.uploadDocument ? [{ label: 'Upload HR Document', icon: 'fa-file', onSelect: () => onAction('Upload HR Document') }] : []),
+    ...(access.viewAudit ? [{ label: 'View Audit', icon: 'fa-clock-rotate-left', onSelect: () => setTab('Audit') }] : []),
+    ...(access.startOffboarding ? [{ label: 'Start Offboarding', icon: 'fa-triangle-exclamation', danger: true, onSelect: () => onAction('Start Offboarding') }] : []),
+  ];
+  const headMenu = headMenuItems.length ? (
+    <Menu align="right" items={headMenuItems} trigger={({ toggle }) => (
       <button class="ui-icon-action" type="button" onClick={toggle} aria-label="More">⋮</button>
     )} />
-  );
+  ) : undefined;
+  const primaryTabs = access.viewDocuments ? PRIMARY_TABS : PRIMARY_TABS.filter(item => item !== 'Documents');
+  const moreTabs = MORE_TABS.filter(item =>
+    (item !== 'Training' || access.viewTraining) &&
+    (item !== 'Statutory Profile' || access.viewStatutory) &&
+    (item !== 'Onboarding' || access.viewOnboarding) &&
+    (item !== 'Audit' || access.viewAudit));
+  const panelMenuItems = [
+    ...(access.uploadDocument ? [{ label: 'Upload HR Document', icon: 'fa-file', onSelect: () => onAction('Upload HR Document') }] : []),
+    ...(access.viewStatutory ? [{ label: 'View Statutory Profile', icon: 'fa-file-shield', onSelect: () => setTab('Statutory Profile') }] : []),
+    ...(access.startOffboarding ? [{ label: 'Start Offboarding', icon: 'fa-triangle-exclamation', danger: true, onSelect: () => onAction('Start Offboarding') }] : []),
+  ];
+  const hasPanelActions = access.requestChange || access.changeStatus || panelMenuItems.length > 0;
 
   return (
     <Drawer rich open={!!employeeId} title="Employee Profile" onClose={onClose} headActions={headMenu}>
@@ -564,33 +579,29 @@ export function ProfileDrawer(
             ) },
           ]} />
 
-          <div class="ui-panel-actions">
-            <button class="ui-btn-primary" type="button" onClick={() => onAction('Request Change')}>Request Change</button>
-            <button class="ui-btn-secondary" type="button" onClick={() => onAction('Change Status')}>Change Status</button>
-            <Menu align="right" items={[
-              { label: 'Upload HR Document', icon: 'fa-file', onSelect: () => onAction('Upload HR Document') },
-              { label: 'View Statutory Profile', icon: 'fa-file-shield', onSelect: () => setTab('Statutory Profile') },
-              { label: 'Start Offboarding', icon: 'fa-triangle-exclamation', danger: true, onSelect: () => onAction('Start Offboarding') },
-            ]} trigger={({ toggle }) => (
+          {hasPanelActions && <div class="ui-panel-actions">
+            {access.requestChange && <button class="ui-btn-primary" type="button" onClick={() => onAction('Request Change')}>Request Change</button>}
+            {access.changeStatus && <button class="ui-btn-secondary" type="button" onClick={() => onAction('Change Status')}>Change Status</button>}
+            {panelMenuItems.length > 0 && <Menu align="right" items={panelMenuItems} trigger={({ toggle }) => (
               <button class="ui-btn-secondary" type="button" onClick={toggle} aria-label="More actions">•••</button>
-            )} />
-          </div>
+            )} />}
+          </div>}
 
-          <PanelTabs primary={PRIMARY_TABS} more={MORE_TABS} active={tab} onChange={setTab} />
+          <PanelTabs primary={primaryTabs} more={moreTabs} active={tab} onChange={setTab} />
 
           <div class="ui-panel-body">
-            {tab === 'Overview'          && <OverviewTab d={d} trainQ={trainQ} auditQ={auditQ} onEditContact={() => onAction('Edit Contact')} onViewHistory={() => setTab('Assignments')} onViewTraining={() => setTab('Training')} onViewTimeline={() => setTab('Timeline')} />}
+            {tab === 'Overview'          && <OverviewTab d={d} trainQ={trainQ} auditQ={auditQ} onEditContact={access.editContact ? () => onAction('Edit Contact') : undefined} onViewHistory={() => setTab('Assignments')} onViewTraining={() => setTab('Training')} onViewTimeline={() => setTab('Timeline')} showTraining={access.viewTraining} showAudit={access.viewAudit} />}
             {tab === 'Employment'        && <EmploymentTab d={d} />}
             {tab === 'Assignments'       && <AssignmentsTab d={d} />}
-            {tab === 'Documents'         && <DocumentsTab docsQ={docsQ} employeeId={employeeId} onUpload={() => onAction('Upload HR Document')} />}
-            {tab === 'Training'          && <TrainingTab trainQ={trainQ} />}
-            {tab === 'Statutory Profile' && <StatutoryTab d={d} onEdit={() => onAction('Edit Statutory Profile')} />}
-            {tab === 'Onboarding'        && <EmployeeOnboardingSummary employeeId={employeeId} onOpenCase={openOnboardingCase} />}
+            {access.viewDocuments && tab === 'Documents' && <DocumentsTab docsQ={docsQ} employeeId={employeeId} onUpload={access.uploadDocument ? () => onAction('Upload HR Document') : undefined} access={access} />}
+            {access.viewTraining && tab === 'Training' && <TrainingTab trainQ={trainQ} />}
+            {access.viewStatutory && tab === 'Statutory Profile' && <StatutoryTab d={d} onEdit={access.editStatutory ? () => onAction('Edit Statutory Profile') : undefined} />}
+            {access.viewOnboarding && tab === 'Onboarding' && <EmployeeOnboardingSummary employeeId={employeeId} onOpenCase={openOnboardingCase} />}
             {tab === 'Timeline'          && <ActivityTimeline module="hr" recordType="employee" recordId={employeeId} />}
             {tab === 'Leave'             && <ModuleLinkTab title="Leave" body="Leave balances and requests are managed in the Leave module." />}
             {tab === 'Attendance'        && <ModuleLinkTab title="Attendance" body="Timesheets and clock events are managed in the Attendance module." />}
             {tab === 'Workflows'         && <WorkflowsTab wfQ={wfQ} />}
-            {tab === 'Audit'             && <AuditTab auditQ={auditQ} />}
+            {access.viewAudit && tab === 'Audit' && <AuditTab auditQ={auditQ} />}
           </div>
         </>
       )}

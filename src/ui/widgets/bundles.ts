@@ -90,14 +90,20 @@ export const WIDGET_BUNDLES: WidgetBundle[] = [
   {
     id: 'bundle.hr.employees.essentials',
     title: 'Employee Master Essentials',
-    description: 'Headcount overview, department breakdown, and active-employee insights for the HR Employee Master board.',
+    description: 'Live workforce, readiness, lifecycle, deadline, and master-data workload insights for the Employee Master workspace.',
     icon: 'fa-users',
     module: 'hr',
     supportedPages: ['hr.employees.overview'],
     widgetIds: [
-      'hr.employees.headcount',         // forward-ref — Employee Master Phase 5
-      'hr.employees.departments',        // forward-ref — Employee Master Phase 5
-      'hr.employees.recentJoiners',      // forward-ref — Employee Master Phase 5
+      'hr.employeeMaster.activeWorkforce',
+      'hr.employeeMaster.recordReadiness',
+      'hr.employeeMaster.hrWorkQueue',
+      'hr.employeeMaster.exceptions',
+      'hr.employeeMaster.workforceTrend',
+      'hr.employeeMaster.workforceDistribution',
+      'hr.employeeMaster.lifecycleMovement',
+      'enterprise.calendar.upcomingDeadlines',
+      'hr.employeeMaster.masterDataWorkload',
     ],
   },
   {

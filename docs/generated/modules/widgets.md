@@ -2,9 +2,9 @@
 
 # widgets Module Map
 
-Source fingerprint: `855d4a135f9b6b3f7fdc78cb`
+Source fingerprint: `bc31b60449b1808b14fb11d3`
 
-Files: 63 | Symbols: 399 | Widgets: 2 | Unique mounted endpoints: 13 | Route definitions: 13 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
+Files: 64 | Symbols: 423 | Widgets: 10 | Unique mounted endpoints: 15 | Route definitions: 15 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
 
 ## Widgets and Tiles
 
@@ -12,6 +12,14 @@ Files: 63 | Symbols: 399 | Widgets: 2 | Unique mounted endpoints: 13 | Route def
 |---|---|---|---|---|
 | `enterprise.calendar.taskPlanner` | Task planner | registry | `TaskPlannerWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:165` |
 | `enterprise.calendar.upcomingDeadlines` | Upcoming deadlines | registry | `UpcomingDeadlinesWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:164` |
+| `hr.employeeMaster.activeWorkforce` | Active workforce | registry | `ActiveWorkforce` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:225` |
+| `hr.employeeMaster.exceptions` | Exceptions | registry | `Exceptions` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:228` |
+| `hr.employeeMaster.hrWorkQueue` | HR work queue | registry | `HrWorkQueue` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:227` |
+| `hr.employeeMaster.lifecycleMovement` | Lifecycle movement | registry | `LifecycleMovement` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:231` |
+| `hr.employeeMaster.masterDataWorkload` | Master data workload | registry | `MasterDataWorkload` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:232` |
+| `hr.employeeMaster.recordReadiness` | Record readiness | registry | `RecordReadiness` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:226` |
+| `hr.employeeMaster.workforceDistribution` | Workforce distribution | registry | `WorkforceDistribution` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:230` |
+| `hr.employeeMaster.workforceTrend` | Workforce trend | registry | `WorkforceTrend` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:229` |
 
 ## Route Definitions
 
@@ -19,16 +27,18 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 
 | Path | Permission | Guards | Schema | Location | Frontend callers | E2E suites |
 |---|---|---|---|---|---|---|
-| `/api/layout/get` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:75` | res @ src/api/layout.ts:21 | - |
-| `/api/layout/getInstanceLayout` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:196` | res @ src/api/layout.ts:57 | widgets |
-| `/api/layout/resetInstanceLayout` | `ui.layout.manage` | requirePermission | `-` | `netlify/functions/routes/uiPrefs.ts:248` | res @ src/api/layout.ts:81 | widgets |
-| `/api/layout/resetOverride` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:122` | resetLayoutOverride @ src/api/layout.ts:39 | - |
-| `/api/layout/saveDefault` | `-` | requireRole | `-` | `netlify/functions/routes/uiPrefs.ts:90` | res @ src/api/layout.ts:33 | - |
-| `/api/layout/saveInstanceLayout` | `ui.layout.manage` | requirePermission | `-` | `netlify/functions/routes/uiPrefs.ts:214` | res @ src/api/layout.ts:69 | widgets |
-| `/api/layout/saveInstanceLayoutDefault` | `ui.layout.default.manage` | requirePermission | `-` | `netlify/functions/routes/uiPrefs.ts:230` | res @ src/api/layout.ts:75 | widgets |
-| `/api/layout/saveOverride` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:107` | res @ src/api/layout.ts:27 | - |
-| `/api/theme/get` | `-` | - | `-` | `netlify/functions/routes/uiPrefs.ts:48` | res @ src/api/theme.ts:14 | - |
-| `/api/theme/save` | `-` | requireRole | `-` | `netlify/functions/routes/uiPrefs.ts:53` | res @ src/api/theme.ts:20 | - |
+| `/api/layout/get` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:154` | res @ src/api/layout.ts:21 | - |
+| `/api/layout/getInstanceLayout` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:275` | res @ src/api/layout.ts:57 | widgets |
+| `/api/layout/resetInstanceLayout` | `ui.layout.manage` | requirePermission | `-` | `netlify/functions/routes/uiPrefs.ts:327` | res @ src/api/layout.ts:81 | widgets |
+| `/api/layout/resetOverride` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:201` | resetLayoutOverride @ src/api/layout.ts:39 | - |
+| `/api/layout/saveDefault` | `-` | requireRole | `-` | `netlify/functions/routes/uiPrefs.ts:169` | res @ src/api/layout.ts:33 | - |
+| `/api/layout/saveInstanceLayout` | `ui.layout.manage` | requirePermission | `-` | `netlify/functions/routes/uiPrefs.ts:293` | res @ src/api/layout.ts:69 | widgets |
+| `/api/layout/saveInstanceLayoutDefault` | `ui.layout.default.manage` | requirePermission | `-` | `netlify/functions/routes/uiPrefs.ts:309` | res @ src/api/layout.ts:75 | widgets |
+| `/api/layout/saveOverride` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:186` | res @ src/api/layout.ts:27 | - |
+| `/api/theme/get` | `-` | - | `-` | `netlify/functions/routes/uiPrefs.ts:75` | res @ src/api/theme.ts:14 | - |
+| `/api/theme/save` | `-` | requireRole | `-` | `netlify/functions/routes/uiPrefs.ts:80` | res @ src/api/theme.ts:20 | - |
+| `/api/ui-preferences/get` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:102` | response @ src/api/uiPreferences.ts:11 | widgets |
+| `/api/ui-preferences/save` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:123` | response @ src/api/uiPreferences.ts:21 | widgets |
 | `/api/widgets/packages/install` | `ui.widgets.packages.manage` | requirePermission | `-` | `netlify/functions/routes/widgetPackages.ts:95` | res @ src/api/widgets.ts:29 | widgets |
 | `/api/widgets/packages/list` | `ui.widgets.packages.view` | requirePermission | `-` | `netlify/functions/routes/widgetPackages.ts:81` | res @ src/api/widgets.ts:18 | widgets |
 | `/api/widgets/packages/uninstall` | `ui.widgets.packages.manage` | requirePermission | `-` | `netlify/functions/routes/widgetPackages.ts:142` | res @ src/api/widgets.ts:34 | widgets |
@@ -71,7 +81,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `requestWidgetBoardReveal` | function / ui-tile | `src/ui/widgets/boardReveal.ts:9` | `-` |
 | `WidgetBundle` | interface / ui-tile | `src/ui/widgets/bundles.ts:53` | `-` |
 | `WIDGET_BUNDLES` | array / ui-tile | `src/ui/widgets/bundles.ts:75` | `-` |
-| `resolveBundleWidgets` | function / ui-tile | `src/ui/widgets/bundles.ts:131` | `-` |
+| `resolveBundleWidgets` | function / ui-tile | `src/ui/widgets/bundles.ts:137` | `-` |
 | `WidgetModuleMeta` | interface / ui-tile | `src/ui/widgets/catalogueTaxonomy.ts:4` | `-` |
 | `WIDGET_MODULE_META` | variable / ui-tile | `src/ui/widgets/catalogueTaxonomy.ts:10` | `-` |
 | `widgetModuleMeta` | function / ui-tile | `src/ui/widgets/catalogueTaxonomy.ts:18` | `-` |
@@ -108,6 +118,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useStaggerReveal` | function / hook | `src/ui/widgets/motion.ts:66` | `-` |
 | `placeWidgetsAtBottom` | function / ui-tile | `src/ui/widgets/placement.ts:5` | `-` |
 | `widgets` | array / ui-tile | `src/ui/widgets/registry.calendarPlanning.tsx:163` | `-` |
+| `widgets` | array / ui-tile | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:224` | `-` |
 | `widgets` | array / ui-tile | `src/ui/widgets/registry.hrEmployeeMaster.tsx:272` | `-` |
 | `WIDGET_REGISTRY` | variable / ui-tile | `src/ui/widgets/registry.ts:53` | `-` |
 | `allWidgets` | function / ui-tile | `src/ui/widgets/registry.ts:56` | `-` |
@@ -154,12 +165,12 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `WidgetRenderProps` | interface / ui-tile | `src/ui/widgets/types.ts:163` | `-` |
 | `WidgetPreviewProps` | interface / ui-tile | `src/ui/widgets/types.ts:174` | `-` |
 | `WidgetDef` | interface / ui-tile | `src/ui/widgets/types.ts:180` | `-` |
-| `WidgetInstance` | interface / ui-tile | `src/ui/widgets/types.ts:253` | `-` |
-| `PreviewWidgetInstance` | interface / ui-tile | `src/ui/widgets/types.ts:275` | `-` |
-| `BoardWidgetInstance` | type / ui-tile | `src/ui/widgets/types.ts:282` | `-` |
-| `LocalWidget` | interface / ui-tile | `src/ui/widgets/types.ts:292` | `-` |
-| `LocalWidgetMap` | type / ui-tile | `src/ui/widgets/types.ts:311` | `-` |
-| `isPreviewWidget` | function / ui-tile | `src/ui/widgets/types.ts:322` | `-` |
+| `WidgetInstance` | interface / ui-tile | `src/ui/widgets/types.ts:257` | `-` |
+| `PreviewWidgetInstance` | interface / ui-tile | `src/ui/widgets/types.ts:279` | `-` |
+| `BoardWidgetInstance` | type / ui-tile | `src/ui/widgets/types.ts:286` | `-` |
+| `LocalWidget` | interface / ui-tile | `src/ui/widgets/types.ts:296` | `-` |
+| `LocalWidgetMap` | type / ui-tile | `src/ui/widgets/types.ts:315` | `-` |
+| `isPreviewWidget` | function / ui-tile | `src/ui/widgets/types.ts:326` | `-` |
 | `useBoardLayout` | function / hook | `src/ui/widgets/useBoardLayout.ts:50` | `-` |
 | `WidgetValidationIssue` | interface / ui-tile | `src/ui/widgets/validation.ts:13` | `-` |
 | `WidgetValidationResult` | interface / ui-tile | `src/ui/widgets/validation.ts:19` | `-` |
@@ -170,8 +181,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `WidgetBoardToolbar` | function / component, ui-tile | `src/ui/widgets/WidgetBoardToolbar.tsx:37` | `-` |
 | `WidgetBoardZoneProps` | interface / ui-tile | `src/ui/widgets/WidgetBoardZone.tsx:33` | `-` |
 | `widgetMinGrid` | function / ui-tile | `src/ui/widgets/WidgetBoardZone.tsx:80` | `-` |
-| `clampWidgetInstanceToMinimum` | function / ui-tile | `src/ui/widgets/WidgetBoardZone.tsx:120` | `-` |
-| `WidgetBoardZone` | function / component, ui-tile | `src/ui/widgets/WidgetBoardZone.tsx:134` | `-` |
+| `clampWidgetInstanceToMinimum` | function / ui-tile | `src/ui/widgets/WidgetBoardZone.tsx:124` | `-` |
+| `WidgetBoardZone` | function / component, ui-tile | `src/ui/widgets/WidgetBoardZone.tsx:138` | `-` |
 | `WidgetCatalog` | function / component, ui-tile | `src/ui/widgets/WidgetCatalog.tsx:92` | `-` |
 | `WidgetConfigFieldRenderer` | function / component, ui-tile | `src/ui/widgets/WidgetConfigFieldRenderer.tsx:7` | `-` |
 | `WidgetConfigureModal` | function / component, ui-tile | `src/ui/widgets/WidgetConfigureModal.tsx:11` | `-` |
@@ -204,7 +215,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 
 | Suite | Tests | API paths | Location |
 |---|---:|---:|---|
-| Widget packages + dashboard layouts | 18 | 7 | `scripts/e2e/suites/widgets.mjs` |
+| Widget packages + dashboard layouts | 23 | 9 | `scripts/e2e/suites/widgets.mjs` |
 
 ## Navigation Files
 
@@ -212,16 +223,16 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 
 | Role | Path | Lines |
 |---|---|---:|
-| backend-route | `netlify/functions/routes/uiPrefs.ts` | 262 |
+| backend-route | `netlify/functions/routes/uiPrefs.ts` | 341 |
 | backend-route | `netlify/functions/routes/widgetPackages.ts` | 179 |
-| e2e-suite | `scripts/e2e/suites/widgets.mjs` | 156 |
+| e2e-suite | `scripts/e2e/suites/widgets.mjs` | 212 |
 | frontend-api | `src/api/layout.ts` | 84 |
 | frontend-api | `src/api/widgets.ts` | 37 |
 | frontend-page | `src/components/sections/Dashboard/useDashLayout.ts` | 174 |
 | frontend-page | `src/components/sections/HR/offboardingWidgets.tsx` | 378 |
 | widget-platform | `src/ui/widgets/WidgetBoard.tsx` | 125 |
 | widget-platform | `src/ui/widgets/WidgetBoardToolbar.tsx` | 110 |
-| widget-platform | `src/ui/widgets/WidgetBoardZone.tsx` | 409 |
+| widget-platform | `src/ui/widgets/WidgetBoardZone.tsx` | 413 |
 | widget-platform | `src/ui/widgets/WidgetCatalog.test.tsx` | 77 |
 | widget-platform | `src/ui/widgets/WidgetCatalog.tsx` | 156 |
 | widget-platform | `src/ui/widgets/WidgetConfigFieldRenderer.tsx` | 41 |
@@ -236,7 +247,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | widget-platform | `src/ui/widgets/access.ts` | 24 |
 | widget-platform | `src/ui/widgets/boardReveal.test.ts` | 26 |
 | widget-platform | `src/ui/widgets/boardReveal.ts` | 34 |
-| widget-platform | `src/ui/widgets/bundles.ts` | 135 |
+| widget-platform | `src/ui/widgets/bundles.ts` | 141 |
 | widget-platform | `src/ui/widgets/calendarPlanningWidgets.test.tsx` | 87 |
 | widget-platform | `src/ui/widgets/catalogueTaxonomy.ts` | 36 |
 | widget-platform | `src/ui/widgets/commitPreviewWidget.ts` | 16 |
@@ -256,10 +267,11 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | widget-platform | `src/ui/widgets/migration.ts` | 76 |
 | widget-platform | `src/ui/widgets/motion.ts` | 82 |
 | widget-platform | `src/ui/widgets/placement.ts` | 25 |
-| widget-platform | `src/ui/widgets/platform.test.tsx` | 116 |
+| widget-platform | `src/ui/widgets/platform.test.tsx` | 121 |
 | widget-registry | `src/ui/widgets/registry.calendarPlanning.tsx` | 167 |
+| widget-registry | `src/ui/widgets/registry.hrEmployeeDashboard.tsx` | 234 |
 | widget-registry | `src/ui/widgets/registry.hrEmployeeMaster.tsx` | 283 |
-| widget-registry | `src/ui/widgets/registry.test.ts` | 150 |
+| widget-registry | `src/ui/widgets/registry.test.ts` | 191 |
 | widget-registry | `src/ui/widgets/registry.ts` | 78 |
 | widget-platform | `src/ui/widgets/resolveBoardWidget.ts` | 20 |
 | widget-platform | `src/ui/widgets/responsive.ts` | 67 |
@@ -267,7 +279,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | widget-platform | `src/ui/widgets/serializeLayout.ts` | 16 |
 | widget-platform | `src/ui/widgets/size.ts` | 20 |
 | widget-platform | `src/ui/widgets/splitCommittedAndPreview.ts` | 18 |
-| widget-platform | `src/ui/widgets/types.ts` | 325 |
+| widget-platform | `src/ui/widgets/types.ts` | 329 |
 | widget-platform | `src/ui/widgets/useBoardLayout.ts` | 161 |
-| widget-platform | `src/ui/widgets/validation.ts` | 46 |
+| widget-platform | `src/ui/widgets/validation.ts` | 53 |
 

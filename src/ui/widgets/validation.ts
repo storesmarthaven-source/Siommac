@@ -34,6 +34,13 @@ export function validateWidgetDef(def: WidgetDef): WidgetValidationResult {
   if (!def.render) err('NO_RENDER', 'Widget must provide a render function.');
   if (!def.allowedSizes?.length) err('NO_SIZES', 'Widget must declare allowedSizes.');
   else if (!def.allowedSizes.some(s => s.key === def.defaultSize)) err('DEFAULT_SIZE_NOT_ALLOWED', `defaultSize "${def.defaultSize}" is not in allowedSizes.`);
+  if (def.resizable === false && def.allowedSizes?.length !== 1)
+    err('FIXED_WIDGET_MULTIPLE_SIZES', 'A non-resizable widget must declare exactly one code-owned size.');
+  if (def.resizable === false && def.allowedSizes?.[0]) {
+    const size = def.allowedSizes[0];
+    if (size.min?.w !== size.grid.w || size.min?.h !== size.grid.h || size.max?.w !== size.grid.w || size.max?.h !== size.grid.h)
+      err('FIXED_WIDGET_UNPINNED_SIZE', 'A non-resizable widget must pin min and max to its single grid size.');
+  }
   if (!def.supportedPages?.length) err('NO_PAGES', 'Widget must declare supportedPages.');
 
   if (!def.dataSource?.permissions?.length) warn('NO_PERMISSIONS', 'dataSource.permissions is empty — the widget is visible to every user.');

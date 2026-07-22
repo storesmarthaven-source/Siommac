@@ -241,15 +241,22 @@ export default async function run(h) {
   });
 
   // ── dashboard-stats ────────────────────────────────────────────────────────
-  await test('dashboard-stats (admin) → 4 cards, all computed', async () => {
+  await test('dashboard-stats (admin) → complete workspace contract, all computed', async () => {
     const r = await api('hr/employees/dashboard-stats', A, {});
     ok(r, 'dashboard-stats');
     const s = r.body.data.stats;
     expect(s.active_workforce && typeof s.active_workforce.total === 'number', 'active_workforce.total');
     expect(Array.isArray(s.active_workforce.trend) && s.active_workforce.trend.length === 6, 'trend has 6 months');
     expect(s.hr_work_queue && Array.isArray(s.hr_work_queue.mix), 'hr_work_queue.mix');
+    expect(typeof s.hr_work_queue.oldest_days === 'number', 'hr_work_queue.oldest_days');
     expect(s.readiness && typeof s.readiness.percent === 'number', 'readiness.percent');
+    expect(typeof s.readiness.assignment_complete === 'number', 'readiness.assignment_complete');
     expect(s.exceptions && Array.isArray(s.exceptions.items), 'exceptions.items');
+    expect(s.distribution && Array.isArray(s.distribution.departments) && Array.isArray(s.distribution.sites), 'distribution arrays');
+    expect(s.distribution.departments.every(x => typeof x.label === 'string' && typeof x.count === 'number' && typeof x.percent === 'number'), 'department distribution envelope');
+    expect(s.lifecycle && Array.isArray(s.lifecycle.periods) && s.lifecycle.periods.length === 6, 'lifecycle has 6 months');
+    expect(s.lifecycle.periods.every(x => typeof x.hires === 'number' && typeof x.exits === 'number' && typeof x.transfers === 'number' && typeof x.promotions === 'number'), 'lifecycle period envelope');
+    expect(['hires', 'exits', 'transfers', 'promotions'].every(key => typeof s.lifecycle.totals[key] === 'number'), 'lifecycle totals envelope');
     expect(s.active_workforce.total >= 1, 'at least one active worker');
   });
 

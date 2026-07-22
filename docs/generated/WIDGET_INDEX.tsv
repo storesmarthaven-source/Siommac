@@ -1,5 +1,5 @@
 id	title	kind	module	area	render	file	line
-bundle.hr.attendance.ops	Attendance & Leave Ops	registry	hr			src/ui/widgets/bundles.ts	103
+bundle.hr.attendance.ops	Attendance & Leave Ops	registry	hr			src/ui/widgets/bundles.ts	109
 bundle.hr.employees.essentials	Employee Master Essentials	registry	hr			src/ui/widgets/bundles.ts	90
 bundle.hr.onboarding.manager	Onboarding Manager Pack	registry	hr			src/ui/widgets/bundles.ts	76
 enterprise.calendar.taskPlanner	Task planner	registry	widgets		TaskPlannerWidget	src/ui/widgets/registry.calendarPlanning.tsx	165
@@ -24,7 +24,15 @@ finance.statutory.kpi.verifyQueue	Verification Queue (KPI)	local	finance		render
 finance.statutory.nisChart	NIS Contribution Schedule	local	finance		renderChart	src/components/sections/Finance/StatutoryDashboard.tsx	651
 finance.statutory.readiness	Statutory Readiness	local	finance		renderReadiness	src/components/sections/Finance/StatutoryDashboard.tsx	652
 finance.statutory.register	Statutory Register	local	finance		renderRegister	src/components/sections/Finance/StatutoryDashboard.tsx	654
-hr.employees.register	Employee Register	local	hr		renderRegister	src/components/sections/HR/EmployeeMaster.tsx	413
+hr.employeeMaster.activeWorkforce	Active workforce	registry	widgets		ActiveWorkforce	src/ui/widgets/registry.hrEmployeeDashboard.tsx	225
+hr.employeeMaster.exceptions	Exceptions	registry	widgets		Exceptions	src/ui/widgets/registry.hrEmployeeDashboard.tsx	228
+hr.employeeMaster.hrWorkQueue	HR work queue	registry	widgets		HrWorkQueue	src/ui/widgets/registry.hrEmployeeDashboard.tsx	227
+hr.employeeMaster.lifecycleMovement	Lifecycle movement	registry	widgets		LifecycleMovement	src/ui/widgets/registry.hrEmployeeDashboard.tsx	231
+hr.employeeMaster.masterDataWorkload	Master data workload	registry	widgets		MasterDataWorkload	src/ui/widgets/registry.hrEmployeeDashboard.tsx	232
+hr.employeeMaster.recordReadiness	Record readiness	registry	widgets		RecordReadiness	src/ui/widgets/registry.hrEmployeeDashboard.tsx	226
+hr.employeeMaster.workforceDistribution	Workforce distribution	registry	widgets		WorkforceDistribution	src/ui/widgets/registry.hrEmployeeDashboard.tsx	230
+hr.employeeMaster.workforceTrend	Workforce trend	registry	widgets		WorkforceTrend	src/ui/widgets/registry.hrEmployeeDashboard.tsx	229
+hr.employees.register	Employee Register	local	hr		renderRegister	src/components/sections/HR/EmployeeMaster.tsx	475
 hr.onboarding.case.activeTasks	Active Tasks	local	hr		() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddTask}>+ Add</button>)	src/components/sections/HR/OnboardingCaseDetail.tsx	317
 hr.onboarding.case.blockersTable	Blockers	local	hr		() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())	src/components/sections/HR/OnboardingCaseDetail.tsx	318
 hr.onboarding.case.customActions	Custom Actions	local	hr		() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddAction}>+ Add</button>)	src/components/sections/HR/OnboardingCaseDetail.tsx	320

@@ -416,8 +416,9 @@ router.post('/employees/create', async c => {
   } });
 });
 
-// POST /api/hr/employees/dashboard-stats — the 4 Employee-Master KPI cards (v36 §4.3).
-// Every number is computed from live data (workforce / statutory / change-requests / certs).
+// POST /api/hr/employees/dashboard-stats — the Employee Master workspace contract.
+// Every number is computed from authorised live data. Realtime may invalidate this query,
+// but never supplies or authorises any of these records.
 router.post('/employees/dashboard-stats', async c => {
   await requirePermission(c, 'hr.employees.view');
   const v = zv(c, z.object({ siteId: z.string().optional(), departmentId: z.string().optional() }),
@@ -425,11 +426,24 @@ router.post('/employees/dashboard-stats', async c => {
   if (!v.ok) return v.response;
   const today = todayISO();
 
-  const [{ data: workforceRaw }, { data: statRows }, { data: changeRows }] = await Promise.all([
+  const [workforceResult, statutoryResult, openChangesResult, lifecycleChangesResult, departmentsResult, sitesResult] = await Promise.all([
     sb.from('app_users').select('id, status, contractor_flag, supervisor_id, department_id, site_id, start_date, end_date').neq('role', 'superadmin'),
     sb.from('hr_employee_statutory').select('employee_id, payroll_ready_status'),
-    sb.from('hr_employee_change_requests').select('change_type, status, requested_at').in('status', ['submitted', 'in_review', 'returned']),
+    sb.from('hr_employee_change_requests').select('employee_id, change_type, status, requested_at').in('status', ['submitted', 'in_review', 'returned']),
+    sb.from('hr_employee_change_requests').select('employee_id, change_type, requested_value, applied_at').eq('status', 'applied').not('applied_at', 'is', null),
+    sb.from('departments').select('id, name'),
+    sb.from('project_sites').select('id, name'),
   ]);
+  for (const [label, result] of [
+    ['workforce', workforceResult], ['statutory readiness', statutoryResult],
+    ['open change requests', openChangesResult], ['lifecycle changes', lifecycleChangesResult],
+    ['departments', departmentsResult], ['sites', sitesResult],
+  ] as const) {
+    if (result.error) throw new Error(`Employee Master ${label} read failed: ${result.error.message}`);
+  }
+  const workforceRaw = workforceResult.data;
+  const statRows = statutoryResult.data;
+  const changeRows = openChangesResult.data;
   let workforce = (workforceRaw ?? []) as { id: string; status: string; contractor_flag: boolean | null; supervisor_id: string | null; department_id: string | null; site_id: string | null; start_date: string | null; end_date: string | null }[];
   if (v.data.siteId)       workforce = workforce.filter(w => w.site_id === v.data.siteId);
   if (v.data.departmentId) workforce = workforce.filter(w => w.department_id === v.data.departmentId);
@@ -439,11 +453,16 @@ router.post('/employees/dashboard-stats', async c => {
   // Active workforce + 6-month headcount trend (by hire / termination dates).
   const now = new Date();
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const trend = Array.from({ length: 6 }, (_, i) => {
+  const monthWindows = Array.from({ length: 6 }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - (5 - i) + 1, 0); // last day of that month
+    const start = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10);
     const monthEnd = d.toISOString().slice(0, 10);
+    return { period: MONTHS[d.getMonth()] ?? '', start, end: monthEnd };
+  });
+  const trend = monthWindows.map(month => {
+    const monthEnd = month.end;
     const count = workforce.filter(w => (w.start_date ?? '') <= monthEnd && (!w.end_date || w.end_date > monthEnd)).length;
-    return { period: MONTHS[d.getMonth()] ?? '', count };
+    return { period: month.period, count };
   });
 
   // Statutory readiness (active workers only).
@@ -455,7 +474,8 @@ router.post('/employees/dashboard-stats', async c => {
   // Training rollup over active workers.
   const certByWorker = new Map<string, { status: string; expires_at: string | null }[]>();
   if (activeIds.length) {
-    const { data: certs } = await sb.from('hse_worker_certificates').select('worker_id, status, expires_at').in('worker_id', activeIds);
+    const { data: certs, error: certError } = await sb.from('hse_worker_certificates').select('worker_id, status, expires_at').in('worker_id', activeIds);
+    if (certError) throw new Error(`Employee Master training read failed: ${certError.message}`);
     for (const cr of (certs ?? []) as { worker_id: string; status: string; expires_at: string | null }[]) {
       const list = certByWorker.get(cr.worker_id) ?? []; list.push({ status: cr.status, expires_at: cr.expires_at }); certByWorker.set(cr.worker_id, list);
     }
@@ -464,16 +484,66 @@ router.post('/employees/dashboard-stats', async c => {
   const trainingExpired = activeIds.filter(id => rollupTrainingStatus(certByWorker.get(id) ?? [], today) === 'expired').length;
 
   // HR work queue (open change-requests).
-  const chg = (changeRows ?? []) as { change_type: string; status: string; requested_at: string | null }[];
+  const workforceSet = new Set(workforce.map(w => w.id));
+  const chg = ((changeRows ?? []) as { employee_id: string; change_type: string; status: string; requested_at: string | null }[])
+    .filter(r => workforceSet.has(r.employee_id));
   const threeDaysAgo = new Date(now.getTime() - 3 * 86_400_000).toISOString();
   const mixMap = new Map<string, number>();
   for (const r of chg) mixMap.set(r.change_type, (mixMap.get(r.change_type) ?? 0) + 1);
   const urgent = chg.filter(r => r.status === 'in_review' || (r.requested_at ?? '') < threeDaysAgo).length;
+  const oldestDays = chg.reduce((max, r) => {
+    if (!r.requested_at) return max;
+    return Math.max(max, Math.floor((now.getTime() - new Date(r.requested_at).getTime()) / 86_400_000));
+  }, 0);
+
+  // Distribution labels are hydrated server-side; widgets never receive raw lookup ids.
+  const departmentNames = new Map(((departmentsResult.data ?? []) as { id: string; name: string | null }[]).map(row => [row.id, row.name ?? 'Unnamed department']));
+  const siteNames = new Map(((sitesResult.data ?? []) as { id: string; name: string | null }[]).map(row => [row.id, row.name ?? 'Unnamed site']));
+  const distribution = (key: 'department_id' | 'site_id', names: Map<string, string>) => {
+    const counts = new Map<string, number>();
+    for (const worker of active) {
+      const id = worker[key] ?? '__unassigned__';
+      counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+    return [...counts.entries()].map(([id, count]) => ({
+      id,
+      label: id === '__unassigned__' ? 'Unassigned' : (names.get(id) ?? 'Unknown'),
+      count,
+      percent: active.length ? Math.round((count / active.length) * 100) : 0,
+    })).sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+  };
+
+  // Lifecycle movement is based on effective workforce dates and applied maker-checker changes.
+  const appliedChanges = ((lifecycleChangesResult.data ?? []) as Array<{
+    employee_id: string; change_type: string; requested_value: Record<string, unknown> | null; applied_at: string | null;
+  }>).filter(row => workforceSet.has(row.employee_id));
+  const lifecyclePeriods = monthWindows.map(month => {
+    const inMonth = (value: string | null): boolean => !!value && value.slice(0, 10) >= month.start && value.slice(0, 10) <= month.end;
+    const applied = appliedChanges.filter(row => inMonth(row.applied_at));
+    const transfers = applied.filter(row => row.change_type === 'department_transfer' || row.change_type === 'site_transfer' ||
+      (row.change_type === 'transfer_promotion' && !!(row.requested_value?.['departmentId'] || row.requested_value?.['siteId'] || row.requested_value?.['supervisorId']))).length;
+    const promotions = applied.filter(row => row.change_type === 'role_change' ||
+      (row.change_type === 'transfer_promotion' && !!(row.requested_value?.['positionId'] || row.requested_value?.['role'] || row.requested_value?.['monthlySalary'] || row.requested_value?.['hourlyRate']))).length;
+    return {
+      period: month.period,
+      hires: workforce.filter(worker => inMonth(worker.start_date)).length,
+      exits: workforce.filter(worker => inMonth(worker.end_date)).length,
+      transfers,
+      promotions,
+    };
+  });
+  const lifecycleTotals = lifecyclePeriods.reduce((totals, period) => ({
+    hires: totals.hires + period.hires,
+    exits: totals.exits + period.exits,
+    transfers: totals.transfers + period.transfers,
+    promotions: totals.promotions + period.promotions,
+  }), { hires: 0, exits: 0, transfers: 0, promotions: 0 });
 
   // Exceptions.
   const exceptionItems = [
     { type: 'Supervisor', count: active.filter(w => !w.supervisor_id).length },
     { type: 'Department', count: active.filter(w => !w.department_id).length },
+    { type: 'Site',       count: active.filter(w => !w.site_id).length },
     { type: 'Payroll',    count: payrollBlocked },
     { type: 'Training',   count: trainingExpired },
   ].filter(x => x.count > 0);
@@ -485,12 +555,19 @@ router.post('/employees/dashboard-stats', async c => {
       contractors: active.filter(w => w.contractor_flag).length,
       trend,
     },
-    hr_work_queue: { total: chg.length, urgent, mix: [...mixMap.entries()].map(([type, count]) => ({ type, count })) },
+    hr_work_queue: { total: chg.length, urgent, oldest_days: oldestDays, mix: [...mixMap.entries()].map(([type, count]) => ({ type, count })) },
     readiness: {
-      percent: active.length ? Math.round((payrollReady / active.length) * 100) : 0,
-      payroll_ready: payrollReady, training_current: trainingCurrent, blocked: payrollBlocked,
+      percent: active.length ? Math.round(((active.filter(w => !!w.supervisor_id && !!w.department_id && !!w.site_id).length + payrollReady + trainingCurrent) / (active.length * 3)) * 100) : 0,
+      assignment_complete: active.filter(w => !!w.supervisor_id && !!w.department_id && !!w.site_id).length,
+      payroll_ready: payrollReady, training_current: trainingCurrent,
+      blocked: new Set([
+        ...activeStat.filter(s => s.payroll_ready_status === 'blocked').map(s => s.employee_id),
+        ...activeIds.filter(id => rollupTrainingStatus(certByWorker.get(id) ?? [], today) === 'expired'),
+      ]).size,
     },
     exceptions: { total: exceptionItems.reduce((s, x) => s + x.count, 0), items: exceptionItems },
+    distribution: { departments: distribution('department_id', departmentNames), sites: distribution('site_id', siteNames) },
+    lifecycle: { periods: lifecyclePeriods, totals: lifecycleTotals },
   } } });
 });
 

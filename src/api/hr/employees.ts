@@ -103,9 +103,17 @@ export interface HrEmployeeDetail {
 
 export interface HrDashboardStats {
   active_workforce: { total: number; employees: number; contractors: number; trend: { period: string; count: number }[] };
-  hr_work_queue:    { total: number; urgent: number; mix: { type: string; count: number }[] };
-  readiness:        { percent: number; payroll_ready: number; training_current: number; blocked: number };
+  hr_work_queue:    { total: number; urgent: number; oldest_days: number; mix: { type: string; count: number }[] };
+  readiness:        { percent: number; assignment_complete: number; payroll_ready: number; training_current: number; blocked: number };
   exceptions:       { total: number; items: { type: string; count: number }[] };
+  distribution: {
+    departments: { id: string; label: string; count: number; percent: number }[];
+    sites: { id: string; label: string; count: number; percent: number }[];
+  };
+  lifecycle: {
+    periods: { period: string; hires: number; exits: number; transfers: number; promotions: number }[];
+    totals: { hires: number; exits: number; transfers: number; promotions: number };
+  };
 }
 
 export interface HrWorkflowSummary {

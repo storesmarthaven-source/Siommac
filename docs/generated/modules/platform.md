@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `855d4a135f9b6b3f7fdc78cb`
+Source fingerprint: `bc31b60449b1808b14fb11d3`
 
-Files: 294 | Symbols: 2659 | Widgets: 0 | Unique mounted endpoints: 31 | Route definitions: 31 mounted + 15 unmounted | API calls: 47 | DB objects: 295 | E2E suites: 0
+Files: 296 | Symbols: 2668 | Widgets: 0 | Unique mounted endpoints: 31 | Route definitions: 31 mounted + 15 unmounted | API calls: 49 | DB objects: 299 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -111,6 +111,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/settings/values/set` | `apiPost` | `res` | `src/lib/themePreference.ts:60` |
 | `/api/theme/get` | `authPost` | `res` | `src/api/theme.ts:14` |
 | `/api/theme/save` | `apiPost` | `res` | `src/api/theme.ts:20` |
+| `/api/ui-preferences/get` | `apiPost` | `response` | `src/api/uiPreferences.ts:11` |
+| `/api/ui-preferences/save` | `apiPost` | `response` | `src/api/uiPreferences.ts:21` |
 | `/api/updateColorScheme` | `apiPost` | `updateColorScheme` | `src/components/nav/api.ts:22` |
 | `/api/updateLayoutMode` | `apiPost` | `updateLayoutMode` | `src/components/nav/api.ts:25` |
 | `/api/updateMyProfile` | `apiPost` | `res` | `src/components/sections/Profile/api.ts:108` |
@@ -359,6 +361,8 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | table | `public.roles` | `supabase/migrations/20260714000013_module_staff_roles.sql:39` |
 | table | `public.hr_document_requirements` | `supabase/migrations/20260716000000_hr_document_requirements.sql:4` |
 | table | `public.hr_document_reminders` | `supabase/migrations/20260716000001_hr_document_reminders.sql:5` |
+| table | `public.ui_user_preferences` | `supabase/migrations/20260722062839_ui_user_preferences.sql:3` |
+| trigger | `trg_ui_user_preferences_updated_at` | `supabase/migrations/20260722062839_ui_user_preferences.sql:18` |
 | table | `public.hr_contract_templates` | `supabase/migrations/20260915000000_hr_contract_management.sql:13` |
 | table | `public.hr_contracts` | `supabase/migrations/20260915000000_hr_contract_management.sql:34` |
 | table | `public.hr_contract_signatories` | `supabase/migrations/20260915000000_hr_contract_management.sql:69` |
@@ -461,6 +465,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/schemas/site.ts` | 61 |
 | frontend-api | `src/api/sites.ts` | 167 |
 | frontend-api | `src/api/theme.ts` | 23 |
+| frontend-api | `src/api/uiPreferences.ts` | 31 |
 | frontend-page | `src/components/sections/AccessControl/AccessControlSection.tsx` | 65 |
 | frontend-page | `src/components/sections/AccessControl/index.ts` | 10 |
 | frontend-page | `src/components/sections/AccessControl/module.ts` | 43 |
@@ -522,5 +527,6 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | shared-types | `types/messaging.ts` | 287 |
 | shared-types | `types/messagingCompliance.ts` | 318 |
 | shared-types | `types/supabase.ts` | 135 |
+| shared-types | `types/uiPreferences.ts` | 31 |
 | shared-types | `types/workCalendars.ts` | 145 |
 
