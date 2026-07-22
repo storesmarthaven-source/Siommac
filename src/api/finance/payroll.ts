@@ -547,6 +547,15 @@ export interface PayrollReleasePreflight {
   missingBankAccountCount: number; disbursementId: string | null;
   netPayroll: number; employeeCount: number;
 }
+/** F-08 — issued payroll release certificate (immutable close evidence). */
+export interface PayrollReleaseCertificate {
+  id: string; runId: string; calculationVersionId: string; certificationId: string;
+  fundingConfirmationId: string; glJournalId: string; disbursementId: string;
+  controlTotals: Record<string, unknown>; payslipManifest: Record<string, unknown>;
+  artifactChecksums: Record<string, unknown>; checksum: string;
+  releasedBy: string; releasedAt: string; createdAt: string;
+  remittances?: { id: string; authority: string; periodYear: number; periodMonth: number }[];
+}
 export interface PayrollCalculationComparison {
   runId: string; from: PayrollCalculationVersion; to: PayrollCalculationVersion;
   totals: { grossDelta: number; deductionDelta: number; netDelta: number; nisEmployerDelta: number; employeeCountDelta: number };
@@ -592,6 +601,11 @@ export const financePayrollApi = {
   // Full-page run-detail composite + readiness + calc-version reads.
   getWorkspace:        (a: { id: string })                        => call<PayrollRunWorkspace>('finance/payroll/runs/workspace', a),
   releasePreflight:    (a: { runId: string })                     => call<PayrollReleasePreflight>('finance/payroll/releases/preflight', a),
+  // F-08 Close & Release: confirm funding → issue release certificate (atomic; creates downstream drafts).
+  confirmFunding:      (a: { runId: string; idempotencyKey: string; confirmedAmount: number; confirmationReference: string; accountReference?: string; note?: string }) =>
+                          call<{ id: string }>('finance/payroll/releases/confirm-funding', a),
+  releaseRun:          (a: { runId: string; idempotencyKey: string }) => call<{ releaseCertificate: PayrollReleaseCertificate }>('finance/payroll/releases/release', a),
+  getReleaseCertificate: (a: { runId: string })                   => call<PayrollReleaseCertificate>('finance/payroll/releases/get-certificate', a),
   listCalcVersions:    (a: { runId: string })                     => call<PayrollCalculationVersion[]>('finance/payroll/calculations/versions/list', a),
   compareCalcVersions: (a: { fromVersionId: string; toVersionId: string }) => call<PayrollCalculationComparison>('finance/payroll/calculations/compare', a),
 
@@ -739,6 +753,16 @@ export function useReleasePreflight(runId: string | null) {
     queryKey: ['finance', 'payroll', 'preflight', runId ?? ''],
     queryFn:  () => financePayrollApi.releasePreflight({ runId: runId! }),
     enabled:  !!runId,
+  });
+}
+/** F-08 — the issued release certificate for a run (present once released). `enabled`
+ *  should be gated by the caller to released/locked runs to avoid 404 noise. */
+export function useReleaseCertificate(runId: string | null, opts: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: ['finance', 'payroll', 'release-certificate', runId ?? ''],
+    queryFn:  () => financePayrollApi.getReleaseCertificate({ runId: runId! }),
+    enabled:  !!runId && (opts.enabled ?? true),
+    retry:    false,   // a not-yet-released run 404s; don't churn
   });
 }
 /** Published calculation versions for a run (reconciliation history). */

@@ -271,6 +271,30 @@
 /* ── Empty / loading / footer ────────────────────────────────────────────── */
 .prw .prw-empty { padding: 26px 22px; text-align: center; color: var(--muted); font-size: 13px; }
 .prw .muted { color: var(--muted); }
+
+/* ── Close & Release (F-08): close controls · certificate · attestation · correction boundary ── */
+.prw .close-control { display: grid; grid-template-columns: 34px minmax(0,1fr) auto; gap: 12px; align-items: center; min-height: 60px; padding: 10px 0; border-bottom: 1px solid var(--border-soft); }
+.prw .close-control:last-child { border-bottom: 0; }
+.prw .close-control strong { display: block; color: #17243c; font-size: 13px; }
+.prw .close-control small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; line-height: 1.4; }
+.prw .control-state { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--green-soft); color: var(--green-ink); font-weight: 900; font-size: 13px; }
+.prw .control-state.warn { background: var(--amber-soft); color: var(--amber-ink); }
+.prw .control-state.pend { background: #eef0f4; color: var(--muted); }
+.prw .certificate { padding: 4px 0; }
+.prw .summary-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 9px 0; border-bottom: 1px solid var(--border-soft); font-size: 12.5px; }
+.prw .summary-row:last-child { border-bottom: 0; }
+.prw .summary-row span { color: var(--muted); }
+.prw .summary-row strong { color: var(--ink, #17243c); font-weight: 700; }
+.prw .attestation { display: flex; align-items: flex-start; gap: 10px; margin-top: 14px; padding: 12px; border: 1px solid #d8e1ee; border-radius: 8px; background: #fbfdff; color: #45546a; font-size: 12px; line-height: 1.5; }
+.prw .attestation input { margin-top: 2px; flex-shrink: 0; }
+.prw .close-actions { display: grid; gap: 9px; margin-top: 14px; }
+.prw .close-actions .btn { justify-content: center; }
+.prw .prw-hint { display: block; margin-top: 8px; color: var(--muted); font-size: 11.5px; }
+.prw .correction-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 18px; }
+@media (max-width: 720px) { .prw .correction-grid { grid-template-columns: 1fr; } }
+.prw .summary-block > span { display: block; margin-bottom: 4px; color: var(--muted); font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .3px; }
+.prw .summary-block strong { display: block; color: #17243c; font-size: 13px; }
+.prw .summary-block small { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.45; }
 .prw .prw-skel { display: block; border-radius: 6px; background: linear-gradient(90deg, #eef1f6 25%, #f6f8fb 37%, #eef1f6 63%); background-size: 400% 100%; animation: prw-shimmer 1.4s ease infinite; }
 @keyframes prw-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
 .prw .footer-note { text-align: center; color: var(--muted); font-size: 10px; margin-top: 8px; }

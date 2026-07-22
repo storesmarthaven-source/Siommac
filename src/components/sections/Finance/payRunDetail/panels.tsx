@@ -24,6 +24,7 @@ import { fmtMoney, humanize } from '../financeShared';
 import { EmployeeCell, EmployeeCellResolved } from '../_shared/EmployeeCell';
 import { InputsTab, WorksheetTab, WarningsTab, PayslipsTab, GlTab, ExportsTab, fmtDateTime, type PayRunDrawerActions } from './interactiveTabs';
 import { PayCreateDisbursementDialog, PayCreateRemittanceDialog } from '../PayBridgeDialog';
+import { CloseReleaseCard } from './CloseReleaseCard';
 import { initials, dayLabel } from './parts';
 
 // ── shared atoms ────────────────────────────────────────────────────────────────
@@ -589,6 +590,9 @@ export function ReleasePanel({ run, preflight, canManage, actions }: {
 
   return (
     <div class="stack">
+      {/* F-08 — governed close-out: close controls, attestation-gated release certificate, correction boundary */}
+      <CloseReleaseCard run={run} preflight={preflight} />
+
       <div class="section-grid">
         <section class="card">
           <SecHead ico="L" title="Release and accounting outputs" sub="Available from the approved and locked calculation version."
