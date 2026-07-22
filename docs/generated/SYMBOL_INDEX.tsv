@@ -6994,37 +6994,48 @@ changeTab	function	payroll	false		src/components/sections/Finance/PayrollPayslip
 BatchRow	function	payroll	false	component	src/components/sections/Finance/PayrollPayslipBatchesPage.tsx	150	
 Metric	function	payroll	false	component	src/components/sections/Finance/PayrollPayslipBatchesPage.tsx	179	
 cost	function	payroll	false	test	src/components/sections/Finance/payrollReportsContract.test.ts	8	
-Completed	type	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	19	
-ELIGIBLE	variable	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	20	
-money	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	22	
-num	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	24	
-fmtDate	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	25	
-thisMonth	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	28	
-newExportKey	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	36	
-errMsg	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	39	
-triggerDownload	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	42	
-buildParams	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	48	
-PayrollReportsPage	function	payroll	true	component	src/components/sections/Finance/PayrollReportsPage.tsx	65	
-loadMoreHistory	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	89	PayrollReportsPage
-pick	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	152	PayrollReportsPage
-run	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	160	PayrollReportsPage
-runExport	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	163	PayrollReportsPage
-tile	function	payroll	false	ui-tile	src/components/sections/Finance/PayrollReportsPage.tsx	170	PayrollReportsPage
-ParamFields	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	345	
-runPicker	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	355	ParamFields
-monthField	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	364	ParamFields
-ReportResult	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	394	
-Totals	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	408	
-Empty	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	414	
-RegisterTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	416	
-NetPayTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	421	
-CostTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	426	
-VarianceTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	431	
-OvertimeTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	440	
-MovementsTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	445	
-NisTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	450	
-Reconciliation	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	455	
-ChartStrip	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	464	
+QResult	interface	payroll	false	test	src/components/sections/Finance/PayrollReportsPage.loadingGate.test.tsx	18	
+H	variable	payroll	false	component,test	src/components/sections/Finance/PayrollReportsPage.loadingGate.test.tsx	19	
+readySummary	function	payroll	false	test	src/components/sections/Finance/PayrollReportsPage.loadingGate.test.tsx	40	
+readyCatalog	function	payroll	false	test	src/components/sections/Finance/PayrollReportsPage.loadingGate.test.tsx	49	
+setReady	function	payroll	false	test	src/components/sections/Finance/PayrollReportsPage.loadingGate.test.tsx	57	
+renderPage	function	payroll	false	test	src/components/sections/Finance/PayrollReportsPage.loadingGate.test.tsx	87	
+Completed	type	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	24	
+ELIGIBLE	variable	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	25	
+money	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	27	
+num	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	29	
+fmtDate	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	30	
+thisMonth	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	33	
+newExportKey	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	41	
+errMsg	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	44	
+reportsBoardCold	function	payroll	true		src/components/sections/Finance/PayrollReportsPage.tsx	51	
+triggerDownload	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	56	
+buildParams	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	62	
+ParamState	interface	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	79	
+FieldErrors	type	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	80	
+paramErrors	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	83	
+PayrollReportsPage	function	payroll	true	component	src/components/sections/Finance/PayrollReportsPage.tsx	104	
+loadMoreHistory	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	129	PayrollReportsPage
+pick	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	198	PayrollReportsPage
+closeDialog	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	208	PayrollReportsPage
+run	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	212	PayrollReportsPage
+runExport	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	216	PayrollReportsPage
+tile	function	payroll	false	ui-tile	src/components/sections/Finance/PayrollReportsPage.tsx	232	PayrollReportsPage
+ParamFields	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	432	
+runPicker	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	443	ParamFields
+monthField	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	453	ParamFields
+ReportResult	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	484	
+Totals	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	498	
+Empty	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	504	
+RegisterTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	506	
+NetPayTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	511	
+CostTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	516	
+VarianceTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	521	
+OvertimeTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	530	
+MovementsTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	535	
+NisTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	540	
+Reconciliation	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	545	
+ChartStrip	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	554	
 TABS	array	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	28	
 STATE_PILL	variable	payroll	false	component	src/components/sections/Finance/PayrollRunRegisterPage.tsx	37	
 pillFor	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	50	

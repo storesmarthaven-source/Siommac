@@ -1,7 +1,10 @@
 // Payroll Reports Center (F-12, Phase A) — full-page report workspace.
 // Statutory-look surface, scoped `.prc-*`. Backed by the F-12 routes
-// (reports/catalog, reports/summary, reports/run preview, reports/history/list).
-// Slice 2 ships PREVIEW only; file exports (worker + download) arrive in Slice 3.
+// (catalog, summary, run preview/export, status, download, history).
+// Slice 5: atomic skeleton gate (KPI board + catalog reveal as one), a focus-
+// trapped Run dialog (shared Modal — trap/restore/Escape, per-field validation,
+// submit-disabled-until-valid, durable-export so closing never cancels the job),
+// with preview + export progress + keyset history on the page.
 
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { VNode } from 'preact';
@@ -9,6 +12,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query';
 import { financePayrollApi } from '@api/finance/payroll';
 import { useRunsRegister } from '@api/finance/payrollRunsRegister';
 import { dialog } from '@lib/dialog';
+import { Modal } from '@/components/shared/Modal';
+import { Skeleton, SkeletonStatGrid } from '@ui';
 import type {
   MoneyValue, PayrollReportKey, ReportParams, ReportFormat, ReportCatalogEntry, ReportRunResult,
   RegisterRow, NetPaySummaryRow, CostRow, VarianceRow, OvertimeRow, ReportArtifactRow,
@@ -38,6 +43,15 @@ const newExportKey = (): string => crypto.randomUUID();
 /** Best-effort human message from an unknown thrown/mutation error. */
 const errMsg = (e: unknown): string => (e instanceof Error ? e.message : 'Something went wrong.');
 
+/**
+ * Atomic-reveal gate: the KPI board + catalog stay behind skeletons until BOTH the
+ * summary and the catalog have resolved (instant once cached). An error reveals the
+ * surface so the error banner can show. Exported for the loadingGate test.
+ */
+export function reportsBoardCold(s: { hasSummary: boolean; hasCatalog: boolean; summaryError: boolean; catalogError: boolean }): boolean {
+  return (!s.hasSummary || !s.hasCatalog) && !s.summaryError && !s.catalogError;
+}
+
 /** Navigate to a fresh signed URL without leaving the page (never cached). */
 function triggerDownload(url: string): void {
   const el = document.createElement('a');
@@ -62,6 +76,31 @@ function buildParams(
   }
 }
 
+interface ParamState { runId: string; compareRunId: string; from: string; to: string; scope: 'run' | 'all' }
+type FieldErrors = Partial<Record<'runId' | 'compareRunId' | 'from' | 'to', string>>;
+
+/** Per-field validation mirrored from the server rules (inline, before submit). */
+function paramErrors(entry: ReportCatalogEntry, s: ParamState): FieldErrors {
+  const e: FieldErrors = {};
+  switch (entry.paramKind) {
+    case 'period':
+      if (!s.from) e.from = 'Required';
+      if (!s.to) e.to = 'Required';
+      if (s.from && s.to && s.to < s.from) e.to = 'End month must be on or after the start month.';
+      break;
+    case 'two_run':
+      if (!s.runId) e.runId = 'Select a run.';
+      if (s.compareRunId && s.compareRunId === s.runId) e.compareRunId = 'Must differ from the reporting run.';
+      break;
+    case 'nis_scope':
+      if (s.scope === 'run' && !s.runId) e.runId = 'Select a run.';
+      break;
+    default: // single_run
+      if (!s.runId) e.runId = 'Select a run.';
+  }
+  return e;
+}
+
 export function PayrollReportsPage(): VNode {
   const [selected, setSelected] = useState<PayrollReportKey | null>(null);
   const [runId, setRunId] = useState('');
@@ -71,6 +110,7 @@ export function PayrollReportsPage(): VNode {
   const [scope, setScope] = useState<'run' | 'all'>('run');
   const [exportFmt, setExportFmt] = useState<ReportFormat | ''>('');
   const [jobId, setJobId] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   // Keyset "Load more" for history — appended pages beyond the first.
   const [morePages, setMorePages] = useState<ReportArtifactRow[]>([]);
   const [moreCursor, setMoreCursor] = useState<string | null | undefined>(undefined);
@@ -148,25 +188,47 @@ export function PayrollReportsPage(): VNode {
     () => (selected ? buildParams(selected, { runId, compareRunId, from, to, scope }) : null),
     [selected, runId, compareRunId, from, to, scope],
   );
+  const fieldErrors = useMemo(
+    () => (entry ? paramErrors(entry, { runId, compareRunId, from, to, scope }) : {}),
+    [entry, runId, compareRunId, from, to, scope],
+  );
+  const canSubmit = !!params && Object.keys(fieldErrors).length === 0;
 
+  // Opening a report resets its param state to sensible defaults (no stale run/period).
   function pick(key: PayrollReportKey): void {
     setSelected(key);
     runMut.reset();
     exportMut.reset();
     setJobId(null);
+    setRunId(''); setCompareRunId(''); setScope('run'); setFrom(thisMonth()); setTo(thisMonth());
     const next = (catalog.find(c => c.key === key)?.supportedFormats ?? []).filter(f => f !== 'preview');
     setExportFmt(next.length ? (next[0] as ReportFormat) : '');
+    setDialogOpen(true);
+  }
+  function closeDialog(): void {
+    // A queued export is durable server-side, so closing never cancels the job.
+    if (!runMut.isPending && !exportMut.isPending) setDialogOpen(false);
   }
   function run(): void {
-    if (params) runMut.mutate(params);
+    if (!params) return; // button is disabled unless canSubmit, so this only narrows null
+    runMut.mutate(params, { onSuccess: () => setDialogOpen(false) });
   }
   function runExport(): void {
-    if (params && exportFmt) { setJobId(null); exportMut.mutate({ params, format: exportFmt, idempotencyKey: newExportKey() }); }
+    if (params && exportFmt) {
+      setJobId(null);
+      exportMut.mutate(
+        { params, format: exportFmt, idempotencyKey: newExportKey() },
+        { onSuccess: () => { setDialogOpen(false); void dialog.success('Export queued', 'Your file is being generated — it will appear in history when ready.'); } },
+      );
+    }
   }
   const status = statusQ.data;
   const succeededArtifactId = status?.state === 'succeeded' ? status.artifact.id : null;
 
   const tiles = summaryQ.data;
+  // Atomic reveal: hold the board+catalog behind skeletons until BOTH the summary
+  // and the catalog have resolved (instant once cached); errors reveal (banner shows).
+  const boardCold = reportsBoardCold({ hasSummary: !!summaryQ.data, hasCatalog: !!catalogQ.data, summaryError: summaryQ.isError, catalogError: catalogQ.isError });
   const tile = (label: string, t?: { value: number | null; available: boolean }): VNode => (
     <div class={`prc-kpi${t?.available ? '' : ' is-na'}`}>
       <div class="prc-kpi-v">{t?.available && t.value != null ? num(t.value) : '—'}</div>
@@ -190,113 +252,89 @@ export function PayrollReportsPage(): VNode {
         </div>
       )}
 
-      {/* KPI board */}
-      <div class="prc-kpis">
-        {tile('Available reports', tiles?.availableReports)}
-        {tile('Generated this month', tiles?.generatedThisMonth)}
-        {tile('NIS exceptions', tiles?.nisExceptions)}
-        {tile('Material variances', tiles?.materialVariances)}
-        {tile('Audit packages', tiles?.auditPackages)}
-      </div>
-
-      <div class="prc-body">
-        {/* Catalog */}
-        <aside class="prc-catalog">
-          <div class="prc-catalog-h">Report catalog</div>
-          {catalogQ.isLoading && <div class="prc-empty">Loading…</div>}
-          {catalogQ.isError && <div class="prc-empty prc-err">Couldn’t load the report catalog.</div>}
-          {catalog.map(c => (
-            <button
-              key={c.key}
-              type="button"
-              class={`prc-cat-item${selected === c.key ? ' is-active' : ''}${c.supportedFormats.length === 0 ? ' is-disabled' : ''}`}
-              disabled={c.supportedFormats.length === 0}
-              onClick={() => pick(c.key)}
-            >
-              <span class="prc-cat-label">{c.label}</span>
-              <span class="prc-cat-cat">{c.category}</span>
-              {c.supportedFormats.length === 0 && <span class="prc-cat-soon">soon</span>}
-            </button>
-          ))}
-        </aside>
-
-        {/* Params + preview */}
-        <section class="prc-main">
-          {!entry && <div class="prc-empty prc-pad">Select a report from the catalog to configure and preview it.</div>}
-          {entry && (
-            <>
-              <div class="prc-params">
-                <div class="prc-params-h">{entry.label}</div>
-                <p class="prc-params-sub">{entry.description}</p>
-                <ParamFields
-                  entry={entry}
-                  eligibleRuns={eligibleRuns}
-                  state={{ runId, compareRunId, from, to, scope }}
-                  set={{ setRunId, setCompareRunId, setFrom, setTo, setScope }}
-                />
-                <div class="prc-run-row">
-                  {canPreview && (
-                    <button type="button" class="prc-run" disabled={!params || runMut.isPending} onClick={run}>
-                      {runMut.isPending ? 'Running…' : 'Run preview'}
-                    </button>
-                  )}
-                  {fileFormats.length > 0 && (
-                    <>
-                      <label class="prc-fmt">
-                        <span>Format</span>
-                        <select value={exportFmt} onChange={e => setExportFmt((e.target as HTMLSelectElement).value as ReportFormat)}>
-                          {fileFormats.map(f => <option key={f} value={f}>{f.toUpperCase()}</option>)}
-                        </select>
-                      </label>
-                      <button
-                        type="button"
-                        class="prc-run prc-run-ghost"
-                        disabled={!params || !exportFmt || exportMut.isPending || (!!jobId && !statusQ.isError && status?.state !== 'succeeded' && status?.state !== 'failed')}
-                        onClick={runExport}
-                      >
-                        {exportMut.isPending ? 'Queuing…' : 'Export file'}
-                      </button>
-                    </>
-                  )}
-                  {runMut.isError && <span class="prc-err">{errMsg(runMut.error)}</span>}
-                  {exportMut.isError && <span class="prc-err">{errMsg(exportMut.error)}</span>}
-                </div>
-
-                {jobId && (status != null || statusQ.isError) && (
-                  <div class="prc-export-status">
-                    {statusQ.isError && (
-                      <span class="prc-err">Couldn’t check the export status — {errMsg(statusQ.error)}</span>
-                    )}
-                    {status && (status.state === 'queued' || status.state === 'running') && (
-                      <span class="prc-export-wait">Generating {exportFmt.toUpperCase()} export… <span class="prc-pill prc-pill-purging">{status.state}</span></span>
-                    )}
-                    {status?.state === 'failed' && (
-                      <span class="prc-err">Export failed: {status.error.message}</span>
-                    )}
-                    {status?.state === 'succeeded' && succeededArtifactId && (
-                      <span class="prc-export-done">
-                        <span class="prc-pill prc-pill-ready">ready</span>
-                        <button type="button" class="prc-dl" disabled={downloadMut.isPending} onClick={() => downloadMut.mutate(succeededArtifactId)}>
-                          {downloadMut.isPending ? 'Preparing…' : `Download ${status.artifact.format.toUpperCase()}`}
-                        </button>
-                      </span>
-                    )}
-                  </div>
-                )}
+      {/* KPI board + catalog reveal ATOMICALLY from one gate (never a flash of 0). */}
+      {boardCold ? (
+        <>
+          <SkeletonStatGrid count={5} class="prc-kpis" />
+          <div class="prc-body">
+            <aside class="prc-catalog">
+              <div class="prc-catalog-h">Report catalog</div>
+              <div class="prc-cat-sk">
+                {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} height={46} radius={8} />)}
               </div>
+            </aside>
+            <section class="prc-main"><div class="prc-empty prc-pad">Loading reports…</div></section>
+          </div>
+        </>
+      ) : (
+        <>
+          <div class="prc-kpis">
+            {tile('Available reports', tiles?.availableReports)}
+            {tile('Generated this month', tiles?.generatedThisMonth)}
+            {tile('NIS exceptions', tiles?.nisExceptions)}
+            {tile('Material variances', tiles?.materialVariances)}
+            {tile('Audit packages', tiles?.auditPackages)}
+          </div>
+
+          <div class="prc-body">
+            {/* Catalog — clicking a report opens the Run dialog. */}
+            <aside class="prc-catalog">
+              <div class="prc-catalog-h">Report catalog</div>
+              {catalog.map(c => (
+                <button
+                  key={c.key}
+                  type="button"
+                  class={`prc-cat-item${selected === c.key ? ' is-active' : ''}${c.supportedFormats.length === 0 ? ' is-disabled' : ''}`}
+                  disabled={c.supportedFormats.length === 0}
+                  onClick={() => pick(c.key)}
+                >
+                  <span class="prc-cat-label">{c.label}</span>
+                  <span class="prc-cat-cat">{c.category}</span>
+                  {c.supportedFormats.length === 0 && <span class="prc-cat-soon">soon</span>}
+                </button>
+              ))}
+            </aside>
+
+            {/* Results workspace — preview + export progress (params live in the dialog). */}
+            <section class="prc-main">
+              {!result && !jobId && (
+                <div class="prc-empty prc-pad">Choose a report from the catalog to configure and run it.</div>
+              )}
+
+              {jobId && (status != null || statusQ.isError) && (
+                <div class="prc-export-status">
+                  {statusQ.isError && (
+                    <span class="prc-err">Couldn’t check the export status — {errMsg(statusQ.error)}</span>
+                  )}
+                  {status && (status.state === 'queued' || status.state === 'running') && (
+                    <span class="prc-export-wait">Generating {exportFmt.toUpperCase()} export… <span class="prc-pill prc-pill-purging">{status.state}</span></span>
+                  )}
+                  {status?.state === 'failed' && (
+                    <span class="prc-err">Export failed: {status.error.message}</span>
+                  )}
+                  {status?.state === 'succeeded' && succeededArtifactId && (
+                    <span class="prc-export-done">
+                      <span class="prc-pill prc-pill-ready">ready</span>
+                      <button type="button" class="prc-dl" disabled={downloadMut.isPending} onClick={() => downloadMut.mutate(succeededArtifactId)}>
+                        {downloadMut.isPending ? 'Preparing…' : `Download ${status.artifact.format.toUpperCase()}`}
+                      </button>
+                    </span>
+                  )}
+                </div>
+              )}
 
               {result && (
                 <div class="prc-preview">
                   <div class="prc-preview-h">
-                    Preview <span class="prc-scope">scope {result.scopeId}</span>
+                    {entry?.label ?? 'Preview'} <span class="prc-scope">scope {result.scopeId}</span>
                   </div>
                   <ReportResult data={result} />
                 </div>
               )}
-            </>
-          )}
-        </section>
-      </div>
+            </section>
+          </div>
+        </>
+      )}
 
       {/* History */}
       <div class="prc-history">
@@ -337,6 +375,55 @@ export function PayrollReportsPage(): VNode {
                 </>
               )}
       </div>
+
+      {/* Run dialog — focus-trapped (shared Modal); params + validation + actions. */}
+      <Modal
+        open={dialogOpen && !!entry}
+        onClose={closeDialog}
+        title={entry?.label ?? 'Run report'}
+        description={entry?.description}
+        size="md"
+        className="prc-dialog"
+        closeOnBackdrop={!runMut.isPending && !exportMut.isPending}
+        closeOnEscape={!runMut.isPending && !exportMut.isPending}
+        footer={
+          <>
+            <button type="button" class="prc-run prc-run-ghost" onClick={closeDialog} disabled={runMut.isPending || exportMut.isPending}>Cancel</button>
+            {canPreview && (
+              <button type="button" class="prc-run" disabled={!canSubmit || runMut.isPending} onClick={run}>
+                {runMut.isPending ? 'Running…' : 'Run preview'}
+              </button>
+            )}
+            {fileFormats.length > 0 && (
+              <button type="button" class="prc-run prc-run-accent" disabled={!canSubmit || !exportFmt || exportMut.isPending} onClick={runExport}>
+                {exportMut.isPending ? 'Queuing…' : `Export ${exportFmt.toUpperCase()}`}
+              </button>
+            )}
+          </>
+        }
+      >
+        {entry && (
+          <div class="prc-dialog-body">
+            <ParamFields
+              entry={entry}
+              eligibleRuns={eligibleRuns}
+              errors={fieldErrors}
+              state={{ runId, compareRunId, from, to, scope }}
+              set={{ setRunId, setCompareRunId, setFrom, setTo, setScope }}
+            />
+            {fileFormats.length > 0 && (
+              <label class="prc-field prc-fmt-field">
+                <span>Export format</span>
+                <select value={exportFmt} onChange={e => setExportFmt((e.target as HTMLSelectElement).value as ReportFormat)}>
+                  {fileFormats.map(f => <option key={f} value={f}>{f.toUpperCase()}</option>)}
+                </select>
+              </label>
+            )}
+            {runMut.isError && <div class="prc-dialog-err">{errMsg(runMut.error)}</div>}
+            {exportMut.isError && <div class="prc-dialog-err">{errMsg(exportMut.error)}</div>}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
@@ -345,33 +432,36 @@ export function PayrollReportsPage(): VNode {
 function ParamFields(props: {
   entry: ReportCatalogEntry;
   eligibleRuns: { id: string; reference: string; period: { startsOn: string } }[];
+  errors: FieldErrors;
   state: { runId: string; compareRunId: string; from: string; to: string; scope: 'run' | 'all' };
   set: {
     setRunId: (v: string) => void; setCompareRunId: (v: string) => void;
     setFrom: (v: string) => void; setTo: (v: string) => void; setScope: (v: 'run' | 'all') => void;
   };
 }): VNode {
-  const { entry, eligibleRuns, state, set } = props;
-  const runPicker = (value: string, onChange: (v: string) => void, label: string, allowNone = false): VNode => (
-    <label class="prc-field">
+  const { entry, eligibleRuns, errors, state, set } = props;
+  const runPicker = (value: string, onChange: (v: string) => void, label: string, error?: string, allowNone = false): VNode => (
+    <label class={`prc-field${error ? ' is-invalid' : ''}`}>
       <span>{label}</span>
-      <select value={value} onChange={e => onChange((e.target as HTMLSelectElement).value)}>
+      <select value={value} aria-invalid={error ? 'true' : undefined} onChange={e => onChange((e.target as HTMLSelectElement).value)}>
         <option value="">{allowNone ? 'Prior released run (auto)' : 'Select a run…'}</option>
         {eligibleRuns.map(r => <option key={r.id} value={r.id}>{r.reference} · {fmtDate(r.period.startsOn)}</option>)}
       </select>
+      {error && <span class="prc-field-err">{error}</span>}
     </label>
   );
-  const monthField = (value: string, onChange: (v: string) => void, label: string): VNode => (
-    <label class="prc-field"><span>{label}</span>
-      <input type="month" value={value} onInput={e => onChange((e.target as HTMLInputElement).value)} />
+  const monthField = (value: string, onChange: (v: string) => void, label: string, error?: string): VNode => (
+    <label class={`prc-field${error ? ' is-invalid' : ''}`}><span>{label}</span>
+      <input type="month" value={value} aria-invalid={error ? 'true' : undefined} onInput={e => onChange((e.target as HTMLInputElement).value)} />
+      {error && <span class="prc-field-err">{error}</span>}
     </label>
   );
 
   if (entry.paramKind === 'period') {
-    return <div class="prc-fields">{monthField(state.from, set.setFrom, 'From')}{monthField(state.to, set.setTo, 'To')}</div>;
+    return <div class="prc-fields">{monthField(state.from, set.setFrom, 'From', errors.from)}{monthField(state.to, set.setTo, 'To', errors.to)}</div>;
   }
   if (entry.paramKind === 'two_run') {
-    return <div class="prc-fields">{runPicker(state.runId, set.setRunId, 'Run')}{runPicker(state.compareRunId, set.setCompareRunId, 'Compare against', true)}</div>;
+    return <div class="prc-fields">{runPicker(state.runId, set.setRunId, 'Run', errors.runId)}{runPicker(state.compareRunId, set.setCompareRunId, 'Compare against', errors.compareRunId, true)}</div>;
   }
   if (entry.paramKind === 'nis_scope') {
     return (
@@ -382,12 +472,12 @@ function ParamFields(props: {
             <option value="all">All employees</option>
           </select>
         </label>
-        {state.scope === 'run' && runPicker(state.runId, set.setRunId, 'Run')}
+        {state.scope === 'run' && runPicker(state.runId, set.setRunId, 'Run', errors.runId)}
       </div>
     );
   }
   // single_run
-  return <div class="prc-fields">{runPicker(state.runId, set.setRunId, 'Run')}</div>;
+  return <div class="prc-fields">{runPicker(state.runId, set.setRunId, 'Run', errors.runId)}</div>;
 }
 
 // ── result renderer per report ───────────────────────────────────────────────

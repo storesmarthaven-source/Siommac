@@ -42,7 +42,20 @@
 .prc-run-row { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
 .prc-run { background: var(--br, #2f6bff); color: #fff; border: 0; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer; }
 .prc-run:disabled { opacity: .5; cursor: not-allowed; }
+.prc-run-accent { background: var(--gn-ink, #1a7f4b); color: #fff; }
 .prc-err { font-size: 12px; color: var(--rd-ink, #b23); }
+
+/* Cold-load skeletons (atomic reveal) */
+.prc-cat-sk { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; }
+
+/* Run dialog (shared Modal body) */
+.prc-dialog-body { display: flex; flex-direction: column; gap: 14px; }
+.prc-dialog-body .prc-fields { display: flex; flex-wrap: wrap; gap: 14px; }
+.prc-dialog-body .prc-field { min-width: 220px; flex: 1; }
+.prc-fmt-field { max-width: 240px; }
+.prc-field.is-invalid select, .prc-field.is-invalid input { border-color: var(--rd-ink, #b23); }
+.prc-field-err { font-size: 11px; color: var(--rd-ink, #b23); }
+.prc-dialog-err { font-size: 12px; color: var(--rd-ink, #b23); background: var(--rd-soft, #fde8ea); border: 1px solid var(--rd-bd, #f3c2c8); border-radius: 8px; padding: 8px 10px; }
 
 /* Preview */
 .prc-preview { background: var(--card, #fff); border: 1px solid var(--bd, #e6e9f0); border-radius: var(--radius, 12px); padding: 16px; }
