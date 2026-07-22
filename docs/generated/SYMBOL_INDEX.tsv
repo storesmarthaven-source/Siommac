@@ -4441,6 +4441,17 @@ getPayrollControlCenter	function	payroll	true		src/api/finance/payroll/controlCe
 isControlCenterDenied	function	payroll	true		src/api/finance/payroll/controlCenter.ts	106	
 isTerminalError	function	payroll	false		src/api/finance/payroll/controlCenter.ts	111	
 usePayrollControlCenter	function	payroll	true	hook	src/api/finance/payroll/controlCenter.ts	118	
+post	function	payroll	false		src/api/finance/payrollExceptions.ts	25	
+FindingAssignRequest	interface	payroll	true		src/api/finance/payrollExceptions.ts	32	
+FindingResolveRequest	interface	payroll	true		src/api/finance/payrollExceptions.ts	33	
+FindingWaiveRequest	interface	payroll	true		src/api/finance/payrollExceptions.ts	34	
+FindingReopenRequest	interface	payroll	true		src/api/finance/payrollExceptions.ts	35	
+WorkQueueDetailRequest	interface	payroll	true		src/api/finance/payrollExceptions.ts	37	
+workQueueKeys	object	payroll	true		src/api/finance/payrollExceptions.ts	39	
+workQueueApi	object	payroll	true		src/api/finance/payrollExceptions.ts	45	
+useWorkQueue	function	payroll	true	hook	src/api/finance/payrollExceptions.ts	61	
+useWorkQueueMutations	function	payroll	true	hook	src/api/finance/payrollExceptions.ts	75	
+invalidate	function	payroll	false		src/api/finance/payrollExceptions.ts	77	useWorkQueueMutations
 post	function	payroll	false		src/api/finance/payrollRunsRegister.ts	19	
 runsRegisterKeys	object	payroll	true		src/api/finance/payrollRunsRegister.ts	25	
 runsRegisterApi	object	payroll	true		src/api/finance/payrollRunsRegister.ts	32	
@@ -6546,22 +6557,23 @@ FinanceKpiDrilldownDrawer	function	finance	true	component,ui-tile	src/components
 go	function	finance	false		src/components/sections/Finance/FinanceOverview.tsx	27	
 TYPE_ROUTE	object	finance	false		src/components/sections/Finance/FinanceOverview.tsx	28	
 FinanceOverview	function	finance	true	component	src/components/sections/Finance/FinanceOverview.tsx	32	
-OVERVIEW_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	28	
-PAYABLES_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	29	
-STATUTORY_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	30	
-PAYROLL_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	31	
-PAYROLL_RUNS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	32	
-PAYROLL_SETUP_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	33	
-REMITTANCES_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	34	
-MY_PAYSLIPS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	35	
-EXPENSES_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	36	
-BUDGETS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	37	
-DISBURSEMENTS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	38	
-STATUTORY_FORMS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	39	
-PAYSLIP_DESIGNER_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	40	
-isFinanceSection	function	finance	false		src/components/sections/Finance/FinanceSection.tsx	42	
-FinanceSection	function	finance	true	component	src/components/sections/Finance/FinanceSection.tsx	59	
-onSection	function	finance	false		src/components/sections/Finance/FinanceSection.tsx	65	FinanceSection
+OVERVIEW_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	29	
+PAYABLES_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	30	
+STATUTORY_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	31	
+PAYROLL_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	32	
+PAYROLL_RUNS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	33	
+PAYROLL_EXCEPTIONS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	34	
+PAYROLL_SETUP_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	35	
+REMITTANCES_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	36	
+MY_PAYSLIPS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	37	
+EXPENSES_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	38	
+BUDGETS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	39	
+DISBURSEMENTS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	40	
+STATUTORY_FORMS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	41	
+PAYSLIP_DESIGNER_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	42	
+isFinanceSection	function	finance	false		src/components/sections/Finance/FinanceSection.tsx	44	
+FinanceSection	function	finance	true	component	src/components/sections/Finance/FinanceSection.tsx	62	
+onSection	function	finance	false		src/components/sections/Finance/FinanceSection.tsx	68	FinanceSection
 MONEY	variable	finance	false		src/components/sections/Finance/financeShared.ts	9	
 fmtMoney	function	finance	true		src/components/sections/Finance/financeShared.ts	11	
 fmtPercent	function	finance	true		src/components/sections/Finance/financeShared.ts	16	
@@ -6579,15 +6591,16 @@ PAYABLES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	23
 STATUTORY_ITEM	object	finance	false		src/components/sections/Finance/module.ts	30	
 PAYROLL_ITEM	object	finance	false		src/components/sections/Finance/module.ts	37	
 PAYROLL_RUNS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	44	
-PAYROLL_SETUP_ITEM	object	finance	false		src/components/sections/Finance/module.ts	51	
-PAYSLIP_DESIGNER_ITEM	object	finance	false		src/components/sections/Finance/module.ts	58	
-REMITTANCES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	65	
-MY_PAYSLIPS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	72	
-EXPENSES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	78	
-BUDGETS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	85	
-DISBURSEMENTS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	92	
-STATUTORY_FORMS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	99	
-financeModule	object	finance	true		src/components/sections/Finance/module.ts	106	
+PAYROLL_EXCEPTIONS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	51	
+PAYROLL_SETUP_ITEM	object	finance	false		src/components/sections/Finance/module.ts	58	
+PAYSLIP_DESIGNER_ITEM	object	finance	false		src/components/sections/Finance/module.ts	65	
+REMITTANCES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	72	
+MY_PAYSLIPS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	79	
+EXPENSES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	85	
+BUDGETS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	92	
+DISBURSEMENTS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	99	
+STATUTORY_FORMS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	106	
+financeModule	object	finance	true		src/components/sections/Finance/module.ts	113	
 mountFinanceSection	function	finance	true		src/components/sections/Finance/mount.ts	10	
 unmountFinanceSection	function	finance	true		src/components/sections/Finance/mount.ts	22	
 MY_PAYSLIPS_KEY	variable	payroll	false	component	src/components/sections/Finance/MyPayslipsOverview.tsx	30	
@@ -6737,60 +6750,92 @@ fullData	function	payroll	false	test	src/components/sections/Finance/PayrollComm
 setScenario	function	payroll	false	test	src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx	74	
 skeletonShown	function	payroll	false	test	src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx	81	
 renderPage	function	payroll	false	test	src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx	111	
-PAGE_KEY	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	44	
-BOARD_COLS	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	45	
-KPI_PAGE_KEY	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	46	
-W_ASSIGNED	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	47	
-W_DEADLINES	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	48	
-W_READINESS	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	49	
-W_IMPACT	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	50	
-W_REGISTER	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	51	
-W_KPI_NEXTPAY	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	52	
-W_KPI_ACTIVE	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	53	
-W_KPI_EMPLOYEES	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	54	
-W_KPI_GROSS	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	55	
-W_KPI_NET	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	56	
-CELL	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	57	
-defInst	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	59	
-defaultKpiLayout	function	payroll	false	ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	64	
-defaultLayout	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	78	
-floor	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	95	
-REGISTER_TABS	array	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	98	
-fmtTTD	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	106	
-fmtTTDc	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	107	
-fmtDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	113	
-fmtDayShort	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	119	
-relDate	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	125	
-timeOf	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	137	
-initials	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	142	
-READINESS_PROGRESS	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	145	
-READINESS_LABEL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	148	
-DEADLINE_LABEL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	153	
-DEADLINE_PILL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	156	
-ACTIVITY_VISUAL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	163	
-activityVisual	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	174	
-GATE_STATE	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	178	
-HEALTH_STATE_LABEL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	185	
-HEALTH_ICON	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	188	
-ReadinessDoughnut	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	193	
-commandCenterReady	function	payroll	true		src/components/sections/Finance/PayrollCommandCenter.tsx	232	
-SkeletonBody	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	244	
-SkeletonHeader	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	259	
-PayrollCommandCenter	function	payroll	true	component	src/components/sections/Finance/PayrollCommandCenter.tsx	273	
-placeBottom	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	310	PayrollCommandCenter
-promoteDefault	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	312	PayrollCommandCenter
-runAction	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	336	PayrollCommandCenter
-submitRunStable	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	342	PayrollCommandCenter
-PortfolioBand	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	555	
-MetricsRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	616	
-RunRegister	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	648	
-RunRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	707	
-ApprovalsWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	727	
-DeadlinesWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	775	
-dayKey	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	779	DeadlinesWidget
-onDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	780	DeadlinesWidget
-ReadinessWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	831	
-ImpactWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	888	
+PAGE_KEY	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	45	
+BOARD_COLS	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	46	
+KPI_PAGE_KEY	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	47	
+W_ASSIGNED	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	48	
+W_DEADLINES	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	49	
+W_READINESS	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	50	
+W_IMPACT	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	51	
+W_REGISTER	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	52	
+W_KPI_NEXTPAY	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	53	
+W_KPI_ACTIVE	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	54	
+W_KPI_EMPLOYEES	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	55	
+W_KPI_GROSS	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	56	
+W_KPI_NET	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	57	
+CELL	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	58	
+defInst	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	60	
+defaultKpiLayout	function	payroll	false	ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	65	
+defaultLayout	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	79	
+floor	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	96	
+REGISTER_TABS	array	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	99	
+fmtTTD	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	107	
+fmtTTDc	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	108	
+fmtDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	114	
+fmtDayShort	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	120	
+relDate	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	126	
+timeOf	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	138	
+initials	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	143	
+READINESS_PROGRESS	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	146	
+READINESS_LABEL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	149	
+DEADLINE_LABEL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	154	
+DEADLINE_PILL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	157	
+ACTIVITY_VISUAL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	164	
+activityVisual	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	175	
+GATE_STATE	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	179	
+HEALTH_STATE_LABEL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	186	
+HEALTH_ICON	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	189	
+ReadinessDoughnut	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	194	
+commandCenterReady	function	payroll	true		src/components/sections/Finance/PayrollCommandCenter.tsx	233	
+SkeletonBody	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	245	
+SkeletonHeader	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	260	
+PayrollCommandCenter	function	payroll	true	component	src/components/sections/Finance/PayrollCommandCenter.tsx	274	
+placeBottom	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	311	PayrollCommandCenter
+promoteDefault	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	313	PayrollCommandCenter
+runAction	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	337	PayrollCommandCenter
+submitRunStable	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	343	PayrollCommandCenter
+PortfolioBand	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	556	
+MetricsRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	617	
+RunRegister	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	649	
+RunRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	708	
+goToExceptions	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	730	
+ApprovalsWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	735	
+DeadlinesWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	783	
+dayKey	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	787	DeadlinesWidget
+onDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	788	DeadlinesWidget
+ReadinessWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	839	
+ImpactWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	896	
+mockUseWorkQueue	variable	payroll	false	test	src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx	19	
+stubMut	function	payroll	false	test	src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx	20	
+findingRow	function	payroll	false	test	src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx	31	
+approvalRow	function	payroll	false	test	src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx	41	
+detail	function	payroll	false	test	src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx	51	
+result	function	payroll	false	test	src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx	62	
+asQuery	function	payroll	false	test	src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx	69	
+TABS	array	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	25	
+SEV_CLS	variable	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	32	
+KIND_ICON	variable	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	35	
+ACT_ICON	variable	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	38	
+fmtTTD	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	48	
+fmtDue	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	49	
+isOverdue	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	54	
+fmtDateTime	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	55	
+initials	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	57	
+openRun	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	60	
+PayrollExceptionQueuePage	function	payroll	true	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	65	
+resetPage	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	91	PayrollExceptionQueuePage
+changeTab	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	109	PayrollExceptionQueuePage
+nextPage	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	110	PayrollExceptionQueuePage
+prevPage	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	111	PayrollExceptionQueuePage
+onRowOpen	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	113	PayrollExceptionQueuePage
+anyPending	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	211	
+QueueRow	function	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	217	
+ACTION_META	object	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	239	
+DetailPanel	function	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	249	
+labelActivity	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	308	
+FindingActionModal	function	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	322	
+key	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	338	FindingActionModal
+run	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	341	FindingActionModal
 TABS	array	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	28	
 STATE_PILL	variable	payroll	false	component	src/components/sections/Finance/PayrollRunRegisterPage.tsx	37	
 pillFor	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	50	
