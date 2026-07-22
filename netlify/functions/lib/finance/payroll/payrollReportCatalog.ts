@@ -48,22 +48,33 @@ import type {
   ReportKpiTiles,
   ReportArtifactRow,
   ReportArtifactFormat,
+  ReportJobStatus,
   PageResult,
 } from '../../../../../types/payrollReports';
 import {
   PAYROLL_REPORT_KEYS,
   REPORT_FORMAT_MATRIX,
   EMPLOYEE_LEVEL_REPORTS,
+  deriveReportRequirements,
 } from '../../../../../types/payrollReports';
+import { payrollRpcHttpError } from './rpcError';
 
 type Completed = Extract<ReportRunResult, { state: 'completed' }>;
 
 const ELIGIBLE_STATES = new Set(['locked', 'released', 'exported']);
-// Slice 2 ships PREVIEW only. File exports (xlsx/csv/pdf/zip) require the
-// generation worker + status/download, built in Slice 3 — until then the catalog
-// advertises only what can actually be fulfilled (no accept-and-drop). Flip to
-// true in Slice 3 when the worker + reports/status + reports/artifacts/download land.
-export const REPORT_FILE_EXPORTS_ENABLED = false;
+// Slice 3: standard file exports (xlsx/csv/pdf) are live (generation worker +
+// reports/status). The export_audit_package ZIP is still deferred (jszip not yet
+// approved) — gated separately so the catalog never advertises what it can't
+// fulfil (no accept-and-drop).
+export const REPORT_FILE_EXPORTS_ENABLED = true;
+export const REPORT_ZIP_ENABLED = false;
+
+/** A format is runnable only when its capability is enabled (preview always). */
+export function isFormatEnabled(f: ReportFormat): boolean {
+  if (f === 'preview') return true;
+  if (f === 'zip') return REPORT_ZIP_ENABLED;
+  return REPORT_FILE_EXPORTS_ENABLED;
+}
 const OVERTIME_CODE = 'overtime';
 const ALLOWANCE_CODES = new Set(['housing_allowance', 'travel_allowance', 'meal_allowance']);
 const PREVIEW_ROW_CAP = 5000;
@@ -720,11 +731,9 @@ const REPORT_META: Record<PayrollReportKey, ReportMeta> = {
 export function buildReportCatalog(caller: { canViewAll: boolean; canExport: boolean }): ReportCatalogEntry[] {
   return PAYROLL_REPORT_KEYS.map((key): ReportCatalogEntry => {
     const employeeLevel = EMPLOYEE_LEVEL_REPORTS.has(key);
-    const supportedFormats = REPORT_FORMAT_MATRIX[key].filter((f: ReportFormat) => {
-      const needsExport = f !== 'preview';
-      if (needsExport && !REPORT_FILE_EXPORTS_ENABLED) return false; // Slice 2: preview only
-      return (!employeeLevel || caller.canViewAll) && (!needsExport || caller.canExport);
-    });
+    const supportedFormats = REPORT_FORMAT_MATRIX[key].filter((f: ReportFormat) => isFormatEnabled(f)
+      && (!employeeLevel || caller.canViewAll)
+      && (f === 'preview' || caller.canExport));
     const meta = REPORT_META[key];
     return {
       key,
@@ -753,6 +762,29 @@ export async function logReportPreview(
     p_format: 'preview',
   });
   if (error) throw err(500, 'logReportPreview: ' + error.message);
+}
+
+// ── enqueue a file-export job (§8 MUT-RPT-001) ───────────────────────────────
+type FileFormat = 'xlsx' | 'csv' | 'pdf' | 'zip';
+export async function enqueueReportJob(input: {
+  actorId: string; params: ReportParams; format: FileFormat; idempotencyKey: string;
+}): Promise<{ state: 'queued'; jobId: string }> {
+  // requires_view_all / requires_export are SERVER-derived here — never client-supplied.
+  const reqs = deriveReportRequirements(input.params.report, input.format);
+  const scopeId = scopeIdFor({ report: input.params.report, params: input.params, format: input.format });
+  const { data, error } = await sb.rpc('finance_payroll_report_enqueue_tx', {
+    p_actor_id: input.actorId,
+    p_report_key: input.params.report,
+    p_params: input.params,
+    p_format: input.format,
+    p_scope: input.params,
+    p_scope_id: scopeId,
+    p_requires_view_all: reqs.requiresViewAll,
+    p_requires_export: reqs.requiresExport,
+    p_idempotency_key: input.idempotencyKey,
+  });
+  if (error) throw payrollRpcHttpError(error);
+  return { state: 'queued', jobId: (data as { id: string }).id };
 }
 
 // ── KPI summary (§4A) ────────────────────────────────────────────────────────
@@ -872,4 +904,65 @@ export async function listReportHistory(
   const last = page[page.length - 1];
   const nextCursor = hasMore && last ? encodeCursor(last.created_at, last.id) : null;
   return { rows, nextCursor };
+}
+
+// ── job status (read-only, state-discriminated; 404 on any auth failure) ─────
+interface JobRow {
+  id: string; report_key: string; requested_by: string | null;
+  requires_view_all: boolean; requires_export: boolean; state: string;
+  error: { code: string; message: string; retryable: boolean } | null; artifact_id: string | null;
+  created_at: string; started_at: string | null; lease_expires_at: string | null;
+  completed_at: string | null; failed_at: string | null;
+}
+interface ArtifactRowDb {
+  id: string; scope_id: string; format: string; byte_size: number; sha256: string; row_count: number;
+  retention_class: string; retention_expires_at: string; requires_view_all: boolean; requires_export: boolean;
+  purge_state: string; created_by: string | null; created_at: string;
+}
+function toArtifactRow(a: ArtifactRowDb, reportKey: PayrollReportKey): ReportArtifactRow {
+  return {
+    id: a.id, reportKey, scopeId: a.scope_id, format: a.format as ReportArtifactFormat,
+    byteSize: Number(a.byte_size), sha256: a.sha256, rowCount: a.row_count,
+    retentionClass: a.retention_class, retentionExpiresAt: a.retention_expires_at,
+    requiresViewAll: a.requires_view_all, requiresExport: a.requires_export,
+    status: purgeToStatus(a.purge_state), createdBy: a.created_by ?? '', createdAt: a.created_at,
+  };
+}
+
+/**
+ * Returns the job status only when the caller is (the requester OR a reports.export
+ * reviewer) AND holds every requirement the job stored. Any other case → null
+ * (the route returns 404, no existence leak). Permissions are re-evaluated here.
+ */
+export async function getReportJobStatus(opts: {
+  jobId: string; actorId: string; canViewAll: boolean; canExport: boolean;
+}): Promise<ReportJobStatus | null> {
+  const { data: job } = await sb.from('payroll_report_jobs')
+    .select('id, report_key, requested_by, requires_view_all, requires_export, state, error, artifact_id, created_at, started_at, lease_expires_at, completed_at, failed_at')
+    .eq('id', opts.jobId).maybeSingle<JobRow>();
+  if (!job) return null;
+
+  const isOwner = job.requested_by === opts.actorId;
+  const isReviewer = opts.canExport; // reports.export = reviewer authority (§5C)
+  if (!(isOwner || isReviewer)) return null;
+  if (job.requires_view_all && !opts.canViewAll) return null;
+  if (job.requires_export && !opts.canExport) return null;
+
+  switch (job.state) {
+    case 'queued':
+      return { state: 'queued', jobId: job.id, queuedAt: job.created_at };
+    case 'running':
+      return { state: 'running', jobId: job.id, startedAt: job.started_at ?? job.created_at, leaseExpiresAt: job.lease_expires_at ?? job.created_at };
+    case 'failed':
+      return { state: 'failed', jobId: job.id, failedAt: job.failed_at ?? job.created_at, error: job.error ?? { code: 'unknown', message: 'failed', retryable: false } };
+    case 'succeeded': {
+      const { data: art } = await sb.from('payroll_report_artifacts')
+        .select('id, scope_id, format, byte_size, sha256, row_count, retention_class, retention_expires_at, requires_view_all, requires_export, purge_state, created_by, created_at')
+        .eq('id', job.artifact_id ?? '').maybeSingle<ArtifactRowDb>();
+      if (!art) return null;
+      return { state: 'succeeded', jobId: job.id, completedAt: job.completed_at ?? job.created_at, artifact: toArtifactRow(art, job.report_key as PayrollReportKey) };
+    }
+    default:
+      return null;
+  }
 }

@@ -17,9 +17,21 @@ export default async function run(h) {
   const M1 = `${Y}-01`, M2 = `${Y}-02`;
 
   let fmgrT, viewOnlyT, empT, empA, empB;
-  const ctx = { versionId: null, priorId: null, currentId: null, draftId: null, skewId: null, users: [], viewOnlyId: null };
+  const ctx = { versionId: null, priorId: null, currentId: null, draftId: null, skewId: null, users: [], viewOnlyId: null, jobIds: [] };
+  const BUCKET = 'payroll-report-artifacts';
 
   h.onCleanup(async () => {
+    // §7 cleanup: remove Storage objects FIRST, then delete the job (CASCADE clears
+    // upload_attempts + artifacts).
+    if (ctx.jobIds.length) {
+      try {
+        const { data: arts } = await sb.from('payroll_report_artifacts').select('storage_path').in('job_id', ctx.jobIds);
+        const { data: atts } = await sb.from('payroll_report_upload_attempts').select('storage_path').in('job_id', ctx.jobIds);
+        const paths = [...(arts ?? []), ...(atts ?? [])].map(x => x.storage_path).filter(Boolean);
+        if (paths.length) await sb.storage.from(BUCKET).remove(paths);
+      } catch {}
+      try { await sb.from('payroll_report_jobs').delete().in('id', ctx.jobIds); } catch {}
+    }
     const runIds = [ctx.priorId, ctx.currentId, ctx.draftId, ctx.skewId].filter(Boolean);
     try { if (runIds.length) await sb.from('finance_payroll_run_warnings').delete().in('run_id', runIds); } catch {}
     try { if (runIds.length) await sb.from('finance_payroll_run_lines').delete().in('run_id', runIds); } catch {}
@@ -104,16 +116,17 @@ export default async function run(h) {
   // ── Catalog + summary ──────────────────────────────────────────────────────
   h.section('Reports Center > Catalog + Summary');
 
-  await test('RPT-CAT-01 finance_manager sees the 9-key catalog (preview-only formats in Slice 2)', async () => {
+  await test('RPT-CAT-01 finance_manager sees the 9-key catalog (preview + xlsx/csv/pdf; zip deferred)', async () => {
     const r = await api('finance/payroll/reports/catalog', fmgrT, {});
     ok(r, `catalog failed: ${r.body.message}`);
     const reports = r.body.data.reports;
     expect(reports.length === 9, `expected 9, got ${reports.length}`);
     const reg = reports.find(x => x.key === 'payroll_register');
     expect(reg && reg.requiresViewAll === true, 'payroll_register must require view_all');
-    expect(reg && reg.supportedFormats.length === 1 && reg.supportedFormats[0] === 'preview', 'Slice 2 offers preview only');
+    expect(reg && ['preview', 'xlsx', 'csv', 'pdf'].every(f => reg.supportedFormats.includes(f)),
+      `register should offer preview+xlsx/csv/pdf, got ${reg?.supportedFormats}`);
     const audit = reports.find(x => x.key === 'export_audit_package');
-    expect(audit && audit.supportedFormats.length === 0, 'export_audit_package is not runnable in Slice 2 (no preview)');
+    expect(audit && audit.supportedFormats.length === 0, 'export_audit_package (zip) still deferred → not runnable');
   });
 
   await test('RPT-SUM-01/04 summary returns 5 tiles; materialVariances inert', async () => {
@@ -225,8 +238,8 @@ export default async function run(h) {
   await test('RPT-FMT-01 audit-package preview → 400 (zip only)', async () => {
     fails(await api('finance/payroll/reports/run', fmgrT, { params: { report: 'export_audit_package', runId: ctx.currentId }, format: 'preview' }), 'audit preview rejected');
   });
-  await test('RPT-FMT-02 file format in preview-only Slice 2 → 400', async () => {
-    fails(await api('finance/payroll/reports/run', fmgrT, { params: { report: 'payroll_register', runId: ctx.currentId }, format: 'xlsx', idempotencyKey: 'e2e-rpt-xlsx-0001' }), 'file export gated');
+  await test('RPT-FMT-02 the audit-package ZIP is still deferred → 400', async () => {
+    fails(await api('finance/payroll/reports/run', fmgrT, { params: { report: 'export_audit_package', runId: ctx.currentId }, format: 'zip', idempotencyKey: 'e2e-rpt-zip-000001' }), 'zip deferred');
   });
   await test('RPT-PARAM-01 nis scope=run without runId → 422', async () => {
     fails(await preview(fmgrT, { report: 'nis_exceptions', scope: 'run' }), 'nis run needs runId');
@@ -264,6 +277,72 @@ export default async function run(h) {
     ok(r, `history failed: ${r.body.message}`);
     expect(Array.isArray(r.body.data.rows), 'rows array');
     expect('nextCursor' in r.body.data, 'keyset nextCursor present');
+  });
+
+  // ── File exports: enqueue → worker → status → artifact (Slice 3) ────────────
+  h.section('Reports Center > File exports (worker)');
+  const IDEM = `e2e-rpt-csv-${TAG.slice(-8)}`;
+
+  await test('FSM-RPT-001 / MUT-RPT-001 enqueue a CSV export → queued + jobId (+ event/audit)', async () => {
+    const r = await api('finance/payroll/reports/run', fmgrT, {
+      params: { report: 'gross_to_net_reconciliation', runId: ctx.currentId }, format: 'csv', idempotencyKey: IDEM,
+    });
+    ok(r, `enqueue failed: ${r.body.message}`);
+    expect(r.body.data.state === 'queued' && r.body.data.jobId, 'expected {state:queued, jobId}');
+    ctx.jobIds.push(r.body.data.jobId);
+    const { count: ev } = await sb.from('app_events').select('id', { count: 'exact', head: true })
+      .eq('event_type', 'finance.payroll.report.enqueued').eq('source_entity_id', r.body.data.jobId);
+    expect((ev ?? 0) === 1, 'exactly one enqueued event');
+    const { count: au } = await sb.from('hr_audit_log').select('id', { count: 'exact', head: true })
+      .eq('action', 'payroll_report.enqueued').eq('record_id', r.body.data.jobId);
+    expect((au ?? 0) === 1, 'exactly one enqueue audit row');
+  });
+
+  await test('RPT-IDEM-01 same idempotency key returns the SAME job', async () => {
+    const r = await api('finance/payroll/reports/run', fmgrT, {
+      params: { report: 'gross_to_net_reconciliation', runId: ctx.currentId }, format: 'csv', idempotencyKey: IDEM,
+    });
+    ok(r, `re-enqueue failed: ${r.body.message}`);
+    expect(r.body.data.jobId === ctx.jobIds[0], 'same key must return the original jobId');
+  });
+
+  await test('AUTH-RPT-003 file export requires reports.export (view-only denied)', async () => {
+    fails(await api('finance/payroll/reports/run', viewOnlyT, {
+      params: { report: 'gross_to_net_reconciliation', runId: ctx.currentId }, format: 'csv', idempotencyKey: `e2e-rpt-deny-${TAG.slice(-8)}`,
+    }), 'file export needs reports.export');
+  });
+
+  await test('missing/blank idempotencyKey on a file export → 400', async () => {
+    fails(await api('finance/payroll/reports/run', fmgrT, {
+      params: { report: 'gross_to_net_reconciliation', runId: ctx.currentId }, format: 'csv',
+    }), 'file export needs an idempotency key');
+  });
+
+  await test('INT-RPT-001 the worker generates the artifact; status → succeeded (checksum + audit)', async () => {
+    const w = await api('finance/payroll/reports/generation/run', fmgrT, { limit: 10 });
+    ok(w, `worker run failed: ${w.body.message}`);
+    expect(w.body.data.claimed >= 1 && w.body.data.succeeded >= 1, `worker summary ${JSON.stringify(w.body.data)}`);
+
+    const s = await api('finance/payroll/reports/status', fmgrT, { jobId: ctx.jobIds[0] });
+    ok(s, `status failed: ${s.body.message}`);
+    expect(s.body.data.state === 'succeeded', `expected succeeded, got ${s.body.data.state}`);
+    const a = s.body.data.artifact;
+    expect(a && a.format === 'csv' && a.byteSize > 0 && /^[0-9a-f]{64}$/.test(a.sha256), 'artifact checksum + bytes');
+    expect(a.reportKey === 'gross_to_net_reconciliation', 'artifact report key');
+    const { count: ev } = await sb.from('app_events').select('id', { count: 'exact', head: true })
+      .eq('event_type', 'finance.payroll.report.completed').eq('source_entity_id', a.id);
+    expect((ev ?? 0) === 1, 'exactly one completed event');
+  });
+
+  await test('RPT-HIS-02 the generated artifact now appears in history', async () => {
+    const r = await api('finance/payroll/reports/history/list', fmgrT, { limit: 25 });
+    ok(r, `history failed: ${r.body.message}`);
+    expect(r.body.data.rows.some(x => x.reportKey === 'gross_to_net_reconciliation' && x.format === 'csv'), 'artifact in history');
+  });
+
+  await test('RPT-STA-05 a non-owner basic viewer gets 404 (no leak)', async () => {
+    const r = await api('finance/payroll/reports/status', viewOnlyT, { jobId: ctx.jobIds[0] });
+    expect(r.status === 404 || !r.body.success, `expected 404 for non-owner non-reviewer, got ${r.status}`);
   });
 
   // ── Side-effects (§2): preview writes ONE audit row, NO business event ───────

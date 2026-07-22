@@ -124,14 +124,19 @@ import {
   computeReportSummary,
   listReportHistory,
   logReportPreview,
+  enqueueReportJob,
+  isFormatEnabled,
+  getReportJobStatus,
 } from '../lib/finance/payroll/payrollReportCatalog';
 // Retained legacy engine fn for the Run Workspace population panel's per-employee
 // net-variance column (NOT part of the F-12 Reports Center public contract).
 import { reportVariation } from '../lib/finance/payrollReports';
+import { processReportGenerationQueue } from '../lib/finance/payroll/reportGenerationWorker';
 import {
   reportParamsSchema,
   isFormatAllowed,
   deriveReportRequirements,
+  fileIdempotencyKey,
   PAYROLL_REPORT_KEYS,
 } from '../../../types/payrollReports';
 import type { ReportFormat, InteractiveReportParams } from '../../../types/payrollReports';
@@ -1709,8 +1714,8 @@ router.post('/payroll/reports/summary', async c => {
   } catch (e) { return routeErr(c, e); }
 });
 
-// POST /api/finance/payroll/reports/run — Phase-A preview branch (inline compute).
-// File formats are gated until Slice 3 (the catalog advertises preview only).
+// POST /api/finance/payroll/reports/run — preview (inline compute) OR enqueue a
+// file export (xlsx/csv/pdf). The audit-package ZIP stays gated (Slice 4 / jszip).
 router.post('/payroll/reports/run', async c => {
   const actor = await requirePermission(c, 'finance.payroll.reports.view');
   const body = b(c) as Record<string, unknown>;
@@ -1721,25 +1726,39 @@ router.post('/payroll/reports/run', async c => {
   }
   const params = parsed.data;
   const format = body['format'];
+  // Frozen format matrix (§5A) — reject before any effect (no job/event/audit/storage).
   if (typeof format !== 'string' || !isFormatAllowed(params.report, format as ReportFormat)) {
     return c.json({ success: false, error: 'invalid_format' }, 400);
   }
-  if (format !== 'preview') {
-    return c.json({ success: false, error: 'file_export_unavailable', message: 'File exports are not yet available.' }, 400);
-  }
-  if (body['idempotencyKey'] !== undefined) {
-    return c.json({ success: false, error: 'invalid_params', message: 'idempotencyKey is not allowed for a preview.' }, 400);
+  const fmt = format as ReportFormat;
+  if (!isFormatEnabled(fmt)) {
+    return c.json({ success: false, error: 'file_export_unavailable', message: 'This export format is not yet available.' }, 400);
   }
 
-  // Additive record gate (§5C): employee-level preview requires view_all.
-  const reqs = deriveReportRequirements(params.report, 'preview');
+  // Server-derived additive gates (§5C) — the client never supplies requires_*.
+  const reqs = deriveReportRequirements(params.report, fmt);
   if (reqs.requiresViewAll && !(await userCan(actor, 'finance.payroll.view_all'))) {
+    return c.json({ success: false, error: 'forbidden' }, 403);
+  }
+  if (reqs.requiresExport && !(await userCan(actor, 'finance.payroll.reports.export'))) {
     return c.json({ success: false, error: 'forbidden' }, 403);
   }
 
   try {
-    const data = await computeInteractiveReport(params as InteractiveReportParams);
-    await logReportPreview(actor.id, params as InteractiveReportParams, data.scopeId);
+    if (fmt === 'preview') {
+      if (body['idempotencyKey'] !== undefined) {
+        return c.json({ success: false, error: 'invalid_params', message: 'idempotencyKey is not allowed for a preview.' }, 400);
+      }
+      const data = await computeInteractiveReport(params as InteractiveReportParams);
+      await logReportPreview(actor.id, params as InteractiveReportParams, data.scopeId);
+      return c.json({ success: true, data });
+    }
+    // File export — a non-blank idempotency key is required (8..128).
+    const keyParse = fileIdempotencyKey.safeParse(body['idempotencyKey']);
+    if (!keyParse.success) {
+      return c.json({ success: false, error: 'invalid_params', message: 'A non-blank idempotencyKey (8..128 chars) is required for a file export.' }, 400);
+    }
+    const data = await enqueueReportJob({ actorId: actor.id, params, format: fmt, idempotencyKey: keyParse.data });
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });
@@ -1757,6 +1776,34 @@ router.post('/payroll/reports/history/list', async c => {
   try {
     const data = await listReportHistory(await reportCaller(actor), v.data);
     return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/reports/status — read-only job status (state union).
+// Returns a job only to (owner OR reports.export reviewer) holding every stored
+// requirement; any other case is 404 (no existence leak).
+router.post('/payroll/reports/status', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.reports.view');
+  const v = zv(c, z.object({ jobId: z.uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const { canViewAll, canExport } = await reportCaller(actor);
+    const status = await getReportJobStatus({ jobId: v.data.jobId, actorId: actor.id, canViewAll, canExport });
+    if (!status) return c.json({ success: false, error: 'not_found' }, 404);
+    return c.json({ success: true, data: status });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/reports/generation/run — manual flush of the report
+// generation queue (the same processor the scheduled worker runs). Gated to
+// reports.export; useful for ops + drives the worker in E2E.
+router.post('/payroll/reports/generation/run', async c => {
+  await requirePermission(c, 'finance.payroll.reports.export');
+  const v = zv(c, z.object({ limit: z.number().int().min(1).max(50).optional() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const summary = await processReportGenerationQueue('manual', v.data.limit ?? 10);
+    return c.json({ success: true, data: summary });
   } catch (e) { return routeErr(c, e); }
 });
 

@@ -2913,13 +2913,14 @@ export default async function run(h) {
     expect(r.body.data.nextCursor === null, 'history nextCursor should be null when empty');
   });
 
-  await test('file-format exports are rejected in preview-only Slice 2 (400)', async () => {
+  await test('the audit-package ZIP export is still deferred (400)', async () => {
+    // xlsx/csv/pdf are live (Slice 3); only the export_audit_package ZIP remains gated.
     const r = await api('finance/payroll/reports/run', fstaff1Token, {
-      params: { report: 'gross_to_net_reconciliation', runId: ctx.runId },
-      format: 'xlsx',
-      idempotencyKey: 'e2e-xlsx-not-yet-0001',
+      params: { report: 'export_audit_package', runId: ctx.runId },
+      format: 'zip',
+      idempotencyKey: 'e2e-zip-not-yet-0001',
     });
-    expect(!r.body.success, 'file export should be rejected while file exports are gated');
+    expect(!r.body.success, 'the ZIP audit package is not available yet');
   });
 
   await test('malformed report params are rejected (400)', async () => {
