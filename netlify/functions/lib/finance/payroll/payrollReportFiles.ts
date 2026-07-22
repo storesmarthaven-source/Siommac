@@ -2,18 +2,16 @@
 // Payroll Reports Center (F-12) — file rendering (Slice 3)
 // ============================================================================
 // Renders a completed interactive report (the same §5B DTO the preview returns)
-// to xlsx / csv / pdf. ONE table-extraction per report feeds all three renderers,
-// so a file is always a faithful projection of the previewed data. The audit-
-// package ZIP is deferred (jszip not yet approved) — see REPORT_ZIP_ENABLED.
-// PDF reuses the existing pdfkit dependency; CSV is hand-rolled; XLSX uses exceljs.
+// to csv / pdf. ONE table-extraction per report feeds both renderers, so a file is
+// always a faithful projection of the previewed data. XLSX is deferred (exceljs
+// pulled a flagged transitive dep) and the audit-package ZIP is deferred (jszip
+// not yet approved). PDF reuses the existing pdfkit dependency; CSV is hand-rolled.
 // ============================================================================
 
-import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
-import type { MoneyValue, ReportRunResult } from '../../../../../types/payrollReports';
+import type { MoneyValue, ReportRunResult, StandardFileFormat } from '../../../../../types/payrollReports';
 
 type Completed = Extract<ReportRunResult, { state: 'completed' }>;
-type StandardFileFormat = 'xlsx' | 'csv' | 'pdf';
 type Cell = string | number;
 
 interface ReportTable { title: string; headers: string[]; rows: Cell[][] }
@@ -85,8 +83,13 @@ export function toReportTable(d: Completed): ReportTable {
 interface FileBytes { buffer: Buffer; contentType: string; ext: StandardFileFormat }
 export interface RenderedFile extends FileBytes { rowCount: number }
 
+// A text cell that opens with one of these is treated as a formula by Excel/Sheets
+// → prefix a single quote to neutralize injection. Applied ONLY to string cells,
+// so numeric values (incl. negatives like -500) are never mangled.
+const FORMULA_LEAD = /^[=+\-@\t\r]/;
 const CSV_ESCAPE = (v: Cell): string => {
-  const s = String(v ?? '');
+  let s = String(v ?? '');
+  if (typeof v === 'string' && FORMULA_LEAD.test(s)) s = `'${s}`;
   return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
@@ -94,22 +97,6 @@ function renderCsv(t: ReportTable): FileBytes {
   const lines = [t.headers.map(CSV_ESCAPE).join(','), ...t.rows.map(r => r.map(CSV_ESCAPE).join(','))];
   // BOM so Excel opens UTF-8 correctly.
   return { buffer: Buffer.from('﻿' + lines.join('\r\n'), 'utf8'), contentType: 'text/csv; charset=utf-8', ext: 'csv' };
-}
-
-async function renderXlsx(t: ReportTable): Promise<FileBytes> {
-  const wb = new ExcelJS.Workbook();
-  wb.creator = 'SIOMAC Payroll';
-  const ws = wb.addWorksheet(t.title.slice(0, 31));
-  const header = ws.addRow(t.headers);
-  header.font = { bold: true };
-  for (const r of t.rows) ws.addRow(r);
-  ws.columns.forEach(col => {
-    let max = 10;
-    col.eachCell?.({ includeEmpty: true }, c => { max = Math.max(max, String(c.value ?? '').length + 2); });
-    col.width = Math.min(max, 48);
-  });
-  const ab = await wb.xlsx.writeBuffer();
-  return { buffer: Buffer.from(ab as ArrayBuffer), contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', ext: 'xlsx' };
 }
 
 function renderPdf(t: ReportTable, generatedAt: string): Promise<FileBytes> {
@@ -142,11 +129,9 @@ function renderPdf(t: ReportTable, generatedAt: string): Promise<FileBytes> {
   });
 }
 
-/** Render a completed report to a file buffer. export_audit_package (zip) is deferred. */
+/** Render a completed report to a file buffer. XLSX + export_audit_package (zip) are deferred. */
 export async function renderReportFile(d: Completed, format: StandardFileFormat): Promise<RenderedFile> {
   const table = toReportTable(d);
-  const f = format === 'csv' ? renderCsv(table)
-    : format === 'xlsx' ? await renderXlsx(table)
-    : await renderPdf(table, d.generatedAt);
+  const f = format === 'csv' ? renderCsv(table) : await renderPdf(table, d.generatedAt);
   return { ...f, rowCount: table.rows.length };
 }

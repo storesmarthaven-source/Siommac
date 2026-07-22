@@ -13,7 +13,7 @@ import { createHash } from 'node:crypto';
 import { sb } from '../../db';
 import { computeInteractiveReport } from './payrollReportCatalog';
 import { renderReportFile } from './payrollReportFiles';
-import type { InteractiveReportParams } from '../../../../../types/payrollReports';
+import type { InteractiveReportParams, StandardFileFormat } from '../../../../../types/payrollReports';
 
 const BUCKET = 'payroll-report-artifacts';
 const RETENTION_CLASS = 'standard';
@@ -23,7 +23,7 @@ interface ClaimedJob {
   id: string;
   report_key: string;
   params: InteractiveReportParams;
-  format: 'xlsx' | 'csv' | 'pdf';
+  format: StandardFileFormat; // csv | pdf (XLSX deferred)
   scope: unknown;
   scope_id: string;
   claim_token: string;
@@ -32,13 +32,21 @@ interface ClaimedJob {
 export interface GenerationSummary { claimed: number; succeeded: number; failed: number }
 
 async function failJob(job: ClaimedJob, code: string, message: string, retryable: boolean): Promise<void> {
-  await sb.rpc('finance_payroll_report_fail_tx', {
+  // Surface a transition failure: if fail_tx itself fails the job is stranded
+  // 'running' until its lease expires — that MUST be visible, never swallowed.
+  const { error } = await sb.rpc('finance_payroll_report_fail_tx', {
     p_job_id: job.id, p_claim_token: job.claim_token,
     p_error_code: code, p_error_message: String(message ?? code).slice(0, 500), p_retryable: retryable,
   });
+  if (error) console.error(`[payroll-report-generation-worker] fail_tx failed for job ${job.id}: ${error.message}`);
 }
 
 export async function processReportGenerationQueue(workerId: string, limit = 5): Promise<GenerationSummary> {
+  // Reap expired-running jobs that have exhausted their retry budget so they surface
+  // as 'failed' (claim excludes them now) instead of looping forever (#4).
+  const reap = await sb.rpc('finance_payroll_report_reap', { p_worker_id: workerId, p_limit: Math.max(limit, 5) });
+  if (reap.error) console.error(`[payroll-report-generation-worker] reap failed: ${reap.error.message}`);
+
   const { data, error } = await sb.rpc('finance_payroll_report_claim', {
     p_worker_id: workerId, p_limit: limit, p_lease_seconds: 300,
   });

@@ -44,80 +44,55 @@ export async function processReportPurgeQueue(workerId: string, limit = 20): Pro
     // checked and routed to purge_fail — never swallowed.
     const rm = await sb.storage.from(BUCKET).remove([a.storage_path]);
     if (rm.error) {
-      await sb.rpc('finance_payroll_report_purge_fail', {
+      const pf = await sb.rpc('finance_payroll_report_purge_fail', {
         p_artifact_id: a.id, p_purge_token: a.purge_token,
         p_error: { code: 'storage_remove_failed', message: String(rm.error.message ?? 'remove failed').slice(0, 500) },
       });
+      if (pf.error) console.error(`[payroll-report-purge-worker] purge_fail failed for artifact ${a.id}: ${pf.error.message}`);
       failed++;
       continue;
     }
     const fin = await sb.rpc('finance_payroll_report_purge_finalize', {
       p_artifact_id: a.id, p_purge_token: a.purge_token,
     });
-    if (fin.error) { failed++; continue; }
+    // A finalize failure leaves the row 'purging' (re-claimable) — surface it.
+    if (fin.error) { console.error(`[payroll-report-purge-worker] purge_finalize failed for artifact ${a.id}: ${fin.error.message}`); failed++; continue; }
     purged++;
   }
   return { claimed: arts.length, purged, failed };
 }
 
-// ── orphan upload-attempt reconciler (§6A) ───────────────────────────────────
-interface OrphanAttempt {
-  id: string; job_id: string; claim_token: string; storage_path: string;
-  created_at: string; cleanup_attempts: number;
-  payroll_report_jobs:
-    | { claim_token: string | null; lease_expires_at: string | null; state: string }
-    | { claim_token: string | null; lease_expires_at: string | null; state: string }[]
-    | null;
-}
-const jobOf = (j: OrphanAttempt['payroll_report_jobs']) => (Array.isArray(j) ? j[0] : j) ?? null;
+// ── orphan upload-attempt reconciler (§6A, fenced — see migration 746) ────────
+interface ClaimedOrphan { id: string; storage_path: string; created_at: string; cleanup_attempts: number }
 
 export async function reconcileOrphanUploadAttempts(workerId: string, limit = 50): Promise<ReconcileSummary> {
-  // Bounded page of UNCOMMITTED attempts, oldest first (idx committed_at, created_at).
-  const { data, error } = await sb.from('payroll_report_upload_attempts')
-    .select('id, job_id, claim_token, storage_path, created_at, cleanup_attempts, payroll_report_jobs!job_id!inner(claim_token, lease_expires_at, state)')
-    .is('committed_at', null)
-    .order('created_at', { ascending: true })
-    .limit(Math.max(limit, 1));
-  if (error) throw Object.assign(new Error('orphan reconcile scan: ' + error.message), { status: 500 });
-
-  const attempts = (data ?? []) as unknown as OrphanAttempt[];
+  // ATOMICALLY claim a page of orphan attempts: the RPC locks each row FOR UPDATE
+  // SKIP LOCKED, excludes any committed-artifact path, and stamps last_cleanup_at as
+  // the claim BEFORE we remove — so complete_tx (which locks the same row) rejects a
+  // racing completion and can never keep a succeeded artifact for a deleted object.
+  const { data, error } = await sb.rpc('finance_payroll_report_reconcile_claim', {
+    p_worker_id: workerId, p_limit: limit,
+  });
+  if (error) throw Object.assign(new Error('orphan reconcile claim: ' + error.message), { status: 500 });
+  const claimed = (data ?? []) as ClaimedOrphan[];
   const now = Date.now();
-  let scanned = 0, removed = 0, deleted = 0;
+  let removed = 0, deleted = 0;
 
-  for (const at of attempts) {
-    const job = jobOf(at.payroll_report_jobs);
-    // A still-current running token with a live lease is an in-flight upload — leave
-    // it alone. Orphan iff the token is no longer current OR the lease has expired.
-    const tokenStale = !job || job.claim_token !== at.claim_token || job.state !== 'running';
-    const leaseExpired = !!job && !!job.lease_expires_at && new Date(job.lease_expires_at).getTime() < now;
-    if (!(tokenStale || leaseExpired)) continue;
-    scanned++;
-
-    // Re-check the committed-path invariant IMMEDIATELY before remove: never remove
-    // the object a committed artifact points at.
-    const { data: winner } = await sb.from('payroll_report_artifacts')
-      .select('id').eq('storage_path', at.storage_path).maybeSingle<{ id: string }>();
-    if (winner) continue;
-    // Re-check the attempt is still uncommitted (guards a concurrent complete_tx).
-    const { data: fresh } = await sb.from('payroll_report_upload_attempts')
-      .select('committed_at').eq('id', at.id).maybeSingle<{ committed_at: string | null }>();
-    if (!fresh || fresh.committed_at) continue;
-
+  for (const at of claimed) {
     const rm = await sb.storage.from(BUCKET).remove([at.storage_path]);
-    if (rm.error) continue; // real storage error — retry on the next pass, don't advance
+    // A missing object is already-gone (idempotent, no error); a real error is
+    // surfaced and retried next pass (the claim stays, so it re-claims).
+    if (rm.error) { console.error(`[payroll-report-purge-worker] orphan remove failed for ${at.id}: ${rm.error.message}`); continue; }
     removed++;
 
-    const ageMs = now - new Date(at.created_at).getTime();
-    if (ageMs >= QUARANTINE_MS && at.cleanup_attempts >= 1) {
-      // Past the 24h quarantine with a confirmed removal → the ledger row may go.
+    // Past the 24h quarantine (covers a displaced worker uploading late) → the ledger
+    // row may go. Still guarded on committed_at IS NULL so a racing commit is safe.
+    if (now - new Date(at.created_at).getTime() >= QUARANTINE_MS) {
       const { error: delErr } = await sb.from('payroll_report_upload_attempts')
         .delete().eq('id', at.id).is('committed_at', null);
-      if (!delErr) deleted++;
-    } else {
-      await sb.from('payroll_report_upload_attempts')
-        .update({ cleanup_attempts: at.cleanup_attempts + 1, last_cleanup_at: new Date(now).toISOString() })
-        .eq('id', at.id).is('committed_at', null);
+      if (delErr) console.error(`[payroll-report-purge-worker] orphan ledger delete failed for ${at.id}: ${delErr.message}`);
+      else deleted++;
     }
   }
-  return { scanned, removed, deleted };
+  return { scanned: claimed.length, removed, deleted };
 }

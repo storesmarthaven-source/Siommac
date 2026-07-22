@@ -17,7 +17,7 @@ export default async function run(h) {
   const P1 = `${Y}-01-01`, P2 = `${Y}-02-01`, P3 = `${Y}-03-01`, P4 = `${Y}-04-01`;
   const M1 = `${Y}-01`, M2 = `${Y}-02`;
 
-  let fmgrT, viewOnlyT, empT, empA, empB;
+  let fmgrT, fmgr2T, viewOnlyT, empT, empA, empB;
   const ctx = { versionId: null, priorId: null, currentId: null, draftId: null, skewId: null, users: [], viewOnlyId: null, jobIds: [], artifactId: null, csvPath: null, orphanPaths: [] };
   const BUCKET = 'payroll-report-artifacts';
 
@@ -43,33 +43,41 @@ export default async function run(h) {
     try { if (runIds.length) await sb.from('finance_payroll_run_lines').delete().in('run_id', runIds); } catch {}
     try { if (runIds.length) await sb.from('finance_payroll_runs').delete().in('id', runIds); } catch {}
     try { if (ctx.versionId) await sb.from('finance_statutory_versions').delete().eq('id', ctx.versionId); } catch {}
-    try { if (ctx.viewOnlyId) await sb.from('user_permissions').delete().eq('user_id', ctx.viewOnlyId); } catch {}
+    try { if (ctx.users.length) await sb.from('user_permissions').delete().in('user_id', ctx.users); } catch {}
     try { if (ctx.users.length) await sb.from('app_users').delete().in('id', ctx.users); } catch {}
   });
 
   h.section('Reports Center > Setup');
 
   await test('provision actors + seed locked runs (prior + current + draft + skew)', async () => {
-    const m = await acquireActors('finance_manager', 1);
+    const m = await acquireActors('finance_manager', 2);
     const v = await acquireActors('employee', 1);
     const e = await acquireActors('employee', 2);
     empA = e.actors[0].id; empB = e.actors[1].id;
     ctx.viewOnlyId = v.actors[0].id;
     ctx.users = [...m.createdIds, ...v.createdIds, ...e.createdIds];
+    // fmgr = finance_manager + reports.maintain (drives the workers). fmgr2 = a plain
+    // finance_manager: it HAS reports.export via its role but NOT maintain, so it
+    // proves an exporter cannot drive the global generation/purge workers (#15).
     fmgrT     = mint({ id: m.actors[0].id, username: m.actors[0].username, role: 'finance_manager', department_id: null });
+    fmgr2T    = mint({ id: m.actors[1].id, username: m.actors[1].username, role: 'finance_manager', department_id: null });
     viewOnlyT = mint({ id: v.actors[0].id, username: v.actors[0].username, role: 'employee', department_id: null });
     empT      = mint({ id: empA, username: e.actors[0].username, role: 'employee', department_id: null });
 
     // Grant ONLY reports.view to the view-only actor (reports.view WITHOUT view_all) —
     // no finance role carries that exact combo, so we use a user_permissions override.
-    const { error: gErr } = await sb.from('user_permissions').insert({
-      user_id: ctx.viewOnlyId, permission: 'finance.payroll.reports.view', granted: true,
-      set_by: m.actors[0].id, set_at: new Date().toISOString(),
-    });
-    expect(!gErr, `grant reports.view failed: ${gErr?.message}`);
+    const now = new Date().toISOString();
+    const { error: gErr } = await sb.from('user_permissions').insert([
+      { user_id: ctx.viewOnlyId, permission: 'finance.payroll.reports.view', granted: true, set_by: m.actors[0].id, set_at: now },
+      // reports.maintain is a system-operator permission carried by NO finance role —
+      // grant it to fmgr via override so it can drive the worker trigger routes.
+      { user_id: m.actors[0].id, permission: 'finance.payroll.reports.maintain', granted: true, set_by: m.actors[0].id, set_at: now },
+    ]);
+    expect(!gErr, `grant reports.view/maintain failed: ${gErr?.message}`);
 
-    // A hire in the current period for population_movements.
-    await sb.from('app_users').update({ start_date: P2 }).eq('id', empB);
+    // A hire in the current period for population_movements. empB's name is a
+    // spreadsheet formula so the CSV export can prove formula-injection neutralization.
+    await sb.from('app_users').update({ start_date: P2, full_name: '=1+2' }).eq('id', empB);
 
     const { data: ver, error: vErr } = await sb.from('finance_statutory_versions').insert({
       effective_from: P1, label: `E2E RPT ${TAG}`,
@@ -122,15 +130,15 @@ export default async function run(h) {
   // ── Catalog + summary ──────────────────────────────────────────────────────
   h.section('Reports Center > Catalog + Summary');
 
-  await test('RPT-CAT-01 finance_manager sees the 9-key catalog (preview + xlsx/csv/pdf; zip deferred)', async () => {
+  await test('RPT-CAT-01 finance_manager sees the 9-key catalog (preview + csv/pdf; xlsx + zip deferred)', async () => {
     const r = await api('finance/payroll/reports/catalog', fmgrT, {});
     ok(r, `catalog failed: ${r.body.message}`);
     const reports = r.body.data.reports;
     expect(reports.length === 9, `expected 9, got ${reports.length}`);
     const reg = reports.find(x => x.key === 'payroll_register');
     expect(reg && reg.requiresViewAll === true, 'payroll_register must require view_all');
-    expect(reg && ['preview', 'xlsx', 'csv', 'pdf'].every(f => reg.supportedFormats.includes(f)),
-      `register should offer preview+xlsx/csv/pdf, got ${reg?.supportedFormats}`);
+    expect(reg && ['preview', 'csv', 'pdf'].every(f => reg.supportedFormats.includes(f)) && !reg.supportedFormats.includes('xlsx'),
+      `register should offer preview+csv/pdf (no xlsx), got ${reg?.supportedFormats}`);
     const audit = reports.find(x => x.key === 'export_audit_package');
     expect(audit && audit.supportedFormats.length === 0, 'export_audit_package (zip) still deferred → not runnable');
   });
@@ -258,6 +266,14 @@ export default async function run(h) {
   });
   await test('RPT-BOUND period > 24 months → 422', async () => {
     fails(await preview(fmgrT, { report: 'payroll_cost_analysis', period: { from: `${Y - 3}-01`, to: `${Y}-12` } }), 'period > 24 months');
+  });
+  await test('RPT-BOUND-02 invalid month (YYYY-99) → 400 (structural)', async () => {
+    const r = await api('finance/payroll/reports/run', fmgrT, { params: { report: 'payroll_cost_analysis', period: { from: `${Y}-99`, to: `${Y}-12` } }, format: 'preview' });
+    expect(r.status === 400 && !r.body.success, `expected 400 for month 99, got ${r.status}`);
+  });
+  await test('RPT-BOUND-03 reversed period (to < from) → 422, not an empty success', async () => {
+    const r = await api('finance/payroll/reports/run', fmgrT, { params: { report: 'payroll_cost_analysis', period: { from: `${Y}-06`, to: `${Y}-01` } }, format: 'preview' });
+    expect(r.status === 422 && !r.body.success, `expected 422 for reversed range, got ${r.status} ${JSON.stringify(r.body).slice(0,120)}`);
   });
 
   // ── Additive gate (view_all) ────────────────────────────────────────────────
@@ -496,6 +512,109 @@ export default async function run(h) {
     ok(r, `history failed: ${r.body.message}`);
     const row = r.body.data.rows.find(x => x.id === ctx.artifactId);
     expect(!row || row.status === 'purged', 'purged artifact shows purged status if listed');
+  });
+
+  // ── Review remediation: maintain gate, reap, append-only, P0 fence ──────────
+  h.section('Reports Center > Hardening (review remediation)');
+
+  await test('MAINT-01 an exporter WITHOUT reports.maintain cannot drive the workers (403)', async () => {
+    // fmgr2 is a finance_manager → HAS reports.export via its role, but NOT maintain.
+    const gen = await api('finance/payroll/reports/generation/run', fmgr2T, { limit: 1 });
+    expect(gen.status === 403 && !gen.body.success, `generation/run should be 403 for a non-maintainer, got ${gen.status}`);
+    const purge = await api('finance/payroll/reports/purge/run', fmgr2T, { limit: 1 });
+    expect(purge.status === 403 && !purge.body.success, `purge/run should be 403 for a non-maintainer, got ${purge.status}`);
+    // and a plain viewer is denied too.
+    const v = await api('finance/payroll/reports/purge/run', viewOnlyT, { limit: 1 });
+    expect(v.status === 403 && !v.body.success, `purge/run should be 403 for a viewer, got ${v.status}`);
+  });
+
+  await test('REAP-01 a stuck running job at max attempts is reaped to failed (one failed event)', async () => {
+    const enq = await api('finance/payroll/reports/run', fmgrT, {
+      params: { report: 'net_pay_summary', runId: ctx.currentId }, format: 'csv', idempotencyKey: `e2e-rpt-reap-${TAG.slice(-8)}`,
+    });
+    ok(enq, `reap enqueue failed: ${enq.body.message}`);
+    const jobId = enq.body.data.jobId;
+    ctx.jobIds.push(jobId);
+    const { data: job } = await sb.from('payroll_report_jobs').select('max_attempts').eq('id', jobId).single();
+    // Simulate a worker killed repeatedly: running, retry budget exhausted, lease dead.
+    const { error: upErr } = await sb.from('payroll_report_jobs')
+      .update({ state: 'running', attempts: job.max_attempts, claim_token: randomUUID(), lease_expires_at: new Date(Date.now() - 3600_000).toISOString() })
+      .eq('id', jobId);
+    expect(!upErr, `force-stuck failed: ${upErr?.message}`);
+    const w = await api('finance/payroll/reports/generation/run', fmgrT, { limit: 5 });
+    ok(w, `generation/run failed: ${w.body.message}`);
+    const { data: after } = await sb.from('payroll_report_jobs').select('state, error').eq('id', jobId).single();
+    expect(after.state === 'failed' && after.error?.code === 'max_attempts_exceeded', `expected reaped→failed, got ${JSON.stringify(after)}`);
+    const { count: ev } = await sb.from('app_events').select('id', { count: 'exact', head: true })
+      .eq('event_type', 'finance.payroll.report.failed').eq('source_entity_id', jobId);
+    expect((ev ?? 0) === 1, 'exactly one failed event for the reaped job');
+  });
+
+  await test('APPEND-01 an artifact evidence column is immutable; retention/purge columns are not', async () => {
+    // Fresh committed artifact for this test (ctx.artifactId was purged above).
+    const enq = await api('finance/payroll/reports/run', fmgrT, {
+      params: { report: 'net_pay_summary', runId: ctx.currentId }, format: 'csv', idempotencyKey: `e2e-rpt-append-${TAG.slice(-8)}`,
+    });
+    ok(enq, `append enqueue failed: ${enq.body.message}`);
+    const jobId = enq.body.data.jobId; ctx.jobIds.push(jobId);
+    const w = await api('finance/payroll/reports/generation/run', fmgrT, { limit: 5 });
+    ok(w, `generation/run failed: ${w.body.message}`);
+    const { data: art } = await sb.from('payroll_report_artifacts').select('id, storage_path').eq('job_id', jobId).single();
+    // Frozen evidence column → DB trigger rejects.
+    const { error: shaErr } = await sb.from('payroll_report_artifacts').update({ sha256: 'tampered' }).eq('id', art.id);
+    expect(shaErr, 'updating sha256 (frozen evidence) must be rejected by the append-only trigger');
+    // Operational column (retention) → allowed.
+    const { error: retErr } = await sb.from('payroll_report_artifacts')
+      .update({ retention_expires_at: new Date(Date.now() + 86400_000).toISOString() }).eq('id', art.id);
+    expect(!retErr, `retention_expires_at should be updatable, got ${retErr?.message}`);
+  });
+
+  await test('CSVINJ-01 a formula-leading text cell is neutralized in the CSV export', async () => {
+    // empB is a hire named "=1+2" → population_movements CSV must emit it as "'=1+2".
+    const enq = await api('finance/payroll/reports/run', fmgrT, {
+      params: { report: 'population_movements', period: { from: M1, to: M2 } }, format: 'csv', idempotencyKey: `e2e-rpt-inj-${TAG.slice(-8)}`,
+    });
+    ok(enq, `inj enqueue failed: ${enq.body.message}`);
+    const jobId = enq.body.data.jobId; ctx.jobIds.push(jobId);
+    const w = await api('finance/payroll/reports/generation/run', fmgrT, { limit: 5 });
+    ok(w, `generation/run failed: ${w.body.message}`);
+    const { data: art } = await sb.from('payroll_report_artifacts').select('id').eq('job_id', jobId).single();
+    const dl = await api('finance/payroll/reports/artifacts/download', fmgrT, { artifactId: art.id });
+    ok(dl, `download failed: ${dl.body.message}`);
+    const res = await fetch(dl.body.data.url);
+    const csv = await res.text();
+    expect(csv.includes("'=1+2"), 'the formula name must be prefixed with a quote (neutralized)');
+    expect(!/(^|,)=1\+2/m.test(csv), 'no raw =1+2 may appear at a cell boundary');
+  });
+
+  await test('FENCE-01 an attempt reclaimed by the reconciler cannot be completed (P0)', async () => {
+    // Enqueue → claim (real running token) → register a ledger attempt.
+    const enq = await api('finance/payroll/reports/run', fmgrT, {
+      params: { report: 'net_pay_summary', runId: ctx.currentId }, format: 'csv', idempotencyKey: `e2e-rpt-fence-${TAG.slice(-8)}`,
+    });
+    ok(enq, `fence enqueue failed: ${enq.body.message}`);
+    const jobId = enq.body.data.jobId; ctx.jobIds.push(jobId);
+    const { data: claimed } = await sb.rpc('finance_payroll_report_claim', { p_worker_id: 'e2e-fence', p_limit: 25, p_lease_seconds: 300 });
+    const mine = (claimed ?? []).find(j => j.id === jobId);
+    expect(mine && mine.claim_token, 'claim should return our job with a token');
+    const token = mine.claim_token;
+    const path = `${jobId}/${token}/fence.csv`;
+    const reg = await sb.rpc('finance_payroll_report_register_upload_tx', { p_job_id: jobId, p_claim_token: token, p_storage_path: path, p_sha256: 'abc', p_byte_size: 1 });
+    expect(!reg.error, `register attempt failed: ${reg.error?.message}`);
+    // Expire the lease so the still-current-token attempt becomes reconcilable, then
+    // the reconciler claims it (stamps last_cleanup_at).
+    await sb.from('payroll_report_jobs').update({ lease_expires_at: new Date(Date.now() - 3600_000).toISOString() }).eq('id', jobId);
+    const rc = await sb.rpc('finance_payroll_report_reconcile_claim', { p_worker_id: 'e2e-fence', p_limit: 50 });
+    expect(!rc.error && (rc.data ?? []).some(a => a.storage_path === path), 'reconciler should claim the orphan attempt');
+    // The fence: completing the same token now must be REJECTED (409), so no succeeded
+    // artifact can point at an object the reconciler is removing.
+    const comp = await sb.rpc('finance_payroll_report_complete_tx', {
+      p_job_id: jobId, p_claim_token: token, p_storage_path: path, p_content_type: 'text/csv',
+      p_byte_size: 1, p_sha256: 'abc', p_scope: {}, p_scope_id: 'v', p_row_count: 0, p_retention_class: 'standard', p_retention_days: 30,
+    });
+    expect(comp.error, 'complete_tx must reject a reconciler-claimed attempt (the P0 fence)');
+    const { count: arts } = await sb.from('payroll_report_artifacts').select('id', { count: 'exact', head: true }).eq('job_id', jobId);
+    expect((arts ?? 0) === 0, 'no artifact may exist for the fenced job');
   });
 
   // ── Side-effects (§2): preview writes ONE audit row, NO business event ───────

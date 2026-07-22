@@ -1,7 +1,8 @@
 // scripts/verify-payroll-reports-apply.mjs
 //
-// Post-apply LIVE verification for Payroll Reports Center (F-12) Slice 1
-// migrations (20260919000740–745). Proves — from the app's side of PostgREST,
+// Post-apply LIVE verification for Payroll Reports Center (F-12) migrations
+// (20260919000740–746, incl. the Slice-4 hardening: reconcile_claim/reap RPCs +
+// append-only artifact trigger). Proves — from the app's side of PostgREST,
 // per the assume-don't-verify rule — that every table/column/grant/RPC/bucket is
 // actually LIVE, not that the SQL editor said "Success":
 //   1. the three tables are selectable + key columns (incl. purge saga) exist;
@@ -65,29 +66,32 @@ console.log('▸ Tables + columns');
 }
 
 // ── 2. Artifact write-boundary ───────────────────────────────────────────────
-// NOTE: on this Supabase project `service_role` holds blanket table privileges
-// platform-wide, so the contract's column-level UPDATE grant does NOT constrain
-// service_role (it can UPDATE any column here — same as every other table incl.
-// the existing append-only finance_payroll_finding_activity). The column grant
-// therefore only ever bound anon/authenticated (fully revoked). Base-column
-// immutability is enforced by RPC DISCIPLINE: no route/RPC ever updates the
-// identity/checksum/retention columns; only the purge RPCs touch purge columns.
-// An immutability trigger was deliberately rejected upstream (it breaks the
-// created_by ON DELETE SET NULL cascade — the evidence-table FK trap). So here we
-// verify the REAL client boundary (anon fully denied) + that the purge columns
-// are grantable to service_role.
+// NOTE: on this Supabase project `service_role` holds blanket table privileges, so
+// the column-level UPDATE grant never constrained service_role. Migration 746 now
+// adds an append-only TRIGGER that enforces evidence-column immutability at the DB
+// (only purge columns + retention_expires_at may change, and created_by may only be
+// CLEARED — the ON DELETE SET NULL cascade — never reassigned), closing the gap that
+// RPC discipline alone left open. Here we verify the REAL client boundary (anon fully
+// denied) + that a purge-saga column update is still permitted to service_role.
 console.log('▸ Artifact write-boundary');
 {
   // The client-reachable anon role must NOT be able to write the artifacts table.
+  // Probe with an INSERT (not an UPDATE by random id — a 0-row UPDATE is
+  // indistinguishable from a denied one). A denied INSERT returns a real error
+  // (42501 permission denied / RLS violation), which unambiguously proves denial.
   const anon = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
   const { data, error } = await anon.from('payroll_report_artifacts')
-    .update({ sha256: 'anon-should-be-denied' })
-    .eq('id', randomUUID())
+    .insert({ job_id: randomUUID(), storage_path: `anon/${randomUUID()}.csv`, content_type: 'text/csv',
+              byte_size: 1, sha256: 'x', scope: {}, scope_id: 'v', retention_class: 'standard',
+              retention_expires_at: new Date().toISOString(), requires_view_all: false,
+              requires_export: true, format: 'csv' })
     .select();
-  if (error || (Array.isArray(data) && data.length === 0)) {
-    ok('anon cannot write payroll_report_artifacts (RLS + revoked grants)');
+  if (error) {
+    ok(`anon cannot write payroll_report_artifacts (denied: ${error.code || error.message.slice(0, 40)})`);
   } else {
-    bad('anon write boundary', 'anon UPDATE was NOT blocked');
+    // No error → the write landed. Clean it up and FAIL the boundary check.
+    if (Array.isArray(data)) for (const r of data) await sb.from('payroll_report_artifacts').delete().eq('id', r.id);
+    bad('anon write boundary', 'anon INSERT was NOT blocked (row was written)');
   }
 }
 {
@@ -103,21 +107,21 @@ console.log('▸ Artifact write-boundary');
 console.log('▸ RPCs (exist + execute; sentinel inputs)');
 const rpcProbes = [
   ['finance_payroll_report_enqueue_tx',
-    { p_actor_id: 'VERIFY-SENTINEL', p_report_key: 'payroll_register', p_params: {}, p_format: 'xlsx',
+    { p_actor_id: 'VERIFY-SENTINEL', p_report_key: 'payroll_register', p_params: {}, p_format: 'csv',
       p_scope: {}, p_scope_id: 'verify', p_requires_view_all: true, p_requires_export: true,
       p_idempotency_key: 'verify-sentinel-key' },
     'not an active user'],                                    // PR403 from inside the fn
-  ['finance_payroll_report_claim',
-    { p_worker_id: 'verify-probe', p_limit: 1, p_lease_seconds: 300 },
-    null],                                                    // should SUCCEED (empty set)
+  // NOTE: claim / purge_claim / reap / reconcile_claim are NOT executed here — they
+  // would lease or fail real queue rows. They are existence-checked below via the
+  // read-only finance_payroll_report_rpc_exists probe (non-mutating).
   ['finance_payroll_report_heartbeat',
     { p_job_id: randomUUID(), p_claim_token: randomUUID(), p_lease_seconds: 300 },
     'not running under this claim token'],                    // PR409
   ['finance_payroll_report_register_upload_tx',
-    { p_job_id: randomUUID(), p_claim_token: randomUUID(), p_storage_path: 'x/y/z.xlsx', p_sha256: 'abc', p_byte_size: 1 },
+    { p_job_id: randomUUID(), p_claim_token: randomUUID(), p_storage_path: 'x/y/z.csv', p_sha256: 'abc', p_byte_size: 1 },
     'was not found'],                                         // PR404
   ['finance_payroll_report_complete_tx',
-    { p_job_id: randomUUID(), p_claim_token: randomUUID(), p_storage_path: 'x/y/z.xlsx', p_content_type: 'application/x',
+    { p_job_id: randomUUID(), p_claim_token: randomUUID(), p_storage_path: 'x/y/z.csv', p_content_type: 'application/x',
       p_byte_size: 1, p_sha256: 'abc', p_scope: {}, p_scope_id: 'v', p_row_count: 0, p_retention_class: 'standard', p_retention_days: 30 },
     'was not found'],                                         // PR404
   ['finance_payroll_report_fail_tx',
@@ -129,9 +133,6 @@ const rpcProbes = [
   ['finance_payroll_report_log_download',
     { p_actor_id: '', p_artifact_id: randomUUID() },
     'actor is required'],                                     // PR400 (no audit insert)
-  ['finance_payroll_report_purge_claim',
-    { p_worker_id: 'verify-probe', p_limit: 1, p_lease_seconds: 300 },
-    null],                                                    // should SUCCEED (empty set)
   ['finance_payroll_report_purge_fail',
     { p_artifact_id: randomUUID(), p_purge_token: randomUUID(), p_error: { code: 'x', message: 'y' } },
     'was not found'],                                         // PR404
@@ -153,6 +154,22 @@ for (const [fn, args, expect] of rpcProbes) {
   } else {
     bad(`rpc ${fn}`, `expected "${expect}", got: ${error.message}`);
   }
+}
+
+// ── 3b. Claim-family RPCs — existence ONLY (executing them would mutate queues) ─
+// Verified via the read-only rpc_exists probe (migration 746).
+console.log('▸ Claim-family RPCs (non-mutating existence check)');
+const existenceProbes = [
+  'public.finance_payroll_report_claim(text, integer, integer)',
+  'public.finance_payroll_report_purge_claim(text, integer, integer)',
+  'public.finance_payroll_report_reap(text, integer)',
+  'public.finance_payroll_report_reconcile_claim(text, integer)',
+];
+for (const sig of existenceProbes) {
+  const { data, error } = await sb.rpc('finance_payroll_report_rpc_exists', { p_qualified_name: sig });
+  if (error) bad(`exists ${sig}`, /PGRST202|Could not find/i.test(error.code || error.message) ? 'rpc_exists probe itself is MISSING (apply migration 746)' : error.message);
+  else if (data === true) ok(`rpc ${sig.split('(')[0].replace('public.', '')} is live`);
+  else bad(`exists ${sig}`, 'function does NOT exist (migration not applied)');
 }
 
 // ── 4. Private bucket ────────────────────────────────────────────────────────

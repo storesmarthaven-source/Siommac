@@ -39,7 +39,11 @@ export type PayrollReportKey = (typeof PAYROLL_REPORT_KEYS)[number];
 
 // ── Formats + the frozen format matrix (§5A) ────────────────────────────────
 export type PreviewFormat = 'preview';
-export type StandardFileFormat = 'xlsx' | 'csv' | 'pdf';
+// XLSX is deferred: `exceljs` pulled a flagged transitive dep (uuid advisory), so
+// it was removed until a maintained, clean spreadsheet library is approved. CSV +
+// PDF cover the file-export need in the meantime (do NOT re-add 'xlsx' here without
+// an approved dependency).
+export type StandardFileFormat = 'csv' | 'pdf';
 export type ZipFormat = 'zip';
 export type ReportFormat = PreviewFormat | StandardFileFormat | ZipFormat;
 /** Persisted artifact formats (preview is never persisted). */
@@ -47,19 +51,19 @@ export type ReportArtifactFormat = StandardFileFormat | ZipFormat;
 
 /**
  * The exact frozen format matrix: the first eight reports support
- * preview|xlsx|csv|pdf; export_audit_package supports zip ONLY. Any other
- * combination is 400 invalid_format (validated before enqueue/preview, so it
- * produces no job/event/audit/Storage object).
+ * preview|csv|pdf; export_audit_package supports zip ONLY. Any other combination
+ * is 400 invalid_format (validated before enqueue/preview, so it produces no
+ * job/event/audit/Storage object).
  */
 export const REPORT_FORMAT_MATRIX: Record<PayrollReportKey, readonly ReportFormat[]> = {
-  payroll_register:            ['preview', 'xlsx', 'csv', 'pdf'],
-  net_pay_summary:             ['preview', 'xlsx', 'csv', 'pdf'],
-  payroll_cost_analysis:       ['preview', 'xlsx', 'csv', 'pdf'],
-  gross_to_net_reconciliation: ['preview', 'xlsx', 'csv', 'pdf'],
-  variance_analysis:           ['preview', 'xlsx', 'csv', 'pdf'],
-  overtime_allowance_analysis: ['preview', 'xlsx', 'csv', 'pdf'],
-  population_movements:        ['preview', 'xlsx', 'csv', 'pdf'],
-  nis_exceptions:              ['preview', 'xlsx', 'csv', 'pdf'],
+  payroll_register:            ['preview', 'csv', 'pdf'],
+  net_pay_summary:             ['preview', 'csv', 'pdf'],
+  payroll_cost_analysis:       ['preview', 'csv', 'pdf'],
+  gross_to_net_reconciliation: ['preview', 'csv', 'pdf'],
+  variance_analysis:           ['preview', 'csv', 'pdf'],
+  overtime_allowance_analysis: ['preview', 'csv', 'pdf'],
+  population_movements:        ['preview', 'csv', 'pdf'],
+  nis_exceptions:              ['preview', 'csv', 'pdf'],
   export_audit_package:        ['zip'],
 } as const;
 
@@ -71,11 +75,13 @@ export function isFormatAllowed(report: PayrollReportKey, format: ReportFormat):
 const uuid = z.string().uuid();
 /** departments.id is the canonical TEXT key; app_users.id is TEXT. */
 const textId = z.string().min(1);
-/** YYYY-MM; to ≥ from and span ≤ 24 months are 422 checks in the engine. */
+/** YYYY-MM with a REAL month (01–12) — structural (400). `to ≥ from` and span
+ *  1..24 are semantic (422) checks in the engine (assertValidPeriod). */
+const YEAR_MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 const Period = z
   .object({
-    from: z.string().regex(/^\d{4}-\d{2}$/, 'from must be YYYY-MM'),
-    to: z.string().regex(/^\d{4}-\d{2}$/, 'to must be YYYY-MM'),
+    from: z.string().regex(YEAR_MONTH, 'from must be a valid YYYY-MM (month 01–12)'),
+    to: z.string().regex(YEAR_MONTH, 'to must be a valid YYYY-MM (month 01–12)'),
   })
   .strict();
 export type Period = z.infer<typeof Period>;
@@ -132,8 +138,9 @@ export const reportParamsSchema = z.discriminatedUnion('report', [
     report: z.literal('nis_exceptions'),
     scope: z.enum(['run', 'all']),
     runId: uuid.optional(), // required iff scope='run'; forbidden iff 'all' (422)
-    status: z.enum(['open', 'all']).optional(),
-    ownerId: textId.optional(),
+    // NOTE: no `status`/`ownerId` filters — Phase A has no NIS-exception owner
+    // model and the source is already scoped to open/unverified. They were
+    // accept-and-drop no-ops and were removed (do not re-add until honored).
   }).strict(),
   z.object({
     report: z.literal('export_audit_package'),

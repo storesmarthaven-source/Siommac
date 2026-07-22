@@ -448,6 +448,7 @@ export const PERMISSION_KEYS = [
   'finance.payroll.run_views.manage_team', // finance manager: publish/edit/delete team-scope saved filter views
   'finance.payroll.reports.view',   // finance staff/manager: view payroll reports
   'finance.payroll.reports.export', // finance manager/admin: export payroll reports
+  'finance.payroll.reports.maintain', // system operator ONLY: drive report generation/purge workers + retention cleanup
   // ── Finance Payroll Runs (Phase 3 Stage 3 — approve / lock / export) ─────────
   'finance.payroll.approve',        // finance manager: approve a submitted payroll run via workflow (SoD: creator cannot approve)
   'finance.payroll.lock',           // finance manager: lock an approved run (lines immutable, payslips generatable) + reopen

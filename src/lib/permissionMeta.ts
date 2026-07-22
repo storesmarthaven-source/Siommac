@@ -1375,7 +1375,13 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   'finance.payroll.reports.export': {
     module: 'Finance', group: 'Payroll Runs',
     label: 'Export Payroll Reports',
-    description: 'Export payroll reports in CSV, XLSX, or PDF format. Audited data egress — Finance Manager or Admin only.',
+    description: 'Export payroll reports in CSV or PDF format. Audited data egress — Finance Manager or Admin only.',
+    risk: 'high',
+  },
+  'finance.payroll.reports.maintain': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'Maintain Report Pipeline',
+    description: 'Drive report generation/purge workers and retention cleanup. System operators only — never a regular exporter.',
     risk: 'high',
   },
   // ── Finance Payroll Runs (Phase 3 Stage 3 — approve / lock / export) ─────────

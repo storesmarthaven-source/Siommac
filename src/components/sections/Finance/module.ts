@@ -67,13 +67,16 @@ const PAYSLIP_BATCHES_ITEM: ModuleNavItem = {
   sub: 'Generation, rendering and protected delivery of payslips for every locked payroll run',
 };
 
-// F-12 — Reports Center: preview + (soon) export reports from locked, authorized runs.
+// F-12 — Reports Center: preview + export reports from locked, authorized runs.
 const PAYROLL_REPORTS_ITEM: ModuleNavItem = {
   id: 's-finance-payroll-reports',
   label: 'Reports',
   icon: 'fa-chart-column',
   parent: 's-finance-payroll',
   sub: 'Payroll register, net-pay, cost, reconciliation, variance, overtime, movements & NIS reports',
+  // Gate the nav item + direct route on the same permission the API enforces, so it
+  // never appears (or opens) for a user whose calls would only 403.
+  permission: 'finance.payroll.reports.view',
 };
 
 const PAYROLL_SETUP_ITEM: ModuleNavItem = {

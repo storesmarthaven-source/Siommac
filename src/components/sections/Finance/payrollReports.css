@@ -97,6 +97,10 @@
 .prc-actions { text-align: right; }
 .prc-muted { font-size: 12px; color: var(--mut, #8a93ab); }
 
+/* Error banner + load-more */
+.prc-banner-err { margin: 0 0 14px; padding: 10px 14px; border-radius: 8px; background: var(--rd-soft, #fde8ea); color: var(--rd-ink, #b23); border: 1px solid var(--rd-bd, #f3c2c8); font-size: 13px; }
+.prc-more { margin-top: 12px; text-align: center; }
+
 /* History */
 .prc-history { margin-top: 18px; background: var(--card, #fff); border: 1px solid var(--bd, #e6e9f0); border-radius: var(--radius, 12px); padding: 16px; }
 .prc-history-h { font-size: 14px; font-weight: 700; margin-bottom: 12px; }

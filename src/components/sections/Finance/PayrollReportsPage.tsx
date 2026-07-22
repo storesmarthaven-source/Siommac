@@ -11,7 +11,7 @@ import { useRunsRegister } from '@api/finance/payrollRunsRegister';
 import { dialog } from '@lib/dialog';
 import type {
   MoneyValue, PayrollReportKey, ReportParams, ReportFormat, ReportCatalogEntry, ReportRunResult,
-  RegisterRow, NetPaySummaryRow, CostRow, VarianceRow, OvertimeRow,
+  RegisterRow, NetPaySummaryRow, CostRow, VarianceRow, OvertimeRow, ReportArtifactRow,
   PopulationMovementRow, NisExceptionRow, ReconciliationResult, ReportChart,
 } from '../../../../types/payrollReports';
 import './payrollReports.css';
@@ -24,25 +24,16 @@ const money = (m: MoneyValue): string =>
 const num = (n: number): string => n.toLocaleString('en-US');
 const fmtDate = (d: string): string =>
   d ? new Date(`${d}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
-/** Current YYYY-MM. */
-const thisMonth = (): string => new Date().toISOString().slice(0, 7);
+/** Current YYYY-MM in AST (UTC-4, no DST) — the payroll operating timezone. */
+const thisMonth = (): string => new Date(Date.now() - 4 * 3600_000).toISOString().slice(0, 7);
 
 /**
- * Deterministic idempotency key per (params, format) — a re-click of the same
- * export dedupes to the same job (never a duplicate). 64-bit FNV-1a keeps the
- * collision risk negligible while staying stable (no clock / randomness). 8..128.
+ * A fresh idempotency key is minted per intentional Export action (a UUID) and
+ * reused only for in-flight retries of THAT action. Re-exporting after the source
+ * data changed (e.g. another run locked into a period) must produce a NEW artifact,
+ * so we never derive the key from the parameters. 36 chars → within 8..128.
  */
-function exportIdemKey(params: ReportParams, format: ReportFormat): string {
-  const s = JSON.stringify({ p: params, f: format });
-  let a = 0x811c9dc5, b = 0x811c9dc5 ^ 0x5bd1e995;
-  for (let i = 0; i < s.length; i++) {
-    const ch = s.charCodeAt(i);
-    a = Math.imul(a ^ ch, 0x01000193);
-    b = Math.imul(b ^ ch, 0x01000193);
-  }
-  const hex = (a >>> 0).toString(16).padStart(8, '0') + (b >>> 0).toString(16).padStart(8, '0');
-  return `rpt-${format}-${hex}`;
-}
+const newExportKey = (): string => crypto.randomUUID();
 
 /** Navigate to a fresh signed URL without leaving the page (never cached). */
 function triggerDownload(url: string): void {
@@ -77,12 +68,32 @@ export function PayrollReportsPage(): VNode {
   const [scope, setScope] = useState<'run' | 'all'>('run');
   const [exportFmt, setExportFmt] = useState<ReportFormat | ''>('');
   const [jobId, setJobId] = useState<string | null>(null);
+  // Keyset "Load more" for history — appended pages beyond the first.
+  const [morePages, setMorePages] = useState<ReportArtifactRow[]>([]);
+  const [moreCursor, setMoreCursor] = useState<string | null | undefined>(undefined);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const qc = useQueryClient();
   const summaryQ = useQuery({ queryKey: ['payroll', 'reports', 'summary'], queryFn: () => financePayrollApi.reportsSummary() });
   const catalogQ = useQuery({ queryKey: ['payroll', 'reports', 'catalog'], queryFn: () => financePayrollApi.reportsCatalog() });
   const historyQ = useQuery({ queryKey: ['payroll', 'reports', 'history'], queryFn: () => financePayrollApi.reportsHistory({ limit: 25 }) });
-  const runsQ = useRunsRegister({ tab: 'all', limit: 50 });
+  const runsQ = useRunsRegister({ tab: 'all', limit: 200 });
+
+  const historyRows = [...(historyQ.data?.rows ?? []), ...morePages];
+  const historyNextCursor = moreCursor !== undefined ? moreCursor : (historyQ.data?.nextCursor ?? null);
+  async function loadMoreHistory(): Promise<void> {
+    if (!historyNextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const page = await financePayrollApi.reportsHistory({ cursor: historyNextCursor, limit: 25 });
+      setMorePages(p => [...p, ...page.rows]);
+      setMoreCursor(page.nextCursor);
+    } catch (e) {
+      dialog.error('Couldn’t load more history', (e as Error)?.message ?? 'Please try again.');
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   const catalog = catalogQ.data?.reports ?? [];
   const entry = useMemo(() => catalog.find(c => c.key === selected) ?? null, [catalog, selected]);
@@ -95,10 +106,12 @@ export function PayrollReportsPage(): VNode {
   });
   const result = runMut.data && runMut.data.state === 'completed' ? (runMut.data as Completed) : null;
 
-  // File export → enqueue a durable job, then poll status until it settles.
+  // File export → enqueue a durable job, then poll status until it settles. The
+  // idempotency key is minted per Export click (see runExport) so a later export
+  // of changed source data is a NEW artifact, while an in-flight retry dedupes.
   const exportMut = useMutation({
-    mutationFn: (a: { params: ReportParams; format: ReportFormat }) =>
-      financePayrollApi.runReport({ params: a.params, format: a.format, idempotencyKey: exportIdemKey(a.params, a.format) }),
+    mutationFn: (a: { params: ReportParams; format: ReportFormat; idempotencyKey: string }) =>
+      financePayrollApi.runReport({ params: a.params, format: a.format, idempotencyKey: a.idempotencyKey }),
     onSuccess: r => { if (r.state === 'queued') setJobId(r.jobId); },
   });
   const statusQ = useQuery({
@@ -110,9 +123,11 @@ export function PayrollReportsPage(): VNode {
       return s && (s.state === 'succeeded' || s.state === 'failed') ? false : 1500;
     },
   });
-  // A finished export lands a new artifact — refresh history + KPI once.
+  // A finished export lands a new artifact — refresh history + KPI once, and reset
+  // the "Load more" pages so the fresh first page is authoritative.
   useEffect(() => {
     if (statusQ.data?.state === 'succeeded') {
+      setMorePages([]); setMoreCursor(undefined);
       qc.invalidateQueries({ queryKey: ['payroll', 'reports', 'history'] });
       qc.invalidateQueries({ queryKey: ['payroll', 'reports', 'summary'] });
     }
@@ -141,7 +156,7 @@ export function PayrollReportsPage(): VNode {
     if (params) runMut.mutate(params);
   }
   function runExport(): void {
-    if (params && exportFmt) { setJobId(null); exportMut.mutate({ params, format: exportFmt }); }
+    if (params && exportFmt) { setJobId(null); exportMut.mutate({ params, format: exportFmt, idempotencyKey: newExportKey() }); }
   }
   const status = statusQ.data;
   const succeededArtifactId = status?.state === 'succeeded' ? status.artifact.id : null;
@@ -164,6 +179,12 @@ export function PayrollReportsPage(): VNode {
         </div>
       </header>
 
+      {(summaryQ.isError || catalogQ.isError) && (
+        <div class="prc-banner-err">
+          Some report data couldn’t be loaded{summaryQ.isError && catalogQ.isError ? '' : summaryQ.isError ? ' (KPIs)' : ' (catalog)'} — {((summaryQ.error ?? catalogQ.error) as Error)?.message ?? 'please retry.'}
+        </div>
+      )}
+
       {/* KPI board */}
       <div class="prc-kpis">
         {tile('Available reports', tiles?.availableReports)}
@@ -178,6 +199,7 @@ export function PayrollReportsPage(): VNode {
         <aside class="prc-catalog">
           <div class="prc-catalog-h">Report catalog</div>
           {catalogQ.isLoading && <div class="prc-empty">Loading…</div>}
+          {catalogQ.isError && <div class="prc-empty prc-err">Couldn’t load the report catalog.</div>}
           {catalog.map(c => (
             <button
               key={c.key}
@@ -224,7 +246,7 @@ export function PayrollReportsPage(): VNode {
                       <button
                         type="button"
                         class="prc-run prc-run-ghost"
-                        disabled={!params || !exportFmt || exportMut.isPending || (!!jobId && status?.state !== 'succeeded' && status?.state !== 'failed')}
+                        disabled={!params || !exportFmt || exportMut.isPending || (!!jobId && !statusQ.isError && status?.state !== 'succeeded' && status?.state !== 'failed')}
                         onClick={runExport}
                       >
                         {exportMut.isPending ? 'Queuing…' : 'Export file'}
@@ -235,15 +257,18 @@ export function PayrollReportsPage(): VNode {
                   {exportMut.isError && <span class="prc-err">{(exportMut.error as Error)?.message ?? 'Export failed.'}</span>}
                 </div>
 
-                {jobId && status && (
+                {jobId && (status || statusQ.isError) && (
                   <div class="prc-export-status">
-                    {(status.state === 'queued' || status.state === 'running') && (
+                    {statusQ.isError && (
+                      <span class="prc-err">Couldn’t check the export status — {(statusQ.error as Error)?.message ?? 'try exporting again.'}</span>
+                    )}
+                    {status && (status.state === 'queued' || status.state === 'running') && (
                       <span class="prc-export-wait">Generating {exportFmt.toUpperCase()} export… <span class="prc-pill prc-pill-purging">{status.state}</span></span>
                     )}
-                    {status.state === 'failed' && (
+                    {status && status.state === 'failed' && (
                       <span class="prc-err">Export failed: {status.error.message}</span>
                     )}
-                    {status.state === 'succeeded' && succeededArtifactId && (
+                    {status && status.state === 'succeeded' && succeededArtifactId && (
                       <span class="prc-export-done">
                         <span class="prc-pill prc-pill-ready">ready</span>
                         <button type="button" class="prc-dl" disabled={downloadMut.isPending} onClick={() => downloadMut.mutate(succeededArtifactId)}>
@@ -271,28 +296,41 @@ export function PayrollReportsPage(): VNode {
       {/* History */}
       <div class="prc-history">
         <div class="prc-history-h">Generated report history</div>
-        {(historyQ.data?.rows.length ?? 0) === 0
-          ? <div class="prc-empty prc-pad">No generated report files yet. Run an export above to generate one.</div>
-          : (
-            <table class="prc-table">
-              <thead><tr><th>Report</th><th>Format</th><th class="num">Rows</th><th class="num">Size</th><th>Created</th><th>Status</th><th class="prc-actions-h">Actions</th></tr></thead>
-              <tbody>
-                {historyQ.data!.rows.map(a => (
-                  <tr key={a.id}>
-                    <td>{a.reportKey}</td><td>{a.format.toUpperCase()}</td>
-                    <td class="num">{num(a.rowCount)}</td><td class="num">{(a.byteSize / 1024).toFixed(1)} KB</td>
-                    <td>{new Date(a.createdAt).toLocaleString('en-GB')}</td>
-                    <td><span class={`prc-pill prc-pill-${a.status}`}>{a.status}</span></td>
-                    <td class="prc-actions">
-                      {a.status === 'ready'
-                        ? <button type="button" class="prc-dl" disabled={downloadMut.isPending} onClick={() => downloadMut.mutate(a.id)}>Download</button>
-                        : <span class="prc-muted">{a.status === 'purged' ? 'expired' : '—'}</span>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+        {historyQ.isError
+          ? <div class="prc-empty prc-pad prc-err">Couldn’t load report history — {(historyQ.error as Error)?.message ?? 'please retry.'}</div>
+          : historyQ.isLoading
+            ? <div class="prc-empty prc-pad">Loading…</div>
+            : historyRows.length === 0
+              ? <div class="prc-empty prc-pad">No generated report files yet. Run an export above to generate one.</div>
+              : (
+                <>
+                  <table class="prc-table">
+                    <thead><tr><th>Report</th><th>Format</th><th class="num">Rows</th><th class="num">Size</th><th>Created</th><th>Status</th><th class="prc-actions-h">Actions</th></tr></thead>
+                    <tbody>
+                      {historyRows.map(a => (
+                        <tr key={a.id}>
+                          <td>{a.reportKey}</td><td>{a.format.toUpperCase()}</td>
+                          <td class="num">{num(a.rowCount)}</td><td class="num">{(a.byteSize / 1024).toFixed(1)} KB</td>
+                          <td>{new Date(a.createdAt).toLocaleString('en-GB')}</td>
+                          <td><span class={`prc-pill prc-pill-${a.status}`}>{a.status}</span></td>
+                          <td class="prc-actions">
+                            {a.status === 'ready'
+                              ? <button type="button" class="prc-dl" disabled={downloadMut.isPending} onClick={() => downloadMut.mutate(a.id)}>Download</button>
+                              : <span class="prc-muted">{a.status === 'purged' ? 'expired' : '—'}</span>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {historyNextCursor && (
+                    <div class="prc-more">
+                      <button type="button" class="prc-run-ghost prc-dl" disabled={loadingMore} onClick={loadMoreHistory}>
+                        {loadingMore ? 'Loading…' : 'Load more'}
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
       </div>
     </div>
   );
@@ -419,15 +457,23 @@ function Reconciliation({ r }: { r: ReconciliationResult }): VNode {
   );
 }
 function ChartStrip({ chart }: { chart: ReportChart }): VNode {
-  const series = chart.series[0];
-  if (!series || !series.points.length) return <></>;
-  const max = Math.max(...series.points.map(p => Math.abs(p.y)), 1);
+  // Render EVERY series (variance = Prior + Current, overtime = Hours + Cost) —
+  // never just the first, or measures silently vanish from the chart.
+  const drawn = chart.series.filter(s => s.points.length);
+  if (!drawn.length) return <></>;
   return (
-    <div class="prc-chart">
-      <div class="prc-chart-h">{series.label} <span class="prc-unit">({series.unit})</span></div>
-      {series.points.map((p, i) => (
-        <div key={i} class="prc-bar-row"><span class="prc-bar-l">{p.x}</span><span class="prc-bar-t"><span class="prc-bar" style={`width:${Math.round((Math.abs(p.y) / max) * 100)}%`} /></span><span class="prc-bar-v">{series.unit === 'TTD' ? `$${num(Math.round(p.y))}` : num(p.y)}</span></div>
-      ))}
-    </div>
+    <>
+      {drawn.map((series, si) => {
+        const max = Math.max(...series.points.map(p => Math.abs(p.y)), 1);
+        return (
+          <div key={si} class="prc-chart">
+            <div class="prc-chart-h">{series.label} <span class="prc-unit">({series.unit})</span></div>
+            {series.points.map((p, i) => (
+              <div key={i} class="prc-bar-row"><span class="prc-bar-l">{p.x}</span><span class="prc-bar-t"><span class="prc-bar" style={`width:${Math.round((Math.abs(p.y) / max) * 100)}%`} /></span><span class="prc-bar-v">{series.unit === 'TTD' ? `$${num(Math.round(p.y))}` : num(p.y)}</span></div>
+            ))}
+          </div>
+        );
+      })}
+    </>
   );
 }

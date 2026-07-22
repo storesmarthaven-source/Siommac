@@ -107,6 +107,17 @@ function monthSpan(from: string, to: string): number {
   const [ty, tm] = to.split('-').map(Number) as [number, number];
   return (ty - fy) * 12 + (tm - fm) + 1;
 }
+/**
+ * Semantic period validation (§5A2) — the zod schema guarantees a well-formed
+ * YYYY-MM with a real month (400); this enforces `to ≥ from` and a 1..24-month
+ * span (422). A reversed range gives a span ≤ 0 and must NOT silently return an
+ * empty "success".
+ */
+function assertValidPeriod(from: string, to: string): void {
+  const span = monthSpan(from, to);
+  if (span < 1) throw err(422, 'Reporting period end (to) cannot be before its start (from).');
+  if (span > 24) throw err(422, 'Reporting period cannot exceed 24 months.');
+}
 function shiftMonth(ym: string, delta: number): string {
   const [y, m] = ym.split('-').map(Number) as [number, number];
   const total = y * 12 + (m - 1) + delta;
@@ -174,10 +185,11 @@ async function resolveNames(ids: string[]): Promise<Map<string, string>> {
   const map = new Map<string, string>();
   const uniq = [...new Set(ids.filter(Boolean))];
   for (const c of chunk(uniq, 300)) {
-    const { data } = await sb
+    const { data, error } = await sb
       .from('app_users')
       .select('id, full_name, first_name, last_name, username')
       .in('id', c);
+    if (error) throw err(500, 'resolveNames: ' + error.message);
     for (const u of (data ?? []) as Array<{ id: string; full_name: string | null; first_name: string | null; last_name: string | null; username: string | null }>) {
       const name =
         (u.full_name ?? '').trim() ||
@@ -193,7 +205,8 @@ async function resolveDepartments(ids: string[]): Promise<Map<string, string>> {
   const map = new Map<string, string>();
   const uniq = [...new Set(ids.filter(Boolean))];
   for (const c of chunk(uniq, 300)) {
-    const { data } = await sb.from('departments').select('id, name').in('id', c);
+    const { data, error } = await sb.from('departments').select('id, name').in('id', c);
+    if (error) throw err(500, 'resolveDepartments: ' + error.message);
     for (const d of (data ?? []) as Array<{ id: string; name: string | null }>) {
       map.set(d.id, d.name ?? d.id);
     }
@@ -204,7 +217,8 @@ async function resolveCostCentres(ids: string[]): Promise<Map<string, string>> {
   const map = new Map<string, string>();
   const uniq = [...new Set(ids.filter(Boolean))];
   for (const c of chunk(uniq, 300)) {
-    const { data } = await sb.from('finance_cost_centers').select('id, name').in('id', c);
+    const { data, error } = await sb.from('finance_cost_centers').select('id, name').in('id', c);
+    if (error) throw err(500, 'resolveCostCentres: ' + error.message);
     for (const cc of (data ?? []) as Array<{ id: string; name: string | null }>) {
       map.set(cc.id, cc.name ?? cc.id);
     }
@@ -225,7 +239,7 @@ function controlTotals(lines: LineRow[]): ReportControlTotals {
 
 // ── period runs (eligible only) ──────────────────────────────────────────────
 async function loadPeriodRuns(from: string, to: string): Promise<RunRow[]> {
-  if (monthSpan(from, to) > 24) throw err(422, 'Reporting period cannot exceed 24 months.');
+  assertValidPeriod(from, to);
   const { data, error } = await sb
     .from('finance_payroll_runs')
     .select('id, run_no, status, period_month, pay_group, pay_group_id, gross_total, deduction_total, net_total, nis_employer_total, employee_count, current_calculation_version_id, current_input_snapshot_id')
@@ -340,22 +354,30 @@ async function computeCostAnalysis(p: Extract<ReportParams, { report: 'payroll_c
   const priorTo = shiftMonth(p.period.from, -1);
   const priorFrom = shiftMonth(priorTo, -(span - 1));
 
-  const allLines = async (rs: RunRow[]): Promise<LineRow[]> => {
-    const out: LineRow[] = [];
-    for (const r of rs) out.push(...await loadRunLines(r.id));
+  // Tag each line with its run's pay group so pay_group grouping keys off the
+  // ACTUAL pay group (not the department) — two pay groups sharing a department
+  // must not collapse.
+  type TaggedLine = LineRow & { _payGroup: string };
+  const allLines = async (rs: RunRow[]): Promise<TaggedLine[]> => {
+    const out: TaggedLine[] = [];
+    for (const r of rs) {
+      const pg = r.pay_group ?? 'Unassigned';
+      for (const l of await loadRunLines(r.id)) out.push({ ...l, _payGroup: pg });
+    }
     return out;
   };
   const curLines = await allLines(runs);
-  const priorRuns = await loadPeriodRuns(priorFrom, priorTo).catch(() => [] as RunRow[]);
+  // Fail closed: a prior-window DB error must not masquerade as "no prior data".
+  const priorRuns = await loadPeriodRuns(priorFrom, priorTo);
   const priorLines = await allLines(priorRuns);
 
   const deptNames = await resolveDepartments([...curLines, ...priorLines].map(l => l.department_id ?? ''));
   const ccNames = await resolveCostCentres([...curLines, ...priorLines].map(l => l.cost_center_id ?? ''));
-  const label = (l: LineRow): { key: string; dept: string; cc: string } => {
+  const label = (l: TaggedLine): { key: string; dept: string; cc: string } => {
+    if (groupBy === 'pay_group') return { key: l._payGroup, dept: l._payGroup, cc: '—' };
     const dept = deptNames.get(l.department_id ?? '') ?? (l.department_id ?? 'Unassigned');
     const cc = ccNames.get(l.cost_center_id ?? '') ?? (l.cost_center_id ?? 'Unassigned');
-    const key = groupBy === 'pay_group' ? dept : `${dept} ${cc}`;
-    return { key, dept, cc: groupBy === 'pay_group' ? '—' : cc };
+    return { key: `${dept} ${cc}`, dept, cc };
   };
 
   interface Agg { dept: string; cc: string; gross: number; employer: number; employees: number }
@@ -460,14 +482,20 @@ async function computeVariance(p: Extract<ReportParams, { report: 'variance_anal
   let priorRunId = p.compareRunId ?? null;
   if (priorRunId && priorRunId === p.runId) throw err(422, 'The comparison run must differ from the reporting run.');
   if (!priorRunId) {
-    const { data: prior } = await sb
+    // Auto-compare only to the latest earlier COMPARABLE run — same pay group —
+    // never an unrelated run of a different population. Fail closed on error.
+    let q = sb
       .from('finance_payroll_runs')
       .select('id')
       .lt('period_month', run.period_month)
       .in('status', ['locked', 'released', 'exported'])
       .order('period_month', { ascending: false })
-      .limit(1)
-      .maybeSingle<{ id: string }>();
+      .limit(1);
+    q = run.pay_group_id
+      ? q.eq('pay_group_id', run.pay_group_id)
+      : q.eq('pay_group', run.pay_group ?? '');
+    const { data: prior, error } = await q.maybeSingle<{ id: string }>();
+    if (error) throw err(500, 'variance prior-run lookup: ' + error.message);
     priorRunId = prior?.id ?? null;
   } else {
     await loadEligibleRun(priorRunId); // validate eligibility of an explicit comparison run
@@ -562,9 +590,9 @@ async function computeOvertimeAllowance(p: Extract<ReportParams, { report: 'over
 }
 
 async function computePopulationMovements(p: Extract<ReportParams, { report: 'population_movements' }>): Promise<Completed> {
+  assertValidPeriod(p.period.from, p.period.to);
   const from = monthStart(p.period.from);
   const toExcl = monthAfter(p.period.to);
-  if (monthSpan(p.period.from, p.period.to) > 24) throw err(422, 'Reporting period cannot exceed 24 months.');
   const want = p.movementType ?? 'all';
   const evidenceFilter = p.evidenceStatus ?? 'all';
   const rows: PopulationMovementRow[] = [];
@@ -575,9 +603,10 @@ async function computePopulationMovements(p: Extract<ReportParams, { report: 'po
 
   // Hires — employee start_date in period (employee start records).
   if (want === 'all' || want === 'hires_leavers') {
-    const { data } = await sb.from('app_users')
+    const { data, error } = await sb.from('app_users')
       .select('id, start_date, department_id, status')
       .gte('start_date', from).lt('start_date', toExcl);
+    if (error) throw err(500, 'population hires: ' + error.message);
     for (const u of (data ?? []) as Array<{ id: string; start_date: string | null; department_id: string | null; status: string | null }>) {
       if (!u.start_date) continue;
       raws.push({ employeeId: u.id, movement: 'hire', effectiveDate: u.start_date, prior: '—', current: '', impact: 'Added to payroll population', verified: u.status === 'active', deptId: u.department_id });
@@ -586,9 +615,10 @@ async function computePopulationMovements(p: Extract<ReportParams, { report: 'po
   }
   // Leavers — offboarding last working day / exit date in period.
   if (want === 'all' || want === 'hires_leavers') {
-    const { data } = await sb.from('hr_offboarding_cases')
+    const { data, error } = await sb.from('hr_offboarding_cases')
       .select('employee_id, last_working_day, exit_date, status')
       .in('status', ['ready_for_exit', 'completed']);
+    if (error) throw err(500, 'population leavers: ' + error.message);
     for (const o of (data ?? []) as Array<{ employee_id: string; last_working_day: string | null; exit_date: string | null; status: string | null }>) {
       const eff = o.last_working_day ?? o.exit_date;
       if (!eff || eff < from || eff >= toExcl) continue;
@@ -598,13 +628,15 @@ async function computePopulationMovements(p: Extract<ReportParams, { report: 'po
   }
   // Unpaid leave — approved leave of an unpaid type overlapping the period.
   if (want === 'all' || want === 'leave') {
-    const { data: unpaidTypes } = await sb.from('hr_leave_types').select('id').eq('paid', false);
+    const { data: unpaidTypes, error: typesErr } = await sb.from('hr_leave_types').select('id').eq('paid', false);
+    if (typesErr) throw err(500, 'population leave types: ' + typesErr.message);
     const unpaidIds = (unpaidTypes ?? []).map((t: { id: string }) => t.id);
     if (unpaidIds.length) {
-      const { data } = await sb.from('hr_leave_requests')
+      const { data, error } = await sb.from('hr_leave_requests')
         .select('employee_id, from_date, to_date, status, leave_type_id')
         .eq('status', 'approved').in('leave_type_id', unpaidIds)
         .lt('from_date', toExcl).gte('to_date', from);
+      if (error) throw err(500, 'population unpaid leave: ' + error.message);
       for (const lv of (data ?? []) as Array<{ employee_id: string; from_date: string; to_date: string; status: string }>) {
         raws.push({ employeeId: lv.employee_id, movement: 'unpaid_leave', effectiveDate: lv.from_date, prior: '', current: '', impact: 'Unpaid leave period', verified: true, deptId: null });
         empIds.push(lv.employee_id);
@@ -670,7 +702,6 @@ async function computeNisExceptions(p: Extract<ReportParams, { report: 'nis_exce
     const unverified = await reportUnverifiedNis();
     const empIds = unverified.rows.map(r => String(r['employee_id'] ?? '')).filter(Boolean);
     const names = await resolveNames(empIds);
-    if (p.ownerId) { /* Phase A has no NIS-exception owner assignment; ownerId filter is a no-op placeholder */ }
     for (const r of unverified.rows) {
       const eid = String(r['employee_id'] ?? '');
       if (!eid) continue;
@@ -690,7 +721,7 @@ async function computeNisExceptions(p: Extract<ReportParams, { report: 'nis_exce
   return {
     state: 'completed',
     report: 'nis_exceptions',
-    scopeId: scopeIdFor({ report: 'nis_exceptions', scope: p.scope, runId: p.runId ?? null, status: p.status ?? 'open' }),
+    scopeId: scopeIdFor({ report: 'nis_exceptions', scope: p.scope, runId: p.runId ?? null }),
     generatedAt: new Date().toISOString(),
     rows,
   };
@@ -765,7 +796,7 @@ export async function logReportPreview(
 }
 
 // ── enqueue a file-export job (§8 MUT-RPT-001) ───────────────────────────────
-type FileFormat = 'xlsx' | 'csv' | 'pdf' | 'zip';
+type FileFormat = 'csv' | 'pdf' | 'zip'; // XLSX deferred (see REPORT_FORMAT_MATRIX)
 export async function enqueueReportJob(input: {
   actorId: string; params: ReportParams; format: FileFormat; idempotencyKey: string;
 }): Promise<{ state: 'queued'; jobId: string }> {
@@ -803,22 +834,26 @@ export async function computeReportSummary(caller: { canViewAll: boolean; canExp
   const availableReports = tile(buildReportCatalog(caller).filter(e => e.supportedFormats.length > 0).length);
 
   // generatedThisMonth — succeeded artifacts this AST month, gated per §4A.
+  // Every count fails closed: a DB error must NOT read as a real "0".
   let genQ = sb.from('payroll_report_artifacts').select('id', { count: 'exact', head: true }).gte('created_at', monthStartIso);
   if (!caller.canExport) genQ = genQ.eq('requires_export', false);
   if (!caller.canViewAll) genQ = genQ.eq('requires_view_all', false);
-  const { count: genCount } = await genQ;
+  const { count: genCount, error: genErr } = await genQ;
+  if (genErr) throw err(500, 'summary generatedThisMonth: ' + genErr.message);
   const generatedThisMonth = tile(genCount ?? 0);
 
   // nisExceptions — latest eligible run's open unverified/continuity; needs view_all.
   let nisExceptions: ReportKpiTile = TILE_NA;
   if (caller.canViewAll) {
-    const { data: run } = await sb.from('finance_payroll_runs')
+    const { data: run, error: runErr } = await sb.from('finance_payroll_runs')
       .select('id').in('status', ['locked', 'released', 'exported'])
       .order('period_month', { ascending: false }).limit(1).maybeSingle<{ id: string }>();
+    if (runErr) throw err(500, 'summary nis run lookup: ' + runErr.message);
     if (run) {
-      const { count } = await sb.from('finance_payroll_run_lines')
+      const { count, error: cErr } = await sb.from('finance_payroll_run_lines')
         .select('employee_id', { count: 'exact', head: true })
         .eq('run_id', run.id).in('nis_status', ['unverified', 'continuity_review']);
+      if (cErr) throw err(500, 'summary nis count: ' + cErr.message);
       nisExceptions = tile(count ?? 0);
     } else {
       nisExceptions = tile(0);
@@ -831,10 +866,11 @@ export async function computeReportSummary(caller: { canViewAll: boolean; canExp
   // auditPackages — succeeded export_audit_package this AST month; needs export.
   let auditPackages: ReportKpiTile = TILE_NA;
   if (caller.canExport) {
-    const { count } = await sb.from('payroll_report_artifacts')
+    const { count, error: apErr } = await sb.from('payroll_report_artifacts')
       .select('id, payroll_report_jobs!job_id!inner(report_key)', { count: 'exact', head: true })
       .gte('created_at', monthStartIso)
       .eq('payroll_report_jobs.report_key', 'export_audit_package');
+    if (apErr) throw err(500, 'summary auditPackages: ' + apErr.message);
     auditPackages = tile(count ?? 0);
   }
 
@@ -937,9 +973,11 @@ function toArtifactRow(a: ArtifactRowDb, reportKey: PayrollReportKey): ReportArt
 export async function getReportJobStatus(opts: {
   jobId: string; actorId: string; canViewAll: boolean; canExport: boolean;
 }): Promise<ReportJobStatus | null> {
-  const { data: job } = await sb.from('payroll_report_jobs')
+  const { data: job, error: jobErr } = await sb.from('payroll_report_jobs')
     .select('id, report_key, requested_by, requires_view_all, requires_export, state, error, artifact_id, created_at, started_at, lease_expires_at, completed_at, failed_at')
     .eq('id', opts.jobId).maybeSingle<JobRow>();
+  // Fail closed: a DB error must throw (500), never masquerade as a not-found 404.
+  if (jobErr) throw err(500, 'getReportJobStatus: ' + jobErr.message);
   if (!job) return null;
 
   const isOwner = job.requested_by === opts.actorId;
@@ -956,9 +994,10 @@ export async function getReportJobStatus(opts: {
     case 'failed':
       return { state: 'failed', jobId: job.id, failedAt: job.failed_at ?? job.created_at, error: job.error ?? { code: 'unknown', message: 'failed', retryable: false } };
     case 'succeeded': {
-      const { data: art } = await sb.from('payroll_report_artifacts')
+      const { data: art, error: artErr } = await sb.from('payroll_report_artifacts')
         .select('id, scope_id, format, byte_size, sha256, row_count, retention_class, retention_expires_at, requires_view_all, requires_export, purge_state, created_by, created_at')
         .eq('id', job.artifact_id ?? '').maybeSingle<ArtifactRowDb>();
+      if (artErr) throw err(500, 'getReportJobStatus artifact: ' + artErr.message);
       if (!art) return null;
       return { state: 'succeeded', jobId: job.id, completedAt: job.completed_at ?? job.created_at, artifact: toArtifactRow(art, job.report_key as PayrollReportKey) };
     }
@@ -998,9 +1037,11 @@ export type ReportDownloadOutcome =
 export async function resolveReportDownload(opts: {
   artifactId: string; actorId: string; canViewAll: boolean; canExport: boolean;
 }): Promise<ReportDownloadOutcome> {
-  const { data: art } = await sb.from('payroll_report_artifacts')
+  const { data: art, error: artErr } = await sb.from('payroll_report_artifacts')
     .select('id, storage_path, requires_view_all, requires_export, purge_state, retention_expires_at')
     .eq('id', opts.artifactId).maybeSingle<DownloadArtifactRow>();
+  // Fail closed: a DB error must throw (500), never read as a not-found 404.
+  if (artErr) throw err(500, 'resolveReportDownload lookup: ' + artErr.message);
   if (!art) return { ok: false, status: 404 };
 
   // Additive gates (§5C) — export is required for every file; view_all additionally

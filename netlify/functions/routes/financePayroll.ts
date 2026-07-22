@@ -1817,9 +1817,10 @@ router.post('/payroll/reports/artifacts/download', async c => {
 
 // POST /api/finance/payroll/reports/generation/run — manual flush of the report
 // generation queue (the same processor the scheduled worker runs). Gated to
-// reports.export; useful for ops + drives the worker in E2E.
+// reports.maintain (system operators only) — a plain exporter must NOT drive the
+// global worker; useful for ops + drives the worker in E2E.
 router.post('/payroll/reports/generation/run', async c => {
-  await requirePermission(c, 'finance.payroll.reports.export');
+  await requirePermission(c, 'finance.payroll.reports.maintain');
   const v = zv(c, z.object({ limit: z.number().int().min(1).max(50).optional() }), b(c));
   if (!v.ok) return v.response;
   try {
@@ -1830,9 +1831,10 @@ router.post('/payroll/reports/generation/run', async c => {
 
 // POST /api/finance/payroll/reports/purge/run — manual flush of the retention
 // purge saga + orphan-attempt reconciler (the same processors the scheduled purge
-// worker runs). Gated to reports.export; useful for ops + drives the worker in E2E.
+// worker runs). Gated to reports.maintain (system operators only) — retention
+// cleanup is not an exporter capability; useful for ops + drives the worker in E2E.
 router.post('/payroll/reports/purge/run', async c => {
-  await requirePermission(c, 'finance.payroll.reports.export');
+  await requirePermission(c, 'finance.payroll.reports.maintain');
   const v = zv(c, z.object({ limit: z.number().int().min(1).max(100).optional() }), b(c));
   if (!v.ok) return v.response;
   try {
