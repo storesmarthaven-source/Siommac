@@ -60,6 +60,7 @@ import {
 import { getPayrollRunWorkspace } from '../lib/finance/payroll/workspace';
 import { getPayrollControlCenter } from '../lib/finance/payroll/controlCenter';
 import { listPayrollRunsRegister } from '../lib/finance/payroll/runRegister';
+import { listPayslipBatches } from '../lib/finance/payroll/payslipBatches';
 import {
   listRunViews,
   createRunView,
@@ -166,6 +167,30 @@ router.post('/payroll/runs/list', async c => {
   if (!v.ok) return v.response;
   try {
     const data = await listPayrollRunsRegister(v.data);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/payslip-batches/list
+// §15.5 Payslip Batches register (F-10). A batch = a locked run's payslip set (no batch entity);
+// counts aggregate finance_payslips + finance_payslip_deliveries. Permission: finance.payroll.view_all.
+router.post('/payroll/payslip-batches/list', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const DATE = /^\d{4}-\d{2}-\d{2}$/;
+  const v = zv(c, z.object({
+    limit:       z.number().int().min(1).max(100).optional(),
+    offset:      z.number().int().min(0).optional(),
+    tab:         z.enum(['all','active','attention','scheduled','completed']).optional(),
+    search:      z.string().trim().max(200).optional(),
+    periodFrom:  z.string().regex(DATE, 'periodFrom must be YYYY-MM-DD').optional(),
+    periodTo:    z.string().regex(DATE, 'periodTo must be YYYY-MM-DD').optional(),
+    payGroupIds: z.array(z.uuid()).max(50).optional(),
+  }).refine(d => !d.periodFrom || !d.periodTo || d.periodFrom <= d.periodTo, {
+    message: 'periodFrom must not be after periodTo',
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listPayslipBatches(v.data);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });
