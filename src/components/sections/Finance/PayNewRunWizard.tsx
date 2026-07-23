@@ -34,6 +34,7 @@ import {
   type InputSourceReadiness,
 } from '@api/finance/payroll';
 import { runsRegisterApi } from '@api/finance/payrollRunsRegister';
+import { PayrollPanelState } from './payRunDetail/PanelState';
 import './payrunWizard.css';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -367,8 +368,11 @@ export function PayNewRunWizard({
         <div class="pcrw-content">
           <section class="card">
             <div class="sec-head"><div class="sec-ico">2</div><div><div class="sec-title">Select pay group</div><div class="sec-sub">The group defines frequency, membership and the effective pay policy.</div></div></div>
-            {payGroupsQ.isLoading
-              ? <div class="panel-body"><span class="pcrw-skel" style={{ width: '100%', height: 44 }} /></div>
+            {payGroupsQ.isLoading || payGroupsQ.isError
+              // P1-7: a failed pay-group load must not read as "No pay groups configured".
+              ? <div class="panel-body"><PayrollPanelState loading={payGroupsQ.isLoading}
+                  error={payGroupsQ.isError ? payGroupsQ.error : undefined}
+                  onRetry={() => void payGroupsQ.refetch()} label="pay groups" /></div>
               : groups.length === 0
                 ? <div class="panel-body"><PendingBlock title="No pay groups configured" detail="Create a pay group in Payroll Setup before creating a run." /></div>
                 : (
@@ -466,8 +470,12 @@ export function PayNewRunWizard({
         <div class="pcrw-content">
           <section class="card">
             <div class="sec-head"><div class="sec-ico">5</div><div><div class="sec-title">Employee population</div><div class="sec-sub">Active employees who will be included{periodMonth ? ` for ${periodMonth}` : ''}. Final membership freezes at Lock Inputs.</div></div></div>
-            {populationQ.isLoading
-              ? <div class="panel-body"><span class="pcrw-skel" style={{ width: '100%', height: 40 }} /></div>
+            {populationQ.isLoading || populationQ.isError
+              ? <div class="panel-body">
+                  <PayrollPanelState loading={populationQ.isLoading}
+                    error={populationQ.isError ? populationQ.error : undefined}
+                    onRetry={() => void populationQ.refetch()} label="population preview" />
+                </div>
               : (
                 <div class="metrics">
                   <div class="metric"><div class="m-ico">#</div><div><div class="k">Total active</div><div class="v">{pop?.total ?? '—'}</div><div class="s">{payGroupName || 'all groups'}</div></div></div>

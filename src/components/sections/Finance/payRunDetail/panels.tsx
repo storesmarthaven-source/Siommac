@@ -23,6 +23,7 @@ import { useEmployeeNames } from '@api/finance/lookups';
 import { fmtMoney, humanize } from '../financeShared';
 import { EmployeeCell, EmployeeCellResolved } from '../_shared/EmployeeCell';
 import { InputsTab, WorksheetTab, WarningsTab, PayslipsTab, GlTab, ExportsTab, fmtDateTime, type PayRunDrawerActions } from './interactiveTabs';
+import { PayrollPanelState } from './PanelState';
 import { PayCreateDisbursementDialog, PayCreateRemittanceDialog } from '../PayBridgeDialog';
 import { CloseReleaseCard } from './CloseReleaseCard';
 import { initials, dayLabel } from './parts';
@@ -176,7 +177,7 @@ export function SummaryPanel({ run, workspace, preflight }: {
 interface VariationRow { employee_id: string; status: string; net?: number; net_delta?: number; gross?: number; }
 
 export function PopulationPanel({ runId }: { runId: string }): VNode {
-  const { data: lines, isLoading } = useRunLines(runId);
+  const { data: lines, isLoading, isError, error, refetch } = useRunLines(runId);
   const variationQ = useQuery({
     queryKey: ['finance', 'payroll', 'report', 'variation', runId],
     queryFn:  () => financePayrollApi.runVariation({ runId }),
@@ -190,8 +191,15 @@ export function PopulationPanel({ runId }: { runId: string }): VNode {
   const rows = (variationQ.data?.rows ?? []) as unknown as VariationRow[];
   for (const r of rows) if (r.employee_id) varByEmp.set(r.employee_id, r);
 
-  if (isLoading) return <section class="card"><SecHead ico="P" title="Calculated employee population" /><Empty>Loading population…</Empty></section>;
-  if (!lines || lines.length === 0) return <section class="card"><SecHead ico="P" title="Calculated employee population" /><Empty>No calculated lines yet — run Calculate first.</Empty></section>;
+  if (isLoading || isError || !lines?.length) {
+    return (
+      <section class="card"><SecHead ico="P" title="Calculated employee population" />
+        <PayrollPanelState loading={isLoading} error={isError ? error : undefined}
+          onRetry={() => void refetch()} empty label="calculated population"
+          emptyText="No calculated lines yet — run Calculate first." />
+      </section>
+    );
+  }
 
   return (
     <section class="card">
@@ -238,14 +246,21 @@ export function PopulationPanel({ runId }: { runId: string }): VNode {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function ReconciliationPanel({ runId }: { runId: string }): VNode {
-  const { data: versions, isLoading } = useCalculationVersions(runId);
+  const { data: versions, isLoading, isError, error, refetch } = useCalculationVersions(runId);
   const sorted = [...(versions ?? [])].sort((a, b) => a.versionNo - b.versionNo);
   const latest = sorted[sorted.length - 1];
   const prev = sorted[sorted.length - 2];
   const cmp = useCalculationComparison(prev?.id ?? null, latest?.id ?? null);
 
-  if (isLoading) return <section class="card"><SecHead ico="R" title="Payroll reconciliation" /><Empty>Loading calculation versions…</Empty></section>;
-  if (!versions || versions.length === 0) return <section class="card"><SecHead ico="R" title="Payroll reconciliation" /><Empty>No calculation versions yet — run Calculate first.</Empty></section>;
+  if (isLoading || isError || !versions?.length) {
+    return (
+      <section class="card"><SecHead ico="R" title="Payroll reconciliation" />
+        <PayrollPanelState loading={isLoading} error={isError ? error : undefined}
+          onRetry={() => void refetch()} empty label="calculation versions"
+          emptyText="No calculation versions yet — run Calculate first." />
+      </section>
+    );
+  }
 
   return (
     <div class="section-grid">
@@ -365,14 +380,15 @@ export function ApprovalsPanel({ run }: { run: PayrollRun }): VNode {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function AuditPanel({ runId }: { runId: string }): VNode {
-  const { data: entries, isLoading } = useRunAuditLog(runId);
+  const { data: entries, isLoading, isError, error, refetch } = useRunAuditLog(runId);
   return (
     <section class="card">
       <SecHead ico="A" title="Audit history" sub="Immutable record of state changes, calculation attempts, control decisions and exports."
-        aux={<Pill intent="grey">{entries?.length ?? 0} events</Pill>} />
+        aux={<Pill intent="grey">{entries ? `${entries.length} events` : '—'}</Pill>} />
       <div class="panel-body">
-        {isLoading
-          ? <Empty>Loading audit log…</Empty>
+        {isLoading || isError
+          ? <PayrollPanelState loading={isLoading} error={isError ? error : undefined}
+              onRetry={() => void refetch()} label="audit history" />
           : !entries || entries.length === 0
             ? <Empty>No audit events recorded for this run yet.</Empty>
             : entries.map(e => (

@@ -304,3 +304,50 @@
 @media (max-width: 1080px) {
   .prw .section-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ── WP-4 (P0-6/P1-7): panel + page state system ─────────────────────────────
+   One skeleton/error/empty/stale vocabulary for every query-backed panel.
+   Skeleton min-height matches typical content so reveal doesn't shift layout;
+   the error band is visually DISTINCT from the empty state (tone + icon + ref). */
+.prw .prw-panel-skel { display: flex; flex-direction: column; gap: 10px; padding: 18px; min-height: 132px; }
+.prw .prw-panel-skel-bar { display: block; height: 16px; border-radius: 6px;
+  background: linear-gradient(90deg, #eef1f6 25%, #f6f8fb 50%, #eef1f6 75%);
+  background-size: 200% 100%; animation: prw-skel-sh 1.3s linear infinite; }
+.prw .prw-panel-skel-bar:nth-child(2) { width: 82%; }
+.prw .prw-panel-skel-bar:nth-child(3) { width: 64%; }
+@keyframes prw-skel-sh { to { background-position: -200% 0; } }
+
+.prw .prw-panel-error { display: flex; align-items: flex-start; gap: 12px; margin: 12px;
+  padding: 14px 16px; min-height: 76px; border: 1px solid #f3c2c8; border-radius: 9px;
+  background: var(--red-soft, #fdecec); color: #7f1d1d; }
+.prw .prw-panel-error > i { margin-top: 2px; color: var(--red, #dc2626); }
+.prw .prw-panel-error-copy { flex: 1; min-width: 0; }
+.prw .prw-panel-error-copy strong { display: block; font-size: 13.5px; }
+.prw .prw-panel-error-copy small { display: block; margin-top: 3px; font-size: 12px; color: #9f3a3a; overflow-wrap: anywhere; }
+.prw .prw-panel-error-meta { font-family: var(--font-mono, ui-monospace, monospace); }
+.prw .prw-panel-error .btn { flex-shrink: 0; }
+
+.prw .prw-panel-empty { padding: 26px 18px; min-height: 76px; text-align: center;
+  color: var(--muted, #64748b); font-size: 13px; }
+
+.prw .prw-panel-stale { display: flex; align-items: center; gap: 8px; padding: 6px 18px;
+  font-size: 11.5px; color: var(--muted, #64748b); }
+
+/* Page-level gate (P0-6): full-workspace skeleton mirrors header + lifecycle +
+   metrics + panel geometry; the error band replaces it at the same footprint. */
+.prw .prw-page-skel { display: flex; flex-direction: column; gap: 16px; }
+.prw .prw-page-skel .ps-block { border: 1px solid var(--border, #e5e9f0); border-radius: 12px;
+  background: linear-gradient(90deg, #f4f6fa 25%, #fafbfe 50%, #f4f6fa 75%);
+  background-size: 200% 100%; animation: prw-skel-sh 1.3s linear infinite; }
+.prw .prw-page-skel .ps-head    { height: 96px; }
+.prw .prw-page-skel .ps-life    { height: 118px; }
+.prw .prw-page-skel .ps-metrics { height: 86px; }
+.prw .prw-page-skel .ps-panel   { height: 320px; }
+
+.prw .prw-page-error { display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 56px 24px; border: 1px solid #f3c2c8; border-radius: 12px; background: var(--red-soft, #fdecec);
+  text-align: center; }
+.prw .prw-page-error > i { font-size: 26px; color: var(--red, #dc2626); }
+.prw .prw-page-error h3 { margin: 0; font-size: 16px; color: #7f1d1d; }
+.prw .prw-page-error p { margin: 0; font-size: 12.5px; color: #9f3a3a; max-width: 560px; overflow-wrap: anywhere; }
+.prw .prw-page-error .prw-panel-error-meta { font-size: 11.5px; color: #9f3a3a; }

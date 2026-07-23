@@ -14,7 +14,7 @@ import { type VNode, Fragment } from 'preact';
 import { useState } from 'preact/hooks';
 import './payrunWorkspace.css';
 import {
-  usePayrollRun, useRunWorkspace, useReleasePreflight,
+  usePayrollRun, useRunWorkspace, useReleasePreflight, PayrollApiError,
   type PayrollRun, type PayrollRunActions,
 } from '@api/finance/payroll';
 import { humanize } from './financeShared';
@@ -55,16 +55,48 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApp
   const [tab, setTab] = useState<TabKey>('summary');
   const runQ = usePayrollRun(runId);
   const workspaceQ = useRunWorkspace(runId);
-  const preflightQ = useReleasePreflight(runId);
+  // P0-6.5: release preflight is REQUIRED only for the states where release
+  // gates are meaningful — never fetched (and never gating) elsewhere.
+  const preflightRelevant = ['approved', 'locked', 'released', 'exported'].includes(runQ.data?.status ?? '');
+  const preflightQ = useReleasePreflight(preflightRelevant ? runId : null);
   const run = runQ.data;
   const workspace = workspaceQ.data;
   const preflight = preflightQ.data;
 
-  if (!run) {
+  // ── P0-6: atomic required-query gate ─────────────────────────────────────────
+  // The run header, lifecycle, metrics, banner and initial tab render from run +
+  // workspace (+ preflight when relevant). Until EVERY required query settles the
+  // whole surface stays behind one stable skeleton; if any REQUIRED query fails,
+  // a page error band (typed code + correlation id + Retry) replaces it at the
+  // same footprint. Counts below the gate never fall back to a fake zero.
+  const requiredError = runQ.error ?? workspaceQ.error ?? (preflightRelevant ? preflightQ.error : null);
+  const requiredSettled = !!run && !!workspace && (!preflightRelevant || !!preflight);
+  if (requiredError != null) {
+    const typed = requiredError instanceof PayrollApiError ? requiredError : null;
     return (
       <div class="prw">
         <button type="button" class="back-link" onClick={onBack}>← Payroll runs</button>
-        <div class="card"><div class="prw-empty">{runQ.isError ? 'Failed to load this run.' : 'Loading run…'}</div></div>
+        <div class="prw-page-error" role="alert">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true" />
+          <h3>Couldn’t load this payroll run</h3>
+          <p>{requiredError instanceof Error ? requiredError.message : 'The run workspace failed to load.'}</p>
+          {typed?.correlationId && <span class="prw-panel-error-meta">{typed.code} · ref {typed.correlationId}</span>}
+          <button type="button" class="btn primary"
+            onClick={() => { void runQ.refetch(); void workspaceQ.refetch(); if (preflightRelevant) void preflightQ.refetch(); }}>
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+  if (!requiredSettled) {
+    return (
+      <div class="prw">
+        <button type="button" class="back-link" onClick={onBack}>← Payroll runs</button>
+        <div class="prw-page-skel" role="status" aria-busy="true" aria-label="Loading payroll run workspace">
+          <div class="ps-block ps-head" /><div class="ps-block ps-life" />
+          <div class="ps-block ps-metrics" /><div class="ps-block ps-panel" />
+        </div>
       </div>
     );
   }
@@ -72,8 +104,10 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApp
   const steps = lifecycleSteps(run.status);
   const curIdx = Math.max(0, steps.findIndex(s => s.state === 'cur'));
   const curStage = steps.find(s => s.state === 'cur')?.label ?? steps[steps.length - 1]?.label ?? '—';
-  const blockers = workspace?.findingSummary.blockers ?? preflight?.blockers.length ?? 0;
-  const warnings = workspace?.findingSummary.warnings ?? 0;
+  // Post-gate: workspace is guaranteed present — these are REAL counts, not
+  // loading fallbacks (P0-6.4: never substitute zero for an unavailable count).
+  const blockers = workspace.findingSummary.blockers;
+  const warnings = workspace.findingSummary.warnings;
   const deductionPct = run.grossTotal > 0 ? Math.round((run.deductionTotal / run.grossTotal) * 1000) / 10 : 0;
 
   return (
@@ -90,7 +124,7 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApp
             <h1>{runTitle(run)}</h1>
             <div class="sub">{run.runNo} · statutory version pinned · {curStage} stage</div>
           </div>
-          <div class="ha"><HeaderActions run={run} caps={workspace?.actions} actions={actions} /></div>
+          <div class="ha"><HeaderActions run={run} caps={workspace.actions} actions={actions} /></div>
         </div>
       </div>
 
@@ -141,10 +175,10 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApp
           ))}
         </div>
         <div class="lc-stats">
-          <div class="lc-stat"><span>◎</span><div><div class="k">Employees</div><div class="v">{workspace?.currentCalculationVersion?.employeeCount ?? run.employeeCount}<small> / {run.employeeCount}</small></div></div></div>
-          <div class="lc-stat"><span>↻</span><div><div class="k">Calculation version</div><div class="v">{workspace?.currentCalculationVersion?.versionNo ?? '—'}</div></div></div>
-          <div class="lc-stat"><span>◷</span><div><div class="k">Attempts</div><div class="v">{workspace?.calculationAttempts.length ?? 0}</div></div></div>
-          <div class="lc-stat"><span>✓</span><div><div class="k">Open findings</div><div class="v">{workspace?.findingSummary.actionable ?? 0}</div></div></div>
+          <div class="lc-stat"><span>◎</span><div><div class="k">Employees</div><div class="v">{workspace.currentCalculationVersion?.employeeCount ?? run.employeeCount}<small> / {run.employeeCount}</small></div></div></div>
+          <div class="lc-stat"><span>↻</span><div><div class="k">Calculation version</div><div class="v">{workspace.currentCalculationVersion?.versionNo ?? '—'}</div></div></div>
+          <div class="lc-stat"><span>◷</span><div><div class="k">Attempts</div><div class="v">{workspace.calculationAttempts.length}</div></div></div>
+          <div class="lc-stat"><span>✓</span><div><div class="k">Open findings</div><div class="v">{workspace.findingSummary.actionable}</div></div></div>
         </div>
       </section>
 
@@ -159,7 +193,7 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApp
       </section>
 
       {/* next-action banner */}
-      <NextActionBanner status={run.status} blockers={blockers} attempt={workspace?.calculationAttempts.length ?? 0} preflight={preflight} onGo={() => setTab('exceptions')} />
+      <NextActionBanner status={run.status} blockers={blockers} attempt={workspace.calculationAttempts.length} preflight={preflight} onGo={() => setTab('exceptions')} />
 
       {run.status === 'calculation_failed' ? (
         /* F-05 — calculation-failure recovery replaces the tabs while the run is failed */
@@ -180,7 +214,7 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApp
           <div class="run-panel on">
             {tab === 'summary'        && <SummaryPanel run={run} workspace={workspace} preflight={preflight} />}
             {tab === 'population'     && <PopulationPanel runId={run.id} />}
-            {tab === 'inputs'         && <InputsPanel run={run} canManage={canManage} inputSnapshot={workspace?.inputSnapshot} />}
+            {tab === 'inputs'         && <InputsPanel run={run} canManage={canManage} inputSnapshot={workspace.inputSnapshot} />}
             {tab === 'reconciliation' && <ReconciliationPanel runId={run.id} />}
             {tab === 'exceptions'     && <ExceptionsPanel run={run} workspace={workspace} canManage={canManage} />}
             {tab === 'approvals'      && <ApprovalsPanel run={run} />}

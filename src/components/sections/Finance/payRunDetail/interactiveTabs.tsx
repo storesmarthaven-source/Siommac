@@ -14,6 +14,7 @@ import { toast } from '@store';
 import { dialog } from '@lib/dialog';
 import { can } from '@lib/permissions';
 import { HrfinPill, type HrfinTone } from '@ui';
+import { PayrollPanelState } from './PanelState';
 import {
   useRunLines,
   useRunInputs,
@@ -84,12 +85,17 @@ export interface PayRunDrawerActions {
 // ── Run Lines ───────────────────────────────────────────────────────────────────
 
 export function RunLinesTab({ runId }: { runId: string }): VNode {
-  const { data: lines, isLoading } = useRunLines(runId);
+  const { data: lines, isLoading, isError, error, refetch } = useRunLines(runId);
   const allIds = (lines ?? []).map(l => l.employeeId);
   const { data: nameMap } = useEmployeeNames(allIds);
 
-  if (isLoading) return <div class="hrfin-empty">Loading run lines…</div>;
-  if (!lines || lines.length === 0) return <div class="hrfin-empty">No run lines — run Calculate first.</div>;
+  // P1-7: loading / error / truthful-empty are distinct — an API failure must
+  // never render as "No run lines".
+  if (isLoading || isError || !lines?.length) {
+    return <PayrollPanelState loading={isLoading} error={isError ? error : undefined}
+      onRetry={() => void refetch()} empty label="run lines"
+      emptyText="No run lines — run Calculate first." />;
+  }
 
   return (
     <div style={{ overflowX: 'auto' }}>
@@ -130,13 +136,16 @@ export function RunLinesTab({ runId }: { runId: string }): VNode {
 // ── Inputs ──────────────────────────────────────────────────────────────────────
 
 export function InputsTab({ runId, runStatus, canManage }: { runId: string; runStatus: string; canManage: boolean }): VNode {
-  const { data: inputs, isLoading } = useRunInputs(runId);
+  const { data: inputs, isLoading, isError, error, refetch } = useRunInputs(runId);
   const allIds = (inputs ?? []).map(i => i.employeeId);
   const { data: nameMap } = useEmployeeNames(allIds);
   const canEditInputs = canManage && runStatus === 'input_locked';
 
-  if (isLoading) return <div class="hrfin-empty">Loading inputs…</div>;
-  if (!inputs || inputs.length === 0) return <div class="hrfin-empty">No inputs snapshotted — run Lock Inputs first.</div>;
+  if (isLoading || isError || !inputs?.length) {
+    return <PayrollPanelState loading={isLoading} error={isError ? error : undefined}
+      onRetry={() => void refetch()} empty label="input snapshot"
+      emptyText="No inputs snapshotted — run Lock Inputs first." />;
+  }
 
   async function handleEditAmount(inp: PayrollRunInput): Promise<void> {
     const raw = await dialog.prompt({
@@ -242,13 +251,18 @@ export function InputsTab({ runId, runStatus, canManage }: { runId: string; runS
 // ── Warnings ──────────────────────────────────────────────────────────────────
 
 export function WarningsTab({ runId, canManage }: { runId: string; canManage: boolean }): VNode {
-  const { data: warnings, isLoading, refetch } = useRunWarnings(runId);
+  const { data: warnings, isLoading, isError, error, refetch } = useRunWarnings(runId);
   const [resolving,     setResolving]     = useState<PayrollRunWarning | null>(null);
   const [acknowledging, setAcknowledging] = useState<string | null>(null);
   const ackMut = usePayrollMutation(financePayrollApi.resolveWarning);
 
-  if (isLoading) return <div class="hrfin-empty">Loading warnings…</div>;
-  if (!warnings || warnings.length === 0) return <div class="hrfin-empty">No warnings for this run.</div>;
+  // "No warnings" is a CONTROL claim — it may only render after a successful
+  // empty response, never as the face of an outage (P1-7).
+  if (isLoading || isError || !warnings?.length) {
+    return <PayrollPanelState loading={isLoading} error={isError ? error : undefined}
+      onRetry={() => void refetch()} empty label="warnings"
+      emptyText="No warnings for this run." />;
+  }
 
   function warnTone(severity: string): HrfinTone {
     if (severity === 'blocker' || severity === 'error') return 'bad';
@@ -344,7 +358,7 @@ export function WarningsTab({ runId, canManage }: { runId: string; canManage: bo
 
 export function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: boolean }): VNode {
   const runId = run.id;
-  const { data: payslips, isLoading, refetch } = useRunPayslips(runId);
+  const { data: payslips, isLoading, isError, error, refetch } = useRunPayslips(runId);
   const allIds = (payslips ?? []).map(p => p.employeeId);
   const { data: nameMap } = useEmployeeNames(allIds);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -428,7 +442,10 @@ export function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: bo
     setSelected(prev => prev.size === payslips.length ? new Set() : new Set(payslips.map(p => p.id)));
   }
 
-  if (isLoading) return <div class="hrfin-empty">Loading payslips…</div>;
+  if (isLoading || isError) {
+    return <PayrollPanelState loading={isLoading} error={isError ? error : undefined}
+      onRetry={() => void refetch()} label="payslips" />;
+  }
   if (!payslips || payslips.length === 0) return (
     <div class="hrfin-empty" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
       <div>No payslips yet. The run must be <strong>locked</strong> first.</div>
@@ -532,7 +549,7 @@ export function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: bo
 
 export function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: string }): VNode {
   const { data: lines } = useRunLines(runId);
-  const { data: overrides, isLoading } = useRunOverrides(runId);
+  const { data: overrides, isLoading, isError: ovIsError, error: ovError, refetch: ovRefetch } = useRunOverrides(runId);
   const empIds = (lines ?? []).map(l => l.employeeId);
   const { data: nameMap } = useEmployeeNames(empIds);
   const canOverride = can('finance.payroll.worksheet.override');
@@ -676,7 +693,10 @@ export function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: s
         </div>
       )}
 
-      {isLoading ? <div class="hrfin-empty">Loading overrides…</div>
+      {isLoading || ovIsError ? (
+        <PayrollPanelState loading={isLoading} error={ovIsError ? ovError : undefined}
+          onRetry={() => void ovRefetch()} label="worksheet overrides" />
+      )
         : list.length === 0 ? <div class="hrfin-empty" style={{ padding: '14px 0' }}>No overrides on this run.</div>
         : (
           <table class="vt-table" style={{ fontSize: 12 }}>
@@ -918,7 +938,7 @@ function MassEditModal({ runId, employeeIds, onClose, onApplied }: {
 // ── GL (general-ledger posting) ─────────────────────────────────────────────────
 
 export function GlTab({ runId, runStatus }: { runId: string; runStatus: string }): VNode {
-  const { data: p, isLoading } = useRunGlPreview(runId);
+  const { data: p, isLoading, isError, error, refetch } = useRunGlPreview(runId);
   const postMut    = usePayrollMutation(financePayrollApi.glPost);
   const reverseMut = usePayrollMutation(financePayrollApi.glReverse);
   const canPost = can('finance.payroll.gl.post');
@@ -942,8 +962,13 @@ export function GlTab({ runId, runStatus }: { runId: string; runStatus: string }
     } catch (e) { toast(e instanceof Error ? e.message : 'GL reversal failed.'); }
   }
 
-  if (isLoading) return <div class="hrfin-empty">Loading GL…</div>;
-  if (!p) return <div class="hrfin-empty">GL preview unavailable.</div>;
+  // "GL unavailable" was the doc's cited failure-masking symptom — an API error
+  // now renders as an ERROR with retry + correlation id, never as absence (P1-7).
+  if (isLoading || isError || !p) {
+    return <PayrollPanelState loading={isLoading} error={isError ? error : undefined}
+      onRetry={() => void refetch()} empty label="GL preview"
+      emptyText="No GL preview — the run needs a calculated version first." />;
+  }
 
   const isLocked = runStatus === 'locked' || runStatus === 'exported';
   const canDoPost = canPost && !p.alreadyPosted && isLocked && p.balanced && p.missingMappings.length === 0;
@@ -1003,7 +1028,7 @@ export function GlTab({ runId, runStatus }: { runId: string; runStatus: string }
 // ── Exports ─────────────────────────────────────────────────────────────────────
 
 export function ExportsTab({ runId, canExport }: { runId: string; canExport: boolean }): VNode {
-  const { data: exports, isLoading, refetch } = useRunExports(runId);
+  const { data: exports, isLoading, isError, error, refetch } = useRunExports(runId);
   const downloadMut = useExportDownload();
   const regenMut    = usePayrollMutation(financePayrollApi.exportRun);
   const regenKeys   = useRef<Map<string, string>>(new Map());
@@ -1046,8 +1071,11 @@ export function ExportsTab({ runId, canExport }: { runId: string; canExport: boo
     toast('Export ID copied.');
   }
 
-  if (isLoading) return <div class="hrfin-empty">Loading exports…</div>;
-  if (!exports || exports.length === 0) return <div class="hrfin-empty">No exports for this run. Lock the run first, then export.</div>;
+  if (isLoading || isError || !exports?.length) {
+    return <PayrollPanelState loading={isLoading} error={isError ? error : undefined}
+      onRetry={() => void refetch()} empty label="exports"
+      emptyText="No exports for this run yet. A released run can be exported." />;
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
