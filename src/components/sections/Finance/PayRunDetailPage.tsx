@@ -115,8 +115,9 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApp
       {/* breadcrumb + page header */}
       <div>
         <div class="crumbs">
-          <a onClick={onBack}>Payroll</a><span class="sep">›</span>
-          <a onClick={onBack}>Payroll runs</a><span class="sep">›</span>
+          {/* WP-6: real buttons, not href-less anchors (keyboard + AT reachable). */}
+          <button type="button" class="crumb-link" onClick={onBack}>Payroll</button><span class="sep">›</span>
+          <button type="button" class="crumb-link" onClick={onBack}>Payroll runs</button><span class="sep">›</span>
           <b>{run.runNo}</b>
         </div>
         <div class="page-header">
@@ -200,10 +201,26 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApp
         <CalcFailurePanel workspace={workspace} />
       ) : (
         <Fragment>
-          {/* tabs */}
-          <nav class="run-tabs">
+          {/* tabs — WP-6: real tab semantics (tablist/tab/tabpanel, aria-selected,
+              aria-controls, roving tabindex + Arrow/Home/End keyboard navigation). */}
+          <nav class="run-tabs" role="tablist" aria-label="Payroll run sections"
+            onKeyDown={e => {
+              const keys: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1, Home: 0, End: 0 };
+              if (!(e.key in keys)) return;
+              e.preventDefault();
+              const idx = TAB_DEFS.findIndex(t => t.key === tab);
+              const next = e.key === 'Home' ? 0
+                : e.key === 'End' ? TAB_DEFS.length - 1
+                : (idx + keys[e.key]! + TAB_DEFS.length) % TAB_DEFS.length;
+              const nextKey = TAB_DEFS[next]!.key;
+              setTab(nextKey);
+              (e.currentTarget.querySelector<HTMLElement>(`#run-tab-${nextKey}`))?.focus();
+            }}>
             {TAB_DEFS.map(t => (
-              <button type="button" class={`tab${tab === t.key ? ' on' : ''}`} key={t.key} onClick={() => setTab(t.key)}>
+              <button type="button" role="tab" id={`run-tab-${t.key}`}
+                aria-selected={tab === t.key} aria-controls="run-tabpanel"
+                tabIndex={tab === t.key ? 0 : -1}
+                class={`tab${tab === t.key ? ' on' : ''}`} key={t.key} onClick={() => setTab(t.key)}>
                 {t.label}
                 {t.key === 'exceptions' && blockers > 0 && <span class="pill red" style={{ padding: '2px 8px', fontSize: 11 }}>{blockers}</span>}
               </button>
@@ -211,7 +228,7 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApp
           </nav>
 
           {/* active panel */}
-          <div class="run-panel on">
+          <div class="run-panel on" role="tabpanel" id="run-tabpanel" aria-labelledby={`run-tab-${tab}`}>
             {tab === 'summary'        && <SummaryPanel run={run} workspace={workspace} preflight={preflight} />}
             {tab === 'population'     && <PopulationPanel runId={run.id} />}
             {tab === 'inputs'         && <InputsPanel run={run} canManage={canManage} inputSnapshot={workspace.inputSnapshot} />}

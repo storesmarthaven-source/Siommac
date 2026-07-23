@@ -275,7 +275,7 @@ export function PayNewRunWizard({
 
   return (
     <div class="pcrw">
-      <div class="pcrw-crumbs"><a onClick={onClose} style={{ cursor: 'pointer' }}>Payroll</a><span class="sep">›</span><b>New payroll run</b></div>
+      <div class="pcrw-crumbs"><button type="button" class="crumb-link" onClick={onClose}>Payroll</button><span class="sep">›</span><b>New payroll run</b></div>
       <div class="pcrw-head">
         <div>
           <h1>Create Payroll Run</h1>

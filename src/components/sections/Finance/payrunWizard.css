@@ -173,3 +173,8 @@
   .pcrw .pcrw-content { grid-template-columns: minmax(0, 1fr); }
   .pcrw .choice-grid, .pcrw .field-grid, .pcrw .field-grid.three { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* WP-6: breadcrumb button (real button, styled as the crumb link it replaces). */
+.pcrw-crumbs button.crumb-link { background: none; border: 0; padding: 0; font: inherit; cursor: pointer; color: var(--pcrw-accent); }
+.pcrw-crumbs button.crumb-link:hover { color: var(--pcrw-accent); text-decoration: underline; }
+.pcrw-crumbs button.crumb-link:focus-visible { outline: 2px solid var(--pcrw-accent); outline-offset: 2px; border-radius: 3px; }

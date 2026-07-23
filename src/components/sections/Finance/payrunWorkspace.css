@@ -351,3 +351,8 @@
 .prw .prw-page-error h3 { margin: 0; font-size: 16px; color: #7f1d1d; }
 .prw .prw-page-error p { margin: 0; font-size: 12.5px; color: #9f3a3a; max-width: 560px; overflow-wrap: anywhere; }
 .prw .prw-page-error .prw-panel-error-meta { font-size: 11.5px; color: #9f3a3a; }
+
+/* WP-6: breadcrumb buttons (real buttons, styled as the crumb links they replace). */
+.prw .crumbs button.crumb-link { background: none; border: 0; padding: 0; font: inherit; cursor: pointer; color: inherit; }
+.prw .crumbs button.crumb-link:hover { color: var(--brand); text-decoration: underline; }
+.prw .crumbs button.crumb-link:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 3px; }
