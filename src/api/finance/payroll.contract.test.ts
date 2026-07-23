@@ -62,6 +62,27 @@ describe('lifecycle command payload contracts (P0-1)', () => {
     await financePayrollApi.rejectRun({ id: 'run-1', reason: 'totals unexplained' });
     expect(apiPost).toHaveBeenCalledWith('finance/payroll/runs/reject', { id: 'run-1', reason: 'totals unexplained' });
   });
+
+  it('P0-4: create sends the three creation attestations verbatim (all literally true)', async () => {
+    okWith({});
+    await financePayrollApi.createRun({
+      idempotencyKey: 'k-create', runType: 'scheduled',
+      periodStart: '2026-07-01', periodEnd: '2026-07-31',
+      attestations: {
+        purposeScopeAndDatesReviewed: true,
+        preflightLimitationsAcknowledged: true,
+        separationOfDutiesAcknowledged: true,
+      },
+    });
+    expect(apiPost).toHaveBeenCalledWith('finance/payroll/runs/create', expect.objectContaining({
+      idempotencyKey: 'k-create',
+      attestations: {
+        purposeScopeAndDatesReviewed: true,
+        preflightLimitationsAcknowledged: true,
+        separationOfDutiesAcknowledged: true,
+      },
+    }));
+  });
 });
 
 describe('typed error decoding (P0-5)', () => {

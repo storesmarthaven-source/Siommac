@@ -1,3 +1,34 @@
+-- ═══════════════════════════════════════════════════════════════════════════
+-- OPERATOR APPLY (rev 2) — P0-4 creation attestations (certification WP-3).
+-- Re-applies the corrected canonical create-RPC source from migration
+-- 20260919000720_finance_payroll_run_metadata.sql (p_attestations added).
+--
+-- Rev 2: the first apply's fixed 20-arg DROP left a LEGACY overload behind
+-- (the DB carried two signatures from the mig-711 → mig-720 lineage) and the
+-- =1 verification correctly aborted the transaction. This revision DYNAMICALLY
+-- drops EVERY existing overload of finance_payroll_create_run_tx (introspected
+-- from pg_proc) before creating the corrected one, so exactly one remains
+-- regardless of signature history. Idempotent: safe to re-run.
+-- ═══════════════════════════════════════════════════════════════════════════
+
+begin;
+
+-- 1. Drop EVERY existing overload, whatever its historical signature.
+do $$
+declare r record;
+begin
+  for r in
+    select p.oid::regprocedure as sig
+      from pg_proc p
+      join pg_namespace ns on ns.oid = p.pronamespace
+     where ns.nspname = 'public'
+       and p.proname = 'finance_payroll_create_run_tx'
+  loop
+    execute format('drop function %s', r.sig);
+  end loop;
+end $$;
+
+-- 2. Corrected canonical source (verbatim from 20260919000720; idempotent DDL).
 -- ══════════════════════════════════════════════════════════════════════════
 -- Slice 1 — Create-Run wizard run metadata.
 -- Adds reason code (+ lookup), payroll owner, extra operational cut-offs,
@@ -512,3 +543,30 @@ begin
   return to_jsonb(v_run) || jsonb_build_object('duplicate', false);
 end
 $fn$;
+
+-- 3. Verify exactly ONE overload remains (fails the transaction otherwise).
+do $$
+declare v_count integer;
+begin
+  select count(*) into v_count
+    from pg_proc p join pg_namespace ns on ns.oid = p.pronamespace
+   where ns.nspname = 'public' and p.proname = 'finance_payroll_create_run_tx';
+  if v_count <> 1 then
+    raise exception 'expected exactly 1 finance_payroll_create_run_tx overload, found %', v_count;
+  end if;
+end $$;
+
+-- 4. Harden grants: server-only execution (the one remaining 21-arg signature).
+revoke all on function public.finance_payroll_create_run_tx(
+  text, text, text, date, date, uuid, integer, uuid, text, numeric, uuid,
+  date, date, text, text, timestamptz, timestamptz, date, text, text, jsonb)
+  from public, anon, authenticated;
+grant execute on function public.finance_payroll_create_run_tx(
+  text, text, text, date, date, uuid, integer, uuid, text, numeric, uuid,
+  date, date, text, text, timestamptz, timestamptz, date, text, text, jsonb)
+  to service_role;
+
+commit;
+
+-- 5. Reload the PostgREST schema cache.
+notify pgrst, 'reload schema';

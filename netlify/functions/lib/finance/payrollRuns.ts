@@ -17,6 +17,7 @@
 // ============================================================================
 
 import { sb } from '../db';
+import type { PayrollRunCreateAttestations } from '../../../../types/payrollRuns';
 import { emitAppEvent, deliverEventNotifications } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
 import { getStatutoryVersion, listNisClasses, assertDifferentApprover } from './statutoryConfig';
@@ -921,6 +922,8 @@ export interface CreateRunInput {
   fundingDate?: string;
   releaseWindow?: string;
   internalDescription?: string;
+  /** P0-4: required creation governance attestations (all literally true). */
+  attestations: PayrollRunCreateAttestations;
   actorId: string;
 }
 
@@ -949,6 +952,7 @@ export async function createPayrollRun(input: CreateRunInput): Promise<PayrollRu
     fundingDate: input.fundingDate,
     releaseWindow: input.releaseWindow,
     internalDescription: input.internalDescription,
+    attestations: input.attestations,
   });
   return toRunDto(row as unknown as DbRunRow);
 }

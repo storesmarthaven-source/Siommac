@@ -202,3 +202,14 @@ export interface PayrollRunActions {
   /** Why a nearly-available action is disabled (wrong state, missing permission, SoD). */
   disabledReasons: Partial<Record<Exclude<keyof PayrollRunActions, 'disabledReasons'>, string>>;
 }
+
+// ── P0-4: creation governance attestations (persisted, not accept-and-drop) ────
+// All three must be literally true; the route schema is strict (unknown keys
+// rejected). The canonical JSON participates in the create command's idempotency
+// hash and is persisted in the run-created app_event + hr_audit_log inside the
+// create transaction.
+export interface PayrollRunCreateAttestations {
+  purposeScopeAndDatesReviewed: true;
+  preflightLimitationsAcknowledged: true;
+  separationOfDutiesAcknowledged: true;
+}

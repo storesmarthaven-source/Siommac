@@ -353,6 +353,14 @@ router.post('/payroll/runs/create', async c => {
     fundingDate:         z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     releaseWindow:       z.string().trim().min(1).max(120).optional(),
     internalDescription: z.string().trim().max(2000).optional(),
+    // P0-4: creation governance attestations — all three literally true, unknown
+    // keys rejected (strict). Persisted in the create tx (event + audit) and part
+    // of the command's idempotency hash.
+    attestations: z.strictObject({
+      purposeScopeAndDatesReviewed:     z.literal(true),
+      preflightLimitationsAcknowledged: z.literal(true),
+      separationOfDutiesAcknowledged:   z.literal(true),
+    }),
   }), b(c));
   if (!v.ok) return v.response;
   try {

@@ -2,6 +2,7 @@ import { sb } from '../../db';
 import { selectAllRows } from '../../dbBulk';
 import { getActiveStatutoryVersion } from '../statutoryConfig';
 import { payrollRpcHttpError } from './rpcError';
+import type { PayrollRunCreateAttestations } from '../../../../../types/payrollRuns';
 
 export type PayrollRunType =
   | 'scheduled'
@@ -43,6 +44,8 @@ export interface CreatePayrollRunCommand {
   fundingDate?: string;
   releaseWindow?: string;
   internalDescription?: string;
+  /** P0-4: required creation governance attestations (all literally true). */
+  attestations: PayrollRunCreateAttestations;
 }
 
 export interface CalculationAttemptRow {
@@ -196,6 +199,8 @@ export async function createPayrollRunCommand(
     p_funding_date: command.fundingDate ?? null,
     p_release_window: command.releaseWindow ?? null,
     p_internal_description: command.internalDescription ?? null,
+    // P0-4: governance attestations — validated + hashed + persisted in the tx.
+    p_attestations: command.attestations,
   });
 
   return rpcData<Record<string, unknown>>(data, error);

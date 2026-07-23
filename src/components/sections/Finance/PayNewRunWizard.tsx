@@ -227,11 +227,18 @@ export function PayNewRunWizard({
   function goToStep(s: number): void { setBlocker(null); setStep(Math.max(0, Math.min(STEPS.length - 1, s))); }
 
   async function create(): Promise<void> {
-    if (!canCreate) return;
+    if (!canCreate) return;   // canCreate requires allConfirmed — the attestations below are real
     setBlocker(null);
     try {
       const run = await createMut.mutateAsync({
         idempotencyKey: idemKey,
+        // P0-4: the three review-step checkboxes ARE the governance attestations —
+        // persisted server-side in the create transaction (event + audit + hash).
+        attestations: {
+          purposeScopeAndDatesReviewed:     true,
+          preflightLimitationsAcknowledged: true,
+          separationOfDutiesAcknowledged:   true,
+        },
         runType,
         periodStart,
         periodEnd,

@@ -9,9 +9,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query';
 import { apiPost } from '@lib/api';
 import { PAYROLL_ERROR_FALLBACK_CODE, type PayrollApiErrorBody } from '../../../types/payrollErrors';
-import type { PayrollRunActions } from '../../../types/payrollRuns';
+import type { PayrollRunActions, PayrollRunCreateAttestations } from '../../../types/payrollRuns';
 
-export type { PayrollRunActions };
+export type { PayrollRunActions, PayrollRunCreateAttestations };
 import type {
   ReportCatalogEntry,
   ReportKpiTiles,
@@ -343,6 +343,9 @@ export interface CreateRunArgs {
   fundingDate?: string;         // YYYY-MM-DD
   releaseWindow?: string;
   internalDescription?: string;
+  /** P0-4: REQUIRED creation governance attestations — all three literally true.
+   *  Persisted server-side in the create transaction's event + audit evidence. */
+  attestations: PayrollRunCreateAttestations;
 }
 
 export interface PayrollReasonCode { code: string; label: string; runType: string | null; sortOrder: number }

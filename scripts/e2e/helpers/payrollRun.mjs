@@ -79,12 +79,23 @@ export function nisContributionPeriods({
   }));
 }
 
+// P0-4: the create contract REQUIRES all three creation attestations (strict
+// object, literal true). The helper supplies the canonical object by default so
+// every suite exercises the real governed contract; a test proving the negative
+// path passes `attestations: null` explicitly to omit them.
+export const PAYROLL_CREATE_ATTESTATIONS = Object.freeze({
+  purposeScopeAndDatesReviewed: true,
+  preflightLimitationsAcknowledged: true,
+  separationOfDutiesAcknowledged: true,
+});
+
 export function payrollRunCommand({
   idempotencyKey,
   periodStart,
   periodEnd,
   runType = 'scheduled',
   payFrequency = 'monthly',
+  attestations = PAYROLL_CREATE_ATTESTATIONS,
   ...optional
 }) {
   if (!idempotencyKey) throw new Error('payrollRunCommand requires idempotencyKey');
@@ -95,6 +106,7 @@ export function payrollRunCommand({
     periodStart,
     periodEnd: periodEnd ?? payrollPeriodEnd(periodStart, payFrequency),
     payFrequency,
+    ...(attestations == null ? {} : { attestations }),
     ...optional,
   };
 }
