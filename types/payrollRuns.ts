@@ -177,3 +177,28 @@ export interface PayrollRunCalendarResult {
   instances: PayrollRunCalendarInstance[];
   asOf: string;
 }
+
+// ── P0-2: authoritative per-run action capabilities (server-computed) ──────────
+// Computed in netlify/functions/lib/finance/payroll/runActions.ts from the run's
+// state + userCan() + separation-of-duty rules, and returned on the run-workspace
+// DTO. The UI renders lifecycle actions EXCLUSIVELY from this object; backend
+// route authorization remains final.
+export interface PayrollRunActions {
+  canLockInputs: boolean;
+  canCalculate: boolean;
+  canCertify: boolean;
+  canSubmit: boolean;
+  canApprove: boolean;
+  canReject: boolean;
+  canLock: boolean;
+  canReopen: boolean;
+  canConfirmFunding: boolean;
+  canRelease: boolean;
+  canGeneratePayslips: boolean;
+  canDistributePayslips: boolean;
+  canPreviewGl: boolean;
+  canPostGl: boolean;
+  canExport: boolean;
+  /** Why a nearly-available action is disabled (wrong state, missing permission, SoD). */
+  disabledReasons: Partial<Record<Exclude<keyof PayrollRunActions, 'disabledReasons'>, string>>;
+}

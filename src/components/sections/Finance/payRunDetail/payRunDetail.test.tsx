@@ -106,6 +106,8 @@ describe('F-02 policy-evidence panel (UT-PPR-U2 / U5)', () => {
 });
 
 describe('F-02 create-run typed blockers (UT-PPR-U3)', () => {
+  // P0-5: matchCreateBlocker resolves by EXACT typed error code (PayrollApiError.code),
+  // never by scanning message text — codes embedded in prose must NOT match.
   it('maps a pay-group-required failure to the payGroupId field', () => {
     const b = matchCreateBlocker('policy.pay_group_required');
     expect(b?.field).toBe('payGroupId');
@@ -122,19 +124,23 @@ describe('F-02 create-run typed blockers (UT-PPR-U3)', () => {
       ['calendar.zero_working_days', /no working days/i],
     ];
     for (const [code, re] of cases) {
-      const b = matchCreateBlocker(`some prefix ${code}`);
+      const b = matchCreateBlocker(code);
       expect(b, code).toBeTruthy();
       expect(b!.code).toBe(code);
       expect(b!.title).toMatch(re);
     }
   });
 
-  it('prefers the longest matching code (version_unpublished over unresolved)', () => {
+  it('matches the base token when the code carries a :qualifier suffix', () => {
     expect(matchCreateBlocker('calendar.version_unpublished')?.code).toBe('calendar.version_unpublished');
+    expect(matchCreateBlocker('policy.missing:whole_period')?.code).toBe('policy.missing');
   });
 
-  it('returns null for a message with no known code', () => {
+  it('does NOT match a code embedded in prose (typed codes only), nor unknown/absent codes', () => {
+    expect(matchCreateBlocker('some prefix policy.missing')).toBeNull();
     expect(matchCreateBlocker('some unrelated 500 error')).toBeNull();
+    expect(matchCreateBlocker(null)).toBeNull();
+    expect(matchCreateBlocker(undefined)).toBeNull();
   });
 });
 

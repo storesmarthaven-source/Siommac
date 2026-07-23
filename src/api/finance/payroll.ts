@@ -8,6 +8,10 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query';
 import { apiPost } from '@lib/api';
+import { PAYROLL_ERROR_FALLBACK_CODE, type PayrollApiErrorBody } from '../../../types/payrollErrors';
+import type { PayrollRunActions } from '../../../types/payrollRuns';
+
+export type { PayrollRunActions };
 import type {
   ReportCatalogEntry,
   ReportKpiTiles,
@@ -263,7 +267,8 @@ export interface PayrollExport {
   id: string;
   exportNo: string;
   runId: string;
-  format: string;
+  /** The backend export enum — only these two are ever produced (runs/export Zod contract). */
+  format: 'csv' | 'json';
   filePath: string;
   checksum: string | null;
   generatedBy: string | null;
@@ -541,6 +546,8 @@ export interface PayrollRunWorkspace {
   findingSummary: PayrollFindingSummary;
   priorityFindings: PayrollControlFinding[];
   audit: RunAuditLogEntry[];
+  /** P0-2: server-computed per-actor action capabilities — the UI's only source. */
+  actions: PayrollRunActions;
 }
 export interface PayrollReleasePreflight {
   runId: string; runNo: string; status: string; ready: boolean; alreadyReleased: boolean;
@@ -569,11 +576,36 @@ export interface PayrollCalculationComparison {
   changes: { employeeId: string; change: 'added' | 'removed' | 'changed'; grossDelta: number; deductionDelta: number; netDelta: number }[];
 }
 
-// ── Core call helper ────────────────────────────────────────────────────────────
+// ── Typed error + core call helper ──────────────────────────────────────────────
+
+/**
+ * P0-5: the typed payroll API error. UI code switches on `code` (and renders
+ * `fieldErrors` / shows `correlationId`) — NEVER by matching message substrings.
+ * `message` stays the sanitized human summary so existing toasts keep working.
+ */
+export class PayrollApiError extends Error {
+  readonly code: string;
+  readonly correlationId: string | null;
+  readonly fieldErrors: Record<string, string> | undefined;
+  readonly retryable: boolean;
+  constructor(body: Partial<PayrollApiErrorBody> & { message: string }) {
+    super(body.message);
+    this.name = 'PayrollApiError';
+    this.code = body.code ?? PAYROLL_ERROR_FALLBACK_CODE;
+    this.correlationId = body.correlationId ?? null;
+    this.fieldErrors = body.fieldErrors;
+    this.retryable = body.retryable ?? false;
+  }
+}
 
 async function call<T>(path: string, args: object = {}): Promise<T> {
-  const res = await apiPost<{ success: boolean; data: T; message?: string }>(path, args as Record<string, unknown>);
-  if (!res.success) throw new Error(res.message ?? `Request to ${path} failed.`);
+  const res = await apiPost<{ success: boolean; data: T; message?: string; error?: PayrollApiErrorBody }>(
+    path, args as Record<string, unknown>,
+  );
+  if (!res.success) {
+    const message = res.error?.message ?? res.message ?? `Request to ${path} failed.`;
+    throw new PayrollApiError({ ...res.error, message });
+  }
   return res.data;
 }
 
@@ -584,17 +616,19 @@ export const financePayrollApi = {
   // src/api/finance/payrollRunsRegister.ts (runsRegisterApi.list → PayrollRunListResult).
   getRun:      (a: { id: string })                     => call<PayrollRun>('finance/payroll/runs/get', a),
   createRun:   (a: CreateRunArgs)                       => call<PayrollRun>('finance/payroll/runs/create', a),
-  lockInputs:  (a: { id: string })                     => call<PayrollRun>('finance/payroll/runs/lock-inputs', a),
-  calculate:   (a: { id: string })                     => call<PayrollRun>('finance/payroll/runs/calculate', a),
-  // idempotencyKey is REQUIRED and must be stable across retries of one submit attempt
-  // (the caller generates it once and reuses it) — a per-call key can't recover a lost
-  // response. See PayrollCommandCenter submit handler.
+  // idempotencyKey is REQUIRED on every state-advancing run command (the backend Zod
+  // contract rejects its absence with 400) and must be stable across retries of ONE
+  // attempt — the caller mints it once per attempt and reuses it so a lost response
+  // recovers via the receipt; a fresh per-call key can't dedupe. See the
+  // PayrollCommandCenter stableAction helper. reopen additionally REQUIRES a reason.
+  lockInputs:  (a: { id: string; idempotencyKey: string }) => call<PayrollRun>('finance/payroll/runs/lock-inputs', a),
+  calculate:   (a: { id: string; idempotencyKey: string }) => call<PayrollRun>('finance/payroll/runs/calculate', a),
   submitRun:   (a: { id: string; idempotencyKey: string }) => call<PayrollRun>('finance/payroll/runs/submit', a),
   approveRun:  (a: { id: string })                     => call<PayrollRun>('finance/payroll/runs/approve', a),
   rejectRun:   (a: { id: string; reason: string })     => call<PayrollRun>('finance/payroll/runs/reject', a),
-  lockRun:     (a: { id: string })                     => call<PayrollRun>('finance/payroll/runs/lock', a),
-  reopenRun:   (a: { id: string; reason?: string })    => call<PayrollRun>('finance/payroll/runs/reopen', a),
-  exportRun:   (a: { id: string; format?: string })    => call<PayrollExport>('finance/payroll/runs/export', a),
+  lockRun:     (a: { id: string; idempotencyKey: string }) => call<PayrollRun>('finance/payroll/runs/lock', a),
+  reopenRun:   (a: { id: string; reason: string; idempotencyKey: string }) => call<PayrollRun>('finance/payroll/runs/reopen', a),
+  exportRun:   (a: { id: string; idempotencyKey: string; format?: 'csv' | 'json' }) => call<PayrollExport>('finance/payroll/runs/export', a),
 
   // Run detail
   listInputs:   (a: { runId: string })                 => call<PayrollRunInput[]>('finance/payroll/inputs/list', a),

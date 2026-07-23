@@ -27,6 +27,7 @@ import {
   usePayGroups,
   useReasonCodes,
   financePayrollApi,
+  PayrollApiError,
   type PayrollRun,
   type PayrollRunType,
   type PopulationReconciliationRule,
@@ -102,11 +103,17 @@ const CREATE_BLOCKERS: Record<string, CreateBlocker> = {
   'calendar.version_period_uncovered': { title: 'Work calendar does not cover the whole period', detail: 'The resolved work-calendar version’s effective window does not cover the whole pay period. Extend or reassign the calendar version.' },
 };
 
-/** Match a create failure message against the typed blocker codes (longest first). */
-export function matchCreateBlocker(message: string): (CreateBlocker & { code: string }) | null {
-  const codes = Object.keys(CREATE_BLOCKERS).sort((a, b) => b.length - a.length);
-  for (const code of codes) if (message.includes(code)) return { code, ...CREATE_BLOCKERS[code]! };
-  return null;
+/**
+ * Resolve a typed create failure to its blocker card by EXACT error code
+ * (P0-5: the code comes from PayrollApiError.code — never parsed out of
+ * display text). Codes may carry a `:qualifier` suffix (e.g.
+ * 'policy.source_missing:payment_destination'); match on the base token.
+ */
+export function matchCreateBlocker(code: string | null | undefined): (CreateBlocker & { code: string }) | null {
+  if (!code) return null;
+  const base = code.split(':', 1)[0]!;
+  const hit = CREATE_BLOCKERS[base];
+  return hit ? { code: base, ...hit } : null;
 }
 
 function lastOfMonth(ym: string): string {
@@ -170,9 +177,7 @@ export function PayNewRunWizard({
   const [blocker, setBlocker]       = useState<(CreateBlocker & { code: string }) | null>(null);
 
   // Caller-owned idempotency key — stable across retries of one create attempt.
-  const [idemKey] = useState(() =>
-    (globalThis.crypto?.randomUUID?.() ?? `run-${String(performance.now()).replace('.', '')}`),
-  );
+  const [idemKey] = useState(() => crypto.randomUUID());
 
   const payGroupsQ  = usePayGroups(true);
   const groups      = payGroupsQ.data ?? [];
@@ -246,8 +251,10 @@ export function PayNewRunWizard({
       toast(`Payroll run ${run.runNo} created as draft.`);
       onCreated(run);
     } catch (e) {
+      // P0-5: switch on the typed error code — never match message substrings.
+      const code = e instanceof PayrollApiError ? e.code : null;
       const msg = e instanceof Error ? e.message : '';
-      const b = matchCreateBlocker(msg);
+      const b = matchCreateBlocker(code);
       if (b) { setBlocker(b); toast(b.title); if (b.field === 'payGroupId') setStep(1); }
       else toast(msg || 'Failed to create payroll run.');
     }
@@ -539,7 +546,7 @@ export function PayNewRunWizard({
                   ? <span class="pcrw-skel" style={{ width: '100%', height: 200 }} />
                   : readinessQ.isError
                     ? <div class="banner danger"><div class="b-ico">!</div><div><div class="b-title">Readiness unavailable</div><div class="b-sub">Could not load input-source readiness. Retry, or continue — inputs still freeze at Lock Inputs.</div></div></div>
-                    : readiness && readiness.sources.map(s => (
+                    : readiness?.sources.map(s => (
                       <div class="readiness-row" key={s.key}>
                         <div class={`rc ${READINESS_RC[s.state]}`}>{READINESS_ICON[s.state]}</div>
                         <div class="rt">

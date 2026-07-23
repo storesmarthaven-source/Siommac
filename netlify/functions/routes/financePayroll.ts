@@ -143,6 +143,10 @@ import {
 } from '../../../types/payrollReports';
 import type { ReportFormat, InteractiveReportParams } from '../../../types/payrollReports';
 import type { HonoVariables } from '../../../types/api';
+import {
+  extractPayrollErrorCode, PAYROLL_ERROR_FALLBACK_CODE,
+  type PayrollApiErrorEnvelope,
+} from '../../../types/payrollErrors';
 
 const router = new Hono<{ Variables: HonoVariables }>();
 
@@ -150,13 +154,35 @@ const router = new Hono<{ Variables: HonoVariables }>();
 const b = (c: { get: (k: string) => unknown }) =>
   (c.get('body') as Record<string, unknown>).args ?? {};
 
-/** Standard route error handler. */
+/**
+ * Standard route error handler — emits the ONE sanitized payroll error envelope
+ * (P0-5, types/payrollErrors.ts). The typed domain code comes from the thrown
+ * error's `.code` (attached by payrollRpcHttpError / lib throws) or is lifted
+ * from the leading token of the message; SQLSTATE never leaks as a code. The
+ * correlationId is logged here so operators can join a UI report to this line.
+ * The legacy top-level `message` is preserved for existing consumers.
+ */
 function routeErr(c: { json: (v: unknown, s: number) => Response }, e: unknown): Response {
-  const er = e as { status?: number; message?: string };
-  return c.json(
-    { success: false, message: er.message ?? 'Internal error' },
-    er.status ?? 500,
-  );
+  const er = e as { status?: number; message?: string; code?: string; fieldErrors?: Record<string, string>; details?: Record<string, unknown> };
+  const status = er.status ?? 500;
+  const message = er.message ?? 'Internal error';
+  const correlationId = crypto.randomUUID();
+  const code = er.code ?? extractPayrollErrorCode(message) ?? PAYROLL_ERROR_FALLBACK_CODE;
+  // Ops correlation line — the only place the raw error object is visible.
+  console.error(`[payroll] ${correlationId} ${status} ${code}: ${message}`);
+  const envelope: PayrollApiErrorEnvelope = {
+    success: false,
+    message,
+    error: {
+      code,
+      message,
+      correlationId,
+      retryable: status >= 500,
+      ...(er.fieldErrors ? { fieldErrors: er.fieldErrors } : {}),
+      ...(er.details ? { details: er.details } : {}),
+    },
+  };
+  return c.json(envelope, status);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -681,7 +707,9 @@ router.post('/payroll/payslips/notify', async c => {
 // Generate payslips for all employees in a locked run.
 // Finance-only: requires view_all.
 router.post('/payroll/payslips/generate', async c => {
-  const actor = await requirePermission(c, 'finance.payroll.view_all');
+  // P0-2: this is a WRITE (creates payslip rows) — gate on the payslips.generate
+  // permission like its render-run/notify siblings, not the read-only view_all.
+  const actor = await requirePermission(c, 'finance.payroll.payslips.generate');
   const v = zv(c, z.object({ runId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
@@ -1234,11 +1262,13 @@ router.post('/payroll/findings/list', async c => {
 });
 
 router.post('/payroll/runs/workspace', async c => {
-  await requirePermission(c, 'finance.payroll.view_all');
+  // The actor is threaded through so the workspace can compute the authoritative
+  // per-actor action capabilities (P0-2) alongside the run evidence.
+  const actor = await requirePermission(c, 'finance.payroll.view_all');
   const v = zv(c, z.object({ id: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await getPayrollRunWorkspace(v.data.id);
+    const data = await getPayrollRunWorkspace(v.data.id, actor);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });

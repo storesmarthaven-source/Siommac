@@ -1,4 +1,5 @@
 import { sb } from '../../db';
+import { computeRunActions, type PayrollRunActions } from './runActions';
 import {
   getPayrollRun,
   listRunAuditLog,
@@ -59,6 +60,11 @@ export interface PayrollRunWorkspace {
   findingSummary: PayrollFindingSummary;
   priorityFindings: PayrollControlFinding[];
   audit: RunAuditLogEntry[];
+  /**
+   * P0-2: authoritative per-actor action capabilities (state + userCan() + SoD),
+   * computed server-side. The UI renders lifecycle actions exclusively from this.
+   */
+  actions: PayrollRunActions;
 }
 
 const findingStates: PayrollFindingState[] = [
@@ -101,13 +107,16 @@ function summarizeFindings(findings: PayrollControlFinding[]): PayrollFindingSum
   };
 }
 
-export async function getPayrollRunWorkspace(runId: string): Promise<PayrollRunWorkspace> {
+export async function getPayrollRunWorkspace(
+  runId: string,
+  actor: { id: string; role?: string | null },
+): Promise<PayrollRunWorkspace> {
   const run = await getPayrollRun(runId);
   if (!run) {
     throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
   }
 
-  const [inputSnapshot, currentCalculationVersion, calculationAttempts, findings, audit] =
+  const [inputSnapshot, currentCalculationVersion, calculationAttempts, findings, audit, actions] =
     await Promise.all([
       getInputSnapshot(run.currentInputSnapshotId),
       run.currentCalculationVersionId
@@ -121,6 +130,11 @@ export async function getPayrollRunWorkspace(runId: string): Promise<PayrollRunW
           })
         : Promise.resolve([]),
       listRunAuditLog(runId),
+      computeRunActions(actor, {
+        status: run.status,
+        createdBy: run.createdBy,
+        hasCurrentCalculationVersion: run.currentCalculationVersionId != null,
+      }),
     ]);
 
   const severityRank: Record<PayrollFindingSeverity, number> = {
@@ -145,6 +159,7 @@ export async function getPayrollRunWorkspace(runId: string): Promise<PayrollRunW
     findingSummary: summarizeFindings(findings),
     priorityFindings,
     audit,
+    actions,
   };
 }
 
@@ -165,10 +180,10 @@ async function getInputSnapshot(id: string | null): Promise<PayrollInputSnapshot
   if (!data) return null;
   return {
     id: data.id,
-    snapshotNo: Number(data.snapshot_no),
+    snapshotNo: data.snapshot_no,
     checksum: data.checksum,
-    employeeCount: Number(data.employee_count),
-    inputCount: Number(data.input_count),
+    employeeCount: data.employee_count,
+    inputCount: data.input_count,
     sourceSummary: data.source_summary,
     lockedBy: data.locked_by,
     lockedAt: data.locked_at,

@@ -27,9 +27,27 @@ export function zv<T>(
   const result = schema.safeParse(input);
   if (!result.success) {
     const issues = result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ');
+    // Per-field map for the typed error envelope (P0-5). First issue per path wins;
+    // pathless (root) issues key as '_'. Additive — legacy `message` is preserved.
+    const fieldErrors: Record<string, string> = {};
+    for (const i of result.error.issues) {
+      const key = i.path.length ? i.path.join('.') : '_';
+      if (!(key in fieldErrors)) fieldErrors[key] = i.message;
+    }
+    const correlationId = crypto.randomUUID();
     return {
       ok: false,
-      response: c.json({ success: false, message: `Validation error: ${issues}` }, 400) as Response,
+      response: c.json({
+        success: false,
+        message: `Validation error: ${issues}`,
+        error: {
+          code: 'validation.failed',
+          message: 'One or more request fields are invalid.',
+          correlationId,
+          fieldErrors,
+          retryable: false,
+        },
+      }, 400),
     };
   }
   return { ok: true, data: result.data };
@@ -39,7 +57,7 @@ export function zv<T>(
 
 export const zUsername   = z.string().min(1).max(64).regex(/^[a-zA-Z0-9_.\-@]+$/, 'Invalid characters in username');
 export const zPassword   = z.string().min(6).max(128);
-export const zUuid       = z.string().uuid();
+export const zUuid       = z.uuid();
 export const zDateStr    = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD');
 export const zHHMM       = z.string().regex(/^\d{2}:\d{2}$/, 'Must be HH:MM');
 export const zRole       = z.enum(['admin', 'manager', 'employee']);
@@ -98,7 +116,7 @@ export const UpdateLayoutModeSchema = z.object({
 export const UpdateMyProfileSchema = z.object({
   username:           zUsername,
   fullName:           zShortStr(128).optional(),
-  email:              z.string().email().max(128).optional().or(z.literal('')),
+  email:              z.email().max(128).optional().or(z.literal('')),
   phone:              z.string().max(32).optional(),
   profileImageBase64: zBase64Img,
   removeProfileImage: z.boolean().optional(),
@@ -124,7 +142,7 @@ export const AddEmployeeSchema = z.object({
   department:                z.string().max(64).optional(),
   position:                  zOptStr(128),
   employeeNumber:            zOptStr(32),
-  email:                     z.string().email().max(128).optional().or(z.literal('')),
+  email:                     z.email().max(128).optional().or(z.literal('')),
   phone:                     zOptStr(32),
   payCycle:                  zPayCycle.optional(),
   payBasis:                  zPayBasis.optional(),
@@ -144,7 +162,7 @@ export const UpdateEmployeeSchema = z.object({
   position:                  zOptStr(128),
   status:                    zStatus.optional(),
   employeeNumber:            zOptStr(32),
-  email:                     z.string().email().max(128).optional().or(z.literal('')),
+  email:                     z.email().max(128).optional().or(z.literal('')),
   phone:                     zOptStr(32),
   password:                  zPassword.optional(),
   payCycle:                  zPayCycle.optional(),

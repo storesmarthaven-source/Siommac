@@ -15,7 +15,7 @@ import { useState } from 'preact/hooks';
 import './payrunWorkspace.css';
 import {
   usePayrollRun, useRunWorkspace, useReleasePreflight,
-  type PayrollRun,
+  type PayrollRun, type PayrollRunActions,
 } from '@api/finance/payroll';
 import { humanize } from './financeShared';
 import { EmployeeCell } from './_shared/EmployeeCell';
@@ -43,7 +43,9 @@ const TAB_DEFS: { key: TabKey; label: string }[] = [
   { key: 'audit',          label: 'Audit' },
 ];
 
-export function PayRunDetailPage({ runId, onBack, canManage, canApprove, actions }: {
+// canApprove stays in the prop contract for callers, but rendering now derives
+// approval capability from the server-computed workspace.actions (P0-2).
+export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApprove, actions }: {
   runId: string;
   onBack: () => void;
   canManage: boolean;
@@ -88,7 +90,7 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove, actions
             <h1>{runTitle(run)}</h1>
             <div class="sub">{run.runNo} · statutory version pinned · {curStage} stage</div>
           </div>
-          <div class="ha"><HeaderActions run={run} canManage={canManage} canApprove={canApprove} actions={actions} /></div>
+          <div class="ha"><HeaderActions run={run} caps={workspace?.actions} actions={actions} /></div>
         </div>
       </div>
 
@@ -193,28 +195,31 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove, actions
   );
 }
 
-// ── header lifecycle actions (state-aware, permission-gated) ────────────────────
+// ── header lifecycle actions (P0-2: rendered EXCLUSIVELY from the server-computed
+//    capability object; P0-3: Export appears only when canExport = released) ─────
 
-function HeaderActions({ run, canManage, canApprove, actions }: {
-  run: PayrollRun; canManage: boolean; canApprove: boolean; actions: PayRunDrawerActions;
+export function HeaderActions({ run, caps, actions }: {
+  run: PayrollRun; caps: PayrollRunActions | undefined; actions: PayRunDrawerActions;
 }): VNode {
+  // Capabilities arrive with the workspace query; until then offer nothing rather
+  // than guessing (the backend remains final either way).
+  if (!caps) return <button class="btn" type="button" disabled>Loading actions…</button>;
   const s = run.status;
   const btns: VNode[] = [];
-  if (s === 'draft' && canManage) btns.push(<button class="btn primary" type="button" onClick={() => actions.onLockInputs(run)}>Lock Inputs</button>);
-  if ((s === 'input_locked' || s === 'returned') && canManage) btns.push(<button class="btn primary" type="button" onClick={() => actions.onCalculate(run)}>Calculate</button>);
-  if (s === 'calculation_failed' && canManage) btns.push(<button class="btn primary" type="button" onClick={() => actions.onCalculate(run)}>Retry Calculation</button>);
-  if ((s === 'calculated' || s === 'returned') && canManage) btns.push(<button class="btn primary" type="button" onClick={() => actions.onSubmit(run)}>{s === 'returned' ? 'Resubmit For Approval' : 'Submit For Approval'}</button>);
-  if (s === 'pending_approval' && canApprove) {
-    btns.push(<button class="btn primary" type="button" onClick={() => actions.onApprove(run)}>Approve</button>);
-    btns.push(<button class="btn danger" type="button" onClick={() => actions.onReject(run)}>Reject</button>);
+  if (caps.canLockInputs) btns.push(<button class="btn primary" type="button" onClick={() => actions.onLockInputs(run)}>Lock Inputs</button>);
+  if (caps.canCalculate) btns.push(<button class="btn primary" type="button" onClick={() => actions.onCalculate(run)}>{s === 'calculation_failed' ? 'Retry Calculation' : 'Calculate'}</button>);
+  if (caps.canSubmit) btns.push(<button class="btn primary" type="button" onClick={() => actions.onSubmit(run)}>{s === 'returned' ? 'Resubmit For Approval' : 'Submit For Approval'}</button>);
+  if (caps.canApprove) btns.push(<button class="btn primary" type="button" onClick={() => actions.onApprove(run)}>Approve</button>);
+  if (caps.canReject) btns.push(<button class="btn danger" type="button" onClick={() => actions.onReject(run)}>Reject</button>);
+  if (caps.canLock) btns.push(<button class="btn primary" type="button" onClick={() => actions.onLockRun(run)}>Lock Run</button>);
+  if (caps.canGeneratePayslips) btns.push(<button class="btn" type="button" onClick={() => actions.onGenPayslips(run)}>Generate Payslips</button>);
+  if (caps.canExport) btns.push(<button class="btn" type="button" onClick={() => actions.onExport(run)}>Export</button>);
+  if (caps.canReopen) btns.push(<button class="btn" type="button" onClick={() => actions.onReopen(run)}>Reopen</button>);
+  if (btns.length === 0) {
+    const reason = caps.disabledReasons.canLockInputs ?? caps.disabledReasons.canCalculate
+      ?? caps.disabledReasons.canSubmit ?? caps.disabledReasons.canApprove ?? undefined;
+    btns.push(<button class="btn" type="button" disabled title={reason}>No actions available</button>);
   }
-  if (s === 'approved' && canManage) btns.push(<button class="btn primary" type="button" onClick={() => actions.onLockRun(run)}>Lock Run</button>);
-  if (s === 'locked' && canManage) {
-    btns.push(<button class="btn" type="button" onClick={() => actions.onExport(run)}>Export</button>);
-    btns.push(<button class="btn" type="button" onClick={() => actions.onGenPayslips(run)}>Generate Payslips</button>);
-  }
-  if (s === 'locked' && canApprove) btns.push(<button class="btn" type="button" onClick={() => actions.onReopen(run)}>Reopen</button>);
-  if (btns.length === 0) btns.push(<button class="btn" type="button" disabled>No actions available</button>);
   return <>{btns}</>;
 }
 

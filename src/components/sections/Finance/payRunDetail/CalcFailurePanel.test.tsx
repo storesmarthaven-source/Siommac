@@ -62,6 +62,14 @@ function makeWorkspace(over: Partial<PayrollRunWorkspace> = {}): PayrollRunWorks
     findingSummary: { total: 1, actionable: 1, blockers: 1, warnings: 0, info: 0, byState: {}, byDomain: {} },
     priorityFindings: [makeFinding()],
     audit: [],
+    // P0-2: a failed run for a preparer — retry-calculate is the only open capability.
+    actions: {
+      canLockInputs: false, canCalculate: true, canCertify: false, canSubmit: false,
+      canApprove: false, canReject: false, canLock: false, canReopen: false,
+      canConfirmFunding: false, canRelease: false, canGeneratePayslips: false,
+      canDistributePayslips: false, canPreviewGl: false, canPostGl: false, canExport: false,
+      disabledReasons: {},
+    },
     ...over,
   };
 }

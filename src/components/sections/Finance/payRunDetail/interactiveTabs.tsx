@@ -9,7 +9,7 @@
  */
 
 import { type VNode } from 'preact';
-import { useState, useMemo } from 'preact/hooks';
+import { useState, useMemo, useRef } from 'preact/hooks';
 import { toast } from '@store';
 import { dialog } from '@lib/dialog';
 import { can } from '@lib/permissions';
@@ -541,6 +541,7 @@ export function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: s
   const addMut    = usePayrollMutation(financePayrollApi.addOverride);
   const removeMut = usePayrollMutation(financePayrollApi.removeOverride);
   const calcMut   = usePayrollMutation(financePayrollApi.calculate);
+  const recalcKeyRef = useRef<string | null>(null);
 
   const [empId, setEmpId]   = useState('');
   const [label, setLabel]   = useState('');
@@ -599,8 +600,14 @@ export function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: s
     catch (e) { toast(e instanceof Error ? e.message : 'Failed to remove override.'); }
   }
   async function recalc(): Promise<void> {
-    try { await calcMut.mutateAsync({ id: runId }); toast('Run recalculated with overrides.'); }
-    catch (e) { toast(e instanceof Error ? e.message : 'Recalculate failed.'); }
+    // Idempotency: stable key per recalc ATTEMPT (held across retries; cleared on success).
+    const key = recalcKeyRef.current ?? crypto.randomUUID();
+    recalcKeyRef.current = key;
+    try {
+      await calcMut.mutateAsync({ id: runId, idempotencyKey: key });
+      recalcKeyRef.current = null;
+      toast('Run recalculated with overrides.');
+    } catch (e) { toast(e instanceof Error ? e.message : 'Recalculate failed.'); }
   }
 
   const fieldStyle = { fontSize: 12, padding: '6px 8px', background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)', borderRadius: 6, color: 'var(--hrfin-text-primary)' };
@@ -999,6 +1006,7 @@ export function ExportsTab({ runId, canExport }: { runId: string; canExport: boo
   const { data: exports, isLoading, refetch } = useRunExports(runId);
   const downloadMut = useExportDownload();
   const regenMut    = usePayrollMutation(financePayrollApi.exportRun);
+  const regenKeys   = useRef<Map<string, string>>(new Map());
 
   async function handleDownload(exp: PayrollExport): Promise<void> {
     try {
@@ -1016,8 +1024,16 @@ export function ExportsTab({ runId, canExport }: { runId: string; canExport: boo
   }
 
   async function handleRegenerate(exp: PayrollExport): Promise<void> {
+    // Idempotency: one stable key per regenerate ATTEMPT (per run+format), held across
+    // retries so a lost response recovers via the receipt; cleared on success. A later
+    // intentional re-export mints a NEW key (source data may have changed).
+    const mapKey = `${exp.runId}:${exp.format}`;
+    const keys = regenKeys.current;
+    const key = keys.get(mapKey) ?? crypto.randomUUID();
+    keys.set(mapKey, key);
     try {
-      await regenMut.mutateAsync({ id: exp.runId, format: exp.format });
+      await regenMut.mutateAsync({ id: exp.runId, format: exp.format, idempotencyKey: key });
+      keys.delete(mapKey);
       void refetch();
       toast(`Re-export (${exp.format.toUpperCase()}) generated.`);
     } catch (e) {

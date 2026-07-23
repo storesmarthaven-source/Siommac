@@ -199,7 +199,7 @@ function ReadinessDoughnut({ passed, applicable, state }: { passed: number; appl
   useEffect(() => {
     if (!canvas) return;
     chartRef.current?.destroy();
-    const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const reduce = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const c = new Chart(canvas, {
       type: 'doughnut',
       data: { labels: ['Passed', 'Remaining'], datasets: [{ data: [passed, Math.max(0, applicable - passed)], backgroundColor: [arc, 'rgba(255,255,255,.12)'], borderWidth: 0 }] },
@@ -339,18 +339,22 @@ export function PayrollCommandCenter(): VNode {
     catch (e) { toast(e instanceof Error ? e.message : 'Action failed.'); }
   }
 
-  const submitKeys = useRef<Map<string, string>>(new Map());
-  function submitRunStable(runId: string): Promise<unknown> {
-    const keys = submitKeys.current;
-    const key = keys.get(runId) ?? crypto.randomUUID();
-    keys.set(runId, key);
-    return submitMut.mutateAsync({ id: runId, idempotencyKey: key }).then(r => { keys.delete(runId); return r; });
+  // Idempotency: ONE stable key per (run, action) ATTEMPT, held across retries so a lost
+  // response recovers via the backend receipt; cleared only on definitive success. Every
+  // state-advancing command requires it (the backend rejects a missing key with 400).
+  const actionKeys = useRef<Map<string, string>>(new Map());
+  function stableAction<T>(runId: string, action: string, fire: (key: string) => Promise<T>): Promise<T> {
+    const keys = actionKeys.current;
+    const mapKey = `${runId}:${action}`;
+    const key = keys.get(mapKey) ?? crypto.randomUUID();
+    keys.set(mapKey, key);
+    return fire(key).then(r => { keys.delete(mapKey); return r; });
   }
 
   const drawerActions: PayRunDrawerActions = {
-    onLockInputs:  run => void runAction(lockInputsMut.mutateAsync({ id: run.id }), 'Inputs locked.'),
-    onCalculate:   run => void runAction(calcMut.mutateAsync({ id: run.id }),       'Run calculated.'),
-    onSubmit:      run => void runAction(submitRunStable(run.id),                   'Submitted for approval.'),
+    onLockInputs:  run => void runAction(stableAction(run.id, 'lock-inputs', k => lockInputsMut.mutateAsync({ id: run.id, idempotencyKey: k })), 'Inputs locked.'),
+    onCalculate:   run => void runAction(stableAction(run.id, 'calculate', k => calcMut.mutateAsync({ id: run.id, idempotencyKey: k })), 'Run calculated.'),
+    onSubmit:      run => void runAction(stableAction(run.id, 'submit', k => submitMut.mutateAsync({ id: run.id, idempotencyKey: k })), 'Submitted for approval.'),
     onApprove:     run => { void (async () => {
       const confirmed = await dialog.confirm({
         title: `Approve run ${run.runNo}?`,
@@ -369,9 +373,20 @@ export function PayrollCommandCenter(): VNode {
       if (reason == null) return;
       void runAction(rejectRunMut.mutateAsync({ id: run.id, reason: reason.trim() || 'Rejected by approver.' }), 'Run rejected and returned for revision.');
     })(); },
-    onLockRun:     run => void runAction(lockRunMut.mutateAsync({ id: run.id }), 'Run locked.'),
-    onExport:      run => void runAction(exportMut.mutateAsync({ id: run.id }),  'Export generated.'),
-    onReopen:      run => void runAction(reopenMut.mutateAsync({ id: run.id }),  'Run reopened.'),
+    onLockRun:     run => void runAction(stableAction(run.id, 'lock', k => lockRunMut.mutateAsync({ id: run.id, idempotencyKey: k })), 'Run locked.'),
+    onExport:      run => void runAction(stableAction(run.id, 'export', k => exportMut.mutateAsync({ id: run.id, idempotencyKey: k })), 'Export generated.'),
+    onReopen:      run => { void (async () => {
+      // The backend REQUIRES a reason for reopen (audited); prompt like onReject does.
+      const reason = await dialog.prompt({
+        title: `Reopen run ${run.runNo}`,
+        text: 'Reopening returns a locked run to the approved state for correction. Provide a reason (audit-logged).',
+        placeholder: 'Reason for reopening…', confirmText: 'Reopen',
+      });
+      if (reason == null) return;
+      const trimmed = reason.trim();
+      if (!trimmed) { toast('A reason is required to reopen a run.'); return; }
+      void runAction(stableAction(run.id, 'reopen', k => reopenMut.mutateAsync({ id: run.id, reason: trimmed, idempotencyKey: k })), 'Run reopened.');
+    })(); },
     onGenPayslips: run => void runAction(genMut.mutateAsync({ runId: run.id }),  'Payslips generated.'),
   };
 
@@ -505,11 +520,11 @@ export function PayrollCommandCenter(): VNode {
       {showChrome ? header : <SkeletonHeader />}
       <div class="pcc">
       {/* ── Error / loading gate ── everything below the header reveals atomically once `ready` ── */}
-      {q.isError && !denied ? (
+      {q.isError ? (
         <div class="pcc-state pcc-state--error">
           <i class="fa-solid fa-triangle-exclamation" />
           <h3>Couldn't load the command center</h3>
-          <p>{(q.error)?.message ?? 'Please try again.'}</p>
+          <p>{q.error.message}</p>
           <button type="button" class="pcc-hbtn pcc-hbtn--primary" onClick={refresh}>Retry</button>
         </div>
       ) : !ready ? (
@@ -609,39 +624,6 @@ function PortfolioBand({ data, onOpen }: { data?: PayrollControlCenterResponse; 
         )}
       </div>
     </section>
-  );
-}
-
-// ── 6 KPI tiles (fixed) — the app-standard @ui KpiTile with drill-through footer, exactly
-// like the Statutory page (icon chip + value/label + dotted sub + "View …" link footer). ──
-function MetricsRow({ data, onFocusRegister, onOpen }: {
-  data?: PayrollControlCenterResponse; onFocusRegister: (t: PayrollRunRegisterTab) => void; onOpen: (id: string) => void;
-}): VNode {
-  const k = data?.kpis;
-  const loading = !k;
-  const nextPay = fmtDayShort(k?.nextPayDate.date);
-  const fundedPct = k ? Math.round((k.funding.required.amount > 0 ? k.funding.confirmed.amount / k.funding.required.amount : 1) * 100) : 0;
-  const fundingOk = !k || k.funding.gap.amount <= 0;
-  return (
-    <div class="pcc-kpis" aria-label="Payroll operational measures">
-      <KpiTile icon="fa-calendar-day" tone="blue" label="Next Pay Date"
-        value={k ? (nextPay.mon ? `${nextPay.day} ${nextPay.mon}` : '—') : '—'}
-        sub={k?.nextPayDate.runNo ? `Run ${k.nextPayDate.runNo}` : 'No scheduled run'} loading={loading}
-        link={{ label: k?.nextPayDate.runNo ? 'Open run' : 'View runs', onClick: () => (k?.nextPayDate.runId ? onOpen(k.nextPayDate.runId) : onFocusRegister('all')) }} />
-      <KpiTile icon="fa-layer-group" tone="teal" label="Active Runs" value={k?.activeRuns ?? 0} sub="In the reporting window" loading={loading}
-        link={{ label: 'View runs', onClick: () => onFocusRegister('all') }} />
-      <KpiTile icon="fa-users" tone="blue" label="Employees Due" value={k?.employeesDue ?? 0} sub="Current calc population" loading={loading}
-        link={{ label: 'View runs', onClick: () => onFocusRegister('all') }} />
-      <KpiTile icon="fa-coins" tone="green" label="Gross Payroll" value={k ? fmtTTDc(k.grossPayroll.amount) : '—'} sub="Window total" loading={loading}
-        link={{ label: 'View runs', onClick: () => onFocusRegister('all') }} />
-      <KpiTile icon="fa-wallet" tone="teal" label="Net Payroll" value={k ? fmtTTDc(k.netPayroll.amount) : '—'} sub="Window total" loading={loading}
-        link={{ label: 'View runs', onClick: () => onFocusRegister('all') }} />
-      <KpiTile icon="fa-building-columns" tone="amber" label="Funding Confirmed" value={k ? `${fundedPct}%` : '—'}
-        sub={k
-          ? <><span class={`ui-kpi-dot ui-kpi-dot--${fundingOk ? 'green' : 'amber'}`} />{fundingOk ? humanize(k.funding.state) : `${fmtTTDc(k.funding.gap.amount)} outstanding`}</>
-          : ''} loading={loading}
-        link={{ label: fundingOk ? 'View runs' : 'Needs action', onClick: () => onFocusRegister(fundingOk ? 'all' : 'attention') }} />
-    </div>
   );
 }
 
