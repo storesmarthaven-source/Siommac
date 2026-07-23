@@ -17,6 +17,7 @@
 // ============================================================================
 
 import { sb } from '../db';
+import { filterSourcePeriodOverlap } from './payroll/sourceOverlap';
 import type { PayrollRunCreateAttestations } from '../../../../types/payrollRuns';
 import { emitAppEvent, deliverEventNotifications } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
@@ -1106,12 +1107,15 @@ export async function lockInputs(
   // Chunk the employee-id IN() list (1000+ ids overflow the URL).
   const tsRows: { id: string; employee_id: string; total_worked_minutes: number }[] = [];
   for (const ids of chunk(empList.map(e => e.id), 300)) {
-    const { data, error: tsErr } = await sb.from('hr_timesheets')
-      .select('id, employee_id, total_worked_minutes')
-      .eq('status', 'approved')
-      .gte('period_start', periodStart)
-      .lte('period_start', periodEnd)
-      .in('employee_id', ids);
+    // P1-9: canonical OVERLAP semantics (shared with input readiness) — an
+    // approved timesheet spanning into the payroll period is in scope; the old
+    // start-in-window filter silently dropped it.
+    const { data, error: tsErr } = await filterSourcePeriodOverlap(
+      sb.from('hr_timesheets')
+        .select('id, employee_id, total_worked_minutes')
+        .eq('status', 'approved'),
+      'period_start', 'period_end', periodStart, periodEnd,
+    ).in('employee_id', ids);
     if (tsErr) throw Object.assign(new Error('lockInputs/timesheets: ' + tsErr.message), { status: 500 });
     tsRows.push(...((data ?? []) as { id: string; employee_id: string; total_worked_minutes: number }[]));
   }
@@ -1775,8 +1779,18 @@ export async function calculateRun(
   });
   const updatedRun = toRunDto(published.run as unknown as DbRunRow);
 
-  // Best-effort notification delivery AFTER the commit (event is in the DB).
-  void deliverEventNotifications(calcEventInput, published.eventId);
+  // P1-8: notification delivery AFTER the commit is AWAITED so a serverless
+  // invocation cannot freeze-and-drop it once the response is sent. A delivery
+  // failure is observability, never a rollback — the committed app_events row
+  // (published.eventId) is the durable record a retry worker can replay.
+  // (Preferred end-state is a transactional outbox; the notification system
+  // has no outbox consumer yet — doc §4 P1-8 sanctions awaited best-effort.)
+  try {
+    await deliverEventNotifications(calcEventInput, published.eventId);
+  } catch (e) {
+    console.error(`[payroll] calc-notify-failed event=${published.eventId} run=${runId}:`,
+      e instanceof Error ? e.message : e);
+  }
 
   return updatedRun;
   } catch (error) {
@@ -2211,10 +2225,12 @@ export async function getInputSourceReadiness(
     state: otPending > 0 ? 'pending' : 'ready',
   });
 
-  // 3. Timesheets — approved timesheets drive hourly base pay.
+  // 3. Timesheets — approved timesheets drive hourly base pay. P1-9: the SAME
+  // canonical overlap resolver as lock preparation, so readiness never reports
+  // a different scope than the lock transaction will actually use.
   type TsRow = { status: string; updated_at: string | null; created_at: string };
   const ts = await pageByEmployee<TsRow>('hr_timesheets', 'status, updated_at, created_at',
-    q => q.gte('period_start', periodStart).lte('period_start', periodEnd));
+    q => filterSourcePeriodOverlap(q, 'period_start', 'period_end', periodStart, periodEnd));
   const tsPending = ts.filter(r => r.status !== 'approved' && r.status !== 'rejected').length;
   sources.push({
     key: 'timesheets', label: 'Timesheets', records: ts.length,

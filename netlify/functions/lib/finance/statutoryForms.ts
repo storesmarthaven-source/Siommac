@@ -104,7 +104,7 @@ export async function recordStatutoryForm(input: RecordStatutoryFormInput): Prom
     sourceModule:     'finance_payroll',
     sourceEntityType: 'statutory_form',
     sourceEntityId:   '', // placeholder — overridden inside the RPC with v_row.id
-    actorUserId:      input.actorId ?? null,
+    actorUserId:      input.actorId,
     severity:         'info' as const,
     payload:          {
       formType:   input.formType,
@@ -113,7 +113,7 @@ export async function recordStatutoryForm(input: RecordStatutoryFormInput): Prom
     },
   };
 
-  const { data, error } = await sb.rpc('finance_record_statutory_form_commit', {
+  const rpcResult = (await sb.rpc('finance_record_statutory_form_commit', {
     p_form: {
       form_type: input.formType, tax_year: input.taxYear ?? null,
       period_start: input.periodStart ?? null, period_end: input.periodEnd ?? null,
@@ -126,17 +126,24 @@ export async function recordStatutoryForm(input: RecordStatutoryFormInput): Prom
     p_event: buildEventRow(sfEventInput),
     p_audit: buildHrAuditRow({
       submoduleKey: 'finance_payroll', recordId: null, // form id not yet known; will be set as source_entity_id in event
-      actorId: input.actorId ?? null, action: 'statutory_form.generated',
+      actorId: input.actorId, action: 'statutory_form.generated',
       previousState: null, newState: { formType: input.formType, taxYear: input.taxYear, employeeId: input.employeeId },
     }),
-  });
+  })) as { data: unknown; error: { message: string } | null };
+  const { data, error } = rpcResult;
   if (error) throw Object.assign(new Error('recordStatutoryForm: ' + error.message), { status: 500 });
   const dto = toDto(data as DbRow);
 
-  // Best-effort notification delivery after commit. No notification block configured
-  // for statutory_form.generated (silent audit event), so this is a no-op today.
-  // When notifications are added here, pass the event's id; for now null is fine.
-  void deliverEventNotifications({ ...sfEventInput, sourceEntityId: dto.id }, null);
+  // P1-8 (same pattern as calc publish): AWAITED best-effort delivery after
+  // commit — a serverless freeze can no longer drop it. No notification block is
+  // configured for statutory_form.generated today (silent audit event), so this
+  // is a fast no-op; a failure is observability, never a rollback.
+  try {
+    await deliverEventNotifications({ ...sfEventInput, sourceEntityId: dto.id }, null);
+  } catch (e) {
+    console.error(`[payroll] statutory-form-notify-failed form=${dto.id}:`,
+      e instanceof Error ? e.message : e);
+  }
 
   return dto;
 }
@@ -151,7 +158,7 @@ export async function listStatutoryForms(opts: {
   q = q.eq('status', opts.status ?? 'generated');
   const { data, error } = await q;
   if (error) throw Object.assign(new Error('listStatutoryForms: ' + error.message), { status: 500 });
-  return ((data ?? []) as DbRow[]).map(toDto);
+  return (data as DbRow[]).map(toDto);
 }
 
 export async function getStatutoryForm(id: string): Promise<StatutoryFormDto | null> {
@@ -170,7 +177,7 @@ export async function getStatutoryFormSignedUrl(
   if (!path) throw Object.assign(new Error('No ' + which + ' artifact for this form.'), { status: 422 });
 
   const { data, error } = await sb.storage.from(STATUTORY_FORMS_BUCKET).createSignedUrl(bucketKey(path), 300);
-  if (error || !data?.signedUrl) {
+  if (error || !data.signedUrl) {
     throw Object.assign(new Error('getStatutoryFormSignedUrl: ' + (error?.message ?? 'Unknown error')), { status: 500 });
   }
   void emitAppEvent({
