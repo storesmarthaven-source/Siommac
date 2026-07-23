@@ -16,6 +16,5 @@ export * from './notification';
 export * from './attendance';
 export * from './employee';
 export * from './leave';
-export * from './payroll';
 export * from './site';
 export * from './settings';
