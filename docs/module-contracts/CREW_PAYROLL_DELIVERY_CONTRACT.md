@@ -63,14 +63,23 @@ error-envelope and capability contracts on main; (2) rebase onto that committed 
 action capabilities, typed errors, atomic loading/error behavior, and the then-current
 `payrollRuns.ts` + migration-711 calculation logic).
 
-### CP7 entry gates (ALL must be green first)
-1. Backend + frontend typechecks clean.
-2. `payrollCreateAttestations` suite green.
-3. `financePayroll` suite green (baseline restored).
-4. `crewPayroll` green **twice consecutively** (cleanup/idempotency proof).
-5. Ordinary (non-crew) runs verified to return `crew: null`.
-6. A crew run created through the normal HTTP `runs/create` route — the direct-RPC fixture
-   shortcut in the current suite must be replaced once the final create contract lands.
+### CP7 entry gates — ALL SATISFIED 2026-07-24 (post-rebase onto main `cc3df4a2`)
+The branch was rebased onto main after WP-1..6 landed (typed error envelope, server-computed
+run actions, persisted creation attestations, atomic workspace gate, P1-8/P1-9 semantics) and
+the crew code adapted: workspace DTO carries BOTH `actions` (P0-2) and `crew` (CP6);
+`routes/hrCrew.ts` emits the shared `PayrollApiErrorEnvelope` (typed dotted codes — the crew
+libs' `crew.assignment_overlap` convention lifts directly); the E2E creates runs through the
+normal HTTP `runs/create` route with the three strict creation attestations (RPC shortcut
+REMOVED) and asserts `error.code === 'crew.assignment_overlap'` + correlationId on CPE-02.
+| Gate | Result |
+|---|---|
+| 1. BE + FE typechecks | BE clean; FE clean except 2 pre-existing errors in `src/ui/widgets/WidgetBoardZone.tsx` — file byte-identical to main, 0 errors from the main checkout; worktree node_modules-junction realpath artifact, not code |
+| 2. `payrollCreateAttestations` | 7/7 green (tag `TEST-E2E-1784857060921`) |
+| 3. `financePayroll` | **137/137 green** — baseline restored (tag `TEST-E2E-1784857111675`) |
+| 4. `crewPayroll` twice | 12/12 (tag `TEST-E2E-1784857486050`) then 12/12 (tag `TEST-E2E-1784857629094`) |
+| 5. Ordinary runs → `crew: null` | asserted 3 ways in-suite: input-readiness on the standard group, standard-run workspace, standard-run policy-evidence |
+| 6. Crew run via normal HTTP route | `createRunFixture` now calls `finance/payroll/runs/create` with attestations; no direct-RPC path remains in the suite |
+Frontend vitest after rebase: 474/474. **CP7 may start.**
 
 Authoritative spec: **§14 "Pay Policies and Conditional Work-Pattern Controls"** and **§9.4**
 of the payroll-enterprise `CLAUDE_IMPLEMENTATION_SPEC.md`. Where this contract and an older

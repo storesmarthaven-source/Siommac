@@ -141,6 +141,9 @@ export default async function run(h) {
     const overlap = await api('hr/crew/assignments/create', T.mgr, { employeeId: U.B, payGroupId: ids.pgId, assetId: ids.assetB, effectiveFrom: '2026-04-15', effectiveTo: '2026-05-15', status: 'active' });
     fails(overlap); expect(overlap.status === 422, `overlap expected 422, got ${overlap.status}`);
     expect(String(overlap.body.message || '').includes('assignment_overlap'), `overlap message (got ${overlap.body.message})`);
+    // P0-5 typed error envelope: stable dotted domain code + correlationId.
+    expect(overlap.body.error?.code === 'crew.assignment_overlap' && !!overlap.body.error?.correlationId,
+      `typed error envelope (got ${JSON.stringify(overlap.body.error)})`);
     const rows = await sb.from('hr_crew_assignments').select('id').eq('employee_id', U.B).eq('asset_id', ids.assetB);
     expect((rows.data ?? []).length === 0, 'blocked overlap must persist NO row');
   });
@@ -190,33 +193,21 @@ export default async function run(h) {
   // a bank account (CPE-22). pg2 carries a standard_salary policy (CPE-27 negative).
   const MAY = { start: '2026-05-01', end: '2026-05-31' };
 
-  // Run-creation FIXTURE via the real atomic RPC. The live create_run_tx has the
-  // creation-attestation gate from the (parallel) certification workstream, which
-  // this branch's `runs/create` route does not pass through yet — run CREATION is
-  // that slice's contract, not CP6's. CP6's own contracts (preflight, lock-inputs,
-  // policy-evidence, workspace, runs/get) all go through the real endpoints below.
+  // Run creation through the NORMAL HTTP route with the WP-3 creation
+  // attestations (all three literally true, strict object) — no RPC shortcut.
   async function createRunFixture({ requestKey, payGroupId }) {
-    const stat = await sb.from('finance_statutory_versions')
-      .select('id').eq('jurisdiction', 'TT').eq('is_active', true).single();
-    expect(!stat.error, `active TT statutory version: ${stat.error?.message}`);
-    const r = await sb.rpc('finance_payroll_create_run_tx', {
-      p_actor_id: U.mgr, p_request_key: requestKey, p_run_type: 'scheduled',
-      p_period_start: MAY.start, p_period_end: MAY.end,
-      p_statutory_version_id: stat.data.id,
-      p_sequence_no: 1, p_source_run_id: null, p_pay_frequency: 'monthly',
-      p_weeks_in_period: null, p_pay_group_id: payGroupId, p_pay_date: MAY.end,
-      p_cut_off_date: null, p_reason_code: null, p_payroll_owner_id: null,
-      p_ot_cutoff_at: null, p_approval_deadline_at: null, p_funding_date: null,
-      p_release_window: null, p_internal_description: null,
-      p_attestations: {
+    const cr = await api('finance/payroll/runs/create', T.mgr, {
+      idempotencyKey: requestKey, runType: 'scheduled', payGroupId,
+      periodStart: MAY.start, periodEnd: MAY.end, payFrequency: 'monthly', payDate: MAY.end,
+      attestations: {
         purposeScopeAndDatesReviewed: true,
         preflightLimitationsAcknowledged: true,
         separationOfDutiesAcknowledged: true,
       },
     });
-    expect(!r.error, `create_run_tx fixture: ${r.error?.message}`);
-    const runId = r.data?.id ?? r.data?.run?.id;
-    expect(!!runId, `run id from RPC (got ${JSON.stringify(r.data).slice(0, 120)})`);
+    ok(cr, `runs/create: ${cr.body.message}`);
+    const runId = cr.body.data.id;
+    expect(!!runId, `run id from runs/create (got ${JSON.stringify(cr.body.data).slice(0, 120)})`);
     ids.runIds.push(runId);
     return runId;
   }

@@ -12,8 +12,13 @@
  */
 
 import { Hono, type Context } from 'hono';
+import { randomUUID } from 'node:crypto';
 import { requirePermission } from '../lib/auth';
 import { z, zv }            from '../lib/validate';
+import {
+  extractPayrollErrorCode, PAYROLL_ERROR_FALLBACK_CODE,
+  type PayrollApiErrorEnvelope,
+} from '../../../types/payrollErrors';
 import {
   listCrewAssignments, createCrewAssignment, updateCrewAssignment, endCrewAssignment,
 } from '../lib/hr/crewAssignments';
@@ -27,9 +32,28 @@ const MOVEMENT_TYPES = ['embark', 'disembark', 'transfer', 'mobilize', 'demobili
 const router = new Hono<{ Variables: HonoVariables }>();
 type HCtx = Context<{ Variables: HonoVariables }>;
 const body = (c: HCtx) => (c.get('body') as Record<string, unknown>).args ?? {};
+// P0-5 typed error envelope (shared payroll contract — crew endpoints are
+// finance.payroll.crew.* gated): stable dotted domain code + correlationId,
+// legacy top-level message preserved. Crew libs already throw `crew.<code>: …`.
 function routeErr(c: HCtx, e: unknown): Response {
-  const er = e as { status?: number; message?: string };
-  return c.json({ success: false, message: er.message ?? 'Request failed.' }, (er.status ?? 500) as 200);
+  const er = e as { status?: number; message?: string; code?: string; details?: Record<string, unknown> };
+  const status = er.status ?? 500;
+  const message = er.message ?? 'Request failed.';
+  const correlationId = randomUUID();
+  const code = er.code ?? extractPayrollErrorCode(message) ?? PAYROLL_ERROR_FALLBACK_CODE;
+  console.error(`[hr-crew] ${correlationId} ${status} ${code}: ${message}`);
+  const envelope: PayrollApiErrorEnvelope = {
+    success: false,
+    message,
+    error: {
+      code,
+      message,
+      correlationId,
+      retryable: status >= 500,
+      ...(er.details ? { details: er.details } : {}),
+    },
+  };
+  return c.json(envelope, status as 200);
 }
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
