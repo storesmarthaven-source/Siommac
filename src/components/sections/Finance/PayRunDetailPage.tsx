@@ -11,7 +11,7 @@
  */
 
 import { type VNode, Fragment } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import './payrunWorkspace.css';
 import {
   usePayrollRun, useRunWorkspace, useReleasePreflight, PayrollApiError,
@@ -46,14 +46,21 @@ const TAB_DEFS: { key: TabKey; label: string }[] = [
 
 // canApprove stays in the prop contract for callers, but rendering now derives
 // approval capability from the server-computed workspace.actions (P0-2).
-export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApprove, actions }: {
+export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApprove, actions, initialTab }: {
   runId: string;
   onBack: () => void;
   canManage: boolean;
   canApprove: boolean;
   actions: PayRunDrawerActions;
+  // Deep-link target tab (e.g. the exceptions queue's Review → Approvals,
+  // Open run evidence → Exceptions). Unknown/absent falls back to Summary.
+  initialTab?: string;
 }): VNode {
-  const [tab, setTab] = useState<TabKey>('summary');
+  const startTab: TabKey = TAB_DEFS.some(t => t.key === initialTab) ? initialTab as TabKey : 'summary';
+  const [tab, setTab] = useState<TabKey>(startTab);
+  // Re-sync when a different run (or a new deep-link target) is opened in place —
+  // mirrors DisbDrawer / StatVersionDrawer. User tab clicks don't change these deps.
+  useEffect(() => { setTab(startTab); }, [runId, startTab]);
   const runQ = usePayrollRun(runId);
   const workspaceQ = useRunWorkspace(runId);
   // P0-6.5: release preflight is REQUIRED only for the states where release

@@ -14,6 +14,7 @@ import { toast } from '@store';
 import { dialog } from '@lib/dialog';
 import { can } from '@lib/permissions';
 import { HrfinPill, type HrfinTone } from '@ui';
+import { openHrEmployee } from '../../HR/hrDeepLink';
 import { PayrollPanelState } from './PanelState';
 import {
   useRunLines,
@@ -187,12 +188,12 @@ export function InputsTab({ runId, runStatus, canManage }: { runId: string; runS
 
   function handleViewSource(inp: PayrollRunInput): void {
     if (!inp.sourceId) { toast('No source record linked to this input.'); return; }
-    const hash = inp.sourceType === 'overtime'
-      ? `s-hr-attendance?id=${inp.sourceId}`
-      : inp.sourceType === 'pay_item'
-      ? `s-hr-compensation?id=${inp.sourceId}`
-      : `s-hr-employees?id=${inp.employeeId}`;
-    window.location.hash = hash;
+    // Employee-scoped sources open the real HR profile deep-link; the attendance /
+    // compensation sub-records still route by hash to their own sections.
+    if (inp.sourceType === 'overtime') { window.location.hash = `s-hr-attendance?id=${inp.sourceId}`; return; }
+    if (inp.sourceType === 'pay_item') { window.location.hash = `s-hr-compensation?id=${inp.sourceId}`; return; }
+    if (inp.employeeId) { openHrEmployee(inp.employeeId); return; }
+    toast('No employee linked to this input.');
   }
 
   return (
@@ -323,7 +324,7 @@ export function WarningsTab({ runId, canManage }: { runId: string; canManage: bo
                   </button>
                   {w.employeeId && (
                     <button type="button" class="hrfin-action" style={{ fontSize: 11, padding: '3px 10px' }}
-                      onClick={() => { window.location.hash = `s-hr-employees?id=${w.employeeId}`; }}>
+                      onClick={() => openHrEmployee(w.employeeId!)}>
                       Open Profile
                     </button>
                   )}

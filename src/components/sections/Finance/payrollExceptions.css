@@ -29,7 +29,10 @@
 .pxq-metrics { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 12px; }
 @media (max-width: 1180px) { .pxq-metrics { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 720px)  { .pxq-metrics { grid-template-columns: repeat(2, 1fr); } }
-.pxq-metric { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--card); border: 1px solid var(--bd); border-radius: var(--radius); box-shadow: var(--shadow); }
+.pxq-metric { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--card); border: 1px solid var(--bd); border-radius: var(--radius); box-shadow: var(--shadow); text-align: left; font-family: inherit; cursor: pointer; width: 100%; }
+.pxq-metric:hover { border-color: #c5cfdd; }
+.pxq-metric.on { border-color: var(--br); box-shadow: 0 0 0 1px var(--br), var(--shadow); }
+.pxq-metric:focus-visible { outline: 2px solid var(--br); outline-offset: 2px; }
 .pxq-mico { flex-shrink: 0; width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-size: 16px; }
 .pxq-mico.blue  { background: var(--br-soft); color: var(--br); }
 .pxq-mico.amber { background: var(--am-soft); color: var(--am-ink); }
@@ -68,6 +71,25 @@
 .pxq-search { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 220px; height: 39px; padding: 0 13px; border: 1px solid var(--bd); border-radius: 9px; background: #f8fafc; color: var(--mut); }
 .pxq-search input { flex: 1; border: 0; background: none; outline: none; font-family: inherit; font-size: 13.5px; color: var(--ink); }
 .pxq-owner { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink2); cursor: pointer; white-space: nowrap; }
+.pxq-filter { display: inline-flex; align-items: center; gap: 8px; color: var(--mut); }
+.pxq-select { height: 39px; border: 1px solid var(--bd); border-radius: 9px; background: #fff; padding: 0 10px; font-family: inherit; font-size: 13px; color: var(--ink); cursor: pointer; max-width: 200px; }
+.pxq-select:focus { outline: none; border-color: var(--br); box-shadow: 0 0 0 3px var(--br-soft); }
+.pxq-clear { display: inline-flex; align-items: center; gap: 6px; height: 39px; padding: 0 12px; border: 1px solid var(--bd); border-radius: 9px; background: #fff; color: var(--mut); font-size: 12.5px; font-weight: 600; font-family: inherit; cursor: pointer; white-space: nowrap; }
+.pxq-clear:hover { border-color: #c5cfdd; color: var(--ink2); }
+
+/* ── Active filter chips ── */
+.pxq-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px 12px; }
+.pxq-chip { display: inline-flex; align-items: center; gap: 8px; padding: 4px 6px 4px 11px; border-radius: 999px; background: var(--br-soft); color: var(--br-ink); font-size: 12px; font-weight: 600; }
+.pxq-chip button { display: grid; place-items: center; width: 18px; height: 18px; border: 0; border-radius: 50%; background: rgba(26,68,184,.14); color: var(--br-ink); cursor: pointer; font-size: 10px; }
+.pxq-chip button:hover { background: rgba(26,68,184,.28); }
+
+/* ── Bulk action bar ── */
+.pxq-bulkbar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--br-soft); border-bottom: 1px solid var(--bd-soft); }
+.pxq-bulkbar strong { color: var(--br-ink); font-size: 13px; }
+.pxq-bulk-actions { display: flex; gap: 8px; }
+.pxq-bulk-actions.sp { margin-left: auto; }
+.pxq-bulk-note { display: flex; gap: 8px; margin: 2px 0 0; font-size: 11.5px; color: var(--mut); line-height: 1.45; }
+.pxq-bulk-note i { color: var(--br); margin-top: 1px; }
 
 /* ── Queue sections ── */
 .pxq-list { display: flex; flex-direction: column; }
@@ -82,12 +104,17 @@
 .pxq-section-head.green i { color: var(--gn); }
 
 /* ── Queue row ── */
-.pxq-item { display: grid; grid-template-columns: 40px minmax(0,1.5fr) minmax(140px,.85fr) 128px auto; align-items: center; gap: 13px;
+.pxq-item { display: grid; grid-template-columns: 24px 40px minmax(0,1.5fr) minmax(140px,.85fr) 128px auto; align-items: center; gap: 13px;
   width: 100%; text-align: left; padding: 13px 17px; border: 0; border-top: 1px solid var(--bd-soft); background: none; cursor: pointer; font-family: inherit; outline: 0; }
 .pxq-section-head + .pxq-item { border-top: 0; }
 .pxq-item:hover { background: #fbfcff; }
 .pxq-item.on { background: #f2f6ff; box-shadow: inset 3px 0 0 var(--br); }
+.pxq-item.picked { background: #eef4ff; }
+.pxq-item.picked.on { background: #e6eeff; }
 .pxq-item:focus-visible { box-shadow: inset 0 0 0 2px var(--br); }
+.pxq-check { display: grid; place-items: center; }
+.pxq-check input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--br); }
+.pxq-check-spacer { display: block; width: 16px; height: 16px; }
 .pxq-sev { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 13px; background: var(--bd-soft); color: var(--mut); }
 .pxq-sev.crit { background: var(--rd-soft); color: var(--rd); }
 .pxq-sev.high { background: var(--am-soft); color: var(--am-ink); }
@@ -137,6 +164,15 @@
 .pxq-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 14px; }
 .pxq-facts dt { font-size: 10px; text-transform: uppercase; letter-spacing: .4px; color: var(--mut); font-weight: 700; }
 .pxq-facts dd { margin: 3px 0 0; font-size: 12.5px; color: var(--ink); }
+.pxq-link { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; font: inherit; font-size: 12.5px; color: var(--br); font-weight: 600; cursor: pointer; text-align: left; }
+.pxq-link:hover { color: var(--br-ink); text-decoration: underline; }
+.pxq-link i { font-size: 10px; }
+.pxq-evidence { padding: 11px 13px; border: 1px solid var(--bd); background: #f8fafc; border-radius: 9px; margin-bottom: 12px; }
+.pxq-evidence > span { font-size: 10.5px; text-transform: uppercase; letter-spacing: .4px; color: var(--mut); font-weight: 700; }
+.pxq-evidence ul { list-style: none; margin: 7px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.pxq-evidence li { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink2); }
+.pxq-evidence li i { color: var(--br); font-size: 11px; }
+.pxq-evidence li em { color: var(--mut); font-style: normal; font-size: 11.5px; }
 .pxq-required { padding: 11px 13px; border: 1px solid var(--am-soft); background: #fffdf7; border-radius: 9px; margin-bottom: 12px; }
 .pxq-required span { font-size: 10.5px; text-transform: uppercase; letter-spacing: .4px; color: var(--am-ink); font-weight: 700; }
 .pxq-required ul { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--ink2); }

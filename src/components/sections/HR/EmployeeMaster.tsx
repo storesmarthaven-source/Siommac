@@ -32,6 +32,7 @@ import {
   humanize, rowName, statusTone, TRAINING_TONE, TRAINING_LABEL, Avatar, TinyAvatar,
 } from './shared';
 import { ProfileDrawer } from './ProfileDrawer';
+import { HR_EMPLOYEE_DEEPLINK_KEY } from './hrDeepLink';
 import { CreateEmployeeWizard } from './CreateEmployeeWizard';
 import { ContactDialog, StatusDialog, OffboardingDialog, ChangeRequestDialog, DocumentDialog, StatutoryDialog } from './ActionDialogs';
 import { ImportWizard } from './ImportWizard';
@@ -186,6 +187,14 @@ export function EmployeeMaster(): VNode {
   const [libOpen, setLibOpen] = useState(false);
   const [demo, setDemo] = useState(false);
   const [preview, setPreview] = useState<PreviewWidgetInstance | null>(null);
+
+  // Deep-link: another module (e.g. the payroll exceptions queue's affected-employee
+  // Subject) can request a specific profile. Consume the one-shot hint on mount.
+  useEffect(() => {
+    let pending: string | null = null;
+    try { pending = sessionStorage.getItem(HR_EMPLOYEE_DEEPLINK_KEY); sessionStorage.removeItem(HR_EMPLOYEE_DEEPLINK_KEY); } catch { /* ignore */ }
+    if (pending) setSelectedId(pending);
+  }, []);
 
   // Debounce free-text search before it hits the network — every other filter/sort/
   // page change fires immediately (they're discrete clicks, not keystrokes).

@@ -7,6 +7,11 @@
 // workspace's Approvals tab (the central workflow decision path); approve/return/reject
 // never happen here. Finding rows open a detail drawer with the activity feed + the
 // version-guarded lifecycle actions the row/actor allows.
+//
+// Triage aids (all backed by the real read model): pay-date on every row, a run filter
+// (RPC p_run_ids), and bulk reassign/waive over the selected open findings — the bulk
+// path loops the same version-guarded, idempotent single-finding commands (no new endpoint,
+// per-item optimistic-concurrency guard preserved, partial failure surfaced honestly).
 
 import { useMemo, useState, useEffect } from 'preact/hooks';
 import type { VNode } from 'preact';
@@ -15,8 +20,11 @@ import { showSection } from '@components/nav/navCore';
 import {
   useWorkQueue, useWorkQueueMutations,
   type PayrollFindingQueueItem, type PayrollFindingDetail, type PayrollWorkQueueTab,
+  type PayrollWorkQueueSort,
   type PayrollFindingQueueSeverity, type PayrollFindingAllowedAction, type PayrollFindingActivityType,
 } from '@api/finance/payrollExceptions';
+import { useRunsRegister } from '@api/finance/payrollRunsRegister';
+import { openHrEmployee } from '../HR/hrDeepLink';
 import { EmployeePicker } from './_shared/pickers';
 import { Modal } from '@ui/components/Modal';
 import './payrollExceptions.css';
@@ -55,6 +63,15 @@ const SECTION_META: Record<SectionKey, { label: string; sub: string; icon: strin
 };
 const SECTION_ORDER: SectionKey[] = ['approval', 'blocker', 'warning'];
 
+// Server-side sort options (the RPC's p_sort). 'priority' is the default triage order.
+const SORT_OPTS: { key: PayrollWorkQueueSort; label: string }[] = [
+  { key: 'priority', label: 'Priority (severity)' },
+  { key: 'pay_date', label: 'Pay date — soonest' },
+  { key: 'due_date', label: 'Due date — soonest' },
+  { key: 'newest',   label: 'Newest first' },
+  { key: 'oldest',   label: 'Oldest first' },
+];
+
 // Client-side grouping of the current page's rows into the mockup's labelled sections.
 // 'resolved' tab collapses to one section; open tabs group by finding kind.
 function groupQueue(items: PayrollFindingQueueItem[], tab: PayrollWorkQueueTab): { key: SectionKey; rows: PayrollFindingQueueItem[] }[] {
@@ -76,6 +93,8 @@ const METRICS: { key: PayrollWorkQueueTab; label: string; sub: string; icon: str
 ];
 
 const fmtTTD = (n: number | null): string => (n == null ? '—' : `TTD ${Math.round(n).toLocaleString('en-US')}`);
+const fmtPayDate = (iso: string | null): string =>
+  iso ? new Date(`${iso.slice(0, 10)}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'No pay date';
 const fmtDue = (iso: string | null): string => {
   if (!iso) return 'No due date';
   const d = new Date(iso);
@@ -86,9 +105,20 @@ const fmtDateTime = (iso: string): string =>
   new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 const initials = (s: string): string => s.split(/\s+/).map(w => w[0] ?? '').join('').slice(0, 2).toUpperCase() || '—';
 
-// Open a payroll run in the workspace (register's deep-link contract).
-function openRun(runId: string): void {
-  try { sessionStorage.setItem('siomac_open_payroll_run', runId); } catch { /* ignore */ }
+// A row that carries lifecycle actions (open/in-progress finding) can be bulk-selected;
+// approval rows are review-only and resolved/waived rows expose no bulk verbs.
+const isBulkable = (row: PayrollFindingQueueItem): boolean =>
+  row.kind !== 'approval' && row.allowedActions.includes('assign');
+
+// Open a payroll run in the workspace (register's deep-link contract). An optional
+// target tab deep-links straight to the relevant section (DEC-EXC-004): approval
+// review → Approvals, finding evidence → Exceptions.
+function openRun(runId: string, tab?: 'approvals' | 'exceptions'): void {
+  try {
+    sessionStorage.setItem('siomac_open_payroll_run', runId);
+    if (tab) sessionStorage.setItem('siomac_open_payroll_run_tab', tab);
+    else sessionStorage.removeItem('siomac_open_payroll_run_tab');
+  } catch { /* ignore */ }
   showSection('s-finance-payroll');
 }
 
@@ -97,10 +127,16 @@ export function PayrollExceptionQueuePage(): VNode {
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [ownerMe, setOwnerMe] = useState(false);
+  const [sort, setSort] = useState<PayrollWorkQueueSort>('priority');
+  const [runFilter, setRunFilter] = useState('');   // '' = all runs; else a run id → req.runIds
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [cursorStack, setCursorStack] = useState<(string | undefined)[]>([]);
   const [action, setAction] = useState<{ type: PayrollFindingAllowedAction; finding: PayrollFindingDetail } | null>(null);
+  // Bulk selection is scoped to the current view (ids + versions from the visible page),
+  // so the optimistic-concurrency guard is always fresh. Cleared on any scope change.
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [bulk, setBulk] = useState<'assign' | 'waive' | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => { setSearch(searchInput.trim()); resetPage(); }, 300);
@@ -118,16 +154,18 @@ export function PayrollExceptionQueuePage(): VNode {
     if (hint?.search) { setSearchInput(hint.search); setSearch(hint.search); }
   }, []);
 
-  function resetPage(): void { setCursor(undefined); setCursorStack([]); }
+  function resetPage(): void { setCursor(undefined); setCursorStack([]); setPicked(new Set()); }
 
   const req = useMemo(() => ({
     tab,
+    sort,
     limit: 25,
     search: search || undefined,
     ownerId: ownerMe ? 'me' : undefined,
+    runIds: runFilter ? [runFilter] : undefined,
     selectedId,
     cursor,
-  }), [tab, search, ownerMe, selectedId, cursor]);
+  }), [tab, sort, search, ownerMe, runFilter, selectedId, cursor]);
 
   const q       = useWorkQueue(req);
   const result  = q.data;
@@ -137,12 +175,24 @@ export function PayrollExceptionQueuePage(): VNode {
   const mut     = useWorkQueueMutations();
   const groups  = useMemo(() => groupQueue(items, tab), [items, tab]);
 
+  // Run options for the filter — a modest, cheap list keyed off the register read model.
+  const runsQ = useRunsRegister({ tab: 'all', limit: 50 });
+  const runOptions = runsQ.data?.items ?? [];
+
+  // The selectable rows currently in view, and the live selection resolved to targets.
+  const bulkableRows = useMemo(() => items.filter(isBulkable), [items]);
+  const pickedRows   = useMemo(() => bulkableRows.filter(r => picked.has(r.id)), [bulkableRows, picked]);
+  const allWaivable  = pickedRows.length > 0 && pickedRows.every(r => r.kind === 'warning');
+
   const changeTab = (t: PayrollWorkQueueTab): void => { setTab(t); setSelectedId(undefined); resetPage(); };
-  const nextPage = (): void => { if (!result?.nextCursor) return; setCursorStack(s => [...s, cursor]); setCursor(result.nextCursor); };
-  const prevPage = (): void => { setCursorStack(s => { const c = [...s]; const prev = c.pop(); setCursor(prev); return c; }); };
+  const nextPage = (): void => { if (!result?.nextCursor) return; setCursorStack(s => [...s, cursor]); setCursor(result.nextCursor); setPicked(new Set()); };
+  const prevPage = (): void => { setCursorStack(s => { const c = [...s]; const prev = c.pop(); setCursor(prev); return c; }); setPicked(new Set()); };
+
+  const togglePick = (id: string): void => setPicked(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const toggleAll = (): void => setPicked(prev => (prev.size >= bulkableRows.length && bulkableRows.length > 0 ? new Set() : new Set(bulkableRows.map(r => r.id))));
 
   const onRowOpen = (row: PayrollFindingQueueItem): void => {
-    if (row.kind === 'approval') { openRun(row.run.id); return; }  // review-only → workflow path
+    if (row.kind === 'approval') { openRun(row.run.id, 'approvals'); return; }  // review-only → workflow/approvals path
     setSelectedId(row.id);
   };
 
@@ -162,14 +212,15 @@ export function PayrollExceptionQueuePage(): VNode {
 
       <section class="pxq-metrics" aria-label="Work queue summary">
         {METRICS.map(m => (
-          <div class="pxq-metric" key={m.key}>
+          <button type="button" class={`pxq-metric${tab === m.key ? ' on' : ''}`} key={m.key}
+            onClick={() => changeTab(m.key)} aria-pressed={tab === m.key} title={`Show ${m.label.toLowerCase()}`}>
             <div class={`pxq-mico ${m.tone}`}><i class={`fa-solid ${m.icon}`} /></div>
             <div class="pxq-m-body">
               <div class="pxq-m-k">{m.label}</div>
               <div class="pxq-m-v">{counts ? counts[m.key] : <span class="pxq-m-dash">—</span>}</div>
               <div class="pxq-m-s">{m.sub}</div>
             </div>
-          </div>
+          </button>
         ))}
       </section>
 
@@ -195,11 +246,61 @@ export function PayrollExceptionQueuePage(): VNode {
               <input type="search" placeholder="Search finding, run or employee"
                 value={searchInput} onInput={e => setSearchInput((e.target as HTMLInputElement).value)} />
             </label>
+            <label class="pxq-filter">
+              <i class="fa-solid fa-filter" aria-hidden="true" />
+              <select class="pxq-select" value={runFilter} aria-label="Filter by run"
+                onChange={e => { setRunFilter((e.target as HTMLSelectElement).value); resetPage(); }}>
+                <option value="">All runs</option>
+                {runOptions.map(r => <option key={r.id} value={r.id}>{r.reference}</option>)}
+              </select>
+            </label>
+            <label class="pxq-filter">
+              <i class="fa-solid fa-arrow-down-wide-short" aria-hidden="true" />
+              <select class="pxq-select" value={sort} aria-label="Sort order"
+                onChange={e => { setSort((e.target as HTMLSelectElement).value as PayrollWorkQueueSort); resetPage(); }}>
+                {SORT_OPTS.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
+              </select>
+            </label>
             <label class="pxq-owner">
               <input type="checkbox" checked={ownerMe} onChange={e => { setOwnerMe((e.target as HTMLInputElement).checked); resetPage(); }} />
               Assigned to me
             </label>
+            {(runFilter || ownerMe || search) && (
+              <button type="button" class="pxq-clear" onClick={() => { setRunFilter(''); setOwnerMe(false); setSearchInput(''); setSearch(''); resetPage(); }}>
+                <i class="fa-solid fa-xmark" /> Clear filters
+              </button>
+            )}
           </div>
+
+          {(runFilter || ownerMe) && (
+            <div class="pxq-chips" aria-label="Active filters">
+              {runFilter && <span class="pxq-chip">Run: {runOptions.find(r => r.id === runFilter)?.reference ?? runFilter}
+                <button type="button" aria-label="Clear run filter" onClick={() => { setRunFilter(''); resetPage(); }}><i class="fa-solid fa-xmark" /></button></span>}
+              {ownerMe && <span class="pxq-chip">Assigned to me
+                <button type="button" aria-label="Clear owner filter" onClick={() => { setOwnerMe(false); resetPage(); }}><i class="fa-solid fa-xmark" /></button></span>}
+            </div>
+          )}
+
+          {/* Bulk action bar — appears only when open findings are selected in view. */}
+          {picked.size > 0 && (
+            <div class="pxq-bulkbar" role="region" aria-label="Bulk actions">
+              <label class="pxq-check"><input type="checkbox"
+                checked={picked.size >= bulkableRows.length && bulkableRows.length > 0}
+                onChange={toggleAll} aria-label="Select all in view" /></label>
+              <strong>{picked.size} selected</strong>
+              <div class="pxq-bulk-actions sp">
+                <button type="button" class="pxq-btn" onClick={() => setBulk('assign')}>
+                  <i class="fa-solid fa-user-pen" /> Reassign
+                </button>
+                <button type="button" class="pxq-btn" disabled={!allWaivable}
+                  title={allWaivable ? undefined : 'Only warnings can be waived — deselect any blockers.'}
+                  onClick={() => setBulk('waive')}>
+                  <i class="fa-solid fa-shield-halved" /> Waive
+                </button>
+                <button type="button" class="pxq-btn" onClick={() => setPicked(new Set())}>Clear</button>
+              </div>
+            </div>
+          )}
 
           <div class="pxq-list">
             {q.isLoading && <div class="pxq-skel" />}
@@ -219,7 +320,9 @@ export function PayrollExceptionQueuePage(): VNode {
                     <i class={`fa-solid ${m.icon}`} /> {m.label} <span>{m.sub}</span>
                   </div>
                   {g.rows.map(row => (
-                    <QueueRow key={row.id} row={row} selected={row.id === selectedId} onOpen={() => onRowOpen(row)} />
+                    <QueueRow key={row.id} row={row} selected={row.id === selectedId}
+                      picked={picked.has(row.id)} onPick={isBulkable(row) ? () => togglePick(row.id) : undefined}
+                      onOpen={() => onRowOpen(row)} />
                   ))}
                 </div>
               );
@@ -238,7 +341,7 @@ export function PayrollExceptionQueuePage(): VNode {
         {/* ── Detail panel ── */}
         <aside class="pxq-detail">
           {selected ? (
-            <DetailPanel detail={selected} busy={anyPending(mut)} onAction={(type) => setAction({ type, finding: selected })} onOpenRun={() => openRun(selected.run.id)} />
+            <DetailPanel detail={selected} busy={anyPending(mut)} onAction={(type) => setAction({ type, finding: selected })} onOpenRun={(t) => openRun(selected.run.id, t)} />
           ) : (
             <div class="pxq-detail-empty">
               <i class="fa-regular fa-hand-pointer" />
@@ -258,6 +361,16 @@ export function PayrollExceptionQueuePage(): VNode {
           onDone={() => { setAction(null); }}
         />
       )}
+
+      {bulk && (
+        <BulkActionModal
+          action={bulk}
+          targets={pickedRows.map(r => ({ id: r.id, version: r.version }))}
+          mut={mut}
+          onClose={() => setBulk(null)}
+          onDone={() => { setBulk(null); setPicked(new Set()); }}
+        />
+      )}
     </div>
   );
 }
@@ -268,18 +381,29 @@ function anyPending(mut: ReturnType<typeof useWorkQueueMutations>): boolean {
 }
 
 // ── Queue row ───────────────────────────────────────────────────────────────
-function QueueRow({ row, selected, onOpen }: { row: PayrollFindingQueueItem; selected: boolean; onOpen: () => void }): VNode {
+function QueueRow({ row, selected, picked, onPick, onOpen }: {
+  row: PayrollFindingQueueItem; selected: boolean; picked: boolean;
+  onPick?: () => void; onOpen: () => void;
+}): VNode {
   const sev = SEV_CLS.get(row.severity) ?? 'low';
   const icon = KIND_ICON.get(row.kind) ?? 'fa-circle-dot';
   const overdue = isOverdue(row.dueAt);
   const cta = row.kind === 'approval' ? 'Review' : 'Open';
+  // Scope suffix: run totals for approval rows (employees + net), amount when present.
+  const scope = row.impact.employeeCount != null ? ` · ${row.impact.employeeCount} employees` : '';
+  const amount = row.impact.amount != null ? ` · ${fmtTTD(row.impact.amount)}` : '';
   return (
-    <div class={`pxq-item${selected ? ' on' : ''}`} role="button" tabIndex={0} onClick={onOpen}
+    <div class={`pxq-item${selected ? ' on' : ''}${picked ? ' picked' : ''}`} role="button" tabIndex={0} onClick={onOpen}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}>
+      <label class="pxq-check" onClick={e => e.stopPropagation()}>
+        {onPick
+          ? <input type="checkbox" checked={picked} onChange={onPick} aria-label={`Select ${row.title}`} />
+          : <span class="pxq-check-spacer" aria-hidden="true" />}
+      </label>
       <div class={`pxq-sev ${sev}`}><i class={`fa-solid ${icon}`} /></div>
       <div class="pxq-copy">
         <strong>{row.title}</strong>
-        <small>{row.run.reference} · {row.summary}{row.impact.amount != null ? ` · ${fmtTTD(row.impact.amount)}` : ''}</small>
+        <small>{row.run.reference} · Pay {fmtPayDate(row.run.payDate)} · {row.summary}{scope}{amount}</small>
       </div>
       <div class="pxq-owner">
         {row.owner ? <><span class="pxq-av">{initials(row.owner.displayName)}</span>
@@ -306,27 +430,47 @@ const ACTION_META: Record<PayrollFindingAllowedAction, { label: string; icon: st
 
 function DetailPanel({ detail, busy, onAction, onOpenRun }: {
   detail: PayrollFindingDetail; busy: boolean;
-  onAction: (a: PayrollFindingAllowedAction) => void; onOpenRun: () => void;
+  onAction: (a: PayrollFindingAllowedAction) => void;
+  onOpenRun: (tab: 'approvals' | 'exceptions') => void;
 }): VNode {
   const activity = detail.activity.items;
   const primaryActs = detail.allowedActions.filter(a => a === 'resolve' || a === 'review');
   const secondaryActs = detail.allowedActions.filter(a => a !== 'resolve' && a !== 'review');
+  // Source evidence carries the record that triggered the finding + when it was observed.
+  // We surface the human label + timestamp (never a raw id — resolving ids to navigable
+  // records is a backend enrichment tracked separately).
+  const evidence = detail.sourceEvidence.filter(e => e.occurredAt || e.label);
   return (
     <div class="pxq-detail-card">
       <header class="pxq-sum-head">
         <span>Selected Finding</span>
         <h3>{detail.title}</h3>
-        <p>{detail.run.reference} · {detail.subject.scopeLabel}</p>
+        <p>{detail.run.reference} · Pay {fmtPayDate(detail.run.payDate)} · {detail.subject.scopeLabel}</p>
       </header>
       <div class="pxq-sum-body">
         <p class="pxq-detail-summary">{detail.summary}</p>
 
         <dl class="pxq-facts">
-          <div><dt>Trigger</dt><dd>{detail.trigger.ruleKey}</dd></div>
+          <div><dt>Trigger</dt><dd>{humanizeKey(detail.trigger.ruleKey)}</dd></div>
           <div><dt>Observed</dt><dd>{detail.trigger.observed}{detail.trigger.threshold ? ` (threshold ${detail.trigger.threshold})` : ''}</dd></div>
-          <div><dt>Subject</dt><dd>{detail.subject.displayName ?? detail.subject.scopeLabel}</dd></div>
+          <div><dt>Subject</dt><dd>
+            {detail.subject.employeeId
+              ? <button type="button" class="pxq-link" title="Open the affected employee's HR record"
+                  onClick={() => openHrEmployee(detail.subject.employeeId!)}>
+                  {detail.subject.displayName ?? detail.subject.scopeLabel} <i class="fa-solid fa-arrow-up-right-from-square" />
+                </button>
+              : (detail.subject.displayName ?? detail.subject.scopeLabel)}
+          </dd></div>
           <div><dt>Impact</dt><dd>{detail.impact.amount != null ? fmtTTD(detail.impact.amount) : (detail.impact.label ?? '—')}</dd></div>
         </dl>
+
+        {evidence.length > 0 && (
+          <div class="pxq-evidence"><span>Source evidence</span>
+            <ul>{evidence.map((e, i) => (
+              <li key={i}><i class="fa-solid fa-file-lines" /> {humanizeKey(e.label)}
+                {e.occurredAt && <em> · {fmtDateTime(e.occurredAt)}</em>}</li>
+            ))}</ul></div>
+        )}
 
         {detail.requiredEvidence.length > 0 && (
           <div class="pxq-required"><span>Required to clear</span>
@@ -341,11 +485,11 @@ function DetailPanel({ detail, busy, onAction, onOpenRun }: {
         <div class="pxq-sum-actions">
           {primaryActs.map(a => (
             <button key={a} type="button" class="pxq-btn primary" disabled={busy}
-              onClick={() => (a === 'review' ? onOpenRun() : onAction(a))}>
+              onClick={() => (a === 'review' ? onOpenRun('approvals') : onAction(a))}>
               <i class={`fa-solid ${ACTION_META[a].icon}`} /> {ACTION_META[a].label}
             </button>
           ))}
-          <button type="button" class="pxq-btn" onClick={onOpenRun}><i class="fa-solid fa-arrow-up-right-from-square" /> Open run evidence</button>
+          <button type="button" class="pxq-btn" onClick={() => onOpenRun('exceptions')}><i class="fa-solid fa-arrow-up-right-from-square" /> Open run evidence</button>
         </div>
 
         {secondaryActs.length > 0 && (
@@ -388,6 +532,12 @@ function labelActivity(t: PayrollFindingActivityType): string {
     case 'reopen': return 'Reopened';
     case 'comment': return 'Comment';
   }
+}
+
+// Humanize a snake/dotted rule or source key for display (no raw machine tokens in the UI).
+function humanizeKey(k: string): string {
+  const s = k.replace(/[._]/g, ' ').trim();
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : k;
 }
 
 // ── Action modal (fully wired: version-guarded + idempotent + per-field validation) ──
@@ -487,6 +637,74 @@ function FindingActionModal({ action, finding, mut, onClose, onDone }: {
             <input type="datetime-local" value={expiresAt}
               onInput={e => setExpiresAt((e.target as HTMLInputElement).value)} /></label>
         )}
+      </div>
+    </Modal>
+  );
+}
+
+// ── Bulk action modal — reassign/waive over the selected open findings ─────────
+// Loops the same version-guarded, idempotent single-finding commands; every item
+// keeps its own optimistic-concurrency guard. Partial failure is reported honestly
+// (items that changed under the actor are counted as failed, not silently skipped).
+
+function BulkActionModal({ action, targets, mut, onClose, onDone }: {
+  action: 'assign' | 'waive';
+  targets: { id: string; version: number }[];
+  mut: ReturnType<typeof useWorkQueueMutations>;
+  onClose: () => void;
+  onDone: () => void;
+}): VNode {
+  const [assigneeId, setAssigneeId] = useState('');
+  const [reason, setReason] = useState('');
+  const [note, setNote] = useState('');
+  const [err, setErr] = useState<Record<string, string>>({});
+  const [running, setRunning] = useState(false);
+
+  const run = async (): Promise<void> => {
+    const e: Record<string, string> = {};
+    if (action === 'assign' && !assigneeId) e.assigneeId = 'Choose an assignee.';
+    if (action === 'waive' && reason.trim().length < 1) e.reason = 'A waiver reason is required.';
+    if (Object.keys(e).length) { setErr(e); return; }
+
+    setRunning(true);
+    let done = 0, failed = 0;
+    for (const t of targets) {
+      try {
+        if (action === 'assign') {
+          await mut.assign.mutateAsync({ id: t.id, expectedVersion: t.version, idempotencyKey: crypto.randomUUID(), assigneeId, note: note.trim() || undefined });
+        } else {
+          await mut.waive.mutateAsync({ id: t.id, expectedVersion: t.version, idempotencyKey: crypto.randomUUID(), reason: reason.trim() });
+        }
+        done++;
+      } catch { failed++; }
+    }
+    setRunning(false);
+    toast(failed
+      ? `${done} ${action === 'assign' ? 'reassigned' : 'waived'} · ${failed} failed — they may have changed since; refresh and retry.`
+      : `${done} finding${done === 1 ? '' : 's'} ${action === 'assign' ? 'reassigned' : 'waived'}.`);
+    onDone();
+  };
+
+  const label = action === 'assign' ? 'Reassign selected' : 'Waive selected';
+  return (
+    <Modal open title={label} sub={`${targets.length} finding${targets.length === 1 ? '' : 's'} selected`}
+      icon={`fa-solid ${action === 'assign' ? 'fa-user-pen' : 'fa-shield-halved'}`}
+      onClose={onClose} onSubmit={() => void run()} submitLabel={running ? 'Working…' : label} submitDisabled={running}>
+      <div class="pxq-form">
+        {action === 'assign' && (
+          <EmployeePicker label="Reassign all to" value={assigneeId} onChange={v => setAssigneeId(v ?? '')} error={err.assigneeId} required />
+        )}
+        {action === 'waive' && (
+          <label class="pxq-field"><span>Waiver reason</span>
+            <textarea rows={4} value={reason} maxLength={2000}
+              placeholder="Applied to every selected warning — why is it accepted without resolution?"
+              onInput={e => setReason((e.target as HTMLTextAreaElement).value)} />
+            {err.reason && <small class="pxq-err">{err.reason}</small>}</label>
+        )}
+        <label class="pxq-field"><span>Note <em>(optional)</em></span>
+          <textarea rows={3} value={note} maxLength={2000} placeholder="Add context applied to each item…"
+            onInput={e => setNote((e.target as HTMLTextAreaElement).value)} /></label>
+        <p class="pxq-bulk-note"><i class="fa-solid fa-circle-info" /> Applies to the {targets.length} selected item{targets.length === 1 ? '' : 's'} in view. Each keeps its own concurrency check; any that changed since selection are reported as failed.</p>
       </div>
     </Modal>
   );

@@ -27,6 +27,9 @@ export type PayrollFindingAllowedAction =
 
 export type PayrollWorkQueueTab = 'all' | 'approvals' | 'blockers' | 'warnings' | 'resolved';
 
+/** Server-side ordering of the work queue (keyset-stable). Default 'priority'. */
+export type PayrollWorkQueueSort = 'priority' | 'pay_date' | 'due_date' | 'newest' | 'oldest';
+
 /** Shared keyset page envelope (§15.2). */
 export interface PayrollPageResult<T> {
   items: T[];
@@ -117,6 +120,7 @@ export interface PayrollWorkQueueRequest {
   cursor?: string;
   limit: number;                 // 1..100, default 25
   tab?: PayrollWorkQueueTab;
+  sort?: PayrollWorkQueueSort;   // server-side order; default 'priority'
   kinds?: PayrollFindingKind[];
   severities?: PayrollFindingQueueSeverity[];
   states?: PayrollFindingQueueState[];

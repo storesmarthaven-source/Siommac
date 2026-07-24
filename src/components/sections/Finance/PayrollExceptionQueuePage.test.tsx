@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/preact';
+import { render, screen, fireEvent } from '@testing-library/preact';
 import type {
   PayrollWorkQueueResult, PayrollFindingQueueItem, PayrollFindingDetail,
 } from '@api/finance/payrollExceptions';
@@ -24,6 +24,10 @@ vi.mock('@api/finance/payrollExceptions', () => ({
     escalate: stubMut(), comment: stubMut(), assign: stubMut(),
     resolve: stubMut(), waive: stubMut(), reopen: stubMut(),
   }),
+}));
+// The run filter reads the runs register; stub it so the page renders without a live query.
+vi.mock('@api/finance/payrollRunsRegister', () => ({
+  useRunsRegister: () => ({ data: { items: [] }, isLoading: false, isError: false }),
 }));
 
 import { PayrollExceptionQueuePage } from './PayrollExceptionQueuePage';
@@ -101,7 +105,7 @@ describe('F-06/F-07 PayrollExceptionQueuePage', () => {
   it('PXQ4 — a selected finding renders detail facts + its allowed actions + activity', () => {
     mockUseWorkQueue.mockReturnValue(asQuery(result({ selected: detail() })));
     render(<PayrollExceptionQueuePage />);
-    expect(screen.getByText('statutory.profile.incomplete')).toBeTruthy();   // trigger
+    expect(screen.getByText('Statutory profile incomplete')).toBeTruthy();   // trigger (humanized, no raw key)
     expect(screen.getByText('Resolve')).toBeTruthy();                        // allowedActions button
     expect(screen.getByText('Escalate')).toBeTruthy();
     expect(screen.getByText('Approved PAYE election')).toBeTruthy();         // required evidence
@@ -112,5 +116,33 @@ describe('F-06/F-07 PayrollExceptionQueuePage', () => {
     mockUseWorkQueue.mockReturnValue(asQuery(result({ items: [], total: 0 })));
     render(<PayrollExceptionQueuePage />);
     expect(screen.getByText('No queue items match this view')).toBeTruthy();
+  });
+
+  it('PXQ6 — rows surface the run pay date for triage', () => {
+    mockUseWorkQueue.mockReturnValue(asQuery(result()));
+    render(<PayrollExceptionQueuePage />);
+    // 2026-07-24 → "Pay 24 Jul" in the row meta line.
+    expect(screen.getByText(/Pay 24 Jul/)).toBeTruthy();
+  });
+
+  it('PXQ7 — selecting an open finding reveals the bulk bar; Waive is disabled for a blocker', () => {
+    mockUseWorkQueue.mockReturnValue(asQuery(result()));
+    render(<PayrollExceptionQueuePage />);
+    fireEvent.click(screen.getByLabelText('Select Statutory profiles incomplete'));
+    expect(screen.getByText('1 selected')).toBeTruthy();
+    expect(screen.getByText('Reassign')).toBeTruthy();
+    // Blocker findings can't be waived → the bulk Waive verb is disabled.
+    const waive = screen.getByText('Waive').closest('button') as HTMLButtonElement;
+    expect(waive.disabled).toBe(true);
+  });
+
+  it('PXQ8 — a selected finding renders its source evidence (humanized, no raw id)', () => {
+    mockUseWorkQueue.mockReturnValue(asQuery(result({ selected: detail({
+      sourceEvidence: [{ type: 'calculation_warning', id: 'src-uuid-should-not-show', label: 'calculation_warning', occurredAt: '2026-07-24T09:00:00Z' }],
+    }) })));
+    render(<PayrollExceptionQueuePage />);
+    expect(screen.getByText('Source evidence')).toBeTruthy();
+    expect(screen.getByText('Calculation warning')).toBeTruthy();
+    expect(screen.queryByText(/src-uuid-should-not-show/)).toBeNull();   // no raw id
   });
 });

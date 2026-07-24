@@ -1466,6 +1466,7 @@ router.post('/payroll/findings/work-queue', async c => {
     cursor:        z.string().max(200).optional(),
     limit:         z.number().int().min(1).max(100).default(25),
     tab:           z.enum(['all', 'approvals', 'blockers', 'warnings', 'resolved']).optional(),
+    sort:          z.enum(['priority', 'pay_date', 'due_date', 'newest', 'oldest']).optional(),
     kinds:         z.array(z.enum(['approval', 'blocker', 'warning'])).optional(),
     severities:    z.array(z.enum(['critical', 'high', 'medium', 'low'])).optional(),
     states:        z.array(z.enum(['open', 'in_progress', 'resolved', 'waived'])).optional(),

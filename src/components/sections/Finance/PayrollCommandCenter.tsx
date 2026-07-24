@@ -322,6 +322,7 @@ export function PayrollCommandCenter(): VNode {
   // ── Lifecycle actions → the real run drawer + create wizard (contract §8) ──
   const [drawerRunId, setDrawerRunId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen]   = useState(false);
+  const [drawerTab, setDrawerTab]     = useState<string | undefined>(undefined);
   const [wizOpen, setWizOpen]         = useState(false);
 
   const lockInputsMut = usePayrollMutation(financePayrollApi.lockInputs);
@@ -392,17 +393,23 @@ export function PayrollCommandCenter(): VNode {
 
   // Open the run's drawer — used by run rows, deadlines, the portfolio intervention, the
   // assigned-approval card, and readiness gates. The drawer IS the workflow decision surface.
-  const openRun = useCallback((runId: string | null) => {
+  const openRun = useCallback((runId: string | null, tab?: string) => {
     if (!runId) return;
     setDrawerRunId(runId);
+    setDrawerTab(tab);
     setDrawerOpen(true);
   }, []);
-  // Deep-link from the Payroll Runs register: it stores a runId + navigates here.
-  // Consume the hint once on mount and open that run's full-page detail.
+  // Deep-link from the Payroll Runs register / batches / exceptions queue: they
+  // store a runId (+ optional target tab) and navigate here. Consume the hint
+  // once on mount and open that run's full-page detail on the requested tab.
   useEffect(() => {
     let pending: string | null = null;
-    try { pending = sessionStorage.getItem('siomac_open_payroll_run'); sessionStorage.removeItem('siomac_open_payroll_run'); } catch { /* ignore */ }
-    if (pending) openRun(pending);
+    let pendingTab: string | null = null;
+    try {
+      pending = sessionStorage.getItem('siomac_open_payroll_run'); sessionStorage.removeItem('siomac_open_payroll_run');
+      pendingTab = sessionStorage.getItem('siomac_open_payroll_run_tab'); sessionStorage.removeItem('siomac_open_payroll_run_tab');
+    } catch { /* ignore */ }
+    if (pending) openRun(pending, pendingTab ?? undefined);
   }, [openRun]);
   const refresh = useCallback(() => { void q.refetch(); }, [q]);
   // KPI drill-through: focus the run register on a tab (mirrors Statutory's goToRegisterTab).
@@ -496,7 +503,8 @@ export function PayrollCommandCenter(): VNode {
     return (
       <PayRunDetailPage
         runId={drawerRunId}
-        onBack={() => { setDrawerOpen(false); setDrawerRunId(null); }}
+        initialTab={drawerTab}
+        onBack={() => { setDrawerOpen(false); setDrawerRunId(null); setDrawerTab(undefined); }}
         canManage={data?.capabilities.canManageRun ?? false}
         canApprove={data?.capabilities.canApprove ?? false}
         actions={drawerActions}
@@ -510,7 +518,7 @@ export function PayrollCommandCenter(): VNode {
     return (
       <PayNewRunWizard
         onClose={() => setWizOpen(false)}
-        onCreated={run => { setWizOpen(false); setTab('all'); setCursor(undefined); setDrawerRunId(run.id); setDrawerOpen(true); }}
+        onCreated={run => { setWizOpen(false); setTab('all'); setCursor(undefined); setDrawerRunId(run.id); setDrawerTab(undefined); setDrawerOpen(true); }}
       />
     );
   }

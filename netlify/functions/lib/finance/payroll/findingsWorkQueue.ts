@@ -34,6 +34,7 @@ export async function getPayrollWorkQueue(
     p_run_ids:    req.runIds ?? null,
     p_owner_id:   req.ownerId ?? null,
     p_search:     req.search ?? null,
+    p_sort:       req.sort ?? 'priority',
   });
   if (error) throw payrollRpcHttpError(error);
   // The function returns the exact PayrollWorkQueueResult shape (minus `selected`,

@@ -30,7 +30,8 @@ const fmtDate = (d: string | null): string =>
   d ? new Date(`${d}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
 function openRun(runId: string): void {
-  try { sessionStorage.setItem('siomac_open_payroll_run', runId); } catch { /* ignore */ }
+  // Batch rows open on the default Summary tab — clear any stale deep-link tab.
+  try { sessionStorage.setItem('siomac_open_payroll_run', runId); sessionStorage.removeItem('siomac_open_payroll_run_tab'); } catch { /* ignore */ }
   showSection('s-finance-payroll');
 }
 

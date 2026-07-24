@@ -198,6 +198,44 @@ export default async function run(h) {
     expect(r.status === 422, `expected 422, got ${r.status}`);
   });
 
+  await test('work-queue — sort=oldest/newest order by creation time (DB-verified)', async () => {
+    const seededIds = [ctx.f.blocker.id, ctx.f.warning.id, ctx.f.info.id, ctx.f.toResolve.id];
+    const { data: rows } = await sb.from('finance_payroll_control_findings').select('id, created_at').in('id', seededIds);
+    const at = Object.fromEntries((rows ?? []).map(r => [r.id, Date.parse(r.created_at)]));
+    const seq = res => res.body.data.items.map(it => it.id).filter(id => seededIds.includes(id)).map(id => at[id]);
+    const oldest = await wq({ sort: 'oldest', limit: 100 });
+    const newest = await wq({ sort: 'newest', limit: 100 });
+    ok(oldest, 'oldest ok'); ok(newest, 'newest ok');
+    const oSeq = seq(oldest), nSeq = seq(newest);
+    expect(oSeq.length >= 2, 'at least two seeded findings visible');
+    for (let i = 1; i < oSeq.length; i++) expect(oSeq[i] >= oSeq[i - 1], `oldest non-decreasing at ${i}`);
+    for (let i = 1; i < nSeq.length; i++) expect(nSeq[i] <= nSeq[i - 1], `newest non-increasing at ${i}`);
+  });
+
+  await test('work-queue — sort=pay_date non-decreasing (nulls last) + clean keyset', async () => {
+    const seen = [];
+    let cursor, pages = 0, prev = -Infinity;
+    do {
+      const r = await wq({ sort: 'pay_date', limit: 2, cursor });
+      ok(r, `page ${pages + 1}`);
+      for (const it of r.body.data.items) {
+        const k = it.run.payDate ? Date.parse(it.run.payDate) : Number.MAX_SAFE_INTEGER;
+        expect(k >= prev, `pay_date non-decreasing across pages: ${prev} > ${k}`); prev = k;
+        expect(!seen.includes(it.id), `dup ${it.id}`); seen.push(it.id);
+      }
+      cursor = r.body.data.nextCursor; pages++;
+      if (pages > 300) break;
+    } while (cursor);
+    for (const f of [ctx.f.blocker, ctx.f.warning, ctx.f.info, ctx.f.toResolve])
+      expect(seen.filter(id => id === f.id).length === 1, `appears once under pay_date sort: ${f.title}`);
+  });
+
+  await test('work-queue — unknown sort → 400 (request validation)', async () => {
+    const r = await wq({ sort: 'bogus' });
+    fails(r, 'unknown sort');
+    expect(r.status === 400, `expected 400, got ${r.status}`);
+  });
+
   await test('work-queue — read-only: writes no app_events', async () => {
     const before = await sb.from('app_events').select('id', { count: 'exact', head: true });
     await wq({ limit: 50 });

@@ -150,7 +150,8 @@ export function PayrollRunRegisterPage(): VNode {
   };
 
   const openRun = (id: string): void => {
-    try { sessionStorage.setItem('siomac_open_payroll_run', id); } catch { /* ignore */ }
+    // Register rows open on the default Summary tab — clear any stale deep-link tab.
+    try { sessionStorage.setItem('siomac_open_payroll_run', id); sessionStorage.removeItem('siomac_open_payroll_run_tab'); } catch { /* ignore */ }
     showSection('s-finance-payroll');
   };
   const onCreated = (run: PayrollRun): void => { setWizOpen(false); openRun(run.id); };
