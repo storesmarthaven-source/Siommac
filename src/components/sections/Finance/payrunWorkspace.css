@@ -368,3 +368,44 @@
 .prw .crew-sec { margin-bottom: 14px; }
 .prw .crew-sec .lc-stats { margin-bottom: 10px; }
 .prw .crew-chips { margin-top: 2px; }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Legacy .hrfin compatibility (interactive tabs: Inputs / Warnings & Exceptions
+   / Payslips / GL / Exports). Those tab bodies still use the Aurora `.hrfin`
+   design system, whose classes + tokens are scoped to a `.hrfin` ANCESTOR that
+   the `.prw` workspace does not have — so every hrfin control rendered inside a
+   run tab was UNSTYLED. Map the hrfin tokens to the mockup palette and restyle
+   the hrfin primitives to the mockup look here, so the tabs match without
+   rewriting each call site. (Full migration off .hrfin is a later slice.)
+   ───────────────────────────────────────────────────────────────────────────── */
+.prw {
+  --hrfin-surface-1: var(--card);
+  --hrfin-surface-2: #f8fafc;
+  --hrfin-border: var(--border);
+  --hrfin-text-primary: var(--ink);
+  --hrfin-text-secondary: var(--muted);
+  --hrfin-accent: var(--brand);
+  --hrfin-accent-rgb: 29, 78, 216;
+}
+.prw .hrfin-action {
+  min-height: 30px; display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--card);
+  color: var(--ink-2); padding: 0 11px; font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: inherit; white-space: nowrap;
+}
+.prw .hrfin-action:hover:not(:disabled) { background: var(--brand-soft); border-color: var(--brand); color: var(--brand-ink); }
+.prw .hrfin-action:disabled { opacity: .55; cursor: not-allowed; }
+.prw .hrfin-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.prw .hrfin-status { display: inline-flex; align-items: center; min-height: 20px; border-radius: 999px; padding: 2px 9px; font-size: 11.5px; font-weight: 650; }
+.prw .hrfin-status.is-success { background: var(--green-soft); color: var(--green-ink); }
+.prw .hrfin-status.is-danger  { background: var(--red-soft);   color: var(--red); }
+.prw .hrfin-status.is-warning { background: var(--amber-soft); color: var(--amber-ink); }
+.prw .hrfin-status.is-info    { background: var(--brand-soft); color: var(--brand-ink); }
+.prw .hrfin-status.is-muted   { background: #f1f5f9;           color: var(--muted); }
+.prw .hrfin-empty { color: var(--muted); font-size: 13px; padding: 10px 2px; }
+.prw .hrfin-input { width: 100%; height: 36px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); padding: 0 12px; font-size: 13px; color: var(--ink); font-family: inherit; }
+.prw .hrfin-input:focus { outline: 0; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+.prw textarea.hrfin-input { height: auto; padding: 9px 12px; resize: vertical; }
+.prw .hrfin-mini-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.prw .hrfin-mini-table th, .prw .hrfin-mini-table td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border-soft); }
+.prw .hrfin-mini-table th { color: var(--muted); font-weight: 600; }

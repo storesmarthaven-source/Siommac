@@ -18,7 +18,7 @@ import {
   type PayrollRun, type PayrollRunActions,
 } from '@api/finance/payroll';
 import { humanize } from './financeShared';
-import { EmployeeCell } from './_shared/EmployeeCell';
+import { useEmployeeNames } from '@api/finance/lookups';
 import { type PayRunDrawerActions } from './payRunDetail/interactiveTabs';
 import {
   PolicyChip, CalendarChip, lifecycleSteps, statusIntent, runTitle,
@@ -60,6 +60,13 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApp
   // gates are meaningful — never fetched (and never gating) elsewhere.
   const preflightRelevant = ['approved', 'locked', 'released', 'exported'].includes(runQ.data?.status ?? '');
   const preflightQ = useReleasePreflight(preflightRelevant ? runId : null);
+  // Resolve the run owner's display name so the header shows a single avatar +
+  // name (mockup .rh-owner), not a raw id-initial avatar plus a nested chip.
+  const ownerId = runQ.data?.createdBy ?? null;
+  const ownerResolved = useEmployeeNames(ownerId ? [ownerId] : []).data?.get(ownerId ?? '');
+  const ownerName = ownerResolved && ownerResolved.fullName !== ownerResolved.id
+    ? ownerResolved.fullName
+    : null;
   const run = runQ.data;
   const workspace = workspaceQ.data;
   const preflight = preflightQ.data;
@@ -146,8 +153,8 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApp
         </div>
         <div class="rh-cell">
           <div class="rh-owner">
-            <span class="av">{initials(run.createdBy ?? undefined, 'PR')}</span>
-            <div><div class="k">Owner</div><div class="v">{run.createdBy ? <EmployeeName id={run.createdBy} /> : '—'}</div></div>
+            <span class="av">{initials(ownerName ?? run.createdBy ?? undefined, 'PR')}</span>
+            <div><div class="k">Owner</div><div class="v">{ownerName ?? (run.createdBy ? '—' : '—')}</div></div>
           </div>
         </div>
         <div class="rh-cell"><div><div class="k">Pay group</div><div class="v">{run.payGroup ?? 'Ad-hoc'}</div></div></div>
@@ -346,5 +353,4 @@ function NextActionBanner({ status, blockers, attempt, preflight, onGo }: {
 
 // ── small helpers ───────────────────────────────────────────────────────────────
 
-function EmployeeName({ id }: { id: string }): VNode { return <EmployeeCell employeeId={id} />; }
 function humanizeStatus(s: string): string { return humanize(s); }

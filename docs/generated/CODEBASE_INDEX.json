@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "c019730a3263292618292d6c0dd6a595802017c2",
+    "head": "8b48bde613757414d6ed76a2411c8bde779e608d",
     "branch": "main",
-    "fingerprint": "2068f16e2b7fc658288ad4b2",
+    "fingerprint": "978af0a4c174c1bc1fc96f84",
     "indexedFiles": 1562
   },
   "summary": {
     "files": 1230,
-    "symbols": 12352,
+    "symbols": 12351,
     "widgets": 32,
     "routes": 933,
     "routeDefinitions": 934,
@@ -49,7 +49,7 @@
       "id": "finance",
       "counts": {
         "files": 138,
-        "symbols": 1838,
+        "symbols": 1837,
         "widgets": 10,
         "routes": 156,
         "routeDefinitions": 156,
@@ -4522,8 +4522,8 @@
       "path": "src/components/sections/Finance/PayRunDetailPage.tsx",
       "module": "finance",
       "role": "frontend-page",
-      "lines": 351,
-      "hash": "ec73b6b5916a493c"
+      "lines": 357,
+      "hash": "976db11ffa1dfbc3"
     },
     {
       "path": "src/components/sections/Finance/PayWarningResolveDialog.tsx",
@@ -84881,7 +84881,7 @@
       "name": "HeaderActions",
       "kind": "function",
       "file": "src/components/sections/Finance/PayRunDetailPage.tsx",
-      "line": 262,
+      "line": 269,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -84893,7 +84893,7 @@
       "name": "Metric",
       "kind": "function",
       "file": "src/components/sections/Finance/PayRunDetailPage.tsx",
-      "line": 287,
+      "line": 294,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -84905,19 +84905,7 @@
       "name": "NextActionBanner",
       "kind": "function",
       "file": "src/components/sections/Finance/PayRunDetailPage.tsx",
-      "line": 296,
-      "module": "finance",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "EmployeeName",
-      "kind": "function",
-      "file": "src/components/sections/Finance/PayRunDetailPage.tsx",
-      "line": 349,
+      "line": 303,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -84929,7 +84917,7 @@
       "name": "humanizeStatus",
       "kind": "function",
       "file": "src/components/sections/Finance/PayRunDetailPage.tsx",
-      "line": 350,
+      "line": 356,
       "module": "finance",
       "exported": false,
       "container": "",

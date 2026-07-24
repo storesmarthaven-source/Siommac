@@ -7311,11 +7311,10 @@ renderPage	function	finance	false	test	src/components/sections/Finance/payRunDet
 TabKey	type	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	34	
 TAB_DEFS	array	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	36	
 PayRunDetailPage	function	finance	true	component	src/components/sections/Finance/PayRunDetailPage.tsx	49	
-HeaderActions	function	finance	true	component	src/components/sections/Finance/PayRunDetailPage.tsx	262	
-Metric	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	287	
-NextActionBanner	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	296	
-EmployeeName	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	349	
-humanizeStatus	function	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	350	
+HeaderActions	function	finance	true	component	src/components/sections/Finance/PayRunDetailPage.tsx	269	
+Metric	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	294	
+NextActionBanner	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	303	
+humanizeStatus	function	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	356	
 severityTone	function	finance	false		src/components/sections/Finance/PayWarningResolveDialog.tsx	15	
 PayWarningResolveDialog	function	finance	true	component	src/components/sections/Finance/PayWarningResolveDialog.tsx	21	
 submit	function	finance	false		src/components/sections/Finance/PayWarningResolveDialog.tsx	33	PayWarningResolveDialog
