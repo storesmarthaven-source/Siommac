@@ -122,6 +122,17 @@ const USER_KEYED = [
  *    (migration 20260919000213), so it never blocks the instance delete.
  */
 const BUSINESS_TAGGED = [
+  // Governed payroll config leaked by an ABORTED run (e.g. dev-server crash mid-
+  // cleanup): policies first (their satellites clear the group assignments that
+  // RESTRICT-block both deletes), then the groups themselves.
+  { table: 'finance_pay_policies', column: 'name', satellites: [
+    ['finance_pay_group_policy_assignments', 'policy_id'],    // (blocks)
+    ['finance_pay_policy_command_receipts', 'policy_id'],
+  ] },
+  { table: 'finance_pay_groups', column: 'name', satellites: [
+    ['finance_pay_group_policy_assignments', 'pay_group_id'], // (blocks)
+    ['finance_employee_pay_group_assignments', 'pay_group_id'],
+  ] },
   { table: 'hse_hazards', column: 'title', satellites: [
     ['hse_controls', 'hazard_id'],                    // (blocks)
     ['hse_risk_assessment_hazards', 'hazard_id'],     // (blocks)
@@ -408,6 +419,20 @@ export async function sweepOrphans(sb, { apply = false, verbose = false, log = (
     await sweepPlatformChains(ids);
     for (const [child, fk] of satellites) await sweepByIds(child, fk, ids.map(String));
     await sweepByIds(table, 'id', ids);
+  }
+
+  // 2b ── MARKER-named work/holiday calendars: immutability triggers block direct
+  // deletes, so an aborted fixture's calendars can ONLY go through the purge RPC.
+  {
+    const wcs = (await sb.from('work_calendars').select('id').ilike('name', `%${MARKER}%`)).data ?? [];
+    const hcs = (await sb.from('holiday_calendars').select('id').ilike('name', `%${MARKER}%`)).data ?? [];
+    if (wcs.length || hcs.length) {
+      vlog(`Marker calendars: ${wcs.length} work / ${hcs.length} holiday → work_calendar_purge_tx`);
+      const { error } = await sb.rpc('work_calendar_purge_tx', {
+        p_work_calendar_ids: wcs.map(c => c.id), p_holiday_calendar_ids: hcs.map(c => c.id),
+      });
+      if (error) vlog(`  ~ calendar purge failed: ${error.message}`);
+    }
   }
 
   // 3 ── user-referencing tables that don't cascade.

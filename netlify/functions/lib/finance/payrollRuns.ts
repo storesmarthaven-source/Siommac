@@ -2040,10 +2040,13 @@ export interface PopulationPreviewResult {
 /**
  * Returns a count of active employees for the payroll wizard preview (step 2).
  * Accepts an optional periodMonth (YYYY-MM-DD) to scope new-hire / termination counts.
- * Does NOT lock inputs — this is a read-only estimate.
+ * When `payGroupId` is given the preview counts ONLY that group's effective members —
+ * a pay-group-scoped run must never present the organization-wide headcount as its
+ * population (certification defect B-01). Does NOT lock inputs — read-only estimate.
  */
 export async function getEmployeePopulationPreview(
   periodMonth?: string,
+  payGroupId?: string,
 ): Promise<PopulationPreviewResult> {
   // Derive the period start/end from the supplied periodMonth (or default to current month)
   const baseDate = periodMonth ? new Date(periodMonth) : new Date();
@@ -2052,18 +2055,35 @@ export async function getEmployeePopulationPreview(
   const periodEnd = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0)
     .toISOString().slice(0, 10);
 
-  // Fetch all non-system users with scheduling and pay fields
-  const { data, error } = await sb
-    .from('app_users')
-    .select('id, pay_basis, status, start_date, end_date')
-    .in('status', ['active', 'inactive'])
-    .not('role', 'eq', 'system');
-  if (error) throw Object.assign(new Error('populationPreview: ' + error.message), { status: 500 });
-
-  const rows = (data ?? []) as {
+  const COLS = 'id, pay_basis, status, start_date, end_date';
+  type PreviewRow = {
     id: string; pay_basis: string | null;
     status: string; start_date: string | null; end_date: string | null;
-  }[];
+  };
+  let rows: PreviewRow[];
+  if (payGroupId) {
+    // Group-scoped: the SAME membership resolution lockInputs uses.
+    const memberIds = await listGroupMemberIds(payGroupId, periodStart, periodEnd);
+    rows = [];
+    for (const ids of chunk(memberIds, 300)) {
+      if (ids.length === 0) continue;
+      const { data, error } = await sb.from('app_users')
+        .select(COLS)
+        .in('status', ['active', 'inactive'])
+        .not('role', 'eq', 'system')
+        .in('id', ids);
+      if (error) throw Object.assign(new Error('populationPreview: ' + error.message), { status: 500 });
+      rows.push(...((data ?? []) as PreviewRow[]));
+    }
+  } else {
+    const { data, error } = await sb
+      .from('app_users')
+      .select(COLS)
+      .in('status', ['active', 'inactive'])
+      .not('role', 'eq', 'system');
+    if (error) throw Object.assign(new Error('populationPreview: ' + error.message), { status: 500 });
+    rows = (data ?? []) as PreviewRow[];
+  }
 
   const active    = rows.filter(r => r.status === 'active');
   const salaried  = active.filter(r => r.pay_basis === 'salary').length;
@@ -2297,6 +2317,10 @@ export interface InputSourceReadiness {
 }
 export interface InputReadinessResult {
   sources: InputSourceReadiness[];
+  /** B-02: the paid population the readiness was computed over. ZERO members is
+   *  never "ready" — every source is forced to 'review' and consumers must
+   *  surface the empty population instead of a green board. */
+  populationCount: number;
   /** CP6: typed crew preflight — present ONLY when the pay group's resolved policy
    *  version enables the crew capability (§14.5); null for every other run. */
   crew: CrewRunEvidence | null;
@@ -2459,7 +2483,13 @@ export async function getInputSourceReadiness(
     }
   }
 
-  return { sources, crew };
+  // B-02: an EMPTY population must never read as a green board — with nobody to
+  // pay, "0 pending" is vacuous, not readiness. Force every source to 'review'.
+  if (paid.length === 0) {
+    for (const s of sources) s.state = 'review';
+  }
+
+  return { sources, populationCount: paid.length, crew };
 }
 
 // ── Export content download ───────────────────────────────────────────────────

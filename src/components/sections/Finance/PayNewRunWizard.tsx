@@ -183,7 +183,9 @@ export function PayNewRunWizard({
   const payGroupsQ  = usePayGroups(true);
   const groups      = payGroupsQ.data ?? [];
   const periodMonth = periodStart ? periodStart.slice(0, 7) : undefined;
-  const populationQ = usePopulationPreview(periodMonth ? `${periodMonth}-01` : undefined);
+  // B-01: the preview is scoped to the SELECTED pay group's effective members —
+  // never the organization-wide headcount.
+  const populationQ = usePopulationPreview(periodMonth ? `${periodMonth}-01` : undefined, payGroupId || undefined);
   const reconQ      = usePopulationReconciliation(
     payGroupId || undefined, periodStart || undefined, periodEnd || undefined);
   const readinessQ  = useInputReadiness(
@@ -381,7 +383,7 @@ export function PayNewRunWizard({
                     <tbody>
                       {groups.map(g => (
                         <tr key={g.id} class={`selectable ${payGroupId === g.id ? 'on' : ''}`} onClick={() => selectGroup(g.id)}>
-                          <td><input type="radio" name="pay-group" checked={payGroupId === g.id} onChange={() => selectGroup(g.id)} /></td>
+                          <td><input type="radio" name="pay-group" aria-label={`Select ${g.name}`} checked={payGroupId === g.id} onChange={() => selectGroup(g.id)} /></td>
                           <td><strong>{g.name}</strong><div class="sec-sub">{g.code}</div></td>
                           <td style={{ textTransform: 'capitalize' }}>{g.frequency.replace('_', '-')}</td>
                           <td class="num">{g.memberCount ?? '—'}</td>
@@ -411,23 +413,23 @@ export function PayNewRunWizard({
             <div class="sec-head"><div class="sec-ico">3</div><div><div class="sec-title">Pay period and operational dates</div><div class="sec-sub">Set the period the run covers and the payment and cut-off dates.</div></div></div>
             <div class="panel-body stack">
               <div class="field-grid three">
-                <div class="field-group"><label>Period start *</label><input class={`field ${errors.periodStart ? 'err' : ''}`} type="date" value={periodStart} onInput={e => { const v = (e.currentTarget).value; setPeriodStart(v); if (v && !periodEnd) setPeriodEnd(lastOfMonth(v)); }} />{errors.periodStart && <span class="err-msg">{errors.periodStart}</span>}</div>
-                <div class="field-group"><label>Period end *</label><input class={`field ${errors.periodEnd ? 'err' : ''}`} type="date" value={periodEnd} onInput={e => setPeriodEnd((e.currentTarget).value)} />{errors.periodEnd && <span class="err-msg">{errors.periodEnd}</span>}</div>
-                <div class="field-group"><label>Pay date</label><input class={`field ${errors.payDate ? 'err' : ''}`} type="date" value={payDate} onInput={e => setPayDate((e.currentTarget).value)} />{errors.payDate ? <span class="err-msg">{errors.payDate}</span> : <span class="hint">Date employees are paid.</span>}</div>
+                <div class="field-group"><label for="pcrw-period-start">Period start *</label><input id="pcrw-period-start" class={`field ${errors.periodStart ? 'err' : ''}`} type="date" value={periodStart} onInput={e => { const v = (e.currentTarget).value; setPeriodStart(v); if (v && !periodEnd) setPeriodEnd(lastOfMonth(v)); }} />{errors.periodStart && <span class="err-msg">{errors.periodStart}</span>}</div>
+                <div class="field-group"><label for="pcrw-period-end">Period end *</label><input id="pcrw-period-end" class={`field ${errors.periodEnd ? 'err' : ''}`} type="date" value={periodEnd} onInput={e => setPeriodEnd((e.currentTarget).value)} />{errors.periodEnd && <span class="err-msg">{errors.periodEnd}</span>}</div>
+                <div class="field-group"><label for="pcrw-pay-date">Pay date</label><input id="pcrw-pay-date" class={`field ${errors.payDate ? 'err' : ''}`} type="date" value={payDate} onInput={e => setPayDate((e.currentTarget).value)} />{errors.payDate ? <span class="err-msg">{errors.payDate}</span> : <span class="hint">Date employees are paid.</span>}</div>
               </div>
               <div class="field-grid three">
-                <div class="field-group"><label>Pay frequency *</label><select class="select" value={payFrequency} onChange={e => { const v = (e.currentTarget).value; setPayFreq(v); setWeeks(String(WEEKS_MAP[v] ?? 4.333)); }}>{PAY_FREQS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}</select></div>
-                <div class="field-group"><label>Weeks in period</label><input class={`field ${errors.weeks ? 'err' : ''}`} type="number" min="0.5" max="5.5" step="0.001" value={weeksInPeriod} onInput={e => setWeeks((e.currentTarget).value)} />{errors.weeks ? <span class="err-msg">{errors.weeks}</span> : <span class="hint">Auto-set from frequency.</span>}</div>
-                <div class="field-group"><label>Employee-change cut-off</label><input class="field" type="date" value={cutOffDate} onInput={e => setCutOffDate((e.currentTarget).value)} /><span class="hint">Changes after this date are excluded.</span></div>
+                <div class="field-group"><label for="pcrw-frequency">Pay frequency *</label><select id="pcrw-frequency" class="select" value={payFrequency} onChange={e => { const v = (e.currentTarget).value; setPayFreq(v); setWeeks(String(WEEKS_MAP[v] ?? 4.333)); }}>{PAY_FREQS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}</select></div>
+                <div class="field-group"><label for="pcrw-weeks">Weeks in period</label><input id="pcrw-weeks" class={`field ${errors.weeks ? 'err' : ''}`} type="number" min="0.5" max="5.5" step="0.001" value={weeksInPeriod} onInput={e => setWeeks((e.currentTarget).value)} />{errors.weeks ? <span class="err-msg">{errors.weeks}</span> : <span class="hint">Auto-set from frequency.</span>}</div>
+                <div class="field-group"><label for="pcrw-cutoff">Employee-change cut-off</label><input id="pcrw-cutoff" class="field" type="date" value={cutOffDate} onInput={e => setCutOffDate((e.currentTarget).value)} /><span class="hint">Changes after this date are excluded.</span></div>
               </div>
               <div class="field-grid three">
-                <div class="field-group"><label>Time / overtime cut-off</label><input class="field" type="datetime-local" value={otCutoffAt} onInput={e => setOtCutoffAt((e.currentTarget).value)} /><span class="hint">Latest overtime accepted into this run.</span></div>
-                <div class="field-group"><label>Approval deadline</label><input class="field" type="datetime-local" value={approvalDeadlineAt} onInput={e => setApprovalDeadlineAt((e.currentTarget).value)} /><span class="hint">Must be on/after the overtime cut-off.</span></div>
-                <div class="field-group"><label>Payment funding date</label><input class="field" type="date" value={fundingDate} onInput={e => setFundingDate((e.currentTarget).value)} /><span class="hint">Treasury funds the payroll account by this date.</span></div>
+                <div class="field-group"><label for="pcrw-ot-cutoff">Time / overtime cut-off</label><input id="pcrw-ot-cutoff" class="field" type="datetime-local" value={otCutoffAt} onInput={e => setOtCutoffAt((e.currentTarget).value)} /><span class="hint">Latest overtime accepted into this run.</span></div>
+                <div class="field-group"><label for="pcrw-approval-deadline">Approval deadline</label><input id="pcrw-approval-deadline" class="field" type="datetime-local" value={approvalDeadlineAt} onInput={e => setApprovalDeadlineAt((e.currentTarget).value)} /><span class="hint">Must be on/after the overtime cut-off.</span></div>
+                <div class="field-group"><label for="pcrw-funding-date">Payment funding date</label><input id="pcrw-funding-date" class="field" type="date" value={fundingDate} onInput={e => setFundingDate((e.currentTarget).value)} /><span class="hint">Treasury funds the payroll account by this date.</span></div>
               </div>
               <div class="field-group">
-                <label>Release window</label>
-                <input class="field" type="text" value={releaseWindow} onInput={e => setReleaseWindow((e.currentTarget).value)} placeholder="e.g. 30 Jul 18:00 – 31 Jul 08:00" maxLength={120} />
+                <label for="pcrw-release-window">Release window</label>
+                <input id="pcrw-release-window" class="field" type="text" value={releaseWindow} onInput={e => setReleaseWindow((e.currentTarget).value)} placeholder="e.g. 30 Jul 18:00 – 31 Jul 08:00" maxLength={120} />
               </div>
             </div>
           </section>
@@ -460,7 +462,7 @@ export function PayNewRunWizard({
             </div>
           </section>
           <aside class="pcrw-aside">
-            <PendingBlock title="Version impact (Slice 2)" detail="Employees covered, missing statutory profiles and component-mapping counts render once the population-reconciliation endpoint lands." />
+            <div class="banner info"><div class="b-ico">i</div><div><div class="b-title">Statutory coverage</div><div class="b-sub">Employees missing a verified statutory profile are listed in the Employee Population step; per policy they are excluded or blocked at calculation, never paid on incomplete statutory data.</div></div></div>
           </aside>
         </div>
       )}
@@ -561,7 +563,9 @@ export function PayNewRunWizard({
                   ? <span class="pcrw-skel" style={{ width: '100%', height: 200 }} />
                   : readinessQ.isError
                     ? <div class="banner danger"><div class="b-ico">!</div><div><div class="b-title">Readiness unavailable</div><div class="b-sub">Could not load input-source readiness. Retry, or continue — inputs still freeze at Lock Inputs.</div></div></div>
-                    : readiness?.sources.map(s => (
+                    : readiness?.populationCount === 0
+                      ? <div class="banner danger" role="alert"><div class="b-ico">!</div><div><div class="b-title">No employees in this pay group for the period</div><div class="b-sub">There is nobody to pay, so no input source can be ready. Assign members to {payGroupName || 'the pay group'} (Payroll Setup › Pay Groups) before creating this run.</div></div></div>
+                      : readiness?.sources.map(s => (
                       <div class="readiness-row" key={s.key}>
                         <div class={`rc ${READINESS_RC[s.state]}`}>{READINESS_ICON[s.state]}</div>
                         <div class="rt">
@@ -630,7 +634,7 @@ export function PayNewRunWizard({
               ['Audit event', 'Recorded'],
               ['Next action', 'Lock Inputs'],
             ]} />
-            <PendingBlock title="Financial estimate (Slice 4)" detail="Estimated gross/net/employer cost and prior-month deltas need a pre-lock preview-calc engine. Real figures are available one step later, after Calculate." />
+            <div class="banner info"><div class="b-ico">i</div><div><div class="b-title">Totals come from Calculate</div><div class="b-sub">Gross, net and employer costs are computed from the frozen inputs after Lock Inputs › Calculate, and shown in the run workspace with a full per-employee breakdown.</div></div></div>
           </aside>
         </div>
       )}

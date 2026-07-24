@@ -485,6 +485,8 @@ export interface InputSourceReadiness {
 }
 export interface InputReadiness {
   sources: InputSourceReadiness[];
+  /** B-02: the paid population the readiness was computed over — 0 is never "ready". */
+  populationCount: number;
 }
 
 export interface ExportDownload {
@@ -773,8 +775,8 @@ export const financePayrollApi = {
   listRunAuditLog: (a: { runId: string }) =>
     call<RunAuditLogEntry[]>('finance/payroll/runs/audit/list', a),
 
-  // Population preview (wizard step 2)
-  populationPreview: (a: { periodMonth?: string } = {}) =>
+  // Population preview (wizard step 2) — pay-group-scoped when payGroupId given (B-01)
+  populationPreview: (a: { periodMonth?: string; payGroupId?: string } = {}) =>
     call<PopulationPreview>('finance/payroll/runs/population-preview', a),
 
   // Population reconciliation (wizard step 5) — pay-group-scoped
@@ -925,10 +927,13 @@ export function useRunAuditLog(runId: string | null) {
     enabled:  !!runId,
   });
 }
-export function usePopulationPreview(periodMonth?: string) {
+export function usePopulationPreview(periodMonth?: string, payGroupId?: string) {
   return useQuery({
-    queryKey: ['finance', 'payroll', 'population-preview', periodMonth],
-    queryFn:  () => financePayrollApi.populationPreview(periodMonth ? { periodMonth } : {}),
+    queryKey: ['finance', 'payroll', 'population-preview', periodMonth, payGroupId ?? ''],
+    queryFn:  () => financePayrollApi.populationPreview({
+      ...(periodMonth ? { periodMonth } : {}),
+      ...(payGroupId ? { payGroupId } : {}),
+    }),
   });
 }
 export function usePopulationReconciliation(

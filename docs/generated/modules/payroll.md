@@ -2,9 +2,9 @@
 
 # payroll Module Map
 
-Source fingerprint: `2c9d5ed01ce9f1547965715f`
+Source fingerprint: `af126f6ea486ce87d3816da8`
 
-Files: 186 | Symbols: 1866 | Widgets: 10 | Unique mounted endpoints: 135 | Route definitions: 135 mounted + 0 unmounted | API calls: 2 | DB objects: 253 | E2E suites: 27
+Files: 186 | Symbols: 1870 | Widgets: 10 | Unique mounted endpoints: 135 | Route definitions: 135 mounted + 0 unmounted | API calls: 2 | DB objects: 253 | E2E suites: 27
 
 ## Widgets and Tiles
 
@@ -43,7 +43,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/finance/payroll/components/retire` | `finance.payroll.components.manage` | requirePermission | `z.object({ id: z.string().uuid(), idempotencyKey: z.string().min(1).max(200).optional() })` | `netlify/functions/routes/financeStatutory.ts:383` | - | financePayComponents |
 | `/api/finance/payroll/components/update` | `finance.payroll.components.manage` | requirePermission | `z.object({     id: z.string().uuid(),     name: z.string().min(1).max(200).optional(),     isStatutory: z.boolean().optional(),     isTaxable: z.boolean().optional(),     reducesChargeable: z.boolean().optional(),     glAccountCode: z.string().max(50).nullable().optional(),     costAllocationRequired: z.boolean().optional(),     idempotencyKey: z.string().min(1).max(200).optional(),   })` | `netlify/functions/routes/financeStatutory.ts:363` | - | financePayComponents |
 | `/api/finance/payroll/control-center/get` | `finance.payroll.view_all` | requirePermission, userCan | `z.object({     window: z.object({       from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),       to:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/),     })       .refine(w => w.from <= w.to, { message: 'window.from must be on or before window.to' })       .refine(w => (Date.parse(w.to) - Date.parse(w.from)) <= 366 * 86_400_000, {         message: 'window may not exceed 366 days',       }),     payGroupIds: z.array(z.uuid()).max(25).optional(),     register: z.object({       tab:    z.enum(['all', 'attention', 'approval', 'ready', 'released']).optional(),       search: z.string().trim().max(100).optional(),       cursor: z.string().max(1000).optional(),       limit:  z.number().int().min(1).max(25).optional(),     }).optional(),   })` | `netlify/functions/routes/financePayroll.ts:250` | - | payrollControlCenter |
-| `/api/finance/payroll/exports/download` | `finance.payroll.export` | requirePermission | `z.object({     exportId: z.uuid(),     idempotencyKey: z.string().trim().min(1).max(200),   })` | `netlify/functions/routes/financePayroll.ts:1626` | - | financePayroll |
+| `/api/finance/payroll/exports/download` | `finance.payroll.export` | requirePermission | `z.object({     exportId: z.uuid(),     idempotencyKey: z.string().trim().min(1).max(200),   })` | `netlify/functions/routes/financePayroll.ts:1628` | - | financePayroll |
 | `/api/finance/payroll/exports/list` | `finance.payroll.view_all` | requirePermission | `z.object({ runId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:686` | - | financePayroll |
 | `/api/finance/payroll/findings/assign` | `finance.payroll.finding.assign` | requirePermission | `z.object({     id: z.uuid(),     expectedVersion: z.number().int().positive(),     idempotencyKey: z.string().trim().min(1).max(200),     assigneeId: z.string().min(1).max(200),     note: z.string().trim().max(1000).optional(),   })` | `netlify/functions/routes/financePayroll.ts:1363` | - | financePayroll |
 | `/api/finance/payroll/findings/comment` | `finance.payroll.view_all` | requirePermission | `z.object({     findingId:       z.uuid(),     idempotencyKey:  z.string().trim().min(1).max(200),     body:            z.string().trim().min(1).max(4000),     expectedVersion: z.number().int().positive().optional(),   })` | `netlify/functions/routes/financePayroll.ts:1542` | - | payrollExceptions |
@@ -56,7 +56,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/finance/payroll/findings/waive` | `finance.payroll.finding.waive` | requirePermission | `z.object({     id: z.uuid(),     expectedVersion: z.number().int().positive(),     idempotencyKey: z.string().trim().min(1).max(200),     reason: z.string().trim().min(1).max(2000),     expiresAt: z.iso.datetime().optional(),   })` | `netlify/functions/routes/financePayroll.ts:1411` | - | financePayroll, payrollExceptions |
 | `/api/finance/payroll/findings/work-queue` | `finance.payroll.view_all` | requirePermission | `z.object({     cursor:        z.string().max(200).optional(),     limit:         z.number().int().min(1).max(100).default(25),     tab:           z.enum(['all', 'approvals', 'blockers', 'warnings', 'resolved']).optional(),     kinds:         z.array(z.enum(['approval', 'blocker', 'warning'])).optional(),     severities:    z.array(z.enum(['critical', 'high', 'medium', 'low'])).optional(),     states:        z.array(z.enum(['open', 'in_progress', 'resolved', 'waived'])).optional(),     runIds:        z.array(z.uuid()).optional(),     ownerId:       z.string().max(200).optional(),     search:        z.string().trim().max(200).optional(),     selectedId:    z.string().max(220).optional(),     activityCursor: z.string().max(200).optional(),     activityLimit: z.number().int().min(1).max(100).optional(),   })` | `netlify/functions/routes/financePayroll.ts:1463` | - | payrollExceptions |
 | `/api/finance/payroll/gl/get` | `finance.payroll.gl.preview` | requirePermission | `z.object({ runId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:1159` | - | payrollGl |
-| `/api/finance/payroll/gl/post` | `finance.payroll.gl.post` | requirePermission | `z.object({     runId: z.uuid(),     idempotencyKey: z.string().trim().min(1).max(200),   })` | `netlify/functions/routes/financePayroll.ts:1118` | - | financePayroll, payrollControlCenter, payrollGl, payrollScale |
+| `/api/finance/payroll/gl/post` | `finance.payroll.gl.post` | requirePermission | `z.object({     runId: z.uuid(),     idempotencyKey: z.string().trim().min(1).max(200),   })` | `netlify/functions/routes/financePayroll.ts:1118` | - | financePayroll, payrollControlCenter, payrollGl, payrollScale, payrollSystemCertification |
 | `/api/finance/payroll/gl/preview` | `finance.payroll.gl.preview` | requirePermission | `z.object({ runId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:1104` | - | payrollGl, payrollScale |
 | `/api/finance/payroll/gl/reverse` | `finance.payroll.gl.post` | requirePermission | `z.object({     runId: z.uuid(),     reason: z.string().min(1),     idempotencyKey: z.string().trim().min(1).max(200),   })` | `netlify/functions/routes/financePayroll.ts:1138` | - | payrollGl |
 | `/api/finance/payroll/inputs/list` | `finance.payroll.view_all` | requirePermission | `z.object({ runId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:409` | - | crewPayroll, financePayroll, payrollLoans |
@@ -104,7 +104,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/finance/payroll/payslips/my` | `finance.payroll.view_own` | requirePermission | `-` | `netlify/functions/routes/financePayroll.ts:1184` | - | financePayroll, financePayslipsEss |
 | `/api/finance/payroll/payslips/notify` | `finance.payroll.run.manage` | requirePermission | `z.object({ runId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:704` | res @ src/components/sections/Finance/payRunDetail/interactiveTabs.tsx:426 | - |
 | `/api/finance/payroll/payslips/render` | `finance.payroll.payslips.generate` | requirePermission | `z.object({ payslipId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:746` | - | payslipRender |
-| `/api/finance/payroll/payslips/render-run` | `finance.payroll.payslips.generate` | requirePermission | `z.object({ runId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:733` | - | financePayroll, financePayslipsEss, payrollControlCenter, payslipRender |
+| `/api/finance/payroll/payslips/render-run` | `finance.payroll.payslips.generate` | requirePermission | `z.object({ runId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:733` | - | financePayroll, financePayslipsEss, payrollControlCenter, payrollSystemCertification, payslipRender |
 | `/api/finance/payroll/payslips/signed-url` | `finance.payroll.view_own` | requirePermission, userCan | `z.object({ id: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:1213` | - | financePayslipsEss |
 | `/api/finance/payroll/policies/activate` | `finance.payroll.policies.activate` | requirePermission | `z.object({ policyId: z.string().uuid(), versionId: z.string().uuid(), idempotencyKey: requestKey }).strict()` | `netlify/functions/routes/financePayPolicies.ts:178` | - | payrollPayPolicies, payrollPayPolicyRun |
 | `/api/finance/payroll/policies/copy-version` | `finance.payroll.policies.draft` | requirePermission | `z.object({     policyId: z.string().uuid(), sourceVersionId: z.string().uuid(), effectiveFrom: date,     changeSummary: z.string().trim().min(3).max(500), idempotencyKey: requestKey,   }).strict()` | `netlify/functions/routes/financePayPolicies.ts:144` | - | payrollPayPolicies |
@@ -123,42 +123,42 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/finance/payroll/policies/versions/get` | `finance.payroll.policies.view` | requirePermission | `z.object({ policyId: z.string().uuid(), versionId: z.string().uuid() }).strict()` | `netlify/functions/routes/financePayPolicies.ts:216` | - | payrollPayPolicies |
 | `/api/finance/payroll/policies/versions/list` | `finance.payroll.policies.view` | requirePermission | `z.object({ policyId: z.string().uuid() }).strict()` | `netlify/functions/routes/financePayPolicies.ts:206` | - | payrollPayPolicies |
 | `/api/finance/payroll/reason-codes/list` | `finance.payroll.view_all` | requirePermission | `z.object({ runType: z.enum(['scheduled', 'off_cycle', 'correction', 'final_pay']).optional() })` | `netlify/functions/routes/financePayroll.ts:1032` | - | payrollPayPolicyRun |
-| `/api/finance/payroll/releases/confirm-funding` | `finance.payroll.funding.approve` | requirePermission | `z.object({     runId: z.uuid(),     idempotencyKey: z.string().trim().min(1).max(200),     confirmedAmount: z.number().nonnegative(),     confirmationReference: z.string().trim().min(1).max(200),     accountReference: z.string().trim().min(1).max(100).optional(),     note: z.string().trim().max(2000).optional(),   })` | `netlify/functions/routes/financePayroll.ts:569` | - | financePayroll, payrollControlCenter |
-| `/api/finance/payroll/releases/get-certificate` | `finance.payroll.view_all` | requirePermission | `z.object({ runId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:608` | - | financePayroll |
-| `/api/finance/payroll/releases/preflight` | `finance.payroll.view_all` | requirePermission | `z.object({ runId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:557` | - | financePayroll, payrollControlCenter |
-| `/api/finance/payroll/releases/release` | `finance.payroll.release` | requirePermission | `z.object({     runId: z.uuid(),     idempotencyKey: z.string().trim().min(1).max(200),   })` | `netlify/functions/routes/financePayroll.ts:591` | - | financePayroll, payrollControlCenter |
-| `/api/finance/payroll/reports/artifacts/download` | `finance.payroll.reports.view` | requirePermission | `z.object({ artifactId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:1841` | - | payrollReports |
-| `/api/finance/payroll/reports/catalog` | `finance.payroll.reports.view` | requirePermission | `-` | `netlify/functions/routes/financePayroll.ts:1740` | - | financePayroll, payrollReports |
-| `/api/finance/payroll/reports/generation/run` | `finance.payroll.reports.maintain` | requirePermission | `z.object({ limit: z.number().int().min(1).max(10).optional() })` | `netlify/functions/routes/financePayroll.ts:1866` | - | payrollReports |
-| `/api/finance/payroll/reports/history/list` | `finance.payroll.reports.view` | requirePermission | `z.object({     cursor:    z.string().max(500).optional(),     limit:     z.number().int().min(1).max(100).optional(),     reportKey: z.enum(PAYROLL_REPORT_KEYS).optional(),   })` | `netlify/functions/routes/financePayroll.ts:1808` | - | financePayroll, payrollReports |
-| `/api/finance/payroll/reports/purge/run` | `finance.payroll.reports.maintain` | requirePermission | `z.object({ limit: z.number().int().min(1).max(100).optional() })` | `netlify/functions/routes/financePayroll.ts:1880` | - | payrollReports |
-| `/api/finance/payroll/reports/run` | `finance.payroll.reports.view` | requirePermission, userCan | `-` | `netlify/functions/routes/financePayroll.ts:1759` | - | financePayroll, payrollReports, payrollScale |
-| `/api/finance/payroll/reports/status` | `finance.payroll.reports.view` | requirePermission | `z.object({ jobId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:1825` | - | payrollReports |
-| `/api/finance/payroll/reports/summary` | `finance.payroll.reports.view` | requirePermission | `-` | `netlify/functions/routes/financePayroll.ts:1749` | - | financePayroll, payrollReports |
+| `/api/finance/payroll/releases/confirm-funding` | `finance.payroll.funding.approve` | requirePermission | `z.object({     runId: z.uuid(),     idempotencyKey: z.string().trim().min(1).max(200),     confirmedAmount: z.number().nonnegative(),     confirmationReference: z.string().trim().min(1).max(200),     accountReference: z.string().trim().min(1).max(100).optional(),     note: z.string().trim().max(2000).optional(),   })` | `netlify/functions/routes/financePayroll.ts:569` | - | financePayroll, payrollControlCenter, payrollSystemCertification |
+| `/api/finance/payroll/releases/get-certificate` | `finance.payroll.view_all` | requirePermission | `z.object({ runId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:608` | - | financePayroll, payrollSystemCertification |
+| `/api/finance/payroll/releases/preflight` | `finance.payroll.view_all` | requirePermission | `z.object({ runId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:557` | - | financePayroll, payrollControlCenter, payrollSystemCertification |
+| `/api/finance/payroll/releases/release` | `finance.payroll.release` | requirePermission | `z.object({     runId: z.uuid(),     idempotencyKey: z.string().trim().min(1).max(200),   })` | `netlify/functions/routes/financePayroll.ts:591` | - | financePayroll, payrollControlCenter, payrollSystemCertification |
+| `/api/finance/payroll/reports/artifacts/download` | `finance.payroll.reports.view` | requirePermission | `z.object({ artifactId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:1843` | - | payrollReports |
+| `/api/finance/payroll/reports/catalog` | `finance.payroll.reports.view` | requirePermission | `-` | `netlify/functions/routes/financePayroll.ts:1742` | - | financePayroll, payrollReports |
+| `/api/finance/payroll/reports/generation/run` | `finance.payroll.reports.maintain` | requirePermission | `z.object({ limit: z.number().int().min(1).max(10).optional() })` | `netlify/functions/routes/financePayroll.ts:1868` | - | payrollReports |
+| `/api/finance/payroll/reports/history/list` | `finance.payroll.reports.view` | requirePermission | `z.object({     cursor:    z.string().max(500).optional(),     limit:     z.number().int().min(1).max(100).optional(),     reportKey: z.enum(PAYROLL_REPORT_KEYS).optional(),   })` | `netlify/functions/routes/financePayroll.ts:1810` | - | financePayroll, payrollReports |
+| `/api/finance/payroll/reports/purge/run` | `finance.payroll.reports.maintain` | requirePermission | `z.object({ limit: z.number().int().min(1).max(100).optional() })` | `netlify/functions/routes/financePayroll.ts:1882` | - | payrollReports |
+| `/api/finance/payroll/reports/run` | `finance.payroll.reports.view` | requirePermission, userCan | `-` | `netlify/functions/routes/financePayroll.ts:1761` | - | financePayroll, payrollReports, payrollScale |
+| `/api/finance/payroll/reports/status` | `finance.payroll.reports.view` | requirePermission | `z.object({ jobId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:1827` | - | payrollReports |
+| `/api/finance/payroll/reports/summary` | `finance.payroll.reports.view` | requirePermission | `-` | `netlify/functions/routes/financePayroll.ts:1751` | - | financePayroll, payrollReports |
 | `/api/finance/payroll/run-lines/list` | `finance.payroll.view_all` | requirePermission | `z.object({ runId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:424` | - | crewPayroll, financePayroll, payrollStatutorySnapshot |
-| `/api/finance/payroll/run-views/create` | `finance.payroll.view_all` | requirePermission, userCan | `z.object({     name:    z.string().trim().min(1).max(80),     scope:   z.enum(['personal', 'team']),     filters: z.record(z.string(), z.unknown()).optional().default({}),   })` | `netlify/functions/routes/financePayroll.ts:1659` | - | payrollRunsRegister |
-| `/api/finance/payroll/run-views/delete` | `finance.payroll.view_all` | requirePermission, userCan | `z.object({ id: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:1693` | - | payrollRunsRegister |
-| `/api/finance/payroll/run-views/list` | `finance.payroll.view_all` | requirePermission | `-` | `netlify/functions/routes/financePayroll.ts:1649` | - | payrollRunsRegister |
-| `/api/finance/payroll/run-views/update` | `finance.payroll.view_all` | requirePermission, userCan | `z.object({     id:      z.uuid(),     name:    z.string().trim().min(1).max(80).optional(),     filters: z.record(z.string(), z.unknown()).optional(),   })` | `netlify/functions/routes/financePayroll.ts:1676` | - | payrollRunsRegister |
-| `/api/finance/payroll/runs/approve` | `finance.payroll.approve` | requirePermission | `z.object({ id: z.uuid(), comment: z.string().max(2000).optional() })` | `netlify/functions/routes/financePayroll.ts:511` | - | financePayroll |
+| `/api/finance/payroll/run-views/create` | `finance.payroll.view_all` | requirePermission, userCan | `z.object({     name:    z.string().trim().min(1).max(80),     scope:   z.enum(['personal', 'team']),     filters: z.record(z.string(), z.unknown()).optional().default({}),   })` | `netlify/functions/routes/financePayroll.ts:1661` | - | payrollRunsRegister |
+| `/api/finance/payroll/run-views/delete` | `finance.payroll.view_all` | requirePermission, userCan | `z.object({ id: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:1695` | - | payrollRunsRegister |
+| `/api/finance/payroll/run-views/list` | `finance.payroll.view_all` | requirePermission | `-` | `netlify/functions/routes/financePayroll.ts:1651` | - | payrollRunsRegister |
+| `/api/finance/payroll/run-views/update` | `finance.payroll.view_all` | requirePermission, userCan | `z.object({     id:      z.uuid(),     name:    z.string().trim().min(1).max(80).optional(),     filters: z.record(z.string(), z.unknown()).optional(),   })` | `netlify/functions/routes/financePayroll.ts:1678` | - | payrollRunsRegister |
+| `/api/finance/payroll/runs/approve` | `finance.payroll.approve` | requirePermission | `z.object({ id: z.uuid(), comment: z.string().max(2000).optional() })` | `netlify/functions/routes/financePayroll.ts:511` | - | financePayroll, payrollSystemCertification |
 | `/api/finance/payroll/runs/audit/list` | `finance.payroll.view_all` | requirePermission | `z.object({ runId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:452` | - | - |
 | `/api/finance/payroll/runs/calculate` | `finance.payroll.run.manage` | requirePermission | `z.object({     id: z.uuid(),     idempotencyKey: z.string().trim().min(1).max(200),   })` | `netlify/functions/routes/financePayroll.ts:391` | - | crewPayroll, financePayroll, payrollBackPay, payrollControlCenter, payrollLoans, payrollOverrides, payrollPayGroups, payrollPayPolicyRun, payrollScale, payrollStatutorySnapshot, payrollSystemCertification, payslipRender |
-| `/api/finance/payroll/runs/calendar` | `finance.payroll.view_all` | requirePermission | `z.object({     from:        z.string().regex(DATE, 'from must be YYYY-MM-DD'),     to:          z.string().regex(DATE, 'to must be YYYY-MM-DD'),     payGroupIds: z.array(z.uuid()).max(50).optional(),   }).refine(d => d.from <= d.to, { message: 'from must not be after to' })` | `netlify/functions/routes/financePayroll.ts:1711` | - | payrollRunsRegister |
-| `/api/finance/payroll/runs/certify` | `finance.payroll.certify` | requirePermission | `z.object({     runId: z.uuid(),     idempotencyKey: z.string().trim().min(1).max(200),     attestations: z.object({       populationReconciled: z.literal(true),       inputsReviewed: z.literal(true),       statutoryReviewed: z.literal(true),       variancesReviewed: z.literal(true),       paymentReadinessReviewed: z.literal(true),       glReadinessReviewed: z.literal(true),     }),     note: z.string().trim().max(2000).optional(),   })` | `netlify/functions/routes/financePayroll.ts:468` | - | financePayroll, payrollControlCenter |
+| `/api/finance/payroll/runs/calendar` | `finance.payroll.view_all` | requirePermission | `z.object({     from:        z.string().regex(DATE, 'from must be YYYY-MM-DD'),     to:          z.string().regex(DATE, 'to must be YYYY-MM-DD'),     payGroupIds: z.array(z.uuid()).max(50).optional(),   }).refine(d => d.from <= d.to, { message: 'from must not be after to' })` | `netlify/functions/routes/financePayroll.ts:1713` | - | payrollRunsRegister |
+| `/api/finance/payroll/runs/certify` | `finance.payroll.certify` | requirePermission | `z.object({     runId: z.uuid(),     idempotencyKey: z.string().trim().min(1).max(200),     attestations: z.object({       populationReconciled: z.literal(true),       inputsReviewed: z.literal(true),       statutoryReviewed: z.literal(true),       variancesReviewed: z.literal(true),       paymentReadinessReviewed: z.literal(true),       glReadinessReviewed: z.literal(true),     }),     note: z.string().trim().max(2000).optional(),   })` | `netlify/functions/routes/financePayroll.ts:468` | - | financePayroll, payrollControlCenter, payrollSystemCertification |
 | `/api/finance/payroll/runs/create` | `finance.payroll.run.manage` | requirePermission | `z.object({     idempotencyKey: z.string().trim().min(1).max(200),     runType:        z.enum(['scheduled', 'off_cycle', 'correction', 'final_pay']),     periodStart:    z.string().regex(/^\d{4}-\d{2}-\d{2}$/),     periodEnd:      z.string().regex(/^\d{4}-\d{2}-\d{2}$/),     sequenceNo:     z.number().int().positive().optional(),     sourceRunId:    z.uuid().optional(),     payFrequency:   z.enum(['monthly', 'weekly', 'fortnightly', 'semi_monthly']).optional(),     weeksInPeriod:  z.number().positive().optional(),     payGroupId:     z.uuid().optional(),     payDate:        z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),     cutOffDate:     z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),     // Slice 1 run metadata     reasonCode:          z.string().trim().min(1).max(64).optional(),     payrollOwnerId:      z.string().trim().min(1).max(64).optional(),     otCutoffAt:          z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/).optional(),     approvalDeadlineAt:  z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/).optional(),     fundingDate:         z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),     releaseWindow:       z.string().trim().min(1).max(120).optional(),     internalDescription: z.string().trim().max(2000).optional(),     // P0-4: creation governance attestations — all three literally true, unknown     // keys rejected (strict). Persisted in the create tx (event + audit) and part     // of the command's idempotency hash.     attestations: z.strictObject({       purposeScopeAndDatesReviewed:     z.literal(true),       preflightLimitationsAcknowledged: z.literal(true),       separationOfDutiesAcknowledged:   z.literal(true),     }),   })` | `netlify/functions/routes/financePayroll.ts:334` | - | crewPayroll, financePayroll, payrollControlCenter, payrollCreateAttestations, payrollLoans, payrollOvertimeRules, payrollPayGroups, payrollPayPolicyRun, payrollScale, payrollStatutorySnapshot, payrollSystemCertification, payslipRender |
 | `/api/finance/payroll/runs/export` | `finance.payroll.export` | requirePermission | `z.object({     id: z.uuid(),     idempotencyKey: z.string().trim().min(1).max(200),     format: z.enum(['csv', 'json']).optional(),   })` | `netlify/functions/routes/financePayroll.ts:662` | - | financePayroll |
 | `/api/finance/payroll/runs/get` | `finance.payroll.view_all` | requirePermission | `z.object({ id: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:304` | - | crewPayroll, payrollPayPolicyRun |
-| `/api/finance/payroll/runs/input-readiness` | `finance.payroll.view_all` | requirePermission | `z.object({     payGroupId:  z.uuid(),     periodStart: z.string().regex(DATE, 'periodStart must be YYYY-MM-DD'),     periodEnd:   z.string().regex(DATE, 'periodEnd must be YYYY-MM-DD'),   }).refine(d => d.periodStart <= d.periodEnd, {     message: 'periodStart must not be after periodEnd', path: ['periodEnd'],   })` | `netlify/functions/routes/financePayroll.ts:1603` | - | crewPayroll, payrollInputReadiness |
+| `/api/finance/payroll/runs/input-readiness` | `finance.payroll.view_all` | requirePermission | `z.object({     payGroupId:  z.uuid(),     periodStart: z.string().regex(DATE, 'periodStart must be YYYY-MM-DD'),     periodEnd:   z.string().regex(DATE, 'periodEnd must be YYYY-MM-DD'),   }).refine(d => d.periodStart <= d.periodEnd, {     message: 'periodStart must not be after periodEnd', path: ['periodEnd'],   })` | `netlify/functions/routes/financePayroll.ts:1605` | - | crewPayroll, payrollInputReadiness |
 | `/api/finance/payroll/runs/list` | `finance.payroll.view_all` | requirePermission | `z.object({     cursor:      z.string().max(2000).optional(),     limit:       z.number().int().min(1).max(100).optional(),     search:      z.string().trim().max(200).optional(),     states:      z.array(z.enum([       'draft','input_locked','calculation_failed','calculated',       'pending_approval','returned','approved','locked','released','exported','cancelled',     ])).optional(),     runTypes:    z.array(z.enum(['scheduled','off_cycle','correction','final_pay'])).optional(),     payGroupIds: z.array(z.uuid()).max(50).optional(),     periodFrom:  z.string().regex(DATE, 'periodFrom must be YYYY-MM-DD').optional(),     periodTo:    z.string().regex(DATE, 'periodTo must be YYYY-MM-DD').optional(),     sort:        z.enum(['pay_date_desc','pay_date_asc','updated_desc']).optional(),     tab:         z.enum(['all','in_progress','approval','attention','released']).optional(),   }).refine(d => !d.periodFrom \|\| !d.periodTo \|\| d.periodFrom <= d.periodTo, {     message: 'periodFrom must not be after periodTo',   })` | `netlify/functions/routes/financePayroll.ts:195` | - | payrollRunsRegister, payrollSystemCertification |
-| `/api/finance/payroll/runs/lock` | `finance.payroll.lock` | requirePermission | `z.object({     id: z.uuid(),     idempotencyKey: z.string().trim().min(1).max(200),   })` | `netlify/functions/routes/financePayroll.ts:542` | - | financePayroll, payrollControlCenter, payrollLoans, payrollScale, payslipRender |
+| `/api/finance/payroll/runs/lock` | `finance.payroll.lock` | requirePermission | `z.object({     id: z.uuid(),     idempotencyKey: z.string().trim().min(1).max(200),   })` | `netlify/functions/routes/financePayroll.ts:542` | - | financePayroll, payrollControlCenter, payrollLoans, payrollScale, payrollSystemCertification, payslipRender |
 | `/api/finance/payroll/runs/lock-inputs` | `finance.payroll.run.manage` | requirePermission | `z.object({     id: z.uuid(),     idempotencyKey: z.string().trim().min(1).max(200),   })` | `netlify/functions/routes/financePayroll.ts:373` | - | crewPayroll, financePayroll, payrollControlCenter, payrollLoans, payrollOvertimeRules, payrollPayGroups, payrollPayPolicyRun, payrollScale, payrollStatutorySnapshot, payrollSystemCertification, payslipRender |
 | `/api/finance/payroll/runs/policy-evidence` | `finance.payroll.view_all` | requirePermission | `z.object({     runId:           z.uuid(),     inputSnapshotId: z.uuid().optional(),   })` | `netlify/functions/routes/financePayroll.ts:320` | - | crewPayroll, payrollPayPolicyRun |
-| `/api/finance/payroll/runs/population-preview` | `finance.payroll.view_all` | requirePermission | `z.object({     periodMonth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),   })` | `netlify/functions/routes/financePayroll.ts:1568` | - | financePayroll |
-| `/api/finance/payroll/runs/population-reconciliation` | `finance.payroll.view_all` | requirePermission | `z.object({     payGroupId:  z.uuid(),     periodStart: z.string().regex(DATE, 'periodStart must be YYYY-MM-DD'),     periodEnd:   z.string().regex(DATE, 'periodEnd must be YYYY-MM-DD'),   }).refine(d => d.periodStart <= d.periodEnd, {     message: 'periodStart must not be after periodEnd', path: ['periodEnd'],   })` | `netlify/functions/routes/financePayroll.ts:1583` | - | payrollPopulationRecon |
-| `/api/finance/payroll/runs/reject` | `finance.payroll.approve` | requirePermission | `z.object({     id:     z.uuid(),     reason: z.string().min(1, 'Reason is required').max(500),   })` | `netlify/functions/routes/financePayroll.ts:526` | - | financePayroll |
-| `/api/finance/payroll/runs/reopen` | `finance.payroll.lock` | requirePermission | `z.object({     id: z.uuid(),     reason: z.string().trim().min(1, 'Reason is required'),     idempotencyKey: z.string().trim().min(1).max(200),   })` | `netlify/functions/routes/financePayroll.ts:628` | - | financePayroll, payrollLoans |
+| `/api/finance/payroll/runs/population-preview` | `finance.payroll.view_all` | requirePermission | `z.object({     periodMonth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),     // B-01: a pay-group-scoped run's preview counts ONLY that group's members.     payGroupId:  z.uuid().optional(),   })` | `netlify/functions/routes/financePayroll.ts:1568` | - | financePayroll |
+| `/api/finance/payroll/runs/population-reconciliation` | `finance.payroll.view_all` | requirePermission | `z.object({     payGroupId:  z.uuid(),     periodStart: z.string().regex(DATE, 'periodStart must be YYYY-MM-DD'),     periodEnd:   z.string().regex(DATE, 'periodEnd must be YYYY-MM-DD'),   }).refine(d => d.periodStart <= d.periodEnd, {     message: 'periodStart must not be after periodEnd', path: ['periodEnd'],   })` | `netlify/functions/routes/financePayroll.ts:1585` | - | payrollPopulationRecon |
+| `/api/finance/payroll/runs/reject` | `finance.payroll.approve` | requirePermission | `z.object({     id:     z.uuid(),     reason: z.string().min(1, 'Reason is required').max(500),   })` | `netlify/functions/routes/financePayroll.ts:526` | - | financePayroll, payrollSystemCertification |
+| `/api/finance/payroll/runs/reopen` | `finance.payroll.lock` | requirePermission | `z.object({     id: z.uuid(),     reason: z.string().trim().min(1, 'Reason is required'),     idempotencyKey: z.string().trim().min(1).max(200),   })` | `netlify/functions/routes/financePayroll.ts:628` | - | financePayroll, payrollLoans, payrollSystemCertification |
 | `/api/finance/payroll/runs/set-template` | `finance.payroll.run.manage` | requirePermission | `z.object({     runId:      z.uuid(),     templateId: z.uuid().nullable().optional(),   })` | `netlify/functions/routes/financePayroll.ts:646` | - | payslipRender, payslipTemplateApproval |
-| `/api/finance/payroll/runs/submit` | `finance.payroll.run.manage` | requirePermission | `z.object({ id: z.uuid(), idempotencyKey: z.string().min(1).max(200) })` | `netlify/functions/routes/financePayroll.ts:496` | - | financePayroll, payrollControlCenter, payrollLoans, payrollScale, payslipRender |
+| `/api/finance/payroll/runs/submit` | `finance.payroll.run.manage` | requirePermission | `z.object({ id: z.uuid(), idempotencyKey: z.string().min(1).max(200) })` | `netlify/functions/routes/financePayroll.ts:496` | - | financePayroll, payrollControlCenter, payrollLoans, payrollScale, payrollSystemCertification, payslipRender |
 | `/api/finance/payroll/runs/variation` | `finance.payroll.view_all` | requirePermission | `z.object({ runId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:1237` | - | payrollVarianceReports |
 | `/api/finance/payroll/runs/workspace` | `finance.payroll.view_all` | requirePermission | `z.object({ id: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:1272` | - | crewPayroll, financePayroll |
 | `/api/finance/payroll/warnings/list` | `finance.payroll.view_all` | requirePermission | `z.object({ runId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:439` | - | financePayroll |
@@ -175,35 +175,35 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | Symbol | Kind/tags | Location | Container |
 |---|---|---|---|
 | `fundingKpiState` | function / ui-tile | `netlify/functions/lib/finance/payroll/controlCenterDerive.ts:70` | `-` |
-| `usePayrollRun` | function / hook | `src/api/finance/payroll.ts:824` | `-` |
-| `useRunLines` | function / hook | `src/api/finance/payroll.ts:827` | `-` |
-| `usePolicyEvidence` | function / hook | `src/api/finance/payroll.ts:831` | `-` |
-| `useRunWorkspace` | function / hook | `src/api/finance/payroll.ts:840` | `-` |
-| `useReleasePreflight` | function / hook | `src/api/finance/payroll.ts:848` | `-` |
-| `useReleaseCertificate` | function / hook | `src/api/finance/payroll.ts:857` | `-` |
-| `useCalculationVersions` | function / hook | `src/api/finance/payroll.ts:866` | `-` |
-| `useCalculationComparison` | function / hook | `src/api/finance/payroll.ts:874` | `-` |
-| `useRunWarnings` | function / hook | `src/api/finance/payroll.ts:881` | `-` |
-| `useRunPayslips` | function / hook | `src/api/finance/payroll.ts:884` | `-` |
-| `useRunGlPreview` | function / hook | `src/api/finance/payroll.ts:887` | `-` |
-| `usePayGroups` | function / hook | `src/api/finance/payroll.ts:890` | `-` |
-| `useReasonCodes` | function / hook | `src/api/finance/payroll.ts:894` | `-` |
-| `usePayGroupMembers` | function / hook | `src/api/finance/payroll.ts:900` | `-` |
-| `useOvertimeRules` | function / hook | `src/api/finance/payroll.ts:903` | `-` |
-| `useEmployeeLoans` | function / hook | `src/api/finance/payroll.ts:906` | `-` |
-| `useRunOverrides` | function / hook | `src/api/finance/payroll.ts:909` | `-` |
-| `useRunExports` | function / hook | `src/api/finance/payroll.ts:912` | `-` |
-| `useRunInputs` | function / hook | `src/api/finance/payroll.ts:915` | `-` |
-| `useNisProfiles` | function / hook | `src/api/finance/payroll.ts:918` | `-` |
-| `useRunAuditLog` | function / hook | `src/api/finance/payroll.ts:921` | `-` |
-| `usePopulationPreview` | function / hook | `src/api/finance/payroll.ts:928` | `-` |
-| `usePopulationReconciliation` | function / hook | `src/api/finance/payroll.ts:934` | `-` |
-| `useInputReadiness` | function / hook | `src/api/finance/payroll.ts:944` | `-` |
-| `usePayrollMutation` | function / hook | `src/api/finance/payroll.ts:957` | `-` |
-| `useResolveWarning` | function / hook | `src/api/finance/payroll.ts:968` | `-` |
-| `useExportDownload` | function / hook | `src/api/finance/payroll.ts:977` | `-` |
-| `usePayslipTemplates` | function / hook | `src/api/finance/payroll.ts:995` | `-` |
-| `useSetRunTemplate` | function / hook | `src/api/finance/payroll.ts:1006` | `-` |
+| `usePayrollRun` | function / hook | `src/api/finance/payroll.ts:826` | `-` |
+| `useRunLines` | function / hook | `src/api/finance/payroll.ts:829` | `-` |
+| `usePolicyEvidence` | function / hook | `src/api/finance/payroll.ts:833` | `-` |
+| `useRunWorkspace` | function / hook | `src/api/finance/payroll.ts:842` | `-` |
+| `useReleasePreflight` | function / hook | `src/api/finance/payroll.ts:850` | `-` |
+| `useReleaseCertificate` | function / hook | `src/api/finance/payroll.ts:859` | `-` |
+| `useCalculationVersions` | function / hook | `src/api/finance/payroll.ts:868` | `-` |
+| `useCalculationComparison` | function / hook | `src/api/finance/payroll.ts:876` | `-` |
+| `useRunWarnings` | function / hook | `src/api/finance/payroll.ts:883` | `-` |
+| `useRunPayslips` | function / hook | `src/api/finance/payroll.ts:886` | `-` |
+| `useRunGlPreview` | function / hook | `src/api/finance/payroll.ts:889` | `-` |
+| `usePayGroups` | function / hook | `src/api/finance/payroll.ts:892` | `-` |
+| `useReasonCodes` | function / hook | `src/api/finance/payroll.ts:896` | `-` |
+| `usePayGroupMembers` | function / hook | `src/api/finance/payroll.ts:902` | `-` |
+| `useOvertimeRules` | function / hook | `src/api/finance/payroll.ts:905` | `-` |
+| `useEmployeeLoans` | function / hook | `src/api/finance/payroll.ts:908` | `-` |
+| `useRunOverrides` | function / hook | `src/api/finance/payroll.ts:911` | `-` |
+| `useRunExports` | function / hook | `src/api/finance/payroll.ts:914` | `-` |
+| `useRunInputs` | function / hook | `src/api/finance/payroll.ts:917` | `-` |
+| `useNisProfiles` | function / hook | `src/api/finance/payroll.ts:920` | `-` |
+| `useRunAuditLog` | function / hook | `src/api/finance/payroll.ts:923` | `-` |
+| `usePopulationPreview` | function / hook | `src/api/finance/payroll.ts:930` | `-` |
+| `usePopulationReconciliation` | function / hook | `src/api/finance/payroll.ts:939` | `-` |
+| `useInputReadiness` | function / hook | `src/api/finance/payroll.ts:949` | `-` |
+| `usePayrollMutation` | function / hook | `src/api/finance/payroll.ts:962` | `-` |
+| `useResolveWarning` | function / hook | `src/api/finance/payroll.ts:973` | `-` |
+| `useExportDownload` | function / hook | `src/api/finance/payroll.ts:982` | `-` |
+| `usePayslipTemplates` | function / hook | `src/api/finance/payroll.ts:1000` | `-` |
+| `useSetRunTemplate` | function / hook | `src/api/finance/payroll.ts:1011` | `-` |
 | `usePayrollControlCenter` | function / hook | `src/api/finance/payroll/controlCenter.ts:118` | `-` |
 | `useWorkQueue` | function / hook | `src/api/finance/payrollExceptions.ts:61` | `-` |
 | `useWorkQueueMutations` | function / hook | `src/api/finance/payrollExceptions.ts:75` | `-` |
@@ -451,7 +451,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | Payroll -- Scale (1000+ employee run) | 17 | 13 | `scripts/e2e/suites/payrollScale.mjs` |
 | Payroll — Statutory Forms (employer profile + TD4) | 17 | 7 | `scripts/e2e/suites/payrollStatutoryForms.mjs` |
 | Payroll — statutory-version snapshot binding (2a) | 7 | 6 | `scripts/e2e/suites/payrollStatutorySnapshot.mjs` |
-| payrollSystemCertification | 6 | 4 | `scripts/e2e/suites/payrollSystemCertification.mjs` |
+| payrollSystemCertification | 13 | 16 | `scripts/e2e/suites/payrollSystemCertification.mjs` |
 | Payroll — Variation + Audit-Comparison reports | 4 | 1 | `scripts/e2e/suites/payrollVarianceReports.mjs` |
 | payslipBatches | 4 | 1 | `scripts/e2e/suites/payslipBatches.mjs` |
 | Finance Phase 2 - Payslip Studio template rendering | 31 | 13 | `scripts/e2e/suites/payslipRender.mjs` |
@@ -464,7 +464,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 
 | Role | Path | Lines |
 |---|---|---:|
-| backend-route | `netlify/functions/routes/financePayroll.ts` | 1892 |
+| backend-route | `netlify/functions/routes/financePayroll.ts` | 1894 |
 | backend-route | `netlify/functions/routes/financePayslipTemplates.ts` | 177 |
 | e2e-suite | `scripts/e2e/suites/crewPayroll.mjs` | 718 |
 | e2e-suite | `scripts/e2e/suites/financePayroll.mjs` | 3412 |
@@ -487,14 +487,14 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/payrollScale.mjs` | 392 |
 | e2e-suite | `scripts/e2e/suites/payrollStatutoryForms.mjs` | 251 |
 | e2e-suite | `scripts/e2e/suites/payrollStatutorySnapshot.mjs` | 292 |
-| e2e-suite | `scripts/e2e/suites/payrollSystemCertification.mjs` | 125 |
+| e2e-suite | `scripts/e2e/suites/payrollSystemCertification.mjs` | 261 |
 | e2e-suite | `scripts/e2e/suites/payrollVarianceReports.mjs` | 92 |
 | e2e-suite | `scripts/e2e/suites/payslipBatches.mjs` | 171 |
 | e2e-suite | `scripts/e2e/suites/payslipRender.mjs` | 681 |
 | e2e-suite | `scripts/e2e/suites/payslipTemplateApproval.mjs` | 517 |
 | e2e-suite | `scripts/e2e/suites/payslipTemplates.mjs` | 271 |
 | frontend-api | `src/api/finance/payroll.contract.test.ts` | 121 |
-| frontend-api | `src/api/finance/payroll.ts` | 1016 |
+| frontend-api | `src/api/finance/payroll.ts` | 1021 |
 | frontend-api | `src/api/finance/payrollExceptions.ts` | 87 |
 | frontend-api | `src/api/finance/payrollPayslipBatches.ts` | 39 |
 | frontend-api | `src/api/finance/payrollRunsRegister.ts` | 77 |

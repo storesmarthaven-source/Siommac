@@ -19,6 +19,114 @@
 import { randomUUID as uuid } from 'node:crypto';
 import { attachActivePolicy } from './payPolicyFixture.mjs';
 
+/**
+ * Strict, FK-ordered purge of EVERY artifact hanging off a set of payroll runs.
+ * Every delete is CHECKED (h.mustDelete logs any failure loudly — no `catch {}`
+ * swallowing); the caller learns via the return value whether anything leaked.
+ *
+ * Order matters:
+ *   1. UNLINK the runs' circular FKs (current_input_snapshot_id → snapshots,
+ *      current_calculation_version_id, certificates, GL) — without this the
+ *      snapshot delete FK-fails, which cascades into the policy-evidence rows
+ *      surviving, which RESTRICT-blocks the governed policy delete. That chain
+ *      was exactly the leak that made the certification suite exit non-zero.
+ *   2. Command receipts + release chain (remittances→certificates→funding).
+ *   3. Disbursement chain (bank files → lines → disbursements).
+ *   4. Payslips, exports, GL journals (by run_no source_ref).
+ *   5. Findings (+ receipts), warnings, lines, calc versions/attempts.
+ *   6. Snapshot lines → snapshots (cascades run policy/calendar evidence).
+ *   7. Platform side effects (notifications, handoffs, audit, events) → runs.
+ */
+export async function purgeRunArtifacts(h, runIds) {
+  const { sb, mustDelete } = h;
+  const ids = runIds.filter(Boolean);
+  if (ids.length === 0) return true;
+  let clean = true;
+  const del = async (table, build) => { if (!(await mustDelete(table, build))) clean = false; };
+
+  const { data: runRows, error: runErr } = await sb.from('finance_payroll_runs')
+    .select('id, run_no').in('id', ids);
+  if (runErr) { console.warn(`[cleanup] run lookup failed: ${runErr.message}`); return false; }
+  const runNos = (runRows ?? []).map(r => r.run_no).filter(Boolean);
+
+  // 1. unlink circular FKs
+  const { error: unlinkErr } = await sb.from('finance_payroll_runs')
+    .update({
+      current_input_snapshot_id: null, current_calculation_version_id: null,
+      release_certificate_id: null, approval_certification_id: null,
+      gl_journal_id: null, gl_posted_at: null,
+    })
+    .in('id', ids);
+  if (unlinkErr) { console.warn(`[cleanup] run unlink failed: ${unlinkErr.message}`); clean = false; }
+
+  // 2. receipts + release chain
+  for (const t of ['finance_payroll_export_command_receipts', 'finance_payroll_release_command_receipts',
+    'finance_payroll_gl_command_receipts', 'finance_payroll_lifecycle_command_receipts',
+    'finance_payroll_input_lock_receipts']) {
+    await del(t, q => q.in('run_id', ids));
+  }
+  {
+    const { data: certs } = await sb.from('finance_payroll_release_certificates').select('id').in('run_id', ids);
+    const certIds = (certs ?? []).map(c => c.id);
+    if (certIds.length) await del('finance_payroll_release_remittances', q => q.in('release_certificate_id', certIds));
+  }
+  await del('finance_remittances', q => q.in('payroll_run_id', ids));
+  await del('finance_payroll_release_certificates', q => q.in('run_id', ids));
+  await del('finance_payroll_funding_confirmations', q => q.in('run_id', ids));
+  await del('finance_payroll_certifications', q => q.in('run_id', ids));
+
+  // 3. disbursement chain
+  {
+    const { data: disb } = await sb.from('finance_disbursements').select('id').in('payroll_run_id', ids);
+    const dIds = (disb ?? []).map(d => d.id);
+    if (dIds.length) {
+      await del('finance_disbursement_bank_files', q => q.in('disbursement_id', dIds));
+      await del('finance_disbursement_lines', q => q.in('disbursement_id', dIds));
+      await del('finance_disbursements', q => q.in('id', dIds));
+    }
+  }
+
+  // 4. payslips, exports, GL
+  await del('finance_payslip_deliveries', q => q.in('run_id', ids));
+  await del('finance_payslips', q => q.in('run_id', ids));
+  await del('finance_payroll_exports', q => q.in('run_id', ids));
+  if (runNos.length) {
+    await del('finance_gl_journals', q => q.eq('source_module', 'finance_payroll').in('source_ref', runNos));
+  }
+
+  // 5. findings, warnings, lines, calc artifacts
+  {
+    const { data: findings } = await sb.from('finance_payroll_control_findings').select('id').in('run_id', ids);
+    const fIds = (findings ?? []).map(f => f.id);
+    if (fIds.length) await del('finance_payroll_finding_command_receipts', q => q.in('finding_id', fIds));
+  }
+  await del('finance_payroll_control_findings', q => q.in('run_id', ids));
+  await del('finance_payroll_run_warnings', q => q.in('run_id', ids));
+  await del('finance_payroll_run_lines', q => q.in('run_id', ids));
+  await del('finance_payroll_calculation_version_lines', q => q.in('run_id', ids));
+  await del('finance_payroll_calculation_versions', q => q.in('run_id', ids));
+  await del('finance_payroll_calculation_attempts', q => q.in('run_id', ids));
+
+  // 6. snapshots (cascade run policy/calendar evidence)
+  await del('finance_payroll_input_snapshot_lines', q => q.in('run_id', ids));
+  await del('finance_payroll_run_inputs', q => q.in('run_id', ids));
+  await del('finance_payroll_input_snapshots', q => q.in('run_id', ids));
+
+  // 7. platform side effects, workflows, then the runs
+  {
+    const { error } = await sb.from('workflow_instances')
+      .update({ status: 'cancelled' }).in('source_record_id', ids)
+      .in('status', ['pending', 'open', 'in_progress']);
+    if (error) { console.warn(`[cleanup] workflow cancel failed: ${error.message}`); clean = false; }
+  }
+  await del('notifications', q => q.in('source_id', ids));
+  await del('handoff_outbox', q => q.in('source_entity_id', ids));
+  await del('hr_audit_log', q => q.in('record_id', ids));
+  await del('app_events', q => q.in('source_entity_id', ids));
+  await del('finance_payroll_runs', q => q.in('id', ids));
+  return clean;
+}
+
 export async function provisionPayrollCertification(h) {
   const { api, expect, ok, mint, sb, TAG } = h;
   const short = TAG.slice(-8);
@@ -51,39 +159,92 @@ export async function provisionPayrollCertification(h) {
   };
 
   // ── FK-safe cleanup — registered BEFORE any mutation (§7) ────────────────────
+  // STRICT: every delete is checked (h.mustDelete logs failures loudly); no
+  // `catch {}` swallowing anywhere. The §7 double-run is the proof it holds.
   h.onCleanup(async () => {
     const users = [...Object.values(U), ...empIds];
-    // run-scoped rows are cleaned by the suites that created the runs; the fixture
-    // owns config + per-employee source rows + identities.
-    for (const a of ctx.calendar.asgIds) {
-      try { await api('hr/work-calendars/assignment/command', ctx.T.hrops, { requestKey: uuid(), reason: 'cert cleanup', command: 'cancel_assignment', assignmentId: a }); } catch {}
+    const del = (t, build) => h.mustDelete(t, build);
+
+    // SELF-SUFFICIENT: purge any runs created by fixture actors FIRST — cleanup
+    // callback ordering across suite/fixture is not guaranteed, and a surviving
+    // run (or its un-unlinked snapshot evidence) RESTRICT-blocks the governed
+    // policy delete, which then blocks user deletion. purgeRunArtifacts owns the
+    // full FK order including the circular current_input_snapshot_id unlink.
+    const { data: leftRuns, error: lrErr } = await sb.from('finance_payroll_runs')
+      .select('id').in('created_by', users);
+    if (lrErr) console.warn(`[cleanup] fixture run lookup failed: ${lrErr.message}`);
+    await purgeRunArtifacts(h, (leftRuns ?? []).map(r => r.id));
+
+    // Governed teardown through the REAL surfaces where they exist.
+    for (const a of ctx.calendar.asgIds.filter(Boolean)) {
+      const r = await api('hr/work-calendars/assignment/command', ctx.T.hrops,
+        { requestKey: uuid(), reason: 'cert cleanup', command: 'cancel_assignment', assignmentId: a });
+      if (!r.body?.success) console.warn(`[cleanup] calendar assignment ${a} cancel failed: ${r.body?.message}`);
     }
-    try { await sb.rpc('work_calendar_purge_tx', { p_work_calendar_ids: ctx.calendar.wcCalIds, p_holiday_calendar_ids: ctx.calendar.hcCalIds }); } catch {}
-    for (const g of Object.values(ctx.payGroups)) {
-      try { await sb.from('finance_pay_group_policy_assignments').delete().eq('pay_group_id', g); } catch {}
-      try { await sb.from('finance_employee_pay_group_assignments').delete().eq('pay_group_id', g); } catch {}
+    {
+      const { error } = await sb.rpc('work_calendar_purge_tx',
+        { p_work_calendar_ids: ctx.calendar.wcCalIds, p_holiday_calendar_ids: ctx.calendar.hcCalIds });
+      if (error) console.warn(`[cleanup] work_calendar_purge_tx failed: ${error.message}`);
     }
-    for (const p of Object.values(ctx.policies)) {
-      if (p?.policyId) { try { await sb.from('finance_pay_policies').delete().eq('id', p.policyId); } catch {} }
+    const groupIds = Object.values(ctx.payGroups).filter(Boolean);
+    if (groupIds.length) {
+      await del('finance_pay_group_policy_assignments', q => q.in('pay_group_id', groupIds));
+      await del('finance_employee_pay_group_assignments', q => q.in('pay_group_id', groupIds));
     }
-    for (const g of Object.values(ctx.payGroups)) {
-      try { await sb.from('finance_pay_groups').delete().eq('id', g); } catch {}
+    const policyIds = Object.values(ctx.policies).map(p => p?.policyId).filter(Boolean);
+    if (policyIds.length) {
+      // A directly-attached fixture policy may hold assignments on other groups.
+      await del('finance_pay_group_policy_assignments', q => q.in('policy_id', policyIds));
+      await del('finance_pay_policy_command_receipts', q => q.in('policy_id', policyIds));
+      await del('finance_pay_policies', q => q.in('id', policyIds));
     }
+    if (groupIds.length) await del('finance_pay_groups', q => q.in('id', groupIds));
+
     for (const t of ['hr_attendance_records', 'hr_timesheets', 'hr_overtime_entries', 'hr_leave_requests',
       'finance_employee_loans', 'finance_employee_bank_accounts', 'hr_employee_statutory_profiles']) {
-      try { await sb.from(t).delete().in('employee_id', empIds); } catch {}
+      await del(t, q => q.in('employee_id', empIds));
     }
-    if (ctx.templateCreated && ctx.templateId) { try { await sb.from('payroll_payslip_templates').delete().eq('id', ctx.templateId); } catch {} }
-    if (ctx.unpaidLeaveTypeId) { try { await sb.from('hr_leave_types').delete().eq('id', ctx.unpaidLeaveTypeId); } catch {} }
+    if (ctx.templateCreated && ctx.templateId) await del('payroll_payslip_templates', q => q.eq('id', ctx.templateId));
+    if (ctx.unpaidLeaveTypeId) await del('hr_leave_types', q => q.eq('id', ctx.unpaidLeaveTypeId));
 
-    try { await sb.from('user_permissions').delete().in('user_id', users); } catch {}
-    for (const t of ['work_calendar_command_receipts', 'workflow_audit_log']) {
-      try { await sb.from(t).delete().in('actor_id', users); } catch {}
+    // Workflow instances raised by fixture actors (policy approvals) — decisions
+    // FK tasks FK instances, and instances FK the users. All three leak classes
+    // were observed blocking user deletion in the live sweep.
+    {
+      const inList = `("${users.join('","')}")`;
+      const { data: wf } = await sb.from('workflow_instances').select('id')
+        .or(`requested_by.in.${inList},owner_id.in.${inList}`);
+      const wfIds = (wf ?? []).map(w => w.id);
+      if (wfIds.length) {
+        const { data: tasks } = await sb.from('workflow_tasks').select('id').in('workflow_id', wfIds);
+        const taskIds = (tasks ?? []).map(t => t.id);
+        if (taskIds.length) await del('workflow_decisions', q => q.in('task_id', taskIds));
+        await del('workflow_audit_log', q => q.in('workflow_id', wfIds));
+        await del('workflow_tasks', q => q.in('workflow_id', wfIds));
+        await del('workflow_instances', q => q.in('id', wfIds));
+      }
     }
-    try { await sb.from('app_events').delete().in('actor_user_id', users); } catch {}
-    try { await sb.from('hr_audit_log').delete().in('actor_id', users); } catch {}
-    try { await sb.from('audit_logs').delete().in('user_id', users); } catch {}
-    try { await sb.from('app_users').delete().in('id', users); } catch {}
+    // Tickets raised BY fixture actors (payroll event rules can open tickets).
+    {
+      const { data: tk } = await sb.from('tickets').select('id').in('created_by_user_id', users);
+      const tkIds = (tk ?? []).map(t => t.id);
+      if (tkIds.length) {
+        await del('ticket_comments', q => q.in('ticket_id', tkIds));
+        await del('ticket_events', q => q.in('ticket_id', tkIds));
+        await del('notifications', q => q.in('source_id', tkIds));
+        await del('tickets', q => q.in('id', tkIds));
+      }
+    }
+    await del('user_permissions', q => q.in('user_id', users));
+    await del('work_calendar_command_receipts', q => q.in('actor_id', users));
+    await del('workflow_audit_log', q => q.in('actor_id', users));
+    await del('notifications', q => q.in('user_id', users));
+    await del('app_events', q => q.in('actor_user_id', users));
+    await del('hr_audit_log', q => q.in('actor_id', users));
+    await del('hr_audit_log', q => q.in('employee_id', users));
+    await del('audit_logs', q => q.in('user_id', users));
+    await del('ui_layout', q => q.in('user_id', users));
+    await del('app_users', q => q.in('id', users));
   });
 
   // ── 1. actors + employees (opaque identity rows) ─────────────────────────────
@@ -153,7 +314,7 @@ export async function provisionPayrollCertification(h) {
   const cal = extra => ({ requestKey: uuid(), reason: 'cert fixture', ...extra });
   {
     const cv = await api('hr/work-calendars/holiday-set/command', ctx.T.hrops, cal({
-      command: 'create_version', calendar: { name: `CERT HS ${short}`, jurisdiction: 'TT' },
+      command: 'create_version', calendar: { name: `CERT HS ${TAG}`, jurisdiction: 'TT' },
       effectiveFrom: '2026-01-01', effectiveTo: '2026-12-31',
     }));
     ok(cv, `holiday set: ${cv.body.message}`);
@@ -175,7 +336,7 @@ export async function provisionPayrollCertification(h) {
     ctx.calendar.hcvId = hverId;
 
     const wc = await api('hr/work-calendars/version/command', ctx.T.hrops, cal({
-      command: 'create_version', calendar: { name: `CERT WC ${short}` },
+      command: 'create_version', calendar: { name: `CERT WC ${TAG}` },
       effectiveFrom: '2026-01-01', effectiveTo: '2026-12-31',
       holidayCalendarVersionId: hverId, workingWeekdays: [1, 2, 3, 4, 5], weekdayFractions: {},
     }));

@@ -1569,10 +1569,12 @@ router.post('/payroll/runs/population-preview', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
   const v = zv(c, z.object({
     periodMonth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    // B-01: a pay-group-scoped run's preview counts ONLY that group's members.
+    payGroupId:  z.uuid().optional(),
   }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await getEmployeePopulationPreview(v.data.periodMonth);
+    const data = await getEmployeePopulationPreview(v.data.periodMonth, v.data.payGroupId);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });
