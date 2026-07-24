@@ -2,7 +2,7 @@
 
 # platform Module Map
 
-Source fingerprint: `594a071ddabbfaa92b4f47d2`
+Source fingerprint: `7309469644fd496c28cf9b4e`
 
 Files: 294 | Symbols: 2662 | Widgets: 0 | Unique mounted endpoints: 31 | Route definitions: 31 mounted + 15 unmounted | API calls: 47 | DB objects: 296 | E2E suites: 0
 
@@ -447,7 +447,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 |---|---|---:|
 | backend-route | `netlify/functions/routes/calendar.ts` | 1001 |
 | backend-route | `netlify/functions/routes/hrContracts.ts` | 170 |
-| backend-route | `netlify/functions/routes/hrCrew.ts` | 162 |
+| backend-route | `netlify/functions/routes/hrCrew.ts` | 186 |
 | backend-route | `netlify/functions/routes/hrStatutoryProfile.ts` | 87 |
 | backend-route | `netlify/functions/routes/hrWorkCalendars.ts` | 123 |
 | backend-route | `netlify/functions/routes/hseCapa.ts` | 313 |
@@ -457,9 +457,9 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/sites.ts` | 163 |
 | backend-route | `netlify/functions/routes/superadmin.ts` | 907 |
 | frontend-api | `src/api/calendar.ts` | 173 |
-| frontend-api | `src/api/index.ts` | 35 |
+| frontend-api | `src/api/index.ts` | 34 |
 | frontend-api | `src/api/queryKeys.ts` | 291 |
-| frontend-api | `src/api/schemas/index.ts` | 22 |
+| frontend-api | `src/api/schemas/index.ts` | 21 |
 | frontend-api | `src/api/schemas/site.ts` | 61 |
 | frontend-api | `src/api/sites.ts` | 167 |
 | frontend-api | `src/api/theme.ts` | 23 |

@@ -2,7 +2,7 @@
 
 # communications Module Map
 
-Source fingerprint: `594a071ddabbfaa92b4f47d2`
+Source fingerprint: `7309469644fd496c28cf9b4e`
 
 Files: 112 | Symbols: 1044 | Widgets: 0 | Unique mounted endpoints: 81 | Route definitions: 82 mounted + 2 unmounted | API calls: 88 | DB objects: 155 | E2E suites: 6
 
@@ -78,7 +78,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/communications/tickets/attachments/upload-url` | `communications.view` | requirePermission | `TicketAttachmentUploadSchema` | `netlify/functions/routes/communications.ts:1263` | reserved @ src/api/communications.ts:1063 | ticketCenter |
 | `/api/communications/tickets/command` | `communications.view` | requirePermission | `TicketCommandSchema` | `netlify/functions/routes/communications.ts:1227` | res @ src/api/communications.ts:996 | communications, ticketCenter |
 | `/api/communications/tickets/comment` | `communications.view` | requirePermission | `CommentSchema` | `netlify/functions/routes/communications.ts:1203` | res @ src/api/communications.ts:968 | communications, ticketCenter |
-| `/api/communications/tickets/create` | `communications.view` | requirePermission | `CreateTicketSchema` | `netlify/functions/routes/communications.ts:1091` | res @ src/api/communications.ts:943<br>handleCreateTicket @ src/components/sections/Finance/payRunDetail/interactiveTabs.tsx:275 | communications, ticketCenter |
+| `/api/communications/tickets/create` | `communications.view` | requirePermission | `CreateTicketSchema` | `netlify/functions/routes/communications.ts:1091` | res @ src/api/communications.ts:943<br>handleCreateTicket @ src/components/sections/Finance/payRunDetail/interactiveTabs.tsx:289 | communications, ticketCenter |
 | `/api/communications/tickets/get` | `communications.view` | requirePermission | `TicketIdSchema` | `netlify/functions/routes/communications.ts:1187` | res @ src/api/communications.ts:914 | communications, ticketCenter |
 | `/api/communications/tickets/list` | `communications.view` | requirePermission | `TicketListSchema` | `netlify/functions/routes/communications.ts:1155` | res @ src/api/communications.ts:825 | communications, ticketCenter |
 | `/api/communications/tickets/mark-read` | `communications.view` | requirePermission | `TicketMarkReadSchema` | `netlify/functions/routes/communications.ts:1243` | useMarkTicketRead @ src/api/communications.ts:1015 | ticketCenter |

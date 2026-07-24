@@ -713,43 +713,55 @@ CrewCapability	interface	payroll	true		netlify/functions/lib/finance/payroll/cre
 CAPABILITY_DISABLED	object	payroll	false		netlify/functions/lib/finance/payroll/crewRun.ts	26	
 CrewEmployeeBlocker	interface	payroll	true		netlify/functions/lib/finance/payroll/crewRun.ts	33	
 CrewMovementBlocker	interface	payroll	true		netlify/functions/lib/finance/payroll/crewRun.ts	37	
-CrewRunEvidence	interface	payroll	true		netlify/functions/lib/finance/payroll/crewRun.ts	43	
-httpError	function	payroll	false		netlify/functions/lib/finance/payroll/crewRun.ts	71	
-chunk	function	payroll	false		netlify/functions/lib/finance/payroll/crewRun.ts	75	
-resolveCrewCapability	function	payroll	true		netlify/functions/lib/finance/payroll/crewRun.ts	85	
-resolvePayGroupPolicyVersionId	function	payroll	true		netlify/functions/lib/finance/payroll/crewRun.ts	118	
-CrewAssignmentRow	interface	payroll	false		netlify/functions/lib/finance/payroll/crewRun.ts	146	
-CrewMovementRow	interface	payroll	false		netlify/functions/lib/finance/payroll/crewRun.ts	152	
-nextDay	function	payroll	false		netlify/functions/lib/finance/payroll/crewRun.ts	159	
-buildCrewRunEvidence	function	payroll	true		netlify/functions/lib/finance/payroll/crewRun.ts	170	
-PayrollRunType	type	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	6	
-PayrollRunStatus	type	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	12	
-CreatePayrollRunCommand	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	25	
-CalculationAttemptRow	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	48	
-PayrollCalculationAttempt	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	65	
-CalculationVersionRow	interface	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	82	
-PayrollCalculationVersion	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	99	
-toAttempt	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	116	
-toVersion	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	135	
-ATTEMPT_COLUMNS	variable	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	154	
-VERSION_COLUMNS	variable	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	156	
-rpcData	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	159	
-createPayrollRunCommand	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	164	
-publishInputSnapshot	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	204	
-replayInputSnapshot	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	243	
-startCalculationAttempt	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	264	
-listCalculationAttempts	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	286	
-getCalculationAttempt	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	307	
-listCalculationVersions	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	323	
-getCalculationVersion	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	339	
-VersionLineRow	interface	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	355	
-PayrollCalculationComparison	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	367	
-compareCalculationVersions	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	390	
-round2	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	442	compareCalculationVersions
-deductions	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	443	compareCalculationVersions
-publishCalculationVersion	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	491	
-failCalculationAttempt	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	523	
-calculationFailure	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	540	
+CrewExcludedOvertime	interface	payroll	true		netlify/functions/lib/finance/payroll/crewRun.ts	44	
+CrewRunEvidence	interface	payroll	true		netlify/functions/lib/finance/payroll/crewRun.ts	50	
+httpError	function	payroll	false		netlify/functions/lib/finance/payroll/crewRun.ts	84	
+chunk	function	payroll	false		netlify/functions/lib/finance/payroll/crewRun.ts	88	
+resolveCrewCapability	function	payroll	true		netlify/functions/lib/finance/payroll/crewRun.ts	98	
+resolvePayGroupPolicyVersionId	function	payroll	true		netlify/functions/lib/finance/payroll/crewRun.ts	131	
+CrewAssignmentRow	interface	payroll	false		netlify/functions/lib/finance/payroll/crewRun.ts	159	
+CrewMovementRow	interface	payroll	false		netlify/functions/lib/finance/payroll/crewRun.ts	165	
+nextDay	function	payroll	false		netlify/functions/lib/finance/payroll/crewRun.ts	172	
+buildCrewRunEvidence	function	payroll	true		netlify/functions/lib/finance/payroll/crewRun.ts	183	
+FrozenAssignmentRow	interface	payroll	false		netlify/functions/lib/finance/payroll/crewRun.ts	380	
+FrozenMovementRow	interface	payroll	false		netlify/functions/lib/finance/payroll/crewRun.ts	391	
+CrewLineAllocation	interface	payroll	true		netlify/functions/lib/finance/payroll/crewRun.ts	401	
+CrewLineEvidence	interface	payroll	true		netlify/functions/lib/finance/payroll/crewRun.ts	412	
+CrewCalculationPrep	interface	payroll	true		netlify/functions/lib/finance/payroll/crewRun.ts	422	
+localDate	function	payroll	false		netlify/functions/lib/finance/payroll/crewRun.ts	434	
+eachDateInclusive	function	payroll	false		netlify/functions/lib/finance/payroll/crewRun.ts	445	
+deriveQualifyingDates	function	payroll	true		netlify/functions/lib/finance/payroll/crewRun.ts	464	
+add	function	payroll	false		netlify/functions/lib/finance/payroll/crewRun.ts	473	deriveQualifyingDates
+prepareCrewCalculation	function	payroll	true		netlify/functions/lib/finance/payroll/crewRun.ts	500	
+loadByIds	function	payroll	false		netlify/functions/lib/finance/payroll/crewRun.ts	505	prepareCrewCalculation
+PayrollRunType	type	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	7	
+PayrollRunStatus	type	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	13	
+CreatePayrollRunCommand	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	26	
+CalculationAttemptRow	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	51	
+PayrollCalculationAttempt	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	68	
+CalculationVersionRow	interface	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	85	
+PayrollCalculationVersion	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	102	
+toAttempt	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	119	
+toVersion	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	138	
+ATTEMPT_COLUMNS	variable	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	157	
+VERSION_COLUMNS	variable	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	159	
+rpcData	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	162	
+createPayrollRunCommand	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	167	
+publishInputSnapshot	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	209	
+replayInputSnapshot	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	248	
+startCalculationAttempt	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	269	
+listCalculationAttempts	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	291	
+getCalculationAttempt	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	312	
+listCalculationVersions	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	328	
+getCalculationVersion	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	344	
+VersionLineRow	interface	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	360	
+PayrollCalculationComparison	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	372	
+compareCalculationVersions	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	395	
+round2	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	447	compareCalculationVersions
+deductions	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	448	compareCalculationVersions
+publishCalculationVersion	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	496	
+failCalculationAttempt	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	528	
+calculationFailure	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	545	
 PayrollExportFormat	type	payroll	true		netlify/functions/lib/finance/payroll/exportContent.ts	3	
 payrollExportChecksum	function	payroll	true		netlify/functions/lib/finance/payroll/exportContent.ts	7	
 PayrollFindingDomain	type	payroll	true		netlify/functions/lib/finance/payroll/findings.ts	6	
@@ -901,9 +913,14 @@ PurgeableArtifact	interface	payroll	false		netlify/functions/lib/finance/payroll
 processReportPurgeQueue	function	payroll	true		netlify/functions/lib/finance/payroll/reportPurgeWorker.ts	34	
 ClaimedOrphan	interface	payroll	false		netlify/functions/lib/finance/payroll/reportPurgeWorker.ts	66	
 reconcileOrphanUploadAttempts	function	payroll	true		netlify/functions/lib/finance/payroll/reportPurgeWorker.ts	68	
-PAYROLL_SQLSTATE_HTTP	object	payroll	false		netlify/functions/lib/finance/payroll/rpcError.ts	1	
-PayrollRpcError	interface	payroll	true		netlify/functions/lib/finance/payroll/rpcError.ts	9	
-payrollRpcHttpError	function	payroll	true		netlify/functions/lib/finance/payroll/rpcError.ts	14	
+PAYROLL_SQLSTATE_HTTP	object	payroll	false		netlify/functions/lib/finance/payroll/rpcError.ts	3	
+PayrollRpcError	interface	payroll	true		netlify/functions/lib/finance/payroll/rpcError.ts	11	
+payrollRpcHttpError	function	payroll	true		netlify/functions/lib/finance/payroll/rpcError.ts	25	
+RunActionsInput	interface	payroll	true		netlify/functions/lib/finance/payroll/runActions.ts	34	
+ActionSpec	interface	payroll	false		netlify/functions/lib/finance/payroll/runActions.ts	40	
+SOD_REASON	variable	payroll	false		netlify/functions/lib/finance/payroll/runActions.ts	50	
+ACTION_SPECS	array	payroll	false		netlify/functions/lib/finance/payroll/runActions.ts	52	
+computeRunActions	function	payroll	true		netlify/functions/lib/finance/payroll/runActions.ts	81	
 parseDate	function	payroll	false		netlify/functions/lib/finance/payroll/runCalendar.ts	56	
 fmtDate	function	payroll	false		netlify/functions/lib/finance/payroll/runCalendar.ts	63	
 addDays	function	payroll	false		netlify/functions/lib/finance/payroll/runCalendar.ts	68	
@@ -956,16 +973,19 @@ listRunViews	function	payroll	true		netlify/functions/lib/finance/payroll/runVie
 createRunView	function	payroll	true		netlify/functions/lib/finance/payroll/runViews.ts	181	
 updateRunView	function	payroll	true		netlify/functions/lib/finance/payroll/runViews.ts	243	
 deleteRunView	function	payroll	true		netlify/functions/lib/finance/payroll/runViews.ts	316	
-InputSnapshotRow	interface	payroll	false		netlify/functions/lib/finance/payroll/workspace.ts	23	
-PayrollInputSnapshot	interface	payroll	true		netlify/functions/lib/finance/payroll/workspace.ts	34	
-PayrollFindingSummary	interface	payroll	true		netlify/functions/lib/finance/payroll/workspace.ts	45	
-PayrollRunWorkspace	interface	payroll	true		netlify/functions/lib/finance/payroll/workspace.ts	55	
-findingStates	array	payroll	false		netlify/functions/lib/finance/payroll/workspace.ts	68	
-findingDomains	array	payroll	false		netlify/functions/lib/finance/payroll/workspace.ts	74	
-countBy	function	payroll	false		netlify/functions/lib/finance/payroll/workspace.ts	85	
-summarizeFindings	function	payroll	false		netlify/functions/lib/finance/payroll/workspace.ts	91	
-getPayrollRunWorkspace	function	payroll	true		netlify/functions/lib/finance/payroll/workspace.ts	108	
-getInputSnapshot	function	payroll	false		netlify/functions/lib/finance/payroll/workspace.ts	156	
+sourcePeriodOverlaps	function	payroll	true		netlify/functions/lib/finance/payroll/sourceOverlap.ts	19	
+OverlapFilterable	interface	payroll	false		netlify/functions/lib/finance/payroll/sourceOverlap.ts	29	
+filterSourcePeriodOverlap	function	payroll	true		netlify/functions/lib/finance/payroll/sourceOverlap.ts	39	
+InputSnapshotRow	interface	payroll	false		netlify/functions/lib/finance/payroll/workspace.ts	24	
+PayrollInputSnapshot	interface	payroll	true		netlify/functions/lib/finance/payroll/workspace.ts	35	
+PayrollFindingSummary	interface	payroll	true		netlify/functions/lib/finance/payroll/workspace.ts	46	
+PayrollRunWorkspace	interface	payroll	true		netlify/functions/lib/finance/payroll/workspace.ts	56	
+findingStates	array	payroll	false		netlify/functions/lib/finance/payroll/workspace.ts	74	
+findingDomains	array	payroll	false		netlify/functions/lib/finance/payroll/workspace.ts	80	
+countBy	function	payroll	false		netlify/functions/lib/finance/payroll/workspace.ts	91	
+summarizeFindings	function	payroll	false		netlify/functions/lib/finance/payroll/workspace.ts	97	
+getPayrollRunWorkspace	function	payroll	true		netlify/functions/lib/finance/payroll/workspace.ts	114	
+getInputSnapshot	function	payroll	false		netlify/functions/lib/finance/payroll/workspace.ts	171	
 PayComponentRow	interface	payroll	true		netlify/functions/lib/finance/payrollComponents.ts	28	
 PayComponentChangeRequest	interface	payroll	true		netlify/functions/lib/finance/payrollComponents.ts	45	
 DbComponentRow	interface	payroll	false		netlify/functions/lib/finance/payrollComponents.ts	60	
@@ -1068,82 +1088,82 @@ diffRuns	function	payroll	false		netlify/functions/lib/finance/payrollReports.ts
 reportVariation	function	payroll	true		netlify/functions/lib/finance/payrollReports.ts	335	
 reportAuditComparison	function	payroll	true		netlify/functions/lib/finance/payrollReports.ts	346	
 runPayrollReport	function	payroll	true		netlify/functions/lib/finance/payrollReports.ts	350	
-MAX_RUN_EMPLOYEES	variable	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	53	
-NisContributionPeriod	interface	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	61	
-NisContributionWeeks	interface	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	68	
-parseUtcDate	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	73	
-isoMonth	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	81	
-mondayOnOrBefore	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	85	
-buildEmployeeContributionWeeks	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	91	
-readFrozenContributionWeeks	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	154	
-buildNisContributionPeriods	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	202	
-round2	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	221	buildNisContributionPeriods
-PayrollRunPayPolicy	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	254	
-PayrollRunDto	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	269	
-PayrollRunInputDto	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	313	
-PayrollRunLineDto	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	328	
-PayrollRunWarningDto	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	354	
-DbRunRow	interface	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	370	
-DbInputRow	interface	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	399	
-DbLineRow	interface	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	406	
-DbWarningRow	interface	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	417	
-toRunDto	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	426	
-toInputDto	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	453	
-toLineDto	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	465	
-toWarningDto	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	482	
-PayrollPolicy	interface	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	493	
-loadPayrollPolicy	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	501	
-ListRunsOptions	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	527	
-listPayrollRuns	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	533	
-resolveRunPayPolicy	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	547	
-getPayrollRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	573	
-resolveEmployeeNames	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	589	
-PolicyEvidenceCalendarEmployee	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	607	
-PolicyEvidenceCalendar	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	618	
-PolicyEvidenceDto	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	630	
-getRunPolicyEvidence	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	658	
-setRunTemplate	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	799	
-listRunInputs	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	850	
-listRunLines	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	858	
-listRunWarnings	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	865	
-RunAuditLogEntry	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	874	
-listRunAuditLog	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	888	
-CreateRunInput	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	915	
-createPayrollRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	942	
-lockInputs	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	979	
-EmpRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1018	lockInputs
-round2	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1111	lockInputs
-calculateRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1432	
-round2	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1764	calculateRun
-maskNisNumber	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1857	
-PopulationPreviewResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1866	
-getEmployeePopulationPreview	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1881	
-PopulationReconciliationRule	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1948	
-PopulationReconciliationDept	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1957	
-PopulationReconciliationPriorRun	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1962	
-PopulationReconciliationResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1969	
-getPopulationReconciliation	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1979	
-UserRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1990	getPopulationReconciliation
-InputSourceReadiness	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2126	
-InputReadinessResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2134	
-getInputSourceReadiness	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2145	
-MemberRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2155	getInputSourceReadiness
-PgQuery	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2182	getInputSourceReadiness
-pageByEmployee	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2183	getInputSourceReadiness
-maxTs	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2198	getInputSourceReadiness
-OtRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2225	getInputSourceReadiness
-TsRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2237	getInputSourceReadiness
-LvRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2248	getInputSourceReadiness
-LnRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2260	getInputSourceReadiness
-PiRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2273	getInputSourceReadiness
-ExportDownloadResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2301	
-downloadRunExport	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2317	
-submitRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2374	
-decideRunApproval	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2446	
-emitRunApprovedSideEffects	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2514	
-lockRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2561	
-reopenRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2608	
-notifyPayslipEmployees	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2643	
+MAX_RUN_EMPLOYEES	variable	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	57	
+NisContributionPeriod	interface	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	65	
+NisContributionWeeks	interface	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	72	
+parseUtcDate	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	77	
+isoMonth	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	85	
+mondayOnOrBefore	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	89	
+buildEmployeeContributionWeeks	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	95	
+readFrozenContributionWeeks	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	158	
+buildNisContributionPeriods	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	206	
+round2	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	225	buildNisContributionPeriods
+PayrollRunPayPolicy	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	258	
+PayrollRunDto	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	273	
+PayrollRunInputDto	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	317	
+PayrollRunLineDto	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	332	
+PayrollRunWarningDto	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	358	
+DbRunRow	interface	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	374	
+DbInputRow	interface	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	403	
+DbLineRow	interface	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	410	
+DbWarningRow	interface	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	421	
+toRunDto	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	430	
+toInputDto	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	457	
+toLineDto	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	469	
+toWarningDto	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	486	
+PayrollPolicy	interface	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	497	
+loadPayrollPolicy	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	505	
+ListRunsOptions	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	531	
+listPayrollRuns	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	537	
+resolveRunPayPolicy	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	551	
+getPayrollRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	577	
+resolveEmployeeNames	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	593	
+PolicyEvidenceCalendarEmployee	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	611	
+PolicyEvidenceCalendar	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	622	
+PolicyEvidenceDto	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	634	
+getRunPolicyEvidence	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	662	
+setRunTemplate	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	803	
+listRunInputs	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	854	
+listRunLines	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	862	
+listRunWarnings	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	869	
+RunAuditLogEntry	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	878	
+listRunAuditLog	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	892	
+CreateRunInput	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	919	
+createPayrollRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	948	
+lockInputs	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	986	
+EmpRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1025	lockInputs
+round2	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1118	lockInputs
+calculateRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1457	
+round2	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1844	calculateRun
+maskNisNumber	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1947	
+PopulationPreviewResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1956	
+getEmployeePopulationPreview	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1971	
+PopulationReconciliationRule	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2038	
+PopulationReconciliationDept	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2047	
+PopulationReconciliationPriorRun	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2052	
+PopulationReconciliationResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2059	
+getPopulationReconciliation	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2069	
+UserRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2080	getPopulationReconciliation
+InputSourceReadiness	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2216	
+InputReadinessResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2224	
+getInputSourceReadiness	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2235	
+MemberRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2245	getInputSourceReadiness
+PgQuery	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2272	getInputSourceReadiness
+pageByEmployee	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2273	getInputSourceReadiness
+maxTs	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2288	getInputSourceReadiness
+OtRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2315	getInputSourceReadiness
+TsRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2329	getInputSourceReadiness
+LvRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2340	getInputSourceReadiness
+LnRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2352	getInputSourceReadiness
+PiRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2365	getInputSourceReadiness
+ExportDownloadResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2393	
+downloadRunExport	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2409	
+submitRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2466	
+decideRunApproval	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2538	
+emitRunApprovedSideEffects	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2606	
+lockRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2653	
+reopenRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2700	
+notifyPayslipEmployees	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2735	
 payPeriodsForFrequency	function	payroll	true		netlify/functions/lib/finance/payrollStatutory.ts	32	
 ComputeNisInput	interface	payroll	true		netlify/functions/lib/finance/payrollStatutory.ts	45	
 ComputeNisResult	interface	payroll	true		netlify/functions/lib/finance/payrollStatutory.ts	56	
@@ -1370,9 +1390,9 @@ sha256Hex	function	finance	true		netlify/functions/lib/finance/statutoryForms.ts
 uploadFormArtifact	function	finance	true		netlify/functions/lib/finance/statutoryForms.ts	65	
 RecordStatutoryFormInput	interface	finance	true		netlify/functions/lib/finance/statutoryForms.ts	70	
 recordStatutoryForm	function	finance	true		netlify/functions/lib/finance/statutoryForms.ts	97	
-listStatutoryForms	function	finance	true		netlify/functions/lib/finance/statutoryForms.ts	144	
-getStatutoryForm	function	finance	true		netlify/functions/lib/finance/statutoryForms.ts	157	
-getStatutoryFormSignedUrl	function	finance	true		netlify/functions/lib/finance/statutoryForms.ts	164	
+listStatutoryForms	function	finance	true		netlify/functions/lib/finance/statutoryForms.ts	151	
+getStatutoryForm	function	finance	true		netlify/functions/lib/finance/statutoryForms.ts	164	
+getStatutoryFormSignedUrl	function	finance	true		netlify/functions/lib/finance/statutoryForms.ts	171	
 round2	function	finance	false		netlify/functions/lib/finance/td4Forms.ts	20	
 Td4Row	interface	finance	true		netlify/functions/lib/finance/td4Forms.ts	22	
 Td4YearData	interface	finance	true		netlify/functions/lib/finance/td4Forms.ts	36	
@@ -2620,80 +2640,80 @@ uploadBase64	function	platform	false		netlify/functions/lib/upload.ts	92
 createAttachmentUploadUrl	function	platform	false		netlify/functions/lib/upload.ts	127	
 ZvResult	type	platform	false		netlify/functions/lib/validate.ts	13	
 zv	function	platform	true		netlify/functions/lib/validate.ts	22	
-zUsername	variable	platform	true		netlify/functions/lib/validate.ts	40	
-zPassword	variable	platform	true		netlify/functions/lib/validate.ts	41	
-zUuid	variable	platform	true		netlify/functions/lib/validate.ts	42	
-zDateStr	variable	platform	true		netlify/functions/lib/validate.ts	43	
-zHHMM	variable	platform	true		netlify/functions/lib/validate.ts	44	
-zRole	variable	platform	true		netlify/functions/lib/validate.ts	45	
-zStatus	variable	platform	true		netlify/functions/lib/validate.ts	46	
-zLeaveType	variable	platform	true		netlify/functions/lib/validate.ts	47	
-zPayCycle	variable	platform	true		netlify/functions/lib/validate.ts	48	
-zPayBasis	variable	platform	true		netlify/functions/lib/validate.ts	49	
-zBase64Img	variable	platform	true		netlify/functions/lib/validate.ts	50	
-zShortStr	function	platform	true		netlify/functions/lib/validate.ts	51	
-zOptStr	function	platform	true		netlify/functions/lib/validate.ts	52	
-zPosFloat	variable	platform	true		netlify/functions/lib/validate.ts	53	
-zLat	variable	platform	true		netlify/functions/lib/validate.ts	54	
-zLng	variable	platform	true		netlify/functions/lib/validate.ts	55	
-LoginSchema	variable	platform	true		netlify/functions/lib/validate.ts	59	
-zTotpCode	variable	platform	true		netlify/functions/lib/validate.ts	65	
-zBackupCode	variable	platform	true		netlify/functions/lib/validate.ts	66	
-Verify2faSchema	variable	platform	true		netlify/functions/lib/validate.ts	68	
-Setup2faInitSchema	variable	platform	true		netlify/functions/lib/validate.ts	73	
-Setup2faConfirmSchema	variable	platform	true		netlify/functions/lib/validate.ts	77	
-Disable2faSchema	variable	platform	true		netlify/functions/lib/validate.ts	82	
-UpdateColorSchemeSchema	variable	platform	true		netlify/functions/lib/validate.ts	86	
-UpdateLayoutModeSchema	variable	platform	true		netlify/functions/lib/validate.ts	91	
-UpdateMyProfileSchema	variable	platform	true		netlify/functions/lib/validate.ts	98	
-VerifyPasswordSchema	variable	platform	true		netlify/functions/lib/validate.ts	107	
-ChangePasswordSchema	variable	platform	true		netlify/functions/lib/validate.ts	112	
-AddEmployeeSchema	variable	platform	true		netlify/functions/lib/validate.ts	119	
-UpdateEmployeeSchema	variable	platform	true		netlify/functions/lib/validate.ts	139	
-DeleteEmployeeSchema	variable	platform	true		netlify/functions/lib/validate.ts	162	
-GetEmployeeSchema	variable	platform	true		netlify/functions/lib/validate.ts	166	
-AddDepartmentSchema	variable	platform	true		netlify/functions/lib/validate.ts	172	
-UpdateDepartmentSchema	variable	platform	true		netlify/functions/lib/validate.ts	177	
-DeleteDepartmentSchema	variable	platform	true		netlify/functions/lib/validate.ts	183	
-AddSiteSchema	variable	platform	true		netlify/functions/lib/validate.ts	189	
-UpdateSiteSchema	variable	platform	true		netlify/functions/lib/validate.ts	199	
-DeleteSiteSchema	variable	platform	true		netlify/functions/lib/validate.ts	210	
-AssignSiteEmployeesSchema	variable	platform	true		netlify/functions/lib/validate.ts	214	
-MarkAttendanceSchema	variable	platform	true		netlify/functions/lib/validate.ts	221	
-GetMyStatusSchema	variable	platform	true		netlify/functions/lib/validate.ts	233	
-GetMyHistorySchema	variable	platform	true		netlify/functions/lib/validate.ts	237	
-GetMyChartSchema	variable	platform	true		netlify/functions/lib/validate.ts	241	
-ListAttendanceSchema	variable	platform	true		netlify/functions/lib/validate.ts	246	
-ListDailyLogSchema	variable	platform	true		netlify/functions/lib/validate.ts	251	
-GetLiveAttendanceSchema	variable	platform	true		netlify/functions/lib/validate.ts	258	
-GetRecentAttendanceSchema	variable	platform	true		netlify/functions/lib/validate.ts	262	
-GetDeptStatsSchema	variable	platform	true		netlify/functions/lib/validate.ts	266	
-SubmitLeaveSchema	variable	platform	true		netlify/functions/lib/validate.ts	272	
-GetLeaveByIdSchema	variable	platform	true		netlify/functions/lib/validate.ts	279	
-UpdateLeaveSchema	variable	platform	true		netlify/functions/lib/validate.ts	283	
-DeleteLeaveSchema	variable	platform	true		netlify/functions/lib/validate.ts	291	
-DecideLeaveSchema	variable	platform	true		netlify/functions/lib/validate.ts	295	
-RunPayrollSchema	variable	platform	true		netlify/functions/lib/validate.ts	302	
-GetPayslipSchema	variable	platform	true		netlify/functions/lib/validate.ts	307	
-GetPayrollRunSchema	variable	platform	true		netlify/functions/lib/validate.ts	311	
-ListPayrollRunsSchema	variable	platform	true		netlify/functions/lib/validate.ts	315	
-ApprovePayrollSchema	variable	platform	true		netlify/functions/lib/validate.ts	319	
-GetEmployeePayrollSchema	variable	platform	true		netlify/functions/lib/validate.ts	323	
-UpdateSettingSchema	variable	platform	true		netlify/functions/lib/validate.ts	332	
-SaveWorkHoursSchema	variable	platform	true		netlify/functions/lib/validate.ts	337	
-UpdateHourlyRateSchema	variable	platform	true		netlify/functions/lib/validate.ts	342	
-BulkImportRatesSchema	variable	platform	true		netlify/functions/lib/validate.ts	347	
-UploadLogoSchema	variable	platform	true		netlify/functions/lib/validate.ts	354	
-SendMessageSchema	variable	platform	true		netlify/functions/lib/validate.ts	360	
-GetMessagesSchema	variable	platform	true		netlify/functions/lib/validate.ts	365	
-MarkMessageReadSchema	variable	platform	true		netlify/functions/lib/validate.ts	370	
-CreateTicketSchema	variable	platform	true		netlify/functions/lib/validate.ts	376	
-UpdateTicketSchema	variable	platform	true		netlify/functions/lib/validate.ts	382	
-GetTicketSchema	variable	platform	true		netlify/functions/lib/validate.ts	389	
-ReplyTicketSchema	variable	platform	true		netlify/functions/lib/validate.ts	393	
-GetNotificationsSchema	variable	platform	true		netlify/functions/lib/validate.ts	400	
-MarkNotificationReadSchema	variable	platform	true		netlify/functions/lib/validate.ts	405	
-SendNotificationSchema	variable	platform	true		netlify/functions/lib/validate.ts	409	
+zUsername	variable	platform	true		netlify/functions/lib/validate.ts	58	
+zPassword	variable	platform	true		netlify/functions/lib/validate.ts	59	
+zUuid	variable	platform	true		netlify/functions/lib/validate.ts	60	
+zDateStr	variable	platform	true		netlify/functions/lib/validate.ts	61	
+zHHMM	variable	platform	true		netlify/functions/lib/validate.ts	62	
+zRole	variable	platform	true		netlify/functions/lib/validate.ts	63	
+zStatus	variable	platform	true		netlify/functions/lib/validate.ts	64	
+zLeaveType	variable	platform	true		netlify/functions/lib/validate.ts	65	
+zPayCycle	variable	platform	true		netlify/functions/lib/validate.ts	66	
+zPayBasis	variable	platform	true		netlify/functions/lib/validate.ts	67	
+zBase64Img	variable	platform	true		netlify/functions/lib/validate.ts	68	
+zShortStr	function	platform	true		netlify/functions/lib/validate.ts	69	
+zOptStr	function	platform	true		netlify/functions/lib/validate.ts	70	
+zPosFloat	variable	platform	true		netlify/functions/lib/validate.ts	71	
+zLat	variable	platform	true		netlify/functions/lib/validate.ts	72	
+zLng	variable	platform	true		netlify/functions/lib/validate.ts	73	
+LoginSchema	variable	platform	true		netlify/functions/lib/validate.ts	77	
+zTotpCode	variable	platform	true		netlify/functions/lib/validate.ts	83	
+zBackupCode	variable	platform	true		netlify/functions/lib/validate.ts	84	
+Verify2faSchema	variable	platform	true		netlify/functions/lib/validate.ts	86	
+Setup2faInitSchema	variable	platform	true		netlify/functions/lib/validate.ts	91	
+Setup2faConfirmSchema	variable	platform	true		netlify/functions/lib/validate.ts	95	
+Disable2faSchema	variable	platform	true		netlify/functions/lib/validate.ts	100	
+UpdateColorSchemeSchema	variable	platform	true		netlify/functions/lib/validate.ts	104	
+UpdateLayoutModeSchema	variable	platform	true		netlify/functions/lib/validate.ts	109	
+UpdateMyProfileSchema	variable	platform	true		netlify/functions/lib/validate.ts	116	
+VerifyPasswordSchema	variable	platform	true		netlify/functions/lib/validate.ts	125	
+ChangePasswordSchema	variable	platform	true		netlify/functions/lib/validate.ts	130	
+AddEmployeeSchema	variable	platform	true		netlify/functions/lib/validate.ts	137	
+UpdateEmployeeSchema	variable	platform	true		netlify/functions/lib/validate.ts	157	
+DeleteEmployeeSchema	variable	platform	true		netlify/functions/lib/validate.ts	180	
+GetEmployeeSchema	variable	platform	true		netlify/functions/lib/validate.ts	184	
+AddDepartmentSchema	variable	platform	true		netlify/functions/lib/validate.ts	190	
+UpdateDepartmentSchema	variable	platform	true		netlify/functions/lib/validate.ts	195	
+DeleteDepartmentSchema	variable	platform	true		netlify/functions/lib/validate.ts	201	
+AddSiteSchema	variable	platform	true		netlify/functions/lib/validate.ts	207	
+UpdateSiteSchema	variable	platform	true		netlify/functions/lib/validate.ts	217	
+DeleteSiteSchema	variable	platform	true		netlify/functions/lib/validate.ts	228	
+AssignSiteEmployeesSchema	variable	platform	true		netlify/functions/lib/validate.ts	232	
+MarkAttendanceSchema	variable	platform	true		netlify/functions/lib/validate.ts	239	
+GetMyStatusSchema	variable	platform	true		netlify/functions/lib/validate.ts	251	
+GetMyHistorySchema	variable	platform	true		netlify/functions/lib/validate.ts	255	
+GetMyChartSchema	variable	platform	true		netlify/functions/lib/validate.ts	259	
+ListAttendanceSchema	variable	platform	true		netlify/functions/lib/validate.ts	264	
+ListDailyLogSchema	variable	platform	true		netlify/functions/lib/validate.ts	269	
+GetLiveAttendanceSchema	variable	platform	true		netlify/functions/lib/validate.ts	276	
+GetRecentAttendanceSchema	variable	platform	true		netlify/functions/lib/validate.ts	280	
+GetDeptStatsSchema	variable	platform	true		netlify/functions/lib/validate.ts	284	
+SubmitLeaveSchema	variable	platform	true		netlify/functions/lib/validate.ts	290	
+GetLeaveByIdSchema	variable	platform	true		netlify/functions/lib/validate.ts	297	
+UpdateLeaveSchema	variable	platform	true		netlify/functions/lib/validate.ts	301	
+DeleteLeaveSchema	variable	platform	true		netlify/functions/lib/validate.ts	309	
+DecideLeaveSchema	variable	platform	true		netlify/functions/lib/validate.ts	313	
+RunPayrollSchema	variable	platform	true		netlify/functions/lib/validate.ts	320	
+GetPayslipSchema	variable	platform	true		netlify/functions/lib/validate.ts	325	
+GetPayrollRunSchema	variable	platform	true		netlify/functions/lib/validate.ts	329	
+ListPayrollRunsSchema	variable	platform	true		netlify/functions/lib/validate.ts	333	
+ApprovePayrollSchema	variable	platform	true		netlify/functions/lib/validate.ts	337	
+GetEmployeePayrollSchema	variable	platform	true		netlify/functions/lib/validate.ts	341	
+UpdateSettingSchema	variable	platform	true		netlify/functions/lib/validate.ts	350	
+SaveWorkHoursSchema	variable	platform	true		netlify/functions/lib/validate.ts	355	
+UpdateHourlyRateSchema	variable	platform	true		netlify/functions/lib/validate.ts	360	
+BulkImportRatesSchema	variable	platform	true		netlify/functions/lib/validate.ts	365	
+UploadLogoSchema	variable	platform	true		netlify/functions/lib/validate.ts	372	
+SendMessageSchema	variable	platform	true		netlify/functions/lib/validate.ts	378	
+GetMessagesSchema	variable	platform	true		netlify/functions/lib/validate.ts	383	
+MarkMessageReadSchema	variable	platform	true		netlify/functions/lib/validate.ts	388	
+CreateTicketSchema	variable	platform	true		netlify/functions/lib/validate.ts	394	
+UpdateTicketSchema	variable	platform	true		netlify/functions/lib/validate.ts	400	
+GetTicketSchema	variable	platform	true		netlify/functions/lib/validate.ts	407	
+ReplyTicketSchema	variable	platform	true		netlify/functions/lib/validate.ts	411	
+GetNotificationsSchema	variable	platform	true		netlify/functions/lib/validate.ts	418	
+MarkNotificationReadSchema	variable	platform	true		netlify/functions/lib/validate.ts	423	
+SendNotificationSchema	variable	platform	true		netlify/functions/lib/validate.ts	427	
 WEBAUTHN_RP_ID	variable	security	true		netlify/functions/lib/webauthn.ts	28	
 WEBAUTHN_RP_NAME	variable	security	true		netlify/functions/lib/webauthn.ts	29	
 WEBAUTHN_ORIGINS	variable	security	true		netlify/functions/lib/webauthn.ts	35	
@@ -3076,10 +3096,10 @@ requestKey	variable	finance	false		netlify/functions/routes/financePayPolicies.t
 component	variable	finance	false		netlify/functions/routes/financePayPolicies.ts	22	
 sourceRule	variable	finance	false		netlify/functions/routes/financePayPolicies.ts	45	
 draft	variable	finance	false		netlify/functions/routes/financePayPolicies.ts	54	
-router	variable	payroll	false		netlify/functions/routes/financePayroll.ts	147	
-b	function	payroll	false		netlify/functions/routes/financePayroll.ts	150	
-routeErr	function	payroll	false		netlify/functions/routes/financePayroll.ts	154	
-reportCaller	function	payroll	false		netlify/functions/routes/financePayroll.ts	1695	
+router	variable	payroll	false		netlify/functions/routes/financePayroll.ts	151	
+b	function	payroll	false		netlify/functions/routes/financePayroll.ts	154	
+routeErr	function	payroll	false		netlify/functions/routes/financePayroll.ts	165	
+reportCaller	function	payroll	false		netlify/functions/routes/financePayroll.ts	1733	
 router	variable	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	18	
 b	function	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	19	
 P	variable	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	22	
@@ -3136,14 +3156,14 @@ PARTIES	variable	platform	false		netlify/functions/routes/hrContracts.ts	27
 METHODS	variable	platform	false		netlify/functions/routes/hrContracts.ts	28	
 signatoryInput	variable	platform	false		netlify/functions/routes/hrContracts.ts	30	
 clauseInput	variable	platform	false		netlify/functions/routes/hrContracts.ts	36	
-MOVEMENT_TYPES	variable	platform	false		netlify/functions/routes/hrCrew.ts	25	
-router	variable	platform	false		netlify/functions/routes/hrCrew.ts	27	
-HCtx	type	platform	false		netlify/functions/routes/hrCrew.ts	28	
-body	function	platform	false		netlify/functions/routes/hrCrew.ts	29	
-routeErr	function	platform	false		netlify/functions/routes/hrCrew.ts	30	
-DATE	variable	platform	false		netlify/functions/routes/hrCrew.ts	35	
-nzStr	function	platform	false		netlify/functions/routes/hrCrew.ts	36	
-uuidN	variable	platform	false		netlify/functions/routes/hrCrew.ts	37	
+MOVEMENT_TYPES	variable	platform	false		netlify/functions/routes/hrCrew.ts	30	
+router	variable	platform	false		netlify/functions/routes/hrCrew.ts	32	
+HCtx	type	platform	false		netlify/functions/routes/hrCrew.ts	33	
+body	function	platform	false		netlify/functions/routes/hrCrew.ts	34	
+routeErr	function	platform	false		netlify/functions/routes/hrCrew.ts	38	
+DATE	variable	platform	false		netlify/functions/routes/hrCrew.ts	59	
+nzStr	function	platform	false		netlify/functions/routes/hrCrew.ts	60	
+uuidN	variable	platform	false		netlify/functions/routes/hrCrew.ts	61	
 router	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	27	
 body	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	28	
 REQUIRED_FIELDS	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	32	
@@ -3598,32 +3618,38 @@ runCleanup	method	testing	false		scripts/e2e/harness.mjs	394	Harness
 report	method	testing	false		scripts/e2e/harness.mjs	402	Harness
 fixturePolicyCode	function	testing	false		scripts/e2e/helpers/payPolicyFixture.mjs	36	
 attachActivePolicy	function	testing	true		scripts/e2e/helpers/payPolicyFixture.mjs	60	
+provisionPayrollCertification	function	payroll	true		scripts/e2e/helpers/payrollCertificationFixture.mjs	22	
+cal	function	payroll	false		scripts/e2e/helpers/payrollCertificationFixture.mjs	153	provisionPayrollCertification
+activatePolicy	function	payroll	false		scripts/e2e/helpers/payrollCertificationFixture.mjs	208	provisionPayrollCertification
+assignPolicy	function	payroll	false		scripts/e2e/helpers/payrollCertificationFixture.mjs	263	provisionPayrollCertification
+groupFor	function	payroll	false		scripts/e2e/helpers/payrollCertificationFixture.mjs	279	provisionPayrollCertification
 addDays	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	1	
 endOfMonth	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	8	
 payrollPeriodEnd	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	16	
 monthStart	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	26	
 payrollContributionWeeks	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	30	
 nisContributionPeriods	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	61	
-payrollRunCommand	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	82	
-payrollCalculationCommand	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	102	
-payrollLockCommand	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	108	
-payrollCertificationCommand	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	114	
-payrollFundingCommand	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	134	
-payrollReleaseCommand	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	162	
-payrollExportCommand	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	170	
-payrollReopenCommand	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	181	
-SALT_DATE_BASE_DAYS	variable	payroll	false		scripts/e2e/helpers/payrollRun.mjs	218	
-SALT_WINDOW_DAYS	variable	payroll	false		scripts/e2e/helpers/payrollRun.mjs	219	
-seedDateFromTag	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	220	
-PAYROLL_PERIOD_SALTS	variable	payroll	true		scripts/e2e/helpers/payrollRun.mjs	229	
-PAYROLL_PERIOD_YEAR_BANDS	variable	payroll	true		scripts/e2e/helpers/payrollRun.mjs	255	
-yearOfDayOffset	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	264	
-saltYearWindow	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	271	
-assertPayrollPeriodAllocatorDisjoint	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	283	
-overlaps	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	284	assertPayrollPeriodAllocatorDisjoint
-payrollPeriod	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	331	
-payrollPeriodYear	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	342	
-payrollRunSeed	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	355	
+PAYROLL_CREATE_ATTESTATIONS	variable	payroll	true		scripts/e2e/helpers/payrollRun.mjs	86	
+payrollRunCommand	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	92	
+payrollCalculationCommand	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	114	
+payrollLockCommand	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	120	
+payrollCertificationCommand	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	126	
+payrollFundingCommand	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	146	
+payrollReleaseCommand	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	174	
+payrollExportCommand	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	182	
+payrollReopenCommand	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	193	
+SALT_DATE_BASE_DAYS	variable	payroll	false		scripts/e2e/helpers/payrollRun.mjs	230	
+SALT_WINDOW_DAYS	variable	payroll	false		scripts/e2e/helpers/payrollRun.mjs	231	
+seedDateFromTag	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	232	
+PAYROLL_PERIOD_SALTS	variable	payroll	true		scripts/e2e/helpers/payrollRun.mjs	241	
+PAYROLL_PERIOD_YEAR_BANDS	variable	payroll	true		scripts/e2e/helpers/payrollRun.mjs	267	
+yearOfDayOffset	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	276	
+saltYearWindow	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	283	
+assertPayrollPeriodAllocatorDisjoint	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	295	
+overlaps	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	296	assertPayrollPeriodAllocatorDisjoint
+payrollPeriod	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	343	
+payrollPeriodYear	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	354	
+payrollRunSeed	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	367	
 here	variable	payroll	false		scripts/e2e/payroll-contract-gate.mjs	18	
 defaultSuitesDir	variable	payroll	false		scripts/e2e/payroll-contract-gate.mjs	19	
 escapeRegExp	function	payroll	false		scripts/e2e/payroll-contract-gate.mjs	21	
@@ -3713,9 +3739,9 @@ readSummary	function	communications	false	test	scripts/e2e/suites/communications
 assertEvidenceTriplet	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	223	run
 requestId	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	263	run
 run	function	payroll	true	test	scripts/e2e/suites/crewPayroll.mjs	14	
-evCount	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	64	run
-auditCount	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	66	run
-createRunFixture	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	198	run
+evCount	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	66	run
+auditCount	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	68	run
+createRunFixture	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	200	run
 title	variable	finance	true	test	scripts/e2e/suites/financeAp.mjs	18	
 run	function	finance	true	test	scripts/e2e/suites/financeAp.mjs	20	
 title	variable	finance	true	test	scripts/e2e/suites/financeBudgets.mjs	36	
@@ -3862,6 +3888,8 @@ getA	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	243
 WIN	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	244	run
 getB	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	245	run
 snap	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	415	run
+run	function	payroll	true	test	scripts/e2e/suites/payrollCreateAttestations.mjs	18	
+sameAttestations	function	payroll	false	test	scripts/e2e/suites/payrollCreateAttestations.mjs	63	run
 title	variable	payroll	true	test	scripts/e2e/suites/payrollExceptions.mjs	15	
 run	function	payroll	true	test	scripts/e2e/suites/payrollExceptions.mjs	17	
 key	function	payroll	false	test	scripts/e2e/suites/payrollExceptions.mjs	39	run
@@ -3945,6 +3973,7 @@ title	variable	payroll	true	test	scripts/e2e/suites/payrollStatutorySnapshot.mjs
 V2_EFFECTIVE_FROM	variable	payroll	false	test	scripts/e2e/suites/payrollStatutorySnapshot.mjs	29	
 V2_LABEL_MARK	variable	payroll	false	test	scripts/e2e/suites/payrollStatutorySnapshot.mjs	30	
 run	function	payroll	true	test	scripts/e2e/suites/payrollStatutorySnapshot.mjs	39	
+run	function	payroll	true	test	scripts/e2e/suites/payrollSystemCertification.mjs	23	
 title	variable	payroll	true	test	scripts/e2e/suites/payrollVarianceReports.mjs	6	
 run	function	payroll	true	test	scripts/e2e/suites/payrollVarianceReports.mjs	10	
 mkRun	function	payroll	false	test	scripts/e2e/suites/payrollVarianceReports.mjs	44	run
@@ -4533,95 +4562,97 @@ payPoliciesApi	object	finance	true		src/api/finance/payPolicies.ts	22
 usePayPolicies	function	finance	true	hook	src/api/finance/payPolicies.ts	56	
 usePayPolicy	function	finance	true	hook	src/api/finance/payPolicies.ts	59	
 usePayPolicyMutation	function	finance	true	hook	src/api/finance/payPolicies.ts	65	
-PayrollRunPayPolicy	interface	payroll	true		src/api/finance/payroll.ts	29	
-PayrollRun	interface	payroll	true		src/api/finance/payroll.ts	44	
-PayrollRunInput	interface	payroll	true		src/api/finance/payroll.ts	80	
-PayrollRunLine	interface	payroll	true		src/api/finance/payroll.ts	95	
-PayrollRunWarning	interface	payroll	true		src/api/finance/payroll.ts	121	
-PolicyEvidenceComponent	interface	payroll	true		src/api/finance/payroll.ts	138	
-PolicyEvidenceSourceRule	interface	payroll	true		src/api/finance/payroll.ts	148	
-PolicyEvidenceCostingRule	interface	payroll	true		src/api/finance/payroll.ts	158	
-PolicyEvidenceConflict	interface	payroll	true		src/api/finance/payroll.ts	164	
-PolicyEvidenceExcluded	interface	payroll	true		src/api/finance/payroll.ts	170	
-PolicyEvidenceCalendarEmployee	interface	payroll	true		src/api/finance/payroll.ts	174	
-PolicyEvidenceCalendar	interface	payroll	true		src/api/finance/payroll.ts	183	
-PolicyEvidence	interface	payroll	true		src/api/finance/payroll.ts	192	
-Payslip	interface	payroll	true		src/api/finance/payroll.ts	205	
-PayslipDelivery	interface	payroll	true		src/api/finance/payroll.ts	217	
-GlPreviewLine	interface	payroll	true		src/api/finance/payroll.ts	232	
-GlPreview	interface	payroll	true		src/api/finance/payroll.ts	239	
-GlJournalLine	interface	payroll	true		src/api/finance/payroll.ts	249	
-GlJournal	interface	payroll	true		src/api/finance/payroll.ts	253	
-PayrollExport	interface	payroll	true		src/api/finance/payroll.ts	262	
-PayslipTemplateSummary	interface	payroll	true		src/api/finance/payroll.ts	276	
-NisProfileRow	interface	payroll	true		src/api/finance/payroll.ts	284	
-RunAuditLogEntry	interface	payroll	true		src/api/finance/payroll.ts	303	
-PayrollRunType	type	payroll	true		src/api/finance/payroll.ts	313	
-CreateRunArgs	interface	payroll	true		src/api/finance/payroll.ts	321	
-PayrollReasonCode	interface	payroll	true		src/api/finance/payroll.ts	343	
-PayGroup	interface	payroll	true		src/api/finance/payroll.ts	345	
-PayGroupMember	interface	payroll	true		src/api/finance/payroll.ts	357	
-LoanType	type	payroll	true		src/api/finance/payroll.ts	359	
-LoanStatus	type	payroll	true		src/api/finance/payroll.ts	360	
-EmployeeLoan	interface	payroll	true		src/api/finance/payroll.ts	361	
-OvertimeEventType	type	payroll	true		src/api/finance/payroll.ts	384	
-OvertimeRule	interface	payroll	true		src/api/finance/payroll.ts	387	
-PayrollOverride	interface	payroll	true		src/api/finance/payroll.ts	399	
-BackPayPeriod	interface	payroll	true		src/api/finance/payroll.ts	412	
-BackPayBreakdown	interface	payroll	true		src/api/finance/payroll.ts	419	
-PopulationPreview	interface	payroll	true		src/api/finance/payroll.ts	431	
-PopulationReconciliationRule	interface	payroll	true		src/api/finance/payroll.ts	442	
-PopulationReconciliationDept	interface	payroll	true		src/api/finance/payroll.ts	451	
-PopulationReconciliationPriorRun	interface	payroll	true		src/api/finance/payroll.ts	456	
-PopulationReconciliation	interface	payroll	true		src/api/finance/payroll.ts	463	
-InputSourceReadiness	interface	payroll	true		src/api/finance/payroll.ts	470	
-InputReadiness	interface	payroll	true		src/api/finance/payroll.ts	478	
-ExportDownload	interface	payroll	true		src/api/finance/payroll.ts	482	
-ResolveWarningResult	interface	payroll	true		src/api/finance/payroll.ts	492	
-PayrollInputSnapshotInfo	interface	payroll	true		src/api/finance/payroll.ts	502	
-PayrollCalculationVersion	interface	payroll	true		src/api/finance/payroll.ts	508	
-PayrollCalculationAttempt	interface	payroll	true		src/api/finance/payroll.ts	514	
-PayrollFindingSeverity	type	payroll	true		src/api/finance/payroll.ts	520	
-PayrollFindingState	type	payroll	true		src/api/finance/payroll.ts	521	
-PayrollFindingSummary	interface	payroll	true		src/api/finance/payroll.ts	522	
-PayrollControlFinding	interface	payroll	true		src/api/finance/payroll.ts	526	
-PayrollRunWorkspace	interface	payroll	true		src/api/finance/payroll.ts	536	
-PayrollReleasePreflight	interface	payroll	true		src/api/finance/payroll.ts	545	
-PayrollReleaseCertificate	interface	payroll	true		src/api/finance/payroll.ts	557	
-PayrollCalculationComparison	interface	payroll	true		src/api/finance/payroll.ts	565	
-call	function	payroll	false		src/api/finance/payroll.ts	574	
-financePayrollApi	object	payroll	true		src/api/finance/payroll.ts	582	
-financePayrollKeys	object	payroll	true		src/api/finance/payroll.ts	729	
-usePayrollRun	function	payroll	true	hook	src/api/finance/payroll.ts	744	
-useRunLines	function	payroll	true	hook	src/api/finance/payroll.ts	747	
-usePolicyEvidence	function	payroll	true	hook	src/api/finance/payroll.ts	751	
-useRunWorkspace	function	payroll	true	hook	src/api/finance/payroll.ts	760	
-useReleasePreflight	function	payroll	true	hook	src/api/finance/payroll.ts	768	
-useReleaseCertificate	function	payroll	true	hook	src/api/finance/payroll.ts	777	
-useCalculationVersions	function	payroll	true	hook	src/api/finance/payroll.ts	786	
-useCalculationComparison	function	payroll	true	hook	src/api/finance/payroll.ts	794	
-useRunWarnings	function	payroll	true	hook	src/api/finance/payroll.ts	801	
-useRunPayslips	function	payroll	true	hook	src/api/finance/payroll.ts	804	
-useRunGlPreview	function	payroll	true	hook	src/api/finance/payroll.ts	807	
-usePayGroups	function	payroll	true	hook	src/api/finance/payroll.ts	810	
-useReasonCodes	function	payroll	true	hook	src/api/finance/payroll.ts	814	
-usePayGroupMembers	function	payroll	true	hook	src/api/finance/payroll.ts	820	
-useOvertimeRules	function	payroll	true	hook	src/api/finance/payroll.ts	823	
-useEmployeeLoans	function	payroll	true	hook	src/api/finance/payroll.ts	826	
-useRunOverrides	function	payroll	true	hook	src/api/finance/payroll.ts	829	
-useRunExports	function	payroll	true	hook	src/api/finance/payroll.ts	832	
-useRunInputs	function	payroll	true	hook	src/api/finance/payroll.ts	835	
-useNisProfiles	function	payroll	true	hook	src/api/finance/payroll.ts	838	
-useRunAuditLog	function	payroll	true	hook	src/api/finance/payroll.ts	841	
-usePopulationPreview	function	payroll	true	hook	src/api/finance/payroll.ts	848	
-usePopulationReconciliation	function	payroll	true	hook	src/api/finance/payroll.ts	854	
-useInputReadiness	function	payroll	true	hook	src/api/finance/payroll.ts	864	
-usePayrollMutation	function	payroll	true	hook	src/api/finance/payroll.ts	877	
-useResolveWarning	function	payroll	true	hook	src/api/finance/payroll.ts	888	
-useExportDownload	function	payroll	true	hook	src/api/finance/payroll.ts	897	
-payslipTemplateKeys	object	payroll	true		src/api/finance/payroll.ts	905	
-usePayslipTemplates	function	payroll	true	hook	src/api/finance/payroll.ts	915	
-useSetRunTemplate	function	payroll	true	hook	src/api/finance/payroll.ts	926	
+okWith	function	payroll	false	test	src/api/finance/payroll.contract.test.ts	19	
+PayrollRunPayPolicy	interface	payroll	true		src/api/finance/payroll.ts	33	
+PayrollRun	interface	payroll	true		src/api/finance/payroll.ts	48	
+PayrollRunInput	interface	payroll	true		src/api/finance/payroll.ts	84	
+PayrollRunLine	interface	payroll	true		src/api/finance/payroll.ts	99	
+PayrollRunWarning	interface	payroll	true		src/api/finance/payroll.ts	125	
+PolicyEvidenceComponent	interface	payroll	true		src/api/finance/payroll.ts	142	
+PolicyEvidenceSourceRule	interface	payroll	true		src/api/finance/payroll.ts	152	
+PolicyEvidenceCostingRule	interface	payroll	true		src/api/finance/payroll.ts	162	
+PolicyEvidenceConflict	interface	payroll	true		src/api/finance/payroll.ts	168	
+PolicyEvidenceExcluded	interface	payroll	true		src/api/finance/payroll.ts	174	
+PolicyEvidenceCalendarEmployee	interface	payroll	true		src/api/finance/payroll.ts	178	
+PolicyEvidenceCalendar	interface	payroll	true		src/api/finance/payroll.ts	187	
+PolicyEvidence	interface	payroll	true		src/api/finance/payroll.ts	196	
+Payslip	interface	payroll	true		src/api/finance/payroll.ts	209	
+PayslipDelivery	interface	payroll	true		src/api/finance/payroll.ts	221	
+GlPreviewLine	interface	payroll	true		src/api/finance/payroll.ts	236	
+GlPreview	interface	payroll	true		src/api/finance/payroll.ts	243	
+GlJournalLine	interface	payroll	true		src/api/finance/payroll.ts	253	
+GlJournal	interface	payroll	true		src/api/finance/payroll.ts	257	
+PayrollExport	interface	payroll	true		src/api/finance/payroll.ts	266	
+PayslipTemplateSummary	interface	payroll	true		src/api/finance/payroll.ts	281	
+NisProfileRow	interface	payroll	true		src/api/finance/payroll.ts	289	
+RunAuditLogEntry	interface	payroll	true		src/api/finance/payroll.ts	308	
+PayrollRunType	type	payroll	true		src/api/finance/payroll.ts	318	
+CreateRunArgs	interface	payroll	true		src/api/finance/payroll.ts	326	
+PayrollReasonCode	interface	payroll	true		src/api/finance/payroll.ts	351	
+PayGroup	interface	payroll	true		src/api/finance/payroll.ts	353	
+PayGroupMember	interface	payroll	true		src/api/finance/payroll.ts	365	
+LoanType	type	payroll	true		src/api/finance/payroll.ts	367	
+LoanStatus	type	payroll	true		src/api/finance/payroll.ts	368	
+EmployeeLoan	interface	payroll	true		src/api/finance/payroll.ts	369	
+OvertimeEventType	type	payroll	true		src/api/finance/payroll.ts	392	
+OvertimeRule	interface	payroll	true		src/api/finance/payroll.ts	395	
+PayrollOverride	interface	payroll	true		src/api/finance/payroll.ts	407	
+BackPayPeriod	interface	payroll	true		src/api/finance/payroll.ts	420	
+BackPayBreakdown	interface	payroll	true		src/api/finance/payroll.ts	427	
+PopulationPreview	interface	payroll	true		src/api/finance/payroll.ts	439	
+PopulationReconciliationRule	interface	payroll	true		src/api/finance/payroll.ts	450	
+PopulationReconciliationDept	interface	payroll	true		src/api/finance/payroll.ts	459	
+PopulationReconciliationPriorRun	interface	payroll	true		src/api/finance/payroll.ts	464	
+PopulationReconciliation	interface	payroll	true		src/api/finance/payroll.ts	471	
+InputSourceReadiness	interface	payroll	true		src/api/finance/payroll.ts	478	
+InputReadiness	interface	payroll	true		src/api/finance/payroll.ts	486	
+ExportDownload	interface	payroll	true		src/api/finance/payroll.ts	490	
+ResolveWarningResult	interface	payroll	true		src/api/finance/payroll.ts	500	
+PayrollInputSnapshotInfo	interface	payroll	true		src/api/finance/payroll.ts	510	
+PayrollCalculationVersion	interface	payroll	true		src/api/finance/payroll.ts	516	
+PayrollCalculationAttempt	interface	payroll	true		src/api/finance/payroll.ts	522	
+PayrollFindingSeverity	type	payroll	true		src/api/finance/payroll.ts	528	
+PayrollFindingState	type	payroll	true		src/api/finance/payroll.ts	529	
+PayrollFindingSummary	interface	payroll	true		src/api/finance/payroll.ts	530	
+PayrollControlFinding	interface	payroll	true		src/api/finance/payroll.ts	534	
+PayrollRunWorkspace	interface	payroll	true		src/api/finance/payroll.ts	544	
+PayrollReleasePreflight	interface	payroll	true		src/api/finance/payroll.ts	555	
+PayrollReleaseCertificate	interface	payroll	true		src/api/finance/payroll.ts	567	
+PayrollCalculationComparison	interface	payroll	true		src/api/finance/payroll.ts	575	
+PayrollApiError	class	payroll	true		src/api/finance/payroll.ts	589	
+call	function	payroll	false		src/api/finance/payroll.ts	604	
+financePayrollApi	object	payroll	true		src/api/finance/payroll.ts	617	
+financePayrollKeys	object	payroll	true		src/api/finance/payroll.ts	766	
+usePayrollRun	function	payroll	true	hook	src/api/finance/payroll.ts	781	
+useRunLines	function	payroll	true	hook	src/api/finance/payroll.ts	784	
+usePolicyEvidence	function	payroll	true	hook	src/api/finance/payroll.ts	788	
+useRunWorkspace	function	payroll	true	hook	src/api/finance/payroll.ts	797	
+useReleasePreflight	function	payroll	true	hook	src/api/finance/payroll.ts	805	
+useReleaseCertificate	function	payroll	true	hook	src/api/finance/payroll.ts	814	
+useCalculationVersions	function	payroll	true	hook	src/api/finance/payroll.ts	823	
+useCalculationComparison	function	payroll	true	hook	src/api/finance/payroll.ts	831	
+useRunWarnings	function	payroll	true	hook	src/api/finance/payroll.ts	838	
+useRunPayslips	function	payroll	true	hook	src/api/finance/payroll.ts	841	
+useRunGlPreview	function	payroll	true	hook	src/api/finance/payroll.ts	844	
+usePayGroups	function	payroll	true	hook	src/api/finance/payroll.ts	847	
+useReasonCodes	function	payroll	true	hook	src/api/finance/payroll.ts	851	
+usePayGroupMembers	function	payroll	true	hook	src/api/finance/payroll.ts	857	
+useOvertimeRules	function	payroll	true	hook	src/api/finance/payroll.ts	860	
+useEmployeeLoans	function	payroll	true	hook	src/api/finance/payroll.ts	863	
+useRunOverrides	function	payroll	true	hook	src/api/finance/payroll.ts	866	
+useRunExports	function	payroll	true	hook	src/api/finance/payroll.ts	869	
+useRunInputs	function	payroll	true	hook	src/api/finance/payroll.ts	872	
+useNisProfiles	function	payroll	true	hook	src/api/finance/payroll.ts	875	
+useRunAuditLog	function	payroll	true	hook	src/api/finance/payroll.ts	878	
+usePopulationPreview	function	payroll	true	hook	src/api/finance/payroll.ts	885	
+usePopulationReconciliation	function	payroll	true	hook	src/api/finance/payroll.ts	891	
+useInputReadiness	function	payroll	true	hook	src/api/finance/payroll.ts	901	
+usePayrollMutation	function	payroll	true	hook	src/api/finance/payroll.ts	914	
+useResolveWarning	function	payroll	true	hook	src/api/finance/payroll.ts	925	
+useExportDownload	function	payroll	true	hook	src/api/finance/payroll.ts	934	
+payslipTemplateKeys	object	payroll	true		src/api/finance/payroll.ts	942	
+usePayslipTemplates	function	payroll	true	hook	src/api/finance/payroll.ts	952	
+useSetRunTemplate	function	payroll	true	hook	src/api/finance/payroll.ts	963	
 PayrollControlCenterParams	interface	payroll	true		src/api/finance/payroll/controlCenter.ts	42	
 defaultControlCenterWindow	function	payroll	true		src/api/finance/payroll/controlCenter.ts	54	
 iso	function	payroll	false		src/api/finance/payroll/controlCenter.ts	55	defaultControlCenterWindow
@@ -5293,13 +5324,6 @@ TimelineItemType	type	workflow	true		src/api/orchestration.ts	9
 TimelineItem	interface	workflow	true		src/api/orchestration.ts	11	
 TimelineRef	interface	workflow	true		src/api/orchestration.ts	24	
 useRecordTimeline	function	workflow	true	hook	src/api/orchestration.ts	33	
-listPayrollRuns	function	payroll	true		src/api/payroll.ts	22	
-getPayrollEntries	function	payroll	true		src/api/payroll.ts	41	
-createPayrollRun	function	payroll	true		src/api/payroll.ts	64	
-approvePayrollRun	function	payroll	true		src/api/payroll.ts	73	
-getHourlyRateHistory	function	payroll	true		src/api/payroll.ts	85	
-listAllHourlyRates	function	payroll	true		src/api/payroll.ts	105	
-setHourlyRate	function	payroll	true		src/api/payroll.ts	124	
 employeeKeys	variable	platform	true		src/api/queryKeys.ts	32	
 hrEmployeeKeys	variable	platform	true		src/api/queryKeys.ts	44	
 departmentKeys	variable	platform	true		src/api/queryKeys.ts	62	
@@ -5391,17 +5415,6 @@ SendNotificationSchema	variable	communications	true		src/api/schemas/notificatio
 SendNotificationPayload	type	communications	true		src/api/schemas/notification.ts	93	
 UpdatePreferenceSchema	variable	communications	true		src/api/schemas/notification.ts	97	
 UpdatePreferencePayload	type	communications	true		src/api/schemas/notification.ts	105	
-PayrollStatusSchema	variable	payroll	true		src/api/schemas/payroll.ts	17	
-PayrollRunSchema	variable	payroll	true		src/api/schemas/payroll.ts	21	
-PayrollRun	type	payroll	true		src/api/schemas/payroll.ts	33	
-PayrollEntrySchema	variable	payroll	true		src/api/schemas/payroll.ts	37	
-PayrollEntry	type	payroll	true		src/api/schemas/payroll.ts	54	
-HourlyRateRowSchema	variable	payroll	true		src/api/schemas/payroll.ts	58	
-HourlyRateRow	type	payroll	true		src/api/schemas/payroll.ts	67	
-SetHourlyRateSchema	variable	payroll	true		src/api/schemas/payroll.ts	69	
-SetHourlyRatePayload	type	payroll	true		src/api/schemas/payroll.ts	75	
-CreatePayrollRunSchema	variable	payroll	true		src/api/schemas/payroll.ts	79	
-CreatePayrollRunPayload	type	payroll	true		src/api/schemas/payroll.ts	87	
 SettingRowSchema	variable	settings	true		src/api/schemas/settings.ts	15	
 SettingRow	type	settings	true		src/api/schemas/settings.ts	20	
 SettingsMap	type	settings	true		src/api/schemas/settings.ts	23	
@@ -6819,27 +6832,27 @@ submit	function	finance	false		src/components/sections/Finance/PayBridgeDialog.t
 _AUTHORITIES	array	finance	false		src/components/sections/Finance/PayBridgeDialog.tsx	92	
 PayCreateRemittanceDialog	function	finance	true	component	src/components/sections/Finance/PayBridgeDialog.tsx	98	
 submit	function	finance	false		src/components/sections/Finance/PayBridgeDialog.tsx	114	PayCreateRemittanceDialog
-PAY_FREQS	array	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	40	
-WEEKS_MAP	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	46	
-RUN_TYPES	array	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	48	
-RECON_STATE_PILL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	56	
-RECON_STATE_LABEL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	59	
-RECON_OWNER_LABEL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	62	
-READINESS_RC	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	67	
-READINESS_ICON	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	70	
-READINESS_LABEL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	73	
-READINESS_PILL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	76	
-STEPS	variable	finance	false	component	src/components/sections/Finance/PayNewRunWizard.tsx	80	
-CreateBlocker	interface	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	91	
-CREATE_BLOCKERS	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	92	
-matchCreateBlocker	function	finance	true		src/components/sections/Finance/PayNewRunWizard.tsx	106	
-lastOfMonth	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	112	
-SummaryCard	function	finance	false	component,ui-tile	src/components/sections/Finance/PayNewRunWizard.tsx	122	
-PendingBlock	function	finance	false	component	src/components/sections/Finance/PayNewRunWizard.tsx	133	
-PayNewRunWizard	function	finance	true	component	src/components/sections/Finance/PayNewRunWizard.tsx	144	
-selectGroup	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	215	PayNewRunWizard
-goToStep	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	222	PayNewRunWizard
-create	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	224	PayNewRunWizard
+PAY_FREQS	array	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	42	
+WEEKS_MAP	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	48	
+RUN_TYPES	array	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	50	
+RECON_STATE_PILL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	58	
+RECON_STATE_LABEL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	61	
+RECON_OWNER_LABEL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	64	
+READINESS_RC	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	69	
+READINESS_ICON	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	72	
+READINESS_LABEL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	75	
+READINESS_PILL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	78	
+STEPS	variable	finance	false	component	src/components/sections/Finance/PayNewRunWizard.tsx	82	
+CreateBlocker	interface	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	93	
+CREATE_BLOCKERS	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	94	
+matchCreateBlocker	function	finance	true		src/components/sections/Finance/PayNewRunWizard.tsx	113	
+lastOfMonth	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	120	
+SummaryCard	function	finance	false	component,ui-tile	src/components/sections/Finance/PayNewRunWizard.tsx	130	
+PendingBlock	function	finance	false	component	src/components/sections/Finance/PayNewRunWizard.tsx	141	
+PayNewRunWizard	function	finance	true	component	src/components/sections/Finance/PayNewRunWizard.tsx	152	
+selectGroup	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	221	PayNewRunWizard
+goToStep	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	228	PayNewRunWizard
+create	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	230	PayNewRunWizard
 draft	function	payroll	false	test	src/components/sections/Finance/payroll/setup/payPolicyRules.test.ts	4	
 buildPayPolicySources	function	payroll	true		src/components/sections/Finance/payroll/setup/payPolicyRules.ts	3	
 payPolicyDraftStepInvalid	function	payroll	true		src/components/sections/Finance/payroll/setup/payPolicyRules.ts	13	
@@ -6989,18 +7002,17 @@ PayrollCommandCenter	function	payroll	true	component	src/components/sections/Fin
 placeBottom	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	311	PayrollCommandCenter
 promoteDefault	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	313	PayrollCommandCenter
 runAction	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	337	PayrollCommandCenter
-submitRunStable	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	343	PayrollCommandCenter
-PortfolioBand	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	556	
-MetricsRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	617	
-RunRegister	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	649	
-RunRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	708	
-goToExceptions	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	730	
-ApprovalsWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	735	
-DeadlinesWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	783	
-dayKey	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	787	DeadlinesWidget
-onDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	788	DeadlinesWidget
-ReadinessWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	839	
-ImpactWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	896	
+stableAction	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	346	PayrollCommandCenter
+PortfolioBand	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	571	
+RunRegister	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	631	
+RunRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	690	
+goToExceptions	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	712	
+ApprovalsWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	717	
+DeadlinesWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	765	
+dayKey	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	769	DeadlinesWidget
+onDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	770	DeadlinesWidget
+ReadinessWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	821	
+ImpactWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	878	
 mockUseWorkQueue	variable	payroll	false	test	src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx	19	
 stubMut	function	payroll	false	test	src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx	20	
 findingRow	function	payroll	false	test	src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx	31	
@@ -7171,65 +7183,77 @@ CloseReleaseCard	function	finance	true	component,ui-tile	src/components/sections
 invalidate	function	finance	false		src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx	41	CloseReleaseCard
 ConfirmFundingModal	function	finance	false	component	src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx	156	
 submit	function	finance	false		src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx	175	ConfirmFundingModal
-runStatusTone	function	finance	true		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	44	
-fmtDateTime	function	finance	true		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	63	
-PayRunDrawerActions	interface	finance	true		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	72	
-RunLinesTab	function	finance	true	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	86	
-InputsTab	function	finance	true	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	132	
-handleEditAmount	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	141	InputsTab
-handleExclude	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	162	InputsTab
-handleViewSource	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	179	InputsTab
-WarningsTab	function	finance	true	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	244	
-warnTone	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	253	WarningsTab
-handleAcknowledge	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	259	WarningsTab
-handleCreateTicket	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	272	WarningsTab
-PayslipsTab	function	finance	true	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	345	
-downloadPayslip	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	358	PayslipsTab
-bulkDownload	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	367	PayslipsTab
-generatePayslips	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	377	PayslipsTab
-emailPayslips	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	389	PayslipsTab
-resendOne	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	401	PayslipsTab
-notifyEmployees	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	408	PayslipsTab
-toggleSelect	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	423	PayslipsTab
-toggleAll	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	426	PayslipsTab
-handleTemplateChange	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	443	PayslipsTab
-WorksheetTab	function	finance	true	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	533	
-toggleOne	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	577	WorksheetTab
-toggleAll	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	578	WorksheetTab
-add	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	585	WorksheetTab
-remove	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	597	WorksheetTab
-recalc	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	601	WorksheetTab
-BackPayModal	function	finance	false	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	716	
-runPreview	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	737	BackPayModal
-apply	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	742	BackPayModal
-GridRow	interface	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	819	
-WorksheetVirtualRows	function	finance	false	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	821	
-MassEditModal	function	finance	false	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	852	
-apply	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	864	MassEditModal
-GlTab	function	finance	true	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	913	
-post	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	919	GlTab
-reverse	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	925	GlTab
-note	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	943	GlTab
-ExportsTab	function	finance	true	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	998	
-handleDownload	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	1003	ExportsTab
-handleRegenerate	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	1018	ExportsTab
-copyId	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	1028	ExportsTab
-Pill	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	32	
-SecHead	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	36	
-Empty	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	46	
-Gate	interface	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	54	
-deriveGates	function	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	56	
-SummaryPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	92	
-VariationRow	interface	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	176	
-PopulationPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	178	
-ReconciliationPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	240	
-ApprovalsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	302	
-decisionChip	function	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	318	ApprovalsPanel
-AuditPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	367	
-InputsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	395	
-PolicyEvidencePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	422	
-ExceptionsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	523	
-ReleasePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	564	
+makeRun	function	finance	false	test	src/components/sections/Finance/payRunDetail/headerActions.test.tsx	13	
+noCaps	object	finance	false	test	src/components/sections/Finance/payRunDetail/headerActions.test.tsx	23	
+drawerActions	variable	finance	false	test	src/components/sections/Finance/payRunDetail/headerActions.test.tsx	30	
+runStatusTone	function	finance	true		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	45	
+fmtDateTime	function	finance	true		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	64	
+PayRunDrawerActions	interface	finance	true		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	73	
+RunLinesTab	function	finance	true	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	87	
+InputsTab	function	finance	true	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	138	
+handleEditAmount	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	150	InputsTab
+handleExclude	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	171	InputsTab
+handleViewSource	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	188	InputsTab
+WarningsTab	function	finance	true	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	253	
+warnTone	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	267	WarningsTab
+handleAcknowledge	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	273	WarningsTab
+handleCreateTicket	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	286	WarningsTab
+PayslipsTab	function	finance	true	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	359	
+downloadPayslip	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	372	PayslipsTab
+bulkDownload	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	381	PayslipsTab
+generatePayslips	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	391	PayslipsTab
+emailPayslips	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	403	PayslipsTab
+resendOne	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	415	PayslipsTab
+notifyEmployees	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	422	PayslipsTab
+toggleSelect	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	437	PayslipsTab
+toggleAll	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	440	PayslipsTab
+handleTemplateChange	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	460	PayslipsTab
+WorksheetTab	function	finance	true	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	550	
+toggleOne	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	595	WorksheetTab
+toggleAll	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	596	WorksheetTab
+add	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	603	WorksheetTab
+remove	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	615	WorksheetTab
+recalc	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	619	WorksheetTab
+BackPayModal	function	finance	false	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	743	
+runPreview	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	764	BackPayModal
+apply	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	769	BackPayModal
+GridRow	interface	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	846	
+WorksheetVirtualRows	function	finance	false	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	848	
+MassEditModal	function	finance	false	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	879	
+apply	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	891	MassEditModal
+GlTab	function	finance	true	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	940	
+post	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	946	GlTab
+reverse	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	952	GlTab
+note	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	975	GlTab
+ExportsTab	function	finance	true	component	src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	1030	
+handleDownload	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	1036	ExportsTab
+handleRegenerate	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	1051	ExportsTab
+copyId	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	1069	ExportsTab
+q	function	finance	false	test	src/components/sections/Finance/payRunDetail/pageGate.test.tsx	12	
+hooks	variable	finance	false	test	src/components/sections/Finance/payRunDetail/pageGate.test.tsx	15	
+renderPage	function	finance	false	test	src/components/sections/Finance/payRunDetail/pageGate.test.tsx	33	
+drawerActions	variable	finance	false	test	src/components/sections/Finance/payRunDetail/pageGate.test.tsx	38	
+makeRun	function	finance	false	test	src/components/sections/Finance/payRunDetail/pageGate.test.tsx	40	
+makeWorkspace	function	finance	false	test	src/components/sections/Finance/payRunDetail/pageGate.test.tsx	49	
+pageProps	object	finance	false	test	src/components/sections/Finance/payRunDetail/pageGate.test.tsx	70	
+Pill	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	33	
+SecHead	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	37	
+Empty	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	47	
+Gate	interface	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	55	
+deriveGates	function	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	57	
+SummaryPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	93	
+VariationRow	interface	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	177	
+PopulationPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	179	
+ReconciliationPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	248	
+ApprovalsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	317	
+decisionChip	function	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	333	ApprovalsPanel
+AuditPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	382	
+InputsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	411	
+PolicyEvidencePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	438	
+ExceptionsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	539	
+ReleasePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	580	
+PanelStateProps	interface	finance	true		src/components/sections/Finance/payRunDetail/PanelState.tsx	14	
+PayrollPanelState	function	finance	true	component	src/components/sections/Finance/payRunDetail/PanelState.tsx	32	
 fmtCompact	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	15	
 initials	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	22	
 monthLabel	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	30	
@@ -7246,14 +7270,21 @@ CalendarChip	function	finance	true	component	src/components/sections/Finance/pay
 CHECKSUM	variable	finance	false	component,test	src/components/sections/Finance/payRunDetail/payRunDetail.test.tsx	19	
 makeRun	function	finance	false	test	src/components/sections/Finance/payRunDetail/payRunDetail.test.tsx	21	
 makeEvidence	function	finance	false	test	src/components/sections/Finance/payRunDetail/payRunDetail.test.tsx	40	
+q	function	finance	false	test	src/components/sections/Finance/payRunDetail/tabsA11y.test.tsx	10	
+hooks	variable	finance	false	test	src/components/sections/Finance/payRunDetail/tabsA11y.test.tsx	13	
+drawerActions	variable	finance	false	test	src/components/sections/Finance/payRunDetail/tabsA11y.test.tsx	27	
+noActions	object	finance	false	test	src/components/sections/Finance/payRunDetail/tabsA11y.test.tsx	28	
+makeRun	function	finance	false	test	src/components/sections/Finance/payRunDetail/tabsA11y.test.tsx	35	
+makeWorkspace	function	finance	false	test	src/components/sections/Finance/payRunDetail/tabsA11y.test.tsx	44	
+renderPage	function	finance	false	test	src/components/sections/Finance/payRunDetail/tabsA11y.test.tsx	51	
 TabKey	type	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	33	
 TAB_DEFS	array	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	35	
-PayRunDetailPage	function	finance	true	component	src/components/sections/Finance/PayRunDetailPage.tsx	46	
-HeaderActions	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	198	
-Metric	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	221	
-NextActionBanner	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	230	
-EmployeeName	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	283	
-humanizeStatus	function	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	284	
+PayRunDetailPage	function	finance	true	component	src/components/sections/Finance/PayRunDetailPage.tsx	48	
+HeaderActions	function	finance	true	component	src/components/sections/Finance/PayRunDetailPage.tsx	252	
+Metric	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	277	
+NextActionBanner	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	286	
+EmployeeName	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	339	
+humanizeStatus	function	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	340	
 severityTone	function	finance	false		src/components/sections/Finance/PayWarningResolveDialog.tsx	15	
 PayWarningResolveDialog	function	finance	true	component	src/components/sections/Finance/PayWarningResolveDialog.tsx	21	
 submit	function	finance	false		src/components/sections/Finance/PayWarningResolveDialog.tsx	33	PayWarningResolveDialog
@@ -11730,6 +11761,11 @@ hsThreshold	function	payroll	false	test	tests/unit/payroll-calc.test.js	35
 calcPayslip	function	payroll	false	test	tests/unit/payroll-calc.test.js	40	
 pf	function	payroll	false	test	tests/unit/payrollControlCenter.test.ts	150	
 d	function	payroll	false	test	tests/unit/payrollRunCalendar.test.ts	23	
+P_START	variable	payroll	false	test	tests/unit/payrollSourceOverlap.test.ts	13	
+P_END	variable	payroll	false	test	tests/unit/payrollSourceOverlap.test.ts	14	
+FakeQ	interface	payroll	false	test	tests/unit/payrollSourceOverlap.test.ts	66	
+lte	method	payroll	false	test	tests/unit/payrollSourceOverlap.test.ts	68	fake
+gte	method	payroll	false	test	tests/unit/payrollSourceOverlap.test.ts	69	fake
 WEEKS	variable	payroll	false	test	tests/unit/payrollStatutory.test.ts	30	
 cls	function	payroll	false	test	tests/unit/payrollStatutory.test.ts	36	
 ALL_CLASSES	array	payroll	false	test	tests/unit/payrollStatutory.test.ts	58	
@@ -12144,6 +12180,11 @@ PayrollRunRegisterItem	interface	payroll	true		types/payrollControlCenter.ts	126
 PayrollNextRun	interface	payroll	true		types/payrollControlCenter.ts	147	
 PayrollRunRegisterPage	interface	payroll	true		types/payrollControlCenter.ts	165	
 PayrollControlCenterResponse	interface	payroll	true		types/payrollControlCenter.ts	172	
+PayrollApiErrorBody	interface	payroll	true		types/payrollErrors.ts	22	
+PayrollApiErrorEnvelope	interface	payroll	true		types/payrollErrors.ts	37	
+PAYROLL_ERROR_FALLBACK_CODE	variable	payroll	true		types/payrollErrors.ts	45	
+PAYROLL_VALIDATION_CODE	variable	payroll	true		types/payrollErrors.ts	47	
+extractPayrollErrorCode	function	payroll	true		types/payrollErrors.ts	55	
 PayrollFindingKind	type	payroll	true		types/payrollFindings.ts	10	
 PayrollFindingQueueSeverity	type	payroll	true		types/payrollFindings.ts	14	
 PayrollFindingQueueState	type	payroll	true		types/payrollFindings.ts	17	
@@ -12251,6 +12292,8 @@ PayrollRunViewUpdateRequest	interface	payroll	true		types/payrollRuns.ts	146
 PayrollRunCalendarInstance	interface	payroll	true		types/payrollRuns.ts	160	
 PayrollRunCalendarRequest	interface	payroll	true		types/payrollRuns.ts	169	
 PayrollRunCalendarResult	interface	payroll	true		types/payrollRuns.ts	175	
+PayrollRunActions	interface	payroll	true		types/payrollRuns.ts	186	
+PayrollRunCreateAttestations	interface	payroll	true		types/payrollRuns.ts	211	
 Database	interface	platform	true		types/supabase.ts	38	
 Tables	type	platform	false		types/supabase.ts	125	
 TableRow	type	platform	true		types/supabase.ts	128	

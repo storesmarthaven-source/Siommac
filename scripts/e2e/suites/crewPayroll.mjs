@@ -47,6 +47,8 @@ export default async function run(h) {
     }
     try { await sb.from('hr_crew_movements').delete().in('employee_id', [U.A, U.B, U.C]); } catch {}
     try { await sb.from('hr_crew_assignments').delete().in('employee_id', [U.A, U.B, U.C]); } catch {}
+    try { await sb.from('hr_overtime_entries').delete().in('employee_id', [U.A, U.B, U.C]); } catch {}
+    try { await sb.from('hr_employee_statutory_profiles').delete().in('employee_id', [U.A, U.B, U.C]); } catch {}
     try { await sb.from('app_events').delete().in('actor_user_id', Object.values(U)); } catch {}
     try { await sb.from('audit_logs').delete().in('user_id', Object.values(U)); } catch {}
     for (const a of [ids.assetA, ids.assetB]) { if (a) { try { await sb.from('ops_assets').delete().eq('id', a); } catch {} } }
@@ -195,10 +197,10 @@ export default async function run(h) {
 
   // Run creation through the NORMAL HTTP route with the WP-3 creation
   // attestations (all three literally true, strict object) — no RPC shortcut.
-  async function createRunFixture({ requestKey, payGroupId }) {
+  async function createRunFixture({ requestKey, payGroupId, period = MAY }) {
     const cr = await api('finance/payroll/runs/create', T.mgr, {
       idempotencyKey: requestKey, runType: 'scheduled', payGroupId,
-      periodStart: MAY.start, periodEnd: MAY.end, payFrequency: 'monthly', payDate: MAY.end,
+      periodStart: period.start, periodEnd: period.end, payFrequency: 'monthly', payDate: period.end,
       attestations: {
         purposeScopeAndDatesReviewed: true,
         preflightLimitationsAcknowledged: true,
@@ -273,6 +275,9 @@ export default async function run(h) {
     expect(b.missingPaymentDestination.count === 2
       && JSON.stringify(b.missingPaymentDestination.employeeIds) === JSON.stringify([U.A, U.C].sort()),
       `CPE-22 missing-payment-destination = [A,C] (got ${JSON.stringify(b.missingPaymentDestination)})`);
+    expect(b.incompleteStatutoryProfile.count === 2
+      && JSON.stringify(b.incompleteStatutoryProfile.employeeIds) === JSON.stringify([U.A, U.C].sort()),
+      `CPE-21 incomplete-statutory-profile = [A,C] pre-verification (got ${JSON.stringify(b.incompleteStatutoryProfile)})`);
     expect(r.body.data.sources.length === 6, 'the six standard sources are untouched');
   });
 
@@ -324,6 +329,125 @@ export default async function run(h) {
     const ev2 = await api('finance/payroll/runs/policy-evidence', T.mgr, { runId: stdRunId });
     ok(ev2, `std policy evidence: ${ev2.body.message}`);
     expect(ev2.body.data.crew === null, 'crew null in standard policy evidence');
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Crew Payroll — CP7 calculation evidence (qualifying days / findings)');
+  // ═══════════════════════════════════════════════════════════════════════════
+  // June run on the crew group. A: verified statutory profile + June assignment on
+  // assetA + movements mobilize Jun-10 08:00Z, embark Jun-10 23:00Z (same local
+  // day — no double count), disembark Jun-13 02:00Z (cross-midnight; local POS
+  // date Jun-12) ⇒ qualifying dates {10,11,12} = 3 (CPE-20). A also has a
+  // SUBMITTED (unapproved) June OT entry ⇒ advisory finding, pay untouched
+  // (CPE-19/24). C is crew via the May-15→Jun-15 assetB assignment but has NO
+  // statutory profile ⇒ blocked, no line (CPE-21). B is a plain member ⇒ normal
+  // line, no crew evidence.
+  const JUN = { start: '2026-06-01', end: '2026-06-30' };
+
+  await test('CP7-setup — profile, June assignment, movements, unapproved OT', async () => {
+    const prof = await sb.from('hr_employee_statutory_profiles').insert({
+      employee_id: U.A, jurisdiction: 'TT', nis_number: `NIS${TAG.slice(-7)}`,
+      nis_status: 'verified', nis_applicable: true,
+    });
+    expect(!prof.error, `A statutory profile: ${prof.error?.message}`);
+
+    const aAsg = await api('hr/crew/assignments/create', T.mgr, {
+      employeeId: U.A, payGroupId: ids.pgId, assetId: ids.assetA,
+      effectiveFrom: JUN.start, effectiveTo: JUN.end, status: 'active',
+    });
+    ok(aAsg, `A June assignment: ${aAsg.body.message}`); ids.asgIds.push(aAsg.body.data.id);
+
+    const movs = [
+      { movementType: 'mobilize',  occurredAt: '2026-06-10T08:00:00Z', ref: `SRC-${TAG}-J1` },
+      { movementType: 'embark',    occurredAt: '2026-06-10T23:00:00Z', ref: `SRC-${TAG}-J2` },
+      { movementType: 'disembark', occurredAt: '2026-06-13T02:00:00Z', ref: `SRC-${TAG}-J3` },
+    ];
+    for (const m of movs) {
+      const r = await api('hr/crew/movements/record', T.mgr, {
+        employeeId: U.A, movementType: m.movementType, occurredAt: m.occurredAt,
+        assetId: ids.assetA, sourceSystem: 'marine_logistics', sourceReference: m.ref,
+      });
+      ok(r, `A movement ${m.movementType}: ${r.body.message}`);
+      ids.movIds.push(r.body.data.movement.id);
+    }
+
+    const ot = await sb.from('hr_overtime_entries').insert({
+      employee_id: U.A, work_date: '2026-06-15', hours: 4, multiplier: 1.5,
+      status: 'submitted',
+    }).select('id').single();
+    expect(!ot.error, `A submitted OT: ${ot.error?.message}`);
+    ids.otId = ot.data.id;
+  });
+
+  await test('CP7 lock+calc — CPE-19/20/21/24/26 evidence and findings', async () => {
+    const runId = await createRunFixture({ requestKey: `crw7-run-${TAG}`, payGroupId: ids.pgId, period: JUN });
+    ids.cp7RunId = runId;
+    const lk = await api('finance/payroll/runs/lock-inputs', T.mgr,
+      { id: runId, idempotencyKey: `crw7-lock-${TAG}` });
+    ok(lk, `lock: ${lk.body.message}`);
+    const calc = await api('finance/payroll/runs/calculate', T.mgr,
+      { id: runId, idempotencyKey: `crw7-calc-${TAG}` });
+    ok(calc, `calculate: ${calc.body.message}`);
+    expect(calc.body.data.status === 'calculated', `calculated (got ${calc.body.data.status})`);
+
+    const lines = await api('finance/payroll/run-lines/list', T.mgr, { runId });
+    ok(lines, `run-lines: ${lines.body.message}`);
+    const byEmp = new Map(lines.body.data.map(l => [l.employeeId, l]));
+    // CPE-21: crew employee C without a verified profile gets NO line.
+    expect(!byEmp.has(U.C), 'C (incomplete statutory profile) has NO line');
+    expect(byEmp.has(U.A) && byEmp.has(U.B), 'A and B have lines');
+
+    // CPE-20/26: qualifying-day evidence on A's line — deduped + cross-midnight safe.
+    const crew = byEmp.get(U.A).breakdown.crew;
+    expect(!!crew, 'A line carries breakdown.crew');
+    expect(crew.qualifyingDays === 3
+      && JSON.stringify(crew.qualifyingDates) === JSON.stringify(['2026-06-10', '2026-06-11', '2026-06-12']),
+      `CPE-20 qualifying dates {10,11,12} (got ${JSON.stringify(crew.qualifyingDates)})`);
+    expect(crew.movementIds.length === 3 && crew.dayBoundary === 'offshore_day'
+      && crew.policyType === 'offshore_rotation', 'CPE-26 evidence fields');
+    // CPE-23 (allocation reconciliation): every qualifying day attributed to a
+    // costing dimension row; totals reconcile to the line.
+    const allocDays = crew.allocations.reduce((s, a) => s + a.days, 0);
+    expect(allocDays === crew.qualifyingDays
+      && crew.allocations.length === 1 && crew.allocations[0].assetId === ids.assetA,
+      `CPE-23 allocation days reconcile (got ${JSON.stringify(crew.allocations)})`);
+    // B is not crew: no crew evidence on their line.
+    expect(byEmp.get(U.B).breakdown.crew === undefined, 'B line has NO crew evidence');
+
+    // CPE-24: the advisory OT finding did NOT suppress earned pay — full salary.
+    expect(Number(byEmp.get(U.A).gross) === 9000, `A gross 9000 (got ${byEmp.get(U.A).gross})`);
+
+    // CPE-19/21/28: exact finding rows from the atomic publish.
+    const verId = calc.body.data.currentCalculationVersionId
+      ?? (await sb.from('finance_payroll_runs').select('current_calculation_version_id').eq('id', runId).single()).data.current_calculation_version_id;
+    const f = await sb.from('finance_payroll_control_findings')
+      .select('finding_type, severity, domain, employee_id, state')
+      .eq('run_id', runId).eq('calculation_version_id', verId)
+      .like('finding_type', 'crew_%');
+    expect(!f.error, `findings: ${f.error?.message}`);
+    const ot = f.data.filter(x => x.finding_type === 'crew_unapproved_overtime_excluded');
+    const st = f.data.filter(x => x.finding_type === 'crew_statutory_profile_incomplete');
+    expect(ot.length === 1 && ot[0].employee_id === U.A && ot[0].severity === 'warning' && ot[0].domain === 'input',
+      `CPE-19 exactly 1 advisory OT finding for A (got ${JSON.stringify(ot)})`);
+    expect(st.length === 1 && st[0].employee_id === U.C && st[0].severity === 'blocker' && st[0].domain === 'statutory',
+      `CPE-21 exactly 1 statutory blocker for C (got ${JSON.stringify(st)})`);
+  });
+
+  await test('CPE-25 — movement recorded AFTER lock cannot alter the calculation', async () => {
+    const late = await api('hr/crew/movements/record', T.mgr, {
+      employeeId: U.A, movementType: 'embark', occurredAt: '2026-06-20T06:00:00Z',
+      assetId: ids.assetA, sourceSystem: 'marine_logistics', sourceReference: `SRC-${TAG}-J4`,
+    });
+    ok(late, `late movement: ${late.body.message}`); ids.movIds.push(late.body.data.movement.id);
+
+    const recalc = await api('finance/payroll/runs/calculate', T.mgr,
+      { id: ids.cp7RunId, idempotencyKey: `crw7-recalc-${TAG}` });
+    ok(recalc, `recalculate: ${recalc.body.message}`);
+    const lines = await api('finance/payroll/run-lines/list', T.mgr, { runId: ids.cp7RunId });
+    ok(lines, `run-lines: ${lines.body.message}`);
+    const crew = lines.body.data.find(l => l.employeeId === U.A).breakdown.crew;
+    expect(crew.qualifyingDays === 3 && crew.movementIds.length === 3,
+      `frozen snapshot unchanged: still 3 qualifying days / 3 movements (got ${crew.qualifyingDays}/${crew.movementIds.length})`);
   });
 
   await test('CPE-15 — locked run keeps its pinned checksum after a later version activates', async () => {

@@ -45,8 +45,10 @@ import { payrollExportChecksum } from './payroll/exportContent';
 import { payrollRpcHttpError } from './payroll/rpcError';
 import {
   buildCrewRunEvidence,
+  prepareCrewCalculation,
   resolveCrewCapability,
   resolvePayGroupPolicyVersionId,
+  type CrewCalculationPrep,
   type CrewRunEvidence,
 } from './payroll/crewRun';
 
@@ -1248,8 +1250,16 @@ export async function lockInputs(
   // ── 4. Build input rows ───────────────────────────────────────────────────
   const inputRows: Record<string, unknown>[] = [];
 
+  // CP7/CPE-21 (§14.8): crew employees without a complete verified statutory
+  // profile are EXCLUDED at lock (frozen in the crew evidence block) — the
+  // publish invariant requires the calculated population to equal the snapshot
+  // population, so rejection happens here, never mid-calculation.
+  const crewStatutoryExcluded = new Set<string>(
+    crewEvidence?.blockers.incompleteStatutoryProfile?.employeeIds ?? []);
+
   // Delete any prior inputs (allows re-lock from draft — shouldn't happen but safe)
   for (const emp of empList) {
+    if (crewStatutoryExcluded.has(emp.id)) continue;
     // Base pay
     //  • salaried: monthly salary prorated to the run's pay frequency (annual ÷ pay periods).
     //  • hourly:   approved-timesheet worked hours × hourly rate (0 until a timesheet is approved).
@@ -1403,12 +1413,19 @@ export async function lockInputs(
     .filter(row => row['source_type'] === 'pay_item').length - loanInstallmentCount;
   const includedOvertimeCount = inputRows
     .filter(row => row['source_type'] === 'overtime').length;
+  const populatedEmployeeCount = new Set(inputRows.map(row => String(row['employee_id']))).size;
+  if (populatedEmployeeCount === 0) {
+    throw Object.assign(
+      new Error('crew.no_eligible_employees: every crew employee in this pay group is excluded (incomplete statutory profiles). Complete HR verification before locking inputs.'),
+      { status: 422 },
+    );
+  }
   const published = await publishInputSnapshot({
     runId,
     actorId,
     idempotencyKey,
     inputs: inputRows,
-    employeeCount: empList.length,
+    employeeCount: populatedEmployeeCount,
     sourceSummary: {
       periodStart,
       periodEnd,
@@ -1519,14 +1536,25 @@ export async function calculateRun(
   // review/correction conflicts are materialized into findings by the atomic calc
   // publish RPC (finance_payroll_calculation_publish_tx), not here.
   const excludedEmployees = new Set<string>();
+  // CP7: frozen crew evidence from the SAME snapshot — null for non-crew runs.
+  // All crew qualifying-day/allocation evidence and findings derive exclusively
+  // from the frozen id sets (movements are immutable; corrections are new rows),
+  // so nothing recorded after lock can alter this calculation (CPE-25).
+  let crewCalc: CrewCalculationPrep | null = null;
   if (run.currentInputSnapshotId) {
     const snapRow = (await sb.from('finance_payroll_input_snapshots')
       .select('source_summary')
       .eq('id', run.currentInputSnapshotId)
       .single()).data;
-    const summary = snapRow?.source_summary as { excludedEmployees?: { employeeId?: string }[] } | null | undefined;
+    const summary = snapRow?.source_summary as {
+      excludedEmployees?: { employeeId?: string }[];
+      crew?: CrewRunEvidence;
+    } | null | undefined;
     for (const ex of (summary?.excludedEmployees ?? [])) {
       if (ex.employeeId) excludedEmployees.add(ex.employeeId);
+    }
+    if (summary?.crew) {
+      crewCalc = await prepareCrewCalculation(summary.crew, run.periodStart, run.periodEnd);
     }
   }
 
@@ -1551,6 +1579,7 @@ export async function calculateRun(
     // ── NIS checks (§13) ────────────────────────────────────────────────────
     const profile = profileMap.get(empId) ?? null;   // batch-loaded (no per-employee query)
     const nisApplicable = profile ? profile.nisApplicable : true; // default: applicable
+
 
     if (nisApplicable) {
       // Warning: missing NIS number
@@ -1746,6 +1775,11 @@ export async function calculateRun(
         nisEmployerWeekly: result.nisEmployerWeekly,
         nisContributionPeriods,
         statutoryVersionId: run.statutoryVersionId,
+        // CP7 (CPE-26): per-line crew evidence — qualifying dates, frozen source
+        // ids and costing-dimension allocation. Absent on non-crew employees.
+        ...(crewCalc?.perEmployee.has(empId)
+          ? { crew: crewCalc.perEmployee.get(empId) }
+          : {}),
       },
       department_id:           null, // resolved from app_users in a later phase
       cost_center_id:          null,
@@ -1761,6 +1795,44 @@ export async function calculateRun(
     totalDeductions  += result.nisEmployee + result.healthSurcharge + result.paye + result.voluntaryDeductions;
     totalNet         += result.net;
     totalNisEmployer += result.nisEmployer;
+  }
+
+  // ── CP7 §14.8 crew statutory gate (CPE-21): employees REJECTED at input lock
+  // (frozen exclusion — they have no snapshot lines, so the publish population
+  // invariant holds) are surfaced as HR-owned BLOCKER findings here.
+  if (crewCalc) {
+    for (const empId of crewCalc.statutoryExcludedIds) {
+      warningRows.push({
+        run_id:       runId,
+        employee_id:  empId,
+        warning_type: 'crew_statutory_profile_incomplete',
+        severity:     'blocker',
+        message:      `Crew employee ${empId} has no complete verified TT statutory profile (PAYE/NIS/Health Surcharge) — excluded at input lock until HR completes verification.`,
+        metadata:     { excludedAtLock: true },
+      });
+    }
+  }
+
+  // ── CP7 (CPE-19/24): unapproved OT excluded at lock → ADVISORY review finding
+  // from the frozen evidence, one per affected crew employee. Advisory findings
+  // never alter a computed line — earned pay is never auto-suppressed (§14.5).
+  if (crewCalc && crewCalc.excludedUnapprovedOvertime.count > 0) {
+    const byEmp = new Map<string, string[]>();
+    for (const e of crewCalc.excludedUnapprovedOvertime.entries) {
+      const list = byEmp.get(e.employeeId) ?? [];
+      list.push(e.id);
+      byEmp.set(e.employeeId, list);
+    }
+    for (const [empId, entryIds] of byEmp) {
+      warningRows.push({
+        run_id:       runId,
+        employee_id:  empId,
+        warning_type: 'crew_unapproved_overtime_excluded',
+        severity:     'warning',
+        message:      `${entryIds.length} submitted overtime entr${entryIds.length === 1 ? 'y' : 'ies'} for crew employee ${empId} were not approved by input lock and are excluded from this run. Approve and recalculate, or process in the next run.`,
+        metadata:     { entryIds },
+      });
+    }
   }
 
   // ── Atomic commit (P3: includes event + audit in the same transaction) ───

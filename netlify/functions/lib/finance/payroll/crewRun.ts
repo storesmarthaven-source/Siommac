@@ -38,6 +38,13 @@ export interface CrewMovementBlocker {
   count: number;
   movementIds: string[];
 }
+/** CP7 (CPE-19): submitted-but-unapproved overtime in the period for crew
+ *  employees — excluded from pay by construction (lock only takes approved OT);
+ *  frozen here so calculation can materialize the review finding from evidence. */
+export interface CrewExcludedOvertime {
+  count: number;
+  entries: Array<{ id: string; employeeId: string; workDate: string }>;
+}
 
 /** Typed crew evidence — identical shape for pre-lock preflight and the frozen snapshot. */
 export interface CrewRunEvidence {
@@ -56,6 +63,8 @@ export interface CrewRunEvidence {
   /** Frozen source ids (sorted — deterministic snapshot content). */
   assignmentIds: string[];
   movementIds: string[];
+  /** CP7: unapproved OT excluded at lock (absent on pre-CP7 snapshots). */
+  excludedUnapprovedOvertime?: CrewExcludedOvertime;
   blockers: {
     /** CPE-16: active assignment (roster) but no movement recorded in the period. */
     rosterWithoutMovement: CrewEmployeeBlocker;
@@ -65,6 +74,10 @@ export interface CrewRunEvidence {
     overlappingAssignments: CrewEmployeeBlocker;
     /** CPE-22: crew employee without an active primary TTD payment destination. */
     missingPaymentDestination: CrewEmployeeBlocker;
+    /** CP7/CPE-21 (§14.8): crew employee without a complete VERIFIED TT statutory
+     *  profile — rejected (excluded at input lock), never accepted-and-ignored.
+     *  Absent on pre-CP7 snapshots. */
+    incompleteStatutoryProfile?: CrewEmployeeBlocker;
   };
 }
 
@@ -253,6 +266,41 @@ export async function buildCrewRunEvidence(
   }
   const missingPaymentDestination = crewEmployeeIds.filter(id => !bankedIds.has(id));
 
+  // CP7/CPE-21 (§14.8): only crew employees with a complete VERIFIED local
+  // statutory profile pass; the rest are excluded at input lock (frozen here).
+  const verifiedIds = new Set<string>();
+  for (const ids of chunk(crewEmployeeIds, 300)) {
+    if (ids.length === 0) continue;
+    const { data, error } = await sb.from('hr_employee_statutory_profiles')
+      .select('employee_id, nis_number, nis_status')
+      .eq('jurisdiction', 'TT')
+      .in('employee_id', ids);
+    if (error) throw httpError('buildCrewRunEvidence/statutory: ' + error.message);
+    for (const r of (data ?? []) as { employee_id: string; nis_number: string | null; nis_status: string }[]) {
+      if (r.nis_number && r.nis_status === 'verified') verifiedIds.add(r.employee_id);
+    }
+  }
+  const incompleteStatutoryProfile = crewEmployeeIds.filter(id => !verifiedIds.has(id));
+
+  // CP7 (CPE-19): submitted-but-unapproved OT in the period for crew employees.
+  // Lock only ingests APPROVED entries, so these are excluded from pay by
+  // construction — frozen as evidence so calc can raise the review finding.
+  const excludedOt: CrewExcludedOvertime['entries'] = [];
+  for (const ids of chunk(crewEmployeeIds, 300)) {
+    if (ids.length === 0) continue;
+    const { data, error } = await sb.from('hr_overtime_entries')
+      .select('id, employee_id, work_date')
+      .eq('status', 'submitted')
+      .gte('work_date', periodStart)
+      .lte('work_date', periodEnd)
+      .in('employee_id', ids);
+    if (error) throw httpError('buildCrewRunEvidence/unapproved-ot: ' + error.message);
+    for (const r of (data ?? []) as { id: string; employee_id: string; work_date: string }[]) {
+      excludedOt.push({ id: r.id, employeeId: r.employee_id, workDate: r.work_date });
+    }
+  }
+  excludedOt.sort((a, b) => a.id.localeCompare(b.id));
+
   // Reconciliation totals — approved time and leave presence for the crew population.
   const timedIds = new Set<string>();
   const leaveIds = new Set<string>();
@@ -295,6 +343,7 @@ export async function buildCrewRunEvidence(
     approvedLeaveEmployeeCount: leaveIds.size,
     assignmentIds: assignments.map(a => a.id).sort(),
     movementIds: movements.map(m => m.id).sort(),
+    excludedUnapprovedOvertime: { count: excludedOt.length, entries: excludedOt },
     blockers: {
       rosterWithoutMovement: {
         count: rosterWithoutMovement.length,
@@ -312,6 +361,226 @@ export async function buildCrewRunEvidence(
         count: missingPaymentDestination.length,
         employeeIds: missingPaymentDestination,
       },
+      incompleteStatutoryProfile: {
+        count: incompleteStatutoryProfile.length,
+        employeeIds: incompleteStatutoryProfile,
+      },
     },
+  };
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// CP7 — calculation-stage crew evidence (spec §14.5, CPE-19/20/21/23/25/26)
+// ═════════════════════════════════════════════════════════════════════════════
+// Calculation reads ONLY the ids frozen in the input snapshot's crew block.
+// Movements are immutable (corrections create NEW rows), so re-reading a frozen
+// id set is reading frozen data: a movement or correction recorded AFTER lock is
+// not in the set and cannot change the result (CPE-25).
+
+interface FrozenAssignmentRow {
+  id: string;
+  employee_id: string;
+  client_id: string | null;
+  contract_id: string | null;
+  asset_id: string | null;
+  work_order_id: string | null;
+  cost_center: string | null;
+  effective_from: string;
+  effective_to: string | null;
+}
+interface FrozenMovementRow {
+  id: string;
+  employee_id: string;
+  movement_type: string;
+  occurred_at: string;
+  operational_timezone: string;
+  asset_id: string | null;
+}
+
+/** Per-assignment day attribution — the costing dimensions ride the assignment. */
+export interface CrewLineAllocation {
+  assignmentId: string;
+  clientId: string | null;
+  contractId: string | null;
+  assetId: string | null;
+  workOrderId: string | null;
+  costCenter: string | null;
+  days: number;
+}
+
+/** Per-line crew calculation evidence, persisted in the line's breakdown.crew. */
+export interface CrewLineEvidence {
+  policyType: string;
+  dayBoundary: string | null;
+  qualifyingDays: number;
+  qualifyingDates: string[];
+  movementIds: string[];
+  assignmentIds: string[];
+  allocations: CrewLineAllocation[];
+}
+
+export interface CrewCalculationPrep {
+  /** Employees holding a frozen crew assignment — subject to the §14.8 statutory gate. */
+  expectedCrewIds: Set<string>;
+  /** Per-crew-employee qualifying-day evidence (present even at 0 days). */
+  perEmployee: Map<string, CrewLineEvidence>;
+  excludedUnapprovedOvertime: CrewExcludedOvertime;
+  /** Crew employees excluded at lock for an incomplete statutory profile (CPE-21). */
+  statutoryExcludedIds: string[];
+}
+
+/** Local calendar date of an instant in an IANA timezone (movement's operational
+ *  timezone — the §14.4 offshore-day/operational-timezone attribution rule). */
+function localDate(isoInstant: string, timeZone: string): string {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(new Date(isoInstant));
+  } catch {
+    // Unknown tz string on an imported row — fall back to UTC rather than fail the run.
+    return isoInstant.slice(0, 10);
+  }
+}
+
+function eachDateInclusive(from: string, to: string): string[] {
+  const out: string[] = [];
+  const d = new Date(from + 'T00:00:00Z');
+  const end = new Date(to + 'T00:00:00Z');
+  while (d <= end) {
+    out.push(d.toISOString().slice(0, 10));
+    d.setUTCDate(d.getUTCDate() + 1);
+  }
+  return out;
+}
+
+/**
+ * Derive one employee's qualifying dates from their frozen movements.
+ * embark/mobilize OPEN presence, disembark/demobilize CLOSE it, transfer keeps
+ * presence continuous. Dates are attributed in each movement's operational
+ * timezone and collected into a SET — a mobilize + embark on the same day, or a
+ * cross-midnight closing movement, can never double-count a day (CPE-20). An
+ * interval still open at period end clamps to the period end.
+ */
+export function deriveQualifyingDates(
+  movements: FrozenMovementRow[],
+  periodStart: string,
+  periodEnd: string,
+): Set<string> {
+  const sorted = [...movements].sort((a, b) =>
+    a.occurred_at.localeCompare(b.occurred_at) || a.id.localeCompare(b.id));
+  const dates = new Set<string>();
+  let openFrom: string | null = null;
+  const add = (from: string, to: string): void => {
+    const lo = from < periodStart ? periodStart : from;
+    const hi = to > periodEnd ? periodEnd : to;
+    if (lo > hi) return;
+    for (const d of eachDateInclusive(lo, hi)) dates.add(d);
+  };
+  for (const m of sorted) {
+    const day = localDate(m.occurred_at, m.operational_timezone);
+    if (m.movement_type === 'embark' || m.movement_type === 'mobilize') {
+      if (openFrom === null) openFrom = day;      // re-open on same presence = no-op
+    } else if (m.movement_type === 'transfer') {
+      if (openFrom === null) openFrom = day;      // presence continues across assets
+    } else { // disembark | demobilize
+      if (openFrom !== null) {
+        add(openFrom, day);
+        openFrom = null;
+      }
+    }
+  }
+  if (openFrom !== null) add(openFrom, periodEnd); // still aboard at period end
+  return dates;
+}
+
+/**
+ * Build the calculation-stage crew prep from a snapshot's frozen crew block.
+ * Returns null when the snapshot carries no crew evidence (non-crew run).
+ */
+export async function prepareCrewCalculation(
+  frozen: CrewRunEvidence,
+  periodStart: string,
+  periodEnd: string,
+): Promise<CrewCalculationPrep> {
+  const loadByIds = async <T>(table: string, cols: string, ids: string[]): Promise<T[]> => {
+    const out: T[] = [];
+    for (const part of chunk(ids, 300)) {
+      if (part.length === 0) continue;
+      const { data, error } = await sb.from(table).select(cols).in('id', part);
+      if (error) throw httpError(`prepareCrewCalculation/${table}: ` + error.message);
+      out.push(...((data ?? []) as T[]));
+    }
+    return out;
+  };
+  const [assignments, movements] = await Promise.all([
+    loadByIds<FrozenAssignmentRow>('hr_crew_assignments',
+      'id, employee_id, client_id, contract_id, asset_id, work_order_id, cost_center, effective_from, effective_to',
+      frozen.assignmentIds),
+    loadByIds<FrozenMovementRow>('hr_crew_movements',
+      'id, employee_id, movement_type, occurred_at, operational_timezone, asset_id',
+      frozen.movementIds),
+  ]);
+
+  const byEmployeeAsg = new Map<string, FrozenAssignmentRow[]>();
+  for (const a of assignments) {
+    const list = byEmployeeAsg.get(a.employee_id) ?? [];
+    list.push(a);
+    byEmployeeAsg.set(a.employee_id, list);
+  }
+  const byEmployeeMov = new Map<string, FrozenMovementRow[]>();
+  for (const m of movements) {
+    const list = byEmployeeMov.get(m.employee_id) ?? [];
+    list.push(m);
+    byEmployeeMov.set(m.employee_id, list);
+  }
+
+  const perEmployee = new Map<string, CrewLineEvidence>();
+  for (const [employeeId, asgList] of byEmployeeAsg) {
+    const movList = byEmployeeMov.get(employeeId) ?? [];
+    const rawDates = deriveQualifyingDates(movList, periodStart, periodEnd);
+    // Roster ∧ movement: a date qualifies only when a frozen assignment covers it.
+    const covered = [...rawDates].filter(d => asgList.some(a =>
+      a.effective_from <= d && (a.effective_to === null || a.effective_to >= d))).sort();
+
+    // Attribute each qualifying date to the covering assignment (latest
+    // effective_from wins when several cover — the most specific roster row).
+    const allocationDays = new Map<string, number>();
+    for (const d of covered) {
+      const cover = asgList
+        .filter(a => a.effective_from <= d && (a.effective_to === null || a.effective_to >= d))
+        .sort((a, b) => b.effective_from.localeCompare(a.effective_from) || a.id.localeCompare(b.id))[0]!;
+      allocationDays.set(cover.id, (allocationDays.get(cover.id) ?? 0) + 1);
+    }
+    const allocations: CrewLineAllocation[] = [...allocationDays.entries()]
+      .map(([assignmentId, days]) => {
+        const a = asgList.find(x => x.id === assignmentId)!;
+        return {
+          assignmentId,
+          clientId: a.client_id,
+          contractId: a.contract_id,
+          assetId: a.asset_id,
+          workOrderId: a.work_order_id,
+          costCenter: a.cost_center,
+          days,
+        };
+      })
+      .sort((a, b) => a.assignmentId.localeCompare(b.assignmentId));
+
+    perEmployee.set(employeeId, {
+      policyType: frozen.policyType,
+      dayBoundary: frozen.dayBoundary,
+      qualifyingDays: covered.length,
+      qualifyingDates: covered,
+      movementIds: movList.map(m => m.id).sort(),
+      assignmentIds: asgList.map(a => a.id).sort(),
+      allocations,
+    });
+  }
+
+  return {
+    expectedCrewIds: new Set(byEmployeeAsg.keys()),
+    perEmployee,
+    excludedUnapprovedOvertime: frozen.excludedUnapprovedOvertime ?? { count: 0, entries: [] },
+    statutoryExcludedIds: frozen.blockers.incompleteStatutoryProfile?.employeeIds ?? [],
   };
 }

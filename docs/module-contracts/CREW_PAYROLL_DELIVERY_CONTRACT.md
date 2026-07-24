@@ -1,8 +1,31 @@
 # Crew Payroll — Delivery Contract
 
-**Slice states (2026-07-23):** CP1 ✅ · CP2 ✅ applied · CP3 ✅ applied · CP4 ✅ Live-verified ·
-CP5 ✅ Live-verified · CP6 ✅ Live-verified (crewPayroll E2E 12/12) · CP7–CP9 Designed.
+**Slice states (2026-07-24):** CP1 ✅ · CP2 ✅ applied · CP3 ✅ applied · CP4 ✅ Live-verified ·
+CP5 ✅ Live-verified · CP6 ✅ Live-verified · **CP7a ✅ Live-verified** (crewPayroll E2E 15/15
+twice; financePayroll 137/137 regression) · CP7b/CP8/CP9 Designed.
 Nothing below is Implemented until its slice lands + is Live-verified + Regression-verified.
+
+**CP7a scope (delivered) vs CP7b (deferred, needs a locked rate decision):**
+CP7a = calculation-stage crew EVIDENCE + findings, no earnings change: (1) qualifying-day
+derivation from the FROZEN movement/assignment id sets only (movements are immutable; a
+movement or correction recorded after lock is not in the set — CPE-25), with operational-
+timezone date attribution and set-semantics dedupe (mobilize+embark same day, cross-midnight
+disembark — CPE-20); (2) the §14.8 statutory gate enforced AT INPUT LOCK (frozen
+`blockers.incompleteStatutoryProfile`; excluded crew employees get no snapshot lines, so the
+publish population invariant holds) surfaced as an HR-owned BLOCKER finding
+`crew_statutory_profile_incomplete` (CPE-21); (3) unapproved OT frozen at lock as
+`excludedUnapprovedOvertime` and materialized as the ADVISORY finding
+`crew_unapproved_overtime_excluded` — advisory findings never alter a computed line (CPE-19/24);
+(4) per-line evidence in the immutable version line's `breakdown.crew` (qualifying dates, frozen
+source ids, day boundary, per-assignment client/contract/asset/work-order/cost-centre allocation
+whose day totals reconcile — CPE-23 day-level/CPE-26).
+CP7b = the `per_qualifying_day` EARNINGS basis: expanding the component
+calculation-basis/eligibility-source allowlists (migration), a TTD day-rate model
+(policy_band vs employee_contract — **needs a user-locked decision**, like the client-FK
+decision), engine + tests, and currency-level client/asset/work-order↔GL reconciliation.
+No dormant rate inputs ship before that decision. A real HSE/medical/competency feed into
+findings is likewise deferred (spec says "may"); CPE-24's invariant is proven via the advisory
+OT finding leaving pay untouched.
 
 **M5 decision (CP6):** run-LEVEL crew evidence is frozen as a typed `crew` block inside the
 input snapshot's `source_summary` (immutable with the snapshot; surfaced by policy-evidence,
