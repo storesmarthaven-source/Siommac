@@ -10,6 +10,10 @@
  *
  * Permission: finance.payroll.view_own (already on `employee` role).
  *
+ * Styling: scoped `.mps-*` in the payroll-enterprise look (matches the Runs /
+ * Exceptions / Reports re-skin) — no borrowed HR `obx-*` / `hr-offboarding`
+ * classes (those live in HR's onboardingCase.css, not loaded in Finance).
+ *
  * Privacy rules (matching §8.4 of spec):
  *   - Employee sees ONLY their own payslips.
  *   - Download is audited server-side via app_events.
@@ -20,10 +24,9 @@ import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { useQuery } from '@tanstack/preact-query';
 import { dialog } from '@lib/dialog';
-import { PageHeader, EmptyState } from '@ui';
 import { financePayrollApi, type Payslip } from '@api/finance/payroll';
-import { fmtDate, humanize, statusTone } from './financeShared';
-import './finance.css';
+import { fmtDate } from './financeShared';
+import './myPayslips.css';
 
 // ── Query key ─────────────────────────────────────────────────────────────────
 
@@ -39,59 +42,77 @@ export function MyPayslipsOverview(): VNode {
 
   const payslips        = payslipsQ.data ?? [];
   const latestGenerated = payslips[0]?.generatedAt ?? null;
-
-  const STAT_ROW = [
-    { label: 'Total payslips',   val: String(payslips.length) },
-    { label: 'Latest generated', val: latestGenerated ? fmtDate(latestGenerated) : '—' },
-  ];
+  const readyCount      = payslips.filter(p => Boolean(p.filePath)).length;
 
   return (
-    <div class="hr-offboarding fin-page">
-      <PageHeader
-        icon="fa-file-invoice"
-        module="Finance · My Payslips"
-        title="My Payslips"
-        sub="Your payslip history. Each download is audited for compliance."
-      />
+    <div class="mps">
+      <header class="mps-lead">
+        <div>
+          <div class="mps-crumbs"><span>Payroll</span><span class="sep">›</span><b>My Payslips</b></div>
+          <h1>My Payslips</h1>
+          <p>Your payslip history. Each download is audited for compliance.</p>
+        </div>
+      </header>
 
-      <div class="obx-repstats" style={{ margin: '4px 0 12px' }}>
-        {STAT_ROW.map(s => (
-          <div class="obx-repstat" key={s.label}>
-            <div class="obx-repstat-val">{s.val}</div>
-            <div class="obx-repstat-label">{s.label}</div>
+      <section class="mps-metrics" aria-label="Payslip summary">
+        <div class="mps-metric">
+          <div class="mps-mico blue"><i class="fa-solid fa-file-invoice" /></div>
+          <div class="mps-m-body">
+            <div class="mps-m-k">Total payslips</div>
+            <div class="mps-m-v">{payslipsQ.isLoading && !payslipsQ.data ? '—' : String(payslips.length)}</div>
+            <div class="mps-m-s">Across all runs</div>
           </div>
-        ))}
-      </div>
+        </div>
+        <div class="mps-metric">
+          <div class="mps-mico green"><i class="fa-solid fa-circle-check" /></div>
+          <div class="mps-m-body">
+            <div class="mps-m-k">Ready to download</div>
+            <div class="mps-m-v">{payslipsQ.isLoading && !payslipsQ.data ? '—' : String(readyCount)}</div>
+            <div class="mps-m-s">Files available</div>
+          </div>
+        </div>
+        <div class="mps-metric">
+          <div class="mps-mico amber"><i class="fa-solid fa-calendar-day" /></div>
+          <div class="mps-m-body">
+            <div class="mps-m-k">Latest generated</div>
+            <div class="mps-m-v">{latestGenerated ? fmtDate(latestGenerated) : '—'}</div>
+            <div class="mps-m-s">Most recent payslip</div>
+          </div>
+        </div>
+      </section>
 
-      <div class="obx-section">
-        <div class="obx-section-body">
-          {payslipsQ.isLoading ? (
-            <div class="obx-empty">Loading…</div>
-          ) : !payslips.length ? (
-            <EmptyState
-              icon="fa-file-invoice"
-              title="No payslips yet"
-              text="Your payslips will appear here once your employer publishes a payroll run."
-            />
-          ) : (
-            <table class="obx-table">
+      <section class="mps-card">
+        <div class="mps-titlebar">
+          <div><h2>Payslip history</h2><p>Download individual payslips — every download is audited.</p></div>
+        </div>
+
+        {payslipsQ.isLoading && !payslipsQ.data ? (
+          <div class="mps-empty"><span class="mps-skel" /></div>
+        ) : payslipsQ.isError ? (
+          <div class="mps-empty"><i class="fa-solid fa-triangle-exclamation" />
+            <strong>Couldn’t load your payslips</strong><small>Please retry in a moment.</small></div>
+        ) : !payslips.length ? (
+          <div class="mps-empty"><i class="fa-regular fa-file-lines" />
+            <strong>No payslips yet</strong>
+            <small>Your payslips will appear here once your employer publishes a payroll run.</small></div>
+        ) : (
+          <div class="mps-table-wrap">
+            <table class="mps-table">
               <thead>
                 <tr>
                   <th>Payslip No.</th>
                   <th>Generated</th>
-                  <th>File</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
+                  <th>Status</th>
+                  <th class="mps-actions-h">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {payslips.map(p => (
-                  <PayslipRow key={p.id} payslip={p} />
-                ))}
+                {payslips.map(p => <PayslipRow key={p.id} payslip={p} />)}
               </tbody>
             </table>
-          )}
-        </div>
-      </div>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
@@ -116,36 +137,26 @@ function PayslipRow({ payslip }: { payslip: Payslip }): VNode {
   };
 
   // A payslip with no filePath cannot be downloaded yet (async file gen pending).
-  const hasFile       = Boolean(payslip.filePath);
-  // The payslip entity has no explicit status column — existence = ready; no file = pending.
-  const displayStatus = hasFile ? 'ready' : 'pending';
+  const hasFile = Boolean(payslip.filePath);
 
   return (
     <tr>
-      <td><b>{payslip.payslipNo}</b></td>
-      <td class="obx-meta">{fmtDate(payslip.generatedAt)}</td>
+      <td><strong>{payslip.payslipNo}</strong></td>
+      <td class="mps-meta">{fmtDate(payslip.generatedAt)}</td>
       <td>
-        <span class={`obx-pill ${statusTone(displayStatus)}`}>
-          {humanize(displayStatus)}
+        <span class={`mps-pill ${hasFile ? 'green' : 'amber'}`}>
+          <i class="mps-dot" />{hasFile ? 'Ready' : 'Pending'}
         </span>
       </td>
-      <td style={{ textAlign: 'right' }}>
-        <div class="obx-rowbtns" style={{ justifyContent: 'flex-end' }}>
-          {hasFile ? (
-            <button
-              class="obx-btn obx-btn-sm"
-              disabled={downloading}
-              onClick={() => void download()}
-            >
-              <i class={`fas ${downloading ? 'fa-spinner fa-spin' : 'fa-download'}`} />
-              {downloading ? ' Preparing…' : ' Download'}
-            </button>
-          ) : (
-            <span class="obx-meta" style={{ fontSize: 12, fontStyle: 'italic' }}>
-              Not yet available
-            </span>
-          )}
-        </div>
+      <td class="mps-actions">
+        {hasFile ? (
+          <button type="button" class="mps-dl" disabled={downloading} onClick={() => void download()}>
+            <i class={`fa-solid ${downloading ? 'fa-spinner fa-spin' : 'fa-download'}`} />
+            {downloading ? ' Preparing…' : ' Download'}
+          </button>
+        ) : (
+          <span class="mps-muted">Not yet available</span>
+        )}
       </td>
     </tr>
   );

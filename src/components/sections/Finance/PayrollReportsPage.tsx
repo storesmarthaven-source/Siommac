@@ -24,6 +24,19 @@ import './payrollReports.css';
 type Completed = Extract<ReportRunResult, { state: 'completed' }>;
 const ELIGIBLE = new Set(['locked', 'released', 'exported']);
 
+// Per-report catalog icons (mirror the mockup's report-nav glyphs).
+const CAT_ICON: Record<string, string> = {
+  payroll_register:            'fa-table-list',
+  net_pay_summary:             'fa-money-check-dollar',
+  payroll_cost_analysis:       'fa-chart-line',
+  gross_to_net_reconciliation: 'fa-scale-balanced',
+  variance_analysis:           'fa-code-compare',
+  overtime_allowance_analysis: 'fa-clock',
+  population_movements:        'fa-users-viewfinder',
+  nis_exceptions:              'fa-shield-halved',
+  export_audit_package:        'fa-clipboard-check',
+};
+
 const money = (m: MoneyValue): string =>
   `$${m.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const num = (n: number): string => n.toLocaleString('en-US');
@@ -229,10 +242,13 @@ export function PayrollReportsPage(): VNode {
   // Atomic reveal: hold the board+catalog behind skeletons until BOTH the summary
   // and the catalog have resolved (instant once cached); errors reveal (banner shows).
   const boardCold = reportsBoardCold({ hasSummary: !!summaryQ.data, hasCatalog: !!catalogQ.data, summaryError: summaryQ.isError, catalogError: catalogQ.isError });
-  const tile = (label: string, t?: { value: number | null; available: boolean }): VNode => (
+  const tile = (label: string, icon: string, tone: string, t?: { value: number | null; available: boolean }): VNode => (
     <div class={`prc-kpi${t?.available ? '' : ' is-na'}`}>
-      <div class="prc-kpi-v">{t?.available && t.value != null ? num(t.value) : '—'}</div>
-      <div class="prc-kpi-l">{label}</div>
+      <div class={`prc-kpi-ico ${tone}`}><i class={`fa-solid ${icon}`} /></div>
+      <div class="prc-kpi-body">
+        <div class="prc-kpi-l">{label}</div>
+        <div class="prc-kpi-v">{t?.available && t.value != null ? num(t.value) : '—'}</div>
+      </div>
     </div>
   );
 
@@ -243,6 +259,11 @@ export function PayrollReportsPage(): VNode {
           <div class="prc-crumbs"><span>Payroll</span><span class="sep">›</span><b>Reports</b></div>
           <h1>Payroll Reports</h1>
           <p>Preview and export tamper-evident reports from locked, authorized payroll runs. Currency TTD.</p>
+        </div>
+        <div class="prc-lead-actions">
+          <button type="button" class="prc-btn primary" disabled={!entry} onClick={() => entry && setDialogOpen(true)}>
+            <i class="fa-solid fa-play" /> Run selected report
+          </button>
         </div>
       </header>
 
@@ -269,11 +290,11 @@ export function PayrollReportsPage(): VNode {
       ) : (
         <>
           <div class="prc-kpis">
-            {tile('Available reports', tiles?.availableReports)}
-            {tile('Generated this month', tiles?.generatedThisMonth)}
-            {tile('NIS exceptions', tiles?.nisExceptions)}
-            {tile('Material variances', tiles?.materialVariances)}
-            {tile('Audit packages', tiles?.auditPackages)}
+            {tile('Available reports', 'fa-file-lines', 'blue', tiles?.availableReports)}
+            {tile('Generated this month', 'fa-circle-check', 'green', tiles?.generatedThisMonth)}
+            {tile('NIS exceptions', 'fa-triangle-exclamation', 'amber', tiles?.nisExceptions)}
+            {tile('Material variances', 'fa-code-compare', 'blue', tiles?.materialVariances)}
+            {tile('Audit packages', 'fa-shield', 'green', tiles?.auditPackages)}
           </div>
 
           <div class="prc-body">
@@ -288,8 +309,11 @@ export function PayrollReportsPage(): VNode {
                   disabled={c.supportedFormats.length === 0}
                   onClick={() => pick(c.key)}
                 >
-                  <span class="prc-cat-label">{c.label}</span>
-                  <span class="prc-cat-cat">{c.category}</span>
+                  <span class="prc-cat-ico"><i class={`fa-solid ${CAT_ICON[c.key] ?? 'fa-file-lines'}`} /></span>
+                  <span class="prc-cat-text">
+                    <span class="prc-cat-label">{c.label}</span>
+                    <span class="prc-cat-cat">{c.category}</span>
+                  </span>
                   {c.supportedFormats.length === 0 && <span class="prc-cat-soon">soon</span>}
                 </button>
               ))}
@@ -325,8 +349,12 @@ export function PayrollReportsPage(): VNode {
 
               {result && (
                 <div class="prc-preview">
-                  <div class="prc-preview-h">
-                    {entry?.label ?? 'Preview'} <span class="prc-scope">scope {result.scopeId}</span>
+                  <div class="prc-sec-head">
+                    <div class="prc-sec-ico"><i class={`fa-solid ${CAT_ICON[result.report] ?? 'fa-file-lines'}`} /></div>
+                    <div>
+                      <div class="prc-sec-title">{entry?.label ?? 'Preview'}</div>
+                      <div class="prc-sec-sub">Scope {result.scopeId}</div>
+                    </div>
                   </div>
                   <ReportResult data={result} />
                 </div>

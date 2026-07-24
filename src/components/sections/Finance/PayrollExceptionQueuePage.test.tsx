@@ -77,9 +77,10 @@ describe('F-06/F-07 PayrollExceptionQueuePage', () => {
     render(<PayrollExceptionQueuePage />);
     expect(screen.getByText('All Open')).toBeTruthy();
     expect(screen.getByText('My Approvals')).toBeTruthy();
-    // approvals count 2 + blockers 4 present
-    expect(screen.getByText('4')).toBeTruthy();
-    expect(screen.getByText('11')).toBeTruthy();
+    // Counts appear in both the KPI strip and the tab chips (mockup design),
+    // so assert presence via getAllByText rather than a unique match.
+    expect(screen.getAllByText('4').length).toBeGreaterThan(0);   // blockers
+    expect(screen.getAllByText('11').length).toBeGreaterThan(0);  // warnings
   });
 
   it('PXQ2 — finding row shows Open, approval row shows Review', () => {

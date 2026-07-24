@@ -1,0 +1,71 @@
+/* Finance ▸ My Payslips (ESS) — scoped .mps-* styles in the payroll-enterprise look.
+   Self-contained tokens (mockup palette) so the page renders correctly in the
+   Finance context without depending on HR's onboarding CSS. */
+
+.mps {
+  --br: #1d4ed8; --br-soft: #eaf1fd; --br-ink: #1a44b8;
+  --gn: #16a34a; --gn-soft: #e5f6ec; --gn-ink: #15803d;
+  --am: #d97706; --am-soft: #fdf1dc; --am-ink: #b45309;
+  --rd: #dc2626; --rd-soft: #fdecec;
+  --bd: #e5e9f0; --bd-soft: #eef1f6;
+  --ink: #0f172a; --ink2: #334155; --mut: #64748b; --mut2: #94a3b8;
+  --card: #fff; --radius: 12px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 1px 3px rgba(15,23,42,.06);
+  display: flex; flex-direction: column; gap: 16px; padding: 2px 2px 40px; color: var(--ink);
+}
+
+/* ── Lead ── */
+.mps-lead { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.mps-crumbs { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--mut); margin-bottom: 10px; }
+.mps-crumbs .sep { color: var(--mut2); }
+.mps-crumbs b { color: var(--br); font-weight: 600; }
+.mps-lead h1 { margin: 0 0 4px; color: #101b33; font-size: 25px; font-weight: 800; letter-spacing: -.01em; line-height: 1.2; }
+.mps-lead p { max-width: 760px; margin: 5px 0 0; color: var(--mut); font-size: 13.5px; }
+
+/* ── Metric strip ── */
+.mps-metrics { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+@media (max-width: 720px) { .mps-metrics { grid-template-columns: 1fr; } }
+.mps-metric { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--card); border: 1px solid var(--bd); border-radius: var(--radius); box-shadow: var(--shadow); }
+.mps-mico { flex-shrink: 0; width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-size: 16px; }
+.mps-mico.blue { background: var(--br-soft); color: var(--br); }
+.mps-mico.green { background: var(--gn-soft); color: var(--gn-ink); }
+.mps-mico.amber { background: var(--am-soft); color: var(--am-ink); }
+.mps-m-body { min-width: 0; }
+.mps-m-k { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--mut); }
+.mps-m-v { font-size: 22px; font-weight: 800; color: #101b33; line-height: 1.2; }
+.mps-m-s { font-size: 11px; color: var(--mut); }
+
+/* ── Register card ── */
+.mps-card { background: var(--card); border: 1px solid var(--bd); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.mps-titlebar { padding: 16px 18px; border-bottom: 1px solid var(--bd-soft); }
+.mps-titlebar h2 { margin: 0; font-size: 16px; font-weight: 700; color: #101b33; }
+.mps-titlebar p { margin: 3px 0 0; font-size: 12.5px; color: var(--mut); }
+
+.mps-table-wrap { overflow-x: auto; }
+.mps-table { width: 100%; border-collapse: collapse; }
+.mps-table th { height: 44px; padding: 0 18px; border-bottom: 1px solid var(--bd); color: #596579; font-size: 11px; text-align: left; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.mps-actions-h { text-align: right; }
+.mps-table td { height: 60px; padding: 10px 18px; border-bottom: 1px solid var(--bd-soft); vertical-align: middle; color: #26344c; font-size: 13px; }
+.mps-table tr:last-child td { border-bottom: 0; }
+.mps-table tr:hover td { background: #fafcff; }
+.mps-table td strong { color: #14213a; font-weight: 700; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px; }
+.mps-meta { color: var(--mut); }
+.mps-actions { text-align: right; }
+
+.mps-pill { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.mps-dot { display: inline-block; width: 7px; height: 7px; margin: 0 6px 1px 0; border-radius: 50%; background: currentColor; }
+.mps-pill.green { background: var(--gn-soft); color: var(--gn-ink); }
+.mps-pill.amber { background: var(--am-soft); color: var(--am-ink); }
+
+.mps-dl { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--br); background: var(--br); color: #fff; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.mps-dl:hover:not(:disabled) { background: var(--br-ink); }
+.mps-dl:disabled { opacity: .6; cursor: not-allowed; }
+.mps-muted { font-size: 12px; font-style: italic; color: var(--mut); }
+
+/* ── Empty / loading ── */
+.mps-empty { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 54px 24px; text-align: center; color: var(--mut); }
+.mps-empty i { font-size: 28px; color: var(--mut2); }
+.mps-empty strong { color: var(--ink2); font-size: 15px; }
+.mps-empty small { font-size: 12.5px; line-height: 1.5; max-width: 420px; }
+.mps-skel { display: block; width: 100%; max-width: 520px; height: 120px; border-radius: 10px;
+  background: linear-gradient(90deg, #eef1f6 25%, #f6f8fb 50%, #eef1f6 75%); background-size: 200% 100%; animation: mps-sh 1.3s linear infinite; }
+@keyframes mps-sh { to { background-position: -200% 0; } }

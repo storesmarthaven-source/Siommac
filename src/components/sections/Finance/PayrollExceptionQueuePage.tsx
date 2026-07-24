@@ -45,6 +45,36 @@ const ACT_ICON = new Map<PayrollFindingActivityType, { icon: string; tone: strin
   ['reopen', { icon: 'fa-rotate-left', tone: 'red' }],
 ]);
 
+// Grouped-section headers (mirror the mockup's queue-section grouping by kind).
+type SectionKey = 'approval' | 'blocker' | 'warning' | 'resolved';
+const SECTION_META: Record<SectionKey, { label: string; sub: string; icon: string; tone: string }> = {
+  approval: { label: 'Decisions Requiring Your Approval', sub: 'Ordered by due time',            icon: 'fa-user-check',           tone: 'amber' },
+  blocker:  { label: 'Release-Blocking Findings',         sub: 'Must be closed before submission', icon: 'fa-ban',                  tone: 'red' },
+  warning:  { label: 'Warnings Requiring Certification',  sub: 'Evidence and note required',       icon: 'fa-triangle-exclamation', tone: 'amber' },
+  resolved: { label: 'Resolved Today',                    sub: 'Immutable resolution evidence retained', icon: 'fa-circle-check',   tone: 'green' },
+};
+const SECTION_ORDER: SectionKey[] = ['approval', 'blocker', 'warning'];
+
+// Client-side grouping of the current page's rows into the mockup's labelled sections.
+// 'resolved' tab collapses to one section; open tabs group by finding kind.
+function groupQueue(items: PayrollFindingQueueItem[], tab: PayrollWorkQueueTab): { key: SectionKey; rows: PayrollFindingQueueItem[] }[] {
+  if (tab === 'resolved') return items.length ? [{ key: 'resolved', rows: items }] : [];
+  const byKind = new Map<string, PayrollFindingQueueItem[]>();
+  for (const it of items) { const arr = byKind.get(it.kind) ?? []; arr.push(it); byKind.set(it.kind, arr); }
+  const out: { key: SectionKey; rows: PayrollFindingQueueItem[] }[] = [];
+  for (const k of SECTION_ORDER) { const rows = byKind.get(k); if (rows?.length) out.push({ key: k, rows }); }
+  return out;
+}
+
+// KPI strip — every value comes from the real tabCounts; no fabricated metrics.
+const METRICS: { key: PayrollWorkQueueTab; label: string; sub: string; icon: string; tone: string }[] = [
+  { key: 'all',       label: 'Open Items',         sub: 'Across all runs',        icon: 'fa-layer-group',          tone: 'blue' },
+  { key: 'approvals', label: 'Assigned Approvals', sub: 'Awaiting your decision', icon: 'fa-user-check',           tone: 'amber' },
+  { key: 'blockers',  label: 'Blocking Findings',  sub: 'Release-blocking',       icon: 'fa-ban',                  tone: 'red' },
+  { key: 'warnings',  label: 'Open Warnings',      sub: 'Need certification',     icon: 'fa-triangle-exclamation', tone: 'amber' },
+  { key: 'resolved',  label: 'Resolved Today',     sub: 'Evidence retained',      icon: 'fa-circle-check',         tone: 'green' },
+];
+
 const fmtTTD = (n: number | null): string => (n == null ? '—' : `TTD ${Math.round(n).toLocaleString('en-US')}`);
 const fmtDue = (iso: string | null): string => {
   if (!iso) return 'No due date';
@@ -105,6 +135,7 @@ export function PayrollExceptionQueuePage(): VNode {
   const counts  = result?.tabCounts;
   const selected = result?.selected ?? null;
   const mut     = useWorkQueueMutations();
+  const groups  = useMemo(() => groupQueue(items, tab), [items, tab]);
 
   const changeTab = (t: PayrollWorkQueueTab): void => { setTab(t); setSelectedId(undefined); resetPage(); };
   const nextPage = (): void => { if (!result?.nextCursor) return; setCursorStack(s => [...s, cursor]); setCursor(result.nextCursor); };
@@ -128,6 +159,19 @@ export function PayrollExceptionQueuePage(): VNode {
             onClick={() => void q.refetch()}><i class="fa-solid fa-rotate" /></button>
         </div>
       </header>
+
+      <section class="pxq-metrics" aria-label="Work queue summary">
+        {METRICS.map(m => (
+          <div class="pxq-metric" key={m.key}>
+            <div class={`pxq-mico ${m.tone}`}><i class={`fa-solid ${m.icon}`} /></div>
+            <div class="pxq-m-body">
+              <div class="pxq-m-k">{m.label}</div>
+              <div class="pxq-m-v">{counts ? counts[m.key] : <span class="pxq-m-dash">—</span>}</div>
+              <div class="pxq-m-s">{m.sub}</div>
+            </div>
+          </div>
+        ))}
+      </section>
 
       <div class="pxq-grid">
         {/* ── Queue board ── */}
@@ -167,13 +211,23 @@ export function PayrollExceptionQueuePage(): VNode {
               <div class="pxq-empty"><i class="fa-regular fa-circle-check" />
                 <strong>No queue items match this view</strong><small>Change a filter or clear the search.</small></div>
             )}
-            {!q.isLoading && items.map(row => (
-              <QueueRow key={row.id} row={row} selected={row.id === selectedId} onOpen={() => onRowOpen(row)} />
-            ))}
+            {!q.isLoading && groups.map(g => {
+              const m = SECTION_META[g.key];
+              return (
+                <div class="pxq-section" key={g.key}>
+                  <div class={`pxq-section-head ${m.tone}`}>
+                    <i class={`fa-solid ${m.icon}`} /> {m.label} <span>{m.sub}</span>
+                  </div>
+                  {g.rows.map(row => (
+                    <QueueRow key={row.id} row={row} selected={row.id === selectedId} onOpen={() => onRowOpen(row)} />
+                  ))}
+                </div>
+              );
+            })}
           </div>
 
           <footer class="pxq-foot">
-            <span>{items.length ? `Showing ${items.length} of ${result?.total ?? items.length}` : ''}</span>
+            <span>{items.length ? `Showing ${items.length} of ${result?.total ?? items.length}${result?.asOf ? ` · Refreshed ${new Date(result.asOf).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}` : ''}` : ''}</span>
             <div class="pxq-pager">
               <button type="button" disabled={cursorStack.length === 0} onClick={prevPage} aria-label="Previous"><i class="fa-solid fa-chevron-left" /></button>
               <button type="button" disabled={!result?.nextCursor} onClick={nextPage} aria-label="Next"><i class="fa-solid fa-chevron-right" /></button>
@@ -218,20 +272,24 @@ function QueueRow({ row, selected, onOpen }: { row: PayrollFindingQueueItem; sel
   const sev = SEV_CLS.get(row.severity) ?? 'low';
   const icon = KIND_ICON.get(row.kind) ?? 'fa-circle-dot';
   const overdue = isOverdue(row.dueAt);
+  const cta = row.kind === 'approval' ? 'Review' : 'Open';
   return (
-    <button type="button" class={`pxq-item${selected ? ' on' : ''}`} onClick={onOpen}>
+    <div class={`pxq-item${selected ? ' on' : ''}`} role="button" tabIndex={0} onClick={onOpen}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}>
       <div class={`pxq-sev ${sev}`}><i class={`fa-solid ${icon}`} /></div>
-      <div class="pxq-copy"><strong>{row.title}</strong><small>{row.run.reference} · {row.summary}</small></div>
+      <div class="pxq-copy">
+        <strong>{row.title}</strong>
+        <small>{row.run.reference} · {row.summary}{row.impact.amount != null ? ` · ${fmtTTD(row.impact.amount)}` : ''}</small>
+      </div>
       <div class="pxq-owner">
         {row.owner ? <><span class="pxq-av">{initials(row.owner.displayName)}</span>
           <div><strong>{row.owner.displayName}</strong><small>{row.owner.type === 'team' ? 'Team' : 'Owner'}</small></div></>
-          : <div><strong>Unassigned</strong></div>}
+          : <><span class="pxq-av ghost"><i class="fa-regular fa-user" /></span><div><strong>Unassigned</strong><small>No owner</small></div></>}
       </div>
-      <div class="pxq-impact">{row.impact.amount != null ? <strong>{fmtTTD(row.impact.amount)}</strong> : null}
-        {row.impact.label && <small>{row.impact.label}</small>}</div>
-      <div class={`pxq-due${overdue ? ' overdue' : ''}`}>{overdue ? 'Overdue' : fmtDue(row.dueAt)}</div>
-      <span class="pxq-cta">{row.kind === 'approval' ? 'Review' : 'Open'} <i class="fa-solid fa-arrow-right" /></span>
-    </button>
+      <div class={`pxq-due${overdue ? ' overdue' : ''}`}>{overdue ? <><i class="fa-solid fa-clock" /> Overdue</> : fmtDue(row.dueAt)}</div>
+      <button type="button" class={`pxq-go${row.kind === 'approval' ? ' primary' : ''}`}
+        onClick={e => { e.stopPropagation(); onOpen(); }}>{cta} <i class="fa-solid fa-arrow-right" /></button>
+    </div>
   );
 }
 
@@ -251,43 +309,57 @@ function DetailPanel({ detail, busy, onAction, onOpenRun }: {
   onAction: (a: PayrollFindingAllowedAction) => void; onOpenRun: () => void;
 }): VNode {
   const activity = detail.activity.items;
+  const primaryActs = detail.allowedActions.filter(a => a === 'resolve' || a === 'review');
+  const secondaryActs = detail.allowedActions.filter(a => a !== 'resolve' && a !== 'review');
   return (
     <div class="pxq-detail-card">
-      <div class="pxq-detail-head">
-        <span class={`pxq-sev ${SEV_CLS.get(detail.severity) ?? 'low'}`}><i class={`fa-solid ${KIND_ICON.get(detail.kind) ?? 'fa-circle-dot'}`} /></span>
-        <div><strong>{detail.title}</strong><small>{detail.run.reference} · {detail.subject.scopeLabel}</small></div>
-      </div>
-      <p class="pxq-detail-summary">{detail.summary}</p>
+      <header class="pxq-sum-head">
+        <span>Selected Finding</span>
+        <h3>{detail.title}</h3>
+        <p>{detail.run.reference} · {detail.subject.scopeLabel}</p>
+      </header>
+      <div class="pxq-sum-body">
+        <p class="pxq-detail-summary">{detail.summary}</p>
 
-      <dl class="pxq-facts">
-        <div><dt>Trigger</dt><dd>{detail.trigger.ruleKey}</dd></div>
-        <div><dt>Observed</dt><dd>{detail.trigger.observed}{detail.trigger.threshold ? ` (threshold ${detail.trigger.threshold})` : ''}</dd></div>
-        <div><dt>Subject</dt><dd>{detail.subject.displayName ?? detail.subject.scopeLabel}</dd></div>
-        <div><dt>Impact</dt><dd>{detail.impact.amount != null ? fmtTTD(detail.impact.amount) : (detail.impact.label ?? '—')}</dd></div>
-      </dl>
+        <dl class="pxq-facts">
+          <div><dt>Trigger</dt><dd>{detail.trigger.ruleKey}</dd></div>
+          <div><dt>Observed</dt><dd>{detail.trigger.observed}{detail.trigger.threshold ? ` (threshold ${detail.trigger.threshold})` : ''}</dd></div>
+          <div><dt>Subject</dt><dd>{detail.subject.displayName ?? detail.subject.scopeLabel}</dd></div>
+          <div><dt>Impact</dt><dd>{detail.impact.amount != null ? fmtTTD(detail.impact.amount) : (detail.impact.label ?? '—')}</dd></div>
+        </dl>
 
-      {detail.requiredEvidence.length > 0 && (
-        <div class="pxq-required"><span>Required to clear</span>
-          <ul>{detail.requiredEvidence.map(r => <li key={r}>{r}</li>)}</ul></div>
-      )}
+        {detail.requiredEvidence.length > 0 && (
+          <div class="pxq-required"><span>Required to clear</span>
+            <ul>{detail.requiredEvidence.map(r => <li key={r}>{r}</li>)}</ul></div>
+        )}
 
-      {detail.resolution && (
-        <div class="pxq-resolution"><i class="fa-solid fa-circle-check" />
-          <div><strong>Resolved</strong><small>{detail.resolution.note}</small></div></div>
-      )}
+        {detail.resolution && (
+          <div class="pxq-resolution"><i class="fa-solid fa-circle-check" />
+            <div><strong>Resolved</strong><small>{detail.resolution.note}</small></div></div>
+        )}
 
-      <div class="pxq-actions">
-        {detail.allowedActions.map(a => (
-          <button key={a} type="button" class={`pxq-btn${a === 'resolve' ? ' primary' : ''}`} disabled={busy}
-            onClick={() => (a === 'review' ? onOpenRun() : onAction(a))}>
-            <i class={`fa-solid ${ACTION_META[a].icon}`} /> {ACTION_META[a].label}
-          </button>
-        ))}
-        <button type="button" class="pxq-btn" onClick={onOpenRun}><i class="fa-solid fa-arrow-up-right-from-square" /> Open run</button>
-      </div>
+        <div class="pxq-sum-actions">
+          {primaryActs.map(a => (
+            <button key={a} type="button" class="pxq-btn primary" disabled={busy}
+              onClick={() => (a === 'review' ? onOpenRun() : onAction(a))}>
+              <i class={`fa-solid ${ACTION_META[a].icon}`} /> {ACTION_META[a].label}
+            </button>
+          ))}
+          <button type="button" class="pxq-btn" onClick={onOpenRun}><i class="fa-solid fa-arrow-up-right-from-square" /> Open run evidence</button>
+        </div>
 
-      <div class="pxq-activity-head">Activity <span>{detail.activity.total}</span></div>
-      <div class="pxq-activity">
+        {secondaryActs.length > 0 && (
+          <div class="pxq-finding-actions">
+            {secondaryActs.map(a => (
+              <button key={a} type="button" class="pxq-btn" disabled={busy} onClick={() => onAction(a)}>
+                <i class={`fa-solid ${ACTION_META[a].icon}`} /> {ACTION_META[a].label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div class="pxq-activity-head">Activity <span>{detail.activity.total}</span></div>
+        <div class="pxq-activity">
         {activity.length ? activity.map(a => {
           const v = ACT_ICON.get(a.activityType) ?? { icon: 'fa-circle', tone: 'blue' };
           return (
@@ -300,6 +372,7 @@ function DetailPanel({ detail, busy, onAction, onOpenRun }: {
             </div>
           );
         }) : <div class="pxq-empty small"><span>No activity yet.</span></div>}
+        </div>
       </div>
     </div>
   );

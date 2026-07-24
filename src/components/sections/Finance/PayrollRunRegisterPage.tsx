@@ -205,17 +205,17 @@ export function PayrollRunRegisterPage(): VNode {
 
       {/* ── KPI strip (derived from real tab counts + calendar; nothing fabricated) ── */}
       <section class="prr-metrics">
-        <Metric ico="blue" k="Active Runs"       v={counts?.in_progress} loading={listQ.isLoading} />
-        <Metric ico="red"  k="Need Action"       v={counts?.attention}   loading={listQ.isLoading} />
-        <Metric ico="amber" k="Awaiting Approval" v={counts?.approval}   loading={listQ.isLoading} />
-        <Metric ico="green" k="Released"          v={counts?.released}    loading={listQ.isLoading} />
-        <Metric ico="amber" k="Funding Gap"
+        <Metric ico="blue" icon="fa-spinner" k="Active Runs"       v={counts?.in_progress} loading={listQ.isLoading} />
+        <Metric ico="red"  icon="fa-triangle-exclamation" k="Need Action"       v={counts?.attention}   loading={listQ.isLoading} />
+        <Metric ico="amber" icon="fa-user-check" k="Awaiting Approval" v={counts?.approval}   loading={listQ.isLoading} />
+        <Metric ico="green" icon="fa-circle-check" k="Released"          v={counts?.released}    loading={listQ.isLoading} />
+        <Metric ico="amber" icon="fa-building-columns" k="Funding Gap"
           text={agg ? money(agg.fundingGap.amount) : '—'} sub={agg ? fundedPct : undefined}
           loading={listQ.isLoading} />
-        <Metric ico="green" k="Closed Net"
+        <Metric ico="green" icon="fa-lock" k="Closed Net"
           text={agg ? money(agg.closedNet.amount) : '—'} sub={agg ? 'Released & exported' : undefined}
           loading={listQ.isLoading} />
-        <Metric ico="blue" k="Next Pay Date"
+        <Metric ico="blue" icon="fa-calendar-day" k="Next Pay Date"
           text={nextCal ? fmtDate(nextCal.payDate) : (calendarQ.isLoading ? '' : '—')}
           sub={nextCal ? nextCal.payGroup.name : undefined} loading={calendarQ.isLoading && !nextCal} />
       </section>
@@ -384,11 +384,11 @@ function RunRow({ r, onOpen }: { r: PayrollRunListItem; onOpen: () => void }): V
 }
 
 // ── KPI metric card ───────────────────────────────────────────────────────────
-function Metric({ ico, k, v, text, sub, loading }:
-  { ico: string; k: string; v?: number; text?: string; sub?: string; loading?: boolean }): VNode {
+function Metric({ ico, icon, k, v, text, sub, loading }:
+  { ico: string; icon: string; k: string; v?: number; text?: string; sub?: string; loading?: boolean }): VNode {
   return (
     <div class="prr-metric">
-      <div class={`prr-mico ${ico}`} />
+      <div class={`prr-mico ${ico}`}><i class={`fa-solid ${icon}`} /></div>
       <div>
         <div class="prr-mk">{k}</div>
         <div class="prr-mv">{loading ? <span class="prr-skel" style={{ width: 40, height: 18 }} />

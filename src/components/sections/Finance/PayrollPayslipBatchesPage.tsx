@@ -81,10 +81,10 @@ export function PayrollPayslipBatchesPage(): VNode {
 
       {/* KPI strip — real aggregates over the filtered set */}
       <section class="psb-metrics">
-        <Metric ico="blue"  k="Active Batches"    v={agg?.activeBatches} loading={q.isLoading} />
-        <Metric ico="green" k="Rendered"          v={agg?.rendered}      loading={q.isLoading} />
-        <Metric ico="green" k="Delivered"         v={agg?.delivered}     loading={q.isLoading} />
-        <Metric ico="red"   k="Delivery Failures" v={agg?.failed}        loading={q.isLoading} />
+        <Metric ico="blue"  icon="fa-layer-group"           k="Active Batches"    v={agg?.activeBatches} loading={q.isLoading} />
+        <Metric ico="green" icon="fa-file-pdf"              k="Rendered"          v={agg?.rendered}      loading={q.isLoading} />
+        <Metric ico="green" icon="fa-paper-plane"           k="Delivered"         v={agg?.delivered}     loading={q.isLoading} />
+        <Metric ico="red"   icon="fa-envelope-circle-check" k="Delivery Failures" v={agg?.failed}        loading={q.isLoading} />
       </section>
 
       <section class="psb-shell">
@@ -176,10 +176,10 @@ function BatchRow({ b, onOpen }: { b: PayslipBatchListItem; onOpen: () => void }
   );
 }
 
-function Metric({ ico, k, v, loading }: { ico: string; k: string; v?: number; loading?: boolean }): VNode {
+function Metric({ ico, icon, k, v, loading }: { ico: string; icon: string; k: string; v?: number; loading?: boolean }): VNode {
   return (
     <div class="psb-metric">
-      <div class={`psb-mico ${ico}`} />
+      <div class={`psb-mico ${ico}`}><i class={`fa-solid ${icon}`} /></div>
       <div>
         <div class="psb-mk">{k}</div>
         <div class="psb-mv">{loading ? <span class="psb-skel" style={{ width: 44, height: 18 }} /> : num(v ?? 0)}</div>

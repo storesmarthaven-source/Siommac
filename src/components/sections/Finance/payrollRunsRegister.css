@@ -36,7 +36,7 @@
   background: var(--card); border: 1px solid var(--bd); border-radius: var(--radius); box-shadow: var(--shadow); }
 .prr-metric { flex: 1; display: flex; align-items: center; gap: 11px; padding: 4px 16px; border-right: 1px solid var(--bd-soft); min-width: 150px; }
 .prr-metric:last-child { border-right: none; }
-.prr-mico { width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center; flex-shrink: 0; }
+.prr-mico { width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center; flex-shrink: 0; font-size: 15px; }
 .prr-mico.blue { background: var(--br-soft); color: var(--br); }
 .prr-mico.green { background: var(--gn-soft); color: var(--gn); }
 .prr-mico.amber { background: var(--am-soft); color: var(--am); }

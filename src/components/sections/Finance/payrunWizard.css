@@ -13,10 +13,10 @@
   --pcrw-ink:         #101b33;
   --pcrw-ink-2:       var(--ink-2, #37415a);
   --pcrw-muted:       var(--muted, #7a869c);
-  --pcrw-accent:      var(--accent, #4f46e5);
-  --pcrw-danger:      var(--danger, #ef4444);
-  --pcrw-green:       #10b981;
-  --pcrw-amber:       #f59e0b;
+  --pcrw-accent:      #1d4ed8; /* mockup --brand (create-run.html) */
+  --pcrw-danger:      var(--danger, #dc2626);
+  --pcrw-green:       #16a34a;
+  --pcrw-amber:       #d97706;
   --pcrw-radius:      14px;
 
   max-width: 1510px;
