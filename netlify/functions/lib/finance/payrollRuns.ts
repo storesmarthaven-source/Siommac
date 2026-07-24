@@ -1608,6 +1608,12 @@ export async function calculateRun(
   // Batch-load every statutory profile once (was an N+1: one query per employee).
   const profileMap = await getStatutoryProfilesByEmployees(empIds, 'TT');
 
+  // Resolve display names once so control-finding messages read with a person's
+  // NAME ("... David Okafor has no NIS number") instead of a raw id — the queue
+  // and detail surfaces show these messages verbatim.
+  const nameMap = await resolveEmployeeNames(empIds);
+  const nameOf = (id: string): string => nameMap.get(id) ?? id;
+
   // Prior lines/warnings are cleared inside the atomic commit RPC below (delete +
   // insert + totals update in ONE transaction), so a re-calculate rebuilds cleanly
   // without a non-transactional delete window.
@@ -1636,7 +1642,7 @@ export async function calculateRun(
           employee_id:  empId,
           warning_type: 'missing_nis_number',
           severity:     policy.blockMissingNisNewEmployee ? 'blocker' : 'warning',
-          message:      `Employee ${empId} has no NIS number on record.`,
+          message:      `Employee ${nameOf(empId)} has no NIS number on record.`,
           metadata:     {},
         });
       }
@@ -1648,7 +1654,7 @@ export async function calculateRun(
           employee_id:  empId,
           warning_type: 'nis_pending_verification',
           severity:     policy.requireVerifiedNis ? 'blocker' : 'warning',
-          message:      `Employee ${empId} NIS profile status is '${profile.nisStatus}' — Finance verification pending.`,
+          message:      `Employee ${nameOf(empId)} NIS profile status is '${profile.nisStatus}' — Finance verification pending.`,
           metadata:     { nisStatus: profile.nisStatus },
         });
       }
@@ -1660,7 +1666,7 @@ export async function calculateRun(
           employee_id:  empId,
           warning_type: 'previous_employer_data_missing',
           severity:     'info',
-          message:      `Employee ${empId} has opening NIS balance but no previous employer name.`,
+          message:      `Employee ${nameOf(empId)} has opening NIS balance but no previous employer name.`,
           metadata:     {},
         });
       }
@@ -1672,7 +1678,7 @@ export async function calculateRun(
           employee_id:  empId,
           warning_type: 'opening_balance_missing',
           severity:     'info',
-          message:      `Employee ${empId} has previous employer but no opening balance date.`,
+          message:      `Employee ${nameOf(empId)} has previous employer but no opening balance date.`,
           metadata:     {},
         });
       }
@@ -1697,7 +1703,7 @@ export async function calculateRun(
         employee_id:  empId,
         warning_type: 'missing_approved_timesheet',
         severity:     policy.requireApprovedTimesheetForHourly ? 'blocker' : 'warning',
-        message:      `Hourly employee ${empId} has no approved timesheet for the period — base pay is 0 until a timesheet is approved.`,
+        message:      `Hourly employee ${nameOf(empId)} has no approved timesheet for the period — base pay is 0 until a timesheet is approved.`,
         metadata:     {},
       });
     } else if (baseMeta.pay_basis === 'salary' && !baseMeta.has_approved_timesheet && policy.warnMissingTimesheetForSalary) {
@@ -1706,7 +1712,7 @@ export async function calculateRun(
         employee_id:  empId,
         warning_type: 'missing_timesheet_salary',
         severity:     'info',
-        message:      `Salaried employee ${empId} has no approved timesheet for the period (informational; full salary applied).`,
+        message:      `Salaried employee ${nameOf(empId)} has no approved timesheet for the period (informational; full salary applied).`,
         metadata:     {},
       });
     }
@@ -1789,7 +1795,7 @@ export async function calculateRun(
         employee_id:  empId,
         warning_type: 'nis_class_not_found',
         severity:     'warning',
-        message:      `No NIS class found for employee ${empId} (weekly insurable = ${weeklyInsurable.toFixed(2)}).`,
+        message:      `No NIS class found for employee ${nameOf(empId)} (weekly insurable = ${weeklyInsurable.toFixed(2)}).`,
         metadata:     { weeklyInsurable },
       });
     }
@@ -1881,7 +1887,7 @@ export async function calculateRun(
         employee_id:  empId,
         warning_type: 'crew_statutory_profile_incomplete',
         severity:     'blocker',
-        message:      `Crew employee ${empId} has no complete verified TT statutory profile (PAYE/NIS/Health Surcharge) — excluded at input lock until HR completes verification.`,
+        message:      `Crew employee ${nameOf(empId)} has no complete verified TT statutory profile (PAYE/NIS/Health Surcharge) — excluded at input lock until HR completes verification.`,
         metadata:     { excludedAtLock: true },
       });
     }
@@ -1903,7 +1909,7 @@ export async function calculateRun(
         employee_id:  empId,
         warning_type: 'crew_unapproved_overtime_excluded',
         severity:     'warning',
-        message:      `${entryIds.length} submitted overtime entr${entryIds.length === 1 ? 'y' : 'ies'} for crew employee ${empId} were not approved by input lock and are excluded from this run. Approve and recalculate, or process in the next run.`,
+        message:      `${entryIds.length} submitted overtime entr${entryIds.length === 1 ? 'y' : 'ies'} for crew employee ${nameOf(empId)} were not approved by input lock and are excluded from this run. Approve and recalculate, or process in the next run.`,
         metadata:     { entryIds },
       });
     }
