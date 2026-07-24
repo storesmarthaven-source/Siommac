@@ -5,7 +5,15 @@ CP5 ✅ Live-verified · CP6 ✅ Live-verified · CP7a ✅ Live-verified · **CP
 (mig 20260921000000 APPLIED + probe-verified; crewPayroll 16/16 twice consecutively, tags
 `TEST-E2E-1784864521220`/`-1784864711246`; financePayroll 137/137; one earlier 12/16 run did not
 reproduce over four subsequent runs — consistent with a transient service-client fetch failure,
-messages not captured) · CP8/CP9 Designed.
+messages not captured) · **CP8 ✅ Implemented + data-contract Live-verified** (conditional
+sections CrewPopulationControls / CrewInputReconciliation / CrewCostAllocation in the normal run
+workspace, rendered only when `workspace.crew != null`; server-resolved `crewEmployeeNames` so no
+raw ids render; vitest C1–C5 + crewPayroll 16/16 ×2 asserting the workspace contract incl. names;
+browser journey = CP9) · CP9 Designed.
+**Known gap (accepted until CP9/sign-off):** the F-01 policy wizard UI does not yet author
+`per_qualifying_day` components (BE route + types accept them; a crew policy version's component
+is currently seeded/managed via the governed API, not the wizard screen). Recorded here per
+No-Band-Aids — not stubbed in the UI.
 Nothing below is Implemented until its slice lands + is Live-verified + Regression-verified.
 
 **CP7b rate model (user-locked 2026-07-24): `employee_contract` ONLY.** The policy governs HOW

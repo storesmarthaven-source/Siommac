@@ -3,6 +3,7 @@ import { computeRunActions, type PayrollRunActions } from './runActions';
 import {
   getPayrollRun,
   listRunAuditLog,
+  resolveEmployeeNames,
   type PayrollRunDto,
   type RunAuditLogEntry,
 } from '../payrollRuns';
@@ -69,6 +70,10 @@ export interface PayrollRunWorkspace {
   /** CP6 (§14.7): frozen crew evidence from the current input snapshot — null for
    *  every run whose pinned policy version does not enable the crew capability. */
   crew: CrewRunEvidence | null;
+  /** CP8: read-time display names for every employee id appearing in the crew
+   *  evidence (blockers, excluded OT, day-rate rows) — the UI never shows raw
+   *  ids. Null exactly when `crew` is null. */
+  crewEmployeeNames: Record<string, string> | null;
 }
 
 const findingStates: PayrollFindingState[] = [
@@ -155,6 +160,20 @@ export async function getPayrollRunWorkspace(
       a.createdAt.localeCompare(b.createdAt))
     .slice(0, 20);
 
+  const crew = (inputSnapshot?.sourceSummary as { crew?: CrewRunEvidence } | undefined)?.crew ?? null;
+  let crewEmployeeNames: Record<string, string> | null = null;
+  if (crew) {
+    const ids = new Set<string>();
+    const b = crew.blockers;
+    for (const id of b.rosterWithoutMovement.employeeIds) ids.add(id);
+    for (const id of b.overlappingAssignments.employeeIds) ids.add(id);
+    for (const id of b.missingPaymentDestination.employeeIds) ids.add(id);
+    for (const id of b.incompleteStatutoryProfile?.employeeIds ?? []) ids.add(id);
+    for (const e of crew.excludedUnapprovedOvertime?.entries ?? []) ids.add(e.employeeId);
+    for (const e of crew.dayRate?.perEmployee ?? []) ids.add(e.employeeId);
+    crewEmployeeNames = Object.fromEntries(await resolveEmployeeNames([...ids]));
+  }
+
   return {
     run,
     inputSnapshot,
@@ -164,7 +183,8 @@ export async function getPayrollRunWorkspace(
     priorityFindings,
     audit,
     actions,
-    crew: (inputSnapshot?.sourceSummary as { crew?: CrewRunEvidence } | undefined)?.crew ?? null,
+    crew,
+    crewEmployeeNames,
   };
 }
 

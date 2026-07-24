@@ -329,6 +329,10 @@ export default async function run(h) {
     ok(w, `workspace: ${w.body.message}`);
     expect(!!w.body.data.crew && w.body.data.crew.expectedCrew === 2,
       'crew block on the crew run workspace');
+    // CP8: server-resolved display names for every id in the crew evidence.
+    const wNames = w.body.data.crewEmployeeNames;
+    expect(!!wNames && wNames[U.A] === 'Crew Emp A' && wNames[U.C] === 'Crew Emp C',
+      `crewEmployeeNames resolved (got ${JSON.stringify(wNames)})`);
 
     const stdRunId = await createRunFixture({ requestKey: `std-run-${TAG}`, payGroupId: ids.pg2Id });
     const lk2 = await api('finance/payroll/runs/lock-inputs', T.mgr,
@@ -338,6 +342,7 @@ export default async function run(h) {
     ok(w2, `std workspace: ${w2.body.message}`);
     expect(w2.body.data.crew === null,
       `crew must be null on a standard run workspace (got ${JSON.stringify(w2.body.data.crew)})`);
+    expect(w2.body.data.crewEmployeeNames === null, 'crewEmployeeNames null on non-crew runs');
     const ev2 = await api('finance/payroll/runs/policy-evidence', T.mgr, { runId: stdRunId });
     ok(ev2, `std policy evidence: ${ev2.body.message}`);
     expect(ev2.body.data.crew === null, 'crew null in standard policy evidence');

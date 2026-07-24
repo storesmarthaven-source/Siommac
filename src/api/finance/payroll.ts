@@ -541,6 +541,45 @@ export interface PayrollControlFinding {
   waiverReason: string | null; waivedBy: string | null; waivedAt: string | null; waiverExpiresAt: string | null;
   createdAt: string; updatedAt: string;
 }
+// ── CP8: conditional crew capability (mirrors backend crewRun.ts) ───────────────
+export interface CrewEmployeeBlocker { count: number; employeeIds: string[] }
+export interface CrewMovementBlocker { count: number; movementIds: string[] }
+export interface CrewDayRateAllocation {
+  assignmentId: string; contractId: string;
+  compensationAmount: number; currency: 'TTD'; period: 'daily';
+  effectiveFrom: string; effectiveTo: string | null;
+  qualifyingDates: string[]; qualifyingDays: number; earningAmount: number;
+}
+export interface CrewDayRateEmployee {
+  employeeId: string; allocations: CrewDayRateAllocation[];
+  totalDays: number; totalAmount: number;
+}
+export interface CrewRunEvidence {
+  policyType: string;
+  rotationPatternId: string | null;
+  dayBoundary: string | null;
+  expectedCrew: number;
+  assignmentCount: number;
+  movementCount: number;
+  movementsByType: Record<string, number>;
+  approvedTimeEmployeeCount: number;
+  approvedLeaveEmployeeCount: number;
+  assignmentIds: string[];
+  movementIds: string[];
+  excludedUnapprovedOvertime?: { count: number; entries: { id: string; employeeId: string; workDate: string }[] };
+  dayRate?: {
+    policyComponentId: string; componentId: string; componentCode: string;
+    isTaxable: boolean; perEmployee: CrewDayRateEmployee[];
+  };
+  blockers: {
+    rosterWithoutMovement: CrewEmployeeBlocker;
+    movementWithoutAssignment: CrewMovementBlocker;
+    overlappingAssignments: CrewEmployeeBlocker;
+    missingPaymentDestination: CrewEmployeeBlocker;
+    incompleteStatutoryProfile?: CrewEmployeeBlocker;
+  };
+}
+
 export interface PayrollRunWorkspace {
   run: PayrollRun;
   inputSnapshot: PayrollInputSnapshotInfo | null;
@@ -551,6 +590,10 @@ export interface PayrollRunWorkspace {
   audit: RunAuditLogEntry[];
   /** P0-2: server-computed per-actor action capabilities — the UI's only source. */
   actions: PayrollRunActions;
+  /** CP8 (§14.7): frozen crew evidence — null on every non-crew run. */
+  crew: CrewRunEvidence | null;
+  /** Display names for every employee id in `crew`; null exactly when crew is null. */
+  crewEmployeeNames: Record<string, string> | null;
 }
 export interface PayrollReleasePreflight {
   runId: string; runNo: string; status: string; ready: boolean; alreadyReleased: boolean;

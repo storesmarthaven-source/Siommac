@@ -70,6 +70,8 @@ function makeWorkspace(over: Partial<PayrollRunWorkspace> = {}): PayrollRunWorks
       canDistributePayslips: false, canPreviewGl: false, canPostGl: false, canExport: false,
       disabledReasons: {},
     },
+    crew: null,
+    crewEmployeeNames: null,
     ...over,
   };
 }

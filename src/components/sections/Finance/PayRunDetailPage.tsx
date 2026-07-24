@@ -29,6 +29,7 @@ import {
   InputsPanel, ExceptionsPanel, ReleasePanel,
 } from './payRunDetail/panels';
 import { CalcFailurePanel } from './payRunDetail/CalcFailurePanel';
+import { CrewPopulationControls, CrewInputReconciliation, CrewCostAllocation } from './payroll/run/crewSections';
 
 type TabKey = 'summary' | 'population' | 'inputs' | 'reconciliation' | 'exceptions' | 'approvals' | 'release' | 'audit';
 
@@ -229,9 +230,18 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApp
 
           {/* active panel */}
           <div class="run-panel on" role="tabpanel" id="run-tabpanel" aria-labelledby={`run-tab-${tab}`}>
+            {/* CP8 §14.7: conditional crew sections — rendered ONLY when the
+                resolved policy version enabled the crew capability (crew != null). */}
             {tab === 'summary'        && <SummaryPanel run={run} workspace={workspace} preflight={preflight} />}
+            {tab === 'population'     && workspace.crew && <CrewPopulationControls crew={workspace.crew} />}
             {tab === 'population'     && <PopulationPanel runId={run.id} />}
+            {tab === 'inputs'         && workspace.crew && (
+              <CrewCostAllocation crew={workspace.crew} names={workspace.crewEmployeeNames ?? {}} />
+            )}
             {tab === 'inputs'         && <InputsPanel run={run} canManage={canManage} inputSnapshot={workspace.inputSnapshot} />}
+            {tab === 'reconciliation' && workspace.crew && (
+              <CrewInputReconciliation crew={workspace.crew} names={workspace.crewEmployeeNames ?? {}} />
+            )}
             {tab === 'reconciliation' && <ReconciliationPanel runId={run.id} />}
             {tab === 'exceptions'     && <ExceptionsPanel run={run} workspace={workspace} canManage={canManage} />}
             {tab === 'approvals'      && <ApprovalsPanel run={run} />}

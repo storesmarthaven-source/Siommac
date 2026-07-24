@@ -356,3 +356,9 @@
 .prw .crumbs button.crumb-link { background: none; border: 0; padding: 0; font: inherit; cursor: pointer; color: inherit; }
 .prw .crumbs button.crumb-link:hover { color: var(--brand); text-decoration: underline; }
 .prw .crumbs button.crumb-link:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 3px; }
+
+/* ── CP8: conditional crew sections (§14.7) — spacing only; everything else
+      reuses the existing .prw design system. ─────────────────────────────── */
+.prw .crew-sec { margin-bottom: 14px; }
+.prw .crew-sec .lc-stats { margin-bottom: 10px; }
+.prw .crew-chips { margin-top: 2px; }

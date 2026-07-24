@@ -593,7 +593,7 @@ export async function getPayrollRun(id: string): Promise<PayrollRunDto | null> {
 
 /** Resolve app_users display names for a set of ids (batch; avoids an N+1 and
  * keeps raw UUIDs out of the evidence DTO — every employees[] row gets a name). */
-async function resolveEmployeeNames(ids: string[]): Promise<Map<string, string>> {
+export async function resolveEmployeeNames(ids: string[]): Promise<Map<string, string>> {
   const map = new Map<string, string>();
   const uniq = [...new Set(ids)].filter(Boolean);
   if (uniq.length === 0) return map;
