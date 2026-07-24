@@ -1,7 +1,20 @@
 # Crew Payroll — Delivery Contract
 
-**Status: Designed** (contract-before-code, per the Enterprise Module Delivery Standard).
+**Slice states (2026-07-23):** CP1 ✅ · CP2 ✅ applied · CP3 ✅ applied · CP4 ✅ Live-verified ·
+CP5 ✅ Live-verified · CP6 ✅ Live-verified (crewPayroll E2E 12/12) · CP7–CP9 Designed.
 Nothing below is Implemented until its slice lands + is Live-verified + Regression-verified.
+
+**M5 decision (CP6):** run-LEVEL crew evidence is frozen as a typed `crew` block inside the
+input snapshot's `source_summary` (immutable with the snapshot; surfaced by policy-evidence,
+run-workspace and input-readiness reads via `lib/finance/payroll/crewRun.ts`). No new table —
+per-LINE roster/movement/asset evidence is CP7's calculation-evidence deliverable and will be
+assessed against `finance_payroll_run_policy_evidence` there.
+
+**Known cross-branch drift (not CP6 scope):** the live `finance_payroll_create_run_tx` now
+enforces the creation-attestation gate (+ NOT NULL `statutory_version_id` seeds) from the
+payroll-certification workstream; this branch's `runs/create` route predates it, so the legacy
+financePayroll suite fails at run CREATE on this branch until that workstream merges. The
+crewPayroll suite creates its fixture runs through the real RPC (with attestations) and is green.
 
 Authoritative spec: **§14 "Pay Policies and Conditional Work-Pattern Controls"** and **§9.4**
 of the payroll-enterprise `CLAUDE_IMPLEMENTATION_SPEC.md`. Where this contract and an older

@@ -72,6 +72,8 @@ const USER_KEYED = [
   ['hr_requests', 'requested_by'],
   ['finance_payroll_run_lines', 'employee_id'], ['finance_remittance_lines', 'employee_id'],
   ['hr_shift_assignments', 'employee_id'],
+  // Crew payroll (CP4/CP5): leaked crew rows FK-block their test employees.
+  ['hr_crew_movements', 'employee_id'], ['hr_crew_assignments', 'employee_id'],
   // Pay-group membership: a leftover assignment for a reused/synthetic employee id
   // trips the one-active-group exclusion constraint ("employee already has a pay-group
   // assignment covering part of that period") on a later run. Sweep by employee_id.

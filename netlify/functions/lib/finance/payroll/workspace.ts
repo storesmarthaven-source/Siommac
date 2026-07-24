@@ -19,6 +19,7 @@ import {
   type PayrollFindingSeverity,
   type PayrollFindingState,
 } from './findings';
+import type { CrewRunEvidence } from './crewRun';
 
 interface InputSnapshotRow {
   id: string;
@@ -65,6 +66,9 @@ export interface PayrollRunWorkspace {
    * computed server-side. The UI renders lifecycle actions exclusively from this.
    */
   actions: PayrollRunActions;
+  /** CP6 (§14.7): frozen crew evidence from the current input snapshot — null for
+   *  every run whose pinned policy version does not enable the crew capability. */
+  crew: CrewRunEvidence | null;
 }
 
 const findingStates: PayrollFindingState[] = [
@@ -160,6 +164,7 @@ export async function getPayrollRunWorkspace(
     priorityFindings,
     audit,
     actions,
+    crew: (inputSnapshot?.sourceSummary as { crew?: CrewRunEvidence } | undefined)?.crew ?? null,
   };
 }
 

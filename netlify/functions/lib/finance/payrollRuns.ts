@@ -43,6 +43,12 @@ import {
 } from './payroll/execution';
 import { payrollExportChecksum } from './payroll/exportContent';
 import { payrollRpcHttpError } from './payroll/rpcError';
+import {
+  buildCrewRunEvidence,
+  resolveCrewCapability,
+  resolvePayGroupPolicyVersionId,
+  type CrewRunEvidence,
+} from './payroll/crewRun';
 
 /** Supported scale ceiling for a single run's calc/lock (500–1k target, ~2k headroom).
  *  Beyond this, the pipeline is rejected rather than silently truncating. */
@@ -634,6 +640,9 @@ export interface PolicyEvidenceDto {
   sourceConflicts: Record<string, unknown>[];
   excludedEmployees: Record<string, unknown>[];
   calendar: PolicyEvidenceCalendar | null;
+  /** CP6: frozen crew evidence from the snapshot — null unless the pinned policy
+   *  version enabled the crew capability at lock time (CPE-27). */
+  crew: CrewRunEvidence | null;
 }
 
 /**
@@ -701,6 +710,7 @@ export async function getRunPolicyEvidence(
   const summary = (snap.source_summary ?? {}) as {
     sourceConflicts?: Record<string, unknown>[];
     excludedEmployees?: Record<string, unknown>[];
+    crew?: CrewRunEvidence;
   };
 
   // §6d calendar block — resolved DISPLAY names of the PINNED work/holiday
@@ -778,6 +788,7 @@ export async function getRunPolicyEvidence(
     sourceConflicts:   summary.sourceConflicts ?? [],
     excludedEmployees: summary.excludedEmployees ?? [],
     calendar,
+    crew:              summary.crew ?? null,
   };
 }
 
@@ -1169,12 +1180,22 @@ export async function lockInputs(
   // enforcement no-ops. lock_inputs_tx then fails-closed on block_input_lock /
   // cost_centre and persists the rest as immutable conflict evidence.
   let sourcePresence: Map<string, Record<string, boolean | string | null>> | null = null;
+  // CP6: crew evidence frozen into the snapshot's source_summary when the pinned
+  // policy version enables the crew capability (§14.5 — snapshot every source id).
+  let crewEvidence: CrewRunEvidence | null = null;
   {
     const pinRow = (await sb.from('finance_payroll_runs')
       .select('pay_policy_version_id, pay_policy_required')
       .eq('id', runId)
       .single()).data as { pay_policy_version_id: string | null; pay_policy_required: boolean | null } | null;
     const policyVersionId = pinRow?.pay_policy_version_id ?? null;
+    if (pinRow?.pay_policy_required && policyVersionId) {
+      const crewCapability = await resolveCrewCapability(policyVersionId);
+      if (crewCapability.enabled) {
+        crewEvidence = await buildCrewRunEvidence(
+          crewCapability, empList.map(e => e.id), periodStart, periodEnd);
+      }
+    }
     if (pinRow?.pay_policy_required && policyVersionId) {
       const [srcRulesRes, costRulesRes] = await Promise.all([
         sb.from('finance_pay_policy_source_rules').select('source_type').eq('policy_version_id', policyVersionId),
@@ -1398,6 +1419,8 @@ export async function lockInputs(
       approvedTimesheetCount: tsRows.length,
       attendanceRecordCount: attendanceRows.length,
       loanInstallmentCount,
+      // CP6: frozen crew evidence — absent entirely for non-crew runs (CPE-27).
+      ...(crewEvidence ? { crew: crewEvidence } : {}),
     },
   });
 
@@ -2128,6 +2151,9 @@ export interface InputSourceReadiness {
 }
 export interface InputReadinessResult {
   sources: InputSourceReadiness[];
+  /** CP6: typed crew preflight — present ONLY when the pay group's resolved policy
+   *  version enables the crew capability (§14.5); null for every other run. */
+  crew: CrewRunEvidence | null;
 }
 
 /**
@@ -2275,7 +2301,19 @@ export async function getInputSourceReadiness(
     state: piPending > 0 ? 'pending' : 'ready',
   });
 
-  return { sources };
+  // CP6 §14.5: conditional crew preflight. Resolve the policy version the create
+  // RPC would pin (whole-period coverage); when — and only when — it enables the
+  // crew capability, add the typed crew evidence block over the paid population.
+  let crew: CrewRunEvidence | null = null;
+  const resolvedVersionId = await resolvePayGroupPolicyVersionId(payGroupId, periodStart, periodEnd);
+  if (resolvedVersionId) {
+    const capability = await resolveCrewCapability(resolvedVersionId);
+    if (capability.enabled) {
+      crew = await buildCrewRunEvidence(capability, scopeIds, periodStart, periodEnd);
+    }
+  }
+
+  return { sources, crew };
 }
 
 // ── Export content download ───────────────────────────────────────────────────

@@ -50,10 +50,17 @@ function fixturePolicyCode(payGroupId) {
  *                 version change_summary so an orphan sweep can find un-cleaned rows
  * @param {string} [args.effectiveFrom='2000-01-01'] assignment/version start; keep
  *                 well before any suite run period (some suites use far-future years)
+ * @param {string} [args.policyType='standard_salary'] policy type — pass
+ *                 'offshore_rotation'/'marine_voyage' to enable the CP6 crew capability
+ * @param {string} [args.workforceType='salaried']
+ * @param {string} [args.dayBoundary='calendar_day'] version day boundary
  * @returns {Promise<{policyId:string,versionId:string,assignmentId:string,
  *                     checksum:string,reused:boolean,cleanup:()=>Promise<void>}>}
  */
-export async function attachActivePolicy({ sb, payGroupId, actorId, tag = '', effectiveFrom = '2000-01-01' }) {
+export async function attachActivePolicy({
+  sb, payGroupId, actorId, tag = '', effectiveFrom = '2000-01-01',
+  policyType = 'standard_salary', workforceType = 'salaried', dayBoundary = 'calendar_day',
+}) {
   if (!sb) throw new Error('attachActivePolicy requires a service-role client (sb)');
   if (!payGroupId) throw new Error('attachActivePolicy requires payGroupId');
   if (!actorId) throw new Error('attachActivePolicy requires an active actorId');
@@ -87,8 +94,8 @@ export async function attachActivePolicy({ sb, payGroupId, actorId, tag = '', ef
     .insert({
       code,
       name: `F-02 fixture policy ${code}${tagSuffix}`,
-      policy_type: 'standard_salary',
-      workforce_type: 'salaried',
+      policy_type: policyType,
+      workforce_type: workforceType,
       status: 'active',
       owner_id: actorId,
       created_by: actorId,
@@ -111,7 +118,7 @@ export async function attachActivePolicy({ sb, payGroupId, actorId, tag = '', ef
       effective_from: effectiveFrom,
       effective_to: null,
       change_summary: `F-02 fixture — legacy-suite policy prerequisite${tagSuffix}`,
-      day_boundary: 'calendar_day',
+      day_boundary: dayBoundary,
       prepared_by: actorId,
       submitted_by: actorId,
       approved_by: actorId,
