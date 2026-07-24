@@ -10,11 +10,67 @@ run-workspace and input-readiness reads via `lib/finance/payroll/crewRun.ts`). N
 per-LINE roster/movement/asset evidence is CP7's calculation-evidence deliverable and will be
 assessed against `finance_payroll_run_policy_evidence` there.
 
-**Known cross-branch drift (not CP6 scope):** the live `finance_payroll_create_run_tx` now
-enforces the creation-attestation gate (+ NOT NULL `statutory_version_id` seeds) from the
-payroll-certification workstream; this branch's `runs/create` route predates it, so the legacy
-financePayroll suite fails at run CREATE on this branch until that workstream merges. The
-crewPayroll suite creates its fixture runs through the real RPC (with attestations) and is green.
+## CP4–CP6 Checkpoint (2026-07-24) — FROZEN before CP7
+
+**Checkpoint commits (branch `payroll-mockup-reskin`):** `43c48c72` (CP1–CP5) · `3a8498ea` (CP6).
+**CP7 is NOT started.** CP7 touches calculation + immutable evidence — the same high-risk area
+the payroll-certification workstream is actively changing on the shared live DB. Proceeding now
+would recreate exactly the branch/DB drift that produced the 97-test baseline incompatibility
+below. No further shared-DB changes from this branch until the freeze lifts.
+
+### Live migration verification evidence (service-role probe, 2026-07-24T01:19:55Z)
+| Check | Result |
+|---|---|
+| `hr_crew_assignments` | EXISTS; full 21-column select OK (id, assignment_no, employee_id, pay_group_id, policy_assignment_id, role, client_id, contract_id, asset_id, work_order_id, cost_center, contract_rate_reference, effective_from, effective_to, status, approval_state, approved_by, approved_at, created_by, created_at, updated_at) |
+| `hr_crew_movements` | EXISTS; full 17-column select OK (id, movement_no, employee_id, movement_type, occurred_at, operational_timezone, asset_id, source_system, source_reference, approval_state, approved_by, approved_at, corrects_movement_id, correction_reason, created_by, created_at, updated_at) |
+| `finance_pay_policy_versions.rotation_pattern_id` + `day_boundary` | present, selectable |
+| `role_permissions` (finance_manager) | all 4 crew keys granted: assignments.manage, evidence.view, movements.correct, movements.record |
+| Behavioral proof migrations are live | same-asset overlap exclusion, idempotent `(source_system,source_reference)` dedupe and 3-value `day_boundary` all exercised green by the E2E below |
+
+### Exact SHA-256 checksums (as committed at `3a8498ea`)
+| File | SHA-256 |
+|---|---|
+| `supabase/migrations/20260920000000_crew_payroll_core.sql` | `b4e9da8400ca6fe745099af0a020ef4db15244803def39a2ec2461f7661cc9c7` |
+| `supabase/migrations/20260920000001_crew_payroll_permissions.sql` | `ad0215f82a39478bce37569269e404ffcbcb1abcae6494e1377ad13388ac0bd7` |
+| `netlify/functions/lib/hr/crewAssignments.ts` | `9554bfa9ff4fe831dfa68ae57ae701ef10b4a2d51614c4d5eaa61e8c02f0e82f` |
+| `netlify/functions/lib/hr/crewMovements.ts` | `c948915fabf633d74255fca1c2b0559e3e399789692a992ffc563164bf5f65e7` |
+| `netlify/functions/routes/hrCrew.ts` | `eac8021a66f7f08bfcca5fd3f7633c3e9c25f71efb3d16bf6a2c0a7f90642f96` |
+| `netlify/functions/lib/finance/payroll/crewRun.ts` | `6ff95af8184352eba54591a1e553a0a9ecfc861aaf2ba83af9ec828f2fafea34` |
+| `scripts/e2e/suites/crewPayroll.mjs` | `ee6ebb55fcbc548e3b00d1884a0b30ae93483a605c90abf101f5902b6439aba6` |
+
+Note: the DEPLOYED definition of `finance_payroll_create_run_tx` on the live DB cannot be read
+through PostgREST (no pg_proc access) and does NOT match this branch's migration 711 — see the
+baseline incompatibility below. Its live behavior is characterized only by probe: it accepts
+`p_attestations` and rejects creation unless all three creation attestations are true.
+
+### E2E results (live dev server :8888, worktree build)
+- CP4/CP5 initial pass: **6/6 green** (tag `TEST-E2E-1784853410626`) — CPE-01/02/04/05/06 + 401/403.
+- CP4–CP6 full suite: **crewPayroll 12/12 green** (tag `TEST-E2E-1784854797404`) — adds
+  CPE-15/16/17/18/22/27(pos+neg), exact-count side-effect and frozen-snapshot assertions.
+
+### Baseline incompatibility — financePayroll 40 passed / 97 FAILED on this branch
+The live DB's `finance_payroll_create_run_tx` and run seeds have moved ahead of this branch:
+run creation now demands three creation attestations (`purposeScopeAndDatesReviewed`,
+`preflightLimitationsAcknowledged`, `separationOfDutiesAcknowledged`) and
+`finance_payroll_runs.statutory_version_id` is NOT NULL for direct seeds. This branch's
+`runs/create` route and the legacy suite helpers predate both, so ~97 financePayroll tests fail
+at run CREATE and cascade (`requires a run id`). Verified: **zero** of the 100 failure messages
+reference crew / policy-evidence / workspace / input-readiness surfaces.
+**Resolution is NOT assumed.** Whether/when another workstream's merge restores this baseline is
+unverified. The crew branch will: (1) wait for WP-3/WP-4 to land the FINAL create-run, workspace,
+error-envelope and capability contracts on main; (2) rebase onto that committed main state;
+(3) adapt crew code to those contracts (required creation attestations, authoritative workspace
+action capabilities, typed errors, atomic loading/error behavior, and the then-current
+`payrollRuns.ts` + migration-711 calculation logic).
+
+### CP7 entry gates (ALL must be green first)
+1. Backend + frontend typechecks clean.
+2. `payrollCreateAttestations` suite green.
+3. `financePayroll` suite green (baseline restored).
+4. `crewPayroll` green **twice consecutively** (cleanup/idempotency proof).
+5. Ordinary (non-crew) runs verified to return `crew: null`.
+6. A crew run created through the normal HTTP `runs/create` route — the direct-RPC fixture
+   shortcut in the current suite must be replaced once the final create contract lands.
 
 Authoritative spec: **§14 "Pay Policies and Conditional Work-Pattern Controls"** and **§9.4**
 of the payroll-enterprise `CLAUDE_IMPLEMENTATION_SPEC.md`. Where this contract and an older
