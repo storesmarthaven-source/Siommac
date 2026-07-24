@@ -21,9 +21,9 @@ const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const requestKey = z.string().trim().min(8).max(200);
 const component = z.object({
   componentId: z.string().uuid(),
-  calculationBasis: z.enum(['salary_period', 'approved_hours']),
+  calculationBasis: z.enum(['salary_period', 'approved_hours', 'per_qualifying_day']),
   rateSource: z.enum(['employee_contract', 'employee_assignment']),
-  eligibilitySource: z.enum(['effective_employment', 'approved_compensation', 'approved_time']),
+  eligibilitySource: z.enum(['effective_employment', 'approved_compensation', 'approved_time', 'crew_movement']),
   ruleParameters: z.union([
     z.object({ proration: z.enum(['calendar_days', 'working_days']) }).strict(),
     z.object({}).strict(),
@@ -37,6 +37,18 @@ const component = z.object({
     }
     if (!('proration' in value.ruleParameters)) {
       ctx.addIssue({ code: 'custom', path: ['ruleParameters'], message: 'Salary-period rules require a proration method.' });
+    }
+  } else if (value.calculationBasis === 'per_qualifying_day') {
+    // CP7b (§14.4): crew day-rate — eligibility comes from crew movements, the
+    // TTD rate ONLY from the employee's daily hr_contracts record (locked decision).
+    if (value.eligibilitySource !== 'crew_movement') {
+      ctx.addIssue({ code: 'custom', path: ['eligibilitySource'], message: 'Qualifying-day rules require crew movement eligibility.' });
+    }
+    if (value.rateSource !== 'employee_contract') {
+      ctx.addIssue({ code: 'custom', path: ['rateSource'], message: 'Qualifying-day rules take their rate from the employee contract.' });
+    }
+    if (Object.keys(value.ruleParameters).length) {
+      ctx.addIssue({ code: 'custom', path: ['ruleParameters'], message: 'Qualifying-day rules take no parameters.' });
     }
   } else if (value.eligibilitySource !== 'approved_time' || Object.keys(value.ruleParameters).length) {
     ctx.addIssue({ code: 'custom', path: ['eligibilitySource'], message: 'Approved-hours rules require approved time and no parameters.' });
@@ -55,7 +67,9 @@ const draft = z.object({
   code: z.string().trim().min(2).max(20).regex(/^[A-Za-z0-9][A-Za-z0-9_-]+$/),
   name: z.string().trim().min(3).max(120),
   description: z.string().trim().max(1000),
-  policyType: z.enum(['standard_salary', 'hourly_shift']),
+  // CP7b: crew types authorable now that the qualifying-day engine exists.
+  // 'project'/'standby_callout' stay OUT until an engine honors them (§14.4).
+  policyType: z.enum(['standard_salary', 'hourly_shift', 'offshore_rotation', 'marine_voyage']),
   ownerId: z.string().min(1).max(100).nullable(),
   effectiveFrom: date,
   effectiveTo: date.nullable(),

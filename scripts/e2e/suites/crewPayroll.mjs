@@ -18,11 +18,13 @@ export default async function run(h) {
   const U = {
     mgr: `CRP-MGR-${TAG}`, plain: `CRP-EMP-${TAG}`,
     A: `CRP-EA-${TAG}`, B: `CRP-EB-${TAG}`, C: `CRP-EC-${TAG}`, D: `CRP-ED-${TAG}`,
+    E: `CRP-EE-${TAG}`, F: `CRP-EF-${TAG}`,
   };
   let T = {};
   const ids = {
-    pgId: null, pg2Id: null, assetA: null, assetB: null, asgIds: [], movIds: [],
-    crewPolicy: null, stdPolicy: null, runIds: [], mayMovementId: null,
+    pgId: null, pg2Id: null, pg3Id: null, assetA: null, assetB: null, asgIds: [], movIds: [],
+    crewPolicy: null, stdPolicy: null, pg3Policy: null, dayCompId: null,
+    runIds: [], mayMovementId: null,
   };
 
   h.onCleanup(async () => {
@@ -45,17 +47,22 @@ export default async function run(h) {
       await h.mustDelete('app_events', q => q.in('source_entity_id', ids.runIds));
       await h.mustDelete('finance_payroll_runs', q => q.in('id', ids.runIds));
     }
-    try { await sb.from('hr_crew_movements').delete().in('employee_id', [U.A, U.B, U.C]); } catch {}
-    try { await sb.from('hr_crew_assignments').delete().in('employee_id', [U.A, U.B, U.C]); } catch {}
-    try { await sb.from('hr_overtime_entries').delete().in('employee_id', [U.A, U.B, U.C]); } catch {}
-    try { await sb.from('hr_employee_statutory_profiles').delete().in('employee_id', [U.A, U.B, U.C]); } catch {}
+    const crewEmp = [U.A, U.B, U.C, U.E, U.F];
+    try { await sb.from('hr_crew_movements').delete().in('employee_id', crewEmp); } catch {}
+    try { await sb.from('hr_crew_assignments').delete().in('employee_id', crewEmp); } catch {}
+    try { await sb.from('hr_contracts').delete().in('employee_id', crewEmp); } catch {}
+    try { await sb.from('hr_overtime_entries').delete().in('employee_id', crewEmp); } catch {}
+    try { await sb.from('hr_employee_statutory_profiles').delete().in('employee_id', crewEmp); } catch {}
     try { await sb.from('app_events').delete().in('actor_user_id', Object.values(U)); } catch {}
     try { await sb.from('audit_logs').delete().in('user_id', Object.values(U)); } catch {}
     for (const a of [ids.assetA, ids.assetB]) { if (a) { try { await sb.from('ops_assets').delete().eq('id', a); } catch {} } }
     // Policy fixtures AFTER runs/snapshots, BEFORE the pay groups (restrict FKs).
     if (ids.crewPolicy) { try { await ids.crewPolicy.cleanup(); } catch {} }
     if (ids.stdPolicy)  { try { await ids.stdPolicy.cleanup(); } catch {} }
-    for (const pg of [ids.pgId, ids.pg2Id]) {
+    if (ids.pg3Policy)  { try { await ids.pg3Policy.cleanup(); } catch {} }
+    // The day-rate pay component AFTER the policy cleanups (binding FK is restrict).
+    if (ids.dayCompId)  { try { await sb.from('finance_pay_components').delete().eq('id', ids.dayCompId); } catch {} }
+    for (const pg of [ids.pgId, ids.pg2Id, ids.pg3Id]) {
       if (!pg) continue;
       try { await sb.from('finance_employee_pay_group_assignments').delete().eq('pay_group_id', pg); } catch {}
       try { await sb.from('finance_pay_groups').delete().eq('id', pg); } catch {}
@@ -77,6 +84,8 @@ export default async function run(h) {
       { id: U.B, username: `${TAG}_crp_eb`, full_name: 'Crew Emp B', role: 'employee', status: 'active', employment_type: 'employee', ...salaried },
       { id: U.C, username: `${TAG}_crp_ec`, full_name: 'Crew Emp C', role: 'employee', status: 'active', employment_type: 'employee', ...salaried },
       { id: U.D, username: `${TAG}_crp_ed`, full_name: 'Std Emp D',  role: 'employee', status: 'active', employment_type: 'employee', ...salaried },
+      { id: U.E, username: `${TAG}_crp_ee`, full_name: 'Crew Emp E', role: 'employee', status: 'active', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 6000.00 },
+      { id: U.F, username: `${TAG}_crp_ef`, full_name: 'Crew Emp F', role: 'employee', status: 'active', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 6000.00 },
     ]);
     expect(!error, `seed users: ${error?.message}`);
     T = {
@@ -86,14 +95,17 @@ export default async function run(h) {
     const pg = await sb.from('finance_pay_groups').insert([
       { code: `CRP-${TAG.slice(-5)}`, name: `Crew ${TAG}`,     frequency: 'monthly', statutory_country: 'TT' },
       { code: `CRS-${TAG.slice(-5)}`, name: `Crew Std ${TAG}`, frequency: 'monthly', statutory_country: 'TT' },
+      { code: `CRB-${TAG.slice(-5)}`, name: `Crew Blk ${TAG}`, frequency: 'monthly', statutory_country: 'TT' },
     ]).select('id');
     expect(!pg.error, `pay groups: ${pg.error?.message}`);
-    ids.pgId = pg.data[0].id; ids.pg2Id = pg.data[1].id;
+    ids.pgId = pg.data[0].id; ids.pg2Id = pg.data[1].id; ids.pg3Id = pg.data[2].id;
     const mem = await sb.from('finance_employee_pay_group_assignments').insert([
       { employee_id: U.A, pay_group_id: ids.pgId,  effective_from: '2026-01-01', created_by: U.mgr },
       { employee_id: U.B, pay_group_id: ids.pgId,  effective_from: '2026-01-01', created_by: U.mgr },
       { employee_id: U.C, pay_group_id: ids.pgId,  effective_from: '2026-01-01', created_by: U.mgr },
       { employee_id: U.D, pay_group_id: ids.pg2Id, effective_from: '2026-01-01', created_by: U.mgr },
+      { employee_id: U.E, pay_group_id: ids.pgId,  effective_from: '2026-01-01', created_by: U.mgr },
+      { employee_id: U.F, pay_group_id: ids.pg3Id, effective_from: '2026-01-01', created_by: U.mgr },
     ]);
     expect(!mem.error, `memberships: ${mem.error?.message}`);
     const a = await sb.from('ops_assets').insert([{ name: `Platform Alpha ${TAG}`, type: 'platform' }, { name: `Platform Bravo ${TAG}`, type: 'platform' }]).select('id');
@@ -344,18 +356,81 @@ export default async function run(h) {
   // line, no crew evidence.
   const JUN = { start: '2026-06-01', end: '2026-06-30' };
 
-  await test('CP7-setup — profile, June assignment, movements, unapproved OT', async () => {
-    const prof = await sb.from('hr_employee_statutory_profiles').insert({
-      employee_id: U.A, jurisdiction: 'TT', nis_number: `NIS${TAG.slice(-7)}`,
-      nis_status: 'verified', nis_applicable: true,
+  await test('CP7-setup — profiles, contracts, day-rate component, assignments, movements, OT', async () => {
+    const prof = await sb.from('hr_employee_statutory_profiles').insert([
+      { employee_id: U.A, jurisdiction: 'TT', nis_number: `NISA${TAG.slice(-6)}`, nis_status: 'verified', nis_applicable: true },
+      { employee_id: U.E, jurisdiction: 'TT', nis_number: `NISE${TAG.slice(-6)}`, nis_status: 'verified', nis_applicable: true },
+      { employee_id: U.F, jurisdiction: 'TT', nis_number: `NISF${TAG.slice(-6)}`, nis_status: 'verified', nis_applicable: true },
+    ]);
+    expect(!prof.error, `statutory profiles: ${prof.error?.message}`);
+
+    // CP7b: the day-rate pay component + its per_qualifying_day binding on BOTH
+    // crew policy versions (pg run + pg3 blocker-run). Requires mig 20260921000000.
+    const comp = await sb.from('finance_pay_components').insert({
+      code: `CRD${TAG.slice(-6)}`, name: `Crew Day Rate [${TAG}]`, kind: 'earning',
+      is_taxable: true, is_active: true,
+    }).select('id').single();
+    expect(!comp.error, `day component: ${comp.error?.message}`);
+    ids.dayCompId = comp.data.id;
+    ids.pg3Policy = await attachActivePolicy({
+      sb, payGroupId: ids.pg3Id, actorId: U.mgr, tag: TAG,
+      policyType: 'offshore_rotation', dayBoundary: 'offshore_day',
     });
-    expect(!prof.error, `A statutory profile: ${prof.error?.message}`);
+    const binds = await sb.from('finance_pay_policy_components').insert([
+      { policy_version_id: ids.crewPolicy.versionId, component_id: ids.dayCompId,
+        calculation_basis: 'per_qualifying_day', rate_source: 'employee_contract',
+        eligibility_source: 'crew_movement', rule_parameters: {}, is_required: true, sort_order: 10 },
+      { policy_version_id: ids.pg3Policy.versionId, component_id: ids.dayCompId,
+        calculation_basis: 'per_qualifying_day', rate_source: 'employee_contract',
+        eligibility_source: 'crew_movement', rule_parameters: {}, is_required: true, sort_order: 10 },
+    ]);
+    expect(!binds.error, `component bindings (mig 20260921000000 applied?): ${binds.error?.message}`);
+
+    // Daily TTD contracts: A = 1234.56 (rounding case), E = two sequential
+    // contracts at different rates (1000 then 1200).
+    const contracts = await sb.from('hr_contracts').insert([
+      { contract_no: `CRW-${TAG}-A1`, employee_id: U.A, title: 'A offshore daily', status: 'active',
+        start_date: JUN.start, compensation_amount: 1234.56, compensation_currency: 'TTD', compensation_period: 'daily' },
+      { contract_no: `CRW-${TAG}-E1`, employee_id: U.E, title: 'E daily 1', status: 'active',
+        start_date: '2026-06-01', end_date: '2026-06-15', compensation_amount: 1000.00, compensation_currency: 'TTD', compensation_period: 'daily' },
+      { contract_no: `CRW-${TAG}-E2`, employee_id: U.E, title: 'E daily 2', status: 'active',
+        start_date: '2026-06-16', compensation_amount: 1200.00, compensation_currency: 'TTD', compensation_period: 'daily' },
+    ]).select('id, contract_no');
+    expect(!contracts.error, `contracts: ${contracts.error?.message}`);
+    const byNo = new Map(contracts.data.map(c => [c.contract_no, c.id]));
+    ids.contractA  = byNo.get(`CRW-${TAG}-A1`);
+    ids.contractE1 = byNo.get(`CRW-${TAG}-E1`);
+    ids.contractE2 = byNo.get(`CRW-${TAG}-E2`);
 
     const aAsg = await api('hr/crew/assignments/create', T.mgr, {
-      employeeId: U.A, payGroupId: ids.pgId, assetId: ids.assetA,
+      employeeId: U.A, payGroupId: ids.pgId, assetId: ids.assetA, contractId: ids.contractA,
       effectiveFrom: JUN.start, effectiveTo: JUN.end, status: 'active',
     });
     ok(aAsg, `A June assignment: ${aAsg.body.message}`); ids.asgIds.push(aAsg.body.data.id);
+
+    // E: two sequential assignments, each with its own contract (CP7b case 2).
+    const e1 = await api('hr/crew/assignments/create', T.mgr, {
+      employeeId: U.E, payGroupId: ids.pgId, assetId: ids.assetA, contractId: ids.contractE1,
+      effectiveFrom: '2026-06-01', effectiveTo: '2026-06-15', status: 'active',
+    });
+    ok(e1, `E assignment 1: ${e1.body.message}`); ids.asgE1 = e1.body.data.id; ids.asgIds.push(ids.asgE1);
+    const e2 = await api('hr/crew/assignments/create', T.mgr, {
+      employeeId: U.E, payGroupId: ids.pgId, assetId: ids.assetB, contractId: ids.contractE2,
+      effectiveFrom: '2026-06-16', effectiveTo: '2026-06-30', status: 'active',
+    });
+    ok(e2, `E assignment 2: ${e2.body.message}`); ids.asgE2 = e2.body.data.id; ids.asgIds.push(ids.asgE2);
+    const eMovs = [
+      { movementType: 'embark',    occurredAt: '2026-06-14T06:00:00Z', ref: `SRC-${TAG}-E1` },
+      { movementType: 'disembark', occurredAt: '2026-06-17T20:00:00Z', ref: `SRC-${TAG}-E2` },
+    ];
+    for (const m of eMovs) {
+      const r = await api('hr/crew/movements/record', T.mgr, {
+        employeeId: U.E, movementType: m.movementType, occurredAt: m.occurredAt,
+        assetId: ids.assetA, sourceSystem: 'marine_logistics', sourceReference: m.ref,
+      });
+      ok(r, `E movement ${m.movementType}: ${r.body.message}`);
+      ids.movIds.push(r.body.data.movement.id);
+    }
 
     const movs = [
       { movementType: 'mobilize',  occurredAt: '2026-06-10T08:00:00Z', ref: `SRC-${TAG}-J1` },
@@ -379,12 +454,21 @@ export default async function run(h) {
     ids.otId = ot.data.id;
   });
 
-  await test('CP7 lock+calc — CPE-19/20/21/24/26 evidence and findings', async () => {
+  await test('CP7 lock+calc — CPE-19/20/21/24/26 evidence, findings, day-rate earnings', async () => {
     const runId = await createRunFixture({ requestKey: `crw7-run-${TAG}`, payGroupId: ids.pgId, period: JUN });
     ids.cp7RunId = runId;
     const lk = await api('finance/payroll/runs/lock-inputs', T.mgr,
       { id: runId, idempotencyKey: `crw7-lock-${TAG}` });
     ok(lk, `lock: ${lk.body.message}`);
+
+    // Idempotent replay: same key relock returns the SAME snapshot, adds nothing.
+    const relk = await api('finance/payroll/runs/lock-inputs', T.mgr,
+      { id: runId, idempotencyKey: `crw7-lock-${TAG}` });
+    ok(relk, `relock replay: ${relk.body.message}`);
+    const snaps = await sb.from('finance_payroll_input_snapshots')
+      .select('id', { count: 'exact', head: true }).eq('run_id', runId);
+    expect(snaps.count === 1, `replay keeps exactly 1 snapshot (got ${snaps.count})`);
+
     const calc = await api('finance/payroll/runs/calculate', T.mgr,
       { id: runId, idempotencyKey: `crw7-calc-${TAG}` });
     ok(calc, `calculate: ${calc.body.message}`);
@@ -395,7 +479,47 @@ export default async function run(h) {
     const byEmp = new Map(lines.body.data.map(l => [l.employeeId, l]));
     // CPE-21: crew employee C without a verified profile gets NO line.
     expect(!byEmp.has(U.C), 'C (incomplete statutory profile) has NO line');
-    expect(byEmp.has(U.A) && byEmp.has(U.B), 'A and B have lines');
+    expect(byEmp.has(U.A) && byEmp.has(U.B) && byEmp.has(U.E), 'A, B and E have lines');
+
+    // CP7b: day-rate earnings from the frozen contract evidence.
+    // A: 3 qualifying days × 1234.56 = 3703.68 (exact rounding) on top of 9000 salary.
+    const aCrew = byEmp.get(U.A).breakdown.crew;
+    expect(!!aCrew.dayRate, 'A line carries frozen dayRate evidence');
+    expect(aCrew.dayRate.totalDays === 3 && aCrew.dayRate.totalAmount === 3703.68,
+      `A day-rate 3d × 1234.56 = 3703.68 (got ${aCrew.dayRate.totalDays}d/${aCrew.dayRate.totalAmount})`);
+    const aAlloc = aCrew.dayRate.allocations[0];
+    expect(aCrew.dayRate.allocations.length === 1 && aAlloc.contractId === ids.contractA
+      && aAlloc.compensationAmount === 1234.56 && aAlloc.currency === 'TTD' && aAlloc.period === 'daily'
+      && aAlloc.earningAmount === 3703.68 && aAlloc.qualifyingDays === 3,
+      `A allocation frozen contract shape (got ${JSON.stringify(aAlloc)})`);
+    expect(Number(byEmp.get(U.A).gross) === 9000 + 3703.68,
+      `A gross = salary + day-rate = 12703.68 (got ${byEmp.get(U.A).gross})`);
+
+    // E: sequential assignments with DIFFERENT contracts/rates — dates 14,15 on
+    // contract E1 @1000, dates 16,17 on contract E2 @1200 ⇒ 2000 + 2400 = 4400.
+    const eCrew = byEmp.get(U.E).breakdown.crew;
+    expect(eCrew.qualifyingDays === 4
+      && JSON.stringify(eCrew.qualifyingDates) === JSON.stringify(['2026-06-14', '2026-06-15', '2026-06-16', '2026-06-17']),
+      `E qualifying dates 14..17 (got ${JSON.stringify(eCrew.qualifyingDates)})`);
+    const eAllocs = eCrew.dayRate.allocations;
+    const e1 = eAllocs.find(a => a.contractId === ids.contractE1);
+    const e2 = eAllocs.find(a => a.contractId === ids.contractE2);
+    expect(eAllocs.length === 2
+      && e1 && e1.qualifyingDays === 2 && e1.compensationAmount === 1000 && e1.earningAmount === 2000
+      && e2 && e2.qualifyingDays === 2 && e2.compensationAmount === 1200 && e2.earningAmount === 2400
+      && eCrew.dayRate.totalAmount === 4400,
+      `E per-contract allocations 2×1000 + 2×1200 (got ${JSON.stringify(eAllocs)})`);
+    expect(Number(byEmp.get(U.E).gross) === 6000 + 4400,
+      `E gross = 10400 (got ${byEmp.get(U.E).gross})`);
+
+    // Allocation-to-line reconciliation: allocation sums equal the frozen input
+    // rows equal the per-line dayRate totals.
+    const inputs = await api('finance/payroll/inputs/list', T.mgr, { runId });
+    ok(inputs, `inputs: ${inputs.body.message}`);
+    const drInputs = inputs.body.data.filter(i => i.sourceType === 'crew_day_rate');
+    expect(drInputs.length === 3, `3 frozen crew_day_rate input rows (got ${drInputs.length})`);
+    const drSum = Math.round(drInputs.reduce((s, i) => s + Number(i.amount), 0) * 100) / 100;
+    expect(drSum === 3703.68 + 4400, `input-row sum reconciles (got ${drSum})`);
 
     // CPE-20/26: qualifying-day evidence on A's line — deduped + cross-midnight safe.
     const crew = byEmp.get(U.A).breakdown.crew;
@@ -414,8 +538,8 @@ export default async function run(h) {
     // B is not crew: no crew evidence on their line.
     expect(byEmp.get(U.B).breakdown.crew === undefined, 'B line has NO crew evidence');
 
-    // CPE-24: the advisory OT finding did NOT suppress earned pay — full salary.
-    expect(Number(byEmp.get(U.A).gross) === 9000, `A gross 9000 (got ${byEmp.get(U.A).gross})`);
+    // CPE-24: the advisory OT finding did NOT suppress earned pay — A's full
+    // salary + full frozen day-rate earnings are both intact (asserted above).
 
     // CPE-19/21/28: exact finding rows from the atomic publish.
     const verId = calc.body.data.currentCalculationVersionId
@@ -433,21 +557,128 @@ export default async function run(h) {
       `CPE-21 exactly 1 statutory blocker for C (got ${JSON.stringify(st)})`);
   });
 
-  await test('CPE-25 — movement recorded AFTER lock cannot alter the calculation', async () => {
+  await test('CPE-25 — post-lock movement AND contract amendment cannot alter recalculation', async () => {
     const late = await api('hr/crew/movements/record', T.mgr, {
       employeeId: U.A, movementType: 'embark', occurredAt: '2026-06-20T06:00:00Z',
       assetId: ids.assetA, sourceSystem: 'marine_logistics', sourceReference: `SRC-${TAG}-J4`,
     });
     ok(late, `late movement: ${late.body.message}`); ids.movIds.push(late.body.data.movement.id);
 
+    // Amend + supersede the live contract AFTER lock — recalculation must consume
+    // only the FROZEN rate evidence, never re-read the contract.
+    const amend = await sb.from('hr_contracts')
+      .update({ compensation_amount: 9999.99, status: 'superseded' })
+      .eq('id', ids.contractA);
+    expect(!amend.error, `contract amend: ${amend.error?.message}`);
+
     const recalc = await api('finance/payroll/runs/calculate', T.mgr,
       { id: ids.cp7RunId, idempotencyKey: `crw7-recalc-${TAG}` });
     ok(recalc, `recalculate: ${recalc.body.message}`);
     const lines = await api('finance/payroll/run-lines/list', T.mgr, { runId: ids.cp7RunId });
     ok(lines, `run-lines: ${lines.body.message}`);
-    const crew = lines.body.data.find(l => l.employeeId === U.A).breakdown.crew;
+    const line = lines.body.data.find(l => l.employeeId === U.A);
+    const crew = line.breakdown.crew;
     expect(crew.qualifyingDays === 3 && crew.movementIds.length === 3,
       `frozen snapshot unchanged: still 3 qualifying days / 3 movements (got ${crew.qualifyingDays}/${crew.movementIds.length})`);
+    expect(crew.dayRate.totalAmount === 3703.68
+      && crew.dayRate.allocations[0].compensationAmount === 1234.56
+      && Number(line.gross) === 9000 + 3703.68,
+      `frozen day-rate unchanged by amendment (got ${JSON.stringify(crew.dayRate)})`);
+
+    // Duplicate-calc replay: the SAME calc key adds no version/findings/events.
+    const before = await sb.from('finance_payroll_calculation_versions')
+      .select('id', { count: 'exact', head: true }).eq('run_id', ids.cp7RunId);
+    const evBefore = await sb.from('app_events')
+      .select('id', { count: 'exact', head: true }).eq('source_entity_id', ids.cp7RunId);
+    const replay = await api('finance/payroll/runs/calculate', T.mgr,
+      { id: ids.cp7RunId, idempotencyKey: `crw7-recalc-${TAG}` });
+    ok(replay, `calc replay: ${replay.body.message}`);
+    const after = await sb.from('finance_payroll_calculation_versions')
+      .select('id', { count: 'exact', head: true }).eq('run_id', ids.cp7RunId);
+    const evAfter = await sb.from('app_events')
+      .select('id', { count: 'exact', head: true }).eq('source_entity_id', ids.cp7RunId);
+    expect(before.count === after.count && evBefore.count === evAfter.count,
+      `same-key replay adds no versions/events (${before.count}->${after.count}, ${evBefore.count}->${evAfter.count})`);
+  });
+
+  await test('CP7b blockers — every typed contract/rate gate fails the lock atomically', async () => {
+    // F (pg3, verified profile): assignment WITHOUT a contract + 3 qualifying days.
+    const fAsg = await api('hr/crew/assignments/create', T.mgr, {
+      employeeId: U.F, payGroupId: ids.pg3Id, assetId: ids.assetA,
+      effectiveFrom: JUN.start, effectiveTo: JUN.end, status: 'active',
+    });
+    ok(fAsg, `F assignment: ${fAsg.body.message}`);
+    const fAsgId = fAsg.body.data.id; ids.asgIds.push(fAsgId);
+    for (const m of [
+      { movementType: 'embark',    occurredAt: '2026-06-05T06:00:00Z', ref: `SRC-${TAG}-F1` },
+      { movementType: 'disembark', occurredAt: '2026-06-07T20:00:00Z', ref: `SRC-${TAG}-F2` },
+    ]) {
+      const r = await api('hr/crew/movements/record', T.mgr, {
+        employeeId: U.F, movementType: m.movementType, occurredAt: m.occurredAt,
+        assetId: ids.assetA, sourceSystem: 'marine_logistics', sourceReference: m.ref,
+      });
+      ok(r, `F movement: ${r.body.message}`); ids.movIds.push(r.body.data.movement.id);
+    }
+    const runId = await createRunFixture({ requestKey: `crw7b-run-${TAG}`, payGroupId: ids.pg3Id, period: JUN });
+
+    let attempt = 0;
+    const expectBlock = async (code, label) => {
+      attempt += 1;
+      const r = await api('finance/payroll/runs/lock-inputs', T.mgr,
+        { id: runId, idempotencyKey: `crw7b-lock-${TAG}-${attempt}` });
+      fails(r);
+      expect(r.status === 422 && r.body.error?.code === code,
+        `${label}: expected 422 ${code} (got ${r.status} ${r.body.error?.code}: ${r.body.message})`);
+      expect(Array.isArray(r.body.error?.details?.blockers) && r.body.error.details.blockers[0].code === code,
+        `${label}: typed blocker details present`);
+      const snaps = await sb.from('finance_payroll_input_snapshots')
+        .select('id', { count: 'exact', head: true }).eq('run_id', runId);
+      expect(snaps.count === 0, `${label}: NO snapshot on blocking failure (got ${snaps.count})`);
+    };
+
+    // 1. assignment has no contract at all.
+    await expectBlock('crew.day_rate.contract_missing', 'missing contract');
+    // 2. contract belongs to a different employee (A's contract on F's assignment).
+    const up1 = await api('hr/crew/assignments/update', T.mgr, { id: fAsgId, contractId: ids.contractA });
+    ok(up1, `attach mismatched contract: ${up1.body.message}`);
+    await expectBlock('crew.day_rate.contract_employee_mismatch', 'employee mismatch');
+    // 3. F's own contract, but not active.
+    const fc = await sb.from('hr_contracts').insert({
+      contract_no: `CRW-${TAG}-F1`, employee_id: U.F, title: 'F daily', status: 'draft',
+      start_date: JUN.start, compensation_amount: 500.00,
+      compensation_currency: 'TTD', compensation_period: 'daily',
+    }).select('id').single();
+    expect(!fc.error, `F contract: ${fc.error?.message}`);
+    ids.contractF = fc.data.id;
+    const up2 = await api('hr/crew/assignments/update', T.mgr, { id: fAsgId, contractId: ids.contractF });
+    ok(up2, `attach F contract: ${up2.body.message}`);
+    await expectBlock('crew.day_rate.contract_not_active', 'inactive contract');
+    // 4. active but not effective for every attributed date (starts Jun-06; day Jun-05 uncovered).
+    await sb.from('hr_contracts').update({ status: 'active', start_date: '2026-06-06' }).eq('id', ids.contractF);
+    await expectBlock('crew.day_rate.contract_not_effective', 'uncovered qualifying date');
+    // 5. covered, but not a daily rate.
+    await sb.from('hr_contracts').update({ start_date: JUN.start, compensation_period: 'monthly' }).eq('id', ids.contractF);
+    await expectBlock('crew.day_rate.rate_period_invalid', 'non-daily period');
+    // 6. daily, but not TTD.
+    await sb.from('hr_contracts').update({ compensation_period: 'daily', compensation_currency: 'USD' }).eq('id', ids.contractF);
+    await expectBlock('crew.day_rate.currency_invalid', 'non-TTD currency');
+    // 7. TTD, but no positive amount.
+    await sb.from('hr_contracts').update({ compensation_currency: 'TTD', compensation_amount: 0 }).eq('id', ids.contractF);
+    await expectBlock('crew.day_rate.rate_amount_invalid', 'non-positive amount');
+
+    // Fully valid → lock + calculate succeed: 3 days × 500 = 1500 on top of salary.
+    await sb.from('hr_contracts').update({ compensation_amount: 500.00 }).eq('id', ids.contractF);
+    const lk = await api('finance/payroll/runs/lock-inputs', T.mgr,
+      { id: runId, idempotencyKey: `crw7b-lock-${TAG}-ok` });
+    ok(lk, `valid lock: ${lk.body.message}`);
+    const calc = await api('finance/payroll/runs/calculate', T.mgr,
+      { id: runId, idempotencyKey: `crw7b-calc-${TAG}` });
+    ok(calc, `calculate: ${calc.body.message}`);
+    const lines = await api('finance/payroll/run-lines/list', T.mgr, { runId });
+    ok(lines, `run-lines: ${lines.body.message}`);
+    const f = lines.body.data.find(l => l.employeeId === U.F);
+    expect(f.breakdown.crew.dayRate.totalAmount === 1500 && Number(f.gross) === 6000 + 1500,
+      `F day-rate 3×500=1500, gross 7500 (got ${JSON.stringify(f.breakdown.crew.dayRate)} gross ${f.gross})`);
   });
 
   await test('CPE-15 — locked run keeps its pinned checksum after a later version activates', async () => {

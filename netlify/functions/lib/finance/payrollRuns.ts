@@ -44,11 +44,14 @@ import {
 import { payrollExportChecksum } from './payroll/exportContent';
 import { payrollRpcHttpError } from './payroll/rpcError';
 import {
+  buildCrewDayRateEvidence,
   buildCrewRunEvidence,
   prepareCrewCalculation,
   resolveCrewCapability,
+  resolveDayRateComponent,
   resolvePayGroupPolicyVersionId,
   type CrewCalculationPrep,
+  type CrewDayRateAllocation,
   type CrewRunEvidence,
 } from './payroll/crewRun';
 
@@ -1196,6 +1199,26 @@ export async function lockInputs(
       if (crewCapability.enabled) {
         crewEvidence = await buildCrewRunEvidence(
           crewCapability, empList.map(e => e.id), periodStart, periodEnd);
+
+        // CP7b: when the pinned version binds a per_qualifying_day component, the
+        // TTD day rate resolves ONCE, here, from each attributed assignment's
+        // canonical hr_contracts record. Any violation is a typed 422 BLOCKER and
+        // the lock fails atomically — no snapshot, no partial earnings.
+        const dayRateComponent = await resolveDayRateComponent(policyVersionId);
+        if (dayRateComponent) {
+          const prep = await prepareCrewCalculation(crewEvidence, periodStart, periodEnd);
+          const { evidence: dayRate, blockers } =
+            await buildCrewDayRateEvidence(dayRateComponent, prep);
+          if (blockers.length > 0) {
+            const first = blockers[0]!;
+            throw Object.assign(new Error(`${first.code}: ${first.detail}`), {
+              status: 422,
+              code: first.code,
+              details: { blockers },
+            });
+          }
+          crewEvidence.dayRate = dayRate;
+        }
       }
     }
     if (pinRow?.pay_policy_required && policyVersionId) {
@@ -1403,6 +1426,30 @@ export async function lockInputs(
         rate:           null,
         metadata:       { kind: 'deduction', is_taxable: false, reduces_chargeable: false, loan: true, loan_id: inst.loanId, loan_reference: inst.reference },
       });
+    }
+  }
+
+  // CP7b: one frozen crew day-rate input row per (employee, assignment)
+  // allocation — amount = round2(contract day rate × attributed qualifying days),
+  // resolved above and never re-read after this point.
+  if (crewEvidence?.dayRate) {
+    const dr = crewEvidence.dayRate;
+    for (const emp of dr.perEmployee) {
+      if (crewStatutoryExcluded.has(emp.employeeId)) continue;
+      for (const alloc of emp.allocations) {
+        inputRows.push({
+          run_id:         runId,
+          employee_id:    emp.employeeId,
+          source_type:    'crew_day_rate',
+          source_id:      alloc.assignmentId,
+          component_code: dr.componentCode,
+          label:          `Crew day rate (${alloc.qualifyingDays}d @ ${alloc.compensationAmount.toFixed(2)} TTD)`,
+          amount:         alloc.earningAmount,
+          quantity:       alloc.qualifyingDays,
+          rate:           alloc.compensationAmount,
+          metadata:       { kind: 'earning', is_taxable: dr.isTaxable, ...alloc },
+        });
+      }
     }
   }
 
@@ -1682,6 +1729,13 @@ export async function calculateRun(
         basePay += Number(input.amount ?? 0);
       } else if (input.sourceType === 'overtime') {
         approvedOtAmount += Number(input.amount ?? 0);
+      } else if (input.sourceType === 'crew_day_rate') {
+        // CP7b: frozen contract day-rate earning (amount computed at lock).
+        if (meta.is_taxable !== false) {
+          taxableAllowances += Number(input.amount ?? 0);
+        } else {
+          nonTaxableAllowances += Number(input.amount ?? 0);
+        }
       } else if (input.sourceType === 'pay_item') {
         // Worksheet overrides are also stored as pay_item rows (tagged metadata.override), so
         // they aggregate here into earnings / deductions via their kind/is_taxable metadata.
@@ -1776,9 +1830,29 @@ export async function calculateRun(
         nisContributionPeriods,
         statutoryVersionId: run.statutoryVersionId,
         // CP7 (CPE-26): per-line crew evidence — qualifying dates, frozen source
-        // ids and costing-dimension allocation. Absent on non-crew employees.
+        // ids and costing-dimension allocation; CP7b adds the frozen contract
+        // day-rate allocations + earnings. Absent on non-crew employees.
         ...(crewCalc?.perEmployee.has(empId)
-          ? { crew: crewCalc.perEmployee.get(empId) }
+          ? {
+              crew: {
+                ...crewCalc.perEmployee.get(empId)!,
+                ...(() => {
+                  const drInputs = empInputs.filter(i => i.sourceType === 'crew_day_rate');
+                  if (drInputs.length === 0) return {};
+                  const allocations = drInputs
+                    .map(i => i.metadata as unknown as CrewDayRateAllocation)
+                    .sort((a, b) => a.assignmentId.localeCompare(b.assignmentId));
+                  return {
+                    dayRate: {
+                      componentCode: drInputs[0]!.componentCode,
+                      allocations,
+                      totalDays: allocations.reduce((s, a) => s + Number(a.qualifyingDays), 0),
+                      totalAmount: Math.round(allocations.reduce((s, a) => s + Number(a.earningAmount), 0) * 100) / 100,
+                    },
+                  };
+                })(),
+              },
+            }
           : {}),
       },
       department_id:           null, // resolved from app_users in a later phase

@@ -1,9 +1,26 @@
 # Crew Payroll — Delivery Contract
 
 **Slice states (2026-07-24):** CP1 ✅ · CP2 ✅ applied · CP3 ✅ applied · CP4 ✅ Live-verified ·
-CP5 ✅ Live-verified · CP6 ✅ Live-verified · **CP7a ✅ Live-verified** (crewPayroll E2E 15/15
-twice; financePayroll 137/137 regression) · CP7b/CP8/CP9 Designed.
+CP5 ✅ Live-verified · CP6 ✅ Live-verified · CP7a ✅ Live-verified · **CP7b ✅ Live-verified**
+(mig 20260921000000 APPLIED + probe-verified; crewPayroll 16/16 twice consecutively, tags
+`TEST-E2E-1784864521220`/`-1784864711246`; financePayroll 137/137; one earlier 12/16 run did not
+reproduce over four subsequent runs — consistent with a transient service-client fetch failure,
+messages not captured) · CP8/CP9 Designed.
 Nothing below is Implemented until its slice lands + is Live-verified + Regression-verified.
+
+**CP7b rate model (user-locked 2026-07-24): `employee_contract` ONLY.** The policy governs HOW
+(a `per_qualifying_day`/`crew_movement`/`employee_contract` component on the pinned version); the
+crew assignment's canonical `hr_contracts` record governs WHAT rate (status active + effective
+for every attributed qualifying date, `compensation_period='daily'`, `TTD`, amount > 0). Rates
+resolve ONCE at input lock; per-allocation evidence
+`{assignmentId, contractId, compensationAmount, currency, period, effectiveFrom, effectiveTo,
+qualifyingDates, qualifyingDays, earningAmount=round2(rate×days)}` freezes into the snapshot as
+one `crew_day_rate` input row per allocation; (re)calculation consumes only frozen rows. Seven
+typed lock blockers (`crew.day_rate.contract_missing|contract_employee_mismatch|
+contract_not_active|contract_not_effective|rate_period_invalid|currency_invalid|
+rate_amount_invalid`) fail the lock atomically — no snapshot, no partial earnings. NO policy
+rate table, NO override, NO dormant rate fields. `project`/`standby_callout` remain outside the
+authorable unions (no engine).
 
 **CP7a scope (delivered) vs CP7b (deferred, needs a locked rate decision):**
 CP7a = calculation-stage crew EVIDENCE + findings, no earnings change: (1) qualifying-day

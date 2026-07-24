@@ -65,6 +65,9 @@ export interface CrewRunEvidence {
   movementIds: string[];
   /** CP7: unapproved OT excluded at lock (absent on pre-CP7 snapshots). */
   excludedUnapprovedOvertime?: CrewExcludedOvertime;
+  /** CP7b: frozen contract day-rate evidence + per-allocation earnings — present
+   *  ONLY when the pinned version binds a per_qualifying_day component. */
+  dayRate?: CrewDayRateEvidence;
   blockers: {
     /** CPE-16: active assignment (roster) but no movement recorded in the period. */
     rosterWithoutMovement: CrewEmployeeBlocker;
@@ -406,6 +409,8 @@ export interface CrewLineAllocation {
   workOrderId: string | null;
   costCenter: string | null;
   days: number;
+  /** The attributed qualifying dates (CP7b: also the contract-coverage domain). */
+  dates: string[];
 }
 
 /** Per-line crew calculation evidence, persisted in the line's breakdown.crew. */
@@ -544,15 +549,17 @@ export async function prepareCrewCalculation(
 
     // Attribute each qualifying date to the covering assignment (latest
     // effective_from wins when several cover — the most specific roster row).
-    const allocationDays = new Map<string, number>();
+    const allocationDates = new Map<string, string[]>();
     for (const d of covered) {
       const cover = asgList
         .filter(a => a.effective_from <= d && (a.effective_to === null || a.effective_to >= d))
         .sort((a, b) => b.effective_from.localeCompare(a.effective_from) || a.id.localeCompare(b.id))[0]!;
-      allocationDays.set(cover.id, (allocationDays.get(cover.id) ?? 0) + 1);
+      const dates = allocationDates.get(cover.id) ?? [];
+      dates.push(d);
+      allocationDates.set(cover.id, dates);
     }
-    const allocations: CrewLineAllocation[] = [...allocationDays.entries()]
-      .map(([assignmentId, days]) => {
+    const allocations: CrewLineAllocation[] = [...allocationDates.entries()]
+      .map(([assignmentId, dates]) => {
         const a = asgList.find(x => x.id === assignmentId)!;
         return {
           assignmentId,
@@ -561,7 +568,8 @@ export async function prepareCrewCalculation(
           assetId: a.asset_id,
           workOrderId: a.work_order_id,
           costCenter: a.cost_center,
-          days,
+          days: dates.length,
+          dates,
         };
       })
       .sort((a, b) => a.assignmentId.localeCompare(b.assignmentId));
@@ -582,5 +590,225 @@ export async function prepareCrewCalculation(
     perEmployee,
     excludedUnapprovedOvertime: frozen.excludedUnapprovedOvertime ?? { count: 0, entries: [] },
     statutoryExcludedIds: frozen.blockers.incompleteStatutoryProfile?.employeeIds ?? [],
+  };
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// CP7b — per_qualifying_day earnings from the employee contract (locked decision)
+// ═════════════════════════════════════════════════════════════════════════════
+// The policy governs HOW to calculate (a per_qualifying_day/crew_movement/
+// employee_contract component on the pinned version); the crew assignment's
+// canonical hr_contracts record governs WHAT rate the employee receives
+// (compensation_period='daily', TTD, > 0, active + effective for every attributed
+// qualifying date). Rates are resolved ONCE at input lock, frozen per allocation
+// into the snapshot, and NEVER re-read during (re)calculation.
+
+export interface CrewDayRateComponent {
+  policyComponentId: string;
+  componentId: string;
+  componentCode: string;
+  isTaxable: boolean;
+}
+
+/** Frozen per-allocation rate evidence + earnings (the user-locked contract shape). */
+export interface CrewDayRateAllocation {
+  assignmentId: string;
+  contractId: string;
+  compensationAmount: number;
+  currency: 'TTD';
+  period: 'daily';
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  qualifyingDates: string[];
+  qualifyingDays: number;
+  earningAmount: number;
+}
+
+export interface CrewDayRateEmployee {
+  employeeId: string;
+  allocations: CrewDayRateAllocation[];
+  totalDays: number;
+  totalAmount: number;
+}
+
+export interface CrewDayRateEvidence {
+  policyComponentId: string;
+  componentId: string;
+  componentCode: string;
+  isTaxable: boolean;
+  perEmployee: CrewDayRateEmployee[];
+}
+
+export type CrewDayRateBlockerCode =
+  | 'crew.day_rate.contract_missing'
+  | 'crew.day_rate.contract_employee_mismatch'
+  | 'crew.day_rate.contract_not_active'
+  | 'crew.day_rate.contract_not_effective'
+  | 'crew.day_rate.rate_period_invalid'
+  | 'crew.day_rate.currency_invalid'
+  | 'crew.day_rate.rate_amount_invalid';
+
+export interface CrewDayRateBlocker {
+  code: CrewDayRateBlockerCode;
+  employeeId: string;
+  assignmentId: string;
+  contractId: string | null;
+  detail: string;
+}
+
+/** The pinned version's crew day-rate component, or null when the policy binds none. */
+export async function resolveDayRateComponent(
+  policyVersionId: string,
+): Promise<CrewDayRateComponent | null> {
+  const { data, error } = await sb
+    .from('finance_pay_policy_components')
+    .select('id, component_id, calculation_basis')
+    .eq('policy_version_id', policyVersionId)
+    .eq('calculation_basis', 'per_qualifying_day');
+  if (error) throw httpError('resolveDayRateComponent: ' + error.message);
+  const row = ((data ?? []) as { id: string; component_id: string }[])[0];
+  if (!row) return null;
+  const { data: comp, error: compErr } = await sb
+    .from('finance_pay_components')
+    .select('code, is_taxable')
+    .eq('id', row.component_id)
+    .maybeSingle<{ code: string; is_taxable: boolean }>();
+  if (compErr) throw httpError('resolveDayRateComponent/component: ' + compErr.message);
+  if (!comp) throw httpError('crew.day_rate.component_unresolved: the policy binds a pay component that no longer exists.', 422);
+  return {
+    policyComponentId: row.id,
+    componentId: row.component_id,
+    componentCode: comp.code,
+    isTaxable: comp.is_taxable,
+  };
+}
+
+const round2 = (n: number): number => Math.round(n * 100) / 100;
+
+interface DayRateContractRow {
+  id: string;
+  employee_id: string;
+  status: string;
+  start_date: string | null;
+  end_date: string | null;
+  compensation_amount: number | null;
+  compensation_currency: string | null;
+  compensation_period: string | null;
+}
+
+/**
+ * Lock-stage day-rate resolution: validate every attributed allocation against
+ * its assignment's canonical hr_contracts record and compute the frozen earning
+ * (round2(dayRate × qualifyingDays)). Any violation is a typed BLOCKER — the
+ * caller fails the lock atomically (no snapshot, no partial earnings).
+ */
+export async function buildCrewDayRateEvidence(
+  component: CrewDayRateComponent,
+  prep: CrewCalculationPrep,
+): Promise<{ evidence: CrewDayRateEvidence; blockers: CrewDayRateBlocker[] }> {
+  const statutoryExcluded = new Set(prep.statutoryExcludedIds);
+  // Assignment → contract linkage comes from the frozen assignment rows already
+  // reflected in the allocations; load the referenced contracts in one sweep.
+  const contractIds = new Set<string>();
+  for (const [employeeId, ev] of prep.perEmployee) {
+    if (statutoryExcluded.has(employeeId)) continue;
+    for (const alloc of ev.allocations) {
+      if (alloc.contractId) contractIds.add(alloc.contractId);
+    }
+  }
+  const contracts = new Map<string, DayRateContractRow>();
+  for (const ids of chunk([...contractIds], 300)) {
+    if (ids.length === 0) continue;
+    const { data, error } = await sb.from('hr_contracts')
+      .select('id, employee_id, status, start_date, end_date, compensation_amount, compensation_currency, compensation_period')
+      .in('id', ids);
+    if (error) throw httpError('buildCrewDayRateEvidence/contracts: ' + error.message);
+    for (const r of (data ?? []) as DayRateContractRow[]) contracts.set(r.id, r);
+  }
+
+  const blockers: CrewDayRateBlocker[] = [];
+  const perEmployee: CrewDayRateEmployee[] = [];
+  const employeeIds = [...prep.perEmployee.keys()].sort();
+  for (const employeeId of employeeIds) {
+    if (statutoryExcluded.has(employeeId)) continue;
+    const ev = prep.perEmployee.get(employeeId)!;
+    const allocations: CrewDayRateAllocation[] = [];
+    for (const alloc of ev.allocations) {
+      if (alloc.days === 0) continue;
+      const blocked = (code: CrewDayRateBlockerCode, detail: string): void => {
+        blockers.push({ code, employeeId, assignmentId: alloc.assignmentId, contractId: alloc.contractId, detail });
+      };
+      if (!alloc.contractId) {
+        blocked('crew.day_rate.contract_missing',
+          `Crew assignment has no contract — the day rate comes ONLY from the employee's daily TTD contract.`);
+        continue;
+      }
+      const c = contracts.get(alloc.contractId);
+      if (!c) {
+        blocked('crew.day_rate.contract_missing', 'The assignment references a contract that does not exist.');
+        continue;
+      }
+      if (c.employee_id !== employeeId) {
+        blocked('crew.day_rate.contract_employee_mismatch',
+          `The assignment's contract belongs to a different employee (${c.employee_id}).`);
+        continue;
+      }
+      if (c.status !== 'active') {
+        blocked('crew.day_rate.contract_not_active', `Contract status is '${c.status}' — an active contract is required.`);
+        continue;
+      }
+      const uncovered = alloc.dates.filter(d =>
+        c.start_date === null || c.start_date > d || (c.end_date !== null && c.end_date < d));
+      if (uncovered.length > 0) {
+        blocked('crew.day_rate.contract_not_effective',
+          `Contract does not cover attributed qualifying date(s): ${uncovered.join(', ')}.`);
+        continue;
+      }
+      if (c.compensation_period !== 'daily') {
+        blocked('crew.day_rate.rate_period_invalid',
+          `Contract compensation period is '${c.compensation_period}' — a daily rate is required.`);
+        continue;
+      }
+      if (c.compensation_currency !== 'TTD') {
+        blocked('crew.day_rate.currency_invalid',
+          `Contract currency is '${c.compensation_currency}' — crew day-rate pay is TTD only.`);
+        continue;
+      }
+      const amount = Number(c.compensation_amount ?? 0);
+      if (!(amount > 0)) {
+        blocked('crew.day_rate.rate_amount_invalid', 'Contract compensation amount must be greater than zero.');
+        continue;
+      }
+      allocations.push({
+        assignmentId: alloc.assignmentId,
+        contractId: c.id,
+        compensationAmount: amount,
+        currency: 'TTD',
+        period: 'daily',
+        effectiveFrom: c.start_date!,
+        effectiveTo: c.end_date,
+        qualifyingDates: alloc.dates,
+        qualifyingDays: alloc.days,
+        earningAmount: round2(amount * alloc.days),
+      });
+    }
+    if (allocations.length > 0) {
+      perEmployee.push({
+        employeeId,
+        allocations,
+        totalDays: allocations.reduce((s, a) => s + a.qualifyingDays, 0),
+        totalAmount: round2(allocations.reduce((s, a) => s + a.earningAmount, 0)),
+      });
+    }
+  }
+  return {
+    evidence: {
+      policyComponentId: component.policyComponentId,
+      componentId: component.componentId,
+      componentCode: component.componentCode,
+      isTaxable: component.isTaxable,
+      perEmployee,
+    },
+    blockers,
   };
 }

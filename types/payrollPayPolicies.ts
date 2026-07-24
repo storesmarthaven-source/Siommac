@@ -1,10 +1,13 @@
-export type PayPolicyType = 'standard_salary' | 'hourly_shift';
+// CP7b: 'offshore_rotation'/'marine_voyage' + the per_qualifying_day/crew_movement
+// pair are authorable — the crew day-rate engine honors them. 'project' and
+// 'standby_callout' stay OUT of the unions until an engine exists (§14.4).
+export type PayPolicyType = 'standard_salary' | 'hourly_shift' | 'offshore_rotation' | 'marine_voyage';
 export type PayPolicyStatus = 'draft' | 'active' | 'retired';
 export type PayPolicyVersionStatus =
   | 'draft' | 'pending_approval' | 'approved' | 'active' | 'superseded' | 'rejected' | 'retired';
-export type PayCalculationBasis = 'salary_period' | 'approved_hours';
+export type PayCalculationBasis = 'salary_period' | 'approved_hours' | 'per_qualifying_day';
 export type PayRateSource = 'employee_contract' | 'employee_assignment';
-export type PayEligibilitySource = 'effective_employment' | 'approved_compensation' | 'approved_time';
+export type PayEligibilitySource = 'effective_employment' | 'approved_compensation' | 'approved_time' | 'crew_movement';
 export type PayPolicySourceType =
   | 'approved_compensation' | 'approved_time' | 'approved_leave' | 'statutory_profile' | 'payment_destination';
 export type PayConflictOutcome =

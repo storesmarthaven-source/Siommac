@@ -2,7 +2,7 @@
 
 # finance Module Map
 
-Source fingerprint: `7309469644fd496c28cf9b4e`
+Source fingerprint: `266b428f979144767d10ebc1`
 
 Files: 138 | Symbols: 1838 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
@@ -487,7 +487,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/financeLookups.ts` | 108 |
 | backend-route | `netlify/functions/routes/financeNis.ts` | 109 |
 | backend-route | `netlify/functions/routes/financeOverview.ts` | 124 |
-| backend-route | `netlify/functions/routes/financePayPolicies.ts` | 253 |
+| backend-route | `netlify/functions/routes/financePayPolicies.ts` | 267 |
 | backend-route | `netlify/functions/routes/financePickers.ts` | 81 |
 | backend-route | `netlify/functions/routes/financeRemittances.ts` | 324 |
 | backend-route | `netlify/functions/routes/financeStatutory.ts` | 435 |
