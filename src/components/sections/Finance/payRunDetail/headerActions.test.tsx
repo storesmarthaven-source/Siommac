@@ -5,7 +5,7 @@
  * Export command appears only when the server says canExport (released runs).
  */
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/preact';
+import { render, screen, fireEvent } from '@testing-library/preact';
 import { HeaderActions } from '../PayRunDetailPage';
 import type { PayrollRun, PayrollRunActions } from '@api/finance/payroll';
 import type { PayRunDrawerActions } from './interactiveTabs';
@@ -46,14 +46,17 @@ describe('P0-2 HeaderActions renders from server capabilities only', () => {
   });
 
   it('P0-3: a LOCKED run with canExport=false shows no Export; a RELEASED run with canExport shows it', () => {
-    // Locked: backend export command would 422 — the button must not exist.
+    // Locked: backend export command would 422 — the button must not exist, in the
+    // header or inside the Run Actions menu. The first non-primary action is the
+    // header button; the rest live behind the "Run Actions" dropdown.
     const { unmount } = render(
       <HeaderActions run={makeRun({ status: 'locked' })}
         caps={{ ...noCaps, canGeneratePayslips: true, canReopen: true }} actions={drawerActions} />,
     );
-    expect(screen.queryByText('Export')).toBeNull();
-    expect(screen.getByText('Generate Payslips')).toBeTruthy();
-    expect(screen.getByText('Reopen')).toBeTruthy();
+    expect(screen.getByText('Generate Payslips')).toBeTruthy();   // primary/header button
+    fireEvent.click(screen.getByText('Run Actions'));             // open the dropdown
+    expect(screen.getByText('Reopen')).toBeTruthy();              // secondary action, in menu
+    expect(screen.queryByText('Export')).toBeNull();              // canExport=false → never present
     unmount();
     // Released: server grants canExport → the command appears.
     render(<HeaderActions run={makeRun({ status: 'released' })}

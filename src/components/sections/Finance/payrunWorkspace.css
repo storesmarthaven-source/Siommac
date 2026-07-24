@@ -409,3 +409,21 @@
 .prw .hrfin-mini-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .prw .hrfin-mini-table th, .prw .hrfin-mini-table td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border-soft); }
 .prw .hrfin-mini-table th { color: var(--muted); font-weight: 600; }
+
+/* ── Run Actions dropdown (header) — secondary lifecycle actions collapse into a
+      menu beside the primary button (mockup run.html "Run Actions"). ─────────── */
+.prw .rh-menu-wrap { position: relative; display: inline-flex; }
+.prw .rh-menu-backdrop { position: fixed; inset: 0; z-index: 40; }
+.prw .rh-menu {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 41; min-width: 190px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .12); padding: 6px; display: flex; flex-direction: column; gap: 2px;
+}
+.prw .rh-menu-item {
+  display: flex; align-items: center; text-align: left; width: 100%; border: 0; background: none;
+  padding: 8px 11px; border-radius: 7px; font-size: 13px; font-weight: 600; color: var(--ink-2);
+  cursor: pointer; font-family: inherit; white-space: nowrap;
+}
+.prw .rh-menu-item:hover { background: var(--brand-soft); color: var(--brand-ink); }
+.prw .rh-menu-item.danger { color: var(--red); }
+.prw .rh-menu-item.danger:hover { background: var(--red-soft); }

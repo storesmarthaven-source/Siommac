@@ -51,7 +51,10 @@ const SOD_REASON = 'Separation of duties: the preparer of a run cannot decide it
 
 const ACTION_SPECS: readonly ActionSpec[] = [
   { key: 'canLockInputs', permission: 'finance.payroll.run.manage', states: ['draft'], stateReason: 'Inputs can only be locked on a draft run.' },
-  { key: 'canCalculate', permission: 'finance.payroll.run.manage', states: ['input_locked', 'returned', 'calculation_failed'], stateReason: 'Calculation requires locked inputs (or a returned/failed run).' },
+  // 'calculated' is included so a calculated run can be RE-calculated (e.g. after
+  // a worksheet override) before submission — the calculateRun command already
+  // permits it; the capability now advertises it (surfaced as "Recalculate").
+  { key: 'canCalculate', permission: 'finance.payroll.run.manage', states: ['input_locked', 'returned', 'calculation_failed', 'calculated'], stateReason: 'Calculation requires locked inputs (or a returned/failed/calculated run).' },
   { key: 'canCertify', permission: 'finance.payroll.certify', states: ['calculated'], stateReason: 'Certification requires a calculated run.' },
   { key: 'canSubmit', permission: 'finance.payroll.run.manage', states: ['calculated', 'returned'], stateReason: 'Submission requires a calculated (or returned) run.' },
   {

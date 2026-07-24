@@ -931,7 +931,7 @@ RunActionsInput	interface	payroll	true		netlify/functions/lib/finance/payroll/ru
 ActionSpec	interface	payroll	false		netlify/functions/lib/finance/payroll/runActions.ts	40	
 SOD_REASON	variable	payroll	false		netlify/functions/lib/finance/payroll/runActions.ts	50	
 ACTION_SPECS	array	payroll	false		netlify/functions/lib/finance/payroll/runActions.ts	52	
-computeRunActions	function	payroll	true		netlify/functions/lib/finance/payroll/runActions.ts	81	
+computeRunActions	function	payroll	true		netlify/functions/lib/finance/payroll/runActions.ts	84	
 parseDate	function	payroll	false		netlify/functions/lib/finance/payroll/runCalendar.ts	56	
 fmtDate	function	payroll	false		netlify/functions/lib/finance/payroll/runCalendar.ts	63	
 addDays	function	payroll	false		netlify/functions/lib/finance/payroll/runCalendar.ts	68	
@@ -7311,10 +7311,11 @@ renderPage	function	finance	false	test	src/components/sections/Finance/payRunDet
 TabKey	type	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	34	
 TAB_DEFS	array	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	36	
 PayRunDetailPage	function	finance	true	component	src/components/sections/Finance/PayRunDetailPage.tsx	49	
-HeaderActions	function	finance	true	component	src/components/sections/Finance/PayRunDetailPage.tsx	269	
-Metric	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	294	
-NextActionBanner	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	303	
-humanizeStatus	function	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	356	
+RunAct	interface	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	269	
+HeaderActions	function	finance	true	component	src/components/sections/Finance/PayRunDetailPage.tsx	271	
+Metric	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	335	
+NextActionBanner	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	344	
+humanizeStatus	function	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	397	
 severityTone	function	finance	false		src/components/sections/Finance/PayWarningResolveDialog.tsx	15	
 PayWarningResolveDialog	function	finance	true	component	src/components/sections/Finance/PayWarningResolveDialog.tsx	21	
 submit	function	finance	false		src/components/sections/Finance/PayWarningResolveDialog.tsx	33	PayWarningResolveDialog

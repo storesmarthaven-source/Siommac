@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "8b48bde613757414d6ed76a2411c8bde779e608d",
+    "head": "ef7077eb25d862677899728afae95f5ed43d1de8",
     "branch": "main",
-    "fingerprint": "978af0a4c174c1bc1fc96f84",
+    "fingerprint": "e0a7a44f2a92f5c876945430",
     "indexedFiles": 1562
   },
   "summary": {
     "files": 1230,
-    "symbols": 12351,
+    "symbols": 12352,
     "widgets": 32,
     "routes": 933,
     "routeDefinitions": 934,
@@ -49,7 +49,7 @@
       "id": "finance",
       "counts": {
         "files": 138,
-        "symbols": 1837,
+        "symbols": 1838,
         "widgets": 10,
         "routes": 156,
         "routeDefinitions": 156,
@@ -616,8 +616,8 @@
       "path": "netlify/functions/lib/finance/payroll/runActions.ts",
       "module": "payroll",
       "role": "backend-lib",
-      "lines": 106,
-      "hash": "55b0972a7fba12bd"
+      "lines": 109,
+      "hash": "fe721cccdd229ca8"
     },
     {
       "path": "netlify/functions/lib/finance/payroll/runCalendar.ts",
@@ -4522,8 +4522,8 @@
       "path": "src/components/sections/Finance/PayRunDetailPage.tsx",
       "module": "finance",
       "role": "frontend-page",
-      "lines": 357,
-      "hash": "976db11ffa1dfbc3"
+      "lines": 398,
+      "hash": "eba8bf76e9e07397"
     },
     {
       "path": "src/components/sections/Finance/PayWarningResolveDialog.tsx",
@@ -4774,8 +4774,8 @@
       "path": "src/components/sections/Finance/payRunDetail/headerActions.test.tsx",
       "module": "finance",
       "role": "frontend-page",
-      "lines": 83,
-      "hash": "f2a57a5ff53833a9"
+      "lines": 86,
+      "hash": "b1214f3e6b6741a7"
     },
     {
       "path": "src/components/sections/Finance/payRunDetail/interactiveTabs.tsx",
@@ -18128,7 +18128,7 @@
       "name": "computeRunActions",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/runActions.ts",
-      "line": 81,
+      "line": 84,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -84878,10 +84878,20 @@
       ]
     },
     {
+      "name": "RunAct",
+      "kind": "interface",
+      "file": "src/components/sections/Finance/PayRunDetailPage.tsx",
+      "line": 269,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "HeaderActions",
       "kind": "function",
       "file": "src/components/sections/Finance/PayRunDetailPage.tsx",
-      "line": 269,
+      "line": 271,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -84893,7 +84903,7 @@
       "name": "Metric",
       "kind": "function",
       "file": "src/components/sections/Finance/PayRunDetailPage.tsx",
-      "line": 294,
+      "line": 335,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -84905,7 +84915,7 @@
       "name": "NextActionBanner",
       "kind": "function",
       "file": "src/components/sections/Finance/PayRunDetailPage.tsx",
-      "line": 303,
+      "line": 344,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -84917,7 +84927,7 @@
       "name": "humanizeStatus",
       "kind": "function",
       "file": "src/components/sections/Finance/PayRunDetailPage.tsx",
-      "line": 356,
+      "line": 397,
       "module": "finance",
       "exported": false,
       "container": "",

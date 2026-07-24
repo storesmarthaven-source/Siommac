@@ -266,29 +266,70 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApp
 // ── header lifecycle actions (P0-2: rendered EXCLUSIVELY from the server-computed
 //    capability object; P0-3: Export appears only when canExport = released) ─────
 
+interface RunAct { key: string; label: string; tone: 'primary' | 'danger' | ''; onClick: () => void }
+
 export function HeaderActions({ run, caps, actions }: {
   run: PayrollRun; caps: PayrollRunActions | undefined; actions: PayRunDrawerActions;
 }): VNode {
+  const [menuOpen, setMenuOpen] = useState(false);
   // Capabilities arrive with the workspace query; until then offer nothing rather
   // than guessing (the backend remains final either way).
   if (!caps) return <button class="btn" type="button" disabled>Loading actions…</button>;
   const s = run.status;
-  const btns: VNode[] = [];
-  if (caps.canLockInputs) btns.push(<button class="btn primary" type="button" onClick={() => actions.onLockInputs(run)}>Lock Inputs</button>);
-  if (caps.canCalculate) btns.push(<button class="btn primary" type="button" onClick={() => actions.onCalculate(run)}>{s === 'calculation_failed' ? 'Retry Calculation' : 'Calculate'}</button>);
-  if (caps.canSubmit) btns.push(<button class="btn primary" type="button" onClick={() => actions.onSubmit(run)}>{s === 'returned' ? 'Resubmit For Approval' : 'Submit For Approval'}</button>);
-  if (caps.canApprove) btns.push(<button class="btn primary" type="button" onClick={() => actions.onApprove(run)}>Approve</button>);
-  if (caps.canReject) btns.push(<button class="btn danger" type="button" onClick={() => actions.onReject(run)}>Reject</button>);
-  if (caps.canLock) btns.push(<button class="btn primary" type="button" onClick={() => actions.onLockRun(run)}>Lock Run</button>);
-  if (caps.canGeneratePayslips) btns.push(<button class="btn" type="button" onClick={() => actions.onGenPayslips(run)}>Generate Payslips</button>);
-  if (caps.canExport) btns.push(<button class="btn" type="button" onClick={() => actions.onExport(run)}>Export</button>);
-  if (caps.canReopen) btns.push(<button class="btn" type="button" onClick={() => actions.onReopen(run)}>Reopen</button>);
-  if (btns.length === 0) {
+
+  // Every currently-permitted action, in lifecycle order. The one forward step is
+  // surfaced as the primary button; the rest collapse into the "Run Actions" menu
+  // beside it (mockup run.html header pattern).
+  const all: RunAct[] = [];
+  if (caps.canLockInputs) all.push({ key: 'lock-inputs', label: 'Lock Inputs', tone: 'primary', onClick: () => actions.onLockInputs(run) });
+  if (caps.canCalculate) all.push({ key: 'calc', label: s === 'calculation_failed' ? 'Retry Calculation' : 'Recalculate', tone: 'primary', onClick: () => actions.onCalculate(run) });
+  if (caps.canSubmit) all.push({ key: 'submit', label: s === 'returned' ? 'Resubmit For Approval' : 'Submit For Approval', tone: 'primary', onClick: () => actions.onSubmit(run) });
+  if (caps.canApprove) all.push({ key: 'approve', label: 'Approve', tone: 'primary', onClick: () => actions.onApprove(run) });
+  if (caps.canReject) all.push({ key: 'reject', label: 'Reject', tone: 'danger', onClick: () => actions.onReject(run) });
+  if (caps.canLock) all.push({ key: 'lock', label: 'Lock Run', tone: 'primary', onClick: () => actions.onLockRun(run) });
+  if (caps.canGeneratePayslips) all.push({ key: 'payslips', label: 'Generate Payslips', tone: '', onClick: () => actions.onGenPayslips(run) });
+  if (caps.canExport) all.push({ key: 'export', label: 'Export', tone: '', onClick: () => actions.onExport(run) });
+  if (caps.canReopen) all.push({ key: 'reopen', label: 'Reopen', tone: '', onClick: () => actions.onReopen(run) });
+
+  if (all.length === 0) {
     const reason = caps.disabledReasons.canLockInputs ?? caps.disabledReasons.canCalculate
       ?? caps.disabledReasons.canSubmit ?? caps.disabledReasons.canApprove ?? undefined;
-    btns.push(<button class="btn" type="button" disabled title={reason}>No actions available</button>);
+    return <button class="btn" type="button" disabled title={reason}>No actions available</button>;
   }
-  return <>{btns}</>;
+
+  // The forward step (first primary-toned action) is the standalone primary button;
+  // 'Recalculate' is never the primary when a Submit is also available.
+  const primary = all.find(a => a.tone === 'primary' && a.key !== 'calc')
+    ?? all.find(a => a.tone === 'primary') ?? all[0]!;
+  const rest = all.filter(a => a !== primary);
+
+  return (
+    <>
+      {rest.length > 0 && (
+        <div class="rh-menu-wrap">
+          <button class="btn" type="button" aria-haspopup="menu" aria-expanded={menuOpen}
+            onClick={() => setMenuOpen(o => !o)}>
+            Run Actions <i class="fa-solid fa-chevron-down" style={{ fontSize: 11 }} />
+          </button>
+          {menuOpen && (
+            <>
+              <div class="rh-menu-backdrop" onClick={() => setMenuOpen(false)} />
+              <div class="rh-menu" role="menu">
+                {rest.map(a => (
+                  <button key={a.key} type="button" role="menuitem"
+                    class={`rh-menu-item${a.tone === 'danger' ? ' danger' : ''}`}
+                    onClick={() => { setMenuOpen(false); a.onClick(); }}>
+                    {a.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+      <button class={`btn ${primary.tone}`} type="button" onClick={primary.onClick}>{primary.label}</button>
+    </>
+  );
 }
 
 function Metric({ ico, tone, k, v, s }: { ico: string; tone: string; k: string; v: string; s: string }): VNode {
