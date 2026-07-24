@@ -472,6 +472,10 @@ export const PERMISSION_KEYS = [
   'finance.payroll.policies.statutory_approve',
   'finance.payroll.policies.activate',
   'finance.payroll.policies.assign',
+  'finance.payroll.crew.assignments.manage', // crew: manage effective crew assignments (offshore/marine)
+  'finance.payroll.crew.movements.record',   // crew: record embark/disembark/transfer movements
+  'finance.payroll.crew.movements.correct',  // crew: reasoned correction of a movement (never overwrites)
+  'finance.payroll.crew.evidence.view',      // crew: view employee-level crew pay evidence
   'finance.payroll.worksheet.override', // finance: add/remove per-employee run overrides
   'finance.payroll.overtime.rules.manage', // finance: manage overtime rule engine (multipliers)
   'finance.payroll.loans.manage',     // finance: create/submit/settle employee loans & salary advances
@@ -740,6 +744,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.policies.statutory_approve',
     'finance.payroll.policies.activate',
     'finance.payroll.policies.assign',
+    'finance.payroll.crew.assignments.manage',
+    'finance.payroll.crew.movements.record',
+    'finance.payroll.crew.movements.correct',
+    'finance.payroll.crew.evidence.view',
     'finance.payroll.worksheet.override',
     'finance.payroll.overtime.rules.manage',
     'finance.payroll.loans.manage',

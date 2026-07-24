@@ -1,32 +1,32 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "b87b675f1f5d8d9841a09786cb190b68055108af",
-    "branch": "payroll/reports-center",
-    "fingerprint": "fe2bbce03596e3a67b0ab020",
-    "indexedFiles": 1540
+    "head": "86842af38a057a05195017606b99c05e23e8c1c8",
+    "branch": "payroll-mockup-reskin",
+    "fingerprint": "0c5a74b22c282cf6c624b1b7",
+    "indexedFiles": 1546
   },
   "summary": {
-    "files": 1212,
-    "symbols": 12219,
+    "files": 1216,
+    "symbols": 12263,
     "widgets": 32,
-    "routes": 926,
-    "routeDefinitions": 927,
+    "routes": 933,
+    "routeDefinitions": 934,
     "unmountedRoutes": 17,
     "apiCalls": 376,
-    "databaseObjects": 1341,
-    "e2eSuites": 77,
-    "e2eTests": 2451
+    "databaseObjects": 1352,
+    "e2eSuites": 78,
+    "e2eTests": 2457
   },
   "modules": [
     {
       "id": "hr",
       "counts": {
-        "files": 202,
-        "symbols": 2243,
+        "files": 204,
+        "symbols": 2270,
         "widgets": 12,
-        "routes": 249,
-        "routeDefinitions": 249,
+        "routes": 256,
+        "routeDefinitions": 256,
         "apiCalls": 57,
         "databaseObjects": 156,
         "e2eSuites": 14
@@ -35,14 +35,14 @@
     {
       "id": "payroll",
       "counts": {
-        "files": 176,
-        "symbols": 1792,
+        "files": 177,
+        "symbols": 1801,
         "widgets": 10,
         "routes": 135,
         "routeDefinitions": 135,
         "apiCalls": 5,
-        "databaseObjects": 239,
-        "e2eSuites": 24
+        "databaseObjects": 250,
+        "e2eSuites": 25
       }
     },
     {
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 293,
-        "symbols": 2654,
+        "files": 294,
+        "symbols": 2662,
         "widgets": 0,
         "routes": 31,
         "routeDefinitions": 46,
@@ -168,8 +168,8 @@
       "path": "netlify/functions/api.ts",
       "module": "platform",
       "role": "backend",
-      "lines": 345,
-      "hash": "ba28e579452240d9"
+      "lines": 347,
+      "hash": "18f405c6e970be9b"
     },
     {
       "path": "netlify/functions/auto-checkout.ts",
@@ -802,6 +802,20 @@
       "hash": "e9c50712e2a832a7"
     },
     {
+      "path": "netlify/functions/lib/hr/crewAssignments.ts",
+      "module": "hr",
+      "role": "backend-lib",
+      "lines": 182,
+      "hash": "9554bfa9ff4fe831"
+    },
+    {
+      "path": "netlify/functions/lib/hr/crewMovements.ts",
+      "module": "hr",
+      "role": "backend-lib",
+      "lines": 140,
+      "hash": "c948915fabf633d7"
+    },
+    {
       "path": "netlify/functions/lib/hr/csvParse.ts",
       "module": "hr",
       "role": "backend-lib",
@@ -1260,8 +1274,8 @@
       "path": "netlify/functions/lib/permissions.ts",
       "module": "security",
       "role": "backend-lib",
-      "lines": 1168,
-      "hash": "27c4ef157e549084"
+      "lines": 1176,
+      "hash": "df2b28fe58a0e22b"
     },
     {
       "path": "netlify/functions/lib/photos.ts",
@@ -1999,6 +2013,13 @@
       "hash": "940f6b90cbbf6585"
     },
     {
+      "path": "netlify/functions/routes/hrCrew.ts",
+      "module": "platform",
+      "role": "backend-route",
+      "lines": 162,
+      "hash": "eac8021a66f7f08b"
+    },
+    {
       "path": "netlify/functions/routes/hrEmployeeImport.ts",
       "module": "hr",
       "role": "backend-route",
@@ -2382,6 +2403,13 @@
       "role": "e2e-suite",
       "lines": 1221,
       "hash": "fbd0726fa1c652f3"
+    },
+    {
+      "path": "scripts/e2e/suites/crewPayroll.mjs",
+      "module": "payroll",
+      "role": "e2e-suite",
+      "lines": 135,
+      "hash": "2f636f573ec1b65e"
     },
     {
       "path": "scripts/e2e/suites/financeAp.mjs",
@@ -4438,8 +4466,8 @@
       "path": "src/components/sections/Finance/MyPayslipsOverview.tsx",
       "module": "payroll",
       "role": "frontend-page",
-      "lines": 153,
-      "hash": "ee05823ff7a5e0db"
+      "lines": 164,
+      "hash": "b918b15a35754cae"
     },
     {
       "path": "src/components/sections/Finance/PayBridgeDialog.tsx",
@@ -4494,15 +4522,15 @@
       "path": "src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx",
       "module": "payroll",
       "role": "frontend-page",
-      "lines": 116,
-      "hash": "e8f26de09605acad"
+      "lines": 117,
+      "hash": "99a854c81f6f1ffe"
     },
     {
       "path": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
       "module": "payroll",
       "role": "frontend-page",
-      "lines": 421,
-      "hash": "1eb1256ace6acd83"
+      "lines": 494,
+      "hash": "c7c2012006bc4f6d"
     },
     {
       "path": "src/components/sections/Finance/PayrollPayslipBatchesPage.test.tsx",
@@ -4516,7 +4544,7 @@
       "module": "payroll",
       "role": "frontend-page",
       "lines": 190,
-      "hash": "277ec31be69baca7"
+      "hash": "451e840a3af71d84"
     },
     {
       "path": "src/components/sections/Finance/PayrollReportsPage.loadingGate.test.tsx",
@@ -4529,15 +4557,15 @@
       "path": "src/components/sections/Finance/PayrollReportsPage.tsx",
       "module": "payroll",
       "role": "frontend-page",
-      "lines": 575,
-      "hash": "0681879b5312226c"
+      "lines": 603,
+      "hash": "84d76264a9969cd7"
     },
     {
       "path": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
       "module": "payroll",
       "role": "frontend-page",
       "lines": 401,
-      "hash": "0194e69bcc2586c7"
+      "hash": "7386736fe9d46119"
     },
     {
       "path": "src/components/sections/Finance/PayrollSetupOverview.tsx",
@@ -7140,8 +7168,8 @@
       "path": "src/lib/permissionMeta.ts",
       "module": "security",
       "role": "frontend",
-      "lines": 1776,
-      "hash": "617bd8bbb2ed395f"
+      "lines": 1796,
+      "hash": "77fe573cf354937f"
     },
     {
       "path": "src/lib/permissions.test.ts",
@@ -7154,8 +7182,8 @@
       "path": "src/lib/permissions.ts",
       "module": "security",
       "role": "frontend",
-      "lines": 1477,
-      "hash": "8b9b2e13a5c7c670"
+      "lines": 1485,
+      "hash": "b7822b137e99be90"
     },
     {
       "path": "src/lib/popup.ts",
@@ -8654,7 +8682,7 @@
       "name": "ALLOWED_ORIGINS",
       "kind": "variable",
       "file": "netlify/functions/api.ts",
-      "line": 87,
+      "line": 88,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -8664,7 +8692,7 @@
       "name": "isAllowedOrigin",
       "kind": "function",
       "file": "netlify/functions/api.ts",
-      "line": 100,
+      "line": 101,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -8674,7 +8702,7 @@
       "name": "app",
       "kind": "variable",
       "file": "netlify/functions/api.ts",
-      "line": 109,
+      "line": 110,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -8684,7 +8712,7 @@
       "name": "_legacyDispatch",
       "kind": "function",
       "file": "netlify/functions/api.ts",
-      "line": 263,
+      "line": 265,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -8694,7 +8722,7 @@
       "name": "NetlifyV1Event",
       "kind": "interface",
       "file": "netlify/functions/api.ts",
-      "line": 293,
+      "line": 295,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -8704,7 +8732,7 @@
       "name": "NetlifyV1Context",
       "kind": "interface",
       "file": "netlify/functions/api.ts",
-      "line": 302,
+      "line": 304,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -8714,7 +8742,7 @@
       "name": "handler",
       "kind": "function",
       "file": "netlify/functions/api.ts",
-      "line": 306,
+      "line": 308,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -23829,6 +23857,276 @@
       "tags": []
     },
     {
+      "name": "fail",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/crewAssignments.ts",
+      "line": 11,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "OPEN",
+      "kind": "variable",
+      "file": "netlify/functions/lib/hr/crewAssignments.ts",
+      "line": 12,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CrewAssignmentStatus",
+      "kind": "type",
+      "file": "netlify/functions/lib/hr/crewAssignments.ts",
+      "line": 14,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CrewAssignmentDto",
+      "kind": "interface",
+      "file": "netlify/functions/lib/hr/crewAssignments.ts",
+      "line": 16,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Row",
+      "kind": "type",
+      "file": "netlify/functions/lib/hr/crewAssignments.ts",
+      "line": 40,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "mapRow",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/crewAssignments.ts",
+      "line": 41,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CrewAssignmentFilter",
+      "kind": "interface",
+      "file": "netlify/functions/lib/hr/crewAssignments.ts",
+      "line": 60,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "listCrewAssignments",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/crewAssignments.ts",
+      "line": 63,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "assertNoActiveOverlap",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/crewAssignments.ts",
+      "line": 78,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "overlapErr",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/crewAssignments.ts",
+      "line": 92,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CreateCrewAssignmentInput",
+      "kind": "interface",
+      "file": "netlify/functions/lib/hr/crewAssignments.ts",
+      "line": 99,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "createCrewAssignment",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/crewAssignments.ts",
+      "line": 105,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "UpdateCrewAssignmentInput",
+      "kind": "interface",
+      "file": "netlify/functions/lib/hr/crewAssignments.ts",
+      "line": 131,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "updateCrewAssignment",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/crewAssignments.ts",
+      "line": 137,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "set",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/crewAssignments.ts",
+      "line": 149,
+      "module": "hr",
+      "exported": false,
+      "container": "updateCrewAssignment",
+      "tags": []
+    },
+    {
+      "name": "endCrewAssignment",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/crewAssignments.ts",
+      "line": 167,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fail",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/crewMovements.ts",
+      "line": 13,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CrewMovementType",
+      "kind": "type",
+      "file": "netlify/functions/lib/hr/crewMovements.ts",
+      "line": 15,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CrewMovementDto",
+      "kind": "interface",
+      "file": "netlify/functions/lib/hr/crewMovements.ts",
+      "line": 17,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Row",
+      "kind": "type",
+      "file": "netlify/functions/lib/hr/crewMovements.ts",
+      "line": 36,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "mapRow",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/crewMovements.ts",
+      "line": 37,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CrewMovementFilter",
+      "kind": "interface",
+      "file": "netlify/functions/lib/hr/crewMovements.ts",
+      "line": 52,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "listCrewMovements",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/crewMovements.ts",
+      "line": 55,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "RecordCrewMovementInput",
+      "kind": "interface",
+      "file": "netlify/functions/lib/hr/crewMovements.ts",
+      "line": 66,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "recordCrewMovement",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/crewMovements.ts",
+      "line": 73,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CorrectCrewMovementInput",
+      "kind": "interface",
+      "file": "netlify/functions/lib/hr/crewMovements.ts",
+      "line": 106,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "correctCrewMovement",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/crewMovements.ts",
+      "line": 113,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "ParsedCsv",
       "kind": "interface",
       "file": "netlify/functions/lib/hr/csvParse.ts",
@@ -31502,7 +31800,7 @@
       "name": "PermissionKey",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 468,
+      "line": 472,
       "module": "security",
       "exported": true,
       "container": "",
@@ -31512,7 +31810,7 @@
       "name": "CRITICAL_GRANT_KEYS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 477,
+      "line": 481,
       "module": "security",
       "exported": true,
       "container": "",
@@ -31522,7 +31820,7 @@
       "name": "isCriticalGrant",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 489,
+      "line": 493,
       "module": "security",
       "exported": true,
       "container": "",
@@ -31532,7 +31830,7 @@
       "name": "COMPLIANCE_GATED_KEYS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 509,
+      "line": 513,
       "module": "security",
       "exported": true,
       "container": "",
@@ -31542,7 +31840,7 @@
       "name": "ROLE_PERMISSIONS",
       "kind": "object",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 518,
+      "line": 522,
       "module": "security",
       "exported": false,
       "container": "",
@@ -31552,7 +31850,7 @@
       "name": "PermissionOverrideRow",
       "kind": "interface",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 989,
+      "line": 997,
       "module": "security",
       "exported": true,
       "container": "",
@@ -31562,7 +31860,7 @@
       "name": "resolveWithSet",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1009,
+      "line": 1017,
       "module": "security",
       "exported": true,
       "container": "",
@@ -31572,7 +31870,7 @@
       "name": "resolvePermission",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1034,
+      "line": 1042,
       "module": "security",
       "exported": true,
       "container": "",
@@ -31582,7 +31880,7 @@
       "name": "ROLE_CACHE_TTL_MS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1044,
+      "line": 1052,
       "module": "security",
       "exported": false,
       "container": "",
@@ -31592,7 +31890,7 @@
       "name": "_roleCache",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1045,
+      "line": 1053,
       "module": "security",
       "exported": false,
       "container": "",
@@ -31602,7 +31900,7 @@
       "name": "invalidateRolePermissions",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1048,
+      "line": 1056,
       "module": "security",
       "exported": true,
       "container": "",
@@ -31612,7 +31910,7 @@
       "name": "loadRolePermissions",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1064,
+      "line": 1072,
       "module": "security",
       "exported": true,
       "container": "",
@@ -31622,7 +31920,7 @@
       "name": "loadRoleIsEmployee",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1099,
+      "line": 1107,
       "module": "security",
       "exported": true,
       "container": "",
@@ -31632,7 +31930,7 @@
       "name": "RoleScope",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1111,
+      "line": 1119,
       "module": "security",
       "exported": true,
       "container": "",
@@ -31642,7 +31940,7 @@
       "name": "_scopeCache",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1112,
+      "line": 1120,
       "module": "security",
       "exported": false,
       "container": "",
@@ -31652,7 +31950,7 @@
       "name": "invalidateRoleScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1115,
+      "line": 1123,
       "module": "security",
       "exported": true,
       "container": "",
@@ -31662,7 +31960,7 @@
       "name": "loadRoleScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1125,
+      "line": 1133,
       "module": "security",
       "exported": true,
       "container": "",
@@ -31672,7 +31970,7 @@
       "name": "DeptScope",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1138,
+      "line": 1146,
       "module": "security",
       "exported": true,
       "container": "",
@@ -31682,7 +31980,7 @@
       "name": "deptScopeFilter",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1146,
+      "line": 1154,
       "module": "security",
       "exported": true,
       "container": "",
@@ -31692,7 +31990,7 @@
       "name": "assertInScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1157,
+      "line": 1165,
       "module": "security",
       "exported": true,
       "container": "",
@@ -39639,6 +39937,86 @@
       "tags": []
     },
     {
+      "name": "MOVEMENT_TYPES",
+      "kind": "variable",
+      "file": "netlify/functions/routes/hrCrew.ts",
+      "line": 25,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "router",
+      "kind": "variable",
+      "file": "netlify/functions/routes/hrCrew.ts",
+      "line": 27,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HCtx",
+      "kind": "type",
+      "file": "netlify/functions/routes/hrCrew.ts",
+      "line": 28,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "body",
+      "kind": "function",
+      "file": "netlify/functions/routes/hrCrew.ts",
+      "line": 29,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "routeErr",
+      "kind": "function",
+      "file": "netlify/functions/routes/hrCrew.ts",
+      "line": 30,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DATE",
+      "kind": "variable",
+      "file": "netlify/functions/routes/hrCrew.ts",
+      "line": 35,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "nzStr",
+      "kind": "function",
+      "file": "netlify/functions/routes/hrCrew.ts",
+      "line": 36,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "uuidN",
+      "kind": "variable",
+      "file": "netlify/functions/routes/hrCrew.ts",
+      "line": 37,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "router",
       "kind": "variable",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
@@ -45434,6 +45812,42 @@
       "file": "scripts/e2e/suites/communicationsCompliance.mjs",
       "line": 263,
       "module": "communications",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "run",
+      "kind": "function",
+      "file": "scripts/e2e/suites/crewPayroll.mjs",
+      "line": 12,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "evCount",
+      "kind": "function",
+      "file": "scripts/e2e/suites/crewPayroll.mjs",
+      "line": 30,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "auditCount",
+      "kind": "function",
+      "file": "scripts/e2e/suites/crewPayroll.mjs",
+      "line": 32,
+      "module": "payroll",
       "exported": false,
       "container": "run",
       "tags": [
@@ -78676,7 +79090,7 @@
       "name": "MY_PAYSLIPS_KEY",
       "kind": "variable",
       "file": "src/components/sections/Finance/MyPayslipsOverview.tsx",
-      "line": 30,
+      "line": 33,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -78688,7 +79102,7 @@
       "name": "MyPayslipsOverview",
       "kind": "function",
       "file": "src/components/sections/Finance/MyPayslipsOverview.tsx",
-      "line": 34,
+      "line": 37,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -78700,7 +79114,7 @@
       "name": "PayslipRow",
       "kind": "function",
       "file": "src/components/sections/Finance/MyPayslipsOverview.tsx",
-      "line": 101,
+      "line": 122,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -78712,7 +79126,7 @@
       "name": "download",
       "kind": "function",
       "file": "src/components/sections/Finance/MyPayslipsOverview.tsx",
-      "line": 104,
+      "line": 125,
       "module": "payroll",
       "exported": false,
       "container": "PayslipRow",
@@ -80980,18 +81394,8 @@
       ]
     },
     {
-      "name": "fmtTTD",
-      "kind": "function",
-      "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
-      "line": 48,
-      "module": "payroll",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "fmtDue",
-      "kind": "function",
+      "name": "SectionKey",
+      "kind": "type",
       "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
       "line": 49,
       "module": "payroll",
@@ -81000,37 +81404,27 @@
       "tags": []
     },
     {
-      "name": "isOverdue",
-      "kind": "function",
+      "name": "SECTION_META",
+      "kind": "object",
       "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
-      "line": 54,
+      "line": 50,
       "module": "payroll",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "fmtDateTime",
-      "kind": "function",
+      "name": "SECTION_ORDER",
+      "kind": "array",
       "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
-      "line": 55,
+      "line": 56,
       "module": "payroll",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "initials",
-      "kind": "function",
-      "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
-      "line": 57,
-      "module": "payroll",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "openRun",
+      "name": "groupQueue",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
       "line": 60,
@@ -81040,10 +81434,80 @@
       "tags": []
     },
     {
+      "name": "METRICS",
+      "kind": "array",
+      "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
+      "line": 70,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fmtTTD",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
+      "line": 78,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fmtDue",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
+      "line": 79,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "isOverdue",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
+      "line": 84,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fmtDateTime",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
+      "line": 85,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "initials",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
+      "line": 87,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "openRun",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
+      "line": 90,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "PayrollExceptionQueuePage",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
-      "line": 65,
+      "line": 95,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -81055,7 +81519,7 @@
       "name": "resetPage",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
-      "line": 91,
+      "line": 121,
       "module": "payroll",
       "exported": false,
       "container": "PayrollExceptionQueuePage",
@@ -81065,7 +81529,7 @@
       "name": "changeTab",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
-      "line": 109,
+      "line": 140,
       "module": "payroll",
       "exported": false,
       "container": "PayrollExceptionQueuePage",
@@ -81075,7 +81539,7 @@
       "name": "nextPage",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
-      "line": 110,
+      "line": 141,
       "module": "payroll",
       "exported": false,
       "container": "PayrollExceptionQueuePage",
@@ -81085,7 +81549,7 @@
       "name": "prevPage",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
-      "line": 111,
+      "line": 142,
       "module": "payroll",
       "exported": false,
       "container": "PayrollExceptionQueuePage",
@@ -81095,7 +81559,7 @@
       "name": "onRowOpen",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
-      "line": 113,
+      "line": 144,
       "module": "payroll",
       "exported": false,
       "container": "PayrollExceptionQueuePage",
@@ -81105,7 +81569,7 @@
       "name": "anyPending",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
-      "line": 211,
+      "line": 265,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81115,7 +81579,7 @@
       "name": "QueueRow",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
-      "line": 217,
+      "line": 271,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81127,7 +81591,7 @@
       "name": "ACTION_META",
       "kind": "object",
       "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
-      "line": 239,
+      "line": 297,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81137,7 +81601,7 @@
       "name": "DetailPanel",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
-      "line": 249,
+      "line": 307,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81149,7 +81613,7 @@
       "name": "labelActivity",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
-      "line": 308,
+      "line": 381,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81159,7 +81623,7 @@
       "name": "FindingActionModal",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
-      "line": 322,
+      "line": 395,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81171,7 +81635,7 @@
       "name": "key",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
-      "line": 338,
+      "line": 411,
       "module": "payroll",
       "exported": false,
       "container": "FindingActionModal",
@@ -81181,7 +81645,7 @@
       "name": "run",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollExceptionQueuePage.tsx",
-      "line": 341,
+      "line": 414,
       "module": "payroll",
       "exported": false,
       "container": "FindingActionModal",
@@ -81451,10 +81915,20 @@
       ]
     },
     {
+      "name": "CAT_ICON",
+      "kind": "object",
+      "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
+      "line": 28,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "money",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 27,
+      "line": 40,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81464,7 +81938,7 @@
       "name": "num",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 29,
+      "line": 42,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81474,7 +81948,7 @@
       "name": "fmtDate",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 30,
+      "line": 43,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81484,7 +81958,7 @@
       "name": "thisMonth",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 33,
+      "line": 46,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81494,7 +81968,7 @@
       "name": "newExportKey",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 41,
+      "line": 54,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81504,7 +81978,7 @@
       "name": "errMsg",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 44,
+      "line": 57,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81514,7 +81988,7 @@
       "name": "reportsBoardCold",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 51,
+      "line": 64,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -81524,7 +81998,7 @@
       "name": "triggerDownload",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 56,
+      "line": 69,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81534,7 +82008,7 @@
       "name": "buildParams",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 62,
+      "line": 75,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81544,7 +82018,7 @@
       "name": "ParamState",
       "kind": "interface",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 79,
+      "line": 92,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81554,7 +82028,7 @@
       "name": "FieldErrors",
       "kind": "type",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 80,
+      "line": 93,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81564,7 +82038,7 @@
       "name": "paramErrors",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 83,
+      "line": 96,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81574,7 +82048,7 @@
       "name": "PayrollReportsPage",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 104,
+      "line": 117,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -81586,7 +82060,7 @@
       "name": "loadMoreHistory",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 129,
+      "line": 142,
       "module": "payroll",
       "exported": false,
       "container": "PayrollReportsPage",
@@ -81596,7 +82070,7 @@
       "name": "pick",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 198,
+      "line": 211,
       "module": "payroll",
       "exported": false,
       "container": "PayrollReportsPage",
@@ -81606,7 +82080,7 @@
       "name": "closeDialog",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 208,
+      "line": 221,
       "module": "payroll",
       "exported": false,
       "container": "PayrollReportsPage",
@@ -81616,7 +82090,7 @@
       "name": "run",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 212,
+      "line": 225,
       "module": "payroll",
       "exported": false,
       "container": "PayrollReportsPage",
@@ -81626,7 +82100,7 @@
       "name": "runExport",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 216,
+      "line": 229,
       "module": "payroll",
       "exported": false,
       "container": "PayrollReportsPage",
@@ -81636,7 +82110,7 @@
       "name": "tile",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 232,
+      "line": 245,
       "module": "payroll",
       "exported": false,
       "container": "PayrollReportsPage",
@@ -81648,7 +82122,7 @@
       "name": "ParamFields",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 432,
+      "line": 460,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81660,7 +82134,7 @@
       "name": "runPicker",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 443,
+      "line": 471,
       "module": "payroll",
       "exported": false,
       "container": "ParamFields",
@@ -81670,7 +82144,7 @@
       "name": "monthField",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 453,
+      "line": 481,
       "module": "payroll",
       "exported": false,
       "container": "ParamFields",
@@ -81680,7 +82154,7 @@
       "name": "ReportResult",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 484,
+      "line": 512,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81692,7 +82166,7 @@
       "name": "Totals",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 498,
+      "line": 526,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81704,7 +82178,7 @@
       "name": "Empty",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 504,
+      "line": 532,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81716,7 +82190,7 @@
       "name": "RegisterTable",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 506,
+      "line": 534,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81728,7 +82202,7 @@
       "name": "NetPayTable",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 511,
+      "line": 539,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81740,7 +82214,7 @@
       "name": "CostTable",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 516,
+      "line": 544,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81752,7 +82226,7 @@
       "name": "VarianceTable",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 521,
+      "line": 549,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81764,7 +82238,7 @@
       "name": "OvertimeTable",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 530,
+      "line": 558,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81776,7 +82250,7 @@
       "name": "MovementsTable",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 535,
+      "line": 563,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81788,7 +82262,7 @@
       "name": "NisTable",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 540,
+      "line": 568,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81800,7 +82274,7 @@
       "name": "Reconciliation",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 545,
+      "line": 573,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81812,7 +82286,7 @@
       "name": "ChartStrip",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 554,
+      "line": 582,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -120695,7 +121169,7 @@
       "name": "PermissionKey",
       "kind": "type",
       "file": "src/lib/permissions.ts",
-      "line": 548,
+      "line": 552,
       "module": "security",
       "exported": true,
       "container": "",
@@ -120705,7 +121179,7 @@
       "name": "CRITICAL_GRANT_KEYS",
       "kind": "variable",
       "file": "src/lib/permissions.ts",
-      "line": 553,
+      "line": 557,
       "module": "security",
       "exported": true,
       "container": "",
@@ -120715,7 +121189,7 @@
       "name": "COMPLIANCE_GATED_KEYS",
       "kind": "variable",
       "file": "src/lib/permissions.ts",
-      "line": 581,
+      "line": 585,
       "module": "security",
       "exported": true,
       "container": "",
@@ -120725,7 +121199,7 @@
       "name": "EMPLOYEE_BASELINE",
       "kind": "variable",
       "file": "src/lib/permissions.ts",
-      "line": 596,
+      "line": 600,
       "module": "security",
       "exported": false,
       "container": "",
@@ -120735,7 +121209,7 @@
       "name": "ROLE_PERMISSIONS",
       "kind": "object",
       "file": "src/lib/permissions.ts",
-      "line": 622,
+      "line": 626,
       "module": "security",
       "exported": true,
       "container": "",
@@ -120745,7 +121219,7 @@
       "name": "PermissionContext",
       "kind": "interface",
       "file": "src/lib/permissions.ts",
-      "line": 1333,
+      "line": 1341,
       "module": "security",
       "exported": true,
       "container": "",
@@ -120755,7 +121229,7 @@
       "name": "resolvePermission",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1364,
+      "line": 1372,
       "module": "security",
       "exported": true,
       "container": "",
@@ -120765,7 +121239,7 @@
       "name": "roleDefaultGranted",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1409,
+      "line": 1417,
       "module": "security",
       "exported": true,
       "container": "",
@@ -120775,7 +121249,7 @@
       "name": "PermissionState",
       "kind": "type",
       "file": "src/lib/permissions.ts",
-      "line": 1415,
+      "line": 1423,
       "module": "security",
       "exported": true,
       "container": "",
@@ -120785,7 +121259,7 @@
       "name": "permissionState",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1421,
+      "line": 1429,
       "module": "security",
       "exported": true,
       "container": "",
@@ -120795,7 +121269,7 @@
       "name": "permissionGroups",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1431,
+      "line": 1439,
       "module": "security",
       "exported": true,
       "container": "",
@@ -120805,7 +121279,7 @@
       "name": "can",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1451,
+      "line": 1459,
       "module": "security",
       "exported": true,
       "container": "",
@@ -120815,7 +121289,7 @@
       "name": "useCan",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1467,
+      "line": 1475,
       "module": "security",
       "exported": true,
       "container": "",
@@ -142971,6 +143445,97 @@
       "module": "hr"
     },
     {
+      "path": "/api/hr/crew/assignments/create",
+      "localPath": "/assignments/create",
+      "router": "router",
+      "permission": "finance.payroll.crew.assignments.manage",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({\n    employeeId:            z.string().min(1),\n    payGroupId:            z.string().uuid(),\n    policyAssignmentId:    uuidN,\n    role:                  nzStr(120),\n    clientId:              uuidN,\n    contractId:            uuidN,\n    assetId:               uuidN,\n    workOrderId:           uuidN,\n    costCenter:            nzStr(60),\n    contractRateReference: nzStr(200),\n    effectiveFrom:         z.string().regex(DATE),\n    effectiveTo:           z.string().regex(DATE).nullable().optional(),\n    status:                z.enum(['draft', 'active']).optional(),\n  })",
+      "file": "netlify/functions/routes/hrCrew.ts",
+      "line": 56,
+      "module": "hr"
+    },
+    {
+      "path": "/api/hr/crew/assignments/end",
+      "localPath": "/assignments/end",
+      "router": "router",
+      "permission": "finance.payroll.crew.assignments.manage",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({\n    id:          z.string().uuid(),\n    effectiveTo: z.string().regex(DATE),\n    reason:      z.string().max(500).optional(),\n  })",
+      "file": "netlify/functions/routes/hrCrew.ts",
+      "line": 100,
+      "module": "hr"
+    },
+    {
+      "path": "/api/hr/crew/assignments/list",
+      "localPath": "/assignments/list",
+      "router": "router",
+      "permission": "finance.payroll.crew.evidence.view",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({\n    employeeId: z.string().optional(),\n    payGroupId: z.string().uuid().optional(),\n    assetId:    z.string().uuid().optional(),\n    status:     z.enum(['draft', 'active', 'ended', 'cancelled']).optional(),\n  })",
+      "file": "netlify/functions/routes/hrCrew.ts",
+      "line": 42,
+      "module": "hr"
+    },
+    {
+      "path": "/api/hr/crew/assignments/update",
+      "localPath": "/assignments/update",
+      "router": "router",
+      "permission": "finance.payroll.crew.assignments.manage",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({\n    id:                    z.string().uuid(),\n    role:                  nzStr(120),\n    clientId:              uuidN,\n    contractId:            uuidN,\n    assetId:               uuidN,\n    workOrderId:           uuidN,\n    costCenter:            nzStr(60),\n    contractRateReference: nzStr(200),\n    effectiveFrom:         z.string().regex(DATE).optional(),\n    effectiveTo:           z.string().regex(DATE).nullable().optional(),\n    status:                z.enum(['draft', 'active', 'ended', 'cancelled']).optional(),\n  })",
+      "file": "netlify/functions/routes/hrCrew.ts",
+      "line": 79,
+      "module": "hr"
+    },
+    {
+      "path": "/api/hr/crew/movements/correct",
+      "localPath": "/movements/correct",
+      "router": "router",
+      "permission": "finance.payroll.crew.movements.correct",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({\n    correctsMovementId:  z.string().uuid(),\n    reason:              z.string().min(1).max(500),\n    movementType:        z.enum(MOVEMENT_TYPES).optional(),\n    occurredAt:          z.string().min(1).optional(),\n    operationalTimezone: z.string().max(60).optional(),\n    assetId:             uuidN,\n  })",
+      "file": "netlify/functions/routes/hrCrew.ts",
+      "line": 146,
+      "module": "hr"
+    },
+    {
+      "path": "/api/hr/crew/movements/list",
+      "localPath": "/movements/list",
+      "router": "router",
+      "permission": "finance.payroll.crew.evidence.view",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({\n    employeeId:      z.string().optional(),\n    assetId:         z.string().uuid().optional(),\n    movementType:    z.enum(MOVEMENT_TYPES).optional(),\n    correctionsOnly: z.boolean().optional(),\n  })",
+      "file": "netlify/functions/routes/hrCrew.ts",
+      "line": 115,
+      "module": "hr"
+    },
+    {
+      "path": "/api/hr/crew/movements/record",
+      "localPath": "/movements/record",
+      "router": "router",
+      "permission": "finance.payroll.crew.movements.record",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({\n    employeeId:          z.string().min(1),\n    movementType:        z.enum(MOVEMENT_TYPES),\n    occurredAt:          z.string().min(1),\n    operationalTimezone: z.string().max(60).optional(),\n    assetId:             uuidN,\n    sourceSystem:        z.string().max(60).optional(),\n    sourceReference:     z.string().min(1).max(200),\n  })",
+      "file": "netlify/functions/routes/hrCrew.ts",
+      "line": 129,
+      "module": "hr"
+    },
+    {
       "path": "/api/hr/dashboard/kpis",
       "localPath": "/dashboard/kpis",
       "router": "router",
@@ -161641,6 +162206,83 @@
       "file": "supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql",
       "line": 346,
       "module": "payroll"
+    },
+    {
+      "name": "public.hr_crew_assignments",
+      "kind": "table",
+      "file": "supabase/migrations/20260920000000_crew_payroll_core.sql",
+      "line": 46,
+      "module": "payroll"
+    },
+    {
+      "name": "hr_crew_assignments_emp_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260920000000_crew_payroll_core.sql",
+      "line": 78,
+      "module": "payroll"
+    },
+    {
+      "name": "hr_crew_assignments_pg_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260920000000_crew_payroll_core.sql",
+      "line": 79,
+      "module": "payroll"
+    },
+    {
+      "name": "hr_crew_assignments_asset_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260920000000_crew_payroll_core.sql",
+      "line": 80,
+      "module": "payroll"
+    },
+    {
+      "name": "hr_crew_assignments_active_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260920000000_crew_payroll_core.sql",
+      "line": 81,
+      "module": "payroll"
+    },
+    {
+      "name": "hr_crew_assignments_updated_at",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260920000000_crew_payroll_core.sql",
+      "line": 93,
+      "module": "payroll"
+    },
+    {
+      "name": "public.hr_crew_movements",
+      "kind": "table",
+      "file": "supabase/migrations/20260920000000_crew_payroll_core.sql",
+      "line": 100,
+      "module": "payroll"
+    },
+    {
+      "name": "hr_crew_movements_emp_time_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260920000000_crew_payroll_core.sql",
+      "line": 129,
+      "module": "payroll"
+    },
+    {
+      "name": "hr_crew_movements_asset_time_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260920000000_crew_payroll_core.sql",
+      "line": 130,
+      "module": "payroll"
+    },
+    {
+      "name": "hr_crew_movements_corrects_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260920000000_crew_payroll_core.sql",
+      "line": 131,
+      "module": "payroll"
+    },
+    {
+      "name": "hr_crew_movements_updated_at",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260920000000_crew_payroll_core.sql",
+      "line": 133,
+      "module": "payroll"
     }
   ],
   "e2eSuites": [
@@ -162687,6 +163329,45 @@
         "/api/communications/messages/posts",
         "/api/communications/messages/thread",
         "/api/superadmin/setUserPermission"
+      ]
+    },
+    {
+      "name": "crewPayroll",
+      "title": "crewPayroll",
+      "module": "payroll",
+      "file": "scripts/e2e/suites/crewPayroll.mjs",
+      "tests": [
+        {
+          "name": "CRP-setup — users, pay group, two assets",
+          "line": 35
+        },
+        {
+          "name": "CRP-03/07 access control — unauthorized 401, non-participant 403",
+          "line": 53
+        },
+        {
+          "name": "CPE-01 assignment create/update/end + exact app_events/audit",
+          "line": 62
+        },
+        {
+          "name": "CPE-02 overlapping active crew assignment → 422 blocker; no row",
+          "line": 88
+        },
+        {
+          "name": "CPE-04/05 movement record + idempotent replay (deduped, +0 events)",
+          "line": 100
+        },
+        {
+          "name": "CPE-06 movement correct — new record links to original; original untouched",
+          "line": 120
+        }
+      ],
+      "apiPaths": [
+        "/api/hr/crew/assignments/create",
+        "/api/hr/crew/assignments/end",
+        "/api/hr/crew/assignments/update",
+        "/api/hr/crew/movements/correct",
+        "/api/hr/crew/movements/record"
       ]
     },
     {

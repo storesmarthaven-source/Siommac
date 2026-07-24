@@ -2,9 +2,9 @@
 
 # payroll Module Map
 
-Source fingerprint: `fe2bbce03596e3a67b0ab020`
+Source fingerprint: `0c5a74b22c282cf6c624b1b7`
 
-Files: 176 | Symbols: 1792 | Widgets: 10 | Unique mounted endpoints: 135 | Route definitions: 135 mounted + 0 unmounted | API calls: 5 | DB objects: 239 | E2E suites: 24
+Files: 177 | Symbols: 1801 | Widgets: 10 | Unique mounted endpoints: 135 | Route definitions: 135 mounted + 0 unmounted | API calls: 5 | DB objects: 250 | E2E suites: 25
 
 ## Widgets and Tiles
 
@@ -215,7 +215,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useRunViews` | function / hook | `src/api/finance/payrollRunsRegister.ts:54` | `-` |
 | `useRunCalendar` | function / hook | `src/api/finance/payrollRunsRegister.ts:58` | `-` |
 | `useRunViewMutations` | function / hook | `src/api/finance/payrollRunsRegister.ts:68` | `-` |
-| `MyPayslipsOverview` | function / component | `src/components/sections/Finance/MyPayslipsOverview.tsx:34` | `-` |
+| `MyPayslipsOverview` | function / component | `src/components/sections/Finance/MyPayslipsOverview.tsx:37` | `-` |
 | `PayPolicySetup` | function / component | `src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx:34` | `-` |
 | `WorkCalendarPage` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:55` | `-` |
 | `WorkCalendarSetup` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:66` | `-` |
@@ -230,9 +230,9 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `ResolvePanel` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:792` | `-` |
 | `ResolveResultView` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:834` | `-` |
 | `PayrollCommandCenter` | function / component | `src/components/sections/Finance/PayrollCommandCenter.tsx:274` | `-` |
-| `PayrollExceptionQueuePage` | function / component | `src/components/sections/Finance/PayrollExceptionQueuePage.tsx:65` | `-` |
+| `PayrollExceptionQueuePage` | function / component | `src/components/sections/Finance/PayrollExceptionQueuePage.tsx:95` | `-` |
 | `PayrollPayslipBatchesPage` | function / component | `src/components/sections/Finance/PayrollPayslipBatchesPage.tsx:37` | `-` |
-| `PayrollReportsPage` | function / component | `src/components/sections/Finance/PayrollReportsPage.tsx:104` | `-` |
+| `PayrollReportsPage` | function / component | `src/components/sections/Finance/PayrollReportsPage.tsx:117` | `-` |
 | `PayrollRunRegisterPage` | function / component | `src/components/sections/Finance/PayrollRunRegisterPage.tsx:74` | `-` |
 | `PayrollSetupOverview` | function / component | `src/components/sections/Finance/PayrollSetupOverview.tsx:92` | `-` |
 | `App` | function / component | `src/components/sections/PayslipStudio/App.tsx:18` | `-` |
@@ -419,11 +419,16 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | function | `public.finance_payroll_report_claim` | `supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql:175` |
 | function | `public.finance_payroll_report_complete_tx` | `supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql:207` |
 | function | `public.finance_payroll_report_rpc_exists` | `supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql:346` |
+| table | `public.hr_crew_assignments` | `supabase/migrations/20260920000000_crew_payroll_core.sql:46` |
+| trigger | `hr_crew_assignments_updated_at` | `supabase/migrations/20260920000000_crew_payroll_core.sql:93` |
+| table | `public.hr_crew_movements` | `supabase/migrations/20260920000000_crew_payroll_core.sql:100` |
+| trigger | `hr_crew_movements_updated_at` | `supabase/migrations/20260920000000_crew_payroll_core.sql:133` |
 
 ## E2E Suites
 
 | Suite | Tests | API paths | Location |
 |---|---:|---:|---|
+| crewPayroll | 6 | 5 | `scripts/e2e/suites/crewPayroll.mjs` |
 | Finance — Payroll Runs (Phase 3 — full lifecycle) | 137 | 50 | `scripts/e2e/suites/financePayroll.mjs` |
 | Finance F3 - Payslip Distribution & ESS | 20 | 8 | `scripts/e2e/suites/financePayslipsEss.mjs` |
 | Payroll — Back pay (retro adjustment, P2-a rebuild) | 14 | 3 | `scripts/e2e/suites/payrollBackPay.mjs` |
@@ -457,6 +462,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 |---|---|---:|
 | backend-route | `netlify/functions/routes/financePayroll.ts` | 1854 |
 | backend-route | `netlify/functions/routes/financePayslipTemplates.ts` | 177 |
+| e2e-suite | `scripts/e2e/suites/crewPayroll.mjs` | 135 |
 | e2e-suite | `scripts/e2e/suites/financePayroll.mjs` | 3412 |
 | e2e-suite | `scripts/e2e/suites/financePayslipsEss.mjs` | 340 |
 | e2e-suite | `scripts/e2e/suites/payrollBackPay.mjs` | 316 |
@@ -488,15 +494,15 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/finance/payroll/controlCenter.ts` | 133 |
 | frontend-api | `src/api/payroll.ts` | 132 |
 | frontend-api | `src/api/schemas/payroll.ts` | 88 |
-| frontend-page | `src/components/sections/Finance/MyPayslipsOverview.tsx` | 153 |
+| frontend-page | `src/components/sections/Finance/MyPayslipsOverview.tsx` | 164 |
 | frontend-page | `src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx` | 157 |
 | frontend-page | `src/components/sections/Finance/PayrollCommandCenter.tsx` | 931 |
-| frontend-page | `src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx` | 116 |
-| frontend-page | `src/components/sections/Finance/PayrollExceptionQueuePage.tsx` | 421 |
+| frontend-page | `src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx` | 117 |
+| frontend-page | `src/components/sections/Finance/PayrollExceptionQueuePage.tsx` | 494 |
 | frontend-page | `src/components/sections/Finance/PayrollPayslipBatchesPage.test.tsx` | 70 |
 | frontend-page | `src/components/sections/Finance/PayrollPayslipBatchesPage.tsx` | 190 |
 | frontend-page | `src/components/sections/Finance/PayrollReportsPage.loadingGate.test.tsx` | 117 |
-| frontend-page | `src/components/sections/Finance/PayrollReportsPage.tsx` | 575 |
+| frontend-page | `src/components/sections/Finance/PayrollReportsPage.tsx` | 603 |
 | frontend-page | `src/components/sections/Finance/PayrollRunRegisterPage.tsx` | 401 |
 | frontend-page | `src/components/sections/Finance/PayrollSetupOverview.tsx` | 882 |
 | frontend-page | `src/components/sections/Finance/payrollReportsContract.test.ts` | 43 |

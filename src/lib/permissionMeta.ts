@@ -1510,6 +1510,26 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Assign active pay-policy versions to pay groups with effective-date overlap controls.',
     risk: 'high',
   },
+  'finance.payroll.crew.assignments.manage': {
+    module: 'Finance', group: 'Payroll Setup', label: 'Manage Crew Assignments',
+    description: 'Create, update and end effective crew assignments (client, contract, operational asset, work-order and rate context) for offshore/marine pay policies. Overlap of prohibited simultaneous asset allocation is blocked.',
+    risk: 'high',
+  },
+  'finance.payroll.crew.movements.record': {
+    module: 'Finance', group: 'Payroll Runs', label: 'Record Crew Movements',
+    description: 'Record embarkation, disembarkation, transfer, mobilization and demobilization crew movements (idempotent by source business key). Feeds crew-run qualifying-day evidence.',
+    risk: 'medium',
+  },
+  'finance.payroll.crew.movements.correct': {
+    module: 'Finance', group: 'Payroll Runs', label: 'Correct Crew Movements',
+    description: 'Record a reasoned correction/reversal of a crew movement. Never overwrites an approved historical event — an already-snapshotted run stays explainable.',
+    risk: 'high',
+  },
+  'finance.payroll.crew.evidence.view': {
+    module: 'Finance', group: 'Payroll Runs', label: 'View Crew Pay Evidence',
+    description: 'View employee-level crew assignment, movement and roster reconciliation evidence for a payroll run.',
+    risk: 'medium',
+  },
   'finance.payroll.worksheet.override': {
     module: 'Finance', group: 'Payroll Runs',
     label: 'Override Payroll Worksheet',

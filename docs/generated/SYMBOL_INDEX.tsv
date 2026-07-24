@@ -1,11 +1,11 @@
 symbol	kind	module	exported	tags	file	line	container
-ALLOWED_ORIGINS	variable	platform	false		netlify/functions/api.ts	87	
-isAllowedOrigin	function	platform	false		netlify/functions/api.ts	100	
-app	variable	platform	false		netlify/functions/api.ts	109	
-_legacyDispatch	function	platform	false		netlify/functions/api.ts	263	
-NetlifyV1Event	interface	platform	false		netlify/functions/api.ts	293	
-NetlifyV1Context	interface	platform	false		netlify/functions/api.ts	302	
-handler	function	platform	true		netlify/functions/api.ts	306	
+ALLOWED_ORIGINS	variable	platform	false		netlify/functions/api.ts	88	
+isAllowedOrigin	function	platform	false		netlify/functions/api.ts	101	
+app	variable	platform	false		netlify/functions/api.ts	110	
+_legacyDispatch	function	platform	false		netlify/functions/api.ts	265	
+NetlifyV1Event	interface	platform	false		netlify/functions/api.ts	295	
+NetlifyV1Context	interface	platform	false		netlify/functions/api.ts	304	
+handler	function	platform	true		netlify/functions/api.ts	308	
 TZ	variable	platform	false		netlify/functions/auto-checkout.ts	10	
 today24	function	platform	false		netlify/functions/auto-checkout.ts	12	
 hhmm24	function	platform	false		netlify/functions/auto-checkout.ts	15	
@@ -1514,6 +1514,33 @@ expireContracts	function	hr	true		netlify/functions/lib/hr/contractsService.ts	3
 createTemplate	function	hr	true		netlify/functions/lib/hr/contractsService.ts	338	
 updateTemplate	function	hr	true		netlify/functions/lib/hr/contractsService.ts	352	
 retireTemplate	function	hr	true		netlify/functions/lib/hr/contractsService.ts	370	
+fail	function	hr	false		netlify/functions/lib/hr/crewAssignments.ts	11	
+OPEN	variable	hr	false		netlify/functions/lib/hr/crewAssignments.ts	12	
+CrewAssignmentStatus	type	hr	true		netlify/functions/lib/hr/crewAssignments.ts	14	
+CrewAssignmentDto	interface	hr	true		netlify/functions/lib/hr/crewAssignments.ts	16	
+Row	type	hr	false		netlify/functions/lib/hr/crewAssignments.ts	40	
+mapRow	function	hr	false		netlify/functions/lib/hr/crewAssignments.ts	41	
+CrewAssignmentFilter	interface	hr	true		netlify/functions/lib/hr/crewAssignments.ts	60	
+listCrewAssignments	function	hr	true		netlify/functions/lib/hr/crewAssignments.ts	63	
+assertNoActiveOverlap	function	hr	false		netlify/functions/lib/hr/crewAssignments.ts	78	
+overlapErr	function	hr	false		netlify/functions/lib/hr/crewAssignments.ts	92	
+CreateCrewAssignmentInput	interface	hr	true		netlify/functions/lib/hr/crewAssignments.ts	99	
+createCrewAssignment	function	hr	true		netlify/functions/lib/hr/crewAssignments.ts	105	
+UpdateCrewAssignmentInput	interface	hr	true		netlify/functions/lib/hr/crewAssignments.ts	131	
+updateCrewAssignment	function	hr	true		netlify/functions/lib/hr/crewAssignments.ts	137	
+set	function	hr	false		netlify/functions/lib/hr/crewAssignments.ts	149	updateCrewAssignment
+endCrewAssignment	function	hr	true		netlify/functions/lib/hr/crewAssignments.ts	167	
+fail	function	hr	false		netlify/functions/lib/hr/crewMovements.ts	13	
+CrewMovementType	type	hr	true		netlify/functions/lib/hr/crewMovements.ts	15	
+CrewMovementDto	interface	hr	true		netlify/functions/lib/hr/crewMovements.ts	17	
+Row	type	hr	false		netlify/functions/lib/hr/crewMovements.ts	36	
+mapRow	function	hr	false		netlify/functions/lib/hr/crewMovements.ts	37	
+CrewMovementFilter	interface	hr	true		netlify/functions/lib/hr/crewMovements.ts	52	
+listCrewMovements	function	hr	true		netlify/functions/lib/hr/crewMovements.ts	55	
+RecordCrewMovementInput	interface	hr	true		netlify/functions/lib/hr/crewMovements.ts	66	
+recordCrewMovement	function	hr	true		netlify/functions/lib/hr/crewMovements.ts	73	
+CorrectCrewMovementInput	interface	hr	true		netlify/functions/lib/hr/crewMovements.ts	106	
+correctCrewMovement	function	hr	true		netlify/functions/lib/hr/crewMovements.ts	113	
 ParsedCsv	interface	hr	true		netlify/functions/lib/hr/csvParse.ts	8	
 parseCsv	function	hr	true		netlify/functions/lib/hr/csvParse.ts	10	
 ComplianceState	type	hr	false		netlify/functions/lib/hr/documentsCompliance.ts	12	
@@ -2281,26 +2308,26 @@ COMPLIANCE_APPROVER_KEYS	variable	security	true		netlify/functions/lib/permissio
 ApproverCandidate	interface	security	true		netlify/functions/lib/permissionApprovalScope.ts	39	
 selectEligibleApprovers	function	security	true		netlify/functions/lib/permissionApprovalScope.ts	56	
 PERMISSION_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	26	
-PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	468	
-CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	477	
-isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	489	
-COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	509	
-ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	518	
-PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	989	
-resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	1009	
-resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	1034	
-ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1044	
-_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1045	
-invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1048	
-loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1064	
-loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1099	
-RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1111	
-_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1112	
-invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1115	
-loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1125	
-DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1138	
-deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1146	
-assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1157	
+PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	472	
+CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	481	
+isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	493	
+COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	513	
+ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	522	
+PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	997	
+resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	1017	
+resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	1042	
+ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1052	
+_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1053	
+invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1056	
+loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1072	
+loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1107	
+RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1119	
+_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1120	
+invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1123	
+loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1133	
+DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1146	
+deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1154	
+assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1165	
 SIGNED_TTL	variable	platform	false		netlify/functions/lib/photos.ts	7	
 SIGNED_REFRESH_BEFORE	variable	platform	false		netlify/functions/lib/photos.ts	8	
 SIGNED_CACHE_TTL_MS	variable	platform	false		netlify/functions/lib/photos.ts	9	
@@ -3095,6 +3122,14 @@ PARTIES	variable	platform	false		netlify/functions/routes/hrContracts.ts	27
 METHODS	variable	platform	false		netlify/functions/routes/hrContracts.ts	28	
 signatoryInput	variable	platform	false		netlify/functions/routes/hrContracts.ts	30	
 clauseInput	variable	platform	false		netlify/functions/routes/hrContracts.ts	36	
+MOVEMENT_TYPES	variable	platform	false		netlify/functions/routes/hrCrew.ts	25	
+router	variable	platform	false		netlify/functions/routes/hrCrew.ts	27	
+HCtx	type	platform	false		netlify/functions/routes/hrCrew.ts	28	
+body	function	platform	false		netlify/functions/routes/hrCrew.ts	29	
+routeErr	function	platform	false		netlify/functions/routes/hrCrew.ts	30	
+DATE	variable	platform	false		netlify/functions/routes/hrCrew.ts	35	
+nzStr	function	platform	false		netlify/functions/routes/hrCrew.ts	36	
+uuidN	variable	platform	false		netlify/functions/routes/hrCrew.ts	37	
 router	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	27	
 body	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	28	
 REQUIRED_FIELDS	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	32	
@@ -3663,6 +3698,9 @@ approveDatedPermission	function	communications	false	test	scripts/e2e/suites/com
 readSummary	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	214	run
 assertEvidenceTriplet	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	223	run
 requestId	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	263	run
+run	function	payroll	true	test	scripts/e2e/suites/crewPayroll.mjs	12	
+evCount	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	30	run
+auditCount	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	32	run
 title	variable	finance	true	test	scripts/e2e/suites/financeAp.mjs	18	
 run	function	finance	true	test	scripts/e2e/suites/financeAp.mjs	20	
 title	variable	finance	true	test	scripts/e2e/suites/financeBudgets.mjs	36	
@@ -6746,10 +6784,10 @@ STATUTORY_FORMS_ITEM	object	finance	false		src/components/sections/Finance/modul
 financeModule	object	finance	true		src/components/sections/Finance/module.ts	138	
 mountFinanceSection	function	finance	true		src/components/sections/Finance/mount.ts	10	
 unmountFinanceSection	function	finance	true		src/components/sections/Finance/mount.ts	22	
-MY_PAYSLIPS_KEY	variable	payroll	false	component	src/components/sections/Finance/MyPayslipsOverview.tsx	30	
-MyPayslipsOverview	function	payroll	true	component	src/components/sections/Finance/MyPayslipsOverview.tsx	34	
-PayslipRow	function	payroll	false	component	src/components/sections/Finance/MyPayslipsOverview.tsx	101	
-download	function	payroll	false		src/components/sections/Finance/MyPayslipsOverview.tsx	104	PayslipRow
+MY_PAYSLIPS_KEY	variable	payroll	false	component	src/components/sections/Finance/MyPayslipsOverview.tsx	33	
+MyPayslipsOverview	function	payroll	true	component	src/components/sections/Finance/MyPayslipsOverview.tsx	37	
+PayslipRow	function	payroll	false	component	src/components/sections/Finance/MyPayslipsOverview.tsx	122	
+download	function	payroll	false		src/components/sections/Finance/MyPayslipsOverview.tsx	125	PayslipRow
 fmtDue	function	finance	false		src/components/sections/Finance/PayablesOverview.tsx	41	
 AGING_TONE	array	finance	false		src/components/sections/Finance/PayablesOverview.tsx	42	
 billTone	function	finance	false		src/components/sections/Finance/PayablesOverview.tsx	44	
@@ -6959,26 +6997,31 @@ TABS	array	payroll	false		src/components/sections/Finance/PayrollExceptionQueueP
 SEV_CLS	variable	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	32	
 KIND_ICON	variable	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	35	
 ACT_ICON	variable	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	38	
-fmtTTD	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	48	
-fmtDue	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	49	
-isOverdue	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	54	
-fmtDateTime	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	55	
-initials	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	57	
-openRun	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	60	
-PayrollExceptionQueuePage	function	payroll	true	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	65	
-resetPage	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	91	PayrollExceptionQueuePage
-changeTab	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	109	PayrollExceptionQueuePage
-nextPage	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	110	PayrollExceptionQueuePage
-prevPage	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	111	PayrollExceptionQueuePage
-onRowOpen	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	113	PayrollExceptionQueuePage
-anyPending	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	211	
-QueueRow	function	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	217	
-ACTION_META	object	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	239	
-DetailPanel	function	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	249	
-labelActivity	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	308	
-FindingActionModal	function	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	322	
-key	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	338	FindingActionModal
-run	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	341	FindingActionModal
+SectionKey	type	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	49	
+SECTION_META	object	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	50	
+SECTION_ORDER	array	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	56	
+groupQueue	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	60	
+METRICS	array	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	70	
+fmtTTD	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	78	
+fmtDue	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	79	
+isOverdue	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	84	
+fmtDateTime	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	85	
+initials	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	87	
+openRun	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	90	
+PayrollExceptionQueuePage	function	payroll	true	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	95	
+resetPage	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	121	PayrollExceptionQueuePage
+changeTab	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	140	PayrollExceptionQueuePage
+nextPage	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	141	PayrollExceptionQueuePage
+prevPage	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	142	PayrollExceptionQueuePage
+onRowOpen	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	144	PayrollExceptionQueuePage
+anyPending	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	265	
+QueueRow	function	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	271	
+ACTION_META	object	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	297	
+DetailPanel	function	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	307	
+labelActivity	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	381	
+FindingActionModal	function	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	395	
+key	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	411	FindingActionModal
+run	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	414	FindingActionModal
 mockQ	variable	payroll	false	test	src/components/sections/Finance/PayrollPayslipBatchesPage.test.tsx	15	
 batch	function	payroll	false	test	src/components/sections/Finance/PayrollPayslipBatchesPage.test.tsx	21	
 result	function	payroll	false	test	src/components/sections/Finance/PayrollPayslipBatchesPage.test.tsx	32	
@@ -7002,40 +7045,41 @@ setReady	function	payroll	false	test	src/components/sections/Finance/PayrollRepo
 renderPage	function	payroll	false	test	src/components/sections/Finance/PayrollReportsPage.loadingGate.test.tsx	87	
 Completed	type	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	24	
 ELIGIBLE	variable	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	25	
-money	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	27	
-num	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	29	
-fmtDate	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	30	
-thisMonth	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	33	
-newExportKey	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	41	
-errMsg	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	44	
-reportsBoardCold	function	payroll	true		src/components/sections/Finance/PayrollReportsPage.tsx	51	
-triggerDownload	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	56	
-buildParams	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	62	
-ParamState	interface	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	79	
-FieldErrors	type	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	80	
-paramErrors	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	83	
-PayrollReportsPage	function	payroll	true	component	src/components/sections/Finance/PayrollReportsPage.tsx	104	
-loadMoreHistory	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	129	PayrollReportsPage
-pick	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	198	PayrollReportsPage
-closeDialog	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	208	PayrollReportsPage
-run	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	212	PayrollReportsPage
-runExport	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	216	PayrollReportsPage
-tile	function	payroll	false	ui-tile	src/components/sections/Finance/PayrollReportsPage.tsx	232	PayrollReportsPage
-ParamFields	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	432	
-runPicker	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	443	ParamFields
-monthField	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	453	ParamFields
-ReportResult	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	484	
-Totals	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	498	
-Empty	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	504	
-RegisterTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	506	
-NetPayTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	511	
-CostTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	516	
-VarianceTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	521	
-OvertimeTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	530	
-MovementsTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	535	
-NisTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	540	
-Reconciliation	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	545	
-ChartStrip	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	554	
+CAT_ICON	object	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	28	
+money	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	40	
+num	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	42	
+fmtDate	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	43	
+thisMonth	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	46	
+newExportKey	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	54	
+errMsg	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	57	
+reportsBoardCold	function	payroll	true		src/components/sections/Finance/PayrollReportsPage.tsx	64	
+triggerDownload	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	69	
+buildParams	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	75	
+ParamState	interface	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	92	
+FieldErrors	type	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	93	
+paramErrors	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	96	
+PayrollReportsPage	function	payroll	true	component	src/components/sections/Finance/PayrollReportsPage.tsx	117	
+loadMoreHistory	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	142	PayrollReportsPage
+pick	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	211	PayrollReportsPage
+closeDialog	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	221	PayrollReportsPage
+run	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	225	PayrollReportsPage
+runExport	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	229	PayrollReportsPage
+tile	function	payroll	false	ui-tile	src/components/sections/Finance/PayrollReportsPage.tsx	245	PayrollReportsPage
+ParamFields	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	460	
+runPicker	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	471	ParamFields
+monthField	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	481	ParamFields
+ReportResult	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	512	
+Totals	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	526	
+Empty	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	532	
+RegisterTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	534	
+NetPayTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	539	
+CostTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	544	
+VarianceTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	549	
+OvertimeTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	558	
+MovementsTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	563	
+NisTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	568	
+Reconciliation	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	573	
+ChartStrip	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	582	
 TABS	array	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	28	
 STATE_PILL	variable	payroll	false	component	src/components/sections/Finance/PayrollRunRegisterPage.tsx	37	
 pillFor	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	50	
@@ -10705,19 +10749,19 @@ ctx	function	security	false	test	src/lib/permissions.test.ts	28
 override	function	security	false	test	src/lib/permissions.test.ts	36	
 expired	function	security	false	test	src/lib/permissions.test.ts	251	
 PERMISSION_KEYS	variable	security	true		src/lib/permissions.ts	55	
-PermissionKey	type	security	true		src/lib/permissions.ts	548	
-CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	553	
-COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	581	
-EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	596	
-ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	622	
-PermissionContext	interface	security	true		src/lib/permissions.ts	1333	
-resolvePermission	function	security	true		src/lib/permissions.ts	1364	
-roleDefaultGranted	function	security	true		src/lib/permissions.ts	1409	
-PermissionState	type	security	true		src/lib/permissions.ts	1415	
-permissionState	function	security	true		src/lib/permissions.ts	1421	
-permissionGroups	function	security	true		src/lib/permissions.ts	1431	
-can	function	security	true		src/lib/permissions.ts	1451	
-useCan	function	security	true	hook	src/lib/permissions.ts	1467	
+PermissionKey	type	security	true		src/lib/permissions.ts	552	
+CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	557	
+COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	585	
+EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	600	
+ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	626	
+PermissionContext	interface	security	true		src/lib/permissions.ts	1341	
+resolvePermission	function	security	true		src/lib/permissions.ts	1372	
+roleDefaultGranted	function	security	true		src/lib/permissions.ts	1417	
+PermissionState	type	security	true		src/lib/permissions.ts	1423	
+permissionState	function	security	true		src/lib/permissions.ts	1429	
+permissionGroups	function	security	true		src/lib/permissions.ts	1439	
+can	function	security	true		src/lib/permissions.ts	1459	
+useCan	function	security	true	hook	src/lib/permissions.ts	1475	
 ICONS	object	platform	false		src/lib/popup.ts	22	
 _svg	function	platform	false		src/lib/popup.ts	30	
 _ready	variable	platform	false		src/lib/popup.ts	36	
