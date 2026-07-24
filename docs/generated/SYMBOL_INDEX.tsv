@@ -964,16 +964,17 @@ matchesTab	function	payroll	false		netlify/functions/lib/finance/payroll/runRegi
 compareRuns	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	176	
 isAfterCursor	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	218	
 readinessLabel	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	279	
-listPayrollRunsRegister	function	payroll	true		netlify/functions/lib/finance/payroll/runRegister.ts	291	
-FindingRow	interface	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	352	listPayrollRunsRegister
-CalcVersionRow	interface	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	412	listPayrollRunsRegister
-effNetOf	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	429	listPayrollRunsRegister
-isFundable	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	435	listPayrollRunsRegister
-FundingRow	interface	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	447	listPayrollRunsRegister
-money	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	480	listPayrollRunsRegister
-UserRow	interface	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	495	listPayrollRunsRegister
-SourceRunRow	interface	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	506	listPayrollRunsRegister
-PayGroupRow	interface	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	517	listPayrollRunsRegister
+lifecycleStagePercent	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	293	
+listPayrollRunsRegister	function	payroll	true		netlify/functions/lib/finance/payroll/runRegister.ts	312	
+FindingRow	interface	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	373	listPayrollRunsRegister
+CalcVersionRow	interface	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	433	listPayrollRunsRegister
+effNetOf	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	450	listPayrollRunsRegister
+isFundable	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	456	listPayrollRunsRegister
+FundingRow	interface	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	468	listPayrollRunsRegister
+money	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	501	listPayrollRunsRegister
+UserRow	interface	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	516	listPayrollRunsRegister
+SourceRunRow	interface	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	527	listPayrollRunsRegister
+PayGroupRow	interface	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	538	listPayrollRunsRegister
 VALID_SORTS	variable	payroll	false		netlify/functions/lib/finance/payroll/runViews.ts	33	
 VALID_STATES	variable	payroll	false		netlify/functions/lib/finance/payroll/runViews.ts	36	
 VALID_RUN_TYPES	variable	payroll	false		netlify/functions/lib/finance/payroll/runViews.ts	42	
@@ -7142,28 +7143,28 @@ STATE_PILL	variable	payroll	false	component	src/components/sections/Finance/Payr
 pillFor	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	50	
 RUN_TYPES	array	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	52	
 SORTS	array	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	59	
-READINESS_CLS	variable	payroll	false	component	src/components/sections/Finance/PayrollRunRegisterPage.tsx	64	
-money	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	66	
-fmtDate	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	68	
-dayNum	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	70	
-DEFAULT_FILTERS	object	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	72	
-PayrollRunRegisterPage	function	payroll	true	component	src/components/sections/Finance/PayrollRunRegisterPage.tsx	74	
-resetPage	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	96	PayrollRunRegisterPage
-iso	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	114	PayrollRunRegisterPage
-changeTab	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	130	PayrollRunRegisterPage
-changeRunType	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	131	PayrollRunRegisterPage
-changePayGroup	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	132	PayrollRunRegisterPage
-changeSort	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	133	PayrollRunRegisterPage
-nextPage	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	134	PayrollRunRegisterPage
-prevPage	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	139	PayrollRunRegisterPage
-openRun	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	143	PayrollRunRegisterPage
-onCreated	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	147	PayrollRunRegisterPage
-applyView	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	150	PayrollRunRegisterPage
-applyDefaultView	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	159	PayrollRunRegisterPage
-saveView	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	163	PayrollRunRegisterPage
-deleteActiveView	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	179	PayrollRunRegisterPage
-RunRow	function	payroll	false	component	src/components/sections/Finance/PayrollRunRegisterPage.tsx	355	
-Metric	function	payroll	false	component	src/components/sections/Finance/PayrollRunRegisterPage.tsx	387	
+READINESS_CLS	variable	payroll	false	component	src/components/sections/Finance/PayrollRunRegisterPage.tsx	68	
+money	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	75	
+fmtDate	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	77	
+dayNum	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	79	
+DEFAULT_FILTERS	object	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	81	
+PayrollRunRegisterPage	function	payroll	true	component	src/components/sections/Finance/PayrollRunRegisterPage.tsx	83	
+resetPage	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	105	PayrollRunRegisterPage
+iso	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	123	PayrollRunRegisterPage
+changeTab	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	139	PayrollRunRegisterPage
+changeRunType	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	140	PayrollRunRegisterPage
+changePayGroup	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	141	PayrollRunRegisterPage
+changeSort	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	142	PayrollRunRegisterPage
+nextPage	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	143	PayrollRunRegisterPage
+prevPage	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	148	PayrollRunRegisterPage
+openRun	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	152	PayrollRunRegisterPage
+onCreated	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	156	PayrollRunRegisterPage
+applyView	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	159	PayrollRunRegisterPage
+applyDefaultView	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	168	PayrollRunRegisterPage
+saveView	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	172	PayrollRunRegisterPage
+deleteActiveView	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	188	PayrollRunRegisterPage
+RunRow	function	payroll	false	component	src/components/sections/Finance/PayrollRunRegisterPage.tsx	364	
+Metric	function	payroll	false	component	src/components/sections/Finance/PayrollRunRegisterPage.tsx	396	
 empName	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	56	
 todayIso	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	59	
 FREQUENCIES	array	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	61	
@@ -7287,16 +7288,16 @@ PayrollPanelState	function	finance	true	component	src/components/sections/Financ
 fmtCompact	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	15	
 initials	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	22	
 monthLabel	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	30	
-dayLabel	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	38	
-runTitle	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	45	
-humanFreq	function	finance	false		src/components/sections/Finance/payRunDetail/parts.tsx	50	
-PillIntent	type	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	56	
-statusIntent	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	58	
-LifecycleStep	interface	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	69	
-LIFECYCLE_ORDER	array	finance	false		src/components/sections/Finance/payRunDetail/parts.tsx	71	
-lifecycleSteps	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	82	
-PolicyChip	function	finance	true	component	src/components/sections/Finance/payRunDetail/parts.tsx	102	
-CalendarChip	function	finance	true	component	src/components/sections/Finance/payRunDetail/parts.tsx	115	
+dayLabel	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	41	
+runTitle	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	54	
+humanFreq	function	finance	false		src/components/sections/Finance/payRunDetail/parts.tsx	59	
+PillIntent	type	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	65	
+statusIntent	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	67	
+LifecycleStep	interface	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	78	
+LIFECYCLE_ORDER	array	finance	false		src/components/sections/Finance/payRunDetail/parts.tsx	80	
+lifecycleSteps	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	91	
+PolicyChip	function	finance	true	component	src/components/sections/Finance/payRunDetail/parts.tsx	111	
+CalendarChip	function	finance	true	component	src/components/sections/Finance/payRunDetail/parts.tsx	124	
 CHECKSUM	variable	finance	false	component,test	src/components/sections/Finance/payRunDetail/payRunDetail.test.tsx	19	
 makeRun	function	finance	false	test	src/components/sections/Finance/payRunDetail/payRunDetail.test.tsx	21	
 makeEvidence	function	finance	false	test	src/components/sections/Finance/payRunDetail/payRunDetail.test.tsx	40	

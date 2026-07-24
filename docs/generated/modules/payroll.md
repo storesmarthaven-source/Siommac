@@ -2,9 +2,9 @@
 
 # payroll Module Map
 
-Source fingerprint: `af126f6ea486ce87d3816da8`
+Source fingerprint: `2068f16e2b7fc658288ad4b2`
 
-Files: 186 | Symbols: 1870 | Widgets: 10 | Unique mounted endpoints: 135 | Route definitions: 135 mounted + 0 unmounted | API calls: 2 | DB objects: 253 | E2E suites: 27
+Files: 186 | Symbols: 1871 | Widgets: 10 | Unique mounted endpoints: 135 | Route definitions: 135 mounted + 0 unmounted | API calls: 2 | DB objects: 253 | E2E suites: 27
 
 ## Widgets and Tiles
 
@@ -233,7 +233,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `PayrollExceptionQueuePage` | function / component | `src/components/sections/Finance/PayrollExceptionQueuePage.tsx:95` | `-` |
 | `PayrollPayslipBatchesPage` | function / component | `src/components/sections/Finance/PayrollPayslipBatchesPage.tsx:37` | `-` |
 | `PayrollReportsPage` | function / component | `src/components/sections/Finance/PayrollReportsPage.tsx:117` | `-` |
-| `PayrollRunRegisterPage` | function / component | `src/components/sections/Finance/PayrollRunRegisterPage.tsx:74` | `-` |
+| `PayrollRunRegisterPage` | function / component | `src/components/sections/Finance/PayrollRunRegisterPage.tsx:83` | `-` |
 | `PayrollSetupOverview` | function / component | `src/components/sections/Finance/PayrollSetupOverview.tsx:92` | `-` |
 | `App` | function / component | `src/components/sections/PayslipStudio/App.tsx:18` | `-` |
 | `Canvas` | function / component | `src/components/sections/PayslipStudio/components/canvas/Canvas.tsx:21` | `-` |
@@ -508,7 +508,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/PayrollPayslipBatchesPage.tsx` | 190 |
 | frontend-page | `src/components/sections/Finance/PayrollReportsPage.loadingGate.test.tsx` | 117 |
 | frontend-page | `src/components/sections/Finance/PayrollReportsPage.tsx` | 603 |
-| frontend-page | `src/components/sections/Finance/PayrollRunRegisterPage.tsx` | 401 |
+| frontend-page | `src/components/sections/Finance/PayrollRunRegisterPage.tsx` | 410 |
 | frontend-page | `src/components/sections/Finance/PayrollSetupOverview.tsx` | 882 |
 | frontend-page | `src/components/sections/Finance/payrollReportsContract.test.ts` | 43 |
 | frontend-page | `src/components/sections/Finance/payroll/run/crewSections.test.tsx` | 106 |

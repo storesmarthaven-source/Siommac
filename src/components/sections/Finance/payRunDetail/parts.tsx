@@ -28,17 +28,26 @@ export function initials(name: string | null | undefined, fallback = '—'): str
 }
 
 export function monthLabel(periodMonth: string): string {
-  // periodMonth is YYYY-MM-01; render "July 2026"
-  const d = new Date(periodMonth);
-  return Number.isNaN(d.getTime())
-    ? periodMonth.slice(0, 7)
-    : d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  // periodMonth is a DATE-ONLY string (YYYY-MM-01). `new Date('2026-04-01')`
+  // parses as UTC midnight, which toLocaleDateString then renders in the local
+  // zone (Port of Spain, UTC-4), shifting an April run's header to "March 2026".
+  // Parse the calendar month directly — no Date, no zone shift.
+  const m = /^(\d{4})-(\d{2})/.exec(periodMonth);
+  if (!m) return periodMonth.slice(0, 7);
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, 1));
+  return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 }
 
 export function dayLabel(iso: string | null): string {
   if (!iso) return '—';
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  // Date-ONLY values (YYYY-MM-DD) must render in UTC so a pay date of 2026-04-30
+  // is not shown as "29 Apr" in a negative-offset zone. Datetime values (with a
+  // time/zone) format normally.
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(iso);
+  const d = new Date(dateOnly ? `${iso}T00:00:00Z` : iso);
+  return Number.isNaN(d.getTime())
+    ? '—'
+    : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', ...(dateOnly ? { timeZone: 'UTC' } : {}) });
 }
 
 /** A friendly run title: pay group (or frequency) + period month. */

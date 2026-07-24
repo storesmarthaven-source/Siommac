@@ -61,7 +61,16 @@ const SORTS: { value: PayrollRunSort; label: string }[] = [
   { value: 'pay_date_asc',  label: 'Pay date (oldest)' },
   { value: 'updated_desc',  label: 'Recently updated' },
 ];
-const READINESS_CLS = new Map<string, string>([['ready', 'ready'], ['warning', 'warn'], ['blocker', 'bad']]);
+// Maps the readiness STATE (not_started | in_progress | blocked | ready |
+// released) to the stage-bar colour class. The old map keyed on the wrong
+// vocabulary ('warning'/'blocker'), so released runs rendered blue instead of
+// green and blocked runs got no red.
+const READINESS_CLS = new Map<string, string>([
+  ['released', 'ready'],
+  ['ready', 'ready'],
+  ['blocked', 'bad'],
+  ['in_progress', 'warn'],
+]);
 
 const money = (n: number | null): string =>
   n == null ? 'Not available' : `TTD ${Math.round(n).toLocaleString('en-US')}`;

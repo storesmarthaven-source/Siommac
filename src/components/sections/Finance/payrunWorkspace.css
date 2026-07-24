@@ -48,7 +48,11 @@
 .prw .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); min-width: 0; }
 
 /* ── Run header ───────────────────────────────────────────────────────────── */
-.prw .runhead { display: flex; align-items: stretch; padding: 18px 8px; max-width: 100%; overflow-x: auto; flex-wrap: wrap; }
+/* Horizontal columnar summary strip (mockup siomac-ui.css .runhead). It must NOT
+   flex-wrap — wrapping stacked the cells vertically instead of the mockup's row
+   of divider-separated columns; narrow widths scroll via overflow-x instead. */
+.prw .runhead { display: flex; flex-direction: row; align-items: stretch; padding: 18px 8px; max-width: 100%; overflow-x: auto; flex-wrap: nowrap; }
+.prw .rh-cell { flex: 0 0 auto; }
 .prw .rh-cell { display: flex; align-items: center; gap: 10px; padding: 4px 16px; border-right: 1px solid var(--border-soft); }
 .prw .rh-cell:last-child { border-right: none; }
 .prw .rh-ico { width: 42px; height: 42px; border-radius: 10px; background: var(--brand-soft); color: var(--brand); display: grid; place-items: center; flex-shrink: 0; font-weight: 800; }
@@ -95,7 +99,9 @@
 .prw .lc-stat .v small { font-size: 11.5px; color: var(--muted); font-weight: 600; }
 
 /* ── Metrics strip ────────────────────────────────────────────────────────── */
-.prw .metrics { display: flex; align-items: stretch; flex-wrap: wrap; padding: 17px 6px; row-gap: 16px; }
+/* Horizontal KPI tile row (mockup .metrics). flex-direction:row is explicit so
+   the app-global `.card{flex-direction:column}` can't stack the tiles vertically. */
+.prw .metrics { display: flex; flex-direction: row; align-items: stretch; flex-wrap: wrap; padding: 17px 6px; row-gap: 16px; }
 .prw .metric { flex: 1; display: flex; align-items: center; gap: 11px; padding: 4px 16px; border-right: 1px solid var(--border-soft); min-width: 150px; }
 .prw .metric:last-child { border-right: none; }
 .prw .m-ico { width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center; flex-shrink: 0; font-weight: 800; }

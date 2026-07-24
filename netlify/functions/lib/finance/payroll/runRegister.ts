@@ -286,6 +286,27 @@ function readinessLabel(state: ReadinessState): string {
   }
 }
 
+// Lifecycle progress percent for the register's stage bar — a run's position
+// along draft → … → released, matching the enterprise mockup's stage-line. The
+// register row shows the STAGE reached (not a live readiness estimate); a failed
+// calculation keeps the stage it reached and is coloured 'bad' by the FE.
+function lifecycleStagePercent(status: string): number {
+  switch (status) {
+    case 'draft':              return 12;
+    case 'input_locked':       return 42;
+    case 'calculation_failed': return 42;
+    case 'calculated':         return 60;
+    case 'pending_approval':   return 76;
+    case 'returned':           return 58;
+    case 'approved':           return 88;
+    case 'locked':             return 94;
+    case 'released':
+    case 'exported':           return 100;
+    case 'cancelled':          return 0;
+    default:                   return 0;
+  }
+}
+
 // ── Main entry point ──────────────────────────────────────────────────────────
 
 export async function listPayrollRunsRegister(
@@ -566,7 +587,10 @@ export async function listPayrollRunsRegister(
       },
       readiness: {
         state:    rdnState,
-        percent:  null, // register rows show no percent (spec §D7 / register-row classification)
+        // Stage progress along the lifecycle (draft → released), matching the
+        // enterprise mockup's stage-line bar. Was null, which rendered an empty
+        // 0% bar with a "—" for every run.
+        percent:  lifecycleStagePercent(run.status),
         blockers,
         warnings,
         label:    readinessLabel(rdnState),
