@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",
-    "dev:netlify": "npm run build:backend:clean && cross-env NODE_OPTIONS=--max-old-space-size=8192 npx netlify-cli dev",
+    "dev:netlify": "npm run build:backend:clean && cross-env NODE_OPTIONS=--max-old-space-size=16384 npx netlify-cli dev",
     "build": "npm run build:backend && npm run build:frontend:clean",
     "build:backend": "tsc -p netlify/functions/tsconfig.json",
     "clean:backend": "node -e \"const fs=require('fs');for(const p of ['dist/netlify','dist/.tsbuildinfo-functions'])fs.rmSync(p,{recursive:true,force:true})\"",
