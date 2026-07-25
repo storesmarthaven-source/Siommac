@@ -2,7 +2,7 @@
 
 # hse Module Map
 
-Source fingerprint: `9282345b80b47542f2a80707`
+Source fingerprint: `020069275152411a61e76d76`
 
 Files: 87 | Symbols: 1275 | Widgets: 0 | Unique mounted endpoints: 144 | Route definitions: 144 mounted + 0 unmounted | API calls: 107 | DB objects: 65 | E2E suites: 4
 
@@ -521,7 +521,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HSE/inspections/InspectionDialogs.tsx` | 207 |
 | frontend-page | `src/components/sections/HSE/inspections/InspectionInsightCards.tsx` | 233 |
 | frontend-page | `src/components/sections/HSE/inspections/useEmployeeOptions.ts` | 18 |
-| frontend-page | `src/components/sections/HSE/module.ts` | 62 |
+| frontend-page | `src/components/sections/HSE/module.ts` | 64 |
 | frontend-page | `src/components/sections/HSE/mount.ts` | 25 |
 | frontend-page | `src/components/sections/HSE/nav.ts` | 205 |
 | frontend-page | `src/components/sections/HSE/ptw/PermitDetailDrawer.tsx` | 657 |

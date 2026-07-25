@@ -2,7 +2,7 @@
 
 # hr Module Map
 
-Source fingerprint: `9282345b80b47542f2a80707`
+Source fingerprint: `020069275152411a61e76d76`
 
 Files: 205 | Symbols: 2272 | Widgets: 12 | Unique mounted endpoints: 256 | Route definitions: 256 mounted + 0 unmounted | API calls: 57 | DB objects: 156 | E2E suites: 14
 
@@ -722,7 +722,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/TransfersOverview.tsx` | 402 |
 | frontend-page | `src/components/sections/HR/hrDeepLink.ts` | 16 |
 | frontend-page | `src/components/sections/HR/index.ts` | 10 |
-| frontend-page | `src/components/sections/HR/module.ts` | 125 |
+| frontend-page | `src/components/sections/HR/module.ts` | 127 |
 | frontend-page | `src/components/sections/HR/mount.ts` | 25 |
 | frontend-page | `src/components/sections/HR/onboardingCase.helpers.tsx` | 143 |
 | frontend-page | `src/components/sections/HR/onboardingStatus.ts` | 77 |

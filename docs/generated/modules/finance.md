@@ -2,9 +2,9 @@
 
 # finance Module Map
 
-Source fingerprint: `9282345b80b47542f2a80707`
+Source fingerprint: `020069275152411a61e76d76`
 
-Files: 138 | Symbols: 1851 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
+Files: 139 | Symbols: 1855 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
 ## Widgets and Tiles
 
@@ -357,7 +357,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `IconChevronLeft` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:36` | `-` |
 | `IconChevronLeftBadge` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:38` | `-` |
 | `IconCoins` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:44` | `-` |
-| ... | 81 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 82 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -538,7 +538,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/ExpClaimDrawer.tsx` | 439 |
 | frontend-page | `src/components/sections/Finance/ExpMarkReimbursedDialog.tsx` | 273 |
 | frontend-page | `src/components/sections/Finance/ExpNewClaimWizard.tsx` | 798 |
-| frontend-page | `src/components/sections/Finance/ExpensesOverview.tsx` | 574 |
+| frontend-page | `src/components/sections/Finance/ExpensesOverview.tsx` | 583 |
 | frontend-page | `src/components/sections/Finance/FinanceApprovalActionModal.tsx` | 75 |
 | frontend-page | `src/components/sections/Finance/FinanceApprovalsInbox.tsx` | 185 |
 | frontend-page | `src/components/sections/Finance/FinanceExportDialog.tsx` | 108 |
@@ -547,7 +547,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/FinanceSection.tsx` | 112 |
 | frontend-page | `src/components/sections/Finance/PayBridgeDialog.tsx` | 185 |
 | frontend-page | `src/components/sections/Finance/PayNewRunWizard.tsx` | 654 |
-| frontend-page | `src/components/sections/Finance/PayRunDetailPage.tsx` | 405 |
+| frontend-page | `src/components/sections/Finance/PayRunDetailPage.tsx` | 420 |
 | frontend-page | `src/components/sections/Finance/PayWarningResolveDialog.tsx` | 96 |
 | frontend-page | `src/components/sections/Finance/PayablesOverview.tsx` | 347 |
 | frontend-page | `src/components/sections/Finance/RemittancesOverview.tsx` | 1840 |
@@ -566,10 +566,11 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/financeShared.ts` | 70 |
 | frontend-page | `src/components/sections/Finance/hrfinFormat.ts` | 38 |
 | frontend-page | `src/components/sections/Finance/index.ts` | 11 |
-| frontend-page | `src/components/sections/Finance/module.ts` | 169 |
+| frontend-page | `src/components/sections/Finance/module.ts` | 174 |
 | frontend-page | `src/components/sections/Finance/mount.ts` | 25 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/CalcFailurePanel.test.tsx` | 148 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx` | 189 |
+| frontend-page | `src/components/sections/Finance/payRunDetail/CertifySubmitModal.tsx` | 104 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/CloseReleaseCard.test.tsx` | 89 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx` | 203 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/PanelState.tsx` | 73 |
