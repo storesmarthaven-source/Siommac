@@ -48,7 +48,9 @@ export const hseModule: ModuleDefinition = {
   id: 'hse',
   navGroup: { id: 'hse', label: 'HSE' },
   navItems: [DASHBOARD_ITEM, ...AREA_ITEMS, PPE_PARENT_ITEM, ...PPE_CHILD_ITEMS],
-  roles: ['admin', 'manager', 'superadmin'],
+  // HSE department role operates this module; the backend still enforces each
+  // action via can()/requirePermission (see moduleRegistry AppRole note).
+  roles: ['admin', 'manager', 'superadmin', 'hse_staff'],
   mount: {
     sectionId: 's-hse',
     rootId: HSE_ROOT_ID,

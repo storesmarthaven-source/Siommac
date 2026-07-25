@@ -111,7 +111,9 @@ export const hrModule: ModuleDefinition = {
   id: 'hr',
   navGroup: { id: 'hr', label: 'Human Resources' },
   navItems: [EMPLOYEE_MASTER_ITEM, ONBOARDING_ITEM, ORGANIZATION_ITEM, DOCUMENTS_ITEM, OFFBOARDING_ITEM, LEAVE_ITEM, TRANSFERS_ITEM, ATTENDANCE_ITEM, REQUESTS_ITEM, ROSTER_ITEM, COMPENSATION_ITEM, OVERTIME_ITEM, WORK_CALENDAR_ITEM],
-  roles: ['admin', 'manager', 'superadmin'],
+  // HR department roles operate this module; the backend still enforces each
+  // action via can()/requirePermission (see moduleRegistry AppRole note).
+  roles: ['admin', 'manager', 'superadmin', 'hr_manager', 'hr_staff'],
   mount: {
     sectionId: 's-hr',
     rootId: HR_ROOT_ID,

@@ -70,7 +70,18 @@ export interface ModuleMount {
 
 // ── Module definition ─────────────────────────────────────────────────────────
 
-export type AppRole = 'superadmin' | 'admin' | 'manager' | 'employee';
+// Nav-visibility roles. Includes the departmental RBAC roles defined in the DB
+// (`roles` table / `role_permissions`) — NOT just the four base tiers. These are
+// real roles a user can hold (e.g. a payroll approver is `finance_manager`), and
+// `getModulesForRole` filters the nav by exactly this set, so a role missing here
+// is invisible in the sidebar even when it holds every backing permission.
+// Per-module `roles` lists + per-item `permission` gates still govern what each
+// role actually sees; this union only makes the role expressible in those lists.
+export type AppRole =
+  | 'superadmin' | 'admin' | 'manager' | 'employee'
+  | 'finance_manager' | 'finance_staff'
+  | 'hr_manager' | 'hr_staff'
+  | 'hse_staff';
 
 export interface ModuleDefinition {
   /** Stable unique id (e.g. 'hse'). */

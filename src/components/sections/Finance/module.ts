@@ -155,7 +155,12 @@ export const financeModule: ModuleDefinition = {
   // Setup (pay groups & rules) → Runs → Approvals & Exceptions → Payslip Designer
   // (template) → Payslip Batches (issue) → Reports (analyse).
   navItems: [OVERVIEW_ITEM, PAYABLES_ITEM, STATUTORY_ITEM, PAYROLL_ITEM, PAYROLL_DASHBOARD_ITEM, PAYROLL_SETUP_ITEM, PAYROLL_RUNS_ITEM, PAYROLL_EXCEPTIONS_ITEM, PAYSLIP_DESIGNER_ITEM, PAYSLIP_BATCHES_ITEM, PAYROLL_REPORTS_ITEM, REMITTANCES_ITEM, STATUTORY_FORMS_ITEM, DISBURSEMENTS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
-  roles: ['admin', 'superadmin'],
+  // The finance department roles are the primary operators of this module (a
+  // payroll approver is `finance_manager`, a processor is `finance_staff`), so
+  // they must see it in the nav — the backend still enforces every action via
+  // can()/requirePermission. Generic `manager` stays excluded (finance is
+  // segregated), matching the prior admin/superadmin-only intent.
+  roles: ['admin', 'superadmin', 'finance_manager', 'finance_staff'],
   mount: {
     sectionId: 's-finance',
     rootId: FINANCE_ROOT_ID,
