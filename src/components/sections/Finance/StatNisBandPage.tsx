@@ -21,7 +21,7 @@
 import { type VNode } from 'preact';
 import { useState, useRef } from 'preact/hooks';
 import { toast } from '@store';
-import { can } from '@lib/permissions';
+import { useCan } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
 import {
   useVersionDetail, useStatutoryMutation, financeStatutoryApi,
@@ -125,8 +125,8 @@ export function StatNisBandPage({ versionId, edit, onClose, onViewVersion }: {
   });
   const set = (k: keyof typeof f) => (v: string) => setF(p => ({ ...p, [k]: v }));
 
-  const canManage = can('finance.statutory.manage');
-  const canDelete = can('finance.statutory.nis_class.delete');
+  const canManage = useCan('finance.statutory.manage');
+  const canDelete = useCan('finance.statutory.nis_class.delete');
   // Server enforces this exact gate (upsertNisClasses): edits only on draft/approved.
   const editable = !!version && (version.status === 'draft' || version.status === 'approved');
   const readOnly = !canManage || !editable;

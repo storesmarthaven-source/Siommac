@@ -19,8 +19,8 @@
 
 import { type VNode } from 'preact';
 import { useMemo, useRef, useState } from 'preact/hooks';
-import { toast } from '@store';
-import { can } from '@lib/permissions';
+import { toast, useSessionStore } from '@store';
+import { useCan } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
 import {
   HrfinPageHeader,
@@ -93,8 +93,16 @@ type SetupTab = 'pay-policies' | 'pay-groups' | 'overtime-rules' | 'work-calenda
 export function PayrollSetupOverview(): VNode {
   // Payroll config and the shared Work Calendar are gated independently — the calendar is
   // hr.work_calendar.view (shared HR capability), payroll config is finance.payroll.*.
-  const canViewPayroll = can('finance.payroll.view_all') || can('finance.payroll.policies.view');
-  const canViewCalendar = can('hr.work_calendar.view');
+  // useCan (reactive) not can() — a plain can() read at mount returns false while the session
+  // store is still hydrating and never re-renders, flashing a false "no permission" that sticks
+  // until re-navigation. permsReady distinguishes "still loading" from "genuinely denied".
+  const permsReady = useSessionStore(s => s.role !== null);
+  // Each useCan() is a hook — call them unconditionally and combine after, never `a() || b()`
+  // (|| short-circuits the second call and breaks hook order when the first flips).
+  const canViewAllPayroll = useCan('finance.payroll.view_all');
+  const canViewPolicies = useCan('finance.payroll.policies.view');
+  const canViewPayroll = canViewAllPayroll || canViewPolicies;
+  const canViewCalendar = useCan('hr.work_calendar.view');
   const tabs = useMemo<{ key: SetupTab; label: string }[]>(() => [
     ...(canViewPayroll ? [
       { key: 'pay-policies' as const, label: 'Pay Policies' },
@@ -103,11 +111,25 @@ export function PayrollSetupOverview(): VNode {
     ] : []),
     ...(canViewCalendar ? [{ key: 'work-calendar' as const, label: 'Work Calendar' }] : []),
   ], [canViewPayroll, canViewCalendar]);
-  const [tab, setTab] = useState<SetupTab>(tabs[0]?.key ?? 'pay-policies');
+  // Held as nullable + derived, not seeded from tabs[0]: the initializer runs once at mount while
+  // permissions are still hydrating (tabs is empty then), which would strand a calendar-only user
+  // on the Pay Policies tab they can't see.
+  const [pickedTab, setPickedTab] = useState<SetupTab | null>(null);
+  const tab: SetupTab = pickedTab && tabs.some(t => t.key === pickedTab)
+    ? pickedTab
+    : (tabs[0]?.key ?? 'pay-policies');
   // Pay Policies opens a full-page wizard / detail view; hide the module header + tabs
   // so it reads as its own page (like the mockup) rather than chrome nested in chrome.
   const [fullPage, setFullPage] = useState(false);
 
+  if (!permsReady) {
+    return (
+      <div class="hrfin fin-page">
+        <HrfinPageHeader icon="book" title="Payroll Setup" sub="Loading…" />
+        <div class="hrfin-table-card"><div style={{ padding: 32 }} class="hrfin-empty">Loading payroll configuration…</div></div>
+      </div>
+    );
+  }
   if (!canViewPayroll && !canViewCalendar) {
     return (
       <div class="hrfin fin-page">
@@ -131,7 +153,7 @@ export function PayrollSetupOverview(): VNode {
 
           <div class="hrfin-tabs" style={{ marginBottom: 14 }}>
             {tabs.map(t => (
-              <button key={t.key} type="button" class={tab === t.key ? 'is-active' : ''} onClick={() => setTab(t.key)}>{t.label}</button>
+              <button key={t.key} type="button" class={tab === t.key ? 'is-active' : ''} onClick={() => setPickedTab(t.key)}>{t.label}</button>
             ))}
           </div>
         </>
@@ -172,7 +194,7 @@ function LoansPanel(): VNode {
   const [statusFilter, setStatusFilter] = useState('');
   const [showNew, setShowNew] = useState(false);
 
-  const canManage = can('finance.payroll.loans.manage');
+  const canManage = useCan('finance.payroll.loans.manage');
   const loansQ = useEmployeeLoans(statusFilter ? { status: statusFilter } : {});
   const empsQ = useHrEmployees({ limit: 1000 });
   const submitMut = usePayrollMutation(financePayrollApi.submitLoan);
@@ -400,7 +422,7 @@ function PayGroupsPanel(): VNode {
   const [showNew, setShowNew] = useState(false);
   const [membersOf, setMembersOf] = useState<PayGroup | null>(null);
 
-  const canManage = can('finance.payroll.paygroups.manage');
+  const canManage = useCan('finance.payroll.paygroups.manage');
   const groupsQ = usePayGroups(false); // include inactive
   const groups = groupsQ.data ?? [];
 
@@ -683,7 +705,7 @@ function OvertimeRulesPanel(): VNode {
   const [search, setSearch] = useState('');
   const [showNew, setShowNew] = useState(false);
 
-  const canManage = can('finance.payroll.overtime.rules.manage');
+  const canManage = useCan('finance.payroll.overtime.rules.manage');
   const rulesQ = useOvertimeRules();
   const setActiveMut = usePayrollMutation(financePayrollApi.setOvertimeRuleActive);
   const rules = rulesQ.data ?? [];

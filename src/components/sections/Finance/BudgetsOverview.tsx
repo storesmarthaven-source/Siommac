@@ -17,7 +17,7 @@
 import { type VNode } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
-import { can } from '@lib/permissions';
+import { useCan } from '@lib/permissions';
 import { toast } from '@store';
 import { exportCsv } from '@ui';
 import {
@@ -889,8 +889,8 @@ export function BudgetsOverview(): VNode {
   const reportsCount    = reportsQ.data?.length ?? 0;
   const isLoading       = budgetsQ.isLoading && !budgets.length;
 
-  const canManage  = can('finance.budgets.manage');
-  const canView    = can('finance.budgets.view') || canManage;
+  const canManage  = useCan('finance.budgets.manage');
+  const canView    = useCan('finance.budgets.view') || canManage;
 
   // Page-level export — exports all budget lines for the current FY/cost-centre filter
   function handlePageExport(): void {

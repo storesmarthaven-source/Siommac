@@ -15,8 +15,13 @@ const H = vi.hoisted(() => {
   };
 });
 
-vi.mock('@lib/permissions', async orig => ({ ...(await orig() as object), can: (k: string) => H.can(k) }));
-vi.mock('@store', () => ({ toast: () => {} }));
+vi.mock('@lib/permissions', async orig => ({ ...(await orig() as object), can: (k: string) => H.can(k), useCan: (k: string) => H.can(k) }));
+vi.mock('@store', () => ({
+  toast: () => {},
+  // WorkCalendarSetup reads role reactively to show a loading state vs a false "no permission";
+  // in tests the store is always hydrated so permsReady is true.
+  useSessionStore: (sel?: (s: { role: string | null }) => unknown) => (sel ? sel({ role: 'superadmin' }) : { role: 'superadmin' }),
+}));
 vi.mock('@lib/dialog', () => ({ dialog: { confirm: () => Promise.resolve(true), prompt: () => Promise.resolve('2026-02-28'), error: () => Promise.resolve(undefined) } }));
 vi.mock('@api/finance/payroll', () => ({ usePayGroups: () => ({ data: H.payGroups }) }));
 vi.mock('@api/hr/workCalendars', () => ({

@@ -16,7 +16,7 @@
 import { type VNode } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import { toast } from '@store';
-import { can } from '@lib/permissions';
+import { useCan } from '@lib/permissions';
 import { HrfinWizardModal, HrfinPill, HrfinIcon } from '@ui';
 import {
   useApBills, useCreatePaymentRun, useProcessPaymentRun, useVoidPaymentRun,
@@ -43,8 +43,8 @@ interface Props {
 }
 
 export function ApPaymentRunBuilder({ open, onClose, onComplete }: Props): VNode {
-  const _canManage  = can('finance.ap.payment.run.manage');
-  const canProcess = can('finance.ap.payment.run.process');
+  const _canManage  = useCan('finance.ap.payment.run.manage');
+  const canProcess = useCan('finance.ap.payment.run.process');
 
   const today = new Date().toISOString().slice(0, 10);
   const [step, setStep] = useState(0);

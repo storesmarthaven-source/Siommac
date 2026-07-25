@@ -21,8 +21,8 @@
 
 import { type VNode } from 'preact';
 import { useState, useMemo, useCallback } from 'preact/hooks';
-import { toast } from '@store';
-import { can } from '@lib/permissions';
+import { toast, useSessionStore } from '@store';
+import { useCan } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
 import {
   HrfinPageHeader,
@@ -144,11 +144,13 @@ const STATUS_OPTIONS: { value: ExpenseStatus | ''; label: string }[] = [
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function ExpensesOverview(): VNode {
-  // Permissions
-  const canView    = can('finance.expenses.view');
-  const canSubmit  = can('finance.expenses.submit');
-  const canManage  = can('finance.expenses.manage');
-  const canApprove = can('finance.expenses.approve');
+  // Permissions — useCan (reactive) not can(): a plain read at mount returns false while the
+  // session store is still hydrating and never re-renders, flashing a false "no permission".
+  const permsReady = useSessionStore(s => s.role !== null);
+  const canView    = useCan('finance.expenses.view');
+  const canSubmit  = useCan('finance.expenses.submit');
+  const canManage  = useCan('finance.expenses.manage');
+  const canApprove = useCan('finance.expenses.approve');
 
   // Tab state
   const [mainTab, setMainTab] = useState<MainTab>('claims');
@@ -386,6 +388,13 @@ export function ExpensesOverview(): VNode {
 
   // ── Guard ────────────────────────────────────────────────────────────────────
 
+  if (!permsReady) {
+    return (
+      <div class="hrfin" style={{ padding: 32 }}>
+        <p class="hse-muted">Loading expense claims…</p>
+      </div>
+    );
+  }
   if (!canView) {
     return (
       <div class="hrfin" style={{ padding: 32 }}>

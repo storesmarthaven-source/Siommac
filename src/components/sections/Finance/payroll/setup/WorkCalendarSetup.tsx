@@ -4,9 +4,9 @@
 // Contract: docs/module-contracts/shared-work-calendar-delivery-contract.md (Rev 5).
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
-import { can } from '@lib/permissions';
+import { useCan } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
-import { toast } from '@store';
+import { toast, useSessionStore } from '@store';
 import { HrfinWizardModal, HrfinPill, HrfinPageHeader, type HrfinTone } from '@ui';
 import { usePayGroups } from '@api/finance/payroll';
 import {
@@ -65,7 +65,15 @@ export function WorkCalendarPage(): VNode {
 // ═══════════════════════════════════════════════════════════════════════════════
 export function WorkCalendarSetup(): VNode {
   const [tab, setTab] = useState<SubTab>('holiday-sets');
-  if (!can('hr.work_calendar.view')) {
+  // useCan (reactive) + permsReady guard — a plain can() read flashes a false denial while the
+  // session store is still hydrating and never re-renders (sticks until re-navigation). Both hooks
+  // are called before any early return so hook order is stable.
+  const permsReady = useSessionStore(s => s.role !== null);
+  const canViewCalendar = useCan('hr.work_calendar.view');
+  if (!permsReady) {
+    return <div class="wcal"><div class="wcal-state">Loading work calendar…</div></div>;
+  }
+  if (!canViewCalendar) {
     return <div class="wcal"><div class="wcal-state">You do not have permission to view the work calendar.</div></div>;
   }
   return (
@@ -152,7 +160,7 @@ export function HolidaySetsPanel(): VNode {
   const pager = usePager();
   const [selected, setSelected] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-  const canManage = can('hr.work_calendar.manage');
+  const canManage = useCan('hr.work_calendar.manage');
   const q = useHolidayCalendars({ ...(search.trim() ? { search: search.trim() } : {}), ...(pager.cursor ? { cursor: pager.cursor } : {}), limit: 25 });
 
   if (selected) return <HolidaySetDetail calendarId={selected} onBack={() => setSelected(null)} />;
@@ -176,7 +184,7 @@ function HolidaySetDetail({ calendarId, onBack }: { calendarId: string; onBack: 
   const [addVersion, setAddVersion] = useState(false);
   const [openVersion, setOpenVersion] = useState<string | null>(null);
   const copy = useWorkCalendarMutation(workCalendarsApi.holidaySetCommand);
-  const canManage = can('hr.work_calendar.manage');
+  const canManage = useCan('hr.work_calendar.manage');
 
   if (q.isLoading) return <div class="wcal-state">Loading holiday set…</div>;
   if (q.isError || !q.data) return <div class="wcal-state is-error">Holiday set could not be loaded. <button type="button" onClick={onBack}>Back</button></div>;
@@ -405,7 +413,7 @@ export function WorkCalendarsPanel(): VNode {
   const pager = usePager();
   const [selected, setSelected] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-  const canManage = can('hr.work_calendar.manage');
+  const canManage = useCan('hr.work_calendar.manage');
   const q = useWorkCalendars({ ...(search.trim() ? { search: search.trim() } : {}), ...(pager.cursor ? { cursor: pager.cursor } : {}), limit: 25 });
 
   if (selected) return <WorkCalendarDetail calendarId={selected} onBack={() => setSelected(null)} />;
@@ -430,7 +438,7 @@ function WorkCalendarDetail({ calendarId, onBack }: { calendarId: string; onBack
   const [editVersion, setEditVersion] = useState<WorkVersionDto | null>(null);
   const publish = useWorkCalendarMutation(workCalendarsApi.workCalendarCommand);
   const copy = useWorkCalendarMutation(workCalendarsApi.workCalendarCommand);
-  const canManage = can('hr.work_calendar.manage');
+  const canManage = useCan('hr.work_calendar.manage');
 
   if (q.isLoading) return <div class="wcal-state">Loading work calendar…</div>;
   if (q.isError || !q.data) return <div class="wcal-state is-error">Work calendar could not be loaded. <button type="button" onClick={onBack}>Back</button></div>;
@@ -674,7 +682,7 @@ export function AssignmentsPanel(): VNode {
   const q = useAssignments();
   const groups = usePayGroups();
   const [assigning, setAssigning] = useState(false);
-  const canManage = can('hr.work_calendar.manage');
+  const canManage = useCan('hr.work_calendar.manage');
   const end = useWorkCalendarMutation(workCalendarsApi.assignmentCommand);
   const cancel = useWorkCalendarMutation(workCalendarsApi.assignmentCommand);
   const groupName = useMemo(() => {
