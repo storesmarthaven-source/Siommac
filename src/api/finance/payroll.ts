@@ -628,6 +628,27 @@ export interface PayrollCertifyResult {
   controlState: Record<string, unknown>;
   eventId: string; duplicate: boolean;
 }
+/** Governed payroll segregation-of-duties policy (level 2 | 3 | 4). Each run
+ *  snapshots the ACTIVE level at creation, so a change never alters an in-flight run. */
+export interface PayrollSodPolicy {
+  id: string;
+  sodLevel: 2 | 3 | 4;
+  status: 'draft' | 'pending_approval' | 'active' | 'superseded';
+  eligibleRoles: string[];
+  reason: string | null;
+  proposedBy: string | null;
+  approvedBy: string | null;
+  workflowId: string | null;
+  supersedesId: string | null;
+  effectiveAt: string | null;
+  createdAt: string;
+}
+export interface PayrollSodPolicyOverview {
+  active: PayrollSodPolicy | null;
+  pending: PayrollSodPolicy | null;
+  history: PayrollSodPolicy[];
+  levels: number[];
+}
 /** F-08 — issued payroll release certificate (immutable close evidence). */
 export interface PayrollReleaseCertificate {
   id: string; runId: string; calculationVersionId: string; certificationId: string;
@@ -697,6 +718,12 @@ export const financePayrollApi = {
   // literally true; the caller mints one idempotencyKey per certification attempt.
   certifyRun:  (a: { runId: string; idempotencyKey: string; attestations: PayrollCertifyAttestations; note?: string }) =>
                  call<PayrollCertifyResult>('finance/payroll/runs/certify', a),
+  // Governed SoD policy — propose never changes the level; a DIFFERENT authorised
+  // approver must approve it. set-roles is superadmin-only.
+  getSodPolicy:     (a: object = {})                            => call<PayrollSodPolicyOverview>('finance/payroll/sod-policy/get', a),
+  proposeSodChange: (a: { sodLevel: 2 | 3 | 4; reason: string }) => call<PayrollSodPolicy>('finance/payroll/sod-policy/propose', a),
+  approveSodChange: (a: { policyId: string })                   => call<PayrollSodPolicy>('finance/payroll/sod-policy/approve', a),
+  setSodRoles:      (a: { roles: string[] })                    => call<PayrollSodPolicy>('finance/payroll/sod-policy/set-roles', a),
   submitRun:   (a: { id: string; idempotencyKey: string }) => call<PayrollRun>('finance/payroll/runs/submit', a),
   approveRun:  (a: { id: string })                     => call<PayrollRun>('finance/payroll/runs/approve', a),
   rejectRun:   (a: { id: string; reason: string })     => call<PayrollRun>('finance/payroll/runs/reject', a),

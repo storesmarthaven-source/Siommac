@@ -52,6 +52,7 @@ import { fmtDate, fmtMoney, humanize } from './financeShared';
 import './finance.css';
 import './payroll/setup/payPolicySetup.css'; // shared payroll-setup command-centre design system (.pps-*)
 import { PayPolicySetup } from './payroll/setup/PayPolicySetup';
+import { SodPolicyPanel } from './payroll/setup/SodPolicyPanel';
 import { WorkCalendarSetup } from './payroll/setup/WorkCalendarSetup';
 
 const empName = (e: HrEmployeeRow): string =>
@@ -88,7 +89,7 @@ function paginate<T>(rows: T[], page: number): { rows: T[]; pageCount: number; t
 // Main page
 // ═══════════════════════════════════════════════════════════════════════════════
 
-type SetupTab = 'pay-policies' | 'pay-groups' | 'overtime-rules' | 'work-calendar';
+type SetupTab = 'pay-policies' | 'pay-groups' | 'overtime-rules' | 'work-calendar' | 'governance';
 
 export function PayrollSetupOverview(): VNode {
   // Payroll config and the shared Work Calendar are gated independently — the calendar is
@@ -103,6 +104,8 @@ export function PayrollSetupOverview(): VNode {
   const canViewPolicies = useCan('finance.payroll.policies.view');
   const canViewPayroll = canViewAllPayroll || canViewPolicies;
   const canViewCalendar = useCan('hr.work_calendar.view');
+  // Governance (segregation-of-duties level) is gated on its own capability.
+  const canViewSod = useCan('finance.payroll.sod_policy.view');
   const tabs = useMemo<{ key: SetupTab; label: string }[]>(() => [
     ...(canViewPayroll ? [
       { key: 'pay-policies' as const, label: 'Pay Policies' },
@@ -110,7 +113,8 @@ export function PayrollSetupOverview(): VNode {
       { key: 'overtime-rules' as const, label: 'Overtime Rules' },
     ] : []),
     ...(canViewCalendar ? [{ key: 'work-calendar' as const, label: 'Work Calendar' }] : []),
-  ], [canViewPayroll, canViewCalendar]);
+    ...(canViewSod ? [{ key: 'governance' as const, label: 'Governance' }] : []),
+  ], [canViewPayroll, canViewCalendar, canViewSod]);
   // Held as nullable + derived, not seeded from tabs[0]: the initializer runs once at mount while
   // permissions are still hydrating (tabs is empty then), which would strand a calendar-only user
   // on the Pay Policies tab they can't see.
@@ -162,6 +166,7 @@ export function PayrollSetupOverview(): VNode {
       {tab === 'pay-policies' ? <PayPolicySetup onFullPage={setFullPage} />
         : tab === 'pay-groups' ? <PayGroupsPanel />
         : tab === 'overtime-rules' ? <OvertimeRulesPanel />
+        : tab === 'governance' ? <SodPolicyPanel />
         : <WorkCalendarSetup />}
     </div>
   );
