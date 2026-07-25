@@ -7069,44 +7069,46 @@ approvalRow	function	payroll	false	test	src/components/sections/Finance/PayrollE
 detail	function	payroll	false	test	src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx	55	
 result	function	payroll	false	test	src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx	66	
 asQuery	function	payroll	false	test	src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx	73	
-TABS	array	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	36	
-SEV_CLS	variable	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	43	
-KIND_ICON	variable	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	46	
-ACT_ICON	variable	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	49	
-SectionKey	type	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	60	
-SECTION_META	object	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	61	
-SECTION_ORDER	array	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	67	
-SORT_OPTS	array	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	70	
-groupQueue	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	80	
-METRICS	array	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	90	
-fmtTTD	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	98	
-fmtPayDate	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	99	
-fmtDue	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	101	
-isOverdue	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	106	
-fmtDateTime	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	107	
-initials	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	109	
-isBulkable	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	113	
-openRun	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	119	
-PayrollExceptionQueuePage	function	payroll	true	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	128	
-resetPage	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	160	PayrollExceptionQueuePage
-changeTab	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	190	PayrollExceptionQueuePage
-nextPage	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	191	PayrollExceptionQueuePage
-prevPage	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	192	PayrollExceptionQueuePage
-togglePick	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	194	PayrollExceptionQueuePage
-toggleAll	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	195	PayrollExceptionQueuePage
-onRowOpen	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	197	PayrollExceptionQueuePage
-anyPending	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	374	
-QueueRow	function	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	380	
-ACTION_META	object	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	417	
-KIND_META	object	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	428	
-DetailPanel	function	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	437	
-labelActivity	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	552	
-humanizeKey	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	565	
-FindingActionModal	function	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	572	
-key	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	588	FindingActionModal
-run	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	591	FindingActionModal
-BulkActionModal	function	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	677	
-run	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	690	BulkActionModal
+TABS	array	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	38	
+SEV_CLS	variable	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	45	
+KIND_ICON	variable	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	48	
+ACT_ICON	variable	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	51	
+SectionKey	type	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	62	
+SECTION_META	object	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	63	
+SECTION_ORDER	array	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	69	
+SORT_OPTS	array	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	72	
+groupQueue	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	82	
+METRICS	array	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	92	
+fmtTTD	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	100	
+fmtPayDate	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	101	
+fmtDue	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	103	
+isOverdue	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	108	
+fmtDateTime	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	109	
+initials	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	111	
+isBulkable	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	115	
+openRun	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	121	
+PayrollExceptionQueuePage	function	payroll	true	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	130	
+resetPage	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	166	PayrollExceptionQueuePage
+clearAdvanced	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	213	PayrollExceptionQueuePage
+clearAll	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	220	PayrollExceptionQueuePage
+changeTab	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	222	PayrollExceptionQueuePage
+nextPage	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	223	PayrollExceptionQueuePage
+prevPage	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	224	PayrollExceptionQueuePage
+togglePick	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	226	PayrollExceptionQueuePage
+toggleAll	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	227	PayrollExceptionQueuePage
+onRowOpen	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	229	PayrollExceptionQueuePage
+anyPending	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	380	
+QueueRow	function	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	386	
+ACTION_META	object	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	423	
+KIND_META	object	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	434	
+DetailPanel	function	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	443	
+labelActivity	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	572	
+humanizeKey	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	585	
+FindingActionModal	function	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	592	
+key	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	608	FindingActionModal
+run	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	611	FindingActionModal
+BulkActionModal	function	payroll	false	component	src/components/sections/Finance/PayrollExceptionQueuePage.tsx	697	
+run	function	payroll	false		src/components/sections/Finance/PayrollExceptionQueuePage.tsx	710	BulkActionModal
 mockQ	variable	payroll	false	test	src/components/sections/Finance/PayrollPayslipBatchesPage.test.tsx	15	
 batch	function	payroll	false	test	src/components/sections/Finance/PayrollPayslipBatchesPage.test.tsx	21	
 result	function	payroll	false	test	src/components/sections/Finance/PayrollPayslipBatchesPage.test.tsx	32	

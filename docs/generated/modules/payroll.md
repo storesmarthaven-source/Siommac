@@ -2,9 +2,9 @@
 
 # payroll Module Map
 
-Source fingerprint: `70d9e7dea4b9a29bf1b8d06f`
+Source fingerprint: `97b029ab4fa58741c0193885`
 
-Files: 187 | Symbols: 1897 | Widgets: 10 | Unique mounted endpoints: 135 | Route definitions: 135 mounted + 0 unmounted | API calls: 2 | DB objects: 254 | E2E suites: 27
+Files: 187 | Symbols: 1899 | Widgets: 10 | Unique mounted endpoints: 135 | Route definitions: 135 mounted + 0 unmounted | API calls: 2 | DB objects: 254 | E2E suites: 27
 
 ## Widgets and Tiles
 
@@ -230,7 +230,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `ResolvePanel` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:792` | `-` |
 | `ResolveResultView` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:834` | `-` |
 | `PayrollCommandCenter` | function / component | `src/components/sections/Finance/PayrollCommandCenter.tsx:274` | `-` |
-| `PayrollExceptionQueuePage` | function / component | `src/components/sections/Finance/PayrollExceptionQueuePage.tsx:128` | `-` |
+| `PayrollExceptionQueuePage` | function / component | `src/components/sections/Finance/PayrollExceptionQueuePage.tsx:130` | `-` |
 | `PayrollPayslipBatchesPage` | function / component | `src/components/sections/Finance/PayrollPayslipBatchesPage.tsx:38` | `-` |
 | `PayrollReportsPage` | function / component | `src/components/sections/Finance/PayrollReportsPage.tsx:117` | `-` |
 | `PayrollRunRegisterPage` | function / component | `src/components/sections/Finance/PayrollRunRegisterPage.tsx:83` | `-` |
@@ -504,7 +504,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx` | 157 |
 | frontend-page | `src/components/sections/Finance/PayrollCommandCenter.tsx` | 921 |
 | frontend-page | `src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx` | 150 |
-| frontend-page | `src/components/sections/Finance/PayrollExceptionQueuePage.tsx` | 739 |
+| frontend-page | `src/components/sections/Finance/PayrollExceptionQueuePage.tsx` | 759 |
 | frontend-page | `src/components/sections/Finance/PayrollPayslipBatchesPage.test.tsx` | 70 |
 | frontend-page | `src/components/sections/Finance/PayrollPayslipBatchesPage.tsx` | 191 |
 | frontend-page | `src/components/sections/Finance/PayrollReportsPage.loadingGate.test.tsx` | 117 |

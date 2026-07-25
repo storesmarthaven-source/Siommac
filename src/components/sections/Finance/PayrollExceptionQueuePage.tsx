@@ -21,7 +21,8 @@ import {
   useWorkQueue, useWorkQueueMutations,
   type PayrollFindingQueueItem, type PayrollFindingDetail, type PayrollWorkQueueTab,
   type PayrollWorkQueueSort,
-  type PayrollFindingQueueSeverity, type PayrollFindingAllowedAction, type PayrollFindingActivityType,
+  type PayrollFindingQueueSeverity, type PayrollFindingQueueState,
+  type PayrollFindingAllowedAction, type PayrollFindingActivityType,
   type PayrollFindingActivity,
 } from '@api/finance/payrollExceptions';
 import { useRunsRegister } from '@api/finance/payrollRunsRegister';
@@ -29,7 +30,8 @@ import { openHrEmployee } from '../HR/hrDeepLink';
 import { EmployeePicker } from './_shared/pickers';
 import { Modal } from '@ui/components/Modal';
 import { Drawer } from '@ui/components/Drawer';
-import { KpiTile, PageHeader, type KpiTone } from '@ui';
+import { KpiTile, PageHeader, TableSearch, AdvancedFilter, ActiveFilters, useFilterDropdowns,
+  type KpiTone, type AdvTab, type ActiveChip } from '@ui';
 import './payrollExceptions.css';
 
 // ── Presentation maps ─────────────────────────────────────────────────────────
@@ -131,7 +133,11 @@ export function PayrollExceptionQueuePage(): VNode {
   const [search, setSearch] = useState('');
   const [ownerMe, setOwnerMe] = useState(false);
   const [sort, setSort] = useState<PayrollWorkQueueSort>('priority');
-  const [runFilter, setRunFilter] = useState('');   // '' = all runs; else a run id → req.runIds
+  // Advanced-filter facets (all backend-supported): runs / severities / states / owner.
+  const [runFilterIds, setRunFilterIds] = useState<string[]>([]);
+  const [severities, setSeverities] = useState<string[]>([]);
+  const [states, setStates] = useState<string[]>([]);
+  const { openId, setOpenId } = useFilterDropdowns();
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [cursorStack, setCursorStack] = useState<(string | undefined)[]>([]);
@@ -165,10 +171,12 @@ export function PayrollExceptionQueuePage(): VNode {
     limit: 25,
     search: search || undefined,
     ownerId: ownerMe ? 'me' : undefined,
-    runIds: runFilter ? [runFilter] : undefined,
+    runIds: runFilterIds.length ? runFilterIds : undefined,
+    severities: severities.length ? (severities as PayrollFindingQueueSeverity[]) : undefined,
+    states: states.length ? (states as PayrollFindingQueueState[]) : undefined,
     selectedId,
     cursor,
-  }), [tab, sort, search, ownerMe, runFilter, selectedId, cursor]);
+  }), [tab, sort, search, ownerMe, runFilterIds, severities, states, selectedId, cursor]);
 
   const q       = useWorkQueue(req);
   const result  = q.data;
@@ -186,6 +194,30 @@ export function PayrollExceptionQueuePage(): VNode {
   const bulkableRows = useMemo(() => items.filter(isBulkable), [items]);
   const pickedRows   = useMemo(() => bulkableRows.filter(r => picked.has(r.id)), [bulkableRows, picked]);
   const allWaivable  = pickedRows.length > 0 && pickedRows.every(r => r.kind === 'warning');
+
+  // ── Advanced filter (shared @ui FilterBar) — every facet is backend-supported ──
+  const advTabs: AdvTab[] = [{
+    name: 'Filters',
+    blurb: 'Narrow the queue by run, severity, state or assignment.',
+    sections: [
+      { type: 'checklist', title: 'Run', options: runOptions.map(r => r.id), selected: runFilterIds,
+        onChange: v => { setRunFilterIds(v); resetPage(); }, labelFn: id => runOptions.find(r => r.id === id)?.reference ?? id },
+      { type: 'checklist', title: 'Severity', options: ['critical', 'high', 'medium', 'low'], selected: severities,
+        onChange: v => { setSeverities(v); resetPage(); }, labelFn: humanizeKey },
+      { type: 'checklist', title: 'State', options: ['open', 'in_progress', 'resolved', 'waived'], selected: states,
+        onChange: v => { setStates(v); resetPage(); }, labelFn: humanizeKey },
+      { type: 'checklist', title: 'Assignment', options: ['me'], selected: ownerMe ? ['me'] : [],
+        onChange: v => { setOwnerMe(v.includes('me')); resetPage(); }, labelFn: () => 'Assigned to me' },
+    ],
+  }];
+  const clearAdvanced = (): void => { setRunFilterIds([]); setSeverities([]); setStates([]); setOwnerMe(false); resetPage(); };
+  const chips: ActiveChip[] = [
+    ...runFilterIds.map(id => ({ label: `Run: ${runOptions.find(r => r.id === id)?.reference ?? id}`, onRemove: () => { setRunFilterIds(runFilterIds.filter(x => x !== id)); resetPage(); } })),
+    ...severities.map(s => ({ label: `Severity: ${humanizeKey(s)}`, onRemove: () => { setSeverities(severities.filter(x => x !== s)); resetPage(); } })),
+    ...states.map(s => ({ label: `State: ${humanizeKey(s)}`, onRemove: () => { setStates(states.filter(x => x !== s)); resetPage(); } })),
+    ...(ownerMe ? [{ label: 'Assigned to me', onRemove: () => { setOwnerMe(false); resetPage(); } }] : []),
+  ];
+  const clearAll = (): void => { clearAdvanced(); setSearchInput(''); setSearch(''); };
 
   const changeTab = (t: PayrollWorkQueueTab): void => { setTab(t); setSelectedId(undefined); resetPage(); };
   const nextPage = (): void => { if (!result?.nextCursor) return; setCursorStack(s => [...s, cursor]); setCursor(result.nextCursor); setPicked(new Set()); };
@@ -235,19 +267,8 @@ export function PayrollExceptionQueuePage(): VNode {
           </div>
 
           <div class="pxq-toolbar">
-            <label class="pxq-search">
-              <i class="fa-solid fa-magnifying-glass" />
-              <input type="search" placeholder="Search finding, run or employee"
-                value={searchInput} onInput={e => setSearchInput((e.target as HTMLInputElement).value)} />
-            </label>
-            <label class="pxq-filter">
-              <i class="fa-solid fa-filter" aria-hidden="true" />
-              <select class="pxq-select" value={runFilter} aria-label="Filter by run"
-                onChange={e => { setRunFilter((e.target as HTMLSelectElement).value); resetPage(); }}>
-                <option value="">All runs</option>
-                {runOptions.map(r => <option key={r.id} value={r.id}>{r.reference}</option>)}
-              </select>
-            </label>
+            <TableSearch value={searchInput} onChange={setSearchInput}
+              placeholder="Search finding, run or employee" ariaLabel="Search the work queue" />
             <label class="pxq-filter">
               <i class="fa-solid fa-arrow-down-wide-short" aria-hidden="true" />
               <select class="pxq-select" value={sort} aria-label="Sort order"
@@ -255,25 +276,10 @@ export function PayrollExceptionQueuePage(): VNode {
                 {SORT_OPTS.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
               </select>
             </label>
-            <label class="pxq-owner">
-              <input type="checkbox" checked={ownerMe} onChange={e => { setOwnerMe((e.target as HTMLInputElement).checked); resetPage(); }} />
-              Assigned to me
-            </label>
-            {(runFilter || ownerMe || search) && (
-              <button type="button" class="pxq-clear" onClick={() => { setRunFilter(''); setOwnerMe(false); setSearchInput(''); setSearch(''); resetPage(); }}>
-                <i class="fa-solid fa-xmark" /> Clear filters
-              </button>
-            )}
+            <AdvancedFilter id="pxq-advanced" tabs={advTabs} onReset={clearAdvanced} openId={openId} setOpenId={setOpenId} />
           </div>
 
-          {(runFilter || ownerMe) && (
-            <div class="pxq-chips" aria-label="Active filters">
-              {runFilter && <span class="pxq-chip">Run: {runOptions.find(r => r.id === runFilter)?.reference ?? runFilter}
-                <button type="button" aria-label="Clear run filter" onClick={() => { setRunFilter(''); resetPage(); }}><i class="fa-solid fa-xmark" /></button></span>}
-              {ownerMe && <span class="pxq-chip">Assigned to me
-                <button type="button" aria-label="Clear owner filter" onClick={() => { setOwnerMe(false); resetPage(); }}><i class="fa-solid fa-xmark" /></button></span>}
-            </div>
-          )}
+          <ActiveFilters chips={chips} onClearAll={clearAll} />
 
           {/* Bulk action bar — appears only when open findings are selected in view. */}
           {picked.size > 0 && (
@@ -340,7 +346,7 @@ export function PayrollExceptionQueuePage(): VNode {
 
       {/* ── Detail drawer — navy rich slide-in (statutory Rate-Version styling) ── */}
       <Drawer rich adaptive open={!!selected} onClose={() => setSelectedId(undefined)}
-        title="Selected finding" panelClass="pxq-drawer">
+        title="Finding Overview" panelClass="pxq-drawer">
         {selected && (
           <DetailPanel detail={selected} busy={anyPending(mut)}
             onAction={(type) => setAction({ type, finding: selected })}
@@ -440,8 +446,11 @@ function DetailPanel({ detail, busy, onAction, onOpenRun }: {
   onOpenRun: (tab: 'approvals' | 'exceptions') => void;
 }): VNode {
   const activity = detail.activity.items;
-  const primaryActs = detail.allowedActions.filter(a => a === 'resolve' || a === 'review');
+  const hasReview = detail.allowedActions.includes('review');
+  const hasResolve = detail.allowedActions.includes('resolve');
   const secondaryActs = detail.allowedActions.filter(a => a !== 'resolve' && a !== 'review');
+  const gridActs = secondaryActs.filter(a => a === 'assign' || a === 'escalate' || a === 'comment');
+  const fullActs = secondaryActs.filter(a => a === 'waive' || a === 'reopen');
   const evidence = detail.sourceEvidence.filter(e => e.occurredAt != null || e.label.length > 0);
   const km = KIND_META[detail.kind] ?? KIND_META.warning!;
   const overdue = isOverdue(detail.dueAt);
@@ -458,35 +467,39 @@ function DetailPanel({ detail, busy, onAction, onOpenRun }: {
   return (
     <div class="pxq-dw">
       <div class="pxq-dw-head">
-        <div class="pxq-dw-title">{detail.title}<span class={`pxq-dw-pill ${km.cls}`}>{km.label}</span></div>
-        <div class="pxq-dw-meta">{detail.run.reference} · Pay {fmtPayDate(detail.run.payDate)} · {detail.subject.scopeLabel}</div>
+        <span class={`pxq-dw-badge ${km.cls}`} aria-hidden="true"><i class={`fa-solid ${km.icon}`} /></span>
+        <div class="pxq-dw-head-main">
+          <span class={`pxq-dw-pill ${km.cls}`}>{km.label}</span>
+          <h3 class="pxq-dw-h">{detail.title}</h3>
+          <div class="pxq-dw-meta">{detail.run.reference} · Pay {fmtPayDate(detail.run.payDate)} · {detail.subject.scopeLabel}</div>
+        </div>
       </div>
 
       <div class={`pxq-dw-ribbon ${km.cls}`}>
         <i class={`fa-solid ${km.icon}`} aria-hidden="true" /><span>{detail.summary}</span>
       </div>
 
-      <div class="pxq-dw-tiles">
-        <div class="pxq-dw-tile"><small>Impact</small>
+      <div class="pxq-dw-stats">
+        <div class="pxq-dw-stat"><small>Impact</small>
           <strong>{detail.impact.amount != null ? fmtTTD(detail.impact.amount) : (detail.impact.label ?? '—')}</strong>
           <span>this finding</span></div>
-        <div class="pxq-dw-tile"><small>Subject</small>
+        <div class="pxq-dw-stat"><small>Subject</small>
           <strong>{detail.subject.employeeId
             ? <button type="button" class="pxq-dw-link" title="Open the affected employee's HR record"
                 onClick={() => openHrEmployee(detail.subject.employeeId!)}>{subjectName} <i class="fa-solid fa-arrow-up-right-from-square" /></button>
             : subjectName}</strong>
           <span>{detail.subject.employeeId ? 'employee' : 'scope'}</span></div>
-        <div class="pxq-dw-tile"><small>Due</small>
+        <div class="pxq-dw-stat"><small>Due</small>
           <strong class={overdue ? 'is-overdue' : ''}>{detail.dueAt ? fmtDue(detail.dueAt).replace('Due ', '') : '—'}</strong>
           <span>{overdue ? 'overdue' : 'target'}</span></div>
       </div>
 
       <section class="pxq-dw-sec">
-        <div class="pxq-dw-sec-h">What triggered it</div>
-        <div class="pxq-dw-grid">
-          <div class="pxq-dw-tile"><small>Rule</small><strong>{humanizeKey(detail.trigger.ruleKey)}</strong></div>
-          <div class="pxq-dw-tile"><small>Observed</small><strong>{detail.trigger.observed}{detail.trigger.threshold ? ` (threshold ${detail.trigger.threshold})` : ''}</strong></div>
-        </div>
+        <div class="pxq-dw-sec-h">Triggered by</div>
+        <dl class="pxq-dw-kv">
+          <div><dt>Rule</dt><dd>{humanizeKey(detail.trigger.ruleKey)}</dd></div>
+          <div><dt>Observed</dt><dd>{detail.trigger.observed}{detail.trigger.threshold ? ` (threshold ${detail.trigger.threshold})` : ''}</dd></div>
+        </dl>
       </section>
 
       {evidence.length > 0 && (
@@ -511,18 +524,25 @@ function DetailPanel({ detail, busy, onAction, onOpenRun }: {
       )}
 
       <div class="pxq-dw-actions">
-        {primaryActs.map(a => (
-          <button key={a} type="button" class="pxq-dw-btn primary" disabled={busy}
-            onClick={() => (a === 'review' ? onOpenRun('approvals') : onAction(a))}>
-            <i class={`fa-solid ${ACTION_META[a].icon}`} /> {ACTION_META[a].label}
-          </button>
-        ))}
-        <button type="button" class="pxq-dw-btn ghost" onClick={() => onOpenRun('exceptions')}>
-          <i class="fa-solid fa-arrow-up-right-from-square" /> Open run evidence</button>
-        {secondaryActs.map(a => (
-          <button key={a} type="button" class="pxq-dw-btn ghost" disabled={busy} onClick={() => onAction(a)}>
-            <i class={`fa-solid ${ACTION_META[a].icon}`} /> {ACTION_META[a].label}
-          </button>
+        {hasReview && (
+          <button type="button" class="pxq-dw-btn primary" disabled={busy} onClick={() => onOpenRun('approvals')}>
+            <i class="fa-solid fa-arrow-up-right-from-square" /> Review in workflow</button>
+        )}
+        {hasResolve && (
+          <button type="button" class="pxq-dw-btn" disabled={busy} onClick={() => onAction('resolve')}>
+            <i class="fa-solid fa-circle-check" /> Resolve</button>
+        )}
+        <div class="pxq-dw-grid4">
+          <button type="button" class="pxq-dw-gbtn" onClick={() => onOpenRun('exceptions')}>
+            <i class="fa-solid fa-arrow-up-right-from-square" /><span>Open run evidence</span></button>
+          {gridActs.map(a => (
+            <button key={a} type="button" class="pxq-dw-gbtn" disabled={busy} onClick={() => onAction(a)}>
+              <i class={`fa-solid ${ACTION_META[a].icon}`} /><span>{ACTION_META[a].label}</span></button>
+          ))}
+        </div>
+        {fullActs.map(a => (
+          <button key={a} type="button" class="pxq-dw-btn" disabled={busy} onClick={() => onAction(a)}>
+            <i class={`fa-solid ${ACTION_META[a].icon}`} /> {ACTION_META[a].label}</button>
         ))}
       </div>
 
