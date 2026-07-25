@@ -30,10 +30,17 @@ live verification outstanding. Security-critical (anti-fraud control over payrol
 TABLE, not the static catalogue in code — the new keys 403'd for `finance_manager` despite being in
 both catalogues (the "DB seed ≠ static code" pitfall). Fixed at source in migration §6.
 
+**ENFORCEMENT PROVEN (`8b08d8c7`, financePayroll 140/140):** three cases in the release section flip
+`finance_payroll_runs.sod_level` on the locked run and probe `finance_payroll_confirm_funding_tx`
+with a non-negative but mismatched amount — the amount check sits AFTER the SoD checks, so PR403 vs
+PR422 distinguishes "blocked by SoD" from "SoD passed". Result: level 3 blocks the approver; level 2
+admits the SAME approver (PR422) while still blocking the preparer; level 4 restores the strictest
+chain. Zero funding rows written. This is the behavioural proof the RPCs read `v_run.sod_level`.
+
 **REMAINING:**
-1. **Level-parameterised enforcement cases belong in `financePayroll.mjs`** (it already builds a
-   fully locked run): at level 2 the certifier/approver MAY fund+release; at level 4 they may not.
-   The SoD suite deliberately does not rebuild a whole run to test this.
+1. Certifier-ONLY delta (level 4 vs 3) needs a fixture whose certifier differs from the preparer —
+   `fstaff1` is both in financePayroll, so the level-4 case asserts the chain end-to-end rather than
+   the certifier clause in isolation.
 2. Browser QA of Payroll Setup → **Governance** (propose → approve as a different actor).
 3. Note: existing runs took `sod_level = 3` from the column default on apply — level 3 is *less*
    strict than the previous hardcoded 4-way, so confirm no in-flight run is surprised (PAY-2026-0589
