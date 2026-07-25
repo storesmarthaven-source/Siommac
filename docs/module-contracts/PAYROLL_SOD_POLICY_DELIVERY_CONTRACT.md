@@ -1,6 +1,26 @@
 # Payroll Segregation-of-Duties (SoD) Policy — Delivery Contract
 
-**Status:** Designed, not yet built. Security-critical (anti-fraud control over payroll money).
+**Status:** BUILT (migration + service + routes + UI) — **migration not yet applied**; E2E suite and
+live verification outstanding. Security-critical (anti-fraud control over payroll money).
+
+**Build log (2026-07-25):**
+- `e516d261` — migration (policy table, `finance_payroll_active_sod_level()`, `runs.sod_level`
+  snapshot default, both RPCs patched) + permission keys in BE/FE catalogues + permissionMeta.
+- `cc9554e3` — `lib/finance/payroll/sodPolicy.ts` + 4 routes + the two atomic policy RPCs
+  (`..._approve_tx`, `..._set_roles_tx`) appended to the same migration.
+- `04142e12` — Payroll Setup → **Governance** tab (`SodPolicyPanel.tsx`) + FE API client.
+- `4af5c0aa` — regenerated `docs/generated` index.
+- Gates so far: BE+FE typecheck 0/0, vitest 484/484, `repo:index:check` clean.
+
+**REMAINING (do these next, in order):**
+1. **Operator applies** `supabase/migrations/20260925000000_finance_payroll_sod_policy.sql`
+   (DDL cannot be run from the JS client). Until then nothing changes at runtime.
+2. Write + run `scripts/e2e/suites/payrollSodPolicy.mjs` (see §3 REQUIRED E2E list). It can only
+   pass once the migration is applied — write it against the live stack, don't guess.
+3. Live-verify each level's negative path in the browser (propose → approve as a different actor →
+   confirm a level-2 run lets the certifier fund/release, and a level-4 run does not).
+4. Backfill note: existing runs get `sod_level` = the column default (3) on apply. PAY-2026-0589 is
+   already released, so this is inert for it — but confirm no in-flight run is surprised.
 **Origin:** 2026-07-25 "finish live run" session — releasing PAY-2026-0589 required 4 distinct
 actors because the SoD chain is hardcoded. User asked to make the strictness configurable.
 **Related:** [[central-workflow-engine]], governed statutory-version pattern (draft→submit→approve→
