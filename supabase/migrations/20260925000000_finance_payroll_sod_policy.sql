@@ -283,3 +283,22 @@ begin
   return to_jsonb(v_new);
 end;
 $fn$;
+
+-- ── 6. Role grants ───────────────────────────────────────────────────────────
+-- requirePermission resolves a role's capabilities from THIS table (not from the
+-- static catalogue in code), so the new keys must be granted here or every call
+-- 403s. superadmin is allow-all in memory and needs no row.
+-- manage_roles is deliberately granted to NOBODY: it stays superadmin-only, so a
+-- finance_manager can never make itself the sole approver and defeat maker-checker.
+insert into public.role_permissions (role_name, permission)
+select r.role_name, p.permission
+  from (values ('finance_manager'), ('admin')) as r(role_name)
+ cross join (values
+   ('finance.payroll.sod_policy.view'),
+   ('finance.payroll.sod_policy.propose'),
+   ('finance.payroll.sod_policy.approve')
+ ) as p(permission)
+ where not exists (
+   select 1 from public.role_permissions rp
+    where rp.role_name = r.role_name and rp.permission = p.permission
+ );
