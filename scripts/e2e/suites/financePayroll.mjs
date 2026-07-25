@@ -48,6 +48,7 @@ import {
   payrollRunSeed,
 } from '../helpers/payrollRun.mjs';
 import { attachActivePolicy } from '../helpers/payPolicyFixture.mjs';
+import { purgeRunArtifacts } from '../helpers/payrollCertificationFixture.mjs';
 
 export const title = 'Finance — Payroll Runs (Phase 3 — full lifecycle)';
 
@@ -2393,6 +2394,82 @@ export default async function run(h) {
     const certifier = await sodProbe(fstaff1Id, 'l4-certifier');
     expect(certifier === 'PR403', `at level 4 the preparer/certifier must be blocked, got ${certifier}`);
     await setRunSodLevel(3);   // restore the default before the real funding test
+  });
+
+  // The main run's preparer and certifier are the SAME person (fstaff1), so the
+  // level-4 case above proves the chain but not the certifier clause on its own.
+  // This fixture separates all three: preparer fmgr2, certifier fstaff1, approver
+  // fmgr1 — so a probe as fstaff1 isolates exactly the level-4 certifier rule.
+  const sodCertRun = { id: null, net: 0 };
+
+  await test('SoD certifier fixture: a run whose certifier is neither preparer nor approver', async () => {
+    const period = payrollPeriod('financePayroll', 'sodCertifier', TAG);
+    const cr = await api('finance/payroll/runs/create', fmgr2Token, payrollRunCommand({
+      idempotencyKey: `${TAG}:sodcert:create`, periodStart: period, payGroupId: ctx.mainPayGroupId,
+    }));
+    ok(cr, `sod certifier run create failed: ${cr.body.message}`);
+    sodCertRun.id = cr.body.data.id;
+
+    const li = await api('finance/payroll/runs/lock-inputs', fmgr2Token,
+      { id: sodCertRun.id, idempotencyKey: `${TAG}:sodcert:lock-inputs` });
+    ok(li, `sodcert lock-inputs failed: ${li.body.message}`);
+    const calc = await api('finance/payroll/runs/calculate', fmgr2Token,
+      payrollCalculationCommand(sodCertRun.id, `${TAG}:sodcert:calc`));
+    ok(calc, `sodcert calculate failed: ${calc.body.message}`);
+    // Certified by fstaff1 — deliberately NOT the preparer.
+    const cert = await api('finance/payroll/runs/certify', fstaff1Token,
+      payrollCertificationCommand(sodCertRun.id, `${TAG}:sodcert:certify`, 'Certifier-isolation fixture.'));
+    ok(cert, `sodcert certify failed: ${cert.body.message}`);
+    const sub = await api('finance/payroll/runs/submit', fmgr2Token,
+      { id: sodCertRun.id, idempotencyKey: `${TAG}:sodcert:submit` });
+    ok(sub, `sodcert submit failed: ${sub.body.message}`);
+    const appr = await api('finance/payroll/runs/approve', fmgr1Token, { id: sodCertRun.id });
+    ok(appr, `sodcert approve failed: ${appr.body.message}`);
+    const lock = await api('finance/payroll/runs/lock', fmgr1Token,
+      payrollLockCommand(sodCertRun.id, `${TAG}:sodcert:lock`));
+    ok(lock, `sodcert lock failed: ${lock.body.message}`);
+
+    const { data: row } = await sb.from('finance_payroll_runs')
+      .select('net_total, created_by, approved_by').eq('id', sodCertRun.id).single();
+    sodCertRun.net = Number(row.net_total);
+    expect(row.created_by === fmgr2Id, `preparer should be fmgr2, got ${row.created_by}`);
+    expect(row.approved_by === fmgr1Id, `approver should be fmgr1, got ${row.approved_by}`);
+    const { data: certRow } = await sb.from('finance_payroll_certifications')
+      .select('certified_by').eq('run_id', sodCertRun.id).order('certified_at', { ascending: false }).limit(1).single();
+    expect(certRow.certified_by === fstaff1Id, `certifier should be fstaff1, got ${certRow.certified_by}`);
+  });
+
+  await test('the certifier alone is blocked at level 4 and admitted at level 3', async () => {
+    const probe = async (level, key) => {
+      const { error: uErr } = await sb.from('finance_payroll_runs')
+        .update({ sod_level: level }).eq('id', sodCertRun.id);
+      expect(!uErr, `could not set sod_level=${level}: ${uErr?.message}`);
+      const { error } = await sb.rpc('finance_payroll_confirm_funding_tx', {
+        p_run_id: sodCertRun.id,
+        p_actor_id: fstaff1Id,                       // the certifier, and ONLY the certifier
+        p_idempotency_key: `${TAG}:sodcert:probe:${key}`,
+        p_confirmed_amount: sodCertRun.net + 1,      // mismatched on purpose (checked after SoD)
+        p_confirmation_reference: `${TAG}-SODCERT-${key}`,
+        p_account_reference: null,
+        p_note: 'Certifier-only SoD probe (expected to fail).',
+      });
+      return error?.code ?? 'ok';
+    };
+
+    const atFour = await probe(4, 'l4');
+    expect(atFour === 'PR403', `at level 4 the certifier must be blocked, got ${atFour}`);
+    const atThree = await probe(3, 'l3');
+    expect(atThree === 'PR422',
+      `at level 3 the certifier should clear SoD and stop on the amount check, got ${atThree}`);
+
+    const count = (await sb.from('finance_payroll_funding_confirmations')
+      .select('id', { count: 'exact', head: true }).eq('run_id', sodCertRun.id)).count ?? 0;
+    expect(count === 0, `certifier probes wrote ${count} funding row(s) — must write none`);
+  });
+
+  await test('cleanup: remove the certifier-isolation run', async () => {
+    const clean = await purgeRunArtifacts(h, [sodCertRun.id]);
+    expect(clean, 'certifier-isolation run did not purge cleanly');
   });
 
   await test('independent releaser confirms exact funding with idempotent evidence', async () => {

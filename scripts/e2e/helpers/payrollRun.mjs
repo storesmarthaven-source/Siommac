@@ -251,7 +251,7 @@ export const PAYROLL_PERIOD_SALTS = Object.freeze({
   payrollOverrides:         Object.freeze({ run: 19 }),
   payrollPayGroups:         Object.freeze({ weeklyRun: 20 }),
   financePayroll:           Object.freeze({
-    lifecycle: 51, denyCreate: 52, denySubmit: 53,
+    lifecycle: 51, denyCreate: 52, denySubmit: 53, sodCertifier: 54,
     atom60: 60, atom61: 61, atom62: 62, atom63: 63, atom64: 64, atom65: 65,
   }),
   payrollOvertimeRules:     Object.freeze({ run: 55 }),

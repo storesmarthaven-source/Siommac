@@ -97,6 +97,17 @@ Each of these cost real debugging time. Don't relearn them.
 - **Permission keys must match the catalogue EXACTLY** (`hse.ptw.view`, not `hse.permits.view`).
   Read-gate / record-inheritance mappings are NOT covered by the enforced-key drift-guard —
   grep the catalogue to confirm any key string before shipping it.
+- **A new permission key is DEAD until it's granted in the `role_permissions` TABLE.**
+  `requirePermission` resolves a role's capabilities via `loadRolePermissions`, which reads
+  `role_permissions` from the DB — NOT the static `ROLE_PERMISSIONS` in
+  `netlify/functions/lib/permissions.ts` / `src/lib/permissions.ts`. Adding a key to both
+  catalogues (and `permissionMeta`) makes it typecheck and show up in the RBAC console, but every
+  call still **403s** until a migration inserts the `role_permissions` rows. Superadmin is the only
+  exception (allow-all in memory) — which is exactly why this hides during superadmin testing. It
+  surfaced on the SoD build when `finance_manager` 403'd on every new endpoint. So: ship the
+  `role_permissions` insert in the SAME migration as the key, and prove it with an E2E that
+  provisions a REAL user of that role. Note `ROLE_CACHE_TTL_MS = 30s` — after granting, wait for the
+  cache to expire (or restart) before retesting.
 - **`dev:netlify` serves compiled `dist/`.** Backend source changes need `npm run build:backend`
   AND a dev-server restart — the running server does NOT hot-reload (module-adapter registration
   especially). A passing test against a stale server is a false pass; restart before trusting E2E.
