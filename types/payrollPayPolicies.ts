@@ -97,6 +97,39 @@ export interface PayPolicyPreflight {
   counts: { components: number; requiredSources: number; costingRules: number };
 }
 
+// ── Setup command-center overview (read model behind the Pay Policies dashboard) ──
+// Every field is DERIVED from the real policy/version/assignment/member/event tables +
+// live preflight over the in-review versions — no static or faked values.
+export interface PayPolicyOverview {
+  generatedAt: string;
+  band: {
+    configuredPolicies: number;   // total non-retired policies
+    coveredEmployees: number;     // distinct active members of pay groups with an active policy assignment
+    payGroupsAssigned: number;    // distinct pay groups with an active policy assignment
+    draftVersions: number;        // versions in draft / pending_approval / approved (in review)
+    nextEffectiveDate: string | null;
+    integrityFindings: number;    // total preflight blockers across in-review versions
+  };
+  metrics: {
+    activePolicies: number;
+    retiringPolicies: number;     // active policies whose current version has a scheduled effective-to
+    pendingVersions: number;      // versions in pending_approval / approved
+    assignedEmployees: number;    // == band.coveredEmployees
+    workPatterns: number;         // distinct policy types among active policies
+    workPatternLabels: string[];
+    setupFindings: number;        // in-review versions with ≥1 blocker
+    blockingFindings: number;     // in-review versions whose blocker set blocks activation
+    versionsThisYear: number;
+  };
+  banner: {
+    policyId: string; policyCode: string; policyName: string;
+    versionId: string; versionNo: number; ownerLabel: string; title: string; detail: string;
+  } | null;
+  integrity: Array<{ code: string; label: string; value: string; tone: 'ok' | 'warning' | 'danger' }>;
+  upcoming: Array<{ policyId: string; tone: 'blue' | 'amber' | 'red'; title: string; detail: string; meta: string }>;
+  activity: Array<{ id: string; tone: 'blue' | 'amber' | 'green' | 'red'; label: string; detail: string; occurredAt: string }>;
+}
+
 export interface PayPolicyWorkspace {
   policy: PayPolicySummary;
   version: PayPolicyVersionDto | null;

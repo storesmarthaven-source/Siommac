@@ -1,93 +1,132 @@
-/* Shared Work Calendar (F-CAL) admin console — scoped .wcal, reusing --hrfin-* tokens. */
-.wcal{display:grid;gap:14px;color:var(--hrfin-text-primary)}
-.wcal button,.wcal input,.wcal select,.wcal textarea{font:inherit}
-.wcal button{border:1px solid var(--hrfin-border);background:#fff;border-radius:7px;padding:8px 12px;cursor:pointer}
-.wcal button:disabled{opacity:.45;cursor:not-allowed}
-.wcal button.is-primary{background:#0b5f62;color:#fff;border-color:#0b5f62}
-.wcal button.is-danger{color:#a2232d;border-color:#e3b9bd}
+/* Shared Work Calendar (F-CAL) admin console — rebuilt into the payroll-setup command-centre
+   design language (navy/blue, card+table+subtabs matching .pps). Self-contained tokens so it
+   reads as one system with Pay Policies / Pay Groups / Overtime Rules. Scoped .wcal-*. */
+.wcal {
+  --br: #1d4ed8; --br-soft: #eaf1fd; --br-ink: #1a44b8;
+  --gn: #16a34a; --gn-soft: #e5f6ec; --gn-ink: #15803d;
+  --am: #d97706; --am-soft: #fdf1dc; --am-ink: #b45309;
+  --rd: #dc2626; --rd-soft: #fdecec;
+  --bd: #e5e9f0; --bd-soft: #eef1f6;
+  --ink: #0f172a; --ink2: #334155; --mut: #64748b; --mut2: #94a3b8;
+  --card: #fff; --radius: 12px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 1px 3px rgba(15,23,42,.06);
+  display: grid; gap: 14px; color: var(--ink);
+}
+.wcal button, .wcal input, .wcal select, .wcal textarea { font: inherit; }
+.wcal button { border: 1px solid var(--bd); background: #fff; color: var(--ink2); border-radius: 8px; padding: 8px 13px; font-weight: 600; cursor: pointer; }
+.wcal button:hover:not(:disabled) { border-color: #aebbd0; color: var(--br); }
+.wcal button:disabled { opacity: .45; cursor: not-allowed; }
+.wcal button.is-primary { background: var(--br); color: #fff; border-color: var(--br); }
+.wcal button.is-primary:hover:not(:disabled) { background: var(--br-ink); color: #fff; }
+.wcal button.is-danger { color: var(--rd); border-color: #e9b7b7; }
+.wcal button.is-danger:hover:not(:disabled) { background: var(--rd-soft); color: var(--rd); }
 
-.wcal-subtabs{display:flex;border-bottom:1px solid var(--hrfin-border);gap:24px;overflow:auto}
-.wcal-subtabs button{border:0;border-radius:0;padding:10px 1px;background:transparent;white-space:nowrap}
-.wcal-subtabs button.active{border-bottom:2px solid #0b7778;color:#075d60;font-weight:700}
+/* Command band (descriptive header above the sub-tabs) */
+.wcal-band { display: grid; grid-template-columns: minmax(240px, 1.6fr) repeat(3, minmax(96px, .7fr)); align-items: center; gap: 14px; background: #101b33; color: #fff; border-radius: var(--radius); padding: 18px 22px; }
+.wcal-band-lead span { font-size: 9px; text-transform: uppercase; letter-spacing: .1em; color: #9eb1ce; font-weight: 800; }
+.wcal-band-lead h2 { font-size: 18px; margin: 6px 0 0; font-weight: 800; }
+.wcal-fact span, .wcal-fact strong { display: block; }
+.wcal-fact span { font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: #9eb1ce; }
+.wcal-fact strong { font-size: 12.5px; margin-top: 5px; font-weight: 700; }
 
-.wcal-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.wcal-toolbar input{min-width:300px;padding:9px 11px;border:1px solid var(--hrfin-border);border-radius:7px}
-.wcal-toolbar>div{display:flex;gap:9px;align-items:center}
-.wcal-sub{font-size:12px;color:var(--hrfin-text-secondary);max-width:640px}
+/* Sub-tabs (blue underline) */
+.wcal-subtabs { display: flex; border-bottom: 1px solid var(--bd); gap: 24px; overflow: auto; }
+.wcal-subtabs button { border: 0; border-radius: 0; padding: 11px 1px; background: transparent; color: var(--mut); font-weight: 700; white-space: nowrap; }
+.wcal-subtabs button:hover { color: var(--ink2); }
+.wcal-subtabs button.active { border-bottom: 2px solid var(--br); color: var(--br); }
 
-.wcal-register,.wcal-panel{background:#fff;border:1px solid var(--hrfin-border);border-radius:9px;overflow:auto}
-.wcal-panel{padding:16px;display:grid;gap:12px}
-.wcal-panel h3{margin:0}
-.wcal-panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-.wcal-inline-actions{display:flex;gap:8px;align-items:center}
+/* Toolbar */
+.wcal-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--bd); border-radius: var(--radius); box-shadow: var(--shadow); padding: 13px 16px; flex-wrap: wrap; }
+.wcal-toolbar input { min-width: 300px; padding: 9px 12px; border: 1px solid #dce2eb; border-radius: 8px; background: #fff; color: var(--ink); }
+.wcal-toolbar input:focus { outline: none; border-color: var(--br); box-shadow: 0 0 0 3px var(--br-soft); }
+.wcal-toolbar > div { display: flex; gap: 9px; align-items: center; }
+.wcal-sub { font-size: 12px; color: var(--mut); max-width: 640px; }
 
-.wcal table{width:100%;border-collapse:collapse}
-.wcal th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:11px 13px;border-bottom:1px solid var(--hrfin-border);color:var(--hrfin-text-secondary)}
-.wcal td{padding:12px 13px;border-bottom:1px solid var(--hrfin-border);font-size:12.5px;vertical-align:top}
-.wcal td small{display:block;color:var(--hrfin-text-secondary);margin-top:3px}
-.wcal tbody tr{cursor:default}
-.wcal-register tbody tr[tabindex]{cursor:pointer}
-.wcal tbody tr:focus-visible{outline:2px solid #0b7778;outline-offset:-2px}
-.wcal tbody tr.is-open{background:#eef7f6}
-.wcal-mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px}
-.wcal-row-actions{display:flex;gap:6px;justify-content:flex-end}
-.wcal-row-actions button{padding:5px 9px;font-size:11.5px}
+/* Cards */
+.wcal-register, .wcal-panel { background: var(--card); border: 1px solid var(--bd); border-radius: var(--radius); box-shadow: var(--shadow); overflow: auto; }
+.wcal-panel { padding: 18px 20px; display: grid; gap: 14px; }
+.wcal-panel h3 { margin: 0; font-size: 15px; color: #101b33; font-weight: 700; }
+.wcal-panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.wcal-inline-actions { display: flex; gap: 8px; align-items: center; }
 
-.wcal-state{padding:30px;text-align:center;color:var(--hrfin-text-secondary)}
-.wcal-state.is-error{color:#a2232d}
-.wcal-state button{margin-left:6px}
-.wcal-skel{padding:14px;display:grid;gap:10px}
-.wcal-skel-row{height:38px;border-radius:7px;background:linear-gradient(90deg,#eef1f2 25%,#f6f8f9 37%,#eef1f2 63%);background-size:400% 100%;animation:wcal-shimmer 1.3s ease infinite}
-@keyframes wcal-shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+/* Tables */
+.wcal table { width: 100%; border-collapse: collapse; }
+.wcal th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; padding: 11px 14px; background: #f7f9fc; border-bottom: 1px solid var(--bd); color: var(--mut); font-weight: 700; white-space: nowrap; }
+.wcal-panel th { background: transparent; }
+.wcal td { padding: 13px 14px; border-bottom: 1px solid var(--bd-soft); font-size: 12.5px; color: #26344c; vertical-align: top; }
+.wcal tbody tr:last-child td { border-bottom: 0; }
+.wcal td strong { color: #14213a; font-weight: 700; }
+.wcal td small { display: block; color: var(--mut); margin-top: 3px; font-size: 11.5px; }
+.wcal tbody tr { cursor: default; }
+.wcal-register tbody tr[tabindex] { cursor: pointer; }
+.wcal-register tbody tr[tabindex]:hover td { background: #fafcff; }
+.wcal tbody tr:focus-visible { outline: 2px solid var(--br); outline-offset: -2px; }
+.wcal tbody tr.is-open { background: var(--br-soft); }
+.wcal-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; color: var(--ink2); }
+.wcal-row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+.wcal-row-actions button { padding: 5px 10px; font-size: 11.5px; }
 
-.wcal-footer{display:flex;justify-content:space-between;align-items:center}
-.wcal-footer span{font-size:12px;color:var(--hrfin-text-secondary)}
-.wcal-footer>div{display:flex;gap:8px}
+/* States */
+.wcal-state { padding: 32px; text-align: center; color: var(--mut); }
+.wcal-state.is-error { color: var(--rd); }
+.wcal-state button { margin-left: 6px; }
+.wcal-skel { padding: 14px; display: grid; gap: 10px; }
+.wcal-skel-row { height: 40px; border-radius: 8px; background: linear-gradient(90deg, #eef1f6 25%, #f7f9fc 37%, #eef1f6 63%); background-size: 400% 100%; animation: wcal-shimmer 1.3s ease infinite; }
+@keyframes wcal-shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
 
-.wcal-detail{display:grid;gap:14px}
-.wcal-detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
-.wcal-detail-head>div:first-child{display:grid;gap:2px}
-.wcal-detail-head h2{margin:5px 0 0}
-.wcal-detail-head span{font-size:12px;color:var(--hrfin-text-secondary)}
+.wcal-footer { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; }
+.wcal-footer span { font-size: 12px; color: var(--mut); }
+.wcal-footer > div { display: flex; gap: 8px; }
 
-/* ── Modal form ── */
-.wcal-form{display:grid;gap:13px;min-width:min(560px,82vw)}
-.wcal-form label{display:grid;gap:5px;font-size:12px;font-weight:650}
-.wcal-form input,.wcal-form select,.wcal-form textarea{border:1px solid var(--hrfin-border);border-radius:6px;padding:9px}
-.wcal-form textarea{min-height:70px;resize:vertical}
-.wcal-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.wcal-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.wcal-err{color:#a2232d;font-weight:500;font-size:11.5px}
-.wcal-banner{padding:10px 12px;border-radius:7px;font-size:12.5px}
-.wcal-banner.is-error{background:#fdf0f1;border:1px solid #e3b9bd;color:#a2232d}
-.wcal-note{font-size:11.5px;color:var(--hrfin-text-secondary);background:var(--hrfin-surface-2);border-radius:7px;padding:9px 11px}
+/* Detail */
+.wcal-detail { display: grid; gap: 14px; }
+.wcal-detail-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.wcal-detail-head > div:first-child { display: grid; gap: 2px; }
+.wcal-detail-head > div:first-child > button { justify-self: start; border: 0; background: 0; color: var(--br); font-weight: 600; padding: 0; cursor: pointer; }
+.wcal-detail-head h2 { margin: 5px 0 0; color: #101b33; font-size: 20px; font-weight: 800; }
+.wcal-detail-head span { font-size: 12px; color: var(--mut); }
 
-/* ── Weekday toggles (no preselection) ── */
-.wcal-weekdays{border:1px solid var(--hrfin-border);border-radius:8px;padding:11px 13px;display:grid;gap:8px}
-.wcal-weekdays legend{font-size:12px;font-weight:650;padding:0 4px}
-.wcal-weekdays>div[role=group]{display:flex;gap:7px;flex-wrap:wrap}
-.wcal-weekdays button{min-width:52px;padding:8px 6px;border-radius:7px;font-size:12px}
-.wcal-weekdays button.on{background:#0b5f62;color:#fff;border-color:#0b5f62;font-weight:650}
-.wcal-fractions{display:grid;gap:7px}
+/* Modal form */
+.wcal-form { display: grid; gap: 13px; min-width: min(560px, 82vw); }
+.wcal-form label { display: grid; gap: 5px; font-size: 12px; font-weight: 650; color: var(--ink2); }
+.wcal-form input, .wcal-form select, .wcal-form textarea { border: 1px solid #dce2eb; border-radius: 7px; padding: 9px 10px; background: #fff; color: var(--ink); }
+.wcal-form input:focus, .wcal-form select:focus, .wcal-form textarea:focus { outline: none; border-color: var(--br); box-shadow: 0 0 0 3px var(--br-soft); }
+.wcal-form textarea { min-height: 72px; resize: vertical; }
+.wcal-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.wcal-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.wcal-err { color: var(--rd); font-weight: 500; font-size: 11.5px; }
+.wcal-banner { padding: 10px 12px; border-radius: 8px; font-size: 12.5px; }
+.wcal-banner.is-error { background: var(--rd-soft); border: 1px solid #e9b7b7; color: var(--rd); }
+.wcal-note { font-size: 11.5px; color: var(--ink2); background: var(--br-soft); border: 1px solid #c9dcf8; border-radius: 8px; padding: 10px 12px; }
 
-.wcal-picker{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.wcal-picker label{display:grid;gap:5px;font-size:12px;font-weight:650}
-.wcal-picker select{border:1px solid var(--hrfin-border);border-radius:6px;padding:9px}
+/* Weekday toggles */
+.wcal-weekdays { border: 1px solid var(--bd); border-radius: 9px; padding: 12px 14px; display: grid; gap: 8px; }
+.wcal-weekdays legend { font-size: 12px; font-weight: 650; padding: 0 4px; color: var(--ink2); }
+.wcal-weekdays > div[role=group] { display: flex; gap: 7px; flex-wrap: wrap; }
+.wcal-weekdays button { min-width: 52px; padding: 8px 6px; border-radius: 8px; font-size: 12px; }
+.wcal-weekdays button.on { background: var(--br); color: #fff; border-color: var(--br); font-weight: 650; }
+.wcal-fractions { display: grid; gap: 7px; }
 
-/* ── Resolve preview ── */
-.wcal-resolve{display:grid;gap:14px}
-.wcal-resolve-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.wcal-resolve-grid>div{display:grid;gap:3px;padding:12px;background:var(--hrfin-surface-2);border-radius:8px}
-.wcal-resolve-grid span{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--hrfin-text-secondary)}
-.wcal-resolve-grid small{color:var(--hrfin-text-secondary);font-weight:400}
-.wcal-workingdays{display:grid;gap:10px}
-.wcal-wd-count{display:flex;align-items:baseline;gap:12px;padding:12px;border:1px solid #b6d7d6;background:#edf8f7;border-radius:8px}
-.wcal-wd-count span{font-size:11px;text-transform:uppercase;color:var(--hrfin-text-secondary)}
-.wcal-wd-count strong{font-size:22px;color:#075d60}
+.wcal-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.wcal-picker label { display: grid; gap: 5px; font-size: 12px; font-weight: 650; color: var(--ink2); }
+.wcal-picker select { border: 1px solid #dce2eb; border-radius: 7px; padding: 9px 10px; }
 
-@media(max-width:900px){
-  .wcal-toolbar{flex-direction:column;align-items:stretch}
-  .wcal-toolbar input{min-width:0}
-  .wcal-detail-head{flex-direction:column}
-  .wcal-grid2,.wcal-grid3,.wcal-picker,.wcal-resolve-grid{grid-template-columns:1fr}
+/* Resolve preview */
+.wcal-resolve { display: grid; gap: 14px; }
+.wcal-resolve-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.wcal-resolve-grid > div { display: grid; gap: 3px; padding: 12px; background: #f7f9fc; border: 1px solid var(--bd-soft); border-radius: 8px; }
+.wcal-resolve-grid span { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--mut); }
+.wcal-resolve-grid strong { color: #14213a; }
+.wcal-resolve-grid small { color: var(--mut); font-weight: 400; }
+.wcal-workingdays { display: grid; gap: 10px; }
+.wcal-wd-count { display: flex; align-items: baseline; gap: 12px; padding: 14px; border: 1px solid #c9dcf8; background: var(--br-soft); border-radius: 8px; }
+.wcal-wd-count span { font-size: 11px; text-transform: uppercase; color: var(--mut); }
+.wcal-wd-count strong { font-size: 22px; color: var(--br-ink); font-weight: 800; }
+
+@media (max-width: 900px) {
+  .wcal-band { grid-template-columns: 1fr 1fr; }
+  .wcal-band-lead { grid-column: 1 / -1; }
+  .wcal-toolbar { flex-direction: column; align-items: stretch; }
+  .wcal-toolbar input { min-width: 0; }
+  .wcal-detail-head { flex-direction: column; }
+  .wcal-grid2, .wcal-grid3, .wcal-picker, .wcal-resolve-grid { grid-template-columns: 1fr; }
 }

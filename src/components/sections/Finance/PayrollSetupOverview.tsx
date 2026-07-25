@@ -50,6 +50,7 @@ import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components
 import { EmployeePicker } from './_shared/pickers';
 import { fmtDate, fmtMoney, humanize } from './financeShared';
 import './finance.css';
+import './payroll/setup/payPolicySetup.css'; // shared payroll-setup command-centre design system (.pps-*)
 import { PayPolicySetup } from './payroll/setup/PayPolicySetup';
 import { WorkCalendarSetup } from './payroll/setup/WorkCalendarSetup';
 
@@ -103,6 +104,9 @@ export function PayrollSetupOverview(): VNode {
     ...(canViewCalendar ? [{ key: 'work-calendar' as const, label: 'Work Calendar' }] : []),
   ], [canViewPayroll, canViewCalendar]);
   const [tab, setTab] = useState<SetupTab>(tabs[0]?.key ?? 'pay-policies');
+  // Pay Policies opens a full-page wizard / detail view; hide the module header + tabs
+  // so it reads as its own page (like the mockup) rather than chrome nested in chrome.
+  const [fullPage, setFullPage] = useState(false);
 
   if (!canViewPayroll && !canViewCalendar) {
     return (
@@ -117,19 +121,23 @@ export function PayrollSetupOverview(): VNode {
 
   return (
     <div class="hrfin fin-page">
-      <HrfinPageHeader
-        icon="book"
-        title="Payroll Setup"
-        sub="Governed Pay Policies, Pay Groups, Overtime Rules, And Work Calendars For Local Trinidad And Tobago Payroll."
-      />
+      {!fullPage && (
+        <>
+          <HrfinPageHeader
+            icon="book"
+            title="Payroll Setup"
+            sub="Governed Pay Policies, Pay Groups, Overtime Rules, And Work Calendars For Local Trinidad And Tobago Payroll."
+          />
 
-      <div class="hrfin-tabs" style={{ marginBottom: 14 }}>
-        {tabs.map(t => (
-          <button key={t.key} type="button" class={tab === t.key ? 'is-active' : ''} onClick={() => setTab(t.key)}>{t.label}</button>
-        ))}
-      </div>
+          <div class="hrfin-tabs" style={{ marginBottom: 14 }}>
+            {tabs.map(t => (
+              <button key={t.key} type="button" class={tab === t.key ? 'is-active' : ''} onClick={() => setTab(t.key)}>{t.label}</button>
+            ))}
+          </div>
+        </>
+      )}
 
-      {tab === 'pay-policies' ? <PayPolicySetup />
+      {tab === 'pay-policies' ? <PayPolicySetup onFullPage={setFullPage} />
         : tab === 'pay-groups' ? <PayGroupsPanel />
         : tab === 'overtime-rules' ? <OvertimeRulesPanel />
         : <WorkCalendarSetup />}
@@ -405,64 +413,64 @@ function PayGroupsPanel(): VNode {
   const { rows, pageCount, total } = useMemo(() => paginate(filtered, page), [filtered, page]);
 
   const totalMembers = groups.reduce((s, g) => s + (g.memberCount ?? 0), 0);
-  const weeklyCount  = groups.filter(g => g.frequency === 'weekly' || g.frequency === 'fortnightly').length;
-
-  const quickActions = [
-    ...(canManage ? [{ key: 'new', label: 'New Pay Group', icon: 'plus' as const, variant: 'primary' as const, onClick: () => setShowNew(true) }] : []),
-    { key: 'refresh', label: 'Refresh', icon: 'refresh' as const, onClick: () => { void groupsQ.refetch(); } },
-  ];
-
-  const COLS: HrfinColumn<PayGroup>[] = [
-    { key: 'code',      label: 'Code',       render: g => <strong style={{ fontFamily: 'monospace', fontSize: 12 }}>{g.code}</strong> },
-    { key: 'name',      label: 'Name',       render: g => <span style={{ fontSize: 13 }}>{g.name}</span> },
-    { key: 'frequency', label: 'Frequency',  render: g => <HrfinPill tone="nu">{humanize(g.frequency)}</HrfinPill> },
-    { key: 'payDay',    label: 'Pay day',    render: g => <span style={{ fontSize: 12, color: 'var(--hrfin-text-secondary)' }}>{g.defaultPayDay != null ? `Day ${g.defaultPayDay}` : '—'}</span> },
-    { key: 'cutoff',    label: 'Cut-off',    render: g => <span style={{ fontSize: 12, color: 'var(--hrfin-text-secondary)' }}>{g.defaultCutoffOffsetDays}d before</span> },
-    { key: 'members',   label: 'Members',    render: g => <span style={{ fontSize: 13, textAlign: 'right', display: 'block' }}>{g.memberCount ?? 0}</span> },
-    { key: 'active',    label: 'Status',     render: g => <HrfinPill tone={g.active ? 'ok' : 'bad'}>{g.active ? 'Active' : 'Inactive'}</HrfinPill> },
-  ];
-
-  const rowActions = (g: PayGroup): RowActionItem[] => {
-    const items: RowActionItem[] = [
-      { key: 'members', label: 'Members', icon: 'file', onClick: () => setMembersOf(g) },
-    ];
-    if (canManage) items.push({ key: 'assign', label: 'Assign employee', icon: 'plus', onClick: () => setMembersOf(g) });
-    return items;
-  };
+  const activeCount  = groups.filter(g => g.active).length;
+  const err = groupsQ.isError ? ((groupsQ.error)?.message ?? 'Failed to load pay groups.') : undefined;
 
   return (
-    <>
-      <QuickActionStrip actions={quickActions} />
+    <div class="pps">
+      {/* Pay Groups reads as a card board — deliberately different from the Pay Policies command centre. */}
+      <div class="pps-slim">
+        <div class="lead"><div class="pps-sico">G</div><div><strong>Pay groups</strong><span class="sub">Frequency + population buckets that scope a payroll run.</span></div></div>
+        <div class="chips">
+          <div class="pps-chip"><span>Groups</span><strong>{groups.length}</strong></div>
+          <div class="pps-chip"><span>Employees</span><strong>{totalMembers}</strong></div>
+          <div class="pps-chip"><span>Active</span><strong>{activeCount}</strong></div>
+        </div>
+        <div class="actions">
+          <button type="button" onClick={() => { void groupsQ.refetch(); }}>Refresh</button>
+          {canManage && <button type="button" class="is-primary" onClick={() => setShowNew(true)}>+ New pay group</button>}
+        </div>
+      </div>
 
-      <section class="hrfin-kpi-strip">
-        <KpiCard label="Pay Groups"     value={String(groups.length)}         support={`${groups.filter(g => g.active).length} active`}  loading={groupsQ.isLoading && !groupsQ.data} />
-        <KpiCard label="Assigned Employees" value={String(totalMembers)}        support="across all groups"                                  loading={groupsQ.isLoading && !groupsQ.data} />
-        <KpiCard label="High-Frequency"  value={String(weeklyCount)}            support="weekly / fortnightly"                               loading={groupsQ.isLoading && !groupsQ.data} />
-      </section>
+      <div class="pps-bar">
+        <input aria-label="Search pay groups" value={search} placeholder="Search by code, name or frequency…"
+          onInput={e => { setSearch(e.currentTarget.value); setPage(0); }} />
+        <span>{filtered.length} group{filtered.length === 1 ? '' : 's'}</span>
+      </div>
 
-      <HrfinTable<PayGroup>
-        searchValue={search}
-        onSearch={v => { setSearch(v); setPage(0); }}
-        searchPlaceholder="Search by code, name or frequency…"
-        columns={COLS}
-        rows={rows}
-        rowKey={g => g.id}
-        onRowClick={g => setMembersOf(g)}
-        rowActions={rowActions}
-        page={page}
-        pageCount={pageCount}
-        total={total}
-        pageSize={PAGE_SIZE}
-        onPage={setPage}
-        noun="pay groups"
-        loading={groupsQ.isLoading && !groupsQ.data}
-        error={groupsQ.isError ? ((groupsQ.error)?.message ?? 'Failed to load pay groups.') : undefined}
-        emptyMessage={search ? 'No pay groups match your search.' : 'No pay groups yet. Click New Pay Group to create the first one.'}
-      />
+      {groupsQ.isLoading && !groupsQ.data ? <section class="pps-card"><div class="pps-state">Loading pay groups…</div></section>
+        : err ? <section class="pps-card"><div class="pps-state is-error">{err} <button onClick={() => void groupsQ.refetch()}>Retry</button></div></section>
+        : rows.length === 0 ? <section class="pps-card"><div class="pps-state">{search ? 'No pay groups match your search.' : 'No pay groups yet — create the first one.'}</div></section>
+        : (
+          <div class="pps-ggrid">
+            {rows.map(g => (
+              <button type="button" class="pps-gcard" data-freq={g.frequency} key={g.id} onClick={() => setMembersOf(g)}>
+                <div class="pps-gcard-top">
+                  <span class="pps-glyph">{g.code.replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase() || 'PG'}</span>
+                  <div><strong>{g.name}</strong><small>{g.code}</small></div>
+                  <HrfinPill tone="nu">{humanize(g.frequency)}</HrfinPill>
+                </div>
+                <div class="pps-gstats">
+                  <div class="pps-gstat"><span>Pay day</span><strong>{g.defaultPayDay ?? '—'}</strong></div>
+                  <div class="pps-gstat"><span>Cut-off</span><strong>{g.defaultCutoffOffsetDays}d</strong></div>
+                  <div class="pps-gstat"><span>Members</span><strong>{g.memberCount ?? 0}</strong></div>
+                </div>
+                <div class="pps-gcard-foot"><HrfinPill tone={g.active ? 'ok' : 'bad'}>{g.active ? 'Active' : 'Inactive'}</HrfinPill><span>Open members →</span></div>
+              </button>
+            ))}
+          </div>
+        )}
+
+      {pageCount > 1 && (
+        <div class="pps-footer">
+          <span>{`Showing ${rows.length} of ${total}`}</span>
+          <div><button type="button" disabled={page === 0} onClick={() => setPage(p => Math.max(0, p - 1))}>Previous</button><button type="button" disabled={page + 1 >= pageCount} onClick={() => setPage(p => p + 1)}>Next</button></div>
+        </div>
+      )}
 
       {showNew && <NewPayGroupModal onClose={() => setShowNew(false)} onCreated={() => { setShowNew(false); void groupsQ.refetch(); }} />}
       {membersOf && <PayGroupMembersModal group={membersOf} canManage={canManage} onClose={() => { setMembersOf(null); void groupsQ.refetch(); }} />}
-    </>
+    </div>
   );
 }
 
@@ -704,24 +712,10 @@ function OvertimeRulesPanel(): VNode {
     catch (e) { toast(e instanceof Error ? e.message : 'Action failed.'); }
   };
 
-  const quickActions = [
-    ...(canManage ? [{ key: 'new', label: 'New Rule', icon: 'plus' as const, variant: 'primary' as const, onClick: () => setShowNew(true) }] : []),
-    { key: 'refresh', label: 'Refresh', icon: 'refresh' as const, onClick: () => { void rulesQ.refetch(); } },
-  ];
-
-  const COLS: HrfinColumn<OvertimeRule>[] = [
-    { key: 'code',       label: 'Code',        render: r => <strong style={{ fontFamily: 'monospace', fontSize: 12 }}>{r.code}</strong> },
-    { key: 'type',       label: 'Event type',  render: r => <span style={{ fontSize: 13 }}>{otEventLabel(r.eventType)}</span> },
-    { key: 'multiplier', label: 'Multiplier',  render: r => <span style={{ fontSize: 13, fontWeight: 600, textAlign: 'right', display: 'block' }}>{r.multiplier}×</span> },
-    { key: 'min',        label: 'Min hours',   render: r => <span style={{ fontSize: 12, color: 'var(--hrfin-text-secondary)', textAlign: 'right', display: 'block' }}>{r.minimumHours != null ? `${r.minimumHours}h` : '—'}</span> },
-    { key: 'window',     label: 'Effective',   render: r => <span style={{ fontSize: 12, color: 'var(--hrfin-text-secondary)' }}>{fmtDate(r.effectiveFrom)}{r.effectiveTo ? ` → ${fmtDate(r.effectiveTo)}` : ' →'}</span> },
-    { key: 'active',     label: 'Status',      render: r => <HrfinPill tone={ruleWindowTone(r)}>{r.active ? 'Active' : 'Inactive'}</HrfinPill> },
-  ];
-
-  const rowActions = (r: OvertimeRule): RowActionItem[] =>
-    canManage
-      ? [{ key: 'toggle', label: r.active ? 'Deactivate' : 'Activate', icon: r.active ? 'close' : 'check', onClick: () => void toggleActive(r), tone: r.active ? 'danger' as const : undefined }]
-      : [];
+  const today = todayIso();
+  const coversType = (t: OvertimeEventType): OvertimeRule | undefined => rules
+    .filter(r => r.eventType === t && r.active && r.effectiveFrom <= today && (r.effectiveTo == null || r.effectiveTo >= today))
+    .sort((a, b) => (a.effectiveFrom < b.effectiveFrom ? 1 : -1))[0];
 
   // The finance_overtime_rules table ships with migration 20260918000070. Surface a
   // clear message (not a silent empty) when that migration hasn't been applied yet.
@@ -732,45 +726,70 @@ function OvertimeRulesPanel(): VNode {
     : undefined;
 
   return (
-    <>
-      <QuickActionStrip actions={quickActions} />
-
-      <div style={{
-        margin: '4px 0 12px', padding: '10px 14px', fontSize: 12.5, lineHeight: 1.5,
-        background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)', borderRadius: 8,
-        color: 'var(--hrfin-text-secondary)',
-      }}>
-        <i class="fas fa-circle-info" style={{ marginRight: 6, color: 'var(--hrfin-accent)' }} />
-        Approved overtime is priced by the <strong>active rule for its event type</strong> at lock-inputs time
-        (latest effective-from wins). Overtime without a classified type falls back to the entry’s own multiplier.
+    <div class="pps">
+      {/* Overtime reads as an event-coverage board — the 5 T&T event types are the hero. */}
+      <div class="pps-slim">
+        <div class="lead"><div class="pps-sico">O</div><div><strong>Overtime rules</strong><span class="sub">Approved OT is priced by the active rule for its event type at lock-inputs (latest effective-from wins).</span></div></div>
+        <div class="actions">
+          <button type="button" onClick={() => { void rulesQ.refetch(); }}>Refresh</button>
+          {canManage && <button type="button" class="is-primary" onClick={() => setShowNew(true)}>+ New rule</button>}
+        </div>
       </div>
 
-      <section class="hrfin-kpi-strip">
-        <KpiCard label="Overtime Rules"  value={String(rules.length)}   support={`${activeCount} active`}       loading={rulesQ.isLoading && !rulesQ.data} />
-        <KpiCard label="Covered Types"   value={`${distinctTypes}/5`}   support="event types with an active rule" loading={rulesQ.isLoading && !rulesQ.data} tone={distinctTypes < 5 ? 'danger' : undefined} />
+      <div class="pps-otboard" aria-label="Event-type coverage">
+        {OT_EVENT_TYPES.map(t => {
+          const rule = coversType(t.value);
+          return (
+            <div class="pps-ottile" data-on={rule ? 'true' : 'false'} key={t.value}>
+              <div class="pps-ottile-head"><span class="pps-otdot" /><span>{t.label}</span></div>
+              <div class="pps-otmult">{rule ? `${rule.multiplier}×` : '—'}</div>
+              <div class="pps-otsub">{rule ? 'Active rule' : 'No active rule'} · typical {t.typical}×</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <section class="pps-card">
+        <div class="pps-sechead">
+          <div class="pps-sico">O</div>
+          <div><strong>All overtime rules</strong><span>{activeCount} active · {distinctTypes} of {OT_EVENT_TYPES.length} event types covered</span></div>
+        </div>
+        <div class="pps-toolbar">
+          <input aria-label="Search overtime rules" value={search} placeholder="Search by code or event type…"
+            onInput={e => { setSearch(e.currentTarget.value); setPage(0); }} />
+          <span>{filtered.length} rule{filtered.length === 1 ? '' : 's'}</span>
+        </div>
+        <div class="pps-register" aria-live="polite">
+          {rulesQ.isLoading && !rulesQ.data ? <div class="pps-state">Loading overtime rules…</div>
+            : loadError ? <div class="pps-state is-error">{loadError} <button onClick={() => void rulesQ.refetch()}>Retry</button></div>
+            : rows.length === 0 ? <div class="pps-state">{search ? 'No rules match your search.' : 'No overtime rules yet — add the first one.'}</div>
+            : (
+              <table>
+                <thead><tr><th>Rule</th><th>Event type</th><th class="num">Multiplier</th><th class="num">Min hours</th><th>Effective</th><th>Status</th>{canManage && <th aria-label="Actions" />}</tr></thead>
+                <tbody>{rows.map(r => (
+                  <tr key={r.id}>
+                    <td><div class="pps-pkg"><span class="pps-glyph">{otEventLabel(r.eventType).slice(0, 2).toUpperCase()}</span><div><strong>{r.code}</strong><small>{r.multiplier}× multiplier</small></div></div></td>
+                    <td>{otEventLabel(r.eventType)}</td>
+                    <td class="num" style={{ fontWeight: 600 }}>{r.multiplier}×</td>
+                    <td class="num">{r.minimumHours != null ? `${r.minimumHours}h` : '—'}</td>
+                    <td>{fmtDate(r.effectiveFrom)}{r.effectiveTo ? ` → ${fmtDate(r.effectiveTo)}` : ' →'}</td>
+                    <td><HrfinPill tone={ruleWindowTone(r)}>{r.active ? 'Active' : 'Inactive'}</HrfinPill></td>
+                    {canManage && <td><button type="button" onClick={() => void toggleActive(r)}>{r.active ? 'Deactivate' : 'Activate'}</button></td>}
+                  </tr>
+                ))}</tbody>
+              </table>
+            )}
+        </div>
+        {pageCount > 1 && (
+          <div class="pps-footer">
+            <span>{`Showing ${rows.length} of ${total}`}</span>
+            <div><button type="button" disabled={page === 0} onClick={() => setPage(p => Math.max(0, p - 1))}>Previous</button><button type="button" disabled={page + 1 >= pageCount} onClick={() => setPage(p => p + 1)}>Next</button></div>
+          </div>
+        )}
       </section>
 
-      <HrfinTable<OvertimeRule>
-        searchValue={search}
-        onSearch={v => { setSearch(v); setPage(0); }}
-        searchPlaceholder="Search by code or event type…"
-        columns={COLS}
-        rows={rows}
-        rowKey={r => r.id}
-        rowActions={rowActions}
-        page={page}
-        pageCount={pageCount}
-        total={total}
-        pageSize={PAGE_SIZE}
-        onPage={setPage}
-        noun="overtime rules"
-        loading={rulesQ.isLoading && !rulesQ.data}
-        error={loadError}
-        emptyMessage={search ? 'No rules match your search.' : 'No overtime rules yet. Click New Rule to add one.'}
-      />
-
       {showNew && <NewOvertimeRuleModal onClose={() => setShowNew(false)} onCreated={() => { setShowNew(false); void rulesQ.refetch(); }} />}
-    </>
+    </div>
   );
 }
 

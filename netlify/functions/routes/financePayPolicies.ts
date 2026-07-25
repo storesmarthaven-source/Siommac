@@ -4,7 +4,7 @@ import { requirePermission } from '../lib/auth';
 import { z, zv } from '../lib/validate';
 import {
   activatePayPolicy, assignPayPolicy, comparePayPolicyVersions, copyPayPolicyVersion, createPayPolicyDraft,
-  decodePolicyCursor, endPayPolicyAssignment, getPayPolicy, listPayPolicies, preflightPayPolicy,
+  decodePolicyCursor, endPayPolicyAssignment, getPayPolicy, getPayPolicyOverview, listPayPolicies, preflightPayPolicy,
   rejectPayPolicyReview, retirePayPolicy, submitPayPolicy, updatePayPolicyDraft,
 } from '../lib/finance/payPolicies';
 
@@ -108,6 +108,12 @@ router.post('/payroll/policies/list', async c => {
   }).strict(), body(c));
   if (!v.ok) return v.response;
   try { return c.json({ success: true, data: await listPayPolicies({ ...v.data, limit: v.data.limit ?? 25, offset: decodePolicyCursor(v.data.cursor) }) }); }
+  catch (e) { return fail(c, e); }
+});
+
+router.post('/payroll/policies/overview', async c => {
+  await requirePermission(c, 'finance.payroll.policies.view');
+  try { return c.json({ success: true, data: await getPayPolicyOverview() }); }
   catch (e) { return fail(c, e); }
 });
 

@@ -82,6 +82,8 @@
 .pps-review p { grid-column: 1/-1; font-size: 12px; line-height: 1.5; }
 
 /* Detail view */
+.pps-detail { display: grid; gap: 14px; }
+.pps-acts { display: grid; }
 .pps-detail-head h2 { margin: 5px 0 0; }
 .pps-position { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--bd); border-radius: var(--radius); background: #fff; box-shadow: var(--shadow); }
 .pps-position > div { display: grid; gap: 5px; padding: 15px; border-right: 1px solid var(--bd-soft); }
@@ -97,6 +99,156 @@
 .pps-composition b { grid-row: 1/3; background: var(--br-soft); color: var(--br); border-radius: 50%; width: 28px; height: 28px; display: grid; place-items: center; font-weight: 800; }
 .pps-composition span { font-size: 11px; color: var(--mut); }
 
+/* ── Command centre (crew-packages.html) ──────────────────────────────────── */
+
+/* Command band — dark navy shell, configuration position + facts */
+.pps-band { display: grid; grid-template-columns: minmax(240px, 1.5fr) repeat(5, minmax(96px, .7fr)); align-items: center; gap: 14px; background: #101b33; color: #fff; border-radius: var(--radius); padding: 18px 22px; }
+.pps-band-lead span { font-size: 9px; text-transform: uppercase; letter-spacing: .1em; color: #9eb1ce; font-weight: 800; }
+.pps-band-lead h2 { font-size: 18px; margin: 6px 0 0; font-weight: 800; }
+.pps-fact span, .pps-fact strong { display: block; }
+.pps-fact span { font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: #9eb1ce; }
+.pps-fact strong { font-size: 12.5px; margin-top: 5px; font-weight: 700; }
+
+/* Metric row */
+.pps-metrics { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px 22px; background: var(--card); border: 1px solid var(--bd); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 20px; }
+.pps-metric { display: flex; align-items: center; gap: 11px; min-width: 168px; flex: 1; }
+.pps-mico { width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center; flex-shrink: 0; font-weight: 800; font-size: 14px; }
+.pps-mico.blue { background: var(--br-soft); color: var(--br); }
+.pps-mico.green { background: var(--gn-soft); color: var(--gn); }
+.pps-mico.amber { background: var(--am-soft); color: var(--am); }
+.pps-metric .k { font-size: 11px; color: var(--mut); font-weight: 600; }
+.pps-metric .v { font-size: 16px; font-weight: 800; color: #101b33; margin-top: 1px; }
+.pps-metric .s { font-size: 10.5px; color: var(--mut2); margin-top: 1px; }
+
+/* Activation-blocked banner */
+.pps-banner { display: flex; align-items: center; gap: 18px; background: var(--rd-soft); border: 1px solid #f4cfcd; border-radius: var(--radius); padding: 18px 22px; }
+.pps-bico { width: 44px; height: 44px; border-radius: 11px; background: var(--rd); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 20px; flex-shrink: 0; }
+.pps-btext { min-width: 0; }
+.pps-beyebrow { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; color: var(--rd); }
+.pps-btitle { font-size: 15px; font-weight: 800; color: #101b33; margin-top: 3px; }
+.pps-bsub { font-size: 12.5px; color: #8d6360; margin-top: 3px; }
+.pps-bbtns { margin-left: auto; flex-shrink: 0; }
+.pps-bmeta { flex-shrink: 0; text-align: right; border-left: 1px solid #f4cfcd; padding-left: 16px; }
+.pps-bmeta .k { font-size: 10px; font-weight: 700; letter-spacing: .05em; color: #8d6360; }
+.pps-bmeta .v { font-size: 12.5px; font-weight: 800; margin-top: 2px; color: #101b33; }
+
+/* Section grid */
+.pps-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(300px, .82fr); gap: 16px; align-items: start; }
+.pps-col { display: grid; gap: 16px; min-width: 0; }
+
+/* Card + section head */
+.pps-card { background: var(--card); border: 1px solid var(--bd); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.pps-sechead { display: flex; align-items: center; gap: 13px; padding: 15px 20px; border-bottom: 1px solid var(--bd-soft); }
+.pps-sechead--plain { padding: 15px 18px; }
+.pps-sico { width: 36px; height: 36px; border-radius: 9px; background: var(--br-soft); color: var(--br); display: grid; place-items: center; font-weight: 800; flex-shrink: 0; }
+.pps-sechead > div:not(.pps-sico):not(.aux) { min-width: 0; }
+.pps-sechead strong { display: block; color: #101b33; font-size: 14px; font-weight: 700; }
+.pps-sechead span { font-size: 11.5px; color: var(--mut); }
+.pps-sechead .aux { margin-left: auto; display: flex; gap: 8px; flex-shrink: 0; }
+
+/* Directory table living inside a card — strip its own chrome */
+.pps-card .pps-tabs { padding: 0 20px; gap: 22px; }
+.pps-card .pps-toolbar { padding: 12px 20px; border-bottom: 1px solid var(--bd-soft); }
+.pps-card .pps-register { border: 0; border-radius: 0; box-shadow: none; }
+.pps-card .pps-footer { padding: 12px 20px; }
+.pps-row { cursor: pointer; }
+.pps th.num, .pps td.num { text-align: right; }
+.pps-pkg { display: flex; align-items: center; gap: 11px; min-width: 200px; }
+.pps-glyph { width: 34px; height: 34px; border-radius: 8px; background: var(--br-soft); color: var(--br); display: grid; place-items: center; font-size: 11px; font-weight: 800; flex: 0 0 auto; }
+.pps-pkg small { margin-top: 2px; }
+.pps-card .pps-composition { padding: 16px; }
+
+/* Sidebar — integrity summary rows */
+.pps-summary { padding: 4px 18px; }
+.pps-srow { display: flex; justify-content: space-between; gap: 14px; align-items: center; min-height: 44px; border-bottom: 1px solid var(--bd-soft); }
+.pps-srow:last-child { border-bottom: 0; }
+.pps-srow span { font-size: 11.5px; color: var(--mut); }
+.pps-srow strong { font-size: 12px; text-align: right; }
+
+/* Sidebar — upcoming (attention) rows */
+.pps-attention { display: grid; }
+.pps-arow { display: flex; align-items: flex-start; gap: 11px; padding: 12px 18px; border-bottom: 1px solid var(--bd-soft); border-radius: 0; background: transparent; text-align: left; width: 100%; }
+.pps-arow:last-child { border-bottom: 0; }
+.pps-arow:hover { background: #fafcff; }
+.pps-signal { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.pps-signal.blue { background: var(--br); }
+.pps-signal.amber { background: var(--am); }
+.pps-signal.red { background: var(--rd); }
+.pps-acopy { min-width: 0; flex: 1; }
+.pps-acopy strong { display: block; font-size: 12.5px; color: #14213a; }
+.pps-acopy small { display: block; font-size: 11px; color: var(--mut); margin-top: 2px; }
+.pps-ameta { font-size: 11px; color: var(--mut2); font-weight: 600; flex-shrink: 0; }
+
+/* Sidebar — recent activity */
+.pps-act { display: flex; align-items: flex-start; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--bd-soft); }
+.pps-act:last-child { border-bottom: 0; }
+.pps-adot { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; margin-top: 1px; }
+.pps-adot.blue { background: var(--br); }
+.pps-adot.green { background: var(--gn); }
+.pps-adot.amber { background: var(--am); }
+.pps-adot.red { background: var(--rd); }
+.pps-at { font-size: 12.5px; font-weight: 650; color: #14213a; }
+.pps-as { font-size: 11px; color: var(--mut); margin-top: 2px; }
+.pps-am { margin-left: auto; font-size: 11px; color: var(--mut2); flex-shrink: 0; }
+
+/* ── Distinct per-page layouts (Pay Groups card board / Overtime event board) ──── */
+
+/* Slim page header shared by the non-command-centre tabs (visually lighter than the
+   navy band so each Setup page reads differently). */
+.pps-slim { display: flex; align-items: center; gap: 14px; background: var(--card); border: 1px solid var(--bd); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 20px; flex-wrap: wrap; }
+.pps-slim > .lead { display: flex; align-items: center; gap: 13px; min-width: 0; }
+.pps-slim .pps-sico { width: 40px; height: 40px; border-radius: 10px; font-size: 15px; }
+.pps-slim strong { display: block; font-size: 16px; color: #101b33; font-weight: 800; }
+.pps-slim span.sub { font-size: 12px; color: var(--mut); }
+.pps-slim .chips { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; }
+.pps-slim .actions { display: flex; gap: 8px; }
+.pps-slim .chips + .actions { margin-left: 14px; }
+.pps-chip { display: grid; gap: 2px; padding: 6px 14px; background: #f7f9fc; border: 1px solid var(--bd-soft); border-radius: 9px; text-align: center; }
+.pps-chip span { font-size: 9.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--mut); }
+.pps-chip strong { font-size: 16px; font-weight: 800; color: #101b33; }
+
+.pps-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.pps-bar input { min-width: 300px; flex: 0 1 340px; padding: 10px 12px; border: 1px solid #dce2eb; border-radius: 9px; background: #fff; color: var(--ink); }
+.pps-bar input:focus { outline: none; border-color: var(--br); box-shadow: 0 0 0 3px var(--br-soft); }
+.pps-bar > span { font-size: 12px; color: var(--mut); }
+
+/* Pay Groups — responsive card board with a frequency-coloured left accent */
+.pps-ggrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.pps-gcard { text-align: left; background: var(--card); border: 1px solid var(--bd); border-left: 4px solid var(--mut2); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; display: grid; gap: 14px; cursor: pointer; }
+.pps-gcard:hover { border-color: #aebbd0; box-shadow: 0 2px 8px rgba(15,23,42,.08); }
+.pps-gcard[data-freq="weekly"], .pps-gcard[data-freq="fortnightly"] { border-left-color: var(--am); }
+.pps-gcard[data-freq="monthly"], .pps-gcard[data-freq="semi_monthly"] { border-left-color: var(--br); }
+.pps-gcard-top { display: flex; align-items: center; gap: 11px; }
+.pps-gcard-top > div { min-width: 0; flex: 1; }
+.pps-gcard-top strong { display: block; font-size: 14px; color: #14213a; font-weight: 700; }
+.pps-gcard-top small { display: block; font-size: 11px; color: var(--mut); margin-top: 2px; }
+.pps-gstats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; border-top: 1px solid var(--bd-soft); border-bottom: 1px solid var(--bd-soft); padding: 12px 0; }
+.pps-gstat { display: grid; gap: 3px; text-align: center; }
+.pps-gstat span { font-size: 9.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--mut); }
+.pps-gstat strong { font-size: 15px; font-weight: 800; color: #101b33; }
+.pps-gcard-foot { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--mut); }
+
+/* Overtime Rules — event-type tile board is the hero, rules list beneath */
+.pps-otboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.pps-ottile { background: var(--card); border: 1px solid var(--bd); border-radius: var(--radius); box-shadow: var(--shadow); padding: 15px 16px; display: grid; gap: 6px; }
+.pps-ottile[data-on="true"] { border-top: 3px solid var(--gn); }
+.pps-ottile[data-on="false"] { border-top: 3px solid var(--rd); }
+.pps-ottile-head { display: flex; align-items: center; gap: 8px; }
+.pps-otdot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.pps-ottile[data-on="true"] .pps-otdot { background: var(--gn); }
+.pps-ottile[data-on="false"] .pps-otdot { background: var(--rd); }
+.pps-ottile-head span { font-size: 12px; font-weight: 700; color: #14213a; }
+.pps-otmult { font-size: 26px; font-weight: 800; color: #101b33; line-height: 1; }
+.pps-ottile[data-on="false"] .pps-otmult { color: var(--mut2); }
+.pps-otsub { font-size: 10.5px; color: var(--mut); }
+
+@media (max-width: 1080px) {
+  .pps-grid { grid-template-columns: minmax(0, 1fr); }
+  .pps-band { grid-template-columns: 1fr 1fr 1fr; }
+  .pps-band-lead { grid-column: 1 / -1; }
+  .pps-metrics { overflow-x: auto; }
+  .pps-slim .chips { margin-left: 0; width: 100%; }
+}
 @media (max-width: 850px) {
   .pps-actions, .pps-detail-head { align-items: stretch; flex-direction: column; }
   .pps-toolbar { gap: 8px; align-items: stretch; flex-direction: column; }
@@ -104,4 +256,8 @@
   .pps-position, .pps-composition, .pps-review { grid-template-columns: 1fr; }
   .pps-source { grid-template-columns: 1fr; }
   .pps-review p { grid-column: auto; }
+  .pps-band { grid-template-columns: 1fr 1fr; }
+  .pps-banner { flex-wrap: wrap; }
+  .pps-bbtns { margin-left: 0; }
+  .pps-bmeta { border-left: 0; padding-left: 0; text-align: left; }
 }

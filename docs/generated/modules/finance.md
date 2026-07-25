@@ -2,9 +2,9 @@
 
 # finance Module Map
 
-Source fingerprint: `974efe13911ba93da7c41ed0`
+Source fingerprint: `9282345b80b47542f2a80707`
 
-Files: 138 | Symbols: 1840 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
+Files: 138 | Symbols: 1851 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
 ## Widgets and Tiles
 
@@ -302,9 +302,10 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useApprovalsQueue` | function / hook | `src/api/finance/overview.ts:130` | `-` |
 | `useActOnApproval` | function / hook | `src/api/finance/overview.ts:146` | `-` |
 | `useSpendBudgetSeries` | function / hook | `src/api/finance/overview.ts:170` | `-` |
-| `usePayPolicies` | function / hook | `src/api/finance/payPolicies.ts:56` | `-` |
-| `usePayPolicy` | function / hook | `src/api/finance/payPolicies.ts:59` | `-` |
-| `usePayPolicyMutation` | function / hook | `src/api/finance/payPolicies.ts:65` | `-` |
+| `usePayPolicies` | function / hook | `src/api/finance/payPolicies.ts:57` | `-` |
+| `usePayPolicyOverview` | function / hook | `src/api/finance/payPolicies.ts:60` | `-` |
+| `usePayPolicy` | function / hook | `src/api/finance/payPolicies.ts:66` | `-` |
+| `usePayPolicyMutation` | function / hook | `src/api/finance/payPolicies.ts:72` | `-` |
 | `useGlAccounts` | function / hook | `src/api/finance/pickers.ts:64` | `-` |
 | `useCostCentres` | function / hook | `src/api/finance/pickers.ts:74` | `-` |
 | `useTaxCodes` | function / hook | `src/api/finance/pickers.ts:84` | `-` |
@@ -356,8 +357,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `IconChevronLeft` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:36` | `-` |
 | `IconChevronLeftBadge` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:38` | `-` |
 | `IconCoins` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:44` | `-` |
-| `IconBook` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:45` | `-` |
-| ... | 80 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 81 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -487,7 +487,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/financeLookups.ts` | 108 |
 | backend-route | `netlify/functions/routes/financeNis.ts` | 109 |
 | backend-route | `netlify/functions/routes/financeOverview.ts` | 124 |
-| backend-route | `netlify/functions/routes/financePayPolicies.ts` | 267 |
+| backend-route | `netlify/functions/routes/financePayPolicies.ts` | 273 |
 | backend-route | `netlify/functions/routes/financePickers.ts` | 81 |
 | backend-route | `netlify/functions/routes/financeRemittances.ts` | 324 |
 | backend-route | `netlify/functions/routes/financeStatutory.ts` | 435 |
@@ -511,7 +511,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/finance/keys.ts` | 160 |
 | frontend-api | `src/api/finance/lookups.ts` | 181 |
 | frontend-api | `src/api/finance/overview.ts` | 178 |
-| frontend-api | `src/api/finance/payPolicies.ts` | 72 |
+| frontend-api | `src/api/finance/payPolicies.ts` | 79 |
 | frontend-api | `src/api/finance/pickers.ts` | 112 |
 | frontend-api | `src/api/finance/remittances.ts` | 279 |
 | frontend-api | `src/api/finance/statutory.ts` | 325 |

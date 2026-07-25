@@ -86,10 +86,10 @@ export default async function run(h) {
   });
 
   const paths = [
-    'list', 'get', 'create-draft', 'update-draft', 'copy-version', 'preflight', 'submit', 'activate', 'reject', 'retire',
+    'list', 'overview', 'get', 'create-draft', 'update-draft', 'copy-version', 'preflight', 'submit', 'activate', 'reject', 'retire',
     'versions/list', 'versions/get', 'versions/compare', 'pay-groups/list', 'pay-groups/assign', 'pay-groups/end-assignment',
   ];
-  await test('all 16 endpoints require authentication and deny a real employee', async () => {
+  await test('all 17 endpoints require authentication and deny a real employee', async () => {
     for (const path of paths) {
       const unauth = await api(`finance/payroll/policies/${path}`, null, {});
       expect(unauth.status === 401, `${path}: expected 401, got ${unauth.status}`);
@@ -100,11 +100,37 @@ export default async function run(h) {
 
   h.section('Pay Policies - Draft, validation and idempotency');
   const createKey = `${TAG}:pps:create`;
-  await test('strict create rejects unknown fields and unsupported Phase B type', async () => {
+  await test('strict create rejects unknown fields and Phase B types without an engine', async () => {
     const unknown = await api('finance/payroll/policies/create-draft', T.preparer, { ...draft(), idempotencyKey: uuid(), ignored: true });
     fails(unknown, 'unknown field must fail'); expect(unknown.status === 400, 'unknown field must be 400');
-    const crew = await api('finance/payroll/policies/create-draft', T.preparer, { ...draft(), policyType: 'offshore_rotation', idempotencyKey: uuid() });
-    fails(crew, 'Phase B policy type must fail'); expect(crew.status === 400, 'Phase B type must be 400');
+    // 'project' / 'standby_callout' have no calc engine yet — still rejected at the boundary.
+    const unsupported = await api('finance/payroll/policies/create-draft', T.preparer, { ...draft(), policyType: 'project', idempotencyKey: uuid() });
+    fails(unsupported, 'unsupported Phase B type must fail'); expect(unsupported.status === 400, 'unsupported type must be 400');
+  });
+  await test('crew day-rate policy authors and validates the per-qualifying-day shape (F-01)', async () => {
+    const crewKey = `${TAG}:pps:crew`;
+    const crewComponent = { componentId, calculationBasis: 'per_qualifying_day', rateSource: 'employee_contract', eligibilitySource: 'crew_movement', ruleParameters: {}, required: true, sortOrder: 0 };
+    const crew = await api('finance/payroll/policies/create-draft', T.preparer, {
+      ...draft(), code: `${code}C`, name: `Offshore 14/14 ${TAG}`, policyType: 'offshore_rotation', dayBoundary: 'shift_start',
+      components: [crewComponent], idempotencyKey: crewKey,
+    });
+    ok(crew, `crew create failed: ${crew.body.message}`);
+    exactKeys(crew.body.data, ['policyId', 'versionId', 'lockVersion', 'status'], 'crew create');
+    const crewPolicyId = crew.body.data.policyId;
+    // Negative: a qualifying-day binding with the wrong eligibility source is rejected at the boundary.
+    const bad = await api('finance/payroll/policies/create-draft', T.preparer, {
+      ...draft(), code: `${code}X`, policyType: 'offshore_rotation',
+      components: [{ ...crewComponent, eligibilitySource: 'approved_time' }], idempotencyKey: uuid(),
+    });
+    fails(bad); expect(bad.status === 400, 'qualifying-day with wrong eligibility must be 400');
+    // The crew draft persisted the exact engine shape.
+    const bound = await sb.from('finance_pay_policy_components').select('calculation_basis,eligibility_source,rate_source').eq('policy_version_id', crew.body.data.versionId).single();
+    expect(!bound.error && bound.data.calculation_basis === 'per_qualifying_day' && bound.data.eligibility_source === 'crew_movement', 'crew component must persist the day-rate engine shape');
+    // Self-contained cleanup so the primary policy fixture is unaffected.
+    await sb.from('finance_pay_policy_command_receipts').delete().eq('policy_id', crewPolicyId);
+    await sb.from('app_events').delete().eq('source_module', 'finance_pay_policy').eq('source_entity_id', crewPolicyId);
+    await sb.from('hr_audit_log').delete().eq('submodule_key', 'finance_pay_policy').eq('record_id', crewPolicyId);
+    await sb.from('finance_pay_policies').delete().eq('id', crewPolicyId);
   });
   await test('create draft returns exact shape and exact business side effects', async () => {
     const r = await api('finance/payroll/policies/create-draft', T.preparer, { ...draft(), idempotencyKey: createKey });
@@ -154,6 +180,18 @@ export default async function run(h) {
     ok(await api('finance/payroll/policies/versions/get', T.preparer, { policyId: ids.policy, versionId: ids.version }));
     ok(await api('finance/payroll/policies/versions/compare', T.preparer, { policyId: ids.policy, fromVersionId: ids.version, toVersionId: ids.version }));
     ok(await api('finance/payroll/policies/pay-groups/list', T.preparer, { policyId: ids.policy }));
+  });
+  await test('setup overview returns the exact command-centre contract derived from live data', async () => {
+    const r = await api('finance/payroll/policies/overview', T.preparer, {});
+    ok(r, `overview failed: ${r.body.message}`);
+    const o = r.body.data;
+    exactKeys(o, ['generatedAt', 'band', 'metrics', 'banner', 'integrity', 'upcoming', 'activity'], 'overview');
+    exactKeys(o.band, ['configuredPolicies', 'coveredEmployees', 'payGroupsAssigned', 'draftVersions', 'nextEffectiveDate', 'integrityFindings'], 'overview.band');
+    exactKeys(o.metrics, ['activePolicies', 'retiringPolicies', 'pendingVersions', 'assignedEmployees', 'workPatterns', 'workPatternLabels', 'setupFindings', 'versionsThisYear', 'blockingFindings'], 'overview.metrics');
+    expect(o.band.configuredPolicies >= 1, 'our in-review draft must count toward configured policies');
+    expect(o.band.draftVersions >= 1, 'our draft version must count as in-review');
+    expect(Array.isArray(o.integrity) && o.integrity.length === 4, 'integrity must expose the four governed check rows');
+    expect(o.activity.every(a => 'id' in a && 'tone' in a && 'label' in a && 'occurredAt' in a), 'each activity row carries the render contract');
   });
   await test('preflight returns exact proof and submit creates one central workflow', async () => {
     const pf = await api('finance/payroll/policies/preflight', T.preparer, { versionId: ids.version });

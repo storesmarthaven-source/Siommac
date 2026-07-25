@@ -70,6 +70,12 @@ export function WorkCalendarSetup(): VNode {
   }
   return (
     <div class="wcal">
+      <section class="wcal-band" aria-label="Work calendar governance">
+        <div class="wcal-band-lead"><span>Work calendar governance</span><h2>Shared working-day evidence</h2></div>
+        <div class="wcal-fact"><span>Timezone</span><strong>{DEFAULT_TZ}</strong></div>
+        <div class="wcal-fact"><span>Sections</span><strong>{SUBTABS.length} governed</strong></div>
+        <div class="wcal-fact"><span>Feeds</span><strong>Payroll working days</strong></div>
+      </section>
       <nav class="wcal-subtabs" role="tablist" aria-label="Work Calendar Sections">
         {SUBTABS.map(t => (
           <button key={t.key} type="button" role="tab" aria-selected={tab === t.key}

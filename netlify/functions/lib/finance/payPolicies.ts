@@ -3,7 +3,8 @@ import { sb } from '../db';
 import { decideTask, rpcHttpError } from '../workflow/service';
 import type { AppUser } from '../../../../types/db';
 import type {
-  PayPolicyDraftInput, PayPolicyPreflight, PayPolicySummary, PayPolicyVersionDto, PayPolicyWorkspace,
+  PayPolicyDraftInput, PayPolicyOverview, PayPolicyPreflight, PayPolicySummary,
+  PayPolicyVersionDto, PayPolicyWorkspace,
 } from '../../../../types/payrollPayPolicies';
 
 type Row = Record<string, unknown>;
@@ -97,6 +98,198 @@ export async function listPayPolicies(input: { search?: string; status?: string;
   const total = count ?? items.length;
   const next = input.offset + items.length < total ? Buffer.from(String(input.offset + items.length)).toString('base64url') : null;
   return { items, total, nextCursor: next };
+}
+
+const POLICY_TYPE_LABEL: Record<string, string> = {
+  standard_salary: 'Standard salaried', hourly_shift: 'Hourly / shift',
+  offshore_rotation: 'Offshore rotation', marine_voyage: 'Marine / voyage',
+};
+const IN_REVIEW = new Set(['draft', 'pending_approval', 'approved']);
+const OVERVIEW_PREFLIGHT_CAP = 50;
+
+const humanizeEvent = (eventType: string): string =>
+  eventType.replace(/^finance\.payroll\.policy\./, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+function eventTone(eventType: string): 'blue' | 'amber' | 'green' | 'red' {
+  if (/activated|assigned/.test(eventType)) return 'green';
+  if (/retired|assignment_ended|reject/.test(eventType)) return 'red';
+  if (/submitted|pending/.test(eventType)) return 'amber';
+  return 'blue';
+}
+
+// Command-center read model behind the Pay Policies dashboard. Every figure is derived
+// from the live policy / version / assignment / member / event tables plus real preflight
+// over the in-review versions — never static or faked (No-Band-Aids).
+export async function getPayPolicyOverview(): Promise<PayPolicyOverview> {
+  const today = new Date().toISOString().slice(0, 10);
+  const yearStart = `${today.slice(0, 4)}-01-01`;
+
+  const [polRes, verRes, asgRes] = await Promise.all([
+    sb.from('finance_pay_policies').select('*'),
+    sb.from('finance_pay_policy_versions').select('*').order('version_no', { ascending: false }),
+    sb.from('finance_pay_group_policy_assignments').select('policy_id,pay_group_id,status').eq('status', 'active'),
+  ]);
+  for (const [label, r] of [['policies', polRes], ['versions', verRes], ['assignments', asgRes]] as const) {
+    if (r.error) throw Object.assign(new Error(`getPayPolicyOverview ${label}: ${r.error.message}`), { status: 500 });
+  }
+  const policies = (polRes.data ?? []) as Row[];
+  const versions = (verRes.data ?? []) as Row[];
+  const assignments = (asgRes.data ?? []) as Row[];
+  const policyById = new Map(policies.map(p => [asText(p.id), p]));
+  const versionsByPolicy = new Map<string, Row[]>();
+  for (const v of versions) versionsByPolicy.set(asText(v.policy_id), [...(versionsByPolicy.get(asText(v.policy_id)) ?? []), v]);
+
+  // Covered / assigned employees = distinct active members of pay groups with an active policy assignment.
+  const activeGroupIds = [...new Set(assignments.map(a => asText(a.pay_group_id)))];
+  const memRes = activeGroupIds.length
+    ? await sb.from('finance_employee_pay_group_assignments').select('pay_group_id,employee_id,effective_from,effective_to').in('pay_group_id', activeGroupIds)
+    : { data: [], error: null };
+  if (memRes.error) throw Object.assign(new Error(`getPayPolicyOverview members: ${memRes.error.message}`), { status: 500 });
+  const coveredEmployeeIds = new Set<string>();
+  for (const m of (memRes.data ?? []) as Row[]) {
+    if (asText(m.effective_from) > today) continue;
+    if (m.effective_to && asText(m.effective_to) < today) continue;
+    coveredEmployeeIds.add(asText(m.employee_id));
+  }
+  const coveredEmployees = coveredEmployeeIds.size;
+
+  const activePolicies = policies.filter(p => asText(p.status) === 'active');
+  const nonRetired = policies.filter(p => asText(p.status) !== 'retired');
+  const workPatternLabels = [...new Set(activePolicies.map(p => POLICY_TYPE_LABEL[asText(p.policy_type)] ?? asText(p.policy_type)))];
+
+  // Current active version of each active policy — used for scheduled-retirement detection.
+  const currentActiveVersion = (policyId: string): Row | undefined =>
+    (versionsByPolicy.get(policyId) ?? []).find(v => asText(v.status) === 'active');
+  const retiringPolicies = activePolicies.filter(p => {
+    const cur = currentActiveVersion(asText(p.id));
+    return cur?.effective_to && asText(cur.effective_to) >= today;
+  });
+
+  // In-review versions drive the integrity panel + activation banner via real preflight.
+  const inReview = versions.filter(v => IN_REVIEW.has(asText(v.status)));
+  const pendingVersions = versions.filter(v => ['pending_approval', 'approved'].includes(asText(v.status))).length;
+  const versionsThisYear = versions.filter(v => asText(v.created_at).slice(0, 10) >= yearStart).length;
+
+  const preflights = (await Promise.all(inReview.slice(0, OVERVIEW_PREFLIGHT_CAP).map(async v => {
+    try { return { version: v, pf: await preflightPayPolicy(asText(v.id)) }; }
+    catch { return null; }
+  }))).filter((x): x is { version: Row; pf: PayPolicyPreflight } => x !== null);
+
+  const totalBlockers = preflights.reduce((s, x) => s + x.pf.blockers.length, 0);
+  const blockedVersions = preflights.filter(x => x.pf.blockers.length > 0);
+  const hasBlockerCode = (pf: PayPolicyPreflight, prefix: string): boolean => pf.blockers.some(b => b.code.startsWith(prefix));
+  const versionsWith = (prefixes: string[]): number =>
+    preflights.filter(x => prefixes.some(p => hasBlockerCode(x.pf, p))).length;
+  const integrityRow = (code: string, label: string, prefixes: string[]): PayPolicyOverview['integrity'][number] => {
+    if (!preflights.length) return { code, label, value: 'No pending versions', tone: 'ok' };
+    const affected = versionsWith(prefixes);
+    return affected === 0
+      ? { code, label, value: `${preflights.length} of ${preflights.length} valid`, tone: 'ok' }
+      : { code, label, value: `${affected} need attention`, tone: 'danger' };
+  };
+  const integrity: PayPolicyOverview['integrity'] = [
+    integrityRow('components', 'Component bindings', ['component.', 'components.', 'earnings.']),
+    integrityRow('statutory', 'Statutory mappings', ['statutory.', 'source.statutory_profile']),
+    integrityRow('sources', 'Source ownership', ['source.payment_destination', 'source.approved_time']),
+    integrityRow('costing', 'Cost & GL dimensions', ['costing.']),
+  ];
+
+  // Activation banner: the first in-review version that cannot activate.
+  const owners = [...new Set(policies.map(p => asText(p.owner_id)).filter(Boolean))];
+  const actorIds = new Set<string>();
+  // Recent cross-policy activity feed.
+  const evRes = policies.length
+    ? await sb.from('app_events').select('id,event_type,actor_user_id,created_at,payload')
+        .eq('source_module', 'finance_pay_policy').order('created_at', { ascending: false }).limit(12)
+    : { data: [], error: null };
+  if (evRes.error) throw Object.assign(new Error(`getPayPolicyOverview events: ${evRes.error.message}`), { status: 500 });
+  for (const e of (evRes.data ?? []) as Row[]) if (e.actor_user_id) actorIds.add(asText(e.actor_user_id));
+  const nameIds = [...new Set([...owners, ...actorIds])];
+  const nameRes = nameIds.length ? await sb.from('app_users').select('id,full_name,username').in('id', nameIds) : { data: [], error: null };
+  if (nameRes.error) throw Object.assign(new Error(`getPayPolicyOverview names: ${nameRes.error.message}`), { status: 500 });
+  const nameOf = new Map(((nameRes.data ?? []) as Row[]).map(u => [asText(u.id), asText(u.full_name) || asText(u.username) || asText(u.id)]));
+
+  let banner: PayPolicyOverview['banner'] = null;
+  const firstBlocked = blockedVersions[0];
+  if (firstBlocked) {
+    const p = policyById.get(asText(firstBlocked.version.policy_id));
+    const firstBlocker = firstBlocked.pf.blockers[0];
+    banner = {
+      policyId: asText(firstBlocked.version.policy_id),
+      policyCode: asText(p?.code), policyName: asText(p?.name),
+      versionId: asText(firstBlocked.version.id), versionNo: Number(firstBlocked.version.version_no),
+      ownerLabel: (p && asText(p.owner_id) && nameOf.get(asText(p.owner_id))) || 'Unassigned',
+      title: `${asText(p?.name)} v${Number(firstBlocked.version.version_no)} cannot activate`,
+      detail: firstBlocker?.message ?? 'Configuration blockers must be resolved before activation.',
+    };
+  }
+
+  // Upcoming changes: future-effective in-review versions + scheduled retirements.
+  const upcoming: PayPolicyOverview['upcoming'] = [];
+  for (const v of inReview) {
+    const p = policyById.get(asText(v.policy_id));
+    const status = asText(v.status);
+    const eff = asText(v.effective_from);
+    upcoming.push({
+      policyId: asText(v.policy_id),
+      tone: status === 'draft' ? 'blue' : 'amber',
+      title: `${asText(p?.name)} v${Number(v.version_no)}`,
+      detail: asText(v.change_summary) || (status === 'draft' ? 'Draft in preparation.' : 'Awaiting approval.'),
+      meta: eff >= today ? eff : status === 'draft' ? 'Draft' : 'Review',
+    });
+  }
+  for (const p of retiringPolicies) {
+    const cur = currentActiveVersion(asText(p.id));
+    upcoming.push({
+      policyId: asText(p.id), tone: 'red',
+      title: `${asText(p.name)} retirement`,
+      detail: 'Policy has a scheduled effective-to date.',
+      meta: asText(cur?.effective_to),
+    });
+  }
+  upcoming.sort((a, b) => (a.meta < b.meta ? -1 : a.meta > b.meta ? 1 : 0));
+
+  const activity: PayPolicyOverview['activity'] = ((evRes.data ?? []) as Row[]).map(e => {
+    const payload = (e.payload ?? {}) as Record<string, unknown>;
+    const policyId = asText(payload.policyId) || asText(payload.policy_id);
+    const p = policyId ? policyById.get(policyId) : undefined;
+    return {
+      id: asText(e.id), tone: eventTone(asText(e.event_type)),
+      label: humanizeEvent(asText(e.event_type)),
+      detail: [p ? asText(p.name) : null, e.actor_user_id ? nameOf.get(asText(e.actor_user_id)) : 'System'].filter(Boolean).join(' · '),
+      occurredAt: asText(e.created_at),
+    };
+  });
+
+  const nextEffectiveDate = inReview
+    .map(v => asText(v.effective_from)).filter(d => d >= today).sort()[0] ?? null;
+
+  return {
+    generatedAt: new Date().toISOString(),
+    band: {
+      configuredPolicies: nonRetired.length,
+      coveredEmployees,
+      payGroupsAssigned: activeGroupIds.length,
+      draftVersions: inReview.length,
+      nextEffectiveDate,
+      integrityFindings: totalBlockers,
+    },
+    metrics: {
+      activePolicies: activePolicies.length,
+      retiringPolicies: retiringPolicies.length,
+      pendingVersions,
+      assignedEmployees: coveredEmployees,
+      workPatterns: workPatternLabels.length,
+      workPatternLabels,
+      setupFindings: blockedVersions.length,
+      blockingFindings: blockedVersions.filter(x => !x.pf.ready).length,
+      versionsThisYear,
+    },
+    banner,
+    integrity,
+    upcoming: upcoming.slice(0, 8),
+    activity,
+  };
 }
 
 export function decodePolicyCursor(cursor?: string): number {

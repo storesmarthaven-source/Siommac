@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/preact-query';
 import { apiPost } from '@lib/api';
 import type {
-  PayPolicyDraftInput, PayPolicyPreflight, PayPolicySummary, PayPolicyWorkspace,
+  PayPolicyDraftInput, PayPolicyOverview, PayPolicyPreflight, PayPolicySummary, PayPolicyWorkspace,
 } from '../../../types/payrollPayPolicies';
 
 export type * from '../../../types/payrollPayPolicies';
@@ -20,6 +20,7 @@ export const payPolicyKeys = {
 };
 
 export const payPoliciesApi = {
+  overview: () => post<PayPolicyOverview>('finance/payroll/policies/overview', {}),
   list: (args: { search?: string; status?: string; cursor?: string; limit?: number }) =>
     post<PayPolicyListResult>('finance/payroll/policies/list', args),
   get: (policyId: string, versionId?: string) =>
@@ -48,13 +49,19 @@ export const payPoliciesApi = {
   retire: (args: { policyId: string; effectiveTo: string; reason: string; idempotencyKey: string }) =>
     post('finance/payroll/policies/retire', args),
   compare: (policyId: string, fromVersionId: string, toVersionId: string) =>
-    post<{ policyId: string; fromVersionId: string; toVersionId: string; changes: Array<{ field: string; from: unknown; to: unknown }> }>(
+    post<{ policyId: string; fromVersionId: string; toVersionId: string; changes: { field: string; from: unknown; to: unknown }[] }>(
       'finance/payroll/policies/versions/compare', { policyId, fromVersionId, toVersionId },
     ),
 };
 
 export function usePayPolicies(args: { search?: string; status?: string; cursor?: string; limit?: number }) {
   return useQuery({ queryKey: payPolicyKeys.list(args), queryFn: () => payPoliciesApi.list(args), placeholderData: p => p });
+}
+export function usePayPolicyOverview() {
+  return useQuery({
+    queryKey: [...payPolicyKeys.all, 'overview'] as const,
+    queryFn: () => payPoliciesApi.overview(), placeholderData: p => p,
+  });
 }
 export function usePayPolicy(policyId: string | null, versionId?: string) {
   return useQuery({

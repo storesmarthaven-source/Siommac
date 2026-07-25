@@ -652,31 +652,41 @@ assignEmployee	function	payroll	true		netlify/functions/lib/finance/payGroups.ts
 listGroupMemberIds	function	payroll	true		netlify/functions/lib/finance/payGroups.ts	179	
 PayGroupMemberDto	interface	payroll	true		netlify/functions/lib/finance/payGroups.ts	196	
 listGroupMembers	function	payroll	true		netlify/functions/lib/finance/payGroups.ts	198	
-Row	type	finance	false		netlify/functions/lib/finance/payPolicies.ts	9	
-asText	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	10	
-hash	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	11	
-versionDto	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	13	
-policySummary	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	28	
-rpcError	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	48	
-dbPayload	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	54	
-listPayPolicies	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	71	
-decodePolicyCursor	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	102	
-getPayPolicy	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	109	
-draftRpc	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	190	
-createPayPolicyDraft	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	202	
-updatePayPolicyDraft	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	204	
-copyPayPolicyVersion	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	207	
-preflightPayPolicy	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	222	
-submitPayPolicy	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	228	
-admin	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	237	
-activatePayPolicy	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	250	
-assignPayPolicy	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	251	
-endPayPolicyAssignment	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	253	
-retirePayPolicy	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	255	
-rejectPayPolicyReview	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	258	
-comparePayPolicyVersions	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	262	
-canonicalComponents	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	273	comparePayPolicyVersions
-canonicalSources	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	278	comparePayPolicyVersions
+Row	type	finance	false		netlify/functions/lib/finance/payPolicies.ts	10	
+asText	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	11	
+hash	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	12	
+versionDto	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	14	
+policySummary	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	29	
+rpcError	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	49	
+dbPayload	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	55	
+listPayPolicies	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	72	
+POLICY_TYPE_LABEL	object	finance	false		netlify/functions/lib/finance/payPolicies.ts	103	
+IN_REVIEW	variable	finance	false		netlify/functions/lib/finance/payPolicies.ts	107	
+OVERVIEW_PREFLIGHT_CAP	variable	finance	false		netlify/functions/lib/finance/payPolicies.ts	108	
+humanizeEvent	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	110	
+eventTone	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	113	
+getPayPolicyOverview	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	123	
+currentActiveVersion	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	161	getPayPolicyOverview
+hasBlockerCode	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	180	getPayPolicyOverview
+versionsWith	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	181	getPayPolicyOverview
+integrityRow	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	183	getPayPolicyOverview
+decodePolicyCursor	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	295	
+getPayPolicy	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	302	
+draftRpc	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	383	
+createPayPolicyDraft	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	395	
+updatePayPolicyDraft	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	397	
+copyPayPolicyVersion	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	400	
+preflightPayPolicy	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	415	
+submitPayPolicy	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	421	
+admin	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	430	
+activatePayPolicy	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	443	
+assignPayPolicy	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	444	
+endPayPolicyAssignment	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	446	
+retirePayPolicy	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	448	
+rejectPayPolicyReview	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	451	
+comparePayPolicyVersions	function	finance	true		netlify/functions/lib/finance/payPolicies.ts	455	
+canonicalComponents	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	466	comparePayPolicyVersions
+canonicalSources	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	471	comparePayPolicyVersions
 ControlCenterServiceInput	interface	payroll	true		netlify/functions/lib/finance/payroll/controlCenter.ts	34	
 money	function	payroll	false		netlify/functions/lib/finance/payroll/controlCenter.ts	43	
 num	function	payroll	false		netlify/functions/lib/finance/payroll/controlCenter.ts	47	
@@ -4592,9 +4602,10 @@ post	function	finance	false		src/api/finance/payPolicies.ts	9
 PayPolicyListResult	interface	finance	true		src/api/finance/payPolicies.ts	15	
 payPolicyKeys	object	finance	true		src/api/finance/payPolicies.ts	16	
 payPoliciesApi	object	finance	true		src/api/finance/payPolicies.ts	22	
-usePayPolicies	function	finance	true	hook	src/api/finance/payPolicies.ts	56	
-usePayPolicy	function	finance	true	hook	src/api/finance/payPolicies.ts	59	
-usePayPolicyMutation	function	finance	true	hook	src/api/finance/payPolicies.ts	65	
+usePayPolicies	function	finance	true	hook	src/api/finance/payPolicies.ts	57	
+usePayPolicyOverview	function	finance	true	hook	src/api/finance/payPolicies.ts	60	
+usePayPolicy	function	finance	true	hook	src/api/finance/payPolicies.ts	66	
+usePayPolicyMutation	function	finance	true	hook	src/api/finance/payPolicies.ts	72	
 okWith	function	payroll	false	test	src/api/finance/payroll.contract.test.ts	19	
 PayrollRunPayPolicy	interface	payroll	true		src/api/finance/payroll.ts	33	
 PayrollRun	interface	payroll	true		src/api/finance/payroll.ts	48	
@@ -6903,30 +6914,59 @@ ReconRow	interface	payroll	false		src/components/sections/Finance/payroll/run/cr
 CrewInputReconciliation	function	payroll	true	component	src/components/sections/Finance/payroll/run/crewSections.tsx	81	
 CrewCostAllocation	function	payroll	true	component	src/components/sections/Finance/payroll/run/crewSections.tsx	152	
 draft	function	payroll	false	test	src/components/sections/Finance/payroll/setup/payPolicyRules.test.ts	4	
-buildPayPolicySources	function	payroll	true		src/components/sections/Finance/payroll/setup/payPolicyRules.ts	3	
-payPolicyDraftStepInvalid	function	payroll	true		src/components/sections/Finance/payroll/setup/payPolicyRules.ts	13	
-today	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	16	
-key	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	17	
-title	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	18	
-detailTabs	variable	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	19	
-replaceQueryValue	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	21	
-initialDraft	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	28	
-PayPolicySetup	function	payroll	true	component	src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	34	
-next	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	50	PayPolicySetup
-previous	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	55	PayPolicySetup
-PayPolicyWizard	function	payroll	false	component	src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	114	
-addComponent	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	136	PayPolicyWizard
-save	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	147	PayPolicyWizard
-PayPolicyDetail	function	payroll	false	component	src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	213	
-runPreflight	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	235	PayPolicyDetail
-doSubmit	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	239	PayPolicyDetail
-doActivate	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	247	PayPolicyDetail
-doAssign	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	254	PayPolicyDetail
-doCopyVersion	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	259	PayPolicyDetail
-doEndAssignment	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	287	PayPolicyDetail
-doRetire	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	310	PayPolicyDetail
-PolicyTab	function	payroll	false	component	src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	360	
-compareVersions	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	369	PolicyTab
+isCrewPolicyType	function	payroll	true		src/components/sections/Finance/payroll/setup/payPolicyRules.ts	5	
+defaultComponentBinding	function	payroll	true		src/components/sections/Finance/payroll/setup/payPolicyRules.ts	12	
+buildPayPolicySources	function	payroll	true		src/components/sections/Finance/payroll/setup/payPolicyRules.ts	34	
+PAY_POLICY_WIZARD_STEPS	variable	payroll	true		src/components/sections/Finance/payroll/setup/payPolicyRules.ts	47	
+payPolicyDraftStepInvalid	function	payroll	true		src/components/sections/Finance/payroll/setup/payPolicyRules.ts	48	
+today	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	15	
+key	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	16	
+title	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	17	
+detailTabs	variable	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	18	
+POLICY_TYPE_LABEL	object	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	20	
+PAY_BASIS_LABEL	object	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	24	
+policyGlyph	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	28	
+fmtDay	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	34	
+fmtActivity	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	36	
+integrityColor	object	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	42	
+replaceQueryValue	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	46	
+PayPolicySetup	function	payroll	true	component	src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	53	
+next	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	76	PayPolicySetup
+previous	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	81	PayPolicySetup
+PayPolicyDetail	function	payroll	false	component	src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	242	
+runPreflight	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	265	PayPolicyDetail
+doSubmit	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	269	PayPolicyDetail
+doActivate	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	277	PayPolicyDetail
+doAssign	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	284	PayPolicyDetail
+doCopyVersion	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	289	PayPolicyDetail
+doEndAssignment	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	317	PayPolicyDetail
+doRetire	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	340	PayPolicyDetail
+PolicyTab	function	payroll	false	component	src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	389	
+compareVersions	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	398	PolicyTab
+today	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	28	
+reqKey	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	29	
+title	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	30	
+empName	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	31	
+STEPS	array	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	34	
+STARTERS	array	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	44	
+OWNER_ROLES	array	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	51	
+initialDraft	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	58	
+draftFromWorkspace	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	64	
+PayPolicyWizard	function	payroll	true	component	src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	77	
+setPolicyType	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	96	PayPolicyWizard
+addComponent	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	103	PayPolicyWizard
+save	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	110	PayPolicyWizard
+renderStep	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	183	PayPolicyWizard
+stepIdentity	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	195	PayPolicyWizard
+stepWorkPattern	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	253	PayPolicyWizard
+dayClass	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	257	stepWorkPattern
+stepComponents	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	281	PayPolicyWizard
+stepSources	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	315	PayPolicyWizard
+stepStatutory	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	338	PayPolicyWizard
+stepCosting	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	355	PayPolicyWizard
+stepGovernance	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	372	PayPolicyWizard
+renderSidebar	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	412	PayPolicyWizard
+sidebar	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	456	PayPolicyWizard
 fullHoliday	function	payroll	false	test	src/components/sections/Finance/payroll/setup/workCalendarRules.test.ts	10	
 ISO_WEEKDAYS	variable	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	6	
 WEEKDAY_LABEL	object	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	7	
@@ -6967,42 +7007,42 @@ SUBTABS	variable	payroll	false	component	src/components/sections/Finance/payroll
 SubTab	type	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	51	
 WorkCalendarPage	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	55	
 WorkCalendarSetup	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	66	
-Directory	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	88	
-usePager	function	payroll	false	hook	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	132	
-next	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	135	usePager
-prev	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	136	usePager
-reset	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	137	usePager
-HolidaySetsPanel	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	144	
-HolidaySetDetail	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	168	
-doCopy	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	181	HolidaySetDetail
-HolidayVersionEditor	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	220	
-doRemove	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	232	HolidayVersionEditor
-doPublish	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	240	HolidayVersionEditor
-HolidayEditorModal	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	291	
-set	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	304	HolidayEditorModal
-save	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	306	HolidayEditorModal
-HolidayVersionModal	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	348	
-save	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	361	HolidayVersionModal
-WorkCalendarsPanel	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	397	
-WorkCalendarDetail	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	421	
-doPublish	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	433	WorkCalendarDetail
-doCopy	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	442	WorkCalendarDetail
-PatternFields	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	486	
-toggle	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	488	PatternFields
-WorkVersionModal	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	532	
-save	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	544	WorkVersionModal
-PatternEditorModal	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	577	
-save	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	587	PatternEditorModal
-PublishedHolidayVersionPicker	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	611	
-PublishedWorkVersionPicker	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	636	
-AssignmentsPanel	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	667	
-doEnd	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	679	AssignmentsPanel
-doCancel	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	687	AssignmentsPanel
-AssignModal	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	732	
-save	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	749	AssignModal
-ResolvePanel	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	792	
-run	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	803	ResolvePanel
-ResolveResultView	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	834	
+Directory	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	94	
+usePager	function	payroll	false	hook	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	138	
+next	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	141	usePager
+prev	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	142	usePager
+reset	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	143	usePager
+HolidaySetsPanel	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	150	
+HolidaySetDetail	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	174	
+doCopy	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	187	HolidaySetDetail
+HolidayVersionEditor	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	226	
+doRemove	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	238	HolidayVersionEditor
+doPublish	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	246	HolidayVersionEditor
+HolidayEditorModal	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	297	
+set	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	310	HolidayEditorModal
+save	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	312	HolidayEditorModal
+HolidayVersionModal	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	354	
+save	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	367	HolidayVersionModal
+WorkCalendarsPanel	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	403	
+WorkCalendarDetail	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	427	
+doPublish	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	439	WorkCalendarDetail
+doCopy	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	448	WorkCalendarDetail
+PatternFields	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	492	
+toggle	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	494	PatternFields
+WorkVersionModal	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	538	
+save	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	550	WorkVersionModal
+PatternEditorModal	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	583	
+save	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	593	PatternEditorModal
+PublishedHolidayVersionPicker	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	617	
+PublishedWorkVersionPicker	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	642	
+AssignmentsPanel	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	673	
+doEnd	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	685	AssignmentsPanel
+doCancel	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	693	AssignmentsPanel
+AssignModal	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	738	
+save	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	755	AssignModal
+ResolvePanel	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	798	
+run	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	809	ResolvePanel
+ResolveResultView	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	840	
 H	variable	payroll	false	component,test	src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx	22	
 fullData	function	payroll	false	test	src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx	59	
 setScenario	function	payroll	false	test	src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx	74	
@@ -7194,35 +7234,34 @@ saveView	function	payroll	false		src/components/sections/Finance/PayrollRunRegis
 deleteActiveView	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	189	PayrollRunRegisterPage
 RunRow	function	payroll	false	component	src/components/sections/Finance/PayrollRunRegisterPage.tsx	365	
 Metric	function	payroll	false	component	src/components/sections/Finance/PayrollRunRegisterPage.tsx	397	
-empName	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	56	
-todayIso	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	59	
-FREQUENCIES	array	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	61	
-OT_EVENT_TYPES	array	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	68	
-otEventLabel	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	75	
-PAGE_SIZE	variable	payroll	false	component	src/components/sections/Finance/PayrollSetupOverview.tsx	77	
-paginate	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	78	
-SetupTab	type	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	90	
-PayrollSetupOverview	function	payroll	true	component	src/components/sections/Finance/PayrollSetupOverview.tsx	92	
-LOAN_TYPES	array	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	144	
-loanStatusTone	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	149	
-LoansPanel	function	payroll	false	component	src/components/sections/Finance/PayrollSetupOverview.tsx	161	
-run	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	191	LoansPanel
-doSubmitLoan	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	198	LoansPanel
-rowActions	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	221	LoansPanel
-NewLoanModal	function	payroll	false	component	src/components/sections/Finance/PayrollSetupOverview.tsx	287	
-submit	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	308	NewLoanModal
-PayGroupsPanel	function	payroll	false	component	src/components/sections/Finance/PayrollSetupOverview.tsx	389	
-rowActions	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	425	PayGroupsPanel
-NewPayGroupModal	function	payroll	false	component	src/components/sections/Finance/PayrollSetupOverview.tsx	469	
-submit	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	489	NewPayGroupModal
-PayGroupMembersModal	function	payroll	false	component	src/components/sections/Finance/PayrollSetupOverview.tsx	567	
-addMember	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	584	PayGroupMembersModal
-ruleWindowTone	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	665	
-OvertimeRulesPanel	function	payroll	false	component	src/components/sections/Finance/PayrollSetupOverview.tsx	673	
-toggleActive	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	693	OvertimeRulesPanel
-rowActions	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	721	OvertimeRulesPanel
-NewOvertimeRuleModal	function	payroll	false	component	src/components/sections/Finance/PayrollSetupOverview.tsx	777	
-submit	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	796	NewOvertimeRuleModal
+empName	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	57	
+todayIso	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	60	
+FREQUENCIES	array	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	62	
+OT_EVENT_TYPES	array	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	69	
+otEventLabel	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	76	
+PAGE_SIZE	variable	payroll	false	component	src/components/sections/Finance/PayrollSetupOverview.tsx	78	
+paginate	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	79	
+SetupTab	type	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	91	
+PayrollSetupOverview	function	payroll	true	component	src/components/sections/Finance/PayrollSetupOverview.tsx	93	
+LOAN_TYPES	array	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	152	
+loanStatusTone	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	157	
+LoansPanel	function	payroll	false	component	src/components/sections/Finance/PayrollSetupOverview.tsx	169	
+run	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	199	LoansPanel
+doSubmitLoan	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	206	LoansPanel
+rowActions	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	229	LoansPanel
+NewLoanModal	function	payroll	false	component	src/components/sections/Finance/PayrollSetupOverview.tsx	295	
+submit	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	316	NewLoanModal
+PayGroupsPanel	function	payroll	false	component	src/components/sections/Finance/PayrollSetupOverview.tsx	397	
+NewPayGroupModal	function	payroll	false	component	src/components/sections/Finance/PayrollSetupOverview.tsx	477	
+submit	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	497	NewPayGroupModal
+PayGroupMembersModal	function	payroll	false	component	src/components/sections/Finance/PayrollSetupOverview.tsx	575	
+addMember	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	592	PayGroupMembersModal
+ruleWindowTone	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	673	
+OvertimeRulesPanel	function	payroll	false	component	src/components/sections/Finance/PayrollSetupOverview.tsx	681	
+toggleActive	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	701	OvertimeRulesPanel
+coversType	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	716	OvertimeRulesPanel
+NewOvertimeRuleModal	function	payroll	false	component	src/components/sections/Finance/PayrollSetupOverview.tsx	796	
+submit	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	815	NewOvertimeRuleModal
 makeRun	function	finance	false	test	src/components/sections/Finance/payRunDetail/CalcFailurePanel.test.tsx	22	
 makeAttempt	function	finance	false	test	src/components/sections/Finance/payRunDetail/CalcFailurePanel.test.tsx	35	
 makeFinding	function	finance	false	test	src/components/sections/Finance/payRunDetail/CalcFailurePanel.test.tsx	46	
@@ -12282,7 +12321,8 @@ PayPolicyDraftInput	interface	payroll	true		types/payrollPayPolicies.ts	37
 PayPolicySummary	interface	payroll	true		types/payrollPayPolicies.ts	51	
 PayPolicyVersionDto	interface	payroll	true		types/payrollPayPolicies.ts	66	
 PayPolicyPreflight	interface	payroll	true		types/payrollPayPolicies.ts	91	
-PayPolicyWorkspace	interface	payroll	true		types/payrollPayPolicies.ts	100	
+PayPolicyOverview	interface	payroll	true		types/payrollPayPolicies.ts	103	
+PayPolicyWorkspace	interface	payroll	true		types/payrollPayPolicies.ts	133	
 PayslipBatchLifecycle	type	payroll	true		types/payrollPayslipBatches.ts	14	
 PayslipBatchTab	type	payroll	true		types/payrollPayslipBatches.ts	15	
 PayslipBatchCounts	interface	payroll	true		types/payrollPayslipBatches.ts	18	
