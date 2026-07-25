@@ -897,8 +897,12 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
   position: relative;
   display: flex; align-items: center; justify-content: space-between;
   gap: var(--space-4); flex-wrap: wrap;
+  /* Top spacing is PADDING, not margin, so it is identical whether the parent is a
+     block or a flex container (margin-top would collapse in a block but become a
+     spurious gap inside a flex parent). This is the standard page-header top space. */
+  padding-top: var(--space-10);
   padding-bottom: 22px;
-  margin-top: var(--space-10); margin-bottom: 32px;
+  margin-bottom: 32px;
 }
 .ui-page-header::after {
   content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;

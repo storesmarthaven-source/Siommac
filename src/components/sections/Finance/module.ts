@@ -39,6 +39,19 @@ const PAYROLL_ITEM: ModuleNavItem = {
   label: 'Payroll',
   icon: 'fa-money-check-dollar',
   sub: 'Pay runs, calculation, approval, payslips & statutory export',
+  // Group-only parent: clicking "Payroll" expands the menu; the Command Center
+  // lives in the "Dashboard" child below (no page of its own on the parent).
+  isGroup: true,
+};
+
+// The payroll Command Center is now a named "Dashboard" page under the Payroll
+// menu (not the parent's default page).
+const PAYROLL_DASHBOARD_ITEM: ModuleNavItem = {
+  id: 's-finance-payroll-dashboard',
+  label: 'Dashboard',
+  icon: 'fa-gauge-high',
+  parent: 's-finance-payroll',
+  sub: 'Payroll command center — portfolio KPIs, deadlines, release readiness & the run register',
 };
 
 // F-14 — every payroll operational page nests under the "Payroll" parent
@@ -138,7 +151,7 @@ const STATUTORY_FORMS_ITEM: ModuleNavItem = {
 export const financeModule: ModuleDefinition = {
   id: 'finance',
   navGroup: { id: 'finance', label: 'Finance' },
-  navItems: [OVERVIEW_ITEM, PAYABLES_ITEM, STATUTORY_ITEM, PAYROLL_ITEM, PAYROLL_RUNS_ITEM, PAYROLL_EXCEPTIONS_ITEM, PAYSLIP_BATCHES_ITEM, PAYROLL_REPORTS_ITEM, PAYROLL_SETUP_ITEM, PAYSLIP_DESIGNER_ITEM, REMITTANCES_ITEM, STATUTORY_FORMS_ITEM, DISBURSEMENTS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
+  navItems: [OVERVIEW_ITEM, PAYABLES_ITEM, STATUTORY_ITEM, PAYROLL_ITEM, PAYROLL_DASHBOARD_ITEM, PAYROLL_RUNS_ITEM, PAYROLL_EXCEPTIONS_ITEM, PAYSLIP_BATCHES_ITEM, PAYROLL_REPORTS_ITEM, PAYROLL_SETUP_ITEM, PAYSLIP_DESIGNER_ITEM, REMITTANCES_ITEM, STATUTORY_FORMS_ITEM, DISBURSEMENTS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
   roles: ['admin', 'superadmin'],
   mount: {
     sectionId: 's-finance',

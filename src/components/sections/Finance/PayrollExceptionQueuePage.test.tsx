@@ -96,10 +96,11 @@ describe('F-06/F-07 PayrollExceptionQueuePage', () => {
     expect(screen.getByText('Review')).toBeTruthy();   // approval CTA (review-only)
   });
 
-  it('PXQ3 — no selection shows the detail-empty prompt', () => {
+  it('PXQ3 — no selection: the detail drawer stays closed (no finding body)', () => {
     mockUseWorkQueue.mockReturnValue(asQuery(result({ selected: null })));
     render(<PayrollExceptionQueuePage />);
-    expect(screen.getByText('Select a finding')).toBeTruthy();
+    // The finding detail is now a drawer; with nothing selected its body isn't rendered.
+    expect(screen.queryByText('What triggered it')).toBeNull();
   });
 
   it('PXQ4 — a selected finding renders detail facts + its allowed actions + activity', () => {
@@ -132,7 +133,7 @@ describe('F-06/F-07 PayrollExceptionQueuePage', () => {
     expect(screen.getByText('1 selected')).toBeTruthy();
     expect(screen.getByText('Reassign')).toBeTruthy();
     // Blocker findings can't be waived → the bulk Waive verb is disabled.
-    const waive = screen.getByText('Waive').closest('button') as HTMLButtonElement;
+    const waive = screen.getByText('Waive').closest('button')!;
     expect(waive.disabled).toBe(true);
   });
 

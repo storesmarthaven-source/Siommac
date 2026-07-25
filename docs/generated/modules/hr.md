@@ -2,15 +2,15 @@
 
 # hr Module Map
 
-Source fingerprint: `4776cd3555aaf55ba75ba607`
+Source fingerprint: `57ff7f35e03921f08185fb34`
 
-Files: 204 | Symbols: 2270 | Widgets: 12 | Unique mounted endpoints: 256 | Route definitions: 256 mounted + 0 unmounted | API calls: 57 | DB objects: 156 | E2E suites: 14
+Files: 205 | Symbols: 2272 | Widgets: 12 | Unique mounted endpoints: 256 | Route definitions: 256 mounted + 0 unmounted | API calls: 57 | DB objects: 156 | E2E suites: 14
 
 ## Widgets and Tiles
 
 | ID | Title | Kind | Render | Location |
 |---|---|---|---|---|
-| `hr.employees.register` | Employee Register | local | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:411` |
+| `hr.employees.register` | Employee Register | local | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:420` |
 | `hr.onboarding.activationReadiness` | Activation Readiness | registry | `OnbActivationReadinessWidget` | `src/ui/widgets/registry.hrOnboarding.tsx:326` |
 | `hr.onboarding.activeCases` | Active Cases | registry | `OnbActiveCasesWidget` | `src/ui/widgets/registry.hrOnboarding.tsx:254` |
 | `hr.onboarding.blockedCases` | Blocked Cases | registry | `OnbBlockedCasesWidget` | `src/ui/widgets/registry.hrOnboarding.tsx:302` |
@@ -695,7 +695,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/AttendanceOverview.tsx` | 506 |
 | frontend-page | `src/components/sections/HR/CompensationOverview.tsx` | 343 |
 | frontend-page | `src/components/sections/HR/CreateEmployeeWizard.tsx` | 366 |
-| frontend-page | `src/components/sections/HR/EmployeeMaster.tsx` | 485 |
+| frontend-page | `src/components/sections/HR/EmployeeMaster.tsx` | 494 |
 | frontend-page | `src/components/sections/HR/EmployeeOnboardingSummary.tsx` | 97 |
 | frontend-page | `src/components/sections/HR/HRDocumentsOverview.tsx` | 728 |
 | frontend-page | `src/components/sections/HR/HRRequestsOverview.tsx` | 424 |
@@ -720,6 +720,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/RosterOverview.tsx` | 679 |
 | frontend-page | `src/components/sections/HR/StartOnboardingWizard.tsx` | 974 |
 | frontend-page | `src/components/sections/HR/TransfersOverview.tsx` | 402 |
+| frontend-page | `src/components/sections/HR/hrDeepLink.ts` | 16 |
 | frontend-page | `src/components/sections/HR/index.ts` | 10 |
 | frontend-page | `src/components/sections/HR/module.ts` | 125 |
 | frontend-page | `src/components/sections/HR/mount.ts` | 25 |

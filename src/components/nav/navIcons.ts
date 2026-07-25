@@ -45,6 +45,15 @@ const FA_TO_LUCIDE: Record<string, keyof typeof lucide> = {
   'fa-briefcase-medical':       'BriefcaseMedical',
   'fa-chart-simple':            'ChartColumn',
   'fa-sliders':                 'Sliders',
+  // Finance / Payroll nav (were falling back to the generic Circle)
+  'fa-money-check-dollar':      'Banknote',
+  'fa-sack-dollar':             'PiggyBank',
+  'fa-chart-column':            'ChartColumn',
+  'fa-chart-pie':               'PieChart',
+  'fa-file-invoice':            'FileText',
+  'fa-file-contract':           'FileSignature',
+  'fa-building-columns':        'Landmark',
+  'fa-receipt':                 'Receipt',
   // HSE functional areas
   'fa-triangle-exclamation':    'TriangleAlert',
   'fa-circle-plus':             'CirclePlus',

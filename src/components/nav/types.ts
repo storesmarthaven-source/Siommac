@@ -21,6 +21,8 @@ export interface SectionItem {
   group?: NavGroupId;
   /** If set, this item is a collapsible child nested under the parent item id. */
   parent?: string;
+  /** A group-only parent: expands its children but does not navigate to a page. */
+  isGroup?: boolean;
   /** Child items only: whether shown by default before any user customization.
    *  Absent = visible by default. Used by the per-parent nav customizer. */
   defaultVisible?: boolean;

@@ -22,11 +22,14 @@ import {
   type PayrollFindingQueueItem, type PayrollFindingDetail, type PayrollWorkQueueTab,
   type PayrollWorkQueueSort,
   type PayrollFindingQueueSeverity, type PayrollFindingAllowedAction, type PayrollFindingActivityType,
+  type PayrollFindingActivity,
 } from '@api/finance/payrollExceptions';
 import { useRunsRegister } from '@api/finance/payrollRunsRegister';
 import { openHrEmployee } from '../HR/hrDeepLink';
 import { EmployeePicker } from './_shared/pickers';
 import { Modal } from '@ui/components/Modal';
+import { Drawer } from '@ui/components/Drawer';
+import { KpiTile, PageHeader, type KpiTone } from '@ui';
 import './payrollExceptions.css';
 
 // ── Presentation maps ─────────────────────────────────────────────────────────
@@ -119,7 +122,7 @@ function openRun(runId: string, tab?: 'approvals' | 'exceptions'): void {
     if (tab) sessionStorage.setItem('siomac_open_payroll_run_tab', tab);
     else sessionStorage.removeItem('siomac_open_payroll_run_tab');
   } catch { /* ignore */ }
-  showSection('s-finance-payroll');
+  showSection('s-finance-payroll-dashboard');
 }
 
 export function PayrollExceptionQueuePage(): VNode {
@@ -198,29 +201,20 @@ export function PayrollExceptionQueuePage(): VNode {
 
   return (
     <div class="pxq">
-      <header class="pxq-lead">
-        <div>
-          <div class="pxq-crumbs"><span>Payroll</span><span class="sep">›</span><b>Approvals &amp; Exceptions</b></div>
-          <h1>Approvals &amp; Exceptions</h1>
-          <p>One work queue for payroll decisions, blocking controls and warnings — ordered by pay-date impact and due time.</p>
-        </div>
-        <div class="pxq-lead-actions">
+      <PageHeader icon="fa-triangle-exclamation" module="Payroll" title="Approvals &amp; Exceptions"
+        sub="One work queue for payroll decisions, blocking controls and warnings — ordered by pay-date impact and due time."
+        actions={
           <button type="button" class="pxq-icon-btn" aria-label="Refresh queue" title="Refresh"
             onClick={() => void q.refetch()}><i class="fa-solid fa-rotate" /></button>
-        </div>
-      </header>
+        } />
 
       <section class="pxq-metrics" aria-label="Work queue summary">
         {METRICS.map(m => (
-          <button type="button" class={`pxq-metric${tab === m.key ? ' on' : ''}`} key={m.key}
-            onClick={() => changeTab(m.key)} aria-pressed={tab === m.key} title={`Show ${m.label.toLowerCase()}`}>
-            <div class={`pxq-mico ${m.tone}`}><i class={`fa-solid ${m.icon}`} /></div>
-            <div class="pxq-m-body">
-              <div class="pxq-m-k">{m.label}</div>
-              <div class="pxq-m-v">{counts ? counts[m.key] : <span class="pxq-m-dash">—</span>}</div>
-              <div class="pxq-m-s">{m.sub}</div>
-            </div>
-          </button>
+          <KpiTile key={m.key} icon={m.icon} tone={m.tone as KpiTone}
+            value={counts ? counts[m.key] : 0} label={m.label} sub={m.sub}
+            loading={!counts}
+            link={{ label: tab === m.key ? 'Viewing' : 'View', onClick: () => changeTab(m.key) }}
+            class={tab === m.key ? 'pxq-kpi-on' : ''} />
         ))}
       </section>
 
@@ -317,7 +311,11 @@ export function PayrollExceptionQueuePage(): VNode {
               return (
                 <div class="pxq-section" key={g.key}>
                   <div class={`pxq-section-head ${m.tone}`}>
-                    <i class={`fa-solid ${m.icon}`} /> {m.label} <span>{m.sub}</span>
+                    <span class="pxq-sh-ico"><i class={`fa-solid ${m.icon}`} /></span>
+                    <div class="pxq-sh-text">
+                      <strong>{m.label}</strong>
+                      <small>{m.sub}</small>
+                    </div>
                   </div>
                   {g.rows.map(row => (
                     <QueueRow key={row.id} row={row} selected={row.id === selectedId}
@@ -338,19 +336,17 @@ export function PayrollExceptionQueuePage(): VNode {
           </footer>
         </section>
 
-        {/* ── Detail panel ── */}
-        <aside class="pxq-detail">
-          {selected ? (
-            <DetailPanel detail={selected} busy={anyPending(mut)} onAction={(type) => setAction({ type, finding: selected })} onOpenRun={(t) => openRun(selected.run.id, t)} />
-          ) : (
-            <div class="pxq-detail-empty">
-              <i class="fa-regular fa-hand-pointer" />
-              <strong>Select a finding</strong>
-              <small>Open a blocker or warning to see its evidence, activity and the actions you can take.</small>
-            </div>
-          )}
-        </aside>
       </div>
+
+      {/* ── Detail drawer — navy rich slide-in (statutory Rate-Version styling) ── */}
+      <Drawer rich adaptive open={!!selected} onClose={() => setSelectedId(undefined)}
+        title="Selected finding" panelClass="pxq-drawer">
+        {selected && (
+          <DetailPanel detail={selected} busy={anyPending(mut)}
+            onAction={(type) => setAction({ type, finding: selected })}
+            onOpenRun={(t) => openRun(selected.run.id, t)} />
+        )}
+      </Drawer>
 
       {action && (
         <FindingActionModal
@@ -428,6 +424,16 @@ const ACTION_META: Record<PayrollFindingAllowedAction, { label: string; icon: st
   reopen:   { label: 'Reopen', icon: 'fa-rotate-left' },
 };
 
+// Kind → ribbon/pill tone + label + icon (rich drawer head).
+const KIND_META: Record<string, { cls: string; label: string; icon: string }> = {
+  blocker:  { cls: 'red',   label: 'Blocker',  icon: 'fa-ban' },
+  warning:  { cls: 'amber', label: 'Warning',  icon: 'fa-triangle-exclamation' },
+  approval: { cls: 'blue',  label: 'Approval', icon: 'fa-user-check' },
+};
+
+// Rich statutory-style detail body (svd layout: head + severity ribbon + stat tiles +
+// sections + activity rail). Rendered inside the <Drawer rich> — light by default,
+// navy under the app dark theme (styling in payrollExceptions.css, .pxq-drawer).
 function DetailPanel({ detail, busy, onAction, onOpenRun }: {
   detail: PayrollFindingDetail; busy: boolean;
   onAction: (a: PayrollFindingAllowedAction) => void;
@@ -436,88 +442,109 @@ function DetailPanel({ detail, busy, onAction, onOpenRun }: {
   const activity = detail.activity.items;
   const primaryActs = detail.allowedActions.filter(a => a === 'resolve' || a === 'review');
   const secondaryActs = detail.allowedActions.filter(a => a !== 'resolve' && a !== 'review');
-  // Source evidence carries the record that triggered the finding + when it was observed.
-  // We surface the human label + timestamp (never a raw id — resolving ids to navigable
-  // records is a backend enrichment tracked separately).
-  const evidence = detail.sourceEvidence.filter(e => e.occurredAt || e.label);
+  const evidence = detail.sourceEvidence.filter(e => e.occurredAt != null || e.label.length > 0);
+  const km = KIND_META[detail.kind] ?? KIND_META.warning!;
+  const overdue = isOverdue(detail.dueAt);
+  const subjectName = detail.subject.displayName ?? detail.subject.scopeLabel;
+  // A finding always has a "raised" moment. When the feed carries no logged activity
+  // (fresh calc-generated finding), surface that origin from the finding's own creation
+  // time (source-evidence occurredAt) so the timeline is never blank — real data, not faked.
+  const raisedAt = detail.sourceEvidence.find(e => e.occurredAt)?.occurredAt ?? null;
+  const railItems: PayrollFindingActivity[] = activity.length
+    ? activity
+    : (raisedAt ? [{ id: 'synthetic-created', findingId: detail.id, actorId: null, actorName: 'System',
+        activityType: 'created', body: null, fromState: null, toState: 'open', findingVersion: null, createdAt: raisedAt }]
+      : []);
   return (
-    <div class="pxq-detail-card">
-      <header class="pxq-sum-head">
-        <span>Selected Finding</span>
-        <h3>{detail.title}</h3>
-        <p>{detail.run.reference} · Pay {fmtPayDate(detail.run.payDate)} · {detail.subject.scopeLabel}</p>
-      </header>
-      <div class="pxq-sum-body">
-        <p class="pxq-detail-summary">{detail.summary}</p>
-
-        <dl class="pxq-facts">
-          <div><dt>Trigger</dt><dd>{humanizeKey(detail.trigger.ruleKey)}</dd></div>
-          <div><dt>Observed</dt><dd>{detail.trigger.observed}{detail.trigger.threshold ? ` (threshold ${detail.trigger.threshold})` : ''}</dd></div>
-          <div><dt>Subject</dt><dd>
-            {detail.subject.employeeId
-              ? <button type="button" class="pxq-link" title="Open the affected employee's HR record"
-                  onClick={() => openHrEmployee(detail.subject.employeeId!)}>
-                  {detail.subject.displayName ?? detail.subject.scopeLabel} <i class="fa-solid fa-arrow-up-right-from-square" />
-                </button>
-              : (detail.subject.displayName ?? detail.subject.scopeLabel)}
-          </dd></div>
-          <div><dt>Impact</dt><dd>{detail.impact.amount != null ? fmtTTD(detail.impact.amount) : (detail.impact.label ?? '—')}</dd></div>
-        </dl>
-
-        {evidence.length > 0 && (
-          <div class="pxq-evidence"><span>Source evidence</span>
-            <ul>{evidence.map((e, i) => (
-              <li key={i}><i class="fa-solid fa-file-lines" /> {humanizeKey(e.label)}
-                {e.occurredAt && <em> · {fmtDateTime(e.occurredAt)}</em>}</li>
-            ))}</ul></div>
-        )}
-
-        {detail.requiredEvidence.length > 0 && (
-          <div class="pxq-required"><span>Required to clear</span>
-            <ul>{detail.requiredEvidence.map(r => <li key={r}>{r}</li>)}</ul></div>
-        )}
-
-        {detail.resolution && (
-          <div class="pxq-resolution"><i class="fa-solid fa-circle-check" />
-            <div><strong>Resolved</strong><small>{detail.resolution.note}</small></div></div>
-        )}
-
-        <div class="pxq-sum-actions">
-          {primaryActs.map(a => (
-            <button key={a} type="button" class="pxq-btn primary" disabled={busy}
-              onClick={() => (a === 'review' ? onOpenRun('approvals') : onAction(a))}>
-              <i class={`fa-solid ${ACTION_META[a].icon}`} /> {ACTION_META[a].label}
-            </button>
-          ))}
-          <button type="button" class="pxq-btn" onClick={() => onOpenRun('exceptions')}><i class="fa-solid fa-arrow-up-right-from-square" /> Open run evidence</button>
-        </div>
-
-        {secondaryActs.length > 0 && (
-          <div class="pxq-finding-actions">
-            {secondaryActs.map(a => (
-              <button key={a} type="button" class="pxq-btn" disabled={busy} onClick={() => onAction(a)}>
-                <i class={`fa-solid ${ACTION_META[a].icon}`} /> {ACTION_META[a].label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <div class="pxq-activity-head">Activity <span>{detail.activity.total}</span></div>
-        <div class="pxq-activity">
-        {activity.length ? activity.map(a => {
-          const v = ACT_ICON.get(a.activityType) ?? { icon: 'fa-circle', tone: 'blue' };
-          return (
-            <div class="pxq-act" key={a.id}>
-              <span class={`pxq-act-dot ${v.tone}`}><i class={`fa-solid ${v.icon}`} /></span>
-              <div><strong>{a.activityType === 'comment' ? (a.actorName ?? 'Someone') : labelActivity(a.activityType)}</strong>
-                {a.body && <small>{a.body}</small>}
-                {a.fromState && a.toState && <small>{a.fromState} → {a.toState}</small>}
-                <em>{a.actorName ?? 'System'} · {fmtDateTime(a.createdAt)}</em></div>
-            </div>
-          );
-        }) : <div class="pxq-empty small"><span>No activity yet.</span></div>}
-        </div>
+    <div class="pxq-dw">
+      <div class="pxq-dw-head">
+        <div class="pxq-dw-title">{detail.title}<span class={`pxq-dw-pill ${km.cls}`}>{km.label}</span></div>
+        <div class="pxq-dw-meta">{detail.run.reference} · Pay {fmtPayDate(detail.run.payDate)} · {detail.subject.scopeLabel}</div>
       </div>
+
+      <div class={`pxq-dw-ribbon ${km.cls}`}>
+        <i class={`fa-solid ${km.icon}`} aria-hidden="true" /><span>{detail.summary}</span>
+      </div>
+
+      <div class="pxq-dw-tiles">
+        <div class="pxq-dw-tile"><small>Impact</small>
+          <strong>{detail.impact.amount != null ? fmtTTD(detail.impact.amount) : (detail.impact.label ?? '—')}</strong>
+          <span>this finding</span></div>
+        <div class="pxq-dw-tile"><small>Subject</small>
+          <strong>{detail.subject.employeeId
+            ? <button type="button" class="pxq-dw-link" title="Open the affected employee's HR record"
+                onClick={() => openHrEmployee(detail.subject.employeeId!)}>{subjectName} <i class="fa-solid fa-arrow-up-right-from-square" /></button>
+            : subjectName}</strong>
+          <span>{detail.subject.employeeId ? 'employee' : 'scope'}</span></div>
+        <div class="pxq-dw-tile"><small>Due</small>
+          <strong class={overdue ? 'is-overdue' : ''}>{detail.dueAt ? fmtDue(detail.dueAt).replace('Due ', '') : '—'}</strong>
+          <span>{overdue ? 'overdue' : 'target'}</span></div>
+      </div>
+
+      <section class="pxq-dw-sec">
+        <div class="pxq-dw-sec-h">What triggered it</div>
+        <div class="pxq-dw-grid">
+          <div class="pxq-dw-tile"><small>Rule</small><strong>{humanizeKey(detail.trigger.ruleKey)}</strong></div>
+          <div class="pxq-dw-tile"><small>Observed</small><strong>{detail.trigger.observed}{detail.trigger.threshold ? ` (threshold ${detail.trigger.threshold})` : ''}</strong></div>
+        </div>
+      </section>
+
+      {evidence.length > 0 && (
+        <section class="pxq-dw-sec">
+          <div class="pxq-dw-sec-h">Source evidence</div>
+          <ul class="pxq-dw-list">{evidence.map((e, i) => (
+            <li key={i}><i class="fa-solid fa-file-lines" /> <span>{humanizeKey(e.label)}</span>{e.occurredAt && <em>{fmtDateTime(e.occurredAt)}</em>}</li>
+          ))}</ul>
+        </section>
+      )}
+
+      {detail.requiredEvidence.length > 0 && (
+        <section class="pxq-dw-sec">
+          <div class="pxq-dw-sec-h">Required to clear</div>
+          <ul class="pxq-dw-req">{detail.requiredEvidence.map(r => <li key={r}>{r}</li>)}</ul>
+        </section>
+      )}
+
+      {detail.resolution && (
+        <div class="pxq-dw-resolved"><i class="fa-solid fa-circle-check" aria-hidden="true" />
+          <div><strong>Resolved</strong><small>{detail.resolution.note}</small></div></div>
+      )}
+
+      <div class="pxq-dw-actions">
+        {primaryActs.map(a => (
+          <button key={a} type="button" class="pxq-dw-btn primary" disabled={busy}
+            onClick={() => (a === 'review' ? onOpenRun('approvals') : onAction(a))}>
+            <i class={`fa-solid ${ACTION_META[a].icon}`} /> {ACTION_META[a].label}
+          </button>
+        ))}
+        <button type="button" class="pxq-dw-btn ghost" onClick={() => onOpenRun('exceptions')}>
+          <i class="fa-solid fa-arrow-up-right-from-square" /> Open run evidence</button>
+        {secondaryActs.map(a => (
+          <button key={a} type="button" class="pxq-dw-btn ghost" disabled={busy} onClick={() => onAction(a)}>
+            <i class={`fa-solid ${ACTION_META[a].icon}`} /> {ACTION_META[a].label}
+          </button>
+        ))}
+      </div>
+
+      <section class="pxq-dw-sec">
+        <div class="pxq-dw-sec-h">Activity <span class="pxq-dw-count">{detail.activity.total || railItems.length}</span></div>
+        <div class="pxq-dw-rail">
+          {railItems.length ? railItems.map(a => {
+            const v = ACT_ICON.get(a.activityType) ?? { icon: 'fa-circle', tone: 'blue' };
+            return (
+              <div class="pxq-dw-rail-item" key={a.id}>
+                <div class="pxq-dw-rail-track"><span class={`pxq-dw-rail-dot ${v.tone}`}><i class={`fa-solid ${v.icon}`} /></span><span class="pxq-dw-rail-line" /></div>
+                <div class="pxq-dw-rail-body">
+                  <div class="pxq-dw-rail-title">{a.activityType === 'comment' ? (a.actorName ?? 'Someone') : labelActivity(a.activityType)}</div>
+                  {a.body && <div class="pxq-dw-rail-sub">{a.body}</div>}
+                  {a.fromState && a.toState && <div class="pxq-dw-rail-sub">{a.fromState} → {a.toState}</div>}
+                  <div class="pxq-dw-rail-by">{a.actorName ?? 'System'} · {fmtDateTime(a.createdAt)}</div>
+                </div>
+              </div>
+            );
+          }) : <div class="pxq-dw-empty">No activity yet.</div>}
+        </div>
+      </section>
     </div>
   );
 }

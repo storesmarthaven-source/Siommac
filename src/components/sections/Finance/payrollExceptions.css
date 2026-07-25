@@ -11,7 +11,10 @@
   --bd: #e5e9f0; --bd-soft: #eef1f6;
   --ink: #0f172a; --ink2: #334155; --mut: #64748b; --mut2: #94a3b8;
   --card: #fff; --radius: 12px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 1px 3px rgba(15,23,42,.06);
-  display: flex; flex-direction: column; gap: 16px; padding: 2px 2px 40px; color: var(--ink);
+  /* BLOCK (not flex) so the @ui PageHeader's margin-top/bottom collapse and space the
+     page the standard way — matching the statutory page. Flex here disabled the collapse
+     and produced a spurious top gap. Children are spaced by margins below. */
+  display: block; padding: 0 0 40px; color: var(--ink);
 }
 
 /* ── Lead ── */
@@ -25,10 +28,8 @@
 .pxq-icon-btn { width: 41px; height: 41px; border-radius: 9px; border: 1px solid var(--bd); background: #fff; color: var(--ink2); cursor: pointer; }
 .pxq-icon-btn:hover { background: #f8fafc; border-color: #c5cfdd; }
 
-/* ── KPI metric strip ── */
-.pxq-metrics { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 12px; }
-@media (max-width: 1180px) { .pxq-metrics { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 720px)  { .pxq-metrics { grid-template-columns: repeat(2, 1fr); } }
+/* ── KPI strip (standard @ui KpiTile cards; auto-fit so they wrap, never overflow) ── */
+.pxq-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(196px, 1fr)); gap: 12px; margin-bottom: 16px; }
 .pxq-metric { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--card); border: 1px solid var(--bd); border-radius: var(--radius); box-shadow: var(--shadow); text-align: left; font-family: inherit; cursor: pointer; width: 100%; }
 .pxq-metric:hover { border-color: #c5cfdd; }
 .pxq-metric.on { border-color: var(--br); box-shadow: 0 0 0 1px var(--br), var(--shadow); }
@@ -44,13 +45,9 @@
 .pxq-m-dash { color: var(--mut2); }
 .pxq-m-s { font-size: 11px; color: var(--mut); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ── Layout ── */
-.pxq-grid { display: grid; grid-template-columns: minmax(0,1fr) 380px; gap: 16px; align-items: start; }
-@media (max-width: 1180px) { .pxq-grid { grid-template-columns: 1fr; } }
-
-.pxq-board, .pxq-detail-card, .pxq-detail-empty {
-  background: var(--card); border: 1px solid var(--bd); border-radius: var(--radius); box-shadow: var(--shadow);
-}
+/* ── Layout: single full-width board (the finding detail is a drawer now) ── */
+.pxq-grid { display: block; }
+.pxq-board { background: var(--card); border: 1px solid var(--bd); border-radius: var(--radius); box-shadow: var(--shadow); }
 
 /* ── Board titlebar + tabs + toolbar ── */
 .pxq-titlebar { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--bd-soft); }
@@ -95,13 +92,15 @@
 .pxq-list { display: flex; flex-direction: column; }
 .pxq-section { border-bottom: 1px solid var(--bd-soft); }
 .pxq-section:last-child { border-bottom: 0; }
-.pxq-section-head { display: flex; align-items: center; gap: 10px; padding: 11px 17px; background: #f8fafc; color: #4e5c72; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .035em; }
-.pxq-section-head i { font-size: 12px; }
-.pxq-section-head span { margin-left: auto; color: var(--mut); font-weight: 600; text-transform: none; letter-spacing: 0; font-size: 11.5px; }
-.pxq-section-head.red i { color: var(--rd); }
-.pxq-section-head.amber i { color: var(--am); }
-.pxq-section-head.green { background: #f2faf5; color: var(--gn-ink); }
-.pxq-section-head.green i { color: var(--gn); }
+.pxq-section-head { display: flex; align-items: center; gap: 13px; padding: 15px 18px; background: #f8fafc; border-bottom: 1px solid var(--bd-soft); }
+.pxq-sh-ico { flex: none; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; font-size: 15px; background: var(--bd-soft); color: var(--mut); }
+.pxq-sh-text { min-width: 0; }
+.pxq-sh-text strong { display: block; font-size: 14px; font-weight: 700; color: #17243c; letter-spacing: -.005em; }
+.pxq-sh-text small { display: block; margin-top: 2px; font-size: 12px; color: var(--mut); }
+.pxq-section-head.red .pxq-sh-ico   { background: var(--rd-soft); color: var(--rd); }
+.pxq-section-head.amber .pxq-sh-ico { background: var(--am-soft); color: var(--am-ink); }
+.pxq-section-head.green { background: #f2faf5; }
+.pxq-section-head.green .pxq-sh-ico { background: var(--gn-soft); color: var(--gn-ink); }
 
 /* ── Queue row ── */
 .pxq-item { display: grid; grid-template-columns: 24px 40px minmax(0,1.5fr) minmax(140px,.85fr) 128px auto; align-items: center; gap: 13px;
@@ -134,6 +133,12 @@
 .pxq-go:hover { border-color: #aebbd0; color: var(--br); }
 .pxq-go.primary { background: var(--br); border-color: var(--br); color: #fff; }
 .pxq-go.primary:hover { background: var(--br-ink); color: #fff; }
+/* Narrow widths (split panes / small windows): drop the owner + due columns so the
+   finding title/summary is never crushed to zero. That detail is in the drawer. */
+@media (max-width: 1040px) {
+  .pxq-item { grid-template-columns: 24px 40px minmax(0,1fr) auto; }
+  .pxq-item > .pxq-owner, .pxq-item > .pxq-due { display: none; }
+}
 
 .pxq-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 46px 20px; text-align: center; color: var(--mut); }
 .pxq-empty i { font-size: 26px; color: var(--mut2); }
@@ -211,3 +216,112 @@
 .pxq-field input, .pxq-field textarea { border: 1px solid var(--bd); border-radius: 9px; padding: 10px 12px; font-family: inherit; font-size: 13px; color: var(--ink); resize: vertical; }
 .pxq-field input:focus, .pxq-field textarea:focus { outline: none; border-color: var(--br); box-shadow: 0 0 0 3px var(--br-soft); }
 .pxq-err { color: var(--rd); font-size: 11.5px; }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Finding detail — rich statutory-style body in the @ui <Drawer rich> (.pxq-drawer).
+   LIGHT by default; navy under the app dark theme (body[data-theme="dark"]). Portaled
+   to <body>, so light/dark keys off body[data-theme]; inner colours read from --dw-*.
+   ════════════════════════════════════════════════════════════════════════════ */
+/* Neutrals map to the adaptive UI-kit surface tokens (data-theme-scope="adaptive" is
+   on the panel) → light by default, navy under body[data-theme="dark"]. The `!important`
+   on the panel surfaces beats the base .ui-rdrawer navy (which is set unlayered too). */
+.ui-rdrawer.pxq-drawer {
+  --dw-text: var(--surface-text); --dw-muted: var(--surface-muted); --dw-label: var(--surface-muted);
+  --dw-tile-bg: var(--surface-subtle); --dw-tile-bd: var(--surface-border); --dw-rail-line: var(--surface-border);
+  --dw-btn-bg: var(--surface-raised); --dw-btn-bd: var(--surface-border); --dw-btn-tx: var(--surface-text); --dw-btn-hv: var(--surface-focus);
+  background: var(--surface) !important; color: var(--surface-text) !important;
+  border-left: 1px solid var(--surface-border);
+}
+.ui-rdrawer.pxq-drawer .ui-rdrawer-top { border-bottom: 1px solid var(--surface-border); }
+.ui-rdrawer.pxq-drawer .ui-rdrawer-title { color: var(--surface-text); }
+.ui-rdrawer.pxq-drawer .ui-rdrawer-sub { color: var(--surface-muted); }
+.ui-rdrawer.pxq-drawer .ui-icon-action { background: var(--surface-subtle); color: var(--surface-muted); border-color: var(--surface-border); }
+.ui-rdrawer.pxq-drawer .ui-icon-action:hover { background: var(--surface-hover); color: var(--surface-text); }
+/* The framework paints the top bar + scroll area navy — clear them so the adaptive
+   panel surface shows through (this was the "navy mixed into light mode"). */
+.ui-rdrawer.pxq-drawer .ui-rdrawer-top,
+.ui-rdrawer.pxq-drawer .ui-rdrawer-scroll,
+.ui-rdrawer.pxq-drawer .ui-rdrawer-foot { background: transparent !important; }
+
+.pxq-dw { display: flex; flex-direction: column; }
+.pxq-dw-head { margin-bottom: 13px; }
+.pxq-dw-title { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; font-size: 18px; font-weight: 700; color: var(--dw-text); line-height: 1.3; }
+.pxq-dw-meta { margin-top: 6px; font-size: 12px; color: var(--dw-muted); }
+.pxq-dw-pill { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; padding: 3px 9px; border-radius: 999px; }
+.pxq-dw-pill.red   { background: rgba(220,38,38,.14); color: #dc2626; }
+.pxq-dw-pill.amber { background: rgba(217,119,6,.16); color: #b45309; }
+.pxq-dw-pill.blue  { background: rgba(37,99,235,.13); color: #1d4ed8; }
+body[data-theme="dark"] .pxq-dw-pill.red { color: #fca5a5; }
+body[data-theme="dark"] .pxq-dw-pill.amber { color: #fcd34d; }
+body[data-theme="dark"] .pxq-dw-pill.blue { color: #93c5fd; }
+
+.pxq-dw-ribbon { display: flex; align-items: flex-start; gap: 9px; padding: 10px 12px; border-radius: 10px; font-size: 12.5px; line-height: 1.4; margin-bottom: 15px; color: var(--dw-text); }
+.pxq-dw-ribbon i { margin-top: 1px; flex: none; }
+.pxq-dw-ribbon.red   { background: rgba(220,38,38,.1);  border: 1px solid rgba(220,38,38,.24); }
+.pxq-dw-ribbon.amber { background: rgba(217,119,6,.1);  border: 1px solid rgba(217,119,6,.26); }
+.pxq-dw-ribbon.blue  { background: rgba(37,99,235,.1);  border: 1px solid rgba(37,99,235,.24); }
+.pxq-dw-ribbon.red i   { color: #dc2626; }
+.pxq-dw-ribbon.amber i { color: #d97706; }
+.pxq-dw-ribbon.blue i  { color: #2563eb; }
+body[data-theme="dark"] .pxq-dw-ribbon.red i { color: #fca5a5; }
+body[data-theme="dark"] .pxq-dw-ribbon.amber i { color: #fcd34d; }
+body[data-theme="dark"] .pxq-dw-ribbon.blue i { color: #93c5fd; }
+
+.pxq-dw-tiles { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin-bottom: 4px; }
+.pxq-dw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pxq-dw-tile { background: var(--dw-tile-bg); border: 1px solid var(--dw-tile-bd); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+.pxq-dw-tile small { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--dw-label); font-weight: 700; margin-bottom: 4px; }
+.pxq-dw-tile strong { display: block; font-size: 13px; font-weight: 700; color: var(--dw-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pxq-dw-tile strong.is-overdue { color: #dc2626; }
+body[data-theme="dark"] .pxq-dw-tile strong.is-overdue { color: #fca5a5; }
+.pxq-dw-tile span { display: block; font-size: 10.5px; color: var(--dw-muted); margin-top: 3px; }
+.pxq-dw-link { border: 0; background: none; padding: 0; font: inherit; font-weight: 700; color: #2563eb; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+body[data-theme="dark"] .pxq-dw-link { color: #93c5fd; }
+.pxq-dw-link:hover { text-decoration: underline; }
+.pxq-dw-link i { font-size: 9px; }
+
+.pxq-dw-sec { margin-top: 16px; }
+.pxq-dw-sec-h { display: flex; align-items: center; gap: 8px; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--dw-label); font-weight: 800; margin-bottom: 9px; }
+.pxq-dw-count { padding: 1px 7px; border-radius: 9px; background: var(--dw-tile-bg); color: var(--dw-muted); }
+.pxq-dw-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.pxq-dw-list li { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--dw-text); }
+.pxq-dw-list li i { color: #2563eb; font-size: 11px; flex: none; }
+body[data-theme="dark"] .pxq-dw-list li i { color: #93c5fd; }
+.pxq-dw-list li em { color: var(--dw-muted); font-style: normal; font-size: 11px; margin-left: auto; white-space: nowrap; }
+.pxq-dw-req { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--dw-text); display: flex; flex-direction: column; gap: 4px; }
+
+.pxq-dw-resolved { display: flex; gap: 10px; padding: 11px 13px; border-radius: 10px; background: rgba(22,163,74,.12); color: #15803d; margin-top: 15px; }
+body[data-theme="dark"] .pxq-dw-resolved { color: #bbf7d0; }
+.pxq-dw-resolved i { color: #16a34a; margin-top: 1px; }
+body[data-theme="dark"] .pxq-dw-resolved i { color: #86efac; }
+.pxq-dw-resolved strong { display: block; font-size: 12.5px; }
+.pxq-dw-resolved small { display: block; font-size: 11.5px; margin-top: 2px; opacity: .92; }
+
+.pxq-dw-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.pxq-dw-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 13px; border-radius: 8px; border: 1px solid var(--dw-btn-bd); background: var(--dw-btn-bg); color: var(--dw-btn-tx); font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.pxq-dw-btn:hover:not(:disabled) { border-color: var(--dw-btn-hv); }
+.pxq-dw-btn.primary { background: #2563eb; border-color: #2563eb; color: #fff; flex: 1 1 100%; }
+.pxq-dw-btn.primary:hover:not(:disabled) { background: #1d4ed8; }
+.pxq-dw-btn.ghost { flex: 1 1 calc(50% - 4px); }
+.pxq-dw-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.pxq-dw-rail { display: flex; flex-direction: column; }
+.pxq-dw-rail-item { display: flex; gap: 11px; }
+.pxq-dw-rail-track { display: flex; flex-direction: column; align-items: center; }
+.pxq-dw-rail-dot { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; flex: none; }
+.pxq-dw-rail-dot.blue  { background: rgba(37,99,235,.14); color: #2563eb; }
+.pxq-dw-rail-dot.green { background: rgba(22,163,74,.16); color: #16a34a; }
+.pxq-dw-rail-dot.amber { background: rgba(217,119,6,.16); color: #b45309; }
+.pxq-dw-rail-dot.red   { background: rgba(220,38,38,.14); color: #dc2626; }
+body[data-theme="dark"] .pxq-dw-rail-dot.blue { color: #93c5fd; }
+body[data-theme="dark"] .pxq-dw-rail-dot.green { color: #86efac; }
+body[data-theme="dark"] .pxq-dw-rail-dot.amber { color: #fcd34d; }
+body[data-theme="dark"] .pxq-dw-rail-dot.red { color: #fca5a5; }
+.pxq-dw-rail-line { width: 2px; flex: 1; background: var(--dw-rail-line); margin: 3px 0; }
+.pxq-dw-rail-item:last-child .pxq-dw-rail-line { display: none; }
+.pxq-dw-rail-body { padding-bottom: 15px; min-width: 0; }
+.pxq-dw-rail-item:last-child .pxq-dw-rail-body { padding-bottom: 0; }
+.pxq-dw-rail-title { font-size: 12.5px; font-weight: 600; color: var(--dw-text); }
+.pxq-dw-rail-sub { font-size: 12px; color: var(--dw-muted); margin-top: 2px; }
+.pxq-dw-rail-by { font-size: 10.5px; color: var(--dw-label); margin-top: 3px; }
+.pxq-dw-empty { font-size: 12.5px; color: var(--dw-muted); padding: 8px 0; }

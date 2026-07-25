@@ -33,6 +33,9 @@ export interface ModuleNavItem {
   sub?:  string;
   /** If set, this item is a collapsible child nested under the parent item id. */
   parent?: string;
+  /** A group-only parent: the sidebar row expands/collapses its children but does
+   *  NOT navigate to a page (it has no section of its own). Use with child items. */
+  isGroup?: boolean;
   /** For toggleable children: default sidebar visibility (default true). */
   defaultVisible?: boolean;
   /** Optional role restriction narrower than the owning module's role list. */

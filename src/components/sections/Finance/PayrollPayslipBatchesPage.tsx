@@ -32,7 +32,7 @@ const fmtDate = (d: string | null): string =>
 function openRun(runId: string): void {
   // Batch rows open on the default Summary tab — clear any stale deep-link tab.
   try { sessionStorage.setItem('siomac_open_payroll_run', runId); sessionStorage.removeItem('siomac_open_payroll_run_tab'); } catch { /* ignore */ }
-  showSection('s-finance-payroll');
+  showSection('s-finance-payroll-dashboard');
 }
 
 export function PayrollPayslipBatchesPage(): VNode {

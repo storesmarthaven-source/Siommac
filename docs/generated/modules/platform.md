@@ -2,7 +2,7 @@
 
 # platform Module Map
 
-Source fingerprint: `4776cd3555aaf55ba75ba607`
+Source fingerprint: `57ff7f35e03921f08185fb34`
 
 Files: 294 | Symbols: 2662 | Widgets: 0 | Unique mounted endpoints: 31 | Route definitions: 31 mounted + 15 unmounted | API calls: 47 | DB objects: 296 | E2E suites: 0
 
@@ -136,8 +136,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `DialogContextPanel` | function / component | `src/components/common/dialogs/DialogContextPanel.tsx:28` | `-` |
 | `EnterpriseFormModal` | function / component | `src/components/common/dialogs/EnterpriseFormModal.tsx:32` | `-` |
 | `NavController` | function / component | `src/components/nav/NavController.tsx:54` | `-` |
-| `skelStatCards` | function / ui-tile | `src/components/nav/navCore.ts:730` | `-` |
-| `skelCards` | function / ui-tile | `src/components/nav/navCore.ts:737` | `-` |
+| `skelStatCards` | function / ui-tile | `src/components/nav/navCore.ts:735` | `-` |
+| `skelCards` | function / ui-tile | `src/components/nav/navCore.ts:742` | `-` |
 | `AccessControlSection` | function / component | `src/components/sections/AccessControl/AccessControlSection.tsx:32` | `-` |
 | `AcApprovalsPage` | function / component | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx:27` | `-` |
 | `AcAuditPage` | function / component | `src/components/sections/AccessControl/pages/AcAuditPage.tsx:17` | `-` |
@@ -215,9 +215,9 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `ChartCardProps` | interface / ui-tile | `src/ui/components/ChartCard.tsx:12` | `-` |
 | `ChartCard` | function / component, ui-tile | `src/ui/components/ChartCard.tsx:23` | `-` |
 | `DetailGrid` | function / component | `src/ui/components/DetailGrid.tsx:40` | `-` |
-| `Drawer` | function / component | `src/ui/components/Drawer.tsx:54` | `-` |
-| `HseDrawer` | variable / component | `src/ui/components/Drawer.tsx:127` | `-` |
-| `DetailDrawer` | variable / component | `src/ui/components/Drawer.tsx:128` | `-` |
+| `Drawer` | function / component | `src/ui/components/Drawer.tsx:59` | `-` |
+| `HseDrawer` | variable / component | `src/ui/components/Drawer.tsx:134` | `-` |
+| `DetailDrawer` | variable / component | `src/ui/components/Drawer.tsx:135` | `-` |
 | `EmptyState` | function / component | `src/ui/components/EmptyState.tsx:29` | `-` |
 | `EntityHead` | function / component | `src/ui/components/EntityHead.tsx:29` | `-` |
 | `PanelStats` | function / component | `src/ui/components/EntityHead.tsx:61` | `-` |

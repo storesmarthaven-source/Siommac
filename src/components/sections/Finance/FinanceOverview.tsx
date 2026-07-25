@@ -67,7 +67,7 @@ export function FinanceOverview(): VNode {
       onClick: () => setInboxOpen(o => !o),
     },
     ...(can('finance.payroll.run.manage')
-      ? [{ key: 'payroll', label: 'Run payroll', icon: 'user', onClick: () => go('s-finance-payroll') } as QuickAction]
+      ? [{ key: 'payroll', label: 'Run payroll', icon: 'user', onClick: () => go('s-finance-payroll-dashboard') } as QuickAction]
       : []),
     ...(can('finance.ap.manage')
       ? [{ key: 'pay', label: 'Record payment', icon: 'receipt', onClick: () => go('s-finance-payables') } as QuickAction]
@@ -121,7 +121,7 @@ export function FinanceOverview(): VNode {
   const focus: { b: string; s: string; to: string }[] = [];
   if (pending) focus.push({ b: 'Clear pending approvals', s: `${pending} items · ${money(k?.pendingApprovalsAmount)} waiting`, to: 's-finance-payables' });
   if (overdue) focus.push({ b: 'Action overdue approvals', s: `${overdue} over the 48h SLA`, to: 's-finance-payables' });
-  if (can('finance.payroll.run.manage')) focus.push({ b: 'Prepare the next payroll run', s: 'Review before the cut-off', to: 's-finance-payroll' });
+  if (can('finance.payroll.run.manage')) focus.push({ b: 'Prepare the next payroll run', s: 'Review before the cut-off', to: 's-finance-payroll-dashboard' });
   if (focus.length < 3) focus.push({ b: 'Keep the on-time rate healthy', s: 'Clear this week\'s payment run', to: 's-finance-payables' });
 
   return (

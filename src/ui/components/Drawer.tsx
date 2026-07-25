@@ -49,9 +49,15 @@ export interface DrawerProps {
   rich?: boolean;
   /** Extra class on the panel (e.g. width override). */
   panelClass?: string;
+  /** Opt into the adaptive light/dark UI-kit: puts `data-theme-scope="adaptive"` on
+   *  the (portaled) panel so it reads `--surface-*` tokens — light by default, dark
+   *  under `body[data-theme="dark"]`. The panel must consume the tokens to adapt. */
+  adaptive?: boolean;
 }
 
-export function Drawer({ open, title, sub, subtitle, details, children, onClose, foot, footer, noFooter, headActions, rich, panelClass }: DrawerProps): VNode<any> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- createPortal() returns VNode<any>
+export function Drawer({ open, title, sub, subtitle, details, children, onClose, foot, footer, noFooter, headActions, rich, panelClass, adaptive }: DrawerProps): VNode<any> {
+  const themeScope = adaptive ? 'adaptive' : undefined;
   const subText = sub ?? subtitle;
   const panelRef = useOverlayA11y(open, onClose);
 
@@ -63,11 +69,12 @@ export function Drawer({ open, title, sub, subtitle, details, children, onClose,
     const richFoot = noFooter ? null : (foot ?? footer ?? null);
     return createPortal(
       <>
-        <div class={`ui-rdrawer-backdrop${open ? ' open' : ''}`} onClick={onClose} aria-hidden="true" />
+        <div class={`ui-rdrawer-backdrop${open ? ' open' : ''}`} onClick={onClose} aria-hidden="true" data-theme-scope={themeScope} />
         <aside
           ref={panelRef}
           class={`ui-rdrawer${panelClass ? ' ' + panelClass : ''}${open ? ' open' : ''}`}
           role="dialog" aria-modal="true" aria-hidden={!open}
+          data-theme-scope={themeScope}
         >
           <div class="ui-rdrawer-top">
             <div>

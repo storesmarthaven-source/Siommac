@@ -31,6 +31,7 @@ const OVERVIEW_ID      = 's-finance-overview';
 const PAYABLES_ID      = 's-finance-payables';
 const STATUTORY_ID    = 's-finance-statutory';
 const PAYROLL_ID       = 's-finance-payroll';
+const PAYROLL_DASHBOARD_ID = 's-finance-payroll-dashboard';
 const PAYROLL_RUNS_ID  = 's-finance-payroll-runs';
 const PAYROLL_EXCEPTIONS_ID = 's-finance-payroll-exceptions';
 const PAYSLIP_BATCHES_ID = 's-finance-payroll-payslips';
@@ -81,7 +82,9 @@ export function FinanceSection(): VNode {
 
   if (sectionId === STATUTORY_ID)    return <StatutoryConfigOverview />;
   if (sectionId === EXPENSES_ID)     return <ExpensesOverview />;
-  if (sectionId === PAYROLL_ID)      return <PayrollCommandCenter />;
+  // Command Center now lives at the "Dashboard" child; the old parent id still
+  // resolves to it as a safety fallback for any un-migrated deep-link.
+  if (sectionId === PAYROLL_DASHBOARD_ID || sectionId === PAYROLL_ID) return <PayrollCommandCenter />;
   if (sectionId === PAYROLL_RUNS_ID)  return <PayrollRunRegisterPage />;
   if (sectionId === PAYROLL_EXCEPTIONS_ID) return <PayrollExceptionQueuePage />;
   if (sectionId === PAYSLIP_BATCHES_ID) return <PayrollPayslipBatchesPage />;

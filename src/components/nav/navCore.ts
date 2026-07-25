@@ -33,7 +33,7 @@ export function moduleSectionItems(role: string): SectionItem[] {
   for (const mod of getModulesForRole(role)) {
     for (const it of mod.navItems) {
       if (!canAccessModuleNavItem(it, role, can)) continue;
-      out.push({ id: it.id, label: it.label, icon: it.icon, sub: it.sub, group: mod.navGroup?.id, parent: it.parent, defaultVisible: it.defaultVisible });
+      out.push({ id: it.id, label: it.label, icon: it.icon, sub: it.sub, group: mod.navGroup?.id, parent: it.parent, isGroup: it.isGroup, defaultVisible: it.defaultVisible });
     }
   }
   return out;
@@ -270,9 +270,14 @@ function renderNavTreeItem(it: SectionItem, children: SectionItem[], open: boole
   // that toggles open/closed. Keeping them separate fixes the "expands but won't
   // collapse" issue (the nav click no longer forces-open) and lets the chevron
   // sit cleanly at the row's trailing edge.
+  // Group-only parents (isGroup) expand/collapse on click but never navigate — the
+  // main row carries data-parent-toggle instead of data-section.
+  const mainAttr = it.isGroup
+    ? `class="sb-parent-main sb-parent-main--group" data-parent-toggle="${esc(it.id)}"`
+    : `class="sb-parent-main" data-section="${esc(it.id)}"`;
   return `<li class="sb-parent${open ? ' open' : ''}" data-parent="${esc(it.id)}">`
     + `<div class="sb-parent-row">`
-    + `<button class="sb-parent-main" data-section="${esc(it.id)}" title="${esc(it.label)}">`
+    + `<button type="button" ${mainAttr} title="${esc(it.label)}">`
     + `${navIconSvg(it.icon)}<span>${esc(it.label)}</span></button>`
     + `<button type="button" class="sb-parent-toggle" data-parent-toggle="${esc(it.id)}" aria-expanded="${open}" aria-label="${open ? 'Collapse' : 'Expand'} ${esc(it.label)}"><i class="fas fa-chevron-down sb-parent-chevron"></i></button>`
     + `</div>`
