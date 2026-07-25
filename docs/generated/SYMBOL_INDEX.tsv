@@ -6819,8 +6819,8 @@ DISBURSEMENTS_ID	variable	finance	false	component	src/components/sections/Financ
 STATUTORY_FORMS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	44	
 PAYSLIP_DESIGNER_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	45	
 isFinanceSection	function	finance	false		src/components/sections/Finance/FinanceSection.tsx	47	
-FinanceSection	function	finance	true	component	src/components/sections/Finance/FinanceSection.tsx	66	
-onSection	function	finance	false		src/components/sections/Finance/FinanceSection.tsx	72	FinanceSection
+FinanceSection	function	finance	true	component	src/components/sections/Finance/FinanceSection.tsx	67	
+onSection	function	finance	false		src/components/sections/Finance/FinanceSection.tsx	73	FinanceSection
 MONEY	variable	finance	false		src/components/sections/Finance/financeShared.ts	9	
 fmtMoney	function	finance	true		src/components/sections/Finance/financeShared.ts	11	
 fmtPercent	function	finance	true		src/components/sections/Finance/financeShared.ts	16	

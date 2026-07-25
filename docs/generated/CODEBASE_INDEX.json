@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "b82c98a905ee256e3e08e61be161cd9f54dc39cd",
+    "head": "76fe64e3a7bda8489966d27092d6e85ada0b2923",
     "branch": "main",
-    "fingerprint": "57ff7f35e03921f08185fb34",
+    "fingerprint": "47eb45f86e4ba0a597251a7f",
     "indexedFiles": 1565
   },
   "summary": {
@@ -4501,8 +4501,8 @@
       "path": "src/components/sections/Finance/FinanceSection.tsx",
       "module": "finance",
       "role": "frontend-page",
-      "lines": 111,
-      "hash": "5d0b13c3b21aacbb"
+      "lines": 112,
+      "hash": "c4cf5629a0a98c8c"
     },
     {
       "path": "src/components/sections/Finance/MyPayslipsOverview.tsx",
@@ -79566,7 +79566,7 @@
       "name": "FinanceSection",
       "kind": "function",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
-      "line": 66,
+      "line": 67,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -79578,7 +79578,7 @@
       "name": "onSection",
       "kind": "function",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
-      "line": 72,
+      "line": 73,
       "module": "finance",
       "exported": false,
       "container": "FinanceSection",

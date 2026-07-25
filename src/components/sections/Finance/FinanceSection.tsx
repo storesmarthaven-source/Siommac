@@ -48,6 +48,7 @@ function isFinanceSection(id: string): boolean {
   return id === OVERVIEW_ID
     || id === STATUTORY_ID
     || id === PAYROLL_ID
+    || id === PAYROLL_DASHBOARD_ID
     || id === PAYROLL_RUNS_ID
     || id === PAYROLL_EXCEPTIONS_ID
     || id === PAYSLIP_BATCHES_ID
