@@ -37,11 +37,26 @@ PR422 distinguishes "blocked by SoD" from "SoD passed". Result: level 3 blocks t
 admits the SAME approver (PR422) while still blocking the preparer; level 4 restores the strictest
 chain. Zero funding rows written. This is the behavioural proof the RPCs read `v_run.sod_level`.
 
-**REMAINING:**
-1. Certifier-ONLY delta (level 4 vs 3) needs a fixture whose certifier differs from the preparer —
-   `fstaff1` is both in financePayroll, so the level-4 case asserts the chain end-to-end rather than
-   the certifier clause in isolation.
-2. Browser QA of Payroll Setup → **Governance** (propose → approve as a different actor).
+**CERTIFIER CLAUSE ISOLATED (`47e71978`, financePayroll 143/143):** certifications are immutable by
+trigger, so `certified_by` could not be rewritten — a second run is the only faithful fixture. Added
+one with three distinct actors (preparer `fmgr2`, certifier `fstaff1`, approver `fmgr1`), asserting
+that provenance before probing as the certifier ALONE: level 4 → PR403, level 3 → PR422. Reuses the
+main pay group (employees keep their statutory/bank evidence), claims period salt 54, purges via
+`purgeRunArtifacts`.
+
+**BROWSER QA DONE (live, two real actors):** Payroll Setup → Governance renders the active policy,
+the plain-language level descriptions and the "each run keeps its level" note. Verified: inline
+per-field validation (level + ≥10-char reason); propose does NOT change the active level; the
+proposer sees *"you cannot approve it — segregation of duties requires a different approver"* instead
+of a dead button; a DIFFERENT finance_manager sees an enabled Approve and activates it; names resolve
+(no raw ids); history appears; the superadmin-only roles editor is correctly ABSENT for
+finance_manager. Ran both directions (3→4 as Camille/Rohan, then 4→3 as Rohan/Camille — maker and
+checker swapped roles, so maker-checker is not hardcoded to one person) and left the DB on level 3.
+**Through both live changes `finance_payroll_runs.sod_level` never moved** — the strongest proof of
+the per-run snapshot guarantee. The two superseded rows are legitimate append-only audit history
+(their `reason` text records they came from browser QA).
+
+**REMAINING:** none for this contract.
 3. Note: existing runs took `sod_level = 3` from the column default on apply — level 3 is *less*
    strict than the previous hardcoded 4-way, so confirm no in-flight run is surprised (PAY-2026-0589
    is already released, so inert there).
