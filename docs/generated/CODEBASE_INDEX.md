@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `04142e12c2adfa439c3761b8bca92f08cf705a2f`  
-Source fingerprint: `020069275152411a61e76d76`  
+Source HEAD: `800feec4fc06fc83f150f58f940f2088b03e2ea9`  
+Source fingerprint: `85efe3903be4213cc6302c32`  
 Generator version: `1`
 
 ## Use
@@ -19,14 +19,14 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1237 | 12465 | 32 | 938 | 939 | 17 | 373 | 1363 | 80 | 2492 |
+| 1238 | 12467 | 32 | 938 | 939 | 17 | 373 | 1361 | 81 | 2506 |
 
 ## Modules
 
 | Module | Files | Symbols | Widgets | Unique routes | Route definitions | API calls | DB objects | E2E suites | Map |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|
 | hr | 205 | 2272 | 12 | 256 | 256 | 57 | 156 | 14 | [open](modules/hr.md) |
-| payroll | 190 | 1953 | 10 | 140 | 140 | 2 | 261 | 27 | [open](modules/payroll.md) |
+| payroll | 191 | 1955 | 10 | 140 | 140 | 2 | 259 | 28 | [open](modules/payroll.md) |
 | finance | 139 | 1855 | 10 | 156 | 156 | 4 | 202 | 9 | [open](modules/finance.md) |
 | hse | 87 | 1275 | 0 | 144 | 144 | 107 | 65 | 4 | [open](modules/hse.md) |
 | communications | 112 | 1044 | 0 | 81 | 84 | 88 | 155 | 6 | [open](modules/communications.md) |

@@ -1,22 +1,22 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "04142e12c2adfa439c3761b8bca92f08cf705a2f",
+    "head": "800feec4fc06fc83f150f58f940f2088b03e2ea9",
     "branch": "main",
-    "fingerprint": "020069275152411a61e76d76",
-    "indexedFiles": 1571
+    "fingerprint": "85efe3903be4213cc6302c32",
+    "indexedFiles": 1572
   },
   "summary": {
-    "files": 1237,
-    "symbols": 12465,
+    "files": 1238,
+    "symbols": 12467,
     "widgets": 32,
     "routes": 938,
     "routeDefinitions": 939,
     "unmountedRoutes": 17,
     "apiCalls": 373,
-    "databaseObjects": 1363,
-    "e2eSuites": 80,
-    "e2eTests": 2492
+    "databaseObjects": 1361,
+    "e2eSuites": 81,
+    "e2eTests": 2506
   },
   "modules": [
     {
@@ -35,14 +35,14 @@
     {
       "id": "payroll",
       "counts": {
-        "files": 190,
-        "symbols": 1953,
+        "files": 191,
+        "symbols": 1955,
         "widgets": 10,
         "routes": 140,
         "routeDefinitions": 140,
         "apiCalls": 2,
-        "databaseObjects": 261,
-        "e2eSuites": 27
+        "databaseObjects": 259,
+        "e2eSuites": 28
       }
     },
     {
@@ -2823,6 +2823,13 @@
       "role": "e2e-suite",
       "lines": 392,
       "hash": "656fd20999cd84f0"
+    },
+    {
+      "path": "scripts/e2e/suites/payrollSodPolicy.mjs",
+      "module": "payroll",
+      "role": "e2e-suite",
+      "lines": 235,
+      "hash": "b566a34753f8052c"
     },
     {
       "path": "scripts/e2e/suites/payrollStatutoryForms.mjs",
@@ -49661,6 +49668,30 @@
       "module": "payroll",
       "exported": false,
       "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "title",
+      "kind": "variable",
+      "file": "scripts/e2e/suites/payrollSodPolicy.mjs",
+      "line": 1,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "run",
+      "kind": "function",
+      "file": "scripts/e2e/suites/payrollSodPolicy.mjs",
+      "line": 20,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
       "tags": [
         "test"
       ]
@@ -164602,49 +164633,35 @@
       "name": "public.finance_payroll_sod_policy",
       "kind": "table",
       "file": "supabase/migrations/20260925000000_finance_payroll_sod_policy.sql",
-      "line": 33,
+      "line": 37,
       "module": "payroll"
     },
     {
       "name": "finance_payroll_sod_policy_one_active",
       "kind": "index",
       "file": "supabase/migrations/20260925000000_finance_payroll_sod_policy.sql",
-      "line": 59,
+      "line": 63,
       "module": "payroll"
     },
     {
       "name": "public.finance_payroll_active_sod_level",
       "kind": "function",
       "file": "supabase/migrations/20260925000000_finance_payroll_sod_policy.sql",
-      "line": 72,
-      "module": "payroll"
-    },
-    {
-      "name": "public.finance_payroll_release_run_tx",
-      "kind": "function",
-      "file": "supabase/migrations/20260925000000_finance_payroll_sod_policy.sql",
-      "line": 110,
-      "module": "payroll"
-    },
-    {
-      "name": "public.finance_payroll_confirm_funding_tx",
-      "kind": "function",
-      "file": "supabase/migrations/20260925000000_finance_payroll_sod_policy.sql",
-      "line": 1289,
+      "line": 76,
       "module": "payroll"
     },
     {
       "name": "public.finance_payroll_sod_policy_approve_tx",
       "kind": "function",
       "file": "supabase/migrations/20260925000000_finance_payroll_sod_policy.sql",
-      "line": 1563,
+      "line": 181,
       "module": "payroll"
     },
     {
       "name": "public.finance_payroll_sod_policy_set_roles_tx",
       "kind": "function",
       "file": "supabase/migrations/20260925000000_finance_payroll_sod_policy.sql",
-      "line": 1622,
+      "line": 240,
       "module": "payroll"
     }
   ],
@@ -173689,6 +173706,77 @@
         "/api/finance/payroll/runs/submit",
         "/api/finance/remittances/compute",
         "/api/workflow-engine/decide"
+      ]
+    },
+    {
+      "name": "payrollSodPolicy",
+      "title": "Finance Payroll - Segregation-of-Duties Policy (governed)",
+      "module": "payroll",
+      "file": "scripts/e2e/suites/payrollSodPolicy.mjs",
+      "tests": [
+        {
+          "name": "provision real roles and capture the pre-existing policy",
+          "line": 53
+        },
+        {
+          "name": "every endpoint requires auth and denies a real employee",
+          "line": 75
+        },
+        {
+          "name": "get returns the active policy and the selectable levels",
+          "line": 84
+        },
+        {
+          "name": "propose rejects an out-of-range level, a thin reason, and a no-op change",
+          "line": 102
+        },
+        {
+          "name": "a finance manager proposes a change; it does NOT take effect yet",
+          "line": 114
+        },
+        {
+          "name": "propose writes its audit + app_events evidence (spec §2)",
+          "line": 129
+        },
+        {
+          "name": "only ONE proposal may be open at a time",
+          "line": 139
+        },
+        {
+          "name": "the proposer CANNOT approve their own change (enforced in the RPC)",
+          "line": 149
+        },
+        {
+          "name": "a DIFFERENT authorised approver activates it, superseding the previous policy",
+          "line": 158
+        },
+        {
+          "name": "approving an already-decided proposal is refused",
+          "line": 176
+        },
+        {
+          "name": "runs created BEFORE the change keep their own level",
+          "line": 184
+        },
+        {
+          "name": "a finance manager may NOT edit the eligible-role list",
+          "line": 197
+        },
+        {
+          "name": "superadmin edits the list, and superadmin is always retained",
+          "line": 203
+        },
+        {
+          "name": "a role outside the eligible list cannot propose",
+          "line": 218
+        }
+      ],
+      "apiPaths": [
+        "/api/finance/payroll/sod-policy/${...}",
+        "/api/finance/payroll/sod-policy/approve",
+        "/api/finance/payroll/sod-policy/get",
+        "/api/finance/payroll/sod-policy/propose",
+        "/api/finance/payroll/sod-policy/set-roles"
       ]
     },
     {

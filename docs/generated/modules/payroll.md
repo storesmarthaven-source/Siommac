@@ -2,9 +2,9 @@
 
 # payroll Module Map
 
-Source fingerprint: `020069275152411a61e76d76`
+Source fingerprint: `85efe3903be4213cc6302c32`
 
-Files: 190 | Symbols: 1953 | Widgets: 10 | Unique mounted endpoints: 140 | Route definitions: 140 mounted + 0 unmounted | API calls: 2 | DB objects: 261 | E2E suites: 27
+Files: 191 | Symbols: 1955 | Widgets: 10 | Unique mounted endpoints: 140 | Route definitions: 140 mounted + 0 unmounted | API calls: 2 | DB objects: 259 | E2E suites: 28
 
 ## Widgets and Tiles
 
@@ -162,10 +162,10 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/finance/payroll/runs/submit` | `finance.payroll.run.manage` | requirePermission | `z.object({ id: z.uuid(), idempotencyKey: z.string().min(1).max(200) })` | `netlify/functions/routes/financePayroll.ts:562` | - | financePayroll, payrollControlCenter, payrollLoans, payrollScale, payrollSystemCertification, payslipRender |
 | `/api/finance/payroll/runs/variation` | `finance.payroll.view_all` | requirePermission | `z.object({ runId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:1303` | - | payrollVarianceReports |
 | `/api/finance/payroll/runs/workspace` | `finance.payroll.view_all` | requirePermission | `z.object({ id: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:1338` | - | crewPayroll, financePayroll |
-| `/api/finance/payroll/sod-policy/approve` | `finance.payroll.sod_policy.approve` | requirePermission | `z.object({ policyId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:532` | - | - |
-| `/api/finance/payroll/sod-policy/get` | `finance.payroll.sod_policy.view` | requirePermission | `-` | `netlify/functions/routes/financePayroll.ts:505` | - | - |
-| `/api/finance/payroll/sod-policy/propose` | `finance.payroll.sod_policy.propose` | requirePermission | `z.object({     sodLevel: z.union([z.literal(2), z.literal(3), z.literal(4)]),     reason:   z.string().trim().min(10).max(2000),   })` | `netlify/functions/routes/financePayroll.ts:514` | - | - |
-| `/api/finance/payroll/sod-policy/set-roles` | `finance.payroll.sod_policy.manage_roles` | requirePermission | `z.object({     roles: z.array(z.string().trim().min(1).max(60)).min(1).max(20),   })` | `netlify/functions/routes/financePayroll.ts:547` | - | - |
+| `/api/finance/payroll/sod-policy/approve` | `finance.payroll.sod_policy.approve` | requirePermission | `z.object({ policyId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:532` | - | payrollSodPolicy |
+| `/api/finance/payroll/sod-policy/get` | `finance.payroll.sod_policy.view` | requirePermission | `-` | `netlify/functions/routes/financePayroll.ts:505` | - | payrollSodPolicy |
+| `/api/finance/payroll/sod-policy/propose` | `finance.payroll.sod_policy.propose` | requirePermission | `z.object({     sodLevel: z.union([z.literal(2), z.literal(3), z.literal(4)]),     reason:   z.string().trim().min(10).max(2000),   })` | `netlify/functions/routes/financePayroll.ts:514` | - | payrollSodPolicy |
+| `/api/finance/payroll/sod-policy/set-roles` | `finance.payroll.sod_policy.manage_roles` | requirePermission | `z.object({     roles: z.array(z.string().trim().min(1).max(60)).min(1).max(20),   })` | `netlify/functions/routes/financePayroll.ts:547` | - | payrollSodPolicy |
 | `/api/finance/payroll/warnings/list` | `finance.payroll.view_all` | requirePermission | `z.object({ runId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:445` | - | financePayroll |
 
 ## Frontend API Calls
@@ -433,12 +433,10 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | table | `public.hr_crew_movements` | `supabase/migrations/20260920000000_crew_payroll_core.sql:100` |
 | trigger | `hr_crew_movements_updated_at` | `supabase/migrations/20260920000000_crew_payroll_core.sql:133` |
 | function | `public.finance_payroll_findings_work_queue` | `supabase/migrations/20260922000000_finance_payroll_work_queue_sort.sql:19` |
-| table | `public.finance_payroll_sod_policy` | `supabase/migrations/20260925000000_finance_payroll_sod_policy.sql:33` |
-| function | `public.finance_payroll_active_sod_level` | `supabase/migrations/20260925000000_finance_payroll_sod_policy.sql:72` |
-| function | `public.finance_payroll_release_run_tx` | `supabase/migrations/20260925000000_finance_payroll_sod_policy.sql:110` |
-| function | `public.finance_payroll_confirm_funding_tx` | `supabase/migrations/20260925000000_finance_payroll_sod_policy.sql:1289` |
-| function | `public.finance_payroll_sod_policy_approve_tx` | `supabase/migrations/20260925000000_finance_payroll_sod_policy.sql:1563` |
-| function | `public.finance_payroll_sod_policy_set_roles_tx` | `supabase/migrations/20260925000000_finance_payroll_sod_policy.sql:1622` |
+| table | `public.finance_payroll_sod_policy` | `supabase/migrations/20260925000000_finance_payroll_sod_policy.sql:37` |
+| function | `public.finance_payroll_active_sod_level` | `supabase/migrations/20260925000000_finance_payroll_sod_policy.sql:76` |
+| function | `public.finance_payroll_sod_policy_approve_tx` | `supabase/migrations/20260925000000_finance_payroll_sod_policy.sql:181` |
+| function | `public.finance_payroll_sod_policy_set_roles_tx` | `supabase/migrations/20260925000000_finance_payroll_sod_policy.sql:240` |
 
 ## E2E Suites
 
@@ -463,6 +461,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | Payroll — Reports Center (F-12, preview) | 52 | 8 | `scripts/e2e/suites/payrollReports.mjs` |
 | Finance — Payroll Runs Register (runs/list + run-views + runs/calendar) | 38 | 7 | `scripts/e2e/suites/payrollRunsRegister.mjs` |
 | Payroll -- Scale (1000+ employee run) | 17 | 13 | `scripts/e2e/suites/payrollScale.mjs` |
+| Finance Payroll - Segregation-of-Duties Policy (governed) | 14 | 5 | `scripts/e2e/suites/payrollSodPolicy.mjs` |
 | Payroll — Statutory Forms (employer profile + TD4) | 17 | 7 | `scripts/e2e/suites/payrollStatutoryForms.mjs` |
 | Payroll — statutory-version snapshot binding (2a) | 7 | 6 | `scripts/e2e/suites/payrollStatutorySnapshot.mjs` |
 | payrollSystemCertification | 13 | 16 | `scripts/e2e/suites/payrollSystemCertification.mjs` |
@@ -499,6 +498,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/payrollReports.mjs` | 660 |
 | e2e-suite | `scripts/e2e/suites/payrollRunsRegister.mjs` | 881 |
 | e2e-suite | `scripts/e2e/suites/payrollScale.mjs` | 392 |
+| e2e-suite | `scripts/e2e/suites/payrollSodPolicy.mjs` | 235 |
 | e2e-suite | `scripts/e2e/suites/payrollStatutoryForms.mjs` | 251 |
 | e2e-suite | `scripts/e2e/suites/payrollStatutorySnapshot.mjs` | 292 |
 | e2e-suite | `scripts/e2e/suites/payrollSystemCertification.mjs` | 261 |

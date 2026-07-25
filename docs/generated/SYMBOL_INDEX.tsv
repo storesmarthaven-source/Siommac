@@ -4022,6 +4022,8 @@ BASE_MAPPINGS	array	payroll	false	test	scripts/e2e/suites/payrollScale.mjs	20
 run	function	payroll	true	test	scripts/e2e/suites/payrollScale.mjs	35	
 waitFor	function	payroll	false	test	scripts/e2e/suites/payrollScale.mjs	43	run
 chunk	function	payroll	false	test	scripts/e2e/suites/payrollScale.mjs	55	run
+title	variable	payroll	true	test	scripts/e2e/suites/payrollSodPolicy.mjs	1	
+run	function	payroll	true	test	scripts/e2e/suites/payrollSodPolicy.mjs	20	
 title	variable	payroll	true	test	scripts/e2e/suites/payrollStatutoryForms.mjs	7	
 run	function	payroll	true	test	scripts/e2e/suites/payrollStatutoryForms.mjs	13	
 waitFor	function	payroll	false	test	scripts/e2e/suites/payrollStatutoryForms.mjs	21	run

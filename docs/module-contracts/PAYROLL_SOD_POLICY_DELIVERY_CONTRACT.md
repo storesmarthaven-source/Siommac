@@ -12,15 +12,32 @@ live verification outstanding. Security-critical (anti-fraud control over payrol
 - `4af5c0aa` — regenerated `docs/generated` index.
 - Gates so far: BE+FE typecheck 0/0, vitest 484/484, `repo:index:check` clean.
 
-**REMAINING (do these next, in order):**
-1. **Operator applies** `supabase/migrations/20260925000000_finance_payroll_sod_policy.sql`
-   (DDL cannot be run from the JS client). Until then nothing changes at runtime.
-2. Write + run `scripts/e2e/suites/payrollSodPolicy.mjs` (see §3 REQUIRED E2E list). It can only
-   pass once the migration is applied — write it against the live stack, don't guess.
-3. Live-verify each level's negative path in the browser (propose → approve as a different actor →
-   confirm a level-2 run lets the certifier fund/release, and a level-4 run does not).
-4. Backfill note: existing runs get `sod_level` = the column default (3) on apply. PAY-2026-0589 is
-   already released, so this is inert for it — but confirm no in-flight run is surprised.
+**APPLIED + VERIFIED (2026-07-25):**
+- Operator applied the migration. Live DB probe: policy table seeded (1 row, level 3, active,
+  roles `{superadmin,finance_manager}`), `finance_payroll_active_sod_level()` = 3,
+  `finance_payroll_runs.sod_level` present (PAY-2026-0589 = 3), both governance RPCs resolvable
+  with their guards firing. A bad-arg probe of `..._set_roles_tx` rolled back cleanly — incidental
+  proof of the in-database atomicity.
+- `599e9f90` — migration reworked to patch the two RPCs from `pg_get_functiondef()` instead of
+  carrying a 1,430-line copy (1667 → 285 lines; cannot go stale, RAISES rather than silently
+  no-op'ing, idempotent).
+- `800feec4` — `scripts/e2e/suites/payrollSodPolicy.mjs` **14/14 green** + migration §6 role grants.
+- Regression: **financePayroll 137/137** — that suite drives certify→submit→approve→lock→fund→
+  release through BOTH patched RPCs, so the patch is behaviourally sound.
+- Shared-DB hygiene verified after the run: exactly one active level-3 policy, no leftover users.
+
+**DEFECT THE SUITE CAUGHT:** `requirePermission` resolves capabilities from the `role_permissions`
+TABLE, not the static catalogue in code — the new keys 403'd for `finance_manager` despite being in
+both catalogues (the "DB seed ≠ static code" pitfall). Fixed at source in migration §6.
+
+**REMAINING:**
+1. **Level-parameterised enforcement cases belong in `financePayroll.mjs`** (it already builds a
+   fully locked run): at level 2 the certifier/approver MAY fund+release; at level 4 they may not.
+   The SoD suite deliberately does not rebuild a whole run to test this.
+2. Browser QA of Payroll Setup → **Governance** (propose → approve as a different actor).
+3. Note: existing runs took `sod_level = 3` from the column default on apply — level 3 is *less*
+   strict than the previous hardcoded 4-way, so confirm no in-flight run is surprised (PAY-2026-0589
+   is already released, so inert there).
 **Origin:** 2026-07-25 "finish live run" session — releasing PAY-2026-0589 required 4 distinct
 actors because the SoD chain is hardcoded. User asked to make the strictness configurable.
 **Related:** [[central-workflow-engine]], governed statutory-version pattern (draft→submit→approve→
