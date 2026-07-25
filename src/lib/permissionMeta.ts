@@ -1421,6 +1421,30 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Release a locked and funded payroll, create the immutable release certificate, and create governed downstream disbursement and remittance drafts.',
     risk: 'high',
   },
+  'finance.payroll.sod_policy.view': {
+    module: 'Finance', group: 'Payroll Controls',
+    label: 'View Payroll SoD Policy',
+    description: 'View the active payroll segregation-of-duties level (2, 3 or 4 person) and the history of approved changes.',
+    risk: 'low',
+  },
+  'finance.payroll.sod_policy.propose': {
+    module: 'Finance', group: 'Payroll Controls',
+    label: 'Propose Payroll SoD Change',
+    description: 'Propose a change to the payroll segregation-of-duties level. The proposal takes effect only after a different authorised approver approves it through the workflow.',
+    risk: 'high',
+  },
+  'finance.payroll.sod_policy.approve': {
+    module: 'Finance', group: 'Payroll Controls',
+    label: 'Approve Payroll SoD Change',
+    description: 'Approve a proposed payroll segregation-of-duties change, activating it for runs created afterwards. The approver must differ from the proposer.',
+    risk: 'critical',
+  },
+  'finance.payroll.sod_policy.manage_roles': {
+    module: 'Finance', group: 'Payroll Controls',
+    label: 'Manage Payroll SoD Eligible Roles',
+    description: 'Edit which roles may propose and approve payroll segregation-of-duties changes. Superadmin only — this guards against a role granting itself sole approval and defeating maker-checker.',
+    risk: 'critical',
+  },
   'finance.payroll.finding.assign': {
     module: 'Finance', group: 'Payroll Controls',
     label: 'Assign Payroll Findings',

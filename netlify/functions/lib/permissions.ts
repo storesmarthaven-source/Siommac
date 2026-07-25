@@ -376,6 +376,10 @@ export const PERMISSION_KEYS = [
   'finance.payroll.certify',        // finance preparer: certify a reviewed immutable calculation version
   'finance.payroll.funding.approve', // finance manager: confirm payroll funding against net pay
   'finance.payroll.release',        // finance manager: release a locked, funded payroll under three-way SoD
+  'finance.payroll.sod_policy.view',    // read the active payroll segregation-of-duties policy + history
+  'finance.payroll.sod_policy.propose', // propose an SoD level change (draft -> submit for approval)
+  'finance.payroll.sod_policy.approve', // approve a proposed SoD change (maker != checker, activates it)
+  'finance.payroll.sod_policy.manage_roles', // SUPERADMIN-ONLY: edit which roles may propose/approve SoD changes
   'finance.payroll.finding.assign', // payroll operator: assign an operational control finding
   'finance.payroll.finding.resolve', // payroll operator: resolve a finding with evidence
   'finance.payroll.finding.waive',  // payroll approver: waive an eligible warning
@@ -731,6 +735,14 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.payroll.finding.resolve',
     'finance.payroll.finding.waive',
     'finance.payroll.finding.reopen',
+    // SoD policy: a finance manager may view/propose/approve a level change (the
+    // service additionally enforces the configurable eligible-roles list and
+    // maker != checker). manage_roles is deliberately NOT granted — editing the
+    // eligible-role list stays superadmin-only, so this role cannot make itself
+    // the sole approver and defeat maker-checker.
+    'finance.payroll.sod_policy.view',
+    'finance.payroll.sod_policy.propose',
+    'finance.payroll.sod_policy.approve',
     // Remittances (F1) — manager has full lifecycle incl approve
     'finance.remittances.view',
     'finance.remittances.manage',
@@ -962,6 +974,10 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.payroll.finding.resolve',
     'finance.payroll.finding.waive',
     'finance.payroll.finding.reopen',
+    // SoD policy — admin may view/propose/approve; manage_roles stays superadmin-only.
+    'finance.payroll.sod_policy.view',
+    'finance.payroll.sod_policy.propose',
+    'finance.payroll.sod_policy.approve',
     // Remittances (F1) -- admin has all
     'finance.remittances.view', 'finance.remittances.manage',
     'finance.remittances.approve', 'finance.remittances.reports.view', 'finance.remittances.reports.export',
