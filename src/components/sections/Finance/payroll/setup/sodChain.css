@@ -1,0 +1,99 @@
+/* Payroll segregation-of-duties chain (SodChainDialog).
+   A vertical governance timeline: one row per seat, a connecting rail down the
+   left, and the separation rules as the visual emphasis — that is the point of
+   the dialog, so it gets the colour. Scoped `.sodc-*`. */
+
+.sodc { display: flex; flex-direction: column; gap: 16px; }
+
+/* ── summary band ── */
+.sodc-band {
+  display: flex; align-items: center; gap: 14px;
+  padding: 13px 15px; border-radius: 11px;
+  background: linear-gradient(180deg, #f7faff 0%, #f2f6fd 100%);
+  border: 1px solid #dfe8f7;
+}
+.sodc-band-num {
+  flex: 0 0 auto; display: inline-flex; align-items: baseline; gap: 5px;
+  color: #17376b; font-weight: 800; font-size: 26px; line-height: 1;
+}
+.sodc-band-num span { font-size: 12px; font-weight: 700; letter-spacing: .02em; }
+.sodc-band p { margin: 0; font-size: 12.5px; line-height: 1.5; color: #4a5a72; }
+.sodc-band strong { color: #17243c; }
+
+/* ── the timeline ── */
+.sodc-rail { display: flex; flex-direction: column; }
+
+.sodc-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: start; column-gap: 12px;
+  padding: 0 0 16px;
+  position: relative;
+}
+.sodc-row:last-child { padding-bottom: 0; }
+
+/* connector rail */
+.sodc-node { position: relative; display: flex; justify-content: center; }
+.sodc-row:not(:last-child) .sodc-node::after {
+  content: ''; position: absolute; top: 27px; bottom: -16px; left: 50%;
+  width: 2px; margin-left: -1px; background: #e2e9f3;
+}
+.sodc-dot {
+  position: relative; z-index: 1;
+  width: 27px; height: 27px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #fff; border: 2px solid #d7e1f0; color: #5a6b85;
+  font-size: 12px; font-weight: 750;
+}
+.sodc-row.is-separated .sodc-dot { background: #17376b; border-color: #17376b; color: #fff; }
+
+/* content */
+.sodc-main { min-width: 0; padding-top: 3px; }
+.sodc-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sodc-title h4 { margin: 0; font-size: 13.5px; font-weight: 700; color: #17243c; }
+.sodc-detail { margin: 3px 0 0; font-size: 12px; line-height: 1.5; color: #667994; }
+
+/* separation chips — the emphasis of the whole dialog */
+.sodc-rules { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.sodc-rule {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 7px 2px 5px; border-radius: 5px;
+  background: #eaf1ff; border: 1px solid #cddcf7; color: #1c4288;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .01em; white-space: nowrap;
+}
+.sodc-rule i { font-style: normal; font-weight: 800; opacity: .75; }
+.sodc-free {
+  font-size: 10.5px; font-weight: 600; color: #93a3b8;
+  padding: 2px 0; white-space: nowrap;
+}
+
+/* people */
+.sodc-people { display: flex; align-items: center; gap: 8px; padding-top: 2px; }
+.sodc-avatars { display: flex; align-items: center; }
+.sodc-avatars > * { margin-left: -8px; border-radius: 50%; box-shadow: 0 0 0 2px #fff; }
+.sodc-avatars > *:first-child { margin-left: 0; }
+.sodc-more {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 26px; height: 26px; padding: 0 6px; border-radius: 999px;
+  background: #eef2f8; color: #51637d; font-size: 10.5px; font-weight: 700;
+  box-shadow: 0 0 0 2px #fff;
+}
+.sodc-count { font-size: 11.5px; color: #8494ab; white-space: nowrap; }
+.sodc-none {
+  font-size: 11px; font-weight: 650; color: var(--danger, #d92d20);
+  background: #fff5f4; border: 1px solid #ffd7d2; border-radius: 6px; padding: 3px 8px;
+  white-space: nowrap;
+}
+
+/* ── footer ── */
+.sodc-note {
+  padding: 11px 13px; border-radius: 9px;
+  background: #f7f9fc; border: 1px solid #e4eaf3;
+  font-size: 12px; color: #4a5a72; line-height: 1.55;
+}
+.sodc-note strong { color: #17243c; }
+
+@media (max-width: 620px) {
+  .sodc-row { grid-template-columns: 30px minmax(0, 1fr); row-gap: 8px; }
+  .sodc-people { grid-column: 2; }
+}

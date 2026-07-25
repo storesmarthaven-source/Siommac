@@ -52,12 +52,31 @@ export interface SodPolicyRow {
   createdAt: string;
 }
 
+/** One seat in the payroll chain, with the people who can actually fill it. */
+export interface SodChainStep {
+  key: 'prepare' | 'certify' | 'approve' | 'fund' | 'release';
+  label: string;
+  detail: string;
+  permission: string;
+  /** Roles granted this capability (from role_permissions), for display. */
+  roles: string[];
+  /** Active users who hold it — capped for display; holderCount is the true total. */
+  holderIds: string[];
+  holderCount: number;
+  /** Earlier seats this one must be a DIFFERENT person from, at the active level. */
+  mustDifferFrom: SodChainStep['key'][];
+}
+
 export interface SodPolicyOverview {
   active: SodPolicyRow | null;
   pending: SodPolicyRow | null;
   history: SodPolicyRow[];
   /** Levels the UI may offer. The floor is 2 — SoD cannot be switched off. */
   levels: readonly number[];
+  /** The lifecycle chain under the ACTIVE level (drives the flow diagram). */
+  chain: SodChainStep[];
+  /** How many DISTINCT people the active level needs end to end. */
+  distinctPeopleRequired: number;
 }
 
 interface DbRow {
@@ -123,6 +142,71 @@ function assertEligible(policy: SodPolicyRow | null, role: string, action: strin
   }
 }
 
+// The lifecycle seats, keyed to the SAME permissions the release-chain RPCs
+// enforce — so the diagram can never drift from what the database actually does.
+const CHAIN_SEATS: { key: SodChainStep['key']; label: string; detail: string; permission: string }[] = [
+  { key: 'prepare', label: 'Prepare',  detail: 'Creates the run, locks inputs and calculates it.',       permission: 'finance.payroll.run.manage' },
+  { key: 'certify', label: 'Certify',  detail: 'Attests the calculation, statutory results and variances.', permission: 'finance.payroll.certify' },
+  { key: 'approve', label: 'Approve',  detail: 'Decides the approval task and locks the run.',            permission: 'finance.payroll.approve' },
+  { key: 'fund',    label: 'Fund',     detail: 'Confirms the money is available against net pay.',         permission: 'finance.payroll.funding.approve' },
+  { key: 'release', label: 'Release',  detail: 'Issues the release certificate and pays employees.',       permission: 'finance.payroll.release' },
+];
+
+const HOLDER_DISPLAY_CAP = 8;
+
+/** Which earlier seats a seat must be a different person from, at `level`. */
+function separationFor(key: SodChainStep['key'], level: SodLevel): SodChainStep['key'][] {
+  // The approver can never be the preparer — the 2-person floor, every level.
+  if (key === 'approve') return ['prepare'];
+  if (key === 'fund' || key === 'release') {
+    const from: SodChainStep['key'][] = ['prepare'];        // floor
+    if (level >= 3) from.push('approve');
+    if (level >= 4) from.push('certify');
+    return from;
+  }
+  return [];
+}
+
+/**
+ * Resolve the chain for a level: each seat plus the ACTIVE users who can fill it.
+ * Holders come from role_permissions (the real authority) + superadmin, which is
+ * allow-all in memory and therefore holds every seat.
+ */
+async function resolveChain(level: SodLevel): Promise<SodChainStep[]> {
+  const permissions = CHAIN_SEATS.map(s => s.permission);
+  const { data: grants, error: gErr } = await sb
+    .from('role_permissions').select('role_name, permission').in('permission', permissions);
+  if (gErr) throw err('sodPolicy.chain: ' + gErr.message);
+
+  const rolesByPermission = new Map<string, string[]>();
+  for (const g of grants ?? []) {
+    const list = rolesByPermission.get(g.permission) ?? [];
+    if (!list.includes(g.role_name)) list.push(g.role_name);
+    rolesByPermission.set(g.permission, list);
+  }
+
+  const everyRole = [...new Set([...(grants ?? []).map(g => g.role_name), 'superadmin'])];
+  const { data: users, error: uErr } = await sb
+    .from('app_users').select('id, role').in('role', everyRole).eq('status', 'active');
+  if (uErr) throw err('sodPolicy.chain users: ' + uErr.message);
+
+  return CHAIN_SEATS.map(seat => {
+    // superadmin is allow-all, so it can fill any seat even without a grant row.
+    const roles = [...new Set([...(rolesByPermission.get(seat.permission) ?? []), 'superadmin'])];
+    const holders = (users ?? []).filter(u => roles.includes(u.role)).map(u => u.id);
+    return {
+      key: seat.key,
+      label: seat.label,
+      detail: seat.detail,
+      permission: seat.permission,
+      roles: roles.sort(),
+      holderIds: holders.slice(0, HOLDER_DISPLAY_CAP),
+      holderCount: holders.length,
+      mustDifferFrom: separationFor(seat.key, level),
+    };
+  });
+}
+
 /** Active policy + open proposal + recent history. */
 export async function getSodPolicy(): Promise<SodPolicyOverview> {
   const { data, error } = await sb
@@ -132,11 +216,15 @@ export async function getSodPolicy(): Promise<SodPolicyOverview> {
     .limit(50);
   if (error) throw err('sodPolicy.get: ' + error.message);
   const rows = (data ?? []).map(toRow);
+  const active = rows.find(r => r.status === 'active') ?? null;
+  const level = (active?.sodLevel ?? 3) as SodLevel;
   return {
-    active:  rows.find(r => r.status === 'active') ?? null,
+    active,
     pending: rows.find(r => r.status === 'pending_approval') ?? null,
     history: rows.filter(r => r.status === 'superseded'),
     levels:  SOD_LEVELS,
+    chain:   await resolveChain(level),
+    distinctPeopleRequired: level,
   };
 }
 

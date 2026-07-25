@@ -95,6 +95,37 @@ export default async function run(h) {
     }
   });
 
+  await test('get returns the lifecycle chain the flow diagram renders', async () => {
+    const r = await api('finance/payroll/sod-policy/get', T.proposer, {});
+    ok(r, `get failed: ${r.body.message}`);
+    const { chain, distinctPeopleRequired, active } = r.body.data;
+    expect(Array.isArray(chain) && chain.length === 5, `chain must have 5 seats, got ${chain?.length}`);
+    expect(chain.map(s => s.key).join(',') === 'prepare,certify,approve,fund,release',
+      `unexpected seat order: ${chain.map(s => s.key).join(',')}`);
+    expect(distinctPeopleRequired === active.sodLevel, 'distinctPeopleRequired must track the active level');
+
+    for (const seat of chain) {
+      for (const k of ['key', 'label', 'detail', 'permission', 'roles', 'holderIds', 'holderCount', 'mustDifferFrom']) {
+        expect(k in seat, `seat ${seat.key} is missing ${k}`);
+      }
+      expect(seat.holderIds.length <= seat.holderCount, `${seat.key}: holderIds exceeds holderCount`);
+      // superadmin is allow-all, so it must be able to fill every seat.
+      expect(seat.roles.includes('superadmin'), `${seat.key}: superadmin missing from roles`);
+    }
+
+    // Separation semantics must match the ACTIVE level exactly.
+    const byKey = Object.fromEntries(chain.map(s => [s.key, s]));
+    const level = active.sodLevel;
+    expect(byKey.prepare.mustDifferFrom.length === 0, 'prepare must have no separation');
+    expect(byKey.certify.mustDifferFrom.length === 0, 'certify must have no separation');
+    expect(byKey.approve.mustDifferFrom.join() === 'prepare', 'approve must differ from prepare at every level');
+    const expected = level >= 4 ? 'prepare,approve,certify' : level >= 3 ? 'prepare,approve' : 'prepare';
+    for (const k of ['fund', 'release']) {
+      expect(byKey[k].mustDifferFrom.join() === expected,
+        `${k} at level ${level} should be [${expected}], got [${byKey[k].mustDifferFrom.join()}]`);
+    }
+  });
+
   h.section('SoD policy - proposal validation');
 
   const target = originalLevel === 4 ? 3 : 4;   // always a real change

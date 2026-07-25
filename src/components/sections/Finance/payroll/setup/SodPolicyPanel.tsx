@@ -23,6 +23,7 @@ import { useCan } from '@lib/permissions';
 import { useSessionStore } from '@store/session';
 import { toast } from '@store';
 import { EmployeeCell } from '../../_shared/EmployeeCell';
+import { SodChainDialog } from './SodChainDialog';
 
 const LEVELS: { level: 2 | 3 | 4; title: string; detail: string }[] = [
   { level: 2, title: '2-person', detail: 'The person who funds and releases must differ from the preparer.' },
@@ -47,6 +48,7 @@ export function SodPolicyPanel(): VNode {
   const [level, setLevel] = useState<2 | 3 | 4 | null>(null);
   const [reason, setReason] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [chainOpen, setChainOpen] = useState(false);
 
   const invalidate = (): void => { void qc.invalidateQueries({ queryKey: ['finance', 'payroll', 'sod-policy'] }); };
 
@@ -114,6 +116,11 @@ export function SodPolicyPanel(): VNode {
               {active.approvedBy && <> · approved by <EmployeeCell employeeId={active.approvedBy} /></>}
             </p>
           )}
+          <div style={{ marginTop: 12 }}>
+            <button type="button" class="hrfin-action" onClick={() => setChainOpen(true)}>
+              <i class="fa-solid fa-diagram-project" style={{ fontSize: 12 }} /> View the approval chain
+            </button>
+          </div>
         </div>
       </section>
 
@@ -238,6 +245,12 @@ export function SodPolicyPanel(): VNode {
             ))}
           </div>
         </section>
+      )}
+
+      {/* Reads the same query as this panel, so approving a level change redraws
+          the chain (separation badges + required headcount) on the next render. */}
+      {chainOpen && (
+        <SodChainDialog chain={q.data!.chain} level={activeLevel} onClose={() => setChainOpen(false)} />
       )}
     </div>
   );

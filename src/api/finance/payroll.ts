@@ -643,11 +643,25 @@ export interface PayrollSodPolicy {
   effectiveAt: string | null;
   createdAt: string;
 }
+/** One seat in the payroll chain + the people who can actually fill it. */
+export interface PayrollSodChainStep {
+  key: 'prepare' | 'certify' | 'approve' | 'fund' | 'release';
+  label: string;
+  detail: string;
+  permission: string;
+  roles: string[];
+  holderIds: string[];
+  holderCount: number;
+  /** Earlier seats this one must be a DIFFERENT person from, at the active level. */
+  mustDifferFrom: PayrollSodChainStep['key'][];
+}
 export interface PayrollSodPolicyOverview {
   active: PayrollSodPolicy | null;
   pending: PayrollSodPolicy | null;
   history: PayrollSodPolicy[];
   levels: number[];
+  chain: PayrollSodChainStep[];
+  distinctPeopleRequired: number;
 }
 /** F-08 — issued payroll release certificate (immutable close evidence). */
 export interface PayrollReleaseCertificate {

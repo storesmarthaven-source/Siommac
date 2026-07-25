@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "800feec4fc06fc83f150f58f940f2088b03e2ea9",
+    "head": "3adbac983d028ddc8083fa1f91c776d53512ee4b",
     "branch": "main",
-    "fingerprint": "85efe3903be4213cc6302c32",
-    "indexedFiles": 1572
+    "fingerprint": "7edd63908ec988c1a23e34f6",
+    "indexedFiles": 1573
   },
   "summary": {
-    "files": 1238,
-    "symbols": 12467,
+    "files": 1239,
+    "symbols": 12479,
     "widgets": 32,
     "routes": 938,
     "routeDefinitions": 939,
@@ -16,7 +16,7 @@
     "apiCalls": 373,
     "databaseObjects": 1361,
     "e2eSuites": 81,
-    "e2eTests": 2506
+    "e2eTests": 2513
   },
   "modules": [
     {
@@ -35,8 +35,8 @@
     {
       "id": "payroll",
       "counts": {
-        "files": 191,
-        "symbols": 1955,
+        "files": 192,
+        "symbols": 1967,
         "widgets": 10,
         "routes": 140,
         "routeDefinitions": 140,
@@ -644,8 +644,8 @@
       "path": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
       "module": "payroll",
       "role": "backend-lib",
-      "lines": 311,
-      "hash": "c0a6186d3edf7e47"
+      "lines": 399,
+      "hash": "808992678deac890"
     },
     {
       "path": "netlify/functions/lib/finance/payroll/sourceOverlap.ts",
@@ -2381,7 +2381,7 @@
       "module": "payroll",
       "role": "tooling",
       "lines": 400,
-      "hash": "2b295f43db3a5def"
+      "hash": "78a31d1c72d40927"
     },
     {
       "path": "scripts/e2e/payroll-contract-gate.mjs",
@@ -2506,8 +2506,8 @@
       "path": "scripts/e2e/suites/financePayroll.mjs",
       "module": "payroll",
       "role": "e2e-suite",
-      "lines": 3412,
-      "hash": "4d3936b4677101c6"
+      "lines": 3546,
+      "hash": "e9b3c8815d65e871"
     },
     {
       "path": "scripts/e2e/suites/financePayslipsEss.mjs",
@@ -2828,8 +2828,8 @@
       "path": "scripts/e2e/suites/payrollSodPolicy.mjs",
       "module": "payroll",
       "role": "e2e-suite",
-      "lines": 235,
-      "hash": "b566a34753f8052c"
+      "lines": 266,
+      "hash": "63a243cd9866ff8b"
     },
     {
       "path": "scripts/e2e/suites/payrollStatutoryForms.mjs",
@@ -3178,8 +3178,8 @@
       "path": "src/api/finance/payroll.ts",
       "module": "payroll",
       "role": "frontend-api",
-      "lines": 1076,
-      "hash": "903fc630e966e169"
+      "lines": 1090,
+      "hash": "01e35e3c03a43042"
     },
     {
       "path": "src/api/finance/payrollExceptions.ts",
@@ -4897,11 +4897,18 @@
       "hash": "8e6c3e571d2bbd20"
     },
     {
+      "path": "src/components/sections/Finance/payroll/setup/SodChainDialog.tsx",
+      "module": "payroll",
+      "role": "frontend-page",
+      "lines": 114,
+      "hash": "92311804db3bc4ee"
+    },
+    {
       "path": "src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx",
       "module": "payroll",
       "role": "frontend-page",
-      "lines": 245,
-      "hash": "f9513c40af05aa61"
+      "lines": 258,
+      "hash": "d16b38c9cee0d24f"
     },
     {
       "path": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.test.tsx",
@@ -18861,10 +18868,20 @@
       "tags": []
     },
     {
+      "name": "SodChainStep",
+      "kind": "interface",
+      "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
+      "line": 56,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "SodPolicyOverview",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 55,
+      "line": 70,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -18874,7 +18891,7 @@
       "name": "DbRow",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 63,
+      "line": 82,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -18884,7 +18901,7 @@
       "name": "err",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 77,
+      "line": 96,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -18894,7 +18911,7 @@
       "name": "toRow",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 81,
+      "line": 100,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -18904,7 +18921,7 @@
       "name": "SELECT",
       "kind": "variable",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 97,
+      "line": 116,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -18914,7 +18931,7 @@
       "name": "activePolicy",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 100,
+      "line": 119,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -18924,7 +18941,47 @@
       "name": "assertEligible",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 115,
+      "line": 134,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CHAIN_SEATS",
+      "kind": "array",
+      "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
+      "line": 147,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HOLDER_DISPLAY_CAP",
+      "kind": "variable",
+      "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
+      "line": 155,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "separationFor",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
+      "line": 158,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "resolveChain",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
+      "line": 175,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -18934,7 +18991,7 @@
       "name": "getSodPolicy",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 127,
+      "line": 211,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -18944,7 +19001,7 @@
       "name": "proposeSodChange",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 147,
+      "line": 235,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -18954,7 +19011,7 @@
       "name": "approveSodChange",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 235,
+      "line": 323,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -18964,7 +19021,7 @@
       "name": "setSodEligibleRoles",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 280,
+      "line": 368,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -47216,7 +47273,7 @@
       "name": "title",
       "kind": "variable",
       "file": "scripts/e2e/suites/financePayroll.mjs",
-      "line": 52,
+      "line": 53,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -47228,7 +47285,7 @@
       "name": "BASE_GL_MAPPINGS",
       "kind": "array",
       "file": "scripts/e2e/suites/financePayroll.mjs",
-      "line": 59,
+      "line": 60,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -47240,7 +47297,7 @@
       "name": "seedDateFromTag",
       "kind": "function",
       "file": "scripts/e2e/suites/financePayroll.mjs",
-      "line": 72,
+      "line": 73,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -47252,7 +47309,7 @@
       "name": "run",
       "kind": "function",
       "file": "scripts/e2e/suites/financePayroll.mjs",
-      "line": 81,
+      "line": 82,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -47264,7 +47321,7 @@
       "name": "waitFor",
       "kind": "function",
       "file": "scripts/e2e/suites/financePayroll.mjs",
-      "line": 120,
+      "line": 121,
       "module": "payroll",
       "exported": false,
       "container": "run",
@@ -47276,7 +47333,7 @@
       "name": "seedRun",
       "kind": "function",
       "file": "scripts/e2e/suites/financePayroll.mjs",
-      "line": 1170,
+      "line": 1171,
       "module": "payroll",
       "exported": false,
       "container": "run",
@@ -47288,7 +47345,7 @@
       "name": "seedCalculatedRun",
       "kind": "function",
       "file": "scripts/e2e/suites/financePayroll.mjs",
-      "line": 1185,
+      "line": 1186,
       "module": "payroll",
       "exported": false,
       "container": "run",
@@ -47300,7 +47357,43 @@
       "name": "runPayslipFlow",
       "kind": "function",
       "file": "scripts/e2e/suites/financePayroll.mjs",
-      "line": 1617,
+      "line": 1618,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "sodProbe",
+      "kind": "function",
+      "file": "scripts/e2e/suites/financePayroll.mjs",
+      "line": 2348,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "setRunSodLevel",
+      "kind": "function",
+      "file": "scripts/e2e/suites/financePayroll.mjs",
+      "line": 2362,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "probe",
+      "kind": "function",
+      "file": "scripts/e2e/suites/financePayroll.mjs",
+      "line": 2443,
       "module": "payroll",
       "exported": false,
       "container": "run",
@@ -56976,10 +57069,20 @@
       "tags": []
     },
     {
+      "name": "PayrollSodChainStep",
+      "kind": "interface",
+      "file": "src/api/finance/payroll.ts",
+      "line": 647,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "PayrollSodPolicyOverview",
       "kind": "interface",
       "file": "src/api/finance/payroll.ts",
-      "line": 646,
+      "line": 658,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -56989,7 +57092,7 @@
       "name": "PayrollReleaseCertificate",
       "kind": "interface",
       "file": "src/api/finance/payroll.ts",
-      "line": 653,
+      "line": 667,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -56999,7 +57102,7 @@
       "name": "PayrollCalculationComparison",
       "kind": "interface",
       "file": "src/api/finance/payroll.ts",
-      "line": 661,
+      "line": 675,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57009,7 +57112,7 @@
       "name": "PayrollApiError",
       "kind": "class",
       "file": "src/api/finance/payroll.ts",
-      "line": 675,
+      "line": 689,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57019,7 +57122,7 @@
       "name": "call",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 690,
+      "line": 704,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -57029,7 +57132,7 @@
       "name": "financePayrollApi",
       "kind": "object",
       "file": "src/api/finance/payroll.ts",
-      "line": 703,
+      "line": 717,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57039,7 +57142,7 @@
       "name": "financePayrollKeys",
       "kind": "object",
       "file": "src/api/finance/payroll.ts",
-      "line": 866,
+      "line": 880,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57049,7 +57152,7 @@
       "name": "usePayrollRun",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 881,
+      "line": 895,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57061,7 +57164,7 @@
       "name": "useRunLines",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 884,
+      "line": 898,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57073,7 +57176,7 @@
       "name": "usePolicyEvidence",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 888,
+      "line": 902,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57085,7 +57188,7 @@
       "name": "useRunWorkspace",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 897,
+      "line": 911,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57097,7 +57200,7 @@
       "name": "useReleasePreflight",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 905,
+      "line": 919,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57109,7 +57212,7 @@
       "name": "useReleaseCertificate",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 914,
+      "line": 928,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57121,7 +57224,7 @@
       "name": "useCalculationVersions",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 923,
+      "line": 937,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57133,7 +57236,7 @@
       "name": "useCalculationComparison",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 931,
+      "line": 945,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57145,7 +57248,7 @@
       "name": "useRunWarnings",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 938,
+      "line": 952,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57157,7 +57260,7 @@
       "name": "useRunPayslips",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 941,
+      "line": 955,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57169,7 +57272,7 @@
       "name": "useRunGlPreview",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 944,
+      "line": 958,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57181,7 +57284,7 @@
       "name": "usePayGroups",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 947,
+      "line": 961,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57193,7 +57296,7 @@
       "name": "useReasonCodes",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 951,
+      "line": 965,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57205,7 +57308,7 @@
       "name": "usePayGroupMembers",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 957,
+      "line": 971,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57217,7 +57320,7 @@
       "name": "useOvertimeRules",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 960,
+      "line": 974,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57229,7 +57332,7 @@
       "name": "useEmployeeLoans",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 963,
+      "line": 977,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57241,7 +57344,7 @@
       "name": "useRunOverrides",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 966,
+      "line": 980,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57253,7 +57356,7 @@
       "name": "useRunExports",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 969,
+      "line": 983,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57265,7 +57368,7 @@
       "name": "useRunInputs",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 972,
+      "line": 986,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57277,7 +57380,7 @@
       "name": "useNisProfiles",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 975,
+      "line": 989,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57289,7 +57392,7 @@
       "name": "useRunAuditLog",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 978,
+      "line": 992,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57301,7 +57404,7 @@
       "name": "usePopulationPreview",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 985,
+      "line": 999,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57313,7 +57416,7 @@
       "name": "usePopulationReconciliation",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 994,
+      "line": 1008,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57325,7 +57428,7 @@
       "name": "useInputReadiness",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 1004,
+      "line": 1018,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57337,7 +57440,7 @@
       "name": "usePayrollMutation",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 1017,
+      "line": 1031,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57349,7 +57452,7 @@
       "name": "useResolveWarning",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 1028,
+      "line": 1042,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57361,7 +57464,7 @@
       "name": "useExportDownload",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 1037,
+      "line": 1051,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57373,7 +57476,7 @@
       "name": "payslipTemplateKeys",
       "kind": "object",
       "file": "src/api/finance/payroll.ts",
-      "line": 1045,
+      "line": 1059,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57383,7 +57486,7 @@
       "name": "usePayslipTemplates",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 1055,
+      "line": 1069,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -57395,7 +57498,7 @@
       "name": "useSetRunTemplate",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 1066,
+      "line": 1080,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -81476,10 +81579,42 @@
       "tags": []
     },
     {
+      "name": "SEAT_SHORT",
+      "kind": "object",
+      "file": "src/components/sections/Finance/payroll/setup/SodChainDialog.tsx",
+      "line": 24,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SodChainDialog",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/SodChainDialog.tsx",
+      "line": 29,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "nameOf",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/SodChainDialog.tsx",
+      "line": 37,
+      "module": "payroll",
+      "exported": false,
+      "container": "SodChainDialog",
+      "tags": []
+    },
+    {
       "name": "LEVELS",
       "kind": "array",
       "file": "src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx",
-      "line": 27,
+      "line": 28,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81489,7 +81624,7 @@
       "name": "ALL_ROLES",
       "kind": "array",
       "file": "src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx",
-      "line": 33,
+      "line": 34,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81499,7 +81634,7 @@
       "name": "SodPolicyPanel",
       "kind": "function",
       "file": "src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx",
-      "line": 35,
+      "line": 36,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -81511,7 +81646,7 @@
       "name": "invalidate",
       "kind": "function",
       "file": "src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx",
-      "line": 51,
+      "line": 53,
       "module": "payroll",
       "exported": false,
       "container": "SodPolicyPanel",
@@ -81521,7 +81656,7 @@
       "name": "submitProposal",
       "kind": "function",
       "file": "src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx",
-      "line": 85,
+      "line": 87,
       "module": "payroll",
       "exported": false,
       "container": "SodPolicyPanel",
@@ -167285,551 +167420,575 @@
       "tests": [
         {
           "name": "finance_staff and finance_manager roles exist in roles table",
-          "line": 320
+          "line": 321
         },
         {
           "name": "acquire finance actors and two isolated salaried employees",
-          "line": 328
+          "line": 329
         },
         {
           "name": "an active statutory version must exist before creating a run",
-          "line": 351
+          "line": 352
         },
         {
           "name": "main lifecycle uses an isolated two-employee pay group",
-          "line": 358
+          "line": 359
         },
         {
           "name": "finance_staff can create a payroll run",
-          "line": 389
+          "line": 390
         },
         {
           "name": "create retry with the same key returns one run and one set of side-effects",
-          "line": 410
+          "line": 411
         },
         {
           "name": "employee is DENIED creating a payroll run",
-          "line": 435
+          "line": 436
         },
         {
           "name": "duplicate scheduled run business key is rejected (409)",
-          "line": 443
+          "line": 444
         },
         {
           "name": "plain employee is DENIED locking payroll inputs",
-          "line": 457
+          "line": 458
         },
         {
           "name": "input lock requires an idempotency key",
-          "line": 470
+          "line": 471
         },
         {
           "name": "finance_manager can lock inputs for the run",
-          "line": 479
+          "line": 480
         },
         {
           "name": "input-lock retry replays one immutable snapshot and exact side effects",
-          "line": 491
+          "line": 492
         },
         {
           "name": "input-lock same key with a different payload is rejected",
-          "line": 521
+          "line": 522
         },
         {
           "name": "an input-locked run rejects a fresh command key",
-          "line": 534
+          "line": 535
         },
         {
           "name": "run inputs are created in finance_payroll_run_inputs",
-          "line": 543
+          "line": 544
         },
         {
           "name": "plain employee is DENIED calculating payroll",
-          "line": 562
+          "line": 563
         },
         {
           "name": "finance_manager can calculate the run",
-          "line": 572
+          "line": 573
         },
         {
           "name": "calculate retry replays one durable attempt and one immutable version",
-          "line": 586
+          "line": 587
         },
         {
           "name": "calculation evidence get endpoints and run workspace return the UI contract",
-          "line": 617
+          "line": 618
         },
         {
           "name": "plain employee is DENIED payroll execution evidence endpoints",
-          "line": 648
+          "line": 649
         },
         {
           "name": "run lines are created with NIS snapshot",
-          "line": 662
+          "line": 663
         },
         {
           "name": "published calculation population and NIS evidence match the frozen input snapshot",
-          "line": 685
+          "line": 686
         },
         {
           "name": "published payroll evidence rejects in-place updates",
-          "line": 723
+          "line": 724
         },
         {
           "name": "NIS warnings are created for employees with no verified NIS profile",
-          "line": 739
+          "line": 740
         },
         {
           "name": "normalized findings expose current calculation warnings and support get",
-          "line": 754
+          "line": 755
         },
         {
           "name": "plain employee is DENIED every payroll finding read and command route",
-          "line": 771
+          "line": 772
         },
         {
           "name": "finding lifecycle is versioned, idempotent and permission-gated",
-          "line": 811
+          "line": 812
         },
         {
           "name": "a failed calculation is durable, safe to inspect, and recoverable with a new key",
-          "line": 902
+          "line": 903
         },
         {
           "name": "an unresolved blocker prevents submission until evidence-backed resolution",
-          "line": 972
+          "line": 973
         },
         {
           "name": "plain employee is DENIED payroll certification",
-          "line": 1034
+          "line": 1035
         },
         {
           "name": "processor certifies the current calculation package exactly once",
-          "line": 1048
+          "line": 1049
         },
         {
           "name": "finance_staff can submit the run for approval",
-          "line": 1088
+          "line": 1089
         },
         {
           "name": "employee is DENIED submitting a run",
-          "line": 1095
+          "line": 1096
         },
         {
           "name": "a pending_approval run cannot be submitted again",
-          "line": 1112
+          "line": 1113
         },
         {
           "name": "§2 side-effects: payroll_run.submitted app_event + audit_log after submit",
-          "line": 1119
+          "line": 1120
         },
         {
           "name": "§8.1 handoff: payroll_approval handoff_outbox row emitted after submit (Gap 18)",
-          "line": 1139
+          "line": 1140
         },
         {
           "name": "atomic submit: retry with the same idempotency key returns the original workflow (no double-create)",
-          "line": 1236
+          "line": 1237
         },
         {
           "name": "atomic submit: a rejected submit leaves the run UNCHANGED (no strand, no orphan workflow)",
-          "line": 1265
+          "line": 1266
         },
         {
           "name": "atomic submit: same key + different payload is rejected WF409 (direct RPC)",
-          "line": 1276
+          "line": 1277
         },
         {
           "name": "atomic submit: concurrent submits — exactly one succeeds, exactly one workflow",
-          "line": 1289
+          "line": 1290
         },
         {
           "name": "atomic submit: a returned run resubmits with a fresh workflow linked via supersedes",
-          "line": 1301
+          "line": 1302
         },
         {
           "name": "atomic submit: primitive wrote the workflow instance + first task + workflow.started audit",
-          "line": 1322
+          "line": 1323
         },
         {
           "name": "atomic submit: a submit without an idempotency key is rejected",
-          "line": 1338
+          "line": 1339
         },
         {
           "name": "atomic submit: cleanup seeded runs",
-          "line": 1346
+          "line": 1347
         },
         {
           "name": "workflow task created for pending_approval run",
-          "line": 1408
+          "line": 1409
         },
         {
           "name": "finance_manager (fmgr1, different from creator fstaff1) can approve via decideTask",
-          "line": 1426
+          "line": 1427
         },
         {
           "name": "SoD + no-workflow guards on the runs/approve route (seeded negatives)",
-          "line": 1463
+          "line": 1464
         },
         {
           "name": "§2 side-effects: payroll_run.approved app_event + audit_log",
-          "line": 1486
+          "line": 1487
         },
         {
           "name": "§8.1 handoff: payroll_locking handoff_outbox row emitted after approve (Gap 18)",
-          "line": 1498
+          "line": 1499
         },
         {
           "name": "finance_staff is DENIED locking a run (SoD — needs finance.payroll.lock)",
-          "line": 1515
+          "line": 1516
         },
         {
           "name": "employee is DENIED locking a run",
-          "line": 1524
+          "line": 1525
         },
         {
           "name": "lock requires an explicit idempotency key",
-          "line": 1533
+          "line": 1534
         },
         {
           "name": "finance_manager can lock an approved run",
-          "line": 1541
+          "line": 1542
         },
         {
           "name": "lock same-key retry replays the result and writes each side effect once",
-          "line": 1554
+          "line": 1555
         },
         {
           "name": "lock same key with a different run is rejected as an idempotency conflict",
-          "line": 1585
+          "line": 1586
         },
         {
           "name": "a locked run cannot be locked again",
-          "line": 1594
+          "line": 1595
         },
         {
           "name": "§8.1 handoff: payslip_generation handoff_outbox row emitted after lock (Gap 18)",
-          "line": 1603
+          "line": 1604
         },
         {
           "name": "finance_manager can generate payslips for a locked run",
-          "line": 1621
+          "line": 1622
         },
         {
           "name": "generating payslips for an already-generated run is idempotent",
-          "line": 1641
+          "line": 1642
         },
         {
           "name": "finance_staff renders every generated payslip before release",
-          "line": 1650
+          "line": 1651
         },
         {
           "name": "finance_manager can list payslips for a run",
-          "line": 1670
+          "line": 1671
         },
         {
           "name": "employee emp1 can view their own payslips (view_own)",
-          "line": 1676
+          "line": 1677
         },
         {
           "name": "employee emp2 sees ONLY their own payslips (not emp1's)",
-          "line": 1687
+          "line": 1688
         },
         {
           "name": "emp1 can get their specific payslip by ID",
-          "line": 1695
+          "line": 1696
         },
         {
           "name": "emp2 is DENIED getting emp1's payslip by ID",
-          "line": 1702
+          "line": 1703
         },
         {
           "name": "§2 side-effects: finance_payroll_run.payslips_generated audit_log",
-          "line": 1708
+          "line": 1709
         },
         {
           "name": "§8.1 notification: employees receive payslip.ready notification after generate (Gap 17)",
-          "line": 1718
+          "line": 1719
         },
         {
           "name": "active bank disbursement blocks reopen atomically, then owner cancellation clears the gate",
-          "line": 1751
+          "line": 1752
         },
         {
           "name": "active statutory remittance blocks reopen atomically, then owner cancellation clears the gate",
-          "line": 1813
+          "line": 1814
         },
         {
           "name": "finance_manager can reopen a locked run with a reason",
-          "line": 1882
+          "line": 1883
         },
         {
           "name": "reopen same-key retry replays the result and writes each side effect once",
-          "line": 1927
+          "line": 1928
         },
         {
           "name": "reopen same key with a different reason is rejected as an idempotency conflict",
-          "line": 1957
+          "line": 1958
         },
         {
           "name": "UI reject path: runs/reject decides the workflow task → run returned, no dangling task",
-          "line": 1970
+          "line": 1971
         },
         {
           "name": "returned run is revisable: recalculate → resubmit → runs/approve completes the workflow",
-          "line": 2024
+          "line": 2025
         },
         {
           "name": "corrected and approved run can be locked again with a fresh command key",
-          "line": 2100
+          "line": 2101
         },
         {
           "name": "plain employee is DENIED reopening a locked payroll run",
-          "line": 2116
+          "line": 2117
         },
         {
           "name": "reopen without a reason is rejected (422)",
-          "line": 2130
+          "line": 2131
         },
         {
           "name": "generated payslips block reopening and leave the locked run unchanged",
-          "line": 2143
+          "line": 2144
         },
         {
           "name": "release preflight names every unresolved operational gate",
-          "line": 2167
+          "line": 2168
         },
         {
           "name": "release setup creates one active primary bank account per paid employee",
-          "line": 2189
+          "line": 2190
         },
         {
           "name": "release setup has valid active payroll GL mappings",
-          "line": 2211
+          "line": 2212
         },
         {
           "name": "GL post is atomic and same-key retry creates no duplicate side effects",
-          "line": 2249
+          "line": 2250
         },
         {
           "name": "GL post with a fresh key is rejected after the run is posted",
-          "line": 2293
+          "line": 2294
         },
         {
           "name": "the payroll approver cannot confirm funding",
-          "line": 2302
+          "line": 2303
         },
         {
           "name": "the payroll preparer and certifier cannot bypass funding SoD through the RPC",
-          "line": 2322
+          "line": 2323
+        },
+        {
+          "name": "SoD level 3 (default) keeps the approver out of funding",
+          "line": 2368
+        },
+        {
+          "name": "SoD level 2 admits the approver but still blocks the preparer",
+          "line": 2374
+        },
+        {
+          "name": "SoD level 4 restores the strictest chain for this run",
+          "line": 2387
+        },
+        {
+          "name": "SoD certifier fixture: a run whose certifier is neither preparer nor approver",
+          "line": 2405
+        },
+        {
+          "name": "the certifier alone is blocked at level 4 and admitted at level 3",
+          "line": 2442
+        },
+        {
+          "name": "cleanup: remove the certifier-isolation run",
+          "line": 2470
         },
         {
           "name": "independent releaser confirms exact funding with idempotent evidence",
-          "line": 2341
+          "line": 2475
         },
         {
           "name": "published certification and funding evidence cannot be rewritten",
-          "line": 2380
+          "line": 2514
         },
         {
           "name": "release preflight becomes ready only after every gate is satisfied",
-          "line": 2396
+          "line": 2530
         },
         {
           "name": "an actor other than the funding confirmer cannot release through the RPC",
-          "line": 2410
+          "line": 2544
         },
         {
           "name": "payroll approver is denied release by three-way segregation of duties",
-          "line": 2425
+          "line": 2559
         },
         {
           "name": "independent manager atomically releases payroll and creates downstream drafts",
-          "line": 2435
+          "line": 2569
         },
         {
           "name": "fresh release key cannot create a second release package",
-          "line": 2464
+          "line": 2598
         },
         {
           "name": "release persisted one reconciled certificate and immutable bank snapshots",
-          "line": 2473
+          "line": 2607
         },
         {
           "name": "release certificate read returns immutable output links and 404 for an unknown run",
-          "line": 2616
+          "line": 2750
         },
         {
           "name": "plain employee is DENIED every payroll release-control endpoint",
-          "line": 2648
+          "line": 2782
         },
         {
           "name": "finance_staff is DENIED exporting a run",
-          "line": 2669
+          "line": 2803
         },
         {
           "name": "finance_manager creates an immutable CSV export exactly once",
-          "line": 2678
+          "line": 2812
         },
         {
           "name": "CSV export persists canonical immutable bytes and strong integrity metadata",
-          "line": 2705
+          "line": 2839
         },
         {
           "name": "export artifact bytes cannot be rewritten",
-          "line": 2740
+          "line": 2874
         },
         {
           "name": "same export key with a different format is rejected",
-          "line": 2758
+          "line": 2892
         },
         {
           "name": "after export, run remains released and records export time",
-          "line": 2768
+          "line": 2902
         },
         {
           "name": "re-export creates a new is_current version; prior is_current becomes false",
-          "line": 2775
-        },
-        {
-          "name": "released run CANNOT be reopened",
-          "line": 2822
-        },
-        {
-          "name": "finance_manager can list exports for a run",
-          "line": 2835
-        },
-        {
-          "name": "export retries retain one event, audit and receipt per artifact",
-          "line": 2844
-        },
-        {
-          "name": "finance_staff sees the F-12 9-key report catalog",
-          "line": 2867
-        },
-        {
-          "name": "report KPI summary returns tiles; materialVariances inert in Phase A",
-          "line": 2877
-        },
-        {
-          "name": "employee is DENIED the reports catalog",
-          "line": 2886
-        },
-        {
-          "name": "finance_staff previews gross-to-net reconciliation (exact, zero-tolerance)",
-          "line": 2891
-        },
-        {
-          "name": "report history is empty until file exports ship (Slice 3)",
           "line": 2909
         },
         {
+          "name": "released run CANNOT be reopened",
+          "line": 2956
+        },
+        {
+          "name": "finance_manager can list exports for a run",
+          "line": 2969
+        },
+        {
+          "name": "export retries retain one event, audit and receipt per artifact",
+          "line": 2978
+        },
+        {
+          "name": "finance_staff sees the F-12 9-key report catalog",
+          "line": 3001
+        },
+        {
+          "name": "report KPI summary returns tiles; materialVariances inert in Phase A",
+          "line": 3011
+        },
+        {
+          "name": "employee is DENIED the reports catalog",
+          "line": 3020
+        },
+        {
+          "name": "finance_staff previews gross-to-net reconciliation (exact, zero-tolerance)",
+          "line": 3025
+        },
+        {
+          "name": "report history is empty until file exports ship (Slice 3)",
+          "line": 3043
+        },
+        {
           "name": "the audit-package ZIP export is still deferred (400)",
-          "line": 2916
+          "line": 3050
         },
         {
           "name": "malformed report params are rejected (400)",
-          "line": 2926
+          "line": 3060
         },
         {
           "name": "warnings list for the locked run returns any existing warnings",
-          "line": 2944
+          "line": 3078
         },
         {
           "name": "population-preview returns total/salaried/hourly/missingPayBasis counts",
-          "line": 2968
+          "line": 3102
         },
         {
           "name": "population-preview includes Wave 2B extended fields (newHires/terminations/missingStatutoryProfile)",
-          "line": 2980
+          "line": 3114
         },
         {
           "name": "population-preview accepts a periodMonth param and returns period-scoped counts",
-          "line": 2998
+          "line": 3132
         },
         {
           "name": "finance_staff can see population preview (view_all scope)",
-          "line": 3009
+          "line": 3143
         },
         {
           "name": "employee role is denied population preview",
-          "line": 3014
+          "line": 3148
         },
         {
           "name": "export download returns content + metadata for the current export",
-          "line": 3023
+          "line": 3157
         },
         {
           "name": "same download key with another export is rejected",
-          "line": 3075
+          "line": 3209
         },
         {
           "name": "finance_staff is denied export download (needs finance.payroll.export)",
-          "line": 3090
+          "line": 3224
         },
         {
           "name": "export download for non-existent export returns clean error",
-          "line": 3099
+          "line": 3233
         },
         {
           "name": "bridge setup reuses release-validated employee bank accounts",
-          "line": 3116
+          "line": 3250
         },
         {
           "name": "bridge setup: seed an isolated exported run (emp1+emp2 only) for disbursement",
-          "line": 3121
+          "line": 3255
         },
         {
           "name": "employee is DENIED create-disbursement (no finance.disbursement.manage)",
-          "line": 3147
+          "line": 3281
         },
         {
           "name": "finance_manager can create a disbursement from an exported run",
-          "line": 3152
+          "line": 3286
         },
         {
           "name": "create-disbursement is idempotent (second call returns reusedExisting: true)",
-          "line": 3163
+          "line": 3297
         },
         {
           "name": "employee is DENIED create-remittance (no finance.remittances.manage)",
-          "line": 3173
-        },
-        {
-          "name": "bridge reuses the PAYE remittance created by atomic release",
-          "line": 3179
-        },
-        {
-          "name": "create-remittance paye_bir is idempotent (second call returns reusedExisting: true)",
-          "line": 3192
-        },
-        {
-          "name": "finance_staff bridge reuses the NIBTT remittance created by release",
-          "line": 3203
-        },
-        {
-          "name": "bridge setup: cleanup isolated disbursement run in FK order",
-          "line": 3213
-        },
-        {
-          "name": "setup: create two hourly employees + a scoped pay group with an approved timesheet",
-          "line": 3258
-        },
-        {
-          "name": "create + lock a pay-group run and hourly base pay = rate × approved hours",
           "line": 3307
         },
         {
+          "name": "bridge reuses the PAYE remittance created by atomic release",
+          "line": 3313
+        },
+        {
+          "name": "create-remittance paye_bir is idempotent (second call returns reusedExisting: true)",
+          "line": 3326
+        },
+        {
+          "name": "finance_staff bridge reuses the NIBTT remittance created by release",
+          "line": 3337
+        },
+        {
+          "name": "bridge setup: cleanup isolated disbursement run in FK order",
+          "line": 3347
+        },
+        {
+          "name": "setup: create two hourly employees + a scoped pay group with an approved timesheet",
+          "line": 3392
+        },
+        {
+          "name": "create + lock a pay-group run and hourly base pay = rate × approved hours",
+          "line": 3441
+        },
+        {
           "name": "calculate raises missing_approved_timesheet warning for the hourly employee with no timesheet",
-          "line": 3339
+          "line": 3473
         },
         {
           "name": "cleanup: remove the hourly run, timesheet and pay group (compensating delete)",
-          "line": 3353
+          "line": 3487
         },
         {
           "name": "legacy /api/payroll/* routes are no longer mounted (should 404 or fail)",
-          "line": 3405
+          "line": 3539
         }
       ],
       "apiPaths": [
@@ -173727,48 +173886,52 @@
           "line": 84
         },
         {
+          "name": "get returns the lifecycle chain the flow diagram renders",
+          "line": 98
+        },
+        {
           "name": "propose rejects an out-of-range level, a thin reason, and a no-op change",
-          "line": 102
+          "line": 133
         },
         {
           "name": "a finance manager proposes a change; it does NOT take effect yet",
-          "line": 114
+          "line": 145
         },
         {
           "name": "propose writes its audit + app_events evidence (spec §2)",
-          "line": 129
+          "line": 160
         },
         {
           "name": "only ONE proposal may be open at a time",
-          "line": 139
+          "line": 170
         },
         {
           "name": "the proposer CANNOT approve their own change (enforced in the RPC)",
-          "line": 149
+          "line": 180
         },
         {
           "name": "a DIFFERENT authorised approver activates it, superseding the previous policy",
-          "line": 158
+          "line": 189
         },
         {
           "name": "approving an already-decided proposal is refused",
-          "line": 176
+          "line": 207
         },
         {
           "name": "runs created BEFORE the change keep their own level",
-          "line": 184
+          "line": 215
         },
         {
           "name": "a finance manager may NOT edit the eligible-role list",
-          "line": 197
+          "line": 228
         },
         {
           "name": "superadmin edits the list, and superadmin is always retained",
-          "line": 203
+          "line": 234
         },
         {
           "name": "a role outside the eligible list cannot propose",
-          "line": 218
+          "line": 249
         }
       ],
       "apiPaths": [
