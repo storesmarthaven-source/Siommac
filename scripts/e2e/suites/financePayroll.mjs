@@ -2338,6 +2338,63 @@ export default async function run(h) {
     expect(count === 0, `denied funding RPC retained ${count} confirmation rows`);
   });
 
+  // ── Configurable SoD level (migration 20260925000000) ──────────────────────
+  // The level is snapshotted on the RUN, so these probes flip
+  // finance_payroll_runs.sod_level directly. Each probe passes a DELIBERATELY
+  // WRONG amount: the amount check sits AFTER the SoD checks inside the RPC, so
+  // PR403 means "stopped by segregation of duties" and PR422 means "SoD passed,
+  // stopped later" — proving which branch ran WITHOUT writing funding evidence.
+  const sodProbe = async (actorId, key) => {
+    const { error } = await sb.rpc('finance_payroll_confirm_funding_tx', {
+      p_run_id: ctx.runId,
+      p_actor_id: actorId,
+      p_idempotency_key: `${TAG}:run:main:sod:${key}`,
+      // Non-negative (an early PR400 guard rejects negatives) but deliberately
+      // mismatched, so the amount check downstream of the SoD checks rejects it.
+      p_confirmed_amount: releaseNetPayroll + 1,
+      p_confirmation_reference: `${TAG}-SOD-${key}`,
+      p_account_reference: null,
+      p_note: 'SoD level probe (expected to fail).',
+    });
+    return error?.code ?? 'ok';
+  };
+  const setRunSodLevel = async (level) => {
+    const { error } = await sb.from('finance_payroll_runs')
+      .update({ sod_level: level }).eq('id', ctx.runId);
+    expect(!error, `could not set run sod_level=${level}: ${error?.message}`);
+  };
+
+  await test('SoD level 3 (default) keeps the approver out of funding', async () => {
+    await setRunSodLevel(3);
+    const code = await sodProbe(fmgr1Id, 'l3-approver');
+    expect(code === 'PR403', `at level 3 the approver must be blocked by SoD, got ${code}`);
+  });
+
+  await test('SoD level 2 admits the approver but still blocks the preparer', async () => {
+    await setRunSodLevel(2);
+    const approver = await sodProbe(fmgr1Id, 'l2-approver');
+    expect(approver === 'PR422',
+      `at level 2 the approver should clear SoD and stop on the amount check, got ${approver}`);
+    // The floor holds at EVERY level: the preparer can never fund their own run.
+    const preparer = await sodProbe(fstaff1Id, 'l2-preparer');
+    expect(preparer === 'PR403', `the preparer must be blocked at every level, got ${preparer}`);
+    const count = (await sb.from('finance_payroll_funding_confirmations')
+      .select('id', { count: 'exact', head: true }).eq('run_id', ctx.runId)).count ?? 0;
+    expect(count === 0, `SoD probes wrote ${count} funding confirmation row(s) — must write none`);
+  });
+
+  await test('SoD level 4 restores the strictest chain for this run', async () => {
+    await setRunSodLevel(4);
+    const approver = await sodProbe(fmgr1Id, 'l4-approver');
+    expect(approver === 'PR403', `at level 4 the approver must be blocked, got ${approver}`);
+    // fstaff1 is both preparer and certifier here, so this asserts the level-4
+    // chain end-to-end. Isolating the certifier-only delta needs a fixture whose
+    // certifier differs from the preparer — noted in the SoD delivery contract.
+    const certifier = await sodProbe(fstaff1Id, 'l4-certifier');
+    expect(certifier === 'PR403', `at level 4 the preparer/certifier must be blocked, got ${certifier}`);
+    await setRunSodLevel(3);   // restore the default before the real funding test
+  });
+
   await test('independent releaser confirms exact funding with idempotent evidence', async () => {
     const command = payrollFundingCommand({
       runId: ctx.runId,
