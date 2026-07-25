@@ -1552,3 +1552,116 @@ begin
   return v_result;
 end
 $fn$;
+
+-- ── Governed policy-change RPCs ──────────────────────────────────────────────
+-- supabase-js issues SEPARATE PostgREST calls, so "supersede the active row" +
+-- "activate the new row" CANNOT be made atomic from the app layer. Both flows
+-- below therefore commit in ONE transaction inside the database.
+
+-- Approve a pending proposal: supersede the current active policy and activate
+-- the proposal, enforcing maker != checker and the status guard server-side.
+create or replace function public.finance_payroll_sod_policy_approve_tx(
+  p_policy_id uuid,
+  p_actor_id  text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_row    public.finance_payroll_sod_policy%rowtype;
+  v_active public.finance_payroll_sod_policy%rowtype;
+  v_had_active boolean := false;
+begin
+  select * into v_row
+    from public.finance_payroll_sod_policy
+   where id = p_policy_id
+     for update;
+  if not found then
+    raise exception 'finance_payroll_sod_policy: proposal % was not found', p_policy_id
+      using errcode = 'PR404';
+  end if;
+  if v_row.status <> 'pending_approval' then
+    raise exception 'finance_payroll_sod_policy: proposal is % (only pending_approval can be approved)',
+      v_row.status using errcode = 'PR422';
+  end if;
+  -- Maker-checker: the proposer can never approve their own change.
+  if v_row.proposed_by is not null and v_row.proposed_by = p_actor_id then
+    raise exception 'finance_payroll_sod_policy: the proposer cannot approve their own change'
+      using errcode = 'PR403';
+  end if;
+
+  select * into v_active
+    from public.finance_payroll_sod_policy
+   where status = 'active'
+     for update;
+  v_had_active := found;
+  if v_had_active then
+    update public.finance_payroll_sod_policy
+       set status = 'superseded', updated_at = now()
+     where id = v_active.id;
+  end if;
+
+  update public.finance_payroll_sod_policy
+     set status        = 'active',
+         approved_by   = p_actor_id,
+         effective_at  = now(),
+         updated_at    = now(),
+         supersedes_id = case when v_had_active then v_active.id else supersedes_id end
+   where id = v_row.id
+  returning * into v_row;
+
+  return to_jsonb(v_row);
+end;
+$fn$;
+
+-- Replace the eligible-role list (superadmin-only; the route enforces the
+-- permission). Versioned like any other change: supersede + insert a new active
+-- row carrying the SAME level, so the history stays append-only.
+create or replace function public.finance_payroll_sod_policy_set_roles_tx(
+  p_roles    text[],
+  p_actor_id text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_active public.finance_payroll_sod_policy%rowtype;
+  v_new    public.finance_payroll_sod_policy%rowtype;
+  v_roles  text[] := p_roles;
+begin
+  if v_roles is null or array_length(v_roles, 1) is null then
+    raise exception 'finance_payroll_sod_policy: at least one eligible role is required'
+      using errcode = 'PR422';
+  end if;
+  -- superadmin is ALWAYS retained: the control can never be locked out of itself.
+  if not ('superadmin' = any(v_roles)) then
+    v_roles := array_append(v_roles, 'superadmin');
+  end if;
+
+  select * into v_active
+    from public.finance_payroll_sod_policy
+   where status = 'active'
+     for update;
+  if not found then
+    raise exception 'finance_payroll_sod_policy: no active policy to amend'
+      using errcode = 'PR409';
+  end if;
+
+  update public.finance_payroll_sod_policy
+     set status = 'superseded', updated_at = now()
+   where id = v_active.id;
+
+  insert into public.finance_payroll_sod_policy
+    (sod_level, status, eligible_roles, reason, proposed_by, supersedes_id, effective_at)
+  values
+    (v_active.sod_level, 'active', v_roles,
+     'Eligible-role list updated by superadmin.', p_actor_id, v_active.id, now())
+  returning * into v_new;
+
+  return to_jsonb(v_new);
+end;
+$fn$;

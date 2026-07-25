@@ -57,6 +57,12 @@ import {
   getPayrollReleasePreflight,
   releasePayrollRun,
 } from '../lib/finance/payroll/releases';
+import {
+  getSodPolicy,
+  proposeSodChange,
+  approveSodChange,
+  setSodEligibleRoles,
+} from '../lib/finance/payroll/sodPolicy';
 import { getPayrollRunWorkspace } from '../lib/finance/payroll/workspace';
 import { getPayrollControlCenter } from '../lib/finance/payroll/controlCenter';
 import { listPayrollRunsRegister } from '../lib/finance/payroll/runRegister';
@@ -486,6 +492,66 @@ router.post('/payroll/runs/certify', async c => {
       ...v.data,
       actorId: actor.id,
     });
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// ── Segregation-of-duties policy (governed, maker-checker) ───────────────────
+// The SoD level decides how many distinct people the funding/release chain needs
+// (2 | 3 | 4). Each run snapshots the ACTIVE level at creation, so a policy change
+// never alters the rules of an in-flight run.
+
+// POST /api/finance/payroll/sod-policy/get
+router.post('/payroll/sod-policy/get', async c => {
+  await requirePermission(c, 'finance.payroll.sod_policy.view');
+  try {
+    return c.json({ success: true, data: await getSodPolicy() });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/sod-policy/propose
+// Opens a proposal only — the level changes when a DIFFERENT approver approves it.
+router.post('/payroll/sod-policy/propose', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.sod_policy.propose');
+  const v = zv(c, z.object({
+    sodLevel: z.union([z.literal(2), z.literal(3), z.literal(4)]),
+    reason:   z.string().trim().min(10).max(2000),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await proposeSodChange({
+      sodLevel: v.data.sodLevel, reason: v.data.reason,
+      actorId: actor.id, actorRole: actor.role,
+    });
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/sod-policy/approve
+// Maker-checker + status guards are enforced inside the RPC.
+router.post('/payroll/sod-policy/approve', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.sod_policy.approve');
+  const v = zv(c, z.object({ policyId: z.uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await approveSodChange({
+      policyId: v.data.policyId, actorId: actor.id, actorRole: actor.role,
+    });
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/sod-policy/set-roles
+// SUPERADMIN-ONLY (manage_roles is granted to superadmin alone): a finance_manager
+// must not be able to make itself the sole approver and defeat maker-checker.
+router.post('/payroll/sod-policy/set-roles', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.sod_policy.manage_roles');
+  const v = zv(c, z.object({
+    roles: z.array(z.string().trim().min(1).max(60)).min(1).max(20),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await setSodEligibleRoles({ roles: v.data.roles, actorId: actor.id });
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });
