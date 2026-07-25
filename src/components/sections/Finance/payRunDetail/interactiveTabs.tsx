@@ -946,7 +946,7 @@ export function GlTab({ runId, runStatus }: { runId: string; runStatus: string }
 
   async function post(): Promise<void> {
     try {
-      const r = await postMut.mutateAsync({ runId });
+      const r = await postMut.mutateAsync({ runId, idempotencyKey: crypto.randomUUID() });
       toast(`GL posted: ${r.journalNo} — ${fmtMoney(r.totalDebit)} (balanced).`);
     } catch (e) { toast(e instanceof Error ? e.message : 'GL posting failed.'); }
   }
@@ -958,7 +958,7 @@ export function GlTab({ runId, runStatus }: { runId: string; runStatus: string }
     });
     if (!reason?.trim()) return;
     try {
-      const r = await reverseMut.mutateAsync({ runId, reason });
+      const r = await reverseMut.mutateAsync({ runId, reason, idempotencyKey: crypto.randomUUID() });
       toast(`GL reversed — ${r.reversingJournalNo}.`);
     } catch (e) { toast(e instanceof Error ? e.message : 'GL reversal failed.'); }
   }

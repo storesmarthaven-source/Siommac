@@ -29,6 +29,7 @@ import {
   InputsPanel, ExceptionsPanel, ReleasePanel,
 } from './payRunDetail/panels';
 import { CalcFailurePanel } from './payRunDetail/CalcFailurePanel';
+import { CertifySubmitModal } from './payRunDetail/CertifySubmitModal';
 import { CrewPopulationControls, CrewInputReconciliation, CrewCostAllocation } from './payroll/run/crewSections';
 
 type TabKey = 'summary' | 'population' | 'inputs' | 'reconciliation' | 'exceptions' | 'approvals' | 'release' | 'audit';
@@ -279,6 +280,11 @@ export function HeaderActions({ run, caps, actions }: {
   run: PayrollRun; caps: PayrollRunActions | undefined; actions: PayRunDrawerActions;
 }): VNode {
   const [menuOpen, setMenuOpen] = useState(false);
+  // Submit is a governed maker step: the backend requires a processor certification
+  // of the current calculation before submit (PR422 otherwise). So "Submit For
+  // Approval" opens the certification modal ("certified at submission"); only after
+  // the certify call commits do we invoke the real submit.
+  const [certifyOpen, setCertifyOpen] = useState(false);
   // Capabilities arrive with the workspace query; until then offer nothing rather
   // than guessing (the backend remains final either way).
   if (!caps) return <button class="btn" type="button" disabled>Loading actions…</button>;
@@ -290,7 +296,7 @@ export function HeaderActions({ run, caps, actions }: {
   const all: RunAct[] = [];
   if (caps.canLockInputs) all.push({ key: 'lock-inputs', label: 'Lock Inputs', tone: 'primary', onClick: () => actions.onLockInputs(run) });
   if (caps.canCalculate) all.push({ key: 'calc', label: s === 'calculation_failed' ? 'Retry Calculation' : 'Recalculate', tone: 'primary', onClick: () => actions.onCalculate(run) });
-  if (caps.canSubmit) all.push({ key: 'submit', label: s === 'returned' ? 'Resubmit For Approval' : 'Submit For Approval', tone: 'primary', onClick: () => actions.onSubmit(run) });
+  if (caps.canSubmit) all.push({ key: 'submit', label: s === 'returned' ? 'Resubmit For Approval' : 'Submit For Approval', tone: 'primary', onClick: () => setCertifyOpen(true) });
   if (caps.canApprove) all.push({ key: 'approve', label: 'Approve', tone: 'primary', onClick: () => actions.onApprove(run) });
   if (caps.canReject) all.push({ key: 'reject', label: 'Reject', tone: 'danger', onClick: () => actions.onReject(run) });
   if (caps.canLock) all.push({ key: 'lock', label: 'Lock Run', tone: 'primary', onClick: () => actions.onLockRun(run) });
@@ -335,6 +341,15 @@ export function HeaderActions({ run, caps, actions }: {
         </div>
       )}
       <button class={`btn ${primary.tone}`} type="button" onClick={primary.onClick}>{primary.label}</button>
+      {certifyOpen && (
+        <CertifySubmitModal
+          run={run}
+          canCertify={caps.canCertify}
+          resubmit={s === 'returned'}
+          onClose={() => setCertifyOpen(false)}
+          onCertified={() => { setCertifyOpen(false); actions.onSubmit(run); }}
+        />
+      )}
     </>
   );
 }

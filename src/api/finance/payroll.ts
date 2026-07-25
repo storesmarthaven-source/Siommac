@@ -608,6 +608,26 @@ export interface PayrollReleasePreflight {
   missingBankAccountCount: number; disbursementId: string | null;
   netPayroll: number; employeeCount: number;
 }
+/** Processor certification of the current calculation package — the maker-checker
+ *  gate the submit RPC requires before a run can enter approval (errcode PR422:
+ *  "certify the current calculation before submission" otherwise). */
+export interface PayrollCertification {
+  id: string; runId: string; calculationVersionId: string; inputSnapshotId: string;
+  certificationNo: number; certificationType: 'processor';
+  evidence: Record<string, unknown>; stateChecksum: string; checksum: string;
+  supersedesId: string | null; certifiedBy: string; certifiedAt: string; createdAt: string;
+}
+/** The six processor attestations — each MUST be literally `true`; the backend Zod
+ *  contract (z.literal(true)) rejects any missing/false attestation. */
+export interface PayrollCertifyAttestations {
+  populationReconciled: true; inputsReviewed: true; statutoryReviewed: true;
+  variancesReviewed: true; paymentReadinessReviewed: true; glReadinessReviewed: true;
+}
+export interface PayrollCertifyResult {
+  certification: PayrollCertification;
+  controlState: Record<string, unknown>;
+  eventId: string; duplicate: boolean;
+}
 /** F-08 — issued payroll release certificate (immutable close evidence). */
 export interface PayrollReleaseCertificate {
   id: string; runId: string; calculationVersionId: string; certificationId: string;
@@ -671,6 +691,12 @@ export const financePayrollApi = {
   // PayrollCommandCenter stableAction helper. reopen additionally REQUIRES a reason.
   lockInputs:  (a: { id: string; idempotencyKey: string }) => call<PayrollRun>('finance/payroll/runs/lock-inputs', a),
   calculate:   (a: { id: string; idempotencyKey: string }) => call<PayrollRun>('finance/payroll/runs/calculate', a),
+  // Processor certification of the CURRENT calculation package. REQUIRED before
+  // submit — the submit RPC guards on a `processor` certification for the run's
+  // current calculation version (PR422 otherwise). All six attestations must be
+  // literally true; the caller mints one idempotencyKey per certification attempt.
+  certifyRun:  (a: { runId: string; idempotencyKey: string; attestations: PayrollCertifyAttestations; note?: string }) =>
+                 call<PayrollCertifyResult>('finance/payroll/runs/certify', a),
   submitRun:   (a: { id: string; idempotencyKey: string }) => call<PayrollRun>('finance/payroll/runs/submit', a),
   approveRun:  (a: { id: string })                     => call<PayrollRun>('finance/payroll/runs/approve', a),
   rejectRun:   (a: { id: string; reason: string })     => call<PayrollRun>('finance/payroll/runs/reject', a),
@@ -742,8 +768,10 @@ export const financePayrollApi = {
 
   // GL posting
   glPreview:  (a: { runId: string })                   => call<GlPreview>('finance/payroll/gl/preview', a),
-  glPost:     (a: { runId: string })                   => call<{ journalId: string; journalNo: string; totalDebit: number; totalCredit: number }>('finance/payroll/gl/post', a),
-  glReverse:  (a: { runId: string; reason: string })   => call<{ reversingJournalId: string; reversingJournalNo: string }>('finance/payroll/gl/reverse', a),
+  // gl/post + gl/reverse both REQUIRE an idempotencyKey (the backend Zod contract
+  // rejects its absence with 400) — mint one per attempt at the call site.
+  glPost:     (a: { runId: string; idempotencyKey: string })                 => call<{ journalId: string; journalNo: string; totalDebit: number; totalCredit: number }>('finance/payroll/gl/post', a),
+  glReverse:  (a: { runId: string; reason: string; idempotencyKey: string }) => call<{ reversingJournalId: string; reversingJournalNo: string }>('finance/payroll/gl/reverse', a),
   glGet:      (a: { runId: string })                   => call<GlJournal | null>('finance/payroll/gl/get', a),
   listPayslips:     (a: { runId: string })             => call<Payslip[]>('finance/payroll/payslips/list', a),
   myPayslips:       (a: object = {})                   => call<Payslip[]>('finance/payroll/payslips/my', a),
