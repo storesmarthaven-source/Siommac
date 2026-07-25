@@ -49,7 +49,7 @@ const PAYROLL_ITEM: ModuleNavItem = {
 const PAYROLL_DASHBOARD_ITEM: ModuleNavItem = {
   id: 's-finance-payroll-dashboard',
   label: 'Command Center',
-  icon: 'fa-gauge-high',
+  icon: 'fa-tachometer-alt',
   parent: 's-finance-payroll',
   sub: 'Payroll command center — portfolio KPIs, deadlines, release readiness & the run register',
 };
@@ -151,7 +151,10 @@ const STATUTORY_FORMS_ITEM: ModuleNavItem = {
 export const financeModule: ModuleDefinition = {
   id: 'finance',
   navGroup: { id: 'finance', label: 'Finance' },
-  navItems: [OVERVIEW_ITEM, PAYABLES_ITEM, STATUTORY_ITEM, PAYROLL_ITEM, PAYROLL_DASHBOARD_ITEM, PAYROLL_RUNS_ITEM, PAYROLL_EXCEPTIONS_ITEM, PAYSLIP_BATCHES_ITEM, PAYROLL_REPORTS_ITEM, PAYROLL_SETUP_ITEM, PAYSLIP_DESIGNER_ITEM, REMITTANCES_ITEM, STATUTORY_FORMS_ITEM, DISBURSEMENTS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
+  // Payroll children follow the pay-run lifecycle flow: Command Center (overview) →
+  // Setup (pay groups & rules) → Runs → Approvals & Exceptions → Payslip Designer
+  // (template) → Payslip Batches (issue) → Reports (analyse).
+  navItems: [OVERVIEW_ITEM, PAYABLES_ITEM, STATUTORY_ITEM, PAYROLL_ITEM, PAYROLL_DASHBOARD_ITEM, PAYROLL_SETUP_ITEM, PAYROLL_RUNS_ITEM, PAYROLL_EXCEPTIONS_ITEM, PAYSLIP_DESIGNER_ITEM, PAYSLIP_BATCHES_ITEM, PAYROLL_REPORTS_ITEM, REMITTANCES_ITEM, STATUTORY_FORMS_ITEM, DISBURSEMENTS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
   roles: ['admin', 'superadmin'],
   mount: {
     sectionId: 's-finance',

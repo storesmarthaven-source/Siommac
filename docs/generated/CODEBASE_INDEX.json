@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "6fa0b1c96b1c85f8857f190e2f8e76e9a8dfb28a",
+    "head": "fd156045dfa4ce1093cbc2747d648622a10fa89a",
     "branch": "main",
-    "fingerprint": "d14d2c4a0777eb0911570f92",
+    "fingerprint": "70d9e7dea4b9a29bf1b8d06f",
     "indexedFiles": 1565
   },
   "summary": {
@@ -4732,8 +4732,8 @@
       "path": "src/components/sections/Finance/module.ts",
       "module": "finance",
       "role": "frontend-page",
-      "lines": 166,
-      "hash": "5aa8190aaeba8215"
+      "lines": 169,
+      "hash": "de8c49649bf20555"
     },
     {
       "path": "src/components/sections/Finance/mount.ts",
