@@ -480,18 +480,18 @@ function DetailPanel({ detail, busy, onAction, onOpenRun }: {
       </div>
 
       <div class="pxq-dw-stats">
-        <div class="pxq-dw-stat"><small>Impact</small>
-          <strong>{detail.impact.amount != null ? fmtTTD(detail.impact.amount) : (detail.impact.label ?? '—')}</strong>
-          <span>this finding</span></div>
+        <div class="pxq-dw-stat"><small>Pay date</small>
+          <strong>{fmtPayDate(detail.run.payDate)}</strong>
+          <span>{detail.run.reference}</span></div>
         <div class="pxq-dw-stat"><small>Subject</small>
           <strong>{detail.subject.employeeId
             ? <button type="button" class="pxq-dw-link" title="Open the affected employee's HR record"
                 onClick={() => openHrEmployee(detail.subject.employeeId!)}>{subjectName} <i class="fa-solid fa-arrow-up-right-from-square" /></button>
             : subjectName}</strong>
           <span>{detail.subject.employeeId ? 'employee' : 'scope'}</span></div>
-        <div class="pxq-dw-stat"><small>Due</small>
-          <strong class={overdue ? 'is-overdue' : ''}>{detail.dueAt ? fmtDue(detail.dueAt).replace('Due ', '') : '—'}</strong>
-          <span>{overdue ? 'overdue' : 'target'}</span></div>
+        <div class="pxq-dw-stat"><small>Status</small>
+          <strong class={overdue ? 'is-overdue' : ''}>{humanizeKey(detail.state)}</strong>
+          <span>{detail.dueAt ? (overdue ? 'overdue' : `due ${fmtPayDate(detail.dueAt)}`) : 'no due date'}</span></div>
       </div>
 
       <section class="pxq-dw-sec">
@@ -506,7 +506,9 @@ function DetailPanel({ detail, busy, onAction, onOpenRun }: {
         <section class="pxq-dw-sec">
           <div class="pxq-dw-sec-h">Source evidence</div>
           <ul class="pxq-dw-list">{evidence.map((e, i) => (
-            <li key={i}><i class="fa-solid fa-file-lines" /> <span>{humanizeKey(e.label)}</span>{e.occurredAt && <em>{fmtDateTime(e.occurredAt)}</em>}</li>
+            <li key={i}><i class="fa-solid fa-file-lines" />
+              <div class="pxq-dw-ev"><span>{humanizeKey(e.label)}</span>{e.occurredAt && <em>{fmtDateTime(e.occurredAt)}</em>}</div>
+            </li>
           ))}</ul>
         </section>
       )}
@@ -529,7 +531,7 @@ function DetailPanel({ detail, busy, onAction, onOpenRun }: {
             <i class="fa-solid fa-arrow-up-right-from-square" /> Review in workflow</button>
         )}
         {hasResolve && (
-          <button type="button" class="pxq-dw-btn" disabled={busy} onClick={() => onAction('resolve')}>
+          <button type="button" class="pxq-dw-btn resolve" disabled={busy} onClick={() => onAction('resolve')}>
             <i class="fa-solid fa-circle-check" /> Resolve</button>
         )}
         <div class="pxq-dw-grid4">
@@ -541,7 +543,7 @@ function DetailPanel({ detail, busy, onAction, onOpenRun }: {
           ))}
         </div>
         {fullActs.map(a => (
-          <button key={a} type="button" class="pxq-dw-btn" disabled={busy} onClick={() => onAction(a)}>
+          <button key={a} type="button" class="pxq-dw-btn muted" disabled={busy} onClick={() => onAction(a)}>
             <i class={`fa-solid ${ACTION_META[a].icon}`} /> {ACTION_META[a].label}</button>
         ))}
       </div>

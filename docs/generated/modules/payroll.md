@@ -2,7 +2,7 @@
 
 # payroll Module Map
 
-Source fingerprint: `97b029ab4fa58741c0193885`
+Source fingerprint: `974efe13911ba93da7c41ed0`
 
 Files: 187 | Symbols: 1899 | Widgets: 10 | Unique mounted endpoints: 135 | Route definitions: 135 mounted + 0 unmounted | API calls: 2 | DB objects: 254 | E2E suites: 27
 
@@ -504,7 +504,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx` | 157 |
 | frontend-page | `src/components/sections/Finance/PayrollCommandCenter.tsx` | 921 |
 | frontend-page | `src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx` | 150 |
-| frontend-page | `src/components/sections/Finance/PayrollExceptionQueuePage.tsx` | 759 |
+| frontend-page | `src/components/sections/Finance/PayrollExceptionQueuePage.tsx` | 761 |
 | frontend-page | `src/components/sections/Finance/PayrollPayslipBatchesPage.test.tsx` | 70 |
 | frontend-page | `src/components/sections/Finance/PayrollPayslipBatchesPage.tsx` | 191 |
 | frontend-page | `src/components/sections/Finance/PayrollReportsPage.loadingGate.test.tsx` | 117 |
