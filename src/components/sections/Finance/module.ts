@@ -48,7 +48,7 @@ const PAYROLL_ITEM: ModuleNavItem = {
 // menu (not the parent's default page).
 const PAYROLL_DASHBOARD_ITEM: ModuleNavItem = {
   id: 's-finance-payroll-dashboard',
-  label: 'Dashboard',
+  label: 'Command Center',
   icon: 'fa-gauge-high',
   parent: 's-finance-payroll',
   sub: 'Payroll command center — portfolio KPIs, deadlines, release readiness & the run register',
