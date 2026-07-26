@@ -97,7 +97,9 @@ async function uploadBase64(bucket: string, base64: string, name: string): Promi
 
   const m    = str.match(/^data:([^;]+);base64,(.+)$/s);
   const mime = ((m ? m[1] : 'image/jpeg') as string).toLowerCase().trim();
-  const raw  = m ? m[2] : str.split('base64,').pop() ?? '';
+  const rawExtract = m ? m[2] : str.split('base64,').pop();
+  if (!rawExtract) throw new Error('Invalid base64 image data: could not extract encoded bytes');
+  const raw = rawExtract;
 
   const ext = ALLOWED_IMAGE_TYPES[mime];
   if (!ext) throw new Error(`Unsupported image type: ${mime}. Allowed: jpeg, png, webp`);

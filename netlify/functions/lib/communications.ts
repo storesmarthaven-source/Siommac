@@ -1295,6 +1295,7 @@ export async function getThreadPosts(
     const attachMap = new Map<string, AttachmentRow[]>();
     for (let i = 0; i < attachList.length; i++) {
       const a   = attachList[i];
+      if (!a) continue; // defensive: noUncheckedIndexedAccess guard
       const url = signedUrls[i] ?? null;
       const list = attachMap.get(a.post_id) ?? [];
       list.push({ id: a.id, fileName: a.file_name, filePath: a.file_path, contentType: a.content_type, sizeBytes: a.size_bytes, url: url || null });

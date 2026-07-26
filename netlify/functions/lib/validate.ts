@@ -391,8 +391,52 @@ export const GetTicketSchema = z.object({
 });
 
 export const ReplyTicketSchema = z.object({
+  ticketId:   zShortStr(64),
+  body:       z.string().min(1).max(10_000),
+  isInternal: z.boolean().optional(),  // admin-only internal note flag
+});
+
+// ── Account Support Service Request schemas ────────────────────────────────────
+
+/** Domains that can be routed to the account-support queue */
+export const zServiceDomain = z.enum([
+  'account_access', 'password_reset', 'mfa', 'permissions', 'activation', 'suspension', 'general',
+]);
+
+export const CreateAccountSupportRequestSchema = z.object({
+  subjectId:              z.string().min(1).max(255),                              // app_users.id of the subject employee
+  serviceDomain:          zServiceDomain,
+  requestedAction:        z.string().min(1).max(512),
+  subject:                z.string().min(1).max(256),
+  body:                   z.string().min(1).max(10_000),
+  priority:               z.enum(['low', 'medium', 'high']).optional(),
+  requestedCompletionDate: zDateStr.optional(),
+  requesterOrg:           z.string().max(255).optional(),
+});
+
+export const GetAccountSupportRequestSchema = z.object({
   ticketId: zShortStr(64),
-  body:     z.string().min(1).max(10_000),
+});
+
+export const UpdateAccountSupportRequestSchema = z.object({
+  ticketId:        zShortStr(64),
+  status:          z.enum(['open', 'in_progress', 'resolved', 'closed']).optional(),
+  assignedUserId:  z.string().max(255).optional(),
+  resolutionNotes: z.string().max(10_000).optional(),
+});
+
+/** Elevated access action — step-up + reason required */
+export const AccountAccessActionSchema = z.object({
+  subjectId: z.string().min(1).max(255),  // app_users.id of the target user
+  reason:    z.string().min(1).max(2_000),
+});
+
+/** Org-level account-support ownership config */
+export const UpdateAccountSupportConfigSchema = z.object({
+  ownershipModel: z.enum(['hr_managed', 'shared', 'dedicated_team', 'external_admin']),
+  capabilityTarget: z.string().max(255).optional(),  // queue code or team identifier
+  assignedUserId:   z.string().max(255).optional(),  // dedicated user (if dedicated_team or external_admin)
+  notes:            z.string().max(2_000).optional(),
 });
 
 // ── Notification schemas ──────────────────────────────────────────────────────

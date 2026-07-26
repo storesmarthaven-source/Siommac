@@ -886,6 +886,18 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Raise internal work for a service queue without impersonating an employee.',
     risk: 'medium',
   },
+  'tickets.view_all': {
+    module: 'Tickets', group: 'Tickets',
+    label: 'View All Tickets',
+    description: 'View all support tickets in the queue, not just own submissions.',
+    risk: 'medium',
+  },
+  'tickets.reply_internal': {
+    module: 'Tickets', group: 'Tickets',
+    label: 'Post Internal Notes',
+    description: 'Post staff-only internal notes on support tickets, hidden from the submitter.',
+    risk: 'medium',
+  },
 
   // ── Account Security ──────────────────────────────────────────────────────────
   'auth.security.view': {
@@ -915,7 +927,77 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     risk: 'critical',
     requiresSuperAdmin: true,
   },
-  // ── Settings & Preferences (Spec §8) ─────────────────────────────────────────
+  // ── Employee Account Access (capability-routed service-request queue) ─────────
+  'employees.access.view': {
+    module: 'HR', group: 'Account Access',
+    label: 'View Employee Access Status',
+    description: "View an employee's account and access status (active, suspended, MFA state, session count).",
+    risk: 'medium',
+  },
+  'employees.access.request': {
+    module: 'HR', group: 'Account Access',
+    label: 'Submit Account Support Request',
+    description: 'Submit a self-service account support request (e.g. password reset, activation resend).',
+    risk: 'low',
+  },
+  'employees.access.reset_password': {
+    module: 'HR', group: 'Account Access',
+    label: 'Reset Employee Password',
+    description: "Reset another user's password. Requires step-up authentication and a stated reason.",
+    risk: 'critical',
+  },
+  'employees.access.resend_activation': {
+    module: 'HR', group: 'Account Access',
+    label: 'Resend Account Activation',
+    description: "Resend the account activation email to a user who has not yet completed setup.",
+    risk: 'medium',
+  },
+  'employees.access.suspend': {
+    module: 'HR', group: 'Account Access',
+    label: 'Suspend Account',
+    description: "Suspend a user account, preventing all logins. Requires step-up authentication and a stated reason.",
+    risk: 'critical',
+    requiresSuperAdmin: true,
+  },
+  'employees.access.restore': {
+    module: 'HR', group: 'Account Access',
+    label: 'Restore Suspended Account',
+    description: "Restore a suspended account, re-enabling login. Requires step-up authentication.",
+    risk: 'critical',
+    requiresSuperAdmin: true,
+  },
+  'employees.access.revoke_sessions': {
+    module: 'HR', group: 'Account Access',
+    label: 'Revoke All Active Sessions',
+    description: "Force-log-out a user by revoking all their active sessions. Requires step-up authentication.",
+    risk: 'critical',
+  },
+  'employees.access.revoke_devices': {
+    module: 'HR', group: 'Account Access',
+    label: 'Revoke All Trusted Devices',
+    description: "Remove all trusted devices for a user. Requires step-up authentication.",
+    risk: 'critical',
+  },
+  'employees.access.require_mfa': {
+    module: 'HR', group: 'Account Access',
+    label: 'Require MFA Enrollment',
+    description: "Force a user to enroll in MFA on their next login. Requires step-up authentication.",
+    risk: 'critical',
+  },
+  'employees.access.permissions.view': {
+    module: 'HR', group: 'Account Access',
+    label: "View Employee Permission Grants",
+    description: "View a user's current role-level and per-user permission overrides.",
+    risk: 'medium',
+  },
+  'employees.access.permissions.manage': {
+    module: 'HR', group: 'Account Access',
+    label: "Manage Employee Permission Overrides",
+    description: "Add or remove per-user permission overrides. Requires step-up authentication.",
+    risk: 'critical',
+    requiresSuperAdmin: true,
+  },
+  // ── Settings & Preferences (Spec §8) ��────────────────────────────────────────
   'settings.manage': { module: 'Settings', group: 'Governance', label: 'Manage Settings', description: 'Manage platform settings.', risk: 'high' },
   'settings.own_preferences.view': { module: 'Settings', group: 'Preferences', label: 'View Own Preferences', description: 'View your own personal preferences.', risk: 'low' },
   'settings.own_preferences.manage': { module: 'Settings', group: 'Preferences', label: 'Manage Own Preferences', description: 'Change your own personal preferences.', risk: 'high' },
@@ -1769,5 +1851,11 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     label: 'Manage Own Activities',
     description: 'Create and update one’s own calendar activities (meetings, site visits, training) and their attendees.',
     risk: 'medium',
+  },
+  'platform.weather.view': {
+    module: 'Platform', group: 'Weather',
+    label: 'View Weather',
+    description: 'Read the server-proxied weather snapshot and place search used by the Weather widget. Public forecast data — no organisation records are exposed; the permission exists so the proxy can’t be called anonymously.',
+    risk: 'low',
   },
 };

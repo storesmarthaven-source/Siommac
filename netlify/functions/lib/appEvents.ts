@@ -23,6 +23,7 @@ import { resolveRecipients }  from './recipientResolver';
 import type { ExplicitRecipient } from './recipientResolver';
 import { notify }             from './notify';
 import { emitSignal }         from './communications';
+import { getReqContext }      from './reqContext';
 
 export type EventSeverity = 'info' | 'success' | 'warning' | 'high' | 'critical';
 
@@ -72,6 +73,53 @@ export interface EmitAppEventResult {
   eventId?: string;
   deduped?: boolean;
   recipientCount?: number;
+}
+
+/**
+ * Write an explicit audit_logs row for platform-level mutations (tickets, account
+ * access actions, org-config changes).
+ *
+ * Unlike the best-effort step-6 write inside emitAppEvent, this function THROWS on
+ * failure so callers can roll back and return an honest error — audit write failure
+ * must never be swallowed and returned as success.
+ *
+ * NOTE: No platform-level audit_logs helper existed before this slice. This function
+ * was introduced as the canonical explicit audit primitive; emitAppEvent's internal
+ * step-6 write is best-effort and DOES NOT replace it.
+ *
+ * Parameters:
+ *   action      — dotted action string, e.g. 'ticket.created', 'account_access.suspended'
+ *   tableName   — entity kind / table, e.g. 'support_ticket', 'app_user'
+ *   recordId    — the business record identifier (ticket_number, user id, etc.)
+ *   actorId     — app_users.id of the actor (null for system events)
+ *   changes     — safe metadata; NEVER include passwords, tokens, or raw credentials.
+ *                 The current request's reqId is injected automatically from the
+ *                 request context so every audit row from one request is correlated.
+ */
+export async function writePlatformAudit(a: {
+  action:    string;
+  tableName: string;
+  recordId:  string;
+  actorId?:  string | null;
+  changes:   Record<string, unknown>;
+}): Promise<void> {
+  const { reqId } = getReqContext();
+  const changes = reqId ? { ...a.changes, reqId } : a.changes;
+  const { error } = await sb.from('audit_logs').insert({
+    action:     a.action,
+    table_name: a.tableName,
+    record_id:  a.recordId,
+    user_id:    a.actorId ?? null,
+    changes,
+    created_at: new Date().toISOString(),
+  });
+  if (error) {
+    console.error('[audit] platform audit write failed:', error.message, { action: a.action, recordId: a.recordId, reqId });
+    throw Object.assign(
+      new Error(`Platform audit write failed (${a.action}): ${error.message}`),
+      { status: 500 },
+    );
+  }
 }
 
 /**
@@ -154,7 +202,12 @@ export async function emitAppEvent(input: EmitAppEventInput): Promise<EmitAppEve
       if (existing) return { ok: true, eventId: existing.id, deduped: true, recipientCount: 0 };
     }
 
-    // 2. Insert app_event
+    // 2. Insert app_event — inject reqId from the request context so every
+    //    app_events row from one request shares the same correlation ID.
+    const { reqId } = getReqContext();
+    const payload = reqId
+      ? { ...(input.payload ?? {}), reqId }
+      : (input.payload ?? {});
     const { data: event, error: evErr } = await sb
       .from('app_events')
       .insert({
@@ -166,7 +219,7 @@ export async function emitAppEvent(input: EmitAppEventInput): Promise<EmitAppEve
         site_id:            input.siteId ?? null,
         department_id:      input.departmentId ?? null,
         severity:           input.severity ?? 'info',
-        payload:            input.payload ?? {},
+        payload,
         dedupe_key:         input.dedupeKey ?? null,
       })
       .select('id')

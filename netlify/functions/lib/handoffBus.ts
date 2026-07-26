@@ -17,6 +17,7 @@ import { sb }                  from './db';
 import { nextRef }             from './refGenerator';
 import { emitAppEvent }        from './appEvents';
 import { getModuleReceiver, hasModuleReceiver } from './moduleRegistry';
+import { getReqContext }       from './reqContext';
 
 export interface CreateHandoffInput {
   sourceModule:      string;
@@ -37,6 +38,10 @@ export interface CreateHandoffResult {
 
 export async function createHandoff(input: CreateHandoffInput): Promise<CreateHandoffResult> {
   try {
+    // Inject the request correlation ID into the payload so the handoff row
+    // shares the same reqId as the audit_logs and app_events rows from this request.
+    const { reqId } = getReqContext();
+    const payload = reqId ? { ...input.payload, reqId } : input.payload;
     const { data, error } = await sb
       .from('handoff_outbox')
       .insert({
@@ -45,7 +50,7 @@ export async function createHandoff(input: CreateHandoffInput): Promise<CreateHa
         source_entity_type: input.sourceEntityType,
         source_entity_id:   input.sourceEntityId,
         target_entity_type: input.targetEntityType ?? null,
-        payload:            input.payload,
+        payload,
         status:             'pending',
         created_by:         input.createdBy ?? null,
       })
