@@ -2,7 +2,8 @@
  * scripts/dev-mint-session.mjs  (dev QA helper — localhost only)
  *
  * Mints a superadmin dev JWT + builds the full PersistedSession and writes it to
- * public/__dev_session.json so the browser can fetch+inject it over localhost.
+ * scripts/__dev_session.json (gitignored) so the browser can fetch+inject it
+ * over localhost via Vite's /@fs route.
  * The token is NEVER printed to stdout. Also reports current payroll-run state.
  * Delete the temp file (and this script) after the QA session.
  */
@@ -75,11 +76,11 @@ const session = {
 writeFileSync(new URL('./__dev_session.json', import.meta.url), JSON.stringify(session));
 
 const { data: runs } = await sb.from('finance_payroll_runs')
-  .select('id, run_number, status, pay_group_id, period_start, period_end, pay_date, current_calculation_version_id, created_at')
+  .select('id, run_no, status, pay_group_id, period_start, period_end, pay_date, current_calculation_version_id, created_at')
   .order('created_at', { ascending: false }).limit(15);
 
-console.log('=== SUPERADMIN ===', u.id, u.username, u.role, '(token written to public/__dev_session.json — NOT printed)');
+console.log('=== SUPERADMIN ===', u.id, u.username, u.role, '(token written to scripts/__dev_session.json — NOT printed)');
 console.log('=== RUNS (newest first) ===');
 for (const r of runs ?? []) {
-  console.log(`  ${r.run_number}  [${r.status}]  pg=${r.pay_group_id}  ${r.period_start}..${r.period_end} pay=${r.pay_date}  calcVer=${r.current_calculation_version_id ? 'Y' : '-'}  id=${r.id}`);
+  console.log(`  ${r.run_no}  [${r.status}]  pg=${r.pay_group_id}  ${r.period_start}..${r.period_end} pay=${r.pay_date}  calcVer=${r.current_calculation_version_id ? 'Y' : '-'}  id=${r.id}`);
 }
