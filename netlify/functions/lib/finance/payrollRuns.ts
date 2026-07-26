@@ -1609,7 +1609,7 @@ export async function calculateRun(
   const profileMap = await getStatutoryProfilesByEmployees(empIds, 'TT');
 
   // Resolve display names once so control-finding messages read with a person's
-  // NAME ("... David Okafor has no NIS number") instead of a raw id — the queue
+  // NAME ("Employee <name> has no NIS number") instead of a raw id — the queue
   // and detail surfaces show these messages verbatim.
   const nameMap = await resolveEmployeeNames(empIds);
   const nameOf = (id: string): string => nameMap.get(id) ?? id;
