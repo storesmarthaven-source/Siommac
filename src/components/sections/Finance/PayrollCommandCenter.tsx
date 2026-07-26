@@ -333,7 +333,12 @@ export function PayrollCommandCenter(): VNode {
   const lockRunMut    = usePayrollMutation(financePayrollApi.lockRun);
   const reopenMut     = usePayrollMutation(financePayrollApi.reopenRun);
   const exportMut     = usePayrollMutation(financePayrollApi.exportRun);
-  const genMut        = usePayrollMutation(financePayrollApi.generatePayslips);
+  // Generate AND render. payslips/generate alone only creates the rows, but the
+  // release preflight demands a RENDERED, checksummed payslip per employee — so a
+  // header action labelled "Generate Payslips" that skipped rendering left the run
+  // silently blocked at release with no hint why. render-run generates
+  // (idempotently) and then renders, which is what the label promises.
+  const genMut        = usePayrollMutation(financePayrollApi.renderRunPayslips);
 
   async function runAction(p: Promise<unknown>, ok: string): Promise<void> {
     try { await p; toast(ok); }
@@ -388,7 +393,7 @@ export function PayrollCommandCenter(): VNode {
       if (!trimmed) { toast('A reason is required to reopen a run.'); return; }
       void runAction(stableAction(run.id, 'reopen', k => reopenMut.mutateAsync({ id: run.id, reason: trimmed, idempotencyKey: k })), 'Run reopened.');
     })(); },
-    onGenPayslips: run => void runAction(genMut.mutateAsync({ runId: run.id }),  'Payslips generated.'),
+    onGenPayslips: run => void runAction(genMut.mutateAsync({ runId: run.id }),  'Payslips generated and rendered.'),
   };
 
   // Open the run's drawer — used by run rows, deadlines, the portfolio intervention, the

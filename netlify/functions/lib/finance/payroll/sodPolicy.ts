@@ -32,11 +32,18 @@ import { writeHrAudit } from '../../hr/employeeCore';
 import { startWorkflowForRecord } from '../../workflow/service';
 import type { ModuleWorkflowContext } from '../../workflow/definitionTypes';
 
+import {
+  SOD_LEVELS, CHAIN_SEATS, DISTINCT_SEATS,
+  separationFor, maxDistinctAssignment, computeFeasibility,
+  type SodLevel, type SodSeatKey, type SodLevelFeasibility,
+} from './sodRules';
+
 const SUBMODULE = 'finance_payroll_sod_policy';
 
-/** The only levels the database CHECK constraint accepts. */
-export const SOD_LEVELS = [2, 3, 4] as const;
-export type SodLevel = (typeof SOD_LEVELS)[number];
+// The rules themselves live in ./sodRules (pure, unit-tested). This module owns
+// the data: who holds which seat, and the governed lifecycle of the policy row.
+export { SOD_LEVELS };
+export type { SodLevel, SodLevelFeasibility };
 
 export interface SodPolicyRow {
   id: string;
@@ -54,7 +61,7 @@ export interface SodPolicyRow {
 
 /** One seat in the payroll chain, with the people who can actually fill it. */
 export interface SodChainStep {
-  key: 'prepare' | 'certify' | 'approve' | 'fund' | 'release';
+  key: SodSeatKey;
   label: string;
   detail: string;
   permission: string;
@@ -64,22 +71,7 @@ export interface SodChainStep {
   holderIds: string[];
   holderCount: number;
   /** Earlier seats this one must be a DIFFERENT person from, at the active level. */
-  mustDifferFrom: SodChainStep['key'][];
-}
-
-/** Can the org actually staff a level? Computed per level, not just for the active one. */
-export interface SodLevelFeasibility {
-  level: SodLevel;
-  /** Distinct people the level needs (prepare + [certify] + [approve] + fund/release). */
-  required: number;
-  /** Largest set of DISTINCT people that can actually cover those seats. */
-  available: number;
-  feasible: boolean;
-  /** Seats that cannot be staffed without reusing someone — empty when feasible. */
-  shortfallSeats: SodChainStep['key'][];
-  /** What this level would enforce. Sent per level so the UI can diff "before vs
-   *  after" without re-implementing the separation rules client-side. */
-  separations: { seat: SodChainStep['key']; mustDifferFrom: SodChainStep['key'][] }[];
+  mustDifferFrom: SodSeatKey[];
 }
 
 export interface SodPolicyOverview {
@@ -159,74 +151,7 @@ function assertEligible(policy: SodPolicyRow | null, role: string, action: strin
   }
 }
 
-// The lifecycle seats, keyed to the SAME permissions the release-chain RPCs
-// enforce — so the diagram can never drift from what the database actually does.
-const CHAIN_SEATS: { key: SodChainStep['key']; label: string; detail: string; permission: string }[] = [
-  { key: 'prepare', label: 'Prepare',  detail: 'Creates the run, locks inputs and calculates it.',       permission: 'finance.payroll.run.manage' },
-  { key: 'certify', label: 'Certify',  detail: 'Attests the calculation, statutory results and variances.', permission: 'finance.payroll.certify' },
-  { key: 'approve', label: 'Approve',  detail: 'Decides the approval task and locks the run.',            permission: 'finance.payroll.approve' },
-  { key: 'fund',    label: 'Fund',     detail: 'Confirms the money is available against net pay.',         permission: 'finance.payroll.funding.approve' },
-  { key: 'release', label: 'Release',  detail: 'Issues the release certificate and pays employees.',       permission: 'finance.payroll.release' },
-];
-
 const HOLDER_DISPLAY_CAP = 8;
-
-/** Which earlier seats a seat must be a different person from, at `level`. */
-function separationFor(key: SodChainStep['key'], level: SodLevel): SodChainStep['key'][] {
-  // The approver can never be the preparer — the 2-person floor, every level.
-  if (key === 'approve') return ['prepare'];
-  if (key === 'fund' || key === 'release') {
-    const from: SodChainStep['key'][] = ['prepare'];        // floor
-    if (level >= 3) from.push('approve');
-    if (level >= 4) from.push('certify');
-    return from;
-  }
-  return [];
-}
-
-// The seats that must be held by DISTINCT people at each level. Fund and release
-// may be the same person (the RPCs never separate those two from each other), so
-// 'fund' stands for the pair.
-const DISTINCT_SEATS: Record<SodLevel, SodChainStep['key'][]> = {
-  2: ['prepare', 'fund'],
-  3: ['prepare', 'approve', 'fund'],
-  4: ['prepare', 'certify', 'approve', 'fund'],
-};
-
-/**
- * Largest set of distinct people that can cover `seats`, given each seat's
- * eligible holders — a maximum bipartite matching (Kuhn's algorithm).
- *
- * A headcount check would be WRONG: five people who can all only prepare do not
- * make level 4 achievable. Only a matching answers "can these seats be staffed by
- * different people at the same time". At most 4 seats, so this is trivially cheap.
- */
-function maxDistinctAssignment(
-  seats: SodChainStep['key'][],
-  holdersBySeat: Map<SodChainStep['key'], string[]>,
-): { size: number; unmatched: SodChainStep['key'][] } {
-  const assignedTo = new Map<string, SodChainStep['key']>();   // person -> seat
-  const unmatched: SodChainStep['key'][] = [];
-
-  const tryAssign = (seat: SodChainStep['key'], seen: Set<string>): boolean => {
-    for (const person of holdersBySeat.get(seat) ?? []) {
-      if (seen.has(person)) continue;
-      seen.add(person);
-      const holder = assignedTo.get(person);
-      // Free, or its current seat can be re-staffed by someone else.
-      if (holder === undefined || tryAssign(holder, seen)) {
-        assignedTo.set(person, seat);
-        return true;
-      }
-    }
-    return false;
-  };
-
-  for (const seat of seats) {
-    if (!tryAssign(seat, new Set())) unmatched.push(seat);
-  }
-  return { size: seats.length - unmatched.length, unmatched };
-}
 
 interface SeatStaffing {
   roles: Map<SodChainStep['key'], string[]>;
@@ -284,25 +209,6 @@ function buildChain(level: SodLevel, staffing: SeatStaffing): SodChainStep[] {
   });
 }
 
-/**
- * Can each level actually be staffed today? Proposing a level the org cannot fill
- * would strand every future run at funding with PR403 — the very deadlock this
- * feature exists to remove — so this is a real gate, not a hint.
- */
-function computeFeasibility(staffing: SeatStaffing): SodLevelFeasibility[] {
-  return SOD_LEVELS.map(level => {
-    const seats = DISTINCT_SEATS[level];
-    const { size, unmatched } = maxDistinctAssignment(seats, staffing.holders);
-    return {
-      level,
-      required: seats.length,
-      available: size,
-      feasible: size >= seats.length,
-      shortfallSeats: unmatched,
-      separations: CHAIN_SEATS.map(s => ({ seat: s.key, mustDifferFrom: separationFor(s.key, level) })),
-    };
-  });
-}
 
 /** Active policy + open proposal + recent history. */
 export async function getSodPolicy(): Promise<SodPolicyOverview> {
@@ -323,7 +229,7 @@ export async function getSodPolicy(): Promise<SodPolicyOverview> {
     levels:  SOD_LEVELS,
     chain:   buildChain(level, staffing),
     distinctPeopleRequired: level,
-    feasibility: computeFeasibility(staffing),
+    feasibility: computeFeasibility(staffing.holders),
   };
 }
 
@@ -367,7 +273,7 @@ export async function proposeSodChange(input: {
   // here rather than let someone approve an outage. Enforced server-side: the UI
   // greys the option, but a direct API call must fail too.
   const staffing = await resolveSeatStaffing();
-  const fit = computeFeasibility(staffing).find(f => f.level === level);
+  const fit = computeFeasibility(staffing.holders).find(f => f.level === level);
   if (fit && !fit.feasible) {
     const short = fit.shortfallSeats
       .map(k => CHAIN_SEATS.find(s => s.key === k)?.label ?? k).join(', ');

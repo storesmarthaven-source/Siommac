@@ -26,8 +26,10 @@ export default defineConfig({
   ],
 
   test: {
-    // Only pick up frontend tests — exclude the legacy Jest test directory
-    include:     ['src/**/*.test.{ts,tsx}'],
+    // Frontend tests, plus PURE backend units (files with no db/env imports — e.g.
+    // the payroll SoD rules, which back a real anti-fraud gate and deserve direct
+    // tests rather than only live-API coverage). Excludes the legacy Jest directory.
+    include:     ['src/**/*.test.{ts,tsx}', 'netlify/functions/**/*.test.ts'],
     exclude:     ['tests/**', 'node_modules/**'],
     environment: 'jsdom',
     globals:     true,           // describe / it / expect without imports

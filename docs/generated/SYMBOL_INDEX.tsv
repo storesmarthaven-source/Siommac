@@ -995,33 +995,36 @@ listRunViews	function	payroll	true		netlify/functions/lib/finance/payroll/runVie
 createRunView	function	payroll	true		netlify/functions/lib/finance/payroll/runViews.ts	181	
 updateRunView	function	payroll	true		netlify/functions/lib/finance/payroll/runViews.ts	243	
 deleteRunView	function	payroll	true		netlify/functions/lib/finance/payroll/runViews.ts	316	
-SUBMODULE	variable	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	35	
-SOD_LEVELS	variable	payroll	true		netlify/functions/lib/finance/payroll/sodPolicy.ts	38	
-SodLevel	type	payroll	true		netlify/functions/lib/finance/payroll/sodPolicy.ts	39	
-SodPolicyRow	interface	payroll	true		netlify/functions/lib/finance/payroll/sodPolicy.ts	41	
-SodChainStep	interface	payroll	true		netlify/functions/lib/finance/payroll/sodPolicy.ts	56	
-SodLevelFeasibility	interface	payroll	true		netlify/functions/lib/finance/payroll/sodPolicy.ts	71	
-SodPolicyOverview	interface	payroll	true		netlify/functions/lib/finance/payroll/sodPolicy.ts	85	
-DbRow	interface	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	99	
-err	function	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	113	
-toRow	function	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	117	
-SELECT	variable	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	133	
-activePolicy	function	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	136	
-assertEligible	function	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	151	
-CHAIN_SEATS	array	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	164	
-HOLDER_DISPLAY_CAP	variable	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	172	
-separationFor	function	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	175	
-DISTINCT_SEATS	object	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	190	
-maxDistinctAssignment	function	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	204	
-tryAssign	function	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	211	maxDistinctAssignment
-SeatStaffing	interface	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	231	
-resolveSeatStaffing	function	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	242	
-buildChain	function	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	271	
-computeFeasibility	function	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	292	
-getSodPolicy	function	payroll	true		netlify/functions/lib/finance/payroll/sodPolicy.ts	308	
-proposeSodChange	function	payroll	true		netlify/functions/lib/finance/payroll/sodPolicy.ts	334	
-approveSodChange	function	payroll	true		netlify/functions/lib/finance/payroll/sodPolicy.ts	439	
-setSodEligibleRoles	function	payroll	true		netlify/functions/lib/finance/payroll/sodPolicy.ts	484	
+SUBMODULE	variable	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	41	
+SodPolicyRow	interface	payroll	true		netlify/functions/lib/finance/payroll/sodPolicy.ts	48	
+SodChainStep	interface	payroll	true		netlify/functions/lib/finance/payroll/sodPolicy.ts	63	
+SodPolicyOverview	interface	payroll	true		netlify/functions/lib/finance/payroll/sodPolicy.ts	77	
+DbRow	interface	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	91	
+err	function	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	105	
+toRow	function	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	109	
+SELECT	variable	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	125	
+activePolicy	function	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	128	
+assertEligible	function	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	143	
+HOLDER_DISPLAY_CAP	variable	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	154	
+SeatStaffing	interface	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	156	
+resolveSeatStaffing	function	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	167	
+buildChain	function	payroll	false		netlify/functions/lib/finance/payroll/sodPolicy.ts	196	
+getSodPolicy	function	payroll	true		netlify/functions/lib/finance/payroll/sodPolicy.ts	214	
+proposeSodChange	function	payroll	true		netlify/functions/lib/finance/payroll/sodPolicy.ts	240	
+approveSodChange	function	payroll	true		netlify/functions/lib/finance/payroll/sodPolicy.ts	345	
+setSodEligibleRoles	function	payroll	true		netlify/functions/lib/finance/payroll/sodPolicy.ts	390	
+holders	function	payroll	false	test	netlify/functions/lib/finance/payroll/sodRules.test.ts	17	
+everyone	function	payroll	false	test	netlify/functions/lib/finance/payroll/sodRules.test.ts	21	
+SOD_LEVELS	variable	payroll	true		netlify/functions/lib/finance/payroll/sodRules.ts	16	
+SodLevel	type	payroll	true		netlify/functions/lib/finance/payroll/sodRules.ts	17	
+SodSeatKey	type	payroll	true		netlify/functions/lib/finance/payroll/sodRules.ts	19	
+CHAIN_SEATS	array	payroll	true		netlify/functions/lib/finance/payroll/sodRules.ts	23	
+DISTINCT_SEATS	object	payroll	true		netlify/functions/lib/finance/payroll/sodRules.ts	36	
+separationFor	function	payroll	true		netlify/functions/lib/finance/payroll/sodRules.ts	43	
+maxDistinctAssignment	function	payroll	true		netlify/functions/lib/finance/payroll/sodRules.ts	63	
+tryAssign	function	payroll	false		netlify/functions/lib/finance/payroll/sodRules.ts	70	maxDistinctAssignment
+SodLevelFeasibility	interface	payroll	true		netlify/functions/lib/finance/payroll/sodRules.ts	90	
+computeFeasibility	function	payroll	true		netlify/functions/lib/finance/payroll/sodRules.ts	104	
 sourcePeriodOverlaps	function	payroll	true		netlify/functions/lib/finance/payroll/sourceOverlap.ts	19	
 OverlapFilterable	interface	payroll	false		netlify/functions/lib/finance/payroll/sourceOverlap.ts	29	
 filterSourcePeriodOverlap	function	payroll	true		netlify/functions/lib/finance/payroll/sourceOverlap.ts	39	
@@ -7155,18 +7158,18 @@ SkeletonHeader	function	payroll	false	component	src/components/sections/Finance/
 PayrollCommandCenter	function	payroll	true	component	src/components/sections/Finance/PayrollCommandCenter.tsx	274	
 placeBottom	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	311	PayrollCommandCenter
 promoteDefault	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	313	PayrollCommandCenter
-runAction	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	338	PayrollCommandCenter
-stableAction	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	347	PayrollCommandCenter
-PortfolioBand	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	579	
-RunRegister	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	639	
-RunRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	698	
-goToExceptions	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	720	
-ApprovalsWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	725	
-DeadlinesWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	773	
-dayKey	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	777	DeadlinesWidget
-onDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	778	DeadlinesWidget
-ReadinessWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	829	
-ImpactWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	886	
+runAction	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	343	PayrollCommandCenter
+stableAction	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	352	PayrollCommandCenter
+PortfolioBand	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	584	
+RunRegister	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	644	
+RunRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	703	
+goToExceptions	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	725	
+ApprovalsWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	730	
+DeadlinesWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	778	
+dayKey	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	782	DeadlinesWidget
+onDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	783	DeadlinesWidget
+ReadinessWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	834	
+ImpactWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	891	
 mockUseWorkQueue	variable	payroll	false	test	src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx	19	
 stubMut	function	payroll	false	test	src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx	20	
 findingRow	function	payroll	false	test	src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx	35	

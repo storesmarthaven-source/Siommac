@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "23792e342d6096766df8e0d1d1c3f180f879b22e",
+    "head": "d52ed39519bd47decb14a4474dfca694a2f72eae",
     "branch": "main",
-    "fingerprint": "acc4d99e367ed7958bc21d4a",
-    "indexedFiles": 1574
+    "fingerprint": "2b159dd6352d096b4251f3a8",
+    "indexedFiles": 1576
   },
   "summary": {
-    "files": 1240,
-    "symbols": 12493,
+    "files": 1242,
+    "symbols": 12496,
     "widgets": 32,
     "routes": 938,
     "routeDefinitions": 939,
@@ -35,8 +35,8 @@
     {
       "id": "payroll",
       "counts": {
-        "files": 193,
-        "symbols": 1981,
+        "files": 195,
+        "symbols": 1984,
         "widgets": 10,
         "routes": 140,
         "routeDefinitions": 140,
@@ -644,8 +644,22 @@
       "path": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
       "module": "payroll",
       "role": "backend-lib",
-      "lines": 515,
-      "hash": "163a7fc6b6f9cd4e"
+      "lines": 421,
+      "hash": "4f8048c16fff0956"
+    },
+    {
+      "path": "netlify/functions/lib/finance/payroll/sodRules.test.ts",
+      "module": "payroll",
+      "role": "backend-lib",
+      "lines": 148,
+      "hash": "2b955b2dd1876ca1"
+    },
+    {
+      "path": "netlify/functions/lib/finance/payroll/sodRules.ts",
+      "module": "payroll",
+      "role": "backend-lib",
+      "lines": 120,
+      "hash": "43f15c7352d4a617"
     },
     {
       "path": "netlify/functions/lib/finance/payroll/sourceOverlap.ts",
@@ -4578,8 +4592,8 @@
       "path": "src/components/sections/Finance/PayrollCommandCenter.tsx",
       "module": "payroll",
       "role": "frontend-page",
-      "lines": 921,
-      "hash": "dc2f7294e058c708"
+      "lines": 926,
+      "hash": "e6adb7df8aa1fe55"
     },
     {
       "path": "src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx",
@@ -18838,29 +18852,9 @@
       "name": "SUBMODULE",
       "kind": "variable",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 35,
+      "line": 41,
       "module": "payroll",
       "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "SOD_LEVELS",
-      "kind": "variable",
-      "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 38,
-      "module": "payroll",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "SodLevel",
-      "kind": "type",
-      "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 39,
-      "module": "payroll",
-      "exported": true,
       "container": "",
       "tags": []
     },
@@ -18868,7 +18862,7 @@
       "name": "SodPolicyRow",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 41,
+      "line": 48,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -18878,17 +18872,7 @@
       "name": "SodChainStep",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 56,
-      "module": "payroll",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "SodLevelFeasibility",
-      "kind": "interface",
-      "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 71,
+      "line": 63,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -18898,7 +18882,7 @@
       "name": "SodPolicyOverview",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 85,
+      "line": 77,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -18908,7 +18892,7 @@
       "name": "DbRow",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 99,
+      "line": 91,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -18918,7 +18902,7 @@
       "name": "err",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 113,
+      "line": 105,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -18928,7 +18912,7 @@
       "name": "toRow",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 117,
+      "line": 109,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -18938,7 +18922,7 @@
       "name": "SELECT",
       "kind": "variable",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 133,
+      "line": 125,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -18948,7 +18932,7 @@
       "name": "activePolicy",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 136,
+      "line": 128,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -18958,17 +18942,7 @@
       "name": "assertEligible",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 151,
-      "module": "payroll",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "CHAIN_SEATS",
-      "kind": "array",
-      "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 164,
+      "line": 143,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -18978,57 +18952,17 @@
       "name": "HOLDER_DISPLAY_CAP",
       "kind": "variable",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 172,
+      "line": 154,
       "module": "payroll",
       "exported": false,
       "container": "",
-      "tags": []
-    },
-    {
-      "name": "separationFor",
-      "kind": "function",
-      "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 175,
-      "module": "payroll",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "DISTINCT_SEATS",
-      "kind": "object",
-      "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 190,
-      "module": "payroll",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "maxDistinctAssignment",
-      "kind": "function",
-      "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 204,
-      "module": "payroll",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "tryAssign",
-      "kind": "function",
-      "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 211,
-      "module": "payroll",
-      "exported": false,
-      "container": "maxDistinctAssignment",
       "tags": []
     },
     {
       "name": "SeatStaffing",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 231,
+      "line": 156,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -19038,7 +18972,7 @@
       "name": "resolveSeatStaffing",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 242,
+      "line": 167,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -19048,17 +18982,7 @@
       "name": "buildChain",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 271,
-      "module": "payroll",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "computeFeasibility",
-      "kind": "function",
-      "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 292,
+      "line": 196,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -19068,7 +18992,7 @@
       "name": "getSodPolicy",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 308,
+      "line": 214,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -19078,7 +19002,7 @@
       "name": "proposeSodChange",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 334,
+      "line": 240,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -19088,7 +19012,7 @@
       "name": "approveSodChange",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 439,
+      "line": 345,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -19098,7 +19022,131 @@
       "name": "setSodEligibleRoles",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/sodPolicy.ts",
-      "line": 484,
+      "line": 390,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "holders",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/sodRules.test.ts",
+      "line": 17,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "everyone",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/sodRules.test.ts",
+      "line": 21,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "SOD_LEVELS",
+      "kind": "variable",
+      "file": "netlify/functions/lib/finance/payroll/sodRules.ts",
+      "line": 16,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SodLevel",
+      "kind": "type",
+      "file": "netlify/functions/lib/finance/payroll/sodRules.ts",
+      "line": 17,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SodSeatKey",
+      "kind": "type",
+      "file": "netlify/functions/lib/finance/payroll/sodRules.ts",
+      "line": 19,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CHAIN_SEATS",
+      "kind": "array",
+      "file": "netlify/functions/lib/finance/payroll/sodRules.ts",
+      "line": 23,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DISTINCT_SEATS",
+      "kind": "object",
+      "file": "netlify/functions/lib/finance/payroll/sodRules.ts",
+      "line": 36,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "separationFor",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/sodRules.ts",
+      "line": 43,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "maxDistinctAssignment",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/sodRules.ts",
+      "line": 63,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "tryAssign",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/sodRules.ts",
+      "line": 70,
+      "module": "payroll",
+      "exported": false,
+      "container": "maxDistinctAssignment",
+      "tags": []
+    },
+    {
+      "name": "SodLevelFeasibility",
+      "kind": "interface",
+      "file": "netlify/functions/lib/finance/payroll/sodRules.ts",
+      "line": 90,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "computeFeasibility",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/sodRules.ts",
+      "line": 104,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -83151,7 +83199,7 @@
       "name": "runAction",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 338,
+      "line": 343,
       "module": "payroll",
       "exported": false,
       "container": "PayrollCommandCenter",
@@ -83161,7 +83209,7 @@
       "name": "stableAction",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 347,
+      "line": 352,
       "module": "payroll",
       "exported": false,
       "container": "PayrollCommandCenter",
@@ -83171,7 +83219,7 @@
       "name": "PortfolioBand",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 579,
+      "line": 584,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -83183,7 +83231,7 @@
       "name": "RunRegister",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 639,
+      "line": 644,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -83195,7 +83243,7 @@
       "name": "RunRow",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 698,
+      "line": 703,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -83207,7 +83255,7 @@
       "name": "goToExceptions",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 720,
+      "line": 725,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -83217,7 +83265,7 @@
       "name": "ApprovalsWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 725,
+      "line": 730,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -83230,7 +83278,7 @@
       "name": "DeadlinesWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 773,
+      "line": 778,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -83243,7 +83291,7 @@
       "name": "dayKey",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 777,
+      "line": 782,
       "module": "payroll",
       "exported": false,
       "container": "DeadlinesWidget",
@@ -83253,7 +83301,7 @@
       "name": "onDay",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 778,
+      "line": 783,
       "module": "payroll",
       "exported": false,
       "container": "DeadlinesWidget",
@@ -83263,7 +83311,7 @@
       "name": "ReadinessWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 829,
+      "line": 834,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -83276,7 +83324,7 @@
       "name": "ImpactWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 886,
+      "line": 891,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -139690,7 +139738,7 @@
       "kind": "local",
       "render": "() => <ApprovalsWidget data={data} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 492
+      "line": 497
     },
     {
       "id": "finance.payroll.deadlines",
@@ -139700,7 +139748,7 @@
       "kind": "local",
       "render": "() => <DeadlinesWidget data={data} onOpen={openRun} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 493
+      "line": 498
     },
     {
       "id": "finance.payroll.kpi.activeRuns",
@@ -139710,7 +139758,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-layer-group\" tone=\"teal\" label=\"Active Runs\" value={kk?.activeRuns ?? 0} sub=\"In the reporting window\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 474
+      "line": 479
     },
     {
       "id": "finance.payroll.kpi.employeesDue",
@@ -139720,7 +139768,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-users\" tone=\"blue\" label=\"Employees Due\" value={kk?.employeesDue ?? 0} sub=\"Current calc population\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 477
+      "line": 482
     },
     {
       "id": "finance.payroll.kpi.grossPayroll",
@@ -139730,7 +139778,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-coins\" tone=\"green\" label=\"Gross Payroll\" value={kk ? fmtTTDc(kk.grossPayroll.amount) : '—'} sub=\"Window total\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 480
+      "line": 485
     },
     {
       "id": "finance.payroll.kpi.netPayroll",
@@ -139740,7 +139788,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-wallet\" tone=\"teal\" label=\"Net Payroll\" value={kk ? fmtTTDc(kk.netPayroll.amount) : '—'} sub=\"Window total\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 483
+      "line": 488
     },
     {
       "id": "finance.payroll.kpi.nextPay",
@@ -139750,7 +139798,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-calendar-day\" tone=\"blue\" label=\"Next Pay Date\"\n        value={kk ? (nextPay.mon ? `${nextPay.day} ${nextPay.mon}` : '—') : '—'}\n        sub={kk?.nextPayDate.runNo ? `Run ${kk.nextPayDate.runNo}` : 'No scheduled run'} loading={kpiLoading}\n        link={{ label: kk?.nextPayDate.runNo ? 'Open run' : 'View runs', onClick: () => (kk?.nextPayDate.runId ? openRun(kk.nextPayDate.runId) : focusRegister('all')) }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 469
+      "line": 474
     },
     {
       "id": "finance.payroll.releaseImpact",
@@ -139760,7 +139808,7 @@
       "kind": "local",
       "render": "() => <ImpactWidget data={data} onOpen={openRun} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 495
+      "line": 500
     },
     {
       "id": "finance.payroll.releaseReadiness",
@@ -139770,7 +139818,7 @@
       "kind": "local",
       "render": "() => <ReadinessWidget data={data} onOpen={openRun} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 494
+      "line": 499
     },
     {
       "id": "finance.payroll.runRegister",
@@ -139780,7 +139828,7 @@
       "kind": "local",
       "render": "() => <RunRegister data={data} tab={tab} setTab={setTab} searchInput={searchInput} setSearchInput={setSearchInput} cursor={cursor} setCursor={setCursor} onOpen={openRun} onNewRun={() => setWizOpen(true)} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 496
+      "line": 501
     },
     {
       "id": "finance.statutory.deadlines",
