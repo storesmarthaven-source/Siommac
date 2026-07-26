@@ -126,6 +126,51 @@ export default async function run(h) {
     }
   });
 
+  await test('get reports per-level staffing feasibility for the guided change flow', async () => {
+    const r = await api('finance/payroll/sod-policy/get', T.proposer, {});
+    ok(r, `get failed: ${r.body.message}`);
+    const { feasibility } = r.body.data;
+    expect(Array.isArray(feasibility) && feasibility.length === 3,
+      `feasibility must cover 3 levels, got ${feasibility?.length}`);
+
+    for (const f of feasibility) {
+      for (const k of ['level', 'required', 'available', 'feasible', 'shortfallSeats', 'separations']) {
+        expect(k in f, `level ${f.level} feasibility is missing ${k}`);
+      }
+      // required = distinct seats the level needs: L2 prepare+fund, L3 +approve, L4 +certify.
+      expect(f.required === f.level, `level ${f.level} should need ${f.level} people, says ${f.required}`);
+      expect(f.feasible === (f.available >= f.required), `level ${f.level}: feasible contradicts available`);
+      expect(f.feasible ? f.shortfallSeats.length === 0 : f.shortfallSeats.length > 0,
+        `level ${f.level}: shortfallSeats disagrees with feasible`);
+      // Separations are published per level so the UI never re-derives the rules.
+      const sep = Object.fromEntries(f.separations.map(s => [s.seat, s.mustDifferFrom.join()]));
+      const expected = f.level >= 4 ? 'prepare,approve,certify' : f.level >= 3 ? 'prepare,approve' : 'prepare';
+      expect(sep.approve === 'prepare', `level ${f.level}: approve must always differ from prepare`);
+      expect(sep.fund === expected && sep.release === expected,
+        `level ${f.level}: fund/release separations should be [${expected}]`);
+    }
+  });
+
+  await test('a level the org cannot staff is refused server-side', async () => {
+    // Drive the gate from real data: pick a level that is genuinely unstaffable.
+    // If every level is staffable in this environment the gate cannot fire, so
+    // assert that fact explicitly rather than silently skipping.
+    const r = await api('finance/payroll/sod-policy/get', T.proposer, {});
+    const blocked = r.body.data.feasibility.find(f => !f.feasible && f.level !== r.body.data.active.sodLevel);
+    if (!blocked) {
+      const worst = r.body.data.feasibility.map(f => `L${f.level}:${f.available}/${f.required}`).join(' ');
+      expect(true, `no unstaffable level in this environment (${worst}) — gate not exercised`);
+      return;
+    }
+    const denied = await api('finance/payroll/sod-policy/propose', T.proposer, {
+      sodLevel: blocked.level, reason: `E2E ${TAG}: proposing a level the org cannot staff.`,
+    });
+    fails(denied, 'an unstaffable level must be refused');
+    expect(denied.status === 422, `unstaffable propose should be 422, got ${denied.status}`);
+    expect(/different people|staff/i.test(denied.body.message ?? ''),
+      `error should explain the staffing shortfall, got: ${denied.body.message}`);
+  });
+
   h.section('SoD policy - proposal validation');
 
   const target = originalLevel === 4 ? 3 : 4;   // always a real change

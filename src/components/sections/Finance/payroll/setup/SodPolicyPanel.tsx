@@ -24,6 +24,7 @@ import { useSessionStore } from '@store/session';
 import { toast } from '@store';
 import { EmployeeCell } from '../../_shared/EmployeeCell';
 import { SodChainDialog } from './SodChainDialog';
+import { SodChangeWizard } from './SodChangeWizard';
 
 const LEVELS: { level: 2 | 3 | 4; title: string; detail: string }[] = [
   { level: 2, title: '2-person', detail: 'The person who funds and releases must differ from the preparer.' },
@@ -45,16 +46,16 @@ export function SodPolicyPanel(): VNode {
     queryFn: () => financePayrollApi.getSodPolicy(),
   });
 
-  const [level, setLevel] = useState<2 | 3 | 4 | null>(null);
-  const [reason, setReason] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [chainOpen, setChainOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   const invalidate = (): void => { void qc.invalidateQueries({ queryKey: ['finance', 'payroll', 'sod-policy'] }); };
 
   const proposeMut = useMutation({
-    mutationFn: () => financePayrollApi.proposeSodChange({ sodLevel: level!, reason: reason.trim() }),
-    onSuccess: () => { toast('SoD change proposed — it needs a different approver.'); setLevel(null); setReason(''); setErrors({}); invalidate(); },
+    mutationFn: (v: { sodLevel: 2 | 3 | 4; reason: string }) => financePayrollApi.proposeSodChange(v),
+    onSuccess: () => { toast('SoD change proposed — it needs a different approver.'); setWizardOpen(false); invalidate(); },
+    // Keeps the wizard open on failure (e.g. the server's staffing refusal), so
+    // the reason the user typed is not thrown away.
     onError: (e) => toast(e instanceof Error ? e.message : 'Could not propose the change.'),
   });
   const approveMut = useMutation({
@@ -83,15 +84,6 @@ export function SodPolicyPanel(): VNode {
   const activeLevel = active?.sodLevel ?? 3;
   const activeMeta = LEVELS.find(l => l.level === activeLevel);
   const iProposed = !!pending && pending.proposedBy === myId;
-
-  const submitProposal = (): void => {
-    const e: Record<string, string> = {};
-    if (!level) e.level = 'Choose the level you want.';
-    if (level && level === activeLevel) e.level = `The policy is already ${level}-person.`;
-    if (reason.trim().length < 10) e.reason = 'Give a reason of at least 10 characters (this is audited).';
-    setErrors(e);
-    if (Object.keys(e).length === 0) proposeMut.mutate();
-  };
 
   return (
     <div class="stack" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -160,41 +152,22 @@ export function SodPolicyPanel(): VNode {
         </section>
       )}
 
-      {/* ── Propose a change ── */}
+      {/* ── Propose a change (guided) ── */}
       {canPropose && !pending && (
         <section class="hrfin-card">
           <div class="hrfin-card-head">
             <div>
-              <h2>Propose a change</h2>
-              <span>Proposing does not change anything on its own — another authorised approver must approve it.</span>
+              <h2>Change the policy</h2>
+              <span>A guided review — choose a level, see exactly what it changes, then submit it for approval.</span>
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {LEVELS.map(l => (
-                <label key={l.level} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 12.5, cursor: l.level === activeLevel ? 'default' : 'pointer', opacity: l.level === activeLevel ? 0.6 : 1 }}>
-                  <input type="radio" name="sod-level" checked={level === l.level} disabled={l.level === activeLevel}
-                    onChange={() => setLevel(l.level)} style={{ marginTop: 3 }} />
-                  <span>
-                    <strong>{l.title}</strong>{l.level === activeLevel && ' — current'}
-                    <br /><span style={{ color: 'var(--muted)' }}>{l.detail}</span>
-                  </span>
-                </label>
-              ))}
-              {errors.level && <small style={{ color: 'var(--danger)', fontSize: 11.5 }}>{errors.level}</small>}
-            </div>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12.5 }}>
-              <span>Reason <em style={{ fontStyle: 'normal', color: 'var(--muted)' }}>(audited)</em></span>
-              <textarea class="hrfin-input" rows={2} style={{ height: 'auto', padding: '8px 12px' }} value={reason} maxLength={2000}
-                placeholder="e.g. Finance team is three people; a fourth approver is not available."
-                onInput={e => setReason((e.target as HTMLTextAreaElement).value)} />
-              {errors.reason && <small style={{ color: 'var(--danger)', fontSize: 11.5 }}>{errors.reason}</small>}
-            </label>
-            <div>
-              <button type="button" class="hrfin-action is-primary" disabled={proposeMut.isPending} onClick={submitProposal}>
-                {proposeMut.isPending ? 'Submitting…' : 'Submit for approval'}
-              </button>
-            </div>
+          <div>
+            <button type="button" class="hrfin-action is-primary" onClick={() => setWizardOpen(true)}>
+              <i class="fa-solid fa-shield-halved" style={{ fontSize: 12 }} /> Change segregation of duties
+            </button>
+            <p style={{ margin: '10px 0 0', fontSize: 11.5, color: 'var(--muted)' }}>
+              Nothing changes on submission — a different authorised approver has to approve it first.
+            </p>
           </div>
         </section>
       )}
@@ -251,6 +224,16 @@ export function SodPolicyPanel(): VNode {
           the chain (separation badges + required headcount) on the next render. */}
       {chainOpen && (
         <SodChainDialog chain={q.data!.chain} level={activeLevel} onClose={() => setChainOpen(false)} />
+      )}
+
+      {wizardOpen && (
+        <SodChangeWizard
+          activeLevel={activeLevel}
+          feasibility={q.data!.feasibility}
+          busy={proposeMut.isPending}
+          onSubmit={(sodLevel, reason) => proposeMut.mutate({ sodLevel, reason })}
+          onClose={() => setWizardOpen(false)}
+        />
       )}
     </div>
   );

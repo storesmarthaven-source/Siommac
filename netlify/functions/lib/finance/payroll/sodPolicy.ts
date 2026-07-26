@@ -67,6 +67,21 @@ export interface SodChainStep {
   mustDifferFrom: SodChainStep['key'][];
 }
 
+/** Can the org actually staff a level? Computed per level, not just for the active one. */
+export interface SodLevelFeasibility {
+  level: SodLevel;
+  /** Distinct people the level needs (prepare + [certify] + [approve] + fund/release). */
+  required: number;
+  /** Largest set of DISTINCT people that can actually cover those seats. */
+  available: number;
+  feasible: boolean;
+  /** Seats that cannot be staffed without reusing someone — empty when feasible. */
+  shortfallSeats: SodChainStep['key'][];
+  /** What this level would enforce. Sent per level so the UI can diff "before vs
+   *  after" without re-implementing the separation rules client-side. */
+  separations: { seat: SodChainStep['key']; mustDifferFrom: SodChainStep['key'][] }[];
+}
+
 export interface SodPolicyOverview {
   active: SodPolicyRow | null;
   pending: SodPolicyRow | null;
@@ -77,6 +92,8 @@ export interface SodPolicyOverview {
   chain: SodChainStep[];
   /** How many DISTINCT people the active level needs end to end. */
   distinctPeopleRequired: number;
+  /** Per-level staffing feasibility — drives the guided change flow. */
+  feasibility: SodLevelFeasibility[];
 }
 
 interface DbRow {
@@ -167,12 +184,62 @@ function separationFor(key: SodChainStep['key'], level: SodLevel): SodChainStep[
   return [];
 }
 
+// The seats that must be held by DISTINCT people at each level. Fund and release
+// may be the same person (the RPCs never separate those two from each other), so
+// 'fund' stands for the pair.
+const DISTINCT_SEATS: Record<SodLevel, SodChainStep['key'][]> = {
+  2: ['prepare', 'fund'],
+  3: ['prepare', 'approve', 'fund'],
+  4: ['prepare', 'certify', 'approve', 'fund'],
+};
+
 /**
- * Resolve the chain for a level: each seat plus the ACTIVE users who can fill it.
- * Holders come from role_permissions (the real authority) + superadmin, which is
- * allow-all in memory and therefore holds every seat.
+ * Largest set of distinct people that can cover `seats`, given each seat's
+ * eligible holders — a maximum bipartite matching (Kuhn's algorithm).
+ *
+ * A headcount check would be WRONG: five people who can all only prepare do not
+ * make level 4 achievable. Only a matching answers "can these seats be staffed by
+ * different people at the same time". At most 4 seats, so this is trivially cheap.
  */
-async function resolveChain(level: SodLevel): Promise<SodChainStep[]> {
+function maxDistinctAssignment(
+  seats: SodChainStep['key'][],
+  holdersBySeat: Map<SodChainStep['key'], string[]>,
+): { size: number; unmatched: SodChainStep['key'][] } {
+  const assignedTo = new Map<string, SodChainStep['key']>();   // person -> seat
+  const unmatched: SodChainStep['key'][] = [];
+
+  const tryAssign = (seat: SodChainStep['key'], seen: Set<string>): boolean => {
+    for (const person of holdersBySeat.get(seat) ?? []) {
+      if (seen.has(person)) continue;
+      seen.add(person);
+      const holder = assignedTo.get(person);
+      // Free, or its current seat can be re-staffed by someone else.
+      if (holder === undefined || tryAssign(holder, seen)) {
+        assignedTo.set(person, seat);
+        return true;
+      }
+    }
+    return false;
+  };
+
+  for (const seat of seats) {
+    if (!tryAssign(seat, new Set())) unmatched.push(seat);
+  }
+  return { size: seats.length - unmatched.length, unmatched };
+}
+
+interface SeatStaffing {
+  roles: Map<SodChainStep['key'], string[]>;
+  /** FULL holder lists (uncapped) — the matching needs every candidate. */
+  holders: Map<SodChainStep['key'], string[]>;
+}
+
+/**
+ * Who can fill each seat. Holders come from role_permissions (the real authority)
+ * plus superadmin, which is allow-all in memory and therefore holds every seat.
+ * Read ONCE and shared by the chain and the feasibility maths.
+ */
+async function resolveSeatStaffing(): Promise<SeatStaffing> {
   const permissions = CHAIN_SEATS.map(s => s.permission);
   const { data: grants, error: gErr } = await sb
     .from('role_permissions').select('role_name, permission').in('permission', permissions);
@@ -190,19 +257,49 @@ async function resolveChain(level: SodLevel): Promise<SodChainStep[]> {
     .from('app_users').select('id, role').in('role', everyRole).eq('status', 'active');
   if (uErr) throw err('sodPolicy.chain users: ' + uErr.message);
 
+  const roles = new Map<SodChainStep['key'], string[]>();
+  const holders = new Map<SodChainStep['key'], string[]>();
+  for (const seat of CHAIN_SEATS) {
+    // superadmin can fill any seat even without an explicit grant row.
+    const seatRoles = [...new Set([...(rolesByPermission.get(seat.permission) ?? []), 'superadmin'])].sort();
+    roles.set(seat.key, seatRoles);
+    holders.set(seat.key, (users ?? []).filter(u => seatRoles.includes(u.role)).map(u => u.id));
+  }
+  return { roles, holders };
+}
+
+function buildChain(level: SodLevel, staffing: SeatStaffing): SodChainStep[] {
   return CHAIN_SEATS.map(seat => {
-    // superadmin is allow-all, so it can fill any seat even without a grant row.
-    const roles = [...new Set([...(rolesByPermission.get(seat.permission) ?? []), 'superadmin'])];
-    const holders = (users ?? []).filter(u => roles.includes(u.role)).map(u => u.id);
+    const holders = staffing.holders.get(seat.key) ?? [];
     return {
       key: seat.key,
       label: seat.label,
       detail: seat.detail,
       permission: seat.permission,
-      roles: roles.sort(),
+      roles: staffing.roles.get(seat.key) ?? [],
       holderIds: holders.slice(0, HOLDER_DISPLAY_CAP),
       holderCount: holders.length,
       mustDifferFrom: separationFor(seat.key, level),
+    };
+  });
+}
+
+/**
+ * Can each level actually be staffed today? Proposing a level the org cannot fill
+ * would strand every future run at funding with PR403 — the very deadlock this
+ * feature exists to remove — so this is a real gate, not a hint.
+ */
+function computeFeasibility(staffing: SeatStaffing): SodLevelFeasibility[] {
+  return SOD_LEVELS.map(level => {
+    const seats = DISTINCT_SEATS[level];
+    const { size, unmatched } = maxDistinctAssignment(seats, staffing.holders);
+    return {
+      level,
+      required: seats.length,
+      available: size,
+      feasible: size >= seats.length,
+      shortfallSeats: unmatched,
+      separations: CHAIN_SEATS.map(s => ({ seat: s.key, mustDifferFrom: separationFor(s.key, level) })),
     };
   });
 }
@@ -218,13 +315,15 @@ export async function getSodPolicy(): Promise<SodPolicyOverview> {
   const rows = (data ?? []).map(toRow);
   const active = rows.find(r => r.status === 'active') ?? null;
   const level = (active?.sodLevel ?? 3) as SodLevel;
+  const staffing = await resolveSeatStaffing();
   return {
     active,
     pending: rows.find(r => r.status === 'pending_approval') ?? null,
     history: rows.filter(r => r.status === 'superseded'),
     levels:  SOD_LEVELS,
-    chain:   await resolveChain(level),
+    chain:   buildChain(level, staffing),
     distinctPeopleRequired: level,
+    feasibility: computeFeasibility(staffing),
   };
 }
 
@@ -261,6 +360,23 @@ export async function proposeSodChange(input: {
   if (open) {
     throw err('An SoD change is already awaiting approval — decide it before proposing another.',
       409, 'sod_policy.proposal_open');
+  }
+
+  // Staffing gate. A level the org cannot fill would strand every future run at
+  // funding with PR403 — the exact deadlock this feature removes — so refuse it
+  // here rather than let someone approve an outage. Enforced server-side: the UI
+  // greys the option, but a direct API call must fail too.
+  const staffing = await resolveSeatStaffing();
+  const fit = computeFeasibility(staffing).find(f => f.level === level);
+  if (fit && !fit.feasible) {
+    const short = fit.shortfallSeats
+      .map(k => CHAIN_SEATS.find(s => s.key === k)?.label ?? k).join(', ');
+    throw err(
+      `Level ${level} needs ${fit.required} different people, but only ${fit.available} can be found ` +
+      `(no one is left to ${short.toLowerCase()}). Grant the missing capability to another active ` +
+      'user first, or choose a lower level.',
+      422, 'sod_policy.not_staffable',
+    );
   }
 
   const { data, error } = await sb

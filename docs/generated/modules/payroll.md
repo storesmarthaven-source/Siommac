@@ -2,9 +2,9 @@
 
 # payroll Module Map
 
-Source fingerprint: `7edd63908ec988c1a23e34f6`
+Source fingerprint: `acc4d99e367ed7958bc21d4a`
 
-Files: 192 | Symbols: 1967 | Widgets: 10 | Unique mounted endpoints: 140 | Route definitions: 140 mounted + 0 unmounted | API calls: 2 | DB objects: 259 | E2E suites: 28
+Files: 193 | Symbols: 1981 | Widgets: 10 | Unique mounted endpoints: 140 | Route definitions: 140 mounted + 0 unmounted | API calls: 2 | DB objects: 259 | E2E suites: 28
 
 ## Widgets and Tiles
 
@@ -180,35 +180,35 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | Symbol | Kind/tags | Location | Container |
 |---|---|---|---|
 | `fundingKpiState` | function / ui-tile | `netlify/functions/lib/finance/payroll/controlCenterDerive.ts:70` | `-` |
-| `usePayrollRun` | function / hook | `src/api/finance/payroll.ts:895` | `-` |
-| `useRunLines` | function / hook | `src/api/finance/payroll.ts:898` | `-` |
-| `usePolicyEvidence` | function / hook | `src/api/finance/payroll.ts:902` | `-` |
-| `useRunWorkspace` | function / hook | `src/api/finance/payroll.ts:911` | `-` |
-| `useReleasePreflight` | function / hook | `src/api/finance/payroll.ts:919` | `-` |
-| `useReleaseCertificate` | function / hook | `src/api/finance/payroll.ts:928` | `-` |
-| `useCalculationVersions` | function / hook | `src/api/finance/payroll.ts:937` | `-` |
-| `useCalculationComparison` | function / hook | `src/api/finance/payroll.ts:945` | `-` |
-| `useRunWarnings` | function / hook | `src/api/finance/payroll.ts:952` | `-` |
-| `useRunPayslips` | function / hook | `src/api/finance/payroll.ts:955` | `-` |
-| `useRunGlPreview` | function / hook | `src/api/finance/payroll.ts:958` | `-` |
-| `usePayGroups` | function / hook | `src/api/finance/payroll.ts:961` | `-` |
-| `useReasonCodes` | function / hook | `src/api/finance/payroll.ts:965` | `-` |
-| `usePayGroupMembers` | function / hook | `src/api/finance/payroll.ts:971` | `-` |
-| `useOvertimeRules` | function / hook | `src/api/finance/payroll.ts:974` | `-` |
-| `useEmployeeLoans` | function / hook | `src/api/finance/payroll.ts:977` | `-` |
-| `useRunOverrides` | function / hook | `src/api/finance/payroll.ts:980` | `-` |
-| `useRunExports` | function / hook | `src/api/finance/payroll.ts:983` | `-` |
-| `useRunInputs` | function / hook | `src/api/finance/payroll.ts:986` | `-` |
-| `useNisProfiles` | function / hook | `src/api/finance/payroll.ts:989` | `-` |
-| `useRunAuditLog` | function / hook | `src/api/finance/payroll.ts:992` | `-` |
-| `usePopulationPreview` | function / hook | `src/api/finance/payroll.ts:999` | `-` |
-| `usePopulationReconciliation` | function / hook | `src/api/finance/payroll.ts:1008` | `-` |
-| `useInputReadiness` | function / hook | `src/api/finance/payroll.ts:1018` | `-` |
-| `usePayrollMutation` | function / hook | `src/api/finance/payroll.ts:1031` | `-` |
-| `useResolveWarning` | function / hook | `src/api/finance/payroll.ts:1042` | `-` |
-| `useExportDownload` | function / hook | `src/api/finance/payroll.ts:1051` | `-` |
-| `usePayslipTemplates` | function / hook | `src/api/finance/payroll.ts:1069` | `-` |
-| `useSetRunTemplate` | function / hook | `src/api/finance/payroll.ts:1080` | `-` |
+| `usePayrollRun` | function / hook | `src/api/finance/payroll.ts:906` | `-` |
+| `useRunLines` | function / hook | `src/api/finance/payroll.ts:909` | `-` |
+| `usePolicyEvidence` | function / hook | `src/api/finance/payroll.ts:913` | `-` |
+| `useRunWorkspace` | function / hook | `src/api/finance/payroll.ts:922` | `-` |
+| `useReleasePreflight` | function / hook | `src/api/finance/payroll.ts:930` | `-` |
+| `useReleaseCertificate` | function / hook | `src/api/finance/payroll.ts:939` | `-` |
+| `useCalculationVersions` | function / hook | `src/api/finance/payroll.ts:948` | `-` |
+| `useCalculationComparison` | function / hook | `src/api/finance/payroll.ts:956` | `-` |
+| `useRunWarnings` | function / hook | `src/api/finance/payroll.ts:963` | `-` |
+| `useRunPayslips` | function / hook | `src/api/finance/payroll.ts:966` | `-` |
+| `useRunGlPreview` | function / hook | `src/api/finance/payroll.ts:969` | `-` |
+| `usePayGroups` | function / hook | `src/api/finance/payroll.ts:972` | `-` |
+| `useReasonCodes` | function / hook | `src/api/finance/payroll.ts:976` | `-` |
+| `usePayGroupMembers` | function / hook | `src/api/finance/payroll.ts:982` | `-` |
+| `useOvertimeRules` | function / hook | `src/api/finance/payroll.ts:985` | `-` |
+| `useEmployeeLoans` | function / hook | `src/api/finance/payroll.ts:988` | `-` |
+| `useRunOverrides` | function / hook | `src/api/finance/payroll.ts:991` | `-` |
+| `useRunExports` | function / hook | `src/api/finance/payroll.ts:994` | `-` |
+| `useRunInputs` | function / hook | `src/api/finance/payroll.ts:997` | `-` |
+| `useNisProfiles` | function / hook | `src/api/finance/payroll.ts:1000` | `-` |
+| `useRunAuditLog` | function / hook | `src/api/finance/payroll.ts:1003` | `-` |
+| `usePopulationPreview` | function / hook | `src/api/finance/payroll.ts:1010` | `-` |
+| `usePopulationReconciliation` | function / hook | `src/api/finance/payroll.ts:1019` | `-` |
+| `useInputReadiness` | function / hook | `src/api/finance/payroll.ts:1029` | `-` |
+| `usePayrollMutation` | function / hook | `src/api/finance/payroll.ts:1042` | `-` |
+| `useResolveWarning` | function / hook | `src/api/finance/payroll.ts:1053` | `-` |
+| `useExportDownload` | function / hook | `src/api/finance/payroll.ts:1062` | `-` |
+| `usePayslipTemplates` | function / hook | `src/api/finance/payroll.ts:1080` | `-` |
+| `useSetRunTemplate` | function / hook | `src/api/finance/payroll.ts:1091` | `-` |
 | `usePayrollControlCenter` | function / hook | `src/api/finance/payroll/controlCenter.ts:118` | `-` |
 | `useWorkQueue` | function / hook | `src/api/finance/payrollExceptions.ts:61` | `-` |
 | `useWorkQueueMutations` | function / hook | `src/api/finance/payrollExceptions.ts:75` | `-` |
@@ -224,7 +224,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `PayPolicySetup` | function / component | `src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx:53` | `-` |
 | `PayPolicyWizard` | function / component | `src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx:77` | `-` |
 | `SodChainDialog` | function / component | `src/components/sections/Finance/payroll/setup/SodChainDialog.tsx:29` | `-` |
-| `SodPolicyPanel` | function / component | `src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx:36` | `-` |
+| `SodChangeWizard` | function / component | `src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx:39` | `-` |
+| `SodPolicyPanel` | function / component | `src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx:37` | `-` |
 | `WorkCalendarPage` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:55` | `-` |
 | `WorkCalendarSetup` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:66` | `-` |
 | `HolidaySetsPanel` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:158` | `-` |
@@ -462,7 +463,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | Payroll — Reports Center (F-12, preview) | 52 | 8 | `scripts/e2e/suites/payrollReports.mjs` |
 | Finance — Payroll Runs Register (runs/list + run-views + runs/calendar) | 38 | 7 | `scripts/e2e/suites/payrollRunsRegister.mjs` |
 | Payroll -- Scale (1000+ employee run) | 17 | 13 | `scripts/e2e/suites/payrollScale.mjs` |
-| Finance Payroll - Segregation-of-Duties Policy (governed) | 15 | 5 | `scripts/e2e/suites/payrollSodPolicy.mjs` |
+| Finance Payroll - Segregation-of-Duties Policy (governed) | 17 | 5 | `scripts/e2e/suites/payrollSodPolicy.mjs` |
 | Payroll — Statutory Forms (employer profile + TD4) | 17 | 7 | `scripts/e2e/suites/payrollStatutoryForms.mjs` |
 | Payroll — statutory-version snapshot binding (2a) | 7 | 6 | `scripts/e2e/suites/payrollStatutorySnapshot.mjs` |
 | payrollSystemCertification | 13 | 16 | `scripts/e2e/suites/payrollSystemCertification.mjs` |
@@ -499,7 +500,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/payrollReports.mjs` | 660 |
 | e2e-suite | `scripts/e2e/suites/payrollRunsRegister.mjs` | 881 |
 | e2e-suite | `scripts/e2e/suites/payrollScale.mjs` | 392 |
-| e2e-suite | `scripts/e2e/suites/payrollSodPolicy.mjs` | 266 |
+| e2e-suite | `scripts/e2e/suites/payrollSodPolicy.mjs` | 311 |
 | e2e-suite | `scripts/e2e/suites/payrollStatutoryForms.mjs` | 251 |
 | e2e-suite | `scripts/e2e/suites/payrollStatutorySnapshot.mjs` | 292 |
 | e2e-suite | `scripts/e2e/suites/payrollSystemCertification.mjs` | 261 |
@@ -509,7 +510,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/payslipTemplateApproval.mjs` | 517 |
 | e2e-suite | `scripts/e2e/suites/payslipTemplates.mjs` | 271 |
 | frontend-api | `src/api/finance/payroll.contract.test.ts` | 121 |
-| frontend-api | `src/api/finance/payroll.ts` | 1090 |
+| frontend-api | `src/api/finance/payroll.ts` | 1101 |
 | frontend-api | `src/api/finance/payrollExceptions.ts` | 87 |
 | frontend-api | `src/api/finance/payrollPayslipBatches.ts` | 39 |
 | frontend-api | `src/api/finance/payrollRunsRegister.ts` | 77 |
@@ -531,7 +532,8 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx` | 432 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx` | 469 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/SodChainDialog.tsx` | 114 |
-| frontend-page | `src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx` | 258 |
+| frontend-page | `src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx` | 204 |
+| frontend-page | `src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx` | 241 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.test.tsx` | 203 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx` | 874 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/payPolicyRules.test.ts` | 67 |

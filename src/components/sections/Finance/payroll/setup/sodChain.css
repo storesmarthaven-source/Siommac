@@ -97,3 +97,83 @@
   .sodc-row { grid-template-columns: 30px minmax(0, 1fr); row-gap: 8px; }
   .sodc-people { grid-column: 2; }
 }
+
+/* ── Guided SoD change (SodChangeWizard) ─────────────────────────────────── */
+.sodw { display: flex; flex-direction: column; gap: 16px; }
+
+/* step rail */
+.sodw-steps { display: flex; align-items: center; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.sodw-steps li {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 11.5px; font-weight: 650; color: #93a3b8;
+  padding: 5px 11px 5px 6px; border-radius: 999px;
+  border: 1px solid #e6ecf5; background: #fbfcfe;
+}
+.sodw-steps li span {
+  width: 19px; height: 19px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #eef2f8; color: #93a3b8; font-size: 10.5px; font-weight: 750;
+}
+.sodw-steps li.is-current { color: #17376b; border-color: #cddcf7; background: #f2f7ff; }
+.sodw-steps li.is-current span { background: #17376b; color: #fff; }
+.sodw-steps li.is-done { color: #1c7a4a; border-color: #c7ead6; background: #f4fbf7; }
+.sodw-steps li.is-done span { background: #1c7a4a; color: #fff; }
+
+.sodw-body { display: flex; flex-direction: column; gap: 12px; }
+.sodw-lead { margin: 0; font-size: 13px; color: #45546a; line-height: 1.55; }
+.sodw-lead strong, .sodw-note strong { color: #17243c; }
+.sodw-hint { margin: 0; font-size: 11.5px; color: #8494ab; line-height: 1.5; }
+.sodw-err { color: var(--danger, #d92d20); font-size: 11.5px; }
+
+/* level cards */
+.sodw-levels { display: flex; flex-direction: column; gap: 9px; }
+.sodw-level {
+  display: flex; gap: 11px; align-items: flex-start;
+  padding: 12px 13px; border: 1px solid #dde5f0; border-radius: 10px;
+  background: #fff; cursor: pointer;
+}
+.sodw-level input { margin-top: 3px; flex: 0 0 auto; }
+.sodw-level.is-picked { border-color: #17376b; box-shadow: 0 0 0 3px rgba(23,55,107,.10); }
+.sodw-level.is-current { background: #fafbfd; cursor: default; }
+.sodw-level.is-blocked { background: #fffafa; border-color: #f2dad6; cursor: not-allowed; }
+.sodw-level-main { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.sodw-level-title { font-size: 13px; font-weight: 700; color: #17243c; }
+.sodw-level-title em { font-style: normal; font-weight: 500; color: #8494ab; }
+.sodw-level-detail { font-size: 12px; color: #667994; line-height: 1.45; }
+.sodw-fit { font-size: 11.5px; font-weight: 650; color: #1c7a4a; margin-top: 3px; line-height: 1.45; }
+.sodw-fit.is-bad { color: #b4483c; }
+
+/* impact diff */
+.sodw-diff { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.sodw-diff li {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 9px 11px; border: 1px solid #e6ecf5; border-radius: 9px; background: #fbfcfe;
+  font-size: 12.5px; color: #17243c;
+}
+.sodw-chip {
+  display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 6px;
+  font-size: 11px; font-weight: 650; white-space: nowrap;
+}
+.sodw-chip.is-add { background: #eaf6ef; border: 1px solid #c7ead6; color: #1c7a4a; }
+.sodw-chip.is-rm  { background: #fdf1ef; border: 1px solid #f7d9d3; color: #b4483c; }
+
+.sodw-note {
+  margin: 0; padding: 11px 13px; border-radius: 9px;
+  background: #f7f9fc; border: 1px solid #e4eaf3;
+  font-size: 12px; color: #4a5a72; line-height: 1.55;
+}
+
+/* justify */
+.sodw-field { display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; font-weight: 600; color: #45546a; }
+.sodw-field em { font-weight: 400; color: #8494ab; font-style: normal; }
+.sodw-field textarea {
+  border: 1px solid #d8e1ee; border-radius: 8px; padding: 9px 11px;
+  font-family: inherit; font-size: 13px; font-weight: 400; color: #17243c; resize: vertical;
+}
+.sodw-field textarea:focus { outline: none; border-color: #7ea2d6; box-shadow: 0 0 0 3px rgba(126,162,214,.25); }
+.sodw-attest {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 12px; border: 1px solid #d8e1ee; border-radius: 9px; background: #fbfdff;
+  font-size: 12px; color: #45546a; line-height: 1.5; cursor: pointer;
+}
+.sodw-attest input { margin-top: 2px; flex: 0 0 auto; }

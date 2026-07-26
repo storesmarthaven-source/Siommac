@@ -655,6 +655,16 @@ export interface PayrollSodChainStep {
   /** Earlier seats this one must be a DIFFERENT person from, at the active level. */
   mustDifferFrom: PayrollSodChainStep['key'][];
 }
+/** Whether a level can actually be staffed today (exact matching, not headcount). */
+export interface PayrollSodLevelFeasibility {
+  level: 2 | 3 | 4;
+  required: number;
+  available: number;
+  feasible: boolean;
+  shortfallSeats: PayrollSodChainStep['key'][];
+  /** What the level enforces — server-supplied so the UI never re-implements the rules. */
+  separations: { seat: PayrollSodChainStep['key']; mustDifferFrom: PayrollSodChainStep['key'][] }[];
+}
 export interface PayrollSodPolicyOverview {
   active: PayrollSodPolicy | null;
   pending: PayrollSodPolicy | null;
@@ -662,6 +672,7 @@ export interface PayrollSodPolicyOverview {
   levels: number[];
   chain: PayrollSodChainStep[];
   distinctPeopleRequired: number;
+  feasibility: PayrollSodLevelFeasibility[];
 }
 /** F-08 — issued payroll release certificate (immutable close evidence). */
 export interface PayrollReleaseCertificate {
