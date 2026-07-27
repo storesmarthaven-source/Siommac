@@ -48,17 +48,26 @@ security definer
 set search_path = public
 as $$
 declare
-  v_batch           record;
-  v_row             record;
+  -- NOTE: deliberately NO `record`-typed variables. The Supabase dashboard SQL editor
+  -- mis-parses `v_x record;` inside a function body as a newly created TABLE and
+  -- appends `ALTER TABLE v_x ENABLE ROW LEVEL SECURITY;`, truncating the body and
+  -- breaking the dollar-quoting. Scalars keep this file safe to paste.
+  v_batch_no        text;
+  v_batch_status    text;
+  v_batch_mode      text;
+  v_row_no          integer;
+  v_row_status      text;
+  v_row_target      text;
   v_key             text;
   v_result          jsonb;
   v_employee_id     text;
   v_replayed        boolean := false;
+  v_is_replay       boolean := false;
   v_rows_touched    integer;
 begin
   -- ── 1. Lock and validate the batch ────────────────────────────────────────
-  select id, batch_no, status, import_mode
-    into v_batch
+  select batch_no, status, import_mode
+    into v_batch_no, v_batch_status, v_batch_mode
     from public.hr_employee_import_batches
    where id = p_batch_id
      for update;
@@ -67,20 +76,9 @@ begin
     raise exception 'import batch % not found', p_batch_id using errcode = 'P0002';
   end if;
 
-  if v_batch.status not in ('validated', 'committing') then
-    raise exception 'batch % is not committable (status: %)', v_batch.batch_no, v_batch.status
-      using errcode = '22023';
-  end if;
-
-  -- `update` mode may never create. Enforced here too, so the guarantee does not rest
-  -- on the application layer alone.
-  if v_batch.import_mode = 'update' then
-    raise exception 'update mode cannot create records' using errcode = '22023';
-  end if;
-
   -- ── 2. Lock the import row ────────────────────────────────────────────────
-  select id, batch_id, row_no, status, target_employee_id
-    into v_row
+  select row_no, status, target_employee_id
+    into v_row_no, v_row_status, v_row_target
     from public.hr_employee_import_rows
    where id = p_row_id and batch_id = p_batch_id
      for update;
@@ -88,6 +86,24 @@ begin
   if not found then
     raise exception 'import row % does not belong to batch %', p_row_id, p_batch_id
       using errcode = 'P0002';
+  end if;
+
+  -- A row that already carries an employee is a REPLAY (or a repair of a lost status
+  -- write). Those must keep working after the batch reaches `committed` — that is
+  -- precisely when a repair is needed. Only a NEW create is gated on batch state.
+  v_is_replay := v_row_status = 'created' and v_row_target is not null;
+
+  if not v_is_replay then
+    if v_batch_status not in ('validated', 'committing') then
+      raise exception 'batch % is not committable (status: %)', v_batch_no, v_batch_status
+        using errcode = '22023';
+    end if;
+
+    -- `update` mode may never create. Enforced here too, so the guarantee does not rest
+    -- on the application layer alone.
+    if v_batch_mode = 'update' then
+      raise exception 'update mode cannot create records' using errcode = '22023';
+    end if;
   end if;
 
   v_key := 'hr.import.row:' || p_batch_id::text || ':' || p_row_id::text;
@@ -116,8 +132,8 @@ begin
     raise exception 'the employee create command returned no employee id' using errcode = 'XX000';
   end if;
 
-  -- A row already marked created for this employee means we are replaying.
-  v_replayed := v_row.status = 'created' and v_row.target_employee_id = v_employee_id;
+  -- Replaying only if the row ALREADY pointed at this same employee before we ran.
+  v_replayed := v_is_replay and v_row_target = v_employee_id;
 
   -- ── 4. Import row state — IN this transaction ─────────────────────────────
   -- This is the write that used to happen after the RPC. If it fails now, the employee
@@ -143,12 +159,12 @@ begin
       jsonb_build_object(
         'employeeId', v_employee_id,
         'employeeNo', v_result->>'employee_no',
-        'batchNo', v_batch.batch_no,
-        'rowNo', v_row.row_no,
+        'batchNo', v_batch_no,
+        'rowNo', v_row_no,
         'requestId', p_request_id,
         'outcome', 'created'
       ),
-      format('Bulk import %s row %s', v_batch.batch_no, v_row.row_no)
+      format('Bulk import %s row %s', v_batch_no, v_row_no)
     );
 
     -- dedupe_key makes the event idempotent even if a caller retries outside the
@@ -162,8 +178,8 @@ begin
       nullif(p_assignment->>'siteId', ''), nullif(p_assignment->>'departmentId', ''),
       'info',
       jsonb_build_object(
-        'batchId', p_batch_id, 'batchNo', v_batch.batch_no,
-        'rowId', p_row_id, 'rowNo', v_row.row_no,
+        'batchId', p_batch_id, 'batchNo', v_batch_no,
+        'rowId', p_row_id, 'rowNo', v_row_no,
         'employeeNo', v_result->>'employee_no',
         'requestId', p_request_id
       ),
@@ -176,8 +192,8 @@ begin
 
   return v_result || jsonb_build_object(
     'row_id',   p_row_id,
-    'row_no',   v_row.row_no,
-    'batch_no', v_batch.batch_no,
+    'row_no',   v_row_no,
+    'batch_no', v_batch_no,
     'replayed', v_replayed
   );
 end;

@@ -278,8 +278,15 @@ export default async function run(h) {
     const after = await sb.from('app_users').select('id', { count: 'exact', head: true });
 
     expect(before.count === after.count, `concurrent replays created no employee — ${before.count} → ${after.count}`);
-    for (const r of results) {
-      if (!r.error) expect(r.data.employee_id === row.target_employee_id, 'each concurrent call returned the same employee');
+
+    // `if (!r.error)` alone would pass vacuously when EVERY call fails — which is exactly
+    // what happened while the batch-status guard wrongly rejected post-commit replays.
+    const succeeded = results.filter(r => !r.error);
+    expect(succeeded.length === results.length,
+      `all ${results.length} concurrent calls succeeded — ${results.length - succeeded.length} failed: ${results.map(r => r.error?.message ?? '').filter(Boolean).join(' | ')}`);
+    for (const r of succeeded) {
+      expect(r.data.employee_id === row.target_employee_id, 'each concurrent call returned the same employee');
+      expect(r.data.replayed === true, 'each concurrent call reports a replay, not a create');
     }
   });
 

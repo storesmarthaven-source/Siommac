@@ -96,11 +96,11 @@ describe('hr_employee_import_create_tx — migration contract', () => {
   });
 
   it('rejects a batch that is not committable', () => {
-    expect(sql()).toMatch(/status not in \('validated', 'committing'\)/);
+    expect(sql()).toMatch(/v_batch_status not in \('validated', 'committing'\)/);
   });
 
   it('refuses to create in update mode, independently of the application layer', () => {
-    expect(sql()).toMatch(/import_mode = 'update'[\s\S]{0,120}raise exception/);
+    expect(sql()).toMatch(/v_batch_mode = 'update'[\s\S]{0,140}raise exception/);
   });
 
   it('rejects a row that belongs to another batch', () => {
