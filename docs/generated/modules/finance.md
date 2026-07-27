@@ -2,24 +2,24 @@
 
 # finance Module Map
 
-Source fingerprint: `2b159dd6352d096b4251f3a8`
+Source fingerprint: `b92be45f166cc04ce9204456`
 
-Files: 139 | Symbols: 1855 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
+Files: 139 | Symbols: 1853 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
 ## Widgets and Tiles
 
 | ID | Title | Kind | Render | Location |
 |---|---|---|---|---|
-| `finance.statutory.deadlines` | Upcoming Deadlines | local | `renderDeadlines` | `src/components/sections/Finance/StatutoryDashboard.tsx:715` |
-| `finance.statutory.kpi.activeVersion` | Active Version | local | `renderKpiActive` | `src/components/sections/Finance/StatutoryDashboard.tsx:721` |
-| `finance.statutory.kpi.approvals` | Pending Approvals | local | `renderKpiApprovals` | `src/components/sections/Finance/StatutoryDashboard.tsx:726` |
-| `finance.statutory.kpi.components` | Pay Components | local | `renderKpiComponents` | `src/components/sections/Finance/StatutoryDashboard.tsx:723` |
-| `finance.statutory.kpi.drafts` | Draft Versions | local | `renderKpiDrafts` | `src/components/sections/Finance/StatutoryDashboard.tsx:722` |
-| `finance.statutory.kpi.nisClasses` | NIS Classes | local | `renderKpiNis` | `src/components/sections/Finance/StatutoryDashboard.tsx:724` |
-| `finance.statutory.kpi.verifyQueue` | Verification Queue (KPI) | local | `renderKpiVerify` | `src/components/sections/Finance/StatutoryDashboard.tsx:725` |
-| `finance.statutory.nisChart` | NIS Contribution Schedule | local | `renderChart` | `src/components/sections/Finance/StatutoryDashboard.tsx:713` |
-| `finance.statutory.readiness` | Statutory Readiness | local | `renderReadiness` | `src/components/sections/Finance/StatutoryDashboard.tsx:714` |
-| `finance.statutory.register` | Statutory Register | local | `renderRegister` | `src/components/sections/Finance/StatutoryDashboard.tsx:716` |
+| `finance.statutory.deadlines` | Upcoming Deadlines | local | `renderDeadlines` | `src/components/sections/Finance/StatutoryDashboard.tsx:655` |
+| `finance.statutory.kpi.activeVersion` | Active Version | local | `renderKpiActive` | `src/components/sections/Finance/StatutoryDashboard.tsx:661` |
+| `finance.statutory.kpi.approvals` | Pending Approvals | local | `renderKpiApprovals` | `src/components/sections/Finance/StatutoryDashboard.tsx:666` |
+| `finance.statutory.kpi.components` | Pay Components | local | `renderKpiComponents` | `src/components/sections/Finance/StatutoryDashboard.tsx:663` |
+| `finance.statutory.kpi.drafts` | Draft Versions | local | `renderKpiDrafts` | `src/components/sections/Finance/StatutoryDashboard.tsx:662` |
+| `finance.statutory.kpi.nisClasses` | NIS Classes | local | `renderKpiNis` | `src/components/sections/Finance/StatutoryDashboard.tsx:664` |
+| `finance.statutory.kpi.verifyQueue` | Verification Queue (KPI) | local | `renderKpiVerify` | `src/components/sections/Finance/StatutoryDashboard.tsx:665` |
+| `finance.statutory.nisChart` | NIS Contribution Schedule | local | `renderChart` | `src/components/sections/Finance/StatutoryDashboard.tsx:653` |
+| `finance.statutory.readiness` | Statutory Readiness | local | `renderReadiness` | `src/components/sections/Finance/StatutoryDashboard.tsx:654` |
+| `finance.statutory.register` | Statutory Register | local | `renderRegister` | `src/components/sections/Finance/StatutoryDashboard.tsx:656` |
 
 ## Route Definitions
 
@@ -557,7 +557,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/StatPayComponentPage.tsx` | 209 |
 | frontend-page | `src/components/sections/Finance/StatTable.tsx` | 204 |
 | frontend-page | `src/components/sections/Finance/StatutoryConfigOverview.tsx` | 1600 |
-| frontend-page | `src/components/sections/Finance/StatutoryDashboard.tsx` | 786 |
+| frontend-page | `src/components/sections/Finance/StatutoryDashboard.tsx` | 734 |
 | frontend-page | `src/components/sections/Finance/StatutoryFormsOverview.tsx` | 286 |
 | frontend-page | `src/components/sections/Finance/_shared/EmployeeCell.tsx` | 133 |
 | frontend-page | `src/components/sections/Finance/_shared/pickers.tsx` | 301 |

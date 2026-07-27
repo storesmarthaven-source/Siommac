@@ -23,6 +23,7 @@ import { useStatutoryProfile, useStatutoryProfileMutation, hrStatutoryProfileApi
 import { useHrEmployees, type HrEmployeeRow } from '@api/hr/employees';
 import { fmtMoney, fmtDate, humanize, statusTone } from '../Finance/financeShared';
 import '../Finance/finance.css';
+import { HRQueryNotice } from './HRQueryState';
 
 type Surface = 'items' | 'statutory';
 
@@ -44,6 +45,8 @@ export function CompensationOverview(): VNode {
         sub="Recurring pay items and employee statutory (NIS continuity) profiles — the compensation inputs that feed payroll."
       />
 
+      <HRQueryNotice queries={[empsQ]} />
+
       <div class="obx-viewswitch" style={{ display: 'flex', gap: 8, margin: '10px 0' }}>
         <button class={`obx-view-btn${surface === 'items' ? ' active' : ''}`} onClick={() => setSurface('items')}>Pay Items</button>
         <button class={`obx-view-btn${surface === 'statutory' ? ' active' : ''}`} onClick={() => setSurface('statutory')}>Statutory Profile</button>
@@ -60,6 +63,7 @@ export function CompensationOverview(): VNode {
 
 function PayItemsSurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id: string) => string }): VNode {
   const itemsQ = usePayItems();
+  const items = itemsQ.data ?? [];
   const componentsQ = usePayComponents({ activeOnly: true });
   const components = componentsQ.data ?? [];
   const compName = (id: string) => components.find(c => c.id === id)?.name ?? id;
@@ -96,12 +100,12 @@ function PayItemsSurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id:
       )}
       {showForm && <NewPayItemForm emps={emps} components={components} onDone={() => setShowForm(false)} />}
 
-      {itemsQ.isLoading && !itemsQ.data ? <div class="obx-empty">Loading…</div>
-        : !(itemsQ.data?.length) ? <EmptyState icon="fa-scale-balanced" title="No pay items" text="Add recurring earnings or deductions for employees; they feed the payroll run." />
+      {itemsQ.isLoading ? <div class="obx-empty">Loading…</div>
+        : !items.length ? <EmptyState icon="fa-scale-balanced" title="No pay items" text="Add recurring earnings or deductions for employees; they feed the payroll run." />
         : (
           <table class="obx-table">
             <thead><tr><th>Item #</th><th>Employee</th><th>Component</th><th>Amount</th><th>Effective</th><th>Status</th><th style={{ textAlign: 'right' }}>Actions</th></tr></thead>
-            <tbody>{itemsQ.data.map(it => (
+            <tbody>{items.map(it => (
               <tr key={it.id}>
                 <td><b>{it.itemNo ?? '—'}</b></td>
                 <td class="obx-meta">{nameOf(it.employeeId)}</td>
@@ -241,7 +245,7 @@ function StatutorySurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id
   const loadedFor = profile?.employeeId;
   if (loadedFor === employeeId && profile && f.nisNumber === EMPTY_PROFILE.nisNumber && profile.nisNumber) {
     setF({
-      nisNumber: profile.nisNumber ?? '', nisApplicable: profile.nisApplicable,
+      nisNumber: profile.nisNumber, nisApplicable: profile.nisApplicable,
       previousEmployerName: profile.previousEmployerName ?? '', previousEmployerEndDate: profile.previousEmployerEndDate ?? '',
       openingYtdInsurableEarnings: profile.openingYtdInsurableEarnings, openingYtdNisEmployee: profile.openingYtdNisEmployee,
       openingYtdNisEmployer: profile.openingYtdNisEmployer, openingBalanceAsOf: profile.openingBalanceAsOf ?? '',
@@ -267,7 +271,7 @@ function StatutorySurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id
   const profileSubmitKeyRef = useRef<string | null>(null);
   const submit = async (): Promise<void> => {
     if (!profile?.id) { void dialog.error('Save the profile before submitting.'); return; }
-    if (!profileSubmitKeyRef.current) profileSubmitKeyRef.current = crypto.randomUUID();
+    profileSubmitKeyRef.current ??= crypto.randomUUID();
     try {
       await submitMut.mutateAsync({ id: profile.id, idempotencyKey: profileSubmitKeyRef.current });
       profileSubmitKeyRef.current = null;

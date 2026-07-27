@@ -2,9 +2,9 @@
 
 # security Module Map
 
-Source fingerprint: `2b159dd6352d096b4251f3a8`
+Source fingerprint: `b92be45f166cc04ce9204456`
 
-Files: 45 | Symbols: 378 | Widgets: 0 | Unique mounted endpoints: 51 | Route definitions: 51 mounted + 0 unmounted | API calls: 31 | DB objects: 65 | E2E suites: 4
+Files: 46 | Symbols: 387 | Widgets: 0 | Unique mounted endpoints: 51 | Route definitions: 51 mounted + 0 unmounted | API calls: 31 | DB objects: 65 | E2E suites: 4
 
 ## Widgets and Tiles
 
@@ -24,17 +24,17 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/admin/approvals/list` | `-` | - | `ListSchema` | `netlify/functions/routes/permissionApprovals.ts:136` | - | permissionPropagation, rbacConsole |
 | `/api/admin/approvals/markSeen` | `-` | - | `MarkSeenSchema` | `netlify/functions/routes/permissionApprovals.ts:260` | - | permissionPropagation |
 | `/api/admin/approvals/reject` | `-` | - | `RejectSchema` | `netlify/functions/routes/permissionApprovals.ts:417` | - | rbacConsole |
-| `/api/admin/security/policy/update` | `auth.security.manage_policy` | requirePermission | `PolicyUpdateSchema` | `netlify/functions/routes/adminSecurity.ts:225` | useUpdateSecurityPolicy @ src/api/security.ts:452 | accountSecurity, securityPolicy |
-| `/api/admin/security/users/passkeys/revoke-all` | `auth.passkeys.admin_revoke` | requirePermission | `UserIdSchema` | `netlify/functions/routes/adminSecurity.ts:92` | useAdminRevokeUserPasskeys @ src/api/security.ts:373 | accountSecurity |
-| `/api/admin/security/users/status` | `auth.security.view` | requirePermission | `UserIdSchema` | `netlify/functions/routes/adminSecurity.ts:42` | useAdminUserSecurityStatus @ src/api/security.ts:359 | accountSecurity |
-| `/api/admin/security/users/trusted-devices/revoke-all` | `auth.trusted_devices.admin_revoke` | requirePermission | `UserIdSchema` | `netlify/functions/routes/adminSecurity.ts:151` | useAdminRevokeUserTrustedDevices @ src/api/security.ts:388 | accountSecurity |
+| `/api/admin/security/policy/update` | `auth.security.manage_policy` | requirePermission | `PolicyUpdateSchema` | `netlify/functions/routes/adminSecurity.ts:240` | useUpdateSecurityPolicy @ src/api/security.ts:453 | accountSecurity, securityPolicy |
+| `/api/admin/security/users/passkeys/revoke-all` | `auth.passkeys.admin_revoke` | requirePermission | `UserIdSchema` | `netlify/functions/routes/adminSecurity.ts:107` | useAdminRevokeUserPasskeys @ src/api/security.ts:374 | accountSecurity |
+| `/api/admin/security/users/status` | `auth.security.view` | requirePermission | `UserIdSchema` | `netlify/functions/routes/adminSecurity.ts:41` | useAdminUserSecurityStatus @ src/api/security.ts:360 | accountSecurity |
+| `/api/admin/security/users/trusted-devices/revoke-all` | `auth.trusted_devices.admin_revoke` | requirePermission | `UserIdSchema` | `netlify/functions/routes/adminSecurity.ts:166` | useAdminRevokeUserTrustedDevices @ src/api/security.ts:389 | accountSecurity |
 | `/api/auth/2fa/backup-codes/regenerate` | `-` | requireUser | `RegenSchema` | `netlify/functions/routes/auth2fa.ts:227` | useRegenerateBackupCodes @ src/api/security.ts:192 | - |
 | `/api/auth/2fa/confirm` | `-` | requireUser | `ConfirmSchema` | `netlify/functions/routes/auth2fa.ts:111` | useConfirmTotp @ src/api/security.ts:162 | - |
 | `/api/auth/2fa/disable` | `-` | requireUser | `DisableSchema` | `netlify/functions/routes/auth2fa.ts:164` | useDisableTotp @ src/api/security.ts:177 | - |
 | `/api/auth/2fa/setup` | `-` | requireUser | `-` | `netlify/functions/routes/auth2fa.ts:80` | useStartTotpSetup @ src/api/security.ts:150 | - |
 | `/api/auth/2fa/status` | `-` | requireUser | `-` | `netlify/functions/routes/auth2fa.ts:59` | useTotpStatus @ src/api/security.ts:138 | - |
 | `/api/auth/password/change` | `-` | requireUser | `ChangePasswordSchema` | `netlify/functions/routes/auth.ts:726` | res @ src/components/sections/Profile/api.ts:216 | - |
-| `/api/auth/security/policy` | `-` | requireUser | `-` | `netlify/functions/routes/adminSecurity.ts:201` | useSecurityPolicy @ src/api/security.ts:436 | accountSecurity, securityPolicy |
+| `/api/auth/security/policy` | `-` | requireUser | `-` | `netlify/functions/routes/adminSecurity.ts:216` | useSecurityPolicy @ src/api/security.ts:437 | accountSecurity, securityPolicy |
 | `/api/auth/step-up/options` | `-` | requireUser | `-` | `netlify/functions/routes/authStepUp.ts:45` | ensureStepUp @ src/hooks/useStepUp.tsx:64 | accountSecurity |
 | `/api/auth/step-up/verify` | `-` | requireUser | `VerifySchema` | `netlify/functions/routes/authStepUp.ts:85` | res @ src/hooks/useStepUp.tsx:97<br>res @ src/hooks/useStepUp.tsx:118 | accountSecurity |
 | `/api/auth/trusted-devices/list` | `-` | requireUser | `-` | `netlify/functions/routes/trustedDevices.ts:37` | useTrustedDevices @ src/api/security.ts:293 | accountSecurity |
@@ -74,16 +74,16 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 
 | Path | Helper | Caller | Location |
 |---|---|---|---|
-| `/api/admin/security/policy/update` | `apiPost` | `useUpdateSecurityPolicy` | `src/api/security.ts:452` |
-| `/api/admin/security/users/passkeys/revoke-all` | `apiPost` | `useAdminRevokeUserPasskeys` | `src/api/security.ts:373` |
-| `/api/admin/security/users/status` | `apiPost` | `useAdminUserSecurityStatus` | `src/api/security.ts:359` |
-| `/api/admin/security/users/trusted-devices/revoke-all` | `apiPost` | `useAdminRevokeUserTrustedDevices` | `src/api/security.ts:388` |
+| `/api/admin/security/policy/update` | `apiPost` | `useUpdateSecurityPolicy` | `src/api/security.ts:453` |
+| `/api/admin/security/users/passkeys/revoke-all` | `apiPost` | `useAdminRevokeUserPasskeys` | `src/api/security.ts:374` |
+| `/api/admin/security/users/status` | `apiPost` | `useAdminUserSecurityStatus` | `src/api/security.ts:360` |
+| `/api/admin/security/users/trusted-devices/revoke-all` | `apiPost` | `useAdminRevokeUserTrustedDevices` | `src/api/security.ts:389` |
 | `/api/auth/2fa/backup-codes/regenerate` | `apiPost` | `useRegenerateBackupCodes` | `src/api/security.ts:192` |
 | `/api/auth/2fa/confirm` | `apiPost` | `useConfirmTotp` | `src/api/security.ts:162` |
 | `/api/auth/2fa/disable` | `apiPost` | `useDisableTotp` | `src/api/security.ts:177` |
 | `/api/auth/2fa/setup` | `apiPost` | `useStartTotpSetup` | `src/api/security.ts:150` |
 | `/api/auth/2fa/status` | `apiPost` | `useTotpStatus` | `src/api/security.ts:138` |
-| `/api/auth/security/policy` | `apiPost` | `useSecurityPolicy` | `src/api/security.ts:436` |
+| `/api/auth/security/policy` | `apiPost` | `useSecurityPolicy` | `src/api/security.ts:437` |
 | `/api/auth/trusted-devices/list` | `apiPost` | `useTrustedDevices` | `src/api/security.ts:293` |
 | `/api/auth/trusted-devices/revoke` | `apiPost` | `useRevokeTrustedDevice` | `src/api/security.ts:308` |
 | `/api/auth/trusted-devices/revoke-all` | `apiPost` | `useRevokeAllTrustedDevices` | `src/api/security.ts:323` |
@@ -122,11 +122,11 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useTrustedDevices` | function / hook | `src/api/security.ts:290` | `-` |
 | `useRevokeTrustedDevice` | function / hook | `src/api/security.ts:304` | `-` |
 | `useRevokeAllTrustedDevices` | function / hook | `src/api/security.ts:319` | `-` |
-| `useAdminUserSecurityStatus` | function / hook | `src/api/security.ts:356` | `-` |
-| `useAdminRevokeUserPasskeys` | function / hook | `src/api/security.ts:369` | `-` |
-| `useAdminRevokeUserTrustedDevices` | function / hook | `src/api/security.ts:384` | `-` |
-| `useSecurityPolicy` | function / hook | `src/api/security.ts:433` | `-` |
-| `useUpdateSecurityPolicy` | function / hook | `src/api/security.ts:443` | `-` |
+| `useAdminUserSecurityStatus` | function / hook | `src/api/security.ts:357` | `-` |
+| `useAdminRevokeUserPasskeys` | function / hook | `src/api/security.ts:370` | `-` |
+| `useAdminRevokeUserTrustedDevices` | function / hook | `src/api/security.ts:385` | `-` |
+| `useSecurityPolicy` | function / hook | `src/api/security.ts:434` | `-` |
+| `useUpdateSecurityPolicy` | function / hook | `src/api/security.ts:444` | `-` |
 | `OtpInput` | variable / component | `src/components/auth/OtpInput.tsx:45` | `-` |
 | `PasskeyArtwork` | function / component | `src/components/auth/PasskeyArtwork.tsx:12` | `-` |
 | `PasskeyRequiredPrompt` | function / component | `src/components/auth/PasskeyRequiredPrompt.tsx:36` | `-` |
@@ -139,7 +139,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `SecurityPolicyTab` | function / component | `src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx:138` | `-` |
 | `UserSecurityPanel` | function / component | `src/components/sections/SuperadminConsole/tabs/UserSecurityPanel.tsx:25` | `-` |
 | `AuthGate` | function / component | `src/components/shared/AuthGate.tsx:93` | `-` |
-| `useCan` | function / hook | `src/lib/permissions.ts:1493` | `-` |
+| `useCan` | function / hook | `src/lib/permissions.ts:1554` | `-` |
+| `useAnyCan` | function / hook | `src/lib/permissions.ts:1566` | `-` |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -185,20 +186,20 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 
 | Role | Path | Lines |
 |---|---|---:|
-| backend-route | `netlify/functions/routes/adminSecurity.ts` | 261 |
+| backend-route | `netlify/functions/routes/adminSecurity.ts` | 276 |
 | backend-route | `netlify/functions/routes/auth.ts` | 792 |
 | backend-route | `netlify/functions/routes/auth2fa.ts` | 277 |
 | backend-route | `netlify/functions/routes/authStepUp.ts` | 178 |
 | backend-route | `netlify/functions/routes/permissionApprovals.ts` | 486 |
 | backend-route | `netlify/functions/routes/trustedDevices.ts` | 136 |
 | backend-route | `netlify/functions/routes/webauthn.ts` | 421 |
-| e2e-suite | `scripts/e2e/suites/accountSecurity.mjs` | 459 |
+| e2e-suite | `scripts/e2e/suites/accountSecurity.mjs` | 460 |
 | e2e-suite | `scripts/e2e/suites/authSession.mjs` | 164 |
 | e2e-suite | `scripts/e2e/suites/permissionPropagation.mjs` | 332 |
 | e2e-suite | `scripts/e2e/suites/securityPolicy.mjs` | 93 |
 | frontend-api | `src/api/auth.ts` | 53 |
 | frontend-api | `src/api/schemas/auth.ts` | 123 |
-| frontend-api | `src/api/security.ts` | 469 |
+| frontend-api | `src/api/security.ts` | 470 |
 | frontend-page | `src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx` | 380 |
 | frontend-page | `src/components/sections/SuperadminConsole/tabs/UserSecurityPanel.tsx` | 259 |
 

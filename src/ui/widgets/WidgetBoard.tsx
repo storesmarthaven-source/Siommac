@@ -1,12 +1,15 @@
 // src/ui/widgets/WidgetBoard.tsx — renders the instance/zone board for a page: one
-// gridstack grid per zone. Preview state (the ephemeral preview-on-board widget) is
+// react-grid-layout grid per zone. Preview state (the ephemeral preview-on-board widget) is
 // owned by the host page and threaded through to whichever zone it targets.
 // Pages may supply page-local widget renderers + a default layout.
 import type { VNode } from 'preact';
+import { useEffect } from 'preact/hooks';
 import { WidgetBoardZone } from './WidgetBoardZone';
 import { useInstalledWidgetPackages } from './runtimeRegistry';
 import { LucideIcon } from '../LucideIcon';
 import type { BoardLayout, LocalWidgetMap, PreviewWidgetInstance } from './types';
+import { registerSectionNavigationGuard } from '@components/nav/navCore';
+import { dialog } from '@lib/dialog';
 
 export interface WidgetBoardProps {
   pageKey: string;
@@ -57,24 +60,56 @@ export interface WidgetBoardProps {
    *  the top of the board while `editing` — so it's obvious you're editing and how to leave it.
    *  Opt-in: boards that don't pass it get no banner. */
   onFinishEditing?: () => void;
+  onSaveEditing?: () => void | Promise<void>;
+  onCancelEditing?: () => void | Promise<void>;
+  /** Opens the page's Widget Library from the persistent edit bar. */
+  onOpenLibrary?: () => void;
   /** Admin "Set as default" surfaced IN the edit banner (the contextual place to promote a
    *  freshly rearranged board). Shown when both this and `canSetDefault` are set; disabled when
    *  `defaultDirty === false` (the layout already matches the default — nothing to promote). */
   onSetDefault?: () => void;
   canSetDefault?: boolean;
   defaultDirty?: boolean;
+  /** True when this page has staged changes that have not been committed. */
+  isDirty?: boolean;
+  /** True while the personal-layout save request is in flight. */
+  saving?: boolean;
   /** True while a Set-as-default promote is in flight — the banner button disables and
    *  reads "Saving…" so it can't be double-clicked into duplicate saves/toasts. */
   defaultSaving?: boolean;
 }
 
-export function WidgetBoard({ pageKey, zones = ['main'], editing, localWidgets, defaultLayout, demo, cellHeight, column, gap, compact, resizable, maxRows, isBounded, revealOnMount, preview, onPreviewChange, onCommitPreview, onDiscardPreview, onFinishEditing, onSetDefault, canSetDefault, defaultDirty, defaultSaving }: WidgetBoardProps): VNode {
+export function WidgetBoard({ pageKey, zones = ['main'], editing, localWidgets, defaultLayout, demo, cellHeight, column, gap, compact, resizable, maxRows, isBounded, revealOnMount, preview, onPreviewChange, onCommitPreview, onDiscardPreview, onFinishEditing, onSaveEditing, onCancelEditing, onOpenLibrary, onSetDefault, canSetDefault, defaultDirty, isDirty, saving, defaultSaving }: WidgetBoardProps): VNode {
   // Load installed declarative packages into the runtime registry so they resolve on the board.
-  // `isSuccess` = the installed-package list is authoritative — only THEN may a zone prune board
-  // instances whose widget no longer resolves (a transient/stale-dist error must NOT drop widgets).
+  // Package readiness changes placeholder resolution only. It never removes saved instances.
   const pkgQuery = useInstalledWidgetPackages();
+  useEffect(() => {
+    if (!editing || !isDirty || !onCancelEditing) return undefined;
+    const unregister = registerSectionNavigationGuard(async () => {
+      const discard = await dialog.confirm({
+        title: 'Discard unsaved widget changes?',
+        text: 'Your widget arrangement has not been saved. Discard it and leave this page?',
+        confirmText: 'Discard and leave',
+        danger: false,
+      });
+      if (!discard) return false;
+      await onCancelEditing();
+      return true;
+    });
+    const beforeUnload = (event: BeforeUnloadEvent): void => {
+      // preventDefault() is the supported way to trigger the unsaved-changes prompt;
+      // the legacy event.returnValue assignment is deprecated.
+      event.preventDefault();
+    };
+    window.addEventListener('beforeunload', beforeUnload);
+    return () => {
+      unregister();
+      window.removeEventListener('beforeunload', beforeUnload);
+    };
+  }, [editing, isDirty, onCancelEditing]);
+
   return (
-    <div class="wbi-board">
+    <div class={`wbi-board${editing ? ' is-editing' : ''}${onFinishEditing ? ' has-edit-banner' : ''}`}>
       {/* Edit-mode banner (opt-in) — the clear "you're editing / click Done to finish" affordance.
           Hidden while previewing a widget, when the host's own preview banner takes over.
           The wrapper stays MOUNTED so entering/leaving edit mode animates the banner's space
@@ -85,11 +120,12 @@ export function WidgetBoard({ pageKey, zones = ['main'], editing, localWidgets, 
             <span class="wbi-edit-banner-txt">
               <span class="wbi-edit-banner-ic"><LucideIcon name="Move" size={18} /></span>
               <span class="wbi-edit-banner-lines">
-                <span class="wbi-edit-banner-title">Editing layout</span>
-                <span class="wbi-edit-banner-sub">Drag, resize or add widgets to rearrange</span>
+                <span class="wbi-edit-banner-title">Editing layout{isDirty ? ' · Unsaved changes' : ''}</span>
+                <span class="wbi-edit-banner-sub" aria-live="polite">{isDirty ? 'Save or cancel before leaving this page' : 'Drag, resize or add widgets to rearrange'}</span>
               </span>
             </span>
             <span class="wbi-edit-banner-actions">
+              {onOpenLibrary && <button type="button" class="wbi-edit-banner-secondary" onClick={onOpenLibrary}><LucideIcon name="LayoutGrid" size={14} /> Widget library</button>}
               {canSetDefault && onSetDefault && (
                 <button type="button" class="wbi-edit-banner-secondary"
                   disabled={defaultDirty === false || defaultSaving}
@@ -98,8 +134,10 @@ export function WidgetBoard({ pageKey, zones = ['main'], editing, localWidgets, 
                   <LucideIcon name="Star" size={14} /> {defaultSaving ? 'Saving…' : 'Set as default'}
                 </button>
               )}
-              <button type="button" class="wbi-edit-banner-done" onClick={onFinishEditing}>
-                <LucideIcon name="Check" size={15} /> Done
+              {onCancelEditing && <button type="button" class="wbi-edit-banner-secondary" onClick={() => void onCancelEditing()}><LucideIcon name="X" size={14} /> Cancel</button>}
+              <button type="button" class="wbi-edit-banner-done" disabled={saving}
+                onClick={() => void (onSaveEditing ? onSaveEditing() : onFinishEditing())}>
+                <LucideIcon name="Check" size={15} /> {saving ? 'Saving…' : isDirty ? 'Save layout' : 'Done'}
               </button>
             </span>
           </div>

@@ -335,6 +335,7 @@ export interface AdminUserSecurityStatusResponse {
   passkeyCount:       number;
   trustedDeviceCount: number;
   mfaMandatory:       boolean;
+  lastSeenAt:         string | null;
   message?:           string;
 }
 

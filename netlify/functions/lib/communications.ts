@@ -1294,7 +1294,8 @@ export async function getThreadPosts(
 
     const attachMap = new Map<string, AttachmentRow[]>();
     for (let i = 0; i < attachList.length; i++) {
-      const a   = attachList[i];
+      const a   = attachList.at(i);
+      if (!a) continue; // attachList.at(i) is honestly T | undefined
       const url = signedUrls[i] ?? null;
       const list = attachMap.get(a.post_id) ?? [];
       list.push({ id: a.id, fileName: a.file_name, filePath: a.file_path, contentType: a.content_type, sizeBytes: a.size_bytes, url: url || null });

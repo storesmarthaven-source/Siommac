@@ -42,6 +42,10 @@
 
 .wbi-zone-wrap { position: relative; }
 .wbi-zone.react-grid-layout { background: transparent; }
+/* The last tile otherwise sits exactly at the scroll boundary, pinning its southeast handle to
+   the viewport edge. Reserve gesture space only while editing so every final-row widget can be
+   scrolled upward and enlarged vertically; normal/read-only boards keep their compact height. */
+.wbi-board.has-edit-banner.is-editing .wbi-zone-wrap { padding-bottom: 0; }
 
 /* Each RGL cell (`.react-grid-item`, absolutely positioned + sized inline by RGL) hosts one
    `.wbi-item` wrapper → one WidgetFrame. The frame owns the visuals; the wrapper just fills the
@@ -63,10 +67,11 @@
    WidgetBoardZone tags these `.wbi-fit`, measures the card's NATURAL height (ResizeObserver on
    the card) and sets the tile's RGL row-span to hug it. For the measurement to work BOTH ways
    (grow AND shrink) the wrapper chain must be natural-height — height:100% would lock the
-   measured height to the current tile height, so a tile could never shrink — and the tile clips
-   (no transient scrollbar during the one-frame refit). */
-.wbi-item.wbi-fit { overflow: hidden; }
-.wbi-item.wbi-fit > *,
+   measured height to the current tile height, so a tile could never shrink. The grid wrapper stays
+   visible so it never clips required content or the southeast resize handle; the widget card owns
+   its own intentional overflow treatment. */
+.wbi-item.wbi-fit { overflow: visible; }
+.wbi-item.wbi-fit > :not(.react-resizable-handle),
 .wbi-item.wbi-fit .wbi-bare,
 .wbi-item.wbi-fit .wbi-bare-body,
 .wbi-item.wbi-fit .wbi-bare-body > * { height: auto; }
@@ -174,6 +179,7 @@
 .wbi-zone .react-resizable-handle { z-index: 3; opacity: 0; transition: opacity .12s ease; }
 .wbi-zone .react-grid-item:hover > .react-resizable-handle,
 .wbi-zone .react-grid-item.resizing > .react-resizable-handle { opacity: .85; }
+.wbi-item[data-widget-revealed="true"] { box-shadow:0 0 0 3px rgba(100,116,139,.2); border-radius:var(--wbi-radius); }
 
 /* Drag/resize TARGET placeholder — RGL's default is a translucent red box (reads as an error);
    restyle it as a soft dashed drop-zone in the accent colour, rounded like the cards it stands
@@ -211,46 +217,88 @@
    still occupies a flex slot in .wbi-board (gap: 18px), so a negative bottom margin cancels
    that phantom gap — the board sits flush as if the banner weren't there. */
 .wbi-edit-banner-wrap {
-  display: grid; grid-template-rows: 0fr; margin: 0 0 -18px;
-  transition: grid-template-rows .26s cubic-bezier(.2, .8, .2, 1), margin .26s cubic-bezier(.2, .8, .2, 1);
+  position: fixed; z-index: 1050; left: 50%; bottom: 18px;
+  width: min(760px, calc(100vw - 32px)); margin: 0;
+  pointer-events: none; transform: translate(-50%, 18px);
+  opacity: 0; visibility: hidden;
+  transition: opacity .18s ease, transform .22s cubic-bezier(.2,.8,.2,1), visibility 0s .22s;
 }
-.wbi-edit-banner-wrap.is-open { grid-template-rows: 1fr; margin: 0 0 14px; }
+.wbi-edit-banner-wrap.is-open {
+  pointer-events: auto; transform: translate(-50%, 0); opacity: 1; visibility: visible;
+  transition: opacity .18s ease, transform .22s cubic-bezier(.2,.8,.2,1), visibility 0s;
+}
 .wbi-edit-banner {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  min-height: 0; overflow: hidden;                     /* lets the 0fr row actually collapse */
-  padding: 11px 12px 11px 16px; border-radius: 12px;
-  background: #61ac68; color: #fff;
-  opacity: 0; transform: translateY(-10px); visibility: hidden;
-  transition: opacity .2s ease, transform .24s cubic-bezier(.2, .8, .2, 1), visibility 0s .26s;
+  min-height: 48px; padding: 7px 8px 7px 12px; border: 1px solid #116b40; border-radius: 14px;
+  background: rgba(22,131,79,.98); color: #fff;
+  box-shadow: 0 12px 36px rgba(17,94,55,.16), 0 2px 8px rgba(17,94,55,.08);
+  backdrop-filter: blur(12px);
 }
-.wbi-edit-banner-wrap.is-open .wbi-edit-banner {
-  opacity: 1; transform: none; visibility: visible;
-  transition: opacity .2s ease .04s, transform .24s cubic-bezier(.2, .8, .2, 1) .04s, visibility 0s;
-}
-.wbi-edit-banner-txt { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.wbi-edit-banner-ic { flex: none; display: flex; color: #fff; }
+.wbi-edit-banner-txt { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.wbi-edit-banner-ic { width: 30px; height: 30px; flex: none; display: grid; place-items: center; border-radius: 9px; background: rgba(255,255,255,.16); color: #fff; }
 .wbi-edit-banner-lines { min-width: 0; display: flex; flex-direction: column; }
-.wbi-edit-banner-title { font-size: 13px; font-weight: 600; line-height: 1.25; color: #fff; }
-.wbi-edit-banner-sub { font-size: 11px; color: rgba(255, 255, 255, .85); line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.wbi-edit-banner-actions { display: flex; align-items: center; gap: 8px; flex: none; }
+.wbi-edit-banner-title { font-size: 12px; font-weight: 600; line-height: 1.2; color: #fff; }
+.wbi-edit-banner-sub { font-size: 10px; color: rgba(255,255,255,.78); line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wbi-edit-banner-actions { display: flex; align-items: center; gap: 6px; flex: none; }
 .wbi-edit-banner-secondary {
   flex: none; display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 13px; border: 1px solid rgba(255, 255, 255, .5); border-radius: 8px;
-  cursor: pointer; background: rgba(255, 255, 255, .16); color: #fff;
-  font-size: 12.5px; font-weight: 600; line-height: 1; transition: background .14s ease;
+  height: 32px; padding: 0 10px; border: 1px solid rgba(255,255,255,.46); border-radius: 8px;
+  cursor: pointer; background: rgba(255,255,255,.08); color: #fff;
+  font-size: 11px; font-weight: 550; line-height: 1; transition: background .14s ease, border-color .14s ease;
 }
 .wbi-edit-banner-secondary svg { flex: none; }
-.wbi-edit-banner-secondary:hover { background: rgba(255, 255, 255, .26); }
+.wbi-edit-banner-secondary:hover { border-color: rgba(255,255,255,.8); background: rgba(255,255,255,.16); }
 .wbi-edit-banner-secondary:disabled { opacity: .5; cursor: not-allowed; }
-.wbi-edit-banner-secondary:disabled:hover { background: rgba(255, 255, 255, .16); }
+.wbi-edit-banner-secondary:disabled:hover { background: rgba(255,255,255,.08); }
 .wbi-edit-banner-done {
   flex: none; display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 15px; border: none; border-radius: 8px; cursor: pointer;
-  background: #fff; color: #2f7d4f; font-size: 12.5px; font-weight: 600; line-height: 1;
+  height: 32px; padding: 0 12px; border: 1px solid #fff; border-radius: 8px; cursor: pointer;
+  background: #fff; color: #116b40; font-size: 11px; font-weight: 600; line-height: 1;
   transition: background .14s ease;
 }
-.wbi-edit-banner-done:hover { background: #edf6ef; }
+.wbi-edit-banner-done:hover { background: #eef9f3; }
+.wbi-edit-banner-done:disabled { opacity: .66; cursor: wait; }
 .wbi-edit-banner-done svg { flex: none; }
+@media (max-width: 720px) {
+  .wbi-edit-banner-wrap { bottom: 10px; width: calc(100vw - 20px); }
+  .wbi-edit-banner-sub, .wbi-edit-banner-actions .wbi-edit-banner-secondary:nth-of-type(2) { display: none; }
+  .wbi-edit-banner { gap: 8px; }
+}
 @media (prefers-reduced-motion: reduce) {
   .wbi-edit-banner-wrap, .wbi-edit-banner { transition: none; }
 }
+
+.wbi-placeholder { height: 100%; min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 20px; text-align: center; color: var(--text-muted, #667085); background: repeating-linear-gradient(135deg, rgba(102,112,133,.04), rgba(102,112,133,.04) 8px, transparent 8px, transparent 16px); border: 1px dashed rgba(102,112,133,.35); border-radius: 10px; }
+.wbi-placeholder i { font-size: 22px; }
+.wbi-placeholder strong { color: var(--text-primary, #344054); }
+.wbi-placeholder span { max-width: 34rem; font-size: 12px; line-height: 1.45; }
+
+/* In-widget config (bare, fixed-height widgets) — the gear flips the CONTENTS inside the
+   card (the card footprint stays put) to reveal settings, instead of a large modal. */
+.wbi-bare-body { position: relative; }
+
+/* A chrome:'none' widget renders straight into .wbi-bare-body. The CHROMED path (.wbi-body) has
+   `overflow:auto`, but this one had no overflow rule at all — so as soon as a card was taller than
+   its tile it painted OVER the widgets below, which reads as "resizing makes widgets overlap".
+   Cards own their own internal scrolling (e.g. .dsn-rows); the tile simply must not leak.
+   size-to-content tiles are exempt — their height is MEASURED from the content, so clipping here
+   would fight the measurement (.wbi-item.wbi-fit is deliberately overflow:visible above). */
+.wbi-item:not(.wbi-fit) .wbi-bare-body { overflow: hidden; }
+.wbi-cfg-flip { position: absolute; inset: 0; z-index: 6; transform-origin: center; animation: wbi-cfg-flip-in .42s cubic-bezier(.4, 0, .2, 1) both; }
+@keyframes wbi-cfg-flip-in { from { transform: perspective(1400px) rotateY(90deg); opacity: 0; } to { transform: perspective(1400px) rotateY(0); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .wbi-cfg-flip { animation: none; } }
+
+.wbi-cfg { display: flex; flex-direction: column; width: 100%; height: 100%; overflow: hidden; border: 1px solid #e0e5ec; border-radius: 16px; background: #fff; box-shadow: 0 8px 26px rgba(21, 37, 62, .08); }
+.wbi-cfg-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex: 0 0 auto; padding: 12px 14px; border-bottom: 1px solid #eef1f7; }
+.wbi-cfg-title { display: inline-flex; align-items: center; gap: 8px; color: #15213b; font-size: 13px; font-weight: 600; }
+.wbi-cfg-title i { color: #2f5fe0; }
+.wbi-cfg-x { display: grid; place-items: center; width: 26px; height: 26px; border: 1px solid #e9edf4; border-radius: 8px; background: #fff; color: #8a94a8; cursor: pointer; }
+.wbi-cfg-x:hover { background: #f4f7fc; color: #3d4863; }
+.wbi-cfg-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 13px; padding: 14px; }
+.wbi-cfg-field { display: flex; flex-direction: column; gap: 4px; }
+.wbi-cfg-help { color: #8a94a8; font-size: 11px; line-height: 1.35; }
+.wbi-cfg-empty { margin: auto; color: #8a94a8; font-size: 12.5px; text-align: center; }
+.wbi-cfg-actions { display: flex; justify-content: flex-end; gap: 8px; flex: 0 0 auto; padding: 10px 14px; border-top: 1px solid #eef1f7; }
+.wbi-cfg-btn { height: 32px; padding: 0 15px; border: 1px solid #e0e5ec; border-radius: 9px; background: #fff; color: #3d4863; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.wbi-cfg-btn.primary { border-color: #2f5fe0; background: #2f5fe0; color: #fff; }
+.wbi-cfg-btn:hover { filter: brightness(.97); }

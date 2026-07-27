@@ -14,9 +14,9 @@
  */
 
 import { sb }                  from './db';
-import { nextRef }             from './refGenerator';
 import { emitAppEvent }        from './appEvents';
 import { getModuleReceiver, hasModuleReceiver } from './moduleRegistry';
+import { getReqContext }       from './reqContext';
 
 export interface CreateHandoffInput {
   sourceModule:      string;
@@ -37,6 +37,10 @@ export interface CreateHandoffResult {
 
 export async function createHandoff(input: CreateHandoffInput): Promise<CreateHandoffResult> {
   try {
+    // Inject the request correlation ID into the payload so the handoff row
+    // shares the same reqId as the audit_logs and app_events rows from this request.
+    const { reqId } = getReqContext();
+    const payload = reqId ? { ...input.payload, reqId } : input.payload;
     const { data, error } = await sb
       .from('handoff_outbox')
       .insert({
@@ -45,16 +49,18 @@ export async function createHandoff(input: CreateHandoffInput): Promise<CreateHa
         source_entity_type: input.sourceEntityType,
         source_entity_id:   input.sourceEntityId,
         target_entity_type: input.targetEntityType ?? null,
-        payload:            input.payload,
+        payload,
         status:             'pending',
         created_by:         input.createdBy ?? null,
       })
       .select('id')
       .single<{ id: string }>();
 
-    if (error || !data) {
-      console.error('[handoffBus] insert failed:', error?.message);
-      return { ok: false, message: error?.message ?? 'handoff insert failed' };
+    // .single() is discriminated: an error means no row, so checking `error`
+    // fully covers the insert-failure case (data is non-null once error is null).
+    if (error) {
+      console.error('[handoffBus] insert failed:', error.message);
+      return { ok: false, message: error.message };
     }
 
     // Emit handoff.created event (best-effort, silent — no notification)
@@ -101,7 +107,7 @@ export async function failHandoff(handoffId: string, errorMessage: string): Prom
 
     if (!data) return;
 
-    const newAttempts = (data.attempts ?? 0) + 1;
+    const newAttempts = data.attempts + 1;
     const newStatus = newAttempts >= 3 ? 'manual_review' : 'failed';
 
     await sb.from('handoff_outbox').update({
@@ -176,7 +182,7 @@ export async function processHandoff(handoffId: string): Promise<void> {
 
   await sb
     .from('handoff_outbox')
-    .update({ status: 'processing', attempts: (handoff.attempts ?? 0) + 1 })
+    .update({ status: 'processing', attempts: handoff.attempts + 1 })
     .eq('id', handoffId);
 
   if (!hasModuleReceiver(handoff.target_module)) {

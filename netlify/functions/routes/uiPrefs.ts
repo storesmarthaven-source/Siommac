@@ -8,6 +8,8 @@
  *   POST /api/layout/saveDefault   — set the org-wide default order (admin)
  *   POST /api/layout/saveOverride  — set the calling user's personal order
  *   POST /api/layout/resetOverride — clear the calling user's personal order
+ *   POST /api/ui-preferences/get    — read the calling user's typed UI preference
+ *   POST /api/ui-preferences/save   — upsert the calling user's typed UI preference
  *
  * Backed by app_theme / ui_layout (see 20260623000000_ui_theme_layout.sql).
  */
@@ -18,6 +20,12 @@ import { sb } from '../lib/db';
 import { requireUser, requireRole, requirePermission, log_ } from '../lib/auth';
 import { emitAppEvent } from '../lib/appEvents';
 import type { HonoVariables } from '../../../types/api';
+import {
+  EMPLOYEE_REGISTER_COLUMN_KEYS,
+  EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_KEY,
+  EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_VERSION,
+  sanitizeEmployeeRegisterColumnKeys,
+} from '../../../types/uiPreferences';
 
 type Ctx = Context<{ Variables: HonoVariables }>;
 
@@ -25,6 +33,13 @@ const router = new Hono<{ Variables: HonoVariables }>();
 
 function getArgs(c: Ctx): Record<string, unknown> {
   return ((c.get('body') as { args?: Record<string, unknown> } | undefined)?.args ?? {});
+}
+
+// An arg is `unknown` (untrusted body). Accept only a genuine string — a non-string
+// (object/number/…) coerces to '' rather than String()'s '[object Object]', and then
+// fails the downstream key/pageKey validation exactly as an empty value would.
+function strArg(v: unknown): string {
+  return typeof v === 'string' ? v : '';
 }
 
 function cleanTokens(v: unknown): Record<string, string> | null {
@@ -43,10 +58,29 @@ function cleanOrder(v: unknown): string[] | null {
   return v.filter(x => typeof x === 'string').map(x => (x).slice(0, 80)).slice(0, 24);
 }
 
+interface UiPreferenceEnvelope {
+  key: string;
+  version: number;
+  value: unknown;
+  updatedAt: string | null;
+}
+
+function knownUiPreferenceKey(key: string): boolean {
+  return key === EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_KEY;
+}
+
+function cleanUiPreference(key: string, value: unknown): { version: number; value: unknown } | null {
+  if (!knownUiPreferenceKey(key) || !Array.isArray(value) || value.length > EMPLOYEE_REGISTER_COLUMN_KEYS.length) return null;
+  const allowed = new Set<string>(EMPLOYEE_REGISTER_COLUMN_KEYS);
+  if (value.some(item => typeof item !== 'string' || !allowed.has(item))) return null;
+  const columns = sanitizeEmployeeRegisterColumnKeys(value);
+  return columns ? { version: EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_VERSION, value: columns } : null;
+}
+
 // ── Theme ───────────────────────────────────────────────────────────────────────
 
 router.post('/theme/get', async c => {
-  const { data } = await sb.from('app_theme').select('tokens').eq('scope', 'global').maybeSingle();
+  const { data } = await sb.from('app_theme').select('tokens').eq('scope', 'global').maybeSingle<{ tokens: Record<string, unknown> }>();
   return c.json({ success: true, data: { tokens: (data?.tokens ?? {}) } });
 });
 
@@ -70,11 +104,63 @@ router.post('/theme/save', async c => {
   return c.json({ success: true });
 });
 
+// ── Per-user UI preferences ───────────────────────────────────────────────────
+
+router.post('/ui-preferences/get', async c => {
+  const user = await requireUser(c);
+  const key = strArg(getArgs(c).key);
+  if (!knownUiPreferenceKey(key)) return c.json({ success: false, message: 'Unknown UI preference key' }, 400 as 200);
+
+  const { data, error } = await sb.from('ui_user_preferences')
+    .select('preference_key, preference_value, version, updated_at')
+    .eq('user_id', user.id)
+    .eq('preference_key', key)
+    .maybeSingle();
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  const preference: UiPreferenceEnvelope | null = data ? {
+    key: String(data.preference_key),
+    version: Number(data.version),
+    value: data.preference_value,
+    updatedAt: data.updated_at ? String(data.updated_at) : null,
+  } : null;
+  return c.json({ success: true, data: { preference } });
+});
+
+router.post('/ui-preferences/save', async c => {
+  const user = await requireUser(c);
+  const args = getArgs(c);
+  const key = strArg(args.key);
+  if (!knownUiPreferenceKey(key)) return c.json({ success: false, message: 'Unknown UI preference key' }, 400 as 200);
+  const cleaned = cleanUiPreference(key, args.value);
+  if (!cleaned) return c.json({ success: false, message: 'Invalid UI preference value' }, 400 as 200);
+
+  const { data, error } = await sb.from('ui_user_preferences').upsert({
+    user_id: user.id,
+    preference_key: key,
+    preference_value: cleaned.value,
+    version: cleaned.version,
+    updated_by: user.id,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'user_id,preference_key' })
+    .select('preference_key, preference_value, version, updated_at')
+    .single();
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  const preference: UiPreferenceEnvelope = {
+    key: String(data.preference_key),
+    version: Number(data.version),
+    value: data.preference_value,
+    updatedAt: data.updated_at ? String(data.updated_at) : null,
+  };
+  return c.json({ success: true, data: { preference } });
+});
+
 // ── Layout ──────────────────────────────────────────────────────────────────────
 
 router.post('/layout/get', async c => {
   const user = await requireUser(c);
-  const pageKey = String(getArgs(c).pageKey ?? '');
+  const pageKey = strArg(getArgs(c).pageKey);
   if (!pageKey) return c.json({ success: false, message: 'pageKey required' }, 400 as 200);
 
   const { data } = await sb.from('ui_layout').select('user_id, card_order').eq('page_key', pageKey);
@@ -90,7 +176,7 @@ router.post('/layout/get', async c => {
 router.post('/layout/saveDefault', async c => {
   const actor = await requireRole(c, ['admin']);
   const a = getArgs(c);
-  const pageKey = String(a.pageKey ?? '');
+  const pageKey = strArg(a.pageKey);
   const order = cleanOrder(a.order);
   if (!pageKey || order === null) return c.json({ success: false, message: 'pageKey and order required' }, 400 as 200);
 
@@ -107,7 +193,7 @@ router.post('/layout/saveDefault', async c => {
 router.post('/layout/saveOverride', async c => {
   const user = await requireUser(c);
   const a = getArgs(c);
-  const pageKey = String(a.pageKey ?? '');
+  const pageKey = strArg(a.pageKey);
   const order = cleanOrder(a.order);
   if (!pageKey || order === null) return c.json({ success: false, message: 'pageKey and order required' }, 400 as 200);
 
@@ -121,7 +207,7 @@ router.post('/layout/saveOverride', async c => {
 
 router.post('/layout/resetOverride', async c => {
   const user = await requireUser(c);
-  const pageKey = String(getArgs(c).pageKey ?? '');
+  const pageKey = strArg(getArgs(c).pageKey);
   if (!pageKey) return c.json({ success: false, message: 'pageKey required' }, 400 as 200);
   await sb.from('ui_layout').delete().eq('page_key', pageKey).eq('user_id', user.id);
   return c.json({ success: true });
@@ -139,12 +225,24 @@ function safeConfig(v: unknown): Record<string, unknown> {
   catch { return {}; }
 }
 
-function cleanInstanceLayout(v: unknown): { pageKey?: string; zones: Record<string, unknown[]> } | null {
+function safeResponsive(v: unknown): Record<string, { x: number; y: number; w: number; h: number }> | undefined {
+  if (typeof v !== 'object' || v === null || Array.isArray(v)) return undefined;
+  const out: Record<string, { x: number; y: number; w: number; h: number }> = {};
+  for (const key of ['desktop', 'tablet', 'mobile']) {
+    const p = (v as Record<string, unknown>)[key];
+    if (typeof p !== 'object' || p === null || Array.isArray(p)) continue;
+    const g = p as Record<string, unknown>;
+    out[key] = { x: clampInt(g.x, 0, 63), y: clampInt(g.y, 0, 9999), w: clampInt(g.w, 1, 64), h: clampInt(g.h, 1, 200) };
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
+function cleanInstanceLayout(v: unknown, expectedPageKey: string): { pageKey?: string; version: number; columns: number; zones: Record<string, unknown[]> } | null {
   if (typeof v !== 'object' || v === null || Array.isArray(v)) return null;
   const obj = v as Record<string, unknown>;
   const zones = obj.zones;
   if (typeof zones !== 'object' || zones === null || Array.isArray(zones)) return null;
-  const pageKey = capStr(obj.pageKey, 120);
+  const pageKey = capStr(expectedPageKey, 120);
   const outZones: Record<string, unknown[]> = {};
   let total = 0, zoneCount = 0;
   for (const [zoneId, arr] of Object.entries(zones as Record<string, unknown>)) {
@@ -156,6 +254,7 @@ function cleanInstanceLayout(v: unknown): { pageKey?: string; zones: Record<stri
       const w = it as Record<string, unknown>;
       const instanceId = capStr(w.instanceId, 80), widgetId = capStr(w.widgetId, 120);
       if (!instanceId || !widgetId) continue;                 // both required, non-empty after cap
+      const responsive = safeResponsive(w.responsive);
       items.push({
         instanceId, widgetId,
         pageKey: capStr(w.pageKey, 120) || pageKey,
@@ -167,20 +266,23 @@ function cleanInstanceLayout(v: unknown): { pageKey?: string; zones: Record<stri
         x: clampInt(w.x, 0, 63), y: clampInt(w.y, 0, 9999), w: clampInt(w.w, 1, 64), h: clampInt(w.h, 1, 200),
         sizeKey: capStr(w.sizeKey, 24) || 'standard',
         config: safeConfig(w.config),
+        ...(responsive ? { responsive } : {}),
         ...(typeof w.titleOverride === 'string' ? { titleOverride: capStr(w.titleOverride, 200) } : {}),
+        ...(typeof w.isHidden === 'boolean' ? { isHidden: w.isHidden } : {}),
+        ...(typeof w.lockedByAdmin === 'boolean' ? { lockedByAdmin: w.lockedByAdmin } : {}),
       });
       if (++total > 300) break;                               // cap total widgets
     }
     outZones[zId] = items;
     if (total > 300) break;
   }
-  return { pageKey: pageKey || undefined, zones: outZones };
+  return { pageKey: pageKey || undefined, version: 3, columns: clampInt(obj.columns ?? 12, 1, 64), zones: outZones };
 }
 
 router.post('/layout/getInstanceLayout', async c => {
   const user = await requireUser(c);
   const a = getArgs(c);
-  const pageKey = String(a.pageKey ?? '');
+  const pageKey = strArg(a.pageKey);
   if (!pageKey) return c.json({ success: false, message: 'pageKey required' }, 400 as 200);
   const [{ data: override, error: e1 }, { data: def, error: e2 }] = await Promise.all([
     sb.from('ui_layout').select('layout').eq('page_key', pageKey).eq('user_id', user.id).maybeSingle<{ layout: unknown }>(),
@@ -198,10 +300,11 @@ router.post('/layout/getInstanceLayout', async c => {
 router.post('/layout/saveInstanceLayout', async c => {
   const user = await requirePermission(c, 'ui.layout.manage');
   const a = getArgs(c);
-  const pageKey = String(a.pageKey ?? '');
-  const layout = cleanInstanceLayout(a.layout);
+  const pageKey = strArg(a.pageKey);
+  const layout = cleanInstanceLayout(a.layout, pageKey);
   if (!pageKey || layout === null) return c.json({ success: false, message: 'pageKey and layout required' }, 400 as 200);
-  const { data: existing } = await sb.from('ui_layout').select('id').eq('page_key', pageKey).eq('user_id', user.id).maybeSingle();
+  const { data: existing, error: readError } = await sb.from('ui_layout').select('id').eq('page_key', pageKey).eq('user_id', user.id).maybeSingle();
+  if (readError) return c.json({ success: false, message: readError.message }, 500 as 200);
   const err = existing
     ? (await sb.from('ui_layout').update({ layout, updated_by: user.id, updated_at: new Date().toISOString() }).eq('id', existing.id)).error
     : (await sb.from('ui_layout').insert({ page_key: pageKey, user_id: user.id, layout, updated_by: user.id })).error;
@@ -213,10 +316,11 @@ router.post('/layout/saveInstanceLayout', async c => {
 router.post('/layout/saveInstanceLayoutDefault', async c => {
   const actor = await requirePermission(c, 'ui.layout.default.manage');
   const a = getArgs(c);
-  const pageKey = String(a.pageKey ?? '');
-  const layout = cleanInstanceLayout(a.layout);
+  const pageKey = strArg(a.pageKey);
+  const layout = cleanInstanceLayout(a.layout, pageKey);
   if (!pageKey || layout === null) return c.json({ success: false, message: 'pageKey and layout required' }, 400 as 200);
-  const { data: existing } = await sb.from('ui_layout').select('id').eq('page_key', pageKey).is('user_id', null).maybeSingle();
+  const { data: existing, error: readError } = await sb.from('ui_layout').select('id').eq('page_key', pageKey).is('user_id', null).maybeSingle();
+  if (readError) return c.json({ success: false, message: readError.message }, 500 as 200);
   const err = existing
     ? (await sb.from('ui_layout').update({ layout, updated_by: actor.id, updated_at: new Date().toISOString() }).eq('id', existing.id)).error
     : (await sb.from('ui_layout').insert({ page_key: pageKey, user_id: null, layout, updated_by: actor.id })).error;
@@ -229,9 +333,10 @@ router.post('/layout/saveInstanceLayoutDefault', async c => {
 // Clear ONLY this user's layout override (revert to org/page default). Keeps card_order.
 router.post('/layout/resetInstanceLayout', async c => {
   const user = await requirePermission(c, 'ui.layout.manage');
-  const pageKey = String(getArgs(c).pageKey ?? '');
+  const pageKey = strArg(getArgs(c).pageKey);
   if (!pageKey) return c.json({ success: false, message: 'pageKey required' }, 400 as 200);
-  const { data: existing } = await sb.from('ui_layout').select('id').eq('page_key', pageKey).eq('user_id', user.id).maybeSingle();
+  const { data: existing, error: readError } = await sb.from('ui_layout').select('id').eq('page_key', pageKey).eq('user_id', user.id).maybeSingle();
+  if (readError) return c.json({ success: false, message: readError.message }, 500 as 200);
   if (existing) {
     const { error } = await sb.from('ui_layout').update({ layout: null, updated_by: user.id, updated_at: new Date().toISOString() }).eq('id', existing.id);
     if (error) return c.json({ success: false, message: error.message }, 500 as 200);

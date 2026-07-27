@@ -5,8 +5,6 @@
  *   • s-adm-dashboard    — rich inline dashboard (stat cards, charts, widget grid)
  *   • s-adm-employees    — employees CRUD (profile pill + Preact mount)
  *   • s-adm-projects     — project sites (profile pill + Preact mount)
- *   • s-adm-attendance   — attendance records (profile pill + Preact mount)
- *   • s-adm-leaves       — leave applications (profile pill + Preact mount)
  *   • s-adm-rates        — hourly rates (profile pill + Preact mount)
  *
  * The Statutory Rates Modal (#prConstantsModal) and Payroll Settings Modal
@@ -536,7 +534,7 @@ function AdminDashboardSection() {
               {/* INTENTIONAL: onclick inline — navigates to attendance section via window global */}
               <button
                 class="btn btn-sm btn-outline-primary"
-                onClick={() => { (window as unknown as Record<string, Record<string, (s: string) => void>>).AttendanceSystem?.goTo?.('s-adm-attendance'); }}
+                onClick={() => { (window as unknown as Record<string, Record<string, (s: string) => void>>).AttendanceSystem?.goTo?.('s-hr-attendance'); }}
               >
                 <i class="fas fa-arrow-right" /> View All
               </button>
@@ -605,15 +603,6 @@ export default function AdminSections() {
       <AppSection id="s-finance" role="admin">
         <div id="preact-finance-root" />
       </AppSection>
-
-      {/* Admin — Attendance Records */}
-      <AppSection id="s-adm-attendance" role="admin">
-        <div id="preact-attendance-root" />
-      </AppSection>
-
-      {/* s-adm-leaves RETIRED — leave management for admin/superadmin is now
-          served by the HR module's Leave & Absence tab (s-hr-leave / preact-hr-root).
-          The AdminLeave section and its legacy /api/listAllLeaves endpoint are gone. */}
 
       {/* Payroll-related modals — included here as they are wired by admin sections */}
       <StatutoryRatesModal />

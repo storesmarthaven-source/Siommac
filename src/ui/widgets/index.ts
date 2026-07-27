@@ -1,11 +1,16 @@
 /**
- * src/ui/widgets/index.ts — public entry for the SIOMAC widget library (v2: instance/zone
+ * src/ui/widgets/index.ts — public entry for the SIOMAC Widget Platform v3 (instance/zone
  * board + preview-on-board). Import from '@ui/widgets'. The legacy v1 card board has been
  * deleted (no dual system); this is the only widget board now.
  */
 
 // contract
 export * from './types';
+export { migrateBoardLayout, createV3Layout } from './migration';
+export { deriveResponsivePlacements, insertWidgetsAtRow, insertWidgetsAtTop, placeWidgetsAtBottom, BREAKPOINT_COLUMNS } from './placement';
+export { resolveWidgetAccess, type WidgetAccessContext, type WidgetAccessDecision } from './access';
+export { registerWidgetDataSource, findWidgetDataSource, listWidgetDataSources } from './dataSources';
+export { setWidgetGovernancePolicies, getWidgetGovernancePolicy, listWidgetGovernancePolicies, effectiveWidgetPolicy, isWidgetDiscoverable } from './governance';
 
 // registry
 export {
@@ -44,5 +49,4 @@ export { WidgetLibraryModal, type WidgetLibraryModalProps } from './WidgetLibrar
 export { WidgetConfigureModal } from './WidgetConfigureModal';
 export { WidgetDetailPanel } from './WidgetDetailPanel';
 export { WidgetCatalog } from './WidgetCatalog';
-export { WidgetSizeSelector } from './WidgetSizeSelector';
 export { WidgetLivePreview } from './WidgetLivePreview';

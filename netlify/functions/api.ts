@@ -49,6 +49,7 @@ import authStepUpRouter     from './routes/authStepUp';
 import adminSecurityRouter, { policyReadRouter } from './routes/adminSecurity';
 import permissionApprovalsRouter from './routes/permissionApprovals';
 import calendarRouter             from './routes/calendar';
+import weatherRouter              from './routes/weather';
 import hrRouter                   from './routes/hr';
 import hrEmployeeImportRouter     from './routes/hrEmployeeImport';
 import hrOnboardingRouter         from './routes/hrOnboarding';
@@ -174,12 +175,17 @@ app.use('*', async (c, next) => {
 // Global rate limiting (also sets clientIp)
 app.use('*', globalRateLimitMiddleware);
 
-// Bind request-scoped context (IP + user-agent) for the downstream chain so the
-// audit logger can record them without threading the context everywhere.
+// Bind request-scoped context (IP + user-agent + correlation ID) for the downstream
+// chain. writePlatformAudit, emitAppEvent, and createHandoff all read reqId from this
+// context and inject it into their respective side-effect rows so every audit_logs,
+// app_events, and handoff_outbox row from one request shares the same ID.
 app.use('*', async (c, next) => {
-  const ip = (c.get('clientIp') as string | undefined) ?? undefined;
+  const ip        = (c.get('clientIp') as string | undefined) ?? undefined;
   const userAgent = (c.req.header('user-agent') ?? '').slice(0, 400) || undefined;
-  await runWithReqContext({ ip, userAgent }, () => next());
+  const reqId     = crypto.randomUUID();
+  // Echo the correlation ID back so clients can reference it in support requests.
+  c.header('X-Request-Id', reqId);
+  await runWithReqContext({ ip, userAgent, reqId }, () => next());
 });
 
 // JWT parsing — extracts and verifies the token; does not block unauthenticated requests.
@@ -244,6 +250,7 @@ app.route('/api',            uiPrefsRouter);
 app.route('/api',            widgetPackagesRouter);
 app.route('/api',            workflowsRouter);
 app.route('/api',            calendarRouter);
+app.route('/api',            weatherRouter);
 app.route('/api',            communicationsRouter);
 app.route('/api',            communicationsComplianceRouter);
 app.route('/api',            handoffsRouter);

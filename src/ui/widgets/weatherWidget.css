@@ -1,0 +1,336 @@
+/* Weather widget (platform.weather.current). Scoped to .wxw.
+ *
+ * Adopted from the operator's reference card: vivid blue, a place PILL + observation time on the
+ * top row, a large outlined condition icon top-right, an oversized temperature bottom-left and
+ * the condition read bottom-right — plus an ANIMATED conditions backdrop (rain / sun / cloud /
+ * snow / storm / fog) driven by the WMO code.
+ *
+ * The card keeps the workforce-pulse FOOTPRINT (fixed 84px band) so Weather and "Hires this
+ * month" sit as a matched pair, and progressively discloses stats → sun times → outlook by
+ * HEIGHT. `container-type: size` lives on .wxw because the tile wrapper (.wbi-bare-body) is
+ * `inline-size`, which answers width queries only.
+ *
+ * Motion is decorative only: every animation is transform/opacity (compositor-friendly) and all
+ * of it stops under prefers-reduced-motion.
+ */
+
+.wxw {
+  container-type: size;
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: 0 0 10px;
+  overflow: hidden;
+  isolation: isolate;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(160deg, #2f8bff 0%, #1673ee 52%, #0b5cd6 100%);
+  color: #fff;
+  font-family: inherit;
+}
+.wxw * { box-sizing: border-box; }
+
+/* Per-condition colour ramps. */
+.wxw.is-sun   { background: linear-gradient(160deg, #48a2ff 0%, #1f81f4 52%, #0f63dd 100%); }
+.wxw.is-cloud { background: linear-gradient(160deg, #4a90d9 0%, #2f74c4 52%, #1f5aa8 100%); }
+.wxw.is-rain  { background: linear-gradient(160deg, #2f8bff 0%, #1673ee 52%, #0b5cd6 100%); }
+.wxw.is-snow  { background: linear-gradient(160deg, #7fb4e8 0%, #5a92d4 52%, #3f74b8 100%); }
+.wxw.is-storm { background: linear-gradient(160deg, #37518c 0%, #263a6b 52%, #1a2749 100%); }
+.wxw.is-fog   { background: linear-gradient(160deg, #7d93ad 0%, #5f7794 52%, #465c76 100%); }
+/* Night is a DEEPER RAMP, not a filter. `filter: brightness()` dimmed the whole card — text,
+   icons and all — which read as the widget being disabled rather than as night. */
+.wxw.is-night { background: linear-gradient(160deg, #1e3a6b 0%, #16294e 52%, #0d1a33 100%); }
+
+/* ── Animated conditions backdrop ─────────────────────────────────────────── */
+.wxw-sky { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.wxw-sky i { position: absolute; display: block; }
+
+/* Rain / storm — two parallel streak sheets at different speeds for depth. */
+.wxw.is-rain .wxw-sky-a,
+.wxw.is-rain .wxw-sky-b,
+.wxw.is-storm .wxw-sky-a,
+.wxw.is-storm .wxw-sky-b {
+  inset: -60% -20%;
+  background-image: repeating-linear-gradient(74deg,
+    rgba(255, 255, 255, .34) 0 1.5px, rgba(255, 255, 255, 0) 1.5px 9px);
+  animation: wxw-rain 1.05s linear infinite;
+}
+.wxw.is-rain .wxw-sky-b,
+.wxw.is-storm .wxw-sky-b { opacity: .45; animation-duration: 1.7s; background-size: 140% 140%; }
+
+/* Storm — an occasional sheet-lightning flash over the rain. */
+.wxw.is-storm .wxw-sky-c {
+  inset: 0;
+  background: radial-gradient(120% 70% at 70% 0%, rgba(255, 255, 255, .85), rgba(255, 255, 255, 0) 60%);
+  opacity: 0;
+  animation: wxw-flash 7s ease-out infinite;
+}
+
+/* Sun — a warm corner glow with slow rays. */
+.wxw.is-sun .wxw-sky-a {
+  top: -46%; right: -22%; width: 78%; aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 236, 168, .55), rgba(255, 214, 102, 0) 62%);
+  animation: wxw-pulse 6s ease-in-out infinite;
+}
+.wxw.is-sun .wxw-sky-b {
+  top: -70%; right: -46%; width: 116%; aspect-ratio: 1;
+  background: conic-gradient(from 0deg, rgba(255, 255, 255, .12) 0 6deg, rgba(255, 255, 255, 0) 6deg 30deg);
+  border-radius: 50%;
+  animation: wxw-spin-slow 44s linear infinite;
+}
+
+/* Cloud / fog — soft masses drifting across at different rates. */
+.wxw.is-cloud .wxw-sky-a,
+.wxw.is-fog .wxw-sky-a,
+.wxw.is-cloud .wxw-sky-b,
+.wxw.is-fog .wxw-sky-b {
+  top: -10%; left: -40%; width: 70%; height: 90%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, .22), rgba(255, 255, 255, 0) 65%);
+  animation: wxw-drift 26s linear infinite;
+}
+.wxw.is-cloud .wxw-sky-b,
+.wxw.is-fog .wxw-sky-b { top: 22%; width: 90%; height: 80%; opacity: .7; animation-duration: 38s; animation-delay: -12s; }
+
+/* Snow — drifting flecks. */
+.wxw.is-snow .wxw-sky-a,
+.wxw.is-snow .wxw-sky-b {
+  inset: -60% -20%;
+  background-image: radial-gradient(rgba(255, 255, 255, .85) 1.4px, rgba(255, 255, 255, 0) 1.6px);
+  background-size: 34px 34px;
+  animation: wxw-snow 7s linear infinite;
+}
+.wxw.is-snow .wxw-sky-b { background-size: 52px 52px; opacity: .6; animation-duration: 11s; }
+
+@keyframes wxw-rain { to { transform: translate3d(-6%, 42%, 0); } }
+@keyframes wxw-snow { to { transform: translate3d(-3%, 34%, 0); } }
+@keyframes wxw-drift { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(210%, 0, 0); } }
+@keyframes wxw-spin-slow { to { transform: rotate(360deg); } }
+@keyframes wxw-pulse { 0%, 100% { opacity: .75; } 50% { opacity: 1; } }
+@keyframes wxw-flash {
+  0%, 88%, 100% { opacity: 0; }
+  90% { opacity: .9; }
+  92% { opacity: .15; }
+  94% { opacity: .7; }
+  96% { opacity: 0; }
+}
+
+/* Decoration only — never animate for users who asked us not to. */
+@media (prefers-reduced-motion: reduce) {
+  .wxw-sky i { animation: none !important; }
+  .wxw.is-storm .wxw-sky-c { opacity: 0; }
+}
+
+/* ── Conditions band — fixed 84px, above the sky layer ────────────────────── */
+.wxw-band { position: relative; z-index: 1; width: 100%; height: 84px; flex: none; }
+
+.wxw-pill { position: absolute; top: 11px; left: 12px; display: inline-flex; align-items: center; gap: 5px; max-width: calc(100% - 108px); padding: 4px 10px 4px 8px; border-radius: 999px; background: rgba(255, 255, 255, .2); }
+.wxw-pill svg { flex: none; color: #fff; }
+.wxw-place { min-width: 0; overflow: hidden; color: #fff; font-size: 11.5px; font-weight: 600; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+.wxw-time { position: absolute; top: 15px; left: 50%; color: rgba(255, 255, 255, .9); font-size: 11px; font-weight: 500; white-space: nowrap; }
+
+.wxw-ic { position: absolute; top: 8px; right: 12px; color: #fff; line-height: 0; opacity: .96; }
+
+/* Oversized, light-weight temperature — the reference's focal point. */
+.wxw-temp { position: absolute; bottom: 8px; left: 12px; color: #fff; font-size: 38px; font-weight: 300; line-height: 1; letter-spacing: -.03em; }
+
+.wxw-side { position: absolute; right: 12px; bottom: 11px; display: flex; flex-direction: column; align-items: flex-end; gap: 1px; max-width: 56%; text-align: right; }
+.wxw-cond { color: #fff; font-size: 13px; font-weight: 600; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.wxw-feels { color: rgba(255, 255, 255, .78); font-size: 10px; line-height: 1.2; white-space: nowrap; }
+.wxw-feels b { font-weight: 700; color: #fff; }
+
+/* ── Stats / sun / outlook — revealed by height ───────────────────────────── */
+.wxw-stats,
+.wxw-sun,
+.wxw-outlook { display: none; position: relative; z-index: 1; margin: 0 12px; flex: 0 0 auto; border-top: 1px solid rgba(255, 255, 255, .22); }
+
+.wxw-stats,
+.wxw-sun { align-items: center; justify-content: space-between; gap: 6px; padding-top: 8px; }
+.wxw-stats span,
+.wxw-sun span { display: inline-flex; align-items: center; gap: 5px; color: rgba(255, 255, 255, .92); font-size: 10.5px; font-weight: 500; white-space: nowrap; }
+.wxw-stats svg,
+.wxw-sun svg { color: rgba(255, 255, 255, .72); flex: none; }
+/* The sun row continues the stats row — no second rule between them. */
+.wxw-sun { margin-top: 6px; padding-top: 0; border-top: 0; }
+
+.wxw-outlook { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 4px; margin-top: 8px; padding-top: 8px; }
+.wxw-day { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
+.wxw-day svg { color: rgba(255, 255, 255, .8); }
+.wxw-day-l { color: rgba(255, 255, 255, .78); font-size: 9.5px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; }
+.wxw-day-t { color: #fff; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.wxw-day-t i { margin-left: 4px; color: rgba(255, 255, 255, .68); font-style: normal; font-weight: 400; }
+.wxw-day-p { color: rgba(255, 255, 255, .72); font-size: 9px; font-weight: 500; white-space: nowrap; }
+
+/* A size container is queried on its CONTENT box — tile height minus this card's 10px bottom
+   padding — so these sit below the tile heights they target, with slack. The slack is
+   deliberate: borders and padding resolve to fractional pixels under page zoom, and a threshold
+   set to the exact content box lands on a sub-pixel boundary, so a band fails to appear at the
+   very size it was cut for. Targets: h6=96 band · h8=132 +stats · h10=168 +sun · h11=186 +outlook. */
+@container (min-height: 108px) { .wxw-stats { display: flex; } }
+@container (min-height: 138px) { .wxw-sun { display: flex; } }
+@container (min-height: 162px) { .wxw-outlook { display: grid; } }
+
+/* Narrow tiles: shed the right-hand read, then the time, before they ellipsise to nothing. */
+@container (max-width: 260px) { .wxw-time { display: none; } }
+@container (max-width: 235px) {
+  .wxw-side { display: none; }
+  .wxw-pill { max-width: calc(100% - 58px); }
+  .wxw-temp { font-size: 32px; }
+}
+
+/* ── Loading / error — same shell so the card never flashes white ─────────── */
+.wxw-state { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; margin: auto; padding: 10px; text-align: center; color: rgba(255, 255, 255, .82); }
+.wxw-state svg { color: rgba(255, 255, 255, .6); }
+.wxw-state strong { color: #fff; font-size: 12.5px; }
+.wxw-state span { font-size: 10.5px; line-height: 1.35; max-width: 220px; }
+.wxw-spin { animation: wxw-spin .9s linear infinite; }
+@keyframes wxw-spin { to { transform: rotate(360deg); } }
+
+/* ── Metric card (square layout) ───────────────────────────────────────────────
+   Adopted from the operator's three reference tiles: place + ▲high ▼low on top, oversized
+   temperature beside a solid condition icon, the condition label, then ONE focus metric with
+   its own visual along the bottom. Colour follows the METRIC (blue precipitation / green UV /
+   purple wind) exactly as the references do — ink is a deep tint of the same hue, not black. */
+.wxm {
+  container-type: size;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: 12px 14px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 22px;
+  font-family: inherit;
+}
+.wxm * { box-sizing: border-box; }
+
+.wxm.is-precipitation { background: linear-gradient(180deg, #a8d0fb 0%, #cfe6ff 100%); color: #0d2440; }
+.wxm.is-uv            { background: linear-gradient(180deg, #bff3d2 0%, #dcfbe7 100%); color: #12554a; }
+.wxm.is-wind          { background: linear-gradient(180deg, #c77bf0 0%, #efb9f5 100%); color: #2e0b3d; }
+/* Metric cards do NOT dim at night — their colour carries the metric, and dimming made the
+   ink muddy against a pastel fill. */
+
+.wxm-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex: 0 0 auto; }
+.wxm-place { min-width: 0; overflow: hidden; font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.wxm-range { font-size: 12px; font-weight: 600; white-space: nowrap; opacity: .82; }
+.wxm-range b { font-weight: 400; font-size: 9px; }
+
+.wxm-read { display: flex; align-items: center; justify-content: center; gap: 8px; flex: 1 1 auto; min-height: 0; }
+.wxm-temp { font-size: 40px; font-weight: 650; line-height: 1; letter-spacing: -.03em; }
+.wxm-ic { line-height: 0; }
+.wxm-cond { flex: 0 0 auto; margin-top: 2px; text-align: center; font-size: 14px; font-weight: 550; }
+
+.wxm-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; flex: 0 0 auto; margin-top: auto; padding-top: 10px; }
+.wxm-metric { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.wxm-metric-l { font-size: 9px; font-weight: 650; letter-spacing: .07em; text-transform: uppercase; opacity: .72; }
+.wxm-metric-v { font-size: 19px; font-weight: 650; line-height: 1.1; white-space: nowrap; }
+
+.wxm-viz { position: relative; width: 46%; max-width: 130px; height: 40px; flex: none; }
+
+/* Sparkline — faint hourly ticks behind a solid trace, mirroring the references. */
+.wxm-spark { width: 100%; height: 100%; overflow: visible; }
+.wxm-spark-ticks rect { fill: currentColor; opacity: .16; }
+.wxm-spark-line { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.wxm-spark-peak { fill: currentColor; }
+.wxm-badge { position: absolute; top: -6px; right: 0; padding: 2px 6px; border-radius: 7px; background: currentColor; font-size: 9.5px; font-weight: 700; line-height: 1.3; }
+.wxm.is-uv .wxm-badge { color: #dcfbe7; }
+
+/* Compass dial — ticked ring, cardinal letters, hub arrow pointing downwind. */
+.wxm-compass { position: relative; width: 40px; height: 40px; margin-left: auto; border-radius: 50%; background: repeating-conic-gradient(currentColor 0 1.4deg, transparent 1.4deg 6deg); opacity: .95; }
+.wxm-compass::after { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: inherit; background: none; box-shadow: 0 0 0 99px transparent; }
+.wxm-compass > span { position: absolute; font-size: 6.5px; font-weight: 700; opacity: .85; }
+.wxm-compass-n { top: 3px; left: 50%; transform: translateX(-50%); }
+.wxm-compass-s { bottom: 3px; left: 50%; transform: translateX(-50%); }
+.wxm-compass-e { right: 3px; top: 50%; transform: translateY(-50%); }
+.wxm-compass-w { left: 3px; top: 50%; transform: translateY(-50%); }
+.wxm-compass-hub { position: absolute; top: 50%; left: 50%; display: grid; place-items: center; width: 17px; height: 17px; margin: -8.5px 0 0 -8.5px; border-radius: 50%; background: currentColor; }
+.wxm.is-wind .wxm-compass-hub svg { color: #efb9f5; }
+
+/* ── Adapts to ANY size ───────────────────────────────────────────────────────
+   The card resizes down to its render floor (w2 x h4 = ~60px) and stays legible the whole way
+   by shedding whole rows rather than letting them squash or clip. `container-type: size` (not
+   inline-size) is required for the height queries below.
+   Shed order by HEIGHT: visualisation -> condition -> metric row -> high/low -> place. */
+@container (max-height: 250px) { .wxm-viz { display: none; } .wxm-metric-v { font-size: 17px; } }
+@container (max-height: 205px) { .wxm-cond { display: none; } .wxm-temp { font-size: 34px; } }
+@container (max-height: 160px) { .wxm-foot { display: none; } }
+@container (max-height: 120px) { .wxm-temp { font-size: 28px; } .wxm-ic svg { width: 32px; height: 32px; } }
+@container (max-height: 86px)  { .wxm-range { display: none; } .wxm-temp { font-size: 24px; } .wxm-ic svg { width: 26px; height: 26px; } }
+@container (max-height: 62px)  { .wxm-place { font-size: 11px; } .wxm-temp { font-size: 20px; } }
+
+/* Narrow tiles shed the same way. */
+@container (max-width: 200px) { .wxm-viz { display: none; } }
+@container (max-width: 160px) { .wxm-range { display: none; } .wxm-cond { font-size: 12px; } }
+@container (max-width: 128px) { .wxm-metric-l { display: none; } .wxm-temp { font-size: 26px; } }
+
+/* At the smallest sizes the read collapses to a single line: temperature beside the icon. */
+@container (max-height: 120px) {
+  .wxm { padding: 8px 10px; }
+  .wxm-read { gap: 6px; }
+}
+
+/* ── Strip card (slim, full-width) ─────────────────────────────────────────────
+   Every reading on ONE line. Nothing wraps and nothing clips: as the tile narrows the card
+   sheds whole groups in reverse order of operational usefulness, so what survives at any width
+   is the most decision-relevant subset rather than an arbitrary truncation.
+   Shed order: outlook → pressure → sun times → UV band text → gust → feels-like → condition. */
+.wxs {
+  container-type: inline-size;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 8px 14px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: linear-gradient(100deg, #2f8bff 0%, #1673ee 58%, #0b5cd6 100%);
+  color: #fff;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.wxs * { box-sizing: border-box; }
+.wxs.is-sun   { background: linear-gradient(100deg, #48a2ff 0%, #1f81f4 58%, #0f63dd 100%); }
+.wxs.is-cloud { background: linear-gradient(100deg, #4a90d9 0%, #2f74c4 58%, #1f5aa8 100%); }
+.wxs.is-snow  { background: linear-gradient(100deg, #7fb4e8 0%, #5a92d4 58%, #3f74b8 100%); }
+.wxs.is-storm { background: linear-gradient(100deg, #37518c 0%, #263a6b 58%, #1a2749 100%); }
+.wxs.is-fog   { background: linear-gradient(100deg, #7d93ad 0%, #5f7794 58%, #465c76 100%); }
+.wxs.is-night { background: linear-gradient(100deg, #1e3a6b 0%, #16294e 58%, #0d1a33 100%); }
+
+.wxs-ic { flex: none; line-height: 0; opacity: .95; }
+.wxs-temp { flex: none; font-size: 24px; font-weight: 600; line-height: 1; letter-spacing: -.02em; }
+.wxs-id { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 0 1 auto; }
+.wxs-place { overflow: hidden; font-size: 12px; font-weight: 600; line-height: 1.2; text-overflow: ellipsis; }
+.wxs-cond { overflow: hidden; color: rgba(255, 255, 255, .78); font-size: 10px; line-height: 1.2; text-overflow: ellipsis; }
+
+/* Readings. `margin-left:auto` on the first one pushes the whole run to the right of the id. */
+.wxs-item { display: inline-flex; align-items: center; gap: 4px; flex: none; color: rgba(255, 255, 255, .92); font-size: 10.5px; font-weight: 500; }
+.wxs-item svg { color: rgba(255, 255, 255, .66); flex: none; }
+.wxs-uv-band { margin-left: 3px; }
+.wxs-range { margin-left: auto; font-weight: 600; }
+.wxs-range b { font-weight: 400; font-size: 8px; opacity: .8; }
+.wxs-range b + b { margin-left: 5px; }
+
+.wxs-days { display: inline-flex; align-items: center; gap: 10px; flex: none; padding-left: 10px; border-left: 1px solid rgba(255, 255, 255, .24); }
+.wxs-day { display: inline-flex; align-items: center; gap: 4px; }
+.wxs-day svg { color: rgba(255, 255, 255, .7); }
+.wxs-day-l { color: rgba(255, 255, 255, .72); font-size: 9px; font-weight: 650; letter-spacing: .02em; text-transform: uppercase; }
+.wxs-day-t { font-size: 10.5px; font-weight: 600; }
+.wxs-day-t i { margin-left: 3px; color: rgba(255, 255, 255, .66); font-style: normal; font-weight: 400; }
+
+/* Shed groups as width runs out — least useful first. */
+@container (max-width: 1080px) { .wxs-days { display: none; } }
+@container (max-width: 900px)  { .wxs-pressure { display: none; } }
+@container (max-width: 780px)  { .wxs-sun { display: none; } }
+@container (max-width: 660px)  { .wxs-uv-band { display: none; } }
+@container (max-width: 580px)  { .wxs-gust { display: none; } }
+@container (max-width: 500px)  { .wxs-feels { display: none; } }
+@container (max-width: 430px)  { .wxs-cond { display: none; } .wxs-temp { font-size: 21px; } }

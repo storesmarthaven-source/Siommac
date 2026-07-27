@@ -78,6 +78,9 @@ export const PERMISSION_KEYS = [
   'hr.employees.import.validate',
   'hr.employees.import.commit',
   'hr.employees.import.report.download',
+  'hr.employees.import.manage_all',
+  'hr.access_profiles.view',
+  'hr.employees.wizard.draft',
   'hr.onboarding.view',
   'hr.onboarding.start',
   'hr.onboarding.task.manage',
@@ -294,11 +297,25 @@ export const PERMISSION_KEYS = [
   'tickets.create_team',            // raise a ticket for an active direct report
   'tickets.create_on_behalf',       // raise a ticket on behalf of another employee (reason required)
   'tickets.create_internal',        // raise internal work for a service queue (no employee requester)
+  'tickets.view_all',               // view all support tickets in the queue (not just own)
+  'tickets.reply_internal',         // post staff-only internal notes on support tickets
   // ── Account Security (admin cross-user management) ──────────────────────────────
   'auth.security.view',             // view another user's security status (MFA, passkeys, trusted devices)
   'auth.security.manage_policy',    // update the organisation-wide security policy
   'auth.passkeys.admin_revoke',     // revoke all passkeys for another user (admin action)
   'auth.trusted_devices.admin_revoke', // revoke all trusted devices for another user (admin action)
+  // ── Employee Account Access (capability-routed service-request queue) ─────────
+  'employees.access.view',               // view an employee's account/access status
+  'employees.access.request',            // submit an account support service request (self-service)
+  'employees.access.reset_password',     // reset a user's password (step-up required)
+  'employees.access.resend_activation',  // resend account activation email
+  'employees.access.suspend',            // suspend a user account (step-up required)
+  'employees.access.restore',            // restore a suspended account (step-up required)
+  'employees.access.revoke_sessions',    // revoke all active sessions for a user (step-up required)
+  'employees.access.revoke_devices',     // revoke all trusted devices for a user (step-up required)
+  'employees.access.require_mfa',        // force MFA enrollment for a user (step-up required)
+  'employees.access.permissions.view',   // view a user's current permission grants
+  'employees.access.permissions.manage', // modify a user's permission overrides (step-up required)
   // ── Settings & Preferences (Spec §8) ─────────────────────────────────────────
   'settings.manage',
   'settings.own_preferences.view',
@@ -409,6 +426,10 @@ export const PERMISSION_KEYS = [
   'ui.layout.default.manage',
   'ui.widgets.packages.view',
   'ui.widgets.packages.manage',
+  'ui.widgets.governance.view',
+  'ui.widgets.governance.manage',
+  'ui.widgets.sources.view',
+  'ui.widgets.sources.manage',
   // ── Finance statutory configuration ─────────────────────────────────────────
   'finance.statutory.view',         // view statutory versions and NIS class tables
   'finance.statutory.manage',       // create and edit draft statutory versions
@@ -551,6 +572,9 @@ export const PERMISSION_KEYS = [
   'calendar.task.manage_own',         // create / update / complete own tasks
   'calendar.task.assign',             // assign a task to a permitted team member
   'calendar.activity.manage_own',     // create / update own activities (meetings, site visits…)
+
+  // ── Weather (platform) ───────────────────────────────────────────────────────
+  'platform.weather.view',            // read the server-proxied weather snapshot (widget)
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -603,6 +627,7 @@ export const COMPLIANCE_GATED_KEYS = new Set<string>([
 // Employee baseline — shared by every module-staff role (flat; no inheritance).
 const EMPLOYEE_BASELINE: ReadonlySet<PermissionKey> = new Set<PermissionKey>([
   'tickets.create_self',            // every authenticated role may raise a self-service ticket
+  'employees.access.request',       // every authenticated role may submit own account support request
   'workflow.my_tasks.view', 'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject',
   'settings.own_preferences.view', 'settings.own_preferences.manage',
   'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own', 'dashboard.view',
@@ -625,6 +650,7 @@ const EMPLOYEE_BASELINE: ReadonlySet<PermissionKey> = new Set<PermissionKey>([
   'finance.bank_accounts.view',
   'finance.bank_accounts.manage',
   'calendar.view', 'calendar.task.manage_own', 'calendar.activity.manage_own',
+  'platform.weather.view',
 ]);
 
 export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
@@ -641,6 +667,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.employee.statutory.view', 'hr.employee.statutory.capture',
     // HR Contract Management — day-to-day lifecycle
     'hr.contracts.view', 'hr.contracts.manage',
+    // Account access — staff: view, request, resend activation, view permissions
+    'employees.access.view', 'employees.access.request',
+    'employees.access.resend_activation', 'employees.access.permissions.view',
+    // Ticket queue management (HR manages the account support queue)
+    'tickets.view_all', 'tickets.reply_internal',
   ]),
   hr_manager: new Set<PermissionKey>([
     'calendar.manage', 'calendar.task.assign',
@@ -657,6 +688,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.policies.view', 'finance.payroll.policies.source_approve',
     // HR Contract Management — full (incl. terminate + templates)
     'hr.contracts.view', 'hr.contracts.manage', 'hr.contracts.terminate', 'hr.contracts.template.manage',
+    // Account access — hr_manager: view, request, resend activation, manage permissions
+    // (reset_password / revoke_sessions / revoke_devices / require_mfa are admin-only)
+    'employees.access.view', 'employees.access.request',
+    'employees.access.resend_activation',
+    'employees.access.permissions.view', 'employees.access.permissions.manage',
+    // Ticket queue management (HR manages the account support queue)
+    'tickets.view_all', 'tickets.reply_internal',
   ]),
   hse_staff: new Set<PermissionKey>([...EMPLOYEE_BASELINE, 'tickets.create_internal']),
 
@@ -836,6 +874,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   employee: new Set<PermissionKey>([
     'tickets.create_self',
     'calendar.view', 'calendar.task.manage_own', 'calendar.activity.manage_own',
+    'platform.weather.view',
     // Workflow — my tasks + decide when assigned (Spec §22)
     'workflow.my_tasks.view', 'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject',
     // Settings — own personal preferences only (Spec §4)
@@ -870,6 +909,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'tickets.create_self', 'tickets.create_team',
     'finance.payroll.view_own',   // self-service: view/print own payslips (self-scoped server-side)
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
+    'platform.weather.view',
     // Workflow — run approvals + manage instances (Spec §22)
     'workflow.dashboard.view', 'workflow.my_tasks.view', 'workflow.register.view',
     'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject', 'workflow.tasks.delegate',
@@ -925,11 +965,17 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.roster.view', 'hr.roster.manage', 'hr.roster.publish', 'hr.roster.templates.manage',
     // Overtime — managers approve team OT
     'hr.overtime.view', 'hr.overtime.approve', 'hr.overtime.reports.view',
+    // Account access — managers can view status and submit requests
+    'employees.access.view', 'employees.access.request',
+    // Ticket queue management
+    'tickets.view_all', 'tickets.reply_internal',
   ]),
 
   admin: new Set<PermissionKey>([
     'tickets.create_self', 'tickets.create_team', 'tickets.create_on_behalf', 'tickets.create_internal',
+    'tickets.view_all', 'tickets.reply_internal',
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
+    'platform.weather.view',
     // Workflow — full except superadmin-only admin_override (Spec §22)
     'workflow.dashboard.view', 'workflow.my_tasks.view', 'workflow.register.view',
     'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject', 'workflow.tasks.delegate',
@@ -1056,6 +1102,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'communications.participants.change_role',
     'auth.security.view', 'auth.security.manage_policy',
     'auth.passkeys.admin_revoke', 'auth.trusted_devices.admin_revoke',
+    // Account access — admin has all 11 keys (step-up required at each elevated endpoint)
+    'employees.access.view', 'employees.access.request',
+    'employees.access.reset_password', 'employees.access.resend_activation',
+    'employees.access.suspend', 'employees.access.restore',
+    'employees.access.revoke_sessions', 'employees.access.revoke_devices',
+    'employees.access.require_mfa',
+    'employees.access.permissions.view', 'employees.access.permissions.manage',
     'ui.layout.manage', 'ui.layout.default.manage', 'ui.widgets.packages.view', 'ui.widgets.packages.manage',
     'hr.transfers.view', 'hr.transfers.request', 'hr.transfers.approve', 'hr.transfers.cancel',
     'hr.requests.submit_own', 'hr.requests.manage',
@@ -1266,7 +1319,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hse.ppe.view',       'hse.ppe.manage',
     'hse.dashboard.view', 'hse.workflows.view', 'hse.workflows.manage',
     'workflow.submit', 'workflow.approve', 'workflow.audit', 'workflow.view',
-    'tickets.manage',
+    'tickets.manage', 'tickets.view_all', 'tickets.reply_internal',
     'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
     'communications.record_thread_read', 'communications.moderate', 'communications.admin',
     'communications.compliance_read', 'communications.compliance_export',
@@ -1279,6 +1332,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'communications.participants.change_role',
     'auth.security.view', 'auth.security.manage_policy',
     'auth.passkeys.admin_revoke', 'auth.trusted_devices.admin_revoke',
+    // Account access — superadmin has all 11 keys
+    'employees.access.view', 'employees.access.request',
+    'employees.access.reset_password', 'employees.access.resend_activation',
+    'employees.access.suspend', 'employees.access.restore',
+    'employees.access.revoke_sessions', 'employees.access.revoke_devices',
+    'employees.access.require_mfa',
+    'employees.access.permissions.view', 'employees.access.permissions.manage',
     'ui.layout.manage', 'ui.layout.default.manage', 'ui.widgets.packages.view', 'ui.widgets.packages.manage',
     'hr.transfers.view', 'hr.transfers.request', 'hr.transfers.approve', 'hr.transfers.cancel',
     'hr.requests.submit_own', 'hr.requests.manage',
@@ -1351,6 +1411,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.ap.duplicate.resolve', 'finance.ap.reports.export', 'finance.ap.bills.import',
     // Calendar & Tasks (platform) — superadmin: all
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
+    'platform.weather.view',
   ]),
 };
 
@@ -1498,5 +1559,18 @@ export function useCan(key: string): boolean {
       rolePermissions: s.rolePermissions,
       overrides:       s.permissionOverrides,
     });
+  });
+}
+
+/** Reactive OR-gate for pages that support distinct self-service/manage capabilities. */
+export function useAnyCan(keys: readonly string[]): boolean {
+  return useSessionStore((s) => {
+    if (!s.role) return false;
+    const context = {
+      role:            s.role,
+      rolePermissions: s.rolePermissions,
+      overrides:       s.permissionOverrides,
+    };
+    return keys.some(key => resolvePermission(key, context));
   });
 }

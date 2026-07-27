@@ -5,15 +5,53 @@
 // A PREVIEW widget is draggable from its WHOLE frame (so you can grab anywhere to move it);
 // its Add/Discard buttons stopPropagation on mousedown so clicking them never starts a drag.
 import type { VNode, TargetedMouseEvent } from 'preact';
+import { useState } from 'preact/hooks';
 import { resolveBoardWidget } from './resolveBoardWidget';
+import { findWidgetDef } from './registry';
+import { WidgetConfigureModal } from './WidgetConfigureModal';
+import { WidgetConfigBack } from './WidgetConfigBack';
 import { WidgetRenderer } from './WidgetRenderer';
 import { useMountReveal } from './motion';
 import type { BoardWidgetInstance, LocalWidgetMap } from './types';
+import { toast } from '@store';
 
 // Pressing an action button must not start a drag.
 const noDrag = (e: TargetedMouseEvent<HTMLButtonElement>): void => e.stopPropagation();
 
-export function WidgetFrame({ item, editing, isPreview, local, demo, revealOnMount = true, onCommitPreview, onDiscardPreview, onRemove }: {
+function copyWidgetSize(e: TargetedMouseEvent<HTMLButtonElement>, item: BoardWidgetInstance, title: string): void {
+  e.stopPropagation();
+  const gridItem = e.currentTarget.closest<HTMLElement>('.react-grid-item');
+  const rect = gridItem?.getBoundingClientRect();
+  const width = rect ? Math.round(rect.width) : null;
+  const height = rect ? Math.round(rect.height) : null;
+  // Emits the size as a DEFAULT, never as a minimum.
+  //
+  // This used to emit a "Minimum size snippet" — `minColumns/minRows` taken from whatever the tile
+  // currently measured. Pasting that made the size you liked the size the widget could never go
+  // BELOW, so minRows crept up to equal defaultRows and the widget stopped being resizable at all.
+  // A captured size is a statement about how the widget should be PLACED (defaultColumns/
+  // defaultRows), not about the smallest it can render — that floor stays low so users can resize.
+  const lines = [
+    `Widget: ${title || item.widgetId}`,
+    `widgetId: ${item.widgetId}`,
+    `instanceId: ${item.instanceId}`,
+    `pageKey: ${item.pageKey}`,
+    `zoneId: ${item.zoneId}`,
+    `grid: w=${item.w}, h=${item.h}  (position x=${item.x}, y=${item.y})`,
+    width != null && height != null ? `pixels: width=${width}, height=${height}` : null,
+    '',
+    'Default size snippet (registry widget):',
+    `sizeConstraints: { defaultColumns: ${item.w}, defaultRows: ${item.h}${width != null ? `, minWidth: ${width}` : ''}${height != null ? `, minHeight: ${height}` : ''} }`,
+    '',
+    "Board default-layout line (widgets placed by the page's own default):",
+    `defInst('${item.widgetId}', ${item.x}, ${item.y}, ${item.w}, ${item.h}, '${item.sizeKey}'),`,
+  ].filter((line): line is string => line != null).join('\n');
+  void navigator.clipboard.writeText(lines)
+    .then(() => toast.success('Widget size copied.'))
+    .catch(() => toast.error('Widget size could not be copied.'));
+}
+
+export function WidgetFrame({ item, editing, isPreview, local, demo, revealOnMount = true, onCommitPreview, onDiscardPreview, onRemove, onConfigure }: {
   item: BoardWidgetInstance;
   editing?: boolean;
   isPreview?: boolean;
@@ -24,7 +62,9 @@ export function WidgetFrame({ item, editing, isPreview, local, demo, revealOnMou
   onCommitPreview?: () => void;
   onDiscardPreview?: () => void;
   onRemove?: () => void;
+  onConfigure?: (config: Record<string, unknown>) => void;
 }): VNode {
+  const [configOpen, setConfigOpen] = useState(false);
   const resolved = resolveBoardWidget(item.widgetId, local);
   const title = item.titleOverride ?? resolved?.title ?? '';
   const bare = resolved?.chrome === 'none';
@@ -41,23 +81,39 @@ export function WidgetFrame({ item, editing, isPreview, local, demo, revealOnMou
       <button type="button" class="wbi-act muted" onMouseDown={noDrag} onClick={onDiscardPreview}>Discard</button>
     </span>
   );
+  const definition = findWidgetDef(item.widgetId);
+  const configure = editing && !isPreview && definition?.configSchema.length ? (
+    <button type="button" class="wbi-remove" onMouseDown={noDrag} onClick={() => setConfigOpen(true)} aria-label="Configure widget"><i class="fas fa-gear" /></button>
+  ) : null;
+  const copySize = editing && !isPreview ? (
+    <button type="button" class="wbi-remove" onMouseDown={noDrag} onClick={event => copyWidgetSize(event, item, title)} aria-label={`Copy ${title || item.widgetId} size`} title="Copy widget size"><i class="fas fa-copy" /></button>
+  ) : null;
+  const configModal = definition ? <WidgetConfigureModal open={configOpen} widget={definition} config={item.config} sizeKey={item.sizeKey} pageKey={item.pageKey} zoneId={item.zoneId} onClose={() => setConfigOpen(false)} onSave={next => { onConfigure?.(next); setConfigOpen(false); }} /> : null;
+  // In-widget flip config: only for BARE, fixed-height widgets. Content-measured
+  // (sizeToContent) tiles keep the modal — an absolute flip face would collapse their height.
+  const useFlip = bare && !isPreview && !definition?.sizeToContent && !!definition;
 
   if (bare) {
     const showTools = isPreview ?? editing;
     // Preview: the whole bare frame is the drag handle (grab anywhere).
     return (
-      <div ref={rootRef} class={`wbi-bare${isPreview ? ' wbi-bare--preview wbi-drag' : ''}`}>
+      <div ref={rootRef} class={`wbi-bare${isPreview ? ' wbi-bare--preview wbi-drag' : editing ? ' wbi-drag' : ''}`}>
         {showTools && (
           <div class={`wbi-bare-tools${isPreview ? '' : ' wbi-drag'}`}>
             {isPreview
               ? <><span class="wbi-preview-chip">Preview</span>{previewActions}</>
               : <>
                   <i class="fas fa-grip-vertical wbi-grip" aria-hidden="true" />
-                  {onRemove ? <button type="button" class="wbi-remove" onMouseDown={noDrag} onClick={onRemove} aria-label="Remove widget"><i class="fas fa-xmark" /></button> : null}
+                  {copySize}{configure}{onRemove ? <button type="button" class="wbi-remove" onMouseDown={noDrag} onClick={onRemove} aria-label="Remove widget"><i class="fas fa-xmark" /></button> : null}
                 </>}
           </div>
         )}
-        <div class="wbi-bare-body"><WidgetRenderer item={item} preview={isPreview} local={local} demo={demo} /></div>
+        <div class="wbi-bare-body">
+          <WidgetRenderer item={item} preview={isPreview} local={local} demo={demo} />
+          {useFlip && configOpen
+            ? <div class="wbi-cfg-flip"><WidgetConfigBack widget={definition} config={item.config} onCancel={() => setConfigOpen(false)} onSave={next => { onConfigure?.(next); setConfigOpen(false); }} /></div>
+            : null}
+        </div>{useFlip ? null : configModal}
       </div>
     );
   }
@@ -69,11 +125,9 @@ export function WidgetFrame({ item, editing, isPreview, local, demo, revealOnMou
         {isPreview
           ? <span class="wbi-preview-chip">Preview — not added</span>
           : <span class="wbi-title"><i class="fas fa-grip-vertical wbi-grip" aria-hidden="true" /> {title}</span>}
-        {isPreview ? previewActions : (editing && onRemove ? (
-          <button type="button" class="wbi-remove" onMouseDown={noDrag} onClick={onRemove} aria-label="Remove widget"><i class="fas fa-xmark" /></button>
-        ) : null)}
+        {isPreview ? previewActions : <>{copySize}{configure}{editing && onRemove ? <button type="button" class="wbi-remove" onMouseDown={noDrag} onClick={onRemove} aria-label="Remove widget"><i class="fas fa-xmark" /></button> : null}</>}
       </header>
-      <div class="wbi-body"><WidgetRenderer item={item} preview={isPreview} local={local} demo={demo} /></div>
+      <div class="wbi-body"><WidgetRenderer item={item} preview={isPreview} local={local} demo={demo} /></div>{configModal}
     </section>
   );
 }

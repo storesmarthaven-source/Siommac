@@ -26,11 +26,12 @@ export default defineConfig({
   ],
 
   test: {
-    // Frontend tests, plus PURE backend units (files with no db/env imports — e.g.
-    // the payroll SoD rules, which back a real anti-fraud gate and deserve direct
-    // tests rather than only live-API coverage). Excludes the legacy Jest directory.
-    include:     ['src/**/*.test.{ts,tsx}', 'netlify/functions/**/*.test.ts'],
-    exclude:     ['tests/**', 'node_modules/**'],
+    // Frontend tests (src/) + PURE backend units in BOTH homes: the
+    // netlify/functions/**/*.test.ts units (payroll SoD rules etc.) and the
+    // tests/vitest/ units the HR branch added. tests/unit + tests/integration
+    // stay Jest-only. (Union of both sides of the merge.)
+    include:     ['src/**/*.test.{ts,tsx}', 'netlify/functions/**/*.test.ts', 'tests/vitest/**/*.test.ts'],
+    exclude:     ['tests/unit/**', 'tests/integration/**', 'node_modules/**'],
     environment: 'jsdom',
     globals:     true,           // describe / it / expect without imports
     setupFiles:  ['src/test-setup.ts'],

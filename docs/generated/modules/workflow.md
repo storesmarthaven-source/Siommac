@@ -2,7 +2,7 @@
 
 # workflow Module Map
 
-Source fingerprint: `2b159dd6352d096b4251f3a8`
+Source fingerprint: `b92be45f166cc04ce9204456`
 
 Files: 47 | Symbols: 321 | Widgets: 0 | Unique mounted endpoints: 40 | Route definitions: 40 mounted + 0 unmounted | API calls: 8 | DB objects: 128 | E2E suites: 3
 
@@ -22,7 +22,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/handoffs/intake` | `workflow.approve` | requirePermission | `IntakeSchema` | `netlify/functions/routes/handoffs.ts:88` | - | - |
 | `/api/handoffs/list` | `workflow.approve` | requirePermission | `-` | `netlify/functions/routes/handoffs.ts:21` | res @ src/api/workflows.ts:159 | - |
 | `/api/handoffs/retry` | `workflow.approve` | requirePermission | `-` | `netlify/functions/routes/handoffs.ts:48` | useRetryHandoff @ src/api/workflows.ts:225 | - |
-| `/api/hr/employees/workflow-summary` | `hr.employees.view` | requirePermission | `z.object({ employeeId: z.string().min(1) })` | `netlify/functions/routes/hr.ts:499` | res @ src/api/hr/employees.ts:223 | hrEmployeeMaster |
+| `/api/hr/employees/workflow-summary` | `hr.employees.view` | requirePermission | `z.object({ employeeId: z.string().min(1) })` | `netlify/functions/routes/hr.ts:802` | - | hrEmployeeMaster |
 | `/api/hr/onboarding/handoff/accept` | `hr.onboarding.case.manage` | requirePermission | `HandoffAction` | `netlify/functions/routes/hrOnboarding.ts:438` | - | hrOnboarding |
 | `/api/hr/onboarding/handoff/cancel` | `hr.onboarding.case.manage` | requirePermission | `HandoffAction` | `netlify/functions/routes/hrOnboarding.ts:450` | - | hrOnboarding |
 | `/api/hr/onboarding/handoff/complete` | `hr.onboarding.case.manage` | requirePermission | `HandoffAction` | `netlify/functions/routes/hrOnboarding.ts:444` | - | hrOnboarding |

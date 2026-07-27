@@ -31,12 +31,20 @@ export function validateWidgetDef(def: WidgetDef): WidgetValidationResult {
   const warn = (code: string, message: string): void => { issues.push({ level: 'warning', code, message }); };
 
   if (!def.id || !ID_PATTERN.test(def.id)) err('INVALID_ID', `Widget id "${def.id}" must be dotted and module-prefixed (e.g. "hr.employees.readiness").`);
-  if (!def.render) err('NO_RENDER', 'Widget must provide a render function.');
-  if (!def.allowedSizes?.length) err('NO_SIZES', 'Widget must declare allowedSizes.');
+  // render is a required WidgetDef field (type-guaranteed) — no runtime presence check.
+  if (!def.allowedSizes.length) err('NO_SIZES', 'Widget must declare allowedSizes.');
   else if (!def.allowedSizes.some(s => s.key === def.defaultSize)) err('DEFAULT_SIZE_NOT_ALLOWED', `defaultSize "${def.defaultSize}" is not in allowedSizes.`);
-  if (!def.supportedPages?.length) err('NO_PAGES', 'Widget must declare supportedPages.');
+  if (def.resizable === false && def.allowedSizes.length !== 1)
+    err('FIXED_WIDGET_MULTIPLE_SIZES', 'A non-resizable widget must declare exactly one code-owned size.');
+  if (def.resizable === false && def.allowedSizes[0]) {
+    const { min, max, grid } = def.allowedSizes[0];
+    // min/max are optional on a size; a missing one is itself "not pinned".
+    if (!min || !max || min.w !== grid.w || min.h !== grid.h || max.w !== grid.w || max.h !== grid.h)
+      err('FIXED_WIDGET_UNPINNED_SIZE', 'A non-resizable widget must pin min and max to its single grid size.');
+  }
+  if (!def.supportedPages.length) err('NO_PAGES', 'Widget must declare supportedPages.');
 
-  if (!def.dataSource?.permissions?.length) warn('NO_PERMISSIONS', 'dataSource.permissions is empty — the widget is visible to every user.');
+  if (!def.dataSource.permissions.length) warn('NO_PERMISSIONS', 'dataSource.permissions is empty — the widget is visible to every user.');
   if (!def.renderPreview) warn('NO_PREVIEW', 'No renderPreview — the library shows only an icon tile instead of a true-aspect thumbnail.');
   if (!def.contentPriorityRules?.length) warn('NO_CONTENT_PRIORITY_RULES', 'No contentPriorityRules — widget will not adapt content at smaller sizes.');
   if (!def.densityRules) warn('NO_DENSITY_RULES', 'No densityRules — widget will not adapt chart/label/action density.');

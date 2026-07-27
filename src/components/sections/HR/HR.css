@@ -1,17 +1,6 @@
 /**
- * src/components/sections/HR/HR.css — HR ▸ Employee Master (v36 faithful port).
- *
- * A faithful port of the v36 source mockup's CONTENT styles
- * (siomac-hr-employee-master-preact-v36-settings-wizard-leftbar.html), rendered
- * inside the Siomac AppShell (the mockup's own hr-sidebar/topbar are dropped —
- * Siomac provides those). The final design layer in the source is "v34" (one-line
- * 4-col stats); these values are taken from there. Everything is scoped under
- * `.hr-emp-master` so the mockup's generic class names (.pill, .avatar, table, h1…)
- * cannot leak into the rest of the app.
- *
- * NOTE: Siomac-token / @ui reconciliation is a deliberate later pass (see
- * src/ui/PAGE_GUIDE.md and the "Siomac-fit" task). This file intentionally mirrors
- * the source look first.
+ * HR Employee Master workspace styles.
+ * Everything remains scoped to `.hr-emp-master`; shared controls come from @ui.
  */
 @layer sections {
 
@@ -29,6 +18,14 @@
 }
 .hr-emp-master *, .hr-emp-master *::before, .hr-emp-master *::after { box-sizing: border-box; }
 .hr-emp-master button { cursor: pointer; box-shadow: none; }
+.hr-emp-master > .ui-page-header { margin-top: 0; margin-bottom: 20px; }
+.hr-emp-master .em-page-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; position: relative; }
+.hr-emp-master .em-page-icon-btn { width: 40px; height: 40px; flex: 0 0 40px; border: 1px solid #d7dee8; border-radius: 9px; background: #fff; color: #475569; display: grid; place-items: center; }
+.hr-emp-master .em-page-icon-btn:hover:not(:disabled) { background: #f6f8fb; border-color: #b9c3d1; color: #1e293b; }
+.hr-emp-master .em-page-icon-btn:disabled { opacity: .58; cursor: wait; }
+.hr-emp-master .em-page-actions .em-new-btn { min-height: 40px; }
+.hr-emp-master .em-kpi-board { margin-bottom: 24px; }
+.hr-emp-master .em-kpi-board + .wbi-board { margin-top: 0; }
 
 /* ── Page header ──────────────────────────────────────────────────────────── */
 .hr-emp-master .page-row { display: flex; align-items: start; justify-content: space-between; gap: 18px; margin-bottom: 18px; }
@@ -98,11 +95,16 @@
 .hr-emp-master .exception-row strong { text-align: right; color: #0f172a; }
 
 /* ── Toolbar ──────────────────────────────────────────────────────────────── */
-/* Flex-wrap so fields shrink/reflow as the table widget is resized. New Employee
-   (last child) stays fixed; search + filters flex and wrap to a new row when narrow. */
-.hr-emp-master .employee-toolbar { background: #fbfdff; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0; position: relative; }
-.hr-emp-master .employee-toolbar > .dropdown-wrap { flex: 0 1 auto; min-width: 130px; max-width: 220px; }
-.hr-emp-master .employee-toolbar > .dropdown-wrap:last-child { flex: 0 0 auto; min-width: 0; max-width: none; }
+/* Flex-wrap so search, filters, and page-specific actions reflow as their table
+   widget is resized. */
+.hr-emp-master .employee-toolbar { background: #f8fafc; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0; position: relative; }
+.hr-emp-master .employee-toolbar .tf-search { min-width: min(300px, 100%); }
+.hr-emp-master .employee-toolbar .tf-wrap { flex: 0 1 auto; }
+.hr-emp-master .employee-toolbar .em-column-btn { height: 46px; min-height: 46px; border-radius: 11px; }
+/* With the "Advanced" kicker gone, a single 700-weight word read heavier than the rest of the
+   toolbar — the button shell is unchanged, only its label is dialled back. */
+.hr-emp-master .employee-toolbar .tf-adv-btn { font-weight: var(--font-weight-semibold, 600); }
+.hr-emp-master .employee-toolbar .tf-adv-btn strong { font-size: 12.5px; font-weight: var(--font-weight-medium, 500); color: rgba(255, 255, 255, .92); letter-spacing: 0; }
 /* table-search / .magnify — removed (OnboardingOverview migrated to @ui TableSearch) */
 
 .hr-emp-master .dropdown-wrap { position: relative; min-width: 0; }
@@ -120,14 +122,19 @@
    explicit display the menu inherits that and renders invisible. */
 .hr-emp-master .dropdown-menu { display: block; position: absolute; top: calc(100% + 8px); left: 0; z-index: 60; min-width: 236px; max-width: 320px; background: #fff; border: 1px solid var(--line-dark); border-radius: 12px; overflow: hidden; box-shadow: 0 18px 40px rgba(15, 23, 42, .12); }
 .hr-emp-master .dropdown-menu.right { left: auto; right: 0; }
+/* Rows near the bottom of the scrolling register open their menu upward instead of
+   letting it hang past the widget's edge. */
+.hr-emp-master .dropdown-menu.up { top: auto; bottom: calc(100% + 8px); }
+.hr-emp-master .menu-sep { height: 1px; margin: 6px 4px; background: var(--line, #e5eaf2); }
 /* dropdown-head — removed (only used by ObAdvancedFilters, replaced by @ui AdvancedFilter) */
 .hr-emp-master .dropdown-list { max-height: 278px; overflow: auto; padding: 8px; }
 /* check-row / check-box — removed (only used by ObAdvancedFilters; @ui FilterBar has .tf-check) */
 .hr-emp-master .menu-row { width: 100%; border: 0; background: #fff; min-height: 36px; display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 8px; text-align: left; color: #1e293b; font-size: 13px; }
 .hr-emp-master .menu-row:hover { background: #f4f8ff; }
-.hr-emp-master .menu-row .menu-ico { width: 25px; height: 25px; border-radius: 7px; background: #f1f5f9; display: grid; place-items: center; flex: none; color: #334155; font-size: 12px; }
+/* Bare Lucide glyph — no tinted chip behind it. */
+.hr-emp-master .menu-row .menu-ico { width: 18px; height: 18px; display: grid; place-items: center; flex: none; color: #475569; }
 .hr-emp-master .menu-row.danger { color: #b91c1c; }
-.hr-emp-master .menu-row.danger .menu-ico { background: #fee2e2; color: #dc2626; }
+.hr-emp-master .menu-row.danger .menu-ico { color: #dc2626; }
 /* dropdown-foot — removed (unused: was the legacy multi-select dropdown footer) */
 
 /* Advanced-filter tabbed panel (advanced-menu, advanced-panel, advanced-tabs, advanced-tab*,
@@ -140,8 +147,39 @@
 /* ── Register table ───────────────────────────────────────────────────────── */
 /* Register table widget — fills its gridstack cell; toolbar + pagination fixed,
    the table body scrolls internally so the widget is resizable. */
-.hr-emp-master .table-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; height: 100%; }
+.hr-emp-master .table-card { background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: visible; display: flex; flex-direction: column; height: 100%; box-shadow: 0 1px 3px rgba(15, 23, 42, .05); }
 .hr-emp-master .table-scroll { flex: 1; min-height: 0; overflow: auto; }
+.hr-emp-master .em-register-head { min-height: 64px; padding: 11px 14px; border-bottom: 1px solid var(--line); border-radius: 14px 14px 0 0; background: #fff; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex: none; }
+.hr-emp-master .em-register-identity { min-width: 0; display: flex; align-items: center; gap: 11px; }
+.hr-emp-master .em-register-icon { width: 36px; height: 36px; flex: 0 0 36px; border: 1px solid #dbe2ea; border-radius: 10px; background: #f1f4f8; color: #475569; display: grid; place-items: center; }
+.hr-emp-master .em-register-identity h2 { margin: 0; color: #14213d; font-size: 15px; line-height: 1.25; font-weight: var(--font-weight-semibold, 600); letter-spacing: -.01em; }
+.hr-emp-master .em-register-identity p { margin: 3px 0 0; color: #667085; font-size: 11.5px; line-height: 1.3; }
+.hr-emp-master .em-column-btn,
+.hr-emp-master .em-new-btn { min-height: 38px; border-radius: 9px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; font: inherit; font-size: 12.5px; font-weight: var(--font-weight-semibold, 600); white-space: nowrap; }
+.hr-emp-master .em-column-btn { border: 1px solid #d7dee8; background: #fff; color: #475569; }
+.hr-emp-master .em-column-btn:hover { background: #f6f8fb; border-color: #b9c3d1; color: #1e293b; }
+.hr-emp-master .em-column-count { min-width: 35px; min-height: 20px; padding: 0 6px; border-radius: 999px; background: #eef2f6; color: #475569; display: inline-grid; place-items: center; font-size: 10.5px; font-weight: var(--font-weight-semibold, 600); }
+.hr-emp-master .em-columns-menu { width: 292px; max-width: min(292px, calc(100vw - 28px)); }
+.hr-emp-master .em-views-menu { width: 310px; max-width: min(310px, calc(100vw - 28px)); }
+.hr-emp-master .em-view-row { display: grid; grid-template-columns: minmax(0, 1fr) 34px; align-items: center; }
+.hr-emp-master .em-view-row > button { min-width: 0; min-height: 36px; padding: 8px 10px; border: 0; background: transparent; color: #334155; display: flex; align-items: center; gap: 8px; font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
+.hr-emp-master .em-view-row > button:first-child span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hr-emp-master .em-view-row > button:last-child { justify-content: center; padding: 0; color: #64748b; }
+.hr-emp-master .em-view-row > button:hover { background: #f6f8fb; color: #1e293b; }
+.hr-emp-master .em-columns-menu .tf-check:disabled { cursor: default; opacity: 1; background: #f8fafc; }
+.hr-emp-master .em-columns-menu .tf-check:disabled .tf-check-label { color: #475569; }
+.hr-emp-master .em-column-required { color: #64748b; background: #eef2f6; border-radius: 999px; padding: 3px 7px; font-size: 9.5px; font-weight: var(--font-weight-semibold, 600); }
+.hr-emp-master .em-new-btn { border: 1px solid var(--siomac-navy, #1b2d54); background: var(--siomac-navy, #1b2d54); color: #fff; }
+.hr-emp-master .em-new-btn:hover { background: #263b63; }
+.hr-emp-master .is-spinning { animation: em-spin .8s linear infinite; }
+@keyframes em-spin { to { transform: rotate(360deg); } }
+.hr-emp-master .table-card > .ui-callout { margin: 10px 14px 0; }
+.hr-emp-master .table-card > .obx-meta[role="status"] { min-height: 36px; padding: 8px 14px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: center; gap: 7px; text-align: center; overflow: hidden; animation: em-sync-slide-in .24s cubic-bezier(.22, 1, .36, 1) both; }
+@keyframes em-sync-slide-in {
+  from { min-height: 0; max-height: 0; padding-top: 0; padding-bottom: 0; opacity: 0; transform: translateY(-7px); }
+  to { min-height: 36px; max-height: 36px; padding-top: 8px; padding-bottom: 8px; opacity: 1; transform: translateY(0); }
+}
+.hr-emp-master .table-card > .tf-active { padding: 9px 14px; border-bottom: 1px solid var(--line); background: #fff; }
 
 /* ── Insight widget panels (widget board) ─────────────────────────────────────── */
 .hr-emp-master .hrw-dept { display: flex; gap: 14px; align-items: center; height: 100%; }
@@ -159,47 +197,61 @@
 /* table-layout: fixed so columns never recompute width from content — the cold
    skeleton and real rows share identical geometry (no layout jump). Row height is
    pinned so skeleton rows (--register-row-height) match real rows exactly. */
-.hr-emp-master table { width: 100%; min-width: 1180px; border-collapse: collapse; table-layout: fixed; --register-row-height: 58px; }
-.hr-emp-master th { height: 46px; text-align: left; font-size: 11px; color: #0f172a; font-weight: var(--font-weight-bold, 700); border-bottom: 1px solid var(--line); padding: 0 10px; background: #fbfdff; }
-.hr-emp-master td { height: 58px; border-bottom: 1px solid var(--line); padding: 0 10px; font-size: 12px; color: #334155; vertical-align: middle; }
+.hr-emp-master table { width: 100%; border-collapse: collapse; table-layout: fixed; --register-row-height: 62px; }
+/* Column headers are Title Case (as authored in EMPLOYEE_REGISTER_COLUMNS), not machine caps. */
+.hr-emp-master th { height: 45px; text-align: left; font-size: 12.5px; color: #475569; font-weight: var(--font-weight-semibold, 600); border-bottom: 1px solid var(--line); padding: 0 11px; background: #f8fafc; letter-spacing: 0; }
+.hr-emp-master .table-card > .table-scroll > table > thead > tr > th { position: sticky; top: 0; z-index: 2; }
+.hr-emp-master td { height: 62px; border-bottom: 1px solid var(--line); padding: 0 11px; font-size: 13px; color: #334155; vertical-align: middle; }
 .hr-emp-master tr:last-child td { border-bottom: none; }
 .hr-emp-master tr.employee-row { cursor: pointer; transition: background .16s ease; }
-.hr-emp-master tr.employee-row:hover { background: #f8fbff; }
-.hr-emp-master tr.employee-row.selected { background: #f2f7ff; }
-.hr-emp-master table th:nth-child(1) { width: 22%; }
-.hr-emp-master table th:nth-child(2) { width: 10%; }
-.hr-emp-master table th:nth-child(3) { width: 11%; }
-.hr-emp-master table th:nth-child(4) { width: 11%; }
-.hr-emp-master table th:nth-child(5) { width: 10%; }
-.hr-emp-master table th:nth-child(6) { width: 10%; }
-.hr-emp-master table th:nth-child(7) { width: 9%; }
-.hr-emp-master table th:nth-child(8) { width: 9%; }
-.hr-emp-master table th:nth-child(9) { width: 8%; }
-.hr-emp-master table th:nth-child(10), .hr-emp-master table td:nth-child(10) { width: 72px; text-align: center; }
+.hr-emp-master tr.employee-row:hover { background: #f7f9fc; }
+.hr-emp-master tr.employee-row.selected { background: #eef2f6; box-shadow: inset 3px 0 0 #64748b; }
+.hr-emp-master [data-column="employee"] { width: 250px; }
+.hr-emp-master [data-column="employeeNumber"] { width: 125px; }
+.hr-emp-master [data-column="position"] { width: 160px; }
+.hr-emp-master [data-column="department"] { width: 145px; }
+.hr-emp-master [data-column="site"] { width: 135px; }
+.hr-emp-master [data-column="supervisor"] { width: 170px; }
+.hr-emp-master [data-column="employmentType"] { width: 145px; }
+.hr-emp-master [data-column="status"] { width: 115px; }
+.hr-emp-master [data-column="readiness"] { width: 155px; }
+.hr-emp-master [data-column="trainingStatus"] { width: 135px; }
+.hr-emp-master [data-column="actions"] { width: 72px; text-align: center; }
 
 .hr-emp-master .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 .hr-emp-master .th-sort-btn { display: flex; align-items: center; gap: 4px; background: none; border: none; padding: 0; margin: 0; font: inherit; font-weight: inherit; color: inherit; cursor: pointer; }
 .hr-emp-master .th-sort-btn:focus-visible { outline: 2px solid var(--siomac-navy, #1b2d54); outline-offset: 2px; }
-.hr-emp-master .th-sort-btn .sort-caret { font-size: 9px; min-width: 8px; }
+.hr-emp-master .th-sort-btn .sort-caret { width: 14px; color: #94a3b8; display: inline-flex; }
+.hr-emp-master th[aria-sort="ascending"] .sort-caret,
+.hr-emp-master th[aria-sort="descending"] .sort-caret { color: #1b2d54; }
 .hr-emp-master tr.employee-row:focus-visible { outline: 2px solid var(--siomac-navy, #1b2d54); outline-offset: -2px; }
 .hr-emp-master .table-scroll:focus-visible { outline: 2px solid var(--siomac-navy, #1b2d54); outline-offset: -2px; }
 
 .hr-emp-master .employee-cell { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.hr-emp-master .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; overflow: hidden; flex: none; font-weight: var(--font-weight-semibold, 600); font-size: 12px; color: #0b55d8; background: #e8f1ff; border: 1px solid #cfe0ff; }
+.hr-emp-master .avatar { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; overflow: hidden; flex: none; font-weight: var(--font-weight-semibold, 600); font-size: 12px; color: #0b55d8; background: #e8f1ff; border: 1px solid #cfe0ff; }
 .hr-emp-master .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.hr-emp-master .emp-name { font-weight: var(--font-weight-bold, 700); color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
-.hr-emp-master .emp-email { color: #64748b; font-size: 11px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hr-emp-master .emp-name { font-weight: var(--font-weight-semibold, 600); color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13.5px; }
+.hr-emp-master .emp-email { color: #64748b; font-size: 11.75px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hr-emp-master .supervisor-cell { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .hr-emp-master .tiny-avatar { width: 20px; height: 20px; border-radius: 50%; background: #eaf2ff; display: inline-grid; place-items: center; flex: none; overflow: hidden; border: 1px solid #dbeafe; font-size: 9px; font-weight: var(--font-weight-semibold, 600); color: #0b55d8; }
 .hr-emp-master .tiny-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-.hr-emp-master .pill { display: inline-flex; align-items: center; justify-content: center; min-height: 26px; padding: 0 10px; border-radius: 999px; font-size: 11px; font-weight: var(--font-weight-bold, 700); white-space: nowrap; }
+.hr-emp-master .pill { display: inline-flex; align-items: center; justify-content: center; min-height: 25px; padding: 0 9px; border-radius: 999px; font-size: 11px; font-weight: var(--font-weight-semibold, 600); white-space: nowrap; }
 .hr-emp-master .pill.green  { background: var(--green-bg);  color: #15803d; }
 .hr-emp-master .pill.amber  { background: var(--amber-bg);  color: #b45309; }
 .hr-emp-master .pill.red    { background: var(--red-bg);    color: #dc2626; }
 .hr-emp-master .pill.purple { background: var(--purple-bg); color: #7c3aed; }
 .hr-emp-master .pill.blue   { background: #dbeafe; color: #1d4ed8; }
 .hr-emp-master .pill.gray   { background: #eef2f7; color: #334155; }
+.hr-emp-master .em-readiness { display: grid; gap: 6px; min-width: 0; }
+.hr-emp-master .em-readiness > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #64748b; font-size: 10.5px; }
+.hr-emp-master .em-readiness > div span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hr-emp-master .em-readiness > div strong { color: #334155; font-size: 11.5px; font-weight: var(--font-weight-semibold, 600); }
+/* Light grey unfilled track; the fill's colour+gradient is set inline per row from the
+   percentage (readinessScale.ts) so a low score never shows a green tail. */
+.hr-emp-master .em-readiness > i { height: 6px; overflow: hidden; border-radius: 999px; background: #e7ebf0; }
+.hr-emp-master .em-readiness > i > b { display: block; height: 100%; border-radius: inherit; background: #94a3b8; transition: width .28s cubic-bezier(.22,1,.36,1); }
+.hr-emp-master .em-readiness-restricted { color: #64748b; font-size: 11px; }
 
 .hr-emp-master .kebab { position: relative; text-align: center; }
 .hr-emp-master .kebab-btn { border: 0; background: transparent; width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; font-size: 18px; color: #0f172a; margin: auto; }
@@ -211,16 +263,45 @@
 .hr-emp-master .page-btn { width: 34px; height: 34px; border: 1px solid var(--line-dark); background: #fff; border-radius: 8px; display: grid; place-items: center; font-weight: var(--font-weight-semibold, 600); color: #334155; }
 .hr-emp-master .page-btn.active { background: #0757df; color: #fff; border-color: #0757df; }
 .hr-emp-master .page-btn:disabled { opacity: .45; cursor: default; }
+.hr-emp-master .em-register-footer { min-height: 48px; border-top: 1px solid var(--line); border-radius: 0 0 14px 14px; background: #fff; display: flex; align-items: center; gap: 12px; flex: none; }
+.hr-emp-master .em-register-footer .ui-pager { flex: 1 1 auto; min-width: 0; border-top: 0; padding: 8px 14px; }
 .hr-emp-master .rows-select { display: flex; align-items: center; gap: 10px; }
+.hr-emp-master .em-register-footer .rows-select { flex: none; padding: 7px 14px 7px 0; color: #667085; font-size: 11.5px; }
 .hr-emp-master .rows-select select { height: 34px; border: 1px solid var(--line-dark); border-radius: 8px; padding: 0 28px 0 12px; background: #fff; }
+.hr-emp-master .em-register-footer .rows-select select { height: 30px; border-radius: 7px; padding-left: 10px; color: #334155; font: inherit; font-size: 12px; }
 
-/* ── Toast ────────────────────────────────────────────────────────────────── */
-/* width/max-width reset — `.toast` collides with Bootstrap's `.toast` (350px). */
-.hr-emp-master .toast { width: auto; max-width: none; position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 120; background: #0f172a; color: #fff; border-radius: 999px; padding: 10px 16px; font-size: 13px; font-weight: var(--font-weight-semibold, 600); opacity: 0; pointer-events: none; transition: opacity .18s ease; }
-.hr-emp-master .toast.show { opacity: 1; }
+@media (max-width: 760px) {
+  .hr-emp-master > .ui-page-header { margin-bottom: 14px; }
+  .hr-emp-master .em-register-head { align-items: flex-start; padding: 10px 12px; }
+  .hr-emp-master .em-column-btn > span:first-of-type { display: none; }
+  .hr-emp-master .employee-toolbar { padding: 10px 12px; }
+  .hr-emp-master .employee-toolbar .tf-search { flex-basis: 100%; min-width: 100%; }
+  .hr-emp-master .employee-toolbar .tf-wrap { flex: 1 1 150px; }
+  .hr-emp-master .employee-toolbar .tf-select,
+  .hr-emp-master .employee-toolbar .tf-adv-btn { min-width: 0; }
+  .hr-emp-master .em-register-footer { align-items: stretch; flex-direction: column; gap: 0; }
+  .hr-emp-master .em-register-footer .ui-pager { width: 100%; }
+  .hr-emp-master .em-register-footer .rows-select { justify-content: space-between; padding: 0 14px 10px; }
+}
+
+@media (max-width: 480px) {
+  .hr-emp-master .em-register-icon { display: none; }
+  .hr-emp-master .em-new-btn { padding: 0 10px; }
+  .hr-emp-master .em-new-btn > svg:last-child { display: none; }
+  .hr-emp-master .em-new-btn span { display: none; }
+  .hr-emp-master .em-register-identity p { max-width: 180px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hr-emp-master .is-spinning { animation: none; }
+  .hr-emp-master .table-card > .obx-meta[role="status"] { animation: none; }
+}
 
 /* ── States ───────────────────────────────────────────────────────────────── */
-.hr-emp-master .em-empty { padding: 22px; text-align: center; color: #64748b; font-size: 12px; font-weight: var(--font-weight-bold); }
+.hr-emp-master .em-empty { padding: 22px; text-align: center; color: #64748b; font-size: 12px; font-weight: var(--font-weight-semibold, 600); }
+.hr-emp-master .em-register-empty-cell { height: auto; padding: 0; }
+.hr-emp-master .em-register-empty { min-height: 220px; display: grid; place-items: center; padding: 12px; }
+.hr-emp-master .em-register-empty .ui-empty { width: min(440px, 100%); }
 .hr-emp-master .em-chart-empty { display: grid; place-items: center; height: 100%; color: #94a3b8; font-size: 11px; font-weight: var(--font-weight-bold); }
 
 /* ── Profile drawer ───────────────────────────────────────────────────────── */
@@ -360,6 +441,9 @@
 .hr-emp-master .form-field input, .hr-emp-master .form-field select, .hr-emp-master .form-field textarea { min-height: 40px; border: 1px solid var(--line-dark); border-radius: 9px; padding: 9px 11px; outline: none; background: #fff; color: #0f172a; }
 .hr-emp-master .form-field textarea { min-height: 92px; resize: vertical; }
 .hr-emp-master .field-help { color: #64748b; font-size: 11px; line-height: 1.35; }
+/* Inline per-field validation, shown on the field itself (not only as a toast). */
+.hr-emp-master .form-field-error { margin-top: -6px; color: #b91c1c; font-size: 11px; line-height: 1.35; }
+.hr-emp-master .form-field-error.full { grid-column: 1 / -1; }
 .hr-emp-master .checkbox-row { min-height: 34px; display: flex; align-items: center; gap: 9px; color: #334155; font-size: 12px; font-weight: var(--font-weight-semibold, 600); }
 .hr-emp-master .warning-card { border: 1px solid #fde68a; background: #fffbeb; color: #92400e; border-radius: 12px; padding: 12px; font-size: 12px; line-height: 1.45; }
 .hr-emp-master .info-strip { border: 1px solid #bfdbfe; background: #eff6ff; color: #1e40af; border-radius: 12px; padding: 12px; font-size: 12px; line-height: 1.45; }

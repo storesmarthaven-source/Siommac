@@ -22,6 +22,7 @@
  */
 
 import type { NavGroupId } from '@components/nav/types';
+import type { UserRole } from '@api/schemas/auth';
 
 // ── Nav contribution ──────────────────────────────────────────────────────────
 
@@ -42,6 +43,8 @@ export interface ModuleNavItem {
   roles?: AppRole[];
   /** Optional capability required for this individual navigation item. */
   permission?: string;
+  /** Optional alternative capabilities; access passes when any one is granted. */
+  permissionsAny?: readonly string[];
 }
 
 export interface ModuleNavGroup {
@@ -77,11 +80,9 @@ export interface ModuleMount {
 // is invisible in the sidebar even when it holds every backing permission.
 // Per-module `roles` lists + per-item `permission` gates still govern what each
 // role actually sees; this union only makes the role expressible in those lists.
-export type AppRole =
-  | 'superadmin' | 'admin' | 'manager' | 'employee'
-  | 'finance_manager' | 'finance_staff'
-  | 'hr_manager' | 'hr_staff'
-  | 'hse_staff';
+// AppRole tracks the canonical UserRole enum (src/api/schemas/auth), which
+// already enumerates every base + departmental role, so the two never drift.
+export type AppRole = UserRole;
 
 export interface ModuleDefinition {
   /** Stable unique id (e.g. 'hse'). */
@@ -105,7 +106,8 @@ export function canAccessModuleNavItem(
   hasPermission: (key: string) => boolean,
 ): boolean {
   if (item.roles && !item.roles.includes(role as AppRole)) return false;
-  return !item.permission || hasPermission(item.permission);
+  if (item.permission && !hasPermission(item.permission)) return false;
+  return !item.permissionsAny?.length || item.permissionsAny.some(hasPermission);
 }
 
 // ── Registry ──────────────────────────────────────────────────────────────────

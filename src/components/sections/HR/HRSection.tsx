@@ -14,6 +14,7 @@
 
 import { type VNode } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
+import { useAnyCan } from '@lib/permissions';
 import { EmployeeMaster } from './EmployeeMaster';
 import { OnboardingOverview } from './OnboardingOverview';
 import { OrgStructureOverview } from './OrgStructureOverview';
@@ -42,6 +43,37 @@ const COMP_ID      = 's-hr-compensation';
 const OT_ID        = 's-hr-overtime';
 const WORKCAL_ID   = 's-hr-work-calendar';
 
+const HR_PAGE_PERMISSIONS: Record<string, readonly string[]> = {
+  [EMP_ID]:        ['hr.employees.view'],
+  [ONB_ID]:        ['hr.onboarding.view'],
+  [ORG_ID]:        ['hr.organization.view'],
+  [DOC_ID]:        ['hr.employee_documents.view'],
+  [OFF_ID]:        ['hr.offboarding.view'],
+  [LEAVE_ID]:      ['hr.leave.view'],
+  [TRANSFERS_ID]:  ['hr.transfers.view'],
+  [REQ_ID]:        ['hr.requests.submit_own', 'hr.requests.manage'],
+  [ATTENDANCE_ID]: ['hr.attendance.view'],
+  [ROSTER_ID]:     ['hr.roster.view'],
+  [COMP_ID]:       ['hr.compensation.view'],
+  [OT_ID]:         ['hr.overtime.view', 'hr.overtime.submit'],
+  [WORKCAL_ID]:    ['hr.work_calendar.view'],
+};
+
+function PermissionDenied({ permissions }: { permissions: readonly string[] }): VNode {
+  return (
+    <div class="hr-offboarding fin-page" data-testid="hr-permission-denied" role="alert">
+      <div class="obx-section">
+        <div class="obx-section-body obx-empty">
+          <i class="fas fa-lock" aria-hidden="true" />
+          <h2>Permission required</h2>
+          <p>You do not have a required capability for this HR page: <code>{permissions.join(' or ')}</code>.</p>
+          <p>Ask an administrator to review your role or access grant.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function isHrSection(id: string): boolean {
   return id === EMP_ID || id === ONB_ID || id === ORG_ID || id === DOC_ID || id === OFF_ID || id === LEAVE_ID || id === TRANSFERS_ID || id === REQ_ID || id === ATTENDANCE_ID || id === ROSTER_ID || id === COMP_ID || id === OT_ID || id === WORKCAL_ID;
 }
@@ -51,6 +83,8 @@ export function HRSection(): VNode {
     try { return localStorage.getItem('siomac_hr_section') ?? EMP_ID; } catch { return EMP_ID; }
   });
   const [pendingCaseId, setPendingCaseId] = useState<string | null>(null);
+  const requiredPermissions = HR_PAGE_PERMISSIONS[sectionId] ?? ['hr.view'];
+  const permitted = useAnyCan(requiredPermissions);
 
   useEffect(() => {
     function onSection(e: Event): void {
@@ -61,7 +95,7 @@ export function HRSection(): VNode {
       }
     }
     function onOpenCase(e: Event): void {
-      const caseId = (e as CustomEvent<{ caseId: string }>).detail?.caseId;
+      const caseId = (e as CustomEvent<{ caseId?: string } | undefined>).detail?.caseId;
       if (!caseId) return;
       setSectionId(ONB_ID);
       try { localStorage.setItem('siomac_hr_section', ONB_ID); } catch (_) { /* ignore */ }
@@ -74,6 +108,8 @@ export function HRSection(): VNode {
       window.removeEventListener('siomac:hr-onboarding-open-case', onOpenCase);
     };
   }, []);
+
+  if (!permitted) return <PermissionDenied permissions={requiredPermissions} />;
 
   if (sectionId === LEAVE_ID)     return <LeaveOverview />;
   if (sectionId === ORG_ID)      return <OrgStructureOverview />;

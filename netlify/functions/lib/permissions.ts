@@ -98,11 +98,25 @@ export const PERMISSION_KEYS = [
   'tickets.create_team',        // raise a ticket for an active direct report
   'tickets.create_on_behalf',   // raise a ticket on behalf of another employee (reason required)
   'tickets.create_internal',    // raise internal work for a service queue (no employee requester)
+  'tickets.view_all',           // view all support tickets in the queue (not just own)
+  'tickets.reply_internal',     // post staff-only internal notes on support tickets
   // ── Account Security (admin cross-user management) ──────────────────────────
   'auth.security.view',          // view another user's security status (MFA, passkeys, trusted devices)
   'auth.security.manage_policy', // update the organisation-wide security policy
   'auth.passkeys.admin_revoke',  // revoke all passkeys for another user (admin action)
   'auth.trusted_devices.admin_revoke', // revoke all trusted devices for another user (admin action)
+  // ── Employee Account Access (capability-routed service-request queue) ─────────
+  'employees.access.view',               // view an employee's account/access status
+  'employees.access.request',            // submit an account support service request (self-service)
+  'employees.access.reset_password',     // reset a user's password (step-up required)
+  'employees.access.resend_activation',  // resend account activation email
+  'employees.access.suspend',            // suspend a user account (step-up required)
+  'employees.access.restore',            // restore a suspended account (step-up required)
+  'employees.access.revoke_sessions',    // revoke all active sessions for a user (step-up required)
+  'employees.access.revoke_devices',     // revoke all trusted devices for a user (step-up required)
+  'employees.access.require_mfa',        // force MFA enrollment for a user (step-up required)
+  'employees.access.permissions.view',   // view a user's current permission grants
+  'employees.access.permissions.manage', // modify a user's permission overrides (step-up required)
   // ── HR (people backbone) ─────────────────────────────────────────────────────
   'hr.view',
   'hr.dashboard.view',
@@ -128,6 +142,9 @@ export const PERMISSION_KEYS = [
   'hr.employees.import.validate',
   'hr.employees.import.commit',
   'hr.employees.import.report.download',
+  'hr.employees.import.manage_all',
+  'hr.access_profiles.view',
+  'hr.employees.wizard.draft',
   'hr.onboarding.view',
   'hr.onboarding.start',
   'hr.onboarding.task.manage',
@@ -329,6 +346,10 @@ export const PERMISSION_KEYS = [
   'ui.layout.default.manage',   // set the org-wide default board layout
   'ui.widgets.packages.view',   // read installed widget packages (needed to render boards)
   'ui.widgets.packages.manage', // install / uninstall widget packages (org-wide)
+  'ui.widgets.governance.view',
+  'ui.widgets.governance.manage',
+  'ui.widgets.sources.view',
+  'ui.widgets.sources.manage',
   // ── Finance statutory configuration ─────────────────────────────────────────
   'finance.statutory.view',         // view statutory versions and NIS class tables
   'finance.statutory.manage',       // create and edit draft statutory versions
@@ -471,6 +492,9 @@ export const PERMISSION_KEYS = [
   'calendar.task.manage_own',         // create / update / complete own tasks
   'calendar.task.assign',             // assign a task to a permitted team member
   'calendar.activity.manage_own',     // create / update own activities (meetings, site visits…)
+
+  // ── Weather (platform) ───────────────────────────────────────────────────────
+  'platform.weather.view',            // read the server-proxied weather snapshot (widget)
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -552,6 +576,11 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hr.overtime.view', 'hr.overtime.manage', 'hr.overtime.reports.view',
     'hr.employee.statutory.view', 'hr.employee.statutory.capture',
     'hr.contracts.view', 'hr.contracts.manage',
+    // Account access — staff: view status, submit requests, resend activation, view permissions
+    'employees.access.view', 'employees.access.request',
+    'employees.access.resend_activation', 'employees.access.permissions.view',
+    // Ticket queue management (HR manages the account support queue)
+    'tickets.view_all', 'tickets.reply_internal',
   ]),
   hr_manager: new Set<PermissionKey>([
     'tickets.create_self', 'tickets.create_internal',
@@ -582,6 +611,14 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hr.employee.statutory.view', 'hr.employee.statutory.capture',
     'finance.payroll.policies.view', 'finance.payroll.policies.source_approve',
     'hr.contracts.view', 'hr.contracts.manage', 'hr.contracts.terminate', 'hr.contracts.template.manage',
+    // Account access — hr_manager: view, request, resend activation, manage permissions
+    // (reset_password / revoke_sessions / revoke_devices / require_mfa are admin-only;
+    //  HR may REQUEST assistance but does not inherit sensitive account-control authority)
+    'employees.access.view', 'employees.access.request',
+    'employees.access.resend_activation',
+    'employees.access.permissions.view', 'employees.access.permissions.manage',
+    // Ticket queue management (HR manages the account support queue)
+    'tickets.view_all', 'tickets.reply_internal',
   ]),
   // Finance roles (flat; each carries the employee baseline + finance keys).
   // Mirrors 20260802000000_finance_roles.sql + 20260802000003_finance_statutory_permissions.sql.
@@ -800,6 +837,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
   ]),
   employee: new Set<PermissionKey>([
     'tickets.create_self',
+    'employees.access.request',           // self-service: submit own account support request
     'calendar.view', 'calendar.task.manage_own', 'calendar.activity.manage_own',
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
     'hr.overtime.submit',
@@ -871,9 +909,14 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hr.roster.view', 'hr.roster.manage', 'hr.roster.publish', 'hr.roster.templates.manage',
     // Overtime — managers approve team OT
     'hr.overtime.view', 'hr.overtime.approve', 'hr.overtime.reports.view',
+    // Account access — managers can view status and submit requests
+    'employees.access.view', 'employees.access.request',
+    // Ticket queue management
+    'tickets.view_all', 'tickets.reply_internal',
   ]),
   admin: new Set<PermissionKey>([
     'tickets.create_self', 'tickets.create_team', 'tickets.create_on_behalf', 'tickets.create_internal',
+    'tickets.view_all', 'tickets.reply_internal',
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
     'attendance.view_own', 'attendance.view_all', 'attendance.edit', 'attendance.export',
     'leaves.view_own', 'leaves.submit', 'leaves.view_all', 'leaves.approve', 'leaves.delete',
@@ -916,6 +959,13 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'communications.participants.change_role',
     'auth.security.view', 'auth.security.manage_policy',
     'auth.passkeys.admin_revoke', 'auth.trusted_devices.admin_revoke',
+    // Account access — admin has all 11 keys (step-up required at each elevated endpoint)
+    'employees.access.view', 'employees.access.request',
+    'employees.access.reset_password', 'employees.access.resend_activation',
+    'employees.access.suspend', 'employees.access.restore',
+    'employees.access.revoke_sessions', 'employees.access.revoke_devices',
+    'employees.access.require_mfa',
+    'employees.access.permissions.view', 'employees.access.permissions.manage',
     'ui.layout.manage', 'ui.layout.default.manage', 'ui.widgets.packages.view', 'ui.widgets.packages.manage',
     'hr.leave.view', 'hr.leave.view_all', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.approve', 'hr.leave.manage', 'hr.leave.types.manage', 'hr.leave.balances.view', 'hr.leave.balances.adjust', 'hr.leave.accruals.run', 'hr.leave.calendar.view', 'hr.leave.reports.view', 'hr.leave.reports.export',
     'hr.transfers.view', 'hr.transfers.request', 'hr.transfers.approve', 'hr.transfers.cancel',

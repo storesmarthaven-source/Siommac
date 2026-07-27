@@ -13,6 +13,17 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 export interface ReqContext {
   ip?:        string;
   userAgent?: string;
+  /**
+   * Per-request correlation / trace ID. Generated once in the reqContext
+   * middleware (api.ts) and automatically injected into audit_logs.changes,
+   * app_events.payload, and handoff_outbox.payload by their respective helpers
+   * (writePlatformAudit, emitAppEvent, createHandoff) so every side-effect from
+   * a single request shares the same ID.
+   *
+   * Echoed back to callers as the `X-Request-Id` response header so clients can
+   * include it in support requests.
+   */
+  reqId?:     string;
 }
 
 const _store = new AsyncLocalStorage<ReqContext>();

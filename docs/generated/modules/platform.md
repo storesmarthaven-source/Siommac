@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `2b159dd6352d096b4251f3a8`
+Source fingerprint: `b92be45f166cc04ce9204456`
 
-Files: 295 | Symbols: 2674 | Widgets: 0 | Unique mounted endpoints: 31 | Route definitions: 31 mounted + 15 unmounted | API calls: 47 | DB objects: 296 | E2E suites: 0
+Files: 304 | Symbols: 2748 | Widgets: 0 | Unique mounted endpoints: 32 | Route definitions: 32 mounted + 15 unmounted | API calls: 50 | DB objects: 301 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -19,21 +19,21 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | Path | Permission | Guards | Schema | Location | Frontend callers | E2E suites |
 |---|---|---|---|---|---|---|
 | `/api/addProjectSite` | `sites.add` | requirePermission | `AddSiteSchema` | `netlify/functions/routes/sites.ts:81` | res @ src/api/sites.ts:134<br>addProjectSiteApi @ src/components/sections/ProjectSites/api.ts:80 | - |
-| `/api/calendar/activity/create` | `calendar.activity.manage_own` | requirePermission | `CreateActivitySchema` | `netlify/functions/routes/calendar.ts:606` | useCreateActivity @ src/api/calendar.ts:101 | calendar |
-| `/api/calendar/activity/respond` | `calendar.view` | requirePermission | `AttendeeResponseSchema` | `netlify/functions/routes/calendar.ts:425` | useRespondToCalendarActivity @ src/api/calendar.ts:165 | calendar |
-| `/api/calendar/cancel` | `calendar.view` | requirePermission | `CancelSchema` | `netlify/functions/routes/calendar.ts:943` | useCancelEntry @ src/api/calendar.ts:139 | calendar |
-| `/api/calendar/get` | `calendar.view` | requirePermission | `GetSchema` | `netlify/functions/routes/calendar.ts:325` | res @ src/api/calendar.ts:58 | calendar |
-| `/api/calendar/list` | `calendar.view` | requirePermission | `ListSchema` | `netlify/functions/routes/calendar.ts:167` | res @ src/api/calendar.ts:45 | calendar |
-| `/api/calendar/reminders/get` | `calendar.view` | requirePermission | `ReminderGetSchema` | `netlify/functions/routes/calendar.ts:379` | res @ src/api/calendar.ts:72 | calendar |
-| `/api/calendar/reminders/run-sweep` | `-` | - | `z.object({ now: z.string().optional() })` | `netlify/functions/routes/calendar.ts:467` | - | calendar |
-| `/api/calendar/reminders/set` | `calendar.view` | requirePermission | `ReminderSetSchema` | `netlify/functions/routes/calendar.ts:399` | useSetCalendarReminders @ src/api/calendar.ts:152 | calendar |
-| `/api/calendar/task/create` | `calendar.task.manage_own` | requirePermission, userCan | `CreateTaskSchema` | `netlify/functions/routes/calendar.ts:523` | useCreateTask @ src/api/calendar.ts:89 | calendar |
-| `/api/calendar/task/status` | `calendar.view` | requirePermission, userCan | `StatusSchema` | `netlify/functions/routes/calendar.ts:894` | useTaskStatus @ src/api/calendar.ts:126 | calendar |
-| `/api/calendar/update` | `calendar.view` | requirePermission, userCan | `UpdateSchema` | `netlify/functions/routes/calendar.ts:784` | useUpdateEntry @ src/api/calendar.ts:113 | calendar |
+| `/api/calendar/activity/create` | `calendar.activity.manage_own` | requirePermission, userCan | `CreateActivitySchema` | `netlify/functions/routes/calendar.ts:654` | useCreateActivity @ src/api/calendar.ts:101 | calendar |
+| `/api/calendar/activity/respond` | `calendar.view` | requirePermission | `AttendeeResponseSchema` | `netlify/functions/routes/calendar.ts:457` | useRespondToCalendarActivity @ src/api/calendar.ts:165 | calendar |
+| `/api/calendar/cancel` | `calendar.view` | requirePermission | `CancelSchema` | `netlify/functions/routes/calendar.ts:1004` | useCancelEntry @ src/api/calendar.ts:139 | calendar |
+| `/api/calendar/get` | `calendar.view` | requirePermission | `GetSchema` | `netlify/functions/routes/calendar.ts:357` | res @ src/api/calendar.ts:58 | calendar |
+| `/api/calendar/list` | `calendar.view` | requirePermission | `ListSchema` | `netlify/functions/routes/calendar.ts:198` | res @ src/api/calendar.ts:45 | calendar |
+| `/api/calendar/reminders/get` | `calendar.view` | requirePermission | `ReminderGetSchema` | `netlify/functions/routes/calendar.ts:411` | res @ src/api/calendar.ts:72 | calendar |
+| `/api/calendar/reminders/run-sweep` | `-` | - | `z.object({ now: z.string().optional() })` | `netlify/functions/routes/calendar.ts:499` | - | calendar |
+| `/api/calendar/reminders/set` | `calendar.view` | requirePermission | `ReminderSetSchema` | `netlify/functions/routes/calendar.ts:431` | useSetCalendarReminders @ src/api/calendar.ts:152 | calendar |
+| `/api/calendar/task/create` | `calendar.task.manage_own` | requirePermission, userCan | `CreateTaskSchema` | `netlify/functions/routes/calendar.ts:563` | useCreateTask @ src/api/calendar.ts:89 | calendar |
+| `/api/calendar/task/status` | `calendar.view` | requirePermission, userCan | `StatusSchema` | `netlify/functions/routes/calendar.ts:955` | useTaskStatus @ src/api/calendar.ts:126 | calendar |
+| `/api/calendar/update` | `calendar.view` | requirePermission, userCan | `UpdateSchema` | `netlify/functions/routes/calendar.ts:840` | useUpdateEntry @ src/api/calendar.ts:113 | calendar |
 | `/api/deleteProjectSite` | `sites.delete` | assertInScope, requirePermission | `DeleteSiteSchema` | `netlify/functions/routes/sites.ts:122` | res @ src/api/sites.ts:152<br>deleteProjectSiteApi @ src/components/sections/ProjectSites/api.ts:115 | - |
 | `/api/getMyPreferences` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:113` | res @ src/api/notifications.ts:137 | - |
 | `/api/getUnreadCount` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:149` | res @ src/api/notifications.ts:73 | - |
-| `/api/listProjectSites` | `-` | requireUser | `-` | `netlify/functions/routes/sites.ts:58` | initializeMap @ src/components/livemap/LiveMapModule.ts:192<br>res @ src/components/sections/AttendanceDashboard/api.ts:51<br>res @ src/components/sections/ProjectSites/api.ts:43 | - |
+| `/api/listProjectSites` | `-` | requireUser | `-` | `netlify/functions/routes/sites.ts:58` | initializeMap @ src/components/livemap/LiveMapModule.ts:192<br>res @ src/components/sections/AttendanceDashboard/api.ts:53<br>res @ src/components/sections/ProjectSites/api.ts:43 | - |
 | `/api/superadmin/complianceApproverAvailability` | `permissions.manage` | requirePermission | `ApproverAvailabilitySchema` | `netlify/functions/routes/superadmin.ts:394` | - | permissionPropagation |
 | `/api/superadmin/createRole` | `roles.manage` | requirePermission | `CreateRoleSchema` | `netlify/functions/routes/superadmin.ts:728` | - | rbacConsole |
 | `/api/superadmin/createRoleCategory` | `roles.manage` | requirePermission | `CreateCategorySchema` | `netlify/functions/routes/superadmin.ts:819` | - | rbacConsole |
@@ -49,6 +49,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/superadmin/updateRoleCategory` | `roles.manage` | requirePermission | `UpdateCategorySchema` | `netlify/functions/routes/superadmin.ts:836` | - | rbacConsole |
 | `/api/updateMyPreference` | `-` | requireUser | `UpdatePrefSchema` | `netlify/functions/routes/notify.ts:127` | res @ src/api/notifications.ts:155 | - |
 | `/api/updateProjectSite` | `sites.edit` | assertInScope, requirePermission | `UpdateSiteSchema` | `netlify/functions/routes/sites.ts:97` | res @ src/api/sites.ts:143<br>updateProjectSiteApi @ src/components/sections/ProjectSites/api.ts:102 | - |
+| `/api/weather/snapshot` | `platform.weather.view` | requirePermission | `z.object({     latitude:  z.number().min(-90).max(90),     longitude: z.number().min(-180).max(180),     name:      z.string().trim().max(120).optional(),   })` | `netlify/functions/routes/weather.ts:84` | res @ src/api/weather.ts:29 | - |
 | `UNMOUNTED:/contracts/activate` | `hr.contracts.manage` | requirePermission | `z.object({ contractId: z.string().uuid() })` | `netlify/functions/routes/hrContracts.ts:101` | - | - |
 | `UNMOUNTED:/contracts/cancel` | `hr.contracts.manage` | requirePermission | `z.object({ contractId: z.string().uuid(), reason: z.string().trim().max(500).nullable().optional() })` | `netlify/functions/routes/hrContracts.ts:127` | - | - |
 | `UNMOUNTED:/contracts/create` | `hr.contracts.manage` | requirePermission | `z.object({     employeeId: z.string().min(1), templateId: z.string().uuid().nullable().optional(), title: z.string().trim().min(1),     contractType: z.enum(CONTRACT_TYPES), startDate: z.string().nullable().optional(), endDate: z.string().nullable().optional(),     probationEndDate: z.string().nullable().optional(), compensationAmount: z.number().nonnegative().nullable().optional(),     compensationCurrency: z.string().nullable().optional(), compensationPeriod: z.enum(PERIODS).nullable().optional(),     body: z.string().nullable().optional(), onboardingCaseId: z.string().uuid().nullable().optional(),     signatories: z.array(signatoryInput).optional(),   })` | `netlify/functions/routes/hrContracts.ts:70` | - | - |
@@ -111,11 +112,14 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/settings/values/set` | `apiPost` | `res` | `src/lib/themePreference.ts:60` |
 | `/api/theme/get` | `authPost` | `res` | `src/api/theme.ts:14` |
 | `/api/theme/save` | `apiPost` | `res` | `src/api/theme.ts:20` |
+| `/api/ui-preferences/get` | `apiPost` | `response` | `src/api/uiPreferences.ts:11` |
+| `/api/ui-preferences/save` | `apiPost` | `response` | `src/api/uiPreferences.ts:21` |
 | `/api/updateColorScheme` | `apiPost` | `updateColorScheme` | `src/components/nav/api.ts:22` |
 | `/api/updateLayoutMode` | `apiPost` | `updateLayoutMode` | `src/components/nav/api.ts:25` |
 | `/api/updateMyProfile` | `apiPost` | `res` | `src/components/sections/Profile/api.ts:108` |
 | `/api/updateProjectSite` | `apiPost` | `res` | `src/api/sites.ts:143` |
 | `/api/updateProjectSite` | `apiPost` | `updateProjectSiteApi` | `src/components/sections/ProjectSites/api.ts:102` |
+| `/api/weather/snapshot` | `apiPost` | `res` | `src/api/weather.ts:29` |
 
 ## Key Components, Hooks, and UI Functions
 
@@ -131,13 +135,14 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useCancelEntry` | function / hook | `src/api/calendar.ts:135` | `-` |
 | `useSetCalendarReminders` | function / hook | `src/api/calendar.ts:148` | `-` |
 | `useRespondToCalendarActivity` | function / hook | `src/api/calendar.ts:161` | `-` |
+| `useWeatherSnapshot` | function / hook | `src/api/weather.ts:24` | `-` |
 | `ActionModal` | function / component | `src/components/common/actions/ActionModal.tsx:34` | `-` |
 | `ActionModalHost` | function / component | `src/components/common/actions/ActionModalProvider.tsx:39` | `-` |
 | `DialogContextPanel` | function / component | `src/components/common/dialogs/DialogContextPanel.tsx:28` | `-` |
 | `EnterpriseFormModal` | function / component | `src/components/common/dialogs/EnterpriseFormModal.tsx:32` | `-` |
 | `NavController` | function / component | `src/components/nav/NavController.tsx:54` | `-` |
-| `skelStatCards` | function / ui-tile | `src/components/nav/navCore.ts:735` | `-` |
-| `skelCards` | function / ui-tile | `src/components/nav/navCore.ts:742` | `-` |
+| `skelStatCards` | function / ui-tile | `src/components/nav/navCore.ts:761` | `-` |
+| `skelCards` | function / ui-tile | `src/components/nav/navCore.ts:768` | `-` |
 | `AccessControlSection` | function / component | `src/components/sections/AccessControl/AccessControlSection.tsx:32` | `-` |
 | `AcApprovalsPage` | function / component | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx:27` | `-` |
 | `AcAuditPage` | function / component | `src/components/sections/AccessControl/pages/AcAuditPage.tsx:17` | `-` |
@@ -153,10 +158,11 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `AdminRecentTable` | function / component | `src/components/sections/AdminDashboard/AdminDashboardController.tsx:99` | `-` |
 | `AgendaView` | function / component | `src/components/sections/Calendar/AgendaView.tsx:16` | `-` |
 | `CalendarItemDialog` | function / component | `src/components/sections/Calendar/CalendarItemDialog.tsx:21` | `-` |
-| `CalendarPage` | function / component | `src/components/sections/Calendar/CalendarPage.tsx:81` | `-` |
+| `CalendarPage` | function / component | `src/components/sections/Calendar/CalendarPage.tsx:82` | `-` |
 | `CalendarRail` | function / component | `src/components/sections/Calendar/CalendarRail.tsx:26` | `-` |
 | `CreateCalendarItemDialog` | function / component | `src/components/sections/Calendar/CreateCalendarItemDialog.tsx:12` | `-` |
 | `MonthView` | function / component | `src/components/sections/Calendar/MonthView.tsx:18` | `-` |
+| `TimeGridView` | function / component | `src/components/sections/Calendar/TimeGridView.tsx:68` | `-` |
 | `DashboardController` | function / component | `src/components/sections/Dashboard/DashboardController.tsx:96` | `-` |
 | `LiveMapController` | function / component | `src/components/sections/LiveMap/LiveMapController.tsx:65` | `-` |
 | `MyProfileSection` | function / component | `src/components/sections/Profile/MyProfileSection.tsx:1025` | `-` |
@@ -189,6 +195,9 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `ErrorBoundary` | class / component | `src/components/shared/ErrorBoundary.tsx:65` | `-` |
 | `Modal` | function / component | `src/components/shared/Modal.tsx:110` | `-` |
 | `Spinner` | function / component | `src/components/shared/Spinner.tsx:30` | `-` |
+| `UpcomingDeadlineCardItem` | interface / ui-tile | `src/components/shared/UpcomingDeadlinesCard.tsx:5` | `-` |
+| `UpcomingDeadlinesCardProps` | interface / ui-tile | `src/components/shared/UpcomingDeadlinesCard.tsx:16` | `-` |
+| `UpcomingDeadlinesCard` | function / component, ui-tile | `src/components/shared/UpcomingDeadlinesCard.tsx:36` | `-` |
 | `UserPill` | function / component | `src/components/shared/UserPill.tsx:50` | `-` |
 | `useHeaderModalOpen` | function / hook | `src/hooks/useHeaderModalOpen.ts:21` | `-` |
 | `StepUpProvider` | function / component | `src/hooks/useStepUp.tsx:47` | `-` |
@@ -197,9 +206,9 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `AppShell` | function / component | `src/shell/AppShell.tsx:130` | `-` |
 | `LoginShell` | function / component | `src/shell/LoginShell.tsx:51` | `-` |
 | `ProjectSiteModal` | function / component | `src/shell/modals/ProjectSiteModal.tsx:15` | `-` |
-| `AdminSections` | function / component | `src/shell/sections/AdminSections.tsx:571` | `-` |
+| `AdminSections` | function / component | `src/shell/sections/AdminSections.tsx:569` | `-` |
 | `AppSection` | function / component | `src/shell/sections/AppSection.tsx:26` | `-` |
-| `ManagerSections` | function / component | `src/shell/sections/ManagerSections.tsx:18` | `-` |
+| `ManagerSections` | function / component | `src/shell/sections/ManagerSections.tsx:17` | `-` |
 | `SharedSections` | function / component | `src/shell/sections/SharedSections.tsx:178` | `-` |
 | `useActiveSection` | function / hook | `src/shell/sections/useActiveSection.ts:69` | `-` |
 | `useDataStore` | variable / hook | `src/store/data.ts:135` | `-` |
@@ -276,12 +285,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `SkeletonFields` | function / component | `src/ui/components/Skeleton.tsx:140` | `-` |
 | `SkeletonStatGrid` | function / component | `src/ui/components/Skeleton.tsx:159` | `-` |
 | `SparkCard` | function / component, ui-tile | `src/ui/components/SparkCard.tsx:28` | `-` |
-| `Spinner` | function / component | `src/ui/components/Spinner.tsx:23` | `-` |
-| `StatsCardProps` | interface / ui-tile | `src/ui/components/StatsCard.tsx:37` | `-` |
-| `StatsCard` | function / component, ui-tile | `src/ui/components/StatsCard.tsx:70` | `-` |
-| `StatusPill` | function / component | `src/ui/components/StatusPill.tsx:24` | `-` |
-| `Stepper` | function / component | `src/ui/components/Stepper.tsx:37` | `-` |
-| ... | 44 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 50 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -359,6 +363,8 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | table | `public.roles` | `supabase/migrations/20260714000013_module_staff_roles.sql:39` |
 | table | `public.hr_document_requirements` | `supabase/migrations/20260716000000_hr_document_requirements.sql:4` |
 | table | `public.hr_document_reminders` | `supabase/migrations/20260716000001_hr_document_reminders.sql:5` |
+| table | `public.ui_user_preferences` | `supabase/migrations/20260722062839_ui_user_preferences.sql:3` |
+| trigger | `trg_ui_user_preferences_updated_at` | `supabase/migrations/20260722062839_ui_user_preferences.sql:18` |
 | table | `public.hr_contract_templates` | `supabase/migrations/20260915000000_hr_contract_management.sql:13` |
 | table | `public.hr_contracts` | `supabase/migrations/20260915000000_hr_contract_management.sql:34` |
 | table | `public.hr_contract_signatories` | `supabase/migrations/20260915000000_hr_contract_management.sql:69` |
@@ -432,6 +438,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | function | `public.work_calendar_command_tx` | `supabase/migrations/20260919000700_shared_work_calendar.sql:614` |
 | function | `public.holiday_set_command_tx` | `supabase/migrations/20260919000700_shared_work_calendar.sql:736` |
 | function | `public.work_calendar_purge_tx` | `supabase/migrations/20260919000700_shared_work_calendar.sql:874` |
+| table | `public.hr_access_profiles` | `supabase/migrations/20260926000003_hr_access_profiles.sql:8` |
 
 ## E2E Suites
 
@@ -445,7 +452,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 
 | Role | Path | Lines |
 |---|---|---:|
-| backend-route | `netlify/functions/routes/calendar.ts` | 1001 |
+| backend-route | `netlify/functions/routes/calendar.ts` | 1062 |
 | backend-route | `netlify/functions/routes/hrContracts.ts` | 170 |
 | backend-route | `netlify/functions/routes/hrCrew.ts` | 186 |
 | backend-route | `netlify/functions/routes/hrStatutoryProfile.ts` | 87 |
@@ -456,6 +463,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/notify.ts` | 213 |
 | backend-route | `netlify/functions/routes/sites.ts` | 163 |
 | backend-route | `netlify/functions/routes/superadmin.ts` | 907 |
+| backend-route | `netlify/functions/routes/weather.ts` | 189 |
 | frontend-api | `src/api/calendar.ts` | 173 |
 | frontend-api | `src/api/index.ts` | 34 |
 | frontend-api | `src/api/queryKeys.ts` | 291 |
@@ -463,6 +471,8 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/schemas/site.ts` | 61 |
 | frontend-api | `src/api/sites.ts` | 167 |
 | frontend-api | `src/api/theme.ts` | 23 |
+| frontend-api | `src/api/uiPreferences.ts` | 31 |
+| frontend-api | `src/api/weather.ts` | 38 |
 | frontend-page | `src/components/sections/AccessControl/AccessControlSection.tsx` | 65 |
 | frontend-page | `src/components/sections/AccessControl/index.ts` | 10 |
 | frontend-page | `src/components/sections/AccessControl/module.ts` | 43 |
@@ -482,14 +492,15 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/AdminDashboard/index.ts` | 13 |
 | frontend-page | `src/components/sections/AdminDashboard/mount.ts` | 16 |
 | frontend-page | `src/components/sections/Calendar/AgendaView.tsx` | 70 |
-| frontend-page | `src/components/sections/Calendar/CalendarItemDialog.test.tsx` | 110 |
+| frontend-page | `src/components/sections/Calendar/CalendarItemDialog.test.tsx` | 114 |
 | frontend-page | `src/components/sections/Calendar/CalendarItemDialog.tsx` | 237 |
-| frontend-page | `src/components/sections/Calendar/CalendarPage.tsx` | 184 |
+| frontend-page | `src/components/sections/Calendar/CalendarPage.tsx` | 204 |
 | frontend-page | `src/components/sections/Calendar/CalendarRail.tsx` | 101 |
 | frontend-page | `src/components/sections/Calendar/CreateCalendarItemDialog.tsx` | 144 |
-| frontend-page | `src/components/sections/Calendar/MonthView.test.tsx` | 98 |
+| frontend-page | `src/components/sections/Calendar/MonthView.test.tsx` | 102 |
 | frontend-page | `src/components/sections/Calendar/MonthView.tsx` | 62 |
-| frontend-page | `src/components/sections/Calendar/calendarViewModel.test.ts` | 146 |
+| frontend-page | `src/components/sections/Calendar/TimeGridView.tsx` | 142 |
+| frontend-page | `src/components/sections/Calendar/calendarViewModel.test.ts` | 157 |
 | frontend-page | `src/components/sections/Calendar/calendarViewModel.ts` | 126 |
 | frontend-page | `src/components/sections/Calendar/index.ts` | 10 |
 | frontend-page | `src/components/sections/Calendar/module.ts` | 34 |
@@ -515,14 +526,16 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx` | 119 |
 | frontend-page | `src/components/sections/SuperadminConsole/hooks.ts` | 353 |
 | frontend-page | `src/components/sections/SuperadminConsole/queryKeys.ts` | 25 |
-| frontend-page | `src/components/sections/index.ts` | 20 |
+| frontend-page | `src/components/sections/index.ts` | 19 |
 | shared-types | `types/api.ts` | 149 |
-| shared-types | `types/calendar.ts` | 167 |
+| shared-types | `types/calendar.ts` | 181 |
 | shared-types | `types/db.ts` | 244 |
 | shared-types | `types/hrContracts.ts` | 179 |
 | shared-types | `types/hrDocuments.ts` | 132 |
 | shared-types | `types/messaging.ts` | 287 |
 | shared-types | `types/messagingCompliance.ts` | 318 |
 | shared-types | `types/supabase.ts` | 135 |
+| shared-types | `types/uiPreferences.ts` | 32 |
+| shared-types | `types/weather.ts` | 93 |
 | shared-types | `types/workCalendars.ts` | 145 |
 

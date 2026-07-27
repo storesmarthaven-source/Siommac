@@ -61,6 +61,8 @@ export interface WidgetBundle {
   icon: string;
   /** Owning module — for future filter alignment. */
   module: ModuleKey;
+  /** Pages where this bundle is relevant. */
+  supportedPages: string[];
   /** Member widget ids. May include forward-references to widgets not yet
    *  registered; `resolveBundleWidgets` filters them out at runtime. */
   widgetIds: string[];
@@ -77,6 +79,7 @@ export const WIDGET_BUNDLES: WidgetBundle[] = [
     description: 'Key onboarding metrics, readiness gates, active-case pipeline, and task health — everything a manager needs at a glance.',
     icon: 'fa-user-plus',
     module: 'hr',
+    supportedPages: ['hr.onboarding.case'],
     widgetIds: [
       'hr.onboarding.readinessGates',   // ✅ registered — registry.hrOnboarding.tsx
       'hr.onboarding.activeCases',      // forward-ref — Phase 5 rebuild
@@ -87,13 +90,28 @@ export const WIDGET_BUNDLES: WidgetBundle[] = [
   {
     id: 'bundle.hr.employees.essentials',
     title: 'Employee Master Essentials',
-    description: 'Headcount overview, department breakdown, and active-employee insights for the HR Employee Master board.',
+    description: 'Live workforce, readiness, lifecycle, deadline, and master-data workload insights for the Employee Master workspace.',
     icon: 'fa-users',
     module: 'hr',
+    supportedPages: ['hr.employees.overview', 'hr.employees.overview.v2', 'hr.employees.overview.v3'],
     widgetIds: [
-      'hr.employees.headcount',         // forward-ref — Employee Master Phase 5
-      'hr.employees.departments',        // forward-ref — Employee Master Phase 5
-      'hr.employees.recentJoiners',      // forward-ref — Employee Master Phase 5
+      'hr.employeeMaster.activeWorkforce',
+      'hr.employeeMaster.recordReadiness',
+      'hr.employeeMaster.hrWorkQueue',
+      'hr.employeeMaster.exceptions',
+      'hr.employeeMaster.newStarters',
+      'hr.employeeMaster.departures',
+      'hr.employeeMaster.recordQuality',
+      // The board's own default tiles — resetting and then adding the bundle must restore the
+      // standard workspace, which the workspace test asserts.
+      'hr.employeeMaster.lifecycleActivity',
+      'hr.employeeMaster.adminWorkload',
+      'enterprise.calendar.upcomingDeadlines',
+      'hr.employeeMaster.monthlyHiresCard',
+      'hr.employeeMaster.internalMovesCard',
+      'hr.employeeMaster.promotionsCard',
+      'hr.employeeMaster.readinessRadar',
+      'hr.employeeMaster.lifecycleOutcomes',
     ],
   },
   {
@@ -102,6 +120,7 @@ export const WIDGET_BUNDLES: WidgetBundle[] = [
     description: 'Daily attendance status, pending leave requests, and overtime highlights for shift and operations teams.',
     icon: 'fa-clock',
     module: 'hr',
+    supportedPages: ['hr.attendance.overview', 'hr.leave.overview'],
     widgetIds: [
       'hr.attendance.todayStatus',      // forward-ref — HR Attendance Phase 5
       'hr.leave.pendingApprovals',       // forward-ref — HR Leave Phase 5

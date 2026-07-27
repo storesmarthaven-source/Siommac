@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SIOMAC Widget Library — extracted design reference</title>
+  <style>
+    :root {
+      --navy: #0b234c;
+      --blue: #2563eb;
+      --blue-soft: #eef4ff;
+      --ink: #17233b;
+      --muted: #6f7c91;
+      --line: #e2e8f2;
+      --surface: #ffffff;
+      --subtle: #f7f9fd;
+      --success: #31a66a;
+      --danger: #c8495b;
+      --shadow: 0 24px 70px rgba(16, 31, 57, .22);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: linear-gradient(135deg, #10264f, #e9eef7); color: var(--ink); }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .page { min-height: 100vh; padding: 24px; display: grid; place-items: center; }
+    .library {
+      width: min(1392px, calc(100vw - 48px)); height: min(852px, calc(100vh - 48px));
+      background: var(--surface); border-radius: 28px; overflow: hidden; box-shadow: var(--shadow);
+      display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto;
+    }
+    .header { padding: 24px 32px; display: flex; gap: 18px; align-items: center; border-bottom: 1px solid var(--line); }
+    .brand-icon, .tile-icon { display: grid; place-items: center; color: var(--blue); background: var(--blue-soft); }
+    .brand-icon { width: 58px; height: 58px; border-radius: 18px; font-size: 27px; font-weight: 800; }
+    .header-copy h1 { margin: 0; font-size: 28px; letter-spacing: -.025em; }
+    .header-copy p { margin: 5px 0 0; color: var(--muted); font-size: 16px; }
+    .header-actions { margin-left: auto; display: flex; gap: 12px; }
+    .btn { border: 1px solid var(--line); border-radius: 12px; min-height: 42px; padding: 0 18px; color: var(--ink); background: #fff; font-weight: 700; }
+    .btn.primary { color: #fff; background: var(--blue); border-color: var(--blue); }
+    .btn:disabled { color: #9cacbf; background: #f6f8fc; cursor: not-allowed; }
+    .icon-btn { width: 44px; padding: 0; font-size: 22px; }
+    .filters { padding: 18px 32px 16px; background: var(--subtle); border-bottom: 1px solid var(--line); }
+    .filter-row { display: flex; align-items: center; gap: 12px; }
+    .search { flex: 1; min-width: 220px; height: 48px; border: 1px solid #d5ddea; border-radius: 12px; background: #fff; display: flex; align-items: center; padding: 0 16px; gap: 10px; }
+    .search span { color: #66758b; font-size: 21px; }
+    .search input { border: 0; outline: 0; min-width: 0; width: 100%; color: var(--ink); background: transparent; }
+    .toggle { display: inline-flex; gap: 10px; align-items: center; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: #53627a; font-weight: 700; }
+    .switch { width: 36px; height: 22px; border-radius: 99px; padding: 3px; background: #cbd5e2; transition: .15s ease; }
+    .switch::after { content: ""; display: block; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .15s ease; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+    .toggle.on { color: var(--blue); border-color: #bfd2ff; background: #f7faff; }
+    .toggle.on .switch { background: var(--blue); }
+    .toggle.on .switch::after { transform: translateX(14px); }
+    .chips { display: flex; gap: 10px; align-items: center; margin-top: 14px; }
+    .chip { border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; background: #fff; color: #5d6b80; font-weight: 700; }
+    .chip.on { color: var(--blue); background: var(--blue-soft); border-color: #c9d9fa; }
+    .workspace { min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 420px; }
+    .catalog { min-width: 0; overflow: auto; padding: 28px 30px 40px; border-right: 1px solid var(--line); }
+    .section-head { display: flex; justify-content: space-between; align-items: end; margin-bottom: 16px; }
+    .section-head h2 { margin: 0; font-size: 19px; }
+    .section-head p { margin: 5px 0 0; color: var(--muted); }
+    .count { color: #8995a8; font-size: 13px; }
+    .bundle { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; align-items: center; padding: 20px; border: 1px solid var(--line); border-radius: 17px; box-shadow: 0 6px 20px rgba(26, 43, 73, .05); }
+    .tile-icon { width: 44px; height: 44px; border-radius: 13px; font-weight: 900; }
+    .bundle h3, .tile h3 { margin: 0; font-size: 16px; }
+    .bundle p, .tile p { margin: 5px 0 0; color: var(--muted); line-height: 1.45; font-size: 13px; }
+    .bundle-meta { margin-top: 13px; color: #8895a8; font-size: 13px; }
+    .bundle-meta b { color: var(--success); }
+    .divider { height: 1px; background: var(--line); margin: 28px -30px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .tile { position: relative; border: 1px solid var(--line); border-radius: 16px; padding: 18px; background: #fff; text-align: left; min-width: 0; }
+    .tile.selected { border-color: #8fb3ff; box-shadow: 0 0 0 2px rgba(37, 99, 235, .08); }
+    .tile-top { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; }
+    .preview { margin-top: 14px; min-height: 112px; border: 1px solid #e5ebf4; border-radius: 13px; background: linear-gradient(180deg, #fff, #f8faff); padding: 14px; }
+    .preview-label { color: var(--muted); font-size: 12px; }
+    .metric { margin-top: 4px; font-size: 32px; font-weight: 850; letter-spacing: -.04em; }
+    .trend { color: var(--success); font-size: 12px; font-weight: 800; }
+    .locked { position: absolute; right: 14px; bottom: 13px; border-radius: 999px; padding: 6px 10px; color: #6f7b8d; background: #f1f4f8; font-size: 11px; font-weight: 800; }
+    .detail { min-width: 0; overflow: auto; background: #fbfcff; }
+    .detail-head { display: flex; align-items: center; gap: 13px; padding: 22px 24px; background: #fff; border-bottom: 1px solid var(--line); }
+    .detail-head h2 { margin: 0; font-size: 20px; }
+    .detail-head p { margin: 3px 0 0; color: var(--muted); font-size: 13px; }
+    .detail-body { padding: 22px; display: grid; gap: 18px; }
+    .detail-block h3 { margin: 0 0 10px; font-size: 13px; }
+    .live-card { border: 1px solid var(--line); border-radius: 16px; background: #fff; padding: 18px; min-height: 170px; }
+    .live-title { display: flex; align-items: center; justify-content: space-between; color: #5f6d81; font-size: 13px; }
+    .live-card .metric { font-size: 48px; }
+    .sizes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .size { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 12px; text-align: left; }
+    .size.on { border-color: var(--blue); color: var(--blue); background: #f6f9ff; }
+    .size strong, .size span { display: block; }
+    .size span { margin-top: 3px; color: var(--muted); font-size: 12px; }
+    .facts { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+    .fact { padding: 12px; border-right: 1px solid var(--line); min-width: 0; }
+    .fact:last-child { border-right: 0; }
+    .fact span, .fact strong { display: block; overflow: hidden; text-overflow: ellipsis; }
+    .fact span { color: var(--muted); font-size: 11px; }
+    .fact strong { margin-top: 5px; font-size: 12px; }
+    .notice { padding: 13px 14px; border: 1px solid #f3c8cf; border-radius: 12px; background: #fff6f7; color: var(--danger); font-size: 12px; line-height: 1.45; }
+    .notice strong { display: block; margin-bottom: 3px; }
+    .actions { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+    .footer { min-height: 66px; padding: 12px 24px; display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--line); background: #fff; }
+    .status { color: var(--muted); font-size: 13px; }
+    .status::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--success); margin-right: 8px; }
+    .footer-actions { margin-left: auto; display: flex; gap: 10px; }
+    .package-menu { position: fixed; z-index: 5; right: 34px; bottom: 76px; width: 330px; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 18px 45px rgba(15, 29, 53, .2); padding: 8px; display: none; }
+    .package-menu.open { display: block; }
+    .menu-item { width: 100%; border: 0; border-radius: 10px; background: #fff; display: grid; grid-template-columns: 36px 1fr; gap: 10px; padding: 11px; text-align: left; }
+    .menu-item:hover { background: var(--subtle); }
+    .menu-item strong, .menu-item span { display: block; }
+    .menu-item span { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .backdrop { position: fixed; inset: 0; z-index: 10; background: rgba(9, 22, 45, .42); display: none; place-items: center; padding: 20px; }
+    .backdrop.open { display: grid; }
+    .package-dialog { width: min(520px, 100%); border-radius: 18px; background: #fff; box-shadow: var(--shadow); overflow: hidden; }
+    .package-dialog header, .package-dialog footer { padding: 18px 20px; display: flex; align-items: center; gap: 10px; }
+    .package-dialog header { border-bottom: 1px solid var(--line); font-weight: 800; }
+    .package-dialog header button { margin-left: auto; }
+    .package-dialog main { padding: 24px 20px; color: var(--muted); }
+    .package-dialog footer { border-top: 1px solid var(--line); justify-content: flex-end; }
+    .reference-note { position: fixed; left: 12px; bottom: 10px; color: rgba(255,255,255,.7); font-size: 11px; }
+    @media (max-width: 900px) {
+      .page { padding: 0; }
+      .library { width: 100vw; height: 100vh; border-radius: 0; }
+      .header { padding: 18px 24px; }
+      .header-actions .preview-btn { display: none; }
+      .filters { padding: 16px 24px; }
+      .filter-row { flex-wrap: wrap; }
+      .search { flex-basis: 100%; }
+      .workspace { display: block; overflow: auto; }
+      .catalog, .detail { overflow: visible; }
+      .catalog { border-right: 0; }
+      .detail { border-top: 1px solid var(--line); }
+      .grid { grid-template-columns: 1fr; }
+      .reference-note { display: none; }
+    }
+    @media (max-width: 560px) {
+      .header-copy h1 { font-size: 22px; }
+      .header-copy p { font-size: 13px; }
+      .brand-icon { width: 48px; height: 48px; border-radius: 14px; }
+      .filters, .catalog { padding-left: 22px; padding-right: 22px; }
+      .toggle { flex: 1; justify-content: space-between; }
+      .bundle { grid-template-columns: auto 1fr; }
+      .bundle .btn { grid-column: 1 / -1; }
+      .facts { grid-template-columns: 1fr; }
+      .fact { border-right: 0; border-bottom: 1px solid var(--line); }
+      .fact:last-child { border-bottom: 0; }
+      .status { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="library" role="dialog" aria-label="Widget Library">
+      <header class="header">
+        <div class="brand-icon">▦</div>
+        <div class="header-copy"><h1>Widget Library</h1><p>Add, preview, size, and configure dashboard widgets.</p></div>
+        <div class="header-actions"><button class="btn preview-btn" disabled>↗ Board preview</button><button class="btn icon-btn" aria-label="Close">×</button></div>
+      </header>
+
+      <div class="filters">
+        <div class="filter-row">
+          <label class="search"><span>⌕</span><input id="search" placeholder="Search widgets, data source, or tag…" /></label>
+          <button class="toggle on" data-toggle>Live preview <span class="switch"></span></button>
+          <button class="toggle" data-toggle>Demo data <span class="switch"></span></button>
+        </div>
+        <div class="chips"><button class="chip on">All</button><button class="chip">HR</button><button class="chip">KPIs</button></div>
+      </div>
+
+      <div class="workspace">
+        <main class="catalog">
+          <div class="section-head"><div><h2>Bundles</h2><p>Curated first-party sets — add several related widgets in one click.</p></div><span class="count">1 bundle</span></div>
+          <article class="bundle">
+            <div class="tile-icon">♟+</div>
+            <div><h3>Onboarding Manager Pack</h3><p>Key onboarding metrics, readiness gates, active-case pipeline, and task health — everything a manager needs at a glance.</p><div class="bundle-meta">3 widgets · <b>all added</b></div></div>
+            <button class="btn" disabled>⊕ Added</button>
+          </article>
+
+          <div class="divider"></div>
+          <div class="section-head"><div><h2>KPIs</h2></div><span class="count">7 widgets</span></div>
+          <div class="grid" id="widget-grid">
+            <button class="tile selected" data-name="Active Cases" data-description="Onboarding cases in flight, with new-hire / transfer / contractor split + weekly trend." data-metric="248" data-source="HR Onboarding">
+              <div class="tile-top"><div class="tile-icon">▰</div><div><h3>Active Cases</h3><p>Onboarding cases in flight, with new-hire / transfer / contractor split + weekly trend.</p></div></div>
+              <div class="preview"><span class="preview-label">Active Cases</span><div class="metric">248</div><span class="trend">↑ 12.6% over recent weeks</span></div><span class="locked">▣ Locked</span>
+            </button>
+            <button class="tile" data-name="Due This Week" data-description="Onboarding tasks due in the next 7 days, with due-today / overdue / critical counts." data-metric="47" data-source="HR Onboarding">
+              <div class="tile-top"><div class="tile-icon">✓</div><div><h3>Due This Week</h3><p>Onboarding tasks due in the next 7 days, with due-today and overdue counts.</p></div></div>
+              <div class="preview"><span class="preview-label">Due This Week</span><div class="metric">47</div><span class="trend">9 today · 6 overdue</span></div><span class="locked">▣ Locked</span>
+            </button>
+            <button class="tile" data-name="Blocked Cases" data-description="Cases blocked by an open dependency, broken down by blocking module." data-metric="18" data-source="HR Onboarding">
+              <div class="tile-top"><div class="tile-icon">!</div><div><h3>Blocked Cases</h3><p>Cases blocked by an open dependency, broken down by blocking module.</p></div></div>
+              <div class="preview"><span class="preview-label">Blocked Cases</span><div class="metric">18</div><span class="trend">7 docs · 4 training · 5 HSE</span></div><span class="locked">▣ Locked</span>
+            </button>
+            <button class="tile" data-name="Activation Readiness" data-description="Share of cases ready to activate across profile, documents, training, and access." data-metric="78%" data-source="HR Onboarding">
+              <div class="tile-top"><div class="tile-icon">◇</div><div><h3>Activation Readiness</h3><p>Readiness across profile, documents, training, and access.</p></div></div>
+              <div class="preview"><span class="preview-label">Activation Readiness</span><div class="metric">78%</div><span class="trend">84% documents ready</span></div><span class="locked">▣ Locked</span>
+            </button>
+          </div>
+        </main>
+
+        <aside class="detail">
+          <header class="detail-head"><div class="tile-icon">▰</div><div><h2 id="detail-title">Active Cases</h2><p>KPIs</p></div></header>
+          <div class="detail-body">
+            <section class="detail-block"><h3>Live preview</h3><div class="live-card"><div class="live-title"><span id="live-label">Active Cases</span><span>compact</span></div><div class="metric" id="live-metric">248</div><span class="trend">↑ representative preview</span></div></section>
+            <section class="detail-block"><h3>Available sizes</h3><div class="sizes"><button class="size on"><strong>Compact</strong><span>3×2</span></button><button class="size"><strong>Standard</strong><span>4×3</span></button></div></section>
+            <div class="facts"><div class="fact"><span>Data source</span><strong id="data-source">HR Onboarding</strong></div><div class="fact"><span>Refresh</span><strong>Every 5 min</strong></div><div class="fact"><span>Category</span><strong>KPIs</strong></div></div>
+            <div class="notice"><strong>Locked</strong>You do not have permission for this widget.</div>
+            <div class="actions"><button class="btn primary" disabled>Add widget</button><button class="btn" id="package-options">Package options ▾</button></div>
+          </div>
+        </aside>
+      </div>
+
+      <footer class="footer"><div class="status">7 widgets available · 1 on this page · layout saved to ui_layout</div><div class="footer-actions"><button class="btn">Cancel</button><button class="btn primary">Done</button></div></footer>
+    </section>
+  </div>
+
+  <div class="package-menu" id="package-menu">
+    <button class="menu-item"><span class="tile-icon">⇧</span><span><strong>Install package</strong><span>Add widgets from a .zip or .html file</span></span></button>
+    <button class="menu-item" id="manage-packages"><span class="tile-icon">▣</span><span><strong>Manage packages</strong><span>View or remove installed packages</span></span></button>
+  </div>
+  <div class="backdrop" id="package-backdrop">
+    <section class="package-dialog" role="dialog" aria-label="Installed packages"><header><span class="tile-icon">▣</span> Installed packages <button class="btn icon-btn close-packages">×</button></header><main>No packages installed. Use “Install package” to add a .zip or .json widget file.</main><footer><button class="btn primary close-packages">Done</button></footer></section>
+  </div>
+  <div class="reference-note">Static extraction for design review — no live data or mutations.</div>
+
+  <script>
+    document.querySelectorAll('[data-toggle]').forEach(button => button.addEventListener('click', () => button.classList.toggle('on')));
+    document.querySelectorAll('.chip').forEach(button => button.addEventListener('click', () => { document.querySelectorAll('.chip').forEach(x => x.classList.remove('on')); button.classList.add('on'); }));
+    document.querySelectorAll('.size').forEach(button => button.addEventListener('click', () => { document.querySelectorAll('.size').forEach(x => x.classList.remove('on')); button.classList.add('on'); }));
+    document.querySelectorAll('.tile').forEach(tile => tile.addEventListener('click', () => {
+      document.querySelectorAll('.tile').forEach(x => x.classList.remove('selected')); tile.classList.add('selected');
+      document.getElementById('detail-title').textContent = tile.dataset.name;
+      document.getElementById('live-label').textContent = tile.dataset.name;
+      document.getElementById('live-metric').textContent = tile.dataset.metric;
+      document.getElementById('data-source').textContent = tile.dataset.source;
+    }));
+    document.getElementById('search').addEventListener('input', event => {
+      const q = event.target.value.toLowerCase(); document.querySelectorAll('.tile').forEach(tile => { tile.style.display = tile.dataset.name.toLowerCase().includes(q) || tile.dataset.description.toLowerCase().includes(q) ? '' : 'none'; });
+    });
+    const packageMenu = document.getElementById('package-menu');
+    document.getElementById('package-options').addEventListener('click', () => packageMenu.classList.toggle('open'));
+    document.getElementById('manage-packages').addEventListener('click', () => { packageMenu.classList.remove('open'); document.getElementById('package-backdrop').classList.add('open'); });
+    document.querySelectorAll('.close-packages').forEach(button => button.addEventListener('click', () => document.getElementById('package-backdrop').classList.remove('open')));
+  </script>
+</body>
+</html>

@@ -23,6 +23,10 @@ export default async function run(h) {
   const T = { admin: mint(admin), b: mint(b) };
   const ctx = { pkgIds: [] };
   const PAGE = `e2e.${TAG}.board`;
+  const PREF_KEY = 'hr.employee-register.columns';
+
+  await sb.from('ui_user_preferences').delete().in('user_id', [admin.id, b.id])
+    .eq('preference_key', PREF_KEY);
 
   h.onCleanup(async () => {
     if (ctx.pkgIds.length) {
@@ -32,6 +36,8 @@ export default async function run(h) {
     }
     await sb.from('ui_widget_packages').delete().ilike('name', `${TAG}%`);
     await sb.from('ui_layout').delete().eq('page_key', PAGE);
+    await sb.from('ui_user_preferences').delete().in('user_id', [admin.id, b.id])
+      .eq('preference_key', PREF_KEY);
   });
 
   const pkg = suffix => ({
@@ -102,8 +108,8 @@ export default async function run(h) {
   // ───────────────────────── BOARD LAYOUTS ─────────────────────────
   h.section('Widgets › Board layouts');
 
-  const layout = { pageKey: PAGE, zones: { main: [
-    { instanceId: 'i1', widgetId: `e2e.${TAG}.w`, x: 0, y: 0, w: 4, h: 3, sizeKey: 'standard', config: {} },
+  const layout = { version: 3, columns: 24, pageKey: PAGE, zones: { main: [
+    { instanceId: 'i1', widgetId: `e2e.${TAG}.w`, pageKey: PAGE, zoneId: 'main', x: 0, y: 0, w: 8, h: 3, sizeKey: 'standard', config: { metric: 'headcount' }, responsive: { mobile: { x: 0, y: 0, w: 4, h: 3 } } },
   ] } };
 
   await test('getInstanceLayout returns a layout field for any user', async () => {
@@ -116,6 +122,14 @@ export default async function run(h) {
     ok(r);
     const { data } = await sb.from('ui_layout').select('layout').eq('page_key', PAGE).eq('user_id', admin.id).maybeSingle();
     expect(data?.layout?.zones?.main?.length === 1, 'layout not persisted');
+    expect(data?.layout?.version === 3 && data?.layout?.columns === 24, '24-column v3 envelope not persisted');
+    const saved = data?.layout?.zones?.main?.[0];
+    expect(saved?.pageKey === PAGE && saved?.zoneId === 'main', 'instance placement context missing');
+    expect(saved?.config?.metric === 'headcount' && saved?.responsive?.mobile?.w === 4, 'config/responsive placement lost');
+  });
+
+  await test('ACCESS: user without layout.manage cannot persist a board', async () => {
+    fails(await api('layout/saveInstanceLayout', T.b, { pageKey: PAGE, layout }), 'user without layout.manage saved a board');
   });
 
   await test('PAYLOAD: oversized ids are capped server-side', async () => {
@@ -143,5 +157,55 @@ export default async function run(h) {
     ok(r);
     const { data } = await sb.from('ui_layout').select('layout').eq('page_key', PAGE).eq('user_id', admin.id).maybeSingle();
     expect(!data || data.layout === null, 'user override not cleared');
+  });
+
+  // ───────────────────────── USER UI PREFERENCES ──────────────────
+  h.section('Widgets › User UI preferences');
+
+  const adminColumns = ['employee', 'employeeNumber', 'department', 'status', 'actions'];
+
+  await test('get returns a null preference before the user saves one', async () => {
+    const r = await api('ui-preferences/get', T.admin, { key: PREF_KEY });
+    ok(r);
+    expect(r.body.data && r.body.data.preference === null, 'missing preference was not returned as null');
+  });
+
+  await test('ACCESS: unauthenticated users cannot read or save preferences', async () => {
+    const read = await api('ui-preferences/get', null, { key: PREF_KEY });
+    const save = await api('ui-preferences/save', null, { key: PREF_KEY, value: adminColumns });
+    fails(read); fails(save);
+    expect(read.status === 401 && save.status === 401, 'unauthenticated preference access was not 401');
+  });
+
+  await test('save persists the authenticated user preference with the exact envelope', async () => {
+    const r = await api('ui-preferences/save', T.admin, { key: PREF_KEY, value: adminColumns });
+    ok(r);
+    const p = r.body.data?.preference;
+    expect(p?.key === PREF_KEY && p?.version === 1, 'preference key/version envelope mismatch');
+    expect(JSON.stringify(p?.value) === JSON.stringify(adminColumns), 'preference value envelope mismatch');
+    expect(typeof p?.updatedAt === 'string', 'preference updatedAt missing');
+
+    const { data } = await sb.from('ui_user_preferences').select('preference_value, version')
+      .eq('user_id', admin.id).eq('preference_key', PREF_KEY).maybeSingle();
+    expect(JSON.stringify(data?.preference_value) === JSON.stringify(adminColumns), 'preference not persisted to DB');
+    expect(data?.version === 1, 'preference DB version mismatch');
+  });
+
+  await test('get returns only the calling user preference', async () => {
+    const adminRead = await api('ui-preferences/get', T.admin, { key: PREF_KEY });
+    const otherRead = await api('ui-preferences/get', T.b, { key: PREF_KEY });
+    ok(adminRead); ok(otherRead);
+    expect(JSON.stringify(adminRead.body.data?.preference?.value) === JSON.stringify(adminColumns), 'saved preference not returned');
+    expect(otherRead.body.data?.preference === null, 'another user received the admin preference');
+  });
+
+  await test('PAYLOAD: unknown keys and invalid column values fail closed', async () => {
+    fails(await api('ui-preferences/save', T.admin, { key: 'unknown.preference', value: [] }), 'unknown preference key accepted');
+    fails(await api('ui-preferences/save', T.admin, { key: PREF_KEY, value: ['employee', 'secretColumn', 'actions'] }), 'unknown column accepted');
+    fails(await api('ui-preferences/save', T.admin, { key: PREF_KEY, value: Array(20).fill('employee') }), 'oversized preference accepted');
+
+    const { data } = await sb.from('ui_user_preferences').select('preference_value')
+      .eq('user_id', admin.id).eq('preference_key', PREF_KEY).maybeSingle();
+    expect(JSON.stringify(data?.preference_value) === JSON.stringify(adminColumns), 'invalid save changed the stored preference');
   });
 }

@@ -50,12 +50,13 @@ import {
   type StatutoryVersion, type PayComponent, type NisClass,
 } from '@api/finance/statutory';
 import {
-  WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget,
+  WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget, placeWidgetsAtBottom,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeDef, type WidgetSizeKey,
 } from '@ui/widgets';
 import { LucideIcon } from '@ui/LucideIcon';
 import { InfoTip } from '@ui/InfoTip';
 import { PageHeader, KpiTile } from '@ui';
+import { UpcomingDeadlinesCard, type UpcomingDeadlineCardItem } from '@components/shared/UpcomingDeadlinesCard';
 import { can } from '@lib/permissions';
 import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session';
 import { fmtDate, humanize } from './financeShared';
@@ -74,6 +75,18 @@ const TABS: { key: MainTab; label: string; locked?: boolean }[] = [
   // Locked until the reporting direction is decided — visible but not selectable.
   { key: 'reports',    label: 'Reports', locked: true },
 ];
+
+function statutoryDeadlinesOn(date: Date): UpcomingDeadlineCardItem[] {
+  const deadlines: UpcomingDeadlineCardItem[] = [];
+  if (date.getDate() === 15) {
+    deadlines.push({ id: `nis-${date.toISOString()}`, title: 'NIS Contribution Remittance', note: 'Monthly payment to NIBTT', tagLabel: 'NIS', tagCls: 'sdb-tag--upcoming' });
+    deadlines.push({ id: `paye-${date.toISOString()}`, title: 'PAYE & Health Surcharge', note: 'Monthly return to BIR', tagLabel: 'BIR', tagCls: 'sdb-tag--pending' });
+  }
+  if (date.getMonth() === 1 && date.getDate() === 28) {
+    deadlines.push({ id: `td4-${date.toISOString()}`, title: 'TD4 Certificates & Summary', note: 'Annual filing to BIR', tagLabel: 'Annual', tagCls: 'sdb-tag--planned' });
+  }
+  return deadlines;
+}
 
 // ── Widget zone ────────────────────────────────────────────────────────────────
 // The KPI strip is a SEPARATE reorder-only row above the board (drag left/right, never
@@ -208,34 +221,6 @@ export function StatutoryDashboard({
 
   // ── Statutory compliance calendar (REAL recurring T&T deadlines) ────────────
   // NIS + PAYE/HS remit on the 15th of each month; TD4 certificates file by 28 Feb.
-  const today = new Date();
-  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const [weekStart, setWeekStart] = useState<Date>(startOfToday);
-  const [selectedDay, setSelectedDay] = useState<Date>(startOfToday);
-
-  const weekDays = useMemo(
-    () => Array.from({ length: 7 }, (_, i) => { const d = new Date(weekStart); d.setDate(weekStart.getDate() + i); return d; }),
-    [weekStart],
-  );
-  const sameDay = (a: Date, b: Date): boolean =>
-    a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-  const deadlinesOn = (d: Date): { title: string; note: string; tagLabel: string; tagCls: string }[] => {
-    const out: { title: string; note: string; tagLabel: string; tagCls: string }[] = [];
-    if (d.getDate() === 15) {
-      out.push({ title: 'NIS Contribution Remittance', note: 'Monthly payment to NIBTT', tagLabel: 'NIS', tagCls: 'sdb-tag--upcoming' });
-      out.push({ title: 'PAYE & Health Surcharge',     note: 'Monthly return to BIR',    tagLabel: 'BIR', tagCls: 'sdb-tag--pending' });
-    }
-    if (d.getMonth() === 1 && d.getDate() === 28) {
-      out.push({ title: 'TD4 Certificates & Summary', note: 'Annual filing to BIR', tagLabel: 'Annual', tagCls: 'sdb-tag--planned' });
-    }
-    return out;
-  };
-  const selectedDeadlines = deadlinesOn(selectedDay);
-  const shiftWeek = (dir: -1 | 1): void => {
-    const d = new Date(weekStart); d.setDate(d.getDate() + dir * 7);
-    setWeekStart(d); setSelectedDay(d);
-  };
-
   // ── Config Completeness — the single readiness lens. Booleans over the active
   //    version's configuration; drives the gauge, subtext, and the two info stats.
   const lens = useMemo(() => {
@@ -277,7 +262,7 @@ export function StatutoryDashboard({
     const from = displayRef.current;
     if (from === target) return;
     const reduce = typeof window !== 'undefined'
-      && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduce) { setPct(target); return; }
     const start = performance.now();
     const dur = 700; // matches the gauge arc animation
@@ -323,7 +308,7 @@ export function StatutoryDashboard({
     // a point-by-point animation produced; driven by rAF so it stays frame-smooth no matter how few
     // points there are. No-ops under prefers-reduced-motion (draws instantly).
     const reduceMotion = typeof window !== 'undefined'
-      && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const totalDuration = 1100;
     const reveal = { v: reduceMotion ? 1 : 0 };
     let didClip = false;
@@ -335,7 +320,6 @@ export function StatutoryDashboard({
         // marker is never half-cut as the wipe crosses it.
         if (reveal.v >= 1) { didClip = false; return; }
         const area = chart.chartArea;
-        if (!area) return;
         const { ctx } = chart;
         ctx.save();
         ctx.beginPath();
@@ -443,7 +427,10 @@ export function StatutoryDashboard({
   const [libOpen, setLibOpen] = useState(false);
   const [demo, setDemo]       = useState(false);
   const [preview, setPreview] = useState<PreviewWidgetInstance | null>(null);
-  const { layout, addWidget, setAsDefault, resetLayout, isDefaultDirty } = useBoardLayout(PAGE_KEY, defaultStatutoryLayout());
+  const {
+    layout, addWidget, updateZoneLayout, saveLayout, cancelLayout, setAsDefault, resetLayout,
+    isDefaultDirty, isDirty, isSaving,
+  } = useBoardLayout(PAGE_KEY, defaultStatutoryLayout());
   // The KPI row is its own board (separate page key) — its layout state shares the query cache
   // with the KPI WidgetBoard below, so this instance sees reorders live. "Set as default" and
   // "Reset layout" act on the WHOLE page: either board being dirty enables the button, and
@@ -655,54 +642,7 @@ export function StatutoryDashboard({
     </div>
   );
 
-  const renderDeadlines = (): VNode => (
-    <div class="sdb-card sdb-ch sdb-cal sdb-wgt-fill">
-      <div class="sdb-ch-hd">
-        <i class="fa-regular fa-calendar" style={{ color: '#2f5fe0' }} />
-        <h2>Upcoming Deadlines</h2>
-        <div class="sdb-ch-tools">
-          <button type="button" class="sdb-ready-nav" aria-label="Previous week" onClick={() => shiftWeek(-1)}><i class="fa-solid fa-chevron-left" /></button>
-          <button type="button" class="sdb-ready-nav" aria-label="Next week" onClick={() => shiftWeek(1)}><i class="fa-solid fa-chevron-right" /></button>
-        </div>
-      </div>
-      <div class="sdb-cal-month">{weekStart.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</div>
-      <div class="sdb-cal-strip">
-        {weekDays.map(d => {
-          const on = sameDay(d, selectedDay);
-          const isToday = sameDay(d, today);
-          const has = deadlinesOn(d).length > 0;
-          return (
-            <button type="button" key={d.toISOString()}
-              class={`sdb-cal-day${on ? ' is-on' : ''}${isToday ? ' is-today' : ''}${has ? ' has-deadline' : ''}`}
-              onClick={() => setSelectedDay(new Date(d))}>
-              <span>{d.toLocaleDateString('en-GB', { weekday: 'short' })}</span>
-              <strong>{d.getDate()}</strong>
-            </button>
-          );
-        })}
-      </div>
-      <div class="sdb-cal-list">
-        {selectedDeadlines.length === 0 ? (
-          <div class="sdb-cal-empty">
-            <LucideIcon name="CalendarCheck" size={52} strokeWidth={1.5} class="sdb-cal-empty-ic" />
-            <div class="sdb-cal-empty-t">No Filings Due on {selectedDay.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
-            <div class="sdb-cal-empty-s">NIS and PAYE remittances are due on the 15th; the TD4 return by 28 February.</div>
-          </div>
-        ) : (
-          selectedDeadlines.map((d, i) => (
-            <div key={i} class="sdb-cal-item">
-              <span class={`sdb-cal-dot ${d.tagCls}`} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div class="sdb-up-t">{d.title}</div>
-                <div class="sdb-up-s">{d.note}</div>
-              </div>
-              <span class={`sdb-tag ${d.tagCls}`}>{d.tagLabel}</span>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
+  const renderDeadlines = (): VNode => <UpcomingDeadlinesCard deadlinesOn={statutoryDeadlinesOn} />;
 
   // Board widgets each declare a resize FLOOR (allowedSizes → minGridFor); without one the generic
   // floor is 2 cells on this 6px grid. (The KPI cards are NOT board widgets — they live in the
@@ -732,7 +672,7 @@ export function StatutoryDashboard({
     <WidgetBoardToolbar
       editing={editing} canSetDefault={isAdmin} defaultDirty={pageDefaultDirty} finishInBanner layoutItems={boardItems}
       onToggleEdit={() => setEditing(e => !e)}
-      onOpenLibrary={() => setLibOpen(true)}
+      onOpenLibrary={() => { setEditing(true); setLibOpen(true); }}
       onReset={resetPageLayout}
       onSetDefault={() => void promotePageDefault()}
     />
@@ -769,8 +709,15 @@ export function StatutoryDashboard({
         preview={preview} onPreviewChange={setPreview}
         onCommitPreview={commitPreview} onDiscardPreview={discardPreview}
         onFinishEditing={() => setEditing(false)}
+        onOpenLibrary={() => setLibOpen(true)}
+        onSaveEditing={async () => {
+          const saved = await Promise.all([saveLayout(), kpiBoard.saveLayout()]);
+          if (saved.every(Boolean)) setEditing(false);
+        }}
+        onCancelEditing={async () => { await Promise.all([cancelLayout(), kpiBoard.cancelLayout()]); setEditing(false); }}
         onSetDefault={() => void promotePageDefault()} canSetDefault={isAdmin}
-        defaultDirty={pageDefaultDirty} defaultSaving={savingDefault} />
+        defaultDirty={pageDefaultDirty} defaultSaving={savingDefault}
+        isDirty={isDirty || kpiBoard.isDirty} saving={isSaving || kpiBoard.isSaving} />
 
       <WidgetLibraryModal open={libOpen} pageKey={PAGE_KEY} zoneId="main"
         placedWidgetIds={placedWidgetIds} userPermissions={userPermissions}
@@ -778,6 +725,7 @@ export function StatutoryDashboard({
         canManagePackages={isAdmin}
         onClose={() => setLibOpen(false)}
         onAddWidget={inst => addWidget('main', placeBottom(inst))}
+        onAddWidgets={instances => updateZoneLayout('main', [...boardItems, ...placeWidgetsAtBottom(boardItems, instances)])}
         onPreviewOnBoard={p => setPreview(placeBottom(p))} />
       </div>
     </>

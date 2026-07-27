@@ -1,5 +1,5 @@
 /**
- * src/ui/widgets/registry.ts — cross-module widget catalogue for the v2 widget library.
+ * src/ui/widgets/registry.ts — cross-module catalogue for Widget Platform v3.
  *
  * SELF-REGISTERING. Every widget "package" is a file `registry.<name>.tsx` (e.g.
  * registry.hr.tsx, registry.hrEmployees.tsx, future registry.hse.tsx) that does:
@@ -10,9 +10,10 @@
  * registers itself; NO edits to this aggregator. Duplicate ids are dropped with a dev
  * warning. Authoring format + scaffold: docs/WIDGET_AUTHORING_GUIDE.md.
  */
-import type { WidgetDef } from './types';
+import { WIDGET_CONTRACT_VERSION, type WidgetDef } from './types';
 import { getRuntimeWidgets } from './runtimeRegistry';
 import { validateWidgetDef } from './validation';
+import { normalizePageKey } from './governance';
 
 // Eager glob → { './registry.hr.tsx': { widgets }, './registry.hrEmployees.tsx': { widgets }, … }.
 // Each package file exports `widgets: WidgetDef[]` (multiple widgets in one file).
@@ -43,7 +44,7 @@ function collectWidgets(): WidgetDef[] {
       }
       if (!validation.ok) continue; // hard errors (no render/id/sizes) — excluded, same as a duplicate id
       seen.add(w.id);
-      out.push(w);
+      out.push({ ...w, contractVersion: WIDGET_CONTRACT_VERSION });
     }
   }
   return out;
@@ -68,8 +69,13 @@ export function findWidgetDef(widgetId: string): WidgetDef | undefined {
   return allWidgets().find(w => w.id === widgetId);
 }
 
+// Matches on the NORMALISED page (layout version + `.kpis` sub-board stripped from both
+// sides) for the same reason governance does — see normalizePageKey. A widget declaring
+// `hr.employees.overview` stays available when the board's layout version is bumped.
 export function getWidgetsForPage(pageKey: string): WidgetDef[] {
-  return allWidgets().filter(w => w.supportedPages.includes(pageKey));
+  const target = normalizePageKey(pageKey);
+  return allWidgets().filter(w => w.supportedPages.includes('*')
+    || w.supportedPages.some(page => normalizePageKey(page) === target));
 }
 
 export function getWidgetsByModule(module: string): WidgetDef[] {

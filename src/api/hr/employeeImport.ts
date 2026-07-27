@@ -9,10 +9,11 @@
  */
 
 import { apiPost } from '@lib/api';
+import { requireHrSuccess } from './client';
 
 async function call<T>(path: string, args: Record<string, unknown>): Promise<T> {
-  const res = await apiPost<{ success: boolean; data: T }>(path, args);
-  return res.data;
+  const res = await apiPost<{ success: boolean; data: T; message?: string }>(path, args);
+  return requireHrSuccess(res, path).data;
 }
 
 // ── contracts (mirror routes/hrEmployeeImport.ts) ──────────────────────────────
@@ -24,13 +25,10 @@ export interface ImportPolicy {
   duplicateUsername:       'skip' | 'error';
   missingSupervisor:       'allow' | 'warn' | 'block';
   missingStatutory:        'allow' | 'warn' | 'block';
-  createLogins:            boolean;
   contractorRows:          'import' | 'reject';
-  // v36 batch ownership / governance (persisted on the batch policy jsonb).
-  defaultRecordStatus?:    'active' | 'draft';
-  batchOwner?:             string;
-  reviewRequired?:         boolean;
-  notifyOnComplete?:       string;
+  /** Only values app_users.status accepts. 'draft' was removed — the live CHECK
+   *  constraint permits active|inactive, so a Draft import could never commit. */
+  defaultRecordStatus?:    'active' | 'inactive';
   batchReference?:         string;
 }
 

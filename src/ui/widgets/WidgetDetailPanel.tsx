@@ -1,122 +1,96 @@
-// src/ui/widgets/WidgetDetailPanel.tsx — right-hand detail pane (ported from the v4
-// prototype): live preview, size selector, data-source metadata, the dense-grid notice,
-// and the Add widget / Configure actions. (Board preview lives in the modal header.)
-import { useState, useRef } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import type { VNode } from 'preact';
-import { DetailGrid, EmptyState } from '@ui';
 import type { WidgetDef, WidgetSizeKey } from './types';
-import { WidgetSizeSelector } from './WidgetSizeSelector';
 import { WidgetLivePreview } from './WidgetLivePreview';
 import { WidgetConfigureModal } from './WidgetConfigureModal';
+import { LucideIcon, type LucideName } from '../LucideIcon';
+
+const WIDGET_ICONS: Record<string, LucideName> = {
+  'fa-chart-column': 'ChartColumn', 'fa-chart-line': 'ChartSpline',
+  'fa-rotate': 'RefreshCcw', 'fa-list-check': 'ListChecks',
+};
 
 function formatRefresh(ms?: number): string {
   if (!ms) return 'Manual';
   return `Every ${Math.round(ms / 60000)} min`;
 }
 
-export function WidgetDetailPanel({ widget, pageKey, zoneId, selectedSizeKey, config, locked, added, livePreview, canManagePackages, installBusy, onSizeChange, onConfigChange, onAddWidget, onInstallPackage, onManagePackages }: {
-  widget: WidgetDef | null; pageKey: string; zoneId: string; selectedSizeKey: WidgetSizeKey;
-  config: Record<string, unknown>; locked: boolean; added: boolean; livePreview: boolean;
-  canManagePackages?: boolean; installBusy?: boolean;
-  onSizeChange: (key: WidgetSizeKey) => void; onConfigChange: (config: Record<string, unknown>) => void;
-  onAddWidget: () => void; onInstallPackage?: () => void; onManagePackages?: () => void;
+export function WidgetDetailPanel({ widget, pageKey, zoneId, selectedSizeKey, config, locked, added, livePreview, onSizeChange, onConfigChange, onAddWidget, onPreviewOnBoard }: {
+  widget: WidgetDef | null;
+  pageKey: string;
+  zoneId: string;
+  selectedSizeKey: WidgetSizeKey;
+  config: Record<string, unknown>;
+  locked: boolean;
+  added: boolean;
+  livePreview: boolean;
+  onSizeChange: (key: WidgetSizeKey) => void;
+  onConfigChange: (config: Record<string, unknown>) => void;
+  onAddWidget: () => void;
+  onPreviewOnBoard: () => void;
 }): VNode {
+  const [activeTab, setActiveTab] = useState<'overview' | 'access' | 'settings'>('overview');
   const [configOpen, setConfigOpen] = useState(false);
-  const [pkgMenuOpen, setPkgMenuOpen] = useState(false);
-  const caretRef = useRef<HTMLButtonElement>(null);
-  // Fixed-position coords so the menu escapes the detail pane's scroll/overflow clipping.
-  const [menuPos, setMenuPos] = useState<{ bottom: number; right: number } | null>(null);
-
-  function togglePkgMenu(): void {
-    if (pkgMenuOpen) { setPkgMenuOpen(false); return; }
-    const r = caretRef.current?.getBoundingClientRect();
-    if (r) setMenuPos({ bottom: Math.round(window.innerHeight - r.top + 6), right: Math.round(window.innerWidth - r.right) });
-    setPkgMenuOpen(true);
-  }
 
   if (!widget) {
-    return (
-      <div class="wlib-detail" style={{ display: 'grid', placeItems: 'center', padding: '24px' }}>
-        <EmptyState icon="fa-table-cells-large" title="Select a widget" text="Choose a widget to preview, size, and add." />
-      </div>
-    );
+    return <aside class="wlib-inspector empty"><LucideIcon name="LayoutGrid" size={30} /><h2>Select a widget</h2><p>Choose an approved widget to inspect it.</p></aside>;
   }
 
+  const permissions = widget.permissions?.requiredPermissions ?? widget.dataSource.permissions;
+  const accessLabel = locked ? 'Restricted' : widget.runtimeState === 'static-preview' ? 'Preview only' : 'Authorized';
+  const accessTone = locked ? 'gray' : widget.runtimeState === 'static-preview' ? 'amber' : 'green';
+  const showLiveData = livePreview && widget.runtimeState !== 'static-preview';
+
   return (
-    <div class="wlib-detail">
-      <header class="wlib-detail-head">
-        <span class="wlib-tile-icon"><i class={`fas ${widget.icon}`} /></span>
-        <div>
-          <h2>{widget.title}</h2>
-          <p>{widget.recommendedFor?.includes(pageKey) ? 'Recommended · ' : ''}{widget.category}</p>
-        </div>
+    <aside class="wlib-inspector">
+      <header class="wlib-inspect-head">
+        <span class="wlib-widget-icon"><LucideIcon name={WIDGET_ICONS[widget.icon] ?? 'PanelsTopLeft'} size={19} strokeWidth={1.8} /></span>
+        <div><h2>{widget.title}</h2><p>{widget.module.toUpperCase()} · {widget.category}</p></div>
       </header>
+      <nav class="wlib-inspect-tabs" aria-label="Widget details">
+        <button type="button" class={activeTab === 'overview' ? 'on' : ''} onClick={() => setActiveTab('overview')}>Overview</button>
+        <button type="button" class={activeTab === 'access' ? 'on' : ''} onClick={() => setActiveTab('access')}>Data &amp; access</button>
+        <button type="button" class={activeTab === 'settings' ? 'on' : ''} onClick={() => setActiveTab('settings')}>Settings</button>
+      </nav>
+      <div class="wlib-inspect-body">
+        {activeTab === 'overview' ? <>
+          <section class="wlib-preview-card">
+            <div class="wlib-preview-card-top"><span>{showLiveData ? 'Live preview' : 'Static preview'}</span><span class={`wlib-pill ${accessTone}`}>{accessLabel}</span></div>
+            <div class={`wlib-inspector-preview${widget.previewAspect ? '' : ' natural-size'}`}><WidgetLivePreview widget={widget} config={config} sizeKey={selectedSizeKey} pageKey={pageKey} zoneId={zoneId} live={showLiveData} showHeader={false} /></div>
+          </section>
+          <section class="wlib-panel"><h3>Widget information</h3><div class="wlib-detail-list">
+            <div><span>Data source</span><strong>{widget.dataSource.label}</strong></div>
+            <div><span>View permission</span><strong>{permissions.join(', ') || 'Page access'}</strong></div>
+            <div><span>Refresh</span><strong>{formatRefresh(widget.dataSource.refreshIntervalMs)}</strong></div>
+            <div><span>Supported pages</span><strong>{widget.supportedPages.includes('*') ? 'Application-wide' : widget.supportedPages.join(' · ')}</strong></div>
+            <div><span>Available sizes</span><strong>{widget.allowedSizes.map(size => size.label).join(' · ')}</strong></div>
+          </div></section>
+        </> : null}
 
-      <div class="wlib-detail-body">
-        <WidgetLivePreview widget={widget} config={config} sizeKey={selectedSizeKey} pageKey={pageKey} zoneId={zoneId} live={livePreview} />
+        {activeTab === 'access' ? <>
+          <section class="wlib-panel"><h3>Data &amp; access</h3><div class="wlib-detail-list">
+            <div><span>Source key</span><strong>{widget.dataSource.sourceKey}</strong></div>
+            <div><span>Permissions</span><strong>{permissions.join(', ') || 'Page access'}</strong></div>
+            <div><span>Dependencies</span><strong>{widget.dataSource.dependencies?.length ? widget.dataSource.dependencies.map(item => item.label).join(', ') : 'None'}</strong></div>
+            <div><span>Record scope</span><strong>Enforced by authenticated server API</strong></div>
+            <div><span>Realtime</span><strong>Invalidation and refetch only</strong></div>
+          </div></section>
+        </> : null}
 
-        <WidgetSizeSelector widget={widget} selectedSizeKey={selectedSizeKey} onChange={onSizeChange} />
+        {activeTab === 'settings' ? <>
+          <section class="wlib-panel"><h3>Available sizes</h3><div class="wlib-size-options">
+            {widget.allowedSizes.map(size => <button type="button" key={size.key} class={selectedSizeKey === size.key ? 'on' : ''} onClick={() => onSizeChange(size.key)}><strong>{size.label}</strong><span>{size.grid.w} × {size.grid.h}</span></button>)}
+          </div></section>
+          <section class="wlib-panel"><h3>Widget settings</h3><div class="wlib-settings-copy"><p>{widget.configSchema.length ? 'Configure the options declared by this widget.' : 'This widget has no configurable options.'}</p><button type="button" class="wlib-btn" disabled={!widget.configSchema.length} onClick={() => setConfigOpen(true)}>Configure widget</button></div></section>
+        </> : null}
 
-        <DetailGrid items={[
-          { icon: 'fa-database', label: 'Data source', value: widget.dataSource.label },
-          { icon: 'fa-rotate', label: 'Refresh', value: formatRefresh(widget.dataSource.refreshIntervalMs) },
-          { icon: 'fa-layer-group', label: 'Category', value: widget.category },
-        ]} />
-
-        {widget.dataSource.dependencies?.length ? (
-          <div class="wlib-deps"><strong>Dependencies</strong>{widget.dataSource.dependencies.map(d => d.label).join(', ')}</div>
-        ) : null}
-
-        {locked ? (
-          <div class="wlib-deps" style={{ borderColor: '#ffd1d6', background: 'var(--wlib-danger-soft)', color: 'var(--wlib-danger)' }}>
-            <strong>Locked</strong>{widget.lockedReason ?? 'You do not have permission for this widget.'}
-          </div>
-        ) : added ? (
-          <div class="wlib-deps" style={{ borderColor: '#ccefdc', background: 'var(--wlib-success-soft)', color: 'var(--wlib-success)' }}>
-            <strong>Already on this page</strong>This widget is already on the board — remove it there to add it again.
-          </div>
-        ) : (
-          <div class="wlib-notice">
-            <i class="fas fa-circle-info" aria-hidden="true" />
-            <div>This version uses dense grid placement and widget-size classes so previews do not compress into the wrong size or leave large empty gaps.</div>
-          </div>
-        )}
-
-        <div class="wlib-actions">
-          <div class="wlib-split">
-            <button type="button" class="wlib-btn wlib-btn-primary wlib-split-main" onClick={onAddWidget} disabled={locked || added}>{added ? 'Added' : 'Add widget'}</button>
-            {canManagePackages ? (
-              <button ref={caretRef} type="button" class="wlib-btn wlib-btn-primary wlib-split-caret" aria-label="Package options" aria-expanded={pkgMenuOpen} onClick={togglePkgMenu}>
-                <i class="fas fa-chevron-down" />
-              </button>
-            ) : null}
-            {pkgMenuOpen && menuPos ? (
-              <>
-                <div class="wlib-split-scrim" onClick={() => setPkgMenuOpen(false)} />
-                <div class="wlib-split-menu" style={{ position: 'fixed', bottom: `${menuPos.bottom}px`, right: `${menuPos.right}px`, left: 'auto', top: 'auto' }}>
-                  <button type="button" class="wlib-split-item" onClick={() => { setPkgMenuOpen(false); onInstallPackage?.(); }}>
-                    <i class={`fas ${installBusy ? 'fa-spinner fa-spin' : 'fa-file-arrow-up'}`} />
-                    <span class="wlib-split-text"><strong>Install package</strong><small>Add widgets from a .zip or .html file</small></span>
-                  </button>
-                  <button type="button" class="wlib-split-item" onClick={() => { setPkgMenuOpen(false); onManagePackages?.(); }}>
-                    <i class="fas fa-box-open" />
-                    <span class="wlib-split-text"><strong>Manage packages</strong><small>View or remove installed packages</small></span>
-                  </button>
-                </div>
-              </>
-            ) : null}
-          </div>
-          <button type="button" class="wlib-btn wlib-btn-secondary" onClick={() => setConfigOpen(true)} disabled={widget.configSchema.length === 0}>Configure</button>
-        </div>
+        <div class={`wlib-access-note ${accessTone}`}><strong>{locked ? 'Access restricted' : 'Access verified'}</strong>{locked ? widget.lockedReason ?? 'The current user cannot mount this widget.' : 'The widget may mount for your current permissions. Its API still enforces record and organizational scope.'}</div>
       </div>
-
-      {configOpen && (
-        <WidgetConfigureModal
-          open widget={widget} config={config} sizeKey={selectedSizeKey} pageKey={pageKey} zoneId={zoneId}
-          onClose={() => setConfigOpen(false)}
-          onSave={c => { onConfigChange(c); setConfigOpen(false); }}
-        />
-      )}
-    </div>
+      <footer class="wlib-inspect-actions">
+        <button type="button" class="wlib-btn" onClick={onPreviewOnBoard} disabled={locked || added}><LucideIcon name="Eye" size={15} /> Preview on board</button>
+        <button type="button" class="wlib-btn primary" onClick={onAddWidget} disabled={locked || added}><LucideIcon name={added ? 'Check' : 'Plus'} size={15} /> {added ? 'On this page' : 'Add to board'}</button>
+      </footer>
+      {configOpen ? <WidgetConfigureModal open widget={widget} config={config} sizeKey={selectedSizeKey} pageKey={pageKey} zoneId={zoneId} onClose={() => setConfigOpen(false)} onSave={next => { onConfigChange(next); setConfigOpen(false); }} /> : null}
+    </aside>
   );
 }

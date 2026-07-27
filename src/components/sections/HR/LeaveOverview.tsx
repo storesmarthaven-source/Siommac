@@ -19,6 +19,7 @@ import {
 } from '@api/hr/leave';
 import type { LeaveRequest, LeaveStatus, LeaveListArgs } from '../../../../types/hrLeave';
 import './onboardingCase.css';
+import { HRQueryNotice } from './HRQueryState';
 
 const STATUS_OPTIONS: { v: LeaveStatus | 'all'; label: string }[] = [
   { v: 'all', label: 'All statuses' },
@@ -85,7 +86,7 @@ function SubmitLeaveDialog({ onClose }: SubmitDialogProps): VNode {
 
   async function handleSubmit() {
     if (!canSubmitForm) return;
-    if (!submitKeyRef.current) submitKeyRef.current = crypto.randomUUID();
+    submitKeyRef.current ??= crypto.randomUUID();
     try {
       // Send the computed working-day count so the backend reserves the balance
       // (this module's ledger is day-denominated; seeded leave types are unit:'days').
@@ -188,8 +189,8 @@ export function LeaveOverview(): VNode {
     pageSize: 50,
   }), [statusFilter]);
 
-  const myQ    = useMyLeaveRequests(isAdmin ? undefined : listArgs);
-  const allQ   = useAllLeaveRequests(isAdmin ? listArgs : undefined);
+  const myQ    = useMyLeaveRequests(listArgs, !isAdmin);
+  const allQ   = useAllLeaveRequests(listArgs, isAdmin);
   const statsQ = useLeaveStats();
 
   const rows: LeaveRequest[] = isAdmin ? (allQ.data?.rows ?? []) : (myQ.data?.rows ?? []);
@@ -232,6 +233,8 @@ export function LeaveOverview(): VNode {
           </button>
         ) : undefined}
       />
+
+      <HRQueryNotice queries={isAdmin ? [allQ, statsQ] : [myQ]} />
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, margin: '14px 0' }}>
         {statCells.map(([label, val]) => (

@@ -41,7 +41,6 @@ const ALLOWED_ATTACHMENT_TYPES: Record<string, string> = {
 
 const MAX_BASE64_BYTES  = 8 * 1024 * 1024;   // raw string length guard
 const MAX_BINARY_BYTES  = 6 * 1024 * 1024;   // decoded buffer guard
-const PRESIGN_TTL_SECS  = 300;               // 5-minute window to upload
 
 // ── 1. Presigned upload URL ───────────────────────────────────────────────────
 
@@ -66,14 +65,14 @@ async function createUploadUrl(bucket: string, name: string, mimeType: string): 
   const ext = ALLOWED_IMAGE_TYPES[mimeType.toLowerCase()];
   if (!ext) throw new Error(`Unsupported image type: ${mimeType}. Allowed: jpeg, png, webp`);
 
-  const safeName = name.replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 80);
+  const safeName = name.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 80);
   const path     = `${safeName}_${Date.now()}.${ext}`;
 
   const { data, error } = await sb.storage
     .from(bucket)
     .createSignedUploadUrl(path);
 
-  if (error || !data) throw new Error(`Failed to create upload URL: ${error?.message ?? 'unknown'}`);
+  if (error) throw new Error(`Failed to create upload URL: ${error.message}`);
 
   return {
     uploadUrl: data.signedUrl,
@@ -87,22 +86,28 @@ async function createUploadUrl(bucket: string, name: string, mimeType: string): 
 /**
  * Upload a base64 data-URI to the given Supabase Storage bucket.
  * Returns the stored path (private buckets) or a public URL (branding bucket).
- * @deprecated For user photo uploads, prefer createUploadUrl() + client-side PUT.
+ *
+ * Server-side upload path — the Lambda buffers the bytes. This is the correct tool for
+ * server-initiated uploads that have no browser to PUT directly (auto-checkout capture,
+ * branding logo). For USER photo uploads prefer createUploadUrl() + client-side PUT so
+ * image bytes never pass through the function.
  */
 async function uploadBase64(bucket: string, base64: string, name: string): Promise<string> {
   if (!base64) return '';
-  const str = String(base64);
+  const str = base64;
 
   if (str.length > MAX_BASE64_BYTES) throw new Error('Image too large (max 6 MB)');
 
-  const m    = str.match(/^data:([^;]+);base64,(.+)$/s);
-  const mime = ((m ? m[1] : 'image/jpeg') as string).toLowerCase().trim();
-  const raw  = m ? m[2] : str.split('base64,').pop() ?? '';
+  const m    = /^data:([^;]+);base64,(.+)$/s.exec(str);
+  const mime = ((m ? m[1] : 'image/jpeg')).toLowerCase().trim();
+  const rawExtract = m ? m[2] : str.split('base64,').pop();
+  if (!rawExtract) throw new Error('Invalid base64 image data: could not extract encoded bytes');
+  const raw = rawExtract;
 
   const ext = ALLOWED_IMAGE_TYPES[mime];
   if (!ext) throw new Error(`Unsupported image type: ${mime}. Allowed: jpeg, png, webp`);
 
-  const safeName = String(name).replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 80);
+  const safeName = name.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 80);
   const path     = `${safeName}_${Date.now()}.${ext}`;
 
   const buffer = Buffer.from(raw, 'base64');
@@ -132,7 +137,7 @@ async function createAttachmentUploadUrl(bucket: string, name: string, mimeType:
   const path     = `${safeName}_${Date.now()}.${ext}`;
 
   const { data, error } = await sb.storage.from(bucket).createSignedUploadUrl(path);
-  if (error || !data) throw new Error(`Failed to create upload URL: ${error?.message ?? 'unknown'}`);
+  if (error) throw new Error(`Failed to create upload URL: ${error.message}`);
 
   return { uploadUrl: data.signedUrl, token: data.token, path, ext };
 }

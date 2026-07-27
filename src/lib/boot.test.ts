@@ -30,7 +30,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { SESSION_KEY }                           from '@cfg';
 import { saveSession, loadSession, clearSession } from '@lib/session';
-import { showSection }                           from '@components/nav/navCore';
+import { registerSectionNavigationGuard, showSection } from '@components/nav/navCore';
 import type { PersistedSession }                 from '@lib/session';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -107,7 +107,7 @@ describe('Boot invariant 1 — window.Nav exists before init()', () => {
 
 describe('Boot invariant 2 — showSection activates the correct DOM section', () => {
   beforeEach(() => {
-    buildShellDom(['s-adm-dashboard', 's-adm-employees', 's-adm-leaves']);
+    buildShellDom(['s-adm-dashboard', 's-adm-employees', 's-emp-leave']);
     window.AppState = {
       get: (k: string) => (k === 'currentRole' ? 'admin' : ''),
       set: vi.fn(),
@@ -124,7 +124,7 @@ describe('Boot invariant 2 — showSection activates the correct DOM section', (
 
     expect(document.getElementById('s-adm-dashboard')?.classList.contains('active')).toBe(true);
     expect(document.getElementById('s-adm-employees')?.classList.contains('active')).toBe(false);
-    expect(document.getElementById('s-adm-leaves')?.classList.contains('active')).toBe(false);
+    expect(document.getElementById('s-emp-leave')?.classList.contains('active')).toBe(false);
   });
 
   it('navigating to a different section moves .active correctly', () => {
@@ -136,8 +136,8 @@ describe('Boot invariant 2 — showSection activates the correct DOM section', (
   });
 
   it('persists the last-visited section to localStorage', () => {
-    showSection('s-adm-leaves');
-    expect(localStorage.getItem('siomac_last_section_admin')).toBe('s-adm-leaves');
+    showSection('s-emp-leave');
+    expect(localStorage.getItem('siomac_last_section_admin')).toBe('s-emp-leave');
   });
 
   it('calling showSection twice does not add .active more than once', () => {
@@ -230,10 +230,8 @@ describe('Boot invariant 4 — registerWindowShims: all required shims are funct
     ['Dashboard',      ['loadDashboardCharts', 'getDashEditMode', 'toggleEditMode']],
     ['SettingsView',   ['loadAdminBrandingSettings', 'refreshCompanySettings', 'applyCompanyLogo', 'applyCompanyName']],
     ['Sites',          ['loadProjectSites']],
-    ['Employees',      ['loadEmployeeList', 'loadDepartments', 'loadLeaveRequests', 'loadManagerLeaveApplications', 'loadMyPayslips', 'loadHistoryInline', 'loadDepartmentData', 'loadDepartmentEmployees']],
+    ['Employees',      ['loadEmployeeList', 'loadDepartments', 'loadLeaveRequests', 'loadMyPayslips', 'loadHistoryInline', 'loadDepartmentData', 'loadDepartmentEmployees']],
     ['Profile',        ['loadMyProfile']],
-    ['LeaveView',      ['loadLeaveApplications']],
-    ['AttendanceView', ['loadAttendanceData']],
   ];
 
   beforeEach(() => {
@@ -263,14 +261,12 @@ describe('Boot invariant 4 — registerWindowShims: all required shims are funct
     window.Sites          = { loadProjectSites: stub, displayProjectSites: stub, showAddProjectModal: stub };
     window.Employees      = {
       loadEmployeeList: stub, loadDepartments: stub, loadLeaveRequests: stub,
-      loadManagerLeaveApplications: stub, loadMyPayslips: stub, loadHistoryInline: stub,
+      loadMyPayslips: stub, loadHistoryInline: stub,
       loadDepartmentData: stub, loadDepartmentEmployees: stub, loadDashboardData: stub,
       loadRecentAttendance: stub, updateRealTimeStats: stub, showAddEmployeeModal: stub,
       showAddDepartmentModal: stub, displayEmployeeCards: stub, loadLeaveApplications: stub,
     };
     window.Profile        = { loadMyProfile: stub };
-    window.LeaveView      = { loadLeaveApplications: stub, _lvCard: () => '', _diffLeaveList: stub };
-    window.AttendanceView = { loadAttendanceData: stub };
   });
 
   for (const [shim, methods] of REQUIRED_SHIMS) {
@@ -396,5 +392,18 @@ describe('Boot invariant 6 — hard refresh: session is restored and nav is usab
   it('no session → showSection still works without throwing', () => {
     // No session in localStorage — simulates first-ever visit or cleared state.
     expect(() => showSection('s-adm-dashboard')).not.toThrow();
+  });
+
+  it('honours the shared page navigation guard before changing sections', async () => {
+    showSection('s-adm-dashboard');
+    const unregister = registerSectionNavigationGuard(() => false);
+
+    showSection('s-adm-employees');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(document.getElementById('s-adm-dashboard')?.classList.contains('active')).toBe(true);
+    expect(document.getElementById('s-adm-employees')?.classList.contains('active')).toBe(false);
+    unregister();
   });
 });

@@ -10,6 +10,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query';
 import { apiPost } from '@lib/api';
+import { requireHrSuccess, withContentIdempotencyKey } from './client';
 import type {
   OrgUnit, OrgUnitDetail, Position, PositionDetail, CostCenter, OrgStats, OrgHealthSummary,
   OrgChangeImpactSummary, PreviewOrgChangeArgs, OrgMutationResult,
@@ -21,8 +22,7 @@ import type {
 
 async function call<T>(path: string, args: object = {}): Promise<T> {
   const res = await apiPost<{ success: boolean; data: T; message?: string }>(path, args as Record<string, unknown>);
-  if (!res.success) throw new Error(res.message ?? `Request to ${path} failed.`);
-  return res.data;
+  return requireHrSuccess(res, path).data;
 }
 
 /**
@@ -31,9 +31,7 @@ async function call<T>(path: string, args: object = {}): Promise<T> {
  * mutation might, so we always send one — a caller-provided key wins so a deliberate
  * retry can dedupe.
  */
-function keyed<T extends { idempotencyKey?: string }>(a: T): T {
-  return { ...a, idempotencyKey: a.idempotencyKey ?? crypto.randomUUID() };
-}
+const keyed = <T extends object>(scope: string, args: T) => withContentIdempotencyKey(scope, args);
 
 export const hrOrganizationApi = {
   listOrgUnits:   ()                        => call<OrgUnit[]>('hr/organization/tree', {}),
@@ -43,21 +41,21 @@ export const hrOrganizationApi = {
   previewChange:  (a: PreviewOrgChangeArgs) => call<OrgChangeImpactSummary>('hr/organization/change/preview', a),
 
   createOrgUnit:  (a: CreateOrgUnitArgs)   => call<{ id: string }>('hr/organization/unit/create', a),
-  updateOrgUnit:  (a: UpdateOrgUnitArgs)   => call<OrgMutationResult>('hr/organization/unit/update', keyed(a)),
-  moveOrgUnit:    (a: MoveOrgUnitArgs)     => call<OrgMutationResult>('hr/organization/unit/move', keyed(a)),
-  archiveOrgUnit: (a: ArchiveOrgUnitArgs)  => call<OrgMutationResult>('hr/organization/unit/archive', keyed(a)),
-  deleteOrgUnit:  (a: DeleteOrgUnitArgs)   => call<OrgMutationResult>('hr/organization/unit/delete', keyed(a)),
+  updateOrgUnit:  (a: UpdateOrgUnitArgs)   => call<OrgMutationResult>('hr/organization/unit/update', keyed('org-unit-update', a)),
+  moveOrgUnit:    (a: MoveOrgUnitArgs)     => call<OrgMutationResult>('hr/organization/unit/move', keyed('org-unit-move', a)),
+  archiveOrgUnit: (a: ArchiveOrgUnitArgs)  => call<OrgMutationResult>('hr/organization/unit/archive', keyed('org-unit-archive', a)),
+  deleteOrgUnit:  (a: DeleteOrgUnitArgs)   => call<OrgMutationResult>('hr/organization/unit/delete', keyed('org-unit-delete', a)),
 
   listPositions:  ()                       => call<Position[]>('hr/positions/list', {}),
   getPosition:    (positionId: string)     => call<PositionDetail>('hr/positions/get', { positionId }),
   createPosition: (a: CreatePositionArgs)  => call<{ id: string }>('hr/positions/create', a),
-  updatePosition: (a: UpdatePositionArgs)  => call<OrgMutationResult>('hr/positions/update', keyed(a)),
-  retirePosition: (a: RetirePositionArgs)  => call<OrgMutationResult>('hr/positions/retire', keyed(a)),
+  updatePosition: (a: UpdatePositionArgs)  => call<OrgMutationResult>('hr/positions/update', keyed('position-update', a)),
+  retirePosition: (a: RetirePositionArgs)  => call<OrgMutationResult>('hr/positions/retire', keyed('position-retire', a)),
 
   listCostCenters: ()                        => call<CostCenter[]>('hr/cost-centers/list', {}),
   createCostCenter: (a: CreateCostCenterArgs) => call<{ id: string }>('hr/cost-centers/create', a),
-  updateCostCenter: (a: UpdateCostCenterArgs) => call<OrgMutationResult>('hr/cost-centers/update', keyed(a)),
-  retireCostCenter: (a: RetireCostCenterArgs) => call<OrgMutationResult>('hr/cost-centers/retire', keyed(a)),
+  updateCostCenter: (a: UpdateCostCenterArgs) => call<OrgMutationResult>('hr/cost-centers/update', keyed('cost-center-update', a)),
+  retireCostCenter: (a: RetireCostCenterArgs) => call<OrgMutationResult>('hr/cost-centers/retire', keyed('cost-center-retire', a)),
 
   listChangeRequests: (a: OrgChangeListArgs = {}) => call<OrgChangeRequest[]>('hr/organization/changes/list', a),
   getChangeRequest:   (changeRequestId: string)   => call<OrgChangeRequest>('hr/organization/change/get', { changeRequestId }),

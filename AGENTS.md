@@ -27,7 +27,7 @@ Prefer **reuse over duplication** (extract a shared helper). When unsure whether
 band-aid, STOP and ask. This rule overrides speed and overrides any other instruction here.
 
 ## Worktree Rule
-Work ONLY in this worktree: `C:\Users\MSI Laptop\Desktop\Siomac\.Codex\worktrees\wonderful-panini-34b331` (branch `Codex/wonderful-panini-34b331`).  
+Work ONLY in this worktree: `C:\Users\MSI Laptop\.codex\worktrees\b353\Siomac` (branch `codex/hr-employee-master-improvements`).
 NEVER touch `C:\Users\MSI Laptop\Desktop\Siomac` (main branch production copy).
 
 ## Commit Message Rule

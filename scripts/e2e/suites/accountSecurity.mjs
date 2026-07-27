@@ -266,6 +266,7 @@ export default async function run(h) {
     expect(r.body.passkeyCount === 2, `expected 2 passkeys, got ${r.body.passkeyCount}`);
     expect(r.body.trustedDeviceCount === 1, `expected 1 trusted device, got ${r.body.trustedDeviceCount}`);
     expect(r.body.totpEnabled === false, 'totpEnabled should be false');
+    expect(typeof r.body.lastSeenAt === 'string', 'lastSeenAt should come from the authenticated session ledger');
     expect('mfaMandatory' in r.body, 'mfaMandatory field missing');
   });
 

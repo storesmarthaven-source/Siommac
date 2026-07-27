@@ -6,7 +6,7 @@ import type {
 } from '@api/calendar';
 import { isOverdue, itemDateKey, parseLocalDate } from '@lib/calendar/date';
 
-export type CalendarViewMode = 'month' | 'agenda';
+export type CalendarViewMode = 'month' | 'week' | 'day' | 'agenda';
 export type CalendarScope = 'all' | 'shared' | 'public' | 'archived';
 
 export interface CalendarFilters {
@@ -29,7 +29,7 @@ export const EMPTY_FILTERS: CalendarFilters = {
 
 export function calendarSource(item: CalendarItemDTO): string {
   if (item.origin === 'calendar') return 'calendar';
-  return item.sourceModule || 'module';
+  return item.sourceModule ?? 'module';
 }
 
 export function sourceLabel(item: CalendarItemDTO): string {
@@ -92,7 +92,7 @@ export function filterCalendarItems(
   }).sort((a, b) => itemSortValue(a).localeCompare(itemSortValue(b)));
 }
 
-export function groupItemsByDate(items: CalendarItemDTO[]): Array<{ key: string; date: Date; items: CalendarItemDTO[] }> {
+export function groupItemsByDate(items: CalendarItemDTO[]): { key: string; date: Date; items: CalendarItemDTO[] }[] {
   const groups = new Map<string, CalendarItemDTO[]>();
   for (const item of items) {
     const key = itemDateKey(item);

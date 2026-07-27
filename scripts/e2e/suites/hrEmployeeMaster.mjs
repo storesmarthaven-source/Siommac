@@ -42,10 +42,11 @@ export default async function run(h) {
   const ctx = {
     empIds: [],          // created employees (app_users) — cascade-clean their satellites
     changeReqIds: [],    // contact change requests
+    offboardingCaseIds: [], // seeded hr_offboarding_cases (offboardingActive flag coverage)
     emp1: null, emp1No: null, emp1User: null, emp2: null,
     mgrTok: null, empTok: null,
     hrMgrTok: null, hrMgrCreatedIds: [],   // real hr_manager to decide the engine-driven change request
-    siteId: null, siteName: null, supName: null, createdSiteId: null,
+    siteId: null, siteName: null, supName: null, createdSiteId: null, accessProfileId: null,
   };
 
   // ── teardown (registered up-front so partial runs still clean up) ─────────────
@@ -56,6 +57,11 @@ export default async function run(h) {
     }
     for (const id of ctx.empIds) {
       await sb.from('hr_audit_log').delete().eq('employee_id', id);
+    }
+    // Before the app_users delete that would cascade them away anyway — explicit, so a
+    // partial run never leaves an orphan case behind.
+    if (ctx.offboardingCaseIds.length) {
+      try { await sb.from('hr_offboarding_cases').delete().in('id', ctx.offboardingCaseIds); } catch { /* ignore */ }
     }
     if (ctx.empIds.length) {
       const { data: rows } = await sb.from('app_users').select('auth_id').in('id', ctx.empIds);
@@ -106,14 +112,23 @@ export default async function run(h) {
     ctx.supName = adminRow?.full_name ?? null;
   }
 
+  // The create contract requires an approved accessProfileId (raw roles were removed).
+  await test('resolve an active access profile for the create contract', async () => {
+    const { data: prof } = await sb.from('hr_access_profiles')
+      .select('id, code').eq('is_active', true).eq('code', 'employee').maybeSingle();
+    expect(!!prof, 'an active "employee" access profile exists (migration 20260919000741)');
+    ctx.accessProfileId = prof.id;
+  });
+
   // ── create ───────────────────────────────────────────────────────────────────
   await test('create employee (admin) → active + payroll READY', async () => {
     const u = `e2e-${TAG}-alpha`.toLowerCase();
     const r = await api('hr/employees/create', A, {
-      identity:   { username: u, password: 'Passw0rd!23', fullName: `${TAG} Alpha One`, phone: '555-0001' },
+      requestKey: crypto.randomUUID(),
+      identity:   { username: u, firstName: `${TAG}`, lastName: 'Alpha One', phone: '555-0001' },
       employment: { employmentType: 'employee', startDate: '2026-01-15', position: 'Technician' },
       assignment: { departmentId: null, siteId: ctx.siteId, supervisorId: admin.id },
-      access:     { role: 'employee' },
+      access:     { accessProfileId: ctx.accessProfileId, accountMode: 'no_login' },
       statutory:  { nisStatus: 'registered', nisNumber: 'NIS-1001', payeApplicable: true, birFileNumber: 'BIR-1001', td1Received: true, hsApplicable: true, hsVerificationRequired: false },
     });
     ok(r, 'create alpha');
@@ -121,21 +136,23 @@ export default async function run(h) {
     expect(/^EMP-\d{4}$/.test(r.body.data.employee_no), `employee_no format — got ${r.body.data.employee_no}`);
     expect(r.body.data.status === 'active', 'status active');
     expect(r.body.data.payroll_readiness === 'ready', `payroll ready — got ${r.body.data.payroll_readiness}`);
-    expect(r.body.data.onboarding_case_id === null, 'onboarding_case_id null (onboarding is a later phase)');
-    expect(r.body.data.workflow_id === null, 'workflow_id null');
+    expect(r.body.data.onboarding_case_id === null, 'onboarding_case_id null when not requested');
+    expect(r.body.data.onboarding_status === 'not_requested', `onboarding_status — got ${r.body.data.onboarding_status}`);
+    // Create NEVER provisions an account: no password is accepted and no Auth user is made.
+    expect(r.body.data.account_status === 'not_requested', `account_status — got ${r.body.data.account_status}`);
     ctx.emp1 = r.body.data.employee_id; ctx.emp1No = r.body.data.employee_no; ctx.emp1User = u; ctx.empIds.push(ctx.emp1);
   });
 
   await test('create side-effects: mutation-run + event + audit + statutory + assignment + auth', async () => {
     // §5 — create goes through runModuleMutation, so an idempotency/observability row exists.
     const { data: run } = await sb.from('module_mutation_runs').select('status')
-      .ilike('idempotency_key', `%${ctx.emp1User}%`).maybeSingle();
+      .eq('entity_id', ctx.emp1).maybeSingle();
     expect(run && run.status === 'completed', `module_mutation_runs completed — got ${run && run.status}`);
     const { data: ev } = await sb.from('app_events').select('id').eq('event_type', 'hr.employee.created').eq('source_entity_id', ctx.emp1).limit(1);
     expect(ev && ev.length === 1, 'app_event hr.employee.created');
     const { data: au } = await sb.from('hr_audit_log').select('id').eq('employee_id', ctx.emp1).eq('action', 'hr.employee.created').limit(1);
     expect(au && au.length === 1, 'audit hr.employee.created');
-    const { data: st } = await sb.from('hr_employee_statutory').select('payroll_ready_status, finance_handoff_eligible').eq('employee_id', ctx.emp1).maybeSingle();
+    const { data: st } = await sb.from('hr_employee_statutory_profiles').select('payroll_ready_status, finance_handoff_eligible').eq('employee_id', ctx.emp1).eq('jurisdiction', 'TT').maybeSingle();
     expect(st && st.payroll_ready_status === 'ready', 'statutory row READY');
     expect(st && st.finance_handoff_eligible === true, 'finance_handoff_eligible true');
     const { data: asg } = await sb.from('hr_employee_assignments').select('id').eq('employee_id', ctx.emp1).eq('is_current', true).limit(1);
@@ -143,14 +160,16 @@ export default async function run(h) {
     const { data: hist } = await sb.from('hr_employee_status_history').select('id').eq('employee_id', ctx.emp1).limit(1);
     expect(hist && hist.length === 1, 'initial status-history row');
     const { data: usr } = await sb.from('app_users').select('auth_id').eq('id', ctx.emp1).maybeSingle();
-    expect(usr && !!usr.auth_id, 'Supabase Auth account linked (auth_id)');
+    expect(usr && usr.auth_id === null, 'employee record is created without an Auth account');
   });
 
   await test('create employee (admin) → payroll BLOCKED (missing BIR/TD1)', async () => {
     const u = `e2e-${TAG}-beta`.toLowerCase();
     const r = await api('hr/employees/create', A, {
-      identity:   { username: u, password: 'Passw0rd!23', fullName: `${TAG} Beta Two` },
-      employment: { employmentType: 'contractor' },
+      requestKey: crypto.randomUUID(),
+      identity:   { username: u, firstName: `${TAG}`, lastName: 'Beta Two' },
+      employment: { employmentType: 'contractor', startDate: '2026-02-01' },
+      access:     { accessProfileId: ctx.accessProfileId, accountMode: 'no_login' },
       statutory:  { nisStatus: 'registered', nisNumber: 'NIS-2002', payeApplicable: true },
     });
     ok(r, 'create beta');
@@ -159,39 +178,42 @@ export default async function run(h) {
   });
 
   await test('create duplicate username → rejected', async () => {
-    const r = await api('hr/employees/create', A, { identity: { username: `e2e-${TAG}-alpha`.toLowerCase(), password: 'Passw0rd!23', fullName: 'dup' } });
+    const r = await api('hr/employees/create', A, { requestKey: crypto.randomUUID(), identity: { username: `e2e-${TAG}-alpha`.toLowerCase(), firstName: 'X', lastName: 'dup' }, employment: { employmentType: 'employee', startDate: '2026-01-15' }, access: { accessProfileId: ctx.accessProfileId, accountMode: 'no_login' } });
     fails(r, 'duplicate username rejected');
   });
 
   await test('create unauthorized (employee role) → denied', async () => {
-    const r = await api('hr/employees/create', ctx.empTok, { identity: { username: `e2e-${TAG}-nope`.toLowerCase(), password: 'Passw0rd!23', fullName: 'nope' } });
+    const r = await api('hr/employees/create', ctx.empTok, { requestKey: crypto.randomUUID(), identity: { username: `e2e-${TAG}-nope`.toLowerCase(), firstName: 'X', lastName: 'nope' }, employment: { employmentType: 'employee', startDate: '2026-01-15' }, access: { accessProfileId: ctx.accessProfileId, accountMode: 'no_login' } });
     fails(r, 'employee cannot create');
   });
 
   await test('create unauthorized (manager is view-only) → denied', async () => {
-    const r = await api('hr/employees/create', ctx.mgrTok, { identity: { username: `e2e-${TAG}-nope2`.toLowerCase(), password: 'Passw0rd!23', fullName: 'nope' } });
+    const r = await api('hr/employees/create', ctx.mgrTok, { requestKey: crypto.randomUUID(), identity: { username: `e2e-${TAG}-nope2`.toLowerCase(), firstName: 'X', lastName: 'nope' }, employment: { employmentType: 'employee', startDate: '2026-01-15' }, access: { accessProfileId: ctx.accessProfileId, accountMode: 'no_login' } });
     fails(r, 'manager cannot create');
   });
 
   await test('create employee (admin) with onboarding → starts a case + tasks', async () => {
     const u = `e2e-${TAG}-gamma`.toLowerCase();
     const r = await api('hr/employees/create', A, {
-      identity:   { username: u, password: 'Passw0rd!23', fullName: `${TAG} Gamma Three` },
-      employment: { employmentType: 'employee' },
-      onboarding: { createOnboardingCase: true, packageKey: 'standard_employee' },
+      requestKey: crypto.randomUUID(),
+      identity:   { username: u, firstName: `${TAG}`, lastName: 'Gamma Three' },
+      employment: { employmentType: 'employee', startDate: '2026-03-01' },
+      access:     { accessProfileId: ctx.accessProfileId, accountMode: 'no_login' },
+      onboarding: { prepareOnboarding: true, packageKey: 'standard_employee' },
     });
     ok(r, 'create gamma + onboarding');
     ctx.empIds.push(r.body.data.employee_id);
     expect(!!r.body.data.onboarding_case_id, `onboarding_case_id returned — got ${r.body.data.onboarding_case_id}`);
-    expect(!r.body.data.onboarding_error, `no onboarding error — got ${r.body.data.onboarding_error}`);
+    expect(r.body.data.onboarding_status === 'draft_prepared', `onboarding_status draft_prepared — got ${r.body.data.onboarding_status}`);
     const { data: kase } = await sb.from('hr_onboarding_cases').select('status').eq('id', r.body.data.onboarding_case_id).maybeSingle();
-    expect(kase && kase.status === 'in_progress', 'onboarding case in_progress');
+    // Create PREPARES a draft; launching is a separate, explicit action.
+    expect(kase && kase.status === 'draft', `onboarding case draft — got ${kase && kase.status}`);
     const { count } = await sb.from('hr_onboarding_tasks').select('id', { count: 'exact', head: true }).eq('case_id', r.body.data.onboarding_case_id);
-    expect((count ?? 0) > 0, 'onboarding tasks generated');
+    expect((count ?? 0) === 0, 'draft preparation does not launch onboarding tasks');
   });
 
   // ── list (extended) ────────────────────────────────────────────────────────
-  await test('list (admin) → rows carry workerType + trainingStatus + siteName + supervisorName', async () => {
+  await test('list (admin) → rows carry resolved names and server-computed readiness', async () => {
     const r = await api('hr/employees/list', A, { search: TAG });
     ok(r, 'list');
     expect(Array.isArray(r.body.data), 'array');
@@ -199,8 +221,42 @@ export default async function run(h) {
     expect(!!e1, 'alpha present');
     expect(e1.workerType === 'employee', `workerType employee — got ${e1 && e1.workerType}`);
     expect(['none', 'current', 'due_soon', 'expired'].includes(e1.trainingStatus), `trainingStatus — got ${e1 && e1.trainingStatus}`);
+    expect(e1.readiness && typeof e1.readiness.percent === 'number', 'readiness.percent');
+    expect(e1.readiness.assignmentComplete === false, 'readiness assignment derives from missing department');
+    expect(e1.readiness.payrollStatus === 'ready', `readiness payrollStatus — got ${e1.readiness.payrollStatus}`);
+    expect(Array.isArray(e1.readiness.blockers) && e1.readiness.blockers.includes('assignment'), 'readiness blockers');
     expect(e1.siteName === ctx.siteName, `siteName resolved server-side from project_sites — got ${e1 && e1.siteName}`);
     expect(e1.supervisorName === ctx.supName, `supervisorName resolved server-side from app_users — got ${e1 && e1.supervisorName}`);
+    // The register's row menu gates "Start Offboarding" on this flag, so it must always be
+    // present and boolean — never undefined, which the UI would read as "not offboarding".
+    expect(e1.offboardingActive === false, `offboardingActive false for a fresh employee — got ${e1 && e1.offboardingActive}`);
+    expect(r.body.data.every(row => typeof row.offboardingActive === 'boolean'), 'offboardingActive is boolean on every row');
+  });
+
+  await test('list → offboardingActive flips once an offboarding case is open', async () => {
+    const { data: created, error } = await sb.from('hr_offboarding_cases')
+      .insert({
+        case_no: `OFF-${TAG}`,
+        employee_id: ctx.emp1,
+        reason: 'resignation',
+        status: 'in_progress',
+        started_by: admin.id,
+      }).select('id').single();
+    expect(!error, `seed offboarding case — ${error && error.message}`);
+    ctx.offboardingCaseIds.push(created.id);
+
+    const r = await api('hr/employees/list', A, { search: TAG });
+    ok(r, 'list after offboarding case');
+    const e1 = r.body.data.find(x => x.id === ctx.emp1);
+    expect(e1.offboardingActive === true, `offboardingActive true with an open case — got ${e1 && e1.offboardingActive}`);
+
+    // A completed case must NOT keep the employee flagged.
+    const { error: upErr } = await sb.from('hr_offboarding_cases').update({ status: 'completed' }).eq('id', created.id);
+    expect(!upErr, `complete offboarding case — ${upErr && upErr.message}`);
+    const after = await api('hr/employees/list', A, { search: TAG });
+    ok(after, 'list after case completion');
+    const e1After = after.body.data.find(x => x.id === ctx.emp1);
+    expect(e1After.offboardingActive === false, `offboardingActive false once the case completes — got ${e1After && e1After.offboardingActive}`);
   });
 
   await test('list workerType=contractor filter', async () => {
@@ -214,6 +270,7 @@ export default async function run(h) {
   await test('list (manager hr.view) → allowed', async () => {
     const r = await api('hr/employees/list', ctx.mgrTok, { search: TAG });
     ok(r, 'manager list');
+    expect(r.body.data.every(row => row.readiness === null), 'readiness hidden without payroll-readiness permission');
   });
 
   await test('list (employee, no hr.view) → denied', async () => {
@@ -222,7 +279,7 @@ export default async function run(h) {
   });
 
   // ── get (extended) ───────────────────────────────────────────────────────────
-  await test('get (admin) → embeds statutory + payrollReadiness + workerType', async () => {
+  await test('get (admin) → embeds statutory + authoritative readiness + workerType', async () => {
     const r = await api('hr/employees/get', A, { employeeId: ctx.emp1 });
     ok(r, 'get alpha');
     expect(r.body.data.employee.id === ctx.emp1, 'employee');
@@ -231,6 +288,10 @@ export default async function run(h) {
     expect(r.body.data.employee.supervisorName === ctx.supName, `supervisorName embedded — got ${r.body.data.employee.supervisorName}`);
     expect(r.body.data.statutory && r.body.data.statutory.payroll_ready_status === 'ready', 'statutory embedded');
     expect(r.body.data.payrollReadiness && r.body.data.payrollReadiness.status === 'ready', 'payrollReadiness present');
+    expect(r.body.data.employee.readiness && typeof r.body.data.employee.readiness.percent === 'number', 'employee readiness present');
+    expect(r.body.data.employee.readiness.assignmentComplete === false, 'detail readiness matches register assignment rule');
+    expect(r.body.data.employee.readiness.payrollStatus === 'ready', 'detail readiness carries payroll status');
+    expect(r.body.data.employee.readiness.blockers.includes('assignment'), 'detail readiness carries blockers');
   });
 
   await test('get (manager, no statutory.view) → statutory hidden', async () => {
@@ -238,18 +299,26 @@ export default async function run(h) {
     ok(r, 'manager get');
     expect(r.body.data.statutory === null, 'statutory hidden for manager');
     expect(r.body.data.payrollReadiness === null, 'payrollReadiness hidden for manager');
+    expect(r.body.data.employee.readiness === null, 'employee readiness hidden without readiness permission');
   });
 
   // ── dashboard-stats ────────────────────────────────────────────────────────
-  await test('dashboard-stats (admin) → 4 cards, all computed', async () => {
+  await test('dashboard-stats (admin) → complete workspace contract, all computed', async () => {
     const r = await api('hr/employees/dashboard-stats', A, {});
     ok(r, 'dashboard-stats');
     const s = r.body.data.stats;
     expect(s.active_workforce && typeof s.active_workforce.total === 'number', 'active_workforce.total');
     expect(Array.isArray(s.active_workforce.trend) && s.active_workforce.trend.length === 6, 'trend has 6 months');
     expect(s.hr_work_queue && Array.isArray(s.hr_work_queue.mix), 'hr_work_queue.mix');
+    expect(typeof s.hr_work_queue.oldest_days === 'number', 'hr_work_queue.oldest_days');
     expect(s.readiness && typeof s.readiness.percent === 'number', 'readiness.percent');
+    expect(typeof s.readiness.assignment_complete === 'number', 'readiness.assignment_complete');
     expect(s.exceptions && Array.isArray(s.exceptions.items), 'exceptions.items');
+    expect(s.distribution && Array.isArray(s.distribution.departments) && Array.isArray(s.distribution.sites), 'distribution arrays');
+    expect(s.distribution.departments.every(x => typeof x.label === 'string' && typeof x.count === 'number' && typeof x.percent === 'number'), 'department distribution envelope');
+    expect(s.lifecycle && Array.isArray(s.lifecycle.periods) && s.lifecycle.periods.length === 6, 'lifecycle has 6 months');
+    expect(s.lifecycle.periods.every(x => typeof x.hires === 'number' && typeof x.exits === 'number' && typeof x.transfers === 'number' && typeof x.promotions === 'number'), 'lifecycle period envelope');
+    expect(['hires', 'exits', 'transfers', 'promotions'].every(key => typeof s.lifecycle.totals[key] === 'number'), 'lifecycle totals envelope');
     expect(s.active_workforce.total >= 1, 'at least one active worker');
   });
 
@@ -328,7 +397,7 @@ export default async function run(h) {
     const types = (ev ?? []).map(x => x.event_type);
     expect(types.includes('hr.employee.statutory_updated'), 'statutory_updated event');
     expect(types.includes('hr.employee.payroll_ready'), 'payroll_ready handoff event (crossed to ready)');
-    const { data: st } = await sb.from('hr_employee_statutory').select('payroll_ready_status, finance_handoff_eligible').eq('employee_id', ctx.emp2).maybeSingle();
+    const { data: st } = await sb.from('hr_employee_statutory_profiles').select('payroll_ready_status, finance_handoff_eligible').eq('employee_id', ctx.emp2).eq('jurisdiction', 'TT').maybeSingle();
     expect(st && st.payroll_ready_status === 'ready' && st.finance_handoff_eligible === true, 'satellite snapshot synced');
   });
 

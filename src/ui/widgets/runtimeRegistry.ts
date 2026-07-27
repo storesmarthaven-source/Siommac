@@ -12,7 +12,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { useQuery, useQueryClient } from '@tanstack/preact-query';
 import { listInstalledPackages } from '@api/widgets';
-import type { WidgetDef } from './types';
+import { WIDGET_CONTRACT_VERSION, type WidgetDef } from './types';
 import { declarativeToWidgetDef } from './declarative/declarativeToWidgetDef';
 
 let runtimeWidgets: WidgetDef[] = [];
@@ -28,7 +28,7 @@ export function setRuntimeWidgets(defs: WidgetDef[]): void {
   for (const d of defs) {
     if (seen.has(d.id)) { if (import.meta.env.DEV) console.warn(`[widgets] duplicate installed widget id "${d.id}" — ignored.`); continue; }
     seen.add(d.id);
-    deduped.push(d);
+    deduped.push({ ...d, contractVersion: WIDGET_CONTRACT_VERSION });
   }
   runtimeWidgets = deduped;
   version += 1;

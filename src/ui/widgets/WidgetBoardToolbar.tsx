@@ -27,12 +27,14 @@ export interface WidgetBoardToolbarProps {
   onOpenLibrary: () => void;
   onReset: () => void;
   onSetDefault: () => void;
+  onSaveEditing?: () => void | Promise<void>;
+  onCancelEditing?: () => void | Promise<void>;
   /** Current board items — when provided (admin only), a "Copy layout" item appears that
    *  captures the live arrangement as ready-to-paste `defInst(...)` code. Dev tool, temporary. */
   layoutItems?: WidgetInstance[];
 }
 
-export function WidgetBoardToolbar({ editing, canSetDefault, defaultDirty, finishInBanner, onToggleEdit, onOpenLibrary, onReset, onSetDefault, layoutItems }: WidgetBoardToolbarProps): VNode {
+export function WidgetBoardToolbar({ editing, canSetDefault, defaultDirty, finishInBanner, onToggleEdit, onOpenLibrary, onReset, onSetDefault, onSaveEditing, onCancelEditing, layoutItems }: WidgetBoardToolbarProps): VNode {
   const [open, setOpen] = useState(false);
 
   // Reset wipes the user's personal arrangement — confirm first (popup system), never silently.
@@ -40,7 +42,7 @@ export function WidgetBoardToolbar({ editing, canSetDefault, defaultDirty, finis
     const ok = await dialog.confirm({
       title: 'Reset layout?',
       text: 'This clears your personal arrangement for this page and restores the default layout.',
-      confirmText: 'Reset layout',
+      confirmText: 'Reset Layout',
     });
     if (ok) onReset();
   }
@@ -60,14 +62,19 @@ export function WidgetBoardToolbar({ editing, canSetDefault, defaultDirty, finis
   const items: { label: string; icon: LucideName; onClick: () => void; disabled?: boolean; disabledReason?: string }[] = [
     // Edit toggle. When the banner owns the exit (finishInBanner), don't duplicate "Finish editing"
     // here — only offer "Edit layout" to ENTER; the banner's Done finishes.
-    ...(finishInBanner
-      ? (editing ? [] : [{ label: 'Edit layout', icon: 'Pencil' as LucideName, onClick: onToggleEdit }])
-      : [{ label: editing ? 'Finish editing' : 'Edit layout', icon: (editing ? 'Check' : 'Pencil') as LucideName, onClick: onToggleEdit }]),
+    ...(editing && !finishInBanner && onSaveEditing
+      ? [
+          { label: 'Save Layout', icon: 'Check' as LucideName, onClick: () => void onSaveEditing() },
+          { label: 'Cancel Changes', icon: 'X' as LucideName, onClick: () => void onCancelEditing?.() },
+        ]
+      : finishInBanner
+      ? (editing ? [] : [{ label: 'Edit Layout', icon: 'Pencil' as LucideName, onClick: onToggleEdit }])
+      : [{ label: editing ? 'Finish Editing' : 'Edit Layout', icon: (editing ? 'Check' : 'Pencil') as LucideName, onClick: onToggleEdit }]),
     { label: 'Widget Library', icon: 'LayoutGrid', onClick: onOpenLibrary },
-    { label: 'Reset layout', icon: 'RotateCcw', onClick: () => void confirmReset() },
-    ...(canSetDefault && !finishInBanner ? [{ label: 'Set as default', icon: 'Users' as LucideName, onClick: onSetDefault,
+    { label: 'Reset Layout', icon: 'RotateCcw', onClick: () => void confirmReset() },
+    ...(canSetDefault && !finishInBanner ? [{ label: 'Set as Default', icon: 'Users' as LucideName, onClick: onSetDefault,
       disabled: defaultDirty === false, disabledReason: 'Rearrange the board to enable' }] : []),
-    ...(canSetDefault && layoutItems ? [{ label: 'Copy layout', icon: 'Crosshair' as LucideName, onClick: () => void copyLayout() }] : []),
+    ...(canSetDefault && layoutItems ? [{ label: 'Copy Layout', icon: 'Crosshair' as LucideName, onClick: () => void copyLayout() }] : []),
   ];
 
   return (
@@ -77,7 +84,7 @@ export function WidgetBoardToolbar({ editing, canSetDefault, defaultDirty, finis
       <button type="button" class="wbi-tb-btn wbi-tb-trigger"
         aria-haspopup="menu" aria-expanded={open}
         onClick={() => setOpen(o => !o)}
-        aria-label="Customize widgets" title="Customize widgets">
+        aria-label="Customize Widgets" title="Customize Widgets">
         <LucideIcon name="SlidersHorizontal" size={17} />
       </button>
       {open && (
