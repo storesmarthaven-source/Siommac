@@ -42,7 +42,6 @@ const FIELDS: { key: string; label: string; required?: boolean }[] = [
   { key: 'site', label: 'Site' },
   { key: 'startDate', label: 'Start Date' },
   { key: 'employmentType', label: 'Employment Type' },
-  { key: 'role', label: 'Role' },
   { key: 'nisNumber', label: 'NIS Number' },
   { key: 'birFileNumber', label: 'BIR File Number' },
   { key: 'td1Received', label: 'TD1 Received' },
@@ -63,12 +62,9 @@ function guessMapping(cols: string[]): Record<string, string> {
 
 const DEFAULT_POLICY: ImportPolicy = {
   duplicateEmployeeNumber: 'skip', duplicateUsername: 'skip',
-  missingSupervisor: 'warn', missingStatutory: 'warn', createLogins: true, contractorRows: 'import',
-  defaultRecordStatus: 'active', batchOwner: 'HR Operations', reviewRequired: true,
-  notifyOnComplete: 'HR + Payroll', batchReference: '',
+  missingSupervisor: 'warn', missingStatutory: 'warn', contractorRows: 'import',
+  defaultRecordStatus: 'active', batchReference: '',
 };
-const BATCH_OWNERS = ['HR Operations', 'HR Manager', 'Payroll', 'Site HR'];
-const NOTIFY_TARGETS = ['HR + Payroll', 'HR only', 'HR + Finance', 'None'];
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -180,8 +176,8 @@ export function ImportWizard({ onClose, onToast }: { onClose: () => void; onToas
     ] },
     { title: 'Permissions & Audit', rows: [
       { label: 'Permission', value: 'HR controlled' },
-      { label: 'Batch owner', value: policy.batchOwner ?? '—' },
-      { label: 'Review required', value: policy.reviewRequired ? 'Yes — before commit' : 'No' },
+      { label: 'Access granted', value: 'Employee role only — never elevated by import' },
+      { label: 'Login accounts', value: 'Not created — requested separately' },
     ] },
   ];
 
@@ -219,17 +215,13 @@ export function ImportWizard({ onClose, onToast }: { onClose: () => void; onToas
               <Fld label="Import Mode"><select value={importMode} onChange={e => setImportMode(e.currentTarget.value as ImportMode)}><option value="create">Create only</option><option value="update">Update existing</option><option value="create_update">Create + update</option></select></Fld>
               <Fld label="Duplicate Handling"><select value={policy.duplicateEmployeeNumber} onChange={e => setPol('duplicateEmployeeNumber', e.currentTarget.value as ImportPolicy['duplicateEmployeeNumber'])}><option value="skip">Block / skip duplicate employee</option><option value="update">Update duplicate</option><option value="error">Error on duplicate</option></select></Fld>
               <Fld label="Missing Statutory Fields"><select value={policy.missingStatutory} onChange={e => setPol('missingStatutory', e.currentTarget.value as ImportPolicy['missingStatutory'])}><option value="allow">Allow</option><option value="warn">Allow · draft payroll block</option><option value="block">Block</option></select></Fld>
-              <Fld label="Default Record Status"><select value={policy.defaultRecordStatus} onChange={e => setPol('defaultRecordStatus', e.currentTarget.value as ImportPolicy['defaultRecordStatus'])}><option value="active">Active</option><option value="draft">Draft</option></select></Fld>
+              <Fld label="Default Record Status"><select value={policy.defaultRecordStatus} onChange={e => setPol('defaultRecordStatus', e.currentTarget.value as ImportPolicy['defaultRecordStatus'])}><option value="active">Active</option><option value="inactive">Inactive</option></select></Fld>
               <Fld label="Missing supervisor"><select value={policy.missingSupervisor} onChange={e => setPol('missingSupervisor', e.currentTarget.value as ImportPolicy['missingSupervisor'])}><option value="allow">Allow</option><option value="warn">Warn</option><option value="block">Block</option></select></Fld>
               <Fld label="Contractor rows"><select value={policy.contractorRows} onChange={e => setPol('contractorRows', e.currentTarget.value as ImportPolicy['contractorRows'])}><option value="import">Import</option><option value="reject">Reject</option></select></Fld>
-              <label class="checkbox-row"><input type="checkbox" checked={policy.createLogins} onChange={e => setPol('createLogins', e.currentTarget.checked)} /> Create login accounts</label>
             </div>
           </Section>
-          <Section id="batch" title="Batch ownership" desc="Defines who owns cleanup, approval, and the final report.">
+          <Section id="batch" title="Batch reference &amp; defaults" desc="Defaults applied to rows that leave a field blank.">
             <div class="form-grid">
-              <Fld label="Batch Owner"><select value={policy.batchOwner} onChange={e => setPol('batchOwner', e.currentTarget.value)}>{BATCH_OWNERS.map(o => <option value={o}>{o}</option>)}</select></Fld>
-              <Fld label="Review Required"><select value={policy.reviewRequired ? 'yes' : 'no'} onChange={e => setPol('reviewRequired', e.currentTarget.value === 'yes')}><option value="yes">Yes — before commit</option><option value="no">No</option></select></Fld>
-              <Fld label="Notify On Complete"><select value={policy.notifyOnComplete} onChange={e => setPol('notifyOnComplete', e.currentTarget.value)}>{NOTIFY_TARGETS.map(o => <option value={o}>{o}</option>)}</select></Fld>
               <Fld label="Batch Reference"><input value={policy.batchReference} placeholder="IMP-EMP-2026-004" onInput={e => setPol('batchReference', e.currentTarget.value)} /></Fld>
               <Fld label="Default Department (optional)"><select value={defaultDepartmentId} onChange={e => setDefaultDepartmentId(e.currentTarget.value)}><option value="">None</option>{(orgQ.data ?? []).map(o => <option value={o.id}>{o.name}</option>)}</select></Fld>
               <Fld label="Default Site (optional)"><select value={defaultSiteId} onChange={e => setDefaultSiteId(e.currentTarget.value)}><option value="">None</option>{(siteQ.data ?? []).map(s => <option value={s.id}>{s.name}</option>)}</select></Fld>
@@ -320,11 +312,11 @@ export function ImportWizard({ onClose, onToast }: { onClose: () => void; onToas
           <div class="summary-list">
             <div class="summary-item"><span>File</span><strong>{batch?.batchNo} · {batch?.totalRows} rows</strong></div>
             <div class="summary-item"><span>Mode · Record status</span><strong>{cap(importMode)} · {cap(policy.defaultRecordStatus ?? 'active')}</strong></div>
-            <div class="summary-item"><span>Batch owner · Reference</span><strong>{policy.batchOwner}{policy.batchReference ? ` · ${policy.batchReference}` : ''}</strong></div>
+            <div class="summary-item"><span>Reference</span><strong>{policy.batchReference || '—'}</strong></div>
             <div class="summary-item"><span>Ready to commit</span><strong>{summary?.ready ?? 0}</strong></div>
             <div class="summary-item"><span>Warnings · Blocked</span><strong>{summary?.warning ?? 0} · {summary?.blocked ?? 0}</strong></div>
           </div>
-          <div class="warning-card">Committing provisions each ready row via the standard create path (app_users + Auth + statutory + assignment), emitting the same events/audit as a single create. Notify on complete: {policy.notifyOnComplete}.</div>
+          <div class="warning-card">Committing provisions each ready row via the standard create path (employee record + statutory profile + assignment), emitting the same events and audit entries as a single create. Imported employees receive the <strong>employee</strong> role and <strong>no login account</strong> — elevated access and credentials are requested separately, per person.</div>
         </Section>
       )}
 

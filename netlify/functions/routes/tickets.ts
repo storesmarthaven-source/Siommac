@@ -612,11 +612,10 @@ router.post('/createAccountSupportRequest', async c => {
     .eq('id', ticketId);
 
   // Notify actor + subject (if different) + receiver (if explicit).
-  // The actor is the ticket owner (their own request) — reason 'owner' ensures
-  // resolveRecipients does NOT suppress their confirmation notification (the
-  // actor-suppression rule in recipientResolver only drops reason === 'actor').
-  const explicitRecipients: Array<{ userId: string; reason: 'owner' | 'participant' | 'assignee' }> = [
-    { userId: actor.id, reason: 'owner' },
+  // The actor is labelled honestly as 'actor'; their confirmation survives because
+  // 'ticket.account_support.created' is registered in ACTOR_CONFIRMATION_EVENTS.
+  const explicitRecipients: Array<{ userId: string; reason: 'actor' | 'participant' | 'assignee' }> = [
+    { userId: actor.id, reason: 'actor' },
   ];
   if (subjectId !== actor.id) explicitRecipients.push({ userId: subjectId, reason: 'participant' });
   if (destination.assignedUserId && destination.assignedUserId !== actor.id) {

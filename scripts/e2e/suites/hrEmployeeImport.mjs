@@ -137,9 +137,18 @@ export default async function run(h) {
     const id = ctx.createdIds[0];
     const { data: usr } = await sb.from('app_users').select('id, employee_number, contractor_flag, auth_id').eq('id', id).maybeSingle();
     expect(usr && /^EMP-\d{4}$/.test(usr.employee_number ?? ''), 'created app_user has EMP number');
-    expect(usr && !usr.auth_id, 'no Auth account (createLogins:false)');
-    const { data: st } = await sb.from('hr_employee_statutory').select('payroll_ready_status').eq('employee_id', id).maybeSingle();
-    expect(st && st.payroll_ready_status === 'ready', `statutory ready — got ${st && st.payroll_ready_status}`);
+    // Import NEVER creates an Auth account — there is no code path left that can.
+    expect(usr && !usr.auth_id, 'no Auth account is ever created by import');
+    // Import NEVER grants elevated access: every imported row lands on `employee`.
+    const { data: roleRow } = await sb.from('app_users').select('role').eq('id', id).maybeSingle();
+    expect(roleRow && roleRow.role === 'employee', `imported role must be employee — got ${roleRow && roleRow.role}`);
+    // Statutory is written to the CANONICAL profile table. The legacy table must not
+    // receive new import writes (this assertion previously checked the legacy table and
+    // therefore no longer proved the current create path).
+    const { data: st } = await sb.from('hr_employee_statutory_profiles').select('payroll_ready_status').eq('employee_id', id).maybeSingle();
+    expect(st && st.payroll_ready_status === 'ready', `canonical statutory ready — got ${st && st.payroll_ready_status}`);
+    const { data: legacy } = await sb.from('hr_employee_statutory').select('employee_id').eq('employee_id', id).maybeSingle();
+    expect(!legacy, 'no new write to the legacy hr_employee_statutory table');
     const { data: batchEv } = await sb.from('app_events').select('id').eq('event_type', 'hr.import.committed').eq('source_entity_id', ctx.batchId).limit(1);
     expect(batchEv && batchEv.length === 1, 'hr.import.committed event');
     const { data: empEv } = await sb.from('app_events').select('id').eq('event_type', 'hr.employee.created').eq('source_entity_id', id).limit(1);

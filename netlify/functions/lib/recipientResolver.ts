@@ -37,11 +37,20 @@ interface EventRule {
   notify: boolean;
 }
 
+/** Events where the ACTOR is a legitimate recipient — a receipt for something they
+ *  submitted or decided. Registering an event here is the ONLY supported way to keep the
+ *  actor on its notification: relabelling the actor as `owner`/`participant` to slip past
+ *  the step-4 suppression below misdescribes the recipient and leaves sibling routes
+ *  silently inconsistent. */
 const ACTOR_CONFIRMATION_EVENTS = new Set([
   'workflow.approved', 'workflow.rejected',
   'hse.capa.closed', 'hse.incident.closed',
   'ptw.permit.approved', 'ptw.permit.rejected',
   'documents.document.published', 'payroll.published',
+  // Ticket / account-support submission receipts — the submitter is told their request landed.
+  'ticket.created',
+  'ticket.account_support.created',
+  'account_access.assistance_requested',
 ]);
 
 /** Returns a Map<userId, reason> — first reason wins on conflict. */

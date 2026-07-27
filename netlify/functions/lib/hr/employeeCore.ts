@@ -94,7 +94,10 @@ export function computePayrollReadiness(s: StatutoryRow): { status: 'ready' | 'b
   return { status, blockers, financeEligible: status === 'ready' };
 }
 
-/** camelCase statutory input → snake_case column patch (only provided keys). */
+/** camelCase statutory input → snake_case column patch for the LEGACY
+ *  hr_employee_statutory table. Only kept for the employees/statutory/update
+ *  read-write path until that endpoint is retired. New creates MUST use
+ *  statutoryProfilePatch() → hr_employee_statutory_profiles instead. */
 export function statutoryPatch(s: Record<string, unknown>): Record<string, unknown> {
   const p: Record<string, unknown> = {};
   if (s['nisNumber']              !== undefined) p['nis_number']               = s['nisNumber'];
@@ -109,6 +112,47 @@ export function statutoryPatch(s: Record<string, unknown>): Record<string, unkno
   if (s['hsEffectiveDate']        !== undefined) p['hs_effective_date']        = s['hsEffectiveDate'];
   if (s['hsVerificationRequired'] !== undefined) p['hs_verification_required'] = s['hsVerificationRequired'];
   return p;
+}
+
+/**
+ * camelCase statutory input → snake_case column patch for
+ * hr_employee_statutory_profiles (the canonical table).
+ * nisStatus maps to nis_reg_status (HR registration status).
+ * nis_status (Finance verification status) is ALWAYS 'pending_verification'
+ * on create — Finance owns the transition to 'verified'.
+ */
+export function statutoryProfilePatch(s: Record<string, unknown>): Record<string, unknown> {
+  const p: Record<string, unknown> = {};
+  if (s['nisNumber']              !== undefined) p['nis_number']               = s['nisNumber'];
+  if (s['nisStatus']              !== undefined) p['nis_reg_status']           = s['nisStatus'];   // ← mapped to new column
+  if (s['nisApplicable']          !== undefined) p['nis_applicable']           = s['nisApplicable'];
+  if (s['nisEffectiveDate']       !== undefined) p['nis_effective_date']       = s['nisEffectiveDate'];
+  if (s['birFileNumber']          !== undefined) p['bir_file_number']          = s['birFileNumber'];
+  if (s['payeApplicable']         !== undefined) p['paye_applicable']          = s['payeApplicable'];
+  if (s['td1Received']            !== undefined) p['td1_received']             = s['td1Received'];
+  if (s['td1EffectiveYear']       !== undefined) p['td1_effective_year']       = s['td1EffectiveYear'];
+  if (s['hsApplicable']           !== undefined) p['hs_applicable']            = s['hsApplicable'];
+  if (s['hsExemptionReason']      !== undefined) p['hs_exemption_reason']      = s['hsExemptionReason'];
+  if (s['hsEffectiveDate']        !== undefined) p['hs_effective_date']        = s['hsEffectiveDate'];
+  if (s['hsVerificationRequired'] !== undefined) p['hs_verification_required'] = s['hsVerificationRequired'];
+  return p;
+}
+
+/**
+ * Build a StatutoryRow-compatible object from an hr_employee_statutory_profiles
+ * DB row, mapping nis_reg_status → nis_status so computePayrollReadiness() works.
+ */
+export function profileRowToStatutoryRow(row: Record<string, unknown>): StatutoryRow {
+  return {
+    nis_status:               (row['nis_reg_status'] as string)   ?? (row['nis_status'] as string) ?? 'pending',
+    nis_number:               (row['nis_number']     as string | null) ?? null,
+    paye_applicable:          (row['paye_applicable'] as boolean) ?? true,
+    bir_file_number:          (row['bir_file_number'] as string | null) ?? null,
+    td1_received:             (row['td1_received']    as boolean) ?? false,
+    hs_applicable:            (row['hs_applicable']   as boolean) ?? true,
+    hs_verification_required: (row['hs_verification_required'] as boolean) ?? false,
+    ...row,
+  };
 }
 
 /** Merge a patch over statutory defaults to a full row for readiness computation. */
@@ -128,21 +172,23 @@ export function statutoryWithDefaults(p: Record<string, unknown>): StatutoryRow 
 
 export interface ProvisionEmployeeInput {
   identity: {
-    username: string; password?: string; fullName: string;
+    username: string; fullName: string;
     firstName?: string; lastName?: string; email?: string; personalEmail?: string;
     phone?: string; employeeNumber?: string; dateOfBirth?: string; nationality?: string;
     preferredName?: string; governmentId?: string;
   };
   employment?: { employmentType?: string; contractorFlag?: boolean; startDate?: string; position?: string; positionTitle?: string; probationEndDate?: string; employeeGrade?: string; workSchedule?: string };
   assignment?: { departmentId?: string | null; siteId?: string | null; positionId?: string | null; supervisorId?: string | null; costCenter?: string | null; effectiveDate?: string };
-  access?:     { role?: string; permissionProfile?: string; selfServiceProfile?: string; requireMfa?: boolean; onboardingRequirements?: Record<string, boolean> };
+  /** Governed access only.
+   *
+   *  `resolvedRole` is the role a caller has ALREADY derived server-side from an
+   *  approved access profile. It must never be populated from user-supplied input
+   *  (a mapped CSV column, a request field). The field previously named `role` was
+   *  reachable from an import mapping, which let anyone who could commit a batch put
+   *  `role=admin` in a spreadsheet. Omit it and the record defaults to `employee`. */
+  access?:     { resolvedRole?: string; permissionProfile?: string; selfServiceProfile?: string; requireMfa?: boolean; onboardingRequirements?: Record<string, boolean> };
   statutory?:  Record<string, unknown>;
-  /** Create a Supabase Auth login (default true). False (e.g. an import with
-   *  "create login accounts" off) provisions the app_user with no login yet. */
-  createLogin?: boolean;
-  /** Initial app_users.status (default 'active'). An import with a "Draft"
-   *  default-record-status provisions 'draft' so the row is reviewed before it
-   *  can authenticate (auth requires status='active'). */
+  /** Initial app_users.status (default 'active'). */
   recordStatus?: string;
 }
 
@@ -160,10 +206,6 @@ export async function provisionEmployee(
   input: ProvisionEmployeeInput,
 ): Promise<{ id: string; employeeNo: string; readiness: 'pending' | 'ready' | 'blocked' }> {
   const { identity, employment, assignment, access, statutory } = input;
-  const createLogin = input.createLogin !== false;
-  if (createLogin && !identity.password) {
-    throw Object.assign(new Error('A password is required to create a login.'), { status: 400 });
-  }
 
   const employeeNo = identity.employeeNumber?.trim()
     ? identity.employeeNumber.trim().toUpperCase()
@@ -173,14 +215,22 @@ export async function provisionEmployee(
     : `${identity.username.toLowerCase()}@siomac.internal`;
   const startDate = employment?.startDate ?? todayISO();
 
-  const stPatch = statutory ? statutoryPatch(statutory) : {};
-  const readiness = Object.keys(stPatch).length
-    ? computePayrollReadiness(statutoryWithDefaults(stPatch))
+  // Use the profile-table mapping (nisStatus → nis_reg_status) for the canonical insert.
+  const stPatch = statutory ? statutoryProfilePatch(statutory) : {};
+  // computePayrollReadiness needs nis_status in StatutoryRow semantics; map nis_reg_status back.
+  const stForReadiness = statutory ? statutoryWithDefaults(statutoryPatch(statutory)) : null;
+  const readiness = stForReadiness
+    ? computePayrollReadiness(stForReadiness)
     : { status: 'pending' as const, blockers: [] as string[], financeEligible: false };
 
   const insertRow: Record<string, unknown> = {
     username: identity.username, full_name: identity.fullName,
-    role: access?.role ?? 'employee', status: input.recordStatus?.trim() || 'active', auth_email: authEmail,
+    role: access?.resolvedRole ?? 'employee',
+    // app_users.status is an authentication gate. HR lifecycle belongs in the
+    // dedicated employment_status column and status history.
+    status: 'active',
+    employment_status: input.recordStatus?.trim() || 'active',
+    auth_email: authEmail,
     email: identity.email?.trim() || null, personal_email: identity.personalEmail?.trim() || null,
     phone: identity.phone?.trim() || null, employee_number: employeeNo,
     contractor_flag: employment?.contractorFlag ?? (employment?.employmentType === 'contractor'),
@@ -215,20 +265,19 @@ export async function provisionEmployee(
   }
   const employeeId = created.id;
 
-  // Supabase Auth login (when requested) — roll back app_users on failure.
-  let authId: string | null = null;
-  if (createLogin) {
-    const { data: authData, error: authErr } = await sb.auth.admin.createUser({
-      email: authEmail, password: identity.password!, email_confirm: true,
-      user_metadata: { appUserId: employeeId, username: identity.username },
-    });
-    if (authErr) {
-      await sb.from('app_users').delete().eq('id', employeeId);
-      throw Object.assign(new Error('Failed to create auth account: ' + authErr.message), { status: 500 });
-    }
-    authId = authData.user.id;
-    await sb.from('app_users').update({ auth_id: authId }).eq('id', employeeId);
-  }
+  // NO Supabase Auth account is created here, by design.
+  //
+  // This path used to mint an Auth user with a randomly generated password and
+  // `email_confirm: true`. Nobody ever received that password, so the credential was
+  // unusable — yet the account was pre-confirmed, meaning anyone controlling the
+  // mailbox could reset it and inherit whatever role the record carried. Bulk import
+  // defaulted this ON.
+  //
+  // Account provisioning is a governed, invite-based flow: see
+  // lib/hr/accountProvisioning.ts (`provisionAccount`), which the Employee Creation
+  // Wizard calls for its `invite_on_create` mode. An employee record with no login is
+  // a valid, safe end state; a login is requested separately and explicitly.
+  const authId: string | null = null;
 
   // Satellites — errors are checked (not swallowed); roll back the user + Auth on failure.
   const { error: asgErr } = await sb.from('hr_employee_assignments').insert({
@@ -237,10 +286,20 @@ export async function provisionEmployee(
     supervisor_id: assignment?.supervisorId ?? null, assignment_type: 'primary',
     effective_from: assignment?.effectiveDate || startDate, is_current: true, created_by: actorId,
   });
-  const { error: stErr } = await sb.from('hr_employee_statutory').insert({
-    employee_id: employeeId, ...stPatch,
-    payroll_ready_status: readiness.status, missing_blockers: readiness.blockers,
-    finance_handoff_eligible: readiness.financeEligible, updated_by: actorId,
+  // Write statutory data to hr_employee_statutory_profiles (canonical table).
+  // nis_status on this table is the Finance verification status (always 'pending_verification' on create).
+  // nis_reg_status is the HR registration status (from the input's nisStatus field).
+  const { error: stErr } = await sb.from('hr_employee_statutory_profiles').insert({
+    employee_id: employeeId,
+    jurisdiction: 'TT',
+    currency: 'TTD',
+    nis_status: 'pending_verification',  // Finance verification state — HR cannot set 'verified'
+    ...stPatch,                          // stPatch maps nisStatus → nis_reg_status, other columns direct
+    payroll_ready_status:     readiness.status,
+    missing_blockers:         readiness.blockers,
+    finance_handoff_eligible: readiness.financeEligible,
+    created_by:               actorId,
+    updated_by:               actorId,
   });
   const { error: histErr } = await sb.from('hr_employee_status_history').insert({
     employee_id: employeeId, previous_status: null, new_status: input.recordStatus?.trim() || 'active',
@@ -254,7 +313,7 @@ export async function provisionEmployee(
   }
 
   await writeHrAudit({ employeeId, submoduleKey: 'employees', recordId: employeeId, actorId,
-    action: 'hr.employee.created', newState: { employee_number: employeeNo, role: access?.role ?? 'employee', payrollReadiness: readiness.status } });
+    action: 'hr.employee.created', newState: { employee_number: employeeNo, role: access?.resolvedRole ?? 'employee', payrollReadiness: readiness.status } });
 
   return { id: employeeId, employeeNo, readiness: readiness.status };
 }

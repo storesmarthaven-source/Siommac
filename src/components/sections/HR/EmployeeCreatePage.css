@@ -1,0 +1,638 @@
+/* ============================================================
+ * EmployeeCreatePage.css
+ *
+ * ALL rules are scoped under .emp-create-page to prevent the
+ * generic mockup names (.card, .btn, .field, .control, etc.)
+ * from leaking into the rest of the app.
+ *
+ * Source: docs/mockups/employee-create-wizard-selected.css
+ *   Every design-bearing class from that file is reproduced
+ *   here under the .emp-create-page root scope.
+ *
+ * Colour variables are mapped to SIOMAC design tokens where
+ * a direct equivalent exists; mockup values serve as fallbacks.
+ *
+ * Intentionally excluded (outer SIOMAC shell or UI-kit Stepper
+ * — see CSS_EXCLUSION_LIST in EmployeeCreatePage.test.ts):
+ *   .app  .workspace  .topbar  .crumbs  .topbar-spacer
+ *   .top-icon-actions  .icon-btn  .profile-button  .profile-dot
+ *   .step-strip  .step-card  .step-icon
+ *
+ * Additional rules beyond the mockup:
+ *   .control.is-error  .field-error  — inline validation state
+ * ============================================================ */
+
+/* ── Local token aliases ─────────────────────────────────────────────── */
+.emp-create-page {
+  --ink:        var(--text-primary, #14213d);
+  --muted:      var(--text-muted,   #66758d);
+  --line:       var(--border,       #dce3ec);
+  --surface:    var(--bg-card,      #ffffff);
+  --canvas:     var(--bg-app,       #f3f6fa);
+  --line-strong: var(--field-border, #cbd5e1);
+
+  /* Status scales — wired to SIOMAC tokens, fall back to mockup literals */
+  --blue-700:   var(--st-info-strong,    #1d4ed8);
+  --blue-600:   var(--st-info,           #2563eb);
+  --blue-100:   #dbeafe;
+  --blue-50:    #eff6ff;
+  --green-700:  var(--st-success-strong, #15803d);
+  --green-100:  #dcfce7;
+  --green-50:   #f0fdf4;
+  --amber-700:  var(--st-warning-strong, #b45309);
+  --amber-100:  #fef3c7;
+  --amber-50:   #fffbeb;
+  --red-700:    var(--st-danger-strong,  #b91c1c);
+  --red-100:    #fee2e2;
+  --red-50:     #fef2f2;
+
+  /* Kept from mockup (no direct SIOMAC equivalent) */
+  --navy-800:  #103c78;
+  --navy-900:  #0a2755;
+  --radius:    12px;
+  --shadow:    0 8px 24px rgba(11, 39, 85, .06);
+}
+
+/* ── UI-kit Stepper override ──────────────────────────────────────────
+   Six steps at the kit's 150px minimum need ~900px, which the content column
+   rarely has once the app shell's sidebar is subtracted. The kit's own rule that
+   hides step copy is keyed to the VIEWPORT (max-width: 720px), so it never fires
+   here: the viewport can be 800px while this column is only ~555px.
+
+   Container queries key off the COLUMN instead, degrading in the kit's own order —
+   drop the description first, then the label — so text is never crushed to a
+   single character and no scrollbar appears inside the rail.                     */
+.emp-create-page .page              { container-type: inline-size; container-name: empwiz; }
+.emp-create-page .ui-stepper        { margin-bottom: 18px; }
+
+@container empwiz (max-width: 900px) {
+  .emp-create-page .ui-stepper-copy span { display: none; }
+}
+@container empwiz (max-width: 700px) {
+  .emp-create-page .ui-stepper-copy { display: none; }
+  .emp-create-page .ui-stepper-step { min-width: 56px; }
+}
+
+/* ── Page shell ───────────────────────────────────────────────────────  */
+.emp-create-page { min-height: 100%; font-size: 15px; }
+
+.emp-create-page .page {
+  min-width: 0;
+  padding: 25px 28px 20px;   /* footer is in-flow (sticky), so no clearance needed */
+}
+
+.emp-create-page .page-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+.emp-create-page .page-head h1 {
+  margin: 0;
+  font-size: 29px;
+  line-height: 1.18;
+  letter-spacing: -.025em;
+}
+.emp-create-page .page-head p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.emp-create-page .page-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────  */
+.emp-create-page .btn {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--ink);
+  background: #fff;
+  font: 650 14px inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.emp-create-page .btn.primary {
+  border-color: var(--blue-600);
+  color: #fff;
+  background: var(--blue-600);
+}
+.emp-create-page .btn.primary:hover { background: var(--blue-700); }
+.emp-create-page .btn.ghost:hover   { border-color: #aab6c7; background: #f8fafc; }
+.emp-create-page .btn[disabled] {
+  cursor: not-allowed;
+  border-color: #d3dae4;
+  color: #9aa6b7;
+  background: #eef1f5;
+}
+
+/* ── Badges ───────────────────────────────────────────────────────────  */
+.emp-create-page .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  color: var(--muted);
+  background: #eef2f7;
+  font-size: 12px;
+  font-weight: 700;
+}
+.emp-create-page .badge.green { color: var(--green-700); background: var(--green-100); }
+.emp-create-page .badge.amber { color: var(--amber-700); background: var(--amber-100); }
+.emp-create-page .badge.red   { color: var(--red-700);   background: var(--red-100);   }
+.emp-create-page .badge.blue  { color: var(--blue-700);  background: var(--blue-100);  }
+
+/* ── Card ─────────────────────────────────────────────────────────────  */
+.emp-create-page .card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+/* ── Grids ────────────────────────────────────────────────────────────  */
+.emp-create-page .grid-3-1 { display: grid; grid-template-columns: minmax(0, 3fr) minmax(275px, 1fr); gap: 18px; }
+.emp-create-page .grid-7-3 { display: grid; grid-template-columns: minmax(0, 7fr) minmax(310px, 3fr); gap: 18px; }
+.emp-create-page .grid-2   { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.emp-create-page .grid-3   { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+
+/* ── Panel ────────────────────────────────────────────────────────────  */
+.emp-create-page .panel       { padding: 20px; }
+.emp-create-page .panel-title { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.emp-create-page .panel-title h2,
+.emp-create-page .panel-title h3 { margin: 0; font-size: 20px; letter-spacing: -.015em; }
+.emp-create-page .panel-title p  { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+
+/* ── Section box ──────────────────────────────────────────────────────  */
+.emp-create-page .section-box {
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+}
+.emp-create-page .section-box + .section-box { margin-top: 13px; }
+.emp-create-page .section-box-head { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.emp-create-page .section-box-head h3 { margin: 0; font-size: 15px; }
+.emp-create-page .section-box-head svg { width: 18px; height: 18px; color: var(--blue-700); flex: 0 0 auto; }
+
+/* ── Icons ────────────────────────────────────────────────────────────  */
+.emp-create-page .section-icon,
+.emp-create-page .status-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--blue-700);
+  background: var(--blue-50);
+}
+.emp-create-page .section-icon { width: 44px; height: 44px; }
+.emp-create-page .status-icon  { width: 40px; height: 40px; border-radius: 50%; }
+
+/* ── Fields ───────────────────────────────────────────────────────────  */
+.emp-create-page .field       { display: grid; gap: 7px; min-width: 0; }
+.emp-create-page .field label { color: #334155; font-size: 12px; font-weight: 700; }
+.emp-create-page .field label em { color: #dc2626; font-style: normal; }
+.emp-create-page .field small    { color: var(--muted); font-size: 11px; line-height: 1.35; }
+
+.emp-create-page .control {
+  min-height: 42px;
+  width: 100%;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  color: var(--ink);
+  background: #fff;
+  outline: none;
+  font: inherit;
+}
+.emp-create-page .control:focus {
+  border-color: var(--blue-600);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .11);
+}
+.emp-create-page .control[readonly]  { color: #667085; background: #f8fafc; }
+.emp-create-page .control[disabled]  { color: #9aa6b7; background: #eef1f5; cursor: not-allowed; }
+
+/* Inline validation error state (not in mockup; SIOMAC addition) */
+.emp-create-page .control.is-error   { border-color: var(--red-700); }
+.emp-create-page .field-error {
+  color: var(--red-700);
+  font-size: 11px;
+  line-height: 1.35;
+  margin-top: -3px;
+}
+
+/* ── Notice ───────────────────────────────────────────────────────────  */
+.emp-create-page .notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 11px 12px;
+  border: 1px solid #f8cf7a;
+  border-radius: 8px;
+  color: #7c4a03;
+  background: var(--amber-50);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.emp-create-page .notice.info { border-color: #b7d0ff; color: #1746a2; background: var(--blue-50); }
+.emp-create-page .notice svg  { width: 18px; height: 18px; margin-top: 1px; flex: none; }
+
+/* ── Side stack ───────────────────────────────────────────────────────  */
+.emp-create-page .side-stack    { display: grid; gap: 12px; align-content: start; }
+.emp-create-page .side-panel    { padding: 16px; }
+.emp-create-page .side-panel h3 { margin: 0 0 13px; font-size: 16px; }
+
+/* ── Mini row ─────────────────────────────────────────────────────────  */
+.emp-create-page .mini-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 9px 0;
+  border-top: 1px solid #edf1f5;
+}
+.emp-create-page .mini-row:first-of-type { border-top: 0; }
+.emp-create-page .mini-row strong { display: block; font-size: 13px; }
+.emp-create-page .mini-row span   { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
+.emp-create-page .mini-row.warn strong { color: var(--amber-700); }
+.emp-create-page .mini-row .tail  { margin-left: auto; color: var(--green-700); font-size: 11px; font-weight: 750; }
+.emp-create-page .mini-row svg    { width: 20px; height: 20px; flex: 0 0 auto; }
+
+/* ── Owner ────────────────────────────────────────────────────────────  */
+.emp-create-page .owner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+}
+.emp-create-page .owner-mark {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--blue-700);
+  background: var(--blue-50);
+  font-size: 11px;
+  font-weight: 800;
+  flex: 0 0 auto;
+}
+.emp-create-page .owner strong { display: block; font-size: 12px; }
+.emp-create-page .owner span   { color: var(--muted); font-size: 11px; }
+
+/* ── Sticky footer ────────────────────────────────────────────────────
+   `position: sticky` inside the content column — NOT `fixed`. A fixed bar is
+   positioned against the viewport, so it spans the full width and runs underneath
+   the app shell's left sidebar. Sticky keeps it pinned to the bottom of the scroll
+   area while still respecting the shell's layout. This matches the canonical
+   pattern used by the other full-page wizards (StartOnboarding, payrunWizard).  */
+.emp-create-page .sticky-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 13px 0;
+  border-top: 1px solid var(--line);
+  background: rgba(255, 255, 255, .97);
+  box-shadow: 0 -6px 20px rgba(11, 39, 85, .05);
+}
+.emp-create-page .sticky-actions .push { flex: 1; }
+
+/* ── Dossier — step 1 ─────────────────────────────────────────────────  */
+.emp-create-page .dossier-head {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+}
+.emp-create-page .avatar {
+  flex: 0 0 auto;
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  border: 4px solid #e7edf5;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(145deg, #9aa8ba, #53647b);
+  font-size: 20px;
+  font-weight: 750;
+  user-select: none;
+}
+.emp-create-page .dossier-head h2 { margin: 0; font-size: 20px; }
+.emp-create-page .identity-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.emp-create-page .identity-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.emp-create-page .identity-meta svg { width: 14px; height: 14px; }
+.emp-create-page .restricted {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--navy-800);
+  font-size: 11px;
+  font-weight: 750;
+}
+.emp-create-page .restricted svg { width: 13px; height: 13px; }
+
+.emp-create-page .dossier-section { padding-top: 17px; }
+.emp-create-page .dossier-section + .dossier-section {
+  margin-top: 17px;
+  border-top: 1px solid var(--line);
+}
+.emp-create-page .dossier-section h3 {
+  display: flex;
+  align-items: center;
+  margin: 0 0 13px;
+  font-size: 15px;
+}
+
+/* ── Readiness list — step 1 side ─────────────────────────────────────  */
+.emp-create-page .readiness-list { overflow: hidden; }
+.emp-create-page .readiness-row {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+}
+.emp-create-page .readiness-row:first-child { border-top: 0; }
+.emp-create-page .readiness-row svg    { width: 20px; height: 20px; flex: 0 0 auto; color: var(--green-700); }
+.emp-create-page .readiness-row.pending svg { color: var(--amber-700); }
+.emp-create-page .readiness-row.locked svg  { color: #8793a5; }
+.emp-create-page .readiness-row strong { display: block; font-size: 13px; }
+.emp-create-page .readiness-row span   { display: block; margin-top: 2px; font-size: 12px; color: var(--green-700); }
+.emp-create-page .readiness-row.pending span { color: var(--amber-700); }
+.emp-create-page .readiness-row.locked span  { color: var(--muted); }
+.emp-create-page .readiness-row .chev { margin-left: auto; color: var(--muted); width: 15px; height: 15px; flex: 0 0 auto; }
+
+/* ── Choice grid — step 5 account mode ───────────────────────────────  */
+.emp-create-page .choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.emp-create-page .choice {
+  min-height: 110px;
+  position: relative;
+  padding: 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  display: block;
+}
+.emp-create-page .choice.selected {
+  border-color: var(--blue-600);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, .1);
+}
+.emp-create-page .choice input[type="radio"] {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  margin: 0;
+}
+.emp-create-page .choice-body          { padding-left: 28px; }
+.emp-create-page .choice-body svg      { width: 26px; height: 26px; margin-bottom: 9px; color: var(--navy-800); }
+.emp-create-page .choice-body strong   { display: block; font-size: 13px; }
+.emp-create-page .choice-body p        { margin: 6px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+
+/* ── Outcome list — steps 5, 6, receipt ──────────────────────────────  */
+.emp-create-page .outcome-list { display: grid; gap: 9px; }
+.emp-create-page .outcome {
+  min-height: 73px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+}
+.emp-create-page .outcome.blocked { border-color: #f5b5b5; background: var(--red-50); }
+.emp-create-page .outcome strong  { display: block; font-size: 13px; }
+.emp-create-page .outcome p       { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+.emp-create-page .outcome-tail    { display: grid; justify-items: end; gap: 5px; }
+.emp-create-page .outcome-owner   { color: var(--blue-700); font-size: 11px; font-weight: 750; }
+
+/* ── Blockers panel ───────────────────────────────────────────────────  */
+.emp-create-page .blockers {
+  margin-top: 12px;
+  padding: 13px;
+  border: 1px solid #f1b2b2;
+  border-radius: 9px;
+  background: var(--red-50);
+}
+.emp-create-page .blockers-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+.emp-create-page .blockers-head strong { font-size: 13px; }
+.emp-create-page .blockers-head button {
+  color: var(--blue-700);
+  font-size: 11px;
+  font-weight: 700;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.emp-create-page .blockers ul { margin: 0; padding-left: 20px; color: #4b5563; font-size: 12px; }
+.emp-create-page .blockers li + li { margin-top: 5px; }
+
+/* ── Progress line — step 4 side ──────────────────────────────────────  */
+.emp-create-page .progress-line {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7ecf2;
+  margin-top: 8px;
+}
+.emp-create-page .progress-line span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--blue-600);
+}
+
+/* ── Check list — step 4 evidence ─────────────────────────────────────  */
+.emp-create-page .check-list { display: grid; gap: 8px; }
+.emp-create-page .check-row {
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+}
+.emp-create-page .check-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--green-700);
+  background: var(--green-50);
+  flex: 0 0 auto;
+}
+.emp-create-page .check-icon.warn   { color: var(--amber-700); background: var(--amber-50); }
+.emp-create-page .check-icon.danger { color: var(--red-700);   background: var(--red-50);   }
+.emp-create-page .check-icon svg    { width: 18px; height: 18px; }
+.emp-create-page .check-row strong  { display: block; font-size: 13px; }
+.emp-create-page .check-row p       { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+
+/* ── Metric grid — receipt, draft recovery ────────────────────────────  */
+.emp-create-page .metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.emp-create-page .metric {
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+}
+.emp-create-page .metric span   { color: var(--muted); font-size: 11px; }
+.emp-create-page .metric strong { display: block; margin-top: 5px; font-size: 20px; letter-spacing: -.02em; }
+
+/* ── Summary grid — step 6 review ─────────────────────────────────────  */
+.emp-create-page .summary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.emp-create-page .summary-card {
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+}
+.emp-create-page .summary-card-head { display: flex; align-items: center; gap: 9px; margin-bottom: 11px; }
+.emp-create-page .summary-card-head svg { width: 19px; height: 19px; color: var(--blue-700); flex: 0 0 auto; }
+.emp-create-page .summary-card-head h3 { margin: 0; font-size: 15px; }
+.emp-create-page .summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 7px 0;
+  border-top: 1px solid #edf1f5;
+  font-size: 12px;
+}
+.emp-create-page .summary-row span    { color: var(--muted); flex-shrink: 0; }
+.emp-create-page .summary-row strong  { text-align: right; font-weight: 650; }
+
+/* ── Draft list — draft recovery banner ───────────────────────────────  */
+.emp-create-page .draft-list  { display: grid; gap: 11px; }
+.emp-create-page .draft-row {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1.3fr) minmax(160px, .7fr) minmax(145px, .6fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 15px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+}
+.emp-create-page .draft-mark {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--blue-700);
+  background: var(--blue-50);
+}
+.emp-create-page .draft-mark svg  { width: 20px; height: 20px; }
+.emp-create-page .draft-row strong { display: block; font-size: 13px; }
+.emp-create-page .draft-row p      { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+.emp-create-page .draft-actions    { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ── Success / receipt ────────────────────────────────────────────────  */
+.emp-create-page .success-shell { max-width: 920px; margin: 32px auto; }
+.emp-create-page .success-hero  { padding: 28px; text-align: center; }
+.emp-create-page .success-icon {
+  width: 66px;
+  height: 66px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  color: var(--green-700);
+  background: var(--green-100);
+}
+.emp-create-page .success-icon svg { width: 34px; height: 34px; }
+.emp-create-page .success-hero h1  { margin: 0; font-size: 28px; }
+.emp-create-page .success-hero > p { margin: 8px auto 0; max-width: 620px; color: var(--muted); }
+.emp-create-page .receipt-id {
+  display: inline-flex;
+  margin-top: 14px;
+  padding: 7px 11px;
+  border-radius: 8px;
+  color: var(--navy-900);
+  background: var(--blue-50);
+  font: 700 12px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.emp-create-page .receipt-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* ── Responsive breakpoints ───────────────────────────────────────────  */
+@media (max-width: 900px) {
+  .emp-create-page .page           { padding: 20px 18px; }
+  .emp-create-page .page-head      { display: grid; }
+  .emp-create-page .page-actions   { margin-left: 0; }
+  .emp-create-page .grid-3-1,
+  .emp-create-page .grid-7-3,
+  .emp-create-page .grid-2,
+  .emp-create-page .grid-3         { grid-template-columns: 1fr; }
+  .emp-create-page .choice-grid    { grid-template-columns: 1fr; }
+  .emp-create-page .metric-grid,
+  .emp-create-page .summary-grid   { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .emp-create-page .draft-row      { grid-template-columns: 46px minmax(0, 1fr) auto; }
+  .emp-create-page .draft-row > div:nth-child(3),
+  .emp-create-page .draft-row > div:nth-child(4) { display: none; }
+}
+
+@media (max-width: 620px) {
+  .emp-create-page .sticky-actions .btn.ghost:not(:first-child) { display: none; }
+  .emp-create-page .metric-grid,
+  .emp-create-page .summary-grid { grid-template-columns: 1fr; }
+  .emp-create-page .draft-row    { grid-template-columns: 40px minmax(0, 1fr); }
+  .emp-create-page .draft-actions { grid-column: 1 / -1; }
+}

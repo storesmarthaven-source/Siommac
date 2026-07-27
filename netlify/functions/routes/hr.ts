@@ -13,15 +13,16 @@ import { sb }         from '../lib/db';
 import { requirePermission, requireUser, userCan } from '../lib/auth';
 import { runModuleMutation } from '../lib/moduleServiceAdapter';
 import { emitAppEvent }      from '../lib/appEvents';
+import { getReqContext }     from '../lib/reqContext';
 import { createAttachmentUploadUrl } from '../lib/upload';
 import { getSignedUrl, resolveProfileImageUrl } from '../lib/photos';
 import { nextRef }    from '../lib/refGenerator';
 import { z, zv }      from '../lib/validate';
 import {
-  EMPLOYMENT_TYPES, NIS_STATUSES, statutoryPatch, statutoryWithDefaults, computePayrollReadiness,
-  writeHrAudit, provisionEmployee, todayISO, type StatutoryRow,
+  EMPLOYMENT_TYPES, NIS_STATUSES, statutoryPatch, statutoryProfilePatch,
+  statutoryWithDefaults, computePayrollReadiness, profileRowToStatutoryRow,
+  writeHrAudit, todayISO, type StatutoryRow,
 } from '../lib/hr/employeeCore';
-import { startOnboardingCase } from '../lib/hr/onboardingCore';
 import { CHANGE_TYPES, type ChangeType, CONTACT_COLS, applyApprovedChange, markChangeRequestStatus } from '../lib/hr/changeApproval';
 import { decideTask, rpcHttpError } from '../lib/workflow/service';
 import { selectWorkflowBinding } from '../lib/workflow/bindingResolver';
@@ -71,6 +72,29 @@ function rollupTrainingStatus(certs: { status: string; expires_at: string | null
   return 'none';
 }
 
+type EmployeeReadiness = {
+  percent: number;
+  assignmentComplete: boolean;
+  payrollStatus: 'pending' | 'ready' | 'blocked';
+  trainingStatus: 'current' | 'due_soon' | 'expired' | 'none';
+  blockers: Array<'assignment' | 'payroll' | 'training'>;
+};
+
+/** One readiness contract for register rows and employee detail. */
+function employeeReadiness(
+  employee: Pick<EmpRow, 'supervisor_id' | 'department_id'> & Record<string, unknown>,
+  payrollStatus: EmployeeReadiness['payrollStatus'],
+  trainingStatus: EmployeeReadiness['trainingStatus'],
+): EmployeeReadiness {
+  const assignmentComplete = !!employee.supervisor_id && !!employee.department_id && !!employee['site_id'];
+  const blockers: EmployeeReadiness['blockers'] = [];
+  if (!assignmentComplete) blockers.push('assignment');
+  if (payrollStatus !== 'ready') blockers.push('payroll');
+  if (trainingStatus !== 'current') blockers.push('training');
+  const passed = Number(assignmentComplete) + Number(payrollStatus === 'ready') + Number(trainingStatus === 'current');
+  return { percent: Math.round((passed / 3) * 100), assignmentComplete, payrollStatus, trainingStatus, blockers };
+}
+
 // ── Employee Master ────────────────────────────────────────────────────────────
 
 const EMPLOYEE_SORT_COLS = ['full_name', 'employee_number', 'status', 'employment_type', 'start_date', 'department_id'] as const;
@@ -82,8 +106,9 @@ function escapeLike(s: string): string {
 }
 
 // POST /api/hr/employees/list
+const MISSING_COLUMN = { supervisor: 'supervisor_id', department: 'department_id', site: 'site_id' } as const;
 router.post('/employees/list', async c => {
-  await requirePermission(c, 'hr.view');
+  const actor = await requirePermission(c, 'hr.view');
   const v = zv(c, z.object({
     // Legacy single-value filters (kept for existing picker/dropdown callers).
     status: z.string().optional(), departmentId: z.string().optional(),
@@ -94,6 +119,9 @@ router.post('/employees/list', async c => {
     departmentIds: z.array(z.string()).optional(),
     employmentTypes: z.array(z.string()).optional(),
     trainingStatuses: z.array(z.enum(TRAINING_STATUSES)).optional(),
+    // Records MISSING a required assignment field. Backs the Exceptions KPI drill-down, which
+    // otherwise had no corresponding register filter and could only scroll the page.
+    missing: z.array(z.enum(['supervisor', 'department', 'site'])).optional(),
     sortBy: z.enum(EMPLOYEE_SORT_COLS).optional(),
     sortDir: z.enum(['asc', 'desc']).optional(),
     page: z.number().int().positive().optional(),
@@ -114,7 +142,7 @@ router.post('/employees/list', async c => {
   // this keeps pagination + totals honest instead of filtering only the current page.
   let restrictToIds: string[] | null = null;
   if (v.data.trainingStatuses?.length) {
-    let idQ = sb.from('app_users').select('id').neq('role', 'superadmin');
+    let idQ = sb.from('app_users').select('id').neq('role', 'superadmin').neq('role', 'admin').not('employee_number', 'is', null);
     if (v.data.status)                 idQ = idQ.eq('status', v.data.status);
     if (v.data.statuses?.length)       idQ = idQ.in('status', v.data.statuses);
     if (v.data.departmentId)           idQ = idQ.eq('department_id', v.data.departmentId);
@@ -122,6 +150,7 @@ router.post('/employees/list', async c => {
     if (v.data.employmentType)         idQ = idQ.eq('employment_type', v.data.employmentType);
     if (v.data.employmentTypes?.length) idQ = idQ.in('employment_type', v.data.employmentTypes);
     if (v.data.workerType)             idQ = idQ.eq('contractor_flag', v.data.workerType === 'contractor');
+    if (v.data.missing?.length)        idQ = idQ.or(v.data.missing.map(m => `${MISSING_COLUMN[m]}.is.null`).join(','));
     if (searchLike)                    idQ = idQ.or(`full_name.ilike.%${searchLike}%,employee_number.ilike.%${searchLike}%,email.ilike.%${searchLike}%,position.ilike.%${searchLike}%`);
     const { data: idRows, error: idErr } = await idQ;
     if (idErr) return c.json({ success: false, message: idErr.message }, 500 as 200);
@@ -142,7 +171,7 @@ router.post('/employees/list', async c => {
     }
   }
 
-  let q = sb.from('app_users').select(HR_COLS, paginated ? { count: 'exact' } : {}).neq('role', 'superadmin');
+  let q = sb.from('app_users').select(HR_COLS, paginated ? { count: 'exact' } : {}).neq('role', 'superadmin').neq('role', 'admin').not('employee_number', 'is', null);
   if (v.data.status)                 q = q.eq('status', v.data.status);
   if (v.data.statuses?.length)       q = q.in('status', v.data.statuses);
   if (v.data.departmentId)           q = q.eq('department_id', v.data.departmentId);
@@ -151,6 +180,10 @@ router.post('/employees/list', async c => {
   if (v.data.employmentTypes?.length) q = q.in('employment_type', v.data.employmentTypes);
   if (v.data.workerType)             q = q.eq('contractor_flag', v.data.workerType === 'contractor');
   if (searchLike)                    q = q.or(`full_name.ilike.%${searchLike}%,employee_number.ilike.%${searchLike}%,email.ilike.%${searchLike}%,position.ilike.%${searchLike}%`);
+  if (v.data.missing?.length) {
+    // OR across the requested fields: "missing supervisor OR department OR site".
+    q = q.or(v.data.missing.map(m => `${MISSING_COLUMN[m]}.is.null`).join(','));
+  }
   if (restrictToIds)                 q = q.in('id', restrictToIds);
   q = q.order(sortCol, { ascending: sortAsc });
   q = paginated
@@ -172,14 +205,34 @@ router.post('/employees/list', async c => {
   // can sit outside this page — so the contract carries the resolved name, not a raw id.
   const ids = data.map(r => r.id);
   const supIds = Array.from(new Set(data.map(r => r.supervisor_id).filter((x): x is string => !!x)));
-  const [certsRes, supsRes] = await Promise.all([
+  const [canStatutory, canReadiness] = await Promise.all([
+    userCan(actor, 'hr.employees.statutory.view'),
+    userCan(actor, 'hr.employees.payroll_readiness.view'),
+  ]);
+  const mayViewReadiness = canStatutory || canReadiness;
+  const [certsRes, supsRes, readinessRes, offboardingRes] = await Promise.all([
     ids.length
       ? sb.from('hse_worker_certificates').select('worker_id, status, expires_at').in('worker_id', ids)
-      : Promise.resolve({ data: [] as { worker_id: string; status: string; expires_at: string | null }[] }),
+      : Promise.resolve({ data: [] as { worker_id: string; status: string; expires_at: string | null }[], error: null }),
     supIds.length
       ? sb.from('app_users').select('id, full_name').in('id', supIds)
-      : Promise.resolve({ data: [] as { id: string; full_name: string | null }[] }),
+      : Promise.resolve({ data: [] as { id: string; full_name: string | null }[], error: null }),
+    mayViewReadiness && ids.length
+      ? sb.from('hr_employee_statutory_profiles').select('employee_id, payroll_ready_status').eq('jurisdiction', 'TT').in('employee_id', ids)
+      : Promise.resolve({ data: [] as { employee_id: string; payroll_ready_status: string }[], error: null }),
+    // Whether an offboarding case is already running, so the register can hide "Start
+    // Offboarding" on employees who are already leaving. A boolean only — no case detail —
+    // and it rides the hr_offboarding_cases(employee_id, status) index.
+    ids.length
+      ? sb.from('hr_offboarding_cases').select('employee_id').in('employee_id', ids).not('status', 'in', '("completed","cancelled")')
+      : Promise.resolve({ data: [] as { employee_id: string | null }[], error: null }),
   ]);
+  if (certsRes.error) return c.json({ success: false, message: certsRes.error.message }, 500 as 200);
+  if (supsRes.error) return c.json({ success: false, message: supsRes.error.message }, 500 as 200);
+  if (readinessRes.error) return c.json({ success: false, message: readinessRes.error.message }, 500 as 200);
+  if (offboardingRes.error) return c.json({ success: false, message: offboardingRes.error.message }, 500 as 200);
+  const offboardingActiveIds = new Set(((offboardingRes.data ?? []) as { employee_id: string | null }[])
+    .map(row => row.employee_id).filter((id): id is string => !!id));
   const certByWorker = new Map<string, { status: string; expires_at: string | null }[]>();
   for (const cr of (certsRes.data ?? []) as { worker_id: string; status: string; expires_at: string | null }[]) {
     const list = certByWorker.get(cr.worker_id) ?? [];
@@ -187,16 +240,24 @@ router.post('/employees/list', async c => {
     certByWorker.set(cr.worker_id, list);
   }
   const supMap = Object.fromEntries(((supsRes.data ?? []) as { id: string; full_name: string | null }[]).map(s => [s.id, s.full_name]));
+  const readinessMap = new Map(((readinessRes.data ?? []) as { employee_id: string; payroll_ready_status: string }[])
+    .map(row => [row.employee_id, row.payroll_ready_status]));
 
-  const mapped = data.map(r => ({
-    ...r,
-    profile_image_url: resolveProfileImageUrl(r as Parameters<typeof resolveProfileImageUrl>[0]),
-    departmentName: deptMap[r.department_id ?? ''] ?? null,
-    siteName: siteMap[(r['site_id'] as string | null) ?? ''] ?? null,
-    supervisorName: r.supervisor_id ? supMap[r.supervisor_id] ?? null : null,
-    workerType: r['contractor_flag'] ? 'contractor' : 'employee',
-    trainingStatus: rollupTrainingStatus(certByWorker.get(r.id) ?? [], today),
-  }));
+  const mapped = data.map(r => {
+    const payrollStatus = (readinessMap.get(r.id) ?? 'pending') as 'pending' | 'ready' | 'blocked';
+    const trainingStatus = rollupTrainingStatus(certByWorker.get(r.id) ?? [], today);
+    return {
+      ...r,
+      profile_image_url: resolveProfileImageUrl(r as Parameters<typeof resolveProfileImageUrl>[0]),
+      departmentName: deptMap[r.department_id ?? ''] ?? null,
+      siteName: siteMap[(r['site_id'] as string | null) ?? ''] ?? null,
+      supervisorName: r.supervisor_id ? supMap[r.supervisor_id] ?? null : null,
+      workerType: r['contractor_flag'] ? 'contractor' : 'employee',
+      trainingStatus,
+      readiness: mayViewReadiness ? employeeReadiness(r, payrollStatus, trainingStatus) : null,
+      offboardingActive: offboardingActiveIds.has(r.id),
+    };
+  });
 
   return c.json({
     success: true,
@@ -221,13 +282,15 @@ router.post('/employees/get', async c => {
   const emp = await loadEmployee(v.data.employeeId);
   if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
 
-  const [{ data: supervisor }, { data: dept }, { data: site }, { data: statusHistory }, { data: assignment }, { data: statutory }] = await Promise.all([
+  const [{ data: supervisor }, { data: dept }, { data: site }, { data: statusHistory }, { data: assignment }, { data: statutory }, certificates] = await Promise.all([
     emp.supervisor_id ? sb.from('app_users').select('id, full_name').eq('id', emp.supervisor_id).maybeSingle() : Promise.resolve({ data: null }),
     emp.department_id ? sb.from('departments').select('id, name').eq('id', emp.department_id).maybeSingle() : Promise.resolve({ data: null }),
     emp['site_id'] ? sb.from('project_sites').select('id, name').eq('id', emp['site_id'] as string).maybeSingle() : Promise.resolve({ data: null }),
     sb.from('hr_employee_status_history').select('*').eq('employee_id', emp.id).order('changed_at', { ascending: false }).limit(20),
     sb.from('hr_employee_assignments').select('*').eq('employee_id', emp.id).eq('is_current', true).maybeSingle(),
-    sb.from('hr_employee_statutory').select('*').eq('employee_id', emp.id).maybeSingle<StatutoryRow & Record<string, unknown>>(),
+    // Read statutory from the canonical profiles table; map nis_reg_status → nis_status for the FE contract.
+    sb.from('hr_employee_statutory_profiles').select('*').eq('employee_id', emp.id).eq('jurisdiction', 'TT').maybeSingle<Record<string, unknown>>(),
+    sb.from('hse_worker_certificates').select('status, expires_at').eq('worker_id', emp.id),
   ]);
 
   // Statutory is sensitive — full detail needs statutory.view; readiness-only needs payroll_readiness.view.
@@ -235,11 +298,22 @@ router.post('/employees/get', async c => {
     userCan(actor, 'hr.employees.statutory.view'),
     userCan(actor, 'hr.employees.payroll_readiness.view'),
   ]);
+  // Map the profiles-table row to the legacy StatutoryRow shape (nis_reg_status → nis_status)
+  // so the existing frontend contract is unchanged.
+  const statutoryMapped = statutory ? profileRowToStatutoryRow(statutory as Record<string, unknown>) : null;
   const payrollReadiness = statutory ? {
-    status: statutory['payroll_ready_status'] ?? 'pending',
-    blockers: statutory['missing_blockers'] ?? [],
-    financeHandoffEligible: statutory['finance_handoff_eligible'] ?? false,
-  } : { status: 'pending', blockers: [], financeHandoffEligible: false };
+    status: (statutory['payroll_ready_status'] ?? 'pending') as string,
+    blockers: (statutory['missing_blockers'] ?? []) as string[],
+    financeHandoffEligible: (statutory['finance_handoff_eligible'] ?? false) as boolean,
+  } : { status: 'pending', blockers: [] as string[], financeHandoffEligible: false };
+  if (certificates.error) return c.json({ success: false, message: certificates.error.message }, 500 as 200);
+  const trainingStatus = rollupTrainingStatus(
+    (certificates.data ?? []) as { status: string; expires_at: string | null }[],
+    todayISO(),
+  );
+  const readiness = (canStatutory || canReadiness)
+    ? employeeReadiness(emp, payrollReadiness.status as EmployeeReadiness['payrollStatus'], trainingStatus)
+    : null;
 
   return c.json({ success: true, data: {
     employee: { ...emp,
@@ -248,10 +322,12 @@ router.post('/employees/get', async c => {
       departmentName: (dept as { name?: string } | null)?.name ?? null,
       siteName: (site as { name?: string } | null)?.name ?? null,
       workerType: emp['contractor_flag'] ? 'contractor' : 'employee',
+      trainingStatus,
+      readiness,
     },
     statusHistory: statusHistory ?? [],
     currentAssignment: assignment ?? null,
-    statutory: canStatutory ? (statutory ?? null) : null,
+    statutory: canStatutory ? (statutoryMapped ?? null) : null,
     payrollReadiness: (canStatutory || canReadiness) ? payrollReadiness : null,
   } });
 });
@@ -310,109 +386,196 @@ router.post('/employees/photo/decide', async c => {
   return c.json({ success: true });
 });
 
-// POST /api/hr/employees/create — v36 Create Employee wizard (identity → statutory).
-// Routed through the standard module-mutation adapter (record → event → idempotency),
-// matching every other module's CREATE path. Credentials live in Supabase Auth —
-// app_users holds no password. Onboarding-case creation is owned by the Onboarding
-// phase (§10, tables not yet built): no onboarding inputs; onboarding_case_id is null.
+// POST /api/hr/employees/create — Production Employee Creation Wizard endpoint.
+//
+// BREAKING from the old contract:
+//   • identity.password REMOVED — HR never sets passwords. account provisioning
+//     is handled post-create via the three approved account modes.
+//   • access.role REMOVED — replaced by access.accessProfileId (resolved server-side
+//     to a system role from hr_access_profiles). Raw role exposure eliminated.
+//   • access.permissionProfile / selfServiceProfile / requireMfa / onboardingRequirements
+//     REMOVED — not yet backed by enforced governance. Accept-and-drop is a band-aid.
+//   • statutory writes → hr_employee_statutory_profiles (canonical). Legacy table
+//     hr_employee_statutory receives NO new writes from this path.
+//   • onboarding preflight: if createOnboardingCase is requested, the package is
+//     validated BEFORE the employee is created. A package that doesn't exist fails
+//     the whole request (no silent skip, no post-create best-effort ignore).
+const employeeCreateDate = z.string().refine((value) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}, 'Use a real calendar date in YYYY-MM-DD format.');
+
 router.post('/employees/create', async c => {
   const actor = await requirePermission(c, 'hr.employees.create');
   const v = zv(c, z.object({
+    requestKey: z.string().uuid(),
     identity: z.object({
       username:       z.string().min(1).max(80),
-      password:       z.string().min(6).max(200),
-      fullName:       z.string().min(1).max(200),
-      firstName:      z.string().max(120).optional(),
-      lastName:       z.string().max(120).optional(),
-      email:          z.string().max(160).optional(),
-      personalEmail:  z.string().max(160).optional(),
+      firstName:      z.string().trim().min(1).max(120),
+      lastName:       z.string().trim().min(1).max(120),
+      email:          z.string().email().max(160).optional().or(z.literal('')).optional(),
+      personalEmail:  z.string().email().max(160).optional().or(z.literal('')).optional(),
       phone:          z.string().max(60).optional(),
       employeeNumber: z.string().max(40).optional(),
-      dateOfBirth:    z.string().max(20).optional(),
+      dateOfBirth:    employeeCreateDate.optional().or(z.literal('')).optional(),
       nationality:    z.string().max(80).optional(),
       preferredName:  z.string().max(160).optional(),
       governmentId:   z.string().max(80).optional(),
     }),
     employment: z.object({
-      employmentType:   z.enum(EMPLOYMENT_TYPES).optional(),
-      contractorFlag:   z.boolean().optional(),
-      startDate:        z.string().optional(),
+      employmentType:   z.enum(EMPLOYMENT_TYPES),
+      startDate:        employeeCreateDate,
       position:         z.string().max(160).optional(),
-      positionTitle:    z.string().max(120).optional(),
-      probationEndDate: z.string().max(20).optional(),
+      probationEndDate: employeeCreateDate.optional().or(z.literal('')).optional(),
       employeeGrade:    z.string().max(60).optional(),
       workSchedule:     z.string().max(60).optional(),
-    }).optional(),
+    }),
     assignment: z.object({
-      departmentId: z.string().nullable().optional(),
-      siteId:       z.string().nullable().optional(),
-      positionId:   z.string().uuid().nullable().optional(),
-      supervisorId: z.string().nullable().optional(),
-      costCenter:   z.string().max(60).nullable().optional(),
-      effectiveDate: z.string().max(20).optional(),
+      departmentId:  z.string().max(100).nullable().optional(),
+      siteId:        z.string().max(100).nullable().optional(),
+      positionId:    z.string().uuid().nullable().optional(),
+      supervisorId:  z.string().nullable().optional(),
+      effectiveDate: employeeCreateDate.optional().or(z.literal('')).optional(),
     }).optional(),
-    access:    z.object({
-      role:                   z.string().max(60).optional(),
-      permissionProfile:      z.string().max(60).optional(),
-      selfServiceProfile:     z.string().max(60).optional(),
-      requireMfa:             z.boolean().optional(),
-      onboardingRequirements: z.record(z.string(), z.boolean()).optional(),
+    access: z.object({
+      accessProfileId: z.string().uuid(),
+      accountMode:     z.literal('no_login'),
+    }),
+    recordStatus: z.enum(['draft', 'pending_onboarding', 'active', 'probation']).default('active'),
+    statutory: z.object({
+      nisNumber:              z.string().max(20).nullable().optional(),
+      nisStatus:              z.enum(NIS_STATUSES).optional(),
+      nisApplicable:          z.boolean().optional(),
+      nisEffectiveDate:       employeeCreateDate.optional().or(z.literal('')).optional(),
+      birFileNumber:          z.string().max(40).nullable().optional(),
+      payeApplicable:         z.boolean().optional(),
+      td1Received:            z.boolean().optional(),
+      td1EffectiveYear:       z.number().int().min(2000).max(2100).nullable().optional(),
+      hsApplicable:           z.boolean().optional(),
+      hsExemptionReason:      z.string().max(200).nullable().optional(),
+      hsEffectiveDate:        employeeCreateDate.optional().or(z.literal('')).optional(),
+      hsVerificationRequired: z.boolean().optional(),
     }).optional(),
-    createLogin:  z.boolean().optional(),
-    recordStatus: z.string().max(40).optional(),
-    statutory: z.record(z.string(), z.unknown()).optional(),
     onboarding: z.object({
-      createOnboardingCase: z.boolean().optional(),
-      packageKey:           z.string().optional(),
+      prepareOnboarding: z.boolean().optional(),
+      packageKey:           z.string().max(100).optional(),
     }).optional(),
   }), (c.get('body') as Record<string, unknown>).args ?? {});
   if (!v.ok) return v.response;
   const { identity, employment, assignment, access, statutory } = v.data;
 
-  // Friendly pre-flight uniqueness (provisionEmployee + the DB constraints are the backstop).
-  const { data: dupUser } = await sb.from('app_users').select('id').eq('username', identity.username).maybeSingle();
-  if (dupUser) return c.json({ success: false, message: `Username "${identity.username}" is already taken.` }, 400 as 200);
-  if (identity.employeeNumber?.trim()) {
-    const num = identity.employeeNumber.trim().toUpperCase();
-    const { data: dupNum } = await sb.from('app_users').select('id').eq('employee_number', num).maybeSingle();
-    if (dupNum) return c.json({ success: false, message: `Employee ID "${num}" is already in use.` }, 400 as 200);
+  if (identity.dateOfBirth && identity.dateOfBirth >= todayISO()) {
+    return c.json({ success: false, message: 'Date of birth must be before today.' }, 400 as 200);
+  }
+  if (employment.probationEndDate && employment.probationEndDate < employment.startDate) {
+    return c.json({ success: false, message: 'Probation end date cannot be before the employment start date.' }, 400 as 200);
+  }
+  if (assignment?.effectiveDate && assignment.effectiveDate < employment.startDate) {
+    return c.json({ success: false, message: 'Assignment effective date cannot be before the employment start date.' }, 400 as 200);
+  }
+  if (statutory?.nisStatus === 'registered' && !statutory.nisNumber?.trim()) {
+    return c.json({ success: false, message: 'A NIS number is required when NIS status is Registered.' }, 400 as 200);
+  }
+  if (statutory?.nisStatus === 'not_applicable' && statutory.nisApplicable !== false) {
+    return c.json({ success: false, message: 'NIS applicable must be No when NIS status is Not Applicable.' }, 400 as 200);
   }
 
-  // Provisioning (app_users + Supabase Auth + satellites, atomic) is the SHARED
-  // provisionEmployee() — the same path import/commit uses. The adapter emits the
-  // hr.employee.created app_event and tracks the run for idempotency.
-  const result = await runModuleMutation<{ id: string; employeeNo: string; readiness: 'pending' | 'ready' | 'blocked' }>({
-    context: { actorUserId: actor.id, siteId: assignment?.siteId ?? null, departmentId: assignment?.departmentId ?? null },
-    options: {
-      module: 'hr', operation: 'create', entityType: 'employee',
-      idempotencyKey: `hr.employee.create:${actor.id}:${identity.username}`,
-      eventType: 'hr.employee.created', eventSeverity: 'info',
-      getEntityIdentity: (r) => ({ id: r.id, ref: r.employeeNo }),
-      buildEventPayload:  (r) => ({ employeeNumber: r.employeeNo, payrollReadiness: r.readiness }),
-    },
-    writeRecord: () => provisionEmployee(actor.id, { identity, employment, assignment, access, statutory, createLogin: v.data.createLogin, recordStatus: v.data.recordStatus }),
-  });
+  // ── Pre-flight: uniqueness checks ────────────────────────────────────────────
+  const [dupUserRes, dupNumRes] = await Promise.all([
+    sb.from('app_users').select('id').eq('username', identity.username).maybeSingle(),
+    identity.employeeNumber?.trim()
+      ? sb.from('app_users').select('id').eq('employee_number', identity.employeeNumber.trim().toUpperCase()).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+  if (dupUserRes.error) throw Object.assign(new Error(`Could not validate username availability: ${dupUserRes.error.message}`), { status: 500 });
+  if (dupNumRes.error) throw Object.assign(new Error(`Could not validate employee number availability: ${dupNumRes.error.message}`), { status: 500 });
+  if (dupUserRes.data) return c.json({ success: false, message: `Username "${identity.username}" is already taken.` }, 400 as 200);
+  if (dupNumRes.data) return c.json({ success: false, message: `Employee ID "${identity.employeeNumber!.trim().toUpperCase()}" is already in use.` }, 400 as 200);
 
-  // Optional onboarding (v36 §10) — the employee is already committed, so starting
-  // onboarding is a best-effort follow-up via the shared startOnboardingCase(). A
-  // failure does NOT roll back the create (the employee is valid); it is SURFACED
-  // (onboarding_error), never swallowed or faked.
-  let onboardingCaseId: string | null = null;
-  let onboardingError: string | null = null;
-  if (v.data.onboarding?.createOnboardingCase) {
-    try {
-      const ob = await startOnboardingCase(actor.id, { employeeId: result.entityId, packageKey: v.data.onboarding.packageKey ?? 'standard_employee' });
-      onboardingCaseId = ob.caseId;
-    } catch (e) {
-      onboardingError = e instanceof Error ? e.message : 'Onboarding could not be started.';
-      console.error('[hr] onboarding start after create failed:', e);
+  // ── Pre-flight: access profile resolution ────────────────────────────────────
+  const { data: profile, error: profErr } = await sb.from('hr_access_profiles')
+    .select('system_role, is_active, label')
+    .eq('id', access.accessProfileId)
+    .maybeSingle<{ system_role: string; is_active: boolean; label: string }>();
+  if (profErr) throw Object.assign(new Error(`Could not resolve the access profile: ${profErr.message}`), { status: 500 });
+  if (!profile) return c.json({ success: false, message: 'Access profile not found.' }, 400 as 200);
+  if (!profile.is_active) return c.json({ success: false, message: `Access profile "${profile.label}" is inactive.` }, 400 as 200);
+
+  // ── Pre-flight: onboarding package ──────────────────────────────────────────
+  // Validated BEFORE the employee is created. If the package doesn't exist the
+  // whole request is rejected — no "employee created, onboarding silently skipped".
+  let resolvedPackageKey: string | null = null;
+  if (v.data.onboarding?.prepareOnboarding) {
+    const pkgKey = v.data.onboarding.packageKey?.trim();
+    if (!pkgKey) return c.json({ success: false, message: 'Select an onboarding package before preparing onboarding.' }, 400 as 200);
+    const { data: pkg, error: pkgErr } = await sb.from('hr_onboarding_packages')
+      .select('package_key, package_name, status, worker_types')
+      .eq('package_key', pkgKey)
+      .maybeSingle<{ package_key: string; package_name: string; status: string; worker_types: unknown }>();
+    if (pkgErr) throw Object.assign(new Error(`Could not validate the onboarding package: ${pkgErr.message}`), { status: 500 });
+    if (!pkg) return c.json({ success: false, message: `Onboarding package "${pkgKey}" does not exist.` }, 400 as 200);
+    if (pkg.status !== 'active') return c.json({ success: false, message: `Onboarding package "${pkg.package_name}" is not active.` }, 400 as 200);
+    const eligibleTypes = Array.isArray(pkg.worker_types) ? pkg.worker_types.map(String) : [];
+    if (eligibleTypes.length && !eligibleTypes.includes(employment.employmentType)) {
+      return c.json({ success: false, message: `Onboarding package "${pkg.package_name}" does not support ${employment.employmentType} workers.` }, 400 as 200);
     }
+    resolvedPackageKey = pkgKey;
   }
 
+  // ── Provisioning ─────────────────────────────────────────────────────────────
+  // provisionEmployee() writes app_users, hr_employee_assignments,
+  // hr_employee_statutory_profiles, hr_employee_status_history, hr_audit_log with
+  // compensating rollback. Auth account is NOT created here (createLogin: false).
+  const fullName = [identity.firstName.trim(), identity.lastName.trim()].join(' ');
+  const idempotencyKey = `hr.employee.create:${actor.id}:${v.data.requestKey}`;
+  const { reqId } = getReqContext();
+  const { data: created, error: createErr } = await sb.rpc('hr_employee_create_tx', {
+    p_actor_id: actor.id,
+    p_identity: { ...identity, fullName },
+    p_employment: {
+      ...employment,
+      contractorFlag: employment.employmentType === 'contractor',
+    },
+    p_assignment: assignment ?? {},
+    p_access: { resolvedRole: profile.system_role },
+    p_statutory: statutory ?? {},
+    p_record_status: v.data.recordStatus,
+    p_onboarding: {
+      prepareOnboarding: v.data.onboarding?.prepareOnboarding === true,
+      packageKey: resolvedPackageKey,
+    },
+    p_idempotency_key: idempotencyKey,
+    p_request_id: reqId ?? null,
+  });
+  if (createErr) {
+    const duplicate = createErr.code === '23505';
+    const message = duplicate
+      ? (createErr.message.includes('employee_number')
+          ? `Employee ID "${identity.employeeNumber?.trim().toUpperCase() ?? ''}" is already in use.`
+          : `Username "${identity.username}" is already taken.`)
+      : createErr.message;
+    throw Object.assign(new Error(message), { status: duplicate ? 400 : 500 });
+  }
+
+  const receipt = created as {
+    employee_id: string;
+    employee_no: string;
+    status: 'draft' | 'pending_onboarding' | 'active' | 'probation';
+    payroll_readiness: 'pending' | 'ready' | 'blocked';
+    onboarding_case_id: string | null;
+    onboarding_case_no: string | null;
+    event_id: string;
+  };
+
+  // ── Account provisioning (invite_on_create) ───────────────────────────────────
+  // Called AFTER the employee record is committed. Failure is SURFACED, not swallowed.
+  // The employee record is valid and usable; the missing account can be provisioned later.
+  // ── Onboarding case (post-create, surfaced on failure) ──────────────────────
   return c.json({ success: true, data: {
-    employee_id: result.entityId, employee_no: result.entityRef, status: 'active',
-    payroll_readiness: result.record.readiness, onboarding_case_id: onboardingCaseId,
-    onboarding_error: onboardingError, workflow_id: null,
+    ...receipt,
+    account_status: 'not_requested',
+    onboarding_status: receipt.onboarding_case_id ? 'draft_prepared' : 'not_requested',
   } });
 });
 
@@ -421,14 +584,19 @@ router.post('/employees/create', async c => {
 // but never supplies or authorises any of these records.
 router.post('/employees/dashboard-stats', async c => {
   await requirePermission(c, 'hr.employees.view');
-  const v = zv(c, z.object({ siteId: z.string().optional(), departmentId: z.string().optional() }),
-    (c.get('body') as Record<string, unknown>).args ?? {});
+  const v = zv(c, z.object({
+    siteId: z.string().optional(),
+    departmentId: z.string().optional(),
+    // Drives the lifecycle buckets only (see lifecycleWindows). Defaults to the historical
+    // behaviour so existing callers are unaffected.
+    granularity: z.enum(['day', 'week', 'month']).default('month'),
+  }), (c.get('body') as Record<string, unknown>).args ?? {});
   if (!v.ok) return v.response;
   const today = todayISO();
 
   const [workforceResult, statutoryResult, openChangesResult, lifecycleChangesResult, departmentsResult, sitesResult] = await Promise.all([
-    sb.from('app_users').select('id, status, contractor_flag, supervisor_id, department_id, site_id, start_date, end_date').neq('role', 'superadmin'),
-    sb.from('hr_employee_statutory').select('employee_id, payroll_ready_status'),
+    sb.from('app_users').select('id, status, contractor_flag, supervisor_id, department_id, site_id, start_date, end_date, updated_at').neq('role', 'superadmin').neq('role', 'admin').not('employee_number', 'is', null),
+    sb.from('hr_employee_statutory_profiles').select('employee_id, payroll_ready_status').eq('jurisdiction', 'TT'),
     sb.from('hr_employee_change_requests').select('employee_id, change_type, status, requested_at').in('status', ['submitted', 'in_review', 'returned']),
     sb.from('hr_employee_change_requests').select('employee_id, change_type, requested_value, applied_at').eq('status', 'applied').not('applied_at', 'is', null),
     sb.from('departments').select('id, name'),
@@ -444,7 +612,7 @@ router.post('/employees/dashboard-stats', async c => {
   const workforceRaw = workforceResult.data;
   const statRows = statutoryResult.data;
   const changeRows = openChangesResult.data;
-  let workforce = (workforceRaw ?? []) as { id: string; status: string; contractor_flag: boolean | null; supervisor_id: string | null; department_id: string | null; site_id: string | null; start_date: string | null; end_date: string | null }[];
+  let workforce = (workforceRaw ?? []) as { id: string; status: string; contractor_flag: boolean | null; supervisor_id: string | null; department_id: string | null; site_id: string | null; start_date: string | null; end_date: string | null; updated_at: string | null }[];
   if (v.data.siteId)       workforce = workforce.filter(w => w.site_id === v.data.siteId);
   if (v.data.departmentId) workforce = workforce.filter(w => w.department_id === v.data.departmentId);
   const active = workforce.filter(w => w.status === 'active');
@@ -459,6 +627,30 @@ router.post('/employees/dashboard-stats', async c => {
     const monthEnd = d.toISOString().slice(0, 10);
     return { period: MONTHS[d.getMonth()] ?? '', start, end: monthEnd };
   });
+
+  // Lifecycle buckets honour the requested granularity so the Workforce Activity chart's
+  // Day / Week / Month controls read REAL data rather than re-slicing one monthly series.
+  // The headcount `trend` above stays monthly on purpose — it is a different question
+  // ("how did headcount move over the year"), and a 14-day headcount line says nothing.
+  const iso = (d: Date): string => d.toISOString().slice(0, 10);
+  const DAY_BUCKETS = 14, WEEK_BUCKETS = 8;
+  const lifecycleWindows = ((): { period: string; start: string; end: string }[] => {
+    if (v.data.granularity === 'day') {
+      return Array.from({ length: DAY_BUCKETS }, (_, i) => {
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (DAY_BUCKETS - 1 - i));
+        return { period: `${d.getDate()} ${MONTHS[d.getMonth()] ?? ''}`, start: iso(d), end: iso(d) };
+      });
+    }
+    if (v.data.granularity === 'week') {
+      return Array.from({ length: WEEK_BUCKETS }, (_, i) => {
+        // Week ENDS on the current weekday, so the last bucket always includes today.
+        const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (WEEK_BUCKETS - 1 - i) * 7);
+        const start = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 6);
+        return { period: `${start.getDate()} ${MONTHS[start.getMonth()] ?? ''}`, start: iso(start), end: iso(end) };
+      });
+    }
+    return monthWindows;
+  })();
   const trend = monthWindows.map(month => {
     const monthEnd = month.end;
     const count = workforce.filter(w => (w.start_date ?? '') <= monthEnd && (!w.end_date || w.end_date > monthEnd)).length;
@@ -517,7 +709,7 @@ router.post('/employees/dashboard-stats', async c => {
   const appliedChanges = ((lifecycleChangesResult.data ?? []) as Array<{
     employee_id: string; change_type: string; requested_value: Record<string, unknown> | null; applied_at: string | null;
   }>).filter(row => workforceSet.has(row.employee_id));
-  const lifecyclePeriods = monthWindows.map(month => {
+  const lifecyclePeriods = lifecycleWindows.map(month => {
     const inMonth = (value: string | null): boolean => !!value && value.slice(0, 10) >= month.start && value.slice(0, 10) <= month.end;
     const applied = appliedChanges.filter(row => inMonth(row.applied_at));
     const transfers = applied.filter(row => row.change_type === 'department_transfer' || row.change_type === 'site_transfer' ||
@@ -530,6 +722,7 @@ router.post('/employees/dashboard-stats', async c => {
       exits: workforce.filter(worker => inMonth(worker.end_date)).length,
       transfers,
       promotions,
+      records_updated: workforce.filter(worker => inMonth(worker.updated_at)).length,
     };
   });
   const lifecycleTotals = lifecyclePeriods.reduce((totals, period) => ({
@@ -537,7 +730,8 @@ router.post('/employees/dashboard-stats', async c => {
     exits: totals.exits + period.exits,
     transfers: totals.transfers + period.transfers,
     promotions: totals.promotions + period.promotions,
-  }), { hires: 0, exits: 0, transfers: 0, promotions: 0 });
+    records_updated: totals.records_updated + period.records_updated,
+  }), { hires: 0, exits: 0, transfers: 0, promotions: 0, records_updated: 0 });
 
   // Exceptions.
   const exceptionItems = [
@@ -612,13 +806,19 @@ router.post('/employees/workflow-summary', async c => {
 });
 
 // POST /api/hr/employees/statutory/get — sensitive; gated by statutory.view.
+// Reads from hr_employee_statutory_profiles (canonical) and maps nis_reg_status
+// back to nis_status in the response so the existing FE contract is unchanged.
 router.post('/employees/statutory/get', async c => {
   await requirePermission(c, 'hr.employees.statutory.view');
   const v = zv(c, z.object({ employeeId: z.string().min(1) }), (c.get('body') as Record<string, unknown>).args ?? {});
   if (!v.ok) return v.response;
-  const { data } = await sb.from('hr_employee_statutory').select('*').eq('employee_id', v.data.employeeId).maybeSingle<StatutoryRow & Record<string, unknown>>();
-  const readiness = data ? computePayrollReadiness(data) : { status: 'pending' as const, blockers: [] as string[], financeEligible: false };
-  return c.json({ success: true, data: { statutory: data ?? null, readiness } });
+  const { data, error } = await sb.from('hr_employee_statutory_profiles')
+    .select('*').eq('employee_id', v.data.employeeId).eq('jurisdiction', 'TT')
+    .maybeSingle<Record<string, unknown>>();
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  const mapped = data ? profileRowToStatutoryRow(data) : null;
+  const readiness = mapped ? computePayrollReadiness(mapped) : { status: 'pending' as const, blockers: [] as string[], financeEligible: false };
+  return c.json({ success: true, data: { statutory: mapped ?? null, readiness } });
 });
 
 // POST /api/hr/employees/statutory/update — capture/verify statutory; recompute payroll readiness.
@@ -644,23 +844,42 @@ router.post('/employees/statutory/update', async c => {
   const emp = await loadEmployee(v.data.employeeId);
   if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
 
-  const { data: existing } = await sb.from('hr_employee_statutory').select('*').eq('employee_id', v.data.employeeId).maybeSingle<Record<string, unknown>>();
-  const patch = statutoryPatch(v.data as Record<string, unknown>);
-  const wasReady = existing?.['payroll_ready_status'] === 'ready';
-  const readiness = computePayrollReadiness(statutoryWithDefaults({ ...(existing ?? {}), ...patch }));
+  const { data: existingRaw, error: fetchErr } = await sb.from('hr_employee_statutory_profiles')
+    .select('*').eq('employee_id', v.data.employeeId).eq('jurisdiction', 'TT')
+    .maybeSingle<Record<string, unknown>>();
+  if (fetchErr) return c.json({ success: false, message: fetchErr.message }, 500 as 200);
+  const existing = existingRaw ? profileRowToStatutoryRow(existingRaw) : null;
+  // statutoryProfilePatch maps nisStatus → nis_reg_status for the profiles table.
+  const patch = statutoryProfilePatch(v.data as Record<string, unknown>);
+  const wasReady = existingRaw?.['payroll_ready_status'] === 'ready';
+  // Build a merged StatutoryRow (using nis_status = nis_reg_status) for readiness computation.
+  // Build a merged StatutoryRow (using nis_reg_status mapped to nis_status) for readiness.
+  // existing already has nis_status set by profileRowToStatutoryRow(); spread it first,
+  // then override with the fresh patch (which also uses nis_status via the legacy path).
+  const mergedForReadiness = statutoryWithDefaults({
+    ...(existing ?? {}),
+    ...statutoryPatch(v.data as Record<string, unknown>),   // legacy patch maps nisStatus → nis_status
+  });
+  const readiness = computePayrollReadiness(mergedForReadiness);
 
   const upd: Record<string, unknown> = {
     ...patch,
-    payroll_ready_status: readiness.status, missing_blockers: readiness.blockers,
-    finance_handoff_eligible: readiness.financeEligible, updated_by: actor.id, updated_at: new Date().toISOString(),
+    payroll_ready_status:     readiness.status,
+    missing_blockers:         readiness.blockers,  // native array for jsonb; no stringify
+    finance_handoff_eligible: readiness.financeEligible,
+    updated_by: actor.id,
   };
   if (v.data.markVerified) { upd['verified_by'] = actor.id; upd['verified_at'] = new Date().toISOString(); }
 
-  if (existing) {
-    const { error } = await sb.from('hr_employee_statutory').update(upd).eq('employee_id', v.data.employeeId);
+  if (existingRaw) {
+    const { error } = await sb.from('hr_employee_statutory_profiles').update(upd)
+      .eq('employee_id', v.data.employeeId).eq('jurisdiction', 'TT');
     if (error) return c.json({ success: false, message: error.message }, 500 as 200);
   } else {
-    const { error } = await sb.from('hr_employee_statutory').insert({ employee_id: v.data.employeeId, ...upd });
+    const { error } = await sb.from('hr_employee_statutory_profiles').insert({
+      employee_id: v.data.employeeId, jurisdiction: 'TT', currency: 'TTD',
+      nis_status: 'pending_verification', ...upd,
+    });
     if (error) return c.json({ success: false, message: error.message }, 500 as 200);
   }
 
@@ -1785,6 +2004,74 @@ router.post('/documents/expiry/run-sweep', async c => {
   } catch (err) {
     return c.json({ success: false, message: err instanceof Error ? err.message : 'Sweep failed' }, 500 as 200);
   }
+});
+
+// ── Access Profiles ────────────────────────────────────────────────────────────
+// Used by the employee creation wizard to resolve a system role server-side without
+// exposing raw role strings to the API surface.
+
+// POST /api/hr/access-profiles/list
+router.post('/access-profiles/list', async c => {
+  await requirePermission(c, 'hr.access_profiles.view');
+  const { data, error } = await sb.from('hr_access_profiles')
+    .select('id, code, label, system_role, description, requires_mfa, is_active, sort_order')
+    .order('sort_order', { ascending: true });
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  return c.json({ success: true, data: data ?? [] });
+});
+
+// ── Wizard Drafts ──────────────────────────────────────────────────────────────
+// One draft per actor (upsert by actor_id). Drafts are ephemeral guidance; they
+// are never the authoritative record — the create route is the single commit path.
+
+// POST /api/hr/employees/wizard/draft/save
+router.post('/employees/wizard/draft/save', async c => {
+  const actor = await requirePermission(c, 'hr.employees.wizard.draft');
+  const body = (c.get('body') as Record<string, unknown>).args ?? c.get('body') as Record<string, unknown>;
+  const draftData = (body as Record<string, unknown>).draftData ?? null;
+  const stepIndex = typeof (body as Record<string, unknown>).stepIndex === 'number'
+    ? (body as Record<string, unknown>).stepIndex as number
+    : 0;
+  const label = typeof (body as Record<string, unknown>).label === 'string'
+    ? (body as Record<string, unknown>).label as string
+    : null;
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data, error } = await sb.from('hr_employee_wizard_drafts')
+    .upsert({
+      actor_id:   actor.id,
+      draft_data: draftData,
+      step_index: stepIndex,
+      label:      label,
+      expires_at: expiresAt,
+    }, { onConflict: 'actor_id' })
+    .select('id, actor_id, step_index, label, expires_at, updated_at')
+    .single<{ id: string; actor_id: string; step_index: number; label: string | null; expires_at: string; updated_at: string | null }>();
+
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  return c.json({ success: true, data });
+});
+
+// POST /api/hr/employees/wizard/draft/get
+router.post('/employees/wizard/draft/get', async c => {
+  const actor = await requirePermission(c, 'hr.employees.wizard.draft');
+  const { data, error } = await sb.from('hr_employee_wizard_drafts')
+    .select('id, actor_id, draft_data, step_index, label, expires_at, updated_at')
+    .eq('actor_id', actor.id)
+    .gt('expires_at', new Date().toISOString())
+    .maybeSingle<{ id: string; actor_id: string; draft_data: unknown; step_index: number; label: string | null; expires_at: string; updated_at: string | null }>();
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  return c.json({ success: true, data: data ?? null });
+});
+
+// POST /api/hr/employees/wizard/draft/delete
+router.post('/employees/wizard/draft/delete', async c => {
+  const actor = await requirePermission(c, 'hr.employees.wizard.draft');
+  const { error } = await sb.from('hr_employee_wizard_drafts')
+    .delete()
+    .eq('actor_id', actor.id);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  return c.json({ success: true });
 });
 
 export default router;
