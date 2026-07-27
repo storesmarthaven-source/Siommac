@@ -9,6 +9,7 @@
 // actor who holds the change permission) and are fully audited + status-tracked.
 
 import { Hono, type Context } from 'hono';
+import { createHash } from 'node:crypto';
 import { sb }         from '../lib/db';
 import { requirePermission, requireUser, userCan } from '../lib/auth';
 import { runModuleMutation } from '../lib/moduleServiceAdapter';
@@ -17,7 +18,7 @@ import { getReqContext }     from '../lib/reqContext';
 import { createAttachmentUploadUrl } from '../lib/upload';
 import { getSignedUrl, resolveProfileImageUrl } from '../lib/photos';
 import { nextRef }    from '../lib/refGenerator';
-import { z, zv }      from '../lib/validate';
+import { z, zv, zUsername } from '../lib/validate';
 import {
   EMPLOYMENT_TYPES, NIS_STATUSES, statutoryPatch, statutoryProfilePatch,
   statutoryWithDefaults, computePayrollReadiness, profileRowToStatutoryRow,
@@ -47,14 +48,14 @@ import type { HonoVariables } from '../../../types/api';
 const router = new Hono<{ Variables: HonoVariables }>();
 
 const HR_COLS =
-  'id, username, full_name, first_name, last_name, display_name, role, status, ' +
+  'id, username, full_name, first_name, last_name, display_name, role, status, employment_status, ' +
   'employment_type, department_id, site_id, position, supervisor_id, email, personal_email, ' +
   'phone, employee_number, start_date, end_date, contractor_flag, profile_image_url, profile_image_thumb_url, profile_image, signed_url, signed_url_expires_at, ' +
   'profile_image_pending_thumb_url, profile_image_pending_submitted_at, ' +
   'date_of_birth, nationality, government_id, probation_end_date, employee_grade, work_schedule, cost_center, ' +
   'emergency_contact_name, emergency_contact_phone, emergency_contact_relationship';
 
-interface EmpRow { id: string; full_name: string | null; department_id: string | null; supervisor_id: string | null; status: string; [k: string]: unknown }
+interface EmpRow { id: string; full_name: string | null; department_id: string | null; supervisor_id: string | null; status: string; employment_status: string | null; [k: string]: unknown }
 
 async function loadEmployee(id: string): Promise<EmpRow | null> {
   const { data } = await sb.from('app_users').select(HR_COLS).eq('id', id).maybeSingle<EmpRow>();
@@ -131,6 +132,7 @@ router.post('/employees/list', async c => {
 
   const paginated = v.data.page != null && v.data.pageSize != null;
   const sortCol = v.data.sortBy ?? 'full_name';
+  const sortDbCol = sortCol === 'status' ? 'employment_status' : sortCol;
   const sortAsc = (v.data.sortDir ?? 'asc') !== 'desc';
   const searchLike = v.data.search ? escapeLike(v.data.search) : null;
   const today = todayISO();
@@ -143,8 +145,8 @@ router.post('/employees/list', async c => {
   let restrictToIds: string[] | null = null;
   if (v.data.trainingStatuses?.length) {
     let idQ = sb.from('app_users').select('id').neq('role', 'superadmin').neq('role', 'admin').not('employee_number', 'is', null);
-    if (v.data.status)                 idQ = idQ.eq('status', v.data.status);
-    if (v.data.statuses?.length)       idQ = idQ.in('status', v.data.statuses);
+    if (v.data.status)                 idQ = idQ.eq('employment_status', v.data.status);
+    if (v.data.statuses?.length)       idQ = idQ.in('employment_status', v.data.statuses);
     if (v.data.departmentId)           idQ = idQ.eq('department_id', v.data.departmentId);
     if (v.data.departmentIds?.length)  idQ = idQ.in('department_id', v.data.departmentIds);
     if (v.data.employmentType)         idQ = idQ.eq('employment_type', v.data.employmentType);
@@ -172,8 +174,8 @@ router.post('/employees/list', async c => {
   }
 
   let q = sb.from('app_users').select(HR_COLS, paginated ? { count: 'exact' } : {}).neq('role', 'superadmin').neq('role', 'admin').not('employee_number', 'is', null);
-  if (v.data.status)                 q = q.eq('status', v.data.status);
-  if (v.data.statuses?.length)       q = q.in('status', v.data.statuses);
+  if (v.data.status)                 q = q.eq('employment_status', v.data.status);
+  if (v.data.statuses?.length)       q = q.in('employment_status', v.data.statuses);
   if (v.data.departmentId)           q = q.eq('department_id', v.data.departmentId);
   if (v.data.departmentIds?.length)  q = q.in('department_id', v.data.departmentIds);
   if (v.data.employmentType)         q = q.eq('employment_type', v.data.employmentType);
@@ -185,7 +187,7 @@ router.post('/employees/list', async c => {
     q = q.or(v.data.missing.map(m => `${MISSING_COLUMN[m]}.is.null`).join(','));
   }
   if (restrictToIds)                 q = q.in('id', restrictToIds);
-  q = q.order(sortCol, { ascending: sortAsc });
+  q = q.order(sortDbCol, { ascending: sortAsc });
   q = paginated
     ? q.range((v.data.page! - 1) * v.data.pageSize!, v.data.page! * v.data.pageSize! - 1)
     : q.limit(v.data.limit ?? 300);
@@ -248,6 +250,7 @@ router.post('/employees/list', async c => {
     const trainingStatus = rollupTrainingStatus(certByWorker.get(r.id) ?? [], today);
     return {
       ...r,
+      status: r.employment_status ?? 'active',
       profile_image_url: resolveProfileImageUrl(r as Parameters<typeof resolveProfileImageUrl>[0]),
       departmentName: deptMap[r.department_id ?? ''] ?? null,
       siteName: siteMap[(r['site_id'] as string | null) ?? ''] ?? null,
@@ -317,6 +320,7 @@ router.post('/employees/get', async c => {
 
   return c.json({ success: true, data: {
     employee: { ...emp,
+      status: emp.employment_status ?? 'active',
       profile_image_url: resolveProfileImageUrl(emp as Parameters<typeof resolveProfileImageUrl>[0]),
       supervisorName: (supervisor as { full_name?: string } | null)?.full_name ?? null,
       departmentName: (dept as { name?: string } | null)?.name ?? null,
@@ -411,7 +415,7 @@ router.post('/employees/create', async c => {
   const v = zv(c, z.object({
     requestKey: z.string().uuid(),
     identity: z.object({
-      username:       z.string().min(1).max(80),
+      username:       zUsername,
       firstName:      z.string().trim().min(1).max(120),
       lastName:       z.string().trim().min(1).max(120),
       email:          z.string().email().max(160).optional().or(z.literal('')).optional(),
@@ -434,7 +438,6 @@ router.post('/employees/create', async c => {
     assignment: z.object({
       departmentId:  z.string().max(100).nullable().optional(),
       siteId:        z.string().max(100).nullable().optional(),
-      positionId:    z.string().uuid().nullable().optional(),
       supervisorId:  z.string().nullable().optional(),
       effectiveDate: employeeCreateDate.optional().or(z.literal('')).optional(),
     }).optional(),
@@ -479,6 +482,34 @@ router.post('/employees/create', async c => {
   }
   if (statutory?.nisStatus === 'not_applicable' && statutory.nisApplicable !== false) {
     return c.json({ success: false, message: 'NIS applicable must be No when NIS status is Not Applicable.' }, 400 as 200);
+  }
+
+  const fullName = [identity.firstName.trim(), identity.lastName.trim()].join(' ');
+  const idempotencyKey = `hr.employee.create:${actor.id}:${v.data.requestKey}`;
+  // Zod emits keys in schema order. Bind the request UUID to the validated
+  // command so accidental key reuse cannot return another employee's receipt.
+  const payloadHash = createHash('sha256').update(JSON.stringify(v.data)).digest('hex');
+  const { reqId } = getReqContext();
+  const { data: priorRun, error: priorRunError } = await sb.from('module_mutation_runs')
+    .select('status, request_payload, result_payload')
+    .eq('idempotency_key', idempotencyKey)
+    .maybeSingle<{
+      status: string;
+      request_payload: Record<string, unknown> | null;
+      result_payload: Record<string, unknown> | null;
+    }>();
+  if (priorRunError) {
+    throw Object.assign(new Error(`Could not verify request idempotency: ${priorRunError.message}`), { status: 500 });
+  }
+  if (priorRun?.status === 'completed' && priorRun.result_payload) {
+    if (priorRun.request_payload?.payloadHash !== payloadHash) {
+      return c.json({ success: false, message: 'This request key was already used with different employee data.' }, 409 as 200);
+    }
+    return c.json({ success: true, data: {
+      ...priorRun.result_payload,
+      account_status: 'not_requested',
+      onboarding_status: priorRun.result_payload.onboarding_case_id ? 'draft_prepared' : 'not_requested',
+    } });
   }
 
   // ── Pre-flight: uniqueness checks ────────────────────────────────────────────
@@ -527,9 +558,6 @@ router.post('/employees/create', async c => {
   // provisionEmployee() writes app_users, hr_employee_assignments,
   // hr_employee_statutory_profiles, hr_employee_status_history, hr_audit_log with
   // compensating rollback. Auth account is NOT created here (createLogin: false).
-  const fullName = [identity.firstName.trim(), identity.lastName.trim()].join(' ');
-  const idempotencyKey = `hr.employee.create:${actor.id}:${v.data.requestKey}`;
-  const { reqId } = getReqContext();
   const { data: created, error: createErr } = await sb.rpc('hr_employee_create_tx', {
     p_actor_id: actor.id,
     p_identity: { ...identity, fullName },
@@ -546,16 +574,19 @@ router.post('/employees/create', async c => {
       packageKey: resolvedPackageKey,
     },
     p_idempotency_key: idempotencyKey,
+    p_payload_hash: payloadHash,
     p_request_id: reqId ?? null,
   });
   if (createErr) {
     const duplicate = createErr.code === '23505';
+    const requestConflict = createErr.code === '22023'
+      && createErr.message.includes('already used with different');
     const message = duplicate
       ? (createErr.message.includes('employee_number')
           ? `Employee ID "${identity.employeeNumber?.trim().toUpperCase() ?? ''}" is already in use.`
           : `Username "${identity.username}" is already taken.`)
       : createErr.message;
-    throw Object.assign(new Error(message), { status: duplicate ? 400 : 500 });
+    throw Object.assign(new Error(message), { status: requestConflict ? 409 : duplicate ? 400 : 500 });
   }
 
   const receipt = created as {
@@ -595,7 +626,7 @@ router.post('/employees/dashboard-stats', async c => {
   const today = todayISO();
 
   const [workforceResult, statutoryResult, openChangesResult, lifecycleChangesResult, departmentsResult, sitesResult] = await Promise.all([
-    sb.from('app_users').select('id, status, contractor_flag, supervisor_id, department_id, site_id, start_date, end_date, updated_at').neq('role', 'superadmin').neq('role', 'admin').not('employee_number', 'is', null),
+    sb.from('app_users').select('id, employment_status, contractor_flag, supervisor_id, department_id, site_id, start_date, end_date, updated_at').neq('role', 'superadmin').neq('role', 'admin').not('employee_number', 'is', null),
     sb.from('hr_employee_statutory_profiles').select('employee_id, payroll_ready_status').eq('jurisdiction', 'TT'),
     sb.from('hr_employee_change_requests').select('employee_id, change_type, status, requested_at').in('status', ['submitted', 'in_review', 'returned']),
     sb.from('hr_employee_change_requests').select('employee_id, change_type, requested_value, applied_at').eq('status', 'applied').not('applied_at', 'is', null),
@@ -612,10 +643,10 @@ router.post('/employees/dashboard-stats', async c => {
   const workforceRaw = workforceResult.data;
   const statRows = statutoryResult.data;
   const changeRows = openChangesResult.data;
-  let workforce = (workforceRaw ?? []) as { id: string; status: string; contractor_flag: boolean | null; supervisor_id: string | null; department_id: string | null; site_id: string | null; start_date: string | null; end_date: string | null; updated_at: string | null }[];
+  let workforce = (workforceRaw ?? []) as { id: string; employment_status: string | null; contractor_flag: boolean | null; supervisor_id: string | null; department_id: string | null; site_id: string | null; start_date: string | null; end_date: string | null; updated_at: string | null }[];
   if (v.data.siteId)       workforce = workforce.filter(w => w.site_id === v.data.siteId);
   if (v.data.departmentId) workforce = workforce.filter(w => w.department_id === v.data.departmentId);
-  const active = workforce.filter(w => w.status === 'active');
+  const active = workforce.filter(w => (w.employment_status ?? 'active') === 'active');
   const activeIds = active.map(w => w.id);
 
   // Active workforce + 6-month headcount trend (by hire / termination dates).
@@ -1025,7 +1056,7 @@ router.post('/employees/status-change', async c => {
   if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
   const prevHr = await sb.from('hr_employee_status_history').select('new_status').eq('employee_id', emp.id)
     .order('changed_at', { ascending: false }).limit(1).maybeSingle<{ new_status: string }>();
-  const previousStatus = prevHr.data?.new_status ?? emp.status;
+  const previousStatus = prevHr.data?.new_status ?? emp.employment_status ?? 'active';
 
   await sb.from('hr_employee_status_history').insert({
     employee_id: emp.id, previous_status: previousStatus, new_status: v.data.newStatus,
@@ -1034,7 +1065,12 @@ router.post('/employees/status-change', async c => {
 
   // Sync the coarse auth status so blocking states stop login (hr.termination_blocks_login).
   const authStatus = BLOCKING_STATUSES.has(v.data.newStatus) ? 'inactive' : 'active';
-  await sb.from('app_users').update({ status: authStatus, updated_at: new Date().toISOString() }).eq('id', emp.id);
+  const { error: statusUpdateError } = await sb.from('app_users').update({
+    status: authStatus,
+    employment_status: v.data.newStatus,
+    updated_at: new Date().toISOString(),
+  }).eq('id', emp.id);
+  if (statusUpdateError) throw Object.assign(new Error(statusUpdateError.message), { status: 500 });
 
   await writeHrAudit({ employeeId: emp.id, submoduleKey: 'employees', recordId: emp.id, actorId: actor.id,
     action: 'hr.employee.status_changed', previousState: { status: previousStatus }, newState: { status: v.data.newStatus, authStatus }, reason: v.data.reason ?? null });
@@ -1404,7 +1440,7 @@ router.post('/dashboard/kpis', async c => {
   const monthStart = new Date(); monthStart.setDate(1);
   const monthStartISO = monthStart.toISOString().slice(0, 10);
   const [active, contractors, inactive, newHires, pendingChanges, total] = await Promise.all([
-    sb.from('app_users').select('id', { count: 'exact', head: true }).eq('status', 'active').neq('role', 'superadmin'),
+    sb.from('app_users').select('id', { count: 'exact', head: true }).eq('employment_status', 'active').neq('role', 'superadmin'),
     sb.from('app_users').select('id', { count: 'exact', head: true }).eq('contractor_flag', true),
     sb.from('app_users').select('id', { count: 'exact', head: true }).neq('status', 'active').neq('role', 'superadmin'),
     sb.from('app_users').select('id', { count: 'exact', head: true }).gte('start_date', monthStartISO),
@@ -2014,7 +2050,7 @@ router.post('/documents/expiry/run-sweep', async c => {
 router.post('/access-profiles/list', async c => {
   await requirePermission(c, 'hr.access_profiles.view');
   const { data, error } = await sb.from('hr_access_profiles')
-    .select('id, code, label, system_role, description, requires_mfa, is_active, sort_order')
+    .select('id, code, label, description, requires_mfa, is_active, sort_order')
     .order('sort_order', { ascending: true });
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
   return c.json({ success: true, data: data ?? [] });
@@ -2027,22 +2063,26 @@ router.post('/access-profiles/list', async c => {
 // POST /api/hr/employees/wizard/draft/save
 router.post('/employees/wizard/draft/save', async c => {
   const actor = await requirePermission(c, 'hr.employees.wizard.draft');
-  const body = (c.get('body') as Record<string, unknown>).args ?? c.get('body') as Record<string, unknown>;
-  const draftData = (body as Record<string, unknown>).draftData ?? null;
-  const stepIndex = typeof (body as Record<string, unknown>).stepIndex === 'number'
-    ? (body as Record<string, unknown>).stepIndex as number
-    : 0;
-  const label = typeof (body as Record<string, unknown>).label === 'string'
-    ? (body as Record<string, unknown>).label as string
-    : null;
+  const v = zv(c, z.object({
+    draftData: z.record(z.string(), z.unknown()),
+    stepIndex: z.number().int().min(0).max(5),
+    label: z.string().trim().min(1).max(160).optional(),
+  }), (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+  if (JSON.stringify(v.data.draftData).length > 128_000) {
+    return c.json({ success: false, message: 'The employee draft is too large.' }, 413 as 200);
+  }
+  if (Object.hasOwn(v.data.draftData, 'password') || Object.hasOwn(v.data.draftData, 'role')) {
+    return c.json({ success: false, message: 'Drafts cannot contain password or raw-role fields.' }, 400 as 200);
+  }
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
   const { data, error } = await sb.from('hr_employee_wizard_drafts')
     .upsert({
       actor_id:   actor.id,
-      draft_data: draftData,
-      step_index: stepIndex,
-      label:      label,
+      draft_data: v.data.draftData,
+      step_index: v.data.stepIndex,
+      label:      v.data.label ?? null,
       expires_at: expiresAt,
     }, { onConflict: 'actor_id' })
     .select('id, actor_id, step_index, label, expires_at, updated_at')

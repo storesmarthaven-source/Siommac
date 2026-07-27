@@ -34,15 +34,17 @@ create or replace function public.hr_employee_create_tx(
   p_record_status  text,
   p_onboarding     jsonb,
   p_idempotency_key text,
+  p_payload_hash   text,
   p_request_id     text default null
 )
 returns jsonb
 language plpgsql
-security definer
+security invoker
 set search_path = public
 as $$
 declare
   v_existing        jsonb;
+  v_existing_hash   text;
   v_employee_id     text;
   v_employee_no     text;
   v_start_date      date;
@@ -58,18 +60,26 @@ begin
   if nullif(trim(p_idempotency_key), '') is null then
     raise exception using errcode = '22023', message = 'An idempotency key is required.';
   end if;
+  if p_payload_hash !~ '^[0-9a-f]{64}$' then
+    raise exception using errcode = '22023', message = 'A valid request payload hash is required.';
+  end if;
 
   -- Serialize retries for the same request. A failed transaction leaves no
   -- mutation-run row; a completed retry returns the original receipt.
   perform pg_advisory_xact_lock(hashtextextended(p_idempotency_key, 0));
 
-  select result_payload
-  into v_existing
+  select result_payload, request_payload->>'payloadHash'
+  into v_existing, v_existing_hash
   from public.module_mutation_runs
   where idempotency_key = p_idempotency_key
     and status = 'completed';
 
   if v_existing is not null then
+    if v_existing_hash is distinct from p_payload_hash then
+      raise exception using
+        errcode = '22023',
+        message = 'This request key was already used with different employee data.';
+    end if;
     return v_existing;
   end if;
 
@@ -81,6 +91,7 @@ begin
     'started', 'started',
     jsonb_build_object(
       'requestId', p_request_id,
+      'payloadHash', p_payload_hash,
       'username', p_identity->>'username',
       'prepareOnboarding', coalesce((p_onboarding->>'prepareOnboarding')::boolean, false)
     )
@@ -130,7 +141,7 @@ begin
     email, personal_email, phone, employee_number,
     date_of_birth, nationality, government_id,
     employment_type, contractor_flag, start_date, position,
-    position_id, department_id, site_id, supervisor_id,
+    department_id, site_id, supervisor_id,
     probation_end_date, employee_grade, work_schedule
   ) values (
     trim(p_identity->>'username'),
@@ -141,10 +152,7 @@ begin
     coalesce(nullif(trim(p_access->>'resolvedRole'), ''), 'employee'),
     'active',
     p_record_status,
-    coalesce(
-      nullif(lower(trim(p_identity->>'email')), ''),
-      lower(trim(p_identity->>'username')) || '@siomac.internal'
-    ),
+    nullif(lower(trim(p_identity->>'email')), ''),
     nullif(lower(trim(p_identity->>'email')), ''),
     nullif(lower(trim(p_identity->>'personalEmail')), ''),
     nullif(trim(p_identity->>'phone'), ''),
@@ -156,7 +164,6 @@ begin
     coalesce((p_employment->>'contractorFlag')::boolean, false),
     v_start_date,
     nullif(trim(p_employment->>'position'), ''),
-    nullif(p_assignment->>'positionId', '')::uuid,
     nullif(p_assignment->>'departmentId', ''),
     nullif(p_assignment->>'siteId', ''),
     nullif(p_assignment->>'supervisorId', ''),
@@ -166,20 +173,23 @@ begin
   )
   returning id into v_employee_id;
 
-  insert into public.hr_employee_assignments (
-    employee_id, position_id, department_id, site_id, supervisor_id,
-    assignment_type, effective_from, is_current, created_by
-  ) values (
-    v_employee_id,
-    nullif(p_assignment->>'positionId', '')::uuid,
-    nullif(p_assignment->>'departmentId', ''),
-    nullif(p_assignment->>'siteId', ''),
-    nullif(p_assignment->>'supervisorId', ''),
-    'primary',
-    coalesce(nullif(p_assignment->>'effectiveDate', '')::date, v_start_date),
-    true,
-    p_actor_id
-  );
+  if nullif(p_assignment->>'departmentId', '') is not null
+     or nullif(p_assignment->>'siteId', '') is not null
+     or nullif(p_assignment->>'supervisorId', '') is not null then
+    insert into public.hr_employee_assignments (
+      employee_id, department_id, site_id, supervisor_id,
+      assignment_type, effective_from, is_current, created_by
+    ) values (
+      v_employee_id,
+      nullif(p_assignment->>'departmentId', ''),
+      nullif(p_assignment->>'siteId', ''),
+      nullif(p_assignment->>'supervisorId', ''),
+      'primary',
+      coalesce(nullif(p_assignment->>'effectiveDate', '')::date, v_start_date),
+      true,
+      p_actor_id
+    );
+  end if;
 
   insert into public.hr_employee_statutory_profiles (
     employee_id, jurisdiction, currency,
@@ -335,10 +345,10 @@ end;
 $$;
 
 revoke all on function public.hr_employee_create_tx(
-  text, jsonb, jsonb, jsonb, jsonb, jsonb, text, jsonb, text, text
+  text, jsonb, jsonb, jsonb, jsonb, jsonb, text, jsonb, text, text, text
 ) from public, anon, authenticated;
 grant execute on function public.hr_employee_create_tx(
-  text, jsonb, jsonb, jsonb, jsonb, jsonb, text, jsonb, text, text
+  text, jsonb, jsonb, jsonb, jsonb, jsonb, text, jsonb, text, text, text
 ) to service_role;
 
 notify pgrst, 'reload schema';

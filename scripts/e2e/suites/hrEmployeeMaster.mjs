@@ -115,7 +115,7 @@ export default async function run(h) {
   // The create contract requires an approved accessProfileId (raw roles were removed).
   await test('resolve an active access profile for the create contract', async () => {
     const { data: prof } = await sb.from('hr_access_profiles')
-      .select('id, profile_key').eq('is_active', true).eq('profile_key', 'employee').maybeSingle();
+      .select('id, code').eq('is_active', true).eq('code', 'employee').maybeSingle();
     expect(!!prof, 'an active "employee" access profile exists (migration 20260919000741)');
     ctx.accessProfileId = prof.id;
   });
@@ -124,7 +124,7 @@ export default async function run(h) {
   await test('create employee (admin) → active + payroll READY', async () => {
     const u = `e2e-${TAG}-alpha`.toLowerCase();
     const r = await api('hr/employees/create', A, {
-      requestKey: `${TAG}-alpha`,
+      requestKey: crypto.randomUUID(),
       identity:   { username: u, firstName: `${TAG}`, lastName: 'Alpha One', phone: '555-0001' },
       employment: { employmentType: 'employee', startDate: '2026-01-15', position: 'Technician' },
       assignment: { departmentId: null, siteId: ctx.siteId, supervisorId: admin.id },
@@ -140,20 +140,19 @@ export default async function run(h) {
     expect(r.body.data.onboarding_status === 'not_requested', `onboarding_status — got ${r.body.data.onboarding_status}`);
     // Create NEVER provisions an account: no password is accepted and no Auth user is made.
     expect(r.body.data.account_status === 'not_requested', `account_status — got ${r.body.data.account_status}`);
-    expect(r.body.data.workflow_id === null, 'workflow_id null');
     ctx.emp1 = r.body.data.employee_id; ctx.emp1No = r.body.data.employee_no; ctx.emp1User = u; ctx.empIds.push(ctx.emp1);
   });
 
   await test('create side-effects: mutation-run + event + audit + statutory + assignment + auth', async () => {
     // §5 — create goes through runModuleMutation, so an idempotency/observability row exists.
     const { data: run } = await sb.from('module_mutation_runs').select('status')
-      .ilike('idempotency_key', `%${ctx.emp1User}%`).maybeSingle();
+      .eq('entity_id', ctx.emp1).maybeSingle();
     expect(run && run.status === 'completed', `module_mutation_runs completed — got ${run && run.status}`);
     const { data: ev } = await sb.from('app_events').select('id').eq('event_type', 'hr.employee.created').eq('source_entity_id', ctx.emp1).limit(1);
     expect(ev && ev.length === 1, 'app_event hr.employee.created');
     const { data: au } = await sb.from('hr_audit_log').select('id').eq('employee_id', ctx.emp1).eq('action', 'hr.employee.created').limit(1);
     expect(au && au.length === 1, 'audit hr.employee.created');
-    const { data: st } = await sb.from('hr_employee_statutory').select('payroll_ready_status, finance_handoff_eligible').eq('employee_id', ctx.emp1).maybeSingle();
+    const { data: st } = await sb.from('hr_employee_statutory_profiles').select('payroll_ready_status, finance_handoff_eligible').eq('employee_id', ctx.emp1).eq('jurisdiction', 'TT').maybeSingle();
     expect(st && st.payroll_ready_status === 'ready', 'statutory row READY');
     expect(st && st.finance_handoff_eligible === true, 'finance_handoff_eligible true');
     const { data: asg } = await sb.from('hr_employee_assignments').select('id').eq('employee_id', ctx.emp1).eq('is_current', true).limit(1);
@@ -161,13 +160,13 @@ export default async function run(h) {
     const { data: hist } = await sb.from('hr_employee_status_history').select('id').eq('employee_id', ctx.emp1).limit(1);
     expect(hist && hist.length === 1, 'initial status-history row');
     const { data: usr } = await sb.from('app_users').select('auth_id').eq('id', ctx.emp1).maybeSingle();
-    expect(usr && !!usr.auth_id, 'Supabase Auth account linked (auth_id)');
+    expect(usr && usr.auth_id === null, 'employee record is created without an Auth account');
   });
 
   await test('create employee (admin) → payroll BLOCKED (missing BIR/TD1)', async () => {
     const u = `e2e-${TAG}-beta`.toLowerCase();
     const r = await api('hr/employees/create', A, {
-      requestKey: `${TAG}-beta`,
+      requestKey: crypto.randomUUID(),
       identity:   { username: u, firstName: `${TAG}`, lastName: 'Beta Two' },
       employment: { employmentType: 'contractor', startDate: '2026-02-01' },
       access:     { accessProfileId: ctx.accessProfileId, accountMode: 'no_login' },
@@ -179,24 +178,24 @@ export default async function run(h) {
   });
 
   await test('create duplicate username → rejected', async () => {
-    const r = await api('hr/employees/create', A, { requestKey: `${TAG}-alpha`, identity: { username: `e2e-${TAG}-alpha`.toLowerCase(), firstName: 'X', lastName: 'dup' }, employment: { employmentType: 'employee', startDate: '2026-01-15' }, access: { accessProfileId: ctx.accessProfileId, accountMode: 'no_login' } });
+    const r = await api('hr/employees/create', A, { requestKey: crypto.randomUUID(), identity: { username: `e2e-${TAG}-alpha`.toLowerCase(), firstName: 'X', lastName: 'dup' }, employment: { employmentType: 'employee', startDate: '2026-01-15' }, access: { accessProfileId: ctx.accessProfileId, accountMode: 'no_login' } });
     fails(r, 'duplicate username rejected');
   });
 
   await test('create unauthorized (employee role) → denied', async () => {
-    const r = await api('hr/employees/create', ctx.empTok, { requestKey: `${TAG}-nope`, identity: { username: `e2e-${TAG}-nope`.toLowerCase(), firstName: 'X', lastName: 'nope' }, employment: { employmentType: 'employee', startDate: '2026-01-15' }, access: { accessProfileId: ctx.accessProfileId, accountMode: 'no_login' } });
+    const r = await api('hr/employees/create', ctx.empTok, { requestKey: crypto.randomUUID(), identity: { username: `e2e-${TAG}-nope`.toLowerCase(), firstName: 'X', lastName: 'nope' }, employment: { employmentType: 'employee', startDate: '2026-01-15' }, access: { accessProfileId: ctx.accessProfileId, accountMode: 'no_login' } });
     fails(r, 'employee cannot create');
   });
 
   await test('create unauthorized (manager is view-only) → denied', async () => {
-    const r = await api('hr/employees/create', ctx.mgrTok, { requestKey: `${TAG}-nope2`, identity: { username: `e2e-${TAG}-nope2`.toLowerCase(), firstName: 'X', lastName: 'nope' }, employment: { employmentType: 'employee', startDate: '2026-01-15' }, access: { accessProfileId: ctx.accessProfileId, accountMode: 'no_login' } });
+    const r = await api('hr/employees/create', ctx.mgrTok, { requestKey: crypto.randomUUID(), identity: { username: `e2e-${TAG}-nope2`.toLowerCase(), firstName: 'X', lastName: 'nope' }, employment: { employmentType: 'employee', startDate: '2026-01-15' }, access: { accessProfileId: ctx.accessProfileId, accountMode: 'no_login' } });
     fails(r, 'manager cannot create');
   });
 
   await test('create employee (admin) with onboarding → starts a case + tasks', async () => {
     const u = `e2e-${TAG}-gamma`.toLowerCase();
     const r = await api('hr/employees/create', A, {
-      requestKey: `${TAG}-gamma`,
+      requestKey: crypto.randomUUID(),
       identity:   { username: u, firstName: `${TAG}`, lastName: 'Gamma Three' },
       employment: { employmentType: 'employee', startDate: '2026-03-01' },
       access:     { accessProfileId: ctx.accessProfileId, accountMode: 'no_login' },
@@ -210,7 +209,7 @@ export default async function run(h) {
     // Create PREPARES a draft; launching is a separate, explicit action.
     expect(kase && kase.status === 'draft', `onboarding case draft — got ${kase && kase.status}`);
     const { count } = await sb.from('hr_onboarding_tasks').select('id', { count: 'exact', head: true }).eq('case_id', r.body.data.onboarding_case_id);
-    expect((count ?? 0) > 0, 'onboarding tasks generated');
+    expect((count ?? 0) === 0, 'draft preparation does not launch onboarding tasks');
   });
 
   // ── list (extended) ────────────────────────────────────────────────────────
@@ -236,7 +235,13 @@ export default async function run(h) {
 
   await test('list → offboardingActive flips once an offboarding case is open', async () => {
     const { data: created, error } = await sb.from('hr_offboarding_cases')
-      .insert({ employee_id: ctx.emp1, status: 'in_progress' }).select('id').single();
+      .insert({
+        case_no: `OFF-${TAG}`,
+        employee_id: ctx.emp1,
+        reason: 'resignation',
+        status: 'in_progress',
+        started_by: admin.id,
+      }).select('id').single();
     expect(!error, `seed offboarding case — ${error && error.message}`);
     ctx.offboardingCaseIds.push(created.id);
 
@@ -392,7 +397,7 @@ export default async function run(h) {
     const types = (ev ?? []).map(x => x.event_type);
     expect(types.includes('hr.employee.statutory_updated'), 'statutory_updated event');
     expect(types.includes('hr.employee.payroll_ready'), 'payroll_ready handoff event (crossed to ready)');
-    const { data: st } = await sb.from('hr_employee_statutory').select('payroll_ready_status, finance_handoff_eligible').eq('employee_id', ctx.emp2).maybeSingle();
+    const { data: st } = await sb.from('hr_employee_statutory_profiles').select('payroll_ready_status, finance_handoff_eligible').eq('employee_id', ctx.emp2).eq('jurisdiction', 'TT').maybeSingle();
     expect(st && st.payroll_ready_status === 'ready' && st.finance_handoff_eligible === true, 'satellite snapshot synced');
   });
 

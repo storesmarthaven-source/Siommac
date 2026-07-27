@@ -341,7 +341,7 @@ export function formToArgs(f: FormState, requestKey: string): CreateHrEmployeeAr
     },
     onboarding: {
       prepareOnboarding: f.prepareOnboarding,
-      packageKey:        f.packageKey || undefined,
+      packageKey:        f.prepareOnboarding ? (f.packageKey || undefined) : undefined,
     },
   };
 }

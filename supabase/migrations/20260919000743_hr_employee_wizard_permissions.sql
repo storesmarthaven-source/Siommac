@@ -9,7 +9,7 @@
 -- catalogue). Superadmin is allow-all and is unaffected; all other roles need the grant.
 -- PENDING OPERATOR ACTION — never self-apply.
 
-insert into public.role_permissions (role, permission_key)
+insert into public.role_permissions (role_name, permission)
 values
   -- hr.access_profiles.view
   ('superadmin',  'hr.access_profiles.view'),

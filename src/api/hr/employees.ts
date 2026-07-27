@@ -497,7 +497,6 @@ export interface HrAccessProfile {
   id:           string;
   code:         string;
   label:        string;
-  system_role:  string;
   description:  string | null;
   requires_mfa: boolean;
   is_active:    boolean;

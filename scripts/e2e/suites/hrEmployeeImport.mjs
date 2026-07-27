@@ -99,8 +99,8 @@ export default async function run(h) {
     ok(r, 'map-fields');
   });
 
-  await test('set-policy (admin) — createLogins:false', async () => {
-    const r = await api('hr/employees/import/set-policy', A, { batchId: ctx.batchId, policy: { createLogins: false, missingSupervisor: 'allow', duplicateEmployeeNumber: 'skip' } });
+  await test('set-policy (admin) — record-only import policy', async () => {
+    const r = await api('hr/employees/import/set-policy', A, { batchId: ctx.batchId, policy: { missingSupervisor: 'allow', duplicateEmployeeNumber: 'skip' } });
     ok(r, 'set-policy');
   });
 

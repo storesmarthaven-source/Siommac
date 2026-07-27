@@ -26,9 +26,20 @@
 export const title = 'HR Employee Create Wizard v2';
 
 export default async function run(h) {
-  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const { api: rawApi, test, expect, ok, fails, mint, sb, TAG } = h;
+  // Keep this suite's token-first call sites concise while preserving the
+  // harness response envelope for ok()/fails().
+  const api = async (token, path, args = {}) => {
+    const response = await rawApi(path, token, args);
+    return { ...response, ...response.body, data: response.body?.data };
+  };
   const { admin } = h.users;
-  const T = { admin: mint(admin) };
+  const { actors: [plainEmployee] } = await h.acquireActors('employee', 1);
+  const T = {
+    admin: mint(admin),
+    employee: mint({ id: plainEmployee.id, username: plainEmployee.username, role: 'employee' }),
+  };
+  let employeeProfileId = null;
 
   // Provisioned test employees for cleanup
   const ctx = { employeeIds: [], draftActorIds: [] };
@@ -42,6 +53,8 @@ export default async function run(h) {
       await sb.from('hr_onboarding_cases').delete().in('employee_id', ctx.employeeIds);
       await sb.from('audit_logs').delete().in('record_id', ctx.employeeIds);
       await sb.from('app_events').delete().in('source_entity_id', ctx.employeeIds);
+      await sb.from('hr_audit_log').delete().in('employee_id', ctx.employeeIds);
+      await sb.from('module_mutation_runs').delete().in('entity_id', ctx.employeeIds);
       // Delete Auth accounts for test employees (ignore errors — may not exist)
       const { data: authRows } = await sb.from('app_users').select('id, auth_id').in('id', ctx.employeeIds);
       for (const row of (authRows ?? [])) {
@@ -65,14 +78,25 @@ export default async function run(h) {
       expect(typeof p.id === 'string',          'profile has id');
       expect(typeof p.code === 'string',         'profile has code');
       expect(typeof p.label === 'string',        'profile has label');
-      expect(typeof p.system_role === 'string',  'profile has system_role');
       expect(typeof p.is_active === 'boolean',   'profile has is_active');
+      expect(!Object.hasOwn(p, 'system_role'),   'raw system role is not exposed');
     }
+    employeeProfileId = r.data.find(p => p.code === 'employee' && p.is_active)?.id
+      ?? r.data.find(p => p.is_active)?.id
+      ?? null;
+    expect(typeof employeeProfileId === 'string', 'an active employee access profile exists');
   });
 
   await test('access-profiles/list — unauthenticated is denied', async () => {
-    const r = await fails(api(null, 'hr/access-profiles/list', {}), 'unauthenticated access-profiles list');
+    const r = await api(null, 'hr/access-profiles/list', {});
+    fails(r, 'unauthenticated access-profiles list');
     expect(r?.status === 401 || r?.status === 403, 'denied with 401 or 403');
+  });
+
+  await test('access-profiles/list rejects a plain employee', async () => {
+    const r = await api(T.employee, 'hr/access-profiles/list', {});
+    fails(r, 'plain employee access-profiles list');
+    expect(r?.status === 403, 'denied with 403');
   });
 
   // ── 2. Wizard draft CRUD ─────────────────────────────────────────────────
@@ -126,27 +150,44 @@ export default async function run(h) {
   let minEmpId = null;
 
   await test('employees/create — minimal args, no_login', async () => {
-    const r = await api(T.admin, 'hr/employees/create', {
-      identity: { username: minUsername, fullName: `${TAG} Minimal` },
-      access: { accountMode: 'no_login' },
-    });
+    const requestKey = crypto.randomUUID();
+    const args = {
+      requestKey,
+      identity: { username: minUsername, firstName: TAG, lastName: 'Minimal' },
+      employment: { employmentType: 'employee', startDate: '2026-01-15' },
+      access: { accessProfileId: employeeProfileId, accountMode: 'no_login' },
+    };
+    const r = await api(T.admin, 'hr/employees/create', args);
     ok(r, 'employees/create minimal');
 
     // Shape — exact fields the frontend consumes
     expect(typeof r.data.employee_id === 'string',          'employee_id present');
     expect(typeof r.data.employee_no === 'string',          'employee_no present');
     expect(['pending','ready','blocked'].includes(r.data.payroll_readiness), 'payroll_readiness valid');
-    expect(r.data.account_invite_sent === null,              'no invite (no_login)');
-    expect(r.data.account_error === null,                    'no account_error');
+    expect(r.data.account_status === 'not_requested',         'account creation was not requested');
+    expect(r.data.onboarding_status === 'not_requested',      'onboarding was not requested');
 
     minEmpId = r.data.employee_id;
     ctx.employeeIds.push(minEmpId);
+
+    const retry = await api(T.admin, 'hr/employees/create', args);
+    ok(retry, 'employees/create idempotent retry');
+    expect(retry.data.employee_id === minEmpId, 'same request key returns the original employee');
+
+    const conflict = await api(T.admin, 'hr/employees/create', {
+      ...args,
+      identity: { ...args.identity, lastName: 'Different' },
+    });
+    expect(!conflict.success, 'request key reuse with different data is rejected');
+    expect(conflict.status === 409, 'request key conflict returns 409');
   });
 
   await test('employees/create — duplicate username is rejected', async () => {
     const r = await api(T.admin, 'hr/employees/create', {
-      identity: { username: minUsername, fullName: `${TAG} Dup` },
-      access: { accountMode: 'no_login' },
+      requestKey: crypto.randomUUID(),
+      identity: { username: minUsername, firstName: TAG, lastName: 'Dup' },
+      employment: { employmentType: 'employee', startDate: '2026-01-15' },
+      access: { accessProfileId: employeeProfileId, accountMode: 'no_login' },
     });
     expect(!r.success, 'duplicate rejected');
     expect(r.message?.toLowerCase().includes('taken') || r.message?.toLowerCase().includes('already'), 'error mentions duplicate');
@@ -170,6 +211,18 @@ export default async function run(h) {
       .eq('action', 'hr.employee.created')
       .eq('employee_id', minEmpId);
     expect((logs ?? []).length >= 1, 'at least 1 hr.employee.created audit row');
+  });
+
+  await test('employees/create writes the platform audit envelope', async () => {
+    expect(minEmpId !== null, 'have minEmpId');
+    const { data: logs } = await sb.from('audit_logs')
+      .select('id, action, table_name, record_id, changes')
+      .eq('action', 'hr.employee.created')
+      .eq('record_id', minEmpId);
+    expect((logs ?? []).length === 1, 'exactly 1 platform audit row');
+    expect(logs?.[0]?.table_name === 'app_users', 'platform audit identifies app_users');
+    expect(logs?.[0]?.changes?.outcome === 'success', 'platform audit records the outcome');
+    expect(typeof logs?.[0]?.changes?.requestId === 'string', 'platform audit carries the request ID');
   });
 
   await test('employees/create — statutory written to hr_employee_statutory_profiles', async () => {
@@ -197,8 +250,9 @@ export default async function run(h) {
 
   await test('employees/create — full args with statutory', async () => {
     const r = await api(T.admin, 'hr/employees/create', {
+      requestKey: crypto.randomUUID(),
       identity: {
-        username: fullUsername, fullName: `${TAG} Full Employee`,
+        username: fullUsername,
         firstName: TAG, lastName: 'FullEmployee',
         employeeNumber: `${TAG}-EMP-001`,
       },
@@ -206,7 +260,7 @@ export default async function run(h) {
         employmentType: 'employee', startDate: '2026-01-01',
         position: 'Test Engineer', employeeGrade: 'Grade 2',
       },
-      access: { accountMode: 'no_login' },
+      access: { accessProfileId: employeeProfileId, accountMode: 'no_login' },
       recordStatus: 'active',
       statutory: {
         nisStatus: 'registered', nisNumber: '99999999',
@@ -233,7 +287,9 @@ export default async function run(h) {
 
   await test('employees/create — non-existent access profile id is rejected', async () => {
     const r = await api(T.admin, 'hr/employees/create', {
-      identity: { username: `${TAG}-badprofile`, fullName: `${TAG} BadProfile` },
+      requestKey: crypto.randomUUID(),
+      identity: { username: `${TAG}-badprofile`, firstName: TAG, lastName: 'BadProfile' },
+      employment: { employmentType: 'employee', startDate: '2026-01-15' },
       access: { accessProfileId: '00000000-0000-0000-0000-000000000000', accountMode: 'no_login' },
     });
     expect(!r.success, 'rejected with bad profile id');
@@ -244,9 +300,11 @@ export default async function run(h) {
 
   await test('employees/create — non-existent package is rejected before create', async () => {
     const r = await api(T.admin, 'hr/employees/create', {
-      identity: { username: `${TAG}-badpkg`, fullName: `${TAG} BadPkg` },
-      access: { accountMode: 'no_login' },
-      onboarding: { createOnboardingCase: true, packageKey: 'nonexistent_package_xyz_e2e' },
+      requestKey: crypto.randomUUID(),
+      identity: { username: `${TAG}-badpkg`, firstName: TAG, lastName: 'BadPkg' },
+      employment: { employmentType: 'employee', startDate: '2026-01-15' },
+      access: { accessProfileId: employeeProfileId, accountMode: 'no_login' },
+      onboarding: { prepareOnboarding: true, packageKey: 'nonexistent_package_xyz_e2e' },
     });
     expect(!r.success, 'rejected with bad package');
     expect(r.message?.toLowerCase().includes('package'), 'error mentions package');
@@ -258,14 +316,25 @@ export default async function run(h) {
   // ── 8. Access control ────────────────────────────────────────────────────
 
   await test('employees/create — unauthenticated is denied', async () => {
-    const r = await fails(
-      api(null, 'hr/employees/create', {
-        identity: { username: `${TAG}-unauth`, fullName: `${TAG} Unauth` },
-        access: { accountMode: 'no_login' },
-      }),
-      'unauthenticated create',
-    );
+    const r = await api(null, 'hr/employees/create', {
+        requestKey: crypto.randomUUID(),
+        identity: { username: `${TAG}-unauth`, firstName: TAG, lastName: 'Unauth' },
+        employment: { employmentType: 'employee', startDate: '2026-01-15' },
+        access: { accessProfileId: employeeProfileId, accountMode: 'no_login' },
+      });
+    fails(r, 'unauthenticated create');
     expect(r?.status === 401 || r?.status === 403, 'denied with 401 or 403');
+  });
+
+  await test('employees/create rejects a plain employee', async () => {
+    const r = await api(T.employee, 'hr/employees/create', {
+      requestKey: crypto.randomUUID(),
+      identity: { username: `${TAG}-plain-denied`, firstName: TAG, lastName: 'Denied' },
+      employment: { employmentType: 'employee', startDate: '2026-01-15' },
+      access: { accessProfileId: employeeProfileId, accountMode: 'no_login' },
+    });
+    fails(r, 'plain employee create');
+    expect(r?.status === 403, 'denied with 403');
   });
 
   // ── BROWSER JOURNEY NOTE ─────────────────────────────────────────────────
