@@ -1775,13 +1775,13 @@ reassignOffboardingOwner	function	hr	true		netlify/functions/lib/hr/offboardingM
 finalizeOffboarding	function	hr	true		netlify/functions/lib/hr/offboardingMutations.ts	77	
 CaseDbRow	interface	hr	false		netlify/functions/lib/hr/offboardingQueries.ts	10	
 nameMap	function	hr	false		netlify/functions/lib/hr/offboardingQueries.ts	16	
-toCaseRow	function	hr	false		netlify/functions/lib/hr/offboardingQueries.ts	23	
-listOffboardingCases	function	hr	true		netlify/functions/lib/hr/offboardingQueries.ts	34	
-getOffboardingCase	function	hr	true		netlify/functions/lib/hr/offboardingQueries.ts	56	
-STATUS_ORDER	array	hr	false		netlify/functions/lib/hr/offboardingQueries.ts	93	
-TERMINAL_STATUSES	variable	hr	false		netlify/functions/lib/hr/offboardingQueries.ts	94	
-DONE_TASK_STATUSES	variable	hr	false		netlify/functions/lib/hr/offboardingQueries.ts	95	
-getOffboardingDashboardStats	function	hr	true		netlify/functions/lib/hr/offboardingQueries.ts	97	
+toCaseRow	function	hr	false		netlify/functions/lib/hr/offboardingQueries.ts	24	
+listOffboardingCases	function	hr	true		netlify/functions/lib/hr/offboardingQueries.ts	35	
+getOffboardingCase	function	hr	true		netlify/functions/lib/hr/offboardingQueries.ts	63	
+STATUS_ORDER	array	hr	false		netlify/functions/lib/hr/offboardingQueries.ts	107	
+TERMINAL_STATUSES	variable	hr	false		netlify/functions/lib/hr/offboardingQueries.ts	108	
+DONE_TASK_STATUSES	variable	hr	false		netlify/functions/lib/hr/offboardingQueries.ts	109	
+getOffboardingDashboardStats	function	hr	true		netlify/functions/lib/hr/offboardingQueries.ts	111	
 err	function	communications	false		netlify/functions/lib/hr/onboardingCommunications.ts	17	
 nowISO	function	communications	false		netlify/functions/lib/hr/onboardingCommunications.ts	18	
 CaseCtx	interface	communications	false		netlify/functions/lib/hr/onboardingCommunications.ts	20	
@@ -3219,29 +3219,31 @@ router	variable	hr	false		netlify/functions/routes/hr.ts	48
 HR_COLS	variable	hr	false		netlify/functions/routes/hr.ts	50	
 EmpRow	interface	hr	false		netlify/functions/routes/hr.ts	58	
 loadEmployee	function	hr	false		netlify/functions/routes/hr.ts	60	
-TRAINING_TERMINAL	variable	hr	false		netlify/functions/routes/hr.ts	65	
-rollupTrainingStatus	function	hr	false		netlify/functions/routes/hr.ts	67	
-EmployeeReadiness	interface	hr	false		netlify/functions/routes/hr.ts	76	
-employeeReadiness	function	hr	false		netlify/functions/routes/hr.ts	85	
-EMPLOYEE_SORT_COLS	variable	hr	false		netlify/functions/routes/hr.ts	101	
-TRAINING_STATUSES	variable	hr	false		netlify/functions/routes/hr.ts	102	
-escapeLike	function	hr	false		netlify/functions/routes/hr.ts	105	
-MISSING_COLUMN	variable	hr	false		netlify/functions/routes/hr.ts	110	
-employeeCreateDate	variable	hr	false		netlify/functions/routes/hr.ts	407	
-iso	function	hr	false		netlify/functions/routes/hr.ts	667	
-distribution	function	hr	false		netlify/functions/routes/hr.ts	726	
-inMonth	function	hr	false		netlify/functions/routes/hr.ts	745	lifecyclePeriods
-HR_STATUSES	variable	hr	false		netlify/functions/routes/hr.ts	1043	
-BLOCKING_STATUSES	variable	hr	false		netlify/functions/routes/hr.ts	1044	
-isExpired	function	hr	false		netlify/functions/routes/hr.ts	1153	
-orgBody	function	hr	false		netlify/functions/routes/hr.ts	1188	
-orgErr	function	hr	false		netlify/functions/routes/hr.ts	1189	
-ORG_UNIT_TYPES	variable	hr	false		netlify/functions/routes/hr.ts	1193	
-GATED	object	hr	false		netlify/functions/routes/hr.ts	1195	
-CHANGE_PERM	object	hr	false		netlify/functions/routes/hr.ts	1468	
-snapshotForChange	function	hr	false		netlify/functions/routes/hr.ts	1480	
-createChangeRequest	function	hr	false		netlify/functions/routes/hr.ts	1510	
-GENERIC_CHANGE_TYPES	variable	hr	false		netlify/functions/routes/hr.ts	1585	
+TRAINING_TERMINAL	variable	hr	false		netlify/functions/routes/hr.ts	66	
+rollupTrainingStatus	function	hr	false		netlify/functions/routes/hr.ts	68	
+EmployeeReadiness	interface	hr	false		netlify/functions/routes/hr.ts	77	
+employeeReadiness	function	hr	false		netlify/functions/routes/hr.ts	86	
+EMPLOYEE_SORT_COLS	variable	hr	false		netlify/functions/routes/hr.ts	102	
+TRAINING_STATUSES	variable	hr	false		netlify/functions/routes/hr.ts	103	
+escapeLike	function	hr	false		netlify/functions/routes/hr.ts	106	
+MISSING_COLUMN	variable	hr	false		netlify/functions/routes/hr.ts	111	
+idsFor	function	hr	false		netlify/functions/routes/hr.ts	323	
+lookup	function	hr	false		netlify/functions/routes/hr.ts	339	
+employeeCreateDate	variable	hr	false		netlify/functions/routes/hr.ts	498	
+iso	function	hr	false		netlify/functions/routes/hr.ts	758	
+distribution	function	hr	false		netlify/functions/routes/hr.ts	817	
+inMonth	function	hr	false		netlify/functions/routes/hr.ts	836	lifecyclePeriods
+HR_STATUSES	variable	hr	false		netlify/functions/routes/hr.ts	1143	
+BLOCKING_STATUSES	variable	hr	false		netlify/functions/routes/hr.ts	1144	
+isExpired	function	hr	false		netlify/functions/routes/hr.ts	1254	
+orgBody	function	hr	false		netlify/functions/routes/hr.ts	1291	
+orgErr	function	hr	false		netlify/functions/routes/hr.ts	1292	
+ORG_UNIT_TYPES	variable	hr	false		netlify/functions/routes/hr.ts	1296	
+GATED	object	hr	false		netlify/functions/routes/hr.ts	1298	
+CHANGE_PERM	object	hr	false		netlify/functions/routes/hr.ts	1571	
+snapshotForChange	function	hr	false		netlify/functions/routes/hr.ts	1583	
+createChangeRequest	function	hr	false		netlify/functions/routes/hr.ts	1613	
+GENERIC_CHANGE_TYPES	variable	hr	false		netlify/functions/routes/hr.ts	1688	
 router	variable	hr	false		netlify/functions/routes/hrAttendance.ts	21	
 body	function	hr	false		netlify/functions/routes/hrAttendance.ts	22	
 router	variable	hr	false		netlify/functions/routes/hrCompensation.ts	22	
@@ -5021,60 +5023,65 @@ TrainingStatus	type	hr	true		src/api/hr/employees.ts	27
 PayrollReadinessStatus	type	hr	true		src/api/hr/employees.ts	28	
 EmployeeReadinessSummary	interface	hr	true		src/api/hr/employees.ts	30	
 HrEmployeeRow	interface	hr	true		src/api/hr/employees.ts	38	
-PayrollReadiness	interface	hr	true		src/api/hr/employees.ts	82	
-HrStatutoryRow	interface	hr	true		src/api/hr/employees.ts	88	
-HrEmployeeDetail	interface	hr	true		src/api/hr/employees.ts	107	
-EmployeeMissingField	type	hr	true		src/api/hr/employees.ts	116	
-HrDashboardStats	interface	hr	true		src/api/hr/employees.ts	118	
-HrWorkflowSummary	interface	hr	true		src/api/hr/employees.ts	133	
-HrEmployeeListFilter	interface	hr	true		src/api/hr/employees.ts	142	
-useHrEmployees	function	hr	true	hook	src/api/hr/employees.ts	147	
-EmployeeSortCol	type	hr	true		src/api/hr/employees.ts	158	
-HrEmployeePageFilter	interface	hr	true		src/api/hr/employees.ts	160	
-HrEmployeePageMeta	interface	hr	true		src/api/hr/employees.ts	169	
-HrEmployeePage	interface	hr	true		src/api/hr/employees.ts	175	
-useHrEmployeesPage	function	hr	true	hook	src/api/hr/employees.ts	181	
-fetchHrEmployeeDetail	function	hr	false		src/api/hr/employees.ts	194	
-useHrEmployee	function	hr	true	hook	src/api/hr/employees.ts	202	
-usePrefetchHrEmployee	function	hr	true	hook	src/api/hr/employees.ts	228	
-useHrDashboardStats	function	hr	true	hook	src/api/hr/employees.ts	243	
-useHrWorkflowSummary	function	hr	true	hook	src/api/hr/employees.ts	256	
-useHrStatutory	function	hr	true	hook	src/api/hr/employees.ts	267	
-HrAuditEntry	interface	hr	true		src/api/hr/employees.ts	278	
-HrDocument	interface	hr	true		src/api/hr/employees.ts	290	
-HrTrainingSummary	interface	hr	true		src/api/hr/employees.ts	303	
-useHrAudit	function	hr	true	hook	src/api/hr/employees.ts	308	
-useHrDocuments	function	hr	true	hook	src/api/hr/employees.ts	320	
-useHrTrainingSummary	function	hr	true	hook	src/api/hr/employees.ts	332	
-HrOrgUnit	interface	hr	true		src/api/hr/employees.ts	344	
-HrSite	interface	hr	true		src/api/hr/employees.ts	345	
-useHrOrgUnits	function	hr	true	hook	src/api/hr/employees.ts	347	
-useHrSites	function	hr	true	hook	src/api/hr/employees.ts	357	
-ContactUpdateArgs	interface	hr	true		src/api/hr/employees.ts	369	
-useUpdateHrContact	function	hr	true	hook	src/api/hr/employees.ts	377	
-PhotoDecideArgs	interface	hr	true		src/api/hr/employees.ts	389	
-useDecideHrEmployeePhoto	function	hr	true	hook	src/api/hr/employees.ts	391	
-StatutoryUpdateArgs	interface	hr	true		src/api/hr/employees.ts	403	
-useUpdateHrStatutory	function	hr	true	hook	src/api/hr/employees.ts	411	
-StatusChangeArgs	interface	hr	true		src/api/hr/employees.ts	423	
-useChangeHrStatus	function	hr	true	hook	src/api/hr/employees.ts	425	
-ChangeRequestArgs	interface	hr	true		src/api/hr/employees.ts	438	
-useCreateHrChangeRequest	function	hr	true	hook	src/api/hr/employees.ts	440	
-UploadDocArgs	interface	hr	true		src/api/hr/employees.ts	449	
-useUploadHrDocument	function	hr	true	hook	src/api/hr/employees.ts	451	
-useVerifyHrDocument	function	hr	true	hook	src/api/hr/employees.ts	471	
-useArchiveHrDocument	function	hr	true	hook	src/api/hr/employees.ts	480	
-getHrDocumentDownloadUrl	function	hr	true		src/api/hr/employees.ts	489	
-HrAccessProfile	interface	hr	true		src/api/hr/employees.ts	496	
-useHrAccessProfiles	function	hr	true	hook	src/api/hr/employees.ts	506	
-WizardAccountMode	type	hr	true		src/api/hr/employees.ts	521	
-CreateHrEmployeeArgsV2	interface	hr	true		src/api/hr/employees.ts	523	
-CreateEmployeeReceiptV2	interface	hr	true		src/api/hr/employees.ts	577	
-useCreateHrEmployeeV2	function	hr	true	hook	src/api/hr/employees.ts	589	
-WizardDraftRecord	interface	hr	true		src/api/hr/employees.ts	600	
-useWizardDraftGet	function	hr	true	hook	src/api/hr/employees.ts	610	
-useWizardDraftSave	function	hr	true	hook	src/api/hr/employees.ts	622	
-useWizardDraftDelete	function	hr	true	hook	src/api/hr/employees.ts	633	
+PayrollReadiness	interface	hr	true		src/api/hr/employees.ts	85	
+HrStatutoryRow	interface	hr	true		src/api/hr/employees.ts	91	
+HrEmployeeDetail	interface	hr	true		src/api/hr/employees.ts	110	
+HrEmployeeAssignment	interface	hr	true		src/api/hr/employees.ts	121	
+HrEmployeePayGroup	interface	hr	true		src/api/hr/employees.ts	138	
+HrEmployeeAccessProfile	interface	hr	true		src/api/hr/employees.ts	147	
+EmployeeMissingField	type	hr	true		src/api/hr/employees.ts	156	
+HrDashboardStats	interface	hr	true		src/api/hr/employees.ts	158	
+HrWorkflowSummary	interface	hr	true		src/api/hr/employees.ts	173	
+HrEmployeeListFilter	interface	hr	true		src/api/hr/employees.ts	182	
+useHrEmployees	function	hr	true	hook	src/api/hr/employees.ts	187	
+EmployeeSortCol	type	hr	true		src/api/hr/employees.ts	198	
+HrEmployeePageFilter	interface	hr	true		src/api/hr/employees.ts	200	
+HrEmployeePageMeta	interface	hr	true		src/api/hr/employees.ts	209	
+HrEmployeePage	interface	hr	true		src/api/hr/employees.ts	215	
+HrEmployeeListCache	type	hr	false		src/api/hr/employees.ts	217	
+findCachedHrEmployeeRow	function	hr	true		src/api/hr/employees.ts	226	
+useHrEmployeesPage	function	hr	true	hook	src/api/hr/employees.ts	238	
+fetchHrEmployeeDetail	function	hr	false		src/api/hr/employees.ts	251	
+useHrEmployee	function	hr	true	hook	src/api/hr/employees.ts	259	
+usePrefetchHrEmployee	function	hr	true	hook	src/api/hr/employees.ts	286	
+useHrDashboardStats	function	hr	true	hook	src/api/hr/employees.ts	301	
+useHrWorkflowSummary	function	hr	true	hook	src/api/hr/employees.ts	314	
+useHrStatutory	function	hr	true	hook	src/api/hr/employees.ts	325	
+HrAuditEntry	interface	hr	true		src/api/hr/employees.ts	336	
+HrDocument	interface	hr	true		src/api/hr/employees.ts	348	
+HrTrainingSummary	interface	hr	true		src/api/hr/employees.ts	361	
+useHrAudit	function	hr	true	hook	src/api/hr/employees.ts	366	
+useHrDocuments	function	hr	true	hook	src/api/hr/employees.ts	378	
+useHrTrainingSummary	function	hr	true	hook	src/api/hr/employees.ts	390	
+HrOrgUnit	interface	hr	true		src/api/hr/employees.ts	402	
+HrSite	interface	hr	true		src/api/hr/employees.ts	403	
+useHrOrgUnits	function	hr	true	hook	src/api/hr/employees.ts	405	
+useHrSites	function	hr	true	hook	src/api/hr/employees.ts	415	
+ContactUpdateArgs	interface	hr	true		src/api/hr/employees.ts	427	
+useUpdateHrContact	function	hr	true	hook	src/api/hr/employees.ts	435	
+PhotoDecideArgs	interface	hr	true		src/api/hr/employees.ts	447	
+useDecideHrEmployeePhoto	function	hr	true	hook	src/api/hr/employees.ts	449	
+StatutoryUpdateArgs	interface	hr	true		src/api/hr/employees.ts	461	
+useUpdateHrStatutory	function	hr	true	hook	src/api/hr/employees.ts	469	
+StatusChangeArgs	interface	hr	true		src/api/hr/employees.ts	481	
+useChangeHrStatus	function	hr	true	hook	src/api/hr/employees.ts	483	
+ChangeRequestArgs	interface	hr	true		src/api/hr/employees.ts	496	
+useCreateHrChangeRequest	function	hr	true	hook	src/api/hr/employees.ts	498	
+UploadDocArgs	interface	hr	true		src/api/hr/employees.ts	507	
+useUploadHrDocument	function	hr	true	hook	src/api/hr/employees.ts	509	
+useVerifyHrDocument	function	hr	true	hook	src/api/hr/employees.ts	529	
+useArchiveHrDocument	function	hr	true	hook	src/api/hr/employees.ts	538	
+getHrDocumentDownloadUrl	function	hr	true		src/api/hr/employees.ts	547	
+HrAccessProfile	interface	hr	true		src/api/hr/employees.ts	554	
+useHrAccessProfiles	function	hr	true	hook	src/api/hr/employees.ts	564	
+WizardAccountMode	type	hr	true		src/api/hr/employees.ts	579	
+CreateHrEmployeeArgsV2	interface	hr	true		src/api/hr/employees.ts	581	
+CreateEmployeeReceiptV2	interface	hr	true		src/api/hr/employees.ts	635	
+useCreateHrEmployeeV2	function	hr	true	hook	src/api/hr/employees.ts	647	
+WizardDraftRecord	interface	hr	true		src/api/hr/employees.ts	658	
+useWizardDraftGet	function	hr	true	hook	src/api/hr/employees.ts	668	
+useWizardDraftSave	function	hr	true	hook	src/api/hr/employees.ts	680	
+useWizardDraftDelete	function	hr	true	hook	src/api/hr/employees.ts	691	
 call	function	hr	false		src/api/hr/leave.ts	16	
 hrLeaveApi	object	hr	true		src/api/hr/leave.ts	21	
 useLeaveTypes	function	hr	true	hook	src/api/hr/leave.ts	50	
@@ -5094,9 +5101,9 @@ call	function	hr	false		src/api/hr/offboarding.ts	15
 hrOffboardingApi	object	hr	true		src/api/hr/offboarding.ts	21	
 offbKeys	object	hr	true		src/api/hr/offboarding.ts	37	
 useOffboardingCases	function	hr	true	hook	src/api/hr/offboarding.ts	44	
-useOffboardingCase	function	hr	true	hook	src/api/hr/offboarding.ts	47	
-useOffboardingStats	function	hr	true	hook	src/api/hr/offboarding.ts	50	
-useOffboardingMutation	function	hr	true	hook	src/api/hr/offboarding.ts	55	
+useOffboardingCase	function	hr	true	hook	src/api/hr/offboarding.ts	50	
+useOffboardingStats	function	hr	true	hook	src/api/hr/offboarding.ts	53	
+useOffboardingMutation	function	hr	true	hook	src/api/hr/offboarding.ts	58	
 call	function	hr	false		src/api/hr/onboarding.ts	27	
 OnboardingTaskTemplate	interface	hr	true		src/api/hr/onboarding.ts	33	
 OnboardingHandoffTemplate	interface	hr	true		src/api/hr/onboarding.ts	34	
@@ -7761,22 +7768,22 @@ DialogProps	interface	hr	false		src/components/sections/HR/ActionDialogs.tsx	100
 ContactDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	104	
 set	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	110	ContactDialog
 submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	119	ContactDialog
-StatusDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	161	
-submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	169	StatusDialog
-OffboardingDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	195	
-submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	207	OffboardingDialog
-ChangeRequestDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	259	
-set	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	268	ChangeRequestDialog
-fields	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	270	ChangeRequestDialog
-requestedValue	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	281	ChangeRequestDialog
-submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	293	ChangeRequestDialog
-DOC_TYPES	array	hr	false		src/components/sections/HR/ActionDialogs.tsx	320	
-CONFIDENTIALITY	array	hr	false		src/components/sections/HR/ActionDialogs.tsx	321	
-DocumentDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	323	
-submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	331	DocumentDialog
-StatutoryDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	359	
-set	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	368	StatutoryDialog
-submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	379	StatutoryDialog
+StatusDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	162	
+submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	170	StatusDialog
+OffboardingDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	196	
+submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	208	OffboardingDialog
+ChangeRequestDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	260	
+set	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	269	ChangeRequestDialog
+fields	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	271	ChangeRequestDialog
+requestedValue	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	282	ChangeRequestDialog
+submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	294	ChangeRequestDialog
+DOC_TYPES	array	hr	false		src/components/sections/HR/ActionDialogs.tsx	321	
+CONFIDENTIALITY	array	hr	false		src/components/sections/HR/ActionDialogs.tsx	322	
+DocumentDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	324	
+submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	332	DocumentDialog
+StatutoryDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	360	
+set	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	369	StatutoryDialog
+submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	380	StatutoryDialog
 ExcRow	interface	hr	false		src/components/sections/HR/AttendanceOverview.tsx	28	
 STATUS_OPTIONS	array	hr	false		src/components/sections/HR/AttendanceOverview.tsx	30	
 SOURCE_OPTIONS	array	hr	false		src/components/sections/HR/AttendanceOverview.tsx	31	
@@ -7912,16 +7919,22 @@ STATUS_TONE	object	hr	false		src/components/sections/HR/EmployeeOnboardingSummar
 EmployeeOnboardingSummaryProps	interface	hr	true		src/components/sections/HR/EmployeeOnboardingSummary.tsx	42	
 EmployeeOnboardingSummary	function	hr	true	component	src/components/sections/HR/EmployeeOnboardingSummary.tsx	47	
 employee	object	hr	false	test	src/components/sections/HR/EmployeeProfilePage.test.tsx	6	
-detail	object	hr	false	test	src/components/sections/HR/EmployeeProfilePage.test.tsx	18	
-access	object	hr	false	test	src/components/sections/HR/EmployeeProfilePage.test.tsx	39	
-ProfileTab	type	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	23	
-EmployeeProfilePageProps	interface	hr	true		src/components/sections/HR/EmployeeProfilePage.tsx	25	
-fmtDate	function	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	32	
-fmtDateTime	function	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	39	
-tenure	function	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	46	
-RestrictedPanel	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	60	
-FinanceEmploymentDetails	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	71	
-EmployeeProfilePage	function	hr	true	component	src/components/sections/HR/EmployeeProfilePage.tsx	103	
+detail	object	hr	false	test	src/components/sections/HR/EmployeeProfilePage.test.tsx	19	
+access	object	hr	false	test	src/components/sections/HR/EmployeeProfilePage.test.tsx	63	
+ProfileTab	type	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	18	
+EmployeeProfilePageProps	interface	hr	true		src/components/sections/HR/EmployeeProfilePage.tsx	20	
+DASH	variable	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	27	
+fmtDate	function	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	29	
+fmtDateTime	function	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	36	
+tenure	function	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	45	
+Card	function	hr	false	component,ui-tile	src/components/sections/HR/EmployeeProfilePage.tsx	60	
+TextAction	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	74	
+DetailList	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	78	
+Gauge	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	89	
+SectionHead	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	101	
+FinanceSnapshot	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	105	
+OffboardingPanel	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	133	
+EmployeeProfilePage	function	hr	true	component	src/components/sections/HR/EmployeeProfilePage.tsx	187	
 EmployeeRegisterColumn	interface	hr	true		src/components/sections/HR/employeeRegisterColumns.ts	9	
 EMPLOYEE_REGISTER_COLUMNS	variable	hr	true		src/components/sections/HR/employeeRegisterColumns.ts	17	
 DEFAULT_EMPLOYEE_REGISTER_COLUMNS	array	hr	true		src/components/sections/HR/employeeRegisterColumns.ts	33	
@@ -12433,6 +12446,8 @@ stripComments	function	hr	false	test	tests/vitest/employeeImportUpdatePath.test.
 lookups	object	hr	false	test	tests/vitest/employeeImportUpdatePath.test.ts	21	
 route	function	hr	false	test	tests/vitest/employeeImportUpdatePath.test.ts	89	
 sql	function	hr	false	test	tests/vitest/employeeImportUpdatePath.test.ts	105	
+read	function	hr	false	test	tests/vitest/employeeProfileReadModel.test.ts	5	
+row	function	hr	false	test	tests/vitest/hrEmployeeDetailPlaceholder.test.ts	8	
 TODAY	variable	testing	false	test	tests/vitest/importValidation.test.ts	15	
 codes	function	testing	false	test	tests/vitest/importValidation.test.ts	16	
 ACTOR	variable	testing	false	test	tests/vitest/recipientResolverActorConfirmation.test.ts	25	

@@ -19,7 +19,7 @@ async function call<T>(path: string, args: object = {}): Promise<T> {
 }
 
 export const hrOffboardingApi = {
-  list:  (a: { status?: string } = {}) => call<OffboardingCaseRow[]>('hr/offboarding/list', a),
+  list:  (a: { status?: string; employeeId?: string } = {}) => call<OffboardingCaseRow[]>('hr/offboarding/list', a),
   get:   (caseId: string)              => call<OffboardingCaseDetail>('hr/offboarding/get', { caseId }),
   stats: ()                            => call<OffboardingDashboardStats>('hr/offboarding/dashboard-stats', {}),
   start: (a: StartOffboardingArgs)     => call<StartOffboardingResult>('hr/offboarding/start', a),
@@ -36,13 +36,16 @@ export const hrOffboardingApi = {
 
 export const offbKeys = {
   root:  ['hr', 'offboarding'] as const,
-  list:  (s?: string) => ['hr', 'offboarding', 'list', s ?? 'all'] as const,
+  list:  (s?: string, employeeId?: string) => ['hr', 'offboarding', 'list', s ?? 'all', employeeId ?? 'all'] as const,
   case:  (id: string) => ['hr', 'offboarding', 'case', id] as const,
   stats: ['hr', 'offboarding', 'stats'] as const,
 };
 
-export function useOffboardingCases(status?: string) {
-  return useQuery({ queryKey: offbKeys.list(status), queryFn: () => hrOffboardingApi.list(status ? { status } : {}) });
+export function useOffboardingCases(status?: string, employeeId?: string) {
+  return useQuery({
+    queryKey: offbKeys.list(status, employeeId),
+    queryFn: () => hrOffboardingApi.list({ ...(status ? { status } : {}), ...(employeeId ? { employeeId } : {}) }),
+  });
 }
 export function useOffboardingCase(caseId: string | null) {
   return useQuery({ queryKey: offbKeys.case(caseId ?? ''), queryFn: () => hrOffboardingApi.get(caseId!), enabled: !!caseId });

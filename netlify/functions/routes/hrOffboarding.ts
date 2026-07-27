@@ -17,7 +17,7 @@ import {
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
-const body = (c: Context<{ Variables: HonoVariables }>) => (c.get('body') as Record<string, unknown>).args ?? {};
+const body = (c: Context<{ Variables: HonoVariables }>) => c.get('body').args ?? {};
 function fail(c: Context<{ Variables: HonoVariables }>, e: unknown): Response {
   const er = e as { status?: number; message?: string };
   return c.json({ success: false, message: er.message ?? 'Request failed.' }, (er.status ?? 500) as 200);
@@ -38,7 +38,7 @@ router.post('/offboarding/start', async c => {
 
 router.post('/offboarding/list', async c => {
   await requirePermission(c, 'hr.offboarding.view');
-  const v = zv(c, z.object({ status: z.string().optional() }), body(c));
+  const v = zv(c, z.object({ status: z.string().optional(), employeeId: z.string().min(1).optional() }), body(c));
   if (!v.ok) return v.response;
   try { return c.json({ success: true, data: await listOffboardingCases(v.data) }); }
   catch (e) { return fail(c, e); }
@@ -46,7 +46,7 @@ router.post('/offboarding/list', async c => {
 
 router.post('/offboarding/get', async c => {
   await requirePermission(c, 'hr.offboarding.view');
-  const v = zv(c, z.object({ caseId: z.string().uuid() }), body(c));
+  const v = zv(c, z.object({ caseId: z.uuid() }), body(c));
   if (!v.ok) return v.response;
   try {
     const detail = await getOffboardingCase(v.data.caseId);
@@ -63,7 +63,7 @@ router.post('/offboarding/dashboard-stats', async c => {
 
 router.post('/offboarding/task/complete', async c => {
   const actor = await requirePermission(c, 'hr.offboarding.task.manage');
-  const v = zv(c, z.object({ taskId: z.string().uuid() }), body(c));
+  const v = zv(c, z.object({ taskId: z.uuid() }), body(c));
   if (!v.ok) return v.response;
   try { return c.json({ success: true, data: await completeOffboardingTask(actor.id, v.data) }); }
   catch (e) { return fail(c, e); }
@@ -71,7 +71,7 @@ router.post('/offboarding/task/complete', async c => {
 
 router.post('/offboarding/pause', async c => {
   const actor = await requirePermission(c, 'hr.offboarding.case.manage');
-  const v = zv(c, z.object({ caseId: z.string().uuid(), reason: z.string().max(500).nullable().optional() }), body(c));
+  const v = zv(c, z.object({ caseId: z.uuid(), reason: z.string().max(500).nullable().optional() }), body(c));
   if (!v.ok) return v.response;
   try { return c.json({ success: true, data: await pauseOffboardingCase(actor.id, v.data) }); }
   catch (e) { return fail(c, e); }
@@ -79,7 +79,7 @@ router.post('/offboarding/pause', async c => {
 
 router.post('/offboarding/resume', async c => {
   const actor = await requirePermission(c, 'hr.offboarding.case.manage');
-  const v = zv(c, z.object({ caseId: z.string().uuid() }), body(c));
+  const v = zv(c, z.object({ caseId: z.uuid() }), body(c));
   if (!v.ok) return v.response;
   try { return c.json({ success: true, data: await resumeOffboardingCase(actor.id, v.data) }); }
   catch (e) { return fail(c, e); }
@@ -87,7 +87,7 @@ router.post('/offboarding/resume', async c => {
 
 router.post('/offboarding/mark-ready', async c => {
   const actor = await requirePermission(c, 'hr.offboarding.case.manage');
-  const v = zv(c, z.object({ caseId: z.string().uuid() }), body(c));
+  const v = zv(c, z.object({ caseId: z.uuid() }), body(c));
   if (!v.ok) return v.response;
   try { return c.json({ success: true, data: await markReadyForExit(actor.id, v.data) }); }
   catch (e) { return fail(c, e); }
@@ -95,7 +95,7 @@ router.post('/offboarding/mark-ready', async c => {
 
 router.post('/offboarding/reassign-owner', async c => {
   const actor = await requirePermission(c, 'hr.offboarding.case.manage');
-  const v = zv(c, z.object({ caseId: z.string().uuid(), ownerId: z.string().nullable() }), body(c));
+  const v = zv(c, z.object({ caseId: z.uuid(), ownerId: z.string().nullable() }), body(c));
   if (!v.ok) return v.response;
   try { return c.json({ success: true, data: await reassignOffboardingOwner(actor.id, v.data) }); }
   catch (e) { return fail(c, e); }
@@ -103,7 +103,7 @@ router.post('/offboarding/reassign-owner', async c => {
 
 router.post('/offboarding/complete', async c => {
   const actor = await requirePermission(c, 'hr.offboarding.complete');
-  const v = zv(c, z.object({ caseId: z.string().uuid() }), body(c));
+  const v = zv(c, z.object({ caseId: z.uuid() }), body(c));
   if (!v.ok) return v.response;
   try { return c.json({ success: true, data: await completeOffboardingCase(actor.id, v.data) }); }
   catch (e) { return fail(c, e); }
@@ -111,7 +111,7 @@ router.post('/offboarding/complete', async c => {
 
 router.post('/offboarding/cancel', async c => {
   const actor = await requirePermission(c, 'hr.offboarding.cancel');
-  const v = zv(c, z.object({ caseId: z.string().uuid(), reason: z.string().trim().min(1, 'A reason is required to cancel an offboarding case.').max(500) }), body(c));
+  const v = zv(c, z.object({ caseId: z.uuid(), reason: z.string().trim().min(1, 'A reason is required to cancel an offboarding case.').max(500) }), body(c));
   if (!v.ok) return v.response;
   try { return c.json({ success: true, data: await cancelOffboardingCase(actor.id, v.data) }); }
   catch (e) { return fail(c, e); }
@@ -119,7 +119,7 @@ router.post('/offboarding/cancel', async c => {
 
 router.post('/offboarding/finalize', async c => {
   const actor = await requirePermission(c, 'hr.offboarding.finalize');
-  const v = zv(c, z.object({ caseId: z.string().uuid(), exitDate: z.string().nullable().optional() }), body(c));
+  const v = zv(c, z.object({ caseId: z.uuid(), exitDate: z.string().nullable().optional() }), body(c));
   if (!v.ok) return v.response;
   try { return c.json({ success: true, data: await finalizeOffboarding(actor.id, v.data) }); }
   catch (e) { return fail(c, e); }
