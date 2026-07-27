@@ -20,6 +20,7 @@ import { resolveSettingValue } from '../lib/settings/resolveSetting';
 import { parseCsv }   from '../lib/hr/csvParse';
 import { IMPORT_LIMITS, checkImportLimits } from '../lib/hr/importLimits';
 import { IMPORT_MAPPING_VERSION, checkMapping } from '../lib/hr/importFields';
+import { validateFieldFormats, WithinFileDuplicates } from '../lib/hr/importValidation';
 import {
   writeHrAudit, statutoryProfilePatch, statutoryWithDefaults, computePayrollReadiness,
   EMPLOYMENT_TYPES,
@@ -33,7 +34,7 @@ const body = (c: { get: (k: string) => unknown }) => (c.get('body') as Record<st
 
 const REQUIRED_FIELDS = ['firstName', 'lastName', 'workerType', 'department', 'position'] as const;
 
-interface ImportPolicy {
+export interface ImportPolicy {
   duplicateEmployeeNumber: 'skip' | 'update' | 'error';
   duplicateUsername:       'skip' | 'error';
   missingSupervisor:       'allow' | 'warn' | 'block';
@@ -96,7 +97,7 @@ function deriveUsername(m: Record<string, string>): string {
   return base.replace(/^\.|\.$/g, '') || 'employee';
 }
 
-interface LookupCtx {
+export interface LookupCtx {
   usernames: Set<string>;
   employeeNumbers: Set<string>;
   deptByKey: Map<string, string>;       // lower(name) | id → id
@@ -112,8 +113,23 @@ interface RowVerdict {
   errors: { fieldKey: string | null; code: string; severity: 'info' | 'warning' | 'error'; message: string; resolutionRequired: boolean }[];
 }
 
+/** Apply the batch's default department/site to a mapped row.
+ *
+ *  Must run BEFORE validation: `department` is a required field, so a blank one was
+ *  rejected before defaultDepartmentId ever got a chance to fill it, making the setting
+ *  inert (P1-6). A default only fills a BLANK cell — it never overrides the file. */
+export function applyBatchDefaults(
+  m: Record<string, string>,
+  defaults: { departmentId?: string | null; siteId?: string | null },
+): Record<string, string> {
+  const out = { ...m };
+  if (!norm(out.department) && defaults.departmentId) out.department = defaults.departmentId;
+  if (!norm(out.site) && defaults.siteId) out.site = defaults.siteId;
+  return out;
+}
+
 /** Validate one mapped row against the lookup context + policy. Pure (no DB). */
-function validateRow(m: Record<string, string>, importMode: string, policy: ImportPolicy, ctx: LookupCtx): RowVerdict {
+export function validateRow(m: Record<string, string>, importMode: string, policy: ImportPolicy, ctx: LookupCtx): RowVerdict {
   const errors: RowVerdict['errors'] = [];
   let targetEmployeeId: string | null = null;
   let resolution: string | null = null;
@@ -210,20 +226,24 @@ function validateRow(m: Record<string, string>, importMode: string, policy: Impo
 
 /** Load the dedup/resolution lookups once for a validate/commit pass. */
 async function loadLookups(): Promise<LookupCtx> {
-  const [{ data: users }, { data: depts }] = await Promise.all([
-    sb.from('app_users').select('id, username, employee_number, full_name, site_id'),
+  // Sites come from the REGISTRY, not from site_ids already referenced by employees: a
+  // valid, newly created site with nobody assigned to it was previously rejected as
+  // unknown, while defaultSiteId was accepted with no registry check at all (P1-6).
+  const [{ data: users }, { data: depts }, { data: sites }] = await Promise.all([
+    sb.from('app_users').select('id, username, employee_number, full_name'),
     sb.from('departments').select('id, name'),
+    sb.from('project_sites').select('id'),
   ]);
   const usernames = new Set<string>();
   const employeeNumbers = new Set<string>();
   const supervisorByKey = new Map<string, string>();
   const siteIds = new Set<string>();
-  for (const u of (users ?? []) as { id: string; username: string | null; employee_number: string | null; full_name: string | null; site_id: string | null }[]) {
+  for (const u of (users ?? []) as { id: string; username: string | null; employee_number: string | null; full_name: string | null }[]) {
     if (u.username) { usernames.add(u.username.toLowerCase()); supervisorByKey.set(u.username.toLowerCase(), u.id); }
     if (u.employee_number) { employeeNumbers.add(u.employee_number.toUpperCase()); supervisorByKey.set(u.employee_number.toLowerCase(), u.id); }
     if (u.full_name) supervisorByKey.set(u.full_name.toLowerCase(), u.id);
-    if (u.site_id) siteIds.add(u.site_id);
   }
+  for (const s of (sites ?? []) as { id: string }[]) siteIds.add(s.id);
   const deptByKey = new Map<string, string>();
   for (const d of (depts ?? []) as { id: string; name: string }[]) {
     deptByKey.set(d.id.toLowerCase(), d.id);
@@ -381,9 +401,28 @@ router.post('/employees/import/validate', async c => {
 
   const tally = { ready: 0, warning: 0, blocked: 0, duplicate: 0 };
   const errorRows: Record<string, unknown>[] = [];
+  const withinFile = new WithinFileDuplicates();
   for (const r of (rows ?? []) as { id: string; row_no: number; raw_data: Record<string, string> }[]) {
-    const mapped = applyMapping(r.raw_data, mapping);
+    const mapped = applyBatchDefaults(applyMapping(r.raw_data, mapping), {
+      departmentId: batch.default_department_id as string | null,
+      siteId: batch.default_site_id as string | null,
+    });
     const verdict = validateRow(mapped, importMode, policy, ctx);
+    // Field formats and same-file collisions are additive blockers: a row that is
+    // otherwise `ready` must not commit with a malformed email or a number another row
+    // in this very file already claimed.
+    const extra = [
+      ...validateFieldFormats(mapped),
+      ...withinFile.check(r.row_no, {
+        employeeNumber: mapped.employeeNumber,
+        username: deriveUsername(mapped),
+        email: mapped.email,
+      }),
+    ];
+    if (extra.length) {
+      verdict.errors.push(...extra);
+      if (verdict.status !== 'duplicate') { verdict.status = 'blocked'; verdict.severity = 'error'; }
+    }
     tally[verdict.status]++;
     await sb.from('hr_employee_import_rows').update({
       mapped_data: mapped, status: verdict.status, severity: verdict.severity,

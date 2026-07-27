@@ -1701,6 +1701,18 @@ checkMapping	function	hr	true		netlify/functions/lib/hr/importFields.ts	39
 IMPORT_LIMITS	variable	hr	true		netlify/functions/lib/hr/importLimits.ts	13	
 ParsedCsvLike	interface	hr	true		netlify/functions/lib/hr/importLimits.ts	25	
 checkImportLimits	function	hr	true		netlify/functions/lib/hr/importLimits.ts	34	
+FieldError	interface	hr	true		netlify/functions/lib/hr/importValidation.ts	15	
+err	function	hr	false		netlify/functions/lib/hr/importValidation.ts	23	
+FIELD_MAX_LENGTH	object	hr	true		netlify/functions/lib/hr/importValidation.ts	28	
+EMPLOYEE_NUMBER_RE	variable	hr	false		netlify/functions/lib/hr/importValidation.ts	34	
+USERNAME_RE	variable	hr	false		netlify/functions/lib/hr/importValidation.ts	35	
+EMAIL_RE	variable	hr	false		netlify/functions/lib/hr/importValidation.ts	37	
+ISO_DATE_RE	variable	hr	false		netlify/functions/lib/hr/importValidation.ts	38	
+isRealIsoDate	function	hr	true		netlify/functions/lib/hr/importValidation.ts	41	
+validateFieldFormats	function	hr	true		netlify/functions/lib/hr/importValidation.ts	52	
+v	function	hr	false		netlify/functions/lib/hr/importValidation.ts	57	validateFieldFormats
+WithinFileDuplicates	class	hr	true		netlify/functions/lib/hr/importValidation.ts	122	
+check	method	hr	false		netlify/functions/lib/hr/importValidation.ts	127	WithinFileDuplicates
 err	function	hr	false		netlify/functions/lib/hr/leaveAccruals.ts	8	
 runAccruals	function	hr	true		netlify/functions/lib/hr/leaveAccruals.ts	10	
 adjustBalance	function	hr	true		netlify/functions/lib/hr/leaveAccruals.ts	72	
@@ -3251,28 +3263,29 @@ routeErr	function	platform	false		netlify/functions/routes/hrCrew.ts	38
 DATE	variable	platform	false		netlify/functions/routes/hrCrew.ts	59	
 nzStr	function	platform	false		netlify/functions/routes/hrCrew.ts	60	
 uuidN	variable	platform	false		netlify/functions/routes/hrCrew.ts	61	
-router	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	29	
-body	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	30	
-REQUIRED_FIELDS	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	34	
-ImportPolicy	interface	hr	false		netlify/functions/routes/hrEmployeeImport.ts	36	
-DEFAULT_POLICY	object	hr	false		netlify/functions/routes/hrEmployeeImport.ts	49	
-PolicySchema	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	63	
-STATUTORY_KEYS	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	73	
-parseBool	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	74	
-norm	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	78	
-applyMapping	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	81	
-deriveUsername	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	92	
-LookupCtx	interface	hr	false		netlify/functions/routes/hrEmployeeImport.ts	99	
-RowVerdict	interface	hr	false		netlify/functions/routes/hrEmployeeImport.ts	107	
-validateRow	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	116	
-loadLookups	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	212	
-loadBatch	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	237	
-loadScopedBatch	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	254	
-importRowPayloadHash	function	hr	true		netlify/functions/routes/hrEmployeeImport.ts	455	
-toProvisionInput	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	461	
-IMPORT_UPDATE_PATCH_FIELDS	variable	hr	true		netlify/functions/routes/hrEmployeeImport.ts	493	
-buildImportUpdatePatch	function	hr	true		netlify/functions/routes/hrEmployeeImport.ts	496	
-updateFromImport	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	529	
+router	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	30	
+body	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	31	
+REQUIRED_FIELDS	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	35	
+ImportPolicy	interface	hr	true		netlify/functions/routes/hrEmployeeImport.ts	37	
+DEFAULT_POLICY	object	hr	false		netlify/functions/routes/hrEmployeeImport.ts	50	
+PolicySchema	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	64	
+STATUTORY_KEYS	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	74	
+parseBool	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	75	
+norm	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	79	
+applyMapping	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	82	
+deriveUsername	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	93	
+LookupCtx	interface	hr	true		netlify/functions/routes/hrEmployeeImport.ts	100	
+RowVerdict	interface	hr	false		netlify/functions/routes/hrEmployeeImport.ts	108	
+applyBatchDefaults	function	hr	true		netlify/functions/routes/hrEmployeeImport.ts	121	
+validateRow	function	hr	true		netlify/functions/routes/hrEmployeeImport.ts	132	
+loadLookups	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	228	
+loadBatch	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	257	
+loadScopedBatch	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	274	
+importRowPayloadHash	function	hr	true		netlify/functions/routes/hrEmployeeImport.ts	494	
+toProvisionInput	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	500	
+IMPORT_UPDATE_PATCH_FIELDS	variable	hr	true		netlify/functions/routes/hrEmployeeImport.ts	532	
+buildImportUpdatePatch	function	hr	true		netlify/functions/routes/hrEmployeeImport.ts	535	
+updateFromImport	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	568	
 router	variable	hr	false		netlify/functions/routes/hrLeave.ts	15	
 body	function	hr	false		netlify/functions/routes/hrLeave.ts	17	
 mutate	function	hr	false		netlify/functions/routes/hrLeave.ts	23	
@@ -12420,6 +12433,8 @@ stripComments	function	hr	false	test	tests/vitest/employeeImportUpdatePath.test.
 lookups	object	hr	false	test	tests/vitest/employeeImportUpdatePath.test.ts	21	
 route	function	hr	false	test	tests/vitest/employeeImportUpdatePath.test.ts	89	
 sql	function	hr	false	test	tests/vitest/employeeImportUpdatePath.test.ts	105	
+TODAY	variable	testing	false	test	tests/vitest/importValidation.test.ts	15	
+codes	function	testing	false	test	tests/vitest/importValidation.test.ts	16	
 ACTOR	variable	testing	false	test	tests/vitest/recipientResolverActorConfirmation.test.ts	25	
 SUBJECT	variable	testing	false	test	tests/vitest/recipientResolverActorConfirmation.test.ts	26	
 ASSIGNEE	variable	testing	false	test	tests/vitest/recipientResolverActorConfirmation.test.ts	27	
