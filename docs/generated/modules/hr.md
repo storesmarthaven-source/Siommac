@@ -2,9 +2,9 @@
 
 # hr Module Map
 
-Source fingerprint: `b92be45f166cc04ce9204456`
+Source fingerprint: `aae5aec69a0243271ab8a83d`
 
-Files: 219 | Symbols: 2345 | Widgets: 9 | Unique mounted endpoints: 260 | Route definitions: 260 mounted + 0 unmounted | API calls: 33 | DB objects: 170 | E2E suites: 16
+Files: 220 | Symbols: 2353 | Widgets: 9 | Unique mounted endpoints: 260 | Route definitions: 260 mounted + 0 unmounted | API calls: 33 | DB objects: 171 | E2E suites: 16
 
 ## Widgets and Tiles
 
@@ -110,9 +110,9 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/hr/employees/documents/list` | `hr.employee_documents.view` | requirePermission, userCan | `z.object({ employeeId: z.string().min(1) })` | `netlify/functions/routes/hr.ts:1774` | - | hr, hrDocuments, hrEmployeeMaster |
 | `/api/hr/employees/documents/upload-url` | `hr.employee_documents.upload` | requirePermission | `z.object({ fileName: z.string().min(1), mimeType: z.string().min(1) })` | `netlify/functions/routes/hr.ts:1788` | - | hr |
 | `/api/hr/employees/get` | `hr.view` | requirePermission, userCan | `z.object({ employeeId: z.string().min(1) })` | `netlify/functions/routes/hr.ts:281` | - | hr, hrEmployeeMaster |
-| `/api/hr/employees/import/commit` | `hr.employees.import.commit` | requirePermission | `z.object({ batchId: z.uuid() })` | `netlify/functions/routes/hrEmployeeImport.ts:509` | - | hrEmployeeImport |
+| `/api/hr/employees/import/commit` | `hr.employees.import.commit` | requirePermission | `z.object({ batchId: z.uuid() })` | `netlify/functions/routes/hrEmployeeImport.ts:553` | - | hrEmployeeImport |
 | `/api/hr/employees/import/map-fields` | `hr.employees.import.map` | requirePermission | `z.object({ batchId: z.uuid(), mapping: z.record(z.string(), z.string()) })` | `netlify/functions/routes/hrEmployeeImport.ts:328` | - | hrEmployeeImport |
-| `/api/hr/employees/import/report` | `hr.employees.import.report.download` | requirePermission | `z.object({ batchId: z.uuid() })` | `netlify/functions/routes/hrEmployeeImport.ts:581` | - | hrEmployeeImport |
+| `/api/hr/employees/import/report` | `hr.employees.import.report.download` | requirePermission | `z.object({ batchId: z.uuid() })` | `netlify/functions/routes/hrEmployeeImport.ts:626` | - | hrEmployeeImport |
 | `/api/hr/employees/import/resolve-row` | `hr.employees.import.validate` | requirePermission | `z.object({     batchId: z.uuid(), rowId: z.uuid(),     action: z.enum(['edit', 'ignore', 'skip', 'assign']),     patch: z.record(z.string(), z.string()).optional(),   })` | `netlify/functions/routes/hrEmployeeImport.ts:406` | - | - |
 | `/api/hr/employees/import/set-policy` | `hr.employees.import.map` | requirePermission | `z.object({ batchId: z.uuid(), policy: PolicySchema })` | `netlify/functions/routes/hrEmployeeImport.ts:348` | - | hrEmployeeImport |
 | `/api/hr/employees/import/upload` | `hr.employees.import.upload` | requirePermission | `z.object({     fileName:   z.string().min(1).max(255),     fileType:   z.enum(['csv']),     // Bounded at the schema so an oversized payload is rejected BEFORE it is decoded     // into memory. Previously any non-empty string was accepted, held whole in the     // request, decoded, parsed, and inserted in a single statement.     fileBase64: z.string().min(1).max(IMPORT_LIMITS.maxBase64Chars, `The file is too large. The limit is ${IMPORT_LIMITS.maxFileBytes / 1024 / 1024} MB.`),     importMode: z.enum(['create', 'update', 'create_update']).optional(),     defaultSiteId:       z.string().nullable().optional(),     defaultDepartmentId: z.string().nullable().optional(),   })` | `netlify/functions/routes/hrEmployeeImport.ts:270` | - | hrEmployeeImport, hrEmployeeSettings |
@@ -565,6 +565,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | table | `public.org_account_support_config` | `supabase/migrations/20260919000731_employees_access_service_requests.sql:57` |
 | function | `public.touch_org_account_support_config` | `supabase/migrations/20260919000731_employees_access_service_requests.sql:84` |
 | trigger | `trg_org_account_support_config_updated_at` | `supabase/migrations/20260919000731_employees_access_service_requests.sql:90` |
+| function | `public.hr_employee_import_update_tx` | `supabase/migrations/20260919000751_hr_employee_import_update_tx.sql:26` |
 | table | `public.hr_employee_wizard_drafts` | `supabase/migrations/20260926000004_hr_employee_wizard_drafts.sql:8` |
 | function | `public.hr_wizard_draft_updated_at` | `supabase/migrations/20260926000004_hr_employee_wizard_drafts.sql:24` |
 | trigger | `trg_hr_wizard_draft_updated_at` | `supabase/migrations/20260926000004_hr_employee_wizard_drafts.sql:29` |
@@ -603,7 +604,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/hr.ts` | 2119 |
 | backend-route | `netlify/functions/routes/hrAttendance.ts` | 342 |
 | backend-route | `netlify/functions/routes/hrCompensation.ts` | 142 |
-| backend-route | `netlify/functions/routes/hrEmployeeImport.ts` | 605 |
+| backend-route | `netlify/functions/routes/hrEmployeeImport.ts` | 650 |
 | backend-route | `netlify/functions/routes/hrLeave.ts` | 213 |
 | backend-route | `netlify/functions/routes/hrOffboarding.ts` | 129 |
 | backend-route | `netlify/functions/routes/hrOnboarding.ts` | 746 |

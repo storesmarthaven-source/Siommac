@@ -20,7 +20,7 @@ import { parseCsv }   from '../lib/hr/csvParse';
 import { IMPORT_LIMITS, checkImportLimits } from '../lib/hr/importLimits';
 import { IMPORT_MAPPING_VERSION, checkMapping } from '../lib/hr/importFields';
 import {
-  provisionEmployee, writeHrAudit, statutoryPatch, statutoryWithDefaults, computePayrollReadiness,
+  provisionEmployee, writeHrAudit, statutoryProfilePatch, statutoryWithDefaults, computePayrollReadiness,
   EMPLOYMENT_TYPES,
 } from '../lib/hr/employeeCore';
 import type { HonoVariables } from '../../../types/api';
@@ -474,35 +474,79 @@ function toProvisionInput(m: Record<string, string>, policy: ImportPolicy, ctx: 
   };
 }
 
-/** Update an existing employee from a mapped row (update / create_update mode). */
-async function updateFromImport(targetId: string, m: Record<string, string>, ctx: LookupCtx, actorId: string): Promise<void> {
-  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
-  if (norm(m.position))  patch.position = norm(m.position);
-  if (norm(m.email))     patch.email = norm(m.email);
-  if (norm(m.phone))     patch.phone = norm(m.phone);
-  if (norm(m.employmentType)) patch.employment_type = norm(m.employmentType);
-  const deptId = ctx.deptByKey.get(norm(m.department).toLowerCase());
-  if (deptId) patch.department_id = deptId;
-  const supId = ctx.supervisorByKey.get(norm(m.supervisor).toLowerCase());
-  if (supId) patch.supervisor_id = supId;
-  const { error: updErr } = await sb.from('app_users').update(patch).eq('id', targetId);
-  if (updErr) throw updErr;   // a failed update must fail the row, not count as 'updated'
+/** The ONLY employee columns an imported row may change. Anything absent here — most
+ *  importantly `role` — is unreachable from a spreadsheet. Mirrors the allowlist
+ *  enforced inside hr_employee_import_update_tx, so neither layer alone is load-bearing. */
+export const IMPORT_UPDATE_PATCH_FIELDS = ['position', 'email', 'phone', 'employmentType'] as const;
 
-  // Statutory upsert + readiness recompute (reuses the shared helpers).
-  const stPatch = statutoryPatch({
+/** Build the allowlisted employee patch + resolved assignment for an update row. */
+export function buildImportUpdatePatch(
+  m: Record<string, string>,
+  lookups: {
+    deptByKey: Map<string, string>;
+    supervisorByKey: Map<string, string>;
+    siteIds: Set<string>;
+  },
+): { patch: Record<string, string>; assignment: Record<string, string | null> } {
+  const patch: Record<string, string> = {};
+  for (const f of IMPORT_UPDATE_PATCH_FIELDS) {
+    const value = norm(m[f]);
+    if (value) patch[f] = value;
+  }
+  const site = norm(m.site);
+  return {
+    patch,
+    assignment: {
+      departmentId: lookups.deptByKey.get(norm(m.department).toLowerCase()) ?? null,
+      siteId:       site && lookups.siteIds.has(site) ? site : null,
+      supervisorId: lookups.supervisorByKey.get(norm(m.supervisor).toLowerCase()) ?? null,
+    },
+  };
+}
+
+/**
+ * Update an existing employee from a mapped row (update / create_update mode).
+ *
+ * ONE transactional command (hr_employee_import_update_tx): the allowlisted employee
+ * patch, an effective-dated assignment change, the CANONICAL statutory profile, and the
+ * HR audit row with previous AND new state all commit together, or none of them do.
+ * The previous implementation issued four separate PostgREST calls, wrote the legacy
+ * statutory table, and left no assignment history.
+ */
+async function updateFromImport(
+  targetId: string, m: Record<string, string>, ctx: LookupCtx, actorId: string,
+  meta: { rowNo: number; batchNo: string; requestId: string | null },
+): Promise<void> {
+  const { patch, assignment } = buildImportUpdatePatch(m, ctx);
+
+  // Statutory goes to the CANONICAL profile shape; readiness is recomputed from the
+  // merged view so the stored status always agrees with the stored fields.
+  const stPatch = statutoryProfilePatch({
     nisNumber: m.nisNumber, nisStatus: m.nisStatus, birFileNumber: m.birFileNumber,
     td1Received: parseBool(m.td1Received), hsApplicable: parseBool(m.hsApplicable),
   });
+  let readiness = { status: 'pending', blockers: [] as string[], financeEligible: false };
   if (Object.keys(stPatch).length) {
-    const { data: existing } = await sb.from('hr_employee_statutory').select('*').eq('employee_id', targetId).maybeSingle<Record<string, unknown>>();
-    const readiness = computePayrollReadiness(statutoryWithDefaults({ ...(existing ?? {}), ...stPatch }));
-    const upd = { ...stPatch, payroll_ready_status: readiness.status, missing_blockers: readiness.blockers, finance_handoff_eligible: readiness.financeEligible, updated_by: actorId };
-    const { error: stErr } = existing
-      ? await sb.from('hr_employee_statutory').update(upd).eq('employee_id', targetId)
-      : await sb.from('hr_employee_statutory').insert({ employee_id: targetId, ...upd });
-    if (stErr) throw stErr;
+    const { data: existing, error: exErr } = await sb.from('hr_employee_statutory_profiles')
+      .select('*').eq('employee_id', targetId).maybeSingle<Record<string, unknown>>();
+    if (exErr) throw Object.assign(new Error(`Could not read the statutory profile: ${exErr.message}`), { status: 500 });
+    const merged = statutoryWithDefaults({ ...(existing ?? {}), ...stPatch });
+    const computed = computePayrollReadiness(merged);
+    readiness = { status: computed.status, blockers: computed.blockers, financeEligible: computed.financeEligible };
   }
-  await writeHrAudit({ employeeId: targetId, submoduleKey: 'import', recordId: targetId, actorId, action: 'hr.import.row_updated', newState: patch });
+
+  const { error } = await sb.rpc('hr_employee_import_update_tx', {
+    p_actor_id:    actorId,
+    p_employee_id: targetId,
+    p_patch:       patch,
+    p_assignment:  assignment,
+    p_statutory:   stPatch,
+    p_readiness:   readiness,
+    p_row_no:      meta.rowNo,
+    p_batch_no:    meta.batchNo,
+    p_request_id:  meta.requestId,
+  });
+  if (error) throw Object.assign(new Error(error.message), { status: 500 });
 }
 
 // ── 6. commit ─────────────────────────────────────────────────────────────────
@@ -543,7 +587,8 @@ router.post('/employees/import/commit', async c => {
             const empNo = norm(r.mapped_data.employeeNumber).toUpperCase();
             const { data: tgt } = await sb.from('app_users').select('id').eq('employee_number', empNo).maybeSingle<{ id: string }>();
             if (!tgt) throw new Error(`update target ${empNo} not found`);
-            await updateFromImport(tgt.id, r.mapped_data, ctx, actor.id);
+            await updateFromImport(tgt.id, r.mapped_data, ctx, actor.id,
+              { rowNo: (r as { row_no?: number }).row_no ?? 0, batchNo: typeof batch.batch_no === 'string' ? batch.batch_no : '', requestId: null });
             await sb.from('hr_employee_import_rows').update({ status: 'updated', target_employee_id: tgt.id }).eq('id', r.id);
             updated++;
           } else {

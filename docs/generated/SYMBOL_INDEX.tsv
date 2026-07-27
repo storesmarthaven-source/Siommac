@@ -3269,7 +3269,9 @@ loadLookups	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	211
 loadBatch	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	236	
 loadScopedBatch	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	253	
 toProvisionInput	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	448	
-updateFromImport	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	478	
+IMPORT_UPDATE_PATCH_FIELDS	variable	hr	true		netlify/functions/routes/hrEmployeeImport.ts	480	
+buildImportUpdatePatch	function	hr	true		netlify/functions/routes/hrEmployeeImport.ts	483	
+updateFromImport	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	516	
 router	variable	hr	false		netlify/functions/routes/hrLeave.ts	15	
 body	function	hr	false		netlify/functions/routes/hrLeave.ts	17	
 mutate	function	hr	false		netlify/functions/routes/hrLeave.ts	23	
@@ -12393,6 +12395,12 @@ EMPLOYEE_CORE	variable	security	false	test	tests/vitest/employeeImportSecurity.t
 IMPORT_UI	variable	security	false	test	tests/vitest/employeeImportSecurity.test.ts	26	
 IMPORT_API	variable	security	false	test	tests/vitest/employeeImportSecurity.test.ts	27	
 handlers	function	security	false	test	tests/vitest/employeeImportSecurity.test.ts	94	
+ROOT	variable	hr	false	test	tests/vitest/employeeImportUpdatePath.test.ts	16	
+read	function	hr	false	test	tests/vitest/employeeImportUpdatePath.test.ts	17	
+stripComments	function	hr	false	test	tests/vitest/employeeImportUpdatePath.test.ts	18	
+lookups	object	hr	false	test	tests/vitest/employeeImportUpdatePath.test.ts	21	
+route	function	hr	false	test	tests/vitest/employeeImportUpdatePath.test.ts	89	
+sql	function	hr	false	test	tests/vitest/employeeImportUpdatePath.test.ts	105	
 ACTOR	variable	testing	false	test	tests/vitest/recipientResolverActorConfirmation.test.ts	25	
 SUBJECT	variable	testing	false	test	tests/vitest/recipientResolverActorConfirmation.test.ts	26	
 ASSIGNEE	variable	testing	false	test	tests/vitest/recipientResolverActorConfirmation.test.ts	27	

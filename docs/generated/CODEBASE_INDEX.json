@@ -1,20 +1,20 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "df23e4996e1b8fc7a6c4c587a9231ef551c2ade4",
+    "head": "8b6a56d0059d072d07fe24f1ed886642d4164f50",
     "branch": "main",
-    "fingerprint": "b92be45f166cc04ce9204456",
-    "indexedFiles": 1636
+    "fingerprint": "aae5aec69a0243271ab8a83d",
+    "indexedFiles": 1638
   },
   "summary": {
-    "files": 1291,
-    "symbols": 12926,
+    "files": 1292,
+    "symbols": 12934,
     "widgets": 51,
     "routes": 957,
     "routeDefinitions": 958,
     "unmountedRoutes": 17,
     "apiCalls": 352,
-    "databaseObjects": 1384,
+    "databaseObjects": 1385,
     "e2eSuites": 83,
     "e2eTests": 2624
   },
@@ -22,13 +22,13 @@
     {
       "id": "hr",
       "counts": {
-        "files": 219,
-        "symbols": 2345,
+        "files": 220,
+        "symbols": 2353,
         "widgets": 9,
         "routes": 260,
         "routeDefinitions": 260,
         "apiCalls": 33,
-        "databaseObjects": 170,
+        "databaseObjects": 171,
         "e2eSuites": 16
       }
     },
@@ -2099,8 +2099,8 @@
       "path": "netlify/functions/routes/hrEmployeeImport.ts",
       "module": "hr",
       "role": "backend-route",
-      "lines": 605,
-      "hash": "19fd1b24c84a6497"
+      "lines": 650,
+      "hash": "d3c7d02b9bd536d3"
     },
     {
       "path": "netlify/functions/routes/hrLeave.ts",
@@ -9010,6 +9010,13 @@
       "role": "test",
       "lines": 145,
       "hash": "580d57375b7bedc7"
+    },
+    {
+      "path": "tests/vitest/employeeImportUpdatePath.test.ts",
+      "module": "hr",
+      "role": "test",
+      "lines": 139,
+      "hash": "5d30aedff41611e6"
     },
     {
       "path": "tests/vitest/recipientResolverActorConfirmation.test.ts",
@@ -41949,10 +41956,30 @@
       "tags": []
     },
     {
+      "name": "IMPORT_UPDATE_PATCH_FIELDS",
+      "kind": "variable",
+      "file": "netlify/functions/routes/hrEmployeeImport.ts",
+      "line": 480,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "buildImportUpdatePatch",
+      "kind": "function",
+      "file": "netlify/functions/routes/hrEmployeeImport.ts",
+      "line": 483,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "updateFromImport",
       "kind": "function",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 478,
+      "line": 516,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -139417,6 +139444,78 @@
       ]
     },
     {
+      "name": "ROOT",
+      "kind": "variable",
+      "file": "tests/vitest/employeeImportUpdatePath.test.ts",
+      "line": 16,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "read",
+      "kind": "function",
+      "file": "tests/vitest/employeeImportUpdatePath.test.ts",
+      "line": 17,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "stripComments",
+      "kind": "function",
+      "file": "tests/vitest/employeeImportUpdatePath.test.ts",
+      "line": 18,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "lookups",
+      "kind": "object",
+      "file": "tests/vitest/employeeImportUpdatePath.test.ts",
+      "line": 21,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "route",
+      "kind": "function",
+      "file": "tests/vitest/employeeImportUpdatePath.test.ts",
+      "line": 89,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "sql",
+      "kind": "function",
+      "file": "tests/vitest/employeeImportUpdatePath.test.ts",
+      "line": 105,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
       "name": "ACTOR",
       "kind": "variable",
       "file": "tests/vitest/recipientResolverActorConfirmation.test.ts",
@@ -151864,7 +151963,7 @@
       ],
       "schema": "z.object({ batchId: z.uuid() })",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 509,
+      "line": 553,
       "module": "hr"
     },
     {
@@ -151890,7 +151989,7 @@
       ],
       "schema": "z.object({ batchId: z.uuid() })",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 581,
+      "line": 626,
       "module": "hr"
     },
     {
@@ -170269,6 +170368,13 @@
       "kind": "index",
       "file": "supabase/migrations/20260919000750_hr_import_batch_scope.sql",
       "line": 27,
+      "module": "hr"
+    },
+    {
+      "name": "public.hr_employee_import_update_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000751_hr_employee_import_update_tx.sql",
+      "line": 26,
       "module": "hr"
     },
     {
