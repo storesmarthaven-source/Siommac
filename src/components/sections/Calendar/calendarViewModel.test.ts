@@ -9,7 +9,7 @@ import {
 } from './calendarViewModel';
 
 function item(overrides: Partial<CalendarItemDTO> = {}): CalendarItemDTO {
-  return {
+  const base: CalendarItemDTO = {
     id: 'item-1',
     type: 'task',
     origin: 'calendar',
@@ -26,12 +26,16 @@ function item(overrides: Partial<CalendarItemDTO> = {}): CalendarItemDTO {
     ownerName: 'Asha Singh',
     assigneeUserId: 'user-1',
     assigneeName: 'Asha Singh',
+    departmentId: null,
+    departmentName: null,
     attendeeCount: 0,
     visibility: 'personal',
     sourceModule: null,
     sourceRef: null,
     sourceRoute: null,
     sourceLabel: null,
+    sourceDepartment: 'calendar',
+    sourceDepartmentLabel: 'Calendar',
     recurrenceSeriesId: null,
     recurrenceRule: null,
     occurrenceDate: null,
@@ -40,7 +44,14 @@ function item(overrides: Partial<CalendarItemDTO> = {}): CalendarItemDTO {
     assignable: false,
     cancelable: true,
     drillThrough: false,
+  };
+  return {
+    ...base,
     ...overrides,
+    sourceDepartment: overrides.sourceDepartment ?? base.sourceDepartment,
+    sourceDepartmentLabel: overrides.sourceDepartmentLabel ?? base.sourceDepartmentLabel,
+    departmentId: overrides.departmentId ?? base.departmentId,
+    departmentName: overrides.departmentName ?? base.departmentName,
   };
 }
 

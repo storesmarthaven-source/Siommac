@@ -93,7 +93,7 @@ export const WIDGET_BUNDLES: WidgetBundle[] = [
     description: 'Live workforce, readiness, lifecycle, deadline, and master-data workload insights for the Employee Master workspace.',
     icon: 'fa-users',
     module: 'hr',
-    supportedPages: ['hr.employees.overview'],
+    supportedPages: ['hr.employees.overview', 'hr.employees.overview.v2', 'hr.employees.overview.v3'],
     widgetIds: [
       'hr.employeeMaster.activeWorkforce',
       'hr.employeeMaster.recordReadiness',
@@ -102,11 +102,16 @@ export const WIDGET_BUNDLES: WidgetBundle[] = [
       'hr.employeeMaster.newStarters',
       'hr.employeeMaster.departures',
       'hr.employeeMaster.recordQuality',
-      'hr.employeeMaster.workforceTrend',
-      'hr.employeeMaster.workforceDistribution',
-      'hr.employeeMaster.lifecycleMovement',
+      // The board's own default tiles — resetting and then adding the bundle must restore the
+      // standard workspace, which the workspace test asserts.
+      'hr.employeeMaster.lifecycleActivity',
+      'hr.employeeMaster.adminWorkload',
       'enterprise.calendar.upcomingDeadlines',
-      'hr.employeeMaster.masterDataWorkload',
+      'hr.employeeMaster.monthlyHiresCard',
+      'hr.employeeMaster.internalMovesCard',
+      'hr.employeeMaster.promotionsCard',
+      'hr.employeeMaster.readinessRadar',
+      'hr.employeeMaster.lifecycleOutcomes',
     ],
   },
   {

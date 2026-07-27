@@ -2,10 +2,11 @@ import { type ComponentChildren, type VNode } from 'preact';
 import { useMemo, useRef, useState } from 'preact/hooks';
 import { useCalendarList, type CalendarItemDTO } from '@api/calendar';
 import { useSessionStore } from '@store/session';
-import { addDays, endOfMonth, itemDateKey, monthGrid, monthLabel, startOfMonth, toLocalDateKey } from '@lib/calendar/date';
+import { addDays, endOfMonth, itemDateKey, monthGrid, monthLabel, parseLocalDate, startOfMonth, toLocalDateKey, weekDays } from '@lib/calendar/date';
 import { can } from '@lib/permissions';
 import { MonthView } from './MonthView';
 import { AgendaView } from './AgendaView';
+import { TimeGridView } from './TimeGridView';
 import { CalendarRail } from './CalendarRail';
 import { CalendarItemDialog } from './CalendarItemDialog';
 import { CreateCalendarItemDialog } from './CreateCalendarItemDialog';
@@ -106,8 +107,26 @@ export function CalendarPage(): VNode {
   const visibleItems = useMemo(() => filterCalendarItems(rawItems, { scope, search, filters, userId }), [rawItems, scope, search, filters, userId]);
   const selectedItems = useMemo(() => visibleItems.filter(item => itemDateKey(item) === selectedKey), [visibleItems, selectedKey]);
   const sources = useMemo(() => [...new Set(rawItems.map(calendarSource))].sort(), [rawItems]);
+  const selectedDate = useMemo(() => parseLocalDate(selectedKey), [selectedKey]);
+  const gridDays = useMemo(() => view === 'week' ? weekDays(selectedDate) : view === 'day' ? [selectedDate] : [], [view, selectedDate]);
 
   const shiftMonth = (delta: number): void => setViewMonth(month => new Date(month.getFullYear(), month.getMonth() + delta, 1));
+  const step = (delta: number): void => {
+    if (view === 'month' || view === 'agenda') { shiftMonth(delta); return; }
+    const next = addDays(selectedDate, delta * (view === 'week' ? 7 : 1));
+    setSelectedKey(toLocalDateKey(next));
+    setViewMonth(startOfMonth(next));
+  };
+  const periodTitle = view === 'day'
+    ? selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+    : view === 'week'
+      ? `${gridDays[0]!.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${gridDays[6]!.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+      : monthLabel(viewMonth);
+  const periodSub = view === 'day'
+    ? String(selectedDate.getFullYear())
+    : view === 'week'
+      ? `Week of ${gridDays[0]!.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+      : formatPeriodRange(viewMonth);
   const goToday = (): void => {
     const now = new Date();
     setViewMonth(startOfMonth(now));
@@ -153,22 +172,23 @@ export function CalendarPage(): VNode {
         <section class="cal-calendar-card">
           <header class="cal-calendar-toolbar">
             <time class="cal-date-tile" dateTime={selectedKey}><span>{viewMonth.toLocaleDateString('en-US', { month: 'short' })}</span><strong>{parseInt(selectedKey.slice(-2), 10)}</strong></time>
-            <div class="cal-period"><strong>{monthLabel(viewMonth)}</strong><small>{formatPeriodRange(viewMonth)}</small></div>
+            <div class="cal-period"><strong>{periodTitle}</strong><small>{periodSub}</small></div>
             <span class="grow" />
             <button type="button" class="cal-icon-button" onClick={() => searchRef.current?.focus()} aria-label="Search calendar"><i class="fas fa-magnifying-glass" /></button>
             <div class="cal-period-nav">
-              <button type="button" onClick={() => shiftMonth(-1)} aria-label="Previous month"><i class="fas fa-arrow-left" /></button>
+              <button type="button" onClick={() => step(-1)} aria-label={`Previous ${view === 'day' ? 'day' : view === 'week' ? 'week' : 'month'}`}><i class="fas fa-arrow-left" /></button>
               <button type="button" onClick={goToday}>Today</button>
-              <button type="button" onClick={() => shiftMonth(1)} aria-label="Next month"><i class="fas fa-arrow-right" /></button>
+              <button type="button" onClick={() => step(1)} aria-label={`Next ${view === 'day' ? 'day' : view === 'week' ? 'week' : 'month'}`}><i class="fas fa-arrow-right" /></button>
             </div>
             <select class="cal-view-select" value={view} onChange={event => setView(event.currentTarget.value as CalendarViewMode)} aria-label="Calendar view">
-              <option value="month">Month view</option><option value="agenda">Agenda view</option>
+              <option value="month">Month view</option><option value="week">Week view</option><option value="day">Day view</option><option value="agenda">Agenda view</option>
             </select>
             {canCreate && <button type="button" class="cal-add-button" onClick={() => openCreate()}><i class="fas fa-plus" /> Add event</button>}
           </header>
 
           {listQ.isError ? <div class="cal-load-error"><div><strong>Calendar could not be loaded</strong><span>{listQ.error instanceof Error ? listQ.error.message : 'The authorised calendar service is unavailable.'}</span></div><button type="button" onClick={() => void listQ.refetch()}>Try again</button></div>
             : view === 'month' ? <MonthView month={viewMonth} items={visibleItems} selectedKey={selectedKey} loading={cold} onSelectDay={setSelectedKey} onOpenItem={setSelectedItem} />
+            : view === 'week' || view === 'day' ? <TimeGridView days={gridDays} items={visibleItems} loading={cold} onOpenItem={setSelectedItem} onCreateForDay={openCreate} />
             : <AgendaView items={visibleItems} loading={cold} onOpenItem={setSelectedItem} />}
         </section>
 

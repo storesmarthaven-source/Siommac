@@ -27,6 +27,14 @@ export type WorkerType     = 'employee' | 'contractor';
 export type TrainingStatus = 'current' | 'due_soon' | 'expired' | 'none';
 export type PayrollReadinessStatus = 'pending' | 'ready' | 'blocked';
 
+export interface EmployeeReadinessSummary {
+  percent: number;
+  assignmentComplete: boolean;
+  payrollStatus: PayrollReadinessStatus;
+  trainingStatus: TrainingStatus;
+  blockers: ('assignment' | 'payroll' | 'training')[];
+}
+
 export interface HrEmployeeRow {
   id:                 string;
   username:           string;
@@ -66,6 +74,9 @@ export interface HrEmployeeRow {
   supervisorName:     string | null;
   workerType:         WorkerType;
   trainingStatus:     TrainingStatus;
+  readiness:          EmployeeReadinessSummary | null;
+  /** An offboarding case is already open for this employee (not completed/cancelled). */
+  offboardingActive:  boolean;
 }
 
 export interface PayrollReadiness {
@@ -101,6 +112,9 @@ export interface HrEmployeeDetail {
   payrollReadiness: PayrollReadiness | null;
 }
 
+/** Assignment fields the register can filter on being ABSENT. */
+export type EmployeeMissingField = 'supervisor' | 'department' | 'site';
+
 export interface HrDashboardStats {
   active_workforce: { total: number; employees: number; contractors: number; trend: { period: string; count: number }[] };
   hr_work_queue:    { total: number; urgent: number; oldest_days: number; mix: { type: string; count: number }[] };
@@ -111,8 +125,8 @@ export interface HrDashboardStats {
     sites: { id: string; label: string; count: number; percent: number }[];
   };
   lifecycle: {
-    periods: { period: string; hires: number; exits: number; transfers: number; promotions: number }[];
-    totals: { hires: number; exits: number; transfers: number; promotions: number };
+    periods: { period: string; hires: number; exits: number; transfers: number; promotions: number; records_updated: number }[];
+    totals: { hires: number; exits: number; transfers: number; promotions: number; records_updated: number };
   };
 }
 
@@ -145,6 +159,8 @@ export type EmployeeSortCol = 'full_name' | 'employee_number' | 'status' | 'empl
 
 export interface HrEmployeePageFilter {
   statuses?: string[]; departmentIds?: string[]; employmentTypes?: string[]; trainingStatuses?: TrainingStatus[];
+  /** Records missing a required assignment field — backs the Exceptions KPI drill-down. */
+  missing?: EmployeeMissingField[];
   workerType?: WorkerType; search?: string;
   sortBy?: EmployeeSortCol; sortDir?: 'asc' | 'desc';
   page: number; pageSize: number;
@@ -221,7 +237,12 @@ export function usePrefetchHrEmployee() {
   };
 }
 
-export function useHrDashboardStats(filter: { siteId?: string; departmentId?: string } = {}) {
+/** `granularity` buckets the lifecycle series (Workforce Activity's Day/Week/Month control).
+ *  It is part of the query key, so each granularity caches separately and switching is instant
+ *  once seen. Omitted = 'month', the historical behaviour. */
+export function useHrDashboardStats(
+  filter: { siteId?: string; departmentId?: string; granularity?: 'day' | 'week' | 'month' } = {},
+) {
   const f = filter as Record<string, unknown>;
   return useQuery({
     queryKey: hrEmployeeKeys.dashboardStats(f),
@@ -344,26 +365,6 @@ export function useHrSites() {
 }
 
 // ── Mutations ─────────────────────────────────────────────────────────────────
-
-export interface CreateHrEmployeeArgs {
-  identity:   { username: string; password: string; fullName: string; firstName?: string; lastName?: string; email?: string; personalEmail?: string; phone?: string; employeeNumber?: string; dateOfBirth?: string; nationality?: string; preferredName?: string; governmentId?: string };
-  employment?: { employmentType?: string; contractorFlag?: boolean; startDate?: string; position?: string; positionTitle?: string; probationEndDate?: string; employeeGrade?: string; workSchedule?: string };
-  assignment?: { departmentId?: string | null; siteId?: string | null; positionId?: string | null; supervisorId?: string | null; costCenter?: string | null; effectiveDate?: string };
-  access?:     { role?: string; permissionProfile?: string; selfServiceProfile?: string; requireMfa?: boolean; onboardingRequirements?: Record<string, boolean> };
-  createLogin?: boolean;
-  recordStatus?: string;
-  statutory?:  Record<string, unknown>;
-  onboarding?: { createOnboardingCase?: boolean; packageKey?: string };
-}
-
-export function useCreateHrEmployee() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (args: CreateHrEmployeeArgs) =>
-      hrPost<{ success: boolean; data: { employee_id: string; employee_no: string; status: string; payroll_readiness: PayrollReadinessStatus; onboarding_case_id: string | null; onboarding_error?: string | null; workflow_id: string | null } }>('hr/employees/create', args as unknown as Record<string, unknown>),
-    onSuccess: () => qc.invalidateQueries({ queryKey: hrEmployeeKeys.all }),
-  });
-}
 
 export interface ContactUpdateArgs {
   employeeId: string; mode?: 'direct' | 'request';
@@ -488,4 +489,155 @@ export function useArchiveHrDocument(employeeId: string | null) {
 export async function getHrDocumentDownloadUrl(documentId: string): Promise<string> {
   const res = await hrPost<{ success: boolean; url: string }>('hr/documents/download-url', { documentId });
   return res.url;
+}
+
+// ── Access Profiles ────────────────────────────────────────────────────────────
+
+export interface HrAccessProfile {
+  id:           string;
+  code:         string;
+  label:        string;
+  system_role:  string;
+  description:  string | null;
+  requires_mfa: boolean;
+  is_active:    boolean;
+  sort_order:   number;
+}
+
+export function useHrAccessProfiles() {
+  return useQuery({
+    queryKey: ['hr', 'access-profiles'],
+    staleTime: 5 * 60 * 1000,  // profiles rarely change; 5-minute cache
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await hrPost<{ success: boolean; data: HrAccessProfile[] }>('hr/access-profiles/list', {}, { signal });
+      return res.data;
+    },
+  });
+}
+
+// ── Employee Creation Wizard V2 ────────────────────────────────────────────────
+// New contract: no password, access-profile-ID instead of raw role,
+// account mode selection, statutory writes to canonical profile table.
+
+export type WizardAccountMode = 'no_login';
+
+export interface CreateHrEmployeeArgsV2 {
+  requestKey: string;
+  identity: {
+    username:       string;
+    firstName:      string;
+    lastName:       string;
+    email?:         string;
+    personalEmail?: string;
+    phone?:         string;
+    employeeNumber?: string;
+    dateOfBirth?:   string;
+    nationality?:   string;
+    preferredName?: string;
+    governmentId?:  string;
+  };
+  employment: {
+    employmentType:    string;
+    startDate:         string;
+    position?:         string;
+    probationEndDate?: string;
+    employeeGrade?:    string;
+    workSchedule?:     string;
+  };
+  assignment?: {
+    departmentId?:  string | null;
+    siteId?:        string | null;
+    supervisorId?:  string | null;
+    effectiveDate?: string;
+  };
+  access: {
+    accessProfileId: string;
+    accountMode:     WizardAccountMode;
+  };
+  recordStatus?: string;
+  statutory?: {
+    nisNumber?:               string | null;
+    nisStatus?:               string;
+    nisApplicable?:           boolean;
+    nisEffectiveDate?:        string | null;
+    birFileNumber?:           string | null;
+    payeApplicable?:          boolean;
+    td1Received?:             boolean;
+    td1EffectiveYear?:        number | null;
+    hsApplicable?:            boolean;
+    hsExemptionReason?:       string | null;
+    hsEffectiveDate?:         string | null;
+    hsVerificationRequired?:  boolean;
+  };
+  onboarding?: {
+    prepareOnboarding?: boolean;
+    packageKey?:        string;
+  };
+}
+
+export interface CreateEmployeeReceiptV2 {
+  employee_id:          string;
+  employee_no:          string;
+  status:               string;
+  payroll_readiness:    PayrollReadinessStatus;
+  onboarding_case_id:   string | null;
+  onboarding_case_no:   string | null;
+  onboarding_status:    'draft_prepared' | 'not_requested';
+  account_status:       'not_requested';
+  event_id:             string;
+}
+
+export function useCreateHrEmployeeV2() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: CreateHrEmployeeArgsV2) =>
+      hrPost<{ success: boolean; data: CreateEmployeeReceiptV2 }>('hr/employees/create', args as unknown as Record<string, unknown>),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEmployeeKeys.all }),
+  });
+}
+
+// ── Wizard Drafts ──────────────────────────────────────────────────────────────
+
+export interface WizardDraftRecord {
+  id:         string;
+  actor_id:   string;
+  draft_data: unknown;
+  step_index: number;
+  label:      string | null;
+  expires_at: string;
+  updated_at: string | null;
+}
+
+export function useWizardDraftGet() {
+  return useQuery({
+    queryKey: ['hr', 'employee-wizard-draft'],
+    staleTime: 0,   // always re-check on mount — draft may have expired or been deleted
+    retry:    false,
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await hrPost<{ success: boolean; data: WizardDraftRecord | null }>('hr/employees/wizard/draft/get', {}, { signal });
+      return res.data;
+    },
+  });
+}
+
+export function useWizardDraftSave() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { draftData: unknown; stepIndex: number; label?: string }) =>
+      hrPost<{ success: boolean; data: WizardDraftRecord }>('hr/employees/wizard/draft/save', args as unknown as Record<string, unknown>),
+    onSuccess: (d) => {
+      qc.setQueryData(['hr', 'employee-wizard-draft'], d.data);
+    },
+  });
+}
+
+export function useWizardDraftDelete() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      hrPost<{ success: boolean }>('hr/employees/wizard/draft/delete', {}),
+    onSuccess: () => {
+      qc.setQueryData(['hr', 'employee-wizard-draft'], null);
+    },
+  });
 }

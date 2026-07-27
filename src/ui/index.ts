@@ -46,7 +46,7 @@ export { LucideIcon, type LucideName } from './LucideIcon';
 export { InfoTip, type InfoTipProps } from './InfoTip';
 export { DataTable, type DataTableProps, type DtColumn, type DtAction, type DtAlign, type DtRowStatus, type DtActiveFilter } from './DataTable';
 export {
-  TableSearch, FilterDropdown, AdvancedFilter, ActiveFilters, useFilterDropdowns,
+  TableSearch, FilterDropdown, AdvancedFilter, ActiveFilters, useFilterDropdowns, FILTER_DROPDOWN_ATTR,
   type FilterDropdownProps, type AdvancedFilterProps, type AdvTab, type AdvSection, type ActiveChip,
 } from './table/FilterBar';
 export { PersonCell, type PersonCellProps } from './table/PersonCell';

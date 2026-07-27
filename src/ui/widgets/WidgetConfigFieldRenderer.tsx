@@ -8,9 +8,12 @@ export function WidgetConfigFieldRenderer({ field, value, onChange }: {
   field: WidgetConfigField; value: unknown; onChange: (value: unknown) => void;
 }): VNode {
   if (field.type === 'select') {
+    const current = (value as string | undefined) ?? (field.defaultValue as string | undefined) ?? '';
+    const selected = (field.options ?? []).find(option => option.value === current);
     return (
       <Field label={field.label}>
-        <SelectInput value={(value as string | undefined) ?? (field.defaultValue as string | undefined) ?? ''} options={field.options ?? []} onInput={v => onChange(v)} />
+        <SelectInput value={current} options={field.options ?? []} onInput={v => onChange(v)} />
+        {selected?.description ? <small class="wcf-option-desc" style="display:block;margin-top:6px;color:#5c6a82;font-size:11px;line-height:1.4">{selected.description}</small> : null}
       </Field>
     );
   }
@@ -29,6 +32,13 @@ export function WidgetConfigFieldRenderer({ field, value, onChange }: {
     return (
       <Field label={field.label}>
         <TextInput type="number" value={String((value as number | string | undefined) ?? (field.defaultValue as number | string | undefined) ?? '')} onInput={v => onChange(Number(v))} />
+      </Field>
+    );
+  }
+  if (field.type === 'color') {
+    return (
+      <Field label={field.label}>
+        <TextInput type="color" value={(value as string | undefined) ?? (field.defaultValue as string | undefined) ?? '#2f5fe0'} onInput={v => onChange(v)} />
       </Field>
     );
   }

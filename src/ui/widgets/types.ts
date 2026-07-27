@@ -129,10 +129,10 @@ export interface WidgetSizeDef {
   description?: string;
 }
 
-export interface WidgetConfigOption { label: string; value: string }
+export interface WidgetConfigOption { label: string; value: string; description?: string }
 
 export type WidgetConfigFieldType =
-  | 'text' | 'select' | 'multiSelect' | 'dateRange' | 'number' | 'boolean' | 'threshold' | 'statusFilter';
+  | 'text' | 'color' | 'select' | 'multiSelect' | 'dateRange' | 'number' | 'boolean' | 'threshold' | 'statusFilter';
 
 export interface WidgetConfigField {
   key: string;

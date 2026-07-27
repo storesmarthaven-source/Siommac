@@ -19,7 +19,7 @@ import { openActionModal, toActionRecord, statusBadge } from '@/components/commo
 import { PageHeader, Modal, Field, FormGrid, TextInput, SelectInput } from '@ui';
 import {
   WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget, placeWidgetsAtBottom,
-  type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeKey,
+  type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeDef, type WidgetSizeKey,
 } from '@ui/widgets';
 import { can } from '@lib/permissions';
 import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session';
@@ -55,7 +55,10 @@ function tone(s: string): string {
 }
 const Pill = ({ s }: { s: string }): VNode => <span class={`obx-pill ${tone(s)}`}>{humanize(s)}</span>;
 
-const CASE_PAGE_KEY = 'hr.onboarding.case';
+// .v2 retires layouts saved against the old coarse 88px grid — their row counts mean a ~5×
+// smaller tile on the canonical grid. normalizePageKey ignores the version when matching
+// governance/supportedPages, so the bump costs nothing but the stale geometry.
+const CASE_PAGE_KEY = 'hr.onboarding.case.v2';
 const CASE_ZONE = 'main';
 function defInst(widgetId: string, x: number, y: number, w: number, h: number, sizeKey: WidgetSizeKey): WidgetInstance {
   return { instanceId: `${widgetId}#def`, widgetId, pageKey: CASE_PAGE_KEY, zoneId: CASE_ZONE, x, y, w, h, sizeKey, config: {} };
@@ -67,11 +70,14 @@ function defaultCaseLayout(): BoardLayout {
       // Functional page-local table widgets (the KPI / timeline / provisioning / communications
       // widgets were removed when the widget catalogue was cleared for the v2 rebuild; they'll be
       // re-authored on the new contract and added back via the Widget Library).
+      // Heights are CANONICAL rows (18h − 12 px) like every other board — this page previously
+      // ran on the old coarse 88px default, which made it the one board where a shared
+      // (`supportedPages: ['*']`) widget could not render at a sane size.
       main: [
-        defInst('hr.onboarding.case.activeTasks',   0, 0, 8, 5, 'wide'),
-        defInst('hr.onboarding.case.blockersTable', 8, 0, 4, 5, 'tall'),
-        defInst('hr.onboarding.case.customActions', 0, 5, 6, 4, 'wide'),
-        defInst('hr.onboarding.case.handoffsTable', 6, 5, 6, 4, 'wide'),
+        defInst('hr.onboarding.case.activeTasks',   0,  0, 8, 28, 'wide'),   // was h5 ≈ 488px
+        defInst('hr.onboarding.case.blockersTable', 8,  0, 4, 28, 'tall'),
+        defInst('hr.onboarding.case.customActions', 0, 28, 6, 22, 'wide'),   // was h4 ≈ 388px
+        defInst('hr.onboarding.case.handoffsTable', 6, 28, 6, 22, 'wide'),
       ],
     },
   };
@@ -102,7 +108,10 @@ export function OnboardingCaseDetail({
   const isAdmin = useSessionStore(selectIsAdmin);
   const setCaseInStore = useOnboardingCaseStore(s => s.setCase);
   const clearCaseInStore = useOnboardingCaseStore(s => s.clear);
-  const { layout, addWidget, updateZoneLayout, saveLayout, cancelLayout, setAsDefault, resetLayout } = useBoardLayout(CASE_PAGE_KEY, defaultCaseLayout());
+  const {
+    layout, addWidget, updateZoneLayout, saveLayout, cancelLayout, setAsDefault, resetLayout,
+    isDefaultDirty, isDirty, isSaving,
+  } = useBoardLayout(CASE_PAGE_KEY, defaultCaseLayout());
   const boardItems = layout.zones[CASE_ZONE] ?? [];
   const placedWidgetIds = boardItems.map(w => w.widgetId);
   const placeBottom = <T extends { x: number; y: number }>(w: T): T => ({ ...w, x: 0, y: Math.max(0, ...boardItems.map(i => i.y + i.h)) });
@@ -313,11 +322,14 @@ export function OnboardingCaseDetail({
     </table>
   );
 
+  // Each page-local widget declares a resize FLOOR in canonical rows. Without one widgetMinGrid
+  // falls back to a generic 2 cells — 24px on this grid, i.e. a table draggable into a sliver.
+  const floor = (w: number, h: number): WidgetSizeDef[] => [{ key: 'wide', label: 'Default', grid: { w, h } }];
   const localWidgets: LocalWidgetMap = {
-    'hr.onboarding.case.activeTasks':   { chrome: 'none', title: 'Active Tasks', render: () => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddTask}>+ Add</button>) },
-    'hr.onboarding.case.blockersTable': { chrome: 'none', title: 'Blockers', render: () => wcard('Blockers', 'fa-triangle-exclamation', blockersBody()) },
-    'hr.onboarding.case.handoffsTable': { chrome: 'none', title: 'Handoffs', render: () => wcard('Handoffs', 'fa-arrow-right-arrow-left', handoffsBody()) },
-    'hr.onboarding.case.customActions': { chrome: 'none', title: 'Custom Actions', render: () => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddAction}>+ Add</button>) },
+    'hr.onboarding.case.activeTasks':   { chrome: 'none', title: 'Active Tasks', allowedSizes: floor(4, 12), render: () => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddTask}>+ Add</button>) },
+    'hr.onboarding.case.blockersTable': { chrome: 'none', title: 'Blockers', allowedSizes: floor(3, 12), render: () => wcard('Blockers', 'fa-triangle-exclamation', blockersBody()) },
+    'hr.onboarding.case.handoffsTable': { chrome: 'none', title: 'Handoffs', allowedSizes: floor(3, 12), render: () => wcard('Handoffs', 'fa-arrow-right-arrow-left', handoffsBody()) },
+    'hr.onboarding.case.customActions': { chrome: 'none', title: 'Custom Actions', allowedSizes: floor(3, 12), render: () => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddAction}>+ Add</button>) },
   };
 
   // ── lifecycle action buttons (PageHeader actions slot) ──────────────────────────
@@ -353,10 +365,10 @@ export function OnboardingCaseDetail({
 
       {canEdit && (
         <WidgetBoardToolbar
-          editing={editing} canSetDefault={isAdmin} layoutItems={boardItems}
+          editing={editing} canSetDefault={isAdmin} defaultDirty={isDefaultDirty} finishInBanner layoutItems={boardItems}
           onToggleEdit={() => setEditing(e => !e)}
           onOpenLibrary={() => { setEditing(true); setLibOpen(true); }}
-          onSaveEditing={async () => { await saveLayout(); setEditing(false); }}
+          onSaveEditing={async () => { if (await saveLayout()) setEditing(false); }}
           onCancelEditing={async () => { await cancelLayout(); setEditing(false); }}
           onReset={() => void resetLayout()}
           onSetDefault={() => void setAsDefault()}
@@ -375,6 +387,11 @@ export function OnboardingCaseDetail({
         localWidgets={localWidgets} defaultLayout={defaultCaseLayout()} demo={demo}
         preview={preview} onPreviewChange={setPreview}
         onCommitPreview={commitPreview} onDiscardPreview={discardPreview}
+        onFinishEditing={() => setEditing(false)}
+        onSaveEditing={async () => { if (await saveLayout()) setEditing(false); }}
+        onCancelEditing={async () => { await cancelLayout(); setEditing(false); }}
+        onOpenLibrary={() => setLibOpen(true)}
+        defaultDirty={isDefaultDirty} isDirty={isDirty} saving={isSaving}
       />
 
       <WidgetLibraryModal

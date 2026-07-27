@@ -46,6 +46,7 @@ create table if not exists public.calendar_entries (
 
   owner_user_id         text not null references public.app_users(id),
   assignee_user_id      text references public.app_users(id),
+  department_id         text references public.departments(id) on delete set null,
   visibility            text not null default 'personal'
                           check (visibility in ('personal', 'team', 'org')),
 
@@ -109,6 +110,7 @@ create index if not exists calendar_entries_starts_on_idx    on public.calendar_
 create index if not exists calendar_entries_starts_at_idx    on public.calendar_entries (starts_at);
 create index if not exists calendar_entries_owner_idx        on public.calendar_entries (owner_user_id);
 create index if not exists calendar_entries_assignee_idx     on public.calendar_entries (assignee_user_id);
+create index if not exists calendar_entries_department_idx   on public.calendar_entries (department_id);
 create index if not exists calendar_entries_status_idx       on public.calendar_entries (status);
 create index if not exists calendar_entries_visibility_idx   on public.calendar_entries (visibility);
 create index if not exists calendar_entries_series_idx       on public.calendar_entries (recurrence_series_id);
@@ -172,6 +174,8 @@ create trigger trg_calendar_exceptions_updated_at
 -- current shape and are no-ops on a fresh create. Backfills run first so the
 -- tightened CHECKs below can be added even if rows already exist.
 alter table public.calendar_entries add column if not exists priority text;
+alter table public.calendar_entries add column if not exists department_id text references public.departments(id) on delete set null;
+create index if not exists calendar_entries_department_idx on public.calendar_entries (department_id);
 
 update public.calendar_entries set status = 'not_started' where status = 'open';
 update public.calendar_entries set priority = 'medium' where type = 'task' and priority is null;

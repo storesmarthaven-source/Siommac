@@ -37,7 +37,7 @@ import { DEADLINE_ADAPTERS, type AdapterContext } from '../lib/calendarAdapters'
 import { runCalendarReminderSweep } from '../lib/calendarReminderSweep';
 import type {
   CalendarItemDTO, CalendarListResponse, CalendarVisibility, CalendarTaskStatus, CalendarTaskPriority,
-  CalendarAttendeeDTO,
+  CalendarAttendeeDTO, CalendarSourceDepartment,
 } from '../../../types/calendar';
 import type { HonoVariables }       from '../../../types/api';
 
@@ -71,6 +71,7 @@ interface EntryRow {
   all_day: boolean; starts_on: string | null; ends_on: string | null;
   starts_at: string | null; ends_at: string | null;
   owner_user_id: string; assignee_user_id: string | null; visibility: string;
+  department_id: string | null;
   status: string | null; priority: string | null; completed_at: string | null;
   recurrence_rule: string | null; recurrence_series_id: string | null;
   source_module: string | null; source_ref: string | null;
@@ -78,6 +79,18 @@ interface EntryRow {
 }
 
 interface Caps { canManage: boolean; canAssign: boolean; userId: string; }
+
+function classifyDepartmentName(name: string | null): CalendarSourceDepartment {
+  const value = (name ?? '').trim().toLowerCase();
+  if (!value) return 'calendar';
+  if (value.includes('finance')) return 'finance';
+  if (value.includes('payroll')) return 'payroll';
+  if (value.includes('hse') || value.includes('safety')) return 'hse';
+  if (value.includes('human') || value === 'hr' || value.includes('people')) return 'human_resource';
+  if (value === 'it' || value.includes('information technology') || value.includes('technology')) return 'it';
+  if (value.includes('operation')) return 'operations';
+  return 'department';
+}
 
 /** Compute a native entry's capability flags for this caller. */
 function entryCaps(row: EntryRow, caps: Caps) {
@@ -119,12 +132,16 @@ function entryToDto(row: EntryRow, caps: Caps, occ?: {
     ownerName:          null,
     assigneeUserId:     row.assignee_user_id,
     assigneeName:       null,
+    departmentId:       row.department_id ?? null,
+    departmentName:     null,
     attendeeCount:      0,
     visibility:         row.visibility as CalendarVisibility,
     sourceModule:       row.source_module,
     sourceRef:          row.source_ref,
     sourceRoute:        null,   // native entries carry no drill-through route (v1)
     sourceLabel:        null,
+    sourceDepartment:   row.department_id ? 'department' : 'calendar',
+    sourceDepartmentLabel: row.department_id ? null : 'Calendar',
     recurrenceSeriesId: row.recurrence_series_id,
     recurrenceRule:     row.recurrence_rule,
     occurrenceDate:     occ?.occurrenceDate ?? null,
@@ -132,16 +149,30 @@ function entryToDto(row: EntryRow, caps: Caps, occ?: {
   };
 }
 
-/** Fill ownerName / assigneeName for a batch of items from app_users. */
+/** Fill ownerName / assigneeName / departmentName for a batch of items. */
 async function hydrateNames(items: CalendarItemDTO[]): Promise<void> {
   const ids = [...new Set(items.flatMap(i => [i.ownerUserId, i.assigneeUserId]).filter((x): x is string => !!x))];
-  if (!ids.length) return;
-  const { data, error } = await sb.from('app_users').select('id, full_name, username').in('id', ids);
-  if (error) throw new Error(`calendar name hydration failed: ${error.message}`);
-  const nameOf = new Map((data ?? []).map((u: { id: string; full_name: string | null; username: string }) => [u.id, u.full_name || u.username]));
+  const departmentIds = [...new Set(items.map(i => i.departmentId).filter((x): x is string => !!x))];
+  const [{ data: users, error: userError }, { data: departments, error: departmentError }] = await Promise.all([
+    ids.length
+      ? sb.from('app_users').select('id, full_name, username').in('id', ids)
+      : Promise.resolve({ data: [], error: null }),
+    departmentIds.length
+      ? sb.from('departments').select('id, name').in('id', departmentIds)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  if (userError) throw new Error(`calendar name hydration failed: ${userError.message}`);
+  if (departmentError) throw new Error(`calendar department hydration failed: ${departmentError.message}`);
+  const nameOf = new Map((users ?? []).map((u: { id: string; full_name: string | null; username: string }) => [u.id, u.full_name || u.username]));
+  const departmentNameOf = new Map((departments ?? []).map((d: { id: string; name: string }) => [d.id, d.name]));
   for (const it of items) {
     if (it.ownerUserId)    it.ownerName    = nameOf.get(it.ownerUserId) ?? null;
     if (it.assigneeUserId) it.assigneeName = nameOf.get(it.assigneeUserId) ?? null;
+    if (it.departmentId) {
+      it.departmentName = departmentNameOf.get(it.departmentId) ?? null;
+      it.sourceDepartment = classifyDepartmentName(it.departmentName);
+      it.sourceDepartmentLabel = it.departmentName;
+    }
   }
 }
 
@@ -190,6 +221,7 @@ router.post('/calendar/list', async c => {
     `owner_user_id.eq.${user.id}`,
     `assignee_user_id.eq.${user.id}`,
     `visibility.eq.org`,
+    ...(user.department_id ? [`and(visibility.eq.team,department_id.eq.${user.department_id})`] : []),
     ...(caps.canManage ? ['visibility.eq.team'] : []),
     ...(attendeeIds.length ? [`id.in.(${attendeeIds.join(',')})`] : []),
   ].join(',');
@@ -505,6 +537,13 @@ async function validAssignee(id: string): Promise<boolean> {
   return !!data && data.status === 'active';
 }
 
+/** Confirm a department is real before a calendar entry can be scoped to it. */
+async function validDepartment(id: string): Promise<boolean> {
+  const { data, error } = await sb.from('departments').select('id').eq('id', id).maybeSingle<{ id: string }>();
+  if (error) throw new Error(`calendar department validation failed: ${error.message}`);
+  return !!data;
+}
+
 // ── POST /calendar/task/create ──────────────────────────────────────────────
 
 const CreateTaskSchema = z.object({
@@ -515,6 +554,7 @@ const CreateTaskSchema = z.object({
   startsAt:       z.string().optional(),
   endsAt:         z.string().optional(),
   assigneeUserId: z.string().optional(),
+  departmentId:   z.string().nullable().optional(),
   priority:       z.enum(['low', 'medium', 'high']).optional(),
   visibility:     VISIBILITY.optional(),
   recurrenceRule: z.string().max(400).optional(),
@@ -529,6 +569,12 @@ router.post('/calendar/task/create', async c => {
 
   const when = normalizeWhen(allDay, d.startsOn ?? null, null, d.startsAt ?? null, d.endsAt ?? null);
   if (!when.ok) return c.json({ success: false, message: when.message }, 400);
+  const visibility = d.visibility ?? 'personal';
+  const departmentId = d.departmentId ?? null;
+  if (departmentId) {
+    if (!(await userCan(user, 'calendar.manage'))) return c.json({ success: false, message: 'You cannot create department-scoped calendar tasks.' }, 403);
+    if (!(await validDepartment(departmentId))) return c.json({ success: false, message: 'The selected department is not valid.' }, 400);
+  }
 
   // Assignment is gated + validated server-side.
   let assignee: string | null = null;
@@ -552,10 +598,10 @@ router.post('/calendar/task/create', async c => {
       module:         'calendar',
       operation:      'create',
       entityType:     'task',
-      idempotencyKey: `calendar.task.create:${user.id}:${d.title}:${d.startsOn ?? d.startsAt ?? ''}:${assignee ?? ''}`,
+      idempotencyKey: `calendar.task.create:${user.id}:${d.title}:${d.startsOn ?? d.startsAt ?? ''}:${assignee ?? ''}:${departmentId ?? ''}`,
       eventType:      'calendar.task.created',
       eventSeverity:  'info',
-      eventPayload:   { title: d.title, assigneeUserId: assignee, recurring: !!seriesId },
+      eventPayload:   { title: d.title, assigneeUserId: assignee, departmentId, recurring: !!seriesId },
       getEntityIdentity: (r) => ({ id: r.id }),
       ...(assignee && assignee !== user.id ? {
         explicitRecipients: [{ userId: assignee, reason: 'assignee' as const }],
@@ -575,7 +621,8 @@ router.post('/calendar/task/create', async c => {
         type: 'task', title: d.title.trim(), notes: d.notes ?? null,
         ...when.row,
         owner_user_id: user.id, assignee_user_id: assignee,
-        visibility: d.visibility ?? 'personal', status: 'not_started', priority: d.priority ?? 'medium',
+        ...(departmentId ? { department_id: departmentId } : {}),
+        visibility, status: 'not_started', priority: d.priority ?? 'medium',
         recurrence_rule: d.recurrenceRule ?? null, recurrence_series_id: seriesId,
         created_by: user.id, created_at: now, updated_at: now,
       }).select('id').single<{ id: string }>();
@@ -599,6 +646,7 @@ const CreateActivitySchema = z.object({
   startsAt:        z.string().optional(),
   endsAt:          z.string().optional(),
   visibility:      VISIBILITY.optional(),
+  departmentId:    z.string().nullable().optional(),
   attendeeUserIds: z.array(z.string()).max(200).optional(),
   recurrenceRule:  z.string().max(400).optional(),
 });
@@ -612,6 +660,12 @@ router.post('/calendar/activity/create', async c => {
 
   const when = normalizeWhen(allDay, d.startsOn ?? null, d.endsOn ?? null, d.startsAt ?? null, d.endsAt ?? null);
   if (!when.ok) return c.json({ success: false, message: when.message }, 400);
+  const visibility = d.visibility ?? 'personal';
+  const departmentId = d.departmentId ?? null;
+  if (departmentId) {
+    if (!(await userCan(user, 'calendar.manage'))) return c.json({ success: false, message: 'You cannot create department-scoped calendar activities.' }, 403);
+    if (!(await validDepartment(departmentId))) return c.json({ success: false, message: 'The selected department is not valid.' }, 400);
+  }
 
   // Validate attendees are real active users.
   const attendees = [...new Set((d.attendeeUserIds ?? []).filter(id => id !== user.id))];
@@ -631,10 +685,10 @@ router.post('/calendar/activity/create', async c => {
       module:         'calendar',
       operation:      'create',
       entityType:     'activity',
-      idempotencyKey: `calendar.activity.create:${user.id}:${d.title}:${d.startsOn ?? d.startsAt ?? ''}`,
+      idempotencyKey: `calendar.activity.create:${user.id}:${d.title}:${d.startsOn ?? d.startsAt ?? ''}:${departmentId ?? ''}`,
       eventType:      'calendar.activity.created',
       eventSeverity:  'info',
-      eventPayload:   { title: d.title, attendees: attendees.length, recurring: !!seriesId },
+      eventPayload:   { title: d.title, attendees: attendees.length, departmentId, recurring: !!seriesId },
       getEntityIdentity: (r) => ({ id: r.id }),
       ...(attendees.length ? {
         explicitRecipients: attendees.map(id => ({ userId: id, reason: 'assignee' as const })),
@@ -660,7 +714,8 @@ router.post('/calendar/activity/create', async c => {
         type: 'activity', title: d.title.trim(), notes: d.notes ?? null,
         ...when.row,
         owner_user_id: user.id, assignee_user_id: null,
-        visibility: d.visibility ?? 'personal', status: null,
+        ...(departmentId ? { department_id: departmentId } : {}),
+        visibility, status: null,
         recurrence_rule: d.recurrenceRule ?? null, recurrence_series_id: seriesId,
         created_by: user.id, created_at: now, updated_at: now,
       }).select('id').single<{ id: string }>();
@@ -776,6 +831,7 @@ const UpdateSchema = z.object({
     startsAt:       z.string().nullable().optional(),
     endsAt:         z.string().nullable().optional(),
     assigneeUserId: z.string().nullable().optional(),
+    departmentId:   z.string().nullable().optional(),
     priority:       z.enum(['low', 'medium', 'high']).optional(),
     visibility:     VISIBILITY.optional(),
   }),
@@ -806,6 +862,10 @@ router.post('/calendar/update', async c => {
     if (!(await userCan(user, 'calendar.task.assign'))) return c.json({ success: false, message: 'You cannot assign tasks to other users.' }, 403);
     if (!(await validAssignee(p.assigneeUserId))) return c.json({ success: false, message: 'The selected assignee is not a valid active user.' }, 400);
   }
+  if (p.departmentId !== undefined && p.departmentId) {
+    if (!(await userCan(user, 'calendar.manage'))) return c.json({ success: false, message: 'You cannot assign calendar entries to a department.' }, 403);
+    if (!(await validDepartment(p.departmentId))) return c.json({ success: false, message: 'The selected department is not valid.' }, 400);
+  }
 
   // A single occurrence of a recurring series → write a 'modified' exception.
   if (scope === 'occurrence' && row.recurrence_rule && occurrenceDate) {
@@ -828,6 +888,7 @@ router.post('/calendar/update', async c => {
     if (p.priority !== undefined)       updates.priority         = p.priority;
     if (p.visibility !== undefined)     updates.visibility       = p.visibility;
     if (p.assigneeUserId !== undefined) updates.assignee_user_id = p.assigneeUserId;
+    if (p.departmentId !== undefined)   updates.department_id    = p.departmentId;
     if (p.allDay !== undefined || p.startsOn !== undefined || p.startsAt !== undefined || p.endsOn !== undefined || p.endsAt !== undefined) {
       const allDay = p.allDay ?? row.all_day;
       const when = normalizeWhen(allDay,

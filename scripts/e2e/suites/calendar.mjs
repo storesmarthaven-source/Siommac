@@ -35,8 +35,10 @@ export default async function run(h) {
 
   const runStart = new Date().toISOString();
   const entryIds = [];               // every calendar_entries id this run created
+  const onboardingCaseIds = [];      // adapter fixtures cascade their onboarding tasks
   const overrides = [];              // { userId, permission } overrides to remove
   const preferenceStates = [];       // preferences changed by this run, restored at cleanup
+  let departmentId = null;
 
   h.onCleanup(async () => {
     if (entryIds.length) {
@@ -46,6 +48,7 @@ export default async function run(h) {
       await h.mustDelete('app_events', q => q.eq('source_module', 'calendar').in('source_entity_id', entryIds).gte('created_at', runStart));
       await h.mustDelete('activity_logs', q => q.eq('entity', 'calendar_entry').in('entity_id', entryIds).gte('created_at', runStart));
     }
+    if (onboardingCaseIds.length) await h.mustDelete('hr_onboarding_cases', q => q.in('id', onboardingCaseIds));
     for (const state of preferenceStates) {
       if (state.before) await sb.from('notification_preferences').upsert(state.before, { onConflict: 'user_id,event_type' });
       else await h.mustDelete('notification_preferences', q => q.eq('user_id', state.userId).eq('event_type', state.eventType));
@@ -99,9 +102,10 @@ export default async function run(h) {
     const items = await listItems(T.emp1, dayKey(-1), dayKey(10));
     const it = items.find(i => i.id === taskId);
     expect(!!it, 'created task appears in the window');
-    for (const f of ['id', 'type', 'origin', 'title', 'status', 'priority', 'ownerUserId', 'allDay', 'editable', 'completable', 'assignable', 'cancelable', 'drillThrough'])
+    for (const f of ['id', 'type', 'origin', 'title', 'status', 'priority', 'ownerUserId', 'allDay', 'departmentId', 'departmentName', 'sourceDepartment', 'sourceDepartmentLabel', 'editable', 'completable', 'assignable', 'cancelable', 'drillThrough'])
       expect(f in it, `CalendarItemDTO.${f} present`);
     expect(it.type === 'task' && it.origin === 'calendar', 'native task');
+    expect(it.sourceDepartment === 'calendar' && it.sourceDepartmentLabel === 'Calendar', 'native task source department');
     expect(it.editable === true && it.completable === true && it.cancelable === true, 'owner can edit/complete/cancel');
     expect(it.assignable === false, 'employee (no assign perm) cannot assign');
   });
@@ -135,6 +139,12 @@ export default async function run(h) {
   h.section('Calendar › Activities');
 
   let activityId = null;
+  await test('setup: existing department available for department-scoped calendar entries', async () => {
+    const { data, error } = await sb.from('departments').select('id').order('name').limit(1).maybeSingle();
+    expect(!error && !!data?.id, `department fixture: ${error?.message ?? ''}`);
+    departmentId = data?.id ?? null;
+  });
+
   await test('activity/create with an attendee → row + attendee + app_event', async () => {
     const r = await api('calendar/activity/create', T.emp1, {
       title: `${TAG} Team Meeting`, allDay: false,
@@ -147,6 +157,30 @@ export default async function run(h) {
     const { data: att } = await sb.from('calendar_activity_attendees').select('user_id').eq('calendar_entry_id', activityId);
     expect((att ?? []).some(a => a.user_id === emp2.id), 'attendee row written');
     expect(await appEventExists(activityId, 'calendar.activity.created'), 'app_event calendar.activity.created');
+  });
+
+  await test('department-scoped activity persists department and returns hydrated department fields', async () => {
+    if (!departmentId) return;
+    const r = await api('calendar/activity/create', T.mgr, {
+      title: `${TAG} Department town hall`, startsOn: dayKey(4), visibility: 'team', departmentId,
+    });
+    ok(r);
+    const departmentActivityId = r.body.id;
+    entryIds.push(departmentActivityId);
+    const { data: row } = await sb.from('calendar_entries').select('department_id').eq('id', departmentActivityId).maybeSingle();
+    expect(row?.department_id === departmentId, 'department_id persisted');
+    const items = await listItems(T.mgr, dayKey(3), dayKey(5), { types: ['activity'] });
+    const projected = items.find(i => i.id === departmentActivityId);
+    expect(projected?.departmentId === departmentId && !!projected?.departmentName, 'department fields returned');
+  });
+
+  await test('ACCESS: employee cannot create department-scoped calendar entries', async () => {
+    if (!departmentId) return;
+    const r = await api('calendar/activity/create', T.emp1, {
+      title: `${TAG} blocked department activity`, startsOn: dayKey(5), visibility: 'team', departmentId,
+    });
+    fails(r);
+    expect(r.status === 403, `expected 403, got ${r.status}`);
   });
 
   await test('get returns attendee response contract to the invited user', async () => {
@@ -433,5 +467,30 @@ export default async function run(h) {
     ok(r); expect(Array.isArray(r.body.items), 'items is an array');
     // A plain employee has no finance/onboarding view → finance deadlines must not leak.
     expect(!r.body.items.some(i => i.sourceModule === 'finance'), 'finance deadlines gated out for a plain employee');
+  });
+
+  await test('onboarding deadline projects its source priority without leaking it from other sources', async () => {
+    await sb.from('user_permissions').upsert(
+      { user_id: mgr.id, permission: 'hr.onboarding.view', granted: true, set_by: 'e2e', set_at: new Date().toISOString() },
+      { onConflict: 'user_id,permission' },
+    );
+    overrides.push({ userId: mgr.id, permission: 'hr.onboarding.view' });
+    const { data: kase, error: caseError } = await sb.from('hr_onboarding_cases').insert({
+      case_no: `${TAG}-CAL-ONB`, employee_id: emp1.id, package_key: 'e2e', status: 'open', owner_id: mgr.id, started_by: mgr.id,
+    }).select('id').single();
+    expect(!caseError && !!kase?.id, `onboarding case fixture: ${caseError?.message ?? ''}`);
+    if (!kase?.id) return;
+    onboardingCaseIds.push(kase.id);
+    const { data: task, error: taskError } = await sb.from('hr_onboarding_tasks').insert({
+      case_id: kase.id, task_key: `${TAG}-calendar-priority`, task_title: `${TAG} Critical onboarding task`, status: 'pending',
+      priority: 'critical', due_at: `${dayKey(4)}T09:00:00Z`, assigned_to: emp1.id, module_key: 'payroll', owner_role: 'payroll',
+    }).select('id').single();
+    expect(!taskError && !!task?.id, `onboarding task fixture: ${taskError?.message ?? ''}`);
+    if (!task?.id) return;
+    const items = await listItems(T.mgr, dayKey(3), dayKey(5), { types: ['deadline'], sourceModules: ['hr'] });
+    const projected = items.find(i => i.id === `hr_onboarding:${task.id}`);
+    expect(projected?.sourceModule === 'hr' && projected?.sourcePriority === 'critical', 'onboarding priority projects exactly');
+    expect(projected?.sourceDepartment === 'payroll' && projected?.sourceDepartmentLabel === 'Payroll', 'onboarding department projects exactly');
+    expect(projected?.priority === null, 'projected source priority stays separate from native task priority');
   });
 }

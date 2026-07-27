@@ -53,29 +53,44 @@ router.post('/users/status', async c => {
   const { userId } = v.data;
 
   // Fetch the target user
-  const { data: target } = await sb
+  const { data: target, error: targetError } = await sb
     .from('app_users')
     .select('id, role, totp_enabled')
     .eq('id', userId)
     .maybeSingle<{ id: string; role: string; totp_enabled: boolean }>();
 
+  if (targetError) throw new Error(`Security status user read failed: ${targetError.message}`);
   if (!target) {
     return c.json({ success: false, message: 'User not found.' }, 404);
   }
 
   // Passkey count
-  const { count: passkeyCount } = await sb
+  const { count: passkeyCount, error: passkeyError } = await sb
     .from('webauthn_credentials')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId);
+  if (passkeyError) throw new Error(`Security status passkey read failed: ${passkeyError.message}`);
 
   // Active trusted device count (non-revoked, non-expired)
-  const { count: trustedDeviceCount } = await sb
+  const { count: trustedDeviceCount, error: trustedDeviceError } = await sb
     .from('auth_trusted_devices')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
     .is('revoked_at', null)
     .gt('trusted_until', new Date().toISOString());
+  if (trustedDeviceError) throw new Error(`Security status trusted-device read failed: ${trustedDeviceError.message}`);
+
+  // The app's authenticated session ledger is the authoritative source for the
+  // most recent successful sign-in/session activity. It contains no secret here;
+  // only the timestamp is exposed behind auth.security.view.
+  const { data: activeSession, error: sessionError } = await sb
+    .from('refresh_tokens')
+    .select('last_seen_at')
+    .eq('user_id', userId)
+    .order('last_seen_at', { ascending: false })
+    .limit(1)
+    .maybeSingle<{ last_seen_at: string | null }>();
+  if (sessionError) throw new Error(`Security status session read failed: ${sessionError.message}`);
 
   return c.json({
     success: true,
@@ -83,6 +98,7 @@ router.post('/users/status', async c => {
     passkeyCount:        passkeyCount ?? 0,
     trustedDeviceCount:  trustedDeviceCount ?? 0,
     mfaMandatory:        isTwoFactorMandatory(target.role),
+    lastSeenAt:          activeSession?.last_seen_at ?? null,
   });
 });
 

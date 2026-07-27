@@ -26,9 +26,10 @@ export default defineConfig({
   ],
 
   test: {
-    // Only pick up frontend tests — exclude the legacy Jest test directory
-    include:     ['src/**/*.test.{ts,tsx}'],
-    exclude:     ['tests/**', 'node_modules/**'],
+    // Frontend tests (src/) + backend unit tests (tests/vitest/).
+    // tests/unit/ and tests/integration/ remain Jest-only.
+    include:     ['src/**/*.test.{ts,tsx}', 'tests/vitest/**/*.test.ts'],
+    exclude:     ['tests/unit/**', 'tests/integration/**', 'node_modules/**'],
     environment: 'jsdom',
     globals:     true,           // describe / it / expect without imports
     setupFiles:  ['src/test-setup.ts'],

@@ -24,6 +24,8 @@
 .hr-emp-master .em-page-icon-btn:hover:not(:disabled) { background: #f6f8fb; border-color: #b9c3d1; color: #1e293b; }
 .hr-emp-master .em-page-icon-btn:disabled { opacity: .58; cursor: wait; }
 .hr-emp-master .em-page-actions .em-new-btn { min-height: 40px; }
+.hr-emp-master .em-kpi-board { margin-bottom: 24px; }
+.hr-emp-master .em-kpi-board + .wbi-board { margin-top: 0; }
 
 /* ── Page header ──────────────────────────────────────────────────────────── */
 .hr-emp-master .page-row { display: flex; align-items: start; justify-content: space-between; gap: 18px; margin-bottom: 18px; }
@@ -99,6 +101,10 @@
 .hr-emp-master .employee-toolbar .tf-search { min-width: min(300px, 100%); }
 .hr-emp-master .employee-toolbar .tf-wrap { flex: 0 1 auto; }
 .hr-emp-master .employee-toolbar .em-column-btn { height: 46px; min-height: 46px; border-radius: 11px; }
+/* With the "Advanced" kicker gone, a single 700-weight word read heavier than the rest of the
+   toolbar — the button shell is unchanged, only its label is dialled back. */
+.hr-emp-master .employee-toolbar .tf-adv-btn { font-weight: var(--font-weight-semibold, 600); }
+.hr-emp-master .employee-toolbar .tf-adv-btn strong { font-size: 12.5px; font-weight: var(--font-weight-medium, 500); color: rgba(255, 255, 255, .92); letter-spacing: 0; }
 /* table-search / .magnify — removed (OnboardingOverview migrated to @ui TableSearch) */
 
 .hr-emp-master .dropdown-wrap { position: relative; min-width: 0; }
@@ -116,14 +122,19 @@
    explicit display the menu inherits that and renders invisible. */
 .hr-emp-master .dropdown-menu { display: block; position: absolute; top: calc(100% + 8px); left: 0; z-index: 60; min-width: 236px; max-width: 320px; background: #fff; border: 1px solid var(--line-dark); border-radius: 12px; overflow: hidden; box-shadow: 0 18px 40px rgba(15, 23, 42, .12); }
 .hr-emp-master .dropdown-menu.right { left: auto; right: 0; }
+/* Rows near the bottom of the scrolling register open their menu upward instead of
+   letting it hang past the widget's edge. */
+.hr-emp-master .dropdown-menu.up { top: auto; bottom: calc(100% + 8px); }
+.hr-emp-master .menu-sep { height: 1px; margin: 6px 4px; background: var(--line, #e5eaf2); }
 /* dropdown-head — removed (only used by ObAdvancedFilters, replaced by @ui AdvancedFilter) */
 .hr-emp-master .dropdown-list { max-height: 278px; overflow: auto; padding: 8px; }
 /* check-row / check-box — removed (only used by ObAdvancedFilters; @ui FilterBar has .tf-check) */
 .hr-emp-master .menu-row { width: 100%; border: 0; background: #fff; min-height: 36px; display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 8px; text-align: left; color: #1e293b; font-size: 13px; }
 .hr-emp-master .menu-row:hover { background: #f4f8ff; }
-.hr-emp-master .menu-row .menu-ico { width: 25px; height: 25px; border-radius: 7px; background: #f1f5f9; display: grid; place-items: center; flex: none; color: #334155; font-size: 12px; }
+/* Bare Lucide glyph — no tinted chip behind it. */
+.hr-emp-master .menu-row .menu-ico { width: 18px; height: 18px; display: grid; place-items: center; flex: none; color: #475569; }
 .hr-emp-master .menu-row.danger { color: #b91c1c; }
-.hr-emp-master .menu-row.danger .menu-ico { background: #fee2e2; color: #dc2626; }
+.hr-emp-master .menu-row.danger .menu-ico { color: #dc2626; }
 /* dropdown-foot — removed (unused: was the legacy multi-select dropdown footer) */
 
 /* Advanced-filter tabbed panel (advanced-menu, advanced-panel, advanced-tabs, advanced-tab*,
@@ -149,6 +160,12 @@
 .hr-emp-master .em-column-btn:hover { background: #f6f8fb; border-color: #b9c3d1; color: #1e293b; }
 .hr-emp-master .em-column-count { min-width: 35px; min-height: 20px; padding: 0 6px; border-radius: 999px; background: #eef2f6; color: #475569; display: inline-grid; place-items: center; font-size: 10.5px; font-weight: var(--font-weight-semibold, 600); }
 .hr-emp-master .em-columns-menu { width: 292px; max-width: min(292px, calc(100vw - 28px)); }
+.hr-emp-master .em-views-menu { width: 310px; max-width: min(310px, calc(100vw - 28px)); }
+.hr-emp-master .em-view-row { display: grid; grid-template-columns: minmax(0, 1fr) 34px; align-items: center; }
+.hr-emp-master .em-view-row > button { min-width: 0; min-height: 36px; padding: 8px 10px; border: 0; background: transparent; color: #334155; display: flex; align-items: center; gap: 8px; font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
+.hr-emp-master .em-view-row > button:first-child span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hr-emp-master .em-view-row > button:last-child { justify-content: center; padding: 0; color: #64748b; }
+.hr-emp-master .em-view-row > button:hover { background: #f6f8fb; color: #1e293b; }
 .hr-emp-master .em-columns-menu .tf-check:disabled { cursor: default; opacity: 1; background: #f8fafc; }
 .hr-emp-master .em-columns-menu .tf-check:disabled .tf-check-label { color: #475569; }
 .hr-emp-master .em-column-required { color: #64748b; background: #eef2f6; border-radius: 999px; padding: 3px 7px; font-size: 9.5px; font-weight: var(--font-weight-semibold, 600); }
@@ -181,7 +198,8 @@
    skeleton and real rows share identical geometry (no layout jump). Row height is
    pinned so skeleton rows (--register-row-height) match real rows exactly. */
 .hr-emp-master table { width: 100%; border-collapse: collapse; table-layout: fixed; --register-row-height: 62px; }
-.hr-emp-master th { height: 45px; text-align: left; font-size: 12.5px; color: #475569; font-weight: var(--font-weight-semibold, 600); border-bottom: 1px solid var(--line); padding: 0 11px; background: #f8fafc; text-transform: uppercase; letter-spacing: .025em; }
+/* Column headers are Title Case (as authored in EMPLOYEE_REGISTER_COLUMNS), not machine caps. */
+.hr-emp-master th { height: 45px; text-align: left; font-size: 12.5px; color: #475569; font-weight: var(--font-weight-semibold, 600); border-bottom: 1px solid var(--line); padding: 0 11px; background: #f8fafc; letter-spacing: 0; }
 .hr-emp-master .table-card > .table-scroll > table > thead > tr > th { position: sticky; top: 0; z-index: 2; }
 .hr-emp-master td { height: 62px; border-bottom: 1px solid var(--line); padding: 0 11px; font-size: 13px; color: #334155; vertical-align: middle; }
 .hr-emp-master tr:last-child td { border-bottom: none; }
@@ -196,6 +214,7 @@
 .hr-emp-master [data-column="supervisor"] { width: 170px; }
 .hr-emp-master [data-column="employmentType"] { width: 145px; }
 .hr-emp-master [data-column="status"] { width: 115px; }
+.hr-emp-master [data-column="readiness"] { width: 155px; }
 .hr-emp-master [data-column="trainingStatus"] { width: 135px; }
 .hr-emp-master [data-column="actions"] { width: 72px; text-align: center; }
 
@@ -224,6 +243,15 @@
 .hr-emp-master .pill.purple { background: var(--purple-bg); color: #7c3aed; }
 .hr-emp-master .pill.blue   { background: #dbeafe; color: #1d4ed8; }
 .hr-emp-master .pill.gray   { background: #eef2f7; color: #334155; }
+.hr-emp-master .em-readiness { display: grid; gap: 6px; min-width: 0; }
+.hr-emp-master .em-readiness > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #64748b; font-size: 10.5px; }
+.hr-emp-master .em-readiness > div span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hr-emp-master .em-readiness > div strong { color: #334155; font-size: 11.5px; font-weight: var(--font-weight-semibold, 600); }
+/* Light grey unfilled track; the fill's colour+gradient is set inline per row from the
+   percentage (readinessScale.ts) so a low score never shows a green tail. */
+.hr-emp-master .em-readiness > i { height: 6px; overflow: hidden; border-radius: 999px; background: #e7ebf0; }
+.hr-emp-master .em-readiness > i > b { display: block; height: 100%; border-radius: inherit; background: #94a3b8; transition: width .28s cubic-bezier(.22,1,.36,1); }
+.hr-emp-master .em-readiness-restricted { color: #64748b; font-size: 11px; }
 
 .hr-emp-master .kebab { position: relative; text-align: center; }
 .hr-emp-master .kebab-btn { border: 0; background: transparent; width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; font-size: 18px; color: #0f172a; margin: auto; }
@@ -413,6 +441,9 @@
 .hr-emp-master .form-field input, .hr-emp-master .form-field select, .hr-emp-master .form-field textarea { min-height: 40px; border: 1px solid var(--line-dark); border-radius: 9px; padding: 9px 11px; outline: none; background: #fff; color: #0f172a; }
 .hr-emp-master .form-field textarea { min-height: 92px; resize: vertical; }
 .hr-emp-master .field-help { color: #64748b; font-size: 11px; line-height: 1.35; }
+/* Inline per-field validation, shown on the field itself (not only as a toast). */
+.hr-emp-master .form-field-error { margin-top: -6px; color: #b91c1c; font-size: 11px; line-height: 1.35; }
+.hr-emp-master .form-field-error.full { grid-column: 1 / -1; }
 .hr-emp-master .checkbox-row { min-height: 34px; display: flex; align-items: center; gap: 9px; color: #334155; font-size: 12px; font-weight: var(--font-weight-semibold, 600); }
 .hr-emp-master .warning-card { border: 1px solid #fde68a; background: #fffbeb; color: #92400e; border-radius: 12px; padding: 12px; font-size: 12px; line-height: 1.45; }
 .hr-emp-master .info-strip { border: 1px solid #bfdbfe; background: #eff6ff; color: #1e40af; border-radius: 12px; padding: 12px; font-size: 12px; line-height: 1.45; }

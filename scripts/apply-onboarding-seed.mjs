@@ -95,6 +95,12 @@ const TASKS = [
   [17, C(6), 'profile_confirmation', 'Confirm employee profile',     'hr', 'hr', 'completed', false, false, 'normal', null, -19],
   [18, C(6), 'document_collection',  'Collect contract & documents', 'hr', 'hr', 'completed', false, true, 'normal', null, -17],
   [19, C(6), 'welcome',              'Welcome the new hire',         'supervisor', 'supervisor', 'completed', false, false, 'normal', null, -5],
+  [20, C(1), 'tax-profile-review',   'Review employee tax profile',  'payroll', 'payroll', 'open', false, false, 'low',      1, null],
+  [21, C(2), 'identity-check',       'Verify identity documents',    'hr', 'hr', 'open', false, true, 'normal', 2, null],
+  [22, C(3), 'safety-briefing',      'Complete safety briefing',     'hse', 'hse', 'blocked', true, true, 'critical', 3, null],
+  [23, C(4), 'workstation-setup',    'Confirm workstation setup',    'it', 'it', 'open', false, false, 'high',     4, null],
+  [24, C(5), 'manager-introduction', 'Schedule manager introduction','supervisor', 'supervisor', 'open', false, false, 'normal', 6, null],
+  [25, C(1), 'benefits-enrolment',   'Complete benefits enrolment',  'hr', 'hr', 'open', false, true, 'high',      8, null],
 ];
 await upsert('hr_onboarding_tasks', TASKS.map(([seq, case_id, task_key, task_title, owner_role, module_key, status, is_blocking, requires_evidence, priority, due_offset, completed_offset]) => ({
   id: T(seq), case_id, task_key, task_title, owner_role, module_key, status, is_blocking, requires_evidence, priority,

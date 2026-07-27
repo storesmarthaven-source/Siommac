@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   DEFAULT_EMPLOYEE_REGISTER_COLUMNS,
+  EMPLOYEE_REGISTER_COLUMNS,
   employeeRegisterColumnStorageKey,
   employeeRegisterTableMinWidth,
   readEmployeeRegisterColumns,
@@ -10,6 +11,24 @@ import {
 
 describe('Employee register column preferences', () => {
   beforeEach(() => localStorage.clear());
+
+  it('uses a focused operational default while keeping optional fields available', () => {
+    expect(DEFAULT_EMPLOYEE_REGISTER_COLUMNS).toEqual([
+      'employee', 'employeeNumber', 'position', 'department', 'site', 'supervisor', 'status', 'readiness', 'actions',
+    ]);
+  });
+
+  it('requires only Employee and Actions, and keeps Employment Type / Training Status optional', () => {
+    expect(EMPLOYEE_REGISTER_COLUMNS.filter(column => column.required).map(column => column.key))
+      .toEqual(['employee', 'actions']);
+    for (const key of ['employmentType', 'trainingStatus'] as const) {
+      expect(EMPLOYEE_REGISTER_COLUMNS.find(column => column.key === key)?.required).toBeUndefined();
+      expect(DEFAULT_EMPLOYEE_REGISTER_COLUMNS).not.toContain(key);
+    }
+    // The toolbar's compact "9 of 11" badge counts the default set against the full contract.
+    expect(EMPLOYEE_REGISTER_COLUMNS).toHaveLength(11);
+    expect(DEFAULT_EMPLOYEE_REGISTER_COLUMNS).toHaveLength(9);
+  });
 
   it('drops unknown and duplicate keys, restores required columns, and preserves canonical order', () => {
     expect(sanitizeEmployeeRegisterColumns(['status', 'unknown', 'status', 'department'])).toEqual([

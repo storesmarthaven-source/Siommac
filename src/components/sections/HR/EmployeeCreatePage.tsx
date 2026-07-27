@@ -28,7 +28,7 @@
  */
 
 import { type VNode } from 'preact';
-import { useState, useEffect, useMemo, useCallback } from 'preact/hooks';
+import { useState, useEffect, useMemo, useCallback, useId, useRef } from 'preact/hooks';
 import { Stepper, LucideIcon, type StepperStep } from '@ui';
 import './EmployeeCreatePage.css';
 import { toast } from '@store';
@@ -58,7 +58,7 @@ const STEP_INTRO: { title: string; blurb: string; icon: 'IdCard' | 'BriefcaseBus
   { title: 'Employment',                    blurb: 'Engagement type, start date and probation terms.',                          icon: 'BriefcaseBusiness' },
   { title: 'Organisational Assignment',     blurb: 'Where they report. Assignment can be updated after creation.',              icon: 'Building2' },
   { title: 'Statutory & Payroll Readiness', blurb: 'Written to the canonical statutory profile. Finance verifies separately.',  icon: 'BadgeDollarSign' },
-  { title: 'Account & Onboarding',          blurb: 'How access is granted and whether onboarding launches now.',                 icon: 'ShieldCheck' },
+  { title: 'Account & Onboarding',          blurb: 'How access is granted and whether an onboarding draft is prepared.',                 icon: 'ShieldCheck' },
   { title: 'Review & Create',               blurb: 'Confirm every value before the record is created.',                          icon: 'ClipboardCheck' },
 ];
 
@@ -89,10 +89,10 @@ const RECORD_STATUSES = [
 // `accountMode: z.literal('no_login')` — offering an invite option here would be a
 // control that the server rejects. Additional modes return when account provisioning
 // is wired end to end (governed invite, never an HR-set password).
-const ACCOUNT_MODES: { id: WizardAccountMode; label: string; desc: string; icon: 'UserRoundX' }[] = [
-  { id: 'no_login', label: 'No Login Yet', icon: 'UserRoundX', desc: 'Employee record only. Access is requested separately, per person — this wizard never sets a password.' },
-];
-
+// Only the modes the CREATE CONTRACT actually accepts. The backend schema is
+// `accountMode: z.literal('no_login')` — offering an invite option here would be a
+// control the server rejects. More modes return when governed account provisioning
+// is wired end to end (invite-based, never an HR-set password).
 // ── Draft shape (matches form state for serialisation) ────────────────────────
 
 export interface FormState {
@@ -104,10 +104,10 @@ export interface FormState {
   // Step 2 — Employment
   employmentType: string; startDate: string; position: string;
   probationEndDate: string; employeeGrade: string; workSchedule: string;
-  contractorFlag: boolean; recordStatus: string;
+  recordStatus: string;
   // Step 3 — Assignment
   departmentId: string; siteId: string; supervisorId: string;
-  positionId: string; effectiveDate: string;
+  effectiveDate: string;
   // Step 4 — Statutory
   nisNumber: string; nisStatus: string; nisEffectiveDate: string;
   birFileNumber: string; payeApplicable: boolean;
@@ -116,20 +116,20 @@ export interface FormState {
   hsEffectiveDate: string; hsVerificationRequired: boolean;
   // Step 5 — Account & Onboarding
   accessProfileId: string; accountMode: WizardAccountMode;
-  createOnboardingCase: boolean; packageKey: string;
+  prepareOnboarding: boolean; packageKey: string;
 }
 
 export const EMPTY_FORM: FormState = {
   firstName: '', lastName: '', preferredName: '', username: '', employeeNumber: '',
   email: '', personalEmail: '', phone: '', dateOfBirth: '', nationality: '', governmentId: '',
   employmentType: 'employee', startDate: '', position: '', probationEndDate: '',
-  employeeGrade: '', workSchedule: '', contractorFlag: false, recordStatus: 'active',
-  departmentId: '', siteId: '', supervisorId: '', positionId: '', effectiveDate: '',
+  employeeGrade: '', workSchedule: '', recordStatus: 'active',
+  departmentId: '', siteId: '', supervisorId: '', effectiveDate: '',
   nisNumber: '', nisStatus: 'pending', nisEffectiveDate: '', birFileNumber: '',
   payeApplicable: true, td1Received: false, td1EffectiveYear: '',
   hsApplicable: true, hsExemptionReason: '', hsEffectiveDate: '', hsVerificationRequired: false,
   accessProfileId: '', accountMode: 'no_login',
-  createOnboardingCase: false, packageKey: '',
+  prepareOnboarding: false, packageKey: '',
 };
 
 // ── Validation helpers (exported for unit tests) ──────────────────────────────
@@ -143,7 +143,12 @@ export function validEmail(v: string): string | null {
 }
 export function validDate(v: string, label: string): string | null {
   if (!v.trim()) return null;
-  return /^\d{4}-\d{2}-\d{2}$/.test(v.trim()) ? null : `${label}: use YYYY-MM-DD format.`;
+  const value = v.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return `${label}: use YYYY-MM-DD format.`;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value
+    ? null
+    : `${label}: enter a real calendar date.`;
 }
 
 export function validateStep(step: number, f: FormState): Record<string, string> {
@@ -157,15 +162,38 @@ export function validateStep(step: number, f: FormState): Record<string, string>
     add('email',         validEmail(f.email));
     add('personalEmail', validEmail(f.personalEmail));
     add('dateOfBirth',   validDate(f.dateOfBirth, 'Date of birth'));
+    if (f.dateOfBirth && f.dateOfBirth >= new Date().toISOString().slice(0, 10)) {
+      errs['dateOfBirth'] = 'Date of birth must be before today.';
+    }
   }
   if (step === 1) {
+    add('startDate', reqStr(f.startDate, 'Start date'));
     add('startDate', validDate(f.startDate, 'Start date'));
+    add('probationEndDate', validDate(f.probationEndDate, 'Probation end date'));
+    if (f.startDate && f.probationEndDate && f.probationEndDate < f.startDate) {
+      errs['probationEndDate'] = 'Probation end date cannot be before the start date.';
+    }
+  }
+  if (step === 2) {
+    add('effectiveDate', validDate(f.effectiveDate, 'Assignment effective date'));
+    if (f.startDate && f.effectiveDate && f.effectiveDate < f.startDate) {
+      errs['effectiveDate'] = 'Assignment effective date cannot be before the start date.';
+    }
+  }
+  if (step === 4) {
+    // Fail closed. `access.accessProfileId` is REQUIRED by the create contract, so a
+    // blank selection (including when the profile registry is unreachable and the list
+    // is empty) must block here rather than be rejected by the server or, worse,
+    // silently defaulted to some role.
+    add('accessProfileId', reqStr(f.accessProfileId, 'Access profile'));
   }
   if (step === 3) {
     add('nisEffectiveDate', validDate(f.nisEffectiveDate, 'NIS effective date'));
     add('hsEffectiveDate',  validDate(f.hsEffectiveDate,  'HS effective date'));
     if (f.td1EffectiveYear.trim() && !/^\d{4}$/.test(f.td1EffectiveYear.trim())) errs['td1EffectiveYear'] = 'TD1 effective year: four-digit year.';
+    if (f.nisStatus === 'registered' && !f.nisNumber.trim()) errs['nisNumber'] = 'NIS number is required when status is Registered.';
   }
+  if (step === 4 && f.prepareOnboarding) add('packageKey', reqStr(f.packageKey, 'Onboarding package'));
   return errs;
 }
 
@@ -186,16 +214,20 @@ function Field({ label, value, onInput, error, type = 'text', placeholder, requi
   label: string; value: string; onInput: (v: string) => void;
   error?: string | null; type?: string; placeholder?: string; required?: boolean; hint?: string;
 }): VNode {
+  const id = useId();
+  const helpId = `${id}-help`;
   return (
     <div class="field">
-      <label>{label}{required && <em aria-hidden="true"> *</em>}</label>
+      <label htmlFor={id}>{label}{required && <em aria-hidden="true"> *</em>}</label>
       <input
+        id={id}
         type={type} value={value} placeholder={placeholder ?? ''}
         class={`control${error ? ' is-error' : ''}`}
         aria-invalid={error ? 'true' : undefined}
+        aria-describedby={error || hint ? helpId : undefined}
         onInput={e => onInput((e.target as HTMLInputElement).value)}
       />
-      {error ? <span class="field-error" role="alert">{error}</span> : hint ? <small>{hint}</small> : null}
+      {error ? <span id={helpId} class="field-error" role="alert">{error}</span> : hint ? <small id={helpId}>{hint}</small> : null}
     </div>
   );
 }
@@ -205,16 +237,19 @@ function SelectField({ label, value, onInput, options, placeholder, error, requi
   options: { id: string; label?: string; name?: string }[];
   placeholder?: string; error?: string | null; required?: boolean; hint?: string;
 }): VNode {
+  const id = useId();
+  const helpId = `${id}-help`;
   return (
     <div class="field">
-      <label>{label}{required && <em aria-hidden="true"> *</em>}</label>
-      <select class={`control${error ? ' is-error' : ''}`} value={value}
+      <label htmlFor={id}>{label}{required && <em aria-hidden="true"> *</em>}</label>
+      <select id={id} class={`control${error ? ' is-error' : ''}`} value={value}
         aria-invalid={error ? 'true' : undefined}
+        aria-describedby={error || hint ? helpId : undefined}
         onChange={e => onInput((e.target as HTMLSelectElement).value)}>
         <option value="">{placeholder ?? `— Select ${label} —`}</option>
         {options.map(o => <option key={o.id} value={o.id}>{o.label ?? o.name ?? o.id}</option>)}
       </select>
-      {error ? <span class="field-error" role="alert">{error}</span> : hint ? <small>{hint}</small> : null}
+      {error ? <span id={helpId} class="field-error" role="alert">{error}</span> : hint ? <small id={helpId}>{hint}</small> : null}
     </div>
   );
 }
@@ -255,11 +290,9 @@ function SectionBox({ title, icon, children }: {
 
 // ── Build API args from form (exported for unit tests) ───────────────────────
 
-export function formToArgs(f: FormState): CreateHrEmployeeArgsV2 {
+export function formToArgs(f: FormState, requestKey: string): CreateHrEmployeeArgsV2 {
   return {
-    // Content-derived idempotency key: retrying the same submission cannot create a
-    // second employee, and two genuinely different people never collide.
-    requestKey: `${f.username.trim()}|${f.firstName.trim()}|${f.lastName.trim()}|${f.startDate.trim()}`,
+    requestKey,
     identity: {
       username:       f.username.trim(),
       firstName:      f.firstName.trim(),
@@ -295,6 +328,7 @@ export function formToArgs(f: FormState): CreateHrEmployeeArgsV2 {
     statutory: {
       nisNumber:              f.nisNumber.trim()        || null,
       nisStatus:              f.nisStatus               || undefined,
+      nisApplicable:          f.nisStatus !== 'not_applicable',
       nisEffectiveDate:       f.nisEffectiveDate.trim() || null,
       birFileNumber:          f.birFileNumber.trim()    || null,
       payeApplicable:         f.payeApplicable,
@@ -306,7 +340,7 @@ export function formToArgs(f: FormState): CreateHrEmployeeArgsV2 {
       hsVerificationRequired: f.hsVerificationRequired,
     },
     onboarding: {
-      prepareOnboarding: f.createOnboardingCase,
+      prepareOnboarding: f.prepareOnboarding,
       packageKey:        f.packageKey || undefined,
     },
   };
@@ -423,6 +457,7 @@ function DraftRecovery({ label, savedAt, stepIndex, onResume, onDiscard }: {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function EmployeeCreatePage({ onClose }: { onClose: () => void }): VNode {
+  const requestKey = useRef(crypto.randomUUID());
   const [step, setStep]               = useState(0);
   const [maxStep, setMaxStep]         = useState(0);
   const [form, setForm]               = useState<FormState>(EMPTY_FORM);
@@ -455,18 +490,24 @@ export function EmployeeCreatePage({ onClose }: { onClose: () => void }): VNode 
   const resumeDraft = useCallback(() => {
     const d = draftGetQ.data;
     if (!d?.draft_data) return;
-    try {
-      const saved = d.draft_data as Partial<FormState>;
-      setForm(f => ({ ...f, ...saved }));
-      setStep(d.step_index ?? 0);
-      setMaxStep(d.step_index ?? 0);
-    } catch { /* ignore corrupt draft */ }
+    if (typeof d.draft_data !== 'object' || Array.isArray(d.draft_data)) {
+      toast.error('This draft is corrupt and cannot be resumed. Discard it to start again.');
+      return;
+    }
+    const saved = d.draft_data as Partial<FormState>;
+    setForm(f => ({ ...f, ...saved }));
+    setStep(d.step_index ?? 0);
+    setMaxStep(d.step_index ?? 0);
     setDraftState('dismissed');
   }, [draftGetQ.data]);
 
-  const discardDraft = useCallback(() => {
-    draftDel.mutate();
-    setDraftState('dismissed');
+  const discardDraft = useCallback(async () => {
+    try {
+      await draftDel.mutateAsync();
+      setDraftState('dismissed');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not discard the draft.');
+    }
   }, [draftDel]);
 
   // Memoised lookup lists
@@ -477,7 +518,7 @@ export function EmployeeCreatePage({ onClose }: { onClose: () => void }): VNode 
   const supervisors = useMemo(() =>
     (supQ.data ?? []).map(r => ({ id: r.id, label: rowName(r) })), [supQ.data]);
   const profiles = useMemo(() =>
-    (profilesQ.data ?? []).filter(p => p.is_active).map(p => ({ id: p.id, label: p.label })), [profilesQ.data]);
+    (profilesQ.data ?? []).filter(p => p.is_active).map(p => ({ id: p.id, label: p.label, code: p.code })), [profilesQ.data]);
   const packages = useMemo(() =>
     (packagesQ.data ?? []).filter(p => p.status === 'active').map(p => ({ id: p.key, label: p.label })), [packagesQ.data]);
 
@@ -499,22 +540,33 @@ export function EmployeeCreatePage({ onClose }: { onClose: () => void }): VNode 
 
   useEffect(() => { setErrors(validateStep(step, form)); }, [step, form]);
 
-  const canAdvance = Object.keys(validateStep(step, form)).length === 0;
+  const registryBlocked = step === 4 && (profilesQ.isError || (form.prepareOnboarding && packagesQ.isError));
+  const canAdvance = Object.keys(validateStep(step, form)).length === 0 && !registryBlocked;
 
-  const goTo = (i: number) => {
+  useEffect(() => {
+    if (form.accessProfileId || !profiles.length) return;
+    const employeeProfile = profiles.find(profile => profile.code === 'employee') ?? profiles[0];
+    if (employeeProfile) setForm(current => ({ ...current, accessProfileId: employeeProfile.id }));
+  }, [form.accessProfileId, profiles]);
+
+  const goTo = async (i: number) => {
     const revalidated = validateStep(step, form);
     if (Object.keys(revalidated).length > 0) {
       setErrors(revalidated);
       setSubmitAttempted(true);
       return;
     }
-    setStep(i);
-    setMaxStep(m => Math.max(m, i));
     const label = `${form.firstName.trim()} ${form.lastName.trim()}`.trim() || form.username.trim() || undefined;
-    draftSave.mutate({ draftData: form, stepIndex: i, label });
+    try {
+      await draftSave.mutateAsync({ draftData: form, stepIndex: i, label });
+      setStep(i);
+      setMaxStep(m => Math.max(m, i));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not save the employee draft.');
+    }
   };
 
-  const next = () => { if (step < WIZARD_STEPS.length - 1) goTo(step + 1); };
+  const next = () => { if (step < WIZARD_STEPS.length - 1) void goTo(step + 1); };
   const back = () => {
     if (step > 0) { setStep(s => s - 1); setSubmitAttempted(false); }
   };
@@ -529,16 +581,18 @@ export function EmployeeCreatePage({ onClose }: { onClose: () => void }): VNode 
       return;
     }
     setSubmitAttempted(true);
-    createMut.mutate(formToArgs(form), {
-      onSuccess: (data) => {
-        draftDel.mutate();
-        toast(`Employee ${data.data.employee_no} created successfully.`);
-        setReceipt(data.data);
-      },
-      onError: (e) => {
-        toast.error(e instanceof Error ? e.message : 'Failed to create employee.');
-      },
-    });
+    try {
+      const data = await createMut.mutateAsync(formToArgs(form, requestKey.current));
+      try {
+        await draftDel.mutateAsync();
+      } catch {
+        toast.error('Employee created, but the saved draft could not be removed. It can be discarded from the register.');
+      }
+      toast(`Employee ${data.data.employee_no} created successfully.`);
+      setReceipt(data.data);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to create employee.');
+    }
   };
 
   // ── Render: receipt state ──────────────────────────────────────────────────
@@ -653,15 +707,11 @@ export function EmployeeCreatePage({ onClose }: { onClose: () => void }): VNode 
       <div class="grid-2">
         <SelectField label="Employment Type" value={form.employmentType} onInput={v => setField('employmentType', v)} options={EMPLOYMENT_TYPES} />
         <SelectField label="Initial Status"  value={form.recordStatus}   onInput={v => setField('recordStatus', v)}  options={RECORD_STATUSES} />
-        <Field label="Start Date"          value={form.startDate}        onInput={v => setField('startDate',        v)} error={err('startDate')} type="date" />
-        <Field label="Probation End Date"  value={form.probationEndDate} onInput={v => setField('probationEndDate', v)} type="date" hint="Optional" />
+        <Field label="Start Date"          value={form.startDate}        onInput={v => setField('startDate',        v)} error={err('startDate')} type="date" required />
+        <Field label="Probation End Date"  value={form.probationEndDate} onInput={v => setField('probationEndDate', v)} error={err('probationEndDate')} type="date" hint="Optional" />
         <Field label="Position / Job Title" value={form.position}        onInput={v => setField('position',      v)} placeholder="e.g. HSE Officer" />
         <Field label="Employee Grade"       value={form.employeeGrade}   onInput={v => setField('employeeGrade', v)} placeholder="e.g. Grade 3" />
         <Field label="Work Schedule"        value={form.workSchedule}    onInput={v => setField('workSchedule',  v)} placeholder="e.g. Day Shift" />
-      </div>
-      <div class="check-list" style={{ marginTop: '16px' }}>
-        <CheckRow label="Contract worker" checked={form.contractorFlag} onChange={v => setField('contractorFlag', v)}
-          description="Engaged under a contract rather than permanent employment." />
       </div>
     </div>
   );
@@ -673,7 +723,7 @@ export function EmployeeCreatePage({ onClose }: { onClose: () => void }): VNode 
           <SelectField label="Department" value={form.departmentId} onInput={v => setField('departmentId', v)} options={departments}  placeholder="— No department —" />
           <SelectField label="Site"       value={form.siteId}       onInput={v => setField('siteId',       v)} options={sites}        placeholder="— No site —" />
           <SelectField label="Supervisor" value={form.supervisorId} onInput={v => setField('supervisorId', v)} options={supervisors}  placeholder="— No supervisor —" />
-          <Field label="Effective Date" value={form.effectiveDate} onInput={v => setField('effectiveDate', v)} type="date" hint="Defaults to the start date" />
+          <Field label="Effective Date" value={form.effectiveDate} onInput={v => setField('effectiveDate', v)} error={err('effectiveDate')} type="date" hint="Defaults to the start date" />
         </div>
         <div class="notice info">
           <LucideIcon name="Info" size={18} />
@@ -708,7 +758,7 @@ export function EmployeeCreatePage({ onClose }: { onClose: () => void }): VNode 
         <SectionBox title="NIS — National Insurance" icon="ShieldCheck">
           <div class="grid-3">
             <SelectField label="Registration Status" value={form.nisStatus} onInput={v => setField('nisStatus', v)} options={NIS_STATUSES} />
-            <Field label="NIS Number"          value={form.nisNumber}        onInput={v => setField('nisNumber',        v)} placeholder="e.g. 12345678" />
+            <Field label="NIS Number"          value={form.nisNumber}        onInput={v => setField('nisNumber',        v)} error={err('nisNumber')} placeholder="e.g. 12345678" />
             <Field label="NIS Effective Date"  value={form.nisEffectiveDate} onInput={v => setField('nisEffectiveDate', v)} error={err('nisEffectiveDate')} type="date" />
           </div>
         </SectionBox>
@@ -776,47 +826,47 @@ export function EmployeeCreatePage({ onClose }: { onClose: () => void }): VNode 
         <SectionBox title="Access profile" icon="UserRoundCog">
           <div class="grid-2">
             <SelectField label="Access Profile" value={form.accessProfileId} onInput={v => setField('accessProfileId', v)}
-              options={profiles} placeholder="— Employee (default) —"
+              options={profiles} placeholder="— Select an access profile —" required error={err('accessProfileId')}
               hint="Determines the system role. HR cannot assign a raw role." />
           </div>
           {profilesQ.isError && (
             <div class="notice">
               <LucideIcon name="TriangleAlert" size={18} />
-              <span>Access profiles could not be loaded. Creation will fall back to the default employee profile.</span>
+              <span>Access profiles could not be loaded, so this employee cannot be created yet. Access is never assigned by fallback — retry once the registry is reachable.</span>
             </div>
           )}
         </SectionBox>
 
         <SectionBox title="Account mode" icon="ShieldCheck">
-          <div class="choice-grid">
-            {ACCOUNT_MODES.map(m => (
-              <label key={m.id} class={`choice${form.accountMode === m.id ? ' selected' : ''}`}>
-                <input type="radio" name="accountMode" value={m.id} checked={form.accountMode === m.id}
-                  onChange={() => setField('accountMode', m.id)} />
-                <span class="choice-body">
-                  <LucideIcon name={m.icon} size={26} />
-                  <strong>{m.label}</strong>
-                  <p>{m.desc}</p>
-                </span>
-              </label>
-            ))}
+          <div class="choice selected">
+            <span class="choice-body">
+              <LucideIcon name="UserRoundX" size={26} />
+              <strong>No Login Created</strong>
+              <p>Employee access can be activated later from the profile or reviewed onboarding case.</p>
+            </span>
           </div>
           <div class="notice info">
             <LucideIcon name="Info" size={18} />
-            <span>No password is ever set here. An invite lets the employee choose their own credentials.</span>
+            <span>This wizard never sets a password, creates an Auth user, or sends an invitation.</span>
           </div>
         </SectionBox>
 
         <SectionBox title="Onboarding" icon="ListChecks">
           <div class="check-list">
-            <CheckRow label="Start an onboarding case now" checked={form.createOnboardingCase}
-              onChange={v => setField('createOnboardingCase', v)}
-              description="Launches the onboarding workflow as part of this creation." />
+            <CheckRow label="Prepare an onboarding case" checked={form.prepareOnboarding}
+              onChange={v => setField('prepareOnboarding', v)}
+              description="Prepares an onboarding case draft. It is launched separately from the Onboarding workspace." />
           </div>
-          {form.createOnboardingCase && (
+          {form.prepareOnboarding && (
             <div class="grid-2" style={{ marginTop: '12px' }}>
               <SelectField label="Onboarding Package" value={form.packageKey} onInput={v => setField('packageKey', v)}
-                options={packages} placeholder="— Standard Employee —" />
+                options={packages} placeholder="— Select an onboarding package —" required error={err('packageKey')} />
+            </div>
+          )}
+          {form.prepareOnboarding && packagesQ.isError && (
+            <div class="notice">
+              <LucideIcon name="TriangleAlert" size={18} />
+              <span>Onboarding packages could not be loaded. Retry before preparing an onboarding draft.</span>
             </div>
           )}
         </SectionBox>
@@ -836,12 +886,11 @@ export function EmployeeCreatePage({ onClose }: { onClose: () => void }): VNode 
               <span><strong>Account</strong><p>No login is created — access is requested separately</p></span>
               <span class="outcome-tail"><span class="badge">Later</span></span>
             </div>
-            <div class={`outcome${form.createOnboardingCase ? '' : ''}`}>
+            <div class={`outcome${form.prepareOnboarding ? '' : ''}`}>
               <span class="status-icon"><LucideIcon name="ListChecks" size={20} /></span>
-              <span><strong>Onboarding</strong><p>{form.createOnboardingCase ? (packages.find(p => p.id === form.packageKey)?.label ?? 'Standard package') : 'Not started'}</p></span>
+              <span><strong>Onboarding</strong><p>{form.prepareOnboarding ? (packages.find(p => p.id === form.packageKey)?.label ?? 'Standard package') : 'Not started'}</p></span>
               <span class="outcome-tail">
-                <span class={`badge ${form.createOnboardingCase ? 'green' : ''}`}>{form.createOnboardingCase ? 'Launch' : 'Skip'}</span>
-                {form.createOnboardingCase && <span class="outcome-owner">HR owns</span>}
+                <span class={`badge ${form.prepareOnboarding ? 'green' : ''}`}>{form.prepareOnboarding ? 'Draft' : 'Skip'}</span>
               </span>
             </div>
           </div>
@@ -896,8 +945,8 @@ export function EmployeeCreatePage({ onClose }: { onClose: () => void }): VNode 
           </SummaryCard>
           <SummaryCard title="Account & Onboarding" icon="ShieldCheck">
             <SummaryRow label="Access Profile" value={profileLabel} />
-            <SummaryRow label="Account Mode"   value={ACCOUNT_MODES.find(m => m.id === form.accountMode)?.label} />
-            <SummaryRow label="Onboarding"     value={form.createOnboardingCase ? (pkgLabel ?? (form.packageKey || 'Standard package')) : 'Not started'} />
+            <SummaryRow label="Account"        value="No login created" />
+            <SummaryRow label="Onboarding"     value={form.prepareOnboarding ? (pkgLabel ?? (form.packageKey || 'Standard package')) : 'Not started'} />
           </SummaryCard>
         </div>
 
@@ -944,7 +993,7 @@ export function EmployeeCreatePage({ onClose }: { onClose: () => void }): VNode 
         <Stepper
           steps={WIZARD_STEPS}
           activeIndex={step}
-          onStep={goTo}
+          onStep={i => { void goTo(i); }}
           reachableIndex={maxStep}
           completed={completed}
           ariaLabel="Employee creation steps"

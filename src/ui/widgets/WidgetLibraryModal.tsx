@@ -20,7 +20,7 @@ import { WidgetDetailPanel } from './WidgetDetailPanel';
 import { useMountReveal } from './motion';
 import { WIDGET_BUNDLES, resolveBundleWidgets } from './bundles';
 import { can } from '@lib/permissions';
-import { effectiveWidgetPolicy, isWidgetDiscoverable } from './governance';
+import { effectiveWidgetPolicy, isWidgetDiscoverable, normalizePageKey } from './governance';
 import { listWidgetDataSources } from './dataSources';
 import { availableWidgetModules, widgetAreas } from './catalogueTaxonomy';
 import { requestWidgetBoardReveal } from './boardReveal';
@@ -30,6 +30,9 @@ import {
 } from '@ui';
 
 type LibraryView = 'catalogue' | 'recommended' | 'bundles' | 'layouts' | 'packages' | 'governance' | 'sources';
+const supportsPage = (pages: string[] | undefined, pageKey: string): boolean =>
+  !!pages?.length && (pages.includes('*')
+    || pages.some(page => normalizePageKey(page) === normalizePageKey(pageKey)));
 
 // ─── Bundles section ──────────────────────────────────────────────────────────
 // Rendered at the TOP of the catalog pane (above the per-category widget tiles).
@@ -60,7 +63,7 @@ function BundlesSection({ widgetDefs, placedIds, lockedIds, pageKey, zoneId, onA
   // Only show bundles that have at least one currently registered widget id.
   // Bundles whose every member is a forward-reference (not yet shipped) are hidden
   // rather than shown disabled — they add no value to the UI yet.
-  const visibleBundles = WIDGET_BUNDLES.filter(b => b.supportedPages.includes(pageKey) && resolveBundleWidgets(b, registeredIds).length > 0);
+  const visibleBundles = WIDGET_BUNDLES.filter(b => supportsPage(b.supportedPages, pageKey) && resolveBundleWidgets(b, registeredIds).length > 0);
   if (visibleBundles.length === 0) return null;
 
   function addBundle(bundleId: string): void {
@@ -221,7 +224,7 @@ export function WidgetLibraryModal({
   const q = query.trim().toLowerCase();
   const filtered = widgets.filter(w => {
     const qOk = !q || [w.title, w.description, w.dataSource.label, ...w.tags].some(s => s.toLowerCase().includes(q));
-    const viewOk = activeView === 'recommended' ? (w.recommendedFor?.includes(pageKey) ?? w.supportedPages.includes(pageKey))
+    const viewOk = activeView === 'recommended' ? (supportsPage(w.recommendedFor, pageKey) || (!w.recommendedFor?.length && supportsPage(w.supportedPages, pageKey)))
       : activeView === 'layouts' ? placedIds.has(w.id) : true;
     return isWidgetDiscoverable(w, pageKey, can) && viewOk && qOk
       && (!activeModule || w.module === activeModule)
@@ -291,6 +294,18 @@ export function WidgetLibraryModal({
     onClose();
     requestAnimationFrame(() => requestWidgetBoardReveal({ pageKey, zoneId, instanceIds: instances.map(instance => instance.instanceId) }));
   }
+  /** Copies the multi-selected widgets as `id — Title` lines, for curating the catalogue: pick
+   *  the ones to retire, paste the list, and the registry entries can be removed by id. Titles
+   *  ride along so the list stays readable and a wrong id is obvious before anything is deleted. */
+  function copySelectedIds(): void {
+    const chosen = widgets.filter(widget => multiSelectedIds.includes(widget.id));
+    if (!chosen.length) return;
+    const text = chosen.map(widget => `${widget.id} — ${widget.title}`).join('\n');
+    void navigator.clipboard.writeText(text)
+      .then(() => toast.success(`${chosen.length} widget id${chosen.length === 1 ? '' : 's'} copied.`))
+      .catch(() => toast.error('Widget ids could not be copied.'));
+  }
+
   async function handleAddSelected(): Promise<void> {
     const selectedWidgets = widgets.filter(widget => multiSelectedIds.includes(widget.id) && !lockedIds.has(widget.id) && !placedIds.has(widget.id));
     if (!selectedWidgets.length) return;
@@ -328,7 +343,7 @@ export function WidgetLibraryModal({
                 <div class="wlib-nav-label">{group.label}</div>
                 {items.map(item => <button key={item.id} type="button" class={activeView === item.id ? 'active' : ''} aria-current={activeView === item.id ? 'page' : undefined} onClick={() => setActiveView(item.id)}>
                   <LucideIcon name={item.icon} size={17} strokeWidth={1.8} /><span>{item.label}</span>
-                  {item.id === 'catalogue' ? <b>{widgets.length}</b> : item.id === 'recommended' ? <b>{widgets.filter(w => w.recommendedFor?.includes(pageKey)).length}</b> : item.id === 'bundles' ? <b>{WIDGET_BUNDLES.length}</b> : null}
+                  {item.id === 'catalogue' ? <b>{widgets.length}</b> : item.id === 'recommended' ? <b>{widgets.filter(w => supportsPage(w.recommendedFor, pageKey)).length}</b> : item.id === 'bundles' ? <b>{WIDGET_BUNDLES.length}</b> : null}
                 </button>)}
               </div> : null;
             })}
@@ -417,8 +432,14 @@ export function WidgetLibraryModal({
               <ActiveFilters chips={activeFilterChips} onClearAll={clearFilters} />
             </div>
             {multiSelect ? <div class="wlib-multi-toolbar" role="status" aria-live="polite">
-              <div><strong>{multiSelectedIds.length} selected</strong><span>Choose widgets, then add them to the board together.</span></div>
-              <div><button type="button" class="wlib-btn" onClick={leaveMultiSelect}>Cancel selection</button><button type="button" class="wlib-btn primary" disabled={!multiSelectedIds.length} onClick={() => void handleAddSelected()}><LucideIcon name="Plus" size={15} /> Add selected widgets</button></div>
+              <div><strong>{multiSelectedIds.length} selected</strong><span>Add them to the board together, or copy their ids to curate the catalogue.</span></div>
+              <div>
+                <button type="button" class="wlib-btn" onClick={leaveMultiSelect}>Cancel selection</button>
+                <button type="button" class="wlib-btn" disabled={!multiSelectedIds.length} onClick={copySelectedIds}>
+                  <LucideIcon name="Copy" size={15} /> Copy ids
+                </button>
+                <button type="button" class="wlib-btn primary" disabled={!multiSelectedIds.length} onClick={() => void handleAddSelected()}><LucideIcon name="Plus" size={15} /> Add selected widgets</button>
+              </div>
             </div> : null}
             {!multiSelect && (activeView === 'catalogue' || activeView === 'bundles') && <BundlesSection
               widgetDefs={widgets}

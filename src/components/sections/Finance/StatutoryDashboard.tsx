@@ -428,7 +428,10 @@ export function StatutoryDashboard({
   const [libOpen, setLibOpen] = useState(false);
   const [demo, setDemo]       = useState(false);
   const [preview, setPreview] = useState<PreviewWidgetInstance | null>(null);
-  const { layout, addWidget, updateZoneLayout, saveLayout, cancelLayout, setAsDefault, resetLayout, isDefaultDirty } = useBoardLayout(PAGE_KEY, defaultStatutoryLayout());
+  const {
+    layout, addWidget, updateZoneLayout, saveLayout, cancelLayout, setAsDefault, resetLayout,
+    isDefaultDirty, isDirty, isSaving,
+  } = useBoardLayout(PAGE_KEY, defaultStatutoryLayout());
   // The KPI row is its own board (separate page key) — its layout state shares the query cache
   // with the KPI WidgetBoard below, so this instance sees reorders live. "Set as default" and
   // "Reset layout" act on the WHOLE page: either board being dirty enables the button, and
@@ -707,10 +710,15 @@ export function StatutoryDashboard({
         preview={preview} onPreviewChange={setPreview}
         onCommitPreview={commitPreview} onDiscardPreview={discardPreview}
         onFinishEditing={() => setEditing(false)}
-        onSaveEditing={async () => { await Promise.all([saveLayout(), kpiBoard.saveLayout()]); setEditing(false); }}
+        onOpenLibrary={() => setLibOpen(true)}
+        onSaveEditing={async () => {
+          const saved = await Promise.all([saveLayout(), kpiBoard.saveLayout()]);
+          if (saved.every(Boolean)) setEditing(false);
+        }}
         onCancelEditing={async () => { await Promise.all([cancelLayout(), kpiBoard.cancelLayout()]); setEditing(false); }}
         onSetDefault={() => void promotePageDefault()} canSetDefault={isAdmin}
-        defaultDirty={pageDefaultDirty} defaultSaving={savingDefault} />
+        defaultDirty={pageDefaultDirty} defaultSaving={savingDefault}
+        isDirty={isDirty || kpiBoard.isDirty} saving={isSaving || kpiBoard.isSaving} />
 
       <WidgetLibraryModal open={libOpen} pageKey={PAGE_KEY} zoneId="main"
         placedWidgetIds={placedWidgetIds} userPermissions={userPermissions}

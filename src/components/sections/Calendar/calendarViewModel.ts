@@ -6,7 +6,7 @@ import type {
 } from '@api/calendar';
 import { isOverdue, itemDateKey, parseLocalDate } from '@lib/calendar/date';
 
-export type CalendarViewMode = 'month' | 'agenda';
+export type CalendarViewMode = 'month' | 'week' | 'day' | 'agenda';
 export type CalendarScope = 'all' | 'shared' | 'public' | 'archived';
 
 export interface CalendarFilters {

@@ -7,7 +7,7 @@
 // contract
 export * from './types';
 export { migrateBoardLayout, createV3Layout } from './migration';
-export { deriveResponsivePlacements, placeWidgetsAtBottom, BREAKPOINT_COLUMNS } from './placement';
+export { deriveResponsivePlacements, insertWidgetsAtRow, insertWidgetsAtTop, placeWidgetsAtBottom, BREAKPOINT_COLUMNS } from './placement';
 export { resolveWidgetAccess, type WidgetAccessContext, type WidgetAccessDecision } from './access';
 export { registerWidgetDataSource, findWidgetDataSource, listWidgetDataSources } from './dataSources';
 export { setWidgetGovernancePolicies, getWidgetGovernancePolicy, listWidgetGovernancePolicies, effectiveWidgetPolicy, isWidgetDiscoverable } from './governance';

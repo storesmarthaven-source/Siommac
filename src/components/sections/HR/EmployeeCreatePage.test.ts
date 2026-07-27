@@ -116,8 +116,8 @@ describe('validateStep — step 0 (Personal & Identity)', () => {
 });
 
 describe('validateStep — step 1 (Employment)', () => {
-  it('passes when startDate is blank (optional)', () => {
-    expect(validateStep(1, { ...EMPTY_FORM, startDate: '' })).toEqual({});
+  it('requires a start date — the create contract does not accept a blank one', () => {
+    expect(validateStep(1, { ...EMPTY_FORM, startDate: '' })['startDate']).toBeDefined();
   });
   it('passes with valid ISO start date', () => {
     expect(validateStep(1, { ...EMPTY_FORM, startDate: '2026-03-01' })).toEqual({});
@@ -166,8 +166,12 @@ describe('validateStep — step 3 (Statutory)', () => {
 });
 
 describe('validateStep — steps 4 and 5', () => {
-  it('step 4 always passes (no server-side validation in FE)', () => {
-    expect(validateStep(4, EMPTY_FORM)).toEqual({});
+  it('step 4 fails closed without an access profile', () => {
+    // accessProfileId is REQUIRED by the create contract, so a blank selection —
+    // including when the profile registry is unreachable — must block here rather
+    // than be rejected by the server or silently defaulted to a role.
+    expect(validateStep(4, EMPTY_FORM)['accessProfileId']).toBeDefined();
+    expect(validateStep(4, { ...EMPTY_FORM, accessProfileId: 'some-uuid' })['accessProfileId']).toBeUndefined();
   });
   it('step 5 (review) always passes', () => {
     expect(validateStep(5, EMPTY_FORM)).toEqual({});
@@ -181,27 +185,26 @@ describe('validateStep — steps 4 and 5', () => {
 
 describe('formToArgs', () => {
   it('sends first and last name separately (the contract has no fullName)', () => {
-    const args = formToArgs({ ...EMPTY_FORM, firstName: 'Alice', lastName: 'Smith', username: 'alice' });
+    const args = formToArgs({ ...EMPTY_FORM, firstName: 'Alice', lastName: 'Smith', username: 'alice' }, 'req-test');
     expect(args.identity.firstName).toBe('Alice');
     expect(args.identity.lastName).toBe('Smith');
   });
 
-  it('derives a content-based requestKey so a retry cannot double-create', () => {
+  it('passes the caller-supplied requestKey through so a retry cannot double-create', () => {
     const form = { ...EMPTY_FORM, firstName: 'Alice', lastName: 'Smith', username: 'alice', startDate: '2026-01-05' };
-    expect(formToArgs(form).requestKey).toBe(formToArgs(form).requestKey);
-    expect(formToArgs(form).requestKey).not.toBe(
-      formToArgs({ ...form, username: 'bob' }).requestKey,
-    );
+    expect(formToArgs(form, 'req-1').requestKey).toBe('req-1');
+    // The same form submitted under a different key is a genuinely different request.
+    expect(formToArgs(form, 'req-2').requestKey).not.toBe(formToArgs(form, 'req-1').requestKey);
   });
   it('trims whitespace from all identity fields', () => {
-    const args = formToArgs({ ...EMPTY_FORM, firstName: '  Alice  ', lastName: '  Smith  ', username: '  alice  ' });
+    const args = formToArgs({ ...EMPTY_FORM, firstName: '  Alice  ', lastName: '  Smith  ', username: '  alice  ' }, 'req-test');
     expect(args.identity.username).toBe('alice');
     expect(args.identity.firstName).toBe('Alice');
     expect(args.identity.lastName).toBe('Smith');
   });
   it('omits optional identity fields when blank', () => {
     const args = formToArgs({ ...EMPTY_FORM, firstName: 'Alice', lastName: 'Smith', username: 'alice',
-      email: '', personalEmail: '', phone: '', employeeNumber: '' });
+      email: '', personalEmail: '', phone: '', employeeNumber: '' }, 'req-test');
     expect(args.identity.email).toBeUndefined();
     expect(args.identity.personalEmail).toBeUndefined();
     expect(args.identity.phone).toBeUndefined();
@@ -209,48 +212,48 @@ describe('formToArgs', () => {
   });
   it('includes email and phone when present', () => {
     const args = formToArgs({ ...EMPTY_FORM, firstName: 'A', lastName: 'B', username: 'ab',
-      email: 'alice@example.com', phone: '+1-868-555-0100' });
+      email: 'alice@example.com', phone: '+1-868-555-0100' }, 'req-test');
     expect(args.identity.email).toBe('alice@example.com');
     expect(args.identity.phone).toBe('+1-868-555-0100');
   });
   it('sends employmentType, which now carries the contractor distinction', () => {
-    const args = formToArgs({ ...EMPTY_FORM, firstName: 'A', lastName: 'B', username: 'ab', employmentType: 'contractor' });
+    const args = formToArgs({ ...EMPTY_FORM, firstName: 'A', lastName: 'B', username: 'ab', employmentType: 'contractor' }, 'req-test');
     expect(args.employment.employmentType).toBe('contractor');
   });
   it('maps accessProfileId and accountMode', () => {
     const args = formToArgs({ ...EMPTY_FORM, firstName: 'A', lastName: 'B', username: 'ab',
-      accessProfileId: 'some-uuid' });
+      accessProfileId: 'some-uuid' }, 'req-test');
     expect(args.access.accessProfileId).toBe('some-uuid');
     // The contract accepts exactly one mode — no login is ever created here.
     expect(args.access.accountMode).toBe('no_login');
   });
   it('maps statutory boolean flags correctly', () => {
     const args = formToArgs({ ...EMPTY_FORM, firstName: 'A', lastName: 'B', username: 'ab',
-      payeApplicable: false, hsApplicable: false, td1Received: true });
+      payeApplicable: false, hsApplicable: false, td1Received: true }, 'req-test');
     expect(args.statutory?.payeApplicable).toBe(false);
     expect(args.statutory?.hsApplicable).toBe(false);
     expect(args.statutory?.td1Received).toBe(true);
   });
   it('converts td1EffectiveYear string to number', () => {
-    const args = formToArgs({ ...EMPTY_FORM, firstName: 'A', lastName: 'B', username: 'ab', td1EffectiveYear: '2026' });
+    const args = formToArgs({ ...EMPTY_FORM, firstName: 'A', lastName: 'B', username: 'ab', td1EffectiveYear: '2026' }, 'req-test');
     expect(args.statutory?.td1EffectiveYear).toBe(2026);
   });
   it('sets td1EffectiveYear to null when blank', () => {
-    const args = formToArgs({ ...EMPTY_FORM, firstName: 'A', lastName: 'B', username: 'ab', td1EffectiveYear: '' });
+    const args = formToArgs({ ...EMPTY_FORM, firstName: 'A', lastName: 'B', username: 'ab', td1EffectiveYear: '' }, 'req-test');
     expect(args.statutory?.td1EffectiveYear).toBeNull();
   });
   it('maps nisNumber to null when blank', () => {
-    const args = formToArgs({ ...EMPTY_FORM, firstName: 'A', lastName: 'B', username: 'ab', nisNumber: '' });
+    const args = formToArgs({ ...EMPTY_FORM, firstName: 'A', lastName: 'B', username: 'ab', nisNumber: '' }, 'req-test');
     expect(args.statutory?.nisNumber).toBeNull();
   });
   it('maps the onboarding request and packageKey', () => {
     const args = formToArgs({ ...EMPTY_FORM, firstName: 'A', lastName: 'B', username: 'ab',
-      createOnboardingCase: true, packageKey: 'standard_employee' });
+      prepareOnboarding: true, packageKey: 'standard_employee' }, 'req-test');
     expect(args.onboarding?.prepareOnboarding).toBe(true);
     expect(args.onboarding?.packageKey).toBe('standard_employee');
   });
   it('uses recordStatus as-is', () => {
-    const args = formToArgs({ ...EMPTY_FORM, firstName: 'A', lastName: 'B', username: 'ab', recordStatus: 'probation' });
+    const args = formToArgs({ ...EMPTY_FORM, firstName: 'A', lastName: 'B', username: 'ab', recordStatus: 'probation' }, 'req-test');
     expect(args.recordStatus).toBe('probation');
   });
 });
@@ -333,7 +336,7 @@ describe('CSS coverage regression guard', () => {
       'field', 'control', 'grid-2', 'grid-3', 'grid-3-1', 'grid-7-3',
       'dossier-head', 'dossier-section', 'avatar', 'identity-meta',
       'side-stack', 'side-panel', 'mini-row', 'section-box', 'section-box-head',
-      'choice-grid', 'choice', 'choice-body', 'outcome-list', 'outcome', 'outcome-tail',
+      'choice', 'choice-body', 'outcome-list', 'outcome', 'outcome-tail',
       'blockers', 'blockers-head', 'check-list', 'check-row', 'check-icon',
       'summary-grid', 'summary-card', 'summary-row', 'metric-grid', 'metric',
       'draft-list', 'draft-row', 'draft-mark', 'draft-actions',

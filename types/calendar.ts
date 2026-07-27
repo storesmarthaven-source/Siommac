@@ -19,6 +19,9 @@ export type CalendarItemOrigin = 'calendar' | 'module' | 'workflow';
 /** Task lifecycle (overdue is DERIVED from the due date, never stored). */
 export type CalendarTaskStatus = 'not_started' | 'in_progress' | 'in_review' | 'blocked' | 'done' | 'cancelled';
 export type CalendarTaskPriority = 'low' | 'medium' | 'high';
+/** Priority supplied by a module-owned deadline. Native calendar tasks use CalendarTaskPriority. */
+export type CalendarSourcePriority = 'low' | 'normal' | 'medium' | 'high' | 'critical';
+export type CalendarSourceDepartment = 'calendar' | 'finance' | 'human_resource' | 'payroll' | 'hse' | 'it' | 'operations' | 'department';
 export type CalendarVisibility = 'personal' | 'team' | 'org';
 export type CalendarAttendeeResponse = 'invited' | 'accepted' | 'declined' | 'tentative';
 
@@ -48,10 +51,15 @@ export interface CalendarItemDTO {
 
   status:             CalendarTaskStatus | null;   // tasks only
   priority:           CalendarTaskPriority | null;  // tasks only
+  /** Optional source-record priority for projected module deadlines. */
+  sourcePriority?:     CalendarSourcePriority | null;
   ownerUserId:        string | null;
   ownerName:          string | null;
   assigneeUserId:     string | null;
   assigneeName:       string | null;
+  /** Native calendar-entry department scope. Module deadlines use sourceDepartment instead. */
+  departmentId:       string | null;
+  departmentName:     string | null;
   attendeeCount:      number;
   visibility:         CalendarVisibility | null;
 
@@ -60,6 +68,9 @@ export interface CalendarItemDTO {
   sourceRef:          string | null;
   sourceRoute:        string | null;   // drill-through target (section id / route)
   sourceLabel:        string | null;
+  /** Department ownership for events/deadlines, used for source tags and filters. */
+  sourceDepartment:   CalendarSourceDepartment | null;
+  sourceDepartmentLabel: string | null;
 
   // Recurrence.
   recurrenceSeriesId: string | null;
@@ -106,6 +117,7 @@ export interface CreateTaskRequest {
   startsAt?:      string | null;
   endsAt?:        string | null;
   assigneeUserId?: string | null;   // requires calendar.task.assign; validated server-side
+  departmentId?:   string | null;   // department-scoped task; requires calendar.manage
   priority?:      CalendarTaskPriority;   // defaults to 'medium'
   visibility?:    CalendarVisibility;
   recurrenceRule?: string | null;
@@ -120,6 +132,7 @@ export interface CreateActivityRequest {
   startsAt?:      string | null;
   endsAt?:        string | null;
   visibility?:    CalendarVisibility;
+  departmentId?:  string | null;    // department-scoped activity; requires calendar.manage
   attendeeUserIds?: string[];
   recurrenceRule?: string | null;
 }
@@ -137,6 +150,7 @@ export interface UpdateEntryRequest {
     startsAt?:    string | null;
     endsAt?:      string | null;
     assigneeUserId?: string | null;
+    departmentId?:   string | null;
     priority?:    CalendarTaskPriority;
     visibility?:  CalendarVisibility;
   };

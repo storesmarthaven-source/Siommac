@@ -1,0 +1,140 @@
+/* Deadline design previews (Designs 1, 2, 4, 7, 8). Scoped to .dsn-deadlines; reuses the
+   .cpw-deadlines shell (header + month + week strip) and adds only the per-variant body. */
+
+/* Tight top margin on purpose: the header, month row and day strip above already stack their
+   own spacing, and every px here comes straight out of the scrollable list below. */
+.dsn-deadlines .dsn-body { display:flex; flex-direction:column; gap:9px; flex:1 1 auto; min-height:0; margin-top:4px; }
+
+/* Section header */
+.dsn-deadlines .dsn-section-head { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px 0 6px; }
+.dsn-deadlines .dsn-section-title { display:flex; align-items:center; gap:7px; color:var(--sdb-ink); font-size:12.5px; font-weight:550; }
+.dsn-deadlines .dsn-section-title svg { color:var(--sdb-primary); }
+.dsn-deadlines .dsn-section-count { color:var(--sdb-muted); font-size:11px; font-weight:600; white-space:nowrap; }
+
+/* Rich rows */
+/* `overflow: hidden auto` — NOT `overflow-y: auto`. Setting only overflow-y forces overflow-x to
+   `auto`, so any horizontal overflow (the row's fixed meta/chevron columns can't shrink past their
+   intrinsic width on a narrow tile) raises a horizontal scrollbar, and that scrollbar then steals
+   ~10px of VERTICAL space — which silently clips the last card. The bug reads as "the third card
+   is cut off" but the cause is horizontal. `.dsn-rows--flush` already did this; this variant
+   didn't. Row text truncates on its own (.dsn-copy is min-width:0 with ellipsis). */
+.dsn-deadlines .dsn-rows { display:flex; flex-direction:column; gap:8px; flex:1 1 auto; min-height:0; overflow:hidden auto; scrollbar-width:thin; scrollbar-color:#cfd8e6 transparent; }
+.dsn-deadlines .dsn-rows--flush { gap:0; flex:1 1 auto; border:1px solid var(--sdb-line); border-radius:12px; overflow:hidden auto; }
+.dsn-deadlines .dsn-rows--flush .dsn-row { border:0; border-radius:0; }
+.dsn-deadlines .dsn-rows--flush .dsn-row + .dsn-row { border-top:1px solid var(--sdb-line2); }
+.dsn-deadlines .dsn-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto auto; align-items:center; gap:10px; width:100%; padding:9px 11px; border:1px solid var(--sdb-line); border-radius:12px; background:#fff; color:inherit; text-align:left; cursor:pointer; font:inherit; }
+.dsn-deadlines button.dsn-row:hover { background:#f8fafd; border-color:#cdd8ea; }
+.dsn-deadlines .dsn-row.is-compact { padding:8px 10px; gap:9px; }
+.dsn-deadlines .dsn-ic { display:grid; place-items:center; width:34px; height:34px; flex:none; border-radius:10px; }
+.dsn-deadlines .dsn-row.is-compact .dsn-ic { width:30px; height:30px; border-radius:9px; }
+.dsn-deadlines .dsn-copy { min-width:0; display:flex; flex-direction:column; gap:2px; }
+.dsn-deadlines .dsn-copy strong { color:var(--sdb-ink); font-size:12.5px; font-weight:550; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dsn-deadlines .dsn-copy span { color:var(--sdb-muted); font-size:10.5px; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dsn-deadlines .dsn-meta { display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+.dsn-deadlines .dsn-when { display:inline-flex; align-items:center; gap:4px; color:#6b7688; font-size:10px; font-weight:500; white-space:nowrap; }
+.dsn-deadlines .dsn-when svg { color:#8a95aa; flex:none; }
+.dsn-deadlines .dsn-status { display:inline-flex; align-items:center; padding:3px 9px; border-radius:999px; font-size:9.5px; font-weight:600; white-space:nowrap; }
+.dsn-deadlines .dsn-chev { color:#9aa6bd; flex:none; }
+
+/* Tones */
+.dsn-deadlines .dsn-ic--blue{background:#eef3ff;color:#2f61e9}   .dsn-deadlines .dsn-status--blue{background:#eef3ff;color:#2f61e9}
+.dsn-deadlines .dsn-ic--green{background:#eaf7ef;color:#18924a}  .dsn-deadlines .dsn-status--green{background:#eaf7ef;color:#18924a}
+.dsn-deadlines .dsn-ic--orange{background:#fff2e7;color:#d76b00} .dsn-deadlines .dsn-status--orange{background:#fff2e7;color:#d76b00}
+.dsn-deadlines .dsn-ic--red{background:#ffedf0;color:#e84655}    .dsn-deadlines .dsn-status--red{background:#ffedf0;color:#e84655}
+.dsn-deadlines .dsn-ic--teal{background:#e9f9fb;color:#0f8b96}   .dsn-deadlines .dsn-status--teal{background:#e9f9fb;color:#0f8b96}
+
+/* Department icon palette — one restrained colour per source module, so HR/Finance/Payroll/HSE/
+   IT/Operations are distinguishable at a glance without shouting. The purple treatment is gone. */
+.dsn-deadlines .dsn-ic--hr{background:#eef3fb;color:#234f85}          .dsn-deadlines .dsn-status--hr{background:#eef3fb;color:#234f85}
+.dsn-deadlines .dsn-ic--finance{background:#edf7f1;color:#2f7d55}     .dsn-deadlines .dsn-status--finance{background:#edf7f1;color:#2f7d55}
+.dsn-deadlines .dsn-ic--payroll{background:#fff1e3;color:#b85f0a}     .dsn-deadlines .dsn-status--payroll{background:#fff1e3;color:#b85f0a}
+.dsn-deadlines .dsn-ic--hse{background:#fff6d8;color:#986600}         .dsn-deadlines .dsn-status--hse{background:#fff6d8;color:#986600}
+.dsn-deadlines .dsn-ic--it{background:#eaf7f6;color:#24766f}          .dsn-deadlines .dsn-status--it{background:#eaf7f6;color:#24766f}
+.dsn-deadlines .dsn-ic--operations{background:#eef1f5;color:#4b5b70}  .dsn-deadlines .dsn-status--operations{background:#eef1f5;color:#4b5b70}
+/* Desaturated slate on the blue tint: reads clearly (≈7:1) and stays distinct from HR's navy. */
+.dsn-deadlines .dsn-ic--calendar{background:#eff3fe;color:#47536b}    .dsn-deadlines .dsn-status--calendar{background:#eff3fe;color:#47536b}
+
+/* Empty / loading */
+.dsn-deadlines .dsn-empty { display:flex; flex-direction:column; align-items:center; gap:6px; margin:auto; padding:14px; text-align:center; color:var(--sdb-muted); }
+.dsn-deadlines .dsn-empty svg { color:#c3ccdb; }
+.dsn-deadlines .dsn-empty strong { color:var(--sdb-ink2); font-size:12.5px; }
+.dsn-deadlines .dsn-empty span { font-size:11px; line-height:1.35; max-width:230px; }
+.dsn-deadlines .dsn-spin { animation:dsn-spin .9s linear infinite; color:var(--sdb-primary); }
+@keyframes dsn-spin { to { transform:rotate(360deg); } }
+
+/* Footer link */
+/* Sits lower than the list it follows — `padding:4px 10px 0` pulls its own box tight so the
+   separation comes from margin-top, which reads as deliberate spacing rather than dead padding. */
+.dsn-deadlines .dsn-footer { display:flex; align-items:center; justify-content:center; gap:6px; flex:0 0 auto; margin-top:9px; padding:4px 10px 0; border:0; background:transparent; color:var(--sdb-primary); font:inherit; font-size:11.5px; font-weight:500; cursor:pointer; }
+.dsn-deadlines .dsn-footer:hover { opacity:.78; }
+
+/* Design 2 — timeline */
+.dsn-deadlines .dsn-timeline { position:relative; display:flex; flex-direction:column; gap:8px; flex:1 1 auto; min-height:0; padding-left:16px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#cfd8e6 transparent; }
+.dsn-deadlines .dsn-timeline::before { content:''; position:absolute; left:4px; top:8px; bottom:8px; width:2px; background:var(--sdb-line2); }
+.dsn-deadlines .dsn-tl-row { position:relative; }
+.dsn-deadlines .dsn-tl-dot { position:absolute; left:-16px; top:15px; width:9px; height:9px; border-radius:50%; box-shadow:0 0 0 3px #fff; }
+.dsn-deadlines .dsn-tl-dot--blue{background:#2f61e9} .dsn-deadlines .dsn-tl-dot--green{background:#18924a} .dsn-deadlines .dsn-tl-dot--orange{background:#d76b00} .dsn-deadlines .dsn-tl-dot--red{background:#e84655} .dsn-deadlines .dsn-tl-dot--teal{background:#0f8b96}
+.dsn-deadlines .dsn-tl-dot--hr{background:#234f85} .dsn-deadlines .dsn-tl-dot--finance{background:#2f7d55} .dsn-deadlines .dsn-tl-dot--payroll{background:#b85f0a} .dsn-deadlines .dsn-tl-dot--hse{background:#986600} .dsn-deadlines .dsn-tl-dot--it{background:#24766f} .dsn-deadlines .dsn-tl-dot--operations{background:#4b5b70} .dsn-deadlines .dsn-tl-dot--calendar{background:#47536b}
+.dsn-deadlines .dsn-tl-card { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:10px; padding:9px 11px; border:1px solid var(--sdb-line); border-radius:12px; background:#fff; }
+
+/* Design 4 — summary stats */
+.dsn-deadlines .dsn-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; flex:0 0 auto; }
+.dsn-deadlines .dsn-stat { display:flex; flex-direction:column; gap:2px; padding:10px; border:1px solid var(--sdb-line); border-radius:12px; }
+.dsn-deadlines .dsn-stat-h { display:flex; align-items:center; gap:6px; font-size:10px; font-weight:550; color:var(--sdb-ink2); }
+.dsn-deadlines .dsn-stat b { font-size:22px; font-weight:600; line-height:1; }
+.dsn-deadlines .dsn-stat-l { font-size:9.5px; color:var(--sdb-muted); }
+.dsn-deadlines .dsn-stat--green{background:linear-gradient(180deg,#f8fffa,#f0fbf4)} .dsn-deadlines .dsn-stat--green b,.dsn-deadlines .dsn-stat--green .dsn-stat-h svg{color:#18924a}
+.dsn-deadlines .dsn-stat--blue{background:linear-gradient(180deg,#f8faff,#f1f5ff)} .dsn-deadlines .dsn-stat--blue b,.dsn-deadlines .dsn-stat--blue .dsn-stat-h svg{color:#2f61e9}
+.dsn-deadlines .dsn-stat--red{background:linear-gradient(180deg,#fffafa,#fff2f3)} .dsn-deadlines .dsn-stat--red b,.dsn-deadlines .dsn-stat--red .dsn-stat-h svg{color:#e84655}
+
+/* Design 7 — guidance */
+.dsn-deadlines .dsn-guidance { flex:0 0 auto; margin-top:2px; border:1px solid var(--sdb-line); border-radius:14px; overflow:hidden; background:linear-gradient(180deg,#f8fbff,#f3f7ff); }
+.dsn-deadlines .dsn-guide-row { display:grid; grid-template-columns:auto 1fr; align-items:center; gap:11px; padding:12px; }
+.dsn-deadlines .dsn-guide-ic { display:grid; place-items:center; width:38px; height:38px; flex:none; border-radius:50%; background:var(--sdb-primary); color:#fff; }
+.dsn-deadlines .dsn-guide-row strong { display:block; font-size:12.5px; font-weight:600; color:var(--sdb-ink); }
+.dsn-deadlines .dsn-guide-row p { margin:4px 0 0; color:var(--sdb-muted); font-size:11px; line-height:1.4; }
+
+/* Design 8 — checklist */
+.dsn-deadlines .dsn-checklist .dsn-check-row { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:9px; }
+.dsn-deadlines .dsn-check { display:grid; place-items:center; width:22px; height:22px; flex:none; color:#9aa6bd; }
+.dsn-deadlines .dsn-check.is-soon { color:#d76b00; }
+
+
+/* Design 7 — second guidance row */
+.dsn-deadlines .dsn-guide-row + .dsn-guide-row { border-top:1px solid var(--sdb-line); }
+.dsn-deadlines .dsn-guide-ic.is-soft { border-radius:12px; background:#eef3ff; color:var(--sdb-primary); }
+
+/* ── "Key Upcoming Dates" caught-up state (mockup design 10, "Rich empty state") ───────────
+   Shown by the keyDates layout when the focused day is clear — the layout's whole point, and
+   without it keyDates renders identically to Simple list. The top half REUSES `.dsn-empty`
+   (CalendarCheck icon + typography) so a clear day looks the same here as in every other
+   layout; only the panel below is new. The mockup's bespoke calendar-and-plant illustration was
+   built and then dropped for exactly that reason — it read as a second, competing empty state.
+   Rows reuse .dsn-ic / .dsn-copy so icon sizing and ellipsis truncation stay in one place. */
+.dsn-deadlines .dsn-caught { display:flex; flex-direction:column; align-items:center; text-align:center; flex:1 1 auto; min-height:0; overflow:hidden auto; }
+/* `margin-top:auto` drops the panel to the BOTTOM, so the icon and confirmation own the upper
+   half (.dsn-empty's own `margin:auto` centres them there) and the panel reads as a footer. */
+.dsn-deadlines .dsn-upbox { width:100%; flex:0 0 auto; margin-top:auto; text-align:left; padding:0 0 8px; border:1px solid var(--sdb-line); border-radius:12px; background:#fff; overflow:hidden; }
+/* A real header band, not just a bold line of text: tinted, ruled off from the row beneath it.
+   Weight 550 is the house weight here (matches .dsn-section-title / .dsn-copy strong). */
+.dsn-deadlines .dsn-upbox-head { display:flex; align-items:center; gap:7px; padding:7px 10px; border-bottom:1px solid var(--sdb-line2); background:#f7f9fd; color:var(--sdb-ink2); font-size:11.5px; font-weight:550; }
+/* No colour override — the icon inherits the head's own ink. */
+.dsn-deadlines .dsn-upbox-head > svg { flex:none; }
+.dsn-deadlines .dsn-upbox-title { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* Pages the list 3 days at a time. `margin-left:auto` pins it right without a spacer element. */
+.dsn-deadlines .dsn-upnav { display:flex; align-items:center; gap:4px; margin-left:auto; flex:none; }
+.dsn-deadlines .dsn-upnav button { display:grid; place-items:center; width:22px; height:22px; padding:0; border:1px solid var(--sdb-line); border-radius:7px; background:#fff; color:var(--sdb-ink2); cursor:pointer; }
+.dsn-deadlines .dsn-upnav button:hover:not(:disabled) { background:#f4f7fc; border-color:#cdd8ea; color:var(--sdb-primary); }
+.dsn-deadlines .dsn-upnav button:disabled { opacity:.4; cursor:default; }
+.dsn-deadlines .dsn-uprow { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:9px; padding:8px 10px 0; }
+.dsn-deadlines .dsn-uprow + .dsn-uprow { border-top:1px solid var(--sdb-line2); }
+.dsn-deadlines .dsn-datebadge { padding:4px 8px; border-radius:7px; background:#eaf7ef; color:#18924a; font-size:10px; font-weight:600; white-space:nowrap; }
+.dsn-deadlines .dsn-datebadge.is-later { background:#eef3ff; color:var(--sdb-primary); }
+
+/* Caught-up state reads LARGER than the plain empty state. It is the keyDates layout's main
+   event — a clear day is the common case — so the icon and both lines scale up. Scoped to
+   .dsn-caught so every other layout's empty state keeps its existing, smaller treatment. */
+.dsn-deadlines .dsn-caught .dsn-empty { gap: 9px; padding: 18px 14px; }
+.dsn-deadlines .dsn-caught .dsn-empty svg { width: 58px; height: 58px; }
+.dsn-deadlines .dsn-caught .dsn-empty strong { font-size: 15px; line-height: 1.25; }
+.dsn-deadlines .dsn-caught .dsn-empty span { font-size: 12.5px; line-height: 1.45; max-width: 260px; }

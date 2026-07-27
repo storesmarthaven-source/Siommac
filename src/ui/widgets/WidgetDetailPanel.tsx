@@ -62,7 +62,7 @@ export function WidgetDetailPanel({ widget, pageKey, zoneId, selectedSizeKey, co
             <div><span>Data source</span><strong>{widget.dataSource.label}</strong></div>
             <div><span>View permission</span><strong>{permissions.join(', ') || 'Page access'}</strong></div>
             <div><span>Refresh</span><strong>{formatRefresh(widget.dataSource.refreshIntervalMs)}</strong></div>
-            <div><span>Supported pages</span><strong>{widget.supportedPages.join(' · ') || 'Application-wide'}</strong></div>
+            <div><span>Supported pages</span><strong>{widget.supportedPages.includes('*') ? 'Application-wide' : widget.supportedPages.join(' · ')}</strong></div>
             <div><span>Available sizes</span><strong>{widget.allowedSizes.map(size => size.label).join(' · ')}</strong></div>
           </div></section>
         </> : null}

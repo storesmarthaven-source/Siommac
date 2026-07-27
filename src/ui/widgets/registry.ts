@@ -13,6 +13,7 @@
 import { WIDGET_CONTRACT_VERSION, type WidgetDef } from './types';
 import { getRuntimeWidgets } from './runtimeRegistry';
 import { validateWidgetDef } from './validation';
+import { normalizePageKey } from './governance';
 
 // Eager glob → { './registry.hr.tsx': { widgets }, './registry.hrEmployees.tsx': { widgets }, … }.
 // Each package file exports `widgets: WidgetDef[]` (multiple widgets in one file).
@@ -68,8 +69,13 @@ export function findWidgetDef(widgetId: string): WidgetDef | undefined {
   return allWidgets().find(w => w.id === widgetId);
 }
 
+// Matches on the NORMALISED page (layout version + `.kpis` sub-board stripped from both
+// sides) for the same reason governance does — see normalizePageKey. A widget declaring
+// `hr.employees.overview` stays available when the board's layout version is bumped.
 export function getWidgetsForPage(pageKey: string): WidgetDef[] {
-  return allWidgets().filter(w => w.supportedPages.includes(pageKey));
+  const target = normalizePageKey(pageKey);
+  return allWidgets().filter(w => w.supportedPages.includes('*')
+    || w.supportedPages.some(page => normalizePageKey(page) === target));
 }
 
 export function getWidgetsByModule(module: string): WidgetDef[] {

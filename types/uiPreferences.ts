@@ -10,6 +10,7 @@ export const EMPLOYEE_REGISTER_COLUMN_KEYS = [
   'supervisor',
   'employmentType',
   'status',
+  'readiness',
   'trainingStatus',
   'actions',
 ] as const;

@@ -18,18 +18,30 @@ export interface EmployeeRegisterColumn {
 export const EMPLOYEE_REGISTER_COLUMNS: readonly EmployeeRegisterColumn[] = [
   { key: 'employee', label: 'Employee', sortKey: 'full_name', required: true, minWidth: 250 },
   { key: 'employeeNumber', label: 'Employee No.', sortKey: 'employee_number', minWidth: 125 },
-  { key: 'position', label: 'Position / Role', minWidth: 160 },
+  { key: 'position', label: 'Position', minWidth: 160 },
   { key: 'department', label: 'Department', sortKey: 'department_id', minWidth: 145 },
   { key: 'site', label: 'Site', minWidth: 135 },
   { key: 'supervisor', label: 'Supervisor', minWidth: 170 },
   { key: 'employmentType', label: 'Employment Type', sortKey: 'employment_type', minWidth: 145 },
   { key: 'status', label: 'Status', sortKey: 'status', minWidth: 115 },
+  { key: 'readiness', label: 'Readiness', minWidth: 155 },
   { key: 'trainingStatus', label: 'Training Status', minWidth: 135 },
   { key: 'actions', label: 'Actions', required: true, minWidth: 72 },
 ] as const;
 
-export const DEFAULT_EMPLOYEE_REGISTER_COLUMNS: readonly EmployeeRegisterColumnKey[] =
-  [...EMPLOYEE_REGISTER_COLUMN_KEYS];
+/** The recommended default set. A user's PERSISTED choice always wins — sanitize() only falls
+ *  back to this when there is no saved preference — so changing it never overwrites anyone. */
+export const DEFAULT_EMPLOYEE_REGISTER_COLUMNS: readonly EmployeeRegisterColumnKey[] = [
+  'employee',
+  'employeeNumber',
+  'position',
+  'department',
+  'site',
+  'supervisor',
+  'status',
+  'readiness',
+  'actions',
+];
 
 /** Reconcile a persisted preference with the current, ordered column contract. */
 export function sanitizeEmployeeRegisterColumns(value: unknown): EmployeeRegisterColumnKey[] {

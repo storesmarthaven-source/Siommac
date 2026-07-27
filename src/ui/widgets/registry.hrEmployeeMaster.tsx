@@ -1,35 +1,82 @@
 import type { VNode } from 'preact';
-import type { WidgetDef, WidgetSizeConstraints, WidgetSizeDef } from './types';
+import { useEffect, useRef, useState } from 'preact/hooks';
+import {
+  CategoryScale,
+  Chart,
+  Filler,
+  LineController,
+  LineElement,
+  LinearScale,
+  PointElement,
+  Tooltip,
+} from 'chart.js';
+import type { ActiveElement, Plugin, ScriptableScaleContext, TooltipModel } from 'chart.js';
+import { useHrDashboardStats } from '@api/hr/employees';
+import type { HrDashboardStats } from '@api/hr/employees';
+import type { WidgetDef, WidgetRenderProps, WidgetSizeConstraints, WidgetSizeDef } from './types';
 import { LucideIcon, type LucideName } from '../LucideIcon';
 import { defineWidget } from './defineWidget';
 import './employeeMasterWidgets.css';
 
-const PAGE = 'hr.employees.overview';
+Chart.register(LineController, CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
+
+const PAGE = 'hr.employees.overview.v3';
+// All sizes here are in the Employee Master board's units: cellHeight 6 + a 12px gap,
+// so a tile is `18h − 12` px tall (Statutory-parity grid). Widths are columns on that
+// board's 24-column grid. A preset authored in any other board's units renders wrong.
 const SIZES: WidgetSizeDef[] = [
-  { key: 'standard', label: 'Standard', grid: { w: 10, h: 4 }, min: { w: 4, h: 3 }, description: 'Compact dashboard card' },
-  { key: 'wide', label: 'Wide', grid: { w: 12, h: 4 }, min: { w: 4, h: 3 }, description: 'Full visual detail' },
-  { key: 'large', label: 'Large', grid: { w: 16, h: 5 }, min: { w: 6, h: 3 }, description: 'Expanded dashboard card' },
+  { key: 'standard', label: 'Standard', grid: { w: 10, h: 22 }, min: { w: 4, h: 12 }, description: 'Compact dashboard card' },
+  { key: 'wide', label: 'Wide', grid: { w: 12, h: 22 }, min: { w: 4, h: 12 }, description: 'Full visual detail' },
+  { key: 'large', label: 'Large', grid: { w: 16, h: 28 }, min: { w: 6, h: 12 }, description: 'Expanded dashboard card' },
 ];
 const DESIGN_SIZES: WidgetSizeDef[] = [
-  { key: 'standard', label: 'Standard', grid: { w: 10, h: 5 }, min: { w: 7, h: 5 }, description: 'Full design detail' },
-  { key: 'wide', label: 'Wide', grid: { w: 14, h: 5 }, min: { w: 8, h: 5 }, description: 'Expanded design detail' },
-  { key: 'large', label: 'Large', grid: { w: 16, h: 5 }, min: { w: 8, h: 5 }, description: 'Wide dashboard card' },
+  { key: 'standard', label: 'Standard', grid: { w: 10, h: 28 }, min: { w: 7, h: 12 }, description: 'Full design detail' },
+  { key: 'wide', label: 'Wide', grid: { w: 14, h: 28 }, min: { w: 8, h: 12 }, description: 'Expanded design detail' },
+  { key: 'large', label: 'Large', grid: { w: 16, h: 28 }, min: { w: 8, h: 12 }, description: 'Wide dashboard card' },
 ];
 const RISK_SIZES: WidgetSizeDef[] = [
-  { key: 'standard', label: 'Standard', grid: { w: 7, h: 3 }, min: { w: 5, h: 3 }, description: 'Compact risk monitor' },
-  { key: 'wide', label: 'Wide', grid: { w: 12, h: 4 }, min: { w: 5, h: 3 }, description: 'Expanded trend detail' },
-  { key: 'large', label: 'Large', grid: { w: 16, h: 5 }, min: { w: 5, h: 3 }, description: 'Large risk monitor' },
+  { key: 'standard', label: 'Standard', grid: { w: 7, h: 17 }, min: { w: 5, h: 12 }, description: 'Compact risk monitor' },
+  { key: 'wide', label: 'Wide', grid: { w: 12, h: 22 }, min: { w: 5, h: 12 }, description: 'Expanded trend detail' },
+  { key: 'large', label: 'Large', grid: { w: 16, h: 28 }, min: { w: 5, h: 12 }, description: 'Large risk monitor' },
 ];
 const HEALTH_SIZES: WidgetSizeDef[] = [
-  { key: 'standard', label: 'Standard', grid: { w: 8, h: 4 }, min: { w: 5, h: 3 }, description: 'Compact record health' },
-  { key: 'wide', label: 'Wide', grid: { w: 12, h: 4 }, min: { w: 5, h: 3 }, description: 'Expanded category detail' },
-  { key: 'large', label: 'Large', grid: { w: 16, h: 5 }, min: { w: 5, h: 3 }, description: 'Large record health card' },
+  { key: 'standard', label: 'Standard', grid: { w: 8, h: 22 }, min: { w: 5, h: 12 }, description: 'Compact record health' },
+  { key: 'wide', label: 'Wide', grid: { w: 12, h: 22 }, min: { w: 5, h: 12 }, description: 'Expanded category detail' },
+  { key: 'large', label: 'Large', grid: { w: 16, h: 28 }, min: { w: 5, h: 12 }, description: 'Large record health card' },
 ];
 const PREVIEW_SOURCE = {
   sourceKey: 'hr.employee-master.selection-preview',
   label: 'Employee Master approved design preview',
   permissions: ['hr.employees.view'],
 };
+const LIVE_SOURCE = {
+  sourceKey: 'hr.employee-master.dashboard',
+  label: 'Employee Master Dashboard API',
+  refreshIntervalMs: 60_000,
+  permissions: ['hr.employees.view'],
+};
+const LIFECYCLE_PREVIEW_STATS: HrDashboardStats = {
+  active_workforce: { total: 128, employees: 116, contractors: 12, trend: [] },
+  hr_work_queue: { total: 26, urgent: 4, oldest_days: 8, mix: [] },
+  readiness: { percent: 74, assignment_complete: 41, payroll_ready: 36, training_current: 30, blocked: 21 },
+  exceptions: { total: 5, items: [] },
+  distribution: { departments: [], sites: [] },
+  lifecycle: {
+    periods: [
+      { period: 'Feb', hires: 4, exits: 1, transfers: 3, promotions: 2, records_updated: 18 },
+      { period: 'Mar', hires: 7, exits: 2, transfers: 4, promotions: 1, records_updated: 24 },
+      { period: 'Apr', hires: 5, exits: 1, transfers: 6, promotions: 3, records_updated: 21 },
+      { period: 'May', hires: 11, exits: 1, transfers: 3, promotions: 4, records_updated: 30 },
+      { period: 'Jun', hires: 5, exits: 1, transfers: 2, promotions: 2, records_updated: 10 },
+      { period: 'Jul', hires: 6, exits: 1, transfers: 4, promotions: 2, records_updated: 26 },
+    ],
+    totals: { hires: 38, exits: 7, transfers: 22, promotions: 14, records_updated: 129 },
+  },
+};
+
+function configColor(value: unknown, fallback: string): string {
+  return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value) ? value : fallback;
+}
 
 function Header({ title }: { title: string }): VNode {
   return (
@@ -39,6 +86,11 @@ function Header({ title }: { title: string }): VNode {
     </header>
   );
 }
+
+export type WorkforceGranularity = 'day' | 'week' | 'month';
+const GRANULARITIES: { value: WorkforceGranularity; label: string }[] = [
+  { value: 'day', label: 'Day' }, { value: 'week', label: 'Week' }, { value: 'month', label: 'Month' },
+];
 
 function WeeklyEmployeeActivity(): VNode {
   const bars = [45, 62, 30, 80, 57, 40, 55];
@@ -93,34 +145,242 @@ function DataChangeTrend(): VNode {
   );
 }
 
-function LifecycleActivity(): VNode {
+function LifecycleActivityView({ stats, config, granularity = 'month', onGranularity }: {
+  stats: HrDashboardStats;
+  config?: Record<string, unknown>;
+  granularity?: WorkforceGranularity;
+  /** Omitted by the library preview, which renders a fixed sample and cannot refetch. */
+  onGranularity?: (next: WorkforceGranularity) => void;
+}): VNode {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  // No fixed slice: the API returns exactly the buckets for the requested granularity
+  // (14 days / 8 weeks / 6 months), so slicing here would silently truncate Day and Week.
+  const periods = stats.lifecycle.periods.length ? stats.lifecycle.periods : LIFECYCLE_PREVIEW_STATS.lifecycle.periods;
+  const movementColor = configColor(config?.movementColor, '#22c55e');
+  const recordsColor = configColor(config?.recordsColor, '#f59e0b');
+  const iconColor = configColor(config?.iconColor, '#0b1f4d');
+  const textColor = configColor(config?.textColor, '#0b1f4d');
+  // "Workforce Changes" is every headcount movement in the bucket — joins, leaves, transfers
+  // and promotions. records_updated stays its own line: it measures admin activity, not people
+  // moving, and summing the two would make a busy data-entry week look like churn.
+  const movement = (period: HrDashboardStats['lifecycle']['periods'][number]): number =>
+    period.hires + period.exits + period.transfers + period.promotions;
+  const currentMonth = periods.at(-1);
+  // Value key, not the array reference: refetches return a fresh array every render,
+  // and rebuilding the chart on reference change restarts the draw animation.
+  const periodsKey = periods
+    .map(period => `${period.period}:${movement(period)}:${period.records_updated}`)
+    .join('|');
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const makeFill = (color: string): string | CanvasGradient => {
+      if (!ctx) return `${color}12`;
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.clientHeight || 220);
+      gradient.addColorStop(0, `${color}2e`);
+      gradient.addColorStop(.6, `${color}0d`);
+      gradient.addColorStop(1, `${color}00`);
+      return gradient;
+    };
+    const movementByPeriod = periods.map(movement);
+    const recordsByPeriod = periods.map(period => period.records_updated);
+    const labels = periods.map(period => period.period);
+    const lastIndex = labels.length - 1;
+
+    // Dashed crosshair + guide line from the active movement point to the y-axis,
+    // matching the reference card. Local to this chart instance (not globally registered).
+    const crosshair: Plugin<'line'> = {
+      id: 'emCrosshair',
+      afterDatasetsDraw(chart) {
+        const active = chart.getActiveElements();
+        if (!active.length) return;
+        const primary = active.find((a: ActiveElement) => a.datasetIndex === 0) ?? active[0];
+        if (!primary) return;
+        const { chartArea } = chart;
+        const drawCtx = chart.ctx;
+        const x = primary.element.x;
+        const y = primary.element.y;
+        drawCtx.save();
+        drawCtx.strokeStyle = '#c7cfdb';
+        drawCtx.lineWidth = 1;
+        drawCtx.setLineDash([5, 5]);
+        drawCtx.beginPath();
+        drawCtx.moveTo(x, chartArea.top);
+        drawCtx.lineTo(x, chartArea.bottom);
+        drawCtx.moveTo(chartArea.left, y);
+        drawCtx.lineTo(x, y);
+        drawCtx.stroke();
+        drawCtx.restore();
+      },
+    };
+
+    const chart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Workforce Changes',
+            data: movementByPeriod,
+            borderColor: movementColor,
+            backgroundColor: makeFill(movementColor),
+            borderWidth: 3,
+            pointBackgroundColor: movementColor,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2.5,
+            pointRadius: movementByPeriod.map((_, index) => index === lastIndex ? 5 : 0),
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor: movementColor,
+            pointHoverBorderColor: '#fff',
+            pointHoverBorderWidth: 3,
+            tension: .42,
+            fill: 'origin',
+            clip: false,
+          },
+          {
+            label: 'Records Updated',
+            data: recordsByPeriod,
+            borderColor: recordsColor,
+            backgroundColor: makeFill(recordsColor),
+            borderWidth: 3,
+            pointBackgroundColor: recordsColor,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2.5,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            pointHoverBackgroundColor: recordsColor,
+            pointHoverBorderColor: '#fff',
+            pointHoverBorderWidth: 3,
+            tension: .42,
+            fill: 'origin',
+            clip: false,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 720, easing: 'easeOutQuart' },
+        // 'nearest' (not 'index') so each point is hovered individually — the green and
+        // amber series are read separately, not joined at a shared x.
+        interaction: { mode: 'nearest', intersect: false },
+        layout: { padding: { top: 26, right: 12, bottom: 2, left: 4 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            enabled: false,
+            external: ({ chart: c, tooltip }: { chart: Chart; tooltip: TooltipModel<'line'> }) => {
+              const el = tooltipRef.current;
+              if (!el) return;
+              if (tooltip.opacity === 0) { el.style.opacity = '0'; return; }
+              const month = tooltip.dataPoints[0]?.label ?? '';
+              const monthEl = el.querySelector<HTMLElement>('.emtt-month');
+              if (monthEl) monthEl.textContent = month;
+              const rowsEl = el.querySelector<HTMLElement>('.emtt-rows');
+              if (rowsEl) {
+                // Every datapoint at this month — both the green and amber series — so the
+                // hover always shows both values, not just the line nearest the cursor.
+                rowsEl.replaceChildren(...tooltip.dataPoints.map(dp => {
+                  const color = typeof dp.dataset.borderColor === 'string' ? dp.dataset.borderColor : '#fff';
+                  const row = document.createElement('div');
+                  row.className = 'emtt-row';
+                  const dot = document.createElement('span');
+                  dot.className = 'emtt-dot';
+                  dot.style.background = color;
+                  const value = document.createElement('b');
+                  value.textContent = String(dp.parsed.y);
+                  const name = document.createElement('span');
+                  name.className = 'emtt-name';
+                  name.textContent = dp.dataset.label ?? '';
+                  row.append(dot, value, name);
+                  return row;
+                }));
+              }
+              el.classList.toggle('is-below', tooltip.caretY < 64);
+              el.style.opacity = '1';
+              // Clamp the (centre-anchored) tooltip so it never overflows the chart
+              // container — otherwise the last point's card is cut off by the card edge.
+              const container = el.parentElement;
+              const half = el.offsetWidth / 2;
+              const pad = 4;
+              let cx = c.canvas.offsetLeft + tooltip.caretX;
+              if (container) cx = Math.max(half + pad, Math.min(container.clientWidth - half - pad, cx));
+              el.style.left = `${cx}px`;
+              el.style.top = `${c.canvas.offsetTop + tooltip.caretY}px`;
+            },
+          },
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            border: { display: false },
+            ticks: {
+              color: (c: ScriptableScaleContext) => c.index === lastIndex ? '#334155' : '#9aa5b8',
+              font: (c: ScriptableScaleContext) => ({ size: 12, weight: c.index === lastIndex ? 700 : 500 }),
+            },
+          },
+          y: {
+            beginAtZero: true,
+            grace: '30%',
+            grid: { color: '#eef2f6', drawTicks: false },
+            border: { display: false },
+            ticks: { color: '#b5becb', precision: 0, maxTicksLimit: 5, padding: 10, font: { size: 12, weight: 500 } },
+          },
+        },
+      },
+      plugins: [crosshair],
+    });
+    return () => chart.destroy();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- periodsKey stands in for periods (value equality)
+  }, [periodsKey, movementColor, recordsColor]);
+
   return (
-    <article class="em-widget em-widget--lifecycle" data-widget-content-root aria-label="Lifecycle activity preview">
-      <Header title="Lifecycle activity" />
-      <div class="em-lifecycle__main" data-widget-fit-required>
-        <div class="em-lifecycle__metric">
-          <strong>185</strong><span>changes today</span>
-          <div class="em-progress-ring" aria-label="74 percent reviewed"><div><b>74<small>%</small></b><span>reviewed</span></div></div>
+    <article class="em-widget em-widget--lifecycle" data-widget-content-root aria-label="Employee activity" style={`--em-life-icon:${iconColor};--em-life-text:${textColor};--em-life-activity:${movementColor};--em-life-records:${recordsColor}`}>
+      <header class="em-widget__header em-lifecycle__header" data-widget-fit-required data-widget-fit-group>
+        <div class="em-lifecycle__title" data-widget-fit-no-overlap>
+          <span aria-hidden="true"><LucideIcon name="ChartNoAxesCombined" size={20} /></span>
+          <h3 data-widget-fit-full-text>Workforce Activity</h3>
         </div>
-        <div class="em-lifecycle__chart" aria-label="Lifecycle changes from Monday to Friday">
-          <svg viewBox="0 0 440 180" preserveAspectRatio="none" aria-hidden="true">
-            <defs><linearGradient id="em-orange-area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff8513" stop-opacity=".24" /><stop offset="1" stop-color="#ff8513" stop-opacity=".03" /></linearGradient></defs>
-            <path class="em-grid-line" d="M0 28 H440 M0 82 H440 M0 136 H440" />
-            <path class="em-chart-area" d="M0 144 C29 128 30 96 58 97 C89 100 91 49 126 47 C158 46 166 90 199 86 C234 82 245 17 284 14 C324 12 338 81 371 91 C403 100 414 124 426 124 L426 150 L0 150 Z" fill="url(#em-orange-area)" />
-            <path class="em-chart-line em-chart-line--orange" pathLength="1" d="M0 144 C29 128 30 96 58 97 C89 100 91 49 126 47 C158 46 166 90 199 86 C234 82 245 17 284 14 C324 12 338 81 371 91 C403 100 414 124 426 124" />
-            <circle class="em-chart-end" cx="426" cy="124" r="5" />
-          </svg>
-          <div class="em-chart-days"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span></div>
+        <div class="em-lifecycle__legend" aria-hidden="true">
+          <span class="is-movements">Changes</span>
+          <span class="is-records">Records</span>
+        </div>
+        <div class="em-lifecycle__range" role="group" aria-label="Activity range">
+          {GRANULARITIES.map(option => (
+            <button key={option.value} type="button"
+              class={option.value === granularity ? 'is-on' : ''}
+              aria-pressed={option.value === granularity}
+              disabled={!onGranularity}
+              onClick={() => onGranularity?.(option.value)}>{option.label}</button>
+          ))}
+        </div>
+      </header>
+      <div class="em-lifecycle__chart" data-widget-fit-required data-widget-min-height="140" aria-label="Employee activity by month">
+        <canvas ref={canvasRef} role="img" aria-label="Employee Activity monthly trend" />
+        <div class="em-lifecycle__tooltip" ref={tooltipRef} aria-hidden="true">
+          <div class="emtt-month" />
+          <div class="emtt-rows" />
         </div>
       </div>
+      {/* Totals, not chart lines. New Hires and Exits are deliberately absent — they are
+          already KPI cards, and repeating them here was the same number shown twice. */}
       <footer class="em-lifecycle__summary" data-widget-fit-required>
-        <div><i aria-hidden="true"><LucideIcon name="UserPlus" size={20} /></i><strong>32</strong><span>New hires</span></div>
-        <div><i aria-hidden="true"><LucideIcon name="ArrowLeftRight" size={20} /></i><strong>18</strong><span>Transfers</span></div>
-        <div><i aria-hidden="true"><LucideIcon name="UserMinus" size={20} /></i><strong>6</strong><span>Exits</span></div>
-        <div><i aria-hidden="true"><LucideIcon name="FileText" size={20} /></i><strong>103</strong><span>Records updated</span></div>
+        <div><i aria-hidden="true"><LucideIcon name="ClipboardList" size={20} /></i><strong>{stats.hr_work_queue.total}</strong><span>Pending Reviews</span></div>
+        <div><i aria-hidden="true"><LucideIcon name="ShieldAlert" size={20} /></i><strong>{stats.readiness.blocked}</strong><span>Readiness Gaps</span></div>
       </footer>
     </article>
   );
+}
+
+function LifecycleActivity(props: WidgetRenderProps): VNode {
+  const [granularity, setGranularity] = useState<WorkforceGranularity>('month');
+  const query = useHrDashboardStats({ granularity });
+  if (query.isLoading && !query.data) return <LifecycleActivityView stats={LIFECYCLE_PREVIEW_STATS} config={props.config} granularity={granularity} onGranularity={setGranularity} />;
+  if (!query.data) return <article class="em-widget em-widget--lifecycle" data-widget-content-root role="alert"><Header title="Employee Activity" /><div class="em-widget__empty">Employee activity is unavailable.</div></article>;
+  return <LifecycleActivityView stats={query.data} config={props.config} granularity={granularity} onGranularity={setGranularity} />;
 }
 
 function WorkloadRing({ value, tone }: { value: number; tone: 'green' | 'orange' }): VNode {
@@ -146,58 +406,7 @@ function BlockedEmployeeActions(): VNode {
     { title: 'Work email setup', employee: 'Amara Diallo · EMP-0010', due: 'Due Jul 25', owner: 'IT Team', initials: 'AD', priority: 'High', tone: 'red' },
     { title: 'Medical clearance', employee: 'Damani Baptiste · EMP-0007', due: 'Due Jul 26', owner: 'HSE Team', initials: 'DB', priority: 'Medium', tone: 'amber' },
   ];
-  return (
-    <article class="em-widget em-widget--blocked" data-widget-content-root aria-label="Blocked employee actions preview">
-      <Header title="Blocked employee actions" />
-      <div class="em-blocked__list" data-widget-fit-required>
-        {actions.map(action => (
-          <div class="em-blocked__item" key={action.title}>
-            <span class={`em-blocked__signal is-${action.tone}`} />
-            <div class="em-blocked__copy"><strong>{action.title}</strong><span>{action.employee}</span></div>
-            <span class={`em-blocked__priority is-${action.tone}`}>{action.priority}</span>
-            <span class="em-blocked__due"><LucideIcon name="CalendarDays" size={14} />{action.due}</span>
-            <span class={`em-avatar em-avatar--${action.tone}`}>{action.initials}</span>
-            <span class="em-blocked__owner">{action.owner}</span>
-          </div>
-        ))}
-      </div>
-      <footer class="em-widget__action"><span>View all</span><LucideIcon name="ChevronRight" size={17} /></footer>
-    </article>
-  );
-}
-
-function TeamReadinessGoal(): VNode {
-  return (
-    <article class="em-widget em-widget--goal" data-widget-content-root aria-label="Team readiness goal preview">
-      <Header title="Team readiness goal" />
-      <div class="em-goal__body" data-widget-fit-required>
-        <span class="em-goal__icon"><LucideIcon name="BookOpenCheck" size={31} /></span>
-        <div class="em-goal__copy"><strong>Complete employee records</strong><span>Close readiness gaps this month</span></div>
-        <div class="em-goal__ring" aria-label="76 percent complete"><span>76%</span></div>
-        <div class="em-goal__people" aria-label="Six team members"><span>AD</span><span>CP</span><span>DB</span><b>+3</b></div>
-        <div class="em-goal__meta"><span><LucideIcon name="MessageCircle" size={18} /><b>12</b><small>Comments</small></span><span><LucideIcon name="Link2" size={18} /><b>2</b><small>Workflows</small></span></div>
-      </div>
-      <footer class="em-widget__action"><span>View all</span><LucideIcon name="ChevronRight" size={17} /></footer>
-    </article>
-  );
-}
-
-function EmployeeQuickContact(): VNode {
-  return (
-    <article class="em-widget em-widget--contact" data-widget-content-root aria-label="Employee quick contact preview">
-      <Header title="Employee quick contact" />
-      <div class="em-contact__person" data-widget-fit-required>
-        <span class="em-contact__avatar">AD<i /></span>
-        <div><strong>Amara Diallo</strong><span>EMP-0010</span><a href="mailto:amara.diallo@siomac.com">amara.diallo@siomac.com</a></div>
-      </div>
-      <div class="em-contact__facts" data-widget-fit-required>
-        <div><i><LucideIcon name="Contact" size={20} /></i><span>Employee No.</span><strong>EMP-0010</strong></div>
-        <div><i><LucideIcon name="Building2" size={20} /></i><span>Department</span><strong>Operations</strong></div>
-        <div><i><LucideIcon name="MapPin" size={20} /></i><span>Site</span><strong>Head Office</strong></div>
-      </div>
-      <button class="em-contact__message" type="button"><LucideIcon name="MessageCircle" size={18} />Message Amara Diallo</button>
-    </article>
-  );
+  return <article class="em-widget em-widget--blocked" data-widget-content-root aria-label="Blocked employee actions preview"><Header title="Blocked employee actions" /><div class="em-blocked__list" data-widget-fit-required>{actions.map(action => <div class="em-blocked__item" key={action.title}><span class={`em-blocked__signal is-${action.tone}`} /><div class="em-blocked__copy"><strong>{action.title}</strong><span>{action.employee}</span></div><span class={`em-blocked__priority is-${action.tone}`}>{action.priority}</span><span class="em-blocked__due"><LucideIcon name="CalendarDays" size={14} />{action.due}</span><span class={`em-avatar em-avatar--${action.tone}`}>{action.initials}</span><span class="em-blocked__owner">{action.owner}</span></div>)}</div><footer class="em-widget__action"><span>View all</span><LucideIcon name="ChevronRight" size={17} /></footer></article>;
 }
 
 function RecordHealth(): VNode {
@@ -270,13 +479,50 @@ function previewDefinition(input: {
 }
 
 export const widgets: WidgetDef[] = [
-  previewDefinition({ id: 'hr.employeeMaster.blockedActions', title: 'Blocked employee actions', description: 'Employee record actions currently blocked or approaching their due dates.', icon: 'fa-circle-exclamation', category: 'Actions & workload', defaultSize: 'standard', previewAspect: 1.08, sizeConstraints: { defaultColumns: 10, defaultRows: 5, minColumns: 7, minRows: 5, minWidth: 350, minHeight: 390, resizeStrategy: 'content-measured' }, tags: ['blocked actions', 'deadlines', 'selection a'], previewVariant: 'task-board', motion: { kind: 'sequence', durationMs: 640, reducedMotion: 'static' }, component: BlockedEmployeeActions, allowedSizes: DESIGN_SIZES }),
-  previewDefinition({ id: 'hr.employeeMaster.readinessGoal', title: 'Team readiness goal', description: 'Shared progress toward complete employee records.', icon: 'fa-bullseye', category: 'Health & readiness', defaultSize: 'large', previewAspect: 2.1, sizeConstraints: { defaultColumns: 16, defaultRows: 5, minColumns: 8, minRows: 5, minWidth: 390, minHeight: 330, resizeStrategy: 'content-measured' }, tags: ['team readiness', 'goal', 'selection d'], previewVariant: 'people', motion: { kind: 'progress', durationMs: 760, reducedMotion: 'static' }, component: TeamReadinessGoal, allowedSizes: DESIGN_SIZES }),
-  previewDefinition({ id: 'hr.employeeMaster.quickContact', title: 'Employee quick contact', description: 'Selected employee context with a direct messaging action.', icon: 'fa-address-card', category: 'People & contact', defaultSize: 'large', previewAspect: 2.1, sizeConstraints: { defaultColumns: 16, defaultRows: 5, minColumns: 8, minRows: 5, minWidth: 390, minHeight: 330, resizeStrategy: 'content-measured' }, tags: ['employee contact', 'message', 'selection e'], previewVariant: 'people', motion: { kind: 'none', reducedMotion: 'static' }, component: EmployeeQuickContact, allowedSizes: DESIGN_SIZES }),
-  previewDefinition({ id: 'hr.employeeMaster.recordHealth', title: 'Employee record health', description: 'Completeness across identity, employment, documents, and access.', icon: 'fa-shield-heart', category: 'Health & readiness', defaultSize: 'standard', previewAspect: 1.08, sizeConstraints: { defaultColumns: 8, defaultRows: 4, minColumns: 5, minRows: 3, minWidth: 250, minHeight: 270, resizeStrategy: 'content-measured' }, tags: ['record health', 'completeness', 'selection f'], previewVariant: 'donut', motion: { kind: 'sequence', durationMs: 780, reducedMotion: 'static' }, component: RecordHealth, allowedSizes: HEALTH_SIZES }),
-  previewDefinition({ id: 'hr.employeeMaster.recordRisk', title: 'Record risk monitor', description: 'Employee-record risk level and recent movement.', icon: 'fa-gauge-high', category: 'Health & readiness', defaultSize: 'standard', previewAspect: 1.2, sizeConstraints: { defaultColumns: 7, defaultRows: 3, minColumns: 5, minRows: 3, minWidth: 240, minHeight: 260, resizeStrategy: 'content-measured' }, tags: ['record risk', 'risk monitor', 'selection h'], previewVariant: 'risk', motion: { kind: 'chart-draw', durationMs: 820, reducedMotion: 'static' }, component: RecordRiskMonitor, allowedSizes: RISK_SIZES }),
-  previewDefinition({ id: 'hr.employeeMaster.weeklyActivity', title: 'Weekly employee activity', description: 'Employee Master updates across the current week.', icon: 'fa-chart-column', category: 'Activity & trends', defaultSize: 'standard', previewAspect: 1.25, sizeConstraints: { defaultColumns: 10, defaultRows: 4, minColumns: 4, minRows: 4, minWidth: 240, minHeight: 330, resizeStrategy: 'content-measured' }, tags: ['weekly activity', 'bar chart', 'selection l'], previewVariant: 'trend', motion: { kind: 'sequence', durationMs: 760, reducedMotion: 'static' }, component: WeeklyEmployeeActivity }),
-  previewDefinition({ id: 'hr.employeeMaster.changeTrend', title: 'Data change trend', description: 'Seven-day trend for Employee Master data changes.', icon: 'fa-chart-line', category: 'Activity & trends', defaultSize: 'standard', previewAspect: 1.25, sizeConstraints: { defaultColumns: 10, defaultRows: 4, minColumns: 6, minRows: 4, minWidth: 280, minHeight: 350, resizeStrategy: 'content-measured' }, tags: ['change trend', 'line chart', 'selection m'], previewVariant: 'trend', motion: { kind: 'chart-draw', durationMs: 820, reducedMotion: 'static' }, component: DataChangeTrend }),
-  previewDefinition({ id: 'hr.employeeMaster.lifecycleActivity', title: 'Lifecycle activity', description: 'Daily employee lifecycle changes and review progress.', icon: 'fa-rotate', category: 'Activity & trends', defaultSize: 'large', previewAspect: 2, sizeConstraints: { defaultColumns: 16, defaultRows: 5, minColumns: 6, minRows: 4, minWidth: 280, minHeight: 340, resizeStrategy: 'content-measured' }, tags: ['lifecycle', 'review progress', 'selection n'], previewVariant: 'trend', motion: { kind: 'chart-draw', durationMs: 880, reducedMotion: 'static' }, component: LifecycleActivity }),
-  previewDefinition({ id: 'hr.employeeMaster.adminWorkload', title: 'Master data workload', description: 'Pending Employee Master corrections and approvals.', icon: 'fa-list-check', category: 'Work management', defaultSize: 'large', previewAspect: 2, sizeConstraints: { defaultColumns: 16, defaultRows: 5, minColumns: 4, minRows: 4, minWidth: 240, minHeight: 330, resizeStrategy: 'content-measured' }, tags: ['workload', 'corrections', 'approvals', 'selection o'], previewVariant: 'status-stack', motion: { kind: 'progress', durationMs: 720, reducedMotion: 'static' }, component: MasterDataWorkload }),
+  previewDefinition({ id: 'hr.employeeMaster.blockedActions', title: 'Blocked Employee Actions', description: 'Employee record actions currently blocked or approaching their due dates.', icon: 'fa-circle-exclamation', category: 'Actions & workload', defaultSize: 'standard', previewAspect: 1.08, sizeConstraints: { defaultColumns: 10, defaultRows: 28, minColumns: 7, minRows: 12, minWidth: 350, minHeight: 390, resizeStrategy: 'content-measured' }, tags: ['blocked actions', 'deadlines', 'selection a'], previewVariant: 'task-board', motion: { kind: 'sequence', durationMs: 640, reducedMotion: 'static' }, component: BlockedEmployeeActions, allowedSizes: DESIGN_SIZES }),
+  previewDefinition({ id: 'hr.employeeMaster.recordHealth', title: 'Employee Record Health', description: 'Completeness across identity, employment, documents, and access.', icon: 'fa-shield-heart', category: 'Health & readiness', defaultSize: 'standard', previewAspect: 1.08, sizeConstraints: { defaultColumns: 8, defaultRows: 22, minColumns: 5, minRows: 12, minWidth: 250, minHeight: 270, resizeStrategy: 'content-measured' }, tags: ['record health', 'completeness', 'selection f'], previewVariant: 'donut', motion: { kind: 'sequence', durationMs: 780, reducedMotion: 'static' }, component: RecordHealth, allowedSizes: HEALTH_SIZES }),
+  previewDefinition({ id: 'hr.employeeMaster.recordRisk', title: 'Record Risk Monitor', description: 'Employee-record risk level and recent movement.', icon: 'fa-gauge-high', category: 'Health & readiness', defaultSize: 'standard', previewAspect: 1.2, sizeConstraints: { defaultColumns: 7, defaultRows: 17, minColumns: 5, minRows: 12, minWidth: 240, minHeight: 260, resizeStrategy: 'content-measured' }, tags: ['record risk', 'risk monitor', 'selection h'], previewVariant: 'risk', motion: { kind: 'chart-draw', durationMs: 820, reducedMotion: 'static' }, component: RecordRiskMonitor, allowedSizes: RISK_SIZES }),
+  previewDefinition({ id: 'hr.employeeMaster.weeklyActivity', title: 'Weekly Employee Activity', description: 'Employee Master updates across the current week.', icon: 'fa-chart-column', category: 'Activity & trends', defaultSize: 'standard', previewAspect: 1.25, sizeConstraints: { defaultColumns: 10, defaultRows: 22, minColumns: 4, minRows: 12, minWidth: 240, minHeight: 330, resizeStrategy: 'content-measured' }, tags: ['weekly activity', 'bar chart', 'selection l'], previewVariant: 'trend', motion: { kind: 'sequence', durationMs: 760, reducedMotion: 'static' }, component: WeeklyEmployeeActivity }),
+  previewDefinition({ id: 'hr.employeeMaster.changeTrend', title: 'Data Change Trend', description: 'Seven-day trend for Employee Master data changes.', icon: 'fa-chart-line', category: 'Activity & trends', defaultSize: 'standard', previewAspect: 1.25, sizeConstraints: { defaultColumns: 10, defaultRows: 22, minColumns: 6, minRows: 12, minWidth: 280, minHeight: 350, resizeStrategy: 'content-measured' }, tags: ['change trend', 'line chart', 'selection m'], previewVariant: 'trend', motion: { kind: 'chart-draw', durationMs: 820, reducedMotion: 'static' }, component: DataChangeTrend }),
+  defineWidget<Record<string, unknown>>({
+    id: 'hr.employeeMaster.lifecycleActivity',
+    module: 'hr',
+    area: 'Employee Master',
+    title: 'Workforce Activity',
+    description: 'Monthly Employee Master activity, current review workload, readiness gaps, and record updates.',
+    icon: 'fa-rotate',
+    category: 'Activity & trends',
+    tags: ['hr', 'employee master', 'lifecycle', 'live api', 'chart.js', 'selection n'],
+    previewVariant: 'trend',
+    chrome: 'none',
+    sizeToContent: false,
+    supportedPages: [PAGE],
+    supportedZones: ['main'],
+    defaultSize: 'large',
+    allowedSizes: DESIGN_SIZES,
+    sizeConstraints: { defaultColumns: 16, defaultRows: 28, minColumns: 6, minRows: 12, minWidth: 280, minHeight: 340, resizeStrategy: 'content-measured' },
+    previewAspect: 2,
+    defaultConfig: {
+      textColor: '#0b1f4d',
+      iconColor: '#0b1f4d',
+      movementColor: '#22c55e',
+      recordsColor: '#f59e0b',
+    },
+    configSchema: [
+      { key: 'textColor', label: 'Title Text Colour', type: 'color', defaultValue: '#0b1f4d' },
+      { key: 'iconColor', label: 'Icon Colour', type: 'color', defaultValue: '#0b1f4d' },
+      { key: 'movementColor', label: 'Movements Line Colour', type: 'color', defaultValue: '#22c55e' },
+      { key: 'recordsColor', label: 'Records Line Colour', type: 'color', defaultValue: '#f59e0b' },
+    ],
+    dataSource: LIVE_SOURCE,
+    dataSourceKey: LIVE_SOURCE.sourceKey,
+    governance: { state: 'enabled', discoverable: true, allowedPages: [PAGE], requiredCapabilities: ['hr.employees.view'] },
+    permissions: { requiredPermissions: ['hr.employees.view'] },
+    runtimeState: 'live-api',
+    motion: { kind: 'chart-draw', durationMs: 880, reducedMotion: 'static' },
+    recommendedFor: [PAGE],
+    render: LifecycleActivity,
+    renderPreview: props => <LifecycleActivityView stats={LIFECYCLE_PREVIEW_STATS} config={props.config} />,
+  }),
+  previewDefinition({ id: 'hr.employeeMaster.adminWorkload', title: 'Master Data Workload', description: 'Pending Employee Master corrections and approvals.', icon: 'fa-list-check', category: 'Work management', defaultSize: 'large', previewAspect: 2, sizeConstraints: { defaultColumns: 16, defaultRows: 28, minColumns: 4, minRows: 12, minWidth: 240, minHeight: 330, resizeStrategy: 'content-measured' }, tags: ['workload', 'corrections', 'approvals', 'selection o'], previewVariant: 'status-stack', motion: { kind: 'progress', durationMs: 720, reducedMotion: 'static' }, component: MasterDataWorkload }),
 ];

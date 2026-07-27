@@ -5,6 +5,8 @@ export interface EmployeeMasterAccess {
   importEmployees: boolean;
   startOnboarding: boolean;
   requestChange: boolean;
+  /** May edit an employee record directly, without routing through a change request. */
+  editEmployee: boolean;
   editContact: boolean;
   changeStatus: boolean;
   startOffboarding: boolean;
@@ -33,6 +35,7 @@ export function resolveEmployeeMasterAccess(has: PermissionCheck = can): Employe
     importEmployees: has('hr.employees.import.upload'),
     startOnboarding: has('hr.onboarding.start'),
     requestChange: has('hr.view'),
+    editEmployee: has('hr.employees.update'),
     editContact: has('hr.employees.update') || has('hr.employees.restricted_contact.update'),
     changeStatus: has('hr.employees.status_change'),
     startOffboarding: has('hr.offboarding.start'),
@@ -54,5 +57,6 @@ export function hasEmployeeCreationAction(access: EmployeeMasterAccess): boolean
 }
 
 export function hasEmployeeRowAction(access: EmployeeMasterAccess): boolean {
-  return access.requestChange || access.changeStatus || access.uploadDocument || access.startOffboarding;
+  return access.editEmployee || access.requestChange || access.changeStatus
+    || access.uploadDocument || access.startOffboarding;
 }

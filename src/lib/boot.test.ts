@@ -30,7 +30,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { SESSION_KEY }                           from '@cfg';
 import { saveSession, loadSession, clearSession } from '@lib/session';
-import { showSection }                           from '@components/nav/navCore';
+import { registerSectionNavigationGuard, showSection } from '@components/nav/navCore';
 import type { PersistedSession }                 from '@lib/session';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -392,5 +392,18 @@ describe('Boot invariant 6 — hard refresh: session is restored and nav is usab
   it('no session → showSection still works without throwing', () => {
     // No session in localStorage — simulates first-ever visit or cleared state.
     expect(() => showSection('s-adm-dashboard')).not.toThrow();
+  });
+
+  it('honours the shared page navigation guard before changing sections', async () => {
+    showSection('s-adm-dashboard');
+    const unregister = registerSectionNavigationGuard(() => false);
+
+    showSection('s-adm-employees');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(document.getElementById('s-adm-dashboard')?.classList.contains('active')).toBe(true);
+    expect(document.getElementById('s-adm-employees')?.classList.contains('active')).toBe(false);
+    unregister();
   });
 });

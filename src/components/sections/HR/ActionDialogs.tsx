@@ -6,7 +6,7 @@
  * ChangeRequest / Document), wired to the real endpoints:
  *   Contact        → useUpdateHrContact (direct + maker-checker request)
  *   Change Status  → useChangeHrStatus
- *   Offboarding    → useChangeHrStatus (newStatus = terminated)
+ *   Offboarding    → hrOffboardingApi.start (canonical case + tasks + IT handoff)
  *   Request Change → useCreateHrChangeRequest (maker side of maker-checker)
  *   Document       → useUploadHrDocument
  *
@@ -22,12 +22,14 @@
  */
 
 import { type VNode } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
-import { ModalSection, SystemActionsPanel } from '@ui';
+import { useState, useEffect, useId } from 'preact/hooks';
+import { ModalSection, SystemActionsPanel, PersonSearchSelect } from '@ui';
 import {
   useUpdateHrContact, useChangeHrStatus, useCreateHrChangeRequest, useUploadHrDocument,
   useUpdateHrStatutory, useHrOrgUnits, useHrSites, useHrEmployees, useHrEmployee,
 } from '@api/hr/employees';
+import { hrOffboardingApi, useOffboardingMutation } from '@api/hr/offboarding';
+import type { OffboardingReason } from '../../../../types/hrOffboarding';
 import { rowName } from './shared';
 
 const HR_STATUSES = ['draft', 'pending_onboarding', 'active', 'probation', 'on_leave', 'suspended', 'inactive', 'terminated', 'archived'];
@@ -35,6 +37,8 @@ const NIS_STATUSES = ['registered', 'pending', 'exempt', 'not_applicable'];
 const ROLES = ['employee', 'supervisor', 'manager', 'hr_manager', 'hr_staff', 'hse_staff'];
 const EMPLOYMENT_TYPES = ['employee', 'contractor', 'intern', 'temporary', 'consultant', 'seconded'];
 const CHANGE_TYPES = ['department_transfer', 'site_transfer', 'supervisor_change', 'role_change', 'employment_type_change', 'status_change'];
+/** Mirrors the REASONS enum the hr/offboarding/start route validates against. */
+const OFFBOARDING_REASONS: readonly OffboardingReason[] = ['resignation', 'termination', 'redundancy', 'end_of_contract', 'retirement'];
 const cap = (s: string) => s.replace(/[_-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
 // Downstream actions the Workflow Engine performs once a request is approved
@@ -59,17 +63,21 @@ function Modal(
     </div>
   );
 }
+// `for`/`id` are wired from a generated id so every dialog field is genuinely labelled —
+// screen readers and label-based queries both resolve the control, not just the text.
 function L({ label, value, onInput, type = 'text', full = false }: { label: string; value: string; onInput: (v: string) => void; type?: string; full?: boolean }): VNode {
-  return <div class={`form-field ${full ? 'full' : ''}`}><label>{label}</label><input type={type} value={value} onInput={e => onInput(e.currentTarget.value)} /></div>;
+  const id = useId();
+  return <div class={`form-field ${full ? 'full' : ''}`}><label for={id}>{label}</label><input id={id} type={type} value={value} onInput={e => onInput(e.currentTarget.value)} /></div>;
 }
 function S(
   { label, value, onInput, options, idOptions, placeholder, full = false }:
   { label: string; value: string; onInput: (v: string) => void; options?: string[]; idOptions?: { id: string; name: string }[]; placeholder?: string; full?: boolean },
 ): VNode {
+  const id = useId();
   return (
     <div class={`form-field ${full ? 'full' : ''}`}>
-      <label>{label}</label>
-      <select value={value} onChange={e => onInput(e.currentTarget.value)}>
+      <label for={id}>{label}</label>
+      <select id={id} value={value} onChange={e => onInput(e.currentTarget.value)}>
         {idOptions && <option value="">{placeholder ?? '—'}</option>}
         {options ? options.map(o => <option value={o}>{cap(o)}</option>) : (idOptions ?? []).map(o => <option value={o.id}>{o.name}</option>)}
       </select>
@@ -185,26 +193,60 @@ export function StatusDialog({ employeeId, onClose, onToast }: DialogProps): VNo
 // ── Offboarding (terminate) ────────────────────────────────────────────────────────
 
 export function OffboardingDialog({ employeeId, onClose, onToast }: DialogProps): VNode {
+  const [reason, setReason] = useState<OffboardingReason>('resignation');
   const [lastDay, setLastDay] = useState('');
-  const [reason, setReason] = useState('');
+  const [noticeDays, setNoticeDays] = useState('');
+  const [ownerId, setOwnerId] = useState('');
   const [err, setErr] = useState<string | null>(null);
-  const m = useChangeHrStatus();
+  const [fieldErr, setFieldErr] = useState<Record<string, string>>({});
+  const m = useOffboardingMutation(hrOffboardingApi.start);
+  // Case owner is optional; the server defaults it to the actor. Picker, never free text.
+  const ownerQ = useHrEmployees({ limit: 500 });
+  const ownerOptions = (ownerQ.data ?? []).map(o => ({ id: o.id, name: rowName(o), meta: o.position ?? undefined }));
+
   function submit() {
-    if (!reason.trim()) { setErr('A reason is required to start offboarding.'); return; }
-    m.mutate({ employeeId, newStatus: 'terminated', reason: reason.trim(), effectiveDate: lastDay || undefined }, {
-      onSuccess: () => { onToast('Offboarding started — status set to Terminated'); onClose(); },
+    setErr(null);
+    const errors: Record<string, string> = {};
+    if (!OFFBOARDING_REASONS.includes(reason)) errors['reason'] = 'Select an offboarding reason.';
+    const notice = noticeDays.trim() ? Number(noticeDays) : null;
+    if (notice !== null && (!Number.isInteger(notice) || notice < 0 || notice > 365)) {
+      errors['noticeDays'] = 'Notice period must be a whole number of days between 0 and 365.';
+    }
+    if (lastDay && Number.isNaN(new Date(lastDay).getTime())) errors['lastDay'] = 'Enter a valid last working day.';
+    setFieldErr(errors);
+    if (Object.keys(errors).length) return;
+
+    m.mutate({
+      employeeId, reason,
+      lastWorkingDay: lastDay || null,
+      noticePeriodDays: notice,
+      ownerId: ownerId || null,
+    }, {
+      onSuccess: r => { onToast(`Offboarding case ${r.caseNo} created — ${r.taskCount} tasks, ${r.handoffCount} handoffs`); onClose(); },
       onError: e => setErr(e instanceof Error ? e.message : 'Offboarding failed.'),
     });
   }
   return (
     <Modal title="Start Offboarding" onClose={onClose}
-      footer={footBtns(onClose, 'Terminate', m.isPending, 'Working…', submit)}>
-      <div class="ui-warn">This sets the employee to <strong>Terminated</strong> and disables their login. Audited and reversible only via a new status change.</div>
+      footer={footBtns(onClose, 'Start Offboarding', m.isPending, 'Starting…', submit,
+        'Creates the offboarding case, its exit tasks and the IT access-removal handoff.')}>
+      <div class="ui-note">This opens a controlled offboarding <strong>case</strong>. The employee stays active until
+        the case is finalized — exit tasks and clearances run first, and access removal is handled by the case, not by
+        an immediate status change.</div>
       <Err m={err} />
-      <ModalSection title="Offboarding Case" desc="Starts the controlled offboarding workflow.">
+      <ModalSection title="Offboarding Case" desc="Starts the canonical offboarding workflow (case, tasks and module handoffs).">
         <div class="form-grid">
+          <S label="Reason *" value={reason} onInput={v => setReason(v as OffboardingReason)} options={[...OFFBOARDING_REASONS]} />
+          {fieldErr['reason'] ? <div class="form-field-error full">{fieldErr['reason']}</div> : null}
           <L label="Last Working Day" type="date" value={lastDay} onInput={setLastDay} />
-          <L label="Reason *" value={reason} onInput={setReason} full />
+          {fieldErr['lastDay'] ? <div class="form-field-error full">{fieldErr['lastDay']}</div> : null}
+          <L label="Notice Period (days)" type="number" value={noticeDays} onInput={setNoticeDays} />
+          {fieldErr['noticeDays'] ? <div class="form-field-error full">{fieldErr['noticeDays']}</div> : null}
+          <div class="form-field full">
+            <label>Case Owner</label>
+            <PersonSearchSelect options={ownerOptions} value={ownerId} onChange={setOwnerId}
+              placeholder="Defaults to you" emptyLabel="No employees found" />
+          </div>
         </div>
       </ModalSection>
       <SystemActionsPanel actions={OFFBOARD_SYS_ACTIONS} />

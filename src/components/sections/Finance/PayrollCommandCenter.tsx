@@ -297,12 +297,16 @@ export function PayrollCommandCenter(): VNode {
   const [editing, setEditing] = useState(false);
   const [libOpen, setLibOpen] = useState(false);
   const [preview, setPreview] = useState<PreviewWidgetInstance | null>(null);
-  const { layout, addWidget, updateZoneLayout, saveLayout, cancelLayout, setAsDefault, resetLayout, isDefaultDirty, isLoading: mainLayoutLoading } = useBoardLayout(PAGE_KEY, defaultLayout());
+  const {
+    layout, addWidget, updateZoneLayout, saveLayout, cancelLayout, setAsDefault, resetLayout,
+    isDefaultDirty, isDirty, isSaving, isLoading: mainLayoutLoading,
+  } = useBoardLayout(PAGE_KEY, defaultLayout());
   // Observe the KPI board's own layout query + the installed-widget registry at the PAGE
   // level so the reveal can wait for them. Both dedupe by query key with the boards' own
   // subscriptions (WidgetBoardZone → useBoardLayout, WidgetBoard → useInstalledWidgetPackages),
   // so this adds no network cost — it only lets the page gate on their loading state.
   const kpiBoard = useBoardLayout(KPI_PAGE_KEY, defaultKpiLayout());
+  const pageDefaultDirty = isDefaultDirty || kpiBoard.isDefaultDirty;
   const kpiLayoutLoading = kpiBoard.isLoading;
   const pkgQuery = useInstalledWidgetPackages();
   const [savingDefault, setSavingDefault] = useState(false);
@@ -310,7 +314,17 @@ export function PayrollCommandCenter(): VNode {
   const placedWidgetIds = boardItems.map(w => w.widgetId);
   const placeBottom = <T extends { x: number; y: number }>(w: T): T => ({ ...w, x: 0, y: Math.max(0, ...boardItems.map(i => i.y + i.h)) });
   const userPermissions = useMemo(() => Array.from(new Set(WIDGET_REGISTRY.flatMap(w => w.dataSource.permissions))).filter(can), []);
-  const promoteDefault = async (): Promise<void> => { if (savingDefault) return; setSavingDefault(true); try { await setAsDefault(); } finally { setSavingDefault(false); } };
+  const promoteDefault = async (): Promise<void> => {
+    if (savingDefault) return;
+    setSavingDefault(true);
+    try {
+      if (isDefaultDirty) await setAsDefault();
+      if (kpiBoard.isDefaultDirty) await kpiBoard.setAsDefault();
+    } finally { setSavingDefault(false); }
+  };
+  const resetPageLayout = (): void => {
+    void Promise.all([resetLayout(), kpiBoard.resetLayout()]);
+  };
 
   // The whole page reveals as one unit once data + both board layouts + the registry are ready.
   const ready = commandCenterReady({ hasData: !!data, mainLayoutLoading, kpiLayoutLoading, registryLoading: pkgQuery.isLoading });
@@ -405,9 +419,9 @@ export function PayrollCommandCenter(): VNode {
   );
   const boardTools = canEditBoard ? (
     <WidgetBoardToolbar
-      editing={editing} canSetDefault={isAdmin} defaultDirty={isDefaultDirty} finishInBanner layoutItems={boardItems}
+      editing={editing} canSetDefault={isAdmin} defaultDirty={pageDefaultDirty} finishInBanner layoutItems={boardItems}
       onToggleEdit={() => setEditing(e => !e)} onOpenLibrary={() => { setEditing(true); setLibOpen(true); }}
-      onReset={() => void resetLayout()} onSetDefault={() => void promoteDefault()} />
+      onReset={resetPageLayout} onSetDefault={() => void promoteDefault()} />
   ) : null;
   const header = (
     <PageHeader icon="fa-money-check-dollar" module="Finance · Payroll" title="Payroll Command Center"
@@ -529,10 +543,15 @@ export function PayrollCommandCenter(): VNode {
             onCommitPreview={p => { void addWidget(p.zoneId, commitPreviewWidget(p)); setPreview(null); }}
             onDiscardPreview={() => { setPreview(null); setLibOpen(true); }}
             onFinishEditing={() => setEditing(false)}
-            onSaveEditing={async () => { await Promise.all([saveLayout(), kpiBoard.saveLayout()]); setEditing(false); }}
+            onOpenLibrary={() => setLibOpen(true)}
+            onSaveEditing={async () => {
+              const saved = await Promise.all([saveLayout(), kpiBoard.saveLayout()]);
+              if (saved.every(Boolean)) setEditing(false);
+            }}
             onCancelEditing={async () => { await Promise.all([cancelLayout(), kpiBoard.cancelLayout()]); setEditing(false); }}
             onSetDefault={() => void promoteDefault()} canSetDefault={isAdmin}
-            defaultDirty={isDefaultDirty} defaultSaving={savingDefault} />
+            defaultDirty={pageDefaultDirty} defaultSaving={savingDefault}
+            isDirty={isDirty || kpiBoard.isDirty} saving={isSaving || kpiBoard.isSaving} />
 
           <WidgetLibraryModal open={libOpen} pageKey={PAGE_KEY} zoneId="main"
             placedWidgetIds={placedWidgetIds} userPermissions={userPermissions}

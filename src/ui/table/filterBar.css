@@ -8,6 +8,12 @@
 .tf-search input { width: 100%; height: 46px; border: 1px solid #d8e0ec; border-radius: 11px; padding: 0 14px 0 40px; background: #fff; outline: none; color: #334155; font: inherit; font-size: 13px; transition: border-color .15s, box-shadow .15s; }
 .tf-search input::placeholder { color: #94a3b8; }
 .tf-search input:focus { border-color: #a9c0ee; box-shadow: 0 0 0 3px rgba(7, 87, 223, .1); }
+/* The native `type=search` cross is suppressed so it never stacks with .tf-search-clear. */
+.tf-search input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.tf-search.has-value input { padding-right: 40px; }
+.tf-search-clear { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; border: 0; border-radius: 999px; background: #eef1f6; color: #64748b; display: grid; place-items: center; cursor: pointer; padding: 0; }
+.tf-search-clear:hover { background: #e2e8f0; color: #1e293b; }
+.tf-search-clear:focus-visible { outline: 2px solid #0757df; outline-offset: 1px; }
 
 /* ── Dropdown wrapper (basic filter + advanced share it) ─────────────────── */
 .tf-wrap { position: relative; min-width: 0; flex: 0 1 auto; }

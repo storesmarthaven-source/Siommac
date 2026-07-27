@@ -9,11 +9,9 @@
  * HSE Incident/Risk/CAPA panels.
  *
  * Every tab is wired to a real read endpoint:
- *   Overview/Employment/Assignments/Statutory ← useHrEmployee (get)
- *   Training ← useHrTrainingSummary · Documents ← useHrDocuments
+ *   Overview/Employment/Compliance ← useHrEmployee (get)
+ *   Compliance training ← useHrTrainingSummary · Documents ← useHrDocuments
  *   Workflows ← useHrWorkflowSummary · Audit ← useHrAudit (actor names server-side)
- * Leave & Attendance have no HR read endpoint (separate modules) — they render an
- * honest "lives in its own module" panel rather than fabricated numbers.
  *
  * Write actions (Request Change / Change Status / Upload / Offboard / Edit Contact)
  * surface via onAction — EmployeeMaster maps them to the dialogs in ActionDialogs.
@@ -23,8 +21,8 @@ import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
   Drawer, Menu, EntityHead, PanelStats, PanelTabs,
-  InfoCard, FieldList, FieldRow, MiniTable, Pill, PanelEmpty, Callout, ActivityList,
-  Skeleton, SkeletonText, Spinner, EmptyState,
+  InfoCard, FieldList, FieldRow, MiniTable, Pill, PanelEmpty, ActivityList,
+  Skeleton, SkeletonText, Spinner, EmptyState, LucideIcon,
   type ActivityEntry,
 } from '@ui';
 import {
@@ -33,14 +31,15 @@ import {
   type HrEmployeeDetail, type HrStatutoryRow, type HrAuditEntry, type HrDocument, type HrTrainingSummary,
   type HrWorkflowSummary,
 } from '@api/hr/employees';
+import { useAdminUserSecurityStatus } from '@api/security';
 import { can } from '@lib/permissions';
 import { toast } from '@store';
 import { ActivityTimeline } from '@shared/orchestration/ActivityTimeline';
+import { showSection } from '@components/nav/navCore';
 import { EmployeeOnboardingSummary } from './EmployeeOnboardingSummary';
-import {
-  humanize, initials, statusTone, TRAINING_TONE, TRAINING_LABEL, type PillTone,
-} from './shared';
+import { humanize, statusTone, type PillTone } from './shared';
 import type { EmployeeMasterAccess } from './employeeMasterAccess';
+import './ProfileDrawer.css';
 
 /** Employee Master only launches/shows onboarding — the full case workspace lives on
  *  the Onboarding page. Switches the HR nav section AND tells it which case to land
@@ -93,26 +92,6 @@ function overallTraining(t: HrTrainingSummary | undefined): { label: string; ton
 
 // Robust label/tone for the employee row's trainingStatus (tolerates values
 // outside the FE union — never blank).
-function trainBadge(s: string): { label: string; tone: PillTone } {
-  const label = (TRAINING_LABEL as Record<string, string>)[s];
-  const tone = (TRAINING_TONE as Record<string, PillTone>)[s];
-  return { label: label ?? humanize(s || 'none'), tone: tone ?? 'gray' };
-}
-
-function activityIcon(action: string): string {
-  const a = action.toLowerCase();
-  if (/approv|verif|pass/.test(a))              return 'fa-circle-check';
-  if (/complet|done|finish/.test(a))            return 'fa-check';
-  if (/document|upload|file|attach/.test(a))    return 'fa-file';
-  if (/status|transfer|offboard/.test(a))       return 'fa-arrow-right-arrow-left';
-  if (/assign|move/.test(a))                    return 'fa-user-group';
-  if (/creat|add|new|onboard/.test(a))          return 'fa-user-plus';
-  if (/delet|remov|archiv/.test(a))             return 'fa-trash';
-  if (/reject|deny|fail/.test(a))               return 'fa-circle-xmark';
-  if (/updat|edit|chang|modif/.test(a))         return 'fa-pen';
-  return 'fa-bolt';
-}
-
 function docTone(status: string): PillTone {
   const s = status.toLowerCase();
   if (s.includes('verif')) return 'green';
@@ -157,55 +136,122 @@ function TrainingSnapshot(
   );
 }
 
-function OverviewTab(
-  { d, trainQ, auditQ, onEditContact, onViewHistory, onViewTraining, onViewTimeline, showTraining, showAudit }:
-  { d: HrEmployeeDetail; trainQ: ReturnType<typeof useHrTrainingSummary>; auditQ: ReturnType<typeof useHrAudit>;
-    onEditContact?: () => void; onViewHistory: () => void; onViewTraining: () => void; onViewTimeline: () => void;
-    showTraining: boolean; showAudit: boolean },
+function ProfileOverview(
+  { d, docsQ, auditQ, securityQ, onEditContact, onViewEmployment, onViewCompliance, onViewDocuments, onViewTimeline, onManageAccess, showDocuments, showStatutory, showAudit, showSecurity }:
+  { d: HrEmployeeDetail; docsQ: ReturnType<typeof useHrDocuments>; auditQ: ReturnType<typeof useHrAudit>;
+    securityQ: ReturnType<typeof useAdminUserSecurityStatus>; onEditContact?: () => void; onViewEmployment: () => void;
+    onViewCompliance: () => void; onViewDocuments: () => void; onViewTimeline: () => void; onManageAccess?: () => void;
+    showDocuments: boolean; showStatutory: boolean; showAudit: boolean; showSecurity: boolean },
 ): VNode {
   const e = d.employee;
-  const riskRed = e.trainingStatus === 'expired';
+  const docs = docsQ.data ?? [];
+  const readiness = e.readiness;
+  const readinessPercent = readiness?.percent ?? 0;
+  const expiringDocument = docs
+    .filter(doc => doc.expiry_date)
+    .sort((a, b) => new Date(a.expiry_date!).getTime() - new Date(b.expiry_date!).getTime())[0];
+  const daysToExpiry = expiringDocument?.expiry_date
+    ? Math.ceil((new Date(expiringDocument.expiry_date).getTime() - Date.now()) / 86_400_000)
+    : null;
+  const security = securityQ.data;
+  const mfaEnabled = !!security && (security.totpEnabled || security.passkeyCount > 0);
+  const attention: { icon: 'IdCard' | 'ShieldCheck' | 'GraduationCap' | 'BriefcaseBusiness' | 'BadgeDollarSign'; title: string; detail: string; action?: () => void }[] = [];
+  if (showDocuments && daysToExpiry !== null && daysToExpiry <= 30) attention.push({
+    icon: 'IdCard', title: daysToExpiry < 0
+      ? `${expiringDocument?.title ?? 'Document'} expired ${Math.abs(daysToExpiry)} days ago`
+      : `${expiringDocument?.title ?? 'Document'} expires in ${daysToExpiry} days`,
+    detail: `${humanize(expiringDocument?.document_type ?? 'employee document')} · Expires ${fmtDate(expiringDocument?.expiry_date)}`,
+    action: onViewDocuments,
+  });
+  if (showSecurity && securityQ.isSuccess && !mfaEnabled) attention.push({
+    icon: 'ShieldCheck', title: 'MFA not enrolled', detail: 'Improve account security', action: onManageAccess,
+  });
+  if (readiness?.blockers.includes('assignment')) attention.push({
+    icon: 'BriefcaseBusiness', title: 'Assignment details are incomplete', detail: 'Department, site and supervisor are required', action: onViewEmployment,
+  });
+  if (readiness?.blockers.includes('payroll')) attention.push({
+    icon: 'BadgeDollarSign', title: `Payroll readiness is ${readiness.payrollStatus}`, detail: 'Review the statutory payroll controls', action: showStatutory ? onViewCompliance : undefined,
+  });
+  if (readiness?.blockers.includes('training')) attention.push({
+    icon: 'GraduationCap', title: `Training status is ${humanize(readiness.trainingStatus)}`, detail: 'Review required learning and certificates', action: onViewCompliance,
+  });
+
+  const readinessTone = readinessPercent >= 100 ? 'is-green' : readinessPercent >= 67 ? 'is-amber' : 'is-red';
+  const assignmentLabel = readiness?.assignmentComplete ? 'Complete' : 'Needs attention';
+  const payrollLabel = readiness ? humanize(readiness.payrollStatus) : 'Restricted';
+  const trainingLabel = readiness ? humanize(readiness.trainingStatus === 'none' ? 'not on file' : readiness.trainingStatus) : 'Restricted';
+
   return (
-    <>
-      <InfoCard title="Personal Summary"
-        action={onEditContact ? <button class="ui-mini-btn" type="button" onClick={onEditContact}>Edit Contact</button> : undefined}>
-        <FieldList>
-          <FieldRow icon="fa-user"        label="Full Name"      value={e.full_name ?? e.username} />
-          <FieldRow icon="fa-envelope"    label="Email"          value={e.email ?? '—'} />
-          <FieldRow icon="fa-phone"       label="Phone"          value={e.phone ?? '—'} />
-          <FieldRow icon="fa-id-badge"    label="Employee No."   value={e.employee_number ?? '—'} />
-          <FieldRow icon="fa-at"          label="Personal Email" value={e.personal_email ?? '—'} />
-          <FieldRow icon="fa-cake-candles" label="Date of Birth" value={fmtDate(e.date_of_birth)} />
-          <FieldRow icon="fa-flag"         label="Nationality"   value={e.nationality ?? '—'} />
-        </FieldList>
+    <div class="epd-overview-grid">
+      <InfoCard title={attention.length ? 'Needs Attention' : 'Record Status'}>
+        <div class={`epd-attention-list${attention.length ? '' : ' is-clear'}`}>
+          {attention.length ? attention.slice(0, 4).map(item => item.action ? (
+            <button type="button" onClick={item.action}>
+              <span class="epd-attention-icon"><LucideIcon name={item.icon} size={18} /></span>
+              <span><strong>{item.title}</strong><small>{item.detail}</small></span>
+              <LucideIcon name="ChevronRight" size={16} />
+            </button>
+          ) : (
+            <div class="epd-attention-note">
+              <span class="epd-attention-icon"><LucideIcon name={item.icon} size={18} /></span>
+              <span><strong>{item.title}</strong><small>{item.detail}</small></span>
+            </div>
+          )) : <div class="epd-clear-state"><LucideIcon name="CircleCheck" size={18} /> No open attention items.</div>}
+        </div>
       </InfoCard>
-      <InfoCard title="Current Assignment"
-        action={<button class="ui-mini-btn" type="button" onClick={onViewHistory}>View History</button>}>
-        <FieldList>
-          <FieldRow label="Position" value={e.position ?? '—'} />
-          <FieldRow label="Department" value={e.departmentName ?? '—'} />
-          <FieldRow label="Site" value={e.siteName ?? '—'} />
-          <FieldRow label="Supervisor" value={e.supervisorName ?? '—'} />
-          <FieldRow label="Effective Date" value={fmtDate(e.start_date)} />
-        </FieldList>
+
+      <div class="epd-summary-grid">
+        <InfoCard title="Personal & Contact"
+          action={onEditContact ? <button class="ui-mini-btn" type="button" onClick={onEditContact}>Edit</button> : undefined}>
+          <FieldList>
+            <FieldRow icon="fa-envelope" label="Work Email" value={e.email ?? '—'} />
+            <FieldRow icon="fa-phone" label="Phone" value={e.phone ?? '—'} />
+            <FieldRow icon="fa-at" label="Personal Email" value={e.personal_email ?? '—'} />
+            <FieldRow icon="fa-cake-candles" label="Date of Birth" value={fmtDate(e.date_of_birth)} />
+            <FieldRow icon="fa-flag" label="Nationality" value={e.nationality ?? '—'} />
+          </FieldList>
+        </InfoCard>
+
+        <InfoCard title="Current Assignment"
+          action={<button class="ui-mini-btn" type="button" onClick={onViewEmployment}>View Details</button>}>
+          <FieldList>
+            <FieldRow label="Position" value={e.position ?? '—'} />
+            <FieldRow label="Department" value={e.departmentName ?? '—'} />
+            <FieldRow label="Site" value={e.siteName ?? '—'} />
+            <FieldRow label="Supervisor" value={e.supervisorName ?? '—'} />
+            <FieldRow label="Effective Date" value={fmtDate(e.start_date)} />
+          </FieldList>
+        </InfoCard>
+      </div>
+
+      <InfoCard title="Record Readiness">
+        {readiness ? <>
+          <div class="epd-readiness-head"><strong>{readinessPercent}%</strong><span>Ready across assignment, payroll and training</span></div>
+          <div class={`epd-progress ${readinessTone}`}><span style={{ width: `${readinessPercent}%` }} /></div>
+          <div class="epd-readiness-grid">
+            <button type="button" onClick={onViewEmployment}><LucideIcon name="BriefcaseBusiness" size={18} /><span>Assignment</span><strong>{assignmentLabel}</strong></button>
+            <button type="button" onClick={onViewCompliance}><LucideIcon name="BadgeDollarSign" size={18} /><span>Payroll</span><strong>{payrollLabel}</strong></button>
+            <button type="button" onClick={onViewCompliance}><LucideIcon name="GraduationCap" size={18} /><span>Training</span><strong>{trainingLabel}</strong></button>
+          </div>
+        </> : <div class="epd-restricted"><LucideIcon name="LockKeyhole" size={18} /> Readiness requires payroll-readiness access.</div>}
       </InfoCard>
-      <Callout
-        mark="♜"
-        title="Workforce Risk"
-        status={riskRed ? 'training exception found' : '✓ no risk items'}
-        alert={riskRed}
-      >
-        {riskRed
-          ? 'This employee has a training or assignment blocker that should be reviewed.'
-          : 'This employee has no workforce risks.'}
-      </Callout>
-      {showTraining && <TrainingSnapshot trainQ={trainQ} onViewTraining={onViewTraining} />}
+
+      <InfoCard title="Account Access"
+        action={onManageAccess ? <button class="ui-mini-btn" type="button" onClick={onManageAccess}>Manage Access</button> : undefined}>
+        <PanelStats plain items={[
+          { label: 'Login', value: <Pill tone={e.status === 'active' ? 'green' : 'red'}>{e.status === 'active' ? 'Enabled' : 'Disabled'}</Pill> },
+          { label: 'Username', value: <strong>{e.username}</strong> },
+          { label: 'Last Sign-in', value: <strong>{showSecurity ? (security?.lastSeenAt ? fmtDateTime(security.lastSeenAt) : 'No active session') : 'Restricted'}</strong> },
+          { label: 'MFA', value: <Pill tone={!showSecurity ? 'gray' : mfaEnabled ? 'green' : 'red'}>{showSecurity ? (mfaEnabled ? 'Enrolled' : 'Not enrolled') : 'Restricted'}</Pill> },
+        ]} />
+      </InfoCard>
+
       {showAudit && <InfoCard title="Recent Activity"
-        action={<button class="ui-mini-btn" type="button" onClick={onViewTimeline}>View full timeline</button>}>
+        action={<button class="ui-mini-btn" type="button" onClick={onViewTimeline}>View Full Timeline</button>}>
         {auditQ.isLoading && !auditQ.data
           ? <Spinner center label="Loading activity…" />
           : auditQ.data?.length
-            ? <ActivityList items={auditQ.data.slice(0, 5).map((a): ActivityEntry => ({
+            ? <ActivityList items={auditQ.data.slice(0, 3).map((a): ActivityEntry => ({
                 icon: <i class={`fas ${activityIcon(a.action)}`} aria-hidden="true" />,
                 title: humanize(a.action),
                 desc: a.reason ?? a.actorName ?? undefined,
@@ -213,48 +259,46 @@ function OverviewTab(
               }))} />
             : <PanelEmpty>{gated(auditQ, 'No recent activity.')}</PanelEmpty>}
       </InfoCard>}
-    </>
+    </div>
   );
+}
+
+function activityIcon(action: string): string {
+  const a = action.toLowerCase();
+  if (/approv|verif|pass/.test(a)) return 'fa-circle-check';
+  if (/complet|done|finish/.test(a)) return 'fa-check';
+  if (/document|upload|file|attach/.test(a)) return 'fa-file';
+  if (/status|transfer|offboard/.test(a)) return 'fa-arrow-right-arrow-left';
+  if (/assign|move/.test(a)) return 'fa-user-group';
+  if (/creat|add|new|onboard/.test(a)) return 'fa-user-plus';
+  if (/delet|remov|archiv/.test(a)) return 'fa-trash';
+  if (/reject|deny|fail/.test(a)) return 'fa-circle-xmark';
+  if (/updat|edit|chang|modif/.test(a)) return 'fa-pen';
+  return 'fa-bolt';
 }
 
 function EmploymentTab({ d }: { d: HrEmployeeDetail }): VNode {
   const e = d.employee;
-  return (
-    <InfoCard title="Employment Details">
-      <FieldList>
-        <FieldRow label="Employment Type" value={humanize(e.employment_type ?? e.workerType)} />
-        <FieldRow label="Status" value={<Pill tone={statusTone(e.status)}>{humanize(e.status)}</Pill>} />
-        <FieldRow label="Position / Role" value={e.position ?? '—'} />
-        <FieldRow label="Employee Grade" value={e.employee_grade ?? '—'} />
-        <FieldRow label="Work Schedule" value={e.work_schedule ?? '—'} />
-        <FieldRow label="Department" value={e.departmentName ?? '—'} />
-        <FieldRow label="Site" value={e.siteName ?? '—'} />
-        <FieldRow label="Cost Center" value={e.cost_center ?? '—'} />
-        <FieldRow label="Supervisor" value={e.supervisorName ?? '—'} />
-        <FieldRow label="Start Date" value={fmtDate(e.start_date)} />
-        <FieldRow label="Probation End" value={fmtDate(e.probation_end_date)} />
-        <FieldRow label="Government ID" value={e.government_id ?? '—'} />
-        <FieldRow label="Login / Access" value={e.status === 'active' ? 'Enabled' : 'Disabled'} />
-      </FieldList>
-    </InfoCard>
-  );
-}
-
-function AssignmentsTab({ d }: { d: HrEmployeeDetail }): VNode {
-  const e = d.employee;
   const hist = d.statusHistory;
   return (
     <>
-      <InfoCard title="Current Assignment">
+      <InfoCard title="Employment Details">
         <FieldList>
-          <FieldRow label="Position" value={e.position ?? '—'} />
+          <FieldRow label="Employment Type" value={humanize(e.employment_type ?? e.workerType)} />
+          <FieldRow label="Status" value={<Pill tone={statusTone(e.status)}>{humanize(e.status)}</Pill>} />
+          <FieldRow label="Position / Role" value={e.position ?? '—'} />
+          <FieldRow label="Employee Grade" value={e.employee_grade ?? '—'} />
+          <FieldRow label="Work Schedule" value={e.work_schedule ?? '—'} />
           <FieldRow label="Department" value={e.departmentName ?? '—'} />
           <FieldRow label="Site" value={e.siteName ?? '—'} />
+          <FieldRow label="Cost Center" value={e.cost_center ?? '—'} />
           <FieldRow label="Supervisor" value={e.supervisorName ?? '—'} />
-          <FieldRow label="Effective From" value={fmtDate(e.start_date)} />
+          <FieldRow label="Start Date" value={fmtDate(e.start_date)} />
+          <FieldRow label="Probation End" value={fmtDate(e.probation_end_date)} />
+          <FieldRow label="Government ID" value={e.government_id ?? '—'} />
         </FieldList>
       </InfoCard>
-      <InfoCard title="Status History">
+      <InfoCard title="Employment History">
         <MiniTable cols={['Effective', 'From', 'To', 'Reason']}
           empty={<EmptyState icon="fa-clock-rotate-left" tone="purple" title="No status changes recorded"
             text="Employment status updates appear here once a change is submitted."
@@ -445,18 +489,10 @@ function AuditTab({ auditQ }: { auditQ: ReturnType<typeof useHrAudit> }): VNode 
 
 // Leave / Attendance live in their own modules; there is no in-drawer action to
 // wire here yet, so this is an honest informational panel — no dead button.
-function ModuleLinkTab({ title, body }: { title: string; body: string }): VNode {
-  return (
-    <InfoCard title={title}>
-      <PanelEmpty>{body}</PanelEmpty>
-    </InfoCard>
-  );
-}
-
 // ── drawer shell ─────────────────────────────────────────────────────────────────
 
-const PRIMARY_TABS = ['Overview', 'Employment', 'Assignments', 'Documents', 'Timeline'];
-const MORE_TABS = ['Training', 'Statutory Profile', 'Onboarding', 'Leave', 'Attendance', 'Workflows', 'Audit'];
+const PRIMARY_TABS = ['Overview', 'Employment', 'Documents', 'Compliance', 'Timeline'];
+const MORE_TABS = ['Onboarding', 'Workflows', 'Audit'];
 
 // Whole-drawer skeleton — shown until the detail data belongs to the requested
 // employee, so a previous employee's header/tags never flash on switch.
@@ -489,9 +525,10 @@ export function ProfileDrawer(
 
   const detailQ = useHrEmployee(employeeId);
   const wfQ     = useHrWorkflowSummary(employeeId);
-  const trainQ  = useHrTrainingSummary(access.viewTraining && (tab === 'Overview' || tab === 'Training') ? employeeId : null);
+  const trainQ  = useHrTrainingSummary(access.viewTraining && tab === 'Compliance' ? employeeId : null);
   const auditQ  = useHrAudit(access.viewAudit && (tab === 'Overview' || tab === 'Audit') ? employeeId : null);
-  const docsQ   = useHrDocuments(access.viewDocuments && tab === 'Documents' ? employeeId : null);
+  const docsQ   = useHrDocuments(access.viewDocuments && (tab === 'Overview' || tab === 'Documents') ? employeeId : null);
+  const securityQ = useAdminUserSecurityStatus(employeeId ?? '', can('auth.security.view') && !!employeeId);
   const decidePhoto = useDecideHrEmployeePhoto();
 
   const handlePhotoDecision = (approve: boolean): void => {
@@ -508,36 +545,35 @@ export function ProfileDrawer(
   // a previous employee's header/tags can never flash through on an A→B switch.
   // (`&& !!e` is redundant at runtime — ready implies data — but lets TS narrow e.)
   const ready = detailQ.ready && !!e;
-  // Open-workflow count is only trustworthy when its query matches this employee.
-  const wfReady = wfQ.data?.employee_id === employeeId;
-  const openWf = wfReady ? (wfQ.data?.open_count ?? 0) : 0;
-
-  const headMenuItems = [
-    ...(access.requestChange ? [{ label: 'Request Change', icon: 'fa-pen', onSelect: () => onAction('Request Change') }] : []),
-    ...(access.uploadDocument ? [{ label: 'Upload HR Document', icon: 'fa-file', onSelect: () => onAction('Upload HR Document') }] : []),
-    ...(access.viewAudit ? [{ label: 'View Audit', icon: 'fa-clock-rotate-left', onSelect: () => setTab('Audit') }] : []),
-    ...(access.startOffboarding ? [{ label: 'Start Offboarding', icon: 'fa-triangle-exclamation', danger: true, onSelect: () => onAction('Start Offboarding') }] : []),
-  ];
-  const headMenu = headMenuItems.length ? (
-    <Menu align="right" items={headMenuItems} trigger={({ toggle }) => (
-      <button class="ui-icon-action" type="button" onClick={toggle} aria-label="More">⋮</button>
-    )} />
-  ) : undefined;
   const primaryTabs = access.viewDocuments ? PRIMARY_TABS : PRIMARY_TABS.filter(item => item !== 'Documents');
+  const visiblePrimaryTabs = (access.viewTraining || access.viewStatutory)
+    ? primaryTabs
+    : primaryTabs.filter(item => item !== 'Compliance');
   const moreTabs = MORE_TABS.filter(item =>
-    (item !== 'Training' || access.viewTraining) &&
-    (item !== 'Statutory Profile' || access.viewStatutory) &&
     (item !== 'Onboarding' || access.viewOnboarding) &&
     (item !== 'Audit' || access.viewAudit));
   const panelMenuItems = [
     ...(access.uploadDocument ? [{ label: 'Upload HR Document', icon: 'fa-file', onSelect: () => onAction('Upload HR Document') }] : []),
-    ...(access.viewStatutory ? [{ label: 'View Statutory Profile', icon: 'fa-file-shield', onSelect: () => setTab('Statutory Profile') }] : []),
+    ...(access.viewAudit ? [{ label: 'View Audit', icon: 'fa-clock-rotate-left', onSelect: () => setTab('Audit') }] : []),
     ...(access.startOffboarding ? [{ label: 'Start Offboarding', icon: 'fa-triangle-exclamation', danger: true, onSelect: () => onAction('Start Offboarding') }] : []),
   ];
   const hasPanelActions = access.requestChange || access.changeStatus || panelMenuItems.length > 0;
+  const manageAccess = can('permissions.manage') ? () => {
+    onClose();
+    showSection('s-ac-users');
+  } : undefined;
+  const actionBar = hasPanelActions ? (
+    <div class={`epd-action-bar${panelMenuItems.length ? ' has-overflow' : ''}`}>
+      {access.requestChange && <button class="ui-btn-primary" type="button" onClick={() => onAction('Request Change')}>Request Change</button>}
+      {access.changeStatus && <button class="ui-btn-secondary" type="button" onClick={() => onAction('Change Status')}>Change Status</button>}
+      {panelMenuItems.length > 0 && <Menu align="right" items={panelMenuItems} trigger={({ toggle }) => (
+        <button class="ui-btn-secondary epd-more-action" type="button" onClick={toggle} aria-label="More employee actions"><LucideIcon name="Ellipsis" size={18} /></button>
+      )} />}
+    </div>
+  ) : undefined;
 
   return (
-    <Drawer rich open={!!employeeId} title="Employee Profile" onClose={onClose} headActions={headMenu}>
+    <Drawer rich open={!!employeeId} title="Employee Profile" onClose={onClose} foot={actionBar} panelClass="employee-profile-drawer">
       {!employeeId ? null : detailQ.isError ? (
         <PanelEmpty>Could not load this employee.</PanelEmpty>
       ) : !ready ? (
@@ -547,7 +583,7 @@ export function ProfileDrawer(
           <EntityHead
             name={e.full_name ?? e.username}
             avatarUrl={e.profile_image_url}
-            reference={<>ⓘ {e.employee_number ?? '—'} <Pill tone={statusTone(e.status)}>{humanize(e.status)}</Pill></>}
+            reference={<>{e.employee_number ?? '—'} <Pill tone={statusTone(e.status)}>{humanize(e.status)}</Pill></>}
             meta={[e.position, e.departmentName, e.siteName]}
           />
 
@@ -567,39 +603,18 @@ export function ProfileDrawer(
             </div>
           )}
 
-          <PanelStats items={[
-            { label: 'Training', value: (() => { const b = trainBadge(e.trainingStatus); return <Pill tone={b.tone}>{b.label}</Pill>; })() },
-            { label: 'Supervisor', value: e.supervisorName ? <><span class="ui-avatar-xs">{initials(e.supervisorName)}</span>{e.supervisorName}</> : '—' },
-            { label: 'Open Workflows', value: (
-              <button class="ui-wf-mini" type="button" onClick={() => setTab('Workflows')} title="Open workflow queue">
-                <span class="ui-wf-mini-ico"><i class="fas fa-list-check" /></span>
-                <span class="ui-wf-mini-text">{openWf} open</span>
-                <span class="ui-wf-mini-eye" aria-hidden="true"><i class="fas fa-eye" /></span>
-              </button>
-            ) },
-          ]} />
-
-          {hasPanelActions && <div class="ui-panel-actions">
-            {access.requestChange && <button class="ui-btn-primary" type="button" onClick={() => onAction('Request Change')}>Request Change</button>}
-            {access.changeStatus && <button class="ui-btn-secondary" type="button" onClick={() => onAction('Change Status')}>Change Status</button>}
-            {panelMenuItems.length > 0 && <Menu align="right" items={panelMenuItems} trigger={({ toggle }) => (
-              <button class="ui-btn-secondary" type="button" onClick={toggle} aria-label="More actions">•••</button>
-            )} />}
-          </div>}
-
-          <PanelTabs primary={primaryTabs} more={moreTabs} active={tab} onChange={setTab} />
+          <PanelTabs primary={visiblePrimaryTabs} more={moreTabs} active={tab} onChange={setTab} />
 
           <div class="ui-panel-body">
-            {tab === 'Overview'          && <OverviewTab d={d} trainQ={trainQ} auditQ={auditQ} onEditContact={access.editContact ? () => onAction('Edit Contact') : undefined} onViewHistory={() => setTab('Assignments')} onViewTraining={() => setTab('Training')} onViewTimeline={() => setTab('Timeline')} showTraining={access.viewTraining} showAudit={access.viewAudit} />}
+            {tab === 'Overview'          && <ProfileOverview d={d} docsQ={docsQ} auditQ={auditQ} securityQ={securityQ} onEditContact={access.editContact ? () => onAction('Edit Contact') : undefined} onViewEmployment={() => setTab('Employment')} onViewCompliance={() => setTab('Compliance')} onViewDocuments={() => setTab('Documents')} onViewTimeline={() => setTab('Timeline')} onManageAccess={manageAccess} showDocuments={access.viewDocuments} showStatutory={access.viewStatutory} showAudit={access.viewAudit} showSecurity={can('auth.security.view')} />}
             {tab === 'Employment'        && <EmploymentTab d={d} />}
-            {tab === 'Assignments'       && <AssignmentsTab d={d} />}
             {access.viewDocuments && tab === 'Documents' && <DocumentsTab docsQ={docsQ} employeeId={employeeId} onUpload={access.uploadDocument ? () => onAction('Upload HR Document') : undefined} access={access} />}
-            {access.viewTraining && tab === 'Training' && <TrainingTab trainQ={trainQ} />}
-            {access.viewStatutory && tab === 'Statutory Profile' && <StatutoryTab d={d} onEdit={access.editStatutory ? () => onAction('Edit Statutory Profile') : undefined} />}
+            {tab === 'Compliance' && <>
+              {access.viewTraining && <TrainingTab trainQ={trainQ} />}
+              {access.viewStatutory && <StatutoryTab d={d} onEdit={access.editStatutory ? () => onAction('Edit Statutory Profile') : undefined} />}
+            </>}
             {access.viewOnboarding && tab === 'Onboarding' && <EmployeeOnboardingSummary employeeId={employeeId} onOpenCase={openOnboardingCase} />}
             {tab === 'Timeline'          && <ActivityTimeline module="hr" recordType="employee" recordId={employeeId} />}
-            {tab === 'Leave'             && <ModuleLinkTab title="Leave" body="Leave balances and requests are managed in the Leave module." />}
-            {tab === 'Attendance'        && <ModuleLinkTab title="Attendance" body="Timesheets and clock events are managed in the Attendance module." />}
             {tab === 'Workflows'         && <WorkflowsTab wfQ={wfQ} />}
             {access.viewAudit && tab === 'Audit' && <AuditTab auditQ={auditQ} />}
           </div>

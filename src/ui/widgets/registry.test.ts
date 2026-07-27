@@ -1,8 +1,11 @@
 // src/ui/widgets/registry.test.ts — guards the registry mechanics (self-registration via
 // import.meta.glob, uniqueness, page filtering) and the declarative adapter.
 import { cleanup, render, screen } from '@testing-library/preact';
+import { QueryClient, QueryClientProvider } from '@tanstack/preact-query';
+import { h } from 'preact';
 import { afterEach, describe, it, expect } from 'vitest';
 import { WIDGET_REGISTRY, getWidgetsForPage } from './registry';
+import { normalizePageKey } from './governance';
 import { declarativeToWidgetDef } from './declarative/declarativeToWidgetDef';
 import type { DeclarativeWidgetSpec } from './declarative/types';
 
@@ -29,25 +32,39 @@ describe('widget registry mechanics', () => {
       'hr.employeeMaster.newStarters',
       'hr.employeeMaster.departures',
       'hr.employeeMaster.recordQuality',
-      'hr.employeeMaster.workforceTrend',
-      'hr.employeeMaster.workforceDistribution',
-      'hr.employeeMaster.lifecycleMovement',
-      'hr.employeeMaster.masterDataWorkload',
+      'hr.employeeMaster.employeeAttentionNeutral',
+      'hr.employeeMaster.monthlyHiresCard',
+      'hr.employeeMaster.internalMovesCard',
+      'hr.employeeMaster.promotionsCard',
+      'hr.employeeMaster.readinessRadar',
+      'hr.employeeMaster.lifecycleOutcomes',
       'hr.employeeMaster.blockedActions',
-      'hr.employeeMaster.readinessGoal',
-      'hr.employeeMaster.quickContact',
       'hr.employeeMaster.recordHealth',
       'hr.employeeMaster.recordRisk',
       'hr.employeeMaster.weeklyActivity',
       'hr.employeeMaster.changeTrend',
       'hr.employeeMaster.lifecycleActivity',
       'hr.employeeMaster.adminWorkload',
+      // supportedPages:['*'] — offered on every board, like the calendar widgets above.
+      'platform.weather.current',
+      'platform.weather.strip',
+      'platform.weather.precipitation',
+      'platform.weather.uv',
+      'platform.weather.wind',
     ]);
   });
 
-  it('registers the nine approved Employee Master design previews', () => {
+  it('keeps versioned page keys and application-wide calendar widgets discoverable', () => {
+    expect(getWidgetsForPage('hr.employees.overview.v2').map(widget => widget.id)).toContain('hr.employeeMaster.activeWorkforce');
+    expect(getWidgetsForPage('hr.employees.overview.kpis.v2').map(widget => widget.id)).toContain('hr.employeeMaster.recordReadiness');
+    expect(getWidgetsForPage('finance.statutory.v2').map(widget => widget.id)).toContain('enterprise.calendar.upcomingDeadlines');
+  });
+
+  // Six: `lifecycleActivity` was promoted from a static preview to a live-api widget, and
+  // `readinessGoal` + `quickContact` were retired from the catalogue.
+  it('registers the six approved Employee Master design previews', () => {
     const employeeMaster = WIDGET_REGISTRY.filter(widget => widget.area === 'Employee Master' && widget.runtimeState === 'static-preview');
-    expect(employeeMaster).toHaveLength(9);
+    expect(employeeMaster).toHaveLength(6);
     for (const widget of employeeMaster) {
       expect(widget.runtimeState).toBe('static-preview');
       expect(widget.governance).toMatchObject({ state: 'preview', discoverable: true });
@@ -71,8 +88,8 @@ describe('widget registry mechanics', () => {
       'hr.employeeMaster.hrWorkQueue', 'hr.employeeMaster.exceptions',
       'hr.employeeMaster.newStarters', 'hr.employeeMaster.departures',
       'hr.employeeMaster.recordQuality',
-      'hr.employeeMaster.workforceTrend', 'hr.employeeMaster.workforceDistribution',
-      'hr.employeeMaster.lifecycleMovement', 'hr.employeeMaster.masterDataWorkload',
+      'hr.employeeMaster.monthlyHiresCard',
+      'hr.employeeMaster.internalMovesCard', 'hr.employeeMaster.promotionsCard',
     ];
     const live = WIDGET_REGISTRY.filter(widget => ids.includes(widget.id));
     expect(live).toHaveLength(ids.length);
@@ -83,31 +100,80 @@ describe('widget registry mechanics', () => {
         permissions: { requiredPermissions: ['hr.employees.view'] },
       });
       expect(widget.renderPreview).not.toBe(widget.render);
-      expect(widget.recommendedFor).toEqual(['hr.employees.overview']);
+      // Compare NORMALISED: the board's layout version (`.v3`) is not part of a widget's identity,
+      // and asserting the literal would make every future version bump a test failure.
+      expect(widget.recommendedFor?.map(normalizePageKey)).toEqual(['hr.employees.overview']);
     }
     const kpis = live.filter(widget => widget.category === 'Key metrics');
     expect(kpis).toHaveLength(4);
     for (const widget of kpis) {
       expect(widget.resizable).toBe(false);
       expect(widget.previewAspect).toBeUndefined();
-      expect(widget.allowedSizes).toEqual([{ key: 'compact', label: 'Fixed', grid: { w: 4, h: 1 }, min: { w: 4, h: 1 }, max: { w: 4, h: 1 }, description: 'Statutory-size Employee Master KPI tile' }]);
-      expect(widget.sizeConstraints).toMatchObject({ defaultColumns: 4, defaultRows: 1, minColumns: 4, minRows: 1, minWidth: 180, minHeight: 84, resizeStrategy: 'fixed-minimum' });
+      expect(widget.allowedSizes).toEqual([{ key: 'compact', label: 'Fixed', grid: { w: 4, h: 6 }, min: { w: 4, h: 6 }, max: { w: 4, h: 6 }, description: 'Statutory-size Employee Master KPI tile' }]);
+      expect(widget.sizeConstraints).toMatchObject({ defaultColumns: 4, defaultRows: 6, minColumns: 4, minRows: 6, minWidth: 180, minHeight: 84, resizeStrategy: 'fixed-minimum' });
     }
-    const trend = live.find(widget => widget.id === 'hr.employeeMaster.workforceTrend');
-    expect(trend?.resizable).toBe(true);
-    expect(trend?.allowedSizes).toHaveLength(3);
-    expect(trend?.sizeConstraints).toMatchObject({ defaultColumns: 12, defaultRows: 4, minColumns: 8, minRows: 4, resizeStrategy: 'content-measured' });
   });
 
-  it('registers two compact workforce pulse charts without reference-image cursor decoration', () => {
-    for (const id of ['hr.employeeMaster.newStarters', 'hr.employeeMaster.departures']) {
+  it('registers the reference-derived Employee Master widgets with live sources and responsive floors', () => {
+    // Two DIFFERENT size families — they were previously asserted with one shared expectation,
+    // which cannot hold: a KPI tile is FIXED (one preset, min == max, so `resizable: false` is
+    // legal), whereas a pulse card offers three presets and therefore must stay resizable —
+    // defineWidget rejects a non-resizable widget that does not pin min and max (FIXED_WIDGET_UNPINNED_SIZE).
+    const kpiIds = ['hr.employeeMaster.activeWorkforce', 'hr.employeeMaster.recordReadiness', 'hr.employeeMaster.hrWorkQueue', 'hr.employeeMaster.exceptions', 'hr.employeeMaster.newStarters', 'hr.employeeMaster.departures'];
+    const pulseIds = ['hr.employeeMaster.monthlyHiresCard', 'hr.employeeMaster.internalMovesCard', 'hr.employeeMaster.promotionsCard'];
+    const largeStatsIds = ['hr.employeeMaster.recordQuality', 'hr.employeeMaster.readinessRadar', 'hr.employeeMaster.lifecycleOutcomes'];
+    const statsIds = [...kpiIds, ...pulseIds, ...largeStatsIds];
+    for (const id of statsIds) expect(WIDGET_REGISTRY.find(widget => widget.id === id), id).toMatchObject({ runtimeState: 'live-api', dataSourceKey: 'hr.employee-master.dashboard' });
+    for (const id of kpiIds) {
       const widget = WIDGET_REGISTRY.find(candidate => candidate.id === id)!;
-      expect(widget).toMatchObject({ category: 'Workforce pulse', resizable: false });
+      expect(widget).toMatchObject({ resizable: false, sizeConstraints: { defaultColumns: 4, defaultRows: 6, minColumns: 4, minRows: 6, minWidth: 180, minHeight: 84, resizeStrategy: 'fixed-minimum' } });
       expect(widget.previewAspect).toBeUndefined();
-      expect(widget.allowedSizes[0]).toMatchObject({ grid: { w: 4, h: 1 }, min: { w: 4, h: 1 }, max: { w: 4, h: 1 } });
-      const { container } = render(widget.renderPreview!({ widgetId: id, sizeKey: 'compact', config: {} }));
-      expect(container.querySelectorAll('.hrew-pulse-chart i')).toHaveLength(4);
-      expect(container.querySelector('.hrew-pulse')).toBeTruthy();
+    }
+    for (const id of pulseIds) {
+      const widget = WIDGET_REGISTRY.find(candidate => candidate.id === id)!;
+      expect(widget).toMatchObject({ resizable: true, sizeConstraints: { defaultColumns: 4, defaultRows: 6, minColumns: 3, minRows: 6, minWidth: 160, minHeight: 84, resizeStrategy: 'fixed-minimum' } });
+      expect(widget.allowedSizes).toHaveLength(3);
+      expect(widget.previewAspect).toBeUndefined();
+    }
+    for (const id of largeStatsIds) expect(WIDGET_REGISTRY.find(widget => widget.id === id)?.resizable, id).toBe(true);
+    for (const id of ['hr.employeeMaster.employeeAttentionNeutral']) {
+      const widget = WIDGET_REGISTRY.find(candidate => candidate.id === id);
+      expect(widget).toMatchObject({ runtimeState: 'live-api', dataSourceKey: 'hr.employee-master.directory', category: 'Actions & workload', permissions: { requiredPermissions: ['hr.employees.view'] } });
+      expect(widget?.recommendedFor).toBeUndefined();
+    }
+    expect(WIDGET_REGISTRY.find(widget => widget.id === 'hr.employeeMaster.readinessRadar')?.sizeConstraints).toMatchObject({ defaultColumns: 7, minColumns: 5, minRows: 12, minWidth: 275, minHeight: 388, resizeStrategy: 'fixed-minimum' });
+  });
+
+
+  it('renders the supplied neutral employee attention design', () => {
+    const widget = WIDGET_REGISTRY.find(candidate => candidate.id === 'hr.employeeMaster.employeeAttentionNeutral')!;
+    expect(widget).toMatchObject({ resizable: true, previewAspect: .62, sizeConstraints: { defaultColumns: 7, defaultRows: 30, minColumns: 6, minRows: 12, minWidth: 389, minHeight: 528 } });
+    const { container } = render(widget.renderPreview!({ widgetId: widget.id, sizeKey: 'standard', config: {} }));
+    expect(container.querySelector('.hrew-attention-reference.is-neutral')).toBeTruthy();
+    expect(screen.getByLabelText('Neutral employee attention card')).toBeTruthy();
+    expect(screen.getByText('Camille Rampersad')).toBeTruthy();
+    expect(container.querySelector('.hrew-ar-ready-gauge')?.getAttribute('aria-label')).toBe('Record ready 0%');
+    expect(screen.getByText('3 Readiness Controls Need Review')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Review Employee Record' })).toBeTruthy();
+  });
+
+  it('renders the three Workplace pulse designs as individual animated white cards', () => {
+    const expected = [
+      { id: 'hr.employeeMaster.monthlyHiresCard', chart: 'bars', title: 'Hires This Month', marks: 5 },
+      { id: 'hr.employeeMaster.internalMovesCard', chart: 'ranges', title: 'Internal Moves', marks: 6 },
+      { id: 'hr.employeeMaster.promotionsCard', chart: 'line', title: 'Promotions', marks: 6 },
+    ];
+    expect(WIDGET_REGISTRY.filter(widget => widget.category === 'Workforce pulse')).toHaveLength(3);
+    for (const item of expected) {
+      const widget = WIDGET_REGISTRY.find(candidate => candidate.id === item.id)!;
+      expect(widget).toMatchObject({ title: item.title, category: 'Workforce pulse', resizable: true });
+      const { container } = render(widget.renderPreview!({ widgetId: item.id, sizeKey: 'compact', config: {} }));
+      const card = container.querySelector<HTMLElement>(`.hrew-workplace-pulse[data-pulse-chart="${item.chart}"]`);
+      expect(card).toBeTruthy();
+      expect(card?.classList.contains('hrew-workplace-pulse')).toBe(true);
+      if (item.chart === 'bars') expect(container.querySelectorAll('.hrew-pulse-bars rect')).toHaveLength(item.marks);
+      if (item.chart === 'ranges') expect(container.querySelectorAll('.hrew-pulse-range-values rect')).toHaveLength(item.marks);
+      if (item.chart === 'line') expect(container.querySelectorAll('.hrew-pulse-points circle')).toHaveLength(item.marks);
       cleanup();
     }
   });
@@ -115,7 +181,7 @@ describe('widget registry mechanics', () => {
   it('adapts the reference scorecard into a live, resizable Record quality widget', () => {
     const widget = WIDGET_REGISTRY.find(candidate => candidate.id === 'hr.employeeMaster.recordQuality')!;
     expect(widget).toMatchObject({ category: 'Health & readiness', runtimeState: 'live-api', resizable: true, previewAspect: .78 });
-    expect(widget.sizeConstraints).toMatchObject({ defaultColumns: 7, defaultRows: 5, minColumns: 6, minRows: 4, minWidth: 280, minHeight: 360, resizeStrategy: 'content-measured' });
+    expect(widget.sizeConstraints).toMatchObject({ defaultColumns: 7, defaultRows: 28, minColumns: 6, minRows: 12, minWidth: 280, minHeight: 360, resizeStrategy: 'content-measured' });
     const { container } = render(widget.renderPreview!({ widgetId: widget.id, sizeKey: 'standard', config: {} }));
     expect(screen.getByText('Record quality')).toBeTruthy();
     expect(screen.getByText('Good records')).toBeTruthy();
@@ -124,10 +190,12 @@ describe('widget registry mechanics', () => {
 
   it('renders Statutory-style drill footers on every Employee Master KPI preview', () => {
     const expected = new Map([
-      ['hr.employeeMaster.activeWorkforce', 'View employees'],
-      ['hr.employeeMaster.recordReadiness', 'Review readiness'],
-      ['hr.employeeMaster.hrWorkQueue', 'View work queue'],
-      ['hr.employeeMaster.exceptions', 'Review exceptions'],
+      // Labels name the FILTER each action applies to the register, not a vague destination —
+      // clicking the count and landing on those exact rows is the point.
+      ['hr.employeeMaster.activeWorkforce', 'View Active Employees'],
+      ['hr.employeeMaster.recordReadiness', 'View Training Gaps'],
+      ['hr.employeeMaster.hrWorkQueue', 'View Register'],
+      ['hr.employeeMaster.exceptions', 'View Missing Assignments'],
     ]);
     for (const [id, label] of expected) {
       const widget = WIDGET_REGISTRY.find(candidate => candidate.id === id);
@@ -146,47 +214,58 @@ describe('widget registry mechanics', () => {
       dataSourceKey: 'platform.calendar',
       permissions: {
         requiredPermissions: ['calendar.view'],
-        actions: { createPersonalTask: 'calendar.task.manage_own', completeTask: 'calendar.task.manage_own' },
+        actions: { createPersonalTask: 'calendar.task.manage_own', completeTask: 'calendar.task.manage_own', removeTask: 'calendar.task.manage_own' },
       },
     });
-    expect(deadlines?.sizeConstraints).toMatchObject({ defaultColumns: 7, defaultRows: 4, minColumns: 6, minRows: 4, minWidth: 285, minHeight: 380 });
-    expect(deadlines?.allowedSizes.find(size => size.key === 'standard')?.grid).toEqual({ w: 7, h: 4 });
+    expect(deadlines?.sizeConstraints).toMatchObject({ defaultColumns: 6, defaultRows: 24, minColumns: 4, minRows: 12, minWidth: 332, minHeight: 420 });
+    expect(deadlines?.allowedSizes.find(size => size.key === 'standard')?.grid).toEqual({ w: 6, h: 24 });
     expect(deadlines?.renderPreview).not.toBe(deadlines?.render);
     expect(tasks?.renderPreview).not.toBe(tasks?.render);
+    expect(tasks?.defaultConfig).toEqual({ theme: 'siomac-blue' });
+    expect(tasks?.configSchema.find(field => field.key === 'theme')?.options).toHaveLength(10);
   });
 
   it('declares a content-safe floor for Data Change Trend and uses it for its default placement', () => {
     const widget = WIDGET_REGISTRY.find(candidate => candidate.id === 'hr.employeeMaster.changeTrend');
     expect(widget?.sizeConstraints).toEqual({
-      defaultColumns: 10, defaultRows: 4, minColumns: 6, minRows: 4,
+      defaultColumns: 10, defaultRows: 22, minColumns: 6, minRows: 12,
       minWidth: 280, minHeight: 350, resizeStrategy: 'content-measured',
     });
-    expect(widget?.allowedSizes.find(size => size.key === widget.defaultSize)?.grid).toEqual({ w: 10, h: 4 });
+    expect(widget?.allowedSizes.find(size => size.key === widget.defaultSize)?.grid).toEqual({ w: 10, h: 22 });
   });
 
   it('keeps Record risk monitor compact and resizable on the 24-column Employee Master board', () => {
     const widget = WIDGET_REGISTRY.find(candidate => candidate.id === 'hr.employeeMaster.recordRisk');
     expect(widget?.sizeConstraints).toEqual({
-      defaultColumns: 7, defaultRows: 3, minColumns: 5, minRows: 3,
+      defaultColumns: 7, defaultRows: 17, minColumns: 5, minRows: 12,
       minWidth: 240, minHeight: 260, resizeStrategy: 'content-measured',
     });
-    expect(widget?.allowedSizes.find(size => size.key === 'standard')?.grid).toEqual({ w: 7, h: 3 });
+    expect(widget?.allowedSizes.find(size => size.key === 'standard')?.grid).toEqual({ w: 7, h: 17 });
   });
 
   it('keeps Record health and Task planner compact on the 24-column Employee Master board', () => {
     const health = WIDGET_REGISTRY.find(candidate => candidate.id === 'hr.employeeMaster.recordHealth');
     const tasks = WIDGET_REGISTRY.find(candidate => candidate.id === 'enterprise.calendar.taskPlanner');
-    expect(health?.sizeConstraints).toMatchObject({ defaultColumns: 8, defaultRows: 4, minColumns: 5, minRows: 3, minHeight: 270 });
-    expect(health?.allowedSizes.find(size => size.key === 'standard')?.grid).toEqual({ w: 8, h: 4 });
+    expect(health?.sizeConstraints).toMatchObject({ defaultColumns: 8, defaultRows: 22, minColumns: 5, minRows: 12, minHeight: 270 });
+    expect(health?.allowedSizes.find(size => size.key === 'standard')?.grid).toEqual({ w: 8, h: 22 });
     expect(tasks?.defaultSize).toBe('standard');
-    expect(tasks?.sizeConstraints).toMatchObject({ defaultColumns: 8, defaultRows: 4, minColumns: 6, minRows: 4, minHeight: 340 });
-    expect(tasks?.allowedSizes.find(size => size.key === 'standard')?.grid).toEqual({ w: 8, h: 4 });
+    expect(tasks?.sizeConstraints).toMatchObject({ defaultColumns: 7, defaultRows: 22, minColumns: 6, minRows: 12, minWidth: 285, minHeight: 280 });
+    expect(tasks?.allowedSizes.find(size => size.key === 'standard')?.grid).toEqual({ w: 7, h: 22 });
+  });
+
+  it('renders an accessible daily completion control in the compact task planner', () => {
+    const tasks = WIDGET_REGISTRY.find(candidate => candidate.id === 'enterprise.calendar.taskPlanner');
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+    render(h(QueryClientProvider, { client }, tasks!.renderPreview!({ widgetId: tasks!.id, sizeKey: 'standard', config: {} })));
+    expect(screen.getByRole('button', { name: 'Mark Review employee records complete' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Remove Review employee records' })).toBeTruthy();
+    expect(screen.getByText('Review employee records')).toBeTruthy();
   });
 
   it('groups the catalogue and curates a smaller recommended starting set', () => {
     const categories = new Set(WIDGET_REGISTRY.map(widget => widget.category));
-    expect(categories).toEqual(new Set(['Calendar & deadlines', 'Actions & workload', 'Health & readiness', 'People & contact', 'Activity & trends', 'Work management', 'Workforce overview', 'Key metrics', 'Workforce pulse']));
-    expect(WIDGET_REGISTRY.filter(widget => widget.recommendedFor?.includes('hr.employees.overview')).map(widget => widget.id)).toEqual([
+    expect(categories).toEqual(new Set(['Calendar & deadlines', 'Actions & workload', 'Health & readiness', 'Activity & trends', 'Work management', 'Key metrics', 'Workforce pulse', 'Site Conditions']));
+    expect(WIDGET_REGISTRY.filter(widget => widget.recommendedFor?.some(page => normalizePageKey(page) === 'hr.employees.overview')).map(widget => widget.id)).toEqual([
       'enterprise.calendar.upcomingDeadlines',
       'hr.employeeMaster.activeWorkforce',
       'hr.employeeMaster.recordReadiness',
@@ -195,10 +274,13 @@ describe('widget registry mechanics', () => {
       'hr.employeeMaster.newStarters',
       'hr.employeeMaster.departures',
       'hr.employeeMaster.recordQuality',
-      'hr.employeeMaster.workforceTrend',
-      'hr.employeeMaster.workforceDistribution',
-      'hr.employeeMaster.lifecycleMovement',
-      'hr.employeeMaster.masterDataWorkload',
+      'hr.employeeMaster.monthlyHiresCard',
+      'hr.employeeMaster.internalMovesCard',
+      'hr.employeeMaster.promotionsCard',
+      'hr.employeeMaster.readinessRadar',
+      'hr.employeeMaster.lifecycleOutcomes',
+      // Promoted from a static design preview to a recommended live-api widget.
+      'hr.employeeMaster.lifecycleActivity',
     ]);
   });
 

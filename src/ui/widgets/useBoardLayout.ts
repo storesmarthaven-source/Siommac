@@ -4,8 +4,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query';
 import { getInstanceLayout, saveInstanceLayout, saveInstanceLayoutDefault, resetInstanceLayout, type InstanceLayoutResponse } from '@api/layout';
 import { toast } from '@store';
+import { dialog } from '@lib/dialog';
 import type { BoardLayout, WidgetInstance } from './types';
 import { createV3Layout, migrateBoardLayout, rebaseBoardLayoutColumns } from './migration';
+import { compactWidgets } from './placement';
 
 const emptyLayout = (pageKey: string): BoardLayout => createV3Layout(pageKey);
 
@@ -38,13 +40,14 @@ export interface UseBoardLayoutResult {
   addWidget: (zoneId: string, widget: WidgetInstance) => Promise<void>;
   removeWidget: (zoneId: string, instanceId: string) => Promise<void>;
   /** Persist the staged edit transaction. */
-  saveLayout: () => Promise<void>;
+  saveLayout: () => Promise<boolean>;
   /** Discard the staged transaction and restore the server value. */
   cancelLayout: () => Promise<void>;
   /** Admin: save the current layout as the org-wide default for this page. */
   setAsDefault: () => Promise<void>;
   /** Clear this user's override and revert to the org/page default. */
   resetLayout: () => Promise<void>;
+  isSaving: boolean;
 }
 
 export function useBoardLayout(pageKey: string, defaultLayout?: BoardLayout, targetColumns?: number): UseBoardLayoutResult {
@@ -94,14 +97,33 @@ export function useBoardLayout(pageKey: string, defaultLayout?: BoardLayout, tar
   async function addWidget(zoneId: string, widget: WidgetInstance): Promise<void> {
     await updateZoneLayout(zoneId, [...(layout.zones[zoneId] ?? []), widget]);
   }
+  // Removing a widget re-packs the zone so the freed space is taken rather than left as a hole —
+  // RGL's vertical compaction alone cannot close a horizontal gap. See compactWidgets: it is a
+  // fixed point for an already-tidy board, so the surviving widgets keep their arrangement.
   async function removeWidget(zoneId: string, instanceId: string): Promise<void> {
-    await updateZoneLayout(zoneId, (layout.zones[zoneId] ?? []).filter(w => w.instanceId !== instanceId));
+    const remaining = (layout.zones[zoneId] ?? []).filter(w => w.instanceId !== instanceId);
+    await updateZoneLayout(zoneId, compactWidgets(remaining, layout.columns ?? 12));
   }
-  async function saveLayout(): Promise<void> {
+  async function saveLayout(): Promise<boolean> {
+    if (!isDirty) return true;
+    const persisted = data?.persistedLayout ? normalizeColumns(data.persistedLayout) : fallback;
+    const persistedCount = Object.values(persisted.zones).reduce((total, zone) => total + zone.length, 0);
+    const nextCount = Object.values(layout.zones).reduce((total, zone) => total + zone.length, 0);
+    if (nextCount < persistedCount) {
+      const removed = persistedCount - nextCount;
+      const confirmed = await dialog.confirm({
+        title: 'Save layout with fewer widgets?',
+        text: `This layout removes ${removed} widget${removed === 1 ? '' : 's'} from your board. You can restore the organization layout later with Reset layout.`,
+        confirmText: 'Save layout',
+        danger: false,
+      });
+      if (!confirmed) return false;
+    }
     try {
       await mutation.mutateAsync(layout);
       qc.setQueryData<InstanceLayoutResponse>(key, prev => ({ layout, orgDefault: prev?.orgDefault ?? orgDefault, persistedLayout: layout }));
       toast.success('Widget layout saved.');
+      return true;
     }
     catch (e) { toast.error((e as Error).message || 'Failed to save widget layout.'); throw e; }
   }
@@ -124,7 +146,7 @@ export function useBoardLayout(pageKey: string, defaultLayout?: BoardLayout, tar
     try {
       await saveInstanceLayoutDefault(pageKey, promoted);
       await resetInstanceLayout(pageKey);
-      qc.setQueryData<InstanceLayoutResponse>(key, { layout: promoted, orgDefault: promoted });
+      qc.setQueryData<InstanceLayoutResponse>(key, { layout: promoted, orgDefault: promoted, persistedLayout: promoted });
       // Refresh in the background — the writes are committed, so surface the toast NOW
       // instead of holding it hostage to another fetch round trip.
       void qc.invalidateQueries({ queryKey: key });
@@ -152,9 +174,28 @@ export function useBoardLayout(pageKey: string, defaultLayout?: BoardLayout, tar
     }
   }
   async function resetLayout(): Promise<void> {
-    await resetInstanceLayout(pageKey);
-    await qc.invalidateQueries({ queryKey: key });
+    try {
+      await resetInstanceLayout(pageKey);
+      await qc.invalidateQueries({ queryKey: key });
+      toast.success('Personal widget layout reset.');
+    } catch (e) {
+      toast.error((e as Error).message || 'Failed to reset widget layout.');
+      throw e;
+    }
   }
 
-  return { layout, isLoading: query.isLoading, isDefaultDirty, isDirty, updateZoneLayout, addWidget, removeWidget, saveLayout, cancelLayout, setAsDefault, resetLayout };
+  return {
+    layout,
+    isLoading: query.isLoading,
+    isDefaultDirty,
+    isDirty,
+    isSaving: mutation.isPending,
+    updateZoneLayout,
+    addWidget,
+    removeWidget,
+    saveLayout,
+    cancelLayout,
+    setAsDefault,
+    resetLayout,
+  };
 }

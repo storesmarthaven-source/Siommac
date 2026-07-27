@@ -1,5 +1,5 @@
 import { findWidgetDataSource } from './dataSources';
-import { effectiveWidgetPolicy } from './governance';
+import { effectiveWidgetPolicy, policyAllowsPage } from './governance';
 import type { WidgetDef, WidgetRuntimeState } from './types';
 
 export interface WidgetAccessContext { pageKey: string; pagePermission?: string; has: (key: string) => boolean }
@@ -9,7 +9,7 @@ export function resolveWidgetAccess(def: WidgetDef | undefined, ctx: WidgetAcces
   if (ctx.pagePermission && !ctx.has(ctx.pagePermission)) return { mount: false, state: 'restricted', reason: 'Page access is required.' };
   const policy = effectiveWidgetPolicy(def);
   if (policy.state === 'disabled') return { mount: false, state: 'disabled', reason: 'Disabled by widget governance.' };
-  if (policy.allowedPages?.length && !policy.allowedPages.includes(ctx.pageKey)) return { mount: false, state: 'restricted', reason: 'Not approved for this page.' };
+  if (!policyAllowsPage(policy.allowedPages, ctx.pageKey)) return { mount: false, state: 'restricted', reason: 'Not approved for this page.' };
   if (!(policy.requiredCapabilities ?? []).every(ctx.has)) return { mount: false, state: 'restricted', reason: 'Governance capability is required.' };
   const required = def.permissions?.requiredPermissions ?? def.dataSource.permissions;
   if (!required.every(ctx.has)) return { mount: false, state: 'restricted', reason: 'You do not have permission to view this widget.' };

@@ -583,7 +583,36 @@ export async function saveLayout(mode: string): Promise<void> {
 
 // ── Section routing ───────────────────────────────────────────────────────────
 
+type SectionNavigationGuard = (targetSectionId: string) => boolean | Promise<boolean>;
+
+let sectionNavigationGuard: SectionNavigationGuard | null = null;
+let sectionNavigationPending = false;
+
+/** Register the active page-level navigation guard.
+ *  Widget boards use this while edits are staged so sidebar navigation cannot silently
+ *  carry an uncommitted cache snapshot into a later save. */
+export function registerSectionNavigationGuard(guard: SectionNavigationGuard): () => void {
+  sectionNavigationGuard = guard;
+  return () => {
+    if (sectionNavigationGuard === guard) sectionNavigationGuard = null;
+  };
+}
+
 export function showSection(id: string): void {
+  const guard = sectionNavigationGuard;
+  if (!guard) {
+    showSectionNow(id);
+    return;
+  }
+  if (sectionNavigationPending) return;
+  sectionNavigationPending = true;
+  void Promise.resolve(guard(id))
+    .then(allowed => { if (allowed) showSectionNow(id); })
+    .catch(() => { /* guard owns user-facing error handling */ })
+    .finally(() => { sectionNavigationPending = false; });
+}
+
+function showSectionNow(id: string): void {
   const win = window as unknown as Record<string, { getDashEditMode?: () => boolean; toggleEditMode?: () => void }>;
   if (id !== 's-adm-dashboard' && win.Dashboard?.getDashEditMode?.()) {
     win.Dashboard.toggleEditMode?.();

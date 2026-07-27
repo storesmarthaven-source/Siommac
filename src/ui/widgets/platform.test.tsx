@@ -1,13 +1,13 @@
 import { render, screen } from '@testing-library/preact';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { migrateBoardLayout, rebaseBoardLayoutColumns } from './migration';
-import { deriveResponsivePlacements, placeWidgetsAtBottom } from './placement';
+import { compactWidgets, deriveResponsivePlacements, insertWidgetsAtRow, insertWidgetsAtTop, placeWidgetsAtBottom } from './placement';
 import { clearWidgetDataSourcesForTests, registerWidgetDataSource } from './dataSources';
 import { resolveWidgetAccess } from './access';
 import { setWidgetGovernancePolicies } from './governance';
 import { WidgetPlaceholder } from './WidgetPlaceholder';
-import type { WidgetDef, WidgetInstance } from './types';
-import { clampWidgetInstanceToMinimum, isResizeProgressTowardFit, resizeGridElement } from './WidgetBoardZone';
+import type { LocalWidgetMap, WidgetDef, WidgetInstance } from './types';
+import { CANONICAL_GAP, CANONICAL_ROW_PX, clampWidgetInstanceToMinimum, resizeGridElement } from './WidgetBoardZone';
 import { widgetPreviewCanvas } from './WidgetPreviewScaler';
 import { WIDGET_REGISTRY } from './registry';
 
@@ -62,15 +62,35 @@ describe('Widget Platform v3 layout contract', () => {
       { ...instance, instanceId: 'i3', y: 0, h: 2 },
     ])).toMatchObject([{ instanceId: 'i2', x: 0, y: 5 }, { instanceId: 'i3', x: 0, y: 9 }]);
   });
+  it('inserts a multi-select batch at the top and shifts existing widgets down', () => {
+    expect(insertWidgetsAtTop([instance], [
+      { ...instance, instanceId: 'i2', x: 3, y: 9, h: 4 },
+      { ...instance, instanceId: 'i3', x: 6, y: 12, h: 2 },
+    ])).toMatchObject([
+      { instanceId: 'i1', x: 6, y: 8 },
+      { instanceId: 'i2', x: 0, y: 0 },
+      { instanceId: 'i3', x: 0, y: 4 },
+    ]);
+  });
+  it('inserts widgets at a section row without moving earlier rows', () => {
+    const kpi = { ...instance, instanceId: 'kpi', x: 0, y: 0, w: 4, h: 1 };
+    const register = { ...instance, instanceId: 'register', x: 0, y: 10, w: 24, h: 9 };
+    expect(insertWidgetsAtRow([kpi, register], [{ ...instance, instanceId: 'new', y: 99, h: 4 }], 1)).toMatchObject([
+      { instanceId: 'kpi', y: 0 },
+      { instanceId: 'register', y: 14 },
+      { instanceId: 'new', x: 0, y: 1 },
+    ]);
+  });
   it('repairs saved geometry below the widget-specific grid floor without losing instance data', () => {
     const widget = WIDGET_REGISTRY.find(candidate => candidate.id === 'hr.employeeMaster.changeTrend')!;
     const undersized = { ...instance, widgetId: widget.id, w: 1, h: 1, config: { locale: 'es' } };
-    expect(clampWidgetInstanceToMinimum(undersized)).toMatchObject({ w: 6, h: 4, config: { locale: 'es' } });
+    // h:12 == the widget's RENDER floor (204px), not its default size — see the shrink guard below.
+    expect(clampWidgetInstanceToMinimum(undersized)).toMatchObject({ w: 6, h: 12, config: { locale: 'es' } });
   });
   it('restores code-owned geometry for a fixed global widget in both directions', () => {
     const widget = WIDGET_REGISTRY.find(candidate => candidate.id === 'hr.employeeMaster.activeWorkforce')!;
     expect(widget.resizable).toBe(false);
-    expect(clampWidgetInstanceToMinimum({ ...instance, widgetId: widget.id, w: 11, h: 7 })).toMatchObject({ w: 4, h: 1 });
+    expect(clampWidgetInstanceToMinimum({ ...instance, widgetId: widget.id, w: 11, h: 7 })).toMatchObject({ w: 4, h: 6 });
   });
   it('uses the board pixel floor when constructing library preview canvases', () => {
     const widget = WIDGET_REGISTRY.find(candidate => candidate.id === 'hr.employeeMaster.changeTrend')!;
@@ -85,12 +105,84 @@ describe('Widget Platform v3 layout contract', () => {
     gridItem.append(handle);
     expect(resizeGridElement(handle)).toBe(gridItem);
   });
-  it('lets an already-undersized saved tile grow toward its content-safe floor without allowing further shrinkage', () => {
-    const previous = { width: 173, height: 388 };
-    expect(isResizeProgressTowardFit(previous, { width: 210, height: 388 }, { horizontal: true, vertical: false })).toBe(true);
-    expect(isResizeProgressTowardFit(previous, { width: 210, height: 388 }, { horizontal: false, vertical: true })).toBe(true);
-    expect(isResizeProgressTowardFit(previous, { width: 160, height: 388 }, { horizontal: true, vertical: false })).toBe(false);
-    expect(isResizeProgressTowardFit(previous, { width: 210, height: 370 }, { horizontal: true, vertical: true })).toBe(false);
+  // Resize is bounded by the grid floor alone (Statutory-parity). The pixel/content-overflow
+  // resize gate that this block used to cover was removed — it fired on the first pixel of
+  // travel for any widget whose declared minWidth met or exceeded its own default placement
+  // width, which pinned the tile instead of guarding it. The floor that remains is minW/minH.
+  // Removal must CLOSE the hole. RGL compacts vertically only, so deleting the left tile of a
+  // two-column row used to leave the right tile pinned right with dead space beside it.
+  it('re-packs a zone so a removed widget leaves no gap, without scrambling the survivors', () => {
+    const at = (id: string, x: number, y: number, w: number, h: number): WidgetInstance =>
+      ({ ...instance, instanceId: id, widgetId: id, x, y, w, h });
+    // Two side-by-side charts over a full-width register (the Employee Master shape).
+    const board = [at('left', 0, 0, 12, 22), at('right', 12, 0, 12, 22), at('register', 0, 22, 24, 50)];
+
+    // Already tidy → a FIXED POINT. The pair must stay side by side, not collapse into a column.
+    expect(compactWidgets(board, 24)).toMatchObject([
+      { instanceId: 'left', x: 0, y: 0 }, { instanceId: 'right', x: 12, y: 0 }, { instanceId: 'register', x: 0, y: 22 },
+    ]);
+
+    // Remove the LEFT tile — the survivor must take the freed space rather than stay pinned right.
+    expect(compactWidgets(board.filter(w => w.instanceId !== 'left'), 24)).toMatchObject([
+      { instanceId: 'right', x: 0, y: 0 }, { instanceId: 'register', x: 0, y: 22 },
+    ]);
+
+    // Idempotent: re-packing a packed layout changes nothing.
+    const packed = compactWidgets(board.filter(w => w.instanceId !== 'left'), 24);
+    expect(compactWidgets(packed, 24)).toEqual(packed);
+  });
+  it('never overlaps two widgets while closing a gap', () => {
+    const at = (id: string, x: number, y: number, w: number, h: number): WidgetInstance =>
+      ({ ...instance, instanceId: id, widgetId: id, x, y, w, h });
+    const packed = compactWidgets([at('a', 12, 40, 6, 28), at('b', 18, 40, 6, 28), at('c', 0, 80, 24, 20)], 24);
+    for (const a of packed) {
+      for (const b of packed) {
+        if (a === b) continue;
+        expect(a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h).toBe(false);
+      }
+    }
+    // Everything floats to the top-left when nothing blocks it.
+    expect(packed.map(p => ({ x: p.x, y: p.y }))).toEqual([{ x: 0, y: 0 }, { x: 6, y: 0 }, { x: 0, y: 28 }]);
+  });
+  // THE unit-system guard. Every board runs the canonical grid (18px per row), so a widget's
+  // authored height and its pixel size describe the SAME thing. Keyed off defaultRows — the size
+  // the widget is MEANT to occupy — because minRows is deliberately a much lower floor (below).
+  // A widget still authored in the old coarse 88px units declares ~5x too few rows and fails here.
+  it('declares every widget height in the canonical grid unit', () => {
+    const offenders = WIDGET_REGISTRY
+      .filter(w => w.sizeConstraints?.minHeight && w.sizeConstraints.defaultRows)
+      .map(w => {
+        const { defaultRows, minHeight } = w.sizeConstraints!;
+        return { id: w.id, defaultRows, derived: Math.ceil((minHeight! + CANONICAL_GAP[1]) / CANONICAL_ROW_PX) };
+      })
+      // Tolerance absorbs honest rounding; a coarse-unit widget is off by ~16.
+      .filter(w => w.defaultRows < w.derived - 4);
+    expect(offenders).toEqual([]);
+  });
+
+  // No resizable widget may declare a TALL vertical floor. minRows and defaultRows had drifted
+  // into meaning the same thing: widgets shipped with minRows === defaultRows (22–28 rows,
+  // 384–492px), so the vertical resize handle moved and snapped straight back — the widget could
+  // not be made smaller than its own default. The two fields mean different things:
+  //   defaultRows — the size the card looks good at, used when it is placed.
+  //   minRows     — the smallest it can still RENDER. Content scrolls; it is not a design opinion.
+  // MAX_FLOOR_ROWS is the Statutory board's own deadline-card floor (h12 = 204px), which is the
+  // reference for how a board should feel. A fixed widget (the KPI tile) is exempt — min == max
+  // == default is precisely what "fixed" means.
+  it('keeps every resizable widget free to shrink vertically', () => {
+    const MAX_FLOOR_ROWS = 12;
+    const tooTall = WIDGET_REGISTRY
+      .filter(w => w.resizable !== false && w.sizeConstraints)
+      .filter(w => w.sizeConstraints!.minRows > MAX_FLOOR_ROWS)
+      .map(w => `${w.id} (minRows ${w.sizeConstraints!.minRows} = ${w.sizeConstraints!.minRows * CANONICAL_ROW_PX - CANONICAL_GAP[1]}px floor)`);
+    expect(tooTall).toEqual([]);
+  });
+  it('clamps a saved tile up to its widget grid floor rather than blocking the gesture', () => {
+    const local: LocalWidgetMap = {
+      'w.floored': { render: () => <div />, allowedSizes: [{ key: 'standard', label: 'Default', grid: { w: 6, h: 20 } }] },
+    };
+    const saved: WidgetInstance = { instanceId: 'i1', widgetId: 'w.floored', pageKey: 'p', zoneId: 'main', x: 0, y: 0, w: 2, h: 3, sizeKey: 'standard', config: {} };
+    expect(clampWidgetInstanceToMinimum(saved, local)).toMatchObject({ w: 6, h: 20 });
   });
 });
 

@@ -40,13 +40,13 @@ export interface WidgetBoardZoneProps {
   defaultLayout?: BoardLayout;
   /** Demo mode — registry widgets render their static sample instead of live data. */
   demo?: boolean;
-  /** Grid row height in px (default 88) — see WidgetBoardProps.cellHeight. */
+  /** Grid row height in px. Defaults to the CANONICAL unit — see CANONICAL_CELL_HEIGHT. */
   cellHeight?: number;
   /** Grid column count (default 12) — see WidgetBoardProps.column. */
   column?: number;
-  /** Explicit [horizontal, vertical] gap in px between tiles. Overrides the default,
-   *  which is derived from cellHeight (`[12, vMargin]`). Lets a board tune spacing
-   *  independently of its row height — see WidgetBoardProps.gap. */
+  /** [horizontal, vertical] gap in px between tiles. Defaults to CANONICAL_GAP; overriding the
+   *  VERTICAL value changes what a declared row height means on this board, so don't — see
+   *  CANONICAL_CELL_HEIGHT. */
   gap?: [number, number];
   /** RGL compactType — see WidgetBoardProps.compact. */
   compact?: 'vertical' | 'horizontal' | null;
@@ -61,13 +61,32 @@ export interface WidgetBoardZoneProps {
   isBounded?: boolean;
   /** When false, tiles skip the fade+rise mount reveal — see WidgetBoardProps.revealOnMount. Default true. */
   revealOnMount?: boolean;
-  /** True once the installed-package list has loaded — gates pruning of orphaned (uninstalled) widgets. */
+  /** True once the installed-package list has loaded. Gates the geometry self-heal below, so a
+   *  widget whose package simply hasn't loaded yet isn't treated as unresolvable. Nothing is
+   *  pruned — an unresolvable instance keeps its saved slot and renders a placeholder. */
   registryReady?: boolean;
   preview?: PreviewWidgetInstance | null;
   onPreviewChange?: (preview: PreviewWidgetInstance) => void;
   onCommitPreview?: (preview: PreviewWidgetInstance) => void;
   onDiscardPreview?: () => void;
 }
+
+// ── THE CANONICAL GRID UNIT — one unit system for every board ─────────────────────────────────
+// A widget's declared heights (allowedSizes[].grid.h / .min.h / .max.h, sizeConstraints.minRows /
+// defaultRows) are RAW react-grid-layout rows. Rows only mean a pixel height in combination with a
+// board's rowHeight + margin — so if boards disagree on those, the SAME widget renders a different
+// size per board, and any widget with `supportedPages: ['*']` is guaranteed wrong somewhere. That
+// mismatch is a recurring source of "widget renders as a sliver" bugs.
+//
+// The fix is to remove the variable rather than convert between values of it: every board uses
+// these constants, so a row is 18px everywhere and a declared height means one thing.
+//   tile height = CANONICAL_CELL_HEIGHT·h + CANONICAL_GAP·(h−1) = 18h − 12
+// A board may still choose its COLUMN count (12 or 24) — widths are declared per-widget against
+// the column count and are not affected by row height.
+export const CANONICAL_CELL_HEIGHT = 6;
+export const CANONICAL_GAP: [number, number] = [12, 12];
+/** Pixels per canonical row, including the gap that follows it. */
+export const CANONICAL_ROW_PX = CANONICAL_CELL_HEIGHT + CANONICAL_GAP[1];
 
 // A widget is interactive (movable/resizable) only as a preview, or when the board is editing.
 const itemInteractive = (item: BoardWidgetInstance, editing?: boolean): boolean => isPreviewWidget(item) || !!editing;
@@ -99,19 +118,6 @@ export function resizeGridElement(callbackElement: HTMLElement): HTMLElement {
   return callbackElement.closest<HTMLElement>('.react-grid-item') ?? callbackElement;
 }
 
-export function isResizeProgressTowardFit(
-  previous: { width: number; height: number },
-  next: { width: number; height: number },
-  blocked: { horizontal: boolean; vertical: boolean },
-): boolean {
-  const anyGrowth = next.width > previous.width + 1 || next.height > previous.height + 1;
-  const horizontalNotWorse = !blocked.horizontal || next.width + 1 >= previous.width;
-  const verticalNotWorse = !blocked.vertical || next.height + 1 >= previous.height;
-  // Growth on an already-safe axis must remain possible while a different axis has a pre-existing
-  // fit warning. For example, a 2px vertical text overflow must not freeze horizontal widening.
-  return horizontalNotWorse && verticalNotWorse && anyGrowth;
-}
-
 // Self-heals geometry saved BEFORE a widget declared its current floor (e.g. a since-fixed resize
 // bug let a tile shrink smaller than the widget can render) — clamps a committed instance up to its
 // widget's current minimum. Runs on every load, so stale bad geometry corrects itself instead of
@@ -135,7 +141,7 @@ function wantsFit(widgetId: string, localWidgets?: LocalWidgetMap): boolean {
   return !!(localWidgets?.[widgetId]?.sizeToContent ?? findWidgetDef(widgetId)?.sizeToContent);
 }
 
-export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaultLayout, demo, cellHeight = 88, column = 12, gap, compact = 'vertical', resizable = true, maxRows, isBounded = false, revealOnMount = true, registryReady, preview, onPreviewChange, onCommitPreview, onDiscardPreview }: WidgetBoardZoneProps): VNode {
+export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaultLayout, demo, cellHeight = CANONICAL_CELL_HEIGHT, column = 12, gap = CANONICAL_GAP, compact = 'vertical', resizable = true, maxRows, isBounded = false, revealOnMount = true, registryReady, preview, onPreviewChange, onCommitPreview, onDiscardPreview }: WidgetBoardZoneProps): VNode {
   // Re-render when installed (declarative) widgets change so islands resolve them.
   const rtVersion = useRuntimeWidgetsVersion();
   const { layout, updateZoneLayout, removeWidget } = useBoardLayout(pageKey, defaultLayout);
@@ -153,12 +159,11 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
   // height). Keyed by instanceId. RGL has no native sizeToContent, so we measure + set `h` ourselves.
   const [fitRows, setFitRows] = useState<Record<string, number>>({});
   const wrapRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const lastValidResize = useRef<Map<string, { w: number; h: number; width: number; height: number }>>(new Map());
   const activeResizeIds = useRef<Set<string>>(new Set());
 
-  // Vertical gap between tiles. Must stay well below the row height on a fine grid — otherwise the
-  // gap dominates and tiles can't hug content. Horizontal gutter is a constant 12.
-  const vMargin = gap ? gap[1] : (cellHeight >= 44 ? 12 : Math.max(2, Math.floor(cellHeight / 2) - 1));
+  // Vertical gap between tiles. Always defined — `gap` defaults to CANONICAL_GAP, so the old
+  // cellHeight-derived fallback is gone along with the per-board row heights it existed for.
+  const vMargin = gap[1];
   const itemMaxRows = Math.max(16, Math.ceil(1408 / cellHeight));
 
   const rglLayout: Layout[] = items.map(it => {
@@ -202,66 +207,23 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
     }
   }
 
-  const onResizeStart: ItemCallback = (_next, oldItem, newItem, _placeholder, _event, element) => {
-    const gridElement = resizeGridElement(element);
-    const rect = gridElement.getBoundingClientRect();
-    lastValidResize.current.set(newItem.i, { w: oldItem.w, h: oldItem.h, width: rect.width, height: rect.height });
+  // Resize is bounded by the GRID FLOOR ONLY (RGL's minW/minH, from widgetMinGrid) — the same
+  // way the Statutory board behaves, which is the reference for how a board should feel.
+  //
+  // There used to be a second gate here that rejected a resize step whenever the tile fell under
+  // a declared pixel `minWidth` or its content reported horizontal overflow. It was removed: a
+  // widget's declared pixel minimum is frequently at or above the width its own default placement
+  // gives it (Upcoming Deadlines declares minWidth 332 and is placed at w6 ≈ 341px on a 24-column
+  // board), so the gate fired on the first pixel of travel and pinned the tile with a "Minimum
+  // widget size reached" badge. That reads as a broken resize, not as a guard rail. Cards are
+  // fluid and reflow; the grid floor is the honest constraint. `minWidth`/`minHeight` remain
+  // meaningful as LIBRARY PREVIEW metadata (see WidgetPreviewScaler), which is what they size well.
+  const onResizeStart: ItemCallback = (_next, _oldItem, newItem) => {
     activeResizeIds.current.add(newItem.i);
-    delete gridElement.dataset.widgetMinimumReached;
   };
 
-  const validateResize: ItemCallback = (_next, oldItem, newItem, placeholder, _event, element) => {
-    const item = items.find(candidate => candidate.instanceId === newItem.i);
-    if (!item) return;
-    const gridElement = resizeGridElement(element);
-    const constraints = sizeConstraintsFor(item.widgetId, localWidgets);
-    const content = gridElement.querySelector<HTMLElement>('[data-widget-content-root]')
-      ?? gridElement.querySelector<HTMLElement>('.wbi-bare-body > *, .wbi-body > *');
-    const rect = gridElement.getBoundingClientRect();
-    const widthBelowMinimum = !!constraints?.minWidth && rect.width + 1 < constraints.minWidth;
-    const heightBelowMinimum = !!constraints?.minHeight && rect.height + 1 < constraints.minHeight;
-    const declaredFit = !widthBelowMinimum && !heightBelowMinimum;
-    const fitResult = constraints?.resizeStrategy === 'content-measured' && content
-      ? checkWidgetContentFit(content)
-      : null;
-    const measuredFit = !fitResult || fitResult.fits;
-    const last = lastValidResize.current.get(newItem.i)
-      ?? { w: oldItem.w, h: oldItem.h, width: rect.width, height: rect.height };
-    const unknownMeasuredAxis = !!fitResult && !fitResult.fits
-      && !fitResult.horizontalOverflow && !fitResult.verticalOverflow;
-    const recovering = isResizeProgressTowardFit(
-      last,
-      rect,
-      {
-        horizontal: widthBelowMinimum || !!fitResult?.horizontalOverflow || unknownMeasuredAxis,
-        vertical: heightBelowMinimum || !!fitResult?.verticalOverflow || unknownMeasuredAxis,
-      },
-    );
-
-    // A legacy/saved tile may already be smaller than today's pixel or content floor. Do not
-    // deadlock it there by rejecting every intermediate drag step: accept monotonic growth until
-    // it reaches a fully valid size. Shrinking from a valid size still snaps to the last safe box.
-    if ((declaredFit && measuredFit) || recovering) {
-      lastValidResize.current.set(newItem.i, { w: newItem.w, h: newItem.h, width: rect.width, height: rect.height });
-      delete gridElement.dataset.widgetMinimumReached;
-      return;
-    }
-
-    newItem.w = last.w; newItem.h = last.h;
-    // react-grid-layout types the placeholder as present, but its stop callback may supply null
-    // after the placeholder DOM has already been torn down.
-    if (placeholder) { placeholder.w = last.w; placeholder.h = last.h; }
-    // Keep RGL as the sole owner of pixel geometry. Writing width/height here desynchronizes the
-    // DOM box from the restored grid units, which leaves neighbouring tiles positioned against a
-    // different height and can visibly overlap them after the gesture ends.
-    gridElement.dataset.widgetMinimumReached = 'true';
-  };
-
-  const onResizeStop: ItemCallback = (next, oldItem, newItem, placeholder, event, element) => {
-    validateResize(next, oldItem, newItem, placeholder, event, element);
-    lastValidResize.current.delete(newItem.i);
+  const onResizeStop: ItemCallback = (next, _oldItem, newItem) => {
     activeResizeIds.current.delete(newItem.i);
-    delete resizeGridElement(element).dataset.widgetMinimumReached;
     persist(next);
   };
 
@@ -306,11 +268,16 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
     return () => { if (raf) cancelAnimationFrame(raf); ro.disconnect(); };
   }, [sig, cellHeight, vMargin, editing, demo, rtVersion, localWidgets]);
 
-  // Recheck content-measured widgets when their rendered box or data changes. The hard RGL floor
-  // handles known minimums; this observer catches longer values, localization, font scaling and
-  // zoom. Width failures grow by one canonical column until the compact layout fits. Non-fit
-  // widgets likewise grow vertically; size-to-content widgets use the natural-height observer
-  // above for their row correction. Never fight an active pointer gesture.
+  // Recheck content-measured widgets when their rendered box or data changes and FLAG overflow
+  // (`data-widget-content-overflow`) so the card can style/scroll it. Observation only.
+  //
+  // This used to also grow the tile "by one canonical column until the compact layout fits" and
+  // persist that. Two problems: it wrote geometry to the server with no user gesture, directly
+  // against this zone's own rule that geometry persists on drag/resize STOP only; and it fought
+  // the user — shrink a tile, the observer sees overflow and widens it straight back, which is
+  // half of why a widget felt impossible to make smaller. The Statutory board never ran this
+  // (its page-local widgets declare no resizeStrategy) and that is the behaviour being matched.
+  // The honest floor is the widget's declared grid minimum, enforced by RGL.
   useEffect(() => {
     const contentToItem = new Map<Element, BoardWidgetInstance>();
     const pendingTargets = new Set<Element>();
@@ -321,33 +288,16 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
       if (raf) cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
         raf = 0;
-        const corrections = new Map<string, { w: number; h: number }>();
-        let previewCorrection: PreviewWidgetInstance | null = null;
         for (const target of pendingTargets) {
           const item = contentToItem.get(target);
+          // Never measure a tile mid-gesture: the box is in flux and the flag would thrash.
           if (!item || activeResizeIds.current.has(item.instanceId)) continue;
-          const content = target as HTMLElement;
           const wrap = wrapRefs.current.get(item.instanceId);
-          const result = checkWidgetContentFit(content);
-          if (result.fits) {
-            if (wrap) delete wrap.dataset.widgetContentOverflow;
-            continue;
-          }
-          if (wrap) wrap.dataset.widgetContentOverflow = 'true';
-          const unknownAxis = !result.horizontalOverflow && !result.verticalOverflow;
-          const w = (result.horizontalOverflow || unknownAxis) && item.w < column ? item.w + 1 : item.w;
-          const h = !wantsFit(item.widgetId, localWidgets)
-            && (result.verticalOverflow || unknownAxis) && item.h < itemMaxRows ? item.h + 1 : item.h;
-          if (w === item.w && h === item.h) continue;
-          if (isPreviewWidget(item)) previewCorrection = { ...item, w, h };
-          else corrections.set(item.instanceId, { w, h });
+          if (!wrap) continue;
+          if (checkWidgetContentFit(target as HTMLElement).fits) delete wrap.dataset.widgetContentOverflow;
+          else wrap.dataset.widgetContentOverflow = 'true';
         }
         pendingTargets.clear();
-        if (corrections.size) {
-          const current = stateRef.current;
-          void current.updateZoneLayout(current.zoneId, current.committed.map(item => ({ ...item, ...(corrections.get(item.instanceId) ?? {}) })));
-        }
-        if (previewCorrection) onPreviewChange?.(previewCorrection);
       });
     };
     const ro = new ResizeObserver(entries => schedule(entries.map(entry => entry.target)));
@@ -363,7 +313,7 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
       mutationObservers.push(mo);
     }
     return () => { if (raf) cancelAnimationFrame(raf); ro.disconnect(); mutationObservers.forEach(observer => observer.disconnect()); };
-  }, [sig, column, itemMaxRows, localWidgets, updateZoneLayout, zoneId, onPreviewChange]);
+  }, [sig, localWidgets]);
 
   // Self-heal resolvable geometry once package discovery is authoritative. Missing widgets stay put.
   useEffect(() => {
@@ -377,14 +327,15 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
       <ReactGridLayout
         className="wbi-zone"
         cols={column} rowHeight={cellHeight}
-        margin={gap ?? [12, vMargin]} containerPadding={[0, 0]}
+        margin={gap} containerPadding={[0, 0]}
         compactType={compact ?? null} preventCollision={compact === null} isBounded={isBounded}
         {...(maxRows != null ? { maxRows } : {})}
-        draggableHandle=".wbi-drag" resizeHandles={['se']}
+        draggableHandle=".wbi-drag"
+        draggableCancel="button,input,select,textarea,a,[role='button'],.wbi-no-drag"
+        resizeHandles={['se', 's', 'e']}
         layout={rglLayout}
         onDragStop={(l: Layout[]) => persist(l)}
         onResizeStart={onResizeStart}
-        onResize={validateResize}
         onResizeStop={onResizeStop}
       >
         {items.map(it => {
