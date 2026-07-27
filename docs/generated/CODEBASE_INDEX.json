@@ -1,34 +1,34 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "8b6a56d0059d072d07fe24f1ed886642d4164f50",
+    "head": "e1d45ac4fe928eb6fe3c8f4a01c4f5e20926385e",
     "branch": "main",
-    "fingerprint": "aae5aec69a0243271ab8a83d",
-    "indexedFiles": 1638
+    "fingerprint": "2e5fb6b691784abf9abc3ed2",
+    "indexedFiles": 1640
   },
   "summary": {
-    "files": 1292,
-    "symbols": 12934,
+    "files": 1293,
+    "symbols": 12942,
     "widgets": 51,
     "routes": 957,
     "routeDefinitions": 958,
     "unmountedRoutes": 17,
     "apiCalls": 352,
-    "databaseObjects": 1385,
+    "databaseObjects": 1386,
     "e2eSuites": 83,
-    "e2eTests": 2624
+    "e2eTests": 2631
   },
   "modules": [
     {
       "id": "hr",
       "counts": {
-        "files": 220,
-        "symbols": 2353,
+        "files": 221,
+        "symbols": 2361,
         "widgets": 9,
         "routes": 260,
         "routeDefinitions": 260,
         "apiCalls": 33,
-        "databaseObjects": 171,
+        "databaseObjects": 172,
         "e2eSuites": 16
       }
     },
@@ -2099,8 +2099,8 @@
       "path": "netlify/functions/routes/hrEmployeeImport.ts",
       "module": "hr",
       "role": "backend-route",
-      "lines": 650,
-      "hash": "d3c7d02b9bd536d3"
+      "lines": 684,
+      "hash": "c20844a02f1d4b75"
     },
     {
       "path": "netlify/functions/routes/hrLeave.ts",
@@ -2624,8 +2624,8 @@
       "path": "scripts/e2e/suites/hrEmployeeImport.mjs",
       "module": "hr",
       "role": "e2e-suite",
-      "lines": 172,
-      "hash": "f23a3db744c585c4"
+      "lines": 300,
+      "hash": "26146e305d20bea3"
     },
     {
       "path": "scripts/e2e/suites/hrEmployeeMaster.mjs",
@@ -8989,6 +8989,13 @@
       "role": "test",
       "lines": 188,
       "hash": "11d192ccffdc15a1"
+    },
+    {
+      "path": "tests/vitest/employeeImportCreatePath.test.ts",
+      "module": "hr",
+      "role": "test",
+      "lines": 154,
+      "hash": "4d44980d67139a2e"
     },
     {
       "path": "tests/vitest/employeeImportLimits.test.ts",
@@ -41779,7 +41786,7 @@
       "name": "router",
       "kind": "variable",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 28,
+      "line": 29,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41789,7 +41796,7 @@
       "name": "body",
       "kind": "function",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 29,
+      "line": 30,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41799,7 +41806,7 @@
       "name": "REQUIRED_FIELDS",
       "kind": "variable",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 33,
+      "line": 34,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41809,7 +41816,7 @@
       "name": "ImportPolicy",
       "kind": "interface",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 35,
+      "line": 36,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41819,7 +41826,7 @@
       "name": "DEFAULT_POLICY",
       "kind": "object",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 48,
+      "line": 49,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41829,7 +41836,7 @@
       "name": "PolicySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 62,
+      "line": 63,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41839,7 +41846,7 @@
       "name": "STATUTORY_KEYS",
       "kind": "variable",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 72,
+      "line": 73,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41849,7 +41856,7 @@
       "name": "parseBool",
       "kind": "function",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 73,
+      "line": 74,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41859,7 +41866,7 @@
       "name": "norm",
       "kind": "function",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 77,
+      "line": 78,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41869,7 +41876,7 @@
       "name": "applyMapping",
       "kind": "function",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 80,
+      "line": 81,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41879,7 +41886,7 @@
       "name": "deriveUsername",
       "kind": "function",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 91,
+      "line": 92,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41889,7 +41896,7 @@
       "name": "LookupCtx",
       "kind": "interface",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 98,
+      "line": 99,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41899,7 +41906,7 @@
       "name": "RowVerdict",
       "kind": "interface",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 106,
+      "line": 107,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41909,7 +41916,7 @@
       "name": "validateRow",
       "kind": "function",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 115,
+      "line": 116,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41919,7 +41926,7 @@
       "name": "loadLookups",
       "kind": "function",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 211,
+      "line": 212,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41929,7 +41936,7 @@
       "name": "loadBatch",
       "kind": "function",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 236,
+      "line": 237,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41939,9 +41946,19 @@
       "name": "loadScopedBatch",
       "kind": "function",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 253,
+      "line": 254,
       "module": "hr",
       "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "importRowPayloadHash",
+      "kind": "function",
+      "file": "netlify/functions/routes/hrEmployeeImport.ts",
+      "line": 455,
+      "module": "hr",
+      "exported": true,
       "container": "",
       "tags": []
     },
@@ -41949,7 +41966,7 @@
       "name": "toProvisionInput",
       "kind": "function",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 448,
+      "line": 461,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41959,7 +41976,7 @@
       "name": "IMPORT_UPDATE_PATCH_FIELDS",
       "kind": "variable",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 480,
+      "line": 493,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -41969,7 +41986,7 @@
       "name": "buildImportUpdatePatch",
       "kind": "function",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 483,
+      "line": 496,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -41979,7 +41996,7 @@
       "name": "updateFromImport",
       "kind": "function",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 516,
+      "line": 529,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -48795,7 +48812,7 @@
       "name": "title",
       "kind": "variable",
       "file": "scripts/e2e/suites/hrEmployeeImport.mjs",
-      "line": 17,
+      "line": 19,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -48807,7 +48824,7 @@
       "name": "run",
       "kind": "function",
       "file": "scripts/e2e/suites/hrEmployeeImport.mjs",
-      "line": 19,
+      "line": 21,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -139324,6 +139341,90 @@
       ]
     },
     {
+      "name": "ROOT",
+      "kind": "variable",
+      "file": "tests/vitest/employeeImportCreatePath.test.ts",
+      "line": 20,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "read",
+      "kind": "function",
+      "file": "tests/vitest/employeeImportCreatePath.test.ts",
+      "line": 21,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "stripComments",
+      "kind": "function",
+      "file": "tests/vitest/employeeImportCreatePath.test.ts",
+      "line": 22,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "ROUTE",
+      "kind": "variable",
+      "file": "tests/vitest/employeeImportCreatePath.test.ts",
+      "line": 25,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "SQL",
+      "kind": "variable",
+      "file": "tests/vitest/employeeImportCreatePath.test.ts",
+      "line": 26,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "route",
+      "kind": "function",
+      "file": "tests/vitest/employeeImportCreatePath.test.ts",
+      "line": 56,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "sql",
+      "kind": "function",
+      "file": "tests/vitest/employeeImportCreatePath.test.ts",
+      "line": 90,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
       "name": "headers",
       "kind": "array",
       "file": "tests/vitest/employeeImportLimits.test.ts",
@@ -151963,7 +152064,7 @@
       ],
       "schema": "z.object({ batchId: z.uuid() })",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 553,
+      "line": 566,
       "module": "hr"
     },
     {
@@ -151976,7 +152077,7 @@
       ],
       "schema": "z.object({ batchId: z.uuid(), mapping: z.record(z.string(), z.string()) })",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 328,
+      "line": 329,
       "module": "hr"
     },
     {
@@ -151989,7 +152090,7 @@
       ],
       "schema": "z.object({ batchId: z.uuid() })",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 626,
+      "line": 660,
       "module": "hr"
     },
     {
@@ -152002,7 +152103,7 @@
       ],
       "schema": "z.object({\n    batchId: z.uuid(), rowId: z.uuid(),\n    action: z.enum(['edit', 'ignore', 'skip', 'assign']),\n    patch: z.record(z.string(), z.string()).optional(),\n  })",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 406,
+      "line": 407,
       "module": "hr"
     },
     {
@@ -152015,7 +152116,7 @@
       ],
       "schema": "z.object({ batchId: z.uuid(), policy: PolicySchema })",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 348,
+      "line": 349,
       "module": "hr"
     },
     {
@@ -152028,7 +152129,7 @@
       ],
       "schema": "z.object({\n    fileName:   z.string().min(1).max(255),\n    fileType:   z.enum(['csv']),\n    // Bounded at the schema so an oversized payload is rejected BEFORE it is decoded\n    // into memory. Previously any non-empty string was accepted, held whole in the\n    // request, decoded, parsed, and inserted in a single statement.\n    fileBase64: z.string().min(1).max(IMPORT_LIMITS.maxBase64Chars, `The file is too large. The limit is ${IMPORT_LIMITS.maxFileBytes / 1024 / 1024} MB.`),\n    importMode: z.enum(['create', 'update', 'create_update']).optional(),\n    defaultSiteId:       z.string().nullable().optional(),\n    defaultDepartmentId: z.string().nullable().optional(),\n  })",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 270,
+      "line": 271,
       "module": "hr"
     },
     {
@@ -152041,7 +152142,7 @@
       ],
       "schema": "z.object({ batchId: z.uuid() })",
       "file": "netlify/functions/routes/hrEmployeeImport.ts",
-      "line": 361,
+      "line": 362,
       "module": "hr"
     },
     {
@@ -170565,6 +170666,13 @@
       "file": "supabase/migrations/20260926000007_calendar_entries_department_id.sql",
       "line": 18,
       "module": "hr"
+    },
+    {
+      "name": "public.hr_employee_import_create_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260926000008_hr_employee_import_create_tx.sql",
+      "line": 32,
+      "module": "hr"
     }
   ],
   "e2eSuites": [
@@ -175160,51 +175268,79 @@
       "tests": [
         {
           "name": "upload (admin) → parses CSV server-side + stages rows",
-          "line": 69
+          "line": 71
         },
         {
           "name": "upload rejects XLSX (CSV-only for now)",
-          "line": 81
+          "line": 83
         },
         {
           "name": "upload unauthorized (employee) → denied",
-          "line": 86
+          "line": 88
         },
         {
           "name": "upload unauthorized (manager — import is full-HR only) → denied",
-          "line": 91
+          "line": 93
         },
         {
           "name": "map-fields (admin)",
-          "line": 97
+          "line": 99
         },
         {
           "name": "set-policy (admin) — record-only import policy",
-          "line": 102
+          "line": 104
         },
         {
           "name": "validate (admin) → ready / blocked / duplicate states",
-          "line": 108
+          "line": 110
         },
         {
           "name": "validate unauthorized (manager) → denied",
-          "line": 120
+          "line": 122
         },
         {
-          "name": "commit (admin) → creates ready rows via provisionEmployee",
-          "line": 126
+          "name": "commit (admin) → creates ready rows via hr_employee_import_create_tx",
+          "line": 128
         },
         {
           "name": "commit side-effects: app_user + statutory + events",
-          "line": 136
+          "line": 138
+        },
+        {
+          "name": "capture the committed payload hashes for replay assertions",
+          "line": 164
+        },
+        {
+          "name": "exactly-once: one assignment, one audit row, one import event per created row",
+          "line": 192
+        },
+        {
+          "name": "deterministic retry: same row returns the SAME employee and duplicates nothing",
+          "line": 207
+        },
+        {
+          "name": "same key + different payload → conflict, no second employee",
+          "line": 230
+        },
+        {
+          "name": "invalid payload rolls back — no employee, no row status change",
+          "line": 244
+        },
+        {
+          "name": "a row from another batch is rejected (no cross-batch write)",
+          "line": 264
+        },
+        {
+          "name": "concurrent execution of the same row creates exactly one employee",
+          "line": 273
         },
         {
           "name": "commit unauthorized (employee) → denied",
-          "line": 158
+          "line": 286
         },
         {
           "name": "report (admin) → committed batch + per-row results",
-          "line": 164
+          "line": 292
         }
       ],
       "apiPaths": [

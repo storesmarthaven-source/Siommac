@@ -6,10 +6,12 @@
  *   upload → map-fields → set-policy → validate → (resolve-row) → commit → report
  *
  * Covers: server-side CSV parse + staging, validation states (ready / blocked /
- * duplicate), commit-create via the SHARED provisionEmployee() (createLogins:false
- * path — no Auth account), access control against REAL roles (employee + manager
- * denied — import is full-HR-only), and §2 side-effects (batch/rows/errors,
- * app_events hr.import.committed + hr.employee.created, created app_users + statutory).
+ * duplicate), commit-create through the TRANSACTIONAL hr_employee_import_create_tx
+ * (no Auth account is ever created), access control against REAL roles (employee +
+ * manager denied — import is full-HR-only), §2 side-effects (batch/rows/errors,
+ * app_events, created app_users + canonical statutory), and the P0-3 atomicity
+ * guarantees: exactly-once audit/event/assignment, deterministic replay, same-key
+ * conflict, invalid-payload rollback, cross-batch rejection and concurrency.
  *
  * REQUIRES (operator-applied): 20260708000000_hr_employee_import.sql + NOTIFY pgrst.
  */
@@ -22,7 +24,7 @@ export default async function run(h) {
   const A = mint(admin);
   const tag = TAG.toLowerCase();
 
-  const ctx = { batchId: null, createdIds: [], mgrTok: null, empTok: null, dupNo: null };
+  const ctx = { batchId: null, createdIds: [], mgrTok: null, empTok: null, dupNo: null, hashByRow: {}, retryArgs: null };
 
   h.onCleanup(async () => {
     try { await sb.from('module_mutation_runs').delete().ilike('idempotency_key', `%${ctx.batchId ?? TAG}%`); } catch { /* optional */ }
@@ -123,7 +125,7 @@ export default async function run(h) {
   });
 
   // ── commit ──────────────────────────────────────────────────────────────────
-  await test('commit (admin) → creates ready rows via provisionEmployee', async () => {
+  await test('commit (admin) → creates ready rows via hr_employee_import_create_tx', async () => {
     const r = await api('hr/employees/import/commit', A, { batchId: ctx.batchId });
     ok(r, 'commit');
     expect(r.body.data.created >= 1, `>=1 created — got ${r.body.data.created}`);
@@ -153,6 +155,132 @@ export default async function run(h) {
     expect(batchEv && batchEv.length === 1, 'hr.import.committed event');
     const { data: empEv } = await sb.from('app_events').select('id').eq('event_type', 'hr.employee.created').eq('source_entity_id', id).limit(1);
     expect(empEv && empEv.length === 1, 'per-employee hr.employee.created event');
+  });
+
+  // ── P0-3: transactional create — atomicity, replay, conflict, concurrency ────
+  // These need a REAL transaction, so they exercise the command directly with the
+  // service-role client rather than through the route.
+
+  await test('capture the committed payload hashes for replay assertions', async () => {
+    // The payload hash is owned by the ROUTE, so reconstructing it here would duplicate
+    // its logic and drift. Read what was actually recorded in the mutation ledger.
+    const { data: runs } = await sb.from('module_mutation_runs')
+      .select('idempotency_key, request_payload')
+      .like('idempotency_key', `hr.import.row:${ctx.batchId}:%`);
+    expect((runs ?? []).length >= 1, 'the commit recorded mutation runs for its rows');
+
+    ctx.hashByRow = {};
+    for (const run of runs ?? []) {
+      const rowId = run.idempotency_key.split(':').pop();
+      ctx.hashByRow[rowId] = run.request_payload?.payloadHash ?? null;
+    }
+    // On replay the canonical command returns before touching identity, so a minimal
+    // identity is sufficient — only the key and hash must match.
+    ctx.retryArgs = (rowId) => ({
+      p_actor_id: h.users.admin.id,
+      p_batch_id: ctx.batchId,
+      p_row_id: rowId,
+      p_identity: { username: `replay-${TAG}`.toLowerCase(), firstName: 'Replay', lastName: 'Probe' },
+      p_employment: { employmentType: 'employee', startDate: '2026-01-15' },
+      p_assignment: {}, p_access: {}, p_statutory: {},
+      p_record_status: 'active',
+      p_payload_hash: ctx.hashByRow[rowId] ?? 'unknown-hash',
+      p_request_id: null,
+    });
+  });
+
+  await test('exactly-once: one assignment, one audit row, one import event per created row', async () => {
+    const id = ctx.createdIds[0];
+    const { count: asg } = await sb.from('hr_employee_assignments')
+      .select('id', { count: 'exact', head: true }).eq('employee_id', id).eq('is_current', true);
+    expect(asg === 1, `exactly one current assignment — got ${asg}`);
+
+    const { data: audit } = await sb.from('hr_audit_log')
+      .select('id').eq('employee_id', id).eq('action', 'hr.import.row_created');
+    expect((audit ?? []).length === 1, `exactly one audit row — got ${(audit ?? []).length}`);
+
+    const { data: ev } = await sb.from('app_events')
+      .select('id').eq('event_type', 'hr.import.row_created').eq('source_entity_id', id);
+    expect((ev ?? []).length === 1, `exactly one import event — got ${(ev ?? []).length}`);
+  });
+
+  await test('deterministic retry: same row returns the SAME employee and duplicates nothing', async () => {
+    const { data: row } = await sb.from('hr_employee_import_rows')
+      .select('id, mapped_data, target_employee_id')
+      .eq('batch_id', ctx.batchId).eq('status', 'created').limit(1).maybeSingle();
+    expect(!!row, 'a created row exists to retry');
+
+    const before = await sb.from('app_users').select('id', { count: 'exact', head: true });
+    const { data: replay, error: replayErr } = await sb.rpc('hr_employee_import_create_tx', ctx.retryArgs(row.id));
+    expect(!replayErr, `retry succeeded — ${replayErr && replayErr.message}`);
+    expect(replay.employee_id === row.target_employee_id, 'retry returned the SAME employee id');
+    expect(replay.replayed === true, `retry reports replayed — got ${replay && replay.replayed}`);
+
+    const after = await sb.from('app_users').select('id', { count: 'exact', head: true });
+    expect(before.count === after.count, `no employee duplicated — ${before.count} → ${after.count}`);
+
+    const { data: audit } = await sb.from('hr_audit_log')
+      .select('id').eq('employee_id', row.target_employee_id).eq('action', 'hr.import.row_created');
+    expect((audit ?? []).length === 1, 'replay wrote no second audit row');
+    const { data: ev } = await sb.from('app_events')
+      .select('id').eq('event_type', 'hr.import.row_created').eq('source_entity_id', row.target_employee_id);
+    expect((ev ?? []).length === 1, 'replay wrote no second event');
+  });
+
+  await test('same key + different payload → conflict, no second employee', async () => {
+    const { data: row } = await sb.from('hr_employee_import_rows')
+      .select('id').eq('batch_id', ctx.batchId).eq('status', 'created').limit(1).maybeSingle();
+    const before = await sb.from('app_users').select('id', { count: 'exact', head: true });
+
+    const args = ctx.retryArgs(row.id);
+    args.p_payload_hash = 'a-deliberately-different-payload-hash';
+    const { error } = await sb.rpc('hr_employee_import_create_tx', args);
+    expect(!!error, 'same key with different data is rejected');
+
+    const after = await sb.from('app_users').select('id', { count: 'exact', head: true });
+    expect(before.count === after.count, 'no employee created by the conflicting call');
+  });
+
+  await test('invalid payload rolls back — no employee, no row status change', async () => {
+    const { data: row } = await sb.from('hr_employee_import_rows')
+      .select('id, status').eq('batch_id', ctx.batchId).neq('status', 'created').limit(1).maybeSingle();
+    if (!row) { console.log('   (no non-created row available — skipped)'); return; }
+    const before = await sb.from('app_users').select('id', { count: 'exact', head: true });
+
+    const args = ctx.retryArgs(row.id);
+    args.p_identity = {};            // username is required by the canonical command
+    args.p_payload_hash = 'invalid-payload';
+    const { error } = await sb.rpc('hr_employee_import_create_tx', args);
+    expect(!!error, 'invalid payload is rejected');
+
+    const after = await sb.from('app_users').select('id', { count: 'exact', head: true });
+    expect(before.count === after.count, 'no employee survived the failed create');
+    const { data: post } = await sb.from('hr_employee_import_rows')
+      .select('status, target_employee_id').eq('id', row.id).maybeSingle();
+    expect(post.status === row.status, `row status unchanged — got ${post.status}`);
+    expect(!post.target_employee_id, 'no target_employee_id was written');
+  });
+
+  await test('a row from another batch is rejected (no cross-batch write)', async () => {
+    const { data: row } = await sb.from('hr_employee_import_rows')
+      .select('id').eq('batch_id', ctx.batchId).limit(1).maybeSingle();
+    const args = ctx.retryArgs(row.id);
+    args.p_batch_id = '00000000-0000-0000-0000-000000000000';
+    const { error } = await sb.rpc('hr_employee_import_create_tx', args);
+    expect(!!error, 'a row must belong to the batch it is committed under');
+  });
+
+  await test('concurrent execution of the same row creates exactly one employee', async () => {
+    const { data: row } = await sb.from('hr_employee_import_rows')
+      .select('id, target_employee_id').eq('batch_id', ctx.batchId).eq('status', 'created').limit(1).maybeSingle();
+    const before = await sb.from('app_users').select('id', { count: 'exact', head: true });
+    const results = await Promise.all([0, 1, 2].map(() => sb.rpc('hr_employee_import_create_tx', ctx.retryArgs(row.id))));
+    const after = await sb.from('app_users').select('id', { count: 'exact', head: true });
+
+    expect(before.count === after.count, `concurrent replays created no employee — ${before.count} → ${after.count}`);
+    for (const r of results) {
+      if (!r.error) expect(r.data.employee_id === row.target_employee_id, 'each concurrent call returned the same employee');
+    }
   });
 
   await test('commit unauthorized (employee) → denied', async () => {

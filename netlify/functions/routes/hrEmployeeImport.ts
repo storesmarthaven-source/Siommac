@@ -3,15 +3,16 @@
 // 7-step wizard: upload → map → policy → validate → resolve → commit → report.
 // The browser uploads the raw file (base64); the BACKEND parses it server-side
 // (the staged rows are the source of truth), validates per mapping+policy, and
-// commits via the SHARED provisionEmployee() (create) or a targeted update — so an
-// imported employee is provisioned by the exact same path as a single create.
+// commits each row through ONE transactional command — hr_employee_import_create_tx
+// (create) or hr_employee_import_update_tx (update) — so an import row and its employee
+// always agree, and import shares the canonical create path with the wizard.
 // Backend-only (service-role); every route gated by hr.employees.import.*.
 // XLSX is a flagged follow-up (CLAUDE.md) — uploads are restricted to CSV here.
 
 import { Hono }       from 'hono';
+import { createHash } from 'node:crypto';
 import { sb }         from '../lib/db';
 import { requirePermission, userCan } from '../lib/auth';
-import { emitAppEvent } from '../lib/appEvents';
 import { nextRef }    from '../lib/refGenerator';
 import { z, zv }      from '../lib/validate';
 import { runModuleMutation } from '../lib/moduleServiceAdapter';
@@ -20,7 +21,7 @@ import { parseCsv }   from '../lib/hr/csvParse';
 import { IMPORT_LIMITS, checkImportLimits } from '../lib/hr/importLimits';
 import { IMPORT_MAPPING_VERSION, checkMapping } from '../lib/hr/importFields';
 import {
-  provisionEmployee, writeHrAudit, statutoryProfilePatch, statutoryWithDefaults, computePayrollReadiness,
+  writeHrAudit, statutoryProfilePatch, statutoryWithDefaults, computePayrollReadiness,
   EMPLOYMENT_TYPES,
 } from '../lib/hr/employeeCore';
 import type { HonoVariables } from '../../../types/api';
@@ -444,7 +445,19 @@ router.post('/employees/import/resolve-row', async c => {
   return c.json({ success: true, data: { rowId: row.id, status: verdict.status } });
 });
 
-/** Build provisionEmployee input from a mapped row + resolved lookups. */
+/** Deterministic hash of a mapped row's CONTENT.
+ *
+ *  The idempotency KEY is batch id + import row id (owned by the SQL command). This hash
+ *  is the payload half: replaying the same row returns the existing employee, while a row
+ *  whose content was edited between attempts is correctly rejected as the same key with a
+ *  different payload rather than silently deduped. Key order is normalised so an
+ *  equivalent row always hashes the same. */
+export function importRowPayloadHash(mapped: Record<string, string>): string {
+  const canonical = JSON.stringify(Object.keys(mapped).sort().map(k => [k, mapped[k]]));
+  return createHash('sha256').update(canonical).digest('hex');
+}
+
+/** Build the canonical create-command payload from a mapped row + resolved lookups. */
 function toProvisionInput(m: Record<string, string>, policy: ImportPolicy, ctx: LookupCtx, batch: Record<string, unknown>) {
   const deptId = ctx.deptByKey.get(norm(m.department).toLowerCase()) ?? (batch.default_department_id as string | null) ?? null;
   const supId  = ctx.supervisorByKey.get(norm(m.supervisor).toLowerCase()) ?? null;
@@ -599,10 +612,31 @@ router.post('/employees/import/commit', async c => {
             if (batch.import_mode === 'update') {
               throw new Error('update mode cannot create records — no existing employee matched this row');
             }
-            const prov = await provisionEmployee(actor.id, toProvisionInput(r.mapped_data, policy, ctx, batch));
-            await sb.from('hr_employee_import_rows').update({ status: 'created', target_employee_id: prov.id }).eq('id', r.id);
-            // Imported employees emit the same domain event as a single create.
-            void emitAppEvent({ eventType: 'hr.employee.created', sourceModule: 'hr', sourceEntityType: 'employee', sourceEntityId: prov.id, actorUserId: actor.id, severity: 'info', payload: { employeeNumber: prov.employeeNo, viaImport: batch.batch_no } });
+            // ONE transactional command. hr_employee_import_create_tx delegates to the
+            // canonical hr_employee_create_tx and marks this import row `created` inside
+            // the SAME transaction, so there is no post-RPC status write that could fail
+            // and leave "row failed, employee exists". The audit row and the
+            // hr.import.row_created event are written in that transaction too — no
+            // fire-and-forget emitAppEvent, whose result was never checked.
+            const input = toProvisionInput(r.mapped_data, policy, ctx, batch);
+            const txRes = await sb.rpc('hr_employee_import_create_tx', {
+              p_actor_id:      actor.id,
+              p_batch_id:      v.data.batchId,
+              p_row_id:        r.id,
+              p_identity:      input.identity,
+              p_employment:    input.employment,
+              p_assignment:    input.assignment,
+              // No access block: an imported row can never carry a role, so the canonical
+              // command falls back to the default `employee` system role.
+              p_access:        {},
+              p_statutory:     input.statutory,
+              p_record_status: input.recordStatus ?? 'active',
+              p_payload_hash:  importRowPayloadHash(r.mapped_data),
+              p_request_id:    null,
+            });
+            if (txRes.error) throw Object.assign(new Error(txRes.error.message), { status: 500 });
+            const tx = (txRes.data ?? {}) as { employee_id?: string; replayed?: boolean };
+            if (!tx.employee_id) throw new Error('the import create command returned no employee id');
             created++;
           }
         } catch (e) {

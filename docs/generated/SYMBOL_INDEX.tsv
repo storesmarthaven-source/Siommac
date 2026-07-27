@@ -3251,27 +3251,28 @@ routeErr	function	platform	false		netlify/functions/routes/hrCrew.ts	38
 DATE	variable	platform	false		netlify/functions/routes/hrCrew.ts	59	
 nzStr	function	platform	false		netlify/functions/routes/hrCrew.ts	60	
 uuidN	variable	platform	false		netlify/functions/routes/hrCrew.ts	61	
-router	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	28	
-body	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	29	
-REQUIRED_FIELDS	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	33	
-ImportPolicy	interface	hr	false		netlify/functions/routes/hrEmployeeImport.ts	35	
-DEFAULT_POLICY	object	hr	false		netlify/functions/routes/hrEmployeeImport.ts	48	
-PolicySchema	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	62	
-STATUTORY_KEYS	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	72	
-parseBool	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	73	
-norm	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	77	
-applyMapping	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	80	
-deriveUsername	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	91	
-LookupCtx	interface	hr	false		netlify/functions/routes/hrEmployeeImport.ts	98	
-RowVerdict	interface	hr	false		netlify/functions/routes/hrEmployeeImport.ts	106	
-validateRow	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	115	
-loadLookups	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	211	
-loadBatch	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	236	
-loadScopedBatch	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	253	
-toProvisionInput	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	448	
-IMPORT_UPDATE_PATCH_FIELDS	variable	hr	true		netlify/functions/routes/hrEmployeeImport.ts	480	
-buildImportUpdatePatch	function	hr	true		netlify/functions/routes/hrEmployeeImport.ts	483	
-updateFromImport	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	516	
+router	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	29	
+body	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	30	
+REQUIRED_FIELDS	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	34	
+ImportPolicy	interface	hr	false		netlify/functions/routes/hrEmployeeImport.ts	36	
+DEFAULT_POLICY	object	hr	false		netlify/functions/routes/hrEmployeeImport.ts	49	
+PolicySchema	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	63	
+STATUTORY_KEYS	variable	hr	false		netlify/functions/routes/hrEmployeeImport.ts	73	
+parseBool	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	74	
+norm	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	78	
+applyMapping	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	81	
+deriveUsername	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	92	
+LookupCtx	interface	hr	false		netlify/functions/routes/hrEmployeeImport.ts	99	
+RowVerdict	interface	hr	false		netlify/functions/routes/hrEmployeeImport.ts	107	
+validateRow	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	116	
+loadLookups	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	212	
+loadBatch	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	237	
+loadScopedBatch	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	254	
+importRowPayloadHash	function	hr	true		netlify/functions/routes/hrEmployeeImport.ts	455	
+toProvisionInput	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	461	
+IMPORT_UPDATE_PATCH_FIELDS	variable	hr	true		netlify/functions/routes/hrEmployeeImport.ts	493	
+buildImportUpdatePatch	function	hr	true		netlify/functions/routes/hrEmployeeImport.ts	496	
+updateFromImport	function	hr	false		netlify/functions/routes/hrEmployeeImport.ts	529	
 router	variable	hr	false		netlify/functions/routes/hrLeave.ts	15	
 body	function	hr	false		netlify/functions/routes/hrLeave.ts	17	
 mutate	function	hr	false		netlify/functions/routes/hrLeave.ts	23	
@@ -3928,8 +3929,8 @@ run	function	testing	true	test	scripts/e2e/suites/hrDocuments.mjs	30
 title	variable	hr	true	test	scripts/e2e/suites/hrEmployeeCreate.mjs	26	
 run	function	hr	true	test	scripts/e2e/suites/hrEmployeeCreate.mjs	28	
 api	function	hr	false	test	scripts/e2e/suites/hrEmployeeCreate.mjs	32	run
-title	variable	hr	true	test	scripts/e2e/suites/hrEmployeeImport.mjs	17	
-run	function	hr	true	test	scripts/e2e/suites/hrEmployeeImport.mjs	19	
+title	variable	hr	true	test	scripts/e2e/suites/hrEmployeeImport.mjs	19	
+run	function	hr	true	test	scripts/e2e/suites/hrEmployeeImport.mjs	21	
 title	variable	hr	true	test	scripts/e2e/suites/hrEmployeeMaster.mjs	35	
 run	function	hr	true	test	scripts/e2e/suites/hrEmployeeMaster.mjs	37	
 title	variable	settings	true	test	scripts/e2e/suites/hrEmployeeSettings.mjs	17	
@@ -12385,6 +12386,13 @@ MinAttachment	interface	testing	false	test	tests/vitest/attachmentGrouping.regre
 AttachmentRow	interface	testing	false	test	tests/vitest/attachmentGrouping.regression.test.ts	42	
 buildAttachMap	function	testing	false	test	tests/vitest/attachmentGrouping.regression.test.ts	55	
 makeAttachment	function	testing	false	test	tests/vitest/attachmentGrouping.regression.test.ts	80	
+ROOT	variable	hr	false	test	tests/vitest/employeeImportCreatePath.test.ts	20	
+read	function	hr	false	test	tests/vitest/employeeImportCreatePath.test.ts	21	
+stripComments	function	hr	false	test	tests/vitest/employeeImportCreatePath.test.ts	22	
+ROUTE	variable	hr	false	test	tests/vitest/employeeImportCreatePath.test.ts	25	
+SQL	variable	hr	false	test	tests/vitest/employeeImportCreatePath.test.ts	26	
+route	function	hr	false	test	tests/vitest/employeeImportCreatePath.test.ts	56	
+sql	function	hr	false	test	tests/vitest/employeeImportCreatePath.test.ts	90	
 headers	array	hr	false	test	tests/vitest/employeeImportLimits.test.ts	10	
 row	function	hr	false	test	tests/vitest/employeeImportLimits.test.ts	11	
 ROOT	variable	security	false	test	tests/vitest/employeeImportSecurity.test.ts	16	
