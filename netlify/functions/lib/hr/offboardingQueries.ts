@@ -13,11 +13,12 @@ interface CaseDbRow {
   started_at: string; ready_at: string | null; completed_at: string | null;
 }
 
-async function nameMap(ids: Array<string | null>): Promise<Map<string, string>> {
+async function nameMap(ids: (string | null)[]): Promise<Map<string, string>> {
   const uniq = Array.from(new Set(ids.filter((x): x is string => !!x)));
   if (!uniq.length) return new Map();
-  const { data } = await sb.from('app_users').select('id, full_name').in('id', uniq);
-  return new Map(((data ?? []) as { id: string; full_name: string | null }[]).map(u => [u.id, u.full_name ?? u.id]));
+  const { data, error } = await sb.from('app_users').select('id, full_name').in('id', uniq);
+  if (error) throw new Error(`Offboarding name resolution failed: ${error.message}`);
+  return new Map((data as { id: string; full_name: string | null }[]).map(u => [u.id, u.full_name ?? u.id]));
 }
 
 function toCaseRow(c: CaseDbRow, names: Map<string, string>, taskCount: number, openTaskCount: number, blockerCount: number): OffboardingCaseRow {
@@ -31,60 +32,73 @@ function toCaseRow(c: CaseDbRow, names: Map<string, string>, taskCount: number, 
   };
 }
 
-export async function listOffboardingCases(filters: { status?: string } = {}): Promise<OffboardingCaseRow[]> {
+export async function listOffboardingCases(filters: { status?: string; employeeId?: string } = {}): Promise<OffboardingCaseRow[]> {
   let q = sb.from('hr_offboarding_cases').select('*').order('started_at', { ascending: false });
   if (filters.status && filters.status !== 'all') q = q.eq('status', filters.status);
-  const { data } = await q;
-  const cases = (data ?? []) as CaseDbRow[];
+  if (filters.employeeId) q = q.eq('employee_id', filters.employeeId);
+  const { data, error } = await q;
+  if (error) throw new Error(`Offboarding case list failed: ${error.message}`);
+  const cases = data as CaseDbRow[];
   const ids = cases.map(c => c.id);
   const names = await nameMap(cases.flatMap(c => [c.employee_id, c.owner_id]));
   const taskCounts = new Map<string, number>(), openCounts = new Map<string, number>(), blockerCounts = new Map<string, number>();
   if (ids.length) {
-    const [{ data: tasks }, { data: blockers }] = await Promise.all([
+    const [tasksResult, blockersResult] = await Promise.all([
       sb.from('hr_offboarding_tasks').select('case_id, status').in('case_id', ids),
       sb.from('hr_offboarding_blockers').select('case_id, status').in('case_id', ids).eq('status', 'open'),
     ]);
-    for (const t of (tasks ?? []) as { case_id: string; status: string }[]) {
+    if (tasksResult.error) throw new Error(`Offboarding task summary failed: ${tasksResult.error.message}`);
+    if (blockersResult.error) throw new Error(`Offboarding blocker summary failed: ${blockersResult.error.message}`);
+    const tasks = tasksResult.data;
+    const blockers = blockersResult.data;
+    for (const t of tasks as { case_id: string; status: string }[]) {
       taskCounts.set(t.case_id, (taskCounts.get(t.case_id) ?? 0) + 1);
       if (t.status !== 'completed' && t.status !== 'skipped') openCounts.set(t.case_id, (openCounts.get(t.case_id) ?? 0) + 1);
     }
-    for (const b of (blockers ?? []) as { case_id: string }[]) blockerCounts.set(b.case_id, (blockerCounts.get(b.case_id) ?? 0) + 1);
+    for (const b of blockers as { case_id: string }[]) blockerCounts.set(b.case_id, (blockerCounts.get(b.case_id) ?? 0) + 1);
   }
   return cases.map(c => toCaseRow(c, names, taskCounts.get(c.id) ?? 0, openCounts.get(c.id) ?? 0, blockerCounts.get(c.id) ?? 0));
 }
 
 export async function getOffboardingCase(caseId: string): Promise<OffboardingCaseDetail | null> {
-  const { data: c } = await sb.from('hr_offboarding_cases').select('*').eq('id', caseId).maybeSingle<CaseDbRow>();
+  const { data: c, error: caseError } = await sb.from('hr_offboarding_cases').select('*').eq('id', caseId).maybeSingle<CaseDbRow>();
+  if (caseError) throw new Error(`Offboarding case read failed: ${caseError.message}`);
   if (!c) return null;
-  const [{ data: tasks }, { data: handoffs }, { data: blockers }] = await Promise.all([
+  const [tasksResult, handoffsResult, blockersResult] = await Promise.all([
     sb.from('hr_offboarding_tasks').select('*').eq('case_id', caseId).order('sort_order'),
     sb.from('hr_offboarding_handoffs').select('*').eq('case_id', caseId).order('created_at'),
     sb.from('hr_offboarding_blockers').select('*').eq('case_id', caseId).order('created_at'),
   ]);
-  const taskRows = (tasks ?? []) as Record<string, unknown>[];
+  if (tasksResult.error) throw new Error(`Offboarding task read failed: ${tasksResult.error.message}`);
+  if (handoffsResult.error) throw new Error(`Offboarding handoff read failed: ${handoffsResult.error.message}`);
+  if (blockersResult.error) throw new Error(`Offboarding blocker read failed: ${blockersResult.error.message}`);
+  const tasks = tasksResult.data;
+  const handoffs = handoffsResult.data;
+  const blockers = blockersResult.data;
+  const taskRows = tasks as Record<string, unknown>[];
   const names = await nameMap([c.employee_id, c.owner_id, ...taskRows.map(t => t.assigned_to as string | null)]);
   const openTasks = taskRows.filter(t => t.status !== 'completed' && t.status !== 'skipped').length;
-  const blockerRows = (blockers ?? []) as Record<string, unknown>[];
+  const blockerRows = blockers as Record<string, unknown>[];
 
   const caseRow = toCaseRow(c, names, taskRows.length, openTasks, blockerRows.filter(b => b.status === 'open').length);
   return {
     case: caseRow,
     tasks: taskRows.map(t => ({
       id: t.id as string, caseId, taskKey: t.task_key as string, taskTitle: t.task_title as string,
-      ownerRole: (t.owner_role as string) ?? null, assignedTo: (t.assigned_to as string) ?? null,
+      ownerRole: (t.owner_role as string | null) ?? null, assignedTo: (t.assigned_to as string | null) ?? null,
       assignedToName: t.assigned_to ? (names.get(t.assigned_to as string) ?? null) : null,
-      moduleKey: (t.module_key as string) ?? null, status: t.status as OffboardingTaskRow['status'],
-      isBlocking: !!t.is_blocking, sortOrder: (t.sort_order as number) ?? 0,
-      dueAt: (t.due_at as string) ?? null, completedAt: (t.completed_at as string) ?? null,
+      moduleKey: (t.module_key as string | null) ?? null, status: t.status as OffboardingTaskRow['status'],
+      isBlocking: !!t.is_blocking, sortOrder: (t.sort_order as number | null) ?? 0,
+      dueAt: (t.due_at as string | null) ?? null, completedAt: (t.completed_at as string | null) ?? null,
     })),
-    handoffs: ((handoffs ?? []) as Record<string, unknown>[]).map(h => ({
-      id: h.id as string, caseId, handoffKey: (h.handoff_key as string) ?? null, targetModule: h.target_module as string,
-      handoffType: (h.handoff_type as string) ?? null, status: h.status as OffboardingHandoffRow['status'], createdAt: h.created_at as string,
+    handoffs: (handoffs as Record<string, unknown>[]).map(h => ({
+      id: h.id as string, caseId, handoffKey: (h.handoff_key as string | null) ?? null, targetModule: h.target_module as string,
+      handoffType: (h.handoff_type as string | null) ?? null, status: h.status as OffboardingHandoffRow['status'], createdAt: h.created_at as string,
     })),
     blockers: blockerRows.map(b => ({
-      id: b.id as string, caseId, title: b.title as string, blockingModule: (b.blocking_module as string) ?? null,
+      id: b.id as string, caseId, title: b.title as string, blockingModule: (b.blocking_module as string | null) ?? null,
       severity: b.severity as OffboardingBlockerRow['severity'], status: b.status as OffboardingBlockerRow['status'],
-      ownerId: (b.owner_id as string) ?? null, dueAt: (b.due_at as string) ?? null,
+      ownerId: (b.owner_id as string | null) ?? null, dueAt: (b.due_at as string | null) ?? null,
     })),
   };
 }

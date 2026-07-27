@@ -104,7 +104,7 @@ interface DialogProps { employeeId: string; onClose: () => void; onToast: (m: st
 export function ContactDialog({ employeeId, onClose, onToast }: DialogProps): VNode {
   const detailQ = useHrEmployee(employeeId);
   const [mode, setMode] = useState<'direct' | 'request'>('direct');
-  const [f, setF] = useState({ email: '', phone: '', personalEmail: '', emName: '', emPhone: '', emRel: '', reason: '' });
+  const [f, setF] = useState({ email: '', phone: '', mobilePhone: '', personalEmail: '', emName: '', emPhone: '', emRel: '', reason: '' });
   const [err, setErr] = useState<string | null>(null);
   const m = useUpdateHrContact();
   const set = (k: keyof typeof f, v: string) => setF(p => ({ ...p, [k]: v }));
@@ -112,7 +112,7 @@ export function ContactDialog({ employeeId, onClose, onToast }: DialogProps): VN
   useEffect(() => {
     const e = detailQ.data?.employee;
     if (e) setF(p => ({
-      ...p, email: e.email ?? '', phone: e.phone ?? '', personalEmail: e.personal_email ?? '',
+      ...p, email: e.email ?? '', phone: e.phone ?? '', mobilePhone: e.mobile_phone ?? '', personalEmail: e.personal_email ?? '',
       emName: e.emergency_contact_name ?? '', emPhone: e.emergency_contact_phone ?? '', emRel: e.emergency_contact_relationship ?? '',
     }));
   }, [detailQ.data]);
@@ -120,7 +120,7 @@ export function ContactDialog({ employeeId, onClose, onToast }: DialogProps): VN
     if (mode === 'request' && !f.reason.trim()) { setErr('A reason is required for a change request.'); return; }
     m.mutate({
       employeeId, mode,
-      work: { email: f.email.trim() || undefined, phone: f.phone.trim() || undefined },
+      work: { email: f.email.trim() || undefined, phone: f.phone.trim() || undefined, mobilePhone: f.mobilePhone.trim() || undefined },
       personal: { personalEmail: f.personalEmail.trim() || undefined },
       emergency: { name: f.emName.trim() || undefined, phone: f.emPhone.trim() || undefined, relationship: f.emRel.trim() || undefined },
       reason: f.reason.trim() || undefined,
@@ -140,7 +140,8 @@ export function ContactDialog({ employeeId, onClose, onToast }: DialogProps): VN
         <div class="form-grid">
           <L label="Work Email" value={f.email} onInput={v => set('email', v)} />
           <L label="Work Phone" value={f.phone} onInput={v => set('phone', v)} />
-          <L label="Personal Email" value={f.personalEmail} onInput={v => set('personalEmail', v)} full />
+          <L label="Mobile" value={f.mobilePhone} onInput={v => set('mobilePhone', v)} />
+          <L label="Personal Email" value={f.personalEmail} onInput={v => set('personalEmail', v)} />
           <L label="Emergency Contact Name" value={f.emName} onInput={v => set('emName', v)} />
           <L label="Emergency Contact Phone" value={f.emPhone} onInput={v => set('emPhone', v)} />
           <L label="Emergency Relationship" value={f.emRel} onInput={v => set('emRel', v)} full />

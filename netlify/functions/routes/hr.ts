@@ -50,7 +50,7 @@ const router = new Hono<{ Variables: HonoVariables }>();
 const HR_COLS =
   'id, username, full_name, first_name, last_name, display_name, role, status, employment_status, ' +
   'employment_type, department_id, site_id, position, supervisor_id, email, personal_email, ' +
-  'phone, employee_number, start_date, end_date, contractor_flag, profile_image_url, profile_image_thumb_url, profile_image, signed_url, signed_url_expires_at, ' +
+  'phone, mobile_phone, employee_number, start_date, end_date, contractor_flag, created_at, profile_image_url, profile_image_thumb_url, profile_image, signed_url, signed_url_expires_at, ' +
   'profile_image_pending_thumb_url, profile_image_pending_submitted_at, ' +
   'date_of_birth, nationality, government_id, probation_end_date, employee_grade, work_schedule, cost_center, ' +
   'emergency_contact_name, emergency_contact_phone, emergency_contact_relationship';
@@ -58,7 +58,8 @@ const HR_COLS =
 interface EmpRow { id: string; full_name: string | null; department_id: string | null; supervisor_id: string | null; status: string; employment_status: string | null; [k: string]: unknown }
 
 async function loadEmployee(id: string): Promise<EmpRow | null> {
-  const { data } = await sb.from('app_users').select(HR_COLS).eq('id', id).maybeSingle<EmpRow>();
+  const { data, error } = await sb.from('app_users').select(HR_COLS).eq('id', id).maybeSingle<EmpRow>();
+  if (error) throw new Error(`Employee read failed: ${error.message}`);
   return data ?? null;
 }
 
@@ -250,6 +251,7 @@ router.post('/employees/list', async c => {
     const trainingStatus = rollupTrainingStatus(certByWorker.get(r.id) ?? [], today);
     return {
       ...r,
+      accountStatus: r.status,
       status: r.employment_status ?? 'active',
       profile_image_url: resolveProfileImageUrl(r as Parameters<typeof resolveProfileImageUrl>[0]),
       departmentName: deptMap[r.department_id ?? ''] ?? null,
@@ -285,16 +287,102 @@ router.post('/employees/get', async c => {
   const emp = await loadEmployee(v.data.employeeId);
   if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
 
-  const [{ data: supervisor }, { data: dept }, { data: site }, { data: statusHistory }, { data: assignment }, { data: statutory }, certificates] = await Promise.all([
-    emp.supervisor_id ? sb.from('app_users').select('id, full_name').eq('id', emp.supervisor_id).maybeSingle() : Promise.resolve({ data: null }),
-    emp.department_id ? sb.from('departments').select('id, name').eq('id', emp.department_id).maybeSingle() : Promise.resolve({ data: null }),
-    emp.site_id ? sb.from('project_sites').select('id, name').eq('id', emp.site_id as string).maybeSingle() : Promise.resolve({ data: null }),
+  const [supervisorResult, departmentResult, siteResult, statusHistoryResult, assignmentsResult, statutoryResult, certificates, payGroupAssignmentResult] = await Promise.all([
+    emp.supervisor_id ? sb.from('app_users').select('id, full_name').eq('id', emp.supervisor_id).maybeSingle() : Promise.resolve({ data: null, error: null }),
+    emp.department_id ? sb.from('departments').select('id, name').eq('id', emp.department_id).maybeSingle() : Promise.resolve({ data: null, error: null }),
+    emp.site_id ? sb.from('project_sites').select('id, name').eq('id', emp.site_id as string).maybeSingle() : Promise.resolve({ data: null, error: null }),
     sb.from('hr_employee_status_history').select('*').eq('employee_id', emp.id).order('changed_at', { ascending: false }).limit(20),
-    sb.from('hr_employee_assignments').select('*').eq('employee_id', emp.id).eq('is_current', true).maybeSingle<Record<string, unknown>>(),
+    sb.from('hr_employee_assignments').select('*').eq('employee_id', emp.id).order('effective_from', { ascending: false }),
     // Read statutory from the canonical profiles table; map nis_reg_status → nis_status for the FE contract.
     sb.from('hr_employee_statutory_profiles').select('*').eq('employee_id', emp.id).eq('jurisdiction', 'TT').maybeSingle<Record<string, unknown>>(),
     sb.from('hse_worker_certificates').select('status, expires_at').eq('worker_id', emp.id),
+    sb.from('finance_employee_pay_group_assignments')
+      .select('pay_group_id, effective_from, effective_to')
+      .eq('employee_id', emp.id)
+      .lte('effective_from', todayISO())
+      .or(`effective_to.is.null,effective_to.gte.${todayISO()}`)
+      .order('effective_from', { ascending: false })
+      .limit(1)
+      .maybeSingle<{ pay_group_id: string; effective_from: string; effective_to: string | null }>(),
   ]);
+
+  const readErrors = [
+    supervisorResult.error, departmentResult.error, siteResult.error, statusHistoryResult.error,
+    assignmentsResult.error, statutoryResult.error, certificates.error, payGroupAssignmentResult.error,
+  ].filter((error): error is NonNullable<typeof error> => !!error);
+  if (readErrors.length) {
+    return c.json({ success: false, message: `Employee profile read failed: ${readErrors[0].message}` }, 500 as 200);
+  }
+  const supervisor = supervisorResult.data;
+  const dept = departmentResult.data;
+  const site = siteResult.data;
+  const statusHistory = statusHistoryResult.data;
+  const assignmentRows = (assignmentsResult.data ?? []) as Record<string, unknown>[];
+  const statutory = statutoryResult.data;
+
+  const idsFor = (field: string) => Array.from(new Set(
+    assignmentRows.map(row => row[field]).filter((id): id is string => typeof id === 'string'),
+  ));
+  const [assignmentDepartmentsResult, assignmentSitesResult, assignmentSupervisorsResult, assignmentPositionsResult] = await Promise.all([
+    idsFor('department_id').length ? sb.from('departments').select('id, name').in('id', idsFor('department_id')) : Promise.resolve({ data: [], error: null }),
+    idsFor('site_id').length ? sb.from('project_sites').select('id, name').in('id', idsFor('site_id')) : Promise.resolve({ data: [], error: null }),
+    idsFor('supervisor_id').length ? sb.from('app_users').select('id, full_name').in('id', idsFor('supervisor_id')) : Promise.resolve({ data: [], error: null }),
+    idsFor('position_id').length ? sb.from('hr_positions').select('id, title').in('id', idsFor('position_id')) : Promise.resolve({ data: [], error: null }),
+  ]);
+  const enrichmentErrors = [
+    assignmentDepartmentsResult.error, assignmentSitesResult.error,
+    assignmentSupervisorsResult.error, assignmentPositionsResult.error,
+  ].filter((error): error is NonNullable<typeof error> => !!error);
+  if (enrichmentErrors.length) {
+    return c.json({ success: false, message: `Employee assignment history read failed: ${enrichmentErrors[0].message}` }, 500 as 200);
+  }
+  const lookup = (rows: unknown[], field: 'name' | 'full_name' | 'title') =>
+    new Map((rows as Record<string, unknown>[]).map(row => [row.id as string, (row[field] as string | null) ?? null]));
+  const departmentNames = lookup(assignmentDepartmentsResult.data ?? [], 'name');
+  const siteNames = lookup(assignmentSitesResult.data ?? [], 'name');
+  const supervisorNames = lookup(assignmentSupervisorsResult.data ?? [], 'full_name');
+  const positionNames = lookup(assignmentPositionsResult.data ?? [], 'title');
+  const assignmentHistory = assignmentRows.map(row => ({
+    ...row,
+    departmentName: typeof row.department_id === 'string' ? departmentNames.get(row.department_id) ?? null : null,
+    siteName: typeof row.site_id === 'string' ? siteNames.get(row.site_id) ?? null : null,
+    supervisorName: typeof row.supervisor_id === 'string' ? supervisorNames.get(row.supervisor_id) ?? null : null,
+    positionTitle: typeof row.position_id === 'string' ? positionNames.get(row.position_id) ?? null : null,
+  }));
+
+  let payGroup: { id: string; code: string; name: string; frequency: string; effectiveFrom: string; effectiveTo: string | null } | null = null;
+  const payGroupAssignment = payGroupAssignmentResult.data;
+  if (payGroupAssignment) {
+    const { data: group, error } = await sb.from('finance_pay_groups')
+      .select('id, code, name, frequency').eq('id', payGroupAssignment.pay_group_id)
+      .maybeSingle<{ id: string; code: string; name: string; frequency: string }>();
+    if (error) return c.json({ success: false, message: `Employee pay group read failed: ${error.message}` }, 500 as 200);
+    if (group) payGroup = { ...group, effectiveFrom: payGroupAssignment.effective_from, effectiveTo: payGroupAssignment.effective_to };
+  }
+
+  let accessProfile: { id: string; code: string; label: string; description: string | null; requiresMfa: boolean } | null = null;
+  if (await userCan(actor, 'auth.security.view')) {
+    const { data: profiles, error } = await sb.from('hr_access_profiles')
+      .select('id, code, label, description, requires_mfa')
+      .eq('system_role', emp.role as string)
+      .eq('is_active', true)
+      .order('sort_order')
+      .limit(2);
+    if (error) return c.json({ success: false, message: `Employee access profile read failed: ${error.message}` }, 500 as 200);
+    // app_users currently stores the resolved system role, not the wizard profile id.
+    // A role may map to more than one profile (for example employee/no-login), so
+    // only expose a profile when the mapping is unambiguous. Never invent one.
+    const typedProfiles = profiles as {
+      id: string; code: string; label: string; description: string | null; requires_mfa: boolean;
+    }[];
+    const profile = typedProfiles.length === 1 ? typedProfiles[0] : null;
+    if (profile) {
+      accessProfile = {
+        id: profile.id, code: profile.code, label: profile.label,
+        description: profile.description, requiresMfa: profile.requires_mfa,
+      };
+    }
+  }
 
   // Statutory is sensitive — full detail needs statutory.view; readiness-only needs payroll_readiness.view.
   const [canStatutory, canReadiness] = await Promise.all([
@@ -309,9 +397,8 @@ router.post('/employees/get', async c => {
     blockers: (statutory.missing_blockers ?? []) as string[],
     financeHandoffEligible: (statutory.finance_handoff_eligible ?? false) as boolean,
   } : { status: 'pending', blockers: [] as string[], financeHandoffEligible: false };
-  if (certificates.error) return c.json({ success: false, message: certificates.error.message }, 500 as 200);
   const trainingStatus = rollupTrainingStatus(
-    certificates.data,
+    certificates.data ?? [],
     todayISO(),
   );
   const readiness = (canStatutory || canReadiness)
@@ -320,6 +407,7 @@ router.post('/employees/get', async c => {
 
   return c.json({ success: true, data: {
     employee: { ...emp,
+      accountStatus: emp.status,
       status: emp.employment_status ?? 'active',
       profile_image_url: resolveProfileImageUrl(emp as Parameters<typeof resolveProfileImageUrl>[0]),
       supervisorName: (supervisor as { full_name?: string } | null)?.full_name ?? null,
@@ -330,7 +418,10 @@ router.post('/employees/get', async c => {
       readiness,
     },
     statusHistory: statusHistory ?? [],
-    currentAssignment: assignment ?? null,
+    currentAssignment: assignmentHistory.find(row => (row as Record<string, unknown>).is_current === true) ?? null,
+    assignmentHistory,
+    payGroup,
+    accessProfile,
     statutory: canStatutory ? (statutoryMapped ?? null) : null,
     payrollReadiness: (canStatutory || canReadiness) ? payrollReadiness : null,
   } });
@@ -804,19 +895,21 @@ router.post('/employees/workflow-summary', async c => {
   const v = zv(c, z.object({ employeeId: z.string().min(1) }), (c.get('body')).args ?? {});
   if (!v.ok) return v.response;
 
-  const { data: instances } = await sb.from('workflow_instances')
+  const { data: instances, error: instancesError } = await sb.from('workflow_instances')
     .select('id, workflow_no, workflow_type, status, current_step_key, priority')
     .eq('source_record_id', v.data.employeeId).in('status', ['in_progress', 'returned'])
     .order('created_at', { ascending: false });
-  const rows = (instances ?? []) as { id: string; workflow_no: string | null; workflow_type: string; status: string; current_step_key: string | null; priority: string | null }[];
+  if (instancesError) return c.json({ success: false, message: instancesError.message }, 500 as 200);
+  const rows = instances as { id: string; workflow_no: string | null; workflow_type: string; status: string; current_step_key: string | null; priority: string | null }[];
 
   // Current open task per workflow → step name + due date.
   const taskByWf = new Map<string, { step_name: string | null; due_at: string | null }>();
   if (rows.length) {
-    const { data: tasks } = await sb.from('workflow_tasks')
+    const { data: tasks, error: tasksError } = await sb.from('workflow_tasks')
       .select('workflow_id, step_name, due_at, status').in('workflow_id', rows.map(r => r.id)).eq('status', 'pending')
       .order('due_at', { ascending: true });
-    for (const t of (tasks ?? []) as { workflow_id: string; step_name: string | null; due_at: string | null }[]) {
+    if (tasksError) return c.json({ success: false, message: tasksError.message }, 500 as 200);
+    for (const t of tasks as { workflow_id: string; step_name: string | null; due_at: string | null }[]) {
       if (!taskByWf.has(t.workflow_id)) taskByWf.set(t.workflow_id, { step_name: t.step_name, due_at: t.due_at });
     }
   }
@@ -943,7 +1036,11 @@ router.post('/employees/contact/update', async c => {
   const v = zv(c, z.object({
     employeeId: z.string().min(1),
     mode:       z.enum(['direct', 'request']).optional(),
-    work:       z.object({ email: z.string().max(160).nullable().optional(), phone: z.string().max(60).nullable().optional() }).optional(),
+    work:       z.object({
+      email: z.string().max(160).nullable().optional(),
+      phone: z.string().max(60).nullable().optional(),
+      mobilePhone: z.string().max(60).nullable().optional(),
+    }).optional(),
     personal:   z.object({ personalEmail: z.string().max(160).nullable().optional() }).optional(),
     emergency:  z.object({
       name:         z.string().max(160).nullable().optional(),
@@ -960,6 +1057,7 @@ router.post('/employees/contact/update', async c => {
   const patch: Record<string, unknown> = {};
   if (v.data.work?.email             !== undefined) patch.email                          = v.data.work.email;
   if (v.data.work?.phone             !== undefined) patch.phone                          = v.data.work.phone;
+  if (v.data.work?.mobilePhone       !== undefined) patch.mobile_phone                   = v.data.work.mobilePhone;
   if (v.data.personal?.personalEmail !== undefined) patch.personal_email                = v.data.personal.personalEmail;
   if (v.data.emergency?.name         !== undefined) patch.emergency_contact_name         = v.data.emergency.name;
   if (v.data.emergency?.phone        !== undefined) patch.emergency_contact_phone        = v.data.emergency.phone;
@@ -1005,6 +1103,7 @@ router.post('/employees/update', async c => {
     displayName:    z.string().max(160).nullable().optional(),
     personalEmail:  z.string().max(160).nullable().optional(),
     phone:          z.string().max(60).nullable().optional(),
+    mobilePhone:    z.string().max(60).nullable().optional(),
     position:       z.string().max(160).nullable().optional(),
     employmentType: z.enum(EMPLOYMENT_TYPES).optional(),
     startDate:      z.string().nullable().optional(),
@@ -1022,6 +1121,7 @@ router.post('/employees/update', async c => {
   if (v.data.displayName    !== undefined) patch.display_name    = v.data.displayName;
   if (v.data.personalEmail  !== undefined) patch.personal_email  = v.data.personalEmail;
   if (v.data.phone          !== undefined) patch.phone           = v.data.phone;
+  if (v.data.mobilePhone    !== undefined) patch.mobile_phone    = v.data.mobilePhone;
   if (v.data.position       !== undefined) patch.position        = v.data.position;
   if (v.data.employmentType !== undefined) patch.employment_type = v.data.employmentType;
   if (v.data.startDate      !== undefined) patch.start_date      = v.data.startDate;
@@ -1147,9 +1247,10 @@ router.post('/employees/training-summary', async c => {
   const v = zv(c, z.object({ employeeId: z.string().min(1) }), (c.get('body')).args ?? {});
   if (!v.ok) return v.response;
   const today = todayISO();
-  const { data: certs } = await sb.from('hse_worker_certificates')
+  const { data: certs, error: certsError } = await sb.from('hse_worker_certificates')
     .select('status, expires_at, course_name').eq('worker_id', v.data.employeeId);
-  const list = (certs ?? []) as { status: string; expires_at: string | null; course_name: string }[];
+  if (certsError) return c.json({ success: false, message: certsError.message }, 500 as 200);
+  const list = certs as { status: string; expires_at: string | null; course_name: string }[];
   const isExpired = (x: { status: string; expires_at: string | null }) =>
     x.status === 'expired' || (!!x.expires_at && x.expires_at < today && !['revoked','archived','rejected'].includes(x.status));
   return c.json({ success: true, data: {
@@ -1168,16 +1269,18 @@ router.post('/employees/audit', async c => {
   const v = zv(c, z.object({ employeeId: z.string().min(1), limit: z.number().int().positive().max(200).optional() }),
     (c.get('body')).args ?? {});
   if (!v.ok) return v.response;
-  const { data } = await sb.from('hr_audit_log').select('*').eq('employee_id', v.data.employeeId)
+  const { data, error } = await sb.from('hr_audit_log').select('*').eq('employee_id', v.data.employeeId)
     .order('created_at', { ascending: false }).limit(v.data.limit ?? 100);
-  const rows = (data ?? []) as { actor_id: string | null; [k: string]: unknown }[];
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  const rows = data as { actor_id: string | null; [k: string]: unknown }[];
   // Resolve actor display names server-side (an actor may be any app_user, not just
   // someone on the employee page) — the audit row carries the name, never a raw id.
   const actorIds = Array.from(new Set(rows.map(r => r.actor_id).filter((x): x is string => !!x)));
-  const { data: actors } = actorIds.length
+  const { data: actors, error: actorsError } = actorIds.length
     ? await sb.from('app_users').select('id, full_name').in('id', actorIds)
-    : { data: [] as { id: string; full_name: string | null }[] };
-  const actorMap = Object.fromEntries(((actors ?? []) as { id: string; full_name: string | null }[]).map(a => [a.id, a.full_name]));
+    : { data: [] as { id: string; full_name: string | null }[], error: null };
+  if (actorsError) return c.json({ success: false, message: actorsError.message }, 500 as 200);
+  const actorMap = Object.fromEntries((actors as { id: string; full_name: string | null }[]).map(a => [a.id, a.full_name]));
   return c.json({ success: true, data: rows.map(r => ({ ...r, actorName: r.actor_id ? actorMap[r.actor_id] ?? null : null })) });
 });
 
@@ -1775,9 +1878,10 @@ router.post('/employees/documents/list', async c => {
   const user = await requirePermission(c, 'hr.employee_documents.view');
   const v = zv(c, z.object({ employeeId: z.string().min(1) }), (c.get('body')).args ?? {});
   if (!v.ok) return v.response;
-  const { data } = await sb.from('hr_employee_documents').select('*').eq('employee_id', v.data.employeeId)
+  const { data, error } = await sb.from('hr_employee_documents').select('*').eq('employee_id', v.data.employeeId)
     .neq('status', 'archived').order('uploaded_at', { ascending: false });
-  const rawRows = (data ?? []) as { confidentiality: string }[];
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  const rawRows = data as { confidentiality: string }[];
   // Restricted tiers require the sensitive-view permission (via filterVisibleDocs).
   const canSeeSensitive = await userCan(user, 'hr.employee_documents.sensitive_view');
   const rows = filterVisibleDocs(rawRows, canSeeSensitive);

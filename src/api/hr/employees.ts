@@ -44,6 +44,7 @@ export interface HrEmployeeRow {
   display_name:       string | null;
   role:               string;
   status:             string;
+  accountStatus:      string;
   employment_type:    string | null;
   department_id:      string | null;
   site_id:            string | null;
@@ -59,6 +60,8 @@ export interface HrEmployeeRow {
   work_schedule:      string | null;
   cost_center:        string | null;
   phone:              string | null;
+  mobile_phone:       string | null;
+  created_at:         string | null;
   emergency_contact_name:         string | null;
   emergency_contact_phone:        string | null;
   emergency_contact_relationship: string | null;
@@ -107,9 +110,46 @@ export interface HrStatutoryRow {
 export interface HrEmployeeDetail {
   employee: HrEmployeeRow & { supervisorName: string | null; departmentName: string | null };
   statusHistory: Record<string, unknown>[];
-  currentAssignment: Record<string, unknown> | null;
+  currentAssignment: HrEmployeeAssignment | null;
+  assignmentHistory: HrEmployeeAssignment[];
+  payGroup: HrEmployeePayGroup | null;
+  accessProfile: HrEmployeeAccessProfile | null;
   statutory: HrStatutoryRow | null;
   payrollReadiness: PayrollReadiness | null;
+}
+
+export interface HrEmployeeAssignment {
+  id: string;
+  employee_id: string;
+  position_id: string | null;
+  department_id: string | null;
+  site_id: string | null;
+  supervisor_id: string | null;
+  assignment_type: string;
+  effective_from: string;
+  effective_to: string | null;
+  is_current: boolean;
+  departmentName: string | null;
+  siteName: string | null;
+  supervisorName: string | null;
+  positionTitle: string | null;
+}
+
+export interface HrEmployeePayGroup {
+  id: string;
+  code: string;
+  name: string;
+  frequency: string;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+}
+
+export interface HrEmployeeAccessProfile {
+  id: string;
+  code: string;
+  label: string;
+  description: string | null;
+  requiresMfa: boolean;
 }
 
 /** Assignment fields the register can filter on being ABSENT. */
@@ -174,6 +214,23 @@ export interface HrEmployeePageMeta {
 
 export interface HrEmployeePage { rows: HrEmployeeRow[]; meta: HrEmployeePageMeta; }
 
+type HrEmployeeListCache = HrEmployeeRow[] | HrEmployeePage;
+
+/**
+ * Resolve a real register row from either HR list-cache shape.
+ *
+ * The legacy list hook caches `HrEmployeeRow[]`; the server-paginated Employee
+ * Master caches `{ rows, meta }`. Detail drawers must support both or the current
+ * page cannot seed an immediate, record-safe placeholder.
+ */
+export function findCachedHrEmployeeRow(
+  cached: HrEmployeeListCache | undefined,
+  employeeId: string,
+): HrEmployeeRow | undefined {
+  const rows = Array.isArray(cached) ? cached : cached?.rows;
+  return rows?.find(row => row.id === employeeId);
+}
+
 
 /** Server-backed register query — filters, sort, and pagination are all applied
  *  in Postgres (not client-side over a fetched-everything payload). Returns the
@@ -210,11 +267,12 @@ export function useHrEmployee(employeeId: string | null) {
     // fake); the full detail (statutory / history / readiness) fills in on fetch.
     placeholder: () => {
       if (!employeeId) return undefined;
-      for (const [, rows] of qc.getQueriesData<HrEmployeeRow[]>({ queryKey: hrEmployeeKeys.lists() })) {
-        const row = rows?.find(r => r.id === employeeId);
+      for (const [, cached] of qc.getQueriesData<HrEmployeeListCache>({ queryKey: hrEmployeeKeys.lists() })) {
+        const row = findCachedHrEmployeeRow(cached, employeeId);
         if (row) return {
           employee: { ...row, supervisorName: row.supervisorName ?? null, departmentName: row.departmentName ?? null },
-          statusHistory: [], currentAssignment: null, statutory: null, payrollReadiness: null,
+          statusHistory: [], currentAssignment: null, assignmentHistory: [],
+          payGroup: null, accessProfile: null, statutory: null, payrollReadiness: null,
         } satisfies HrEmployeeDetail;
       }
       return undefined;
@@ -368,7 +426,7 @@ export function useHrSites() {
 
 export interface ContactUpdateArgs {
   employeeId: string; mode?: 'direct' | 'request';
-  work?:      { email?: string | null; phone?: string | null };
+  work?:      { email?: string | null; phone?: string | null; mobilePhone?: string | null };
   personal?:  { personalEmail?: string | null };
   emergency?: { name?: string | null; phone?: string | null; relationship?: string | null };
   reason?:    string;

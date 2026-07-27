@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "9b66c58a834daa883d0d9800e2eef860cacc9d10",
-    "branch": "main",
-    "fingerprint": "857097b94fe97f729362a342",
-    "indexedFiles": 1645
+    "head": "c499a8f3f6a781057d5b9d8da0e1b7595e9072cc",
+    "branch": "codex/hr-employee-profile-integration",
+    "fingerprint": "0822db7d2e187876b18841d1",
+    "indexedFiles": 1648
   },
   "summary": {
-    "files": 1298,
-    "symbols": 12968,
+    "files": 1300,
+    "symbols": 12983,
     "widgets": 51,
     "routes": 957,
     "routeDefinitions": 958,
@@ -22,8 +22,8 @@
     {
       "id": "hr",
       "counts": {
-        "files": 224,
-        "symbols": 2385,
+        "files": 226,
+        "symbols": 2400,
         "widgets": 9,
         "routes": 260,
         "routeDefinitions": 260,
@@ -1007,8 +1007,8 @@
       "path": "netlify/functions/lib/hr/offboardingQueries.ts",
       "module": "hr",
       "role": "backend-lib",
-      "lines": 190,
-      "hash": "60b53dd9f8998e8f"
+      "lines": 204,
+      "hash": "40622b61adb38bdf"
     },
     {
       "path": "netlify/functions/lib/hr/onboardingCommunications.ts",
@@ -2071,8 +2071,8 @@
       "path": "netlify/functions/routes/hr.ts",
       "module": "hr",
       "role": "backend-route",
-      "lines": 2119,
-      "hash": "4325b6009b14846f"
+      "lines": 2223,
+      "hash": "3fade5e92796ccfd"
     },
     {
       "path": "netlify/functions/routes/hrAttendance.ts",
@@ -2121,7 +2121,7 @@
       "module": "hr",
       "role": "backend-route",
       "lines": 129,
-      "hash": "879a7dbde875709d"
+      "hash": "d9eaeb9f0d57544c"
     },
     {
       "path": "netlify/functions/routes/hrOnboarding.ts",
@@ -2638,8 +2638,8 @@
       "path": "scripts/e2e/suites/hrEmployeeMaster.mjs",
       "module": "hr",
       "role": "e2e-suite",
-      "lines": 508,
-      "hash": "57d51d226f516c9a"
+      "lines": 524,
+      "hash": "7bf22a94072fb93e"
     },
     {
       "path": "scripts/e2e/suites/hrEmployeeSettings.mjs",
@@ -2659,8 +2659,8 @@
       "path": "scripts/e2e/suites/hrOffboarding.mjs",
       "module": "hr",
       "role": "e2e-suite",
-      "lines": 165,
-      "hash": "485514692e126b1c"
+      "lines": 169,
+      "hash": "3dedce156033b843"
     },
     {
       "path": "scripts/e2e/suites/hrOnboarding.mjs",
@@ -3366,8 +3366,8 @@
       "path": "src/api/hr/employees.ts",
       "module": "hr",
       "role": "frontend-api",
-      "lines": 643,
-      "hash": "2b12d7211c8cc1bf"
+      "lines": 701,
+      "hash": "dd915dd58d857699"
     },
     {
       "path": "src/api/hr/leave.ts",
@@ -3380,8 +3380,8 @@
       "path": "src/api/hr/offboarding.ts",
       "module": "hr",
       "role": "frontend-api",
-      "lines": 59,
-      "hash": "ea44a85af1e27bb6"
+      "lines": 62,
+      "hash": "b1cb9e929ede904a"
     },
     {
       "path": "src/api/hr/onboarding.ts",
@@ -4990,8 +4990,8 @@
       "path": "src/components/sections/HR/ActionDialogs.tsx",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 423,
-      "hash": "6c6f441ab8413827"
+      "lines": 424,
+      "hash": "cce121c42697aff4"
     },
     {
       "path": "src/components/sections/HR/AttendanceOverview.tsx",
@@ -5039,15 +5039,15 @@
       "path": "src/components/sections/HR/EmployeeProfilePage.test.tsx",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 70,
-      "hash": "a1bc62326e2c9aba"
+      "lines": 115,
+      "hash": "ad32e87f6dddffa3"
     },
     {
       "path": "src/components/sections/HR/EmployeeProfilePage.tsx",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 300,
-      "hash": "650d96af67632de7"
+      "lines": 471,
+      "hash": "54decb0fab1996e1"
     },
     {
       "path": "src/components/sections/HR/HRDocumentsOverview.tsx",
@@ -9052,6 +9052,20 @@
       "role": "test",
       "lines": 139,
       "hash": "5d30aedff41611e6"
+    },
+    {
+      "path": "tests/vitest/employeeProfileReadModel.test.ts",
+      "module": "hr",
+      "role": "test",
+      "lines": 43,
+      "hash": "2d33a405f5507f3b"
+    },
+    {
+      "path": "tests/vitest/hrEmployeeDetailPlaceholder.test.ts",
+      "module": "hr",
+      "role": "test",
+      "lines": 84,
+      "hash": "20231259d8802bfc"
     },
     {
       "path": "tests/vitest/importValidation.test.ts",
@@ -27061,7 +27075,7 @@
       "name": "toCaseRow",
       "kind": "function",
       "file": "netlify/functions/lib/hr/offboardingQueries.ts",
-      "line": 23,
+      "line": 24,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -27071,7 +27085,7 @@
       "name": "listOffboardingCases",
       "kind": "function",
       "file": "netlify/functions/lib/hr/offboardingQueries.ts",
-      "line": 34,
+      "line": 35,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -27081,7 +27095,7 @@
       "name": "getOffboardingCase",
       "kind": "function",
       "file": "netlify/functions/lib/hr/offboardingQueries.ts",
-      "line": 56,
+      "line": 63,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -27091,7 +27105,7 @@
       "name": "STATUS_ORDER",
       "kind": "array",
       "file": "netlify/functions/lib/hr/offboardingQueries.ts",
-      "line": 93,
+      "line": 107,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -27101,7 +27115,7 @@
       "name": "TERMINAL_STATUSES",
       "kind": "variable",
       "file": "netlify/functions/lib/hr/offboardingQueries.ts",
-      "line": 94,
+      "line": 108,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -27111,7 +27125,7 @@
       "name": "DONE_TASK_STATUSES",
       "kind": "variable",
       "file": "netlify/functions/lib/hr/offboardingQueries.ts",
-      "line": 95,
+      "line": 109,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -27121,7 +27135,7 @@
       "name": "getOffboardingDashboardStats",
       "kind": "function",
       "file": "netlify/functions/lib/hr/offboardingQueries.ts",
-      "line": 97,
+      "line": 111,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -41501,7 +41515,7 @@
       "name": "TRAINING_TERMINAL",
       "kind": "variable",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 65,
+      "line": 66,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41511,7 +41525,7 @@
       "name": "rollupTrainingStatus",
       "kind": "function",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 67,
+      "line": 68,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41521,7 +41535,7 @@
       "name": "EmployeeReadiness",
       "kind": "interface",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 76,
+      "line": 77,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41531,7 +41545,7 @@
       "name": "employeeReadiness",
       "kind": "function",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 85,
+      "line": 86,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41541,7 +41555,7 @@
       "name": "EMPLOYEE_SORT_COLS",
       "kind": "variable",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 101,
+      "line": 102,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41551,7 +41565,7 @@
       "name": "TRAINING_STATUSES",
       "kind": "variable",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 102,
+      "line": 103,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41561,7 +41575,7 @@
       "name": "escapeLike",
       "kind": "function",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 105,
+      "line": 106,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41571,7 +41585,27 @@
       "name": "MISSING_COLUMN",
       "kind": "variable",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 110,
+      "line": 111,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "idsFor",
+      "kind": "function",
+      "file": "netlify/functions/routes/hr.ts",
+      "line": 323,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "lookup",
+      "kind": "function",
+      "file": "netlify/functions/routes/hr.ts",
+      "line": 339,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41581,7 +41615,7 @@
       "name": "employeeCreateDate",
       "kind": "variable",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 407,
+      "line": 498,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41591,7 +41625,7 @@
       "name": "iso",
       "kind": "function",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 667,
+      "line": 758,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41601,7 +41635,7 @@
       "name": "distribution",
       "kind": "function",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 726,
+      "line": 817,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41611,7 +41645,7 @@
       "name": "inMonth",
       "kind": "function",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 745,
+      "line": 836,
       "module": "hr",
       "exported": false,
       "container": "lifecyclePeriods",
@@ -41621,7 +41655,7 @@
       "name": "HR_STATUSES",
       "kind": "variable",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1043,
+      "line": 1143,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41631,7 +41665,7 @@
       "name": "BLOCKING_STATUSES",
       "kind": "variable",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1044,
+      "line": 1144,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41641,7 +41675,7 @@
       "name": "isExpired",
       "kind": "function",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1153,
+      "line": 1254,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41651,7 +41685,7 @@
       "name": "orgBody",
       "kind": "function",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1188,
+      "line": 1291,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41661,7 +41695,7 @@
       "name": "orgErr",
       "kind": "function",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1189,
+      "line": 1292,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41671,7 +41705,7 @@
       "name": "ORG_UNIT_TYPES",
       "kind": "variable",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1193,
+      "line": 1296,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41681,7 +41715,7 @@
       "name": "GATED",
       "kind": "object",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1195,
+      "line": 1298,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41691,7 +41725,7 @@
       "name": "CHANGE_PERM",
       "kind": "object",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1468,
+      "line": 1571,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41701,7 +41735,7 @@
       "name": "snapshotForChange",
       "kind": "function",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1480,
+      "line": 1583,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41711,7 +41745,7 @@
       "name": "createChangeRequest",
       "kind": "function",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1510,
+      "line": 1613,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -41721,7 +41755,7 @@
       "name": "GENERIC_CHANGE_TYPES",
       "kind": "variable",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1585,
+      "line": 1688,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -60852,7 +60886,7 @@
       "name": "PayrollReadiness",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 82,
+      "line": 85,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -60862,7 +60896,7 @@
       "name": "HrStatutoryRow",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 88,
+      "line": 91,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -60872,7 +60906,37 @@
       "name": "HrEmployeeDetail",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 107,
+      "line": 110,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HrEmployeeAssignment",
+      "kind": "interface",
+      "file": "src/api/hr/employees.ts",
+      "line": 121,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HrEmployeePayGroup",
+      "kind": "interface",
+      "file": "src/api/hr/employees.ts",
+      "line": 138,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HrEmployeeAccessProfile",
+      "kind": "interface",
+      "file": "src/api/hr/employees.ts",
+      "line": 147,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -60882,7 +60946,7 @@
       "name": "EmployeeMissingField",
       "kind": "type",
       "file": "src/api/hr/employees.ts",
-      "line": 116,
+      "line": 156,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -60892,7 +60956,7 @@
       "name": "HrDashboardStats",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 118,
+      "line": 158,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -60902,7 +60966,7 @@
       "name": "HrWorkflowSummary",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 133,
+      "line": 173,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -60912,7 +60976,7 @@
       "name": "HrEmployeeListFilter",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 142,
+      "line": 182,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -60922,7 +60986,7 @@
       "name": "useHrEmployees",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 147,
+      "line": 187,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -60934,7 +60998,7 @@
       "name": "EmployeeSortCol",
       "kind": "type",
       "file": "src/api/hr/employees.ts",
-      "line": 158,
+      "line": 198,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -60944,7 +61008,7 @@
       "name": "HrEmployeePageFilter",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 160,
+      "line": 200,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -60954,7 +61018,7 @@
       "name": "HrEmployeePageMeta",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 169,
+      "line": 209,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -60964,7 +61028,27 @@
       "name": "HrEmployeePage",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 175,
+      "line": 215,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HrEmployeeListCache",
+      "kind": "type",
+      "file": "src/api/hr/employees.ts",
+      "line": 217,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "findCachedHrEmployeeRow",
+      "kind": "function",
+      "file": "src/api/hr/employees.ts",
+      "line": 226,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -60974,7 +61058,7 @@
       "name": "useHrEmployeesPage",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 181,
+      "line": 238,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -60986,7 +61070,7 @@
       "name": "fetchHrEmployeeDetail",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 194,
+      "line": 251,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -60996,7 +61080,7 @@
       "name": "useHrEmployee",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 202,
+      "line": 259,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61008,7 +61092,7 @@
       "name": "usePrefetchHrEmployee",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 228,
+      "line": 286,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61020,7 +61104,7 @@
       "name": "useHrDashboardStats",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 243,
+      "line": 301,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61032,7 +61116,7 @@
       "name": "useHrWorkflowSummary",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 256,
+      "line": 314,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61044,7 +61128,7 @@
       "name": "useHrStatutory",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 267,
+      "line": 325,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61056,7 +61140,7 @@
       "name": "HrAuditEntry",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 278,
+      "line": 336,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61066,7 +61150,7 @@
       "name": "HrDocument",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 290,
+      "line": 348,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61076,7 +61160,7 @@
       "name": "HrTrainingSummary",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 303,
+      "line": 361,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61086,7 +61170,7 @@
       "name": "useHrAudit",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 308,
+      "line": 366,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61098,7 +61182,7 @@
       "name": "useHrDocuments",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 320,
+      "line": 378,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61110,7 +61194,7 @@
       "name": "useHrTrainingSummary",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 332,
+      "line": 390,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61122,7 +61206,7 @@
       "name": "HrOrgUnit",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 344,
+      "line": 402,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61132,7 +61216,7 @@
       "name": "HrSite",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 345,
+      "line": 403,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61142,7 +61226,7 @@
       "name": "useHrOrgUnits",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 347,
+      "line": 405,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61154,7 +61238,7 @@
       "name": "useHrSites",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 357,
+      "line": 415,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61166,7 +61250,7 @@
       "name": "ContactUpdateArgs",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 369,
+      "line": 427,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61176,7 +61260,7 @@
       "name": "useUpdateHrContact",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 377,
+      "line": 435,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61188,7 +61272,7 @@
       "name": "PhotoDecideArgs",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 389,
+      "line": 447,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61198,7 +61282,7 @@
       "name": "useDecideHrEmployeePhoto",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 391,
+      "line": 449,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61210,7 +61294,7 @@
       "name": "StatutoryUpdateArgs",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 403,
+      "line": 461,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61220,7 +61304,7 @@
       "name": "useUpdateHrStatutory",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 411,
+      "line": 469,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61232,7 +61316,7 @@
       "name": "StatusChangeArgs",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 423,
+      "line": 481,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61242,7 +61326,7 @@
       "name": "useChangeHrStatus",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 425,
+      "line": 483,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61254,7 +61338,7 @@
       "name": "ChangeRequestArgs",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 438,
+      "line": 496,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61264,7 +61348,7 @@
       "name": "useCreateHrChangeRequest",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 440,
+      "line": 498,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61276,7 +61360,7 @@
       "name": "UploadDocArgs",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 449,
+      "line": 507,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61286,7 +61370,7 @@
       "name": "useUploadHrDocument",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 451,
+      "line": 509,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61298,7 +61382,7 @@
       "name": "useVerifyHrDocument",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 471,
+      "line": 529,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61310,7 +61394,7 @@
       "name": "useArchiveHrDocument",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 480,
+      "line": 538,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61322,7 +61406,7 @@
       "name": "getHrDocumentDownloadUrl",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 489,
+      "line": 547,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61332,7 +61416,7 @@
       "name": "HrAccessProfile",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 496,
+      "line": 554,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61342,7 +61426,7 @@
       "name": "useHrAccessProfiles",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 506,
+      "line": 564,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61354,7 +61438,7 @@
       "name": "WizardAccountMode",
       "kind": "type",
       "file": "src/api/hr/employees.ts",
-      "line": 521,
+      "line": 579,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61364,7 +61448,7 @@
       "name": "CreateHrEmployeeArgsV2",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 523,
+      "line": 581,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61374,7 +61458,7 @@
       "name": "CreateEmployeeReceiptV2",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 577,
+      "line": 635,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61384,7 +61468,7 @@
       "name": "useCreateHrEmployeeV2",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 589,
+      "line": 647,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61396,7 +61480,7 @@
       "name": "WizardDraftRecord",
       "kind": "interface",
       "file": "src/api/hr/employees.ts",
-      "line": 600,
+      "line": 658,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61406,7 +61490,7 @@
       "name": "useWizardDraftGet",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 610,
+      "line": 668,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61418,7 +61502,7 @@
       "name": "useWizardDraftSave",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 622,
+      "line": 680,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61430,7 +61514,7 @@
       "name": "useWizardDraftDelete",
       "kind": "function",
       "file": "src/api/hr/employees.ts",
-      "line": 633,
+      "line": 691,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61660,7 +61744,7 @@
       "name": "useOffboardingCase",
       "kind": "function",
       "file": "src/api/hr/offboarding.ts",
-      "line": 47,
+      "line": 50,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61672,7 +61756,7 @@
       "name": "useOffboardingStats",
       "kind": "function",
       "file": "src/api/hr/offboarding.ts",
-      "line": 50,
+      "line": 53,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -61684,7 +61768,7 @@
       "name": "useOffboardingMutation",
       "kind": "function",
       "file": "src/api/hr/offboarding.ts",
-      "line": 55,
+      "line": 58,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -90081,7 +90165,7 @@
       "name": "StatusDialog",
       "kind": "function",
       "file": "src/components/sections/HR/ActionDialogs.tsx",
-      "line": 161,
+      "line": 162,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -90093,7 +90177,7 @@
       "name": "submit",
       "kind": "function",
       "file": "src/components/sections/HR/ActionDialogs.tsx",
-      "line": 169,
+      "line": 170,
       "module": "hr",
       "exported": false,
       "container": "StatusDialog",
@@ -90103,7 +90187,7 @@
       "name": "OffboardingDialog",
       "kind": "function",
       "file": "src/components/sections/HR/ActionDialogs.tsx",
-      "line": 195,
+      "line": 196,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -90115,7 +90199,7 @@
       "name": "submit",
       "kind": "function",
       "file": "src/components/sections/HR/ActionDialogs.tsx",
-      "line": 207,
+      "line": 208,
       "module": "hr",
       "exported": false,
       "container": "OffboardingDialog",
@@ -90125,7 +90209,7 @@
       "name": "ChangeRequestDialog",
       "kind": "function",
       "file": "src/components/sections/HR/ActionDialogs.tsx",
-      "line": 259,
+      "line": 260,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -90137,7 +90221,7 @@
       "name": "set",
       "kind": "function",
       "file": "src/components/sections/HR/ActionDialogs.tsx",
-      "line": 268,
+      "line": 269,
       "module": "hr",
       "exported": false,
       "container": "ChangeRequestDialog",
@@ -90147,7 +90231,7 @@
       "name": "fields",
       "kind": "function",
       "file": "src/components/sections/HR/ActionDialogs.tsx",
-      "line": 270,
+      "line": 271,
       "module": "hr",
       "exported": false,
       "container": "ChangeRequestDialog",
@@ -90157,7 +90241,7 @@
       "name": "requestedValue",
       "kind": "function",
       "file": "src/components/sections/HR/ActionDialogs.tsx",
-      "line": 281,
+      "line": 282,
       "module": "hr",
       "exported": false,
       "container": "ChangeRequestDialog",
@@ -90167,7 +90251,7 @@
       "name": "submit",
       "kind": "function",
       "file": "src/components/sections/HR/ActionDialogs.tsx",
-      "line": 293,
+      "line": 294,
       "module": "hr",
       "exported": false,
       "container": "ChangeRequestDialog",
@@ -90177,7 +90261,7 @@
       "name": "DOC_TYPES",
       "kind": "array",
       "file": "src/components/sections/HR/ActionDialogs.tsx",
-      "line": 320,
+      "line": 321,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -90187,7 +90271,7 @@
       "name": "CONFIDENTIALITY",
       "kind": "array",
       "file": "src/components/sections/HR/ActionDialogs.tsx",
-      "line": 321,
+      "line": 322,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -90197,7 +90281,7 @@
       "name": "DocumentDialog",
       "kind": "function",
       "file": "src/components/sections/HR/ActionDialogs.tsx",
-      "line": 323,
+      "line": 324,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -90209,7 +90293,7 @@
       "name": "submit",
       "kind": "function",
       "file": "src/components/sections/HR/ActionDialogs.tsx",
-      "line": 331,
+      "line": 332,
       "module": "hr",
       "exported": false,
       "container": "DocumentDialog",
@@ -90219,7 +90303,7 @@
       "name": "StatutoryDialog",
       "kind": "function",
       "file": "src/components/sections/HR/ActionDialogs.tsx",
-      "line": 359,
+      "line": 360,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -90231,7 +90315,7 @@
       "name": "set",
       "kind": "function",
       "file": "src/components/sections/HR/ActionDialogs.tsx",
-      "line": 368,
+      "line": 369,
       "module": "hr",
       "exported": false,
       "container": "StatutoryDialog",
@@ -90241,7 +90325,7 @@
       "name": "submit",
       "kind": "function",
       "file": "src/components/sections/HR/ActionDialogs.tsx",
-      "line": 379,
+      "line": 380,
       "module": "hr",
       "exported": false,
       "container": "StatutoryDialog",
@@ -91672,7 +91756,7 @@
       "name": "detail",
       "kind": "object",
       "file": "src/components/sections/HR/EmployeeProfilePage.test.tsx",
-      "line": 18,
+      "line": 19,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -91684,7 +91768,7 @@
       "name": "access",
       "kind": "object",
       "file": "src/components/sections/HR/EmployeeProfilePage.test.tsx",
-      "line": 39,
+      "line": 63,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -91696,7 +91780,7 @@
       "name": "ProfileTab",
       "kind": "type",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 23,
+      "line": 18,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -91706,17 +91790,29 @@
       "name": "EmployeeProfilePageProps",
       "kind": "interface",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 25,
+      "line": 20,
       "module": "hr",
       "exported": true,
       "container": "",
       "tags": []
     },
     {
+      "name": "DASH",
+      "kind": "variable",
+      "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
+      "line": 27,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "fmtDate",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 32,
+      "line": 29,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -91726,7 +91822,7 @@
       "name": "fmtDateTime",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 39,
+      "line": 36,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -91736,17 +91832,30 @@
       "name": "tenure",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 46,
+      "line": 45,
       "module": "hr",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "RestrictedPanel",
+      "name": "Card",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
       "line": 60,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "TextAction",
+      "kind": "function",
+      "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
+      "line": 74,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -91755,10 +91864,58 @@
       ]
     },
     {
-      "name": "FinanceEmploymentDetails",
+      "name": "DetailList",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 71,
+      "line": 78,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "Gauge",
+      "kind": "function",
+      "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
+      "line": 89,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "SectionHead",
+      "kind": "function",
+      "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
+      "line": 101,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "FinanceSnapshot",
+      "kind": "function",
+      "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
+      "line": 105,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "OffboardingPanel",
+      "kind": "function",
+      "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
+      "line": 133,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -91770,7 +91927,7 @@
       "name": "EmployeeProfilePage",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 103,
+      "line": 187,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -139904,6 +140061,30 @@
       ]
     },
     {
+      "name": "read",
+      "kind": "function",
+      "file": "tests/vitest/employeeProfileReadModel.test.ts",
+      "line": 5,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "row",
+      "kind": "function",
+      "file": "tests/vitest/hrEmployeeDetailPlaceholder.test.ts",
+      "line": 8,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
       "name": "TODAY",
       "kind": "variable",
       "file": "tests/vitest/importValidation.test.ts",
@@ -151463,7 +151644,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 2051,
+      "line": 2155,
       "module": "hr"
     },
     {
@@ -151860,7 +152041,7 @@
       ],
       "schema": "z.object({\n    code: z.string().max(40).nullable().optional(), name: z.string().min(1).max(160),\n    currency: z.string().max(8).optional(), annualBudget: z.number().nullable().optional(),\n    departmentId: z.string().nullable().optional(), managerId: z.string().nullable().optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1363,
+      "line": 1466,
       "module": "hr"
     },
     {
@@ -151873,7 +152054,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1357,
+      "line": 1460,
       "module": "hr"
     },
     {
@@ -151886,7 +152067,7 @@
       ],
       "schema": "z.object({ costCenterId: z.uuid(), ...GATED })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1389,
+      "line": 1492,
       "module": "hr"
     },
     {
@@ -151899,7 +152080,7 @@
       ],
       "schema": "z.object({\n    costCenterId: z.uuid(), expectedUpdatedAt: z.string().nullable().optional(),\n    code: z.string().max(40).nullable().optional(), name: z.string().min(1).max(160).optional(),\n    currency: z.string().max(8).optional(), annualBudget: z.number().nullable().optional(),\n    departmentId: z.string().nullable().optional(), managerId: z.string().nullable().optional(), isActive: z.boolean().optional(),\n    ...GATED,\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1375,
+      "line": 1478,
       "module": "hr"
     },
     {
@@ -152003,7 +152184,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1439,
+      "line": 1542,
       "module": "hr"
     },
     {
@@ -152016,7 +152197,7 @@
       ],
       "schema": "z.object({ documentId: z.uuid() })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1844,
+      "line": 1948,
       "module": "hr"
     },
     {
@@ -152030,7 +152211,7 @@
       ],
       "schema": "z.object({\n    employeeId: z.string().optional(), departmentId: z.string().optional(), overview: z.boolean().optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1927,
+      "line": 2031,
       "module": "hr"
     },
     {
@@ -152044,7 +152225,7 @@
       ],
       "schema": "z.object({ documentId: z.uuid() })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1857,
+      "line": 1961,
       "module": "hr"
     },
     {
@@ -152058,7 +152239,7 @@
       ],
       "schema": "z.object({ withinDays: z.number().int().positive().max(365).optional() })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1912,
+      "line": 2016,
       "module": "hr"
     },
     {
@@ -152069,7 +152250,7 @@
       "guards": [],
       "schema": "z.object({ windows: z.array(z.number().int()).optional() })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 2018,
+      "line": 2122,
       "module": "hr"
     },
     {
@@ -152083,7 +152264,7 @@
       ],
       "schema": "z.object({\n    q: z.string().optional(), employeeId: z.string().optional(), departmentId: z.string().optional(),\n    documentType: z.string().optional(), status: z.string().optional(), confidentiality: z.string().optional(),\n    expiryState: z.enum(['valid','expiring','expired','none']).optional(),\n    expiringWithinDays: z.number().int().positive().optional(),\n    page: z.number().int().positive().optional(), pageSize: z.number().int().positive().max(200).optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1879,
+      "line": 1983,
       "module": "hr"
     },
     {
@@ -152096,7 +152277,7 @@
       ],
       "schema": "z.object({\n    documentType: z.string().min(1).max(80), label: z.string().min(1).max(200),\n    appliesToScope: z.enum(['all','role','employment_type','department']),\n    appliesToValue: z.string().nullable().optional(),\n    requiresExpiry: z.boolean().optional(), reminderDays: z.array(z.number().int()).optional(),\n    minConfidentiality: z.enum(['internal','confidential','restricted_hr','legal','medical']).nullable().optional(),\n    metadata: z.record(z.string(), z.unknown()).optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1963,
+      "line": 2067,
       "module": "hr"
     },
     {
@@ -152109,7 +152290,7 @@
       ],
       "schema": "z.object({ activeOnly: z.boolean().optional() })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1949,
+      "line": 2053,
       "module": "hr"
     },
     {
@@ -152122,7 +152303,7 @@
       ],
       "schema": "z.object({ requirementId: z.uuid() })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 2003,
+      "line": 2107,
       "module": "hr"
     },
     {
@@ -152135,7 +152316,7 @@
       ],
       "schema": "z.object({\n    requirementId: z.uuid(), label: z.string().min(1).max(200).optional(),\n    requiresExpiry: z.boolean().optional(), reminderDays: z.array(z.number().int()).optional(),\n    minConfidentiality: z.enum(['internal','confidential','restricted_hr','legal','medical']).nullable().optional(),\n    metadata: z.record(z.string(), z.unknown()).optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1984,
+      "line": 2088,
       "module": "hr"
     },
     {
@@ -152149,7 +152330,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1899,
+      "line": 2003,
       "module": "hr"
     },
     {
@@ -152162,7 +152343,7 @@
       ],
       "schema": "z.object({ documentId: z.uuid(), decision: z.enum(['approve', 'reject']), reason: z.string().max(500).optional() })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1825,
+      "line": 1929,
       "module": "hr"
     },
     {
@@ -152176,7 +152357,7 @@
       ],
       "schema": "z.object({ requestId: z.uuid() })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1656,
+      "line": 1759,
       "module": "hr"
     },
     {
@@ -152190,7 +152371,7 @@
       ],
       "schema": "z.object({ requestId: z.uuid(), decision: z.enum(['approve','reject','return']), comment: z.string().max(500).optional() })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1617,
+      "line": 1720,
       "module": "hr"
     },
     {
@@ -152203,7 +152384,7 @@
       ],
       "schema": "z.object({ status: z.string().optional(), employeeId: z.string().optional() })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1605,
+      "line": 1708,
       "module": "hr"
     },
     {
@@ -152255,7 +152436,7 @@
       ],
       "schema": "z.object({ employeeId: z.string().min(1), limit: z.number().int().positive().max(200).optional() })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1166,
+      "line": 1267,
       "module": "hr"
     },
     {
@@ -152268,7 +152449,7 @@
       ],
       "schema": "z.object({\n    employeeId: z.string().min(1), changeType: z.enum(GENERIC_CHANGE_TYPES as unknown as [string, ...string[]]),\n    requestedValue: z.record(z.string(), z.unknown()), reason: z.string().max(500).optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1586,
+      "line": 1689,
       "module": "hr"
     },
     {
@@ -152280,9 +152461,9 @@
         "requirePermission",
         "userCan"
       ],
-      "schema": "z.object({\n    employeeId: z.string().min(1),\n    mode:       z.enum(['direct', 'request']).optional(),\n    work:       z.object({ email: z.string().max(160).nullable().optional(), phone: z.string().max(60).nullable().optional() }).optional(),\n    personal:   z.object({ personalEmail: z.string().max(160).nullable().optional() }).optional(),\n    emergency:  z.object({\n      name:         z.string().max(160).nullable().optional(),\n      phone:        z.string().max(60).nullable().optional(),\n      relationship: z.string().max(80).nullable().optional(),\n    }).optional(),\n    reason: z.string().max(500).optional(),\n  })",
+      "schema": "z.object({\n    employeeId: z.string().min(1),\n    mode:       z.enum(['direct', 'request']).optional(),\n    work:       z.object({\n      email: z.string().max(160).nullable().optional(),\n      phone: z.string().max(60).nullable().optional(),\n      mobilePhone: z.string().max(60).nullable().optional(),\n    }).optional(),\n    personal:   z.object({ personalEmail: z.string().max(160).nullable().optional() }).optional(),\n    emergency:  z.object({\n      name:         z.string().max(160).nullable().optional(),\n      phone:        z.string().max(60).nullable().optional(),\n      relationship: z.string().max(80).nullable().optional(),\n    }).optional(),\n    reason: z.string().max(500).optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 941,
+      "line": 1034,
       "module": "hr"
     },
     {
@@ -152295,7 +152476,7 @@
       ],
       "schema": "z.object({\n    requestKey: z.uuid(),\n    identity: z.object({\n      username:       zUsername,\n      firstName:      z.string().trim().min(1).max(120),\n      lastName:       z.string().trim().min(1).max(120),\n      email:          z.email().max(160).optional().or(z.literal('')).optional(),\n      personalEmail:  z.email().max(160).optional().or(z.literal('')).optional(),\n      phone:          z.string().max(60).optional(),\n      employeeNumber: z.string().max(40).optional(),\n      dateOfBirth:    employeeCreateDate.optional().or(z.literal('')).optional(),\n      nationality:    z.string().max(80).optional(),\n      preferredName:  z.string().max(160).optional(),\n      governmentId:   z.string().max(80).optional(),\n    }),\n    employment: z.object({\n      employmentType:   z.enum(EMPLOYMENT_TYPES),\n      startDate:        employeeCreateDate,\n      position:         z.string().max(160).optional(),\n      probationEndDate: employeeCreateDate.optional().or(z.literal('')).optional(),\n      employeeGrade:    z.string().max(60).optional(),\n      workSchedule:     z.string().max(60).optional(),\n    }),\n    assignment: z.object({\n      departmentId:  z.string().max(100).nullable().optional(),\n      siteId:        z.string().max(100).nullable().optional(),\n      supervisorId:  z.string().nullable().optional(),\n      effectiveDate: employeeCreateDate.optional().or(z.literal('')).optional(),\n    }).optional(),\n    access: z.object({\n      accessProfileId: z.uuid(),\n      accountMode:     z.literal('no_login'),\n    }),\n    recordStatus: z.enum(['draft', 'pending_onboarding', 'active', 'probation']).default('active'),\n    statutory: z.object({\n      nisNumber:              z.string().max(20).nullable().optional(),\n      nisStatus:              z.enum(NIS_STATUSES).optional(),\n      nisApplicable:          z.boolean().optional(),\n      nisEffectiveDate:       employeeCreateDate.optional().or(z.literal('')).optional(),\n      birFileNumber:          z.string().max(40).nullable().optional(),\n      payeApplicable:         z.boolean().optional(),\n      td1Received:            z.boolean().optional(),\n      td1EffectiveYear:       z.number().int().min(2000).max(2100).nullable().optional(),\n      hsApplicable:           z.boolean().optional(),\n      hsExemptionReason:      z.string().max(200).nullable().optional(),\n      hsEffectiveDate:        employeeCreateDate.optional().or(z.literal('')).optional(),\n      hsVerificationRequired: z.boolean().optional(),\n    }).optional(),\n    onboarding: z.object({\n      prepareOnboarding: z.boolean().optional(),\n      packageKey:           z.string().max(100).optional(),\n    }).optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 413,
+      "line": 504,
       "module": "hr"
     },
     {
@@ -152308,7 +152489,7 @@
       ],
       "schema": "z.object({\n    siteId: z.string().optional(),\n    departmentId: z.string().optional(),\n    // Drives the lifecycle buckets only (see lifecycleWindows). Defaults to the historical\n    // behaviour so existing callers are unaffected.\n    granularity: z.enum(['day', 'week', 'month']).default('month'),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 617,
+      "line": 708,
       "module": "hr"
     },
     {
@@ -152321,7 +152502,7 @@
       ],
       "schema": "z.object({\n    employeeId: z.string().min(1), documentType: z.string().min(1).max(80), title: z.string().min(1).max(200),\n    filePath: z.string().min(1), fileName: z.string().min(1), mimeType: z.string().nullable().optional(),\n    // Bucket file_size_limit (migration 20260804000000) is authoritative; this is a friendly early reject.\n    fileSize: z.number().int().max(HR_DOC_MAX_BYTES, `File exceeds the ${Math.round(HR_DOC_MAX_BYTES / 1048576)} MB limit.`).nullable().optional(),\n    confidentiality: z.enum(['internal', 'confidential', 'restricted_hr', 'legal', 'medical']).default('internal'),\n    expiryDate: z.string().nullable().optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1799,
+      "line": 1903,
       "module": "hr"
     },
     {
@@ -152335,7 +152516,7 @@
       ],
       "schema": "z.object({ employeeId: z.string().min(1) })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1774,
+      "line": 1877,
       "module": "hr"
     },
     {
@@ -152348,7 +152529,7 @@
       ],
       "schema": "z.object({ fileName: z.string().min(1), mimeType: z.string().min(1) })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1788,
+      "line": 1892,
       "module": "hr"
     },
     {
@@ -152362,7 +152543,7 @@
       ],
       "schema": "z.object({ employeeId: z.string().min(1) })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 281,
+      "line": 283,
       "module": "hr"
     },
     {
@@ -152467,7 +152648,7 @@
       ],
       "schema": "z.object({\n    // Legacy single-value filters (kept for existing picker/dropdown callers).\n    status: z.string().optional(), departmentId: z.string().optional(),\n    employmentType: z.string().optional(), workerType: z.enum(['employee', 'contractor']).optional(),\n    search: z.string().optional(), limit: z.number().int().positive().max(500).optional(),\n    // Server-backed register filters (multi-select) + sort + pagination.\n    statuses: z.array(z.string()).optional(),\n    departmentIds: z.array(z.string()).optional(),\n    employmentTypes: z.array(z.string()).optional(),\n    trainingStatuses: z.array(z.enum(TRAINING_STATUSES)).optional(),\n    // Records MISSING a required assignment field. Backs the Exceptions KPI drill-down, which\n    // otherwise had no corresponding register filter and could only scroll the page.\n    missing: z.array(z.enum(['supervisor', 'department', 'site'])).optional(),\n    sortBy: z.enum(EMPLOYEE_SORT_COLS).optional(),\n    sortDir: z.enum(['asc', 'desc']).optional(),\n    page: z.number().int().positive().optional(),\n    pageSize: z.number().int().positive().max(200).optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 111,
+      "line": 112,
       "module": "hr"
     },
     {
@@ -152480,7 +152661,7 @@
       ],
       "schema": "z.object({ employeeId: z.string().min(1), approve: z.boolean(), reason: z.string().max(500).optional() })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 343,
+      "line": 434,
       "module": "hr"
     },
     {
@@ -152493,7 +152674,7 @@
       ],
       "schema": "z.object({\n    employeeId: z.string().min(1),\n    newStatus:  z.enum(HR_STATUSES),\n    reason:     z.string().max(500).optional(),\n    effectiveDate: z.string().optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1046,
+      "line": 1146,
       "module": "hr"
     },
     {
@@ -152506,7 +152687,7 @@
       ],
       "schema": "z.object({ employeeId: z.string().min(1) })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 843,
+      "line": 936,
       "module": "hr"
     },
     {
@@ -152519,7 +152700,7 @@
       ],
       "schema": "z.object({\n    employeeId:             z.string().min(1),\n    nisNumber:              z.string().nullable().optional(),\n    nisStatus:              z.enum(NIS_STATUSES).optional(),\n    nisEffectiveDate:       z.string().nullable().optional(),\n    birFileNumber:          z.string().nullable().optional(),\n    payeApplicable:         z.boolean().optional(),\n    td1Received:            z.boolean().optional(),\n    td1EffectiveYear:       z.number().int().nullable().optional(),\n    hsApplicable:           z.boolean().optional(),\n    hsExemptionReason:      z.string().nullable().optional(),\n    hsEffectiveDate:        z.string().nullable().optional(),\n    hsVerificationRequired: z.boolean().optional(),\n    markVerified:           z.boolean().optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 857,
+      "line": 950,
       "module": "hr"
     },
     {
@@ -152532,7 +152713,7 @@
       ],
       "schema": "z.object({\n    employeeId: z.string().min(1), supervisorId: z.string().nullable(), reason: z.string().max(500).optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1124,
+      "line": 1224,
       "module": "hr"
     },
     {
@@ -152545,7 +152726,7 @@
       ],
       "schema": "z.object({ employeeId: z.string().min(1) })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1145,
+      "line": 1245,
       "module": "hr"
     },
     {
@@ -152558,7 +152739,7 @@
       ],
       "schema": "z.object({\n    employeeId:   z.string().min(1),\n    departmentId: z.string().nullable().optional(),\n    siteId:       z.string().nullable().optional(),\n    positionId:   z.uuid().nullable().optional(),\n    reason:       z.string().max(500).optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1086,
+      "line": 1186,
       "module": "hr"
     },
     {
@@ -152569,9 +152750,9 @@
       "guards": [
         "requirePermission"
       ],
-      "schema": "z.object({\n    employeeId:     z.string().min(1),\n    firstName:      z.string().max(120).optional(),\n    lastName:       z.string().max(120).nullable().optional(),\n    displayName:    z.string().max(160).nullable().optional(),\n    personalEmail:  z.string().max(160).nullable().optional(),\n    phone:          z.string().max(60).nullable().optional(),\n    position:       z.string().max(160).nullable().optional(),\n    employmentType: z.enum(EMPLOYMENT_TYPES).optional(),\n    startDate:      z.string().nullable().optional(),\n    endDate:        z.string().nullable().optional(),\n    contractorFlag: z.boolean().optional(),\n  })",
+      "schema": "z.object({\n    employeeId:     z.string().min(1),\n    firstName:      z.string().max(120).optional(),\n    lastName:       z.string().max(120).nullable().optional(),\n    displayName:    z.string().max(160).nullable().optional(),\n    personalEmail:  z.string().max(160).nullable().optional(),\n    phone:          z.string().max(60).nullable().optional(),\n    mobilePhone:    z.string().max(60).nullable().optional(),\n    position:       z.string().max(160).nullable().optional(),\n    employmentType: z.enum(EMPLOYMENT_TYPES).optional(),\n    startDate:      z.string().nullable().optional(),\n    endDate:        z.string().nullable().optional(),\n    contractorFlag: z.boolean().optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 999,
+      "line": 1097,
       "module": "hr"
     },
     {
@@ -152584,7 +152765,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 2109,
+      "line": 2213,
       "module": "hr"
     },
     {
@@ -152597,7 +152778,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 2097,
+      "line": 2201,
       "module": "hr"
     },
     {
@@ -152610,7 +152791,7 @@
       ],
       "schema": "z.object({\n    draftData: z.record(z.string(), z.unknown()),\n    stepIndex: z.number().int().min(0).max(5),\n    label: z.string().trim().min(1).max(160).optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 2065,
+      "line": 2169,
       "module": "hr"
     },
     {
@@ -152623,7 +152804,7 @@
       ],
       "schema": "z.object({ employeeId: z.string().min(1) })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 802,
+      "line": 893,
       "module": "workflow"
     },
     {
@@ -152907,7 +153088,7 @@
       "guards": [
         "requirePermission"
       ],
-      "schema": "z.object({ caseId: z.string().uuid(), reason: z.string().trim().min(1, 'A reason is required to cancel an offboarding case.').max(500) })",
+      "schema": "z.object({ caseId: z.uuid(), reason: z.string().trim().min(1, 'A reason is required to cancel an offboarding case.').max(500) })",
       "file": "netlify/functions/routes/hrOffboarding.ts",
       "line": 112,
       "module": "hr"
@@ -152920,7 +153101,7 @@
       "guards": [
         "requirePermission"
       ],
-      "schema": "z.object({ caseId: z.string().uuid() })",
+      "schema": "z.object({ caseId: z.uuid() })",
       "file": "netlify/functions/routes/hrOffboarding.ts",
       "line": 104,
       "module": "hr"
@@ -152946,7 +153127,7 @@
       "guards": [
         "requirePermission"
       ],
-      "schema": "z.object({ caseId: z.string().uuid(), exitDate: z.string().nullable().optional() })",
+      "schema": "z.object({ caseId: z.uuid(), exitDate: z.string().nullable().optional() })",
       "file": "netlify/functions/routes/hrOffboarding.ts",
       "line": 120,
       "module": "hr"
@@ -152959,7 +153140,7 @@
       "guards": [
         "requirePermission"
       ],
-      "schema": "z.object({ caseId: z.string().uuid() })",
+      "schema": "z.object({ caseId: z.uuid() })",
       "file": "netlify/functions/routes/hrOffboarding.ts",
       "line": 47,
       "module": "hr"
@@ -152972,7 +153153,7 @@
       "guards": [
         "requirePermission"
       ],
-      "schema": "z.object({ status: z.string().optional() })",
+      "schema": "z.object({ status: z.string().optional(), employeeId: z.string().min(1).optional() })",
       "file": "netlify/functions/routes/hrOffboarding.ts",
       "line": 39,
       "module": "hr"
@@ -152985,7 +153166,7 @@
       "guards": [
         "requirePermission"
       ],
-      "schema": "z.object({ caseId: z.string().uuid() })",
+      "schema": "z.object({ caseId: z.uuid() })",
       "file": "netlify/functions/routes/hrOffboarding.ts",
       "line": 88,
       "module": "hr"
@@ -152998,7 +153179,7 @@
       "guards": [
         "requirePermission"
       ],
-      "schema": "z.object({ caseId: z.string().uuid(), reason: z.string().max(500).nullable().optional() })",
+      "schema": "z.object({ caseId: z.uuid(), reason: z.string().max(500).nullable().optional() })",
       "file": "netlify/functions/routes/hrOffboarding.ts",
       "line": 72,
       "module": "hr"
@@ -153011,7 +153192,7 @@
       "guards": [
         "requirePermission"
       ],
-      "schema": "z.object({ caseId: z.string().uuid(), ownerId: z.string().nullable() })",
+      "schema": "z.object({ caseId: z.uuid(), ownerId: z.string().nullable() })",
       "file": "netlify/functions/routes/hrOffboarding.ts",
       "line": 96,
       "module": "hr"
@@ -153024,7 +153205,7 @@
       "guards": [
         "requirePermission"
       ],
-      "schema": "z.object({ caseId: z.string().uuid() })",
+      "schema": "z.object({ caseId: z.uuid() })",
       "file": "netlify/functions/routes/hrOffboarding.ts",
       "line": 80,
       "module": "hr"
@@ -153050,7 +153231,7 @@
       "guards": [
         "requirePermission"
       ],
-      "schema": "z.object({ taskId: z.string().uuid() })",
+      "schema": "z.object({ taskId: z.uuid() })",
       "file": "netlify/functions/routes/hrOffboarding.ts",
       "line": 64,
       "module": "hr"
@@ -153877,7 +154058,7 @@
       ],
       "schema": "z.object({ changeRequestId: z.uuid(), reason: z.string().max(500).nullable().optional() })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1420,
+      "line": 1523,
       "module": "hr"
     },
     {
@@ -153890,7 +154071,7 @@
       ],
       "schema": "z.object({ changeRequestId: z.uuid() })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1409,
+      "line": 1512,
       "module": "hr"
     },
     {
@@ -153903,7 +154084,7 @@
       ],
       "schema": "z.object({\n    entityType: z.enum(['org_unit', 'position', 'cost_center']), entityId: z.string().min(1),\n    action: z.enum(['move', 'archive', 'delete', 'retire', 'update']), newParentId: z.string().nullable().optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1282,
+      "line": 1385,
       "module": "hr"
     },
     {
@@ -153916,7 +154097,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1430,
+      "line": 1533,
       "module": "hr"
     },
     {
@@ -153929,7 +154110,7 @@
       ],
       "schema": "z.object({\n    status: z.string().optional(), entityType: z.enum(['org_unit', 'position', 'cost_center']).optional(), limit: z.number().int().optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1399,
+      "line": 1502,
       "module": "hr"
     },
     {
@@ -153942,7 +154123,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1276,
+      "line": 1379,
       "module": "hr"
     },
     {
@@ -153955,7 +154136,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1270,
+      "line": 1373,
       "module": "hr"
     },
     {
@@ -153968,7 +154149,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1198,
+      "line": 1301,
       "module": "hr"
     },
     {
@@ -153981,7 +154162,7 @@
       ],
       "schema": "z.object({ unitId: z.string().min(1), ...GATED })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1254,
+      "line": 1357,
       "module": "hr"
     },
     {
@@ -153994,7 +154175,7 @@
       ],
       "schema": "z.object({\n    name: z.string().min(1).max(160), code: z.string().max(40).nullable().optional(),\n    orgUnitType: z.enum(ORG_UNIT_TYPES).optional(), parentId: z.string().nullable().optional(),\n    siteId: z.string().nullable().optional(), managerId: z.string().nullable().optional(),\n    costCenterId: z.uuid().nullable().optional(), description: z.string().max(500).nullable().optional(),\n    sortOrder: z.number().int().optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1215,
+      "line": 1318,
       "module": "hr"
     },
     {
@@ -154007,7 +154188,7 @@
       ],
       "schema": "z.object({ unitId: z.string().min(1), ...GATED })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1262,
+      "line": 1365,
       "module": "hr"
     },
     {
@@ -154020,7 +154201,7 @@
       ],
       "schema": "z.object({ unitId: z.string().min(1) })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1204,
+      "line": 1307,
       "module": "hr"
     },
     {
@@ -154033,7 +154214,7 @@
       ],
       "schema": "z.object({\n    unitId: z.string().min(1), newParentId: z.string().nullable(), expectedUpdatedAt: z.string().nullable().optional(), ...GATED,\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1244,
+      "line": 1347,
       "module": "hr"
     },
     {
@@ -154046,7 +154227,7 @@
       ],
       "schema": "z.object({\n    unitId: z.string().min(1), expectedUpdatedAt: z.string().nullable().optional(),\n    name: z.string().min(1).max(160).optional(), code: z.string().max(40).nullable().optional(),\n    orgUnitType: z.enum(ORG_UNIT_TYPES).optional(), siteId: z.string().nullable().optional(),\n    managerId: z.string().nullable().optional(), costCenterId: z.uuid().nullable().optional(),\n    description: z.string().max(500).nullable().optional(), isActive: z.boolean().optional(), sortOrder: z.number().int().optional(),\n    ...GATED,\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1229,
+      "line": 1332,
       "module": "hr"
     },
     {
@@ -154150,7 +154331,7 @@
       ],
       "schema": "z.object({\n    positionKey: z.string().min(1).max(80), title: z.string().min(1).max(160), grade: z.string().max(60).nullable().optional(),\n    departmentId: z.string().nullable().optional(), siteId: z.string().nullable().optional(),\n    defaultSupervisorId: z.string().nullable().optional(), reportsToPositionId: z.uuid().nullable().optional(),\n    isSafetyCritical: z.boolean().optional(), headcountBudget: z.number().int().nullable().optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1319,
+      "line": 1422,
       "module": "hr"
     },
     {
@@ -154163,7 +154344,7 @@
       ],
       "schema": "z.object({ positionId: z.uuid() })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1308,
+      "line": 1411,
       "module": "hr"
     },
     {
@@ -154176,7 +154357,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1302,
+      "line": 1405,
       "module": "hr"
     },
     {
@@ -154189,7 +154370,7 @@
       ],
       "schema": "z.object({ positionId: z.uuid(), ...GATED })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1347,
+      "line": 1450,
       "module": "hr"
     },
     {
@@ -154202,7 +154383,7 @@
       ],
       "schema": "z.object({\n    positionId: z.uuid(), expectedUpdatedAt: z.string().nullable().optional(),\n    title: z.string().max(160).optional(), grade: z.string().max(60).nullable().optional(),\n    departmentId: z.string().nullable().optional(), siteId: z.string().nullable().optional(),\n    defaultSupervisorId: z.string().nullable().optional(), reportsToPositionId: z.uuid().nullable().optional(),\n    isSafetyCritical: z.boolean().optional(), headcountBudget: z.number().int().nullable().optional(), isActive: z.boolean().optional(),\n    ...GATED,\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1332,
+      "line": 1435,
       "module": "hr"
     },
     {
@@ -154608,7 +154789,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1296,
+      "line": 1399,
       "module": "hr"
     },
     {
@@ -154621,7 +154802,7 @@
       ],
       "schema": "z.object({\n    status:     z.string().optional(),\n    employeeId: z.string().optional(),\n    limit:      z.number().int().positive().max(500).optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1722,
+      "line": 1825,
       "module": "hr"
     },
     {
@@ -154634,7 +154815,7 @@
       ],
       "schema": "z.object({\n    employeeId:    z.string().min(1),\n    departmentId:  z.string().nullable().optional(),\n    siteId:        z.string().nullable().optional(),\n    positionId:    z.uuid().nullable().optional(),\n    supervisorId:  z.string().nullable().optional(),\n    role:          z.string().nullable().optional(),\n    monthlySalary: z.number().positive().nullable().optional(),\n    hourlyRate:    z.number().positive().nullable().optional(),\n    effectiveDate: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, 'effectiveDate must be YYYY-MM-DD'),\n    reason:        z.string().max(500).optional(),\n  })",
       "file": "netlify/functions/routes/hr.ts",
-      "line": 1678,
+      "line": 1781,
       "module": "hr"
     },
     {
@@ -175722,92 +175903,92 @@
           "line": 276
         },
         {
-          "name": "get (admin) → embeds statutory + authoritative readiness + workerType",
+          "name": "get (admin) → complete employee-record read model",
           "line": 282
         },
         {
           "name": "get (manager, no statutory.view) → statutory hidden",
-          "line": 297
+          "line": 307
         },
         {
           "name": "dashboard-stats (admin) → complete workspace contract, all computed",
-          "line": 306
+          "line": 317
         },
         {
           "name": "dashboard-stats (manager hr.employees.view) → allowed",
-          "line": 325
-        },
-        {
-          "name": "dashboard-stats (employee) → denied",
-          "line": 330
-        },
-        {
-          "name": "workflow-summary (admin) → reads central engine",
           "line": 336
         },
         {
+          "name": "dashboard-stats (employee) → denied",
+          "line": 341
+        },
+        {
+          "name": "workflow-summary (admin) → reads central engine",
+          "line": 347
+        },
+        {
           "name": "workflow-summary (employee) → denied",
-          "line": 345
+          "line": 356
         },
         {
           "name": "audit (admin) → entries with actor names resolved server-side",
-          "line": 351
+          "line": 362
         },
         {
           "name": "training-summary (admin) → counts + certificates shape",
-          "line": 360
+          "line": 371
         },
         {
           "name": "documents/list (admin) → array",
-          "line": 367
+          "line": 378
         },
         {
           "name": "sites/list (admin) → array (Create wizard option source)",
-          "line": 373
+          "line": 384
         },
         {
           "name": "statutory/get (admin) → statutory + readiness",
-          "line": 380
-        },
-        {
-          "name": "statutory/get (manager) → denied",
-          "line": 386
-        },
-        {
-          "name": "statutory/update (admin) blocked→READY + finance handoff signal",
           "line": 391
         },
         {
+          "name": "statutory/get (manager) → denied",
+          "line": 397
+        },
+        {
+          "name": "statutory/update (admin) blocked→READY + finance handoff signal",
+          "line": 402
+        },
+        {
           "name": "statutory/update (manager) → denied",
-          "line": 404
+          "line": 415
         },
         {
           "name": "contact/update direct WORK contact (admin)",
-          "line": 410
+          "line": 421
         },
         {
           "name": "contact/update direct EMERGENCY contact (admin, restricted)",
-          "line": 420
+          "line": 436
         },
         {
           "name": "contact/update WORK direct (manager lacks hr.employees.update) → denied",
-          "line": 430
+          "line": 446
         },
         {
           "name": "contact/update EMERGENCY direct (manager lacks restricted_contact.update) → denied",
-          "line": 435
+          "line": 451
         },
         {
           "name": "contact/update REQUEST mode (manager maker) → change request created (Shape-B atomic)",
-          "line": 440
+          "line": 456
         },
         {
           "name": "change-request decide approve (hr_manager) → applies contact_update",
-          "line": 486
+          "line": 502
         },
         {
           "name": "status-change (admin) → status applied + history row",
-          "line": 500
+          "line": 516
         }
       ],
       "apiPaths": [
@@ -176075,23 +176256,23 @@
         },
         {
           "name": "task/complete marks a task completed",
-          "line": 108
+          "line": 112
         },
         {
           "name": "pause → resume → mark-ready transitions",
-          "line": 117
+          "line": 121
         },
         {
           "name": "finalize → employee terminated + auth disabled + IT handoff + case completed",
-          "line": 129
+          "line": 133
         },
         {
           "name": "finalize side-effects: offboarding.finalized event + employee status audit",
-          "line": 147
+          "line": 151
         },
         {
           "name": "employee denied start; hr_staff allowed view",
-          "line": 160
+          "line": 164
         }
       ],
       "apiPaths": [

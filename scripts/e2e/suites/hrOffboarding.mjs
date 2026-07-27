@@ -86,6 +86,10 @@ export default async function run(h) {
     const l = await api('hr/offboarding/list', A, {});
     ok(l, 'list failed');
     expect(l.body.data.some(x => x.id === ctx.caseId), 'case not in list');
+    const employeeList = await api('hr/offboarding/list', A, { employeeId: empId });
+    ok(employeeList, 'employee-scoped list failed');
+    expect(employeeList.body.data.length > 0, 'employee-scoped list is empty');
+    expect(employeeList.body.data.every(x => x.employeeId === empId), 'employee-scoped list leaked another employee');
     const s = await api('hr/offboarding/dashboard-stats', A, {});
     ok(s, 'stats failed');
     const d = s.body.data;

@@ -279,11 +279,12 @@ export default async function run(h) {
   });
 
   // ── get (extended) ───────────────────────────────────────────────────────────
-  await test('get (admin) → embeds statutory + authoritative readiness + workerType', async () => {
+  await test('get (admin) → complete employee-record read model', async () => {
     const r = await api('hr/employees/get', A, { employeeId: ctx.emp1 });
     ok(r, 'get alpha');
     expect(r.body.data.employee.id === ctx.emp1, 'employee');
     expect(r.body.data.employee.workerType === 'employee', 'workerType');
+    expect(typeof r.body.data.employee.accountStatus === 'string', 'accountStatus is distinct from employment status');
     expect(r.body.data.employee.siteName === ctx.siteName, `siteName embedded — got ${r.body.data.employee.siteName}`);
     expect(r.body.data.employee.supervisorName === ctx.supName, `supervisorName embedded — got ${r.body.data.employee.supervisorName}`);
     expect(r.body.data.statutory && r.body.data.statutory.payroll_ready_status === 'ready', 'statutory embedded');
@@ -292,6 +293,15 @@ export default async function run(h) {
     expect(r.body.data.employee.readiness.assignmentComplete === false, 'detail readiness matches register assignment rule');
     expect(r.body.data.employee.readiness.payrollStatus === 'ready', 'detail readiness carries payroll status');
     expect(r.body.data.employee.readiness.blockers.includes('assignment'), 'detail readiness carries blockers');
+    expect('mobile_phone' in r.body.data.employee, 'employee exposes a distinct mobile_phone field');
+    expect(typeof r.body.data.employee.created_at === 'string', 'employee exposes record creation time');
+    expect(Array.isArray(r.body.data.assignmentHistory), 'assignmentHistory array');
+    expect(r.body.data.assignmentHistory.every(x => (
+      'departmentName' in x && 'siteName' in x && 'supervisorName' in x && 'positionTitle' in x
+    )), 'assignmentHistory carries resolved display values');
+    expect('currentAssignment' in r.body.data, 'currentAssignment field');
+    expect('payGroup' in r.body.data, 'payGroup field is explicit even when unassigned');
+    expect('accessProfile' in r.body.data, 'accessProfile field is explicit');
   });
 
   await test('get (manager, no statutory.view) → statutory hidden', async () => {
@@ -300,6 +310,7 @@ export default async function run(h) {
     expect(r.body.data.statutory === null, 'statutory hidden for manager');
     expect(r.body.data.payrollReadiness === null, 'payrollReadiness hidden for manager');
     expect(r.body.data.employee.readiness === null, 'employee readiness hidden without readiness permission');
+    expect(r.body.data.accessProfile === null, 'access profile hidden without auth.security.view');
   });
 
   // ── dashboard-stats ────────────────────────────────────────────────────────
@@ -408,11 +419,16 @@ export default async function run(h) {
 
   // ── contact/update ─────────────────────────────────────────────────────────
   await test('contact/update direct WORK contact (admin)', async () => {
-    const r = await api('hr/employees/contact/update', A, { employeeId: ctx.emp1, mode: 'direct', work: { phone: '555-9999' } });
+    const r = await api('hr/employees/contact/update', A, {
+      employeeId: ctx.emp1,
+      mode: 'direct',
+      work: { phone: '555-9999', mobilePhone: '555-8888' },
+    });
     ok(r, 'contact direct work');
     expect(r.body.data.mode === 'direct', 'mode direct');
-    const { data: u } = await sb.from('app_users').select('phone').eq('id', ctx.emp1).maybeSingle();
+    const { data: u } = await sb.from('app_users').select('phone, mobile_phone').eq('id', ctx.emp1).maybeSingle();
     expect(u && u.phone === '555-9999', 'work phone applied');
+    expect(u && u.mobile_phone === '555-8888', 'mobile phone applied independently');
     const { data: ev } = await sb.from('app_events').select('id').eq('event_type', 'hr.employee.contact_updated').eq('source_entity_id', ctx.emp1).limit(1);
     expect(ev && ev.length >= 1, 'contact_updated event');
   });
