@@ -7842,50 +7842,50 @@ next	function	hr	false		src/components/sections/HR/EmployeeCreatePage.tsx	573	Em
 back	function	hr	false		src/components/sections/HR/EmployeeCreatePage.tsx	574	EmployeeCreatePage
 handleCreate	function	hr	false		src/components/sections/HR/EmployeeCreatePage.tsx	578	EmployeeCreatePage
 err	function	hr	false		src/components/sections/HR/EmployeeCreatePage.tsx	613	EmployeeCreatePage
-PAGE_KEY	variable	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	56	
-KPI_PAGE_KEY	variable	hr	false	component,ui-tile	src/components/sections/HR/EmployeeMaster.tsx	57	
-EMPLOYEE_BOARD_COLUMNS	variable	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	58	
-Filters	interface	hr	false		src/components/sections/HR/EmployeeMaster.tsx	64	
-EMPTY_FILTERS	object	hr	false		src/components/sections/HR/EmployeeMaster.tsx	65	
-MISSING_LABEL	object	hr	false		src/components/sections/HR/EmployeeMaster.tsx	66	
-REGISTER_FILTER_EVENT	variable	hr	true	component	src/components/sections/HR/EmployeeMaster.tsx	72	
-RegisterFilterPatch	type	hr	true		src/components/sections/HR/EmployeeMaster.tsx	73	
-EmployeeRowMenu	function	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	79	
-items	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	90	EmployeeRowMenu
-close	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	109	EmployeeRowMenu
-onMenuKeyDown	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	116	EmployeeRowMenu
-focusAt	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	119	onMenuKeyDown
-EmployeeRow	function	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	162	
-activate	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	174	EmployeeRow
-defInst	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	218	
-defaultEmployeeKpiLayout	function	hr	true	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	221	
-defaultEmployeeLayout	function	hr	true		src/components/sections/HR/EmployeeMaster.tsx	238	
-EmployeeMaster	function	hr	true	component	src/components/sections/HR/EmployeeMaster.tsx	261	
-setColumns	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	318	EmployeeMaster
-toggleColumn	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	333	EmployeeMaster
-toggleSort	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	363	EmployeeMaster
-placeInWidgetSection	function	hr	false	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	404	EmployeeMaster
-discardPreview	function	hr	false	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	409	EmployeeMaster
-commitPreview	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	413	EmployeeMaster
-savePageLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	417	EmployeeMaster
-cancelPageLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	421	EmployeeMaster
-resetPageLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	424	EmployeeMaster
-setPageAsDefault	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	428	EmployeeMaster
-onRowHover	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	437	EmployeeMaster
-onRowHoverEnd	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	441	EmployeeMaster
-deptLabelFn	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	449	EmployeeMaster
-notify	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	453	EmployeeMaster
-openAction	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	454	EmployeeMaster
-setFiltersReset	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	471	EmployeeMaster
-onFilterRequest	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	477	EmployeeMaster
-trainingLabel	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	498	EmployeeMaster
-clearAdvanced	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	516	EmployeeMaster
-applySavedView	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	518	EmployeeMaster
-persistViews	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	531	EmployeeMaster
-saveCurrentView	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	537	EmployeeMaster
-deleteSavedView	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	564	EmployeeMaster
-renderRegister	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	576	EmployeeMaster
-floor	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	730	EmployeeMaster
+PAGE_KEY	variable	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	57	
+KPI_PAGE_KEY	variable	hr	false	component,ui-tile	src/components/sections/HR/EmployeeMaster.tsx	58	
+EMPLOYEE_BOARD_COLUMNS	variable	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	59	
+Filters	interface	hr	false		src/components/sections/HR/EmployeeMaster.tsx	65	
+EMPTY_FILTERS	object	hr	false		src/components/sections/HR/EmployeeMaster.tsx	66	
+MISSING_LABEL	object	hr	false		src/components/sections/HR/EmployeeMaster.tsx	67	
+REGISTER_FILTER_EVENT	variable	hr	true	component	src/components/sections/HR/EmployeeMaster.tsx	73	
+RegisterFilterPatch	type	hr	true		src/components/sections/HR/EmployeeMaster.tsx	74	
+EmployeeRowMenu	function	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	80	
+items	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	91	EmployeeRowMenu
+close	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	110	EmployeeRowMenu
+onMenuKeyDown	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	117	EmployeeRowMenu
+focusAt	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	120	onMenuKeyDown
+EmployeeRow	function	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	163	
+activate	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	175	EmployeeRow
+defInst	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	219	
+defaultEmployeeKpiLayout	function	hr	true	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	222	
+defaultEmployeeLayout	function	hr	true		src/components/sections/HR/EmployeeMaster.tsx	239	
+EmployeeMaster	function	hr	true	component	src/components/sections/HR/EmployeeMaster.tsx	262	
+setColumns	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	320	EmployeeMaster
+toggleColumn	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	335	EmployeeMaster
+toggleSort	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	365	EmployeeMaster
+placeInWidgetSection	function	hr	false	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	406	EmployeeMaster
+discardPreview	function	hr	false	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	411	EmployeeMaster
+commitPreview	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	415	EmployeeMaster
+savePageLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	419	EmployeeMaster
+cancelPageLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	423	EmployeeMaster
+resetPageLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	426	EmployeeMaster
+setPageAsDefault	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	430	EmployeeMaster
+onRowHover	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	439	EmployeeMaster
+onRowHoverEnd	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	443	EmployeeMaster
+deptLabelFn	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	451	EmployeeMaster
+notify	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	455	EmployeeMaster
+openAction	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	456	EmployeeMaster
+setFiltersReset	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	473	EmployeeMaster
+onFilterRequest	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	479	EmployeeMaster
+trainingLabel	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	500	EmployeeMaster
+clearAdvanced	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	518	EmployeeMaster
+applySavedView	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	520	EmployeeMaster
+persistViews	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	533	EmployeeMaster
+saveCurrentView	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	539	EmployeeMaster
+deleteSavedView	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	566	EmployeeMaster
+renderRegister	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	578	EmployeeMaster
+floor	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	732	EmployeeMaster
 permissions	function	hr	false	test	src/components/sections/HR/employeeMasterAccess.test.ts	8	
 EmployeeMasterAccess	interface	hr	true		src/components/sections/HR/employeeMasterAccess.ts	3	
 PermissionCheck	type	hr	false		src/components/sections/HR/employeeMasterAccess.ts	25	
@@ -7898,6 +7898,17 @@ relativeTime	function	hr	false		src/components/sections/HR/EmployeeOnboardingSum
 STATUS_TONE	object	hr	false		src/components/sections/HR/EmployeeOnboardingSummary.tsx	37	
 EmployeeOnboardingSummaryProps	interface	hr	true		src/components/sections/HR/EmployeeOnboardingSummary.tsx	42	
 EmployeeOnboardingSummary	function	hr	true	component	src/components/sections/HR/EmployeeOnboardingSummary.tsx	47	
+employee	object	hr	false	test	src/components/sections/HR/EmployeeProfilePage.test.tsx	6	
+detail	object	hr	false	test	src/components/sections/HR/EmployeeProfilePage.test.tsx	18	
+access	object	hr	false	test	src/components/sections/HR/EmployeeProfilePage.test.tsx	39	
+ProfileTab	type	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	23	
+EmployeeProfilePageProps	interface	hr	true		src/components/sections/HR/EmployeeProfilePage.tsx	25	
+fmtDate	function	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	32	
+fmtDateTime	function	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	39	
+tenure	function	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	46	
+RestrictedPanel	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	60	
+FinanceEmploymentDetails	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	71	
+EmployeeProfilePage	function	hr	true	component	src/components/sections/HR/EmployeeProfilePage.tsx	103	
 EmployeeRegisterColumn	interface	hr	true		src/components/sections/HR/employeeRegisterColumns.ts	9	
 EMPLOYEE_REGISTER_COLUMNS	variable	hr	true		src/components/sections/HR/employeeRegisterColumns.ts	17	
 DEFAULT_EMPLOYEE_REGISTER_COLUMNS	array	hr	true		src/components/sections/HR/employeeRegisterColumns.ts	33	
@@ -8416,13 +8427,13 @@ gated	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	111
 TrainingSnapshot	function	hr	false	component	src/components/sections/HR/ProfileDrawer.tsx	117	
 ProfileOverview	function	hr	false	component	src/components/sections/HR/ProfileDrawer.tsx	139	
 activityIcon	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	269	
-EmploymentTab	function	hr	false	component	src/components/sections/HR/ProfileDrawer.tsx	283	
-DocumentsTab	function	hr	false	component	src/components/sections/HR/ProfileDrawer.tsx	323	
+EmploymentTab	function	hr	true	component	src/components/sections/HR/ProfileDrawer.tsx	283	
+DocumentsTab	function	hr	true	component	src/components/sections/HR/ProfileDrawer.tsx	323	
 download	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	329	DocumentsTab
-TrainingTab	function	hr	false	component	src/components/sections/HR/ProfileDrawer.tsx	371	
-StatutoryTab	function	hr	false	component	src/components/sections/HR/ProfileDrawer.tsx	399	
-WorkflowsTab	function	hr	false	component	src/components/sections/HR/ProfileDrawer.tsx	448	
-AuditTab	function	hr	false	component	src/components/sections/HR/ProfileDrawer.tsx	471	
+TrainingTab	function	hr	true	component	src/components/sections/HR/ProfileDrawer.tsx	371	
+StatutoryTab	function	hr	true	component	src/components/sections/HR/ProfileDrawer.tsx	399	
+WorkflowsTab	function	hr	true	component	src/components/sections/HR/ProfileDrawer.tsx	448	
+AuditTab	function	hr	true	component	src/components/sections/HR/ProfileDrawer.tsx	471	
 PRIMARY_TABS	array	hr	false		src/components/sections/HR/ProfileDrawer.tsx	497	
 MORE_TABS	array	hr	false		src/components/sections/HR/ProfileDrawer.tsx	498	
 DrawerSkeleton	function	hr	false	component	src/components/sections/HR/ProfileDrawer.tsx	502	

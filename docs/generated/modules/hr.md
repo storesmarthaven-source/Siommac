@@ -2,9 +2,9 @@
 
 # hr Module Map
 
-Source fingerprint: `42e351ff550e583592b7f995`
+Source fingerprint: `01bb14039f3e169f8df47efd`
 
-Files: 221 | Symbols: 2361 | Widgets: 9 | Unique mounted endpoints: 260 | Route definitions: 260 mounted + 0 unmounted | API calls: 33 | DB objects: 172 | E2E suites: 16
+Files: 223 | Symbols: 2372 | Widgets: 9 | Unique mounted endpoints: 260 | Route definitions: 260 mounted + 0 unmounted | API calls: 33 | DB objects: 172 | E2E suites: 16
 
 ## Widgets and Tiles
 
@@ -14,7 +14,7 @@ Files: 221 | Symbols: 2361 | Widgets: 9 | Unique mounted endpoints: 260 | Route 
 | `bundle.hr.employees.essentials` | Employee Master Essentials | registry | `` | `src/ui/widgets/bundles.ts:90` |
 | `bundle.hr.onboarding.manager` | Onboarding Manager Pack | registry | `` | `src/ui/widgets/bundles.ts:76` |
 | `hr.employeeMaster.lifecycleActivity` | Workforce Activity | registry | `LifecycleActivity` | `src/ui/widgets/registry.hrEmployeeMaster.tsx:486` |
-| `hr.employees.register` | Employee Register | local | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:733` |
+| `hr.employees.register` | Employee Register | local | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:735` |
 | `hr.onboarding.case.activeTasks` | Active Tasks | local | `() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddTask}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:329` |
 | `hr.onboarding.case.blockersTable` | Blockers | local | `() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:330` |
 | `hr.onboarding.case.customActions` | Custom Actions | local | `() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddAction}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:332` |
@@ -489,7 +489,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useRequestsMutation` | function / hook | `src/api/hr/requests.ts:63` | `-` |
 | `useShiftTemplates` | function / hook | `src/api/hr/roster.ts:87` | `-` |
 | `useRotationPatterns` | function / hook | `src/api/hr/roster.ts:91` | `-` |
-| ... | 92 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 99 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -676,8 +676,10 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/CompensationOverview.tsx` | 347 |
 | frontend-page | `src/components/sections/HR/EmployeeCreatePage.test.ts` | 350 |
 | frontend-page | `src/components/sections/HR/EmployeeCreatePage.tsx` | 1037 |
-| frontend-page | `src/components/sections/HR/EmployeeMaster.tsx` | 852 |
+| frontend-page | `src/components/sections/HR/EmployeeMaster.tsx` | 875 |
 | frontend-page | `src/components/sections/HR/EmployeeOnboardingSummary.tsx` | 97 |
+| frontend-page | `src/components/sections/HR/EmployeeProfilePage.test.tsx` | 70 |
+| frontend-page | `src/components/sections/HR/EmployeeProfilePage.tsx` | 300 |
 | frontend-page | `src/components/sections/HR/HRDocumentsOverview.tsx` | 728 |
 | frontend-page | `src/components/sections/HR/HRQueryState.tsx` | 52 |
 | frontend-page | `src/components/sections/HR/HRRequestsOverview.tsx` | 424 |
@@ -699,7 +701,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/OrgStructureOverview.tsx` | 777 |
 | frontend-page | `src/components/sections/HR/OvertimeOverview.tsx` | 233 |
 | frontend-page | `src/components/sections/HR/ProfileDrawer.test.tsx` | 75 |
-| frontend-page | `src/components/sections/HR/ProfileDrawer.tsx` | 629 |
+| frontend-page | `src/components/sections/HR/ProfileDrawer.tsx` | 630 |
 | frontend-page | `src/components/sections/HR/RosterOverview.tsx` | 686 |
 | frontend-page | `src/components/sections/HR/StartOnboardingWizard.tsx` | 974 |
 | frontend-page | `src/components/sections/HR/TransfersOverview.tsx` | 405 |

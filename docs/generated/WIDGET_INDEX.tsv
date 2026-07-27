@@ -38,7 +38,7 @@ hr.employeeMaster.promotionsCard	Promotions	registry	widgets		PromotionsCard	src
 hr.employeeMaster.readinessRadar	Employee Readiness Radar	registry	widgets		ReadinessRadar	src/ui/widgets/registry.hrEmployeeDashboard.tsx	456
 hr.employeeMaster.recordQuality	Record Quality	registry	widgets		RecordQuality	src/ui/widgets/registry.hrEmployeeDashboard.tsx	451
 hr.employeeMaster.recordReadiness	Record Readiness	registry	widgets		RecordReadiness	src/ui/widgets/registry.hrEmployeeDashboard.tsx	446
-hr.employees.register	Employee Register	local	hr		renderRegister	src/components/sections/HR/EmployeeMaster.tsx	733
+hr.employees.register	Employee Register	local	hr		renderRegister	src/components/sections/HR/EmployeeMaster.tsx	735
 hr.onboarding.case.activeTasks	Active Tasks	local	hr		() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddTask}>+ Add</button>)	src/components/sections/HR/OnboardingCaseDetail.tsx	329
 hr.onboarding.case.blockersTable	Blockers	local	hr		() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())	src/components/sections/HR/OnboardingCaseDetail.tsx	330
 hr.onboarding.case.customActions	Custom Actions	local	hr		() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddAction}>+ Add</button>)	src/components/sections/HR/OnboardingCaseDetail.tsx	332

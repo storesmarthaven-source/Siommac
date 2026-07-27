@@ -280,7 +280,7 @@ function activityIcon(action: string): string {
   return 'fa-bolt';
 }
 
-function EmploymentTab({ d }: { d: HrEmployeeDetail }): VNode {
+export function EmploymentTab({ d }: { d: HrEmployeeDetail }): VNode {
   const e = d.employee;
   const hist = d.statusHistory;
   return (
@@ -320,7 +320,7 @@ function EmploymentTab({ d }: { d: HrEmployeeDetail }): VNode {
   );
 }
 
-function DocumentsTab({ docsQ, employeeId, onUpload, access }: { docsQ: ReturnType<typeof useHrDocuments>; employeeId: string; onUpload?: () => void; access: EmployeeMasterAccess }): VNode {
+export function DocumentsTab({ docsQ, employeeId, onUpload, access }: { docsQ: ReturnType<typeof useHrDocuments>; employeeId: string; onUpload?: () => void; access: EmployeeMasterAccess }): VNode {
   const rows = docsQ.data ?? [];
   const verify = useVerifyHrDocument(employeeId);
   const archive = useArchiveHrDocument(employeeId);
@@ -368,7 +368,7 @@ function DocumentsTab({ docsQ, employeeId, onUpload, access }: { docsQ: ReturnTy
   );
 }
 
-function TrainingTab(
+export function TrainingTab(
   { trainQ }:
   { trainQ: ReturnType<typeof useHrTrainingSummary> },
 ): VNode {
@@ -396,7 +396,7 @@ function TrainingTab(
   );
 }
 
-function StatutoryTab({ d, onEdit }: { d: HrEmployeeDetail; onEdit?: () => void }): VNode {
+export function StatutoryTab({ d, onEdit }: { d: HrEmployeeDetail; onEdit?: () => void }): VNode {
   const s: HrStatutoryRow | null = d.statutory;
   const readiness = d.payrollReadiness;
   if (!s) {
@@ -445,7 +445,7 @@ function StatutoryTab({ d, onEdit }: { d: HrEmployeeDetail; onEdit?: () => void 
   );
 }
 
-function WorkflowsTab({ wfQ }: { wfQ: ReturnType<typeof useHrWorkflowSummary> }): VNode {
+export function WorkflowsTab({ wfQ }: { wfQ: ReturnType<typeof useHrWorkflowSummary> }): VNode {
   const data: HrWorkflowSummary | undefined = wfQ.data;
   return (
     <InfoCard title="Open Workflows">
@@ -468,7 +468,7 @@ function WorkflowsTab({ wfQ }: { wfQ: ReturnType<typeof useHrWorkflowSummary> })
   );
 }
 
-function AuditTab({ auditQ }: { auditQ: ReturnType<typeof useHrAudit> }): VNode {
+export function AuditTab({ auditQ }: { auditQ: ReturnType<typeof useHrAudit> }): VNode {
   return (
     <InfoCard title="Audit Trail">
       {auditQ.isError
@@ -521,8 +521,8 @@ function DrawerSkeleton(): VNode {
 }
 
 export function ProfileDrawer(
-  { employeeId, onClose, onAction, access }:
-  { employeeId: string | null; onClose: () => void; onAction: (label: string) => void; access: EmployeeMasterAccess },
+  { employeeId, onClose, onAction, onOpenFullRecord, access }:
+  { employeeId: string | null; onClose: () => void; onAction: (label: string) => void; onOpenFullRecord?: () => void; access: EmployeeMasterAccess },
 ): VNode {
   const [tab, setTab] = useState('Overview');
 
@@ -560,13 +560,14 @@ export function ProfileDrawer(
     ...(access.viewAudit ? [{ label: 'View Audit', icon: 'fa-clock-rotate-left', onSelect: () => setTab('Audit') }] : []),
     ...(access.startOffboarding ? [{ label: 'Start Offboarding', icon: 'fa-triangle-exclamation', danger: true, onSelect: () => onAction('Start Offboarding') }] : []),
   ];
-  const hasPanelActions = access.requestChange || access.changeStatus || panelMenuItems.length > 0;
+  const hasPanelActions = !!onOpenFullRecord || access.requestChange || access.changeStatus || panelMenuItems.length > 0;
   const manageAccess = can('permissions.manage') ? () => {
     onClose();
     showSection('s-ac-users');
   } : undefined;
   const actionBar = hasPanelActions ? (
     <div class={`epd-action-bar${panelMenuItems.length ? ' has-overflow' : ''}`}>
+      {onOpenFullRecord && <button class="ui-btn-secondary" type="button" onClick={onOpenFullRecord}>View Full Employee Record</button>}
       {access.requestChange && <button class="ui-btn-primary" type="button" onClick={() => onAction('Request Change')}>Request Change</button>}
       {access.changeStatus && <button class="ui-btn-secondary" type="button" onClick={() => onAction('Change Status')}>Change Status</button>}
       {panelMenuItems.length > 0 && <Menu align="right" items={panelMenuItems} trigger={({ toggle }) => (

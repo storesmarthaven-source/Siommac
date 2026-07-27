@@ -17,6 +17,7 @@ import {
 } from './shared';
 import { ProfileDrawer } from './ProfileDrawer';
 import { HR_EMPLOYEE_DEEPLINK_KEY } from './hrDeepLink';
+import { EmployeeProfilePage } from './EmployeeProfilePage';
 import { EmployeeCreatePage } from './EmployeeCreatePage';
 import { ContactDialog, StatusDialog, OffboardingDialog, ChangeRequestDialog, DocumentDialog, StatutoryDialog } from './ActionDialogs';
 import { ImportWizard } from './ImportWizard';
@@ -262,6 +263,7 @@ export function EmployeeMaster(): VNode {
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const { openId, setOpenId } = useFilterDropdowns();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [fullEmployeeId, setFullEmployeeId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [modal, setModal] = useState<{ type: string; employeeId: string | null } | null>(null);
@@ -740,6 +742,24 @@ export function EmployeeMaster(): VNode {
   if (modal?.type === 'onboarding') {
     return <StartOnboardingWizard employeeId={modal.employeeId} onBack={() => setModal(null)} />;
   }
+  if (fullEmployeeId) {
+    return (
+      <>
+        <EmployeeProfilePage
+          employeeId={fullEmployeeId}
+          access={access}
+          onBack={() => setFullEmployeeId(null)}
+          onAction={(label) => openAction(label, fullEmployeeId)}
+        />
+        {modal?.type === 'contact' && <ContactDialog employeeId={fullEmployeeId} onClose={() => setModal(null)} onToast={notify} />}
+        {modal?.type === 'status' && <StatusDialog employeeId={fullEmployeeId} onClose={() => setModal(null)} onToast={notify} />}
+        {modal?.type === 'offboard' && <OffboardingDialog employeeId={fullEmployeeId} onClose={() => setModal(null)} onToast={notify} />}
+        {modal?.type === 'change' && <ChangeRequestDialog employeeId={fullEmployeeId} onClose={() => setModal(null)} onToast={notify} />}
+        {modal?.type === 'document' && <DocumentDialog employeeId={fullEmployeeId} onClose={() => setModal(null)} onToast={notify} />}
+        {modal?.type === 'statutory' && <StatutoryDialog employeeId={fullEmployeeId} onClose={() => setModal(null)} onToast={notify} />}
+      </>
+    );
+  }
 
   return (
     <>
@@ -834,7 +854,10 @@ export function EmployeeMaster(): VNode {
         onPreviewOnBoard={p => setPreview(placeInWidgetSection(p))} />
 
       {/* Profile drawer */}
-      <ProfileDrawer employeeId={selectedId} onClose={() => setSelectedId(null)} onAction={(label) => openAction(label, selectedId)} access={access} />
+      <ProfileDrawer employeeId={selectedId} onClose={() => setSelectedId(null)}
+        onAction={(label) => openAction(label, selectedId)}
+        onOpenFullRecord={selectedId ? () => { setFullEmployeeId(selectedId); setSelectedId(null); } : undefined}
+        access={access} />
 
       {/* Modals — 'create' is handled as a full-page takeover above */}
       {modal?.type === 'import'   && <ImportWizard onClose={() => setModal(null)} onToast={notify} />}
