@@ -5,7 +5,8 @@
  *   supabase/migrations/20260928000001_hr_employee_profile_foundations.sql
  *   sha256 c1e6fceb500d126688bfc8d0576cb0a022e9196597c1bda1cbfaafa835fb95d0
  *
- * WHY THIS EXISTS, separately from supabase/verify-20260928000001.sql:
+ * WHY THIS EXISTS, separately from
+ * scripts/sql/verify_20260928000001_hr_employee_profile_foundations.sql:
  * the SQL script proves the objects exist IN THE DATABASE. It cannot prove the
  * Data API picked them up — a session running SQL bypasses PostgREST entirely.
  * This probe crosses the API boundary the application actually uses.

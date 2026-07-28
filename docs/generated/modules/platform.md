@@ -2,7 +2,7 @@
 
 # platform Module Map
 
-Source fingerprint: `52954da09eed458009e44cc3`
+Source fingerprint: `50fe0b2119431e302074d185`
 
 Files: 305 | Symbols: 2765 | Widgets: 0 | Unique mounted endpoints: 32 | Route definitions: 32 mounted + 15 unmounted | API calls: 50 | DB objects: 303 | E2E suites: 0
 
@@ -439,8 +439,8 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | function | `public.holiday_set_command_tx` | `supabase/migrations/20260919000700_shared_work_calendar.sql:736` |
 | function | `public.work_calendar_purge_tx` | `supabase/migrations/20260919000700_shared_work_calendar.sql:874` |
 | table | `public.hr_access_profiles` | `supabase/migrations/20260926000003_hr_access_profiles.sql:8` |
-| function | `public.hr_access_assignment_grant_tx` | `supabase/migrations/20260928000002_hr_access_assignment_tx.sql:26` |
-| function | `public.hr_access_assignment_revoke_tx` | `supabase/migrations/20260928000002_hr_access_assignment_tx.sql:126` |
+| function | `public.hr_access_assignment_grant_tx` | `supabase/migrations/20260928000002_hr_access_assignment_tx.sql:34` |
+| function | `public.hr_access_assignment_revoke_tx` | `supabase/migrations/20260928000002_hr_access_assignment_tx.sql:148` |
 
 ## E2E Suites
 

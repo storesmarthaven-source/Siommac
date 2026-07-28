@@ -71,6 +71,7 @@ export default async function run(h) {
     if (ctx.accessAssignmentId) {
       await h.mustDelete('hr_employee_access_scopes', q => q.eq('assignment_id', ctx.accessAssignmentId));
       await h.mustDelete('app_events', q => q.eq('source_entity_id', ctx.accessAssignmentId));
+      await h.mustDelete('audit_logs', q => q.eq('record_id', ctx.accessAssignmentId));
       await h.mustDelete('hr_audit_log', q => q.eq('record_id', ctx.accessAssignmentId));
       await h.mustDelete('hr_employee_access_assignments', q => q.eq('id', ctx.accessAssignmentId));
     }
@@ -535,11 +536,22 @@ export default async function run(h) {
     expect(ev.length === 1, `exactly one granted event — got ${ev.length}`);
     expect(ev[0].payload.correlationId === ctx.accessCorrelationId, 'event carries the same correlation id');
 
+    // The CANONICAL platform audit record. audit_logs and hr_audit_log are
+    // different tables for different readers; the HR log is not a substitute.
+    // Route mutations get audit_logs via emitAppEvent, but a command that writes
+    // app_events directly in SQL bypasses that and must write it itself.
+    const { data: plat } = await sb.from('audit_logs')
+      .select('action, table_name, record_id, user_id, changes').eq('record_id', ctx.accessAssignmentId)
+      .eq('action', 'hr.employee.access_assignment.granted');
+    expect(plat.length === 1, `exactly one canonical audit_logs row — got ${plat.length}`);
+    expect(plat[0].table_name === 'employee_access_assignment', 'audit_logs records the entity type');
+    expect(plat[0].changes.correlationId === ctx.accessCorrelationId, 'audit_logs carries the same correlation id');
+
     const { data: audit } = await sb.from('hr_audit_log')
       .select('action, record_id, metadata').eq('record_id', ctx.accessAssignmentId)
       .eq('action', 'hr.employee.access_assignment.granted');
-    expect(audit.length === 1, `exactly one granted audit row — got ${audit.length}`);
-    expect(audit[0].metadata.correlationId === ctx.accessCorrelationId, 'audit carries the same correlation id');
+    expect(audit.length === 1, `exactly one granted hr_audit_log row — got ${audit.length}`);
+    expect(audit[0].metadata.correlationId === ctx.accessCorrelationId, 'hr audit carries the same correlation id');
   });
 
   await test('access-assignments list (admin) → scopes resolved to labels, never raw ids', async () => {
@@ -621,10 +633,17 @@ export default async function run(h) {
       .eq('event_type', 'hr.employee.access_assignment.revoked');
     expect(ev.length === 1, `exactly one revoked event — got ${ev.length}`);
 
+    const { data: platRev } = await sb.from('audit_logs')
+      .select('action, changes').eq('record_id', ctx.accessAssignmentId)
+      .eq('action', 'hr.employee.access_assignment.revoked');
+    expect(platRev.length === 1, `exactly one canonical audit_logs revoke row — got ${platRev.length}`);
+    expect(platRev[0].changes.previousStatus === 'active' && platRev[0].changes.status === 'revoked',
+      'audit_logs records the status transition');
+
     const { data: audit } = await sb.from('hr_audit_log')
       .select('action, previous_state, new_state').eq('record_id', ctx.accessAssignmentId)
       .eq('action', 'hr.employee.access_assignment.revoked');
-    expect(audit.length === 1, 'exactly one revoked audit row');
+    expect(audit.length === 1, 'exactly one revoked hr_audit_log row');
     expect(audit[0].previous_state.status === 'active' && audit[0].new_state.status === 'revoked',
       'audit records the before and after state');
   });

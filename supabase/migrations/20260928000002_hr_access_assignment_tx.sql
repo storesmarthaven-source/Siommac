@@ -1,11 +1,19 @@
 -- ============================================================================
 -- Employee Profile S2A step 3 — atomic access-assignment commands
 -- ============================================================================
--- Granting an access assignment writes FOUR things that must land together:
+-- Granting an access assignment writes FIVE things that must land together:
 --   1. the assignment row,
 --   2. its explicit scope rows,
 --   3. app_events,
---   4. hr_audit_log.
+--   4. audit_logs   — the CANONICAL platform audit record,
+--   5. hr_audit_log — the HR-module trail.
+--
+-- audit_logs and hr_audit_log are DIFFERENT tables serving different readers:
+-- audit_logs is the platform-wide record the compliance surfaces query, while
+-- hr_audit_log carries the HR before/after state for the employee record. The
+-- HR log is NOT a substitute. Route mutations normally get audit_logs for free
+-- as a side effect of emitAppEvent(); a command that writes app_events directly
+-- in SQL bypasses that, so it must write audit_logs itself.
 --
 -- supabase-js issues a SEPARATE PostgREST call per statement, so the app layer
 -- cannot wrap these in one transaction: a failure midway leaves an access grant
@@ -19,7 +27,7 @@
 -- ⚠ Apply this file WHOLE. The trailing REVOKE is what stops these
 --   SECURITY DEFINER functions being callable by anon/authenticated, and it is
 --   exactly the tail the SQL editor has silently dropped before. Verify with
---   supabase/verify-20260928000002.sql after applying.
+--   scripts/sql/verify_20260928000002_hr_access_assignment_tx.sql after applying.
 -- ============================================================================
 
 -- ── grant ───────────────────────────────────────────────────────────────────
@@ -97,6 +105,20 @@ begin
       'correlationId', p_correlation_id
     ),
     p_correlation_id || ':access-granted'
+  );
+
+  insert into public.audit_logs (action, table_name, record_id, user_id, changes)
+  values (
+    'hr.employee.access_assignment.granted', 'employee_access_assignment',
+    v_assignment_id::text, p_actor_id,
+    jsonb_build_object(
+      'employeeId', p_employee_id,
+      'accessProfileId', p_access_profile_id,
+      'accessProfileLabel', v_profile_label,
+      'assignmentType', coalesce(nullif(p_assignment_type, ''), 'profile'),
+      'scopes', p_scopes,
+      'correlationId', p_correlation_id
+    )
   );
 
   insert into public.hr_audit_log (
@@ -181,6 +203,20 @@ begin
       'correlationId', p_correlation_id
     ),
     p_correlation_id || ':access-revoked'
+  );
+
+  insert into public.audit_logs (action, table_name, record_id, user_id, changes)
+  values (
+    'hr.employee.access_assignment.revoked', 'employee_access_assignment',
+    p_assignment_id::text, p_actor_id,
+    jsonb_build_object(
+      'employeeId', v_employee_id,
+      'accessProfileId', v_profile_id,
+      'previousStatus', v_status,
+      'status', 'revoked',
+      'reason', p_reason,
+      'correlationId', p_correlation_id
+    )
   );
 
   insert into public.hr_audit_log (

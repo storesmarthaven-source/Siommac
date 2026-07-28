@@ -1,5 +1,6 @@
 -- ============================================================================
--- READ-ONLY verification for 20260928000002_hr_access_assignment_tx.sql
+-- READ-ONLY verification for
+--   supabase/migrations/20260928000002_hr_access_assignment_tx.sql
 -- ============================================================================
 -- ONE STATEMENT, ONE RESULT SET (the SQL editor shows only the last result).
 -- Safe to run before or after applying. Every status must begin with "OK".
@@ -10,7 +11,7 @@
 -- audit rows directly, bypassing every route-level permission check.
 -- That row MUST read OK.
 --
--- Expected: 10 check rows + 1 summary row.
+-- Expected: 16 check rows + 1 summary row.
 -- ============================================================================
 
 with fns as (
@@ -19,6 +20,7 @@ with fns as (
          p.prosecdef              as is_definer,
          pg_get_function_identity_arguments(p.oid) as args,
          coalesce(array_to_string(p.proconfig, ','), '') as config,
+         p.prosrc                 as body,
          p.proacl
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace and n.nspname = 'public'
@@ -71,6 +73,24 @@ checks as (
                when has_function_privilege('service_role', f.oid, 'EXECUTE') then 'OK — service_role may execute'
                else 'NO GRANT — the backend cannot call it' end)::text
     from expected e left join fns f on f.name = e.name
+
+  union all
+  -- 6. BODY performs every required write ----------------------------------
+  -- Signature and ACL checks pass IDENTICALLY before and after a body change,
+  -- so they cannot prove a re-apply landed. This asserts the side effects the
+  -- command must perform — notably audit_logs, the CANONICAL platform audit
+  -- record, which hr_audit_log does NOT substitute for.
+  select 6, 'body_writes', e.name::text || ' → ' || w.target,
+         (case when f.name is null then 'MISSING FUNCTION'
+               when position(w.needle in f.body) > 0 then 'OK — writes ' || w.target
+               else 'NOT WRITTEN — re-apply the migration' end)::text
+    from expected e
+    left join fns f on f.name = e.name
+    cross join (values
+      ('app_events',   'insert into public.app_events'),
+      ('audit_logs',   'insert into public.audit_logs'),
+      ('hr_audit_log', 'insert into public.hr_audit_log')
+    ) as w(target, needle)
 )
 select seq, check_name, object_name, status from checks
 union all
@@ -79,5 +99,5 @@ select 99, 'SUMMARY',
              then 'ALL CHECKS PASSED' else 'FAILURES PRESENT' end)::text,
        ((select count(*) from checks where status not like 'OK%')::text
         || ' problem row(s) of ' || (select count(*) from checks)::text
-        || ' — expected 10 check rows when fully applied')::text
+        || ' — expected 16 check rows when fully applied')::text
  order by seq, check_name, object_name;

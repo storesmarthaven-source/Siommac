@@ -1,5 +1,6 @@
 -- ============================================================================
--- READ-ONLY verification for 20260928000001_hr_employee_profile_foundations.sql
+-- READ-ONLY verification for
+--   supabase/migrations/20260928000001_hr_employee_profile_foundations.sql
 --   migration sha256 c1e6fceb500d126688bfc8d0576cb0a022e9196597c1bda1cbfaafa835fb95d0
 -- ============================================================================
 -- ONE STATEMENT, ONE RESULT SET.

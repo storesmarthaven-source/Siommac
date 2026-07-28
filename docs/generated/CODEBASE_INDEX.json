@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "1afc7fb648cb35c05971667d4d7dfc6044fd636b",
+    "head": "cf7c8a3a8a0b3a95d07fc545716a6d7d6f1c1187",
     "branch": "codex/employee-profile-s1",
-    "fingerprint": "52954da09eed458009e44cc3",
+    "fingerprint": "50fe0b2119431e302074d185",
     "indexedFiles": 1664
   },
   "summary": {
@@ -2666,8 +2666,8 @@
       "path": "scripts/e2e/suites/hrEmployeeMaster.mjs",
       "module": "hr",
       "role": "e2e-suite",
-      "lines": 851,
-      "hash": "e4cc7e6861b730b5"
+      "lines": 870,
+      "hash": "f73307788a1c582d"
     },
     {
       "path": "scripts/e2e/suites/hrEmployeeSettings.mjs",
@@ -3142,8 +3142,8 @@
       "path": "scripts/verify-hr-profile-foundations.mjs",
       "module": "hr",
       "role": "tooling",
-      "lines": 155,
-      "hash": "22da6c6307b1578f"
+      "lines": 156,
+      "hash": "44b02cd55cf44b40"
     },
     {
       "path": "scripts/verify-payroll-reports-apply.mjs",
@@ -54621,7 +54621,7 @@
       "name": "REQUIRED_ENV",
       "kind": "array",
       "file": "scripts/verify-hr-profile-foundations.mjs",
-      "line": 30,
+      "line": 31,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -54631,7 +54631,7 @@
       "name": "loadEnv",
       "kind": "function",
       "file": "scripts/verify-hr-profile-foundations.mjs",
-      "line": 32,
+      "line": 33,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -54641,7 +54641,7 @@
       "name": "env",
       "kind": "variable",
       "file": "scripts/verify-hr-profile-foundations.mjs",
-      "line": 45,
+      "line": 46,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -54651,7 +54651,7 @@
       "name": "sb",
       "kind": "variable",
       "file": "scripts/verify-hr-profile-foundations.mjs",
-      "line": 46,
+      "line": 47,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -54661,7 +54661,7 @@
       "name": "failures",
       "kind": "variable",
       "file": "scripts/verify-hr-profile-foundations.mjs",
-      "line": 48,
+      "line": 49,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -54671,7 +54671,7 @@
       "name": "pass",
       "kind": "function",
       "file": "scripts/verify-hr-profile-foundations.mjs",
-      "line": 49,
+      "line": 50,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -54681,7 +54681,7 @@
       "name": "fail",
       "kind": "function",
       "file": "scripts/verify-hr-profile-foundations.mjs",
-      "line": 50,
+      "line": 51,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -54691,7 +54691,7 @@
       "name": "probe",
       "kind": "function",
       "file": "scripts/verify-hr-profile-foundations.mjs",
-      "line": 59,
+      "line": 60,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -54701,7 +54701,7 @@
       "name": "controls",
       "kind": "variable",
       "file": "scripts/verify-hr-profile-foundations.mjs",
-      "line": 95,
+      "line": 96,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -54711,7 +54711,7 @@
       "name": "EXPECTED_ROLES",
       "kind": "object",
       "file": "scripts/verify-hr-profile-foundations.mjs",
-      "line": 105,
+      "line": 106,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -54721,7 +54721,7 @@
       "name": "suspect",
       "kind": "variable",
       "file": "scripts/verify-hr-profile-foundations.mjs",
-      "line": 142,
+      "line": 143,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -173132,14 +173132,14 @@
       "name": "public.hr_access_assignment_grant_tx",
       "kind": "function",
       "file": "supabase/migrations/20260928000002_hr_access_assignment_tx.sql",
-      "line": 26,
+      "line": 34,
       "module": "platform"
     },
     {
       "name": "public.hr_access_assignment_revoke_tx",
       "kind": "function",
       "file": "supabase/migrations/20260928000002_hr_access_assignment_tx.sql",
-      "line": 126,
+      "line": 148,
       "module": "platform"
     }
   ],
@@ -177828,215 +177828,215 @@
       "tests": [
         {
           "name": "resolve an active access profile for the create contract",
-          "line": 128
+          "line": 129
         },
         {
           "name": "create employee (admin) → active + payroll READY",
-          "line": 136
+          "line": 137
         },
         {
           "name": "create side-effects: mutation-run + event + audit + statutory + assignment + auth",
-          "line": 158
+          "line": 159
         },
         {
           "name": "create employee (admin) → payroll BLOCKED (missing BIR/TD1)",
-          "line": 178
+          "line": 179
         },
         {
           "name": "create duplicate username → rejected",
-          "line": 192
+          "line": 193
         },
         {
           "name": "create unauthorized (employee role) → denied",
-          "line": 197
+          "line": 198
         },
         {
           "name": "create unauthorized (manager is view-only) → denied",
-          "line": 202
+          "line": 203
         },
         {
           "name": "create employee (admin) with onboarding → starts a case + tasks",
-          "line": 207
+          "line": 208
         },
         {
           "name": "list (admin) → rows carry resolved names and server-computed readiness",
-          "line": 228
+          "line": 229
         },
         {
           "name": "list → offboardingActive flips once an offboarding case is open",
-          "line": 248
+          "line": 249
         },
         {
           "name": "list workerType=contractor filter",
-          "line": 274
+          "line": 275
         },
         {
           "name": "list (manager hr.view) → allowed",
-          "line": 282
+          "line": 283
         },
         {
           "name": "list (employee, no hr.view) → denied",
-          "line": 288
+          "line": 289
         },
         {
           "name": "get (admin) → complete employee-record read model",
-          "line": 294
+          "line": 295
         },
         {
           "name": "get (manager, no statutory.view) → statutory hidden",
-          "line": 319
+          "line": 320
         },
         {
           "name": "profile-shell (admin) → exact contract the drawer and page consume",
-          "line": 329
+          "line": 330
         },
         {
           "name": "profile-shell → employment facts carry working time and the canonical legal employer",
-          "line": 390
+          "line": 391
         },
         {
           "name": "document-health (admin) → grouped tree with counts and percentages",
-          "line": 417
+          "line": 418
         },
         {
           "name": "document-health (employee, no documents.view) → denied",
-          "line": 444
+          "line": 445
         },
         {
           "name": "profile-shell → tab indicators agree with the attention endpoint exactly",
-          "line": 449
+          "line": 450
         },
         {
           "name": "profile-shell (manager, no statutory/readiness) → gated blocks omitted, not blanked",
-          "line": 461
+          "line": 462
         },
         {
           "name": "profile-shell (employee, no hr.view) → denied",
-          "line": 480
+          "line": 481
         },
         {
           "name": "attention (employee, no hr.view) → denied",
-          "line": 485
+          "line": 486
         },
         {
           "name": "profile-shell → unknown employee is 404, not an empty shell",
-          "line": 490
+          "line": 491
         },
         {
           "name": "profile-shell → switching employees never returns the previous identity",
-          "line": 495
+          "line": 496
         },
         {
           "name": "access-assignments grant (admin) → assignment + scopes + event + audit, one correlation id",
-          "line": 506
+          "line": 507
         },
         {
           "name": "access-assignments list (admin) → scopes resolved to labels, never raw ids",
-          "line": 545
+          "line": 557
         },
         {
           "name": "access-assignments grant → empty scope list is refused (no unbounded grant)",
-          "line": 558
+          "line": 570
         },
         {
           "name": "access-assignments grant → department scope without a target is refused",
-          "line": 565
+          "line": 577
         },
         {
           "name": "access-assignments: hr_staff may VIEW but not MANAGE (segregation of duties)",
-          "line": 573
+          "line": 585
         },
         {
           "name": "access-assignments (employee) → denied both view and manage",
-          "line": 597
+          "line": 609
         },
         {
           "name": "access-assignments revoke (admin) → status + event + audit, reason required",
-          "line": 604
+          "line": 616
         },
         {
           "name": "access-assignments revoke → revoking twice is refused (no duplicate access event)",
-          "line": 632
+          "line": 651
         },
         {
           "name": "dashboard-stats (admin) → complete workspace contract, all computed",
-          "line": 644
-        },
-        {
-          "name": "dashboard-stats (manager hr.employees.view) → allowed",
           "line": 663
         },
         {
+          "name": "dashboard-stats (manager hr.employees.view) → allowed",
+          "line": 682
+        },
+        {
           "name": "dashboard-stats (employee) → denied",
-          "line": 668
+          "line": 687
         },
         {
           "name": "workflow-summary (admin) → reads central engine",
-          "line": 674
+          "line": 693
         },
         {
           "name": "workflow-summary (employee) → denied",
-          "line": 683
+          "line": 702
         },
         {
           "name": "audit (admin) → entries with actor names resolved server-side",
-          "line": 689
+          "line": 708
         },
         {
           "name": "training-summary (admin) → counts + certificates shape",
-          "line": 698
+          "line": 717
         },
         {
           "name": "documents/list (admin) → array",
-          "line": 705
-        },
-        {
-          "name": "sites/list (admin) → array (Create wizard option source)",
-          "line": 711
-        },
-        {
-          "name": "statutory/get (admin) → statutory + readiness",
-          "line": 718
-        },
-        {
-          "name": "statutory/get (manager) → denied",
           "line": 724
         },
         {
+          "name": "sites/list (admin) → array (Create wizard option source)",
+          "line": 730
+        },
+        {
+          "name": "statutory/get (admin) → statutory + readiness",
+          "line": 737
+        },
+        {
+          "name": "statutory/get (manager) → denied",
+          "line": 743
+        },
+        {
           "name": "statutory/update (admin) blocked→READY + finance handoff signal",
-          "line": 729
-        },
-        {
-          "name": "statutory/update (manager) → denied",
-          "line": 742
-        },
-        {
-          "name": "contact/update direct WORK contact (admin)",
           "line": 748
         },
         {
+          "name": "statutory/update (manager) → denied",
+          "line": 761
+        },
+        {
+          "name": "contact/update direct WORK contact (admin)",
+          "line": 767
+        },
+        {
           "name": "contact/update direct EMERGENCY contact (admin, restricted)",
-          "line": 763
+          "line": 782
         },
         {
           "name": "contact/update WORK direct (manager lacks hr.employees.update) → denied",
-          "line": 773
+          "line": 792
         },
         {
           "name": "contact/update EMERGENCY direct (manager lacks restricted_contact.update) → denied",
-          "line": 778
+          "line": 797
         },
         {
           "name": "contact/update REQUEST mode (manager maker) → change request created (Shape-B atomic)",
-          "line": 783
+          "line": 802
         },
         {
           "name": "change-request decide approve (hr_manager) → applies contact_update",
-          "line": 829
+          "line": 848
         },
         {
           "name": "status-change (admin) → status applied + history row",
-          "line": 843
+          "line": 862
         }
       ],
       "apiPaths": [
