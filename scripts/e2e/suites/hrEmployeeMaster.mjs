@@ -46,6 +46,8 @@ export default async function run(h) {
     emp1: null, emp1No: null, emp1User: null, emp2: null,
     mgrTok: null, empTok: null,
     hrMgrTok: null, hrMgrCreatedIds: [],   // real hr_manager to decide the engine-driven change request
+    accessAssignmentId: null, accessCorrelationId: null,  // access-assignment grant/revoke cycle
+    hrStaffCreatedIds: [],                 // real hr_staff for the segregation-of-duties check
     siteId: null, siteName: null, supName: null, createdSiteId: null, accessProfileId: null,
   };
 
@@ -63,6 +65,15 @@ export default async function run(h) {
     if (ctx.offboardingCaseIds.length) {
       try { await sb.from('hr_offboarding_cases').delete().in('id', ctx.offboardingCaseIds); } catch { /* ignore */ }
     }
+    // Access assignments cascade from app_users, but the app_events and audit rows
+    // they wrote do NOT — remove them explicitly, child-first, so a partial run
+    // cannot leave an access event pointing at a deleted assignment.
+    if (ctx.accessAssignmentId) {
+      await h.mustDelete('hr_employee_access_scopes', q => q.eq('assignment_id', ctx.accessAssignmentId));
+      await h.mustDelete('app_events', q => q.eq('source_entity_id', ctx.accessAssignmentId));
+      await h.mustDelete('hr_audit_log', q => q.eq('record_id', ctx.accessAssignmentId));
+      await h.mustDelete('hr_employee_access_assignments', q => q.eq('id', ctx.accessAssignmentId));
+    }
     if (ctx.empIds.length) {
       const { data: rows } = await sb.from('app_users').select('auth_id').in('id', ctx.empIds);
       await sb.from('app_users').delete().in('id', ctx.empIds);   // cascades statutory/assignments/history/change_requests
@@ -74,6 +85,7 @@ export default async function run(h) {
     // Best-effort: remove the provisioned hr_manager (may be FK-pinned by the workflow
     // decision it made — the orphan sweeper mops up any remainder).
     if (ctx.hrMgrCreatedIds?.length) { try { await sb.from('app_users').delete().in('id', ctx.hrMgrCreatedIds); } catch { /* ignore */ } }
+    if (ctx.hrStaffCreatedIds?.length) { try { await sb.from('app_users').delete().in('id', ctx.hrStaffCreatedIds); } catch { /* ignore */ } }
   });
 
   // ── identities: REAL active users of each role (permissions come from the genuine
@@ -488,6 +500,144 @@ export default async function run(h) {
     expect(b.body.data.identity.employeeId === ctx.emp2, 'beta shell is beta');
     expect(a.body.data.identity.employeeId !== b.body.data.identity.employeeId,
       'each response is scoped to its own employee');
+  });
+
+  // ── access assignments + scopes ────────────────────────────────────────────
+  await test('access-assignments grant (admin) → assignment + scopes + event + audit, one correlation id', async () => {
+    const r = await api('hr/employees/access-assignments/grant', A, {
+      employeeId: ctx.emp1,
+      accessProfileId: ctx.accessProfileId,
+      assignmentType: 'profile',
+      scopes: [{ scopeType: 'organisation' }, { scopeType: 'site', scopeId: ctx.siteId }],
+    });
+    ok(r, 'grant');
+    expect(!!r.body.data.assignmentId, 'assignmentId returned');
+    expect(r.body.data.scopeCount === 2, `scopeCount 2 — got ${r.body.data.scopeCount}`);
+    expect(!!r.body.data.correlationId, 'correlationId returned');
+    ctx.accessAssignmentId = r.body.data.assignmentId;
+    ctx.accessCorrelationId = r.body.data.correlationId;
+
+    // The row, its scopes, the event and the audit entry must ALL exist — the
+    // whole point of routing this through a transactional command.
+    const { data: row } = await sb.from('hr_employee_access_assignments')
+      .select('id, employee_id, status, granted_by').eq('id', ctx.accessAssignmentId).maybeSingle();
+    expect(row && row.status === 'active' && row.employee_id === ctx.emp1, 'assignment row written and active');
+
+    const { data: scopes } = await sb.from('hr_employee_access_scopes')
+      .select('scope_type, scope_id').eq('assignment_id', ctx.accessAssignmentId);
+    expect(scopes.length === 2, `2 scope rows persisted — got ${scopes.length}`);
+    expect(scopes.some(s => s.scope_type === 'organisation' && s.scope_id === null), 'organisation scope stored with null target');
+    expect(scopes.some(s => s.scope_type === 'site' && s.scope_id === ctx.siteId), 'site scope stored against the real site');
+
+    const { data: ev } = await sb.from('app_events')
+      .select('event_type, source_entity_id, payload')
+      .eq('source_entity_id', ctx.accessAssignmentId).eq('event_type', 'hr.employee.access_assignment.granted');
+    expect(ev.length === 1, `exactly one granted event — got ${ev.length}`);
+    expect(ev[0].payload.correlationId === ctx.accessCorrelationId, 'event carries the same correlation id');
+
+    const { data: audit } = await sb.from('hr_audit_log')
+      .select('action, record_id, metadata').eq('record_id', ctx.accessAssignmentId)
+      .eq('action', 'hr.employee.access_assignment.granted');
+    expect(audit.length === 1, `exactly one granted audit row — got ${audit.length}`);
+    expect(audit[0].metadata.correlationId === ctx.accessCorrelationId, 'audit carries the same correlation id');
+  });
+
+  await test('access-assignments list (admin) → scopes resolved to labels, never raw ids', async () => {
+    const r = await api('hr/employees/access-assignments', A, { employeeId: ctx.emp1 });
+    ok(r, 'list');
+    const row = r.body.data.find(a => a.id === ctx.accessAssignmentId);
+    expect(!!row, 'granted assignment present');
+    expect(typeof row.accessProfileLabel === 'string' && row.accessProfileLabel.length > 0, 'access profile label resolved');
+    expect(typeof row.requiresMfa === 'boolean', 'requiresMfa exposed');
+    expect(row.scopes.length === 2, 'both scopes returned');
+    expect(row.scopes.every(s => typeof s.scopeLabel === 'string' && s.scopeLabel.length > 0), 'every scope carries a resolved label');
+    expect(row.scopes.every(s => s.scopeLabel !== s.scopeId), 'scope label is not the raw id');
+    expect(row.grantedByName !== null, 'granting actor resolved to a name');
+  });
+
+  await test('access-assignments grant → empty scope list is refused (no unbounded grant)', async () => {
+    const r = await api('hr/employees/access-assignments/grant', A, {
+      employeeId: ctx.emp1, accessProfileId: ctx.accessProfileId, scopes: [],
+    });
+    fails(r, 'empty scope list rejected');
+  });
+
+  await test('access-assignments grant → department scope without a target is refused', async () => {
+    const r = await api('hr/employees/access-assignments/grant', A, {
+      employeeId: ctx.emp1, accessProfileId: ctx.accessProfileId,
+      scopes: [{ scopeType: 'department' }],
+    });
+    fails(r, 'unscoped department rejected');
+  });
+
+  await test('access-assignments: hr_staff may VIEW but not MANAGE (segregation of duties)', async () => {
+    // Provisioned as a REAL hr_staff — requireUser resolves the role from the DB,
+    // so a forged token would prove nothing, and the admin harness actor is a
+    // superadmin (allow-all) which would mask the denial entirely.
+    const staffRes = await acquireActors('hr_staff', 1);
+    const staff = staffRes.actors[0];
+    ctx.hrStaffCreatedIds = staffRes.createdIds;
+    if (!staff) { console.error('⚠ no hr_staff available — segregation test would misreport'); return; }
+    const staffTok = mint({ id: staff.id, username: staff.username, role: 'hr_staff', department_id: staff.department_id ?? null });
+
+    const view = await api('hr/employees/access-assignments', staffTok, { employeeId: ctx.emp1 });
+    ok(view, 'hr_staff may view access assignments');
+
+    const grant = await api('hr/employees/access-assignments/grant', staffTok, {
+      employeeId: ctx.emp1, accessProfileId: ctx.accessProfileId, scopes: [{ scopeType: 'organisation' }],
+    });
+    fails(grant, 'hr_staff cannot GRANT access despite being able to view it');
+
+    const revoke = await api('hr/employees/access-assignments/revoke', staffTok, {
+      assignmentId: ctx.accessAssignmentId, reason: 'should not be permitted',
+    });
+    fails(revoke, 'hr_staff cannot REVOKE access');
+  });
+
+  await test('access-assignments (employee) → denied both view and manage', async () => {
+    fails(await api('hr/employees/access-assignments', ctx.empTok, { employeeId: ctx.emp1 }), 'employee cannot view');
+    fails(await api('hr/employees/access-assignments/grant', ctx.empTok, {
+      employeeId: ctx.emp1, accessProfileId: ctx.accessProfileId, scopes: [{ scopeType: 'organisation' }],
+    }), 'employee cannot grant');
+  });
+
+  await test('access-assignments revoke (admin) → status + event + audit, reason required', async () => {
+    fails(await api('hr/employees/access-assignments/revoke', A, { assignmentId: ctx.accessAssignmentId }),
+      'revoke without a reason rejected');
+
+    const r = await api('hr/employees/access-assignments/revoke', A, {
+      assignmentId: ctx.accessAssignmentId, reason: `${TAG} access no longer required`,
+    });
+    ok(r, 'revoke');
+    expect(r.body.data.status === 'revoked', 'status revoked');
+
+    const { data: row } = await sb.from('hr_employee_access_assignments')
+      .select('status, revoked_by, revoked_at, effective_to').eq('id', ctx.accessAssignmentId).maybeSingle();
+    expect(row.status === 'revoked' && !!row.revoked_at && !!row.effective_to,
+      'revocation stamped status, actor time and effective_to');
+
+    const { data: ev } = await sb.from('app_events')
+      .select('event_type').eq('source_entity_id', ctx.accessAssignmentId)
+      .eq('event_type', 'hr.employee.access_assignment.revoked');
+    expect(ev.length === 1, `exactly one revoked event — got ${ev.length}`);
+
+    const { data: audit } = await sb.from('hr_audit_log')
+      .select('action, previous_state, new_state').eq('record_id', ctx.accessAssignmentId)
+      .eq('action', 'hr.employee.access_assignment.revoked');
+    expect(audit.length === 1, 'exactly one revoked audit row');
+    expect(audit[0].previous_state.status === 'active' && audit[0].new_state.status === 'revoked',
+      'audit records the before and after state');
+  });
+
+  await test('access-assignments revoke → revoking twice is refused (no duplicate access event)', async () => {
+    const r = await api('hr/employees/access-assignments/revoke', A, {
+      assignmentId: ctx.accessAssignmentId, reason: 'second attempt',
+    });
+    fails(r, 'already-revoked assignment rejected');
+    const { data: ev } = await sb.from('app_events')
+      .select('id').eq('source_entity_id', ctx.accessAssignmentId)
+      .eq('event_type', 'hr.employee.access_assignment.revoked');
+    expect(ev.length === 1, `still exactly one revoked event — got ${ev.length}`);
   });
 
   // ── dashboard-stats ────────────────────────────────────────────────────────

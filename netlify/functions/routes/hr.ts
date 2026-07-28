@@ -45,6 +45,7 @@ import { runExpirySweep } from '../lib/hr/documentsExpirySweep';
 import { resolveSettingValue } from '../lib/settings/resolveSetting';
 import { getEmployerProfile } from '../lib/finance/employerProfile';
 import { getDocumentHealth } from '../lib/hr/documentHealth';
+import { listAccessAssignments, grantAccessAssignment, revokeAccessAssignment } from '../lib/hr/accessAssignments';
 import {
   buildAttentionItems, buildTabIndicators, filterAttentionByCapability, loadAttentionInput,
 } from '../lib/hr/employeeAttention';
@@ -580,6 +581,104 @@ router.post('/employees/document-health', async c => {
   } catch (e) {
     const err = e as { status?: number; message?: string };
     return c.json({ success: false, message: err.message ?? 'Document health read failed.' },
+      (err.status ?? 500) as 200);
+  }
+});
+
+/**
+ * POST /api/hr/employees/access-assignments — an employee's access assignments
+ * with their recorded scopes.
+ *
+ * Every id is resolved to a label server-side, so no raw uuid or department id
+ * reaches the UI. Scope is read from the stored scope rows — it is never
+ * re-derived from the employee's role.
+ */
+router.post('/employees/access-assignments', async c => {
+  await requirePermission(c, 'hr.employees.access_assignments.view');
+  const v = zv(c, z.object({
+    employeeId: z.string().min(1),
+    activeOnly: z.boolean().optional(),
+  }), (c.get('body')).args ?? {});
+  if (!v.ok) return v.response;
+
+  try {
+    const rows = await listAccessAssignments(v.data.employeeId, v.data.activeOnly ?? false);
+    return c.json({ success: true, data: rows });
+  } catch (e) {
+    const err = e as { status?: number; message?: string };
+    return c.json({ success: false, message: err.message ?? 'Access assignment read failed.' },
+      (err.status ?? 500) as 200);
+  }
+});
+
+/**
+ * POST /api/hr/employees/access-assignments/grant
+ *
+ * Elevated: granting access is a different authority from seeing it, so this
+ * requires `manage` rather than `view`. At least one scope is required — the
+ * command fails closed on an empty scope list rather than recording an
+ * unbounded grant.
+ */
+router.post('/employees/access-assignments/grant', async c => {
+  const actor = await requirePermission(c, 'hr.employees.access_assignments.manage');
+  const v = zv(c, z.object({
+    employeeId:      z.string().min(1),
+    accessProfileId: z.uuid(),
+    assignmentType:  z.enum(['profile', 'mandatory', 'delegated']).optional(),
+    effectiveFrom:   z.iso.date().nullable().optional(),
+    scopes: z.array(z.object({
+      scopeType: z.enum(['organisation', 'department', 'site']),
+      scopeId:   z.string().min(1).nullable().optional(),
+    })).min(1, 'At least one scope is required.'),
+    reason: z.string().max(500).optional(),
+  }), (c.get('body')).args ?? {});
+  if (!v.ok) return v.response;
+
+  // A department/site scope without a target would be meaningless; the database
+  // enforces this too, but failing here gives the caller a field-level message.
+  const unscoped = v.data.scopes.find(s => s.scopeType !== 'organisation' && !s.scopeId);
+  if (unscoped) {
+    return c.json({ success: false, message: `A ${unscoped.scopeType} scope requires a target.` }, 422 as 200);
+  }
+
+  try {
+    const result = await grantAccessAssignment({
+      actorId: actor.id,
+      employeeId: v.data.employeeId,
+      accessProfileId: v.data.accessProfileId,
+      assignmentType: v.data.assignmentType,
+      effectiveFrom: v.data.effectiveFrom ?? null,
+      scopes: v.data.scopes,
+      correlationId: crypto.randomUUID(),
+    });
+    return c.json({ success: true, data: result });
+  } catch (e) {
+    const err = e as { status?: number; message?: string };
+    return c.json({ success: false, message: err.message ?? 'Access assignment grant failed.' },
+      (err.status ?? 500) as 200);
+  }
+});
+
+/** POST /api/hr/employees/access-assignments/revoke — elevated, same reasoning. */
+router.post('/employees/access-assignments/revoke', async c => {
+  const actor = await requirePermission(c, 'hr.employees.access_assignments.manage');
+  const v = zv(c, z.object({
+    assignmentId: z.uuid(),
+    reason: z.string().trim().min(1, 'A reason is required to revoke access.').max(500),
+  }), (c.get('body')).args ?? {});
+  if (!v.ok) return v.response;
+
+  try {
+    const result = await revokeAccessAssignment({
+      actorId: actor.id,
+      assignmentId: v.data.assignmentId,
+      reason: v.data.reason,
+      correlationId: crypto.randomUUID(),
+    });
+    return c.json({ success: true, data: result });
+  } catch (e) {
+    const err = e as { status?: number; message?: string };
+    return c.json({ success: false, message: err.message ?? 'Access assignment revoke failed.' },
       (err.status ?? 500) as 200);
   }
 });

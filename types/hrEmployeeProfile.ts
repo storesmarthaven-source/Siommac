@@ -174,6 +174,42 @@ export interface EmployeeAttentionResponse {
   tabIndicators: ProfileTabIndicator[];
 }
 
+// ── Access assignments ──────────────────────────────────────────────────────
+
+export type AccessScopeType = 'organisation' | 'department' | 'site';
+export type AccessAssignmentType = 'profile' | 'mandatory' | 'delegated';
+export type AccessAssignmentStatus = 'active' | 'suspended' | 'revoked';
+
+/**
+ * One recorded scope on an access assignment.
+ *
+ * Scope is STORED, never inferred from a role label. `scopeId` is null only for
+ * `organisation`, which means the whole organisation. `scopeLabel` is resolved
+ * server-side so no raw id reaches the UI.
+ */
+export interface EmployeeAccessScope {
+  scopeType: AccessScopeType;
+  scopeId: string | null;
+  scopeLabel: string;
+}
+
+export interface EmployeeAccessAssignment {
+  id: string;
+  accessProfileId: string;
+  accessProfileCode: string;
+  accessProfileLabel: string;
+  requiresMfa: boolean;
+  assignmentType: AccessAssignmentType;
+  status: AccessAssignmentStatus;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  grantedByName: string | null;
+  grantedAt: string;
+  revokedByName: string | null;
+  revokedAt: string | null;
+  scopes: EmployeeAccessScope[];
+}
+
 /** Severity ordering used for "highest severity wins" rollups. */
 export const ATTENTION_SEVERITY_RANK: Record<AttentionSeverity, number> = {
   critical: 3, warning: 2, info: 1,
