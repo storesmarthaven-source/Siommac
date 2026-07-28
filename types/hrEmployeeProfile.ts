@@ -80,6 +80,20 @@ export interface ProfileEmploymentFacts {
   tenureMonths: number | null;
   supervisorName: string | null;
   payGroupName: string | null;
+  /**
+   * Legal name of the employing entity, read from the CANONICAL single-tenant
+   * employer profile that also feeds TD4/NI184/NI187 and the payslip employer
+   * block — never a second employer record kept for the profile surface.
+   */
+  legalEmployer: string | null;
+  /**
+   * Contracted working time for the CURRENT assignment period. Effective-dated
+   * on the assignment, so a change preserves the prior period's values rather
+   * than overwriting them.
+   */
+  weeklyHours: number | null;
+  /** Full-time equivalent for the current assignment; 1.0 = full-time. */
+  fte: number | null;
 }
 
 export interface ProfileReadinessSummary {

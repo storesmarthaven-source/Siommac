@@ -1638,6 +1638,21 @@ CorrectCrewMovementInput	interface	hr	true		netlify/functions/lib/hr/crewMovemen
 correctCrewMovement	function	hr	true		netlify/functions/lib/hr/crewMovements.ts	113	
 ParsedCsv	interface	hr	true		netlify/functions/lib/hr/csvParse.ts	8	
 parseCsv	function	hr	true		netlify/functions/lib/hr/csvParse.ts	10	
+DOCUMENT_EXPIRY_SOON_DAYS	variable	hr	true		netlify/functions/lib/hr/documentHealth.ts	23	
+DocumentHealthState	type	hr	true		netlify/functions/lib/hr/documentHealth.ts	31	
+DocumentHealthItem	interface	hr	true		netlify/functions/lib/hr/documentHealth.ts	34	
+DocumentHealthGroup	interface	hr	true		netlify/functions/lib/hr/documentHealth.ts	49	
+DocumentHealthSummary	interface	hr	true		netlify/functions/lib/hr/documentHealth.ts	58	
+HealthDocRow	interface	hr	true		netlify/functions/lib/hr/documentHealth.ts	74	
+DAY_MS	variable	hr	false		netlify/functions/lib/hr/documentHealth.ts	86	
+daysUntil	function	hr	false		netlify/functions/lib/hr/documentHealth.ts	88	
+categoryOf	function	hr	true		netlify/functions/lib/hr/documentHealth.ts	96	
+classifyDocumentHealth	function	hr	true		netlify/functions/lib/hr/documentHealth.ts	110	
+detailFor	function	hr	false		netlify/functions/lib/hr/documentHealth.ts	130	
+HEALTHY	variable	hr	false		netlify/functions/lib/hr/documentHealth.ts	142	
+buildDocumentHealth	function	hr	true		netlify/functions/lib/hr/documentHealth.ts	149	
+pct	function	hr	false		netlify/functions/lib/hr/documentHealth.ts	225	buildDocumentHealth
+getDocumentHealth	function	hr	true		netlify/functions/lib/hr/documentHealth.ts	242	
 ComplianceState	type	hr	false		netlify/functions/lib/hr/documentsCompliance.ts	12	
 EmployeeComplianceRow	interface	hr	true		netlify/functions/lib/hr/documentsCompliance.ts	14	
 ComplianceOverviewRow	interface	hr	true		netlify/functions/lib/hr/documentsCompliance.ts	25	
@@ -1717,16 +1732,16 @@ ATTENTION_PREVIEW_SIZE	variable	hr	true		netlify/functions/lib/hr/employeeProfil
 ACTIVITY_PREVIEW_SIZE	variable	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	31	
 ShellEmployeeRow	interface	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	33	
 ShellContext	interface	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	52	
-tenureMonths	function	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	68	
-readinessSummary	function	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	81	
-firstNonBlank	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	111	
-identityOf	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	118	
-employmentOf	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	132	
-contactOf	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	143	
-activityPreview	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	158	
-OPEN_SUPPORT_STATUSES	array	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	185	
-openSupportRequestCount	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	203	
-buildProfileShell	function	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	217	
+tenureMonths	function	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	73	
+readinessSummary	function	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	86	
+firstNonBlank	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	116	
+identityOf	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	123	
+employmentOf	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	137	
+contactOf	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	151	
+activityPreview	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	166	
+OPEN_SUPPORT_STATUSES	array	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	193	
+openSupportRequestCount	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	211	
+buildProfileShell	function	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	225	
 IMPORT_MAPPING_VERSION	variable	hr	true		netlify/functions/lib/hr/importFields.ts	13	
 IMPORT_TARGET_FIELDS	variable	hr	true		netlify/functions/lib/hr/importFields.ts	15	
 ImportTargetField	type	hr	true		netlify/functions/lib/hr/importFields.ts	27	
@@ -3249,37 +3264,37 @@ FORM_TYPES	variable	finance	false		netlify/functions/routes/financeStatutoryForm
 router	variable	workflow	false		netlify/functions/routes/handoffs.ts	17	
 IntakeSchema	variable	workflow	false		netlify/functions/routes/handoffs.ts	84	
 _processHandoff	function	workflow	false		netlify/functions/routes/handoffs.ts	112	
-router	variable	hr	false		netlify/functions/routes/hr.ts	52	
-HR_COLS	variable	hr	false		netlify/functions/routes/hr.ts	54	
-EmpRow	interface	hr	false		netlify/functions/routes/hr.ts	62	
-loadEmployee	function	hr	false		netlify/functions/routes/hr.ts	64	
-TRAINING_TERMINAL	variable	hr	false		netlify/functions/routes/hr.ts	70	
-rollupTrainingStatus	function	hr	false		netlify/functions/routes/hr.ts	72	
-EmployeeReadiness	interface	hr	false		netlify/functions/routes/hr.ts	81	
-employeeReadiness	function	hr	false		netlify/functions/routes/hr.ts	90	
-EMPLOYEE_SORT_COLS	variable	hr	false		netlify/functions/routes/hr.ts	106	
-TRAINING_STATUSES	variable	hr	false		netlify/functions/routes/hr.ts	107	
-escapeLike	function	hr	false		netlify/functions/routes/hr.ts	110	
-MISSING_COLUMN	variable	hr	false		netlify/functions/routes/hr.ts	115	
-idsFor	function	hr	false		netlify/functions/routes/hr.ts	327	
-lookup	function	hr	false		netlify/functions/routes/hr.ts	343	
-grantedProfileCapabilities	function	hr	false		netlify/functions/routes/hr.ts	441	
-loadShellContext	function	hr	false		netlify/functions/routes/hr.ts	456	
-employeeCreateDate	variable	hr	false		netlify/functions/routes/hr.ts	615	
-iso	function	hr	false		netlify/functions/routes/hr.ts	875	
-distribution	function	hr	false		netlify/functions/routes/hr.ts	934	
-inMonth	function	hr	false		netlify/functions/routes/hr.ts	953	lifecyclePeriods
-HR_STATUSES	variable	hr	false		netlify/functions/routes/hr.ts	1260	
-BLOCKING_STATUSES	variable	hr	false		netlify/functions/routes/hr.ts	1261	
-isExpired	function	hr	false		netlify/functions/routes/hr.ts	1371	
-orgBody	function	hr	false		netlify/functions/routes/hr.ts	1408	
-orgErr	function	hr	false		netlify/functions/routes/hr.ts	1409	
-ORG_UNIT_TYPES	variable	hr	false		netlify/functions/routes/hr.ts	1413	
-GATED	object	hr	false		netlify/functions/routes/hr.ts	1415	
-CHANGE_PERM	object	hr	false		netlify/functions/routes/hr.ts	1688	
-snapshotForChange	function	hr	false		netlify/functions/routes/hr.ts	1700	
-createChangeRequest	function	hr	false		netlify/functions/routes/hr.ts	1730	
-GENERIC_CHANGE_TYPES	variable	hr	false		netlify/functions/routes/hr.ts	1805	
+router	variable	hr	false		netlify/functions/routes/hr.ts	54	
+HR_COLS	variable	hr	false		netlify/functions/routes/hr.ts	56	
+EmpRow	interface	hr	false		netlify/functions/routes/hr.ts	64	
+loadEmployee	function	hr	false		netlify/functions/routes/hr.ts	66	
+TRAINING_TERMINAL	variable	hr	false		netlify/functions/routes/hr.ts	72	
+rollupTrainingStatus	function	hr	false		netlify/functions/routes/hr.ts	74	
+EmployeeReadiness	interface	hr	false		netlify/functions/routes/hr.ts	83	
+employeeReadiness	function	hr	false		netlify/functions/routes/hr.ts	92	
+EMPLOYEE_SORT_COLS	variable	hr	false		netlify/functions/routes/hr.ts	108	
+TRAINING_STATUSES	variable	hr	false		netlify/functions/routes/hr.ts	109	
+escapeLike	function	hr	false		netlify/functions/routes/hr.ts	112	
+MISSING_COLUMN	variable	hr	false		netlify/functions/routes/hr.ts	117	
+idsFor	function	hr	false		netlify/functions/routes/hr.ts	329	
+lookup	function	hr	false		netlify/functions/routes/hr.ts	345	
+grantedProfileCapabilities	function	hr	false		netlify/functions/routes/hr.ts	443	
+loadShellContext	function	hr	false		netlify/functions/routes/hr.ts	458	
+employeeCreateDate	variable	hr	false		netlify/functions/routes/hr.ts	655	
+iso	function	hr	false		netlify/functions/routes/hr.ts	915	
+distribution	function	hr	false		netlify/functions/routes/hr.ts	974	
+inMonth	function	hr	false		netlify/functions/routes/hr.ts	993	lifecyclePeriods
+HR_STATUSES	variable	hr	false		netlify/functions/routes/hr.ts	1300	
+BLOCKING_STATUSES	variable	hr	false		netlify/functions/routes/hr.ts	1301	
+isExpired	function	hr	false		netlify/functions/routes/hr.ts	1411	
+orgBody	function	hr	false		netlify/functions/routes/hr.ts	1448	
+orgErr	function	hr	false		netlify/functions/routes/hr.ts	1449	
+ORG_UNIT_TYPES	variable	hr	false		netlify/functions/routes/hr.ts	1453	
+GATED	object	hr	false		netlify/functions/routes/hr.ts	1455	
+CHANGE_PERM	object	hr	false		netlify/functions/routes/hr.ts	1728	
+snapshotForChange	function	hr	false		netlify/functions/routes/hr.ts	1740	
+createChangeRequest	function	hr	false		netlify/functions/routes/hr.ts	1770	
+GENERIC_CHANGE_TYPES	variable	hr	false		netlify/functions/routes/hr.ts	1845	
 router	variable	hr	false		netlify/functions/routes/hrAttendance.ts	21	
 body	function	hr	false		netlify/functions/routes/hrAttendance.ts	22	
 router	variable	hr	false		netlify/functions/routes/hrCompensation.ts	22	
@@ -12516,6 +12531,9 @@ MinAttachment	interface	testing	false	test	tests/vitest/attachmentGrouping.regre
 AttachmentRow	interface	testing	false	test	tests/vitest/attachmentGrouping.regression.test.ts	42	
 buildAttachMap	function	testing	false	test	tests/vitest/attachmentGrouping.regression.test.ts	55	
 makeAttachment	function	testing	false	test	tests/vitest/attachmentGrouping.regression.test.ts	80	
+TODAY	variable	testing	false	test	tests/vitest/documentHealth.test.ts	14	
+req	function	testing	false	test	tests/vitest/documentHealth.test.ts	16	
+doc	function	testing	false	test	tests/vitest/documentHealth.test.ts	24	
 TODAY	variable	hr	false	test	tests/vitest/employeeAttention.test.ts	14	
 input	function	hr	false	test	tests/vitest/employeeAttention.test.ts	16	
 ROOT	variable	hr	false	test	tests/vitest/employeeImportCreatePath.test.ts	20	
@@ -12677,14 +12695,14 @@ EmployeeAttentionItem	interface	hr	true		types/hrEmployeeProfile.ts	37
 ProfileTabIndicator	interface	hr	true		types/hrEmployeeProfile.ts	57	
 ProfileIdentity	interface	hr	true		types/hrEmployeeProfile.ts	63	
 ProfileEmploymentFacts	interface	hr	true		types/hrEmployeeProfile.ts	75	
-ProfileReadinessSummary	interface	hr	true		types/hrEmployeeProfile.ts	85	
-ProfileContactSummary	interface	hr	true		types/hrEmployeeProfile.ts	95	
-ProfileAccountHealth	interface	hr	true		types/hrEmployeeProfile.ts	111	
-ProfileActivityEntry	interface	hr	true		types/hrEmployeeProfile.ts	118	
-ProfileCapabilities	interface	hr	true		types/hrEmployeeProfile.ts	127	
-EmployeeProfileShell	interface	hr	true		types/hrEmployeeProfile.ts	143	
-EmployeeAttentionResponse	interface	hr	true		types/hrEmployeeProfile.ts	157	
-ATTENTION_SEVERITY_RANK	object	hr	true		types/hrEmployeeProfile.ts	164	
+ProfileReadinessSummary	interface	hr	true		types/hrEmployeeProfile.ts	99	
+ProfileContactSummary	interface	hr	true		types/hrEmployeeProfile.ts	109	
+ProfileAccountHealth	interface	hr	true		types/hrEmployeeProfile.ts	125	
+ProfileActivityEntry	interface	hr	true		types/hrEmployeeProfile.ts	132	
+ProfileCapabilities	interface	hr	true		types/hrEmployeeProfile.ts	141	
+EmployeeProfileShell	interface	hr	true		types/hrEmployeeProfile.ts	157	
+EmployeeAttentionResponse	interface	hr	true		types/hrEmployeeProfile.ts	171	
+ATTENTION_SEVERITY_RANK	object	hr	true		types/hrEmployeeProfile.ts	178	
 LeaveStatus	type	hr	true		types/hrLeave.ts	11	
 LeaveUnit	type	hr	true		types/hrLeave.ts	12	
 AccrualCadence	type	hr	true		types/hrLeave.ts	13	

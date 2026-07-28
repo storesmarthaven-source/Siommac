@@ -2,7 +2,7 @@
 
 # payroll Module Map
 
-Source fingerprint: `6cee721566d29db9471ef1a5`
+Source fingerprint: `d23252021e5b5e73c4fe0c59`
 
 Files: 195 | Symbols: 1985 | Widgets: 10 | Unique mounted endpoints: 140 | Route definitions: 140 mounted + 0 unmounted | API calls: 2 | DB objects: 260 | E2E suites: 28
 

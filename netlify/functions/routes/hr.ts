@@ -43,6 +43,8 @@ import { listRequirements, createRequirement, updateRequirement, retireRequireme
 import { getComplianceForEmployee, getComplianceOverview, countMissingRequired } from '../lib/hr/documentsCompliance';
 import { runExpirySweep } from '../lib/hr/documentsExpirySweep';
 import { resolveSettingValue } from '../lib/settings/resolveSetting';
+import { getEmployerProfile } from '../lib/finance/employerProfile';
+import { getDocumentHealth } from '../lib/hr/documentHealth';
 import {
   buildAttentionItems, buildTabIndicators, filterAttentionByCapability, loadAttentionInput,
 } from '../lib/hr/employeeAttention';
@@ -454,7 +456,7 @@ async function grantedProfileCapabilities(actor: { id: string; role?: string | n
  * payroll/training signals that drive the readiness gauge.
  */
 async function loadShellContext(employee: EmpRow): Promise<ShellContext> {
-  const [deptRes, siteRes, supRes, statRes, certsRes, payGroupRes] = await Promise.all([
+  const [deptRes, siteRes, supRes, statRes, certsRes, payGroupRes, assignmentRes, employerProfile] = await Promise.all([
     employee.department_id ? sb.from('departments').select('name').eq('id', employee.department_id).maybeSingle<{ name: string }>() : Promise.resolve({ data: null, error: null }),
     employee.site_id ? sb.from('project_sites').select('name').eq('id', employee.site_id).maybeSingle<{ name: string }>() : Promise.resolve({ data: null, error: null }),
     employee.supervisor_id ? sb.from('app_users').select('full_name').eq('id', employee.supervisor_id).maybeSingle<{ full_name: string | null }>() : Promise.resolve({ data: null, error: null }),
@@ -466,8 +468,16 @@ async function loadShellContext(employee: EmpRow): Promise<ShellContext> {
       .or(`effective_to.is.null,effective_to.gte.${todayISO()}`)
       .order('effective_from', { ascending: false }).limit(1)
       .maybeSingle<{ pay_group_id: string }>(),
+    // Working time lives on the CURRENT effective-dated assignment period.
+    sb.from('hr_employee_assignments')
+      .select('weekly_hours, fte').eq('employee_id', employee.id).eq('is_current', true)
+      .order('effective_from', { ascending: false }).limit(1)
+      .maybeSingle<{ weekly_hours: number | null; fte: number | null }>(),
+    // Canonical single-tenant employer record — the same one TD4/NI184/NI187 and
+    // the payslip employer block read. Never a profile-local copy.
+    getEmployerProfile(),
   ]);
-  const errors = [deptRes.error, siteRes.error, supRes.error, statRes.error, certsRes.error, payGroupRes.error]
+  const errors = [deptRes.error, siteRes.error, supRes.error, statRes.error, certsRes.error, payGroupRes.error, assignmentRes.error]
     .filter((e): e is NonNullable<typeof e> => !!e);
   if (errors.length) throw new Error(`Employee profile context read failed: ${errors[0].message}`);
 
@@ -496,6 +506,11 @@ async function loadShellContext(employee: EmpRow): Promise<ShellContext> {
     accessProfileLabel,
     payrollStatus: (statRes.data?.payroll_ready_status ?? 'pending') as ShellContext['payrollStatus'],
     trainingStatus: rollupTrainingStatus(certsRes.data ?? [], todayISO()),
+    // An unconfigured employer profile yields an empty legalName; surface null so
+    // the UI shows its empty state rather than an empty-looking value.
+    legalEmployer: employerProfile.legalName.trim() || null,
+    weeklyHours: assignmentRes.data?.weekly_hours ?? null,
+    fte: assignmentRes.data?.fte ?? null,
   };
 }
 
@@ -542,6 +557,31 @@ router.post('/employees/attention', async c => {
   const input = await loadAttentionInput(emp, todayISO());
   const items = filterAttentionByCapability(buildAttentionItems(input), granted);
   return c.json({ success: true, data: { items, total: items.length, tabIndicators: buildTabIndicators(items) } });
+});
+
+/**
+ * POST /api/hr/employees/document-health — per-employee document health.
+ *
+ * TAB-SCOPED on purpose: the grouped tree is the Documents surface's dataset and
+ * must not be pulled just to open the drawer, so it is NOT part of the profile
+ * shell. Gated on the documents capability, and the sensitive-tier filter is
+ * applied server-side before anything is counted — so a restricted document
+ * cannot leak through a count or a percentage either.
+ */
+router.post('/employees/document-health', async c => {
+  const actor = await requirePermission(c, 'hr.employee_documents.view');
+  const v = zv(c, z.object({ employeeId: z.string().min(1) }), (c.get('body')).args ?? {});
+  if (!v.ok) return v.response;
+
+  const canSeeSensitive = await userCan(actor, 'hr.employee_documents.sensitive_view');
+  try {
+    const health = await getDocumentHealth(v.data.employeeId, canSeeSensitive, todayISO());
+    return c.json({ success: true, data: health });
+  } catch (e) {
+    const err = e as { status?: number; message?: string };
+    return c.json({ success: false, message: err.message ?? 'Document health read failed.' },
+      (err.status ?? 500) as 200);
+  }
 });
 
 // POST /api/hr/employees/photo/decide — approve or reject a pending profile

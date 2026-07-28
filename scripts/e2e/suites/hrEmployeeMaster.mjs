@@ -375,6 +375,65 @@ export default async function run(h) {
       'shell excludes large per-tab datasets');
   });
 
+  await test('profile-shell → employment facts carry working time and the canonical legal employer', async () => {
+    const r = await api('hr/employees/profile-shell', A, { employeeId: ctx.emp1 });
+    ok(r, 'profile-shell');
+    const emp = r.body.data.employment;
+    // Present as explicit fields even when unset — the drawer must be able to show
+    // its empty state rather than omit an approved row.
+    expect('weeklyHours' in emp && 'fte' in emp && 'legalEmployer' in emp,
+      'employment carries weeklyHours, fte and legalEmployer');
+    expect(emp.weeklyHours === null || typeof emp.weeklyHours === 'number', 'weeklyHours is numeric or null');
+    expect(emp.fte === null || typeof emp.fte === 'number', 'fte is numeric or null');
+    expect(emp.legalEmployer === null || typeof emp.legalEmployer === 'string', 'legalEmployer is string or null');
+
+    // Legal Employer must equal the canonical single-tenant employer profile —
+    // never a value stored separately for this surface.
+    const { data: settingRow } = await sb.from('settings').select('value').eq('key', 'employerProfile').maybeSingle();
+    let canonical = null;
+    if (settingRow?.value) {
+      try { canonical = (JSON.parse(settingRow.value)).legalName || null; } catch { canonical = null; }
+    }
+    if (!canonical) {
+      const { data: legacy } = await sb.from('settings').select('value').eq('key', 'companyName').maybeSingle();
+      canonical = legacy?.value ? String(legacy.value).trim() || null : null;
+    }
+    expect((emp.legalEmployer ?? null) === (canonical ?? null),
+      `legalEmployer mirrors the canonical employer profile — shell ${emp.legalEmployer} vs settings ${canonical}`);
+  });
+
+  await test('document-health (admin) → grouped tree with counts and percentages', async () => {
+    const r = await api('hr/employees/document-health', A, { employeeId: ctx.emp1 });
+    ok(r, 'document-health');
+    const h = r.body.data;
+    for (const k of ['totalDocuments', 'requiredCount', 'verifiedCount', 'expiringCount',
+                     'missingCount', 'verifiedPercent', 'expiringPercent', 'missingPercent', 'categoryCount']) {
+      expect(typeof h[k] === 'number', `${k} is numeric`);
+    }
+    expect(Array.isArray(h.groups), 'groups array');
+    expect(h.groups.every(g => (
+      typeof g.key === 'string' && typeof g.label === 'string' && Array.isArray(g.items)
+      && typeof g.currentCount === 'number' && typeof g.expiringCount === 'number'
+      && typeof g.missingCount === 'number'
+    )), 'every group carries key, label, per-state counts and its items');
+    expect(h.groups.flatMap(g => g.items).every(i => (
+      'documentId' in i && 'requirementId' in i && typeof i.documentType === 'string'
+      && typeof i.title === 'string' && typeof i.detail === 'string'
+      && ['verified', 'current', 'expiring', 'expired', 'unverified', 'missing'].includes(i.state)
+      && typeof i.required === 'boolean'
+    )), 'every item carries the full health contract');
+    // Percentages are of the required set and must never be NaN.
+    expect([h.verifiedPercent, h.expiringPercent, h.missingPercent].every(p => Number.isFinite(p) && p >= 0 && p <= 100),
+      'percentages are finite and within range');
+    expect(h.requiredCount === h.groups.flatMap(g => g.items).filter(i => i.required).length,
+      'requiredCount equals the number of required rows in the tree');
+  });
+
+  await test('document-health (employee, no documents.view) → denied', async () => {
+    const r = await api('hr/employees/document-health', ctx.empTok, { employeeId: ctx.emp1 });
+    fails(r, 'employee cannot read document health');
+  });
+
   await test('profile-shell → tab indicators agree with the attention endpoint exactly', async () => {
     const shell = await api('hr/employees/profile-shell', A, { employeeId: ctx.emp1 });
     const att = await api('hr/employees/attention', A, { employeeId: ctx.emp1 });

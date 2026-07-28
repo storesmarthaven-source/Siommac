@@ -57,6 +57,11 @@ export interface ShellContext {
   accessProfileLabel: string | null;
   payrollStatus: ProfileReadinessSummary['payrollStatus'];
   trainingStatus: ProfileReadinessSummary['trainingStatus'];
+  /** From the canonical single-tenant employer profile, not a profile-local copy. */
+  legalEmployer: string | null;
+  /** From the CURRENT effective-dated assignment row. */
+  weeklyHours: number | null;
+  fte: number | null;
 }
 
 /**
@@ -137,6 +142,9 @@ function employmentOf(employee: ShellEmployeeRow, ctx: ShellContext, today: stri
     tenureMonths: tenureMonths(employee.start_date ?? null, today),
     supervisorName: ctx.supervisorName,
     payGroupName: ctx.payGroupName,
+    legalEmployer: ctx.legalEmployer,
+    weeklyHours: ctx.weeklyHours,
+    fte: ctx.fte,
   };
 }
 
