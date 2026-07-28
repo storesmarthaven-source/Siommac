@@ -43,6 +43,10 @@ import { listRequirements, createRequirement, updateRequirement, retireRequireme
 import { getComplianceForEmployee, getComplianceOverview, countMissingRequired } from '../lib/hr/documentsCompliance';
 import { runExpirySweep } from '../lib/hr/documentsExpirySweep';
 import { resolveSettingValue } from '../lib/settings/resolveSetting';
+import {
+  buildAttentionItems, buildTabIndicators, filterAttentionByCapability, loadAttentionInput,
+} from '../lib/hr/employeeAttention';
+import { buildProfileShell, type ShellContext } from '../lib/hr/employeeProfileShell';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -55,7 +59,7 @@ const HR_COLS =
   'date_of_birth, nationality, government_id, probation_end_date, employee_grade, work_schedule, cost_center, ' +
   'emergency_contact_name, emergency_contact_phone, emergency_contact_relationship';
 
-interface EmpRow { id: string; full_name: string | null; department_id: string | null; supervisor_id: string | null; status: string; employment_status: string | null; [k: string]: unknown }
+interface EmpRow { id: string; full_name: string | null; department_id: string | null; site_id: string | null; supervisor_id: string | null; status: string; employment_status: string | null; [k: string]: unknown }
 
 async function loadEmployee(id: string): Promise<EmpRow | null> {
   const { data, error } = await sb.from('app_users').select(HR_COLS).eq('id', id).maybeSingle<EmpRow>();
@@ -255,7 +259,7 @@ router.post('/employees/list', async c => {
       status: r.employment_status ?? 'active',
       profile_image_url: resolveProfileImageUrl(r as Parameters<typeof resolveProfileImageUrl>[0]),
       departmentName: deptMap[r.department_id ?? ''] ?? null,
-      siteName: siteMap[(r.site_id as string | null) ?? ''] ?? null,
+      siteName: siteMap[r.site_id ?? ''] ?? null,
       supervisorName: r.supervisor_id ? supMap[r.supervisor_id] ?? null : null,
       workerType: r.contractor_flag ? 'contractor' : 'employee',
       trainingStatus,
@@ -290,7 +294,7 @@ router.post('/employees/get', async c => {
   const [supervisorResult, departmentResult, siteResult, statusHistoryResult, assignmentsResult, statutoryResult, certificates, payGroupAssignmentResult] = await Promise.all([
     emp.supervisor_id ? sb.from('app_users').select('id, full_name').eq('id', emp.supervisor_id).maybeSingle() : Promise.resolve({ data: null, error: null }),
     emp.department_id ? sb.from('departments').select('id, name').eq('id', emp.department_id).maybeSingle() : Promise.resolve({ data: null, error: null }),
-    emp.site_id ? sb.from('project_sites').select('id, name').eq('id', emp.site_id as string).maybeSingle() : Promise.resolve({ data: null, error: null }),
+    emp.site_id ? sb.from('project_sites').select('id, name').eq('id', emp.site_id).maybeSingle() : Promise.resolve({ data: null, error: null }),
     sb.from('hr_employee_status_history').select('*').eq('employee_id', emp.id).order('changed_at', { ascending: false }).limit(20),
     sb.from('hr_employee_assignments').select('*').eq('employee_id', emp.id).order('effective_from', { ascending: false }),
     // Read statutory from the canonical profiles table; map nis_reg_status → nis_status for the FE contract.
@@ -425,6 +429,119 @@ router.post('/employees/get', async c => {
     statutory: canStatutory ? (statutoryMapped ?? null) : null,
     payrollReadiness: (canStatutory || canReadiness) ? payrollReadiness : null,
   } });
+});
+
+/**
+ * Resolve the capability set once per request.
+ *
+ * The shell and attention contracts filter on capability rather than issuing a
+ * separate `userCan` per item, so a profile with many attention items still costs
+ * one role lookup.
+ */
+async function grantedProfileCapabilities(actor: { id: string; role?: string | null }): Promise<Set<string>> {
+  const keys = [
+    'hr.employees.statutory.view', 'hr.employees.payroll_readiness.view',
+    'hr.employee_documents.view', 'hr.audit.view',
+    'hr.onboarding.view', 'hr.offboarding.view', 'auth.security.view',
+  ];
+  const results = await Promise.all(keys.map(k => userCan(actor, k)));
+  return new Set(keys.filter((_, i) => results[i]));
+}
+
+/**
+ * Read the shared context the shell needs on top of the employee row: resolved
+ * department/site/supervisor names, pay group, access-profile label, and the
+ * payroll/training signals that drive the readiness gauge.
+ */
+async function loadShellContext(employee: EmpRow): Promise<ShellContext> {
+  const [deptRes, siteRes, supRes, statRes, certsRes, payGroupRes] = await Promise.all([
+    employee.department_id ? sb.from('departments').select('name').eq('id', employee.department_id).maybeSingle<{ name: string }>() : Promise.resolve({ data: null, error: null }),
+    employee.site_id ? sb.from('project_sites').select('name').eq('id', employee.site_id).maybeSingle<{ name: string }>() : Promise.resolve({ data: null, error: null }),
+    employee.supervisor_id ? sb.from('app_users').select('full_name').eq('id', employee.supervisor_id).maybeSingle<{ full_name: string | null }>() : Promise.resolve({ data: null, error: null }),
+    sb.from('hr_employee_statutory_profiles').select('payroll_ready_status').eq('employee_id', employee.id).eq('jurisdiction', 'TT').maybeSingle<{ payroll_ready_status: string | null }>(),
+    sb.from('hse_worker_certificates').select('status, expires_at').eq('worker_id', employee.id),
+    sb.from('finance_employee_pay_group_assignments')
+      .select('pay_group_id').eq('employee_id', employee.id)
+      .lte('effective_from', todayISO())
+      .or(`effective_to.is.null,effective_to.gte.${todayISO()}`)
+      .order('effective_from', { ascending: false }).limit(1)
+      .maybeSingle<{ pay_group_id: string }>(),
+  ]);
+  const errors = [deptRes.error, siteRes.error, supRes.error, statRes.error, certsRes.error, payGroupRes.error]
+    .filter((e): e is NonNullable<typeof e> => !!e);
+  if (errors.length) throw new Error(`Employee profile context read failed: ${errors[0].message}`);
+
+  let payGroupName: string | null = null;
+  if (payGroupRes.data) {
+    const { data: group, error } = await sb.from('finance_pay_groups')
+      .select('name').eq('id', payGroupRes.data.pay_group_id).maybeSingle<{ name: string }>();
+    if (error) throw new Error(`Employee pay group read failed: ${error.message}`);
+    payGroupName = group?.name ?? null;
+  }
+
+  // Only expose an access-profile label when the role maps to exactly one active
+  // profile — an ambiguous mapping must not be guessed (same rule as employees/get).
+  let accessProfileLabel: string | null = null;
+  const { data: profiles, error: profilesError } = await sb.from('hr_access_profiles')
+    .select('label').eq('system_role', employee.role as string).eq('is_active', true).limit(2);
+  if (profilesError) throw new Error(`Employee access profile read failed: ${profilesError.message}`);
+  const typedProfiles = profiles as { label: string }[];
+  if (typedProfiles.length === 1) accessProfileLabel = typedProfiles[0].label;
+
+  return {
+    departmentName: deptRes.data?.name ?? null,
+    siteName: siteRes.data?.name ?? null,
+    supervisorName: supRes.data?.full_name ?? null,
+    payGroupName,
+    accessProfileLabel,
+    payrollStatus: (statRes.data?.payroll_ready_status ?? 'pending') as ShellContext['payrollStatus'],
+    trainingStatus: rollupTrainingStatus(certsRes.data ?? [], todayISO()),
+  };
+}
+
+/**
+ * POST /api/hr/employees/profile-shell — the ONE contract the Employee Profile
+ * drawer and the full employee page open with.
+ *
+ * Permission-filtered server-side: statutory/readiness, documents, audit,
+ * onboarding and offboarding blocks are omitted (not blanked) for actors without
+ * the capability, and attention items of those domains never leave the server.
+ */
+router.post('/employees/profile-shell', async c => {
+  const actor = await requirePermission(c, 'hr.view');
+  const v = zv(c, z.object({ employeeId: z.string().min(1) }), (c.get('body')).args ?? {});
+  if (!v.ok) return v.response;
+
+  const emp = await loadEmployee(v.data.employeeId);
+  if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
+
+  const [granted, ctx] = await Promise.all([
+    grantedProfileCapabilities(actor),
+    loadShellContext(emp),
+  ]);
+  const shell = await buildProfileShell(emp, ctx, granted);
+  return c.json({ success: true, data: shell });
+});
+
+/**
+ * POST /api/hr/employees/attention — the full unresolved-work list behind the
+ * Needs Attention panel's view-all behaviour.
+ *
+ * Same aggregation and the same capability filter as the shell, so the panel and
+ * the tab indicators can never disagree.
+ */
+router.post('/employees/attention', async c => {
+  const actor = await requirePermission(c, 'hr.view');
+  const v = zv(c, z.object({ employeeId: z.string().min(1) }), (c.get('body')).args ?? {});
+  if (!v.ok) return v.response;
+
+  const emp = await loadEmployee(v.data.employeeId);
+  if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
+
+  const granted = await grantedProfileCapabilities(actor);
+  const input = await loadAttentionInput(emp, todayISO());
+  const items = filterAttentionByCapability(buildAttentionItems(input), granted);
+  return c.json({ success: true, data: { items, total: items.length, tabIndicators: buildTabIndicators(items) } });
 });
 
 // POST /api/hr/employees/photo/decide — approve or reject a pending profile
@@ -1208,7 +1325,7 @@ router.post('/employees/transfer', async c => {
     .eq('employee_id', emp.id).eq('is_current', true);
   await sb.from('hr_employee_assignments').insert({
     employee_id: emp.id, position_id: v.data.positionId ?? null,
-    department_id: v.data.departmentId ?? emp.department_id, site_id: v.data.siteId ?? (emp.site_id as string | null),
+    department_id: v.data.departmentId ?? emp.department_id, site_id: v.data.siteId ?? emp.site_id,
     supervisor_id: emp.supervisor_id, assignment_type: 'primary', effective_from: todayISO(), is_current: true, created_by: actor.id,
   });
 

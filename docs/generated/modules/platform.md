@@ -2,7 +2,7 @@
 
 # platform Module Map
 
-Source fingerprint: `0822db7d2e187876b18841d1`
+Source fingerprint: `f5da9fb9dd06a1d93deb89f3`
 
 Files: 304 | Symbols: 2748 | Widgets: 0 | Unique mounted endpoints: 32 | Route definitions: 32 mounted + 15 unmounted | API calls: 50 | DB objects: 301 | E2E suites: 0
 
@@ -466,7 +466,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/weather.ts` | 189 |
 | frontend-api | `src/api/calendar.ts` | 173 |
 | frontend-api | `src/api/index.ts` | 34 |
-| frontend-api | `src/api/queryKeys.ts` | 291 |
+| frontend-api | `src/api/queryKeys.ts` | 293 |
 | frontend-api | `src/api/schemas/index.ts` | 21 |
 | frontend-api | `src/api/schemas/site.ts` | 61 |
 | frontend-api | `src/api/sites.ts` | 167 |

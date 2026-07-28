@@ -20,6 +20,11 @@ export interface EmployeeMasterAccess {
   viewTraining: boolean;
   viewOnboarding: boolean;
   viewAudit: boolean;
+  /** Readiness summary + controls. Statutory viewers see it implicitly. */
+  viewReadiness: boolean;
+  viewOffboarding: boolean;
+  /** Non-technical account health only — never password/session/device controls. */
+  viewAccountSecurity: boolean;
 }
 
 type PermissionCheck = (permission: string) => boolean;
@@ -49,6 +54,9 @@ export function resolveEmployeeMasterAccess(has: PermissionCheck = can): Employe
     viewTraining: has('hr.view'),
     viewOnboarding: has('hr.onboarding.view'),
     viewAudit: has('hr.audit.view'),
+    viewReadiness: has('hr.employees.payroll_readiness.view') || has('hr.employees.statutory.view'),
+    viewOffboarding: has('hr.offboarding.view'),
+    viewAccountSecurity: has('auth.security.view'),
   };
 }
 

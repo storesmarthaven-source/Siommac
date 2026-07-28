@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/preact';
 import { describe, expect, it, vi } from 'vitest';
 import { EmployeeProfilePage } from './EmployeeProfilePage';
-import type { EmployeeMasterAccess } from './employeeMasterAccess';
+import { resolveEmployeeMasterAccess, type EmployeeMasterAccess } from './employeeMasterAccess';
 
 const employee = {
   id: 'emp-1', username: 'damani.baptiste', full_name: 'Damani Baptiste', first_name: 'Damani', last_name: 'Baptiste', display_name: null,
@@ -60,12 +60,9 @@ vi.mock('@components/nav/navCore', () => ({ showSection: vi.fn() }));
 vi.mock('@store', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('./EmployeeOnboardingSummary', () => ({ EmployeeOnboardingSummary: () => null }));
 
-const access: EmployeeMasterAccess = {
-  createEmployee: true, importEmployees: true, startOnboarding: true,
-  requestChange: true, editEmployee: true, editContact: true, changeStatus: true, startOffboarding: true,
-  viewDocuments: true, uploadDocument: true, downloadDocument: true, verifyDocument: true, archiveDocument: true,
-  viewStatutory: true, editStatutory: true, viewTraining: true, viewOnboarding: true, viewAudit: true,
-};
+// Derive the full-capability map instead of listing fields: a new capability must
+// not silently leave these fixtures behind (and un-exercised).
+const access: EmployeeMasterAccess = resolveEmployeeMasterAccess(() => true);
 
 describe('Full employee record page', () => {
   it('separates quick identity from deep work and uses the approved focused tabs', () => {

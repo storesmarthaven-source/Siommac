@@ -313,6 +313,124 @@ export default async function run(h) {
     expect(r.body.data.accessProfile === null, 'access profile hidden without auth.security.view');
   });
 
+  // ── profile shell + attention (the ONE Employee Profile contract) ──────────
+  await test('profile-shell (admin) → exact contract the drawer and page consume', async () => {
+    const r = await api('hr/employees/profile-shell', A, { employeeId: ctx.emp1 });
+    ok(r, 'profile-shell alpha');
+    const d = r.body.data;
+
+    // identity
+    expect(d.identity.employeeId === ctx.emp1, 'identity.employeeId echoes the request');
+    expect(typeof d.identity.displayName === 'string' && d.identity.displayName.length > 0, 'identity.displayName resolved');
+    expect(typeof d.identity.employmentStatus === 'string', 'identity.employmentStatus');
+    expect(typeof d.identity.accountStatus === 'string', 'identity.accountStatus is distinct from employment status');
+    expect(d.identity.siteName === ctx.siteName, `identity.siteName resolved — got ${d.identity.siteName}`);
+    expect('employeeNo' in d.identity && 'profileImageUrl' in d.identity, 'identity carries employeeNo + profileImageUrl');
+
+    // employment facts, including server-computed tenure
+    expect('employmentBasis' in d.employment && 'workArrangement' in d.employment, 'employment facts present');
+    expect(d.employment.supervisorName === ctx.supName, `employment.supervisorName resolved — got ${d.employment.supervisorName}`);
+    expect(d.employment.tenureMonths === null || typeof d.employment.tenureMonths === 'number', 'tenureMonths computed server-side');
+    expect('payGroupName' in d.employment, 'payGroupName explicit even when unassigned');
+
+    // readiness expressed as controls
+    expect(d.readiness && typeof d.readiness.percent === 'number', 'readiness present for a statutory-capable actor');
+    expect(d.readiness.totalControls === 3 && typeof d.readiness.readyControls === 'number', 'readiness ready/total controls');
+    expect(Array.isArray(d.readiness.blockers), 'readiness.blockers array');
+    expect(d.readiness.blockers.includes('assignment'), 'readiness reflects the incomplete assignment');
+
+    // attention + indicators come from ONE source
+    expect(Array.isArray(d.attentionPreview), 'attentionPreview array');
+    expect(typeof d.attentionTotal === 'number', 'attentionTotal number');
+    expect(d.attentionPreview.length <= d.attentionTotal, 'preview never exceeds the total');
+    expect(d.attentionPreview.every(i => (
+      typeof i.id === 'string' && typeof i.domain === 'string' && typeof i.title === 'string'
+      && typeof i.detail === 'string' && ['critical', 'warning', 'info'].includes(i.severity)
+      && ['overdue', 'due_soon', 'scheduled', 'none'].includes(i.dueState)
+      && 'owner' in i && 'responsibleParty' in i && typeof i.actionLabel === 'string'
+      && typeof i.actionTarget === 'string' && 'requiredCapability' in i
+    )), 'every attention item carries the full canonical contract');
+    expect(Array.isArray(d.tabIndicators), 'tabIndicators array');
+    expect(d.tabIndicators.every(t => t.unresolvedCount > 0), 'no zero-count indicator is emitted');
+
+    // The alpha fixture is created with departmentId:null (site + supervisor ARE set),
+    // so exactly the department gap must surface — and nothing else from employment.
+    expect(d.attentionPreview.some(i => i.id === 'employment.missing:department'),
+      'the unassigned department surfaces as an attention item');
+    expect(!d.attentionPreview.some(i => i.id === 'employment.missing:supervisor'
+      || i.id === 'employment.missing:site'),
+      'assigned supervisor/site do NOT produce phantom attention items');
+    const employmentTab = d.tabIndicators.find(t => t.tab === 'employment');
+    expect(employmentTab && employmentTab.unresolvedCount >= 1, 'employment tab indicator derived from that item');
+
+    // summaries + capability map
+    expect(d.contact && 'workEmail' in d.contact && 'mobilePhone' in d.contact, 'contact summary present');
+    expect(d.accountHealth && typeof d.accountHealth.openSupportRequests === 'number', 'account health present');
+    expect(typeof d.accountHealth.hasLoginIdentity === 'boolean', 'account health reports login identity');
+    expect(Array.isArray(d.recentActivity), 'recentActivity array');
+    expect(d.capabilities && typeof d.capabilities.viewDocuments === 'boolean', 'capability map present');
+
+    // the shell must NOT carry the heavy per-tab datasets
+    expect(!('documents' in d) && !('auditLog' in d) && !('assignmentHistory' in d),
+      'shell excludes large per-tab datasets');
+  });
+
+  await test('profile-shell → tab indicators agree with the attention endpoint exactly', async () => {
+    const shell = await api('hr/employees/profile-shell', A, { employeeId: ctx.emp1 });
+    const att = await api('hr/employees/attention', A, { employeeId: ctx.emp1 });
+    ok(shell, 'shell'); ok(att, 'attention');
+    expect(att.body.data.total === shell.body.data.attentionTotal,
+      `attention total agrees — shell ${shell.body.data.attentionTotal} vs attention ${att.body.data.total}`);
+    expect(JSON.stringify(att.body.data.tabIndicators) === JSON.stringify(shell.body.data.tabIndicators),
+      'tab indicators are byte-identical across both reads (one source of truth)');
+    expect(att.body.data.items.length === att.body.data.total, 'attention returns the full list');
+    expect(att.body.data.items.length >= shell.body.data.attentionPreview.length, 'full list covers the preview');
+  });
+
+  await test('profile-shell (manager, no statutory/readiness) → gated blocks omitted, not blanked', async () => {
+    const r = await api('hr/employees/profile-shell', ctx.mgrTok, { employeeId: ctx.emp1 });
+    ok(r, 'manager profile-shell');
+    const d = r.body.data;
+    expect(d.readiness === null, 'readiness withheld without the readiness capability');
+    expect(d.capabilities.viewReadiness === false, 'capability map reports the denial');
+    // The capability map and the payload must agree — a true capability with a
+    // withheld block (or vice versa) is the drift this contract exists to prevent.
+    expect((d.capabilities.viewReadiness === false) === (d.readiness === null),
+      'capability map matches what the payload actually carries');
+    expect(d.capabilities.viewAudit === (d.recentActivity.length > 0 || d.capabilities.viewAudit),
+      'activity preview only populated when audit is granted');
+    expect(d.attentionPreview.every(i => i.domain !== 'payroll' && i.domain !== 'statutory'),
+      'payroll/statutory attention items never leave the server for this actor');
+    expect(d.tabIndicators.every(t => t.tab !== 'readiness'),
+      'no readiness indicator leaks a hidden blocker count');
+    expect(d.identity.employeeId === ctx.emp1, 'identity still resolved for an authorised HR viewer');
+  });
+
+  await test('profile-shell (employee, no hr.view) → denied', async () => {
+    const r = await api('hr/employees/profile-shell', ctx.empTok, { employeeId: ctx.emp1 });
+    fails(r, 'employee cannot read the profile shell');
+  });
+
+  await test('attention (employee, no hr.view) → denied', async () => {
+    const r = await api('hr/employees/attention', ctx.empTok, { employeeId: ctx.emp1 });
+    fails(r, 'employee cannot read the attention list');
+  });
+
+  await test('profile-shell → unknown employee is 404, not an empty shell', async () => {
+    const r = await api('hr/employees/profile-shell', A, { employeeId: `${TAG}-does-not-exist` });
+    fails(r, 'unknown employee rejected');
+  });
+
+  await test('profile-shell → switching employees never returns the previous identity', async () => {
+    const a = await api('hr/employees/profile-shell', A, { employeeId: ctx.emp1 });
+    const b = await api('hr/employees/profile-shell', A, { employeeId: ctx.emp2 });
+    ok(a, 'shell alpha'); ok(b, 'shell beta');
+    expect(a.body.data.identity.employeeId === ctx.emp1, 'alpha shell is alpha');
+    expect(b.body.data.identity.employeeId === ctx.emp2, 'beta shell is beta');
+    expect(a.body.data.identity.employeeId !== b.body.data.identity.employeeId,
+      'each response is scoped to its own employee');
+  });
+
   // ── dashboard-stats ────────────────────────────────────────────────────────
   await test('dashboard-stats (admin) → complete workspace contract, all computed', async () => {
     const r = await api('hr/employees/dashboard-stats', A, {});

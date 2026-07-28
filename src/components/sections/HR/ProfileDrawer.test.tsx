@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ProfileDrawer } from './ProfileDrawer';
-import type { EmployeeMasterAccess } from './employeeMasterAccess';
+import { resolveEmployeeMasterAccess, type EmployeeMasterAccess } from './employeeMasterAccess';
 
 const employee = {
   id: 'emp-1', username: 'amara.diallo', full_name: 'Amara Diallo', first_name: 'Amara', last_name: 'Diallo', display_name: null,
@@ -33,12 +33,9 @@ vi.mock('@store', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('@components/nav/navCore', () => ({ showSection: vi.fn() }));
 vi.mock('./EmployeeOnboardingSummary', () => ({ EmployeeOnboardingSummary: () => <div>Onboarding summary</div> }));
 
-const access: EmployeeMasterAccess = {
-  createEmployee: true, importEmployees: true, startOnboarding: true,
-  requestChange: true, editEmployee: true, editContact: true, changeStatus: true, startOffboarding: true,
-  viewDocuments: true, uploadDocument: true, downloadDocument: true, verifyDocument: true, archiveDocument: true,
-  viewStatutory: true, editStatutory: true, viewTraining: true, viewOnboarding: true, viewAudit: true,
-};
+// Derive the full-capability map instead of listing fields: a new capability must
+// not silently leave these fixtures behind (and un-exercised).
+const access: EmployeeMasterAccess = resolveEmployeeMasterAccess(() => true);
 
 afterEach(() => { document.body.innerHTML = ''; });
 

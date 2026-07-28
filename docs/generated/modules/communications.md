@@ -2,7 +2,7 @@
 
 # communications Module Map
 
-Source fingerprint: `0822db7d2e187876b18841d1`
+Source fingerprint: `f5da9fb9dd06a1d93deb89f3`
 
 Files: 112 | Symbols: 1052 | Widgets: 0 | Unique mounted endpoints: 93 | Route definitions: 94 mounted + 2 unmounted | API calls: 88 | DB objects: 158 | E2E suites: 6
 
