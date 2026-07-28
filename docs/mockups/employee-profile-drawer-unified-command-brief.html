@@ -1,0 +1,1422 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Employee Profile — Unified Command Brief</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --navy-950: #071a3b;
+      --navy-900: #0b2552;
+      --navy-800: #143969;
+      --blue: #1768e5;
+      --ink: #152039;
+      --muted: #66758b;
+      --line: #dce3ec;
+      --line-soft: #e9eef4;
+      --surface: #ffffff;
+      --surface-soft: #f6f8fb;
+      --surface-tint: #eef4fb;
+      --amber: #d97908;
+      --amber-deep: #9a4d00;
+      --amber-soft: #fff6e7;
+      --red: #cf3d35;
+      --red-soft: #fff0ef;
+      --green: #188956;
+      --green-soft: #eaf7ef;
+      --shadow: 0 24px 60px rgba(12, 31, 61, .18);
+    }
+    body[data-theme="dark"] {
+      color-scheme: dark;
+      --navy-950: #374669;
+      --navy-900: #2a3d61;
+      --navy-800: #bfdbfe;
+      --blue: #93c5fd;
+      --ink: #ffffff;
+      --muted: rgba(226, 238, 252, .68);
+      --line: rgba(255, 255, 255, .10);
+      --line-soft: rgba(255, 255, 255, .08);
+      --surface: #1b2d54;
+      --surface-soft: #162846;
+      --surface-tint: #374669;
+      --amber-soft: #3a2b17;
+      --red-soft: #3a2226;
+      --green-soft: #17392d;
+      --shadow: 0 26px 70px rgba(0, 0, 0, .38);
+    }
+    body[data-theme="dark"] { background: #0e1d36; }
+    body[data-theme="dark"] .drawer { border-left-color: rgba(255,255,255,.10); }
+    body[data-theme="dark"] .topbar { background: #3a4666; }
+    body[data-theme="dark"] .footer { background: #374669; }
+    body[data-theme="dark"] .identity,
+    body[data-theme="dark"] .tabs,
+    body[data-theme="dark"] .scroll { background: #1b2d54; }
+    body[data-theme="dark"] .identity { background-image: none; }
+    body[data-theme="dark"] .card,
+    body[data-theme="dark"] .summary-stat,
+    body[data-theme="dark"] .record-row,
+    body[data-theme="dark"] .history-row,
+    body[data-theme="dark"] .filter,
+    body[data-theme="dark"] .access-state {
+      border-color: rgba(255,255,255,.10);
+      color: #fff;
+      background: rgba(255,255,255,.075);
+    }
+    body[data-theme="dark"] .filter.active { border-color: rgba(191,219,254,.34); color: #fff; background: rgba(147,197,253,.18); }
+    body[data-theme="dark"] .outline-btn,
+    body[data-theme="dark"] .text-btn { color: #dbeafe; }
+    body[data-theme="dark"] .outline-btn { border-color: rgba(255,255,255,.14); background: rgba(255,255,255,.08); }
+    body[data-theme="dark"] .primary-btn { border-color: rgba(191,219,254,.32); background: rgba(255,255,255,.13); }
+    body[data-theme="dark"] .request-change-btn { border-color: #0b2552; color: #fff; background: #0b2552; }
+    body[data-theme="dark"] .record-icon,
+    body[data-theme="dark"] .account-icon { background: rgba(255,255,255,.10); }
+    body[data-theme="dark"] .badge.neutral { color: #dbeafe; background: rgba(255,255,255,.10); }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background: #f5f7fa;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+    }
+    button { font: inherit; }
+    .icon {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.85;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .page {
+      display: grid;
+      min-height: 100vh;
+      grid-template-columns: minmax(260px, 1fr) minmax(680px, 780px);
+    }
+    .register-ghost {
+      position: relative;
+      overflow: hidden;
+      padding: 42px;
+      opacity: .52;
+      background: #f7f9fc;
+    }
+    .register-ghost::after {
+      position: absolute;
+      inset: 0;
+      content: "";
+      background: rgba(236, 241, 247, .38);
+      backdrop-filter: blur(1.5px);
+    }
+    .ghost-title { width: 240px; height: 26px; border-radius: 7px; background: #c9d3df; }
+    .ghost-toolbar { width: min(620px, 90%); height: 52px; margin: 26px 0; border-radius: 11px; background: #dce4ed; }
+    .ghost-row { width: min(720px, 96%); height: 56px; border-top: 1px solid #ccd6e1; background: #f8fafc; }
+    .drawer {
+      position: relative;
+      display: flex;
+      min-width: 0;
+      height: 100vh;
+      flex-direction: column;
+      overflow: hidden;
+      border-left: 1px solid rgba(255,255,255,.36);
+      color: var(--ink);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .topbar {
+      display: flex;
+      min-height: 62px;
+      padding: 0 24px;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, .10);
+      color: #fff;
+      background: #3a4666;
+    }
+    .brand { display: flex; align-items: baseline; gap: 8px; letter-spacing: .02em; }
+    .brand strong { font-size: 21px; letter-spacing: .055em; }
+    .brand span { color: #e4e7eb; font-size: 13px; }
+    .top-actions { display: flex; gap: 6px; }
+    .action-menu-wrap { position: relative; }
+    .action-menu {
+      position: absolute;
+      z-index: 20;
+      top: 44px;
+      right: 0;
+      display: none;
+      width: 220px;
+      padding: 6px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface);
+      box-shadow: 0 14px 34px rgba(12, 31, 61, .18);
+    }
+    .action-menu.open { display: grid; }
+    .action-menu button {
+      width: 100%;
+      padding: 9px 10px;
+      border: 0;
+      border-radius: 7px;
+      color: var(--ink);
+      background: transparent;
+      font: inherit;
+      font-size: 12px;
+      text-align: left;
+      cursor: pointer;
+    }
+    .action-menu button:hover { background: var(--surface-soft); }
+    .action-menu button.danger { color: var(--red); }
+    body[data-theme="dark"] .action-menu { border-color: rgba(255,255,255,.10); background: #1b2d54; }
+    .icon-btn {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 9px;
+      color: #fff;
+      background: rgba(255,255,255,.06);
+      cursor: pointer;
+    }
+    .icon-btn:hover { background: rgba(255,255,255,.13); }
+    .identity {
+      padding: 22px 24px 18px;
+      color: #fff;
+      background: #1b2d54;
+    }
+    .identity-grid {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 18px;
+    }
+    .portrait-shell {
+      position: relative;
+      width: 104px;
+      height: 104px;
+      overflow: hidden;
+      border: 4px solid rgba(255,255,255,.18);
+      border-radius: 50%;
+      background: #dce4ec;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.12), 0 8px 20px rgba(9, 35, 76, .22);
+    }
+    .portrait-shell svg { width: 100%; height: 100%; }
+    .presence {
+      position: absolute;
+      right: 3px;
+      bottom: 5px;
+      width: 18px;
+      height: 18px;
+      border: 3px solid #1b2d54;
+      border-radius: 50%;
+      background: #21b36b;
+    }
+    .name-line { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
+    .name-line h1 { margin: 0; font-size: 25px; line-height: 1.18; letter-spacing: -.025em; }
+    .status {
+      display: inline-flex;
+      min-height: 25px;
+      padding: 0 9px;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid #bee8ce;
+      border-radius: 999px;
+      color: var(--green);
+      background: var(--green-soft);
+      font-size: 12px;
+      font-weight: 650;
+    }
+    .status::before { width: 7px; height: 7px; border-radius: 50%; background: currentColor; content: ""; }
+    .employee-no { margin-top: 5px; color: rgba(226,238,252,.68); font-size: 12.5px; font-weight: 650; letter-spacing: .025em; }
+    .identity-lines { display: flex; margin-top: 10px; flex-wrap: wrap; gap: 8px 18px; color: #fff; }
+    .identity-lines span { display: inline-flex; align-items: center; gap: 7px; }
+    .identity-lines .icon { width: 16px; height: 16px; color: rgba(226,238,252,.68); }
+    .text-btn {
+      display: inline-flex;
+      margin-top: 9px;
+      padding: 0;
+      align-items: center;
+      gap: 5px;
+      border: 0;
+      color: var(--navy-900);
+      background: transparent;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .text-btn .icon { width: 14px; height: 14px; }
+    .facts {
+      display: grid;
+      margin: 17px -24px -18px;
+      padding: 15px 24px 18px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border-top: 1px solid rgba(255,255,255,.10);
+      background: #364263;
+    }
+    .fact {
+      display: grid;
+      padding: 0 14px;
+      grid-template-columns: 26px minmax(0, 1fr);
+      gap: 3px 8px;
+      border-right: 1px solid rgba(255,255,255,.13);
+    }
+    .fact:first-child { padding-left: 0; }
+    .fact:last-child { padding-right: 0; border-right: 0; }
+    .fact .icon { grid-row: 1 / 3; align-self: center; color: #bfdbfe; }
+    .fact span { color: rgba(226,238,252,.68); font-size: 11px; }
+    .fact strong { overflow: hidden; color: #fff; font-size: 12.5px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+    .tabs {
+      display: none;
+      min-height: 51px;
+      padding: 0 18px;
+      align-items: stretch;
+      overflow-x: auto;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+    }
+    .tab {
+      position: relative;
+      min-width: max-content;
+      padding: 0 15px;
+      border: 0;
+      color: var(--muted);
+      background: transparent;
+      font-size: 12.5px;
+      font-weight: 560;
+      cursor: pointer;
+    }
+    .tab:hover { color: var(--ink); }
+    .tab.active { color: var(--navy-800); font-weight: 700; }
+    .tab.active::after {
+      position: absolute;
+      right: 13px;
+      bottom: 0;
+      left: 13px;
+      height: 3px;
+      border-radius: 3px 3px 0 0;
+      background: var(--blue);
+      content: "";
+    }
+    .scroll {
+      flex: 1;
+      overflow-y: auto;
+      background: #f5f7fa;
+      scrollbar-color: #b8c5d6 transparent;
+      scrollbar-width: thin;
+    }
+    .panel { display: none; padding: 18px 20px 90px; }
+    .panel.active { display: block; }
+    .section-head {
+      display: flex;
+      margin-bottom: 12px;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-head h2 { margin: 0; font-size: 15px; line-height: 1.25; }
+    .section-head > .icon { color: var(--navy-800); }
+    .count {
+      display: inline-grid;
+      min-width: 24px;
+      height: 24px;
+      padding: 0 7px;
+      place-items: center;
+      border-radius: 999px;
+      color: var(--amber-deep);
+      background: #ffebc6;
+      font-size: 11px;
+      font-weight: 750;
+    }
+    .section-head .text-btn { margin: 0 0 0 auto; }
+    .attention-strip {
+      display: grid;
+      grid-template-columns: 220px repeat(2, minmax(0, 1fr));
+      margin-bottom: 14px;
+      overflow: hidden;
+      border: 1px solid #dfe5ed;
+      border-radius: 10px;
+      background: #fff;
+    }
+    body[data-theme="dark"] .attention-strip { border-color: #dfe5ed; background: #fff; }
+    .attention-title {
+      display: flex;
+      padding: 13px;
+      align-items: center;
+      gap: 8px;
+      color: #65430b;
+      background: #fff2d6;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    body[data-theme="dark"] .attention-title { color: #65430b; background: #fff2d6; }
+    .attention-heading-icon {
+      display: flex;
+      width: 32px;
+      height: 32px;
+      box-sizing: border-box;
+      flex: none;
+      align-items: center;
+      justify-content: center;
+      border-radius: 9px;
+      color: #8a5500;
+      background: #f7dca8;
+      line-height: 0;
+    }
+    .attention-heading-icon .icon { display: block; width: 17px; height: 17px; margin: 0; }
+    .attention-title .badge.warning {
+      display: inline-grid;
+      width: 23px;
+      min-width: 23px;
+      height: 23px;
+      min-height: 23px;
+      padding: 0;
+      flex: none;
+      place-items: center;
+      border: 1px solid #d8a140;
+      border-radius: 50%;
+      color: #633b00;
+      background: #fff;
+      margin-left: auto;
+    }
+    .attention-item {
+      display: grid;
+      min-width: 0;
+      padding: 10px 12px;
+      grid-template-columns: 36px minmax(0, 1fr) 28px;
+      align-items: center;
+      gap: 9px;
+      border-left: 1px solid #e7ebf0;
+      color: #17233a;
+      background: #fff;
+      cursor: pointer;
+    }
+    .attention-item:hover,
+    .attention-item:focus-visible {
+      background: #f8fafc;
+      outline: none;
+    }
+    .attention-next {
+      display: grid;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      place-items: center;
+      border: 1px solid #d7dee8;
+      border-radius: 7px;
+      color: var(--navy-900);
+      background: #fff;
+      cursor: pointer;
+    }
+    .attention-next:hover { border-color: #aebbd0; background: #eef3f9; }
+    .attention-next .icon { width: 14px; height: 14px; }
+    .attention-item > .attention-ico {
+      position: relative;
+      display: flex;
+      width: 36px;
+      height: 36px;
+      box-sizing: border-box;
+      flex: none;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #cbd6e5;
+      border-radius: 9px;
+      color: #405a82;
+      background: #e8eef7;
+      line-height: 0;
+    }
+    .attention-item.danger > .attention-ico { border-color: #efc7c4; color: #b63a35; background: #fff0ef; }
+    .attention-item > .attention-ico > .icon { position:absolute; top:50%; left:50%; display:block; width:18px; height:18px; margin:0; transform:translate(-50%,-50%); }
+    .attention-item > .icon { display: block; width: 15px; height: 15px; margin: 0; justify-self: center; color: #9a7b48; }
+    .attention-item > div { display: flex; min-width: 0; flex-direction: column; justify-content: center; gap: 3px; }
+    .attention-item > div > strong { display: block; overflow: hidden; font-size: 12px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+    .attention-item > div > span { display: block; margin: 2px 0 0; overflow: hidden; color: #596f90; font-size: 10px; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
+    .overview-grid { display: grid; margin-top: 14px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+    .card {
+      min-width: 0;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    .card-head { display: flex; margin-bottom: 13px; align-items: center; gap: 8px; }
+    .card-head .icon { color: var(--navy-800); }
+    .card-head h3 { margin: 0; font-size: 14px; }
+    .card-head .text-btn { margin: 0 0 0 auto; }
+    .readiness-body { display: grid; grid-template-columns: 140px minmax(0, 1fr); align-items: center; gap: 10px; }
+    .gauge { width: 140px; height: 92px; overflow: visible; }
+    .gauge-track, .gauge-value { fill: none; stroke-width: 13; stroke-linecap: round; }
+    .gauge-track { stroke: var(--line-soft); }
+    .gauge-value { stroke: url(#readiness-gradient); stroke-dasharray: 67 100; animation: load-gauge .9s ease-out both; }
+    @keyframes load-gauge { from { stroke-dasharray: 0 100; } }
+    .gauge-score { fill: var(--ink); font-size: 24px; font-weight: 750; text-anchor: middle; }
+    .gauge-label { fill: var(--muted); font-size: 9px; font-weight: 700; text-anchor: middle; text-transform: uppercase; }
+    .readiness-copy strong { display: block; font-size: 14px; }
+    .readiness-copy p { margin: 5px 0 10px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .mini-statuses { display: flex; flex-wrap: wrap; gap: 6px; }
+    .mini-status {
+      display: inline-flex;
+      padding: 4px 7px;
+      align-items: center;
+      gap: 5px;
+      border-radius: 999px;
+      color: var(--green);
+      background: var(--green-soft);
+      font-size: 10.5px;
+      font-weight: 650;
+    }
+    .mini-status.warn { color: var(--amber-deep); background: var(--amber-soft); }
+    .data-list { display: grid; grid-template-columns: 1fr 1.4fr; gap: 9px 12px; font-size: 12px; }
+    .data-list span { color: var(--muted); }
+    .data-list strong { font-weight: 620; }
+    .contact-row { display: grid; grid-template-columns: 24px 1fr; align-items: center; gap: 4px 8px; margin-bottom: 10px; }
+    .contact-row .icon { grid-row: 1 / 3; color: var(--navy-800); }
+    .contact-row span { color: var(--muted); font-size: 10.5px; }
+    .contact-row strong { overflow: hidden; font-size: 12px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+    .contact-sep { height: 1px; margin: 12px 0; background: var(--line-soft); }
+    .doc-tree {
+      height: 188px;
+      overflow: hidden;
+      overflow-y: auto;
+      border-top: 1px solid var(--line-soft);
+      border-bottom: 1px solid var(--line-soft);
+      scrollbar-color: #b9c5d4 transparent;
+      scrollbar-width: thin;
+    }
+    .doc-tree::-webkit-scrollbar { width: 6px; }
+    .doc-tree::-webkit-scrollbar-thumb { border-radius: 99px; background: #b9c5d4; }
+    .doc-tree details {
+      border-top: 1px solid var(--line-soft);
+    }
+    .doc-tree details:first-child { border-top: 0; }
+    .doc-tree summary {
+      display: grid;
+      min-height: 38px;
+      padding: 0 4px;
+      grid-template-columns: 12px 23px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 7px;
+      color: var(--ink);
+      cursor: pointer;
+      list-style: none;
+    }
+    .doc-tree summary::-webkit-details-marker { display: none; }
+    .doc-tree summary::before {
+      width: 6px;
+      height: 6px;
+      border-right: 1.5px solid var(--muted);
+      border-bottom: 1.5px solid var(--muted);
+      content: "";
+      transform: rotate(-45deg);
+      transition: transform .16s ease;
+    }
+    .doc-tree details[open] summary::before { transform: rotate(45deg) translate(-1px, -1px); }
+    .doc-tree summary > .icon { width: 18px; height: 18px; color: #d49118; }
+    .doc-tree summary strong { overflow: hidden; font-size: 11.5px; font-weight: 670; text-overflow: ellipsis; white-space: nowrap; }
+    .folder-count { color: var(--muted); font-size: 9.5px; }
+    .doc-tree-children {
+      position: relative;
+      margin: 0 0 6px 25px;
+      padding-left: 18px;
+      border-left: 1px solid #cbd5e1;
+    }
+    .doc-leaf {
+      position: relative;
+      display: grid;
+      min-height: 34px;
+      padding: 5px 2px 5px 0;
+      grid-template-columns: 18px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 7px;
+    }
+    .doc-leaf::before {
+      position: absolute;
+      top: 50%;
+      left: -18px;
+      width: 13px;
+      height: 1px;
+      background: #cbd5e1;
+      content: "";
+    }
+    .doc-leaf:last-child::after {
+      position: absolute;
+      top: 50%;
+      bottom: -6px;
+      left: -19px;
+      width: 3px;
+      background: var(--surface);
+      content: "";
+    }
+    .doc-file-icon { width: 16px; height: 16px; color: #6a7b91; }
+    .doc-leaf div { min-width: 0; }
+    .doc-leaf strong, .doc-leaf > div > span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .doc-leaf strong { font-size: 10.5px; font-weight: 610; }
+    .doc-leaf > div > span { margin-top: 2px; color: var(--muted); font-size: 9.5px; }
+    .doc-state { display: inline-flex; min-height: 21px; margin: 0; padding: 0 7px; align-items: center; justify-content: center; border: 1px solid #bfe4ce; border-radius: 999px; color: #187c43; background: #eaf7ef; font-size: 9px; font-weight: 700; line-height: 1; }
+    .doc-state.warn { border-color: #e8c26d; color: var(--amber-deep); background: var(--amber-soft); }
+    .doc-state.missing { color: var(--red); background: var(--red-soft); }
+    .wide { grid-column: 1 / -1; }
+    .account-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto; align-items: stretch; }
+    .account-stat { display: grid; min-height: 62px; padding: 7px 12px; grid-template-columns: 30px 1fr; align-content: center; gap: 2px 8px; border-right: 1px solid var(--line); }
+    .account-stat .stat-icon {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      grid-row: 1 / 3;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--green);
+      background: var(--green-soft);
+    }
+    .account-stat span { color: var(--muted); font-size: 10.5px; }
+    .account-stat strong { font-size: 12px; font-weight: 650; }
+    .outline-btn, .primary-btn {
+      display: inline-flex;
+      min-height: 38px;
+      padding: 0 14px;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .outline-btn { align-self: center; margin-left: 13px; border: 1px solid #b8c6d9; color: var(--navy-800); background: var(--surface); }
+    .primary-btn { border: 1px solid var(--navy-800); color: #fff; background: var(--navy-800); }
+    .request-change-btn {
+      border-color: #0b2552;
+      color: #fff;
+      background: #0b2552;
+    }
+    .request-change-btn:hover { border-color: #071a3b; background: #071a3b; }
+    .request-change-btn:active { border-color: #06152f; background: #06152f; }
+    .account-assistance-btn {
+      border: 1px solid #188956;
+      color: #fff;
+      background: #188956;
+    }
+    .account-assistance-btn:hover { border-color: #137347; background: #137347; }
+    body[data-theme="dark"] .account-assistance-btn { border-color: #188956; color: #fff; background: #188956; }
+    .activity-list { position: relative; display: grid; gap: 0; }
+    .activity-list::before { position: absolute; top: 17px; bottom: 17px; left: 17px; width: 1px; background: var(--line); content: ""; }
+    .activity-row { position: relative; display: grid; min-height: 57px; padding: 9px 0; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+    .activity-icon {
+      z-index: 1;
+      display: grid;
+      width: 35px;
+      height: 35px;
+      place-items: center;
+      border: 4px solid var(--surface);
+      border-radius: 50%;
+      color: var(--blue);
+      background: #e9f2ff;
+    }
+    .activity-icon.green { color: var(--green); background: var(--green-soft); }
+    .activity-icon.amber { color: var(--amber-deep); background: var(--amber-soft); }
+    .activity-copy strong, .activity-copy span { display: block; }
+    .activity-copy strong { font-size: 12.5px; }
+    .activity-copy span { margin-top: 2px; color: var(--muted); font-size: 11px; }
+    .activity-time { color: var(--muted); font-size: 10.5px; text-align: right; line-height: 1.4; }
+    .tab-heading {
+      display: flex;
+      margin-bottom: 14px;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .tab-heading h2 { margin: 0; font-size: 18px; }
+    .tab-heading p { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .tab-heading-actions { display: flex; flex: 0 0 auto; gap: 7px; }
+    .summary-grid {
+      display: grid;
+      margin-bottom: 12px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .summary-stat {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+    .summary-stat span, .summary-stat small { display: block; color: var(--muted); }
+    .summary-stat span { font-size: 10.5px; }
+    .summary-stat strong { display: block; margin: 5px 0 2px; overflow: hidden; font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
+    .summary-stat small { font-size: 10px; }
+    .summary-stat.green { border-color: #bfe3cf; background: var(--green-soft); }
+    .summary-stat.amber { border-color: #efd3a4; background: var(--amber-soft); }
+    .tab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+    .tab-grid .card { height: fit-content; }
+    .history { display: grid; gap: 0; }
+    .history-row {
+      display: grid;
+      min-height: 60px;
+      padding: 10px 0;
+      grid-template-columns: 28px minmax(0, 1fr) auto;
+      align-items: start;
+      gap: 9px;
+      border-top: 1px solid var(--line-soft);
+    }
+    .history-row:first-child { padding-top: 0; border-top: 0; }
+    .history-dot {
+      display: grid;
+      width: 28px;
+      height: 28px;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--blue);
+      background: #e9f2ff;
+    }
+    .history-row strong, .history-row span { display: block; }
+    .history-row strong { font-size: 12px; }
+    .history-row span { margin-top: 3px; color: var(--muted); font-size: 10.5px; line-height: 1.4; }
+    .history-row time { color: var(--muted); font-size: 10px; white-space: nowrap; }
+    .health-bar { display: flex; height: 8px; margin: 10px 0 8px; overflow: hidden; border-radius: 99px; background: var(--line-soft); }
+    .health-bar i:nth-child(1) { width: 83%; background: var(--green); }
+    .health-bar i:nth-child(2) { width: 9%; background: #e3a01d; }
+    .health-bar i:nth-child(3) { width: 8%; background: var(--red); }
+    .legend { display: flex; flex-wrap: wrap; gap: 10px; color: var(--muted); font-size: 10.5px; }
+    .legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .legend i { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+    .legend .amber { background: #e3a01d; }
+    .legend .red { background: var(--red); }
+    .filters { display: flex; margin: 12px 0 9px; flex-wrap: wrap; gap: 6px; }
+    .filter {
+      min-height: 30px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      color: var(--muted);
+      background: var(--surface);
+      font-size: 10.5px;
+    }
+    .filter.active { color: var(--navy-800); border-color: #b9cae2; background: var(--surface-tint); font-weight: 700; }
+    .record-list { overflow: hidden; border: 1px solid var(--line); border-radius: 10px; }
+    .record-row {
+      display: grid;
+      min-height: 64px;
+      padding: 10px 12px;
+      grid-template-columns: 34px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      border-top: 1px solid var(--line-soft);
+      background: var(--surface);
+    }
+    .record-row:first-child { border-top: 0; }
+    .record-icon {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 8px;
+      color: var(--navy-800);
+      background: var(--surface-tint);
+    }
+    .record-copy strong, .record-copy span { display: block; }
+    .record-copy strong { font-size: 12.5px; }
+    .record-copy span { margin-top: 3px; color: var(--muted); font-size: 10.5px; }
+    .record-meta { display: grid; justify-items: end; gap: 4px; color: var(--muted); font-size: 10px; }
+    .badge {
+      display: inline-flex;
+      width: fit-content;
+      min-height: 22px;
+      padding: 0 7px;
+      align-items: center;
+      border-radius: 5px;
+      color: #187c43;
+      background: var(--green-soft);
+      font-size: 10px;
+      font-weight: 650;
+    }
+    .badge.warning { color: #976000; background: var(--amber-soft); }
+    .badge.danger { color: #a52f2b; background: var(--red-soft); }
+    .badge.neutral { color: #536176; background: #edf1f5; }
+    .progress-list { display: grid; gap: 11px; }
+    .progress-row { display: grid; grid-template-columns: 90px minmax(0, 1fr) 36px; align-items: center; gap: 8px; font-size: 11px; }
+    .progress-row strong { text-align: right; }
+    .progress-track { height: 7px; overflow: hidden; border-radius: 99px; background: var(--line-soft); }
+    .progress-fill { height: 100%; border-radius: inherit; background: var(--green); }
+    .progress-fill.amber { background: #e3a01d; }
+    .access-summary { display: grid; margin-bottom: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .access-state {
+      display: grid;
+      min-height: 70px;
+      padding: 12px;
+      grid-template-columns: 36px 1fr;
+      align-content: center;
+      gap: 2px 9px;
+      border: 1px solid #c6e3d2;
+      border-radius: 10px;
+      background: var(--green-soft);
+    }
+    .access-state .record-icon { grid-row: 1 / 3; width: 36px; height: 36px; color: var(--green); background: var(--surface); border-radius: 50%; }
+    .access-state span { color: var(--muted); font-size: 10px; }
+    .access-state strong { font-size: 12.5px; }
+    .support-banner {
+      display: grid;
+      margin-top: 11px;
+      padding: 13px;
+      grid-template-columns: 38px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid #c8d6e8;
+      border-radius: 10px;
+      background: var(--surface-tint);
+    }
+    .support-banner .record-icon { width: 38px; height: 38px; border-radius: 50%; }
+    .support-banner strong, .support-banner span { display: block; }
+    .support-banner strong { font-size: 12.5px; }
+    .support-banner span { margin-top: 3px; color: var(--muted); font-size: 10.5px; line-height: 1.4; }
+    .audit-summary { display: grid; margin-bottom: 12px; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .audit-summary .summary-stat { display: grid; grid-template-columns: 30px 1fr; gap: 2px 8px; }
+    .audit-summary .record-icon { grid-row: 1 / 3; width: 30px; height: 30px; border-radius: 50%; }
+    .placeholder-panel { display: grid; min-height: 440px; place-items: center; text-align: center; }
+    .placeholder-panel div { max-width: 420px; }
+    .placeholder-panel .big-icon {
+      display: grid;
+      width: 54px;
+      height: 54px;
+      margin: 0 auto 13px;
+      place-items: center;
+      border-radius: 14px;
+      color: var(--navy-800);
+      background: var(--surface-tint);
+    }
+    .placeholder-panel h2 { margin: 0; font-size: 18px; }
+    .placeholder-panel p { margin: 8px 0 0; color: var(--muted); line-height: 1.55; }
+    .footer {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      display: flex;
+      min-height: 66px;
+      padding: 12px 20px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-top: 1px solid var(--line);
+      background: color-mix(in srgb, var(--surface) 94%, transparent);
+      backdrop-filter: blur(14px);
+    }
+    .footer .left-actions, .footer .right-actions { display: flex; gap: 8px; }
+    .footer a { text-decoration: none; }
+    .contact-dialog {
+      width: min(530px, calc(100vw - 32px));
+      padding: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      color: var(--ink);
+      background: var(--surface);
+      box-shadow: 0 28px 80px rgba(8, 25, 50, .28);
+    }
+    .contact-dialog::backdrop { background: rgba(8, 22, 43, .44); backdrop-filter: blur(2px); }
+    .contact-dialog-head {
+      display: flex;
+      min-height: 82px;
+      padding: 14px 18px;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+      background: #f8fafc;
+    }
+    .contact-dialog-title {
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr);
+      align-items: center;
+      gap: 11px;
+    }
+    .contact-dialog-title-icon {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      border-radius: 10px;
+      color: #fff;
+      background: var(--navy-900);
+    }
+    .contact-dialog-title-icon .icon { width: 19px; height: 19px; }
+    .contact-dialog-kicker {
+      margin-bottom: 3px;
+      color: var(--blue);
+      font-size: 9.5px;
+      font-weight: 750;
+      letter-spacing: .075em;
+      text-transform: uppercase;
+    }
+    .contact-dialog-head h2 { margin: 0; font-size: 17px; }
+    .contact-dialog-head p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+    .dialog-close {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      background: transparent;
+    }
+    .contact-form { padding: 16px 18px 18px; }
+    .contact-dialog-intro {
+      display: grid;
+      margin-bottom: 17px;
+      padding: 11px 12px;
+      grid-template-columns: 32px minmax(0, 1fr);
+      align-items: start;
+      gap: 10px;
+      border: 1px solid #cfdae9;
+      border-radius: 9px;
+      background: #eef4fb;
+    }
+    .contact-dialog-intro > .icon {
+      width: 20px;
+      height: 20px;
+      margin-top: 1px;
+      color: var(--navy-800);
+    }
+    .contact-dialog-intro strong,
+    .contact-dialog-intro span { display: block; }
+    .contact-dialog-intro strong { color: var(--navy-900); font-size: 11.5px; }
+    .contact-dialog-intro span { margin-top: 3px; color: #56667c; font-size: 10.5px; line-height: 1.45; }
+    .form-section + .form-section { margin-top: 18px; padding-top: 17px; border-top: 1px solid var(--line-soft); }
+    .form-section-title { display: flex; margin: 0 0 11px; align-items: center; gap: 7px; }
+    .form-section-title .icon { width: 16px; height: 16px; color: var(--navy-800); }
+    .form-section h3 { margin: 0; font-size: 13px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-field { display: grid; gap: 6px; }
+    .form-field.wide { grid-column: 1 / -1; }
+    .form-field span { color: var(--muted); font-size: 11px; font-weight: 650; }
+    .form-field input,
+    .form-field select {
+      width: 100%;
+      min-height: 40px;
+      padding: 0 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      background: var(--surface-soft);
+      outline: none;
+    }
+    .form-field input:focus,
+    .form-field select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 16%, transparent); }
+    .contact-dialog-actions {
+      display: flex;
+      margin: 18px -18px -18px;
+      padding: 12px 18px;
+      justify-content: flex-end;
+      gap: 8px;
+      border-top: 1px solid var(--line);
+      background: var(--surface-soft);
+    }
+    body[data-theme="dark"] .contact-dialog { background: #1b2d54; }
+    body[data-theme="dark"] .contact-dialog-head,
+    body[data-theme="dark"] .contact-dialog-actions { background: #374669; }
+    body[data-theme="dark"] .contact-dialog-intro { border-color: rgba(255,255,255,.12); background: rgba(255,255,255,.075); }
+    body[data-theme="dark"] .contact-dialog-intro strong,
+    body[data-theme="dark"] .contact-dialog-intro span { color: #fff; }
+    body[data-theme="dark"] .form-field input,
+    body[data-theme="dark"] .form-field select { background: rgba(255,255,255,.075); }
+    @media (max-width: 980px) {
+      .page { grid-template-columns: 1fr; }
+      .register-ghost { display: none; }
+      .drawer { width: 100%; }
+    }
+    @media (max-width: 700px) {
+      .identity-grid { grid-template-columns: 76px 1fr; }
+      .portrait-shell { width: 76px; height: 76px; }
+      .facts { grid-template-columns: 1fr 1fr; gap: 13px 0; }
+      .fact:nth-child(2) { border-right: 0; }
+      .attention-strip, .overview-grid { grid-template-columns: 1fr; }
+      .attention-item { border-top: 1px solid #f0dfbf; border-left: 0; }
+      .wide { grid-column: auto; }
+      .account-grid { grid-template-columns: 1fr 1fr; }
+      .account-stat:nth-child(2) { border-right: 0; }
+      .outline-btn { grid-column: 1 / -1; margin: 10px 0 0; }
+      .summary-grid, .tab-grid, .access-summary, .audit-summary { grid-template-columns: 1fr; }
+      .tab-grid .wide { grid-column: auto; }
+      .tab-heading { flex-direction: column; }
+      .footer { position: static; flex-wrap: wrap; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-field.wide { grid-column: auto; }
+    }
+  </style>
+</head>
+<body>
+  <svg aria-hidden="true" width="0" height="0" style="position:absolute">
+    <defs>
+      <linearGradient id="readiness-gradient" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#d84b3f"/>
+        <stop offset=".52" stop-color="#e8a11c"/>
+        <stop offset="1" stop-color="#23a566"/>
+      </linearGradient>
+      <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+      <symbol id="i-briefcase" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"/></symbol>
+      <symbol id="i-building" viewBox="0 0 24 24"><path d="M4 21V3h12v18M16 9h4v12M8 7h4M8 11h4M8 15h4M2 21h20"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-5"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2"/></symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+      <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.5 2.4 18a2 2 0 0 0 1.8 3h15.6a2 2 0 0 0 1.8-3L13.7 3.5a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+      <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></symbol>
+      <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></symbol>
+      <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 22a8 8 0 0 1 16 0"/></symbol>
+      <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
+      <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.4 2.1L8 9.7a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.7.5 2.6.6a2 2 0 0 1 2 2.3Z"/></symbol>
+      <symbol id="i-mobile" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+      <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9m-3 3 3 3m-6 0 3 3"/></symbol>
+      <symbol id="i-headset" viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0 1 16 0v2M4 14h3v6H5a1 1 0 0 1-1-1v-5ZM20 14h-3v6h2a1 1 0 0 0 1-1v-5Z"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+      <symbol id="i-login" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></symbol>
+    </defs>
+  </svg>
+
+  <div class="page">
+    <aside class="register-ghost" aria-hidden="true">
+      <div class="ghost-title"></div>
+      <div class="ghost-toolbar"></div>
+      <div class="ghost-row"></div><div class="ghost-row"></div><div class="ghost-row"></div>
+      <div class="ghost-row"></div><div class="ghost-row"></div><div class="ghost-row"></div>
+    </aside>
+
+    <main class="drawer" aria-label="Unified Command Brief employee profile drawer">
+      <header class="topbar">
+        <div class="brand"><strong>SIOMAC</strong><span>Employee Profile</span></div>
+        <div class="top-actions">
+          <div class="action-menu-wrap">
+            <button class="icon-btn" id="employee-actions-toggle" type="button" aria-label="More employee actions" aria-haspopup="menu" aria-expanded="false"><svg class="icon"><use href="#i-more"/></svg></button>
+            <div class="action-menu" id="employee-actions-menu" role="menu">
+              <button type="button" role="menuitem">Edit Employee</button>
+              <button type="button" role="menuitem">Change Employment Status</button>
+              <button class="danger" type="button" role="menuitem">Start Offboarding</button>
+            </div>
+          </div>
+          <button class="icon-btn" type="button" aria-label="Close employee profile"><svg class="icon"><use href="#i-close"/></svg></button>
+        </div>
+      </header>
+
+      <section class="identity">
+        <div class="identity-grid">
+          <div class="portrait-shell">
+            <svg viewBox="0 0 110 110" role="img" aria-label="Damani Baptiste">
+              <rect width="110" height="110" fill="#e4e9ed"/>
+              <path d="M16 110c5-26 18-38 39-38s35 12 39 38Z" fill="#16345e"/>
+              <ellipse cx="55" cy="45" rx="23" ry="28" fill="#996447"/>
+              <path d="M31 39C31 18 43 9 57 9c18 0 27 12 25 33-5-5-9-10-11-18-11 7-24 8-36 5Z" fill="#17181a"/>
+              <path d="M40 62c5 14 12 20 16 20 9 0 16-7 19-22-6 8-13 10-20 10-6 0-11-2-15-8Z" fill="#35231d" opacity=".45"/>
+              <circle cx="46" cy="46" r="1.8"/><circle cx="65" cy="46" r="1.8"/>
+              <path d="M46 61c6 5 13 5 19 0" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            <span class="presence" aria-label="Active employee"></span>
+          </div>
+          <div>
+            <div class="name-line"><h1>Damani Baptiste</h1><span class="status">Active</span></div>
+            <div class="employee-no">EMP-0021</div>
+            <div class="identity-lines">
+              <span><svg class="icon"><use href="#i-briefcase"/></svg>Project Manager</span>
+              <span><svg class="icon"><use href="#i-building"/></svg>Administration</span>
+            </div>
+          </div>
+        </div>
+        <div class="facts">
+          <div class="fact"><svg class="icon"><use href="#i-shield"/></svg><span>Employment Basis</span><strong>Permanent</strong></div>
+          <div class="fact"><svg class="icon"><use href="#i-clock"/></svg><span>Work Arrangement</span><strong>Full-Time</strong></div>
+          <div class="fact"><svg class="icon"><use href="#i-calendar"/></svg><span>Start Date</span><strong>12 Mar 2021</strong></div>
+          <div class="fact"><svg class="icon"><use href="#i-clock"/></svg><span>Tenure</span><strong>5 Years 4 Months</strong></div>
+        </div>
+      </section>
+
+      <nav class="tabs" role="tablist" aria-label="Employee profile sections">
+        <button class="tab active" role="tab" aria-selected="true" data-tab="overview">Overview</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="employment">Employment</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="documents">Documents</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="readiness">Readiness</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="access">Access</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="activity">Activity</button>
+      </nav>
+
+      <div class="scroll">
+        <section class="panel active" id="panel-overview" role="tabpanel">
+          <section class="attention-strip">
+            <div class="attention-title"><span class="attention-heading-icon"><svg class="icon"><use href="#i-alert"/></svg></span>Needs Attention <span class="badge warning">5</span></div>
+            <article class="attention-item danger" id="attention-card-one" role="link" tabindex="0" data-href="employee-profile-full-page.html#access"><span class="attention-ico"><svg class="icon"><use href="#i-shield"/></svg></span><div><strong>Bank Account Reverification Due</strong><span>Owner: Payroll Team · Confirm account ending 4821</span></div><svg class="icon"><use href="#i-chevron"/></svg></article>
+            <article class="attention-item" id="attention-card-two" role="link" tabindex="0" data-href="employee-profile-full-page.html#readiness"><span class="attention-ico"><svg class="icon"><use href="#i-calendar"/></svg></span><div><strong>Training Evidence Due</strong><span>Owner: Learning Team · Due 03 Jun 2025</span></div><button class="attention-next" id="attention-next" type="button" aria-label="Show the next attention items"><svg class="icon"><use href="#i-chevron"/></svg></button></article>
+          </section>
+
+          <div class="overview-grid">
+            <section class="card">
+              <div class="card-head"><svg class="icon"><use href="#i-shield"/></svg><h3>Record Readiness</h3><button class="text-btn">Details<svg class="icon"><use href="#i-chevron"/></svg></button></div>
+              <div class="readiness-body">
+                <svg class="gauge" viewBox="0 0 140 92" role="img" aria-label="67 percent ready">
+                  <path class="gauge-track" pathLength="100" d="M15 76 A55 55 0 0 1 125 76"/>
+                  <path class="gauge-value" pathLength="100" d="M15 76 A55 55 0 0 1 125 76"/>
+                  <text class="gauge-score" x="70" y="67">67%</text>
+                  <text class="gauge-label" x="70" y="84">Needs Review</text>
+                </svg>
+                <div class="readiness-copy">
+                  <strong>Two Controls Need Follow-Up</strong>
+                  <p>Payroll and training are preventing this record from being fully ready.</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="card-head"><svg class="icon"><use href="#i-briefcase"/></svg><h3>Employment Snapshot</h3><button class="text-btn">Employment<svg class="icon"><use href="#i-chevron"/></svg></button></div>
+              <div class="data-list">
+                <span>Legal Employer</span><strong>SIOMAC Ltd.</strong>
+                <span>Cost Centre</span><strong>ADM-001</strong>
+                <span>Work Location</span><strong>Port of Spain Head Office</strong>
+                <span>Reports To</span><strong>Lila Auguste</strong>
+                <span>Pay Group</span><strong>Monthly Salaried</strong>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="card-head"><svg class="icon"><use href="#i-user"/></svg><h3>Contact</h3><button class="text-btn" id="edit-contact" type="button" title="Requires HR contact-management permission"><svg class="icon"><use href="#i-shield"/></svg>Edit Contact</button></div>
+              <div class="contact-row"><svg class="icon"><use href="#i-mail"/></svg><span>Work Email</span><strong id="contact-work-email">damani.baptiste@siomac.com</strong></div>
+              <div class="contact-row"><svg class="icon"><use href="#i-phone"/></svg><span>Work Phone</span><strong id="contact-work-phone">+1 (868) 555-0147</strong></div>
+              <div class="contact-row"><svg class="icon"><use href="#i-mobile"/></svg><span>Mobile</span><strong id="contact-mobile">+1 (868) 335-7821</strong></div>
+              <div class="contact-sep"></div>
+              <div class="contact-row"><svg class="icon"><use href="#i-user"/></svg><span id="emergency-contact-label">Emergency Contact · Spouse</span><strong id="emergency-contact-value">Althea Baptiste · +1 (868) 683-2190</strong></div>
+            </section>
+
+            <section class="card document-health-card">
+              <div class="card-head"><svg class="icon"><use href="#i-file"/></svg><h3>Document Health</h3><button class="text-btn">Documents<svg class="icon"><use href="#i-chevron"/></svg></button></div>
+              <div class="doc-tree" aria-label="Employee document tree">
+                <details open>
+                  <summary><svg class="icon"><use href="#i-folder"/></svg><strong>Identity &amp; Statutory</strong><span class="folder-count">3 Current</span></summary>
+                  <div class="doc-tree-children">
+                    <div class="doc-leaf"><svg class="doc-file-icon icon"><use href="#i-file"/></svg><div><strong>National Identification</strong><span>Verified 08 Jan 2025</span></div><span class="doc-state">Current</span></div>
+                    <div class="doc-leaf"><svg class="doc-file-icon icon"><use href="#i-file"/></svg><div><strong>NIS Registration</strong><span>Verified by Payroll</span></div><span class="doc-state">Verified</span></div>
+                    <div class="doc-leaf"><svg class="doc-file-icon icon"><use href="#i-file"/></svg><div><strong>TD1 Tax Declaration</strong><span>Effective 2025</span></div><span class="doc-state">Current</span></div>
+                  </div>
+                </details>
+                <details open>
+                  <summary><svg class="icon"><use href="#i-folder"/></svg><strong>Employment</strong><span class="folder-count">2 Current</span></summary>
+                  <div class="doc-tree-children">
+                    <div class="doc-leaf"><svg class="doc-file-icon icon"><use href="#i-file"/></svg><div><strong>Employment Agreement</strong><span>Permanent · Signed</span></div><span class="doc-state">Signed</span></div>
+                    <div class="doc-leaf"><svg class="doc-file-icon icon"><use href="#i-file"/></svg><div><strong>Project Manager Appointment</strong><span>Effective 01 Jul 2024</span></div><span class="doc-state">Current</span></div>
+                  </div>
+                </details>
+                <details open>
+                  <summary><svg class="icon"><use href="#i-folder"/></svg><strong>Training &amp; Qualifications</strong><span class="folder-count">1 Expiring</span></summary>
+                  <div class="doc-tree-children">
+                    <div class="doc-leaf"><svg class="doc-file-icon icon"><use href="#i-file"/></svg><div><strong>PMP Certification</strong><span>Uploaded 09 May 2025</span></div><span class="doc-state">Verified</span></div>
+                    <div class="doc-leaf"><svg class="doc-file-icon icon"><use href="#i-file"/></svg><div><strong>Safety Awareness Certificate</strong><span>Expires 03 Jun 2025</span></div><span class="doc-state warn">Expiring</span></div>
+                  </div>
+                </details>
+              </div>
+            </section>
+
+            <section class="card wide">
+              <div class="card-head"><svg class="icon"><use href="#i-lock"/></svg><h3>Account Health</h3><button class="text-btn">Access<svg class="icon"><use href="#i-chevron"/></svg></button></div>
+              <div class="account-grid">
+                <div class="account-stat"><span class="stat-icon"><svg class="icon"><use href="#i-check"/></svg></span><span>Account</span><strong>Active</strong></div>
+                <div class="account-stat"><span class="stat-icon"><svg class="icon"><use href="#i-key"/></svg></span><span>MFA</span><strong>Enabled</strong></div>
+                <div class="account-stat"><span class="stat-icon"><svg class="icon"><use href="#i-shield"/></svg></span><span>Access Profile</span><strong>Project Manager</strong></div>
+                <div class="account-stat"><span class="stat-icon"><svg class="icon"><use href="#i-login"/></svg></span><span>Last Sign-In</span><strong>Today · 08:42 AM</strong></div>
+                <button class="outline-btn account-assistance-btn" type="button"><svg class="icon"><use href="#i-headset"/></svg>Request Assistance</button>
+              </div>
+            </section>
+
+            <section class="card wide">
+              <div class="card-head"><svg class="icon"><use href="#i-clock"/></svg><h3>Recent Activity</h3><button class="text-btn">View All<svg class="icon"><use href="#i-chevron"/></svg></button></div>
+              <div class="activity-list">
+                <div class="activity-row"><span class="activity-icon green"><svg class="icon"><use href="#i-check"/></svg></span><div class="activity-copy"><strong>Training Completed</strong><span>Safety Awareness Training · By Damani Baptiste</span></div><time class="activity-time">13 May 2025<br>10:15 AM</time></div>
+                <div class="activity-row"><span class="activity-icon"><svg class="icon"><use href="#i-file"/></svg></span><div class="activity-copy"><strong>Document Uploaded</strong><span>Professional Certification — PMP · By Damani Baptiste</span></div><time class="activity-time">09 May 2025<br>04:32 PM</time></div>
+                <div class="activity-row"><span class="activity-icon amber"><svg class="icon"><use href="#i-briefcase"/></svg></span><div class="activity-copy"><strong>Assignment Updated</strong><span>Work location changed to Port of Spain · By Lila Auguste</span></div><time class="activity-time">02 May 2025<br>09:21 AM</time></div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-employment" role="tabpanel">
+          <div class="tab-heading">
+            <div><h2>Employment</h2><p>Current assignment, employment terms, payroll placement and effective-dated history.</p></div>
+            <div class="tab-heading-actions"><button class="outline-btn request-change-btn">Request Change</button><button class="primary-btn">Edit Employment</button></div>
+          </div>
+          <div class="summary-grid">
+            <div class="summary-stat green"><span>Employment Status</span><strong>Active</strong><small>Permanent Employee</small></div>
+            <div class="summary-stat"><span>Continuous Service</span><strong>5 Years 4 Months</strong><small>Started 12 Mar 2021</small></div>
+            <div class="summary-stat"><span>Current Appointment</span><strong>01 Jul 2024</strong><small>Project Manager</small></div>
+            <div class="summary-stat"><span>Weekly Hours</span><strong>40 Hours</strong><small>Full-Time · 1.0 FTE</small></div>
+          </div>
+          <div class="tab-grid">
+            <section class="card">
+              <div class="card-head"><svg class="icon"><use href="#i-briefcase"/></svg><h3>Current Assignment</h3></div>
+              <div class="data-list"><span>Position</span><strong>Project Manager</strong><span>Department</span><strong>Administration</strong><span>Reports To</span><strong>Lila Auguste</strong><span>Work Location</span><strong>Port of Spain Head Office</strong><span>Cost Centre</span><strong>ADM-001</strong><span>Effective From</span><strong>01 Jul 2024</strong></div>
+            </section>
+            <section class="card">
+              <div class="card-head"><svg class="icon"><use href="#i-shield"/></svg><h3>Employment Terms</h3></div>
+              <div class="data-list"><span>Legal Employer</span><strong>SIOMAC Ltd.</strong><span>Employment Basis</span><strong>Permanent</strong><span>Work Arrangement</span><strong>Full-Time</strong><span>Standard Hours</span><strong>40 Hours Weekly</strong><span>Work Schedule</span><strong>Standard</strong><span>Notice Period</span><strong>One Month</strong></div>
+            </section>
+            <section class="card">
+              <div class="card-head"><svg class="icon"><use href="#i-calendar"/></svg><h3>HR Administration</h3></div>
+              <div class="data-list"><span>Pay Group</span><strong>Monthly Salaried</strong><span>Pay Frequency</span><strong>Monthly</strong><span>Probation</span><strong><span class="badge">Completed</span></strong><span>Probation Ended</span><strong>12 Sep 2021</strong><span>Employee Grade</span><strong>G7</strong><span>Worker Category</span><strong>Employee</strong></div>
+            </section>
+            <section class="card">
+              <div class="card-head"><svg class="icon"><use href="#i-key"/></svg><h3>Bank &amp; Pay Administration</h3></div>
+              <div class="data-list"><span>Primary Bank</span><strong>Republic Bank</strong><span>Account</span><strong>•••• 4821</strong><span>Account Type</span><strong>Chequing</strong><span>Payment Method</span><strong>Direct Deposit</strong><span>Bank Record</span><strong><span class="badge warning">Reverify</span></strong><span>Last Verified</span><strong>08 Jan 2025</strong></div>
+            </section>
+            <section class="card wide">
+              <div class="card-head"><svg class="icon"><use href="#i-clock"/></svg><h3>Employment History</h3><button class="text-btn">View Details<svg class="icon"><use href="#i-chevron"/></svg></button></div>
+              <div class="history">
+                <div class="history-row"><span class="history-dot"><svg class="icon"><use href="#i-briefcase"/></svg></span><div><strong>Promoted to Project Manager</strong><span>Administration · Approved by Lila Auguste · HR-CHG-2024-0182</span></div><time>01 Jul 2024</time></div>
+                <div class="history-row"><span class="history-dot"><svg class="icon"><use href="#i-building"/></svg></span><div><strong>Cost Centre Updated</strong><span>Assigned to ADM-001 · Approved by HR Operations</span></div><time>01 Jan 2024</time></div>
+                <div class="history-row"><span class="history-dot"><svg class="icon"><use href="#i-check"/></svg></span><div><strong>Probation Completed</strong><span>Employment confirmed as permanent</span></div><time>12 Sep 2021</time></div>
+                <div class="history-row"><span class="history-dot"><svg class="icon"><use href="#i-user"/></svg></span><div><strong>Employment Started</strong><span>Joined as Project Coordinator · Administration</span></div><time>12 Mar 2021</time></div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-documents" role="tabpanel">
+          <div class="tab-heading">
+            <div><h2>Documents</h2><p>Authorised employee records, verification state, expiry dates and missing evidence.</p></div>
+            <div class="tab-heading-actions"><button class="outline-btn">Export Index</button><button class="primary-btn">Add Document</button></div>
+          </div>
+          <div class="summary-grid">
+            <div class="summary-stat"><span>Total Documents</span><strong>12</strong><small>Across 6 Categories</small></div>
+            <div class="summary-stat green"><span>Verified</span><strong>10</strong><small>83% Verified</small></div>
+            <div class="summary-stat amber"><span>Expiring Soon</span><strong>1</strong><small>Within 30 Days</small></div>
+            <div class="summary-stat"><span>Missing</span><strong style="color:var(--red)">1</strong><small>Training Evidence</small></div>
+          </div>
+          <section class="card">
+            <div class="card-head"><svg class="icon"><use href="#i-shield"/></svg><h3>Document Health</h3><button class="text-btn">Review Exceptions<svg class="icon"><use href="#i-chevron"/></svg></button></div>
+            <p style="margin:0;color:var(--muted);font-size:11px">Most required records are verified. One certificate is expiring and one item is missing.</p>
+            <div class="health-bar"><i></i><i></i><i></i></div>
+            <div class="legend"><span><i></i>10 Verified</span><span><i class="amber"></i>1 Expiring</span><span><i class="red"></i>1 Missing</span></div>
+          </section>
+          <div class="filters"><button class="filter active">All Documents</button><button class="filter">Identity</button><button class="filter">Employment</button><button class="filter">Statutory</button><button class="filter">Training</button></div>
+          <div class="record-list">
+            <article class="record-row"><span class="record-icon"><svg class="icon"><use href="#i-file"/></svg></span><div class="record-copy"><strong>National Identification</strong><span>Identity · Verified by HR Operations · 08 Jan 2025</span></div><div class="record-meta"><span class="badge">Current</span><button class="text-btn">Open</button></div></article>
+            <article class="record-row"><span class="record-icon"><svg class="icon"><use href="#i-file"/></svg></span><div class="record-copy"><strong>NIS Registration</strong><span>Statutory · Verified by Payroll · 12 Mar 2021</span></div><div class="record-meta"><span class="badge">Verified</span><button class="text-btn">Open</button></div></article>
+            <article class="record-row"><span class="record-icon"><svg class="icon"><use href="#i-file"/></svg></span><div class="record-copy"><strong>Employment Agreement</strong><span>Employment · Permanent agreement · 12 Mar 2021</span></div><div class="record-meta"><span class="badge">Signed</span><button class="text-btn">Open</button></div></article>
+            <article class="record-row"><span class="record-icon" style="color:var(--amber-deep);background:var(--amber-soft)"><svg class="icon"><use href="#i-alert"/></svg></span><div class="record-copy"><strong>Safety Awareness Certification</strong><span>Training · Expires 03 Jun 2025 · Learning Team</span></div><div class="record-meta"><span class="badge warning">Expires Soon</span><button class="text-btn">Review</button></div></article>
+            <article class="record-row"><span class="record-icon" style="color:var(--red);background:var(--red-soft)"><svg class="icon"><use href="#i-alert"/></svg></span><div class="record-copy"><strong>Emergency Response Refresher</strong><span>Training · Updated evidence required</span></div><div class="record-meta"><span class="badge danger">Missing</span><button class="text-btn">Request</button></div></article>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-readiness" role="tabpanel">
+          <div class="tab-heading">
+            <div><h2>Readiness</h2><p>Evidence-based controls showing whether this employee record can support HR and operational workflows.</p></div>
+            <div class="tab-heading-actions"><button class="outline-btn">Export Breakdown</button><button class="primary-btn">Review Controls</button></div>
+          </div>
+          <div class="tab-grid">
+            <section class="card">
+              <div class="card-head"><svg class="icon"><use href="#i-shield"/></svg><h3>Overall Readiness</h3></div>
+              <div class="readiness-body">
+                <svg class="gauge" viewBox="0 0 140 92" role="img" aria-label="67 percent ready"><path class="gauge-track" pathLength="100" d="M15 76 A55 55 0 0 1 125 76"/><path class="gauge-value" pathLength="100" d="M15 76 A55 55 0 0 1 125 76"/><text class="gauge-score" x="70" y="67">67%</text><text class="gauge-label" x="70" y="84">Needs Review</text></svg>
+                <div class="readiness-copy"><strong>One Control Blocks Readiness</strong><p>Updated training evidence is required before this record can become fully ready.</p><span class="badge warning">Due 03 Jun 2025</span></div>
+              </div>
+            </section>
+            <section class="card">
+              <div class="card-head"><svg class="icon"><use href="#i-alert"/></svg><h3>Blocking Action</h3></div>
+              <div class="record-row" style="padding:0;border:0"><span class="record-icon" style="color:var(--amber-deep);background:var(--amber-soft)"><svg class="icon"><use href="#i-file"/></svg></span><div class="record-copy"><strong>Upload Current Training Evidence</strong><span>Owner: Learning Team · Due 03 Jun 2025</span></div><div class="record-meta"><button class="text-btn">Review</button></div></div>
+            </section>
+            <section class="card wide">
+              <div class="card-head"><svg class="icon"><use href="#i-shield"/></svg><h3>Readiness Control Matrix</h3></div>
+              <div class="progress-list">
+                <div class="progress-row"><span>Assignment</span><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div><strong>100%</strong></div>
+                <div class="progress-row"><span>Payroll</span><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div><strong>100%</strong></div>
+                <div class="progress-row"><span>Training</span><div class="progress-track"><div class="progress-fill amber" style="width:0%"></div></div><strong>0%</strong></div>
+              </div>
+              <div class="record-list" style="margin-top:14px">
+                <article class="record-row"><span class="record-icon"><svg class="icon"><use href="#i-briefcase"/></svg></span><div class="record-copy"><strong>Assignment</strong><span>Department, site and supervisor · HR Operations</span></div><div class="record-meta"><span class="badge">Complete</span><button class="text-btn">Inspect</button></div></article>
+                <article class="record-row"><span class="record-icon"><svg class="icon"><use href="#i-key"/></svg></span><div class="record-copy"><strong>Payroll</strong><span>NIS, tax and pay setup · Payroll Team</span></div><div class="record-meta"><span class="badge">Complete</span><button class="text-btn">Inspect</button></div></article>
+                <article class="record-row"><span class="record-icon" style="color:var(--amber-deep);background:var(--amber-soft)"><svg class="icon"><use href="#i-alert"/></svg></span><div class="record-copy"><strong>Training</strong><span>Mandatory learning evidence · Learning Team</span></div><div class="record-meta"><span class="badge warning">Review</span><button class="text-btn">Inspect</button></div></article>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-access" role="tabpanel">
+          <div class="tab-heading">
+            <div><h2>Access</h2><p>Authoritative account state, assigned access and capability-gated support workflows.</p></div>
+            <div class="tab-heading-actions"><button class="outline-btn">Request Access Review</button><button class="primary-btn">Request Assistance</button></div>
+          </div>
+          <div class="access-summary">
+            <div class="access-state"><span class="record-icon"><svg class="icon"><use href="#i-check"/></svg></span><span>Account Status</span><strong>Active</strong></div>
+            <div class="access-state"><span class="record-icon"><svg class="icon"><use href="#i-lock"/></svg></span><span>MFA Status</span><strong>Enabled</strong></div>
+            <div class="access-state"><span class="record-icon"><svg class="icon"><use href="#i-login"/></svg></span><span>Last Sign-In</span><strong>14 May · 08:42 AM</strong></div>
+          </div>
+          <div class="tab-grid">
+            <section class="card">
+              <div class="card-head"><svg class="icon"><use href="#i-user"/></svg><h3>User Account</h3></div>
+              <div class="data-list"><span>Username</span><strong>dbaptiste</strong><span>Primary Email</span><strong>damani.baptiste@siomac.com</strong><span>Provisioned</span><strong>12 Mar 2021</strong><span>Active Sessions</span><strong>2</strong><span>Registered Devices</span><strong>2</strong></div>
+            </section>
+            <section class="card">
+              <div class="card-head"><svg class="icon"><use href="#i-key"/></svg><h3>Authorised Access</h3></div>
+              <div class="data-list"><span>Access Profile</span><strong>Project Manager</strong><span>Organisation Scope</span><strong>SIOMAC Ltd.</strong><span>Department Scope</span><strong>Administration</strong><span>Privileged Access</span><strong><span class="badge neutral">None</span></strong><span>Last Reviewed</span><strong>01 Apr 2025</strong></div>
+            </section>
+            <section class="card wide">
+              <div class="card-head"><svg class="icon"><use href="#i-shield"/></svg><h3>Access Assignments</h3></div>
+              <div class="record-list">
+                <article class="record-row"><span class="record-icon"><svg class="icon"><use href="#i-shield"/></svg></span><div class="record-copy"><strong>Project Manager Core</strong><span>Access Profile · Administration · Reviewed 01 Apr 2025</span></div><div class="record-meta"><span class="badge">Active</span><button class="text-btn">Details</button></div></article>
+                <article class="record-row"><span class="record-icon"><svg class="icon"><use href="#i-user"/></svg></span><div class="record-copy"><strong>Employee Self-Service</strong><span>Mandatory · Own Record · Reviewed 01 Apr 2025</span></div><div class="record-meta"><span class="badge">Active</span><button class="text-btn">Details</button></div></article>
+                <article class="record-row"><span class="record-icon"><svg class="icon"><use href="#i-briefcase"/></svg></span><div class="record-copy"><strong>Project Portfolio — Administration</strong><span>Approved Request · Administration · Reviewed 01 Apr 2025</span></div><div class="record-meta"><span class="badge">Active</span><button class="text-btn">Details</button></div></article>
+              </div>
+              <div class="support-banner"><span class="record-icon"><svg class="icon"><use href="#i-headset"/></svg></span><div><strong>Sensitive Account Actions</strong><span>Password resets, session revocation, device removal, MFA enforcement and suspension route to the authorised Account Support owner.</span></div><button class="primary-btn">Request Assistance</button></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-activity" role="tabpanel">
+          <div class="tab-heading">
+            <div><h2>Activity &amp; Audit</h2><p>Employee record history with actor, source, outcome and correlation details.</p></div>
+            <div class="tab-heading-actions"><button class="outline-btn">Export Audit History</button></div>
+          </div>
+          <div class="audit-summary">
+            <div class="summary-stat"><span class="record-icon"><svg class="icon"><use href="#i-clock"/></svg></span><span>Last Record Change</span><strong>13 May 2025</strong></div>
+            <div class="summary-stat"><span class="record-icon"><svg class="icon"><use href="#i-user"/></svg></span><span>Most Recent Actor</span><strong>Damani Baptiste</strong></div>
+            <div class="summary-stat"><span class="record-icon"><svg class="icon"><use href="#i-shield"/></svg></span><span>Recorded Events</span><strong>6 In This View</strong></div>
+          </div>
+          <div class="filters"><button class="filter active">All Activity</button><button class="filter">Employment</button><button class="filter">Documents</button><button class="filter">Readiness</button><button class="filter">Access</button><button class="filter">System</button></div>
+          <div class="record-list">
+            <article class="record-row"><span class="record-icon"><svg class="icon"><use href="#i-login"/></svg></span><div class="record-copy"><strong>Successful Sign-In</strong><span>Access · Damani Baptiste · Authentication · Web Portal</span></div><div class="record-meta"><span class="badge">Success</span><time>14 May · 08:42 AM</time><button class="text-btn">Details</button></div></article>
+            <article class="record-row"><span class="record-icon"><svg class="icon"><use href="#i-check"/></svg></span><div class="record-copy"><strong>Training Completed</strong><span>Readiness · Damani Baptiste · Learning</span></div><div class="record-meta"><span class="badge">Success</span><time>13 May · 10:15 AM</time><button class="text-btn">Details</button></div></article>
+            <article class="record-row"><span class="record-icon"><svg class="icon"><use href="#i-file"/></svg></span><div class="record-copy"><strong>Document Uploaded</strong><span>Documents · Damani Baptiste · Employee Portal</span></div><div class="record-meta"><span class="badge">Success</span><time>09 May · 04:32 PM</time><button class="text-btn">Details</button></div></article>
+            <article class="record-row"><span class="record-icon"><svg class="icon"><use href="#i-building"/></svg></span><div class="record-copy"><strong>Cost Centre Assignment Updated</strong><span>Employment · Lila Auguste · HR Workspace</span></div><div class="record-meta"><span class="badge">Success</span><time>02 May · 09:21 AM</time><button class="text-btn">Details</button></div></article>
+            <article class="record-row"><span class="record-icon"><svg class="icon"><use href="#i-shield"/></svg></span><div class="record-copy"><strong>Access Review Completed</strong><span>Access · Account Support · Access Review</span></div><div class="record-meta"><span class="badge">Success</span><time>01 Apr · 02:10 PM</time><button class="text-btn">Details</button></div></article>
+          </div>
+          <p style="margin:12px 0 0;color:var(--muted);font-size:10px">All dates and times are displayed in AST. Detailed audit records include the correlation ID and safe mutation metadata.</p>
+        </section>
+      </div>
+
+      <footer class="footer">
+        <div class="left-actions"><a class="outline-btn" href="./employee-profile-full-page.html">View Full Employee Record</a></div>
+        <div class="right-actions"><button class="primary-btn request-change-btn" type="button">Request Change</button></div>
+      </footer>
+    </main>
+  </div>
+
+  <dialog class="contact-dialog" id="contact-dialog" aria-labelledby="contact-dialog-title">
+    <div class="contact-dialog-head">
+      <div class="contact-dialog-title">
+        <span class="contact-dialog-title-icon"><svg class="icon"><use href="#i-user"/></svg></span>
+        <div>
+          <div class="contact-dialog-kicker">HR Managed Record</div>
+          <h2 id="contact-dialog-title">Edit Contact Information</h2>
+          <p>Keep verified work and emergency details current.</p>
+        </div>
+      </div>
+      <button class="dialog-close" id="close-contact-dialog" type="button" aria-label="Close contact editor"><svg class="icon"><use href="#i-close"/></svg></button>
+    </div>
+    <form class="contact-form" id="contact-form">
+      <div class="contact-dialog-intro">
+        <svg class="icon"><use href="#i-shield"/></svg>
+        <div><strong>Protected Employee Information</strong><span>Only authorised HR staff can save these changes. Every update is recorded in the employee audit trail. A changed work email is sent to Account Support for identity verification before it affects sign-in.</span></div>
+      </div>
+      <section class="form-section" aria-labelledby="employee-contact-heading">
+        <div class="form-section-title"><svg class="icon"><use href="#i-mail"/></svg><h3 id="employee-contact-heading">Employee Contact</h3></div>
+        <div class="form-grid">
+          <label class="form-field wide"><span>Work Email</span><input name="workEmail" type="email" value="damani.baptiste@siomac.com" autocomplete="email" required></label>
+          <label class="form-field"><span>Work Phone</span><input name="workPhone" type="tel" value="+1 (868) 555-0147" autocomplete="tel"></label>
+          <label class="form-field"><span>Mobile</span><input name="mobile" type="tel" value="+1 (868) 335-7821" autocomplete="mobile tel"></label>
+        </div>
+      </section>
+      <section class="form-section" aria-labelledby="emergency-contact-heading">
+        <div class="form-section-title"><svg class="icon"><use href="#i-phone"/></svg><h3 id="emergency-contact-heading">Emergency Contact</h3></div>
+        <div class="form-grid">
+          <label class="form-field wide"><span>Full Name</span><input name="emergencyName" value="Althea Baptiste" required></label>
+          <label class="form-field"><span>Relationship</span><select name="relationship"><option>Spouse</option><option>Parent</option><option>Sibling</option><option>Child</option><option>Other</option></select></label>
+          <label class="form-field"><span>Phone</span><input name="emergencyPhone" type="tel" value="+1 (868) 683-2190" required></label>
+        </div>
+      </section>
+      <div class="contact-dialog-actions">
+        <button class="outline-btn" id="cancel-contact-edit" type="button">Cancel</button>
+        <button class="primary-btn" type="submit">Save Changes</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    const tabs = [...document.querySelectorAll('.tab')];
+    const panels = [...document.querySelectorAll('.panel')];
+    tabs.forEach((tab) => tab.addEventListener('click', () => {
+      tabs.forEach((item) => {
+        const active = item === tab;
+        item.classList.toggle('active', active);
+        item.setAttribute('aria-selected', String(active));
+      });
+      panels.forEach((panel) => panel.classList.toggle('active', panel.id === `panel-${tab.dataset.tab}`));
+    }));
+    const employeeActionsToggle = document.querySelector('#employee-actions-toggle');
+    const employeeActionsMenu = document.querySelector('#employee-actions-menu');
+    employeeActionsToggle.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const open = employeeActionsMenu.classList.toggle('open');
+      employeeActionsToggle.setAttribute('aria-expanded', String(open));
+    });
+    document.addEventListener('click', (event) => {
+      if (!employeeActionsMenu.contains(event.target)) {
+        employeeActionsMenu.classList.remove('open');
+        employeeActionsToggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+    const attentionItems = [
+      { title: 'Bank Account Reverification Due', detail: 'Owner: Payroll Team · Confirm account ending 4821', icon: '#i-shield', href: 'employee-profile-full-page.html#access', danger: true },
+      { title: 'Training Evidence Due', detail: 'Owner: Learning Team · Due 03 Jun 2025', icon: '#i-calendar', href: 'employee-profile-full-page.html#readiness', danger: false },
+      { title: 'Work Permit Expires Soon', detail: 'Owner: HR Compliance · Due 18 Jun 2025', icon: '#i-file', href: 'employee-profile-full-page.html#documents', danger: true },
+      { title: 'Emergency Contact Missing', detail: 'Owner: HR Operations · Contact details incomplete', icon: '#i-alert', href: 'employee-profile-full-page.html#overview', danger: false },
+      { title: 'MFA Enrolment Required', detail: 'Owner: Account Support · Access control incomplete', icon: '#i-key', href: 'employee-profile-full-page.html#access', danger: true }
+    ];
+    const attentionCards = [
+      document.querySelector('#attention-card-one'),
+      document.querySelector('#attention-card-two')
+    ];
+    let attentionOffset = 0;
+    const renderAttentionCards = () => {
+      attentionCards.forEach((card, index) => {
+        const item = attentionItems[(attentionOffset + index) % attentionItems.length];
+        card.querySelector('strong').textContent = item.title;
+        card.querySelector('div > span').textContent = item.detail;
+        card.querySelector('.attention-ico use').setAttribute('href', item.icon);
+        card.dataset.href = item.href;
+        card.classList.toggle('danger', item.danger);
+      });
+    };
+    attentionCards.forEach((card) => {
+      card.addEventListener('click', (event) => {
+        if (!event.target.closest('button')) window.location.href = card.dataset.href;
+      });
+      card.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') window.location.href = card.dataset.href;
+      });
+    });
+    document.querySelector('#attention-next').addEventListener('click', (event) => {
+      event.stopPropagation();
+      attentionOffset = (attentionOffset + 2) % attentionItems.length;
+      renderAttentionCards();
+    });
+    const contactDialog = document.querySelector('#contact-dialog');
+    const contactForm = document.querySelector('#contact-form');
+    document.querySelector('#edit-contact').addEventListener('click', () => contactDialog.showModal());
+    document.querySelector('#close-contact-dialog').addEventListener('click', () => contactDialog.close());
+    document.querySelector('#cancel-contact-edit').addEventListener('click', () => contactDialog.close());
+    contactDialog.addEventListener('click', (event) => {
+      if (event.target === contactDialog) contactDialog.close();
+    });
+    contactForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const values = new FormData(contactForm);
+      document.querySelector('#contact-work-email').textContent = values.get('workEmail');
+      document.querySelector('#contact-work-phone').textContent = values.get('workPhone') || 'Not provided';
+      document.querySelector('#contact-mobile').textContent = values.get('mobile') || 'Not provided';
+      document.querySelector('#emergency-contact-label').textContent = `Emergency Contact · ${values.get('relationship')}`;
+      document.querySelector('#emergency-contact-value').textContent = `${values.get('emergencyName')} · ${values.get('emergencyPhone')}`;
+      contactDialog.close();
+    });
+  </script>
+</body>
+</html>
