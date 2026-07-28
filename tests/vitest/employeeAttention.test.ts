@@ -9,6 +9,7 @@ import {
   buildAttentionItems, buildTabIndicators, filterAttentionByCapability, sortAttention,
   type AttentionInput,
 } from '../../netlify/functions/lib/hr/employeeAttention';
+import { resolveRequiredTypesForEmployee } from '../../netlify/functions/lib/hr/documentsCompliance';
 
 const TODAY = '2026-07-28';
 
@@ -16,7 +17,7 @@ function input(over: Partial<AttentionInput> = {}): AttentionInput {
   return {
     employee: {
       id: 'EMP-1', supervisor_id: 'SUP-1', department_id: 'DEP-1', site_id: 'SITE-1',
-      employment_status: 'active', status: 'active',
+      employment_status: 'active', status: 'active', role: 'employee', employment_type: 'employee',
     },
     statutory: { payroll_ready_status: 'ready', missing_blockers: [] },
     documents: [], requirements: [], certificates: [], changeRequests: [],
@@ -34,7 +35,7 @@ describe('employee attention aggregation', () => {
     const items = buildAttentionItems(input({
       employee: {
         id: 'EMP-1', supervisor_id: null, department_id: null, site_id: null,
-        employment_status: 'active', status: 'active',
+        employment_status: 'active', status: 'active', role: 'employee', employment_type: 'employee',
       },
     }));
     expect(items.map(i => i.id).sort()).toEqual([
@@ -164,7 +165,7 @@ describe('capability filtering', () => {
   const items = buildAttentionItems(input({
     statutory: { payroll_ready_status: 'blocked', missing_blockers: ['td1_received'] },
     documents: [{ id: 'D1', document_type: 'id', title: 'ID', status: 'uploaded', expiry_date: null }],
-    employee: { id: 'EMP-1', supervisor_id: null, department_id: 'D', site_id: 'S', employment_status: 'active', status: 'active' },
+    employee: { id: 'EMP-1', supervisor_id: null, department_id: 'D', site_id: 'S', employment_status: 'active', status: 'active', role: 'employee', employment_type: 'employee' },
   }));
 
   it('suppresses items the viewer has no capability for', () => {
@@ -176,6 +177,53 @@ describe('capability filtering', () => {
   it('returns a gated item once the capability is granted', () => {
     const visible = filterAttentionByCapability(items, new Set(['hr.employee_documents.view']));
     expect(visible.map(i => i.domain).sort()).toEqual(['documents', 'employment']);
+  });
+});
+
+describe('document-requirement scope resolution (canonical engine)', () => {
+  // loadAttentionInput now delegates scope resolution to the documents engine.
+  // The previous local filter honoured only `all` and `department`, so role- and
+  // employment_type-scoped requirements were NEVER reported missing. These cases
+  // lock the canonical behaviour in.
+  const REQS = [
+    { id: 'r1', documentType: 'id_card', label: 'ID Card', appliesToScope: 'all' as const, appliesToValue: null, requiresExpiry: false, reminderDays: [], minConfidentiality: null, isActive: true, blocksOnboarding: false, allowWaiver: false },
+    { id: 'r2', documentType: 'driver_permit', label: 'Driver Permit', appliesToScope: 'role' as const, appliesToValue: 'driver', requiresExpiry: true, reminderDays: [], minConfidentiality: null, isActive: true, blocksOnboarding: false, allowWaiver: false },
+    { id: 'r3', documentType: 'contractor_agreement', label: 'Contractor Agreement', appliesToScope: 'employment_type' as const, appliesToValue: 'contractor', requiresExpiry: false, reminderDays: [], minConfidentiality: null, isActive: true, blocksOnboarding: false, allowWaiver: false },
+    { id: 'r4', documentType: 'site_induction', label: 'Site Induction', appliesToScope: 'department' as const, appliesToValue: 'DEP-1', requiresExpiry: false, reminderDays: [], minConfidentiality: null, isActive: true, blocksOnboarding: false, allowWaiver: false },
+    { id: 'r5', documentType: 'retired_form', label: 'Retired Form', appliesToScope: 'all' as const, appliesToValue: null, requiresExpiry: false, reminderDays: [], minConfidentiality: null, isActive: false, blocksOnboarding: false, allowWaiver: false },
+  ];
+
+  it('resolves a ROLE-scoped requirement that the old local filter dropped', () => {
+    const applicable = resolveRequiredTypesForEmployee(
+      { id: 'E1', full_name: null, role: 'driver', employment_type: 'employee', department_id: 'DEP-9' },
+      REQS,
+    );
+    expect(applicable.map(r => r.documentType).sort()).toEqual(['driver_permit', 'id_card']);
+  });
+
+  it('resolves an EMPLOYMENT_TYPE-scoped requirement that the old local filter dropped', () => {
+    const applicable = resolveRequiredTypesForEmployee(
+      { id: 'E2', full_name: null, role: 'employee', employment_type: 'contractor', department_id: 'DEP-9' },
+      REQS,
+    );
+    expect(applicable.map(r => r.documentType).sort()).toEqual(['contractor_agreement', 'id_card']);
+  });
+
+  it('still resolves department scope, and never applies an inactive requirement', () => {
+    const applicable = resolveRequiredTypesForEmployee(
+      { id: 'E3', full_name: null, role: 'employee', employment_type: 'employee', department_id: 'DEP-1' },
+      REQS,
+    );
+    expect(applicable.map(r => r.documentType).sort()).toEqual(['id_card', 'site_induction']);
+    expect(applicable.some(r => r.documentType === 'retired_form')).toBe(false);
+  });
+
+  it('applies only the unscoped requirement when nothing else matches', () => {
+    const applicable = resolveRequiredTypesForEmployee(
+      { id: 'E4', full_name: null, role: 'employee', employment_type: 'employee', department_id: 'DEP-9' },
+      REQS,
+    );
+    expect(applicable.map(r => r.documentType)).toEqual(['id_card']);
   });
 });
 

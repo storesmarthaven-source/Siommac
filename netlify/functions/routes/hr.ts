@@ -59,7 +59,7 @@ const HR_COLS =
   'date_of_birth, nationality, government_id, probation_end_date, employee_grade, work_schedule, cost_center, ' +
   'emergency_contact_name, emergency_contact_phone, emergency_contact_relationship';
 
-interface EmpRow { id: string; full_name: string | null; department_id: string | null; site_id: string | null; supervisor_id: string | null; status: string; employment_status: string | null; [k: string]: unknown }
+interface EmpRow { id: string; full_name: string | null; department_id: string | null; site_id: string | null; supervisor_id: string | null; status: string; employment_status: string | null; role: string; employment_type: string | null; [k: string]: unknown }
 
 async function loadEmployee(id: string): Promise<EmpRow | null> {
   const { data, error } = await sb.from('app_users').select(HR_COLS).eq('id', id).maybeSingle<EmpRow>();
@@ -368,7 +368,7 @@ router.post('/employees/get', async c => {
   if (await userCan(actor, 'auth.security.view')) {
     const { data: profiles, error } = await sb.from('hr_access_profiles')
       .select('id, code, label, description, requires_mfa')
-      .eq('system_role', emp.role as string)
+      .eq('system_role', emp.role)
       .eq('is_active', true)
       .order('sort_order')
       .limit(2);
@@ -483,7 +483,7 @@ async function loadShellContext(employee: EmpRow): Promise<ShellContext> {
   // profile — an ambiguous mapping must not be guessed (same rule as employees/get).
   let accessProfileLabel: string | null = null;
   const { data: profiles, error: profilesError } = await sb.from('hr_access_profiles')
-    .select('label').eq('system_role', employee.role as string).eq('is_active', true).limit(2);
+    .select('label').eq('system_role', employee.role).eq('is_active', true).limit(2);
   if (profilesError) throw new Error(`Employee access profile read failed: ${profilesError.message}`);
   const typedProfiles = profiles as { label: string }[];
   if (typedProfiles.length === 1) accessProfileLabel = typedProfiles[0].label;
@@ -1711,7 +1711,7 @@ function snapshotForChange(t: ChangeType, emp: EmpRow): Record<string, unknown> 
       site_id:        emp.site_id ?? null,
       position_id:    emp.position_id ?? null,
       supervisor_id:  emp.supervisor_id,
-      role:           emp.role ?? null,
+      role:           emp.role,
       monthly_salary: emp.monthly_salary ?? null,
       hourly_rate:    emp.hourly_rate ?? null,
       pay_basis:      emp.pay_basis ?? null,

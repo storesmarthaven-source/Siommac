@@ -2,9 +2,9 @@
 
 # hr Module Map
 
-Source fingerprint: `f5da9fb9dd06a1d93deb89f3`
+Source fingerprint: `6cee721566d29db9471ef1a5`
 
-Files: 234 | Symbols: 2486 | Widgets: 9 | Unique mounted endpoints: 262 | Route definitions: 262 mounted + 0 unmounted | API calls: 33 | DB objects: 172 | E2E suites: 16
+Files: 235 | Symbols: 2497 | Widgets: 9 | Unique mounted endpoints: 262 | Route definitions: 262 mounted + 0 unmounted | API calls: 33 | DB objects: 195 | E2E suites: 16
 
 ## Widgets and Tiles
 
@@ -573,6 +573,17 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | trigger | `trg_hr_wizard_draft_updated_at` | `supabase/migrations/20260926000004_hr_employee_wizard_drafts.sql:29` |
 | function | `public.hr_employee_create_tx` | `supabase/migrations/20260926000006_hr_employee_create_atomic.sql:27` |
 | function | `public.hr_employee_import_create_tx` | `supabase/migrations/20260926000008_hr_employee_import_create_tx.sql:32` |
+| trigger | `trg_hr_employee_assignments_updated_at` | `supabase/migrations/20260928000001_hr_employee_profile_foundations.sql:56` |
+| table | `public.hr_employee_access_assignments` | `supabase/migrations/20260928000001_hr_employee_profile_foundations.sql:65` |
+| trigger | `trg_hr_employee_access_assignments_updated_at` | `supabase/migrations/20260928000001_hr_employee_profile_foundations.sql:98` |
+| table | `public.hr_employee_access_scopes` | `supabase/migrations/20260928000001_hr_employee_profile_foundations.sql:102` |
+| table | `public.hr_readiness_controls` | `supabase/migrations/20260928000001_hr_employee_profile_foundations.sql:125` |
+| trigger | `trg_hr_readiness_controls_updated_at` | `supabase/migrations/20260928000001_hr_employee_profile_foundations.sql:150` |
+| table | `public.hr_readiness_control_instances` | `supabase/migrations/20260928000001_hr_employee_profile_foundations.sql:154` |
+| trigger | `trg_hr_readiness_control_instances_updated_at` | `supabase/migrations/20260928000001_hr_employee_profile_foundations.sql:176` |
+| table | `public.hr_readiness_work_items` | `supabase/migrations/20260928000001_hr_employee_profile_foundations.sql:180` |
+| trigger | `trg_hr_readiness_work_items_updated_at` | `supabase/migrations/20260928000001_hr_employee_profile_foundations.sql:218` |
+| table | `public.hr_readiness_work_item_transitions` | `supabase/migrations/20260928000001_hr_employee_profile_foundations.sql:222` |
 
 ## E2E Suites
 

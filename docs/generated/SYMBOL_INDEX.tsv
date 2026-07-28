@@ -1677,26 +1677,26 @@ createRequirement	function	hr	true		netlify/functions/lib/hr/documentsRequiremen
 UpdateRequirementArgs	interface	hr	true		netlify/functions/lib/hr/documentsRequirements.ts	146	
 updateRequirement	function	hr	true		netlify/functions/lib/hr/documentsRequirements.ts	155	
 retireRequirement	function	hr	true		netlify/functions/lib/hr/documentsRequirements.ts	206	
-EXPIRY_SOON_DAYS	variable	hr	true		netlify/functions/lib/hr/employeeAttention.ts	21	
-AttentionEmployee	interface	hr	true		netlify/functions/lib/hr/employeeAttention.ts	23	
-AttentionStatutory	interface	hr	true		netlify/functions/lib/hr/employeeAttention.ts	32	
-AttentionDocument	interface	hr	true		netlify/functions/lib/hr/employeeAttention.ts	37	
-AttentionRequirement	interface	hr	true		netlify/functions/lib/hr/employeeAttention.ts	45	
-AttentionCertificate	interface	hr	true		netlify/functions/lib/hr/employeeAttention.ts	51	
-AttentionChangeRequest	interface	hr	true		netlify/functions/lib/hr/employeeAttention.ts	58	
-AttentionCase	interface	hr	true		netlify/functions/lib/hr/employeeAttention.ts	65	
-AttentionInput	interface	hr	true		netlify/functions/lib/hr/employeeAttention.ts	72	
-DOMAIN_CAPABILITY	object	hr	false		netlify/functions/lib/hr/employeeAttention.ts	86	
-DOMAIN_TARGET	object	hr	false		netlify/functions/lib/hr/employeeAttention.ts	98	
-DAY_MS	variable	hr	false		netlify/functions/lib/hr/employeeAttention.ts	109	
-daysBetween	function	hr	false		netlify/functions/lib/hr/employeeAttention.ts	111	
-humanize	function	hr	false		netlify/functions/lib/hr/employeeAttention.ts	118	
-buildAttentionItems	function	hr	true		netlify/functions/lib/hr/employeeAttention.ts	128	
-push	function	hr	false		netlify/functions/lib/hr/employeeAttention.ts	132	buildAttentionItems
-sortAttention	function	hr	true		netlify/functions/lib/hr/employeeAttention.ts	360	
-filterAttentionByCapability	function	hr	true		netlify/functions/lib/hr/employeeAttention.ts	372	
-buildTabIndicators	function	hr	true		netlify/functions/lib/hr/employeeAttention.ts	385	
-loadAttentionInput	function	hr	true		netlify/functions/lib/hr/employeeAttention.ts	410	
+EXPIRY_SOON_DAYS	variable	hr	true		netlify/functions/lib/hr/employeeAttention.ts	23	
+AttentionEmployee	interface	hr	true		netlify/functions/lib/hr/employeeAttention.ts	25	
+AttentionStatutory	interface	hr	true		netlify/functions/lib/hr/employeeAttention.ts	37	
+AttentionDocument	interface	hr	true		netlify/functions/lib/hr/employeeAttention.ts	42	
+AttentionRequirement	interface	hr	true		netlify/functions/lib/hr/employeeAttention.ts	50	
+AttentionCertificate	interface	hr	true		netlify/functions/lib/hr/employeeAttention.ts	56	
+AttentionChangeRequest	interface	hr	true		netlify/functions/lib/hr/employeeAttention.ts	63	
+AttentionCase	interface	hr	true		netlify/functions/lib/hr/employeeAttention.ts	70	
+AttentionInput	interface	hr	true		netlify/functions/lib/hr/employeeAttention.ts	77	
+DOMAIN_CAPABILITY	object	hr	false		netlify/functions/lib/hr/employeeAttention.ts	91	
+DOMAIN_TARGET	object	hr	false		netlify/functions/lib/hr/employeeAttention.ts	103	
+DAY_MS	variable	hr	false		netlify/functions/lib/hr/employeeAttention.ts	114	
+daysBetween	function	hr	false		netlify/functions/lib/hr/employeeAttention.ts	116	
+humanize	function	hr	false		netlify/functions/lib/hr/employeeAttention.ts	123	
+buildAttentionItems	function	hr	true		netlify/functions/lib/hr/employeeAttention.ts	133	
+push	function	hr	false		netlify/functions/lib/hr/employeeAttention.ts	137	buildAttentionItems
+sortAttention	function	hr	true		netlify/functions/lib/hr/employeeAttention.ts	365	
+filterAttentionByCapability	function	hr	true		netlify/functions/lib/hr/employeeAttention.ts	377	
+buildTabIndicators	function	hr	true		netlify/functions/lib/hr/employeeAttention.ts	390	
+loadAttentionInput	function	hr	true		netlify/functions/lib/hr/employeeAttention.ts	415	
 todayISO	function	hr	true		netlify/functions/lib/hr/employeeCore.ts	10	
 EMPLOYMENT_TYPES	variable	hr	true		netlify/functions/lib/hr/employeeCore.ts	14	
 NIS_STATUSES	variable	hr	true		netlify/functions/lib/hr/employeeCore.ts	15	
@@ -1716,17 +1716,17 @@ provisionEmployee	function	hr	true		netlify/functions/lib/hr/employeeCore.ts	218
 ATTENTION_PREVIEW_SIZE	variable	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	29	
 ACTIVITY_PREVIEW_SIZE	variable	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	31	
 ShellEmployeeRow	interface	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	33	
-ShellContext	interface	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	51	
-tenureMonths	function	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	67	
-readinessSummary	function	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	80	
-firstNonBlank	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	110	
-identityOf	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	117	
-employmentOf	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	131	
-contactOf	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	142	
-activityPreview	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	157	
-OPEN_SUPPORT_STATUSES	array	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	184	
-openSupportRequestCount	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	202	
-buildProfileShell	function	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	216	
+ShellContext	interface	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	52	
+tenureMonths	function	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	68	
+readinessSummary	function	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	81	
+firstNonBlank	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	111	
+identityOf	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	118	
+employmentOf	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	132	
+contactOf	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	143	
+activityPreview	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	158	
+OPEN_SUPPORT_STATUSES	array	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	185	
+openSupportRequestCount	function	hr	false		netlify/functions/lib/hr/employeeProfileShell.ts	203	
+buildProfileShell	function	hr	true		netlify/functions/lib/hr/employeeProfileShell.ts	217	
 IMPORT_MAPPING_VERSION	variable	hr	true		netlify/functions/lib/hr/importFields.ts	13	
 IMPORT_TARGET_FIELDS	variable	hr	true		netlify/functions/lib/hr/importFields.ts	15	
 ImportTargetField	type	hr	true		netlify/functions/lib/hr/importFields.ts	27	
@@ -2461,26 +2461,26 @@ COMPLIANCE_APPROVER_KEYS	variable	security	true		netlify/functions/lib/permissio
 ApproverCandidate	interface	security	true		netlify/functions/lib/permissionApprovalScope.ts	39	
 selectEligibleApprovers	function	security	true		netlify/functions/lib/permissionApprovalScope.ts	56	
 PERMISSION_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	26	
-PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	500	
-CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	509	
-isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	521	
-COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	541	
-ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	550	
-PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	1063	
-resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	1083	
-resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	1108	
-ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1118	
-_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1119	
-invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1122	
-loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1138	
-loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1173	
-RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1185	
-_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1186	
-invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1189	
-loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1199	
-DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1212	
-deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1220	
-assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1231	
+PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	505	
+CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	514	
+isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	526	
+COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	546	
+ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	555	
+PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	1068	
+resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	1088	
+resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	1113	
+ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1123	
+_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1124	
+invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1127	
+loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1143	
+loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1178	
+RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1190	
+_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1191	
+invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1194	
+loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1204	
+DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1217	
+deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1225	
+assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1236	
 SIGNED_TTL	variable	platform	false		netlify/functions/lib/photos.ts	7	
 SIGNED_REFRESH_BEFORE	variable	platform	false		netlify/functions/lib/photos.ts	8	
 SIGNED_CACHE_TTL_MS	variable	platform	false		netlify/functions/lib/photos.ts	9	
@@ -4335,6 +4335,23 @@ writeOutputs	function	platform	false		scripts/generate-codebase-index.mjs	886
 checkOutputs	function	platform	false		scripts/generate-codebase-index.mjs	899	
 index	variable	platform	false		scripts/generate-codebase-index.mjs	916	
 outputs	variable	platform	false		scripts/generate-codebase-index.mjs	917	
+SOURCE	variable	platform	false		scripts/port-drawer-css.mjs	19	
+TARGET	variable	platform	false		scripts/port-drawer-css.mjs	20	
+ROOT	variable	platform	false		scripts/port-drawer-css.mjs	21	
+SKIP_SELECTORS	array	platform	false		scripts/port-drawer-css.mjs	24	
+KEYFRAME_PREFIX	variable	platform	false		scripts/port-drawer-css.mjs	27	
+scopeSelector	function	platform	false		scripts/port-drawer-css.mjs	29	
+scopeSelectorList	function	platform	false		scripts/port-drawer-css.mjs	52	
+topLevelBlocks	function	platform	false		scripts/port-drawer-css.mjs	58	
+isTokenDeclaration	function	platform	false		scripts/port-drawer-css.mjs	81	
+renderDeclarations	function	platform	false		scripts/port-drawer-css.mjs	86	
+portRules	function	platform	false		scripts/port-drawer-css.mjs	95	
+html	variable	platform	false		scripts/port-drawer-css.mjs	123	
+sourceHash	variable	platform	false		scripts/port-drawer-css.mjs	124	
+css	variable	platform	false		scripts/port-drawer-css.mjs	125	
+ported	variable	platform	false		scripts/port-drawer-css.mjs	127	
+header	variable	platform	false		scripts/port-drawer-css.mjs	131	
+output	variable	platform	false		scripts/port-drawer-css.mjs	147	
 key	variable	payroll	false		scripts/preflight-paygroup-overlaps.mjs	19	
 url	variable	payroll	false		scripts/preflight-paygroup-overlaps.mjs	19	
 sb	variable	payroll	false		scripts/preflight-paygroup-overlaps.mjs	21	
@@ -4386,6 +4403,17 @@ soonCut	variable	payroll	false		scripts/seed-payroll-command-center.mjs	43
 main	function	payroll	false		scripts/seed-payroll-command-center.mjs	45	
 pick	function	payroll	false		scripts/seed-payroll-command-center.mjs	58	main
 ago	function	payroll	false		scripts/seed-payroll-command-center.mjs	171	main
+REQUIRED_ENV	array	hr	false		scripts/verify-hr-profile-foundations.mjs	30	
+loadEnv	function	hr	false		scripts/verify-hr-profile-foundations.mjs	32	
+env	variable	hr	false		scripts/verify-hr-profile-foundations.mjs	45	
+sb	variable	hr	false		scripts/verify-hr-profile-foundations.mjs	46	
+failures	variable	hr	false		scripts/verify-hr-profile-foundations.mjs	48	
+pass	function	hr	false		scripts/verify-hr-profile-foundations.mjs	49	
+fail	function	hr	false		scripts/verify-hr-profile-foundations.mjs	50	
+probe	function	hr	false		scripts/verify-hr-profile-foundations.mjs	59	
+controls	variable	hr	false		scripts/verify-hr-profile-foundations.mjs	95	
+EXPECTED_ROLES	object	hr	false		scripts/verify-hr-profile-foundations.mjs	105	
+suspect	variable	hr	false		scripts/verify-hr-profile-foundations.mjs	142	
 env	variable	payroll	false		scripts/verify-payroll-reports-apply.mjs	29	
 sb	variable	payroll	false		scripts/verify-payroll-reports-apply.mjs	36	
 fail	variable	payroll	false		scripts/verify-payroll-reports-apply.mjs	40	
@@ -11210,20 +11238,20 @@ ctx	function	security	false	test	src/lib/permissions.test.ts	28
 override	function	security	false	test	src/lib/permissions.test.ts	36	
 expired	function	security	false	test	src/lib/permissions.test.ts	251	
 PERMISSION_KEYS	variable	security	true		src/lib/permissions.ts	55	
-PermissionKey	type	security	true		src/lib/permissions.ts	580	
-CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	585	
-COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	613	
-EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	628	
-ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	656	
-PermissionContext	interface	security	true		src/lib/permissions.ts	1420	
-resolvePermission	function	security	true		src/lib/permissions.ts	1451	
-roleDefaultGranted	function	security	true		src/lib/permissions.ts	1496	
-PermissionState	type	security	true		src/lib/permissions.ts	1502	
-permissionState	function	security	true		src/lib/permissions.ts	1508	
-permissionGroups	function	security	true		src/lib/permissions.ts	1518	
-can	function	security	true		src/lib/permissions.ts	1538	
-useCan	function	security	true	hook	src/lib/permissions.ts	1554	
-useAnyCan	function	security	true	hook	src/lib/permissions.ts	1566	
+PermissionKey	type	security	true		src/lib/permissions.ts	585	
+CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	590	
+COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	618	
+EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	633	
+ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	661	
+PermissionContext	interface	security	true		src/lib/permissions.ts	1425	
+resolvePermission	function	security	true		src/lib/permissions.ts	1456	
+roleDefaultGranted	function	security	true		src/lib/permissions.ts	1501	
+PermissionState	type	security	true		src/lib/permissions.ts	1507	
+permissionState	function	security	true		src/lib/permissions.ts	1513	
+permissionGroups	function	security	true		src/lib/permissions.ts	1523	
+can	function	security	true		src/lib/permissions.ts	1543	
+useCan	function	security	true	hook	src/lib/permissions.ts	1559	
+useAnyCan	function	security	true	hook	src/lib/permissions.ts	1571	
 ICONS	object	platform	false		src/lib/popup.ts	22	
 _svg	function	platform	false		src/lib/popup.ts	30	
 _ready	variable	platform	false		src/lib/popup.ts	36	
@@ -12488,8 +12516,8 @@ MinAttachment	interface	testing	false	test	tests/vitest/attachmentGrouping.regre
 AttachmentRow	interface	testing	false	test	tests/vitest/attachmentGrouping.regression.test.ts	42	
 buildAttachMap	function	testing	false	test	tests/vitest/attachmentGrouping.regression.test.ts	55	
 makeAttachment	function	testing	false	test	tests/vitest/attachmentGrouping.regression.test.ts	80	
-TODAY	variable	hr	false	test	tests/vitest/employeeAttention.test.ts	13	
-input	function	hr	false	test	tests/vitest/employeeAttention.test.ts	15	
+TODAY	variable	hr	false	test	tests/vitest/employeeAttention.test.ts	14	
+input	function	hr	false	test	tests/vitest/employeeAttention.test.ts	16	
 ROOT	variable	hr	false	test	tests/vitest/employeeImportCreatePath.test.ts	20	
 read	function	hr	false	test	tests/vitest/employeeImportCreatePath.test.ts	21	
 stripComments	function	hr	false	test	tests/vitest/employeeImportCreatePath.test.ts	22	

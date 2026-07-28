@@ -36,7 +36,8 @@ export interface ShellEmployeeRow extends AttentionEmployee {
   username?: string | null;
   employee_number?: string | null;
   position?: string | null;
-  employment_type?: string | null;
+  // employment_type is inherited from AttentionEmployee as `string | null`;
+  // re-declaring it optional here would weaken the canonical resolver's input.
   work_schedule?: string | null;
   start_date?: string | null;
   email?: string | null;

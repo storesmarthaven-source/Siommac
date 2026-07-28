@@ -12,6 +12,8 @@
  */
 
 import { sb } from '../db';
+import { listRequirements } from './documentsRequirements';
+import { resolveRequiredTypesForEmployee } from './documentsCompliance';
 import type {
   EmployeeAttentionItem, ProfileTabIndicator, AttentionSeverity, AttentionDomain,
 } from '../../../../types/hrEmployeeProfile';
@@ -27,6 +29,9 @@ export interface AttentionEmployee {
   site_id: string | null;
   employment_status: string | null;
   status: string;
+  /** Required by the canonical document-requirement scope resolver. */
+  role: string;
+  employment_type: string | null;
 }
 
 export interface AttentionStatutory {
@@ -411,13 +416,13 @@ export async function loadAttentionInput(
   employee: AttentionEmployee,
   today: string,
 ): Promise<AttentionInput> {
-  const [docsRes, reqRes, certsRes, crRes, onbRes, offRes, statRes] = await Promise.all([
+  const [docsRes, requirementList, certsRes, crRes, onbRes, offRes, statRes] = await Promise.all([
     sb.from('hr_employee_documents')
       .select('id, document_type, title, status, expiry_date')
       .eq('employee_id', employee.id).neq('status', 'archived'),
-    sb.from('hr_document_requirements')
-      .select('document_type, label, requires_expiry, applies_to_scope, applies_to_value')
-      .eq('is_active', true),
+    // Canonical requirement source — the documents engine already owns scope
+    // resolution (all / role / employment_type / department).
+    listRequirements(true),
     sb.from('hse_worker_certificates')
       .select('id, course_name, status, expires_at').eq('worker_id', employee.id),
     sb.from('hr_employee_change_requests')
@@ -433,21 +438,23 @@ export async function loadAttentionInput(
       .eq('employee_id', employee.id).eq('jurisdiction', 'TT').maybeSingle<AttentionStatutory>(),
   ]);
 
-  const errors = [docsRes.error, reqRes.error, certsRes.error, crRes.error, onbRes.error, offRes.error, statRes.error]
+  const errors = [docsRes.error, certsRes.error, crRes.error, onbRes.error, offRes.error, statRes.error]
     .filter((e): e is NonNullable<typeof e> => !!e);
   if (errors.length) throw new Error(`Employee attention read failed: ${errors[0].message}`);
 
-  // Only requirements that actually apply to this employee become "missing" items.
-  const requirements = (reqRes.data as {
-    document_type: string; label: string; requires_expiry: boolean;
-    applies_to_scope: string; applies_to_value: string | null;
-  }[]).filter(r => {
-    if (r.applies_to_scope === 'all') return true;
-    if (r.applies_to_scope === 'department') return r.applies_to_value === employee.department_id;
-    // role / employment_type scopes are resolved by the caller's employee row; an
-    // unmatched scope must NOT silently become a missing-document blocker.
-    return false;
-  }).map(r => ({ document_type: r.document_type, label: r.label, requires_expiry: r.requires_expiry }));
+  // Scope resolution is the documents engine's job, not a second rule here. The
+  // previous local filter honoured only `all` and `department`, so role- and
+  // employment_type-scoped requirements were silently never reported missing.
+  const requirements = resolveRequiredTypesForEmployee(
+    {
+      id: employee.id,
+      full_name: null,
+      role: employee.role,
+      employment_type: employee.employment_type,
+      department_id: employee.department_id,
+    },
+    requirementList,
+  ).map(r => ({ document_type: r.documentType, label: r.label, requires_expiry: r.requiresExpiry }));
 
   return {
     employee,
