@@ -1,0 +1,11 @@
+# Locked acceptance baselines for the Employee Profile rebuild.
+#
+# These files are byte-for-byte visual specifications. `core.autocrlf=true` would
+# re-encode their line endings on checkout (the blobs already hold CRLF, so the
+# LF->CRLF filter produces CRCRLF and inflates the file), which breaks the
+# unchanged-hash proof the implementation contract requires. Mark them -text so
+# git stores and restores them verbatim with no EOL conversion.
+docs/mockups/employee-profile-drawer-unified-command-brief.html -text
+docs/mockups/employee-profile-full-page.html                    -text
+docs/EMPLOYEE_READINESS_COLLABORATION_NOTE.md                   -text
+docs/EMPLOYEE_PROFILE_EXACT_MOCKUP_IMPLEMENTATION_SPEC.md       -text
