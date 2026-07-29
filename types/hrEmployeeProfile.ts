@@ -230,6 +230,60 @@ export const ATTENTION_SEVERITY_RANK: Record<AttentionSeverity, number> = {
   critical: 3, warning: 2, info: 1,
 };
 
+// ── Document health ─────────────────────────────────────────────────────────
+// Lives in the SHARED contract, not in the backend lib, because the Documents
+// tab renders it directly: the approved health bar and tree list are not
+// decorative, and the frontend cannot import from netlify/functions.
+
+/**
+ * Health state for one expected document.
+ *
+ * `missing` and `expired` are compliance failures; `expiring` is a warning;
+ * `verified` and `current` are healthy; `unverified` is provided-but-unreviewed.
+ */
+export type DocumentHealthState =
+  | 'verified' | 'current' | 'expiring' | 'expired' | 'unverified' | 'missing';
+
+export interface DocumentHealthItem {
+  /** Null when the requirement has no document at all. */
+  documentId: string | null;
+  /** Null for a held document that satisfies no active requirement. */
+  requirementId: string | null;
+  documentType: string;
+  title: string;
+  state: DocumentHealthState;
+  expiryDate: string | null;
+  /** Supporting line under the title, e.g. "Expires 03 Jun 2025". */
+  detail: string;
+  /** True when this row exists because a requirement expects it. */
+  required: boolean;
+}
+
+export interface DocumentHealthGroup {
+  key: string;
+  label: string;
+  currentCount: number;
+  expiringCount: number;
+  missingCount: number;
+  items: DocumentHealthItem[];
+}
+
+export interface DocumentHealthSummary {
+  /** Documents actually held (non-archived, visible to this actor). */
+  totalDocuments: number;
+  /** Requirements that apply to this employee. */
+  requiredCount: number;
+  verifiedCount: number;
+  expiringCount: number;
+  missingCount: number;
+  /** Percentages are of `requiredCount`, and are 0 when nothing is required. */
+  verifiedPercent: number;
+  expiringPercent: number;
+  missingPercent: number;
+  categoryCount: number;
+  groups: DocumentHealthGroup[];
+}
+
 // ── Readiness: controls, work items, ownership ──────────────────────────────
 // Mirrors docs/EMPLOYEE_READINESS_COLLABORATION_NOTE.md. A CONTROL is the rule,
 // an INSTANCE is this employee's state against it, and a WORK ITEM is the

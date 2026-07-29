@@ -22,54 +22,16 @@ import type { DocumentRequirement } from './documentsRequirements';
 /** A document is "expiring" inside this window. Matches the attention aggregation. */
 export const DOCUMENT_EXPIRY_SOON_DAYS = 30;
 
-/**
- * Health state for one expected document.
- *
- * `missing` and `expired` are compliance failures; `expiring` is a warning;
- * `verified` and `current` are healthy; `unverified` is provided-but-unreviewed.
- */
-export type DocumentHealthState =
-  | 'verified' | 'current' | 'expiring' | 'expired' | 'unverified' | 'missing';
-
-export interface DocumentHealthItem {
-  /** Null when the requirement has no document at all. */
-  documentId: string | null;
-  /** Null for a held document that satisfies no active requirement. */
-  requirementId: string | null;
-  documentType: string;
-  title: string;
-  state: DocumentHealthState;
-  expiryDate: string | null;
-  /** Supporting line under the title, e.g. "Expires 03 Jun 2025". */
-  detail: string;
-  /** True when this row exists because a requirement expects it. */
-  required: boolean;
-}
-
-export interface DocumentHealthGroup {
-  key: string;
-  label: string;
-  currentCount: number;
-  expiringCount: number;
-  missingCount: number;
-  items: DocumentHealthItem[];
-}
-
-export interface DocumentHealthSummary {
-  /** Documents actually held (non-archived, visible to this actor). */
-  totalDocuments: number;
-  /** Requirements that apply to this employee. */
-  requiredCount: number;
-  verifiedCount: number;
-  expiringCount: number;
-  missingCount: number;
-  /** Percentages are of `requiredCount`, and are 0 when nothing is required. */
-  verifiedPercent: number;
-  expiringPercent: number;
-  missingPercent: number;
-  categoryCount: number;
-  groups: DocumentHealthGroup[];
-}
+// The document-health contract now lives in `types/hrEmployeeProfile.ts` — the
+// ONE authoritative profile contract — because the Documents tab renders it and
+// the frontend cannot import from netlify/functions. Re-exported here so every
+// existing backend import keeps working.
+export type {
+  DocumentHealthState, DocumentHealthItem, DocumentHealthGroup, DocumentHealthSummary,
+} from '../../../../types/hrEmployeeProfile';
+import type {
+  DocumentHealthState, DocumentHealthItem, DocumentHealthGroup, DocumentHealthSummary,
+} from '../../../../types/hrEmployeeProfile';
 
 export interface HealthDocRow {
   id: string;

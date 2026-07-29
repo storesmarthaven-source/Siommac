@@ -331,3 +331,19 @@ export async function provisionEmployee(
 
   return { id: employeeId, employeeNo, readiness: readiness.status };
 }
+
+/**
+ * First value that is present AND not blank.
+ *
+ * A stored empty string must fall through to the next candidate — `??` alone
+ * would render an employee with a blank `display_name` as having no name, and a
+ * `||` chain trips the nullish-coalescing lint rule while meaning exactly this.
+ * Lives here rather than in employeeProfileShell so the readiness modules can
+ * reuse it without importing the shell (which imports them).
+ */
+export function firstNonBlank(...values: (string | null | undefined)[]): string | null {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim().length > 0) return value;
+  }
+  return null;
+}

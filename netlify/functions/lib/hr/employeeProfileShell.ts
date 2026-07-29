@@ -14,7 +14,7 @@
 
 import { sb } from '../db';
 import { resolveProfileImageUrl } from '../photos';
-import { todayISO } from './employeeCore';
+import { todayISO, firstNonBlank } from './employeeCore';
 import {
   buildAttentionItems, buildTabIndicators, filterAttentionByCapability, loadAttentionInput,
   type AttentionEmployee,
@@ -89,19 +89,6 @@ export function tenureMonths(startDate: string | null, today: string): number | 
 // `lib/hr/readinessService.ts`, and keeping a second calculation alive would
 // have let the drawer gauge and the Readiness tab disagree about the same
 // employee. Callers use `getReadinessSummary()`.
-
-/**
- * First value that is present AND not blank.
- *
- * A stored empty string must fall through to the next candidate — `??` alone
- * would render an employee with a blank `display_name` as having no name.
- */
-function firstNonBlank(...values: (string | null | undefined)[]): string | null {
-  for (const value of values) {
-    if (typeof value === 'string' && value.trim().length > 0) return value;
-  }
-  return null;
-}
 
 function identityOf(employee: ShellEmployeeRow, ctx: ShellContext): ProfileIdentity {
   return {

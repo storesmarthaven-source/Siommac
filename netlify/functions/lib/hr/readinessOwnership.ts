@@ -28,6 +28,7 @@
 
 import { sb } from '../db';
 import { loadRolePermissions } from '../permissions';
+import { firstNonBlank } from './employeeCore';
 import { resolveSettingsBatch } from '../settings/resolveSetting';
 import type { ReadinessDomain, ReadinessOwnerType, ReadinessOwnerResolution } from '../../../../types/hrEmployeeProfile';
 
@@ -121,7 +122,7 @@ export async function resolveReadinessOwners(
     .eq('is_active', true);
   if (catalogError) throw new Error(`Readiness ownership catalog read failed: ${catalogError.message}`);
 
-  const resolved = await resolveSettingsBatch(sb, catalogData ?? [], { moduleKey: 'workforce_readiness' });
+  const resolved = await resolveSettingsBatch(sb, catalogData, { moduleKey: 'workforce_readiness' });
 
   const candidates: OwnerCandidate[] = [];
   for (const domain of domains) {
@@ -218,7 +219,7 @@ export async function resolveReadinessOwners(
     }
     out.set(c.domain, {
       domain: c.domain, status: 'resolved', ownerType: 'user', ownerId: c.ownerId,
-      ownerLabel: user.display_name?.trim() || user.full_name?.trim() || user.username || c.ownerId,
+      ownerLabel: firstNonBlank(user.display_name, user.full_name, user.username) ?? c.ownerId,
       recipientUserIds: [c.ownerId], reason: null,
     });
   }

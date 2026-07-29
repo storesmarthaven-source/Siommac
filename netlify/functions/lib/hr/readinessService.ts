@@ -20,7 +20,8 @@
  */
 
 import { sb } from '../db';
-import { requireReadinessOwner, resolveReadinessOwners, READINESS_DOMAINS } from './readinessOwnership';
+import { firstNonBlank } from './employeeCore';
+import { requireReadinessOwner, resolveReadinessOwners, READINESS_DOMAINS, OwnerRequiredError } from './readinessOwnership';
 import type {
   ReadinessDomain, ReadinessState, ReadinessResolutionType, ReadinessDecision,
   ReadinessActionKey, ReadinessCapabilities, ReadinessControlDefinition,
@@ -133,14 +134,14 @@ async function loadControls(): Promise<ControlRow[]> {
   const { data, error } = await sb.from('hr_readiness_controls')
     .select(CONTROL_COLS).eq('is_active', true).order('sort_order');
   if (error) throw new Error(`Readiness control read failed: ${error.message}`);
-  return data as ControlRow[];
+  return data;
 }
 
 async function loadInstances(employeeId: string): Promise<Map<string, InstanceRow>> {
   const { data, error } = await sb.from('hr_readiness_control_instances')
     .select('control_id, state, percent, evaluated_at').eq('employee_id', employeeId);
   if (error) throw new Error(`Readiness instance read failed: ${error.message}`);
-  return new Map((data as InstanceRow[]).map(r => [r.control_id, r]));
+  return new Map((data as unknown as InstanceRow[]).map(r => [r.control_id, r]));
 }
 
 async function loadOpenWorkItems(employeeId: string): Promise<WorkItemRow[]> {
@@ -158,7 +159,7 @@ async function employeeDisplayName(employeeId: string): Promise<string> {
     .select('display_name, full_name, username').eq('id', employeeId)
     .maybeSingle<{ display_name: string | null; full_name: string | null; username: string | null }>();
   if (error) throw new Error(`Readiness employee read failed: ${error.message}`);
-  return data?.display_name?.trim() || data?.full_name?.trim() || data?.username || employeeId;
+  return firstNonBlank(data?.display_name, data?.full_name, data?.username) ?? employeeId;
 }
 
 /**
@@ -235,7 +236,7 @@ async function resolveOwnerUserLabels(rows: WorkItemRow[]): Promise<Map<string, 
     .select('id, display_name, full_name, username').in('id', ids);
   if (error) throw new Error(`Readiness actor resolution failed: ${error.message}`);
   return new Map((data as { id: string; display_name: string | null; full_name: string | null; username: string | null }[])
-    .map(u => [u.id, u.display_name?.trim() || u.full_name?.trim() || u.username || u.id]));
+    .map(u => [u.id, firstNonBlank(u.display_name, u.full_name, u.username) ?? u.id]));
 }
 
 /**
@@ -284,9 +285,8 @@ export async function getReadinessSummary(
     const severityRank: Record<AttentionSeverity, number> = { critical: 3, warning: 2, info: 1 };
     const controlById = new Map(controls.map(c => [c.id, c]));
     const ranked = [...unresolved].sort((a, b) => severityRank[b.severity] - severityRank[a.severity]);
-    const leadDomain = ranked.length
-      ? controlById.get(ranked[0]!.control_id)?.domain ?? coverage.blockedDomains[0]!
-      : coverage.blockedDomains[0]!;
+    const leadDomain = (ranked.length ? controlById.get(ranked[0].control_id)?.domain : undefined)
+      ?? coverage.blockedDomains[0];
     const owner = owners.get(leadDomain);
     // An unconfigured owner surfaces as Owner Required, never as a blank.
     reviewOwnerLabel = owner?.status === 'resolved' ? owner.ownerLabel : 'Owner Required';
@@ -399,7 +399,11 @@ export async function getWorkItemDetail(
 
   const control = definitionOf(controlRes.data);
   const owners = await resolveReadinessOwners([control.domain]);
-  const owner = owners.get(control.domain)!;
+  // resolveReadinessOwners always yields an entry per requested domain, but the
+  // fail-closed shape is reconstructed here rather than asserted non-null.
+  const owner = owners.get(control.domain)
+    ?? { domain: control.domain, status: 'owner_required' as const, ownerType: null, ownerId: null,
+         ownerLabel: null, recipientUserIds: [], reason: `No owner is configured for the ${control.domain} readiness area.` };
 
   const transitionRows = transitionRes.data as {
     id: string; from_status: ReadinessState | null; to_status: ReadinessState;
@@ -448,7 +452,7 @@ async function resolveActorLabels(ids: (string | null)[]): Promise<Map<string, s
     .select('id, display_name, full_name, username').in('id', unique);
   if (error) throw new Error(`Readiness actor resolution failed: ${error.message}`);
   return new Map((data as { id: string; display_name: string | null; full_name: string | null; username: string | null }[])
-    .map(u => [u.id, u.display_name?.trim() || u.full_name?.trim() || u.username || u.id]));
+    .map(u => [u.id, firstNonBlank(u.display_name, u.full_name, u.username) ?? u.id]));
 }
 
 // ── Transitions ─────────────────────────────────────────────────────────────
@@ -547,7 +551,11 @@ export async function transitionWorkItem(input: TransitionInput): Promise<Transi
   const owner = await requireReadinessOwner(control.domain);
 
   const terminal = isSatisfied(input.toStatus);
-  const templateVersionId = terminal ? null : await templateVersionFor(owner.ownerType!);
+  // requireReadinessOwner only returns a RESOLVED owner, so ownerType is present;
+  // this narrows it without an assertion and keeps the fail-closed path explicit.
+  const ownerType = owner.ownerType;
+  if (!ownerType) throw new OwnerRequiredError(control.domain, owner.reason ?? 'No valid owner is configured.');
+  const templateVersionId = terminal ? null : await templateVersionFor(ownerType);
 
   // Notify the routed owner, except on a terminal resolution, where the
   // coordinator who has been chasing it is the one who needs to know.
@@ -564,11 +572,11 @@ export async function transitionWorkItem(input: TransitionInput): Promise<Transi
     p_work_item_id:        input.workItemId ?? null,
     p_action:              input.action,
     p_to_status:           input.toStatus,
-    p_owner_type:          owner.ownerType,
+    p_owner_type:          ownerType,
     p_owner_id:            owner.ownerId,
     p_owner_label:         owner.ownerLabel,
     p_recipient_ids:       recipients,
-    p_responsible_team:    owner.ownerType === 'role' ? owner.ownerLabel : null,
+    p_responsible_team:    ownerType === 'role' ? owner.ownerLabel : null,
     p_severity:            input.severity ?? null,
     p_due_date:            input.dueDate ?? null,
     p_decision:            input.decision ?? null,

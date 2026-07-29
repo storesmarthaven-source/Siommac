@@ -93,7 +93,7 @@ export function formatTenure(months: number | null | undefined): string {
 export function readinessLabel(readiness: ProfileReadinessSummary | null): string {
   if (!readiness) return DASH;
   if (readiness.percent >= 100) return 'Ready';
-  if (readiness.blockers.length >= 2) return 'Needs Review';
+  if (readiness.blockedDomains.length >= 2) return 'Needs Review';
   return 'Almost Ready';
 }
 
@@ -101,14 +101,18 @@ export function readinessLabel(readiness: ProfileReadinessSummary | null): strin
  * Sentence explaining what is holding the record back, e.g.
  * "Payroll and training are preventing this record from being fully ready."
  */
-type ReadinessBlocker = ProfileReadinessSummary['blockers'][number];
+// Now covers every readiness DOMAIN, not just the three the superseded
+// approximation could produce. A domain missing from this map would render as
+// its raw key, so it lists all six.
+type ReadinessBlocker = ProfileReadinessSummary['blockedDomains'][number];
 const BLOCKER_NOUN: Record<ReadinessBlocker, string> = {
   assignment: 'assignment', payroll: 'payroll', training: 'training',
+  documents: 'documents', statutory: 'statutory', access: 'access',
 };
 export function readinessExplanation(readiness: ProfileReadinessSummary | null): string {
   if (!readiness) return DASH;
-  if (!readiness.blockers.length) return 'Every readiness control has passed for this record.';
-  const nouns = readiness.blockers.map((b: ReadinessBlocker) => BLOCKER_NOUN[b]);
+  if (!readiness.blockedDomains.length) return 'Every readiness control has passed for this record.';
+  const nouns = readiness.blockedDomains.map((b: ReadinessBlocker) => BLOCKER_NOUN[b]);
   const list = nouns.length === 1
     ? nouns[0]
     : `${nouns.slice(0, -1).join(', ')} and ${nouns[nouns.length - 1]}`;
@@ -124,7 +128,7 @@ export function readinessExplanation(readiness: ProfileReadinessSummary | null):
 const COUNT_WORD = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six'];
 export function readinessHeadline(readiness: ProfileReadinessSummary | null): string {
   if (!readiness) return DASH;
-  const n = readiness.blockers.length;
+  const n = readiness.blockedDomains.length;
   if (n === 0) return 'All Controls Are Ready';
   const word = COUNT_WORD[n] ?? String(n);
   return `${word} Control${n === 1 ? '' : 's'} Need${n === 1 ? 's' : ''} Follow-Up`;
