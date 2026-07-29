@@ -2,14 +2,17 @@ import { defineConfig } from 'vite';
 import preact           from '@preact/preset-vite';
 import { VitePWA }      from 'vite-plugin-pwa';
 
-export default defineConfig(({ mode }) => ({
-  // react-grid-layout (+ react-draggable/-resizable) read `process.env.NODE_ENV` at runtime
-  // for dev warnings; the browser has no `process`, so define it (mode-aware) or the board
-  // crashes with "process is not defined". Only NODE_ENV is defined (the only key those deps
-  // read) to avoid clobbering the whole process.env object.
-  define: {
-    'process.env.NODE_ENV': JSON.stringify(mode === 'production' ? 'production' : 'development'),
-  },
+export default defineConfig(({ mode }) => {
+  const apiProxyTarget = process.env.SIOMAC_API_PROXY_TARGET ?? 'http://localhost:8888';
+
+  return {
+    // react-grid-layout (+ react-draggable/-resizable) read `process.env.NODE_ENV` at runtime
+    // for dev warnings; the browser has no `process`, so define it (mode-aware) or the board
+    // crashes with "process is not defined". Only NODE_ENV is defined (the only key those deps
+    // read) to avoid clobbering the whole process.env object.
+    define: {
+      'process.env.NODE_ENV': JSON.stringify(mode === 'production' ? 'production' : 'development'),
+    },
   plugins: [
     preact({
       // Disable the hook-names debug transform in dev mode — it depends on
@@ -120,8 +123,10 @@ export default defineConfig(({ mode }) => ({
   server: {
     port: 5173,
     proxy: {
-      // Proxy /api to Netlify Dev (port 8888) in development
-      '/api': { target: 'http://localhost:8888', changeOrigin: true },
+      // Defaults to main's Netlify Dev server; worktrees can explicitly pair
+      // their Vite frontend with an isolated backend using SIOMAC_API_PROXY_TARGET.
+      '/api': { target: apiProxyTarget, changeOrigin: true },
     },
   },
-}));
+  };
+});
