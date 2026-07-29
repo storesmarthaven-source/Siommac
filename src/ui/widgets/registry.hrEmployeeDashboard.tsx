@@ -18,7 +18,7 @@ import {
 import { useHrDashboardStats, useHrEmployeesPage, type HrDashboardStats, type HrEmployeeRow } from '@api/hr/employees';
 import { LucideIcon, type LucideName } from '../LucideIcon';
 import { KpiTile, type KpiTone } from '../components/KpiTile';
-import { WidgetSkeleton } from '../components/Skeleton';
+import { Skeleton, SkeletonText } from '../components/Skeleton';
 import { defineWidget } from './defineWidget';
 import { findWidgetDataSource, registerWidgetDataSource } from './dataSources';
 import type { WidgetDef, WidgetRenderProps, WidgetSizeDef } from './types';
@@ -53,16 +53,6 @@ if (!findWidgetDataSource(SOURCE.sourceKey)) {
 const KPI_SIZES: WidgetSizeDef[] = [
   { key: 'compact', label: 'Fixed', grid: { w: 4, h: 6 }, min: { w: 4, h: 6 }, max: { w: 4, h: 6 }, description: 'Statutory-size Employee Master KPI tile' },
 ];
-// A DOUBLE-WIDE KPI tile: exactly two standard slots (w8) at the same h6, so it lines up with the
-// strip rather than sitting on its own row. Fixed for the same reason as KPI_SIZES — the strip is
-// reorder-only, so a tile's size is code-owned, and defineWidget requires min == max for a
-// non-resizable widget. Use it when a metric genuinely needs the width (a breakdown BESIDE the
-// headline number), never to give a single number more room.
-const KPI_WIDE_SIZES: WidgetSizeDef[] = [
-  { key: 'standard', label: 'Fixed (double)', grid: { w: 8, h: 6 }, min: { w: 8, h: 6 }, max: { w: 8, h: 6 }, description: 'Double-width Employee Master KPI tile' },
-];
-/** Both KPI families are fixed, chrome-less strip tiles; only their width differs. */
-const isKpiFamily = (sizes: WidgetSizeDef[]): boolean => sizes === KPI_SIZES || sizes === KPI_WIDE_SIZES;
 // Workforce-pulse cards are a SHORT absolute-positioned design (header row + value
 // row). On the old coarse main board (cellHeight 88) the KPI h:6 stretched them to ~528px
 // with a huge void — a short height fits the design without overlap.
@@ -93,15 +83,7 @@ const RADAR_SIZES: WidgetSizeDef[] = [
 ];
 const ATTENTION_PORTRAIT_SIZES: WidgetSizeDef[] = [
   // 'standard' is the defaultSize, so its grid IS the widget's placed size (externalDefinition
-  // derives defaultColumns/defaultRows from it). w7 × h30 == 389 × 528px — operator-set, and it
-  // now genuinely fits: the card's content measures ~485px after the compaction pass below
-  // (it was ~760px, which is why it used to open an inner scrollbar and then hide its own
-  // facts strip to cope).
-  //
-  // `min.h` stays 12 on purpose. minRows is "the smallest it can still RENDER" — raising it to
-  // the content height is what made the resize handle snap straight back on other widgets (see
-  // the 'keeps every resizable widget free to shrink vertically' invariant in platform.test.tsx
-  // and the "minimum size reached" pitfall in CLAUDE.md).
+  // derives defaultColumns/defaultRows from it). w7 × h30 == 389 × 528px — operator-set.
   { key: 'standard', label: 'Standard', grid: { w: 7, h: 30 }, min: { w: 6, h: 12 }, description: 'Portrait employee attention card' },
   { key: 'wide', label: 'Wide', grid: { w: 10, h: 39 }, min: { w: 6, h: 12 }, description: 'Expanded employee attention card' },
   { key: 'large', label: 'Large', grid: { w: 13, h: 44 }, min: { w: 6, h: 12 }, description: 'Large employee attention card' },
@@ -133,7 +115,16 @@ const PREVIEW: HrDashboardStats = {
 
 function WidgetState({ kind, message }: { kind: 'loading' | 'error'; message?: string }): VNode {
   if (kind === 'loading') {
-    return <WidgetSkeleton class="hrew-card" variant="card" />;
+    return (
+      <article class="hrew-card hrew-state" data-widget-content-root role="status" aria-busy="true">
+        <span class="sr-only">Loading authorised Employee Master data…</span>
+        <div style={{ width: '100%', display: 'grid', gap: '14px' }}>
+          <Skeleton width="42%" height={15} radius={999} />
+          <Skeleton width="58%" height={34} radius={8} />
+          <SkeletonText lines={3} width="88%" lastWidth="62%" />
+        </div>
+      </article>
+    );
   }
   return <article class="hrew-card hrew-state" data-widget-content-root role="alert">
     <LucideIcon name="TriangleAlert" size={23} />
@@ -163,114 +154,26 @@ function applyRegisterFilter(detail: Record<string, string[]>): void {
   focusEmployeeRegister();
 }
 
-/** Event the Employee Attention card raises to open a specific employee's profile drawer.
- *  Same reason as the filter event above: the board renders widgets OUTSIDE the page's tree, so a
- *  widget cannot reach the page's selection state through props. EmployeeMaster listens for this
- *  and sets the drawer's employee id. */
-export const EMPLOYEE_DRAWER_EVENT = 'siomac:hr-open-employee-drawer';
-
-/** Open the profile drawer for one employee. "Review Employee Record" used to call
- *  focusEmployeeRegister, i.e. it scrolled the page and left the reader to find the person
- *  themselves — a button whose label promises a record but only moves the viewport. */
-function openEmployeeDrawer(employeeId: string): void {
-  window.dispatchEvent(new CustomEvent<{ employeeId: string }>(EMPLOYEE_DRAWER_EVENT, { detail: { employeeId } }));
-}
-
-/** A DOUBLE-WIDE KPI tile (w8 = two strip slots).
- *
- *  Left is exactly a standard KPI tile (icon chip, value, label, sub). Right is a single stacked
- *  bar showing the composition of that value, and it gets the whole right half at full height —
- *  which is what the removed legend and drill-through link paid for. At 7px beside a four-row
- *  labelled legend the bar was a sliver; the tile cost two slots and showed less than one.
- *
- *  Segments sum to the total, so a share can never be misread — an earlier pass scaled each
- *  category to the LARGEST one, which drew a 1/1/1 mix as three full bars. Counts print inside
- *  segments wide enough to hold them; category names live in each segment's tooltip and in the
- *  bar's aria-label, so nothing is lost to a reader or a screen reader.
- */
-function KpiWideCard({ title, value, detail, icon, tone = 'blue', breakdown }: {
-  title: string; value: number | string; detail: string; icon: string;
-  tone?: KpiTone;
-  breakdown: { label: string; count: number; colour: string }[];
-}): VNode {
-  const sum = breakdown.reduce((total, item) => total + item.count, 0);
-  return (
-    <article class={`hrew-kpi-wide is-${tone}`} data-widget-content-root aria-label={title}>
-      <div class="hrew-kpi-wide__lead">
-        <span class={`hrew-kpi-wide__ic is-${tone}`} aria-hidden="true"><i class={`fa-solid ${icon}`} /></span>
-        <div class="hrew-kpi-wide__row"><strong>{value}</strong><span>{title}</span></div>
-        <small>{detail}</small>
-      </div>
-      {sum > 0 && (
-        <div class="hrew-kpi-wide__mix">
-          <div class="hrew-kpi-wide__bar" role="img"
-            aria-label={`${title} — ${breakdown.map(item => `${item.label} ${item.count}`).join(', ')}`}>
-            {breakdown.map(item => {
-              const share = item.count / sum * 100;
-              return (
-                <i key={item.label} title={`${item.label}: ${item.count}`}
-                  style={`width:${share}%;background:${item.colour}`} />
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </article>
-  );
-}
-
 function KpiCard({ title, value, detail, icon, linkLabel, tone = 'blue', filter }: { title: string; value: number | string | VNode; detail: string; icon: string; linkLabel: string; tone?: KpiTone; filter?: Record<string, string[]> }): VNode {
   const onClick = filter ? () => applyRegisterFilter(filter) : focusEmployeeRegister;
   return <div class="hrew-kpi-shell" data-widget-content-root><KpiTile icon={icon} tone={tone} label={title} value={value} sub={detail} link={{ label: linkLabel, onClick }} /></div>;
 }
 
-
 function ActiveWorkforce({ stats }: { stats: HrDashboardStats }): VNode {
   const s = stats.active_workforce;
-  // Title Case per the register conventions, and the nouns agree with their counts —
-  // a single contractor read "1 contractors".
-  return <KpiCard title="Active Workforce" value={s.total} detail={`${s.employees} ${s.employees === 1 ? 'Employee' : 'Employees'} · ${s.contractors} ${s.contractors === 1 ? 'Contractor' : 'Contractors'}`} icon="fa-users" linkLabel="View Active Employees" filter={{ status: ['active'] }} />;
+  return <KpiCard title="Active Workforce" value={s.total} detail={`${s.employees} employees · ${s.contractors} contractors`} icon="fa-users" linkLabel="View Active Employees" filter={{ status: ['active'] }} />;
 }
 function RecordReadiness({ stats }: { stats: HrDashboardStats }): VNode {
   const s = stats.readiness;
-  return <KpiCard title="Record Readiness" value={<>{s.percent}<small style="font-size:.6em;font-weight:600;margin-left:1px">%</small></>} detail={`${s.blocked} ${s.blocked === 1 ? 'Person' : 'People'} Currently Blocked`} icon="fa-shield-halved" linkLabel="View Training Gaps" filter={{ training: ['expired', 'due_soon'] }} tone="green" />;
+  return <KpiCard title="Record Readiness" value={<>{s.percent}<small style="font-size:.6em;font-weight:600;margin-left:1px">%</small></>} detail={`${s.blocked} people currently blocked`} icon="fa-shield-check" linkLabel="View Training Gaps" filter={{ training: ['expired', 'due_soon'] }} tone="green" />;
 }
 function HrWorkQueue({ stats }: { stats: HrDashboardStats }): VNode {
   const s = stats.hr_work_queue;
-  return <KpiCard title="HR Work Queue" value={s.total} detail={`${s.urgent} Urgent · Oldest ${s.oldest_days}d`} icon="fa-list-check" linkLabel="View Register" tone="amber" />;
+  return <KpiCard title="HR Work Queue" value={s.total} detail={`${s.urgent} urgent · oldest ${s.oldest_days}d`} icon="fa-list-check" linkLabel="View Register" tone="amber" />;
 }
-/** Payroll readiness as a double-wide KPI — the highest-consequence number on this board.
- *
- * The headline is the count NOT payroll-ready, because that is the actionable figure: those people
- * are paid wrong, or not at all, at month end. "N ready" reads as reassurance and buries the work.
- *
- * The bar is deliberately TWO segments (ready / not ready) and not one segment per readiness
- * domain. `assignment_complete`, `payroll_ready` and `training_current` are independent counts that
- * OVERLAP — one employee can fail several — so stacking them to 100% would assert a partition the
- * data does not support. Ready vs not-ready is an exact partition of the active workforce, so every
- * width on this bar is literally true. The domain gaps go in the sub-line, where they are words
- * rather than implied shares.
- */
-function PayrollReadinessKpi({ stats }: { stats: HrDashboardStats }): VNode {
-  const total = stats.active_workforce.total;
-  const ready = Math.min(stats.readiness.payroll_ready, total);
-  const notReady = Math.max(0, total - ready);
-  const detail = total === 0
-    ? 'No active workforce'
-    : notReady === 0
-      ? `All ${total} Active Employees Ready`
-      : `${ready} of ${total} Ready · ${stats.readiness.percent}% Record Readiness`;
-  return <KpiWideCard title="Not Payroll-Ready" value={notReady} detail={detail}
-    icon="fa-money-check-dollar" tone={notReady === 0 ? 'green' : 'red'}
-    breakdown={[
-      { label: 'Not payroll-ready', count: notReady, colour: '#dc2626' },
-      { label: 'Payroll-ready', count: ready, colour: '#16a34a' },
-    ]} />;
-}
-
 function Exceptions({ stats }: { stats: HrDashboardStats }): VNode {
   const s = stats.exceptions;
-  return <KpiCard title="Exceptions" value={s.total} detail={s.items.slice(0, 2).map(x => `${x.type} ${x.count}`).join(' · ') || 'No Current Exceptions'} icon="fa-circle-exclamation" linkLabel="View Missing Assignments" filter={{ missing: ['supervisor', 'department', 'site'] }} tone="red" />;
+  return <KpiCard title="Exceptions" value={s.total} detail={s.items.slice(0, 2).map(x => `${x.type} ${x.count}`).join(' · ') || 'No current exceptions'} icon="fa-circle-exclamation" linkLabel="View Missing Assignments" filter={{ missing: ['supervisor', 'department', 'site'] }} tone="neutral" />;
 }
 
 function focusLifecycleMovement(): void {
@@ -289,6 +192,7 @@ function LifecyclePulse({ stats, metric, title, accent }: { stats: HrDashboardSt
     <div class="hrew-pulse-chart" aria-label={`${title} over the last four months`}>{periods.map((period, index) => <span key={period.period} class={index === periods.length - 1 ? 'current' : ''}><i style={`height:${Math.max(18, period[metric] / peak * 100)}%`} title={`${period.period}: ${period[metric]}`} /><small>{period.period}</small></span>)}</div>
   </article>;
 }
+function NewStarters({ stats }: { stats: HrDashboardStats }): VNode { return <LifecyclePulse stats={stats} metric="hires" title="New Starters" accent="blue" />; }
 function Departures({ stats }: { stats: HrDashboardStats }): VNode { return <LifecyclePulse stats={stats} metric="exits" title="Departures" accent="coral" />; }
 
 function RecordQuality({ stats }: { stats: HrDashboardStats }): VNode {
@@ -314,33 +218,12 @@ function RecordQuality({ stats }: { stats: HrDashboardStats }): VNode {
 function initials(person: Pick<HrEmployeeRow, 'display_name' | 'full_name'>): string { return (person.display_name ?? person.full_name ?? 'Employee').split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase(); }
 
 type AttentionEmployee = Pick<HrEmployeeRow, 'id' | 'full_name' | 'display_name' | 'employee_number' | 'position' | 'departmentName' | 'profile_image_url' | 'readiness'>;
-function previewReadiness(
-  readyControls: number,
-  blockedDomains: NonNullable<HrEmployeeRow['readiness']>['blockedDomains'],
-): NonNullable<HrEmployeeRow['readiness']> {
-  const totalControls = 3;
-  return {
-    percent: Math.round((readyControls / totalControls) * 100),
-    readyControls,
-    totalControls,
-    unresolvedWorkItems: blockedDomains.length,
-    payrollStatus: blockedDomains.includes('payroll') ? 'blocked' : 'ready',
-    trainingStatus: blockedDomains.includes('training') ? 'expired' : 'current',
-    blockedDomains,
-    lastReviewedAt: null,
-    reviewOwnerLabel: blockedDomains.length ? 'Owner Required' : null,
-    nextReviewAt: null,
-  };
-}
 const PREVIEW_ATTENTION: AttentionEmployee[] = [
-  { id: 'a1', full_name: 'Amara Diallo', display_name: null, employee_number: 'EMP-0010', position: 'Field Engineer', departmentName: 'Operations', profile_image_url: null, readiness: previewReadiness(1, ['payroll', 'training']) },
-  { id: 'a2', full_name: 'Claudia Pierre', display_name: null, employee_number: 'EMP-0008', position: 'People Specialist', departmentName: 'Human Resources', profile_image_url: null, readiness: previewReadiness(2, ['assignment']) },
-  { id: 'a3', full_name: 'Damani Baptiste', display_name: null, employee_number: 'EMP-0007', position: 'Site Coordinator', departmentName: 'Operations', profile_image_url: null, readiness: previewReadiness(2, ['training']) },
+  { id: 'a1', full_name: 'Amara Diallo', display_name: null, employee_number: 'EMP-0010', position: 'Field Engineer', departmentName: 'Operations', profile_image_url: null, readiness: { percent: 58, assignmentComplete: true, payrollStatus: 'blocked', trainingStatus: 'due_soon', blockers: ['payroll', 'training'] } },
+  { id: 'a2', full_name: 'Claudia Pierre', display_name: null, employee_number: 'EMP-0008', position: 'People Specialist', departmentName: 'Human Resources', profile_image_url: null, readiness: { percent: 72, assignmentComplete: false, payrollStatus: 'ready', trainingStatus: 'current', blockers: ['assignment'] } },
+  { id: 'a3', full_name: 'Damani Baptiste', display_name: null, employee_number: 'EMP-0007', position: 'Site Coordinator', departmentName: 'Operations', profile_image_url: null, readiness: { percent: 64, assignmentComplete: true, payrollStatus: 'ready', trainingStatus: 'expired', blockers: ['training'] } },
 ];
-const ATTENTION_LABELS = {
-  assignment: 'Assignment', payroll: 'Payroll', training: 'Training',
-  documents: 'Documents', statutory: 'Statutory', access: 'Access',
-} as const;
+const ATTENTION_LABELS = { assignment: 'Assignment', payroll: 'Payroll', training: 'Training' } as const;
 const COUNT_WORDS = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
 const countWithWord = (count: number): string => `${COUNT_WORDS[count] ?? count} (${count})`;
 type AttentionBlocker = keyof typeof ATTENTION_LABELS;
@@ -370,20 +253,16 @@ function attentionReviewCopy(blockers: AttentionBlocker[]): { title: string; but
     title: 'Complete Payroll Readiness',
     button: 'Review Payroll Setup',
   };
-  if (blocker === 'training') return {
+  return {
     title: 'Update Training Compliance',
     button: 'Review Training',
-  };
-  return {
-    title: `Resolve ${ATTENTION_LABELS[blocker]} Readiness`,
-    button: `Review ${ATTENTION_LABELS[blocker]}`,
   };
 }
 
 type AttentionReferenceVariant = 'neutral' | 'semantic';
 const PREVIEW_ATTENTION_REFERENCE: AttentionEmployee[] = [
   PREVIEW_ATTENTION[0]!,
-  { id: 'a4', full_name: 'Camille Rampersad', display_name: null, employee_number: 'EMP-FIN01', position: 'Finance Manager', departmentName: null, profile_image_url: null, readiness: previewReadiness(0, ['assignment', 'payroll', 'training']) },
+  { id: 'a4', full_name: 'Camille Rampersad', display_name: null, employee_number: 'EMP-FIN01', position: 'Finance Manager', departmentName: null, profile_image_url: null, readiness: { percent: 0, assignmentComplete: false, payrollStatus: 'blocked', trainingStatus: 'expired', blockers: ['assignment', 'payroll', 'training'] } },
 ];
 function EmployeeAttentionReferenceView({ employees, total, variant, initialIndex = 0 }: { employees: AttentionEmployee[]; total: number; variant: AttentionReferenceVariant; initialIndex?: number }): VNode {
   const [activeIndex, setActiveIndex] = useState(Math.min(initialIndex, Math.max(0, employees.length - 1)));
@@ -392,44 +271,25 @@ function EmployeeAttentionReferenceView({ employees, total, variant, initialInde
   const readiness = employee?.readiness ?? null;
   if (!employee || !readiness) return <article class={`hrew-attention-reference is-${variant}`} aria-label="Employee attention card" data-widget-content-root><div class="hrew-attention-empty"><LucideIcon name="ShieldCheck" size={24} /><strong>No Employee Issues</strong><span>All visible employee records meet their readiness controls.</span></div></article>;
   const name = employee.display_name ?? employee.full_name ?? 'Employee';
-  const primaryBlocker = readiness.blockedDomains[0] ?? 'assignment';
+  const primaryBlocker = readiness.blockers[0] ?? 'assignment';
   const primaryLabel = ATTENTION_LABELS[primaryBlocker];
-  const reviewCopy = attentionReviewCopy(readiness.blockedDomains);
-  // Spelled-out count (the same COUNT_WORDS the facts strip uses), and the verb agrees with
-  // it — the singular branch read "1 Readiness Control Need Review".
-  const blockedCount = readiness.blockedDomains.length;
-  const issueTitle = blockedCount === 1
-    ? `${COUNT_WORDS[1]} Readiness Control Needs Review`
-    : `${COUNT_WORDS[blockedCount] ?? blockedCount} Readiness Controls Need Review`;
+  const reviewCopy = attentionReviewCopy(readiness.blockers);
+  const issueTitle = `${readiness.blockers.length} Readiness ${readiness.blockers.length === 1 ? 'Control' : 'Controls'} Need Review`;
   const roleLine = [employee.position, employee.departmentName].filter(Boolean).join(' · ') || 'Employee';
   return <article class={`hrew-attention-reference is-${variant}`} aria-label={`${variant === 'neutral' ? 'Neutral' : 'Semantic'} employee attention card`} data-widget-content-root>
     <section class="hrew-ar-person"><span class="hrew-avatar">{employee.profile_image_url ? <img src={employee.profile_image_url} alt="" /> : initials(employee)}</span><div><strong>{name}</strong><small><LucideIcon name="BriefcaseBusiness" size={13} /><span>{roleLine}</span></small></div><nav><div class="hrew-ar-nav-row"><button type="button" aria-label="Previous employee issue" disabled={employees.length < 2} onClick={() => move(-1)}><LucideIcon name="ChevronLeft" size={18} /></button><button type="button" aria-label="Next employee issue" disabled={employees.length < 2} onClick={() => move(1)}><LucideIcon name="ChevronRight" size={18} /></button></div><span class="hrew-ar-count">{activeIndex + 1} of {total}</span></nav>
     </section>
     <section class="hrew-ar-issue"><h3>{issueTitle}</h3></section>
-    <section class="hrew-ar-facts"><div class="is-department"><LucideIcon name="UserRound" size={21} /><strong>{employee.departmentName ?? 'Unassigned'}</strong><span>Department</span></div><div class="is-control"><LucideIcon name="BriefcaseBusiness" size={21} /><strong>{primaryLabel}</strong><span>Control</span></div><div class="is-issues"><LucideIcon name="CircleAlert" size={21} /><strong>{countWithWord(readiness.blockedDomains.length)}</strong><span>Issues</span></div></section>
-    <section class="hrew-ar-impact"><div class="hrew-ar-ready-gauge" style={`--hrew-ready-angle:${readiness.percent * 1.12 - 56}deg`} aria-label={`Record ready ${readiness.percent}%`}><svg viewBox="0 0 360 158" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><defs><linearGradient id={`hrew-ready-arc-${employee.id}`} x1="0" x2="1"><stop offset="0" stop-color="#dc2626" /><stop offset=".18" stop-color="#ef4444" /><stop offset=".38" stop-color="#f97316" /><stop offset=".55" stop-color="#f59e0b" /><stop offset=".74" stop-color="#84cc16" /><stop offset="1" stop-color="#16a34a" /></linearGradient></defs><path class="hrew-ready-track" d="M34 132 A146 146 0 0 1 326 132" fill="none" stroke="#edf0f4" stroke-width="24" stroke-linecap="round" /><path class="hrew-ready-arc" pathLength="100" d="M34 132 A146 146 0 0 1 326 132" fill="none" stroke={`url(#hrew-ready-arc-${employee.id})`} stroke-width="24" stroke-linecap="round" stroke-opacity={readiness.percent > 0 ? 1 : 0} style={`stroke-dasharray:${readiness.percent} 100`} /></svg><div><strong>{readiness.percent}<small>%</small></strong><span>{readiness.percent === 100 ? 'Ready' : 'Not Ready'}</span></div></div><div><strong>Readiness Impact</strong><p>Complete {readiness.blockedDomains.map(blocker => ATTENTION_LABELS[blocker].toLowerCase()).join(', ')} to make this record ready.</p></div><i><em style={`width:${readiness.percent}%`} /></i></section>
-    {/* Separated footer — a hairline rule instead of a nested rounded container. */}
-    <section class="hrew-ar-action"><span>Recommended Review</span><h4>{reviewCopy.title}</h4><button type="button" onClick={() => openEmployeeDrawer(employee.id)}>{reviewCopy.button}</button></section>
+    <section class="hrew-ar-facts"><div class="is-department"><LucideIcon name="UserRound" size={21} /><strong>{employee.departmentName ?? 'Unassigned'}</strong><span>Department</span></div><div class="is-control"><LucideIcon name="BriefcaseBusiness" size={21} /><strong>{primaryLabel}</strong><span>Control</span></div><div class="is-issues"><LucideIcon name="CircleAlert" size={21} /><strong>{countWithWord(readiness.blockers.length)}</strong><span>Issues</span></div></section>
+    <section class="hrew-ar-impact"><div class="hrew-ar-ready-gauge" style={`--hrew-ready-angle:${readiness.percent * 1.12 - 56}deg`} aria-label={`Record ready ${readiness.percent}%`}><svg viewBox="0 0 360 158" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><defs><linearGradient id={`hrew-ready-arc-${employee.id}`} x1="0" x2="1"><stop offset="0" stop-color="#dc2626" /><stop offset=".18" stop-color="#ef4444" /><stop offset=".38" stop-color="#f97316" /><stop offset=".55" stop-color="#f59e0b" /><stop offset=".74" stop-color="#84cc16" /><stop offset="1" stop-color="#16a34a" /></linearGradient></defs><path class="hrew-ready-track" d="M34 132 A146 146 0 0 1 326 132" fill="none" stroke="#edf0f4" stroke-width="24" stroke-linecap="round" /><path class="hrew-ready-arc" pathLength="100" d="M34 132 A146 146 0 0 1 326 132" fill="none" stroke={`url(#hrew-ready-arc-${employee.id})`} stroke-width="24" stroke-linecap="round" stroke-opacity={readiness.percent > 0 ? 1 : 0} style={`stroke-dasharray:${readiness.percent} 100`} /></svg><div><strong>{readiness.percent}<small>%</small></strong><span>{readiness.percent === 100 ? 'Ready' : 'Not Ready'}</span></div></div><div><strong>Readiness Impact</strong><p>Complete {readiness.blockers.map(blocker => ATTENTION_LABELS[blocker].toLowerCase()).join(', ')} to make this record ready.</p></div><i><em style={`width:${readiness.percent}%`} /></i></section>
+    <section class="hrew-ar-action"><span>Recommended Review</span><h4>{reviewCopy.title}</h4><button type="button" onClick={focusEmployeeRegister}>{reviewCopy.button}</button></section>
   </article>;
 }
-/**
- * The roster slice the attention widgets read.
- *
- * EXPORTED so the host page can warm the very same query key before it clears
- * its own page skeleton. It is a different key from the register's filtered
- * list, so without this the page skeleton finished while these widgets were
- * still cold and each one flashed its own card skeleton afterwards. Two copies
- * of these params would silently drift apart and bring the flash back.
- */
-export const EMPLOYEE_ATTENTION_ROSTER_QUERY = {
-  statuses: ['active'], page: 1, pageSize: 200, sortBy: 'full_name', sortDir: 'asc',
-} as const;
-
 function EmployeeAttentionReferenceWidget({ variant }: { variant: AttentionReferenceVariant }): VNode {
-  const query = useHrEmployeesPage({ ...EMPLOYEE_ATTENTION_ROSTER_QUERY, statuses: ['active'] });
+  const query = useHrEmployeesPage({ statuses: ['active'], page: 1, pageSize: 200, sortBy: 'full_name', sortDir: 'asc' });
   if (query.isLoading) return <WidgetState kind="loading" />;
   if (!query.data) return <WidgetState kind="error" message={query.error instanceof Error ? query.error.message : 'Employee attention data is unavailable.'} />;
-  const affected = query.data.rows.filter(employee => employee.readiness?.blockedDomains.length).sort((a, b) => (a.readiness?.percent ?? 100) - (b.readiness?.percent ?? 100));
+  const affected = query.data.rows.filter(employee => employee.readiness?.blockers.length).sort((a, b) => (a.readiness?.percent ?? 100) - (b.readiness?.percent ?? 100));
   return <EmployeeAttentionReferenceView employees={affected} total={query.data.meta.total} variant={variant} />;
 }
 function EmployeeAttentionNeutralWidget(): VNode { return <EmployeeAttentionReferenceWidget variant="neutral" />; }
@@ -497,24 +357,9 @@ function WorkplacePulseCard({ title, icon, values, labels, chart, showTrend = fa
   </article>;
 }
 
-/** A plain KPI tile, not a pulse card: it belongs on the Employee Master KPI strip, which is a
- *  uniform w4×h6 reorder-only row. The 5-month bars chart it used to draw cannot survive at that
- *  size, and the month-over-month movement it carried is still on the board through Workforce
- *  Activity. The sub-line keeps the comparison in words instead. */
 function MonthlyHiresCard({ stats }: { stats: HrDashboardStats }): VNode {
-  const periods = stats.lifecycle.periods;
-  const latest = periods.at(-1)?.hires ?? 0;
-  const previous = periods.at(-2)?.hires ?? 0;
-  const delta = latest - previous;
-  const previousPeriod = periods.at(-2)?.period;
-  // Never fabricate a comparison: with only one bucket there is no prior period to compare to.
-  const detail = previousPeriod === undefined
-    ? 'No Prior Period To Compare'
-    : delta === 0
-      ? `No Change vs ${previousPeriod}`
-      : `${delta > 0 ? '+' : ''}${delta} vs ${previousPeriod}`;
-  return <KpiCard title="Hires This Month" value={latest} detail={detail} icon="fa-user-plus"
-    linkLabel="View Active Employees" filter={{ status: ['active'] }} tone="teal" />;
+  const periods = stats.lifecycle.periods.slice(-5);
+  return <WorkplacePulseCard title="Hires this month" icon="UserPlus" values={periods.map(period => period.hires)} labels={periods.map(period => period.period)} chart="bars" showTrend tone="blue" />;
 }
 function InternalMovesCard({ stats }: { stats: HrDashboardStats }): VNode {
   const periods = stats.lifecycle.periods.slice(-6);
@@ -578,14 +423,14 @@ function liveDefinition(input: { id: string; title: string; description: string;
   // KPI_SIZES declares a single w4×h6 preset whose min == the preset, and clampWidgetInstanceToMinimum
   // heals a fixed widget in BOTH directions — so a layout saved when the tile was resizable snaps
   // back to the code default instead of being pinned forever at a stale size.
-  const fixed = input.fixed === true || isKpiFamily(input.sizes);
+  const fixed = input.fixed === true || input.sizes === KPI_SIZES;
   return defineWidget({
     id: input.id, module: 'hr', area: 'Employee Master', title: input.title, description: input.description,
     longDescription: `${input.description} Uses the authenticated Employee Master dashboard API and server-scoped workforce records.`,
     icon: input.icon, category: input.category, tags: ['hr', 'employee master', 'live api'], previewVariant: input.previewVariant,
     chrome: 'none', sizeToContent: false, resizable: !fixed, supportedPages: [PAGE], supportedZones: ['main'], defaultSize: input.defaultSize,
-    allowedSizes: input.sizes, sizeConstraints: { defaultColumns: defaultGrid.w, defaultRows: defaultGrid.h, minColumns: input.sizes[0]?.min?.w ?? 5, minRows: input.sizes[0]?.min?.h ?? 2, minWidth: input.minWidth ?? (input.sizes === KPI_WIDE_SIZES ? 340 : input.sizes === KPI_SIZES ? 180 : input.sizes === PULSE_SIZES ? 160 : input.sizes === QUALITY_SIZES ? 280 : 300), minHeight: input.minHeight ?? (isKpiFamily(input.sizes) ? 84 : input.sizes === PULSE_SIZES ? 84 : input.sizes === QUALITY_SIZES ? 360 : 320), resizeStrategy: input.resizeStrategy ?? (fixed ? 'fixed-minimum' : 'content-measured') },
-    ...(isKpiFamily(input.sizes) || input.sizes === PULSE_SIZES ? {} : { previewAspect: input.previewAspect ?? (input.sizes === CHART_SIZES ? 1.55 : input.sizes === QUALITY_SIZES ? .78 : 1.1) }),
+    allowedSizes: input.sizes, sizeConstraints: { defaultColumns: defaultGrid.w, defaultRows: defaultGrid.h, minColumns: input.sizes[0]?.min?.w ?? 5, minRows: input.sizes[0]?.min?.h ?? 2, minWidth: input.minWidth ?? (input.sizes === KPI_SIZES ? 180 : input.sizes === PULSE_SIZES ? 160 : input.sizes === QUALITY_SIZES ? 280 : 300), minHeight: input.minHeight ?? (input.sizes === KPI_SIZES ? 84 : input.sizes === PULSE_SIZES ? 84 : input.sizes === QUALITY_SIZES ? 360 : 320), resizeStrategy: input.resizeStrategy ?? (fixed ? 'fixed-minimum' : 'content-measured') },
+    ...(input.sizes === KPI_SIZES || input.sizes === PULSE_SIZES ? {} : { previewAspect: input.previewAspect ?? (input.sizes === CHART_SIZES ? 1.55 : input.sizes === QUALITY_SIZES ? .78 : 1.1) }),
     defaultConfig: input.defaultConfig ?? {}, configSchema: input.configSchema ?? [], dataSource: SOURCE, dataSourceKey: SOURCE.sourceKey,
     governance: { state: 'enabled', discoverable: true, allowedPages: [PAGE], requiredCapabilities: ['hr.employees.view'] },
     permissions: { requiredPermissions: ['hr.employees.view'] }, runtimeState: 'live-api', recommendedFor: [PAGE], motion: input.motion,
@@ -595,7 +440,7 @@ function liveDefinition(input: { id: string; title: string; description: string;
 
 function externalDefinition(input: { id: string; title: string; description: string; icon: string; category: string; defaultSize: WidgetDef['defaultSize']; sizes: WidgetSizeDef[]; source: typeof DIRECTORY_SOURCE | typeof CALENDAR_SOURCE; permission: string; render: WidgetDef['render']; renderPreview: NonNullable<WidgetDef['renderPreview']>; previewVariant: WidgetDef['previewVariant']; minWidth: number; minHeight: number; previewAspect?: number; fixed?: boolean; recommended?: boolean }): WidgetDef {
   const size = input.sizes.find(candidate => candidate.key === input.defaultSize) ?? input.sizes[0]!;
-  const fixed = input.fixed === true || isKpiFamily(input.sizes);   // see liveDefinition
+  const fixed = input.fixed === true || input.sizes === KPI_SIZES;   // see liveDefinition
   return defineWidget({
     id: input.id, module: 'hr', area: 'Employee Master', title: input.title, description: input.description,
     longDescription: `${input.description} Uses an authenticated SIOMAC API with server-scoped records.`, icon: input.icon,
@@ -611,42 +456,14 @@ function externalDefinition(input: { id: string; title: string; description: str
 
 export const widgets: WidgetDef[] = [
   liveDefinition({ id: 'hr.employeeMaster.activeWorkforce', title: 'Active Workforce', description: 'Current active employee and contractor headcount.', icon: 'fa-users', category: 'Key metrics', defaultSize: 'compact', sizes: KPI_SIZES, render: ActiveWorkforce, previewVariant: 'metric', motion: { kind: 'count-up', durationMs: 520, reducedMotion: 'static' } }),
-  liveDefinition({ id: 'hr.employeeMaster.recordReadiness', title: 'Record Readiness', description: 'Assignment, payroll, and training readiness across active workers.', icon: 'fa-shield-halved', category: 'Key metrics', defaultSize: 'compact', sizes: KPI_SIZES, render: RecordReadiness, previewVariant: 'metric', motion: { kind: 'progress', durationMs: 620, reducedMotion: 'static' } }),
+  liveDefinition({ id: 'hr.employeeMaster.recordReadiness', title: 'Record Readiness', description: 'Assignment, payroll, and training readiness across active workers.', icon: 'fa-shield-check', category: 'Key metrics', defaultSize: 'compact', sizes: KPI_SIZES, render: RecordReadiness, previewVariant: 'metric', motion: { kind: 'progress', durationMs: 620, reducedMotion: 'static' } }),
   liveDefinition({ id: 'hr.employeeMaster.hrWorkQueue', title: 'HR Work Queue', description: 'Open and urgent Employee Master change requests.', icon: 'fa-list-check', category: 'Key metrics', defaultSize: 'compact', sizes: KPI_SIZES, render: HrWorkQueue, previewVariant: 'metric', motion: { kind: 'count-up', durationMs: 520, reducedMotion: 'static' } }),
   liveDefinition({ id: 'hr.employeeMaster.exceptions', title: 'Exceptions', description: 'Current assignment, payroll, and training gaps.', icon: 'fa-circle-exclamation', category: 'Key metrics', defaultSize: 'compact', sizes: KPI_SIZES, render: Exceptions, previewVariant: 'metric', motion: { kind: 'count-up', durationMs: 520, reducedMotion: 'static' } }),
+  liveDefinition({ id: 'hr.employeeMaster.newStarters', title: 'New Starters', description: 'Recent employee starts with month-over-month movement.', icon: 'fa-user-plus', category: 'Activity & trends', defaultSize: 'compact', sizes: KPI_SIZES, render: NewStarters, previewVariant: 'trend', motion: { kind: 'sequence', durationMs: 620, reducedMotion: 'static' } }),
   liveDefinition({ id: 'hr.employeeMaster.departures', title: 'Departures', description: 'Recent employee departures with month-over-month movement.', icon: 'fa-user-minus', category: 'Activity & trends', defaultSize: 'compact', sizes: KPI_SIZES, render: Departures, previewVariant: 'trend', motion: { kind: 'sequence', durationMs: 620, reducedMotion: 'static' } }),
-  liveDefinition({ id: 'hr.employeeMaster.recordQuality', title: 'Record Quality', description: 'Workforce record quality across assignment, payroll, and training readiness.', icon: 'fa-shield-halved', category: 'Health & readiness', defaultSize: 'standard', sizes: QUALITY_SIZES, render: RecordQuality, previewVariant: 'metric', motion: { kind: 'progress', durationMs: 680, reducedMotion: 'static' } }),
+  liveDefinition({ id: 'hr.employeeMaster.recordQuality', title: 'Record Quality', description: 'Workforce record quality across assignment, payroll, and training readiness.', icon: 'fa-shield-check', category: 'Health & readiness', defaultSize: 'standard', sizes: QUALITY_SIZES, render: RecordQuality, previewVariant: 'metric', motion: { kind: 'progress', durationMs: 680, reducedMotion: 'static' } }),
   externalDefinition({ id: 'hr.employeeMaster.employeeAttentionNeutral', title: 'Employee Attention — Neutral', description: 'Employee readiness issue card in the supplied neutral structured design.', icon: 'fa-user-clock', category: 'Actions & workload', defaultSize: 'standard', sizes: ATTENTION_PORTRAIT_SIZES, source: DIRECTORY_SOURCE, permission: 'hr.employees.view', render: EmployeeAttentionNeutralWidget, renderPreview: () => <EmployeeAttentionReferenceView employees={PREVIEW_ATTENTION_REFERENCE} total={25} variant="neutral" initialIndex={1} />, previewVariant: 'task-board', minWidth: 389, minHeight: 528, previewAspect: .62, recommended: false }),
-  // Payroll readiness — a DOUBLE-WIDE KPI strip tile (w8 = two slots).
-  //
-  // This replaces the Master Data Workload card that used to hold this id. That card showed
-  // hardcoded 18/9/72%/3-days, and once wired to real data its numbers were the SAME
-  // `hr_work_queue` stats the HR Work Queue KPI already shows — the same metric twice, and a mix so
-  // thin (5 items over 5 types) that the second slot bought nothing. Payroll readiness is the
-  // highest-consequence number on this board and has an exact two-part partition to chart, so the
-  // width is doing work. New id, because a widget id should mean one thing: an instance saved as
-  // "workload" must not silently become a readiness tile.
-  liveDefinition({
-    id: 'hr.employeeMaster.payrollReadinessWide', title: 'Not Payroll-Ready',
-    description: 'Active employees not payroll-ready, against those that are.',
-    icon: 'fa-money-check-dollar', category: 'Key metrics', defaultSize: 'standard', sizes: KPI_WIDE_SIZES,
-    render: PayrollReadinessKpi, previewVariant: 'status-stack',
-    motion: { kind: 'progress', durationMs: 720, reducedMotion: 'static' },
-  }),
-  // KPI_SIZES (not PULSE_SIZES) is what makes this placeable on the KPI strip: liveDefinition
-  // reads that identity to mark the widget FIXED at w4×h6 like every other KPI tile, so the
-  // strip stays uniform and reorder-only. Category is 'Key metrics' for the same reason — it is a
-  // sibling of Active Workforce, not of the Workforce-pulse cards.
-  liveDefinition({
-    id: 'hr.employeeMaster.monthlyHiresCard', title: 'Hires This Month',
-    description: 'Current-month hires against the previous period.', icon: 'fa-user-plus',
-    category: 'Key metrics', defaultSize: 'compact', sizes: KPI_SIZES, render: MonthlyHiresCard,
-    previewVariant: 'metric', motion: { kind: 'count-up', durationMs: 520, reducedMotion: 'static' },
-    // NO configSchema, deliberately: a KPI tile carries no settings. WidgetFrame only renders the
-    // gear when a widget declares configurable options, so leaving this empty removes it from the
-    // tile rather than hiding a control that exists. This is a plain KPI tile — same white shell
-    // as every other tile on the strip — so there is nothing per-instance left to decide.
-  }),
+  liveDefinition({ id: 'hr.employeeMaster.monthlyHiresCard', title: 'Hires This Month', description: 'Current-month hires with five-month movement.', icon: 'fa-user-plus', category: 'Workforce pulse', defaultSize: 'compact', sizes: PULSE_SIZES, resizeStrategy: 'fixed-minimum', render: MonthlyHiresCard, previewVariant: 'trend', motion: { kind: 'sequence', durationMs: 680, reducedMotion: 'static' } }),
   liveDefinition({ id: 'hr.employeeMaster.internalMovesCard', title: 'Internal Moves', description: 'Internal transfers across the latest six periods.', icon: 'fa-box', category: 'Workforce pulse', defaultSize: 'compact', sizes: PULSE_SIZES, resizeStrategy: 'fixed-minimum', render: InternalMovesCard, previewVariant: 'trend', motion: { kind: 'sequence', durationMs: 680, reducedMotion: 'static' } }),
   liveDefinition({ id: 'hr.employeeMaster.promotionsCard', title: 'Promotions', description: 'Promotion movement across the latest six periods.', icon: 'fa-arrow-trend-up', category: 'Workforce pulse', defaultSize: 'compact', sizes: PULSE_SIZES, resizeStrategy: 'fixed-minimum', render: PromotionsCard, previewVariant: 'trend', motion: { kind: 'sequence', durationMs: 680, reducedMotion: 'static' } }),
   liveDefinition({ id: 'hr.employeeMaster.readinessRadar', title: 'Employee Readiness Radar', description: 'Six-dimension Employee Master readiness profile rendered with Chart.js.', icon: 'fa-chart-simple', category: 'Health & readiness', defaultSize: 'standard', sizes: RADAR_SIZES, render: ReadinessRadar, previewVariant: 'donut', minWidth: 275, minHeight: 388, previewAspect: .9, resizeStrategy: 'fixed-minimum', motion: { kind: 'chart-draw', durationMs: 720, reducedMotion: 'static' } }),

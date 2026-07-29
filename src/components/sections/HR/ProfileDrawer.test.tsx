@@ -174,7 +174,7 @@ describe('Employee profile drawer', () => {
   it('renders the approved facts strip with the FTE-derived work arrangement', () => {
     renderDrawer();
     const facts = document.querySelector<HTMLElement>('.facts')!;
-    expect(within(facts).getByText('Work Schedule')).toBeTruthy();
+    expect(within(facts).getByText('Work Arrangement')).toBeTruthy();
     expect(within(facts).getByText('Full-Time')).toBeTruthy();
   });
 
@@ -223,21 +223,6 @@ describe('Employee profile drawer', () => {
     for (const name of ['workEmail', 'workPhone', 'mobile', 'emergencyName', 'relationship', 'emergencyPhone']) {
       expect(dialog.querySelector(`[name="${name}"]`), name).not.toBeNull();
     }
-    expect(within(dialog).getAllByText('+1 (868)')).toHaveLength(3);
-    expect(dialog.querySelectorAll('.tt-phone-prefix')).toHaveLength(3);
-  });
-
-  it('does not render a decorative online-presence dot on the employee photo', () => {
-    renderDrawer();
-    expect(document.querySelector('.identity .presence')).toBeNull();
-  });
-
-  it('omits Needs Attention entirely when the employee has no unresolved items', () => {
-    shell.attentionPreview = [];
-    shell.attentionTotal = 0;
-    renderDrawer();
-    expect(document.querySelector('.attention-strip')).toBeNull();
-    expect(screen.queryByText('Needs Attention')).toBeNull();
   });
 
   it('keeps the footer actions pinned in the approved footer', () => {
@@ -277,30 +262,12 @@ describe('Employee profile drawer', () => {
     expect(screen.queryByText('Add Document')).toBeNull();
   });
 
-  it('carries a minimal header: caption only, no wordmark and no header controls', () => {
+  it('only offers implemented actions in the three-dot menu', () => {
     renderDrawer();
-    const topbar = document.querySelector<HTMLElement>('.epd-root .topbar')!;
-    expect(within(topbar).getByText('Employee Profile')).toBeTruthy();
-    // The SIOMAC wordmark and both header controls were removed by design.
-    expect(within(topbar).queryByText('SIOMAC')).toBeNull();
-    expect(screen.queryByLabelText('More employee actions')).toBeNull();
-    expect(screen.queryByLabelText('Close employee profile')).toBeNull();
-    expect(topbar.querySelector('button')).toBeNull();
-    expect(document.querySelector('.action-menu')).toBeNull();
-  });
-
-  it('closes on Escape, which is now the keyboard route out of the drawer', () => {
-    const onClose = vi.fn();
-    renderDrawer({ onClose });
-    fireEvent.keyDown(window, { key: 'Escape' });
-    expect(onClose).toHaveBeenCalled();
-  });
-
-  it('renders ONE overlay across loading and loaded, so the slide-in cannot replay', () => {
-    // The skeleton used to render its own .epd-overlay; swapping it for the
-    // loaded content tore the subtree down and re-ran the slide animation.
-    renderDrawer();
-    expect(document.querySelectorAll('.epd-overlay')).toHaveLength(1);
-    expect(document.querySelectorAll('.epd-overlay > .epd-root')).toHaveLength(1);
+    fireEvent.click(screen.getByLabelText('More employee actions'));
+    const menu = document.querySelector('.action-menu')!;
+    const labels = [...menu.querySelectorAll('button')].map(b => b.textContent);
+    expect(labels).toEqual(['Edit Employee', 'Change Employment Status', 'Start Offboarding']);
+    expect(menu.querySelector('.danger')?.textContent).toBe('Start Offboarding');
   });
 });
