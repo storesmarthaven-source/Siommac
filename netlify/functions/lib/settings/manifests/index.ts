@@ -23,6 +23,7 @@ import { hrLeaveManifest } from './hrLeave.manifest';
 import { hrAttendanceManifest } from './hrAttendance.manifest';
 import { financePayrollManifest } from './financePayroll.manifest';
 import { financeStatutoryManifest } from './financeStatutory.manifest';
+import { workforceReadinessManifest } from './workforceReadiness.manifest';
 
 export const moduleSettingsManifests: ModuleSettingsManifest[] = [
   // My Settings / General
@@ -31,6 +32,7 @@ export const moduleSettingsManifests: ModuleSettingsManifest[] = [
   attendanceManifest,
   // Module Policy
   employeesManifest,
+  workforceReadinessManifest,
   onboardingManifest,
   hrLeaveManifest,
   hrAttendanceManifest,

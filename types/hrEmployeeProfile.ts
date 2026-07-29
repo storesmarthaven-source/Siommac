@@ -96,6 +96,14 @@ export interface ProfileEmploymentFacts {
   fte: number | null;
 }
 
+/**
+ * Readiness summary for the gauge, derived from the TYPED control instances —
+ * not from the superseded three-factor (assignment/payroll/training) guess.
+ *
+ * `readyControls`/`totalControls` count real `hr_readiness_control_instances`
+ * rows against active `hr_readiness_controls`, and `blockedDomains` names the
+ * domains that actually hold a non-ready blocking control.
+ */
 export interface ProfileReadinessSummary {
   percent: number;
   readyControls: number;
@@ -103,7 +111,14 @@ export interface ProfileReadinessSummary {
   unresolvedWorkItems: number;
   payrollStatus: 'pending' | 'ready' | 'blocked';
   trainingStatus: 'current' | 'due_soon' | 'expired' | 'none';
-  blockers: ('assignment' | 'payroll' | 'training')[];
+  /** Domains carrying at least one non-ready BLOCKING control. */
+  blockedDomains: ReadinessDomain[];
+  /** Most recent control evaluation for this employee; null before first evaluation. */
+  lastReviewedAt: string | null;
+  /** Resolved label of the coordinating owner, never a raw id. */
+  reviewOwnerLabel: string | null;
+  /** Earliest outstanding work-item due date — the next date something is expected. */
+  nextReviewAt: string | null;
 }
 
 export interface ProfileContactSummary {
@@ -214,3 +229,179 @@ export interface EmployeeAccessAssignment {
 export const ATTENTION_SEVERITY_RANK: Record<AttentionSeverity, number> = {
   critical: 3, warning: 2, info: 1,
 };
+
+// ── Readiness: controls, work items, ownership ──────────────────────────────
+// Mirrors docs/EMPLOYEE_READINESS_COLLABORATION_NOTE.md. A CONTROL is the rule,
+// an INSTANCE is this employee's state against it, and a WORK ITEM is the
+// collaboration record used to resolve a failure. They are deliberately three
+// separate things — a blocker is not always a document upload.
+
+/** Readiness area. Each has exactly one configured operational owner. */
+export type ReadinessDomain =
+  | 'assignment' | 'payroll' | 'training' | 'documents' | 'statutory' | 'access';
+
+/**
+ * What a control definition declares is needed to resolve it. The work-item
+ * panel adapts its information and actions to this — the system must not treat
+ * every blocker as a document-upload problem.
+ */
+export type ReadinessResolutionType =
+  | 'field_correction' | 'document_evidence' | 'training_completion'
+  | 'department_verification' | 'support_request' | 'external_system_confirmation';
+
+/**
+ * Canonical lifecycle. `exception_approved` and `not_applicable` are the only
+ * exceptional terminal outcomes; rejected evidence returns to
+ * `waiting_for_information` and is NOT terminal.
+ */
+export type ReadinessState =
+  | 'open' | 'assigned' | 'waiting_for_information' | 'submitted_for_review'
+  | 'in_review' | 'ready' | 'exception_approved' | 'not_applicable';
+
+/** States in which a control counts as satisfied for coverage. */
+export const READINESS_SATISFIED_STATES: readonly ReadinessState[] =
+  ['ready', 'exception_approved', 'not_applicable'];
+
+export type ReadinessDecision = 'approved' | 'returned' | 'rejected';
+
+/** How an owner was configured. Configuration never grants authority by itself. */
+export type ReadinessOwnerType = 'role' | 'user';
+
+/**
+ * Result of resolving a domain's configured owner.
+ *
+ * `owner_required` is the fail-closed outcome: the domain has no configured
+ * owner, the configured owner no longer exists or is inactive, or no holder of
+ * the configured role holds the capability the control needs. The UI surfaces
+ * this as **Owner Required** for an administrator to configure — it never
+ * silently falls back to HR or to the actor.
+ */
+export interface ReadinessOwnerResolution {
+  domain: ReadinessDomain;
+  status: 'resolved' | 'owner_required';
+  ownerType: ReadinessOwnerType | null;
+  /** Role key or user id. Never rendered directly — `ownerLabel` is. */
+  ownerId: string | null;
+  ownerLabel: string | null;
+  /** Concrete user ids that should receive routing/notification for this domain. */
+  recipientUserIds: string[];
+  /** Populated only when `status` is `owner_required`; explains what is missing. */
+  reason: string | null;
+}
+
+/** A control's rule definition, as configured (not per employee). */
+export interface ReadinessControlDefinition {
+  controlKey: string;
+  label: string;
+  domain: ReadinessDomain;
+  resolutionType: ReadinessResolutionType;
+  description: string | null;
+  isBlocking: boolean;
+}
+
+/** Compact work-item shape carried inside a matrix row. */
+export interface ReadinessWorkItemSummary {
+  id: string;
+  status: ReadinessState;
+  severity: AttentionSeverity;
+  dueDate: string | null;
+  /** Whole days since the work item was opened — the "ageing" the row shows. */
+  ageDays: number;
+  ownerLabel: string | null;
+  responsibleTeam: string | null;
+  /** Who is expected to act NOW; may differ from the owner. */
+  nextResponsibleParty: string | null;
+}
+
+/** One row of the control matrix: the rule, this employee's state, and its work. */
+export interface ReadinessControlMatrixEntry {
+  control: ReadinessControlDefinition;
+  state: ReadinessState;
+  percent: number;
+  evaluatedAt: string | null;
+  /** Resolved owner for the control's domain, including the fail-closed case. */
+  owner: ReadinessOwnerResolution;
+  /** The open work item blocking this control, when one exists. */
+  workItem: ReadinessWorkItemSummary | null;
+}
+
+export interface ReadinessCoverage {
+  percent: number;
+  readyControls: number;
+  totalControls: number;
+  unresolvedWorkItems: number;
+  blockedDomains: ReadinessDomain[];
+}
+
+/** The Readiness tab's whole dataset. */
+export interface EmployeeReadinessMatrix {
+  employeeId: string;
+  coverage: ReadinessCoverage;
+  controls: ReadinessControlMatrixEntry[];
+  /** Actions the CURRENT actor may take. Presentation only — routes re-authorize. */
+  capabilities: ReadinessCapabilities;
+}
+
+/** Presentation hints for readiness actions. Server-side authorization is authoritative. */
+export interface ReadinessCapabilities {
+  view: boolean;
+  /** Coordination: remind, reassign, note. Does NOT confer specialist authority. */
+  followUp: boolean;
+  /** Approve/return submitted evidence. Elevated, and never granted to hr_staff. */
+  review: boolean;
+}
+
+export interface ReadinessWorkItemTransitionEntry {
+  id: string;
+  fromStatus: ReadinessState | null;
+  toStatus: ReadinessState;
+  actorName: string | null;
+  note: string | null;
+  occurredAt: string;
+}
+
+/** Full work-item detail behind **Open Work Item**. */
+export interface ReadinessWorkItemDetail {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  control: ReadinessControlDefinition;
+  status: ReadinessState;
+  severity: AttentionSeverity;
+  dueDate: string | null;
+  ageDays: number;
+  owner: ReadinessOwnerResolution;
+  ownerLabel: string | null;
+  responsibleTeam: string | null;
+  /** HR's coordinating contact for this employee, resolved to a name. */
+  coordinatorLabel: string | null;
+  reviewerName: string | null;
+  decision: ReadinessDecision | null;
+  decisionReason: string | null;
+  /** Evidence/source references; shape depends on the control's resolution type. */
+  evidenceRefs: unknown[];
+  correlationId: string;
+  workflowId: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+  history: ReadinessWorkItemTransitionEntry[];
+  /** The two or three valid next actions for THIS control and THIS actor. */
+  availableActions: ReadinessWorkItemAction[];
+}
+
+/**
+ * One offered outcome. `effect` is the explicit explanation of what the
+ * submission will change, which the dialog is required to show.
+ */
+export interface ReadinessWorkItemAction {
+  action: ReadinessActionKey;
+  /** The primary button label for this outcome, e.g. "Approve And Complete". */
+  label: string;
+  effect: string;
+  requiresReason: boolean;
+  targetStatus: ReadinessState;
+}
+
+export type ReadinessActionKey =
+  | 'send_reminder' | 'assign' | 'request_information'
+  | 'submit_for_review' | 'approve' | 'return' | 'approve_exception' | 'mark_not_applicable';

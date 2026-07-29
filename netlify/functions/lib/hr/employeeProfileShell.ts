@@ -19,6 +19,7 @@ import {
   buildAttentionItems, buildTabIndicators, filterAttentionByCapability, loadAttentionInput,
   type AttentionEmployee,
 } from './employeeAttention';
+import { getReadinessSummary } from './readinessService';
 import type {
   EmployeeProfileShell, ProfileAccountHealth, ProfileActivityEntry, ProfileCapabilities,
   ProfileContactSummary, ProfileEmploymentFacts, ProfileIdentity, ProfileReadinessSummary,
@@ -82,30 +83,12 @@ export function tenureMonths(startDate: string | null, today: string): number | 
   return Math.max(0, months);
 }
 
-/** Readiness summary expressed as controls, so the gauge can show ready/total. */
-export function readinessSummary(
-  employee: Pick<ShellEmployeeRow, 'supervisor_id' | 'department_id' | 'site_id'>,
-  payrollStatus: ProfileReadinessSummary['payrollStatus'],
-  trainingStatus: ProfileReadinessSummary['trainingStatus'],
-  unresolvedWorkItems: number,
-): ProfileReadinessSummary {
-  const assignmentComplete = !!employee.supervisor_id && !!employee.department_id && !!employee.site_id;
-  const blockers: ProfileReadinessSummary['blockers'] = [];
-  if (!assignmentComplete) blockers.push('assignment');
-  if (payrollStatus !== 'ready') blockers.push('payroll');
-  if (trainingStatus !== 'current') blockers.push('training');
-  const totalControls = 3;
-  const readyControls = totalControls - blockers.length;
-  return {
-    percent: Math.round((readyControls / totalControls) * 100),
-    readyControls,
-    totalControls,
-    unresolvedWorkItems,
-    payrollStatus,
-    trainingStatus,
-    blockers,
-  };
-}
+// The former `readinessSummary()` lived here and scored readiness from three
+// hard-coded booleans (assignment / payroll / training). It has been DELETED,
+// not wrapped: readiness is now the typed control model in
+// `lib/hr/readinessService.ts`, and keeping a second calculation alive would
+// have let the drawer gauge and the Readiness tab disagree about the same
+// employee. Callers use `getReadinessSummary()`.
 
 /**
  * First value that is present AND not blank.
@@ -231,7 +214,9 @@ export async function buildProfileShell(
 
   const capabilities: ProfileCapabilities = {
     viewStatutory:       granted.has('hr.employees.statutory.view'),
-    viewReadiness:       granted.has('hr.employees.payroll_readiness.view') || granted.has('hr.employees.statutory.view'),
+    viewReadiness:       granted.has('hr.employees.readiness.view')
+                         || granted.has('hr.employees.payroll_readiness.view')
+                         || granted.has('hr.employees.statutory.view'),
     viewDocuments:       granted.has('hr.employee_documents.view'),
     viewAudit:           granted.has('hr.audit.view'),
     viewOnboarding:      granted.has('hr.onboarding.view'),
@@ -244,8 +229,11 @@ export async function buildProfileShell(
   const visibleItems = filterAttentionByCapability(allItems, granted);
   const tabIndicators = buildTabIndicators(visibleItems);
 
+  // Readiness comes from the typed control instances, NOT from the attention
+  // list: an attention item is anything needing action, while readiness counts
+  // controls. Conflating them was what made the old gauge disagree with the tab.
   const readiness = capabilities.viewReadiness
-    ? readinessSummary(employee, ctx.payrollStatus, ctx.trainingStatus, visibleItems.length)
+    ? await getReadinessSummary(employee.id, ctx.payrollStatus, ctx.trainingStatus)
     : null;
 
   const recentActivity = capabilities.viewAudit ? await activityPreview(employee.id) : [];

@@ -50,6 +50,10 @@ import {
   buildAttentionItems, buildTabIndicators, filterAttentionByCapability, loadAttentionInput,
 } from '../lib/hr/employeeAttention';
 import { buildProfileShell, type ShellContext } from '../lib/hr/employeeProfileShell';
+import {
+  getReadinessMatrix, getWorkItemDetail, transitionWorkItem,
+  READINESS_VIEW, READINESS_FOLLOW_UP, READINESS_REVIEW,
+} from '../lib/hr/readinessService';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -446,6 +450,11 @@ async function grantedProfileCapabilities(actor: { id: string; role?: string | n
     'hr.employees.statutory.view', 'hr.employees.payroll_readiness.view',
     'hr.employee_documents.view', 'hr.audit.view',
     'hr.onboarding.view', 'hr.offboarding.view', 'auth.security.view',
+    // The typed readiness model has its own three keys. `readiness.view` is the
+    // canonical one for this surface; the older payroll_readiness/statutory keys
+    // stay in the OR below so an actor who could already see readiness does not
+    // silently lose it.
+    READINESS_VIEW, READINESS_FOLLOW_UP, READINESS_REVIEW,
   ];
   const results = await Promise.all(keys.map(k => userCan(actor, k)));
   return new Set(keys.filter((_, i) => results[i]));
@@ -680,6 +689,177 @@ router.post('/employees/access-assignments/revoke', async c => {
     const err = e as { status?: number; message?: string };
     return c.json({ success: false, message: err.message ?? 'Access assignment revoke failed.' },
       (err.status ?? 500) as 200);
+  }
+});
+
+// ── Readiness: control matrix, work items, follow-up and review ────────────
+//
+// Four routes, three permissions, deliberately NOT collapsed into one:
+//   view      — read the matrix and a work item
+//   follow_up — coordinate (remind, request information). HR-level.
+//   review    — accept or return a specialist result. Elevated; never hr_staff.
+//
+// Frontend capability gating is presentation only; each route re-authorizes.
+
+/** Resolve just the readiness capability set for the actor. */
+async function grantedReadinessCapabilities(actor: { id: string; role?: string | null }): Promise<Set<string>> {
+  const keys = [READINESS_VIEW, READINESS_FOLLOW_UP, READINESS_REVIEW];
+  const results = await Promise.all(keys.map(k => userCan(actor, k)));
+  return new Set(keys.filter((_, i) => results[i]));
+}
+
+/** Map a service/ownership error onto its HTTP status without losing the message. */
+function readinessError(c: Context, e: unknown, fallback: string) {
+  const err = e as { status?: number; code?: string; message?: string };
+  return c.json({
+    success: false,
+    message: err.message ?? fallback,
+    // `owner_required` is a configuration refusal, not a validation error: the UI
+    // renders it as "Owner Required" and points an administrator at Settings.
+    code: err.code ?? undefined,
+  }, (err.status ?? 500) as 200);
+}
+
+/**
+ * POST /api/hr/employees/readiness/matrix — the Readiness tab's dataset.
+ *
+ * Every control, this employee's state against it, its RESOLVED owner (including
+ * the fail-closed `owner_required` case) and any open work item.
+ */
+router.post('/employees/readiness/matrix', async c => {
+  const actor = await requirePermission(c, READINESS_VIEW);
+  const v = zv(c, z.object({ employeeId: z.string().min(1) }), (c.get('body')).args ?? {});
+  if (!v.ok) return v.response;
+
+  const emp = await loadEmployee(v.data.employeeId);
+  if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
+
+  try {
+    const granted = await grantedReadinessCapabilities(actor);
+    return c.json({ success: true, data: await getReadinessMatrix(v.data.employeeId, granted) });
+  } catch (e) {
+    return readinessError(c, e, 'Readiness matrix read failed.');
+  }
+});
+
+/**
+ * POST /api/hr/employees/readiness/work-item — the decision workspace behind
+ * **Open Work Item**: full context, collaboration history, and ONLY the actions
+ * this actor is authorised to take.
+ */
+router.post('/employees/readiness/work-item', async c => {
+  const actor = await requirePermission(c, READINESS_VIEW);
+  const v = zv(c, z.object({ workItemId: z.uuid() }), (c.get('body')).args ?? {});
+  if (!v.ok) return v.response;
+
+  try {
+    const granted = await grantedReadinessCapabilities(actor);
+    return c.json({ success: true, data: await getWorkItemDetail(v.data.workItemId, granted) });
+  } catch (e) {
+    return readinessError(c, e, 'Readiness work item read failed.');
+  }
+});
+
+/**
+ * POST /api/hr/employees/readiness/follow-up — HR coordination.
+ *
+ * `send_reminder` keeps the status unchanged and notifies the routed owner;
+ * `request_information` moves the item to Waiting For Information and asks the
+ * employee for evidence. Neither confers specialist resolution authority — that
+ * is the whole point of separating this route from `/review`.
+ */
+router.post('/employees/readiness/follow-up', async c => {
+  const actor = await requirePermission(c, READINESS_FOLLOW_UP);
+  const v = zv(c, z.object({
+    employeeId: z.string().min(1),
+    controlKey: z.string().min(1),
+    workItemId: z.uuid().nullable().optional(),
+    action:     z.enum(['send_reminder', 'request_information']),
+    note:       z.string().trim().max(1000).optional(),
+    dueDate:    z.iso.date().nullable().optional(),
+    severity:   z.enum(['critical', 'warning', 'info']).nullable().optional(),
+  }), (c.get('body')).args ?? {});
+  if (!v.ok) return v.response;
+
+  // `request_information` states what the employee must supply, so a reason is
+  // mandatory — an unexplained request is not actionable by the employee.
+  if (v.data.action === 'request_information' && !v.data.note) {
+    return c.json({ success: false, message: 'Explain what the employee needs to supply.' }, 422 as 200);
+  }
+
+  const emp = await loadEmployee(v.data.employeeId);
+  if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
+
+  try {
+    const result = await transitionWorkItem({
+      actorId:       actor.id,
+      employeeId:    v.data.employeeId,
+      controlKey:    v.data.controlKey,
+      workItemId:    v.data.workItemId ?? null,
+      action:        v.data.action,
+      // A reminder must not move the lifecycle; it only re-notifies the owner.
+      toStatus:      v.data.action === 'request_information' ? 'waiting_for_information' : 'assigned',
+      severity:      v.data.severity ?? null,
+      dueDate:       v.data.dueDate ?? null,
+      note:          v.data.note ?? null,
+      correlationId: crypto.randomUUID(),
+    });
+    return c.json({ success: true, data: result });
+  } catch (e) {
+    return readinessError(c, e, 'Readiness follow-up failed.');
+  }
+});
+
+/**
+ * POST /api/hr/employees/readiness/review — the authorised review transitions.
+ *
+ * Elevated on purpose. `return` is NOT terminal: rejected evidence goes back to
+ * Waiting For Information with a correction request, per the collaboration note.
+ */
+router.post('/employees/readiness/review', async c => {
+  const actor = await requirePermission(c, READINESS_REVIEW);
+  const v = zv(c, z.object({
+    employeeId: z.string().min(1),
+    controlKey: z.string().min(1),
+    workItemId: z.uuid().nullable().optional(),
+    action:     z.enum(['approve', 'return', 'approve_exception', 'mark_not_applicable']),
+    reason:     z.string().trim().max(1000).optional(),
+  }), (c.get('body')).args ?? {});
+  if (!v.ok) return v.response;
+
+  // Every outcome except a clean approval changes the employee's readiness on
+  // the reviewer's say-so, so it must carry an audited reason.
+  if (v.data.action !== 'approve' && !v.data.reason) {
+    return c.json({ success: false, message: 'A reason is required for this decision.' }, 422 as 200);
+  }
+
+  const emp = await loadEmployee(v.data.employeeId);
+  if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
+
+  const TARGET: Record<string, { status: 'ready' | 'waiting_for_information' | 'exception_approved' | 'not_applicable'; decision: 'approved' | 'returned' | null }> = {
+    approve:             { status: 'ready',                   decision: 'approved' },
+    return:              { status: 'waiting_for_information', decision: 'returned' },
+    approve_exception:   { status: 'exception_approved',      decision: 'approved' },
+    mark_not_applicable: { status: 'not_applicable',          decision: null },
+  };
+  const target = TARGET[v.data.action]!;
+
+  try {
+    const result = await transitionWorkItem({
+      actorId:        actor.id,
+      employeeId:     v.data.employeeId,
+      controlKey:     v.data.controlKey,
+      workItemId:     v.data.workItemId ?? null,
+      action:         v.data.action,
+      toStatus:       target.status,
+      decision:       target.decision,
+      decisionReason: v.data.reason ?? null,
+      note:           v.data.reason ?? null,
+      correlationId:  crypto.randomUUID(),
+    });
+    return c.json({ success: true, data: result });
+  } catch (e) {
+    return readinessError(c, e, 'Readiness review failed.');
   }
 });
 
