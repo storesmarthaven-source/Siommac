@@ -29,6 +29,8 @@
 import { type ComponentChildren, type VNode } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { toast } from '@store';
+import { isCompleteTrinidadPhone, normalizeTrinidadPhone } from '../../../../../types/trinidadPhone';
+import { TrinidadPhoneInput } from '../TrinidadPhoneInput';
 import {
   useUpdateHrContact, useUpdateHrStatutory, useUpdateHrEmployeeRecord, useApplyHrAssignment,
   useCreateHrChangeRequest, useUploadHrDocument, useHrEmployees, useHrOrgUnits, useHrSites,
@@ -387,11 +389,11 @@ function ContactAreaForm({ employeeId, shell, access, scope, onBack, onClose }: 
     if (scope === 'contact') {
       if (!workEmail.trim()) next.workEmail = 'A work email is required.';
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(workEmail.trim())) next.workEmail = 'Enter a valid email address.';
-      if (workPhone.trim() && workPhone.trim().length < 7) next.workPhone = 'Enter at least 7 characters.';
-      if (mobile.trim() && mobile.trim().length < 7) next.mobile = 'Enter at least 7 characters.';
+      if (!isCompleteTrinidadPhone(workPhone)) next.workPhone = 'Enter a complete seven-digit number.';
+      if (!isCompleteTrinidadPhone(mobile)) next.mobile = 'Enter a complete seven-digit number.';
     } else {
       if (name.trim() && name.trim().length < 2) next.name = 'Enter the contact’s full name.';
-      if (phone.trim() && phone.trim().length < 7) next.phone = 'Enter at least 7 characters.';
+      if (!isCompleteTrinidadPhone(phone)) next.phone = 'Enter a complete seven-digit number.';
       if (name.trim() && !phone.trim()) next.phone = 'An emergency contact needs a number.';
       if (phone.trim() && !name.trim()) next.name = 'Record who this number belongs to.';
     }
@@ -410,8 +412,16 @@ function ContactAreaForm({ employeeId, shell, access, scope, onBack, onClose }: 
         employeeId,
         mode: direct ? 'direct' : 'request',
         ...(scope === 'contact'
-          ? { work: { email: workEmail.trim(), phone: orNull(workPhone), mobilePhone: orNull(mobile) } }
-          : { emergency: { name: orNull(name), phone: orNull(phone), relationship: orNull(relationship) } }),
+          ? { work: {
+              email: workEmail.trim(),
+              phone: normalizeTrinidadPhone(workPhone),
+              mobilePhone: normalizeTrinidadPhone(mobile),
+            } }
+          : { emergency: {
+              name: orNull(name),
+              phone: normalizeTrinidadPhone(phone),
+              relationship: orNull(relationship),
+            } }),
       });
       toast.success(result.data.mode === 'request'
         ? `Change request ${result.data.changeNo ?? ''} submitted for approval.`.trim()
@@ -451,10 +461,10 @@ function ContactAreaForm({ employeeId, shell, access, scope, onBack, onClose }: 
                 />
               </Field>
               <Field id="contact-phone" label="Work Phone" error={errors.workPhone}>
-                <input id="contact-phone" type="tel" maxLength={60} value={workPhone} onInput={event => setWorkPhone(event.currentTarget.value)} />
+                <TrinidadPhoneInput id="contact-phone" value={workPhone} onValueChange={setWorkPhone} />
               </Field>
               <Field id="contact-mobile" label="Mobile" error={errors.mobile}>
-                <input id="contact-mobile" type="tel" maxLength={60} value={mobile} onInput={event => setMobile(event.currentTarget.value)} />
+                <TrinidadPhoneInput id="contact-mobile" value={mobile} onValueChange={setMobile} />
               </Field>
             </>
           ) : (
@@ -469,7 +479,7 @@ function ContactAreaForm({ employeeId, shell, access, scope, onBack, onClose }: 
                 </select>
               </Field>
               <Field id="emergency-phone" label="Emergency Phone" error={errors.phone}>
-                <input id="emergency-phone" type="tel" maxLength={60} value={phone} onInput={event => setPhone(event.currentTarget.value)} />
+                <TrinidadPhoneInput id="emergency-phone" value={phone} onValueChange={setPhone} />
               </Field>
             </>
           )}

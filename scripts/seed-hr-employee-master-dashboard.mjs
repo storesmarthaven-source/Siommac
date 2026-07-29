@@ -1,10 +1,11 @@
 /**
  * Employee Profile / Employee Master demo seed.
  *
- * Populates canonical profile sources for six standing demo employees. Five are
- * substantially complete; each scenario deliberately leaves a small, named gap
- * so Needs Attention, tab indicators, document health and readiness can be
- * exercised with real data.
+ * Populates canonical profile sources for seven standing demo employees. Every
+ * employee has a complete identity, assignment and contact snapshot. Deliberate
+ * issues live in readiness, statutory and document records, so QA can exercise
+ * Needs Attention without making the core Employee Snapshot look accidentally
+ * unfinished.
  *
  * Idempotency: every satellite row has a fixed UUID or natural conflict key.
  * The script updates only the curated employee ids below and seed-tagged rows.
@@ -36,8 +37,8 @@ const profiles = [
   },
   {
     id: 'USR-FINMGR', no: 'EMP-FIN01', first: 'Camille', last: 'Rampersad',
-    position: 'Finance Manager', scenario: 'assignment_gaps',
-    phone: '+1 (868) 555-0112', mobile: null,
+    position: 'Finance Manager', scenario: 'assignment_review',
+    phone: '+1 (868) 555-0112', mobile: '+1 (868) 333-4012',
   },
   {
     id: 'USR-AF908865', no: 'EMP-0022', first: 'Darrell', last: 'Browne',
@@ -58,6 +59,11 @@ const profiles = [
     id: 'USR-76C36139', no: 'EMP-0020', first: 'Nectus', last: 'Alexander',
     position: 'Field Technician', scenario: 'missing_document',
     phone: '+1 (868) 555-0138', mobile: '+1 (868) 333-4272',
+  },
+  {
+    id: 'USR-FINFUND', no: 'EMP-FIN02', first: 'Rohan', last: 'Persad',
+    position: 'Finance Officer', scenario: 'multiple_issues',
+    phone: '+1 (868) 555-0176', mobile: '+1 (868) 333-4316',
   },
 ];
 
@@ -117,13 +123,12 @@ async function main() {
     return;
   }
 
-  const completeSupervisor = profiles[0].id;
+  const supervisorFor = profile => profile.id === profiles[0].id ? profiles[3].id : profiles[0].id;
   const assignmentByEmployee = new Map(currentAssignments.map(row => [row.employee_id, row.id]));
   const bankByEmployee = new Map(currentBanks.map(row => [row.employee_id, row.id]));
   const accessByEmployee = new Map(currentAccess.map(row => [row.employee_id, row.id]));
   const payGroupByEmployee = new Map(currentPayAssignments.map(row => [row.employee_id, row.pay_group_id]));
   for (const [index, profile] of profiles.entries()) {
-    const hasAssignmentGap = profile.scenario === 'assignment_gaps';
     const department = departments[index % departments.length];
     const site = sites[index % sites.length];
     await checked(`update ${profile.id}`, sb.from('app_users').update({
@@ -146,17 +151,17 @@ async function main() {
       emergency_contact_name: `${profile.last} Family Contact`,
       emergency_contact_phone: `+1 (868) 680-${String(2100 + index)}`,
       emergency_contact_relationship: index % 2 ? 'parent' : 'spouse',
-      department_id: hasAssignmentGap ? null : department.id,
-      site_id: hasAssignmentGap ? null : site.id,
-      supervisor_id: hasAssignmentGap ? null : completeSupervisor,
+      department_id: department.id,
+      site_id: site.id,
+      supervisor_id: supervisorFor(profile),
     }).eq('id', profile.id));
 
     await checked(`upsert assignment ${profile.id}`, sb.from('hr_employee_assignments').upsert({
       id: assignmentByEmployee.get(profile.id) ?? uuid('1', index + 1),
       employee_id: profile.id,
-      department_id: hasAssignmentGap ? null : department.id,
-      site_id: hasAssignmentGap ? null : site.id,
-      supervisor_id: hasAssignmentGap ? null : completeSupervisor,
+      department_id: department.id,
+      site_id: site.id,
+      supervisor_id: supervisorFor(profile),
       assignment_type: 'primary',
       effective_from: `2024-07-01`,
       effective_to: null,
@@ -172,15 +177,15 @@ async function main() {
       employee_id: profile.id,
       jurisdiction: 'TT',
       currency: 'TTD',
-      nis_number: profile.scenario === 'payroll_blocked' ? null : `NIS-DEMO-${profile.no}`,
-      nis_status: profile.scenario === 'payroll_blocked' ? 'pending_verification' : 'verified',
+      nis_number: ['payroll_blocked', 'multiple_issues'].includes(profile.scenario) ? null : `NIS-DEMO-${profile.no}`,
+      nis_status: ['payroll_blocked', 'multiple_issues'].includes(profile.scenario) ? 'pending_verification' : 'verified',
       nis_applicable: true,
-      payroll_ready_status: profile.scenario === 'payroll_blocked' ? 'blocked' : 'ready',
-      missing_blockers: profile.scenario === 'payroll_blocked'
+      payroll_ready_status: ['payroll_blocked', 'multiple_issues'].includes(profile.scenario) ? 'blocked' : 'ready',
+      missing_blockers: ['payroll_blocked', 'multiple_issues'].includes(profile.scenario)
         ? ['nis verification', 'bank account confirmation'] : [],
-      finance_handoff_eligible: profile.scenario !== 'payroll_blocked',
-      verified_by: profile.scenario === 'payroll_blocked' ? null : actor.id,
-      verified_at: profile.scenario === 'payroll_blocked' ? null : new Date().toISOString(),
+      finance_handoff_eligible: !['payroll_blocked', 'multiple_issues'].includes(profile.scenario),
+      verified_by: ['payroll_blocked', 'multiple_issues'].includes(profile.scenario) ? null : actor.id,
+      verified_at: ['payroll_blocked', 'multiple_issues'].includes(profile.scenario) ? null : new Date().toISOString(),
       created_by: actor.id,
       updated_by: actor.id,
     }, { onConflict: 'employee_id,jurisdiction' }));
@@ -261,7 +266,7 @@ async function main() {
   const documentRows = [];
   for (const [employeeIndex, profile] of profiles.entries()) {
     for (const [typeIndex, req] of requirementRows.entries()) {
-      if (profile.scenario === 'missing_document' && req.document_type === 'national_id') continue;
+      if (['missing_document', 'multiple_issues'].includes(profile.scenario) && req.document_type === 'national_id') continue;
       documentRows.push({
         id: `e6${String(employeeIndex + 1).padStart(2, '0')}0000-${String(typeIndex + 1).padStart(4, '0')}-4000-8000-${String((employeeIndex * 10) + typeIndex + 1).padStart(12, '0')}`,
         employee_id: profile.id,
@@ -287,7 +292,7 @@ async function main() {
     .upsert(documentRows, { onConflict: 'id' }));
 
   const certificates = profiles.map((profile, index) => {
-    const due = ['document_and_training', 'training_due'].includes(profile.scenario);
+    const due = ['document_and_training', 'training_due', 'multiple_issues'].includes(profile.scenario);
     return {
       id: uuid('7', index + 1),
       certificate_no: `CERT-PROFILE-${String(index + 1).padStart(3, '0')}`,
@@ -312,10 +317,10 @@ async function main() {
   for (const [employeeIndex, profile] of profiles.entries()) {
     for (const [controlIndex, control] of controls.entries()) {
       const blocked =
-        (profile.scenario === 'assignment_gaps' && control.domain === 'assignment')
-        || (profile.scenario === 'payroll_blocked' && ['payroll', 'statutory'].includes(control.domain))
-        || (['document_and_training', 'training_due'].includes(profile.scenario) && control.domain === 'training')
-        || (profile.scenario === 'missing_document' && control.domain === 'documents');
+        (profile.scenario === 'assignment_review' && control.domain === 'assignment')
+        || (['payroll_blocked', 'multiple_issues'].includes(profile.scenario) && ['payroll', 'statutory'].includes(control.domain))
+        || (['document_and_training', 'training_due', 'multiple_issues'].includes(profile.scenario) && control.domain === 'training')
+        || (['missing_document', 'multiple_issues'].includes(profile.scenario) && control.domain === 'documents');
       instances.push({
         id: `e8${String(employeeIndex + 1).padStart(2, '0')}0000-${String(controlIndex + 1).padStart(4, '0')}-4000-8000-${String((employeeIndex * 100) + controlIndex + 1).padStart(12, '0')}`,
         employee_id: profile.id,
@@ -348,7 +353,7 @@ async function main() {
   const [verifiedProfiles, verifiedAssignments, verifiedStatutory, verifiedBanks, verifiedDocuments, verifiedReadiness] =
     await Promise.all([
       checked('verify profile rows', sb.from('app_users')
-        .select('id,employee_number,department_id,site_id,supervisor_id,email,phone,mobile_phone')
+        .select('id,employee_number,full_name,position,employment_type,employment_status,start_date,work_schedule,cost_center,employee_grade,department_id,site_id,supervisor_id,email,phone,mobile_phone,emergency_contact_name,emergency_contact_phone,emergency_contact_relationship')
         .in('id', employeeIds)),
       checked('verify current assignments', sb.from('hr_employee_assignments')
         .select('employee_id,weekly_hours,fte,notice_period_days').in('employee_id', employeeIds).eq('is_current', true)),
@@ -383,6 +388,26 @@ async function main() {
   for (const key of Object.keys(expected)) {
     if (actual[key] < expected[key]) {
       throw new Error(`verification ${key}: expected at least ${expected[key]}, got ${actual[key]}.`);
+    }
+  }
+  const requiredProfileFields = [
+    'employee_number', 'full_name', 'position', 'employment_type', 'employment_status',
+    'start_date', 'work_schedule', 'cost_center', 'employee_grade', 'department_id',
+    'site_id', 'supervisor_id', 'email', 'phone', 'mobile_phone',
+    'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship',
+  ];
+  for (const row of verifiedProfiles) {
+    const missingFields = requiredProfileFields.filter(field => {
+      const value = row[field];
+      return value === null || value === undefined || (typeof value === 'string' && !value.trim());
+    });
+    if (missingFields.length) {
+      throw new Error(`verification ${row.employee_number}: missing ${missingFields.join(', ')}.`);
+    }
+    for (const field of ['phone', 'mobile_phone', 'emergency_contact_phone']) {
+      if (!/^\+1 \(868\) \d{3}-\d{4}$/.test(row[field])) {
+        throw new Error(`verification ${row.employee_number}: ${field} is not canonical Trinidad format.`);
+      }
     }
   }
 

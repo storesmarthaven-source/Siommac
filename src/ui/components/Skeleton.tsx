@@ -169,3 +169,89 @@ export function SkeletonStatGrid({ count = 4, class: cls }: SkeletonStatGridProp
     </div>
   );
 }
+
+export interface WidgetSkeletonProps {
+  class?: string;
+  variant?: 'metric' | 'card' | 'chart' | 'list';
+}
+
+/** Standard cold-state for any widget. It fills the widget cell and mirrors the
+ * widget's information density without fabricating values. */
+export function WidgetSkeleton({ class: cls, variant = 'card' }: WidgetSkeletonProps): VNode {
+  return (
+    <article
+      class={`ui-widget-skeleton ui-widget-skeleton--${variant}${cls ? ` ${cls}` : ''}`}
+      data-widget-content-root
+      role="status"
+      aria-busy="true"
+    >
+      <span class="sr-only">Loading widget data…</span>
+      <header>
+        <Skeleton circle width={34} />
+        <Skeleton width="42%" height={13} radius={999} />
+      </header>
+      {variant === 'metric' ? (
+        <>
+          <Skeleton width="34%" height={34} radius={8} />
+          <Skeleton width="66%" height={11} radius={999} />
+        </>
+      ) : variant === 'list' ? (
+        <ListSkeleton rows={4} avatar={false} />
+      ) : variant === 'chart' ? (
+        <>
+          <Skeleton width="62%" height={16} radius={999} />
+          <Skeleton class="ui-widget-skeleton-chart" width="100%" height={128} radius={10} />
+        </>
+      ) : (
+        <SkeletonText lines={4} width="88%" lastWidth="58%" />
+      )}
+    </article>
+  );
+}
+
+export interface DashboardPageSkeletonProps {
+  title?: string;
+  kpiCount?: number;
+  widgetCount?: number;
+  includeTable?: boolean;
+}
+
+/** Standard dashboard cold-state: header, KPI strip, insight widgets and an
+ * optional register. Pages should use this only until their first authoritative
+ * datasets exist; subsequent background refreshes keep real content visible. */
+export function DashboardPageSkeleton({
+  title = 'Loading dashboard',
+  kpiCount = 4,
+  widgetCount = 3,
+  includeTable = false,
+}: DashboardPageSkeletonProps): VNode {
+  return (
+    <section class="ui-dashboard-skeleton" role="status" aria-busy="true" aria-label={title}>
+      <span class="sr-only">{title}…</span>
+      <header class="ui-dashboard-skeleton-head">
+        <span><Skeleton circle width={42} /></span>
+        <div>
+          <Skeleton width={120} height={10} radius={999} />
+          <Skeleton width={250} height={24} radius={8} />
+          <Skeleton width={430} height={11} radius={999} />
+        </div>
+        <Skeleton width={150} height={38} radius={9} />
+      </header>
+      <SkeletonStatGrid count={kpiCount} />
+      <div class="ui-dashboard-skeleton-widgets">
+        {Array.from({ length: widgetCount }, (_, index) => (
+          <WidgetSkeleton key={index} variant={index === 0 ? 'chart' : index === 1 ? 'list' : 'card'} />
+        ))}
+      </div>
+      {includeTable && (
+        <div class="ui-dashboard-skeleton-table">
+          <div class="ui-dashboard-skeleton-table-head">
+            <Skeleton width={180} height={16} radius={999} />
+            <Skeleton width={260} height={36} radius={9} />
+          </div>
+          <table><tbody><TableSkeleton rows={7} cols={6} firstCellAvatar /></tbody></table>
+        </div>
+      )}
+    </section>
+  );
+}

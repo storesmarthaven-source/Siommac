@@ -804,8 +804,8 @@ export default async function run(h) {
     ok(r, 'contact direct work');
     expect(r.body.data.mode === 'direct', 'mode direct');
     const { data: u } = await sb.from('app_users').select('phone, mobile_phone').eq('id', ctx.emp1).maybeSingle();
-    expect(u && u.phone === '555-9999', 'work phone applied');
-    expect(u && u.mobile_phone === '555-8888', 'mobile phone applied independently');
+    expect(u && u.phone === '+1 (868) 555-9999', 'work phone canonicalized');
+    expect(u && u.mobile_phone === '+1 (868) 555-8888', 'mobile phone canonicalized independently');
     const { data: ev } = await sb.from('app_events').select('id').eq('event_type', 'hr.employee.contact_updated').eq('source_entity_id', ctx.emp1).limit(1);
     expect(ev && ev.length >= 1, 'contact_updated event');
   });
@@ -813,21 +813,31 @@ export default async function run(h) {
   await test('contact/update direct EMERGENCY contact (admin, restricted)', async () => {
     const r = await api('hr/employees/contact/update', A, { employeeId: ctx.emp1, mode: 'direct', emergency: { name: `${TAG} Kin`, phone: '555-7777', relationship: 'Spouse' } });
     ok(r, 'contact direct emergency');
-    const { data: u } = await sb.from('app_users').select('emergency_contact_name').eq('id', ctx.emp1).maybeSingle();
+    const { data: u } = await sb.from('app_users').select('emergency_contact_name,emergency_contact_phone').eq('id', ctx.emp1).maybeSingle();
     expect(u && u.emergency_contact_name === `${TAG} Kin`, 'emergency name applied');
+    expect(u && u.emergency_contact_phone === '+1 (868) 555-7777', 'emergency phone canonicalized');
     // get now returns emergency_contact_* (HR_COLS extended) so the Edit Contact modal can pre-fill
     const g = await api('hr/employees/get', A, { employeeId: ctx.emp1 });
     expect(g.body.data.employee.emergency_contact_name === `${TAG} Kin`, 'get returns emergency_contact_name for pre-fill');
   });
 
   await test('contact/update WORK direct (manager lacks hr.employees.update) → denied', async () => {
-    const r = await api('hr/employees/contact/update', ctx.mgrTok, { employeeId: ctx.emp1, mode: 'direct', work: { phone: '555-1111' } });
+    const r = await api('hr/employees/contact/update', ctx.mgrTok, { employeeId: ctx.emp1, mode: 'direct', work: { phone: '+1 (868) 555-1111' } });
     fails(r, 'manager cannot direct-update work contact');
   });
 
   await test('contact/update EMERGENCY direct (manager lacks restricted_contact.update) → denied', async () => {
-    const r = await api('hr/employees/contact/update', ctx.mgrTok, { employeeId: ctx.emp1, mode: 'direct', emergency: { phone: '555-0000' } });
+    const r = await api('hr/employees/contact/update', ctx.mgrTok, { employeeId: ctx.emp1, mode: 'direct', emergency: { phone: '+1 (868) 555-0000' } });
     fails(r, 'manager cannot direct-update restricted contact');
+  });
+
+  await test('contact/update rejects an incomplete Trinidad number', async () => {
+    const r = await api('hr/employees/contact/update', A, {
+      employeeId: ctx.emp1,
+      mode: 'direct',
+      work: { mobilePhone: '+1 (868) 555-01' },
+    });
+    fails(r, 'incomplete phone rejected');
   });
 
   await test('contact/update REQUEST mode (manager maker) → change request created (Shape-B atomic)', async () => {

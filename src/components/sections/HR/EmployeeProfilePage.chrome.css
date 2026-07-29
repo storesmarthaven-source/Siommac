@@ -242,3 +242,10 @@
     }
   }
 }
+
+/* Employment status is already expressed in the hero badge. The reference's
+   decorative portrait dot duplicated that state and was mistaken for online
+   presence, so the production portrait intentionally has no pseudo indicator. */
+.epf-root .portrait-shell::after {
+  content: none;
+}
