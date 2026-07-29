@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SIOMAC — Onboarding Overview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root{
+      --navy:#082b5b;--navy-deep:#052349;--blue:#1264f5;--ink:#111b34;
+      --muted:#63718a;--line:#e4e9f1;--page:#f9fbfe;--green:#13a35b;
+      --amber:#ff9f0a;--red:#ef3135;--purple:#8147ea;--cyan:#42a5f5;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%}
+    body{font-family:Inter,system-ui,sans-serif;color:var(--ink);background:#fff;font-size:13px}
+    button,input{font:inherit}
+    .app{display:grid;grid-template-columns:214px minmax(0,1fr);min-height:100vh;background:var(--page)}
+    .sidebar{position:sticky;top:0;height:100vh;background:linear-gradient(155deg,var(--navy-deep),#092e61 68%,#05244a);color:#d9e5f6;border-radius:0 8px 8px 0;overflow:hidden}
+    .logo{height:82px;padding:0 24px;display:flex;align-items:center;font-size:24px;font-weight:800;letter-spacing:.02em;color:#fff}
+    .nav{padding:0 8px;display:grid;gap:4px}
+    .nav-item{height:50px;border:0;border-radius:8px;background:transparent;color:#d7e1f0;display:flex;align-items:center;gap:15px;padding:0 18px;text-align:left;font-size:16px}
+    .nav-item i{width:18px;text-align:center;font-size:17px}.nav-item.active{background:linear-gradient(90deg,#1264f5,#1f70ff);color:#fff;box-shadow:0 7px 20px rgba(0,61,170,.35)}
+    .main{min-width:0;padding:22px 22px 16px 26px;display:flex;flex-direction:column}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:16px}
+    .top-left{display:flex;align-items:center;gap:38px;min-width:0}
+    h1{font-size:27px;letter-spacing:-.035em;margin:0;white-space:nowrap}
+    .search{width:288px;height:44px;border:1px solid #dfe5ee;background:#fff;border-radius:9px;display:flex;align-items:center;gap:10px;padding:0 14px;color:#708098;box-shadow:0 2px 7px rgba(22,38,65,.025)}
+    .search input{border:0;outline:0;width:100%;color:var(--ink)}.shortcut{border:1px solid #dce3ec;border-radius:5px;padding:2px 5px;font-size:11px;color:#74839a}
+    .profile-actions{display:flex;align-items:center;gap:13px}.icon-btn{width:48px;height:48px;border:0;background:#fff;border-radius:10px;box-shadow:0 3px 11px rgba(21,40,77,.09);font-size:19px;color:#17233b;position:relative}
+    .badge{position:absolute;right:5px;top:2px;background:#ef2025;color:#fff;font-size:10px;font-weight:800;min-width:20px;height:20px;border-radius:12px;display:grid;place-items:center;border:2px solid #fff}
+    .profile{height:51px;border:0;background:#fff;border-radius:10px;display:flex;align-items:center;gap:10px;padding:0 12px;box-shadow:0 3px 11px rgba(21,40,77,.06)}
+    .profile img{width:38px;height:38px;border-radius:50%;object-fit:cover}.profile strong{display:block;font-size:13px}.profile span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+    .actions{display:flex;justify-content:flex-end;gap:16px;margin-bottom:14px}.btn{height:38px;border-radius:8px;padding:0 18px;border:1px solid #e0e6ef;background:#fff;color:#193052;font-weight:600;box-shadow:0 2px 7px rgba(21,40,77,.05)}
+    .btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}.btn i{margin-right:7px}
+    .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px}
+    .metric{height:140px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:22px 18px;display:grid;grid-template-columns:48px minmax(0,1fr) 122px;gap:12px;align-items:start;box-shadow:0 3px 11px rgba(18,39,76,.04)}
+    .micon{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:20px}.micon.green{background:#e8f7ef;color:var(--green)}.micon.amber{background:#fff4dd;color:var(--amber)}.micon.blue{background:#eaf1ff;color:var(--blue)}
+    .metric label{font-size:13px;font-weight:600;display:block;margin-top:3px}.metric strong{font-size:29px;display:block;margin-top:11px;line-height:1}.delta{font-size:10px;font-weight:700;margin-top:15px;display:block}.delta.green{color:var(--green)}.delta.amber{color:#fb7d00}.delta.blue{color:var(--blue)}
+    .spark{width:118px;height:62px;align-self:end;overflow:visible}.spark .fill{opacity:.16}.spark.green{color:var(--green)}.spark.blue{color:var(--blue)}.spark.amber{color:var(--amber)}
+    .grid{display:grid;grid-template-columns:1.02fr 1.15fr 1.08fr;gap:14px;margin-bottom:14px}.grid.bottom{grid-template-columns:1fr 1.25fr 1fr;margin-bottom:24px}
+    .card{background:#fff;border:1px solid var(--line);border-radius:11px;box-shadow:0 3px 12px rgba(18,39,76,.04);overflow:hidden}
+    .card-head{height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 18px}.card-head h2{font-size:14px;margin:0}.link{border:0;background:none;color:var(--blue);font-size:11px;font-weight:600}
+    .priority,.blockers,.activity{padding:0 18px}.priority-row{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(105px,.8fr) auto;gap:10px;align-items:center;height:60px;border-bottom:1px solid #edf0f5;color:inherit;text-decoration:none}
+    .person-img{width:33px;height:33px;border-radius:50%;object-fit:cover}.pname{font-size:11px;font-weight:600}.pid{font-size:10px;color:#637a9e;margin-top:4px}.issue{font-size:10px;color:#28344b}.pill{height:22px;padding:0 9px;border-radius:12px;display:inline-flex;align-items:center;font-size:9px;font-weight:600}.pill.red{background:#ffe9e9;color:var(--red)}.pill.amber{background:#fff2df;color:#f58a00}
+    .card-foot{height:42px;display:flex;align-items:center;padding:0 18px;color:var(--blue);font-size:10px;font-weight:600}
+    .donut-wrap{height:236px;padding:8px 22px 10px;display:grid;grid-template-columns:190px 1fr;gap:18px;align-items:center}
+    .donut{width:180px;height:180px;border-radius:50%;background:conic-gradient(#ffbd2e 0 18%,#ff5938 18% 35%,#22ad67 35% 52%,#8746ed 52% 65%,#1767ef 65% 84%,#b9c4d5 84%);position:relative}
+    .donut:after{content:"";position:absolute;inset:22px;border-radius:50%;background:#fff}.donut-center{position:absolute;inset:0;z-index:2;display:grid;place-content:center;text-align:center}.donut-center strong{font-size:29px}.donut-center span{font-size:10px;color:var(--muted);margin-top:5px}
+    .legend{display:grid;gap:13px}.legend-row{display:grid;grid-template-columns:9px 1fr auto;gap:9px;align-items:center;font-size:10px}.dot{width:9px;height:9px;border-radius:50%}
+    .blocker-row{height:49px;border-bottom:1px solid #edf0f5;display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:9px;font-size:11px}.blocker-row i{font-size:17px}.blocker-row b{font-size:11px}.blocker-row.red i,.blocker-row.red b{color:var(--red)}.blocker-row.orange i,.blocker-row.orange b{color:#ff8a00}.blocker-row.blue i,.blocker-row.blue b{color:var(--blue)}.blocker-row.green i,.blocker-row.green b{color:var(--green)}.blocker-row.purple i,.blocker-row.purple b{color:var(--purple)}
+    .activity-row{height:39px;border-bottom:1px solid #edf0f5;display:grid;grid-template-columns:25px 1fr auto;align-items:center;gap:8px;font-size:10px}.activity-row i{font-size:15px}.activity-row time{color:var(--muted)}
+    .quick{padding:8px 18px 0}.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.quick-item{height:126px;border-radius:10px;display:grid;place-items:center;text-align:center;padding:15px 8px}.quick-item i{font-size:25px}.quick-item strong{font-size:10px;margin-top:9px}.quick-item span{font-size:9px;color:var(--muted);line-height:1.5;margin-top:5px}.quick-item.green{background:#eaf8f1;color:var(--green)}.quick-item.blue{background:#eaf4ff;color:var(--blue)}.quick-item.amber{background:#fff5df;color:#f08a00}.quick-item.purple{background:#f1edff;color:var(--purple)}
+    .tip{height:56px;margin-top:14px;border-top:1px solid #edf0f5;display:flex;align-items:center;gap:8px;font-size:10px}.tip i{color:#ff9f00}.tip kbd{background:#17233b;color:#fff;border-radius:4px;padding:3px 6px}
+    .readiness{padding:0 20px 14px}.gauge{width:180px;height:92px;margin:0 auto;overflow:hidden;position:relative}.gauge-ring{width:180px;height:180px;border-radius:50%;background:conic-gradient(from 270deg,#ef3135 0 13%,#ff9f0a 13% 28%,#ffbd2e 28% 44%,#76d4ae 44% 56%,#16a663 56% 68%,#edf1f6 68%);position:absolute;top:0;left:0}.gauge-ring:after{content:"";position:absolute;inset:18px;border-radius:50%;background:#fff}.gauge-value{position:absolute;left:0;right:0;bottom:0;text-align:center;z-index:2}.gauge-value strong{font-size:27px}.gauge-value span{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+    .ready-counts{display:grid;grid-template-columns:repeat(3,1fr);margin-top:18px}.ready-count{text-align:center;border-right:1px solid var(--line)}.ready-count:last-child{border-right:0}.ready-count strong{font-size:17px}.ready-count span{display:block;font-size:9px;color:var(--muted);margin-top:6px}.ready-count.green strong{color:var(--green)}.ready-count.amber strong{color:#f08a00}.ready-count.red strong{color:var(--red)}
+    footer{margin-top:auto;display:flex;justify-content:space-between;color:#7c8ba2;font-size:10px;padding:0 2px}.footer-links{display:flex;gap:18px}
+    @media(max-width:1150px){.app{grid-template-columns:82px minmax(0,1fr)}.logo{font-size:0;padding:0;justify-content:center}.logo:after{content:"S";font-size:26px}.nav-item{justify-content:center;padding:0}.nav-item{font-size:0}.nav-item i{font-size:18px}.grid,.grid.bottom{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">SIOMAC</div>
+    <nav class="nav">
+      <button class="nav-item"><i class="fa-solid fa-house"></i>Home</button>
+      <button class="nav-item"><i class="fa-solid fa-table-cells-large"></i>Dashboard</button>
+      <button class="nav-item"><i class="fa-regular fa-user"></i>Employees</button>
+      <button class="nav-item active"><i class="fa-solid fa-user-plus"></i>Onboarding</button>
+      <button class="nav-item"><i class="fa-solid fa-user-minus"></i>Offboarding</button>
+      <button class="nav-item"><i class="fa-regular fa-calendar"></i>Leave</button>
+      <button class="nav-item"><i class="fa-regular fa-circle-down"></i>Attendance</button>
+      <button class="nav-item"><i class="fa-regular fa-file-lines"></i>Documents</button>
+      <button class="nav-item"><i class="fa-solid fa-chart-column"></i>Reports</button>
+      <button class="nav-item"><i class="fa-solid fa-gear"></i>Settings</button>
+    </nav>
+  </aside>
+  <main class="main">
+    <header class="top">
+      <div class="top-left"><h1>Onboarding Overview</h1><label class="search"><i class="fa-solid fa-magnifying-glass"></i><input placeholder="Search onboarding..."><span class="shortcut">⌘ K</span></label></div>
+      <div class="profile-actions">
+        <button class="icon-btn"><i class="fa-regular fa-bell"></i><span class="badge">12</span></button>
+        <button class="icon-btn"><i class="fa-regular fa-circle-question"></i></button>
+        <button class="profile"><img src="https://i.pravatar.cc/80?img=47" alt=""><span><strong>Diane Rheem</strong><span>HR Manager</span></span><i class="fa-solid fa-chevron-down"></i></button>
+      </div>
+    </header>
+    <div class="actions"><button class="btn primary"><i class="fa-solid fa-plus"></i>New Case</button><button class="btn"><i class="fa-solid fa-download"></i>Export</button></div>
+    <section class="metrics">
+      <article class="metric">
+        <div class="micon green"><i class="fa-solid fa-user-check"></i></div><div><label>Active Cases</label><strong>42</strong><span class="delta green">↗ 12% vs last month</span></div>
+        <svg class="spark blue" viewBox="0 0 120 60"><defs><linearGradient id="b1" x1="0" y1="0" x2="0" y2="1"><stop stop-color="currentColor"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><path class="fill" fill="url(#b1)" d="M2 52 C15 20 22 44 34 24 S53 38 65 17 S87 29 96 10 S108 4 118 51 L118 60 L2 60Z"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M2 52 C15 20 22 44 34 24 S53 38 65 17 S87 29 96 10 S108 4 118 51"/></svg>
+      </article>
+      <article class="metric">
+        <div class="micon amber"><i class="fa-regular fa-circle-exclamation"></i></div><div><label>Blocking Tasks</label><strong>11</strong><span class="delta amber">↗ 10% vs last week</span></div>
+        <svg class="spark amber" viewBox="0 0 120 60"><path class="fill" fill="currentColor" d="M2 51 C14 48 13 34 26 40 S40 56 52 32 S70 45 84 20 S102 3 110 28 S115 34 118 43 L118 60 L2 60Z"/><path fill="none" stroke="currentColor" stroke-width="1.5" d="M2 51 C14 48 13 34 26 40 S40 56 52 32 S70 45 84 20 S102 3 110 28 S115 34 118 43"/></svg>
+      </article>
+      <article class="metric">
+        <div class="micon blue"><i class="fa-regular fa-calendar"></i></div><div><label>Due This Week</label><strong>27</strong><span class="delta blue">↗ 8% vs last week</span></div>
+        <svg class="spark blue" viewBox="0 0 120 60"><path class="fill" fill="currentColor" d="M2 52 C13 27 21 36 30 22 S45 29 54 16 S71 24 83 11 S100 26 108 8 S113 31 118 46 L118 60 L2 60Z"/><path fill="none" stroke="currentColor" stroke-width="1.6" d="M2 52 C13 27 21 36 30 22 S45 29 54 16 S71 24 83 11 S100 26 108 8 S113 31 118 46"/></svg>
+      </article>
+      <article class="metric">
+        <div class="micon green"><i class="fa-regular fa-circle-check"></i></div><div><label>Activation Readiness</label><strong>68%</strong><span class="delta green">↗ 6% vs last month</span></div>
+        <svg class="spark green" viewBox="0 0 120 60"><path class="fill" fill="currentColor" d="M2 48 C7 7 22 6 31 26 S50 45 61 37 S78 55 92 32 S107 37 118 4 L118 60 L2 60Z"/><path fill="none" stroke="currentColor" stroke-width="1.6" d="M2 48 C7 7 22 6 31 26 S50 45 61 37 S78 55 92 32 S107 37 118 4"/></svg>
+      </article>
+    </section>
+    <section class="grid">
+      <article class="card">
+        <div class="card-head"><h2>Priority Cases</h2><button class="link">View all</button></div>
+        <div class="priority">
+          <a class="priority-row" href="onboarding-case-detail-reference-conversion.html"><img class="person-img" src="https://i.pravatar.cc/60?img=12"><div><div class="pname">Mike Johnson</div><div class="pid">EMP-00245</div></div><div class="issue">HSE Induction overdue</div><span class="pill red">Critical</span></a>
+          <a class="priority-row" href="onboarding-case-detail-reference-conversion.html"><img class="person-img" src="https://i.pravatar.cc/60?img=45"><div><div class="pname">Sarah Williams</div><div class="pid">EMP-00312</div></div><div class="issue">Medical documents</div><span class="pill amber">High</span></a>
+          <a class="priority-row" href="onboarding-case-detail-reference-conversion.html"><img class="person-img" src="https://i.pravatar.cc/60?img=14"><div><div class="pname">James White</div><div class="pid">EMP-00187</div></div><div class="issue">IT Access pending</div><span class="pill amber">High</span></a>
+          <a class="priority-row" href="onboarding-case-detail-reference-conversion.html"><img class="person-img" src="https://i.pravatar.cc/60?img=49"><div><div class="pname">Priya Laxmi</div><div class="pid">EMP-00418</div></div><div class="issue">Training not assigned</div><span class="pill amber">Medium</span></a>
+        </div><div class="card-foot">View all priority cases</div>
+      </article>
+      <article class="card">
+        <div class="card-head"><h2>Readiness by Package</h2></div>
+        <div class="donut-wrap">
+          <div class="donut"><div class="donut-center"><strong>68%</strong><span>Overall Readiness</span></div></div>
+          <div class="legend">
+            <div class="legend-row"><span class="dot" style="background:#1767ef"></span><span>Standard Employee</span><b>68%</b></div>
+            <div class="legend-row"><span class="dot" style="background:#ffbd2e"></span><span>HSE Induction</span><b>61%</b></div>
+            <div class="legend-row"><span class="dot" style="background:#ff8d1a"></span><span>Contractor Onboard</span><b>55%</b></div>
+            <div class="legend-row"><span class="dot" style="background:linear-gradient(90deg,#1767ef,#ef3135)"></span><span>IT & Access Setup</span><b>74%</b></div>
+            <div class="legend-row"><span class="dot" style="background:#8147ea"></span><span>Training & Compliance</span><b>53%</b></div>
+            <div class="legend-row"><span class="dot" style="background:#b9c4d5"></span><span>Others / Admin</span><b>62%</b></div>
+          </div>
+        </div><div class="card-foot">View full report</div>
+      </article>
+      <article class="card">
+        <div class="card-head"><h2>Blockers by Module</h2><button class="link">View all</button></div>
+        <div class="blockers">
+          <div class="blocker-row red"><i class="fa-regular fa-circle"></i><span>Training & Compliance</span><b>6</b></div>
+          <div class="blocker-row orange"><i class="fa-regular fa-file-lines"></i><span>Documents</span><b>3</b></div>
+          <div class="blocker-row blue"><i class="fa-solid fa-desktop"></i><span>IT & Access</span><b>2</b></div>
+          <div class="blocker-row green"><i class="fa-solid fa-briefcase-medical"></i><span>Medical</span><b>2</b></div>
+          <div class="blocker-row purple"><i class="fa-solid fa-briefcase"></i><span>Equipment</span><b>1</b></div>
+        </div><div class="card-foot">View all blockers</div>
+      </article>
+    </section>
+    <section class="grid bottom">
+      <article class="card">
+        <div class="card-head"><h2>Recent Activity</h2></div>
+        <div class="activity">
+          <div class="activity-row"><i class="fa-regular fa-circle-check" style="color:#13a35b"></i><span>Mike Johnson completed HSE Induction</span><time>2 minutes ago</time></div>
+          <div class="activity-row"><i class="fa-regular fa-file-lines" style="color:#1264f5"></i><span>Sarah Williams uploaded Medical Certificate</span><time>15 minutes ago</time></div>
+          <div class="activity-row"><i class="fa-solid fa-user-plus" style="color:#ff8a00"></i><span>James White assigned to Plant 1</span><time>1 hour ago</time></div>
+          <div class="activity-row"><i class="fa-solid fa-briefcase" style="color:#8147ea"></i><span>Priya Laxmi training assigned</span><time>2 hours ago</time></div>
+          <div class="activity-row"><i class="fa-regular fa-file-lines" style="color:#1264f5"></i><span>Contractor batch uploaded (12 records)</span><time>3 hours ago</time></div>
+        </div><div class="card-foot">View all activity</div>
+      </article>
+      <article class="card">
+        <div class="card-head"><h2>Smart Quick Actions</h2></div>
+        <div class="quick">
+          <div class="quick-grid">
+            <div class="quick-item green"><i class="fa-solid fa-user-plus"></i><strong>Add New Case</strong><span>Create onboarding case</span></div>
+            <div class="quick-item blue"><i class="fa-solid fa-upload"></i><strong>Bulk Upload</strong><span>Upload multiple employees</span></div>
+            <div class="quick-item amber"><i class="fa-regular fa-calendar"></i><strong>Schedule Training</strong><span>Plan training sessions</span></div>
+            <div class="quick-item purple"><i class="fa-regular fa-file-lines"></i><strong>Generate Report</strong><span>Export onboarding insights</span></div>
+          </div>
+          <div class="tip"><i class="fa-solid fa-bolt"></i><strong>Pro Tip</strong><span>Press</span><kbd>Ctrl</kbd>+<kbd>N</kbd><span>anywhere to quickly add a new onboarding case.</span></div>
+        </div>
+      </article>
+      <article class="card">
+        <div class="card-head"><h2>Activation Readiness Summary</h2></div>
+        <div class="readiness">
+          <div class="gauge"><div class="gauge-ring"></div><div class="gauge-value"><strong>68%</strong><span>Ready</span></div></div>
+          <div class="ready-counts"><div class="ready-count green"><strong>29</strong><span>Ready</span></div><div class="ready-count amber"><strong>9</strong><span>In Progress</span></div><div class="ready-count red"><strong>4</strong><span>Not Started</span></div></div>
+        </div><div class="card-foot">View full readiness report</div>
+      </article>
+    </section>
+    <footer><span>© 2025 SIOMAC. All rights reserved.</span><div class="footer-links"><span>v2.4.1</span><span>Privacy Policy</span><span>Terms of Service</span><span>Support</span></div></footer>
+  </main>
+</div>
+</body>
+</html>

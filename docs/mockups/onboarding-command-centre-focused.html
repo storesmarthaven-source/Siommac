@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SIOMAC Onboarding — Focused Command Centre</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root{
+      --navy:#0b2f66;--navy-2:#183c72;--slate:#3a4666;--ink:#13213b;
+      --muted:#66758f;--page:#f5f7fa;--line:#dfe5ee;--white:#fff;
+      --blue:#2563eb;--green:#238653;--amber:#d78300;--red:#c63d37;
+      --blue-bg:#eef4ff;--green-bg:#eaf7ef;--amber-bg:#fff5df;--red-bg:#fff0ef;
+      --radius:14px;
+    }
+    *{box-sizing:border-box} html,body{margin:0;min-height:100%}
+    body{font-family:Inter,system-ui,sans-serif;background:var(--page);color:var(--ink);font-size:14px}
+    button,input,select{font:inherit}
+    .app{min-height:100vh;display:grid;grid-template-columns:220px minmax(0,1fr)}
+    .sidebar{background:var(--navy);color:#fff;display:flex;flex-direction:column;min-height:100vh}
+    .brand{height:78px;display:flex;align-items:center;padding:0 24px;border-bottom:1px solid rgba(255,255,255,.1)}
+    .brand-mark{font-size:24px;font-weight:800;letter-spacing:.08em}.brand-mark span{color:#ffb712}
+    .nav{padding:18px 12px;display:grid;gap:6px}.nav-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#9fb2d0;padding:16px 12px 6px}
+    .nav-item{height:42px;border:0;background:transparent;color:#dbe6f5;border-radius:9px;display:flex;align-items:center;gap:12px;padding:0 13px;text-align:left}
+    .nav-item i{width:20px;text-align:center}.nav-item.active{background:rgba(255,255,255,.14);color:#fff;font-weight:700;box-shadow:inset 3px 0 #8fb6ff}
+    .sidebar-foot{margin-top:auto;padding:18px 16px;border-top:1px solid rgba(255,255,255,.1);display:flex;gap:10px;align-items:center}
+    .avatar{display:grid;place-items:center;border-radius:50%;font-weight:700;flex:none}
+    .avatar.sm{width:34px;height:34px;background:#dbe7f7;color:var(--navy);font-size:12px}
+    .sidebar-foot .avatar{width:38px;height:38px;background:#fff;color:var(--navy)}
+    .sidebar-foot strong{display:block;font-size:13px}.sidebar-foot span{font-size:11px;color:#afbed4}
+    .shell{min-width:0}.topbar{height:66px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:5}
+    .search{width:min(460px,42vw);height:39px;border:1px solid var(--line);border-radius:10px;display:flex;align-items:center;gap:10px;padding:0 13px;color:var(--muted)}
+    .search input{border:0;outline:0;width:100%;color:var(--ink)}.top-actions{display:flex;align-items:center;gap:10px}
+    .round{width:38px;height:38px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--slate)}
+    .user{display:flex;align-items:center;gap:9px;padding-left:8px}.user strong{font-size:13px}.user span{display:block;font-size:11px;color:var(--muted)}
+    main{padding:24px 28px 34px;max-width:1540px;margin:0 auto}
+    .page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:17px}
+    h1{font-size:28px;line-height:1.15;margin:0 0 7px;letter-spacing:-.035em}.page-head p{margin:0;color:var(--muted);font-size:14px}
+    .head-actions{display:flex;gap:9px}.btn{height:40px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--ink);font-weight:700;padding:0 15px;display:inline-flex;align-items:center;gap:8px}
+    .btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}.btn.ghost{color:var(--navy)}
+    .tabs{height:43px;display:flex;gap:28px;border-bottom:1px solid var(--line);margin-bottom:18px}
+    .tab{border:0;background:none;color:var(--muted);font-weight:600;padding:0 2px;position:relative}.tab.active{color:var(--navy)}
+    .tab.active:after{content:"";height:3px;background:var(--navy);position:absolute;left:0;right:0;bottom:-1px;border-radius:3px}
+    .status-band{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:17px 19px;margin-bottom:18px}
+    .status-grid{display:grid;grid-template-columns:repeat(4,1fr)}
+    .measure{display:flex;align-items:center;gap:13px;padding:0 18px;border-right:1px solid var(--line)}.measure:first-child{padding-left:0}.measure:last-child{border-right:0}
+    .icon{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;font-size:18px;flex:none}
+    .icon.blue{color:var(--blue);background:var(--blue-bg)}.icon.green{color:var(--green);background:var(--green-bg)}
+    .icon.amber{color:var(--amber);background:var(--amber-bg)}.icon.red{color:var(--red);background:var(--red-bg)}
+    .measure strong{font-size:22px;line-height:1}.measure span{display:block;font-size:12px;color:var(--muted);margin-top:5px}
+    .distribution{display:grid;grid-template-columns:9fr 10fr 5fr 3fr;height:8px;gap:3px;margin-top:16px}.distribution span{border-radius:10px}
+    .distribution .a{background:#6bbb88}.distribution .b{background:#5688d7}.distribution .c{background:#e7ad48}.distribution .d{background:#dc6b66}
+    .layout{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(320px,.8fr);gap:18px;align-items:start}
+    .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+    .card-head{min-height:58px;padding:14px 17px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+    .card-head h2{font-size:16px;margin:0}.card-head p{font-size:12px;color:var(--muted);margin:4px 0 0}.link{border:0;background:none;color:var(--navy);font-weight:700;font-size:12px}
+    .filters{display:grid;grid-template-columns:1.5fr repeat(3,.8fr);gap:8px;padding:12px 14px;border-bottom:1px solid var(--line);background:#fbfcfe}
+    .control{height:36px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--muted);padding:0 10px;min-width:0}
+    .queue{padding:0 14px}.queue-row{display:grid;grid-template-columns:minmax(180px,1.25fr) 108px 120px minmax(150px,1fr) 94px 28px;gap:12px;align-items:center;min-height:74px;border-bottom:1px solid #edf0f5}
+    .queue-row:last-child{border-bottom:0}.person{display:flex;align-items:center;gap:10px;min-width:0}.person strong{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.person span,.sub{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+    .date strong{font-size:12px}.date span{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+    .steps{display:flex;align-items:center}.steps span{width:18px;height:18px;border-radius:50%;border:2px solid #cfd8e6;background:#fff;position:relative}.steps span+span{margin-left:9px}.steps span+span:before{content:"";position:absolute;right:16px;top:6px;width:11px;height:2px;background:#cfd8e6}
+    .steps .done{background:var(--navy);border-color:var(--navy)}.steps .done:after{content:"✓";color:#fff;font-size:9px;position:absolute;left:3px;top:0}.steps .current{border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-bg)}
+    .next strong{font-size:12px}.next span{display:block;color:var(--muted);font-size:11px;margin-top:3px}.tag{display:inline-flex;align-items:center;height:25px;border-radius:7px;padding:0 9px;font-size:11px;font-weight:700}
+    .tag.green{background:var(--green-bg);color:var(--green)}.tag.amber{background:var(--amber-bg);color:#a76200}.tag.red{background:var(--red-bg);color:var(--red)}.tag.blue{background:var(--blue-bg);color:var(--blue)}
+    .open{width:28px;height:28px;border:0;border-radius:7px;background:#f3f6fa;color:var(--navy)}
+    .right{display:grid;gap:18px}.attention-list,.starts{padding:4px 14px 8px}.attention,.start{display:grid;align-items:center;border-bottom:1px solid #edf0f5}.attention{grid-template-columns:40px minmax(0,1fr) auto 22px;gap:10px;min-height:74px}.start{grid-template-columns:42px minmax(0,1fr) auto;gap:10px;min-height:64px}
+    .attention:last-child,.start:last-child{border-bottom:0}.attention .icon{width:36px;height:36px;border-radius:9px;font-size:15px}.attention strong,.start strong{font-size:12px}.attention p,.start p{font-size:11px;color:var(--muted);margin:4px 0 0}.due{font-size:11px;color:var(--red);font-weight:700;white-space:nowrap}
+    .date-box{width:38px;border:1px solid #cad5e4;border-radius:8px;text-align:center;overflow:hidden}.date-box b{display:block;background:var(--navy);color:#fff;font-size:9px;padding:3px}.date-box strong{font-size:14px;display:block;padding:4px}
+    .handoffs{margin-top:18px}.flow{display:grid;grid-template-columns:repeat(4,1fr);padding:18px}.flow-item{display:flex;align-items:center;gap:11px;position:relative;padding-right:22px}.flow-item:not(:last-child):after{content:"→";position:absolute;right:5px;color:#9aa8bd;font-size:18px}.flow-item strong{font-size:13px}.flow-item span{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+    .flow .icon{width:38px;height:38px;font-size:15px}
+    @media(max-width:1100px){.app{grid-template-columns:78px minmax(0,1fr)}.brand-mark,.nav-item span,.nav-label,.sidebar-foot div{display:none}.brand{padding:0;justify-content:center}.nav-item{justify-content:center}.layout{grid-template-columns:1fr}.status-grid{grid-template-columns:repeat(2,1fr);gap:18px}.measure:nth-child(2){border-right:0}.queue-row{grid-template-columns:minmax(180px,1fr) 100px 110px minmax(140px,1fr) 90px 28px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark">SIO<span>MAC</span></div></div>
+    <nav class="nav">
+      <div class="nav-label">Workspace</div>
+      <button class="nav-item"><i class="fa-solid fa-house"></i><span>Dashboard</span></button>
+      <button class="nav-item"><i class="fa-solid fa-users"></i><span>Employee Master</span></button>
+      <button class="nav-item active"><i class="fa-solid fa-user-plus"></i><span>Onboarding</span></button>
+      <button class="nav-item"><i class="fa-solid fa-sitemap"></i><span>Organization</span></button>
+      <button class="nav-item"><i class="fa-regular fa-folder"></i><span>Documents</span></button>
+      <button class="nav-item"><i class="fa-solid fa-arrow-right-from-bracket"></i><span>Offboarding</span></button>
+      <div class="nav-label">Related Work</div>
+      <button class="nav-item"><i class="fa-solid fa-money-check-dollar"></i><span>Payroll</span></button>
+      <button class="nav-item"><i class="fa-solid fa-headset"></i><span>Account Support</span></button>
+      <button class="nav-item"><i class="fa-solid fa-graduation-cap"></i><span>Learning</span></button>
+    </nav>
+    <div class="sidebar-foot"><div class="avatar">EB</div><div><strong>Ervin Baptiste</strong><span>Super Administrator</span></div></div>
+  </aside>
+  <div class="shell">
+    <header class="topbar">
+      <div class="search"><i class="fa-solid fa-magnifying-glass"></i><input aria-label="Global Search" placeholder="Search Employees, Cases Or Tasks" /></div>
+      <div class="top-actions">
+        <button class="round"><i class="fa-regular fa-bell"></i></button><button class="round"><i class="fa-regular fa-message"></i></button>
+        <div class="user"><div class="avatar sm">EB</div><div><strong>Ervin Baptiste</strong><span>Super Administrator</span></div></div>
+      </div>
+    </header>
+    <main>
+      <div class="page-head">
+        <div><h1>Onboarding</h1><p>Prepare Every Employee For A Successful First Day.</p></div>
+        <div class="head-actions"><button class="btn ghost"><i class="fa-solid fa-list-check"></i> My Tasks</button><button class="btn primary"><i class="fa-solid fa-plus"></i> Start Onboarding</button></div>
+      </div>
+      <div class="tabs"><button class="tab active">Overview</button><button class="tab">Cases</button><button class="tab">Tasks & Approvals</button><button class="tab">Handoffs</button><button class="tab">Packages</button><button class="tab">Reports</button></div>
+      <section class="status-band">
+        <div class="status-grid">
+          <div class="measure"><div class="icon blue"><i class="fa-solid fa-briefcase"></i></div><div><strong>5</strong><span>Active Cases</span></div></div>
+          <div class="measure"><div class="icon green"><i class="fa-solid fa-circle-check"></i></div><div><strong>1</strong><span>Ready For Day One</span></div></div>
+          <div class="measure"><div class="icon amber"><i class="fa-solid fa-triangle-exclamation"></i></div><div><strong>4</strong><span>Need Attention</span></div></div>
+          <div class="measure"><div class="icon red"><i class="fa-regular fa-clock"></i></div><div><strong>2</strong><span>Overdue Actions</span></div></div>
+        </div>
+        <div class="distribution"><span class="a"></span><span class="b"></span><span class="c"></span><span class="d"></span></div>
+      </section>
+      <div class="layout">
+        <section class="card">
+          <div class="card-head"><div><h2>My Onboarding Work</h2><p>Cases ordered by start-date risk and next required action.</p></div><button class="link">View All Cases <i class="fa-solid fa-arrow-right"></i></button></div>
+          <div class="filters"><input class="control" placeholder="Search Employees Or Cases"><select class="control"><option>All Statuses</option></select><select class="control"><option>All Start Dates</option></select><select class="control"><option>My Cases</option></select></div>
+          <div class="queue">
+            <div class="queue-row"><div class="person"><div class="avatar sm">DB</div><div><strong>Damani Baptiste</strong><span>HSE Officer · ONB-2026-DEMO03</span></div></div><div class="date"><strong>03 Jul 2026</strong><span>Starts In 4 Days</span></div><div class="steps"><span class="done"></span><span class="current"></span><span></span><span></span></div><div class="next"><strong>Complete Site Induction</strong><span>Waiting On HSE</span></div><span class="tag red">Blocked</span><button class="open"><i class="fa-solid fa-chevron-right"></i></button></div>
+            <div class="queue-row"><div class="person"><div class="avatar sm">DB</div><div><strong>Darrell Browne</strong><span>Contractor · ONB-2026-DEMO04</span></div></div><div class="date"><strong>05 Jul 2026</strong><span>Starts In 6 Days</span></div><div class="steps"><span class="done"></span><span class="done"></span><span class="current"></span><span></span></div><div class="next"><strong>Approve Application Access</strong><span>Waiting On Account Support</span></div><span class="tag amber">At Risk</span><button class="open"><i class="fa-solid fa-chevron-right"></i></button></div>
+            <div class="queue-row"><div class="person"><div class="avatar sm">AD</div><div><strong>Amara Diallo</strong><span>Supervisor · ONB-2026-DEMO05</span></div></div><div class="date"><strong>06 Jul 2026</strong><span>Starts In 7 Days</span></div><div class="steps"><span class="done"></span><span class="done"></span><span class="done"></span><span class="current"></span></div><div class="next"><strong>Final Readiness Review</strong><span>Owned By HR Operations</span></div><span class="tag green">Ready</span><button class="open"><i class="fa-solid fa-chevron-right"></i></button></div>
+            <div class="queue-row"><div class="person"><div class="avatar sm">CP</div><div><strong>Claudia Pierre</strong><span>Administrative Assistant · ONB-2026-DEMO01</span></div></div><div class="date"><strong>07 Jul 2026</strong><span>Starts In 8 Days</span></div><div class="steps"><span class="done"></span><span class="current"></span><span></span><span></span></div><div class="next"><strong>Collect Contract Documents</strong><span>Waiting On Employee</span></div><span class="tag blue">In Progress</span><button class="open"><i class="fa-solid fa-chevron-right"></i></button></div>
+            <div class="queue-row"><div class="person"><div class="avatar sm">KL</div><div><strong>Kern Lewis</strong><span>Standard Employee · ONB-2026-0053</span></div></div><div class="date"><strong>10 Jul 2026</strong><span>Starts In 11 Days</span></div><div class="steps"><span class="done"></span><span class="current"></span><span></span><span></span></div><div class="next"><strong>Confirm Payroll Profile</strong><span>Waiting On Payroll</span></div><span class="tag blue">In Progress</span><button class="open"><i class="fa-solid fa-chevron-right"></i></button></div>
+          </div>
+        </section>
+        <aside class="right">
+          <section class="card">
+            <div class="card-head"><div><h2>Needs Attention</h2><p>Issues currently threatening employee starts.</p></div><button class="link">View All</button></div>
+            <div class="attention-list">
+              <div class="attention"><div class="icon red"><i class="fa-solid fa-shield-halved"></i></div><div><strong>Site Induction Incomplete</strong><p>Damani Baptiste · HSE Owner</p></div><span class="due">Overdue</span><i class="fa-solid fa-chevron-right"></i></div>
+              <div class="attention"><div class="icon amber"><i class="fa-solid fa-lock"></i></div><div><strong>Application Access Pending</strong><p>Darrell Browne · Account Support</p></div><span class="due">Due Today</span><i class="fa-solid fa-chevron-right"></i></div>
+              <div class="attention"><div class="icon blue"><i class="fa-regular fa-file-lines"></i></div><div><strong>Contract Documents Missing</strong><p>Claudia Pierre · Waiting On Employee</p></div><span class="due">Due Tomorrow</span><i class="fa-solid fa-chevron-right"></i></div>
+            </div>
+          </section>
+          <section class="card">
+            <div class="card-head"><div><h2>Upcoming Starts</h2><p>The next employees scheduled to begin.</p></div><button class="link">View Calendar</button></div>
+            <div class="starts">
+              <div class="start"><div class="date-box"><b>JUL</b><strong>03</strong></div><div><strong>Damani Baptiste</strong><p>HSE Officer</p></div><span class="tag red">Blocked</span></div>
+              <div class="start"><div class="date-box"><b>JUL</b><strong>05</strong></div><div><strong>Darrell Browne</strong><p>Contractor</p></div><span class="tag amber">At Risk</span></div>
+              <div class="start"><div class="date-box"><b>JUL</b><strong>06</strong></div><div><strong>Amara Diallo</strong><p>Supervisor</p></div><span class="tag green">Ready</span></div>
+              <div class="start"><div class="date-box"><b>JUL</b><strong>07</strong></div><div><strong>Claudia Pierre</strong><p>Administrative Assistant</p></div><span class="tag blue">In Progress</span></div>
+            </div>
+          </section>
+        </aside>
+      </div>
+      <section class="card handoffs">
+        <div class="card-head"><div><h2>Department Handoffs</h2><p>Open work currently owned outside HR.</p></div><button class="link">Open Handoff Workspace <i class="fa-solid fa-arrow-right"></i></button></div>
+        <div class="flow">
+          <div class="flow-item"><div class="icon blue"><i class="fa-solid fa-users"></i></div><div><strong>HR Operations</strong><span>3 Open · 0 Overdue</span></div></div>
+          <div class="flow-item"><div class="icon green"><i class="fa-solid fa-money-check-dollar"></i></div><div><strong>Payroll</strong><span>2 Open · 1 Overdue</span></div></div>
+          <div class="flow-item"><div class="icon amber"><i class="fa-solid fa-headset"></i></div><div><strong>Account Support</strong><span>2 Open · 1 Overdue</span></div></div>
+          <div class="flow-item"><div class="icon blue"><i class="fa-solid fa-graduation-cap"></i></div><div><strong>Learning & HSE</strong><span>4 Open · 1 Overdue</span></div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>
