@@ -2,7 +2,7 @@
 
 # hr Module Map
 
-Source fingerprint: `50fe0b2119431e302074d185`
+Source fingerprint: `2c06e6a6f82b8b1230dea4a0`
 
 Files: 238 | Symbols: 2540 | Widgets: 9 | Unique mounted endpoints: 266 | Route definitions: 266 mounted + 0 unmounted | API calls: 33 | DB objects: 195 | E2E suites: 16
 
@@ -637,7 +637,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/hrEmployeeMaster.mjs` | 870 |
 | e2e-suite | `scripts/e2e/suites/hrLeave.mjs` | 539 |
 | e2e-suite | `scripts/e2e/suites/hrOffboarding.mjs` | 169 |
-| e2e-suite | `scripts/e2e/suites/hrOnboarding.mjs` | 841 |
+| e2e-suite | `scripts/e2e/suites/hrOnboarding.mjs` | 856 |
 | e2e-suite | `scripts/e2e/suites/hrOnboardingPackages.mjs` | 183 |
 | e2e-suite | `scripts/e2e/suites/hrOrganization.mjs` | 365 |
 | e2e-suite | `scripts/e2e/suites/hrOvertime.mjs` | 359 |
@@ -762,7 +762,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | shared-types | `types/hrEmployeeProfile.ts` | 217 |
 | shared-types | `types/hrLeave.ts` | 226 |
 | shared-types | `types/hrOffboarding.ts` | 120 |
-| shared-types | `types/hrOnboarding.ts` | 613 |
+| shared-types | `types/hrOnboarding.ts` | 625 |
 | shared-types | `types/hrOrganization.ts` | 307 |
 | shared-types | `types/hrRequests.ts` | 152 |
 | shared-types | `types/hrRoster.ts` | 229 |

@@ -438,6 +438,21 @@ export default async function run(h) {
     const d = r.body.data;
     expect(d.activeCases && typeof d.activeCases.total === 'number', 'activeCases.total');
     expect(d.blockingTasks && d.dueThisWeek && d.activationReadiness, 'all KPI groups present');
+
+    // Activation Readiness Summary — the three-way split the Overview renders.
+    const ar = d.activationReadiness;
+    for (const k of ['readyCases', 'inProgressCases', 'notStartedCases']) {
+      expect(typeof ar[k] === 'number' && ar[k] >= 0, `activationReadiness.${k} is a non-negative number`);
+    }
+    // The buckets are defined to be mutually exclusive and exhaustive over the
+    // ACTIVE case set, so they must reconcile exactly. A drift here means a case
+    // was double-counted or silently dropped from the summary.
+    expect(ar.readyCases + ar.inProgressCases + ar.notStartedCases === d.activeCases.total,
+      `readiness buckets reconcile with activeCases.total — ${ar.readyCases}+${ar.inProgressCases}+${ar.notStartedCases} vs ${d.activeCases.total}`);
+    // readyPercent is derived from the same ready set, so it must agree with the count.
+    const expectedPct = d.activeCases.total ? Math.round((ar.readyCases / d.activeCases.total) * 100) : 0;
+    expect(ar.readyPercent === expectedPct,
+      `readyPercent agrees with readyCases — got ${ar.readyPercent}, expected ${expectedPct}`);
   });
 
   await test('list (admin) → case M present with computed fields', async () => {

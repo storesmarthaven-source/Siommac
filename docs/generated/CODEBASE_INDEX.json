@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "cf7c8a3a8a0b3a95d07fc545716a6d7d6f1c1187",
+    "head": "893d7ea383ade5b1e19e8f49c2b736430e1e3420",
     "branch": "codex/employee-profile-s1",
-    "fingerprint": "50fe0b2119431e302074d185",
+    "fingerprint": "2c06e6a6f82b8b1230dea4a0",
     "indexedFiles": 1664
   },
   "summary": {
@@ -1091,8 +1091,8 @@
       "path": "netlify/functions/lib/hr/onboardingQueries.ts",
       "module": "hr",
       "role": "backend-lib",
-      "lines": 565,
-      "hash": "7ef24a6226048a21"
+      "lines": 580,
+      "hash": "47eafc4615b0a99b"
     },
     {
       "path": "netlify/functions/lib/hr/onboardingReports.ts",
@@ -2694,8 +2694,8 @@
       "path": "scripts/e2e/suites/hrOnboarding.mjs",
       "module": "hr",
       "role": "e2e-suite",
-      "lines": 841,
-      "hash": "2358a2f8eec9a6bd"
+      "lines": 856,
+      "hash": "01dea6848cd1c74a"
     },
     {
       "path": "scripts/e2e/suites/hrOnboardingPackages.mjs",
@@ -9253,8 +9253,8 @@
       "path": "types/hrOnboarding.ts",
       "module": "hr",
       "role": "shared-types",
-      "lines": 613,
-      "hash": "1396f66c771a1b24"
+      "lines": 625,
+      "hash": "0aa81cc37907663b"
     },
     {
       "path": "types/hrOrganization.ts",
@@ -29433,7 +29433,7 @@
       "name": "listRecentOnboardingActivity",
       "kind": "function",
       "file": "netlify/functions/lib/hr/onboardingQueries.ts",
-      "line": 358,
+      "line": 373,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -29443,7 +29443,7 @@
       "name": "listOnboardingTasks",
       "kind": "function",
       "file": "netlify/functions/lib/hr/onboardingQueries.ts",
-      "line": 374,
+      "line": 389,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -29453,7 +29453,7 @@
       "name": "TaskDetailDB",
       "kind": "interface",
       "file": "netlify/functions/lib/hr/onboardingQueries.ts",
-      "line": 426,
+      "line": 441,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -29463,7 +29463,7 @@
       "name": "asNoteArr",
       "kind": "function",
       "file": "netlify/functions/lib/hr/onboardingQueries.ts",
-      "line": 430,
+      "line": 445,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -29473,7 +29473,7 @@
       "name": "asEvidenceArr",
       "kind": "function",
       "file": "netlify/functions/lib/hr/onboardingQueries.ts",
-      "line": 431,
+      "line": 446,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -29483,7 +29483,7 @@
       "name": "getOnboardingTaskDetail",
       "kind": "function",
       "file": "netlify/functions/lib/hr/onboardingQueries.ts",
-      "line": 433,
+      "line": 448,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -29493,7 +29493,7 @@
       "name": "listOnboardingHandoffs",
       "kind": "function",
       "file": "netlify/functions/lib/hr/onboardingQueries.ts",
-      "line": 484,
+      "line": 499,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -29503,7 +29503,7 @@
       "name": "listOnboardingBlockers",
       "kind": "function",
       "file": "netlify/functions/lib/hr/onboardingQueries.ts",
-      "line": 523,
+      "line": 538,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -143838,7 +143838,7 @@
       "name": "OnboardingTaskListArgs",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 285,
+      "line": 297,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -143848,7 +143848,7 @@
       "name": "OnboardingTaskRow",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 297,
+      "line": 309,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -143858,7 +143858,7 @@
       "name": "OnboardingTaskNote",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 323,
+      "line": 335,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -143868,7 +143868,7 @@
       "name": "OnboardingTaskEvidence",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 331,
+      "line": 343,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -143878,7 +143878,7 @@
       "name": "OnboardingTaskDetail",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 344,
+      "line": 356,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -143888,7 +143888,7 @@
       "name": "AddTaskNoteArgs",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 356,
+      "line": 368,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -143898,7 +143898,7 @@
       "name": "AttachTaskEvidenceArgs",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 357,
+      "line": 369,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -143908,7 +143908,7 @@
       "name": "OnboardingHandoffListArgs",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 363,
+      "line": 375,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -143918,7 +143918,7 @@
       "name": "OnboardingHandoffRow",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 369,
+      "line": 381,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -143928,7 +143928,7 @@
       "name": "OnboardingHandoffActionArgs",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 388,
+      "line": 400,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -143938,7 +143938,7 @@
       "name": "OnboardingHandoffActionResult",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 392,
+      "line": 404,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -143948,7 +143948,7 @@
       "name": "OnboardingBlockerListArgs",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 400,
+      "line": 412,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -143958,7 +143958,7 @@
       "name": "OnboardingBlockerRow",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 407,
+      "line": 419,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -143968,7 +143968,7 @@
       "name": "NotifyBlockerOwnerArgs",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 426,
+      "line": 438,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -143978,7 +143978,7 @@
       "name": "NotifyBlockerOwnerResult",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 427,
+      "line": 439,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -143988,7 +143988,7 @@
       "name": "OnboardingCommunicationType",
       "kind": "type",
       "file": "types/hrOnboarding.ts",
-      "line": 430,
+      "line": 442,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -143998,7 +143998,7 @@
       "name": "OnboardingCommunicationChannel",
       "kind": "type",
       "file": "types/hrOnboarding.ts",
-      "line": 432,
+      "line": 444,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144008,7 +144008,7 @@
       "name": "OnboardingCommunicationStatus",
       "kind": "type",
       "file": "types/hrOnboarding.ts",
-      "line": 433,
+      "line": 445,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144018,7 +144018,7 @@
       "name": "OnboardingCommunicationRow",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 435,
+      "line": 447,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144028,7 +144028,7 @@
       "name": "OnboardingCommunicationPreview",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 453,
+      "line": 465,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144038,7 +144038,7 @@
       "name": "PreviewCommunicationArgs",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 463,
+      "line": 475,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144048,7 +144048,7 @@
       "name": "SendCommunicationArgs",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 470,
+      "line": 482,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144058,7 +144058,7 @@
       "name": "OnboardingActionType",
       "kind": "type",
       "file": "types/hrOnboarding.ts",
-      "line": 475,
+      "line": 487,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144068,7 +144068,7 @@
       "name": "OnboardingOwnerType",
       "kind": "type",
       "file": "types/hrOnboarding.ts",
-      "line": 479,
+      "line": 491,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144078,7 +144078,7 @@
       "name": "OnboardingActionPriority",
       "kind": "type",
       "file": "types/hrOnboarding.ts",
-      "line": 480,
+      "line": 492,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144088,7 +144088,7 @@
       "name": "OnboardingCaseActionStatus",
       "kind": "type",
       "file": "types/hrOnboarding.ts",
-      "line": 481,
+      "line": 493,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144098,7 +144098,7 @@
       "name": "OnboardingActionTemplate",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 483,
+      "line": 495,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144108,7 +144108,7 @@
       "name": "OnboardingCaseAction",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 509,
+      "line": 521,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144118,7 +144118,7 @@
       "name": "OnboardingReportKey",
       "kind": "type",
       "file": "types/hrOnboarding.ts",
-      "line": 526,
+      "line": 538,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144128,7 +144128,7 @@
       "name": "OnboardingReportMeta",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 531,
+      "line": 543,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144138,7 +144138,7 @@
       "name": "RunOnboardingReportArgs",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 540,
+      "line": 552,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144148,7 +144148,7 @@
       "name": "OnboardingReportColumn",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 555,
+      "line": 567,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144158,7 +144158,7 @@
       "name": "OnboardingReportSummaryStat",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 560,
+      "line": 572,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144168,7 +144168,7 @@
       "name": "OnboardingReportChart",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 566,
+      "line": 578,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144178,7 +144178,7 @@
       "name": "OnboardingReportResult",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 571,
+      "line": 583,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144188,7 +144188,7 @@
       "name": "OnboardingStartArgs",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 584,
+      "line": 596,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -144198,7 +144198,7 @@
       "name": "OnboardingAuditRow",
       "kind": "interface",
       "file": "types/hrOnboarding.ts",
-      "line": 603,
+      "line": 615,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -178493,163 +178493,163 @@
         },
         {
           "name": "list (admin) → case M present with computed fields",
-          "line": 443
+          "line": 458
         },
         {
           "name": "tasks/list (caseId M) → tasks for the case",
-          "line": 451
-        },
-        {
-          "name": "tasks/list packageKeys filter → only that package's tasks",
-          "line": 460
-        },
-        {
-          "name": "task/add-note (admin) + task/get returns it with actor name",
           "line": 466
         },
         {
+          "name": "tasks/list packageKeys filter → only that package's tasks",
+          "line": 475
+        },
+        {
+          "name": "task/add-note (admin) + task/get returns it with actor name",
+          "line": 481
+        },
+        {
           "name": "task/add-note by ASSIGNED employee → allowed; unassigned → denied",
-          "line": 479
+          "line": 494
         },
         {
           "name": "task/attach-evidence records the file reference + audit",
-          "line": 485
+          "line": 500
         },
         {
           "name": "evidence gate: requires_evidence task cannot complete until evidence attached — 7b",
-          "line": 496
+          "line": 511
         },
         {
           "name": "timeline reuse (orchestration) gated to hr.onboarding.view",
-          "line": 508
+          "line": 523
         },
         {
           "name": "start case C (admin) → for custom-action tests",
-          "line": 519
+          "line": 534
         },
         {
           "name": "actions/templates/create (admin) → package custom-action template",
-          "line": 528
-        },
-        {
-          "name": "actions/case/add from template → instantiates a real task",
-          "line": 535
-        },
-        {
-          "name": "actions/case/add one-off document_request → task + pending handoff",
           "line": 543
         },
         {
+          "name": "actions/case/add from template → instantiates a real task",
+          "line": 550
+        },
+        {
+          "name": "actions/case/add one-off document_request → task + pending handoff",
+          "line": 558
+        },
+        {
           "name": "actions/case/add custom_approval without workflow template → fails",
-          "line": 551
+          "line": 566
         },
         {
           "name": "actions/case/list → lists the case actions",
-          "line": 556
+          "line": 571
         },
         {
           "name": "actions/case/complete → completes action + linked task",
-          "line": 562
+          "line": 577
         },
         {
           "name": "actions/case/cancel → cancels action + linked handoff",
-          "line": 569
+          "line": 584
         },
         {
           "name": "handoffs/list (caseId C) → includes the custom handoff + payload/failureReason shape",
-          "line": 576
+          "line": 591
         },
         {
           "name": "handoff/accept (pending → accepted) + event + case audit",
-          "line": 592
+          "line": 607
         },
         {
           "name": "handoff/complete (accepted → completed)",
-          "line": 605
+          "line": 620
         },
         {
           "name": "handoff illegal transition (completed → accepted) → fails (FSM)",
-          "line": 612
+          "line": 627
         },
         {
           "name": "handoff retry: fail a fresh handoff then retry (failed → pending)",
-          "line": 616
-        },
-        {
-          "name": "handoff/cancel (pending → cancelled)",
           "line": 631
         },
         {
+          "name": "handoff/cancel (pending → cancelled)",
+          "line": 646
+        },
+        {
           "name": "handoff action unauthorized (employee) → denied",
-          "line": 637
+          "line": 652
         },
         {
           "name": "communications/preview (owner_reminder) resolves the case owner",
-          "line": 645
+          "line": 660
         },
         {
           "name": "communications/send (employee_welcome, in_app) → row + notification + audit",
-          "line": 650
+          "line": 665
         },
         {
           "name": "communications/send (manual channel) records only, no delivery",
-          "line": 663
+          "line": 678
         },
         {
           "name": "communications/resend re-delivers the sent message",
-          "line": 668
+          "line": 683
         },
         {
           "name": "communications send unauthorized (employee) → denied; list allowed to viewers",
-          "line": 675
+          "line": 690
         },
         {
           "name": "reports/list returns the 9-report catalogue",
-          "line": 684
-        },
-        {
-          "name": "reports/run (${...}) returns the result contract",
-          "line": 691
-        },
-        {
-          "name": "reports/run honors the package filter",
           "line": 699
         },
         {
+          "name": "reports/run (${...}) returns the result contract",
+          "line": 706
+        },
+        {
+          "name": "reports/run honors the package filter",
+          "line": 714
+        },
+        {
           "name": "reports/export writes an audit row (data egress)",
-          "line": 705
+          "line": 720
         },
         {
           "name": "reports unauthorized (employee) → denied",
-          "line": 713
-        },
-        {
-          "name": "actions/templates update → retire (admin)",
-          "line": 718
-        },
-        {
-          "name": "actions/templates/create unauthorized (employee) → denied",
           "line": 728
         },
         {
+          "name": "actions/templates update → retire (admin)",
+          "line": 733
+        },
+        {
+          "name": "actions/templates/create unauthorized (employee) → denied",
+          "line": 743
+        },
+        {
           "name": "actions/case/add unauthorized (employee) → denied",
-          "line": 731
+          "line": 746
         },
         {
           "name": "activation gate (documents) blocks ready — 7b",
-          "line": 738
+          "line": 753
         },
         {
           "name": "start case with probation package → probation_end_date written to app_users",
-          "line": 748
+          "line": 763
         },
         {
           "name": "start case with contractor package → probation_end_date NOT written",
-          "line": 792
+          "line": 807
         },
         {
           "name": "require_owner_on_start: a start with no explicit owner defaults to the actor — 7b",
-          "line": 824
+          "line": 839
         }
       ],
       "apiPaths": [

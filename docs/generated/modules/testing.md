@@ -2,7 +2,7 @@
 
 # testing Module Map
 
-Source fingerprint: `50fe0b2119431e302074d185`
+Source fingerprint: `2c06e6a6f82b8b1230dea4a0`
 
 Files: 34 | Symbols: 176 | Widgets: 0 | Unique mounted endpoints: 0 | Route definitions: 0 mounted + 0 unmounted | API calls: 0 | DB objects: 0 | E2E suites: 10
 

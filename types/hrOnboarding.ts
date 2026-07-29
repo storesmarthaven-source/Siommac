@@ -277,6 +277,18 @@ export interface OnboardingDashboardStats {
     documentsReadyPercent: number;
     trainingReadyPercent: number;
     accessReadyPercent: number;
+    /**
+     * Active cases split three ways by TASK STATE. Definitions are explicit and
+     * mutually exclusive, so the three always sum to `activeCases.total`:
+     *   ready       — no open tasks remain (or the case is ready_for_activation);
+     *   inProgress  — not ready, and at least one task is already done;
+     *   notStarted  — not ready, and no task has been completed yet.
+     * A case with no tasks at all counts as notStarted, not ready — an empty
+     * checklist is not evidence of readiness.
+     */
+    readyCases: number;
+    inProgressCases: number;
+    notStartedCases: number;
   };
   packageReadiness: { packageKey: string; packageLabel: string; activeCount: number; readyPercent: number }[];
 }
