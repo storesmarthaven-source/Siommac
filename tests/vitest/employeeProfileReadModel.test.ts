@@ -39,4 +39,23 @@ describe('employee full-record read model', () => {
     expect(route).toContain('employeeId: z.string().min(1).optional()');
     expect(queries).toContain("q = q.eq('employee_id', filters.employeeId)");
   });
+
+  it('uses one canonical readiness model in the register, drawer and detail read', () => {
+    const route = read('netlify/functions/routes/hr.ts');
+    const service = read('netlify/functions/lib/hr/readinessService.ts');
+
+    expect(route).toContain('getReadinessSummaries');
+    expect(route).toContain('getReadinessSummary');
+    expect(route).not.toContain('function employeeReadiness(');
+    expect(service).toContain('function buildReadinessSummary(');
+    expect(service).toContain('Page-sized readiness summaries for the Employee Master register.');
+  });
+
+  it('keeps employee switching on one drawer and disables board entrance reveals', () => {
+    const master = read('src/components/sections/HR/EmployeeMaster.tsx');
+
+    expect(master).toContain('<ProfileDrawer employeeId={selectedId}');
+    expect(master).not.toContain("<ProfileDrawer key={selectedId ?? 'closed'}");
+    expect(master.match(/revealOnMount=\{false\}/g)).toHaveLength(2);
+  });
 });

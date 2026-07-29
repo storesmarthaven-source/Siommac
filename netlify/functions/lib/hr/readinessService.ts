@@ -47,6 +47,7 @@ interface ControlRow {
 }
 
 interface InstanceRow { control_id: string; state: ReadinessState; percent: number; evaluated_at: string }
+interface EmployeeInstanceRow extends InstanceRow { employee_id: string }
 
 interface WorkItemRow {
   id: string; employee_id: string; control_id: string; instance_id: string | null;
@@ -154,6 +155,23 @@ async function loadOpenWorkItems(employeeId: string): Promise<WorkItemRow[]> {
   return data as unknown as WorkItemRow[];
 }
 
+async function loadInstancesForEmployees(employeeIds: string[]): Promise<EmployeeInstanceRow[]> {
+  if (!employeeIds.length) return [];
+  const { data, error } = await sb.from('hr_readiness_control_instances')
+    .select('employee_id, control_id, state, percent, evaluated_at').in('employee_id', employeeIds);
+  if (error) throw new Error(`Readiness instance batch read failed: ${error.message}`);
+  return data;
+}
+
+async function loadWorkItemsForEmployees(employeeIds: string[]): Promise<WorkItemRow[]> {
+  if (!employeeIds.length) return [];
+  const { data, error } = await sb.from('hr_readiness_work_items')
+    .select(WORK_ITEM_COLS).in('employee_id', employeeIds)
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(`Readiness work-item batch read failed: ${error.message}`);
+  return data as unknown as WorkItemRow[];
+}
+
 async function employeeDisplayName(employeeId: string): Promise<string> {
   const { data, error } = await sb.from('app_users')
     .select('display_name, full_name, username').eq('id', employeeId)
@@ -251,15 +269,14 @@ async function resolveOwnerUserLabels(rows: WorkItemRow[]): Promise<Map<string, 
  * signals read from their canonical sources — they are reported, not used to
  * synthesise the score.
  */
-export async function getReadinessSummary(
-  employeeId: string,
+function buildReadinessSummary(
+  controls: ControlRow[],
+  instances: Map<string, InstanceRow>,
+  workItems: WorkItemRow[],
   payrollStatus: ProfileReadinessSummary['payrollStatus'],
   trainingStatus: ProfileReadinessSummary['trainingStatus'],
-): Promise<ProfileReadinessSummary> {
-  const [controls, instances, workItems] = await Promise.all([
-    loadControls(), loadInstances(employeeId), loadOpenWorkItems(employeeId),
-  ]);
-
+  owners?: ReadonlyMap<ReadinessDomain, ReadinessOwnerResolution>,
+): ProfileReadinessSummary {
   const unresolved = workItems.filter(w => !isSatisfied(w.status));
   const coverage = computeCoverage(controls, instances, unresolved.length);
 
@@ -281,13 +298,12 @@ export async function getReadinessSummary(
   // imply an accountability that does not exist.
   let reviewOwnerLabel: string | null = null;
   if (coverage.blockedDomains.length) {
-    const owners = await resolveReadinessOwners(coverage.blockedDomains);
     const severityRank: Record<AttentionSeverity, number> = { critical: 3, warning: 2, info: 1 };
     const controlById = new Map(controls.map(c => [c.id, c]));
     const ranked = [...unresolved].sort((a, b) => severityRank[b.severity] - severityRank[a.severity]);
     const leadDomain = (ranked.length ? controlById.get(ranked[0].control_id)?.domain : undefined)
       ?? coverage.blockedDomains[0];
-    const owner = owners.get(leadDomain);
+    const owner = owners?.get(leadDomain);
     // An unconfigured owner surfaces as Owner Required, never as a blank.
     reviewOwnerLabel = owner?.status === 'resolved' ? owner.ownerLabel : 'Owner Required';
   }
@@ -304,6 +320,90 @@ export async function getReadinessSummary(
     reviewOwnerLabel,
     nextReviewAt,
   };
+}
+
+export async function getReadinessSummary(
+  employeeId: string,
+  payrollStatus: ProfileReadinessSummary['payrollStatus'],
+  trainingStatus: ProfileReadinessSummary['trainingStatus'],
+): Promise<ProfileReadinessSummary> {
+  const [controls, instances, workItems] = await Promise.all([
+    loadControls(), loadInstances(employeeId), loadOpenWorkItems(employeeId),
+  ]);
+  const preliminary = buildReadinessSummary(
+    controls, instances, workItems, payrollStatus, trainingStatus,
+  );
+  if (!preliminary.blockedDomains.length) return preliminary;
+  const owners = await resolveReadinessOwners(preliminary.blockedDomains);
+  return buildReadinessSummary(
+    controls, instances, workItems, payrollStatus, trainingStatus, owners,
+  );
+}
+
+export interface ReadinessSummaryInput {
+  employeeId: string;
+  payrollStatus: ProfileReadinessSummary['payrollStatus'];
+  trainingStatus: ProfileReadinessSummary['trainingStatus'];
+}
+
+/**
+ * Page-sized readiness summaries for the Employee Master register.
+ *
+ * The register and drawer must use the same control instances, but issuing the
+ * single-employee loader once per row would turn a 25-row page into 75 database
+ * reads. This batches controls, instances and work items once and then applies
+ * the exact same summary builder used by the drawer.
+ */
+export async function getReadinessSummaries(
+  inputs: ReadinessSummaryInput[],
+): Promise<Map<string, ProfileReadinessSummary>> {
+  const uniqueInputs = [...new Map(inputs.map(input => [input.employeeId, input])).values()];
+  if (!uniqueInputs.length) return new Map();
+  const employeeIds = uniqueInputs.map(input => input.employeeId);
+  const [controls, instanceRows, workItems] = await Promise.all([
+    loadControls(), loadInstancesForEmployees(employeeIds), loadWorkItemsForEmployees(employeeIds),
+  ]);
+
+  const instancesByEmployee = new Map<string, Map<string, InstanceRow>>();
+  for (const row of instanceRows) {
+    const employeeInstances = instancesByEmployee.get(row.employee_id) ?? new Map<string, InstanceRow>();
+    employeeInstances.set(row.control_id, row);
+    instancesByEmployee.set(row.employee_id, employeeInstances);
+  }
+  const workItemsByEmployee = new Map<string, WorkItemRow[]>();
+  for (const row of workItems) {
+    const employeeItems = workItemsByEmployee.get(row.employee_id) ?? [];
+    employeeItems.push(row);
+    workItemsByEmployee.set(row.employee_id, employeeItems);
+  }
+
+  const preliminary = new Map<string, ProfileReadinessSummary>();
+  const blockedDomains = new Set<ReadinessDomain>();
+  for (const input of uniqueInputs) {
+    const summary = buildReadinessSummary(
+      controls,
+      instancesByEmployee.get(input.employeeId) ?? new Map<string, InstanceRow>(),
+      workItemsByEmployee.get(input.employeeId) ?? [],
+      input.payrollStatus,
+      input.trainingStatus,
+    );
+    preliminary.set(input.employeeId, summary);
+    summary.blockedDomains.forEach(domain => blockedDomains.add(domain));
+  }
+  if (!blockedDomains.size) return preliminary;
+
+  const owners = await resolveReadinessOwners([...blockedDomains]);
+  return new Map(uniqueInputs.map(input => [
+    input.employeeId,
+    buildReadinessSummary(
+      controls,
+      instancesByEmployee.get(input.employeeId) ?? new Map<string, InstanceRow>(),
+      workItemsByEmployee.get(input.employeeId) ?? [],
+      input.payrollStatus,
+      input.trainingStatus,
+      owners,
+    ),
+  ]));
 }
 
 // ── Offered actions ─────────────────────────────────────────────────────────

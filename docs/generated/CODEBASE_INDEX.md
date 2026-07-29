@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `4bb801ab23d1441e73136bac93a08b5f5062fd4c`  
-Source fingerprint: `51aba885cee4bbcd3e904c77`  
+Source HEAD: `5baf13ff6ea124ef5be4c0ba3388cc9b5f7a651e`  
+Source fingerprint: `17491b032cad903ca80b7bff`  
 Generator version: `1`
 
 ## Use
@@ -19,13 +19,13 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1336 | 13473 | 51 | 972 | 973 | 17 | 354 | 1414 | 83 | 2666 |
+| 1336 | 13474 | 51 | 972 | 973 | 17 | 354 | 1414 | 83 | 2666 |
 
 ## Modules
 
 | Module | Files | Symbols | Widgets | Unique routes | Route definitions | API calls | DB objects | E2E suites | Map |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| hr | 254 | 2835 | 9 | 275 | 275 | 35 | 196 | 16 | [open](modules/hr.md) |
+| hr | 254 | 2839 | 9 | 275 | 275 | 35 | 196 | 16 | [open](modules/hr.md) |
 | payroll | 195 | 1978 | 10 | 140 | 140 | 2 | 260 | 28 | [open](modules/payroll.md) |
 | finance | 139 | 1853 | 10 | 156 | 156 | 4 | 202 | 9 | [open](modules/finance.md) |
 | hse | 87 | 1275 | 0 | 144 | 144 | 107 | 65 | 4 | [open](modules/hse.md) |
@@ -33,8 +33,8 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | workflow | 47 | 321 | 0 | 40 | 40 | 8 | 128 | 3 | [open](modules/workflow.md) |
 | security | 46 | 387 | 0 | 51 | 51 | 31 | 65 | 4 | [open](modules/security.md) |
 | settings | 43 | 250 | 0 | 26 | 26 | 18 | 21 | 2 | [open](modules/settings.md) |
-| widgets | 69 | 541 | 21 | 15 | 15 | 11 | 14 | 1 | [open](modules/widgets.md) |
-| platform | 307 | 2804 | 0 | 32 | 47 | 50 | 305 | 0 | [open](modules/platform.md) |
+| widgets | 69 | 542 | 21 | 15 | 15 | 11 | 14 | 1 | [open](modules/widgets.md) |
+| platform | 307 | 2800 | 0 | 32 | 47 | 50 | 305 | 0 | [open](modules/platform.md) |
 | testing | 37 | 177 | 0 | 0 | 0 | 0 | 0 | 10 | [open](modules/testing.md) |
 | enterprise | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | [open](modules/enterprise.md) |
 
@@ -67,20 +67,20 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `finance.statutory.nisChart` | NIS Contribution Schedule | local | finance | `renderChart` | `src/components/sections/Finance/StatutoryDashboard.tsx:653` |
 | `finance.statutory.readiness` | Statutory Readiness | local | finance | `renderReadiness` | `src/components/sections/Finance/StatutoryDashboard.tsx:654` |
 | `finance.statutory.register` | Statutory Register | local | finance | `renderRegister` | `src/components/sections/Finance/StatutoryDashboard.tsx:656` |
-| `hr.employeeMaster.activeWorkforce` | Active Workforce | registry | widgets | `ActiveWorkforce` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:449` |
-| `hr.employeeMaster.departures` | Departures | registry | widgets | `Departures` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:454` |
-| `hr.employeeMaster.employeeAttentionNeutral` | Employee Attention — Neutral | registry | widgets | `EmployeeAttentionNeutralWidget` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:456` |
-| `hr.employeeMaster.exceptions` | Exceptions | registry | widgets | `Exceptions` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:452` |
-| `hr.employeeMaster.hrWorkQueue` | HR Work Queue | registry | widgets | `HrWorkQueue` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:451` |
-| `hr.employeeMaster.internalMovesCard` | Internal Moves | registry | widgets | `InternalMovesCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:458` |
+| `hr.employeeMaster.activeWorkforce` | Active Workforce | registry | widgets | `ActiveWorkforce` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:474` |
+| `hr.employeeMaster.departures` | Departures | registry | widgets | `Departures` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:479` |
+| `hr.employeeMaster.employeeAttentionNeutral` | Employee Attention — Neutral | registry | widgets | `EmployeeAttentionNeutralWidget` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:481` |
+| `hr.employeeMaster.exceptions` | Exceptions | registry | widgets | `Exceptions` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:477` |
+| `hr.employeeMaster.hrWorkQueue` | HR Work Queue | registry | widgets | `HrWorkQueue` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:476` |
+| `hr.employeeMaster.internalMovesCard` | Internal Moves | registry | widgets | `InternalMovesCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:483` |
 | `hr.employeeMaster.lifecycleActivity` | Workforce Activity | registry | hr/Employee Master | `LifecycleActivity` | `src/ui/widgets/registry.hrEmployeeMaster.tsx:486` |
-| `hr.employeeMaster.lifecycleOutcomes` | Lifecycle Outcomes | registry | widgets | `LifecycleOutcomeChart` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:461` |
-| `hr.employeeMaster.monthlyHiresCard` | Hires This Month | registry | widgets | `MonthlyHiresCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:457` |
-| `hr.employeeMaster.newStarters` | New Starters | registry | widgets | `NewStarters` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:453` |
-| `hr.employeeMaster.promotionsCard` | Promotions | registry | widgets | `PromotionsCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:459` |
-| `hr.employeeMaster.readinessRadar` | Employee Readiness Radar | registry | widgets | `ReadinessRadar` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:460` |
-| `hr.employeeMaster.recordQuality` | Record Quality | registry | widgets | `RecordQuality` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:455` |
-| `hr.employeeMaster.recordReadiness` | Record Readiness | registry | widgets | `RecordReadiness` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:450` |
+| `hr.employeeMaster.lifecycleOutcomes` | Lifecycle Outcomes | registry | widgets | `LifecycleOutcomeChart` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:486` |
+| `hr.employeeMaster.monthlyHiresCard` | Hires This Month | registry | widgets | `MonthlyHiresCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:482` |
+| `hr.employeeMaster.newStarters` | New Starters | registry | widgets | `NewStarters` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:478` |
+| `hr.employeeMaster.promotionsCard` | Promotions | registry | widgets | `PromotionsCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:484` |
+| `hr.employeeMaster.readinessRadar` | Employee Readiness Radar | registry | widgets | `ReadinessRadar` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:485` |
+| `hr.employeeMaster.recordQuality` | Record Quality | registry | widgets | `RecordQuality` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:480` |
+| `hr.employeeMaster.recordReadiness` | Record Readiness | registry | widgets | `RecordReadiness` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:475` |
 | `hr.employees.register` | Employee Register | local | hr | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:742` |
 | `hr.onboarding.case.activeTasks` | Active Tasks | local | hr | `() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddTask}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:329` |
 | `hr.onboarding.case.blockersTable` | Blockers | local | hr | `() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:330` |

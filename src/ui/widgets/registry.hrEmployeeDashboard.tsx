@@ -209,12 +209,33 @@ function RecordQuality({ stats }: { stats: HrDashboardStats }): VNode {
 function initials(person: Pick<HrEmployeeRow, 'display_name' | 'full_name'>): string { return (person.display_name ?? person.full_name ?? 'Employee').split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase(); }
 
 type AttentionEmployee = Pick<HrEmployeeRow, 'id' | 'full_name' | 'display_name' | 'employee_number' | 'position' | 'departmentName' | 'profile_image_url' | 'readiness'>;
+function previewReadiness(
+  readyControls: number,
+  blockedDomains: NonNullable<HrEmployeeRow['readiness']>['blockedDomains'],
+): NonNullable<HrEmployeeRow['readiness']> {
+  const totalControls = 3;
+  return {
+    percent: Math.round((readyControls / totalControls) * 100),
+    readyControls,
+    totalControls,
+    unresolvedWorkItems: blockedDomains.length,
+    payrollStatus: blockedDomains.includes('payroll') ? 'blocked' : 'ready',
+    trainingStatus: blockedDomains.includes('training') ? 'expired' : 'current',
+    blockedDomains,
+    lastReviewedAt: null,
+    reviewOwnerLabel: blockedDomains.length ? 'Owner Required' : null,
+    nextReviewAt: null,
+  };
+}
 const PREVIEW_ATTENTION: AttentionEmployee[] = [
-  { id: 'a1', full_name: 'Amara Diallo', display_name: null, employee_number: 'EMP-0010', position: 'Field Engineer', departmentName: 'Operations', profile_image_url: null, readiness: { percent: 58, assignmentComplete: true, payrollStatus: 'blocked', trainingStatus: 'due_soon', blockers: ['payroll', 'training'] } },
-  { id: 'a2', full_name: 'Claudia Pierre', display_name: null, employee_number: 'EMP-0008', position: 'People Specialist', departmentName: 'Human Resources', profile_image_url: null, readiness: { percent: 72, assignmentComplete: false, payrollStatus: 'ready', trainingStatus: 'current', blockers: ['assignment'] } },
-  { id: 'a3', full_name: 'Damani Baptiste', display_name: null, employee_number: 'EMP-0007', position: 'Site Coordinator', departmentName: 'Operations', profile_image_url: null, readiness: { percent: 64, assignmentComplete: true, payrollStatus: 'ready', trainingStatus: 'expired', blockers: ['training'] } },
+  { id: 'a1', full_name: 'Amara Diallo', display_name: null, employee_number: 'EMP-0010', position: 'Field Engineer', departmentName: 'Operations', profile_image_url: null, readiness: previewReadiness(1, ['payroll', 'training']) },
+  { id: 'a2', full_name: 'Claudia Pierre', display_name: null, employee_number: 'EMP-0008', position: 'People Specialist', departmentName: 'Human Resources', profile_image_url: null, readiness: previewReadiness(2, ['assignment']) },
+  { id: 'a3', full_name: 'Damani Baptiste', display_name: null, employee_number: 'EMP-0007', position: 'Site Coordinator', departmentName: 'Operations', profile_image_url: null, readiness: previewReadiness(2, ['training']) },
 ];
-const ATTENTION_LABELS = { assignment: 'Assignment', payroll: 'Payroll', training: 'Training' } as const;
+const ATTENTION_LABELS = {
+  assignment: 'Assignment', payroll: 'Payroll', training: 'Training',
+  documents: 'Documents', statutory: 'Statutory', access: 'Access',
+} as const;
 const COUNT_WORDS = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
 const countWithWord = (count: number): string => `${COUNT_WORDS[count] ?? count} (${count})`;
 type AttentionBlocker = keyof typeof ATTENTION_LABELS;
@@ -244,16 +265,20 @@ function attentionReviewCopy(blockers: AttentionBlocker[]): { title: string; but
     title: 'Complete Payroll Readiness',
     button: 'Review Payroll Setup',
   };
-  return {
+  if (blocker === 'training') return {
     title: 'Update Training Compliance',
     button: 'Review Training',
+  };
+  return {
+    title: `Resolve ${ATTENTION_LABELS[blocker]} Readiness`,
+    button: `Review ${ATTENTION_LABELS[blocker]}`,
   };
 }
 
 type AttentionReferenceVariant = 'neutral' | 'semantic';
 const PREVIEW_ATTENTION_REFERENCE: AttentionEmployee[] = [
   PREVIEW_ATTENTION[0]!,
-  { id: 'a4', full_name: 'Camille Rampersad', display_name: null, employee_number: 'EMP-FIN01', position: 'Finance Manager', departmentName: null, profile_image_url: null, readiness: { percent: 0, assignmentComplete: false, payrollStatus: 'blocked', trainingStatus: 'expired', blockers: ['assignment', 'payroll', 'training'] } },
+  { id: 'a4', full_name: 'Camille Rampersad', display_name: null, employee_number: 'EMP-FIN01', position: 'Finance Manager', departmentName: null, profile_image_url: null, readiness: previewReadiness(0, ['assignment', 'payroll', 'training']) },
 ];
 function EmployeeAttentionReferenceView({ employees, total, variant, initialIndex = 0 }: { employees: AttentionEmployee[]; total: number; variant: AttentionReferenceVariant; initialIndex?: number }): VNode {
   const [activeIndex, setActiveIndex] = useState(Math.min(initialIndex, Math.max(0, employees.length - 1)));
@@ -262,17 +287,17 @@ function EmployeeAttentionReferenceView({ employees, total, variant, initialInde
   const readiness = employee?.readiness ?? null;
   if (!employee || !readiness) return <article class={`hrew-attention-reference is-${variant}`} aria-label="Employee attention card" data-widget-content-root><div class="hrew-attention-empty"><LucideIcon name="ShieldCheck" size={24} /><strong>No Employee Issues</strong><span>All visible employee records meet their readiness controls.</span></div></article>;
   const name = employee.display_name ?? employee.full_name ?? 'Employee';
-  const primaryBlocker = readiness.blockers[0] ?? 'assignment';
+  const primaryBlocker = readiness.blockedDomains[0] ?? 'assignment';
   const primaryLabel = ATTENTION_LABELS[primaryBlocker];
-  const reviewCopy = attentionReviewCopy(readiness.blockers);
-  const issueTitle = `${readiness.blockers.length} Readiness ${readiness.blockers.length === 1 ? 'Control' : 'Controls'} Need Review`;
+  const reviewCopy = attentionReviewCopy(readiness.blockedDomains);
+  const issueTitle = `${readiness.blockedDomains.length} Readiness ${readiness.blockedDomains.length === 1 ? 'Control' : 'Controls'} Need Review`;
   const roleLine = [employee.position, employee.departmentName].filter(Boolean).join(' · ') || 'Employee';
   return <article class={`hrew-attention-reference is-${variant}`} aria-label={`${variant === 'neutral' ? 'Neutral' : 'Semantic'} employee attention card`} data-widget-content-root>
     <section class="hrew-ar-person"><span class="hrew-avatar">{employee.profile_image_url ? <img src={employee.profile_image_url} alt="" /> : initials(employee)}</span><div><strong>{name}</strong><small><LucideIcon name="BriefcaseBusiness" size={13} /><span>{roleLine}</span></small></div><nav><div class="hrew-ar-nav-row"><button type="button" aria-label="Previous employee issue" disabled={employees.length < 2} onClick={() => move(-1)}><LucideIcon name="ChevronLeft" size={18} /></button><button type="button" aria-label="Next employee issue" disabled={employees.length < 2} onClick={() => move(1)}><LucideIcon name="ChevronRight" size={18} /></button></div><span class="hrew-ar-count">{activeIndex + 1} of {total}</span></nav>
     </section>
     <section class="hrew-ar-issue"><h3>{issueTitle}</h3></section>
-    <section class="hrew-ar-facts"><div class="is-department"><LucideIcon name="UserRound" size={21} /><strong>{employee.departmentName ?? 'Unassigned'}</strong><span>Department</span></div><div class="is-control"><LucideIcon name="BriefcaseBusiness" size={21} /><strong>{primaryLabel}</strong><span>Control</span></div><div class="is-issues"><LucideIcon name="CircleAlert" size={21} /><strong>{countWithWord(readiness.blockers.length)}</strong><span>Issues</span></div></section>
-    <section class="hrew-ar-impact"><div class="hrew-ar-ready-gauge" style={`--hrew-ready-angle:${readiness.percent * 1.12 - 56}deg`} aria-label={`Record ready ${readiness.percent}%`}><svg viewBox="0 0 360 158" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><defs><linearGradient id={`hrew-ready-arc-${employee.id}`} x1="0" x2="1"><stop offset="0" stop-color="#dc2626" /><stop offset=".18" stop-color="#ef4444" /><stop offset=".38" stop-color="#f97316" /><stop offset=".55" stop-color="#f59e0b" /><stop offset=".74" stop-color="#84cc16" /><stop offset="1" stop-color="#16a34a" /></linearGradient></defs><path class="hrew-ready-track" d="M34 132 A146 146 0 0 1 326 132" fill="none" stroke="#edf0f4" stroke-width="24" stroke-linecap="round" /><path class="hrew-ready-arc" pathLength="100" d="M34 132 A146 146 0 0 1 326 132" fill="none" stroke={`url(#hrew-ready-arc-${employee.id})`} stroke-width="24" stroke-linecap="round" stroke-opacity={readiness.percent > 0 ? 1 : 0} style={`stroke-dasharray:${readiness.percent} 100`} /></svg><div><strong>{readiness.percent}<small>%</small></strong><span>{readiness.percent === 100 ? 'Ready' : 'Not Ready'}</span></div></div><div><strong>Readiness Impact</strong><p>Complete {readiness.blockers.map(blocker => ATTENTION_LABELS[blocker].toLowerCase()).join(', ')} to make this record ready.</p></div><i><em style={`width:${readiness.percent}%`} /></i></section>
+    <section class="hrew-ar-facts"><div class="is-department"><LucideIcon name="UserRound" size={21} /><strong>{employee.departmentName ?? 'Unassigned'}</strong><span>Department</span></div><div class="is-control"><LucideIcon name="BriefcaseBusiness" size={21} /><strong>{primaryLabel}</strong><span>Control</span></div><div class="is-issues"><LucideIcon name="CircleAlert" size={21} /><strong>{countWithWord(readiness.blockedDomains.length)}</strong><span>Issues</span></div></section>
+    <section class="hrew-ar-impact"><div class="hrew-ar-ready-gauge" style={`--hrew-ready-angle:${readiness.percent * 1.12 - 56}deg`} aria-label={`Record ready ${readiness.percent}%`}><svg viewBox="0 0 360 158" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><defs><linearGradient id={`hrew-ready-arc-${employee.id}`} x1="0" x2="1"><stop offset="0" stop-color="#dc2626" /><stop offset=".18" stop-color="#ef4444" /><stop offset=".38" stop-color="#f97316" /><stop offset=".55" stop-color="#f59e0b" /><stop offset=".74" stop-color="#84cc16" /><stop offset="1" stop-color="#16a34a" /></linearGradient></defs><path class="hrew-ready-track" d="M34 132 A146 146 0 0 1 326 132" fill="none" stroke="#edf0f4" stroke-width="24" stroke-linecap="round" /><path class="hrew-ready-arc" pathLength="100" d="M34 132 A146 146 0 0 1 326 132" fill="none" stroke={`url(#hrew-ready-arc-${employee.id})`} stroke-width="24" stroke-linecap="round" stroke-opacity={readiness.percent > 0 ? 1 : 0} style={`stroke-dasharray:${readiness.percent} 100`} /></svg><div><strong>{readiness.percent}<small>%</small></strong><span>{readiness.percent === 100 ? 'Ready' : 'Not Ready'}</span></div></div><div><strong>Readiness Impact</strong><p>Complete {readiness.blockedDomains.map(blocker => ATTENTION_LABELS[blocker].toLowerCase()).join(', ')} to make this record ready.</p></div><i><em style={`width:${readiness.percent}%`} /></i></section>
     <section class="hrew-ar-action"><span>Recommended Review</span><h4>{reviewCopy.title}</h4><button type="button" onClick={focusEmployeeRegister}>{reviewCopy.button}</button></section>
   </article>;
 }
@@ -280,7 +305,7 @@ function EmployeeAttentionReferenceWidget({ variant }: { variant: AttentionRefer
   const query = useHrEmployeesPage({ statuses: ['active'], page: 1, pageSize: 200, sortBy: 'full_name', sortDir: 'asc' });
   if (query.isLoading) return <WidgetState kind="loading" />;
   if (!query.data) return <WidgetState kind="error" message={query.error instanceof Error ? query.error.message : 'Employee attention data is unavailable.'} />;
-  const affected = query.data.rows.filter(employee => employee.readiness?.blockers.length).sort((a, b) => (a.readiness?.percent ?? 100) - (b.readiness?.percent ?? 100));
+  const affected = query.data.rows.filter(employee => employee.readiness?.blockedDomains.length).sort((a, b) => (a.readiness?.percent ?? 100) - (b.readiness?.percent ?? 100));
   return <EmployeeAttentionReferenceView employees={affected} total={query.data.meta.total} variant={variant} />;
 }
 function EmployeeAttentionNeutralWidget(): VNode { return <EmployeeAttentionReferenceWidget variant="neutral" />; }

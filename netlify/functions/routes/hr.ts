@@ -52,12 +52,13 @@ import {
 } from '../lib/hr/employeeAttention';
 import { buildProfileShell, type ShellContext } from '../lib/hr/employeeProfileShell';
 import {
-  getReadinessMatrix, getWorkItemDetail, transitionWorkItem,
+  getReadinessMatrix, getReadinessSummaries, getReadinessSummary, getWorkItemDetail, transitionWorkItem,
   READINESS_VIEW, READINESS_FOLLOW_UP, READINESS_REVIEW,
 } from '../lib/hr/readinessService';
 import { getEmploymentDetail, currentAssignmentConditions, applyEmployeeAssignment } from '../lib/hr/employmentDetail';
 import { exportDocumentIndex, exportReadinessBreakdown, exportAuditHistory } from '../lib/hr/employeeExports';
 import type { HonoVariables } from '../../../types/api';
+import type { ProfileReadinessSummary } from '../../../types/hrEmployeeProfile';
 
 const router = new Hono<{ Variables: HonoVariables }>();
 
@@ -86,29 +87,6 @@ function rollupTrainingStatus(certs: { status: string; expires_at: string | null
   if (active.some(x => x.status === 'due_soon')) return 'due_soon';
   if (active.some(x => x.status === 'current')) return 'current';
   return 'none';
-}
-
-interface EmployeeReadiness {
-  percent: number;
-  assignmentComplete: boolean;
-  payrollStatus: 'pending' | 'ready' | 'blocked';
-  trainingStatus: 'current' | 'due_soon' | 'expired' | 'none';
-  blockers: ('assignment' | 'payroll' | 'training')[];
-}
-
-/** One readiness contract for register rows and employee detail. */
-function employeeReadiness(
-  employee: Pick<EmpRow, 'supervisor_id' | 'department_id'> & Record<string, unknown>,
-  payrollStatus: EmployeeReadiness['payrollStatus'],
-  trainingStatus: EmployeeReadiness['trainingStatus'],
-): EmployeeReadiness {
-  const assignmentComplete = !!employee.supervisor_id && !!employee.department_id && !!employee.site_id;
-  const blockers: EmployeeReadiness['blockers'] = [];
-  if (!assignmentComplete) blockers.push('assignment');
-  if (payrollStatus !== 'ready') blockers.push('payroll');
-  if (trainingStatus !== 'current') blockers.push('training');
-  const passed = Number(assignmentComplete) + Number(payrollStatus === 'ready') + Number(trainingStatus === 'current');
-  return { percent: Math.round((passed / 3) * 100), assignmentComplete, payrollStatus, trainingStatus, blockers };
 }
 
 // ── Employee Master ────────────────────────────────────────────────────────────
@@ -259,10 +237,25 @@ router.post('/employees/list', async c => {
   const supMap = Object.fromEntries((supsRes.data as { id: string; full_name: string | null }[]).map(s => [s.id, s.full_name]));
   const readinessMap = new Map((readinessRes.data as { employee_id: string; payroll_ready_status: string }[])
     .map(row => [row.employee_id, row.payroll_ready_status]));
+  const readinessSignals = new Map(data.map(employee => {
+    const payrollStatus = (readinessMap.get(employee.id) ?? 'pending') as 'pending' | 'ready' | 'blocked';
+    const trainingStatus = rollupTrainingStatus(certByWorker.get(employee.id) ?? [], today);
+    return [employee.id, { payrollStatus, trainingStatus }] as const;
+  }));
+  const readinessSummaries: Map<string, ProfileReadinessSummary> = mayViewReadiness
+    ? await getReadinessSummaries(data.map(employee => {
+        const signals = readinessSignals.get(employee.id);
+        return {
+          employeeId: employee.id,
+          payrollStatus: signals?.payrollStatus ?? 'pending',
+          trainingStatus: signals?.trainingStatus ?? 'none',
+        };
+      }))
+    : new Map<string, ProfileReadinessSummary>();
 
   const mapped = data.map(r => {
-    const payrollStatus = (readinessMap.get(r.id) ?? 'pending') as 'pending' | 'ready' | 'blocked';
-    const trainingStatus = rollupTrainingStatus(certByWorker.get(r.id) ?? [], today);
+    const signals = readinessSignals.get(r.id);
+    const trainingStatus = signals?.trainingStatus ?? 'none';
     return {
       ...r,
       accountStatus: r.status,
@@ -273,7 +266,7 @@ router.post('/employees/list', async c => {
       supervisorName: r.supervisor_id ? supMap[r.supervisor_id] ?? null : null,
       workerType: r.contractor_flag ? 'contractor' : 'employee',
       trainingStatus,
-      readiness: mayViewReadiness ? employeeReadiness(r, payrollStatus, trainingStatus) : null,
+      readiness: mayViewReadiness ? readinessSummaries.get(r.id) ?? null : null,
       offboardingActive: offboardingActiveIds.has(r.id),
     };
   });
@@ -416,7 +409,11 @@ router.post('/employees/get', async c => {
     todayISO(),
   );
   const readiness = (canStatutory || canReadiness)
-    ? employeeReadiness(emp, payrollReadiness.status as EmployeeReadiness['payrollStatus'], trainingStatus)
+    ? await getReadinessSummary(
+        emp.id,
+        payrollReadiness.status as 'pending' | 'ready' | 'blocked',
+        trainingStatus,
+      )
     : null;
 
   return c.json({ success: true, data: {
@@ -1461,6 +1458,7 @@ router.post('/employees/dashboard-stats', async c => {
   // Statutory readiness (active workers only).
   const activeSet = new Set(activeIds);
   const activeStat = ((statRows ?? []) as { employee_id: string; payroll_ready_status: string }[]).filter(s => activeSet.has(s.employee_id));
+  const activeStatByEmployee = new Map(activeStat.map(row => [row.employee_id, row.payroll_ready_status]));
   const payrollReady   = activeStat.filter(s => s.payroll_ready_status === 'ready').length;
   const payrollBlocked = activeStat.filter(s => s.payroll_ready_status === 'blocked').length;
 
@@ -1475,6 +1473,19 @@ router.post('/employees/dashboard-stats', async c => {
   }
   const trainingCurrent = activeIds.filter(id => rollupTrainingStatus(certByWorker.get(id) ?? [], today) === 'current').length;
   const trainingExpired = activeIds.filter(id => rollupTrainingStatus(certByWorker.get(id) ?? [], today) === 'expired').length;
+  const activeReadiness = await getReadinessSummaries(activeIds.map(employeeId => ({
+    employeeId,
+    payrollStatus: (activeStatByEmployee.get(employeeId) ?? 'pending') as 'pending' | 'ready' | 'blocked',
+    trainingStatus: rollupTrainingStatus(certByWorker.get(employeeId) ?? [], today),
+  })));
+  const readinessCoverage = [...activeReadiness.values()].reduce(
+    (totals, summary) => ({
+      ready: totals.ready + summary.readyControls,
+      controls: totals.controls + summary.totalControls,
+      blockedEmployees: totals.blockedEmployees + Number(summary.percent < 100),
+    }),
+    { ready: 0, controls: 0, blockedEmployees: 0 },
+  );
 
   // HR work queue (open change-requests).
   const workforceSet = new Set(workforce.map(w => w.id));
@@ -1552,13 +1563,12 @@ router.post('/employees/dashboard-stats', async c => {
     },
     hr_work_queue: { total: chg.length, urgent, oldest_days: oldestDays, mix: [...mixMap.entries()].map(([type, count]) => ({ type, count })) },
     readiness: {
-      percent: active.length ? Math.round(((active.filter(w => !!w.supervisor_id && !!w.department_id && !!w.site_id).length + payrollReady + trainingCurrent) / (active.length * 3)) * 100) : 0,
+      percent: readinessCoverage.controls
+        ? Math.round((readinessCoverage.ready / readinessCoverage.controls) * 100)
+        : 0,
       assignment_complete: active.filter(w => !!w.supervisor_id && !!w.department_id && !!w.site_id).length,
       payroll_ready: payrollReady, training_current: trainingCurrent,
-      blocked: new Set([
-        ...activeStat.filter(s => s.payroll_ready_status === 'blocked').map(s => s.employee_id),
-        ...activeIds.filter(id => rollupTrainingStatus(certByWorker.get(id) ?? [], today) === 'expired'),
-      ]).size,
+      blocked: readinessCoverage.blockedEmployees,
     },
     exceptions: { total: exceptionItems.reduce((s, x) => s + x.count, 0), items: exceptionItems },
     distribution: { departments: distribution('department_id', departmentNames), sites: distribution('site_id', siteNames) },

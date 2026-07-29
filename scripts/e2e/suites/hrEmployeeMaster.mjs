@@ -253,9 +253,13 @@ export default async function run(h) {
     expect(e1.workerType === 'employee', `workerType employee — got ${e1 && e1.workerType}`);
     expect(['none', 'current', 'due_soon', 'expired'].includes(e1.trainingStatus), `trainingStatus — got ${e1 && e1.trainingStatus}`);
     expect(e1.readiness && typeof e1.readiness.percent === 'number', 'readiness.percent');
-    expect(e1.readiness.assignmentComplete === false, 'readiness assignment derives from missing department');
+    expect(typeof e1.readiness.readyControls === 'number', 'readiness.readyControls');
+    expect(typeof e1.readiness.totalControls === 'number', 'readiness.totalControls');
+    expect(e1.readiness.readyControls <= e1.readiness.totalControls, 'readiness readyControls never exceeds totalControls');
     expect(e1.readiness.payrollStatus === 'ready', `readiness payrollStatus — got ${e1.readiness.payrollStatus}`);
-    expect(Array.isArray(e1.readiness.blockers) && e1.readiness.blockers.includes('assignment'), 'readiness blockers');
+    expect(Array.isArray(e1.readiness.blockedDomains), 'readiness.blockedDomains');
+    expect(!('assignmentComplete' in e1.readiness), 'retired three-factor readiness is not served');
+    expect(!('blockers' in e1.readiness), 'retired readiness blockers field is not served');
     expect(e1.siteName === ctx.siteName, `siteName resolved server-side from project_sites — got ${e1 && e1.siteName}`);
     expect(e1.supervisorName === ctx.supName, `supervisorName resolved server-side from app_users — got ${e1 && e1.supervisorName}`);
     // The register's row menu gates "Start Offboarding" on this flag, so it must always be
@@ -321,9 +325,10 @@ export default async function run(h) {
     expect(r.body.data.statutory && r.body.data.statutory.payroll_ready_status === 'ready', 'statutory embedded');
     expect(r.body.data.payrollReadiness && r.body.data.payrollReadiness.status === 'ready', 'payrollReadiness present');
     expect(r.body.data.employee.readiness && typeof r.body.data.employee.readiness.percent === 'number', 'employee readiness present');
-    expect(r.body.data.employee.readiness.assignmentComplete === false, 'detail readiness matches register assignment rule');
+    expect(typeof r.body.data.employee.readiness.readyControls === 'number', 'detail readiness uses typed readyControls');
+    expect(typeof r.body.data.employee.readiness.totalControls === 'number', 'detail readiness uses typed totalControls');
     expect(r.body.data.employee.readiness.payrollStatus === 'ready', 'detail readiness carries payroll status');
-    expect(r.body.data.employee.readiness.blockers.includes('assignment'), 'detail readiness carries blockers');
+    expect(Array.isArray(r.body.data.employee.readiness.blockedDomains), 'detail readiness carries blocked domains');
     expect('mobile_phone' in r.body.data.employee, 'employee exposes a distinct mobile_phone field');
     expect(typeof r.body.data.employee.created_at === 'string', 'employee exposes record creation time');
     expect(Array.isArray(r.body.data.assignmentHistory), 'assignmentHistory array');
@@ -379,6 +384,21 @@ export default async function run(h) {
     expect(Array.isArray(d.readiness.blockedDomains), 'readiness.blockedDomains array');
     expect(!('blockers' in d.readiness), 'readiness.blockers is the SUPERSEDED shape and must not be served');
     expect(d.readiness.blockedDomains.includes('assignment'), 'readiness reflects the incomplete assignment');
+
+    // The register and drawer are two views of the same typed readiness controls.
+    // A second calculation here previously let the same employee show two scores.
+    const register = await api('hr/employees/list', A, { search: TAG });
+    ok(register, 'register readiness comparison');
+    const registerEmployee = register.body.data.find(row => row.id === ctx.emp1);
+    expect(!!registerEmployee?.readiness, 'register employee carries readiness');
+    expect(registerEmployee.readiness.percent === d.readiness.percent,
+      `register/drawer readiness percent agrees â€” ${registerEmployee.readiness.percent} vs ${d.readiness.percent}`);
+    expect(registerEmployee.readiness.readyControls === d.readiness.readyControls,
+      'register/drawer readyControls agrees');
+    expect(registerEmployee.readiness.totalControls === d.readiness.totalControls,
+      'register/drawer totalControls agrees');
+    expect(JSON.stringify(registerEmployee.readiness.blockedDomains) === JSON.stringify(d.readiness.blockedDomains),
+      'register/drawer blockedDomains agrees');
 
     // attention + indicators come from ONE source
     expect(Array.isArray(d.attentionPreview), 'attentionPreview array');
@@ -708,6 +728,30 @@ export default async function run(h) {
     expect(s.lifecycle.periods.every(x => typeof x.hires === 'number' && typeof x.exits === 'number' && typeof x.transfers === 'number' && typeof x.promotions === 'number'), 'lifecycle period envelope');
     expect(['hires', 'exits', 'transfers', 'promotions'].every(key => typeof s.lifecycle.totals[key] === 'number'), 'lifecycle totals envelope');
     expect(s.active_workforce.total >= 1, 'at least one active worker');
+
+    // The dashboard KPI, register rows, drawer and full record must all use the
+    // same typed readiness controls. Page through the register so this remains
+    // an exact reconciliation when the workforce grows beyond one API page.
+    const activeRows = [];
+    let page = 1;
+    while (true) {
+      const list = await api('hr/employees/list', A, {
+        statuses: ['active'], page, pageSize: 200,
+      });
+      ok(list, `active employee page ${page}`);
+      activeRows.push(...list.body.data);
+      if (activeRows.length >= list.body.meta.total) break;
+      page += 1;
+    }
+    const readinessTotals = activeRows.reduce((totals, employee) => ({
+      ready: totals.ready + (employee.readiness?.readyControls ?? 0),
+      controls: totals.controls + (employee.readiness?.totalControls ?? 0),
+    }), { ready: 0, controls: 0 });
+    const registerPercent = readinessTotals.controls
+      ? Math.round((readinessTotals.ready / readinessTotals.controls) * 100)
+      : 0;
+    expect(s.readiness.percent === registerPercent,
+      `dashboard/register readiness agrees — ${s.readiness.percent} vs ${registerPercent}`);
   });
 
   await test('dashboard-stats (manager hr.employees.view) → allowed', async () => {

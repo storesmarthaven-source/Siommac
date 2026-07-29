@@ -12,6 +12,7 @@ import { apiPost } from '@lib/api';
 import { requireHrSuccess } from './client';
 import { useRecordQuery } from '@lib/recordQuery';
 import { hrEmployeeKeys } from '../queryKeys';
+import type { ProfileReadinessSummary } from '../../../types/hrEmployeeProfile';
 
 async function hrPost<T extends { success: boolean; message?: string }>(
   path: string,
@@ -27,13 +28,7 @@ export type WorkerType     = 'employee' | 'contractor';
 export type TrainingStatus = 'current' | 'due_soon' | 'expired' | 'none';
 export type PayrollReadinessStatus = 'pending' | 'ready' | 'blocked';
 
-export interface EmployeeReadinessSummary {
-  percent: number;
-  assignmentComplete: boolean;
-  payrollStatus: PayrollReadinessStatus;
-  trainingStatus: TrainingStatus;
-  blockers: ('assignment' | 'payroll' | 'training')[];
-}
+export type EmployeeReadinessSummary = ProfileReadinessSummary;
 
 export interface HrEmployeeRow {
   id:                 string;
