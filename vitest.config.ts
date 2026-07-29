@@ -30,7 +30,12 @@ export default defineConfig({
     // netlify/functions/**/*.test.ts units (payroll SoD rules etc.) and the
     // tests/vitest/ units the HR branch added. tests/unit + tests/integration
     // stay Jest-only. (Union of both sides of the merge.)
-    include:     ['src/**/*.test.{ts,tsx}', 'netlify/functions/**/*.test.ts', 'tests/vitest/**/*.test.ts'],
+    // `tests/vitest` matches BOTH extensions. It previously matched `.test.ts`
+    // only, so a `.test.tsx` placed there was collected by nothing and reported
+    // as neither passing nor failing — `skeletonStandard.test.tsx` sat dead that
+    // way. A test that cannot run is worse than a missing one: it reads as
+    // coverage in the file tree while asserting nothing.
+    include:     ['src/**/*.test.{ts,tsx}', 'netlify/functions/**/*.test.ts', 'tests/vitest/**/*.test.{ts,tsx}'],
     exclude:     ['tests/unit/**', 'tests/integration/**', 'node_modules/**'],
     environment: 'jsdom',
     globals:     true,           // describe / it / expect without imports
