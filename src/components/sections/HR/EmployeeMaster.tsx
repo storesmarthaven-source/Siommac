@@ -199,7 +199,7 @@ function EmployeeRow(
       {visibleColumns.includes('employmentType') && <td data-column="employmentType">{humanize(type)}</td>}
       {visibleColumns.includes('status') && <td data-column="status"><span class={`pill ${statusTone(emp.status)}`}>{humanize(emp.status)}</span></td>}
       {visibleColumns.includes('readiness') && <td data-column="readiness">
-        {emp.readiness ? <div class="em-readiness" aria-label={`${emp.readiness.percent}% ready${emp.readiness.blockers.length ? `; blockers: ${emp.readiness.blockers.join(', ')}` : ''}`}>
+        {emp.readiness ? <div class="em-readiness" aria-label={`${emp.readiness.percent}% ready${emp.readiness.blockedDomains.length ? `; blockers: ${emp.readiness.blockedDomains.join(', ')}` : ''}`}>
           <div><span>Record readiness</span><strong>{emp.readiness.percent}%</strong></div>
           {/* One percentage-derived colour per bar (see readinessScale) — never the whole
               red→amber→green ramp, which would give a low score a green tail. */}
@@ -765,7 +765,7 @@ export function EmployeeMaster(): VNode {
     );
   }
 
-  if ((listQ.isLoading && !listQ.data) || (dashboardQ.isLoading && !dashboardQ.data)) {
+  if (listQ.isLoading || dashboardQ.isLoading) {
     return <DashboardPageSkeleton title="Loading Employee Master" kpiCount={6} widgetCount={3} includeTable />;
   }
 
@@ -841,7 +841,7 @@ export function EmployeeMaster(): VNode {
           coarse-unit widget (one sized for the default 88px board) renders it ~15× too short. */}
       <WidgetBoard pageKey={PAGE_KEY} zones={['main']} editing={editing && canEdit}
         localWidgets={localWidgets} defaultLayout={defaultEmployeeLayout()} demo={demo}
-        column={EMPLOYEE_BOARD_COLUMNS} cellHeight={6} gap={[12, 12]}
+        column={EMPLOYEE_BOARD_COLUMNS} cellHeight={6} gap={[12, 12]} revealOnMount={false}
         preview={preview} onPreviewChange={setPreview}
         onCommitPreview={commitPreview} onDiscardPreview={discardPreview}
         onFinishEditing={() => setEditing(false)}
@@ -862,7 +862,7 @@ export function EmployeeMaster(): VNode {
         onPreviewOnBoard={p => setPreview(placeInWidgetSection(p))} />
 
       {/* Profile drawer */}
-      <ProfileDrawer key={selectedId ?? 'closed'} employeeId={selectedId} onClose={() => setSelectedId(null)}
+      <ProfileDrawer employeeId={selectedId} onClose={() => setSelectedId(null)}
         onAction={(label) => openAction(label, selectedId)}
         onOpenFullRecord={selectedId
           ? (tab) => {
