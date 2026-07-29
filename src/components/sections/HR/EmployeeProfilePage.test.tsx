@@ -71,6 +71,7 @@ const shell: EmployeeProfileShell = {
     viewOnboarding: true, viewOffboarding: true, viewAccountSecurity: true,
   },
 };
+const primaryAttention = shell.attentionPreview[0]!;
 let shellData: EmployeeProfileShell | undefined = shell;
 
 const readinessMatrix: EmployeeReadinessMatrix = {
@@ -264,7 +265,12 @@ function selectOption(select: HTMLSelectElement, value: string): void {
   });
 }
 
-afterEach(() => { document.body.innerHTML = ''; shellData = shell; });
+afterEach(() => {
+  document.body.innerHTML = '';
+  shellData = shell;
+  shell.attentionPreview = [primaryAttention];
+  shell.attentionTotal = 2;
+});
 
 describe('Employee record — locked structure', () => {
   it('emits the reference regions, not the superseded UI-kit composition', () => {
@@ -323,6 +329,14 @@ describe('Employee record — locked structure', () => {
     const strip = document.querySelector<HTMLElement>('.attention-strip')!;
     expect(within(strip).getByText('Bank Account Reverification Due')).toBeTruthy();
     expect(within(strip).getByText('Owner: Payroll Team · Confirm account ending 4821')).toBeTruthy();
+  });
+
+  it('omits Needs Attention entirely when the employee has no unresolved items', () => {
+    shell.attentionPreview = [];
+    shell.attentionTotal = 0;
+    renderPage();
+    expect(document.querySelector('.attention-strip')).toBeNull();
+    expect(screen.queryByText('Needs Attention')).toBeNull();
   });
 
   it('keeps Account Health as the overview grid’s last card, which the locked layout pins', () => {

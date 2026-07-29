@@ -223,6 +223,21 @@ describe('Employee profile drawer', () => {
     for (const name of ['workEmail', 'workPhone', 'mobile', 'emergencyName', 'relationship', 'emergencyPhone']) {
       expect(dialog.querySelector(`[name="${name}"]`), name).not.toBeNull();
     }
+    expect(within(dialog).getAllByText('+1 (868)')).toHaveLength(3);
+    expect(dialog.querySelectorAll('.tt-phone-prefix')).toHaveLength(3);
+  });
+
+  it('does not render a decorative online-presence dot on the employee photo', () => {
+    renderDrawer();
+    expect(document.querySelector('.identity .presence')).toBeNull();
+  });
+
+  it('omits Needs Attention entirely when the employee has no unresolved items', () => {
+    shell.attentionPreview = [];
+    shell.attentionTotal = 0;
+    renderDrawer();
+    expect(document.querySelector('.attention-strip')).toBeNull();
+    expect(screen.queryByText('Needs Attention')).toBeNull();
   });
 
   it('keeps the footer actions pinned in the approved footer', () => {

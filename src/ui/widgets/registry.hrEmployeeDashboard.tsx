@@ -18,7 +18,7 @@ import {
 import { useHrDashboardStats, useHrEmployeesPage, type HrDashboardStats, type HrEmployeeRow } from '@api/hr/employees';
 import { LucideIcon, type LucideName } from '../LucideIcon';
 import { KpiTile, type KpiTone } from '../components/KpiTile';
-import { Skeleton, SkeletonText } from '../components/Skeleton';
+import { WidgetSkeleton } from '../components/Skeleton';
 import { defineWidget } from './defineWidget';
 import { findWidgetDataSource, registerWidgetDataSource } from './dataSources';
 import type { WidgetDef, WidgetRenderProps, WidgetSizeDef } from './types';
@@ -115,16 +115,7 @@ const PREVIEW: HrDashboardStats = {
 
 function WidgetState({ kind, message }: { kind: 'loading' | 'error'; message?: string }): VNode {
   if (kind === 'loading') {
-    return (
-      <article class="hrew-card hrew-state" data-widget-content-root role="status" aria-busy="true">
-        <span class="sr-only">Loading authorised Employee Master data…</span>
-        <div style={{ width: '100%', display: 'grid', gap: '14px' }}>
-          <Skeleton width="42%" height={15} radius={999} />
-          <Skeleton width="58%" height={34} radius={8} />
-          <SkeletonText lines={3} width="88%" lastWidth="62%" />
-        </div>
-      </article>
-    );
+    return <WidgetSkeleton class="hrew-card" variant="card" />;
   }
   return <article class="hrew-card hrew-state" data-widget-content-root role="alert">
     <LucideIcon name="TriangleAlert" size={23} />

@@ -237,3 +237,40 @@ export function PageHeaderSkeleton(): VNode {
     </header>
   );
 }
+
+export interface DashboardPageSkeletonProps {
+  title?: string;
+  kpiCount?: number;
+  widgetCount?: number;
+  includeTable?: boolean;
+}
+
+/** Complete dashboard cold state for pages that do not own a layout-driven board. */
+export function DashboardPageSkeleton({
+  title = 'Loading dashboard',
+  kpiCount = 4,
+  widgetCount = 3,
+  includeTable = false,
+}: DashboardPageSkeletonProps): VNode {
+  return (
+    <section class="ui-dashboard-skeleton" role="status" aria-busy="true" aria-label={title}>
+      <span class="sr-only">{title}…</span>
+      <PageHeaderSkeleton />
+      <SkeletonStatGrid count={kpiCount} />
+      <div class="ui-dashboard-skeleton-widgets">
+        {Array.from({ length: widgetCount }, (_, index) => (
+          <WidgetSkeleton key={index} variant={index === 0 ? 'chart' : index === 1 ? 'list' : 'card'} />
+        ))}
+      </div>
+      {includeTable ? (
+        <div class="ui-dashboard-skeleton-table">
+          <div class="ui-dashboard-skeleton-table-head">
+            <Skeleton width={180} height={16} radius={999} />
+            <Skeleton width={260} height={36} radius={9} />
+          </div>
+          <table><tbody><TableSkeleton rows={7} cols={6} firstCellAvatar /></tbody></table>
+        </div>
+      ) : null}
+    </section>
+  );
+}

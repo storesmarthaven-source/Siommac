@@ -39,6 +39,7 @@ import {
   type DocumentHealthGroup, type ReadinessControlMatrixEntry,
 } from '@api/hr/employeeReadiness';
 import { useHrAudit, useUpdateHrContact } from '@api/hr/employees';
+import { TrinidadPhoneInput } from './TrinidadPhoneInput';
 import {
   DASH, DRAWER_TABS, DRAWER_TAB_LABEL, titleCase, formatDate, formatDateTime,
   formatTenure, formatNoticePeriod, formatWeeklyHours, formatArrangementAndFte,
@@ -409,7 +410,6 @@ export function ProfileDrawer({
                   : <span class="portrait-fallback" aria-hidden="true">
                       {(identity?.displayName ?? '?').slice(0, 1).toUpperCase()}
                     </span>}
-                <span class="presence" aria-label={titleCase(identity?.employmentStatus)} />
               </div>
               <div>
                 <div class="name-line">
@@ -461,17 +461,11 @@ export function ProfileDrawer({
 
             {shell && tab === 'overview' && (
               <section class="panel active" id="panel-overview" role="tabpanel">
-                <section class="attention-strip">
+                {attentionTotal > 0 && <section class="attention-strip">
                   <div class="attention-title">
                     <span class="attention-heading-icon"><Icon id="alert" /></span>
                     Needs Attention <span class="badge warning">{attentionTotal}</span>
                   </div>
-                  {attentionItems.length === 0 && (
-                    <article class="attention-item">
-                      <span class="attention-ico"><Icon id="check" /></span>
-                      <div><strong>Nothing Needs Attention</strong><span>Every tracked item for this employee is resolved.</span></div>
-                    </article>
-                  )}
                   {attentionItems.map((item, i) => (
                     <article
                       key={item.id}
@@ -494,7 +488,7 @@ export function ProfileDrawer({
                         : <Icon id="chevron" />}
                     </article>
                   ))}
-                </section>
+                </section>}
 
                 <div class="overview-grid">
                   {shell.readiness && (
@@ -959,10 +953,10 @@ export function ProfileDrawer({
                       <input name="workEmail" type="email" required autocomplete="email" defaultValue={shell.contact.workEmail ?? ''} />
                     </label>
                     <label class="form-field"><span>Work Phone</span>
-                      <input name="workPhone" type="tel" autocomplete="tel" defaultValue={shell.contact.workPhone ?? ''} />
+                      <TrinidadPhoneInput name="workPhone" autocomplete="tel" defaultValue={shell.contact.workPhone ?? ''} />
                     </label>
                     <label class="form-field"><span>Mobile</span>
-                      <input name="mobile" type="tel" autocomplete="tel" defaultValue={shell.contact.mobilePhone ?? ''} />
+                      <TrinidadPhoneInput name="mobile" autocomplete="tel" defaultValue={shell.contact.mobilePhone ?? ''} />
                     </label>
                   </div>
                 </section>
@@ -980,7 +974,7 @@ export function ProfileDrawer({
                       </select>
                     </label>
                     <label class="form-field"><span>Phone</span>
-                      <input name="emergencyPhone" type="tel" defaultValue={shell.contact.emergencyContactPhone ?? ''} />
+                      <TrinidadPhoneInput name="emergencyPhone" defaultValue={shell.contact.emergencyContactPhone ?? ''} />
                     </label>
                   </div>
                 </section>

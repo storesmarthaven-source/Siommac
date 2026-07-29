@@ -451,17 +451,11 @@ export function EmployeeProfilePage({
           {/* ── Overview ────────────────────────────────────────────────── */}
           {tab === 'overview' && (
             <section class="tab-panel active" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview">
-              <div class="attention-strip">
+              {shell.attentionTotal > 0 && <div class="attention-strip">
                 <div class="attention-title">
                   <span class="attention-heading-icon"><PageIcon id="alert" /></span>
                   Needs Attention <span class="badge warning">{shell.attentionTotal}</span>
                 </div>
-                {attentionItems.length === 0 && (
-                  <article class="attention-item">
-                    <span class="attention-ico"><PageIcon id="check" /></span>
-                    <div><strong>Nothing Needs Attention</strong><span>Every tracked item for this employee is resolved.</span></div>
-                  </article>
-                )}
                 {attentionItems.map((item, index) => (
                   <article
                     key={item.id}
@@ -484,7 +478,7 @@ export function EmployeeProfilePage({
                       : <PageIcon id="chevron" />}
                   </article>
                 ))}
-              </div>
+              </div>}
 
               <div class="grid-3">
                 <section class="card">
