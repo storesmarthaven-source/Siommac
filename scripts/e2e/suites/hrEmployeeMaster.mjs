@@ -396,9 +396,12 @@ export default async function run(h) {
 
     // The alpha fixture is created with departmentId:null (site + supervisor ARE set),
     // so exactly the department gap must surface — and nothing else from employment.
-    expect(d.attentionPreview.some(i => i.id === 'employment.missing:department'),
+    const attentionResult = await api('hr/employees/attention', A, { employeeId: ctx.emp1 });
+    ok(attentionResult, 'full attention');
+    const fullAttention = attentionResult.body.data.items;
+    expect(fullAttention.some(i => i.id === 'employment.missing:department'),
       'the unassigned department surfaces as an attention item');
-    expect(!d.attentionPreview.some(i => i.id === 'employment.missing:supervisor'
+    expect(!fullAttention.some(i => i.id === 'employment.missing:supervisor'
       || i.id === 'employment.missing:site'),
       'assigned supervisor/site do NOT produce phantom attention items');
     const employmentTab = d.tabIndicators.find(t => t.tab === 'employment');

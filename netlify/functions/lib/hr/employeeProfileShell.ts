@@ -26,8 +26,8 @@ import type {
   EmployeeAttentionItem, ProfileTabIndicator,
 } from '../../../../types/hrEmployeeProfile';
 
-/** Rows the drawer's Needs Attention panel shows before "view all" paging. */
-export const ATTENTION_PREVIEW_SIZE = 6;
+/** Rows the locked drawer shows before paging through the remaining work. */
+export const ATTENTION_PREVIEW_SIZE = 2;
 /** Entries in the shell's activity preview. The Activity tab reads the full list. */
 export const ACTIVITY_PREVIEW_SIZE = 5;
 

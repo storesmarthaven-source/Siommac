@@ -29,6 +29,7 @@
 
 import { type ComponentChildren, type VNode } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { ListSkeleton, Skeleton, SkeletonFields, SkeletonStatGrid, SkeletonText } from '@ui';
 import {
   useEmployeeProfileShell, useEmployeeAttention, tabIndicatorFor,
   type EmployeeAttentionItem, type ProfileTabKey,
@@ -73,6 +74,7 @@ import './EmployeeProfilePage.chrome.css';
 export interface EmployeeProfilePageProps {
   employeeId: string;
   access: EmployeeMasterAccess;
+  initialTab?: ProfileTabKey | undefined;
   onBack: () => void;
 }
 
@@ -163,8 +165,66 @@ function initialsOf(name: string): string {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part.charAt(0).toUpperCase()).join('') || '?';
 }
 
-export function EmployeeProfilePage({ employeeId, access, onBack }: EmployeeProfilePageProps): VNode {
-  const [tab, setTab] = useState<ProfileTabKey>('overview');
+/** Cold-path full-record shell using only the shared SIOMAC skeleton primitives. */
+function EmployeeProfilePageSkeleton({ onBack }: { onBack: () => void }): VNode {
+  return (
+    <div class="epf-root" aria-busy="true">
+      <ProfilePageIconSprite />
+      <span class="sr-only" role="status">Loading the employee record…</span>
+      <div class="workspace">
+        <div class="breadcrumbs">
+          <button type="button" onClick={onBack}>Employee Master</button><span>/</span><Skeleton width={150} />
+        </div>
+        <section class="employee-hero">
+          <div class="hero-profile">
+            <Skeleton circle width={88} />
+            <div style={{ display: 'grid', gap: '10px', alignContent: 'center' }}>
+              <Skeleton width={260} height={26} radius={8} />
+              <Skeleton width={112} height={12} radius={999} />
+              <SkeletonText lines={2} width={230} lastWidth={180} />
+            </div>
+          </div>
+          <div class="hero-facts"><SkeletonStatGrid count={4} /></div>
+          <aside class="hero-readiness">
+            <Skeleton circle width={94} />
+            <SkeletonText lines={3} width={180} lastWidth={130} />
+          </aside>
+        </section>
+        <nav class="record-tabs" aria-hidden="true">
+          {Array.from({ length: 7 }, (_, index) => (
+            <span class="record-tab" key={index}>
+              <Skeleton width={index === 0 ? 72 : 92} height={13} radius={999} />
+            </span>
+          ))}
+        </nav>
+        <div class="tab-shell">
+          <div class="grid-3">
+            {Array.from({ length: 6 }, (_, index) => (
+              <section class="card" key={index}>
+                <Skeleton width="44%" height={16} radius={999} />
+                {index % 2 === 0 ? <SkeletonFields rows={4} /> : <ListSkeleton rows={3} avatar={false} />}
+              </section>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProfileSectionSkeleton({ label, rows = 4 }: { label: string; rows?: number }): VNode {
+  return (
+    <div aria-busy="true">
+      <span class="sr-only" role="status">{label}</span>
+      <SkeletonFields rows={rows} />
+    </div>
+  );
+}
+
+export function EmployeeProfilePage({
+  employeeId, access, initialTab = 'overview', onBack,
+}: EmployeeProfilePageProps): VNode {
+  const [tab, setTab] = useState<ProfileTabKey>(initialTab);
   const [dialog, setDialog] = useState<OpenDialog | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showAllAttention, setShowAllAttention] = useState(false);
@@ -180,12 +240,17 @@ export function EmployeeProfilePage({ employeeId, access, onBack }: EmployeeProf
   // Reset per-employee state on switch: a newly opened record must never inherit
   // the previous one's tab, filters or open dialog.
   useEffect(() => {
-    setTab('overview'); setDialog(null); setMenuOpen(false); setShowAllAttention(false);
+    setTab(initialTab); setDialog(null); setMenuOpen(false); setShowAllAttention(false);
     setDocumentFilters(EMPTY_DOCUMENT_FILTERS); setActivityFilters(EMPTY_ACTIVITY_FILTERS);
-  }, [employeeId]);
+  }, [employeeId, initialTab]);
 
   const tabs = useMemo(() => visibleTabs(shell, FULL_PAGE_TABS), [shell]);
-  useEffect(() => { if (!tabs.includes(tab)) setTab('overview'); }, [tabs, tab]);
+  // Do not erase a drawer-requested destination while the shell is still
+  // loading. Once capabilities arrive, an inaccessible target fails closed to
+  // Overview instead of briefly exposing a protected panel.
+  useEffect(() => {
+    if (shell && !tabs.includes(tab)) setTab('overview');
+  }, [shell, tabs, tab]);
 
   // Tab-scoped datasets — each stays off until its tab is opened.
   const attentionQuery = useEmployeeAttention(employeeId, showAllAttention);
@@ -237,14 +302,7 @@ export function EmployeeProfilePage({ employeeId, access, onBack }: EmployeeProf
   }
 
   if (!shell) {
-    return (
-      <div class="epf-root">
-        <ProfilePageIconSprite />
-        <div class="workspace">
-          <div class="epf-loading" role="status">Loading the employee record…</div>
-        </div>
-      </div>
-    );
+    return <EmployeeProfilePageSkeleton onBack={onBack} />;
   }
 
   const identity = shell.identity;
@@ -630,7 +688,7 @@ export function EmployeeProfilePage({ employeeId, access, onBack }: EmployeeProf
 
                 <section class="card">
                   <CardHead icon="key" title="Bank &amp; Pay Administration" />
-                  {employment.isPending && <div class="epf-loading">Loading payroll context…</div>}
+                  {employment.isPending && <ProfileSectionSkeleton label="Loading payroll context…" />}
                   {employment.data && !employment.data.bank && (
                     <div class="epf-empty">Payroll context requires the payroll-readiness capability.</div>
                   )}
@@ -685,7 +743,7 @@ export function EmployeeProfilePage({ employeeId, access, onBack }: EmployeeProf
 
                 <section class="card span-2 history-card">
                   <CardHead icon="clock" title="Complete Employment History" />
-                  {employment.isPending && <div class="epf-loading">Loading employment history…</div>}
+                  {employment.isPending && <ProfileSectionSkeleton label="Loading employment history…" rows={3} />}
                   {employment.data?.history.length === 0 && (
                     <div class="epf-empty">No employment changes have been recorded for this employee.</div>
                   )}
@@ -728,7 +786,7 @@ export function EmployeeProfilePage({ employeeId, access, onBack }: EmployeeProf
                   </>
                 }
               />
-              {documentHealth.isPending && <div class="epf-loading" role="status">Loading document health…</div>}
+              {documentHealth.isPending && <ProfileSectionSkeleton label="Loading document health…" />}
               {documentHealth.isError && (
                 <div class="epf-error" role="alert">
                   {documentHealth.error instanceof Error ? documentHealth.error.message : 'Document health could not be loaded.'}
@@ -921,7 +979,7 @@ export function EmployeeProfilePage({ employeeId, access, onBack }: EmployeeProf
                 title="Readiness"
                 text="Detailed evidence-based controls showing whether this employee record can support authorised HR and operational workflows."
               />
-              {readiness.isPending && <div class="epf-loading" role="status">Loading readiness controls…</div>}
+              {readiness.isPending && <ProfileSectionSkeleton label="Loading readiness controls…" />}
               {readiness.isError && (
                 <div class="epf-error" role="alert">
                   {readiness.error instanceof Error ? readiness.error.message : 'Readiness controls could not be loaded.'}
@@ -1146,7 +1204,7 @@ export function EmployeeProfilePage({ employeeId, access, onBack }: EmployeeProf
                         {!access.viewAccessAssignments ? (
                           <div class="epf-empty">Access assignments require the access-assignment capability.</div>
                         ) : assignments.isPending ? (
-                          <div class="epf-loading">Loading access assignments…</div>
+                          <ProfileSectionSkeleton label="Loading access assignments…" rows={3} />
                         ) : !activeAssignment ? (
                           <div class="epf-empty">No access assignment is recorded for this employee.</div>
                         ) : (
@@ -1254,7 +1312,7 @@ export function EmployeeProfilePage({ employeeId, access, onBack }: EmployeeProf
                           <PageIcon id="info" />
                           <span>Track the employee&rsquo;s current account-support request or submit a new request when help is needed.</span>
                         </div>
-                        {supportRequests.isPending && <div class="epf-loading">Loading account requests…</div>}
+                        {supportRequests.isPending && <ProfileSectionSkeleton label="Loading account requests…" rows={2} />}
                         {supportRequests.isError && (
                           <div class="epf-empty">Account requests are not available to your role.</div>
                         )}
@@ -1302,7 +1360,7 @@ export function EmployeeProfilePage({ employeeId, access, onBack }: EmployeeProf
                   </button>
                 }
               />
-              {audit.isPending && <div class="epf-loading" role="status">Loading audit history…</div>}
+              {audit.isPending && <ProfileSectionSkeleton label="Loading audit history…" rows={5} />}
               {audit.isError && (
                 <div class="epf-error" role="alert">
                   {audit.error instanceof Error ? audit.error.message : 'Audit history could not be loaded.'}
@@ -1438,7 +1496,7 @@ export function EmployeeProfilePage({ employeeId, access, onBack }: EmployeeProf
                 title="Offboarding"
                 text="Controlled termination, resignation, retirement, redundancy, and contract-completion workflows."
               />
-              {offboardingCases.isPending && <div class="epf-loading" role="status">Loading offboarding cases…</div>}
+              {offboardingCases.isPending && <ProfileSectionSkeleton label="Loading offboarding cases…" rows={3} />}
               {offboardingCases.isError && (
                 <div class="epf-error" role="alert">
                   {offboardingCases.error instanceof Error ? offboardingCases.error.message : 'Offboarding cases could not be loaded.'}
@@ -1502,7 +1560,7 @@ export function EmployeeProfilePage({ employeeId, access, onBack }: EmployeeProf
                       <strong>{taskCompletion(phase.active.taskCount, phase.active.openTaskCount)}</strong>
                     </div>
                   </div>
-                  {offboardingDetail.isPending && <div class="epf-loading">Loading case tasks…</div>}
+                  {offboardingDetail.isPending && <ProfileSectionSkeleton label="Loading case tasks…" rows={3} />}
                   {offboardingDetail.data && (
                     <div class="offboarding-task-list">
                       {offboardingDetail.data.tasks.length === 0 && (

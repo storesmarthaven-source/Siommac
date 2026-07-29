@@ -9,7 +9,7 @@
  * They therefore assert the mockup's OWN class names and copy — the things that
  * would silently drift if someone re-adapted the drawer to generic components.
  */
-import { fireEvent, render, screen, within } from '@testing-library/preact';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/preact-query';
 import { ProfileDrawer } from './ProfileDrawer';
@@ -59,15 +59,26 @@ const shell: EmployeeProfileShell = {
     viewOnboarding: true, viewOffboarding: true, viewAccountSecurity: true,
   },
 };
+const trainingAttention = shell.attentionPreview[0]!;
+let shellData: EmployeeProfileShell | undefined = shell;
 
 const emptyQuery = { data: undefined, isPending: false, isError: false, error: null };
+let attentionData: { items: EmployeeProfileShell['attentionPreview'] } | undefined;
+const attentionRefetch = vi.fn(() => Promise.resolve({ data: attentionData }));
 
 vi.mock('@api/hr/employeeProfile', async () => {
   const actual = await vi.importActual<typeof import('@api/hr/employeeProfile')>('@api/hr/employeeProfile');
   return {
     ...actual,
-    useEmployeeProfileShell: () => ({ data: shell, isPending: false, isError: false, error: null, refetch: vi.fn() }),
-    useEmployeeAttention: () => emptyQuery,
+    useEmployeeProfileShell: (employeeId: string | null) => {
+      const data = shellData?.identity.employeeId === employeeId ? shellData : undefined;
+      return {
+        data, ready: !!data, isPending: !data, isError: false, error: null, refetch: vi.fn(),
+      };
+    },
+    useEmployeeAttention: () => ({
+      ...emptyQuery, data: attentionData, isFetching: false, refetch: attentionRefetch,
+    }),
   };
 });
 
@@ -101,7 +112,15 @@ function renderDrawer(props: Partial<DrawerProps> = {}): void {
   );
 }
 
-afterEach(() => { document.body.innerHTML = ''; });
+afterEach(() => {
+  document.body.innerHTML = '';
+  attentionData = undefined;
+  shellData = shell;
+  attentionRefetch.mockClear();
+  shell.attentionPreview = [trainingAttention];
+  shell.attentionTotal = 1;
+  shell.readiness!.percent = 67;
+});
 
 describe('Employee profile drawer', () => {
   it('emits the locked structural regions rather than the generic UI-kit composition', () => {
@@ -115,6 +134,14 @@ describe('Employee profile drawer', () => {
     expect(document.querySelector('.ui-rdrawer-foot')).toBeNull();
   });
 
+  it('uses the shared UI-kit skeleton and withholds the previous employee during a switch', () => {
+    shellData = undefined;
+    renderDrawer();
+    expect(document.querySelectorAll('.ui-skeleton').length).toBeGreaterThan(8);
+    expect(screen.queryByText('Amara Diallo')).toBeNull();
+    expect(document.querySelector('.drawer')?.getAttribute('aria-busy')).toBe('true');
+  });
+
   it('renders the six approved drawer tabs in order, with no offboarding tab', () => {
     renderDrawer();
     const tabs = [...document.querySelectorAll('.tabs .tab')].map(t => t.getAttribute('data-tab'));
@@ -123,7 +150,7 @@ describe('Employee profile drawer', () => {
 
   it('drives the tab counter from the shell indicators, not a hand-maintained value', () => {
     renderDrawer();
-    const readinessTab = document.querySelector('.tab[data-tab="readiness"]') as HTMLElement;
+    const readinessTab = document.querySelector<HTMLElement>('.tab[data-tab="readiness"]')!;
     expect(within(readinessTab).getByText('1')).toBeTruthy();
     // A tab with no unresolved work carries no indicator at all.
     expect(document.querySelector('.tab[data-tab="access"] .badge')).toBeNull();
@@ -137,24 +164,59 @@ describe('Employee profile drawer', () => {
     expect(value?.getAttribute('style')).toContain('67');
   });
 
+  it('renders one red origin marker, not a gradient endpoint, at zero readiness', () => {
+    shell.readiness!.percent = 0;
+    renderDrawer();
+    expect(document.querySelector('.gauge-zero-dot')).not.toBeNull();
+    expect(document.querySelector('.gauge-value')).toBeNull();
+  });
+
   it('renders the approved facts strip with the FTE-derived work arrangement', () => {
     renderDrawer();
-    const facts = document.querySelector('.facts') as HTMLElement;
+    const facts = document.querySelector<HTMLElement>('.facts')!;
     expect(within(facts).getByText('Work Arrangement')).toBeTruthy();
     expect(within(facts).getByText('Full-Time')).toBeTruthy();
   });
 
   it('shows the attention row with its resolved owner prefix', () => {
     renderDrawer();
-    const strip = document.querySelector('.attention-strip') as HTMLElement;
+    const strip = document.querySelector<HTMLElement>('.attention-strip')!;
     expect(within(strip).getByText('Training Evidence Due')).toBeTruthy();
     expect(within(strip).getByText('Owner: Learning Team · Due 03 Jun 2025')).toBeTruthy();
+  });
+
+  it('pages attention work two items at a time and keeps the next arrow visible', async () => {
+    const makeItem = (
+      id: string, title: string,
+    ): EmployeeProfileShell['attentionPreview'][number] => ({
+      ...trainingAttention, id, title,
+    });
+    const allItems = [
+      makeItem('a', 'First Issue'),
+      makeItem('b', 'Second Issue'),
+      makeItem('c', 'Third Issue'),
+      makeItem('d', 'Fourth Issue'),
+      makeItem('e', 'Fifth Issue'),
+    ];
+    shell.attentionPreview = allItems.slice(0, 2);
+    shell.attentionTotal = allItems.length;
+    attentionData = { items: allItems };
+
+    renderDrawer();
+    expect(document.querySelectorAll('.attention-strip .attention-item')).toHaveLength(2);
+    fireEvent.click(screen.getByLabelText('Show the next attention items'));
+
+    await waitFor(() => expect(screen.getByText('Third Issue')).toBeTruthy());
+    expect(screen.getByText('Fourth Issue')).toBeTruthy();
+    expect(screen.queryByText('First Issue')).toBeNull();
+    expect(document.querySelectorAll('.attention-strip .attention-item')).toHaveLength(2);
+    expect(screen.getByLabelText('Show the next attention items')).toBeTruthy();
   });
 
   it('opens the contact dialog with every approved field, in one dialog', () => {
     renderDrawer();
     fireEvent.click(screen.getByText('Edit Contact'));
-    const dialog = document.querySelector('.contact-dialog') as HTMLElement;
+    const dialog = document.querySelector<HTMLElement>('.contact-dialog')!;
     expect(dialog).not.toBeNull();
     expect(within(dialog).getByText('Edit Contact Information')).toBeTruthy();
     // Never a reduced one-field dialog.
@@ -166,22 +228,44 @@ describe('Employee profile drawer', () => {
   it('keeps the footer actions pinned in the approved footer', () => {
     const onOpenFullRecord = vi.fn();
     renderDrawer({ onOpenFullRecord });
-    const footer = document.querySelector('.footer') as HTMLElement;
+    const footer = document.querySelector<HTMLElement>('.footer')!;
     fireEvent.click(within(footer).getByText('View Full Employee Record'));
-    expect(onOpenFullRecord).toHaveBeenCalled();
+    expect(onOpenFullRecord).toHaveBeenCalledWith('overview');
     expect(within(footer).getByText('Request Change')).toBeTruthy();
+  });
+
+  it('drills contextual links into the matching full-record tab', () => {
+    const onOpenFullRecord = vi.fn();
+    renderDrawer({ onOpenFullRecord });
+
+    fireEvent.click(screen.getByRole('button', { name: /^Details/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Employment/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Documents/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Access/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^View All/ }));
+    fireEvent.click(screen.getByText('Training Evidence Due'));
+
+    expect(onOpenFullRecord.mock.calls).toEqual([
+      ['readiness'],
+      ['employment'],
+      ['documents'],
+      ['access'],
+      ['activity'],
+      ['readiness'],
+    ]);
+    expect(screen.getByRole('tab', { name: /^Overview/ })).toHaveProperty('ariaSelected', 'true');
   });
 
   it('gates the Add Document action on the upload capability', () => {
     renderDrawer({ access: resolveEmployeeMasterAccess(p => p !== 'hr.employee_documents.upload') });
-    fireEvent.click(document.querySelector('.tab[data-tab="documents"]') as HTMLElement);
+    fireEvent.click(document.querySelector('.tab[data-tab="documents"]')!);
     expect(screen.queryByText('Add Document')).toBeNull();
   });
 
   it('only offers implemented actions in the three-dot menu', () => {
     renderDrawer();
     fireEvent.click(screen.getByLabelText('More employee actions'));
-    const menu = document.querySelector('.action-menu') as HTMLElement;
+    const menu = document.querySelector('.action-menu')!;
     const labels = [...menu.querySelectorAll('button')].map(b => b.textContent);
     expect(labels).toEqual(['Edit Employee', 'Change Employment Status', 'Start Offboarding']);
     expect(menu.querySelector('.danger')?.textContent).toBe('Start Offboarding');
