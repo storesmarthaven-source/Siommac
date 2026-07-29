@@ -8,8 +8,10 @@
 // not yet approved). PDF reuses the existing pdfkit dependency; CSV is hand-rolled.
 // ============================================================================
 
-import PDFDocument from 'pdfkit';
+import { renderTableFile, type RenderedFile } from '../../reportTable';
 import type { MoneyValue, ReportRunResult, StandardFileFormat } from '../../../../../types/payrollReports';
+
+export type { RenderedFile };
 
 type Completed = Extract<ReportRunResult, { state: 'completed' }>;
 type Cell = string | number;
@@ -80,58 +82,9 @@ export function toReportTable(d: Completed): ReportTable {
   }
 }
 
-interface FileBytes { buffer: Buffer; contentType: string; ext: StandardFileFormat }
-export interface RenderedFile extends FileBytes { rowCount: number }
-
-// A text cell that opens with one of these is treated as a formula by Excel/Sheets
-// → prefix a single quote to neutralize injection. Applied ONLY to string cells,
-// so numeric values (incl. negatives like -500) are never mangled.
-const FORMULA_LEAD = /^[=+\-@\t\r]/;
-const CSV_ESCAPE = (v: Cell): string => {
-  let s = String(v);
-  if (typeof v === 'string' && FORMULA_LEAD.test(s)) s = `'${s}`;
-  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-};
-
-function renderCsv(t: ReportTable): FileBytes {
-  const lines = [t.headers.map(CSV_ESCAPE).join(','), ...t.rows.map(r => r.map(CSV_ESCAPE).join(','))];
-  // BOM so Excel opens UTF-8 correctly.
-  return { buffer: Buffer.from('﻿' + lines.join('\r\n'), 'utf8'), contentType: 'text/csv; charset=utf-8', ext: 'csv' };
-}
-
-function renderPdf(t: ReportTable, generatedAt: string): Promise<FileBytes> {
-  return new Promise((resolve, reject) => {
-    try {
-      const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 36 });
-      const chunks: Buffer[] = [];
-      doc.on('data', (c: Buffer) => chunks.push(c));
-      doc.on('end', () => resolve({ buffer: Buffer.concat(chunks), contentType: 'application/pdf', ext: 'pdf' }));
-
-      doc.fontSize(16).font('Helvetica-Bold').text(t.title);
-      doc.fontSize(9).font('Helvetica').fillColor('#666').text(`Generated ${new Date(generatedAt).toLocaleString('en-GB')} · currency TTD`);
-      doc.moveDown(0.8).fillColor('#000');
-
-      const pageW = doc.page.width - 72;
-      const colW = t.headers.length ? pageW / t.headers.length : pageW;
-      const drawRow = (cells: Cell[], bold: boolean): void => {
-        const y = doc.y;
-        doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(8);
-        cells.forEach((c, i) => doc.text(String(c), 36 + i * colW, y, { width: colW - 4, ellipsis: true }));
-        doc.moveDown(0.2);
-        if (doc.y > doc.page.height - 48) doc.addPage();
-      };
-      drawRow(t.headers, true);
-      doc.moveTo(36, doc.y).lineTo(36 + pageW, doc.y).strokeColor('#ccc').stroke().moveDown(0.2);
-      if (!t.rows.length) doc.font('Helvetica-Oblique').fontSize(9).text('No rows for this selection.');
-      for (const r of t.rows) drawRow(r, false);
-      doc.end();
-    } catch (e) { reject(e instanceof Error ? e : new Error('PDF render failed')); }
-  });
-}
-
 /** Render a completed report to a file buffer. XLSX + export_audit_package (zip) are deferred. */
 export async function renderReportFile(d: Completed, format: StandardFileFormat): Promise<RenderedFile> {
-  const table = toReportTable(d);
-  const f = format === 'csv' ? renderCsv(table) : await renderPdf(table, d.generatedAt);
-  return { ...f, rowCount: table.rows.length };
+  // `StandardFileFormat` still carries formats this renderer does not produce;
+  // anything other than csv falls to the PDF path, exactly as before.
+  return renderTableFile(toReportTable(d), format === 'csv' ? 'csv' : 'pdf', d.generatedAt);
 }

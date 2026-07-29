@@ -55,6 +55,7 @@ import {
   READINESS_VIEW, READINESS_FOLLOW_UP, READINESS_REVIEW,
 } from '../lib/hr/readinessService';
 import { getEmploymentDetail, currentAssignmentConditions } from '../lib/hr/employmentDetail';
+import { exportDocumentIndex, exportReadinessBreakdown, exportAuditHistory } from '../lib/hr/employeeExports';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -733,6 +734,140 @@ router.post('/employees/employment-detail', async c => {
   }
 });
 
+// ── Employee exports ───────────────────────────────────────────────────────
+//
+// Three exports, three NARROW permissions — each the key that already governs
+// its own dataset. There is deliberately no broad employee-export permission:
+// a single such key would let one holder extract documents, readiness AND audit
+// history, which is exactly the aggregation the narrow keys prevent.
+//
+// Every export is built SERVER-SIDE from the authorised service, never from
+// rows the browser happens to hold, and writes its own audit row.
+//
+// Formats are csv and pdf. XLSX stays deferred repository-wide (the Excel writer
+// was removed for a flagged transitive dependency) — see lib/reportTable.ts.
+
+const exportFormat = z.enum(['csv', 'pdf']);
+
+/** Turn a rendered export into a download response. */
+function exportResponse(c: Context, file: { buffer: Buffer; contentType: string; fileName: string; rowCount: number; correlationId: string }) {
+  return new Response(new Uint8Array(file.buffer), {
+    status: 200,
+    headers: {
+      'Content-Type': file.contentType,
+      'Content-Disposition': `attachment; filename="${file.fileName}"`,
+      'X-Export-Rows': String(file.rowCount),
+      'X-Correlation-Id': file.correlationId,
+    },
+  });
+}
+
+function exportError(c: Context, e: unknown, fallback: string) {
+  const err = e as { status?: number; message?: string };
+  return c.json({ success: false, message: err.message ?? fallback }, (err.status ?? 500) as 200);
+}
+
+/**
+ * POST /api/hr/employees/exports/document-index — metadata and status only.
+ *
+ * Gated on `hr.employee_documents.download`: this is document data leaving the
+ * system, which is the same authority as downloading one — not merely viewing.
+ * Document BINARIES are never included.
+ */
+router.post('/employees/exports/document-index', async c => {
+  const actor = await requirePermission(c, 'hr.employee_documents.download');
+  const v = zv(c, z.object({
+    employeeId: z.string().min(1),
+    format: exportFormat,
+    scope: z.enum(['all_authorised', 'current_filters', 'expiring_missing']).default('all_authorised'),
+    reason: z.string().trim().max(500).optional(),
+  }), (c.get('body')).args ?? {});
+  if (!v.ok) return v.response;
+
+  const emp = await loadEmployee(v.data.employeeId);
+  if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
+
+  try {
+    const file = await exportDocumentIndex({
+      actorId: actor.id, employeeId: v.data.employeeId, format: v.data.format,
+      scope: v.data.scope, reason: v.data.reason ?? null,
+      // Confidentiality tiering is resolved HERE and applied before any row or
+      // total is produced.
+      canSeeSensitive: await userCan(actor, 'hr.employee_documents.sensitive_view'),
+      today: todayISO(),
+    });
+    return exportResponse(c, file);
+  } catch (e) { return exportError(c, e, 'Document index export failed.'); }
+});
+
+/**
+ * POST /api/hr/employees/exports/readiness-breakdown
+ *
+ * Gated on `hr.employees.readiness.view` — the same key that governs reading the
+ * matrix on screen. The export reads through the same service, so it cannot
+ * disagree with the tab.
+ */
+router.post('/employees/exports/readiness-breakdown', async c => {
+  const actor = await requirePermission(c, READINESS_VIEW);
+  const v = zv(c, z.object({
+    employeeId: z.string().min(1),
+    format: exportFormat,
+    reason: z.string().trim().max(500).optional(),
+  }), (c.get('body')).args ?? {});
+  if (!v.ok) return v.response;
+
+  const emp = await loadEmployee(v.data.employeeId);
+  if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
+
+  try {
+    const file = await exportReadinessBreakdown({
+      actorId: actor.id, employeeId: v.data.employeeId, format: v.data.format,
+      reason: v.data.reason ?? null,
+      granted: await grantedReadinessCapabilities(actor),
+    });
+    return exportResponse(c, file);
+  } catch (e) { return exportError(c, e, 'Readiness breakdown export failed.'); }
+});
+
+/**
+ * POST /api/hr/employees/exports/audit-history
+ *
+ * Gated on `hr.audit.view`. A business REASON is mandatory: extracting an audit
+ * trail is itself an audited act, and an unexplained extraction is exactly what
+ * a reviewer would need to question later.
+ *
+ * The reason column is masked for actors without the sensitive-view capability.
+ */
+router.post('/employees/exports/audit-history', async c => {
+  const actor = await requirePermission(c, 'hr.audit.view');
+  const v = zv(c, z.object({
+    employeeId: z.string().min(1),
+    format: exportFormat,
+    dateFrom: z.iso.date().nullable().optional(),
+    dateTo:   z.iso.date().nullable().optional(),
+    area:     z.string().trim().max(64).nullable().optional(),
+    reason:   z.string().trim().min(1, 'A business reason is required to export audit history.').max(500),
+  }), (c.get('body')).args ?? {});
+  if (!v.ok) return v.response;
+
+  if (v.data.dateFrom && v.data.dateTo && v.data.dateFrom > v.data.dateTo) {
+    return c.json({ success: false, message: 'The start date must be on or before the end date.' }, 422 as 200);
+  }
+
+  const emp = await loadEmployee(v.data.employeeId);
+  if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
+
+  try {
+    const file = await exportAuditHistory({
+      actorId: actor.id, employeeId: v.data.employeeId, format: v.data.format,
+      reason: v.data.reason,
+      filters: { dateFrom: v.data.dateFrom ?? null, dateTo: v.data.dateTo ?? null, area: v.data.area ?? null },
+      canSeeSensitive: await userCan(actor, 'hr.employees.sensitive_view'),
+    });
+    return exportResponse(c, file);
+  } catch (e) { return exportError(c, e, 'Audit history export failed.'); }
+});
+
 // ── Readiness: control matrix, work items, follow-up and review ────────────
 //
 // Four routes, three permissions, deliberately NOT collapsed into one:
@@ -877,13 +1012,16 @@ router.post('/employees/readiness/review', async c => {
   const emp = await loadEmployee(v.data.employeeId);
   if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
 
-  const TARGET: Record<string, { status: 'ready' | 'waiting_for_information' | 'exception_approved' | 'not_applicable'; decision: 'approved' | 'returned' | null }> = {
+  const TARGET: Record<
+    'approve' | 'return' | 'approve_exception' | 'mark_not_applicable',
+    { status: 'ready' | 'waiting_for_information' | 'exception_approved' | 'not_applicable'; decision: 'approved' | 'returned' | null }
+  > = {
     approve:             { status: 'ready',                   decision: 'approved' },
     return:              { status: 'waiting_for_information', decision: 'returned' },
     approve_exception:   { status: 'exception_approved',      decision: 'approved' },
     mark_not_applicable: { status: 'not_applicable',          decision: null },
   };
-  const target = TARGET[v.data.action]!;
+  const target = TARGET[v.data.action];
 
   try {
     const result = await transitionWorkItem({

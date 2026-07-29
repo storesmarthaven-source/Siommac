@@ -44,6 +44,9 @@ import {
   probationState, readinessLabel, readinessExplanation, readinessHeadline,
   attentionSubtitle, severityToneClass, tabAriaLabel, visibleTabs, identitySubtitle,
 } from './employeeProfileModel';
+import {
+  exportDocumentIndex, exportReadinessBreakdown, exportAuditHistory,
+} from '@api/hr/employeeExports';
 import { ProfileIconSprite, Icon, type ProfileIconId } from './profile/ProfileIconSprite';
 import type { EmployeeMasterAccess } from './employeeMasterAccess';
 import './ProfileDrawer.mockup.css';
@@ -101,6 +104,11 @@ export function ProfileDrawer({
   const [menuOpen, setMenuOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [showAllAttention, setShowAllAttention] = useState(false);
+  // The audit export refuses without a business reason, so it always prompts —
+  // it is never a one-click extraction of an audit trail.
+  const [auditExportOpen, setAuditExportOpen] = useState(false);
+  /** Which export is currently running, so its button can show progress. */
+  const [exporting, setExporting] = useState<string | null>(null);
 
   const shellQuery = useEmployeeProfileShell(employeeId);
   const shell = shellQuery.data;
@@ -108,7 +116,8 @@ export function ProfileDrawer({
   // Reset per-employee UI state on switch, so a newly selected employee never
   // inherits the previous one's open tab, expanded attention list or menu.
   useEffect(() => {
-    setTab('overview'); setMenuOpen(false); setContactOpen(false); setShowAllAttention(false);
+    setTab('overview'); setMenuOpen(false); setContactOpen(false);
+    setShowAllAttention(false); setAuditExportOpen(false);
   }, [employeeId]);
 
   const tabs = useMemo(() => visibleTabs(shell, DRAWER_TABS), [shell]);
@@ -155,6 +164,25 @@ export function ProfileDrawer({
   const attentionTotal = shell?.attentionTotal ?? 0;
 
   function runAction(label: string): void { setMenuOpen(false); onAction(label); }
+
+  /**
+   * Run an export and report its outcome.
+   *
+   * The drawer offers only the default CSV form of each export; the full page
+   * carries the format/scope dialogs. The correlation id is surfaced so the
+   * downloaded file can be tied to its audit row.
+   */
+  async function runExport(kind: string, run: () => Promise<{ fileName: string; rowCount: number }>): Promise<void> {
+    setExporting(kind);
+    try {
+      const outcome = await run();
+      toast.success(`${outcome.fileName} exported · ${outcome.rowCount} rows.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Export failed.');
+    } finally {
+      setExporting(null);
+    }
+  }
 
   /** Attention rows target a tab; `offboarding` has no drawer tab, so it opens the full record. */
   function openAttention(item: EmployeeAttentionItem): void {
@@ -583,6 +611,12 @@ export function ProfileDrawer({
                 <div class="tab-heading">
                   <div><h2>Documents</h2><p>Authorised employee records, verification state, expiry dates and missing evidence.</p></div>
                   <div class="tab-heading-actions">
+                    {access.downloadDocument && (
+                      <button
+                        class="outline-btn" type="button" disabled={exporting === 'documents'}
+                        onClick={() => void runExport('documents', () => exportDocumentIndex(employeeId, 'csv', 'all_authorised'))}
+                      >{exporting === 'documents' ? 'Exporting…' : 'Export Index'}</button>
+                    )}
                     {access.uploadDocument && <button class="primary-btn" type="button" onClick={() => runAction('Upload Document')}>Add Document</button>}
                   </div>
                 </div>
@@ -618,6 +652,12 @@ export function ProfileDrawer({
               <section class="panel active" id="panel-readiness" role="tabpanel">
                 <div class="tab-heading">
                   <div><h2>Readiness</h2><p>Evidence-based controls showing whether this employee record can support HR and operational workflows.</p></div>
+                  <div class="tab-heading-actions">
+                    <button
+                      class="outline-btn" type="button" disabled={exporting === 'readiness'}
+                      onClick={() => void runExport('readiness', () => exportReadinessBreakdown(employeeId, 'csv'))}
+                    >{exporting === 'readiness' ? 'Exporting…' : 'Export Breakdown'}</button>
+                  </div>
                 </div>
                 {readiness.isPending && <div class="epd-loading" role="status">Loading readiness controls…</div>}
                 {readiness.data && (
@@ -732,6 +772,12 @@ export function ProfileDrawer({
               <section class="panel active" id="panel-activity" role="tabpanel">
                 <div class="tab-heading">
                   <div><h2>Activity &amp; Audit</h2><p>Employee record history with actor, source, outcome and correlation details.</p></div>
+                  <div class="tab-heading-actions">
+                    <button
+                      class="outline-btn" type="button" disabled={exporting === 'audit'}
+                      onClick={() => setAuditExportOpen(true)}
+                    >{exporting === 'audit' ? 'Exporting…' : 'Export Audit History'}</button>
+                  </div>
                 </div>
                 {audit.isPending && <div class="epd-loading" role="status">Loading audit history…</div>}
                 {audit.data?.length === 0 && <div class="epd-empty">No audit entries recorded.</div>}
@@ -826,6 +872,83 @@ export function ProfileDrawer({
                   <button class="primary-btn" type="submit" disabled={updateContact.isPending}>
                     {updateContact.isPending ? 'Saving…' : 'Save Changes'}
                   </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {auditExportOpen && (
+          <div class="contact-dialog-backdrop" role="presentation" onClick={e => { if (e.target === e.currentTarget) setAuditExportOpen(false); }}>
+            <div class="contact-dialog" role="dialog" aria-modal="true" aria-labelledby="audit-export-title">
+              <div class="contact-dialog-head">
+                <div class="contact-dialog-title">
+                  <span class="contact-dialog-title-icon"><Icon id="shield" /></span>
+                  <div>
+                    <div class="contact-dialog-kicker">Audited Extract</div>
+                    <h2 id="audit-export-title">Export Audit History</h2>
+                    <p>Choose the range and state why the extract is needed.</p>
+                  </div>
+                </div>
+                <button class="dialog-close" type="button" aria-label="Close audit export" onClick={() => setAuditExportOpen(false)}>
+                  <Icon id="close" />
+                </button>
+              </div>
+              <form
+                class="contact-form"
+                onSubmit={e => {
+                  e.preventDefault();
+                  const fd = new FormData(e.target as HTMLFormElement);
+                  const pick = (k: string): string => {
+                    const value = fd.get(k);
+                    return typeof value === 'string' ? value.trim() : '';
+                  };
+                  const reason = pick('reason');
+                  if (!reason) return;
+                  setAuditExportOpen(false);
+                  void runExport('audit', () => exportAuditHistory(employeeId, pick('format') === 'pdf' ? 'pdf' : 'csv', {
+                    dateFrom: pick('dateFrom') || null,
+                    dateTo: pick('dateTo') || null,
+                    area: pick('area') || null,
+                    reason,
+                  }));
+                }}
+              >
+                <div class="contact-dialog-intro">
+                  <Icon id="alert" />
+                  <div><strong>This Extract Is Itself Audited</strong><span>The export is recorded against this employee with your reason and a correlation ID. Entries you are not authorised to see in full are exported with their detail withheld.</span></div>
+                </div>
+                <section class="form-section">
+                  <div class="form-section-title"><Icon id="calendar" /><h3>Range And Scope</h3></div>
+                  <div class="form-grid">
+                    <label class="form-field"><span>From</span><input name="dateFrom" type="date" /></label>
+                    <label class="form-field"><span>To</span><input name="dateTo" type="date" /></label>
+                    <label class="form-field"><span>Activity Area</span>
+                      <select name="area">
+                        <option value="">All Areas</option>
+                        <option value="employees">Employment</option>
+                        <option value="documents">Documents</option>
+                        <option value="readiness">Readiness</option>
+                        <option value="access_assignments">Access</option>
+                      </select>
+                    </label>
+                    <label class="form-field"><span>Format</span>
+                      {/* XLSX is deliberately absent — see lib/reportTable.ts. */}
+                      <select name="format"><option value="csv">CSV</option><option value="pdf">PDF</option></select>
+                    </label>
+                  </div>
+                </section>
+                <section class="form-section">
+                  <div class="form-section-title"><Icon id="file" /><h3>Business Reason</h3></div>
+                  <div class="form-grid">
+                    <label class="form-field wide"><span>Why is this extract needed?</span>
+                      <input name="reason" required maxLength={500} placeholder="e.g. Statutory audit request 2026-Q2" />
+                    </label>
+                  </div>
+                </section>
+                <div class="contact-dialog-actions">
+                  <button class="outline-btn" type="button" onClick={() => setAuditExportOpen(false)}>Cancel</button>
+                  <button class="primary-btn" type="submit">Generate Audit Export</button>
                 </div>
               </form>
             </div>
