@@ -56,6 +56,20 @@ const TARGETS = [
     drop: [/^\.page$/, /^\.register-ghost/, /^\.ghost-/],
     keyframePrefix: 'epd-',
   },
+  {
+    name: 'employee-profile-full-page',
+    source: 'docs/mockups/employee-profile-full-page.html',
+    target: 'src/components/sections/HR/EmployeeProfilePage.mockup.css',
+    root: '.epf-root',
+    // The full-page mockup carries a WHOLE fake application shell (sidebar, top
+    // bar, nav, user pill) because it is a standalone page. Production renders
+    // inside the real SIOMAC shell, so those rules are scoped like everything
+    // else and simply never match — deliberately NOT dropped, so the fidelity
+    // pass can still prove no content rule was lost. Verified before adding this
+    // target: the mockup has ZERO `.main <descendant>` selectors, so no content
+    // style depends on the shell being present.
+    keyframePrefix: 'epf-',
+  },
 ];
 
 function scopeSelector(sel, cfg) {

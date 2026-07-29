@@ -15,7 +15,7 @@
  */
 
 import { sb } from '../db';
-import { listBankAccounts } from '../finance/bankAccounts';
+import { listBankAccounts, type BankAccountDto } from '../finance/bankAccounts';
 import { firstNonBlank } from './employeeCore';
 import type {
   ProfileBankContext, EmploymentHistoryEntry, EmploymentDetail,
@@ -113,11 +113,15 @@ async function bankVerificationState(
   if (error) throw new Error(`Bank verification state read failed: ${error.message}`);
 
   if (!hasPrimary) return { state: 'missing', lastVerifiedAt: null };
-  const satisfied = data?.state === 'ready' || data?.state === 'exception_approved';
+  // An early return rather than optional chaining: the employee may simply have
+  // no instance row for this control yet, and that is "reverify", not "verified".
+  if (data === null) return { state: 'reverify', lastVerifiedAt: null };
+
+  const satisfied = data.state === 'ready' || data.state === 'exception_approved';
   return {
     state: satisfied ? 'verified' : 'reverify',
     // Only a satisfied control carries a meaningful verification date.
-    lastVerifiedAt: satisfied ? (data?.evaluated_at ?? null) : null,
+    lastVerifiedAt: satisfied ? data.evaluated_at : null,
   };
 }
 
@@ -133,14 +137,17 @@ export async function getBankContext(
   if (!canViewPayrollContext) return null;
 
   const accounts = await listBankAccounts({ employeeId });
-  const primary = accounts.find(a => a.isPrimary) ?? accounts[0] ?? null;
-  const verification = await bankVerificationState(employeeId, !!primary);
+  // Explicitly nullable: this tsconfig types an array index as non-nullish, so
+  // without the annotation the empty-account case reads as "always present".
+  const primary: BankAccountDto | null =
+    accounts.find(a => a.isPrimary) ?? (accounts.length > 0 ? accounts[0] : null);
+  const verification = await bankVerificationState(employeeId, primary !== null);
 
   return {
-    bankName: primary?.bankName ?? null,
-    accountNumberMasked: primary?.accountNumberMasked ?? null,
-    accountType: primary?.accountType ?? null,
-    hasPrimaryAccount: !!primary,
+    bankName: primary === null ? null : primary.bankName,
+    accountNumberMasked: primary === null ? null : primary.accountNumberMasked,
+    accountType: primary === null ? null : primary.accountType,
+    hasPrimaryAccount: primary !== null,
     lastVerifiedAt: verification.lastVerifiedAt,
     verificationState: verification.state,
   };
@@ -237,4 +244,72 @@ export async function getEmploymentDetail(
     getEmploymentHistory(employeeId),
   ]);
   return { bank, history };
+}
+
+// ── Assignment command ──────────────────────────────────────────────────────
+
+export interface ApplyAssignmentInput {
+  actorId: string;
+  employeeId: string;
+  positionId?: string | null;
+  departmentId?: string | null;
+  siteId?: string | null;
+  supervisorId?: string | null;
+  effectiveFrom?: string | null;
+  /**
+   * Only the keys PRESENT are applied; anything omitted is carried forward from
+   * the outgoing period. A key present with `null` deliberately CLEARS the value,
+   * which is why this is a partial object rather than three nullable params.
+   */
+  conditions?: {
+    weeklyHours?: number | null;
+    fte?: number | null;
+    noticePeriodDays?: number | null;
+  };
+  reason?: string | null;
+  correlationId: string;
+}
+
+export interface ApplyAssignmentResult {
+  assignmentId: string;
+  employeeId: string;
+  /** True when this opened the employee's FIRST effective period. */
+  isFirstAssignment: boolean;
+  supersededAssignmentId: string | null;
+  effectiveFrom: string;
+  weeklyHours: number | null;
+  fte: number | null;
+  noticePeriodDays: number | null;
+  correlationId: string;
+}
+
+/**
+ * Open a new effective-dated assignment period, creating the FIRST one when the
+ * employee has none.
+ *
+ * Closing the outgoing period and opening the incoming one are two writes that
+ * must commit together: a failure between them would leave the employee with no
+ * current assignment at all. They therefore run inside
+ * `hr_employee_assignment_apply_tx`, together with the event and both audit
+ * trails, under one correlation id.
+ */
+export async function applyEmployeeAssignment(input: ApplyAssignmentInput): Promise<ApplyAssignmentResult> {
+  const result = await sb.rpc('hr_employee_assignment_apply_tx', {
+    p_actor_id:       input.actorId,
+    p_employee_id:    input.employeeId,
+    p_position_id:    input.positionId ?? null,
+    p_department_id:  input.departmentId ?? null,
+    p_site_id:        input.siteId ?? null,
+    p_supervisor_id:  input.supervisorId ?? null,
+    p_effective_from: input.effectiveFrom ?? null,
+    p_conditions:     input.conditions ?? {},
+    p_reason:         input.reason ?? null,
+    p_correlation_id: input.correlationId,
+  }) as unknown as { data: unknown; error: { message: string; code?: string } | null };
+
+  if (result.error) {
+    const status = result.error.code === '22023' ? 422 : result.error.code === 'P0002' ? 404 : 500;
+    throw Object.assign(new Error(`Assignment update failed: ${result.error.message}`), { status });
+  }
+  return result.data as ApplyAssignmentResult;
 }

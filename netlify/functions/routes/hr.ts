@@ -54,7 +54,7 @@ import {
   getReadinessMatrix, getWorkItemDetail, transitionWorkItem,
   READINESS_VIEW, READINESS_FOLLOW_UP, READINESS_REVIEW,
 } from '../lib/hr/readinessService';
-import { getEmploymentDetail, currentAssignmentConditions } from '../lib/hr/employmentDetail';
+import { getEmploymentDetail, currentAssignmentConditions, applyEmployeeAssignment } from '../lib/hr/employmentDetail';
 import { exportDocumentIndex, exportReadinessBreakdown, exportAuditHistory } from '../lib/hr/employeeExports';
 import type { HonoVariables } from '../../../types/api';
 
@@ -730,6 +730,68 @@ router.post('/employees/employment-detail', async c => {
   } catch (e) {
     const err = e as { status?: number; message?: string };
     return c.json({ success: false, message: err.message ?? 'Employment detail read failed.' },
+      (err.status ?? 500) as 200);
+  }
+});
+
+/**
+ * POST /api/hr/employees/assignment/apply — the Edit Employee employment command.
+ *
+ * Opens a new effective-dated assignment period, CREATING the first one when the
+ * employee has none. That is the normal case in this build: the assignment table
+ * is empty for existing employees, so this endpoint must create rather than
+ * assume a period exists to update.
+ *
+ * Everything commits inside `hr_employee_assignment_apply_tx` — closing the old
+ * period, opening the new one, the event and both audit trails — so a failure
+ * can never leave an employee with no current assignment.
+ *
+ * Conditions omitted from the payload are CARRIED FORWARD; a posting change does
+ * not renegotiate contracted working time.
+ */
+router.post('/employees/assignment/apply', async c => {
+  const actor = await requirePermission(c, 'hr.employees.update');
+  const v = zv(c, z.object({
+    employeeId:    z.string().min(1),
+    positionId:    z.uuid().nullable().optional(),
+    departmentId:  z.string().nullable().optional(),
+    siteId:        z.string().nullable().optional(),
+    supervisorId:  z.string().nullable().optional(),
+    effectiveFrom: z.iso.date().nullable().optional(),
+    conditions: z.object({
+      weeklyHours:      z.number().positive().max(168).nullable().optional(),
+      fte:              z.number().positive().max(1.5).nullable().optional(),
+      noticePeriodDays: z.number().int().min(0).max(730).nullable().optional(),
+    }).optional(),
+    reason: z.string().trim().max(500).optional(),
+  }), (c.get('body')).args ?? {});
+  if (!v.ok) return v.response;
+
+  const emp = await loadEmployee(v.data.employeeId);
+  if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
+
+  // An employee cannot report to themselves; the DB has no such constraint.
+  if (v.data.supervisorId && v.data.supervisorId === v.data.employeeId) {
+    return c.json({ success: false, message: 'An employee cannot be their own supervisor.' }, 422 as 200);
+  }
+
+  try {
+    const result = await applyEmployeeAssignment({
+      actorId: actor.id,
+      employeeId: v.data.employeeId,
+      positionId: v.data.positionId ?? null,
+      departmentId: v.data.departmentId ?? null,
+      siteId: v.data.siteId ?? null,
+      supervisorId: v.data.supervisorId ?? null,
+      effectiveFrom: v.data.effectiveFrom ?? null,
+      ...(v.data.conditions ? { conditions: v.data.conditions } : {}),
+      reason: v.data.reason ?? null,
+      correlationId: crypto.randomUUID(),
+    });
+    return c.json({ success: true, data: result });
+  } catch (e) {
+    const err = e as { status?: number; message?: string };
+    return c.json({ success: false, message: err.message ?? 'Assignment update failed.' },
       (err.status ?? 500) as 200);
   }
 });
