@@ -313,6 +313,18 @@ export async function getOnboardingDashboardStats(args: OnboardingDashboardStats
   const pct = (n: number) => (total ? Math.round((n / total) * 100) : 0);
   const isReady = (c: CaseDB): boolean => { const a = agg.get(c.id); return c.status === 'ready_for_activation' || (!!a && a.total > 0 && a.open === 0); };
   const readyCount = cases.filter(isReady).length;
+
+  // Three-way activation split, defined on TASK STATE so every active case lands in
+  // exactly one bucket and the three sum to `total`. A case with no tasks is
+  // notStarted — an empty checklist is not evidence of readiness.
+  let inProgressCases = 0;
+  let notStartedCases = 0;
+  for (const c of cases) {
+    if (isReady(c)) continue;
+    const a = agg.get(c.id);
+    if ((a?.done ?? 0) > 0) inProgressCases += 1;
+    else notStartedCases += 1;
+  }
   const catReady: Record<TaskCategory, number> = { profile: 0, documents: 0, training: 0, access: 0, payroll: 0, hse: 0, other: 0 };
   for (const c of cases) {
     const a = agg.get(c.id);
@@ -345,6 +357,9 @@ export async function getOnboardingDashboardStats(args: OnboardingDashboardStats
       documentsReadyPercent: pct(catReady.documents),
       trainingReadyPercent: pct(catReady.training),
       accessReadyPercent: pct(catReady.access),
+      readyCases: readyCount,
+      inProgressCases,
+      notStartedCases,
     },
     packageReadiness,
   };
