@@ -18,7 +18,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/preact-query';
 import { EmployeeProfilePage } from './EmployeeProfilePage';
 import { resolveEmployeeMasterAccess, type EmployeeMasterAccess } from './employeeMasterAccess';
-import type { EmployeeProfileShell } from '@api/hr/employeeProfile';
+import type { EmployeeProfileShell, ProfileTabKey } from '@api/hr/employeeProfile';
 import type { EmployeeReadinessMatrix, DocumentHealthSummary } from '@api/hr/employeeReadiness';
 
 const shell: EmployeeProfileShell = {
@@ -71,6 +71,7 @@ const shell: EmployeeProfileShell = {
     viewOnboarding: true, viewOffboarding: true, viewAccountSecurity: true,
   },
 };
+let shellData: EmployeeProfileShell | undefined = shell;
 
 const readinessMatrix: EmployeeReadinessMatrix = {
   employeeId: 'emp-1',
@@ -155,7 +156,9 @@ vi.mock('@api/hr/employeeProfile', async () => {
   const actual = await vi.importActual<typeof import('@api/hr/employeeProfile')>('@api/hr/employeeProfile');
   return {
     ...actual,
-    useEmployeeProfileShell: () => settled(shell),
+    useEmployeeProfileShell: () => ({
+      ...settled(shellData), ready: !!shellData, isPending: !shellData,
+    }),
     useEmployeeAttention: () => idle,
   };
 });
@@ -222,11 +225,14 @@ vi.mock('@store', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 // not silently leave these fixtures behind (and un-exercised).
 const fullAccess: EmployeeMasterAccess = resolveEmployeeMasterAccess(() => true);
 
-function renderPage(access: EmployeeMasterAccess = fullAccess): void {
+function renderPage(
+  access: EmployeeMasterAccess = fullAccess,
+  initialTab?: ProfileTabKey,
+): void {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={client}>
-      <EmployeeProfilePage employeeId="emp-1" access={access} onBack={vi.fn()} />
+      <EmployeeProfilePage employeeId="emp-1" access={access} initialTab={initialTab} onBack={vi.fn()} />
     </QueryClientProvider>,
   );
 }
@@ -258,7 +264,7 @@ function selectOption(select: HTMLSelectElement, value: string): void {
   });
 }
 
-afterEach(() => { document.body.innerHTML = ''; });
+afterEach(() => { document.body.innerHTML = ''; shellData = shell; });
 
 describe('Employee record — locked structure', () => {
   it('emits the reference regions, not the superseded UI-kit composition', () => {
@@ -281,6 +287,20 @@ describe('Employee record — locked structure', () => {
     expect(tabs).toEqual([
       'overview', 'employment', 'documents', 'readiness', 'access', 'activity', 'offboarding',
     ]);
+  });
+
+  it('uses the shared UI-kit skeleton for a cold full-record load', () => {
+    shellData = undefined;
+    renderPage();
+    expect(document.querySelectorAll('.ui-skeleton').length).toBeGreaterThan(12);
+    expect(screen.queryByText('Damani Baptiste')).toBeNull();
+    expect(document.querySelector('.epf-root')?.getAttribute('aria-busy')).toBe('true');
+  });
+
+  it('opens on the tab requested by a drawer drill-through link', () => {
+    renderPage(fullAccess, 'documents');
+    expect(screen.getByRole('tab', { name: /^Documents/ })).toHaveProperty('ariaSelected', 'true');
+    expect(document.querySelector('#panel-documents.active')).not.toBeNull();
   });
 
   it('drives every tab indicator from the shell, never a hand-maintained value', () => {

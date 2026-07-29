@@ -12,6 +12,7 @@ import {
   useHrEmployeesPage, usePrefetchHrEmployee,
   type HrEmployeeRow, type TrainingStatus, type EmployeeSortCol, type EmployeeMissingField,
 } from '@api/hr/employees';
+import { usePrefetchEmployeeProfileShell, type ProfileTabKey } from '@api/hr/employeeProfile';
 import {
   humanize, rowName, statusTone, TRAINING_TONE, TRAINING_LABEL, Avatar, TinyAvatar,
 } from './shared';
@@ -264,6 +265,7 @@ export function EmployeeMaster(): VNode {
   const { openId, setOpenId } = useFilterDropdowns();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [fullEmployeeId, setFullEmployeeId] = useState<string | null>(null);
+  const [fullEmployeeTab, setFullEmployeeTab] = useState<ProfileTabKey>('overview');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [modal, setModal] = useState<{ type: string; employeeId: string | null } | null>(null);
@@ -435,10 +437,14 @@ export function EmployeeMaster(): VNode {
   // Debounced hover-prefetch: only warm a row's detail once the cursor RESTS on it
   // (~140ms) — sweeping across the list fires nothing, so we never storm the API.
   const prefetchEmployee = usePrefetchHrEmployee();
+  const prefetchProfileShell = usePrefetchEmployeeProfileShell();
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onRowHover = (id: string) => {
     if (hoverTimer.current) clearTimeout(hoverTimer.current);
-    hoverTimer.current = setTimeout(() => prefetchEmployee(id), 140);
+    hoverTimer.current = setTimeout(() => {
+      prefetchEmployee(id);
+      prefetchProfileShell(id);
+    }, 140);
   };
   const onRowHoverEnd = () => {
     if (hoverTimer.current) { clearTimeout(hoverTimer.current); hoverTimer.current = null; }
@@ -752,7 +758,8 @@ export function EmployeeMaster(): VNode {
       <EmployeeProfilePage
         employeeId={fullEmployeeId}
         access={access}
-        onBack={() => setFullEmployeeId(null)}
+        initialTab={fullEmployeeTab}
+        onBack={() => { setFullEmployeeId(null); setFullEmployeeTab('overview'); }}
       />
     );
   }
@@ -850,9 +857,15 @@ export function EmployeeMaster(): VNode {
         onPreviewOnBoard={p => setPreview(placeInWidgetSection(p))} />
 
       {/* Profile drawer */}
-      <ProfileDrawer employeeId={selectedId} onClose={() => setSelectedId(null)}
+      <ProfileDrawer key={selectedId ?? 'closed'} employeeId={selectedId} onClose={() => setSelectedId(null)}
         onAction={(label) => openAction(label, selectedId)}
-        onOpenFullRecord={selectedId ? () => { setFullEmployeeId(selectedId); setSelectedId(null); } : undefined}
+        onOpenFullRecord={selectedId
+          ? (tab) => {
+              setFullEmployeeTab(tab);
+              setFullEmployeeId(selectedId);
+              setSelectedId(null);
+            }
+          : undefined}
         access={access} />
 
       {/* Modals — 'create' is handled as a full-page takeover above */}

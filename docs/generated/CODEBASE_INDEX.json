@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "9bb73a8523252c0e11053853f69bfb0f3d892b9d",
+    "head": "e8d36fcb4d551f89404850be60710fe8411741c3",
     "branch": "codex/employee-profile-s1",
-    "fingerprint": "69337caf9910e18dc6d5516e",
-    "indexedFiles": 1684
+    "fingerprint": "1d07044f8adfffd7a8fdca90",
+    "indexedFiles": 1685
   },
   "summary": {
-    "files": 1331,
-    "symbols": 13428,
+    "files": 1332,
+    "symbols": 13453,
     "widgets": 51,
     "routes": 972,
     "routeDefinitions": 973,
@@ -22,8 +22,8 @@
     {
       "id": "hr",
       "counts": {
-        "files": 252,
-        "symbols": 2803,
+        "files": 253,
+        "symbols": 2828,
         "widgets": 9,
         "routes": 275,
         "routeDefinitions": 275,
@@ -959,7 +959,7 @@
       "module": "hr",
       "role": "backend-lib",
       "lines": 283,
-      "hash": "9ae40791c9068ba9"
+      "hash": "0c4470ce67796243"
     },
     {
       "path": "netlify/functions/lib/hr/employmentDetail.ts",
@@ -2708,8 +2708,8 @@
       "path": "scripts/e2e/suites/hrEmployeeMaster.mjs",
       "module": "hr",
       "role": "e2e-suite",
-      "lines": 1143,
-      "hash": "adbc490800a277c2"
+      "lines": 1146,
+      "hash": "c24a54ecc45b2098"
     },
     {
       "path": "scripts/e2e/suites/hrEmployeeSettings.mjs",
@@ -3167,6 +3167,13 @@
       "hash": "92b169b9fba85c0d"
     },
     {
+      "path": "scripts/seed-hr-employee-master-dashboard.mjs",
+      "module": "hr",
+      "role": "tooling",
+      "lines": 400,
+      "hash": "9934469fc1b201d4"
+    },
+    {
       "path": "scripts/seed-payroll-command-center.mjs",
       "module": "payroll",
       "role": "tooling",
@@ -3485,8 +3492,8 @@
       "path": "src/api/hr/employeeProfile.ts",
       "module": "hr",
       "role": "frontend-api",
-      "lines": 119,
-      "hash": "eeae01ee034a9d03"
+      "lines": 128,
+      "hash": "8a3deaab14265368"
     },
     {
       "path": "src/api/hr/employeeReadiness.ts",
@@ -5158,8 +5165,8 @@
       "path": "src/components/sections/HR/EmployeeMaster.tsx",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 871,
-      "hash": "374f7afbea1f316b"
+      "lines": 884,
+      "hash": "d6a6154717e9bb8e"
     },
     {
       "path": "src/components/sections/HR/EmployeeOnboardingSummary.tsx",
@@ -5172,15 +5179,15 @@
       "path": "src/components/sections/HR/EmployeeProfilePage.test.tsx",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 530,
-      "hash": "e2668d9507e45e76"
+      "lines": 550,
+      "hash": "d66ddf9ae7a9db33"
     },
     {
       "path": "src/components/sections/HR/EmployeeProfilePage.tsx",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 1621,
-      "hash": "2bfc01da134e8c3a"
+      "lines": 1679,
+      "hash": "664aef71c48cae5e"
     },
     {
       "path": "src/components/sections/HR/HRDocumentsOverview.tsx",
@@ -5333,15 +5340,15 @@
       "path": "src/components/sections/HR/ProfileDrawer.test.tsx",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 190,
-      "hash": "8c2b975b3b0116fd"
+      "lines": 274,
+      "hash": "aee01e7a31cf50c5"
     },
     {
       "path": "src/components/sections/HR/ProfileDrawer.tsx",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 963,
-      "hash": "c6d4895863215123"
+      "lines": 1080,
+      "hash": "adfd6932f215018a"
     },
     {
       "path": "src/components/sections/HR/RosterOverview.tsx",
@@ -8840,8 +8847,8 @@
       "path": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
       "module": "widgets",
       "role": "widget-registry",
-      "lines": 466,
-      "hash": "71199cd7940aecf8"
+      "lines": 479,
+      "hash": "b4f9b8a8586d0e7a"
     },
     {
       "path": "src/ui/widgets/registry.hrEmployeeMaster.tsx",
@@ -55127,6 +55134,126 @@
       "tags": []
     },
     {
+      "name": "url",
+      "kind": "variable",
+      "file": "scripts/seed-hr-employee-master-dashboard.mjs",
+      "line": 18,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "serviceKey",
+      "kind": "variable",
+      "file": "scripts/seed-hr-employee-master-dashboard.mjs",
+      "line": 19,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sb",
+      "kind": "variable",
+      "file": "scripts/seed-hr-employee-master-dashboard.mjs",
+      "line": 22,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SEED",
+      "kind": "variable",
+      "file": "scripts/seed-hr-employee-master-dashboard.mjs",
+      "line": 25,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CHECK_ONLY",
+      "kind": "variable",
+      "file": "scripts/seed-hr-employee-master-dashboard.mjs",
+      "line": 26,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DAY_MS",
+      "kind": "variable",
+      "file": "scripts/seed-hr-employee-master-dashboard.mjs",
+      "line": 27,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "today",
+      "kind": "variable",
+      "file": "scripts/seed-hr-employee-master-dashboard.mjs",
+      "line": 28,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "date",
+      "kind": "function",
+      "file": "scripts/seed-hr-employee-master-dashboard.mjs",
+      "line": 29,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "profiles",
+      "kind": "array",
+      "file": "scripts/seed-hr-employee-master-dashboard.mjs",
+      "line": 31,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "uuid",
+      "kind": "function",
+      "file": "scripts/seed-hr-employee-master-dashboard.mjs",
+      "line": 64,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "checked",
+      "kind": "function",
+      "file": "scripts/seed-hr-employee-master-dashboard.mjs",
+      "line": 67,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "main",
+      "kind": "function",
+      "file": "scripts/seed-hr-employee-master-dashboard.mjs",
+      "line": 73,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "ROOT",
       "kind": "variable",
       "file": "scripts/seed-payroll-command-center.mjs",
@@ -63097,7 +63224,7 @@
       "name": "call",
       "kind": "function",
       "file": "src/api/hr/employeeProfile.ts",
-      "line": 26,
+      "line": 27,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -63107,7 +63234,7 @@
       "name": "useEmployeeProfileShell",
       "kind": "function",
       "file": "src/api/hr/employeeProfile.ts",
-      "line": 41,
+      "line": 42,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -63119,7 +63246,7 @@
       "name": "useEmployeeAttention",
       "kind": "function",
       "file": "src/api/hr/employeeProfile.ts",
-      "line": 58,
+      "line": 67,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -63131,7 +63258,7 @@
       "name": "assertShellMatches",
       "kind": "function",
       "file": "src/api/hr/employeeProfile.ts",
-      "line": 74,
+      "line": 83,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -63141,7 +63268,7 @@
       "name": "usePrefetchEmployeeProfileShell",
       "kind": "function",
       "file": "src/api/hr/employeeProfile.ts",
-      "line": 83,
+      "line": 92,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -63153,7 +63280,7 @@
       "name": "useInvalidateEmployeeProfile",
       "kind": "function",
       "file": "src/api/hr/employeeProfile.ts",
-      "line": 103,
+      "line": 112,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -63165,7 +63292,7 @@
       "name": "tabIndicatorFor",
       "kind": "function",
       "file": "src/api/hr/employeeProfile.ts",
-      "line": 113,
+      "line": 122,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -93725,7 +93852,7 @@
       "name": "PAGE_KEY",
       "kind": "variable",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 57,
+      "line": 58,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -93737,7 +93864,7 @@
       "name": "KPI_PAGE_KEY",
       "kind": "variable",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 58,
+      "line": 59,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -93750,7 +93877,7 @@
       "name": "EMPLOYEE_BOARD_COLUMNS",
       "kind": "variable",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 59,
+      "line": 60,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -93762,7 +93889,7 @@
       "name": "Filters",
       "kind": "interface",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 65,
+      "line": 66,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -93772,7 +93899,7 @@
       "name": "EMPTY_FILTERS",
       "kind": "object",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 66,
+      "line": 67,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -93782,7 +93909,7 @@
       "name": "MISSING_LABEL",
       "kind": "object",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 67,
+      "line": 68,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -93792,7 +93919,7 @@
       "name": "REGISTER_FILTER_EVENT",
       "kind": "variable",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 73,
+      "line": 74,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -93804,7 +93931,7 @@
       "name": "RegisterFilterPatch",
       "kind": "type",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 74,
+      "line": 75,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -93814,7 +93941,7 @@
       "name": "EmployeeRowMenu",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 80,
+      "line": 81,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -93826,7 +93953,7 @@
       "name": "items",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 91,
+      "line": 92,
       "module": "hr",
       "exported": false,
       "container": "EmployeeRowMenu",
@@ -93836,7 +93963,7 @@
       "name": "close",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 110,
+      "line": 111,
       "module": "hr",
       "exported": false,
       "container": "EmployeeRowMenu",
@@ -93846,7 +93973,7 @@
       "name": "onMenuKeyDown",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 117,
+      "line": 118,
       "module": "hr",
       "exported": false,
       "container": "EmployeeRowMenu",
@@ -93856,7 +93983,7 @@
       "name": "focusAt",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 120,
+      "line": 121,
       "module": "hr",
       "exported": false,
       "container": "onMenuKeyDown",
@@ -93866,7 +93993,7 @@
       "name": "EmployeeRow",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 163,
+      "line": 164,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -93878,7 +94005,7 @@
       "name": "activate",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 175,
+      "line": 176,
       "module": "hr",
       "exported": false,
       "container": "EmployeeRow",
@@ -93888,7 +94015,7 @@
       "name": "defInst",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 219,
+      "line": 220,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -93898,7 +94025,7 @@
       "name": "defaultEmployeeKpiLayout",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 222,
+      "line": 223,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -93910,7 +94037,7 @@
       "name": "defaultEmployeeLayout",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 239,
+      "line": 240,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -93920,7 +94047,7 @@
       "name": "EmployeeMaster",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 262,
+      "line": 263,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -93932,7 +94059,7 @@
       "name": "setColumns",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 320,
+      "line": 322,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -93942,7 +94069,7 @@
       "name": "toggleColumn",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 335,
+      "line": 337,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -93952,7 +94079,7 @@
       "name": "toggleSort",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 365,
+      "line": 367,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -93962,7 +94089,7 @@
       "name": "placeInWidgetSection",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 406,
+      "line": 408,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -93974,7 +94101,7 @@
       "name": "discardPreview",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 411,
+      "line": 413,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -93986,7 +94113,7 @@
       "name": "commitPreview",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 415,
+      "line": 417,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -93996,7 +94123,7 @@
       "name": "savePageLayout",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 419,
+      "line": 421,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -94006,7 +94133,7 @@
       "name": "cancelPageLayout",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 423,
+      "line": 425,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -94016,7 +94143,7 @@
       "name": "resetPageLayout",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 426,
+      "line": 428,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -94026,7 +94153,7 @@
       "name": "setPageAsDefault",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 430,
+      "line": 432,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -94036,7 +94163,7 @@
       "name": "onRowHover",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 439,
+      "line": 442,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -94046,7 +94173,7 @@
       "name": "onRowHoverEnd",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 443,
+      "line": 449,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -94056,7 +94183,7 @@
       "name": "deptLabelFn",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 451,
+      "line": 457,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -94066,7 +94193,7 @@
       "name": "notify",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 455,
+      "line": 461,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -94076,7 +94203,7 @@
       "name": "openAction",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 456,
+      "line": 462,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -94086,7 +94213,7 @@
       "name": "setFiltersReset",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 473,
+      "line": 479,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -94096,7 +94223,7 @@
       "name": "onFilterRequest",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 479,
+      "line": 485,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -94106,7 +94233,7 @@
       "name": "trainingLabel",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 500,
+      "line": 506,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -94116,7 +94243,7 @@
       "name": "clearAdvanced",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 518,
+      "line": 524,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -94126,7 +94253,7 @@
       "name": "applySavedView",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 520,
+      "line": 526,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -94136,7 +94263,7 @@
       "name": "persistViews",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 533,
+      "line": 539,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -94146,7 +94273,7 @@
       "name": "saveCurrentView",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 539,
+      "line": 545,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -94156,7 +94283,7 @@
       "name": "deleteSavedView",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 566,
+      "line": 572,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -94166,7 +94293,7 @@
       "name": "renderRegister",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 578,
+      "line": 584,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -94176,7 +94303,7 @@
       "name": "floor",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 732,
+      "line": 738,
       "module": "hr",
       "exported": false,
       "container": "EmployeeMaster",
@@ -94582,10 +94709,22 @@
       ]
     },
     {
+      "name": "shellData",
+      "kind": "variable",
+      "file": "src/components/sections/HR/EmployeeProfilePage.test.tsx",
+      "line": 74,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
       "name": "readinessMatrix",
       "kind": "object",
       "file": "src/components/sections/HR/EmployeeProfilePage.test.tsx",
-      "line": 75,
+      "line": 76,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -94597,7 +94736,7 @@
       "name": "documentHealth",
       "kind": "object",
       "file": "src/components/sections/HR/EmployeeProfilePage.test.tsx",
-      "line": 114,
+      "line": 115,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -94609,7 +94748,7 @@
       "name": "auditRows",
       "kind": "array",
       "file": "src/components/sections/HR/EmployeeProfilePage.test.tsx",
-      "line": 144,
+      "line": 145,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -94621,7 +94760,7 @@
       "name": "idle",
       "kind": "object",
       "file": "src/components/sections/HR/EmployeeProfilePage.test.tsx",
-      "line": 151,
+      "line": 152,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -94633,7 +94772,7 @@
       "name": "settled",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeProfilePage.test.tsx",
-      "line": 152,
+      "line": 153,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -94645,7 +94784,7 @@
       "name": "fullAccess",
       "kind": "variable",
       "file": "src/components/sections/HR/EmployeeProfilePage.test.tsx",
-      "line": 223,
+      "line": 226,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -94657,7 +94796,7 @@
       "name": "renderPage",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeProfilePage.test.tsx",
-      "line": 225,
+      "line": 228,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -94669,7 +94808,7 @@
       "name": "openTab",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeProfilePage.test.tsx",
-      "line": 235,
+      "line": 241,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -94681,7 +94820,7 @@
       "name": "selectOption",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeProfilePage.test.tsx",
-      "line": 251,
+      "line": 257,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -94693,7 +94832,7 @@
       "name": "EmployeeProfilePageProps",
       "kind": "interface",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 73,
+      "line": 74,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -94703,7 +94842,7 @@
       "name": "OpenDialog",
       "kind": "type",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 80,
+      "line": 82,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -94713,7 +94852,7 @@
       "name": "DOMAIN_ICON",
       "kind": "object",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 93,
+      "line": 95,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -94723,7 +94862,7 @@
       "name": "CONTROL_ICON",
       "kind": "object",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 99,
+      "line": 101,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -94733,7 +94872,7 @@
       "name": "ACTIVITY_VISUAL",
       "kind": "object",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 105,
+      "line": 107,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -94743,7 +94882,7 @@
       "name": "Row",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 113,
+      "line": 115,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -94755,7 +94894,7 @@
       "name": "CardHead",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 118,
+      "line": 120,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -94768,7 +94907,7 @@
       "name": "LinkButton",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 125,
+      "line": 127,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -94780,7 +94919,7 @@
       "name": "SectionHead",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 134,
+      "line": 136,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -94792,7 +94931,7 @@
       "name": "Gauge",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 146,
+      "line": 148,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -94804,17 +94943,41 @@
       "name": "initialsOf",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 162,
+      "line": 164,
       "module": "hr",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
+      "name": "EmployeeProfilePageSkeleton",
+      "kind": "function",
+      "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
+      "line": 169,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ProfileSectionSkeleton",
+      "kind": "function",
+      "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
+      "line": 215,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "EmployeeProfilePage",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 166,
+      "line": 224,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -94826,7 +94989,7 @@
       "name": "goToTab",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 207,
+      "line": 272,
       "module": "hr",
       "exported": false,
       "container": "EmployeeProfilePage",
@@ -94836,7 +94999,7 @@
       "name": "onTabKeyDown",
       "kind": "function",
       "file": "src/components/sections/HR/EmployeeProfilePage.tsx",
-      "line": 213,
+      "line": 278,
       "module": "hr",
       "exported": false,
       "container": "EmployeeProfilePage",
@@ -101331,10 +101494,58 @@
       ]
     },
     {
+      "name": "trainingAttention",
+      "kind": "variable",
+      "file": "src/components/sections/HR/ProfileDrawer.test.tsx",
+      "line": 62,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "shellData",
+      "kind": "variable",
+      "file": "src/components/sections/HR/ProfileDrawer.test.tsx",
+      "line": 63,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
       "name": "emptyQuery",
       "kind": "object",
       "file": "src/components/sections/HR/ProfileDrawer.test.tsx",
-      "line": 63,
+      "line": 65,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "attentionData",
+      "kind": "variable",
+      "file": "src/components/sections/HR/ProfileDrawer.test.tsx",
+      "line": 66,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "attentionRefetch",
+      "kind": "variable",
+      "file": "src/components/sections/HR/ProfileDrawer.test.tsx",
+      "line": 67,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -101346,7 +101557,7 @@
       "name": "access",
       "kind": "variable",
       "file": "src/components/sections/HR/ProfileDrawer.test.tsx",
-      "line": 89,
+      "line": 100,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -101358,7 +101569,7 @@
       "name": "DrawerProps",
       "kind": "type",
       "file": "src/components/sections/HR/ProfileDrawer.test.tsx",
-      "line": 91,
+      "line": 102,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -101370,7 +101581,19 @@
       "name": "renderDrawer",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.test.tsx",
-      "line": 93,
+      "line": 104,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "makeItem",
+      "kind": "function",
+      "file": "src/components/sections/HR/ProfileDrawer.test.tsx",
+      "line": 189,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -101382,7 +101605,7 @@
       "name": "ProfileDrawerProps",
       "kind": "interface",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 55,
+      "line": 56,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -101392,7 +101615,7 @@
       "name": "DOMAIN_ICON",
       "kind": "object",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 65,
+      "line": 70,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -101402,7 +101625,7 @@
       "name": "CONTROL_ICON",
       "kind": "object",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 71,
+      "line": 76,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -101412,7 +101635,7 @@
       "name": "DOC_STATE_LABEL",
       "kind": "object",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 77,
+      "line": 82,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -101422,7 +101645,7 @@
       "name": "activityVisual",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 87,
+      "line": 92,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -101432,7 +101655,55 @@
       "name": "DataRow",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 96,
+      "line": 101,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ReadinessGauge",
+      "kind": "function",
+      "file": "src/components/sections/HR/ProfileDrawer.tsx",
+      "line": 111,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ProfileDrawerSkeleton",
+      "kind": "function",
+      "file": "src/components/sections/HR/ProfileDrawer.tsx",
+      "line": 135,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "SkeletonStatStrip",
+      "kind": "function",
+      "file": "src/components/sections/HR/ProfileDrawer.tsx",
+      "line": 183,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "DrawerSectionSkeleton",
+      "kind": "function",
+      "file": "src/components/sections/HR/ProfileDrawer.tsx",
+      "line": 197,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -101444,7 +101715,7 @@
       "name": "ProfileDrawer",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 100,
+      "line": 206,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -101456,7 +101727,7 @@
       "name": "onKey",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 147,
+      "line": 255,
       "module": "hr",
       "exported": false,
       "container": "ProfileDrawer",
@@ -101466,7 +101737,7 @@
       "name": "runAction",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 166,
+      "line": 274,
       "module": "hr",
       "exported": false,
       "container": "ProfileDrawer",
@@ -101476,7 +101747,7 @@
       "name": "runExport",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 175,
+      "line": 283,
       "module": "hr",
       "exported": false,
       "container": "ProfileDrawer",
@@ -101486,7 +101757,17 @@
       "name": "openAttention",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 188,
+      "line": 296,
+      "module": "hr",
+      "exported": false,
+      "container": "ProfileDrawer",
+      "tags": []
+    },
+    {
+      "name": "showNextAttentionPage",
+      "kind": "function",
+      "file": "src/components/sections/HR/ProfileDrawer.tsx",
+      "line": 300,
       "module": "hr",
       "exported": false,
       "container": "ProfileDrawer",
@@ -101496,7 +101777,7 @@
       "name": "sendReadinessReminder",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 193,
+      "line": 314,
       "module": "hr",
       "exported": false,
       "container": "ProfileDrawer",
@@ -101506,7 +101787,7 @@
       "name": "submitContact",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 211,
+      "line": 332,
       "module": "hr",
       "exported": false,
       "container": "ProfileDrawer",
@@ -101516,7 +101797,7 @@
       "name": "str",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 216,
+      "line": 337,
       "module": "hr",
       "exported": false,
       "container": "submitContact",
@@ -101526,7 +101807,7 @@
       "name": "pick",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 902,
+      "line": 1019,
       "module": "hr",
       "exported": false,
       "container": "ProfileDrawer",
@@ -139482,7 +139763,7 @@
       "name": "PAGE",
       "kind": "variable",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 28,
+      "line": 29,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139494,7 +139775,7 @@
       "name": "SOURCE",
       "kind": "object",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 30,
+      "line": 31,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139504,7 +139785,7 @@
       "name": "KPI_SIZES",
       "kind": "array",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 52,
+      "line": 53,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139516,7 +139797,7 @@
       "name": "PULSE_SIZES",
       "kind": "array",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 65,
+      "line": 66,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139526,7 +139807,7 @@
       "name": "CHART_SIZES",
       "kind": "array",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 70,
+      "line": 71,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139536,7 +139817,7 @@
       "name": "QUALITY_SIZES",
       "kind": "array",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 75,
+      "line": 76,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139546,7 +139827,7 @@
       "name": "RADAR_SIZES",
       "kind": "array",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 79,
+      "line": 80,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139556,7 +139837,7 @@
       "name": "ATTENTION_PORTRAIT_SIZES",
       "kind": "array",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 83,
+      "line": 84,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139566,7 +139847,7 @@
       "name": "STACKED_CHART_SIZES",
       "kind": "array",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 90,
+      "line": 91,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139576,7 +139857,7 @@
       "name": "DIRECTORY_SOURCE",
       "kind": "object",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 95,
+      "line": 96,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139586,7 +139867,7 @@
       "name": "CALENDAR_SOURCE",
       "kind": "object",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 99,
+      "line": 100,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139596,7 +139877,7 @@
       "name": "PREVIEW",
       "kind": "object",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 106,
+      "line": 107,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139606,7 +139887,7 @@
       "name": "WidgetState",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 115,
+      "line": 116,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139619,7 +139900,7 @@
       "name": "withLiveData",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 122,
+      "line": 135,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139629,7 +139910,7 @@
       "name": "focusEmployeeRegister",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 131,
+      "line": 144,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139639,7 +139920,7 @@
       "name": "applyRegisterFilter",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 139,
+      "line": 152,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139649,7 +139930,7 @@
       "name": "KpiCard",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 144,
+      "line": 157,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139662,7 +139943,7 @@
       "name": "ActiveWorkforce",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 149,
+      "line": 162,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139674,7 +139955,7 @@
       "name": "RecordReadiness",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 153,
+      "line": 166,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139686,7 +139967,7 @@
       "name": "HrWorkQueue",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 157,
+      "line": 170,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139698,7 +139979,7 @@
       "name": "Exceptions",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 161,
+      "line": 174,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139710,7 +139991,7 @@
       "name": "focusLifecycleMovement",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 166,
+      "line": 179,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139718,30 +139999,6 @@
     },
     {
       "name": "LifecyclePulse",
-      "kind": "function",
-      "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 170,
-      "module": "widgets",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "NewStarters",
-      "kind": "function",
-      "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 182,
-      "module": "widgets",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "Departures",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
       "line": 183,
@@ -139753,10 +140010,34 @@
       ]
     },
     {
+      "name": "NewStarters",
+      "kind": "function",
+      "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
+      "line": 195,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "Departures",
+      "kind": "function",
+      "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
+      "line": 196,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "RecordQuality",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 185,
+      "line": 198,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139768,7 +140049,7 @@
       "name": "initials",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 205,
+      "line": 218,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139778,7 +140059,7 @@
       "name": "AttentionEmployee",
       "kind": "type",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 207,
+      "line": 220,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139788,7 +140069,7 @@
       "name": "PREVIEW_ATTENTION",
       "kind": "array",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 208,
+      "line": 221,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139798,7 +140079,7 @@
       "name": "ATTENTION_LABELS",
       "kind": "variable",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 213,
+      "line": 226,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139810,7 +140091,7 @@
       "name": "COUNT_WORDS",
       "kind": "array",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 214,
+      "line": 227,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139820,7 +140101,7 @@
       "name": "countWithWord",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 215,
+      "line": 228,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139830,7 +140111,7 @@
       "name": "AttentionBlocker",
       "kind": "type",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 216,
+      "line": 229,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139840,7 +140121,7 @@
       "name": "attentionReviewCopy",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 219,
+      "line": 232,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139850,7 +140131,7 @@
       "name": "AttentionReferenceVariant",
       "kind": "type",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 249,
+      "line": 262,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139860,7 +140141,7 @@
       "name": "PREVIEW_ATTENTION_REFERENCE",
       "kind": "array",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 250,
+      "line": 263,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139870,7 +140151,7 @@
       "name": "EmployeeAttentionReferenceView",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 254,
+      "line": 267,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139882,7 +140163,7 @@
       "name": "move",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 257,
+      "line": 270,
       "module": "widgets",
       "exported": false,
       "container": "EmployeeAttentionReferenceView",
@@ -139892,7 +140173,7 @@
       "name": "EmployeeAttentionReferenceWidget",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 275,
+      "line": 288,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139905,7 +140186,7 @@
       "name": "EmployeeAttentionNeutralWidget",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 282,
+      "line": 295,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139918,7 +140199,7 @@
       "name": "useAnimatedInteger",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 286,
+      "line": 299,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139930,7 +140211,7 @@
       "name": "animate",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 298,
+      "line": 311,
       "module": "widgets",
       "exported": false,
       "container": "useAnimatedInteger",
@@ -139940,7 +140221,7 @@
       "name": "movementTrend",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 309,
+      "line": 322,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139950,7 +140231,7 @@
       "name": "pulseLinePath",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 316,
+      "line": 329,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139960,7 +140241,7 @@
       "name": "WorkplacePulseChart",
       "kind": "type",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 328,
+      "line": 341,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139970,7 +140251,7 @@
       "name": "WorkplacePulseCard",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 329,
+      "line": 342,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139983,7 +140264,7 @@
       "name": "MonthlyHiresCard",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 347,
+      "line": 360,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -139996,7 +140277,7 @@
       "name": "InternalMovesCard",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 351,
+      "line": 364,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -140009,7 +140290,7 @@
       "name": "PromotionsCard",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 355,
+      "line": 368,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -140022,7 +140303,7 @@
       "name": "ReadinessRadar",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 360,
+      "line": 373,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -140034,7 +140315,7 @@
       "name": "LifecycleOutcomeChart",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 386,
+      "line": 399,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -140046,7 +140327,7 @@
       "name": "liveDefinition",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 406,
+      "line": 419,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -140056,7 +140337,7 @@
       "name": "externalDefinition",
       "kind": "function",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 428,
+      "line": 441,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -140066,7 +140347,7 @@
       "name": "widgets",
       "kind": "array",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 444,
+      "line": 457,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -150481,7 +150762,7 @@
       "kind": "registry",
       "render": "ActiveWorkforce",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 445
+      "line": 458
     },
     {
       "id": "hr.employeeMaster.departures",
@@ -150491,7 +150772,7 @@
       "kind": "registry",
       "render": "Departures",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 450
+      "line": 463
     },
     {
       "id": "hr.employeeMaster.employeeAttentionNeutral",
@@ -150501,7 +150782,7 @@
       "kind": "registry",
       "render": "EmployeeAttentionNeutralWidget",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 452
+      "line": 465
     },
     {
       "id": "hr.employeeMaster.exceptions",
@@ -150511,7 +150792,7 @@
       "kind": "registry",
       "render": "Exceptions",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 448
+      "line": 461
     },
     {
       "id": "hr.employeeMaster.hrWorkQueue",
@@ -150521,7 +150802,7 @@
       "kind": "registry",
       "render": "HrWorkQueue",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 447
+      "line": 460
     },
     {
       "id": "hr.employeeMaster.internalMovesCard",
@@ -150531,7 +150812,7 @@
       "kind": "registry",
       "render": "InternalMovesCard",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 454
+      "line": 467
     },
     {
       "id": "hr.employeeMaster.lifecycleActivity",
@@ -150551,7 +150832,7 @@
       "kind": "registry",
       "render": "LifecycleOutcomeChart",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 457
+      "line": 470
     },
     {
       "id": "hr.employeeMaster.monthlyHiresCard",
@@ -150561,7 +150842,7 @@
       "kind": "registry",
       "render": "MonthlyHiresCard",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 453
+      "line": 466
     },
     {
       "id": "hr.employeeMaster.newStarters",
@@ -150571,7 +150852,7 @@
       "kind": "registry",
       "render": "NewStarters",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 449
+      "line": 462
     },
     {
       "id": "hr.employeeMaster.promotionsCard",
@@ -150581,7 +150862,7 @@
       "kind": "registry",
       "render": "PromotionsCard",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 455
+      "line": 468
     },
     {
       "id": "hr.employeeMaster.readinessRadar",
@@ -150591,7 +150872,7 @@
       "kind": "registry",
       "render": "ReadinessRadar",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 456
+      "line": 469
     },
     {
       "id": "hr.employeeMaster.recordQuality",
@@ -150601,7 +150882,7 @@
       "kind": "registry",
       "render": "RecordQuality",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 451
+      "line": 464
     },
     {
       "id": "hr.employeeMaster.recordReadiness",
@@ -150611,7 +150892,7 @@
       "kind": "registry",
       "render": "RecordReadiness",
       "file": "src/ui/widgets/registry.hrEmployeeDashboard.tsx",
-      "line": 446
+      "line": 459
     },
     {
       "id": "hr.employees.register",
@@ -150621,7 +150902,7 @@
       "kind": "local",
       "render": "renderRegister",
       "file": "src/components/sections/HR/EmployeeMaster.tsx",
-      "line": 735
+      "line": 741
     },
     {
       "id": "hr.onboarding.case.activeTasks",
@@ -181100,215 +181381,215 @@
         },
         {
           "name": "profile-shell → employment facts carry working time and the canonical legal employer",
-          "line": 409
+          "line": 412
         },
         {
           "name": "document-health (admin) → grouped tree with counts and percentages",
-          "line": 436
+          "line": 439
         },
         {
           "name": "document-health (employee, no documents.view) → denied",
-          "line": 463
+          "line": 466
         },
         {
           "name": "profile-shell → tab indicators agree with the attention endpoint exactly",
-          "line": 468
+          "line": 471
         },
         {
           "name": "profile-shell (manager, no statutory/readiness) → gated blocks omitted, not blanked",
-          "line": 480
+          "line": 483
         },
         {
           "name": "profile-shell (employee, no hr.view) → denied",
-          "line": 499
+          "line": 502
         },
         {
           "name": "attention (employee, no hr.view) → denied",
-          "line": 504
+          "line": 507
         },
         {
           "name": "profile-shell → unknown employee is 404, not an empty shell",
-          "line": 509
+          "line": 512
         },
         {
           "name": "profile-shell → switching employees never returns the previous identity",
-          "line": 514
+          "line": 517
         },
         {
           "name": "access-assignments grant (admin) → assignment + scopes + event + audit, one correlation id",
-          "line": 525
+          "line": 528
         },
         {
           "name": "access-assignments list (admin) → scopes resolved to labels, never raw ids",
-          "line": 575
+          "line": 578
         },
         {
           "name": "access-assignments grant → empty scope list is refused (no unbounded grant)",
-          "line": 588
+          "line": 591
         },
         {
           "name": "access-assignments grant → department scope without a target is refused",
-          "line": 595
+          "line": 598
         },
         {
           "name": "access-assignments: hr_staff may VIEW but not MANAGE (segregation of duties)",
-          "line": 603
+          "line": 606
         },
         {
           "name": "access-assignments (employee) → denied both view and manage",
-          "line": 627
+          "line": 630
         },
         {
           "name": "access-assignments revoke (admin) → status + event + audit, reason required",
-          "line": 634
+          "line": 637
         },
         {
           "name": "access-assignments revoke → revoking twice is refused (no duplicate access event)",
-          "line": 669
+          "line": 672
         },
         {
           "name": "dashboard-stats (admin) → complete workspace contract, all computed",
-          "line": 681
+          "line": 684
         },
         {
           "name": "dashboard-stats (manager hr.employees.view) → allowed",
-          "line": 700
+          "line": 703
         },
         {
           "name": "dashboard-stats (employee) → denied",
-          "line": 705
+          "line": 708
         },
         {
           "name": "workflow-summary (admin) → reads central engine",
-          "line": 711
+          "line": 714
         },
         {
           "name": "workflow-summary (employee) → denied",
-          "line": 720
+          "line": 723
         },
         {
           "name": "audit (admin) → entries with actor names resolved server-side",
-          "line": 726
+          "line": 729
         },
         {
           "name": "training-summary (admin) → counts + certificates shape",
-          "line": 735
+          "line": 738
         },
         {
           "name": "documents/list (admin) → array",
-          "line": 742
+          "line": 745
         },
         {
           "name": "sites/list (admin) → array (Create wizard option source)",
-          "line": 748
+          "line": 751
         },
         {
           "name": "statutory/get (admin) → statutory + readiness",
-          "line": 755
+          "line": 758
         },
         {
           "name": "statutory/get (manager) → denied",
-          "line": 761
+          "line": 764
         },
         {
           "name": "statutory/update (admin) blocked→READY + finance handoff signal",
-          "line": 766
+          "line": 769
         },
         {
           "name": "statutory/update (manager) → denied",
-          "line": 779
+          "line": 782
         },
         {
           "name": "contact/update direct WORK contact (admin)",
-          "line": 785
+          "line": 788
         },
         {
           "name": "contact/update direct EMERGENCY contact (admin, restricted)",
-          "line": 800
+          "line": 803
         },
         {
           "name": "contact/update WORK direct (manager lacks hr.employees.update) → denied",
-          "line": 810
+          "line": 813
         },
         {
           "name": "contact/update EMERGENCY direct (manager lacks restricted_contact.update) → denied",
-          "line": 815
+          "line": 818
         },
         {
           "name": "contact/update REQUEST mode (manager maker) → change request created (Shape-B atomic)",
-          "line": 820
+          "line": 823
         },
         {
           "name": "change-request decide approve (hr_manager) → applies contact_update",
-          "line": 866
+          "line": 869
         },
         {
           "name": "ui-preferences: capture the actor’s existing preferences for restore",
-          "line": 888
+          "line": 891
         },
         {
           "name": "ui-preferences: BOTH employee-register keys are accepted",
-          "line": 898
+          "line": 901
         },
         {
           "name": "ui-preferences: saved views round-trip through the store",
-          "line": 906
+          "line": 909
         },
         {
           "name": "ui-preferences: visible columns round-trip and are normalised",
-          "line": 940
+          "line": 943
         },
         {
           "name": "ui-preferences: unknown key is refused on BOTH get and save",
-          "line": 950
+          "line": 953
         },
         {
           "name": "ui-preferences: each key is validated by ITS OWN sanitizer",
-          "line": 961
+          "line": 964
         },
         {
           "name": "ui-preferences: malformed values are refused, not coerced",
-          "line": 970
+          "line": 973
         },
         {
           "name": "ui-preferences: requires authentication",
-          "line": 994
+          "line": 997
         },
         {
           "name": "profile-shell (admin) → identity, employment, readiness, indicators",
-          "line": 1005
+          "line": 1008
         },
         {
           "name": "profile-shell (employee) → denied",
-          "line": 1033
+          "line": 1036
         },
         {
           "name": "attention (admin) → items carry target, owner and severity",
-          "line": 1038
+          "line": 1041
         },
         {
           "name": "document-health (admin) → counts, percentages and grouped tree",
-          "line": 1051
+          "line": 1054
         },
         {
           "name": "employment-detail (admin) → masked bank context + effective-dated history",
-          "line": 1070
+          "line": 1073
         },
         {
           "name": "readiness/matrix (admin) → controls with resolved owners and coverage",
-          "line": 1090
+          "line": 1093
         },
         {
           "name": "access-assignments (admin) → labels resolved, never raw ids",
-          "line": 1109
+          "line": 1112
         },
         {
           "name": "profile reads (employee) → every one denied",
-          "line": 1127
+          "line": 1130
         },
         {
           "name": "status-change (admin) → status applied + history row",
-          "line": 1135
+          "line": 1138
         }
       ],
       "apiPaths": [

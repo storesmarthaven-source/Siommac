@@ -121,3 +121,16 @@
     font-size: 11px;
   }
 }
+
+/*
+ * Integration corrections for host-page cascade and browser SVG behaviour.
+ * These do not change the locked design: they preserve the colours the static
+ * reference already inherits when it is mounted inside Employee Master.
+ */
+.epd-root .identity .name-line h1 {
+  color: #fff;
+}
+
+.epd-root .gauge-zero-dot {
+  fill: var(--red, #cf3d35);
+}

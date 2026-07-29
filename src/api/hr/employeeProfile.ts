@@ -8,6 +8,7 @@
  */
 import { useQuery, useQueryClient } from '@tanstack/preact-query';
 import { apiPost } from '@lib/api';
+import { useRecordQuery } from '@lib/recordQuery';
 import { hrEmployeeKeys } from '../queryKeys';
 import type {
   EmployeeProfileShell, EmployeeAttentionResponse, EmployeeAttentionItem,
@@ -23,8 +24,8 @@ export type {
   ProfileAccountHealth, ProfileActivityEntry, ProfileCapabilities,
 };
 
-async function call<T>(path: string, args: Record<string, unknown>): Promise<T> {
-  const res = await apiPost<{ success: boolean; message?: string; data: T }>(path, args);
+async function call<T>(path: string, args: Record<string, unknown>, signal?: AbortSignal): Promise<T> {
+  const res = await apiPost<{ success: boolean; message?: string; data: T }>(path, args, { signal });
   if (!res.success) throw new Error(res.message ?? 'Request failed.');
   return res.data;
 }
@@ -39,19 +40,27 @@ async function call<T>(path: string, args: Record<string, unknown>): Promise<T> 
  * different employee's name.
  */
 export function useEmployeeProfileShell(employeeId: string | null, enabled = true) {
-  return useQuery({
+  const record = useRecordQuery<EmployeeProfileShell>({
+    recordId: employeeId,
     queryKey: hrEmployeeKeys.profileShell(employeeId ?? ''),
     enabled: !!employeeId && enabled,
-    queryFn: async () => {
-      const shell = await call<EmployeeProfileShell>('hr/employees/profile-shell', { employeeId });
+    queryFn: async (signal) => {
+      const shell = await call<EmployeeProfileShell>('hr/employees/profile-shell', { employeeId }, signal);
       assertShellMatches(shell, employeeId);
       return shell;
     },
     // No `placeholderData: keepPreviousData` — showing the previous employee's
     // shell under the newly selected employee is exactly the defect this contract
     // exists to prevent.
+    getId: shell => shell.identity.employeeId,
     staleTime: 30_000,
   });
+  return {
+    ...record.query,
+    data: record.data,
+    ready: record.ready,
+    isPending: record.isLoading,
+  };
 }
 
 /** Full unresolved-work list — the Needs Attention panel's "view all" source. */

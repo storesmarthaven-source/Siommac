@@ -2,9 +2,9 @@
 
 # hr Module Map
 
-Source fingerprint: `69337caf9910e18dc6d5516e`
+Source fingerprint: `1d07044f8adfffd7a8fdca90`
 
-Files: 252 | Symbols: 2803 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 35 | DB objects: 196 | E2E suites: 16
+Files: 253 | Symbols: 2828 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 35 | DB objects: 196 | E2E suites: 16
 
 ## Widgets and Tiles
 
@@ -14,7 +14,7 @@ Files: 252 | Symbols: 2803 | Widgets: 9 | Unique mounted endpoints: 275 | Route 
 | `bundle.hr.employees.essentials` | Employee Master Essentials | registry | `` | `src/ui/widgets/bundles.ts:90` |
 | `bundle.hr.onboarding.manager` | Onboarding Manager Pack | registry | `` | `src/ui/widgets/bundles.ts:76` |
 | `hr.employeeMaster.lifecycleActivity` | Workforce Activity | registry | `LifecycleActivity` | `src/ui/widgets/registry.hrEmployeeMaster.tsx:486` |
-| `hr.employees.register` | Employee Register | local | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:735` |
+| `hr.employees.register` | Employee Register | local | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:741` |
 | `hr.onboarding.case.activeTasks` | Active Tasks | local | `() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddTask}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:329` |
 | `hr.onboarding.case.blockersTable` | Blockers | local | `() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:330` |
 | `hr.onboarding.case.customActions` | Custom Actions | local | `() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddAction}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:332` |
@@ -380,10 +380,10 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useRunExpirySweep` | function / hook | `src/api/hr/documents.ts:136` | `-` |
 | `useEmployeeAccountSupportRequests` | function / hook | `src/api/hr/employeeAccountSupport.ts:75` | `-` |
 | `useCreateAccountSupportRequest` | function / hook | `src/api/hr/employeeAccountSupport.ts:96` | `-` |
-| `useEmployeeProfileShell` | function / hook | `src/api/hr/employeeProfile.ts:41` | `-` |
-| `useEmployeeAttention` | function / hook | `src/api/hr/employeeProfile.ts:58` | `-` |
-| `usePrefetchEmployeeProfileShell` | function / hook | `src/api/hr/employeeProfile.ts:83` | `-` |
-| `useInvalidateEmployeeProfile` | function / hook | `src/api/hr/employeeProfile.ts:103` | `-` |
+| `useEmployeeProfileShell` | function / hook | `src/api/hr/employeeProfile.ts:42` | `-` |
+| `useEmployeeAttention` | function / hook | `src/api/hr/employeeProfile.ts:67` | `-` |
+| `usePrefetchEmployeeProfileShell` | function / hook | `src/api/hr/employeeProfile.ts:92` | `-` |
+| `useInvalidateEmployeeProfile` | function / hook | `src/api/hr/employeeProfile.ts:112` | `-` |
 | `useReadinessMatrix` | function / hook | `src/api/hr/employeeReadiness.ts:67` | `-` |
 | `useReadinessWorkItem` | function / hook | `src/api/hr/employeeReadiness.ts:85` | `-` |
 | `useReadinessFollowUp` | function / hook | `src/api/hr/employeeReadiness.ts:122` | `-` |
@@ -646,7 +646,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/hrCompensation.mjs` | 396 |
 | e2e-suite | `scripts/e2e/suites/hrEmployeeCreate.mjs` | 351 |
 | e2e-suite | `scripts/e2e/suites/hrEmployeeImport.mjs` | 307 |
-| e2e-suite | `scripts/e2e/suites/hrEmployeeMaster.mjs` | 1143 |
+| e2e-suite | `scripts/e2e/suites/hrEmployeeMaster.mjs` | 1146 |
 | e2e-suite | `scripts/e2e/suites/hrLeave.mjs` | 539 |
 | e2e-suite | `scripts/e2e/suites/hrOffboarding.mjs` | 169 |
 | e2e-suite | `scripts/e2e/suites/hrOnboarding.mjs` | 856 |
@@ -668,7 +668,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/hr/employeeAccountSupport.ts` | 113 |
 | frontend-api | `src/api/hr/employeeExports.ts` | 123 |
 | frontend-api | `src/api/hr/employeeImport.ts` | 70 |
-| frontend-api | `src/api/hr/employeeProfile.ts` | 119 |
+| frontend-api | `src/api/hr/employeeProfile.ts` | 128 |
 | frontend-api | `src/api/hr/employeeReadiness.ts` | 206 |
 | frontend-api | `src/api/hr/employees.ts` | 807 |
 | frontend-api | `src/api/hr/leave.ts` | 130 |
@@ -709,10 +709,10 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/CompensationOverview.tsx` | 347 |
 | frontend-page | `src/components/sections/HR/EmployeeCreatePage.test.ts` | 350 |
 | frontend-page | `src/components/sections/HR/EmployeeCreatePage.tsx` | 1037 |
-| frontend-page | `src/components/sections/HR/EmployeeMaster.tsx` | 871 |
+| frontend-page | `src/components/sections/HR/EmployeeMaster.tsx` | 884 |
 | frontend-page | `src/components/sections/HR/EmployeeOnboardingSummary.tsx` | 97 |
-| frontend-page | `src/components/sections/HR/EmployeeProfilePage.test.tsx` | 530 |
-| frontend-page | `src/components/sections/HR/EmployeeProfilePage.tsx` | 1621 |
+| frontend-page | `src/components/sections/HR/EmployeeProfilePage.test.tsx` | 550 |
+| frontend-page | `src/components/sections/HR/EmployeeProfilePage.tsx` | 1679 |
 | frontend-page | `src/components/sections/HR/HRDocumentsOverview.tsx` | 728 |
 | frontend-page | `src/components/sections/HR/HRQueryState.tsx` | 52 |
 | frontend-page | `src/components/sections/HR/HRRequestsOverview.tsx` | 424 |
@@ -733,8 +733,8 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/OnboardingTasksWorkspace.tsx` | 458 |
 | frontend-page | `src/components/sections/HR/OrgStructureOverview.tsx` | 777 |
 | frontend-page | `src/components/sections/HR/OvertimeOverview.tsx` | 233 |
-| frontend-page | `src/components/sections/HR/ProfileDrawer.test.tsx` | 190 |
-| frontend-page | `src/components/sections/HR/ProfileDrawer.tsx` | 963 |
+| frontend-page | `src/components/sections/HR/ProfileDrawer.test.tsx` | 274 |
+| frontend-page | `src/components/sections/HR/ProfileDrawer.tsx` | 1080 |
 | frontend-page | `src/components/sections/HR/RosterOverview.tsx` | 686 |
 | frontend-page | `src/components/sections/HR/StartOnboardingWizard.tsx` | 974 |
 | frontend-page | `src/components/sections/HR/TransfersOverview.tsx` | 405 |

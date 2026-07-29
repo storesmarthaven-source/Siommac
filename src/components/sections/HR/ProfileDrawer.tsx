@@ -28,6 +28,7 @@
 import { type VNode } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { toast } from '@store';
+import { ListSkeleton, Skeleton, SkeletonFields, SkeletonText } from '@ui';
 import {
   useEmployeeProfileShell, useEmployeeAttention, tabIndicatorFor,
   type ProfileTabKey, type EmployeeAttentionItem, type EmployeeProfileShell,
@@ -57,7 +58,11 @@ export interface ProfileDrawerProps {
   onClose: () => void;
   /** Routed to EmployeeMaster's dialog map. Labels match its `openAction` keys. */
   onAction: (label: string) => void;
-  onOpenFullRecord?: (() => void) | undefined;
+  /**
+   * Leave the drawer and open the full employee record at the requested tab.
+   * The drawer tab strip remains local navigation; contextual links drill through.
+   */
+  onOpenFullRecord?: ((tab: ProfileTabKey) => void) | undefined;
   access: EmployeeMasterAccess;
 }
 
@@ -97,13 +102,114 @@ function DataRow({ label, value }: { label: string; value: VNode | string | null
   return <><span>{label}</span><strong>{value ?? DASH}</strong></>;
 }
 
+/**
+ * The approved semicircle uses a red-to-green gradient only when progress
+ * exists. At 0%, drawing a zero-length round-capped gradient path exposes both
+ * gradient endpoints in some browsers, producing a false green marker. Render
+ * one explicit red origin marker instead.
+ */
+function ReadinessGauge({
+  percent, label,
+}: {
+  percent: number;
+  label: string;
+}): VNode {
+  return (
+    <svg class="gauge" viewBox="0 0 140 92" role="img" aria-label={`${percent} percent ready`}>
+      <path class="gauge-track" pathLength="100" d="M15 76 A55 55 0 0 1 125 76" />
+      {percent > 0
+        ? (
+          <path
+            class="gauge-value" pathLength="100" d="M15 76 A55 55 0 0 1 125 76"
+            style={{ strokeDasharray: `${percent} 100` }}
+          />
+        )
+        : <circle class="gauge-zero-dot" cx="15" cy="76" r="6.5" />}
+      <text class="gauge-score" x="70" y="67">{percent}%</text>
+      <text class="gauge-label" x="70" y="84">{label}</text>
+    </svg>
+  );
+}
+
+/** Cold-path drawer shell built entirely from the shared SIOMAC skeleton kit. */
+function ProfileDrawerSkeleton({ onClose }: { onClose: () => void }): VNode {
+  return (
+    <div class="epd-overlay" role="presentation">
+      <div class="epd-root">
+        <ProfileIconSprite />
+        <main class="drawer" aria-busy="true" aria-label="Loading employee profile">
+          <span class="sr-only" role="status">Loading employee profile…</span>
+          <header class="topbar">
+            <div class="brand"><strong>SIOMAC</strong><span>Employee Profile</span></div>
+            <button class="icon-btn" type="button" aria-label="Close employee profile" onClick={onClose}>
+              <Icon id="close" />
+            </button>
+          </header>
+          <section class="identity">
+            <div class="identity-grid">
+              <Skeleton circle width={80} />
+              <div style={{ display: 'grid', gap: '10px', alignContent: 'center' }}>
+                <Skeleton width={240} height={24} radius={8} />
+                <Skeleton width={96} height={12} radius={999} />
+                <SkeletonText lines={2} width={210} lastWidth={170} />
+              </div>
+            </div>
+            <div class="facts"><SkeletonStatStrip /></div>
+          </section>
+          <nav class="tabs" aria-hidden="true">
+            {Array.from({ length: 6 }, (_, index) => (
+              <span class="tab" key={index}><Skeleton width={index === 0 ? 62 : 74} height={12} radius={999} /></span>
+            ))}
+          </nav>
+          <div class="scroll">
+            <section class="panel active">
+              <div class="overview-grid">
+                {Array.from({ length: 4 }, (_, index) => (
+                  <section class={`card${index > 1 ? ' wide' : ''}`} key={index}>
+                    <Skeleton width="42%" height={15} radius={999} />
+                    {index === 3 ? <ListSkeleton rows={3} avatar={false} /> : <SkeletonFields rows={4} />}
+                  </section>
+                ))}
+              </div>
+            </section>
+          </div>
+          <footer class="footer"><Skeleton width={180} height={38} radius={9} /><Skeleton width={140} height={38} radius={9} /></footer>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function SkeletonStatStrip(): VNode {
+  return (
+    <>
+      {Array.from({ length: 4 }, (_, index) => (
+        <div class="fact" key={index}>
+          <Skeleton circle width={22} />
+          <Skeleton width={84} height={9} radius={999} />
+          <Skeleton width={index % 2 ? 72 : 96} height={12} radius={999} />
+        </div>
+      ))}
+    </>
+  );
+}
+
+function DrawerSectionSkeleton({ label, rows = 3 }: { label: string; rows?: number }): VNode {
+  return (
+    <div aria-busy="true">
+      <span class="sr-only" role="status">{label}</span>
+      <SkeletonFields rows={rows} />
+    </div>
+  );
+}
+
 export function ProfileDrawer({
   employeeId, onClose, onAction, onOpenFullRecord, access,
 }: ProfileDrawerProps): VNode | null {
   const [tab, setTab] = useState<ProfileTabKey>('overview');
   const [menuOpen, setMenuOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
-  const [showAllAttention, setShowAllAttention] = useState(false);
+  const [attentionPage, setAttentionPage] = useState(0);
   // The audit export refuses without a business reason, so it always prompts —
   // it is never a one-click extraction of an audit trail.
   const [auditExportOpen, setAuditExportOpen] = useState(false);
@@ -117,7 +223,7 @@ export function ProfileDrawer({
   // inherits the previous one's open tab, expanded attention list or menu.
   useEffect(() => {
     setTab('overview'); setMenuOpen(false); setContactOpen(false);
-    setShowAllAttention(false); setAuditExportOpen(false);
+    setAttentionPage(0); setAuditExportOpen(false);
   }, [employeeId]);
 
   const tabs = useMemo(() => visibleTabs(shell, DRAWER_TABS), [shell]);
@@ -127,7 +233,9 @@ export function ProfileDrawer({
 
   // Tab-scoped datasets. `enabled` keeps each one off until its tab is opened,
   // so opening the drawer costs the shell request alone.
-  const attentionQuery = useEmployeeAttention(employeeId, showAllAttention);
+  // The shell supplies the first two rows. The complete list is fetched only
+  // when the pager is used; refetch() works even while this query is disabled.
+  const attentionQuery = useEmployeeAttention(employeeId, false);
   const documentHealth = useEmployeeDocumentHealth(
     employeeId, access.viewDocuments && (tab === 'overview' || tab === 'documents'));
   const employment = useEmploymentDetail(employeeId, tab === 'employment');
@@ -158,9 +266,9 @@ export function ProfileDrawer({
 
   const identity = shell?.identity;
   const facts = shell?.employment;
-  const attentionItems: EmployeeAttentionItem[] = showAllAttention
-    ? (attentionQuery.data?.items ?? shell?.attentionPreview ?? [])
-    : (shell?.attentionPreview ?? []);
+  const attentionSource: EmployeeAttentionItem[] =
+    attentionQuery.data?.items ?? shell?.attentionPreview ?? [];
+  const attentionItems = attentionSource.slice(attentionPage * 2, (attentionPage * 2) + 2);
   const attentionTotal = shell?.attentionTotal ?? 0;
 
   function runAction(label: string): void { setMenuOpen(false); onAction(label); }
@@ -184,10 +292,23 @@ export function ProfileDrawer({
     }
   }
 
-  /** Attention rows target a tab; `offboarding` has no drawer tab, so it opens the full record. */
+  /** Attention work is resolved on the full record, at the domain named by the backend. */
   function openAttention(item: EmployeeAttentionItem): void {
-    if (item.actionTarget === 'offboarding') { onOpenFullRecord?.(); return; }
-    setTab(item.actionTarget);
+    onOpenFullRecord?.(item.actionTarget);
+  }
+
+  async function showNextAttentionPage(): Promise<void> {
+    let allItems = attentionQuery.data?.items;
+    if (!allItems) {
+      const result = await attentionQuery.refetch();
+      allItems = result.data?.items;
+      if (!allItems) {
+        toast.error('The remaining attention items could not be loaded.');
+        return;
+      }
+    }
+    const pageCount = Math.max(1, Math.ceil(allItems.length / 2));
+    setAttentionPage(page => (page + 1) % pageCount);
   }
 
   async function sendReadinessReminder(entry: ReadinessControlMatrixEntry): Promise<void> {
@@ -238,6 +359,10 @@ export function ProfileDrawer({
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Contact update failed.');
     }
+  }
+
+  if (employeeId && !shellQuery.ready && !shellQuery.isError) {
+    return <ProfileDrawerSkeleton onClose={onClose} />;
   }
 
   return (
@@ -328,7 +453,6 @@ export function ProfileDrawer({
           </nav>
 
           <div class="scroll">
-            {shellQuery.isPending && <div class="epd-loading" role="status">Loading employee profile…</div>}
             {shellQuery.isError && (
               <div class="epd-error" role="alert">
                 {shellQuery.error instanceof Error ? shellQuery.error.message : 'Employee profile failed to load.'}
@@ -358,12 +482,13 @@ export function ProfileDrawer({
                     >
                       <span class="attention-ico"><Icon id={DOMAIN_ICON[item.domain]} /></span>
                       <div><strong>{item.title}</strong><span>{attentionSubtitle(item)}</span></div>
-                      {i === attentionItems.length - 1 && attentionTotal > attentionItems.length && !showAllAttention
+                      {i === attentionItems.length - 1 && attentionTotal > 2
                         ? (
                           <button
                             class="attention-next" type="button"
                             aria-label="Show the next attention items"
-                            onClick={e => { e.stopPropagation(); setShowAllAttention(true); }}
+                            disabled={attentionQuery.isFetching}
+                            onClick={e => { e.stopPropagation(); void showNextAttentionPage(); }}
                           ><Icon id="chevron" /></button>
                         )
                         : <Icon id="chevron" />}
@@ -375,18 +500,13 @@ export function ProfileDrawer({
                   {shell.readiness && (
                     <section class="card">
                       <div class="card-head"><Icon id="shield" /><h3>Record Readiness</h3>
-                        <button class="text-btn" type="button" onClick={() => setTab('readiness')}>Details<Icon id="chevron" /></button>
+                        <button class="text-btn" type="button" onClick={() => onOpenFullRecord?.('readiness')}>Details<Icon id="chevron" /></button>
                       </div>
                       <div class="readiness-body">
-                        <svg class="gauge" viewBox="0 0 140 92" role="img" aria-label={`${shell.readiness.percent} percent ready`}>
-                          <path class="gauge-track" pathLength="100" d="M15 76 A55 55 0 0 1 125 76" />
-                          <path
-                            class="gauge-value" pathLength="100" d="M15 76 A55 55 0 0 1 125 76"
-                            style={{ strokeDasharray: `${shell.readiness.percent} 100` }}
-                          />
-                          <text class="gauge-score" x="70" y="67">{shell.readiness.percent}%</text>
-                          <text class="gauge-label" x="70" y="84">{readinessLabel(shell.readiness)}</text>
-                        </svg>
+                        <ReadinessGauge
+                          percent={shell.readiness.percent}
+                          label={readinessLabel(shell.readiness)}
+                        />
                         <div class="readiness-copy">
                           <strong>{readinessHeadline(shell.readiness)}</strong>
                           <p>{readinessExplanation(shell.readiness)}</p>
@@ -397,7 +517,7 @@ export function ProfileDrawer({
 
                   <section class="card">
                     <div class="card-head"><Icon id="briefcase" /><h3>Employment Snapshot</h3>
-                      <button class="text-btn" type="button" onClick={() => setTab('employment')}>Employment<Icon id="chevron" /></button>
+                      <button class="text-btn" type="button" onClick={() => onOpenFullRecord?.('employment')}>Employment<Icon id="chevron" /></button>
                     </div>
                     <div class="data-list">
                       <DataRow label="Legal Employer" value={facts?.legalEmployer ?? DASH} />
@@ -435,10 +555,10 @@ export function ProfileDrawer({
                   {access.viewDocuments && (
                     <section class="card document-health-card">
                       <div class="card-head"><Icon id="file" /><h3>Document Health</h3>
-                        <button class="text-btn" type="button" onClick={() => setTab('documents')}>Documents<Icon id="chevron" /></button>
+                        <button class="text-btn" type="button" onClick={() => onOpenFullRecord?.('documents')}>Documents<Icon id="chevron" /></button>
                       </div>
                       <div class="doc-tree" aria-label="Employee document tree">
-                        {documentHealth.isPending && <div class="epd-loading">Loading documents…</div>}
+                        {documentHealth.isPending && <DrawerSectionSkeleton label="Loading documents…" />}
                         {documentHealth.data?.groups.length === 0 && (
                           <div class="epd-empty">No document requirements apply to this employee.</div>
                         )}
@@ -475,7 +595,7 @@ export function ProfileDrawer({
                   {shell.accountHealth && (
                     <section class="card wide">
                       <div class="card-head"><Icon id="lock" /><h3>Account Health</h3>
-                        <button class="text-btn" type="button" onClick={() => setTab('access')}>Access<Icon id="chevron" /></button>
+                        <button class="text-btn" type="button" onClick={() => onOpenFullRecord?.('access')}>Access<Icon id="chevron" /></button>
                       </div>
                       <div class="account-grid">
                         <div class="account-stat"><span class="stat-icon"><Icon id="check" /></span><span>Account</span><strong>{titleCase(shell.accountHealth.accountStatus)}</strong></div>
@@ -489,7 +609,7 @@ export function ProfileDrawer({
                   {access.viewAudit && (
                     <section class="card wide">
                       <div class="card-head"><Icon id="clock" /><h3>Recent Activity</h3>
-                        <button class="text-btn" type="button" onClick={() => setTab('activity')}>View All<Icon id="chevron" /></button>
+                        <button class="text-btn" type="button" onClick={() => onOpenFullRecord?.('activity')}>View All<Icon id="chevron" /></button>
                       </div>
                       <div class="activity-list">
                         {shell.recentActivity.length === 0 && <div class="epd-empty">No recorded activity yet.</div>}
@@ -568,7 +688,7 @@ export function ProfileDrawer({
                   </section>
                   <section class="card">
                     <div class="card-head"><Icon id="key" /><h3>Bank &amp; Pay Administration</h3></div>
-                    {employment.isPending && <div class="epd-loading">Loading payroll context…</div>}
+                    {employment.isPending && <DrawerSectionSkeleton label="Loading payroll context…" />}
                     {employment.data && !employment.data.bank && (
                       <div class="epd-empty">Payroll context is not available to your role.</div>
                     )}
@@ -591,7 +711,7 @@ export function ProfileDrawer({
                   <section class="card wide">
                     <div class="card-head"><Icon id="clock" /><h3>Employment History</h3></div>
                     <div class="history">
-                      {employment.isPending && <div class="epd-loading">Loading history…</div>}
+                      {employment.isPending && <DrawerSectionSkeleton label="Loading history…" />}
                       {employment.data?.history.length === 0 && <div class="epd-empty">No recorded employment changes.</div>}
                       {employment.data?.history.map(entry => (
                         <div class="history-row" key={entry.id}>
@@ -620,7 +740,7 @@ export function ProfileDrawer({
                     {access.uploadDocument && <button class="primary-btn" type="button" onClick={() => runAction('Upload Document')}>Add Document</button>}
                   </div>
                 </div>
-                {documentHealth.isPending && <div class="epd-loading" role="status">Loading document health…</div>}
+                {documentHealth.isPending && <DrawerSectionSkeleton label="Loading document health…" />}
                 {documentHealth.data && (
                   <>
                     <div class="summary-grid">
@@ -659,19 +779,16 @@ export function ProfileDrawer({
                     >{exporting === 'readiness' ? 'Exporting…' : 'Export Breakdown'}</button>
                   </div>
                 </div>
-                {readiness.isPending && <div class="epd-loading" role="status">Loading readiness controls…</div>}
+                {readiness.isPending && <DrawerSectionSkeleton label="Loading readiness controls…" />}
                 {readiness.data && (
                   <div class="tab-grid">
                     <section class="card">
                       <div class="card-head"><Icon id="shield" /><h3>Overall Readiness</h3></div>
                       <div class="readiness-body">
-                        <svg class="gauge" viewBox="0 0 140 92" role="img" aria-label={`${readiness.data.coverage.percent} percent ready`}>
-                          <path class="gauge-track" pathLength="100" d="M15 76 A55 55 0 0 1 125 76" />
-                          <path class="gauge-value" pathLength="100" d="M15 76 A55 55 0 0 1 125 76"
-                            style={{ strokeDasharray: `${readiness.data.coverage.percent} 100` }} />
-                          <text class="gauge-score" x="70" y="67">{readiness.data.coverage.percent}%</text>
-                          <text class="gauge-label" x="70" y="84">{readinessLabel(shell.readiness)}</text>
-                        </svg>
+                        <ReadinessGauge
+                          percent={readiness.data.coverage.percent}
+                          label={readinessLabel(shell.readiness)}
+                        />
                         <div class="readiness-copy">
                           <strong>{readiness.data.coverage.readyControls} Of {readiness.data.coverage.totalControls} Controls Ready</strong>
                           <p>Readiness is shared work: HR coordinates, and each department resolves the controls in its own domain.</p>
@@ -742,7 +859,7 @@ export function ProfileDrawer({
                   {access.viewAccessAssignments && (
                     <section class="card wide">
                       <div class="card-head"><Icon id="shield" /><h3>Access Assignments</h3></div>
-                      {assignments.isPending && <div class="epd-loading">Loading access assignments…</div>}
+                      {assignments.isPending && <DrawerSectionSkeleton label="Loading access assignments…" />}
                       {assignments.data?.length === 0 && <div class="epd-empty">No access assignments are recorded.</div>}
                       <div class="record-list">
                         {assignments.data?.map(a => (
@@ -779,7 +896,7 @@ export function ProfileDrawer({
                     >{exporting === 'audit' ? 'Exporting…' : 'Export Audit History'}</button>
                   </div>
                 </div>
-                {audit.isPending && <div class="epd-loading" role="status">Loading audit history…</div>}
+                {audit.isPending && <DrawerSectionSkeleton label="Loading audit history…" rows={5} />}
                 {audit.data?.length === 0 && <div class="epd-empty">No audit entries recorded.</div>}
                 <div class="record-list">
                   {audit.data?.map(entry => (
@@ -803,7 +920,7 @@ export function ProfileDrawer({
           <footer class="footer">
             <div class="left-actions">
               {onOpenFullRecord && (
-                <button class="outline-btn" type="button" onClick={onOpenFullRecord}>View Full Employee Record</button>
+                <button class="outline-btn" type="button" onClick={() => onOpenFullRecord('overview')}>View Full Employee Record</button>
               )}
             </div>
             <div class="right-actions">

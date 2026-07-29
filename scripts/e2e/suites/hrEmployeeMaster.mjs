@@ -367,8 +367,8 @@ export default async function run(h) {
     // readiness expressed as controls
     expect(d.readiness && typeof d.readiness.percent === 'number', 'readiness present for a statutory-capable actor');
     expect(d.readiness.totalControls === 3 && typeof d.readiness.readyControls === 'number', 'readiness ready/total controls');
-    expect(Array.isArray(d.readiness.blockers), 'readiness.blockers array');
-    expect(d.readiness.blockers.includes('assignment'), 'readiness reflects the incomplete assignment');
+    expect(Array.isArray(d.readiness.blockedDomains), 'readiness.blockedDomains array');
+    expect(d.readiness.blockedDomains.includes('assignment'), 'readiness reflects the incomplete assignment');
 
     // attention + indicators come from ONE source
     expect(Array.isArray(d.attentionPreview), 'attentionPreview array');
@@ -386,9 +386,12 @@ export default async function run(h) {
 
     // The alpha fixture is created with departmentId:null (site + supervisor ARE set),
     // so exactly the department gap must surface — and nothing else from employment.
-    expect(d.attentionPreview.some(i => i.id === 'employment.missing:department'),
+    const attentionResult = await api('hr/employees/attention', A, { employeeId: ctx.emp1 });
+    ok(attentionResult, 'full attention');
+    const fullAttention = attentionResult.body.data.items;
+    expect(fullAttention.some(i => i.id === 'employment.missing:department'),
       'the unassigned department surfaces as an attention item');
-    expect(!d.attentionPreview.some(i => i.id === 'employment.missing:supervisor'
+    expect(!fullAttention.some(i => i.id === 'employment.missing:supervisor'
       || i.id === 'employment.missing:site'),
       'assigned supervisor/site do NOT produce phantom attention items');
     const employmentTab = d.tabIndicators.find(t => t.tab === 'employment');
