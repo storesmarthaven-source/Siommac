@@ -11016,13 +11016,17 @@ AuthGateProps	interface	security	false		src/components/shared/AuthGate.tsx	49
 ROLE_RANK	object	security	false		src/components/shared/AuthGate.tsx	69	
 roleAtLeast	function	security	false		src/components/shared/AuthGate.tsx	81	
 AuthGate	function	security	true	component	src/components/shared/AuthGate.tsx	93	
+bg	function	platform	false	test	src/components/shared/Avatar.test.tsx	62	
 AvatarVariant	type	platform	true		src/components/shared/Avatar.tsx	26	
 AvatarSize	type	platform	true		src/components/shared/Avatar.tsx	27	
 AvatarProps	interface	platform	true		src/components/shared/Avatar.tsx	29	
-getInitials	function	platform	false		src/components/shared/Avatar.tsx	44	
-nameToColor	function	platform	false		src/components/shared/Avatar.tsx	55	
-isPreloaded	function	platform	false		src/components/shared/Avatar.tsx	68	
-Avatar	function	platform	true	component	src/components/shared/Avatar.tsx	78	
+NAME_TITLES	variable	platform	false	component	src/components/shared/Avatar.tsx	50	
+NAME_SUFFIXES	variable	platform	false	component	src/components/shared/Avatar.tsx	51	
+bareWord	function	platform	false		src/components/shared/Avatar.tsx	54	
+getInitials	function	platform	false		src/components/shared/Avatar.tsx	58	
+nameToColor	function	platform	false		src/components/shared/Avatar.tsx	84	
+isPreloaded	function	platform	false		src/components/shared/Avatar.tsx	97	
+Avatar	function	platform	true	component	src/components/shared/Avatar.tsx	107	
 UserStatus	type	platform	true		src/components/shared/Badge.tsx	21	
 AttendanceStatus	type	platform	true		src/components/shared/Badge.tsx	22	
 LeaveStatus	type	platform	true		src/components/shared/Badge.tsx	23	

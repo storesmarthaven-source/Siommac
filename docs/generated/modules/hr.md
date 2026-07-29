@@ -2,7 +2,7 @@
 
 # hr Module Map
 
-Source fingerprint: `69337caf9910e18dc6d5516e`
+Source fingerprint: `77bb7c470dcea6f024f82c86`
 
 Files: 252 | Symbols: 2803 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 35 | DB objects: 196 | E2E suites: 16
 
@@ -646,7 +646,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/hrCompensation.mjs` | 396 |
 | e2e-suite | `scripts/e2e/suites/hrEmployeeCreate.mjs` | 351 |
 | e2e-suite | `scripts/e2e/suites/hrEmployeeImport.mjs` | 307 |
-| e2e-suite | `scripts/e2e/suites/hrEmployeeMaster.mjs` | 1143 |
+| e2e-suite | `scripts/e2e/suites/hrEmployeeMaster.mjs` | 1153 |
 | e2e-suite | `scripts/e2e/suites/hrLeave.mjs` | 539 |
 | e2e-suite | `scripts/e2e/suites/hrOffboarding.mjs` | 169 |
 | e2e-suite | `scripts/e2e/suites/hrOnboarding.mjs` | 856 |
