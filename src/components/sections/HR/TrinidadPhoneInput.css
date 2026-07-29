@@ -1,0 +1,32 @@
+.tt-phone-control {
+  display: grid;
+  width: 100%;
+  align-items: stretch;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.tt-phone-control .tt-phone-prefix {
+  display: flex;
+  min-height: 38px;
+  padding: 0 10px;
+  align-items: center;
+  border: 1px solid var(--border, #d9e1eb);
+  border-right: 0;
+  border-radius: 8px 0 0 8px;
+  background: var(--surface-subtle, #f5f7fa);
+  color: var(--text-muted, #667085);
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tt-phone-control > input[type='tel'] {
+  min-width: 0;
+  border-radius: 0 8px 8px 0 !important;
+}
+
+body[data-theme='dark'] .tt-phone-control .tt-phone-prefix {
+  border-color: var(--border, #31415f);
+  background: var(--surface-subtle, #1d2d48);
+  color: var(--text-muted, #b8c2d3);
+}

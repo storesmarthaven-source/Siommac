@@ -31,6 +31,8 @@ import {
 import { hrOffboardingApi, useOffboardingMutation } from '@api/hr/offboarding';
 import type { OffboardingReason } from '../../../../types/hrOffboarding';
 import { rowName } from './shared';
+import { TrinidadPhoneInput } from './TrinidadPhoneInput';
+import { isCompleteTrinidadPhone, normalizeTrinidadPhone } from '../../../../types/trinidadPhone';
 
 const HR_STATUSES = ['draft', 'pending_onboarding', 'active', 'probation', 'on_leave', 'suspended', 'inactive', 'terminated', 'archived'];
 const NIS_STATUSES = ['registered', 'pending', 'exempt', 'not_applicable'];
@@ -68,6 +70,15 @@ function Modal(
 function L({ label, value, onInput, type = 'text', full = false }: { label: string; value: string; onInput: (v: string) => void; type?: string; full?: boolean }): VNode {
   const id = useId();
   return <div class={`form-field ${full ? 'full' : ''}`}><label for={id}>{label}</label><input id={id} type={type} value={value} onInput={e => onInput(e.currentTarget.value)} /></div>;
+}
+function PhoneField({ label, value, onInput }: { label: string; value: string; onInput: (v: string) => void }): VNode {
+  const id = useId();
+  return (
+    <div class="form-field">
+      <label for={id}>{label}</label>
+      <TrinidadPhoneInput id={id} value={value} onValueChange={onInput} />
+    </div>
+  );
 }
 function S(
   { label, value, onInput, options, idOptions, placeholder, full = false }:
@@ -118,11 +129,23 @@ export function ContactDialog({ employeeId, onClose, onToast }: DialogProps): VN
   }, [detailQ.data]);
   function submit() {
     if (mode === 'request' && !f.reason.trim()) { setErr('A reason is required for a change request.'); return; }
+    if (![f.phone, f.mobilePhone, f.emPhone].every(isCompleteTrinidadPhone)) {
+      setErr('Each phone number must contain seven digits.');
+      return;
+    }
     m.mutate({
       employeeId, mode,
-      work: { email: f.email.trim() || undefined, phone: f.phone.trim() || undefined, mobilePhone: f.mobilePhone.trim() || undefined },
+      work: {
+        email: f.email.trim() || undefined,
+        phone: normalizeTrinidadPhone(f.phone),
+        mobilePhone: normalizeTrinidadPhone(f.mobilePhone),
+      },
       personal: { personalEmail: f.personalEmail.trim() || undefined },
-      emergency: { name: f.emName.trim() || undefined, phone: f.emPhone.trim() || undefined, relationship: f.emRel.trim() || undefined },
+      emergency: {
+        name: f.emName.trim() || undefined,
+        phone: normalizeTrinidadPhone(f.emPhone),
+        relationship: f.emRel.trim() || undefined,
+      },
       reason: f.reason.trim() || undefined,
     }, {
       onSuccess: () => { onToast(mode === 'request' ? 'Contact change request submitted' : 'Contact updated'); onClose(); },
@@ -139,11 +162,11 @@ export function ContactDialog({ employeeId, onClose, onToast }: DialogProps): VN
       <ModalSection title="Contact Details" desc="Work, personal and emergency contact fields used by HR, Notifications and self-service.">
         <div class="form-grid">
           <L label="Work Email" value={f.email} onInput={v => set('email', v)} />
-          <L label="Work Phone" value={f.phone} onInput={v => set('phone', v)} />
-          <L label="Mobile" value={f.mobilePhone} onInput={v => set('mobilePhone', v)} />
+          <PhoneField label="Work Phone" value={f.phone} onInput={v => set('phone', v)} />
+          <PhoneField label="Mobile" value={f.mobilePhone} onInput={v => set('mobilePhone', v)} />
           <L label="Personal Email" value={f.personalEmail} onInput={v => set('personalEmail', v)} />
           <L label="Emergency Contact Name" value={f.emName} onInput={v => set('emName', v)} />
-          <L label="Emergency Contact Phone" value={f.emPhone} onInput={v => set('emPhone', v)} />
+          <PhoneField label="Emergency Contact Phone" value={f.emPhone} onInput={v => set('emPhone', v)} />
           <L label="Emergency Relationship" value={f.emRel} onInput={v => set('emRel', v)} full />
         </div>
       </ModalSection>

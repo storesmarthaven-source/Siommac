@@ -2,7 +2,7 @@
 
 # widgets Module Map
 
-Source fingerprint: `1d07044f8adfffd7a8fdca90`
+Source fingerprint: `76d4e1831ea4b4e7119e1254`
 
 Files: 69 | Symbols: 541 | Widgets: 21 | Unique mounted endpoints: 15 | Route definitions: 15 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
 
@@ -12,19 +12,19 @@ Files: 69 | Symbols: 541 | Widgets: 21 | Unique mounted endpoints: 15 | Route de
 |---|---|---|---|---|
 | `enterprise.calendar.taskPlanner` | Task Planner | registry | `TaskPlannerWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:278` |
 | `enterprise.calendar.upcomingDeadlines` | Schedule & Deadlines | registry | `DeadlineWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:277` |
-| `hr.employeeMaster.activeWorkforce` | Active Workforce | registry | `ActiveWorkforce` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:458` |
-| `hr.employeeMaster.departures` | Departures | registry | `Departures` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:463` |
-| `hr.employeeMaster.employeeAttentionNeutral` | Employee Attention — Neutral | registry | `EmployeeAttentionNeutralWidget` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:465` |
-| `hr.employeeMaster.exceptions` | Exceptions | registry | `Exceptions` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:461` |
-| `hr.employeeMaster.hrWorkQueue` | HR Work Queue | registry | `HrWorkQueue` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:460` |
-| `hr.employeeMaster.internalMovesCard` | Internal Moves | registry | `InternalMovesCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:467` |
-| `hr.employeeMaster.lifecycleOutcomes` | Lifecycle Outcomes | registry | `LifecycleOutcomeChart` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:470` |
-| `hr.employeeMaster.monthlyHiresCard` | Hires This Month | registry | `MonthlyHiresCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:466` |
-| `hr.employeeMaster.newStarters` | New Starters | registry | `NewStarters` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:462` |
-| `hr.employeeMaster.promotionsCard` | Promotions | registry | `PromotionsCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:468` |
-| `hr.employeeMaster.readinessRadar` | Employee Readiness Radar | registry | `ReadinessRadar` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:469` |
-| `hr.employeeMaster.recordQuality` | Record Quality | registry | `RecordQuality` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:464` |
-| `hr.employeeMaster.recordReadiness` | Record Readiness | registry | `RecordReadiness` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:459` |
+| `hr.employeeMaster.activeWorkforce` | Active Workforce | registry | `ActiveWorkforce` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:449` |
+| `hr.employeeMaster.departures` | Departures | registry | `Departures` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:454` |
+| `hr.employeeMaster.employeeAttentionNeutral` | Employee Attention — Neutral | registry | `EmployeeAttentionNeutralWidget` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:456` |
+| `hr.employeeMaster.exceptions` | Exceptions | registry | `Exceptions` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:452` |
+| `hr.employeeMaster.hrWorkQueue` | HR Work Queue | registry | `HrWorkQueue` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:451` |
+| `hr.employeeMaster.internalMovesCard` | Internal Moves | registry | `InternalMovesCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:458` |
+| `hr.employeeMaster.lifecycleOutcomes` | Lifecycle Outcomes | registry | `LifecycleOutcomeChart` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:461` |
+| `hr.employeeMaster.monthlyHiresCard` | Hires This Month | registry | `MonthlyHiresCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:457` |
+| `hr.employeeMaster.newStarters` | New Starters | registry | `NewStarters` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:453` |
+| `hr.employeeMaster.promotionsCard` | Promotions | registry | `PromotionsCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:459` |
+| `hr.employeeMaster.readinessRadar` | Employee Readiness Radar | registry | `ReadinessRadar` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:460` |
+| `hr.employeeMaster.recordQuality` | Record Quality | registry | `RecordQuality` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:455` |
+| `hr.employeeMaster.recordReadiness` | Record Readiness | registry | `RecordReadiness` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:450` |
 | `platform.weather.current` | Weather | registry | `WeatherBandWidget` | `src/ui/widgets/registry.weather.tsx:488` |
 | `platform.weather.precipitation` | Weather · Precipitation | registry | `metricWidget('precipitation')` | `src/ui/widgets/registry.weather.tsx:502` |
 | `platform.weather.strip` | Weather · Strip | registry | `WeatherStripWidget` | `src/ui/widgets/registry.weather.tsx:495` |
@@ -134,7 +134,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `insertWidgetsAtRow` | function / ui-tile | `src/ui/widgets/placement.ts:18` | `-` |
 | `compactWidgets` | function / ui-tile | `src/ui/widgets/placement.ts:41` | `-` |
 | `widgets` | array / ui-tile | `src/ui/widgets/registry.calendarPlanning.tsx:276` | `-` |
-| `widgets` | array / ui-tile | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:457` | `-` |
+| `widgets` | array / ui-tile | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:448` | `-` |
 | `widgets` | array / ui-tile | `src/ui/widgets/registry.hrEmployeeMaster.tsx:480` | `-` |
 | `WIDGET_REGISTRY` | variable / ui-tile | `src/ui/widgets/registry.ts:54` | `-` |
 | `allWidgets` | function / ui-tile | `src/ui/widgets/registry.ts:57` | `-` |
@@ -292,7 +292,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | widget-platform | `src/ui/widgets/placement.ts` | 73 |
 | widget-platform | `src/ui/widgets/platform.test.tsx` | 213 |
 | widget-registry | `src/ui/widgets/registry.calendarPlanning.tsx` | 280 |
-| widget-registry | `src/ui/widgets/registry.hrEmployeeDashboard.tsx` | 479 |
+| widget-registry | `src/ui/widgets/registry.hrEmployeeDashboard.tsx` | 470 |
 | widget-registry | `src/ui/widgets/registry.hrEmployeeMaster.tsx` | 528 |
 | widget-registry | `src/ui/widgets/registry.test.ts` | 323 |
 | widget-registry | `src/ui/widgets/registry.ts` | 84 |

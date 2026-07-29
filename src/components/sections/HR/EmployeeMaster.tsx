@@ -9,7 +9,7 @@
 import { Fragment, type VNode } from 'preact';
 import { useEffect, useLayoutEffect, useMemo, useState, useRef } from 'preact/hooks';
 import {
-  useHrEmployeesPage, usePrefetchHrEmployee,
+  useHrDashboardStats, useHrEmployeesPage, usePrefetchHrEmployee,
   type HrEmployeeRow, type TrainingStatus, type EmployeeSortCol, type EmployeeMissingField,
 } from '@api/hr/employees';
 import { usePrefetchEmployeeProfileShell, type ProfileTabKey } from '@api/hr/employeeProfile';
@@ -23,7 +23,7 @@ import { EmployeeCreatePage } from './EmployeeCreatePage';
 import { ContactDialog, StatusDialog, OffboardingDialog, ChangeRequestDialog, DocumentDialog, StatutoryDialog } from './ActionDialogs';
 import { ImportWizard } from './ImportWizard';
 import { StartOnboardingWizard } from './StartOnboardingWizard';
-import { TableSkeleton, Button, EmptyState, LucideIcon, PageHeader, Pagination } from '@ui';
+import { DashboardPageSkeleton, TableSkeleton, Button, EmptyState, LucideIcon, PageHeader, Pagination } from '@ui';
 import {
   WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget, insertWidgetsAtRow,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeDef, type WidgetSizeKey,
@@ -381,6 +381,7 @@ export function EmployeeMaster(): VNode {
     missing: filters.missing.length ? filters.missing : undefined,
     sortBy, sortDir, page, pageSize,
   });
+  const dashboardQ = useHrDashboardStats();
   const paged = listQ.data?.rows ?? [];
   const meta = listQ.data?.meta;
   const total = meta?.total ?? 0;
@@ -762,6 +763,10 @@ export function EmployeeMaster(): VNode {
         onBack={() => { setFullEmployeeId(null); setFullEmployeeTab('overview'); }}
       />
     );
+  }
+
+  if ((listQ.isLoading && !listQ.data) || (dashboardQ.isLoading && !dashboardQ.data)) {
+    return <DashboardPageSkeleton title="Loading Employee Master" kpiCount={6} widgetCount={3} includeTable />;
   }
 
   return (

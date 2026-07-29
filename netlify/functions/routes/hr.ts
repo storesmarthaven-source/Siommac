@@ -43,6 +43,7 @@ import { listRequirements, createRequirement, updateRequirement, retireRequireme
 import { getComplianceForEmployee, getComplianceOverview, countMissingRequired } from '../lib/hr/documentsCompliance';
 import { runExpirySweep } from '../lib/hr/documentsExpirySweep';
 import { resolveSettingValue } from '../lib/settings/resolveSetting';
+import { isCompleteTrinidadPhone, normalizeTrinidadPhone } from '../../../types/trinidadPhone.js';
 import { getEmployerProfile } from '../lib/finance/employerProfile';
 import { getDocumentHealth } from '../lib/hr/documentHealth';
 import { listAccessAssignments, grantAccessAssignment, revokeAccessAssignment } from '../lib/hr/accessAssignments';
@@ -1708,6 +1709,15 @@ router.post('/employees/statutory/update', async c => {
 // Gating per tier (no grab-bag): work contact → hr.employees.update;
 // personal/emergency (restricted) → hr.employees.restricted_contact.update. All audited.
 // mode 'request' routes through maker-checker (hr_employee_change_requests, change_type contact_update).
+const optionalTrinidadPhone = z.string()
+  .max(60)
+  .refine(value => isCompleteTrinidadPhone(value), {
+    message: 'Enter a complete Trinidad and Tobago phone number.',
+  })
+  .transform(value => normalizeTrinidadPhone(value))
+  .nullable()
+  .optional();
+
 router.post('/employees/contact/update', async c => {
   const actor = await requirePermission(c, 'hr.view');
   const v = zv(c, z.object({
@@ -1715,13 +1725,13 @@ router.post('/employees/contact/update', async c => {
     mode:       z.enum(['direct', 'request']).optional(),
     work:       z.object({
       email: z.string().max(160).nullable().optional(),
-      phone: z.string().max(60).nullable().optional(),
-      mobilePhone: z.string().max(60).nullable().optional(),
+      phone: optionalTrinidadPhone,
+      mobilePhone: optionalTrinidadPhone,
     }).optional(),
     personal:   z.object({ personalEmail: z.string().max(160).nullable().optional() }).optional(),
     emergency:  z.object({
       name:         z.string().max(160).nullable().optional(),
-      phone:        z.string().max(60).nullable().optional(),
+      phone:        optionalTrinidadPhone,
       relationship: z.string().max(80).nullable().optional(),
     }).optional(),
     reason: z.string().max(500).optional(),
@@ -1779,8 +1789,8 @@ router.post('/employees/update', async c => {
     lastName:       z.string().max(120).nullable().optional(),
     displayName:    z.string().max(160).nullable().optional(),
     personalEmail:  z.string().max(160).nullable().optional(),
-    phone:          z.string().max(60).nullable().optional(),
-    mobilePhone:    z.string().max(60).nullable().optional(),
+    phone:          optionalTrinidadPhone,
+    mobilePhone:    optionalTrinidadPhone,
     position:       z.string().max(160).nullable().optional(),
     employmentType: z.enum(EMPLOYMENT_TYPES).optional(),
     startDate:      z.string().nullable().optional(),

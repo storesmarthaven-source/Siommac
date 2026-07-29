@@ -12,7 +12,7 @@ describe('employee full-record read model', () => {
     expect(migration).toMatch(/add column if not exists mobile_phone text/i);
     expect(route).toContain("'phone, mobile_phone, employee_number");
     expect(route).toContain('patch.mobile_phone');
-    expect(route).toContain('mobilePhone: z.string().max(60).nullable().optional()');
+    expect(route).toContain('mobilePhone: optionalTrinidadPhone');
   });
 
   it('returns the authoritative deep-work sources used by the full employee page', () => {

@@ -414,6 +414,36 @@ body[data-theme="dark"] .hero-footer {
   min-height: 156px; border: 1px solid var(--line, #e5eaf2); border-radius: var(--radius-lg, 14px);
   background: var(--card, #fff); padding: 18px; display: grid; align-content: start; gap: 16px;
 }
+.ui-widget-skeleton {
+  display: grid; height: 100%; min-height: 120px; padding: 18px; align-content: start; gap: 16px;
+  border: 1px solid var(--line, #e5eaf2); border-radius: var(--radius-lg, 14px);
+  background: var(--card, #fff); overflow: hidden;
+}
+.ui-widget-skeleton > header { display: flex; align-items: center; gap: 12px; }
+.ui-widget-skeleton-chart { margin-top: 2px; }
+.ui-dashboard-skeleton { display: grid; padding: 20px 22px 36px; gap: 18px; }
+.ui-dashboard-skeleton-head {
+  display: grid; min-height: 84px; align-items: center; grid-template-columns: auto minmax(0,1fr) auto; gap: 14px;
+}
+.ui-dashboard-skeleton-head > div { display: grid; gap: 8px; }
+.ui-dashboard-skeleton-widgets { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+.ui-dashboard-skeleton-widgets .ui-widget-skeleton { min-height: 250px; }
+.ui-dashboard-skeleton-table {
+  overflow: hidden; border: 1px solid var(--line, #e5eaf2); border-radius: var(--radius-lg, 14px); background: var(--card, #fff);
+}
+.ui-dashboard-skeleton-table-head { display: flex; padding: 18px; align-items: center; justify-content: space-between; gap: 16px; }
+.ui-dashboard-skeleton-table table { width: 100%; border-collapse: collapse; }
+@media (max-width: 900px) {
+  .ui-skeleton-stat-grid,
+  .ui-dashboard-skeleton-widgets { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (max-width: 620px) {
+  .ui-dashboard-skeleton { padding-inline: 14px; }
+  .ui-skeleton-stat-grid,
+  .ui-dashboard-skeleton-widgets { grid-template-columns: 1fr; }
+  .ui-dashboard-skeleton-head { grid-template-columns: auto minmax(0,1fr); }
+  .ui-dashboard-skeleton-head > .ui-skeleton { display: none; }
+}
 /* Screen-reader-only — used to announce loading regions (with aria-busy). */
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
