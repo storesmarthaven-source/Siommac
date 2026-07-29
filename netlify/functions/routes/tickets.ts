@@ -16,6 +16,7 @@ import {
   GetTicketSchema,
   UpdateTicketSchema,
   CreateAccountSupportRequestSchema,
+  ListAccountSupportRequestsSchema,
   UpdateAccountSupportRequestSchema,
   AccountAccessActionSchema,
   UpdateAccountSupportConfigSchema,
@@ -737,6 +738,13 @@ router.post('/createAccountSupportRequest', async c => {
  * List account support service requests.
  * employees.access.view OR tickets.manage → all requests.
  * Otherwise → own submissions only.
+ *
+ * `subjectId` narrows the list to the requests ABOUT one employee, which is what
+ * the Employee Profile's Account Request History shows. It is applied in the
+ * query rather than by the caller because the row cap is 50: filtering a capped
+ * page in the browser would silently drop that employee's older requests while
+ * still looking like a complete history. The filter narrows what an actor may
+ * already see — it never widens it, so the `canViewAll` gate still applies.
  */
 router.post('/getAccountSupportRequests', async c => {
   const actor      = await requirePermission(c, 'employees.access.request');
@@ -744,12 +752,19 @@ router.post('/getAccountSupportRequests', async c => {
     (await userCan(actor, 'employees.access.view')) ||
     (await userCan(actor, 'tickets.manage'));
 
+  const v = zv(c, ListAccountSupportRequestsSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+
   let query = sb.from('support_tickets')
     .select('id, from_username, from_name, ticket_number, category, subject_type, subject_id, service_domain, requested_action, requested_completion_date, requester_org, capability_target, assigned_user_id, subject, body, status, priority, resolution_notes, created_at, updated_at')
     .eq('category', 'account_support')
     .not('status', 'eq', 'deleted')
     .order('created_at', { ascending: false })
     .limit(50);
+
+  if (v.data.subjectId) {
+    query = query.eq('subject_id', v.data.subjectId);
+  }
 
   if (!canViewAll) {
     query = query.eq('from_user_id', actor.id);

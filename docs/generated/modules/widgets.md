@@ -2,9 +2,9 @@
 
 # widgets Module Map
 
-Source fingerprint: `2c06e6a6f82b8b1230dea4a0`
+Source fingerprint: `69337caf9910e18dc6d5516e`
 
-Files: 69 | Symbols: 543 | Widgets: 21 | Unique mounted endpoints: 15 | Route definitions: 15 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
+Files: 69 | Symbols: 541 | Widgets: 21 | Unique mounted endpoints: 15 | Route definitions: 15 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
 
 ## Widgets and Tiles
 
@@ -38,18 +38,18 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 
 | Path | Permission | Guards | Schema | Location | Frontend callers | E2E suites |
 |---|---|---|---|---|---|---|
-| `/api/layout/get` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:161` | res @ src/api/layout.ts:21 | - |
-| `/api/layout/getInstanceLayout` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:282` | res @ src/api/layout.ts:57 | widgets |
-| `/api/layout/resetInstanceLayout` | `ui.layout.manage` | requirePermission | `-` | `netlify/functions/routes/uiPrefs.ts:334` | res @ src/api/layout.ts:81 | widgets |
-| `/api/layout/resetOverride` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:208` | resetLayoutOverride @ src/api/layout.ts:39 | - |
-| `/api/layout/saveDefault` | `-` | requireRole | `-` | `netlify/functions/routes/uiPrefs.ts:176` | res @ src/api/layout.ts:33 | - |
-| `/api/layout/saveInstanceLayout` | `ui.layout.manage` | requirePermission | `-` | `netlify/functions/routes/uiPrefs.ts:300` | res @ src/api/layout.ts:69 | widgets |
-| `/api/layout/saveInstanceLayoutDefault` | `ui.layout.default.manage` | requirePermission | `-` | `netlify/functions/routes/uiPrefs.ts:316` | res @ src/api/layout.ts:75 | widgets |
-| `/api/layout/saveOverride` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:193` | res @ src/api/layout.ts:27 | - |
-| `/api/theme/get` | `-` | - | `-` | `netlify/functions/routes/uiPrefs.ts:82` | res @ src/api/theme.ts:14 | - |
-| `/api/theme/save` | `-` | requireRole | `-` | `netlify/functions/routes/uiPrefs.ts:87` | res @ src/api/theme.ts:20 | - |
-| `/api/ui-preferences/get` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:109` | response @ src/api/uiPreferences.ts:11 | widgets |
-| `/api/ui-preferences/save` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:130` | response @ src/api/uiPreferences.ts:21 | widgets |
+| `/api/layout/get` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:151` | res @ src/api/layout.ts:21 | - |
+| `/api/layout/getInstanceLayout` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:272` | res @ src/api/layout.ts:57 | widgets |
+| `/api/layout/resetInstanceLayout` | `ui.layout.manage` | requirePermission | `-` | `netlify/functions/routes/uiPrefs.ts:324` | res @ src/api/layout.ts:81 | widgets |
+| `/api/layout/resetOverride` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:198` | resetLayoutOverride @ src/api/layout.ts:39 | - |
+| `/api/layout/saveDefault` | `-` | requireRole | `-` | `netlify/functions/routes/uiPrefs.ts:166` | res @ src/api/layout.ts:33 | - |
+| `/api/layout/saveInstanceLayout` | `ui.layout.manage` | requirePermission | `-` | `netlify/functions/routes/uiPrefs.ts:290` | res @ src/api/layout.ts:69 | widgets |
+| `/api/layout/saveInstanceLayoutDefault` | `ui.layout.default.manage` | requirePermission | `-` | `netlify/functions/routes/uiPrefs.ts:306` | res @ src/api/layout.ts:75 | widgets |
+| `/api/layout/saveOverride` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:183` | res @ src/api/layout.ts:27 | - |
+| `/api/theme/get` | `-` | - | `-` | `netlify/functions/routes/uiPrefs.ts:65` | res @ src/api/theme.ts:14 | - |
+| `/api/theme/save` | `-` | requireRole | `-` | `netlify/functions/routes/uiPrefs.ts:70` | res @ src/api/theme.ts:20 | - |
+| `/api/ui-preferences/get` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:97` | response @ src/api/uiPreferences.ts:35 | hrEmployeeMaster, widgets |
+| `/api/ui-preferences/save` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:118` | response @ src/api/uiPreferences.ts:47 | hrEmployeeMaster, widgets |
 | `/api/widgets/packages/install` | `ui.widgets.packages.manage` | requirePermission | `-` | `netlify/functions/routes/widgetPackages.ts:95` | res @ src/api/widgets.ts:29 | widgets |
 | `/api/widgets/packages/list` | `ui.widgets.packages.view` | requirePermission | `-` | `netlify/functions/routes/widgetPackages.ts:81` | res @ src/api/widgets.ts:18 | widgets |
 | `/api/widgets/packages/uninstall` | `ui.widgets.packages.manage` | requirePermission | `-` | `netlify/functions/routes/widgetPackages.ts:142` | res @ src/api/widgets.ts:34 | widgets |
@@ -243,7 +243,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 
 | Role | Path | Lines |
 |---|---|---:|
-| backend-route | `netlify/functions/routes/uiPrefs.ts` | 348 |
+| backend-route | `netlify/functions/routes/uiPrefs.ts` | 338 |
 | backend-route | `netlify/functions/routes/widgetPackages.ts` | 179 |
 | e2e-suite | `scripts/e2e/suites/widgets.mjs` | 212 |
 | frontend-api | `src/api/layout.ts` | 84 |

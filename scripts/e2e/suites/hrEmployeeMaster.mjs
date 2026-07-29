@@ -49,10 +49,28 @@ export default async function run(h) {
     accessAssignmentId: null, accessCorrelationId: null,  // access-assignment grant/revoke cycle
     hrStaffCreatedIds: [],                 // real hr_staff for the segregation-of-duties check
     siteId: null, siteName: null, supName: null, createdSiteId: null, accessProfileId: null,
+    // The UI-preference tests write against the harness admin's OWN preferences,
+    // which cannot be tagged (the key and user are fixed by the contract). Their
+    // prior values are captured here and restored in teardown, so running the
+    // suite never silently discards a real user's saved views or column choice.
+    priorUiPreferences: null,
   };
 
   // ── teardown (registered up-front so partial runs still clean up) ─────────────
   h.onCleanup(async () => {
+    if (ctx.priorUiPreferences) {
+      for (const [key, prior] of Object.entries(ctx.priorUiPreferences)) {
+        if (prior) {
+          await sb.from('ui_user_preferences').upsert({
+            user_id: admin.id, preference_key: key,
+            preference_value: prior.preference_value, version: prior.version,
+            updated_by: admin.id, updated_at: new Date().toISOString(),
+          }, { onConflict: 'user_id,preference_key' });
+        } else {
+          await h.mustDelete('ui_user_preferences', q => q.eq('user_id', admin.id).eq('preference_key', key));
+        }
+      }
+    }
     try { await sb.from('module_mutation_runs').delete().ilike('idempotency_key', `%${TAG}%`); } catch { /* table optional */ }
     for (const id of [...ctx.empIds, ...ctx.changeReqIds]) {
       await sb.from('app_events').delete().eq('source_entity_id', id);
@@ -856,6 +874,261 @@ export default async function run(h) {
     expect(u && u.personal_email === `e2e-${TAG}@personal.test`, 'personal_email applied to record');
     const { data: ev } = await sb.from('app_events').select('id').eq('event_type', 'hr.employee.change_applied').eq('source_entity_id', ctx.changeReqIds[0]).limit(1);
     expect(ev && ev.length === 1, 'change_applied event');
+  });
+
+  // ── typed UI preference store (saved views + visible columns) ────────────────
+  //
+  // Regression cover for a CONTRACT SPLIT, not a code bug: the register saved
+  // views under `hr.employee-register.views` while the endpoint's allow-list knew
+  // only `hr.employee-register.columns`, so every save was rejected with "Unknown
+  // UI preference key" and no saved view ever loaded. These assert both keys
+  // round-trip, that each is validated by ITS OWN sanitizer, and that the store
+  // still refuses anything it does not declare.
+
+  await test('ui-preferences: capture the actor’s existing preferences for restore', async () => {
+    const keys = ['hr.employee-register.columns', 'hr.employee-register.views'];
+    const { data } = await sb.from('ui_user_preferences')
+      .select('preference_key, preference_value, version')
+      .eq('user_id', admin.id).in('preference_key', keys);
+    const byKey = Object.fromEntries((data ?? []).map(row => [row.preference_key, row]));
+    ctx.priorUiPreferences = Object.fromEntries(keys.map(key => [key, byKey[key] ?? null]));
+    expect(ctx.priorUiPreferences !== null, 'captured prior preferences for teardown');
+  });
+
+  await test('ui-preferences: BOTH employee-register keys are accepted', async () => {
+    for (const key of ['hr.employee-register.columns', 'hr.employee-register.views']) {
+      const r = await api('ui-preferences/get', A, { key });
+      ok(r, `get ${key} — got ${r.body.message ?? ''}`);
+      expect('preference' in r.body.data, `${key}: response must carry a preference envelope`);
+    }
+  });
+
+  await test('ui-preferences: saved views round-trip through the store', async () => {
+    const view = {
+      id: `view-${TAG}`,
+      name: `E2E ${TAG}`.slice(0, 48),
+      filters: { query: 'ari', status: ['active'], department: [], employmentType: ['contract'], training: [] },
+      sortBy: 'employee_number',
+      sortDir: 'desc',
+      pageSize: 50,
+      columns: ['employee', 'department', 'employmentType', 'actions'],
+    };
+    const saved = await api('ui-preferences/save', A, { key: 'hr.employee-register.views', value: [view] });
+    ok(saved, `save views — got ${saved.body.message ?? ''}`);
+    expect(saved.body.data.preference.version === 1, 'views preference stamped with contract version 1');
+
+    // PERSISTENCE is the point: read it back on a separate request.
+    const read = await api('ui-preferences/get', A, { key: 'hr.employee-register.views' });
+    ok(read, 'get views back');
+    const stored = read.body.data.preference;
+    expect(stored && Array.isArray(stored.value) && stored.value.length === 1,
+      `one view persisted — got ${JSON.stringify(stored?.value).slice(0, 200)}`);
+    const got = stored.value[0];
+    expect(got.id === view.id, `view id round-trips — got ${got.id}`);
+    expect(got.sortBy === 'employee_number' && got.sortDir === 'desc', `sort round-trips — got ${got.sortBy}/${got.sortDir}`);
+    expect(got.pageSize === 50, `page size round-trips — got ${got.pageSize}`);
+    expect(JSON.stringify(got.columns) === JSON.stringify(view.columns), `columns round-trip — got ${JSON.stringify(got.columns)}`);
+    expect(got.filters.query === 'ari' && got.filters.status[0] === 'active', 'filters round-trip');
+
+    // Stored against the CALLING user, on the declared key.
+    const { data: row } = await sb.from('ui_user_preferences')
+      .select('preference_key, version').eq('user_id', admin.id)
+      .eq('preference_key', 'hr.employee-register.views').maybeSingle();
+    expect(row && row.version === 1, 'row persisted for the calling user with its contract version');
+  });
+
+  await test('ui-preferences: visible columns round-trip and are normalised', async () => {
+    const saved = await api('ui-preferences/save', A, { key: 'hr.employee-register.columns', value: ['status', 'employee', 'actions'] });
+    ok(saved, `save columns — got ${saved.body.message ?? ''}`);
+    const read = await api('ui-preferences/get', A, { key: 'hr.employee-register.columns' });
+    ok(read, 'get columns back');
+    // Normalised into contract order — not stored as submitted.
+    expect(JSON.stringify(read.body.data.preference.value) === JSON.stringify(['employee', 'status', 'actions']),
+      `columns normalised to contract order — got ${JSON.stringify(read.body.data.preference.value)}`);
+  });
+
+  await test('ui-preferences: unknown key is refused on BOTH get and save', async () => {
+    for (const key of ['hr.employee-register', 'hr.employee-register.viewss', 'anything.at.all']) {
+      const g = await api('ui-preferences/get', A, { key });
+      fails(g, `get must refuse unknown key ${key}`);
+      expect(/unknown ui preference key/i.test(g.body.message ?? ''),
+        `get ${key}: message must name the cause — got ${g.body.message}`);
+      const p = await api('ui-preferences/save', A, { key, value: [] });
+      fails(p, `save must refuse unknown key ${key}`);
+    }
+  });
+
+  await test('ui-preferences: each key is validated by ITS OWN sanitizer', async () => {
+    // A column payload is not a valid view payload, and vice versa — this is what
+    // makes it a typed store rather than a generic accept-any one.
+    fails(await api('ui-preferences/save', A, { key: 'hr.employee-register.views', value: ['employee', 'actions'] }),
+      'views key must reject a column array');
+    fails(await api('ui-preferences/save', A, { key: 'hr.employee-register.columns', value: [{ id: 'v', name: 'V' }] }),
+      'columns key must reject a view array');
+  });
+
+  await test('ui-preferences: malformed values are refused, not coerced', async () => {
+    const bad = [
+      ['hr.employee-register.columns', 'employee'],
+      ['hr.employee-register.columns', { 0: 'employee' }],
+      ['hr.employee-register.columns', ['employee', 7]],
+      ['hr.employee-register.columns', ['no-such-column']],
+      ['hr.employee-register.views', 'views'],
+      ['hr.employee-register.views', { id: 'v' }],
+      // A non-empty list where nothing is usable: storing [] would silently delete
+      // the views the user actually had.
+      ['hr.employee-register.views', [null, { id: '', name: '' }]],
+    ];
+    for (const [key, value] of bad) {
+      const r = await api('ui-preferences/save', A, { key, value });
+      fails(r, `save must refuse ${key} = ${JSON.stringify(value)}`);
+      expect(/invalid ui preference value/i.test(r.body.message ?? ''),
+        `${key}: message must name the cause — got ${r.body.message}`);
+    }
+    // The valid views saved earlier must still be there — a refused write changes nothing.
+    const read = await api('ui-preferences/get', A, { key: 'hr.employee-register.views' });
+    ok(read, 'views still readable after refused writes');
+    expect(read.body.data.preference.value.length === 1, 'refused writes left the stored views intact');
+  });
+
+  await test('ui-preferences: requires authentication', async () => {
+    fails(await api('ui-preferences/get', null, { key: 'hr.employee-register.views' }), 'anonymous get denied');
+    fails(await api('ui-preferences/save', null, { key: 'hr.employee-register.views', value: [] }), 'anonymous save denied');
+  });
+
+  // ── Employee Profile read contracts (drawer + full record) ───────────────────
+  //
+  // The six endpoints both profile surfaces open with. Each asserts the exact
+  // fields the frontend consumes — these are the contracts that broke silently
+  // when a stale build served the superseded shell shape.
+
+  await test('profile-shell (admin) → identity, employment, readiness, indicators', async () => {
+    const r = await api('hr/employees/profile-shell', A, { employeeId: ctx.emp1 });
+    ok(r, `profile-shell — got ${r.body.message ?? ''}`);
+    const d = r.body.data;
+    expect(d.identity.employeeId === ctx.emp1, `shell must be for the requested employee — got ${d.identity.employeeId}`);
+    for (const field of ['employeeNo', 'displayName', 'employmentStatus', 'accountStatus', 'position', 'departmentName', 'siteName']) {
+      expect(field in d.identity, `identity.${field} missing`);
+    }
+    for (const field of ['employmentBasis', 'workArrangement', 'workSchedule', 'startDate', 'tenureMonths',
+      'supervisorName', 'payGroupName', 'legalEmployer', 'weeklyHours', 'fte', 'costCentre', 'employeeGrade',
+      'probationEndDate', 'noticePeriodDays', 'payFrequency', 'workerCategory', 'assignmentEffectiveFrom']) {
+      expect(field in d.employment, `employment.${field} missing`);
+    }
+    if (d.readiness) {
+      // The TYPED readiness contract — `blockers` was the superseded shape.
+      for (const field of ['percent', 'readyControls', 'totalControls', 'unresolvedWorkItems',
+        'payrollStatus', 'trainingStatus', 'blockedDomains', 'lastReviewedAt', 'reviewOwnerLabel', 'nextReviewAt']) {
+        expect(field in d.readiness, `readiness.${field} missing — stale contract?`);
+      }
+      expect(Array.isArray(d.readiness.blockedDomains), 'readiness.blockedDomains must be an array');
+      expect(!('blockers' in d.readiness), 'readiness.blockers is the SUPERSEDED shape and must not be served');
+    }
+    expect(Array.isArray(d.attentionPreview) && typeof d.attentionTotal === 'number', 'attention preview + total');
+    expect(Array.isArray(d.tabIndicators), 'tabIndicators array');
+    expect(Array.isArray(d.recentActivity), 'recentActivity array');
+    expect(d.capabilities && typeof d.capabilities.viewDocuments === 'boolean', 'capabilities present');
+  });
+
+  await test('profile-shell (employee) → denied', async () => {
+    fails(await api('hr/employees/profile-shell', ctx.empTok, { employeeId: ctx.emp1 }),
+      'employee must not read a profile shell');
+  });
+
+  await test('attention (admin) → items carry target, owner and severity', async () => {
+    const r = await api('hr/employees/attention', A, { employeeId: ctx.emp1 });
+    ok(r, `attention — got ${r.body.message ?? ''}`);
+    expect(Array.isArray(r.body.data.items) && typeof r.body.data.total === 'number', 'items + total');
+    expect(Array.isArray(r.body.data.tabIndicators), 'tabIndicators');
+    for (const item of r.body.data.items) {
+      for (const field of ['id', 'domain', 'title', 'detail', 'severity', 'dueState', 'actionLabel', 'actionTarget']) {
+        expect(field in item, `attention item missing ${field}`);
+      }
+      expect(['critical', 'warning', 'info'].includes(item.severity), `unknown severity ${item.severity}`);
+    }
+  });
+
+  await test('document-health (admin) → counts, percentages and grouped tree', async () => {
+    const r = await api('hr/employees/document-health', A, { employeeId: ctx.emp1 });
+    ok(r, `document-health — got ${r.body.message ?? ''}`);
+    const d = r.body.data;
+    for (const field of ['totalDocuments', 'requiredCount', 'verifiedCount', 'expiringCount', 'missingCount',
+      'verifiedPercent', 'expiringPercent', 'missingPercent', 'categoryCount']) {
+      expect(typeof d[field] === 'number', `document-health.${field} must be a number — got ${typeof d[field]}`);
+    }
+    expect(Array.isArray(d.groups), 'groups array');
+    for (const group of d.groups) {
+      for (const item of group.items) {
+        // `issuedAt` is what the locked table's Issue/Effective Date column reads.
+        for (const field of ['documentType', 'title', 'state', 'expiryDate', 'issuedAt', 'detail', 'required']) {
+          expect(field in item, `document-health item missing ${field}`);
+        }
+      }
+    }
+  });
+
+  await test('employment-detail (admin) → masked bank context + effective-dated history', async () => {
+    const r = await api('hr/employees/employment-detail', A, { employeeId: ctx.emp1 });
+    ok(r, `employment-detail — got ${r.body.message ?? ''}`);
+    expect('bank' in r.body.data, 'bank key present (null when not permitted)');
+    expect(Array.isArray(r.body.data.history), 'history array');
+    if (r.body.data.bank) {
+      for (const field of ['bankName', 'accountNumberMasked', 'accountType', 'hasPrimaryAccount', 'lastVerifiedAt', 'verificationState']) {
+        expect(field in r.body.data.bank, `bank.${field} missing`);
+      }
+      // HR receives the MASKED number only — never the raw account.
+      const masked = r.body.data.bank.accountNumberMasked;
+      expect(masked === null || /[•*x]/i.test(masked), `account number must be masked — got ${masked}`);
+    }
+    for (const entry of r.body.data.history) {
+      for (const field of ['id', 'kind', 'title', 'detail', 'occurredAt']) {
+        expect(field in entry, `history entry missing ${field}`);
+      }
+    }
+  });
+
+  await test('readiness/matrix (admin) → controls with resolved owners and coverage', async () => {
+    const r = await api('hr/employees/readiness/matrix', A, { employeeId: ctx.emp1 });
+    ok(r, `readiness/matrix — got ${r.body.message ?? ''}`);
+    const d = r.body.data;
+    expect(d.employeeId === ctx.emp1, `matrix must be for the requested employee — got ${d.employeeId}`);
+    for (const field of ['percent', 'readyControls', 'totalControls', 'unresolvedWorkItems', 'blockedDomains']) {
+      expect(field in d.coverage, `coverage.${field} missing`);
+    }
+    expect(Array.isArray(d.controls), 'controls array');
+    for (const entry of d.controls) {
+      expect(entry.control && typeof entry.control.controlKey === 'string', 'control definition');
+      expect(typeof entry.percent === 'number', 'control percent');
+      // Fail-closed ownership must be VISIBLE, never a blank.
+      expect(['resolved', 'owner_required'].includes(entry.owner.status), `owner.status — got ${entry.owner.status}`);
+      if (entry.owner.status === 'owner_required') expect(entry.owner.reason, 'owner_required must explain what is missing');
+    }
+    expect(d.capabilities && typeof d.capabilities.view === 'boolean', 'capabilities present');
+  });
+
+  await test('access-assignments (admin) → labels resolved, never raw ids', async () => {
+    const r = await api('hr/employees/access-assignments', A, { employeeId: ctx.emp1, activeOnly: false });
+    ok(r, `access-assignments — got ${r.body.message ?? ''}`);
+    expect(Array.isArray(r.body.data), 'array of assignments');
+    for (const a of r.body.data) {
+      for (const field of ['id', 'accessProfileId', 'accessProfileCode', 'accessProfileLabel', 'requiresMfa',
+        'assignmentType', 'status', 'effectiveFrom', 'scopes']) {
+        expect(field in a, `assignment missing ${field}`);
+      }
+      expect(typeof a.accessProfileLabel === 'string' && a.accessProfileLabel.length > 0,
+        'profile label resolved server-side');
+      for (const scope of a.scopes) {
+        expect(typeof scope.scopeLabel === 'string' && scope.scopeLabel.length > 0,
+          `scope must carry a resolved label, not a raw id — got ${JSON.stringify(scope)}`);
+      }
+    }
+  });
+
+  await test('profile reads (employee) → every one denied', async () => {
+    for (const path of ['hr/employees/attention', 'hr/employees/document-health',
+      'hr/employees/employment-detail', 'hr/employees/readiness/matrix', 'hr/employees/access-assignments']) {
+      fails(await api(path, ctx.empTok, { employeeId: ctx.emp1 }), `${path} must deny a plain employee`);
+    }
   });
 
   // ── status-change (Change Status / Offboarding dialogs) ──────────────────────

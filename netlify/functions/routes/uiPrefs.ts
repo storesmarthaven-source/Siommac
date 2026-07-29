@@ -20,12 +20,7 @@ import { sb } from '../lib/db';
 import { requireUser, requireRole, requirePermission, log_ } from '../lib/auth';
 import { emitAppEvent } from '../lib/appEvents';
 import type { HonoVariables } from '../../../types/api';
-import {
-  EMPLOYEE_REGISTER_COLUMN_KEYS,
-  EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_KEY,
-  EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_VERSION,
-  sanitizeEmployeeRegisterColumnKeys,
-} from '../../../types/uiPreferences';
+import { isKnownUiPreferenceKey, sanitizeUiPreference } from '../../../types/uiPreferences';
 
 type Ctx = Context<{ Variables: HonoVariables }>;
 
@@ -65,18 +60,6 @@ interface UiPreferenceEnvelope {
   updatedAt: string | null;
 }
 
-function knownUiPreferenceKey(key: string): boolean {
-  return key === EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_KEY;
-}
-
-function cleanUiPreference(key: string, value: unknown): { version: number; value: unknown } | null {
-  if (!knownUiPreferenceKey(key) || !Array.isArray(value) || value.length > EMPLOYEE_REGISTER_COLUMN_KEYS.length) return null;
-  const allowed = new Set<string>(EMPLOYEE_REGISTER_COLUMN_KEYS);
-  if (value.some(item => typeof item !== 'string' || !allowed.has(item))) return null;
-  const columns = sanitizeEmployeeRegisterColumnKeys(value);
-  return columns ? { version: EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_VERSION, value: columns } : null;
-}
-
 // ── Theme ───────────────────────────────────────────────────────────────────────
 
 router.post('/theme/get', async c => {
@@ -105,11 +88,16 @@ router.post('/theme/save', async c => {
 });
 
 // ── Per-user UI preferences ───────────────────────────────────────────────────
+//
+// Every key this endpoint accepts is declared in `types/uiPreferences.ts` with
+// its OWN typed sanitizer, and both routes below validate through that registry.
+// It is deliberately not a generic key/value store: an authenticated user must
+// not be able to persist arbitrary JSON under an arbitrary key.
 
 router.post('/ui-preferences/get', async c => {
   const user = await requireUser(c);
   const key = strArg(getArgs(c).key);
-  if (!knownUiPreferenceKey(key)) return c.json({ success: false, message: 'Unknown UI preference key' }, 400 as 200);
+  if (!isKnownUiPreferenceKey(key)) return c.json({ success: false, message: 'Unknown UI preference key' }, 400 as 200);
 
   const { data, error } = await sb.from('ui_user_preferences')
     .select('preference_key, preference_value, version, updated_at')
@@ -131,8 +119,10 @@ router.post('/ui-preferences/save', async c => {
   const user = await requireUser(c);
   const args = getArgs(c);
   const key = strArg(args.key);
-  if (!knownUiPreferenceKey(key)) return c.json({ success: false, message: 'Unknown UI preference key' }, 400 as 200);
-  const cleaned = cleanUiPreference(key, args.value);
+  // Reported separately from an invalid value so an operator can tell a
+  // mistyped key from a payload the key's own sanitizer refused.
+  if (!isKnownUiPreferenceKey(key)) return c.json({ success: false, message: 'Unknown UI preference key' }, 400 as 200);
+  const cleaned = sanitizeUiPreference(key, args.value);
   if (!cleaned) return c.json({ success: false, message: 'Invalid UI preference value' }, 400 as 200);
 
   const { data, error } = await sb.from('ui_user_preferences').upsert({

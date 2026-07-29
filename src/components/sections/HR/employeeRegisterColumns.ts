@@ -1,10 +1,13 @@
 import type { EmployeeSortCol } from '@api/hr/employees';
 import {
+  DEFAULT_EMPLOYEE_REGISTER_COLUMNS,
   sanitizeEmployeeRegisterColumnKeys,
   type EmployeeRegisterColumnKey,
 } from '../../../../types/uiPreferences';
 
 export type { EmployeeRegisterColumnKey } from '../../../../types/uiPreferences';
+/** Re-exported from the shared contract: a saved view stores against this list. */
+export { DEFAULT_EMPLOYEE_REGISTER_COLUMNS } from '../../../../types/uiPreferences';
 
 export interface EmployeeRegisterColumn {
   key: EmployeeRegisterColumnKey;
@@ -27,20 +30,6 @@ export const EMPLOYEE_REGISTER_COLUMNS: readonly EmployeeRegisterColumn[] = [
   { key: 'trainingStatus', label: 'Training Status', minWidth: 135 },
   { key: 'actions', label: 'Actions', required: true, minWidth: 72 },
 ] as const;
-
-/** The recommended default set. A user's PERSISTED choice always wins — sanitize() only falls
- *  back to this when there is no saved preference — so changing it never overwrites anyone. */
-export const DEFAULT_EMPLOYEE_REGISTER_COLUMNS: readonly EmployeeRegisterColumnKey[] = [
-  'employee',
-  'employeeNumber',
-  'position',
-  'department',
-  'site',
-  'supervisor',
-  'status',
-  'readiness',
-  'actions',
-];
 
 /** Reconcile a persisted preference with the current, ordered column contract. */
 export function sanitizeEmployeeRegisterColumns(value: unknown): EmployeeRegisterColumnKey[] {

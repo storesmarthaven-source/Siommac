@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `2c06e6a6f82b8b1230dea4a0`
+Source fingerprint: `69337caf9910e18dc6d5516e`
 
-Files: 305 | Symbols: 2765 | Widgets: 0 | Unique mounted endpoints: 32 | Route definitions: 32 mounted + 15 unmounted | API calls: 50 | DB objects: 303 | E2E suites: 0
+Files: 306 | Symbols: 2791 | Widgets: 0 | Unique mounted endpoints: 32 | Route definitions: 32 mounted + 15 unmounted | API calls: 50 | DB objects: 305 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -112,8 +112,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/settings/values/set` | `apiPost` | `res` | `src/lib/themePreference.ts:60` |
 | `/api/theme/get` | `authPost` | `res` | `src/api/theme.ts:14` |
 | `/api/theme/save` | `apiPost` | `res` | `src/api/theme.ts:20` |
-| `/api/ui-preferences/get` | `apiPost` | `response` | `src/api/uiPreferences.ts:11` |
-| `/api/ui-preferences/save` | `apiPost` | `response` | `src/api/uiPreferences.ts:21` |
+| `/api/ui-preferences/get` | `apiPost` | `response` | `src/api/uiPreferences.ts:35` |
+| `/api/ui-preferences/save` | `apiPost` | `response` | `src/api/uiPreferences.ts:47` |
 | `/api/updateColorScheme` | `apiPost` | `updateColorScheme` | `src/components/nav/api.ts:22` |
 | `/api/updateLayoutMode` | `apiPost` | `updateLayoutMode` | `src/components/nav/api.ts:25` |
 | `/api/updateMyProfile` | `apiPost` | `res` | `src/components/sections/Profile/api.ts:108` |
@@ -441,6 +441,8 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | table | `public.hr_access_profiles` | `supabase/migrations/20260926000003_hr_access_profiles.sql:8` |
 | function | `public.hr_access_assignment_grant_tx` | `supabase/migrations/20260928000002_hr_access_assignment_tx.sql:34` |
 | function | `public.hr_access_assignment_revoke_tx` | `supabase/migrations/20260928000002_hr_access_assignment_tx.sql:148` |
+| function | `public.hr_readiness_recalculate` | `supabase/migrations/20260929000001_hr_readiness_lifecycle_tx.sql:143` |
+| function | `public.hr_readiness_work_item_transition_tx` | `supabase/migrations/20260929000001_hr_readiness_lifecycle_tx.sql:183` |
 
 ## E2E Suites
 
@@ -468,12 +470,12 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/weather.ts` | 189 |
 | frontend-api | `src/api/calendar.ts` | 173 |
 | frontend-api | `src/api/index.ts` | 34 |
-| frontend-api | `src/api/queryKeys.ts` | 293 |
+| frontend-api | `src/api/queryKeys.ts` | 298 |
 | frontend-api | `src/api/schemas/index.ts` | 21 |
 | frontend-api | `src/api/schemas/site.ts` | 61 |
 | frontend-api | `src/api/sites.ts` | 167 |
 | frontend-api | `src/api/theme.ts` | 23 |
-| frontend-api | `src/api/uiPreferences.ts` | 31 |
+| frontend-api | `src/api/uiPreferences.ts` | 57 |
 | frontend-api | `src/api/weather.ts` | 38 |
 | frontend-page | `src/components/sections/AccessControl/AccessControlSection.tsx` | 65 |
 | frontend-page | `src/components/sections/AccessControl/index.ts` | 10 |
@@ -537,7 +539,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | shared-types | `types/messaging.ts` | 287 |
 | shared-types | `types/messagingCompliance.ts` | 318 |
 | shared-types | `types/supabase.ts` | 135 |
-| shared-types | `types/uiPreferences.ts` | 32 |
+| shared-types | `types/uiPreferences.ts` | 253 |
 | shared-types | `types/weather.ts` | 93 |
 | shared-types | `types/workCalendars.ts` | 145 |
 

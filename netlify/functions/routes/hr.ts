@@ -1786,6 +1786,15 @@ router.post('/employees/update', async c => {
     startDate:      z.string().nullable().optional(),
     endDate:        z.string().nullable().optional(),
     contractorFlag: z.boolean().optional(),
+    // Administrative placement carried on the employee record rather than on the
+    // effective-dated assignment. These columns already exist on `app_users` and
+    // are already read by `loadEmployee`; before this they were readable but had
+    // no write path, so the profile's Organisation and Service forms could not
+    // save them.
+    costCenter:        z.string().max(60).nullable().optional(),
+    employeeGrade:     z.string().max(60).nullable().optional(),
+    workSchedule:      z.string().max(60).nullable().optional(),
+    probationEndDate:  z.iso.date().nullable().optional(),
   }), (c.get('body')).args ?? {});
   if (!v.ok) return v.response;
 
@@ -1804,6 +1813,10 @@ router.post('/employees/update', async c => {
   if (v.data.startDate      !== undefined) patch.start_date      = v.data.startDate;
   if (v.data.endDate        !== undefined) patch.end_date        = v.data.endDate;
   if (v.data.contractorFlag !== undefined) patch.contractor_flag = v.data.contractorFlag;
+  if (v.data.costCenter       !== undefined) patch.cost_center        = v.data.costCenter;
+  if (v.data.employeeGrade    !== undefined) patch.employee_grade     = v.data.employeeGrade;
+  if (v.data.workSchedule     !== undefined) patch.work_schedule      = v.data.workSchedule;
+  if (v.data.probationEndDate !== undefined) patch.probation_end_date = v.data.probationEndDate;
 
   const { error } = await sb.from('app_users').update(patch).eq('id', v.data.employeeId);
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);

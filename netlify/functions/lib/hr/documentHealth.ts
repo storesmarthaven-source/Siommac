@@ -101,6 +101,18 @@ function detailFor(state: DocumentHealthState, doc: HealthDocRow | undefined): s
   }
 }
 
+/**
+ * The date a held document became effective.
+ *
+ * Verification is preferred over upload because that is when the record became
+ * authoritative. A requirement with no document has no such date, and gets null
+ * rather than today's date or the requirement's own timestamps.
+ */
+function issuedAtOf(doc: HealthDocRow | undefined): string | null {
+  if (!doc) return null;
+  return (doc.verified_at ?? doc.uploaded_at ?? null)?.slice(0, 10) ?? null;
+}
+
 const HEALTHY = new Set<DocumentHealthState>(['verified', 'current']);
 
 /**
@@ -139,6 +151,7 @@ export function buildDocumentHealth(
       title: doc?.title ?? req.label,
       state,
       expiryDate: doc?.expiry_date ?? null,
+      issuedAt: issuedAtOf(doc),
       detail: detailFor(state, doc),
       required: true,
     });
@@ -157,6 +170,7 @@ export function buildDocumentHealth(
       title: d.title,
       state,
       expiryDate: d.expiry_date,
+      issuedAt: issuedAtOf(d),
       detail: detailFor(state, d),
       required: false,
     });

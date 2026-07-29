@@ -8,8 +8,10 @@ import {
   formatTenure, identitySubtitle, readinessExplanation, readinessHeadline, readinessLabel,
   severityToneClass, tabAriaLabel, titleCase, visibleTabs,
 } from '../../src/components/sections/HR/employeeProfileModel';
-import { tenureMonths, readinessSummary } from '../../netlify/functions/lib/hr/employeeProfileShell';
-import type { EmployeeProfileShell, EmployeeAttentionItem } from '../../types/hrEmployeeProfile';
+import { tenureMonths } from '../../netlify/functions/lib/hr/employeeProfileShell';
+import type {
+  EmployeeProfileShell, EmployeeAttentionItem, ProfileReadinessSummary, ReadinessDomain,
+} from '../../types/hrEmployeeProfile';
 
 function shell(over: Partial<EmployeeProfileShell> = {}): EmployeeProfileShell {
   return {
@@ -84,38 +86,54 @@ describe('continuous service', () => {
 });
 
 describe('readiness summary and copy', () => {
-  const emp = { supervisor_id: 'S', department_id: 'D', site_id: 'X' };
-
-  it('expresses readiness as ready-of-total controls', () => {
-    expect(readinessSummary(emp, 'ready', 'current', 0)).toMatchObject({
-      percent: 100, readyControls: 3, totalControls: 3, blockers: [],
-    });
-    expect(readinessSummary(emp, 'blocked', 'expired', 2)).toMatchObject({
-      percent: 33, readyControls: 1, totalControls: 3, blockers: ['payroll', 'training'],
-    });
-    expect(readinessSummary({ supervisor_id: null, department_id: 'D', site_id: 'X' }, 'ready', 'current', 0))
-      .toMatchObject({ percent: 67, blockers: ['assignment'] });
+  /**
+   * These cover the PRESENTATION rules only.
+   *
+   * The summary itself is no longer assembled here: the three-factor
+   * approximation `readinessSummary()` that used to live in
+   * `employeeProfileShell` was replaced by the typed readiness service
+   * (`readinessService.getReadinessSummary`), which counts real control
+   * instances against real control definitions. Its arithmetic is covered where
+   * it now lives; asserting a deleted builder from this file is what left these
+   * cases red.
+   */
+  const summary = (
+    blockedDomains: ReadinessDomain[], readyControls: number,
+  ): ProfileReadinessSummary => ({
+    percent: Math.round((readyControls / 3) * 100),
+    readyControls, totalControls: 3, unresolvedWorkItems: blockedDomains.length,
+    payrollStatus: blockedDomains.includes('payroll') ? 'blocked' : 'ready',
+    trainingStatus: blockedDomains.includes('training') ? 'expired' : 'current',
+    blockedDomains, lastReviewedAt: null, reviewOwnerLabel: null, nextReviewAt: null,
   });
 
   it('labels the gauge from the score and blocker count', () => {
-    expect(readinessLabel(readinessSummary(emp, 'ready', 'current', 0))).toBe('Ready');
-    expect(readinessLabel(readinessSummary(emp, 'blocked', 'current', 1))).toBe('Almost Ready');
-    expect(readinessLabel(readinessSummary(emp, 'blocked', 'expired', 2))).toBe('Needs Review');
+    expect(readinessLabel(summary([], 3))).toBe('Ready');
+    expect(readinessLabel(summary(['payroll'], 2))).toBe('Almost Ready');
+    expect(readinessLabel(summary(['payroll', 'training'], 1))).toBe('Needs Review');
     expect(readinessLabel(null)).toBe(DASH);
   });
 
   it('writes the approved headline and explanation', () => {
-    const two = readinessSummary(emp, 'blocked', 'expired', 2);
+    const two = summary(['payroll', 'training'], 1);
     expect(readinessHeadline(two)).toBe('Two Controls Need Follow-Up');
     expect(readinessExplanation(two)).toBe('Payroll and training are preventing this record from being fully ready.');
 
-    const one = readinessSummary(emp, 'blocked', 'current', 1);
+    const one = summary(['payroll'], 2);
     expect(readinessHeadline(one)).toBe('One Control Needs Follow-Up');
     expect(readinessExplanation(one)).toBe('Payroll is preventing this record from being fully ready.');
 
-    const none = readinessSummary(emp, 'ready', 'current', 0);
+    const none = summary([], 3);
     expect(readinessHeadline(none)).toBe('All Controls Are Ready');
     expect(readinessExplanation(none)).toBe('Every readiness control has passed for this record.');
+  });
+
+  it('names every readiness domain in the explanation, not just the original three', () => {
+    // A domain missing from the noun map would render as its raw key.
+    for (const domain of ['assignment', 'payroll', 'training', 'documents', 'statutory', 'access'] as ReadinessDomain[]) {
+      expect(readinessExplanation(summary([domain], 2))).not.toContain('_');
+      expect(readinessExplanation(summary([domain], 2))).toMatch(/preventing this record from being fully ready\.$/);
+    }
   });
 });
 

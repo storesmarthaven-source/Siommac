@@ -304,16 +304,22 @@
 .hr-emp-master .em-register-empty .ui-empty { width: min(440px, 100%); }
 .hr-emp-master .em-chart-empty { display: grid; place-items: center; height: 100%; color: #94a3b8; font-size: 11px; font-weight: var(--font-weight-bold); }
 
-/* ── Profile drawer ───────────────────────────────────────────────────────── */
-.hr-emp-master .drawer { position: fixed; top: 0; right: 0; z-index: 80; width: min(500px, calc(100vw - 24px)); height: 100vh; background: #fff; border-left: 1px solid var(--line); display: flex; flex-direction: column; min-width: 0; overflow: hidden; transform: translateX(calc(100% + 18px)); opacity: 0; pointer-events: none; transition: transform .28s cubic-bezier(.2,.8,.2,1), opacity .18s ease; box-shadow: -18px 0 38px rgba(15,23,42,.12); }
-.hr-emp-master .drawer.open { transform: translateX(0); opacity: 1; pointer-events: auto; }
-.hr-emp-master .drawer-top { min-height: 64px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
-.hr-emp-master .drawer-title { font-size: 20px; font-weight: var(--font-weight-bold, 700); color: #111827; letter-spacing: -.02em; }
-.hr-emp-master .drawer-icons { display: flex; gap: 6px; align-items: center; position: relative; }
-.hr-emp-master .drawer-icon-btn { width: 32px; height: 32px; border: 0; background: transparent; border-radius: 8px; display: grid; place-items: center; color: #0f172a; font-size: 22px; line-height: 1; }
-.hr-emp-master .drawer-icon-btn:hover { background: #f1f5f9; }
-.hr-emp-master .drawer-scroll { overflow: auto; padding: 20px 18px 24px; background: var(--bg, #f7f9fc); }
 
+/* ── Superseded profile-drawer skin — DELETED ─────────────────────────────────
+ * The `.hr-emp-master .drawer*` rules that used to live here styled the v36
+ * drawer that `ProfileDrawer.tsx` REPLACED (commit 54cc258a). They matched no
+ * rendered markup afterwards — except, accidentally, the rebuilt drawer's own
+ * `<main class="drawer">`, which renders inside `.hr-emp-master`. The dead
+ * `opacity: 0; transform: translateX(100%); pointer-events: none` (visible only
+ * with a `.open` class the new drawer never sets) hid it completely: the
+ * backdrop appeared and the panel did not.
+ *
+ * Generic class names are why this could happen at all. The ported stylesheets
+ * scope the mockup's names under `.epd-root` / `.epf-root` so they cannot leak
+ * OUT; that scoping does nothing to stop an app rule leaking IN. Deleting the
+ * legacy rules fixes the cause; raising the new drawer's specificity would only
+ * have hidden dead CSS behind a heavier selector.
+ */
 .hr-emp-master .profile-head { display: flex; align-items: center; gap: 16px; }
 .hr-emp-master .profile-photo { width: 76px; height: 76px; border-radius: 50%; background: #eaf2ff; border: 2px solid #dbeafe; flex: none; overflow: hidden; display: grid; place-items: center; }
 .hr-emp-master .profile-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -340,17 +346,10 @@
 .hr-emp-master .workflow-mini-copy em { font-style: normal; font-size: 10px; color: #64748b; }
 .hr-emp-master .workflow-mini-action { font-size: 11px; font-weight: var(--font-weight-bold, 700); color: #0757df; white-space: nowrap; }
 
-.hr-emp-master .drawer-actions { display: grid; grid-template-columns: 1fr 1fr .9fr; gap: 10px; margin-bottom: 16px; position: relative; }
-.hr-emp-master .drawer-actions .primary-btn, .hr-emp-master .drawer-actions .secondary-btn { width: 100%; justify-content: center; }
-.hr-emp-master .drawer-more-button { display: grid; place-items: center; }
-.hr-emp-master .more-ellipsis { letter-spacing: 1px; font-weight: var(--font-weight-bold, 700); }
 
-.hr-emp-master .drawer-tabs { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); margin: 0 -18px 18px; padding: 0 18px; position: relative; }
-.hr-emp-master .drawer-tab-list { display: flex; align-items: center; gap: 16px; min-width: 0; overflow-x: auto; }
 .hr-emp-master .tab { position: relative; height: 42px; display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: var(--font-weight-semibold, 600); color: #526178; white-space: nowrap; border: 0; background: transparent; padding: 0; }
 .hr-emp-master .tab.active { color: #0757df; }
 .hr-emp-master .tab.active::after { content: ""; position: absolute; left: 0; bottom: -1px; width: 100%; height: 3px; border-radius: 3px 3px 0 0; background: #0757df; }
-.hr-emp-master .tab-more-caret { font-size: 12px; opacity: .65; }
 
 .hr-emp-master .info-card { border: 1px solid var(--line); border-radius: 12px; background: #fff; margin-bottom: 14px; padding: 16px; }
 .hr-emp-master .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }

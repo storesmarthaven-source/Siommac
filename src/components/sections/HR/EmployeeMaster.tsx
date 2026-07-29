@@ -286,7 +286,7 @@ export function EmployeeMaster(): VNode {
     if (!userId) return;
 
     let alive = true;
-    void getUiPreference<EmployeeRegisterColumnKey[]>(EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_KEY)
+    void getUiPreference(EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_KEY)
       .then(preference => {
         if (!alive || columnPreferenceDirty.current || !preference) return;
         const remote = sanitizeEmployeeRegisterColumns(preference.value);
@@ -302,7 +302,7 @@ export function EmployeeMaster(): VNode {
     setSavedViews([]);
     if (!userId) return;
     let alive = true;
-    void getUiPreference<EmployeeRegisterView[]>(EMPLOYEE_REGISTER_VIEWS_PREFERENCE_KEY)
+    void getUiPreference(EMPLOYEE_REGISTER_VIEWS_PREFERENCE_KEY)
       .then(preference => {
         if (alive) setSavedViews(sanitizeEmployeeRegisterViews(preference?.value));
       })
@@ -742,22 +742,18 @@ export function EmployeeMaster(): VNode {
   if (modal?.type === 'onboarding') {
     return <StartOnboardingWizard employeeId={modal.employeeId} onBack={() => setModal(null)} />;
   }
+  // The full employee record owns ALL TEN of its locked dialogs. It is no longer
+  // wrapped in the register's ActionDialogs: routing its Edit / Request Change /
+  // Offboarding / Document actions back out to the register's generic modals
+  // would have shown a different dialog from the approved one on the same click.
+  // Those modals remain in use by the register rows and the drawer.
   if (fullEmployeeId) {
     return (
-      <>
-        <EmployeeProfilePage
-          employeeId={fullEmployeeId}
-          access={access}
-          onBack={() => setFullEmployeeId(null)}
-          onAction={(label) => openAction(label, fullEmployeeId)}
-        />
-        {modal?.type === 'contact' && <ContactDialog employeeId={fullEmployeeId} onClose={() => setModal(null)} onToast={notify} />}
-        {modal?.type === 'status' && <StatusDialog employeeId={fullEmployeeId} onClose={() => setModal(null)} onToast={notify} />}
-        {modal?.type === 'offboard' && <OffboardingDialog employeeId={fullEmployeeId} onClose={() => setModal(null)} onToast={notify} />}
-        {modal?.type === 'change' && <ChangeRequestDialog employeeId={fullEmployeeId} onClose={() => setModal(null)} onToast={notify} />}
-        {modal?.type === 'document' && <DocumentDialog employeeId={fullEmployeeId} onClose={() => setModal(null)} onToast={notify} />}
-        {modal?.type === 'statutory' && <StatutoryDialog employeeId={fullEmployeeId} onClose={() => setModal(null)} onToast={notify} />}
-      </>
+      <EmployeeProfilePage
+        employeeId={fullEmployeeId}
+        access={access}
+        onBack={() => setFullEmployeeId(null)}
+      />
     );
   }
 

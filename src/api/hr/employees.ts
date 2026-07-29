@@ -342,6 +342,11 @@ export interface HrAuditEntry {
   action:         string;
   reason:         string | null;
   created_at:     string;
+  /** The row the change was recorded against — the "related record" reference. */
+  record_id?:     string | null;
+  /** Snapshots the audit writer stored. Absent on rows written without them. */
+  previous_state?: Record<string, unknown> | null;
+  new_state?:      Record<string, unknown> | null;
   [k: string]: unknown;
 }
 
@@ -474,6 +479,107 @@ export function useUpdateHrStatutory() {
     onSuccess: (_d, vars) => {
       void qc.invalidateQueries({ queryKey: hrEmployeeKeys.statutory(vars.employeeId) });
       void qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) });
+    },
+  });
+}
+
+/**
+ * Employee-record attributes that are NOT effective-dated.
+ *
+ * Every key is optional: an omitted key leaves the column untouched, and `null`
+ * clears it. Sending `''` would write an empty string where the record means
+ * "not recorded", so callers normalise a cleared control to `null`.
+ */
+export interface EmployeeRecordUpdateArgs {
+  employeeId: string;
+  firstName?: string;
+  lastName?: string | null;
+  displayName?: string | null;
+  personalEmail?: string | null;
+  phone?: string | null;
+  mobilePhone?: string | null;
+  position?: string | null;
+  employmentType?: string;
+  startDate?: string | null;
+  endDate?: string | null;
+  contractorFlag?: boolean;
+  costCenter?: string | null;
+  employeeGrade?: string | null;
+  workSchedule?: string | null;
+  probationEndDate?: string | null;
+}
+
+export function useUpdateHrEmployeeRecord() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: EmployeeRecordUpdateArgs) =>
+      hrPost<{ success: boolean; data: HrEmployeeRow }>(
+        'hr/employees/update', args as unknown as Record<string, unknown>, { retryable: false },
+      ),
+    onSuccess: (_d, vars) => {
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) });
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.profileShell(vars.employeeId) });
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.audit(vars.employeeId) });
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.lists() });
+    },
+  });
+}
+
+/**
+ * Effective-dated assignment change.
+ *
+ * Every field is optional-and-nullable because the backend distinguishes
+ * "omitted" (carry the current period's value forward) from `null` (clear it).
+ * Sending a blank string for an unset picker would be a THIRD meaning the route
+ * does not have, so the caller must send `null` or omit the key.
+ */
+export interface AssignmentApplyArgs {
+  employeeId: string;
+  positionId?: string | null;
+  departmentId?: string | null;
+  siteId?: string | null;
+  supervisorId?: string | null;
+  effectiveFrom?: string | null;
+  conditions?: { weeklyHours?: number | null; fte?: number | null; noticePeriodDays?: number | null };
+  reason?: string;
+}
+
+/** Mirrors `ApplyAssignmentResult` in netlify/functions/lib/hr/employmentDetail.ts. */
+export interface AssignmentApplyResult {
+  assignmentId: string;
+  employeeId: string;
+  /** True when this opened the employee's FIRST effective period. */
+  isFirstAssignment: boolean;
+  supersededAssignmentId: string | null;
+  effectiveFrom: string;
+  weeklyHours: number | null;
+  fte: number | null;
+  noticePeriodDays: number | null;
+  correlationId: string;
+}
+
+/**
+ * Apply an assignment change through the transactional command.
+ *
+ * `hr_employee_assignment_apply_tx` closes the outgoing period and opens the
+ * incoming one in ONE commit, and CREATES the first period when the employee has
+ * none — which is the normal case in this build. Not retryable: a replay would
+ * open a second period for the same effective date.
+ */
+export function useApplyHrAssignment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: AssignmentApplyArgs) =>
+      hrPost<{ success: boolean; data: AssignmentApplyResult }>(
+        'hr/employees/assignment/apply', args as unknown as Record<string, unknown>, { retryable: false },
+      ),
+    onSuccess: (_d, vars) => {
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) });
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.profileShell(vars.employeeId) });
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.employmentDetail(vars.employeeId) });
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.attention(vars.employeeId) });
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.audit(vars.employeeId) });
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.lists() });
     },
   });
 }

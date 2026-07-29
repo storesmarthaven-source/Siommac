@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `893d7ea383ade5b1e19e8f49c2b736430e1e3420`  
-Source fingerprint: `2c06e6a6f82b8b1230dea4a0`  
+Source HEAD: `9bb73a8523252c0e11053853f69bfb0f3d892b9d`  
+Source fingerprint: `69337caf9910e18dc6d5516e`  
 Generator version: `1`
 
 ## Use
@@ -19,23 +19,23 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1314 | 13143 | 51 | 963 | 964 | 17 | 352 | 1411 | 83 | 2649 |
+| 1331 | 13428 | 51 | 972 | 973 | 17 | 354 | 1414 | 83 | 2665 |
 
 ## Modules
 
 | Module | Files | Symbols | Widgets | Unique routes | Route definitions | API calls | DB objects | E2E suites | Map |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| hr | 238 | 2540 | 9 | 266 | 266 | 33 | 195 | 16 | [open](modules/hr.md) |
-| payroll | 195 | 1985 | 10 | 140 | 140 | 2 | 260 | 28 | [open](modules/payroll.md) |
+| hr | 252 | 2803 | 9 | 275 | 275 | 35 | 196 | 16 | [open](modules/hr.md) |
+| payroll | 195 | 1978 | 10 | 140 | 140 | 2 | 260 | 28 | [open](modules/payroll.md) |
 | finance | 139 | 1853 | 10 | 156 | 156 | 4 | 202 | 9 | [open](modules/finance.md) |
 | hse | 87 | 1275 | 0 | 144 | 144 | 107 | 65 | 4 | [open](modules/hse.md) |
 | communications | 112 | 1052 | 0 | 93 | 96 | 88 | 158 | 6 | [open](modules/communications.md) |
 | workflow | 47 | 321 | 0 | 40 | 40 | 8 | 128 | 3 | [open](modules/workflow.md) |
 | security | 46 | 387 | 0 | 51 | 51 | 31 | 65 | 4 | [open](modules/security.md) |
-| settings | 42 | 246 | 0 | 26 | 26 | 18 | 21 | 2 | [open](modules/settings.md) |
-| widgets | 69 | 543 | 21 | 15 | 15 | 11 | 14 | 1 | [open](modules/widgets.md) |
-| platform | 305 | 2765 | 0 | 32 | 47 | 50 | 303 | 0 | [open](modules/platform.md) |
-| testing | 34 | 176 | 0 | 0 | 0 | 0 | 0 | 10 | [open](modules/testing.md) |
+| settings | 43 | 250 | 0 | 26 | 26 | 18 | 21 | 2 | [open](modules/settings.md) |
+| widgets | 69 | 541 | 21 | 15 | 15 | 11 | 14 | 1 | [open](modules/widgets.md) |
+| platform | 306 | 2791 | 0 | 32 | 47 | 50 | 305 | 0 | [open](modules/platform.md) |
+| testing | 35 | 177 | 0 | 0 | 0 | 0 | 0 | 10 | [open](modules/testing.md) |
 | enterprise | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | [open](modules/enterprise.md) |
 
 ## Widget and Tile Directory

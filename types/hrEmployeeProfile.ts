@@ -317,6 +317,13 @@ export interface DocumentHealthItem {
   title: string;
   state: DocumentHealthState;
   expiryDate: string | null;
+  /**
+   * The date the held document became effective: its verification date when it
+   * has one, otherwise when it was provided. Null for a requirement with no
+   * document — an absent record has no issue date, and inventing one would put a
+   * date against evidence that does not exist.
+   */
+  issuedAt: string | null;
   /** Supporting line under the title, e.g. "Expires 03 Jun 2025". */
   detail: string;
   /** True when this row exists because a requirement expects it. */

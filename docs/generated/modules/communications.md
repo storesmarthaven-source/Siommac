@@ -2,7 +2,7 @@
 
 # communications Module Map
 
-Source fingerprint: `2c06e6a6f82b8b1230dea4a0`
+Source fingerprint: `69337caf9910e18dc6d5516e`
 
 Files: 112 | Symbols: 1052 | Widgets: 0 | Unique mounted endpoints: 93 | Route definitions: 94 mounted + 2 unmounted | API calls: 88 | DB objects: 158 | E2E suites: 6
 
@@ -19,7 +19,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | Path | Permission | Guards | Schema | Location | Frontend callers | E2E suites |
 |---|---|---|---|---|---|---|
 | `/api/clearAllNotifications` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:181` | res @ src/api/notifications.ts:111 | - |
-| `/api/clearClosedTickets` | `-` | requireUser, userCan | `-` | `netlify/functions/routes/tickets.ts:540` | - | serviceRequests |
+| `/api/clearClosedTickets` | `-` | requireUser, userCan | `-` | `netlify/functions/routes/tickets.ts:541` | - | serviceRequests |
 | `/api/communications/compliance/access-events/list` | `communications.compliance_read` | requirePermission | `AccessEventsListSchema` | `netlify/functions/routes/communicationsCompliance.ts:457` | res @ src/api/communicationsCompliance.ts:156 | communicationsCompliance |
 | `/api/communications/compliance/cases/close` | `communications.compliance_read` | requirePermission | `CaseCloseSchema` | `netlify/functions/routes/communicationsCompliance.ts:439` | useCloseComplianceCase @ src/api/communicationsCompliance.ts:208 | communicationsCompliance |
 | `/api/communications/compliance/cases/decide` | `communications.compliance_read` | requirePermission | `CaseDecisionSchema` | `netlify/functions/routes/communicationsCompliance.ts:302` | useDecideComplianceCase @ src/api/communicationsCompliance.ts:194 | communicationsCompliance |
@@ -86,32 +86,32 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/communications/tickets/request-types` | `communications.view` | requirePermission | `RequestTypesSchema` | `netlify/functions/routes/communications.ts:1048` | res @ src/api/communications.ts:877 | ticketCenter |
 | `/api/communications/tickets/requester-search` | `communications.view` | requirePermission | `RequesterSearchSchema` | `netlify/functions/routes/communications.ts:1064` | res @ src/api/communications.ts:899 | ticketCenter |
 | `/api/communications/tickets/run-overdue-sweep` | `tickets.manage` | requirePermission | `TicketSweepSchema` | `netlify/functions/routes/communications.ts:1363` | - | ticketCenter |
-| `/api/createAccountSupportRequest` | `employees.access.request, employees.access.view` | requirePermission | `CreateAccountSupportRequestSchema` | `netlify/functions/routes/tickets.ts:586` | - | serviceRequests |
-| `/api/createTicket` | `tickets.create_self` | requirePermission | `CreateTicketSchema` | `netlify/functions/routes/tickets.ts:219` | - | serviceRequests |
+| `/api/createAccountSupportRequest` | `employees.access.request, employees.access.view` | requirePermission | `CreateAccountSupportRequestSchema` | `netlify/functions/routes/tickets.ts:587` | res @ src/api/hr/employeeAccountSupport.ts:100 | serviceRequests |
+| `/api/createTicket` | `tickets.create_self` | requirePermission | `CreateTicketSchema` | `netlify/functions/routes/tickets.ts:220` | - | serviceRequests |
 | `/api/deleteNotification` | `-` | requireUser | `MarkReadSchema` | `netlify/functions/routes/notify.ts:164` | res @ src/api/notifications.ts:103 | - |
-| `/api/deleteTicket` | `-` | requireUser | `GetTicketSchema` | `netlify/functions/routes/tickets.ts:492` | - | serviceRequests |
-| `/api/getAccountSupportConfig` | `employees.access.view` | requirePermission | `-` | `netlify/functions/routes/tickets.ts:1388` | - | serviceRequests |
-| `/api/getAccountSupportRequests` | `employees.access.request` | requirePermission, userCan | `-` | `netlify/functions/routes/tickets.ts:741` | - | serviceRequests |
+| `/api/deleteTicket` | `-` | requireUser | `GetTicketSchema` | `netlify/functions/routes/tickets.ts:493` | - | serviceRequests |
+| `/api/getAccountSupportConfig` | `employees.access.view` | requirePermission | `-` | `netlify/functions/routes/tickets.ts:1403` | - | serviceRequests |
+| `/api/getAccountSupportRequests` | `employees.access.request` | requirePermission, userCan | `ListAccountSupportRequestsSchema` | `netlify/functions/routes/tickets.ts:749` | res @ src/api/hr/employeeAccountSupport.ts:80 | serviceRequests |
 | `/api/getMyNotifications` | `-` | requireUser | `GetNotifSchema` | `netlify/functions/routes/notify.ts:58` | res @ src/api/notifications.ts:47 | - |
-| `/api/getTickets` | `-` | requireUser, userCan | `-` | `netlify/functions/routes/tickets.ts:276` | - | serviceRequests |
+| `/api/getTickets` | `-` | requireUser, userCan | `-` | `netlify/functions/routes/tickets.ts:277` | - | serviceRequests |
 | `/api/hr/onboarding/communications/list` | `hr.onboarding.view` | requirePermission | `z.object({ caseId: z.string().uuid() })` | `netlify/functions/routes/hrOnboarding.ts:459` | - | hrOnboarding |
 | `/api/hr/onboarding/communications/preview` | `hr.onboarding.case.manage` | requirePermission | `z.object({ caseId: z.string().uuid(), communicationType: CommType, subject: nstr, body: nstr, recipientUserId: nstr })` | `netlify/functions/routes/hrOnboarding.ts:465` | - | hrOnboarding |
 | `/api/hr/onboarding/communications/resend` | `hr.onboarding.case.manage` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/hrOnboarding.ts:477` | - | hrOnboarding |
 | `/api/hr/onboarding/communications/send` | `hr.onboarding.case.manage` | requirePermission | `z.object({ caseId: z.string().uuid(), communicationType: CommType, subject: nstr, body: nstr, recipientUserId: nstr, channel: z.enum(['email', 'in_app', 'sms', 'manual']).optional() })` | `netlify/functions/routes/hrOnboarding.ts:471` | - | hrOnboarding |
 | `/api/markAllNotificationsRead` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:99` | res @ src/api/notifications.ts:95 | - |
 | `/api/markNotificationRead` | `-` | requireUser | `MarkReadSchema` | `netlify/functions/routes/notify.ts:82` | res @ src/api/notifications.ts:87 | - |
-| `/api/replyTicket` | `-` | requireUser, userCan | `ReplyTicketSchema` | `netlify/functions/routes/tickets.ts:366` | - | serviceRequests |
-| `/api/requestAccountAssistance` | `employees.access.reset_password` | requirePermission | `AccountAccessActionSchema` | `netlify/functions/routes/tickets.ts:867` | - | serviceRequests |
-| `/api/requireMfa` | `employees.access.require_mfa` | requirePermission | `AccountAccessActionSchema` | `netlify/functions/routes/tickets.ts:1327` | - | - |
-| `/api/resendActivation` | `employees.access.resend_activation` | requirePermission | `AccountAccessActionSchema` | `netlify/functions/routes/tickets.ts:1005` | - | serviceRequests |
-| `/api/restoreAccount` | `employees.access.restore` | requirePermission | `AccountAccessActionSchema` | `netlify/functions/routes/tickets.ts:1137` | - | - |
-| `/api/revokeUserDevices` | `employees.access.revoke_devices` | requirePermission | `AccountAccessActionSchema` | `netlify/functions/routes/tickets.ts:1272` | - | - |
-| `/api/revokeUserSessions` | `employees.access.revoke_sessions` | requirePermission | `AccountAccessActionSchema` | `netlify/functions/routes/tickets.ts:1216` | - | - |
+| `/api/replyTicket` | `-` | requireUser, userCan | `ReplyTicketSchema` | `netlify/functions/routes/tickets.ts:367` | - | serviceRequests |
+| `/api/requestAccountAssistance` | `employees.access.reset_password` | requirePermission | `AccountAccessActionSchema` | `netlify/functions/routes/tickets.ts:882` | - | serviceRequests |
+| `/api/requireMfa` | `employees.access.require_mfa` | requirePermission | `AccountAccessActionSchema` | `netlify/functions/routes/tickets.ts:1342` | - | - |
+| `/api/resendActivation` | `employees.access.resend_activation` | requirePermission | `AccountAccessActionSchema` | `netlify/functions/routes/tickets.ts:1020` | - | serviceRequests |
+| `/api/restoreAccount` | `employees.access.restore` | requirePermission | `AccountAccessActionSchema` | `netlify/functions/routes/tickets.ts:1152` | - | - |
+| `/api/revokeUserDevices` | `employees.access.revoke_devices` | requirePermission | `AccountAccessActionSchema` | `netlify/functions/routes/tickets.ts:1287` | - | - |
+| `/api/revokeUserSessions` | `employees.access.revoke_sessions` | requirePermission | `AccountAccessActionSchema` | `netlify/functions/routes/tickets.ts:1231` | - | - |
 | `/api/sendNotification` | `-` | requireRole | `SendNotifSchema` | `netlify/functions/routes/notify.ts:195` | res @ src/api/notifications.ts:121 | - |
-| `/api/suspendAccount` | `employees.access.suspend` | requirePermission | `AccountAccessActionSchema` | `netlify/functions/routes/tickets.ts:1052` | - | serviceRequests |
-| `/api/updateAccountSupportConfig` | `tickets.manage` | requirePermission | `UpdateAccountSupportConfigSchema` | `netlify/functions/routes/tickets.ts:1421` | - | serviceRequests |
-| `/api/updateAccountSupportRequest` | `tickets.manage` | requirePermission | `UpdateAccountSupportRequestSchema` | `netlify/functions/routes/tickets.ts:792` | - | serviceRequests |
-| `/api/updateTicketStatus` | `tickets.manage` | requirePermission | `UpdateTicketSchema` | `netlify/functions/routes/tickets.ts:422` | - | serviceRequests |
+| `/api/suspendAccount` | `employees.access.suspend` | requirePermission | `AccountAccessActionSchema` | `netlify/functions/routes/tickets.ts:1067` | - | serviceRequests |
+| `/api/updateAccountSupportConfig` | `tickets.manage` | requirePermission | `UpdateAccountSupportConfigSchema` | `netlify/functions/routes/tickets.ts:1436` | - | serviceRequests |
+| `/api/updateAccountSupportRequest` | `tickets.manage` | requirePermission | `UpdateAccountSupportRequestSchema` | `netlify/functions/routes/tickets.ts:807` | - | serviceRequests |
+| `/api/updateTicketStatus` | `tickets.manage` | requirePermission | `UpdateTicketSchema` | `netlify/functions/routes/tickets.ts:423` | - | serviceRequests |
 | `UNMOUNTED:/getNotifications` | `-` | requireUser | `-` | `netlify/functions/routes/notifications.ts:22` | - | - |
 | `UNMOUNTED:/markNotificationsRead` | `-` | requireUser | `-` | `netlify/functions/routes/notifications.ts:139` | - | - |
 
@@ -480,7 +480,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/communications.ts` | 1377 |
 | backend-route | `netlify/functions/routes/communicationsCompliance.ts` | 510 |
 | backend-route | `netlify/functions/routes/notifications.ts` | 146 |
-| backend-route | `netlify/functions/routes/tickets.ts` | 1489 |
+| backend-route | `netlify/functions/routes/tickets.ts` | 1504 |
 | e2e-suite | `scripts/e2e/suites/communications.mjs` | 1032 |
 | e2e-suite | `scripts/e2e/suites/communicationsBadges.mjs` | 86 |
 | e2e-suite | `scripts/e2e/suites/communicationsCompliance.mjs` | 1221 |

@@ -1,470 +1,1620 @@
-import { type ComponentChildren, type VNode } from 'preact';
-import { useMemo, useState } from 'preact/hooks';
-import { EmptyState, LucideIcon, PageHeader, Pill, SkeletonText, type LucideName } from '@ui';
-import {
-  useHrAudit, useHrDocuments, useHrEmployee, useHrTrainingSummary,
-  useHrWorkflowSummary, type HrDocument, type HrEmployeeAssignment,
-} from '@api/hr/employees';
-import { useAdminUserSecurityStatus } from '@api/security';
-import { useBankAccounts } from '@api/finance/bankAccounts';
-import { useEmployerProfile } from '@api/finance/statutoryForms';
-import { useOffboardingCases, useOffboardingCase } from '@api/hr/offboarding';
-import { can } from '@lib/permissions';
-import { showSection } from '@components/nav/navCore';
-import { humanize, statusTone } from './shared';
-import type { EmployeeMasterAccess } from './employeeMasterAccess';
-import './EmployeeProfilePage.css';
+/**
+ * src/components/sections/HR/EmployeeProfilePage.tsx
+ *
+ * HR ▸ Employee Master — the FULL employee record, rebuilt to emit the DOM of the
+ * LOCKED reference `docs/mockups/employee-profile-full-page.html`.
+ *
+ * This is a REPLACEMENT, not an adaptation. The superseded page composed the @ui
+ * primitives (PageHeader / Pill / LucideIcon / EmptyState) into a structure the
+ * approved reference does not have, and derived readiness, attention and document
+ * health in the browser from whatever queries happened to be loaded. Both are
+ * gone: every class name below is the reference's own, scoped under `.epf-root`
+ * by the generated stylesheet, and every number comes from the authorised
+ * contract that computes it.
+ *
+ * STYLING — two stylesheets, one job each:
+ *   EmployeeProfilePage.mockup.css  generated verbatim from the locked reference;
+ *                                   owns every content style. Never hand-edited.
+ *   EmployeeProfilePage.chrome.css  what a static page cannot carry: the root
+ *                                   type scale the dropped `body` rule held, the
+ *                                   dialog centring layer, the loading/empty/
+ *                                   error states, and the DERIVED dark palette.
+ *
+ * DARK MODE is derived from the approved drawer treatment (the full-page
+ * reference carries none) and changes tokens only — never layout.
+ *
+ * DATA — the shell opens the page; every large dataset is tab-scoped and loads
+ * only when its tab is selected.
+ */
 
-type ProfileTab = 'Overview' | 'Employment' | 'Documents' | 'Readiness' | 'Access' | 'Activity & Audit' | 'Offboarding';
+import { type ComponentChildren, type VNode } from 'preact';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import {
+  useEmployeeProfileShell, useEmployeeAttention, tabIndicatorFor,
+  type EmployeeAttentionItem, type ProfileTabKey,
+} from '@api/hr/employeeProfile';
+import {
+  useEmployeeAccessAssignments, useEmployeeDocumentHealth, useEmploymentDetail,
+  useReadinessMatrix, type ReadinessControlMatrixEntry,
+} from '@api/hr/employeeReadiness';
+import { useEmployeeAccountSupportRequests } from '@api/hr/employeeAccountSupport';
+import { useHrAudit, useHrEmployee, type HrAuditEntry } from '@api/hr/employees';
+import { useAdminUserSecurityStatus } from '@api/security';
+import { useOffboardingCase, useOffboardingCases } from '@api/hr/offboarding';
+import { showSection } from '@components/nav/navCore';
+import {
+  DASH, FULL_PAGE_TABS, TAB_LABEL, formatArrangementAndFte, formatDate, formatDateTime,
+  formatNoticePeriod, formatTenure, formatWeeklyHours, identitySubtitle, probationState,
+  readinessExplanation, readinessHeadline, readinessLabel, attentionSubtitle,
+  severityToneClass, tabAriaLabel, titleCase, visibleTabs,
+} from './employeeProfileModel';
+import {
+  ACTIVITY_AREA_LABEL, ACTIVITY_RANGES, DOCUMENT_STATE_BADGE, DOCUMENT_STATUS_FILTERS,
+  EMPTY_ACTIVITY_FILTERS, EMPTY_DOCUMENT_FILTERS, activityArea, activityTitle, auditActors,
+  changesThisMonth, coverageSentence, documentCategories, documentHealthBand,
+  documentHealthScore, documentRowAction, documentRows, filterAuditRows, filterDocumentRows,
+  healthBarTracks,
+  hasActivityFilters, hasDocumentFilters, offboardingPhase, offboardingTaskBadge,
+  readinessBlockers, readinessMatrixBadge, readinessRailLabel, readinessRailState,
+  readinessWorkStateBadge, supportStatusBadge, taskCompletion,
+  type ActivityArea, type ActivityFilters, type ActivityRange,
+  type DocumentFilters, type DocumentStatusFilter,
+} from './profile/employeeProfilePageModel';
+import { PageIcon, ProfilePageIconSprite, type ProfilePageIconId } from './profile/ProfilePageIconSprite';
+import {
+  AccountAssistanceDialog, AccountRequestHistoryDialog, ActivityChangeDialog, AddDocumentDialog,
+  EditEmployeeDialog, ExportAuditDialog, ExportIndexDialog, ReadinessReviewDialog,
+  RequestChangeDialog, StartOffboardingDialog,
+} from './profile/EmployeeProfileDialogs';
+import type { EmployeeMasterAccess } from './employeeMasterAccess';
+import './EmployeeProfilePage.mockup.css';
+import './EmployeeProfilePage.chrome.css';
 
 export interface EmployeeProfilePageProps {
   employeeId: string;
   access: EmployeeMasterAccess;
   onBack: () => void;
-  onAction: (label: string) => void;
 }
 
-const DASH = '—';
+/** Which dialog is open. The page owns all ten; none is routed elsewhere. */
+type OpenDialog =
+  | { kind: 'edit' }
+  | { kind: 'request-change' }
+  | { kind: 'add-document' }
+  | { kind: 'export-index' }
+  | { kind: 'export-audit' }
+  | { kind: 'account-assistance' }
+  | { kind: 'account-history' }
+  | { kind: 'start-offboarding' }
+  | { kind: 'readiness'; entry: ReadinessControlMatrixEntry }
+  | { kind: 'activity'; entry: HrAuditEntry };
 
-function fmtDate(value: string | null | undefined): string {
-  if (!value) return DASH;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString('en-TT', { day: '2-digit', month: 'short', year: 'numeric' });
+/** Attention domain → the reference's icon for that row. */
+const DOMAIN_ICON: Record<EmployeeAttentionItem['domain'], ProfilePageIconId> = {
+  employment: 'briefcase', statutory: 'shield', payroll: 'key', documents: 'file',
+  training: 'calendar', access: 'lock', onboarding: 'user', offboarding: 'exit',
+};
+
+/** Readiness domain → the rail and matrix icon. */
+const CONTROL_ICON: Record<string, ProfilePageIconId> = {
+  assignment: 'briefcase', payroll: 'key', training: 'calendar',
+  documents: 'file-check', statutory: 'shield', access: 'lock',
+};
+
+/** Activity area → the Recent Activity timeline icon and its tone class. */
+const ACTIVITY_VISUAL: Record<ActivityArea, { icon: ProfilePageIconId; tone: string }> = {
+  readiness: { icon: 'check', tone: 'green' },
+  documents: { icon: 'file', tone: 'blue' },
+  account:   { icon: 'lock', tone: '' },
+  employment: { icon: 'briefcase', tone: 'purple' },
+};
+
+/** A `<dl class="definition-list">` row pair. */
+function Row({ label, value }: { label: string; value: ComponentChildren }): VNode {
+  return <><dt>{label}</dt><dd>{value ?? DASH}</dd></>;
 }
 
-function fmtDateTime(value: string | null | undefined): string {
-  if (!value) return DASH;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString('en-TT', {
-    day: '2-digit', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit',
-  });
+/** The reference's card header, with an optional tab link on the right. */
+function CardHead({ icon, title, action }: {
+  icon: ProfilePageIconId; title: string; action?: ComponentChildren;
+}): VNode {
+  return <div class="card-head"><PageIcon id={icon} />{title}{action}</div>;
 }
 
-function tenure(startDate: string | null): string {
-  if (!startDate) return 'Not On File';
-  const start = new Date(startDate);
-  const now = new Date();
-  if (Number.isNaN(start.getTime()) || start > now) return 'Not On File';
-  let months = (now.getFullYear() - start.getFullYear()) * 12 + now.getMonth() - start.getMonth();
-  if (now.getDate() < start.getDate()) months -= 1;
-  const years = Math.floor(months / 12);
-  const rest = months % 12;
-  return [
-    years ? `${years} ${years === 1 ? 'Year' : 'Years'}` : '',
-    rest ? `${rest} ${rest === 1 ? 'Month' : 'Months'}` : '',
-  ].filter(Boolean).join(' ') || 'Less Than One Month';
+/** The reference's `.link` control — a text button that opens a tab or dialog. */
+function LinkButton({ label, onClick, hidden }: { label: string; onClick: () => void; hidden?: boolean }): VNode {
+  return (
+    <button class={`link${hidden ? ' is-context-hidden' : ''}`} type="button" onClick={onClick}>
+      {label}<PageIcon id="chevron" />
+    </button>
+  );
 }
 
-function Card({ title, icon, action, wide, children }: {
-  title: string; icon: LucideName; action?: ComponentChildren; wide?: boolean; children: ComponentChildren;
+/** Panel heading with its optional right-hand action cluster. */
+function SectionHead({ title, text, actions }: {
+  title: string; text: string; actions?: ComponentChildren;
 }): VNode {
   return (
-    <section class={`epf-card${wide ? ' is-wide' : ''}`}>
-      <header class="epf-card-head">
-        <span class="epf-card-icon"><LucideIcon name={icon} size={18} /></span>
-        <h3>{title}</h3>{action && <div class="epf-card-action">{action}</div>}
-      </header>
-      {children}
-    </section>
+    <div class="section-head">
+      <div><h2>{title}</h2><p>{text}</p></div>
+      {actions && <div class="section-actions">{actions}</div>}
+    </div>
   );
 }
 
-function TextAction({ children, onClick }: { children: ComponentChildren; onClick: () => void }): VNode {
-  return <button type="button" class="epf-text-action" onClick={onClick}>{children}<LucideIcon name="ChevronRight" size={15} /></button>;
-}
-
-function DetailList({ items }: { items: { icon?: LucideName; label: string; value: ComponentChildren }[] }): VNode {
+/** The reference's half-circle readiness gauge. */
+function Gauge({ percent, label }: { percent: number; label: string }): VNode {
+  const safe = Math.max(0, Math.min(100, percent));
   return (
-    <dl class="epf-detail-list">
-      {items.map(item => <div>
-        <dt>{item.icon && <LucideIcon name={item.icon} size={15} />}{item.label}</dt>
-        <dd>{item.value ?? DASH}</dd>
-      </div>)}
-    </dl>
-  );
-}
-
-function Gauge({ value, label = 'Ready' }: { value: number; label?: string }): VNode {
-  const safe = Math.max(0, Math.min(100, value));
-  return (
-    <svg class="epf-gauge" viewBox="0 0 180 112" role="img" aria-label={`${safe} percent ${label.toLowerCase()}`}>
-      <path class="epf-gauge-track" pathLength="100" d="M20 92 A70 70 0 0 1 160 92" />
-      <path class="epf-gauge-value" pathLength="100" style={{ strokeDasharray: `${safe} 100` }} d="M20 92 A70 70 0 0 1 160 92" />
-      <text class="epf-gauge-score" x="90" y="75">{safe}%</text>
-      <text class="epf-gauge-label" x="90" y="99">{label}</text>
+    <svg class="gauge" viewBox="0 0 140 92" role="img" aria-label={`${safe} percent ready`}>
+      <path class="gauge-track" pathLength="100" d="M15 76 A55 55 0 0 1 125 76" />
+      <path
+        class="gauge-value" pathLength="100" d="M15 76 A55 55 0 0 1 125 76"
+        style={{ strokeDasharray: `${safe} 100` }}
+      />
+      <text class="gauge-score" x="70" y="67">{safe}%</text>
+      <text class="gauge-label" x="70" y="84">{label}</text>
     </svg>
   );
 }
 
-function SectionHead({ title, text, actions }: { title: string; text: string; actions?: ComponentChildren }): VNode {
-  return <header class="epf-section-head"><div><h2>{title}</h2><p>{text}</p></div>{actions && <div class="epf-section-actions">{actions}</div>}</header>;
+/** Two-letter avatar for an actor cell. */
+function initialsOf(name: string): string {
+  return name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part.charAt(0).toUpperCase()).join('') || '?';
 }
 
-function FinanceSnapshot({ employeeId, tab }: { employeeId: string; tab: 'overview' | 'employment' }): VNode {
-  const employerQ = useEmployerProfile();
-  const bankQ = useBankAccounts({ employeeId });
-  const primary = bankQ.data?.find(account => account.isPrimary && account.isActive);
-  if (tab === 'overview') {
-    return <>{employerQ.isLoading ? 'Loading…' : employerQ.isError ? 'Unavailable' : (employerQ.data?.legalName ?? 'Not Configured')}</>;
+export function EmployeeProfilePage({ employeeId, access, onBack }: EmployeeProfilePageProps): VNode {
+  const [tab, setTab] = useState<ProfileTabKey>('overview');
+  const [dialog, setDialog] = useState<OpenDialog | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showAllAttention, setShowAllAttention] = useState(false);
+  const [documentFilters, setDocumentFilters] = useState<DocumentFilters>(EMPTY_DOCUMENT_FILTERS);
+  const [activityFilters, setActivityFilters] = useState<ActivityFilters>(EMPTY_ACTIVITY_FILTERS);
+  const tabsRef = useRef<HTMLElement>(null);
+
+  const shellQuery = useEmployeeProfileShell(employeeId);
+  const shell = shellQuery.data;
+  const detailQuery = useHrEmployee(employeeId);
+  const detail = detailQuery.data;
+
+  // Reset per-employee state on switch: a newly opened record must never inherit
+  // the previous one's tab, filters or open dialog.
+  useEffect(() => {
+    setTab('overview'); setDialog(null); setMenuOpen(false); setShowAllAttention(false);
+    setDocumentFilters(EMPTY_DOCUMENT_FILTERS); setActivityFilters(EMPTY_ACTIVITY_FILTERS);
+  }, [employeeId]);
+
+  const tabs = useMemo(() => visibleTabs(shell, FULL_PAGE_TABS), [shell]);
+  useEffect(() => { if (!tabs.includes(tab)) setTab('overview'); }, [tabs, tab]);
+
+  // Tab-scoped datasets — each stays off until its tab is opened.
+  const attentionQuery = useEmployeeAttention(employeeId, showAllAttention);
+  const documentHealth = useEmployeeDocumentHealth(
+    employeeId, access.viewDocuments && (tab === 'documents' || tab === 'readiness'));
+  const employment = useEmploymentDetail(employeeId, tab === 'employment');
+  const readiness = useReadinessMatrix(employeeId, access.viewReadiness && tab === 'readiness');
+  const assignments = useEmployeeAccessAssignments(employeeId, false, access.viewAccessAssignments && tab === 'access');
+  const supportRequests = useEmployeeAccountSupportRequests(employeeId, tab === 'access');
+  const audit = useHrAudit(access.viewAudit && (tab === 'activity') ? employeeId : null);
+  const security = useAdminUserSecurityStatus(
+    employeeId, access.viewAccountSecurity && (tab === 'overview' || tab === 'access'));
+  const offboardingCases = useOffboardingCases(undefined, tab === 'offboarding' ? employeeId : undefined);
+
+  const phase = offboardingPhase(tab === 'offboarding' ? offboardingCases.data : []);
+  const offboardingDetail = useOffboardingCase(tab === 'offboarding' ? phase.active?.id ?? null : null);
+
+  /** Move to a tab and put the tab strip back in view, as the reference does. */
+  function goToTab(next: ProfileTabKey): void {
+    setTab(next);
+    tabsRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
-  return (
-    <div class="epf-grid-2">
-      <Card title="Legal Employer" icon="Building2">
-        <DetailList items={[
-          { label: 'Legal Name', value: employerQ.isError ? 'Unavailable' : (employerQ.data?.legalName ?? 'Not Configured') },
-          { label: 'Trading Name', value: employerQ.data?.tradingName ?? DASH },
-          { label: 'Jurisdiction', value: employerQ.data?.country ?? 'Trinidad And Tobago' },
-        ]} />
-      </Card>
-      <Card title="Bank & Pay Administration" icon="Landmark">
-        <DetailList items={[
-          { label: 'Primary Bank', value: bankQ.isError ? 'Unavailable' : (primary?.bankName ?? 'No Primary Account') },
-          { label: 'Account', value: primary?.accountNumberMasked ?? DASH },
-          { label: 'Account Type', value: primary ? humanize(primary.accountType) : DASH },
-          { label: 'Bank Record', value: primary ? <Pill tone="green">Active</Pill> : <Pill tone="amber">Required</Pill> },
-        ]} />
-      </Card>
-    </div>
-  );
-}
 
-function OffboardingPanel({ employeeId, canStart, onAction }: { employeeId: string; canStart: boolean; onAction: (label: string) => void }): VNode {
-  const casesQ = useOffboardingCases(undefined, employeeId);
-  const current = casesQ.data?.find(item => !['completed', 'cancelled'].includes(item.status)) ?? null;
-  const detailQ = useOffboardingCase(current?.id ?? null);
-  if (casesQ.isLoading) return <SkeletonText lines={8} />;
-  if (casesQ.isError) return <EmptyState icon="fa-lock" title="Offboarding unavailable" text="The authorised offboarding record could not be loaded." />;
-  if (!current) {
+  /** Roving-tabindex keyboard navigation across the tab strip. */
+  function onTabKeyDown(event: KeyboardEvent, index: number): void {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const last = tabs.length - 1;
+    const next = event.key === 'ArrowLeft' ? (index - 1 + tabs.length) % tabs.length
+      : event.key === 'ArrowRight' ? (index + 1) % tabs.length
+        : event.key === 'Home' ? 0 : last;
+    const target = tabs[next];
+    if (!target) return;
+    setTab(target);
+    (tabsRef.current?.querySelectorAll<HTMLButtonElement>('.record-tab')[next])?.focus();
+  }
+
+  if (shellQuery.isError) {
     return (
-      <div class="epf-offboarding-empty">
-        <span><LucideIcon name="LogOut" size={28} /></span>
-        <h3>No Active Offboarding Case</h3>
-        <p>Starting offboarding creates a governed case, assigns accountable work, and routes cross-team handoffs.</p>
-        {canStart && <button type="button" class="ui-btn-primary" onClick={() => onAction('Start Offboarding')}><LucideIcon name="LogOut" size={16} /> Start Offboarding</button>}
-        <div class="epf-flow">
-          {[
-            ['Create Case', 'Capture reason, last working day and accountable owner.'],
-            ['Assign Work', 'Schedule HR, payroll and department tasks.'],
-            ['Secure Access', 'Route account removal to the authorised support owner.'],
-            ['Close Record', 'Verify evidence and complete the audit trail.'],
-          ].map(([title, text], index) => <div><span>Step {index + 1}</span><strong>{title}</strong><small>{text}</small></div>)}
+      <div class="epf-root">
+        <div class="workspace">
+          <div class="epf-error" role="alert">
+            {shellQuery.error instanceof Error ? shellQuery.error.message : 'This employee record could not be loaded.'}
+            <button class="button" type="button" onClick={onBack}>Back To Employee Master</button>
+          </div>
         </div>
       </div>
     );
   }
-  const detail = detailQ.data;
-  return (
-    <div class="epf-grid-2">
-      <Card title="Active Case" icon="LogOut">
-        <DetailList items={[
-          { label: 'Case Number', value: current.caseNo },
-          { label: 'Reason', value: humanize(current.reason) },
-          { label: 'Status', value: <Pill tone={current.status === 'blocked' ? 'red' : 'amber'}>{humanize(current.status)}</Pill> },
-          { label: 'Last Working Day', value: fmtDate(current.lastWorkingDay) },
-          { label: 'Owner', value: current.ownerName ?? 'Not Assigned' },
-        ]} />
-      </Card>
-      <Card title="Clearance Progress" icon="ListChecks">
-        <div class="epf-stat-row">
-          <div><strong>{current.taskCount - current.openTaskCount}</strong><span>Completed Tasks</span></div>
-          <div><strong>{current.openTaskCount}</strong><span>Open Tasks</span></div>
-          <div><strong>{current.blockerCount}</strong><span>Blockers</span></div>
+
+  if (!shell) {
+    return (
+      <div class="epf-root">
+        <ProfilePageIconSprite />
+        <div class="workspace">
+          <div class="epf-loading" role="status">Loading the employee record…</div>
         </div>
-        <button type="button" class="ui-btn-secondary" onClick={() => showSection('s-hr-offboarding')}>Open Offboarding Workspace</button>
-      </Card>
-      <Card title="Tasks & Handoffs" icon="Workflow" wide>
-        <div class="epf-table-wrap"><table class="epf-table"><thead><tr><th>Item</th><th>Owner / Module</th><th>Due</th><th>Status</th></tr></thead><tbody>
-          {(detail?.tasks ?? []).map(task => <tr><td><strong>{task.taskTitle}</strong></td><td>{task.assignedToName ?? humanize(task.ownerRole ?? task.moduleKey ?? 'Unassigned')}</td><td>{fmtDate(task.dueAt)}</td><td><Pill tone={task.status === 'completed' ? 'green' : task.status === 'blocked' ? 'red' : 'amber'}>{humanize(task.status)}</Pill></td></tr>)}
-          {(detail?.handoffs ?? []).map(handoff => <tr><td><strong>{humanize(handoff.handoffType ?? handoff.handoffKey ?? 'Handoff')}</strong></td><td>{humanize(handoff.targetModule)}</td><td>{fmtDate(handoff.createdAt)}</td><td><Pill tone={handoff.status === 'delivered' ? 'green' : 'amber'}>{humanize(handoff.status)}</Pill></td></tr>)}
-        </tbody></table></div>
-      </Card>
-    </div>
-  );
-}
-
-export function EmployeeProfilePage({ employeeId, access, onBack, onAction }: EmployeeProfilePageProps): VNode {
-  const [tab, setTab] = useState<ProfileTab>('Overview');
-  const [referenceTime] = useState(() => Date.now());
-  const detailQ = useHrEmployee(employeeId);
-  const docsQ = useHrDocuments(access.viewDocuments && (tab === 'Overview' || tab === 'Documents' || tab === 'Readiness') ? employeeId : null);
-  const trainQ = useHrTrainingSummary(access.viewTraining && (tab === 'Overview' || tab === 'Readiness') ? employeeId : null);
-  const auditQ = useHrAudit(access.viewAudit && (tab === 'Overview' || tab === 'Activity & Audit') ? employeeId : null);
-  const workflowQ = useHrWorkflowSummary(tab === 'Overview' || tab === 'Readiness' || tab === 'Activity & Audit' ? employeeId : null);
-  const mayViewSecurity = can('auth.security.view');
-  const securityQ = useAdminUserSecurityStatus(employeeId, mayViewSecurity && (tab === 'Overview' || tab === 'Access'));
-
-  const tabs = useMemo(() => ([
-    'Overview', 'Employment',
-    ...(access.viewDocuments ? ['Documents'] : []),
-    ...((access.viewTraining || access.viewStatutory) ? ['Readiness'] : []),
-    'Access',
-    ...(access.viewAudit ? ['Activity & Audit'] : []),
-    ...(access.startOffboarding || can('hr.offboarding.view') ? ['Offboarding'] : []),
-  ] as ProfileTab[]), [access]);
-
-  if (detailQ.isError) {
-    return <div class="employee-profile-page"><EmptyState icon="fa-user-slash" title="Employee Record Unavailable" text="Check your access or return to the register and try again." /></div>;
+      </div>
+    );
   }
-  if (!detailQ.ready || !detailQ.data) return <div class="employee-profile-page"><SkeletonText lines={14} /></div>;
 
-  const d = detailQ.data;
-  const employee = d.employee;
-  const readiness = employee.readiness;
-  const security = securityQ.data;
-  const mfaEnabled = !!security && (security.totpEnabled || security.passkeyCount > 0);
-  const documents = docsQ.data ?? [];
-  const expiring = documents.filter(doc => doc.expiry_date && new Date(doc.expiry_date).getTime() <= referenceTime + 30 * 86_400_000);
-  const verifiedDocs = documents.filter(doc => doc.status === 'verified').length;
-  const currentAssignment = d.currentAssignment;
-  const payrollBlockerDetail = d.payrollReadiness?.blockers.map(humanize).join(' · ');
-  const attention: { title: string; detail: string; icon: LucideName; target: ProfileTab; tone: 'danger' | 'warning' }[] = [
-    ...(readiness?.blockers.includes('assignment') ? [{ title: 'Assignment Details Need Review', detail: 'Department, work location or supervisor is incomplete.', icon: 'BriefcaseBusiness' as LucideName, target: 'Employment' as ProfileTab, tone: 'danger' as const }] : []),
-    ...(readiness?.blockers.includes('payroll') ? [{ title: 'Payroll Readiness Is Blocked', detail: payrollBlockerDetail?.length ? payrollBlockerDetail : 'Review the statutory and payroll setup.', icon: 'BadgeDollarSign' as LucideName, target: 'Readiness' as ProfileTab, tone: 'danger' as const }] : []),
-    ...(readiness?.blockers.includes('training') ? [{ title: 'Training Evidence Needs Review', detail: `${trainQ.data?.expired ?? 0} expired · ${trainQ.data?.dueSoon ?? 0} due soon`, icon: 'GraduationCap' as LucideName, target: 'Readiness' as ProfileTab, tone: 'warning' as const }] : []),
-    ...(expiring.length ? [{ title: 'Employee Document Expiring', detail: `${expiring.length} document${expiring.length === 1 ? '' : 's'} expire within 30 days.`, icon: 'FileWarning' as LucideName, target: 'Documents' as ProfileTab, tone: 'warning' as const }] : []),
-    ...(mayViewSecurity && securityQ.isSuccess && !mfaEnabled ? [{ title: 'MFA Is Not Enrolled', detail: 'Route account assistance to the authorised support owner.', icon: 'ShieldAlert' as LucideName, target: 'Access' as ProfileTab, tone: 'danger' as const }] : []),
-  ].slice(0, 3);
-
-  const readinessRows = [
-    { name: 'Assignment', value: readiness?.assignmentComplete ? 100 : 0, state: readiness?.assignmentComplete ? 'Complete' : 'Blocked', owner: 'HR Operations' },
-    { name: 'Payroll', value: readiness?.payrollStatus === 'ready' ? 100 : 0, state: humanize(readiness?.payrollStatus ?? 'restricted'), owner: 'Payroll Team' },
-    { name: 'Training', value: readiness?.trainingStatus === 'current' ? 100 : 0, state: humanize(readiness?.trainingStatus ?? 'restricted'), owner: 'Learning Team' },
-    { name: 'Documents', value: documents.length ? Math.round((verifiedDocs / documents.length) * 100) : 0, state: documents.length ? `${verifiedDocs} Of ${documents.length} Verified` : 'No Documents', owner: 'HR Operations' },
-  ];
+  const identity = shell.identity;
+  const facts = shell.employment;
+  const attentionItems = showAllAttention
+    ? (attentionQuery.data?.items ?? shell.attentionPreview)
+    : shell.attentionPreview;
 
   return (
-    <div class="employee-profile-page">
-      <PageHeader icon={<LucideIcon name="ContactRound" size={21} />} module="Human Resources" title="Employee Record"
-        sub="Complete employee history, authorised administration, and readiness controls."
-        actions={<div class="epf-page-actions">
-          <button class="ui-btn-secondary" type="button" onClick={onBack}><LucideIcon name="ArrowLeft" size={16} /> Back To Register</button>
-          {access.editEmployee && <button class="ui-btn-primary" type="button" onClick={() => onAction('Edit Contact')}><LucideIcon name="Pencil" size={16} /> Edit Employee</button>}
-        </div>} />
+    <div class="epf-root">
+      <ProfilePageIconSprite />
 
-      <section class="epf-hero" aria-label="Employee Summary">
-        <div class="epf-hero-identity">
-          <div class="epf-avatar-wrap">
-            {employee.profile_image_url ? <img src={employee.profile_image_url} alt="" /> : <span>{(employee.first_name?.[0] ?? employee.username[0] ?? 'E').toUpperCase()}</span>}
-            <i class={employee.status === 'active' ? 'is-active' : ''} />
-          </div>
+      <div class="workspace">
+        <div class="breadcrumbs">
+          <button class="epf-crumb" type="button" onClick={onBack}>Employee Master</button>
+          <PageIcon id="chevron" />
+          <span>{identity.displayName}</span>
+        </div>
+
+        <div class="page-head">
           <div>
-            <div class="epf-name-line"><h2>{employee.full_name ?? employee.username}</h2><Pill tone={statusTone(employee.status)}>{humanize(employee.status)}</Pill></div>
-            <p>{employee.employee_number ?? 'Employee Number Not Assigned'}</p>
-            <strong>{employee.position ?? 'Position Not Assigned'}</strong>
-            <span>{employee.departmentName ?? 'Department Not Assigned'} · {employee.siteName ?? 'Location Not Assigned'}</span>
+            <h1>Employee Record</h1>
+            <p>Complete employee history, authorised administration, and readiness controls.</p>
+          </div>
+          <div class="page-actions">
+            {/* The reference shows Request Change only to an actor who cannot edit
+                directly; an actor who can edit gets the editor instead. */}
+            {!access.editEmployee && access.requestChange && (
+              <button class="button" type="button" onClick={() => setDialog({ kind: 'request-change' })}>
+                <PageIcon id="message" />Request Change
+              </button>
+            )}
+            {access.editEmployee && (
+              <button class="button primary" type="button" onClick={() => setDialog({ kind: 'edit' })}>
+                <PageIcon id="edit" />Edit Employee
+              </button>
+            )}
+            <div class="epf-menu-wrap">
+              <button
+                class="button" type="button" aria-label="More employee actions"
+                aria-haspopup="menu" aria-expanded={menuOpen}
+                onClick={() => setMenuOpen(open => !open)}
+              ><PageIcon id="more" /></button>
+              {menuOpen && (
+                <div class="epf-action-menu" role="menu">
+                  {access.editEmployee && access.requestChange && (
+                    <button
+                      type="button" role="menuitem"
+                      onClick={() => { setMenuOpen(false); setDialog({ kind: 'request-change' }); }}
+                    >Request Employee Change</button>
+                  )}
+                  {access.viewAudit && (
+                    <button
+                      type="button" role="menuitem"
+                      onClick={() => { setMenuOpen(false); setDialog({ kind: 'export-audit' }); }}
+                    >Export Audit History</button>
+                  )}
+                  {access.startOffboarding && !phase.active && (
+                    <button
+                      class="danger" type="button" role="menuitem"
+                      onClick={() => { setMenuOpen(false); setDialog({ kind: 'start-offboarding' }); }}
+                    >Start Offboarding</button>
+                  )}
+                  <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onBack(); }}>
+                    Back To Employee Master
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-        <div class="epf-hero-facts">
-          <div><span>Employment</span><strong>{humanize(employee.employment_type ?? employee.workerType)} · {employee.work_schedule ?? 'Not On File'}</strong><small>{d.payGroup?.name ?? 'Pay Group Not Assigned'}</small></div>
-          <div><span>Continuous Service</span><strong>{fmtDate(employee.start_date)}</strong><small>{tenure(employee.start_date)}</small></div>
-          <div><span>Current Appointment</span><strong>{fmtDate(currentAssignment?.effective_from)}</strong><small>{currentAssignment?.positionTitle ?? employee.position ?? 'Not Assigned'}</small></div>
-          <div><span>Supervisor</span><strong>{employee.supervisorName ?? 'Not Assigned'}</strong><small>{employee.departmentName ?? 'Department Not Assigned'}</small></div>
+
+        <section class="employee-hero" aria-label="Employee summary">
+          <div class="hero-profile">
+            <div class="hero-identity">
+              <div class="portrait-shell">
+                {identity.profileImageUrl
+                  ? <img class="portrait" src={identity.profileImageUrl} alt={identity.displayName} />
+                  : <span class="portrait epf-portrait-fallback" aria-hidden="true">{initialsOf(identity.displayName)}</span>}
+              </div>
+              <div>
+                <div class="hero-name-line">
+                  <h2>{identity.displayName}</h2>
+                  <span class="status-pill">{titleCase(identity.employmentStatus)}</span>
+                </div>
+                <div class="employee-id">{identity.employeeNo ?? 'Employee Number Not Assigned'}</div>
+                <div class="hero-details">
+                  <span><PageIcon id="briefcase" />{identity.position ?? 'Position Not Assigned'}</span>
+                  <span><PageIcon id="building" />{identitySubtitle(shell)}</span>
+                </div>
+              </div>
+            </div>
+            <div class="hero-facts">
+              <div class="hero-fact"><PageIcon id="shield" /><span>Employment Basis</span><strong>{titleCase(facts.employmentBasis)}</strong></div>
+              <div class="hero-fact"><PageIcon id="clock" /><span>Work Arrangement</span><strong>{facts.workArrangement ?? DASH}</strong></div>
+              <div class="hero-fact"><PageIcon id="calendar" /><span>Start Date</span><strong>{formatDate(facts.startDate)}</strong></div>
+              <div class="hero-fact"><PageIcon id="clock" /><span>Tenure</span><strong>{formatTenure(facts.tenureMonths)}</strong></div>
+            </div>
+          </div>
+
+          {shell.readiness && (
+            <aside class="hero-readiness" aria-label="Record readiness summary">
+              <div class="hero-readiness-head">
+                <PageIcon id="chart" /><strong>Record Readiness</strong>
+                <LinkButton label="Open Breakdown" hidden={tab === 'readiness'} onClick={() => goToTab('readiness')} />
+              </div>
+              <div class="hero-readiness-body">
+                <Gauge percent={shell.readiness.percent} label={readinessLabel(shell.readiness)} />
+                <div class="hero-readiness-copy">
+                  <strong>{readinessHeadline(shell.readiness)}</strong>
+                  <p>{readinessExplanation(shell.readiness)}</p>
+                </div>
+              </div>
+              <div class="hero-readiness-foot">
+                <span>{shell.readiness.lastReviewedAt
+                  ? `Last reviewed ${formatDate(shell.readiness.lastReviewedAt)}`
+                  : 'Not yet reviewed'}</span>
+              </div>
+            </aside>
+          )}
+        </section>
+
+        <nav class="record-tabs" role="tablist" aria-label="Employee record sections" ref={tabsRef}>
+          {tabs.map((key, index) => {
+            const indicator = tabIndicatorFor(shell.tabIndicators, key);
+            const selected = tab === key;
+            return (
+              <button
+                key={key} id={`tab-${key}`} class={`record-tab${selected ? ' active' : ''}`}
+                data-tab={key} role="tab" aria-selected={selected} aria-controls={`panel-${key}`}
+                aria-label={tabAriaLabel(key, indicator)} tabIndex={selected ? 0 : -1}
+                onClick={() => setTab(key)} onKeyDown={event => onTabKeyDown(event, index)}
+              >
+                {TAB_LABEL[key]}
+                {indicator && (
+                  <span class={`tab-indicator ${severityToneClass(indicator.highestSeverity)}`.trim()} aria-hidden="true">
+                    {indicator.unresolvedCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div class="tab-shell">
+          {/* ── Overview ────────────────────────────────────────────────── */}
+          {tab === 'overview' && (
+            <section class="tab-panel active" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview">
+              <div class="attention-strip">
+                <div class="attention-title">
+                  <span class="attention-heading-icon"><PageIcon id="alert" /></span>
+                  Needs Attention <span class="badge warning">{shell.attentionTotal}</span>
+                </div>
+                {attentionItems.length === 0 && (
+                  <article class="attention-item">
+                    <span class="attention-ico"><PageIcon id="check" /></span>
+                    <div><strong>Nothing Needs Attention</strong><span>Every tracked item for this employee is resolved.</span></div>
+                  </article>
+                )}
+                {attentionItems.map((item, index) => (
+                  <article
+                    key={item.id}
+                    class={`attention-item${item.severity === 'critical' ? ' danger' : ''}`}
+                    role="link" tabIndex={0}
+                    onClick={() => goToTab(item.actionTarget)}
+                    onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') goToTab(item.actionTarget); }}
+                  >
+                    <span class="attention-ico"><PageIcon id={DOMAIN_ICON[item.domain]} /></span>
+                    <div><strong>{item.title}</strong><span>{attentionSubtitle(item)}</span></div>
+                    {index === attentionItems.length - 1
+                      && shell.attentionTotal > attentionItems.length && !showAllAttention
+                      ? (
+                        <button
+                          class="attention-next" type="button"
+                          aria-label={`Show all ${shell.attentionTotal} attention items`}
+                          onClick={event => { event.stopPropagation(); setShowAllAttention(true); }}
+                        ><PageIcon id="chevron" /></button>
+                      )
+                      : <PageIcon id="chevron" />}
+                  </article>
+                ))}
+              </div>
+
+              <div class="grid-3">
+                <section class="card">
+                  <CardHead
+                    icon="briefcase" title="Employment Snapshot"
+                    action={<LinkButton label="Open Employment" onClick={() => goToTab('employment')} />}
+                  />
+                  <dl class="definition-list">
+                    <Row label="Legal Employer" value={facts.legalEmployer ?? DASH} />
+                    <Row label="Employment Basis" value={titleCase(facts.employmentBasis)} />
+                    <Row label="Work Arrangement" value={facts.workArrangement ?? DASH} />
+                    <Row label="Cost Centre" value={facts.costCentre ?? DASH} />
+                    <Row label="Work Location" value={identity.siteName ?? DASH} />
+                    <Row label="Pay Group" value={facts.payGroupName ?? DASH} />
+                  </dl>
+                </section>
+
+                <section class="card">
+                  <CardHead icon="phone" title="Contact" />
+                  {shell.contact ? (
+                    <dl class="definition-list">
+                      <Row label="Work Email" value={shell.contact.workEmail ?? DASH} />
+                      <Row label="Work Phone" value={shell.contact.workPhone ?? DASH} />
+                      <Row label="Mobile" value={shell.contact.mobilePhone ?? DASH} />
+                      <Row label="Emergency Contact" value={shell.contact.emergencyContactName ?? DASH} />
+                      <Row label="Relationship" value={titleCase(shell.contact.emergencyContactRelationship)} />
+                      <Row label="Emergency Phone" value={shell.contact.emergencyContactPhone ?? DASH} />
+                    </dl>
+                  ) : (
+                    <div class="epf-empty">Contact details are not available to your role.</div>
+                  )}
+                </section>
+
+                <section class="card span-2">
+                  <CardHead
+                    icon="clock" title="Recent Employee Activity"
+                    action={access.viewAudit
+                      ? <LinkButton label="View Full History" onClick={() => goToTab('activity')} />
+                      : undefined}
+                  />
+                  {!access.viewAudit ? (
+                    <div class="epf-empty">Employee activity requires the HR audit capability.</div>
+                  ) : shell.recentActivity.length === 0 ? (
+                    <div class="epf-empty">No activity has been recorded for this employee yet.</div>
+                  ) : (
+                    <div class="activity-list">
+                      {shell.recentActivity.map(entry => {
+                        const visual = ACTIVITY_VISUAL[activityArea(entry.area)];
+                        return (
+                          <div class="activity-row" key={entry.id}>
+                            <span class={`activity-icon ${visual.tone}`.trim()}><PageIcon id={visual.icon} /></span>
+                            <div class="activity-copy">
+                              <strong>{activityTitle(entry.action)}</strong>
+                              <span>{titleCase(entry.area)}{entry.actorName ? ` · By ${entry.actorName}` : ''}</span>
+                            </div>
+                            <time class="activity-time">{formatDateTime(entry.occurredAt)}</time>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+
+                {/* Always rendered, even when restricted: it is the grid's last
+                    child, and the locked layout pins that child to column 3. */}
+                <section class="card">
+                  <CardHead
+                    icon="shield" title="Account Health"
+                    action={<LinkButton label="Open Access" onClick={() => goToTab('access')} />}
+                  />
+                  {shell.accountHealth ? (
+                    <dl class="definition-list">
+                      <Row label="Account" value={<span class="badge">{titleCase(shell.accountHealth.accountStatus)}</span>} />
+                      <Row
+                        label="MFA"
+                        value={!access.viewAccountSecurity
+                          ? <span class="badge neutral">Restricted</span>
+                          : security.isPending
+                            ? <span class="badge neutral">Loading</span>
+                            : security.data?.totpEnabled || (security.data?.passkeyCount ?? 0) > 0
+                              ? <span class="badge">Enabled</span>
+                              : <span class="badge warning">Not Enrolled</span>}
+                      />
+                      <Row
+                        label="Last Sign-In"
+                        value={access.viewAccountSecurity ? formatDateTime(security.data?.lastSeenAt) : 'Restricted'}
+                      />
+                      <Row label="Access Profile" value={shell.accountHealth.accessProfileLabel ?? DASH} />
+                      <Row
+                        label="Open Assistance"
+                        value={shell.accountHealth.openSupportRequests > 0
+                          ? <span class="badge warning">{shell.accountHealth.openSupportRequests} In Review</span>
+                          : <span class="badge neutral">None</span>}
+                      />
+                      <Row
+                        label="Sign-In Identity"
+                        value={shell.accountHealth.hasLoginIdentity
+                          ? <span class="badge">Provisioned</span>
+                          : <span class="badge warning">Not Provisioned</span>}
+                      />
+                    </dl>
+                  ) : (
+                    <div class="epf-empty">Account health is not available to your role.</div>
+                  )}
+                </section>
+              </div>
+            </section>
+          )}
+
+          {/* ── Employment ──────────────────────────────────────────────── */}
+          {tab === 'employment' && (
+            <section class="tab-panel active" id="panel-employment" role="tabpanel" aria-labelledby="tab-employment">
+              <SectionHead
+                title="Employment"
+                text="Authoritative assignment, terms, service dates, and complete employment history."
+                actions={access.editEmployee
+                  ? <button class="button primary" type="button" onClick={() => setDialog({ kind: 'edit' })}>
+                    <PageIcon id="edit" />Edit Employment
+                  </button>
+                  : access.requestChange
+                    ? <button class="button" type="button" onClick={() => setDialog({ kind: 'request-change' })}>
+                      <PageIcon id="message" />Request Change
+                    </button>
+                    : undefined}
+              />
+              <div class="stat-grid employment-kpis">
+                <div class="stat">
+                  <span class="kpi-icon"><PageIcon id="shield" /></span>
+                  <div class="kpi-copy">
+                    <div class="kpi-line"><span>Employment Status</span><strong>{titleCase(identity.employmentStatus)}</strong></div>
+                    <small>{titleCase(facts.employmentBasis)}</small>
+                  </div>
+                </div>
+                <div class="stat">
+                  <span class="kpi-icon blue"><PageIcon id="clock" /></span>
+                  <div class="kpi-copy">
+                    <div class="kpi-line"><span>Continuous Service</span><strong>{formatTenure(facts.tenureMonths)}</strong></div>
+                    <small>Started {formatDate(facts.startDate)}</small>
+                  </div>
+                </div>
+                <div class="stat">
+                  <span class="kpi-icon purple"><PageIcon id="calendar" /></span>
+                  <div class="kpi-copy">
+                    <div class="kpi-line"><span>Current Appointment</span><strong>{formatDate(facts.assignmentEffectiveFrom)}</strong></div>
+                    <small>{identity.position ?? 'Not Assigned'}</small>
+                  </div>
+                </div>
+                <div class="stat">
+                  <span class="kpi-icon amber"><PageIcon id="briefcase" /></span>
+                  <div class="kpi-copy">
+                    <div class="kpi-line"><span>Weekly Hours</span><strong>{formatWeeklyHours(facts.weeklyHours)}</strong></div>
+                    <small>{formatArrangementAndFte(facts.workArrangement, facts.fte)}</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid-2" style="margin-top:13px">
+                <section class="card">
+                  <CardHead icon="briefcase" title="Current Assignment" />
+                  <dl class="definition-list">
+                    <Row label="Position" value={identity.position ?? 'Not Assigned'} />
+                    <Row label="Department" value={identity.departmentName ?? 'Not Assigned'} />
+                    <Row label="Supervisor" value={facts.supervisorName ?? 'Not Assigned'} />
+                    <Row label="Work Location" value={identity.siteName ?? 'Not Assigned'} />
+                    <Row label="Cost Centre" value={facts.costCentre ?? 'Not Assigned'} />
+                    <Row label="Effective From" value={formatDate(facts.assignmentEffectiveFrom)} />
+                  </dl>
+                </section>
+
+                <section class="card">
+                  <CardHead icon="shield" title="Employment Terms" />
+                  <dl class="definition-list">
+                    <Row label="Legal Employer" value={facts.legalEmployer ?? DASH} />
+                    <Row label="Contract Type" value={titleCase(facts.employmentBasis)} />
+                    <Row label="Work Type / FTE" value={formatArrangementAndFte(facts.workArrangement, facts.fte)} />
+                    <Row label="Standard Hours" value={formatWeeklyHours(facts.weeklyHours)} />
+                    <Row label="Work Schedule" value={titleCase(facts.workSchedule)} />
+                    <Row label="Notice Period" value={formatNoticePeriod(facts.noticePeriodDays)} />
+                  </dl>
+                </section>
+
+                <section class="card">
+                  <CardHead icon="calendar" title="HR Administration" />
+                  <dl class="definition-list">
+                    <Row label="Pay Group" value={facts.payGroupName ?? 'Not Assigned'} />
+                    <Row label="Pay Frequency" value={titleCase(facts.payFrequency)} />
+                    <Row
+                      label="Probation"
+                      value={(() => {
+                        const state = probationState(facts.probationEndDate);
+                        if (state === 'completed') return <span class="badge">Completed</span>;
+                        if (state === 'in_progress') return <span class="badge warning">In Progress</span>;
+                        return <span class="badge neutral">Not Recorded</span>;
+                      })()}
+                    />
+                    <Row label="Probation Ended" value={formatDate(facts.probationEndDate)} />
+                    <Row label="Classification" value={facts.employeeGrade ?? 'Not Assigned'} />
+                    <Row label="Worker Category" value={facts.workerCategory ?? DASH} />
+                  </dl>
+                </section>
+
+                <section class="card">
+                  <CardHead icon="key" title="Bank &amp; Pay Administration" />
+                  {employment.isPending && <div class="epf-loading">Loading payroll context…</div>}
+                  {employment.data && !employment.data.bank && (
+                    <div class="epf-empty">Payroll context requires the payroll-readiness capability.</div>
+                  )}
+                  {employment.data?.bank && (
+                    <dl class="definition-list">
+                      <Row label="Primary Bank" value={employment.data.bank.bankName ?? DASH} />
+                      {/* Masked only — HR never receives the full account number. */}
+                      <Row label="Account" value={employment.data.bank.accountNumberMasked ?? DASH} />
+                      <Row label="Account Type" value={titleCase(employment.data.bank.accountType)} />
+                      <Row label="Payment Method" value={employment.data.bank.hasPrimaryAccount ? 'Direct Deposit' : DASH} />
+                      <Row
+                        label="Bank Record"
+                        value={employment.data.bank.verificationState === 'verified'
+                          ? <span class="badge">Verified</span>
+                          : employment.data.bank.verificationState === 'missing'
+                            ? <span class="badge danger">Missing</span>
+                            : <span class="badge warning">Reverify</span>}
+                      />
+                      <Row label="Last Verified" value={formatDate(employment.data.bank.lastVerifiedAt)} />
+                    </dl>
+                  )}
+                </section>
+
+                {shell.capabilities.viewStatutory && (
+                  <section class="card span-2">
+                    <CardHead icon="file" title="Trinidad &amp; Tobago Statutory Status" />
+                    <dl class="definition-list statutorystatus">
+                      <Row
+                        label="NIS Registration"
+                        value={detail?.statutory?.nis_status === 'registered'
+                          ? <span class="badge">Registered</span>
+                          : <span class="badge warning">{titleCase(detail?.statutory?.nis_status ?? 'not recorded')}</span>}
+                      />
+                      <Row
+                        label="Tax Profile"
+                        value={detail?.statutory?.bir_file_number
+                          ? <span class="badge">On File</span>
+                          : <span class="badge warning">Required</span>}
+                      />
+                      <Row label="PAYE" value={detail?.statutory?.paye_applicable ? 'Applicable' : 'Not Applicable'} />
+                      <Row
+                        label="Payroll Readiness"
+                        value={shell.readiness?.payrollStatus === 'ready'
+                          ? <span class="badge">Ready</span>
+                          : <span class={`badge ${shell.readiness?.payrollStatus === 'blocked' ? 'danger' : 'warning'}`}>
+                            {titleCase(shell.readiness?.payrollStatus ?? 'pending')}
+                          </span>}
+                      />
+                    </dl>
+                  </section>
+                )}
+
+                <section class="card span-2 history-card">
+                  <CardHead icon="clock" title="Complete Employment History" />
+                  {employment.isPending && <div class="epf-loading">Loading employment history…</div>}
+                  {employment.data?.history.length === 0 && (
+                    <div class="epf-empty">No employment changes have been recorded for this employee.</div>
+                  )}
+                  {employment.data && employment.data.history.length > 0 && (
+                    <div class="timeline">
+                      {employment.data.history.map(entry => (
+                        <div class="timeline-entry" key={entry.id}>
+                          <div>
+                            <strong>{entry.title}</strong>
+                            <span>{entry.detail}{entry.actorName ? ` · ${entry.actorName}` : ''}</span>
+                          </div>
+                          <time>{formatDate(entry.occurredAt)}</time>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              </div>
+            </section>
+          )}
+
+          {/* ── Documents ───────────────────────────────────────────────── */}
+          {tab === 'documents' && (
+            <section class="tab-panel active" id="panel-documents" role="tabpanel" aria-labelledby="tab-documents">
+              <SectionHead
+                title="Documents"
+                text="Authorised employee documents, verification state, expiries, and evidence management."
+                actions={
+                  <>
+                    {access.downloadDocument && (
+                      <button class="button" type="button" onClick={() => setDialog({ kind: 'export-index' })}>
+                        <PageIcon id="download" />Export Index
+                      </button>
+                    )}
+                    {access.uploadDocument && (
+                      <button class="button primary" type="button" onClick={() => setDialog({ kind: 'add-document' })}>
+                        <PageIcon id="plus" />Add Document
+                      </button>
+                    )}
+                  </>
+                }
+              />
+              {documentHealth.isPending && <div class="epf-loading" role="status">Loading document health…</div>}
+              {documentHealth.isError && (
+                <div class="epf-error" role="alert">
+                  {documentHealth.error instanceof Error ? documentHealth.error.message : 'Document health could not be loaded.'}
+                </div>
+              )}
+              {documentHealth.data && (() => {
+                const summary = documentHealth.data;
+                const rows = documentRows(summary.groups);
+                const visible = filterDocumentRows(rows, documentFilters);
+                const score = documentHealthScore(summary);
+                return (
+                  <>
+                    <div class="stat-grid document-kpis">
+                      <div class="stat">
+                        <span class="kpi-icon"><PageIcon id="file" /></span>
+                        <div class="kpi-copy">
+                          <span>Total Documents</span><strong>{summary.totalDocuments}</strong>
+                          <small>Across {summary.categoryCount} {summary.categoryCount === 1 ? 'category' : 'categories'}</small>
+                        </div>
+                      </div>
+                      <div class="stat">
+                        <span class="kpi-icon"><PageIcon id="check" /></span>
+                        <div class="kpi-copy">
+                          <span>Verified</span><strong>{summary.verifiedCount}</strong>
+                          <small>{summary.verifiedPercent}% of required records</small>
+                        </div>
+                      </div>
+                      <div class="stat">
+                        <span class="kpi-icon"><PageIcon id="clock" /></span>
+                        <div class="kpi-copy">
+                          <span>Expiring Soon</span><strong>{summary.expiringCount}</strong>
+                          <small>Within the next 30 days</small>
+                        </div>
+                      </div>
+                      <div class="stat">
+                        <span class="kpi-icon"><PageIcon id="alert" /></span>
+                        <div class="kpi-copy">
+                          <span>Missing</span><strong>{summary.missingCount}</strong>
+                          <small>{summary.missingCount === 0 ? 'All required evidence held' : 'Required evidence outstanding'}</small>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="document-workspace-card">
+                      <div class="document-health-redesign">
+                        <div class="document-health-title">
+                          <span><PageIcon id="file-check" /></span>
+                          <div>
+                            <strong>Employee Document Health</strong>
+                            <p>Required records are measured against this employee&rsquo;s employment, statutory, training,
+                              and identity requirements.</p>
+                          </div>
+                        </div>
+                        <div class="document-health-score">
+                          <div><strong>{score}</strong><b>/100</b><span>{documentHealthBand(score)}</span></div>
+                        </div>
+                        <div class="document-health-breakdown">
+                          <div class="document-health-summary-head">
+                            <span>Required Document Status</span>
+                            <strong>{summary.requiredCount} {summary.requiredCount === 1 ? 'Record' : 'Records'}</strong>
+                          </div>
+                          {/* The reference draws its three segments at a fixed
+                              10fr 1fr 1fr, which is only the ratio of ITS sample
+                              data. Production sizes them from the real counts by
+                              overriding that same grid track list inline; a bar
+                              whose segments did not match the numbers printed
+                              beneath it would be a decorative graphic. */}
+                          <div
+                            class="document-health-bar-new"
+                            style={{ gridTemplateColumns: healthBarTracks(summary) }}
+                            aria-label={`${summary.verifiedCount} verified, ${summary.expiringCount} expiring, ${summary.missingCount} missing`}
+                          >
+                            <span /><span /><span />
+                          </div>
+                          <div class="document-health-states">
+                            <div class="document-health-state">
+                              <strong>{summary.verifiedCount}</strong><span>Verified · {summary.verifiedPercent}%</span>
+                            </div>
+                            <div class="document-health-state warning">
+                              <strong>{summary.expiringCount}</strong><span>Expiring · {summary.expiringPercent}%</span>
+                            </div>
+                            <div class="document-health-state danger">
+                              <strong>{summary.missingCount}</strong><span>Missing · {summary.missingPercent}%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="document-toolbar">
+                        <label class="document-search">
+                          <PageIcon id="search" />
+                          <input
+                            type="search" placeholder="Search employee documents" aria-label="Search employee documents"
+                            value={documentFilters.search}
+                            onInput={event => setDocumentFilters({ ...documentFilters, search: event.currentTarget.value })}
+                          />
+                        </label>
+                        <select
+                          class="document-filter-select" aria-label="Filter by category"
+                          value={documentFilters.category}
+                          onChange={event => setDocumentFilters({ ...documentFilters, category: event.currentTarget.value })}
+                        >
+                          <option value="all">All Categories</option>
+                          {documentCategories(summary.groups).map(category => (
+                            <option key={category.key} value={category.key}>{category.label}</option>
+                          ))}
+                        </select>
+                        <select
+                          class="document-filter-select" aria-label="Filter by status"
+                          value={documentFilters.status}
+                          onChange={event => setDocumentFilters({
+                            ...documentFilters, status: event.currentTarget.value as DocumentStatusFilter,
+                          })}
+                        >
+                          {DOCUMENT_STATUS_FILTERS.map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                          ))}
+                        </select>
+                        <button
+                          class="button filter-reset" type="button"
+                          disabled={!hasDocumentFilters(documentFilters)}
+                          onClick={() => setDocumentFilters(EMPTY_DOCUMENT_FILTERS)}
+                        >Clear Filters</button>
+                      </div>
+
+                      {hasDocumentFilters(documentFilters) && (
+                        <p class="epf-filter-summary" role="status">
+                          Showing {visible.length} of {rows.length} document records.
+                        </p>
+                      )}
+
+                      {visible.length === 0 ? (
+                        <div class="epf-empty">
+                          {rows.length === 0
+                            ? 'No document requirements apply to this employee, and no documents are held.'
+                            : 'No document records match the selected filters.'}
+                        </div>
+                      ) : (
+                        <div class="table-wrap">
+                          <table class="data-table">
+                            <thead>
+                              <tr>
+                                <th>Document</th><th>Category</th><th>Status</th>
+                                <th>Issue / Effective Date</th><th>Expiry Date</th><th>Requirement</th><th />
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {visible.map(row => {
+                                const badge = DOCUMENT_STATE_BADGE[row.state];
+                                const action = documentRowAction(row);
+                                return (
+                                  <tr key={`${row.categoryKey}:${row.documentId ?? row.requirementId ?? row.title}`}>
+                                    <td><strong>{row.title}</strong><small>{row.detail}</small></td>
+                                    <td>{row.categoryLabel}</td>
+                                    <td><span class={`badge ${badge.tone}`.trim()}>{badge.label}</span></td>
+                                    <td>{formatDate(row.issuedAt)}</td>
+                                    <td>{formatDate(row.expiryDate)}</td>
+                                    <td>{row.required ? 'Required' : 'Supplementary'}</td>
+                                    <td>
+                                      {action === 'request'
+                                        ? access.uploadDocument && (
+                                          <button class="link" type="button" onClick={() => setDialog({ kind: 'add-document' })}>
+                                            Request
+                                          </button>
+                                        )
+                                        : (
+                                          <button class="link" type="button" onClick={() => showSection('s-hr-documents')}>
+                                            {action === 'review' ? 'Review' : 'Open'}
+                                          </button>
+                                        )}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
+            </section>
+          )}
+
+          {/* ── Readiness ───────────────────────────────────────────────── */}
+          {tab === 'readiness' && (
+            <section class="tab-panel active" id="panel-readiness" role="tabpanel" aria-labelledby="tab-readiness">
+              <SectionHead
+                title="Readiness"
+                text="Detailed evidence-based controls showing whether this employee record can support authorised HR and operational workflows."
+              />
+              {readiness.isPending && <div class="epf-loading" role="status">Loading readiness controls…</div>}
+              {readiness.isError && (
+                <div class="epf-error" role="alert">
+                  {readiness.error instanceof Error ? readiness.error.message : 'Readiness controls could not be loaded.'}
+                </div>
+              )}
+              {readiness.data && (() => {
+                const matrix = readiness.data;
+                const blockers = readinessBlockers(matrix.controls);
+                return (
+                  <>
+                    <section class="readiness-command">
+                      <div class="readiness-coverage-head">
+                        <div class="readiness-coverage-title">
+                          <span><PageIcon id="shield" /></span>
+                          <div>
+                            <strong>Readiness Coverage</strong>
+                            <small>Authorised controls required for this employee record</small>
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        class="readiness-rail"
+                        aria-label={`${matrix.coverage.readyControls} of ${matrix.coverage.totalControls} controls ready`}
+                      >
+                        {matrix.controls.map(entry => (
+                          <button
+                            key={entry.control.controlKey} type="button"
+                            class={`readiness-rail-item ${readinessRailState(entry)}`.trim()}
+                            onClick={() => setDialog({ kind: 'readiness', entry })}
+                          >
+                            <span class="readiness-rail-icon">
+                              <PageIcon id={CONTROL_ICON[entry.control.domain] ?? 'shield'} />
+                            </span>
+                            <strong>{entry.control.label}</strong>
+                            <small>{readinessRailLabel(entry)}</small>
+                          </button>
+                        ))}
+                      </div>
+                      <div class="readiness-meta">
+                        <span class="coverage-inline">
+                          <strong>{coverageSentence(matrix.coverage.readyControls, matrix.coverage.totalControls)}</strong> Controls Ready
+                        </span>
+                        <span>Last Reviewed <strong>{formatDate(shell.readiness?.lastReviewedAt)}</strong></span>
+                        <span>Review Owner <strong>{shell.readiness?.reviewOwnerLabel ?? 'Owner Required'}</strong></span>
+                        <span>Next Review <strong>{formatDate(shell.readiness?.nextReviewAt)}</strong></span>
+                      </div>
+                    </section>
+
+                    <div class="readiness-collaboration-note">
+                      <span><PageIcon id="users" /></span>
+                      <div>
+                        <strong>Shared Readiness Work</strong>
+                        <small>HR coordinates the employee record. The responsible department completes or verifies its own
+                          control, and the readiness score updates automatically.</small>
+                      </div>
+                      <div class="collaboration-route">HR Coordinates → Department Resolves</div>
+                    </div>
+
+                    <section class="readiness-blockers" aria-labelledby="readiness-blockers-title">
+                      <div class="readiness-blockers-head">
+                        <div><PageIcon id="alert" /><strong id="readiness-blockers-title">Readiness Blockers</strong></div>
+                        <span>{blockers.length === 0
+                          ? 'No work items require action'
+                          : `${blockers.length} work ${blockers.length === 1 ? 'item requires' : 'items require'} action`}</span>
+                      </div>
+                      {blockers.length === 0 && (
+                        <div class="epf-empty">Every readiness control has passed for this record.</div>
+                      )}
+                      {blockers.map(entry => {
+                        const state = readinessWorkStateBadge(entry);
+                        return (
+                          <article
+                            class={`readiness-blocker${entry.control.isBlocking ? '' : ' review'}`}
+                            key={entry.control.controlKey}
+                          >
+                            <div class="readiness-blocker-title">
+                              <span><PageIcon id={CONTROL_ICON[entry.control.domain] ?? 'shield'} /></span>
+                              <div>
+                                <strong>{entry.control.label}</strong>
+                                <small>{entry.control.description ?? `Resolved by ${titleCase(entry.control.resolutionType)}.`}</small>
+                              </div>
+                            </div>
+                            <div class="readiness-blocker-meta">
+                              <span>Department Owner</span>
+                              <strong>{entry.owner.status === 'resolved' ? entry.owner.ownerLabel : 'Owner Required'}</strong>
+                            </div>
+                            <div class="readiness-blocker-meta">
+                              <span>Action Needed Now</span>
+                              <strong>{entry.workItem?.nextResponsibleParty ?? titleCase(entry.control.resolutionType)}</strong>
+                            </div>
+                            <div class="readiness-work-state">
+                              <span class={`badge ${state.tone}`.trim()}>{state.label}</span>
+                            </div>
+                            <button
+                              class={`button${entry.control.isBlocking ? ' primary' : ''}`} type="button"
+                              onClick={() => setDialog({ kind: 'readiness', entry })}
+                            >Open Work Item</button>
+                          </article>
+                        );
+                      })}
+                    </section>
+
+                    <section class="card control-matrix-card">
+                      <CardHead icon="shield" title="Readiness Control Matrix" />
+                      <div class="table-wrap" style="margin-top:12px">
+                        <table class="data-table">
+                          <thead>
+                            <tr>
+                              <th>Control Area</th><th>Score</th><th>Evidence</th>
+                              <th>Owner</th><th>Last Reviewed</th><th>State</th><th />
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {matrix.controls.map(entry => {
+                              const badge = readinessMatrixBadge(entry);
+                              return (
+                                <tr key={entry.control.controlKey}>
+                                  <td>
+                                    <strong>{entry.control.label}</strong>
+                                    <small>{entry.control.description ?? titleCase(entry.control.domain)}</small>
+                                  </td>
+                                  <td>{entry.percent}%</td>
+                                  <td>{titleCase(entry.state)}</td>
+                                  <td>{entry.owner.status === 'resolved' ? entry.owner.ownerLabel : 'Owner Required'}</td>
+                                  <td>{formatDate(entry.evaluatedAt)}</td>
+                                  <td><span class={`badge ${badge.tone}`.trim()}>{badge.label}</span></td>
+                                  <td>
+                                    <button class="link" type="button" onClick={() => setDialog({ kind: 'readiness', entry })}>
+                                      Open
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </>
+                );
+              })()}
+            </section>
+          )}
+
+          {/* ── Access ──────────────────────────────────────────────────── */}
+          {tab === 'access' && (
+            <section class="tab-panel active" id="panel-access" role="tabpanel" aria-labelledby="tab-access">
+              <SectionHead
+                title="Access"
+                text="Sign-in identity, authorised business access, account health, and routed support for this employee."
+                actions={
+                  <button class="button primary" type="button" onClick={() => setDialog({ kind: 'account-assistance' })}>
+                    <PageIcon id="headset" />Request Account Assistance
+                  </button>
+                }
+              />
+              {(() => {
+                const health = shell.accountHealth;
+                const mfaEnabled = !!security.data && (security.data.totpEnabled || security.data.passkeyCount > 0);
+                const openRequests = health?.openSupportRequests ?? 0;
+                const methods = [
+                  'Password',
+                  ...(security.data?.totpEnabled ? ['Authenticator'] : []),
+                  ...((security.data?.passkeyCount ?? 0) > 0 ? [`${security.data?.passkeyCount} Passkey`] : []),
+                ].join(' · ');
+                const activeAssignment = assignments.data?.find(row => row.status === 'active') ?? assignments.data?.[0];
+                return (
+                  <>
+                    <div class="access-cards">
+                      <div class="access-card">
+                        <span class="access-icon"><PageIcon id="check" /></span>
+                        <div><span>Account Status</span><strong>{titleCase(health?.accountStatus)}</strong></div>
+                      </div>
+                      <div class="access-card">
+                        <span class="access-icon"><PageIcon id="lock" /></span>
+                        <div>
+                          <span>MFA Status</span>
+                          <strong>{!access.viewAccountSecurity ? 'Restricted' : mfaEnabled ? 'Enabled' : 'Not Enrolled'}</strong>
+                        </div>
+                      </div>
+                      <div class="access-card">
+                        <span class="access-icon"><PageIcon id="login" /></span>
+                        <div>
+                          <span>Last Sign-In</span>
+                          <strong>{access.viewAccountSecurity ? formatDateTime(security.data?.lastSeenAt) : 'Restricted'}</strong>
+                        </div>
+                      </div>
+                      <div class="access-card">
+                        <span class="access-icon"><PageIcon id="headset" /></span>
+                        <div>
+                          <span>Open Assistance</span>
+                          <strong>{openRequests === 0 ? 'None' : `${openRequests} In Review`}</strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="grid-2" style="margin-top:13px">
+                      <section class="card">
+                        <CardHead icon="user" title="Sign-In Identity" />
+                        <dl class="definition-list">
+                          <Row label="Username" value={detail?.employee.username ?? DASH} />
+                          <Row label="Sign-In Email" value={shell.contact?.workEmail ?? detail?.employee.email ?? DASH} />
+                          <Row label="Account Created" value={formatDate(detail?.employee.created_at)} />
+                          <Row
+                            label="Sign-In Identity"
+                            value={health?.hasLoginIdentity
+                              ? <span class="badge">Provisioned</span>
+                              : <span class="badge warning">Not Provisioned</span>}
+                          />
+                          <Row label="Sign-In Methods" value={access.viewAccountSecurity ? methods : 'Restricted'} />
+                          <Row
+                            label="Account State"
+                            value={health?.accountStatus === 'active'
+                              ? <span class="badge neutral">Not Restricted</span>
+                              : <span class="badge warning">{titleCase(health?.accountStatus)}</span>}
+                          />
+                        </dl>
+                      </section>
+
+                      <section class="card">
+                        <CardHead icon="key" title="Authorised Access" />
+                        {!access.viewAccessAssignments ? (
+                          <div class="epf-empty">Access assignments require the access-assignment capability.</div>
+                        ) : assignments.isPending ? (
+                          <div class="epf-loading">Loading access assignments…</div>
+                        ) : !activeAssignment ? (
+                          <div class="epf-empty">No access assignment is recorded for this employee.</div>
+                        ) : (
+                          <dl class="definition-list">
+                            <Row label="Business Access Profile" value={activeAssignment.accessProfileLabel} />
+                            <Row label="Assignment Source" value={titleCase(activeAssignment.assignmentType)} />
+                            <Row
+                              label="Organisation Scope"
+                              value={activeAssignment.scopes.find(scope => scope.scopeType === 'organisation')?.scopeLabel ?? 'Whole Organisation'}
+                            />
+                            <Row
+                              label="Department Scope"
+                              value={activeAssignment.scopes.filter(scope => scope.scopeType === 'department')
+                                .map(scope => scope.scopeLabel).join(', ') || 'Not Scoped'}
+                            />
+                            <Row label="Effective From" value={formatDate(activeAssignment.effectiveFrom)} />
+                            <Row label="Granted By" value={activeAssignment.grantedByName ?? DASH} />
+                          </dl>
+                        )}
+                      </section>
+                    </div>
+
+                    {activeAssignment && (
+                      <section class="access-profile">
+                        <div class="access-profile-head">
+                          <div class="access-profile-title">
+                            <span class="access-icon"><PageIcon id="shield" /></span>
+                            <div>
+                              <strong>{activeAssignment.accessProfileLabel} Access Profile</strong>
+                              <span>The current approved business-access assignment for this employee.</span>
+                            </div>
+                          </div>
+                          <span class={`badge ${activeAssignment.status === 'active' ? '' : 'warning'}`.trim()}>
+                            {titleCase(activeAssignment.status)}
+                          </span>
+                        </div>
+                        <div class="access-profile-facts">
+                          <div><span>Source</span><strong>{titleCase(activeAssignment.assignmentType)}</strong></div>
+                          <div>
+                            <span>Scope</span>
+                            <strong>{activeAssignment.scopes.map(scope => scope.scopeLabel).join(', ') || 'Organisation'}</strong>
+                          </div>
+                          <div><span>Effective</span><strong>{formatDate(activeAssignment.effectiveFrom)}</strong></div>
+                          <div><span>MFA Policy</span><strong>{activeAssignment.requiresMfa ? 'Required' : 'Standard'}</strong></div>
+                          <div>
+                            <span>Exceptions</span>
+                            <strong>{activeAssignment.requiresMfa && access.viewAccountSecurity && !mfaEnabled
+                              ? 'MFA Not Enrolled' : 'None'}</strong>
+                          </div>
+                        </div>
+                      </section>
+                    )}
+
+                    <div class="security-support-grid">
+                      <section class="card">
+                        <CardHead icon="shield" title="Account Health" />
+                        <div class="access-help-note compact">
+                          <PageIcon id="info" />
+                          <span>HR sees whether this employee needs account help. Technical administration is handled elsewhere.</span>
+                        </div>
+                        <div class="security-list">
+                          {(() => {
+                            // Ranked most-blocking first, so the row names the one
+                            // thing HR should act on rather than the longest list.
+                            const concern = !health
+                              ? { title: 'Account Health Is Restricted', detail: 'Your role cannot see this employee’s account state.', tone: 'neutral' }
+                              : health.accountStatus !== 'active'
+                                ? { title: 'Account Is Not Active', detail: `The account state is ${titleCase(health.accountStatus)}.`, tone: 'warning' }
+                                : !health.hasLoginIdentity
+                                  ? { title: 'No Sign-In Identity', detail: 'This employee has no sign-in account provisioned.', tone: 'warning' }
+                                  : access.viewAccountSecurity && !mfaEnabled && activeAssignment?.requiresMfa
+                                    ? { title: 'MFA Is Required But Not Enrolled', detail: 'The assigned access profile requires multi-factor authentication.', tone: 'danger' }
+                                    : null;
+                            return concern ? (
+                              <div class="security-row">
+                                <span class="access-icon"><PageIcon id="alert" /></span>
+                                <div class="security-copy"><strong>{concern.title}</strong><span>{concern.detail}</span></div>
+                                <span class={`badge ${concern.tone}`}>Needs Help</span>
+                              </div>
+                            ) : (
+                              <div class="security-row">
+                                <span class="access-icon"><PageIcon id="check" /></span>
+                                <div class="security-copy">
+                                  <strong>No Account Concerns</strong>
+                                  <span>No lockout, suspension, or unresolved sign-in warning requires HR action</span>
+                                </div>
+                                <span class="badge">Healthy</span>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </section>
+
+                      <section class="card">
+                        <CardHead
+                          icon="headset" title="Account Assistance"
+                          action={
+                            <button
+                              class="link" type="button" style="margin-left:auto"
+                              onClick={() => setDialog({ kind: 'account-history' })}
+                            >View Request History</button>
+                          }
+                        />
+                        <div class="access-help-note compact">
+                          <PageIcon id="info" />
+                          <span>Track the employee&rsquo;s current account-support request or submit a new request when help is needed.</span>
+                        </div>
+                        {supportRequests.isPending && <div class="epf-loading">Loading account requests…</div>}
+                        {supportRequests.isError && (
+                          <div class="epf-empty">Account requests are not available to your role.</div>
+                        )}
+                        {supportRequests.data?.length === 0 && (
+                          <div class="epf-empty">No account support requests have been raised for this employee.</div>
+                        )}
+                        {supportRequests.data && supportRequests.data.length > 0 && (
+                          <div class="support-request-list">
+                            {supportRequests.data.slice(0, 3).map(request => {
+                              const badge = supportStatusBadge(request.status);
+                              return (
+                                <div class="support-request" key={request.id}>
+                                  <div>
+                                    <strong>{request.requestedAction ?? request.subject}</strong>
+                                    <span>{request.ticketNumber} · Submitted {formatDate(request.createdAt)}</span>
+                                    <small>Owner: Account Support</small>
+                                  </div>
+                                  <span class={`badge ${badge.tone}`.trim()}>{badge.label}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                        <button
+                          class="button primary" type="button" style="margin-top:12px;align-self:flex-end"
+                          onClick={() => setDialog({ kind: 'account-assistance' })}
+                        >Request Assistance</button>
+                      </section>
+                    </div>
+                  </>
+                );
+              })()}
+            </section>
+          )}
+
+          {/* ── Activity & Audit ────────────────────────────────────────── */}
+          {tab === 'activity' && (
+            <section class="tab-panel active" id="panel-activity" role="tabpanel" aria-labelledby="tab-activity">
+              <SectionHead
+                title="Activity &amp; Audit"
+                text="A practical history of changes to this employee record, who made them, and what still requires action."
+                actions={
+                  <button class="button" type="button" onClick={() => setDialog({ kind: 'export-audit' })}>
+                    <PageIcon id="download" />Export Audit History
+                  </button>
+                }
+              />
+              {audit.isPending && <div class="epf-loading" role="status">Loading audit history…</div>}
+              {audit.isError && (
+                <div class="epf-error" role="alert">
+                  {audit.error instanceof Error ? audit.error.message : 'Audit history could not be loaded.'}
+                </div>
+              )}
+              {audit.data && (() => {
+                const rows = audit.data;
+                const visible = filterAuditRows(rows, activityFilters);
+                const actors = auditActors(rows);
+                const monthCount = changesThisMonth(rows);
+                return (
+                  <>
+                    <div class="activity-summary">
+                      <div class="activity-summary-item">
+                        <span class="attention-ico"><PageIcon id="clock" /></span>
+                        <div><span>Last Record Change</span><strong>{formatDate(rows[0]?.created_at)}</strong></div>
+                      </div>
+                      <div class="activity-summary-item">
+                        <span class="attention-ico"><PageIcon id="edit" /></span>
+                        <div><span>Changes This Month</span><strong>{monthCount} Recorded</strong></div>
+                      </div>
+                      <div class="activity-summary-item">
+                        <span class="attention-ico"><PageIcon id="lock" /></span>
+                        <div>
+                          <span>Recorded Events</span>
+                          <strong>{rows.length} In This View</strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="document-toolbar activity-toolbar">
+                      <label class="document-search">
+                        <PageIcon id="search" />
+                        <input
+                          type="search" placeholder="Search employee activity" aria-label="Search employee activity"
+                          value={activityFilters.search}
+                          onInput={event => setActivityFilters({ ...activityFilters, search: event.currentTarget.value })}
+                        />
+                      </label>
+                      <select
+                        class="document-filter-select" aria-label="Filter by activity area"
+                        value={activityFilters.area}
+                        onChange={event => setActivityFilters({
+                          ...activityFilters, area: event.currentTarget.value as ActivityArea | 'all',
+                        })}
+                      >
+                        <option value="all">All Activity Areas</option>
+                        {(Object.keys(ACTIVITY_AREA_LABEL) as ActivityArea[]).map(area => (
+                          <option key={area} value={area}>{ACTIVITY_AREA_LABEL[area]}</option>
+                        ))}
+                      </select>
+                      <select
+                        class="document-filter-select" aria-label="Filter by date range"
+                        value={activityFilters.range}
+                        onChange={event => setActivityFilters({
+                          ...activityFilters, range: event.currentTarget.value as ActivityRange,
+                        })}
+                      >
+                        {ACTIVITY_RANGES.map(option => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
+                      <select
+                        class="document-filter-select" aria-label="Filter by actor"
+                        value={activityFilters.actor}
+                        onChange={event => setActivityFilters({ ...activityFilters, actor: event.currentTarget.value })}
+                      >
+                        <option value="all">Changed By: Anyone</option>
+                        {actors.map(actor => <option key={actor} value={actor}>{actor}</option>)}
+                      </select>
+                      <button
+                        class="button filter-reset" type="button"
+                        disabled={!hasActivityFilters(activityFilters)}
+                        onClick={() => setActivityFilters(EMPTY_ACTIVITY_FILTERS)}
+                      >Clear Filters</button>
+                    </div>
+
+                    {visible.length === 0 ? (
+                      <div class="epf-empty">
+                        {rows.length === 0
+                          ? 'No activity has been recorded for this employee yet.'
+                          : 'No recorded activity matches the selected filters.'}
+                      </div>
+                    ) : (
+                      <div class="table-wrap activity-table-wrap">
+                        <table class="data-table">
+                          <thead>
+                            <tr><th>Date &amp; Time</th><th>Activity</th><th>Area</th><th>Changed By</th><th>Reason</th><th /></tr>
+                          </thead>
+                          <tbody>
+                            {visible.map(entry => {
+                              const area = activityArea(entry.submodule_key);
+                              const actor = entry.actorName ?? 'System';
+                              return (
+                                <tr class={`event-${area}`} key={entry.id}>
+                                  <td>{formatDate(entry.created_at)}<small>{formatDateTime(entry.created_at).slice(-5)}</small></td>
+                                  <td><strong>{activityTitle(entry.action)}</strong><small>{entry.action}</small></td>
+                                  <td><span class="activity-area">{ACTIVITY_AREA_LABEL[area]}</span></td>
+                                  <td>
+                                    <div class="actor-cell">
+                                      <span class="actor-avatar">{initialsOf(actor)}</span>
+                                      <div><strong>{actor}</strong><small>{titleCase(entry.submodule_key ?? 'employee record')}</small></div>
+                                    </div>
+                                  </td>
+                                  <td>{entry.reason ?? DASH}</td>
+                                  <td>
+                                    <button class="link" type="button" onClick={() => setDialog({ kind: 'activity', entry })}>
+                                      View Change
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                    <p class="activity-note">
+                      <PageIcon id="info" />
+                      Times are displayed in UTC. Sensitive values and technical correlation details are shown only to
+                      authorised audit reviewers.
+                    </p>
+                  </>
+                );
+              })()}
+            </section>
+          )}
+
+          {/* ── Offboarding ─────────────────────────────────────────────── */}
+          {tab === 'offboarding' && (
+            <section class="tab-panel active" id="panel-offboarding" role="tabpanel" aria-labelledby="tab-offboarding">
+              <SectionHead
+                title="Offboarding"
+                text="Controlled termination, resignation, retirement, redundancy, and contract-completion workflows."
+              />
+              {offboardingCases.isPending && <div class="epf-loading" role="status">Loading offboarding cases…</div>}
+              {offboardingCases.isError && (
+                <div class="epf-error" role="alert">
+                  {offboardingCases.error instanceof Error ? offboardingCases.error.message : 'Offboarding cases could not be loaded.'}
+                </div>
+              )}
+              {offboardingCases.data && !phase.active && (
+                <div class="offboarding-empty">
+                  <div>
+                    <span class="offboarding-empty-icon"><PageIcon id="exit" /></span>
+                    <h3>No Active Offboarding Case</h3>
+                    <p>Starting offboarding creates a governed case, assigns an owner, schedules required tasks, and hands
+                      account-removal work to the authorised support receiver.</p>
+                    {access.startOffboarding && (
+                      <button class="button danger" type="button" onClick={() => setDialog({ kind: 'start-offboarding' })}>
+                        <PageIcon id="exit" />Start Offboarding
+                      </button>
+                    )}
+                    <div class="offboarding-flow" aria-label="Offboarding workflow">
+                      {([
+                        ['Create Case', 'Capture reason, last working day and accountable owner.'],
+                        ['Assign Work', 'Schedule HR, payroll and department completion tasks.'],
+                        ['Secure Access', 'Route account removal to the authorised support owner.'],
+                        ['Close Record', 'Verify evidence, final status and complete the audit trail.'],
+                      ] as [string, string][]).map(([title, text], index) => (
+                        <div class="offboarding-step" key={title}>
+                          <span>Step {index + 1}</span><strong>{title}</strong><small>{text}</small>
+                        </div>
+                      ))}
+                    </div>
+                    <div class="offboarding-notes">
+                      <span><PageIcon id="shield" />Permission Required</span>
+                      <span><PageIcon id="clock" />Audited Workflow</span>
+                      <span><PageIcon id="users" />Cross-Team Handoffs</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {phase.active && (
+                <section class="offboarding-case">
+                  <div class="section-head">
+                    <div>
+                      <h2>Active Offboarding Case</h2>
+                      <p>Case {phase.active.caseNo} is coordinating the employee&rsquo;s final working arrangements.</p>
+                    </div>
+                    <div class="section-actions">
+                      <span class={`badge ${phase.active.status === 'blocked' ? 'danger' : 'warning'}`}>
+                        {titleCase(phase.active.status)}
+                      </span>
+                      <button class="button primary" type="button" onClick={() => showSection('s-hr-offboarding')}>
+                        Open Offboarding Workspace
+                      </button>
+                    </div>
+                  </div>
+                  <div class="offboarding-case-summary">
+                    <div><span>Last Working Day</span><strong>{formatDate(phase.active.lastWorkingDay)}</strong></div>
+                    <div><span>Case Owner</span><strong>{phase.active.ownerName ?? 'Not Assigned'}</strong></div>
+                    <div><span>Reason</span><strong>{titleCase(phase.active.reason)}</strong></div>
+                    <div>
+                      <span>Tasks Complete</span>
+                      <strong>{taskCompletion(phase.active.taskCount, phase.active.openTaskCount)}</strong>
+                    </div>
+                  </div>
+                  {offboardingDetail.isPending && <div class="epf-loading">Loading case tasks…</div>}
+                  {offboardingDetail.data && (
+                    <div class="offboarding-task-list">
+                      {offboardingDetail.data.tasks.length === 0 && (
+                        <div class="epf-empty">This case has no scheduled tasks.</div>
+                      )}
+                      {offboardingDetail.data.tasks.map(task => {
+                        const badge = offboardingTaskBadge(task.status);
+                        return (
+                          <div class="offboarding-task" key={task.id}>
+                            <span class="access-icon">
+                              <PageIcon id={task.status === 'completed' ? 'check' : 'file'} />
+                            </span>
+                            <div>
+                              <strong>{task.taskTitle}</strong>
+                              <small>{task.dueAt ? `Due ${formatDate(task.dueAt)}` : 'No due date recorded'}</small>
+                            </div>
+                            <span>{task.assignedToName ?? titleCase(task.ownerRole ?? task.moduleKey ?? 'Unassigned')}</span>
+                            <span class={`badge ${badge.tone}`.trim()}>{badge.label}</span>
+                          </div>
+                        );
+                      })}
+                      {offboardingDetail.data.handoffs.map(handoff => (
+                        <div class="offboarding-task" key={handoff.id}>
+                          <span class="access-icon"><PageIcon id="lock" /></span>
+                          <div>
+                            <strong>{titleCase(handoff.handoffType ?? handoff.handoffKey ?? 'Cross-Module Handoff')}</strong>
+                            <small>Raised {formatDate(handoff.createdAt)}</small>
+                          </div>
+                          <span>{titleCase(handoff.targetModule)}</span>
+                          <span class={`badge ${handoff.status === 'delivered' ? '' : 'warning'}`.trim()}>
+                            {titleCase(handoff.status)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {offboardingCases.data && (
+                <section class="card offboarding-history">
+                  <CardHead icon="clock" title="Offboarding History" />
+                  {phase.history.length === 0 ? (
+                    <div class="offboarding-state-card">
+                      <span class="offboarding-empty-icon"><PageIcon id="check" /></span>
+                      <div class="offboarding-state-copy">
+                        <strong>No Previous Offboarding Cases</strong>
+                        <span>Completed or cancelled cases will remain available here as protected employee history.</span>
+                      </div>
+                      <span class="badge neutral">None</span>
+                    </div>
+                  ) : phase.history.map(row => (
+                    <div class="offboarding-state-card" key={row.id}>
+                      <span class="offboarding-empty-icon"><PageIcon id="check" /></span>
+                      <div class="offboarding-state-copy">
+                        <strong>{row.caseNo} · {titleCase(row.reason)}</strong>
+                        <span>
+                          {row.completedAt ? `Completed ${formatDate(row.completedAt)}` : `Started ${formatDate(row.startedAt)}`}
+                          {row.ownerName ? ` · Case owner ${row.ownerName}` : ''}
+                        </span>
+                      </div>
+                      <span class={`badge ${row.status === 'completed' ? '' : 'neutral'}`.trim()}>
+                        {titleCase(row.status)}
+                      </span>
+                    </div>
+                  ))}
+                </section>
+              )}
+            </section>
+          )}
         </div>
-      </section>
+      </div>
 
-      <nav class="epf-tabs" role="tablist" aria-label="Employee Record Sections">
-        {tabs.map(item => <button type="button" role="tab" aria-selected={tab === item} class={tab === item ? 'is-active' : ''} onClick={() => setTab(item)}>{item}</button>)}
-      </nav>
-
-      <main class="epf-tab-shell">
-        {tab === 'Overview' && <>
-          <section class="epf-attention">
-            <header><LucideIcon name="TriangleAlert" size={19} /><strong>Needs Attention</strong><span>{attention.length}</span></header>
-            <div>
-              {attention.length ? attention.map(item => <button type="button" class={`is-${item.tone}`} onClick={() => setTab(item.target)}>
-                <span><LucideIcon name={item.icon} size={20} /></span><div><strong>{item.title}</strong><small>{item.detail}</small></div><LucideIcon name="ChevronRight" size={17} />
-              </button>) : <div class="epf-no-attention"><LucideIcon name="CircleCheckBig" size={20} /> No Employee Record Issues Need Attention.</div>}
-            </div>
-          </section>
-          <div class="epf-grid-3">
-            <Card title="Record Readiness" icon="ChartNoAxesCombined" action={<TextAction onClick={() => setTab('Readiness')}>Open Breakdown</TextAction>}>
-              {readiness ? <div class="epf-readiness-overview"><Gauge value={readiness.percent} /><div class="epf-progress-list">
-                {readinessRows.slice(0, 3).map(row => <div><span>{row.name}</span><i><b style={{ width: `${row.value}%` }} /></i><strong>{row.value}%</strong></div>)}
-              </div></div> : <div class="epf-restricted"><LucideIcon name="LockKeyhole" size={18} /> Readiness Is Restricted.</div>}
-            </Card>
-            <Card title="Employment Snapshot" icon="BriefcaseBusiness" action={<TextAction onClick={() => setTab('Employment')}>Open Employment</TextAction>}>
-              <DetailList items={[
-                { icon: 'Building2', label: 'Legal Employer', value: can('finance.payroll.statutory_forms.view') ? <FinanceSnapshot employeeId={employeeId} tab="overview" /> : 'Restricted' },
-                { icon: 'BadgeCheck', label: 'Employment Basis', value: humanize(employee.employment_type ?? employee.workerType) },
-                { icon: 'Clock3', label: 'Work Arrangement', value: employee.work_schedule ?? 'Not On File' },
-                { icon: 'ChartNoAxesColumn', label: 'Cost Centre', value: employee.cost_center ?? 'Not Assigned' },
-                { icon: 'MapPin', label: 'Work Location', value: employee.siteName ?? 'Not Assigned' },
-                { icon: 'WalletCards', label: 'Pay Group', value: d.payGroup?.name ?? 'Not Assigned' },
-              ]} />
-            </Card>
-            <Card title="Contact" icon="Phone">
-              <DetailList items={[
-                { icon: 'Mail', label: 'Work Email', value: employee.email ?? DASH },
-                { icon: 'PhoneCall', label: 'Work Phone', value: employee.phone ?? DASH },
-                { icon: 'Smartphone', label: 'Mobile', value: employee.mobile_phone ?? DASH },
-                { icon: 'UserRound', label: 'Emergency Contact', value: employee.emergency_contact_name ?? DASH },
-                { icon: 'UsersRound', label: 'Relationship', value: employee.emergency_contact_relationship ?? DASH },
-                { icon: 'PhoneForwarded', label: 'Emergency Phone', value: employee.emergency_contact_phone ?? DASH },
-              ]} />
-            </Card>
-            <Card title="Recent Employee Activity" icon="Clock3" wide action={<TextAction onClick={() => setTab('Activity & Audit')}>View Full History</TextAction>}>
-              <div class="epf-timeline">{(auditQ.data ?? []).slice(0, 4).map(entry => <div><span /><div><strong>{humanize(entry.action)}</strong><small>{humanize(entry.submodule_key ?? 'Employee Record')} · By {entry.actorName ?? 'System'}</small></div><time>{fmtDateTime(entry.created_at)}</time></div>)}</div>
-            </Card>
-            <Card title="Account Health" icon="ShieldCheck" action={<TextAction onClick={() => setTab('Access')}>Open Access</TextAction>}>
-              {!mayViewSecurity ? <div class="epf-restricted"><LucideIcon name="LockKeyhole" size={18} /> Account Health Requires Security Access.</div>
-                : securityQ.isLoading ? <SkeletonText lines={5} />
-                : securityQ.isError || !security ? <div class="epf-restricted"><LucideIcon name="ShieldAlert" size={18} /> Account Health Is Unavailable.</div>
-                : <DetailList items={[
-                { icon: 'CircleUserRound', label: 'Account', value: <Pill tone={employee.accountStatus === 'active' ? 'green' : 'red'}>{humanize(employee.accountStatus)}</Pill> },
-                { icon: 'ShieldCheck', label: 'MFA', value: <Pill tone={mfaEnabled ? 'green' : 'amber'}>{mfaEnabled ? 'Enabled' : 'Not Enrolled'}</Pill> },
-                { icon: 'LogIn', label: 'Last Sign-In', value: fmtDateTime(security.lastSeenAt) },
-                { icon: 'KeyRound', label: 'Access Profile', value: d.accessProfile?.label ?? humanize(employee.role) },
-                { icon: 'Laptop', label: 'Trusted Devices', value: security.trustedDeviceCount },
-                { icon: 'ShieldAlert', label: 'Exceptions', value: mfaEnabled ? <Pill tone="gray">None</Pill> : <Pill tone="amber">MFA</Pill> },
-              ]} />}
-            </Card>
-          </div>
-        </>}
-
-        {tab === 'Employment' && <>
-          <SectionHead title="Employment" text="Authoritative assignment, terms, service dates, pay administration, and complete employment history."
-            actions={<>{access.editEmployee && <button class="ui-btn-primary" type="button" onClick={() => onAction('Edit Employment')}>Edit Employment</button>}</>} />
-          <div class="epf-stat-grid">
-            <div><span>Employment Status</span><strong>{humanize(employee.status)}</strong><small>{humanize(employee.employment_type ?? employee.workerType)}</small></div>
-            <div><span>Continuous Service</span><strong>{tenure(employee.start_date)}</strong><small>Started {fmtDate(employee.start_date)}</small></div>
-            <div><span>Current Appointment</span><strong>{fmtDate(currentAssignment?.effective_from)}</strong><small>{currentAssignment?.positionTitle ?? employee.position ?? 'Not Assigned'}</small></div>
-            <div><span>Work Arrangement</span><strong>{employee.work_schedule ?? 'Not On File'}</strong><small>{d.payGroup?.name ?? 'Pay Group Not Assigned'}</small></div>
-          </div>
-          <div class="epf-grid-2">
-            <Card title="Current Assignment" icon="BriefcaseBusiness"><DetailList items={[
-              { label: 'Position', value: currentAssignment?.positionTitle ?? employee.position ?? 'Not Assigned' },
-              { label: 'Department', value: currentAssignment?.departmentName ?? employee.departmentName ?? 'Not Assigned' },
-              { label: 'Supervisor', value: currentAssignment?.supervisorName ?? employee.supervisorName ?? 'Not Assigned' },
-              { label: 'Work Location', value: currentAssignment?.siteName ?? employee.siteName ?? 'Not Assigned' },
-              { label: 'Cost Centre', value: employee.cost_center ?? 'Not Assigned' },
-              { label: 'Effective From', value: fmtDate(currentAssignment?.effective_from) },
-            ]} /></Card>
-            <Card title="Employment Terms" icon="ShieldCheck"><DetailList items={[
-              { label: 'Employment Basis', value: humanize(employee.employment_type ?? employee.workerType) },
-              { label: 'Work Arrangement', value: employee.work_schedule ?? 'Not On File' },
-              { label: 'Start Date', value: fmtDate(employee.start_date) },
-              { label: 'End Date', value: fmtDate(employee.end_date) },
-              { label: 'Probation End', value: fmtDate(employee.probation_end_date) },
-              { label: 'Employee Grade', value: employee.employee_grade ?? 'Not Assigned' },
-            ]} /></Card>
-            <Card title="HR Administration" icon="ClipboardList"><DetailList items={[
-              { label: 'Pay Group', value: d.payGroup?.name ?? 'Not Assigned' },
-              { label: 'Pay Frequency', value: d.payGroup ? humanize(d.payGroup.frequency) : DASH },
-              { label: 'Worker Category', value: employee.contractor_flag ? 'Contractor' : 'Employee' },
-              { label: 'Employee Number', value: employee.employee_number ?? 'Not Assigned' },
-              { label: 'Record Created', value: fmtDate(employee.created_at) },
-              { label: 'Continuous Service', value: tenure(employee.start_date) },
-            ]} /></Card>
-            {can('finance.bank_accounts.view') && can('finance.payroll.statutory_forms.view')
-              ? <FinanceSnapshot employeeId={employeeId} tab="employment" />
-              : <Card title="Pay Administration & Legal Employer" icon="LockKeyhole"><div class="epf-restricted">Finance Capabilities Are Required.</div></Card>}
-            {access.viewStatutory && <Card title="Trinidad & Tobago Statutory Status" icon="Landmark" wide><DetailList items={[
-              { label: 'NIS Registration', value: <Pill tone={d.statutory?.nis_status === 'verified' ? 'green' : 'amber'}>{humanize(d.statutory?.nis_status ?? 'Not On File')}</Pill> },
-              { label: 'Tax Profile', value: d.statutory?.bir_file_number ? <Pill tone="green">On File</Pill> : <Pill tone="amber">Required</Pill> },
-              { label: 'PAYE', value: d.statutory?.paye_applicable ? 'Applicable' : 'Not Applicable' },
-              { label: 'Payroll Readiness', value: <Pill tone={d.payrollReadiness?.status === 'ready' ? 'green' : 'amber'}>{humanize(d.payrollReadiness?.status ?? 'Restricted')}</Pill> },
-            ]} /></Card>}
-            <Card title="Complete Employment History" icon="History" wide>
-              <div class="epf-timeline">{d.assignmentHistory.map((assignment: HrEmployeeAssignment) => <div><span /><div><strong>{assignment.positionTitle ?? 'Employment Assignment'}</strong><small>{assignment.departmentName ?? 'Department Not Recorded'} · {assignment.siteName ?? 'Location Not Recorded'} · Supervisor: {assignment.supervisorName ?? 'Not Assigned'}</small></div><time>{fmtDate(assignment.effective_from)}{assignment.effective_to ? ` – ${fmtDate(assignment.effective_to)}` : ' – Present'}</time></div>)}</div>
-            </Card>
-          </div>
-        </>}
-
-        {tab === 'Documents' && <>
-          <SectionHead title="Documents" text="Authorised employee documents, verification state, expiries, and evidence management."
-            actions={access.uploadDocument && <button class="ui-btn-primary" type="button" onClick={() => onAction('Upload HR Document')}><LucideIcon name="Plus" size={16} /> Add Document</button>} />
-          {docsQ.isError ? <EmptyState icon="fa-file-circle-xmark" title="Documents Unavailable" text="The authorised employee documents could not be loaded." /> : <>
-          <div class="epf-stat-grid">
-            <div><span>Total Documents</span><strong>{documents.length}</strong><small>Authorised Records</small></div>
-            <div><span>Verified</span><strong>{verifiedDocs}</strong><small>{documents.length ? Math.round(verifiedDocs / documents.length * 100) : 0}% Verified</small></div>
-            <div><span>Expiring Soon</span><strong>{expiring.length}</strong><small>Within 30 Days</small></div>
-            <div><span>Needs Review</span><strong>{documents.filter(doc => ['uploaded', 'rejected'].includes(doc.status)).length}</strong><small>Unverified Or Rejected</small></div>
-          </div>
-          <Card title="Employee Document Health" icon="FileCheck2" wide>
-            <div class="epf-document-health"><div><b style={{ width: `${documents.length ? verifiedDocs / documents.length * 100 : 0}%` }} /><i style={{ width: `${documents.length ? expiring.length / documents.length * 100 : 0}%` }} /></div><p>Verified records are shown in green; expiring records require follow-up.</p></div>
-          </Card>
-          <div class="epf-table-wrap"><table class="epf-table"><thead><tr><th>Document</th><th>Category</th><th>Status</th><th>Uploaded</th><th>Expiry Date</th><th>Confidentiality</th></tr></thead><tbody>
-            {documents.map((doc: HrDocument) => <tr><td><strong>{doc.title}</strong><small>{doc.file_name}</small></td><td>{humanize(doc.document_type)}</td><td><Pill tone={doc.status === 'verified' ? 'green' : doc.status === 'rejected' ? 'red' : 'amber'}>{humanize(doc.status)}</Pill></td><td>{fmtDate(doc.uploaded_at)}</td><td>{fmtDate(doc.expiry_date)}</td><td>{humanize(doc.confidentiality)}</td></tr>)}
-          </tbody></table></div>
-          </>}
-        </>}
-
-        {tab === 'Readiness' && <>
-          <SectionHead title="Readiness" text="Evidence-based controls showing whether this employee record can support authorised HR and operational workflows." />
-          <div class="epf-grid-2">
-            <Card title="Overall Readiness" icon="ChartNoAxesCombined"><div class="epf-readiness-overview"><Gauge value={readiness?.percent ?? 0} /><div><Pill tone={(readiness?.blockers.length ?? 0) ? 'amber' : 'green'}>{readiness?.blockers.length ?? 0} Blocking Controls</Pill><p>Readiness is calculated from assignment, payroll, training, and document evidence.</p></div></div></Card>
-            <Card title="Blocking Actions" icon="TriangleAlert"><div class="epf-action-list">
-              {attention.length ? attention.map(item => <button type="button" onClick={() => setTab(item.target)}><LucideIcon name={item.icon} size={18} /><span><strong>{item.title}</strong><small>{item.detail}</small></span><LucideIcon name="ChevronRight" size={16} /></button>) : <div class="epf-no-attention">No Blocking Actions.</div>}
-            </div></Card>
-            <Card title="Readiness Control Matrix" icon="ShieldCheck" wide><div class="epf-table-wrap"><table class="epf-table"><thead><tr><th>Control Area</th><th>Score</th><th>Evidence</th><th>Owner</th><th>State</th></tr></thead><tbody>
-              {readinessRows.map(row => <tr><td><strong>{row.name}</strong></td><td>{row.value}%</td><td>{row.state}</td><td>{row.owner}</td><td><Pill tone={row.value === 100 ? 'green' : row.value === 0 ? 'red' : 'amber'}>{row.value === 100 ? 'Complete' : 'Review'}</Pill></td></tr>)}
-            </tbody></table></div></Card>
-          </div>
-        </>}
-
-        {tab === 'Access' && <>
-          <SectionHead title="Access" text="Authoritative account state, assigned access profile, and controlled support workflows."
-            actions={<button class="ui-btn-primary" type="button" onClick={() => showSection('s-tickets')}><LucideIcon name="Headset" size={16} /> Request Account Assistance</button>} />
-          {!mayViewSecurity ? <div class="epf-restricted"><LucideIcon name="LockKeyhole" size={20} /> Account Security Requires <code>auth.security.view</code>.</div>
-            : securityQ.isLoading ? <SkeletonText lines={8} />
-            : securityQ.isError || !security ? <EmptyState icon="fa-shield-halved" title="Account Security Unavailable" text="The authoritative account-security state could not be loaded." />
-            : <>
-            <div class="epf-access-cards">
-              <div><span><LucideIcon name="CircleCheckBig" size={21} /></span><div><small>Account Status</small><strong>{humanize(employee.accountStatus)}</strong></div></div>
-              <div><span><LucideIcon name="ShieldCheck" size={21} /></span><div><small>MFA Status</small><strong>{mfaEnabled ? 'Enabled' : 'Not Enrolled'}</strong></div></div>
-              <div><span><LucideIcon name="LogIn" size={21} /></span><div><small>Last Sign-In</small><strong>{fmtDateTime(security.lastSeenAt)}</strong></div></div>
-            </div>
-            <div class="epf-grid-2">
-              <Card title="User Account" icon="CircleUserRound"><DetailList items={[
-                { label: 'Username', value: employee.username },
-                { label: 'Primary Email', value: employee.email ?? DASH },
-                { label: 'Provisioned', value: fmtDate(employee.created_at) },
-                { label: 'Account Owner', value: employee.full_name ?? employee.username },
-                { label: 'Passkeys', value: security.passkeyCount },
-                { label: 'Trusted Devices', value: security.trustedDeviceCount },
-              ]} /></Card>
-              <Card title="Authorised Access" icon="KeyRound"><DetailList items={[
-                { label: 'Access Profile', value: d.accessProfile?.label ?? humanize(employee.role) },
-                { label: 'System Role', value: humanize(employee.role) },
-                { label: 'Department Scope', value: employee.departmentName ?? 'Not Assigned' },
-                { label: 'MFA Required', value: d.accessProfile?.requiresMfa ? 'Yes' : 'No' },
-                { label: 'Profile Status', value: d.accessProfile ? <Pill tone="green">Active</Pill> : <Pill tone="amber">Unmapped</Pill> },
-                { label: 'Exceptions', value: mfaEnabled || !d.accessProfile?.requiresMfa ? 'None' : 'MFA Required' },
-              ]} /></Card>
-              <Card title="Access Assignment" icon="Shield" wide>
-                <div class="epf-table-wrap"><table class="epf-table"><thead><tr><th>Access Profile</th><th>Source</th><th>Scope</th><th>MFA Policy</th><th>Status</th></tr></thead><tbody><tr>
-                  <td><strong>{d.accessProfile?.label ?? humanize(employee.role)}</strong><small>{d.accessProfile?.description ?? 'System role assignment'}</small></td>
-                  <td>Employee Access Profile</td><td>{employee.departmentName ?? 'Organisation'}</td><td>{d.accessProfile?.requiresMfa ? 'Required' : 'Standard'}</td><td><Pill tone="green">Active</Pill></td>
-                </tr></tbody></table></div>
-                <div class="epf-support-banner"><span><LucideIcon name="Headset" size={20} /></span><div><strong>Sensitive Account Actions</strong><small>Password reset, session revocation, device removal, MFA enforcement, and suspension are routed to the authorised Account Support owner.</small></div><button type="button" class="ui-btn-primary" onClick={() => showSection('s-tickets')}>Request Assistance</button></div>
-              </Card>
-            </div>
-          </>}
-        </>}
-
-        {tab === 'Activity & Audit' && <>
-          <SectionHead title="Activity & Audit" text="Employee-record history with actor, source, outcome, and authorised audit details." />
-          {auditQ.isError ? <EmptyState icon="fa-clock-rotate-left" title="Audit History Unavailable" text="The authorised employee audit history could not be loaded." /> : <>
-          <div class="epf-stat-grid">
-            <div><span>Last Record Change</span><strong>{fmtDate(auditQ.data?.[0]?.created_at)}</strong><small>Most Recent Audit Entry</small></div>
-            <div><span>Most Recent Actor</span><strong>{auditQ.data?.[0]?.actorName ?? 'System'}</strong><small>Authorised Actor</small></div>
-            <div><span>Recorded Events</span><strong>{auditQ.data?.length ?? 0}</strong><small>In This View</small></div>
-            <div><span>Open Workflows</span><strong>{workflowQ.data?.open_count ?? 0}</strong><small>{workflowQ.data?.urgent_count ?? 0} Urgent</small></div>
-          </div>
-          <div class="epf-table-wrap"><table class="epf-table"><thead><tr><th>Date & Time</th><th>Activity</th><th>Area</th><th>Actor</th><th>Reason</th><th>Outcome</th></tr></thead><tbody>
-            {(auditQ.data ?? []).map(entry => <tr><td>{fmtDateTime(entry.created_at)}</td><td><strong>{humanize(entry.action)}</strong></td><td>{humanize(entry.submodule_key ?? 'Employee Record')}</td><td>{entry.actorName ?? 'System'}</td><td>{entry.reason ?? DASH}</td><td><Pill tone="green">Recorded</Pill></td></tr>)}
-          </tbody></table></div>
-          <p class="epf-timezone-note">All Dates And Times Are Displayed In AST (Atlantic Standard Time).</p>
-          </>}
-        </>}
-
-        {tab === 'Offboarding' && <>
-          <SectionHead title="Offboarding" text="Controlled termination, resignation, retirement, redundancy, and contract-completion workflows." />
-          <OffboardingPanel employeeId={employeeId} canStart={access.startOffboarding} onAction={onAction} />
-        </>}
-      </main>
+      {/* ── The ten dialogs ──────────────────────────────────────────────── */}
+      {dialog?.kind === 'edit' && (
+        <EditEmployeeDialog
+          employeeId={employeeId} shell={shell} detail={detail} statutory={detail?.statutory}
+          access={access} onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog?.kind === 'request-change' && (
+        <RequestChangeDialog employeeId={employeeId} shell={shell} onClose={() => setDialog(null)} />
+      )}
+      {dialog?.kind === 'add-document' && (
+        <AddDocumentDialog employeeId={employeeId} shell={shell} onClose={() => setDialog(null)} />
+      )}
+      {dialog?.kind === 'export-index' && (
+        <ExportIndexDialog employeeId={employeeId} onClose={() => setDialog(null)} />
+      )}
+      {dialog?.kind === 'export-audit' && (
+        <ExportAuditDialog employeeId={employeeId} onClose={() => setDialog(null)} />
+      )}
+      {dialog?.kind === 'account-assistance' && (
+        <AccountAssistanceDialog
+          employeeId={employeeId} shell={shell} onClose={() => setDialog(null)}
+          onOpenHistory={() => setDialog({ kind: 'account-history' })}
+        />
+      )}
+      {dialog?.kind === 'account-history' && (
+        <AccountRequestHistoryDialog
+          employeeId={employeeId} employeeName={identity.displayName} onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog?.kind === 'start-offboarding' && (
+        <StartOffboardingDialog employeeId={employeeId} shell={shell} onClose={() => setDialog(null)} />
+      )}
+      {dialog?.kind === 'readiness' && (
+        <ReadinessReviewDialog employeeId={employeeId} entry={dialog.entry} onClose={() => setDialog(null)} />
+      )}
+      {dialog?.kind === 'activity' && (
+        <ActivityChangeDialog entry={dialog.entry} onClose={() => setDialog(null)} />
+      )}
     </div>
   );
 }

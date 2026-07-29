@@ -436,6 +436,17 @@ export const GetAccountSupportRequestSchema = z.object({
   ticketId: zShortStr(64),
 });
 
+/**
+ * Optional narrowing for the account-support list.
+ *
+ * `subjectId` selects the requests ABOUT one employee (support_tickets.subject_id),
+ * which is how the Employee Profile renders that employee's request history. It
+ * only ever narrows the actor's already-authorised set.
+ */
+export const ListAccountSupportRequestsSchema = z.object({
+  subjectId: z.string().min(1).max(255).nullable().optional(),
+});
+
 export const UpdateAccountSupportRequestSchema = z.object({
   ticketId:        zShortStr(64),
   status:          z.enum(['open', 'in_progress', 'resolved', 'closed']).optional(),

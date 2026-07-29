@@ -1,0 +1,244 @@
+/* EmployeeProfilePage.chrome.css — PRODUCTION CHROME ONLY.
+ *
+ * Every content style for this surface lives in the generated
+ * EmployeeProfilePage.mockup.css, ported verbatim from
+ * docs/mockups/employee-profile-full-page.html. Nothing in this file may restyle
+ * approved content. It exists for the two things a static reference page cannot
+ * supply:
+ *
+ *   1. THE ROOT ITSELF. The porter drops `html`/`body` as page chrome, so the
+ *      reference's own base declarations (`background: var(--page)`, the Inter
+ *      stack, and the later `body { font-size: 15px }` that overrides its
+ *      earlier 14px) have to be re-applied to `.epf-root`. The values below are
+ *      the reference's, not new ones.
+ *
+ *   2. LAYERS THE REFERENCE HAS NO NEED FOR. The mockup drives its ten dialogs
+ *      with `<dialog>.showModal()`, which promotes the element to the browser's
+ *      top layer — outside `.epf-root`, where the ported stylesheet would not
+ *      reach it. Production renders them inline instead, so it needs a centring
+ *      backdrop. Likewise the reference is fully populated and therefore shows
+ *      no loading, empty or error state, and its breadcrumb is an `<a href="#">`
+ *      where production needs a real button.
+ *
+ * NO DARK MODE. The Employee Record renders in the locked light appearance in
+ * every theme — this is a product decision, not an omission. The locked
+ * reference carries zero theme declarations, and the record is a
+ * document-of-authority surface that must look the same to everyone reading it.
+ * There is therefore deliberately no `body[data-theme="dark"]` rule in this
+ * file. If one is ever wanted, it belongs here (unlayered, so it can beat the
+ * ported stylesheet's own unlayered declarations) and must be derived from the
+ * drawer palette in `ProfileDrawer.mockup.css` — but do not add one without the
+ * product decision being reversed first.
+ */
+
+@layer sections {
+  /* ── 1. The root ─────────────────────────────────────────────────────── */
+
+  .epf-root {
+    min-width: 320px;
+    color: var(--ink);
+    background: var(--page);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    /* The reference sets `body { font-size: 14px }` and then overrides it with
+       `body { font-size: 15px }` in its "slightly larger SIOMAC type scale"
+       block. The later declaration wins, so 15px is the locked base. */
+    font-size: 15px;
+    line-height: 1.42;
+  }
+
+  /* The reference's `.main` supplies the workspace padding, but `.main` also
+     carries `margin-left: 232px` for the mockup's own fixed sidebar. Production
+     renders inside the application shell, so the padding is applied here and the
+     sidebar offset is deliberately not. */
+  .epf-root > .workspace {
+    padding: 22px 28px 48px;
+  }
+
+  /* Breadcrumb. The reference uses `<a href="#">`; going back is an action on
+     this view, not a navigation, so production uses a real button and borrows
+     the anchor's appearance rather than restyling it. */
+  .epf-root .breadcrumbs .epf-crumb {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--navy-700);
+    font: inherit;
+    font-size: inherit;
+    text-decoration: none;
+  }
+
+  .epf-root .breadcrumbs .epf-crumb:hover {
+    text-decoration: underline;
+  }
+
+  /* Portrait. The reference ships an illustrative SVG likeness; production must
+     not invent one, so a stored photo fills the same shell and an initial is the
+     fallback. Both use the shell's own box. */
+  .epf-root .portrait-shell > img.portrait {
+    object-fit: cover;
+  }
+
+  .epf-root .epf-portrait-fallback {
+    display: grid;
+    place-items: center;
+    background: linear-gradient(140deg, #f2f4f6, #d9dee4);
+    color: var(--navy-900);
+    font-size: 34px;
+    font-weight: 680;
+    letter-spacing: .02em;
+  }
+
+  /* ── 2. Layers the reference has no need for ─────────────────────────── */
+
+  /* The "more employee actions" menu. The reference renders the trigger with no
+     menu at all; a button whose label promises actions has to have them. */
+  .epf-root .epf-menu-wrap {
+    position: relative;
+  }
+
+  .epf-root .epf-action-menu {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 6px);
+    right: 0;
+    display: flex;
+    min-width: 232px;
+    padding: 6px;
+    flex-direction: column;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+
+  .epf-root .epf-action-menu button {
+    padding: 9px 10px;
+    border: 0;
+    border-radius: 7px;
+    background: none;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .epf-root .epf-action-menu button:hover {
+    background: var(--surface-soft);
+  }
+
+  .epf-root .epf-action-menu button.danger {
+    color: var(--red);
+  }
+
+  /* Dialog centring. The reference's dialogs are centred by the user agent
+     because they are native `<dialog>` elements opened with showModal(); an
+     inline dialog needs its own layer. Purely positional — every dialog's
+     appearance still comes from the ported stylesheet. */
+  .epf-root .epf-dialog-backdrop {
+    position: fixed;
+    z-index: 70;
+    display: grid;
+    inset: 0;
+    padding: 16px;
+    place-items: center;
+    background: rgba(9, 30, 62, .46);
+  }
+
+  /* The footer must stay visible while the body scrolls: the spec forbids
+     clipped controls at supported viewport sizes. */
+  .epf-root .epf-dialog-backdrop > .edit-dialog {
+    display: flex;
+    max-height: calc(100vh - 32px);
+    flex-direction: column;
+  }
+
+  .epf-root .epf-dialog-backdrop > .edit-dialog > form,
+  .epf-root .epf-dialog-backdrop > .edit-dialog > .employee-edit-shell,
+  .epf-root .epf-dialog-backdrop > .edit-dialog > .employee-edit-shell > .employee-edit-main,
+  .epf-root .epf-dialog-backdrop > .edit-dialog > .assistance-layout {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+  }
+
+  .epf-root .epf-dialog-backdrop .dialog-body,
+  .epf-root .epf-dialog-backdrop .assistance-main {
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .epf-root .epf-dialog-backdrop .dialog-head,
+  .epf-root .epf-dialog-backdrop .dialog-foot {
+    flex: none;
+  }
+
+  /* Inline field validation. The reference is a populated happy path and shows
+     no invalid state, but the delivery standard requires the message ON the
+     field, not only in a toast. */
+  .epf-root .epf-field-error {
+    display: block;
+    margin-top: 5px;
+    color: var(--red);
+    font-size: 11.5px;
+    font-weight: 600;
+  }
+
+  .epf-root .form-field.is-invalid input,
+  .epf-root .form-field.is-invalid select,
+  .epf-root .form-field.is-invalid textarea,
+  .epf-root .upload-dropzone.is-invalid {
+    border-color: var(--red);
+  }
+
+  /* Loading / empty / error / filter-summary states. These reuse the
+     reference's own muted type scale rather than introducing a new visual
+     language. */
+  .epf-root .epf-loading,
+  .epf-root .epf-empty,
+  .epf-root .epf-filter-summary {
+    padding: 14px 2px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 12.5px;
+  }
+
+  .epf-root .epf-error {
+    display: flex;
+    padding: 15px 16px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    border: 1px solid var(--red);
+    border-radius: 11px;
+    margin: 14px 0;
+    background: var(--red-soft);
+    color: var(--red);
+    font-size: 13px;
+  }
+
+  /* A filter that clears nothing must not look actionable. */
+  .epf-root .button:disabled {
+    cursor: default;
+    opacity: .55;
+  }
+
+  /* The reference hides the hero's "Open Breakdown" link while the Readiness tab
+     is already open; its script toggles this class but the ported stylesheet has
+     no rule for it. */
+  .epf-root .link.is-context-hidden {
+    visibility: hidden;
+  }
+
+  /* Honour the platform motion preference. The reference animates the health bar
+     and the gauge on entry; both must stand still when the platform asks. */
+  @media (prefers-reduced-motion: reduce) {
+    .epf-root .gauge-value,
+    .epf-root .document-health-bar-new,
+    .epf-root .document-health-bar-new span {
+      animation: none;
+      clip-path: none;
+      transition: none;
+    }
+  }
+}
