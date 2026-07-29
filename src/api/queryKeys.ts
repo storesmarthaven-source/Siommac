@@ -55,6 +55,7 @@ export const hrEmployeeKeys = {
   attention:       (id: string) => [...hrEmployeeKeys.all, 'attention', id]   as const,
   documents:       (id: string) => [...hrEmployeeKeys.all, 'documents', id]   as const,
   documentHealth:  (id: string) => [...hrEmployeeKeys.all, 'document-health', id] as const,
+  employmentDetail: (id: string) => [...hrEmployeeKeys.all, 'employment-detail', id] as const,
   accessAssignments: (id: string) => [...hrEmployeeKeys.all, 'access-assignments', id] as const,
   readinessMatrix: (id: string) => [...hrEmployeeKeys.all, 'readiness-matrix', id] as const,
   readinessWorkItem: (id: string) => [...hrEmployeeKeys.all, 'readiness-work-item', id] as const,

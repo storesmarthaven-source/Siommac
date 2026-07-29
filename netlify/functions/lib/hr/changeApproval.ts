@@ -10,6 +10,7 @@
 
 import { sb } from '../db';
 import { writeHrAudit, todayISO } from './employeeCore';
+import { currentAssignmentConditions } from './employmentDetail';
 import { emitAppEvent } from '../appEvents';
 
 export const CHANGE_TYPES = ['status_change', 'department_transfer', 'site_transfer', 'supervisor_change', 'role_change', 'employment_type_change', 'contact_update', 'transfer_promotion'] as const;
@@ -45,10 +46,15 @@ export async function applyChange(req: ChangeRow, actorId: string | null): Promi
       if ('departmentId' in rv) patch['department_id'] = rv['departmentId'];
       if ('siteId' in rv)       patch['site_id']       = rv['siteId'];
       await sb.from('app_users').update(patch).eq('id', eid);
+      // Carry the employment conditions forward: a transfer moves the posting,
+      // it does not renegotiate contracted hours, FTE or notice.
+      const transferConditions = await currentAssignmentConditions(eid);
       await sb.from('hr_employee_assignments').update({ is_current: false, effective_to: todayISO() }).eq('employee_id', eid).eq('is_current', true);
       await sb.from('hr_employee_assignments').insert({
         employee_id: eid, department_id: (rv['departmentId'] as string) ?? null, site_id: (rv['siteId'] as string) ?? null,
         assignment_type: 'primary', effective_from: todayISO(), is_current: true, created_by: actorId,
+        weekly_hours: transferConditions.weekly_hours, fte: transferConditions.fte,
+        notice_period_days: transferConditions.notice_period_days,
       });
       break;
     }
@@ -97,6 +103,8 @@ export async function applyChange(req: ChangeRow, actorId: string | null): Promi
         const newPosition   = ('positionId'    in rv)  ? (rv['positionId']    as string | null) : (prev['position_id']    as string | null) ?? null;
         const newSupervisor = ('supervisorId'  in rv)  ? (rv['supervisorId']  as string | null) : (prev['supervisor_id']  as string | null) ?? null;
 
+        const approvedConditions = await currentAssignmentConditions(eid);
+
         await sb.from('hr_employee_assignments')
           .update({ is_current: false, effective_to: eff })
           .eq('employee_id', eid).eq('is_current', true);
@@ -110,6 +118,9 @@ export async function applyChange(req: ChangeRow, actorId: string | null): Promi
           assignment_type: 'primary',
           effective_from:  eff,
           is_current:      true,
+          weekly_hours:       approvedConditions.weekly_hours,
+          fte:                approvedConditions.fte,
+          notice_period_days: approvedConditions.notice_period_days,
           created_by:      actorId,
         });
       }

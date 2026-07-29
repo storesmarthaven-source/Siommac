@@ -1,629 +1,839 @@
 /**
  * src/components/sections/HR/ProfileDrawer.tsx
  *
- * HR ▸ Employee Master — the employee profile panel. Built on the @ui design
- * system's canonical rich slide-in (<Drawer> = SidePanel) and panel primitives
- * (<EntityHead>, <PanelStats>, <PanelTabs>, <InfoCard>/<FieldList>/<MiniTable>/
- * <Pill>/<Callout>), so every colour/style comes from Siomac tokens defined once
- * in the design system — not from page-scoped CSS. The same components back the
- * HSE Incident/Risk/CAPA panels.
+ * HR ▸ Employee Master — the employee profile drawer, rebuilt to emit the DOM of
+ * the LOCKED reference `docs/mockups/employee-profile-drawer-unified-command-brief.html`.
  *
- * Every tab is wired to a real read endpoint:
- *   Overview/Employment/Compliance ← useHrEmployee (get)
- *   Compliance training ← useHrTrainingSummary · Documents ← useHrDocuments
- *   Workflows ← useHrWorkflowSummary · Audit ← useHrAudit (actor names server-side)
+ * This is a REPLACEMENT, not an adaptation. The previous drawer composed the @ui
+ * primitives (Drawer/EntityHead/PanelStats/InfoCard/FieldList/MiniTable), which
+ * render a different structure from the approved one; the implementation
+ * contract forbids substituting a generic UI-kit component where doing so
+ * changes the approved appearance. Every class name below is the mockup's own,
+ * scoped under `.epd-root` by the generated stylesheet.
  *
- * Write actions (Request Change / Change Status / Upload / Offboard / Edit Contact)
- * surface via onAction — EmployeeMaster maps them to the dialogs in ActionDialogs.
+ * STYLING — two stylesheets, one job each:
+ *   ProfileDrawer.mockup.css  generated verbatim from the locked reference; owns
+ *                             every content style. Never hand-edited.
+ *   ProfileDrawer.css         production chrome only (overlay, backdrop, slide-in,
+ *                             approved drawer width). The mockup is a static page
+ *                             with no overlay, so this cannot come from it.
+ *
+ * THEME comes only from the global `body[data-theme="dark"]`, which the generated
+ * stylesheet already scopes. There is deliberately no local theme control.
+ *
+ * DATA — the shell opens the drawer; every large dataset is tab-scoped and loads
+ * only when its tab is selected, so switching employees costs one request.
  */
 
 import { type VNode } from 'preact';
-import { useState } from 'preact/hooks';
-import {
-  Drawer, Menu, EntityHead, PanelStats, PanelTabs,
-  InfoCard, FieldList, FieldRow, MiniTable, Pill, PanelEmpty, ActivityList,
-  Skeleton, SkeletonText, Spinner, EmptyState, LucideIcon,
-  type ActivityEntry,
-} from '@ui';
-import {
-  useHrEmployee, useHrWorkflowSummary, useHrAudit, useHrDocuments, useHrTrainingSummary,
-  useVerifyHrDocument, useArchiveHrDocument, getHrDocumentDownloadUrl, useDecideHrEmployeePhoto,
-  type HrEmployeeDetail, type HrStatutoryRow, type HrAuditEntry, type HrDocument, type HrTrainingSummary,
-  type HrWorkflowSummary,
-} from '@api/hr/employees';
-import { useAdminUserSecurityStatus } from '@api/security';
-import { can } from '@lib/permissions';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { toast } from '@store';
-import { ActivityTimeline } from '@shared/orchestration/ActivityTimeline';
-import { showSection } from '@components/nav/navCore';
-import { EmployeeOnboardingSummary } from './EmployeeOnboardingSummary';
-import { humanize, statusTone, type PillTone } from './shared';
+import {
+  useEmployeeProfileShell, useEmployeeAttention, tabIndicatorFor,
+  type ProfileTabKey, type EmployeeAttentionItem, type EmployeeProfileShell,
+} from '@api/hr/employeeProfile';
+import {
+  useReadinessMatrix, useEmployeeDocumentHealth, useEmployeeAccessAssignments,
+  useEmploymentDetail, useReadinessFollowUp,
+  type DocumentHealthGroup, type ReadinessControlMatrixEntry,
+} from '@api/hr/employeeReadiness';
+import { useHrAudit, useUpdateHrContact } from '@api/hr/employees';
+import {
+  DASH, DRAWER_TABS, DRAWER_TAB_LABEL, titleCase, formatDate, formatDateTime,
+  formatTenure, formatNoticePeriod, formatWeeklyHours, formatArrangementAndFte,
+  probationState, readinessLabel, readinessExplanation, readinessHeadline,
+  attentionSubtitle, severityToneClass, tabAriaLabel, visibleTabs, identitySubtitle,
+} from './employeeProfileModel';
+import { ProfileIconSprite, Icon, type ProfileIconId } from './profile/ProfileIconSprite';
 import type { EmployeeMasterAccess } from './employeeMasterAccess';
+import './ProfileDrawer.mockup.css';
 import './ProfileDrawer.css';
 
-/** Employee Master only launches/shows onboarding — the full case workspace lives on
- *  the Onboarding page. Switches the HR nav section AND tells it which case to land
- *  on; HRSection.tsx listens for this dedicated event separately from the generic
- *  'siomac:section' nav switch (which only ever carries a plain section-id string). */
-function openOnboardingCase(caseId: string): void {
-  window.dispatchEvent(new CustomEvent('siomac:hr-onboarding-open-case', { detail: { caseId } }));
+export interface ProfileDrawerProps {
+  employeeId: string | null;
+  onClose: () => void;
+  /** Routed to EmployeeMaster's dialog map. Labels match its `openAction` keys. */
+  onAction: (label: string) => void;
+  onOpenFullRecord?: (() => void) | undefined;
+  access: EmployeeMasterAccess;
 }
 
-// ── small presentational helpers ───────────────────────────────────────────────
+/** Attention domain → the mockup's icon for that row. */
+const DOMAIN_ICON: Record<EmployeeAttentionItem['domain'], ProfileIconId> = {
+  employment: 'briefcase', statutory: 'shield', payroll: 'key', documents: 'file',
+  training: 'calendar', access: 'lock', onboarding: 'user', offboarding: 'user',
+};
 
-function fmtDate(s: string | null | undefined): string {
-  if (!s) return '—';
-  const d = new Date(s);
-  if (isNaN(d.getTime())) return s;
-  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}
-function fmtDateTime(s: string | null | undefined): string {
-  if (!s) return '—';
-  const d = new Date(s);
-  if (isNaN(d.getTime())) return s;
-  return d.toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-}
-const yn = (b: unknown): string => (b ? 'Yes' : 'No');
+/** Readiness domain → matrix row icon. */
+const CONTROL_ICON: Record<string, ProfileIconId> = {
+  assignment: 'briefcase', payroll: 'key', training: 'calendar',
+  documents: 'file', statutory: 'shield', access: 'lock',
+};
 
-function relativeTime(s: string | null | undefined): string {
-  if (!s) return '—';
-  const d = new Date(s);
-  if (isNaN(d.getTime())) return s;
-  const secs = Math.round((Date.now() - d.getTime()) / 1000);
-  const day = 86400;
-  if (secs < 60) return 'just now';
-  if (secs < 3600) return `${Math.floor(secs / 60)} min ago`;
-  if (secs < day) return `${Math.floor(secs / 3600)}h ago`;
-  if (secs < day * 7) return `${Math.floor(secs / day)} days ago`;
-  if (secs < day * 30) return `${Math.floor(secs / (day * 7))} weeks ago`;
-  return fmtDate(s);
-}
+/** Document health state → the approved pill text and tone. */
+const DOC_STATE_LABEL: Record<string, { label: string; tone: string }> = {
+  verified:   { label: 'Verified',   tone: '' },
+  current:    { label: 'Current',    tone: '' },
+  expiring:   { label: 'Expiring',   tone: 'warn' },
+  expired:    { label: 'Expired',    tone: 'danger' },
+  unverified: { label: 'Unverified', tone: 'warn' },
+  missing:    { label: 'Missing',    tone: 'danger' },
+};
 
-// Overall training status, DERIVED from the actual counts so it always agrees
-// with the numbers shown and never renders blank (the employee row's
-// `trainingStatus` can be a value outside the FE union). Matches v36 semantics.
-function overallTraining(t: HrTrainingSummary | undefined): { label: string; tone: PillTone } {
-  if (!t || t.total === 0) return { label: 'Not Required', tone: 'gray' };
-  if (t.expired > 0) return { label: 'Non-Compliant', tone: 'red' };
-  if (t.dueSoon > 0) return { label: 'Due Soon', tone: 'amber' };
-  if (t.current >= t.total) return { label: 'Compliant', tone: 'green' };
-  return { label: 'In Progress', tone: 'amber' };
+/** Activity area → timeline icon and tone, from the record's own area field. */
+function activityVisual(area: string): { icon: ProfileIconId; tone: string } {
+  if (area.includes('document')) return { icon: 'file', tone: '' };
+  if (area.includes('readiness') || area.includes('training')) return { icon: 'check', tone: 'green' };
+  if (area.includes('access')) return { icon: 'lock', tone: '' };
+  if (area.includes('offboard')) return { icon: 'alert', tone: 'amber' };
+  return { icon: 'briefcase', tone: 'amber' };
 }
 
-// Robust label/tone for the employee row's trainingStatus (tolerates values
-// outside the FE union — never blank).
-function docTone(status: string): PillTone {
-  const s = status.toLowerCase();
-  if (s.includes('verif')) return 'green';
-  if (s.includes('reject')) return 'red';
-  if (s.includes('pending')) return 'amber';
-  return 'gray';
-}
-function wfTone(status: string): PillTone {
-  const s = status.toLowerCase();
-  if (s.includes('complete') || s.includes('approved')) return 'green';
-  if (s.includes('progress')) return 'blue';
-  if (s.includes('reject') || s.includes('return')) return 'red';
-  if (s.includes('pending')) return 'amber';
-  return 'gray';
+/** A value row inside the approved `.data-list` grid. */
+function DataRow({ label, value }: { label: string; value: VNode | string | null }): VNode {
+  return <><span>{label}</span><strong>{value ?? DASH}</strong></>;
 }
 
-function gated(q: { isLoading: boolean; isError: boolean }, empty: string): string {
-  return q.isLoading ? 'Loading…' : q.isError ? 'You don’t have permission to view this, or nothing is on file.' : empty;
-}
+export function ProfileDrawer({
+  employeeId, onClose, onAction, onOpenFullRecord, access,
+}: ProfileDrawerProps): VNode | null {
+  const [tab, setTab] = useState<ProfileTabKey>('overview');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [showAllAttention, setShowAllAttention] = useState(false);
 
-// ── tabs ────────────────────────────────────────────────────────────────────────
+  const shellQuery = useEmployeeProfileShell(employeeId);
+  const shell = shellQuery.data;
 
-function TrainingSnapshot(
-  { trainQ, onViewTraining }:
-  { trainQ: ReturnType<typeof useHrTrainingSummary>; onViewTraining?: () => void },
-): VNode {
-  const t: HrTrainingSummary | undefined = trainQ.data;
-  const ov = overallTraining(t);
-  return (
-    <InfoCard title="Training Snapshot"
-      action={onViewTraining ? <button class="ui-mini-btn" type="button" onClick={onViewTraining}>View Training Profile</button> : undefined}>
-      {trainQ.isLoading
-        ? <Spinner center label="Loading…" />
-        : <PanelStats plain items={[
-            { label: 'Overall Status', value: <Pill tone={ov.tone}>{ov.label}</Pill> },
-            { label: 'Required', value: <strong>{t?.total ?? '—'}</strong> },
-            { label: 'Current', value: <strong>{t?.current ?? '—'}</strong> },
-            { label: 'Expired', value: <strong>{t?.expired ?? '—'}</strong> },
-            { label: 'Due Soon', value: <strong>{t?.dueSoon ?? '—'}</strong> },
-          ]} />}
-    </InfoCard>
-  );
-}
+  // Reset per-employee UI state on switch, so a newly selected employee never
+  // inherits the previous one's open tab, expanded attention list or menu.
+  useEffect(() => {
+    setTab('overview'); setMenuOpen(false); setContactOpen(false); setShowAllAttention(false);
+  }, [employeeId]);
 
-function ProfileOverview(
-  { d, docsQ, auditQ, securityQ, onEditContact, onViewEmployment, onViewCompliance, onViewDocuments, onViewTimeline, onManageAccess, showDocuments, showStatutory, showAudit, showSecurity }:
-  { d: HrEmployeeDetail; docsQ: ReturnType<typeof useHrDocuments>; auditQ: ReturnType<typeof useHrAudit>;
-    securityQ: ReturnType<typeof useAdminUserSecurityStatus>; onEditContact?: () => void; onViewEmployment: () => void;
-    onViewCompliance: () => void; onViewDocuments: () => void; onViewTimeline: () => void; onManageAccess?: () => void;
-    showDocuments: boolean; showStatutory: boolean; showAudit: boolean; showSecurity: boolean },
-): VNode {
-  // Capture "now" once at mount via a lazy state initializer — calling Date.now() directly in
-  // the render body is impure (it changes every render); this keeps the expiry countdown stable.
-  const [nowMs] = useState(() => Date.now());
-  const e = d.employee;
-  const docs = docsQ.data ?? [];
-  const readiness = e.readiness;
-  const readinessPercent = readiness?.percent ?? 0;
-  const expiringDocument = docs
-    .filter(doc => doc.expiry_date)
-    .sort((a, b) => new Date(a.expiry_date!).getTime() - new Date(b.expiry_date!).getTime())[0];
-  const daysToExpiry = expiringDocument?.expiry_date
-    ? Math.ceil((new Date(expiringDocument.expiry_date).getTime() - nowMs) / 86_400_000)
-    : null;
-  const security = securityQ.data;
-  const mfaEnabled = !!security && (security.totpEnabled || security.passkeyCount > 0);
-  const attention: { icon: 'IdCard' | 'ShieldCheck' | 'GraduationCap' | 'BriefcaseBusiness' | 'BadgeDollarSign'; title: string; detail: string; action?: () => void }[] = [];
-  if (showDocuments && daysToExpiry !== null && daysToExpiry <= 30) attention.push({
-    icon: 'IdCard', title: daysToExpiry < 0
-      ? `${expiringDocument?.title ?? 'Document'} expired ${Math.abs(daysToExpiry)} days ago`
-      : `${expiringDocument?.title ?? 'Document'} expires in ${daysToExpiry} days`,
-    detail: `${humanize(expiringDocument?.document_type ?? 'employee document')} · Expires ${fmtDate(expiringDocument?.expiry_date)}`,
-    action: onViewDocuments,
-  });
-  if (showSecurity && securityQ.isSuccess && !mfaEnabled) attention.push({
-    icon: 'ShieldCheck', title: 'MFA not enrolled', detail: 'Improve account security', action: onManageAccess,
-  });
-  if (readiness?.blockers.includes('assignment')) attention.push({
-    icon: 'BriefcaseBusiness', title: 'Assignment details are incomplete', detail: 'Department, site and supervisor are required', action: onViewEmployment,
-  });
-  if (readiness?.blockers.includes('payroll')) attention.push({
-    icon: 'BadgeDollarSign', title: `Payroll readiness is ${readiness.payrollStatus}`, detail: 'Review the statutory payroll controls', action: showStatutory ? onViewCompliance : undefined,
-  });
-  if (readiness?.blockers.includes('training')) attention.push({
-    icon: 'GraduationCap', title: `Training status is ${humanize(readiness.trainingStatus)}`, detail: 'Review required learning and certificates', action: onViewCompliance,
-  });
+  const tabs = useMemo(() => visibleTabs(shell, DRAWER_TABS), [shell]);
+  // A capability-gated tab can disappear once the shell resolves; fall back to
+  // overview rather than render an empty panel for a tab that no longer exists.
+  useEffect(() => { if (!tabs.includes(tab)) setTab('overview'); }, [tabs, tab]);
 
-  const readinessTone = readinessPercent >= 100 ? 'is-green' : readinessPercent >= 67 ? 'is-amber' : 'is-red';
-  const assignmentLabel = readiness?.assignmentComplete ? 'Complete' : 'Needs attention';
-  const payrollLabel = readiness ? humanize(readiness.payrollStatus) : 'Restricted';
-  const trainingLabel = readiness ? humanize(readiness.trainingStatus === 'none' ? 'not on file' : readiness.trainingStatus) : 'Restricted';
+  // Tab-scoped datasets. `enabled` keeps each one off until its tab is opened,
+  // so opening the drawer costs the shell request alone.
+  const attentionQuery = useEmployeeAttention(employeeId, showAllAttention);
+  const documentHealth = useEmployeeDocumentHealth(
+    employeeId, access.viewDocuments && (tab === 'overview' || tab === 'documents'));
+  const employment = useEmploymentDetail(employeeId, tab === 'employment');
+  const readiness = useReadinessMatrix(employeeId, access.viewReadiness && tab === 'readiness');
+  const assignments = useEmployeeAccessAssignments(
+    employeeId, false, access.viewAccessAssignments && tab === 'access');
+  const audit = useHrAudit(tab === 'activity' && access.viewAudit ? employeeId : null);
 
-  return (
-    <div class="epd-overview-grid">
-      <InfoCard title={attention.length ? 'Needs Attention' : 'Record Status'}>
-        <div class={`epd-attention-list${attention.length ? '' : ' is-clear'}`}>
-          {attention.length ? attention.slice(0, 4).map(item => item.action ? (
-            <button type="button" onClick={item.action}>
-              <span class="epd-attention-icon"><LucideIcon name={item.icon} size={18} /></span>
-              <span><strong>{item.title}</strong><small>{item.detail}</small></span>
-              <LucideIcon name="ChevronRight" size={16} />
-            </button>
-          ) : (
-            <div class="epd-attention-note">
-              <span class="epd-attention-icon"><LucideIcon name={item.icon} size={18} /></span>
-              <span><strong>{item.title}</strong><small>{item.detail}</small></span>
-            </div>
-          )) : <div class="epd-clear-state"><LucideIcon name="CircleCheck" size={18} /> No open attention items.</div>}
-        </div>
-      </InfoCard>
+  const followUp = useReadinessFollowUp();
+  const updateContact = useUpdateHrContact();
 
-      <div class="epd-summary-grid">
-        <InfoCard title="Personal & Contact"
-          action={onEditContact ? <button class="ui-mini-btn" type="button" onClick={onEditContact}>Edit</button> : undefined}>
-          <FieldList>
-            <FieldRow icon="fa-envelope" label="Work Email" value={e.email ?? '—'} />
-            <FieldRow icon="fa-phone" label="Phone" value={e.phone ?? '—'} />
-            <FieldRow icon="fa-at" label="Personal Email" value={e.personal_email ?? '—'} />
-            <FieldRow icon="fa-cake-candles" label="Date of Birth" value={fmtDate(e.date_of_birth)} />
-            <FieldRow icon="fa-flag" label="Nationality" value={e.nationality ?? '—'} />
-          </FieldList>
-        </InfoCard>
+  const closeRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => { closeRef.current?.focus(); }, [employeeId]);
 
-        <InfoCard title="Current Assignment"
-          action={<button class="ui-mini-btn" type="button" onClick={onViewEmployment}>View Details</button>}>
-          <FieldList>
-            <FieldRow label="Position" value={e.position ?? '—'} />
-            <FieldRow label="Department" value={e.departmentName ?? '—'} />
-            <FieldRow label="Site" value={e.siteName ?? '—'} />
-            <FieldRow label="Supervisor" value={e.supervisorName ?? '—'} />
-            <FieldRow label="Effective Date" value={fmtDate(e.start_date)} />
-          </FieldList>
-        </InfoCard>
-      </div>
+  // Escape closes the top-most layer first, then the drawer.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent): void {
+      if (e.key !== 'Escape') return;
+      if (contactOpen) { setContactOpen(false); return; }
+      if (menuOpen) { setMenuOpen(false); return; }
+      onClose();
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [contactOpen, menuOpen, onClose]);
 
-      <InfoCard title="Record Readiness">
-        {readiness ? <>
-          <div class="epd-readiness-head"><strong>{readinessPercent}%</strong><span>Ready across assignment, payroll and training</span></div>
-          <div class={`epd-progress ${readinessTone}`}><span style={{ width: `${readinessPercent}%` }} /></div>
-          <div class="epd-readiness-grid">
-            <button type="button" onClick={onViewEmployment}><LucideIcon name="BriefcaseBusiness" size={18} /><span>Assignment</span><strong>{assignmentLabel}</strong></button>
-            <button type="button" onClick={onViewCompliance}><LucideIcon name="BadgeDollarSign" size={18} /><span>Payroll</span><strong>{payrollLabel}</strong></button>
-            <button type="button" onClick={onViewCompliance}><LucideIcon name="GraduationCap" size={18} /><span>Training</span><strong>{trainingLabel}</strong></button>
-          </div>
-        </> : <div class="epd-restricted"><LucideIcon name="LockKeyhole" size={18} /> Readiness requires payroll-readiness access.</div>}
-      </InfoCard>
+  if (!employeeId) return null;
 
-      <InfoCard title="Account Access"
-        action={onManageAccess ? <button class="ui-mini-btn" type="button" onClick={onManageAccess}>Manage Access</button> : undefined}>
-        <PanelStats plain items={[
-          { label: 'Login', value: <Pill tone={e.status === 'active' ? 'green' : 'red'}>{e.status === 'active' ? 'Enabled' : 'Disabled'}</Pill> },
-          { label: 'Username', value: <strong>{e.username}</strong> },
-          { label: 'Last Sign-in', value: <strong>{showSecurity ? (security?.lastSeenAt ? fmtDateTime(security.lastSeenAt) : 'No active session') : 'Restricted'}</strong> },
-          { label: 'MFA', value: <Pill tone={!showSecurity ? 'gray' : mfaEnabled ? 'green' : 'red'}>{showSecurity ? (mfaEnabled ? 'Enrolled' : 'Not enrolled') : 'Restricted'}</Pill> },
-        ]} />
-      </InfoCard>
+  const identity = shell?.identity;
+  const facts = shell?.employment;
+  const attentionItems: EmployeeAttentionItem[] = showAllAttention
+    ? (attentionQuery.data?.items ?? shell?.attentionPreview ?? [])
+    : (shell?.attentionPreview ?? []);
+  const attentionTotal = shell?.attentionTotal ?? 0;
 
-      {showAudit && <InfoCard title="Recent Activity"
-        action={<button class="ui-mini-btn" type="button" onClick={onViewTimeline}>View Full Timeline</button>}>
-        {auditQ.isLoading
-          ? <Spinner center label="Loading activity…" />
-          : auditQ.data?.length
-            ? <ActivityList items={auditQ.data.slice(0, 3).map((a): ActivityEntry => ({
-                icon: <i class={`fas ${activityIcon(a.action)}`} aria-hidden="true" />,
-                title: humanize(a.action),
-                desc: a.reason ?? a.actorName ?? undefined,
-                time: relativeTime(a.created_at),
-              }))} />
-            : <PanelEmpty>{gated(auditQ, 'No recent activity.')}</PanelEmpty>}
-      </InfoCard>}
-    </div>
-  );
-}
+  function runAction(label: string): void { setMenuOpen(false); onAction(label); }
 
-function activityIcon(action: string): string {
-  const a = action.toLowerCase();
-  if (/approv|verif|pass/.test(a)) return 'fa-circle-check';
-  if (/complet|done|finish/.test(a)) return 'fa-check';
-  if (/document|upload|file|attach/.test(a)) return 'fa-file';
-  if (/status|transfer|offboard/.test(a)) return 'fa-arrow-right-arrow-left';
-  if (/assign|move/.test(a)) return 'fa-user-group';
-  if (/creat|add|new|onboard/.test(a)) return 'fa-user-plus';
-  if (/delet|remov|archiv/.test(a)) return 'fa-trash';
-  if (/reject|deny|fail/.test(a)) return 'fa-circle-xmark';
-  if (/updat|edit|chang|modif/.test(a)) return 'fa-pen';
-  return 'fa-bolt';
-}
-
-export function EmploymentTab({ d }: { d: HrEmployeeDetail }): VNode {
-  const e = d.employee;
-  const hist = d.statusHistory;
-  return (
-    <>
-      <InfoCard title="Employment Details">
-        <FieldList>
-          <FieldRow label="Employment Type" value={humanize(e.employment_type ?? e.workerType)} />
-          <FieldRow label="Status" value={<Pill tone={statusTone(e.status)}>{humanize(e.status)}</Pill>} />
-          <FieldRow label="Position / Role" value={e.position ?? '—'} />
-          <FieldRow label="Employee Grade" value={e.employee_grade ?? '—'} />
-          <FieldRow label="Work Schedule" value={e.work_schedule ?? '—'} />
-          <FieldRow label="Department" value={e.departmentName ?? '—'} />
-          <FieldRow label="Site" value={e.siteName ?? '—'} />
-          <FieldRow label="Cost Center" value={e.cost_center ?? '—'} />
-          <FieldRow label="Supervisor" value={e.supervisorName ?? '—'} />
-          <FieldRow label="Start Date" value={fmtDate(e.start_date)} />
-          <FieldRow label="Probation End" value={fmtDate(e.probation_end_date)} />
-          <FieldRow label="Government ID" value={e.government_id ?? '—'} />
-        </FieldList>
-      </InfoCard>
-      <InfoCard title="Employment History">
-        <MiniTable cols={['Effective', 'From', 'To', 'Reason']}
-          empty={<EmptyState icon="fa-clock-rotate-left" tone="purple" title="No status changes recorded"
-            text="Employment status updates appear here once a change is submitted."
-            note="Tracks active, suspended, terminated, leave and reinstatement changes with effective dates and workflow references." />}>
-          {hist.map(r => (
-            <tr>
-              <td>{fmtDate((r.effective_date ?? r.changed_at) as string)}</td>
-              <td>{humanize((r.previous_status as string | undefined) ?? '—')}</td>
-              <td>{humanize((r.new_status as string | undefined) ?? '—')}</td>
-              <td>{(r.reason as string | undefined) ?? '—'}</td>
-            </tr>
-          ))}
-        </MiniTable>
-      </InfoCard>
-    </>
-  );
-}
-
-export function DocumentsTab({ docsQ, employeeId, onUpload, access }: { docsQ: ReturnType<typeof useHrDocuments>; employeeId: string; onUpload?: () => void; access: EmployeeMasterAccess }): VNode {
-  const rows = docsQ.data ?? [];
-  const verify = useVerifyHrDocument(employeeId);
-  const archive = useArchiveHrDocument(employeeId);
-  const [docErr, setDocErr] = useState<string | null>(null);
-  const actErr = (verify.error ?? archive.error);
-  async function download(id: string) {
-    setDocErr(null);
-    try { const url = await getHrDocumentDownloadUrl(id); window.open(url, '_blank', 'noopener'); }
-    catch (e) { setDocErr(e instanceof Error ? e.message : 'Download failed.'); }
+  /** Attention rows target a tab; `offboarding` has no drawer tab, so it opens the full record. */
+  function openAttention(item: EmployeeAttentionItem): void {
+    if (item.actionTarget === 'offboarding') { onOpenFullRecord?.(); return; }
+    setTab(item.actionTarget);
   }
+
+  async function sendReadinessReminder(entry: ReadinessControlMatrixEntry): Promise<void> {
+    if (!employeeId) return;
+    if (entry.owner.status !== 'resolved') {
+      // Fail closed in the UI exactly as the backend does, and name the fix.
+      toast.error(`Owner Required — ${entry.owner.reason ?? 'no owner is configured for this readiness area.'}`);
+      return;
+    }
+    try {
+      const result = await followUp.mutateAsync({
+        employeeId, controlKey: entry.control.controlKey,
+        workItemId: entry.workItem?.id ?? null, action: 'send_reminder',
+      });
+      toast.success(`Reminder sent to ${entry.owner.ownerLabel ?? 'the owner'} · ${result.notified} notified.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Reminder failed.');
+    }
+  }
+
+  async function submitContact(e: Event): Promise<void> {
+    e.preventDefault();
+    if (!employeeId) return;
+    const fd = new FormData(e.target as HTMLFormElement);
+    // FormData values may be File; only a string is a contact value.
+    const str = (k: string): string => {
+      const value = fd.get(k);
+      return typeof value === 'string' ? value.trim() : '';
+    };
+    try {
+      const res = await updateContact.mutateAsync({
+        employeeId,
+        // `direct` when the actor may edit outright, otherwise the SAME form
+        // raises a tracked change request — the backend decides either way.
+        mode: access.editContact ? 'direct' : 'request',
+        work: { email: str('workEmail'), phone: str('workPhone') || null, mobilePhone: str('mobile') || null },
+        emergency: {
+          name: str('emergencyName') || null,
+          phone: str('emergencyPhone') || null,
+          relationship: str('relationship') || null,
+        },
+      });
+      toast.success(res.data.mode === 'request'
+        ? `Change request ${res.data.changeNo ?? ''} submitted for approval.`.trim()
+        : 'Contact information updated.');
+      setContactOpen(false);
+      void shellQuery.refetch();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Contact update failed.');
+    }
+  }
+
   return (
-    <InfoCard title="Employee Documents"
-      action={onUpload ? <button class="ui-mini-btn" type="button" onClick={onUpload}>Upload Document</button> : undefined}>
-      {docErr ? <div class="ui-warn">{docErr}</div> : null}
-      {actErr ? <div class="ui-warn">{actErr instanceof Error ? actErr.message : 'Action failed'}</div> : null}
-      {docsQ.isLoading
-        ? <Spinner center label="Loading documents…" />
-        : docsQ.isError
-        ? <PanelEmpty>{gated(docsQ, 'No documents on file.')}</PanelEmpty>
-        : <MiniTable cols={['Document', 'Type', 'Status', 'Expiry', '']}
-            empty={<EmptyState icon="fa-folder-open" title="No documents uploaded"
-              text="Add employee IDs, contracts, certificates, medical files or onboarding records."
-              note="Uploaded files appear here with type, expiry, verification status and audit history." />}>
-            {rows.map((doc: HrDocument) => {
-              const pending = !['verified', 'rejected', 'archived'].includes(doc.status);
+    <div class="epd-overlay" role="presentation" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div class="epd-root">
+        <ProfileIconSprite />
+
+        <main class="drawer" aria-label="Employee profile">
+          <header class="topbar">
+            <div class="brand"><strong>SIOMAC</strong><span>Employee Profile</span></div>
+            <div class="top-actions">
+              <div class="action-menu-wrap">
+                <button
+                  class="icon-btn" type="button" aria-label="More employee actions"
+                  aria-haspopup="menu" aria-expanded={menuOpen}
+                  onClick={() => setMenuOpen(o => !o)}
+                ><Icon id="more" /></button>
+                {menuOpen && (
+                  <div class="action-menu" role="menu">
+                    {/* Only implemented, capability-appropriate actions appear here. */}
+                    {access.editEmployee && (
+                      <button type="button" role="menuitem" onClick={() => runAction('Edit Contact')}>Edit Employee</button>
+                    )}
+                    {access.changeStatus && (
+                      <button type="button" role="menuitem" onClick={() => runAction('Change Status')}>Change Employment Status</button>
+                    )}
+                    {access.startOffboarding && (
+                      <button class="danger" type="button" role="menuitem" onClick={() => runAction('Start Offboarding')}>Start Offboarding</button>
+                    )}
+                  </div>
+                )}
+              </div>
+              <button ref={closeRef} class="icon-btn" type="button" aria-label="Close employee profile" onClick={onClose}>
+                <Icon id="close" />
+              </button>
+            </div>
+          </header>
+
+          <section class="identity">
+            <div class="identity-grid">
+              <div class="portrait-shell">
+                {identity?.profileImageUrl
+                  ? <img src={identity.profileImageUrl} alt={identity.displayName} />
+                  : <span class="portrait-fallback" aria-hidden="true">
+                      {(identity?.displayName ?? '?').slice(0, 1).toUpperCase()}
+                    </span>}
+                <span class="presence" aria-label={titleCase(identity?.employmentStatus)} />
+              </div>
+              <div>
+                <div class="name-line">
+                  <h1>{identity?.displayName ?? DASH}</h1>
+                  <span class="status">{titleCase(identity?.employmentStatus)}</span>
+                </div>
+                <div class="employee-no">{identity?.employeeNo ?? DASH}</div>
+                <div class="identity-lines">
+                  <span><Icon id="briefcase" />{identity?.position ?? DASH}</span>
+                  <span><Icon id="building" />{shell ? identitySubtitle(shell) : DASH}</span>
+                </div>
+              </div>
+            </div>
+            <div class="facts">
+              <div class="fact"><Icon id="shield" /><span>Employment Basis</span><strong>{titleCase(facts?.employmentBasis)}</strong></div>
+              <div class="fact"><Icon id="clock" /><span>Work Arrangement</span><strong>{facts?.workArrangement ?? DASH}</strong></div>
+              <div class="fact"><Icon id="calendar" /><span>Start Date</span><strong>{formatDate(facts?.startDate)}</strong></div>
+              <div class="fact"><Icon id="clock" /><span>Tenure</span><strong>{formatTenure(facts?.tenureMonths)}</strong></div>
+            </div>
+          </section>
+
+          <nav class="tabs" role="tablist" aria-label="Employee profile sections">
+            {tabs.map(key => {
+              const indicator = tabIndicatorFor(shell?.tabIndicators, key);
               return (
-                <tr>
-                  <td>{doc.title}</td>
-                  <td>{humanize(doc.document_type)}</td>
-                  <td><Pill tone={docTone(doc.status)}>{humanize(doc.status)}</Pill></td>
-                  <td>{fmtDate(doc.expiry_date)}</td>
-                  <td>
-                    <div class="ui-mini-btn-row">
-                      {access.downloadDocument && <button class="ui-mini-btn" type="button" onClick={() => void download(doc.id)}>Download</button>}
-                      {access.verifyDocument && pending && <button class="ui-mini-btn" type="button" disabled={verify.isPending} onClick={() => verify.mutate({ documentId: doc.id, decision: 'approve' })}>Verify</button>}
-                      {access.verifyDocument && pending && <button class="ui-mini-btn" type="button" disabled={verify.isPending} onClick={() => verify.mutate({ documentId: doc.id, decision: 'reject' })}>Reject</button>}
-                      {access.archiveDocument && doc.status !== 'archived' && <button class="ui-mini-btn" type="button" disabled={archive.isPending} onClick={() => archive.mutate(doc.id)}>Archive</button>}
-                    </div>
-                  </td>
-                </tr>
+                <button
+                  key={key} class={`tab${tab === key ? ' active' : ''}`} role="tab"
+                  aria-selected={tab === key} data-tab={key}
+                  aria-label={tabAriaLabel(key, indicator)}
+                  onClick={() => setTab(key)}
+                >
+                  {DRAWER_TAB_LABEL[key]}
+                  {indicator && (
+                    <span class={`badge ${severityToneClass(indicator.highestSeverity)}`.trim()}>
+                      {indicator.unresolvedCount}
+                    </span>
+                  )}
+                </button>
               );
             })}
-          </MiniTable>}
-    </InfoCard>
-  );
-}
+          </nav>
 
-export function TrainingTab(
-  { trainQ }:
-  { trainQ: ReturnType<typeof useHrTrainingSummary> },
-): VNode {
-  const t: HrTrainingSummary | undefined = trainQ.data;
-  return (
-    <>
-      <TrainingSnapshot trainQ={trainQ} />
-      <InfoCard title="Certificates">
-        {trainQ.isError
-          ? <PanelEmpty>{gated(trainQ, 'No certificates on file.')}</PanelEmpty>
-          : <MiniTable loading={trainQ.isLoading && !trainQ.data} cols={['Course', 'Status', 'Expiry']}
-              empty={<EmptyState icon="fa-certificate" tone="green" title="No certificates on file"
-                text="Completed courses and competencies appear here."
-                note="Each certificate shows its course, current status and expiry, synced from the Training module." />}>
-              {(t?.certificates ?? []).map(cert => (
-                <tr>
-                  <td>{cert.course_name}</td>
-                  <td>{humanize(cert.status)}</td>
-                  <td>{fmtDate(cert.expires_at)}</td>
-                </tr>
-              ))}
-            </MiniTable>}
-      </InfoCard>
-    </>
-  );
-}
-
-export function StatutoryTab({ d, onEdit }: { d: HrEmployeeDetail; onEdit?: () => void }): VNode {
-  const s: HrStatutoryRow | null = d.statutory;
-  const readiness = d.payrollReadiness;
-  if (!s) {
-    return <InfoCard title="Trinidad & Tobago Statutory Profile">
-      <EmptyState icon="fa-shield-halved" tone="amber" title="Statutory profile unavailable"
-        text="Details require the statutory.view permission, or none are on file yet."
-        note="NIS, BIR / PAYE, TD1 and health-surcharge fields appear here once access is granted and the profile is completed." />
-    </InfoCard>;
-  }
-  const readyLabel = readiness ? humanize(readiness.status) : '—';
-  const readySub = readiness?.blockers.length ? readiness.blockers.join(', ') : 'Ready for Finance / Payroll handoff';
-  return (
-    <>
-      <InfoCard title="Trinidad & Tobago Statutory Profile"
-        action={onEdit ? <button class="ui-mini-btn" type="button" onClick={onEdit}>Edit Statutory Profile</button> : undefined}>
-        <div class="ui-stat-tiles">
-          <div class="ui-stat-tile"><small>Payroll Readiness</small><strong>{readyLabel}</strong><span>{readySub}</span></div>
-          <div class="ui-stat-tile"><small>NIS Profile</small><strong>{humanize(s.nis_status)}</strong><span>{s.nis_number ? `NIS No. ${s.nis_number}` : 'No NIS number on file'}</span></div>
-          <div class="ui-stat-tile"><small>BIR / PAYE</small><strong>{s.bir_file_number ? 'Complete' : 'Incomplete'}</strong><span>{`PAYE ${s.paye_applicable ? 'applicable' : 'n/a'} · TD1 ${s.td1_received ? 'received' : 'pending'}`}</span></div>
-          <div class="ui-stat-tile"><small>Health Surcharge</small><strong>{s.hs_applicable ? 'Applicable' : 'Exempt'}</strong><span>{s.hs_exemption_reason ?? 'Standard employee deduction'}</span></div>
-        </div>
-      </InfoCard>
-      <InfoCard title="NIS Profile">
-        <FieldList>
-          <FieldRow label="NIS Number" value={s.nis_number ?? '—'} />
-          <FieldRow label="Registration Status" value={humanize(s.nis_status)} />
-          <FieldRow label="Effective Date" value={fmtDate(s.nis_effective_date)} />
-        </FieldList>
-      </InfoCard>
-      <InfoCard title="BIR / PAYE & TD1">
-        <FieldList>
-          <FieldRow label="BIR File Number" value={s.bir_file_number ?? 'Missing'} />
-          <FieldRow label="PAYE Applicable" value={yn(s.paye_applicable)} />
-          <FieldRow label="TD1 Received" value={yn(s.td1_received)} />
-          <FieldRow label="TD1 Effective Year" value={s.td1_effective_year ? String(s.td1_effective_year) : '—'} />
-        </FieldList>
-      </InfoCard>
-      <InfoCard title="Health Surcharge">
-        <FieldList>
-          <FieldRow label="Applicable" value={yn(s.hs_applicable)} />
-          <FieldRow label="Exemption Reason" value={s.hs_exemption_reason ?? 'None'} />
-          <FieldRow label="Payroll Handoff" value={readiness?.financeHandoffEligible ? 'Available to Finance / Payroll' : 'Blocked until statutory profile complete'} />
-        </FieldList>
-      </InfoCard>
-    </>
-  );
-}
-
-export function WorkflowsTab({ wfQ }: { wfQ: ReturnType<typeof useHrWorkflowSummary> }): VNode {
-  const data: HrWorkflowSummary | undefined = wfQ.data;
-  return (
-    <InfoCard title="Open Workflows">
-      {wfQ.isError
-        ? <PanelEmpty>{gated(wfQ, 'No open workflows.')}</PanelEmpty>
-        : <MiniTable loading={wfQ.isLoading && !wfQ.data} cols={['Workflow', 'Current Step', 'Status', 'Due']}
-            empty={<EmptyState icon="fa-list-check" title="No open workflows"
-              text="Approvals and change requests for this employee appear here."
-              note="Sensitive-change, onboarding and offboarding workflows show their current step, status and due date." />}>
-            {(data?.items ?? []).map(w => (
-              <tr>
-                <td>{humanize(w.workflow_type)}</td>
-                <td>{w.current_step ?? '—'}</td>
-                <td><Pill tone={wfTone(w.status)}>{humanize(w.status)}</Pill></td>
-                <td>{fmtDate(w.due_at)}</td>
-              </tr>
-            ))}
-          </MiniTable>}
-    </InfoCard>
-  );
-}
-
-export function AuditTab({ auditQ }: { auditQ: ReturnType<typeof useHrAudit> }): VNode {
-  return (
-    <InfoCard title="Audit Trail">
-      {auditQ.isError
-        ? <PanelEmpty>{gated(auditQ, 'No audit entries.')}</PanelEmpty>
-        : <MiniTable loading={auditQ.isLoading && !auditQ.data} cols={['Time', 'Actor', 'Action', 'Reason']}
-            empty={<EmptyState icon="fa-clipboard-list" tone="gray" title="No audit entries"
-              text="Changes to this employee's record will be logged here."
-              note="Every status change, contact edit, document action and approval is recorded with the actor and time." />}>
-            {(auditQ.data ?? []).map((a: HrAuditEntry) => (
-              <tr>
-                <td>{fmtDateTime(a.created_at)}</td>
-                <td>{a.actorName ?? (a.actor_id ? '—' : 'System')}</td>
-                <td>{humanize(a.action)}</td>
-                <td>{a.reason ?? '—'}</td>
-              </tr>
-            ))}
-          </MiniTable>}
-    </InfoCard>
-  );
-}
-
-// Leave / Attendance live in their own modules; there is no in-drawer action to
-// wire here yet, so this is an honest informational panel — no dead button.
-// ── drawer shell ─────────────────────────────────────────────────────────────────
-
-const PRIMARY_TABS = ['Overview', 'Employment', 'Documents', 'Compliance', 'Timeline'];
-const MORE_TABS = ['Onboarding', 'Workflows', 'Audit'];
-
-// Whole-drawer skeleton — shown until the detail data belongs to the requested
-// employee, so a previous employee's header/tags never flash on switch.
-function DrawerSkeleton(): VNode {
-  return (
-    <>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', margin: '4px 0 18px' }}>
-        <Skeleton circle width={56} />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0 }}>
-          <Skeleton height={18} width="45%" />
-          <Skeleton height={12} width="65%" />
-        </div>
-      </div>
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '18px' }}>
-        <Skeleton height={56} width="33%" radius={10} />
-        <Skeleton height={56} width="33%" radius={10} />
-        <Skeleton height={56} width="33%" radius={10} />
-      </div>
-      <InfoCard title="Personal Summary"><SkeletonText lines={5} /></InfoCard>
-      <InfoCard title="Current Assignment"><SkeletonText lines={4} /></InfoCard>
-    </>
-  );
-}
-
-export function ProfileDrawer(
-  { employeeId, onClose, onAction, onOpenFullRecord, access }:
-  { employeeId: string | null; onClose: () => void; onAction: (label: string) => void; onOpenFullRecord?: () => void; access: EmployeeMasterAccess },
-): VNode {
-  const [tab, setTab] = useState('Overview');
-
-  const detailQ = useHrEmployee(employeeId);
-  const wfQ     = useHrWorkflowSummary(employeeId);
-  const trainQ  = useHrTrainingSummary(access.viewTraining && tab === 'Compliance' ? employeeId : null);
-  const auditQ  = useHrAudit(access.viewAudit && (tab === 'Overview' || tab === 'Audit') ? employeeId : null);
-  const docsQ   = useHrDocuments(access.viewDocuments && (tab === 'Overview' || tab === 'Documents') ? employeeId : null);
-  const securityQ = useAdminUserSecurityStatus(employeeId ?? '', can('auth.security.view') && !!employeeId);
-  const decidePhoto = useDecideHrEmployeePhoto();
-
-  const handlePhotoDecision = (approve: boolean): void => {
-    if (!employeeId) return;
-    decidePhoto.mutate({ employeeId, approve }, {
-      onSuccess: () => toast.success(approve ? 'Profile photo approved.' : 'Profile photo rejected.'),
-      onError:   (err) => toast.error(err instanceof Error ? err.message : 'Could not update the photo.'),
-    });
-  };
-
-  const d = detailQ.data;
-  const e = d?.employee;
-  // useRecordQuery guarantees `data`/`ready` belong to the requested employee, so
-  // a previous employee's header/tags can never flash through on an A→B switch.
-  // (`&& !!e` is redundant at runtime — ready implies data — but lets TS narrow e.)
-  const ready = detailQ.ready && !!e;
-  const primaryTabs = access.viewDocuments ? PRIMARY_TABS : PRIMARY_TABS.filter(item => item !== 'Documents');
-  const visiblePrimaryTabs = (access.viewTraining || access.viewStatutory)
-    ? primaryTabs
-    : primaryTabs.filter(item => item !== 'Compliance');
-  const moreTabs = MORE_TABS.filter(item =>
-    (item !== 'Onboarding' || access.viewOnboarding) &&
-    (item !== 'Audit' || access.viewAudit));
-  const panelMenuItems = [
-    ...(access.uploadDocument ? [{ label: 'Upload HR Document', icon: 'fa-file', onSelect: () => onAction('Upload HR Document') }] : []),
-    ...(access.viewAudit ? [{ label: 'View Audit', icon: 'fa-clock-rotate-left', onSelect: () => setTab('Audit') }] : []),
-    ...(access.startOffboarding ? [{ label: 'Start Offboarding', icon: 'fa-triangle-exclamation', danger: true, onSelect: () => onAction('Start Offboarding') }] : []),
-  ];
-  const hasPanelActions = !!onOpenFullRecord || access.requestChange || access.changeStatus || panelMenuItems.length > 0;
-  const manageAccess = can('permissions.manage') ? () => {
-    onClose();
-    showSection('s-ac-users');
-  } : undefined;
-  const actionBar = hasPanelActions ? (
-    <div class={`epd-action-bar${panelMenuItems.length ? ' has-overflow' : ''}`}>
-      {onOpenFullRecord && <button class="ui-btn-secondary" type="button" onClick={onOpenFullRecord}>View Full Employee Record</button>}
-      {access.requestChange && <button class="ui-btn-primary" type="button" onClick={() => onAction('Request Change')}>Request Change</button>}
-      {access.changeStatus && <button class="ui-btn-secondary" type="button" onClick={() => onAction('Change Status')}>Change Status</button>}
-      {panelMenuItems.length > 0 && <Menu align="right" items={panelMenuItems} trigger={({ toggle }) => (
-        <button class="ui-btn-secondary epd-more-action" type="button" onClick={toggle} aria-label="More employee actions"><LucideIcon name="Ellipsis" size={18} /></button>
-      )} />}
-    </div>
-  ) : undefined;
-
-  return (
-    <Drawer rich open={!!employeeId} title="Employee Profile" onClose={onClose} foot={actionBar} panelClass="employee-profile-drawer">
-      {!employeeId ? null : detailQ.isError ? (
-        <PanelEmpty>Could not load this employee.</PanelEmpty>
-      ) : !ready ? (
-        <DrawerSkeleton />
-      ) : (
-        <>
-          <EntityHead
-            name={e.full_name ?? e.username}
-            avatarUrl={e.profile_image_url}
-            reference={<>{e.employee_number ?? '—'} <Pill tone={statusTone(e.status)}>{humanize(e.status)}</Pill></>}
-            meta={[e.position, e.departmentName, e.siteName]}
-          />
-
-          {/* Pending profile photo — reviewers (hr.employees.photo_approve) can
-              approve/reject a self-submitted photo before it goes live. */}
-          {can('hr.employees.photo_approve') && e.profile_image_pending_thumb_url && (
-            <div class="ui-pending-photo">
-              <img class="ui-pending-photo-thumb" src={e.profile_image_pending_thumb_url} alt="Pending profile photo" />
-              <div class="ui-pending-photo-copy">
-                <strong>Profile photo pending review</strong>
-                <span>Submitted {relativeTime(e.profile_image_pending_submitted_at)}. The current photo stays active until you approve.</span>
+          <div class="scroll">
+            {shellQuery.isPending && <div class="epd-loading" role="status">Loading employee profile…</div>}
+            {shellQuery.isError && (
+              <div class="epd-error" role="alert">
+                {shellQuery.error instanceof Error ? shellQuery.error.message : 'Employee profile failed to load.'}
               </div>
-              <div class="ui-pending-photo-actions">
-                <button class="ui-btn-primary" type="button" disabled={decidePhoto.isPending} onClick={() => handlePhotoDecision(true)}>Approve</button>
-                <button class="ui-btn-secondary" type="button" disabled={decidePhoto.isPending} onClick={() => handlePhotoDecision(false)}>Reject</button>
-              </div>
-            </div>
-          )}
+            )}
 
-          <PanelTabs primary={visiblePrimaryTabs} more={moreTabs} active={tab} onChange={setTab} />
+            {shell && tab === 'overview' && (
+              <section class="panel active" id="panel-overview" role="tabpanel">
+                <section class="attention-strip">
+                  <div class="attention-title">
+                    <span class="attention-heading-icon"><Icon id="alert" /></span>
+                    Needs Attention <span class="badge warning">{attentionTotal}</span>
+                  </div>
+                  {attentionItems.length === 0 && (
+                    <article class="attention-item">
+                      <span class="attention-ico"><Icon id="check" /></span>
+                      <div><strong>Nothing Needs Attention</strong><span>Every tracked item for this employee is resolved.</span></div>
+                    </article>
+                  )}
+                  {attentionItems.map((item, i) => (
+                    <article
+                      key={item.id}
+                      class={`attention-item${item.severity === 'critical' ? ' danger' : ''}`}
+                      role="link" tabIndex={0}
+                      onClick={() => openAttention(item)}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') openAttention(item); }}
+                    >
+                      <span class="attention-ico"><Icon id={DOMAIN_ICON[item.domain]} /></span>
+                      <div><strong>{item.title}</strong><span>{attentionSubtitle(item)}</span></div>
+                      {i === attentionItems.length - 1 && attentionTotal > attentionItems.length && !showAllAttention
+                        ? (
+                          <button
+                            class="attention-next" type="button"
+                            aria-label="Show the next attention items"
+                            onClick={e => { e.stopPropagation(); setShowAllAttention(true); }}
+                          ><Icon id="chevron" /></button>
+                        )
+                        : <Icon id="chevron" />}
+                    </article>
+                  ))}
+                </section>
 
-          <div class="ui-panel-body">
-            {tab === 'Overview'          && <ProfileOverview d={d} docsQ={docsQ} auditQ={auditQ} securityQ={securityQ} onEditContact={access.editContact ? () => onAction('Edit Contact') : undefined} onViewEmployment={() => setTab('Employment')} onViewCompliance={() => setTab('Compliance')} onViewDocuments={() => setTab('Documents')} onViewTimeline={() => setTab('Timeline')} onManageAccess={manageAccess} showDocuments={access.viewDocuments} showStatutory={access.viewStatutory} showAudit={access.viewAudit} showSecurity={can('auth.security.view')} />}
-            {tab === 'Employment'        && <EmploymentTab d={d} />}
-            {access.viewDocuments && tab === 'Documents' && <DocumentsTab docsQ={docsQ} employeeId={employeeId} onUpload={access.uploadDocument ? () => onAction('Upload HR Document') : undefined} access={access} />}
-            {tab === 'Compliance' && <>
-              {access.viewTraining && <TrainingTab trainQ={trainQ} />}
-              {access.viewStatutory && <StatutoryTab d={d} onEdit={access.editStatutory ? () => onAction('Edit Statutory Profile') : undefined} />}
-            </>}
-            {access.viewOnboarding && tab === 'Onboarding' && <EmployeeOnboardingSummary employeeId={employeeId} onOpenCase={openOnboardingCase} />}
-            {tab === 'Timeline'          && <ActivityTimeline module="hr" recordType="employee" recordId={employeeId} />}
-            {tab === 'Workflows'         && <WorkflowsTab wfQ={wfQ} />}
-            {access.viewAudit && tab === 'Audit' && <AuditTab auditQ={auditQ} />}
+                <div class="overview-grid">
+                  {shell.readiness && (
+                    <section class="card">
+                      <div class="card-head"><Icon id="shield" /><h3>Record Readiness</h3>
+                        <button class="text-btn" type="button" onClick={() => setTab('readiness')}>Details<Icon id="chevron" /></button>
+                      </div>
+                      <div class="readiness-body">
+                        <svg class="gauge" viewBox="0 0 140 92" role="img" aria-label={`${shell.readiness.percent} percent ready`}>
+                          <path class="gauge-track" pathLength="100" d="M15 76 A55 55 0 0 1 125 76" />
+                          <path
+                            class="gauge-value" pathLength="100" d="M15 76 A55 55 0 0 1 125 76"
+                            style={{ strokeDasharray: `${shell.readiness.percent} 100` }}
+                          />
+                          <text class="gauge-score" x="70" y="67">{shell.readiness.percent}%</text>
+                          <text class="gauge-label" x="70" y="84">{readinessLabel(shell.readiness)}</text>
+                        </svg>
+                        <div class="readiness-copy">
+                          <strong>{readinessHeadline(shell.readiness)}</strong>
+                          <p>{readinessExplanation(shell.readiness)}</p>
+                        </div>
+                      </div>
+                    </section>
+                  )}
+
+                  <section class="card">
+                    <div class="card-head"><Icon id="briefcase" /><h3>Employment Snapshot</h3>
+                      <button class="text-btn" type="button" onClick={() => setTab('employment')}>Employment<Icon id="chevron" /></button>
+                    </div>
+                    <div class="data-list">
+                      <DataRow label="Legal Employer" value={facts?.legalEmployer ?? DASH} />
+                      <DataRow label="Cost Centre" value={facts?.costCentre ?? DASH} />
+                      <DataRow label="Work Location" value={identity?.siteName ?? DASH} />
+                      <DataRow label="Reports To" value={facts?.supervisorName ?? DASH} />
+                      <DataRow label="Pay Group" value={facts?.payGroupName ?? DASH} />
+                    </div>
+                  </section>
+
+                  {shell.contact && (
+                    <section class="card">
+                      <div class="card-head"><Icon id="user" /><h3>Contact</h3>
+                        {access.editContact && (
+                          <button
+                            class="text-btn" type="button" title="Requires HR contact-management permission"
+                            onClick={() => setContactOpen(true)}
+                          ><Icon id="shield" />Edit Contact</button>
+                        )}
+                      </div>
+                      <div class="contact-row"><Icon id="mail" /><span>Work Email</span><strong>{shell.contact.workEmail ?? DASH}</strong></div>
+                      <div class="contact-row"><Icon id="phone" /><span>Work Phone</span><strong>{shell.contact.workPhone ?? DASH}</strong></div>
+                      <div class="contact-row"><Icon id="mobile" /><span>Mobile</span><strong>{shell.contact.mobilePhone ?? DASH}</strong></div>
+                      <div class="contact-sep" />
+                      <div class="contact-row"><Icon id="user" />
+                        <span>{shell.contact.emergencyContactRelationship
+                          ? `Emergency Contact · ${titleCase(shell.contact.emergencyContactRelationship)}`
+                          : 'Emergency Contact'}</span>
+                        <strong>{[shell.contact.emergencyContactName, shell.contact.emergencyContactPhone]
+                          .filter(Boolean).join(' · ') || DASH}</strong>
+                      </div>
+                    </section>
+                  )}
+
+                  {access.viewDocuments && (
+                    <section class="card document-health-card">
+                      <div class="card-head"><Icon id="file" /><h3>Document Health</h3>
+                        <button class="text-btn" type="button" onClick={() => setTab('documents')}>Documents<Icon id="chevron" /></button>
+                      </div>
+                      <div class="doc-tree" aria-label="Employee document tree">
+                        {documentHealth.isPending && <div class="epd-loading">Loading documents…</div>}
+                        {documentHealth.data?.groups.length === 0 && (
+                          <div class="epd-empty">No document requirements apply to this employee.</div>
+                        )}
+                        {documentHealth.data?.groups.map((group: DocumentHealthGroup) => (
+                          <details key={group.key} open>
+                            <summary>
+                              <Icon id="folder" /><strong>{group.label}</strong>
+                              <span class="folder-count">
+                                {group.missingCount > 0
+                                  ? `${group.missingCount} Missing`
+                                  : group.expiringCount > 0
+                                    ? `${group.expiringCount} Expiring`
+                                    : `${group.currentCount} Current`}
+                              </span>
+                            </summary>
+                            <div class="doc-tree-children">
+                              {group.items.map(item => {
+                                const state = DOC_STATE_LABEL[item.state] ?? { label: titleCase(item.state), tone: '' };
+                                return (
+                                  <div class="doc-leaf" key={`${group.key}:${item.documentId ?? item.requirementId ?? item.title}`}>
+                                    <Icon id="file" class="doc-file-icon" />
+                                    <div><strong>{item.title}</strong><span>{item.detail}</span></div>
+                                    <span class={`doc-state ${state.tone}`.trim()}>{state.label}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </details>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {shell.accountHealth && (
+                    <section class="card wide">
+                      <div class="card-head"><Icon id="lock" /><h3>Account Health</h3>
+                        <button class="text-btn" type="button" onClick={() => setTab('access')}>Access<Icon id="chevron" /></button>
+                      </div>
+                      <div class="account-grid">
+                        <div class="account-stat"><span class="stat-icon"><Icon id="check" /></span><span>Account</span><strong>{titleCase(shell.accountHealth.accountStatus)}</strong></div>
+                        <div class="account-stat"><span class="stat-icon"><Icon id="key" /></span><span>Sign-In Identity</span><strong>{shell.accountHealth.hasLoginIdentity ? 'Provisioned' : 'Not Provisioned'}</strong></div>
+                        <div class="account-stat"><span class="stat-icon"><Icon id="shield" /></span><span>Access Profile</span><strong>{shell.accountHealth.accessProfileLabel ?? DASH}</strong></div>
+                        <div class="account-stat"><span class="stat-icon"><Icon id="headset" /></span><span>Open Requests</span><strong>{shell.accountHealth.openSupportRequests}</strong></div>
+                      </div>
+                    </section>
+                  )}
+
+                  {access.viewAudit && (
+                    <section class="card wide">
+                      <div class="card-head"><Icon id="clock" /><h3>Recent Activity</h3>
+                        <button class="text-btn" type="button" onClick={() => setTab('activity')}>View All<Icon id="chevron" /></button>
+                      </div>
+                      <div class="activity-list">
+                        {shell.recentActivity.length === 0 && <div class="epd-empty">No recorded activity yet.</div>}
+                        {shell.recentActivity.map(entry => {
+                          const visual = activityVisual(entry.area);
+                          return (
+                            <div class="activity-row" key={entry.id}>
+                              <span class={`activity-icon ${visual.tone}`.trim()}><Icon id={visual.icon} /></span>
+                              <div class="activity-copy">
+                                <strong>{titleCase(entry.action.split('.').pop() ?? entry.action)}</strong>
+                                <span>{titleCase(entry.area)}{entry.actorName ? ` · By ${entry.actorName}` : ''}</span>
+                              </div>
+                              <time class="activity-time">{formatDateTime(entry.occurredAt)}</time>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {shell && tab === 'employment' && (
+              <section class="panel active" id="panel-employment" role="tabpanel">
+                <div class="tab-heading">
+                  <div><h2>Employment</h2><p>Current assignment, employment terms, payroll placement and effective-dated history.</p></div>
+                  <div class="tab-heading-actions">
+                    {access.requestChange && <button class="outline-btn" type="button" onClick={() => runAction('Request Change')}>Request Change</button>}
+                    {access.editEmployee && <button class="primary-btn" type="button" onClick={() => runAction('Edit Contact')}>Edit Employment</button>}
+                  </div>
+                </div>
+                <div class="summary-grid">
+                  <div class="summary-stat green"><span>Employment Status</span><strong>{titleCase(identity?.employmentStatus)}</strong><small>{titleCase(facts?.employmentBasis)}</small></div>
+                  <div class="summary-stat"><span>Continuous Service</span><strong>{formatTenure(facts?.tenureMonths)}</strong><small>Started {formatDate(facts?.startDate)}</small></div>
+                  <div class="summary-stat"><span>Current Appointment</span><strong>{formatDate(facts?.assignmentEffectiveFrom)}</strong><small>{identity?.position ?? DASH}</small></div>
+                  <div class="summary-stat"><span>Weekly Hours</span><strong>{formatWeeklyHours(facts?.weeklyHours)}</strong><small>{formatArrangementAndFte(facts?.workArrangement, facts?.fte)}</small></div>
+                </div>
+                <div class="tab-grid">
+                  <section class="card">
+                    <div class="card-head"><Icon id="briefcase" /><h3>Current Assignment</h3></div>
+                    <div class="data-list">
+                      <DataRow label="Position" value={identity?.position ?? DASH} />
+                      <DataRow label="Department" value={identity?.departmentName ?? DASH} />
+                      <DataRow label="Reports To" value={facts?.supervisorName ?? DASH} />
+                      <DataRow label="Work Location" value={identity?.siteName ?? DASH} />
+                      <DataRow label="Cost Centre" value={facts?.costCentre ?? DASH} />
+                      <DataRow label="Effective From" value={formatDate(facts?.assignmentEffectiveFrom)} />
+                    </div>
+                  </section>
+                  <section class="card">
+                    <div class="card-head"><Icon id="shield" /><h3>Employment Terms</h3></div>
+                    <div class="data-list">
+                      <DataRow label="Legal Employer" value={facts?.legalEmployer ?? DASH} />
+                      <DataRow label="Employment Basis" value={titleCase(facts?.employmentBasis)} />
+                      <DataRow label="Work Arrangement" value={facts?.workArrangement ?? DASH} />
+                      <DataRow label="Standard Hours" value={formatWeeklyHours(facts?.weeklyHours)} />
+                      <DataRow label="Work Schedule" value={titleCase(facts?.workSchedule)} />
+                      <DataRow label="Notice Period" value={formatNoticePeriod(facts?.noticePeriodDays)} />
+                    </div>
+                  </section>
+                  <section class="card">
+                    <div class="card-head"><Icon id="calendar" /><h3>HR Administration</h3></div>
+                    <div class="data-list">
+                      <DataRow label="Pay Group" value={facts?.payGroupName ?? DASH} />
+                      <DataRow label="Pay Frequency" value={titleCase(facts?.payFrequency)} />
+                      <DataRow label="Probation" value={
+                        <span class={`badge${probationState(facts?.probationEndDate) === 'in_progress' ? ' warning' : ''}`}>
+                          {probationState(facts?.probationEndDate) === 'completed' ? 'Completed'
+                            : probationState(facts?.probationEndDate) === 'in_progress' ? 'In Progress' : 'Not Recorded'}
+                        </span>} />
+                      <DataRow label="Probation Ended" value={formatDate(facts?.probationEndDate)} />
+                      <DataRow label="Employee Grade" value={facts?.employeeGrade ?? DASH} />
+                      <DataRow label="Worker Category" value={facts?.workerCategory ?? DASH} />
+                    </div>
+                  </section>
+                  <section class="card">
+                    <div class="card-head"><Icon id="key" /><h3>Bank &amp; Pay Administration</h3></div>
+                    {employment.isPending && <div class="epd-loading">Loading payroll context…</div>}
+                    {employment.data && !employment.data.bank && (
+                      <div class="epd-empty">Payroll context is not available to your role.</div>
+                    )}
+                    {employment.data?.bank && (
+                      <div class="data-list">
+                        <DataRow label="Primary Bank" value={employment.data.bank.bankName ?? DASH} />
+                        {/* Masked only — HR never receives the full account number. */}
+                        <DataRow label="Account" value={employment.data.bank.accountNumberMasked ?? DASH} />
+                        <DataRow label="Account Type" value={titleCase(employment.data.bank.accountType)} />
+                        <DataRow label="Payment Method" value={employment.data.bank.hasPrimaryAccount ? 'Direct Deposit' : DASH} />
+                        <DataRow label="Bank Record" value={
+                          <span class={`badge${employment.data.bank.verificationState === 'verified' ? '' : employment.data.bank.verificationState === 'missing' ? ' danger' : ' warning'}`}>
+                            {employment.data.bank.verificationState === 'verified' ? 'Verified'
+                              : employment.data.bank.verificationState === 'missing' ? 'Missing' : 'Reverify'}
+                          </span>} />
+                        <DataRow label="Last Verified" value={formatDate(employment.data.bank.lastVerifiedAt)} />
+                      </div>
+                    )}
+                  </section>
+                  <section class="card wide">
+                    <div class="card-head"><Icon id="clock" /><h3>Employment History</h3></div>
+                    <div class="history">
+                      {employment.isPending && <div class="epd-loading">Loading history…</div>}
+                      {employment.data?.history.length === 0 && <div class="epd-empty">No recorded employment changes.</div>}
+                      {employment.data?.history.map(entry => (
+                        <div class="history-row" key={entry.id}>
+                          <span class="history-dot"><Icon id={entry.kind === 'assignment' ? 'briefcase' : 'check'} /></span>
+                          <div><strong>{entry.title}</strong><span>{entry.detail}{entry.actorName ? ` · ${entry.actorName}` : ''}</span></div>
+                          <time>{formatDate(entry.occurredAt)}</time>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                </div>
+              </section>
+            )}
+
+            {shell && tab === 'documents' && access.viewDocuments && (
+              <section class="panel active" id="panel-documents" role="tabpanel">
+                <div class="tab-heading">
+                  <div><h2>Documents</h2><p>Authorised employee records, verification state, expiry dates and missing evidence.</p></div>
+                  <div class="tab-heading-actions">
+                    {access.uploadDocument && <button class="primary-btn" type="button" onClick={() => runAction('Upload Document')}>Add Document</button>}
+                  </div>
+                </div>
+                {documentHealth.isPending && <div class="epd-loading" role="status">Loading document health…</div>}
+                {documentHealth.data && (
+                  <>
+                    <div class="summary-grid">
+                      <div class="summary-stat"><span>Total Documents</span><strong>{documentHealth.data.totalDocuments}</strong><small>Across {documentHealth.data.categoryCount} Categories</small></div>
+                      <div class="summary-stat green"><span>Verified</span><strong>{documentHealth.data.verifiedCount}</strong><small>{documentHealth.data.verifiedPercent}% Verified</small></div>
+                      <div class="summary-stat amber"><span>Expiring Soon</span><strong>{documentHealth.data.expiringCount}</strong><small>Within 30 Days</small></div>
+                      <div class="summary-stat"><span>Missing</span><strong>{documentHealth.data.missingCount}</strong><small>Required Evidence</small></div>
+                    </div>
+                    <div class="record-list">
+                      {documentHealth.data.groups.flatMap(group => group.items.map(item => {
+                        const state = DOC_STATE_LABEL[item.state] ?? { label: titleCase(item.state), tone: '' };
+                        return (
+                          <article class="record-row" key={`${group.key}:${item.documentId ?? item.requirementId ?? item.title}`}>
+                            <span class="record-icon"><Icon id={item.state === 'missing' || item.state === 'expired' ? 'alert' : 'file'} /></span>
+                            <div class="record-copy"><strong>{item.title}</strong><span>{group.label} · {item.detail}</span></div>
+                            <div class="record-meta">
+                              <span class={`badge ${state.tone === 'warn' ? 'warning' : state.tone}`.trim()}>{state.label}</span>
+                            </div>
+                          </article>
+                        );
+                      }))}
+                    </div>
+                  </>
+                )}
+              </section>
+            )}
+
+            {shell && tab === 'readiness' && access.viewReadiness && (
+              <section class="panel active" id="panel-readiness" role="tabpanel">
+                <div class="tab-heading">
+                  <div><h2>Readiness</h2><p>Evidence-based controls showing whether this employee record can support HR and operational workflows.</p></div>
+                </div>
+                {readiness.isPending && <div class="epd-loading" role="status">Loading readiness controls…</div>}
+                {readiness.data && (
+                  <div class="tab-grid">
+                    <section class="card">
+                      <div class="card-head"><Icon id="shield" /><h3>Overall Readiness</h3></div>
+                      <div class="readiness-body">
+                        <svg class="gauge" viewBox="0 0 140 92" role="img" aria-label={`${readiness.data.coverage.percent} percent ready`}>
+                          <path class="gauge-track" pathLength="100" d="M15 76 A55 55 0 0 1 125 76" />
+                          <path class="gauge-value" pathLength="100" d="M15 76 A55 55 0 0 1 125 76"
+                            style={{ strokeDasharray: `${readiness.data.coverage.percent} 100` }} />
+                          <text class="gauge-score" x="70" y="67">{readiness.data.coverage.percent}%</text>
+                          <text class="gauge-label" x="70" y="84">{readinessLabel(shell.readiness)}</text>
+                        </svg>
+                        <div class="readiness-copy">
+                          <strong>{readiness.data.coverage.readyControls} Of {readiness.data.coverage.totalControls} Controls Ready</strong>
+                          <p>Readiness is shared work: HR coordinates, and each department resolves the controls in its own domain.</p>
+                        </div>
+                      </div>
+                    </section>
+                    <section class="card wide">
+                      <div class="card-head"><Icon id="shield" /><h3>Readiness Control Matrix</h3></div>
+                      <div class="progress-list">
+                        {readiness.data.controls.map(entry => (
+                          <div class="progress-row" key={entry.control.controlKey}>
+                            <span>{entry.control.label}</span>
+                            <div class="progress-track">
+                              <div class={`progress-fill${entry.percent < 100 ? ' amber' : ''}`} style={{ width: `${entry.percent}%` }} />
+                            </div>
+                            <strong>{entry.percent}%</strong>
+                          </div>
+                        ))}
+                      </div>
+                      <div class="record-list" style="margin-top:14px">
+                        {readiness.data.controls.map(entry => (
+                          <article class="record-row" key={`row:${entry.control.controlKey}`}>
+                            <span class="record-icon"><Icon id={CONTROL_ICON[entry.control.domain] ?? 'shield'} /></span>
+                            <div class="record-copy">
+                              <strong>{entry.control.label}</strong>
+                              <span>
+                                {entry.control.description ?? titleCase(entry.control.domain)}
+                                {' · '}
+                                {/* Fail-closed ownership is VISIBLE, never a blank. */}
+                                {entry.owner.status === 'resolved' ? entry.owner.ownerLabel : 'Owner Required'}
+                                {entry.workItem?.nextResponsibleParty ? ` · Next: ${entry.workItem.nextResponsibleParty}` : ''}
+                              </span>
+                            </div>
+                            <div class="record-meta">
+                              <span class={`badge${entry.percent === 100 ? '' : ' warning'}`}>
+                                {entry.percent === 100 ? 'Complete' : titleCase(entry.state)}
+                              </span>
+                              {entry.percent < 100 && access.followUpReadiness && (
+                                <button
+                                  class="text-btn" type="button"
+                                  disabled={followUp.isPending}
+                                  onClick={() => void sendReadinessReminder(entry)}
+                                >Send Reminder</button>
+                              )}
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    </section>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {shell && tab === 'access' && (
+              <section class="panel active" id="panel-access" role="tabpanel">
+                <div class="tab-heading">
+                  <div><h2>Access</h2><p>Authoritative account state, assigned access and capability-gated support workflows.</p></div>
+                </div>
+                {shell.accountHealth && (
+                  <div class="access-summary">
+                    <div class="access-state"><span class="record-icon"><Icon id="check" /></span><span>Account Status</span><strong>{titleCase(shell.accountHealth.accountStatus)}</strong></div>
+                    <div class="access-state"><span class="record-icon"><Icon id="lock" /></span><span>Sign-In Identity</span><strong>{shell.accountHealth.hasLoginIdentity ? 'Provisioned' : 'Not Provisioned'}</strong></div>
+                    <div class="access-state"><span class="record-icon"><Icon id="headset" /></span><span>Open Requests</span><strong>{shell.accountHealth.openSupportRequests}</strong></div>
+                  </div>
+                )}
+                <div class="tab-grid">
+                  {access.viewAccessAssignments && (
+                    <section class="card wide">
+                      <div class="card-head"><Icon id="shield" /><h3>Access Assignments</h3></div>
+                      {assignments.isPending && <div class="epd-loading">Loading access assignments…</div>}
+                      {assignments.data?.length === 0 && <div class="epd-empty">No access assignments are recorded.</div>}
+                      <div class="record-list">
+                        {assignments.data?.map(a => (
+                          <article class="record-row" key={a.id}>
+                            <span class="record-icon"><Icon id="shield" /></span>
+                            <div class="record-copy">
+                              <strong>{a.accessProfileLabel}</strong>
+                              <span>{titleCase(a.assignmentType)} · {a.scopes.map(s => s.scopeLabel).join(', ') || 'No Recorded Scope'} · From {formatDate(a.effectiveFrom)}</span>
+                            </div>
+                            <div class="record-meta">
+                              <span class={`badge${a.status === 'active' ? '' : ' warning'}`}>{titleCase(a.status)}</span>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                      <div class="support-banner">
+                        <span class="record-icon"><Icon id="headset" /></span>
+                        <div><strong>Sensitive Account Actions</strong><span>Password resets, session revocation, device removal, MFA enforcement and suspension route to the authorised Account Support owner.</span></div>
+                      </div>
+                    </section>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {shell && tab === 'activity' && access.viewAudit && (
+              <section class="panel active" id="panel-activity" role="tabpanel">
+                <div class="tab-heading">
+                  <div><h2>Activity &amp; Audit</h2><p>Employee record history with actor, source, outcome and correlation details.</p></div>
+                </div>
+                {audit.isPending && <div class="epd-loading" role="status">Loading audit history…</div>}
+                {audit.data?.length === 0 && <div class="epd-empty">No audit entries recorded.</div>}
+                <div class="record-list">
+                  {audit.data?.map(entry => (
+                    <article class="record-row" key={entry.id}>
+                      <span class="record-icon"><Icon id={activityVisual(entry.submodule_key ?? '').icon} /></span>
+                      <div class="record-copy">
+                        <strong>{titleCase(entry.action.split('.').pop() ?? entry.action)}</strong>
+                        <span>{titleCase(entry.submodule_key ?? 'employee')}{entry.actorName ? ` · ${entry.actorName}` : ''}</span>
+                      </div>
+                      <div class="record-meta"><time>{formatDateTime(entry.created_at)}</time></div>
+                    </article>
+                  ))}
+                </div>
+                <p style="margin:12px 0 0;color:var(--muted);font-size:10px">
+                  Detailed audit records include the correlation ID and safe mutation metadata.
+                </p>
+              </section>
+            )}
           </div>
-        </>
-      )}
-    </Drawer>
+
+          <footer class="footer">
+            <div class="left-actions">
+              {onOpenFullRecord && (
+                <button class="outline-btn" type="button" onClick={onOpenFullRecord}>View Full Employee Record</button>
+              )}
+            </div>
+            <div class="right-actions">
+              {access.requestChange && (
+                <button class="primary-btn" type="button" onClick={() => runAction('Request Change')}>Request Change</button>
+              )}
+            </div>
+          </footer>
+        </main>
+
+        {contactOpen && shell?.contact && (
+          <div class="contact-dialog-backdrop" role="presentation" onClick={e => { if (e.target === e.currentTarget) setContactOpen(false); }}>
+            <div class="contact-dialog" role="dialog" aria-modal="true" aria-labelledby="contact-dialog-title">
+              <div class="contact-dialog-head">
+                <div class="contact-dialog-title">
+                  <span class="contact-dialog-title-icon"><Icon id="user" /></span>
+                  <div>
+                    <div class="contact-dialog-kicker">HR Managed Record</div>
+                    <h2 id="contact-dialog-title">Edit Contact Information</h2>
+                    <p>Keep verified work and emergency details current.</p>
+                  </div>
+                </div>
+                <button class="dialog-close" type="button" aria-label="Close contact editor" onClick={() => setContactOpen(false)}>
+                  <Icon id="close" />
+                </button>
+              </div>
+              <form class="contact-form" onSubmit={e => void submitContact(e)}>
+                <div class="contact-dialog-intro">
+                  <Icon id="shield" />
+                  <div><strong>Protected Employee Information</strong><span>Only authorised HR staff can save these changes. Every update is recorded in the employee audit trail. A changed work email is sent to Account Support for identity verification before it affects sign-in.</span></div>
+                </div>
+                <section class="form-section" aria-labelledby="employee-contact-heading">
+                  <div class="form-section-title"><Icon id="mail" /><h3 id="employee-contact-heading">Employee Contact</h3></div>
+                  <div class="form-grid">
+                    <label class="form-field wide"><span>Work Email</span>
+                      <input name="workEmail" type="email" required autocomplete="email" defaultValue={shell.contact.workEmail ?? ''} />
+                    </label>
+                    <label class="form-field"><span>Work Phone</span>
+                      <input name="workPhone" type="tel" autocomplete="tel" defaultValue={shell.contact.workPhone ?? ''} />
+                    </label>
+                    <label class="form-field"><span>Mobile</span>
+                      <input name="mobile" type="tel" autocomplete="tel" defaultValue={shell.contact.mobilePhone ?? ''} />
+                    </label>
+                  </div>
+                </section>
+                <section class="form-section" aria-labelledby="emergency-contact-heading">
+                  <div class="form-section-title"><Icon id="phone" /><h3 id="emergency-contact-heading">Emergency Contact</h3></div>
+                  <div class="form-grid">
+                    <label class="form-field wide"><span>Full Name</span>
+                      <input name="emergencyName" defaultValue={shell.contact.emergencyContactName ?? ''} />
+                    </label>
+                    <label class="form-field"><span>Relationship</span>
+                      <select name="relationship" defaultValue={shell.contact.emergencyContactRelationship ?? ''}>
+                        <option value="">Select</option>
+                        <option>Spouse</option><option>Parent</option><option>Sibling</option>
+                        <option>Child</option><option>Other</option>
+                      </select>
+                    </label>
+                    <label class="form-field"><span>Phone</span>
+                      <input name="emergencyPhone" type="tel" defaultValue={shell.contact.emergencyContactPhone ?? ''} />
+                    </label>
+                  </div>
+                </section>
+                <div class="contact-dialog-actions">
+                  <button class="outline-btn" type="button" onClick={() => setContactOpen(false)}>Cancel</button>
+                  <button class="primary-btn" type="submit" disabled={updateContact.isPending}>
+                    {updateContact.isPending ? 'Saving…' : 'Save Changes'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
+
+export type { EmployeeProfileShell };

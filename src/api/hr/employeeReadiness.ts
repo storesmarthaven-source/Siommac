@@ -19,7 +19,7 @@ import type {
   ReadinessOwnerResolution, ReadinessWorkItemAction, ReadinessActionKey,
   ReadinessCoverage, ReadinessState, ReadinessDomain, ReadinessResolutionType,
   DocumentHealthSummary, DocumentHealthGroup, DocumentHealthItem, DocumentHealthState,
-  EmployeeAccessAssignment,
+  EmployeeAccessAssignment, EmploymentDetail, EmploymentHistoryEntry, ProfileBankContext,
 } from '../../../types/hrEmployeeProfile';
 
 export type {
@@ -27,7 +27,7 @@ export type {
   ReadinessOwnerResolution, ReadinessWorkItemAction, ReadinessActionKey,
   ReadinessCoverage, ReadinessState, ReadinessDomain, ReadinessResolutionType,
   DocumentHealthSummary, DocumentHealthGroup, DocumentHealthItem, DocumentHealthState,
-  EmployeeAccessAssignment,
+  EmployeeAccessAssignment, EmploymentDetail, EmploymentHistoryEntry, ProfileBankContext,
 };
 
 /** Result the transition routes return — used to confirm side effects fired. */
@@ -162,6 +162,25 @@ export function useEmployeeDocumentHealth(employeeId: string | null, enabled = t
     queryKey: hrEmployeeKeys.documentHealth(employeeId ?? ''),
     enabled: !!employeeId && enabled,
     queryFn: () => call<DocumentHealthSummary>('hr/employees/document-health', { employeeId }),
+    staleTime: 60_000,
+  });
+}
+
+// ── Employment detail ───────────────────────────────────────────────────────
+
+/**
+ * The Employment tab's own dataset: masked bank context and effective-dated
+ * history.
+ *
+ * `bank` is null when the actor lacks payroll-context capability — the card
+ * renders its denied state rather than a blank one, so the difference between
+ * "no account" and "not permitted to see it" stays visible.
+ */
+export function useEmploymentDetail(employeeId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: hrEmployeeKeys.employmentDetail(employeeId ?? ''),
+    enabled: !!employeeId && enabled,
+    queryFn: () => call<EmploymentDetail>('hr/employees/employment-detail', { employeeId }),
     staleTime: 60_000,
   });
 }

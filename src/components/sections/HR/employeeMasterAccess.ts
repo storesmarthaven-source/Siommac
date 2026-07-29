@@ -22,6 +22,14 @@ export interface EmployeeMasterAccess {
   viewAudit: boolean;
   /** Readiness summary + controls. Statutory viewers see it implicitly. */
   viewReadiness: boolean;
+  /** Coordinate a readiness blocker: remind, request information. HR-level. */
+  followUpReadiness: boolean;
+  /** Accept or return a specialist readiness result. Elevated; never hr_staff. */
+  reviewReadiness: boolean;
+  /** Masked bank/payroll context on the Employment tab — context only, no action. */
+  viewPayrollContext: boolean;
+  /** Read an employee's access assignments and their recorded scopes. */
+  viewAccessAssignments: boolean;
   viewOffboarding: boolean;
   /** Non-technical account health only — never password/session/device controls. */
   viewAccountSecurity: boolean;
@@ -54,7 +62,15 @@ export function resolveEmployeeMasterAccess(has: PermissionCheck = can): Employe
     viewTraining: has('hr.view'),
     viewOnboarding: has('hr.onboarding.view'),
     viewAudit: has('hr.audit.view'),
-    viewReadiness: has('hr.employees.payroll_readiness.view') || has('hr.employees.statutory.view'),
+    // `hr.employees.readiness.view` is the canonical key for the typed readiness
+    // model; the older two stay in the OR so an actor who could already see
+    // readiness does not silently lose it.
+    viewReadiness: has('hr.employees.readiness.view')
+      || has('hr.employees.payroll_readiness.view') || has('hr.employees.statutory.view'),
+    followUpReadiness: has('hr.employees.readiness.follow_up'),
+    reviewReadiness: has('hr.employees.readiness.review'),
+    viewPayrollContext: has('hr.employees.payroll_readiness.view'),
+    viewAccessAssignments: has('hr.employees.access_assignments.view'),
     viewOffboarding: has('hr.offboarding.view'),
     viewAccountSecurity: has('auth.security.view'),
   };

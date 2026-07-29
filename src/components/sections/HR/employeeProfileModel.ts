@@ -180,3 +180,57 @@ export function identitySubtitle(shell: EmployeeProfileShell): string {
   const parts = [shell.identity.departmentName, shell.identity.siteName].filter(Boolean);
   return parts.length ? parts.join(' · ') : DASH;
 }
+
+/**
+ * Contracted notice, stored in days, rendered the way the locked mockup words it
+ * ("One Month").
+ *
+ * Whole months are named because that is how notice is written in a contract;
+ * anything else keeps its day count rather than being rounded into a month it
+ * does not equal. Null renders as the empty state — never a statutory guess.
+ */
+export function formatNoticePeriod(days: number | null | undefined): string {
+  if (days === null || days === undefined || days < 0) return DASH;
+  if (days === 0) return 'None';
+  const MONTH_WORD = ['', 'One Month', 'Two Months', 'Three Months', 'Four Months', 'Five Months', 'Six Months'];
+  if (days % 30 === 0) {
+    const months = days / 30;
+    const word = MONTH_WORD[months];
+    if (word) return word;
+  }
+  if (days === 7)  return 'One Week';
+  if (days === 14) return 'Two Weeks';
+  return `${days} Days`;
+}
+
+/** "40 Hours" — the mockup's Standard Hours / Weekly Hours wording. */
+export function formatWeeklyHours(hours: number | null | undefined): string {
+  if (hours === null || hours === undefined) return DASH;
+  const rounded = Number.isInteger(hours) ? hours : Number(hours.toFixed(2));
+  return `${rounded} Hours`;
+}
+
+/**
+ * "Full-Time · 1.0 FTE" — the paired sub-label under Weekly Hours.
+ *
+ * Shows whichever half is known rather than suppressing the whole line, so a
+ * recorded FTE with no arrangement still tells the reader something true.
+ */
+export function formatArrangementAndFte(
+  arrangement: string | null | undefined, fte: number | null | undefined,
+): string {
+  const parts: string[] = [];
+  if (arrangement) parts.push(arrangement);
+  if (fte !== null && fte !== undefined) parts.push(`${Number(fte.toFixed(3))} FTE`);
+  return parts.length ? parts.join(' · ') : DASH;
+}
+
+/** Probation reads as a state, not a raw date: the date sits on its own row. */
+export function probationState(
+  probationEndDate: string | null | undefined, today = new Date(),
+): 'completed' | 'in_progress' | 'none' {
+  if (!probationEndDate) return 'none';
+  const end = new Date(`${probationEndDate.slice(0, 10)}T00:00:00Z`);
+  if (Number.isNaN(end.getTime())) return 'none';
+  return end <= today ? 'completed' : 'in_progress';
+}

@@ -47,6 +47,10 @@ export interface ShellEmployeeRow extends AttentionEmployee {
   emergency_contact_name?: string | null;
   emergency_contact_phone?: string | null;
   emergency_contact_relationship?: string | null;
+  cost_center?: string | null;
+  employee_grade?: string | null;
+  probation_end_date?: string | null;
+  contractor_flag?: boolean | null;
   [k: string]: unknown;
 }
 
@@ -63,6 +67,12 @@ export interface ShellContext {
   /** From the CURRENT effective-dated assignment row. */
   weeklyHours: number | null;
   fte: number | null;
+  /** Contractual notice in days, also from the current assignment period. */
+  noticePeriodDays: number | null;
+  /** Start of the current assignment period. */
+  assignmentEffectiveFrom: string | null;
+  /** Cycle of the assigned pay group, e.g. monthly. */
+  payFrequency: string | null;
 }
 
 /**
@@ -104,10 +114,24 @@ function identityOf(employee: ShellEmployeeRow, ctx: ShellContext): ProfileIdent
   };
 }
 
+/**
+ * Full-Time / Part-Time in words, from FTE.
+ *
+ * The locked mockup renders the pair as "Full-Time · 1.0 FTE", so the
+ * arrangement IS the FTE — not a separate stored field. Returns null when FTE is
+ * unknown rather than defaulting to Full-Time: assuming a full-time arrangement
+ * for someone with no recorded FTE would misstate an employment term.
+ */
+export function workArrangementFromFte(fte: number | null): string | null {
+  if (fte === null || !Number.isFinite(fte) || fte <= 0) return null;
+  return fte >= 1 ? 'Full-Time' : 'Part-Time';
+}
+
 function employmentOf(employee: ShellEmployeeRow, ctx: ShellContext, today: string): ProfileEmploymentFacts {
   return {
     employmentBasis: employee.employment_type ?? null,
-    workArrangement: employee.work_schedule ?? null,
+    workArrangement: workArrangementFromFte(ctx.fte),
+    workSchedule: employee.work_schedule ?? null,
     startDate: employee.start_date ?? null,
     tenureMonths: tenureMonths(employee.start_date ?? null, today),
     supervisorName: ctx.supervisorName,
@@ -115,6 +139,15 @@ function employmentOf(employee: ShellEmployeeRow, ctx: ShellContext, today: stri
     legalEmployer: ctx.legalEmployer,
     weeklyHours: ctx.weeklyHours,
     fte: ctx.fte,
+    costCentre: employee.cost_center ?? null,
+    employeeGrade: employee.employee_grade ?? null,
+    probationEndDate: employee.probation_end_date ?? null,
+    noticePeriodDays: ctx.noticePeriodDays,
+    payFrequency: ctx.payFrequency,
+    // contractor_flag is the only worker-category source; a null flag is an
+    // employee, which is the column's own default.
+    workerCategory: employee.contractor_flag ? 'Contractor' : 'Employee',
+    assignmentEffectiveFrom: ctx.assignmentEffectiveFrom,
   };
 }
 

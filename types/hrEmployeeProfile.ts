@@ -74,7 +74,16 @@ export interface ProfileIdentity {
 
 export interface ProfileEmploymentFacts {
   employmentBasis: string | null;
+  /**
+   * Full-Time / Part-Time, DERIVED from `fte`.
+   *
+   * The locked mockup pairs the two in one stat — "Full-Time · 1.0 FTE" — so the
+   * arrangement is the FTE expressed in words, not a separate stored field.
+   * Null when FTE is unknown; it is never guessed at from hours.
+   */
   workArrangement: string | null;
+  /** Rostered pattern (e.g. Standard, Shift) from `app_users.work_schedule`. */
+  workSchedule: string | null;
   startDate: string | null;
   /** Whole months of continuous service, computed server-side from `startDate`. */
   tenureMonths: number | null;
@@ -94,6 +103,43 @@ export interface ProfileEmploymentFacts {
   weeklyHours: number | null;
   /** Full-time equivalent for the current assignment; 1.0 = full-time. */
   fte: number | null;
+  /** Cost centre carried on the employee record (`app_users.cost_center`). */
+  costCentre: string | null;
+  employeeGrade: string | null;
+  /** Null when no probation was recorded — never treated as "completed". */
+  probationEndDate: string | null;
+  /**
+   * Contractual notice in DAYS for the CURRENT assignment period.
+   *
+   * Effective-dated on the assignment, so a historical period keeps the notice
+   * that applied then. Deliberately NOT the notice served on an offboarding
+   * case, which is a departure fact rather than an employment term.
+   */
+  noticePeriodDays: number | null;
+  /** Pay cycle from the assigned pay group (`finance_pay_groups.frequency`). */
+  payFrequency: string | null;
+  /** Employee vs Contractor, from `contractor_flag`. */
+  workerCategory: string | null;
+  /** Start of the CURRENT effective-dated assignment period. */
+  assignmentEffectiveFrom: string | null;
+}
+
+/**
+ * Masked bank context for the Employment tab.
+ *
+ * HR sees context and workflow state ONLY — never the raw account number, and
+ * never a banking action. The canonical Finance API returns the masked value;
+ * the unmasked number is not read here at all.
+ */
+export interface ProfileBankContext {
+  bankName: string | null;
+  accountNumberMasked: string | null;
+  accountType: string | null;
+  /** True when Finance holds a primary, active account for this employee. */
+  hasPrimaryAccount: boolean;
+  lastVerifiedAt: string | null;
+  /** Readiness state of the payroll control that owns bank verification. */
+  verificationState: 'verified' | 'reverify' | 'missing';
 }
 
 /**
@@ -229,6 +275,24 @@ export interface EmployeeAccessAssignment {
 export const ATTENTION_SEVERITY_RANK: Record<AttentionSeverity, number> = {
   critical: 3, warning: 2, info: 1,
 };
+
+/** One entry in the Employment History timeline. */
+export interface EmploymentHistoryEntry {
+  id: string;
+  /** Drives the timeline icon; never inferred from the title text. */
+  kind: 'assignment' | 'status';
+  title: string;
+  detail: string;
+  occurredAt: string;
+  actorName: string | null;
+}
+
+/** The Employment tab's own dataset — deliberately not part of the shell. */
+export interface EmploymentDetail {
+  /** Null when the actor may not see payroll context — omitted, not blanked. */
+  bank: ProfileBankContext | null;
+  history: EmploymentHistoryEntry[];
+}
 
 // ── Document health ─────────────────────────────────────────────────────────
 // Lives in the SHARED contract, not in the backend lib, because the Documents

@@ -54,6 +54,7 @@ import {
   getReadinessMatrix, getWorkItemDetail, transitionWorkItem,
   READINESS_VIEW, READINESS_FOLLOW_UP, READINESS_REVIEW,
 } from '../lib/hr/readinessService';
+import { getEmploymentDetail, currentAssignmentConditions } from '../lib/hr/employmentDetail';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -478,11 +479,13 @@ async function loadShellContext(employee: EmpRow): Promise<ShellContext> {
       .or(`effective_to.is.null,effective_to.gte.${todayISO()}`)
       .order('effective_from', { ascending: false }).limit(1)
       .maybeSingle<{ pay_group_id: string }>(),
-    // Working time lives on the CURRENT effective-dated assignment period.
+    // Working time AND contractual notice live on the CURRENT effective-dated
+    // assignment period, so a later change preserves what applied before.
     sb.from('hr_employee_assignments')
-      .select('weekly_hours, fte').eq('employee_id', employee.id).eq('is_current', true)
+      .select('weekly_hours, fte, notice_period_days, effective_from')
+      .eq('employee_id', employee.id).eq('is_current', true)
       .order('effective_from', { ascending: false }).limit(1)
-      .maybeSingle<{ weekly_hours: number | null; fte: number | null }>(),
+      .maybeSingle<{ weekly_hours: number | null; fte: number | null; notice_period_days: number | null; effective_from: string | null }>(),
     // Canonical single-tenant employer record — the same one TD4/NI184/NI187 and
     // the payslip employer block read. Never a profile-local copy.
     getEmployerProfile(),
@@ -492,11 +495,16 @@ async function loadShellContext(employee: EmpRow): Promise<ShellContext> {
   if (errors.length) throw new Error(`Employee profile context read failed: ${errors[0].message}`);
 
   let payGroupName: string | null = null;
+  let payFrequency: string | null = null;
   if (payGroupRes.data) {
     const { data: group, error } = await sb.from('finance_pay_groups')
-      .select('name').eq('id', payGroupRes.data.pay_group_id).maybeSingle<{ name: string }>();
+      .select('name, frequency').eq('id', payGroupRes.data.pay_group_id)
+      .maybeSingle<{ name: string; frequency: string | null }>();
     if (error) throw new Error(`Employee pay group read failed: ${error.message}`);
     payGroupName = group?.name ?? null;
+    // Pay frequency belongs to the GROUP, not the employee — reading it here
+    // keeps one source rather than copying a cycle onto the employee record.
+    payFrequency = group?.frequency ?? null;
   }
 
   // Only expose an access-profile label when the role maps to exactly one active
@@ -521,6 +529,9 @@ async function loadShellContext(employee: EmpRow): Promise<ShellContext> {
     legalEmployer: employerProfile.legalName.trim() || null,
     weeklyHours: assignmentRes.data?.weekly_hours ?? null,
     fte: assignmentRes.data?.fte ?? null,
+    noticePeriodDays: assignmentRes.data?.notice_period_days ?? null,
+    assignmentEffectiveFrom: assignmentRes.data?.effective_from ?? null,
+    payFrequency,
   };
 }
 
@@ -688,6 +699,36 @@ router.post('/employees/access-assignments/revoke', async c => {
   } catch (e) {
     const err = e as { status?: number; message?: string };
     return c.json({ success: false, message: err.message ?? 'Access assignment revoke failed.' },
+      (err.status ?? 500) as 200);
+  }
+});
+
+/**
+ * POST /api/hr/employees/employment-detail — the Employment tab's own dataset.
+ *
+ * TAB-SCOPED: masked bank context and the effective-dated history are not in the
+ * profile shell, so opening the drawer never pulls them.
+ *
+ * The bank block is gated on `hr.employees.payroll_readiness.view` — the HR-side
+ * payroll-context permission that already exists. It deliberately does NOT use a
+ * finance capability: HR must be able to SEE masked context without being
+ * granted any banking authority, and an actor without it gets `bank: null`
+ * (omitted, not blanked).
+ */
+router.post('/employees/employment-detail', async c => {
+  const actor = await requirePermission(c, 'hr.employees.view');
+  const v = zv(c, z.object({ employeeId: z.string().min(1) }), (c.get('body')).args ?? {});
+  if (!v.ok) return v.response;
+
+  const emp = await loadEmployee(v.data.employeeId);
+  if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
+
+  const canViewPayrollContext = await userCan(actor, 'hr.employees.payroll_readiness.view');
+  try {
+    return c.json({ success: true, data: await getEmploymentDetail(v.data.employeeId, canViewPayrollContext) });
+  } catch (e) {
+    const err = e as { status?: number; message?: string };
+    return c.json({ success: false, message: err.message ?? 'Employment detail read failed.' },
       (err.status ?? 500) as 200);
   }
 });
@@ -1626,12 +1667,20 @@ router.post('/employees/transfer', async c => {
     departmentId: z.string().nullable().optional(),
     siteId:       z.string().nullable().optional(),
     positionId:   z.uuid().nullable().optional(),
+    // Notice is an employment CONDITION, effective-dated on the assignment
+    // period. Omitting it carries the current value forward rather than clearing it.
+    noticePeriodDays: z.number().int().min(0).max(730).nullable().optional(),
     reason:       z.string().max(500).optional(),
   }), (c.get('body')).args ?? {});
   if (!v.ok) return v.response;
 
   const emp = await loadEmployee(v.data.employeeId);
   if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
+
+  // A transfer changes the POSTING, not the terms. Read the conditions off the
+  // outgoing period so opening a new one cannot silently erase contracted hours,
+  // FTE or notice.
+  const conditions = await currentAssignmentConditions(emp.id);
 
   const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (v.data.departmentId !== undefined) patch.department_id = v.data.departmentId;
@@ -1646,6 +1695,10 @@ router.post('/employees/transfer', async c => {
     employee_id: emp.id, position_id: v.data.positionId ?? null,
     department_id: v.data.departmentId ?? emp.department_id, site_id: v.data.siteId ?? emp.site_id,
     supervisor_id: emp.supervisor_id, assignment_type: 'primary', effective_from: todayISO(), is_current: true, created_by: actor.id,
+    weekly_hours: conditions.weekly_hours, fte: conditions.fte,
+    notice_period_days: v.data.noticePeriodDays !== undefined
+      ? v.data.noticePeriodDays
+      : conditions.notice_period_days,
   });
 
   await writeHrAudit({ employeeId: emp.id, submoduleKey: 'employees', recordId: emp.id, actorId: actor.id,
