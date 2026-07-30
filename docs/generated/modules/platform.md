@@ -2,7 +2,7 @@
 
 # platform Module Map
 
-Source fingerprint: `8af9bd4211159aa5cfc3b43a`
+Source fingerprint: `c2ab69e20934faf57c7e960a`
 
 Files: 309 | Symbols: 2816 | Widgets: 0 | Unique mounted endpoints: 32 | Route definitions: 32 mounted + 15 unmounted | API calls: 50 | DB objects: 305 | E2E suites: 0
 
@@ -254,9 +254,9 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `MetricCardItem` | interface / ui-tile | `src/ui/components/MetricRow.tsx:16` | `-` |
 | `MetricRow` | function / component | `src/ui/components/MetricRow.tsx:59` | `-` |
 | `ReorderableRow` | function / component | `src/ui/components/MetricRow.tsx:100` | `-` |
-| `Modal` | function / component | `src/ui/components/Modal.tsx:38` | `-` |
-| `HseModal` | variable / component | `src/ui/components/Modal.tsx:76` | `-` |
-| `ModalSection` | function / component | `src/ui/components/Modal.tsx:84` | `-` |
+| `Modal` | function / component | `src/ui/components/Modal.tsx:46` | `-` |
+| `HseModal` | variable / component | `src/ui/components/Modal.tsx:85` | `-` |
+| `ModalSection` | function / component | `src/ui/components/Modal.tsx:93` | `-` |
 | `TabBar` | function / component | `src/ui/components/ModuleTabs.tsx:51` | `-` |
 | `ModuleTabs` | function / component | `src/ui/components/ModuleTabs.tsx:76` | `-` |
 | `AreaTabs` | variable / component | `src/ui/components/ModuleTabs.tsx:129` | `-` |

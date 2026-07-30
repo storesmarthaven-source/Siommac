@@ -132,52 +132,53 @@ function ReadinessGauge({
   );
 }
 
-/** Cold-path drawer shell built entirely from the shared SIOMAC skeleton kit. */
-function ProfileDrawerSkeleton({ onClose }: { onClose: () => void }): VNode {
+/**
+ * Cold-path drawer BODY built from the shared SIOMAC skeleton kit.
+ *
+ * Deliberately returns only the `<main class="drawer">` — not the overlay and
+ * root around it. Those are rendered once by ProfileDrawer and stay mounted
+ * while this swaps for the loaded content, because `.epd-overlay > .epd-root`
+ * carries the slide-in animation: rendering a second overlay here tore the
+ * subtree down and replayed the slide when the data arrived, so the panel
+ * appeared to slide in twice.
+ */
+function DrawerSkeletonBody(): VNode {
   return (
-    <div class="epd-overlay" role="presentation">
-      <div class="epd-root">
-        <ProfileIconSprite />
-        <main class="drawer" aria-busy="true" aria-label="Loading employee profile">
-          <span class="sr-only" role="status">Loading employee profile…</span>
-          <header class="topbar">
-            <div class="brand"><strong>SIOMAC</strong><span>Employee Profile</span></div>
-            <button class="icon-btn" type="button" aria-label="Close employee profile" onClick={onClose}>
-              <Icon id="close" />
-            </button>
-          </header>
-          <section class="identity">
-            <div class="identity-grid">
-              <Skeleton circle width={80} />
-              <div style={{ display: 'grid', gap: '10px', alignContent: 'center' }}>
-                <Skeleton width={240} height={24} radius={8} />
-                <Skeleton width={96} height={12} radius={999} />
-                <SkeletonText lines={2} width={210} lastWidth={170} />
-              </div>
-            </div>
-            <div class="facts"><SkeletonStatStrip /></div>
-          </section>
-          <nav class="tabs" aria-hidden="true">
-            {Array.from({ length: 6 }, (_, index) => (
-              <span class="tab" key={index}><Skeleton width={index === 0 ? 62 : 74} height={12} radius={999} /></span>
-            ))}
-          </nav>
-          <div class="scroll">
-            <section class="panel active">
-              <div class="overview-grid">
-                {Array.from({ length: 4 }, (_, index) => (
-                  <section class={`card${index > 1 ? ' wide' : ''}`} key={index}>
-                    <Skeleton width="42%" height={15} radius={999} />
-                    {index === 3 ? <ListSkeleton rows={3} avatar={false} /> : <SkeletonFields rows={4} />}
-                  </section>
-                ))}
-              </div>
-            </section>
+    <main class="drawer" aria-busy="true" aria-label="Loading employee profile">
+      <span class="sr-only" role="status">Loading employee profile…</span>
+      <header class="topbar">
+        <div class="brand"><span>Employee Profile</span></div>
+      </header>
+      <section class="identity">
+        <div class="identity-grid">
+          <Skeleton circle width={80} />
+          <div style={{ display: 'grid', gap: '10px', alignContent: 'center' }}>
+            <Skeleton width={240} height={24} radius={8} />
+            <Skeleton width={96} height={12} radius={999} />
+            <SkeletonText lines={2} width={210} lastWidth={170} />
           </div>
-          <footer class="footer"><Skeleton width={180} height={38} radius={9} /><Skeleton width={140} height={38} radius={9} /></footer>
-        </main>
+        </div>
+        <div class="facts"><SkeletonStatStrip /></div>
+      </section>
+      <nav class="tabs" aria-hidden="true">
+        {Array.from({ length: 6 }, (_, index) => (
+          <span class="tab" key={index}><Skeleton width={index === 0 ? 62 : 74} height={12} radius={999} /></span>
+        ))}
+      </nav>
+      <div class="scroll">
+        <section class="panel active">
+          <div class="overview-grid">
+            {Array.from({ length: 4 }, (_, index) => (
+              <section class={`card${index > 1 ? ' wide' : ''}`} key={index}>
+                <Skeleton width="42%" height={15} radius={999} />
+                {index === 3 ? <ListSkeleton rows={3} avatar={false} /> : <SkeletonFields rows={4} />}
+              </section>
+            ))}
+          </div>
+        </section>
       </div>
-    </div>
+      <footer class="footer"><Skeleton width={180} height={38} radius={9} /><Skeleton width={140} height={38} radius={9} /></footer>
+    </main>
   );
 }
 
@@ -208,7 +209,6 @@ export function ProfileDrawer({
   employeeId, onClose, onAction, onOpenFullRecord, access,
 }: ProfileDrawerProps): VNode | null {
   const [tab, setTab] = useState<ProfileTabKey>('overview');
-  const [menuOpen, setMenuOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [attentionPage, setAttentionPage] = useState(0);
   // The audit export refuses without a business reason, so it always prompts —
@@ -221,9 +221,9 @@ export function ProfileDrawer({
   const shell = shellQuery.data;
 
   // Reset per-employee UI state on switch, so a newly selected employee never
-  // inherits the previous one's open tab, expanded attention list or menu.
+  // inherits the previous one's open tab, attention page or dialog.
   useEffect(() => {
-    setTab('overview'); setMenuOpen(false); setContactOpen(false);
+    setTab('overview'); setContactOpen(false);
     setAttentionPage(0); setAuditExportOpen(false);
   }, [employeeId]);
 
@@ -248,20 +248,24 @@ export function ProfileDrawer({
   const followUp = useReadinessFollowUp();
   const updateContact = useUpdateHrContact();
 
-  const closeRef = useRef<HTMLButtonElement>(null);
-  useEffect(() => { closeRef.current?.focus(); }, [employeeId]);
+  // The header no longer carries a close button, so focus lands on the dialog
+  // itself. Without this the keyboard would stay behind the drawer on the
+  // register underneath it.
+  const panelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { panelRef.current?.focus(); }, [employeeId]);
 
-  // Escape closes the top-most layer first, then the drawer.
+  // Escape closes the contact dialog first, then the drawer. With no visible
+  // close control this and the backdrop click are the only ways out, so the
+  // listener is not optional.
   useEffect(() => {
     function onKey(e: KeyboardEvent): void {
       if (e.key !== 'Escape') return;
       if (contactOpen) { setContactOpen(false); return; }
-      if (menuOpen) { setMenuOpen(false); return; }
       onClose();
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [contactOpen, menuOpen, onClose]);
+  }, [contactOpen, onClose]);
 
   if (!employeeId) return null;
 
@@ -272,7 +276,7 @@ export function ProfileDrawer({
   const attentionItems = attentionSource.slice(attentionPage * 2, (attentionPage * 2) + 2);
   const attentionTotal = shell?.attentionTotal ?? 0;
 
-  function runAction(label: string): void { setMenuOpen(false); onAction(label); }
+  function runAction(label: string): void { onAction(label); }
 
   /**
    * Run an export and report its outcome.
@@ -362,44 +366,23 @@ export function ProfileDrawer({
     }
   }
 
-  if (employeeId && !shellQuery.ready && !shellQuery.isError) {
-    return <ProfileDrawerSkeleton onClose={onClose} />;
-  }
+  // ONE overlay and root for both states. The loading body swaps inside them, so
+  // the slide-in on `.epd-overlay > .epd-root` runs once per open rather than
+  // again when the data lands.
+  const loading = !shellQuery.ready && !shellQuery.isError;
 
   return (
     <div class="epd-overlay" role="presentation" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div class="epd-root">
+      <div
+        ref={panelRef} tabIndex={-1} role="dialog" aria-modal="true"
+        aria-label="Employee profile" class="epd-root"
+      >
         <ProfileIconSprite />
 
+        {loading ? <DrawerSkeletonBody /> : (
         <main class="drawer" aria-label="Employee profile">
           <header class="topbar">
-            <div class="brand"><strong>SIOMAC</strong><span>Employee Profile</span></div>
-            <div class="top-actions">
-              <div class="action-menu-wrap">
-                <button
-                  class="icon-btn" type="button" aria-label="More employee actions"
-                  aria-haspopup="menu" aria-expanded={menuOpen}
-                  onClick={() => setMenuOpen(o => !o)}
-                ><Icon id="more" /></button>
-                {menuOpen && (
-                  <div class="action-menu" role="menu">
-                    {/* Only implemented, capability-appropriate actions appear here. */}
-                    {access.editEmployee && (
-                      <button type="button" role="menuitem" onClick={() => runAction('Edit Contact')}>Edit Employee</button>
-                    )}
-                    {access.changeStatus && (
-                      <button type="button" role="menuitem" onClick={() => runAction('Change Status')}>Change Employment Status</button>
-                    )}
-                    {access.startOffboarding && (
-                      <button class="danger" type="button" role="menuitem" onClick={() => runAction('Start Offboarding')}>Start Offboarding</button>
-                    )}
-                  </div>
-                )}
-              </div>
-              <button ref={closeRef} class="icon-btn" type="button" aria-label="Close employee profile" onClick={onClose}>
-                <Icon id="close" />
-              </button>
-            </div>
+            <div class="brand"><span>Employee Profile</span></div>
           </header>
 
           <section class="identity">
@@ -506,6 +489,17 @@ export function ProfileDrawer({
                           <p>{readinessExplanation(shell.readiness)}</p>
                         </div>
                       </div>
+                      {/* A sibling of the body, not a child of the copy column, so
+                          the rule spans the whole card — the same shape as the
+                          record page's `.hero-readiness-foot`. Says plainly when
+                          the record has never been reviewed, rather than a dash. */}
+                      <div class="epd-readiness-foot">
+                        <span>
+                          {shell.readiness.lastReviewedAt
+                            ? `Last reviewed ${formatDate(shell.readiness.lastReviewedAt)}`
+                            : 'Not yet reviewed'}
+                        </span>
+                      </div>
                     </section>
                   )}
 
@@ -556,8 +550,11 @@ export function ProfileDrawer({
                         {documentHealth.data?.groups.length === 0 && (
                           <div class="epd-empty">No document requirements apply to this employee.</div>
                         )}
+                        {/* Collapsed by default: the card is a health SUMMARY, and
+                            expanding every category buried the rest of the overview.
+                            The count on each folder carries its state. */}
                         {documentHealth.data?.groups.map((group: DocumentHealthGroup) => (
-                          <details key={group.key} open>
+                          <details key={group.key}>
                             <summary>
                               <Icon id="folder" /><strong>{group.label}</strong>
                               <span class="folder-count">
@@ -924,6 +921,7 @@ export function ProfileDrawer({
             </div>
           </footer>
         </main>
+        )}
 
         {contactOpen && shell?.contact && (
           <div class="contact-dialog-backdrop" role="presentation" onClick={e => { if (e.target === e.currentTarget) setContactOpen(false); }}>

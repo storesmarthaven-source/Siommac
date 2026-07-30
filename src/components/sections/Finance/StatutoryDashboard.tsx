@@ -56,7 +56,6 @@ import {
 import { LucideIcon } from '@ui/LucideIcon';
 import { InfoTip } from '@ui/InfoTip';
 import { PageHeader, KpiTile } from '@ui';
-import { UpcomingDeadlinesCard, type UpcomingDeadlineCardItem } from '@components/shared/UpcomingDeadlinesCard';
 import { can } from '@lib/permissions';
 import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session';
 import { fmtDate, humanize } from './financeShared';
@@ -76,17 +75,6 @@ const TABS: { key: MainTab; label: string; locked?: boolean }[] = [
   { key: 'reports',    label: 'Reports', locked: true },
 ];
 
-function statutoryDeadlinesOn(date: Date): UpcomingDeadlineCardItem[] {
-  const deadlines: UpcomingDeadlineCardItem[] = [];
-  if (date.getDate() === 15) {
-    deadlines.push({ id: `nis-${date.toISOString()}`, title: 'NIS Contribution Remittance', note: 'Monthly payment to NIBTT', tagLabel: 'NIS', tagCls: 'sdb-tag--upcoming' });
-    deadlines.push({ id: `paye-${date.toISOString()}`, title: 'PAYE & Health Surcharge', note: 'Monthly return to BIR', tagLabel: 'BIR', tagCls: 'sdb-tag--pending' });
-  }
-  if (date.getMonth() === 1 && date.getDate() === 28) {
-    deadlines.push({ id: `td4-${date.toISOString()}`, title: 'TD4 Certificates & Summary', note: 'Annual filing to BIR', tagLabel: 'Annual', tagCls: 'sdb-tag--planned' });
-  }
-  return deadlines;
-}
 
 // ── Widget zone ────────────────────────────────────────────────────────────────
 // The KPI strip is a SEPARATE reorder-only row above the board (drag left/right, never
@@ -105,24 +93,47 @@ const W_KPI_VERIFY     = 'finance.statutory.kpi.verifyQueue';
 const W_KPI_APPROVALS  = 'finance.statutory.kpi.approvals';
 const W_CHART     = 'finance.statutory.nisChart';
 const W_READY     = 'finance.statutory.readiness';
-const W_DEADLINES = 'finance.statutory.deadlines';
 const W_REGISTER  = 'finance.statutory.register';
+/** The unified Schedule & Deadlines widget from the platform registry — NOT the page-local
+ *  "Upcoming Deadlines" card this page used to carry. That one was removed; this supersedes it,
+ *  and being a registry widget it needs no `localWidgets` entry. */
+const W_DEADLINES = 'enterprise.calendar.upcomingDeadlines';
+
+/**
+ * The main board's column count.
+ *
+ * 24, not the platform default of 12, so a horizontal resize step is ~1/24 of the board instead of
+ * ~1/12 — the same granularity the Employee Master board has. At 12 columns a drag jumped ~79px at
+ * a time and a tile hit its neighbour after one or two steps, which read as "it only resizes up to
+ * a certain size". Total widths are unchanged: every placement below is simply expressed in twice
+ * as many columns.
+ *
+ * Saved layouts migrate automatically — useBoardLayout is given this as `targetColumns` and
+ * rebaseBoardLayoutColumns rescales existing x/w, so nobody loses their arrangement.
+ *
+ * The KPI strip is a SEPARATE board and deliberately stays at 12: it is reorder-only, and its
+ * uniform w2 tiles already divide that row exactly six ways.
+ */
+const STATUTORY_BOARD_COLUMNS = 24;
 
 function defInst(widgetId: string, x: number, y: number, w: number, h: number, sizeKey: WidgetSizeKey, pageKey = PAGE_KEY): WidgetInstance {
   return { instanceId: `${widgetId}#def`, widgetId, pageKey, zoneId: 'main', x, y, w, h, sizeKey, config: {} };
 }
-// 12-COLUMN grid. Top row: chart (left half, w6) · Upcoming Deadlines (w3) · Config
-// Completeness (w3) → then the register. rowHeight is a fine 6px; spacing a fixed 12px gap.
-// Tile px ≈ 6·h + 12·(h−1) = 18h − 12. (The KPI strip is NOT on this board.)
+// 24-COLUMN grid (see STATUTORY_BOARD_COLUMNS). Top row: chart (left half, w12) · Schedule &
+// Deadlines (w6) · Config Completeness (w6) → then the register. rowHeight is a fine 6px; spacing
+// a fixed 12px gap. Tile px ≈ 6·h + 12·(h−1) = 18h − 12. (The KPI strip is NOT on this board.)
 function defaultStatutoryLayout(): BoardLayout {
   return {
     pageKey: PAGE_KEY,
+    // Declared explicitly: without it rebaseBoardLayoutColumns falls back to 12 and has to infer
+    // the real grid from placement extents. Stating it means the default is never a guess.
+    columns: STATUTORY_BOARD_COLUMNS,
     zones: {
       main: [
-        defInst(W_CHART,           0,   0,  6, 24, 'large'),     // chart (left half) · deadlines · readiness
-        defInst(W_DEADLINES,       6,   0,  3, 24, 'standard'),
-        defInst(W_READY,           9,   0,  3, 24, 'standard'),
-        defInst(W_REGISTER,        0,  24, 12, 40, 'hero'),      // register table
+        defInst(W_CHART,           0,   0, 12, 24, 'large'),     // chart (left half)
+        defInst(W_DEADLINES,      12,   0,  6, 24, 'standard'),  // unified Schedule & Deadlines
+        defInst(W_READY,          18,   0,  6, 24, 'standard'),
+        defInst(W_REGISTER,        0,  24, 24, 34, 'hero'),      // register table
       ],
     },
   };
@@ -430,7 +441,7 @@ export function StatutoryDashboard({
   const {
     layout, addWidget, updateZoneLayout, saveLayout, cancelLayout, setAsDefault, resetLayout,
     isDefaultDirty, isDirty, isSaving,
-  } = useBoardLayout(PAGE_KEY, defaultStatutoryLayout());
+  } = useBoardLayout(PAGE_KEY, defaultStatutoryLayout(), STATUTORY_BOARD_COLUMNS);
   // The KPI row is its own board (separate page key) — its layout state shares the query cache
   // with the KPI WidgetBoard below, so this instance sees reorders live. "Set as default" and
   // "Reset layout" act on the WHOLE page: either board being dirty enables the button, and
@@ -642,18 +653,29 @@ export function StatutoryDashboard({
     </div>
   );
 
-  const renderDeadlines = (): VNode => <UpcomingDeadlinesCard deadlinesOn={statutoryDeadlinesOn} />;
 
-  // Board widgets each declare a resize FLOOR (allowedSizes → minGridFor); without one the generic
-  // floor is 2 cells on this 6px grid. (The KPI cards are NOT board widgets — they live in the
-  // reorder-only strip above.)
+  // Board widgets declare BOTH the size they are placed at and the floor they may be dragged down
+  // to — and the two must differ, or the tile is pinned.
+  //
+  // They did not differ before: the helper emitted a single size with no `min`, and widgetMinGrid
+  // then falls back to `grid.w`, so each card's minimum width WAS its placed width. The chart
+  // (placed w12, floor w12) and Readiness (w6/w6) could not be narrowed by a single column, and
+  // with the top row full they could not widen either — so they could not be resized horizontally
+  // at all. Only the register worked, because its floor (w12) happened to sit below its placement
+  // (w24). Widths are MAIN-BOARD columns (24).
+  //
+  // (The KPI cards are NOT board widgets — they live in the reorder-only strip above, where
+  // `resizable: false` pins them deliberately.)
+  const sized = (key: WidgetSizeKey, w: number, h: number, minW: number, minH: number): WidgetSizeDef[] =>
+    [{ key, label: 'Default', grid: { w, h }, min: { w: minW, h: minH } }];
+  /** A PINNED size — min == grid on purpose. Only for the reorder-only KPI strip, whose tiles are
+   *  `resizable: false` and must stay uniform; using this on a board widget pins it. */
   const floor = (key: WidgetSizeKey, w: number, h: number): WidgetSizeDef[] =>
     [{ key, label: 'Default', grid: { w, h } }];
   const localWidgets: LocalWidgetMap = {
-    [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule', allowedSizes: floor('large', 6, 16) },
-    [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness',      allowedSizes: floor('standard', 3, 16) },
-    [W_DEADLINES]:      { render: renderDeadlines,    chrome: 'none', title: 'Upcoming Deadlines',       allowedSizes: floor('standard', 3, 12) },
-    [W_REGISTER]:       { render: renderRegister,     chrome: 'none', title: 'Statutory Register',       allowedSizes: floor('hero', 6, 20) },
+    [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule', allowedSizes: sized('large', 12, 24, 8, 14) },
+    [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness',      allowedSizes: sized('standard', 6, 24, 4, 12) },
+    [W_REGISTER]:       { render: renderRegister,     chrome: 'none', title: 'Statutory Register',       allowedSizes: sized('hero', 24, 34, 10, 16) },
   };
 
   // KPI board widgets — uniform, reorder-only (resizable:false → w2×h6 floor pins the tile size).
@@ -705,7 +727,7 @@ export function StatutoryDashboard({
       )}
       <WidgetBoard pageKey={PAGE_KEY} zones={['main']} editing={editing && canEditBoard}
         localWidgets={localWidgets} defaultLayout={defaultStatutoryLayout()} demo={demo}
-        cellHeight={6} gap={[12, 12]} revealOnMount={false}
+        column={STATUTORY_BOARD_COLUMNS} cellHeight={6} gap={[12, 12]} revealOnMount={false}
         preview={preview} onPreviewChange={setPreview}
         onCommitPreview={commitPreview} onDiscardPreview={discardPreview}
         onFinishEditing={() => setEditing(false)}

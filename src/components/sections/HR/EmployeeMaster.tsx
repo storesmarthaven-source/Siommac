@@ -13,7 +13,7 @@ import {
   type HrEmployeeRow, type TrainingStatus, type EmployeeSortCol, type EmployeeMissingField,
 } from '@api/hr/employees';
 import { usePrefetchEmployeeProfileShell, type ProfileTabKey } from '@api/hr/employeeProfile';
-import { EMPLOYEE_ATTENTION_ROSTER_QUERY } from '@ui/widgets/registry.hrEmployeeDashboard';
+import { EMPLOYEE_ATTENTION_ROSTER_QUERY, EMPLOYEE_DRAWER_EVENT } from '@ui/widgets/registry.hrEmployeeDashboard';
 import { useDeadlineWindowQuery } from '@ui/widgets/registry.calendarPlanning';
 import {
   humanize, rowName, statusTone, TRAINING_TONE, TRAINING_LABEL, Avatar, TinyAvatar,
@@ -27,7 +27,7 @@ import { ImportWizard } from './ImportWizard';
 import { StartOnboardingWizard } from './StartOnboardingWizard';
 import { PageHeaderSkeleton, TableSkeleton, Button, EmptyState, LucideIcon, PageHeader, Pagination } from '@ui';
 import {
-  BoardSkeleton, WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget, insertWidgetsAtRow,
+  BoardSkeleton, WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget, insertWidgetsAtRow, findWidgetDef,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeDef, type WidgetSizeKey,
 } from '@ui/widgets';
 import { TableSearch, FilterDropdown, AdvancedFilter, ActiveFilters, useFilterDropdowns, FILTER_DROPDOWN_ATTR, type AdvTab } from '@ui';
@@ -222,6 +222,82 @@ function EmployeeRow(
 function defInst(widgetId: string, x: number, y: number, w: number, h: number, sizeKey: WidgetSizeKey, pageKey = PAGE_KEY): WidgetInstance {
   return { instanceId: `${widgetId}#def`, widgetId, pageKey, zoneId: 'main', x, y, w, h, sizeKey, config: {} };
 }
+
+// Every KPI tile is a uniform, fixed w4×h6 (KPI_SIZES in the registry), so the strip's next free
+// spot is purely positional: fill left to right and wrap to a new tile row. The generic
+// placeWidgetsAtBottom helper cannot do this — it pins x to 0 and gives each addition its own
+// row, which on this strip stacks tiles in a single column instead of filling the row.
+const KPI_TILE = { w: 4, h: 6 } as const;
+const KPI_SLOTS_PER_ROW = Math.max(1, Math.floor(EMPLOYEE_BOARD_COLUMNS / KPI_TILE.w));
+/** Grid rows the strip needs for `slotsUsed` SLOTS — not tiles, because a double-wide tile takes
+ *  two. One tile row while the strip holds six slots or fewer, so the default board keeps its
+ *  locked single-row look and only grows when the row genuinely overflows. */
+export function kpiStripMaxRows(slotsUsed: number): number {
+  return Math.max(1, Math.ceil(slotsUsed / KPI_SLOTS_PER_ROW)) * KPI_TILE.h;
+}
+/**
+ * Does this widget belong on the KPI strip rather than the main board?
+ *
+ * The strip and the main board are separate WidgetBoards, so nothing can be dragged between
+ * them — the single widget library has to pick the destination itself. It routes on the widget's
+ * own declared geometry: a KPI tile declares KPI_SIZES, which the registry turns into a FIXED
+ * w4×h6, and the strip is exactly the board of uniform fixed w4×h6 tiles. Routing this way also
+ * stops a KPI tile landing on the fine-grained board below, where its fixed 96px renders as a
+ * sliver.
+ */
+export function isKpiTileWidget(widgetId: string): boolean {
+  return kpiTileSlots(widgetId) > 0;
+}
+
+/**
+ * How many strip slots a widget occupies, or 0 if it is not a strip tile.
+ *
+ * A strip tile is FIXED, exactly one tile row tall, and a whole number of slots wide — that last
+ * part is what lets a metric take two slots (Master Data Workload: a headline plus its breakdown)
+ * without the strip losing its uniform rhythm. Width is checked as a MULTIPLE rather than equality
+ * so adding a wide tile needs no change here.
+ */
+export function kpiTileSlots(widgetId: string): number {
+  const def = findWidgetDef(widgetId);
+  if (def?.resizable !== false) return 0;
+  const constraints = def.sizeConstraints;
+  if (constraints?.defaultRows !== KPI_TILE.h) return 0;
+  const slots = constraints.defaultColumns / KPI_TILE.w;
+  return Number.isInteger(slots) && slots >= 1 && slots <= KPI_SLOTS_PER_ROW ? slots : 0;
+}
+
+/** Slots already consumed by the strip's contents — NOT the tile count, since a double-wide tile
+ *  takes two. Falls back to the instance's own width for anything the registry cannot resolve, so
+ *  an unresolved tile still reserves the space it visibly occupies. */
+export function kpiSlotsUsed(items: readonly WidgetInstance[]): number {
+  return items.reduce((total, item) => total + (kpiTileSlots(item.widgetId) || Math.max(1, Math.round(item.w / KPI_TILE.w))), 0);
+}
+
+/**
+ * Place additions in the strip's next free slots, normalising each to its declared tile size.
+ *
+ * A tile never straddles two rows: if it does not fit in what is left of the current row, the row
+ * is padded out and the tile starts the next one. Wrapping a double-wide tile across the row break
+ * would put half of it at x=20 and half at x=0, which react-grid-layout resolves by shoving other
+ * tiles around — the strip would silently reorder itself.
+ */
+export function placeKpiTiles(existing: readonly WidgetInstance[], additions: readonly WidgetInstance[]): WidgetInstance[] {
+  let cursor = kpiSlotsUsed(existing);
+  return additions.map(item => {
+    const slots = kpiTileSlots(item.widgetId) || 1;
+    const offsetInRow = cursor % KPI_SLOTS_PER_ROW;
+    if (offsetInRow + slots > KPI_SLOTS_PER_ROW) cursor += KPI_SLOTS_PER_ROW - offsetInRow;
+    const placed = {
+      ...item,
+      x: (cursor % KPI_SLOTS_PER_ROW) * KPI_TILE.w,
+      y: Math.floor(cursor / KPI_SLOTS_PER_ROW) * KPI_TILE.h,
+      w: slots * KPI_TILE.w,
+      h: KPI_TILE.h,
+    };
+    cursor += slots;
+    return placed;
+  });
+}
 export function defaultEmployeeKpiLayout(): BoardLayout {
   return {
     pageKey: KPI_PAGE_KEY,
@@ -232,8 +308,9 @@ export function defaultEmployeeKpiLayout(): BoardLayout {
         defInst('hr.employeeMaster.recordReadiness', 4, 0, 4, 6, 'compact', KPI_PAGE_KEY),
         defInst('hr.employeeMaster.hrWorkQueue', 8, 0, 4, 6, 'compact', KPI_PAGE_KEY),
         defInst('hr.employeeMaster.exceptions', 12, 0, 4, 6, 'compact', KPI_PAGE_KEY),
-        defInst('hr.employeeMaster.newStarters', 16, 0, 4, 6, 'compact', KPI_PAGE_KEY),
-        defInst('hr.employeeMaster.departures', 20, 0, 4, 6, 'compact', KPI_PAGE_KEY),
+        // New Starters retired: it reported the same `hires` figure as the Hires This Month KPI,
+        // so the strip showed one metric twice. Departures moves left to close the gap.
+        defInst('hr.employeeMaster.departures', 16, 0, 4, 6, 'compact', KPI_PAGE_KEY),
       ],
     },
   };
@@ -252,8 +329,7 @@ export function defaultEmployeeLayout(): BoardLayout {
         // near-identical survivors (`lifecycleActivity`, `adminWorkload` — same titles), and the
         // two workforce charts were retired outright, so the top row closes up.
         defInst('hr.employeeMaster.lifecycleActivity', 0, 0, 12, 28, 'wide'),         // 492px
-        defInst('enterprise.calendar.upcomingDeadlines', 12, 0, 6, 28, 'standard'),
-        defInst('hr.employeeMaster.adminWorkload', 18, 0, 6, 28, 'large'),
+        defInst('enterprise.calendar.upcomingDeadlines', 12, 0, 12, 28, 'standard'),
         defInst('hr.employees.register', 0, 28, EMPLOYEE_BOARD_COLUMNS, 50, 'hero'),  // 888px
       ],
     },
@@ -413,6 +489,21 @@ export function EmployeeMaster(): VNode {
   const pageSaving = isSaving || kpiBoard.isSaving;
   const boardItems = layout.zones.main ?? [];
   const placedWidgetIds = boardItems.map(w => w.widgetId);
+  const kpiItems = kpiBoard.layout.zones.main ?? [];
+  // ONE widget library serves both boards. The destination is derived from the widget itself
+  // rather than from a second "KPI library" entry point: a KPI tile declares KPI_SIZES, which
+  // the registry turns into a fixed w4×h6, and the strip is exactly the board of uniform fixed
+  // w4×h6 tiles. Routing on that fact means the user picks a widget, not a board — and it stops
+  // a KPI tile being dropped onto the fine-grained board below, where its fixed 96px height
+  // renders as a sliver.
+  // "Added" must reflect BOTH boards, or a KPI already on the strip reads as still available.
+  const allPlacedWidgetIds = [...placedWidgetIds, ...kpiItems.map(w => w.widgetId)];
+  const addFromLibrary = async (instances: WidgetInstance[]): Promise<void> => {
+    const kpis = instances.filter(inst => isKpiTileWidget(inst.widgetId));
+    const rest = instances.filter(inst => !isKpiTileWidget(inst.widgetId));
+    if (kpis.length) await kpiBoard.updateZoneLayout('main', [...kpiItems, ...placeKpiTiles(kpiItems, kpis)]);
+    if (rest.length) await updateZoneLayout('main', insertWidgetsAtRow(boardItems, rest, WIDGET_SECTION_START_ROW));
+  };
   const WIDGET_SECTION_START_ROW = 0;
   // New widgets enter the editable widget section, below the independent fixed KPI row.
   const placeInWidgetSection = <T extends { x: number; y: number }>(w: T): T => ({ ...w, x: 0, y: WIDGET_SECTION_START_ROW });
@@ -500,6 +591,17 @@ export function EmployeeMaster(): VNode {
     };
     window.addEventListener(REGISTER_FILTER_EVENT, onFilterRequest);
     return () => window.removeEventListener(REGISTER_FILTER_EVENT, onFilterRequest);
+  }, []);
+
+  // The Employee Attention card's "Review Employee Record" opens THAT employee's drawer. It also
+  // renders inside the board, outside this tree, so it asks by event like the KPI filters do.
+  useEffect(() => {
+    const onOpenDrawer = (event: Event): void => {
+      const employeeId = (event as CustomEvent<{ employeeId?: string }>).detail.employeeId;
+      if (employeeId) setSelectedId(employeeId);
+    };
+    window.addEventListener(EMPLOYEE_DRAWER_EVENT, onOpenDrawer);
+    return () => window.removeEventListener(EMPLOYEE_DRAWER_EVENT, onOpenDrawer);
   }, []);
 
   const chipDefs: { label: string; onRemove: () => void }[] = [
@@ -863,9 +965,13 @@ export function EmployeeMaster(): VNode {
       {/* Unified customizable board — KPI/insight/workforce widgets (from the library) +
           the employee register (page-local). Read-only unless manager/admin/superadmin. */}
       <div class="em-kpi-board">
+        {/* maxRows tracks the tile count instead of being pinned at 6: pinned, the strip was
+            exactly full at six and an added seventh tile had nowhere to land — the library
+            would have been a control that silently did nothing. */}
         <WidgetBoard pageKey={KPI_PAGE_KEY} zones={['main']} editing={editing && canEdit}
           defaultLayout={defaultEmployeeKpiLayout()} column={EMPLOYEE_BOARD_COLUMNS}
-          cellHeight={6} gap={[12, 12]} resizable={false} maxRows={6} isBounded revealOnMount={false} />
+          cellHeight={6} gap={[12, 12]} resizable={false} maxRows={kpiStripMaxRows(kpiSlotsUsed(kpiItems))}
+          isBounded revealOnMount={false} />
       </div>
 
       {/* Fine grid at Statutory/Command-Centre parity (cellHeight 6, gap 12 → an 18px vertical
@@ -885,13 +991,16 @@ export function EmployeeMaster(): VNode {
         defaultDirty={pageDefaultDirty} isDirty={pageDirty} saving={pageSaving}
       />
 
+      {/* The single widget library for the page. Adds route themselves to the KPI strip or the
+          main board (see addFromLibrary); preview-on-board stays main-board only, since a KPI
+          tile is fixed-size and reorder-only and has no geometry to preview. */}
       <WidgetLibraryModal open={libOpen} pageKey={PAGE_KEY} zoneId="main"
-        placedWidgetIds={placedWidgetIds} userPermissions={userPermissions}
+        placedWidgetIds={allPlacedWidgetIds} userPermissions={userPermissions}
         demo={demo} onToggleDemo={() => setDemo(d => !d)}
         canManagePackages={isAdmin}
         onClose={() => setLibOpen(false)}
-        onAddWidget={inst => updateZoneLayout('main', insertWidgetsAtRow(boardItems, [inst], WIDGET_SECTION_START_ROW))}
-        onAddWidgets={instances => updateZoneLayout('main', insertWidgetsAtRow(boardItems, instances, WIDGET_SECTION_START_ROW))}
+        onAddWidget={inst => addFromLibrary([inst])}
+        onAddWidgets={instances => addFromLibrary(instances)}
         onPreviewOnBoard={p => setPreview(placeInWidgetSection(p))} />
 
       {/* Profile drawer */}

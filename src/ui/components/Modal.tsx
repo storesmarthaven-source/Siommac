@@ -9,9 +9,17 @@
  *
  * Sizes: 'sm' | 'md' (default) | 'lg'. Footer buttons use the shared <Button>.
  * Legacy alias: `HseModal`.
+ *
+ * PORTALLED to document.body. The backdrop is `position: fixed`, which is normally enough — but
+ * a fixed descendant of a TRANSFORMED ancestor positions against that ancestor instead of the
+ * viewport, and is then clipped by its overflow. react-grid-layout translates every board tile,
+ * so a dialog opened from inside a widget (the per-widget settings gear) rendered *inside* the
+ * tile: at KPI size that is a 96px box, which is why the settings window appeared tiny and
+ * unreadable. Portalling makes the shell independent of wherever it was invoked from.
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
+import { createPortal } from 'preact/compat';
 import { Button } from './Button';
 import { useOverlayA11y } from '../lib/useOverlayA11y';
 
@@ -41,7 +49,7 @@ export function Modal({
 }: ModalProps): VNode | null {
   const panelRef = useOverlayA11y(open, onClose);
   if (!open) return null;
-  return (
+  return createPortal(
     <div class={`ui-modal-backdrop${overlayClass ? ` ${overlayClass}` : ''}`} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <section ref={panelRef} class={`ui-modal${size !== 'md' ? ` ui-modal--${size}` : ''}`} role="dialog" aria-modal="true">
         <header class="ui-modal-head">
@@ -68,7 +76,8 @@ export function Modal({
           )}
         </footer>
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

@@ -471,12 +471,25 @@
 
 /* Fixed-size gauge, centered — no flex-grow, so the card never balloons blank space. */
 .sdb-ready-score { flex: 0 0 auto; display: flex; justify-content: center; padding: 0 0 3px; }
-.sdb-gauge-wrap { position: relative; width: 195px; max-width: 100%; aspect-ratio: 118 / 78; }
+/* Fluid, so the gauge tracks the widget instead of sitting at a fixed 195px.
+   `width: 195px; max-width: 100%` only ever let it SHRINK — widening the tile left the gauge
+   stranded at its original size with growing dead space around it. The clamp keeps it legible when
+   the card is narrow and stops it ballooning when the card is very wide.
+   `container-type` makes the wrap a query container so the value below can scale with it. */
+.sdb-gauge-wrap {
+  position: relative;
+  container-type: inline-size;
+  width: clamp(140px, 74%, 300px);
+  aspect-ratio: 118 / 78;
+}
 .sdb-gauge { width: 100%; height: 100%; }
 .sdb-gauge svg { width: 100%; height: 100%; overflow: visible; display: block; }
 .sdb-gauge-val {
   position: absolute; left: 50%; bottom: 14%; transform: translateX(-50%);
-  font-size: 23px; font-weight: 720; letter-spacing: -.02em; line-height: 1;
+  /* 11.8cqw == the old 23px at the old 195px width, so the default size is unchanged and it now
+     tracks the gauge. Clamped so it stays readable small and never overruns the arc. */
+  font-size: clamp(17px, 11.8cqw, 32px);
+  font-weight: 720; letter-spacing: -.02em; line-height: 1;
 }
 .sdb-ready-sub { flex: 0 0 auto; margin: 12px 0 10px; font-size: 13px; font-weight: 550; color: var(--sdb-ink2); text-align: center; line-height: 1.35; text-transform: capitalize; }
 
@@ -832,3 +845,182 @@
 /* Upcoming (not-yet-reached) lifecycle stage — muted title + sub, dot outlined (inline). */
 .svd-rail-item.is-pending .svd-rail-title { color: rgba(226, 238, 252, .55); font-weight: 500; }
 .svd-rail-item.is-pending .svd-rail-sub { color: rgba(226, 238, 252, .35); }
+
+/* == Rate Version drawer - LIGHT mode ========================================
+   The .svd-* body above is written for the navy panel (white text, translucent-white
+   rules/dots). The drawer opts into the theme switch via <Drawer adaptive /> in
+   StatutoryConfigOverview.tsx; these are the light counterparts.
+
+   Same inverted gating as the kit layer in assets/styles/uikit-overlay.css: dark is the
+   base and is left untouched, so only light mode is restated here. */
+body:not([data-theme="dark"]) .svd-drawer .svd-title,
+body:not([data-theme="dark"]) .svd-drawer .svd-step-title,
+body:not([data-theme="dark"]) .svd-drawer .svd-rail-title { color: var(--surface-text); }
+body:not([data-theme="dark"]) .svd-drawer .svd-meta,
+body:not([data-theme="dark"]) .svd-drawer .svd-label,
+body:not([data-theme="dark"]) .svd-drawer .svd-step-date,
+body:not([data-theme="dark"]) .svd-drawer .svd-rail-sub { color: var(--surface-muted); }
+/* Pending steps read one step back from the resolved ones in both themes. */
+body:not([data-theme="dark"]) .svd-drawer .svd-step-by,
+body:not([data-theme="dark"]) .svd-drawer .svd-step.is-pending .svd-step-title,
+body:not([data-theme="dark"]) .svd-drawer .svd-step.is-pending .svd-step-date,
+body:not([data-theme="dark"]) .svd-drawer .svd-rail-item.is-pending .svd-rail-title,
+body:not([data-theme="dark"]) .svd-drawer .svd-rail-item.is-pending .svd-rail-sub { color: var(--surface-disabled); }
+/* Connector rules between lifecycle steps. */
+body:not([data-theme="dark"]) .svd-drawer .svd-step-line,
+body:not([data-theme="dark"]) .svd-drawer .svd-rail-line { background: var(--surface-border); }
+
+/* Ribbons - washes tuned for navy; light mode needs the darker ink on a pale tint. */
+body:not([data-theme="dark"]) .svd-drawer .svd-ribbon--blue  { background: #e6efff; border-color: #c7dbff; color: #1d4ed8; }
+body:not([data-theme="dark"]) .svd-drawer .svd-ribbon--blue i  { color: #2563eb; }
+body:not([data-theme="dark"]) .svd-drawer .svd-ribbon--green { background: #e3f7ea; border-color: #bde5cb; color: #15803d; }
+body:not([data-theme="dark"]) .svd-drawer .svd-ribbon--green i { color: #16a34a; }
+body:not([data-theme="dark"]) .svd-drawer .svd-ribbon--amber { background: #fdf1dd; border-color: #f2ddb4; color: #b45309; }
+body:not([data-theme="dark"]) .svd-drawer .svd-ribbon--amber i { color: #d97706; }
+body:not([data-theme="dark"]) .svd-drawer .svd-ribbon--red   { background: #fdeaea; border-color: #f5c6c6; color: #b91c1c; }
+body:not([data-theme="dark"]) .svd-drawer .svd-ribbon--red i   { color: #dc2626; }
+body:not([data-theme="dark"]) .svd-drawer .svd-ribbon--gray  { background: var(--surface-subtle); border-color: var(--surface-border); color: var(--surface-text); }
+body:not([data-theme="dark"]) .svd-drawer .svd-ribbon--gray i  { color: var(--surface-muted); }
+
+/* Retire is a destructive action - it stays red, but on a light tint. */
+body:not([data-theme="dark"]) .svd-drawer .svd-retire { background: #fdeaea; border-color: #f0b4b4; color: #b91c1c; }
+body:not([data-theme="dark"]) .svd-drawer .svd-retire:hover { background: #f9d7d7; }
+
+/* Loading-placeholder step dot. Was an inline style, which no stylesheet can override,
+   so it could not follow the theme; it is a class now. */
+.svd-drawer .svd-step-dot--skel { background: rgb(255 255 255 / 22%); }
+body:not([data-theme="dark"]) .svd-drawer .svd-step-dot--skel { background: var(--surface-border); }
+/* == Rich drawer - LIGHT mode (OPT-IN via <Drawer adaptive />) ===============
+   The shared rich panel is navy-only: #1b2d54 + white text baked into ~80 rules. These
+   rules supply the LIGHT counterpart and apply ONLY when the panel carries
+   the .svd-drawer panel class AND the theme switch is not on dark.
+
+   Note the inverted gating. Elsewhere the base is light and dark is layered on top
+   (assets/styles/theme-dark.css); here the base is DARK, so light is the override and the
+   navy is left untouched - dark mode renders exactly as it did before.
+
+   Scoped to .svd-drawer, NOT to [data-theme-scope="adaptive"]: PayrollExceptions already
+   opts in and ships its own light/dark rules, so a scope-wide selector would reach it.
+   Every other rich drawer stays navy in both themes. */
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer {
+  /* The shared light `--surface-muted` (#66788f) lands at 4.2:1 on the recessed
+     `--surface-subtle`, and this drawer sets a lot of 9.5-11px text on exactly that
+     surface. Re-pointing the two muted tiers HERE (same element the base tokens are
+     declared on, so this wins) keeps every rule below on one token and clears AA,
+     without touching the messenger or any other adaptive consumer. */
+  --surface-muted: #5b6d86;
+  --surface-disabled: #64748b;
+
+  background: var(--surface);
+  color: var(--surface-text);
+  border-left-color: var(--surface-border);
+  box-shadow: -18px 0 50px rgb(15 23 42 / 14%);
+}
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-rdrawer-top,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-rdrawer-foot {
+  background: var(--surface-subtle);
+  border-color: var(--surface-border);
+}
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-rdrawer-title { color: var(--surface-text); }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-rdrawer-sub { color: var(--surface-muted); }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-rdrawer-scroll {
+  background: var(--surface);
+  color: var(--surface-text);
+}
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-icon-action {
+  background: var(--surface-hover); color: var(--surface-muted); border-color: var(--surface-border);
+}
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-icon-action:hover {
+  background: var(--surface-active); color: var(--surface-text);
+}
+
+/* Cards / tiles / callouts - translucent white over navy becomes a recessed light panel. */
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-info-card,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-callout,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-stat-tile,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-stats,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-stat {
+  background: var(--surface-subtle); border-color: var(--surface-border); color: var(--surface-text);
+}
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-info-card-head h4,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-callout-body strong,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-stat-tile strong,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-stat-line,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-stat-line strong,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-field-row-value,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-mini-table td,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-title,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-activity-title,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-entity-name h2,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-wf-mini-text { color: var(--surface-text); }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-callout-body p,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-stat-tile small,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-stat-tile span,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-stat > small,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-field-row-label,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-mini-table th,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-empty,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-text,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-note,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-entity-meta,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-entity-ref,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-activity-desc,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-activity-time { color: var(--surface-muted); }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-mini-table th,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-mini-table td { border-color: var(--surface-border); }
+
+/* Tabs */
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-tabs { border-bottom-color: var(--surface-border); }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-tab { color: var(--surface-muted); }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-tab:hover,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-tab.active { color: var(--surface-text); }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-tab.active::after { background: var(--surface-focus); }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-tab-sep { background: var(--surface-border); }
+
+/* Controls */
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-mini-btn,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-wf-mini {
+  background: var(--surface); border-color: var(--surface-border); color: var(--surface-text);
+}
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-mini-btn:hover,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-wf-mini:hover { background: var(--surface-hover); }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-actions > .ui-btn-primary {
+  background: var(--surface-accent-bg); border-color: var(--surface-accent-border); color: var(--surface-accent-text);
+}
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-actions > .ui-btn-primary:hover { background: var(--surface-active); }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-actions .ui-btn-secondary {
+  background: var(--surface); border-color: var(--surface-border); color: var(--surface-text);
+}
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-actions .ui-btn-secondary:hover { background: var(--surface-hover); color: var(--surface-text); }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-spinner-wrap { color: var(--surface-muted); }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-avatar-xs,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-entity-photo {
+  background: var(--surface-accent-bg); border-color: var(--surface-border); color: var(--surface-accent-text);
+}
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-entity-photo span { color: var(--surface-accent-text); }
+
+/* Menus */
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-menu {
+  background: var(--surface); border-color: var(--surface-border); color: var(--surface-text);
+}
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-menu-item { color: var(--surface-text); }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-menu-item:hover { background: var(--surface-hover); }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-menu-ico { color: var(--surface-muted); }
+
+/* Status pills - the navy set is a light tint on dark; light mode needs the darker ink. */
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-pill.gray   { background: #eef1f7; color: #475569; }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-pill.blue   { background: #e6efff; color: #1d4ed8; }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-pill.green  { background: #e3f7ea; color: #12652f; }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-pill.amber  { background: #fdf1dd; color: #b45309; }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-pill.red    { background: #fdeaea; color: #b91c1c; }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-pill.purple { background: #f1ecfe; color: #6d28d9; }
+
+/* Empty-state icon washes */
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-icon.tone-blue   { background: #e6efff; color: #2563eb; }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-icon.tone-amber  { background: #fdf1dd; color: #b45309; }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-icon.tone-green  { background: #e3f7ea; color: #15803d; }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-icon.tone-purple { background: #f1ecfe; color: #6d28d9; }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-icon.tone-gray   { background: #eef1f7; color: #475569; }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-activity-icon,
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-wf-mini-eye { color: var(--surface-focus); }
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-wf-mini-ico { background: var(--surface-accent-bg); color: var(--surface-accent-text); }

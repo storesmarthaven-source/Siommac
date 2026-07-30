@@ -35,6 +35,37 @@ describe('Avatar', () => {
     expect(screen.getByText('P')).toBeTruthy();
   });
 
+  it('ignores a leading honorific', () => {
+    render(<Avatar name="Dr. Camille Joseph" />);
+    expect(screen.getByText('CJ')).toBeTruthy();
+  });
+
+  it('ignores a trailing generational suffix', () => {
+    render(<Avatar name="Terrence Baptiste Jr." />);
+    expect(screen.getByText('TB')).toBeTruthy();
+  });
+
+  it('keeps a mononym that collides with a suffix word', () => {
+    // "Sr" alone is the whole name here, not an honorific to strip.
+    render(<Avatar name="Sr" />);
+    expect(screen.getByText('S')).toBeTruthy();
+  });
+
+  it('handles hyphenated surnames', () => {
+    render(<Avatar name="Shivani Boodoo-Persad" />);
+    expect(screen.getByText('SB')).toBeTruthy();
+  });
+
+  it('gives the same colour for the same seed regardless of name', () => {
+    const { container: a } = render(<Avatar name="Anisa Mohammed" seed="emp-1" />);
+    const { container: b } = render(<Avatar name="Anisa Ramsundar" seed="emp-1" />);
+    const bg = (c: Element): string => {
+      const el = c.firstElementChild;
+      return el instanceof HTMLElement ? el.style.background : '';
+    };
+    expect(bg(a)).toBe(bg(b));
+  });
+
   it('renders the generic icon for an empty name', () => {
     render(<Avatar name="" />);
     expect(screen.getByLabelText('Unknown user')).toBeTruthy();

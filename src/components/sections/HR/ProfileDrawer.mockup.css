@@ -37,7 +37,14 @@
   --shadow: 0 24px 60px rgba(12, 31, 61, .18);
 }
 
-body[data-theme="dark"] .epd-root {
+/* ── DARK MODE: DISABLED (temporary, by request) ─────────────────────────────
+   Every dark rule below now also requires `.epd-dark-on` on the drawer root. That class
+   is NOT rendered, so the drawer stays light whatever the theme switch says.
+
+   TO RE-ENABLE: add `epd-dark-on` to the root class in ProfileDrawer.tsx (~line 378,
+   class="epd-root") — one edit, no CSS changes. The rules themselves are untouched.
+   ────────────────────────────────────────────────────────────────────────── */
+body[data-theme="dark"] .epd-root.epd-dark-on {
   color-scheme: dark;
   --navy-950: #374669;
   --navy-900: #2a3d61;
@@ -56,72 +63,72 @@ body[data-theme="dark"] .epd-root {
   --shadow: 0 26px 70px rgba(0, 0, 0, .38);
 }
 
-body[data-theme="dark"] .epd-root .drawer {
+body[data-theme="dark"] .epd-root.epd-dark-on .drawer {
   border-left-color: rgba(255,255,255,.10);
 }
 
-body[data-theme="dark"] .epd-root .topbar {
+body[data-theme="dark"] .epd-root.epd-dark-on .topbar {
   background: #3a4666;
 }
 
-body[data-theme="dark"] .epd-root .footer {
+body[data-theme="dark"] .epd-root.epd-dark-on .footer {
   background: #374669;
 }
 
-body[data-theme="dark"] .epd-root .identity,
-body[data-theme="dark"] .epd-root .tabs,
-body[data-theme="dark"] .epd-root .scroll {
+body[data-theme="dark"] .epd-root.epd-dark-on .identity,
+body[data-theme="dark"] .epd-root.epd-dark-on .tabs,
+body[data-theme="dark"] .epd-root.epd-dark-on .scroll {
   background: #1b2d54;
 }
 
-body[data-theme="dark"] .epd-root .identity {
+body[data-theme="dark"] .epd-root.epd-dark-on .identity {
   background-image: none;
 }
 
-body[data-theme="dark"] .epd-root .card,
-body[data-theme="dark"] .epd-root .summary-stat,
-body[data-theme="dark"] .epd-root .record-row,
-body[data-theme="dark"] .epd-root .history-row,
-body[data-theme="dark"] .epd-root .filter,
-body[data-theme="dark"] .epd-root .access-state {
+body[data-theme="dark"] .epd-root.epd-dark-on .card,
+body[data-theme="dark"] .epd-root.epd-dark-on .summary-stat,
+body[data-theme="dark"] .epd-root.epd-dark-on .record-row,
+body[data-theme="dark"] .epd-root.epd-dark-on .history-row,
+body[data-theme="dark"] .epd-root.epd-dark-on .filter,
+body[data-theme="dark"] .epd-root.epd-dark-on .access-state {
   border-color: rgba(255,255,255,.10);
   color: #fff;
   background: rgba(255,255,255,.075);
 }
 
-body[data-theme="dark"] .epd-root .filter.active {
+body[data-theme="dark"] .epd-root.epd-dark-on .filter.active {
   border-color: rgba(191,219,254,.34);
   color: #fff;
   background: rgba(147,197,253,.18);
 }
 
-body[data-theme="dark"] .epd-root .outline-btn,
-body[data-theme="dark"] .epd-root .text-btn {
+body[data-theme="dark"] .epd-root.epd-dark-on .outline-btn,
+body[data-theme="dark"] .epd-root.epd-dark-on .text-btn {
   color: #dbeafe;
 }
 
-body[data-theme="dark"] .epd-root .outline-btn {
+body[data-theme="dark"] .epd-root.epd-dark-on .outline-btn {
   border-color: rgba(255,255,255,.14);
   background: rgba(255,255,255,.08);
 }
 
-body[data-theme="dark"] .epd-root .primary-btn {
+body[data-theme="dark"] .epd-root.epd-dark-on .primary-btn {
   border-color: rgba(191,219,254,.32);
   background: rgba(255,255,255,.13);
 }
 
-body[data-theme="dark"] .epd-root .request-change-btn {
+body[data-theme="dark"] .epd-root.epd-dark-on .request-change-btn {
   border-color: #0b2552;
   color: #fff;
   background: #0b2552;
 }
 
-body[data-theme="dark"] .epd-root .record-icon,
-body[data-theme="dark"] .epd-root .account-icon {
+body[data-theme="dark"] .epd-root.epd-dark-on .record-icon,
+body[data-theme="dark"] .epd-root.epd-dark-on .account-icon {
   background: rgba(255,255,255,.10);
 }
 
-body[data-theme="dark"] .epd-root .badge.neutral {
+body[data-theme="dark"] .epd-root.epd-dark-on .badge.neutral {
   color: #dbeafe;
   background: rgba(255,255,255,.10);
 }
@@ -233,7 +240,7 @@ body[data-theme="dark"] .epd-root .badge.neutral {
   color: var(--red);
 }
 
-body[data-theme="dark"] .epd-root .action-menu {
+body[data-theme="dark"] .epd-root.epd-dark-on .action-menu {
   border-color: rgba(255,255,255,.10);
   background: #1b2d54;
 }
@@ -527,7 +534,7 @@ body[data-theme="dark"] .epd-root .action-menu {
   background: #fff;
 }
 
-body[data-theme="dark"] .epd-root .attention-strip {
+body[data-theme="dark"] .epd-root.epd-dark-on .attention-strip {
   border-color: #dfe5ed;
   background: #fff;
 }
@@ -544,7 +551,7 @@ body[data-theme="dark"] .epd-root .attention-strip {
   white-space: nowrap;
 }
 
-body[data-theme="dark"] .epd-root .attention-title {
+body[data-theme="dark"] .epd-root.epd-dark-on .attention-title {
   color: #65430b;
   background: #fff2d6;
 }
@@ -1127,7 +1134,7 @@ body[data-theme="dark"] .epd-root .attention-title {
   background: #137347;
 }
 
-body[data-theme="dark"] .epd-root .account-assistance-btn {
+body[data-theme="dark"] .epd-root.epd-dark-on .account-assistance-btn {
   border-color: #188956;
   color: #fff;
   background: #188956;
@@ -1875,27 +1882,27 @@ body[data-theme="dark"] .epd-root .account-assistance-btn {
   background: var(--surface-soft);
 }
 
-body[data-theme="dark"] .epd-root .contact-dialog {
+body[data-theme="dark"] .epd-root.epd-dark-on .contact-dialog {
   background: #1b2d54;
 }
 
-body[data-theme="dark"] .epd-root .contact-dialog-head,
-body[data-theme="dark"] .epd-root .contact-dialog-actions {
+body[data-theme="dark"] .epd-root.epd-dark-on .contact-dialog-head,
+body[data-theme="dark"] .epd-root.epd-dark-on .contact-dialog-actions {
   background: #374669;
 }
 
-body[data-theme="dark"] .epd-root .contact-dialog-intro {
+body[data-theme="dark"] .epd-root.epd-dark-on .contact-dialog-intro {
   border-color: rgba(255,255,255,.12);
   background: rgba(255,255,255,.075);
 }
 
-body[data-theme="dark"] .epd-root .contact-dialog-intro strong,
-body[data-theme="dark"] .epd-root .contact-dialog-intro span {
+body[data-theme="dark"] .epd-root.epd-dark-on .contact-dialog-intro strong,
+body[data-theme="dark"] .epd-root.epd-dark-on .contact-dialog-intro span {
   color: #fff;
 }
 
-body[data-theme="dark"] .epd-root .form-field input,
-body[data-theme="dark"] .epd-root .form-field select {
+body[data-theme="dark"] .epd-root.epd-dark-on .form-field input,
+body[data-theme="dark"] .epd-root.epd-dark-on .form-field select {
   background: rgba(255,255,255,.075);
 }
 

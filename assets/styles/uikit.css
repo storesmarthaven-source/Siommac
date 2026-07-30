@@ -25,61 +25,97 @@
 
 /* ── Modal / standard window ────────────────────────────────────────────────── */
 
+/* ── The app-wide dialog shell ─────────────────────────────────────────────────
+   Every module's modal renders this. The redesign is structural rather than decorative: the
+   old shell put a grey band behind BOTH the header and the footer, so a dialog read as three
+   stacked bars with the content sandwiched between them, and the title competed with its own
+   chrome. Now the sheet is one white surface, the header carries the hierarchy (tinted icon
+   ring, then title, then sub), and the header/footer are separated by hairlines only. Depth
+   comes from a layered shadow plus a 1px ring instead of a heavier border. */
 .ui-modal-backdrop {
   position: fixed; inset: 0; z-index: var(--z-modal-back);
-  background: rgba(27, 45, 84, .42);
+  /* Deeper scrim + blur: it separates the dialog from a busy dashboard behind it, which a flat
+     42% navy wash did not do over cards and charts. */
+  background: rgba(13, 24, 48, .52);
+  -webkit-backdrop-filter: blur(3px) saturate(.96);
+  backdrop-filter: blur(3px) saturate(.96);
   display: flex; align-items: center; justify-content: center; padding: var(--space-4);
+  animation: ui-modal-fade .16s ease-out both;
 }
 /* A Modal opened over the wizard (z-index 1000) must stack above it. */
 .ui-modal-backdrop.ui-modal--over-wizard { z-index: 1200; }
 
 .ui-modal {
   width: min(640px, 100%);
-  max-height: calc(100vh - 48px);
+  max-height: min(calc(100vh - 48px), 900px);
   background: var(--bg-card);
-  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  box-shadow: var(--elev-4);
-  display: grid; grid-template-rows: auto 1fr auto;
+  /* Ring + layered shadow rather than a solid border: the edge stays crisp on any backdrop
+     without drawing a hard grey line around the sheet. */
+  box-shadow:
+    0 0 0 1px rgba(16, 29, 59, .07),
+    var(--elev-5);
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;
+  animation: ui-modal-rise .2s cubic-bezier(.22, 1, .36, 1) both;
 }
 .ui-modal--sm { width: min(460px, 100%); }
 .ui-modal--lg { width: min(860px, 100%); }
 
+@keyframes ui-modal-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ui-modal-rise {
+  from { opacity: 0; transform: translateY(8px) scale(.985); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-modal-backdrop, .ui-modal { animation: none; }
+}
+
 .ui-modal-head {
   display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3);
-  padding: 18px 20px;
-  background: var(--bg-subtle);
+  padding: 20px 22px 16px;
+  background: var(--bg-card);
   border-bottom: 1px solid var(--border);
 }
-.ui-modal-headwrap { display: flex; align-items: flex-start; gap: var(--space-3); min-width: 0; }
+.ui-modal-headwrap { display: flex; align-items: center; gap: 13px; min-width: 0; }
 .ui-modal-icon {
   flex-shrink: 0;
-  width: 38px; height: 38px; border-radius: var(--radius-sm);
+  width: 40px; height: 40px; border-radius: 12px;
   display: grid; place-items: center;
-  background: rgba(27, 45, 84, .08); color: var(--siomac-navy);
+  background: rgba(27, 45, 84, .06);
+  box-shadow: inset 0 0 0 1px rgba(27, 45, 84, .10);
+  color: var(--siomac-navy);
   font-size: 1rem;
 }
-.ui-modal-titles { min-width: 0; }
-.ui-modal-title { color: var(--siomac-navy); font-size: 1.05rem; font-weight: var(--font-weight-bold, 700); line-height: 1.25; }
-.ui-modal-sub   { color: var(--text-muted); font-size: 0.78rem; margin-top: 3px; line-height: 1.4; }
+.ui-modal-titles { min-width: 0; display: grid; gap: 2px; }
+.ui-modal-title {
+  margin: 0;
+  color: var(--siomac-navy); font-size: 1rem; font-weight: var(--font-weight-semibold, 600);
+  line-height: 1.3; letter-spacing: -.011em;
+}
+.ui-modal-sub { margin: 0; color: var(--text-muted); font-size: .8rem; line-height: 1.45; }
 
 .ui-modal-close {
   flex-shrink: 0;
-  width: 34px; height: 34px; border-radius: var(--radius-sm);
-  border: 1px solid var(--border); background: var(--bg-card);
-  color: var(--text-muted); font-size: 0.9rem; cursor: pointer;
+  width: 32px; height: 32px; border-radius: 9px;
+  /* Ghost, not outlined: a bordered box beside the title read as a second action. */
+  border: 1px solid transparent; background: transparent;
+  color: var(--text-muted); font-size: .9rem; cursor: pointer;
   display: grid; place-items: center;
-  transition: color .15s, border-color .15s;
+  transition: color .15s, background-color .15s;
 }
-.ui-modal-close:hover { color: var(--siomac-navy); border-color: var(--siomac-navy); }
+.ui-modal-close:hover { color: var(--siomac-navy); background: rgba(27, 45, 84, .07); }
+.ui-modal-close:focus-visible { outline: 2px solid var(--siomac-navy); outline-offset: 1px; }
 
-.ui-modal-body { padding: 20px; overflow: auto; }
+.ui-modal-body { padding: 20px 22px 22px; overflow: auto; overscroll-behavior: contain; }
 
 .ui-modal-foot {
-  display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2);
-  padding: 16px 20px;
-  background: var(--bg-subtle);
+  display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+  min-height: 64px;
+  padding: 14px 22px;
+  /* Faintly tinted so the action row reads as a distinct commit zone, without the heavy grey
+     band that used to bracket the sheet top and bottom. */
+  background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-subtle) 100%);
   border-top: 1px solid var(--border);
 }
 /* A left-aligned slot in the footer (e.g. a Back button) pushes the rest right. */

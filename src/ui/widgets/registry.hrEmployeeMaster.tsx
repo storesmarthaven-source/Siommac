@@ -445,22 +445,6 @@ function LifecycleActivity(props: WidgetRenderProps): VNode {
   return <LifecycleActivityView stats={query.data} config={props.config} granularity={granularity} onGranularity={setGranularity} />;
 }
 
-function WorkloadRing({ value, tone }: { value: number; tone: 'green' | 'orange' }): VNode {
-  return <div class={`em-workload-ring em-workload-ring--${tone}`} style={`--em-progress:${value * 3.6}deg`} aria-label={`${value} percent`}><div><strong>{value}<small>%</small></strong></div></div>;
-}
-
-function MasterDataWorkload(): VNode {
-  return (
-    <article class="em-widget em-widget--workload" data-widget-content-root aria-label="Master data workload preview">
-      <Header title="Master data workload" />
-      <div class="em-workload__rows" data-widget-fit-required>
-        <div class="em-workload__row"><WorkloadRing value={72} tone="green" /><div><span>Pending corrections</span><strong>18</strong></div></div>
-        <div class="em-workload__row"><WorkloadRing value={35} tone="orange" /><div><span>Pending approvals</span><strong>9</strong></div></div>
-      </div>
-      <footer class="em-workload__footer" data-widget-fit-required><span><i aria-hidden="true"><LucideIcon name="Clock3" size={18} /></i>Oldest item: 3 days</span><span class="em-workload__link">Open work queue <b aria-hidden="true">›</b></span></footer>
-    </article>
-  );
-}
 
 function BlockedEmployeeActions(): VNode {
   const actions = [
@@ -586,5 +570,4 @@ export const widgets: WidgetDef[] = [
     render: LifecycleActivity,
     renderPreview: props => <LifecycleActivityView stats={LIFECYCLE_PREVIEW_STATS} config={props.config} />,
   }),
-  previewDefinition({ id: 'hr.employeeMaster.adminWorkload', title: 'Master Data Workload', description: 'Pending Employee Master corrections and approvals.', icon: 'fa-list-check', category: 'Work management', defaultSize: 'large', previewAspect: 2, sizeConstraints: { defaultColumns: 16, defaultRows: 28, minColumns: 4, minRows: 12, minWidth: 240, minHeight: 330, resizeStrategy: 'content-measured' }, tags: ['workload', 'corrections', 'approvals', 'selection o'], previewVariant: 'status-stack', motion: { kind: 'progress', durationMs: 720, reducedMotion: 'static' }, component: MasterDataWorkload }),
 ];

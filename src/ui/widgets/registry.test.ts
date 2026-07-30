@@ -29,10 +29,12 @@ describe('widget registry mechanics', () => {
       'hr.employeeMaster.recordReadiness',
       'hr.employeeMaster.hrWorkQueue',
       'hr.employeeMaster.exceptions',
-      'hr.employeeMaster.newStarters',
       'hr.employeeMaster.departures',
       'hr.employeeMaster.recordQuality',
       'hr.employeeMaster.employeeAttentionNeutral',
+      // Registered with the live KPI tiles now that it is a double-wide KPI rather than a static
+      // preview card in registry.hrEmployeeMaster.
+      'hr.employeeMaster.payrollReadinessWide',
       'hr.employeeMaster.monthlyHiresCard',
       'hr.employeeMaster.internalMovesCard',
       'hr.employeeMaster.promotionsCard',
@@ -44,7 +46,6 @@ describe('widget registry mechanics', () => {
       'hr.employeeMaster.weeklyActivity',
       'hr.employeeMaster.changeTrend',
       'hr.employeeMaster.lifecycleActivity',
-      'hr.employeeMaster.adminWorkload',
       // supportedPages:['*'] — offered on every board, like the calendar widgets above.
       'platform.weather.current',
       'platform.weather.strip',
@@ -62,9 +63,11 @@ describe('widget registry mechanics', () => {
 
   // Six: `lifecycleActivity` was promoted from a static preview to a live-api widget, and
   // `readinessGoal` + `quickContact` were retired from the catalogue.
-  it('registers the six approved Employee Master design previews', () => {
+  // Five, not six: Master Data Workload was a static preview with hardcoded 18/9/72%/3-days and is
+  // now a live double-wide KPI on the real hr_work_queue stats.
+  it('registers the approved Employee Master design previews', () => {
     const employeeMaster = WIDGET_REGISTRY.filter(widget => widget.area === 'Employee Master' && widget.runtimeState === 'static-preview');
-    expect(employeeMaster).toHaveLength(6);
+    expect(employeeMaster).toHaveLength(5);
     for (const widget of employeeMaster) {
       expect(widget.runtimeState).toBe('static-preview');
       expect(widget.governance).toMatchObject({ state: 'preview', discoverable: true });
@@ -86,8 +89,10 @@ describe('widget registry mechanics', () => {
     const ids = [
       'hr.employeeMaster.activeWorkforce', 'hr.employeeMaster.recordReadiness',
       'hr.employeeMaster.hrWorkQueue', 'hr.employeeMaster.exceptions',
-      'hr.employeeMaster.newStarters', 'hr.employeeMaster.departures',
+      'hr.employeeMaster.departures',
       'hr.employeeMaster.recordQuality',
+      // Also promoted from a static design preview — now a live double-wide KPI tile.
+      'hr.employeeMaster.payrollReadinessWide',
       'hr.employeeMaster.monthlyHiresCard',
       'hr.employeeMaster.internalMovesCard', 'hr.employeeMaster.promotionsCard',
     ];
@@ -104,14 +109,29 @@ describe('widget registry mechanics', () => {
       // and asserting the literal would make every future version bump a test failure.
       expect(widget.recommendedFor?.map(normalizePageKey)).toEqual(['hr.employees.overview']);
     }
+    // Six KPI-strip tiles: the four originals, Hires This Month, and the double-wide Not
+    // Payroll-Ready. Every one is FIXED and exactly one tile row tall — which is what
+    // EmployeeMaster's kpiTileSlots routes on.
     const kpis = live.filter(widget => widget.category === 'Key metrics');
-    expect(kpis).toHaveLength(4);
+    expect(kpis).toHaveLength(6);
     for (const widget of kpis) {
-      expect(widget.resizable).toBe(false);
-      expect(widget.previewAspect).toBeUndefined();
-      expect(widget.allowedSizes).toEqual([{ key: 'compact', label: 'Fixed', grid: { w: 4, h: 6 }, min: { w: 4, h: 6 }, max: { w: 4, h: 6 }, description: 'Statutory-size Employee Master KPI tile' }]);
-      expect(widget.sizeConstraints).toMatchObject({ defaultColumns: 4, defaultRows: 6, minColumns: 4, minRows: 6, minWidth: 180, minHeight: 84, resizeStrategy: 'fixed-minimum' });
+      expect(widget.resizable, widget.id).toBe(false);
+      expect(widget.previewAspect, widget.id).toBeUndefined();
+      expect(widget.sizeConstraints, widget.id).toMatchObject({ defaultRows: 6, minRows: 6, minHeight: 84, resizeStrategy: 'fixed-minimum' });
+      // Width is a whole number of 4-column slots, so a tile never straddles the strip's rhythm.
+      expect((widget.sizeConstraints!.defaultColumns) % 4, widget.id).toBe(0);
     }
+    // Standard single-slot tiles share one preset verbatim; the double-wide one is the exception
+    // and is asserted separately so a drift in either is a named failure.
+    const singleSlotKpis = kpis.filter(widget => widget.sizeConstraints!.defaultColumns === 4);
+    expect(singleSlotKpis).toHaveLength(5);
+    for (const widget of singleSlotKpis) {
+      expect(widget.allowedSizes, widget.id).toEqual([{ key: 'compact', label: 'Fixed', grid: { w: 4, h: 6 }, min: { w: 4, h: 6 }, max: { w: 4, h: 6 }, description: 'Statutory-size Employee Master KPI tile' }]);
+      expect(widget.sizeConstraints, widget.id).toMatchObject({ defaultColumns: 4, minColumns: 4, minWidth: 180 });
+    }
+    const wideKpi = kpis.find(widget => widget.id === 'hr.employeeMaster.payrollReadinessWide')!;
+    expect(wideKpi.allowedSizes).toEqual([{ key: 'standard', label: 'Fixed (double)', grid: { w: 8, h: 6 }, min: { w: 8, h: 6 }, max: { w: 8, h: 6 }, description: 'Double-width Employee Master KPI tile' }]);
+    expect(wideKpi.sizeConstraints).toMatchObject({ defaultColumns: 8, minColumns: 8, minWidth: 340 });
   });
 
   it('registers the reference-derived Employee Master widgets with live sources and responsive floors', () => {
@@ -119,8 +139,8 @@ describe('widget registry mechanics', () => {
     // which cannot hold: a KPI tile is FIXED (one preset, min == max, so `resizable: false` is
     // legal), whereas a pulse card offers three presets and therefore must stay resizable —
     // defineWidget rejects a non-resizable widget that does not pin min and max (FIXED_WIDGET_UNPINNED_SIZE).
-    const kpiIds = ['hr.employeeMaster.activeWorkforce', 'hr.employeeMaster.recordReadiness', 'hr.employeeMaster.hrWorkQueue', 'hr.employeeMaster.exceptions', 'hr.employeeMaster.newStarters', 'hr.employeeMaster.departures'];
-    const pulseIds = ['hr.employeeMaster.monthlyHiresCard', 'hr.employeeMaster.internalMovesCard', 'hr.employeeMaster.promotionsCard'];
+    const kpiIds = ['hr.employeeMaster.activeWorkforce', 'hr.employeeMaster.recordReadiness', 'hr.employeeMaster.hrWorkQueue', 'hr.employeeMaster.exceptions', 'hr.employeeMaster.departures', 'hr.employeeMaster.monthlyHiresCard'];
+    const pulseIds = ['hr.employeeMaster.internalMovesCard', 'hr.employeeMaster.promotionsCard'];
     const largeStatsIds = ['hr.employeeMaster.recordQuality', 'hr.employeeMaster.readinessRadar', 'hr.employeeMaster.lifecycleOutcomes'];
     const statsIds = [...kpiIds, ...pulseIds, ...largeStatsIds];
     for (const id of statsIds) expect(WIDGET_REGISTRY.find(widget => widget.id === id), id).toMatchObject({ runtimeState: 'live-api', dataSourceKey: 'hr.employee-master.dashboard' });
@@ -158,13 +178,14 @@ describe('widget registry mechanics', () => {
     expect(screen.getByRole('button', { name: 'Review Employee Record' })).toBeTruthy();
   });
 
-  it('renders the three Workplace pulse designs as individual animated white cards', () => {
+  // Two, not three: 'Hires This Month' became a KPI tile for the Employee Master KPI strip, so it
+  // no longer draws a pulse chart. Its coverage lives with the KPI family above.
+  it('renders the Workplace pulse designs as individual animated white cards', () => {
     const expected = [
-      { id: 'hr.employeeMaster.monthlyHiresCard', chart: 'bars', title: 'Hires This Month', marks: 5 },
       { id: 'hr.employeeMaster.internalMovesCard', chart: 'ranges', title: 'Internal Moves', marks: 6 },
       { id: 'hr.employeeMaster.promotionsCard', chart: 'line', title: 'Promotions', marks: 6 },
     ];
-    expect(WIDGET_REGISTRY.filter(widget => widget.category === 'Workforce pulse')).toHaveLength(3);
+    expect(WIDGET_REGISTRY.filter(widget => widget.category === 'Workforce pulse')).toHaveLength(2);
     for (const item of expected) {
       const widget = WIDGET_REGISTRY.find(candidate => candidate.id === item.id)!;
       expect(widget).toMatchObject({ title: item.title, category: 'Workforce pulse', resizable: true });
@@ -265,16 +286,19 @@ describe('widget registry mechanics', () => {
 
   it('groups the catalogue and curates a smaller recommended starting set', () => {
     const categories = new Set(WIDGET_REGISTRY.map(widget => widget.category));
-    expect(categories).toEqual(new Set(['Calendar & deadlines', 'Actions & workload', 'Health & readiness', 'Activity & trends', 'Work management', 'Key metrics', 'Workforce pulse', 'Site Conditions']));
+    // 'Work management' is gone: its only member (Master Data Workload) became a 'Key metrics'
+    // double-wide KPI tile, so the category no longer exists in the catalogue.
+    expect(categories).toEqual(new Set(['Calendar & deadlines', 'Actions & workload', 'Health & readiness', 'Activity & trends', 'Key metrics', 'Workforce pulse', 'Site Conditions']));
     expect(WIDGET_REGISTRY.filter(widget => widget.recommendedFor?.some(page => normalizePageKey(page) === 'hr.employees.overview')).map(widget => widget.id)).toEqual([
       'enterprise.calendar.upcomingDeadlines',
       'hr.employeeMaster.activeWorkforce',
       'hr.employeeMaster.recordReadiness',
       'hr.employeeMaster.hrWorkQueue',
       'hr.employeeMaster.exceptions',
-      'hr.employeeMaster.newStarters',
       'hr.employeeMaster.departures',
       'hr.employeeMaster.recordQuality',
+      // Also promoted from a static design preview — now a live double-wide KPI tile.
+      'hr.employeeMaster.payrollReadinessWide',
       'hr.employeeMaster.monthlyHiresCard',
       'hr.employeeMaster.internalMovesCard',
       'hr.employeeMaster.promotionsCard',

@@ -33,13 +33,13 @@ function inst(widgetId: string, x: number, y: number, w: number, h: number, page
 
 /** The user's SAVED workspace: 6 KPI tiles + 13 board widgets = 19 instances. */
 const SAVED_KPI: WidgetInstance[] = [
-  'activeWorkforce', 'recordReadiness', 'hrWorkQueue', 'exceptions', 'newStarters', 'departures',
+  'activeWorkforce', 'recordReadiness', 'hrWorkQueue', 'exceptions', 'monthlyHiresCard', 'departures',
 ].map((name, index) => inst(`hr.employeeMaster.${name}`, index * 4, 0, 4, 6, KPI_PAGE_KEY));
 
 const SAVED_BOARD: WidgetInstance[] = [
   inst('hr.employeeMaster.lifecycleActivity', 0, 0, 12, 28, PAGE_KEY),
   inst('enterprise.calendar.upcomingDeadlines', 12, 0, 6, 28, PAGE_KEY),
-  inst('hr.employeeMaster.adminWorkload', 18, 0, 6, 28, PAGE_KEY),
+  inst('hr.employeeMaster.weeklyActivity', 18, 0, 6, 28, PAGE_KEY),
   inst('hr.employeeMaster.recordHealth', 0, 28, 8, 22, PAGE_KEY),
   inst('hr.employeeMaster.readinessRadar', 8, 28, 8, 22, PAGE_KEY),
   inst('hr.employeeMaster.recordRisk', 16, 28, 8, 22, PAGE_KEY),

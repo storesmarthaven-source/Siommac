@@ -7925,60 +7925,60 @@ tlEvent	function	finance	false		src/components/sections/Finance/StatutoryConfigO
 stepDate	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1060	StatVersionDrawer
 stepBy	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1061	StatVersionDrawer
 retireVersion	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1089	StatVersionDrawer
-lifeDotColor	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1362	
-lifeLabel	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1372	
-SvdTile	function	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryConfigOverview.tsx	1379	
-SvdSection	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1390	
-SvdRailItem	interface	finance	true		src/components/sections/Finance/StatutoryConfigOverview.tsx	1399	
-SvdSteps	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1409	
-SvdRail	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1436	
-StatEditVersionDialog	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1467	
-submit	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1491	StatEditVersionDialog
-MainTab	type	finance	true		src/components/sections/Finance/StatutoryDashboard.tsx	68	
-TABS	array	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	70	
-statutoryDeadlinesOn	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	79	
-PAGE_KEY	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	98	
-KPI_PAGE_KEY	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	99	
-W_KPI_ACTIVE	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	100	
-W_KPI_DRAFTS	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	101	
-W_KPI_COMPONENTS	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	102	
-W_KPI_NIS	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	103	
-W_KPI_VERIFY	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	104	
-W_KPI_APPROVALS	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	105	
-W_CHART	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	106	
-W_READY	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	107	
-W_DEADLINES	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	108	
-W_REGISTER	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	109	
-defInst	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	111	
-defaultStatutoryLayout	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	117	
-defaultKpiLayout	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	135	
-StatutoryDashboardProps	interface	finance	true		src/components/sections/Finance/StatutoryDashboard.tsx	151	
-GAUGE_SEGMENTS	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	183	
-HalfGauge	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	184	
-StatutoryDashboard	function	finance	true	component	src/components/sections/Finance/StatutoryDashboard.tsx	214	
-setPct	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	259	StatutoryDashboard
-step	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	270	StatutoryDashboard
-beforeDatasetsDraw	method	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	317	revealPlugin
-afterDatasetsDraw	method	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	330	revealPlugin
-easeOutCubic	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	404	StatutoryDashboard
-tick	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	406	StatutoryDashboard
-promotePageDefault	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	443	StatutoryDashboard
-resetPageLayout	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	451	StatutoryDashboard
-placeBottom	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	454	StatutoryDashboard
-discardPreview	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	462	StatutoryDashboard
-commitPreview	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	463	StatutoryDashboard
-goToRegisterTab	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	468	StatutoryDashboard
-renderKpiActive	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	478	StatutoryDashboard
-renderKpiDrafts	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	485	StatutoryDashboard
-renderKpiComponents	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	491	StatutoryDashboard
-renderKpiNis	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	496	StatutoryDashboard
-renderKpiVerify	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	504	StatutoryDashboard
-renderKpiApprovals	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	510	StatutoryDashboard
-renderChart	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	520	StatutoryDashboard
-renderRegister	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	583	StatutoryDashboard
-renderReadiness	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	614	StatutoryDashboard
-renderDeadlines	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	645	StatutoryDashboard
-floor	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	650	StatutoryDashboard
+lifeDotColor	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1367	
+lifeLabel	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1377	
+SvdTile	function	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryConfigOverview.tsx	1384	
+SvdSection	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1395	
+SvdRailItem	interface	finance	true		src/components/sections/Finance/StatutoryConfigOverview.tsx	1404	
+SvdSteps	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1414	
+SvdRail	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1441	
+StatEditVersionDialog	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1472	
+submit	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1496	StatEditVersionDialog
+MainTab	type	finance	true		src/components/sections/Finance/StatutoryDashboard.tsx	67	
+TABS	array	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	69	
+PAGE_KEY	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	86	
+KPI_PAGE_KEY	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	87	
+W_KPI_ACTIVE	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	88	
+W_KPI_DRAFTS	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	89	
+W_KPI_COMPONENTS	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	90	
+W_KPI_NIS	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	91	
+W_KPI_VERIFY	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	92	
+W_KPI_APPROVALS	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	93	
+W_CHART	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	94	
+W_READY	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	95	
+W_REGISTER	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	96	
+W_DEADLINES	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	100	
+STATUTORY_BOARD_COLUMNS	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	117	
+defInst	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	119	
+defaultStatutoryLayout	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	125	
+defaultKpiLayout	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	146	
+StatutoryDashboardProps	interface	finance	true		src/components/sections/Finance/StatutoryDashboard.tsx	162	
+GAUGE_SEGMENTS	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	194	
+HalfGauge	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	195	
+StatutoryDashboard	function	finance	true	component	src/components/sections/Finance/StatutoryDashboard.tsx	225	
+setPct	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	270	StatutoryDashboard
+step	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	281	StatutoryDashboard
+beforeDatasetsDraw	method	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	328	revealPlugin
+afterDatasetsDraw	method	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	341	revealPlugin
+easeOutCubic	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	415	StatutoryDashboard
+tick	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	417	StatutoryDashboard
+promotePageDefault	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	454	StatutoryDashboard
+resetPageLayout	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	462	StatutoryDashboard
+placeBottom	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	465	StatutoryDashboard
+discardPreview	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	473	StatutoryDashboard
+commitPreview	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	474	StatutoryDashboard
+goToRegisterTab	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	479	StatutoryDashboard
+renderKpiActive	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	489	StatutoryDashboard
+renderKpiDrafts	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	496	StatutoryDashboard
+renderKpiComponents	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	502	StatutoryDashboard
+renderKpiNis	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	507	StatutoryDashboard
+renderKpiVerify	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	515	StatutoryDashboard
+renderKpiApprovals	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	521	StatutoryDashboard
+renderChart	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	531	StatutoryDashboard
+renderRegister	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	594	StatutoryDashboard
+renderReadiness	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	625	StatutoryDashboard
+sized	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	669	StatutoryDashboard
+floor	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	673	StatutoryDashboard
 CURRENT_YEAR	variable	finance	false	component	src/components/sections/Finance/StatutoryFormsOverview.tsx	25	
 fmtDate	function	finance	false		src/components/sections/Finance/StatutoryFormsOverview.tsx	26	
 FORM_LABEL	object	finance	false		src/components/sections/Finance/StatutoryFormsOverview.tsx	29	
@@ -8129,34 +8129,43 @@ focusAt	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	123	onM
 EmployeeRow	function	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	166	
 activate	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	178	EmployeeRow
 defInst	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	222	
-defaultEmployeeKpiLayout	function	hr	true	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	225	
-defaultEmployeeLayout	function	hr	true		src/components/sections/HR/EmployeeMaster.tsx	242	
-EmployeeMaster	function	hr	true	component	src/components/sections/HR/EmployeeMaster.tsx	265	
-setColumns	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	324	EmployeeMaster
-toggleColumn	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	339	EmployeeMaster
-toggleSort	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	369	EmployeeMaster
-placeInWidgetSection	function	hr	false	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	418	EmployeeMaster
-discardPreview	function	hr	false	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	423	EmployeeMaster
-commitPreview	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	427	EmployeeMaster
-savePageLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	431	EmployeeMaster
-cancelPageLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	435	EmployeeMaster
-resetPageLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	438	EmployeeMaster
-setPageAsDefault	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	442	EmployeeMaster
-onRowHover	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	452	EmployeeMaster
-onRowHoverEnd	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	459	EmployeeMaster
-deptLabelFn	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	467	EmployeeMaster
-notify	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	471	EmployeeMaster
-openAction	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	472	EmployeeMaster
-setFiltersReset	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	489	EmployeeMaster
-onFilterRequest	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	495	EmployeeMaster
-trainingLabel	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	516	EmployeeMaster
-clearAdvanced	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	534	EmployeeMaster
-applySavedView	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	536	EmployeeMaster
-persistViews	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	549	EmployeeMaster
-saveCurrentView	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	555	EmployeeMaster
-deleteSavedView	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	582	EmployeeMaster
-renderRegister	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	594	EmployeeMaster
-floor	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	748	EmployeeMaster
+KPI_TILE	variable	hr	false	component,ui-tile	src/components/sections/HR/EmployeeMaster.tsx	230	
+KPI_SLOTS_PER_ROW	variable	hr	false	component,ui-tile	src/components/sections/HR/EmployeeMaster.tsx	231	
+kpiStripMaxRows	function	hr	true	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	235	
+isKpiTileWidget	function	hr	true	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	248	
+kpiTileSlots	function	hr	true	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	260	
+kpiSlotsUsed	function	hr	true	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	272	
+placeKpiTiles	function	hr	true	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	284	
+defaultEmployeeKpiLayout	function	hr	true	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	301	
+defaultEmployeeLayout	function	hr	true		src/components/sections/HR/EmployeeMaster.tsx	319	
+EmployeeMaster	function	hr	true	component	src/components/sections/HR/EmployeeMaster.tsx	341	
+setColumns	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	400	EmployeeMaster
+toggleColumn	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	415	EmployeeMaster
+toggleSort	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	445	EmployeeMaster
+addFromLibrary	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	501	EmployeeMaster
+placeInWidgetSection	function	hr	false	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	509	EmployeeMaster
+discardPreview	function	hr	false	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	514	EmployeeMaster
+commitPreview	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	518	EmployeeMaster
+savePageLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	522	EmployeeMaster
+cancelPageLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	526	EmployeeMaster
+resetPageLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	529	EmployeeMaster
+setPageAsDefault	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	533	EmployeeMaster
+onRowHover	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	543	EmployeeMaster
+onRowHoverEnd	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	550	EmployeeMaster
+deptLabelFn	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	558	EmployeeMaster
+notify	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	562	EmployeeMaster
+openAction	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	563	EmployeeMaster
+setFiltersReset	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	580	EmployeeMaster
+onFilterRequest	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	586	EmployeeMaster
+onOpenDrawer	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	599	EmployeeMaster
+trainingLabel	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	618	EmployeeMaster
+clearAdvanced	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	636	EmployeeMaster
+applySavedView	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	638	EmployeeMaster
+persistViews	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	651	EmployeeMaster
+saveCurrentView	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	657	EmployeeMaster
+deleteSavedView	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	684	EmployeeMaster
+renderRegister	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	696	EmployeeMaster
+floor	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	850	EmployeeMaster
 permissions	function	hr	false	test	src/components/sections/HR/employeeMasterAccess.test.ts	8	
 EmployeeMasterAccess	interface	hr	true		src/components/sections/HR/employeeMasterAccess.ts	3	
 PermissionCheck	type	hr	false		src/components/sections/HR/employeeMasterAccess.ts	38	
@@ -11987,10 +11996,10 @@ useFlip	function	platform	false	hook	src/ui/components/MetricRow.tsx	31
 setNode	function	platform	false		src/ui/components/MetricRow.tsx	34	useFlip
 MetricRow	function	platform	true	component	src/ui/components/MetricRow.tsx	59	
 ReorderableRow	function	platform	true	component	src/ui/components/MetricRow.tsx	100	
-ModalProps	interface	platform	true		src/ui/components/Modal.tsx	18	
-Modal	function	platform	true	component	src/ui/components/Modal.tsx	38	
-HseModal	variable	platform	true	component	src/ui/components/Modal.tsx	76	
-ModalSection	function	platform	true	component	src/ui/components/Modal.tsx	84	
+ModalProps	interface	platform	true		src/ui/components/Modal.tsx	26	
+Modal	function	platform	true	component	src/ui/components/Modal.tsx	46	
+HseModal	variable	platform	true	component	src/ui/components/Modal.tsx	85	
+ModalSection	function	platform	true	component	src/ui/components/Modal.tsx	93	
 ModuleTab	interface	platform	true		src/ui/components/ModuleTabs.tsx	16	
 withCounts	function	platform	true		src/ui/components/ModuleTabs.tsx	29	
 ModuleTabsProps	interface	platform	true		src/ui/components/ModuleTabs.tsx	33	
@@ -12340,7 +12349,7 @@ BoardSkeletonProps	interface	widgets	true		src/ui/widgets/BoardSkeleton.tsx	29
 BoardSkeleton	function	widgets	true	component	src/ui/widgets/BoardSkeleton.tsx	44	
 WidgetBundle	interface	widgets	true	ui-tile	src/ui/widgets/bundles.ts	53	
 WIDGET_BUNDLES	array	widgets	true	ui-tile	src/ui/widgets/bundles.ts	75	
-resolveBundleWidgets	function	widgets	true	ui-tile	src/ui/widgets/bundles.ts	145	
+resolveBundleWidgets	function	widgets	true	ui-tile	src/ui/widgets/bundles.ts	144	
 H	variable	widgets	false	component,test	src/ui/widgets/calendarPlanningWidgets.test.tsx	4	
 props	object	widgets	false	test	src/ui/widgets/calendarPlanningWidgets.test.tsx	24	
 WidgetModuleMeta	interface	widgets	true	ui-tile	src/ui/widgets/catalogueTaxonomy.ts	4	
@@ -12435,6 +12444,12 @@ X	function	widgets	false	component	src/ui/widgets/inlinePrimitives.tsx	71	TrendA
 Y	function	widgets	false	component	src/ui/widgets/inlinePrimitives.tsx	72	TrendArea
 MiniBars	function	widgets	true	component	src/ui/widgets/inlinePrimitives.tsx	84	
 DonutPct	function	widgets	true	component	src/ui/widgets/inlinePrimitives.tsx	107	
+KPI_PAGE_KEY	variable	widgets	false	component,ui-tile,test	src/ui/widgets/kpiStripPlacement.test.tsx	16	
+SINGLE	variable	widgets	false	component,test	src/ui/widgets/kpiStripPlacement.test.tsx	18	
+inst	function	widgets	false	test	src/ui/widgets/kpiStripPlacement.test.tsx	20	
+strip	function	widgets	false	test	src/ui/widgets/kpiStripPlacement.test.tsx	23	
+shell	function	widgets	false	test	src/ui/widgets/kpiStripPlacement.test.tsx	81	
+WIDE	variable	widgets	false	component,test	src/ui/widgets/kpiStripPlacement.test.tsx	104	
 sizeKeys	array	widgets	false		src/ui/widgets/migration.ts	3	
 isSizeKey	function	widgets	false		src/ui/widgets/migration.ts	4	
 object	function	widgets	false		src/ui/widgets/migration.ts	5	
@@ -12505,59 +12520,64 @@ widgets	array	widgets	true	ui-tile	src/ui/widgets/registry.calendarPlanning.tsx	
 PAGE	variable	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	29	
 SOURCE	object	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	31	
 KPI_SIZES	array	widgets	false	ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	53	
-PULSE_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	66	
-CHART_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	71	
-QUALITY_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	76	
-RADAR_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	80	
-ATTENTION_PORTRAIT_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	84	
-STACKED_CHART_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	99	
-DIRECTORY_SOURCE	object	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	104	
-CALENDAR_SOURCE	object	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	108	
-PREVIEW	object	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	115	
-WidgetState	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	124	
-withLiveData	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	134	
-focusEmployeeRegister	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	143	
-applyRegisterFilter	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	151	
-KpiCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	156	
-ActiveWorkforce	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	161	
-RecordReadiness	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	167	
-HrWorkQueue	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	171	
-Exceptions	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	175	
-focusLifecycleMovement	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	180	
-LifecyclePulse	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	184	
-NewStarters	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	196	
-Departures	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	197	
-RecordQuality	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	199	
-initials	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	219	
-AttentionEmployee	type	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	221	
-previewReadiness	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	222	
-PREVIEW_ATTENTION	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	240	
-ATTENTION_LABELS	variable	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	245	
-COUNT_WORDS	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	249	
-countWithWord	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	250	
-AttentionBlocker	type	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	251	
-attentionReviewCopy	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	254	
-AttentionReferenceVariant	type	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	288	
-PREVIEW_ATTENTION_REFERENCE	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	289	
-EmployeeAttentionReferenceView	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	293	
-move	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	296	EmployeeAttentionReferenceView
-EMPLOYEE_ATTENTION_ROSTER_QUERY	variable	widgets	true	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	329	
-EmployeeAttentionReferenceWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	333	
-EmployeeAttentionNeutralWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	340	
-useAnimatedInteger	function	widgets	false	hook	src/ui/widgets/registry.hrEmployeeDashboard.tsx	344	
-animate	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	356	useAnimatedInteger
-movementTrend	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	367	
-pulseLinePath	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	374	
-WorkplacePulseChart	type	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	386	
-WorkplacePulseCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	387	
-MonthlyHiresCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	405	
-InternalMovesCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	409	
-PromotionsCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	413	
-ReadinessRadar	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	418	
-LifecycleOutcomeChart	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	444	
-liveDefinition	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	464	
-externalDefinition	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	486	
-widgets	array	widgets	true	ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	502	
+KPI_WIDE_SIZES	array	widgets	false	ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	61	
+isKpiFamily	function	widgets	false	ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	65	
+PULSE_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	76	
+CHART_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	81	
+QUALITY_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	86	
+RADAR_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	90	
+ATTENTION_PORTRAIT_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	94	
+STACKED_CHART_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	109	
+DIRECTORY_SOURCE	object	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	114	
+CALENDAR_SOURCE	object	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	118	
+PREVIEW	object	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	125	
+WidgetState	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	134	
+withLiveData	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	144	
+focusEmployeeRegister	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	153	
+applyRegisterFilter	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	161	
+EMPLOYEE_DRAWER_EVENT	variable	widgets	true	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	170	
+openEmployeeDrawer	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	175	
+KpiWideCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	191	
+KpiCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	222	
+ActiveWorkforce	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	228	
+RecordReadiness	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	234	
+HrWorkQueue	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	238	
+PayrollReadinessKpi	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	254	
+Exceptions	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	271	
+focusLifecycleMovement	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	276	
+LifecyclePulse	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	280	
+Departures	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	292	
+RecordQuality	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	294	
+initials	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	314	
+AttentionEmployee	type	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	316	
+previewReadiness	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	317	
+PREVIEW_ATTENTION	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	335	
+ATTENTION_LABELS	variable	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	340	
+COUNT_WORDS	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	344	
+countWithWord	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	345	
+AttentionBlocker	type	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	346	
+attentionReviewCopy	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	349	
+AttentionReferenceVariant	type	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	383	
+PREVIEW_ATTENTION_REFERENCE	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	384	
+EmployeeAttentionReferenceView	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	388	
+move	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	391	EmployeeAttentionReferenceView
+EMPLOYEE_ATTENTION_ROSTER_QUERY	variable	widgets	true	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	424	
+EmployeeAttentionReferenceWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	428	
+EmployeeAttentionNeutralWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	435	
+useAnimatedInteger	function	widgets	false	hook	src/ui/widgets/registry.hrEmployeeDashboard.tsx	439	
+animate	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	451	useAnimatedInteger
+movementTrend	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	462	
+pulseLinePath	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	469	
+WorkplacePulseChart	type	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	481	
+WorkplacePulseCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	482	
+MonthlyHiresCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	504	
+InternalMovesCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	519	
+PromotionsCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	523	
+ReadinessRadar	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	528	
+LifecycleOutcomeChart	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	554	
+liveDefinition	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	574	
+externalDefinition	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	596	
+widgets	array	widgets	true	ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	612	
 PAGE	variable	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	24	
 DRAW_MS	variable	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	26	
 SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	30	
@@ -12581,13 +12601,11 @@ beforeDatasetsDraw	method	widgets	false		src/ui/widgets/registry.hrEmployeeMaste
 afterDatasetsDraw	method	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	252	draw
 tick	function	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	384	LifecycleActivityView
 LifecycleActivity	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	440	
-WorkloadRing	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	448	
-MasterDataWorkload	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	452	
-BlockedEmployeeActions	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	465	
-RecordHealth	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	474	
-RecordRiskMonitor	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	501	
-previewDefinition	function	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	523	
-widgets	array	widgets	true	ui-tile	src/ui/widgets/registry.hrEmployeeMaster.tsx	543	
+BlockedEmployeeActions	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	449	
+RecordHealth	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	458	
+RecordRiskMonitor	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	485	
+previewDefinition	function	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	507	
+widgets	array	widgets	true	ui-tile	src/ui/widgets/registry.hrEmployeeMaster.tsx	527	
 packages	variable	widgets	false		src/ui/widgets/registry.ts	22	
 collectWidgets	function	widgets	false	ui-tile	src/ui/widgets/registry.ts	24	
 WIDGET_REGISTRY	variable	widgets	true	ui-tile	src/ui/widgets/registry.ts	54	
@@ -12746,15 +12764,22 @@ slug	function	widgets	false		src/ui/widgets/WidgetCatalog.tsx	33
 WidgetTile	function	widgets	false	component,ui-tile	src/ui/widgets/WidgetCatalog.tsx	35	
 activate	function	widgets	false		src/ui/widgets/WidgetCatalog.tsx	52	WidgetTile
 WidgetCatalog	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetCatalog.tsx	92	
-WidgetConfigBack	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetConfigBack.tsx	9	
 WidgetConfigFieldRenderer	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetConfigFieldRenderer.tsx	7	
-WidgetConfigureModal	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetConfigureModal.tsx	11	
+isAppearanceField	function	widgets	false		src/ui/widgets/WidgetConfigureModal.tsx	26	
+Group	interface	widgets	false		src/ui/widgets/WidgetConfigureModal.tsx	31	
+groupFields	function	widgets	false		src/ui/widgets/WidgetConfigureModal.tsx	33	
+REFRESH_COPY	object	widgets	false		src/ui/widgets/WidgetConfigureModal.tsx	42	
+Fact	function	widgets	false	component	src/ui/widgets/WidgetConfigureModal.tsx	49	
+WidgetConfigureModal	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetConfigureModal.tsx	58	
+signature	function	widgets	false		src/ui/widgets/WidgetConfigureModal.tsx	73	WidgetConfigureModal
+set	function	widgets	false		src/ui/widgets/WidgetConfigureModal.tsx	79	WidgetConfigureModal
+commit	function	widgets	false		src/ui/widgets/WidgetConfigureModal.tsx	82	WidgetConfigureModal
 WIDGET_ICONS	object	widgets	false	ui-tile	src/ui/widgets/WidgetDetailPanel.tsx	8	
 formatRefresh	function	widgets	false		src/ui/widgets/WidgetDetailPanel.tsx	13	
 WidgetDetailPanel	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetDetailPanel.tsx	18	
-noDrag	function	widgets	false		src/ui/widgets/WidgetFrame.tsx	19	
-copyWidgetSize	function	widgets	false	ui-tile	src/ui/widgets/WidgetFrame.tsx	21	
-WidgetFrame	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetFrame.tsx	54	
+noDrag	function	widgets	false		src/ui/widgets/WidgetFrame.tsx	18	
+copyWidgetSize	function	widgets	false	ui-tile	src/ui/widgets/WidgetFrame.tsx	20	
+WidgetFrame	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetFrame.tsx	53	
 LibraryView	type	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	32	
 supportsPage	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	33	
 BundlesSectionProps	interface	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	50	

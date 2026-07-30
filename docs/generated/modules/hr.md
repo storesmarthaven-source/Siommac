@@ -2,19 +2,19 @@
 
 # hr Module Map
 
-Source fingerprint: `8af9bd4211159aa5cfc3b43a`
+Source fingerprint: `c2ab69e20934faf57c7e960a`
 
-Files: 255 | Symbols: 2854 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 35 | DB objects: 196 | E2E suites: 16
+Files: 255 | Symbols: 2863 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 35 | DB objects: 196 | E2E suites: 16
 
 ## Widgets and Tiles
 
 | ID | Title | Kind | Render | Location |
 |---|---|---|---|---|
-| `bundle.hr.attendance.ops` | Attendance & Leave Ops | registry | `` | `src/ui/widgets/bundles.ts:117` |
+| `bundle.hr.attendance.ops` | Attendance & Leave Ops | registry | `` | `src/ui/widgets/bundles.ts:116` |
 | `bundle.hr.employees.essentials` | Employee Master Essentials | registry | `` | `src/ui/widgets/bundles.ts:90` |
 | `bundle.hr.onboarding.manager` | Onboarding Manager Pack | registry | `` | `src/ui/widgets/bundles.ts:76` |
-| `hr.employeeMaster.lifecycleActivity` | Workforce Activity | registry | `LifecycleActivity` | `src/ui/widgets/registry.hrEmployeeMaster.tsx:549` |
-| `hr.employees.register` | Employee Register | local | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:753` |
+| `hr.employeeMaster.lifecycleActivity` | Workforce Activity | registry | `LifecycleActivity` | `src/ui/widgets/registry.hrEmployeeMaster.tsx:533` |
+| `hr.employees.register` | Employee Register | local | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:855` |
 | `hr.onboarding.case.activeTasks` | Active Tasks | local | `() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddTask}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:329` |
 | `hr.onboarding.case.blockersTable` | Blockers | local | `() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:330` |
 | `hr.onboarding.case.customActions` | Custom Actions | local | `() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddAction}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:332` |
@@ -506,7 +506,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useArchiveOrgUnit` | function / hook | `src/api/hr/organization.ts:103` | `-` |
 | `useDeleteOrgUnit` | function / hook | `src/api/hr/organization.ts:104` | `-` |
 | `useCreatePosition` | function / hook | `src/api/hr/organization.ts:106` | `-` |
-| ... | 123 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 128 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -709,7 +709,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/CompensationOverview.tsx` | 347 |
 | frontend-page | `src/components/sections/HR/EmployeeCreatePage.test.ts` | 350 |
 | frontend-page | `src/components/sections/HR/EmployeeCreatePage.tsx` | 1037 |
-| frontend-page | `src/components/sections/HR/EmployeeMaster.tsx` | 922 |
+| frontend-page | `src/components/sections/HR/EmployeeMaster.tsx` | 1031 |
 | frontend-page | `src/components/sections/HR/EmployeeOnboardingSummary.tsx` | 97 |
 | frontend-page | `src/components/sections/HR/EmployeeProfilePage.test.tsx` | 564 |
 | frontend-page | `src/components/sections/HR/EmployeeProfilePage.tsx` | 1673 |

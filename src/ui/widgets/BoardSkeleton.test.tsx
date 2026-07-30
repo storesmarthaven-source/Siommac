@@ -49,14 +49,14 @@ const SAVED_KPI_INSTANCES: WidgetInstance[] = [
   inst('hr.employeeMaster.recordReadiness', 4, 0, 4, 6, KPI_PAGE_KEY, 'compact'),
   inst('hr.employeeMaster.hrWorkQueue', 8, 0, 4, 6, KPI_PAGE_KEY, 'compact'),
   inst('hr.employeeMaster.exceptions', 12, 0, 4, 6, KPI_PAGE_KEY, 'compact'),
-  inst('hr.employeeMaster.newStarters', 16, 0, 4, 6, KPI_PAGE_KEY, 'compact'),
+  inst('hr.employeeMaster.monthlyHiresCard', 16, 0, 4, 6, KPI_PAGE_KEY, 'compact'),
   inst('hr.employeeMaster.departures', 20, 0, 4, 6, KPI_PAGE_KEY, 'compact'),
 ];
 
 const SAVED_BOARD_INSTANCES: WidgetInstance[] = [
   inst('hr.employeeMaster.lifecycleActivity', 0, 0, 12, 28, PAGE_KEY, 'wide'),
   inst('enterprise.calendar.upcomingDeadlines', 12, 0, 6, 28, PAGE_KEY),
-  inst('hr.employeeMaster.adminWorkload', 18, 0, 6, 28, PAGE_KEY, 'large'),
+  inst('hr.employeeMaster.weeklyActivity', 18, 0, 6, 28, PAGE_KEY, 'large'),
   inst('hr.employeeMaster.recordHealth', 0, 28, 8, 22, PAGE_KEY),
   inst('hr.employeeMaster.readinessRadar', 8, 28, 8, 22, PAGE_KEY),
   inst('hr.employeeMaster.recordRisk', 16, 28, 8, 22, PAGE_KEY),

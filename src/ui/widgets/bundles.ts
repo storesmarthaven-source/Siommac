@@ -99,13 +99,12 @@ export const WIDGET_BUNDLES: WidgetBundle[] = [
       'hr.employeeMaster.recordReadiness',
       'hr.employeeMaster.hrWorkQueue',
       'hr.employeeMaster.exceptions',
-      'hr.employeeMaster.newStarters',
       'hr.employeeMaster.departures',
       'hr.employeeMaster.recordQuality',
       // The board's own default tiles — resetting and then adding the bundle must restore the
       // standard workspace, which the workspace test asserts.
       'hr.employeeMaster.lifecycleActivity',
-      'hr.employeeMaster.adminWorkload',
+      'hr.employeeMaster.payrollReadinessWide',
       'enterprise.calendar.upcomingDeadlines',
       'hr.employeeMaster.monthlyHiresCard',
       'hr.employeeMaster.internalMovesCard',

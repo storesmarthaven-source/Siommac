@@ -277,12 +277,30 @@ describe('Employee profile drawer', () => {
     expect(screen.queryByText('Add Document')).toBeNull();
   });
 
-  it('only offers implemented actions in the three-dot menu', () => {
+  it('carries a minimal header: caption only, no wordmark and no header controls', () => {
     renderDrawer();
-    fireEvent.click(screen.getByLabelText('More employee actions'));
-    const menu = document.querySelector('.action-menu')!;
-    const labels = [...menu.querySelectorAll('button')].map(b => b.textContent);
-    expect(labels).toEqual(['Edit Employee', 'Change Employment Status', 'Start Offboarding']);
-    expect(menu.querySelector('.danger')?.textContent).toBe('Start Offboarding');
+    const topbar = document.querySelector<HTMLElement>('.epd-root .topbar')!;
+    expect(within(topbar).getByText('Employee Profile')).toBeTruthy();
+    // The SIOMAC wordmark and both header controls were removed by design.
+    expect(within(topbar).queryByText('SIOMAC')).toBeNull();
+    expect(screen.queryByLabelText('More employee actions')).toBeNull();
+    expect(screen.queryByLabelText('Close employee profile')).toBeNull();
+    expect(topbar.querySelector('button')).toBeNull();
+    expect(document.querySelector('.action-menu')).toBeNull();
+  });
+
+  it('closes on Escape, which is now the keyboard route out of the drawer', () => {
+    const onClose = vi.fn();
+    renderDrawer({ onClose });
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('renders ONE overlay across loading and loaded, so the slide-in cannot replay', () => {
+    // The skeleton used to render its own .epd-overlay; swapping it for the
+    // loaded content tore the subtree down and re-ran the slide animation.
+    renderDrawer();
+    expect(document.querySelectorAll('.epd-overlay')).toHaveLength(1);
+    expect(document.querySelectorAll('.epd-overlay > .epd-root')).toHaveLength(1);
   });
 });

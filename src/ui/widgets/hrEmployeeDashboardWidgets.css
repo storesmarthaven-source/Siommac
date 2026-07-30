@@ -114,7 +114,7 @@
 .hrew-ar-issue{padding:1px 3px}.hrew-ar-issue>span{color:#5e6980;font-size:10.5px;font-weight:650}.hrew-ar-issue h3{margin:10px 0 0;font-size:20px;font-weight:660;line-height:1.25;letter-spacing:-.025em}.hrew-ar-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.hrew-ar-facts>div{min-width:0;display:grid;justify-items:center;gap:7px;padding:10px 8px;border:1px solid #e0e5eb;border-radius:13px;background:#fff;text-align:center}.hrew-ar-facts>div+div{border-left:1px solid #e0e5eb}.hrew-ar-facts svg{width:23px;height:23px;color:#626a6e}.hrew-ar-facts .is-department{border-color:#f5d5a5;background:#fff8ed}.hrew-ar-facts .is-department svg,.hrew-ar-facts .is-department strong{color:#a85b00}.hrew-ar-facts .is-control{border-color:#d8e3f7;background:#f5f8ff}.hrew-ar-facts .is-control svg,.hrew-ar-facts .is-control strong{color:#1b4f9c}.hrew-ar-facts .is-issues{border-color:#f0c4c4;background:#fff5f5}.hrew-ar-facts .is-issues svg,.hrew-ar-facts .is-issues strong{color:#b42318}.hrew-ar-facts strong,.hrew-ar-facts span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hrew-ar-facts strong{font-size:12.5px}.hrew-ar-facts span{color:#767e80;font-size:10.75px}.hrew-attention-reference.is-semantic .hrew-ar-facts{gap:8px}.hrew-attention-reference.is-semantic .hrew-ar-facts>div{padding:13px 8px;border:1px solid #e0e5eb!important;border-radius:13px}
 .hrew-ar-impact{display:grid;grid-template-columns:116px minmax(0,1fr);gap:14px;align-items:center;padding:13px;border:1px solid #e0e5eb;border-radius:11px}.hrew-ar-ready-gauge{position:relative;min-height:88px;color:#dc2626}.hrew-ar-ready-gauge svg{display:block;width:116px;height:88px;overflow:visible}.hrew-ready-arc{transition:stroke-dasharray .42s ease}.hrew-ready-needle{transform-box:view-box;transform-origin:180px 132px;transform:rotate(var(--hrew-ready-angle));animation:hrew-ready-needle-in .82s cubic-bezier(.2,.8,.25,1) 120ms both}.hrew-ar-ready-gauge>div{position:absolute;inset:0;display:block}.hrew-ar-ready-gauge strong{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#111a39;font-size:24px;font-weight:650;letter-spacing:-.04em;line-height:1}.hrew-ar-ready-gauge small{font-size:.58em}.hrew-ar-ready-gauge span{position:absolute;left:50%;bottom:0;transform:translateX(-50%);color:#b42318;font-size:9.25px;font-weight:600;text-transform:uppercase;white-space:nowrap}.hrew-ar-impact>div:nth-child(2){align-self:center}.hrew-ar-impact>div:nth-child(2)>strong{font-size:13px}.hrew-ar-impact p{margin:5px 0 0;color:#6f7778;font-size:11.5px;line-height:1.45}.hrew-ar-impact>i{grid-column:1/-1;height:7px;overflow:hidden;border-radius:7px;background:#eceff3}.hrew-ar-impact>i em{display:block;height:100%;border-radius:inherit;background:#c43d2a;animation:hrew-grow .65s ease-out both}.hrew-attention-reference.is-neutral .hrew-ar-impact>i{display:none}.hrew-attention-reference.is-semantic .hrew-ar-ready-score{--hrew-ready-progress:0%;position:relative;isolation:isolate;width:88px;height:88px;min-height:0;place-content:center;border-radius:50%;background:conic-gradient(#c43d2a var(--hrew-ready-progress),#f5dcda 0);color:#bf3526;animation:hrew-ready-ring .82s cubic-bezier(.22,.8,.28,1) forwards}.hrew-attention-reference.is-semantic .hrew-ar-ready-score:before{position:absolute;z-index:-1;inset:8px;border-radius:50%;background:#fff8f7;content:""}.hrew-attention-reference.is-semantic .hrew-ar-ready-score span,.hrew-attention-reference.is-semantic .hrew-ar-ready-score strong{position:relative;z-index:1}.hrew-attention-reference.is-semantic .hrew-ar-ready-score span{font-size:8px}.hrew-attention-reference.is-semantic .hrew-ar-ready-score strong{font-size:25px}.hrew-ar-controls{display:grid;gap:8px;padding:12px;border:1px solid #dfe5ee;border-radius:14px;background:linear-gradient(180deg,#fbfcfe,#f6f8fb)}.hrew-ar-controls:before{content:none}.hrew-ar-controls>span{min-width:0;color:#687386;font-size:10px;font-weight:560;text-transform:uppercase;letter-spacing:.04em}.hrew-ar-controls>div{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.hrew-ar-controls strong{min-width:0;display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:0 9px;border:1px solid #dfe5ee;border-radius:9px;background:#fff;color:#17233a;font-size:12.5px;font-weight:570;white-space:nowrap}.hrew-ar-controls strong svg{width:14px;height:14px}.hrew-ar-controls strong.is-assignment{border-color:#f3d29d;background:#fff8ed;color:#9a5600}.hrew-ar-controls strong.is-payroll{border-color:#d7e3f8;background:#f5f8ff;color:#1b4f9c}.hrew-ar-controls strong.is-training{border-color:#ded6fb;background:#f7f4ff;color:#6842b8}
 .hrew-ar-action{margin-top:auto;padding:14px;border:1px solid #e0e5eb;border-radius:15px;background:#fff}.hrew-ar-action>span{display:inline-flex;padding:5px 9px;border-radius:99px;background:#f1f3f6;color:#4e596f;font-size:8.5px;font-weight:700;text-transform:uppercase}.hrew-attention-reference.is-semantic .hrew-ar-action>span{background:#edf3ff;color:#2864d2}.hrew-ar-action h4{margin:11px 0 0;font-size:14px;font-weight:650}.hrew-ar-action p{margin:8px 0 0;color:#6d7577;font-size:10.5px;line-height:1.45}.hrew-ar-action button{width:100%;height:40px;margin-top:14px;border:0;border-radius:10px;background:#1b2d54;color:#fff;font:inherit;font-size:11.5px;font-weight:630;cursor:pointer}
-.hrew-attention-reference.is-neutral .hrew-ar-person{background:#1b2d54;color:#fff;border:1px solid rgba(255,255,255,.10);border-radius:16px;box-shadow:none}.hrew-attention-reference.is-neutral .hrew-ar-person .hrew-avatar{background:rgba(255,255,255,.10);border:1px solid rgb(250 250 250);box-shadow:0 0 0 4px rgba(226,238,252,.12);color:#bfdbfe;font-size:13px;font-weight:700}.hrew-attention-reference.is-neutral .hrew-ar-person strong{color:#fff;font-weight:650}.hrew-attention-reference.is-neutral .hrew-ar-person small{color:rgba(226,238,252,.68);font-size:12.5px;font-weight:500}.hrew-attention-reference.is-neutral .hrew-ar-person nav button{border-color:rgba(255,255,255,.12);background:rgb(70 82 120);color:rgba(255,255,255,.80)}.hrew-attention-reference.is-neutral .hrew-ar-person nav button:hover{background:rgba(255,255,255,.14);color:#fff}.hrew-attention-reference.is-neutral .hrew-ar-person>.hrew-ar-status{grid-column:1/-1;margin:1px 0 0;padding:9px 0 0;border:0;border-top:1px solid rgba(255,255,255,.10);border-radius:0;background:transparent}.hrew-attention-reference.is-neutral .hrew-ar-person>.hrew-ar-status>span{height:auto;padding:0;border:0;border-radius:0;background:transparent;color:#e5eefb}.hrew-attention-reference.is-neutral .hrew-ar-person>.hrew-ar-status>strong{color:#dbeafe;font-size:11px;font-weight:500}.hrew-attention-reference.is-neutral .hrew-ar-person>.hrew-ar-status svg{color:#f5bd63;width:15px;height:15px}
+.hrew-attention-reference.is-neutral .hrew-ar-person{background:#1b2d54;color:#fff;border:1px solid rgba(255,255,255,.10);border-radius:16px;box-shadow:none}.hrew-attention-reference.is-neutral .hrew-ar-person .hrew-avatar{background:rgba(255,255,255,.10);border:1px solid rgb(250 250 250);box-shadow:0 0 0 4px rgba(226,238,252,.12);color:#bfdbfe;font-size:13px;font-weight:700}.hrew-attention-reference.is-neutral .hrew-ar-person strong{color:#fff;font-weight:650}.hrew-attention-reference.is-neutral .hrew-ar-person small{color:rgba(226,238,252,.68);font-size:12.5px;font-weight:500}.hrew-attention-reference.is-neutral .hrew-ar-person nav button{border-color:rgba(255,255,255,.12);background:rgb(87 97 131);color:rgba(255,255,255,.80)}.hrew-attention-reference.is-neutral .hrew-ar-person nav button:hover{background:rgba(255,255,255,.14);color:#fff}.hrew-attention-reference.is-neutral .hrew-ar-person>.hrew-ar-status{grid-column:1/-1;margin:1px 0 0;padding:9px 0 0;border:0;border-top:1px solid rgba(255,255,255,.10);border-radius:0;background:transparent}.hrew-attention-reference.is-neutral .hrew-ar-person>.hrew-ar-status>span{height:auto;padding:0;border:0;border-radius:0;background:transparent;color:#e5eefb}.hrew-attention-reference.is-neutral .hrew-ar-person>.hrew-ar-status>strong{color:#dbeafe;font-size:11px;font-weight:500}.hrew-attention-reference.is-neutral .hrew-ar-person>.hrew-ar-status svg{color:#f5bd63;width:15px;height:15px}
 @container (max-width:390px){.hrew-attention-reference{gap:10px;padding:12px}.hrew-ar-status>span{font-size:9px}.hrew-ar-status>button{height:32px;padding-inline:12px}.hrew-ar-person{grid-template-columns:44px minmax(0,1fr) auto;padding:10px}.hrew-ar-person .hrew-avatar{width:44px;height:44px}.hrew-ar-person strong{font-size:16px}.hrew-ar-person small{font-size:11px}.hrew-ar-person nav button{width:29px;height:29px}.hrew-ar-issue h3{font-size:17px}.hrew-ar-facts svg{width:18px;height:18px}.hrew-ar-impact{grid-template-columns:96px minmax(0,1fr);padding:10px}.hrew-ar-ready-gauge{min-height:76px}.hrew-ar-ready-gauge svg{width:96px;height:76px}.hrew-ar-ready-gauge strong{font-size:21px}.hrew-ar-ready-gauge span{font-size:8.25px}.hrew-attention-reference.is-semantic .hrew-ar-ready-score{width:72px;height:72px}.hrew-attention-reference.is-semantic .hrew-ar-ready-score:before{inset:7px}.hrew-attention-reference.is-semantic .hrew-ar-ready-score span{font-size:7px}.hrew-attention-reference.is-semantic .hrew-ar-ready-score strong{font-size:21px}.hrew-ar-controls{padding:10px}.hrew-ar-controls strong{min-height:28px;font-size:11px}.hrew-ar-action{padding:11px}.hrew-ar-action button{height:36px;margin-top:10px}}
 @container (max-width: 430px) {
   .hrew-attention-facts { grid-template-columns: 1fr 1fr; }
@@ -147,7 +147,7 @@
 .hrew-attention-reference.is-neutral .hrew-ar-person .hrew-avatar{background:rgba(255,255,255,.10);border:1px solid rgb(250 250 250);box-shadow:0 0 0 4px rgba(226,238,252,.12);color:#bfdbfe;font-size:13px;font-weight:700}
 .hrew-attention-reference.is-neutral .hrew-ar-person strong{color:#fff}
 .hrew-attention-reference.is-neutral .hrew-ar-person small{color:rgba(226,238,252,.68)}
-.hrew-attention-reference.is-neutral .hrew-ar-person nav button{border-color:rgba(255,255,255,.12);background:rgb(70 82 120);color:rgba(255,255,255,.80)}
+.hrew-attention-reference.is-neutral .hrew-ar-person nav button{border-color:rgba(255,255,255,.12);background:rgb(87 97 131);color:rgba(255,255,255,.80)}
 .hrew-attention-reference.is-neutral .hrew-ar-person nav button:hover{background:rgba(255,255,255,.14);color:#fff}
 .hrew-attention-reference.is-neutral .hrew-ar-person>.hrew-ar-status{grid-column:1/-1;margin:8px -17px -17px;padding:11px 17px;border:0;border-top:1px solid rgba(191,219,254,.18);border-radius:0;background:transparent}
 .hrew-attention-reference.is-neutral .hrew-ar-person>.hrew-ar-status>span{height:auto;padding:0;border:0;background:transparent;color:#dbeafe;font-size:11px;font-weight:500}
@@ -315,4 +315,74 @@
 }
 .hrew-attention-reference {
   gap: 8px;
+}
+
+/* ── Double-wide KPI tile (w8 × h6) ───────────────────────────────────────────
+   Two slots, one tile row (304 × 96 on this board). Left reads exactly like a standard KPI tile so
+   the strip stays one visual family; right is the composition of that number. The split is 1fr/1fr
+   with a hairline between — an even split, because the headline and its breakdown are equally the
+   point of a wide tile. */
+.hrew-kpi-wide {
+  box-sizing: border-box; width: 100%; height: 100%; min-width: 0;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center; gap: 13px;
+  padding: 11px 13px;
+  border: 1px solid var(--line, #e0e5eb); border-radius: 14px;
+  background: #fff;
+}
+.hrew-kpi-wide__lead {
+  display: grid; grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center; gap: 2px 10px; min-width: 0;
+}
+.hrew-kpi-wide__ic {
+  grid-row: 1 / 3; align-self: center;
+  width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+  font-size: 15px;
+}
+/* Same tone ramp as the standard KPI tile, so a wide tile is not a different visual language. */
+.hrew-kpi-wide__ic.is-blue    { background: #eaf1fe; color: #3b82f6; }
+.hrew-kpi-wide__ic.is-purple  { background: #f2effe; color: #8b5cf6; }
+.hrew-kpi-wide__ic.is-teal    { background: #e5f8f5; color: #12b3a6; }
+.hrew-kpi-wide__ic.is-amber   { background: #fdf3e0; color: #f59e0b; }
+.hrew-kpi-wide__ic.is-green   { background: #e4f8ea; color: #16a34a; }
+.hrew-kpi-wide__ic.is-red     { background: #fdecec; color: #dc2626; }
+.hrew-kpi-wide__ic.is-coral   { background: #fdecec; color: #f0736f; }
+.hrew-kpi-wide__ic.is-neutral { background: #eef1f6; color: #475569; }
+
+.hrew-kpi-wide__row { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+.hrew-kpi-wide__row strong { color: #0f1e3d; font-size: 22px; font-weight: 680; letter-spacing: -.03em; line-height: 1; }
+.hrew-kpi-wide__row span {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: #1e2a44; font-size: 12px; font-weight: 600;
+}
+.hrew-kpi-wide__lead small {
+  grid-column: 2; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: #6b7689; font-size: 10.5px;
+}
+
+/* Composition bar — THIN, as originally drawn. A 30px bar was tried and read as a heavy block
+   rather than a chart at this tile size. Centred vertically so it sits on the headline number's
+   optical line. */
+.hrew-kpi-wide__mix {
+  display: grid; align-content: center; min-width: 0; height: 100%;
+  padding-left: 13px; border-left: 1px solid var(--line, #e0e5eb);
+}
+.hrew-kpi-wide__bar {
+  display: flex; height: 8px; border-radius: 999px; overflow: hidden;
+  background: #eef1f6;
+}
+.hrew-kpi-wide__bar > i {
+  display: grid; place-items: center; height: 100%; min-width: 3px;
+  animation: hrew-grow .55s cubic-bezier(.2, .8, .25, 1) both;
+}
+/* A hairline between segments, so adjacent colours of similar value still read as two. */
+.hrew-kpi-wide__bar > i + i { box-shadow: inset 1px 0 0 rgba(255, 255, 255, .9); }
+/* Nothing is printed inside an 8px bar — a clipped digit reads as a rendering fault. Counts live in
+   each segment's tooltip and in the bar's aria-label. */
+
+/* Narrow board: the composition folds away before the headline number does. */
+@container (max-width: 300px) {
+  .hrew-kpi-wide { grid-template-columns: minmax(0, 1fr); }
+  .hrew-kpi-wide__mix { display: none; }
 }

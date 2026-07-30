@@ -9,7 +9,6 @@ import { useState } from 'preact/hooks';
 import { resolveBoardWidget } from './resolveBoardWidget';
 import { findWidgetDef } from './registry';
 import { WidgetConfigureModal } from './WidgetConfigureModal';
-import { WidgetConfigBack } from './WidgetConfigBack';
 import { WidgetRenderer } from './WidgetRenderer';
 import { useMountReveal } from './motion';
 import type { BoardWidgetInstance, LocalWidgetMap } from './types';
@@ -89,9 +88,14 @@ export function WidgetFrame({ item, editing, isPreview, local, demo, revealOnMou
     <button type="button" class="wbi-remove" onMouseDown={noDrag} onClick={event => copyWidgetSize(event, item, title)} aria-label={`Copy ${title || item.widgetId} size`} title="Copy widget size"><i class="fas fa-copy" /></button>
   ) : null;
   const configModal = definition ? <WidgetConfigureModal open={configOpen} widget={definition} config={item.config} sizeKey={item.sizeKey} pageKey={item.pageKey} zoneId={item.zoneId} onClose={() => setConfigOpen(false)} onSave={next => { onConfigure?.(next); setConfigOpen(false); }} /> : null;
-  // In-widget flip config: only for BARE, fixed-height widgets. Content-measured
-  // (sizeToContent) tiles keep the modal — an absolute flip face would collapse their height.
-  const useFlip = bare && !isPreview && !definition?.sizeToContent && !!definition;
+  // Settings are ALWAYS a small window — one surface for every widget, whatever its size.
+  //
+  // Configuration used to flip into the widget's own body for bare, fixed-height tiles. That
+  // could never work in general: the config face is a real form (labels, colour inputs,
+  // Save/Cancel) rendered inside the tile, so it was clipped by whatever height the tile
+  // happened to have — invisible in a 96px KPI card, cramped in a chart. Gating the flip by
+  // height only moved the boundary; the form still competed with the tile for space. One small
+  // dialog is sized by its content instead of by the board, so it reads the same everywhere.
 
   if (bare) {
     const showTools = isPreview ?? editing;
@@ -110,10 +114,7 @@ export function WidgetFrame({ item, editing, isPreview, local, demo, revealOnMou
         )}
         <div class="wbi-bare-body">
           <WidgetRenderer item={item} preview={isPreview} local={local} demo={demo} />
-          {useFlip && configOpen
-            ? <div class="wbi-cfg-flip"><WidgetConfigBack widget={definition} config={item.config} onCancel={() => setConfigOpen(false)} onSave={next => { onConfigure?.(next); setConfigOpen(false); }} /></div>
-            : null}
-        </div>{useFlip ? null : configModal}
+        </div>{configModal}
       </div>
     );
   }

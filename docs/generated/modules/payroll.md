@@ -2,9 +2,9 @@
 
 # payroll Module Map
 
-Source fingerprint: `8af9bd4211159aa5cfc3b43a`
+Source fingerprint: `c2ab69e20934faf57c7e960a`
 
-Files: 195 | Symbols: 1978 | Widgets: 10 | Unique mounted endpoints: 140 | Route definitions: 140 mounted + 0 unmounted | API calls: 2 | DB objects: 260 | E2E suites: 28
+Files: 195 | Symbols: 1978 | Widgets: 11 | Unique mounted endpoints: 140 | Route definitions: 140 mounted + 0 unmounted | API calls: 2 | DB objects: 260 | E2E suites: 28
 
 ## Widgets and Tiles
 
@@ -20,6 +20,7 @@ Files: 195 | Symbols: 1978 | Widgets: 10 | Unique mounted endpoints: 140 | Route
 | `finance.payroll.releaseImpact` | Release Impact | local | `() => <ImpactWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:515` |
 | `finance.payroll.releaseReadiness` | Release Readiness | local | `() => <ReadinessWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:514` |
 | `finance.payroll.runRegister` | Payroll Runs | local | `() => <RunRegister data={data} tab={tab} setTab={setTab} searchInput={searchInput} setSearchInput={setSearchInput} cursor={cursor} setCursor={setCursor} onOpen={openRun} onNewRun={() => setWizOpen(true)} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:516` |
+| `hr.employeeMaster.payrollReadinessWide` | Not Payroll-Ready | registry | `PayrollReadinessKpi` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:629` |
 
 ## Route Definitions
 

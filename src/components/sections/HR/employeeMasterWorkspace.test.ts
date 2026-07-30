@@ -8,11 +8,11 @@ const EXPECTED_WIDGETS = [
   'hr.employeeMaster.recordReadiness',
   'hr.employeeMaster.hrWorkQueue',
   'hr.employeeMaster.exceptions',
-  'hr.employeeMaster.newStarters',
   'hr.employeeMaster.departures',
   'hr.employeeMaster.lifecycleActivity',
+  // Master Data Workload is NOT here any more: it became a fixed double-wide KPI strip tile, so
+  // the main board's default no longer places it and Upcoming Deadlines takes the freed width.
   'enterprise.calendar.upcomingDeadlines',
-  'hr.employeeMaster.adminWorkload',
 ];
 
 describe('Employee Master default workspace', () => {
@@ -21,11 +21,11 @@ describe('Employee Master default workspace', () => {
     const widgets = layout.zones.main ?? [];
     expect(layout.pageKey).toBe('hr.employees.overview.kpis.v2');
     expect(layout.columns).toBe(24);
-    expect(widgets.map(widget => widget.widgetId)).toEqual(EXPECTED_WIDGETS.slice(0, 6));
+    expect(widgets.map(widget => widget.widgetId)).toEqual(EXPECTED_WIDGETS.slice(0, 5));
     expect(widgets.map(widget => ({ x: widget.x, y: widget.y, w: widget.w, h: widget.h }))).toEqual([
       { x: 0, y: 0, w: 4, h: 6 }, { x: 4, y: 0, w: 4, h: 6 },
       { x: 8, y: 0, w: 4, h: 6 }, { x: 12, y: 0, w: 4, h: 6 },
-      { x: 16, y: 0, w: 4, h: 6 }, { x: 20, y: 0, w: 4, h: 6 },
+      { x: 16, y: 0, w: 4, h: 6 },
     ]);
   });
 
@@ -34,12 +34,12 @@ describe('Employee Master default workspace', () => {
     const widgets = layout.zones.main ?? [];
     expect(layout.pageKey).toBe('hr.employees.overview.v3');
     expect(layout.columns).toBe(24);
-    expect(widgets.map(widget => widget.widgetId)).toEqual([...EXPECTED_WIDGETS.slice(6), 'hr.employees.register']);
+    expect(widgets.map(widget => widget.widgetId)).toEqual([...EXPECTED_WIDGETS.slice(5), 'hr.employees.register']);
     // Geometry is in the board's Statutory-parity units (cellHeight 6 + 12px gap → 18h − 12 px).
     // Pinned in full: a widget authored in another board's units is the exact defect this board
     // was rebuilt to remove, and only a whole-layout assertion catches it.
     expect(widgets.map(widget => ({ x: widget.x, y: widget.y, w: widget.w, h: widget.h }))).toEqual([
-      { x: 0, y: 0, w: 12, h: 28 }, { x: 12, y: 0, w: 6, h: 28 }, { x: 18, y: 0, w: 6, h: 28 },
+      { x: 0, y: 0, w: 12, h: 28 }, { x: 12, y: 0, w: 12, h: 28 },
       { x: 0, y: 28, w: 24, h: 50 },
     ]);
   });

@@ -773,7 +773,7 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
   const { data: nameMap } = useEmployeeNames(employeeIds);
 
   const verify = async (r: NisProfileRow): Promise<void> => {
-    const id = r.id ?? '';
+    const id = r.id;
     if (!id || !canVerify) return;
     // Compliance sign-off: confirm, and capture an optional verification note for the audit trail.
     const note = await dialog.prompt({
@@ -789,7 +789,7 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
   };
 
   const reject = async (r: NisProfileRow): Promise<void> => {
-    const id = r.id ?? '';
+    const id = r.id;
     if (!id || !canVerify) return;
     const reason = await dialog.prompt({ title: 'Rejection reason', text: 'Finance cannot verify this profile. HR must correct and re-submit.', placeholder: 'Rejection reason (required)', confirmText: 'Return to HR' });
     if (!reason?.trim()) return;
@@ -934,7 +934,7 @@ function StatReportsTab(): VNode {
       selectedReport={selectedReport}
       onSelectReport={k => setSelectedReport(k as StatutoryReportKey)}
       result={reportQ.data ?? null}
-      columns={selectedReport ? (REPORT_COLUMNS[selectedReport] ?? []) : []}
+      columns={selectedReport ? REPORT_COLUMNS[selectedReport] : []}
       exportFilename={`statutory-${selectedReport ?? 'report'}`}
       loading={reportQ.isLoading}
       error={reportQ.error ? String(reportQ.error) : null}
@@ -1098,7 +1098,7 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
     (canApprove && d.status === 'pending_approval') ||
     (canApprove && d.status === 'approved')
   );
-  const footer = hasFooterActions && d ? (
+  const footer = hasFooterActions ? (
     <div style={{ display: 'flex', gap: 8, width: '100%' }}>
       {canManage && d.status === 'draft' && (
         <button class="ui-btn-primary" type="button" onClick={() => { const key = submitKeys.current.get(d.id) ?? crypto.randomUUID(); submitKeys.current.set(d.id, key); void run(submitMut.mutateAsync({ id: d.id, idempotencyKey: key }).then(r => { submitKeys.current.delete(d.id); return r; }), 'Submitted for approval.'); }}>Submit for approval</button>
@@ -1126,7 +1126,10 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
   ) : undefined;
 
   return (
-    <Drawer rich open={open} onClose={onClose} title="Rate Version" foot={footer} noFooter={!footer} panelClass="svd-drawer">
+    // `adaptive` puts data-theme-scope="adaptive" on the portaled panel so this drawer follows
+    // the theme switch: the navy below is kept as-is for dark, and finance.css supplies the light
+    // counterpart. Scoped to THIS drawer — the other rich drawers stay navy in both themes.
+    <Drawer rich adaptive open={open} onClose={onClose} title="Rate Version" foot={footer} noFooter={!footer} panelClass="svd-drawer">
       {!d ? (
         // Loading placeholder — reuses the REAL layout elements (svd-head/title/meta,
         // svd-tiles ui-stat-tile small/strong/span, svd-steps, svd-grid) so every margin,
@@ -1161,7 +1164,9 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
                 <div class="svd-step" key={i}>
                   <div class="svd-step-track">
                     <span class="svd-step-line" style={{ visibility: i === 0 ? 'hidden' : 'visible' }} />
-                    <span class="svd-step-dot" style={{ background: 'rgba(255,255,255,.22)' }} />
+                    {/* Class, not an inline style — an inline colour beats every stylesheet,
+                        so the skeleton dot could never follow the theme. */}
+                    <span class="svd-step-dot svd-step-dot--skel" />
                     <span class="svd-step-line" style={{ visibility: i === 4 ? 'hidden' : 'visible' }} />
                   </div>
                   <div class="svd-step-title"><Skeleton height={9} width={40} /></div>

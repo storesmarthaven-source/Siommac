@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `82d5c34f0567bfb0e6285d0382b574dc9c15ffa0`  
-Source fingerprint: `8af9bd4211159aa5cfc3b43a`  
+Source HEAD: `fa7939360c1f573fa8789c960fb1dc28a519f901`  
+Source fingerprint: `c2ab69e20934faf57c7e960a`  
 Generator version: `1`
 
 ## Use
@@ -19,21 +19,21 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1342 | 13528 | 52 | 972 | 973 | 17 | 354 | 1414 | 83 | 2666 |
+| 1342 | 13553 | 51 | 972 | 973 | 17 | 354 | 1414 | 83 | 2666 |
 
 ## Modules
 
 | Module | Files | Symbols | Widgets | Unique routes | Route definitions | API calls | DB objects | E2E suites | Map |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| hr | 255 | 2854 | 9 | 275 | 275 | 35 | 196 | 16 | [open](modules/hr.md) |
-| payroll | 195 | 1978 | 10 | 140 | 140 | 2 | 260 | 28 | [open](modules/payroll.md) |
-| finance | 139 | 1853 | 10 | 156 | 156 | 4 | 202 | 9 | [open](modules/finance.md) |
+| hr | 255 | 2863 | 9 | 275 | 275 | 35 | 196 | 16 | [open](modules/hr.md) |
+| payroll | 195 | 1978 | 11 | 140 | 140 | 2 | 260 | 28 | [open](modules/payroll.md) |
+| finance | 139 | 1853 | 9 | 156 | 156 | 4 | 202 | 9 | [open](modules/finance.md) |
 | hse | 87 | 1275 | 0 | 144 | 144 | 107 | 65 | 4 | [open](modules/hse.md) |
 | communications | 112 | 1052 | 0 | 93 | 96 | 88 | 158 | 6 | [open](modules/communications.md) |
 | workflow | 47 | 321 | 0 | 40 | 40 | 8 | 128 | 3 | [open](modules/workflow.md) |
 | security | 46 | 387 | 0 | 51 | 51 | 31 | 65 | 4 | [open](modules/security.md) |
 | settings | 43 | 250 | 0 | 26 | 26 | 18 | 21 | 2 | [open](modules/settings.md) |
-| widgets | 72 | 565 | 22 | 15 | 15 | 11 | 14 | 1 | [open](modules/widgets.md) |
+| widgets | 72 | 581 | 21 | 15 | 15 | 11 | 14 | 1 | [open](modules/widgets.md) |
 | platform | 309 | 2816 | 0 | 32 | 47 | 50 | 305 | 0 | [open](modules/platform.md) |
 | testing | 37 | 177 | 0 | 0 | 0 | 0 | 0 | 10 | [open](modules/testing.md) |
 | enterprise | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | [open](modules/enterprise.md) |
@@ -42,7 +42,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | ID | Title | Kind | Module/area | Render | Location |
 |---|---|---|---|---|---|
-| `bundle.hr.attendance.ops` | Attendance & Leave Ops | registry | hr | `` | `src/ui/widgets/bundles.ts:117` |
+| `bundle.hr.attendance.ops` | Attendance & Leave Ops | registry | hr | `` | `src/ui/widgets/bundles.ts:116` |
 | `bundle.hr.employees.essentials` | Employee Master Essentials | registry | hr | `` | `src/ui/widgets/bundles.ts:90` |
 | `bundle.hr.onboarding.manager` | Onboarding Manager Pack | registry | hr | `` | `src/ui/widgets/bundles.ts:76` |
 | `enterprise.calendar.taskPlanner` | Task Planner | registry | widgets | `TaskPlannerWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:291` |
@@ -57,31 +57,30 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `finance.payroll.releaseImpact` | Release Impact | local | payroll | `() => <ImpactWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:515` |
 | `finance.payroll.releaseReadiness` | Release Readiness | local | payroll | `() => <ReadinessWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:514` |
 | `finance.payroll.runRegister` | Payroll Runs | local | payroll | `() => <RunRegister data={data} tab={tab} setTab={setTab} searchInput={searchInput} setSearchInput={setSearchInput} cursor={cursor} setCursor={setCursor} onOpen={openRun} onNewRun={() => setWizOpen(true)} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:516` |
-| `finance.statutory.deadlines` | Upcoming Deadlines | local | finance | `renderDeadlines` | `src/components/sections/Finance/StatutoryDashboard.tsx:655` |
-| `finance.statutory.kpi.activeVersion` | Active Version | local | finance | `renderKpiActive` | `src/components/sections/Finance/StatutoryDashboard.tsx:661` |
-| `finance.statutory.kpi.approvals` | Pending Approvals | local | finance | `renderKpiApprovals` | `src/components/sections/Finance/StatutoryDashboard.tsx:666` |
-| `finance.statutory.kpi.components` | Pay Components | local | finance | `renderKpiComponents` | `src/components/sections/Finance/StatutoryDashboard.tsx:663` |
-| `finance.statutory.kpi.drafts` | Draft Versions | local | finance | `renderKpiDrafts` | `src/components/sections/Finance/StatutoryDashboard.tsx:662` |
-| `finance.statutory.kpi.nisClasses` | NIS Classes | local | finance | `renderKpiNis` | `src/components/sections/Finance/StatutoryDashboard.tsx:664` |
-| `finance.statutory.kpi.verifyQueue` | Verification Queue (KPI) | local | finance | `renderKpiVerify` | `src/components/sections/Finance/StatutoryDashboard.tsx:665` |
-| `finance.statutory.nisChart` | NIS Contribution Schedule | local | finance | `renderChart` | `src/components/sections/Finance/StatutoryDashboard.tsx:653` |
-| `finance.statutory.readiness` | Statutory Readiness | local | finance | `renderReadiness` | `src/components/sections/Finance/StatutoryDashboard.tsx:654` |
-| `finance.statutory.register` | Statutory Register | local | finance | `renderRegister` | `src/components/sections/Finance/StatutoryDashboard.tsx:656` |
-| `hr.employeeMaster.activeWorkforce` | Active Workforce | registry | widgets | `ActiveWorkforce` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:503` |
-| `hr.employeeMaster.departures` | Departures | registry | widgets | `Departures` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:508` |
-| `hr.employeeMaster.employeeAttentionNeutral` | Employee Attention — Neutral | registry | widgets | `EmployeeAttentionNeutralWidget` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:510` |
-| `hr.employeeMaster.exceptions` | Exceptions | registry | widgets | `Exceptions` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:506` |
-| `hr.employeeMaster.hrWorkQueue` | HR Work Queue | registry | widgets | `HrWorkQueue` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:505` |
-| `hr.employeeMaster.internalMovesCard` | Internal Moves | registry | widgets | `InternalMovesCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:512` |
-| `hr.employeeMaster.lifecycleActivity` | Workforce Activity | registry | hr/Employee Master | `LifecycleActivity` | `src/ui/widgets/registry.hrEmployeeMaster.tsx:549` |
-| `hr.employeeMaster.lifecycleOutcomes` | Lifecycle Outcomes | registry | widgets | `LifecycleOutcomeChart` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:515` |
-| `hr.employeeMaster.monthlyHiresCard` | Hires This Month | registry | widgets | `MonthlyHiresCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:511` |
-| `hr.employeeMaster.newStarters` | New Starters | registry | widgets | `NewStarters` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:507` |
-| `hr.employeeMaster.promotionsCard` | Promotions | registry | widgets | `PromotionsCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:513` |
-| `hr.employeeMaster.readinessRadar` | Employee Readiness Radar | registry | widgets | `ReadinessRadar` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:514` |
-| `hr.employeeMaster.recordQuality` | Record Quality | registry | widgets | `RecordQuality` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:509` |
-| `hr.employeeMaster.recordReadiness` | Record Readiness | registry | widgets | `RecordReadiness` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:504` |
-| `hr.employees.register` | Employee Register | local | hr | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:753` |
+| `finance.statutory.kpi.activeVersion` | Active Version | local | finance | `renderKpiActive` | `src/components/sections/Finance/StatutoryDashboard.tsx:683` |
+| `finance.statutory.kpi.approvals` | Pending Approvals | local | finance | `renderKpiApprovals` | `src/components/sections/Finance/StatutoryDashboard.tsx:688` |
+| `finance.statutory.kpi.components` | Pay Components | local | finance | `renderKpiComponents` | `src/components/sections/Finance/StatutoryDashboard.tsx:685` |
+| `finance.statutory.kpi.drafts` | Draft Versions | local | finance | `renderKpiDrafts` | `src/components/sections/Finance/StatutoryDashboard.tsx:684` |
+| `finance.statutory.kpi.nisClasses` | NIS Classes | local | finance | `renderKpiNis` | `src/components/sections/Finance/StatutoryDashboard.tsx:686` |
+| `finance.statutory.kpi.verifyQueue` | Verification Queue (KPI) | local | finance | `renderKpiVerify` | `src/components/sections/Finance/StatutoryDashboard.tsx:687` |
+| `finance.statutory.nisChart` | NIS Contribution Schedule | local | finance | `renderChart` | `src/components/sections/Finance/StatutoryDashboard.tsx:676` |
+| `finance.statutory.readiness` | Statutory Readiness | local | finance | `renderReadiness` | `src/components/sections/Finance/StatutoryDashboard.tsx:677` |
+| `finance.statutory.register` | Statutory Register | local | finance | `renderRegister` | `src/components/sections/Finance/StatutoryDashboard.tsx:678` |
+| `hr.employeeMaster.activeWorkforce` | Active Workforce | registry | widgets | `ActiveWorkforce` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:613` |
+| `hr.employeeMaster.departures` | Departures | registry | widgets | `Departures` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:617` |
+| `hr.employeeMaster.employeeAttentionNeutral` | Employee Attention — Neutral | registry | widgets | `EmployeeAttentionNeutralWidget` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:619` |
+| `hr.employeeMaster.exceptions` | Exceptions | registry | widgets | `Exceptions` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:616` |
+| `hr.employeeMaster.hrWorkQueue` | HR Work Queue | registry | widgets | `HrWorkQueue` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:615` |
+| `hr.employeeMaster.internalMovesCard` | Internal Moves | registry | widgets | `InternalMovesCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:650` |
+| `hr.employeeMaster.lifecycleActivity` | Workforce Activity | registry | hr/Employee Master | `LifecycleActivity` | `src/ui/widgets/registry.hrEmployeeMaster.tsx:533` |
+| `hr.employeeMaster.lifecycleOutcomes` | Lifecycle Outcomes | registry | widgets | `LifecycleOutcomeChart` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:653` |
+| `hr.employeeMaster.monthlyHiresCard` | Hires This Month | registry | widgets | `MonthlyHiresCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:640` |
+| `hr.employeeMaster.payrollReadinessWide` | Not Payroll-Ready | registry | payroll | `PayrollReadinessKpi` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:629` |
+| `hr.employeeMaster.promotionsCard` | Promotions | registry | widgets | `PromotionsCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:651` |
+| `hr.employeeMaster.readinessRadar` | Employee Readiness Radar | registry | widgets | `ReadinessRadar` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:652` |
+| `hr.employeeMaster.recordQuality` | Record Quality | registry | widgets | `RecordQuality` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:618` |
+| `hr.employeeMaster.recordReadiness` | Record Readiness | registry | widgets | `RecordReadiness` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:614` |
+| `hr.employees.register` | Employee Register | local | hr | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:855` |
 | `hr.employees.register` |  | local | widgets | `() => <div />` | `src/ui/widgets/BoardSkeleton.test.tsx:30` |
 | `hr.onboarding.case.activeTasks` | Active Tasks | local | hr | `() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddTask}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:329` |
 | `hr.onboarding.case.blockersTable` | Blockers | local | hr | `() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:330` |
