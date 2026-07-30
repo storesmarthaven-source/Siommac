@@ -26,6 +26,7 @@ import {
   getRole,
 } from './navCore';
 import { scheduleHdrBadgeSync, doHdrBadgeSync } from './badgeSync';
+import { markNavReady } from '@lib/sectionRestore';
 
 // ── Shared header modals (one set, shared by every profile pill) ─────────────
 
@@ -252,6 +253,10 @@ export function NavController(): h.JSX.Element {
       doHdrBadgeSync,
       setupSidebar: () => { /* already set up by NavController */ },
     };
+    // The shim is installed LAST in this effect, and AttendanceSystem.init() runs
+    // BEFORE this component mounts — so boot-time navigation (refresh restoration)
+    // waits on this one-shot signal instead of firing into an undefined window.Nav.
+    markNavReady();
 
     // ── Cleanup ───────────────────────────────────────────────────────────────
     return () => {

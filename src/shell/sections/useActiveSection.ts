@@ -24,6 +24,8 @@
  */
 
 import { useEffect, useState } from 'preact/hooks';
+import { loadSession } from '@lib/session';
+import { sectionPanelId } from '@lib/sectionRestore';
 
 type Listener = (panelId: string) => void;
 
@@ -35,23 +37,45 @@ type Listener = (panelId: string) => void;
  * Pinning to window also keeps the *same* listener set + value across a hot-swap
  * of this very module, so an edit cannot blank the active panel.
  */
-interface ActiveSectionStore { panelId: string; listeners: Set<Listener>; }
+interface ActiveSectionStore { panelId: string; seeded: boolean; listeners: Set<Listener>; }
 const store: ActiveSectionStore =
   ((window as unknown as { __siomacActiveSection?: ActiveSectionStore }).__siomacActiveSection ??=
-    { panelId: readPersisted(), listeners: new Set<Listener>() });
+    { panelId: '', seeded: false, listeners: new Set<Listener>() });
 
-/** Seed from the persisted last section so a reload lands on the right panel. */
+/**
+ * Seed from the persisted last section so a reload lands on the right panel.
+ *
+ * Three corrections over the original: the role comes from the PERSISTED session
+ * (AppState is in-memory and still empty when this module first evaluates, which
+ * made the seed always read `siomac_last_section_` and resolve to nothing); the
+ * stored LOGICAL id is mapped to its panel — a module-backed subsection like
+ * `s-hr-employees` is served by `#s-hr`, so seeding the raw id matched no panel and
+ * the shell painted blank until navigation caught up; and the seed is resolved on
+ * FIRST READ rather than at module evaluation, because `sectionPanelId` needs the
+ * feature modules to have self-registered and this module's position in the import
+ * graph does not guarantee that yet.
+ */
 function readPersisted(): string {
   try {
-    const role = (window as unknown as { AppState?: { get(k: string): string } }).AppState?.get('currentRole') ?? '';
-    return localStorage.getItem('siomac_last_section_' + role) ?? '';
+    const role = loadSession()?.role
+      ?? (window as unknown as { AppState?: { get(k: string): string } }).AppState?.get('currentRole')
+      ?? '';
+    const stored = localStorage.getItem('siomac_last_section_' + role);
+    return stored ? sectionPanelId(stored) : '';
   } catch {
     return '';
   }
 }
 
+/** The active panel, seeding lazily from storage the first time it is asked for. */
+function currentPanel(): string {
+  if (!store.seeded) { store.seeded = true; store.panelId = readPersisted(); }
+  return store.panelId;
+}
+
 /** Publish the active *panel* id (called by showSection). Idempotent. */
 export function setActivePanel(panelId: string): void {
+  store.seeded = true;
   if (!panelId || panelId === store.panelId) return;
   store.panelId = panelId;
   for (const fn of store.listeners) fn(panelId);
@@ -59,7 +83,7 @@ export function setActivePanel(panelId: string): void {
 
 /** Current active panel id (non-reactive read). */
 export function getActivePanel(): string {
-  return store.panelId;
+  return currentPanel();
 }
 
 /**
@@ -67,7 +91,7 @@ export function getActivePanel(): string {
  * `active` class. Re-renders the caller whenever the active panel changes.
  */
 export function useActiveSection(): (panelId: string) => boolean {
-  const [active, setActive] = useState<string>(store.panelId);
+  const [active, setActive] = useState<string>(currentPanel);
 
   useEffect(() => {
     const fn: Listener = id => setActive(id);

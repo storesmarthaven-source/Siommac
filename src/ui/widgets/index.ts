@@ -39,6 +39,9 @@ export { WidgetBoard, type WidgetBoardProps } from './WidgetBoard';
 export { WidgetBoardZone, type WidgetBoardZoneProps } from './WidgetBoardZone';
 export { WidgetBoardToolbar, type WidgetBoardToolbarProps } from './WidgetBoardToolbar';
 export { WidgetRenderer } from './WidgetRenderer';
+// layout-driven cold state (one skeleton per SAVED instance — never a hard-coded count)
+export { BoardSkeleton, type BoardSkeletonProps } from './BoardSkeleton';
+export { widgetSkeletonVariant } from './skeletonVariant';
 export { WidgetFrame } from './WidgetFrame';
 
 // first-party bundles (curated code sets — distinct from third-party installable packages)

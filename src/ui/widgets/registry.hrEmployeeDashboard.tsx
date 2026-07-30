@@ -83,7 +83,15 @@ const RADAR_SIZES: WidgetSizeDef[] = [
 ];
 const ATTENTION_PORTRAIT_SIZES: WidgetSizeDef[] = [
   // 'standard' is the defaultSize, so its grid IS the widget's placed size (externalDefinition
-  // derives defaultColumns/defaultRows from it). w7 × h30 == 389 × 528px — operator-set.
+  // derives defaultColumns/defaultRows from it). w7 × h30 == 389 × 528px — operator-set, and it
+  // now genuinely fits: the card's content measures ~485px after the compaction pass below
+  // (it was ~760px, which is why it used to open an inner scrollbar and then hide its own
+  // facts strip to cope).
+  //
+  // `min.h` stays 12 on purpose. minRows is "the smallest it can still RENDER" — raising it to
+  // the content height is what made the resize handle snap straight back on other widgets (see
+  // the 'keeps every resizable widget free to shrink vertically' invariant in platform.test.tsx
+  // and the "minimum size reached" pitfall in CLAUDE.md).
   { key: 'standard', label: 'Standard', grid: { w: 7, h: 30 }, min: { w: 6, h: 12 }, description: 'Portrait employee attention card' },
   { key: 'wide', label: 'Wide', grid: { w: 10, h: 39 }, min: { w: 6, h: 12 }, description: 'Expanded employee attention card' },
   { key: 'large', label: 'Large', grid: { w: 13, h: 44 }, min: { w: 6, h: 12 }, description: 'Large employee attention card' },
@@ -152,19 +160,21 @@ function KpiCard({ title, value, detail, icon, linkLabel, tone = 'blue', filter 
 
 function ActiveWorkforce({ stats }: { stats: HrDashboardStats }): VNode {
   const s = stats.active_workforce;
-  return <KpiCard title="Active Workforce" value={s.total} detail={`${s.employees} employees · ${s.contractors} contractors`} icon="fa-users" linkLabel="View Active Employees" filter={{ status: ['active'] }} />;
+  // Title Case per the register conventions, and the nouns agree with their counts —
+  // a single contractor read "1 contractors".
+  return <KpiCard title="Active Workforce" value={s.total} detail={`${s.employees} ${s.employees === 1 ? 'Employee' : 'Employees'} · ${s.contractors} ${s.contractors === 1 ? 'Contractor' : 'Contractors'}`} icon="fa-users" linkLabel="View Active Employees" filter={{ status: ['active'] }} />;
 }
 function RecordReadiness({ stats }: { stats: HrDashboardStats }): VNode {
   const s = stats.readiness;
-  return <KpiCard title="Record Readiness" value={<>{s.percent}<small style="font-size:.6em;font-weight:600;margin-left:1px">%</small></>} detail={`${s.blocked} people currently blocked`} icon="fa-shield-check" linkLabel="View Training Gaps" filter={{ training: ['expired', 'due_soon'] }} tone="green" />;
+  return <KpiCard title="Record Readiness" value={<>{s.percent}<small style="font-size:.6em;font-weight:600;margin-left:1px">%</small></>} detail={`${s.blocked} ${s.blocked === 1 ? 'Person' : 'People'} Currently Blocked`} icon="fa-shield-halved" linkLabel="View Training Gaps" filter={{ training: ['expired', 'due_soon'] }} tone="green" />;
 }
 function HrWorkQueue({ stats }: { stats: HrDashboardStats }): VNode {
   const s = stats.hr_work_queue;
-  return <KpiCard title="HR Work Queue" value={s.total} detail={`${s.urgent} urgent · oldest ${s.oldest_days}d`} icon="fa-list-check" linkLabel="View Register" tone="amber" />;
+  return <KpiCard title="HR Work Queue" value={s.total} detail={`${s.urgent} Urgent · Oldest ${s.oldest_days}d`} icon="fa-list-check" linkLabel="View Register" tone="amber" />;
 }
 function Exceptions({ stats }: { stats: HrDashboardStats }): VNode {
   const s = stats.exceptions;
-  return <KpiCard title="Exceptions" value={s.total} detail={s.items.slice(0, 2).map(x => `${x.type} ${x.count}`).join(' · ') || 'No current exceptions'} icon="fa-circle-exclamation" linkLabel="View Missing Assignments" filter={{ missing: ['supervisor', 'department', 'site'] }} tone="neutral" />;
+  return <KpiCard title="Exceptions" value={s.total} detail={s.items.slice(0, 2).map(x => `${x.type} ${x.count}`).join(' · ') || 'No Current Exceptions'} icon="fa-circle-exclamation" linkLabel="View Missing Assignments" filter={{ missing: ['supervisor', 'department', 'site'] }} tone="red" />;
 }
 
 function focusLifecycleMovement(): void {
@@ -290,7 +300,12 @@ function EmployeeAttentionReferenceView({ employees, total, variant, initialInde
   const primaryBlocker = readiness.blockedDomains[0] ?? 'assignment';
   const primaryLabel = ATTENTION_LABELS[primaryBlocker];
   const reviewCopy = attentionReviewCopy(readiness.blockedDomains);
-  const issueTitle = `${readiness.blockedDomains.length} Readiness ${readiness.blockedDomains.length === 1 ? 'Control' : 'Controls'} Need Review`;
+  // Spelled-out count (the same COUNT_WORDS the facts strip uses), and the verb agrees with
+  // it — the singular branch read "1 Readiness Control Need Review".
+  const blockedCount = readiness.blockedDomains.length;
+  const issueTitle = blockedCount === 1
+    ? `${COUNT_WORDS[1]} Readiness Control Needs Review`
+    : `${COUNT_WORDS[blockedCount] ?? blockedCount} Readiness Controls Need Review`;
   const roleLine = [employee.position, employee.departmentName].filter(Boolean).join(' · ') || 'Employee';
   return <article class={`hrew-attention-reference is-${variant}`} aria-label={`${variant === 'neutral' ? 'Neutral' : 'Semantic'} employee attention card`} data-widget-content-root>
     <section class="hrew-ar-person"><span class="hrew-avatar">{employee.profile_image_url ? <img src={employee.profile_image_url} alt="" /> : initials(employee)}</span><div><strong>{name}</strong><small><LucideIcon name="BriefcaseBusiness" size={13} /><span>{roleLine}</span></small></div><nav><div class="hrew-ar-nav-row"><button type="button" aria-label="Previous employee issue" disabled={employees.length < 2} onClick={() => move(-1)}><LucideIcon name="ChevronLeft" size={18} /></button><button type="button" aria-label="Next employee issue" disabled={employees.length < 2} onClick={() => move(1)}><LucideIcon name="ChevronRight" size={18} /></button></div><span class="hrew-ar-count">{activeIndex + 1} of {total}</span></nav>
@@ -298,11 +313,25 @@ function EmployeeAttentionReferenceView({ employees, total, variant, initialInde
     <section class="hrew-ar-issue"><h3>{issueTitle}</h3></section>
     <section class="hrew-ar-facts"><div class="is-department"><LucideIcon name="UserRound" size={21} /><strong>{employee.departmentName ?? 'Unassigned'}</strong><span>Department</span></div><div class="is-control"><LucideIcon name="BriefcaseBusiness" size={21} /><strong>{primaryLabel}</strong><span>Control</span></div><div class="is-issues"><LucideIcon name="CircleAlert" size={21} /><strong>{countWithWord(readiness.blockedDomains.length)}</strong><span>Issues</span></div></section>
     <section class="hrew-ar-impact"><div class="hrew-ar-ready-gauge" style={`--hrew-ready-angle:${readiness.percent * 1.12 - 56}deg`} aria-label={`Record ready ${readiness.percent}%`}><svg viewBox="0 0 360 158" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><defs><linearGradient id={`hrew-ready-arc-${employee.id}`} x1="0" x2="1"><stop offset="0" stop-color="#dc2626" /><stop offset=".18" stop-color="#ef4444" /><stop offset=".38" stop-color="#f97316" /><stop offset=".55" stop-color="#f59e0b" /><stop offset=".74" stop-color="#84cc16" /><stop offset="1" stop-color="#16a34a" /></linearGradient></defs><path class="hrew-ready-track" d="M34 132 A146 146 0 0 1 326 132" fill="none" stroke="#edf0f4" stroke-width="24" stroke-linecap="round" /><path class="hrew-ready-arc" pathLength="100" d="M34 132 A146 146 0 0 1 326 132" fill="none" stroke={`url(#hrew-ready-arc-${employee.id})`} stroke-width="24" stroke-linecap="round" stroke-opacity={readiness.percent > 0 ? 1 : 0} style={`stroke-dasharray:${readiness.percent} 100`} /></svg><div><strong>{readiness.percent}<small>%</small></strong><span>{readiness.percent === 100 ? 'Ready' : 'Not Ready'}</span></div></div><div><strong>Readiness Impact</strong><p>Complete {readiness.blockedDomains.map(blocker => ATTENTION_LABELS[blocker].toLowerCase()).join(', ')} to make this record ready.</p></div><i><em style={`width:${readiness.percent}%`} /></i></section>
+    {/* Separated footer — a hairline rule instead of a nested rounded container. */}
     <section class="hrew-ar-action"><span>Recommended Review</span><h4>{reviewCopy.title}</h4><button type="button" onClick={focusEmployeeRegister}>{reviewCopy.button}</button></section>
   </article>;
 }
+/**
+ * The roster slice the attention widgets read.
+ *
+ * EXPORTED so the host page can warm the very same query key before it clears
+ * its own page skeleton. It is a different key from the register's filtered
+ * list, so without this the page skeleton finished while these widgets were
+ * still cold and each one flashed its own card skeleton afterwards. Two copies
+ * of these params would silently drift apart and bring the flash back.
+ */
+export const EMPLOYEE_ATTENTION_ROSTER_QUERY = {
+  statuses: ['active'], page: 1, pageSize: 200, sortBy: 'full_name', sortDir: 'asc',
+} as const;
+
 function EmployeeAttentionReferenceWidget({ variant }: { variant: AttentionReferenceVariant }): VNode {
-  const query = useHrEmployeesPage({ statuses: ['active'], page: 1, pageSize: 200, sortBy: 'full_name', sortDir: 'asc' });
+  const query = useHrEmployeesPage({ ...EMPLOYEE_ATTENTION_ROSTER_QUERY, statuses: ['active'] });
   if (query.isLoading) return <WidgetState kind="loading" />;
   if (!query.data) return <WidgetState kind="error" message={query.error instanceof Error ? query.error.message : 'Employee attention data is unavailable.'} />;
   const affected = query.data.rows.filter(employee => employee.readiness?.blockedDomains.length).sort((a, b) => (a.readiness?.percent ?? 100) - (b.readiness?.percent ?? 100));
@@ -472,12 +501,12 @@ function externalDefinition(input: { id: string; title: string; description: str
 
 export const widgets: WidgetDef[] = [
   liveDefinition({ id: 'hr.employeeMaster.activeWorkforce', title: 'Active Workforce', description: 'Current active employee and contractor headcount.', icon: 'fa-users', category: 'Key metrics', defaultSize: 'compact', sizes: KPI_SIZES, render: ActiveWorkforce, previewVariant: 'metric', motion: { kind: 'count-up', durationMs: 520, reducedMotion: 'static' } }),
-  liveDefinition({ id: 'hr.employeeMaster.recordReadiness', title: 'Record Readiness', description: 'Assignment, payroll, and training readiness across active workers.', icon: 'fa-shield-check', category: 'Key metrics', defaultSize: 'compact', sizes: KPI_SIZES, render: RecordReadiness, previewVariant: 'metric', motion: { kind: 'progress', durationMs: 620, reducedMotion: 'static' } }),
+  liveDefinition({ id: 'hr.employeeMaster.recordReadiness', title: 'Record Readiness', description: 'Assignment, payroll, and training readiness across active workers.', icon: 'fa-shield-halved', category: 'Key metrics', defaultSize: 'compact', sizes: KPI_SIZES, render: RecordReadiness, previewVariant: 'metric', motion: { kind: 'progress', durationMs: 620, reducedMotion: 'static' } }),
   liveDefinition({ id: 'hr.employeeMaster.hrWorkQueue', title: 'HR Work Queue', description: 'Open and urgent Employee Master change requests.', icon: 'fa-list-check', category: 'Key metrics', defaultSize: 'compact', sizes: KPI_SIZES, render: HrWorkQueue, previewVariant: 'metric', motion: { kind: 'count-up', durationMs: 520, reducedMotion: 'static' } }),
   liveDefinition({ id: 'hr.employeeMaster.exceptions', title: 'Exceptions', description: 'Current assignment, payroll, and training gaps.', icon: 'fa-circle-exclamation', category: 'Key metrics', defaultSize: 'compact', sizes: KPI_SIZES, render: Exceptions, previewVariant: 'metric', motion: { kind: 'count-up', durationMs: 520, reducedMotion: 'static' } }),
   liveDefinition({ id: 'hr.employeeMaster.newStarters', title: 'New Starters', description: 'Recent employee starts with month-over-month movement.', icon: 'fa-user-plus', category: 'Activity & trends', defaultSize: 'compact', sizes: KPI_SIZES, render: NewStarters, previewVariant: 'trend', motion: { kind: 'sequence', durationMs: 620, reducedMotion: 'static' } }),
   liveDefinition({ id: 'hr.employeeMaster.departures', title: 'Departures', description: 'Recent employee departures with month-over-month movement.', icon: 'fa-user-minus', category: 'Activity & trends', defaultSize: 'compact', sizes: KPI_SIZES, render: Departures, previewVariant: 'trend', motion: { kind: 'sequence', durationMs: 620, reducedMotion: 'static' } }),
-  liveDefinition({ id: 'hr.employeeMaster.recordQuality', title: 'Record Quality', description: 'Workforce record quality across assignment, payroll, and training readiness.', icon: 'fa-shield-check', category: 'Health & readiness', defaultSize: 'standard', sizes: QUALITY_SIZES, render: RecordQuality, previewVariant: 'metric', motion: { kind: 'progress', durationMs: 680, reducedMotion: 'static' } }),
+  liveDefinition({ id: 'hr.employeeMaster.recordQuality', title: 'Record Quality', description: 'Workforce record quality across assignment, payroll, and training readiness.', icon: 'fa-shield-halved', category: 'Health & readiness', defaultSize: 'standard', sizes: QUALITY_SIZES, render: RecordQuality, previewVariant: 'metric', motion: { kind: 'progress', durationMs: 680, reducedMotion: 'static' } }),
   externalDefinition({ id: 'hr.employeeMaster.employeeAttentionNeutral', title: 'Employee Attention — Neutral', description: 'Employee readiness issue card in the supplied neutral structured design.', icon: 'fa-user-clock', category: 'Actions & workload', defaultSize: 'standard', sizes: ATTENTION_PORTRAIT_SIZES, source: DIRECTORY_SOURCE, permission: 'hr.employees.view', render: EmployeeAttentionNeutralWidget, renderPreview: () => <EmployeeAttentionReferenceView employees={PREVIEW_ATTENTION_REFERENCE} total={25} variant="neutral" initialIndex={1} />, previewVariant: 'task-board', minWidth: 389, minHeight: 528, previewAspect: .62, recommended: false }),
   liveDefinition({ id: 'hr.employeeMaster.monthlyHiresCard', title: 'Hires This Month', description: 'Current-month hires with five-month movement.', icon: 'fa-user-plus', category: 'Workforce pulse', defaultSize: 'compact', sizes: PULSE_SIZES, resizeStrategy: 'fixed-minimum', render: MonthlyHiresCard, previewVariant: 'trend', motion: { kind: 'sequence', durationMs: 680, reducedMotion: 'static' } }),
   liveDefinition({ id: 'hr.employeeMaster.internalMovesCard', title: 'Internal Moves', description: 'Internal transfers across the latest six periods.', icon: 'fa-box', category: 'Workforce pulse', defaultSize: 'compact', sizes: PULSE_SIZES, resizeStrategy: 'fixed-minimum', render: InternalMovesCard, previewVariant: 'trend', motion: { kind: 'sequence', durationMs: 680, reducedMotion: 'static' } }),

@@ -31,6 +31,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { SESSION_KEY }                           from '@cfg';
 import { saveSession, loadSession, clearSession } from '@lib/session';
 import { registerSectionNavigationGuard, showSection } from '@components/nav/navCore';
+import { readLastSection, resolveRestorableSection }   from '@lib/sectionRestore';
 import type { PersistedSession }                 from '@lib/session';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -361,10 +362,10 @@ describe('Boot invariant 6 — hard refresh: session is restored and nav is usab
     const sess = loadSession();
     expect(sess).not.toBeNull();
 
-    const lastSection = localStorage.getItem('siomac_last_section_' + sess!.role);
-    const targetId = (lastSection && document.getElementById(lastSection))
-      ? lastSection
-      : 's-adm-dashboard';
+    // Resolution goes through the SHARED helper the boot actually calls, not a local copy
+    // of the rule — an inline `getElementById(storedId)` check is exactly what broke
+    // module-backed sections (see sectionRestore.test.ts).
+    const targetId = resolveRestorableSection(readLastSection(sess!.role), 's-adm-dashboard');
 
     showSection(targetId);
 
@@ -379,10 +380,7 @@ describe('Boot invariant 6 — hard refresh: session is restored and nav is usab
     const sess = loadSession();
     expect(sess).not.toBeNull();
 
-    const lastSection = localStorage.getItem('siomac_last_section_' + sess!.role);
-    const targetId = (lastSection && document.getElementById(lastSection))
-      ? lastSection
-      : 's-adm-dashboard';
+    const targetId = resolveRestorableSection(readLastSection(sess!.role), 's-adm-dashboard');
 
     showSection(targetId);
 

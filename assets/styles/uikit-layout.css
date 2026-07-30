@@ -421,26 +421,25 @@ body[data-theme="dark"] .hero-footer {
 }
 .ui-widget-skeleton > header { display: flex; align-items: center; gap: 12px; }
 .ui-widget-skeleton-chart { margin-top: 2px; }
+.ui-widget-skeleton-table { overflow: hidden; }
+.ui-widget-skeleton-table table { width: 100%; border-collapse: collapse; }
 .ui-dashboard-skeleton { display: grid; padding: 20px 22px 36px; gap: 18px; }
 .ui-dashboard-skeleton-head {
   display: grid; min-height: 84px; align-items: center; grid-template-columns: auto minmax(0,1fr) auto; gap: 14px;
 }
 .ui-dashboard-skeleton-head > div { display: grid; gap: 8px; }
-.ui-dashboard-skeleton-widgets { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
-.ui-dashboard-skeleton-widgets .ui-widget-skeleton { min-height: 250px; }
-.ui-dashboard-skeleton-table {
-  overflow: hidden; border: 1px solid var(--line, #e5eaf2); border-radius: var(--radius-lg, 14px); background: var(--card, #fff);
-}
-.ui-dashboard-skeleton-table-head { display: flex; padding: 18px; align-items: center; justify-content: space-between; gap: 16px; }
-.ui-dashboard-skeleton-table table { width: 100%; border-collapse: collapse; }
+/* Layout-driven board cold state (BoardSkeleton). The grid itself is inline-styled from the
+   board's own columns/cellHeight/gap so it restates react-grid-layout's geometry exactly;
+   only the tile shell is styled here. A skeleton tile never animates in — the loaded board
+   replaces it in place (revealOnMount={false}), so there is no double entrance. */
+.wbi-skeleton-item { display: grid; min-height: 0; }
+.wbi-skeleton-item > .ui-widget-skeleton { min-height: 0; height: 100%; }
 @media (max-width: 900px) {
-  .ui-skeleton-stat-grid,
-  .ui-dashboard-skeleton-widgets { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .ui-skeleton-stat-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 @media (max-width: 620px) {
   .ui-dashboard-skeleton { padding-inline: 14px; }
-  .ui-skeleton-stat-grid,
-  .ui-dashboard-skeleton-widgets { grid-template-columns: 1fr; }
+  .ui-skeleton-stat-grid { grid-template-columns: 1fr; }
   .ui-dashboard-skeleton-head { grid-template-columns: auto minmax(0,1fr); }
   .ui-dashboard-skeleton-head > .ui-skeleton { display: none; }
 }

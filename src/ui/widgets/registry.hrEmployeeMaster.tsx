@@ -16,11 +16,14 @@ import type { HrDashboardStats } from '@api/hr/employees';
 import type { WidgetDef, WidgetRenderProps, WidgetSizeConstraints, WidgetSizeDef } from './types';
 import { LucideIcon, type LucideName } from '../LucideIcon';
 import { defineWidget } from './defineWidget';
+import { reducedMotion } from './motion';
 import './employeeMasterWidgets.css';
 
 Chart.register(LineController, CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
 
 const PAGE = 'hr.employees.overview.v3';
+/** Workforce Activity's line-draw duration — the same 880ms its `motion` spec declares. */
+const DRAW_MS = 880;
 // All sizes here are in the Employee Master board's units: cellHeight 6 + a 12px gap,
 // so a tile is `18h − 12` px tall (Statutory-parity grid). Widths are columns on that
 // board's 24-column grid. A preset authored in any other board's units renders wrong.
@@ -216,6 +219,44 @@ function LifecycleActivityView({ stats, config, granularity = 'month', onGranula
       },
     };
 
+    // Progressive left-to-right DRAW — the motion this widget declares
+    // (`motion: { kind: 'chart-draw', durationMs: 880, reducedMotion: 'static' }`).
+    //
+    // Chart.js's own property animation was doing something else entirely: it interpolates
+    // every point's x/y, so the two series slid/rose in from the axis as finished shapes.
+    // A draw has to reveal the finished geometry along the x-axis instead, which is a CLIP,
+    // not a property tween — clipping also keeps the curve tension and the area fills
+    // consistent with the final render, which per-point tweening cannot.
+    //
+    // Chart.js's animation is therefore off and this plugin owns the entrance: the clip
+    // widens over DRAW_MS, driven by rAF, and once complete it stops clipping altogether so
+    // the last point's `clip: false` overhang is not shaved off. Under
+    // prefers-reduced-motion it starts finished — the declared 'static' end-state.
+    let progress = reducedMotion() ? 1 : 0;
+    let rafId = 0;
+    let startedAt = 0;
+    const draw: Plugin<'line'> = {
+      id: 'emChartDraw',
+      beforeDatasetsDraw(chart) {
+        if (progress >= 1) return;
+        const { chartArea, ctx: drawCtx } = chart;
+        drawCtx.save();
+        drawCtx.beginPath();
+        // Full height, and generous vertical bleed, so only the horizontal sweep clips.
+        drawCtx.rect(
+          chartArea.left, 0,
+          (chartArea.right - chartArea.left) * progress, chart.height,
+        );
+        drawCtx.clip();
+      },
+      afterDatasetsDraw(chart) {
+        if (progress >= 1) return;
+        // Paired with the save() above — restored before the crosshair plugin draws, which
+        // is why `draw` is registered ahead of `crosshair` (same-hook plugins run in order).
+        chart.ctx.restore();
+      },
+    };
+
     const chart = new Chart(canvas, {
       type: 'line',
       data: {
@@ -262,7 +303,10 @@ function LifecycleActivityView({ stats, config, granularity = 'month', onGranula
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: { duration: 720, easing: 'easeOutQuart' },
+        // Off by design — the entrance is the `emChartDraw` clip sweep above. Leaving
+        // Chart.js's property animation on would tween x/y underneath the sweep, which is
+        // the sliding entrance this replaces, and the two would fight on every re-render.
+        animation: false,
         // 'nearest' (not 'index') so each point is hovered individually — the green and
         // amber series are read separately, not joined at a shared x.
         interaction: { mode: 'nearest', intersect: false },
@@ -330,9 +374,28 @@ function LifecycleActivityView({ stats, config, granularity = 'month', onGranula
           },
         },
       },
-      plugins: [crosshair],
+      // Order matters: emChartDraw must restore the clip before emCrosshair paints, so the
+      // hover guides are never shaved by a sweep still in flight.
+      plugins: [draw, crosshair],
     });
-    return () => chart.destroy();
+
+    // Drive the sweep. easeOutQuart matches the pace the rest of this card animates at.
+    if (progress < 1) {
+      const tick = (now: number): void => {
+        startedAt ||= now;
+        const t = Math.min(1, (now - startedAt) / DRAW_MS);
+        progress = 1 - Math.pow(1 - t, 4);
+        chart.draw();
+        if (t < 1) rafId = requestAnimationFrame(tick);
+        else { rafId = 0; progress = 1; chart.draw(); }
+      };
+      rafId = requestAnimationFrame(tick);
+    }
+
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      chart.destroy();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- periodsKey stands in for periods (value equality)
   }, [periodsKey, movementColor, recordsColor]);
 

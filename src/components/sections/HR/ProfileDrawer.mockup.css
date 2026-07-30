@@ -827,7 +827,7 @@ body[data-theme="dark"] .epd-root .attention-title {
 }
 
 .epd-root .data-list strong {
-  font-weight: 620;
+  font-weight: 500;
 }
 
 .epd-root .contact-row {
@@ -851,7 +851,7 @@ body[data-theme="dark"] .epd-root .attention-title {
 .epd-root .contact-row strong {
   overflow: hidden;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

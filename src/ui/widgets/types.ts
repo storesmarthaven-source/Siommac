@@ -16,6 +16,9 @@
  */
 
 import type { VNode } from 'preact';
+import type { WidgetSkeletonVariant } from '../components/Skeleton';
+
+export type { WidgetSkeletonVariant };
 
 export const WIDGET_CONTRACT_VERSION = 3 as const;
 export const WIDGET_DESKTOP_COLUMNS = 12 as const;
@@ -195,6 +198,11 @@ export interface WidgetDef<TConfig = Record<string, unknown>> {
 
   previewVariant: WidgetPreviewVariant;
 
+  /** Cold-state density for the layout-driven board skeleton. Optional: it is derived
+   *  from `previewVariant` when omitted (see skeletonVariant.ts) — set it only when the
+   *  loading shape should differ from the catalogue thumbnail's shape. */
+  skeletonVariant?: WidgetSkeletonVariant;
+
   /** Board chrome (default 'standard'). Use 'none' when the widget renders its own card. */
   chrome?: WidgetChrome;
 
@@ -305,6 +313,9 @@ export interface LocalWidget {
   sizeConstraints?: WidgetSizeConstraints;
   /** Same as `WidgetDef.sizeToContent` — tile height auto-fits the rendered card. */
   sizeToContent?: boolean;
+  /** Cold-state density for the board skeleton. A page-local widget has no registry
+   *  entry to derive one from, so declare it here (e.g. the employee register: 'table'). */
+  skeletonVariant?: WidgetSkeletonVariant;
   /** Set false for a FIXED-size tile the user can move but never resize (e.g. KPI cards
    *  that must stay a uniform size). Default true. */
   resizable?: boolean;

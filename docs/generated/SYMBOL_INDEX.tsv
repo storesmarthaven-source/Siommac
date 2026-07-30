@@ -6192,22 +6192,22 @@ onInputKey	function	platform	false		src/components/nav/CommandPalette.tsx	150	Co
 mountCommandPalette	function	platform	true		src/components/nav/CommandPalette.tsx	218	
 mountNavController	function	platform	true		src/components/nav/mount.ts	13	
 unmountNavController	function	platform	true		src/components/nav/mount.ts	17	
-HDR_MODALS	variable	platform	false	component	src/components/nav/NavController.tsx	32	
-Win	type	platform	false		src/components/nav/NavController.tsx	34	
-callWin	function	platform	false		src/components/nav/NavController.tsx	36	
-permissionSignature	function	platform	false		src/components/nav/NavController.tsx	46	
-NavController	function	platform	true	component	src/components/nav/NavController.tsx	54	
-setMobileOpen	function	platform	false		src/components/nav/NavController.tsx	102	NavController
-onMobileMenuClick	function	platform	false		src/components/nav/NavController.tsx	107	NavController
-onBackdropClick	function	platform	false		src/components/nav/NavController.tsx	110	NavController
-onSidebarMenuClick	function	platform	false		src/components/nav/NavController.tsx	122	NavController
-onTopTabsClick	function	platform	false		src/components/nav/NavController.tsx	135	NavController
-closeAllModals	function	platform	false		src/components/nav/NavController.tsx	144	NavController
-HdrKind	type	platform	false		src/components/nav/NavController.tsx	149	NavController
-afterOpen	function	platform	false		src/components/nav/NavController.tsx	153	NavController
-toggleHdrModal	function	platform	false		src/components/nav/NavController.tsx	169	NavController
-onPillActionClick	function	platform	false		src/components/nav/NavController.tsx	194	NavController
-onDocClickForModals	function	platform	false		src/components/nav/NavController.tsx	209	NavController
+HDR_MODALS	variable	platform	false	component	src/components/nav/NavController.tsx	33	
+Win	type	platform	false		src/components/nav/NavController.tsx	35	
+callWin	function	platform	false		src/components/nav/NavController.tsx	37	
+permissionSignature	function	platform	false		src/components/nav/NavController.tsx	47	
+NavController	function	platform	true	component	src/components/nav/NavController.tsx	55	
+setMobileOpen	function	platform	false		src/components/nav/NavController.tsx	103	NavController
+onMobileMenuClick	function	platform	false		src/components/nav/NavController.tsx	108	NavController
+onBackdropClick	function	platform	false		src/components/nav/NavController.tsx	111	NavController
+onSidebarMenuClick	function	platform	false		src/components/nav/NavController.tsx	123	NavController
+onTopTabsClick	function	platform	false		src/components/nav/NavController.tsx	136	NavController
+closeAllModals	function	platform	false		src/components/nav/NavController.tsx	145	NavController
+HdrKind	type	platform	false		src/components/nav/NavController.tsx	150	NavController
+afterOpen	function	platform	false		src/components/nav/NavController.tsx	154	NavController
+toggleHdrModal	function	platform	false		src/components/nav/NavController.tsx	170	NavController
+onPillActionClick	function	platform	false		src/components/nav/NavController.tsx	195	NavController
+onDocClickForModals	function	platform	false		src/components/nav/NavController.tsx	210	NavController
 cfg	function	platform	false		src/components/nav/navCore.ts	21	
 moduleSectionItems	function	platform	true		src/components/nav/navCore.ts	31	
 allItemsForRole	function	platform	false		src/components/nav/navCore.ts	43	
@@ -8113,56 +8113,71 @@ next	function	hr	false		src/components/sections/HR/EmployeeCreatePage.tsx	573	Em
 back	function	hr	false		src/components/sections/HR/EmployeeCreatePage.tsx	574	EmployeeCreatePage
 handleCreate	function	hr	false		src/components/sections/HR/EmployeeCreatePage.tsx	578	EmployeeCreatePage
 err	function	hr	false		src/components/sections/HR/EmployeeCreatePage.tsx	613	EmployeeCreatePage
-PAGE_KEY	variable	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	58	
-KPI_PAGE_KEY	variable	hr	false	component,ui-tile	src/components/sections/HR/EmployeeMaster.tsx	59	
-EMPLOYEE_BOARD_COLUMNS	variable	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	60	
-Filters	interface	hr	false		src/components/sections/HR/EmployeeMaster.tsx	66	
-EMPTY_FILTERS	object	hr	false		src/components/sections/HR/EmployeeMaster.tsx	67	
-MISSING_LABEL	object	hr	false		src/components/sections/HR/EmployeeMaster.tsx	68	
-REGISTER_FILTER_EVENT	variable	hr	true	component	src/components/sections/HR/EmployeeMaster.tsx	74	
-RegisterFilterPatch	type	hr	true		src/components/sections/HR/EmployeeMaster.tsx	75	
-EmployeeRowMenu	function	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	81	
-items	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	92	EmployeeRowMenu
-close	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	111	EmployeeRowMenu
-onMenuKeyDown	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	118	EmployeeRowMenu
-focusAt	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	121	onMenuKeyDown
-EmployeeRow	function	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	164	
-activate	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	176	EmployeeRow
-defInst	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	220	
-defaultEmployeeKpiLayout	function	hr	true	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	223	
-defaultEmployeeLayout	function	hr	true		src/components/sections/HR/EmployeeMaster.tsx	240	
-EmployeeMaster	function	hr	true	component	src/components/sections/HR/EmployeeMaster.tsx	263	
-setColumns	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	322	EmployeeMaster
-toggleColumn	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	337	EmployeeMaster
-toggleSort	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	367	EmployeeMaster
-placeInWidgetSection	function	hr	false	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	409	EmployeeMaster
-discardPreview	function	hr	false	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	414	EmployeeMaster
-commitPreview	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	418	EmployeeMaster
-savePageLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	422	EmployeeMaster
-cancelPageLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	426	EmployeeMaster
-resetPageLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	429	EmployeeMaster
-setPageAsDefault	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	433	EmployeeMaster
-onRowHover	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	443	EmployeeMaster
-onRowHoverEnd	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	450	EmployeeMaster
-deptLabelFn	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	458	EmployeeMaster
-notify	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	462	EmployeeMaster
-openAction	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	463	EmployeeMaster
-setFiltersReset	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	480	EmployeeMaster
-onFilterRequest	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	486	EmployeeMaster
-trainingLabel	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	507	EmployeeMaster
-clearAdvanced	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	525	EmployeeMaster
-applySavedView	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	527	EmployeeMaster
-persistViews	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	540	EmployeeMaster
-saveCurrentView	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	546	EmployeeMaster
-deleteSavedView	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	573	EmployeeMaster
-renderRegister	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	585	EmployeeMaster
-floor	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	739	EmployeeMaster
+PAGE_KEY	variable	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	60	
+KPI_PAGE_KEY	variable	hr	false	component,ui-tile	src/components/sections/HR/EmployeeMaster.tsx	61	
+EMPLOYEE_BOARD_COLUMNS	variable	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	62	
+Filters	interface	hr	false		src/components/sections/HR/EmployeeMaster.tsx	68	
+EMPTY_FILTERS	object	hr	false		src/components/sections/HR/EmployeeMaster.tsx	69	
+MISSING_LABEL	object	hr	false		src/components/sections/HR/EmployeeMaster.tsx	70	
+REGISTER_FILTER_EVENT	variable	hr	true	component	src/components/sections/HR/EmployeeMaster.tsx	76	
+RegisterFilterPatch	type	hr	true		src/components/sections/HR/EmployeeMaster.tsx	77	
+EmployeeRowMenu	function	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	83	
+items	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	94	EmployeeRowMenu
+close	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	113	EmployeeRowMenu
+onMenuKeyDown	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	120	EmployeeRowMenu
+focusAt	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	123	onMenuKeyDown
+EmployeeRow	function	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	166	
+activate	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	178	EmployeeRow
+defInst	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	222	
+defaultEmployeeKpiLayout	function	hr	true	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	225	
+defaultEmployeeLayout	function	hr	true		src/components/sections/HR/EmployeeMaster.tsx	242	
+EmployeeMaster	function	hr	true	component	src/components/sections/HR/EmployeeMaster.tsx	265	
+setColumns	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	324	EmployeeMaster
+toggleColumn	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	339	EmployeeMaster
+toggleSort	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	369	EmployeeMaster
+placeInWidgetSection	function	hr	false	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	418	EmployeeMaster
+discardPreview	function	hr	false	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	423	EmployeeMaster
+commitPreview	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	427	EmployeeMaster
+savePageLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	431	EmployeeMaster
+cancelPageLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	435	EmployeeMaster
+resetPageLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	438	EmployeeMaster
+setPageAsDefault	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	442	EmployeeMaster
+onRowHover	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	452	EmployeeMaster
+onRowHoverEnd	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	459	EmployeeMaster
+deptLabelFn	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	467	EmployeeMaster
+notify	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	471	EmployeeMaster
+openAction	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	472	EmployeeMaster
+setFiltersReset	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	489	EmployeeMaster
+onFilterRequest	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	495	EmployeeMaster
+trainingLabel	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	516	EmployeeMaster
+clearAdvanced	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	534	EmployeeMaster
+applySavedView	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	536	EmployeeMaster
+persistViews	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	549	EmployeeMaster
+saveCurrentView	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	555	EmployeeMaster
+deleteSavedView	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	582	EmployeeMaster
+renderRegister	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	594	EmployeeMaster
+floor	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	748	EmployeeMaster
 permissions	function	hr	false	test	src/components/sections/HR/employeeMasterAccess.test.ts	8	
 EmployeeMasterAccess	interface	hr	true		src/components/sections/HR/employeeMasterAccess.ts	3	
 PermissionCheck	type	hr	false		src/components/sections/HR/employeeMasterAccess.ts	38	
 resolveEmployeeMasterAccess	function	hr	true		src/components/sections/HR/employeeMasterAccess.ts	45	
 hasEmployeeCreationAction	function	hr	true		src/components/sections/HR/employeeMasterAccess.ts	79	
 hasEmployeeRowAction	function	hr	true		src/components/sections/HR/employeeMasterAccess.ts	83	
+COLUMNS	variable	hr	false	component,test	src/components/sections/HR/employeeMasterSkeleton.test.tsx	26	
+KPI_PAGE_KEY	variable	hr	false	component,ui-tile,test	src/components/sections/HR/employeeMasterSkeleton.test.tsx	27	
+PAGE_KEY	variable	hr	false	component,test	src/components/sections/HR/employeeMasterSkeleton.test.tsx	28	
+inst	function	hr	false	test	src/components/sections/HR/employeeMasterSkeleton.test.tsx	30	
+SAVED_KPI	variable	hr	false	component,ui-tile,test	src/components/sections/HR/employeeMasterSkeleton.test.tsx	35	
+SAVED_BOARD	array	hr	false	test	src/components/sections/HR/employeeMasterSkeleton.test.tsx	39	
+Phase	interface	hr	false	test	src/components/sections/HR/employeeMasterSkeleton.test.tsx	56	
+phase	object	hr	false	test	src/components/sections/HR/employeeMasterSkeleton.test.tsx	57	
+savedZones	object	hr	false	test	src/components/sections/HR/employeeMasterSkeleton.test.tsx	58	
+boardProps	array	hr	false	test	src/components/sections/HR/employeeMasterSkeleton.test.tsx	60	
+layoutFor	function	hr	false	test	src/components/sections/HR/employeeMasterSkeleton.test.tsx	64	
+listQuery	function	hr	false	test	src/components/sections/HR/employeeMasterSkeleton.test.tsx	94	
+setPhase	function	hr	false	test	src/components/sections/HR/employeeMasterSkeleton.test.tsx	144	
+allReady	object	hr	false	test	src/components/sections/HR/employeeMasterSkeleton.test.tsx	145	
+withClient	function	hr	false	test	src/components/sections/HR/employeeMasterSkeleton.test.tsx	148	
 EXPECTED_WIDGETS	array	hr	false	ui-tile,test	src/components/sections/HR/employeeMasterWorkspace.test.ts	6	
 fmtDate	function	hr	false		src/components/sections/HR/EmployeeOnboardingSummary.tsx	21	
 relativeTime	function	hr	false		src/components/sections/HR/EmployeeOnboardingSummary.tsx	27	
@@ -8855,19 +8870,19 @@ DOC_STATE_LABEL	object	hr	false		src/components/sections/HR/ProfileDrawer.tsx	83
 activityVisual	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	93	
 DataRow	function	hr	false	component	src/components/sections/HR/ProfileDrawer.tsx	102	
 ReadinessGauge	function	hr	false	component	src/components/sections/HR/ProfileDrawer.tsx	112	
-ProfileDrawerSkeleton	function	hr	false	component	src/components/sections/HR/ProfileDrawer.tsx	136	
-SkeletonStatStrip	function	hr	false	component	src/components/sections/HR/ProfileDrawer.tsx	184	
-DrawerSectionSkeleton	function	hr	false	component	src/components/sections/HR/ProfileDrawer.tsx	198	
-ProfileDrawer	function	hr	true	component	src/components/sections/HR/ProfileDrawer.tsx	207	
-onKey	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	256	ProfileDrawer
-runAction	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	275	ProfileDrawer
-runExport	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	284	ProfileDrawer
-openAttention	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	297	ProfileDrawer
-showNextAttentionPage	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	301	ProfileDrawer
-sendReadinessReminder	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	315	ProfileDrawer
-submitContact	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	333	ProfileDrawer
-str	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	338	submitContact
-pick	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	1013	ProfileDrawer
+DrawerSkeletonBody	function	hr	false	component	src/components/sections/HR/ProfileDrawer.tsx	145	
+SkeletonStatStrip	function	hr	false	component	src/components/sections/HR/ProfileDrawer.tsx	185	
+DrawerSectionSkeleton	function	hr	false	component	src/components/sections/HR/ProfileDrawer.tsx	199	
+ProfileDrawer	function	hr	true	component	src/components/sections/HR/ProfileDrawer.tsx	208	
+onKey	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	261	ProfileDrawer
+runAction	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	279	ProfileDrawer
+runExport	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	288	ProfileDrawer
+openAttention	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	301	ProfileDrawer
+showNextAttentionPage	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	305	ProfileDrawer
+sendReadinessReminder	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	319	ProfileDrawer
+submitContact	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	337	ProfileDrawer
+str	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	342	submitContact
+pick	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	1011	ProfileDrawer
 Rgb	interface	hr	true		src/components/sections/HR/readinessScale.ts	12	
 READINESS_STOPS	array	hr	false		src/components/sections/HR/readinessScale.ts	15	
 clampPercent	function	hr	false		src/components/sections/HR/readinessScale.ts	23	
@@ -11266,108 +11281,108 @@ on	function	platform	false		src/lib/appState.ts	129
 seed	function	platform	false		src/lib/appState.ts	136	
 reset	function	platform	false		src/lib/appState.ts	141	
 AppState	object	platform	true		src/lib/appState.ts	173	
-flatpickr	variable	platform	false		src/lib/attSystem.ts	27	
-L	variable	platform	false		src/lib/attSystem.ts	28	
-Win	type	platform	false		src/lib/attSystem.ts	31	
-w	function	platform	false		src/lib/attSystem.ts	32	
-_Nav	function	platform	false		src/lib/attSystem.ts	36	
-_Dashboard	function	platform	false		src/lib/attSystem.ts	37	
-_LiveMap	function	platform	false		src/lib/attSystem.ts	38	
-_Payroll	function	platform	false		src/lib/attSystem.ts	39	
-_SettingsView	function	platform	false		src/lib/attSystem.ts	40	
-_SiomacDB	function	platform	false		src/lib/attSystem.ts	41	
-_SwCacheMgr	function	platform	false		src/lib/attSystem.ts	42	
-_AppState	function	platform	false		src/lib/attSystem.ts	43	
-_swr	function	platform	false		src/lib/attSystem.ts	44	
-_swrLastHash	function	platform	false		src/lib/attSystem.ts	45	
-_rawApiW	function	platform	false		src/lib/attSystem.ts	46	
-_apiW	function	platform	false		src/lib/attSystem.ts	47	
-_cpop	function	platform	false		src/lib/attSystem.ts	48	
-_Swal	function	platform	false		src/lib/attSystem.ts	49	
-_SiomacConfig	function	platform	false		src/lib/attSystem.ts	50	
-currentColorScheme	variable	platform	false		src/lib/attSystem.ts	54	
-currentLayoutMode	variable	platform	false		src/lib/attSystem.ts	55	
-_currentProfileImage	variable	platform	false		src/lib/attSystem.ts	56	
-_attFpFrom	variable	platform	false		src/lib/attSystem.ts	58	
-_attFpTo	variable	platform	false		src/lib/attSystem.ts	59	
-_sessExpTimer	variable	platform	false		src/lib/attSystem.ts	61	
-_sessWarnTimer	variable	platform	false		src/lib/attSystem.ts	62	
-_sessTickTimer	variable	platform	false		src/lib/attSystem.ts	63	
-_sessWarned	variable	platform	false		src/lib/attSystem.ts	64	
-_lastActivityReset	variable	platform	false		src/lib/attSystem.ts	66	
-_activityHandler	variable	platform	false		src/lib/attSystem.ts	67	
-_sectionLoaded	object	platform	false		src/lib/attSystem.ts	69	
-_resetLoadedState	function	platform	false		src/lib/attSystem.ts	70	
-_photoCache	object	platform	false		src/lib/attSystem.ts	72	
-SESSION_KEY	variable	platform	false		src/lib/attSystem.ts	76	
-SESSION_DEFAULT_IDLE	variable	platform	false		src/lib/attSystem.ts	81	
-SESSION_REMEMBER_IDLE	variable	platform	false		src/lib/attSystem.ts	82	
-SESSION_WARN_AT	variable	platform	false		src/lib/attSystem.ts	83	
-SESSION_ACTIVITY_THROTTLE	variable	platform	false		src/lib/attSystem.ts	84	
-CONFIG	object	platform	false		src/lib/attSystem.ts	88	
-fmtLocalTime	function	platform	false		src/lib/attSystem.ts	97	
-escapeHtml	function	platform	false		src/lib/attSystem.ts	104	
-cssEscape	function	platform	false		src/lib/attSystem.ts	109	
-_patchPhotoCache	function	platform	false		src/lib/attSystem.ts	116	
-_clearPhotoCache	function	platform	false		src/lib/attSystem.ts	124	
-showSpinner	function	platform	false		src/lib/attSystem.ts	132	
-hideSpinner	function	platform	false		src/lib/attSystem.ts	135	
-showPopup	function	platform	false		src/lib/attSystem.ts	136	
-GeoResult	interface	platform	false		src/lib/attSystem.ts	141	
-getCurrentLocation	function	platform	false		src/lib/attSystem.ts	143	
-_spinBtn	function	platform	false		src/lib/attSystem.ts	158	
-ProfileAvEl	interface	platform	false		src/lib/attSystem.ts	167	
-_swapAvatarImg	function	platform	false		src/lib/attSystem.ts	169	
-applyImg	function	platform	false		src/lib/attSystem.ts	174	_swapAvatarImg
-applyFallback	function	platform	false		src/lib/attSystem.ts	184	_swapAvatarImg
-_syncPillAvatars	function	platform	false		src/lib/attSystem.ts	210	
-_setAttendanceAvatar	function	platform	false		src/lib/attSystem.ts	216	
-_profileToastTimer	variable	platform	false		src/lib/attSystem.ts	227	
-_profileToast	function	platform	false		src/lib/attSystem.ts	229	
-PREFIX	variable	platform	false		src/lib/attSystem.ts	241	
-PREFIX_LEN	variable	platform	false		src/lib/attSystem.ts	242	
-_buildMasked	function	platform	false		src/lib/attSystem.ts	244	
-_localDigits	function	platform	false		src/lib/attSystem.ts	251	
-setPhone	function	platform	true		src/lib/attSystem.ts	257	
-readPhone	function	platform	true		src/lib/attSystem.ts	263	
-onInput	function	platform	false		src/lib/attSystem.ts	273	
-onFocus	function	platform	false		src/lib/attSystem.ts	295	
-onKeydown	function	platform	false		src/lib/attSystem.ts	301	
-onBlur	function	platform	false		src/lib/attSystem.ts	312	
-SessionData	interface	platform	false		src/lib/attSystem.ts	329	
-_idleDeadline	function	platform	false		src/lib/attSystem.ts	352	
-saveSession	function	platform	false		src/lib/attSystem.ts	356	
-updateStoredSession	function	platform	false		src/lib/attSystem.ts	373	
-loadSession	function	platform	false		src/lib/attSystem.ts	381	
-clearSession	function	platform	false		src/lib/attSystem.ts	398	
-_armSessionTimers	function	platform	false		src/lib/attSystem.ts	406	
-_resetIdleDeadline	function	platform	false		src/lib/attSystem.ts	428	
-startSessionTimer	function	platform	false		src/lib/attSystem.ts	440	
-stopSessionTimer	function	platform	false		src/lib/attSystem.ts	459	
-handleSessionWarning	function	platform	false		src/lib/attSystem.ts	470	
-handleSessionExpired	function	platform	false		src/lib/attSystem.ts	476	
-updateSessionWidget	function	platform	false	ui-tile	src/lib/attSystem.ts	481	
-_completeLogin	function	platform	true		src/lib/attSystem.ts	516	
-applySession	function	platform	false		src/lib/attSystem.ts	561	
-handleLogout	function	platform	false		src/lib/attSystem.ts	668	
-stopCamera	function	platform	false		src/lib/attSystem.ts	745	
-startLocationTracking	function	platform	false		src/lib/attSystem.ts	756	
-updateLocationInfo	function	platform	false		src/lib/attSystem.ts	772	
-handleLocationError	function	platform	false		src/lib/attSystem.ts	796	
-_noSyncSections	variable	platform	false		src/lib/attSystem.ts	812	
-_userIsInteracting	function	platform	false		src/lib/attSystem.ts	814	
-startAutoSync	function	platform	false		src/lib/attSystem.ts	822	
-stopAutoSync	function	platform	false		src/lib/attSystem.ts	828	
-syncData	function	platform	false		src/lib/attSystem.ts	834	
-refreshCurrentView	function	platform	false		src/lib/attSystem.ts	839	
-updateClock	function	platform	false		src/lib/attSystem.ts	847	
-set	function	platform	false		src/lib/attSystem.ts	852	updateClock
-initializeDateSelectors	function	platform	false		src/lib/attSystem.ts	858	
-setupEventListeners	function	platform	false		src/lib/attSystem.ts	900	
-init	function	platform	true		src/lib/attSystem.ts	1175	
-AttendanceSystem	object	platform	true		src/lib/attSystem.ts	1238	
-goTo	method	platform	false		src/lib/attSystem.ts	1240	AttendanceSystem
-_w	variable	platform	false		src/lib/attSystem.ts	1267	
+flatpickr	variable	platform	false		src/lib/attSystem.ts	28	
+L	variable	platform	false		src/lib/attSystem.ts	29	
+Win	type	platform	false		src/lib/attSystem.ts	32	
+w	function	platform	false		src/lib/attSystem.ts	33	
+_Nav	function	platform	false		src/lib/attSystem.ts	37	
+_Dashboard	function	platform	false		src/lib/attSystem.ts	38	
+_LiveMap	function	platform	false		src/lib/attSystem.ts	39	
+_Payroll	function	platform	false		src/lib/attSystem.ts	40	
+_SettingsView	function	platform	false		src/lib/attSystem.ts	41	
+_SiomacDB	function	platform	false		src/lib/attSystem.ts	42	
+_SwCacheMgr	function	platform	false		src/lib/attSystem.ts	43	
+_AppState	function	platform	false		src/lib/attSystem.ts	44	
+_swr	function	platform	false		src/lib/attSystem.ts	45	
+_swrLastHash	function	platform	false		src/lib/attSystem.ts	46	
+_rawApiW	function	platform	false		src/lib/attSystem.ts	47	
+_apiW	function	platform	false		src/lib/attSystem.ts	48	
+_cpop	function	platform	false		src/lib/attSystem.ts	49	
+_Swal	function	platform	false		src/lib/attSystem.ts	50	
+_SiomacConfig	function	platform	false		src/lib/attSystem.ts	51	
+currentColorScheme	variable	platform	false		src/lib/attSystem.ts	55	
+currentLayoutMode	variable	platform	false		src/lib/attSystem.ts	56	
+_currentProfileImage	variable	platform	false		src/lib/attSystem.ts	57	
+_attFpFrom	variable	platform	false		src/lib/attSystem.ts	59	
+_attFpTo	variable	platform	false		src/lib/attSystem.ts	60	
+_sessExpTimer	variable	platform	false		src/lib/attSystem.ts	62	
+_sessWarnTimer	variable	platform	false		src/lib/attSystem.ts	63	
+_sessTickTimer	variable	platform	false		src/lib/attSystem.ts	64	
+_sessWarned	variable	platform	false		src/lib/attSystem.ts	65	
+_lastActivityReset	variable	platform	false		src/lib/attSystem.ts	67	
+_activityHandler	variable	platform	false		src/lib/attSystem.ts	68	
+_sectionLoaded	object	platform	false		src/lib/attSystem.ts	70	
+_resetLoadedState	function	platform	false		src/lib/attSystem.ts	71	
+_photoCache	object	platform	false		src/lib/attSystem.ts	73	
+SESSION_KEY	variable	platform	false		src/lib/attSystem.ts	77	
+SESSION_DEFAULT_IDLE	variable	platform	false		src/lib/attSystem.ts	82	
+SESSION_REMEMBER_IDLE	variable	platform	false		src/lib/attSystem.ts	83	
+SESSION_WARN_AT	variable	platform	false		src/lib/attSystem.ts	84	
+SESSION_ACTIVITY_THROTTLE	variable	platform	false		src/lib/attSystem.ts	85	
+CONFIG	object	platform	false		src/lib/attSystem.ts	89	
+fmtLocalTime	function	platform	false		src/lib/attSystem.ts	98	
+escapeHtml	function	platform	false		src/lib/attSystem.ts	105	
+cssEscape	function	platform	false		src/lib/attSystem.ts	110	
+_patchPhotoCache	function	platform	false		src/lib/attSystem.ts	117	
+_clearPhotoCache	function	platform	false		src/lib/attSystem.ts	125	
+showSpinner	function	platform	false		src/lib/attSystem.ts	133	
+hideSpinner	function	platform	false		src/lib/attSystem.ts	136	
+showPopup	function	platform	false		src/lib/attSystem.ts	137	
+GeoResult	interface	platform	false		src/lib/attSystem.ts	142	
+getCurrentLocation	function	platform	false		src/lib/attSystem.ts	144	
+_spinBtn	function	platform	false		src/lib/attSystem.ts	159	
+ProfileAvEl	interface	platform	false		src/lib/attSystem.ts	168	
+_swapAvatarImg	function	platform	false		src/lib/attSystem.ts	170	
+applyImg	function	platform	false		src/lib/attSystem.ts	175	_swapAvatarImg
+applyFallback	function	platform	false		src/lib/attSystem.ts	185	_swapAvatarImg
+_syncPillAvatars	function	platform	false		src/lib/attSystem.ts	211	
+_setAttendanceAvatar	function	platform	false		src/lib/attSystem.ts	217	
+_profileToastTimer	variable	platform	false		src/lib/attSystem.ts	228	
+_profileToast	function	platform	false		src/lib/attSystem.ts	230	
+PREFIX	variable	platform	false		src/lib/attSystem.ts	242	
+PREFIX_LEN	variable	platform	false		src/lib/attSystem.ts	243	
+_buildMasked	function	platform	false		src/lib/attSystem.ts	245	
+_localDigits	function	platform	false		src/lib/attSystem.ts	252	
+setPhone	function	platform	true		src/lib/attSystem.ts	258	
+readPhone	function	platform	true		src/lib/attSystem.ts	264	
+onInput	function	platform	false		src/lib/attSystem.ts	274	
+onFocus	function	platform	false		src/lib/attSystem.ts	296	
+onKeydown	function	platform	false		src/lib/attSystem.ts	302	
+onBlur	function	platform	false		src/lib/attSystem.ts	313	
+SessionData	interface	platform	false		src/lib/attSystem.ts	330	
+_idleDeadline	function	platform	false		src/lib/attSystem.ts	353	
+saveSession	function	platform	false		src/lib/attSystem.ts	357	
+updateStoredSession	function	platform	false		src/lib/attSystem.ts	374	
+loadSession	function	platform	false		src/lib/attSystem.ts	382	
+clearSession	function	platform	false		src/lib/attSystem.ts	399	
+_armSessionTimers	function	platform	false		src/lib/attSystem.ts	407	
+_resetIdleDeadline	function	platform	false		src/lib/attSystem.ts	429	
+startSessionTimer	function	platform	false		src/lib/attSystem.ts	441	
+stopSessionTimer	function	platform	false		src/lib/attSystem.ts	460	
+handleSessionWarning	function	platform	false		src/lib/attSystem.ts	471	
+handleSessionExpired	function	platform	false		src/lib/attSystem.ts	477	
+updateSessionWidget	function	platform	false	ui-tile	src/lib/attSystem.ts	482	
+_completeLogin	function	platform	true		src/lib/attSystem.ts	517	
+applySession	function	platform	false		src/lib/attSystem.ts	562	
+handleLogout	function	platform	false		src/lib/attSystem.ts	673	
+stopCamera	function	platform	false		src/lib/attSystem.ts	750	
+startLocationTracking	function	platform	false		src/lib/attSystem.ts	761	
+updateLocationInfo	function	platform	false		src/lib/attSystem.ts	777	
+handleLocationError	function	platform	false		src/lib/attSystem.ts	801	
+_noSyncSections	variable	platform	false		src/lib/attSystem.ts	817	
+_userIsInteracting	function	platform	false		src/lib/attSystem.ts	819	
+startAutoSync	function	platform	false		src/lib/attSystem.ts	827	
+stopAutoSync	function	platform	false		src/lib/attSystem.ts	833	
+syncData	function	platform	false		src/lib/attSystem.ts	839	
+refreshCurrentView	function	platform	false		src/lib/attSystem.ts	844	
+updateClock	function	platform	false		src/lib/attSystem.ts	852	
+set	function	platform	false		src/lib/attSystem.ts	857	updateClock
+initializeDateSelectors	function	platform	false		src/lib/attSystem.ts	863	
+setupEventListeners	function	platform	false		src/lib/attSystem.ts	905	
+init	function	platform	true		src/lib/attSystem.ts	1180	
+AttendanceSystem	object	platform	true		src/lib/attSystem.ts	1243	
+goTo	method	platform	false		src/lib/attSystem.ts	1245	AttendanceSystem
+_w	variable	platform	false		src/lib/attSystem.ts	1272	
 AuthSuccess	interface	security	true		src/lib/auth.ts	56	
 Auth2faRequired	interface	security	true		src/lib/auth.ts	62	
 Auth2faSetupRequired	interface	security	true		src/lib/auth.ts	68	
@@ -11382,10 +11397,10 @@ confirm2faSetup	function	security	true		src/lib/auth.ts	207
 signOut	function	security	true		src/lib/auth.ts	233	
 getSession	function	security	true		src/lib/auth.ts	281	
 _applyFullSession	function	security	false		src/lib/auth.ts	318	
-makeSession	function	platform	false	test	src/lib/boot.test.ts	39	
-buildShellDom	function	platform	false	test	src/lib/boot.test.ts	58	
-teardownShellDom	function	platform	false	test	src/lib/boot.test.ts	72	
-stub	function	platform	false	test	src/lib/boot.test.ts	238	
+makeSession	function	platform	false	test	src/lib/boot.test.ts	40	
+buildShellDom	function	platform	false	test	src/lib/boot.test.ts	59	
+teardownShellDom	function	platform	false	test	src/lib/boot.test.ts	73	
+stub	function	platform	false	test	src/lib/boot.test.ts	239	
 DB_NAME	variable	platform	false		src/lib/cache.ts	25	
 DB_VERSION	variable	platform	false		src/lib/cache.ts	26	
 STORE	variable	platform	false		src/lib/cache.ts	27	
@@ -11621,6 +11636,17 @@ sanitizeRichHtml	function	platform	true		src/lib/richText.tsx	59
 renderNode	function	platform	false		src/lib/richText.tsx	91	
 renderRichHtml	function	platform	true		src/lib/richText.tsx	119	
 looksLikeHtml	function	platform	true		src/lib/richText.tsx	126	
+buildShellDom	function	platform	false	test	src/lib/sectionRestore.test.ts	30	
+PANELS	array	platform	false	test	src/lib/sectionRestore.test.ts	43	
+onSection	function	platform	false	test	src/lib/sectionRestore.test.ts	91	
+NAV_READY_EVENT	variable	platform	true		src/lib/sectionRestore.ts	31	
+NavShim	type	platform	true		src/lib/sectionRestore.ts	33	
+sectionPanelId	function	platform	true		src/lib/sectionRestore.ts	41	
+resolveRestorableSection	function	platform	true		src/lib/sectionRestore.ts	51	
+readLastSection	function	platform	true		src/lib/sectionRestore.ts	57	
+isNavReady	function	platform	true		src/lib/sectionRestore.ts	62	
+markNavReady	function	platform	true		src/lib/sectionRestore.ts	67	
+whenNavReady	function	platform	true		src/lib/sectionRestore.ts	75	
 PersistedSession	interface	platform	true		src/lib/session.ts	17	
 loadSession	function	platform	true		src/lib/session.ts	59	
 saveSession	function	platform	true		src/lib/session.ts	73	
@@ -11766,14 +11792,15 @@ ManagerSections	function	platform	true	component	src/shell/sections/ManagerSecti
 LiveMapSection	function	platform	false	component	src/shell/sections/SharedSections.tsx	23	
 AboutSection	function	platform	false	component	src/shell/sections/SharedSections.tsx	99	
 SharedSections	function	platform	true	component	src/shell/sections/SharedSections.tsx	178	
-Listener	type	platform	false		src/shell/sections/useActiveSection.ts	28	
-ActiveSectionStore	interface	platform	false		src/shell/sections/useActiveSection.ts	38	
-store	variable	platform	false		src/shell/sections/useActiveSection.ts	39	
-readPersisted	function	platform	false		src/shell/sections/useActiveSection.ts	44	
-setActivePanel	function	platform	true		src/shell/sections/useActiveSection.ts	54	
-getActivePanel	function	platform	true		src/shell/sections/useActiveSection.ts	61	
-useActiveSection	function	platform	true	hook	src/shell/sections/useActiveSection.ts	69	
-fn	function	platform	false		src/shell/sections/useActiveSection.ts	73	useActiveSection
+Listener	type	platform	false		src/shell/sections/useActiveSection.ts	30	
+ActiveSectionStore	interface	platform	false		src/shell/sections/useActiveSection.ts	40	
+store	variable	platform	false		src/shell/sections/useActiveSection.ts	41	
+readPersisted	function	platform	false		src/shell/sections/useActiveSection.ts	58	
+currentPanel	function	platform	false		src/shell/sections/useActiveSection.ts	71	
+setActivePanel	function	platform	true		src/shell/sections/useActiveSection.ts	77	
+getActivePanel	function	platform	true		src/shell/sections/useActiveSection.ts	85	
+useActiveSection	function	platform	true	hook	src/shell/sections/useActiveSection.ts	93	
+fn	function	platform	false		src/shell/sections/useActiveSection.ts	97	useActiveSection
 EmployeeSummary	interface	platform	true		src/store/data.ts	37	
 toEmployeeSummary	function	platform	true		src/store/data.ts	51	
 DataState	interface	platform	true		src/store/data.ts	67	
@@ -12020,21 +12047,21 @@ SidePanel	function	platform	true	component	src/ui/components/SidePanel.tsx	50
 SizeValue	type	platform	false		src/ui/components/Skeleton.tsx	30	
 dim	function	platform	false		src/ui/components/Skeleton.tsx	32	
 SkeletonProps	interface	platform	true		src/ui/components/Skeleton.tsx	35	
-Skeleton	function	platform	true	component	src/ui/components/Skeleton.tsx	45	
-SkeletonTextProps	interface	platform	true		src/ui/components/Skeleton.tsx	58	
-SkeletonText	function	platform	true	component	src/ui/components/Skeleton.tsx	67	
-TableSkeletonProps	interface	platform	true		src/ui/components/Skeleton.tsx	77	
-TableSkeleton	function	platform	true	component	src/ui/components/Skeleton.tsx	86	
-ListSkeletonProps	interface	platform	true		src/ui/components/Skeleton.tsx	112	
-ListSkeleton	function	platform	true	component	src/ui/components/Skeleton.tsx	118	
-SkeletonFieldsProps	interface	platform	true		src/ui/components/Skeleton.tsx	134	
-SkeletonFields	function	platform	true	component	src/ui/components/Skeleton.tsx	140	
-SkeletonStatGridProps	interface	platform	true		src/ui/components/Skeleton.tsx	153	
-SkeletonStatGrid	function	platform	true	component	src/ui/components/Skeleton.tsx	159	
-WidgetSkeletonProps	interface	platform	true	ui-tile	src/ui/components/Skeleton.tsx	173	
-WidgetSkeleton	function	platform	true	component,ui-tile	src/ui/components/Skeleton.tsx	180	
-DashboardPageSkeletonProps	interface	platform	true		src/ui/components/Skeleton.tsx	212	
-DashboardPageSkeleton	function	platform	true	component	src/ui/components/Skeleton.tsx	222	
+Skeleton	function	platform	true	component	src/ui/components/Skeleton.tsx	49	
+SkeletonTextProps	interface	platform	true		src/ui/components/Skeleton.tsx	62	
+SkeletonText	function	platform	true	component	src/ui/components/Skeleton.tsx	71	
+TableSkeletonProps	interface	platform	true		src/ui/components/Skeleton.tsx	81	
+TableSkeleton	function	platform	true	component	src/ui/components/Skeleton.tsx	90	
+ListSkeletonProps	interface	platform	true		src/ui/components/Skeleton.tsx	116	
+ListSkeleton	function	platform	true	component	src/ui/components/Skeleton.tsx	122	
+SkeletonFieldsProps	interface	platform	true		src/ui/components/Skeleton.tsx	138	
+SkeletonFields	function	platform	true	component	src/ui/components/Skeleton.tsx	144	
+SkeletonStatGridProps	interface	platform	true		src/ui/components/Skeleton.tsx	157	
+SkeletonStatGrid	function	platform	true	component	src/ui/components/Skeleton.tsx	163	
+WidgetSkeletonVariant	type	platform	true	ui-tile	src/ui/components/Skeleton.tsx	180	
+WidgetSkeletonProps	interface	platform	true	ui-tile	src/ui/components/Skeleton.tsx	182	
+WidgetSkeleton	function	platform	true	component,ui-tile	src/ui/components/Skeleton.tsx	189	
+PageHeaderSkeleton	function	platform	true	component	src/ui/components/Skeleton.tsx	227	
 SparkDef	interface	platform	true		src/ui/components/SparkCard.tsx	14	
 SparkCard	function	platform	true	component,ui-tile	src/ui/components/SparkCard.tsx	28	
 SpinnerProps	interface	platform	true		src/ui/components/Spinner.tsx	14	
@@ -12296,6 +12323,21 @@ resolveWidgetAccess	function	widgets	true	ui-tile	src/ui/widgets/access.ts	7
 WIDGET_BOARD_REVEAL_EVENT	variable	widgets	true	ui-tile	src/ui/widgets/boardReveal.ts	1	
 WidgetBoardRevealDetail	interface	widgets	true	ui-tile	src/ui/widgets/boardReveal.ts	3	
 requestWidgetBoardReveal	function	widgets	true	ui-tile	src/ui/widgets/boardReveal.ts	9	
+COLUMNS	variable	widgets	false	component,test	src/ui/widgets/BoardSkeleton.test.tsx	21	
+CELL_HEIGHT	variable	widgets	false	component,test	src/ui/widgets/BoardSkeleton.test.tsx	22	
+GAP	array	widgets	false	test	src/ui/widgets/BoardSkeleton.test.tsx	23	
+REGISTER_ID	variable	widgets	false	component,test	src/ui/widgets/BoardSkeleton.test.tsx	25	
+LOCAL_WIDGETS	object	widgets	false	ui-tile,test	src/ui/widgets/BoardSkeleton.test.tsx	29	
+inst	function	widgets	false	test	src/ui/widgets/BoardSkeleton.test.tsx	33	
+board	function	widgets	false	test	src/ui/widgets/BoardSkeleton.test.tsx	37	
+KPI_PAGE_KEY	variable	widgets	false	component,ui-tile,test	src/ui/widgets/BoardSkeleton.test.tsx	44	
+PAGE_KEY	variable	widgets	false	component,test	src/ui/widgets/BoardSkeleton.test.tsx	45	
+SAVED_KPI_INSTANCES	array	widgets	false	ui-tile,test	src/ui/widgets/BoardSkeleton.test.tsx	47	
+SAVED_BOARD_INSTANCES	array	widgets	false	test	src/ui/widgets/BoardSkeleton.test.tsx	56	
+renderedTiles	function	widgets	false	ui-tile,test	src/ui/widgets/BoardSkeleton.test.tsx	73	
+renderBoards	function	widgets	false	test	src/ui/widgets/BoardSkeleton.test.tsx	87	
+BoardSkeletonProps	interface	widgets	true		src/ui/widgets/BoardSkeleton.tsx	29	
+BoardSkeleton	function	widgets	true	component	src/ui/widgets/BoardSkeleton.tsx	44	
 WidgetBundle	interface	widgets	true	ui-tile	src/ui/widgets/bundles.ts	53	
 WIDGET_BUNDLES	array	widgets	true	ui-tile	src/ui/widgets/bundles.ts	75	
 resolveBundleWidgets	function	widgets	true	ui-tile	src/ui/widgets/bundles.ts	145	
@@ -12447,18 +12489,19 @@ DEADLINE_LAYOUT_OPTIONS	array	widgets	false		src/ui/widgets/registry.calendarPla
 DEADLINE_DEFAULT_CONFIG	object	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	172	
 DEADLINE_CONFIG_SCHEMA	array	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	173	
 deadlineDesign	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	177	
-DeadlineWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.calendarPlanning.tsx	181	
-DeadlinePreview	function	widgets	false	component	src/ui/widgets/registry.calendarPlanning.tsx	194	
-TaskPlannerView	function	widgets	false	component	src/ui/widgets/registry.calendarPlanning.tsx	199	
-shift	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	219	TaskPlannerView
-save	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	220	TaskPlannerView
-complete	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	229	TaskPlannerView
-remove	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	233	TaskPlannerView
-TaskPlannerWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.calendarPlanning.tsx	259	
-TaskPlannerPreview	function	widgets	false	component	src/ui/widgets/registry.calendarPlanning.tsx	266	
-item	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	268	TaskPlannerPreview
-liveDefinition	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	272	
-widgets	array	widgets	true	ui-tile	src/ui/widgets/registry.calendarPlanning.tsx	276	
+useDeadlineWindowQuery	function	widgets	true	hook	src/ui/widgets/registry.calendarPlanning.tsx	189	
+DeadlineWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.calendarPlanning.tsx	197	
+DeadlinePreview	function	widgets	false	component	src/ui/widgets/registry.calendarPlanning.tsx	207	
+TaskPlannerView	function	widgets	false	component	src/ui/widgets/registry.calendarPlanning.tsx	212	
+shift	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	232	TaskPlannerView
+save	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	233	TaskPlannerView
+complete	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	242	TaskPlannerView
+remove	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	246	TaskPlannerView
+TaskPlannerWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.calendarPlanning.tsx	272	
+TaskPlannerPreview	function	widgets	false	component	src/ui/widgets/registry.calendarPlanning.tsx	279	
+item	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	281	TaskPlannerPreview
+liveDefinition	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	285	
+widgets	array	widgets	true	ui-tile	src/ui/widgets/registry.calendarPlanning.tsx	289	
 PAGE	variable	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	29	
 SOURCE	object	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	31	
 KPI_SIZES	array	widgets	false	ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	53	
@@ -12467,79 +12510,84 @@ CHART_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx
 QUALITY_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	76	
 RADAR_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	80	
 ATTENTION_PORTRAIT_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	84	
-STACKED_CHART_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	91	
-DIRECTORY_SOURCE	object	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	96	
-CALENDAR_SOURCE	object	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	100	
-PREVIEW	object	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	107	
-WidgetState	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	116	
-withLiveData	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	126	
-focusEmployeeRegister	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	135	
-applyRegisterFilter	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	143	
-KpiCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	148	
-ActiveWorkforce	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	153	
-RecordReadiness	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	157	
-HrWorkQueue	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	161	
-Exceptions	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	165	
-focusLifecycleMovement	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	170	
-LifecyclePulse	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	174	
-NewStarters	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	186	
-Departures	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	187	
-RecordQuality	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	189	
-initials	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	209	
-AttentionEmployee	type	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	211	
-previewReadiness	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	212	
-PREVIEW_ATTENTION	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	230	
-ATTENTION_LABELS	variable	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	235	
-COUNT_WORDS	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	239	
-countWithWord	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	240	
-AttentionBlocker	type	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	241	
-attentionReviewCopy	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	244	
-AttentionReferenceVariant	type	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	278	
-PREVIEW_ATTENTION_REFERENCE	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	279	
-EmployeeAttentionReferenceView	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	283	
-move	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	286	EmployeeAttentionReferenceView
-EmployeeAttentionReferenceWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	304	
-EmployeeAttentionNeutralWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	311	
-useAnimatedInteger	function	widgets	false	hook	src/ui/widgets/registry.hrEmployeeDashboard.tsx	315	
-animate	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	327	useAnimatedInteger
-movementTrend	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	338	
-pulseLinePath	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	345	
-WorkplacePulseChart	type	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	357	
-WorkplacePulseCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	358	
-MonthlyHiresCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	376	
-InternalMovesCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	380	
-PromotionsCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	384	
-ReadinessRadar	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	389	
-LifecycleOutcomeChart	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	415	
-liveDefinition	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	435	
-externalDefinition	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	457	
-widgets	array	widgets	true	ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	473	
-PAGE	variable	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	23	
-SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	27	
-DESIGN_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	32	
-RISK_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	37	
-HEALTH_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	42	
-PREVIEW_SOURCE	object	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	47	
-LIVE_SOURCE	object	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	52	
-LIFECYCLE_PREVIEW_STATS	object	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	58	
-configColor	function	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	77	
-Header	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	81	
-WorkforceGranularity	type	widgets	true		src/ui/widgets/registry.hrEmployeeMaster.tsx	90	
-GRANULARITIES	array	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	91	
-WeeklyEmployeeActivity	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	95	
-DataChangeTrend	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	123	
-LifecycleActivityView	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	148	
-movement	function	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	167	LifecycleActivityView
-makeFill	function	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	179	LifecycleActivityView
-afterDatasetsDraw	method	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	196	crosshair
-LifecycleActivity	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	377	
-WorkloadRing	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	385	
-MasterDataWorkload	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	389	
-BlockedEmployeeActions	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	402	
-RecordHealth	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	411	
-RecordRiskMonitor	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	438	
-previewDefinition	function	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	460	
-widgets	array	widgets	true	ui-tile	src/ui/widgets/registry.hrEmployeeMaster.tsx	480	
+STACKED_CHART_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	99	
+DIRECTORY_SOURCE	object	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	104	
+CALENDAR_SOURCE	object	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	108	
+PREVIEW	object	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	115	
+WidgetState	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	124	
+withLiveData	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	134	
+focusEmployeeRegister	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	143	
+applyRegisterFilter	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	151	
+KpiCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	156	
+ActiveWorkforce	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	161	
+RecordReadiness	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	167	
+HrWorkQueue	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	171	
+Exceptions	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	175	
+focusLifecycleMovement	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	180	
+LifecyclePulse	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	184	
+NewStarters	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	196	
+Departures	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	197	
+RecordQuality	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	199	
+initials	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	219	
+AttentionEmployee	type	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	221	
+previewReadiness	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	222	
+PREVIEW_ATTENTION	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	240	
+ATTENTION_LABELS	variable	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	245	
+COUNT_WORDS	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	249	
+countWithWord	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	250	
+AttentionBlocker	type	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	251	
+attentionReviewCopy	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	254	
+AttentionReferenceVariant	type	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	288	
+PREVIEW_ATTENTION_REFERENCE	array	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	289	
+EmployeeAttentionReferenceView	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	293	
+move	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	296	EmployeeAttentionReferenceView
+EMPLOYEE_ATTENTION_ROSTER_QUERY	variable	widgets	true	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	329	
+EmployeeAttentionReferenceWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	333	
+EmployeeAttentionNeutralWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	340	
+useAnimatedInteger	function	widgets	false	hook	src/ui/widgets/registry.hrEmployeeDashboard.tsx	344	
+animate	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	356	useAnimatedInteger
+movementTrend	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	367	
+pulseLinePath	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	374	
+WorkplacePulseChart	type	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	386	
+WorkplacePulseCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	387	
+MonthlyHiresCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	405	
+InternalMovesCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	409	
+PromotionsCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	413	
+ReadinessRadar	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	418	
+LifecycleOutcomeChart	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	444	
+liveDefinition	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	464	
+externalDefinition	function	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	486	
+widgets	array	widgets	true	ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	502	
+PAGE	variable	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	24	
+DRAW_MS	variable	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	26	
+SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	30	
+DESIGN_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	35	
+RISK_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	40	
+HEALTH_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	45	
+PREVIEW_SOURCE	object	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	50	
+LIVE_SOURCE	object	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	55	
+LIFECYCLE_PREVIEW_STATS	object	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	61	
+configColor	function	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	80	
+Header	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	84	
+WorkforceGranularity	type	widgets	true		src/ui/widgets/registry.hrEmployeeMaster.tsx	93	
+GRANULARITIES	array	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	94	
+WeeklyEmployeeActivity	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	98	
+DataChangeTrend	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	126	
+LifecycleActivityView	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	151	
+movement	function	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	170	LifecycleActivityView
+makeFill	function	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	182	LifecycleActivityView
+afterDatasetsDraw	method	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	199	crosshair
+beforeDatasetsDraw	method	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	240	draw
+afterDatasetsDraw	method	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	252	draw
+tick	function	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	384	LifecycleActivityView
+LifecycleActivity	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	440	
+WorkloadRing	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	448	
+MasterDataWorkload	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	452	
+BlockedEmployeeActions	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	465	
+RecordHealth	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	474	
+RecordRiskMonitor	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	501	
+previewDefinition	function	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	523	
+widgets	array	widgets	true	ui-tile	src/ui/widgets/registry.hrEmployeeMaster.tsx	543	
 packages	variable	widgets	false		src/ui/widgets/registry.ts	22	
 collectWidgets	function	widgets	false	ui-tile	src/ui/widgets/registry.ts	24	
 WIDGET_REGISTRY	variable	widgets	true	ui-tile	src/ui/widgets/registry.ts	54	
@@ -12598,46 +12646,48 @@ n	function	widgets	false		src/ui/widgets/serializeLayout.ts	11	rows
 SIZE_ORDER	array	widgets	true		src/ui/widgets/size.ts	10	
 sizeRank	function	widgets	true		src/ui/widgets/size.ts	12	
 isSizeAtLeast	function	widgets	true		src/ui/widgets/size.ts	17	
+VARIANT_DENSITY	object	widgets	false		src/ui/widgets/skeletonVariant.ts	23	
+widgetSkeletonVariant	function	widgets	true	ui-tile	src/ui/widgets/skeletonVariant.ts	38	
 splitCommittedAndPreview	function	widgets	true		src/ui/widgets/splitCommittedAndPreview.ts	6	
-WIDGET_CONTRACT_VERSION	variable	widgets	true	ui-tile	src/ui/widgets/types.ts	20	
-WIDGET_DESKTOP_COLUMNS	variable	widgets	true	ui-tile	src/ui/widgets/types.ts	21	
-WidgetContractVersion	type	widgets	true	ui-tile	src/ui/widgets/types.ts	22	
-WidgetRuntimeState	type	widgets	true	ui-tile	src/ui/widgets/types.ts	23	
-WidgetGovernanceState	type	widgets	true	ui-tile	src/ui/widgets/types.ts	26	
-WidgetMotionKind	type	widgets	true	ui-tile	src/ui/widgets/types.ts	27	
-WidgetBreakpoint	type	widgets	true	ui-tile	src/ui/widgets/types.ts	28	
-WidgetPlacement	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	30	
-WidgetResponsivePlacements	type	widgets	true	ui-tile	src/ui/widgets/types.ts	31	
-WidgetGovernancePolicy	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	33	
-WidgetMotionSpec	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	44	
-WidgetDataSourceRegistration	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	51	
-ModuleKey	type	widgets	true		src/ui/widgets/types.ts	61	
-WidgetSizeKey	type	widgets	true	ui-tile	src/ui/widgets/types.ts	63	
-WidgetChrome	type	widgets	true	ui-tile	src/ui/widgets/types.ts	68	
-WidgetPreviewVariant	type	widgets	true	ui-tile	src/ui/widgets/types.ts	70	
-WidgetLifecycleState	type	widgets	true	ui-tile	src/ui/widgets/types.ts	75	
-WidgetContentPriorityRule	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	78	
-WidgetDensityRules	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	87	
-WidgetResponsiveContext	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	94	
-WidgetPermissionSpec	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	106	
-WidgetGridSize	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	111	
-WidgetSizeConstraints	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	113	
-WidgetSizeDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	123	
-WidgetConfigOption	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	132	
-WidgetConfigFieldType	type	widgets	true	ui-tile	src/ui/widgets/types.ts	134	
-WidgetConfigField	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	137	
-WidgetDependencyDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	147	
-WidgetDataSourceDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	155	
-WidgetRenderProps	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	163	
-WidgetPreviewProps	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	174	
-WidgetDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	180	
-WidgetInstance	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	257	
-PreviewWidgetInstance	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	279	
-BoardWidgetInstance	type	widgets	true	ui-tile	src/ui/widgets/types.ts	286	
-LocalWidget	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	296	
-LocalWidgetMap	type	widgets	true	ui-tile	src/ui/widgets/types.ts	315	
-BoardLayout	interface	widgets	true		src/ui/widgets/types.ts	317	
-isPreviewWidget	function	widgets	true	ui-tile	src/ui/widgets/types.ts	326	
+WIDGET_CONTRACT_VERSION	variable	widgets	true	ui-tile	src/ui/widgets/types.ts	23	
+WIDGET_DESKTOP_COLUMNS	variable	widgets	true	ui-tile	src/ui/widgets/types.ts	24	
+WidgetContractVersion	type	widgets	true	ui-tile	src/ui/widgets/types.ts	25	
+WidgetRuntimeState	type	widgets	true	ui-tile	src/ui/widgets/types.ts	26	
+WidgetGovernanceState	type	widgets	true	ui-tile	src/ui/widgets/types.ts	29	
+WidgetMotionKind	type	widgets	true	ui-tile	src/ui/widgets/types.ts	30	
+WidgetBreakpoint	type	widgets	true	ui-tile	src/ui/widgets/types.ts	31	
+WidgetPlacement	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	33	
+WidgetResponsivePlacements	type	widgets	true	ui-tile	src/ui/widgets/types.ts	34	
+WidgetGovernancePolicy	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	36	
+WidgetMotionSpec	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	47	
+WidgetDataSourceRegistration	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	54	
+ModuleKey	type	widgets	true		src/ui/widgets/types.ts	64	
+WidgetSizeKey	type	widgets	true	ui-tile	src/ui/widgets/types.ts	66	
+WidgetChrome	type	widgets	true	ui-tile	src/ui/widgets/types.ts	71	
+WidgetPreviewVariant	type	widgets	true	ui-tile	src/ui/widgets/types.ts	73	
+WidgetLifecycleState	type	widgets	true	ui-tile	src/ui/widgets/types.ts	78	
+WidgetContentPriorityRule	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	81	
+WidgetDensityRules	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	90	
+WidgetResponsiveContext	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	97	
+WidgetPermissionSpec	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	109	
+WidgetGridSize	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	114	
+WidgetSizeConstraints	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	116	
+WidgetSizeDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	126	
+WidgetConfigOption	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	135	
+WidgetConfigFieldType	type	widgets	true	ui-tile	src/ui/widgets/types.ts	137	
+WidgetConfigField	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	140	
+WidgetDependencyDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	150	
+WidgetDataSourceDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	158	
+WidgetRenderProps	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	166	
+WidgetPreviewProps	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	177	
+WidgetDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	183	
+WidgetInstance	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	265	
+PreviewWidgetInstance	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	287	
+BoardWidgetInstance	type	widgets	true	ui-tile	src/ui/widgets/types.ts	294	
+LocalWidget	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	304	
+LocalWidgetMap	type	widgets	true	ui-tile	src/ui/widgets/types.ts	326	
+BoardLayout	interface	widgets	true		src/ui/widgets/types.ts	328	
+isPreviewWidget	function	widgets	true	ui-tile	src/ui/widgets/types.ts	337	
 emptyLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	12	
 layoutSignature	function	widgets	false		src/ui/widgets/useBoardLayout.ts	20	
 layoutsEqual	function	widgets	false		src/ui/widgets/useBoardLayout.ts	30	

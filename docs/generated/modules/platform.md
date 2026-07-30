@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `16d02473a82899f320f60a94`
+Source fingerprint: `8af9bd4211159aa5cfc3b43a`
 
-Files: 307 | Symbols: 2804 | Widgets: 0 | Unique mounted endpoints: 32 | Route definitions: 32 mounted + 15 unmounted | API calls: 50 | DB objects: 305 | E2E suites: 0
+Files: 309 | Symbols: 2816 | Widgets: 0 | Unique mounted endpoints: 32 | Route definitions: 32 mounted + 15 unmounted | API calls: 50 | DB objects: 305 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -140,7 +140,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `ActionModalHost` | function / component | `src/components/common/actions/ActionModalProvider.tsx:39` | `-` |
 | `DialogContextPanel` | function / component | `src/components/common/dialogs/DialogContextPanel.tsx:28` | `-` |
 | `EnterpriseFormModal` | function / component | `src/components/common/dialogs/EnterpriseFormModal.tsx:32` | `-` |
-| `NavController` | function / component | `src/components/nav/NavController.tsx:54` | `-` |
+| `NavController` | function / component | `src/components/nav/NavController.tsx:55` | `-` |
 | `skelStatCards` | function / ui-tile | `src/components/nav/navCore.ts:761` | `-` |
 | `skelCards` | function / ui-tile | `src/components/nav/navCore.ts:768` | `-` |
 | `AccessControlSection` | function / component | `src/components/sections/AccessControl/AccessControlSection.tsx:32` | `-` |
@@ -210,7 +210,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `AppSection` | function / component | `src/shell/sections/AppSection.tsx:26` | `-` |
 | `ManagerSections` | function / component | `src/shell/sections/ManagerSections.tsx:17` | `-` |
 | `SharedSections` | function / component | `src/shell/sections/SharedSections.tsx:178` | `-` |
-| `useActiveSection` | function / hook | `src/shell/sections/useActiveSection.ts:69` | `-` |
+| `useActiveSection` | function / hook | `src/shell/sections/useActiveSection.ts:93` | `-` |
 | `useDataStore` | variable / hook | `src/store/data.ts:135` | `-` |
 | `useSessionStore` | variable / hook | `src/store/session.ts:200` | `-` |
 | `useUiStore` | variable / hook | `src/store/ui.ts:93` | `-` |
@@ -278,14 +278,14 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `ArrangeControls` | function / component | `src/ui/components/reorder.tsx:89` | `-` |
 | `SectionHead` | function / component | `src/ui/components/SectionHead.tsx:26` | `-` |
 | `SidePanel` | function / component | `src/ui/components/SidePanel.tsx:50` | `-` |
-| `Skeleton` | function / component | `src/ui/components/Skeleton.tsx:45` | `-` |
-| `SkeletonText` | function / component | `src/ui/components/Skeleton.tsx:67` | `-` |
-| `TableSkeleton` | function / component | `src/ui/components/Skeleton.tsx:86` | `-` |
-| `ListSkeleton` | function / component | `src/ui/components/Skeleton.tsx:118` | `-` |
-| `SkeletonFields` | function / component | `src/ui/components/Skeleton.tsx:140` | `-` |
-| `SkeletonStatGrid` | function / component | `src/ui/components/Skeleton.tsx:159` | `-` |
-| `WidgetSkeletonProps` | interface / ui-tile | `src/ui/components/Skeleton.tsx:173` | `-` |
-| ... | 53 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| `Skeleton` | function / component | `src/ui/components/Skeleton.tsx:49` | `-` |
+| `SkeletonText` | function / component | `src/ui/components/Skeleton.tsx:71` | `-` |
+| `TableSkeleton` | function / component | `src/ui/components/Skeleton.tsx:90` | `-` |
+| `ListSkeleton` | function / component | `src/ui/components/Skeleton.tsx:122` | `-` |
+| `SkeletonFields` | function / component | `src/ui/components/Skeleton.tsx:144` | `-` |
+| `SkeletonStatGrid` | function / component | `src/ui/components/Skeleton.tsx:163` | `-` |
+| `WidgetSkeletonVariant` | type / ui-tile | `src/ui/components/Skeleton.tsx:180` | `-` |
+| ... | 54 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 

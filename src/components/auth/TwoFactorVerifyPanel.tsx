@@ -258,7 +258,7 @@ export function TwoFactorVerifyPanel({
             for="trustDeviceCheckbox"
             style="font-size:0.82rem;color:var(--text-secondary,#536171);cursor:pointer;line-height:1.4;margin:0;"
           >
-            <i class="fas fa-shield-check" style="color:var(--accent,#2563eb);margin-right:4px;" />
+            <i class="fas fa-shield-halved" style="color:var(--accent,#2563eb);margin-right:4px;" />
             Trust this device for{' '}
             <strong>{maxDays} day{maxDays !== 1 ? 's' : ''}</strong>{' '}
             — skip 2FA on future sign-ins

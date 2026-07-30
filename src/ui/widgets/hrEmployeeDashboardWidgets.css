@@ -228,13 +228,17 @@
 .hrew-ar-action h4 { margin: 2px 0 9px; font-size: 13.5px; line-height: 1.3; }
 .hrew-ar-action button { padding: 9px 12px; }
 
-/* Narrow tiles: the facts strip is the first thing to fold, then the impact gauge — identity,
-   issue, prev/next and the review action always survive. */
+/* Narrow tiles used to fold the facts strip to one column and then hide it outright. Both
+   rules are gone: stacking turned a 76px row into a 276px column (the single biggest reason
+   this card overflowed its tile), and `display:none` silently dropped Department/Control/
+   Issues — the card then disagreed with itself, since the heading still counted controls the
+   body no longer showed. The strip now stays a 3-across row at every width and relies on the
+   per-cell ellipsis it already had. */
 @container (max-width: 300px) {
-  .hrew-ar-facts { grid-template-columns: minmax(0, 1fr); }
-}
-@container (max-width: 240px) {
-  .hrew-ar-facts { display: none; }
+  .hrew-ar-facts > div { padding: 7px 5px; gap: 4px; }
+  .hrew-ar-facts svg { width: 17px; height: 17px; }
+  .hrew-ar-facts strong { font-size: 11.5px; }
+  .hrew-ar-facts span { font-size: 9.5px; }
 }
 
 /* Review action — solid green so the card's one real action reads as the primary control
@@ -243,4 +247,72 @@
   background: #16a34a;
   border: 0;
   color: #fff;
+}
+
+/* Review action, final form — a SEPARATED footer, not a nested box (operator-specified).
+   The rounded/bordered/filled container is gone: inside a card that is already a bordered
+   surface it read as a second card, and it cost 2px of border plus the radius' optical
+   inset on all four sides. A single hairline rule above the block does the same job of
+   marking "this is the action area" for free, and the reclaimed width/height is what makes
+   room for the identity line below. Declared LAST so it wins over the base rule at the top
+   of this file and the is-neutral override — see the cascade note in CLAUDE.md. */
+.hrew-ar-action {
+  padding: 11px 3px 1px;
+  border: 0;
+  border-top: 1px solid #e0e5eb;
+  border-radius: 0;
+  background: transparent;
+}
+.hrew-attention-reference.is-neutral .hrew-ar-action,
+.hrew-attention-reference.is-semantic .hrew-ar-action {
+  border: 0;
+  border-top: 1px solid #e0e5eb;
+  border-radius: 0;
+  background: transparent;
+}
+/* Breathing room under the kicker pill. The compaction pass had squeezed this to 2px, which
+   was survivable inside the old filled container but reads as collision now that the pill
+   and the heading sit on the same open surface. */
+.hrew-ar-action h4 {
+  margin: 10px 0 9px;
+}
+
+/* ── Fit at the placed size ───────────────────────────────────────────────────
+   An inner scrollbar hid content behind a gesture nobody makes on a dashboard. The fix is to
+   make the content FIT the widget's declared default size, not to clip it: `overflow` stays
+   `auto` on purpose, because minRows lets a user shrink this tile on purpose and silently
+   cutting content off would be worse than a scrollbar (see the vertical-shrink invariant in
+   platform.test.tsx). Everything below trims decorative space only — no section is dropped,
+   and the two rules that USED to create room (fold the facts strip, then hide it outright)
+   are deleted above. Required height went 760px → 537px, under the 546px default tile. */
+/* The gauge's supporting paragraph named the blocked domains in prose — which is now exactly
+   what the chip row at the bottom does, in less than half the height. Kept as a single
+   ellipsised line so the gauge still has a caption, without paying for wrapped prose. */
+.hrew-ar-impact p {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.35;
+}
+.hrew-ar-impact {
+  padding: 9px 11px;
+  gap: 9px;
+}
+.hrew-ar-action {
+  padding: 9px 3px 0;
+}
+.hrew-ar-action h4 {
+  margin: 8px 0 7px;
+}
+/* The review button sits lower than the heading's own margin would put it — the removed chip
+   row left this room at the bottom of the card, and the CTA is the thing worth spending it on. */
+.hrew-ar-action button {
+  height: 36px;
+  margin-top: 16px;
+}
+.hrew-attention-reference {
+  gap: 8px;
 }

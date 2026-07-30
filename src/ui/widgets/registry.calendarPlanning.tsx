@@ -178,11 +178,24 @@ function deadlineDesign(config: Record<string, unknown> | undefined): DeadlineDe
   const value = config?.design;
   return DEADLINE_LAYOUT_OPTIONS.some(option => option.value === value) ? value as DeadlineDesign : 'keyDates';
 }
-function DeadlineWidget({ config }: WidgetRenderProps): VNode {
+/**
+ * The deadline window the Schedule & Deadlines widget reads.
+ *
+ * EXPORTED as a hook so a host page can warm the SAME query key before it clears
+ * its own page skeleton. The widget sits on the Employee Master board, and
+ * without this it stayed cold after that skeleton cleared and showed a second,
+ * per-card loading state. Duplicating the range in the page would drift.
+ */
+export function useDeadlineWindowQuery() {
   const today = useMemo(() => startOfDay(), []);
   const from = useMemo(() => addDays(today, -14), [today]);
   const to = useMemo(() => addDays(today, 62), [today]);
   const query = useCalendarList({ from: dateKey(from), to: dateKey(to), types: ['deadline', 'activity'] });
+  return { today, query };
+}
+
+function DeadlineWidget({ config }: WidgetRenderProps): VNode {
+  const { today, query } = useDeadlineWindowQuery();
   const items = query.data ?? [];
   const overdue = items.filter(item => { const key = itemDateKey(item); return item.type === 'deadline' && !!key && key < dateKey(today); }).length;
   return <DeadlineCard design={deadlineDesign(config)} deadlinesOn={designDeadlinesOn(items, today)} overdueCount={overdue}

@@ -42,14 +42,18 @@ export interface SkeletonProps {
   style?:  CSSProperties;
 }
 
-export function Skeleton({ width = '100%', height = 12, radius, circle, class: cls, style }: SkeletonProps): VNode {
+// `width`/`height` are deliberately NOT defaulted in the signature: defaulting `width` to
+// '100%' made the documented circle fallback ("uses `width`, or `height`, default 38px")
+// unreachable, because `width ?? height ?? 38` could never get past the first operand. The
+// defaults belong to the branch that actually wants them.
+export function Skeleton({ width, height, radius, circle, class: cls, style }: SkeletonProps): VNode {
   const s: CSSProperties = Object.assign({}, style);
   if (circle) {
     const d = dim(width ?? height ?? 38);
     s.width = d; s.height = d;
   } else {
-    s.width  = dim(width);
-    s.height = dim(height);
+    s.width  = dim(width ?? '100%');
+    s.height = dim(height ?? 12);
     if (radius !== undefined) s.borderRadius = dim(radius);
   }
   return <span class={`ui-skeleton${circle ? ' ui-skeleton--circle' : ''}${cls ? ` ${cls}` : ''}`} style={s} aria-hidden="true" />;
@@ -170,9 +174,14 @@ export function SkeletonStatGrid({ count = 4, class: cls }: SkeletonStatGridProp
   );
 }
 
+/** Information-density shapes a widget's cold state can take. A widget declares its
+ *  own via `WidgetDef.skeletonVariant` / `LocalWidget.skeletonVariant`, otherwise it
+ *  is derived from the registered `previewVariant` — see widgets/skeletonVariant.ts. */
+export type WidgetSkeletonVariant = 'metric' | 'card' | 'chart' | 'list' | 'table';
+
 export interface WidgetSkeletonProps {
   class?: string;
-  variant?: 'metric' | 'card' | 'chart' | 'list';
+  variant?: WidgetSkeletonVariant;
 }
 
 /** Standard cold-state for any widget. It fills the widget cell and mirrors the
@@ -202,6 +211,10 @@ export function WidgetSkeleton({ class: cls, variant = 'card' }: WidgetSkeletonP
           <Skeleton width="62%" height={16} radius={999} />
           <Skeleton class="ui-widget-skeleton-chart" width="100%" height={128} radius={10} />
         </>
+      ) : variant === 'table' ? (
+        <div class="ui-widget-skeleton-table">
+          <table><tbody><TableSkeleton rows={7} cols={6} firstCellAvatar /></tbody></table>
+        </div>
       ) : (
         <SkeletonText lines={4} width="88%" lastWidth="58%" />
       )}
@@ -209,49 +222,18 @@ export function WidgetSkeleton({ class: cls, variant = 'card' }: WidgetSkeletonP
   );
 }
 
-export interface DashboardPageSkeletonProps {
-  title?: string;
-  kpiCount?: number;
-  widgetCount?: number;
-  includeTable?: boolean;
-}
-
-/** Standard dashboard cold-state: header, KPI strip, insight widgets and an
- * optional register. Pages should use this only until their first authoritative
- * datasets exist; subsequent background refreshes keep real content visible. */
-export function DashboardPageSkeleton({
-  title = 'Loading dashboard',
-  kpiCount = 4,
-  widgetCount = 3,
-  includeTable = false,
-}: DashboardPageSkeletonProps): VNode {
+/** The page-header cold state (icon, module kicker, title, sub, primary action).
+ *  Pairs with a layout-driven board skeleton to form a whole dashboard page. */
+export function PageHeaderSkeleton(): VNode {
   return (
-    <section class="ui-dashboard-skeleton" role="status" aria-busy="true" aria-label={title}>
-      <span class="sr-only">{title}…</span>
-      <header class="ui-dashboard-skeleton-head">
-        <span><Skeleton circle width={42} /></span>
-        <div>
-          <Skeleton width={120} height={10} radius={999} />
-          <Skeleton width={250} height={24} radius={8} />
-          <Skeleton width={430} height={11} radius={999} />
-        </div>
-        <Skeleton width={150} height={38} radius={9} />
-      </header>
-      <SkeletonStatGrid count={kpiCount} />
-      <div class="ui-dashboard-skeleton-widgets">
-        {Array.from({ length: widgetCount }, (_, index) => (
-          <WidgetSkeleton key={index} variant={index === 0 ? 'chart' : index === 1 ? 'list' : 'card'} />
-        ))}
+    <header class="ui-dashboard-skeleton-head" aria-hidden="true">
+      <span><Skeleton circle width={42} /></span>
+      <div>
+        <Skeleton width={120} height={10} radius={999} />
+        <Skeleton width={250} height={24} radius={8} />
+        <Skeleton width={430} height={11} radius={999} />
       </div>
-      {includeTable && (
-        <div class="ui-dashboard-skeleton-table">
-          <div class="ui-dashboard-skeleton-table-head">
-            <Skeleton width={180} height={16} radius={999} />
-            <Skeleton width={260} height={36} radius={9} />
-          </div>
-          <table><tbody><TableSkeleton rows={7} cols={6} firstCellAvatar /></tbody></table>
-        </div>
-      )}
-    </section>
+      <Skeleton width={150} height={38} radius={9} />
+    </header>
   );
 }

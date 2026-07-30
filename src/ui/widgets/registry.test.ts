@@ -153,7 +153,8 @@ describe('widget registry mechanics', () => {
     expect(screen.getByLabelText('Neutral employee attention card')).toBeTruthy();
     expect(screen.getByText('Camille Rampersad')).toBeTruthy();
     expect(container.querySelector('.hrew-ar-ready-gauge')?.getAttribute('aria-label')).toBe('Record ready 0%');
-    expect(screen.getByText('3 Readiness Controls Need Review')).toBeTruthy();
+    // Spelled-out count, per the register conventions.
+    expect(screen.getByText('Three Readiness Controls Need Review')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Review Employee Record' })).toBeTruthy();
   });
 

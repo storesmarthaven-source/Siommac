@@ -2,9 +2,9 @@
 
 # hr Module Map
 
-Source fingerprint: `16d02473a82899f320f60a94`
+Source fingerprint: `8af9bd4211159aa5cfc3b43a`
 
-Files: 254 | Symbols: 2839 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 35 | DB objects: 196 | E2E suites: 16
+Files: 255 | Symbols: 2854 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 35 | DB objects: 196 | E2E suites: 16
 
 ## Widgets and Tiles
 
@@ -13,8 +13,8 @@ Files: 254 | Symbols: 2839 | Widgets: 9 | Unique mounted endpoints: 275 | Route 
 | `bundle.hr.attendance.ops` | Attendance & Leave Ops | registry | `` | `src/ui/widgets/bundles.ts:117` |
 | `bundle.hr.employees.essentials` | Employee Master Essentials | registry | `` | `src/ui/widgets/bundles.ts:90` |
 | `bundle.hr.onboarding.manager` | Onboarding Manager Pack | registry | `` | `src/ui/widgets/bundles.ts:76` |
-| `hr.employeeMaster.lifecycleActivity` | Workforce Activity | registry | `LifecycleActivity` | `src/ui/widgets/registry.hrEmployeeMaster.tsx:486` |
-| `hr.employees.register` | Employee Register | local | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:742` |
+| `hr.employeeMaster.lifecycleActivity` | Workforce Activity | registry | `LifecycleActivity` | `src/ui/widgets/registry.hrEmployeeMaster.tsx:549` |
+| `hr.employees.register` | Employee Register | local | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:753` |
 | `hr.onboarding.case.activeTasks` | Active Tasks | local | `() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddTask}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:329` |
 | `hr.onboarding.case.blockersTable` | Blockers | local | `() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:330` |
 | `hr.onboarding.case.customActions` | Custom Actions | local | `() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddAction}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:332` |
@@ -709,7 +709,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/CompensationOverview.tsx` | 347 |
 | frontend-page | `src/components/sections/HR/EmployeeCreatePage.test.ts` | 350 |
 | frontend-page | `src/components/sections/HR/EmployeeCreatePage.tsx` | 1037 |
-| frontend-page | `src/components/sections/HR/EmployeeMaster.tsx` | 889 |
+| frontend-page | `src/components/sections/HR/EmployeeMaster.tsx` | 922 |
 | frontend-page | `src/components/sections/HR/EmployeeOnboardingSummary.tsx` | 97 |
 | frontend-page | `src/components/sections/HR/EmployeeProfilePage.test.tsx` | 564 |
 | frontend-page | `src/components/sections/HR/EmployeeProfilePage.tsx` | 1673 |
@@ -733,14 +733,15 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/OnboardingTasksWorkspace.tsx` | 458 |
 | frontend-page | `src/components/sections/HR/OrgStructureOverview.tsx` | 777 |
 | frontend-page | `src/components/sections/HR/OvertimeOverview.tsx` | 233 |
-| frontend-page | `src/components/sections/HR/ProfileDrawer.test.tsx` | 289 |
-| frontend-page | `src/components/sections/HR/ProfileDrawer.tsx` | 1074 |
+| frontend-page | `src/components/sections/HR/ProfileDrawer.test.tsx` | 307 |
+| frontend-page | `src/components/sections/HR/ProfileDrawer.tsx` | 1072 |
 | frontend-page | `src/components/sections/HR/RosterOverview.tsx` | 686 |
 | frontend-page | `src/components/sections/HR/StartOnboardingWizard.tsx` | 974 |
 | frontend-page | `src/components/sections/HR/TransfersOverview.tsx` | 405 |
 | frontend-page | `src/components/sections/HR/TrinidadPhoneInput.tsx` | 65 |
 | frontend-page | `src/components/sections/HR/employeeMasterAccess.test.ts` | 72 |
 | frontend-page | `src/components/sections/HR/employeeMasterAccess.ts` | 87 |
+| frontend-page | `src/components/sections/HR/employeeMasterSkeleton.test.tsx` | 256 |
 | frontend-page | `src/components/sections/HR/employeeMasterWorkspace.test.ts` | 77 |
 | frontend-page | `src/components/sections/HR/employeeProfileModel.ts` | 237 |
 | frontend-page | `src/components/sections/HR/employeeRegisterColumns.test.ts` | 59 |

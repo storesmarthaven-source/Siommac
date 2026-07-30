@@ -13,6 +13,8 @@ import {
   type HrEmployeeRow, type TrainingStatus, type EmployeeSortCol, type EmployeeMissingField,
 } from '@api/hr/employees';
 import { usePrefetchEmployeeProfileShell, type ProfileTabKey } from '@api/hr/employeeProfile';
+import { EMPLOYEE_ATTENTION_ROSTER_QUERY } from '@ui/widgets/registry.hrEmployeeDashboard';
+import { useDeadlineWindowQuery } from '@ui/widgets/registry.calendarPlanning';
 import {
   humanize, rowName, statusTone, TRAINING_TONE, TRAINING_LABEL, Avatar, TinyAvatar,
 } from './shared';
@@ -23,9 +25,9 @@ import { EmployeeCreatePage } from './EmployeeCreatePage';
 import { ContactDialog, StatusDialog, OffboardingDialog, ChangeRequestDialog, DocumentDialog, StatutoryDialog } from './ActionDialogs';
 import { ImportWizard } from './ImportWizard';
 import { StartOnboardingWizard } from './StartOnboardingWizard';
-import { DashboardPageSkeleton, TableSkeleton, Button, EmptyState, LucideIcon, PageHeader, Pagination } from '@ui';
+import { PageHeaderSkeleton, TableSkeleton, Button, EmptyState, LucideIcon, PageHeader, Pagination } from '@ui';
 import {
-  WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget, insertWidgetsAtRow,
+  BoardSkeleton, WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget, insertWidgetsAtRow,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeDef, type WidgetSizeKey,
 } from '@ui/widgets';
 import { TableSearch, FilterDropdown, AdvancedFilter, ActiveFilters, useFilterDropdowns, FILTER_DROPDOWN_ATTR, type AdvTab } from '@ui';
@@ -382,6 +384,13 @@ export function EmployeeMaster(): VNode {
     sortBy, sortDir, page, pageSize,
   });
   const dashboardQ = useHrDashboardStats();
+  // The attention widgets read a DIFFERENT roster slice from the register's
+  // filtered list. Warming it here — same key, so TanStack serves one request —
+  // lets the page skeleton stand in for those widgets too, instead of clearing
+  // and letting each one flash its own card skeleton.
+  const attentionRosterQ = useHrEmployeesPage({ ...EMPLOYEE_ATTENTION_ROSTER_QUERY, statuses: ['active'] });
+  // Same for the Schedule & Deadlines card on this board.
+  const deadlineQ = useDeadlineWindowQuery().query;
   const paged = listQ.data?.rows ?? [];
   const meta = listQ.data?.meta;
   const total = meta?.total ?? 0;
@@ -396,7 +405,7 @@ export function EmployeeMaster(): VNode {
   // widgets come from the global registry (browsable in the Widget Library).
   const {
     layout, updateZoneLayout, saveLayout, cancelLayout, setAsDefault, resetLayout,
-    isDefaultDirty, isDirty, isSaving,
+    isDefaultDirty, isDirty, isSaving, isLoading: layoutLoading,
   } = useBoardLayout(PAGE_KEY, defaultEmployeeLayout(), EMPLOYEE_BOARD_COLUMNS);
   const kpiBoard = useBoardLayout(KPI_PAGE_KEY, defaultEmployeeKpiLayout(), EMPLOYEE_BOARD_COLUMNS);
   const pageDefaultDirty = isDefaultDirty || kpiBoard.isDefaultDirty;
@@ -739,7 +748,9 @@ export function EmployeeMaster(): VNode {
   const floor = (key: WidgetSizeKey, w: number, h: number): WidgetSizeDef[] =>
     [{ key, label: 'Default', grid: { w, h } }];
   const localWidgets: LocalWidgetMap = {
-    'hr.employees.register': { render: renderRegister, chrome: 'none', title: 'Employee Register', allowedSizes: floor('hero', 12, 12) },
+    // `skeletonVariant` is what the board's cold state draws for this tile — a page-local
+    // widget has no registry entry to derive it from, so it is declared with the renderer.
+    'hr.employees.register': { render: renderRegister, chrome: 'none', title: 'Employee Register', allowedSizes: floor('hero', 12, 12), skeletonVariant: 'table' },
   };
 
   // Full-PAGE wizards — take over the whole view when launched.
@@ -765,8 +776,30 @@ export function EmployeeMaster(): VNode {
     );
   }
 
-  if (listQ.isLoading || dashboardQ.isLoading) {
-    return <DashboardPageSkeleton title="Loading Employee Master" kpiCount={6} widgetCount={3} includeTable />;
+  // ONE cold state for the whole page: the skeleton holds until every dataset the page and
+  // its widgets render is present, then all content appears together.
+  //
+  // The skeleton is LAYOUT-DRIVEN, not counted. It reads the same two `useBoardLayout`
+  // results the live boards render from (same pageKey ⇒ same TanStack cache entry, so
+  // there is exactly one layout source and no duplicated placement model), and mirrors
+  // every saved instance at its real x/y/w/h in its registered density. Rearranging,
+  // adding or removing a widget therefore changes the skeleton with no code change here.
+  // The layout queries are part of the gate: a skeleton drawn before the saved layout
+  // arrived would have to invent a shape, which is exactly the failure being removed.
+  if (layoutLoading || kpiBoard.isLoading
+    || listQ.isLoading || dashboardQ.isLoading || attentionRosterQ.isLoading || deadlineQ.isLoading) {
+    return (
+      <div class="hr-emp-master" data-testid="employee-master-skeleton" role="status" aria-busy="true"
+        aria-label="Loading Employee Master">
+        <span class="sr-only">Loading Employee Master…</span>
+        <PageHeaderSkeleton />
+        <div class="em-kpi-board">
+          <BoardSkeleton layout={kpiBoard.layout} columns={EMPLOYEE_BOARD_COLUMNS} cellHeight={6} gap={[12, 12]} />
+        </div>
+        <BoardSkeleton layout={layout} columns={EMPLOYEE_BOARD_COLUMNS} cellHeight={6} gap={[12, 12]}
+          localWidgets={localWidgets} />
+      </div>
+    );
   }
 
   return (

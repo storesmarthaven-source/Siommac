@@ -22,6 +22,7 @@
  */
 
 import { toast as uiToast } from '@ui/toast';
+import { readLastSection, resolveRestorableSection, whenNavReady } from './sectionRestore';
 
 // ── CDN-global type shims ─────────────────────────────────────────────────────
 declare const flatpickr: ((sel: string, opts: Record<string, unknown>) => { selectedDates: Date[]; formatDate: (d: Date, f: string) => string; set: (k: string, v: unknown) => void; setDate: (d: string, trigger: boolean) => void; destroy: () => void }) | undefined;
@@ -608,13 +609,17 @@ function applySession(result: Record<string, unknown>, announce: boolean): void 
   const commonItems = cfg?.COMMON_ITEMS ?? [];
   const def = (sectionDefs[currentRole] ?? [commonItems[1] ?? { id: '' }])[0] ?? { id: '' };
 
+  // Navigation is deferred to `whenNavReady` because init() runs BEFORE NavController
+  // mounts the `window.Nav` shim — calling nav.showSection here was a silent no-op, so
+  // a refresh restored nothing. A restore also cannot validate the stored id against the
+  // DOM directly: module-backed subsections (s-hr-employees, …) have no element of their
+  // own, so resolveRestorableSection routes through the canonical module→panel mapping.
   if (announce) {
     try { localStorage.removeItem('siomac_last_section_' + currentRole); } catch (_) { /* empty */ }
-    nav?.showSection?.(def.id);
+    whenNavReady(readyNav => readyNav.showSection?.(def.id));
   } else {
-    let lastSection: string | null = null;
-    try { lastSection = localStorage.getItem('siomac_last_section_' + currentRole); } catch (_) { /* empty */ }
-    nav?.showSection?.((lastSection && document.getElementById(lastSection)) ? lastSection : def.id);
+    const lastSection = readLastSection(currentRole);
+    whenNavReady(readyNav => readyNav.showSection?.(resolveRestorableSection(lastSection, def.id)));
   }
 
   if (currentRole === 'employee') {

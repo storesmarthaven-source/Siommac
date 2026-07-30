@@ -2,8 +2,8 @@ id	title	kind	module	area	render	file	line
 bundle.hr.attendance.ops	Attendance & Leave Ops	registry	hr			src/ui/widgets/bundles.ts	117
 bundle.hr.employees.essentials	Employee Master Essentials	registry	hr			src/ui/widgets/bundles.ts	90
 bundle.hr.onboarding.manager	Onboarding Manager Pack	registry	hr			src/ui/widgets/bundles.ts	76
-enterprise.calendar.taskPlanner	Task Planner	registry	widgets		TaskPlannerWidget	src/ui/widgets/registry.calendarPlanning.tsx	278
-enterprise.calendar.upcomingDeadlines	Schedule & Deadlines	registry	widgets		DeadlineWidget	src/ui/widgets/registry.calendarPlanning.tsx	277
+enterprise.calendar.taskPlanner	Task Planner	registry	widgets		TaskPlannerWidget	src/ui/widgets/registry.calendarPlanning.tsx	291
+enterprise.calendar.upcomingDeadlines	Schedule & Deadlines	registry	widgets		DeadlineWidget	src/ui/widgets/registry.calendarPlanning.tsx	290
 finance.payroll.assignedWork	Approval and Activity	local	payroll		() => <ApprovalsWidget data={data} />	src/components/sections/Finance/PayrollCommandCenter.tsx	512
 finance.payroll.deadlines	Upcoming Deadlines	local	payroll		() => <DeadlinesWidget data={data} onOpen={openRun} />	src/components/sections/Finance/PayrollCommandCenter.tsx	513
 finance.payroll.kpi.activeRuns	Active Runs	local	payroll		() => <KpiTile icon="fa-layer-group" tone="teal" label="Active Runs" value={kk?.activeRuns ?? 0} sub="In the reporting window" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />	src/components/sections/Finance/PayrollCommandCenter.tsx	494
@@ -24,21 +24,22 @@ finance.statutory.kpi.verifyQueue	Verification Queue (KPI)	local	finance		render
 finance.statutory.nisChart	NIS Contribution Schedule	local	finance		renderChart	src/components/sections/Finance/StatutoryDashboard.tsx	653
 finance.statutory.readiness	Statutory Readiness	local	finance		renderReadiness	src/components/sections/Finance/StatutoryDashboard.tsx	654
 finance.statutory.register	Statutory Register	local	finance		renderRegister	src/components/sections/Finance/StatutoryDashboard.tsx	656
-hr.employeeMaster.activeWorkforce	Active Workforce	registry	widgets		ActiveWorkforce	src/ui/widgets/registry.hrEmployeeDashboard.tsx	474
-hr.employeeMaster.departures	Departures	registry	widgets		Departures	src/ui/widgets/registry.hrEmployeeDashboard.tsx	479
-hr.employeeMaster.employeeAttentionNeutral	Employee Attention — Neutral	registry	widgets		EmployeeAttentionNeutralWidget	src/ui/widgets/registry.hrEmployeeDashboard.tsx	481
-hr.employeeMaster.exceptions	Exceptions	registry	widgets		Exceptions	src/ui/widgets/registry.hrEmployeeDashboard.tsx	477
-hr.employeeMaster.hrWorkQueue	HR Work Queue	registry	widgets		HrWorkQueue	src/ui/widgets/registry.hrEmployeeDashboard.tsx	476
-hr.employeeMaster.internalMovesCard	Internal Moves	registry	widgets		InternalMovesCard	src/ui/widgets/registry.hrEmployeeDashboard.tsx	483
-hr.employeeMaster.lifecycleActivity	Workforce Activity	registry	hr	Employee Master	LifecycleActivity	src/ui/widgets/registry.hrEmployeeMaster.tsx	486
-hr.employeeMaster.lifecycleOutcomes	Lifecycle Outcomes	registry	widgets		LifecycleOutcomeChart	src/ui/widgets/registry.hrEmployeeDashboard.tsx	486
-hr.employeeMaster.monthlyHiresCard	Hires This Month	registry	widgets		MonthlyHiresCard	src/ui/widgets/registry.hrEmployeeDashboard.tsx	482
-hr.employeeMaster.newStarters	New Starters	registry	widgets		NewStarters	src/ui/widgets/registry.hrEmployeeDashboard.tsx	478
-hr.employeeMaster.promotionsCard	Promotions	registry	widgets		PromotionsCard	src/ui/widgets/registry.hrEmployeeDashboard.tsx	484
-hr.employeeMaster.readinessRadar	Employee Readiness Radar	registry	widgets		ReadinessRadar	src/ui/widgets/registry.hrEmployeeDashboard.tsx	485
-hr.employeeMaster.recordQuality	Record Quality	registry	widgets		RecordQuality	src/ui/widgets/registry.hrEmployeeDashboard.tsx	480
-hr.employeeMaster.recordReadiness	Record Readiness	registry	widgets		RecordReadiness	src/ui/widgets/registry.hrEmployeeDashboard.tsx	475
-hr.employees.register	Employee Register	local	hr		renderRegister	src/components/sections/HR/EmployeeMaster.tsx	742
+hr.employeeMaster.activeWorkforce	Active Workforce	registry	widgets		ActiveWorkforce	src/ui/widgets/registry.hrEmployeeDashboard.tsx	503
+hr.employeeMaster.departures	Departures	registry	widgets		Departures	src/ui/widgets/registry.hrEmployeeDashboard.tsx	508
+hr.employeeMaster.employeeAttentionNeutral	Employee Attention — Neutral	registry	widgets		EmployeeAttentionNeutralWidget	src/ui/widgets/registry.hrEmployeeDashboard.tsx	510
+hr.employeeMaster.exceptions	Exceptions	registry	widgets		Exceptions	src/ui/widgets/registry.hrEmployeeDashboard.tsx	506
+hr.employeeMaster.hrWorkQueue	HR Work Queue	registry	widgets		HrWorkQueue	src/ui/widgets/registry.hrEmployeeDashboard.tsx	505
+hr.employeeMaster.internalMovesCard	Internal Moves	registry	widgets		InternalMovesCard	src/ui/widgets/registry.hrEmployeeDashboard.tsx	512
+hr.employeeMaster.lifecycleActivity	Workforce Activity	registry	hr	Employee Master	LifecycleActivity	src/ui/widgets/registry.hrEmployeeMaster.tsx	549
+hr.employeeMaster.lifecycleOutcomes	Lifecycle Outcomes	registry	widgets		LifecycleOutcomeChart	src/ui/widgets/registry.hrEmployeeDashboard.tsx	515
+hr.employeeMaster.monthlyHiresCard	Hires This Month	registry	widgets		MonthlyHiresCard	src/ui/widgets/registry.hrEmployeeDashboard.tsx	511
+hr.employeeMaster.newStarters	New Starters	registry	widgets		NewStarters	src/ui/widgets/registry.hrEmployeeDashboard.tsx	507
+hr.employeeMaster.promotionsCard	Promotions	registry	widgets		PromotionsCard	src/ui/widgets/registry.hrEmployeeDashboard.tsx	513
+hr.employeeMaster.readinessRadar	Employee Readiness Radar	registry	widgets		ReadinessRadar	src/ui/widgets/registry.hrEmployeeDashboard.tsx	514
+hr.employeeMaster.recordQuality	Record Quality	registry	widgets		RecordQuality	src/ui/widgets/registry.hrEmployeeDashboard.tsx	509
+hr.employeeMaster.recordReadiness	Record Readiness	registry	widgets		RecordReadiness	src/ui/widgets/registry.hrEmployeeDashboard.tsx	504
+hr.employees.register	Employee Register	local	hr		renderRegister	src/components/sections/HR/EmployeeMaster.tsx	753
+hr.employees.register		local	widgets		() => <div />	src/ui/widgets/BoardSkeleton.test.tsx	30
 hr.onboarding.case.activeTasks	Active Tasks	local	hr		() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddTask}>+ Add</button>)	src/components/sections/HR/OnboardingCaseDetail.tsx	329
 hr.onboarding.case.blockersTable	Blockers	local	hr		() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())	src/components/sections/HR/OnboardingCaseDetail.tsx	330
 hr.onboarding.case.customActions	Custom Actions	local	hr		() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddAction}>+ Add</button>)	src/components/sections/HR/OnboardingCaseDetail.tsx	332

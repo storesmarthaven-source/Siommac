@@ -57,10 +57,10 @@ export { PersonSearchSelect, type PersonSearchOption, type PersonSearchSelectPro
 // ── Loading placeholders (cold-path only) ──
 export {
   Skeleton, SkeletonText, TableSkeleton, ListSkeleton, SkeletonFields, SkeletonStatGrid,
-  WidgetSkeleton, DashboardPageSkeleton,
+  WidgetSkeleton, PageHeaderSkeleton,
   type SkeletonProps, type SkeletonTextProps, type TableSkeletonProps, type ListSkeletonProps,
   type SkeletonFieldsProps, type SkeletonStatGridProps, type WidgetSkeletonProps,
-  type DashboardPageSkeletonProps,
+  type WidgetSkeletonVariant,
 } from './components/Skeleton';
 export { Spinner, type SpinnerProps } from './components/Spinner';
 export { EmptyState, type EmptyStateProps, type EmptyTone } from './components/EmptyState';

@@ -93,7 +93,11 @@ declare global {
     jQuery: JQueryNS.JQueryStatic;
 
     // Legacy navigation + per-section view shims (see LegacyViewShim above).
-    Nav:            LegacyViewShim;
+    // `Nav` is OPTIONAL on purpose: NavController installs it on mount, which happens
+    // AFTER AttendanceSystem.init() runs. Typing it as always-present is what let a
+    // boot-time `nav?.showSection?.(…)` read as safe when it was in fact a silent
+    // no-op that broke refresh restoration — see @lib/sectionRestore.
+    Nav?:           LegacyViewShim;
     AppState:       { get: (key: string) => unknown; set: (key: string, value: unknown) => void; _photoCache: Record<string, unknown> };
     Dashboard:      LegacyViewShim;
     SettingsView:   LegacyViewShim;

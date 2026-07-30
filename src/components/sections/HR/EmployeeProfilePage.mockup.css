@@ -826,7 +826,6 @@
 .epf-root .definition-list dd {
   margin: 0;
   color: var(--ink);
-  font-weight: 560;
 }
 
 .epf-root .definition-list dd a {

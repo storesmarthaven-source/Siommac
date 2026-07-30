@@ -2,29 +2,30 @@
 
 # widgets Module Map
 
-Source fingerprint: `16d02473a82899f320f60a94`
+Source fingerprint: `8af9bd4211159aa5cfc3b43a`
 
-Files: 69 | Symbols: 542 | Widgets: 21 | Unique mounted endpoints: 15 | Route definitions: 15 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
+Files: 72 | Symbols: 565 | Widgets: 22 | Unique mounted endpoints: 15 | Route definitions: 15 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
 
 ## Widgets and Tiles
 
 | ID | Title | Kind | Render | Location |
 |---|---|---|---|---|
-| `enterprise.calendar.taskPlanner` | Task Planner | registry | `TaskPlannerWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:278` |
-| `enterprise.calendar.upcomingDeadlines` | Schedule & Deadlines | registry | `DeadlineWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:277` |
-| `hr.employeeMaster.activeWorkforce` | Active Workforce | registry | `ActiveWorkforce` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:474` |
-| `hr.employeeMaster.departures` | Departures | registry | `Departures` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:479` |
-| `hr.employeeMaster.employeeAttentionNeutral` | Employee Attention — Neutral | registry | `EmployeeAttentionNeutralWidget` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:481` |
-| `hr.employeeMaster.exceptions` | Exceptions | registry | `Exceptions` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:477` |
-| `hr.employeeMaster.hrWorkQueue` | HR Work Queue | registry | `HrWorkQueue` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:476` |
-| `hr.employeeMaster.internalMovesCard` | Internal Moves | registry | `InternalMovesCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:483` |
-| `hr.employeeMaster.lifecycleOutcomes` | Lifecycle Outcomes | registry | `LifecycleOutcomeChart` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:486` |
-| `hr.employeeMaster.monthlyHiresCard` | Hires This Month | registry | `MonthlyHiresCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:482` |
-| `hr.employeeMaster.newStarters` | New Starters | registry | `NewStarters` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:478` |
-| `hr.employeeMaster.promotionsCard` | Promotions | registry | `PromotionsCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:484` |
-| `hr.employeeMaster.readinessRadar` | Employee Readiness Radar | registry | `ReadinessRadar` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:485` |
-| `hr.employeeMaster.recordQuality` | Record Quality | registry | `RecordQuality` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:480` |
-| `hr.employeeMaster.recordReadiness` | Record Readiness | registry | `RecordReadiness` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:475` |
+| `enterprise.calendar.taskPlanner` | Task Planner | registry | `TaskPlannerWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:291` |
+| `enterprise.calendar.upcomingDeadlines` | Schedule & Deadlines | registry | `DeadlineWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:290` |
+| `hr.employeeMaster.activeWorkforce` | Active Workforce | registry | `ActiveWorkforce` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:503` |
+| `hr.employeeMaster.departures` | Departures | registry | `Departures` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:508` |
+| `hr.employeeMaster.employeeAttentionNeutral` | Employee Attention — Neutral | registry | `EmployeeAttentionNeutralWidget` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:510` |
+| `hr.employeeMaster.exceptions` | Exceptions | registry | `Exceptions` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:506` |
+| `hr.employeeMaster.hrWorkQueue` | HR Work Queue | registry | `HrWorkQueue` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:505` |
+| `hr.employeeMaster.internalMovesCard` | Internal Moves | registry | `InternalMovesCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:512` |
+| `hr.employeeMaster.lifecycleOutcomes` | Lifecycle Outcomes | registry | `LifecycleOutcomeChart` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:515` |
+| `hr.employeeMaster.monthlyHiresCard` | Hires This Month | registry | `MonthlyHiresCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:511` |
+| `hr.employeeMaster.newStarters` | New Starters | registry | `NewStarters` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:507` |
+| `hr.employeeMaster.promotionsCard` | Promotions | registry | `PromotionsCard` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:513` |
+| `hr.employeeMaster.readinessRadar` | Employee Readiness Radar | registry | `ReadinessRadar` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:514` |
+| `hr.employeeMaster.recordQuality` | Record Quality | registry | `RecordQuality` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:509` |
+| `hr.employeeMaster.recordReadiness` | Record Readiness | registry | `RecordReadiness` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:504` |
+| `hr.employees.register` |  | local | `() => <div />` | `src/ui/widgets/BoardSkeleton.test.tsx:30` |
 | `platform.weather.current` | Weather | registry | `WeatherBandWidget` | `src/ui/widgets/registry.weather.tsx:488` |
 | `platform.weather.precipitation` | Weather · Precipitation | registry | `metricWidget('precipitation')` | `src/ui/widgets/registry.weather.tsx:502` |
 | `platform.weather.strip` | Weather · Strip | registry | `WeatherStripWidget` | `src/ui/widgets/registry.weather.tsx:495` |
@@ -90,6 +91,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `WIDGET_BOARD_REVEAL_EVENT` | variable / ui-tile | `src/ui/widgets/boardReveal.ts:1` | `-` |
 | `WidgetBoardRevealDetail` | interface / ui-tile | `src/ui/widgets/boardReveal.ts:3` | `-` |
 | `requestWidgetBoardReveal` | function / ui-tile | `src/ui/widgets/boardReveal.ts:9` | `-` |
+| `BoardSkeleton` | function / component | `src/ui/widgets/BoardSkeleton.tsx:44` | `-` |
 | `WidgetBundle` | interface / ui-tile | `src/ui/widgets/bundles.ts:53` | `-` |
 | `WIDGET_BUNDLES` | array / ui-tile | `src/ui/widgets/bundles.ts:75` | `-` |
 | `resolveBundleWidgets` | function / ui-tile | `src/ui/widgets/bundles.ts:145` | `-` |
@@ -133,9 +135,11 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `insertWidgetsAtTop` | function / ui-tile | `src/ui/widgets/placement.ts:14` | `-` |
 | `insertWidgetsAtRow` | function / ui-tile | `src/ui/widgets/placement.ts:18` | `-` |
 | `compactWidgets` | function / ui-tile | `src/ui/widgets/placement.ts:41` | `-` |
-| `widgets` | array / ui-tile | `src/ui/widgets/registry.calendarPlanning.tsx:276` | `-` |
-| `widgets` | array / ui-tile | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:473` | `-` |
-| `widgets` | array / ui-tile | `src/ui/widgets/registry.hrEmployeeMaster.tsx:480` | `-` |
+| `useDeadlineWindowQuery` | function / hook | `src/ui/widgets/registry.calendarPlanning.tsx:189` | `-` |
+| `widgets` | array / ui-tile | `src/ui/widgets/registry.calendarPlanning.tsx:289` | `-` |
+| `EMPLOYEE_ATTENTION_ROSTER_QUERY` | variable / component | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:329` | `-` |
+| `widgets` | array / ui-tile | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:502` | `-` |
+| `widgets` | array / ui-tile | `src/ui/widgets/registry.hrEmployeeMaster.tsx:543` | `-` |
 | `WIDGET_REGISTRY` | variable / ui-tile | `src/ui/widgets/registry.ts:54` | `-` |
 | `allWidgets` | function / ui-tile | `src/ui/widgets/registry.ts:57` | `-` |
 | `getWidgetDef` | function / ui-tile | `src/ui/widgets/registry.ts:62` | `-` |
@@ -151,43 +155,44 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `WIDGET_PACKAGES_KEY` | variable / ui-tile | `src/ui/widgets/runtimeRegistry.ts:54` | `-` |
 | `useInstalledWidgetPackages` | function / hook, ui-tile | `src/ui/widgets/runtimeRegistry.ts:60` | `-` |
 | `useRefreshInstalledPackages` | function / hook | `src/ui/widgets/runtimeRegistry.ts:75` | `-` |
-| `WIDGET_CONTRACT_VERSION` | variable / ui-tile | `src/ui/widgets/types.ts:20` | `-` |
-| `WIDGET_DESKTOP_COLUMNS` | variable / ui-tile | `src/ui/widgets/types.ts:21` | `-` |
-| `WidgetContractVersion` | type / ui-tile | `src/ui/widgets/types.ts:22` | `-` |
-| `WidgetRuntimeState` | type / ui-tile | `src/ui/widgets/types.ts:23` | `-` |
-| `WidgetGovernanceState` | type / ui-tile | `src/ui/widgets/types.ts:26` | `-` |
-| `WidgetMotionKind` | type / ui-tile | `src/ui/widgets/types.ts:27` | `-` |
-| `WidgetBreakpoint` | type / ui-tile | `src/ui/widgets/types.ts:28` | `-` |
-| `WidgetPlacement` | interface / ui-tile | `src/ui/widgets/types.ts:30` | `-` |
-| `WidgetResponsivePlacements` | type / ui-tile | `src/ui/widgets/types.ts:31` | `-` |
-| `WidgetGovernancePolicy` | interface / ui-tile | `src/ui/widgets/types.ts:33` | `-` |
-| `WidgetMotionSpec` | interface / ui-tile | `src/ui/widgets/types.ts:44` | `-` |
-| `WidgetDataSourceRegistration` | interface / ui-tile | `src/ui/widgets/types.ts:51` | `-` |
-| `WidgetSizeKey` | type / ui-tile | `src/ui/widgets/types.ts:63` | `-` |
-| `WidgetChrome` | type / ui-tile | `src/ui/widgets/types.ts:68` | `-` |
-| `WidgetPreviewVariant` | type / ui-tile | `src/ui/widgets/types.ts:70` | `-` |
-| `WidgetLifecycleState` | type / ui-tile | `src/ui/widgets/types.ts:75` | `-` |
-| `WidgetContentPriorityRule` | interface / ui-tile | `src/ui/widgets/types.ts:78` | `-` |
-| `WidgetDensityRules` | interface / ui-tile | `src/ui/widgets/types.ts:87` | `-` |
-| `WidgetResponsiveContext` | interface / ui-tile | `src/ui/widgets/types.ts:94` | `-` |
-| `WidgetPermissionSpec` | interface / ui-tile | `src/ui/widgets/types.ts:106` | `-` |
-| `WidgetGridSize` | interface / ui-tile | `src/ui/widgets/types.ts:111` | `-` |
-| `WidgetSizeConstraints` | interface / ui-tile | `src/ui/widgets/types.ts:113` | `-` |
-| `WidgetSizeDef` | interface / ui-tile | `src/ui/widgets/types.ts:123` | `-` |
-| `WidgetConfigOption` | interface / ui-tile | `src/ui/widgets/types.ts:132` | `-` |
-| `WidgetConfigFieldType` | type / ui-tile | `src/ui/widgets/types.ts:134` | `-` |
-| `WidgetConfigField` | interface / ui-tile | `src/ui/widgets/types.ts:137` | `-` |
-| `WidgetDependencyDef` | interface / ui-tile | `src/ui/widgets/types.ts:147` | `-` |
-| `WidgetDataSourceDef` | interface / ui-tile | `src/ui/widgets/types.ts:155` | `-` |
-| `WidgetRenderProps` | interface / ui-tile | `src/ui/widgets/types.ts:163` | `-` |
-| `WidgetPreviewProps` | interface / ui-tile | `src/ui/widgets/types.ts:174` | `-` |
-| `WidgetDef` | interface / ui-tile | `src/ui/widgets/types.ts:180` | `-` |
-| `WidgetInstance` | interface / ui-tile | `src/ui/widgets/types.ts:257` | `-` |
-| `PreviewWidgetInstance` | interface / ui-tile | `src/ui/widgets/types.ts:279` | `-` |
-| `BoardWidgetInstance` | type / ui-tile | `src/ui/widgets/types.ts:286` | `-` |
-| `LocalWidget` | interface / ui-tile | `src/ui/widgets/types.ts:296` | `-` |
-| `LocalWidgetMap` | type / ui-tile | `src/ui/widgets/types.ts:315` | `-` |
-| `isPreviewWidget` | function / ui-tile | `src/ui/widgets/types.ts:326` | `-` |
+| `widgetSkeletonVariant` | function / ui-tile | `src/ui/widgets/skeletonVariant.ts:38` | `-` |
+| `WIDGET_CONTRACT_VERSION` | variable / ui-tile | `src/ui/widgets/types.ts:23` | `-` |
+| `WIDGET_DESKTOP_COLUMNS` | variable / ui-tile | `src/ui/widgets/types.ts:24` | `-` |
+| `WidgetContractVersion` | type / ui-tile | `src/ui/widgets/types.ts:25` | `-` |
+| `WidgetRuntimeState` | type / ui-tile | `src/ui/widgets/types.ts:26` | `-` |
+| `WidgetGovernanceState` | type / ui-tile | `src/ui/widgets/types.ts:29` | `-` |
+| `WidgetMotionKind` | type / ui-tile | `src/ui/widgets/types.ts:30` | `-` |
+| `WidgetBreakpoint` | type / ui-tile | `src/ui/widgets/types.ts:31` | `-` |
+| `WidgetPlacement` | interface / ui-tile | `src/ui/widgets/types.ts:33` | `-` |
+| `WidgetResponsivePlacements` | type / ui-tile | `src/ui/widgets/types.ts:34` | `-` |
+| `WidgetGovernancePolicy` | interface / ui-tile | `src/ui/widgets/types.ts:36` | `-` |
+| `WidgetMotionSpec` | interface / ui-tile | `src/ui/widgets/types.ts:47` | `-` |
+| `WidgetDataSourceRegistration` | interface / ui-tile | `src/ui/widgets/types.ts:54` | `-` |
+| `WidgetSizeKey` | type / ui-tile | `src/ui/widgets/types.ts:66` | `-` |
+| `WidgetChrome` | type / ui-tile | `src/ui/widgets/types.ts:71` | `-` |
+| `WidgetPreviewVariant` | type / ui-tile | `src/ui/widgets/types.ts:73` | `-` |
+| `WidgetLifecycleState` | type / ui-tile | `src/ui/widgets/types.ts:78` | `-` |
+| `WidgetContentPriorityRule` | interface / ui-tile | `src/ui/widgets/types.ts:81` | `-` |
+| `WidgetDensityRules` | interface / ui-tile | `src/ui/widgets/types.ts:90` | `-` |
+| `WidgetResponsiveContext` | interface / ui-tile | `src/ui/widgets/types.ts:97` | `-` |
+| `WidgetPermissionSpec` | interface / ui-tile | `src/ui/widgets/types.ts:109` | `-` |
+| `WidgetGridSize` | interface / ui-tile | `src/ui/widgets/types.ts:114` | `-` |
+| `WidgetSizeConstraints` | interface / ui-tile | `src/ui/widgets/types.ts:116` | `-` |
+| `WidgetSizeDef` | interface / ui-tile | `src/ui/widgets/types.ts:126` | `-` |
+| `WidgetConfigOption` | interface / ui-tile | `src/ui/widgets/types.ts:135` | `-` |
+| `WidgetConfigFieldType` | type / ui-tile | `src/ui/widgets/types.ts:137` | `-` |
+| `WidgetConfigField` | interface / ui-tile | `src/ui/widgets/types.ts:140` | `-` |
+| `WidgetDependencyDef` | interface / ui-tile | `src/ui/widgets/types.ts:150` | `-` |
+| `WidgetDataSourceDef` | interface / ui-tile | `src/ui/widgets/types.ts:158` | `-` |
+| `WidgetRenderProps` | interface / ui-tile | `src/ui/widgets/types.ts:166` | `-` |
+| `WidgetPreviewProps` | interface / ui-tile | `src/ui/widgets/types.ts:177` | `-` |
+| `WidgetDef` | interface / ui-tile | `src/ui/widgets/types.ts:183` | `-` |
+| `WidgetInstance` | interface / ui-tile | `src/ui/widgets/types.ts:265` | `-` |
+| `PreviewWidgetInstance` | interface / ui-tile | `src/ui/widgets/types.ts:287` | `-` |
+| `BoardWidgetInstance` | type / ui-tile | `src/ui/widgets/types.ts:294` | `-` |
+| `LocalWidget` | interface / ui-tile | `src/ui/widgets/types.ts:304` | `-` |
+| `LocalWidgetMap` | type / ui-tile | `src/ui/widgets/types.ts:326` | `-` |
+| `isPreviewWidget` | function / ui-tile | `src/ui/widgets/types.ts:337` | `-` |
 | `useBoardLayout` | function / hook | `src/ui/widgets/useBoardLayout.ts:53` | `-` |
 | `WidgetValidationIssue` | interface / ui-tile | `src/ui/widgets/validation.ts:13` | `-` |
 | `WidgetValidationResult` | interface / ui-tile | `src/ui/widgets/validation.ts:19` | `-` |
@@ -250,6 +255,8 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/widgets.ts` | 37 |
 | frontend-page | `src/components/sections/Dashboard/useDashLayout.ts` | 174 |
 | frontend-page | `src/components/sections/HR/offboardingWidgets.tsx` | 378 |
+| widget-platform | `src/ui/widgets/BoardSkeleton.test.tsx` | 208 |
+| widget-platform | `src/ui/widgets/BoardSkeleton.tsx` | 81 |
 | widget-platform | `src/ui/widgets/WidgetBoard.test.tsx` | 47 |
 | widget-platform | `src/ui/widgets/WidgetBoard.tsx` | 161 |
 | widget-platform | `src/ui/widgets/WidgetBoardToolbar.tsx` | 110 |
@@ -285,16 +292,16 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | widget-platform | `src/ui/widgets/declarative/types.ts` | 44 |
 | widget-platform | `src/ui/widgets/defineWidget.ts` | 23 |
 | widget-platform | `src/ui/widgets/governance.ts` | 33 |
-| widget-platform | `src/ui/widgets/index.ts` | 53 |
+| widget-platform | `src/ui/widgets/index.ts` | 56 |
 | widget-platform | `src/ui/widgets/inlinePrimitives.tsx` | 120 |
 | widget-platform | `src/ui/widgets/migration.ts` | 76 |
 | widget-platform | `src/ui/widgets/motion.ts` | 82 |
 | widget-platform | `src/ui/widgets/placement.ts` | 73 |
 | widget-platform | `src/ui/widgets/platform.test.tsx` | 213 |
-| widget-registry | `src/ui/widgets/registry.calendarPlanning.tsx` | 280 |
-| widget-registry | `src/ui/widgets/registry.hrEmployeeDashboard.tsx` | 495 |
-| widget-registry | `src/ui/widgets/registry.hrEmployeeMaster.tsx` | 528 |
-| widget-registry | `src/ui/widgets/registry.test.ts` | 323 |
+| widget-registry | `src/ui/widgets/registry.calendarPlanning.tsx` | 293 |
+| widget-registry | `src/ui/widgets/registry.hrEmployeeDashboard.tsx` | 524 |
+| widget-registry | `src/ui/widgets/registry.hrEmployeeMaster.tsx` | 591 |
+| widget-registry | `src/ui/widgets/registry.test.ts` | 324 |
 | widget-registry | `src/ui/widgets/registry.ts` | 84 |
 | widget-registry | `src/ui/widgets/registry.weather.tsx` | 527 |
 | widget-platform | `src/ui/widgets/resolveBoardWidget.ts` | 20 |
@@ -302,8 +309,9 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | widget-platform | `src/ui/widgets/runtimeRegistry.ts` | 79 |
 | widget-platform | `src/ui/widgets/serializeLayout.ts` | 16 |
 | widget-platform | `src/ui/widgets/size.ts` | 20 |
+| widget-platform | `src/ui/widgets/skeletonVariant.ts` | 45 |
 | widget-platform | `src/ui/widgets/splitCommittedAndPreview.ts` | 18 |
-| widget-platform | `src/ui/widgets/types.ts` | 329 |
+| widget-platform | `src/ui/widgets/types.ts` | 340 |
 | widget-platform | `src/ui/widgets/useBoardLayout.ts` | 202 |
 | widget-platform | `src/ui/widgets/validation.ts` | 54 |
 | widget-platform | `src/ui/widgets/weatherWidget.test.tsx` | 78 |
