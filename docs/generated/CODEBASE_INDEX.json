@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "5baf13ff6ea124ef5be4c0ba3388cc9b5f7a651e",
-    "branch": "codex/employee-profile-s1",
-    "fingerprint": "17491b032cad903ca80b7bff",
+    "head": "4c1eafc65a9935227b548e84dfe0d95b0647c2e6",
+    "branch": "main",
+    "fingerprint": "16d02473a82899f320f60a94",
     "indexedFiles": 1689
   },
   "summary": {
     "files": 1336,
-    "symbols": 13474,
+    "symbols": 13478,
     "widgets": 51,
     "routes": 972,
     "routeDefinitions": 973,
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 307,
-        "symbols": 2800,
+        "symbols": 2804,
         "widgets": 0,
         "routes": 32,
         "routeDefinitions": 47,
@@ -2708,8 +2708,8 @@
       "path": "scripts/e2e/suites/hrEmployeeMaster.mjs",
       "module": "hr",
       "role": "e2e-suite",
-      "lines": 1201,
-      "hash": "d00018f42b44ee0f"
+      "lines": 1210,
+      "hash": "193fb6ae647b4589"
     },
     {
       "path": "scripts/e2e/suites/hrEmployeeSettings.mjs",
@@ -7328,15 +7328,15 @@
       "path": "src/components/shared/Avatar.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 61,
-      "hash": "08ed2aa91d6a0724"
+      "lines": 92,
+      "hash": "8a742f2cd18d156f"
     },
     {
       "path": "src/components/shared/Avatar.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 171,
-      "hash": "cd44ea6cf8e0969a"
+      "lines": 202,
+      "hash": "55e4daa7932b574c"
     },
     {
       "path": "src/components/shared/Badge.test.tsx",
@@ -125220,6 +125220,18 @@
       ]
     },
     {
+      "name": "bg",
+      "kind": "function",
+      "file": "src/components/shared/Avatar.test.tsx",
+      "line": 62,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
       "name": "AvatarVariant",
       "kind": "type",
       "file": "src/components/shared/Avatar.tsx",
@@ -125250,10 +125262,44 @@
       "tags": []
     },
     {
+      "name": "NAME_TITLES",
+      "kind": "variable",
+      "file": "src/components/shared/Avatar.tsx",
+      "line": 50,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "NAME_SUFFIXES",
+      "kind": "variable",
+      "file": "src/components/shared/Avatar.tsx",
+      "line": 51,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "bareWord",
+      "kind": "function",
+      "file": "src/components/shared/Avatar.tsx",
+      "line": 54,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "getInitials",
       "kind": "function",
       "file": "src/components/shared/Avatar.tsx",
-      "line": 44,
+      "line": 58,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -125263,7 +125309,7 @@
       "name": "nameToColor",
       "kind": "function",
       "file": "src/components/shared/Avatar.tsx",
-      "line": 55,
+      "line": 84,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -125273,7 +125319,7 @@
       "name": "isPreloaded",
       "kind": "function",
       "file": "src/components/shared/Avatar.tsx",
-      "line": 68,
+      "line": 97,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -125283,7 +125329,7 @@
       "name": "Avatar",
       "kind": "function",
       "file": "src/components/shared/Avatar.tsx",
-      "line": 78,
+      "line": 107,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -181632,219 +181678,219 @@
         },
         {
           "name": "profile-shell → employment facts carry working time and the canonical legal employer",
-          "line": 433
+          "line": 442
         },
         {
           "name": "document-health (admin) → grouped tree with counts and percentages",
-          "line": 460
+          "line": 469
         },
         {
           "name": "document-health (employee, no documents.view) → denied",
-          "line": 487
+          "line": 496
         },
         {
           "name": "profile-shell → tab indicators agree with the attention endpoint exactly",
-          "line": 492
+          "line": 501
         },
         {
           "name": "profile-shell (manager, no statutory/readiness) → gated blocks omitted, not blanked",
-          "line": 504
+          "line": 513
         },
         {
           "name": "profile-shell (employee, no hr.view) → denied",
-          "line": 523
+          "line": 532
         },
         {
           "name": "attention (employee, no hr.view) → denied",
-          "line": 528
+          "line": 537
         },
         {
           "name": "profile-shell → unknown employee is 404, not an empty shell",
-          "line": 533
+          "line": 542
         },
         {
           "name": "profile-shell → switching employees never returns the previous identity",
-          "line": 538
+          "line": 547
         },
         {
           "name": "access-assignments grant (admin) → assignment + scopes + event + audit, one correlation id",
-          "line": 549
+          "line": 558
         },
         {
           "name": "access-assignments list (admin) → scopes resolved to labels, never raw ids",
-          "line": 599
+          "line": 608
         },
         {
           "name": "access-assignments grant → empty scope list is refused (no unbounded grant)",
-          "line": 612
+          "line": 621
         },
         {
           "name": "access-assignments grant → department scope without a target is refused",
-          "line": 619
+          "line": 628
         },
         {
           "name": "access-assignments: hr_staff may VIEW but not MANAGE (segregation of duties)",
-          "line": 627
+          "line": 636
         },
         {
           "name": "access-assignments (employee) → denied both view and manage",
-          "line": 651
+          "line": 660
         },
         {
           "name": "access-assignments revoke (admin) → status + event + audit, reason required",
-          "line": 658
+          "line": 667
         },
         {
           "name": "access-assignments revoke → revoking twice is refused (no duplicate access event)",
-          "line": 693
+          "line": 702
         },
         {
           "name": "dashboard-stats (admin) → complete workspace contract, all computed",
-          "line": 705
+          "line": 714
         },
         {
           "name": "dashboard-stats (manager hr.employees.view) → allowed",
-          "line": 748
+          "line": 757
         },
         {
           "name": "dashboard-stats (employee) → denied",
-          "line": 753
+          "line": 762
         },
         {
           "name": "workflow-summary (admin) → reads central engine",
-          "line": 759
-        },
-        {
-          "name": "workflow-summary (employee) → denied",
           "line": 768
         },
         {
-          "name": "audit (admin) → entries with actor names resolved server-side",
-          "line": 774
+          "name": "workflow-summary (employee) → denied",
+          "line": 777
         },
         {
-          "name": "training-summary (admin) → counts + certificates shape",
+          "name": "audit (admin) → entries with actor names resolved server-side",
           "line": 783
         },
         {
+          "name": "training-summary (admin) → counts + certificates shape",
+          "line": 792
+        },
+        {
           "name": "documents/list (admin) → array",
-          "line": 790
+          "line": 799
         },
         {
           "name": "sites/list (admin) → array (Create wizard option source)",
-          "line": 796
+          "line": 805
         },
         {
           "name": "statutory/get (admin) → statutory + readiness",
-          "line": 803
+          "line": 812
         },
         {
           "name": "statutory/get (manager) → denied",
-          "line": 809
+          "line": 818
         },
         {
           "name": "statutory/update (admin) blocked→READY + finance handoff signal",
-          "line": 814
+          "line": 823
         },
         {
           "name": "statutory/update (manager) → denied",
-          "line": 827
+          "line": 836
         },
         {
           "name": "contact/update direct WORK contact (admin)",
-          "line": 833
+          "line": 842
         },
         {
           "name": "contact/update direct EMERGENCY contact (admin, restricted)",
-          "line": 848
+          "line": 857
         },
         {
           "name": "contact/update WORK direct (manager lacks hr.employees.update) → denied",
-          "line": 859
+          "line": 868
         },
         {
           "name": "contact/update EMERGENCY direct (manager lacks restricted_contact.update) → denied",
-          "line": 864
+          "line": 873
         },
         {
           "name": "contact/update rejects an incomplete Trinidad number",
-          "line": 869
-        },
-        {
-          "name": "contact/update REQUEST mode (manager maker) → change request created (Shape-B atomic)",
           "line": 878
         },
         {
+          "name": "contact/update REQUEST mode (manager maker) → change request created (Shape-B atomic)",
+          "line": 887
+        },
+        {
           "name": "change-request decide approve (hr_manager) → applies contact_update",
-          "line": 924
+          "line": 933
         },
         {
           "name": "ui-preferences: capture the actor’s existing preferences for restore",
-          "line": 946
+          "line": 955
         },
         {
           "name": "ui-preferences: BOTH employee-register keys are accepted",
-          "line": 956
+          "line": 965
         },
         {
           "name": "ui-preferences: saved views round-trip through the store",
-          "line": 964
+          "line": 973
         },
         {
           "name": "ui-preferences: visible columns round-trip and are normalised",
-          "line": 998
+          "line": 1007
         },
         {
           "name": "ui-preferences: unknown key is refused on BOTH get and save",
-          "line": 1008
+          "line": 1017
         },
         {
           "name": "ui-preferences: each key is validated by ITS OWN sanitizer",
-          "line": 1019
-        },
-        {
-          "name": "ui-preferences: malformed values are refused, not coerced",
           "line": 1028
         },
         {
+          "name": "ui-preferences: malformed values are refused, not coerced",
+          "line": 1037
+        },
+        {
           "name": "ui-preferences: requires authentication",
-          "line": 1052
+          "line": 1061
         },
         {
           "name": "profile-shell (admin) → identity, employment, readiness, indicators",
-          "line": 1063
+          "line": 1072
         },
         {
           "name": "profile-shell (employee) → denied",
-          "line": 1091
+          "line": 1100
         },
         {
           "name": "attention (admin) → items carry target, owner and severity",
-          "line": 1096
+          "line": 1105
         },
         {
           "name": "document-health (admin) → counts, percentages and grouped tree",
-          "line": 1109
+          "line": 1118
         },
         {
           "name": "employment-detail (admin) → masked bank context + effective-dated history",
-          "line": 1128
+          "line": 1137
         },
         {
           "name": "readiness/matrix (admin) → controls with resolved owners and coverage",
-          "line": 1148
+          "line": 1157
         },
         {
           "name": "access-assignments (admin) → labels resolved, never raw ids",
-          "line": 1167
+          "line": 1176
         },
         {
           "name": "profile reads (employee) → every one denied",
-          "line": 1185
+          "line": 1194
         },
         {
           "name": "status-change (admin) → status applied + history row",
-          "line": 1193
+          "line": 1202
         }
       ],
       "apiPaths": [
