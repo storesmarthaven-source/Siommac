@@ -10,7 +10,7 @@
 // (`employees.onboarding_default_package`) — not duplicated here.
 
 import type { ModuleSettingsManifest } from '../types';
-import { modulePolicy, workflowRule, notificationRule, auditPolicy } from '../catalogHelpers';
+import { modulePolicy, workflowRule, auditPolicy } from '../catalogHelpers';
 
 const M = 'hr_onboarding';
 const MANAGE = 'hr.settings.manage';
@@ -50,20 +50,12 @@ export const onboardingManifest: ModuleSettingsManifest = {
       label: 'Require Case Owner on Start', description: 'Require an explicit case owner when starting onboarding.',
       dataType: 'boolean', defaultValue: true, scope: ['global'], requiresPermission: MANAGE,
     }),
-    modulePolicy(M, 'hr_onboarding.allow_draft_cases', {
-      label: 'Allow Draft Cases', description: 'Allow saving an onboarding case as a draft before starting it.',
-      dataType: 'boolean', defaultValue: true, scope: ['global'], requiresPermission: MANAGE,
-    }),
     modulePolicy(M, 'hr_onboarding.task_completion_requires_evidence', {
       label: 'Task Completion Requires Evidence', description: 'Require an evidence attachment to complete tasks flagged as evidence-required.',
       dataType: 'boolean', defaultValue: false, scope: ['global'], requiresPermission: MANAGE,
     }),
 
     // ── Workflow / automation ────────────────────────────────────────────────────
-    workflowRule(M, 'hr_onboarding.auto_start_after_employee_create', {
-      label: 'Auto-Start After Employee Create', description: 'Automatically start an onboarding case when a new employee is created.',
-      dataType: 'boolean', defaultValue: false, scope: ['global'], requiresPermission: MANAGE,
-    }),
     modulePolicy(M, 'hr_onboarding.allow_blocker_waiver', {
       label: 'Allow Blocker Waiver', description: 'Allow authorized users to waive an onboarding blocker (with a reason).',
       dataType: 'boolean', defaultValue: true, scope: ['global'], requiresPermission: MANAGE,
@@ -98,14 +90,6 @@ export const onboardingManifest: ModuleSettingsManifest = {
     }),
 
     // ── Notifications (defaults the Start wizard pre-selects) ─────────────────────
-    notificationRule(M, 'hr_onboarding.send_employee_welcome_email_default', {
-      label: 'Send Welcome Email (default)', description: 'Default for "send employee welcome email" when starting a case.',
-      dataType: 'boolean', defaultValue: true, scope: ['global'], requiresPermission: MANAGE,
-    }),
-    notificationRule(M, 'hr_onboarding.notify_supervisor_default', {
-      label: 'Notify Supervisor (default)', description: 'Default for "notify supervisor & HR owner" when starting a case.',
-      dataType: 'boolean', defaultValue: true, scope: ['global'], requiresPermission: MANAGE,
-    }),
 
     // ── Account / work-email provisioning (Phase 6 defaults) ─────────────────────
     modulePolicy(M, 'hr_onboarding.work_email_domain', {
@@ -116,13 +100,41 @@ export const onboardingManifest: ModuleSettingsManifest = {
       label: 'Work Email Naming Pattern', description: 'How the local part is built from the name.',
       dataType: 'select', defaultValue: 'first.last', allowedValues: ['first.last', 'flast', 'first'], scope: ['global'], requiresPermission: MANAGE,
     }),
-    modulePolicy(M, 'hr_onboarding.account_default_credential_method', {
-      label: 'Default Credential Method', description: 'How a new hire first signs in. MFA requirement is governed by the security policy.',
-      dataType: 'select', defaultValue: 'invite_link', allowedValues: ['invite_link', 'temp_password', 'passkey'], scope: ['global'], requiresPermission: MANAGE,
+    modulePolicy(M, 'hr_onboarding.account_operating_model', {
+      label: 'Account Provisioning Model', description: 'Which team owns the employee account setup handoff.',
+      dataType: 'select', defaultValue: 'hr_managed', allowedValues: ['hr_managed', 'it_managed', 'hybrid'], scope: ['global'], requiresPermission: MANAGE,
     }),
-    workflowRule(M, 'hr_onboarding.auto_provision_account_on_start', {
-      label: 'Auto-Provision Account on Start', description: 'Create the login account + send the invite automatically when a case starts.',
-      dataType: 'boolean', defaultValue: false, scope: ['global'], requiresPermission: MANAGE,
+    modulePolicy(M, 'hr_onboarding.account_owner_queue', {
+      label: 'Account Owner Queue', description: 'Default accountable queue for account setup work.',
+      dataType: 'select', defaultValue: 'hr_operations', allowedValues: ['hr_operations', 'it_service_desk'], scope: ['global'], requiresPermission: MANAGE,
+    }),
+    modulePolicy(M, 'hr_onboarding.account_hr_fallback_enabled', {
+      label: 'Use HR Fallback', description: 'Route account setup to HR Operations when the configured IT queue is unavailable.',
+      dataType: 'boolean', defaultValue: true, scope: ['global'], requiresPermission: MANAGE,
+    }),
+    modulePolicy(M, 'hr_onboarding.secure_invitation_enabled', {
+      label: 'Secure Worker Invitation', description: 'Issue a single-use invitation for worker account activation.',
+      dataType: 'boolean', defaultValue: true, scope: ['global'], requiresPermission: MANAGE,
+    }),
+    modulePolicy(M, 'hr_onboarding.invitation_offset_days', {
+      label: 'Invitation Timing (days before start)', description: 'When the secure worker invitation becomes due relative to the target start date.',
+      dataType: 'number', defaultValue: 5, minValue: 0, maxValue: 90, scope: ['global'], requiresPermission: MANAGE,
+    }),
+    modulePolicy(M, 'hr_onboarding.invitation_expiry_days', {
+      label: 'Invitation Expiry (days)', description: 'How long a worker activation link remains valid.',
+      dataType: 'number', defaultValue: 7, minValue: 1, maxValue: 30, scope: ['global'], requiresPermission: MANAGE,
+    }),
+    modulePolicy(M, 'hr_onboarding.communication_sender_name', {
+      label: 'Onboarding Sender Name', description: 'Display name used for onboarding invitations and messages.',
+      dataType: 'string', defaultValue: 'SIOMAC HR', scope: ['global'], requiresPermission: MANAGE,
+    }),
+    modulePolicy(M, 'hr_onboarding.communication_sender_email', {
+      label: 'Onboarding Sender Email', description: 'Approved sender address used for onboarding invitations.',
+      dataType: 'string', defaultValue: '', scope: ['global'], requiresPermission: MANAGE,
+    }),
+    workflowRule(M, 'hr_onboarding.default_escalation_hours', {
+      label: 'Default Escalation Window', description: 'Hours before overdue onboarding work is escalated.',
+      dataType: 'number', defaultValue: 24, minValue: 1, maxValue: 720, scope: ['global'], requiresPermission: MANAGE,
     }),
 
     // ── Audit / retention ────────────────────────────────────────────────────────

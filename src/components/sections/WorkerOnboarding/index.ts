@@ -1,0 +1,1 @@
+export { workerOnboardingModule } from './module';

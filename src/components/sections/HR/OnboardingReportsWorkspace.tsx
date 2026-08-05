@@ -11,16 +11,24 @@
  * needs hr.onboarding.reports.export.
  */
 import { type VNode } from 'preact';
-import { useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import {
+  ArcElement, BarController, BarElement, CategoryScale, Chart, DoughnutController,
+  Legend, LinearScale, Tooltip,
+} from 'chart.js';
 import { PageHeader, exportCsv } from '@ui';
 import { can } from '@lib/permissions';
 import { useOnboardingReportList, useOnboardingReport, useOnboardingPackages, hrOnboardingApi } from '@api/hr/onboarding';
 import type { OnboardingReportKey, RunOnboardingReportArgs, OnboardingReportColumn, OnboardingReportChart } from '../../../../types/hrOnboarding';
 import { humanize } from './onboardingStatus';
+import { OnboardingScopeSelector } from './OnboardingScopeSelector';
+import { useOnboardingScope } from './useOnboardingScope';
 import './onboardingCase.css';
 
 const CASE_STATUSES = ['draft', 'open', 'in_progress', 'blocked', 'paused', 'ready_for_activation', 'completed', 'cancelled'];
 const BAR_COLORS = ['#2563eb', '#11a86b', '#f2a321', '#e11d48', '#6746f2', '#0ea5e9', '#64748b'];
+
+Chart.register(ArcElement, BarController, BarElement, CategoryScale, DoughnutController, Legend, LinearScale, Tooltip);
 
 function fmtCell(v: unknown, type?: OnboardingReportColumn['type']): string {
   if (v === null || v === undefined || v === '') return '—';
@@ -33,36 +41,49 @@ function fmtCell(v: unknown, type?: OnboardingReportColumn['type']): string {
 }
 
 function ChartView({ chart }: { chart: OnboardingReportChart }): VNode {
-  if (chart.type === 'donut') {
-    const vals = chart.series[0]?.values ?? [];
-    const total = vals.reduce((s, x) => s + x, 0) || 1;
-    return (
-      <div class="obx-repchart">
-        <div class="obx-repdonut">
-          {chart.labels.map((l, i) => (
-            <div class="obx-repdonut-row" key={l}>
-              <span class="obx-repdonut-dot" style={{ background: BAR_COLORS[i % BAR_COLORS.length] }} />
-              <span>{humanize(l)}</span>
-              <span><b>{vals[i] ?? 0}</b> ({Math.round(((vals[i] ?? 0) / total) * 100)}%)</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-  // bar (+ stacked_bar rendered as the first series bar; a second series shown inline)
-  const series = chart.series[0];
-  const max = Math.max(1, ...(series?.values ?? []));
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const chartLabel = `${chart.series.map(series => series.name).join(' and ')} by ${chart.labels.map(humanize).join(', ')}`;
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const isDonut = chart.type === 'donut';
+    const instance = new Chart(canvas, {
+      type: isDonut ? 'doughnut' : 'bar',
+      data: {
+        labels: chart.labels.map(humanize),
+        datasets: chart.series.map((series, index) => ({
+          label: series.name,
+          data: series.values,
+          backgroundColor: isDonut
+            ? chart.labels.map((_, itemIndex) => BAR_COLORS[itemIndex % BAR_COLORS.length])
+            : BAR_COLORS[index % BAR_COLORS.length],
+          borderColor: isDonut ? '#ffffff' : BAR_COLORS[index % BAR_COLORS.length],
+          borderWidth: isDonut ? 2 : 0,
+          borderRadius: isDonut ? 0 : 5,
+          maxBarThickness: 42,
+        })),
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        plugins: {
+          legend: { display: isDonut || chart.series.length > 1, position: 'bottom', labels: { boxWidth: 12, boxHeight: 12, padding: 18 } },
+          tooltip: { enabled: true },
+        },
+        scales: isDonut ? undefined : {
+          x: { stacked: chart.type === 'stacked_bar', grid: { display: false } },
+          y: { stacked: chart.type === 'stacked_bar', beginAtZero: true, ticks: { precision: 0 } },
+        },
+      },
+    });
+    return () => instance.destroy();
+  }, [chart]);
+
   return (
-    <div class="obx-repchart">
-      {chart.labels.map((l, i) => (
-        <div class="obx-repbar" key={l}>
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{humanize(l)}</span>
-          <span class="obx-repbar-track"><i class="obx-repbar-fill" style={{ display: 'block', width: `${Math.round(((series?.values[i] ?? 0) / max) * 100)}%`, background: BAR_COLORS[0] }} /></span>
-          <span class="obx-repbar-val">{series?.values[i] ?? 0}{chart.series[1] ? ` / ${chart.series[1].values[i] ?? 0}` : ''}</span>
-        </div>
-      ))}
-      {chart.series[1] && <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>{chart.series[0]?.name} / {chart.series[1].name}</div>}
+    <div class="obx-repchart" style={{ height: 320 }}>
+      <canvas ref={canvasRef} role="img" aria-label={chartLabel} />
     </div>
   );
 }
@@ -76,20 +97,24 @@ export function OnboardingReportsWorkspace({ onBack, onToast }: { onBack: () => 
   const [pkgKey, setPkgKey] = useState('');
   const [status, setStatus] = useState('');
   const [exporting, setExporting] = useState(false);
+  const scopeState = useOnboardingScope();
 
   const pkgsQ = useOnboardingPackages(true);
   const packages = pkgsQ.data ?? [];
 
   const args = useMemo<RunOnboardingReportArgs>(() => ({
-    reportKey,
+    reportKey, scope: scopeState.scope,
     dateFrom: dateFrom || null, dateTo: dateTo || null,
     packageKeys: pkgKey ? [pkgKey] : undefined,
     status: status ? [status] : undefined,
-  }), [reportKey, dateFrom, dateTo, pkgKey, status]);
+  }), [reportKey, scopeState.scope, dateFrom, dateTo, pkgKey, status]);
 
   const reportQ = useOnboardingReport(args);
   const result = reportQ.data;
   const canExport = can('hr.onboarding.reports.export');
+  useEffect(() => {
+    if (scopeState.changing && !reportQ.isFetching) scopeState.settled();
+  }, [reportQ.isFetching, scopeState.changing, scopeState.settled]);
 
   async function handleExport(): Promise<void> {
     if (!result) return;
@@ -113,12 +138,13 @@ export function OnboardingReportsWorkspace({ onBack, onToast }: { onBack: () => 
       <PageHeader
         icon="fa-chart-column"
         module="HR · Onboarding"
-        title="Reports"
-        sub="Operational analytics and compliance reporting."
+        title="Onboarding Insights"
+        sub="Readiness, capacity, package performance and bottleneck analysis for HR managers."
         actions={canExport ? <button class="obx-btn" disabled={!result || exporting} onClick={() => void handleExport()}>{exporting ? 'Exporting…' : 'Export CSV'}</button> : undefined}
       />
 
       <div class="obx-toolbar">
+        <OnboardingScopeSelector scope={scopeState.scope} options={scopeState.options} visible={scopeState.visible} onSelect={scopeState.select} busy={scopeState.changing} />
         <label class="obx-meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>From <input class="ui-input" type="date" value={dateFrom} onInput={e => setDateFrom((e.target as HTMLInputElement).value)} /></label>
         <label class="obx-meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>To <input class="ui-input" type="date" value={dateTo} onInput={e => setDateTo((e.target as HTMLInputElement).value)} /></label>
         <select class="ui-select" value={pkgKey} onChange={e => setPkgKey((e.target as HTMLSelectElement).value)}>

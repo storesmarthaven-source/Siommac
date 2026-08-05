@@ -3,8 +3,8 @@
  *
  * Creates case-specific document request rows at launch time, one per required
  * document for the employee. The wizard's documentSelections drive the initial
- * status — 'use_existing' / 'uploaded' selections mark the row satisfied
- * immediately; the rest start as 'pending' (= request from worker).
+ * status — a verified existing document marks the row satisfied immediately;
+ * requests remain pending and authorised waivers are recorded explicitly.
  *
  * Called from startOnboardingCase's writeRecord closure. Failures propagate so
  * the caller can compensate (delete the case row).
@@ -44,7 +44,6 @@ function resolveStatus(
   }
   switch (sel.action) {
     case 'use_existing':       return 'use_existing';
-    case 'uploaded':           return 'uploaded';
     case 'waive':              return 'waived';
     case 'request_from_worker':
     case 'none':

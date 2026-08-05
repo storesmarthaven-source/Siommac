@@ -1,0 +1,40 @@
+.wob-root{max-width:1440px;margin:0 auto;padding:28px;color:#1f2937;font-size:14px}.wob-hero{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:26px 28px;background:#fff;border:1px solid #dfe5ec;border-radius:12px}.wob-person{display:flex;align-items:center;gap:16px}.wob-person h1{margin:3px 0 5px;font-size:29px;line-height:1.15;color:#10233f}.wob-person p,.wob-card header p,.wob-progress p{margin:0;color:#64748b}.wob-eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#526b8c}.wob-start{display:grid;justify-items:end;gap:4px}.wob-start span{font-size:12px;color:#64748b}.wob-start strong{font-size:17px;color:#10233f}.wob-start em{padding:4px 9px;border-radius:999px;font-size:12px;font-style:normal}.wob-start em.ready{background:#e8f5ee;color:#246443}.wob-start em.progress{background:#fff3dc;color:#885b08}.wob-progress{margin:16px 0 20px;padding:18px 22px;background:#fff;border:1px solid #dfe5ec;border-radius:10px}.wob-progress>div:first-child{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.wob-progress strong{font-size:18px;color:#10233f}.wob-track{height:8px;background:#e7ebf0;border-radius:999px;overflow:hidden}.wob-track i{display:block;height:100%;background:#2f6fb0;border-radius:inherit}.wob-progress p{margin-top:9px}.wob-layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px}.wob-main,.wob-aside{display:grid;align-content:start;gap:18px}.wob-card{background:#fff;border:1px solid #dfe5ec;border-radius:10px;overflow:hidden}.wob-card>header{display:flex;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid #e8edf2}.wob-card h2{margin:0 0 3px;font-size:17px;color:#10233f}.wob-icon,.wob-file{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;color:#536b8a}.wob-icon{width:36px;height:36px;border:1px solid #d8e0e9;border-radius:9px;background:#f7f9fb}.wob-file{width:34px;height:34px;border-radius:50%;background:#eef3f8}.wob-list{display:grid}.wob-task,.wob-document{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:13px;padding:15px 20px;border-bottom:1px solid #edf0f4}.wob-task:last-child,.wob-document:last-child{border-bottom:0}.wob-task strong,.wob-document strong{display:block;color:#24364d}.wob-task small,.wob-document small{display:block;margin-top:4px;color:#64748b;font-size:12px}.wob-task em,.wob-document em{display:block;margin-top:5px;color:#9a3b32;font-size:12px;font-style:normal}.wob-state{width:9px;height:9px;border-radius:50%;background:#3f78b5}.wob-state.blocking{background:#c64940}.wob-pill{padding:4px 8px;border-radius:999px;background:#eef2f6;color:#475569;font-size:12px}.wob-pill.rejected{background:#fbe9e7;color:#9e342d}.wob-pill.uploaded{background:#e9f1fb;color:#285f97}.wob-note{margin:0;padding:12px 20px;border-top:1px solid #edf0f4;background:#fafbfc;color:#64748b;font-size:12px}.wob-messages{display:grid}.wob-messages article{padding:16px 20px;border-bottom:1px solid #edf0f4}.wob-messages article:last-child{border-bottom:0}.wob-messages p{margin:6px 0;color:#475569;line-height:1.5}.wob-messages small{color:#64748b}.wob-day-one>strong{display:block;padding:18px 20px 0;font-size:18px;color:#10233f}.wob-day-one>p{margin:7px 20px 20px;color:#566579;line-height:1.5}.wob-people{display:grid}.wob-people div{padding:14px 20px;border-bottom:1px solid #edf0f4}.wob-people div:last-child{border-bottom:0}.wob-people span,.wob-people strong{display:block}.wob-people span{margin-bottom:4px;color:#64748b;font-size:12px}.wob-people strong{color:#24364d}.wob-empty{min-height:420px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#64748b}.wob-empty h1{margin:16px 0 6px;color:#10233f;font-size:26px}.wob-empty p{max-width:520px;margin:0 0 18px}.wob-skeleton{height:560px;border-radius:12px;background:linear-gradient(90deg,#eef1f4 25%,#f8fafb 37%,#eef1f4 63%);background-size:400% 100%;animation:wob-shimmer 1.4s ease infinite}@keyframes wob-shimmer{0%{background-position:100% 0}100%{background-position:0 0}}@media(max-width:900px){.wob-root{padding:18px}.wob-hero{align-items:flex-start}.wob-layout{grid-template-columns:1fr}.wob-start{justify-items:start}}@media(max-width:640px){.wob-hero{display:grid}.wob-task,.wob-document{grid-template-columns:auto minmax(0,1fr)}.wob-task button,.wob-document>.wob-pill{grid-column:2}.wob-person h1{font-size:25px}}
+
+/* Shown instead of a progress bar when the worker has nothing assigned — an empty bar and
+   a full bar are both misleading when there is simply no worker-owned work yet. */
+.wob-progress-note { margin: 4px 0 0; font-size: 13px; color: var(--muted, #66738a); }
+
+/* ── governed document upload (dialog, per the approved worker mockup) ──────────── */
+.wob-doc-action { grid-column: 1 / -1; display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.wob-doc-action .btn { min-height: 38px; }
+
+.wob-dialog-copy { margin: 0 0 12px; font-size: 13px; color: var(--ink, #132038); }
+.wob-dialog-note { margin: 12px 0 0; font-size: 12px; color: var(--muted, #66738a); }
+
+.wob-file-pick { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; }
+.wob-file-pick input { font-size: 13px; }
+
+/* The mockup's summary line: name and size, only once a file is chosen. */
+.wob-file-summary {
+  margin-top: 8px; padding: 8px 10px; border-radius: 8px;
+  background: var(--slate-100, #eef1f6); font-size: 12px; font-weight: 600;
+  color: var(--ink, #132038); word-break: break-all;
+}
+
+.wob-expiry { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; font-size: 13px; font-weight: 600; }
+.wob-expiry input { min-height: 38px; }
+
+/* Each state says something different — "awaiting review", "returned" and "failed" must
+   never be mistaken for one another. */
+.wob-doc-state { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 12px; font-weight: 600; flex-wrap: wrap; }
+.wob-doc-state.is-review   { grid-column: 1 / -1; color: var(--muted, #66738a); margin-top: 8px; }
+.wob-doc-state.is-returned { color: var(--amber-700, #a16207); flex: 1 1 200px; }
+.wob-doc-state.is-error    { color: var(--red-600, #b42318); margin-top: 12px; }
+.wob-retry {
+  border: 0; background: none; padding: 0 0 0 4px; cursor: pointer;
+  font: inherit; text-decoration: underline; color: inherit;
+}
+
+@media (max-width: 900px) {
+  .wob-doc-action { justify-content: flex-start; }
+}

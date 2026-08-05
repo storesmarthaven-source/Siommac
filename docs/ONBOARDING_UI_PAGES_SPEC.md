@@ -11,7 +11,7 @@ seeded data from the dev environment, not placeholders.
 Sidebar → HR → Onboarding
   └─ Overview (landing page)
        ├─ click a case row        → Case Detail
-       ├─ "New Case" button       → Start Onboarding wizard (modal)
+       ├─ "Start Onboarding"      → Start Onboarding wizard (full page)
        └─ "Packages" button       → Package Manager (list)
                                         └─ click a package row → Package Detail (3 tabs)
 ```
@@ -19,6 +19,10 @@ Sidebar → HR → Onboarding
 Package Manager / Package Detail are only visible to users holding
 `hr.onboarding.packages.manage` (admin / hr_manager / superadmin — an oversight-tier
 permission, not given to day-to-day HR staff).
+
+The connected journey also includes **My Onboarding Work** for the signed-in internal
+participant and a separate **Worker Onboarding** experience reached through the secure
+invitation. Neither surface is a duplicate Case Detail page.
 
 ---
 
@@ -71,79 +75,221 @@ buttons, rows-per-page selector (10/25/50).
 
 ---
 
-## 2. Start Onboarding wizard (modal)
+## 2. Start Onboarding wizard (full page)
 
-Opened via "New Case". A single modal with sequential steps:
+Opened via "Start Onboarding". This is a full-page `WizardShell`, not a modal. It
+captures only decisions HR must make; package-generated work remains read-only.
 
-1. **Package** — pick an employee (search/select) and an onboarding package (cards showing package label, worker types, task/handoff counts).
-2. **Preview** — read-only preview of what the chosen package will instantiate: the task list (title + owner role) and the cross-module handoffs it will create.
-3. **Actions** — checkboxes for each of the package's custom action templates (e.g. "Manager welcome call", "Assign onboarding buddy"); required ones are locked on; optional ones can be excluded.
-4. **Options** — reason (new hire / transfer / rehire…), priority, target start date, launch mode, case owner (assignee), worker type override.
-5. **Review** — summary of every choice above, including "Custom actions: N of M included", then "Start Onboarding" to submit.
+1. **Employee & Timing** — search Employee Master by name, employee number or work email
+   and select one canonical employee record. The selected result shows name, number,
+   role and department. A separate read-only facts panel shows worker category,
+   employment type, department and role from the employee's current assignment; these
+   values drive package eligibility and cannot be overridden here. Incorrect facts are
+   corrected through **Review in Employee Master**. If no employee record exists,
+   **Create Employee Record** opens the existing Employee Master create flow and returns
+   the new employee to the wizard. This step captures only reason, target start date,
+   priority and accountable case owner as onboarding-specific inputs.
+2. **Package** — choose from active packages compatible with the employee's worker type,
+   department, site and role. Each card shows version, lead time and generated totals.
+   The selected card expands a concise generated-plan preview.
+3. **Optional Work** — add approved extras from a searchable package action library.
+   Managers additionally see **Create One-Off Action** for case-specific work that does
+   not change the reusable package. Ownership appears only for unresolved routes:
+   team/department owns the queue and a named person is accountable when available.
+   Required package work remains locked.
+4. **Documents** — show a required/ready/needs-action summary, collapse verified
+   Employee Master documents, and require one disposition for every unresolved
+   requirement: upload a real committed document, request it securely from the employee,
+   use an eligible existing record, or record an authorised waiver. Each card states
+   case-launch and Day-One impact. Waiver is separately permission-gated and requires a
+   reason; outstanding evidence becomes tracked work rather than disappearing.
+5. **Review & Launch** — show one server-authoritative Ready or Blocked banner, the
+   frozen work SIOMAC will create, and only the unresolved follow-ups that continue after
+   launch. Passed technical checks are collapsed for inspection. The employee summary is
+   not repeated because it remains in the wizard rail. Launch disables after one click,
+   re-runs the same preflight used by the page, creates the complete governed case
+   atomically and opens Case Detail only after every required record and side effect
+   commits. A validation error returns the user to the relevant step; there is no
+   redundant confirmation modal.
+
+The page uses the shared SIOMAC skeleton while its employee, package, preview, document
+and ownership datasets load. Save Draft and Scheduled Launch are not visible until their
+backend lifecycles exist.
 
 ---
 
 ## 3. Onboarding Case Detail
 
-**Purpose:** the working page for one case — a customizable board of glanceable tiles + functional task/blocker/handoff/custom-action tables.
+**Purpose:** the focused operating page for one case. The default Overview answers four
+questions only: what needs action next, what blocks readiness, which domains are ready,
+and whether account activation needs action. Detailed history and work management stay
+in their dedicated tabs.
 
 **Header**
 - Back link: "← Onboarding Cases"
 - Icon + "HR · Onboarding" eyebrow + employee name as title (e.g. "Ervin Baptiste")
 - Subtitle: case no + package label (e.g. "ONB-2026-0053 · Standard Employee")
 - Meta chips: status ("In Progress"), progress ("17% complete"), due date ("Due —")
-- Lifecycle action buttons (contextual to status): Pause / Resume / Mark Ready / Complete / Provision / Cancel
-- Owner selector (dropdown of employees, "Unassigned" default)
-- "Customize" button (manager+ only)
+- Primary actions: **View Employee Record** and **Review Readiness**.
+- A **More** menu contains Customize Overview, Reassign Owner, Pause and Cancel. This
+  keeps destructive and infrequent controls out of the primary action row.
+- The joined profile strip uses approved Concept 01, **Navy Identity Anchor**: the
+  employee identity is the only navy cell, followed by package, case owner, current
+  stage and case status in equal white operational cells. Department is not repeated as
+  its own cell because it is already part of the employee identity. Match Employee
+  Master's drawer treatment: each operational label has a restrained icon tile,
+  title-case copy, a readable value and one secondary line; the case owner retains the
+  profile photo beside the name.
 
-**Default board (4 KPI tiles + 6 functional widgets)**
+**Focused default Overview (4 widgets)**
 
-KPI tiles (top row):
-1. **Package Progress** — gauge arc, big % in the center, "On track/Behind/Complete" label, footer: Done / Open / Blocking counts.
-2. **Activation Readiness** — ring chart, big % in the center ("ready"), footer: Docs % / Training % / Access %.
-3. **SLA Countdown** — gauge, big number of days left (or overdue), footer: target date + status label ("On track"/"Due soon"/"Overdue").
-4. **Team** — case owner (name + avatar initials), a stack of assignee avatars pulled from the case's tasks.
+1. **Priority Tasks** — only the next urgent work, with status, owner, deadline and direct
+   action. The complete task list, including package and case-specific actions, lives in
+   Tasks. Use a neutral white work-list with aligned Task, Owner, Due and Action columns.
+   State icons, buttons and row surfaces remain neutral; semantic colour is reserved for
+   the compact status tag only. Due dates use a quiet calendar fact treatment, with only
+   overdue helper copy using warning colour. Tags use title case and medium weight. Do
+   not repeat task-workspace links because the Tasks tab is persistent navigation.
+2. **Activation Readiness** — a compact semantic gauge in the right rail. Its
+   red–amber–green treatment is reserved for readiness meaning; surrounding widget
+   decoration remains neutral.
+3. **Readiness by Domain** — the approved six-domain matrix with gate status,
+   completion, task coverage, blockers and accountable team.
+4. **Key Blockers** — compact critical/high issues first, with owner, age and drill-down.
 
-Functional tables:
-5. **Active Tasks** (+ Add button) — columns: Task (title, "blocking" red tag if applicable), Assignee (dropdown to reassign), Due, Status (pill), Actions (Complete / Block / Unblock buttons). Example rows: "Confirm employee profile — Completed", "Welcome the new hire — Pending — Supervisor", "Send account invite — Pending — IT".
-6. **Blockers** — columns: Blocker, Module, Severity (pill), Status (pill), Actions (Resolve / Escalate / Waive).
-7. **Custom Actions** (+ Add button) — columns: Action, Type, Status (dropdown to change), Actions (Complete / Cancel).
-8. **Handoffs** (read-only) — columns: Module, Type, Owner, Status (pill), Last event (timestamp).
-9. **Recent Activity** — feed of the last 5 audit events for this specific case (action + actor + relative time).
-10. **Account Provisioning** — battery-style fill gauge showing % of provisioning steps done, footer: Work email / Login / Mailbox each tagged Done/Pending/—.
+The former seven-stage Onboarding Progress strip is removed. Current Stage owns a compact
+progress bar inside the profile strip, with its percentage placed to the right. The case
+navigation remains a separate full-width card beneath the profile strip. Its active tab
+fills the complete tab segment with a quiet grey surface and no accent line. Task and
+handoff counts use neutral badges; only the Blockers count uses red because it signals
+an active issue. The compact 44px navigation uses one neutral 16px icon per section;
+icons inherit navy only on hover or when active. Priority Tasks begins directly beneath
+the navigation.
 
-*(Optional extra tiles available via the widget library but not shown by default: a bold "Blockers" hero tile, Training %, Approvals list, Due This Week list.)*
+Account Activation is not a standalone widget. When action is required, it appears as an
+Access-owned Priority Task and opens the governed provisioning/request dialog. After
+provisioning, ongoing account details belong to Employee Master → Access.
+
+The provisioning dialog follows one visible lifecycle:
+
+1. **Preflight** — verify the Employee Master record, start date, personal delivery
+   address, unique proposed work email, access profile and configured operating model.
+2. **Queued** — create one accountable work item for automation, IT/Admin, or delegated
+   HR. HR can monitor it but does not gain technical permissions merely by coordinating.
+3. **Identity created** — the SIOMAC identity and approved baseline exist. External
+   mailbox creation is a separately confirmed outcome and is never inferred from the
+   proposed email address.
+4. **Activation pending** — send a single-use activation method to a verified destination;
+   HR never sees or chooses the employee's password.
+5. **Activated** — keep remaining day-one access work in onboarding, then manage durable
+   MFA, account health, access assignments and support in Employee Master → Access.
+
+An account may be created and activated before the onboarding case is complete. Activation
+does not bypass document, HSE, training, payroll or application-access gates.
+
+**Case dialogs**
+
+Every visible case action opens a complete dialog; no action may end in a generic prompt
+when it needs ownership, evidence, authority or routing data. The approved dialog set is:
+
+- blocker detail, escalation and tracked owner notification;
+- restricted evidence preview, download and specialist approve/return decision;
+- task detail, reassignment, unblock, add task, replacement evidence and task note;
+- handoff detail, reassignment, completion and workstation-evidence confirmation;
+- case-owner reassignment, message compose/preview, failed-delivery recovery and audit
+  export;
+- account-provisioning lifecycle, readiness review and the generic confirmation used
+  only for simple pause/cancel-style case transitions.
+
+Nested dialogs return to their originating task, handoff or blocker. Specialist decisions
+remain capability-gated; HR coordination never implies HSE, medical or IT approval.
+
+Recent Activity, Handoff Summary, Case Actions, Upcoming Tasks and Communications
+Summary remain available through the widget library, but are not default widgets.
+Timeline is the authoritative activity view; Handoffs is the authoritative cross-team
+workspace; case-specific actions are rows in Tasks rather than a parallel task system.
+
+**Dedicated tab responsibilities**
+
+- **Tasks** is the complete work queue. It supports search, status/owner/due filters,
+  package tasks and clearly labelled case-specific actions. The right summary calls out
+  overdue, unassigned and evidence-review work rather than repeating general progress.
+- **Handoffs** is the receiving-team workspace. Every row shows the responsible team,
+  accountable person where assigned, acceptance state, expected outcome and latest
+  deadline/evidence state. HR coordinates; the receiving team performs specialist work.
+- **Blockers** is the exception-resolution workspace. It owns severity, accountable
+  owner, age, evidence, readiness impact, reminders, escalation and authorised review.
+- **Communications** owns case-linked messages and delivery state. It supports recipient,
+  channel and delivery-state filtering, failed-delivery recovery and related-work context.
+- **Timeline** is the readable chronological history. Each event links back to its
+  authoritative task, handoff, communication or audit entry; it does not replace Audit.
+- **Audit** is permission-gated evidence of governed change: actor, action, reason,
+  before/after state and correlation metadata. Export requires the same audit authority
+  and a recorded business reason.
 
 ---
 
-## 4. Package Manager (list)
+## 3A. My Onboarding Work
 
-**Purpose:** admin configuration screen — create/activate/retire onboarding packages.
+**Purpose:** a role-scoped execution queue for the signed-in employee and, where
+permission allows, their accountable department.
 
-**Header**
-- Back link: "← Onboarding"
-- Icon + "HR · Onboarding" eyebrow + title "Packages"
-- Subtitle: "Configure onboarding packages, task & handoff templates, and custom actions."
-- Meta chip: package count (e.g. "5 packages")
-- "New Package" button (primary)
+- Defaults to **Assigned to me**; changing to a team queue requires target-population
+  authority.
+- Combines tasks, handoffs and evidence review into one read model without creating a
+  second work store.
+- Shows the owning queue and accountable person separately. Unassigned work remains
+  visible in its department queue.
+- Opens the authoritative Case Detail tab and selected record.
+- Supports due-state and work-type filters plus personal saved views.
 
-**Toolbar:** search box ("Search packages…") + status dropdown (All / Draft / Active / Retired).
+---
 
-**Table**
-| Column | Content |
-|---|---|
-| Package | label (bold) + key · version underneath, e.g. "Standard Employee" / "standard_employee · v1" |
-| Status | pill: active (green) / draft / retired (gray) |
-| Worker Types | comma list, e.g. "employee", or "contractor, contractor_worker" |
-| Templates | "N tasks · N handoffs", e.g. "18 tasks · 3 handoffs" |
-| SLA | "N days" |
-| Actions | single contextual button: "Activate" (if not active) / "Retire" (if active) |
+## 3B. Worker Onboarding
+
+**Purpose:** the secure pre-hire experience reached from the invitation link. It is not
+the internal Case Detail page.
+
+- Shows only worker-owned tasks and worker-safe status.
+- Supports personal-data confirmation, secure document upload, forms/e-signature,
+  welcome content, key people and Day-One instructions.
+- Never exposes internal blockers, audit history, routing queues, specialist decisions
+  or other employees.
+- Writes accepted personal data and verified documents to their authoritative Employee
+  Master records while retaining the onboarding task link.
+- Uses an expiring, single-use activation flow and a verified destination; HR never
+  communicates or selects a password.
+
+---
+
+## 4. Package Manager
+
+**Purpose:** one governed workspace for finding packages and configuring the selected
+definition. Do not split selection into a permanent narrow left rail or send the user to
+a separate detail page.
+
+Published packages are immutable. **Create Draft Version** copies the current definition
+into an isolated draft; review and publish produce a new version for future cases.
+Existing cases remain locked to the version frozen at launch. Package retirement requires
+a reason and only removes the package from future selection.
+
+**Top package register**
+- Full-width card at the top of the main column above the package workspace, not a left
+  library. The persistent context rail begins beside it and serves the entire page.
+- Header contains search plus status and worker-type filters.
+- A 2 × 2 visual register shows all four package cards on one desktop page. Each uses a
+  large, recognisable package-type icon and shows package name, lifecycle state,
+  description, version, active-case count, task count and handoff count without becoming
+  a dense mini-table.
+- The selected card uses a quiet blue border and surface; never a left accent.
+- New Package remains the primary page-level action.
+- Retired packages stay visible for history but are excluded from launch selection.
 
 Real seeded packages: Contractor Worker (7 tasks·1 handoff), Office / Admin (14·1),
 Safety-Critical Employee (20·3), Standard Employee (18·3), Supervisor / Manager (19·3)
 — all currently "active".
 
-Row click → Package Detail.
+Selecting a package updates the full-width workspace below without navigating away.
 
 **"New Package" modal fields:** Label, Description (textarea), Default SLA (days,
 number), Default owner role (text), Worker types (comma-separated text, e.g. "full_time,
@@ -152,29 +298,49 @@ contractor"). The package key is auto-generated from the label and shown greyed-
 
 ---
 
-## 5. Package Detail
+## 5. Selected Package Workspace
 
-**Purpose:** configure one package's task templates, handoff templates, and custom
-actions.
+**Purpose:** understand one package quickly, then configure each controlled part without
+losing package context.
 
 **Header**
-- Back link: "← Packages"
-- Icon + "HR · Onboarding" eyebrow + package label as title (e.g. "Standard Employee")
-- Status pill next to the title (Active/Draft/Retired)
-- Subtitle: key · version (e.g. "standard_employee · v1")
-- Meta chips: status, SLA ("10 day SLA"), default owner role ("Hr")
-- Actions: "Edit details" button, and a contextual status-transition button (Activate /
-  Retire / Restore to draft)
+- Package name, lifecycle state, description, published version, package owner and next
+  policy-review date.
+- Published versions expose **Preview Package Plan** and **Create Draft Version**.
+  Duplicate, Compare Versions and permission-gated Retire live under **More** so the
+  destructive action is not permanently prominent.
+- **Preview Package Plan** first shows a concise summary, then **Open Full Plan** opens a
+  complete read-only stage, outcome and ownership view. It must never end in a toast or
+  imply that a case was created.
+- A concise read-only banner explains that active cases remain frozen to their launch
+  version.
 
-**Tabs:** Task templates (N) · Handoff templates (N) · Custom actions (N)
+**Tabs:** Overview · Work Plan · Handoffs · Requirements & Gates · Worker Portal &
+Account · Communications · Governance & Versions.
 
-### Tab: Task templates
-Table columns: **#** (sort order), **Key** (e.g. "profile_confirmation"), **Title**
-(e.g. "Confirm employee profile"), **Owner** (role, e.g. "Hr", "Supervisor", "It"),
-**Module**, **Blocking** (yes/—), **Evidence** (yes/—), **Actions** (Edit / Delete).
-"+ Add" button opens a modal: Task key (locked once created), Title, Owner role,
-Module key, Sort order, plus checkboxes "Blocks activation until complete" / "Requires
-evidence to complete".
+### Tab: Overview
+
+- Five-item at-a-glance strip: lead time, required tasks, handoffs, Day-One gates and
+  active cases. Version belongs in the header and is not repeated.
+- The selected-package workspace uses a main configuration column and a persistent right
+  rail across every tab. The rail holds **Package Health**, **Operating Defaults** and the
+  current draft/review state. Package Definition and Package Eligibility remain in the
+  main Overview column; do not add a redundant quick-settings widget.
+- Eligibility is driven by Employee Master facts: worker category, employment type,
+  department, site and role.
+- **Test a match** selects an Employee Master record, explains every match and warns when
+  two published packages have equal priority.
+- Do not repeat ownership or review-cycle facts inside Package Definition after they are
+  shown in the persistent rail.
+
+### Tab: Work Plan
+
+Group tasks by **Before Start**, **Day One**, and **First Week**. Every row shows task,
+performer, accountable queue, relative due rule, requirement type and prerequisite.
+The task dialog also captures completion evidence and worker visibility. A worker can
+perform a task without becoming the internal accountable owner.
+Provide task search, accountable-team filtering and a governed bulk-change dialog. Bulk
+changes apply only to a draft and require a version-history reason.
 
 Real example rows (Standard Employee): profile_confirmation → "Confirm employee
 profile" (Hr), document_collection → "Collect contract & documents" (Hr),
@@ -183,26 +349,190 @@ emergency_contact → "Confirm emergency contact" (Hr), welcome → "Welcome the
 first_week_checkin → "First-week check-in" (Supervisor), account_invite → "Send
 account invite" (It), plus MFA/access/equipment steps — 18 total.
 
-### Tab: Handoff templates
-Table columns: **#**, **Key**, **Target module**, **Type**, **Required** (yes/—),
-**Actions** (Edit / Delete). "+ Add" modal: Handoff key (locked once created), Target
-module, Handoff type, Sort order, "Required" checkbox.
+### Tab: Handoffs
 
-### Tab: Custom actions
-*(This tab is the Custom Action Template Manager.)* Table columns: **Name**, **Type**
-(Task / Checklist Item / External Action / Handoff / Document Request / Training
-Request / Approval / Notification), **Owner** (role or employee id), **Priority**
-(pill: Low/Normal/High/Critical), **Required** (yes/—), **Blocks** (yes/—), **Active**
-(yes/—), **Actions** (Edit / Retire). "+ Add" modal fields: Action name, Type
-(dropdown), Priority (dropdown), Owner type (Role/Employee/Department/System/External)
-→ conditional Owner role or Owner employee id field, Due offset (days), and — only when
-Type is "Approval" — a Workflow template ID field; checkboxes for Required / Blocks
-activation / Requires evidence. Empty state: "No custom action templates yet." (e.g.
-the seeded "Standard Employee" package currently has none).
+Use a compact table rather than large cards. Each handoff defines the durable queue,
+case-person resolution rule, expected outcome, relative due rule, evidence expectation,
+fallback and escalation. The department owns the work type; the resolved person is
+accountable for the specific case.
+
+### Tab: Requirements & Gates
+
+Requirements are filterable by Documents, Training, HSE, Access and Payroll. A document
+rule captures provider, accepted formats, expiry rule, reviewer, due rule and waiver
+authority. A gate captures the business outcome, linked conditions, accountable owner,
+activation impact, waiver authority and escalation. Every gate shows what evidence or
+control satisfies it. Gates are outcomes, not duplicate tasks.
+
+### Tab: Worker Portal & Account
+
+Configure Welcome, Personal Details, Documents & Forms and Prepare for Day One. Preview
+the Worker Portal from the package. The package controls content, invitation timing and
+the account-readiness gate; Global Settings controls which authorised HR, IT/Admin or
+automation route performs account setup. Never encode organisation ownership in each
+package.
+
+### Tab: Communications
+
+The product and dependency audit for this workspace is
+`docs/ONBOARDING_EMAIL_STUDIO_AUDIT.md`. The approved direction is a native
+Preact/Vite/TypeScript editor inside SIOMAC's Payslip Studio visual shell. SIOMAC owns the
+allow-listed component schema, ordered canvas, contextual inspector, governed data/assets,
+permissions, backend compiler and immutable revision lifecycle. React Email, GrapesJS,
+Unlayer and the former HTML mockup editor are not implementation sources or fallbacks.
+
+Each message has an event trigger, audience, language, channel, template, enabled state
+and delivery-failure action. Support preview and test delivery without emitting a real
+case event. The Communications tab is the template register. **Add message** and **Edit**
+open a dedicated full-page, package-scoped email workspace—not a large dialog. That
+workspace keeps the selected package and template in its header, provides approved
+content blocks and personalisation tokens, and shows a live desktop/mobile preview.
+Reuse the proven Payslip Studio shell and theme: persistent dark toolbar, dark left palette,
+dotted centre stage, contextual right properties inspector, geometry-matched skeleton and
+bottom status bar. The native editor supplies selection, visible drag/drop positions, nested
+column drops, outline, history, bounded sizing and commands against its controlled schema.
+Unlike the payslip canvas, email content is an ordered responsive block flow rather than
+freely positioned elements. Dragging reorders or inserts rows; it never stores x/y
+coordinates, arbitrary widths or browser-only CSS. The WYSIWYG canvas supports headings,
+rich text, lists, links, buttons, employee profile, information panels, dividers, spacing,
+two-column sections and uploaded images. The employee profile block resolves the selected
+case's Employee Master photo, full name and job title at render time. Its photo is circular,
+has fixed dimensions and alternative text, and falls back to the governed initials avatar
+when no approved employee photo exists.
+Images come from a governed package asset library with upload/replace, file validation,
+alternative text and desktop/mobile preview.
+SIOMAC stores versioned structured blocks, never canvas HTML. Preview, test and delivery
+all use the same server compiler, which produces multipart plain-text + HTML output using
+client-safe table layout, inline styles, declared dimensions and allow-listed links/tokens.
+The compiler has a named compatibility profile (for example `email-html-2026-01`). A
+profile is upgraded through dependency/security review, fixture compilation, strict
+validation and the supported-client render matrix; it is never silently switched to a
+new upstream release at runtime. The server-rendering slice should assess a pinned MJML
+compiler behind SIOMAC's own compiler interface, and must not add it if dependency review
+finds a known vulnerability. MJML is not editor state. Raw HTML/MJML blocks and unrestricted
+includes remain disabled.
+Onboarding Settings supplies the default brand shell, sender identity, security notice
+and approved destinations. The package Email Studio may select approved logo assets,
+change the header label/approved colour and add footer context. It may not remove the
+required security notice or use an unapproved sender/destination. Case Detail may preview,
+resend and inspect delivery state, but it never edits package templates.
+
+### Tab: Governance & Versions
+
+Show draft, ready-for-review, published and superseded versions with owner/reviewer,
+reason and affected-case count. Before publish, show concise checks for eligibility
+conflicts, task/handoff ownership, gate evidence links and assigned reviewer. Support a
+focused version comparison. Publishing a reviewed draft affects future cases only.
+
+The package manager must support loading, empty, no-results and error states using the
+shared SIOMAC skeleton and error treatment. Skeleton geometry follows the full-width
+package register plus selected-package workspace; it must not restore the removed left
+rail.
+
+**Package dialogs**
+
+All package actions use the shared SIOMAC dialog shell with a clear context statement,
+complete fields, permission consequences and a specific final action. The approved set
+covers package summary preview, full generated-plan preview, create/draft/retire/
+duplicate, employee match testing, task and handoff configuration, bulk task change,
+requirement and gate configuration, Worker Portal content, communication preview and
+test delivery, complete version comparison and publish review. Email template editing is
+the deliberate exception: it uses the dedicated package-scoped workspace because its
+content tools, metadata and live preview need full-page space.
+Draft-only actions must say so in the dialog. Publish and retire dialogs show affected
+case protections before confirmation. An action labelled **Open**, **View** or
+**Preview** must open its real destination; it may not be represented by a generic toast.
+
+---
+
+## End-to-end operating journey
+
+The module is one journey with four role-specific surfaces. Do not make Case Detail or
+the launch wizard carry every participant's work.
+
+### 1. Configure once
+
+- **Onboarding Settings** defines the operating model, default routing queues,
+  escalation timing, communication sender, account-provisioning ownership and which
+  roles may waive or approve requirements.
+- **Packages** define reusable eligibility rules, required work, documents, training,
+  handoffs, communications and Day-One gates. Publishing freezes a version; editing a
+  package never silently rewrites an active case.
+
+### 2. Start from one worker record
+
+- The worker is selected from **Employee Master** or arrives from an approved recruitment
+  intake. SIOMAC never creates a second person record inside onboarding.
+- Employee Master remains authoritative for identity, employment type, department,
+  role, manager and location. The wizard may send HR back to correct those facts, but
+  cannot override them locally.
+- The server checks for an active duplicate, compatible package versions, start-date
+  feasibility and required owners before HR can continue.
+
+### 3. Review and launch the generated plan
+
+- The wizard contains only five decisions: Employee & Timing, Package, Optional Work,
+  Documents, and Review & Launch.
+- Package work is a read-only generated preview. HR may add approved case-specific work
+  without editing the reusable package.
+- Launch freezes the package version and atomically creates the case, tasks, handoffs,
+  document requests, communications, provisioning intent, gates, events and audit trail.
+  A partial case must never become visible.
+
+### 4. Execute through separate work views
+
+- **HR Portfolio** answers which cases, deadlines and blockers need coordination.
+- **Case Detail** is the control record for one case. Overview is exception-focused;
+  Tasks, Handoffs, Blockers, Communications, Timeline and Audit remain authoritative.
+- **My Work / team queues** show only work assigned to the signed-in person or their
+  accountable department. Specialists complete and approve their own work; HR follows
+  up without inheriting specialist authority.
+- **Worker Onboarding** is a separate secure pre-hire experience for personal-data
+  collection, documents, forms/e-signature, welcome information, key people, Day-One
+  instructions and worker-owned tasks. This surface is required and is not yet represented
+  by the current internal HR mockups.
+
+### 5. Recalculate readiness and complete
+
+- Readiness is calculated from required gates, not manually typed and not inferred from
+  task percentage alone.
+- A task can be complete while its evidence still awaits an authorised decision. The
+  related domain remains at risk or blocked until that decision is recorded.
+- Account activation may occur before onboarding completes, but it does not bypass
+  document, HSE, training, payroll or application-access gates.
+- **Complete Case** is available only when required gates are ready or an authorised,
+  reasoned exception exists. Completion records the frozen outcome and closes remaining
+  onboarding-only work.
+
+### 6. Hand durable data to Employee Master
+
+- Verified documents, employment facts, training outcomes, payroll readiness and access
+  assignments become durable Employee Master records.
+- Onboarding retains its immutable case plan, task/handoff history, communications,
+  decisions and audit trail.
+- Rehire, internal transfer, delayed start, cancellation and restart are explicit case
+  types/transitions. They must not create duplicate workers or silently mutate a completed
+  case.
+
+### Flow simplifications
+
+- Do not restore a duplicate Employee Snapshot card on Case Detail.
+- Do not create separate “case action” and task systems.
+- Do not show both a seven-stage journey strip and a readiness gauge.
+- Do not make Account Activation a permanent overview widget; show it as Access-owned
+  priority work only while action is required.
+- Do not let the launch wizard become a package editor.
+- Do not expose all participant work to every role. Scope Portfolio, My Work, case actions
+  and approvals by permission, target population and assignment.
 
 ---
 
 ## Shared visual language (for consistency in a mockup)
+
+- **Reuse before styling:** Command Centre KPIs use Employee Master's shared `KpiTile`
+  component and skeleton treatment. Upcoming Deadlines and Tasks are the registered
+  `enterprise.calendar.upcomingDeadlines` and `enterprise.calendar.taskPlanner` widgets;
+  onboarding configures them rather than copying them.
 
 - **Status pill colors:** gray = draft/inactive/cancelled, blue = in progress, green =
   active/ready/completed, amber = paused/warning, red = blocked/overdue/critical,
@@ -213,3 +543,7 @@ the seeded "Standard Employee" package currently has none).
   compact "mini" action buttons per row.
 - **KPI tiles:** icon + label caption row, one large focal number, a small chart
   (sparkline / bar / ring / gauge) and a one-line sub-stat footer.
+
+The final cross-page visual, role and redundancy decisions are recorded in
+`docs/ONBOARDING_PRODUCTION_UX_AUDIT.md`. That audit and the canonical
+`*-implementation-ready.html` references override older exploratory concepts.

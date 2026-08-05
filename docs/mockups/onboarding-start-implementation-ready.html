@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SIOMAC — Start Onboarding Implementation Reference</title>
+  <style>
+    /*
+     * IMPLEMENTATION CONTRACT
+     * Production surface: HR > Onboarding > Start Onboarding
+     * UI: full-page WizardShell, not a modal
+     * Read sources:
+     *   hr/employees/list
+     *   hr/onboarding/packages/list
+     *   hr/onboarding/intake-preview
+     *   hr/onboarding/actions/templates/list
+     * Required backend addition:
+     *   hr/onboarding/account-preflight — resolves the organisation's configured
+     *   operating model, owning team/person, access profile and invitation timing.
+     * Mutation:
+     *   hr/onboarding/start — permission hr.onboarding.start
+     *
+     * Five steps are intentional:
+     *   Employee & Timing → Package → Optional Work → Documents → Review & Launch.
+     * Generated tasks and handoffs are package outputs, not separate wizard decisions.
+     * Documents remain a focused step because each requirement needs an explicit
+     * use/upload/request/waive decision. Outstanding documents become governed follow-up
+     * work; only structural launch failures (duplicate, package, unresolved owner) block.
+     * The selected package version and generated plan must be frozen on the launched case.
+     * No charts, no Save Draft control (no draft endpoint), no local entrance animation.
+     * Loading regions use @ui/WidgetSkeleton; the wizard shell never flashes partial data.
+     */
+    :root{
+      --navy:#0b2b59;--navy-2:#123b76;--blue:#075ee8;--blue-soft:#eaf2ff;
+      --page:#f5f7fa;--card:#fff;--subtle:#f8fafc;--line:#dce4ef;--line-soft:#e9eef5;
+      --ink:#10203d;--text:#283a58;--muted:#6c7d98;--green:#179447;--green-soft:#eaf7ee;
+      --amber:#e98212;--amber-soft:#fff4e6;--red:#e3262e;--red-soft:#fff0f0;
+      --purple:#6c3bd1;--purple-soft:#f2edff;--radius:16px;--shadow:0 10px 30px rgba(15,41,77,.055)
+    }
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%}body{background:var(--page);color:var(--ink);font:15px Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+    button,input,select,textarea{font:inherit}button{cursor:pointer}svg{display:block}
+    .shell{min-height:100vh;padding:18px 22px 24px}.frame{width:min(100%,1460px);margin:auto}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:14px}
+    .title{display:flex;align-items:center;gap:13px}.back{width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--navy)}.back svg{width:18px;height:18px}
+    h1{margin:0;font-size:27px;letter-spacing:-.035em}.title p{margin:5px 0 0;color:var(--muted);font-size:13px}
+    .top-meta{display:flex;align-items:center;gap:9px}.secure{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:12px}.secure svg{width:16px;height:16px;color:var(--green)}
+    .wizard{min-height:720px}
+    .wizard-body{display:grid;grid-template-columns:minmax(0,1fr) 390px;min-height:650px;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:var(--shadow);overflow:hidden}
+    .ui-stepper{display:flex;align-items:stretch;gap:8px;margin-bottom:14px;padding:10px;border:1px solid var(--line);border-radius:14px;background:#fff;overflow-x:auto}
+    .ui-stepper-step{min-width:170px;display:flex;flex:1 1 0;align-items:center;gap:11px;padding:11px 13px;border:1px solid transparent;border-radius:10px;background:none;color:#53617f;text-align:left;transition:background-color 140ms ease,border-color 140ms ease}
+    .ui-stepper-step:hover{background:rgba(245,247,250,.62)}.ui-stepper-step.is-active{border-color:#eaedf3;background:#f5f7fa}
+    .ui-stepper-marker{width:30px;height:30px;display:grid;place-items:center;flex:0 0 auto;border:1px solid var(--line);border-radius:50%;background:#f8fbff;color:#7c879d;font-size:13px;font-weight:600}
+    .ui-stepper-step.is-active .ui-stepper-marker{border-color:#e0e5fb;background:#364263;color:#fff}.ui-stepper-step.is-complete .ui-stepper-marker{border-color:var(--green);background:var(--green);color:#fff}
+    .ui-stepper-copy{display:flex;min-width:0;flex-direction:column}.ui-stepper-copy strong{overflow:hidden;color:#0d1b35;font-size:14px;font-weight:650;line-height:1.2;text-overflow:ellipsis;white-space:nowrap}.ui-stepper-copy span{overflow:hidden;color:#7c879d;font-size:12.5px;line-height:1.25;text-overflow:ellipsis;white-space:nowrap}.ui-stepper-step.is-active .ui-stepper-copy strong{color:#384260}
+    .ui-stepper-step.is-locked{cursor:not-allowed;opacity:.55}.ui-stepper-step.is-locked:hover{background:none}
+    .content{min-width:0;display:flex;flex-direction:column}.content-head{padding:22px 26px 17px;border-bottom:1px solid var(--line-soft)}
+    .eyebrow{color:var(--blue);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.content-head h2{margin:5px 0 0;font-size:22px;letter-spacing:-.025em}.content-head p{margin:6px 0 0;color:var(--muted);font-size:13px}
+    .panel{display:none;flex:1;padding:22px 26px}.panel.active{display:block}.section+.section{margin-top:20px}
+    .section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}.section-title h3{margin:0;font-size:15px}.section-title span{color:var(--muted);font-size:13px}
+    .field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.field.full{grid-column:1/-1}.field label{display:block;margin-bottom:7px;color:var(--text);font-size:13.5px;font-weight:800}.req{color:var(--red)}
+    .control{width:100%;height:42px;padding:0 11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--text);outline:none}.control:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(7,94,232,.1)}textarea.control{height:82px;padding-top:10px;resize:vertical}
+    .person-control{display:flex;align-items:center;gap:11px}.person-control .avatar{width:32px;height:32px}.hint{margin-top:5px;color:var(--muted);font-size:11.5px}
+    .employee-picker{padding:16px;border:1px solid var(--line);border-radius:13px;background:var(--subtle)}
+    .employee-search-label{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}.employee-search-label strong{font-size:14px}.employee-search-label span{color:var(--muted);font-size:12px}
+    .employee-search-help{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 1px 0;color:var(--muted);font-size:12px}.employee-search-help button{padding:0;border:0;background:none;color:var(--blue);font-weight:800}
+    .employee-picker .ui-person-search{position:relative}.employee-picker .ui-person-search-control{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:9px;min-height:46px;padding:0 13px;border:1px solid var(--blue);border-radius:10px;background:#fff;box-shadow:0 0 0 3px rgba(7,94,232,.09)}.employee-picker .ui-person-search-control input{min-width:0;border:0;outline:0;color:var(--text);font-size:14px}.employee-picker .ui-person-search-icon{width:18px;height:18px;color:#647895}.employee-picker .ui-person-search-list{position:relative;z-index:2;display:grid;gap:4px;margin-top:6px;padding:6px;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:0 12px 28px rgba(15,23,42,.11)}.employee-picker .ui-person-search-result-count,.employee-picker .ui-person-search-empty{padding:4px 7px;color:var(--muted);font-size:11.5px}.employee-picker .ui-person-search-empty{display:none;padding:14px;text-align:center}.employee-picker .ui-person-search-item{width:100%;display:flex;align-items:center;gap:11px;padding:9px;border:0;border-radius:8px;background:none;color:var(--text);text-align:left}.employee-picker .ui-person-search-item:hover,.employee-picker .ui-person-search-item.is-selected{background:#edf4ff}.employee-picker .ui-person-search-avatar{width:38px;height:38px;display:grid;place-items:center;flex:0 0 auto;overflow:hidden;border:1px solid #d4dfed;border-radius:50%;background:#eaf2ff}.employee-picker .ui-person-search-avatar img{width:100%;height:100%;display:block;object-fit:cover}.employee-picker .ui-person-search-copy{display:flex;min-width:0;flex:1;flex-direction:column;gap:2px}.employee-picker .ui-person-search-copy strong{font-size:14px}.employee-picker .ui-person-search-copy small{overflow:hidden;color:var(--muted);font-size:12px;text-overflow:ellipsis;white-space:nowrap}.employee-picker .ui-person-search-check{width:26px;height:26px;display:grid;place-items:center;border-radius:50%;background:var(--green-soft);color:var(--green)}.employee-picker .ui-person-search-check svg{width:14px;height:14px}
+    .employment-source{border:1px solid var(--line);border-radius:13px;background:#fff;overflow:hidden}.employment-source-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;border-bottom:1px solid var(--line-soft);background:#fbfcfe}.employment-source-head div{display:flex;align-items:center;gap:9px}.employment-source-head svg{width:18px;height:18px;color:var(--navy)}.employment-source-head strong{font-size:14px}.employment-source-head span{color:var(--muted);font-size:12px}.employment-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}.employment-fact{min-width:0;padding:14px 15px;border-right:1px solid var(--line-soft)}.employment-fact:last-child{border-right:0}.employment-fact span,.employment-fact strong{display:block}.employment-fact span{color:var(--muted);font-size:11.5px}.employment-fact strong{margin-top:5px;color:var(--navy);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.employment-source-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 15px;border-top:1px solid var(--line-soft);background:#f8fbff}.employment-source-foot p{margin:0;color:#536580;font-size:12.5px;line-height:1.45}.employment-source-foot .btn{flex:0 0 auto}
+    .choice-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.choice{position:relative;padding:14px;border:1px solid var(--line);border-radius:11px;background:#fff}.choice.selected{border-color:var(--blue);box-shadow:0 0 0 2px rgba(7,94,232,.08);background:#f8fbff}.choice.disabled{opacity:.55}.choice input{position:absolute;right:12px;top:12px}.choice-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;background:var(--blue-soft);color:var(--blue)}.choice-icon svg{width:19px;height:19px}.choice strong{display:block;margin-top:10px;font-size:14px}.choice p{margin:4px 0 0;color:var(--muted);font-size:12px;line-height:1.4}.choice em{display:inline-block;margin-top:8px;padding:3px 7px;border-radius:999px;background:var(--green-soft);color:var(--green);font-size:10.5px;font-style:normal;font-weight:800;text-transform:uppercase}
+    .package-list{display:grid;gap:10px}.package{display:grid;grid-template-columns:44px 1fr auto;gap:13px;align-items:center;padding:15px;border:1px solid var(--line);border-radius:12px;background:#fff}.package.selected{border-color:var(--blue);background:#f8fbff}.package-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:11px;background:var(--blue-soft);color:var(--blue)}.package-icon svg{width:22px;height:22px}.package h3{margin:0;font-size:14px}.package p{margin:5px 0 0;color:var(--muted);font-size:12px}.package-meta{display:flex;flex-wrap:wrap;gap:12px;margin-top:9px;color:var(--text);font-size:11px}.radio{width:18px;height:18px;border:2px solid #bdc9da;border-radius:50%;padding:3px}.selected .radio{border-color:var(--blue)}.selected .radio:after{content:"";display:block;width:100%;height:100%;border-radius:50%;background:var(--blue)}
+    .notice{display:flex;gap:11px;padding:13px;border:1px solid #cfe0fb;border-radius:10px;background:#f5f9ff;color:var(--text)}.notice.warning{border-color:#f4ddbd;background:#fffaf3}.notice.danger{border-color:#f0c8ca;background:var(--red-soft)}.notice.success{border-color:#c9e7d3;background:#f2faf5}.notice svg{width:19px;height:19px;flex:0 0 auto;color:var(--blue)}.notice.warning svg{color:var(--amber)}.notice.danger svg{color:var(--red)}.notice.success svg{color:var(--green)}.notice strong{display:block;font-size:13px}.notice p{margin:4px 0 0;color:var(--muted);font-size:12px;line-height:1.45}
+    .work-list{border:1px solid var(--line);border-radius:12px;overflow:hidden}.work-head,.work-row{display:grid;grid-template-columns:24px minmax(0,1fr) 150px 110px;gap:11px;align-items:center}.work-head{padding:10px 13px;background:var(--subtle);color:var(--muted);font-size:10.5px;font-weight:800;text-transform:uppercase}.work-row{padding:12px 13px;border-top:1px solid var(--line-soft)}.work-row strong{display:block;font-size:13px}.work-row small{display:block;margin-top:3px;color:var(--muted);font-size:11.5px}.check{width:19px;height:19px;border:1px solid #bdc9da;border-radius:5px;background:#fff}.check.on{display:grid;place-items:center;border-color:var(--blue);background:var(--blue);color:#fff}.check.locked{border-color:#ccebd7;background:var(--green-soft);color:var(--green)}.check svg{width:11px;height:11px}
+    .pill{display:inline-flex;align-items:center;justify-content:center;padding:5px 8px;border-radius:999px;background:var(--blue-soft);color:var(--blue);font-size:10.5px;font-weight:800}.pill.green{background:var(--green-soft);color:var(--green)}.pill.amber{background:var(--amber-soft);color:#b76300}.pill.red{background:var(--red-soft);color:var(--red)}.pill.gray{background:#f0f3f7;color:#6b7a90}
+    .handoff-list,.doc-list{display:grid;gap:9px}.handoff,.document{display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:center;padding:13px;border:1px solid var(--line);border-radius:11px}.item-icon{width:40px;height:40px;display:grid;place-items:center;border-radius:10px;background:var(--purple-soft);color:var(--purple)}.item-icon svg{width:20px;height:20px}.handoff strong,.document strong{display:block;font-size:13px}.handoff small,.document small{display:block;margin-top:4px;color:var(--muted);font-size:11.5px}.doc-action{height:34px;padding:0 9px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--text);font-size:11px;font-weight:800}
+    .account-plan{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border:1px solid var(--line);border-radius:12px;background:#fbfcfe;overflow:hidden}.account-plan-item{min-width:0;padding:13px 14px;border-right:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}.account-plan-item:nth-child(2n){border-right:0}.account-plan-item:nth-last-child(-n+2){border-bottom:0}.account-plan-item span,.account-plan-item strong{display:block}.account-plan-item span{color:var(--muted);font-size:11px}.account-plan-item strong{margin-top:4px;color:var(--navy);font-size:13px}.account-plan-item small{display:block;margin-top:3px;color:var(--muted);font-size:11px;line-height:1.35}
+    .review-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.review-card{padding:15px;border:1px solid var(--line);border-radius:11px}.review-card h3{margin:0 0 11px;font-size:14px}.review-row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--line-soft);font-size:12.5px}.review-row span{color:var(--muted)}.review-row strong{text-align:right}
+    .checks{display:grid;gap:7px}.launch-check{display:flex;align-items:center;gap:10px;padding:10px 11px;border:1px solid var(--line);border-radius:9px}.launch-check .mark{width:23px;height:23px;display:grid;place-items:center;border-radius:50%;background:var(--green-soft);color:var(--green)}.launch-check.follow-up{border-color:#f4ddbd;background:#fffaf3}.launch-check.follow-up .mark{background:#fff;color:var(--amber)}.launch-check span{flex:1;font-size:12.5px}.launch-check strong{font-size:10.5px;text-transform:uppercase;color:var(--green)}.launch-check.follow-up strong{color:#b76300}
+    .panel[data-panel="review"]{padding:24px 26px 28px}.pill.navy{background:#e8eef7;color:var(--navy)}.launch-ready-banner{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:13px;align-items:center;padding:17px 18px;border:1px solid #c7e5d1;border-radius:13px;background:#f3faf5}.launch-ready-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:11px;background:#dff3e6;color:var(--green)}.launch-ready-icon svg{width:22px;height:22px}.launch-ready-copy strong,.launch-ready-copy span{display:block}.launch-ready-copy strong{font-size:17px}.launch-ready-copy span{margin-top:4px;color:#607567;font-size:12.5px}.launch-ready-state{padding:7px 10px;border-radius:7px;background:#dff3e6;color:var(--green);font-size:11.5px;font-weight:850}.launch-review-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(260px,.75fr);gap:14px;margin-top:18px}.launch-plan-card,.launch-followup-card{overflow:hidden;border:1px solid var(--line);border-radius:13px;background:#fff}.launch-card-head{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line-soft)}.launch-card-head>.item-icon{width:36px;height:36px;border-radius:9px;background:#edf4ff;color:var(--blue)}.launch-card-head>div{min-width:0;flex:1}.launch-card-head h3{margin:0;font-size:15.5px}.launch-card-head p{margin:4px 0 0;color:var(--muted);font-size:12px;line-height:1.4}.launch-card-head .pill{align-self:center}.launch-plan-list{display:grid}.launch-plan-row{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px 16px}.launch-plan-row+.launch-plan-row{border-top:1px solid var(--line-soft)}.launch-plan-row>svg{width:17px;height:17px;color:var(--navy)}.launch-plan-row strong,.launch-plan-row small{display:block}.launch-plan-row strong{font-size:13px}.launch-plan-row small{margin-top:3px;color:var(--muted);font-size:11.5px}.launch-plan-row>span:last-child{color:var(--navy);font-size:12px;font-weight:850;text-align:right}.launch-followup-card{border-color:#efd8b7}.launch-followup-card .launch-card-head{background:#fffaf3}.launch-followup-card .launch-card-head>.item-icon{background:var(--amber-soft);color:var(--amber)}.launch-followup-body{padding:14px 16px}.launch-followup-body>strong{display:block;font-size:14px}.launch-followup-body>p{margin:5px 0 12px;color:var(--muted);font-size:12px;line-height:1.45}.launch-followup-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border:1px solid #f0dfc7;border-radius:9px}.launch-followup-facts span{padding:10px}.launch-followup-facts span+span{border-left:1px solid #f0dfc7}.launch-followup-facts small,.launch-followup-facts strong{display:block}.launch-followup-facts small{color:var(--muted);font-size:10.5px}.launch-followup-facts strong{margin-top:4px;font-size:12px}.launch-followup-action{display:flex;justify-content:flex-end;margin-top:12px}.launch-followup-action .btn{height:34px;padding:0 11px;font-size:11.5px}.final-checks{margin-top:18px;border:1px solid var(--line);border-radius:12px;background:#fff}.final-checks summary{display:flex;align-items:center;gap:11px;padding:14px 16px;cursor:pointer;list-style:none}.final-checks summary::-webkit-details-marker{display:none}.final-checks summary>.mark{width:30px;height:30px;display:grid;place-items:center;border-radius:50%;background:var(--green-soft);color:var(--green)}.final-checks summary>.mark svg{width:15px;height:15px}.final-checks summary>.chevron{width:16px;height:16px;color:var(--muted);transition:transform .18s ease}.final-checks[open] summary>.chevron{transform:rotate(90deg)}.final-checks-copy{min-width:0;flex:1}.final-checks-copy strong,.final-checks-copy small{display:block}.final-checks-copy strong{font-size:14px}.final-checks-copy small{margin-top:3px;color:var(--muted);font-size:11.5px}.final-check-list{padding:0 16px 13px;border-top:1px solid var(--line-soft)}.final-check-list .launch-check{border:0;border-bottom:1px solid var(--line-soft);border-radius:0;padding:10px 0}.final-check-list .launch-check:last-child{border-bottom:0}.launch-submit-note{display:flex;align-items:flex-start;gap:9px;margin-top:14px;color:var(--muted);font-size:11.5px;line-height:1.45}.launch-submit-note svg{width:16px;height:16px;flex:0 0 auto;color:var(--navy)}
+    .launch-followup-body{padding:16px}.launch-followup-document{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:11px;align-items:center}.launch-document-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:10px;background:#fff3e3;color:#c96a00}.launch-document-icon svg{width:20px;height:20px}.launch-followup-document>div{min-width:0}.launch-followup-document strong,.launch-followup-document small{display:block}.launch-followup-document strong{font-size:15px}.launch-followup-document small{margin-top:3px;color:var(--muted);font-size:12px}.launch-followup-message{margin:13px 0!important;color:#566985!important;font-size:13px!important;line-height:1.5!important}.launch-followup-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}.launch-followup-meta-item{display:flex;align-items:center;gap:9px;padding:12px 4px}.launch-followup-meta-item+.launch-followup-meta-item{padding-left:13px;border-left:1px solid var(--line-soft)}.launch-meta-icon{width:30px;height:30px;display:grid;place-items:center;border-radius:50%;background:#eef3fa;color:var(--navy)}.launch-meta-icon svg{width:15px;height:15px}.launch-followup-meta-item small,.launch-followup-meta-item strong{display:block}.launch-followup-meta-item small{color:var(--muted);font-size:11px}.launch-followup-meta-item strong{margin-top:3px;font-size:12.5px}.launch-followup-action{margin-top:14px}.launch-followup-action .btn{width:100%;height:38px;border-color:#cbd8e9;color:var(--navy);font-size:12.5px}.final-checks{overflow:hidden}.final-checks summary{padding:15px 16px}.final-checks summary>.mark{width:36px;height:36px;border-radius:10px}.final-checks summary>.mark svg{width:18px;height:18px}.final-checks-copy strong{font-size:15px}.final-checks-copy small{font-size:12px;line-height:1.4}.final-check-count{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border-radius:999px;background:var(--green-soft);color:var(--green);font-size:11.5px;font-weight:850}.final-check-count svg{width:13px;height:13px}.final-check-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;padding:0 16px 14px;border-top:1px solid var(--line-soft)}.final-check-item{display:grid;grid-template-columns:28px minmax(0,1fr);gap:9px;align-items:start;padding:13px 12px 13px 0;border-bottom:1px solid var(--line-soft)}.final-check-item:nth-child(2n){padding-left:12px;border-left:1px solid var(--line-soft)}.final-check-item:last-child{grid-column:1/-1;border-bottom:0;border-left:0;padding-bottom:0;padding-left:0}.final-check-item>span{width:26px;height:26px;display:grid;place-items:center;border-radius:50%;background:var(--green-soft);color:var(--green)}.final-check-item>span svg{width:13px;height:13px}.final-check-item strong,.final-check-item small{display:block}.final-check-item strong{font-size:12.5px}.final-check-item small{margin-top:3px;color:var(--muted);font-size:11.5px;line-height:1.35}
+    .summary{padding:18px;border-left:1px solid var(--line);background:#f7f9fc}.summary-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}.summary-head h2{margin:0;font-size:17px}.summary-head p{margin:4px 0 0;color:var(--muted);font-size:12px}.summary-step{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;font-size:12px;font-weight:800}.summary-profile{display:flex;align-items:center;gap:11px;padding:13px;border:1px solid var(--line);border-radius:11px;background:#fff}.summary-profile .avatar{width:44px;height:44px;overflow:hidden}.summary-profile .avatar img{width:100%;height:100%;display:block;object-fit:cover}.summary-profile strong{display:block;font-size:14px}.summary-profile small{display:block;margin-top:3px;color:var(--muted);font-size:11.5px}.summary-profile .pill{margin-left:auto}.summary-body{display:grid;gap:11px;margin-top:11px}.summary-card{padding:13px;border:1px solid var(--line);border-radius:11px;background:#fff}.summary-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}.summary-card-title{display:flex;align-items:center;gap:8px}.summary-card-title svg{width:17px;height:17px;color:var(--navy)}.summary-card-title strong{font-size:13.5px}.summary-card-head>span{color:var(--muted);font-size:11px}.summary-row{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--line-soft);font-size:12px}.summary-row:first-of-type{border-top:0}.summary-row span{color:var(--muted)}.summary-row strong{text-align:right}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line-soft)}.mini{min-width:0;padding:11px 4px 2px;text-align:center}.mini span{display:block;color:var(--muted);font-size:9.5px;text-transform:uppercase}.mini strong{display:block;margin-top:4px;color:var(--navy);font-size:17px}.readiness{padding:0;color:var(--text)}.readiness-top{display:flex;justify-content:space-between;align-items:center}.readiness strong{font-size:15px;color:var(--green)}.readiness span{font-size:12px;color:var(--muted)}.bar{height:7px;margin-top:10px;border-radius:20px;background:#e3e9f1;overflow:hidden}.bar i{display:block;width:100%;height:100%;border-radius:inherit;background:var(--green)}.readiness small{display:block;margin-top:8px;color:var(--muted);font-size:11.5px;line-height:1.45}.summary-note{display:flex;gap:9px;padding:11px;border-top:1px solid var(--line-soft);color:var(--muted);font-size:11.5px;line-height:1.45}.summary-note svg{width:16px;height:16px;flex:0 0 auto;color:var(--amber)}.worker{display:flex;align-items:center;gap:11px;padding:13px;border:1px solid var(--line);border-radius:11px;background:#fff}.avatar{width:42px;height:42px;display:grid;place-items:center;flex:0 0 auto;border:1px solid #c5d9fb;border-radius:50%;background:#dceaff;color:#0a56c7;font-size:12px;font-weight:800}.worker strong{display:block;font-size:14px}.worker small{display:block;margin-top:3px;color:var(--muted);font-size:11.5px}
+    .footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 26px;border-top:1px solid var(--line);background:#fff}.footer-copy{color:var(--muted);font-size:12px}.footer-actions{display:flex;gap:8px}.btn{height:40px;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:0 15px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--text);font-size:12.5px;font-weight:800}.btn.primary{border-color:var(--navy);background:var(--navy);color:#fff}.btn:disabled{cursor:not-allowed;opacity:.5}.btn svg{width:14px;height:14px}
+    .skeleton{display:block;position:relative;overflow:hidden;border-radius:8px;background:#e6ebf2}.skeleton:after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.68),transparent);animation:shimmer 1.15s infinite}@keyframes shimmer{to{transform:translateX(100%)}}.preview-skeleton{display:grid;gap:10px}.preview-skeleton i{height:54px}
+    @media(max-width:1120px){.wizard-body{grid-template-columns:minmax(0,1fr)}.summary{display:none}}@media(max-width:760px){.shell{padding:12px}.ui-stepper-step{min-width:56px;justify-content:center}.ui-stepper-copy{display:none}.content-head,.panel{padding-left:15px;padding-right:15px}.choice-grid,.field-grid,.review-grid,.account-plan,.employment-facts{grid-template-columns:1fr}.employment-fact{border-right:0;border-bottom:1px solid var(--line-soft)}.employment-fact:last-child{border-bottom:0}.employment-source-foot,.employee-search-help{align-items:flex-start;flex-direction:column}.account-plan-item{border-right:0}.account-plan-item:nth-last-child(-n+2){border-bottom:1px solid var(--line-soft)}.account-plan-item:last-child{border-bottom:0}.work-head,.work-row{grid-template-columns:24px minmax(0,1fr) 90px}.work-head>:nth-child(3),.work-row>:nth-child(3){display:none}.footer{padding:12px 15px}.footer-copy{display:none}}
+    @media(prefers-reduced-motion:reduce){.skeleton:after{animation:none}}
+    .conditional-card{display:none;margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:10px;background:#fbfcfe}.conditional-card.active{display:block}
+    .schedule-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.schedule-option{padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff}.schedule-option.selected{border-color:#77a8f5;background:#f3f7ff}.schedule-option strong{display:block;font-size:12px}.schedule-option small{display:block;margin-top:4px;color:var(--muted);font-size:11.5px}
+    .document-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.doc-choice{height:32px;padding:0 10px;border:1px solid var(--line);border-radius:7px;background:#fff;color:#344660;font-size:11.5px;font-weight:700}.doc-choice.active{border-color:#7faaf1;background:#edf4ff;color:var(--blue)}
+    .panel[data-panel="documents"]{padding:24px 26px 28px}.panel[data-panel="documents"]>.section{margin-top:19px}.document-overview{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,110px);align-items:center;gap:14px;padding:17px 18px;border:1px solid #cfe0fb;border-radius:13px;background:#f7faff}.document-overview-copy{display:flex;align-items:center;gap:12px}.document-overview-copy .item-icon{background:#e7f0ff;color:var(--blue)}.document-overview-copy h3{margin:0;font-size:17px}.document-overview-copy p{margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.4}.document-overview-stat{padding:6px 11px;border-left:1px solid #dce6f4;text-align:center}.document-overview-stat strong,.document-overview-stat span{display:block}.document-overview-stat strong{color:var(--navy);font-size:22px}.document-overview-stat span{margin-top:4px;color:var(--muted);font-size:11.5px}.document-overview-stat.is-ready strong{color:var(--green)}.document-overview-stat.is-attention strong{color:var(--amber)}
+    .ready-documents{overflow:hidden;border:1px solid var(--line);border-radius:12px;background:#fff}.ready-documents summary{display:flex;align-items:center;gap:12px;padding:15px 16px;cursor:pointer;list-style:none}.ready-documents summary::-webkit-details-marker{display:none}.ready-documents summary>.item-icon{background:var(--green-soft);color:var(--green)}.ready-documents-summary{min-width:0;flex:1}.ready-documents-summary strong,.ready-documents-summary small{display:block}.ready-documents-summary strong{font-size:15px}.ready-documents-summary small{margin-top:4px;color:var(--muted);font-size:12.5px;line-height:1.4}.ready-documents-chevron{width:17px;height:17px;color:#71819a;transition:transform .15s ease}.ready-documents[open] .ready-documents-chevron{transform:rotate(90deg)}.ready-document-list{border-top:1px solid var(--line-soft)}.ready-document-row{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:11px;align-items:center;padding:12px 16px}.ready-document-row+.ready-document-row{border-top:1px solid var(--line-soft)}.ready-document-row .item-icon{width:33px;height:33px;border-radius:8px;background:var(--green-soft);color:var(--green)}.ready-document-row .item-icon svg{width:16px;height:16px}.ready-document-row strong,.ready-document-row small{display:block}.ready-document-row strong{font-size:13.5px}.ready-document-row small{margin-top:4px;color:var(--muted);font-size:12px}
+    .document-attention-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}.document-attention-head h3{margin:0;font-size:16px}.document-attention-head span{color:var(--amber);font-size:12px;font-weight:800}.document-decision-card{overflow:hidden;border:1px solid #efd8b7;border-radius:13px;background:#fff}.document-decision-head{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:13px;align-items:center;padding:16px 17px;background:#fffaf3}.document-decision-head .item-icon{width:42px;height:42px;background:var(--amber-soft);color:var(--amber)}.document-decision-copy strong,.document-decision-copy small{display:block}.document-decision-copy strong{font-size:15.5px}.document-decision-copy small{margin-top:5px;color:var(--muted);font-size:12.5px}.document-impact{padding:7px 10px;border-radius:7px;background:#fff0dc;color:#a85d05;font-size:11.5px;font-weight:800;white-space:nowrap}.document-requirement-facts{display:flex;flex-wrap:wrap;gap:14px;padding:11px 17px;border-top:1px solid #f3e4cf;border-bottom:1px solid var(--line-soft)}.document-requirement-facts span{display:flex;align-items:center;gap:6px;color:#62718a;font-size:12px}.document-requirement-facts svg{width:14px;height:14px}.document-decision-controls{padding:15px 17px 17px}.document-decision-controls>strong{display:block;margin-bottom:10px;font-size:13.5px}.document-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0}.doc-choice{height:40px;font-size:12px}.document-decision-panel{display:none;margin-top:13px;padding:15px;border:1px solid var(--line);border-radius:10px;background:#f8fafc}.document-decision-panel.active{display:block}.document-decision-panel-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:13px}.document-decision-panel-head svg{width:18px;height:18px;flex:0 0 auto;color:var(--navy)}.document-decision-panel-head strong,.document-decision-panel-head small{display:block}.document-decision-panel-head strong{font-size:14px}.document-decision-panel-head small{margin-top:4px;color:var(--muted);font-size:12.5px;line-height:1.45}.document-upload-zone{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;border:1px dashed #9eb3cf;border-radius:9px;background:#fff}.document-upload-zone input{position:absolute;width:1px;height:1px;opacity:0}.document-upload-zone span{font-size:13px}.document-upload-zone small{display:block;margin-top:4px;color:var(--muted);font-size:11.5px}.document-request-grid{display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:12px}.document-request-note{margin-top:11px;color:var(--muted);font-size:12px;line-height:1.45}.document-launch-impact{display:flex;align-items:center;gap:11px;margin-top:14px;padding:13px 15px;border-radius:10px;background:#fff8ef;color:#66553e}.document-launch-impact svg{width:18px;height:18px;flex:0 0 auto;color:var(--amber)}.document-launch-impact div{min-width:0;flex:1}.document-launch-impact strong,.document-launch-impact span{display:block}.document-launch-impact strong{font-size:13.5px}.document-launch-impact span{margin-top:4px;color:#806f59;font-size:12.5px;line-height:1.4}.document-launch-impact em{font-size:11px;font-style:normal;font-weight:800;color:#a85d05}
+    .success-state{display:none;padding:30px;background:#f5f7fa}.success-state.active{display:block}.success-shell{max-width:1040px;margin:0 auto}.success-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:11px;background:var(--green);color:#fff}.success-icon svg{width:21px;height:21px}.success-launch-header{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:13px;align-items:center;padding:15px 19px;border:1px solid #bfe1ca;border-radius:14px 14px 0 0;background:#f1faf4}.success-launch-copy>span{color:var(--green);font-size:10.5px;font-weight:850;text-transform:uppercase;letter-spacing:.045em}.success-launch-copy h2{margin:3px 0 0;font-size:20px}.success-launch-copy p{margin:4px 0 0;color:#607567;font-size:12px;line-height:1.4}.success-reference{min-width:155px;padding-left:16px;border-left:1px solid #cce4d3;text-align:right}.success-reference small,.success-reference strong,.success-reference span{display:block}.success-reference small{color:#67806f;font-size:9.5px;text-transform:uppercase;letter-spacing:.045em}.success-reference strong{margin-top:3px;color:var(--navy);font-size:14px}.success-reference span{margin-top:3px;color:var(--green);font-size:10.5px;font-weight:800}.success-person-card{display:grid;grid-template-columns:52px minmax(0,1fr) auto 130px 130px;gap:14px;align-items:center;padding:17px 22px;border:1px solid var(--line);border-top:0;background:#fff}.success-person-card>img{width:50px;height:50px;border-radius:50%;object-fit:cover}.success-person-copy strong,.success-person-copy span{display:block}.success-person-copy strong{font-size:16px}.success-person-copy span{margin-top:4px;color:var(--muted);font-size:12.5px}.success-person-fact{padding-left:14px;border-left:1px solid var(--line-soft)}.success-person-fact small,.success-person-fact strong{display:block}.success-person-fact small{color:var(--muted);font-size:10.5px}.success-person-fact strong{margin-top:5px;font-size:12.5px}.success-created{border:1px solid var(--line);border-top:0;border-radius:0 0 16px 16px;background:#fff}.success-section-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 22px;border-bottom:1px solid var(--line-soft)}.success-section-head>div,.success-card-title{display:flex;align-items:center;gap:11px}.success-section-head .item-icon,.success-card-title .item-icon{width:38px;height:38px;border-radius:10px;background:#edf4ff;color:var(--blue)}.success-section-head h3,.success-card-title h3{margin:0;font-size:15px}.success-section-head p,.success-card-title p{margin:4px 0 0;color:var(--muted);font-size:12px}.success-audit-state{display:inline-flex;align-items:center;gap:6px;color:var(--green);font-size:11.5px;font-weight:850}.success-audit-state svg{width:15px;height:15px}.success-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:0}.success-metric{padding:15px 18px;text-align:left}.success-metric+.success-metric{border-left:1px solid var(--line-soft)}.success-metric strong,.success-metric span{display:block}.success-metric strong{color:var(--navy);font-size:24px}.success-metric span{margin-top:4px;color:var(--muted);font-size:11.5px}.success-metric.is-followup strong{color:var(--amber)}.success-next-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:16px}.success-followup,.success-routing{overflow:hidden;border:1px solid var(--line);border-radius:14px;background:#fff}.success-followup{border-color:#ecd6b7}.success-card-title{align-items:flex-start;padding:15px 17px;border-bottom:1px solid var(--line-soft)}.success-card-title>div{min-width:0;flex:1}.success-followup .success-card-title{background:#fffaf3}.success-followup .success-card-title .item-icon{background:var(--amber-soft);color:var(--amber)}.success-card-title>.pill{align-self:center}.success-followup-row{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:14px;align-items:center;padding:16px 17px}.success-followup-row>div+div{padding-left:14px;border-left:1px solid var(--line-soft)}.success-followup-row strong,.success-followup-row span,.success-followup-row small{display:block}.success-followup-row>div:first-child strong{font-size:14px}.success-followup-row span{margin-top:4px;color:var(--muted);font-size:12px}.success-followup-row small{color:var(--muted);font-size:10.5px}.success-followup-row>div:last-child strong{margin-top:4px;font-size:12px}.success-routing-list{display:grid;padding:6px 17px 12px}.success-routing-list>div{display:grid;grid-template-columns:26px minmax(0,1fr);gap:9px;align-items:start;padding:10px 0}.success-routing-list>div+div{border-top:1px solid var(--line-soft)}.success-routing-list>div>span{width:25px;height:25px;display:grid;place-items:center;border-radius:50%;background:var(--green-soft);color:var(--green)}.success-routing-list svg{width:12px;height:12px}.success-routing-list p{margin:0}.success-routing-list strong,.success-routing-list small{display:block}.success-routing-list strong{font-size:12.5px}.success-routing-list small{margin-top:3px;color:var(--muted);font-size:11.5px}.success-actions{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:16px;padding:15px 17px;border:1px solid var(--line);border-radius:13px;background:#fff}.success-actions>p{display:flex;align-items:flex-start;gap:8px;margin:0;color:var(--muted);font-size:11.5px;line-height:1.4}.success-actions>p svg{width:16px;height:16px;flex:0 0 auto;color:var(--green)}.success-actions>div{display:flex;flex:0 0 auto;gap:8px}
+    .ob-side-stack{display:grid;align-content:start;gap:12px;padding:0 14px 14px;border-left:1px solid var(--line);background:#f5f7fa}.ob-rail-card{overflow:hidden;border:1px solid var(--line);border-radius:14px;background:#fff}.ob-side-stack>.ob-rail-card:first-child{width:calc(100% + 28px);margin:0 -14px;border:0;border-bottom:1px solid var(--line);border-radius:0}.ob-preview-kicker{display:flex;align-items:center;gap:8px;min-height:46px;padding:0 18px;background:#374669;color:#fff;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}.ob-preview-kicker>button{height:28px;margin-left:auto;padding:0 9px;border:1px solid rgba(255,255,255,.28);border-radius:7px;background:rgba(255,255,255,.08);color:#fff;font-size:9.5px;font-weight:800;letter-spacing:0;text-transform:none}.ob-preview-kicker svg{width:16px;height:16px}.ob-ring-hero{padding:18px;background:#1b2d54}.ob-ring-row{display:flex;align-items:center;gap:14px}.ob-ring-wrap{position:relative;width:68px;height:68px;flex:0 0 auto}.ob-ring{width:68px;height:68px;transform:rotate(-90deg)}.ob-ring-track{fill:none;stroke:rgba(255,255,255,.14);stroke-width:3}.ob-ring-value{fill:none;stroke:#34d399;stroke-width:3;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:17}.ob-ring-photo{position:absolute;inset:8px;overflow:hidden;border-radius:50%;background:#e4efff}.ob-ring-photo img{width:100%;height:100%;display:block;object-fit:cover}.ob-ring-copy{display:flex;min-width:0;flex:1;flex-direction:column;gap:7px}.ob-ring-copy strong{overflow:hidden;color:#fff;font-size:18px;text-overflow:ellipsis;white-space:nowrap}.ob-ring-role{align-self:flex-start;display:inline-flex;align-items:center;gap:5px;max-width:100%;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.1);color:#cfe0ff;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ob-ring-role svg{width:12px;height:12px}.ob-ring-status{display:flex;flex:0 0 auto;flex-direction:column;align-items:center;gap:6px;padding-left:14px;border-left:1px solid rgba(255,255,255,.14)}.ob-ring-status strong{color:#fff;font-size:26px}.ob-ring-status span{padding:4px 8px;border:1px solid rgba(16,185,129,.3);border-radius:999px;background:rgba(16,185,129,.16);color:#6ee7b7;font-size:10px;white-space:nowrap}.ob-preview-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}.ob-preview-fact{min-width:0;padding:13px 7px;text-align:center}.ob-preview-fact+.ob-preview-fact{border-left:1px solid var(--line)}.ob-preview-fact svg{width:16px;height:16px;margin:0 auto 8px;color:var(--navy)}.ob-preview-fact small,.ob-preview-fact strong{display:block}.ob-preview-fact small{padding-bottom:7px;border-bottom:1px dashed var(--line);color:var(--muted);font-size:9px;text-transform:uppercase}.ob-preview-fact strong{overflow:hidden;margin-top:8px;color:var(--text);font-size:11.5px;text-overflow:ellipsis;white-space:nowrap}.ob-rail-section{padding:14px}.ob-rail-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}.ob-rail-title{display:flex;align-items:center;gap:7px}.ob-rail-title svg{width:16px;height:16px;color:var(--navy)}.ob-rail-title strong{font-size:13.5px}.ob-rail-count{padding:3px 7px;border-radius:999px;background:var(--green-soft);color:var(--green);font-size:10.5px;font-weight:800}.ob-check-list,.ob-doc-list{display:grid}.ob-check-row,.ob-doc-row,.ob-total-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line-soft);font-size:12px}.ob-check-row:first-child,.ob-doc-row:first-child{border-top:0}.ob-check-row svg,.ob-doc-row svg{width:14px;height:14px;color:var(--green)}.ob-check-row span,.ob-doc-row span{min-width:0;flex:1}.ob-check-row strong,.ob-doc-row strong{color:var(--green);font-size:10.5px}.ob-doc-row.is-missing svg,.ob-doc-row.is-missing strong{color:var(--amber)}.ob-duplicate-ok{display:flex;align-items:flex-start;gap:9px;padding:11px;border-radius:9px;background:var(--green-soft)}.ob-duplicate-ok svg{width:16px;height:16px;flex:0 0 auto;color:var(--green)}.ob-duplicate-ok strong{display:block;color:#176b38;font-size:12px}.ob-duplicate-ok span{display:block;margin-top:3px;color:#538065;font-size:11px;line-height:1.35}.ob-total-row{justify-content:space-between}.ob-total-row span{display:flex;align-items:center;gap:6px;color:var(--muted)}.ob-total-row svg{width:14px;height:14px}.ob-total-row strong{font-size:12.5px}
+    .employee-picker .ui-person-search-item[hidden]{display:none}
+    .ob-preview-photo{width:62px;height:62px;display:block;flex:0 0 auto;overflow:hidden;border:2px solid rgba(255,255,255,.7);border-radius:50%;background:#e4efff}
+    .ob-preview-photo img{width:100%;height:100%;display:block;object-fit:cover}
+    .ob-ring-copy strong{font-size:20px}
+    .ob-ring-id{color:#a9bddd;font-size:12px;font-weight:750;letter-spacing:.04em}
+    .ob-ring-role{padding:0;border-radius:0;background:none}
+    .ob-ring-role{font-size:12.5px}
+    .ob-preview-fact{padding:15px 8px}
+    .ob-preview-fact small{font-size:10.5px}
+    .ob-preview-fact strong{font-size:13.5px}
+    .ob-rail-title strong{font-size:15px}
+    .ob-check-row,.ob-doc-row,.ob-total-row{font-size:13.5px}
+    .ob-check-row strong,.ob-doc-row strong{font-size:12px}
+    .ob-duplicate-ok strong{font-size:13.5px}
+    .ob-duplicate-ok span{font-size:12.5px}
+    .package-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:19px 0 11px}.package-section-head h3{margin:0;font-size:18px}.package-section-head p{margin:4px 0 0;color:var(--muted);font-size:13px}.quiet-link{padding:0;border:0;background:none;color:var(--blue);font-size:12.5px;font-weight:800}
+    .package-section-actions{display:flex;align-items:center;gap:13px}
+    .package-decision-banner{overflow:hidden;border:1px solid #c9e7d3;border-radius:12px;background:#fff}
+    .package-banner-top{display:flex;align-items:center;gap:11px;padding:13px 15px;background:#f3faf5}
+    .package-banner-icon{width:38px;height:38px;display:grid;place-items:center;flex:0 0 auto;border-radius:10px;background:#dff3e6;color:var(--green)}.package-banner-icon svg{width:20px;height:20px}
+    .package-banner-copy{min-width:0;flex:1}.package-banner-copy strong{display:block;font-size:14px}.package-banner-copy small{display:block;margin-top:3px;color:#5f7769;font-size:11.5px}
+    .package-insight-state{flex:0 0 auto;padding:5px 8px;border-radius:999px;background:#dff3e6;color:var(--green);font-size:10px;font-weight:850;white-space:nowrap}
+    .package-header-timing{flex:0 0 auto;padding-left:14px;border-left:1px solid #cde5d5;color:#526b5c;white-space:nowrap}.package-header-timing strong,.package-header-timing small{display:block}.package-header-timing strong{font-size:12.5px}.package-header-timing small{margin-top:3px;color:#6f8275;font-size:10.5px}
+    .package-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .package-choice{position:relative;min-width:0;padding:17px;border:1px solid var(--line);border-radius:13px;background:#fff;color:var(--text);font:inherit;text-align:left;cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease,background .15s ease}
+    .package-choice:hover{border-color:#9bbcf1}.package-choice.is-selected{border-color:var(--blue);background:#f8fbff;box-shadow:0 0 0 3px rgba(7,94,232,.08)}
+    .package-choice-badge{position:absolute;top:0;right:16px;transform:translateY(-50%);padding:4px 8px;border-radius:999px;background:var(--green);color:#fff;font-size:10.5px;font-weight:800}.package-choice-badge.is-alt{background:#e8eef7;color:#51627c}
+    .package-choice-head{display:flex;align-items:center;gap:11px}.package-choice-icon{width:42px;height:42px;display:grid;place-items:center;flex:0 0 auto;border-radius:11px;background:var(--blue-soft);color:var(--blue)}.package-choice-icon.is-safety{background:var(--amber-soft);color:var(--amber)}.package-choice-icon svg{width:21px;height:21px}
+    .package-choice-title{min-width:0;flex:1}.package-choice-title strong,.package-choice-title small{display:block}.package-choice-title strong{font-size:15px}.package-choice-title small{margin-top:4px;color:var(--muted);font-size:11.5px}
+    .package-choice-description{display:block;min-height:38px;margin-top:13px;color:#536580;font-size:12.5px;line-height:1.45}
+    .package-reasons{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px}.package-reasons span{padding:4px 7px;border-radius:6px;background:#f0f4f9;color:#536580;font-size:10.5px;font-weight:700}
+    .package-choice-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;border-top:1px solid var(--line-soft)}.package-choice-stats>span{min-width:0;padding:11px 3px 0;text-align:center}.package-choice-stats>span+span{border-left:1px solid var(--line-soft)}.package-choice-stats strong,.package-choice-stats small{display:block}.package-choice-stats strong{color:var(--navy);font-size:16px}.package-choice-stats small{margin-top:3px;color:var(--muted);font-size:9.5px;text-transform:uppercase}
+    .package-policy-stack{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+    .package-policy-row{display:grid;grid-template-columns:44px minmax(0,1fr);gap:13px;align-items:start;width:100%;padding:15px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--text);font:inherit;text-align:left;cursor:pointer}
+    .package-policy-row:hover{border-color:#9bbcf1}.package-policy-row.is-selected{border-color:var(--blue);background:#f8fbff;box-shadow:0 0 0 3px rgba(7,94,232,.07)}
+    .package-policy-copy{display:block;min-width:0}.package-policy-title{display:flex;align-items:center;gap:8px}.package-policy-title strong{font-size:15px}.package-policy-title .package-choice-badge{position:static;transform:none}
+    .package-policy-copy>small{display:block;margin-top:4px;color:var(--muted);font-size:12px;line-height:1.4}.package-policy-copy .package-reasons{margin-top:8px}
+    .package-policy-numbers{display:grid;grid-column:1/-1;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:1px;padding-top:11px;border-top:1px solid var(--line-soft)}.package-policy-numbers>span{min-width:0;padding:1px 7px;text-align:center}.package-policy-numbers>span+span{border-left:1px solid var(--line-soft)}
+    .package-policy-numbers strong,.package-policy-numbers small{display:block}.package-policy-numbers strong{color:var(--navy);font-size:15px}.package-policy-numbers small{margin-top:3px;color:var(--muted);font-size:9px;text-transform:uppercase}
+    .package-decision-banner.is-tight{border-color:#f1d6ad}.package-decision-banner.is-tight .package-banner-top{background:#fff9f0}.package-decision-banner.is-tight .package-banner-icon{background:var(--amber-soft);color:var(--amber)}.package-decision-banner.is-tight .package-insight-state{background:var(--amber-soft);color:#a85d05}.package-decision-banner.is-tight .package-banner-copy small,.package-decision-banner.is-tight .package-header-timing small{color:#7c684b}.package-decision-banner.is-tight .package-header-timing{border-color:#eed8b8}
+    .generated-plan{margin-top:18px;border:1px solid var(--line);border-radius:13px;background:#fff;overflow:hidden}.generated-plan-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;border-bottom:1px solid var(--line-soft)}.generated-plan-head h3{margin:0;font-size:17px}.generated-plan-head p{margin:4px 0 0;color:var(--muted);font-size:12.5px}.generated-plan-readonly{padding:5px 8px;border-radius:999px;background:#f0f3f7;color:#62718a;font-size:10px;font-weight:800}
+    .generated-work-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:4px 15px 10px}.generated-work-row{display:grid;grid-template-columns:34px minmax(0,1fr) auto 16px;gap:9px;align-items:center;padding:11px 7px;border:0;border-bottom:1px solid var(--line-soft);background:#fff;color:var(--text);text-align:left}.generated-work-row:nth-last-child(-n+2){border-bottom:0}.generated-work-row:hover{background:#f8fbff}.generated-module-icon{width:32px;height:32px;display:grid;place-items:center;border-radius:9px;background:#eef4fd;color:var(--navy)}.generated-module-icon svg{width:16px;height:16px}.generated-work-row strong,.generated-work-row small{display:block}.generated-work-row strong{font-size:13px}.generated-work-row small{margin-top:3px;color:var(--muted);font-size:10.5px}.generated-work-row em{font-style:normal}.module-state{font-size:10px;font-weight:800;color:var(--green)}.module-state.is-gate{color:#b76300}.generated-work-row>.row-arrow{width:14px;height:14px;color:#8a99ae}
+    .generated-plan-note{display:flex;align-items:center;gap:8px;padding:10px 15px;border-top:1px solid var(--line-soft);background:#f8fbff;color:#536580;font-size:11.5px}.generated-plan-note svg{width:15px;height:15px;color:var(--navy)}
+    .work-preview-dialog{width:min(620px,calc(100vw - 28px));padding:0;border:0;border-radius:15px;background:#fff;color:var(--text);box-shadow:0 24px 70px rgba(7,27,58,.24)}.work-preview-dialog::backdrop{background:rgba(6,20,42,.48)}.work-dialog-head{display:flex;align-items:flex-start;gap:11px;padding:17px 18px;border-bottom:1px solid var(--line)}.work-dialog-head>div{min-width:0;flex:1}.work-dialog-head h3{margin:0;color:var(--navy);font-size:19px}.work-dialog-head p{margin:5px 0 0;color:var(--muted);font-size:12.5px}.work-dialog-close{width:34px;height:34px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--muted);font-size:20px}.work-dialog-body{padding:17px 18px}.work-dialog-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:hidden;border:1px solid var(--line);border-radius:10px}.work-dialog-facts span{padding:11px}.work-dialog-facts span+span{border-left:1px solid var(--line-soft)}.work-dialog-facts small,.work-dialog-facts strong{display:block}.work-dialog-facts small{color:var(--muted);font-size:10px}.work-dialog-facts strong{margin-top:4px;font-size:12.5px}.work-dialog-list{margin:14px 0 0;padding:0;list-style:none}.work-dialog-list li{display:flex;align-items:center;gap:9px;padding:9px 0;border-top:1px solid var(--line-soft);font-size:12.5px}.work-dialog-list li:first-child{border-top:0}.work-dialog-list svg{width:15px;height:15px;color:var(--green)}.work-dialog-foot{display:flex;justify-content:flex-end;padding:13px 18px;border-top:1px solid var(--line);background:#fbfcfe}
+    .exception-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:10px}.exception-section-title{display:flex;align-items:center;gap:9px}.exception-section-title>span{width:31px;height:31px;display:grid;place-items:center;border-radius:8px;background:#eef3fb;color:var(--navy)}.exception-section-title svg{width:16px;height:16px}.exception-section-title h3{margin:0;font-size:15px}.exception-section-title p{margin:3px 0 0;color:var(--muted);font-size:11.5px}.exception-section-head>span{color:var(--muted);font-size:12px}.exception-section-actions{display:flex;align-items:center;gap:10px}.exception-section-actions>span{color:var(--muted);font-size:12px}
+    .optional-action-list{overflow:hidden;border:1px solid var(--line);border-radius:12px;background:#fff}.optional-action{display:grid;grid-template-columns:26px 42px minmax(0,1fr) minmax(150px,.55fr) auto;gap:11px;align-items:center;padding:12px 14px;cursor:pointer}.optional-action[hidden]{display:none}.optional-action+.optional-action:not([hidden]){border-top:1px solid var(--line-soft)}.optional-action:hover{background:#fafcff}.optional-action input{position:absolute;opacity:0;pointer-events:none}.optional-check{width:21px;height:21px;display:grid;place-items:center;border:1px solid #b9c7da;border-radius:6px;background:#fff;color:transparent}.optional-action.is-selected .optional-check{border-color:var(--blue);background:var(--blue);color:#fff}.optional-check svg{width:12px;height:12px}.optional-action-icon{width:40px;height:40px;display:grid;place-items:center;border-radius:10px;background:#edf4ff;color:var(--blue)}.optional-action-icon.is-facilities{background:var(--amber-soft);color:var(--amber)}.optional-action-icon svg{width:19px;height:19px}.optional-action-copy strong,.optional-action-copy small,.optional-owner strong,.optional-owner small{display:block}.optional-action-copy strong{font-size:13.5px}.optional-action-copy small{margin-top:3px;color:var(--muted);font-size:11.5px}.optional-owner strong{font-size:12.5px}.optional-owner small{margin-top:3px;color:var(--muted);font-size:11px}.outcome-tag{padding:5px 8px;border-radius:7px;background:#f0f4f9;color:#566883;font-size:10.5px;font-weight:800;white-space:nowrap}
+    .ownership-exception{display:grid;grid-template-columns:42px minmax(0,1fr) minmax(170px,.65fr) auto;gap:12px;align-items:center;padding:13px 14px;border:1px solid #f0d7b5;border-radius:12px;background:#fffaf4}.ownership-exception[hidden]{display:none}.ownership-exception .item-icon{background:#fff0dc;color:var(--amber)}.ownership-copy strong,.ownership-copy small,.queue-owner strong,.queue-owner small{display:block}.ownership-copy strong{font-size:13.5px}.ownership-copy small{margin-top:3px;color:var(--muted);font-size:11.5px}.queue-owner{display:flex;align-items:center;gap:9px}.owner-avatar{width:32px;height:32px;display:grid;place-items:center;flex:0 0 auto;border:1px solid #d2ddea;border-radius:50%;background:#edf3fb;color:var(--navy);font-size:10px;font-weight:850}.queue-owner strong{font-size:12px}.queue-owner small{margin-top:2px;color:var(--muted);font-size:10.5px}.btn.compact{height:34px;padding:0 12px;font-size:11.5px}
+    .account-policy{overflow:hidden;border:1px solid var(--line);border-radius:12px;background:#fff}.account-policy-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}.account-policy-fact{min-width:0;padding:12px 13px}.account-policy-fact+.account-policy-fact{border-left:1px solid var(--line-soft)}.account-policy-fact span,.account-policy-fact strong,.account-policy-fact small{display:block}.account-policy-fact span{color:var(--muted);font-size:10px;text-transform:uppercase}.account-policy-fact strong{overflow:hidden;margin-top:5px;color:var(--navy);font-size:12.5px;text-overflow:ellipsis;white-space:nowrap}.account-policy-fact small{margin-top:3px;color:var(--muted);font-size:10.5px}
+    .assignment-dialog,.action-library-dialog{width:min(650px,calc(100vw - 28px));padding:0;border:0;border-radius:16px;background:#fff;color:var(--text);box-shadow:0 24px 70px rgba(7,27,58,.25)}.assignment-dialog::backdrop,.action-library-dialog::backdrop{background:rgba(6,20,42,.5)}.assignment-dialog-head{display:flex;align-items:flex-start;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line)}.assignment-dialog-head .item-icon{background:var(--amber-soft);color:var(--amber)}.assignment-dialog-head>div{min-width:0;flex:1}.assignment-dialog-head h3{margin:0;color:var(--navy);font-size:20px}.assignment-dialog-head p{margin:5px 0 0;color:var(--muted);font-size:12.5px}.assignment-dialog-body{display:grid;gap:17px;padding:18px 20px}.assignment-field label{display:block;margin-bottom:7px;font-size:12.5px;font-weight:800}.assignment-select{width:100%;height:42px;padding:0 11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--text)}.assignee-options{display:grid;gap:8px}.assignee-option{display:flex;align-items:center;gap:10px;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:#fff}.assignee-option.is-selected{border-color:#8eb4f1;background:#f5f9ff}.assignee-option input{accent-color:var(--blue)}.assignee-option>div{min-width:0;flex:1}.assignee-option strong,.assignee-option small{display:block}.assignee-option strong{font-size:12.5px}.assignee-option small{margin-top:2px;color:var(--muted);font-size:11px}.assignment-dialog-note{display:flex;gap:8px;padding:10px 11px;border-radius:9px;background:#f5f8fc;color:#5e708b;font-size:11.5px;line-height:1.4}.assignment-dialog-note svg{width:16px;height:16px;flex:0 0 auto;color:var(--navy)}.assignment-dialog-foot{display:flex;justify-content:flex-end;gap:8px;padding:13px 20px;border-top:1px solid var(--line);background:#fbfcfe}
+    .action-library-dialog{width:min(760px,calc(100vw - 28px))}.action-library-search{position:relative}.action-library-search svg{position:absolute;left:12px;top:12px;width:18px;height:18px;color:#71819a}.action-library-search .control{padding-left:39px}.action-library-list{display:grid;gap:8px}.library-action{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:11px;align-items:center;padding:11px;border:1px solid var(--line);border-radius:10px}.library-action[hidden]{display:none}.library-action-copy strong,.library-action-copy small{display:block}.library-action-copy strong{font-size:13.5px}.library-action-copy small{margin-top:3px;color:var(--muted);font-size:11.5px}.library-action-meta{display:flex;gap:7px;margin-top:6px}.library-action-meta span{padding:3px 6px;border-radius:6px;background:#f1f4f8;color:#60708a;font-size:10px;font-weight:750}.library-empty{display:none;padding:18px;color:var(--muted);text-align:center}.action-library-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 20px;border-top:1px solid var(--line);background:#fbfcfe}.one-off-form{display:grid;gap:13px;padding:15px;border:1px solid #d8e4f6;border-radius:11px;background:#f8fbff}.one-off-form[hidden]{display:none}.one-off-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.one-off-actions{display:flex;justify-content:flex-end;gap:8px}
+    .panel[data-panel="exceptions"]{padding-top:18px;padding-bottom:18px}.panel[data-panel="exceptions"] .section[hidden]{display:none}.panel[data-panel="exceptions"] .section+.section{margin-top:16px}.panel[data-panel="exceptions"] .exception-section-head{margin-bottom:8px}.panel[data-panel="exceptions"] .optional-action{padding:10px 12px}.panel[data-panel="exceptions"] .ownership-exception{padding:11px 12px}.panel[data-panel="exceptions"] .account-policy-fact{padding:10px 12px}
+    @media(max-width:900px){.package-policy-stack{grid-template-columns:1fr}.package-banner-top{flex-wrap:wrap}.package-header-timing{margin-left:49px}.optional-action{grid-template-columns:26px 40px minmax(0,1fr) auto}.optional-owner{display:none}.ownership-exception{grid-template-columns:40px minmax(0,1fr) auto}.queue-owner{display:none}.account-policy-facts{grid-template-columns:repeat(2,minmax(0,1fr))}.account-policy-fact:nth-child(3){border-left:0;border-top:1px solid var(--line-soft)}.account-policy-fact:nth-child(4){border-top:1px solid var(--line-soft)}}
+    @media(max-width:600px){.optional-action{grid-template-columns:24px 38px minmax(0,1fr)}.optional-action .outcome-tag{display:none}.exception-section-head{align-items:flex-start;flex-direction:column}.exception-section-actions{width:100%;justify-content:space-between}.ownership-exception{grid-template-columns:38px minmax(0,1fr)}.ownership-exception .btn{grid-column:1/-1}.account-policy-facts{grid-template-columns:1fr}.account-policy-fact+.account-policy-fact{border-top:1px solid var(--line-soft);border-left:0}.one-off-grid{grid-template-columns:1fr}.action-library-foot{align-items:stretch;flex-direction:column}}
+    @media(max-width:820px){.package-choice-grid{grid-template-columns:1fr}.package-banner-top{align-items:flex-start}.package-header-timing{order:3;width:calc(100% - 49px);padding:9px 0 0;border-top:1px solid #cde5d5;border-left:0}.package-banner-top .package-insight-state{margin-left:49px}.generated-work-list{grid-template-columns:1fr}.generated-work-row:nth-last-child(-n+2){border-bottom:1px solid var(--line-soft)}.generated-work-row:last-child{border-bottom:0}.work-dialog-facts{grid-template-columns:1fr}.work-dialog-facts span+span{border-top:1px solid var(--line-soft);border-left:0}.document-overview{grid-template-columns:1fr repeat(3,minmax(0,1fr))}.document-overview-copy{grid-column:1/-1}.document-overview-stat:first-of-type{border-left:0}.document-actions{grid-template-columns:1fr}.document-request-grid{grid-template-columns:1fr}.launch-review-grid{grid-template-columns:1fr}.launch-ready-banner{grid-template-columns:44px minmax(0,1fr)}.launch-ready-state{grid-column:2}}
+    @media(max-width:620px){.launch-followup-document{grid-template-columns:42px minmax(0,1fr)}.launch-followup-document>.pill{grid-column:2;justify-self:start}.launch-followup-meta,.final-check-list{grid-template-columns:1fr}.launch-followup-meta-item+.launch-followup-meta-item{padding-left:4px;border-top:1px solid var(--line-soft);border-left:0}.final-check-item:nth-child(2n){padding-left:0;border-left:0}.final-check-item:last-child{grid-column:auto}.final-check-count{display:none}}
+    @media(max-width:820px){.success-launch-header{grid-template-columns:48px minmax(0,1fr)}.success-reference{grid-column:2;min-width:0;padding:8px 0 0;border-top:1px solid #cce4d3;border-left:0;text-align:left}.success-person-card{grid-template-columns:50px minmax(0,1fr) auto}.success-person-fact{grid-column:auto;padding:10px 0 0;border-top:1px solid var(--line-soft);border-left:0}.success-next-grid{grid-template-columns:1fr}.success-actions{align-items:stretch;flex-direction:column}.success-actions>div{justify-content:flex-end}.success-created .success-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.success-created .success-metric:nth-child(3){border-top:1px solid var(--line-soft);border-left:0}.success-created .success-metric:nth-child(4){border-top:1px solid var(--line-soft)}}@media(max-width:560px){.success-state{padding:14px}.success-person-card{grid-template-columns:50px minmax(0,1fr)}.success-person-card>.pill{grid-column:2;justify-self:start}.success-created .success-grid{grid-template-columns:1fr}.success-created .success-metric+.success-metric{border-top:1px solid var(--line-soft);border-left:0}.success-followup-row{grid-template-columns:1fr}.success-followup-row>div+div{padding:11px 0 0;border-top:1px solid var(--line-soft);border-left:0}.success-actions>div{display:grid;grid-template-columns:1fr}.success-actions .btn{width:100%}}
+/* Production typography floor: operational labels must remain readable at app scale. */
+body .wizard small,body .wizard em,body .wizard .pill,body .wizard .mini span,body .wizard .module-state,body .wizard .generated-plan-readonly,body .wizard .work-head,body .wizard .ob-preview-kicker>button,body .wizard .ob-ring-status span,body .wizard .package-insight-state,body .wizard .package-choice-badge,body .wizard .owner-avatar,body .wizard .account-policy-fact span,body .wizard .library-action-meta span{font-size:11.5px}
+</style>
+  <link rel="stylesheet" href="onboarding-production-polish.css">
+</head>
+<body data-page-key="hr.onboarding.start">
+<svg width="0" height="0" aria-hidden="true" style="position:absolute">
+  <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5m7 7-7-7 7-7" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 21a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m20 20-4-4" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8m8-1a3 3 0 1 0 0-6M2 21v-2a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v2m2-7a4 4 0 0 1 4 4v3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-package" viewBox="0 0 24 24"><path d="m21 8-9-5-9 5 9 5zm0 0v8l-9 5-9-5V8m9 5v8" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-task" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M3 6l1 1 2-2m-3 7 1 1 2-2m-3 7 1 1 2-2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-handoff" viewBox="0 0 24 24"><path d="M7 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8m10 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8M11 7h4a2 2 0 0 1 2 2v4m-3-3 3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 2h8l4 4v16H6zm8 0v5h4M9 12h6m-6 4h6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 20 6v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6zM9 12l2 2 4-5" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+</svg>
+
+<div class="shell">
+  <div class="frame">
+    <header class="top">
+      <div class="title"><button class="back" aria-label="Back to Onboarding Command Centre" data-href="onboarding-command-centre-core.html"><svg><use href="#i-arrow-left"/></svg></button><div><h1>Start Onboarding</h1><p>Create a governed onboarding case from an existing Employee Master record.</p></div></div>
+      <div class="top-meta"><span class="secure"><svg><use href="#i-lock"/></svg>Protected HR workflow</span></div>
+    </header>
+
+    <section class="wizard" data-ui="WizardShell" data-source="hr/onboarding/intake-preview">
+      <nav class="steps ui-stepper" data-ui="Stepper" aria-label="Onboarding steps">
+        <button type="button" class="step ui-stepper-step is-active" data-step="worker" aria-current="step"><span class="step-no ui-stepper-marker">1</span><span class="step-copy ui-stepper-copy"><strong>Employee &amp; Timing</strong><span>Identity and start context</span></span></button>
+        <button type="button" class="step ui-stepper-step is-todo" data-step="package"><span class="step-no ui-stepper-marker">2</span><span class="step-copy ui-stepper-copy"><strong>Package</strong><span>Rules and generated plan</span></span></button>
+        <button type="button" class="step ui-stepper-step is-todo is-locked" data-step="exceptions" disabled title="Complete the previous step first"><span class="step-no ui-stepper-marker">3</span><span class="step-copy ui-stepper-copy"><strong>Optional Work</strong><span>Add approved extras</span></span></button>
+        <button type="button" class="step ui-stepper-step is-todo is-locked" data-step="documents" disabled title="Complete the previous step first"><span class="step-no ui-stepper-marker">4</span><span class="step-copy ui-stepper-copy"><strong>Documents</strong><span>Requirement decisions</span></span></button>
+        <button type="button" class="step ui-stepper-step is-todo is-locked" data-step="review" disabled title="Complete the previous step first"><span class="step-no ui-stepper-marker">5</span><span class="step-copy ui-stepper-copy"><strong>Review &amp; Launch</strong><span>Validate generated work</span></span></button>
+      </nav>
+
+      <div class="wizard-body">
+      <div class="content">
+        <div class="content-head"><div class="eyebrow" id="stepEyebrow">Step 1 of 5</div><h2 id="stepTitle">Choose the employee and start timing</h2><p id="stepDescription">Select the Employee Master record and define only the case context HR controls.</p></div>
+
+        <section class="panel active" data-panel="worker">
+          <div class="section">
+            <div class="section-title"><h3>Select an employee</h3><span>Searches Employee Master</span></div>
+            <div class="employee-picker" data-ui="EmployeeSearchCombobox" data-field="employeeId" data-source="hr/employees/list">
+              <div class="employee-search-label"><strong>Employee name or number <span class="req">*</span></strong><span>Required before package matching</span></div>
+              <div class="ui-person-search" data-ui-kit-component="PersonSearchSelect">
+                <span class="ui-person-search-control">
+                  <input id="employeeSearchInput" type="text" value="Damani" role="combobox" aria-label="Search Employee Master" aria-expanded="true" aria-controls="employee-search-results" placeholder="Search by name, employee number, or work email" autocomplete="off">
+                  <svg class="ui-person-search-icon"><use href="#i-search"/></svg>
+                </span>
+                <div class="ui-person-search-list" id="employee-search-results" role="listbox">
+                  <div class="ui-person-search-result-count" id="employeeResultCount">1 matching employee</div>
+                  <button type="button" class="ui-person-search-item is-selected" role="option" aria-selected="true" data-employee-option data-search="damani baptiste emp-0021 project manager administration">
+                    <span class="ui-person-search-avatar"><img src="https://i.pravatar.cc/96?img=12" alt="" referrerpolicy="no-referrer"></span>
+                    <span class="ui-person-search-copy"><strong>Damani Baptiste</strong><small>EMP-0021 · Project Manager · Administration</small></span>
+                    <span class="ui-person-search-check" aria-label="Selected"><svg><use href="#i-check"/></svg></span>
+                  </button>
+                  <button type="button" class="ui-person-search-item" role="option" aria-selected="false" data-employee-option data-search="damian lewis emp-0048 field supervisor operations" hidden>
+                    <span class="ui-person-search-avatar"><img src="https://i.pravatar.cc/96?img=15" alt="" referrerpolicy="no-referrer"></span>
+                    <span class="ui-person-search-copy"><strong>Damian Lewis</strong><small>EMP-0048 · Field Supervisor · Operations</small></span>
+                  </button>
+                  <button type="button" class="ui-person-search-item" role="option" aria-selected="false" data-employee-option data-search="dana mohammed emp-0053 payroll officer finance" hidden>
+                    <span class="ui-person-search-avatar"><img src="https://i.pravatar.cc/96?img=47" alt="" referrerpolicy="no-referrer"></span>
+                    <span class="ui-person-search-copy"><strong>Dana Mohammed</strong><small>EMP-0053 · Payroll Officer · Finance</small></span>
+                  </button>
+                  <div class="ui-person-search-empty" id="employeeSearchEmpty">No matching employees. <button type="button" data-navigation-target="hr-employee-master:create">Create Employee Record</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-title"><h3>Employment facts used for package matching</h3><span>Read-only · Employee Master</span></div>
+            <div class="employment-source" data-source="hr/employees/profile-shell">
+              <div class="employment-source-head"><div><svg><use href="#i-user"/></svg><strong>Current employee record</strong></div><span>Automatically refreshed after selection</span></div>
+              <div class="employment-facts">
+                <div class="employment-fact"><span>Worker category</span><strong>Employee</strong></div>
+                <div class="employment-fact"><span>Employment type</span><strong>Permanent</strong></div>
+                <div class="employment-fact"><span>Department</span><strong>Administration</strong></div>
+                <div class="employment-fact"><span>Role</span><strong>Project Manager</strong></div>
+              </div>
+              <div class="employment-source-foot"><p>These values come from the employee’s current Employee Master assignment. They determine which onboarding packages are eligible and cannot be overridden in this wizard.</p><button class="btn" data-href="employee-profile-full-page.html?employeeId=EMP-0021#employment">Review in Employee Master</button></div>
+            </div>
+          </div>
+          <div class="section"><div class="field-grid">
+            <div class="field"><label>Reason <span class="req">*</span></label><select class="control" data-field="reason"><option>New hire</option><option>Rehire</option><option>Transfer in</option><option>Role change</option></select></div>
+            <div class="field"><label>Target start date <span class="req">*</span></label><input class="control" type="date" value="2026-08-17" data-field="targetStartDate"></div>
+            <div class="field"><label>Priority</label><select class="control" data-field="priority"><option>Normal</option><option>High</option><option>Urgent</option></select></div>
+            <div class="field"><label>Case owner</label><select class="control" data-field="ownerId"><option>Priya Patel · HR Operations</option></select></div>
+          </div></div>
+        </section>
+
+        <section class="panel" data-panel="package">
+          <div class="package-decision-banner" id="packageScheduleFit" data-source="hr/onboarding/packages/compatible" aria-label="Package compatibility and schedule">
+            <div class="package-banner-top">
+              <span class="package-banner-icon"><svg><use href="#i-check"/></svg></span>
+              <div class="package-banner-copy"><strong id="packageScheduleTitle">Ready to choose a package</strong><small id="packageScheduleSummary">2 compatible policies and an achievable start date</small></div>
+              <div class="package-header-timing"><strong id="packageScheduleDays">20 days available</strong><small id="packageScheduleRecommendation">20-day recommendation met</small></div>
+              <span class="package-insight-state" id="packageScheduleState">All checks passed</span>
+            </div>
+          </div>
+
+          <div class="package-section-head">
+            <div><h3>Choose an onboarding package</h3><p>Select the policy SIOMAC will use to generate required work.</p></div>
+            <div class="package-section-actions"><button class="quiet-link" data-href="onboarding-package-management-implementation-ready.html">Manage Packages</button></div>
+          </div>
+
+          <div class="package-policy-stack" data-source="hr/onboarding/packages/compatible">
+            <button type="button" class="package-policy-row is-selected" data-package-choice data-package-name="Standard Employee" data-package-version="2.3" data-package-lead="20" data-package-tasks="18" data-package-handoffs="5" data-package-documents="3" data-package-gates="2">
+              <span class="package-choice-icon"><svg><use href="#i-package"/></svg></span>
+              <span class="package-policy-copy"><span class="package-policy-title"><strong>Standard Employee</strong><span class="package-choice-badge">Recommended</span></span><small>Version 2.3 · Standard cross-team onboarding for permanent office employees.</small><span class="package-reasons"><span>Permanent employee</span><span>Administration</span><span>Role matched</span></span></span>
+              <span class="package-policy-numbers"><span><strong>18</strong><small>Tasks</small></span><span><strong>5</strong><small>Handoffs</small></span><span><strong>3</strong><small>Docs</small></span><span><strong>20d</strong><small>Lead</small></span></span>
+            </button>
+            <button type="button" class="package-policy-row" data-package-choice data-package-name="Safety-Critical Employee" data-package-version="1.8" data-package-lead="25" data-package-tasks="26" data-package-handoffs="7" data-package-documents="5" data-package-gates="4">
+              <span class="package-choice-icon is-safety"><svg><use href="#i-shield"/></svg></span>
+              <span class="package-policy-copy"><span class="package-policy-title"><strong>Safety-Critical Employee</strong><span class="package-choice-badge is-alt">Alternative</span></span><small>Version 1.8 · Enhanced medical, HSE and evidence gates for sensitive assignments.</small><span class="package-reasons"><span>Permanent employee</span><span>Site eligible</span><span>HSE enhanced</span></span></span>
+              <span class="package-policy-numbers"><span><strong>26</strong><small>Tasks</small></span><span><strong>7</strong><small>Handoffs</small></span><span><strong>5</strong><small>Docs</small></span><span><strong>25d</strong><small>Lead</small></span></span>
+            </button>
+          </div>
+
+          <section class="generated-plan" data-source="hr/onboarding/intake-preview:preview">
+            <div class="generated-plan-head">
+              <div><h3>Generated Work Preview</h3><p id="generatedPlanCopy">Required work and owners from Standard Employee v2.3.</p></div>
+              <span class="generated-plan-readonly">Read only</span>
+            </div>
+            <div class="generated-work-list">
+              <button type="button" class="generated-work-row" data-work-detail data-work-name="HR Setup" data-work-owner="HR Operations" data-standard-count="4 tasks" data-safety-count="6 tasks" data-standard-state="Ready" data-safety-state="Ready"><span class="generated-module-icon"><svg><use href="#i-user"/></svg></span><span><strong>HR Setup</strong><small>HR Operations · <em data-work-count>4 tasks</em></small></span><span class="module-state" data-work-state>Ready</span><svg class="row-arrow"><use href="#i-arrow-right"/></svg></button>
+              <button type="button" class="generated-work-row" data-work-detail data-work-name="Documents" data-work-owner="HR Operations" data-standard-count="3 requirements" data-safety-count="5 requirements" data-standard-state="1 gate" data-safety-state="2 gates"><span class="generated-module-icon"><svg><use href="#i-doc"/></svg></span><span><strong>Documents</strong><small>HR Operations · <em data-work-count>3 requirements</em></small></span><span class="module-state is-gate" data-work-state>1 gate</span><svg class="row-arrow"><use href="#i-arrow-right"/></svg></button>
+              <button type="button" class="generated-work-row" data-work-detail data-work-name="IT &amp; Access" data-work-owner="Account Support" data-standard-count="4 tasks" data-safety-count="5 tasks" data-standard-state="1 gate" data-safety-state="1 gate"><span class="generated-module-icon"><svg><use href="#i-shield"/></svg></span><span><strong>IT &amp; Access</strong><small>Account Support · <em data-work-count>4 tasks</em></small></span><span class="module-state is-gate" data-work-state>1 gate</span><svg class="row-arrow"><use href="#i-arrow-right"/></svg></button>
+              <button type="button" class="generated-work-row" data-work-detail data-work-name="Training" data-work-owner="Learning Team" data-standard-count="3 tasks" data-safety-count="5 tasks" data-standard-state="Planned" data-safety-state="1 gate"><span class="generated-module-icon"><svg><use href="#i-task"/></svg></span><span><strong>Training</strong><small>Learning Team · <em data-work-count>3 tasks</em></small></span><span class="module-state" data-work-state>Planned</span><svg class="row-arrow"><use href="#i-arrow-right"/></svg></button>
+              <button type="button" class="generated-work-row" data-work-detail data-work-name="Payroll" data-work-owner="Payroll Team" data-standard-count="3 tasks" data-safety-count="3 tasks" data-standard-state="Planned" data-safety-state="Planned"><span class="generated-module-icon"><svg><use href="#i-handoff"/></svg></span><span><strong>Payroll</strong><small>Payroll Team · <em data-work-count>3 tasks</em></small></span><span class="module-state" data-work-state>Planned</span><svg class="row-arrow"><use href="#i-arrow-right"/></svg></button>
+              <button type="button" class="generated-work-row" data-work-detail data-work-name="Day One" data-work-owner="Supervisor" data-standard-count="4 tasks" data-safety-count="2 tasks" data-standard-state="Planned" data-safety-state="Planned"><span class="generated-module-icon"><svg><use href="#i-check"/></svg></span><span><strong>Day One</strong><small>Supervisor · <em data-work-count>4 tasks</em></small></span><span class="module-state" data-work-state>Planned</span><svg class="row-arrow"><use href="#i-arrow-right"/></svg></button>
+            </div>
+            <div class="generated-plan-note"><svg><use href="#i-shield"/></svg><span>The selected package version and generated work are frozen when the case launches.</span></div>
+          </section>
+
+          <dialog class="work-preview-dialog" id="generatedWorkDialog">
+            <div class="work-dialog-head">
+              <span class="generated-module-icon"><svg><use href="#i-task"/></svg></span>
+              <div><h3 id="workDialogTitle">Generated work details</h3><p>Read-only preview of the work SIOMAC will create when this case launches.</p></div>
+              <button type="button" class="work-dialog-close" data-close-work-dialog aria-label="Close">×</button>
+            </div>
+            <div class="work-dialog-body">
+              <div class="work-dialog-facts">
+                <span><small>Owner</small><strong id="workDialogOwner">HR Operations</strong></span>
+                <span><small>Generated work</small><strong id="workDialogCount">4 tasks</strong></span>
+                <span><small>Launch condition</small><strong id="workDialogState">Ready</strong></span>
+              </div>
+              <ul class="work-dialog-list">
+                <li><svg><use href="#i-check"/></svg><span>Work is generated from the selected published package version.</span></li>
+                <li><svg><use href="#i-check"/></svg><span>Team ownership and due dates are resolved when the case launches.</span></li>
+                <li><svg><use href="#i-check"/></svg><span>Changes must be made in Package Management, not overridden here.</span></li>
+              </ul>
+            </div>
+            <div class="work-dialog-foot"><button type="button" class="btn primary" data-close-work-dialog>Done</button></div>
+          </dialog>
+        </section>
+
+        <section class="panel" data-panel="exceptions">
+          <div class="section">
+            <div class="exception-section-head">
+              <div class="exception-section-title"><span><svg><use href="#i-task"/></svg></span><div><h3>Optional work</h3><p>Add approved extras only when this employee needs them.</p></div></div>
+              <div class="exception-section-actions"><span id="optionalSelectionLabel">2 selected</span><button class="btn primary compact" type="button" id="openActionLibrary"><svg><use href="#i-plus"/></svg>Add Optional Action</button></div>
+            </div>
+            <div class="optional-action-list" data-source="hr/onboarding/actions/templates/list">
+              <label class="optional-action is-selected" data-optional-action>
+                <input type="checkbox" checked>
+                <span class="optional-check"><svg><use href="#i-check"/></svg></span>
+                <span class="optional-action-icon"><svg><use href="#i-users"/></svg></span>
+                <span class="optional-action-copy"><strong>Assign onboarding buddy</strong><small>Creates one supporting task for HR Operations.</small></span>
+                <span class="optional-owner"><strong>Priya Patel</strong><small>HR Operations · accountable</small></span>
+                <span class="outcome-tag">Task</span>
+              </label>
+              <label class="optional-action is-selected" data-optional-action data-ownership-action>
+                <input type="checkbox" checked>
+                <span class="optional-check"><svg><use href="#i-check"/></svg></span>
+                <span class="optional-action-icon is-facilities"><svg><use href="#i-package"/></svg></span>
+                <span class="optional-action-copy"><strong>Arrange welcome kit</strong><small>Creates a non-blocking Facilities handoff.</small></span>
+                <span class="optional-owner"><strong>Facilities Queue</strong><small>Unassigned · may resolve later</small></span>
+                <span class="outcome-tag">Handoff</span>
+              </label>
+              <label class="optional-action" data-optional-action data-library-action="first-week-check-in" hidden>
+                <input type="checkbox" checked>
+                <span class="optional-check"><svg><use href="#i-check"/></svg></span>
+                <span class="optional-action-icon"><svg><use href="#i-users"/></svg></span>
+                <span class="optional-action-copy"><strong>Schedule first-week check-in</strong><small>Creates one follow-up task after the employee starts.</small></span>
+                <span class="optional-owner"><strong>HR Operations</strong><small>Package default · queue owned</small></span>
+                <span class="outcome-tag">Task</span>
+              </label>
+              <label class="optional-action" data-optional-action data-library-action="workstation-equipment" hidden>
+                <input type="checkbox" checked>
+                <span class="optional-check"><svg><use href="#i-check"/></svg></span>
+                <span class="optional-action-icon is-facilities"><svg><use href="#i-package"/></svg></span>
+                <span class="optional-action-copy"><strong>Prepare workstation equipment</strong><small>Creates a Facilities handoff for equipment readiness.</small></span>
+                <span class="optional-owner"><strong>Facilities Queue</strong><small>Organisation policy · queue owned</small></span>
+                <span class="outcome-tag">Handoff</span>
+              </label>
+              <label class="optional-action" data-optional-action data-library-action="payroll-orientation" hidden>
+                <input type="checkbox" checked>
+                <span class="optional-check"><svg><use href="#i-check"/></svg></span>
+                <span class="optional-action-icon"><svg><use href="#i-doc"/></svg></span>
+                <span class="optional-action-copy"><strong>Arrange payroll orientation</strong><small>Creates a short payroll briefing task before Day One.</small></span>
+                <span class="optional-owner"><strong>Payroll Team</strong><small>Organisation policy · queue owned</small></span>
+                <span class="outcome-tag">Task</span>
+              </label>
+              <label class="optional-action" data-optional-action data-library-action="one-off" hidden data-backend-gap="atomic-one-off-action-at-launch">
+                <input type="checkbox" checked>
+                <span class="optional-check"><svg><use href="#i-check"/></svg></span>
+                <span class="optional-action-icon"><svg><use href="#i-task"/></svg></span>
+                <span class="optional-action-copy"><strong id="oneOffActionName">One-off action</strong><small id="oneOffActionDescription">Manager-created work for this case only.</small></span>
+                <span class="optional-owner"><strong id="oneOffActionTeam">HR Operations</strong><small>Manager override · queue owned</small></span>
+                <span class="outcome-tag" id="oneOffActionOutcome">Task</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="section" id="ownershipSection">
+            <div class="exception-section-head"><div class="exception-section-title"><span><svg><use href="#i-handoff"/></svg></span><div><h3>Ownership exception</h3><p>This optional item has a queue but no accountable person.</p></div></div><span>1 unresolved</span></div>
+            <div class="ownership-exception" id="ownershipException" data-source="hr/onboarding/account-preflight" data-backend-gap="account-preflight-and-ownership-routing">
+              <span class="item-icon"><svg><use href="#i-alert"/></svg></span>
+              <div class="ownership-copy"><strong>Welcome Kit</strong><small>Optional Facilities handoff · does not block launch</small></div>
+              <div class="queue-owner"><span class="owner-avatar" id="ownershipAvatar">FQ</span><div><strong id="ownershipOwner">Facilities Queue</strong><small id="ownershipOwnerDetail">Unassigned</small></div></div>
+              <button class="btn compact" type="button" id="openAssignmentDialog">Assign person</button>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="exception-section-head"><div class="exception-section-title"><span><svg><use href="#i-lock"/></svg></span><div><h3>Account setup</h3><p>Read-only routing applied after this case launches.</p></div></div><span class="pill green">Policy resolved</span></div>
+            <div class="account-policy" data-source="hr/onboarding/account-preflight" data-backend-gap="account-preflight-and-ownership-routing">
+              <div class="account-policy-facts">
+                <div class="account-policy-fact"><span>Operating model</span><strong>HR managed</strong><small>HR Operations · Priya Patel</small></div>
+                <div class="account-policy-fact"><span>Access profile</span><strong>Standard Employee</strong><small>Applied after approval checks</small></div>
+                <div class="account-policy-fact"><span>Proposed email</span><strong>damani.baptiste@siomac.co</strong><small>Generated from naming policy</small></div>
+                <div class="account-policy-fact"><span>Invitation</span><strong>After account handoff</strong><small>No account is created in this step</small></div>
+              </div>
+            </div>
+          </div>
+
+          <dialog class="assignment-dialog" id="assignmentDialog">
+            <div class="assignment-dialog-head"><span class="item-icon"><svg><use href="#i-handoff"/></svg></span><div><h3>Assign Welcome Kit</h3><p>Keep the work in its owning queue and name the person accountable for completing it.</p></div><button type="button" class="work-dialog-close" data-close-assignment aria-label="Close">×</button></div>
+            <div class="assignment-dialog-body">
+              <div class="assignment-field"><label for="assignmentTeam">Owning team / queue</label><select class="assignment-select" id="assignmentTeam"><option>Facilities Queue</option><option>HR Operations</option></select></div>
+              <div class="assignment-field"><label>Accountable person</label><div class="assignee-options">
+                <label class="assignee-option is-selected"><input type="radio" name="accountablePerson" value="Amara Diallo" checked><span class="owner-avatar">AD</span><div><strong>Amara Diallo</strong><small>Facilities Coordinator · available</small></div></label>
+                <label class="assignee-option"><input type="radio" name="accountablePerson" value="Marcus Noel"><span class="owner-avatar">MN</span><div><strong>Marcus Noel</strong><small>Office Services Officer · available</small></div></label>
+                <label class="assignee-option"><input type="radio" name="accountablePerson" value=""><span class="owner-avatar">FQ</span><div><strong>Leave in Facilities Queue</strong><small>Visible but not assigned to a person</small></div></label>
+              </div></div>
+              <div class="assignment-dialog-note"><svg><use href="#i-shield"/></svg><span>The team remains responsible even when a person is assigned. Reassignment is recorded in the case audit trail.</span></div>
+            </div>
+            <div class="assignment-dialog-foot"><button type="button" class="btn" data-close-assignment>Cancel</button><button type="button" class="btn primary" id="saveAssignment">Save assignment</button></div>
+          </dialog>
+
+          <dialog class="action-library-dialog" id="actionLibraryDialog">
+            <div class="assignment-dialog-head">
+              <span class="item-icon"><svg><use href="#i-task"/></svg></span>
+              <div><h3>Add optional action</h3><p>Choose approved work from the selected package’s action library.</p></div>
+              <button type="button" class="work-dialog-close" data-close-action-library aria-label="Close">×</button>
+            </div>
+            <div class="assignment-dialog-body">
+              <div class="action-library-search"><svg><use href="#i-search"/></svg><input class="control" id="actionLibrarySearch" type="search" placeholder="Search approved actions, teams, or outcomes"></div>
+              <div class="action-library-list" data-source="hr/onboarding/actions/templates/list">
+                <div class="library-action" data-library-option data-search="schedule first week check in hr operations task">
+                  <span class="optional-action-icon"><svg><use href="#i-users"/></svg></span>
+                  <div class="library-action-copy"><strong>Schedule first-week check-in</strong><small>A structured follow-up after the employee starts.</small><div class="library-action-meta"><span>HR Operations</span><span>Creates task</span><span>Non-blocking</span></div></div>
+                  <button class="btn compact" type="button" data-add-library="first-week-check-in">Add</button>
+                </div>
+                <div class="library-action" data-library-option data-search="prepare workstation equipment facilities handoff">
+                  <span class="optional-action-icon is-facilities"><svg><use href="#i-package"/></svg></span>
+                  <div class="library-action-copy"><strong>Prepare workstation equipment</strong><small>Routes equipment readiness to the Facilities queue.</small><div class="library-action-meta"><span>Facilities</span><span>Creates handoff</span><span>Non-blocking</span></div></div>
+                  <button class="btn compact" type="button" data-add-library="workstation-equipment">Add</button>
+                </div>
+                <div class="library-action" data-library-option data-search="arrange payroll orientation payroll team task">
+                  <span class="optional-action-icon"><svg><use href="#i-doc"/></svg></span>
+                  <div class="library-action-copy"><strong>Arrange payroll orientation</strong><small>Adds a payroll briefing before the employee’s start date.</small><div class="library-action-meta"><span>Payroll Team</span><span>Creates task</span><span>Non-blocking</span></div></div>
+                  <button class="btn compact" type="button" data-add-library="payroll-orientation">Add</button>
+                </div>
+                <div class="library-empty" id="actionLibraryEmpty">No approved optional actions match your search.</div>
+              </div>
+              <div class="one-off-form" id="oneOffForm" hidden data-permission="hr.onboarding.custom_actions.create" data-backend-gap="atomic-one-off-action-at-launch">
+                <div><strong>Create one-off action</strong><div class="hint">Managers only · applies to this onboarding case and does not change the package library.</div></div>
+                <div class="one-off-grid">
+                  <div class="assignment-field"><label for="oneOffName">Action name</label><input class="control" id="oneOffName" value="Arrange executive welcome briefing"></div>
+                  <div class="assignment-field"><label for="oneOffOutcome">Operational result</label><select class="assignment-select" id="oneOffOutcome"><option>Task</option><option>Handoff</option><option>Notification</option></select></div>
+                  <div class="assignment-field"><label for="oneOffTeam">Owning team / queue</label><select class="assignment-select" id="oneOffTeam"><option>HR Operations</option><option>Facilities Queue</option><option>Payroll Team</option><option>Account Support</option></select></div>
+                  <div class="assignment-field"><label for="oneOffDue">Due timing</label><select class="assignment-select" id="oneOffDue"><option>Before start date</option><option>On Day One</option><option>Within first week</option></select></div>
+                </div>
+                <div class="one-off-actions"><button class="btn compact" type="button" id="cancelOneOff">Cancel</button><button class="btn primary compact" type="button" id="addOneOff">Add one-off action</button></div>
+              </div>
+            </div>
+            <div class="action-library-foot">
+              <button class="btn" type="button" id="openOneOffForm" data-permission="hr.onboarding.custom_actions.create" data-role-visibility="admin,hr_manager"><svg><use href="#i-plus"/></svg>Create One-Off Action</button>
+              <button class="btn primary" type="button" data-close-action-library>Done</button>
+            </div>
+          </dialog>
+        </section>
+
+        <section class="panel" data-panel="documents">
+          <div class="document-overview" data-source="hr/onboarding/intake-preview:documents">
+            <div class="document-overview-copy"><span class="item-icon"><svg><use href="#i-doc"/></svg></span><div><h3>Required documents</h3><p>Verified records are reused automatically. Decide only what needs attention.</p></div></div>
+            <div class="document-overview-stat"><strong>3</strong><span>Required</span></div>
+            <div class="document-overview-stat is-ready"><strong>2</strong><span>Ready</span></div>
+            <div class="document-overview-stat is-attention"><strong>1</strong><span>Needs action</span></div>
+          </div>
+
+          <div class="section">
+            <details class="ready-documents">
+              <summary><span class="item-icon"><svg><use href="#i-check"/></svg></span><span class="ready-documents-summary"><strong>2 documents ready</strong><small>Verified Employee Master records will be linked to this case automatically.</small></span><span class="pill green">No action needed</span><svg class="ready-documents-chevron"><use href="#i-arrow-right"/></svg></summary>
+              <div class="ready-document-list" data-source="hr/onboarding/intake-preview:documents.items">
+                <div class="ready-document-row"><span class="item-icon"><svg><use href="#i-doc"/></svg></span><span><strong>National ID</strong><small>Verified · expires 12 May 2030</small></span><span class="pill green">Use existing</span></div>
+                <div class="ready-document-row"><span class="item-icon"><svg><use href="#i-doc"/></svg></span><span><strong>NIS Registration</strong><small>Verified · no expiry required</small></span><span class="pill green">Use existing</span></div>
+              </div>
+            </details>
+          </div>
+
+          <div class="section">
+            <div class="document-attention-head"><h3>Needs action</h3><span>1 decision required</span></div>
+            <article class="document-decision-card" data-requirement-id="proof-of-address" data-required="true" data-blocks-launch="false" data-can-waive="true">
+              <div class="document-decision-head">
+                <span class="item-icon"><svg><use href="#i-alert"/></svg></span>
+                <div class="document-decision-copy"><strong>Proof of Address</strong><small>Missing from Employee Master · required by Standard Employee v2.3</small></div>
+                <span class="document-impact" id="requirementDecisionStatus">Follow-up selected</span>
+              </div>
+              <div class="document-requirement-facts"><span><svg><use href="#i-check"/></svg>Required record</span><span><svg><use href="#i-alert"/></svg>Does not block case launch</span><span><svg><use href="#i-shield"/></svg>May block Day-One readiness</span></div>
+              <div class="document-decision-controls">
+                <strong>How will this requirement be handled?</strong>
+                <div class="document-actions" data-field="documentSelections">
+                  <button class="doc-choice" type="button" data-doc-action="upload">Upload document now</button>
+                  <button class="doc-choice active" type="button" data-doc-action="request">Request from employee</button>
+                  <button class="doc-choice" type="button" data-doc-action="waive" data-permission="hr.onboarding.documents.waive" data-backend-gap="dedicated-document-waiver-permission">Authorised waiver</button>
+                </div>
+
+                <div class="document-decision-panel" data-doc-panel="upload">
+                  <div class="document-decision-panel-head"><svg><use href="#i-doc"/></svg><div><strong>Upload a valid record</strong><small>The file is scanned, stored in Employee Master and linked to this onboarding requirement.</small></div></div>
+                  <label class="document-upload-zone"><span><strong id="uploadFileName">Choose PDF, JPG or PNG</strong><small>Maximum 10 MB · the file must belong to Damani Baptiste</small></span><span class="btn compact">Choose file</span><input id="documentUploadInput" type="file" accept=".pdf,.jpg,.jpeg,.png"></label>
+                </div>
+
+                <div class="document-decision-panel active" data-doc-panel="request">
+                  <div class="document-decision-panel-head"><svg><use href="#i-users"/></svg><div><strong>Send a secure document request</strong><small>The employee receives a single-use upload link after the case launches.</small></div></div>
+                  <div class="document-request-grid">
+                    <div class="assignment-field"><label for="documentRequestEmail">Send to</label><input class="control" id="documentRequestEmail" value="damani.baptiste@example.com" readonly></div>
+                    <div class="assignment-field"><label for="documentRequestDue">Due date</label><input class="control" id="documentRequestDue" type="date" value="2026-08-10"></div>
+                  </div>
+                  <div class="document-request-note">The request, due date and delivery status remain visible in Case Detail. The employee cannot browse any other employee documents.</div>
+                </div>
+
+                <div class="document-decision-panel" id="waiverReason" data-doc-panel="waive">
+                  <div class="document-decision-panel-head"><svg><use href="#i-shield"/></svg><div><strong>Record an authorised exception</strong><small>Available only when this requirement permits waiver and the actor has elevated authority.</small></div></div>
+                  <div class="field full"><label>Waiver reason <span class="req">*</span></label><textarea class="control" rows="3" placeholder="Explain why this document is not required for this employee"></textarea><div class="hint">The requirement, actor, reason and approval state are written to the case audit trail.</div></div>
+                </div>
+              </div>
+            </article>
+
+            <div class="document-launch-impact" id="documentDecisionSummary"><svg><use href="#i-alert"/></svg><div><strong>Case launch can continue</strong><span>Proof of Address will become assigned follow-up work and remains visible in readiness.</span></div><em>Follow-up</em></div>
+          </div>
+        </section>
+
+        <section class="panel" data-panel="review">
+          <div class="launch-ready-banner" data-source="hr/onboarding/intake-preflight:launch">
+            <span class="launch-ready-icon"><svg><use href="#i-check"/></svg></span>
+            <div class="launch-ready-copy"><strong>Ready to launch</strong><span id="launchReadyCopy">Five structural checks passed. One governed follow-up will continue after launch.</span></div>
+            <span class="launch-ready-state">Validated now</span>
+          </div>
+
+          <div class="launch-review-grid">
+            <section class="launch-plan-card">
+              <div class="launch-card-head">
+                <span class="item-icon"><svg><use href="#i-package"/></svg></span>
+                <div><h3>What SIOMAC will create</h3><p>The frozen work plan generated from Standard Employee v2.3.</p></div>
+                <span class="pill navy">Version 2.3</span>
+              </div>
+              <div class="launch-plan-list">
+                <div class="launch-plan-row"><svg><use href="#i-shield"/></svg><div><strong>Onboarding case</strong><small>Standard Employee policy snapshot</small></div><span>Frozen</span></div>
+                <div class="launch-plan-row"><svg><use href="#i-task"/></svg><div><strong>Required work</strong><small>Across six governed workstreams</small></div><span>18 tasks</span></div>
+                <div class="launch-plan-row"><svg><use href="#i-handoff"/></svg><div><strong>Team handoffs</strong><small>Routed to accountable operating teams</small></div><span>5 handoffs</span></div>
+                <div class="launch-plan-row"><svg><use href="#i-users"/></svg><div><strong>Optional work</strong><small>Selected during intake</small></div><span>2 actions</span></div>
+                <div class="launch-plan-row"><svg><use href="#i-doc"/></svg><div><strong>Documents</strong><small>Two linked records and one employee request</small></div><span>3 requirements</span></div>
+                <div class="launch-plan-row"><svg><use href="#i-lock"/></svg><div><strong>Account setup</strong><small>Owned by HR Operations</small></div><span>Standard Employee</span></div>
+              </div>
+            </section>
+
+            <section class="launch-followup-card" id="documentLaunchCheck">
+              <div class="launch-card-head">
+                <span class="item-icon"><svg><use href="#i-alert"/></svg></span>
+                <div><h3>Follow-up after launch</h3><p>Tracked work that does not prevent the case from starting.</p></div>
+                <span class="pill amber">1 follow-up</span>
+              </div>
+              <div class="launch-followup-body">
+                <div class="launch-followup-document">
+                  <span class="launch-document-icon"><svg><use href="#i-doc"/></svg></span>
+                  <div><strong id="launchFollowupTitle">Proof of Address</strong><small>Employee document request</small></div>
+                  <span class="pill amber" id="launchFollowupState">Queued on launch</span>
+                </div>
+                <p class="launch-followup-message" id="launchFollowupCopy">A secure, single-use upload request will be sent to the employee when this case launches.</p>
+                <div class="launch-followup-meta">
+                  <div class="launch-followup-meta-item">
+                    <span class="launch-meta-icon"><svg><use href="#i-users"/></svg></span>
+                    <div><small>Accountable queue</small><strong>HR Operations</strong></div>
+                  </div>
+                  <div class="launch-followup-meta-item">
+                    <span class="launch-meta-icon"><svg><use href="#i-task"/></svg></span>
+                    <div><small>Response due</small><strong>10 Aug 2026</strong></div>
+                  </div>
+                </div>
+                <div class="launch-followup-action"><button class="btn" type="button" data-step-link="documents"><svg><use href="#i-doc"/></svg>Review document decision</button></div>
+              </div>
+            </section>
+          </div>
+
+          <details class="final-checks">
+            <summary>
+              <span class="mark"><svg><use href="#i-shield"/></svg></span>
+              <span class="final-checks-copy"><strong>Preflight checks</strong><small>Employee, package, ownership, duplicate and account rules were revalidated.</small></span>
+              <span class="final-check-count"><svg><use href="#i-check"/></svg>5 passed</span>
+              <svg class="chevron"><use href="#i-chevron"/></svg>
+            </summary>
+            <div class="final-check-list">
+              <div class="final-check-item"><span><svg><use href="#i-check"/></svg></span><div><strong>Employee and timing</strong><small>Current employee record and target date are valid.</small></div></div>
+              <div class="final-check-item"><span><svg><use href="#i-check"/></svg></span><div><strong>Package policy</strong><small>Compatible published version 2.3 is frozen.</small></div></div>
+              <div class="final-check-item"><span><svg><use href="#i-check"/></svg></span><div><strong>Duplicate protection</strong><small>No active onboarding case conflicts with this launch.</small></div></div>
+              <div class="final-check-item"><span><svg><use href="#i-check"/></svg></span><div><strong>Work ownership</strong><small>Every required action has an accountable queue.</small></div></div>
+              <div class="final-check-item"><span><svg><use href="#i-check"/></svg></span><div><strong>Account setup</strong><small>Provisioning owner and access profile are resolved.</small></div></div>
+            </div>
+          </details>
+
+          <div class="launch-submit-note" data-backend-gap="atomic-onboarding-launch">
+            <svg><use href="#i-shield"/></svg>
+            <span>Launching creates the case and governed work in one transaction. If any required write or side effect fails, nothing is created.</span>
+          </div>
+        </section>
+
+        <footer class="footer"><span class="footer-copy" id="footerCopy">Complete the worker and intake fields.</span><div class="footer-actions"><button class="btn" id="previousButton" disabled>Back</button><button class="btn primary" id="nextButton" data-action-route="hr/onboarding/start" data-permission="hr.onboarding.start">Continue <svg><use href="#i-arrow-right"/></svg></button></div></footer>
+      </div>
+
+      <aside class="ob-side-stack" data-ui="WizardSummaryRail" data-reference="production-start-onboarding:right-rail" aria-label="Onboarding case status">
+        <section class="ob-rail-card">
+          <div class="ob-preview-kicker"><svg><use href="#i-user"/></svg>Case Preview</div>
+          <div class="ob-ring-hero"><div class="ob-ring-row">
+            <span class="ob-preview-photo"><img src="https://i.pravatar.cc/96?img=12" alt="" referrerpolicy="no-referrer"></span>
+            <div class="ob-ring-copy"><strong>Damani Baptiste</strong><span class="ob-ring-id">EMP-0021</span><span class="ob-ring-role"><svg><use href="#i-user"/></svg>Project Manager · Administration</span></div>
+          </div></div>
+          <div class="ob-preview-facts">
+            <div class="ob-preview-fact"><svg><use href="#i-package"/></svg><small>Package</small><strong>Standard</strong></div>
+            <div class="ob-preview-fact"><svg><use href="#i-doc"/></svg><small>Documents</small><strong>2 / 3</strong></div>
+            <div class="ob-preview-fact"><svg><use href="#i-task"/></svg><small>Start Date</small><strong>17 Aug</strong></div>
+            <div class="ob-preview-fact"><svg><use href="#i-handoff"/></svg><small>Lead Time</small><strong>20 days</strong></div>
+          </div>
+        </section>
+        <section class="ob-rail-card ob-rail-section">
+          <div class="ob-rail-head"><div class="ob-rail-title"><svg><use href="#i-shield"/></svg><strong>Worker Verification</strong></div><span class="ob-rail-count">3 / 3</span></div>
+          <div class="ob-check-list"><div class="ob-check-row"><svg><use href="#i-check"/></svg><span>Identity record verified</span><strong>Ready</strong></div><div class="ob-check-row"><svg><use href="#i-check"/></svg><span>Current assignment found</span><strong>Ready</strong></div><div class="ob-check-row"><svg><use href="#i-check"/></svg><span>Work email available</span><strong>Ready</strong></div></div>
+        </section>
+        <section class="ob-rail-card ob-rail-section">
+          <div class="ob-rail-head"><div class="ob-rail-title"><svg><use href="#i-users"/></svg><strong>Duplicate Check</strong></div></div>
+          <div class="ob-duplicate-ok"><svg><use href="#i-check"/></svg><div><strong>No duplicates found</strong><span>No active onboarding case exists for this employee.</span></div></div>
+        </section>
+        <section class="ob-rail-card ob-rail-section">
+          <div class="ob-rail-head"><div class="ob-rail-title"><svg><use href="#i-doc"/></svg><strong>Required Documents (3)</strong></div><button class="doc-choice" type="button" data-step-link="documents">View all</button></div>
+          <div class="ob-doc-list"><div class="ob-doc-row"><svg><use href="#i-check"/></svg><span>National ID</span><strong>Verified</strong></div><div class="ob-doc-row"><svg><use href="#i-check"/></svg><span>NIS Registration</span><strong>Verified</strong></div><div class="ob-doc-row is-missing"><svg><use href="#i-alert"/></svg><span>Proof of Address</span><strong>Follow-up</strong></div></div>
+        </section>
+        <section class="ob-rail-card ob-rail-section">
+          <div class="ob-rail-head"><div class="ob-rail-title"><svg><use href="#i-package"/></svg><strong>Generated Summary</strong></div></div>
+          <div class="ob-total-row"><span><svg><use href="#i-task"/></svg>Tasks</span><strong>18</strong></div><div class="ob-total-row"><span><svg><use href="#i-handoff"/></svg>Handoffs</span><strong>5</strong></div><div class="ob-total-row"><span><svg><use href="#i-doc"/></svg>Documents</span><strong>3</strong></div>
+        </section>
+      </aside>
+      </div>
+    </section>
+    <section class="success-state" id="successState" data-source="hr/onboarding/start:result">
+      <div class="success-shell">
+        <header class="success-launch-header">
+          <span class="success-icon"><svg><use href="#i-check"/></svg></span>
+          <div class="success-launch-copy">
+            <span>Case created successfully</span>
+            <h2>Damani’s onboarding is now active</h2>
+            <p>The frozen Standard Employee v2.3 plan has been assigned to the accountable teams.</p>
+          </div>
+          <div class="success-reference"><small>Case reference</small><strong>ONB-2026-00142</strong><span>Launched now</span></div>
+        </header>
+
+        <section class="success-person-card">
+          <img src="https://i.pravatar.cc/96?img=12" alt="" referrerpolicy="no-referrer">
+          <div class="success-person-copy"><strong>Damani Baptiste</strong><span>EMP-0021 · Project Manager · Administration</span></div>
+          <span class="pill green">Active onboarding</span>
+          <div class="success-person-fact"><small>Target start</small><strong>17 Aug 2026</strong></div>
+          <div class="success-person-fact"><small>Case owner</small><strong>Priya Patel</strong></div>
+        </section>
+
+        <section class="success-created">
+          <div class="success-section-head">
+            <div><span class="item-icon"><svg><use href="#i-package"/></svg></span><div><h3>Governed work created</h3><p>Committed from the frozen package plan.</p></div></div>
+            <span class="success-audit-state"><svg><use href="#i-shield"/></svg>Audited</span>
+          </div>
+          <div class="success-grid">
+            <div class="success-metric"><strong>18</strong><span>Required tasks</span></div>
+            <div class="success-metric"><strong>5</strong><span>Team handoffs</span></div>
+            <div class="success-metric"><strong>3</strong><span>Document requirements</span></div>
+            <div class="success-metric is-followup"><strong>1</strong><span>Tracked follow-up</span></div>
+          </div>
+        </section>
+
+        <div class="success-next-grid">
+          <section class="success-followup">
+            <div class="success-card-title"><span class="item-icon"><svg><use href="#i-doc"/></svg></span><div><h3>Follow-up already assigned</h3><p>This does not prevent the onboarding case from progressing.</p></div><span class="pill amber">Due 10 Aug</span></div>
+            <div class="success-followup-row">
+              <div><strong>Proof of Address</strong><span>Secure upload request to employee</span></div>
+              <div><small>Accountable queue</small><strong>HR Operations</strong></div>
+            </div>
+          </section>
+
+          <section class="success-routing">
+            <div class="success-card-title"><span class="item-icon"><svg><use href="#i-handoff"/></svg></span><div><h3>What happens next</h3><p>SIOMAC has activated the operating workflow.</p></div></div>
+            <div class="success-routing-list">
+              <div><span><svg><use href="#i-check"/></svg></span><p><strong>Owners notified</strong><small>Assigned teams can now see their work.</small></p></div>
+              <div><span><svg><use href="#i-check"/></svg></span><p><strong>Handoffs queued</strong><small>Five accountable queues received work.</small></p></div>
+              <div><span><svg><use href="#i-check"/></svg></span><p><strong>Readiness tracking started</strong><small>HR can monitor progress from Case Detail.</small></p></div>
+            </div>
+          </section>
+        </div>
+
+        <footer class="success-actions">
+          <p><svg><use href="#i-shield"/></svg>Case, tasks, handoffs, notifications and audit records committed successfully.</p>
+          <div><button class="btn" data-href="onboarding-command-centre-core.html">Return to Command Centre</button><button class="btn" data-href="onboarding-worker-implementation-ready.html">Preview Worker View</button><button class="btn" data-action="start-another">Start Another</button><button class="btn primary" data-href="onboarding-case-detail-implementation-ready.html">Open Case <svg><use href="#i-arrow-right"/></svg></button></div>
+        </footer>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+  const stepCopy={
+    worker:['Step 1 of 5','Choose the employee and start timing','Select the Employee Master record and define only the case context HR controls.','Complete the employee and timing fields.'],
+    package:['Step 2 of 5','Choose the onboarding package','Compare compatible packages and review the work SIOMAC will generate.','The package owns required tasks, handoffs and lead-time rules.'],
+    exceptions:['Step 3 of 5','Add optional work','Choose approved extras for this employee. Ownership appears only when SIOMAC cannot resolve it.','Select any additional work, or continue without adding anything.'],
+    documents:['Step 4 of 5','Resolve document requirements','Use existing records, upload, request from the employee, or waive with elevated authority.','Record a clear decision for every document requirement.'],
+    review:['Step 5 of 5','Validate and launch','Review the frozen plan, accountable owners and real launch blockers.','Launch remains disabled while a structural check fails.']
+  };
+  const order=['worker','package','exceptions','documents','review'];
+  let active='review';
+  let maxReached=4;
+  const employeeSearchInput=document.getElementById('employeeSearchInput');
+  const employeeOptions=[...document.querySelectorAll('[data-employee-option]')];
+  const employeeResultCount=document.getElementById('employeeResultCount');
+  const employeeSearchEmpty=document.getElementById('employeeSearchEmpty');
+  function filterEmployees(){
+    const query=employeeSearchInput.value.trim().toLowerCase();
+    let visible=0;
+    employeeOptions.forEach(option=>{const match=!query||option.dataset.search.includes(query);option.hidden=!match;if(match)visible+=1});
+    employeeResultCount.textContent=visible===1?'1 matching employee':`${visible} matching employees`;
+    employeeSearchEmpty.style.display=visible?'none':'block';
+    employeeSearchInput.setAttribute('aria-expanded','true');
+  }
+  employeeSearchInput.addEventListener('input',filterEmployees);
+  employeeSearchInput.addEventListener('focus',filterEmployees);
+  function renderStep(key){
+    active=key;
+    document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.dataset.panel===key));
+    document.querySelectorAll('.step').forEach((s,i)=>{const isActive=s.dataset.step===key;const isComplete=i<order.indexOf(key);const isReachable=i<=maxReached;s.classList.toggle('is-active',isActive);s.classList.toggle('is-complete',isComplete);s.classList.toggle('is-todo',!isActive&&!isComplete);s.classList.toggle('is-locked',!isReachable);s.disabled=!isReachable;s.title=isReachable?'':'Complete the previous step first';if(isActive)s.setAttribute('aria-current','step');else s.removeAttribute('aria-current');const no=s.querySelector('.step-no');if(isComplete)no.innerHTML='<svg width="14" height="14"><use href="#i-check"/></svg>';else no.textContent=String(i+1)});
+    const copy=stepCopy[key];document.getElementById('stepEyebrow').textContent=copy[0];document.getElementById('stepTitle').textContent=copy[1];document.getElementById('stepDescription').textContent=copy[2];document.getElementById('footerCopy').textContent=copy[3];
+    const index=order.indexOf(key);document.getElementById('previousButton').disabled=index===0;const next=document.getElementById('nextButton');next.innerHTML=index===order.length-1?'Launch Case':'Continue <svg><use href="#i-arrow-right"/></svg>';next.disabled=false;
+  }
+  document.querySelectorAll('.step').forEach(s=>s.addEventListener('click',()=>renderStep(s.dataset.step)));
+  document.getElementById('previousButton').addEventListener('click',()=>{const i=order.indexOf(active);if(i>0)renderStep(order[i-1])});
+  document.getElementById('nextButton').addEventListener('click',()=>{const i=order.indexOf(active);if(i<order.length-1){maxReached=Math.max(maxReached,i+1);renderStep(order[i+1]);return}const next=document.getElementById('nextButton');next.disabled=true;next.textContent='Launching case...';document.querySelector('.wizard').hidden=true;document.getElementById('successState').classList.add('active');window.scrollTo({top:0,behavior:'auto'})});
+  document.querySelectorAll('[data-doc-action]').forEach(button=>button.addEventListener('click',event=>{
+    event.preventDefault();
+    document.querySelectorAll('[data-doc-action]').forEach(item=>item.classList.toggle('active',item===button));
+    const action=button.dataset.docAction;
+    document.querySelectorAll('[data-doc-panel]').forEach(panel=>panel.classList.toggle('active',panel.dataset.docPanel===action));
+    const status=document.getElementById('requirementDecisionStatus');
+    const summary=document.getElementById('documentDecisionSummary');
+    const check=document.getElementById('documentLaunchCheck');
+    const copy={
+      upload:['Upload selected','Document will be scanned and verified before it satisfies the requirement.','Verification pending','Proof of Address upload is pending verification','Follow-up queued'],
+      request:['Follow-up selected','Proof of Address will become assigned follow-up work and remains visible in readiness.','Follow-up','Proof of Address will be requested after launch','Follow-up queued'],
+      waive:['Waiver selected','An authorised waiver and reason will satisfy this requirement when the case launches.','Authorised exception','Proof of Address has an authorised waiver','Passed']
+    }[action];
+    status.textContent=copy[0];
+    summary.querySelector('span').textContent=copy[1];
+    summary.querySelector('em').textContent=copy[2];
+    const hasFollowup=action!=='waive';
+    check.hidden=!hasFollowup;
+    document.getElementById('launchReadyCopy').textContent=hasFollowup?'Five structural checks passed. One governed follow-up will continue after launch.':'All structural and evidence checks passed. No follow-up work remains.';
+    document.getElementById('launchFollowupTitle').textContent='Proof of Address';
+    document.getElementById('launchFollowupCopy').textContent=action==='upload'?'The selected upload will remain pending until its security and evidence checks pass.':'A secure upload request will be sent to the employee when the case launches.';
+    document.getElementById('launchFollowupState').textContent=action==='upload'?'Verification after upload':'Queued on launch';
+    if(active==='review')renderStep('review');
+  }));
+  document.getElementById('documentUploadInput').addEventListener('change',event=>{
+    const file=event.target.files?.[0];
+    document.getElementById('uploadFileName').textContent=file?.name||'Choose PDF, JPG or PNG';
+  });
+  document.querySelectorAll('[data-package-choice]').forEach(button=>button.addEventListener('click',()=>{
+    document.querySelectorAll('[data-package-choice]').forEach(item=>{
+      const selected=item===button;
+      item.classList.toggle('is-selected',selected);
+    });
+    const name=button.dataset.packageName;
+    const version=button.dataset.packageVersion;
+    const lead=Number(button.dataset.packageLead);
+    const available=20;
+    const tight=lead>available;
+    const fit=document.getElementById('packageScheduleFit');
+    fit.classList.toggle('is-tight',tight);
+    document.getElementById('packageScheduleTitle').textContent=tight?'Start date needs attention':'Ready to choose a package';
+    document.getElementById('packageScheduleSummary').textContent=tight?`${name} exceeds the available lead time`:'2 compatible policies and an achievable start date';
+    document.getElementById('packageScheduleDays').textContent=`${available} days available`;
+    document.getElementById('packageScheduleRecommendation').textContent=tight?`${lead}-day recommendation · ${lead-available} days short`:`${lead}-day recommendation met`;
+    document.getElementById('packageScheduleState').textContent=tight?`${lead-available} days short`:'All checks passed';
+    document.getElementById('generatedPlanCopy').textContent=`Required work and owners from ${name} v${version}.`;
+    const variant=name.startsWith('Safety')?'safety':'standard';
+    document.querySelectorAll('[data-work-detail]').forEach(row=>{
+      const count=row.dataset[`${variant}Count`];
+      const state=row.dataset[`${variant}State`];
+      row.querySelector('[data-work-count]').textContent=count;
+      const stateNode=row.querySelector('[data-work-state]');
+      stateNode.textContent=state;
+      stateNode.classList.toggle('is-gate',state.includes('gate'));
+    });
+  }));
+  const generatedWorkDialog=document.getElementById('generatedWorkDialog');
+  document.querySelectorAll('[data-work-detail]').forEach(row=>row.addEventListener('click',()=>{
+    document.getElementById('workDialogTitle').textContent=row.dataset.workName;
+    document.getElementById('workDialogOwner').textContent=row.dataset.workOwner;
+    document.getElementById('workDialogCount').textContent=row.querySelector('[data-work-count]').textContent;
+    document.getElementById('workDialogState').textContent=row.querySelector('[data-work-state]').textContent;
+    generatedWorkDialog.showModal();
+  }));
+  document.querySelectorAll('[data-close-work-dialog]').forEach(button=>button.addEventListener('click',()=>generatedWorkDialog.close()));
+  generatedWorkDialog.addEventListener('click',event=>{if(event.target===generatedWorkDialog)generatedWorkDialog.close()});
+  const optionalActions=[...document.querySelectorAll('[data-optional-action]')];
+  const ownershipAction=document.querySelector('[data-ownership-action]');
+  const ownershipSection=document.getElementById('ownershipSection');
+  function renderOptionalActions(){
+    optionalActions.forEach(row=>row.classList.toggle('is-selected',row.querySelector('input').checked));
+    const selected=optionalActions.filter(row=>!row.hidden&&row.querySelector('input').checked).length;
+    document.getElementById('optionalSelectionLabel').textContent=`${selected} selected`;
+    const ownershipIncluded=ownershipAction.querySelector('input').checked;
+    const ownershipAssigned=document.getElementById('ownershipOwnerDetail').textContent!=='Unassigned';
+    ownershipSection.hidden=!ownershipIncluded||ownershipAssigned;
+  }
+  optionalActions.forEach(row=>row.querySelector('input').addEventListener('change',renderOptionalActions));
+  const actionLibraryDialog=document.getElementById('actionLibraryDialog');
+  const actionLibrarySearch=document.getElementById('actionLibrarySearch');
+  const oneOffForm=document.getElementById('oneOffForm');
+  document.getElementById('openActionLibrary').addEventListener('click',()=>{
+    actionLibrarySearch.value='';
+    document.querySelectorAll('[data-library-option]').forEach(option=>option.hidden=false);
+    document.getElementById('actionLibraryEmpty').style.display='none';
+    oneOffForm.hidden=true;
+    actionLibraryDialog.showModal();
+    actionLibrarySearch.focus();
+  });
+  document.querySelectorAll('[data-close-action-library]').forEach(button=>button.addEventListener('click',()=>actionLibraryDialog.close()));
+  actionLibraryDialog.addEventListener('click',event=>{if(event.target===actionLibraryDialog)actionLibraryDialog.close()});
+  actionLibrarySearch.addEventListener('input',()=>{
+    const query=actionLibrarySearch.value.trim().toLowerCase();
+    let visible=0;
+    document.querySelectorAll('[data-library-option]').forEach(option=>{
+      const match=!query||option.dataset.search.includes(query);
+      option.hidden=!match;
+      if(match)visible+=1;
+    });
+    document.getElementById('actionLibraryEmpty').style.display=visible?'none':'block';
+  });
+  document.querySelectorAll('[data-add-library]').forEach(button=>button.addEventListener('click',()=>{
+    const row=document.querySelector(`[data-library-action="${button.dataset.addLibrary}"]`);
+    row.hidden=false;
+    row.querySelector('input').checked=true;
+    button.textContent='Added';
+    button.disabled=true;
+    renderOptionalActions();
+  }));
+  document.getElementById('openOneOffForm').addEventListener('click',()=>{
+    oneOffForm.hidden=false;
+    document.getElementById('oneOffName').focus();
+  });
+  document.getElementById('cancelOneOff').addEventListener('click',()=>{oneOffForm.hidden=true});
+  document.getElementById('addOneOff').addEventListener('click',()=>{
+    const name=document.getElementById('oneOffName').value.trim();
+    if(!name){document.getElementById('oneOffName').focus();return}
+    const outcome=document.getElementById('oneOffOutcome').value;
+    const team=document.getElementById('oneOffTeam').value;
+    const due=document.getElementById('oneOffDue').value;
+    document.getElementById('oneOffActionName').textContent=name;
+    document.getElementById('oneOffActionDescription').textContent=`${outcome} due ${due.toLowerCase()}.`;
+    document.getElementById('oneOffActionTeam').textContent=team;
+    document.getElementById('oneOffActionOutcome').textContent=outcome;
+    const row=document.querySelector('[data-library-action="one-off"]');
+    row.hidden=false;
+    row.querySelector('input').checked=true;
+    oneOffForm.hidden=true;
+    actionLibraryDialog.close();
+    renderOptionalActions();
+  });
+  const assignmentDialog=document.getElementById('assignmentDialog');
+  document.getElementById('openAssignmentDialog').addEventListener('click',()=>assignmentDialog.showModal());
+  document.querySelectorAll('[data-close-assignment]').forEach(button=>button.addEventListener('click',()=>assignmentDialog.close()));
+  assignmentDialog.addEventListener('click',event=>{if(event.target===assignmentDialog)assignmentDialog.close()});
+  document.querySelectorAll('input[name="accountablePerson"]').forEach(input=>input.addEventListener('change',()=>{
+    document.querySelectorAll('.assignee-option').forEach(option=>option.classList.toggle('is-selected',option.querySelector('input').checked));
+  }));
+  document.getElementById('saveAssignment').addEventListener('click',()=>{
+    const choice=document.querySelector('input[name="accountablePerson"]:checked');
+    const person=choice.value;
+    const team=document.getElementById('assignmentTeam').value;
+    document.getElementById('ownershipOwner').textContent=person||team;
+    document.getElementById('ownershipOwnerDetail').textContent=person?`${team} · accountable`:'Unassigned';
+    document.getElementById('ownershipAvatar').textContent=person?person.split(' ').map(part=>part[0]).join(''):team.split(' ').map(part=>part[0]).join('');
+    document.getElementById('openAssignmentDialog').textContent=person?'Change':'Assign person';
+    assignmentDialog.close();
+    renderOptionalActions();
+  });
+  document.querySelectorAll('[data-step-link]').forEach(item=>item.addEventListener('click',()=>{const target=item.dataset.stepLink;maxReached=Math.max(maxReached,order.indexOf(target));renderStep(target)}));
+  document.querySelectorAll('[data-href]').forEach(item=>item.addEventListener('click',()=>{location.href=item.dataset.href}));
+  document.querySelector('[data-action="start-another"]').addEventListener('click',()=>location.reload());
+  renderOptionalActions();
+  renderStep(active);
+</script>
+</body>
+</html>

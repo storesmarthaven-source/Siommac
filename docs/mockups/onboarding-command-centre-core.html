@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SIOMAC — Onboarding Command Centre</title>
+  <link rel="stylesheet" href="onboarding-command-centre.css">
+  <link rel="stylesheet" href="onboarding-production-polish.css">
+</head>
+<body data-page-key="hr.onboarding.command-centre">
+  <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8M5 10v10h14V10M9 20v-6h6v6"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-brief" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"/></symbol>
+    <symbol id="i-task" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m8 12 2 2 5-5M8 7h8M8 18h8"/></symbol>
+    <symbol id="i-case" viewBox="0 0 24 24"><path d="M4 5h6l2 2h8v12H4z"/><path d="M4 9h16"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20V7"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V6z"/><path d="m9 12 2 2 4-5"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 4h7a3 3 0 0 1 3 3v13a3 3 0 0 0-3-3H4zM20 4h-3a3 3 0 0 0-3 3v13a3 3 0 0 1 3-3h3z"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16l-6 7v5l-4 2v-7z"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h7M15 18h5"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="13" cy="18" r="2"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v11H3z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2.8 20h18.4z"/><path d="M12 9v5M12 18h.01"/></symbol>
+    <symbol id="i-wait" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 8h8M8 16h8M9 8c0 3 6 3 6 8M15 8c0 3-6 3-6 8"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 13v7H4V6h7"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 5h10l2 3-2 3H5"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+  </svg>
+
+  <div class="app-shell">
+    <aside class="side-nav" aria-label="Primary navigation">
+      <div class="brand"><strong>SIOMAC</strong><small>Onboarding</small></div>
+      <button class="nav-link"><svg class="icon"><use href="#i-home"/></svg><span>Home</span></button>
+      <div class="nav-group-label">HR workspace</div>
+      <button class="nav-link"><svg class="icon"><use href="#i-user"/></svg><span>Employee Master</span></button>
+      <div class="nav-parent"><svg class="icon"><use href="#i-users"/></svg><span>Onboarding</span></div>
+      <nav class="nav-sub" aria-label="Onboarding navigation">
+        <a class="nav-sub-link active" href="onboarding-command-centre-core.html">Command Centre</a>
+        <a class="nav-sub-link" href="onboarding-package-management-implementation-ready.html" data-role-visibility="manager">Packages <small>Manager</small></a>
+        <a class="nav-sub-link" href="onboarding-command-centre-analytics.html" data-role-visibility="manager">Insights <small>Manager</small></a>
+      </nav>
+      <div class="nav-group-label">Operations</div>
+      <button class="nav-link"><svg class="icon"><use href="#i-brief"/></svg><span>Payroll</span></button>
+      <button class="nav-link"><svg class="icon"><use href="#i-shield"/></svg><span>HSE</span></button>
+      <button class="nav-link"><svg class="icon"><use href="#i-clock"/></svg><span>Time &amp; Attendance</span></button>
+      <button class="nav-link"><svg class="icon"><use href="#i-book"/></svg><span>Learning</span></button>
+      <div class="side-spacer"></div>
+      <button class="nav-link"><svg class="icon"><use href="#i-settings"/></svg><span>Settings</span></button>
+      <div class="side-profile"><span class="avatar">MJ</span><div><strong>Maria Johnson</strong><small>HR Manager</small></div></div>
+    </aside>
+
+    <main class="page">
+      <header class="page-header">
+        <div>
+          <div class="breadcrumb"><span>HR</span><span>/</span><span>Onboarding</span></div>
+          <h1 class="page-title">Onboarding Command Centre</h1>
+          <p class="page-subtitle">Manage upcoming starts, assigned work, blockers and day-one readiness.</p>
+        </div>
+        <div class="header-actions">
+          <label class="search-control"><svg class="icon"><use href="#i-search"/></svg><input aria-label="Search onboarding" placeholder="Search cases or employees"></label>
+          <a class="btn primary" href="onboarding-start-implementation-ready.html"><svg class="icon"><use href="#i-plus"/></svg>New Onboarding</a>
+        </div>
+      </header>
+
+      <section class="scope-bar" aria-label="Onboarding scope and filters">
+        <div class="segment" role="tablist" aria-label="Work scope">
+          <button data-scope="my" aria-selected="false">My Work</button>
+          <button data-scope="team" class="active" aria-selected="true" data-permission="hr.onboarding.view_team">Team Work</button>
+          <button data-scope="all" aria-selected="false" data-permission="hr.onboarding.view_all">All Onboarding</button>
+        </div>
+        <span class="scope-divider"></span>
+        <div class="filter-scroller">
+          <select class="filter-select" id="startFilter" aria-label="Start date"><option value="all">All start dates</option><option value="7">Next 7 days</option><option value="30">Next 30 days</option></select>
+          <select class="filter-select" id="departmentFilter" aria-label="Department"><option value="all">All departments</option><option value="Administration">Administration</option><option value="Operations">Operations</option><option value="Finance">Finance</option></select>
+          <select class="filter-select" id="caseStatusFilter" aria-label="Status"><option value="all">Active statuses</option><option value="At Risk">At Risk</option><option value="Blocked">Blocked</option><option value="Ready">Ready</option></select>
+          <select class="filter-select" aria-label="Owner" id="ownerFilter"><option value="all" id="ownerScope">HR Team</option><option value="Maria Johnson">Maria Johnson</option><option value="Amara Diallo">Amara Diallo</option><option value="Priya Patel">Priya Patel</option></select>
+        </div>
+        <button class="clear-link">Clear Filters</button>
+      </section>
+
+      <section class="summary-grid" aria-label="Onboarding command summary">
+        <article class="summary-card" data-ui="KpiTile" data-kpi-style-source="hr.employeeMaster" data-queue-filter="today" role="button" tabindex="0" aria-pressed="false" aria-label="Filter work queue to actions due today"><span class="summary-icon"><svg class="icon"><use href="#i-calendar"/></svg></span><div><h3>Due Today</h3><div class="summary-value" id="dueTodayValue">18</div><div class="summary-detail" id="dueTodayDetail">7 require a decision</div></div></article>
+        <article class="summary-card" data-ui="KpiTile" data-kpi-style-source="hr.employeeMaster" data-queue-filter="overdue" role="button" tabindex="0" aria-pressed="false" aria-label="Filter work queue to overdue actions"><span class="summary-icon bad"><svg class="icon"><use href="#i-clock"/></svg></span><div><h3>Overdue Actions</h3><div class="summary-value" id="overdueValue">5</div><div class="summary-detail bad" id="overdueDetail">Oldest overdue by 5 days</div></div></article>
+        <article class="summary-card" data-ui="KpiTile" data-kpi-style-source="hr.employeeMaster" data-queue-filter="starting" role="button" tabindex="0" aria-pressed="false" aria-label="Jump to employees starting within seven days"><span class="summary-icon good"><svg class="icon"><use href="#i-users"/></svg></span><div><h3>Starting Within 7 Days</h3><div class="summary-value" id="startingValue">10</div><div class="summary-detail warn" id="startingDetail">7 ready · 3 at risk</div></div></article>
+        <article class="summary-card" data-ui="KpiTile" data-kpi-style-source="hr.employeeMaster" data-queue-filter="exception" role="button" tabindex="0" aria-pressed="false" aria-label="Jump to onboarding exceptions needing attention"><span class="summary-icon warn"><svg class="icon"><use href="#i-alert"/></svg></span><div><h3 id="routingTitle">Owner Required</h3><div class="summary-value" id="routingValue">3</div><div class="summary-detail" id="routingDetail">Unassigned work needs routing</div></div></article>
+      </section>
+
+      <section class="command-pulse" aria-label="Operational onboarding charts">
+        <article class="pulse-card main-pulse-chart">
+          <header class="pulse-header"><div><h2>Start Readiness</h2><p>Employees starting in the next 14 days</p></div><span class="pulse-total">21 starts</span></header>
+          <div class="command-chart-stage"><canvas id="commandReadinessChart" aria-label="Fourteen-day start readiness chart"></canvas></div>
+          <footer class="pulse-legend"><span><i class="ready"></i>Ready 16</span><span><i class="risk"></i>At Risk 3</span><span><i class="blocked"></i>Blocked 2</span><a href="#upcomingStarts">View starts</a></footer>
+        </article>
+
+        <aside class="pulse-widget-stack" aria-label="Upcoming onboarding work">
+          <article class="pulse-mini-widget deadline-widget" data-widget-key="enterprise.calendar.upcomingDeadlines" data-reuse="existing-widget">
+            <header class="mini-widget-head"><div><span class="mini-widget-icon"><svg class="icon"><use href="#i-calendar"/></svg></span><h2>Upcoming Deadlines</h2></div></header>
+            <div class="deadline-week"><button data-deadline-index="0"><span>Mon</span><b>20</b></button><button class="active" data-deadline-index="1"><span>Tue</span><b>21</b><i></i></button><button data-deadline-index="2"><span>Wed</span><b>22</b><i></i></button><button data-deadline-index="3"><span>Thu</span><b>23</b></button><button data-deadline-index="4"><span>Fri</span><b>24</b><i></i></button></div>
+            <a class="deadline-item" id="selectedDeadline" href="#workQueue"><span class="avatar warm" id="deadlineAvatar">DB</span><div><strong id="deadlineTitle">Right-to-work review</strong><small id="deadlineMeta">Damani Baptiste · Due today</small></div><svg class="icon"><use href="#i-chevron"/></svg></a>
+          </article>
+          <article class="pulse-mini-widget task-widget" data-widget-key="enterprise.calendar.taskPlanner" data-reuse="existing-widget">
+            <header class="mini-widget-head"><div><span class="mini-widget-icon task"><svg class="icon"><use href="#i-list"/></svg></span><div><h2>Tasks</h2><p>Next actions requiring HR</p></div></div><a href="#workQueue">View All</a></header>
+            <a class="mini-task-row" href="#workQueue"><span class="task-state overdue"></span><div><strong>Approve payroll setup</strong><small>Claudia Pierre · Payroll</small></div><time>Overdue</time></a>
+            <a class="mini-task-row" href="#workQueue"><span class="task-state today"></span><div><strong>Accept HSE handoff</strong><small>Kern Lewis · HSE</small></div><time>Today</time></a>
+          </article>
+        </aside>
+      </section>
+
+      <section class="operational-grid">
+      <div class="operational-main-column">
+      <section class="upcoming-work-card obv-collab-card obv-project-card obv-onboarding-work-card obv-task-work-card obv-work-restored-card" id="upcomingStarts" aria-labelledby="upcomingTitle">
+        <header class="upcoming-work-head">
+          <div><h2 id="upcomingTitle">Upcoming Starts</h2><p>Employees starting next, readiness gates, and accountable owners</p></div>
+          <div class="upcoming-work-actions"><a class="view-all-control" href="#workQueue">View All</a></div>
+        </header>
+        <div class="upcoming-task-grid">
+          <a class="upcoming-task-card" href="onboarding-case-detail-implementation-ready.html">
+            <div class="upcoming-task-top"><span class="upcoming-task-icon green"><svg class="icon"><use href="#i-user"/></svg></span><span class="upcoming-status ready">Ready</span></div>
+            <strong>Jordan Smith</strong><small>Operations Analyst · ONB-2026-00151</small>
+            <div class="upcoming-start-detail"><span><svg class="icon"><use href="#i-calendar"/></svg>Starts 23rd July</span><em>All gates cleared</em></div>
+            <div class="upcoming-owner"><span class="avatar">PP</span><span>Priya Patel</span><em>Case owner</em></div>
+            <div class="upcoming-meter green"><span>82%</span><em><i style="width:82%"><b></b></i></em></div>
+          </a>
+          <a class="upcoming-task-card" href="onboarding-case-detail-implementation-ready.html">
+            <div class="upcoming-task-top"><span class="upcoming-task-icon amber"><svg class="icon"><use href="#i-user"/></svg></span><span class="upcoming-status risk">At Risk</span></div>
+            <strong>Claudia Pierre</strong><small>Finance Analyst · ONB-2026-00148</small>
+            <div class="upcoming-start-detail"><span><svg class="icon"><use href="#i-calendar"/></svg>Starts 22nd July</span><em>Payroll · 1 gate open</em></div>
+            <div class="upcoming-owner"><span class="avatar">AD</span><span>Amara Diallo</span><em>Case owner</em></div>
+            <div class="upcoming-meter amber"><span>76%</span><em><i style="width:76%"><b></b></i></em></div>
+          </a>
+        </div>
+      </section>
+
+        <article class="panel work-queue-panel" id="workQueue" aria-labelledby="workQueueTitle">
+          <header class="panel-header">
+            <div class="panel-title"><span class="panel-title-icon"><svg class="icon"><use href="#i-list"/></svg></span><div><h2 id="workQueueTitle">Team Work Queue</h2><p id="workQueueDescription">Overdue work, approvals, handoffs and exceptions across your team.</p></div></div>
+          </header>
+          <div class="queue-toolbar">
+            <div class="tab-list" role="tablist" aria-label="Work due date">
+              <button class="active" data-queue-tab="overdue">Overdue <span class="count" id="queueOverdueCount">5</span></button>
+              <button data-queue-tab="today">Due Today <span class="count" id="queueTodayCount">18</span></button>
+              <button data-queue-tab="upcoming">Upcoming <span class="count" id="queueUpcomingCount">22</span></button>
+            </div>
+            <div class="type-filters"><button class="active" data-work-type="all">All</button><button data-work-type="task">Tasks</button><button data-work-type="approval">Approvals</button><button data-work-type="handoff">Handoffs</button><button data-work-type="blocker">Blockers</button></div>
+          </div>
+          <div style="overflow:auto">
+            <table class="work-table">
+              <colgroup><col style="width:20%"><col style="width:24%"><col style="width:12%"><col style="width:14%"><col style="width:19%"><col style="width:11%"></colgroup>
+              <thead><tr><th>Employee</th><th>Task / Action</th><th>Current Stage</th><th>Due Date</th><th>Owner / Waiting On</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr class="selected" data-person="Damani Baptiste" data-role="Project Manager" data-case="ONB-2026-00142" data-task="Review and verify right-to-work evidence" data-due="17th July 2026" data-owner="Maria Johnson" data-stage="Documents" data-queue-state="overdue" data-work-type="task" data-department="Administration" data-case-status="Blocked" data-start-window="7">
+                  <td><div class="employee"><span class="avatar warm">DB</span><div><strong>Damani Baptiste</strong><small>Project Manager · ONB-2026-00142</small></div></div></td>
+                  <td><span class="task-title">Verify right-to-work evidence</span><span class="task-meta"><i class="state-dot red"></i>Critical · Document review</span></td><td><span class="stage-tag">Documents</span></td><td><span class="due overdue"><svg class="icon"><use href="#i-calendar"/></svg><span><b>17th July</b><small>5 days overdue</small></span></span></td>
+                  <td><div class="owner"><span class="avatar">MJ</span><div><strong>Maria Johnson</strong><small>Waiting on employee</small></div></div></td><td><div class="row-actions"><button class="btn primary small open-detail">Review</button></div></td>
+                </tr>
+                <tr data-person="Claudia Pierre" data-role="Finance Analyst" data-case="ONB-2026-00148" data-task="Approve payroll setup" data-due="18th July 2026" data-owner="Maria Johnson" data-stage="Payroll" data-queue-state="overdue" data-work-type="approval" data-department="Finance" data-case-status="At Risk" data-start-window="7">
+                  <td><div class="employee"><span class="avatar">CP</span><div><strong>Claudia Pierre</strong><small>Finance Analyst · ONB-2026-00148</small></div></div></td>
+                  <td><span class="task-title">Approve payroll setup</span><span class="task-meta"><i class="state-dot red"></i>High · Approval required</span></td><td><span class="stage-tag">Payroll</span></td><td><span class="due overdue"><svg class="icon"><use href="#i-calendar"/></svg><span><b>18th July</b><small>4 days overdue</small></span></span></td>
+                  <td><div class="owner"><span class="avatar">MJ</span><div><strong>Maria Johnson</strong><small>Waiting on Payroll</small></div></div></td><td><div class="row-actions"><button class="btn primary small open-detail">Approve</button></div></td>
+                </tr>
+                <tr data-person="Kern Lewis" data-role="HSE Technician" data-case="ONB-2026-00155" data-task="Accept HSE handoff" data-due="19th July 2026" data-owner="Maria Johnson" data-stage="HSE" data-queue-state="overdue" data-work-type="handoff" data-department="Operations" data-case-status="Blocked" data-start-window="7">
+                  <td><div class="employee"><span class="avatar green">KL</span><div><strong>Kern Lewis</strong><small>HSE Technician · ONB-2026-00155</small></div></div></td>
+                  <td><span class="task-title">Accept HSE handoff</span><span class="task-meta"><i class="state-dot amber"></i>High · Department handoff</span></td><td><span class="stage-tag">HSE</span></td><td><span class="due overdue"><svg class="icon"><use href="#i-calendar"/></svg><span><b>19th July</b><small>3 days overdue</small></span></span></td>
+                  <td><div class="owner"><span class="avatar">MJ</span><div><strong>Maria Johnson</strong><small>HSE Queue</small></div></div></td><td><div class="row-actions"><button class="btn primary small open-detail">Accept</button></div></td>
+                </tr>
+                <tr data-person="Priya Patel" data-role="HR Officer" data-case="ONB-2026-00161" data-task="Request missing bank details" data-due="Today" data-owner="Maria Johnson" data-stage="Payroll" data-queue-state="today" data-work-type="task" data-department="Administration" data-case-status="At Risk" data-start-window="30">
+                  <td><div class="employee"><span class="avatar">PP</span><div><strong>Priya Patel</strong><small>HR Officer · ONB-2026-00161</small></div></div></td>
+                  <td><span class="task-title">Request missing bank details</span><span class="task-meta"><i class="state-dot amber"></i>Medium · Employee information</span></td><td><span class="stage-tag">Payroll</span></td><td><span class="due today"><svg class="icon"><use href="#i-calendar"/></svg><span><b>Today</b><small>Due by 4:00 PM</small></span></span></td>
+                  <td><div class="owner"><span class="avatar">MJ</span><div><strong>Maria Johnson</strong><small>Waiting on employee</small></div></div></td><td><div class="row-actions"><button class="btn primary small open-detail">Request</button></div></td>
+                </tr>
+                <tr data-person="Michael Green" data-role="Operations Assistant" data-case="ONB-2026-00167" data-task="Resolve manager approval blocker" data-due="Today" data-owner="Maria Johnson" data-stage="Approvals" data-queue-state="today" data-work-type="blocker" data-department="Operations" data-case-status="Blocked" data-start-window="7">
+                  <td><div class="employee"><span class="avatar green">MG</span><div><strong>Michael Green</strong><small>Operations Assistant · ONB-2026-00167</small></div></div></td>
+                  <td><span class="task-title">Resolve manager approval blocker</span><span class="task-meta"><i class="state-dot amber"></i>Medium · Escalation required</span></td><td><span class="stage-tag">Approvals</span></td><td><span class="due today"><svg class="icon"><use href="#i-calendar"/></svg><span><b>Today</b><small>Due by 5:00 PM</small></span></span></td>
+                  <td><div class="owner"><span class="avatar">MJ</span><div><strong>Maria Johnson</strong><small>Hiring Manager</small></div></div></td><td><div class="row-actions"><button class="btn primary small open-detail">Resolve</button></div></td>
+                </tr>
+                <tr data-person="Aisha Khan" data-role="Executive Assistant" data-case="ONB-2026-00172" data-task="Complete employee details review" data-due="21st July 2026" data-owner="Maria Johnson" data-stage="Profile" data-queue-state="upcoming" data-work-type="task" data-department="Administration" data-case-status="Ready" data-start-window="30">
+                  <td><div class="employee"><span class="avatar warm">AK</span><div><strong>Aisha Khan</strong><small>Executive Assistant · ONB-2026-00172</small></div></div></td>
+                  <td><span class="task-title">Complete employee details review</span><span class="task-meta"><i class="state-dot green"></i>Normal · Record verification</span></td><td><span class="stage-tag">Profile</span></td><td><span class="due"><svg class="icon"><use href="#i-calendar"/></svg><span><b>21st July</b><small>Due in 2 days</small></span></span></td>
+                  <td><div class="owner"><span class="avatar">MJ</span><div><strong>Maria Johnson</strong><small>HR Operations</small></div></div></td><td><div class="row-actions"><button class="btn primary small open-detail">Complete</button></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <footer class="table-footer"><span id="queueResultCount">Showing 6 of 38 team actions</span><span>Sorted by urgency, due date and start-date impact</span></footer>
+        </article>
+      </div>
+
+      <aside class="case-focus-column" aria-label="Selected case">
+
+        <article class="case-focus-panel obv-collab-card obv-goal-card obv-daily-goal-card obv-activation-goal-card obv-critical-path-card" aria-labelledby="caseFocusTitle">
+          <section class="case-focus-person-stack">
+            <div class="case-focus-profile">
+              <span class="avatar">DB</span>
+              <div><h2 id="caseFocusTitle">Damani Baptiste</h2><p><svg class="icon"><use href="#i-brief"/></svg><span>Project Manager</span></p></div>
+              <nav aria-label="Priority case navigation"><div class="case-focus-nav"><button type="button" aria-label="Previous priority case"><svg class="icon left"><use href="#i-chevron"/></svg></button><button type="button" aria-label="Next priority case"><svg class="icon"><use href="#i-chevron"/></svg></button></div><span>1 of 7</span></nav>
+            </div>
+            <section class="case-focus-issue">
+              <header><h3>1 Blocking Gate Needs Review</h3><em>Blocked</em></header>
+              <div><p><span>ONB-2026-00142 · HSE</span><strong>Site induction not completed</strong></p><time><small>Due Date</small><strong>20th July</strong><em>5 days overdue</em></time></div>
+            </section>
+          </section>
+          <section class="case-focus-facts" aria-label="HR case facts">
+            <div class="case-focus-person-fact"><span class="avatar">MJ</span><p><small>Case Owner · HR</small><strong>Maria Johnson</strong></p></div>
+            <div class="case-focus-person-fact"><span class="avatar warm">SA</span><p><small>Waiting On · HSE</small><strong>System Admin</strong></p></div>
+          </section>
+          <section class="case-focus-impact">
+            <div class="case-focus-readiness-ring" aria-label="Day-One readiness 54 percent"><strong>54%</strong><span>Ready</span></div>
+            <div><strong>Day-One Readiness</strong><p>Two of four activation gates are complete. The HSE gate is holding the start-date plan.</p></div>
+          </section>
+          <section class="case-focus-recommendation">
+            <span>Next Action</span>
+            <h4>Request HSE evidence</h4>
+            <p>Notify the accountable owner, then review the submitted induction evidence before clearing the gate.</p>
+            <div class="case-focus-actions"><a class="case-focus-open" href="onboarding-case-detail-implementation-ready.html">Open Full Case <svg class="icon"><use href="#i-chevron"/></svg></a><button type="button"><svg class="icon"><use href="#i-mail"/></svg>Notify Owner</button></div>
+          </section>
+        </article>
+
+      <div class="blocked-cases-column" aria-label="Blocked onboarding cases">
+        <article class="panel blocked-cases-panel obx-section obv-card obv-blocked-card obv-blocked-board-compact obv-blocked-condensed-card" id="blockedCases" aria-labelledby="blockedCasesTitle">
+          <header class="blocked-cases-head obv-health-head obv-blocked-condensed-head">
+            <div class="blocked-cases-title obv-blocked-title-group"><span class="blocked-signal obv-blocked-alert-dot"></span><h2 id="blockedCasesTitle">Blocked Cases</h2><span class="blocked-count">4</span></div>
+            <div class="blocked-cases-actions obv-health-actions obv-blocked-nav-actions"><a class="view-all-control obv-health-viewall" href="#workQueue">View All</a></div>
+          </header>
+          <div class="blocked-case-list obv-blocked-condensed-list">
+            <a class="blocked-case-row obv-blocked-condensed-item severity-critical" href="onboarding-case-detail-implementation-ready.html">
+              <div class="obv-blocked-condensed-main"><span class="severity-tag critical obv-blocker-chip blocker-chip-critical"><i></i>Critical</span><div class="blocked-case-copy obv-blocked-condensed-copy"><strong>Site induction not completed</strong><small>Damani Baptiste · ONB-2026-00142</small></div></div>
+              <div class="blocked-case-meta obv-blocked-condensed-meta obv-blocked-essential-meta"><time class="obv-blocked-due">Due 20th July</time></div>
+              <div class="blocked-case-owner obv-blocked-condensed-side obv-blocked-condensed-assignee"><span class="avatar warm obv-blocked-single-avatar">SA</span><b class="obv-blocked-owner">System Admin</b></div>
+            </a>
+            <a class="blocked-case-row obv-blocked-condensed-item severity-high" href="onboarding-case-detail-implementation-ready.html">
+              <div class="obv-blocked-condensed-main"><span class="severity-tag high obv-blocker-chip blocker-chip-high"><i></i>High</span><div class="blocked-case-copy obv-blocked-condensed-copy"><strong>Payroll verification outstanding</strong><small>Claudia Pierre · ONB-2026-00148</small></div></div>
+              <div class="blocked-case-meta obv-blocked-condensed-meta obv-blocked-essential-meta"><time class="obv-blocked-due">Due 22nd July</time></div>
+              <div class="blocked-case-owner obv-blocked-condensed-side obv-blocked-condensed-assignee"><span class="avatar obv-blocked-single-avatar">LJ</span><b class="obv-blocked-owner">Linda James</b></div>
+            </a>
+            <a class="blocked-case-row obv-blocked-condensed-item severity-high" href="onboarding-case-detail-implementation-ready.html">
+              <div class="obv-blocked-condensed-main"><span class="severity-tag high obv-blocker-chip blocker-chip-high"><i></i>High</span><div class="blocked-case-copy obv-blocked-condensed-copy"><strong>Application access not granted</strong><small>Kern Lewis · ONB-2026-00155</small></div></div>
+              <div class="blocked-case-meta obv-blocked-condensed-meta obv-blocked-essential-meta"><time class="obv-blocked-due">Due 24th July</time></div>
+              <div class="blocked-case-owner obv-blocked-condensed-side obv-blocked-condensed-assignee"><span class="avatar green obv-blocked-single-avatar">FQ</span><b class="obv-blocked-owner">Facilities Queue</b></div>
+            </a>
+          </div>
+        </article>
+      </div>
+      </aside>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="drawer-backdrop" id="detailDrawer" aria-hidden="true">
+    <aside class="detail-drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+      <header class="drawer-topbar"><div class="drawer-brand"><strong>SIOMAC</strong><span id="drawerTitle">Onboarding Work</span></div><div class="drawer-top-actions"><div class="drawer-menu-wrap"><button class="drawer-icon-btn" id="drawerActionsToggle" type="button" aria-label="More work actions" aria-expanded="false"><svg class="icon"><use href="#i-more"/></svg></button><div class="drawer-action-menu" id="drawerActionMenu"><button type="button" data-drawer-action="Request updated evidence">Request Updated Evidence</button><button type="button" data-drawer-action="Reassign work">Reassign Work</button><button type="button" data-drawer-action="Escalate blocker">Escalate Blocker</button></div></div><button class="drawer-icon-btn" id="closeDrawer" type="button" aria-label="Close details">&times;</button></div></header>
+      <section class="drawer-identity">
+        <div class="drawer-identity-grid">
+          <div class="drawer-portrait"><span id="drawerAvatar">DB</span></div>
+          <div><div class="drawer-name-line"><h2 id="drawerName">Damani Baptiste</h2><span class="drawer-identity-status">Overdue</span></div><div class="drawer-case-no"><span id="drawerCase">ONB-2026-00142</span> · <span id="drawerRole">Project Manager</span></div><div class="drawer-work-kind"><svg class="icon"><use href="#i-task"/></svg><span>Evidence review assigned to HR</span></div></div>
+        </div>
+        <div class="drawer-identity-facts">
+          <div><svg class="icon"><use href="#i-folder"/></svg><span>Current Stage</span><strong id="drawerStage">Documents</strong></div>
+          <div><svg class="icon"><use href="#i-calendar"/></svg><span>Due Date</span><strong id="drawerDue">17th July 2026</strong></div>
+          <div><svg class="icon"><use href="#i-users"/></svg><span>Assigned To</span><strong id="drawerOwner">Maria Johnson</strong></div>
+        </div>
+      </section>
+      <nav class="drawer-tabs" aria-label="Onboarding work sections"><button class="active" type="button" data-drawer-tab="brief">Work Brief</button><button type="button" data-drawer-tab="evidence">Evidence <span>2</span></button><button type="button" data-drawer-tab="activity">Activity <span>4</span></button></nav>
+      <div class="drawer-scroll">
+        <section class="drawer-panel drawer-tab-panel active" data-drawer-panel="brief">
+          <section class="drawer-action-brief"><div class="drawer-action-brief-icon"><svg class="icon"><use href="#i-alert"/></svg></div><div><span>Action required</span><h3 id="drawerTask">Review and verify right-to-work evidence</h3><p>Confirm whether the submitted identification satisfies the onboarding requirement.</p></div><b>5 days overdue</b></section>
+          <div class="drawer-overview-grid">
+            <section class="drawer-card drawer-card-wide drawer-impact-card"><header><svg class="icon"><use href="#i-shield"/></svg><h3>Impact on start</h3></header><div class="drawer-impact-grid"><div><span>Target Start</span><strong>22nd July</strong></div><div><span>Day-One Ready</span><strong class="warn">54%</strong></div><div><span>Blocking Gate</span><strong>HSE</strong></div></div></section>
+            <section class="drawer-card drawer-card-wide"><header><svg class="icon"><use href="#i-users"/></svg><h3>Accountability</h3></header><div class="drawer-coordination"><div><span class="avatar">MJ</span><p><small>Assigned reviewer · HR</small><strong>Maria Johnson</strong></p></div><div><span class="avatar warm">SA</span><p><small>Waiting on · HSE</small><strong>System Admin</strong></p></div><button type="button" class="drawer-notify">Notify</button></div></section>
+          </div>
+        </section>
+        <section class="drawer-panel drawer-tab-panel" data-drawer-panel="evidence">
+          <header class="drawer-panel-heading"><div><svg class="icon"><use href="#i-folder"/></svg><span><h3>Evidence Required</h3><p>Documents and confirmations needed to complete this review</p></span></div><b>2 need action</b></header>
+          <div class="drawer-evidence-list">
+            <article><span class="drawer-file-icon"><svg class="icon"><use href="#i-shield"/></svg></span><div><strong>Right-to-work identification</strong><small>Uploaded today · Awaiting HR verification</small></div><span class="drawer-evidence-state review">Review</span><button type="button" data-evidence-action="Opened right-to-work evidence">Open</button></article>
+            <article><span class="drawer-file-icon warn"><svg class="icon"><use href="#i-folder"/></svg></span><div><strong>Proof of address</strong><small>Not received · Requested 15th July</small></div><span class="drawer-evidence-state missing">Missing</span><button type="button" data-evidence-action="Reminder sent for proof of address">Remind</button></article>
+            <article><span class="drawer-file-icon complete"><svg class="icon"><use href="#i-check"/></svg></span><div><strong>Medical clearance</strong><small>Verified by HSE · 14th July</small></div><span class="drawer-evidence-state complete">Verified</span><button type="button" data-evidence-action="Opened verified medical clearance">View</button></article>
+          </div>
+        </section>
+        <section class="drawer-panel drawer-tab-panel" data-drawer-panel="activity">
+          <header class="drawer-panel-heading"><div><svg class="icon"><use href="#i-clock"/></svg><span><h3>Work Activity</h3><p>Actions, reminders and ownership changes for this item</p></span></div></header>
+          <div class="drawer-activity drawer-activity-full"><div><i class="complete"><svg class="icon"><use href="#i-check"/></svg></i><p><strong>Document uploaded</strong><span>Employee · Today at 9:42 AM</span></p></div><div><i><svg class="icon"><use href="#i-mail"/></svg></i><p><strong>Reminder sent</strong><span>HR Operations · Yesterday at 3:15 PM</span></p></div><div><i><svg class="icon"><use href="#i-users"/></svg></i><p><strong>Work assigned to Maria Johnson</strong><span>System · 15th July at 10:08 AM</span></p></div><div><i><svg class="icon"><use href="#i-alert"/></svg></i><p><strong>Task became overdue</strong><span>System · 18th July at 12:01 AM</span></p></div></div>
+        </section>
+      </div>
+      <div class="drawer-toast" id="drawerToast" hidden><svg class="icon"><use href="#i-check"/></svg><span>Owner notified</span></div>
+      <div class="drawer-footer"><a class="btn" href="onboarding-case-detail-implementation-ready.html">Open Full Case</a><button class="btn" type="button" id="footerNotifyOwner"><svg class="icon"><use href="#i-mail"/></svg>Notify Owner</button><button class="btn primary" id="completeReview" type="button">Complete Review</button></div>
+    </aside>
+  </div>
+
+  <dialog class="work-review-dialog" id="reviewOutcomeDialog">
+    <form method="dialog"><header><div><span>Complete Evidence Review</span><h2>Record the review outcome</h2></div><button value="cancel" aria-label="Close review dialog">&times;</button></header><div class="review-dialog-body"><label>Outcome<select id="reviewOutcome"><option>Evidence verified</option><option>Updated evidence required</option><option>Escalate for specialist review</option></select></label><label>Review note<textarea id="reviewNote" rows="4" placeholder="Record what was checked and the reason for this outcome"></textarea></label><label class="review-confirm"><input id="reviewConfirmed" type="checkbox">I confirm that I reviewed the submitted evidence.</label></div><footer><button class="btn" value="cancel">Cancel</button><button class="btn primary" id="saveReviewOutcome" type="button">Save Outcome</button></footer></form>
+  </dialog>
+
+  <script src="../../node_modules/chart.js/dist/chart.umd.js"></script>
+  <script>
+    const drawer = document.getElementById('detailDrawer');
+    const drawerToast = document.getElementById('drawerToast');
+    const drawerActionMenu = document.getElementById('drawerActionMenu');
+    let drawerToastTimer;
+    const showDrawerToast = (message) => {
+      drawerToast.querySelector('span').textContent = message;
+      drawerToast.hidden = false;
+      clearTimeout(drawerToastTimer);
+      drawerToastTimer = setTimeout(() => { drawerToast.hidden = true; }, 2600);
+    };
+    const selectDrawerTab = (tabName) => {
+      document.querySelectorAll('[data-drawer-tab]').forEach(button => button.classList.toggle('active', button.dataset.drawerTab === tabName));
+      document.querySelectorAll('[data-drawer-panel]').forEach(panel => panel.classList.toggle('active', panel.dataset.drawerPanel === tabName));
+    };
+    const openDrawer = (row) => {
+      if (row) {
+        document.querySelectorAll('.work-table tbody tr').forEach(item => item.classList.remove('selected'));
+        row.classList.add('selected');
+        const initials = row.dataset.person.split(/\s+/).map(part => part[0]).slice(0, 2).join('');
+        document.getElementById('drawerAvatar').textContent = initials;
+        document.getElementById('drawerName').textContent = row.dataset.person;
+        document.getElementById('drawerRole').textContent = row.dataset.role;
+        document.getElementById('drawerCase').textContent = row.dataset.case;
+        document.getElementById('drawerTask').textContent = row.dataset.task;
+        document.getElementById('drawerStage').textContent = row.dataset.stage;
+        document.getElementById('drawerDue').textContent = row.dataset.due;
+        document.getElementById('drawerOwner').textContent = row.dataset.owner;
+      }
+      selectDrawerTab('brief');
+      drawerActionMenu.classList.remove('open');
+      document.getElementById('drawerActionsToggle').setAttribute('aria-expanded', 'false');
+      drawer.classList.add('open');
+      drawer.setAttribute('aria-hidden', 'false');
+    };
+    document.querySelectorAll('.work-table tbody tr').forEach(row => row.addEventListener('click', event => {
+      if (!event.target.closest('.icon-btn')) openDrawer(row);
+    }));
+    document.getElementById('closeDrawer').addEventListener('click', () => {
+      drawer.classList.remove('open');
+      drawer.setAttribute('aria-hidden', 'true');
+      drawerActionMenu.classList.remove('open');
+      document.getElementById('drawerActionsToggle').setAttribute('aria-expanded', 'false');
+    });
+    drawer.addEventListener('click', event => { if (event.target === drawer) document.getElementById('closeDrawer').click(); });
+    document.querySelectorAll('[data-drawer-tab]').forEach(button => button.addEventListener('click', () => selectDrawerTab(button.dataset.drawerTab)));
+    document.getElementById('drawerActionsToggle').addEventListener('click', event => {
+      event.stopPropagation();
+      const open = drawerActionMenu.classList.toggle('open');
+      event.currentTarget.setAttribute('aria-expanded', String(open));
+    });
+    document.querySelectorAll('[data-drawer-action]').forEach(button => button.addEventListener('click', () => {
+      drawerActionMenu.classList.remove('open');
+      document.getElementById('drawerActionsToggle').setAttribute('aria-expanded', 'false');
+      showDrawerToast(`${button.dataset.drawerAction} ready`);
+    }));
+    document.querySelectorAll('[data-evidence-action]').forEach(button => button.addEventListener('click', () => showDrawerToast(button.dataset.evidenceAction)));
+    document.querySelectorAll('.drawer-notify, #footerNotifyOwner').forEach(button => button.addEventListener('click', () => showDrawerToast('Accountable owner notified')));
+    const reviewDialog = document.getElementById('reviewOutcomeDialog');
+    document.getElementById('completeReview').addEventListener('click', () => reviewDialog.showModal());
+    document.getElementById('saveReviewOutcome').addEventListener('click', () => {
+      const confirmed = document.getElementById('reviewConfirmed');
+      if (!confirmed.checked) {
+        confirmed.setCustomValidity('Confirm that you reviewed the submitted evidence.');
+        confirmed.focus();
+        confirmed.reportValidity();
+        return;
+      }
+      confirmed.setCustomValidity('');
+      const outcome = document.getElementById('reviewOutcome').value;
+      reviewDialog.close('confirm');
+      showDrawerToast(`${outcome} recorded`);
+      confirmed.checked = false;
+      document.getElementById('reviewNote').value = '';
+    });
+    document.getElementById('reviewConfirmed').addEventListener('change', event => event.currentTarget.setCustomValidity(''));
+    const deadlineItems = [
+      null,
+      { initials: 'DB', title: 'Right-to-work review', meta: 'Damani Baptiste · Due today' },
+      { initials: 'KL', title: 'Accept HSE handoff', meta: 'Kern Lewis · Due Wednesday' },
+      null,
+      { initials: 'CP', title: 'Payroll readiness review', meta: 'Claudia Pierre · Due Friday' }
+    ];
+    const deadlineLink = document.getElementById('selectedDeadline');
+    document.querySelectorAll('[data-deadline-index]').forEach(button => button.addEventListener('click', () => {
+      const selected = deadlineItems[Number(button.dataset.deadlineIndex)];
+      document.querySelectorAll('[data-deadline-index]').forEach(item => {
+        item.classList.toggle('active', item === button);
+        item.setAttribute('aria-pressed', String(item === button));
+      });
+      document.getElementById('deadlineAvatar').textContent = selected?.initials || '—';
+      document.getElementById('deadlineTitle').textContent = selected?.title || 'No deadlines';
+      document.getElementById('deadlineMeta').textContent = selected?.meta || 'No onboarding work is due on this date.';
+      deadlineLink.toggleAttribute('aria-disabled', !selected);
+      if (selected) deadlineLink.setAttribute('href', '#workQueue'); else deadlineLink.removeAttribute('href');
+    }));
+    const scopeContent = {
+      my: {
+        due: ['9', '4 require a decision'], starting: ['6', '4 ready · 2 at risk'], overdue: ['3', 'Your oldest is 3 days late'], routing: ['8', '6 employee · 2 department'], routingTitle: 'Waiting on Others', owner: 'Me', queueCounts: ['3', '9', '12'], queueTotal: 'Showing 6 of 24 assigned actions', queueTitle: 'My Work Queue', queueDescription: 'Actions assigned to you that need a decision or follow-up.'
+      },
+      team: {
+        due: ['18', '7 require a decision'], starting: ['10', '7 ready · 3 at risk'], overdue: ['5', 'Oldest overdue by 5 days'], routing: ['3', 'Unassigned work needs routing'], routingTitle: 'Owner Required', owner: 'HR Team', queueCounts: ['5', '18', '22'], queueTotal: 'Showing 6 of 38 team actions', queueTitle: 'Team Work Queue', queueDescription: 'Overdue work, approvals, handoffs and exceptions across your team.'
+      },
+      all: {
+        due: ['31', '12 require a decision'], starting: ['21', '16 ready · 5 at risk'], overdue: ['7', 'Oldest overdue by 5 days'], routing: ['15', '9 employee · 6 department'], routingTitle: 'Waiting on Others', owner: 'All owners', queueCounts: ['7', '31', '46'], queueTotal: 'Showing 6 of 84 onboarding actions', queueTitle: 'All Onboarding Work', queueDescription: 'Operational work requiring action across every active onboarding case.'
+      }
+    };
+    const updateScope = (scope) => {
+      const copy = scopeContent[scope];
+      document.getElementById('dueTodayValue').textContent = copy.due[0];
+      document.getElementById('dueTodayDetail').textContent = copy.due[1];
+      document.getElementById('startingValue').textContent = copy.starting[0];
+      document.getElementById('startingDetail').textContent = copy.starting[1];
+      document.getElementById('overdueValue').textContent = copy.overdue[0];
+      document.getElementById('overdueDetail').textContent = copy.overdue[1];
+      document.getElementById('routingValue').textContent = copy.routing[0];
+      document.getElementById('routingDetail').textContent = copy.routing[1];
+      document.getElementById('routingTitle').textContent = copy.routingTitle;
+      document.getElementById('ownerScope').textContent = copy.owner;
+      document.getElementById('queueOverdueCount').textContent = copy.queueCounts[0];
+      document.getElementById('queueTodayCount').textContent = copy.queueCounts[1];
+      document.getElementById('queueUpcomingCount').textContent = copy.queueCounts[2];
+      document.getElementById('queueResultCount').textContent = copy.queueTotal;
+      document.getElementById('workQueueTitle').textContent = copy.queueTitle;
+      document.getElementById('workQueueDescription').textContent = copy.queueDescription;
+    };
+    document.querySelectorAll('.segment button').forEach(button => button.addEventListener('click', () => {
+      button.parentElement.querySelectorAll('button').forEach(item => { item.classList.toggle('active', item === button); item.setAttribute('aria-selected', String(item === button)); });
+      updateScope(button.dataset.scope);
+      applyQueueFilters();
+    }));
+    let selectedQueueState = 'overdue';
+    let selectedWorkType = 'all';
+    const searchInput = document.querySelector('.search-control input');
+    const queueRows = [...document.querySelectorAll('.work-table tbody tr')];
+    const applyQueueFilters = () => {
+      const query = searchInput.value.trim().toLowerCase();
+      const department = document.getElementById('departmentFilter').value;
+      const caseStatus = document.getElementById('caseStatusFilter').value;
+      const owner = document.getElementById('ownerFilter').value;
+      const startWindow = document.getElementById('startFilter').value;
+      let visibleRows = 0;
+      queueRows.forEach(row => {
+        const visible = (!query || row.textContent.toLowerCase().includes(query))
+          && row.dataset.queueState === selectedQueueState
+          && (selectedWorkType === 'all' || row.dataset.workType === selectedWorkType)
+          && (department === 'all' || row.dataset.department === department)
+          && (caseStatus === 'all' || row.dataset.caseStatus === caseStatus)
+          && (owner === 'all' || row.dataset.owner === owner)
+          && (startWindow === 'all' || Number(row.dataset.startWindow) <= Number(startWindow));
+        row.hidden = !visible;
+        if (visible) visibleRows += 1;
+      });
+      document.getElementById('queueResultCount').textContent = `${visibleRows} matching action${visibleRows === 1 ? '' : 's'}`;
+    };
+    document.querySelectorAll('[data-queue-tab]').forEach(button => button.addEventListener('click', () => {
+      button.parentElement.querySelectorAll('button').forEach(item => item.classList.toggle('active', item === button));
+      selectedQueueState = button.dataset.queueTab;
+      applyQueueFilters();
+    }));
+    document.querySelectorAll('.type-filters button').forEach(button => button.addEventListener('click', () => {
+      button.parentElement.querySelectorAll('button').forEach(item => item.classList.toggle('active', item === button));
+      selectedWorkType = button.dataset.workType;
+      applyQueueFilters();
+    }));
+    document.querySelectorAll('[data-queue-filter]').forEach(card => card.addEventListener('click', () => {
+      document.querySelectorAll('[data-queue-filter]').forEach(item => {
+        const active = item === card;
+        item.classList.toggle('active', active);
+        item.setAttribute('aria-pressed', String(active));
+      });
+      const filter = card.dataset.queueFilter;
+      if (filter === 'today' || filter === 'overdue') {
+        const tab = document.querySelector(`[data-queue-tab="${filter}"]`);
+        tab.click();
+        document.getElementById('workQueueTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (filter === 'starting') {
+        document.getElementById('upcomingTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        document.getElementById('blockedCasesTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }));
+    document.querySelectorAll('[data-queue-filter]').forEach(card => card.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        card.click();
+      }
+    }));
+    searchInput.addEventListener('input', applyQueueFilters);
+    document.querySelectorAll('.filter-select').forEach(select => select.addEventListener('change', applyQueueFilters));
+    document.querySelector('.clear-link').addEventListener('click', () => {
+      document.querySelectorAll('.filter-select').forEach(select => { select.selectedIndex = 0; });
+      searchInput.value = '';
+      applyQueueFilters();
+      document.querySelectorAll('[data-queue-filter]').forEach(item => {
+        item.classList.remove('active');
+        item.setAttribute('aria-pressed', 'false');
+      });
+    });
+    applyQueueFilters();
+
+    Chart.defaults.font.family = 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    Chart.defaults.color = '#66738a';
+    new Chart(document.getElementById('commandReadinessChart'), {
+      type: 'bar',
+      data: {
+        labels: ['20 Jul', '22 Jul', '24 Jul', '26 Jul', '28 Jul', '30 Jul', '2 Aug'],
+        datasets: [
+          { label: 'Ready', data: [4, 3, 4, 2, 2, 1, 0], backgroundColor: '#159447', borderRadius: 3, borderSkipped: false },
+          { label: 'At Risk', data: [1, 1, 0, 0, 1, 0, 0], backgroundColor: '#d97706', borderRadius: 3, borderSkipped: false },
+          { label: 'Blocked', data: [1, 0, 0, 0, 1, 0, 0], backgroundColor: '#d92d20', borderRadius: 3, borderSkipped: false }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { display: false }, tooltip: { padding: 10, displayColors: true } },
+        scales: {
+          x: { stacked: true, grid: { display: false }, border: { display: false }, ticks: { font: { size: 10 } } },
+          y: { stacked: true, beginAtZero: true, suggestedMax: 7, ticks: { stepSize: 2, font: { size: 10 } }, grid: { color: '#edf1f5' }, border: { display: false } }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

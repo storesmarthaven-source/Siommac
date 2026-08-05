@@ -159,9 +159,20 @@ async function instantiate(actorId: string, kase: CaseRow, spec: ActionSpec): Pr
 // Template CRUD
 // ════════════════════════════════════════════════════════════════════════════════
 async function packageIdByKey(packageKey: string): Promise<string> {
-  const { data } = await sb.from('hr_onboarding_packages').select('id').eq('package_key', packageKey).maybeSingle<{ id: string }>();
+  const { data, error } = await sb.from('hr_onboarding_packages').select('id').eq('package_key', packageKey).maybeSingle<{ id: string }>();
+  if (error) throw err(500, error.message);
   if (!data) throw err(404, 'Onboarding package not found.');
   return data.id;
+}
+
+async function requireDraftPackage(packageId: string): Promise<void> {
+  const { data, error } = await sb.from('hr_onboarding_packages')
+    .select('status')
+    .eq('id', packageId)
+    .maybeSingle<{ status: string }>();
+  if (error) throw err(500, error.message);
+  if (!data) throw err(404, 'Onboarding package not found.');
+  if (data.status !== 'draft') throw err(409, 'Published and retired packages are read-only. Create a draft version before changing the package definition.');
 }
 
 export async function listActionTemplates(packageKey: string, includeInactive = false): Promise<OnboardingActionTemplate[]> {
@@ -181,7 +192,10 @@ export interface ActionTemplateInput {
 }
 export async function createActionTemplate(actorId: string, a: ActionTemplateInput): Promise<{ templateId: string }> {
   const pkgId = await packageIdByKey(a.packageKey);
+  await requireDraftPackage(pkgId);
   if (a.actionType === 'custom_approval' && !a.workflowTemplateId) throw err(400, 'A custom approval template needs a workflow template.');
+  if (a.actionType === 'custom_document_request' && !a.documentTypeId) throw err(400, 'A document request template needs an approved document type.');
+  if (a.actionType === 'custom_training_request' && !a.trainingRequirementId) throw err(400, 'A training request template needs an approved training requirement.');
   const { data, error } = await sb.from('hr_onboarding_action_templates').insert({
     package_id: pkgId, action_name: a.actionName, action_type: a.actionType, description: a.description ?? null, instructions: a.instructions ?? null,
     owner_type: a.ownerType ?? 'role', owner_role: a.ownerRole ?? null, owner_employee_id: a.ownerEmployeeId ?? null, owner_department_id: a.ownerDepartmentId ?? null,
@@ -196,6 +210,17 @@ export async function createActionTemplate(actorId: string, a: ActionTemplateInp
 }
 
 export async function updateActionTemplate(actorId: string, a: Partial<ActionTemplateInput> & { id: string }): Promise<{ templateId: string }> {
+  const { data: template, error: templateError } = await sb.from('hr_onboarding_action_templates')
+    .select('package_id, action_type, document_type_id, training_requirement_id, workflow_template_id')
+    .eq('id', a.id)
+    .maybeSingle<{ package_id: string; action_type: OnboardingActionType; document_type_id: string | null; training_requirement_id: string | null; workflow_template_id: string | null }>();
+  if (templateError) throw err(500, templateError.message);
+  if (!template) throw err(404, 'Onboarding action template not found.');
+  await requireDraftPackage(template.package_id);
+  const nextType = a.actionType ?? template.action_type;
+  if (nextType === 'custom_document_request' && !(a.documentTypeId !== undefined ? a.documentTypeId : template.document_type_id)) throw err(400, 'A document request template needs an approved document type.');
+  if (nextType === 'custom_training_request' && !(a.trainingRequirementId !== undefined ? a.trainingRequirementId : template.training_requirement_id)) throw err(400, 'A training request template needs an approved training requirement.');
+  if (nextType === 'custom_approval' && !(a.workflowTemplateId !== undefined ? a.workflowTemplateId : template.workflow_template_id)) throw err(400, 'A custom approval template needs a workflow template.');
   const patch: Record<string, unknown> = { updated_by: actorId, updated_at: nowISO() };
   const set = (k: string, v: unknown) => { if (v !== undefined) patch[k] = v; };
   set('action_name', a.actionName); set('action_type', a.actionType); set('description', a.description); set('instructions', a.instructions);
@@ -211,6 +236,13 @@ export async function updateActionTemplate(actorId: string, a: Partial<ActionTem
 }
 
 export async function retireActionTemplate(actorId: string, a: { id: string }): Promise<{ templateId: string }> {
+  const { data: template, error: templateError } = await sb.from('hr_onboarding_action_templates')
+    .select('package_id')
+    .eq('id', a.id)
+    .maybeSingle<{ package_id: string }>();
+  if (templateError) throw err(500, templateError.message);
+  if (!template) throw err(404, 'Onboarding action template not found.');
+  await requireDraftPackage(template.package_id);
   const { error } = await sb.from('hr_onboarding_action_templates').update({ is_active: false, retired_by: actorId, retired_at: nowISO() }).eq('id', a.id);
   if (error) throw err(500, error.message);
   void emitAppEvent({ eventType: 'onboarding.custom_action_template.retired', sourceModule: 'hr', sourceEntityType: 'onboarding_action_template', sourceEntityId: a.id, actorUserId: actorId, severity: 'info', payload: { templateId: a.id } });

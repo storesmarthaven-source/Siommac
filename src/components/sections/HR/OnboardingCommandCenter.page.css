@@ -1,0 +1,226 @@
+/*
+ * src/components/sections/HR/OnboardingCommandCenter.page.css
+ *
+ * Production-only, LIGHT-MODE rules for the Onboarding Command Centre.
+ *
+ * WHY A SEPARATE FILE FROM THE PORT
+ * `OnboardingCommandCenter.mockup.css` is generated mechanically by
+ * scripts/port-mockup-css.mjs and verified by its fidelity check. Hand-editing it would be
+ * silently reverted on the next regeneration and would break `--check`. Anything the port
+ * cannot supply therefore lives here.
+ *
+ * SCOPE OF THIS FILE — two things only:
+ *   1. Page shell the mockup cannot provide (its title row belongs to the standalone
+ *      mockup's own chrome, which the port scopes but production never renders).
+ *   2. Panel bounding, so a growing list scrolls inside its fixed widget tile.
+ *
+ * There is deliberately NO dark-theme layer. Onboarding pages are light-mode only; the
+ * approved mockup is authored light-mode and is the sole visual reference. Nothing here is
+ * gated on `body[data-theme]`, so global theme behaviour and other modules are untouched.
+ */
+
+/* ── Page shell ─────────────────────────────────────────────────────────────────── */
+/* Page rhythm mirrors Employee Master, measured side by side at 1440px: 24px top padding and
+   a 24px separation between the KPI strip and the main board. */
+.occ-root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 0 26px;
+  min-width: 0;
+}
+
+.occ-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.occ-title-row h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -.02em; }
+.occ-title-row p  { margin: 4px 0 0; font-size: 14px; color: var(--muted, #66738a); }
+
+.occ-page-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+/* Controls meet the production 40px baseline even where the mockup drew them shorter. */
+.occ-page-actions .btn { min-height: 40px; }
+
+/* The KPI strip is a bounded, reorder-only row — it must not grow with the board.
+   The 24px separation is a MARGIN, not the parent's flex gap: both boards live inside the
+   scope-keyed wrapper `<div key={board-scope}>`, so `.occ-root`'s gap applies to that wrapper
+   and never reaches between the two boards — they were rendering flush at 0px. */
+.occ-kpi-board { min-width: 0; margin-bottom: 24px; }
+
+/* Shared empty state for the page-local widgets. Neutral by design: state colour belongs to
+   status indicators, not to whole cards. */
+.occ-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; padding: 22px 16px; text-align: center; min-height: 96px;
+}
+.occ-empty strong { font-size: 14px; font-weight: 600; color: var(--ink, #132038); }
+.occ-empty p { margin: 0; font-size: 13px; color: var(--muted, #66738a); }
+
+/* The chart stage holds a Chart.js canvas; it must have a definite height or a responsive
+   canvas collapses to zero inside a flex column. */
+.occ-root .command-chart-stage { flex: 1 1 auto; min-height: 0; position: relative; }
+.occ-root .command-chart-stage canvas { width: 100% !important; height: 100% !important; }
+
+/* A footer link rendered as a real button, not an href="#" placeholder.
+   Scoped under .occ-root so the port's own `.pulse-legend a/button` sizing (10.5px) cannot
+   win on specificity and drop it below the 12px contextual-text floor. */
+.occ-root .occ-linkish {
+  border: 0; background: none; padding: 0; cursor: pointer;
+  font: inherit; font-size: 13px; font-weight: 600; color: var(--blue-600, #0d6efd);
+}
+.occ-root .occ-linkish:hover { text-decoration: underline; }
+
+/* ── Bounded panels ─────────────────────────────────────────────────────────────
+   A widget tile has a FIXED height, so a growing list must scroll INSIDE its panel rather
+   than overflow it. Measured at 1440px: Blocked Cases overflowed its tile by 67px as soon
+   as real rows loaded, and the queue and starts grid share that failure mode as data grows.
+
+   `min-height: 0` is required — a flex child defaults to `min-height: auto` and refuses to
+   shrink below its content, which silently defeats the inner scroll. */
+.occ-root .panel,
+.occ-root .case-focus-panel { display: flex; flex-direction: column; min-height: 0; }
+
+.occ-root .blocked-case-list,
+.occ-root .upcoming-task-grid,
+.occ-root .work-queue-panel > div[style*="overflow"] {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* ── 12px contextual-text floor — APPROVED ACCESSIBILITY DEVIATION ──────────────
+ *
+ * The production baseline (docs/ONBOARDING_PRODUCTION_UX_AUDIT.md) requires body text ~14px
+ * and contextual text never below 12px. The approved mockup, the registered calendar widgets
+ * and the shared KpiTile all render contextual text below that floor — measured on the live
+ * page at 7px (calendar day labels), 8–11.5px (mockup micro-copy, avatars, legends) and
+ * 10.5px (KpiTile sub-line).
+ *
+ * This block raises ONLY those cases, and ONLY when rendered inside `.occ-root`. It is a
+ * DELIBERATE, RECORDED DEVIATION from pixel fidelity to the mockup: the audit permits
+ * departing from the reference for accessibility, and this is that departure.
+ *
+ * Deliberately NOT done here:
+ *   • no edits to the generated `*.mockup.css` port (regeneration would revert them);
+ *   • no edits to shared widget CSS, KpiTile, Employee Master or Statutory — those surfaces
+ *     keep their current type scale, so this cannot leak into other modules;
+ *   • no global typography change.
+ *
+ * 12px is a FLOOR, not a blanket size. Headings, KPI values and primary labels are already
+ * above it and are left alone, so the visual hierarchy is preserved.
+ */
+
+/* Registered calendar widgets (Upcoming Deadlines / Task Planner) — day strips and tabs. */
+.occ-root .sdb-cal-day span,
+.occ-root .sdb-cal-day strong,
+.occ-root .obv-habit-day span,
+.occ-root .sdb-cal-list-tabs button,
+.occ-root .dsn-datebadge,
+.occ-root .dsn-upbox-title,
+.occ-root [class^="sdb-cal-empty"] { font-size: 12px; }
+
+/* Shared KpiTile supporting line — raised only within this page. */
+.occ-root .ui-kpi-sub { font-size: 12px; }
+
+/* Shared board edit banner. */
+.occ-root .wbi-edit-banner-sub { font-size: 12px; }
+
+/* Mockup micro-copy: captions, legends, meta lines and secondary emphasis. */
+.occ-root small,
+.occ-root em,
+.occ-root .pulse-legend span,
+.occ-root .pulse-header p,
+.occ-root .panel-header p,
+.occ-root .case-focus-issue p span,
+.occ-root .case-focus-readiness-ring span,
+.occ-root .case-focus-nav + span,
+.occ-root .case-focus-open,
+.occ-root .task-meta,
+.occ-root .upcoming-start-detail em,
+.occ-root .upcoming-owner em { font-size: 12px; }
+
+/* Avatar initials. The circle is >=24px, so 12px initials still centre cleanly; without this
+   they rendered at 8px inside the case-focus facts. */
+.occ-root .avatar { font-size: 12px; }
+
+/* `strong` is used both for primary values and for small meta text in the port. Only the
+   demonstrably-small contexts are raised; primary values keep their own larger sizes. */
+.occ-root .sdb-cal-day strong,
+.occ-root .blocked-case-copy small,
+.occ-root .upcoming-task-card small { font-size: 12px; }
+
+/* Second pass — selectors that only became measurable once the first pass reflowed the
+   widgets, plus the Task Planner's own day strip (`obv-habit-day`, the sibling of the
+   deadline widget's `sdb-cal-day`). */
+.occ-root .obv-habit-day strong,
+.occ-root .dsn-copy span,
+.occ-root .obv-add-task-btn span,
+.occ-root .tab-list .count,
+.occ-root .blocked-count,
+.occ-root .queue-toolbar button,
+.occ-root .tab-list button,
+.occ-root .type-filters button { font-size: 12px; }
+
+/* Third pass — the port styles these through deeper descendant chains
+   (e.g. `.case-focus-person-fact p small`), which out-specify the generic `small`/`em`/
+   `.avatar` rules above. Matching that depth is required; raising specificity further with
+   !important would be a blunt instrument that future rules could not override. */
+.occ-root .cpw-task-scope-tabs button span,
+.occ-root .case-focus-profile span.avatar,
+.occ-root .case-focus-profile nav span,
+.occ-root .case-focus-issue header em,
+.occ-root .case-focus-issue time small,
+.occ-root .case-focus-issue time em,
+.occ-root .case-focus-person-fact span.avatar,
+.occ-root .case-focus-person-fact p small,
+.occ-root .case-focus-recommendation > span,
+.occ-root .case-focus-recommendation .case-focus-open,
+.occ-root .case-focus-impact .case-focus-readiness-ring span { font-size: 12px; }
+
+/* Fourth pass — selectors that only render once real rows load. These were invisible on an
+   empty board, which is why the floor must be measured against POPULATED data. */
+.occ-root .severity-tag,
+.occ-root .obv-blocked-due,
+.occ-root .blocked-case-owner .avatar,
+.occ-root .blocked-case-owner b,
+.occ-root .obv-blocked-owner,
+.occ-root .blocked-case-copy strong,
+.occ-root .work-table th,
+.occ-root .work-table td small,
+.occ-root .work-table td b,
+.occ-root .work-table .stage-tag,
+.occ-root .work-table .due small,
+.occ-root .work-table .employee small,
+.occ-root .work-table .owner small { font-size: 12px; }
+
+/* Fifth pass — the port styles these through severity/state modifier chains
+   (`.blocked-case-row.severity-critical .severity-tag.critical`), which out-specify a plain
+   `.occ-root .severity-tag`. Matching the modifier depth is what makes the floor stick. */
+.occ-root .blocked-case-row .severity-tag,
+.occ-root .blocked-case-row .obv-blocked-due,
+.occ-root .work-table .owner .avatar,
+.occ-root .work-table .row-actions .btn { font-size: 12px; }
+
+/* ── Match Employee Master's KPI + widget type scale ────────────────────────────
+   Measured side by side at 1440px. Employee Master: KPI value 16px, sub 10.5px, link 11px;
+   widget headers 14-16px. The Command Centre had drifted to a 16px KPI link (inheriting the
+   port's base size, which overflowed and CLIPPED the longest label) and a 32px header on
+   Upcoming Starts, because the port styles that section as a page-level `h2`.
+
+   Sizes are set to Employee Master's scale, floored at the 12px contextual minimum. */
+.occ-root .ui-kpi-link { font-size: 12px; }
+
+/* Widget titles sit in the 16px band Employee Master uses — not the port's page-level h2. */
+.occ-root .panel-header h2,
+.occ-root .pulse-header h2,
+.occ-root .blocked-cases-head h2,
+.occ-root .upcoming-work-panel h2,
+.occ-root .work-queue-panel h2,
+.occ-root .case-focus-panel h2 { font-size: 16px; line-height: 1.3; }
+
+/* Their supporting line stays one step down, as on Employee Master. */
+.occ-root .panel-header p,
+.occ-root .pulse-header p { font-size: 12px; }

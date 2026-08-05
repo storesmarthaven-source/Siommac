@@ -70,7 +70,21 @@ export function humanize(s: string | null | undefined): string {
   if (!s) return '—';
   return s.replace(/[_.]+/g, ' ').replace(/\b\w/g, m => m.toUpperCase());
 }
-export const fmtDate = (iso: string | null): string =>
-  iso ? new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
+function ordinal(day: number): string {
+  const mod100 = day % 100;
+  const suffix = mod100 >= 11 && mod100 <= 13 ? 'th'
+    : day % 10 === 1 ? 'st' : day % 10 === 2 ? 'nd' : day % 10 === 3 ? 'rd' : 'th';
+  return `${day}${suffix}`;
+}
+export const fmtDate = (iso: string | null): string => {
+  if (!iso) return '—';
+  // Date-only values represent local business dates. Noon avoids shifting them to the
+  // previous day in western time zones when the browser parses an ISO date as UTC.
+  const date = new Date(iso.includes('T') ? iso : `${iso}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return '—';
+  const month = date.toLocaleDateString(undefined, { month: 'long' });
+  const year = date.getFullYear() === new Date().getFullYear() ? '' : ` ${date.getFullYear()}`;
+  return `${ordinal(date.getDate())} ${month}${year}`;
+};
 export const fmtDateTime = (iso: string | null): string =>
   iso ? new Date(iso).toLocaleString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';

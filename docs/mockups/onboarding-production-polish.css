@@ -1,0 +1,259 @@
+/*
+ * SIOMAC onboarding production polish
+ *
+ * Shared final-pass rules for the canonical onboarding references. These rules
+ * intentionally use the same 13/14/16/18/28px type ladder, 40px control floor,
+ * visible keyboard focus, and minmax grid behaviour expected from the Preact
+ * implementation and UI kit.
+ */
+
+body[data-page-key^="hr.onboarding"] {
+  --ob-prod-body: 14px;
+  --ob-prod-small: 12px;
+  --ob-prod-label: 12.5px;
+  font-size: var(--ob-prod-body);
+  line-height: 1.45;
+  text-rendering: optimizeLegibility;
+}
+
+body[data-page-key^="hr.onboarding"] :where(button, input, select, textarea) {
+  font-family: inherit;
+}
+
+body[data-page-key^="hr.onboarding"] :where(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid rgba(35, 107, 214, .24);
+  outline-offset: 2px;
+}
+
+body[data-page-key^="hr.onboarding"] :where(button, .btn, .control, input, select) {
+  min-height: 40px;
+}
+
+body[data-page-key^="hr.onboarding"] :where(.icon, svg) {
+  flex: 0 0 auto;
+  vertical-align: middle;
+}
+
+body[data-page-key^="hr.onboarding"] :where(.avatar, .profile-photo, .owner-photo) {
+  line-height: 1;
+  text-align: center;
+}
+
+/* Context text may be compact, but never microscopic. */
+body[data-page-key^="hr.onboarding"] :where(
+  small, .meta, .helper, .hint, .eyebrow, .field-help,
+  .status, .pill, th, time
+) {
+  font-size: 12px;
+}
+
+/* Command Centre and manager Insights */
+body[data-page-key="hr.onboarding.command-centre"] .nav-sub,
+body[data-page-key="hr.onboarding.insights"] .nav-sub {
+  width: 100%;
+  min-width: 0;
+  overflow: visible;
+}
+
+body[data-page-key="hr.onboarding.command-centre"] .work-table {
+  min-width: 840px;
+}
+
+body[data-page-key="hr.onboarding.command-centre"] .work-table :where(th, td) {
+  overflow-wrap: anywhere;
+}
+
+body[data-page-key="hr.onboarding.command-centre"] :where(.mini-widget-head h2, .panel-title h2),
+body[data-page-key="hr.onboarding.insights"] :where(.chart-head h2, .insight-card h2, h3) {
+  font-size: 16px;
+}
+
+body[data-page-key="hr.onboarding.command-centre"] :where(.mini-widget-head p, .mini-widget-head > a, .pulse-legend),
+body[data-page-key="hr.onboarding.insights"] :where(small, .chart-note, .legend, .meta) {
+  font-size: var(--ob-prod-small);
+}
+
+body[data-page-key="hr.onboarding.command-centre"] :where(.deadline-item small, .mini-task-row small, .mini-task-row time, .due small),
+body[data-page-key="hr.onboarding.command-centre"] :where(.deadline-week span, .task-meta, .employee small, .owner small) {
+  font-size: 11.5px;
+}
+
+/* Worker experience stays intentionally simpler than the operations surfaces. */
+body[data-page-key="hr.onboarding.worker"] :where(.shell, .task-card, .people-card, .day-one-card) {
+  min-width: 0;
+}
+
+body[data-page-key="hr.onboarding.worker"] :where(small, .meta, .eyebrow) {
+  font-size: var(--ob-prod-small);
+}
+
+/* Case Detail */
+body[data-page-key="hr.onboarding.case-detail"] :where(.widget-head h2, .priority-head h2) {
+  font-size: 18px;
+}
+
+body[data-page-key="hr.onboarding.case-detail"] :where(
+  .priority-main p, .priority-owner small, .priority-due small,
+  .matrix-cell small, .matrix-row-label small, .matrix-summary-copy,
+  .handoff small, .handoff-work-copy small, .handoff-work-meta span,
+  .action-owner-copy small, .provision-state small, .provision-note,
+  .activity small, .activity time, .detail-row small
+) {
+  font-size: 12px;
+}
+
+body[data-page-key="hr.onboarding.case-detail"] .readiness-matrix-wrap {
+  max-width: 100%;
+  padding-inline: 8px;
+  overflow-x: auto;
+  scrollbar-gutter: stable;
+}
+
+body[data-page-key="hr.onboarding.case-detail"] .readiness-matrix {
+  min-width: 650px;
+  grid-template-columns: 106px repeat(6, minmax(86px, 1fr));
+}
+
+body[data-page-key="hr.onboarding.case-detail"] .dialog-lead,
+body[data-page-key="hr.onboarding.case-detail"] .dialog-context p,
+body[data-page-key="hr.onboarding.case-detail"] .field-help {
+  font-size: 12.5px;
+}
+
+/* Launch wizard */
+body[data-page-key="hr.onboarding.start"] :where(.wizard-step small, .step-copy small, .helper, .hint, .meta, .eyebrow) {
+  font-size: var(--ob-prod-small);
+}
+
+body[data-page-key="hr.onboarding.start"] :where(.wizard-step strong, .step-copy strong, label) {
+  font-size: 13px;
+}
+
+body[data-page-key="hr.onboarding.start"] :where(.step-panel, .wizard-main, .wizard-aside) {
+  min-width: 0;
+}
+
+body[data-page-key="hr.onboarding.start"] :where(.wizard-nav, .stepper, .steps) {
+  gap: 10px;
+}
+
+/* Package Management */
+body[data-page-key="hr.onboarding.packages"] .package-rail,
+body[data-page-key="hr.onboarding.packages"] .rail-head {
+  width: auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+body[data-page-key="hr.onboarding.packages"] .rail-head {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+body[data-page-key="hr.onboarding.packages"] .catalog-tools {
+  width: 100%;
+  min-width: 0;
+}
+
+body[data-page-key="hr.onboarding.packages"] .catalog-tools .search {
+  min-width: 220px;
+  flex: 1 1 280px;
+}
+
+body[data-page-key="hr.onboarding.packages"] .tabs {
+  display: flex;
+  max-width: 100%;
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+body[data-page-key="hr.onboarding.packages"] .tabs :where(button, a) {
+  min-height: 38px;
+  white-space: normal;
+}
+
+body[data-page-key="hr.onboarding.packages"] :where(
+  small, .meta, .helper, .package-card small, .rail-card small,
+  .side-card small, .field-help, .dialog-copy small
+) {
+  font-size: var(--ob-prod-small);
+}
+
+/* Settings: inactive items belong to the wider Settings shell and are not fake links. */
+body[data-page-key="hr.onboarding.settings"] .nav-placeholder {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 11px 12px;
+  color: #9fb1c8;
+  font-weight: 650;
+  cursor: default;
+}
+
+/* Email Studio */
+body[data-page-key="hr.onboarding.email-studio"] {
+  overflow: hidden;
+}
+
+body[data-page-key="hr.onboarding.email-studio"] .workspace {
+  grid-template-columns: 260px minmax(0, 1fr) 320px;
+  width: 100%;
+  min-width: 0;
+}
+
+body[data-page-key="hr.onboarding.email-studio"] :where(.palette-panel, .stage, .inspector, .canvas-shell, .canvas-frame) {
+  min-width: 0;
+}
+
+body[data-page-key="hr.onboarding.email-studio"] .stage {
+  padding-inline: 18px;
+}
+
+body[data-page-key="hr.onboarding.email-studio"] :where(.palette-title, .row-item span, .saved-item small, .asset-item small, .token-item small) {
+  font-size: 12px;
+}
+
+body[data-page-key="hr.onboarding.email-studio"] :where(.panel-tabs button, .tb-btn, .tb-select, .control, .btn) {
+  font-size: 13px;
+}
+
+body[data-page-key="hr.onboarding.email-studio"] :where(.panel-head h2, .inspector .panel-head h2) {
+  font-size: 16px;
+}
+
+body[data-page-key="hr.onboarding.email-studio"] .canvas-frame {
+  padding-inline: 20px;
+}
+
+@media (max-width: 1100px) {
+  body[data-page-key="hr.onboarding.command-centre"] .operational-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body[data-page-key="hr.onboarding.command-centre"] :where(.case-focus-column, .operational-main-column) {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  body[data-page-key="hr.onboarding.email-studio"] .workspace {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+
+  body[data-page-key="hr.onboarding.email-studio"] .inspector {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  body[data-page-key^="hr.onboarding"] :where(.header-actions, .dialog-foot-actions, .panel-actions) {
+    flex-wrap: wrap;
+  }
+
+  body[data-page-key="hr.onboarding.case-detail"] .readiness-matrix {
+    min-width: 640px;
+  }
+
+  body[data-page-key="hr.onboarding.email-studio"] {
+    overflow: auto;
+  }
+}

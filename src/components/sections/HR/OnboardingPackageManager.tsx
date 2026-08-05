@@ -9,39 +9,55 @@
  * comment in 20260714000014_hr_onboarding_packages_manage_perm.sql).
  */
 import { type VNode } from 'preact';
-import { useMemo, useState } from 'preact/hooks';
-import { dialog } from '@lib/dialog';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import { PageHeader, Modal, Field, FormGrid, TextInput, TextareaInput } from '@ui';
-import { useOnboardingPackages, useOnboardingCreatePackage, useOnboardingSetPackageStatus } from '@api/hr/onboarding';
-import type { OnboardingPackageSummary } from '../../../../types/hrOnboarding';
+import { useOnboardingPackages, useOnboardingCreatePackage } from '@api/hr/onboarding';
 import './onboardingCase.css';
+import './OnboardingPackageManagement.mockup.css';
+import './OnboardingPackageManagement.page.css';
 
 const STATUS_FILTERS = ['all', 'draft', 'active', 'retired'] as const;
 type StatusFilter = typeof STATUS_FILTERS[number];
 
-function statusTone(s: string): 'gray' | 'green' {
-  return s === 'active' ? 'green' : 'gray';
+function humanizeStatus(value: string): string {
+  return value.replace(/[_-]+/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase());
 }
 
 export function OnboardingPackageManager({
-  onBack, onOpenPackage, onToast,
-}: { onBack: () => void; onOpenPackage: (key: string) => void; onToast: (m: string) => void }): VNode {
+  onBack, onOpenPackage, onOpenEmailTemplates, onToast,
+}: { onBack: () => void; onOpenPackage: (key: string) => void; onOpenEmailTemplates: () => void; onToast: (m: string) => void }): VNode {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<StatusFilter>('all');
+  const [workerType, setWorkerType] = useState('all');
+  const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [form, setForm] = useState({ label: '', description: '', workerTypes: '', defaultSlaDays: '10', defaultOwnerRole: '' });
 
   const pkgsQ = useOnboardingPackages(true);
   const createMut = useOnboardingCreatePackage();
-  const statusMut = useOnboardingSetPackageStatus();
 
-  const rows = useMemo(() => {
+  const workerTypes = useMemo(
+    () => Array.from(new Set((pkgsQ.data ?? []).flatMap(p => p.workerTypes))).sort(),
+    [pkgsQ.data],
+  );
+  const filteredRows = useMemo(() => {
     const all = pkgsQ.data ?? [];
     const q = query.trim().toLowerCase();
     return all.filter(p =>
       (status === 'all' || p.status === status) &&
+      (workerType === 'all' || p.workerTypes.includes(workerType)) &&
       (!q || p.label.toLowerCase().includes(q) || p.key.toLowerCase().includes(q)));
-  }, [pkgsQ.data, query, status]);
+  }, [pkgsQ.data, query, status, workerType]);
+  const pageCount = Math.max(1, Math.ceil(filteredRows.length / 4));
+  const currentPage = Math.min(page, pageCount);
+  const rows = filteredRows.slice((currentPage - 1) * 4, currentPage * 4);
+  useEffect(() => { setPage(1); }, [query, status, workerType]);
+  useEffect(() => {
+    if (!rows.length) { setSelectedKey(null); return; }
+    if (!selectedKey || !rows.some(row => row.key === selectedKey)) setSelectedKey(rows[0]!.key);
+  }, [rows, selectedKey]);
+  const selected = rows.find(row => row.key === selectedKey) ?? null;
 
   function openNew(): void {
     setForm({ label: '', description: '', workerTypes: '', defaultSlaDays: '10', defaultOwnerRole: '' });
@@ -62,59 +78,79 @@ export function OnboardingPackageManager({
     } catch (e) { onToast(e instanceof Error ? e.message : 'Failed to create package'); }
   }
 
-  async function toggleStatus(p: OnboardingPackageSummary): Promise<void> {
-    const next = p.status === 'active' ? 'retired' : 'active';
-    const verb = next === 'active' ? 'Activate' : 'Retire';
-    if (!await dialog.confirm({ title: `${verb} "${p.label}"?` })) return;
-    try {
-      await statusMut.mutateAsync({ id: p.id, status: next });
-      onToast(`Package ${next === 'active' ? 'activated' : 'retired'}`);
-    } catch (e) { onToast(e instanceof Error ? e.message : 'Failed to update status'); }
-  }
-
   return (
-    <div class="hr-onboarding-packages">
+    <div class="hr-onboarding-packages opm-root">
       <button class="obx-back" onClick={onBack}>← Onboarding</button>
 
       <PageHeader
         icon="fa-boxes-stacked"
         module="HR · Onboarding"
         title="Packages"
-        sub="Configure onboarding packages, task &amp; handoff templates, and custom actions."
-        actions={<button class="obx-btn primary" onClick={openNew}>+ New Package</button>}
+        sub="Configure onboarding packages, task and handoff templates, and governed requirements."
+        actions={<div class="obx-actions">
+          <button class="obx-btn" onClick={onOpenEmailTemplates}><i class="fas fa-envelope-open-text" /> Email Studio</button>
+          <button class="obx-btn primary" onClick={openNew}>+ New Package</button>
+        </div>}
       />
 
-      <div style={{ display: 'flex', gap: 10, margin: '14px 0' }}>
-        <input class="ui-input" style={{ flex: 1 }} placeholder="Search packages…" value={query} onInput={e => setQuery((e.target as HTMLInputElement).value)} />
-        <select class="ui-select" style={{ width: 160 }} value={status} onChange={e => setStatus((e.target as HTMLSelectElement).value as StatusFilter)}>
-          {STATUS_FILTERS.map(s => <option key={s} value={s}>{s === 'all' ? 'All statuses' : s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
-        </select>
-      </div>
-
-      <div class="obx-section">
-        <div class="obx-section-body">
-          {pkgsQ.isLoading && !pkgsQ.data ? <div class="obx-empty">Loading…</div> : !rows.length ? <div class="obx-empty">No packages match these filters.</div> : (
-            <table class="obx-table">
-              <thead><tr><th>Package</th><th>Status</th><th>Worker types</th><th>Templates</th><th>SLA</th><th>Probation</th><th>Actions</th></tr></thead>
-              <tbody>{rows.map(p => (
-                <tr key={p.key} style={{ cursor: 'pointer' }} onClick={() => onOpenPackage(p.key)}>
-                  <td>
-                    <b>{p.label}</b>
-                    <div class="obx-meta" style={{ fontSize: 12 }}>{p.key} · v{p.versionNo}</div>
-                  </td>
-                  <td><span class={`obx-pill ${statusTone(p.status)}`}>{p.status}</span></td>
-                  <td class="obx-meta">{p.workerTypes.length ? p.workerTypes.join(', ') : '—'}</td>
-                  <td class="obx-meta">{p.taskCount} tasks · {p.handoffCount} handoffs</td>
-                  <td class="obx-meta">{p.defaultSlaDays} days</td>
-                  <td class="obx-meta">{p.probationDays != null ? `${p.probationDays}d` : '—'}</td>
-                  <td onClick={e => e.stopPropagation()}>
-                    <button class="obx-mini" onClick={() => void toggleStatus(p)}>{p.status === 'active' ? 'Retire' : 'Activate'}</button>
-                  </td>
-                </tr>
-              ))}</tbody>
-            </table>
-          )}
+      <div class="package-page-grid">
+        <div class="package-main-stack">
+          <section class="card package-rail" aria-label="Onboarding package register">
+            <div class="rail-head">
+              <div><h2>Package Register</h2><p>Choose a package to review its audience, work plan and worker experience.</p></div>
+              <div class="catalog-tools">
+                <label class="search"><i class="fas fa-search" aria-hidden="true" /><input placeholder="Search packages" value={query} onInput={e => setQuery((e.target as HTMLInputElement).value)} /></label>
+                <select class="control" value={status} onChange={e => setStatus((e.target as HTMLSelectElement).value as StatusFilter)}>
+                  {STATUS_FILTERS.map(s => <option key={s} value={s}>{s === 'all' ? 'All statuses' : humanizeStatus(s)}</option>)}
+                </select>
+                <select class="control" aria-label="Worker type" value={workerType} onChange={e => setWorkerType((e.target as HTMLSelectElement).value)}>
+                  <option value="all">All worker types</option>
+                  {workerTypes.map(type => <option key={type} value={type}>{humanizeStatus(type)}</option>)}
+                </select>
+              </div>
+            </div>
+            {pkgsQ.isLoading && !pkgsQ.data ? <div class="obx-empty">Loading packages…</div> : !rows.length ? <div class="obx-empty">No packages match these filters.</div> : (
+              <div class="package-list">
+                {rows.map(p => (
+                  <button class={`package-item ${selectedKey === p.key ? 'active' : ''}`} type="button" key={p.key} data-status={p.status} onClick={() => setSelectedKey(p.key)}>
+                    <div class="package-item-top">
+                      <span class="package-icon"><i class="fas fa-box-open" aria-hidden="true" /></span>
+                      <div class="title-line"><strong>{p.label}</strong><span class={`pill ${p.status}`}>{humanizeStatus(p.status)}</span></div>
+                    </div>
+                    <p>{p.description ?? 'Reusable onboarding work plan.'}</p>
+                    <div class="package-meta"><span>v{p.versionNo} · {p.defaultSlaDays} day lead</span><span>{p.taskCount} tasks · {p.handoffCount} handoffs</span></div>
+                  </button>
+                ))}
+              </div>
+            )}
+            <footer class="rail-foot package-register-footer">
+              <span>{filteredRows.length ? `${(currentPage - 1) * 4 + 1}–${Math.min(currentPage * 4, filteredRows.length)} of ${filteredRows.length}` : 'No packages'}</span>
+              <span class="package-register-pager" aria-label="Package register pages">
+                <button class="btn" type="button" aria-label="Previous package page" disabled={currentPage === 1} onClick={() => setPage(p => Math.max(1, p - 1))}><i class="fas fa-chevron-left" aria-hidden="true" /></button>
+                <strong>Page {currentPage} of {pageCount}</strong>
+                <button class="btn" type="button" aria-label="Next package page" disabled={currentPage === pageCount} onClick={() => setPage(p => Math.min(pageCount, p + 1))}><i class="fas fa-chevron-right" aria-hidden="true" /></button>
+              </span>
+            </footer>
+          </section>
         </div>
+
+        <aside class="package-context-rail" aria-label="Selected package context">
+          <section class="rail-widget">
+            <div class="rail-widget-head"><i class="fas fa-heart-pulse" aria-hidden="true" /><div><h3>Package Health</h3><p>{selected ? selected.label : 'No package selected'}</p></div></div>
+            {selected ? <div class="health-score"><span class="health-check"><i class="fas fa-check" /></span><div class="health-copy"><strong>{selected.status === 'active' ? 'Ready for selection' : humanizeStatus(selected.status)}</strong><span>{selected.taskCount} tasks and {selected.handoffCount} handoffs configured.</span></div></div> : null}
+          </section>
+          {selected ? (
+            <section class="rail-widget">
+              <div class="rail-widget-head"><i class="fas fa-sliders" aria-hidden="true" /><div><h3>Operating Defaults</h3><p>Applied to future cases</p></div></div>
+              <div class="rail-facts">
+                <div class="rail-fact"><span class="rail-fact-icon"><i class="fas fa-calendar-day" /></span><div><span>Lead Time</span><strong>{selected.defaultSlaDays} days</strong></div></div>
+                <div class="rail-fact"><span class="rail-fact-icon"><i class="fas fa-user-shield" /></span><div><span>Owner Queue</span><strong>{selected.defaultOwnerRole ?? 'HR Operations'}</strong></div></div>
+                <div class="rail-fact"><span class="rail-fact-icon"><i class="fas fa-users" /></span><div><span>Worker Types</span><strong>{selected.workerTypes.length ? selected.workerTypes.map(humanizeStatus).join(', ') : 'Employees'}</strong></div></div>
+              </div>
+            </section>
+          ) : null}
+          {selected ? <button class="btn primary" type="button" onClick={() => onOpenPackage(selected.key)}>Open Package Workspace</button> : null}
+        </aside>
       </div>
 
       <Modal
