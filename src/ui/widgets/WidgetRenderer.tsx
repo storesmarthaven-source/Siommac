@@ -13,9 +13,9 @@ import { resolveWidgetAccess } from './access';
 import { WidgetPlaceholder } from './WidgetPlaceholder';
 import { resolveBoardWidget } from './resolveBoardWidget';
 import { findWidgetDef } from './registry';
-import type { BoardWidgetInstance, LocalWidgetMap } from './types';
+import type { BoardWidgetInstance, LocalWidgetMap, WidgetRuntimeContext } from './types';
 
-export function WidgetRenderer({ item, preview, local, demo }: { item: BoardWidgetInstance; preview?: boolean; local?: LocalWidgetMap; demo?: boolean }): VNode {
+export function WidgetRenderer({ item, preview, local, demo, runtime }: { item: BoardWidgetInstance; preview?: boolean; local?: LocalWidgetMap; demo?: boolean; runtime?: WidgetRuntimeContext }): VNode {
   const resolved = resolveBoardWidget(item.widgetId, local);
   const def = findWidgetDef(item.widgetId);
   if (!resolved) return <WidgetPlaceholder state="missing" reason={`Unknown widget: ${item.widgetId}. Its saved position is preserved.`} />;

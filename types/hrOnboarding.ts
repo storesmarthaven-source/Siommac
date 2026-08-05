@@ -72,13 +72,20 @@ export interface OnboardingIntakeVerification { id: string; label: string; statu
 export type OnboardingDocumentState = 'present_verified' | 'present_unverified' | 'expired' | 'missing';
 
 /** Selection the wizard makes for a document requirement (how it will be satisfied at launch). */
-export type OnboardingDocumentLaunchAction = 'use_existing' | 'request_from_worker' | 'waive' | 'none';
+/**
+ * `upload_now` — HR attached a NEW record through the governed Employee Master commit flow
+ * during intake. It carries the committed `uploadedDocumentId`; the server re-validates
+ * ownership, type and provenance rather than trusting the id.
+ */
+export type OnboardingDocumentLaunchAction = 'use_existing' | 'upload_now' | 'request_from_worker' | 'waive' | 'none';
 
 export interface OnboardingDocumentLaunchSelection {
   requirementId: string;
   action: OnboardingDocumentLaunchAction;
   /** doc ID when action === 'use_existing' */
   existingDocumentId?: string | null;
+  /** doc ID returned by `hr/employees/documents/commit` when action === 'upload_now'. */
+  uploadedDocumentId?: string | null;
   waiverReason?: string | null;
 }
 
@@ -129,7 +136,7 @@ export interface OnboardingIntakePreview {
   preview: {
     package: string;
     label: string;
-    tasks: { taskKey: string; taskTitle: string; ownerRole: string; moduleKey: string | null }[];
+    tasks: { taskKey: string; taskTitle: string; ownerRole: string; moduleKey: string | null; isBlocking: boolean }[];
     handoffs: { targetModule: string; handoffType: string }[];
     taskCount: number;
     handoffCount: number;
@@ -166,6 +173,9 @@ export interface OnboardingLaunchPreflightArgs {
   employeeId: string;
   packageKey: string;
   ownerId?: string | null;
+  /** Required at launch (the approved mockup marks it `*`); surfaced here so the wizard can
+   *  show it as a `worker`-step blocker instead of only failing at submit. */
+  reason?: string | null;
   targetStartDate?: string | null;
   includeActionTemplateIds?: string[] | null;
   oneOffActions?: OnboardingLaunchOneOffAction[] | null;
@@ -783,7 +793,10 @@ export interface OnboardingStartArgs {
   employeeId: string;
   packageKey: string;
   ownerId?: string | null;
-  reason?: string | null;
+  /** REQUIRED and non-blank — the approved wizard marks Reason `*`, and the route, the
+   *  service and the launch preflight all enforce it. Typed non-optional so a caller cannot
+   *  omit it and discover the 400 at runtime. */
+  reason: string;
   priority?: string | null;
   targetStartDate?: string | null;
   includeActionTemplateIds?: string[] | null;

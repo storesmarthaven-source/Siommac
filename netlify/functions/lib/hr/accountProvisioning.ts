@@ -14,6 +14,8 @@ import { sb } from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from './employeeCore';
 import { resolveSettingValue } from '../settings/resolveSetting';
+import { loadPackagePlan } from './onboardingPackageService';
+import type { OnboardingAccountPreflight } from '../../../../types/hrOnboarding';
 
 const err = (status: number, message: string): Error => Object.assign(new Error(message), { status });
 const nowISO = (): string => new Date().toISOString();
@@ -38,25 +40,91 @@ function deriveLocalPart(first: string, last: string, pattern: string): string {
 async function uniqueWorkEmail(local: string, domain: string, excludeUserId: string): Promise<string> {
   for (let i = 0; i < 50; i++) {
     const candidate = `${local}${i === 0 ? '' : i}@${domain}`.toLowerCase();
-    const { data } = await sb.from('app_users').select('id')
+    const { data, error } = await sb.from('app_users').select('id')
       .or(`work_email.eq.${candidate},auth_email.eq.${candidate},email.eq.${candidate}`)
       .neq('id', excludeUserId).limit(1);
+    if (error) throw err(500, error.message);
     if (!data || data.length === 0) return candidate;
   }
   return `${local}.${Date.now().toString(36)}@${domain}`.toLowerCase();
 }
 
+export async function getAccountProvisioningPreflight(args: {
+  employeeId: string;
+  packageKey: string;
+  ownerId?: string | null;
+}): Promise<OnboardingAccountPreflight> {
+  const [employeeResult, plan, domainValue, patternValue, operatingModelValue, ownerQueueValue, invitationEnabledValue, invitationOffsetValue] = await Promise.all([
+    sb.from('app_users')
+      .select('id, full_name, first_name, last_name, username, work_email')
+      .eq('id', args.employeeId)
+      .maybeSingle<{ id: string; full_name: string | null; first_name: string | null; last_name: string | null; username: string | null; work_email: string | null }>(),
+    loadPackagePlan(args.packageKey),
+    resolveSettingValue<unknown>(sb, 'hr_onboarding.work_email_domain', SCOPE, ''),
+    resolveSettingValue<unknown>(sb, 'hr_onboarding.work_email_pattern', SCOPE, 'first.last'),
+    resolveSettingValue<unknown>(sb, 'hr_onboarding.account_operating_model', SCOPE, 'hr_managed'),
+    resolveSettingValue<unknown>(sb, 'hr_onboarding.account_owner_queue', SCOPE, 'hr_operations'),
+    resolveSettingValue<unknown>(sb, 'hr_onboarding.secure_invitation_enabled', SCOPE, true),
+    resolveSettingValue<unknown>(sb, 'hr_onboarding.invitation_offset_days', SCOPE, 5),
+  ]);
+  if (employeeResult.error) throw err(500, employeeResult.error.message);
+  if (!employeeResult.data) throw err(404, 'Employee not found.');
+  if (!plan || plan.status !== 'active') throw err(400, 'Choose an active onboarding package.');
+
+  const employee = employeeResult.data;
+  const required = plan.tasks.some(task => task.moduleKey === 'access' || task.moduleKey === 'it')
+    || plan.handoffs.some(handoff => handoff.targetModule === 'access' || handoff.targetModule === 'it');
+  const domain = String(domainValue ?? '').trim().replace(/^@/, '');
+  const pattern = String(patternValue ?? 'first.last');
+  const operatingModel = ['hr_managed', 'it_managed', 'hybrid'].includes(String(operatingModelValue))
+    ? String(operatingModelValue) as OnboardingAccountPreflight['operatingModel']
+    : 'hr_managed';
+  const owningTeamId = String(ownerQueueValue) === 'it_service_desk' ? 'it_service_desk' : 'hr_operations';
+  const owningTeamLabel = owningTeamId === 'it_service_desk' ? 'IT Service Desk' : 'HR Operations';
+  const invitationEnabled = invitationEnabledValue !== false;
+  const invitationOffsetDays = Math.max(0, Math.min(90, Number(invitationOffsetValue) || 0));
+  const firstName = employee.first_name ?? (employee.full_name ?? '').split(' ')[0] ?? employee.username ?? '';
+  const lastName = employee.last_name ?? (employee.full_name ?? '').split(' ').slice(-1)[0] ?? '';
+  const proposedWorkEmail = !required ? null : employee.work_email
+    ?? (domain ? await uniqueWorkEmail(deriveLocalPart(firstName, lastName, pattern), domain, employee.id) : null);
+  const accountableId = args.ownerId ?? null;
+  let accountableName: string | null = null;
+  if (accountableId) {
+    const { data, error } = await sb.from('app_users').select('full_name').eq('id', accountableId).maybeSingle<{ full_name: string | null }>();
+    if (error) throw err(500, error.message);
+    accountableName = data?.full_name ?? null;
+  }
+  const blockers = [
+    ...(required && !domain ? ['Configure the onboarding work-email domain before provisioning.'] : []),
+    ...(required && !invitationEnabled ? ['Enable secure worker invitations before launching account setup.'] : []),
+  ];
+  return {
+    required,
+    ready: blockers.length === 0,
+    operatingModel,
+    owningTeam: { id: owningTeamId, label: owningTeamLabel },
+    accountablePerson: accountableId ? { id: accountableId, name: accountableName } : null,
+    accessProfile: plan.label,
+    proposedWorkEmail,
+    credentialMethod: 'invite_link',
+    invitationTiming: { mode: 'before_start', offsetDays: invitationOffsetDays },
+    provisioningAuthority: 'hr.onboarding.provision_account',
+    blockers,
+  };
+}
+
 /** Resend invite to the PERSONAL email (work mailbox doesn't exist yet). Returns sent? */
-async function sendInviteEmail(to: string, link: string, name: string): Promise<boolean> {
+async function sendInviteEmail(to: string, link: string, name: string, senderName: string, senderEmail: string, expiryDays: number): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey || !to) return false;
   try {
     const { Resend } = await import('resend');
     const resend = new Resend(apiKey);
-    const from = process.env.RESEND_FROM_EMAIL ?? 'Siomac <no-reply@siomac.app>';
+    const configuredFrom = senderEmail ? `${senderName || 'SIOMAC HR'} <${senderEmail}>` : '';
+    const from = configuredFrom || process.env.RESEND_FROM_EMAIL || 'SIOMAC HR <no-reply@siomac.app>';
     const { error } = await resend.emails.send({
       from, to: [to], subject: 'Set up your work account',
-      html: `<p>Hi ${name || 'there'},</p><p>Your work account is ready. Click below to set your password and finish setup:</p><p><a href="${link}">Set my password</a></p><p>This link expires in 7 days. If you didn't expect this, ignore it.</p>`,
+      html: `<p>Hi ${name || 'there'},</p><p>Your work account is ready. Click below to set your password and finish setup:</p><p><a href="${link}">Set my password</a></p><p>This link expires in ${expiryDays} day${expiryDays === 1 ? '' : 's'}. If you didn't expect this, ignore it.</p>`,
     });
     return !error;
   } catch { return false; }
@@ -69,15 +137,28 @@ export interface ProvisionResult {
 }
 
 export async function provisionAccount(actorId: string, args: { employeeId: string; sendInvite?: boolean }): Promise<ProvisionResult> {
-  const { data: emp } = await sb.from('app_users')
+  const { data: emp, error: employeeError } = await sb.from('app_users')
     .select('id, full_name, first_name, last_name, email, personal_email, auth_id, auth_email, work_email, username, account_status')
     .eq('id', args.employeeId).maybeSingle<EmpRow>();
+  if (employeeError) throw err(500, employeeError.message);
   if (!emp) throw err(404, 'Employee not found.');
   if (emp.account_status === 'active') throw err(400, 'Account is already active.');
 
-  const domain = String(await resolveSettingValue<unknown>(sb, 'hr_onboarding.work_email_domain', SCOPE, '') ?? '').trim();
+  const [domainValue, patternValue, invitationEnabledValue, expiryValue, senderNameValue, senderEmailValue] = await Promise.all([
+    resolveSettingValue<unknown>(sb, 'hr_onboarding.work_email_domain', SCOPE, ''),
+    resolveSettingValue<unknown>(sb, 'hr_onboarding.work_email_pattern', SCOPE, 'first.last'),
+    resolveSettingValue<unknown>(sb, 'hr_onboarding.secure_invitation_enabled', SCOPE, true),
+    resolveSettingValue<unknown>(sb, 'hr_onboarding.invitation_expiry_days', SCOPE, 7),
+    resolveSettingValue<unknown>(sb, 'hr_onboarding.communication_sender_name', SCOPE, 'SIOMAC HR'),
+    resolveSettingValue<unknown>(sb, 'hr_onboarding.communication_sender_email', SCOPE, ''),
+  ]);
+  if (invitationEnabledValue === false) throw err(409, 'Secure worker invitations are disabled in Onboarding Settings.');
+  const domain = String(domainValue ?? '').trim();
   if (!domain) throw err(400, 'No work email domain configured (set hr_onboarding.work_email_domain in settings).');
-  const pattern = String(await resolveSettingValue<unknown>(sb, 'hr_onboarding.work_email_pattern', SCOPE, 'first.last'));
+  const pattern = String(patternValue ?? 'first.last');
+  const expiryDays = Math.max(1, Math.min(30, Number(expiryValue) || 7));
+  const senderName = String(senderNameValue ?? 'SIOMAC HR').trim();
+  const senderEmail = String(senderEmailValue ?? '').trim();
 
   const firstName = emp.first_name ?? (emp.full_name ?? '').split(' ')[0] ?? emp.username ?? '';
   const lastName = emp.last_name ?? (emp.full_name ?? '').split(' ').slice(-1)[0] ?? '';
@@ -103,16 +184,18 @@ export async function provisionAccount(actorId: string, args: { employeeId: stri
   // Single-use invite token (store only the hash).
   const token = randomBytes(32).toString('hex');
   const tokenHash = createHash('sha256').update(token).digest('hex');
-  const expiresAt = new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
+  const expiresAt = new Date(Date.now() + expiryDays * 24 * 3600 * 1000).toISOString();
 
-  const { data: kase } = await sb.from('hr_onboarding_cases').select('id')
+  const { data: kase, error: caseError } = await sb.from('hr_onboarding_cases').select('id')
     .eq('employee_id', emp.id).not('status', 'in', '("completed","cancelled")')
     .order('started_at', { ascending: false }).limit(1).maybeSingle<{ id: string }>();
+  if (caseError) throw err(500, caseError.message);
 
-  await sb.from('hr_onboarding_account_invites').update({ status: 'revoked' }).eq('user_id', emp.id).eq('status', 'pending');
+  const { error: revokeError } = await sb.from('hr_onboarding_account_invites').update({ status: 'revoked' }).eq('user_id', emp.id).eq('status', 'pending');
+  if (revokeError) throw err(500, revokeError.message);
 
   const link = `${appBaseUrl()}/set-password?token=${token}`;
-  const sent = (args.sendInvite ?? true) ? await sendInviteEmail(emp.personal_email ?? '', link, emp.full_name ?? '') : false;
+  const sent = (args.sendInvite ?? true) ? await sendInviteEmail(emp.personal_email ?? '', link, emp.full_name ?? '', senderName, senderEmail, expiryDays) : false;
 
   const { error: iErr } = await sb.from('hr_onboarding_account_invites').insert({
     user_id: emp.id, case_id: kase?.id ?? null, token_hash: tokenHash, work_email: workEmail,
@@ -122,10 +205,11 @@ export async function provisionAccount(actorId: string, args: { employeeId: stri
 
   // Mailbox is external (we don't run mail/directory) → pending IT handoff, never faked.
   if (kase?.id) {
-    await sb.from('hr_onboarding_handoffs').insert({
+    const { error: handoffError } = await sb.from('hr_onboarding_handoffs').insert({
       case_id: kase.id, handoff_key: 'account_mailbox', target_module: 'it', handoff_type: 'account_mailbox_provision',
       status: 'pending', payload: { workEmail, employeeId: emp.id },
     });
+    if (handoffError) throw err(500, handoffError.message);
   }
 
   void emitAppEvent({

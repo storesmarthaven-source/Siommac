@@ -3,6 +3,7 @@ import { getOnboardingIntakePreview } from './onboardingIntake';
 import { getAccountProvisioningPreflight } from './accountProvisioning';
 import { listActionTemplates } from './onboardingCustomActions';
 import { loadPackagePlan } from './onboardingPackageService';
+import { validateUploadedDocument } from './onboardingDocumentUploads';
 import type { OnboardingLaunchPreflight, OnboardingLaunchPreflightArgs } from '../../../../types/hrOnboarding';
 
 const fail = (status: number, message: string): Error => Object.assign(new Error(message), { status });
@@ -26,6 +27,7 @@ export async function getOnboardingLaunchPreflight(
 
   const blockers: OnboardingLaunchPreflight['blockers'] = [];
   if (!args.targetStartDate) blockers.push({ step: 'worker', message: 'Set the target start date.' });
+  if (!args.reason?.trim()) blockers.push({ step: 'worker', message: 'Choose an onboarding reason.' });
   for (const check of intake.verification.filter(item => item.critical && item.status !== 'verified')) {
     blockers.push({ step: 'worker', message: check.label });
   }
@@ -64,6 +66,21 @@ export async function getOnboardingLaunchPreflight(
     }
     if (selection.action === 'waive' && (!document.canWaive || !authority.canWaiveDocuments || !selection.waiverReason?.trim())) {
       blockers.push({ step: 'documents', message: `An authorised waiver reason is required for ${document.label}.` });
+      continue;
+    }
+    if (selection.action === 'upload_now') {
+      const verdict = await validateUploadedDocument(args.employeeId, document.type, document.label, selection.uploadedDocumentId);
+      if (!verdict.ok) { blockers.push({ step: 'documents', message: verdict.message }); continue; }
+      // Verified upload → the requirement is satisfied, nothing further to do.
+      if (verdict.status === 'verified') continue;
+      // Unverified upload: it gates Day One only where the requirement itself does. A
+      // blocking requirement cannot launch on unreviewed evidence; a non-blocking one
+      // launches with a linked request that waits for review.
+      if (document.isBlocking) {
+        blockers.push({ step: 'documents', message: `${document.label} is uploaded but still awaiting verification.` });
+      } else {
+        followUps.push({ step: 'documents', label: `${document.label} (awaiting verification)`, owner: ownerResult.data.full_name ?? 'Case owner', dueAt: null });
+      }
       continue;
     }
     if (selection.action === 'use_existing') {

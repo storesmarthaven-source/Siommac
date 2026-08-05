@@ -7,12 +7,14 @@ import { useEffect } from 'preact/hooks';
 import { WidgetBoardZone } from './WidgetBoardZone';
 import { useInstalledWidgetPackages } from './runtimeRegistry';
 import { LucideIcon } from '../LucideIcon';
-import type { BoardLayout, LocalWidgetMap, PreviewWidgetInstance } from './types';
+import type { BoardLayout, LocalWidgetMap, PreviewWidgetInstance, WidgetRuntimeContext } from './types';
 import { registerSectionNavigationGuard } from '@components/nav/navCore';
 import { dialog } from '@lib/dialog';
 
 export interface WidgetBoardProps {
   pageKey: string;
+  /** Transient per-request context forwarded to widgets. NOT persisted (see WidgetRuntimeContext). */
+  runtime?: WidgetRuntimeContext;
   /** Ordered zone ids to render; defaults to a single 'main' zone. */
   zones?: string[];
   editing?: boolean;
@@ -79,7 +81,7 @@ export interface WidgetBoardProps {
   defaultSaving?: boolean;
 }
 
-export function WidgetBoard({ pageKey, zones = ['main'], editing, localWidgets, defaultLayout, demo, cellHeight, column, gap, compact, resizable, maxRows, isBounded, revealOnMount, preview, onPreviewChange, onCommitPreview, onDiscardPreview, onFinishEditing, onSaveEditing, onCancelEditing, onOpenLibrary, onSetDefault, canSetDefault, defaultDirty, isDirty, saving, defaultSaving }: WidgetBoardProps): VNode {
+export function WidgetBoard({ runtime, pageKey, zones = ['main'], editing, localWidgets, defaultLayout, demo, cellHeight, column, gap, compact, resizable, maxRows, isBounded, revealOnMount, preview, onPreviewChange, onCommitPreview, onDiscardPreview, onFinishEditing, onSaveEditing, onCancelEditing, onOpenLibrary, onSetDefault, canSetDefault, defaultDirty, isDirty, saving, defaultSaving }: WidgetBoardProps): VNode {
   // Load installed declarative packages into the runtime registry so they resolve on the board.
   // Package readiness changes placeholder resolution only. It never removes saved instances.
   const pkgQuery = useInstalledWidgetPackages();
@@ -145,6 +147,7 @@ export function WidgetBoard({ pageKey, zones = ['main'], editing, localWidgets, 
       )}
       {zones.map(zoneId => (
         <WidgetBoardZone
+          runtime={runtime}
           key={zoneId} pageKey={pageKey} zoneId={zoneId} editing={editing}
           localWidgets={localWidgets} defaultLayout={defaultLayout} demo={demo}
           cellHeight={cellHeight} column={column} gap={gap} compact={compact} resizable={resizable}

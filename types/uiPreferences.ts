@@ -179,6 +179,127 @@ export function sanitizeEmployeeRegisterViews(value: unknown): EmployeeRegisterV
   return views;
 }
 
+// ── Onboarding Work Queue: saved views ──────────────────────────────────────
+//
+// Declared HERE, in the contract both halves import, for the reason recorded at the top of
+// employeeRegisterViews.ts: when a view key lives only on the frontend, the endpoint's
+// allow-list never learns it and every save is rejected as "Unknown UI preference key"
+// while the UI reports success. One declaration, both sides.
+
+export const ONBOARDING_WORK_QUEUE_VIEWS_PREFERENCE_KEY = 'hr.onboarding.work-queue.views';
+export const ONBOARDING_WORK_QUEUE_VIEWS_PREFERENCE_VERSION = 1;
+
+/**
+ * The sortable fields, mirroring the hr_onboarding_work_queue RPC's p_sort enum.
+ *
+ * A saved view PERSISTS a sort field, so a value that is no longer sortable has to be
+ * rejected on read rather than trusted because it was valid when saved. If this list and
+ * the RPC's enum ever diverge, the RPC is authoritative and the view falls back.
+ */
+export const ONBOARDING_WORK_QUEUE_SORT_FIELDS = [
+  'due_at', 'title', 'employee_name', 'case_no', 'source_type', 'status', 'created_at',
+] as const;
+export type OnboardingWorkQueueSortField = typeof ONBOARDING_WORK_QUEUE_SORT_FIELDS[number];
+
+export const ONBOARDING_WORK_QUEUE_SOURCE_TYPES = ['task', 'handoff', 'blocker', 'evidence'] as const;
+export const ONBOARDING_WORK_QUEUE_LIFECYCLES = ['open', 'in_progress', 'blocked', 'done', 'cancelled'] as const;
+export const ONBOARDING_WORK_QUEUE_DUE_STATES = ['all', 'overdue', 'due_today', 'due_this_week', 'unscheduled'] as const;
+export const ONBOARDING_WORK_QUEUE_SCOPES = ['my', 'team', 'all'] as const;
+export const ONBOARDING_WORK_QUEUE_PAGE_SIZES = [25, 50, 100] as const;
+
+export const ONBOARDING_WORK_QUEUE_VIEW_LIMITS = {
+  maxViews: 20,
+  maxIdLength: 80,
+  maxNameLength: 48,
+  maxQueryLength: 200,
+  maxFilterValues: 50,
+  maxFilterValueLength: 120,
+} as const;
+
+export interface OnboardingWorkQueueViewFilters {
+  query: string;
+  sourceTypes: string[];
+  lifecycles: string[];
+  dueState: string;
+  departmentIds: string[];
+  queues: string[];
+  accountableIds: string[];
+  unassigned: boolean;
+}
+
+export interface OnboardingWorkQueueView {
+  id: string;
+  name: string;
+  /**
+   * The scope the view was saved at. Persisting it is NOT an authorization decision —
+   * the server re-resolves scope on every request and 403s an unauthorised one, so a view
+   * saved at 'all' by a manager simply fails to widen for a user who lacks the key.
+   */
+  scope: string;
+  filters: OnboardingWorkQueueViewFilters;
+  sortBy: OnboardingWorkQueueSortField;
+  sortDir: 'asc' | 'desc';
+  pageSize: number;
+}
+
+/** Same drop-don't-repair rule as the register: an entry without usable identity is discarded. */
+export function sanitizeOnboardingWorkQueueViews(value: unknown): OnboardingWorkQueueView[] {
+  if (!Array.isArray(value)) return [];
+  const L = ONBOARDING_WORK_QUEUE_VIEW_LIMITS;
+  const sortFields = new Set<string>(ONBOARDING_WORK_QUEUE_SORT_FIELDS);
+  const dueStates = new Set<string>(ONBOARDING_WORK_QUEUE_DUE_STATES);
+  const scopes = new Set<string>(ONBOARDING_WORK_QUEUE_SCOPES);
+  const pageSizes = new Set<number>(ONBOARDING_WORK_QUEUE_PAGE_SIZES);
+  const seen = new Set<string>();
+  const views: OnboardingWorkQueueView[] = [];
+
+  const bounded = (v: unknown): string[] => {
+    if (!Array.isArray(v)) return [];
+    const unique = new Set(v.filter(
+      (item): item is string => typeof item === 'string' && item.length <= L.maxFilterValueLength,
+    ));
+    return Array.from(unique).slice(0, L.maxFilterValues);
+  };
+  /** Enum-valued facets are membership-checked, not just length-checked. */
+  const enumerated = (v: unknown, allowed: readonly string[]): string[] => {
+    const set = new Set<string>(allowed);
+    return bounded(v).filter(item => set.has(item));
+  };
+
+  for (const candidate of value.slice(0, L.maxViews)) {
+    if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) continue;
+    const row = candidate as Record<string, unknown>;
+    const id = typeof row.id === 'string' ? row.id.slice(0, L.maxIdLength) : '';
+    const name = typeof row.name === 'string' ? row.name.trim().slice(0, L.maxNameLength) : '';
+    if (!id || !name || seen.has(id)) continue;
+
+    const raw = row.filters && typeof row.filters === 'object' && !Array.isArray(row.filters)
+      ? row.filters as Record<string, unknown>
+      : {};
+    const pageSize = Number(row.pageSize);
+    seen.add(id);
+    views.push({
+      id,
+      name,
+      scope: scopes.has(row.scope as string) ? row.scope as string : 'my',
+      filters: {
+        query: typeof raw.query === 'string' ? raw.query.slice(0, L.maxQueryLength) : '',
+        sourceTypes: enumerated(raw.sourceTypes, ONBOARDING_WORK_QUEUE_SOURCE_TYPES),
+        lifecycles: enumerated(raw.lifecycles, ONBOARDING_WORK_QUEUE_LIFECYCLES),
+        dueState: dueStates.has(raw.dueState as string) ? raw.dueState as string : 'all',
+        departmentIds: bounded(raw.departmentIds),
+        queues: bounded(raw.queues),
+        accountableIds: bounded(raw.accountableIds),
+        unassigned: raw.unassigned === true,
+      },
+      sortBy: sortFields.has(row.sortBy as string) ? row.sortBy as OnboardingWorkQueueSortField : 'due_at',
+      sortDir: row.sortDir === 'desc' ? 'desc' : 'asc',
+      pageSize: pageSizes.has(pageSize) ? pageSize : 25,
+    });
+  }
+  return views;
+}
+
 // ── The registry the endpoint validates against ─────────────────────────────
 
 /**
@@ -220,6 +341,19 @@ export const UI_PREFERENCES: readonly UiPreferenceDefinition[] = [
       if (!Array.isArray(value)) return null;
       if (value.length > EMPLOYEE_REGISTER_VIEW_LIMITS.maxViews) return null;
       const views = sanitizeEmployeeRegisterViews(value);
+      if (value.length > 0 && views.length === 0) return null;
+      return views;
+    },
+  },
+  {
+    key: ONBOARDING_WORK_QUEUE_VIEWS_PREFERENCE_KEY,
+    version: ONBOARDING_WORK_QUEUE_VIEWS_PREFERENCE_VERSION,
+    // Same rule as the register's views: a non-empty payload that sanitises to nothing is
+    // a malformed submission, not an instruction to clear the user's saved views.
+    sanitize: value => {
+      if (!Array.isArray(value)) return null;
+      if (value.length > ONBOARDING_WORK_QUEUE_VIEW_LIMITS.maxViews) return null;
+      const views = sanitizeOnboardingWorkQueueViews(value);
       if (value.length > 0 && views.length === 0) return null;
       return views;
     },

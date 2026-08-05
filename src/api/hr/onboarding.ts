@@ -39,7 +39,9 @@ async function call<T>(path: string, args: object = {}): Promise<T> {
 export interface OnboardingTaskTemplate { taskKey: string; taskTitle: string; ownerRole: string; moduleKey: string | null }
 export interface OnboardingHandoffTemplate { targetModule: string; handoffType: string }
 export interface OnboardingPreview { package: string; label: string; tasks: OnboardingTaskTemplate[]; handoffs: OnboardingHandoffTemplate[]; taskCount: number }
-export interface OnboardingStartResult { caseId: string; caseNo: string; status: string; taskCount: number; handoffCount: number }
+/** `documentRequestCount` is returned by hr_onboarding_launch_tx and surfaced on the success
+ *  receipt; it was simply absent from this interface. */
+export interface OnboardingStartResult { caseId: string; caseNo: string; status: string; taskCount: number; handoffCount: number; documentRequestCount: number }
 
 /** One row of the case timeline — mirrors the orchestration TimelineItem projection
  *  (snake_case, since it comes from the generic /orchestration/timeline/get endpoint,

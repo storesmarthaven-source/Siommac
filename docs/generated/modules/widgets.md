@@ -2,9 +2,9 @@
 
 # widgets Module Map
 
-Source fingerprint: `aa8e9e135aa5b06e49c77390`
+Source fingerprint: `5982aa8f41568bb1142e7a97`
 
-Files: 71 | Symbols: 573 | Widgets: 25 | Unique mounted endpoints: 15 | Route definitions: 15 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
+Files: 71 | Symbols: 574 | Widgets: 25 | Unique mounted endpoints: 15 | Route definitions: 15 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
 
 ## Widgets and Tiles
 
@@ -52,8 +52,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/layout/saveOverride` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:183` | res @ src/api/layout.ts:27 | - |
 | `/api/theme/get` | `-` | - | `-` | `netlify/functions/routes/uiPrefs.ts:65` | res @ src/api/theme.ts:14 | - |
 | `/api/theme/save` | `-` | requireRole | `-` | `netlify/functions/routes/uiPrefs.ts:70` | res @ src/api/theme.ts:20 | - |
-| `/api/ui-preferences/get` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:97` | response @ src/api/uiPreferences.ts:35 | hrEmployeeMaster, widgets |
-| `/api/ui-preferences/save` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:118` | response @ src/api/uiPreferences.ts:47 | hrEmployeeMaster, widgets |
+| `/api/ui-preferences/get` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:97` | response @ src/api/uiPreferences.ts:38 | hrEmployeeMaster, widgets |
+| `/api/ui-preferences/save` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:118` | response @ src/api/uiPreferences.ts:50 | hrEmployeeMaster, widgets |
 | `/api/widgets/packages/install` | `ui.widgets.packages.manage` | requirePermission | `-` | `netlify/functions/routes/widgetPackages.ts:95` | res @ src/api/widgets.ts:29 | widgets |
 | `/api/widgets/packages/list` | `ui.widgets.packages.view` | requirePermission | `-` | `netlify/functions/routes/widgetPackages.ts:81` | res @ src/api/widgets.ts:18 | widgets |
 | `/api/widgets/packages/uninstall` | `ui.widgets.packages.manage` | requirePermission | `-` | `netlify/functions/routes/widgetPackages.ts:142` | res @ src/api/widgets.ts:34 | widgets |
@@ -190,29 +190,30 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `WidgetConfigField` | interface / ui-tile | `src/ui/widgets/types.ts:137` | `-` |
 | `WidgetDependencyDef` | interface / ui-tile | `src/ui/widgets/types.ts:147` | `-` |
 | `WidgetDataSourceDef` | interface / ui-tile | `src/ui/widgets/types.ts:155` | `-` |
-| `WidgetRenderProps` | interface / ui-tile | `src/ui/widgets/types.ts:163` | `-` |
-| `WidgetPreviewProps` | interface / ui-tile | `src/ui/widgets/types.ts:174` | `-` |
-| `WidgetDef` | interface / ui-tile | `src/ui/widgets/types.ts:180` | `-` |
-| `WidgetInstance` | interface / ui-tile | `src/ui/widgets/types.ts:257` | `-` |
-| `PreviewWidgetInstance` | interface / ui-tile | `src/ui/widgets/types.ts:279` | `-` |
-| `BoardWidgetInstance` | type / ui-tile | `src/ui/widgets/types.ts:286` | `-` |
-| `LocalWidget` | interface / ui-tile | `src/ui/widgets/types.ts:296` | `-` |
-| `LocalWidgetMap` | type / ui-tile | `src/ui/widgets/types.ts:315` | `-` |
-| `isPreviewWidget` | function / ui-tile | `src/ui/widgets/types.ts:326` | `-` |
+| `WidgetRuntimeContext` | interface / ui-tile | `src/ui/widgets/types.ts:174` | `-` |
+| `WidgetRenderProps` | interface / ui-tile | `src/ui/widgets/types.ts:180` | `-` |
+| `WidgetPreviewProps` | interface / ui-tile | `src/ui/widgets/types.ts:193` | `-` |
+| `WidgetDef` | interface / ui-tile | `src/ui/widgets/types.ts:199` | `-` |
+| `WidgetInstance` | interface / ui-tile | `src/ui/widgets/types.ts:276` | `-` |
+| `PreviewWidgetInstance` | interface / ui-tile | `src/ui/widgets/types.ts:298` | `-` |
+| `BoardWidgetInstance` | type / ui-tile | `src/ui/widgets/types.ts:305` | `-` |
+| `LocalWidget` | interface / ui-tile | `src/ui/widgets/types.ts:315` | `-` |
+| `LocalWidgetMap` | type / ui-tile | `src/ui/widgets/types.ts:334` | `-` |
+| `isPreviewWidget` | function / ui-tile | `src/ui/widgets/types.ts:345` | `-` |
 | `useBoardLayout` | function / hook | `src/ui/widgets/useBoardLayout.ts:53` | `-` |
 | `WidgetValidationIssue` | interface / ui-tile | `src/ui/widgets/validation.ts:13` | `-` |
 | `WidgetValidationResult` | interface / ui-tile | `src/ui/widgets/validation.ts:19` | `-` |
 | `validateWidgetDef` | function / ui-tile | `src/ui/widgets/validation.ts:28` | `-` |
 | `WidgetBoardProps` | interface / ui-tile | `src/ui/widgets/WidgetBoard.tsx:14` | `-` |
-| `WidgetBoard` | function / component, ui-tile | `src/ui/widgets/WidgetBoard.tsx:82` | `-` |
+| `WidgetBoard` | function / component, ui-tile | `src/ui/widgets/WidgetBoard.tsx:84` | `-` |
 | `WidgetBoardToolbarProps` | interface / ui-tile | `src/ui/widgets/WidgetBoardToolbar.tsx:16` | `-` |
 | `WidgetBoardToolbar` | function / component, ui-tile | `src/ui/widgets/WidgetBoardToolbar.tsx:37` | `-` |
 | `WidgetBoardZoneProps` | interface / ui-tile | `src/ui/widgets/WidgetBoardZone.tsx:33` | `-` |
-| `CANONICAL_CELL_HEIGHT` | variable / component | `src/ui/widgets/WidgetBoardZone.tsx:86` | `-` |
-| `CANONICAL_ROW_PX` | variable / component | `src/ui/widgets/WidgetBoardZone.tsx:89` | `-` |
-| `widgetMinGrid` | function / ui-tile | `src/ui/widgets/WidgetBoardZone.tsx:99` | `-` |
-| `clampWidgetInstanceToMinimum` | function / ui-tile | `src/ui/widgets/WidgetBoardZone.tsx:130` | `-` |
-| `WidgetBoardZone` | function / component, ui-tile | `src/ui/widgets/WidgetBoardZone.tsx:144` | `-` |
+| `CANONICAL_CELL_HEIGHT` | variable / component | `src/ui/widgets/WidgetBoardZone.tsx:88` | `-` |
+| `CANONICAL_ROW_PX` | variable / component | `src/ui/widgets/WidgetBoardZone.tsx:91` | `-` |
+| `widgetMinGrid` | function / ui-tile | `src/ui/widgets/WidgetBoardZone.tsx:101` | `-` |
+| `clampWidgetInstanceToMinimum` | function / ui-tile | `src/ui/widgets/WidgetBoardZone.tsx:132` | `-` |
+| `WidgetBoardZone` | function / component, ui-tile | `src/ui/widgets/WidgetBoardZone.tsx:146` | `-` |
 | `WidgetCatalog` | function / component, ui-tile | `src/ui/widgets/WidgetCatalog.tsx:92` | `-` |
 | `WidgetConfigBack` | function / component, ui-tile | `src/ui/widgets/WidgetConfigBack.tsx:9` | `-` |
 | `WidgetConfigFieldRenderer` | function / component, ui-tile | `src/ui/widgets/WidgetConfigFieldRenderer.tsx:7` | `-` |
@@ -263,16 +264,16 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/offboardingWidgets.tsx` | 378 |
 | frontend-page | `src/components/sections/HR/onboarding/CommandCentreWidgets.tsx` | 408 |
 | widget-platform | `src/ui/widgets/WidgetBoard.test.tsx` | 47 |
-| widget-platform | `src/ui/widgets/WidgetBoard.tsx` | 161 |
+| widget-platform | `src/ui/widgets/WidgetBoard.tsx` | 164 |
 | widget-platform | `src/ui/widgets/WidgetBoardToolbar.tsx` | 110 |
-| widget-platform | `src/ui/widgets/WidgetBoardZone.tsx` | 364 |
+| widget-platform | `src/ui/widgets/WidgetBoardZone.tsx` | 366 |
 | widget-platform | `src/ui/widgets/WidgetCatalog.test.tsx` | 77 |
 | widget-platform | `src/ui/widgets/WidgetCatalog.tsx` | 156 |
 | widget-platform | `src/ui/widgets/WidgetConfigBack.tsx` | 37 |
 | widget-platform | `src/ui/widgets/WidgetConfigFieldRenderer.tsx` | 51 |
 | widget-platform | `src/ui/widgets/WidgetConfigureModal.tsx` | 37 |
 | widget-platform | `src/ui/widgets/WidgetDetailPanel.tsx` | 97 |
-| widget-platform | `src/ui/widgets/WidgetFrame.tsx` | 134 |
+| widget-platform | `src/ui/widgets/WidgetFrame.tsx` | 135 |
 | widget-platform | `src/ui/widgets/WidgetLibraryModal.tsx` | 480 |
 | widget-platform | `src/ui/widgets/WidgetLivePreview.tsx` | 29 |
 | widget-platform | `src/ui/widgets/WidgetPlaceholder.tsx` | 16 |
@@ -316,7 +317,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | widget-platform | `src/ui/widgets/serializeLayout.ts` | 16 |
 | widget-platform | `src/ui/widgets/size.ts` | 20 |
 | widget-platform | `src/ui/widgets/splitCommittedAndPreview.ts` | 18 |
-| widget-platform | `src/ui/widgets/types.ts` | 329 |
+| widget-platform | `src/ui/widgets/types.ts` | 348 |
 | widget-platform | `src/ui/widgets/useBoardLayout.ts` | 202 |
 | widget-platform | `src/ui/widgets/validation.ts` | 54 |
 | widget-platform | `src/ui/widgets/weatherWidget.test.tsx` | 78 |

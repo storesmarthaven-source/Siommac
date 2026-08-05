@@ -90,7 +90,10 @@ export async function getOnboardingIntakePreview(args: OnboardingIntakePreviewAr
       ? {
           package: plan.key,
           label: plan.label,
-          tasks: plan.tasks.map(t => ({ taskKey: t.taskKey, taskTitle: t.taskTitle, ownerRole: t.ownerRole, moduleKey: t.moduleKey })),
+          // `isBlocking` is a pass-through of data the plan already carries. The approved
+          // wizard shows a per-module launch condition in Generated Work Preview, and
+          // dropping the flag here was the only reason it could not be derived client-side.
+          tasks: plan.tasks.map(t => ({ taskKey: t.taskKey, taskTitle: t.taskTitle, ownerRole: t.ownerRole, moduleKey: t.moduleKey, isBlocking: t.isBlocking })),
           handoffs: plan.handoffs.map(h => ({ targetModule: h.targetModule, handoffType: h.handoffType })),
           taskCount: plan.tasks.length,
           handoffCount: plan.handoffs.length,

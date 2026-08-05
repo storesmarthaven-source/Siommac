@@ -160,6 +160,23 @@ export interface WidgetDataSourceDef {
   dependencies?: WidgetDependencyDef[];
 }
 
+/**
+ * Transient per-request context handed to a widget at RENDER time.
+ *
+ * Deliberately separate from `config`: config is PERSISTED in ui_layout and describes how a
+ * user arranged a widget, while runtime context describes the request the host page is
+ * making right now. Persisting onboarding scope would pin a user's board to whichever scope
+ * they last viewed and leak an authority decision into saved layout.
+ *
+ * Widgets must treat every field as optional — a board that supplies no context is normal,
+ * and those widgets keep their existing behaviour unchanged.
+ */
+export interface WidgetRuntimeContext {
+  /** Onboarding read scope the host page is currently showing. Literal union rather than an
+   *  import, so the widget platform stays decoupled from the HR module's types. */
+  onboardingScope?: 'my' | 'team' | 'all';
+}
+
 export interface WidgetRenderProps<TConfig = Record<string, unknown>> {
   widgetId: string;
   instanceId: string;
@@ -169,6 +186,8 @@ export interface WidgetRenderProps<TConfig = Record<string, unknown>> {
   config: TConfig;
   /** True when rendered as a board PREVIEW (unsaved) — render can lighten if desired. */
   preview?: boolean;
+  /** Transient host-page context. NOT persisted. Absent on boards that supply none. */
+  runtime?: WidgetRuntimeContext;
 }
 
 export interface WidgetPreviewProps<TConfig = Record<string, unknown>> {

@@ -65,6 +65,11 @@ export interface HrEmployeeRow {
   end_date:           string | null;
   contractor_flag:    boolean | null;
   profile_image_url:  string | null;
+  /** Returned by /employees/list alongside `profile_image_url`; several roster rows carry
+   *  only one of the three, so an avatar keyed on `profile_image_url` alone shows initials
+   *  for people who do have a photo. */
+  profile_image_thumb_url: string | null;
+  signed_url:              string | null;
   profile_image_pending_thumb_url:    string | null;
   profile_image_pending_submitted_at: string | null;
   departmentName:     string | null;
@@ -614,7 +619,7 @@ export function useUploadHrDocument() {
     // Lambda never holds the file bytes.
     mutationFn: async (a: UploadDocArgs) => {
       const signed = await hrPost<{ success: boolean; uploadUrl: string; path: string }>(
-        'hr/employees/documents/upload-url', { fileName: a.file.name, mimeType: a.file.type || 'application/octet-stream' }, { retryable: false });
+        'hr/employees/documents/upload-url', { employeeId: a.employeeId, fileName: a.file.name, mimeType: a.file.type || 'application/octet-stream' }, { retryable: false });
       const put = await fetch(signed.uploadUrl, { method: 'PUT', headers: { 'Content-Type': a.file.type || 'application/octet-stream' }, body: a.file });
       if (!put.ok) throw new Error('File upload failed.');
       return hrPost<{ success: boolean; data: { id: string } }>('hr/employees/documents/commit', {

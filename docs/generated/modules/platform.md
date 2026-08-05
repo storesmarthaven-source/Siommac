@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `aa8e9e135aa5b06e49c77390`
+Source fingerprint: `5982aa8f41568bb1142e7a97`
 
-Files: 308 | Symbols: 2815 | Widgets: 0 | Unique mounted endpoints: 32 | Route definitions: 32 mounted + 15 unmounted | API calls: 50 | DB objects: 305 | E2E suites: 0
+Files: 308 | Symbols: 2831 | Widgets: 0 | Unique mounted endpoints: 32 | Route definitions: 32 mounted + 15 unmounted | API calls: 50 | DB objects: 305 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -112,8 +112,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/settings/values/set` | `apiPost` | `res` | `src/lib/themePreference.ts:60` |
 | `/api/theme/get` | `authPost` | `res` | `src/api/theme.ts:14` |
 | `/api/theme/save` | `apiPost` | `res` | `src/api/theme.ts:20` |
-| `/api/ui-preferences/get` | `apiPost` | `response` | `src/api/uiPreferences.ts:35` |
-| `/api/ui-preferences/save` | `apiPost` | `response` | `src/api/uiPreferences.ts:47` |
+| `/api/ui-preferences/get` | `apiPost` | `response` | `src/api/uiPreferences.ts:38` |
+| `/api/ui-preferences/save` | `apiPost` | `response` | `src/api/uiPreferences.ts:50` |
 | `/api/updateColorScheme` | `apiPost` | `updateColorScheme` | `src/components/nav/api.ts:22` |
 | `/api/updateLayoutMode` | `apiPost` | `updateLayoutMode` | `src/components/nav/api.ts:25` |
 | `/api/updateMyProfile` | `apiPost` | `res` | `src/components/sections/Profile/api.ts:108` |
@@ -270,7 +270,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `usePagination` | function / hook | `src/ui/components/Pagination.tsx:26` | `-` |
 | `Pagination` | function / component | `src/ui/components/Pagination.tsx:54` | `-` |
 | `PanelTabs` | function / component | `src/ui/components/PanelTabs.tsx:25` | `-` |
-| `PersonSearchSelect` | function / component | `src/ui/components/PersonSearchSelect.tsx:35` | `-` |
+| `PersonSearchSelect` | function / component | `src/ui/components/PersonSearchSelect.tsx:52` | `-` |
 | `RegisterTable` | function / component | `src/ui/components/RegisterTable.tsx:38` | `-` |
 | `CardDragProps` | interface / ui-tile | `src/ui/components/reorder.tsx:18` | `-` |
 | `CardReorder` | interface / ui-tile | `src/ui/components/reorder.tsx:26` | `-` |
@@ -475,7 +475,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/schemas/site.ts` | 61 |
 | frontend-api | `src/api/sites.ts` | 167 |
 | frontend-api | `src/api/theme.ts` | 23 |
-| frontend-api | `src/api/uiPreferences.ts` | 57 |
+| frontend-api | `src/api/uiPreferences.ts` | 60 |
 | frontend-api | `src/api/weather.ts` | 38 |
 | frontend-page | `src/components/sections/AccessControl/AccessControlSection.tsx` | 65 |
 | frontend-page | `src/components/sections/AccessControl/index.ts` | 10 |
@@ -540,7 +540,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | shared-types | `types/messagingCompliance.ts` | 318 |
 | shared-types | `types/supabase.ts` | 135 |
 | shared-types | `types/trinidadPhone.ts` | 32 |
-| shared-types | `types/uiPreferences.ts` | 253 |
+| shared-types | `types/uiPreferences.ts` | 387 |
 | shared-types | `types/weather.ts` | 93 |
 | shared-types | `types/workCalendars.ts` | 145 |
 

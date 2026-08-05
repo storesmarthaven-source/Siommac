@@ -129,12 +129,19 @@ async function uploadBase64(bucket: string, base64: string, name: string): Promi
  * Presigned upload URL for an HSE document/evidence attachment. Same flow as
  * createUploadUrl but with the broader document MIME allowlist.
  */
-async function createAttachmentUploadUrl(bucket: string, name: string, mimeType: string): Promise<UploadUrlResult & { ext: string }> {
+/**
+ * `prefix` scopes the generated object under a caller-controlled folder (e.g. one employee).
+ * It is sanitised the same way the file name is, so a caller cannot escape the bucket with
+ * `../`, and it lets a commit endpoint prove an uploaded path belongs to its subject rather
+ * than trusting whatever path the client sends back.
+ */
+async function createAttachmentUploadUrl(bucket: string, name: string, mimeType: string, prefix?: string): Promise<UploadUrlResult & { ext: string }> {
   const ext = ALLOWED_ATTACHMENT_TYPES[mimeType.toLowerCase()];
   if (!ext) throw new Error(`Unsupported file type: ${mimeType}`);
 
   const safeName = name.replace(/[^a-zA-Z0-9_\-.]/g, '_').slice(0, 80);
-  const path     = `${safeName}_${Date.now()}.${ext}`;
+  const safePrefix = prefix ? `${prefix.replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 80)}/` : '';
+  const path     = `${safePrefix}${safeName}_${Date.now()}.${ext}`;
 
   const { data, error } = await sb.storage.from(bucket).createSignedUploadUrl(path);
   if (error) throw new Error(`Failed to create upload URL: ${error.message}`);

@@ -8,6 +8,7 @@ import { listActionTemplates } from './onboardingCustomActions';
 import { getComplianceForEmployee } from './documentsCompliance';
 import { listRequirements } from './documentsRequirements';
 import { getAccountProvisioningPreflight } from './accountProvisioning';
+import { validateUploadedDocument } from './onboardingDocumentUploads';
 import { getOnboardingLaunchPreflight } from './onboardingLaunchPreflight';
 import type { OnboardingCaseStatus, OnboardingDocumentLaunchSelection, OnboardingLaunchOneOffAction } from '../../../../types/hrOnboarding';
 
@@ -29,6 +30,9 @@ export interface StartOnboardingResult {
   caseNo: string;
   taskCount: number;
   handoffCount: number;
+  /** Returned by hr_onboarding_launch_tx (both the fresh and the replay branch); surfaced on
+   *  the wizard's success receipt. */
+  documentRequestCount: number;
 }
 
 const ACTIVE_CASE_STATUSES: OnboardingCaseStatus[] = [
@@ -62,13 +66,21 @@ async function findLaunchReplay(requestId: string): Promise<StartOnboardingResul
     .maybeSingle<{ id: string; case_no: string }>();
   if (error) throw fail(500, error.message);
   if (!existing) return null;
-  const [tasks, handoffs] = await Promise.all([
+  const [tasks, handoffs, documentRequests] = await Promise.all([
     sb.from('hr_onboarding_tasks').select('id', { count: 'exact', head: true }).eq('case_id', existing.id),
     sb.from('hr_onboarding_handoffs').select('id', { count: 'exact', head: true }).eq('case_id', existing.id),
+    sb.from('hr_onboarding_document_requests').select('id', { count: 'exact', head: true }).eq('case_id', existing.id),
   ]);
   if (tasks.error) throw fail(500, tasks.error.message);
   if (handoffs.error) throw fail(500, handoffs.error.message);
-  return { caseId: existing.id, caseNo: existing.case_no, taskCount: tasks.count ?? 0, handoffCount: handoffs.count ?? 0 };
+  if (documentRequests.error) throw fail(500, documentRequests.error.message);
+  // A REPLAY must report the same counts as the original launch, so the receipt a user sees
+  // after a retry matches the one they would have seen first time.
+  return {
+    caseId: existing.id, caseNo: existing.case_no,
+    taskCount: tasks.count ?? 0, handoffCount: handoffs.count ?? 0,
+    documentRequestCount: documentRequests.count ?? 0,
+  };
 }
 
 export async function startOnboardingCase(
@@ -111,6 +123,11 @@ export async function startOnboardingCase(
   if (!employee) throw fail(404, 'Employee not found.');
   const workerType = employee.contractor_flag ? 'contractor' : 'employee';
   validateWorkerType(workerType, plan.workerTypes, plan.label);
+  // The approved wizard marks Reason required. Enforced HERE as well as in the route schema:
+  // the schema stops a malformed request, this stops a blank/whitespace one reaching the
+  // launch transaction, where `reason` would silently become NULL and the asterisk would be
+  // a lie. Same shape as the waiver-reason gate below.
+  if (!args.reason?.trim()) throw fail(400, 'Choose an onboarding reason.');
   await validateLaunchGates(args.employeeId);
 
   const accountPreflight = await getAccountProvisioningPreflight({
@@ -133,6 +150,20 @@ export async function startOnboardingCase(
     if (!requirementById.has(selection.requirementId)) throw fail(409, 'A document requirement is no longer active. Refresh the intake preview.');
   }
 
+  // Re-validate every `upload_now` selection against the DB before any row is built. The same
+  // validator the preflight uses, so a launch can never accept an upload the preflight refused
+  // (or refuse one it accepted). Resolved up-front because the row mapping below is sync.
+  const complianceByRequirement = new Map(compliance.map(item => [item.requirementId, item]));
+  const uploadVerdicts = new Map<string, Awaited<ReturnType<typeof validateUploadedDocument>>>();
+  for (const selection of args.documentSelections ?? []) {
+    if (selection.action !== 'upload_now') continue;
+    const item = complianceByRequirement.get(selection.requirementId);
+    if (!item) throw fail(409, 'A document requirement is no longer active. Refresh the intake preview.');
+    const verdict = await validateUploadedDocument(args.employeeId, item.requiredType, item.label, selection.uploadedDocumentId);
+    if (!verdict.ok) throw fail(400, verdict.message);
+    uploadVerdicts.set(selection.requirementId, verdict);
+  }
+
   const documentRows = compliance.map(item => {
     const requirement = requirementById.get(item.requirementId);
     const selection = selectionByRequirement.get(item.requirementId);
@@ -150,13 +181,26 @@ export async function startOnboardingCase(
       if (!requirement?.canWaive) throw fail(403, `${item.label} cannot be waived.`);
       if (!selection.waiverReason?.trim()) throw fail(400, `A waiver reason is required for ${item.label}.`);
     }
-    const status = selection?.action === 'waive' ? 'waived' : eligibleExisting || selection?.action === 'use_existing' ? 'use_existing' : 'pending';
-    if (requirement?.blocksOnboarding && !eligibleExisting && status !== 'use_existing' && status !== 'waived') {
+    // An `upload_now` verdict decides the row's shape: verified evidence satisfies the
+    // requirement outright; an unreviewed upload becomes an `uploaded` request LINKED to the
+    // document so the reviewer has something to act on.
+    const uploadVerdict = selection?.action === 'upload_now' ? uploadVerdicts.get(item.requirementId) : undefined;
+    const uploadedVerified = uploadVerdict?.ok === true && uploadVerdict.status === 'verified';
+    const uploadedPending = uploadVerdict?.ok === true && uploadVerdict.status === 'pending';
+
+    const status = selection?.action === 'waive' ? 'waived'
+      : eligibleExisting || selection?.action === 'use_existing' || uploadedVerified ? 'use_existing'
+      : uploadedPending ? 'uploaded'
+      : 'pending';
+    // A blocking requirement never launches on unreviewed evidence — `uploaded` is explicitly
+    // NOT a satisfying status here, which is what makes the preflight's blocker honest.
+    if (requirement?.blocksOnboarding && status !== 'use_existing' && status !== 'waived') {
       throw fail(400, `${item.label} must be attached or waived before launch.`);
     }
     return {
       id: crypto.randomUUID(), requirementId: item.requirementId, documentType: item.requiredType,
-      label: item.label, status, documentId: status === 'use_existing' ? item.documentId : null,
+      label: item.label, status,
+      documentId: uploadVerdict?.ok === true ? uploadVerdict.documentId : status === 'use_existing' ? item.documentId : null,
       waiverReason: selection?.action === 'waive' ? selection.waiverReason!.trim() : null,
       blocksOnboarding: requirement?.blocksOnboarding ?? false, canWaive: requirement?.canWaive ?? false,
       requiresExpiry: requirement?.requiresExpiry ?? false,
@@ -201,6 +245,39 @@ export async function startOnboardingCase(
       actionRoute: `hr/onboarding/worker/${caseId}`,
       actionRequired: true,
       dedupeKey: `hr.onboarding.launch:${args.requestId}:document:${document.id}:${employee.id}`,
+    });
+  }
+
+  // Uploads awaiting review. The UPLOAD itself already emitted its event + audit through the
+  // governed commit endpoint (`hr.employee.document_uploaded`), so what launch owes is the
+  // review WORK: a task for the case owner and a notification pointing at the existing
+  // document-review action. Both ride the transactional arrays, so they commit or roll back
+  // with the case — no fire-and-forget.
+  for (const document of documentRows.filter(row => row.status === 'uploaded')) {
+    const reviewTaskId = crypto.randomUUID();
+    taskRows.push({
+      id: reviewTaskId,
+      taskKey: `document_review_${document.id}`,
+      taskTitle: `Verify ${document.label}`,
+      ownerRole: 'hr', assignedTo: ownerId, moduleKey: 'documents',
+      // Non-blocking by construction: a BLOCKING requirement never reaches `uploaded` — it is
+      // refused at launch until the evidence is verified or waived.
+      isBlocking: false, requiresEvidence: false, sortOrder: 890,
+      dependencyKeys: [], dueAt: resolveDueAt(startDate, -3),
+      priority: 'normal',
+      metadata: {
+        documentRequestId: document.id, requirementId: document.requirementId,
+        documentId: document.documentId, awaitingVerification: true,
+      },
+    });
+    notifications.push({
+      userId: ownerId,
+      type: 'hr.onboarding.document_awaiting_verification',
+      title: `Verify uploaded document: ${document.label}`,
+      body: `${document.label} was uploaded during intake for case ${caseNo} and is awaiting verification.`,
+      actionRoute: `hr/employees/${employee.id}/documents`,
+      actionRequired: true,
+      dedupeKey: `hr.onboarding.launch:${args.requestId}:document_review:${document.id}:${ownerId}`,
     });
   }
 

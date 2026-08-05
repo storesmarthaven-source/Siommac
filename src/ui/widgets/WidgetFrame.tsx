@@ -12,7 +12,7 @@ import { WidgetConfigureModal } from './WidgetConfigureModal';
 import { WidgetConfigBack } from './WidgetConfigBack';
 import { WidgetRenderer } from './WidgetRenderer';
 import { useMountReveal } from './motion';
-import type { BoardWidgetInstance, LocalWidgetMap } from './types';
+import type { BoardWidgetInstance, LocalWidgetMap, WidgetRuntimeContext } from './types';
 import { toast } from '@store';
 
 // Pressing an action button must not start a drag.
@@ -51,7 +51,8 @@ function copyWidgetSize(e: TargetedMouseEvent<HTMLButtonElement>, item: BoardWid
     .catch(() => toast.error('Widget size could not be copied.'));
 }
 
-export function WidgetFrame({ item, editing, isPreview, local, demo, revealOnMount = true, onCommitPreview, onDiscardPreview, onRemove, onConfigure }: {
+export function WidgetFrame({ runtime, item, editing, isPreview, local, demo, revealOnMount = true, onCommitPreview, onDiscardPreview, onRemove, onConfigure }: {
+  runtime?: WidgetRuntimeContext;
   item: BoardWidgetInstance;
   editing?: boolean;
   isPreview?: boolean;
@@ -109,7 +110,7 @@ export function WidgetFrame({ item, editing, isPreview, local, demo, revealOnMou
           </div>
         )}
         <div class="wbi-bare-body">
-          <WidgetRenderer item={item} preview={isPreview} local={local} demo={demo} />
+          <WidgetRenderer item={item} preview={isPreview} local={local} demo={demo} runtime={runtime} />
           {useFlip && configOpen
             ? <div class="wbi-cfg-flip"><WidgetConfigBack widget={definition} config={item.config} onCancel={() => setConfigOpen(false)} onSave={next => { onConfigure?.(next); setConfigOpen(false); }} /></div>
             : null}
@@ -127,7 +128,7 @@ export function WidgetFrame({ item, editing, isPreview, local, demo, revealOnMou
           : <span class="wbi-title"><i class="fas fa-grip-vertical wbi-grip" aria-hidden="true" /> {title}</span>}
         {isPreview ? previewActions : <>{copySize}{configure}{editing && onRemove ? <button type="button" class="wbi-remove" onMouseDown={noDrag} onClick={onRemove} aria-label="Remove widget"><i class="fas fa-xmark" /></button> : null}</>}
       </header>
-      <div class="wbi-body"><WidgetRenderer item={item} preview={isPreview} local={local} demo={demo} /></div>{configModal}
+      <div class="wbi-body"><WidgetRenderer item={item} preview={isPreview} local={local} demo={demo} runtime={runtime} /></div>{configModal}
     </section>
   );
 }

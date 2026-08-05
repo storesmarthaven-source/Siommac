@@ -24,7 +24,7 @@ import { findWidgetDef } from './registry';
 import { useRuntimeWidgetsVersion } from './runtimeRegistry';
 import { WidgetFrame } from './WidgetFrame';
 import { checkWidgetContentFit } from './contentFit';
-import { isPreviewWidget, type BoardLayout, type BoardWidgetInstance, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance } from './types';
+import { isPreviewWidget, type BoardLayout, type BoardWidgetInstance, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetRuntimeContext } from './types';
 
 // WidthProvider auto-measures the container width (RGL needs an explicit pixel width). Built
 // ONCE at module load — recreating the HOC per render would remount the whole grid every time.
@@ -32,6 +32,8 @@ const ReactGridLayout = WidthProvider(GridLayout);
 
 export interface WidgetBoardZoneProps {
   pageKey: string;
+  /** Transient per-request context forwarded to widgets. NOT persisted. */
+  runtime?: WidgetRuntimeContext;
   zoneId: string;
   editing?: boolean;
   /** Page-local widget renderers (e.g. the employee register) keyed by widgetId. */
@@ -141,7 +143,7 @@ function wantsFit(widgetId: string, localWidgets?: LocalWidgetMap): boolean {
   return !!(localWidgets?.[widgetId]?.sizeToContent ?? findWidgetDef(widgetId)?.sizeToContent);
 }
 
-export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaultLayout, demo, cellHeight = CANONICAL_CELL_HEIGHT, column = 12, gap = CANONICAL_GAP, compact = 'vertical', resizable = true, maxRows, isBounded = false, revealOnMount = true, registryReady, preview, onPreviewChange, onCommitPreview, onDiscardPreview }: WidgetBoardZoneProps): VNode {
+export function WidgetBoardZone({ runtime, pageKey, zoneId, editing, localWidgets, defaultLayout, demo, cellHeight = CANONICAL_CELL_HEIGHT, column = 12, gap = CANONICAL_GAP, compact = 'vertical', resizable = true, maxRows, isBounded = false, revealOnMount = true, registryReady, preview, onPreviewChange, onCommitPreview, onDiscardPreview }: WidgetBoardZoneProps): VNode {
   // Re-render when installed (declarative) widgets change so islands resolve them.
   const rtVersion = useRuntimeWidgetsVersion();
   const { layout, updateZoneLayout, removeWidget } = useBoardLayout(pageKey, defaultLayout);
@@ -347,7 +349,7 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
               class={`wbi-item${wantsFit(it.widgetId, localWidgets) ? ' wbi-fit' : ''}`}
               ref={el => { if (el) wrapRefs.current.set(it.instanceId, el); else wrapRefs.current.delete(it.instanceId); }}
             >
-              <WidgetFrame
+              <WidgetFrame runtime={runtime}
                 item={it} editing={editing} isPreview={isPrev} local={localWidgets} demo={demo} revealOnMount={revealOnMount}
                 onCommitPreview={isPrev ? () => onCommitPreview?.(it) : undefined}
                 onDiscardPreview={isPrev ? onDiscardPreview : undefined}

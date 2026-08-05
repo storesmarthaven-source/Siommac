@@ -2,9 +2,9 @@
 
 # hr Module Map
 
-Source fingerprint: `aa8e9e135aa5b06e49c77390`
+Source fingerprint: `5982aa8f41568bb1142e7a97`
 
-Files: 265 | Symbols: 3019 | Widgets: 16 | Unique mounted endpoints: 284 | Route definitions: 284 mounted + 0 unmounted | API calls: 35 | DB objects: 207 | E2E suites: 19
+Files: 266 | Symbols: 3033 | Widgets: 16 | Unique mounted endpoints: 284 | Route definitions: 284 mounted + 0 unmounted | API calls: 35 | DB objects: 207 | E2E suites: 19
 
 ## Widgets and Tiles
 
@@ -237,7 +237,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/hr/onboarding/task/attach-evidence` | `-` | - | `z.object({     taskId: z.string().uuid(), fileName: z.string().min(1).max(200), filePath: z.string().min(1),     mimeType: z.string().nullable().optional(), fileSize: z.number().int().nullable().optional(),   })` | `netlify/functions/routes/hrOnboarding.ts:522` | - | hrOnboarding, hrOnboardingWorkQueue |
 | `/api/hr/onboarding/task/block` | `hr.onboarding.task.manage` | requirePermission | `z.object({ taskId: z.string().uuid(), reason: z.string().trim().min(1, 'A reason is required to block a task.').max(500), severity: Sev.optional() })` | `netlify/functions/routes/hrOnboarding.ts:563` | - | hrOnboarding |
 | `/api/hr/onboarding/task/complete` | `-` | requireUser, userCan | `z.object({ taskId: z.string().uuid() })` | `netlify/functions/routes/hrOnboarding.ts:234` | - | hrOnboarding, hrOnboardingWorker |
-| `/api/hr/onboarding/task/evidence-upload-url` | `-` | - | `z.object({ taskId: z.string().uuid(), fileName: z.string().min(1), mimeType: z.string().min(1) })` | `netlify/functions/routes/hrOnboarding.ts:511` | signed @ src/api/hr/onboarding.ts:86 | - |
+| `/api/hr/onboarding/task/evidence-upload-url` | `-` | - | `z.object({ taskId: z.string().uuid(), fileName: z.string().min(1), mimeType: z.string().min(1) })` | `netlify/functions/routes/hrOnboarding.ts:511` | signed @ src/api/hr/onboarding.ts:88 | - |
 | `/api/hr/onboarding/task/get` | `hr.onboarding.view` | requirePermission | `z.object({ taskId: z.string().uuid() })` | `netlify/functions/routes/hrOnboarding.ts:483` | - | hrOnboarding |
 | `/api/hr/onboarding/task/reassign` | `hr.onboarding.task.manage` | requirePermission | `z.object({ taskId: z.string().uuid(), assignedTo: z.string().nullable() })` | `netlify/functions/routes/hrOnboarding.ts:296` | - | hrOnboarding |
 | `/api/hr/onboarding/task/review-evidence` | `hr.onboarding.task.manage` | requirePermission, requireUser | `z.object({     evidenceId: z.string().uuid(),     decision: z.enum(['approved', 'returned']),     note: z.string().max(1000).nullable().optional(),   })` | `netlify/functions/routes/hrOnboarding.ts:536` | - | hrOnboarding, hrOnboardingWorkQueue |
@@ -342,7 +342,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/getMyHistory` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:115` |
 | `/api/getMyStatus` | `apiPost` | `res` | `src/components/sections/AttendanceDashboard/api.ts:43` |
 | `/api/getRecentAttendance` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:143` |
-| `/api/hr/onboarding/task/evidence-upload-url` | `apiPost` | `signed` | `src/api/hr/onboarding.ts:86` |
+| `/api/hr/onboarding/task/evidence-upload-url` | `apiPost` | `signed` | `src/api/hr/onboarding.ts:88` |
 | `/api/listAssignableRoles` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:91` |
 | `/api/listDepartments` | `apiPost` | `res` | `src/api/employees.ts:84` |
 | `/api/listDepartments` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:78` |
@@ -407,33 +407,33 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useEmployeeDocumentHealth` | function / hook | `src/api/hr/employeeReadiness.ts:160` | `-` |
 | `useEmploymentDetail` | function / hook | `src/api/hr/employeeReadiness.ts:179` | `-` |
 | `useEmployeeAccessAssignments` | function / hook | `src/api/hr/employeeReadiness.ts:196` | `-` |
-| `useHrEmployees` | function / hook | `src/api/hr/employees.ts:182` | `-` |
-| `useHrEmployeesPage` | function / hook | `src/api/hr/employees.ts:233` | `-` |
-| `useHrEmployee` | function / hook | `src/api/hr/employees.ts:254` | `-` |
-| `usePrefetchHrEmployee` | function / hook | `src/api/hr/employees.ts:281` | `-` |
-| `useHrDashboardStats` | function / hook | `src/api/hr/employees.ts:296` | `-` |
-| `useHrWorkflowSummary` | function / hook | `src/api/hr/employees.ts:309` | `-` |
-| `useHrStatutory` | function / hook | `src/api/hr/employees.ts:320` | `-` |
-| `useHrAudit` | function / hook | `src/api/hr/employees.ts:366` | `-` |
-| `useHrDocuments` | function / hook | `src/api/hr/employees.ts:378` | `-` |
-| `useHrTrainingSummary` | function / hook | `src/api/hr/employees.ts:390` | `-` |
-| `useHrOrgUnits` | function / hook | `src/api/hr/employees.ts:405` | `-` |
-| `useHrSites` | function / hook | `src/api/hr/employees.ts:415` | `-` |
-| `useUpdateHrContact` | function / hook | `src/api/hr/employees.ts:435` | `-` |
-| `useDecideHrEmployeePhoto` | function / hook | `src/api/hr/employees.ts:449` | `-` |
-| `useUpdateHrStatutory` | function / hook | `src/api/hr/employees.ts:469` | `-` |
-| `useUpdateHrEmployeeRecord` | function / hook | `src/api/hr/employees.ts:507` | `-` |
-| `useApplyHrAssignment` | function / hook | `src/api/hr/employees.ts:564` | `-` |
-| `useChangeHrStatus` | function / hook | `src/api/hr/employees.ts:584` | `-` |
-| `useCreateHrChangeRequest` | function / hook | `src/api/hr/employees.ts:599` | `-` |
-| `useUploadHrDocument` | function / hook | `src/api/hr/employees.ts:610` | `-` |
-| `useVerifyHrDocument` | function / hook | `src/api/hr/employees.ts:630` | `-` |
-| `useArchiveHrDocument` | function / hook | `src/api/hr/employees.ts:639` | `-` |
-| `useHrAccessProfiles` | function / hook | `src/api/hr/employees.ts:665` | `-` |
-| `useCreateHrEmployeeV2` | function / hook | `src/api/hr/employees.ts:748` | `-` |
-| `useWizardDraftGet` | function / hook | `src/api/hr/employees.ts:769` | `-` |
-| `useWizardDraftSave` | function / hook | `src/api/hr/employees.ts:781` | `-` |
-| `useWizardDraftDelete` | function / hook | `src/api/hr/employees.ts:792` | `-` |
+| `useHrEmployees` | function / hook | `src/api/hr/employees.ts:187` | `-` |
+| `useHrEmployeesPage` | function / hook | `src/api/hr/employees.ts:238` | `-` |
+| `useHrEmployee` | function / hook | `src/api/hr/employees.ts:259` | `-` |
+| `usePrefetchHrEmployee` | function / hook | `src/api/hr/employees.ts:286` | `-` |
+| `useHrDashboardStats` | function / hook | `src/api/hr/employees.ts:301` | `-` |
+| `useHrWorkflowSummary` | function / hook | `src/api/hr/employees.ts:314` | `-` |
+| `useHrStatutory` | function / hook | `src/api/hr/employees.ts:325` | `-` |
+| `useHrAudit` | function / hook | `src/api/hr/employees.ts:371` | `-` |
+| `useHrDocuments` | function / hook | `src/api/hr/employees.ts:383` | `-` |
+| `useHrTrainingSummary` | function / hook | `src/api/hr/employees.ts:395` | `-` |
+| `useHrOrgUnits` | function / hook | `src/api/hr/employees.ts:410` | `-` |
+| `useHrSites` | function / hook | `src/api/hr/employees.ts:420` | `-` |
+| `useUpdateHrContact` | function / hook | `src/api/hr/employees.ts:440` | `-` |
+| `useDecideHrEmployeePhoto` | function / hook | `src/api/hr/employees.ts:454` | `-` |
+| `useUpdateHrStatutory` | function / hook | `src/api/hr/employees.ts:474` | `-` |
+| `useUpdateHrEmployeeRecord` | function / hook | `src/api/hr/employees.ts:512` | `-` |
+| `useApplyHrAssignment` | function / hook | `src/api/hr/employees.ts:569` | `-` |
+| `useChangeHrStatus` | function / hook | `src/api/hr/employees.ts:589` | `-` |
+| `useCreateHrChangeRequest` | function / hook | `src/api/hr/employees.ts:604` | `-` |
+| `useUploadHrDocument` | function / hook | `src/api/hr/employees.ts:615` | `-` |
+| `useVerifyHrDocument` | function / hook | `src/api/hr/employees.ts:635` | `-` |
+| `useArchiveHrDocument` | function / hook | `src/api/hr/employees.ts:644` | `-` |
+| `useHrAccessProfiles` | function / hook | `src/api/hr/employees.ts:670` | `-` |
+| `useCreateHrEmployeeV2` | function / hook | `src/api/hr/employees.ts:753` | `-` |
+| `useWizardDraftGet` | function / hook | `src/api/hr/employees.ts:774` | `-` |
+| `useWizardDraftSave` | function / hook | `src/api/hr/employees.ts:786` | `-` |
+| `useWizardDraftDelete` | function / hook | `src/api/hr/employees.ts:797` | `-` |
 | `useLeaveTypes` | function / hook | `src/api/hr/leave.ts:50` | `-` |
 | `useMyLeaveRequests` | function / hook | `src/api/hr/leave.ts:54` | `-` |
 | `useAllLeaveRequests` | function / hook | `src/api/hr/leave.ts:58` | `-` |
@@ -451,68 +451,68 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useOffboardingCase` | function / hook | `src/api/hr/offboarding.ts:50` | `-` |
 | `useOffboardingStats` | function / hook | `src/api/hr/offboarding.ts:53` | `-` |
 | `useOffboardingMutation` | function / hook | `src/api/hr/offboarding.ts:58` | `-` |
-| `useMyOnboarding` | function / hook | `src/api/hr/onboarding.ts:184` | `-` |
-| `useOnboardingDashboard` | function / hook | `src/api/hr/onboarding.ts:211` | `-` |
-| `useOnboardingCases` | function / hook | `src/api/hr/onboarding.ts:218` | `-` |
-| `useOnboardingWorkQueue` | function / hook | `src/api/hr/onboarding.ts:233` | `-` |
-| `useOnboardingTasksList` | function / hook | `src/api/hr/onboarding.ts:241` | `-` |
-| `useOnboardingHandoffsList` | function / hook | `src/api/hr/onboarding.ts:249` | `-` |
-| `useOnboardingBlockersList` | function / hook | `src/api/hr/onboarding.ts:258` | `-` |
-| `useOnboardingPackages` | function / hook | `src/api/hr/onboarding.ts:266` | `-` |
-| `useOnboardingIntakePreview` | function / hook | `src/api/hr/onboarding.ts:276` | `-` |
-| `useOnboardingAccountPreflight` | function / hook | `src/api/hr/onboarding.ts:284` | `-` |
-| `useOnboardingLaunchPreflight` | function / hook | `src/api/hr/onboarding.ts:292` | `-` |
-| `useOnboardingAudit` | function / hook | `src/api/hr/onboarding.ts:300` | `-` |
-| `useOnboardingRecentActivity` | function / hook | `src/api/hr/onboarding.ts:308` | `-` |
-| `useOnboardingPackageDetail` | function / hook | `src/api/hr/onboarding.ts:315` | `-` |
-| `useOnboardingTaskDetail` | function / hook | `src/api/hr/onboarding.ts:323` | `-` |
-| `useOnboardingCommunications` | function / hook | `src/api/hr/onboarding.ts:331` | `-` |
-| `useOnboardingTimeline` | function / hook | `src/api/hr/onboarding.ts:339` | `-` |
-| `useOnboardingReportList` | function / hook | `src/api/hr/onboarding.ts:347` | `-` |
-| `useOnboardingReport` | function / hook | `src/api/hr/onboarding.ts:355` | `-` |
-| `useOnboardingCompleteTask` | function / hook | `src/api/hr/onboarding.ts:372` | `-` |
-| `useOnboardingAddTask` | function / hook | `src/api/hr/onboarding.ts:373` | `-` |
-| `useOnboardingReassignTask` | function / hook | `src/api/hr/onboarding.ts:374` | `-` |
-| `useOnboardingAddTaskNote` | function / hook | `src/api/hr/onboarding.ts:375` | `-` |
-| `useOnboardingAttachTaskEvidence` | function / hook | `src/api/hr/onboarding.ts:376` | `-` |
-| `useOnboardingRetryHandoff` | function / hook | `src/api/hr/onboarding.ts:377` | `-` |
-| `useOnboardingAcceptHandoff` | function / hook | `src/api/hr/onboarding.ts:378` | `-` |
-| `useOnboardingCompleteHandoff` | function / hook | `src/api/hr/onboarding.ts:379` | `-` |
-| `useOnboardingCancelHandoff` | function / hook | `src/api/hr/onboarding.ts:380` | `-` |
-| `useOnboardingBlockTask` | function / hook | `src/api/hr/onboarding.ts:381` | `-` |
-| `useOnboardingUnblockTask` | function / hook | `src/api/hr/onboarding.ts:382` | `-` |
-| `useOnboardingCompleteCase` | function / hook | `src/api/hr/onboarding.ts:383` | `-` |
-| `useOnboardingCancelCase` | function / hook | `src/api/hr/onboarding.ts:384` | `-` |
-| `useOnboardingPauseCase` | function / hook | `src/api/hr/onboarding.ts:385` | `-` |
-| `useOnboardingResumeCase` | function / hook | `src/api/hr/onboarding.ts:386` | `-` |
-| `useOnboardingReassignOwner` | function / hook | `src/api/hr/onboarding.ts:387` | `-` |
-| `useOnboardingMarkReady` | function / hook | `src/api/hr/onboarding.ts:388` | `-` |
-| `useOnboardingResolveBlocker` | function / hook | `src/api/hr/onboarding.ts:389` | `-` |
-| `useOnboardingEscalateBlocker` | function / hook | `src/api/hr/onboarding.ts:390` | `-` |
-| `useOnboardingWaiveBlocker` | function / hook | `src/api/hr/onboarding.ts:391` | `-` |
-| `useOnboardingNotifyBlockerOwner` | function / hook | `src/api/hr/onboarding.ts:392` | `-` |
-| `useOnboardingSendCommunication` | function / hook | `src/api/hr/onboarding.ts:393` | `-` |
-| `useOnboardingResendCommunication` | function / hook | `src/api/hr/onboarding.ts:394` | `-` |
-| `useOnboardingActionTemplates` | function / hook | `src/api/hr/onboarding.ts:397` | `-` |
-| `useOnboardingCaseActions` | function / hook | `src/api/hr/onboarding.ts:405` | `-` |
-| `useOnboardingCreateActionTemplate` | function / hook | `src/api/hr/onboarding.ts:413` | `-` |
-| `useOnboardingUpdateActionTemplate` | function / hook | `src/api/hr/onboarding.ts:414` | `-` |
-| `useOnboardingRetireActionTemplate` | function / hook | `src/api/hr/onboarding.ts:415` | `-` |
-| `useOnboardingAddCaseAction` | function / hook | `src/api/hr/onboarding.ts:416` | `-` |
-| `useOnboardingUpdateCaseAction` | function / hook | `src/api/hr/onboarding.ts:417` | `-` |
-| `useOnboardingCompleteCaseAction` | function / hook | `src/api/hr/onboarding.ts:418` | `-` |
-| `useOnboardingCancelCaseAction` | function / hook | `src/api/hr/onboarding.ts:419` | `-` |
-| `useOnboardingProvisionAccount` | function / hook | `src/api/hr/onboarding.ts:420` | `-` |
-| `useOnboardingCreatePackage` | function / hook | `src/api/hr/onboarding.ts:423` | `-` |
-| `useOnboardingPackageReferenceData` | function / hook | `src/api/hr/onboarding.ts:424` | `-` |
-| `useOnboardingUpdatePackage` | function / hook | `src/api/hr/onboarding.ts:432` | `-` |
-| `useOnboardingSetPackageStatus` | function / hook | `src/api/hr/onboarding.ts:433` | `-` |
-| `useOnboardingCreateTaskTemplate` | function / hook | `src/api/hr/onboarding.ts:434` | `-` |
-| `useOnboardingUpdateTaskTemplate` | function / hook | `src/api/hr/onboarding.ts:435` | `-` |
-| `useOnboardingDeleteTaskTemplate` | function / hook | `src/api/hr/onboarding.ts:436` | `-` |
-| `useOnboardingCreateHandoffTemplate` | function / hook | `src/api/hr/onboarding.ts:437` | `-` |
-| `useOnboardingUpdateHandoffTemplate` | function / hook | `src/api/hr/onboarding.ts:438` | `-` |
-| `useOnboardingDeleteHandoffTemplate` | function / hook | `src/api/hr/onboarding.ts:439` | `-` |
+| `useMyOnboarding` | function / hook | `src/api/hr/onboarding.ts:186` | `-` |
+| `useOnboardingDashboard` | function / hook | `src/api/hr/onboarding.ts:213` | `-` |
+| `useOnboardingCases` | function / hook | `src/api/hr/onboarding.ts:220` | `-` |
+| `useOnboardingWorkQueue` | function / hook | `src/api/hr/onboarding.ts:235` | `-` |
+| `useOnboardingTasksList` | function / hook | `src/api/hr/onboarding.ts:243` | `-` |
+| `useOnboardingHandoffsList` | function / hook | `src/api/hr/onboarding.ts:251` | `-` |
+| `useOnboardingBlockersList` | function / hook | `src/api/hr/onboarding.ts:260` | `-` |
+| `useOnboardingPackages` | function / hook | `src/api/hr/onboarding.ts:268` | `-` |
+| `useOnboardingIntakePreview` | function / hook | `src/api/hr/onboarding.ts:278` | `-` |
+| `useOnboardingAccountPreflight` | function / hook | `src/api/hr/onboarding.ts:286` | `-` |
+| `useOnboardingLaunchPreflight` | function / hook | `src/api/hr/onboarding.ts:294` | `-` |
+| `useOnboardingAudit` | function / hook | `src/api/hr/onboarding.ts:302` | `-` |
+| `useOnboardingRecentActivity` | function / hook | `src/api/hr/onboarding.ts:310` | `-` |
+| `useOnboardingPackageDetail` | function / hook | `src/api/hr/onboarding.ts:317` | `-` |
+| `useOnboardingTaskDetail` | function / hook | `src/api/hr/onboarding.ts:325` | `-` |
+| `useOnboardingCommunications` | function / hook | `src/api/hr/onboarding.ts:333` | `-` |
+| `useOnboardingTimeline` | function / hook | `src/api/hr/onboarding.ts:341` | `-` |
+| `useOnboardingReportList` | function / hook | `src/api/hr/onboarding.ts:349` | `-` |
+| `useOnboardingReport` | function / hook | `src/api/hr/onboarding.ts:357` | `-` |
+| `useOnboardingCompleteTask` | function / hook | `src/api/hr/onboarding.ts:374` | `-` |
+| `useOnboardingAddTask` | function / hook | `src/api/hr/onboarding.ts:375` | `-` |
+| `useOnboardingReassignTask` | function / hook | `src/api/hr/onboarding.ts:376` | `-` |
+| `useOnboardingAddTaskNote` | function / hook | `src/api/hr/onboarding.ts:377` | `-` |
+| `useOnboardingAttachTaskEvidence` | function / hook | `src/api/hr/onboarding.ts:378` | `-` |
+| `useOnboardingRetryHandoff` | function / hook | `src/api/hr/onboarding.ts:379` | `-` |
+| `useOnboardingAcceptHandoff` | function / hook | `src/api/hr/onboarding.ts:380` | `-` |
+| `useOnboardingCompleteHandoff` | function / hook | `src/api/hr/onboarding.ts:381` | `-` |
+| `useOnboardingCancelHandoff` | function / hook | `src/api/hr/onboarding.ts:382` | `-` |
+| `useOnboardingBlockTask` | function / hook | `src/api/hr/onboarding.ts:383` | `-` |
+| `useOnboardingUnblockTask` | function / hook | `src/api/hr/onboarding.ts:384` | `-` |
+| `useOnboardingCompleteCase` | function / hook | `src/api/hr/onboarding.ts:385` | `-` |
+| `useOnboardingCancelCase` | function / hook | `src/api/hr/onboarding.ts:386` | `-` |
+| `useOnboardingPauseCase` | function / hook | `src/api/hr/onboarding.ts:387` | `-` |
+| `useOnboardingResumeCase` | function / hook | `src/api/hr/onboarding.ts:388` | `-` |
+| `useOnboardingReassignOwner` | function / hook | `src/api/hr/onboarding.ts:389` | `-` |
+| `useOnboardingMarkReady` | function / hook | `src/api/hr/onboarding.ts:390` | `-` |
+| `useOnboardingResolveBlocker` | function / hook | `src/api/hr/onboarding.ts:391` | `-` |
+| `useOnboardingEscalateBlocker` | function / hook | `src/api/hr/onboarding.ts:392` | `-` |
+| `useOnboardingWaiveBlocker` | function / hook | `src/api/hr/onboarding.ts:393` | `-` |
+| `useOnboardingNotifyBlockerOwner` | function / hook | `src/api/hr/onboarding.ts:394` | `-` |
+| `useOnboardingSendCommunication` | function / hook | `src/api/hr/onboarding.ts:395` | `-` |
+| `useOnboardingResendCommunication` | function / hook | `src/api/hr/onboarding.ts:396` | `-` |
+| `useOnboardingActionTemplates` | function / hook | `src/api/hr/onboarding.ts:399` | `-` |
+| `useOnboardingCaseActions` | function / hook | `src/api/hr/onboarding.ts:407` | `-` |
+| `useOnboardingCreateActionTemplate` | function / hook | `src/api/hr/onboarding.ts:415` | `-` |
+| `useOnboardingUpdateActionTemplate` | function / hook | `src/api/hr/onboarding.ts:416` | `-` |
+| `useOnboardingRetireActionTemplate` | function / hook | `src/api/hr/onboarding.ts:417` | `-` |
+| `useOnboardingAddCaseAction` | function / hook | `src/api/hr/onboarding.ts:418` | `-` |
+| `useOnboardingUpdateCaseAction` | function / hook | `src/api/hr/onboarding.ts:419` | `-` |
+| `useOnboardingCompleteCaseAction` | function / hook | `src/api/hr/onboarding.ts:420` | `-` |
+| `useOnboardingCancelCaseAction` | function / hook | `src/api/hr/onboarding.ts:421` | `-` |
+| `useOnboardingProvisionAccount` | function / hook | `src/api/hr/onboarding.ts:422` | `-` |
+| `useOnboardingCreatePackage` | function / hook | `src/api/hr/onboarding.ts:425` | `-` |
+| `useOnboardingPackageReferenceData` | function / hook | `src/api/hr/onboarding.ts:426` | `-` |
+| `useOnboardingUpdatePackage` | function / hook | `src/api/hr/onboarding.ts:434` | `-` |
+| `useOnboardingSetPackageStatus` | function / hook | `src/api/hr/onboarding.ts:435` | `-` |
+| `useOnboardingCreateTaskTemplate` | function / hook | `src/api/hr/onboarding.ts:436` | `-` |
+| `useOnboardingUpdateTaskTemplate` | function / hook | `src/api/hr/onboarding.ts:437` | `-` |
+| `useOnboardingDeleteTaskTemplate` | function / hook | `src/api/hr/onboarding.ts:438` | `-` |
+| `useOnboardingCreateHandoffTemplate` | function / hook | `src/api/hr/onboarding.ts:439` | `-` |
+| `useOnboardingUpdateHandoffTemplate` | function / hook | `src/api/hr/onboarding.ts:440` | `-` |
+| `useOnboardingDeleteHandoffTemplate` | function / hook | `src/api/hr/onboarding.ts:441` | `-` |
 | `useOrgUnits` | function / hook | `src/api/hr/organization.ts:79` | `-` |
 | `useOrgUnit` | function / hook | `src/api/hr/organization.ts:80` | `-` |
 | `useOrgStats` | function / hook | `src/api/hr/organization.ts:81` | `-` |
@@ -697,10 +697,10 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/hr/employeeImport.ts` | 70 |
 | frontend-api | `src/api/hr/employeeProfile.ts` | 128 |
 | frontend-api | `src/api/hr/employeeReadiness.ts` | 206 |
-| frontend-api | `src/api/hr/employees.ts` | 802 |
+| frontend-api | `src/api/hr/employees.ts` | 807 |
 | frontend-api | `src/api/hr/leave.ts` | 130 |
 | frontend-api | `src/api/hr/offboarding.ts` | 62 |
-| frontend-api | `src/api/hr/onboarding.ts` | 440 |
+| frontend-api | `src/api/hr/onboarding.ts` | 442 |
 | frontend-api | `src/api/hr/organization.ts` | 115 |
 | frontend-api | `src/api/hr/overtime.ts` | 76 |
 | frontend-api | `src/api/hr/requests.ts` | 72 |
@@ -777,7 +777,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/employeeRegisterViews.ts` | 28 |
 | frontend-page | `src/components/sections/HR/employeeRowActions.test.ts` | 81 |
 | frontend-page | `src/components/sections/HR/employeeRowActions.ts` | 63 |
-| frontend-page | `src/components/sections/HR/hrDeepLink.ts` | 16 |
+| frontend-page | `src/components/sections/HR/hrDeepLink.ts` | 76 |
 | frontend-page | `src/components/sections/HR/hrFoundation.test.tsx` | 69 |
 | frontend-page | `src/components/sections/HR/index.ts` | 10 |
 | frontend-page | `src/components/sections/HR/module.ts` | 141 |
@@ -808,7 +808,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | shared-types | `types/hrEmployeeProfile.ts` | 533 |
 | shared-types | `types/hrLeave.ts` | 226 |
 | shared-types | `types/hrOffboarding.ts` | 120 |
-| shared-types | `types/hrOnboarding.ts` | 893 |
+| shared-types | `types/hrOnboarding.ts` | 906 |
 | shared-types | `types/hrOrganization.ts` | 307 |
 | shared-types | `types/hrRequests.ts` | 152 |
 | shared-types | `types/hrRoster.ts` | 229 |
