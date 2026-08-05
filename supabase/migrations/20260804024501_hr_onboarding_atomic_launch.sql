@@ -1,6 +1,5 @@
 -- HR Onboarding: one atomic launch boundary.
--- APPLIED 2026-08-04. The E2E gate is green and the three verification checks below are
--- now automated (see the footer) — no operator action is outstanding.
+-- PENDING OPERATOR ACTION - apply only after the accompanying backend/E2E gate is green.
 
 alter table public.hr_onboarding_cases
   add column if not exists package_id uuid references public.hr_onboarding_packages(id) on delete restrict,
@@ -251,21 +250,8 @@ revoke all on function public.hr_onboarding_launch_tx(uuid, text, jsonb, jsonb, 
 grant execute on function public.hr_onboarding_launch_tx(uuid, text, jsonb, jsonb, jsonb, jsonb, jsonb, jsonb, date)
   to service_role;
 
--- Verification — all three are AUTOMATED in scripts/e2e/suites/hrOnboarding.mjs. Do not
--- re-run these by hand; extend the suite instead.
+-- Verification (operator):
 -- 1. Function is service-role only.
---    → proved by the grants above; the suite drives it through the service-role client
---      precisely because no HTTP path can reach it.
 -- 2. launch_request_id is unique and a replay returns the original case.
---    → "start retry with the same request id returns the same frozen case".
 -- 3. A forced invalid child row leaves no case, task, handoff, document, action,
 --    event, audit, notification or outbox row for that request id.
---    → "forced child failure rolls the entire launch back — no orphan rows", in the
---      "Onboarding › Atomic launch contract" section. It sets p_documents[].requirementId
---      to a random uuid, so the FK to hr_document_requirements raises 23503 only AFTER the
---      case, task, handoff, handoff_outbox row and handoff app_events row are inserted,
---      then asserts zero survivors across all ten tables plus probation_end_date.
---      ⚠ That test PINS the failing table name. If a change makes the launch abort
---      earlier, the no-orphan assertions would go vacuous and silently pass.
--- Plus (not in the original list): launch_snapshot is written and stays frozen when the
--- source package is retired and a case task is completed.
