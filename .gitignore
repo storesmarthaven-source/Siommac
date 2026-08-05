@@ -12,3 +12,6 @@ supabase-es256-import.jwk.json
 
 # Dev QA: minted session payload (contains a short-lived JWT) — never commit
 scripts/__dev_session.json
+
+# CI scratch (vitest JSON report for the baseline gate)
+.artifacts/

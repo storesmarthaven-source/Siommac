@@ -1,12 +1,12 @@
 {
   "formatVersion": 1,
   "source": {
-    "fingerprint": "286425af071942cf23406065",
-    "indexedFiles": 1711
+    "fingerprint": "aa8e9e135aa5b06e49c77390",
+    "indexedFiles": 1712
   },
   "summary": {
-    "files": 1348,
-    "symbols": 13675,
+    "files": 1349,
+    "symbols": 13688,
     "widgets": 62,
     "routes": 981,
     "routeDefinitions": 982,
@@ -137,8 +137,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 307,
-        "symbols": 2802,
+        "files": 308,
+        "symbols": 2815,
         "widgets": 0,
         "routes": 32,
         "routeDefinitions": 47,
@@ -3303,6 +3303,13 @@
       "role": "tooling",
       "lines": 121,
       "hash": "03d36a9450f48af8"
+    },
+    {
+      "path": "scripts/verify-vitest-baseline.mjs",
+      "module": "platform",
+      "role": "tooling",
+      "lines": 84,
+      "hash": "2f8a660d64b5ac3a"
     },
     {
       "path": "scripts/verify-workflow-tx-apply.mjs",
@@ -57749,6 +57756,136 @@
       "file": "scripts/verify-realtime-auth.mjs",
       "line": 66,
       "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "here",
+      "kind": "variable",
+      "file": "scripts/verify-vitest-baseline.mjs",
+      "line": 20,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "reportPath",
+      "kind": "variable",
+      "file": "scripts/verify-vitest-baseline.mjs",
+      "line": 21,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "readJson",
+      "kind": "function",
+      "file": "scripts/verify-vitest-baseline.mjs",
+      "line": 28,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "report",
+      "kind": "variable",
+      "file": "scripts/verify-vitest-baseline.mjs",
+      "line": 37,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "baseline",
+      "kind": "variable",
+      "file": "scripts/verify-vitest-baseline.mjs",
+      "line": 38,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "allowed",
+      "kind": "variable",
+      "file": "scripts/verify-vitest-baseline.mjs",
+      "line": 39,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "basename",
+      "kind": "function",
+      "file": "scripts/verify-vitest-baseline.mjs",
+      "line": 41,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "failures",
+      "kind": "array",
+      "file": "scripts/verify-vitest-baseline.mjs",
+      "line": 43,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "file",
+      "kind": "variable",
+      "file": "scripts/verify-vitest-baseline.mjs",
+      "line": 44,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "matches",
+      "kind": "function",
+      "file": "scripts/verify-vitest-baseline.mjs",
+      "line": 52,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "unexpected",
+      "kind": "variable",
+      "file": "scripts/verify-vitest-baseline.mjs",
+      "line": 55,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "tolerated",
+      "kind": "variable",
+      "file": "scripts/verify-vitest-baseline.mjs",
+      "line": 56,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "stale",
+      "kind": "variable",
+      "file": "scripts/verify-vitest-baseline.mjs",
+      "line": 57,
+      "module": "platform",
       "exported": false,
       "container": "",
       "tags": []

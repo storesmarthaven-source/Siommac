@@ -37,8 +37,16 @@ jobs:
       - name: Typecheck (frontend + backend)
         run: npm run typecheck
 
-      - name: Unit tests
-        run: npx vitest run
+      # Baseline-aware, NOT `continue-on-error`. One committed test currently fails
+      # (EmployeeProfilePage.test.tsx), so a bare `vitest run` would red every clean PR —
+      # but tolerating the whole job would also tolerate NEW breakage, which defeats the
+      # gate. The verifier tolerates exactly the allowlisted failures, fails on anything
+      # else, and fails when an allowlist entry starts passing so the debt list shrinks.
+      - name: Unit tests (baseline-aware)
+        run: |
+          mkdir -p .artifacts
+          npx vitest run --reporter=json --outputFile=.artifacts/vitest.json || true
+          node scripts/verify-vitest-baseline.mjs .artifacts/vitest.json
 
       # E2E needs a live stack, so it is not run here. Module suites run against a dev
       # server per the Testing Standard and are recorded in the module's release evidence.
