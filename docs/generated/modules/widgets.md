@@ -2,7 +2,7 @@
 
 # widgets Module Map
 
-Source fingerprint: `5982aa8f41568bb1142e7a97`
+Source fingerprint: `a900c96292f8d64f54f7c962`
 
 Files: 71 | Symbols: 574 | Widgets: 25 | Unique mounted endpoints: 15 | Route definitions: 15 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
 
@@ -10,8 +10,8 @@ Files: 71 | Symbols: 574 | Widgets: 25 | Unique mounted endpoints: 15 | Route de
 
 | ID | Title | Kind | Render | Location |
 |---|---|---|---|---|
-| `enterprise.calendar.taskPlanner` | Task Planner | registry | `TaskPlannerWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:278` |
-| `enterprise.calendar.upcomingDeadlines` | Schedule & Deadlines | registry | `DeadlineWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:277` |
+| `enterprise.calendar.taskPlanner` | Task Planner | registry | `TaskPlannerWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:288` |
+| `enterprise.calendar.upcomingDeadlines` | Schedule & Deadlines | registry | `DeadlineWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:287` |
 | `hr.employeeMaster.activeWorkforce` | Active Workforce | registry | `ActiveWorkforce` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:474` |
 | `hr.employeeMaster.departures` | Departures | registry | `Departures` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:479` |
 | `hr.employeeMaster.employeeAttentionNeutral` | Employee Attention — Neutral | registry | `EmployeeAttentionNeutralWidget` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:481` |
@@ -142,7 +142,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `insertWidgetsAtTop` | function / ui-tile | `src/ui/widgets/placement.ts:14` | `-` |
 | `insertWidgetsAtRow` | function / ui-tile | `src/ui/widgets/placement.ts:18` | `-` |
 | `compactWidgets` | function / ui-tile | `src/ui/widgets/placement.ts:41` | `-` |
-| `widgets` | array / ui-tile | `src/ui/widgets/registry.calendarPlanning.tsx:276` | `-` |
+| `widgets` | array / ui-tile | `src/ui/widgets/registry.calendarPlanning.tsx:286` | `-` |
 | `widgets` | array / ui-tile | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:473` | `-` |
 | `widgets` | array / ui-tile | `src/ui/widgets/registry.hrEmployeeMaster.tsx:480` | `-` |
 | `ONBOARDING_QUEUE_FILTER_EVENT` | variable / component | `src/ui/widgets/registry.hrOnboarding.tsx:73` | `-` |
@@ -304,7 +304,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | widget-platform | `src/ui/widgets/motion.ts` | 82 |
 | widget-platform | `src/ui/widgets/placement.ts` | 73 |
 | widget-platform | `src/ui/widgets/platform.test.tsx` | 213 |
-| widget-registry | `src/ui/widgets/registry.calendarPlanning.tsx` | 280 |
+| widget-registry | `src/ui/widgets/registry.calendarPlanning.tsx` | 290 |
 | widget-registry | `src/ui/widgets/registry.hrEmployeeDashboard.tsx` | 495 |
 | widget-registry | `src/ui/widgets/registry.hrEmployeeMaster.tsx` | 528 |
 | widget-registry | `src/ui/widgets/registry.hrOnboarding.tsx` | 173 |

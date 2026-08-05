@@ -4584,16 +4584,16 @@ index	variable	platform	false		scripts/generate-codebase-index.mjs	934
 outputs	variable	platform	false		scripts/generate-codebase-index.mjs	935	
 DROP_SELECTORS	array	platform	false		scripts/port-mockup-css.mjs	35	
 TARGETS	array	platform	false		scripts/port-mockup-css.mjs	37	
-scopeSelector	function	platform	false		scripts/port-mockup-css.mjs	75	
-blocks	function	platform	false		scripts/port-mockup-css.mjs	89	
-declarations	function	platform	false		scripts/port-mockup-css.mjs	107	
-port	function	platform	false		scripts/port-mockup-css.mjs	116	
-fidelity	function	platform	false		scripts/port-mockup-css.mjs	145	
-norm	function	platform	false		scripts/port-mockup-css.mjs	147	fidelity
-build	function	platform	false		scripts/port-mockup-css.mjs	169	
-check	variable	platform	false		scripts/port-mockup-css.mjs	196	
-failed	variable	platform	false		scripts/port-mockup-css.mjs	197	
-cfg	variable	platform	false		scripts/port-mockup-css.mjs	199	
+scopeSelector	function	platform	false		scripts/port-mockup-css.mjs	79	
+blocks	function	platform	false		scripts/port-mockup-css.mjs	93	
+declarations	function	platform	false		scripts/port-mockup-css.mjs	111	
+port	function	platform	false		scripts/port-mockup-css.mjs	120	
+fidelity	function	platform	false		scripts/port-mockup-css.mjs	149	
+norm	function	platform	false		scripts/port-mockup-css.mjs	151	fidelity
+build	function	platform	false		scripts/port-mockup-css.mjs	173	
+check	variable	platform	false		scripts/port-mockup-css.mjs	200	
+failed	variable	platform	false		scripts/port-mockup-css.mjs	201	
+cfg	variable	platform	false		scripts/port-mockup-css.mjs	203	
 key	variable	payroll	false		scripts/preflight-paygroup-overlaps.mjs	19	
 url	variable	payroll	false		scripts/preflight-paygroup-overlaps.mjs	19	
 sb	variable	payroll	false		scripts/preflight-paygroup-overlaps.mjs	21	
@@ -11919,12 +11919,12 @@ SubmitWorkflowInput	interface	workflow	true		src/lib/workflow/types.ts	186
 DEMO_ACTOR	object	workflow	false		src/lib/workflow/useWorkflow.ts	19	
 UseWorkflow	interface	workflow	true		src/lib/workflow/useWorkflow.ts	21	
 useWorkflow	function	workflow	true	hook	src/lib/workflow/useWorkflow.ts	36	
-queryClient	variable	platform	false		src/main.tsx	95	
-SCRIPTS	array	platform	false		src/main.tsx	105	
-loadScript	function	platform	false		src/main.tsx	126	
-loadScripts	function	platform	false		src/main.tsx	136	
-bootApp	function	platform	false		src/main.tsx	145	
-_mountEmp	function	platform	false		src/main.tsx	320	bootApp
+queryClient	variable	platform	false		src/main.tsx	96	
+SCRIPTS	array	platform	false		src/main.tsx	106	
+loadScript	function	platform	false		src/main.tsx	127	
+loadScripts	function	platform	false		src/main.tsx	137	
+bootApp	function	platform	false		src/main.tsx	146	
+_mountEmp	function	platform	false		src/main.tsx	321	bootApp
 CommsBridgeInner	function	platform	false	component	src/shell/AppShell.tsx	51	
 CommsBridge	function	platform	false	component	src/shell/AppShell.tsx	64	
 ThemeBridge	function	platform	false	component	src/shell/AppShell.tsx	74	
@@ -12636,17 +12636,17 @@ DEADLINE_DEFAULT_CONFIG	object	widgets	false		src/ui/widgets/registry.calendarPl
 DEADLINE_CONFIG_SCHEMA	array	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	173	
 deadlineDesign	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	177	
 DeadlineWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.calendarPlanning.tsx	181	
-DeadlinePreview	function	widgets	false	component	src/ui/widgets/registry.calendarPlanning.tsx	194	
-TaskPlannerView	function	widgets	false	component	src/ui/widgets/registry.calendarPlanning.tsx	199	
-shift	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	219	TaskPlannerView
-save	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	220	TaskPlannerView
-complete	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	229	TaskPlannerView
-remove	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	233	TaskPlannerView
-TaskPlannerWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.calendarPlanning.tsx	259	
-TaskPlannerPreview	function	widgets	false	component	src/ui/widgets/registry.calendarPlanning.tsx	266	
-item	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	268	TaskPlannerPreview
-liveDefinition	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	272	
-widgets	array	widgets	true	ui-tile	src/ui/widgets/registry.calendarPlanning.tsx	276	
+DeadlinePreview	function	widgets	false	component	src/ui/widgets/registry.calendarPlanning.tsx	201	
+TaskPlannerView	function	widgets	false	component	src/ui/widgets/registry.calendarPlanning.tsx	206	
+shift	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	226	TaskPlannerView
+save	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	227	TaskPlannerView
+complete	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	236	TaskPlannerView
+remove	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	240	TaskPlannerView
+TaskPlannerWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.calendarPlanning.tsx	266	
+TaskPlannerPreview	function	widgets	false	component	src/ui/widgets/registry.calendarPlanning.tsx	276	
+item	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	278	TaskPlannerPreview
+liveDefinition	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	282	
+widgets	array	widgets	true	ui-tile	src/ui/widgets/registry.calendarPlanning.tsx	286	
 PAGE	variable	widgets	false	component	src/ui/widgets/registry.hrEmployeeDashboard.tsx	29	
 SOURCE	object	widgets	false		src/ui/widgets/registry.hrEmployeeDashboard.tsx	31	
 KPI_SIZES	array	widgets	false	ui-tile	src/ui/widgets/registry.hrEmployeeDashboard.tsx	53	

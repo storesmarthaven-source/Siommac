@@ -2,7 +2,7 @@
 
 # SIOMAC Codebase Index
 
-Source fingerprint: `5982aa8f41568bb1142e7a97`  
+Source fingerprint: `a900c96292f8d64f54f7c962`  
 Generator version: `1`
 
 ## Use
@@ -44,8 +44,8 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `bundle.hr.attendance.ops` | Attendance & Leave Ops | registry | hr | `` | `src/ui/widgets/bundles.ts:117` |
 | `bundle.hr.employees.essentials` | Employee Master Essentials | registry | hr | `` | `src/ui/widgets/bundles.ts:90` |
 | `bundle.hr.onboarding.manager` | Onboarding Manager Pack | registry | hr | `` | `src/ui/widgets/bundles.ts:76` |
-| `enterprise.calendar.taskPlanner` | Task Planner | registry | widgets | `TaskPlannerWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:278` |
-| `enterprise.calendar.upcomingDeadlines` | Schedule & Deadlines | registry | widgets | `DeadlineWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:277` |
+| `enterprise.calendar.taskPlanner` | Task Planner | registry | widgets | `TaskPlannerWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:288` |
+| `enterprise.calendar.upcomingDeadlines` | Schedule & Deadlines | registry | widgets | `DeadlineWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:287` |
 | `finance.payroll.assignedWork` | Approval and Activity | local | payroll | `() => <ApprovalsWidget data={data} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:512` |
 | `finance.payroll.deadlines` | Upcoming Deadlines | local | payroll | `() => <DeadlinesWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:513` |
 | `finance.payroll.kpi.activeRuns` | Active Runs | local | payroll | `() => <KpiTile icon="fa-layer-group" tone="teal" label="Active Runs" value={kk?.activeRuns ?? 0} sub="In the reporting window" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:494` |

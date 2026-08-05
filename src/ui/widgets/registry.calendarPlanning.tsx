@@ -178,11 +178,18 @@ function deadlineDesign(config: Record<string, unknown> | undefined): DeadlineDe
   const value = config?.design;
   return DEADLINE_LAYOUT_OPTIONS.some(option => option.value === value) ? value as DeadlineDesign : 'keyDates';
 }
-function DeadlineWidget({ config }: WidgetRenderProps): VNode {
+function DeadlineWidget({ config, runtime }: WidgetRenderProps): VNode {
   const today = useMemo(() => startOfDay(), []);
   const from = useMemo(() => addDays(today, -14), [today]);
   const to = useMemo(() => addDays(today, 62), [today]);
-  const query = useCalendarList({ from: dateKey(from), to: dateKey(to), types: ['deadline', 'activity'] });
+  // Transient host context, never persisted config: when the Onboarding Command Centre
+  // mounts this widget it states the scope currently shown, so the widget cannot display a
+  // case the register beside it hides. Boards that supply no runtime context are unaffected
+  // — `onboardingScope` is simply omitted and the server defaults to 'my'.
+  const query = useCalendarList({
+    from: dateKey(from), to: dateKey(to), types: ['deadline', 'activity'],
+    ...(runtime?.onboardingScope ? { onboardingScope: runtime.onboardingScope } : {}),
+  });
   const items = query.data ?? [];
   const overdue = items.filter(item => { const key = itemDateKey(item); return item.type === 'deadline' && !!key && key < dateKey(today); }).length;
   return <DeadlineCard design={deadlineDesign(config)} deadlinesOn={designDeadlinesOn(items, today)} overdueCount={overdue}
@@ -260,7 +267,10 @@ function TaskPlannerWidget(props: WidgetRenderProps): VNode {
   const today = useMemo(() => startOfDay(), []);
   const from = useMemo(() => addDays(today, -7), [today]);
   const to = useMemo(() => addDays(today, 62), [today]);
-  const query = useCalendarList({ from: dateKey(from), to: dateKey(to), types: ['task', 'deadline'] });
+  const query = useCalendarList({
+    from: dateKey(from), to: dateKey(to), types: ['task', 'deadline'],
+    ...(props.runtime?.onboardingScope ? { onboardingScope: props.runtime.onboardingScope } : {}),
+  });
   return <TaskPlannerView items={query.data ?? []} loading={query.isLoading && !query.data} loadError={query.isError ? (query.error instanceof Error ? query.error.message : 'The authorised Calendar API is unavailable.') : null} theme={taskTheme(props.config.theme)} live />;
 }
 function TaskPlannerPreview(props: { config: Record<string, unknown> }): VNode {

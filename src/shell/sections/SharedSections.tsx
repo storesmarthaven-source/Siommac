@@ -205,6 +205,13 @@ export default function SharedSections() {
         <div id="preact-access-control-root" />
       </AppSection>
 
+      {/* My Onboarding — employee self-service. The registered WorkerOnboarding module
+          mounts into the root below; main.tsx skips any module whose rootId is absent from
+          the shell, which is why the nav item rendered while the page never appeared. */}
+      <AppSection id="s-my-onboarding">
+        <div id="preact-my-onboarding-root" />
+      </AppSection>
+
       {/* My Profile — every role.
           NO wrapper <UserPill> here: the Preact component's <PageHeader>
           already renders the single standard pill. A second one duplicates it. */}

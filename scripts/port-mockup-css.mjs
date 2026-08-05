@@ -42,10 +42,14 @@ const TARGETS = [
     root: '.onb-ov',
   },
   {
-    name: 'onboarding-case-detail',
-    source: 'docs/mockups/onboarding-case-detail-reference-conversion.html',
-    target: 'src/components/sections/HR/onboardingCaseDetailPage.css',
-    root: '.onb-cd',
+    // The AUTHORITATIVE Case Detail design: the seven-tab operating page. This replaced the
+    // older reference-conversion port, whose target was unreferenced dead CSS and has been
+    // deleted along with its entry.
+    name: 'onboarding-case-detail-v2',
+    source: 'docs/mockups/onboarding-case-detail-implementation-ready.html',
+    target: 'src/components/sections/HR/OnboardingCaseDetail.mockup.css',
+    root: '.ocd-root',
+    keyframePrefix: 'ocd-',
   },
   {
     name: 'employee-profile-drawer',
