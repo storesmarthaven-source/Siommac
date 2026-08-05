@@ -34,9 +34,29 @@ async function getScopedSetting<T>(
 
   query = scopeId === null ? query.is('scope_id', null) : query.eq('scope_id', scopeId);
 
-  const { data, error } = await query.maybeSingle<{ value: T }>();
-  if (error || !data) return { found: false, value: undefined as T };
-  return { found: true, value: data.value };
+  // NOT `.maybeSingle()`. That errors when more than one row matches, and the old
+  // `if (error || !data)` collapsed that error into "no override" — so a DUPLICATED
+  // setting resolved as UNSET and silently reverted to the catalog default. A global
+  // override (scope_id IS NULL) could duplicate freely because the write path's
+  // ON CONFLICT could not match NULL to NULL, which meant the SECOND write to any
+  // global setting quietly switched it off with no error anywhere.
+  //
+  // The DB now forbids duplicates (migration 20261005000000), but this resolver must
+  // never be the thing that hides one: a genuine "no rows" is a legitimate miss, while
+  // multiple rows is corruption and has to surface.
+  const { data, error } = await query;
+  if (error) {
+    throw new Error(`Setting read failed (${settingKey} @ ${scopeType}): ${error.message}`);
+  }
+  const rows = data ?? [];
+  if (rows.length === 0) return { found: false, value: undefined as T };
+  if (rows.length > 1) {
+    throw new Error(
+      `Setting ${settingKey} has ${rows.length} rows at scope ${scopeType}/${scopeId ?? 'null'} — ` +
+      'duplicate override rows must be de-duplicated before this setting can resolve.',
+    );
+  }
+  return { found: true, value: (rows[0] as { value: T }).value };
 }
 
 export async function resolveSetting<T = unknown>(

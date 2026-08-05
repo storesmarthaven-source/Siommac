@@ -127,6 +127,9 @@ router.post('/onboarding/launch-preflight', async c => {
   const actor = await requirePermission(c, 'hr.onboarding.start');
   const v = zv(c, z.object({
     employeeId: z.string().min(1), packageKey: z.string().min(1), ownerId: z.string().nullable().optional(),
+    // Optional HERE on purpose: preflight's job is to REPORT a blank reason as a `worker`-step
+    // blocker while the wizard is still being filled in, not to refuse to answer.
+    reason: z.string().max(60).nullable().optional(),
     targetStartDate: z.string().max(20).nullable().optional(),
     includeActionTemplateIds: z.array(z.string().uuid()).max(100).nullable().optional(),
     oneOffActions: z.array(z.object({
@@ -139,7 +142,8 @@ router.post('/onboarding/launch-preflight', async c => {
       externalSystemKey: z.string().max(100).nullable().optional(), externalActionUrl: z.string().url().max(500).nullable().optional(),
     })).max(25).nullable().optional(),
     documentSelections: z.array(z.object({
-      requirementId: z.string().min(1), action: z.enum(['use_existing','request_from_worker','waive','none']),
+      requirementId: z.string().min(1), action: z.enum(['use_existing','upload_now','request_from_worker','waive','none']),
+      uploadedDocumentId: z.string().uuid().nullable().optional(),
       existingDocumentId: z.string().uuid().nullable().optional(), waiverReason: z.string().max(500).nullable().optional(),
     })).max(100).nullable().optional(),
   }), body(c));
@@ -169,7 +173,9 @@ router.post('/onboarding/start', async c => {
     employeeId: z.string().min(1),
     packageKey: z.string().min(1),
     ownerId:    z.string().nullable().optional(),
-    reason:          z.string().max(60).nullable().optional(),
+    // Required, non-blank: the approved wizard marks Reason `*`. `.trim()` runs before
+    // `.min(1)`, so "   " is rejected rather than stored as whitespace.
+    reason:          z.string().trim().min(1).max(60),
     priority:        z.string().max(30).nullable().optional(),
     targetStartDate: z.string().max(20).nullable().optional(),
     includeActionTemplateIds: z.array(z.string().uuid()).max(100).nullable().optional(),
@@ -190,7 +196,8 @@ router.post('/onboarding/start', async c => {
     })).max(25).nullable().optional(),
     documentSelections: z.array(z.object({
       requirementId: z.string().min(1),
-      action: z.enum(['use_existing', 'request_from_worker', 'waive', 'none']),
+      action: z.enum(['use_existing', 'upload_now', 'request_from_worker', 'waive', 'none']),
+      uploadedDocumentId: z.string().uuid().nullable().optional(),
       existingDocumentId: z.string().uuid().nullable().optional(),
       waiverReason: z.string().max(500).nullable().optional(),
     })).max(100).nullable().optional(),
@@ -210,7 +217,13 @@ router.post('/onboarding/start', async c => {
 
   try {
     const r = await startOnboardingCase(actor.id, v.data, authority);
-    return c.json({ success: true, data: { caseId: r.caseId, caseNo: r.caseNo, status: 'in_progress', taskCount: r.taskCount, handoffCount: r.handoffCount } });
+    // `documentRequestCount` is part of the OnboardingStartResult contract and the launch
+    // receipt renders it as one of its four metrics. Omitting it here left that metric blank
+    // on screen — the value exists on `r`, it was simply never put on the wire.
+    return c.json({ success: true, data: {
+      caseId: r.caseId, caseNo: r.caseNo, status: 'in_progress',
+      taskCount: r.taskCount, handoffCount: r.handoffCount, documentRequestCount: r.documentRequestCount,
+    } });
   } catch (e) {
     const err = e as { status?: number; message?: string };
     return c.json({ success: false, message: err.message ?? 'Onboarding start failed.' }, (err.status ?? 500) as 200);

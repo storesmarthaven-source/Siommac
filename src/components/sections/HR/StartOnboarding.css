@@ -25,7 +25,11 @@
   box-sizing: border-box;
   width: 100%;
   min-height: 100%;
-  padding: 28px 32px 38px;
+  /* Horizontal padding trimmed 32px -> 20px. The app shell already pads `.main-content`
+     by 28px, and this element cancels that with a -28px margin only to re-add 32px — the
+     net effect was ~64px of width taken from a content column that is already ~340px
+     narrower than the standalone mockup the design was drawn at. */
+  padding: 28px 20px 38px;
   color: var(--ob-text);
   background: #F9FAFC;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -1158,16 +1162,11 @@
 }
 
 /* Responsive */
-@media (max-width: 1380px) {
-  .mock-onboarding-start .ob-page-grid {
-    grid-template-columns: 280px minmax(0, 1fr);
-  }
-
-  .mock-onboarding-start .ob-side-stack {
-    grid-column: 1 / -1;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
+/* REMOVED: a `max-width: 1380px` block that reflowed the retired `.ob-page-grid` and forced
+   `.ob-side-stack { grid-column: 1 / -1 }`. The rail now lives in the mockup's `.wizard-body`
+   grid, so that rule made it span BOTH columns — at 1280px it rendered 871px wide inside a
+   390px track and broke the two-column layout outright. The approved mockup keeps two columns
+   down to 1120px and only then collapses, which `.wizard-body` already does on its own. */
 
 @media (max-width: 1080px) {
   .mock-onboarding-start {
@@ -1405,9 +1404,14 @@
 /* Full-bleed inside the app's padded `.main-content` (padding: 24px 28px; background: #F9FAFC) so the
  * wizard reads as a TRUE full page — its own background covers the whole content area, no boxed card,
  * and the 3-column grid gets the full width (fixes the squished left rail + off background). */
+/* NO negative bleed margin. This used to be `margin: -24px -28px 0` to cancel the shell's
+   `.main-content` padding for a full-bleed treatment. Two things were wrong with it here:
+   the -24px top pulled the page to y=76 while `.app-topbar` ends at y=84, so the wizard
+   rendered 8px UNDER the top bar and clipped it; and the -28px sides shifted the page left
+   without widening it (its width is constrained by the section), leaving it off-centre with
+   28px of dead space on the right. The page now sits inside the section like every other. */
 .mock-onboarding-start {
-  margin: -24px -28px 0;
-  min-height: calc(100% + 48px);
+  min-height: 100%;
 }
 
 /* ── REDESIGN: horizontal top stepper + 2-column body (workspace + status rail) ──────────────────
@@ -1426,7 +1430,7 @@
 }
 .mock-onboarding-start .ob-stepper-step {
   flex: 1 1 0;
-  min-width: 150px;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 11px;
@@ -1458,9 +1462,9 @@
 .mock-onboarding-start .ob-stepper-step.is-active .ob-stepper-marker { background: var(--ob-blue); color: #fff; border-color: var(--ob-blue); }
 .mock-onboarding-start .ob-stepper-step.is-complete .ob-stepper-marker { background: var(--ob-green); color: #fff; border-color: var(--ob-green); }
 .mock-onboarding-start .ob-stepper-marker .ob-icon { width: 16px; height: 16px; }
-.mock-onboarding-start .ob-stepper-copy { display: flex; flex-direction: column; min-width: 0; }
-.mock-onboarding-start .ob-stepper-copy strong { color: var(--ob-text); font-size: 13.5px; font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mock-onboarding-start .ob-stepper-copy span { color: var(--ob-subtle); font-size: 11.5px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mock-onboarding-start .ob-stepper-copy { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.mock-onboarding-start .ob-stepper-copy strong { color: var(--ob-text); font-size: 13.5px; font-weight: 600; line-height: 1.2; }
+.mock-onboarding-start .ob-stepper-copy span { color: var(--ob-subtle); font-size: 12px; line-height: 1.3; }
 .mock-onboarding-start .ob-stepper-step.is-active .ob-stepper-copy strong { color: var(--ob-blue-dark); }
 .mock-onboarding-start .ob-stepper-step.is-locked { cursor: not-allowed; opacity: 0.55; }
 .mock-onboarding-start .ob-stepper-step.is-locked:hover { background: none; }
@@ -1586,3 +1590,324 @@
 }
 .mock-onboarding-start .ob-preview-fact-documents strong { color: #b5790a; }
 .mock-onboarding-start .ob-preview-fact-documents.is-complete strong { color: #15803d; }
+
+/* ── States the approved mockup does not model ────────────────────────────────
+   The locked Start Onboarding mockup is static: it has no validation-error,
+   empty or busy states, so those three cannot come from the generated
+   StartOnboarding.mockup.css. They live here, in the wizard's own namespace
+   (`obs-`), rather than reusing the retired `ob-` workspace tokens.
+   Everything else in this file belongs to the SUMMARY RAIL, which
+   docs/ONBOARDING_IMPLEMENTATION_REFERENCE.md requires be reused verbatim. */
+.obs-root .obs-field-error {
+  display: block;
+  margin-top: 4px;
+  color: #b42318;
+  font-size: 12px;
+  font-weight: 600;
+}
+.obs-root .field.is-error .control,
+.obs-root .assignment-field.is-error .control {
+  border-color: #b42318;
+  box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.12);
+}
+.obs-root .obs-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 20px;
+  border: 1px dashed var(--line, #dfe5ed);
+  border-radius: 14px;
+  color: #5b6b80;
+  text-align: center;
+}
+
+/* The approved mockup lays this label out on ONE line, which it always is at its standalone
+   829px content width. Production renders inside the app shell (~481px at 1280px), where the
+   label wrapped mid-phrase and orphaned the required asterisk onto its own line. Allowing the
+   ROW to wrap — and keeping the phrase itself unbreakable — preserves the approved single-line
+   appearance wherever it fits and degrades by stacking instead of splitting the label. */
+.obs-root .employee-search-label { flex-wrap: wrap; }
+.obs-root .employee-search-label strong { white-space: nowrap; }
+
+/* ── Base type ─────────────────────────────────────────────────────────────────
+   The mockup's body runs at 14px / 1.45. The port never carried that over, so the
+   page inherited the app shell's 16px / 24px: every unsized element (all body copy,
+   row labels, list text) rendered 14% larger inside a line box 18% taller than the
+   design's. Nothing looked individually wrong, but every row grew, so the whole
+   page's vertical rhythm and apparent spacing were off against the approved design.
+   Sized elements (pills, small, strong) already carry their own font-size, so this
+   only restores the inherited baseline the mockup assumes. */
+.mock-onboarding-start.obs-root { font-size: 14px; line-height: 1.45; }
+
+/* ── Container-width responsiveness for the workspace column ───────────────────
+   The mockup's own collapse rules key off the VIEWPORT, because it is a standalone
+   full-width page. Production renders the same panels inside the app shell, so the
+   mockup's viewport rules never fire here and two-column grids stay two-column at
+   half their intended width.
+
+   The thresholds below are MEASURED, not guessed. In the mockup the workspace
+   column is exactly `viewport - 61px` while the rail sits beside it (verified at
+   1035 → 974 and 886 → 825), and `viewport - 25px` once the rail stacks below
+   ~620px. So each of the mockup's viewport breakpoints maps to one content width:
+
+     mockup @900 → container 839    mockup @600 → container 575
+     mockup @820 → container 759    mockup @560 → container 535
+     mockup @620 → container 595
+
+   The previous mapping used the raw viewport numbers (620 / 560 / 460), which put
+   every threshold far too low: at the app's real ~825px workspace the mockup shows
+   a ONE-column package list and production showed two. These re-express the SAME
+   intent against the actual column. No new design — the fallbacks are the mockup's.
+
+   NOTE the doubled root class: StartOnboarding.mockup.css is imported AFTER this
+   file, so at equal specificity the generated rules win on order. Both classes sit
+   on the same element, so this is purely a specificity bump, not a new selector. */
+.mock-onboarding-start.obs-root .content { container-type: inline-size; container-name: obs-workspace; }
+
+/* The rail keeps its designed 390px. Narrowing it to a proportional width was tried and
+   REVERTED: the rail's composition is fixed (a four-across preview-fact row, an identity line),
+   so at ~300px it truncated "No worker selected" and ran "DOCUMENTS" into "START DATE". It is
+   the WORKSPACE that flexes — its grids collapse to one column via the container queries below,
+   which is the mockup's own fallback. That also honours the implementation reference, which
+   requires the rail be reused verbatim. */
+
+/* mockup @900 — the package list stops being a two-across comparison. */
+@container obs-workspace (max-width: 839px) {
+  .mock-onboarding-start.obs-root .package-policy-stack { grid-template-columns: 1fr; }
+  .mock-onboarding-start.obs-root .package-banner-top { flex-wrap: wrap; }
+  .mock-onboarding-start.obs-root .package-header-timing { margin-left: 49px; }
+  .mock-onboarding-start.obs-root .optional-action { grid-template-columns: 26px 40px minmax(0, 1fr) auto; }
+  .mock-onboarding-start.obs-root .optional-owner { display: none; }
+  .mock-onboarding-start.obs-root .ownership-exception { grid-template-columns: 40px minmax(0, 1fr) auto; }
+  .mock-onboarding-start.obs-root .queue-owner { display: none; }
+  .mock-onboarding-start.obs-root .account-policy-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mock-onboarding-start.obs-root .account-policy-fact:nth-child(3) { border-top: 1px solid var(--line-soft); border-left: 0; }
+  .mock-onboarding-start.obs-root .account-policy-fact:nth-child(4) { border-top: 1px solid var(--line-soft); }
+}
+
+/* The launch review pair collapses EARLIER than the mockup's own @820, and the threshold is
+   derived rather than picked. The grid is `minmax(0,1.25fr) minmax(260px,.75fr)`, so the
+   follow-up card gets `0.375 × (gridWidth − 14)`. It was authored at the mockup's native size
+   — content 974px, grid 922px, follow-up 340px — which is the width its `42px | copy | pill`
+   rows actually need. Solving for 340px gives a grid of 920px, i.e. a content column of 972px.
+
+   Below that the card is squeezed (at the app's real 825px content the copy track drops to
+   72px and the requirement title wraps behind its pill). The mockup does exactly the same
+   thing at that width — this is the DESIGN's own limitation, not a porting error, confirmed by
+   rendering the mockup at content 825px and reading identical 42/72/115 tracks. The mockup's
+   own remedy is the single-column fallback below; it just triggers it 200px too late for a
+   layout where a fixed 390px rail permanently eats the width the design assumed. So the
+   fallback is the mockup's, applied at the width where the two-column form stops working. */
+@container obs-workspace (max-width: 971px) {
+  .mock-onboarding-start.obs-root .launch-review-grid { grid-template-columns: 1fr; }
+}
+
+/* mockup @820 */
+@container obs-workspace (max-width: 759px) {
+  .mock-onboarding-start.obs-root .package-choice-grid { grid-template-columns: 1fr; }
+
+  /* The mockup's banner reflow, ported WHOLE. Porting only the flex-wrap left
+     `.package-header-timing` inline, which squeezed `.package-banner-copy` down to one
+     word per line ("Ready / to / choose / a / package"). The timing block has to take the
+     full row for the copy to get its width back. */
+  .mock-onboarding-start.obs-root .package-banner-top { align-items: flex-start; }
+  .mock-onboarding-start.obs-root .package-header-timing {
+    order: 3;
+    width: calc(100% - 49px);
+    padding: 9px 0 0;
+    border-top: 1px solid #cde5d5;
+    border-left: 0;
+  }
+  .mock-onboarding-start.obs-root .package-banner-top .package-insight-state { margin-left: 49px; }
+
+  .mock-onboarding-start.obs-root .generated-work-list { grid-template-columns: 1fr; }
+  .mock-onboarding-start.obs-root .generated-work-row:nth-last-child(-n+2) { border-bottom: 1px solid var(--line-soft); }
+  .mock-onboarding-start.obs-root .generated-work-row:last-child { border-bottom: 0; }
+  .mock-onboarding-start.obs-root .work-dialog-facts { grid-template-columns: 1fr; }
+  .mock-onboarding-start.obs-root .work-dialog-facts span + span { border-top: 1px solid var(--line-soft); border-left: 0; }
+
+  /* Documents overview: the copy shares a row with three fixed 110px stat columns, so at this
+     width it was crushed to one word per line. The mockup gives the copy its own full row. */
+  .mock-onboarding-start.obs-root .document-overview { grid-template-columns: 1fr repeat(3, minmax(0, 1fr)); }
+  .mock-onboarding-start.obs-root .document-overview-copy { grid-column: 1 / -1; }
+  .mock-onboarding-start.obs-root .document-overview-stat:first-of-type { border-left: 0; }
+  .mock-onboarding-start.obs-root .document-actions { grid-template-columns: 1fr; }
+  .mock-onboarding-start.obs-root .document-request-grid { grid-template-columns: 1fr; }
+
+  /* .launch-review-grid already collapsed at 971px above — the mockup's @820 rule for it is
+     subsumed, so it is not repeated here. */
+  .mock-onboarding-start.obs-root .launch-ready-banner { grid-template-columns: 44px minmax(0, 1fr); }
+  .mock-onboarding-start.obs-root .launch-ready-state { grid-column: 2; }
+}
+
+/* mockup @620 */
+@container obs-workspace (max-width: 595px) {
+  .mock-onboarding-start.obs-root .launch-followup-document { grid-template-columns: 42px minmax(0, 1fr); }
+  .mock-onboarding-start.obs-root .launch-followup-document > .pill { grid-column: 2; justify-self: start; }
+  .mock-onboarding-start.obs-root .launch-followup-meta,
+  .mock-onboarding-start.obs-root .final-check-list { grid-template-columns: 1fr; }
+  .mock-onboarding-start.obs-root .launch-followup-meta-item + .launch-followup-meta-item {
+    padding-left: 4px;
+    border-top: 1px solid var(--line-soft);
+    border-left: 0;
+  }
+  .mock-onboarding-start.obs-root .final-check-item:nth-child(2n) { padding-left: 0; border-left: 0; }
+  .mock-onboarding-start.obs-root .final-check-item:last-child { grid-column: auto; }
+  .mock-onboarding-start.obs-root .final-check-count { display: none; }
+}
+
+/* mockup @600 */
+@container obs-workspace (max-width: 575px) {
+  .mock-onboarding-start.obs-root .optional-action { grid-template-columns: 24px 38px minmax(0, 1fr); }
+  .mock-onboarding-start.obs-root .optional-action .outcome-tag { display: none; }
+  .mock-onboarding-start.obs-root .exception-section-head { align-items: flex-start; flex-direction: column; }
+  .mock-onboarding-start.obs-root .exception-section-actions { width: 100%; justify-content: space-between; }
+  .mock-onboarding-start.obs-root .ownership-exception { grid-template-columns: 38px minmax(0, 1fr); }
+  .mock-onboarding-start.obs-root .ownership-exception .btn { grid-column: 1 / -1; }
+  .mock-onboarding-start.obs-root .account-policy-facts { grid-template-columns: 1fr; }
+  .mock-onboarding-start.obs-root .account-policy-fact + .account-policy-fact { border-top: 1px solid var(--line-soft); border-left: 0; }
+  .mock-onboarding-start.obs-root .one-off-grid { grid-template-columns: 1fr; }
+  .mock-onboarding-start.obs-root .action-library-foot { align-items: stretch; flex-direction: column; }
+}
+
+/* Production-only: the mockup never models these grids below its own narrowest
+   breakpoint, but the app shell can take the workspace this far down. */
+@container obs-workspace (max-width: 460px) {
+  .mock-onboarding-start.obs-root .field-grid,
+  .mock-onboarding-start.obs-root .employment-facts,
+  .mock-onboarding-start.obs-root .review-grid { grid-template-columns: 1fr; }
+}
+
+/* Centre the page's native dialogs. A global `dialog { margin: 0; inset: 0 }` reset in the
+   app stylesheet beats the UA's `dialog:modal { margin: auto }`, which pinned these to the
+   top-left corner over the app top bar. Restoring `margin: auto` re-centres them on both
+   axes; the max-height keeps a tall dialog scrollable rather than clipped. */
+.mock-onboarding-start.obs-root dialog.work-preview-dialog,
+.mock-onboarding-start.obs-root dialog.action-library-dialog,
+.mock-onboarding-start.obs-root dialog.assignment-dialog {
+  margin: auto;
+  inset: 0;
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+}
+
+/* `.library-empty` is `display: none` in the mockup because the mockup TOGGLES it from its own
+   script — it is the hidden default of a static element. Production renders the element only
+   when it applies, so the ported default made the state unreachable: the action library showed
+   a search box over blank space with no explanation of why nothing was listed. */
+.mock-onboarding-start.obs-root .library-empty { display: block; }
+
+/* Toggle rows the mockup does not model (the one-off action's blocking / evidence flags). */
+.mock-onboarding-start.obs-root .obs-toggle-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line, #dfe5ed);
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+}
+.mock-onboarding-start.obs-root .obs-toggle-row + .obs-toggle-row { margin-top: 8px; }
+.mock-onboarding-start.obs-root .obs-toggle-row input { margin-top: 2px; flex: 0 0 auto; }
+.mock-onboarding-start.obs-root .obs-toggle-row span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mock-onboarding-start.obs-root .obs-toggle-row strong { font-size: 13px; font-weight: 600; }
+.mock-onboarding-start.obs-root .obs-toggle-row small { font-size: 12px; color: #5b6b80; }
+
+/* Rail empty states are plain text, deliberately WITHOUT a card. They previously reused
+   `.ob-duplicate-ok` — the green success block — so "nothing selected yet" rendered as a
+   positive result in its own container. */
+.mock-onboarding-start.obs-root .ob-rail-empty {
+  margin: 0;
+  padding: 2px 0 0;
+  color: #7c879d;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+/* The focused-but-empty dropdown state ("Type at least 2 characters", "No workers found").
+   It was rendering with `display: none` and picking up uikit's 14px padding instead of the
+   mockup's, so focusing the employee field showed an empty 14px sliver instead of the
+   approved dropdown. Forced here because the generated mockup rules lose to the UNLAYERED
+   uikit.css rules regardless of specificity. */
+.mock-onboarding-start.obs-root .employee-picker .ui-person-search-empty,
+.mock-onboarding-start.obs-root .employee-picker .ui-person-search-result-count {
+  display: block;
+  padding: 4px 7px;
+  color: #5b6b80;
+  font-size: 12px;
+  text-align: left;
+}
+
+/* Stepper fit. The mockup sizes each step `min-width: 170px`, which with gaps and padding needs
+   902px — it has ~1219px as a standalone page, but only ~895px inside the app shell, so it
+   overflowed by 7px and showed a scrollbar with every title ellipsised ("Employee & …",
+   "Validate gener…"). Letting the copy wrap and the steps shrink keeps the approved appearance
+   wherever there is room and stays readable where there is not. */
+.mock-onboarding-start.obs-root .ui-stepper { overflow-x: visible; }
+.mock-onboarding-start.obs-root .ui-stepper-step { min-width: 0; }
+.mock-onboarding-start.obs-root .ui-stepper-copy strong,
+.mock-onboarding-start.obs-root .ui-stepper-copy span {
+  overflow: visible;
+  white-space: normal;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+}
+
+/* Empty identity disc in the Case Preview rail: a lighter fill with a Lucide glyph. The
+   previous empty state rendered the wizard's own inline icon inside the circular frame,
+   which showed as a stray mark rather than a placeholder portrait. */
+.mock-onboarding-start.obs-root .ob-preview-photo.is-empty {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* The search input sits INSIDE the already-rounded `.ui-person-search-control`, so uikit's
+   `.ui-input` background and 10px radius painted a second rounded rectangle within the field.
+   The approved mockup's input is `border: 0` with no fill of its own. */
+.mock-onboarding-start.obs-root .employee-picker .ui-person-search-control input,
+.mock-onboarding-start.obs-root .employee-picker .ui-person-search-control input:focus {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  outline: 0;
+}
+
+/* Centre the identity glyph. The disc computed `display: block`, so a 20px icon inside a
+   62px circle rendered against the top-left corner instead of the middle. */
+.mock-onboarding-start.obs-root .ob-preview-photo {
+  display: grid;
+  place-items: center;
+}
+.mock-onboarding-start.obs-root .ob-preview-photo > svg { display: block; }
+
+/* Selected-employee state. The mockup only draws the SEARCHING state, so this falls back to
+   uikit's `.ui-person-search-selected` (min-height 40px) while the mockup sizes the avatar at
+   38px — plus its 1px border that is 40px exactly, so the photo was clipped top and bottom.
+   Match the control's own 46px and let the avatar keep its full circle. */
+.mock-onboarding-start.obs-root .employee-picker .ui-person-search-selected {
+  min-height: 46px;
+  padding: 0 13px;
+  border-color: var(--line, #dfe5ed);
+  border-radius: 10px;
+}
+.mock-onboarding-start.obs-root .employee-picker .ui-person-search-selected .ui-person-search-avatar {
+  width: 34px;
+  height: 34px;
+}
+
+/* Rail preview-fact labels. The approved mockup sets these at 9px uppercase inside a 4-column
+   390px rail; the older production rail CSS was winning with a larger size, so "DOCUMENTS"
+   overflowed its 66px column and clipped. Restore the design's own value. */
+.mock-onboarding-start.obs-root .ob-preview-fact small {
+  padding-bottom: 7px;
+  border-bottom: 1px dashed var(--line, #dfe5ed);
+  color: #7c879d;
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}

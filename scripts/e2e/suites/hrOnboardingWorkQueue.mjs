@@ -106,7 +106,9 @@ export default async function run(h) {
     const documentSelections = (preview.body?.data?.documents?.items ?? [])
       .filter(item => item.state !== 'present_verified')
       .map(item => ({ requirementId: item.requirementId, action: 'request_from_worker' }));
-    return api('hr/onboarding/start', token, { requestId: crypto.randomUUID(), documentSelections, ...args });
+    // `reason` is required at launch (the wizard marks it `*` and the route enforces it).
+    // Defaulted here so a caller that does not care about it still sends a valid launch.
+    return api('hr/onboarding/start', token, { requestId: crypto.randomUUID(), reason: 'New hire', documentSelections, ...args });
   }
 
 
@@ -119,6 +121,44 @@ export default async function run(h) {
   let deptId, employeeId, pkgKey, caseId;
 
   await h.section('fixtures');
+
+  // This suite LAUNCHES cases, and launching provisions an account, which needs
+  // `hr_onboarding.work_email_domain`. It used to inherit whatever the environment happened
+  // to hold — which made it depend on suite ORDER: hrOnboarding pins that key for its own
+  // tests and then clears it, so every start here failed with "Configure the onboarding
+  // work-email domain before provisioning" and took the whole evidence chain down with it.
+  // A suite must not rely on another suite's leftovers, so it pins what it needs and puts
+  // the pre-image back (never a blind delete — that key is real deployment configuration).
+  const WQ_DOMAIN_KEY = 'hr_onboarding.work_email_domain';
+  let wqDomainPreImage;
+  await test('pin the work-email domain this suite needs (setup)', async () => {
+    // Seeded through the service-role client, like every other fixture in this suite, rather
+    // than `settings/values/set`. Writing it over HTTP would make the fixture depend on this
+    // suite's actor holding `hr.settings.manage` — a permission it does not need for anything
+    // it actually tests, and a denial there would look like a queue failure.
+    const { data } = await sb.from('app_setting_values').select('value')
+      .eq('setting_key', WQ_DOMAIN_KEY).eq('scope_type', 'global').is('scope_id', null).maybeSingle();
+    wqDomainPreImage = data ? data.value : undefined;   // undefined = no override existed
+
+    await sb.from('app_setting_values').delete()
+      .eq('setting_key', WQ_DOMAIN_KEY).eq('scope_type', 'global').is('scope_id', null);
+    const { error } = await sb.from('app_setting_values').insert({
+      setting_key: WQ_DOMAIN_KEY, scope_type: 'global', scope_id: null,
+      value: 'e2e-wq.invalid', updated_by: manager.id,
+    });
+    expect(!error, `pin work email domain: ${error?.message ?? ''}`);
+  });
+
+  h.onCleanup(async () => {
+    await sb.from('app_setting_values').delete()
+      .eq('setting_key', WQ_DOMAIN_KEY).eq('scope_type', 'global').is('scope_id', null);
+    if (wqDomainPreImage !== undefined) {
+      await sb.from('app_setting_values').insert({
+        setting_key: WQ_DOMAIN_KEY, scope_type: 'global', scope_id: null,
+        value: wqDomainPreImage, updated_by: manager.id,
+      });
+    }
+  });
 
   await test('seed a department, employee and a package whose plan carries due offsets', async () => {
     const dept = await sb.from('departments').insert({ name: `${TAG} WQ Dept` }).select('id').single();

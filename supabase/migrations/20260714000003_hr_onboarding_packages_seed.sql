@@ -27,10 +27,10 @@ from public.hr_onboarding_packages p cross join (values
   ('welcome','Welcome the new hire','supervisor',null,40),
   ('schedule_confirmation','Confirm schedule','supervisor',null,50),
   ('first_week_checkin','First-week check-in','supervisor',null,60),
-  ('account_invite','Send account invite','it',null,70),
-  ('mfa_setup','MFA / passkey setup','it',null,80),
-  ('application_access','Grant application access','it',null,90),
-  ('equipment_request','Equipment request','it',null,100),
+  ('account_invite','Send account invite','it','it',70),
+  ('mfa_setup','MFA / passkey setup','it','it',80),
+  ('application_access','Grant application access','it','it',90),
+  ('equipment_request','Equipment request','it','it',100),
   ('site_induction','Site induction','hse','hse',110),
   ('ppe_requirements','PPE requirements','hse','hse',120),
   ('hse_briefing','HSE briefing','hse','hse',130),
@@ -53,10 +53,10 @@ from public.hr_onboarding_packages p cross join (values
   ('welcome','Welcome the new hire','supervisor',null,40),
   ('schedule_confirmation','Confirm schedule','supervisor',null,50),
   ('first_week_checkin','First-week check-in','supervisor',null,60),
-  ('account_invite','Send account invite','it',null,70),
-  ('mfa_setup','MFA / passkey setup','it',null,80),
-  ('application_access','Grant application access','it',null,90),
-  ('equipment_request','Equipment request','it',null,100),
+  ('account_invite','Send account invite','it','it',70),
+  ('mfa_setup','MFA / passkey setup','it','it',80),
+  ('application_access','Grant application access','it','it',90),
+  ('equipment_request','Equipment request','it','it',100),
   ('site_induction','Site induction','hse','hse',110),
   ('ppe_requirements','PPE requirements','hse','hse',120),
   ('hse_briefing','HSE briefing','hse','hse',130),
@@ -81,7 +81,7 @@ from public.hr_onboarding_packages p cross join (values
   ('ppe_requirements','PPE requirements','hse','hse',40),
   ('hse_briefing','HSE briefing','hse','hse',50),
   ('contractor_readiness','Contractor HSE readiness','hse','hse',60),
-  ('application_access','Grant limited access','it',null,70)
+  ('application_access','Grant limited access','it','it',70)
 ) as t(task_key, task_title, owner_role, module_key, sort_order)
 where p.package_key = 'contractor_worker'
 on conflict (package_id, task_key) do nothing;
@@ -96,10 +96,10 @@ from public.hr_onboarding_packages p cross join (values
   ('welcome','Welcome the new hire','supervisor',null,40),
   ('schedule_confirmation','Confirm schedule','supervisor',null,50),
   ('first_week_checkin','First-week check-in','supervisor',null,60),
-  ('account_invite','Send account invite','it',null,70),
-  ('mfa_setup','MFA / passkey setup','it',null,80),
-  ('application_access','Grant application access','it',null,90),
-  ('equipment_request','Equipment request','it',null,100),
+  ('account_invite','Send account invite','it','it',70),
+  ('mfa_setup','MFA / passkey setup','it','it',80),
+  ('application_access','Grant application access','it','it',90),
+  ('equipment_request','Equipment request','it','it',100),
   ('leadership_orientation','Leadership orientation','hr',null,110),
   ('site_induction','Site induction','hse','hse',120),
   ('ppe_requirements','PPE requirements','hse','hse',130),
@@ -123,10 +123,10 @@ from public.hr_onboarding_packages p cross join (values
   ('welcome','Welcome the new hire','supervisor',null,40),
   ('schedule_confirmation','Confirm schedule','supervisor',null,50),
   ('first_week_checkin','First-week check-in','supervisor',null,60),
-  ('account_invite','Send account invite','it',null,70),
-  ('mfa_setup','MFA / passkey setup','it',null,80),
-  ('application_access','Grant application access','it',null,90),
-  ('equipment_request','Equipment request','it',null,100),
+  ('account_invite','Send account invite','it','it',70),
+  ('mfa_setup','MFA / passkey setup','it','it',80),
+  ('application_access','Grant application access','it','it',90),
+  ('equipment_request','Equipment request','it','it',100),
   ('office_induction','Office induction','hse','hse',110),
   ('statutory_review','Statutory readiness review','payroll','payroll',120),
   ('pay_group_handoff','Pay group handoff','payroll','payroll',130),
@@ -154,6 +154,24 @@ on conflict (package_id, handoff_key) do nothing;
 insert into public.hr_onboarding_handoff_templates (package_id, handoff_key, target_module, handoff_type, sort_order)
 select p.id, 'onboarding_payroll','payroll','onboarding_payroll',10
 from public.hr_onboarding_packages p where p.package_key = 'office_admin'
+on conflict (package_id, handoff_key) do nothing;
+
+-- ── IT / Access Setup handoff ─────────────────────────────────────────────────--
+-- "Create the account and approved access profile." — the approved Package Management
+-- design gives every package that provisions an account this handoff, routed to the
+-- IT / Admin Queue. It was missing from this seed, which is why account provisioning
+-- never registered as REQUIRED: `accountPreflight` derives `required` from a task or
+-- handoff whose module is 'access' / 'it', and the IT tasks above carried a NULL
+-- module_key while no access handoff existed at all. The result was a package that
+-- listed "Grant application access" as work yet reported `required: false`, so the
+-- missing-work-email-domain blocker could never surface.
+--
+-- contractor_worker is included deliberately: the design gives contractors temporary,
+-- limited access under a sponsor, which is still an account that must be provisioned.
+insert into public.hr_onboarding_handoff_templates (package_id, handoff_key, target_module, handoff_type, sort_order)
+select p.id, 'onboarding_it_access', 'it', 'onboarding_it_access', 5
+from public.hr_onboarding_packages p
+where p.package_key in ('standard_employee','safety_critical_employee','supervisor_manager','office_admin','contractor_worker')
 on conflict (package_id, handoff_key) do nothing;
 
 -- After applying:  NOTIFY pgrst, 'reload schema';

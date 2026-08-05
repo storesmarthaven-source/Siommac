@@ -86,7 +86,13 @@ export const PERMISSION_KEYS = [
   'hr.employees.import.manage_all',
   'hr.access_profiles.view',
   'hr.employees.wizard.draft',
+  // Onboarding read SCOPE is a three-tier ladder, enforced server-side in the read models.
+  // Base `view` is own/assigned/participant only ("My Work"); the two scope keys widen the
+  // server-returned set. The frontend never fetches all cases and hides rows after the fact.
   'hr.onboarding.view',
+  'hr.onboarding.self.view',
+  'hr.onboarding.view_team',
+  'hr.onboarding.view_all',
   'hr.onboarding.start',
   'hr.onboarding.task.manage',
   'hr.onboarding.cancel',
@@ -102,6 +108,7 @@ export const PERMISSION_KEYS = [
   'hr.onboarding.custom_actions.case_complete',
   'hr.onboarding.custom_actions.case_cancel',
   'hr.onboarding.provision_account',
+  'hr.onboarding.documents.waive',
   'hr.onboarding.packages.manage',
   'hr.onboarding.reports.view',
   'hr.onboarding.reports.export',
@@ -463,6 +470,8 @@ export const PERMISSION_KEYS = [
   // ── HR Employee Statutory Profile (NIS capture) ───────────────────────────────
   'hr.employee.statutory.view',     // view the NIS / statutory profile section of an employee
   'hr.employee.statutory.capture',  // create or update NIS / statutory profile data (HR side)
+  // ── HR Employee Probation Correction ─────────────────────────────────────────
+  'hr.employee.probation.correct',  // governed correction of an employee's probation end date
   // ── Finance NIS Profile Verification ─────────────────────────────────────────
   'finance.payroll.nis.view',       // Finance: view pending and verified NIS profiles
   'finance.payroll.nis.verify',     // Finance Manager: verify a NIS profile (set status=verified)
@@ -631,6 +640,7 @@ export const COMPLIANCE_GATED_KEYS = new Set<string>([
  */
 // Employee baseline — shared by every module-staff role (flat; no inheritance).
 const EMPLOYEE_BASELINE: ReadonlySet<PermissionKey> = new Set<PermissionKey>([
+  'hr.onboarding.self.view',       // signed-in worker may read only their own onboarding projection
   'tickets.create_self',            // every authenticated role may raise a self-service ticket
   'employees.access.request',       // every authenticated role may submit own account support request
   'workflow.my_tasks.view', 'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject',
@@ -664,6 +674,18 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   hr_staff: new Set<PermissionKey>([
     ...EMPLOYEE_BASELINE,
     'tickets.create_internal',      // HR service-queue handler
+    // HR Onboarding — execution tier. Mirrors 20260714000013_hr_staff_onboarding_permissions.sql.
+    // Deliberately EXCLUDES audit.view, template authoring (custom_actions.create/update/retire),
+    // packages.manage, provision_account, reports.view and reports.export — all oversight tier.
+    // The reports.view removal is the manager-only Insights policy in 20261002000000.
+    // Read scope stays at base `view` = own/assigned/participant ("My Work"); hr_staff must
+    // never hold view_team or view_all.
+    'hr.onboarding.view',
+    'hr.onboarding.start', 'hr.onboarding.task.manage', 'hr.onboarding.cancel',
+    'hr.onboarding.case.manage', 'hr.onboarding.complete',
+    'hr.onboarding.custom_actions.view',
+    'hr.onboarding.custom_actions.case_add', 'hr.onboarding.custom_actions.case_update',
+    'hr.onboarding.custom_actions.case_complete', 'hr.onboarding.custom_actions.case_cancel',
     // HR Compensation — manage pay items
     'hr.compensation.view', 'hr.compensation.manage',
     // HR Overtime — view + admin manage
@@ -682,6 +704,17 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'calendar.manage', 'calendar.task.assign',
     ...EMPLOYEE_BASELINE,
     'tickets.create_internal',      // HR service-queue handler
+    // HR Onboarding — oversight tier. Mirrors the cumulative onboarding grant migrations
+    // plus 20260930000001_hr_onboarding_view_scope_permissions.sql (view_team/view_all).
+    'hr.onboarding.view', 'hr.onboarding.view_team', 'hr.onboarding.view_all',
+    'hr.onboarding.start', 'hr.onboarding.task.manage', 'hr.onboarding.cancel',
+    'hr.onboarding.case.manage', 'hr.onboarding.complete', 'hr.onboarding.audit.view',
+    'hr.onboarding.custom_actions.view', 'hr.onboarding.custom_actions.create',
+    'hr.onboarding.custom_actions.update', 'hr.onboarding.custom_actions.retire',
+    'hr.onboarding.custom_actions.case_add', 'hr.onboarding.custom_actions.case_update',
+    'hr.onboarding.custom_actions.case_complete', 'hr.onboarding.custom_actions.case_cancel',
+    'hr.onboarding.provision_account', 'hr.onboarding.documents.waive', 'hr.onboarding.packages.manage',
+    'hr.onboarding.reports.view', 'hr.onboarding.reports.export',
     // HR Compensation — full
     'hr.compensation.view', 'hr.compensation.manage', 'hr.compensation.approve',
     'hr.compensation.reports.view', 'hr.compensation.reports.export',
@@ -877,6 +910,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   ]),
 
   employee: new Set<PermissionKey>([
+    'hr.onboarding.self.view',
     'tickets.create_self',
     'calendar.view', 'calendar.task.manage_own', 'calendar.activity.manage_own',
     'platform.weather.view',
@@ -911,6 +945,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   ]),
 
   manager: new Set<PermissionKey>([
+    'hr.onboarding.self.view',
     'tickets.create_self', 'tickets.create_team',
     'finance.payroll.view_own',   // self-service: view/print own payslips (self-scoped server-side)
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
@@ -977,6 +1012,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   ]),
 
   admin: new Set<PermissionKey>([
+    'hr.onboarding.self.view',
     'tickets.create_self', 'tickets.create_team', 'tickets.create_on_behalf', 'tickets.create_internal',
     'tickets.view_all', 'tickets.reply_internal',
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
@@ -1026,11 +1062,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.employees.view', 'hr.employees.create', 'hr.employees.update', 'hr.employees.statutory.view', 'hr.employees.statutory.update',
     'hr.employees.payroll_readiness.view', 'hr.employees.restricted_contact.update',
     'hr.employees.import', 'hr.employees.import.upload', 'hr.employees.import.map', 'hr.employees.import.validate', 'hr.employees.import.commit', 'hr.employees.import.report.download',
-    'hr.onboarding.view', 'hr.onboarding.start', 'hr.onboarding.task.manage', 'hr.onboarding.cancel',
+    'hr.onboarding.view', 'hr.onboarding.view_team', 'hr.onboarding.view_all',
+    'hr.onboarding.start', 'hr.onboarding.task.manage', 'hr.onboarding.cancel',
     'hr.onboarding.case.manage', 'hr.onboarding.complete', 'hr.onboarding.audit.view',
     'hr.onboarding.custom_actions.view', 'hr.onboarding.custom_actions.create', 'hr.onboarding.custom_actions.update', 'hr.onboarding.custom_actions.retire',
     'hr.onboarding.custom_actions.case_add', 'hr.onboarding.custom_actions.case_update', 'hr.onboarding.custom_actions.case_complete', 'hr.onboarding.custom_actions.case_cancel',
-    'hr.onboarding.provision_account', 'hr.onboarding.packages.manage', 'hr.onboarding.reports.view', 'hr.onboarding.reports.export',
+    'hr.onboarding.provision_account', 'hr.onboarding.documents.waive', 'hr.onboarding.packages.manage', 'hr.onboarding.reports.view', 'hr.onboarding.reports.export',
     'hr.offboarding.view', 'hr.offboarding.start', 'hr.offboarding.task.manage', 'hr.offboarding.case.manage', 'hr.offboarding.complete', 'hr.offboarding.finalize', 'hr.offboarding.cancel', 'hr.offboarding.audit.view',
     'hr.employees.status_change', 'hr.employees.transfer', 'hr.employees.role_change',
     'hr.employees.supervisor_change', 'hr.employees.sensitive_view',
@@ -1250,11 +1287,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.employees.view', 'hr.employees.create', 'hr.employees.update', 'hr.employees.statutory.view', 'hr.employees.statutory.update',
     'hr.employees.payroll_readiness.view', 'hr.employees.restricted_contact.update',
     'hr.employees.import', 'hr.employees.import.upload', 'hr.employees.import.map', 'hr.employees.import.validate', 'hr.employees.import.commit', 'hr.employees.import.report.download',
-    'hr.onboarding.view', 'hr.onboarding.start', 'hr.onboarding.task.manage', 'hr.onboarding.cancel',
+    'hr.onboarding.view', 'hr.onboarding.view_team', 'hr.onboarding.view_all',
+    'hr.onboarding.start', 'hr.onboarding.task.manage', 'hr.onboarding.cancel',
     'hr.onboarding.case.manage', 'hr.onboarding.complete', 'hr.onboarding.audit.view',
     'hr.onboarding.custom_actions.view', 'hr.onboarding.custom_actions.create', 'hr.onboarding.custom_actions.update', 'hr.onboarding.custom_actions.retire',
     'hr.onboarding.custom_actions.case_add', 'hr.onboarding.custom_actions.case_update', 'hr.onboarding.custom_actions.case_complete', 'hr.onboarding.custom_actions.case_cancel',
-    'hr.onboarding.provision_account', 'hr.onboarding.packages.manage', 'hr.onboarding.reports.view', 'hr.onboarding.reports.export',
+    'hr.onboarding.provision_account', 'hr.onboarding.documents.waive', 'hr.onboarding.packages.manage', 'hr.onboarding.reports.view', 'hr.onboarding.reports.export',
     'hr.offboarding.view', 'hr.offboarding.start', 'hr.offboarding.task.manage', 'hr.offboarding.case.manage', 'hr.offboarding.complete', 'hr.offboarding.finalize', 'hr.offboarding.cancel', 'hr.offboarding.audit.view',
     'hr.employees.status_change', 'hr.employees.transfer', 'hr.employees.role_change',
     'hr.employees.supervisor_change', 'hr.employees.sensitive_view',

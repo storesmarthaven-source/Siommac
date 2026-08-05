@@ -150,7 +150,13 @@ export const PERMISSION_KEYS = [
   'hr.employees.import.manage_all',
   'hr.access_profiles.view',
   'hr.employees.wizard.draft',
+  // Onboarding read SCOPE ladder. Base `view` resolves to own/assigned/participant rows
+  // ("My Work") inside the read models; these two widen the SERVER-returned set. Scope is
+  // never applied by hiding rows in the client.
   'hr.onboarding.view',
+  'hr.onboarding.self.view',
+  'hr.onboarding.view_team',
+  'hr.onboarding.view_all',
   'hr.onboarding.start',
   'hr.onboarding.task.manage',
   'hr.onboarding.cancel',
@@ -166,6 +172,7 @@ export const PERMISSION_KEYS = [
   'hr.onboarding.custom_actions.case_complete',
   'hr.onboarding.custom_actions.case_cancel',
   'hr.onboarding.provision_account',
+  'hr.onboarding.documents.waive',
   'hr.onboarding.packages.manage',
   'hr.onboarding.reports.view',
   'hr.onboarding.reports.export',
@@ -383,6 +390,8 @@ export const PERMISSION_KEYS = [
   // ── HR Employee Statutory Profile (NIS capture) ───────────────────────────────
   'hr.employee.statutory.view',     // view the NIS / statutory profile section of an employee
   'hr.employee.statutory.capture',  // create or update NIS / statutory profile data (HR side)
+  // ── HR Employee Probation Correction ─────────────────────────────────────────
+  'hr.employee.probation.correct',  // governed correction of an employee's probation end date
   // ── Finance NIS Profile Verification ─────────────────────────────────────────
   'finance.payroll.nis.view',       // Finance: view pending and verified NIS profiles
   'finance.payroll.nis.verify',     // Finance Manager: verify a NIS profile (set status=verified)
@@ -556,6 +565,18 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
   // HR module staff roles (flat; employee baseline + HR keys).
   // Mirrors 20260802000007_hr_compensation_overtime_permissions.sql.
   hr_staff: new Set<PermissionKey>([
+    'hr.onboarding.self.view',
+    // HR Onboarding — execution tier. Mirrors 20260714000013_hr_staff_onboarding_permissions.sql.
+    // Deliberately EXCLUDES audit.view, template authoring, packages.manage, provision_account,
+    // reports.view and reports.export. Insights is manager-only per 20261002000000.
+    // Read scope stays at base `view` = own/assigned/participant
+    // ("My Work"); hr_staff must never hold view_team or view_all.
+    'hr.onboarding.view',
+    'hr.onboarding.start', 'hr.onboarding.task.manage', 'hr.onboarding.cancel',
+    'hr.onboarding.case.manage', 'hr.onboarding.complete',
+    'hr.onboarding.custom_actions.view',
+    'hr.onboarding.custom_actions.case_add', 'hr.onboarding.custom_actions.case_update',
+    'hr.onboarding.custom_actions.case_complete', 'hr.onboarding.custom_actions.case_cancel',
     'tickets.create_self', 'tickets.create_internal',
     'calendar.view', 'calendar.task.manage_own', 'calendar.activity.manage_own',
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
@@ -588,6 +609,18 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'tickets.view_all', 'tickets.reply_internal',
   ]),
   hr_manager: new Set<PermissionKey>([
+    'hr.onboarding.self.view',
+    // HR Onboarding — oversight tier. Mirrors the cumulative onboarding grant migrations
+    // plus 20260930000001_hr_onboarding_view_scope_permissions.sql (view_team/view_all).
+    'hr.onboarding.view', 'hr.onboarding.view_team', 'hr.onboarding.view_all',
+    'hr.onboarding.start', 'hr.onboarding.task.manage', 'hr.onboarding.cancel',
+    'hr.onboarding.case.manage', 'hr.onboarding.complete', 'hr.onboarding.audit.view',
+    'hr.onboarding.custom_actions.view', 'hr.onboarding.custom_actions.create',
+    'hr.onboarding.custom_actions.update', 'hr.onboarding.custom_actions.retire',
+    'hr.onboarding.custom_actions.case_add', 'hr.onboarding.custom_actions.case_update',
+    'hr.onboarding.custom_actions.case_complete', 'hr.onboarding.custom_actions.case_cancel',
+    'hr.onboarding.provision_account', 'hr.onboarding.documents.waive', 'hr.onboarding.packages.manage',
+    'hr.onboarding.reports.view', 'hr.onboarding.reports.export',
     'tickets.create_self', 'tickets.create_internal',
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
@@ -628,6 +661,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
   // Finance roles (flat; each carries the employee baseline + finance keys).
   // Mirrors 20260802000000_finance_roles.sql + 20260802000003_finance_statutory_permissions.sql.
   finance_staff: new Set<PermissionKey>([
+    'hr.onboarding.self.view',
     'tickets.create_self', 'tickets.create_internal',
     'calendar.view', 'calendar.task.manage_own', 'calendar.activity.manage_own',
     // employee baseline (same keys as employee role)
@@ -703,6 +737,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.ap.payment.record',
   ]),
   finance_manager: new Set<PermissionKey>([
+    'hr.onboarding.self.view',
     'tickets.create_self', 'tickets.create_internal',
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
     // employee baseline (same keys as employee role)
@@ -841,6 +876,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.ap.bills.import',
   ]),
   employee: new Set<PermissionKey>([
+    'hr.onboarding.self.view',
     'tickets.create_self',
     'employees.access.request',           // self-service: submit own account support request
     'calendar.view', 'calendar.task.manage_own', 'calendar.activity.manage_own',
@@ -867,6 +903,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.bank_accounts.manage',
   ]),
   manager: new Set<PermissionKey>([
+    'hr.onboarding.self.view',
     'tickets.create_self', 'tickets.create_team',
     'finance.payroll.view_own',   // self-service: view/print own payslips (self-scoped server-side)
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
@@ -920,6 +957,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'tickets.view_all', 'tickets.reply_internal',
   ]),
   admin: new Set<PermissionKey>([
+    'hr.onboarding.self.view',
     'tickets.create_self', 'tickets.create_team', 'tickets.create_on_behalf', 'tickets.create_internal',
     'tickets.view_all', 'tickets.reply_internal',
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',

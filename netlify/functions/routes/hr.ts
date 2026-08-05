@@ -55,7 +55,7 @@ import {
   getReadinessMatrix, getReadinessSummaries, getReadinessSummary, getWorkItemDetail, transitionWorkItem,
   READINESS_VIEW, READINESS_FOLLOW_UP, READINESS_REVIEW,
 } from '../lib/hr/readinessService';
-import { getEmploymentDetail, currentAssignmentConditions, applyEmployeeAssignment } from '../lib/hr/employmentDetail';
+import { getEmploymentDetail, currentAssignmentConditions, applyEmployeeAssignment, correctEmployeeProbation } from '../lib/hr/employmentDetail';
 import { exportDocumentIndex, exportReadinessBreakdown, exportAuditHistory } from '../lib/hr/employeeExports';
 import type { HonoVariables } from '../../../types/api';
 import type { ProfileReadinessSummary } from '../../../types/hrEmployeeProfile';
@@ -790,6 +790,50 @@ router.post('/employees/assignment/apply', async c => {
   } catch (e) {
     const err = e as { status?: number; message?: string };
     return c.json({ success: false, message: err.message ?? 'Assignment update failed.' },
+      (err.status ?? 500) as 200);
+  }
+});
+
+/**
+ * POST /api/hr/employees/probation/correct — the governed correction of an employee's
+ * probation end date.
+ *
+ * An onboarding launch writes `probation_end_date` as a side effect of creating a case.
+ * That made the field a one-way door: once set, nothing recorded what it had been, so a
+ * case cleanup had no authoritative value to restore. The launch now captures the pre-image
+ * (`hr_audit_log.previous_state`); this endpoint is how a human puts a value back or amends
+ * one, under its OWN high-risk permission and a mandatory reason.
+ *
+ * It is deliberately separate from `employees/assignment/apply`: probation terms carry
+ * employment consequences (confirmation, notice), so they must not ride along with a routine
+ * posting edit. `probationEndDate: null` is an explicit CLEAR — the caller has to say so.
+ */
+router.post('/employees/probation/correct', async c => {
+  const actor = await requirePermission(c, 'hr.employee.probation.correct');
+  const v = zv(c, z.object({
+    employeeId:       z.string().min(1),
+    // `.nullable()` WITHOUT `.optional()`: clearing the date must be stated, never inferred
+    // from an omitted field.
+    probationEndDate: z.iso.date().nullable(),
+    reason:           z.string().trim().min(10).max(500),
+  }), (c.get('body')).args ?? {});
+  if (!v.ok) return v.response;
+
+  const emp = await loadEmployee(v.data.employeeId);
+  if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
+
+  try {
+    const result = await correctEmployeeProbation({
+      actorId:          actor.id,
+      employeeId:       v.data.employeeId,
+      probationEndDate: v.data.probationEndDate,
+      reason:           v.data.reason,
+      correlationId:    crypto.randomUUID(),
+    });
+    return c.json({ success: true, data: result });
+  } catch (e) {
+    const err = e as { status?: number; message?: string };
+    return c.json({ success: false, message: err.message ?? 'Probation correction failed.' },
       (err.status ?? 500) as 200);
   }
 });
@@ -2613,13 +2657,21 @@ router.post('/employees/documents/list', async c => {
 // POST /api/hr/employees/documents/upload-url
 router.post('/employees/documents/upload-url', async c => {
   await requirePermission(c, 'hr.employee_documents.upload');
-  const v = zv(c, z.object({ fileName: z.string().min(1), mimeType: z.string().min(1) }), (c.get('body')).args ?? {});
+  // `employeeId` scopes the generated object under that employee's folder so `commit` can
+  // prove the path it is handed was issued for THIS subject. Without it a caller could commit
+  // an arbitrary bucket path — including another employee's file — against any employee.
+  const v = zv(c, z.object({ employeeId: z.string().min(1), fileName: z.string().min(1), mimeType: z.string().min(1) }), (c.get('body')).args ?? {});
   if (!v.ok) return v.response;
   try {
-    const { uploadUrl, token, path } = await createAttachmentUploadUrl(HR_DOC_BUCKET, v.data.fileName, v.data.mimeType);
+    const { uploadUrl, token, path } = await createAttachmentUploadUrl(HR_DOC_BUCKET, v.data.fileName, v.data.mimeType, v.data.employeeId);
     return c.json({ success: true, uploadUrl, token, path, bucket: HR_DOC_BUCKET });
   } catch (err) { return c.json({ success: false, message: err instanceof Error ? err.message : 'Upload URL failed' }, 400 as 200); }
 });
+
+/** The folder `upload-url` issues for an employee. Shared so commit validates the same shape. */
+export function hrDocumentPathPrefix(employeeId: string): string {
+  return `${employeeId.replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 80)}/`;
+}
 
 // POST /api/hr/employees/documents/commit
 router.post('/employees/documents/commit', async c => {
@@ -2633,6 +2685,21 @@ router.post('/employees/documents/commit', async c => {
     expiryDate: z.string().nullable().optional(),
   }), (c.get('body')).args ?? {});
   if (!v.ok) return v.response;
+  // FORGED-PATH GATE. The client sends the path back, so it must be proven, not trusted:
+  //   1. it has to sit under the folder `upload-url` issues for THIS employee, and
+  //   2. an object has to actually exist there.
+  // Together these stop a caller committing another employee's file, an arbitrary bucket
+  // object, or a path that was never uploaded.
+  const prefix = hrDocumentPathPrefix(v.data.employeeId);
+  if (!v.data.filePath.startsWith(prefix) || v.data.filePath.includes('..')) {
+    return c.json({ success: false, message: 'The upload path does not belong to this employee.' }, 400 as 200);
+  }
+  const objectName = v.data.filePath.slice(prefix.length);
+  const { data: listed, error: listErr } = await sb.storage.from(HR_DOC_BUCKET).list(prefix.replace(/\/$/, ''), { search: objectName, limit: 1 });
+  if (listErr) return c.json({ success: false, message: listErr.message }, 500 as 200);
+  if (!(listed ?? []).some(o => o.name === objectName)) {
+    return c.json({ success: false, message: 'No uploaded file was found at that path.' }, 400 as 200);
+  }
   const { data, error } = await sb.from('hr_employee_documents').insert({
     employee_id: v.data.employeeId, document_type: v.data.documentType, title: v.data.title,
     file_path: v.data.filePath, file_name: v.data.fileName, mime_type: v.data.mimeType ?? null,

@@ -40,6 +40,9 @@ declare
   v_handoff_count integer := 0;
   v_document_count integer := 0;
   v_action_count integer := 0;
+  v_prev_probation_end_date date;
+  v_employee_found boolean := false;
+  v_probation_changed boolean := false;
 begin
   if p_request_id is null then raise exception 'request id is required' using errcode = '22023'; end if;
 
@@ -77,6 +80,19 @@ begin
       and c.status in ('draft','open','in_progress','blocked','paused','ready_for_activation')
   ) then
     raise exception 'employee already has an active onboarding case' using errcode = '23505';
+  end if;
+
+  -- Capture the employee's probation_end_date BEFORE anything can change it, and hold the
+  -- row lock for the rest of the transaction. The launch is the only place that mutates this
+  -- field as a side effect of creating a case, so without the pre-image the change is not
+  -- reversible from its own audit trail: an operator cleaning up a case has no authoritative
+  -- prior value to restore and would have to guess. Reading it here (rather than next to the
+  -- UPDATE below) means the recorded pre-image cannot drift between the read and the write.
+  select u.probation_end_date into v_prev_probation_end_date
+  from public.app_users u where u.id = v_employee_id for update;
+  v_employee_found := found;
+  if not v_employee_found then
+    raise exception 'employee % does not exist', v_employee_id using errcode = '23503';
   end if;
 
   insert into public.hr_onboarding_cases (
@@ -180,8 +196,13 @@ begin
     v_action_count := v_action_count + 1;
   end loop;
 
-  if p_probation_end_date is not null then
+  -- Only touch the field when the launch actually supplies a date (a package with no
+  -- probation_days passes null) AND the value would really change. A launch must never
+  -- overwrite an existing probation date with the value it already holds, and must never
+  -- clear one it was not asked to set.
+  if p_probation_end_date is not null and p_probation_end_date is distinct from v_prev_probation_end_date then
     update public.app_users set probation_end_date = p_probation_end_date where id = v_employee_id;
+    v_probation_changed := true;
   end if;
 
   insert into public.app_events (
@@ -197,25 +218,35 @@ begin
     'hr.onboarding.launch:' || p_request_id::text
   ) returning id into v_event_id;
 
+  -- The platform audit entry carries BOTH sides of the employee mutation this launch made,
+  -- so the change is reversible from the audit alone.
   insert into public.audit_logs(action, table_name, record_id, user_id, changes)
   values ('hr.onboarding.started', 'hr_onboarding_cases', v_case_id::text, p_actor_id,
     jsonb_build_object('caseNo', v_case_no, 'employeeId', v_employee_id,
       'packageKey', p_case ->> 'packageKey', 'packageVersionNo', p_case ->> 'packageVersionNo',
       'taskCount', v_task_count, 'handoffCount', v_handoff_count,
       'documentRequestCount', v_document_count, 'actionCount', v_action_count,
-      'requestId', p_request_id));
+      'requestId', p_request_id,
+      'probationEndDate', jsonb_build_object(
+        'previous', v_prev_probation_end_date,
+        'new', case when v_probation_changed then p_probation_end_date else v_prev_probation_end_date end,
+        'changed', v_probation_changed)));
 
+  -- `previous_state` is the employee pre-image, recorded whether or not the launch changed
+  -- it: "the field was already null" is as much a fact to preserve as a changed value.
   insert into public.hr_audit_log (
-    employee_id, submodule_key, record_id, actor_id, action, new_state, reason
+    employee_id, submodule_key, record_id, actor_id, action, previous_state, new_state, reason
   ) values (
     v_employee_id, 'onboarding', v_case_id::text, p_actor_id,
     'hr.onboarding.started',
+    jsonb_build_object('probationEndDate', v_prev_probation_end_date),
     jsonb_build_object(
       'caseNo', v_case_no, 'packageKey', p_case ->> 'packageKey',
       'packageId', p_case ->> 'packageId', 'packageVersionNo', p_case ->> 'packageVersionNo',
       'taskCount', v_task_count, 'handoffCount', v_handoff_count,
       'documentRequestCount', v_document_count, 'actionCount', v_action_count,
-      'probationEndDate', p_probation_end_date, 'requestId', p_request_id
+      'probationEndDate', case when v_probation_changed then p_probation_end_date else v_prev_probation_end_date end,
+      'probationEndDateChanged', v_probation_changed, 'requestId', p_request_id
     ),
     nullif(p_case ->> 'reason', '')
   );
@@ -254,4 +285,14 @@ grant execute on function public.hr_onboarding_launch_tx(uuid, text, jsonb, json
 -- 1. Function is service-role only.
 -- 2. launch_request_id is unique and a replay returns the original case.
 -- 3. A forced invalid child row leaves no case, task, handoff, document, action,
---    event, audit, notification or outbox row for that request id.
+--    event, audit, notification or outbox row for that request id — and the employee's
+--    probation_end_date is byte-identical to its pre-launch value.
+-- 4. hr_audit_log.previous_state carries the employee's probation_end_date pre-image on
+--    every hr.onboarding.started row, and audit_logs.changes carries previous + new.
+--
+-- RE-APPLY NOTE: this file is idempotent end to end (add column if not exists / create index
+-- if not exists / create or replace function / revoke + grant), so it is re-run in place
+-- rather than corrected by a follow-up migration. Apply it with psql or the Supabase CLI —
+-- NOT the dashboard SQL editor, which has been observed to mangle plpgsql `record`
+-- declarations, truncate function bodies, and silently drop the trailing REVOKE (which would
+-- leave this SECURITY DEFINER function executable by anon).
