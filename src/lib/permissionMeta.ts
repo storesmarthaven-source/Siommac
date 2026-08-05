@@ -76,7 +76,10 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   'hr.employees.import.manage_all': { module: 'HR', group: 'Employee Master', label: 'Import: Manage All Batches', description: "Act on import batches uploaded by other operators. Staged batches hold raw personal data (date of birth, NIS, BIR), so without this an operator sees only their own.", risk: 'high' },
   'hr.access_profiles.view':    { module: 'HR', group: 'Employee Master', label: 'View Access Profiles', description: 'List available access profiles for the employee creation wizard.', risk: 'low' },
   'hr.employees.wizard.draft':  { module: 'HR', group: 'Employee Master', label: 'Manage Wizard Drafts', description: 'Save, load, and delete resumable employee-creation wizard drafts.', risk: 'low' },
-  'hr.onboarding.view':        { module: 'HR', group: 'Onboarding', label: 'View Onboarding',      description: 'View onboarding cases, tasks and handoffs.', risk: 'low' },
+  'hr.onboarding.view':        { module: 'HR', group: 'Onboarding', label: 'View Onboarding',      description: 'View onboarding cases, tasks and handoffs the holder owns, is assigned, or participates in ("My Work").', risk: 'low' },
+  'hr.onboarding.self.view':   { module: 'HR', group: 'Onboarding', label: 'View Own Onboarding',  description: 'View only the signed-in worker’s onboarding tasks, document requests, messages and Day-One status.', risk: 'low' },
+  'hr.onboarding.view_team':   { module: 'HR', group: 'Onboarding', label: 'View Team Onboarding', description: 'Widen onboarding reads to the accountable team/department, not just the holder’s own work.', risk: 'medium' },
+  'hr.onboarding.view_all':    { module: 'HR', group: 'Onboarding', label: 'View All Onboarding',  description: 'Widen onboarding reads to every case in the organisation, including other departments.', risk: 'high' },
   'hr.onboarding.start':       { module: 'HR', group: 'Onboarding', label: 'Start Onboarding',     description: 'Start an onboarding case from a package.', risk: 'medium' },
   'hr.onboarding.task.manage': { module: 'HR', group: 'Onboarding', label: 'Manage Onboarding Tasks', description: 'Complete or reassign onboarding tasks.', risk: 'medium' },
   'hr.onboarding.cancel':      { module: 'HR', group: 'Onboarding', label: 'Cancel Onboarding',    description: 'Cancel an onboarding case.', risk: 'medium' },
@@ -92,6 +95,7 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   'hr.onboarding.custom_actions.case_complete':{ module: 'HR', group: 'Onboarding', label: 'Complete Case Custom Action', description: 'Complete a custom action on an onboarding case.', risk: 'medium' },
   'hr.onboarding.custom_actions.case_cancel':  { module: 'HR', group: 'Onboarding', label: 'Cancel Case Custom Action',   description: 'Cancel a custom action on an onboarding case.', risk: 'medium' },
   'hr.onboarding.provision_account':           { module: 'HR', group: 'Onboarding', label: 'Provision Account',           description: 'Create a work email + login and send the set-password invite.', risk: 'high' },
+  'hr.onboarding.documents.waive':             { module: 'HR', group: 'Onboarding', label: 'Waive Onboarding Documents', description: 'Authorise a documented exception to an eligible onboarding document requirement.', risk: 'high' },
   'hr.onboarding.packages.manage':             { module: 'HR', group: 'Onboarding', label: 'Manage Packages',             description: 'Create/edit onboarding packages and their task, handoff & custom-action templates.', risk: 'high' },
   'hr.onboarding.reports.view':                { module: 'HR', group: 'Onboarding', label: 'View Onboarding Reports',     description: 'View onboarding analytics and compliance reports.', risk: 'low' },
   'hr.onboarding.reports.export':              { module: 'HR', group: 'Onboarding', label: 'Export Onboarding Reports',   description: 'Export onboarding report data to CSV (audited data egress).', risk: 'medium' },
@@ -1413,6 +1417,14 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     module: 'HR', group: 'Statutory Profile',
     label: 'Capture Statutory Profile',
     description: 'Create or update NIS continuity data for an employee. HR can capture data but cannot mark a profile as verified (Finance only).',
+    risk: 'high',
+  },
+
+  // ── HR Employee Probation Correction ─────────────────────────────────────────
+  'hr.employee.probation.correct': {
+    module: 'HR', group: 'Employment',
+    label: 'Correct Probation End Date',
+    description: 'Set or clear an employee probation end date outside the normal onboarding launch, with a mandatory reason. The only sanctioned way to change this field after a case has set it — cleanup scripts and manual edits must never guess at a prior value.',
     risk: 'high',
   },
 

@@ -55,7 +55,7 @@ export default async function run(h) {
     if (path !== 'hr/onboarding/start') return rawApi(path, token, args);
     const documentSelections = await defaultDocumentSelections(token, args);
     return rawApi(path, token, {
-      requestId: crypto.randomUUID(), targetStartDate: '2027-01-01',
+      requestId: crypto.randomUUID(), targetStartDate: '2027-01-01', reason: 'New hire',
       ...(documentSelections === undefined ? {} : { documentSelections }),
       ...args,
     });
@@ -94,7 +94,15 @@ export default async function run(h) {
   };
 
   h.onCleanup(async () => {
-    const caseIds = [ctx.caseId, ctx.cancelCaseId, ctx.mCaseId, ctx.cCaseId, ctx.hoCaseId, ctx.ownerCaseId, ctx.probationCaseId, ctx.contractorProbCaseId].filter(Boolean);
+    const caseIds = [ctx.caseId, ctx.cancelCaseId, ctx.mCaseId, ctx.cCaseId, ctx.hoCaseId, ctx.ownerCaseId, ctx.probationCaseId, ctx.contractorProbCaseId, ctx.uploadCaseId, ctx.probationPreImageCaseId, ctx.probationKeepCaseId].filter(Boolean);
+    // The probation-correction trail is keyed by EMPLOYEE id, not a case id, so the caseIds
+    // loop below never reaches it — and both rows FK back to app_users, which would block the
+    // employee delete and leak a synthetic user onto the Access Control page.
+    if (ctx.probationFixEmpId) {
+      await sb.from('app_events').delete().eq('event_type', 'hr.employee.probation_corrected').eq('source_entity_id', ctx.probationFixEmpId);
+      await sb.from('audit_logs').delete().eq('action', 'hr.employee.probation_corrected').eq('record_id', ctx.probationFixEmpId);
+      await sb.from('hr_audit_log').delete().eq('action', 'hr.employee.probation_corrected').eq('record_id', ctx.probationFixEmpId);
+    }
     for (const id of caseIds) {
       await sb.from('app_events').delete().eq('source_entity_id', id);
       await sb.from('hr_audit_log').delete().eq('record_id', id);
@@ -107,10 +115,10 @@ export default async function run(h) {
     // package is then auto-included in every later launch of that package — which is
     // exactly how three orphans once broke the office_admin start path.
     await sweepLeakedActionTemplates();
-    if (ctx.packageId) {
-      await sb.from('app_events').delete().eq('source_entity_id', ctx.packageId);
-      await sb.from('hr_audit_log').delete().eq('record_id', ctx.packageId);
-      await sb.from('hr_onboarding_packages').delete().eq('id', ctx.packageId);
+    for (const pid of [ctx.packageId, ctx.accessPackageId].filter(Boolean)) {
+      await sb.from('app_events').delete().eq('source_entity_id', pid);
+      await sb.from('hr_audit_log').delete().eq('record_id', pid);
+      await sb.from('hr_onboarding_packages').delete().eq('id', pid);   // cascades its templates
     }
     for (const id of (ctx.createdEmpIds ?? []).filter(Boolean)) {
       // (employeeId, packageKey)-keyed artifacts this run created for the TAGGED test
@@ -119,10 +127,36 @@ export default async function run(h) {
       try { await sb.from('module_mutation_runs').delete().ilike('idempotency_key', `hr.onboarding.start:${id}%`); } catch { /* optional */ }
       try { await sb.from('app_events').delete().ilike('dedupe_key', `hr.onboarding.start:${id}%`); } catch { /* optional */ }
     }
+    // Documents committed by the upload_now tests. Deleted BEFORE the employees, since the
+    // rows FK back to app_users and would otherwise block the employee delete.
+    const docIds = [ctx.uploadedDocumentId, ctx.foreignDocumentId].filter(Boolean);
+    if (docIds.length) {
+      try { await sb.from('hr_audit_log').delete().in('record_id', docIds); } catch { /* optional */ }
+      try { await sb.from('app_events').delete().in('source_entity_id', docIds); } catch { /* optional */ }
+      try { await sb.from('hr_employee_documents').delete().in('id', docIds); } catch { /* optional */ }
+    }
     if (ctx.createdEmpIds?.length) { try { await sb.from('app_users').delete().in('id', ctx.createdEmpIds); } catch { /* FK-blocked → leaked test user, non-fatal */ } }
-    // Remove the global setting overrides this suite set (revert to catalog defaults).
+    // RESTORE the global overrides this suite pinned — do not just delete them. Deleting a
+    // key the suite did not create wipes the deployment's real configuration (that is how
+    // `hr_onboarding.work_email_domain` kept vanishing and failing every later suite).
+    // Delete only where there genuinely was no override before.
+    //
+    // The delete is unconditional-then-insert rather than an update because
+    // `settings/values/set` cannot update a global row at all: its upsert keys on
+    // (setting_key, scope_type, scope_id) and NULL never matches NULL in a unique index, so
+    // it always INSERTS. Writing the pre-image back through the API would therefore stack a
+    // duplicate, and a duplicated key resolves as NOT FOUND (`.maybeSingle()` errors and the
+    // caller swallows it) — leaving the setting silently off, which is worse than deleting.
     for (const k of (ctx.settingKeys ?? [])) {
-      try { await sb.from('app_setting_values').delete().eq('setting_key', k).eq('scope_type', 'global').is('scope_id', null); } catch { /* optional */ }
+      try {
+        await sb.from('app_setting_values').delete().eq('setting_key', k).eq('scope_type', 'global').is('scope_id', null);
+        const prev = (ctx.settingPreImages ?? {})[k];
+        if (prev !== undefined) {
+          await sb.from('app_setting_values').insert({
+            setting_key: k, scope_type: 'global', scope_id: null, value: prev, updated_by: admin.id,
+          });
+        }
+      } catch { /* optional */ }
     }
   });
 
@@ -188,6 +222,20 @@ export default async function run(h) {
 
   await test('settings: catalog sync + pin gates/owner off (setup)', async () => {
     ok(await api('settings/catalog/sync', A, {}), 'catalog sync');
+
+    // Capture the PRE-IMAGE of every global override this suite is about to overwrite, so
+    // teardown can put the environment back exactly as it found it. The old teardown simply
+    // DELETED these keys, which silently destroyed the deployment's real configuration on
+    // every run — `hr_onboarding.work_email_domain` is a live production value, and once
+    // deleted, provisioning fails for every later suite ("Configure the onboarding
+    // work-email domain before provisioning") and for the app itself.
+    ctx.settingPreImages = {};
+    for (const k of ctx.settingKeys) {
+      const { data } = await sb.from('app_setting_values').select('value')
+        .eq('setting_key', k).eq('scope_type', 'global').is('scope_id', null).maybeSingle();
+      ctx.settingPreImages[k] = data ? data.value : undefined;   // undefined = no override existed
+    }
+
     for (const k of ctx.settingKeys) {
       if (k === 'hr_onboarding.work_email_domain') continue;
       ok(await api('settings/values/set', A, { settingKey: k, scopeType: 'global', scopeId: null, value: false }), `pin ${k}=false`);
@@ -250,6 +298,27 @@ export default async function run(h) {
     const { count } = await sb.from('hr_onboarding_cases').select('id', { count: 'exact', head: true })
       .eq('launch_request_id', ctx.launchRequestId);
     expect(count === 1, `one case for request id, got ${count}`);
+  });
+
+  // The wizard marks Reason `*`. These use rawApi deliberately: the suite's `api` wrapper
+  // injects a default reason for every other test, so going through it could never prove the
+  // gate. A required-looking field with an optional API is an accept-and-drop defect.
+  await test('start with a MISSING reason → rejected (route schema)', async () => {
+    const r = await rawApi('hr/onboarding/start', A, {
+      requestId: crypto.randomUUID(), employeeId: ctx.empId, packageKey: 'office_admin', targetStartDate: '2027-01-01',
+    });
+    fails(r, 'a start with no reason must be refused');
+    expect(/reason/i.test(JSON.stringify(r.body)), `error should name the reason field — got ${JSON.stringify(r.body).slice(0, 200)}`);
+  });
+
+  await test('start with a BLANK reason → rejected, and no case is created', async () => {
+    const requestId = crypto.randomUUID();
+    const r = await rawApi('hr/onboarding/start', A, {
+      requestId, employeeId: ctx.empId, packageKey: 'office_admin', targetStartDate: '2027-01-01', reason: '   ',
+    });
+    fails(r, 'a whitespace-only reason must be refused');
+    const { count } = await sb.from('hr_onboarding_cases').select('id', { count: 'exact', head: true }).eq('launch_request_id', requestId);
+    expect((count ?? 0) === 0, 'a refused start must not leave a case behind');
   });
 
   await test('start unauthorized (employee) → denied', async () => {
@@ -332,6 +401,199 @@ export default async function run(h) {
     expect(kase && kase.status === 'completed' && !!kase.completed_at, 'case status completed');
     const { data: ev } = await sb.from('app_events').select('id').eq('event_type', 'onboarding.completed').eq('source_entity_id', ctx.caseId).limit(1);
     expect(ev && ev.length === 1, 'onboarding.completed event');
+  });
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // upload_now document disposition. Exercises the governed Employee Master commit flow
+  // (upload-url → PUT → commit) and then every way the launch boundary can refuse the
+  // resulting document id. The id comes from the CLIENT, so the negatives are the point.
+  // ════════════════════════════════════════════════════════════════════════════
+  h.section('Onboarding › upload_now disposition');
+
+  const PNG_BYTES = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+
+  await test('setup: find a NON-blocking outstanding requirement to upload against', async () => {
+    const preview = await rawApi('hr/onboarding/intake-preview', A, {
+      employeeId: ctx.empId, packageKey: 'office_admin', targetStartDate: '2027-01-01',
+    });
+    ok(preview, 'intake preview');
+    const outstanding = (preview.body.data.documents.items ?? []).filter(i => i.state !== 'present_verified');
+    const target = outstanding.find(i => !i.isBlocking) ?? outstanding[0];
+    if (!target) { ctx.uploadRequirementId = null; return; }
+    ctx.uploadRequirementId = target.requirementId;
+    ctx.uploadRequirementType = target.type;
+    ctx.uploadRequirementBlocking = target.isBlocking;
+    ctx.uploadRequirementLabel = target.label;
+  });
+
+  /**
+   * Launch selections that resolve EVERY outstanding requirement, using `upload_now` for the
+   * one under test and a follow-up request for the rest. Built from a live preview so it can
+   * never drift from the requirement set the server actually enforces.
+   */
+  async function uploadAwareSelections(employeeId, packageKey) {
+    const preview = await rawApi('hr/onboarding/intake-preview', A, { employeeId, packageKey, targetStartDate: '2027-01-01' });
+    return (preview.body?.data?.documents?.items ?? [])
+      .filter(i => i.state !== 'present_verified')
+      .map(i => i.requirementId === ctx.uploadRequirementId
+        ? { requirementId: i.requirementId, action: 'upload_now', uploadedDocumentId: ctx.uploadedDocumentId }
+        : { requirementId: i.requirementId, action: 'request_from_worker' });
+  }
+
+  /** Full governed upload for one employee. Returns the committed document id + its path. */
+  async function commitDocument(employeeId, documentType, extra = {}) {
+    const signed = await rawApi('hr/employees/documents/upload-url', A, {
+      employeeId, fileName: `${TAG}-doc.png`, mimeType: 'image/png',
+    });
+    if (!signed.body?.uploadUrl) return { signed, committed: null, path: null };
+    const put = await fetch(signed.body.uploadUrl, {
+      method: 'PUT', headers: { 'Content-Type': 'image/png' }, body: PNG_BYTES,
+    });
+    expect(put.ok, `signed PUT failed: ${put.status}`);
+    const committed = await rawApi('hr/employees/documents/commit', A, {
+      employeeId, documentType, title: `${TAG} ${documentType}`, filePath: signed.body.path,
+      fileName: `${TAG}-doc.png`, mimeType: 'image/png', fileSize: PNG_BYTES.length,
+      confidentiality: 'confidential', ...extra,
+    });
+    return { signed, committed, path: signed.body.path };
+  }
+
+  await test('upload-url refuses an unsupported MIME type', async () => {
+    const r = await rawApi('hr/employees/documents/upload-url', A, {
+      employeeId: ctx.empId, fileName: 'payload.exe', mimeType: 'application/x-msdownload',
+    });
+    fails(r, 'an unsupported mime type must be refused');
+  });
+
+  await test('commit refuses an oversized file', async () => {
+    const signed = await rawApi('hr/employees/documents/upload-url', A, {
+      employeeId: ctx.empId, fileName: `${TAG}-big.png`, mimeType: 'image/png',
+    });
+    ok(signed, 'upload url');
+    const r = await rawApi('hr/employees/documents/commit', A, {
+      employeeId: ctx.empId, documentType: 'national_id', title: `${TAG} oversized`,
+      filePath: signed.body.path, fileName: `${TAG}-big.png`, mimeType: 'image/png',
+      fileSize: 999_999_999, confidentiality: 'confidential',
+    });
+    fails(r, 'an oversized file must be refused');
+  });
+
+  await test('commit refuses a FORGED path outside the employee folder', async () => {
+    const r = await rawApi('hr/employees/documents/commit', A, {
+      employeeId: ctx.empId, documentType: 'national_id', title: `${TAG} forged`,
+      filePath: `${ctx.empId2}/someone-elses-file.png`, fileName: 'x.png', mimeType: 'image/png',
+      fileSize: 100, confidentiality: 'confidential',
+    });
+    fails(r, 'a path under another employee must be refused');
+  });
+
+  await test('commit refuses a path that was never uploaded', async () => {
+    const r = await rawApi('hr/employees/documents/commit', A, {
+      employeeId: ctx.empId, documentType: 'national_id', title: `${TAG} ghost`,
+      filePath: `${ctx.empId}/never-uploaded-${TAG}.png`, fileName: 'x.png', mimeType: 'image/png',
+      fileSize: 100, confidentiality: 'confidential',
+    });
+    fails(r, 'a path with no stored object must be refused');
+  });
+
+  await test('launch preflight refuses a FORGED document id', async () => {
+    const r = await rawApi('hr/onboarding/launch-preflight', A, {
+      employeeId: ctx.empId, packageKey: 'office_admin', targetStartDate: '2027-01-01', reason: 'New hire',
+      documentSelections: [{ requirementId: ctx.uploadRequirementId, action: 'upload_now', uploadedDocumentId: crypto.randomUUID() }],
+    });
+    ok(r, 'preflight answers');
+    expect(r.body.data.blockers.some(b => b.step === 'documents'), 'an unknown document id must raise a documents blocker');
+  });
+
+  await test("launch preflight refuses ANOTHER employee's document (ownership)", async () => {
+    const other = await commitDocument(ctx.empId2, ctx.uploadRequirementType);
+    ok(other.committed, 'commit for the other employee');
+    ctx.foreignDocumentId = other.committed.body.data.id;
+    const r = await rawApi('hr/onboarding/launch-preflight', A, {
+      employeeId: ctx.empId, packageKey: 'office_admin', targetStartDate: '2027-01-01', reason: 'New hire',
+      documentSelections: [{ requirementId: ctx.uploadRequirementId, action: 'upload_now', uploadedDocumentId: ctx.foreignDocumentId }],
+    });
+    ok(r, 'preflight answers');
+    expect(r.body.data.blockers.some(b => /does not belong/i.test(b.message)), `expected an ownership blocker — got ${JSON.stringify(r.body.data.blockers)}`);
+  });
+
+  await test('a genuine upload is committed and linked to its requirement', async () => {
+    const mine = await commitDocument(ctx.empId, ctx.uploadRequirementType);
+    ok(mine.committed, 'governed commit');
+    ctx.uploadedDocumentId = mine.committed.body.data.id;
+    const { data } = await sb.from('hr_employee_documents')
+      .select('employee_id, document_type, status, file_path, uploaded_by').eq('id', ctx.uploadedDocumentId).maybeSingle();
+    expect(data.employee_id === ctx.empId, 'document filed against the employee');
+    expect(data.file_path.startsWith(`${ctx.empId}/`), `path must be employee-scoped — got ${data.file_path}`);
+    expect(!!data.uploaded_by, 'commit stamps the actor');
+    expect(data.status !== 'verified', 'a fresh upload is not verified');
+  });
+
+  await test('unverified upload against a NON-blocking requirement launches with an `uploaded` request', async () => {
+    await closeActiveCasesFor(ctx.empId);
+    const requestId = crypto.randomUUID();
+    const r = await rawApi('hr/onboarding/start', A, {
+      requestId, employeeId: ctx.empId, packageKey: 'office_admin',
+      targetStartDate: '2027-01-01', reason: 'New hire',
+      documentSelections: await uploadAwareSelections(ctx.empId, 'office_admin'),
+    });
+    ok(r, 'launch with an unverified non-blocking upload');
+    ctx.uploadCaseId = r.body.data.caseId;
+
+    const { data: req } = await sb.from('hr_onboarding_document_requests')
+      .select('status, document_id').eq('case_id', ctx.uploadCaseId).eq('requirement_id', ctx.uploadRequirementId).maybeSingle();
+    expect(req?.status === 'uploaded', `expected an 'uploaded' request — got ${req?.status}`);
+    expect(req?.document_id === ctx.uploadedDocumentId, 'the request must link the committed document');
+
+    // §2 side-effects: a reviewer work item and a notification, both inside the launch tx.
+    const { data: reviewTask } = await sb.from('hr_onboarding_tasks')
+      .select('task_key, assigned_to').eq('case_id', ctx.uploadCaseId).like('task_key', 'document_review_%');
+    expect((reviewTask ?? []).length === 1, 'launch must create exactly one document-review task');
+    const { data: notes } = await sb.from('notifications')
+      .select('type').eq('source_id', ctx.uploadCaseId).eq('type', 'hr.onboarding.document_awaiting_verification');
+    expect((notes ?? []).length >= 1, 'reviewer notification missing');
+  });
+
+  await test('the same requestId replays the upload launch without creating a second case', async () => {
+    const { count } = await sb.from('hr_onboarding_cases').select('id', { count: 'exact', head: true }).eq('id', ctx.uploadCaseId);
+    expect(count === 1, 'exactly one case for the upload launch');
+  });
+
+  await test('verifying the upload satisfies the requirement on the next preflight', async () => {
+    ok(await rawApi('hr/documents/verify', A, { documentId: ctx.uploadedDocumentId, decision: 'approve' }), 'verify');
+    const r = await rawApi('hr/onboarding/launch-preflight', A, {
+      employeeId: ctx.empId2, packageKey: 'office_admin', targetStartDate: '2027-01-01', reason: 'New hire',
+      documentSelections: [{ requirementId: ctx.uploadRequirementId, action: 'upload_now', uploadedDocumentId: ctx.uploadedDocumentId }],
+    });
+    ok(r, 'preflight answers');
+    // It is now the WRONG employee's verified document, so ownership still refuses it —
+    // proving verification alone never bypasses the ownership gate.
+    expect(r.body.data.blockers.some(b => /does not belong/i.test(b.message)), 'verified evidence must still be ownership-checked');
+  });
+
+  await test('a VERIFIED upload satisfies its requirement (no documents blocker)', async () => {
+    if (!ctx.uploadRequirementId || !ctx.uploadedDocumentId) return;
+    // The document was approved by the verify step above and belongs to ctx.empId.
+    const { data: doc } = await sb.from('hr_employee_documents').select('status').eq('id', ctx.uploadedDocumentId).maybeSingle();
+    expect(doc?.status === 'verified', `precondition: document should be verified, got ${doc?.status}`);
+    const r = await rawApi('hr/onboarding/launch-preflight', A, {
+      employeeId: ctx.empId, packageKey: 'office_admin', targetStartDate: '2027-01-01', reason: 'New hire',
+      documentSelections: await uploadAwareSelections(ctx.empId, 'office_admin'),
+    });
+    ok(r, 'preflight answers');
+    const forThisRequirement = r.body.data.blockers.filter(b => b.step === 'documents' && new RegExp(ctx.uploadRequirementLabel ?? '$^', 'i').test(b.message));
+    expect(forThisRequirement.length === 0, `a verified upload must not block — got ${JSON.stringify(forThisRequirement)}`);
+  });
+
+  await test('teardown: release the upload case so later tests can reuse the employee', async () => {
+    // This section LAUNCHES a case on ctx.empId. The one-active-case-per-employee gate is
+    // real, so leaving it open makes every later start on that employee fail — the section
+    // has to hand the employee back in the state it found it.
+    await closeActiveCasesFor(ctx.empId);
+    const { data: active } = await sb.from('hr_onboarding_cases').select('id')
+      .eq('employee_id', ctx.empId)
+      .in('status', ['draft', 'open', 'in_progress', 'blocked', 'paused', 'ready_for_activation']);
+    expect((active ?? []).length === 0, `employee still has ${(active ?? []).length} active case(s)`);
   });
 
   // ── cancel ──────────────────────────────────────────────────────────────────
@@ -998,7 +1260,159 @@ export default async function run(h) {
   // through the service-role client because it is service-role-only by grant, so
   // there is no HTTP path that can inject a deliberately invalid child row.
   // ════════════════════════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════════════════════
+  // Account provisioning preflight.
+  //
+  // `required` is derived from the PACKAGE PLAN — a task whose module is 'access'/'it',
+  // or a handoff whose target module is. The seed shipped the IT tasks with a NULL
+  // module_key and no access handoff, so every package reported `required: false`: account
+  // provisioning was inert and the missing-domain blocker was unreachable. These tests pin
+  // the contract from both sides so that can never regress silently again.
+  // ════════════════════════════════════════════════════════════════════════════
+  h.section('Onboarding › Account provisioning preflight');
+
+  const DOMAIN_KEY = 'hr_onboarding.work_email_domain';
+  const readDomainRow = async () => (await sb.from('app_setting_values').select('value')
+    .eq('setting_key', DOMAIN_KEY).eq('scope_type', 'global').is('scope_id', null).maybeSingle()).data;
+  const setDomain = async (value) => {
+    await sb.from('app_setting_values').delete()
+      .eq('setting_key', DOMAIN_KEY).eq('scope_type', 'global').is('scope_id', null);
+    if (value !== undefined) {
+      await sb.from('app_setting_values').insert({
+        setting_key: DOMAIN_KEY, scope_type: 'global', scope_id: null, value, updated_by: admin.id });
+    }
+  };
+
+  await test('every active seeded package that provisions an account declares Access/IT work', async () => {
+    // Design parity, asserted against the DB rather than assumed from the seed file: the
+    // canonical Package Management mockup gives the standard package a "Provision
+    // application access" task and an "IT / Access Setup" handoff. A package listing IT
+    // work whose module_key is null looks complete in the editor while being invisible to
+    // every access-aware code path.
+    const { data: pkgs } = await sb.from('hr_onboarding_packages').select('id, package_key').eq('status', 'active');
+    const offenders = [];
+    for (const p of pkgs ?? []) {
+      const { data: itTasks } = await sb.from('hr_onboarding_task_templates')
+        .select('task_key, owner_role, module_key').eq('package_id', p.id);
+      const { data: hands } = await sb.from('hr_onboarding_handoff_templates')
+        .select('target_module').eq('package_id', p.id);
+      // "Looks like account work" — an IT-owned task — without being DECLARED as such.
+      const looksLikeAccess = (itTasks ?? []).some(t => t.owner_role === 'it');
+      const declaresAccess = (itTasks ?? []).some(t => ['access', 'it'].includes(t.module_key))
+        || (hands ?? []).some(x => ['access', 'it'].includes(x.target_module));
+      if (looksLikeAccess && !declaresAccess) offenders.push(p.package_key);
+    }
+    expect(offenders.length === 0,
+      `packages carry IT-owned tasks but declare no access work, so account provisioning silently never runs: ${offenders.join(', ')}`);
+  });
+
+  await test('an access package with NO work-email domain is required, not ready, and blocks with the exact message', async () => {
+    const pre = await readDomainRow();
+    const preValue = pre ? pre.value : undefined;
+    try {
+      await setDomain(undefined);   // unset
+      // A TEST-OWNED package with access work, so this contract holds regardless of what
+      // the seeded packages happen to contain.
+      const created = await api('hr/onboarding/packages/create', A, {
+        label: `${TAG} Access Package`, description: 'E2E access-provisioning package',
+        workerTypes: ['employee'], defaultSlaDays: 10, defaultOwnerRole: 'hr',
+      });
+      ok(created, 'access package create');
+      ctx.accessPackageId = created.body.data.id;
+      const accessKey = created.body.data.key;
+      // Task AND handoff, mirroring the approved design ("Provision application access"
+      // + "IT / Access Setup"). The handoff is also required to publish: a package with
+      // no accountable handoff cannot be activated.
+      ok(await api('hr/onboarding/packages/task-templates/create', A, {
+        packageId: ctx.accessPackageId, taskKey: `${TAG}_access_task`, taskTitle: 'Provision application access',
+        ownerRole: 'it', moduleKey: 'it', sortOrder: 10,
+      }), 'access task template create');
+      ok(await api('hr/onboarding/packages/handoff-templates/create', A, {
+        packageId: ctx.accessPackageId, handoffKey: `${TAG}_it_access`, targetModule: 'it',
+        handoffType: 'onboarding_it_access', sortOrder: 5,
+      }), 'access handoff template create');
+      ok(await api('hr/onboarding/packages/set-status', A, { id: ctx.accessPackageId, status: 'active' }), 'activate access package');
+
+      const r = await api('hr/onboarding/account-preflight', A, { employeeId: ctx.empId, packageKey: accessKey });
+      ok(r, 'account preflight');
+      const d = r.body.data;
+      expect(d.required === true, `required must be true for a package with access work, got ${JSON.stringify(d.required)}`);
+      expect(d.ready === false, `ready must be false with no work-email domain, got ${JSON.stringify(d.ready)}`);
+      expect(Array.isArray(d.blockers) && d.blockers.includes('Configure the onboarding work-email domain before provisioning.'),
+        `expected the exact configuration blocker, got ${JSON.stringify(d.blockers)}`);
+      // The point of the blocker: an address must never be invented without a domain.
+      expect(d.proposedWorkEmail === null,
+        `no address may be proposed without a configured domain, got ${JSON.stringify(d.proposedWorkEmail)}`);
+      ctx.accessPackageKey = accessKey;
+    } finally {
+      await setDomain(preValue);
+    }
+  });
+
+  await test('a package with no access work is not required and raises no fake blocker', async () => {
+    // ctx.packageKey is the suite's own package: one 'hr' task, one 'hr' handoff.
+    const r = await api('hr/onboarding/account-preflight', A, { employeeId: ctx.empId, packageKey: ctx.packageKey });
+    ok(r, 'account preflight (no-access package)');
+    const d = r.body.data;
+    expect(d.required === false, `required must be false for a package with no access work, got ${JSON.stringify(d.required)}`);
+    expect(Array.isArray(d.blockers) && d.blockers.length === 0,
+      `a package that provisions nothing must not report configuration blockers, got ${JSON.stringify(d.blockers)}`);
+    expect(d.proposedWorkEmail === null, 'no address for a package that provisions no account');
+  });
+
+  await test('with a configured domain the preflight proposes a unique address and names the owning queue', async () => {
+    expect(!!ctx.accessPackageKey, 'need the access package from the earlier test');
+    const pre = await readDomainRow();
+    const preValue = pre ? pre.value : undefined;
+    try {
+      await setDomain('e2e-access.invalid');
+      const r = await api('hr/onboarding/account-preflight', A, { employeeId: ctx.empId, packageKey: ctx.accessPackageKey });
+      ok(r, 'account preflight with domain');
+      const d = r.body.data;
+      expect(d.required === true, 'still required');
+      expect(d.ready === true, `ready must be true once the domain is configured, got ${JSON.stringify(d.ready)} blockers=${JSON.stringify(d.blockers)}`);
+      expect(typeof d.proposedWorkEmail === 'string' && d.proposedWorkEmail.endsWith('@e2e-access.invalid'),
+        `expected an address on the configured domain, got ${JSON.stringify(d.proposedWorkEmail)}`);
+      // Uniqueness is the reason this is derived server-side rather than typed by a user.
+      const { count } = await sb.from('app_users').select('*', { count: 'exact', head: true })
+        .eq('work_email', d.proposedWorkEmail);
+      expect((count ?? 0) === 0, `the proposed address ${d.proposedWorkEmail} is already taken`);
+      // Ownership / routing is governed by settings, not by the package.
+      expect(['hr_operations', 'it_service_desk'].includes(d.owningTeam?.id),
+        `owning queue must be a governed queue, got ${JSON.stringify(d.owningTeam)}`);
+      expect(typeof d.owningTeam?.label === 'string' && d.owningTeam.label.length > 0, 'owning queue must be named, not an id');
+      expect(d.credentialMethod === 'invite_link', `credential method must be the governed invite link, got ${JSON.stringify(d.credentialMethod)}`);
+    } finally {
+      await setDomain(preValue);
+    }
+  });
+
+  await test('account preflight is denied to actors without onboarding view', async () => {
+    fails(await api('hr/onboarding/account-preflight', ctx.empTok, { employeeId: ctx.empId, packageKey: ctx.packageKey }),
+      'an employee cannot read another worker account provisioning plan');
+  });
+
   h.section('Onboarding › Atomic launch contract');
+
+  /**
+   * Drop a probe case the moment its own test is done.
+   *
+   * These probes launch REAL `in_progress` cases. Left alive until suite teardown they
+   * outlive their own test and sit in the dataset while LATER suites reconcile aggregate
+   * KPI counts against a pre-fixture baseline — which shows up as an unrelated
+   * "manager/all: KPI active N !== baseline" failure that has nothing to do with scope.
+   * They are also the classic leak: an aborted run never reaches teardown and the case
+   * survives forever. Nothing after these tests needs them, so they go immediately.
+   */
+  const dropProbeCase = async (caseId, employeeId) => {
+    await sb.from('app_events').delete().eq('source_entity_id', caseId);
+    await sb.from('audit_logs').delete().eq('record_id', caseId);
+    await sb.from('hr_audit_log').delete().eq('record_id', caseId);
+    await sb.from('notifications').delete().eq('source_id', caseId);
+    await sb.from('handoff_outbox').delete().eq('source_entity_id', caseId);
+    await sb.from('hr_onboarding_cases').delete().eq('id', caseId);   // cascades tasks/handoffs/actions
+    if (employeeId) await sb.from('app_users').delete().eq('id', employeeId);
+  };
 
   await test('forced child failure rolls the entire launch back — no orphan rows', async () => {
     const requestId = crypto.randomUUID();
@@ -1006,9 +1420,15 @@ export default async function run(h) {
     const employeeId = `ONB-ATOMIC-${TAG}`;
     // A worker of its own: the RPC aborts early if the employee already has an active
     // case, and that would abort for the WRONG reason and fake a pass.
+    // Seeded with a PRE-EXISTING probation date, and the launch below supplies a DIFFERENT
+    // one. Both matter: with a null pre-image and a null argument (as this test used to run)
+    // the post-rollback assertion could not tell "restored" apart from "never written", so it
+    // would have passed even if the RPC clobbered the column.
+    const PRIOR_PROBATION = '2027-01-15';
     const { error: empErr } = await sb.from('app_users').insert({
       id: employeeId, username: `${TAG}_onb_atomic`, full_name: 'Onboarding E2E Atomic',
       role: 'employee', status: 'active', employment_type: 'employee', contractor_flag: false,
+      probation_end_date: PRIOR_PROBATION,
     });
     expect(!empErr, `seed atomic-launch employee: ${empErr?.message ?? ''}`);
     ctx.createdEmpIds.push(employeeId);
@@ -1039,7 +1459,8 @@ export default async function run(h) {
       }],
       p_actions: [],
       p_notifications: [{ userId: admin.id, title: 'Atomic probe', body: 'should never exist' }],
-      p_probation_end_date: null,
+      // A REAL probation write, so the rollback has something to undo on app_users.
+      p_probation_end_date: '2027-06-30',
     });
     expect(!!error, 'the RPC must reject the invalid child row');
     // Pin WHERE it failed. If a future change makes the launch abort earlier (e.g. at the
@@ -1071,8 +1492,192 @@ export default async function run(h) {
     expect(survivors.length === 0, `rollback leaked rows: ${survivors.join(', ')}`);
 
     // The employee's probation column must be untouched too (the RPC writes it inline).
+    // Asserted against the seeded PRIOR value, not against null: the launch genuinely tried
+    // to set 2027-06-30, so this proves the write was rolled back rather than never attempted.
     const { data: worker } = await sb.from('app_users').select('probation_end_date').eq('id', employeeId).maybeSingle();
-    expect((worker?.probation_end_date ?? null) === null, 'rolled-back launch wrote probation_end_date');
+    expect((worker?.probation_end_date ?? null) === PRIOR_PROBATION,
+      `rolled-back launch left probation_end_date = ${worker?.probation_end_date ?? 'null'}, expected the untouched ${PRIOR_PROBATION}`);
+  });
+
+  await test('a successful launch records the probation pre-image in both audit trails', async () => {
+    // The gap this closes: the launch mutates app_users.probation_end_date as a side effect
+    // of creating a case. Without the pre-image the change is irreversible from its own audit
+    // trail — a cleanup would have to GUESS the prior value. Prove it is captured.
+    const requestId = crypto.randomUUID();
+    const caseId = crypto.randomUUID();
+    const employeeId = `ONB-PROBPRE-${TAG}`;
+    const PRIOR_PROBATION = '2027-02-20';
+    const NEW_PROBATION = '2027-08-31';
+
+    const { error: empErr } = await sb.from('app_users').insert({
+      id: employeeId, username: `${TAG}_onb_probpre`, full_name: 'Onboarding E2E ProbationPre',
+      role: 'employee', status: 'active', employment_type: 'employee', contractor_flag: false,
+      probation_end_date: PRIOR_PROBATION,
+    });
+    expect(!empErr, `seed probation pre-image employee: ${empErr?.message ?? ''}`);
+    ctx.createdEmpIds.push(employeeId);
+    ctx.probationPreImageCaseId = caseId;
+
+    const { data: pkg } = await sb.from('hr_onboarding_packages')
+      .select('id, package_key, version_no').eq('package_key', 'standard_employee').maybeSingle();
+    expect(!!pkg, 'standard_employee package must exist');
+
+    const { error } = await sb.rpc('hr_onboarding_launch_tx', {
+      p_request_id: requestId, p_actor_id: admin.id,
+      p_case: {
+        id: caseId, caseNo: `ONB-PROBPRE-${TAG}`, employeeId, workerType: 'employee',
+        packageKey: pkg.package_key, packageId: pkg.id, packageVersionNo: pkg.version_no ?? 1,
+        launchSnapshot: { schemaVersion: 1, probe: 'probation-pre-image' }, ownerId: admin.id,
+        targetStartDate: '2027-03-01', reason: 'New hire',
+      },
+      p_tasks: [], p_handoffs: [], p_documents: [], p_actions: [], p_notifications: [],
+      p_probation_end_date: NEW_PROBATION,
+    });
+    expect(!error, `launch failed: ${error?.message ?? ''}`);
+
+    // The field actually moved.
+    const { data: worker } = await sb.from('app_users').select('probation_end_date').eq('id', employeeId).maybeSingle();
+    expect(worker?.probation_end_date === NEW_PROBATION,
+      `probation_end_date = ${worker?.probation_end_date ?? 'null'}, expected ${NEW_PROBATION}`);
+
+    // hr_audit_log.previous_state carries the pre-image — the value a cleanup would restore.
+    const { data: hrAudit } = await sb.from('hr_audit_log')
+      .select('previous_state, new_state').eq('record_id', caseId).eq('action', 'hr.onboarding.started').maybeSingle();
+    expect(!!hrAudit, 'no hr.onboarding.started hr_audit_log row');
+    expect(hrAudit?.previous_state?.probationEndDate === PRIOR_PROBATION,
+      `hr_audit_log.previous_state.probationEndDate = ${JSON.stringify(hrAudit?.previous_state)}, expected ${PRIOR_PROBATION}`);
+    expect(hrAudit?.new_state?.probationEndDate === NEW_PROBATION,
+      `hr_audit_log.new_state.probationEndDate = ${JSON.stringify(hrAudit?.new_state?.probationEndDate)}, expected ${NEW_PROBATION}`);
+    expect(hrAudit?.new_state?.probationEndDateChanged === true, 'new_state.probationEndDateChanged must be true');
+
+    // The platform audit entry carries BOTH sides.
+    const { data: audit } = await sb.from('audit_logs')
+      .select('changes').eq('record_id', caseId).eq('action', 'hr.onboarding.started').maybeSingle();
+    expect(!!audit, 'no hr.onboarding.started audit_logs row');
+    const p = audit?.changes?.probationEndDate ?? null;
+    expect(p?.previous === PRIOR_PROBATION && p?.new === NEW_PROBATION && p?.changed === true,
+      `audit_logs.changes.probationEndDate = ${JSON.stringify(p)}, expected previous=${PRIOR_PROBATION} new=${NEW_PROBATION} changed=true`);
+
+    await dropProbeCase(caseId, employeeId);
+    ctx.probationPreImageCaseId = null;
+    ctx.createdEmpIds = ctx.createdEmpIds.filter(id => id !== employeeId);
+  });
+
+  await test('a launch that supplies no probation date leaves an existing one untouched', async () => {
+    // A package with no probation_days passes null. That must NOT clear a date the employee
+    // already holds, and the audit must still record the (unchanged) pre-image.
+    const requestId = crypto.randomUUID();
+    const caseId = crypto.randomUUID();
+    const employeeId = `ONB-PROBKEEP-${TAG}`;
+    const PRIOR_PROBATION = '2027-04-10';
+
+    const { error: empErr } = await sb.from('app_users').insert({
+      id: employeeId, username: `${TAG}_onb_probkeep`, full_name: 'Onboarding E2E ProbationKeep',
+      role: 'employee', status: 'active', employment_type: 'employee', contractor_flag: false,
+      probation_end_date: PRIOR_PROBATION,
+    });
+    expect(!empErr, `seed probation keep employee: ${empErr?.message ?? ''}`);
+    ctx.createdEmpIds.push(employeeId);
+    ctx.probationKeepCaseId = caseId;
+
+    const { data: pkg } = await sb.from('hr_onboarding_packages')
+      .select('id, package_key, version_no').eq('package_key', 'standard_employee').maybeSingle();
+
+    const { error } = await sb.rpc('hr_onboarding_launch_tx', {
+      p_request_id: requestId, p_actor_id: admin.id,
+      p_case: {
+        id: caseId, caseNo: `ONB-PROBKEEP-${TAG}`, employeeId, workerType: 'employee',
+        packageKey: pkg.package_key, packageId: pkg.id, packageVersionNo: pkg.version_no ?? 1,
+        launchSnapshot: { schemaVersion: 1, probe: 'probation-keep' }, ownerId: admin.id,
+        targetStartDate: '2027-05-01',
+      },
+      p_tasks: [], p_handoffs: [], p_documents: [], p_actions: [], p_notifications: [],
+      p_probation_end_date: null,
+    });
+    expect(!error, `launch failed: ${error?.message ?? ''}`);
+
+    const { data: worker } = await sb.from('app_users').select('probation_end_date').eq('id', employeeId).maybeSingle();
+    expect(worker?.probation_end_date === PRIOR_PROBATION,
+      `a null probation argument changed the column to ${worker?.probation_end_date ?? 'null'}`);
+
+    const { data: hrAudit } = await sb.from('hr_audit_log')
+      .select('previous_state, new_state').eq('record_id', caseId).eq('action', 'hr.onboarding.started').maybeSingle();
+    expect(hrAudit?.previous_state?.probationEndDate === PRIOR_PROBATION,
+      `previous_state must record the pre-image even when unchanged, got ${JSON.stringify(hrAudit?.previous_state)}`);
+    expect(hrAudit?.new_state?.probationEndDateChanged === false,
+      'probationEndDateChanged must be false when the launch supplied no date');
+
+    await dropProbeCase(caseId, employeeId);
+    ctx.probationKeepCaseId = null;
+    ctx.createdEmpIds = ctx.createdEmpIds.filter(id => id !== employeeId);
+  });
+
+  await test('probation correction: governed, audited, and denied without the permission', async () => {
+    // The sanctioned replacement for a script writing app_users directly.
+    const employeeId = `ONB-PROBFIX-${TAG}`;
+    const PRIOR_PROBATION = '2027-07-07';
+    const { error: empErr } = await sb.from('app_users').insert({
+      id: employeeId, username: `${TAG}_onb_probfix`, full_name: 'Onboarding E2E ProbationFix',
+      role: 'employee', status: 'active', employment_type: 'employee', contractor_flag: false,
+      probation_end_date: PRIOR_PROBATION,
+    });
+    expect(!empErr, `seed probation correction employee: ${empErr?.message ?? ''}`);
+    ctx.createdEmpIds.push(employeeId);
+
+    // A reason is mandatory — the whole point is that corrections are explainable.
+    const noReason = await api('hr/employees/probation/correct', A, {
+      employeeId, probationEndDate: '2027-09-09', reason: 'oops',
+    });
+    fails(noReason, 'a correction with a sub-10-character reason must be rejected');
+
+    // Clearing must be STATED, never inferred from an omitted field.
+    const omitted = await api('hr/employees/probation/correct', A, {
+      employeeId, reason: 'Reverting an onboarding side effect for QA cleanup.',
+    });
+    fails(omitted, 'omitting probationEndDate must be rejected, not treated as a clear');
+
+    const res = await api('hr/employees/probation/correct', A, {
+      employeeId, probationEndDate: null,
+      reason: 'Restoring the pre-launch value after a QA verification case.',
+    });
+    // `api()` returns { status, body } — the payload is under `res.body`, never on `res`
+    // itself. Asserting `res.success` / `res.data` reads undefined every time, which is a
+    // test that can only ever fail (and reports nothing useful when it does).
+    ok(res, `correction failed: ${JSON.stringify(res)}`);
+    expect(res.body?.data?.previousProbationEndDate === PRIOR_PROBATION,
+      `response must echo the pre-image, got ${JSON.stringify(res.body?.data)}`);
+    expect(res.body?.data?.changed === true, 'clearing a set date must report changed=true');
+
+    const { data: worker } = await sb.from('app_users').select('probation_end_date').eq('id', employeeId).maybeSingle();
+    expect((worker?.probation_end_date ?? null) === null, 'the correction did not clear the date');
+
+    // §2 side-effects, asserted not assumed.
+    const { data: hrAudit } = await sb.from('hr_audit_log')
+      .select('previous_state, new_state, reason').eq('record_id', employeeId)
+      .eq('action', 'hr.employee.probation_corrected').maybeSingle();
+    expect(hrAudit?.previous_state?.probationEndDate === PRIOR_PROBATION,
+      `correction previous_state = ${JSON.stringify(hrAudit?.previous_state)}, expected ${PRIOR_PROBATION}`);
+    expect((hrAudit?.new_state?.probationEndDate ?? null) === null, 'correction new_state must record the cleared value');
+    const { count: evCount } = await sb.from('app_events').select('*', { count: 'exact', head: true })
+      .eq('event_type', 'hr.employee.probation_corrected').eq('source_entity_id', employeeId);
+    expect((evCount ?? 0) === 1, `expected exactly 1 probation_corrected app_event, got ${evCount ?? 0}`);
+    const { count: alCount } = await sb.from('audit_logs').select('*', { count: 'exact', head: true })
+      .eq('action', 'hr.employee.probation_corrected').eq('record_id', employeeId);
+    expect((alCount ?? 0) === 1, `expected exactly 1 probation_corrected audit_log, got ${alCount ?? 0}`);
+
+    // Negative path against REAL users of roles that lack the key. The harness `admin` is a
+    // superadmin (allow-all in memory), so it can never prove a denial — these two can.
+    const deniedEmp = await api('hr/employees/probation/correct', ctx.empTok, {
+      employeeId, probationEndDate: '2027-10-10', reason: 'Unauthorised attempt for the negative path.',
+    });
+    fails(deniedEmp, 'an employee without hr.employee.probation.correct must be denied');
+    if (ctx.mgrTok) {
+      const deniedMgr = await api('hr/employees/probation/correct', ctx.mgrTok, {
+        employeeId, probationEndDate: '2027-10-10', reason: 'Unauthorised attempt for the negative path.',
+      });
+      fails(deniedMgr, 'a line manager without hr.employee.probation.correct must be denied');
+    }
+    ctx.probationFixEmpId = employeeId;
   });
 
   await test('launch_snapshot is written at launch and frozen against later package change', async () => {

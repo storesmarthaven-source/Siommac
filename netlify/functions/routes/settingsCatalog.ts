@@ -208,20 +208,45 @@ router.post('/values/set', async c => {
       currentEffectiveValue: current.value,
     });
 
-    const { data: existing } = await sb.from('app_setting_values').select('value')
+    // Explicit read → UPDATE-or-INSERT, NOT `upsert({ onConflict })`.
+    //
+    // `onConflict: 'setting_key,scope_type,scope_id'` cannot fire for a GLOBAL override:
+    // scope_id is NULL there, and NULL is never equal to NULL in a unique index, so every
+    // global write INSERTED a new row. The second write to any global setting therefore
+    // produced a duplicate, and a duplicate resolved as UNSET (see resolveSetting) — the
+    // setting silently switched off with no error raised anywhere. `values/reset` then
+    // refused to clean it up, because its own `.maybeSingle()` hit the same wall. The
+    // three faults together made a duplicated global setting unrecoverable through the API.
+    //
+    // Selecting rows (not `.maybeSingle()`) also lets a pre-existing duplicate surface as a
+    // real error instead of being papered over by another insert.
+    const { data: existingRaw, error: readErr } = await sb.from('app_setting_values').select('id, value')
       .eq('setting_key', v.data.settingKey).eq('scope_type', v.data.scopeType)
-      .filter('scope_id', scopeId === null ? 'is' : 'eq', scopeId === null ? null : scopeId).maybeSingle<{ value: unknown }>();
+      .filter('scope_id', scopeId === null ? 'is' : 'eq', scopeId);
+    if (readErr) return c.json({ success: false, message: readErr.message }, 500 as 200);
+    const existingRows = existingRaw as { id: string; value: unknown }[] | null ?? [];
+    if (existingRows.length > 1) {
+      return c.json({ success: false, message:
+        `Setting ${v.data.settingKey} has ${existingRows.length} override rows at this scope. ` +
+        'De-duplicate them before writing.' }, 409 as 200);
+    }
+    const existingId: string | null = existingRows.length === 1 ? existingRows[0].id : null;
+    const existingValue: unknown = existingRows.length === 1 ? existingRows[0].value : null;
 
-    const { error } = await sb.from('app_setting_values').upsert({
-      setting_key: v.data.settingKey, scope_type: v.data.scopeType, scope_id: scopeId,
-      value: v.data.value, updated_by: (actor as unknown as ScopeUser).id, updated_at: new Date().toISOString(),
-    }, { onConflict: 'setting_key,scope_type,scope_id' });
-    if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+    const written = existingId !== null
+      ? await sb.from('app_setting_values').update({
+          value: v.data.value, updated_by: (actor as unknown as ScopeUser).id, updated_at: new Date().toISOString(),
+        }).eq('id', existingId)
+      : await sb.from('app_setting_values').insert({
+          setting_key: v.data.settingKey, scope_type: v.data.scopeType, scope_id: scopeId,
+          value: v.data.value, updated_by: (actor as unknown as ScopeUser).id, updated_at: new Date().toISOString(),
+        });
+    if (written.error) return c.json({ success: false, message: written.error.message }, 500 as 200);
 
     if (catalog['is_audited']) {
       await sb.from('app_setting_audit_log').insert({
         setting_key: v.data.settingKey, module_key: catalog['module_key'], scope_type: v.data.scopeType, scope_id: scopeId,
-        previous_value: existing?.value ?? null, new_value: v.data.value, changed_by: (actor as unknown as ScopeUser).id,
+        previous_value: existingValue, new_value: v.data.value, changed_by: (actor as unknown as ScopeUser).id,
         reason: v.data.reason ?? null,
       });
     }
@@ -248,20 +273,31 @@ router.post('/values/reset', async c => {
       request: { settingKey: v.data.settingKey, scopeType: v.data.scopeType, scopeId, value: catalog['default_value'] },
     });
 
-    const { data: existing } = await sb.from('app_setting_values').select('id, value')
+    // Select rows, not `.maybeSingle()`. With more than one row `.maybeSingle()` errors,
+    // `existing` came back null, and reset reported "No override existed." while deleting
+    // NOTHING — so the one operation that could have cleared a duplicated setting was the
+    // one guaranteed to refuse. Reset must be able to clean up exactly the mess the old
+    // write path created, so it clears EVERY row at the scope.
+    const { data: existingRaw, error: readErr } = await sb.from('app_setting_values').select('id, value')
       .eq('setting_key', v.data.settingKey).eq('scope_type', v.data.scopeType)
-      .filter('scope_id', scopeId === null ? 'is' : 'eq', scopeId === null ? null : scopeId).maybeSingle<{ id: string; value: unknown }>();
-    if (!existing) return c.json({ success: true, data: { reset: false, message: 'No override existed.' } });
+      .filter('scope_id', scopeId === null ? 'is' : 'eq', scopeId);
+    if (readErr) return c.json({ success: false, message: readErr.message }, 500 as 200);
+    const rows = existingRaw as { id: string; value: unknown }[] | null ?? [];
+    if (rows.length === 0) return c.json({ success: true, data: { reset: false, message: 'No override existed.' } });
 
-    await sb.from('app_setting_values').delete().eq('id', existing.id);
+    const { error: delErr } = await sb.from('app_setting_values').delete().in('id', rows.map(r => r.id));
+    if (delErr) return c.json({ success: false, message: delErr.message }, 500 as 200);
     if (catalog['is_audited']) {
       await sb.from('app_setting_audit_log').insert({
         setting_key: v.data.settingKey, module_key: catalog['module_key'], scope_type: v.data.scopeType, scope_id: scopeId,
-        previous_value: existing.value, new_value: null, changed_by: (actor as unknown as ScopeUser).id,
+        // The pre-image of a duplicated setting is every value that was there, not an
+        // arbitrary one of them.
+        previous_value: rows.length === 1 ? rows[0].value : rows.map(r => r.value),
+        new_value: null, changed_by: (actor as unknown as ScopeUser).id,
         reason: v.data.reason ?? 'Reset to inherited value',
       });
     }
-    return c.json({ success: true, data: { reset: true } });
+    return c.json({ success: true, data: { reset: true, rowsCleared: rows.length } });
   });
 });
 

@@ -313,3 +313,47 @@ export async function applyEmployeeAssignment(input: ApplyAssignmentInput): Prom
   }
   return result.data as ApplyAssignmentResult;
 }
+
+export interface CorrectProbationInput {
+  actorId: string;
+  employeeId: string;
+  /** null CLEARS the date. The caller states this explicitly; it is never inferred. */
+  probationEndDate: string | null;
+  reason: string;
+  correlationId: string;
+}
+
+export interface CorrectProbationResult {
+  employeeId: string;
+  previousProbationEndDate: string | null;
+  probationEndDate: string | null;
+  changed: boolean;
+  eventId: string;
+}
+
+/**
+ * Correct an employee's probation end date — the ONLY sanctioned way to change the field
+ * after an onboarding launch has set it.
+ *
+ * `probation_end_date` is written as a side effect of a launch, so a case cleanup needs an
+ * authoritative prior value to restore. The launch now records that pre-image
+ * (`hr_audit_log.previous_state`), and this command is how a human applies a correction:
+ * locked read + write + event + both audit trails in ONE transaction, with a mandatory
+ * reason. Cleanup scripts must call this rather than write `app_users` directly — a direct
+ * write has no actor, no reason and no trail, which is the failure this replaces.
+ */
+export async function correctEmployeeProbation(input: CorrectProbationInput): Promise<CorrectProbationResult> {
+  const result = await sb.rpc('hr_employee_probation_correct_tx', {
+    p_actor_id:            input.actorId,
+    p_employee_id:         input.employeeId,
+    p_probation_end_date:  input.probationEndDate,
+    p_reason:              input.reason,
+    p_correlation_id:      input.correlationId,
+  }) as unknown as { data: unknown; error: { message: string; code?: string } | null };
+
+  if (result.error) {
+    const status = result.error.code === '22023' ? 422 : result.error.code === '23503' ? 404 : 500;
+    throw Object.assign(new Error(`Probation correction failed: ${result.error.message}`), { status });
+  }
+  return result.data as CorrectProbationResult;
+}

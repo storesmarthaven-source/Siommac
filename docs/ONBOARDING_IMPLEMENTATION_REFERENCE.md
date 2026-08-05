@@ -1579,3 +1579,79 @@ single-use worker upload token and delivery record for document requests, and at
 automatic account provisioning (which remains disabled). The corresponding unused draft,
 automatic-start, notification-default, credential-method and auto-provision settings were
 removed from the catalogue rather than advertised as working controls.
+
+## Probation pre-image + retained QA case (2026-08-05)
+
+### The gap
+
+`hr_onboarding_launch_tx` writes `app_users.probation_end_date` as a side effect of creating
+a case, but `hr_audit_log.previous_state` was `null` on `hr.onboarding.started` and
+`audit_logs.changes` carried only the new value. **An onboarding launch was therefore not
+reversible from its own audit trail:** an operator removing a case had no authoritative prior
+value to restore and would have to guess at a real employee's employment terms. This surfaced
+during the Start Onboarding visual verification pass, on a live case.
+
+### The fix (source migration `20260804024501`, re-applied in place)
+
+The migration is idempotent end to end, so it is corrected at source and re-run rather than
+patched by a follow-up migration.
+
+- The employee row is **locked and read** (`select … for update`) immediately after the
+  duplicate-case guard, so the recorded pre-image cannot drift between read and write and two
+  concurrent launches cannot interleave. A missing employee now raises `23503` explicitly.
+- `probation_end_date` is written **only** when the launch supplies a date AND that date
+  differs from the current value. A launch never re-writes an identical value and never clears
+  a date it was not asked to set.
+- `hr_audit_log.previous_state` carries `{ probationEndDate: <pre-image> }` on every
+  `hr.onboarding.started` row — recorded whether or not the value changed, because "it was
+  already null" is as much a fact to preserve as a changed value.
+- `audit_logs.changes.probationEndDate` carries `{ previous, new, changed }`.
+
+### Governed correction (`20261004000000_hr_employee_probation_correction.sql`)
+
+`POST /api/hr/employees/probation/correct` → `hr_employee_probation_correct_tx`. Locked read
++ write + `app_events` + `audit_logs` + `hr_audit_log` in one transaction, under the new
+high-risk permission `hr.employee.probation.correct` (granted to `admin` and `hr_manager` in
+the same migration — the key is dead until the `role_permissions` rows exist). A reason of at
+least 10 characters is enforced in the RPC, not only at the API boundary, and
+`probationEndDate: null` is an explicit CLEAR that the caller must state — omitting the field
+is rejected rather than treated as a clear.
+
+**Cleanup scripts must call this endpoint. They must never write `app_users.probation_end_date`
+directly and must never guess at a prior value.**
+
+### E2E coverage (`scripts/e2e/suites/hrOnboarding.mjs`)
+
+- `forced child failure rolls the entire launch back` — strengthened. The employee is now
+  seeded with a real prior probation date and the launch supplies a *different* one, so the
+  post-rollback assertion proves the write was **rolled back** rather than never attempted.
+  Previously both were null, and the assertion would have passed even if the RPC had clobbered
+  the column.
+- `a successful launch records the probation pre-image in both audit trails` — asserts the
+  field moved, and that `hr_audit_log.previous_state`, `new_state.probationEndDateChanged` and
+  `audit_logs.changes.probationEndDate.{previous,new,changed}` all carry the right values.
+- `a launch that supplies no probation date leaves an existing one untouched` — a package with
+  no `probation_days` must not clear an existing date, and the pre-image is still recorded.
+- `probation correction: governed, audited, and denied without the permission` — reason
+  minimum, omitted-field rejection, the clear itself, exact-count side effects, and denial for
+  real `employee` and `manager` users (the harness `admin` is a superadmin and can never prove
+  a denial).
+
+### Retained QA verification case — ONB-2026-0645
+
+`ONB-2026-0645` (employee `USR-40397F16`, package `office_admin`, launched 2026-08-05) is
+**deliberately retained**. It was created to verify the post-launch receipt, which had never
+been walked and was rendering invisibly.
+
+It is NOT to be purged. The launch predates the pre-image fix, so its `hr_audit_log`
+`previous_state` is `null` and the employee's prior `probation_end_date` is unknown
+(`app_users.updated_at` is not reliable evidence that the field was untouched). Deleting the
+case would destroy the only remaining business context for an employee mutation that cannot
+be safely reversed.
+
+It may be removed only once an authoritative prior value is established, and the removal must
+route the field change through `hr/employees/probation/correct` — not a direct write.
+
+**Operator actions outstanding:** re-apply `20260804024501` (psql or the Supabase CLI, NOT the
+dashboard SQL editor — it has been observed to truncate function bodies and drop the trailing
+REVOKE), apply `20261004000000`, then run `npm run test:e2e -- hrOnboarding`.
