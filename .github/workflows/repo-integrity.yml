@@ -1,0 +1,44 @@
+# Repository integrity gate.
+#
+# The repo has a Husky pre-commit hook, but a local hook is not enforcement: it can be
+# skipped with --no-verify, it does not run for commits made by other tooling, and it never
+# runs at all on a machine that skipped `npm install`. This workflow is the non-bypassable
+# equivalent.
+#
+# `repo:index:check` is deliberately the FIRST gate. The generated index is only meaningful
+# if it is reproducible from a clean checkout — the generator indexes tracked and staged
+# files and embeds no commit hash or branch name, so a checkout of any commit must be able
+# to regenerate a byte-identical index. If that fails, the index is describing something
+# other than the committed source.
+name: Repository integrity
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Must pass from a CLEAN checkout, not merely on the author's machine before commit.
+      - name: Generated index is reproducible and current
+        run: npm run repo:index:check
+
+      - name: Typecheck (frontend + backend)
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npx vitest run
+
+      # E2E needs a live stack, so it is not run here. Module suites run against a dev
+      # server per the Testing Standard and are recorded in the module's release evidence.

@@ -13,24 +13,17 @@
 
 ---
 
-## Current-state delta (verified against code, 2026-06)
+## Implementation status
 
-What the plan assumes vs. what actually exists. Keep this honest — update as built.
+This section used to carry a per-module status table dated 2026-06. It went stale in the
+way every volatile fact embedded in an architectural document does — it still described
+`app_events` as missing and "must create" long after that stream became the backbone every
+module emits through, and HR/Finance as merely "planned" after both had shipped.
 
-| Plan element | State | Evidence / gap |
-|---|---|---|
-| Platform core (auth, RBAC, depts, sites, employees, settings, audit, registry) | ✅ built | live + backend-enforced |
-| Workflow tables (`workflow_instances`, `approval_tasks`, `workflow_events`, handoff in/out) | 🟡 built, unused | migration `20260620000000`; **frontend store is localStorage** (`src/lib/workflow/store.ts`, key `siomac.hse.workflow.v1`) — never calls `/api/workflow/*` |
-| `app_events` central stream | ❌ missing | no table, no emitter — **must create** |
-| Handoff emission | 🟡 built, never fired | `/api/workflow/decide` writes outbox→inbox, but nothing calls decide; no consumer |
-| `notify.ts` canonical notification API | ❌ not mounted | absent from `api.ts` route mounts |
-| `getNotifications` synthetic path | 🟡 to retire | `routes/notifications.ts` builds notifs inline from leave/attendance; no notifications table |
-| User id typing | ⚠️ inconsistent | notifications use ad-hoc `user_id` from joined tables, not canonical `app_users.id` |
-| HSE Incidents→Investigations→CAPA | ✅ live | real backend (`routes/hse.ts`); investigations global-list endpoint missing |
-| Other 11 HSE areas + PPE | 🟡 frontend mock | no tables |
-| HR / Finance / Operations modules | 🔵 planned | frontend partial/none, no backend |
-| Payroll | 🟡 partial | runs/approvals exist; ledger + NIS employer rate incomplete |
-| UI kit (`src/ui`) | 🟡 started | tokens + statusTokens + 9 components + exportCsv built; pages not migrated |
+**Module status now lives in `docs/CURRENT_IMPLEMENTATION_STATUS.md`.** This document
+describes the STABLE architecture only: the boundaries and contracts that hold regardless
+of which module is currently in flight. If a statement here would need editing when a
+module progresses, it belongs in the status document instead.
 
 ---
 

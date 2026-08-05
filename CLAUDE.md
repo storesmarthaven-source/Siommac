@@ -127,16 +127,21 @@ Each of these cost real debugging time. Don't relearn them.
   enrolled factor. Before that wiring: confirm every superadmin has MFA, or default super-admin
   MFA off. Don't flip it blind.
 
-## Worktree Rule
-Work **directly in `C:\Users\MSI Laptop\Desktop\Siomac` on branch `main`** — that is the
-complete, runnable copy (has `.env`, `node_modules`, `netlify/`, `assets/`, `docs/`) and the
-dev servers run from it. The former working branch `claude/wonderful-panini-34b331` was
-fully merged into `main` (identical at the merge point); commit new work to `main`.
+## Repository authority
+**`docs/CURRENT_IMPLEMENTATION_STATUS.md` is the single source of truth** for which branch is
+authoritative, what is in flight, and what is superseded. This file used to name an absolute
+path and a branch directly; `AGENTS.md` named a different absolute path and a different
+branch. Two documents asserting conflicting authority means at least one is wrong, and both
+go stale silently.
 
-Any `wonderful-panini-*` folders under `.claude\worktrees\` are DEAD stray/Explorer copies
-(stale snapshots, broken or missing `.git` links) and must NOT be used for anything —
-delete them once no process holds them open. Genuine short-lived worktrees for parallel
-agents (e.g. `wf-*`) are created/removed by sessions via `git worktree add/remove`.
+Before making changes: `git status --short`, `git branch --show-current`, then read
+`docs/CURRENT_IMPLEMENTATION_STATUS.md` and follow the workstream declared there. Do not
+switch branches, delete worktrees or rewrite history without explicit approval.
+
+Short-lived worktrees for parallel agents are created and removed via
+`git worktree add/remove`. ⚠ On Windows a worktree's `node_modules` is typically a JUNCTION
+into another checkout — remove the junction before deleting the worktree, or you will delete
+the shared modules.
 
 ## Commit Message Rule
 Every commit message MUST end with:

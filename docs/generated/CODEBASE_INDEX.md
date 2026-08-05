@@ -2,8 +2,7 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `5baf13ff6ea124ef5be4c0ba3388cc9b5f7a651e`  
-Source fingerprint: `17491b032cad903ca80b7bff`  
+Source fingerprint: `286425af071942cf23406065`  
 Generator version: `1`
 
 ## Use
@@ -19,23 +18,23 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1336 | 13474 | 51 | 972 | 973 | 17 | 354 | 1414 | 83 | 2666 |
+| 1348 | 13675 | 62 | 981 | 982 | 17 | 354 | 1429 | 86 | 2764 |
 
 ## Modules
 
 | Module | Files | Symbols | Widgets | Unique routes | Route definitions | API calls | DB objects | E2E suites | Map |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| hr | 254 | 2839 | 9 | 275 | 275 | 35 | 196 | 16 | [open](modules/hr.md) |
+| hr | 265 | 3019 | 16 | 284 | 284 | 35 | 207 | 19 | [open](modules/hr.md) |
 | payroll | 195 | 1978 | 10 | 140 | 140 | 2 | 260 | 28 | [open](modules/payroll.md) |
 | finance | 139 | 1853 | 10 | 156 | 156 | 4 | 202 | 9 | [open](modules/finance.md) |
 | hse | 87 | 1275 | 0 | 144 | 144 | 107 | 65 | 4 | [open](modules/hse.md) |
 | communications | 112 | 1052 | 0 | 93 | 96 | 88 | 158 | 6 | [open](modules/communications.md) |
-| workflow | 47 | 321 | 0 | 40 | 40 | 8 | 128 | 3 | [open](modules/workflow.md) |
+| workflow | 46 | 308 | 0 | 40 | 40 | 8 | 130 | 3 | [open](modules/workflow.md) |
 | security | 46 | 387 | 0 | 51 | 51 | 31 | 65 | 4 | [open](modules/security.md) |
-| settings | 43 | 250 | 0 | 26 | 26 | 18 | 21 | 2 | [open](modules/settings.md) |
-| widgets | 69 | 542 | 21 | 15 | 15 | 11 | 14 | 1 | [open](modules/widgets.md) |
-| platform | 307 | 2800 | 0 | 32 | 47 | 50 | 305 | 0 | [open](modules/platform.md) |
-| testing | 37 | 177 | 0 | 0 | 0 | 0 | 0 | 10 | [open](modules/testing.md) |
+| settings | 43 | 250 | 0 | 26 | 26 | 18 | 23 | 2 | [open](modules/settings.md) |
+| widgets | 71 | 573 | 25 | 15 | 15 | 11 | 14 | 1 | [open](modules/widgets.md) |
+| platform | 307 | 2802 | 0 | 32 | 47 | 50 | 305 | 0 | [open](modules/platform.md) |
+| testing | 37 | 178 | 0 | 0 | 0 | 0 | 0 | 10 | [open](modules/testing.md) |
 | enterprise | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | [open](modules/enterprise.md) |
 
 ## Widget and Tile Directory
@@ -82,10 +81,21 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `hr.employeeMaster.recordQuality` | Record Quality | registry | widgets | `RecordQuality` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:480` |
 | `hr.employeeMaster.recordReadiness` | Record Readiness | registry | widgets | `RecordReadiness` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:475` |
 | `hr.employees.register` | Employee Register | local | hr | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:742` |
-| `hr.onboarding.case.activeTasks` | Active Tasks | local | hr | `() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddTask}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:329` |
-| `hr.onboarding.case.blockersTable` | Blockers | local | hr | `() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:330` |
-| `hr.onboarding.case.customActions` | Custom Actions | local | hr | `() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddAction}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:332` |
-| `hr.onboarding.case.handoffsTable` | Handoffs | local | hr | `() => wcard('Handoffs', 'fa-arrow-right-arrow-left', handoffsBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:331` |
+| `hr.onboarding.blockedCases` | Blocked Cases | local | hr | `() => <BlockedCasesWidget blockers={blockers} onOpenCase={openCase}         onViewAll={() => openSurface('blocked')} />` | `src/components/sections/HR/OnboardingCommandCenter.tsx:232` |
+| `hr.onboarding.case.activationReadiness` | Activation Readiness | local | hr | `() => wcard('Activation Readiness', 'fa-gauge-high', readinessBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:636` |
+| `hr.onboarding.case.activeTasks` | Active Tasks | local | hr | `() => wcard('Priority Tasks', 'fa-list-check', priorityTasksBody(), <div class="obx-rowbtns"><button class="obx-mini" onClick={() => setTab('tasks')}>View all</button>{canManageTasks && <button class="obx-btn primary obx-btn-sm" onClick={openAddTask}>+ Add</button>}</div>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:633` |
+| `hr.onboarding.case.blockersTable` | Blockers | local | hr | `() => wcard('Key Blockers', 'fa-triangle-exclamation', blockersBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:634` |
+| `hr.onboarding.case.customActions` | Custom Actions | local | hr | `() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddAction}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:638` |
+| `hr.onboarding.case.handoffsTable` | Handoffs | local | hr | `() => wcard('Handoffs', 'fa-arrow-right-arrow-left', handoffsBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:635` |
+| `hr.onboarding.case.readinessByDomain` | Readiness by Domain | local | hr | `() => wcard('Readiness by Domain', 'fa-layer-group', readinessDomainBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:637` |
+| `hr.onboarding.caseFocus` | Case Focus | local | hr | `() => <CaseFocusWidget         cases={focusCases} blockers={blockers} index={focusIndex}         onCycle={d => setFocusIndex(i => {           const n = focusCases.length \|\| 1;           return ((i + d) % n + n) % n;         })}         onOpenCase={openCase}         onNotifyOwner={b => openSurface('blocked', { blockerId: b.blockerId })} />` | `src/components/sections/HR/OnboardingCommandCenter.tsx:221` |
+| `hr.onboarding.dueToday` | Due Today | registry | widgets | `DueToday` | `src/ui/widgets/registry.hrOnboarding.tsx:168` |
+| `hr.onboarding.overdueActions` | Overdue Actions | registry | widgets | `OverdueActions` | `src/ui/widgets/registry.hrOnboarding.tsx:169` |
+| `hr.onboarding.ownerRequired` | Owner Required | registry | widgets | `OwnerRequired` | `src/ui/widgets/registry.hrOnboarding.tsx:171` |
+| `hr.onboarding.startReadiness` | Start Readiness | local | hr | `() => <StartReadinessWidget stats={statsQ.data}         onViewStarts={() => openSurface('cases', { startsWithinDays: 7 })} />` | `src/components/sections/HR/OnboardingCommandCenter.tsx:216` |
+| `hr.onboarding.startsWithin7Days` | Starting Within 7 Days | registry | widgets | `StartsWithinSevenDays` | `src/ui/widgets/registry.hrOnboarding.tsx:170` |
+| `hr.onboarding.upcomingStarts` | Upcoming Starts | local | hr | `() => <UpcomingStartsWidget rows={starts} loading={startsQ.isPending}         onOpenCase={openCase} onViewAll={() => openSurface('cases', { startsWithinDays: 7 })} />` | `src/components/sections/HR/OnboardingCommandCenter.tsx:237` |
+| `hr.onboarding.workQueue` |  | local | hr | `() => <WorkQueueWidget rows={queueRows} isManager={isManager} tab={queueTab}         onTab={setQueueTab} counts={queueCounts}         activeFilterLabel={queueFilter?.label ?? null}         onClearFilter={() => setQueueFilter(null)} onOpenCase={openCase}         onOpenQueue={() => openSurface('tasks')} />` | `src/components/sections/HR/OnboardingCommandCenter.tsx:242` |
 | `platform.weather.current` | Weather | registry | widgets | `WeatherBandWidget` | `src/ui/widgets/registry.weather.tsx:488` |
 | `platform.weather.precipitation` | Weather · Precipitation | registry | widgets | `metricWidget('precipitation')` | `src/ui/widgets/registry.weather.tsx:502` |
 | `platform.weather.strip` | Weather · Strip | registry | widgets | `WeatherStripWidget` | `src/ui/widgets/registry.weather.tsx:495` |

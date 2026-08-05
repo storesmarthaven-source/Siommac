@@ -59,17 +59,38 @@ function walk(directory, predicate) {
   return out;
 }
 
-function read(path) {
-  return readFileSync(path, 'utf8').replaceAll('\r\n', '\n');
-}
-
-function git(...args) {
+/**
+ * The set of files Git knows about — tracked, plus anything newly staged.
+ *
+ * The generator walks the FILESYSTEM, so without this filter any untracked file under
+ * src/, netlify/functions/, scripts/, types/ or the migration directories contaminates the
+ * output. A developer with unrelated work in progress would generate an index describing
+ * files that are not in the commit, and `repo:index:check` would then fail for anyone
+ * checking that commit out. Returning null (git unavailable) degrades to the old
+ * walk-everything behaviour rather than producing an empty index.
+ *
+ * `git ls-files` lists the index, so `git add <new file>` is what makes a new file
+ * indexable. The intended order is: stage sources → repo:index → stage docs/generated →
+ * commit.
+ */
+function collectTrackedFiles() {
   try {
-    return execFileSync('git', ['-C', root, ...args], { encoding: 'utf8' }).trim();
+    const output = execFileSync('git', ['-C', root, 'ls-files', '-z'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    return new Set(output.split('\0').filter(Boolean).map(slash));
   }
   catch {
-    return 'unknown';
+    return null;
   }
+}
+
+const trackedFiles = collectTrackedFiles();
+
+function isTracked(path) {
+  return trackedFiles === null || trackedFiles.has(rel(path));
+}
+
+function read(path) {
+  return readFileSync(path, 'utf8').replaceAll('\r\n', '\n');
 }
 
 function inferModule(pathOrName) {
@@ -231,7 +252,7 @@ function normalizeApiPath(path) {
 
 function collectCode() {
   const roots = ['src', 'netlify/functions', 'types', 'scripts', 'tests'].map(path => join(root, path));
-  const paths = roots.flatMap(directory => walk(directory, path => CODE_EXTENSIONS.has(extname(path))));
+  const paths = roots.flatMap(directory => walk(directory, path => isTracked(path) && CODE_EXTENSIONS.has(extname(path))));
   const files = [];
   const symbols = [];
   const widgets = [];
@@ -426,7 +447,7 @@ function collectRouteMounts() {
 
 function collectRoutes() {
   const mountByFileExport = collectRouteMounts();
-  const routePaths = walk(join(root, 'netlify', 'functions', 'routes'), path => extname(path) === '.ts');
+  const routePaths = walk(join(root, 'netlify', 'functions', 'routes'), path => isTracked(path) && extname(path) === '.ts');
   const routes = [];
 
   for (const absolutePath of routePaths) {
@@ -572,7 +593,7 @@ function collectRoutes() {
 
 function collectDatabaseObjects() {
   const roots = ['supabase/migrations', 'database/migrations'].map(path => join(root, path));
-  const paths = roots.flatMap(directory => walk(directory, path => extname(path) === '.sql'));
+  const paths = roots.flatMap(directory => walk(directory, path => isTracked(path) && extname(path) === '.sql'));
   const objects = [];
   const patterns = [
     ['table', /create\s+table\s+(?:if\s+not\s+exists\s+)?((?:"?[a-zA-Z_][\w$]*"?\.)?"?[a-zA-Z_][\w$]*"?)/gi],
@@ -621,7 +642,7 @@ function collectDatabaseObjects() {
 }
 
 function collectE2e() {
-  const paths = walk(join(root, 'scripts', 'e2e', 'suites'), path => extname(path) === '.mjs');
+  const paths = walk(join(root, 'scripts', 'e2e', 'suites'), path => isTracked(path) && extname(path) === '.mjs');
   const suites = [];
 
   for (const absolutePath of paths.sort()) {
@@ -682,7 +703,6 @@ function renderIndex(index) {
     '',
     '# SIOMAC Codebase Index',
     '',
-    `Source HEAD: \`${index.source.head}\`  `,
     `Source fingerprint: \`${index.source.fingerprint}\`  `,
     `Generator version: \`${index.formatVersion}\``,
     '',
@@ -831,8 +851,6 @@ function buildIndex() {
   return {
     formatVersion: GENERATOR_VERSION,
     source: {
-      head: git('rev-parse', 'HEAD'),
-      branch: git('branch', '--show-current'),
       fingerprint,
       indexedFiles: allInputPaths.length,
     },

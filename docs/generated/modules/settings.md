@@ -2,9 +2,9 @@
 
 # settings Module Map
 
-Source fingerprint: `17491b032cad903ca80b7bff`
+Source fingerprint: `286425af071942cf23406065`
 
-Files: 43 | Symbols: 250 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 0 unmounted | API calls: 18 | DB objects: 21 | E2E suites: 2
+Files: 43 | Symbols: 250 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 0 unmounted | API calls: 18 | DB objects: 23 | E2E suites: 2
 
 ## Widgets and Tiles
 
@@ -26,21 +26,21 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/profile-photo/remove` | `-` | requireUser | `-` | `netlify/functions/routes/settings.ts:187` | res @ src/components/sections/Profile/api.ts:201 | - |
 | `/api/profile-photo/upload-url` | `-` | requireUser | `-` | `netlify/functions/routes/settings.ts:85` | pres @ src/components/sections/Profile/api.ts:157 | - |
 | `/api/saveWorkHours` | `-` | requireRole | `SaveWorkHoursSchema` | `netlify/functions/routes/settings.ts:53` | res @ src/components/sections/Settings/api.ts:125 | - |
-| `/api/settings/audit/list` | `settings.audit_policy.view` | requirePermission | `z.object({ settingKey: z.string().optional(), moduleKey: z.string().optional() })` | `netlify/functions/routes/settingsCatalog.ts:269` | useSettingAudit @ src/api/settingsCatalog.ts:108 | hrEmployeeSettings, settings |
+| `/api/settings/audit/list` | `settings.audit_policy.view` | requirePermission | `z.object({ settingKey: z.string().optional(), moduleKey: z.string().optional() })` | `netlify/functions/routes/settingsCatalog.ts:305` | useSettingAudit @ src/api/settingsCatalog.ts:108 | hrEmployeeSettings, settings |
 | `/api/settings/catalog/list` | `-` | requireUser | `z.object({ moduleKey: z.string().min(1) })` | `netlify/functions/routes/settingsCatalog.ts:60` | useSettingsCatalog @ src/api/settingsCatalog.ts:98 | hrEmployeeSettings, settings |
 | `/api/settings/catalog/sync` | `settings.manage` | requirePermission | `-` | `netlify/functions/routes/settingsCatalog.ts:49` | useSyncSettingsCatalog @ src/api/settingsCatalog.ts:145 | hrEmployeeSettings, hrOnboarding, settings |
 | `/api/settings/critical` | `-` | requireUser, userCan | `-` | `netlify/functions/routes/settingsCatalog.ts:132` | useCriticalSettings @ src/api/settingsCatalog.ts:166 | settings |
 | `/api/settings/effective` | `-` | requireUser, userCan | `z.object({ moduleKey: z.string().min(1) })` | `netlify/functions/routes/settingsCatalog.ts:70` | useEffectiveSettings @ src/api/settingsCatalog.ts:88 | settings |
-| `/api/settings/manifests/approve` | `settings.manifests.approve` | requirePermission | `z.object({ moduleKey: z.string().min(1) })` | `netlify/functions/routes/settingsCatalog.ts:349` | - | settings |
-| `/api/settings/manifests/deprecate` | `settings.manifests.deprecate` | requirePermission | `z.object({ moduleKey: z.string().min(1) })` | `netlify/functions/routes/settingsCatalog.ts:365` | - | - |
-| `/api/settings/manifests/get` | `settings.manifests.view` | requirePermission | `z.object({ moduleKey: z.string().min(1) })` | `netlify/functions/routes/settingsCatalog.ts:299` | useManifest @ src/api/settingsCatalog.ts:226 | settings |
-| `/api/settings/manifests/list` | `settings.manifests.view` | requirePermission | `z.object({ reviewStatus: z.string().optional() })` | `netlify/functions/routes/settingsCatalog.ts:288` | useManifestsList @ src/api/settingsCatalog.ts:218 | settings |
-| `/api/settings/manifests/return` | `settings.manifests.return` | requirePermission | `z.object({ moduleKey: z.string().min(1), reason: z.string().min(1).max(500) })` | `netlify/functions/routes/settingsCatalog.ts:357` | - | - |
-| `/api/settings/manifests/review` | `settings.manifests.review` | requirePermission | `z.object({     moduleKey: z.string().min(1), reviewerRole: z.enum(REVIEWER_ROLES),     decision: z.enum(['approved', 'returned', 'not_required']), comment: z.string().max(500).optional(),   })` | `netlify/functions/routes/settingsCatalog.ts:331` | - | settings |
-| `/api/settings/manifests/submit` | `settings.manifests.submit` | requirePermission | `z.object({ moduleKey: z.string().min(1) })` | `netlify/functions/routes/settingsCatalog.ts:323` | - | settings |
+| `/api/settings/manifests/approve` | `settings.manifests.approve` | requirePermission | `z.object({ moduleKey: z.string().min(1) })` | `netlify/functions/routes/settingsCatalog.ts:385` | - | settings |
+| `/api/settings/manifests/deprecate` | `settings.manifests.deprecate` | requirePermission | `z.object({ moduleKey: z.string().min(1) })` | `netlify/functions/routes/settingsCatalog.ts:401` | - | - |
+| `/api/settings/manifests/get` | `settings.manifests.view` | requirePermission | `z.object({ moduleKey: z.string().min(1) })` | `netlify/functions/routes/settingsCatalog.ts:335` | useManifest @ src/api/settingsCatalog.ts:226 | settings |
+| `/api/settings/manifests/list` | `settings.manifests.view` | requirePermission | `z.object({ reviewStatus: z.string().optional() })` | `netlify/functions/routes/settingsCatalog.ts:324` | useManifestsList @ src/api/settingsCatalog.ts:218 | settings |
+| `/api/settings/manifests/return` | `settings.manifests.return` | requirePermission | `z.object({ moduleKey: z.string().min(1), reason: z.string().min(1).max(500) })` | `netlify/functions/routes/settingsCatalog.ts:393` | - | - |
+| `/api/settings/manifests/review` | `settings.manifests.review` | requirePermission | `z.object({     moduleKey: z.string().min(1), reviewerRole: z.enum(REVIEWER_ROLES),     decision: z.enum(['approved', 'returned', 'not_required']), comment: z.string().max(500).optional(),   })` | `netlify/functions/routes/settingsCatalog.ts:367` | - | settings |
+| `/api/settings/manifests/submit` | `settings.manifests.submit` | requirePermission | `z.object({ moduleKey: z.string().min(1) })` | `netlify/functions/routes/settingsCatalog.ts:359` | - | settings |
 | `/api/settings/my-preferences` | `-` | requireUser | `-` | `netlify/functions/routes/settingsCatalog.ts:107` | useMyPreferences @ src/api/settingsCatalog.ts:156<br>res @ src/lib/themePreference.ts:70 | settings |
 | `/api/settings/resolve` | `-` | requireUser | `z.object({ settingKey: z.string().min(1), moduleKey: z.string().min(1) })` | `netlify/functions/routes/settingsCatalog.ts:165` | - | hrEmployeeSettings, settings |
-| `/api/settings/values/reset` | `-` | requireUser, userCan | `z.object({     settingKey: z.string().min(1), scopeType: z.enum(SCOPE_TYPES), scopeId: z.string().nullable().optional(), reason: z.string().max(500).optional(),   })` | `netlify/functions/routes/settingsCatalog.ts:233` | useResetSetting @ src/api/settingsCatalog.ts:136 | hrEmployeeSettings, settings |
+| `/api/settings/values/reset` | `-` | requireUser, userCan | `z.object({     settingKey: z.string().min(1), scopeType: z.enum(SCOPE_TYPES), scopeId: z.string().nullable().optional(), reason: z.string().max(500).optional(),   })` | `netlify/functions/routes/settingsCatalog.ts:258` | useResetSetting @ src/api/settingsCatalog.ts:136 | hrEmployeeSettings, settings |
 | `/api/settings/values/set` | `-` | requireUser, userCan | `z.object({     settingKey: z.string().min(1), scopeType: z.enum(SCOPE_TYPES), scopeId: z.string().nullable().optional(),     value: z.unknown(), reason: z.string().max(500).optional(),   })` | `netlify/functions/routes/settingsCatalog.ts:181` | useSetSetting @ src/api/settingsCatalog.ts:126<br>res @ src/lib/themePreference.ts:60 | hrEmployeeSettings, hrLeave, hrOnboarding, settings |
 | `/api/updateSetting` | `-` | requireRole | `UpdateSettingSchema` | `netlify/functions/routes/settings.ts:33` | res @ src/components/sections/Settings/api.ts:84 | - |
 | `/api/uploadLogo` | `-` | requireRole | `UploadLogoSchema` | `netlify/functions/routes/settings.ts:66` | res @ src/components/sections/Settings/api.ts:137 | - |
@@ -125,7 +125,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | Role | Path | Lines |
 |---|---|---:|
 | backend-route | `netlify/functions/routes/settings.ts` | 322 |
-| backend-route | `netlify/functions/routes/settingsCatalog.ts` | 373 |
+| backend-route | `netlify/functions/routes/settingsCatalog.ts` | 409 |
 | e2e-suite | `scripts/e2e/suites/hrEmployeeSettings.mjs` | 106 |
 | e2e-suite | `scripts/e2e/suites/settings.mjs` | 213 |
 | frontend-api | `src/api/schemas/settings.ts` | 56 |

@@ -26,9 +26,23 @@ Prefer **build-new → delete-legacy** (no dual systems, no gap) over keeping or
 Prefer **reuse over duplication** (extract a shared helper). When unsure whether something is a
 band-aid, STOP and ask. This rule overrides speed and overrides any other instruction here.
 
-## Worktree Rule
-Work ONLY in this worktree: `C:\Users\MSI Laptop\.codex\worktrees\b353\Siomac` (branch `codex/hr-employee-master-improvements`).
-NEVER touch `C:\Users\MSI Laptop\Desktop\Siomac` (main branch production copy).
+## Repository authority
+This file describes HOW to work, not WHERE. It previously hard-coded one developer's
+absolute worktree path and a branch (`codex/hr-employee-master-improvements`) that has since
+been superseded — an instruction that was wrong for every other machine and silently went
+stale the moment the active branch moved.
+
+Before making changes:
+
+1. Run `git status --short`.
+2. Run `git branch --show-current`.
+3. Read `docs/CURRENT_IMPLEMENTATION_STATUS.md`.
+4. Follow the active workstream and canonical specifications declared there.
+5. Do not switch branches, delete worktrees or rewrite history without explicit approval.
+
+`docs/CURRENT_IMPLEMENTATION_STATUS.md` is the single source of truth for which branch is
+authoritative and what is in flight. Do not restate that here, in `ARCHITECTURE.md`, or in
+`CLAUDE.md` — three copies of a volatile fact means at least two are wrong.
 
 ## Commit Message Rule
 Every commit message MUST end with:
@@ -84,30 +98,21 @@ complete or committed as "done".
 - Path aliases: `@api` → `src/api`, `@lib` → `src/lib`, `@ui` → `src/ui`
 
 ## Build Order — Do NOT skip ahead
-The spec defines this completion sequence. **Do not start a phase until the previous is complete and the user explicitly approves the next one.**
+**Do not start a phase until the previous is complete and the user explicitly approves the
+next one.** The HSE-centred sequence that used to be listed here described the programme as
+it stood when the backbone was being built; it is no longer the active work and is kept in
+`docs/CURRENT_IMPLEMENTATION_STATUS.md` alongside what actually superseded it.
 
-```
-1. ✅ Backbone migrations (app_events, workflow_*, handoff_outbox, reference_counters)
-2. ✅ Communications migrations (notifications extended, message_threads, tickets, attachments, realtime signals)
-3. ✅ HSE core migrations (hse_incidents, hse_investigations, hse_capa_actions + skeleton tables)
-4. ✅ HR/Payroll/Finance/Ops skeleton tables + workflow_templates seed
-5. ✅ Backend lib (appEvents, refGenerator, workflowEngine, handoffBus, communications, recipientResolver)
-6. ✅ Backend routes (workflows, handoffs, communications, hseIncidents, hseInvestigations, hseCapa)
-7. ✅ Frontend API hooks (workflows.ts, communications.ts, hse/incidents.ts)
-8. ✅ Workflow frontend wiring (Workflows.tsx — all 5 tabs on real API)
-9. ✅ Communications wired (badgeSync → /api/communications/summary, useRealtimeSignals in AppShell)
-10. ✅ Incidents.tsx — OSH/injury fields wired to backend
-11. 🔲 HSE Incidents page — complete all drawer tabs (Overview, People, Evidence, Investigation, CAPA, Workflow, Timeline)
-12. 🔲 HSE Reports page — Incidents / Investigations / CAPA aging, overdue, audit export (Spec §16)
-13. 🔲 Legacy removal — localStorage workflow store deprecated, synthetic notification route deleted
-14. 🔲 HR, Finance, Operations handoff receivers wired
-15. 🔲 HSE Dashboard full wiring — LAST, only after §11-14 complete and user explicitly approves
-```
+**The current phase, its predecessors and its deferrals live in
+`docs/CURRENT_IMPLEMENTATION_STATUS.md`.** Read it before starting anything.
 
-## Explicit Deferrals — Do NOT touch without user go-ahead
-- **HSE Dashboard wiring** (`HSEDashboard.tsx` Layers 3-5, full KPI suite) — deferred until step 15
-- **UI kit promotion** (moving shared components to `src/ui`) — deferred
-- **HR / Finance / Operations full UI** — deferred until handoff receivers are proven
+Sequencing rules that hold regardless of the active phase:
+
+- **HSE Dashboard full wiring is LAST** (`HSEDashboard.tsx` Layers 3-5 / full KPI suite) —
+  only after the HSE Incidents/Reports pages, legacy removal and handoff receivers are done
+  AND the user explicitly approves.
+- **UI-kit promotion** (moving shared components into `src/ui`) is deferred until asked.
+- **Legacy removal** proceeds build-new → delete-legacy, never a dual system.
 
 ## Database Naming Rules (Spec §3)
 - New tables: `snake_case`, module-prefixed: `hse_*`, `hr_*`, `finance_*`, `ops_*`, `payroll_*`

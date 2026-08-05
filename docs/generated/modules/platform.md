@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `17491b032cad903ca80b7bff`
+Source fingerprint: `286425af071942cf23406065`
 
-Files: 307 | Symbols: 2800 | Widgets: 0 | Unique mounted endpoints: 32 | Route definitions: 32 mounted + 15 unmounted | API calls: 50 | DB objects: 305 | E2E suites: 0
+Files: 307 | Symbols: 2802 | Widgets: 0 | Unique mounted endpoints: 32 | Route definitions: 32 mounted + 15 unmounted | API calls: 50 | DB objects: 305 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -23,7 +23,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/calendar/activity/respond` | `calendar.view` | requirePermission | `AttendeeResponseSchema` | `netlify/functions/routes/calendar.ts:457` | useRespondToCalendarActivity @ src/api/calendar.ts:165 | calendar |
 | `/api/calendar/cancel` | `calendar.view` | requirePermission | `CancelSchema` | `netlify/functions/routes/calendar.ts:1004` | useCancelEntry @ src/api/calendar.ts:139 | calendar |
 | `/api/calendar/get` | `calendar.view` | requirePermission | `GetSchema` | `netlify/functions/routes/calendar.ts:357` | res @ src/api/calendar.ts:58 | calendar |
-| `/api/calendar/list` | `calendar.view` | requirePermission | `ListSchema` | `netlify/functions/routes/calendar.ts:198` | res @ src/api/calendar.ts:45 | calendar |
+| `/api/calendar/list` | `calendar.view` | requirePermission | `ListSchema` | `netlify/functions/routes/calendar.ts:198` | res @ src/api/calendar.ts:45 | calendar, hrOnboardingScope |
 | `/api/calendar/reminders/get` | `calendar.view` | requirePermission | `ReminderGetSchema` | `netlify/functions/routes/calendar.ts:411` | res @ src/api/calendar.ts:72 | calendar |
 | `/api/calendar/reminders/run-sweep` | `-` | - | `z.object({ now: z.string().optional() })` | `netlify/functions/routes/calendar.ts:499` | - | calendar |
 | `/api/calendar/reminders/set` | `calendar.view` | requirePermission | `ReminderSetSchema` | `netlify/functions/routes/calendar.ts:431` | useSetCalendarReminders @ src/api/calendar.ts:152 | calendar |

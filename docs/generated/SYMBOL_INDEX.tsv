@@ -1769,6 +1769,9 @@ getEmploymentDetail	function	hr	true		netlify/functions/lib/hr/employmentDetail.
 ApplyAssignmentInput	interface	hr	true		netlify/functions/lib/hr/employmentDetail.ts	251	
 ApplyAssignmentResult	interface	hr	true		netlify/functions/lib/hr/employmentDetail.ts	273	
 applyEmployeeAssignment	function	hr	true		netlify/functions/lib/hr/employmentDetail.ts	296	
+CorrectProbationInput	interface	hr	true		netlify/functions/lib/hr/employmentDetail.ts	317	
+CorrectProbationResult	interface	hr	true		netlify/functions/lib/hr/employmentDetail.ts	326	
+correctEmployeeProbation	function	hr	true		netlify/functions/lib/hr/employmentDetail.ts	345	
 IMPORT_MAPPING_VERSION	variable	hr	true		netlify/functions/lib/hr/importFields.ts	13	
 IMPORT_TARGET_FIELDS	variable	hr	true		netlify/functions/lib/hr/importFields.ts	15	
 ImportTargetField	type	hr	true		netlify/functions/lib/hr/importFields.ts	27	
@@ -1867,13 +1870,14 @@ previewOnboardingCommunication	function	communications	true		netlify/functions/l
 listOnboardingCommunications	function	communications	true		netlify/functions/lib/hr/onboardingCommunications.ts	106	
 sendOnboardingCommunication	function	communications	true		netlify/functions/lib/hr/onboardingCommunications.ts	128	
 resendOnboardingCommunication	function	communications	true		netlify/functions/lib/hr/onboardingCommunications.ts	162	
-StartOnboardingArgs	interface	hr	true		netlify/functions/lib/hr/onboardingCore.ts	22	
-StartOnboardingResult	interface	hr	true		netlify/functions/lib/hr/onboardingCore.ts	39	
-ACTIVE_CASE_STATUSES	array	hr	false		netlify/functions/lib/hr/onboardingCore.ts	42	
-validateOnboardingLaunchGates	function	hr	false		netlify/functions/lib/hr/onboardingCore.ts	50	
-validateWorkerTypeAndPackage	function	hr	false		netlify/functions/lib/hr/onboardingCore.ts	129	
-has	function	hr	false		netlify/functions/lib/hr/onboardingCore.ts	148	validateWorkerTypeAndPackage
-startOnboardingCase	function	hr	true		netlify/functions/lib/hr/onboardingCore.ts	165	
+StartOnboardingArgs	interface	hr	true		netlify/functions/lib/hr/onboardingCore.ts	14	
+StartOnboardingResult	interface	hr	true		netlify/functions/lib/hr/onboardingCore.ts	27	
+ACTIVE_CASE_STATUSES	array	hr	false		netlify/functions/lib/hr/onboardingCore.ts	34	
+fail	function	hr	false		netlify/functions/lib/hr/onboardingCore.ts	38	
+validateLaunchGates	function	hr	false		netlify/functions/lib/hr/onboardingCore.ts	40	
+validateWorkerType	function	hr	false		netlify/functions/lib/hr/onboardingCore.ts	53	
+findLaunchReplay	function	hr	false		netlify/functions/lib/hr/onboardingCore.ts	58	
+startOnboardingCase	function	hr	true		netlify/functions/lib/hr/onboardingCore.ts	74	
 err	function	hr	false		netlify/functions/lib/hr/onboardingCustomActions.ts	24	
 nowISO	function	hr	false		netlify/functions/lib/hr/onboardingCustomActions.ts	25	
 slug	function	hr	false		netlify/functions/lib/hr/onboardingCustomActions.ts	26	
@@ -1891,26 +1895,33 @@ instantiate	function	hr	false		netlify/functions/lib/hr/onboardingCustomActions.
 createTask	function	hr	false		netlify/functions/lib/hr/onboardingCustomActions.ts	87	instantiate
 createHandoff	function	hr	false		netlify/functions/lib/hr/onboardingCustomActions.ts	96	instantiate
 packageIdByKey	function	hr	false		netlify/functions/lib/hr/onboardingCustomActions.ts	161	
-listActionTemplates	function	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	167	
-ActionTemplateInput	interface	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	175	
-createActionTemplate	function	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	182	
-updateActionTemplate	function	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	198	
-set	function	hr	false		netlify/functions/lib/hr/onboardingCustomActions.ts	200	updateActionTemplate
-retireActionTemplate	function	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	213	
-listCaseActions	function	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	224	
-AddCaseActionInput	interface	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	240	
-addCaseAction	function	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	249	
-CaseActionRow	interface	hr	false		netlify/functions/lib/hr/onboardingCustomActions.ts	289	
-loadCaseAction	function	hr	false		netlify/functions/lib/hr/onboardingCustomActions.ts	290	
-updateCaseAction	function	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	296	
-completeCaseAction	function	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	305	
-cancelCaseAction	function	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	318	
+requireDraftPackage	function	hr	false		netlify/functions/lib/hr/onboardingCustomActions.ts	168	
+listActionTemplates	function	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	178	
+ActionTemplateInput	interface	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	186	
+createActionTemplate	function	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	193	
+updateActionTemplate	function	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	212	
+set	function	hr	false		netlify/functions/lib/hr/onboardingCustomActions.ts	225	updateActionTemplate
+retireActionTemplate	function	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	238	
+listCaseActions	function	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	256	
+AddCaseActionInput	interface	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	272	
+addCaseAction	function	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	281	
+CaseActionRow	interface	hr	false		netlify/functions/lib/hr/onboardingCustomActions.ts	321	
+loadCaseAction	function	hr	false		netlify/functions/lib/hr/onboardingCustomActions.ts	322	
+updateCaseAction	function	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	328	
+completeCaseAction	function	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	337	
+cancelCaseAction	function	hr	true		netlify/functions/lib/hr/onboardingCustomActions.ts	350	
 CreateDocumentRequestsArgs	interface	hr	true		netlify/functions/lib/hr/onboardingDocumentRequests.ts	18	
 DocumentRequestResult	interface	hr	true		netlify/functions/lib/hr/onboardingDocumentRequests.ts	27	
 resolveStatus	function	hr	false		netlify/functions/lib/hr/onboardingDocumentRequests.ts	32	
-createOnboardingDocumentRequests	function	hr	true		netlify/functions/lib/hr/onboardingDocumentRequests.ts	55	
+createOnboardingDocumentRequests	function	hr	true		netlify/functions/lib/hr/onboardingDocumentRequests.ts	54	
+ACTIVE_DUPLICATE_STATUSES	array	hr	false		netlify/functions/lib/hr/onboardingDuplicateCheck.ts	30	
+OnboardingDuplicateConflict	interface	hr	true		netlify/functions/lib/hr/onboardingDuplicateCheck.ts	35	
+OnboardingDuplicateDecision	interface	hr	true		netlify/functions/lib/hr/onboardingDuplicateCheck.ts	39	
+detectActiveOnboardingDuplicate	function	hr	true		netlify/functions/lib/hr/onboardingDuplicateCheck.ts	52	
 ACTIVE_CASE_STATUSES	array	hr	false		netlify/functions/lib/hr/onboardingIntake.ts	20	
 getOnboardingIntakePreview	function	hr	true		netlify/functions/lib/hr/onboardingIntake.ts	22	
+fail	function	hr	false		netlify/functions/lib/hr/onboardingLaunchPreflight.ts	8	
+getOnboardingLaunchPreflight	function	hr	true		netlify/functions/lib/hr/onboardingLaunchPreflight.ts	10	
 err	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	18	
 nowISO	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	19	
 TERMINAL	array	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	20	
@@ -1922,150 +1933,207 @@ CaseRow	interface	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	26
 TaskRow	interface	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	27	
 BlockerRow	interface	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	28	
 loadCase	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	30	
-mergeCaseMeta	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	36	
-mergeBlockerMeta	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	40	
-recomputeCaseStatus	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	47	
-GATE_KEYS	array	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	61	
-activationGateFailures	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	69	
-AddTaskArgs	interface	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	82	
-addOnboardingTask	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	83	
-blockOnboardingTask	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	101	
-unblockOnboardingTask	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	122	
-loadTaskWithMeta	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	136	
-metaArr	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	143	
-addOnboardingTaskNote	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	145	
-attachOnboardingTaskEvidence	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	158	
-taskEvidenceMissing	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	179	
-completeOnboardingCase	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	189	
-pauseOnboardingCase	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	202	
-resumeOnboardingCase	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	214	
-reassignOnboardingOwner	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	231	
-markOnboardingReady	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	244	
-loadBlocker	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	264	
-unblockLinkedTask	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	269	
-resolveOnboardingBlocker	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	274	
-escalateOnboardingBlocker	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	287	
-notifyOnboardingBlockerOwner	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	303	
-waiveOnboardingBlocker	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	326	
-HANDOFF_TRANSITIONS	object	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	348	
-HandoffRow	interface	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	359	
-loadHandoff	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	360	
-transitionHandoff	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	369	
-retryOnboardingHandoff	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	391	
-acceptOnboardingHandoff	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	395	
-completeOnboardingHandoff	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	399	
-cancelOnboardingHandoff	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	403	
-listOnboardingAudit	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	407	
+mergeCaseMeta	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	37	
+mergeBlockerMeta	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	42	
+recomputeCaseStatus	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	50	
+GATE_KEYS	array	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	69	
+activationGateFailures	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	77	
+AddTaskArgs	interface	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	91	
+addOnboardingTask	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	92	
+blockOnboardingTask	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	110	
+unblockOnboardingTask	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	133	
+loadTaskWithMeta	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	149	
+metaArr	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	157	
+addOnboardingTaskNote	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	159	
+attachOnboardingTaskEvidence	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	179	
+reviewOnboardingTaskEvidence	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	216	
+taskEvidenceMissing	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	293	
+completeOnboardingCase	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	309	
+pauseOnboardingCase	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	323	
+resumeOnboardingCase	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	335	
+reassignOnboardingOwner	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	352	
+markOnboardingReady	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	366	
+loadBlocker	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	387	
+unblockLinkedTask	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	393	
+resolveOnboardingBlocker	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	399	
+escalateOnboardingBlocker	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	412	
+notifyOnboardingBlockerOwner	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	428	
+waiveOnboardingBlocker	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	452	
+HANDOFF_TRANSITIONS	object	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	474	
+HandoffRow	interface	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	485	
+loadHandoff	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	486	
+transitionHandoff	function	hr	false		netlify/functions/lib/hr/onboardingMutations.ts	496	
+retryOnboardingHandoff	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	518	
+acceptOnboardingHandoff	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	522	
+completeOnboardingHandoff	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	526	
+cancelOnboardingHandoff	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	530	
+listOnboardingAudit	function	hr	true		netlify/functions/lib/hr/onboardingMutations.ts	534	
 err	function	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	25	
 nowISO	function	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	26	
 isUniqueViolation	function	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	27	
 slugify	function	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	28	
-PackageTaskTemplate	interface	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	30	
-PackageHandoffTemplate	interface	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	31	
-PackagePlan	interface	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	32	
-PkgDB	interface	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	34	
-PkgDBBase	interface	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	35	
-TaskTplDB	interface	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	36	
-HandoffTplDB	interface	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	37	
-ROLE_LABEL	object	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	39	
-asStrArr	function	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	40	
-loadPackagePlan	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	43	
-listPackageSummaries	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	70	
-packageLabelMap	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	108	
-getPackageDetail	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	118	
-createPackage	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	158	
-updatePackage	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	176	
-set	function	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	178	updatePackage
-setPackageStatus	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	190	
-createTaskTemplate	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	201	
-updateTaskTemplate	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	214	
-set	function	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	216	updateTaskTemplate
-deleteTaskTemplate	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	227	
-createHandoffTemplate	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	237	
-updateHandoffTemplate	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	250	
-set	function	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	252	updateHandoffTemplate
-deleteHandoffTemplate	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	263	
-CaseDB	interface	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	23	
-TaskDB	interface	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	24	
-HandoffDB	interface	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	25	
-BlockerDB	interface	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	26	
-EmpDB	interface	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	27	
-CaseLite	interface	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	28	
-ACTIVE_BLOCKER	variable	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	30	
-CLOSED_TASK	variable	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	31	
-DONE_TASK	variable	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	32	
-ACTIVE_CASE	array	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	33	
-isOpenTask	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	34	
-CaseAgg	interface	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	37	
-emptyAgg	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	38	
-aggregateTasks	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	40	
-loadTasks	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	59	
-activeBlockerCounts	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	67	
-nameMap	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	77	
-photoMap	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	87	
-employeeMaps	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	94	
-caseLiteMap	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	109	
-DueBucket	type	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	117	
-dueBucket	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	118	
-matchDue	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	129	
-weekStart	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	138	
-isoDate	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	139	
-listOnboardingCases	function	hr	true		netlify/functions/lib/hr/onboardingQueries.ts	144	
-blocked	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	216	listOnboardingCases
-getOnboardingDashboardStats	function	hr	true		netlify/functions/lib/hr/onboardingQueries.ts	246	
-pct	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	313	getOnboardingDashboardStats
-isReady	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	314	getOnboardingDashboardStats
-listRecentOnboardingActivity	function	hr	true		netlify/functions/lib/hr/onboardingQueries.ts	373	
-listOnboardingTasks	function	hr	true		netlify/functions/lib/hr/onboardingQueries.ts	389	
-TaskDetailDB	interface	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	441	
-asNoteArr	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	445	
-asEvidenceArr	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	446	
-getOnboardingTaskDetail	function	hr	true		netlify/functions/lib/hr/onboardingQueries.ts	448	
-listOnboardingHandoffs	function	hr	true		netlify/functions/lib/hr/onboardingQueries.ts	499	
-listOnboardingBlockers	function	hr	true		netlify/functions/lib/hr/onboardingQueries.ts	538	
-REPORT_CATALOGUE	array	hr	true		netlify/functions/lib/hr/onboardingReports.ts	20	
-listOnboardingReports	function	hr	true		netlify/functions/lib/hr/onboardingReports.ts	32	
-CaseDB	interface	hr	false		netlify/functions/lib/hr/onboardingReports.ts	35	
-TaskDB	interface	hr	false		netlify/functions/lib/hr/onboardingReports.ts	36	
-BlockerDB	interface	hr	false		netlify/functions/lib/hr/onboardingReports.ts	37	
-HandoffDB	interface	hr	false		netlify/functions/lib/hr/onboardingReports.ts	38	
-EmpDB	interface	hr	false		netlify/functions/lib/hr/onboardingReports.ts	39	
-CLOSED_TASK	variable	hr	false		netlify/functions/lib/hr/onboardingReports.ts	41	
-DONE_TASK	variable	hr	false		netlify/functions/lib/hr/onboardingReports.ts	42	
-ACTIVE_BLOCKER	variable	hr	false		netlify/functions/lib/hr/onboardingReports.ts	43	
-ACTIVE_CASE	variable	hr	false		netlify/functions/lib/hr/onboardingReports.ts	44	
-isOpenTask	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	45	
-DAY	variable	hr	false		netlify/functions/lib/hr/onboardingReports.ts	46	
-daysBetween	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	47	
-isOverdue	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	48	
-round1	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	49	
-median	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	50	
-ReportData	interface	hr	false		netlify/functions/lib/hr/onboardingReports.ts	52	
-nameMap	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	57	
-loadReportData	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	64	
-pkgLabel	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	107	
-ownerLabel	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	108	
-groupBy	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	109	
-reportCycleTime	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	119	
-reportBlockedCases	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	145	
-reportTaskOwnerPerformance	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	168	
-reportHandoffCompletion	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	195	
-Agg	interface	hr	false		netlify/functions/lib/hr/onboardingReports.ts	221	
-aggregateByCase	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	222	
-caseReady	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	233	
-reportPackageEffectiveness	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	235	
-reportActivationReadiness	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	265	
-pct	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	269	reportActivationReadiness
-reportOverdueTasks	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	287	
-ageOf	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	290	reportOverdueTasks
-bucket	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	291	reportOverdueTasks
-reportCohort	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	313	
-catPct	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	319	reportCohort
-runOnboardingReport	function	hr	true		netlify/functions/lib/hr/onboardingReports.ts	339	
-exportOnboardingReport	function	hr	true		netlify/functions/lib/hr/onboardingReports.ts	355	
+getPackageReferenceData	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	30	
+requireDraftPackageById	function	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	77	
+dueOffsetDaysFromRule	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	95	
+resolveDueAt	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	105	
+PackageTaskTemplate	interface	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	113	
+PackageHandoffTemplate	interface	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	114	
+PackagePlan	interface	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	115	
+PkgDB	interface	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	117	
+PkgDBBase	interface	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	118	
+TaskTplDB	interface	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	119	
+HandoffTplDB	interface	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	120	
+ROLE_LABEL	object	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	122	
+asStrArr	function	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	123	
+loadPackagePlan	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	126	
+listPackageSummaries	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	155	
+SummaryDB	type	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	165	listPackageSummaries
+requireCompatiblePackage	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	255	
+packageLabelMap	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	265	
+getPackageDetail	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	275	
+createPackage	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	315	
+updatePackage	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	333	
+set	function	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	336	updatePackage
+setPackageStatus	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	348	
+createTaskTemplate	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	372	
+updateTaskTemplate	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	386	
+set	function	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	388	updateTaskTemplate
+deleteTaskTemplate	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	400	
+createHandoffTemplate	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	411	
+updateHandoffTemplate	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	425	
+set	function	hr	false		netlify/functions/lib/hr/onboardingPackageService.ts	427	updateHandoffTemplate
+deleteHandoffTemplate	function	hr	true		netlify/functions/lib/hr/onboardingPackageService.ts	439	
+scopeIsEmpty	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	18	
+scopedCaseIds	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	23	
+CaseDB	interface	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	38	
+TaskDB	interface	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	39	
+HandoffDB	interface	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	40	
+BlockerDB	interface	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	41	
+EmpDB	interface	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	42	
+CaseLite	interface	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	43	
+ACTIVE_BLOCKER	variable	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	45	
+CLOSED_TASK	variable	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	46	
+DONE_TASK	variable	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	47	
+ACTIVE_CASE	array	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	48	
+isOpenTask	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	49	
+startWindow	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	52	
+CASE_PAGE	variable	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	71	
+loadAllActiveCases	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	73	
+loadAllCasesForList	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	98	
+CaseAgg	interface	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	131	
+emptyAgg	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	132	
+aggregateTasks	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	134	
+loadTasks	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	153	
+activeBlockerCounts	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	162	
+nameMap	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	173	
+photoMap	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	184	
+employeeMaps	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	192	
+caseLiteMap	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	210	
+DueBucket	type	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	219	
+dueBucket	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	220	
+matchDue	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	231	
+weekStart	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	240	
+isoDate	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	241	
+listOnboardingCases	function	hr	true		netlify/functions/lib/hr/onboardingQueries.ts	246	
+blocked	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	323	listOnboardingCases
+getOnboardingDashboardStats	function	hr	true		netlify/functions/lib/hr/onboardingQueries.ts	362	
+pct	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	441	getOnboardingDashboardStats
+isReady	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	442	getOnboardingDashboardStats
+listRecentOnboardingActivity	function	hr	true		netlify/functions/lib/hr/onboardingQueries.ts	503	
+listOnboardingTasks	function	hr	true		netlify/functions/lib/hr/onboardingQueries.ts	551	
+TaskDetailDB	interface	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	610	
+asNoteArr	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	614	
+EvidenceDB	interface	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	622	
+loadTaskEvidence	function	hr	false		netlify/functions/lib/hr/onboardingQueries.ts	629	
+getOnboardingTaskDetail	function	hr	true		netlify/functions/lib/hr/onboardingQueries.ts	640	
+listOnboardingHandoffs	function	hr	true		netlify/functions/lib/hr/onboardingQueries.ts	711	
+listOnboardingBlockers	function	hr	true		netlify/functions/lib/hr/onboardingQueries.ts	758	
+REPORT_CATALOGUE	array	hr	true		netlify/functions/lib/hr/onboardingReports.ts	21	
+listOnboardingReports	function	hr	true		netlify/functions/lib/hr/onboardingReports.ts	33	
+CaseDB	interface	hr	false		netlify/functions/lib/hr/onboardingReports.ts	36	
+TaskDB	interface	hr	false		netlify/functions/lib/hr/onboardingReports.ts	37	
+BlockerDB	interface	hr	false		netlify/functions/lib/hr/onboardingReports.ts	38	
+HandoffDB	interface	hr	false		netlify/functions/lib/hr/onboardingReports.ts	39	
+EmpDB	interface	hr	false		netlify/functions/lib/hr/onboardingReports.ts	40	
+CLOSED_TASK	variable	hr	false		netlify/functions/lib/hr/onboardingReports.ts	42	
+DONE_TASK	variable	hr	false		netlify/functions/lib/hr/onboardingReports.ts	43	
+ACTIVE_BLOCKER	variable	hr	false		netlify/functions/lib/hr/onboardingReports.ts	44	
+ACTIVE_CASE	variable	hr	false		netlify/functions/lib/hr/onboardingReports.ts	45	
+isOpenTask	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	46	
+DAY	variable	hr	false		netlify/functions/lib/hr/onboardingReports.ts	47	
+daysBetween	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	48	
+isOverdue	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	49	
+round1	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	50	
+median	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	51	
+ReportData	interface	hr	false		netlify/functions/lib/hr/onboardingReports.ts	53	
+loadReportCases	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	58	
+nameMap	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	88	
+loadReportData	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	95	
+pkgLabel	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	128	
+ownerLabel	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	129	
+groupBy	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	130	
+reportCycleTime	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	140	
+reportBlockedCases	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	166	
+reportTaskOwnerPerformance	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	189	
+reportHandoffCompletion	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	216	
+Agg	interface	hr	false		netlify/functions/lib/hr/onboardingReports.ts	242	
+aggregateByCase	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	243	
+caseReady	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	254	
+reportPackageEffectiveness	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	256	
+reportActivationReadiness	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	286	
+pct	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	290	reportActivationReadiness
+reportOverdueTasks	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	308	
+ageOf	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	311	reportOverdueTasks
+bucket	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	312	reportOverdueTasks
+reportCohort	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	334	
+catPct	function	hr	false		netlify/functions/lib/hr/onboardingReports.ts	340	reportCohort
+runOnboardingReport	function	hr	true		netlify/functions/lib/hr/onboardingReports.ts	360	
+exportOnboardingReport	function	hr	true		netlify/functions/lib/hr/onboardingReports.ts	376	
+allow	function	hr	false	test	netlify/functions/lib/hr/onboardingScope.test.ts	35	
+denyAll	function	hr	false	test	netlify/functions/lib/hr/onboardingScope.test.ts	36	
+OnboardingScope	type	hr	true		netlify/functions/lib/hr/onboardingScope.ts	22	
+ScopeActor	interface	hr	true		netlify/functions/lib/hr/onboardingScope.ts	24	
+SCOPE_KEY	object	hr	false		netlify/functions/lib/hr/onboardingScope.ts	27	
+ONBOARDING_SCOPES	array	hr	true		netlify/functions/lib/hr/onboardingScope.ts	33	
+isOnboardingScope	function	hr	true		netlify/functions/lib/hr/onboardingScope.ts	35	
+ResolvedOnboardingScope	interface	hr	true		netlify/functions/lib/hr/onboardingScope.ts	46	
+forbidden	function	hr	false		netlify/functions/lib/hr/onboardingScope.ts	51	
+CanCheck	type	hr	true		netlify/functions/lib/hr/onboardingScope.ts	63	
+DEFAULT_ONBOARDING_SCOPE	variable	hr	true		netlify/functions/lib/hr/onboardingScope.ts	73	
+myCaseIds	function	hr	false		netlify/functions/lib/hr/onboardingScope.ts	76	
+teamCaseIds	function	hr	false		netlify/functions/lib/hr/onboardingScope.ts	116	
+resolveOnboardingScope	function	hr	true		netlify/functions/lib/hr/onboardingScope.ts	154	
+resolveOnboardingScopeWith	function	hr	true		netlify/functions/lib/hr/onboardingScope.ts	168	
+intersectScope	function	hr	true		netlify/functions/lib/hr/onboardingScope.ts	189	
 TaskCategory	type	hr	true		netlify/functions/lib/hr/onboardingTaskCategory.ts	7	
 READINESS_CATS	array	hr	true		netlify/functions/lib/hr/onboardingTaskCategory.ts	10	
 taskCategory	function	hr	true		netlify/functions/lib/hr/onboardingTaskCategory.ts	12	
+fail	function	hr	false		netlify/functions/lib/hr/onboardingWorker.ts	12	
+DONE	variable	hr	false		netlify/functions/lib/hr/onboardingWorker.ts	13	
+LIVE_CASE	variable	hr	false		netlify/functions/lib/hr/onboardingWorker.ts	15	
+CASE_READY	variable	hr	false		netlify/functions/lib/hr/onboardingWorker.ts	17	
+DOC_SATISFIED	variable	hr	false		netlify/functions/lib/hr/onboardingWorker.ts	19	
+CaseDb	interface	hr	false		netlify/functions/lib/hr/onboardingWorker.ts	21	
+getMyOnboarding	function	hr	true		netlify/functions/lib/hr/onboardingWorker.ts	31	
+rank	function	hr	false		netlify/functions/lib/hr/onboardingWorker.ts	42	getMyOnboarding
+err	function	hr	false		netlify/functions/lib/hr/onboardingWorkerDocuments.ts	26	
+ALLOWED_MIME	object	hr	false		netlify/functions/lib/hr/onboardingWorkerDocuments.ts	33	
+WORKER_DOC_MAX_BYTES	variable	hr	true		netlify/functions/lib/hr/onboardingWorkerDocuments.ts	38	
+BUCKET	variable	hr	false		netlify/functions/lib/hr/onboardingWorkerDocuments.ts	41	
+UPLOADABLE	variable	hr	false		netlify/functions/lib/hr/onboardingWorkerDocuments.ts	44	
+TERMINAL	variable	hr	false		netlify/functions/lib/hr/onboardingWorkerDocuments.ts	46	
+RequestRow	interface	hr	false		netlify/functions/lib/hr/onboardingWorkerDocuments.ts	48	
+workerDocPrefix	function	hr	true		netlify/functions/lib/hr/onboardingWorkerDocuments.ts	54	
+loadOwnRequest	function	hr	false		netlify/functions/lib/hr/onboardingWorkerDocuments.ts	63	
+assertUploadable	function	hr	false		netlify/functions/lib/hr/onboardingWorkerDocuments.ts	85	
+issueWorkerDocumentUploadUrl	function	hr	true		netlify/functions/lib/hr/onboardingWorkerDocuments.ts	94	
+commitWorkerDocument	function	hr	true		netlify/functions/lib/hr/onboardingWorkerDocuments.ts	120	
+WorkQueueDB	interface	hr	false		netlify/functions/lib/hr/onboardingWorkQueue.ts	28	
+emptyPage	function	hr	false		netlify/functions/lib/hr/onboardingWorkQueue.ts	52	
+arrOrNull	function	hr	false		netlify/functions/lib/hr/onboardingWorkQueue.ts	59	
+pageLabels	function	hr	false		netlify/functions/lib/hr/onboardingWorkQueue.ts	67	
+map	function	hr	false		netlify/functions/lib/hr/onboardingWorkQueue.ts	86	pageLabels
+listOnboardingWorkQueue	function	hr	true		netlify/functions/lib/hr/onboardingWorkQueue.ts	93	
 nowISO	function	hr	false		netlify/functions/lib/hr/organizationApply.ts	15	
 fail	function	hr	false		netlify/functions/lib/hr/organizationApply.ts	16	
 State	type	hr	false		netlify/functions/lib/hr/organizationApply.ts	18	
@@ -2551,26 +2619,26 @@ COMPLIANCE_APPROVER_KEYS	variable	security	true		netlify/functions/lib/permissio
 ApproverCandidate	interface	security	true		netlify/functions/lib/permissionApprovalScope.ts	39	
 selectEligibleApprovers	function	security	true		netlify/functions/lib/permissionApprovalScope.ts	56	
 PERMISSION_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	26	
-PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	505	
-CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	514	
-isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	526	
-COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	546	
-ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	555	
-PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	1068	
-resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	1088	
-resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	1113	
-ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1123	
-_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1124	
-invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1127	
-loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1143	
-loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1178	
-RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1190	
-_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1191	
-invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1194	
-loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1204	
-DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1217	
-deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1225	
-assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1236	
+PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	514	
+CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	523	
+isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	535	
+COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	555	
+ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	564	
+PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	1106	
+resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	1126	
+resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	1151	
+ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1161	
+_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1162	
+invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1165	
+loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1181	
+loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1216	
+RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1228	
+_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1229	
+invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1232	
+loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1242	
+DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1255	
+deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1263	
+assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1274	
 SIGNED_TTL	variable	platform	false		netlify/functions/lib/photos.ts	7	
 SIGNED_REFRESH_BEFORE	variable	platform	false		netlify/functions/lib/photos.ts	8	
 SIGNED_CACHE_TTL_MS	variable	platform	false		netlify/functions/lib/photos.ts	9	
@@ -2752,12 +2820,12 @@ ownerSetting	function	settings	false		netlify/functions/lib/settings/manifests/w
 workforceReadinessManifest	object	settings	true		netlify/functions/lib/settings/manifests/workforceReadiness.manifest.ts	61	
 CatalogRow	interface	settings	false		netlify/functions/lib/settings/resolveSetting.ts	12	
 getScopedSetting	function	settings	false		netlify/functions/lib/settings/resolveSetting.ts	23	
-resolveSetting	function	settings	true		netlify/functions/lib/settings/resolveSetting.ts	42	
-BatchCatalogRow	interface	settings	false		netlify/functions/lib/settings/resolveSetting.ts	91	
-resolveSettingsBatch	function	settings	true		netlify/functions/lib/settings/resolveSetting.ts	112	
-pick	function	settings	false		netlify/functions/lib/settings/resolveSetting.ts	133	resolveSettingsBatch
-resolveSettingValue	function	settings	true		netlify/functions/lib/settings/resolveSetting.ts	174	
-resolveOverride	function	settings	true		netlify/functions/lib/settings/resolveSetting.ts	194	
+resolveSetting	function	settings	true		netlify/functions/lib/settings/resolveSetting.ts	62	
+BatchCatalogRow	interface	settings	false		netlify/functions/lib/settings/resolveSetting.ts	111	
+resolveSettingsBatch	function	settings	true		netlify/functions/lib/settings/resolveSetting.ts	132	
+pick	function	settings	false		netlify/functions/lib/settings/resolveSetting.ts	153	resolveSettingsBatch
+resolveSettingValue	function	settings	true		netlify/functions/lib/settings/resolveSetting.ts	194	
+resolveOverride	function	settings	true		netlify/functions/lib/settings/resolveSetting.ts	214	
 catalogRow	function	settings	false		netlify/functions/lib/settings/seedSettingsFromManifests.ts	14	
 PREF_CLASSES	variable	settings	false		netlify/functions/lib/settings/seedSettingsFromManifests.ts	44	
 syncManifest	function	settings	false		netlify/functions/lib/settings/seedSettingsFromManifests.ts	46	
@@ -3369,27 +3437,28 @@ idsFor	function	hr	false		netlify/functions/routes/hr.ts	330
 lookup	function	hr	false		netlify/functions/routes/hr.ts	346	
 grantedProfileCapabilities	function	hr	false		netlify/functions/routes/hr.ts	448	
 loadShellContext	function	hr	false		netlify/functions/routes/hr.ts	468	
-exportFormat	variable	hr	false		netlify/functions/routes/hr.ts	810	
-exportResponse	function	hr	false		netlify/functions/routes/hr.ts	813	
-exportError	function	hr	false		netlify/functions/routes/hr.ts	825	
-grantedReadinessCapabilities	function	hr	false		netlify/functions/routes/hr.ts	941	
-readinessError	function	hr	false		netlify/functions/routes/hr.ts	948	
-employeeCreateDate	variable	hr	false		netlify/functions/routes/hr.ts	1173	
-iso	function	hr	false		netlify/functions/routes/hr.ts	1433	
-distribution	function	hr	false		netlify/functions/routes/hr.ts	1506	
-inMonth	function	hr	false		netlify/functions/routes/hr.ts	1525	lifecyclePeriods
-optionalTrinidadPhone	variable	hr	false		netlify/functions/routes/hr.ts	1722	
-HR_STATUSES	variable	hr	false		netlify/functions/routes/hr.ts	1853	
-BLOCKING_STATUSES	variable	hr	false		netlify/functions/routes/hr.ts	1854	
-isExpired	function	hr	false		netlify/functions/routes/hr.ts	1976	
-orgBody	function	hr	false		netlify/functions/routes/hr.ts	2013	
-orgErr	function	hr	false		netlify/functions/routes/hr.ts	2014	
-ORG_UNIT_TYPES	variable	hr	false		netlify/functions/routes/hr.ts	2018	
-GATED	object	hr	false		netlify/functions/routes/hr.ts	2020	
-CHANGE_PERM	object	hr	false		netlify/functions/routes/hr.ts	2293	
-snapshotForChange	function	hr	false		netlify/functions/routes/hr.ts	2305	
-createChangeRequest	function	hr	false		netlify/functions/routes/hr.ts	2335	
-GENERIC_CHANGE_TYPES	variable	hr	false		netlify/functions/routes/hr.ts	2410	
+exportFormat	variable	hr	false		netlify/functions/routes/hr.ts	854	
+exportResponse	function	hr	false		netlify/functions/routes/hr.ts	857	
+exportError	function	hr	false		netlify/functions/routes/hr.ts	869	
+grantedReadinessCapabilities	function	hr	false		netlify/functions/routes/hr.ts	985	
+readinessError	function	hr	false		netlify/functions/routes/hr.ts	992	
+employeeCreateDate	variable	hr	false		netlify/functions/routes/hr.ts	1217	
+iso	function	hr	false		netlify/functions/routes/hr.ts	1477	
+distribution	function	hr	false		netlify/functions/routes/hr.ts	1550	
+inMonth	function	hr	false		netlify/functions/routes/hr.ts	1569	lifecyclePeriods
+optionalTrinidadPhone	variable	hr	false		netlify/functions/routes/hr.ts	1766	
+HR_STATUSES	variable	hr	false		netlify/functions/routes/hr.ts	1897	
+BLOCKING_STATUSES	variable	hr	false		netlify/functions/routes/hr.ts	1898	
+isExpired	function	hr	false		netlify/functions/routes/hr.ts	2020	
+orgBody	function	hr	false		netlify/functions/routes/hr.ts	2057	
+orgErr	function	hr	false		netlify/functions/routes/hr.ts	2058	
+ORG_UNIT_TYPES	variable	hr	false		netlify/functions/routes/hr.ts	2062	
+GATED	object	hr	false		netlify/functions/routes/hr.ts	2064	
+CHANGE_PERM	object	hr	false		netlify/functions/routes/hr.ts	2337	
+snapshotForChange	function	hr	false		netlify/functions/routes/hr.ts	2349	
+createChangeRequest	function	hr	false		netlify/functions/routes/hr.ts	2379	
+GENERIC_CHANGE_TYPES	variable	hr	false		netlify/functions/routes/hr.ts	2454	
+hrDocumentPathPrefix	function	hr	true		netlify/functions/routes/hr.ts	2672	
 router	variable	hr	false		netlify/functions/routes/hrAttendance.ts	21	
 body	function	hr	false		netlify/functions/routes/hrAttendance.ts	22	
 router	variable	hr	false		netlify/functions/routes/hrCompensation.ts	22	
@@ -3441,28 +3510,33 @@ router	variable	hr	false		netlify/functions/routes/hrOffboarding.ts	19
 body	function	hr	false		netlify/functions/routes/hrOffboarding.ts	20	
 fail	function	hr	false		netlify/functions/routes/hrOffboarding.ts	21	
 REASONS	variable	hr	false		netlify/functions/routes/hrOffboarding.ts	25	
-router	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	31	
-body	function	hr	false		netlify/functions/routes/hrOnboarding.ts	32	
-StrArr	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	198	
-DueEnum	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	199	
-DashSchema	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	201	
-CaseListSchema	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	202	
-TaskListSchema	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	213	
-HandoffListSchema	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	217	
-BlockerListSchema	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	218	
-mutate	function	hr	false		netlify/functions/routes/hrOnboarding.ts	269	
-Sev	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	273	
-TASK_EVIDENCE_BUCKET	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	285	
-requireTaskActor	function	hr	false		netlify/functions/routes/hrOnboarding.ts	286	
-HandoffAction	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	431	
-CommType	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	458	
-ReportKey	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	485	
-RunReportSchema	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	486	
-ActionType	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	521	
-OwnerType	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	522	
-Priority	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	523	
-nstr	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	524	
-nuuid	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	525	
+router	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	37	
+body	function	hr	false		netlify/functions/routes/hrOnboarding.ts	38	
+WorkerDocFile	object	hr	false		netlify/functions/routes/hrOnboarding.ts	58	
+StrArr	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	352	
+DueEnum	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	353	
+DashSchema	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	355	
+CaseListSchema	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	356	
+TaskListSchema	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	371	
+HandoffListSchema	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	375	
+BlockerListSchema	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	376	
+ScopeSchema	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	382	
+IdArr	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	390	
+WorkQueueSchema	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	391	
+readScope	function	hr	false		netlify/functions/routes/hrOnboarding.ts	407	
+mutate	function	hr	false		netlify/functions/routes/hrOnboarding.ts	476	
+Sev	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	480	
+TASK_EVIDENCE_BUCKET	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	492	
+requireTaskActor	function	hr	false		netlify/functions/routes/hrOnboarding.ts	493	
+HandoffAction	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	653	
+CommType	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	680	
+ReportKey	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	707	
+RunReportSchema	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	708	
+ActionType	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	744	
+OwnerType	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	745	
+Priority	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	746	
+nstr	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	747	
+nuuid	variable	hr	false		netlify/functions/routes/hrOnboarding.ts	748	
 router	variable	hr	false		netlify/functions/routes/hrOvertime.ts	21	
 b	function	hr	false		netlify/functions/routes/hrOvertime.ts	24	
 router	variable	hr	false		netlify/functions/routes/hrRequests.ts	16	
@@ -3672,9 +3746,9 @@ canViewModule	function	settings	false		netlify/functions/routes/settingsCatalog.
 canManage	function	settings	false		netlify/functions/routes/settingsCatalog.ts	79	
 canManage	function	settings	false		netlify/functions/routes/settingsCatalog.ts	141	
 SCOPE_TYPES	variable	settings	false		netlify/functions/routes/settingsCatalog.ts	178	
-REVIEWER_ROLES	variable	settings	false		netlify/functions/routes/settingsCatalog.ts	281	
-REVIEW_COL	object	settings	false		netlify/functions/routes/settingsCatalog.ts	282	
-setManifestStatus	function	settings	false		netlify/functions/routes/settingsCatalog.ts	312	
+REVIEWER_ROLES	variable	settings	false		netlify/functions/routes/settingsCatalog.ts	317	
+REVIEW_COL	object	settings	false		netlify/functions/routes/settingsCatalog.ts	318	
+setManifestStatus	function	settings	false		netlify/functions/routes/settingsCatalog.ts	348	
 router	variable	platform	false		netlify/functions/routes/sites.ts	8	
 SiteRow	interface	platform	false		netlify/functions/routes/sites.ts	10	
 AssignmentRow	interface	platform	false		netlify/functions/routes/sites.ts	16	
@@ -4104,11 +4178,68 @@ run	function	hr	true	test	scripts/e2e/suites/hrOffboarding.mjs	17
 waitFor	function	hr	false	test	scripts/e2e/suites/hrOffboarding.mjs	26	run
 title	variable	hr	true	test	scripts/e2e/suites/hrOnboarding.mjs	26	
 run	function	hr	true	test	scripts/e2e/suites/hrOnboarding.mjs	28	
-waitFor	function	hr	false	test	scripts/e2e/suites/hrOnboarding.mjs	37	run
-mk	function	hr	false	test	scripts/e2e/suites/hrOnboarding.mjs	84	run
-closeActiveCasesFor	function	hr	false	test	scripts/e2e/suites/hrOnboarding.mjs	96	run
+defaultDocumentSelections	function	hr	false	test	scripts/e2e/suites/hrOnboarding.mjs	41	run
+api	function	hr	false	test	scripts/e2e/suites/hrOnboarding.mjs	54	run
+waitFor	function	hr	false	test	scripts/e2e/suites/hrOnboarding.mjs	70	run
+sweepLeakedActionTemplates	function	hr	false	test	scripts/e2e/suites/hrOnboarding.mjs	80	run
+mk	function	hr	false	test	scripts/e2e/suites/hrOnboarding.mjs	175	run
+closeActiveCasesFor	function	hr	false	test	scripts/e2e/suites/hrOnboarding.mjs	190	run
+uploadAwareSelections	function	hr	false	test	scripts/e2e/suites/hrOnboarding.mjs	434	run
+commitDocument	function	hr	false	test	scripts/e2e/suites/hrOnboarding.mjs	444	run
+readDomainRow	function	hr	false	test	scripts/e2e/suites/hrOnboarding.mjs	1275	run
+setDomain	function	hr	false	test	scripts/e2e/suites/hrOnboarding.mjs	1277	run
+dropProbeCase	function	hr	false	test	scripts/e2e/suites/hrOnboarding.mjs	1407	run
+countWhere	function	hr	false	test	scripts/e2e/suites/hrOnboarding.mjs	1472	run
+check	function	hr	false	test	scripts/e2e/suites/hrOnboarding.mjs	1478	run
 title	variable	hr	true	test	scripts/e2e/suites/hrOnboardingPackages.mjs	21	
 run	function	hr	true	test	scripts/e2e/suites/hrOnboardingPackages.mjs	23	
+packageIds	function	hr	false	test	scripts/e2e/suites/hrOnboardingPackages.mjs	38	run
+title	variable	hr	true	test	scripts/e2e/suites/hrOnboardingScope.mjs	34	
+run	function	hr	true	test	scripts/e2e/suites/hrOnboardingScope.mjs	36	
+nz	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	59	run
+list	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	71	run
+stats	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	72	run
+tasks	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	73	run
+hands	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	74	run
+blocks	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	75	run
+acts	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	76	run
+deadlinesWidget	function	hr	false	ui-tile,test	scripts/e2e/suites/hrOnboardingScope.mjs	83	run
+plannerWidget	function	hr	false	ui-tile,test	scripts/e2e/suites/hrOnboardingScope.mjs	84	run
+calItems	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	89	run
+activeTotal	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	99	run
+numOf	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	105	run
+trendOf	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	109	run
+idsOf	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	116	run
+snapshot	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	125	run
+makeDept	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	163	run
+makeEmployee	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	168	run
+makeCase	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	177	run
+ins	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	178	makeCase
+idx	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	237	run
+handoffOf	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	238	run
+taskOf	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	238	run
+auditOf	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	239	run
+blockerOf	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	239	run
+titleOf	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	240	run
+assertExact	function	hr	false	test	scripts/e2e/suites/hrOnboardingScope.mjs	249	run
+title	variable	hr	true	test	scripts/e2e/suites/hrOnboardingWorker.mjs	21	
+run	function	hr	true	test	scripts/e2e/suites/hrOnboardingWorker.mjs	23	
+nz	function	hr	false	test	scripts/e2e/suites/hrOnboardingWorker.mjs	40	run
+mine	function	hr	false	test	scripts/e2e/suites/hrOnboardingWorker.mjs	53	run
+dataOf	function	hr	false	test	scripts/e2e/suites/hrOnboardingWorker.mjs	54	run
+mk	function	hr	false	test	scripts/e2e/suites/hrOnboardingWorker.mjs	70	run
+urlFor	function	hr	false	test	scripts/e2e/suites/hrOnboardingWorker.mjs	267	run
+commit	function	hr	false	test	scripts/e2e/suites/hrOnboardingWorker.mjs	268	run
+title	variable	hr	true	test	scripts/e2e/suites/hrOnboardingWorkQueue.mjs	31	
+run	function	hr	true	test	scripts/e2e/suites/hrOnboardingWorkQueue.mjs	33	
+nz	function	hr	false	test	scripts/e2e/suites/hrOnboardingWorkQueue.mjs	52	run
+dataOf	function	hr	false	test	scripts/e2e/suites/hrOnboardingWorkQueue.mjs	71	run
+queueOf	function	hr	false	test	scripts/e2e/suites/hrOnboardingWorkQueue.mjs	76	run
+rowKey	function	hr	false	test	scripts/e2e/suites/hrOnboardingWorkQueue.mjs	82	run
+need	function	hr	false	test	scripts/e2e/suites/hrOnboardingWorkQueue.mjs	88	run
+queue	function	hr	false	test	scripts/e2e/suites/hrOnboardingWorkQueue.mjs	93	run
+startCase	function	hr	false	test	scripts/e2e/suites/hrOnboardingWorkQueue.mjs	101	run
+dayAfter	function	hr	false	test	scripts/e2e/suites/hrOnboardingWorkQueue.mjs	119	run
 title	variable	hr	true	test	scripts/e2e/suites/hrOrganization.mjs	20	
 run	function	hr	true	test	scripts/e2e/suites/hrOrganization.mjs	22	
 waitFor	function	hr	false	test	scripts/e2e/suites/hrOrganization.mjs	33	run
@@ -4376,6 +4507,7 @@ countWhere	function	testing	false		scripts/e2e/sweep-orphans.mjs	265	sweepPayrol
 delWhere	function	testing	false		scripts/e2e/sweep-orphans.mjs	270	sweepPayrollRunsOwnedBy
 delIn	function	testing	false		scripts/e2e/sweep-orphans.mjs	279	sweepPayrollRunsOwnedBy
 selIn	function	testing	false		scripts/e2e/sweep-orphans.mjs	284	sweepPayrollRunsOwnedBy
+tagIds	function	testing	false		scripts/e2e/sweep-orphans.mjs	486	sweepOrphans
 REQ	array	finance	false		scripts/e2e/verify-finance-ui.mjs	11	
 env	object	finance	false		scripts/e2e/verify-finance-ui.mjs	12	
 line	variable	finance	false		scripts/e2e/verify-finance-ui.mjs	13	
@@ -4403,46 +4535,48 @@ cleanTsv	function	platform	false		scripts/generate-codebase-index.mjs	45
 unique	function	platform	false		scripts/generate-codebase-index.mjs	46	
 byPathLineName	function	platform	false		scripts/generate-codebase-index.mjs	47	
 walk	function	platform	false		scripts/generate-codebase-index.mjs	50	
-read	function	platform	false		scripts/generate-codebase-index.mjs	62	
-git	function	platform	false		scripts/generate-codebase-index.mjs	66	
-inferModule	function	platform	false		scripts/generate-codebase-index.mjs	75	
-fileRole	function	platform	false		scripts/generate-codebase-index.mjs	90	
-scriptKind	function	platform	false		scripts/generate-codebase-index.mjs	108	
-lineOf	function	platform	false		scripts/generate-codebase-index.mjs	119	
-hasExport	function	platform	false		scripts/generate-codebase-index.mjs	123	
-nodeName	function	platform	false		scripts/generate-codebase-index.mjs	127	
-callName	function	platform	false		scripts/generate-codebase-index.mjs	133	
-enclosingName	function	platform	false		scripts/generate-codebase-index.mjs	139	
-staticValue	function	platform	false		scripts/generate-codebase-index.mjs	152	
-staticString	function	platform	false		scripts/generate-codebase-index.mjs	209	
-propertyMap	function	platform	false		scripts/generate-codebase-index.mjs	214	
-normalizeApiPath	function	platform	false		scripts/generate-codebase-index.mjs	226	
-collectCode	function	platform	false		scripts/generate-codebase-index.mjs	232	
-addSymbol	function	platform	false		scripts/generate-codebase-index.mjs	264	collectCode
-visit	function	platform	false		scripts/generate-codebase-index.mjs	283	collectCode
-dedupe	function	platform	false		scripts/generate-codebase-index.mjs	379	
-collectRouteMounts	function	platform	false		scripts/generate-codebase-index.mjs	385	
-visit	function	platform	false		scripts/generate-codebase-index.mjs	406	collectRouteMounts
-collectRoutes	function	platform	false		scripts/generate-codebase-index.mjs	427	
-bindIterationValue	function	platform	false		scripts/generate-codebase-index.mjs	461	collectRoutes
-routeBindings	function	platform	false		scripts/generate-codebase-index.mjs	477	collectRoutes
-visit	function	platform	false		scripts/generate-codebase-index.mjs	511	collectRoutes
-inspect	function	platform	false		scripts/generate-codebase-index.mjs	533	visit
-collectDatabaseObjects	function	platform	false		scripts/generate-codebase-index.mjs	573	
-lineForOffset	function	platform	false		scripts/generate-codebase-index.mjs	592	collectDatabaseObjects
-collectE2e	function	platform	false		scripts/generate-codebase-index.mjs	623	
-visit	function	platform	false		scripts/generate-codebase-index.mjs	644	collectE2e
-moduleSort	function	platform	false		scripts/generate-codebase-index.mjs	673	
-renderIndex	function	platform	false		scripts/generate-codebase-index.mjs	679	
-renderModule	function	platform	false		scripts/generate-codebase-index.mjs	730	
-makeTsv	function	platform	false		scripts/generate-codebase-index.mjs	795	
-buildIndex	function	platform	false		scripts/generate-codebase-index.mjs	799	
-expectedOutputs	function	platform	false		scripts/generate-codebase-index.mjs	862	
-currentGeneratedFiles	function	platform	false		scripts/generate-codebase-index.mjs	882	
-writeOutputs	function	platform	false		scripts/generate-codebase-index.mjs	886	
-checkOutputs	function	platform	false		scripts/generate-codebase-index.mjs	899	
-index	variable	platform	false		scripts/generate-codebase-index.mjs	916	
-outputs	variable	platform	false		scripts/generate-codebase-index.mjs	917	
+collectTrackedFiles	function	platform	false		scripts/generate-codebase-index.mjs	76	
+trackedFiles	variable	platform	false		scripts/generate-codebase-index.mjs	86	
+isTracked	function	platform	false		scripts/generate-codebase-index.mjs	88	
+read	function	platform	false		scripts/generate-codebase-index.mjs	92	
+inferModule	function	platform	false		scripts/generate-codebase-index.mjs	96	
+fileRole	function	platform	false		scripts/generate-codebase-index.mjs	111	
+scriptKind	function	platform	false		scripts/generate-codebase-index.mjs	129	
+lineOf	function	platform	false		scripts/generate-codebase-index.mjs	140	
+hasExport	function	platform	false		scripts/generate-codebase-index.mjs	144	
+nodeName	function	platform	false		scripts/generate-codebase-index.mjs	148	
+callName	function	platform	false		scripts/generate-codebase-index.mjs	154	
+enclosingName	function	platform	false		scripts/generate-codebase-index.mjs	160	
+staticValue	function	platform	false		scripts/generate-codebase-index.mjs	173	
+staticString	function	platform	false		scripts/generate-codebase-index.mjs	230	
+propertyMap	function	platform	false		scripts/generate-codebase-index.mjs	235	
+normalizeApiPath	function	platform	false		scripts/generate-codebase-index.mjs	247	
+collectCode	function	platform	false		scripts/generate-codebase-index.mjs	253	
+addSymbol	function	platform	false		scripts/generate-codebase-index.mjs	285	collectCode
+visit	function	platform	false		scripts/generate-codebase-index.mjs	304	collectCode
+dedupe	function	platform	false		scripts/generate-codebase-index.mjs	400	
+collectRouteMounts	function	platform	false		scripts/generate-codebase-index.mjs	406	
+visit	function	platform	false		scripts/generate-codebase-index.mjs	427	collectRouteMounts
+collectRoutes	function	platform	false		scripts/generate-codebase-index.mjs	448	
+bindIterationValue	function	platform	false		scripts/generate-codebase-index.mjs	482	collectRoutes
+routeBindings	function	platform	false		scripts/generate-codebase-index.mjs	498	collectRoutes
+visit	function	platform	false		scripts/generate-codebase-index.mjs	532	collectRoutes
+inspect	function	platform	false		scripts/generate-codebase-index.mjs	554	visit
+collectDatabaseObjects	function	platform	false		scripts/generate-codebase-index.mjs	594	
+lineForOffset	function	platform	false		scripts/generate-codebase-index.mjs	613	collectDatabaseObjects
+collectE2e	function	platform	false		scripts/generate-codebase-index.mjs	644	
+visit	function	platform	false		scripts/generate-codebase-index.mjs	665	collectE2e
+moduleSort	function	platform	false		scripts/generate-codebase-index.mjs	694	
+renderIndex	function	platform	false		scripts/generate-codebase-index.mjs	700	
+renderModule	function	platform	false		scripts/generate-codebase-index.mjs	750	
+makeTsv	function	platform	false		scripts/generate-codebase-index.mjs	815	
+buildIndex	function	platform	false		scripts/generate-codebase-index.mjs	819	
+expectedOutputs	function	platform	false		scripts/generate-codebase-index.mjs	880	
+currentGeneratedFiles	function	platform	false		scripts/generate-codebase-index.mjs	900	
+writeOutputs	function	platform	false		scripts/generate-codebase-index.mjs	904	
+checkOutputs	function	platform	false		scripts/generate-codebase-index.mjs	917	
+index	variable	platform	false		scripts/generate-codebase-index.mjs	934	
+outputs	variable	platform	false		scripts/generate-codebase-index.mjs	935	
 DROP_SELECTORS	array	platform	false		scripts/port-mockup-css.mjs	35	
 TARGETS	array	platform	false		scripts/port-mockup-css.mjs	37	
 scopeSelector	function	platform	false		scripts/port-mockup-css.mjs	75	
@@ -4539,6 +4673,16 @@ pass	function	hr	false		scripts/verify-hr-employee-assignment-tx.mjs	41
 fail	function	hr	false		scripts/verify-hr-employee-assignment-tx.mjs	42	
 ARGS	object	hr	false		scripts/verify-hr-employee-assignment-tx.mjs	44	
 expectRefusal	function	hr	false		scripts/verify-hr-employee-assignment-tx.mjs	61	
+REQUIRED_ENV	array	hr	false		scripts/verify-hr-onboarding-view-scope.mjs	32	
+loadEnv	function	hr	false		scripts/verify-hr-onboarding-view-scope.mjs	34	
+env	variable	hr	false		scripts/verify-hr-onboarding-view-scope.mjs	47	
+sb	variable	hr	false		scripts/verify-hr-onboarding-view-scope.mjs	48	
+failures	variable	hr	false		scripts/verify-hr-onboarding-view-scope.mjs	50	
+pass	function	hr	false		scripts/verify-hr-onboarding-view-scope.mjs	51	
+fail	function	hr	false		scripts/verify-hr-onboarding-view-scope.mjs	52	
+SCOPE_KEYS	array	hr	false		scripts/verify-hr-onboarding-view-scope.mjs	54	
+EXPECTED_ROLES	object	hr	false		scripts/verify-hr-onboarding-view-scope.mjs	58	
+FORBIDDEN_ROLES	array	hr	false		scripts/verify-hr-onboarding-view-scope.mjs	64	
 REQUIRED_ENV	array	hr	false		scripts/verify-hr-profile-foundations.mjs	31	
 loadEnv	function	hr	false		scripts/verify-hr-profile-foundations.mjs	33	
 env	variable	hr	false		scripts/verify-hr-profile-foundations.mjs	46	
@@ -5352,73 +5496,78 @@ useOffboardingCases	function	hr	true	hook	src/api/hr/offboarding.ts	44
 useOffboardingCase	function	hr	true	hook	src/api/hr/offboarding.ts	50	
 useOffboardingStats	function	hr	true	hook	src/api/hr/offboarding.ts	53	
 useOffboardingMutation	function	hr	true	hook	src/api/hr/offboarding.ts	58	
-call	function	hr	false		src/api/hr/onboarding.ts	27	
-OnboardingTaskTemplate	interface	hr	true		src/api/hr/onboarding.ts	33	
-OnboardingHandoffTemplate	interface	hr	true		src/api/hr/onboarding.ts	34	
-OnboardingPreview	interface	hr	true		src/api/hr/onboarding.ts	35	
-OnboardingStartResult	interface	hr	true		src/api/hr/onboarding.ts	36	
-OnboardingTimelineItem	interface	hr	true		src/api/hr/onboarding.ts	41	
-hrOnboardingApi	object	hr	true		src/api/hr/onboarding.ts	56	
-ActionTemplateArgs	interface	hr	true		src/api/hr/onboarding.ts	166	
-CaseActionArgs	interface	hr	true		src/api/hr/onboarding.ts	173	
-useOnboardingDashboard	function	hr	true	hook	src/api/hr/onboarding.ts	186	
-useOnboardingCases	function	hr	true	hook	src/api/hr/onboarding.ts	193	
-useOnboardingTasksList	function	hr	true	hook	src/api/hr/onboarding.ts	202	
-useOnboardingHandoffsList	function	hr	true	hook	src/api/hr/onboarding.ts	210	
-useOnboardingBlockersList	function	hr	true	hook	src/api/hr/onboarding.ts	219	
-useOnboardingPackages	function	hr	true	hook	src/api/hr/onboarding.ts	227	
-useOnboardingIntakePreview	function	hr	true	hook	src/api/hr/onboarding.ts	237	
-useOnboardingAudit	function	hr	true	hook	src/api/hr/onboarding.ts	245	
-useOnboardingRecentActivity	function	hr	true	hook	src/api/hr/onboarding.ts	253	
-useOnboardingPackageDetail	function	hr	true	hook	src/api/hr/onboarding.ts	260	
-useOnboardingTaskDetail	function	hr	true	hook	src/api/hr/onboarding.ts	268	
-useOnboardingCommunications	function	hr	true	hook	src/api/hr/onboarding.ts	276	
-useOnboardingTimeline	function	hr	true	hook	src/api/hr/onboarding.ts	284	
-useOnboardingReportList	function	hr	true	hook	src/api/hr/onboarding.ts	292	
-useOnboardingReport	function	hr	true	hook	src/api/hr/onboarding.ts	300	
-useOnboardingMutation	function	hr	false	hook	src/api/hr/onboarding.ts	312	
-useOnboardingCompleteTask	function	hr	true	hook	src/api/hr/onboarding.ts	317	
-useOnboardingAddTask	function	hr	true	hook	src/api/hr/onboarding.ts	318	
-useOnboardingReassignTask	function	hr	true	hook	src/api/hr/onboarding.ts	319	
-useOnboardingAddTaskNote	function	hr	true	hook	src/api/hr/onboarding.ts	320	
-useOnboardingAttachTaskEvidence	function	hr	true	hook	src/api/hr/onboarding.ts	321	
-useOnboardingRetryHandoff	function	hr	true	hook	src/api/hr/onboarding.ts	322	
-useOnboardingAcceptHandoff	function	hr	true	hook	src/api/hr/onboarding.ts	323	
-useOnboardingCompleteHandoff	function	hr	true	hook	src/api/hr/onboarding.ts	324	
-useOnboardingCancelHandoff	function	hr	true	hook	src/api/hr/onboarding.ts	325	
-useOnboardingBlockTask	function	hr	true	hook	src/api/hr/onboarding.ts	326	
-useOnboardingUnblockTask	function	hr	true	hook	src/api/hr/onboarding.ts	327	
-useOnboardingCompleteCase	function	hr	true	hook	src/api/hr/onboarding.ts	328	
-useOnboardingCancelCase	function	hr	true	hook	src/api/hr/onboarding.ts	329	
-useOnboardingPauseCase	function	hr	true	hook	src/api/hr/onboarding.ts	330	
-useOnboardingResumeCase	function	hr	true	hook	src/api/hr/onboarding.ts	331	
-useOnboardingReassignOwner	function	hr	true	hook	src/api/hr/onboarding.ts	332	
-useOnboardingMarkReady	function	hr	true	hook	src/api/hr/onboarding.ts	333	
-useOnboardingResolveBlocker	function	hr	true	hook	src/api/hr/onboarding.ts	334	
-useOnboardingEscalateBlocker	function	hr	true	hook	src/api/hr/onboarding.ts	335	
-useOnboardingWaiveBlocker	function	hr	true	hook	src/api/hr/onboarding.ts	336	
-useOnboardingNotifyBlockerOwner	function	hr	true	hook	src/api/hr/onboarding.ts	337	
-useOnboardingSendCommunication	function	hr	true	hook	src/api/hr/onboarding.ts	338	
-useOnboardingResendCommunication	function	hr	true	hook	src/api/hr/onboarding.ts	339	
-useOnboardingActionTemplates	function	hr	true	hook	src/api/hr/onboarding.ts	342	
-useOnboardingCaseActions	function	hr	true	hook	src/api/hr/onboarding.ts	350	
-useOnboardingCreateActionTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	358	
-useOnboardingUpdateActionTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	359	
-useOnboardingRetireActionTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	360	
-useOnboardingAddCaseAction	function	hr	true	hook	src/api/hr/onboarding.ts	361	
-useOnboardingUpdateCaseAction	function	hr	true	hook	src/api/hr/onboarding.ts	362	
-useOnboardingCompleteCaseAction	function	hr	true	hook	src/api/hr/onboarding.ts	363	
-useOnboardingCancelCaseAction	function	hr	true	hook	src/api/hr/onboarding.ts	364	
-useOnboardingProvisionAccount	function	hr	true	hook	src/api/hr/onboarding.ts	365	
-useOnboardingCreatePackage	function	hr	true	hook	src/api/hr/onboarding.ts	368	
-useOnboardingUpdatePackage	function	hr	true	hook	src/api/hr/onboarding.ts	369	
-useOnboardingSetPackageStatus	function	hr	true	hook	src/api/hr/onboarding.ts	370	
-useOnboardingCreateTaskTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	371	
-useOnboardingUpdateTaskTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	372	
-useOnboardingDeleteTaskTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	373	
-useOnboardingCreateHandoffTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	374	
-useOnboardingUpdateHandoffTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	375	
-useOnboardingDeleteHandoffTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	376	
+call	function	hr	false		src/api/hr/onboarding.ts	33	
+OnboardingTaskTemplate	interface	hr	true		src/api/hr/onboarding.ts	39	
+OnboardingHandoffTemplate	interface	hr	true		src/api/hr/onboarding.ts	40	
+OnboardingPreview	interface	hr	true		src/api/hr/onboarding.ts	41	
+OnboardingStartResult	interface	hr	true		src/api/hr/onboarding.ts	42	
+OnboardingTimelineItem	interface	hr	true		src/api/hr/onboarding.ts	47	
+hrOnboardingApi	object	hr	true		src/api/hr/onboarding.ts	62	
+useMyOnboarding	function	hr	true	hook	src/api/hr/onboarding.ts	184	
+ActionTemplateArgs	interface	hr	true		src/api/hr/onboarding.ts	191	
+CaseActionArgs	interface	hr	true		src/api/hr/onboarding.ts	198	
+useOnboardingDashboard	function	hr	true	hook	src/api/hr/onboarding.ts	211	
+useOnboardingCases	function	hr	true	hook	src/api/hr/onboarding.ts	218	
+useOnboardingWorkQueue	function	hr	true	hook	src/api/hr/onboarding.ts	233	
+useOnboardingTasksList	function	hr	true	hook	src/api/hr/onboarding.ts	241	
+useOnboardingHandoffsList	function	hr	true	hook	src/api/hr/onboarding.ts	249	
+useOnboardingBlockersList	function	hr	true	hook	src/api/hr/onboarding.ts	258	
+useOnboardingPackages	function	hr	true	hook	src/api/hr/onboarding.ts	266	
+useOnboardingIntakePreview	function	hr	true	hook	src/api/hr/onboarding.ts	276	
+useOnboardingAccountPreflight	function	hr	true	hook	src/api/hr/onboarding.ts	284	
+useOnboardingLaunchPreflight	function	hr	true	hook	src/api/hr/onboarding.ts	292	
+useOnboardingAudit	function	hr	true	hook	src/api/hr/onboarding.ts	300	
+useOnboardingRecentActivity	function	hr	true	hook	src/api/hr/onboarding.ts	308	
+useOnboardingPackageDetail	function	hr	true	hook	src/api/hr/onboarding.ts	315	
+useOnboardingTaskDetail	function	hr	true	hook	src/api/hr/onboarding.ts	323	
+useOnboardingCommunications	function	hr	true	hook	src/api/hr/onboarding.ts	331	
+useOnboardingTimeline	function	hr	true	hook	src/api/hr/onboarding.ts	339	
+useOnboardingReportList	function	hr	true	hook	src/api/hr/onboarding.ts	347	
+useOnboardingReport	function	hr	true	hook	src/api/hr/onboarding.ts	355	
+useOnboardingMutation	function	hr	false	hook	src/api/hr/onboarding.ts	367	
+useOnboardingCompleteTask	function	hr	true	hook	src/api/hr/onboarding.ts	372	
+useOnboardingAddTask	function	hr	true	hook	src/api/hr/onboarding.ts	373	
+useOnboardingReassignTask	function	hr	true	hook	src/api/hr/onboarding.ts	374	
+useOnboardingAddTaskNote	function	hr	true	hook	src/api/hr/onboarding.ts	375	
+useOnboardingAttachTaskEvidence	function	hr	true	hook	src/api/hr/onboarding.ts	376	
+useOnboardingRetryHandoff	function	hr	true	hook	src/api/hr/onboarding.ts	377	
+useOnboardingAcceptHandoff	function	hr	true	hook	src/api/hr/onboarding.ts	378	
+useOnboardingCompleteHandoff	function	hr	true	hook	src/api/hr/onboarding.ts	379	
+useOnboardingCancelHandoff	function	hr	true	hook	src/api/hr/onboarding.ts	380	
+useOnboardingBlockTask	function	hr	true	hook	src/api/hr/onboarding.ts	381	
+useOnboardingUnblockTask	function	hr	true	hook	src/api/hr/onboarding.ts	382	
+useOnboardingCompleteCase	function	hr	true	hook	src/api/hr/onboarding.ts	383	
+useOnboardingCancelCase	function	hr	true	hook	src/api/hr/onboarding.ts	384	
+useOnboardingPauseCase	function	hr	true	hook	src/api/hr/onboarding.ts	385	
+useOnboardingResumeCase	function	hr	true	hook	src/api/hr/onboarding.ts	386	
+useOnboardingReassignOwner	function	hr	true	hook	src/api/hr/onboarding.ts	387	
+useOnboardingMarkReady	function	hr	true	hook	src/api/hr/onboarding.ts	388	
+useOnboardingResolveBlocker	function	hr	true	hook	src/api/hr/onboarding.ts	389	
+useOnboardingEscalateBlocker	function	hr	true	hook	src/api/hr/onboarding.ts	390	
+useOnboardingWaiveBlocker	function	hr	true	hook	src/api/hr/onboarding.ts	391	
+useOnboardingNotifyBlockerOwner	function	hr	true	hook	src/api/hr/onboarding.ts	392	
+useOnboardingSendCommunication	function	hr	true	hook	src/api/hr/onboarding.ts	393	
+useOnboardingResendCommunication	function	hr	true	hook	src/api/hr/onboarding.ts	394	
+useOnboardingActionTemplates	function	hr	true	hook	src/api/hr/onboarding.ts	397	
+useOnboardingCaseActions	function	hr	true	hook	src/api/hr/onboarding.ts	405	
+useOnboardingCreateActionTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	413	
+useOnboardingUpdateActionTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	414	
+useOnboardingRetireActionTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	415	
+useOnboardingAddCaseAction	function	hr	true	hook	src/api/hr/onboarding.ts	416	
+useOnboardingUpdateCaseAction	function	hr	true	hook	src/api/hr/onboarding.ts	417	
+useOnboardingCompleteCaseAction	function	hr	true	hook	src/api/hr/onboarding.ts	418	
+useOnboardingCancelCaseAction	function	hr	true	hook	src/api/hr/onboarding.ts	419	
+useOnboardingProvisionAccount	function	hr	true	hook	src/api/hr/onboarding.ts	420	
+useOnboardingCreatePackage	function	hr	true	hook	src/api/hr/onboarding.ts	423	
+useOnboardingPackageReferenceData	function	hr	true	hook	src/api/hr/onboarding.ts	424	
+useOnboardingUpdatePackage	function	hr	true	hook	src/api/hr/onboarding.ts	432	
+useOnboardingSetPackageStatus	function	hr	true	hook	src/api/hr/onboarding.ts	433	
+useOnboardingCreateTaskTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	434	
+useOnboardingUpdateTaskTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	435	
+useOnboardingDeleteTaskTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	436	
+useOnboardingCreateHandoffTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	437	
+useOnboardingUpdateHandoffTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	438	
+useOnboardingDeleteHandoffTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	439	
 call	function	hr	false		src/api/hr/organization.ts	23	
 keyed	function	hr	false		src/api/hr/organization.ts	34	
 hrOrganizationApi	object	hr	true		src/api/hr/organization.ts	36	
@@ -8406,54 +8555,26 @@ UpcomingExitsCard	function	widgets	false	component,ui-tile	src/components/sectio
 BlockedAtRiskCard	function	widgets	false	component,ui-tile	src/components/sections/HR/offboardingWidgets.tsx	307	
 OffboardingDashboardSkeleton	function	widgets	true	component	src/components/sections/HR/offboardingWidgets.tsx	342	
 OffboardingDashboard	function	widgets	true	component	src/components/sections/HR/offboardingWidgets.tsx	358	
-ActivationCompletionCard	function	hr	false	component,ui-tile	src/components/sections/HR/onboarding/cards/ActivationCompletionCard.tsx	6	
-BlockedCasesCard	function	hr	false	component,ui-tile	src/components/sections/HR/onboarding/cards/BlockedCasesCard.tsx	8	
-moveBlockers	function	hr	false		src/components/sections/HR/onboarding/cards/BlockedCasesCard.tsx	22	BlockedCasesCard
-CasePerformanceCard	function	hr	false	component,ui-tile	src/components/sections/HR/onboarding/cards/CasePerformanceCard.tsx	8	
-movePage	function	hr	false		src/components/sections/HR/onboarding/cards/CasePerformanceCard.tsx	28	CasePerformanceCard
-CommandCenterHealthBanner	function	hr	false	component	src/components/sections/HR/onboarding/cards/CommandCenterHealthBanner.tsx	6	
-CommandMetricStrip	function	hr	false	component	src/components/sections/HR/onboarding/cards/CommandMetricStrip.tsx	6	
-MorningGoalCard	function	hr	false	component,ui-tile	src/components/sections/HR/onboarding/cards/MorningGoalCard.tsx	9	
-CriticalAction	type	hr	false		src/components/sections/HR/onboarding/cards/MorningGoalCard.tsx	15	MorningGoalCard
-selectAction	function	hr	false		src/components/sections/HR/onboarding/cards/MorningGoalCard.tsx	67	MorningGoalCard
-movePriority	function	hr	false		src/components/sections/HR/onboarding/cards/MorningGoalCard.tsx	68	MorningGoalCard
-runSelectedAction	function	hr	false		src/components/sections/HR/onboarding/cards/MorningGoalCard.tsx	72	MorningGoalCard
-RecentActivityCard	function	hr	false	component,ui-tile	src/components/sections/HR/onboarding/cards/RecentActivityCard.tsx	7	
-RecentProjectWorkCard	function	hr	false	component,ui-tile	src/components/sections/HR/onboarding/cards/RecentProjectWorkCard.tsx	8	
-movePage	function	hr	false		src/components/sections/HR/onboarding/cards/RecentProjectWorkCard.tsx	27	RecentProjectWorkCard
-taskProgress	function	hr	false		src/components/sections/HR/onboarding/cards/RecentProjectWorkCard.tsx	28	RecentProjectWorkCard
-TasksPlannerCard	function	hr	false	component,ui-tile	src/components/sections/HR/onboarding/cards/TasksPlannerCard.tsx	10	
-moveDateWindow	function	hr	false		src/components/sections/HR/onboarding/cards/TasksPlannerCard.tsx	47	TasksPlannerCard
-openComposer	function	hr	false		src/components/sections/HR/onboarding/cards/TasksPlannerCard.tsx	54	TasksPlannerCard
-closeComposer	function	hr	false		src/components/sections/HR/onboarding/cards/TasksPlannerCard.tsx	55	TasksPlannerCard
-saveTask	function	hr	false		src/components/sections/HR/onboarding/cards/TasksPlannerCard.tsx	62	TasksPlannerCard
-renderTask	function	hr	false		src/components/sections/HR/onboarding/cards/TasksPlannerCard.tsx	74	TasksPlannerCard
-UpcomingDeadlinesCard	function	hr	false	component,ui-tile	src/components/sections/HR/onboarding/cards/UpcomingDeadlinesCard.tsx	8	
-moveDateWindow	function	hr	false		src/components/sections/HR/onboarding/cards/UpcomingDeadlinesCard.tsx	19	UpcomingDeadlinesCard
-Icon	function	hr	false	component	src/components/sections/HR/onboarding/primitives.tsx	8	
-PersonAvatar	function	hr	false	component	src/components/sections/HR/onboarding/primitives.tsx	43	
-Button	function	hr	false	component	src/components/sections/HR/onboarding/primitives.tsx	47	
-MetricGauge	function	hr	false	component	src/components/sections/HR/onboarding/primitives.tsx	51	
-MetricMicroChart	function	hr	false	component	src/components/sections/HR/onboarding/primitives.tsx	93	
-InsightGlyph	function	hr	false	component	src/components/sections/HR/onboarding/primitives.tsx	123	
-taskIconFor	function	hr	false		src/components/sections/HR/onboarding/primitives.tsx	128	
+initials	function	widgets	true		src/components/sections/HR/onboarding/CommandCentreWidgets.tsx	27	
+MONTHS	array	widgets	false		src/components/sections/HR/onboarding/CommandCentreWidgets.tsx	33	
+ordinal	function	widgets	false		src/components/sections/HR/onboarding/CommandCentreWidgets.tsx	35	
+longDate	function	widgets	true		src/components/sections/HR/onboarding/CommandCentreWidgets.tsx	42	
+daysFromToday	function	widgets	true		src/components/sections/HR/onboarding/CommandCentreWidgets.tsx	50	
+dueHelper	function	widgets	false		src/components/sections/HR/onboarding/CommandCentreWidgets.tsx	59	
+EmptyPanel	function	widgets	false	component	src/components/sections/HR/onboarding/CommandCentreWidgets.tsx	67	
+StartReadinessWidget	function	widgets	true	component,ui-tile	src/components/sections/HR/onboarding/CommandCentreWidgets.tsx	77	
+CaseFocusWidget	function	widgets	true	component,ui-tile	src/components/sections/HR/onboarding/CommandCentreWidgets.tsx	140	
+BlockedCasesWidget	function	widgets	true	component,ui-tile	src/components/sections/HR/onboarding/CommandCentreWidgets.tsx	231	
+UpcomingStartsWidget	function	widgets	true	component,ui-tile	src/components/sections/HR/onboarding/CommandCentreWidgets.tsx	277	
+tone	function	widgets	false		src/components/sections/HR/onboarding/CommandCentreWidgets.tsx	283	UpcomingStartsWidget
+label	function	widgets	false		src/components/sections/HR/onboarding/CommandCentreWidgets.tsx	285	UpcomingStartsWidget
+QueueTab	type	widgets	true		src/components/sections/HR/onboarding/CommandCentreWidgets.tsx	331	
+WorkQueueWidget	function	widgets	true	component,ui-tile	src/components/sections/HR/onboarding/CommandCentreWidgets.tsx	333	
 OnboardingAddTaskModalProps	interface	hr	true		src/components/sections/HR/OnboardingAddTaskModal.tsx	15	
 EMPTY_FORM	object	hr	false		src/components/sections/HR/OnboardingAddTaskModal.tsx	24	
 OnboardingAddTaskModal	function	hr	true	component	src/components/sections/HR/OnboardingAddTaskModal.tsx	26	
 handleClose	function	hr	false		src/components/sections/HR/OnboardingAddTaskModal.tsx	40	OnboardingAddTaskModal
 submit	function	hr	false		src/components/sections/HR/OnboardingAddTaskModal.tsx	46	OnboardingAddTaskModal
-ACTIVE_STATUSES	array	hr	false		src/components/sections/HR/OnboardingBlockedBoard.tsx	27	
-MODULE_META	object	hr	false		src/components/sections/HR/OnboardingBlockedBoard.tsx	28	
-moduleLabel	function	hr	false		src/components/sections/HR/OnboardingBlockedBoard.tsx	40	
-moduleIcon	function	hr	false		src/components/sections/HR/OnboardingBlockedBoard.tsx	41	
-OnboardingBlockedBoard	function	hr	true	component	src/components/sections/HR/OnboardingBlockedBoard.tsx	43	
-run	function	hr	false		src/components/sections/HR/OnboardingBlockedBoard.tsx	78	OnboardingBlockedBoard
-handleResolve	function	hr	false		src/components/sections/HR/OnboardingBlockedBoard.tsx	81	OnboardingBlockedBoard
-handleEscalate	function	hr	false		src/components/sections/HR/OnboardingBlockedBoard.tsx	82	OnboardingBlockedBoard
-handleNotify	function	hr	false		src/components/sections/HR/OnboardingBlockedBoard.tsx	83	OnboardingBlockedBoard
-openWaive	function	hr	false		src/components/sections/HR/OnboardingBlockedBoard.tsx	84	OnboardingBlockedBoard
-submitWaive	function	hr	false		src/components/sections/HR/OnboardingBlockedBoard.tsx	85	OnboardingBlockedBoard
-card	function	hr	false	ui-tile	src/components/sections/HR/OnboardingBlockedBoard.tsx	92	OnboardingBlockedBoard
 STAGE_NAMES	array	hr	true		src/components/sections/HR/onboardingCase.helpers.tsx	14	
 STAGE_RANK	object	hr	true		src/components/sections/HR/onboardingCase.helpers.tsx	16	
 initials	function	hr	true		src/components/sections/HR/onboardingCase.helpers.tsx	22	
@@ -8473,57 +8594,76 @@ Spark	function	hr	true	component	src/components/sections/HR/onboardingCase.helpe
 Ring	function	hr	true	component	src/components/sections/HR/onboardingCase.helpers.tsx	94	
 GaugeArc	function	hr	true	component	src/components/sections/HR/onboardingCase.helpers.tsx	113	
 Bars	function	hr	true	component	src/components/sections/HR/onboardingCase.helpers.tsx	131	
-_initials	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	46	
-tone	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	49	
-Pill	function	hr	false	component	src/components/sections/HR/OnboardingCaseDetail.tsx	56	
-CASE_PAGE_KEY	variable	hr	false	component	src/components/sections/HR/OnboardingCaseDetail.tsx	61	
-CASE_ZONE	variable	hr	false	component	src/components/sections/HR/OnboardingCaseDetail.tsx	62	
-defInst	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	63	
-defaultCaseLayout	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	66	
-OnboardingCaseDetail	function	hr	true	component	src/components/sections/HR/OnboardingCaseDetail.tsx	87	
-placeBottom	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	117	OnboardingCaseDetail
-commitPreview	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	124	OnboardingCaseDetail
-discardPreview	function	hr	false	ui-tile	src/components/sections/HR/OnboardingCaseDetail.tsx	125	OnboardingCaseDetail
-run	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	147	OnboardingCaseDetail
-caseRecord	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	152	OnboardingCaseDetail
-handlePause	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	157	OnboardingCaseDetail
-handleResume	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	161	OnboardingCaseDetail
-handleMarkReady	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	165	OnboardingCaseDetail
-handleComplete	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	169	OnboardingCaseDetail
-handleCancel	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	173	OnboardingCaseDetail
-handleReassignOwner	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	177	OnboardingCaseDetail
-handleProvision	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	178	OnboardingCaseDetail
-openAddTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	185	OnboardingCaseDetail
-handleCompleteTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	186	OnboardingCaseDetail
-handleBlockTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	187	OnboardingCaseDetail
-handleUnblockTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	192	OnboardingCaseDetail
-handleReassignTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	193	OnboardingCaseDetail
-handleResolve	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	196	OnboardingCaseDetail
-handleEscalate	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	201	OnboardingCaseDetail
-handleWaive	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	206	OnboardingCaseDetail
-openAddAction	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	213	OnboardingCaseDetail
-submitAddAction	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	217	OnboardingCaseDetail
-handleCompleteAction	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	227	OnboardingCaseDetail
-handleCancelAction	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	228	OnboardingCaseDetail
-handleUpdateActionStatus	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	233	OnboardingCaseDetail
-blockerOpen	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	235	OnboardingCaseDetail
-wcard	function	hr	false	ui-tile	src/components/sections/HR/OnboardingCaseDetail.tsx	238	OnboardingCaseDetail
-empty	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	244	OnboardingCaseDetail
-tasksBody	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	246	OnboardingCaseDetail
-blockersBody	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	269	OnboardingCaseDetail
-handoffsBody	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	288	OnboardingCaseDetail
-actionsBody	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	304	OnboardingCaseDetail
-floor	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	327	OnboardingCaseDetail
-adaptCase	function	hr	true		src/components/sections/HR/OnboardingCommandCenter.adapters.ts	11	
-adaptTask	function	hr	true		src/components/sections/HR/OnboardingCommandCenter.adapters.ts	25	
-adaptBlocker	function	hr	true		src/components/sections/HR/OnboardingCommandCenter.adapters.ts	37	
-ACTIVITY_TONE_BY_KEYWORD	array	hr	false		src/components/sections/HR/OnboardingCommandCenter.adapters.ts	47	
-fmtActivityTime	function	hr	true		src/components/sections/HR/OnboardingCommandCenter.adapters.ts	56	
-adaptActivity	function	hr	true		src/components/sections/HR/OnboardingCommandCenter.adapters.ts	70	
-KpiInputs	interface	hr	true	ui-tile	src/components/sections/HR/OnboardingCommandCenter.adapters.ts	79	
-deriveKpis	function	hr	true	ui-tile	src/components/sections/HR/OnboardingCommandCenter.adapters.ts	92	
-PrioritySnapshot	interface	hr	true		src/components/sections/HR/OnboardingCommandCenter.adapters.ts	127	
-derivePrioritySnapshot	function	hr	true		src/components/sections/HR/OnboardingCommandCenter.adapters.ts	135	
+read	function	hr	false	test	src/components/sections/HR/onboardingCaseDetail.test.ts	20	
+has	function	hr	false	test	src/components/sections/HR/onboardingCaseDetail.test.ts	21	
+stripComments	function	hr	false	test	src/components/sections/HR/onboardingCaseDetail.test.ts	22	
+SRC	variable	hr	false	test	src/components/sections/HR/onboardingCaseDetail.test.ts	25	
+req	function	hr	false	test	src/components/sections/HR/onboardingCaseDetail.test.ts	26	
+_initials	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	63	
+tone	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	66	
+Pill	function	hr	false	component	src/components/sections/HR/OnboardingCaseDetail.tsx	73	
+CASE_PAGE_KEY	variable	hr	false	component	src/components/sections/HR/OnboardingCaseDetail.tsx	78	
+QUEUE_LABEL	object	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	83	
+queueLabel	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	88	
+TAB_LABEL	object	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	93	
+CASE_ZONE	variable	hr	false	component	src/components/sections/HR/OnboardingCaseDetail.tsx	97	
+defInst	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	98	
+defaultCaseLayout	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	101	
+OnboardingCaseDetail	function	hr	true	component	src/components/sections/HR/OnboardingCaseDetail.tsx	126	
+placeBottom	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	168	OnboardingCaseDetail
+commitPreview	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	175	OnboardingCaseDetail
+discardPreview	function	hr	false	ui-tile	src/components/sections/HR/OnboardingCaseDetail.tsx	176	OnboardingCaseDetail
+done	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	245	readiness
+run	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	278	OnboardingCaseDetail
+caseRecord	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	283	OnboardingCaseDetail
+handlePause	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	288	OnboardingCaseDetail
+handleResume	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	292	OnboardingCaseDetail
+handleMarkReady	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	296	OnboardingCaseDetail
+handleComplete	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	300	OnboardingCaseDetail
+handleCancel	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	304	OnboardingCaseDetail
+handleReassignOwner	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	308	OnboardingCaseDetail
+handleProvision	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	309	OnboardingCaseDetail
+openAddTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	316	OnboardingCaseDetail
+handleCompleteTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	317	OnboardingCaseDetail
+handleBlockTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	318	OnboardingCaseDetail
+handleUnblockTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	323	OnboardingCaseDetail
+handleReassignTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	324	OnboardingCaseDetail
+handleRetryHandoff	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	327	OnboardingCaseDetail
+handleAcceptHandoff	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	330	OnboardingCaseDetail
+handleCompleteHandoff	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	333	OnboardingCaseDetail
+handleCancelHandoff	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	336	OnboardingCaseDetail
+submitCommunication	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	346	OnboardingCaseDetail
+handleResolve	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	352	OnboardingCaseDetail
+handleEscalate	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	357	OnboardingCaseDetail
+handleWaive	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	362	OnboardingCaseDetail
+openAddAction	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	369	OnboardingCaseDetail
+submitAddAction	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	373	OnboardingCaseDetail
+handleCompleteAction	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	383	OnboardingCaseDetail
+handleCancelAction	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	384	OnboardingCaseDetail
+handleUpdateActionStatus	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	389	OnboardingCaseDetail
+blockerOpen	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	391	OnboardingCaseDetail
+wcard	function	hr	false	ui-tile	src/components/sections/HR/OnboardingCaseDetail.tsx	394	OnboardingCaseDetail
+empty	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	400	OnboardingCaseDetail
+tasksBody	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	402	OnboardingCaseDetail
+blockersBody	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	439	OnboardingCaseDetail
+handoffsBody	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	458	OnboardingCaseDetail
+actionsBody	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	480	OnboardingCaseDetail
+floor	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	503	OnboardingCaseDetail
+panelState	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	506	OnboardingCaseDetail
+communicationsPanel	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	518	OnboardingCaseDetail
+timelinePanel	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	539	OnboardingCaseDetail
+auditPanel	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	557	OnboardingCaseDetail
+readinessBody	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	576	OnboardingCaseDetail
+readinessDomainBody	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	591	OnboardingCaseDetail
+priorityTasksBody	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	606	OnboardingCaseDetail
+CASE_TABS	variable	hr	true		src/components/sections/HR/onboardingCaseFocus.ts	14	
+CaseTab	type	hr	true		src/components/sections/HR/onboardingCaseFocus.ts	17	
+DEFAULT_CASE_TAB	variable	hr	true		src/components/sections/HR/onboardingCaseFocus.ts	20	
+CaseFocusRequest	interface	hr	true		src/components/sections/HR/onboardingCaseFocus.ts	22	
+CASE_FOCUS_TAB	object	hr	true		src/components/sections/HR/onboardingCaseFocus.ts	30	
+focusTab	function	hr	true		src/components/sections/HR/onboardingCaseFocus.ts	37	
+focusRecordId	function	hr	true		src/components/sections/HR/onboardingCaseFocus.ts	48	
+focusEvidenceId	function	hr	true		src/components/sections/HR/onboardingCaseFocus.ts	55	
 Tone	type	hr	true		src/components/sections/HR/OnboardingCommandCenter.helpers.ts	6	
 BadgeTone	type	hr	true		src/components/sections/HR/OnboardingCommandCenter.helpers.ts	7	
 OnboardingSurface	type	hr	true		src/components/sections/HR/OnboardingCommandCenter.helpers.ts	9	
@@ -8545,82 +8685,83 @@ weekWindow	function	hr	true		src/components/sections/HR/OnboardingCommandCenter.
 blockerMeta	function	hr	true		src/components/sections/HR/OnboardingCommandCenter.helpers.ts	156	
 relativeDueLabel	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.helpers.ts	162	
 deriveDeadlines	function	hr	true		src/components/sections/HR/OnboardingCommandCenter.helpers.ts	174	
-OnboardingCommandCenter	function	hr	true	component	src/components/sections/HR/OnboardingCommandCenter.tsx	31	
-openSurface	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	45	OnboardingCommandCenter
-openCase	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	46	OnboardingCommandCenter
-startNewCase	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	47	OnboardingCommandCenter
-handleCompleteTask	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	80	OnboardingCommandCenter
-HANDOFF_STATUSES	array	workflow	false		src/components/sections/HR/OnboardingHandoffsWorkspace.tsx	28	
-OPEN_HANDOFF	variable	workflow	false	component	src/components/sections/HR/OnboardingHandoffsWorkspace.tsx	29	
-MODULE_META	object	workflow	false		src/components/sections/HR/OnboardingHandoffsWorkspace.tsx	33	
-moduleLabel	function	workflow	false		src/components/sections/HR/OnboardingHandoffsWorkspace.tsx	44	
-moduleIcon	function	workflow	false		src/components/sections/HR/OnboardingHandoffsWorkspace.tsx	45	
-OnboardingHandoffsWorkspace	function	workflow	true	component	src/components/sections/HR/OnboardingHandoffsWorkspace.tsx	47	
-run	function	workflow	false		src/components/sections/HR/OnboardingHandoffsWorkspace.tsx	87	OnboardingHandoffsWorkspace
-handleRetry	function	workflow	false		src/components/sections/HR/OnboardingHandoffsWorkspace.tsx	90	OnboardingHandoffsWorkspace
-handleAccept	function	workflow	false		src/components/sections/HR/OnboardingHandoffsWorkspace.tsx	91	OnboardingHandoffsWorkspace
-handleComplete	function	workflow	false		src/components/sections/HR/OnboardingHandoffsWorkspace.tsx	92	OnboardingHandoffsWorkspace
-handleCancel	function	workflow	false		src/components/sections/HR/OnboardingHandoffsWorkspace.tsx	93	OnboardingHandoffsWorkspace
-retryAllFailed	function	workflow	false		src/components/sections/HR/OnboardingHandoffsWorkspace.tsx	96	OnboardingHandoffsWorkspace
-lifecycleActions	function	workflow	false		src/components/sections/HR/OnboardingHandoffsWorkspace.tsx	108	OnboardingHandoffsWorkspace
-CASE_COLS	array	hr	false		src/components/sections/HR/OnboardingOverview.tsx	40	
-pageWindow	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	43	
-DUE_LABEL	object	hr	false		src/components/sections/HR/OnboardingOverview.tsx	57	
-BLOCK_LABEL	object	hr	false		src/components/sections/HR/OnboardingOverview.tsx	60	
-READY_LABEL	object	hr	false		src/components/sections/HR/OnboardingOverview.tsx	63	
-OnboardingSurface	type	hr	false		src/components/sections/HR/OnboardingOverview.tsx	69	
-OnboardingOverview	function	hr	true	component	src/components/sections/HR/OnboardingOverview.tsx	71	
-openCaseById	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	91	OnboardingOverview
-onOpen	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	95	OnboardingOverview
-setPkg	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	121	OnboardingOverview
-setWorker	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	122	OnboardingOverview
-setDue	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	123	OnboardingOverview
-setBlock	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	124	OnboardingOverview
-setReady	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	125	OnboardingOverview
-resetAdvanced	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	126	OnboardingOverview
-notify	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	154	OnboardingOverview
-renderCases	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	267	OnboardingOverview
-handleOpenSurface	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	376	OnboardingOverview
-PkgTab	type	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	31	
-TABS	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	32	
-ACTION_TYPES	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	37	
-OWNER_TYPES	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	38	
-PRIORITIES	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	39	
-emptyTaskForm	object	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	40	
-emptyHandoffForm	object	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	41	
-emptyActionForm	object	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	42	
-OnboardingPackageDetail	function	hr	true	component	src/components/sections/HR/OnboardingPackageDetail.tsx	48	
-run	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	69	OnboardingPackageDetail
-openEdit	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	77	OnboardingPackageDetail
-submitEdit	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	81	OnboardingPackageDetail
-handleStatusStep	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	90	OnboardingPackageDetail
-openAddTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	98	OnboardingPackageDetail
-openEditTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	99	OnboardingPackageDetail
-submitTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	102	OnboardingPackageDetail
-deleteTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	109	OnboardingPackageDetail
-openAddHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	115	OnboardingPackageDetail
-openEditHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	116	OnboardingPackageDetail
-submitHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	119	OnboardingPackageDetail
-deleteHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	126	OnboardingPackageDetail
-openAddAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	132	OnboardingPackageDetail
-openEditAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	133	OnboardingPackageDetail
-submitAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	141	OnboardingPackageDetail
-retireAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	155	OnboardingPackageDetail
-YN	function	hr	false	component	src/components/sections/HR/OnboardingPackageDetail.tsx	160	OnboardingPackageDetail
-empty	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	161	OnboardingPackageDetail
+PAGE_KEY	variable	hr	false	component	src/components/sections/HR/OnboardingCommandCenter.tsx	51	
+KPI_PAGE_KEY	variable	hr	false	component,ui-tile	src/components/sections/HR/OnboardingCommandCenter.tsx	52	
+BOARD_COLUMNS	variable	hr	false	component	src/components/sections/HR/OnboardingCommandCenter.tsx	53	
+ACTIVE_STATUSES	array	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	55	
+defInst	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	57	
+defaultOnboardingKpiLayout	function	hr	true	ui-tile	src/components/sections/HR/OnboardingCommandCenter.tsx	62	
+defaultOnboardingLayout	function	hr	true		src/components/sections/HR/OnboardingCommandCenter.tsx	82	
+OnboardingCommandCenter	function	hr	true	component	src/components/sections/HR/OnboardingCommandCenter.tsx	109	
+openSurface	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	128	OnboardingCommandCenter
+openCase	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	129	OnboardingCommandCenter
+onFilter	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	171	OnboardingCommandCenter
+savePageLayout	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	197	OnboardingCommandCenter
+cancelPageLayout	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	200	OnboardingCommandCenter
+resetPageLayout	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	201	OnboardingCommandCenter
+setPageAsDefault	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	202	OnboardingCommandCenter
+size	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	212	OnboardingCommandCenter
+repoFile	function	hr	false	test	src/components/sections/HR/onboardingCommandCentre.test.ts	15	
+repoHas	function	hr	false	test	src/components/sections/HR/onboardingCommandCentre.test.ts	16	
+stripComments	function	hr	false	test	src/components/sections/HR/onboardingCommandCentre.test.ts	21	
+PAGE	variable	hr	false	test	src/components/sections/HR/onboardingCommandCentre.test.ts	23	
+REGISTRY	variable	hr	false	test	src/components/sections/HR/onboardingCommandCentre.test.ts	24	
+WIDGETS	variable	hr	false	ui-tile,test	src/components/sections/HR/onboardingCommandCentre.test.ts	25	
+asRole	function	hr	false	test	src/components/sections/HR/onboardingCommandCentre.test.ts	29	
+presentationFor	function	hr	false	test	src/components/sections/HR/onboardingCommandCentre.test.ts	130	
+OnboardingSurface	type	hr	false		src/components/sections/HR/OnboardingOverview.tsx	24	
+EMAIL_STUDIO_ID	variable	hr	false	component	src/components/sections/HR/OnboardingOverview.tsx	25	
+OnboardingOverview	function	hr	true	component	src/components/sections/HR/OnboardingOverview.tsx	27	
+onOpen	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	52	OnboardingOverview
+notify	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	62	OnboardingOverview
+openCaseById	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	67	OnboardingOverview
+handleOpenSurface	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	139	OnboardingOverview
+PkgTab	type	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	34	
+TABS	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	35	
+ACTION_TYPES	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	44	
+OWNER_TYPES	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	45	
+PRIORITIES	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	46	
+emptyTaskForm	object	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	47	
+emptyHandoffForm	object	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	48	
+emptyActionForm	object	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	49	
+OnboardingPackageDetail	function	hr	true	component	src/components/sections/HR/OnboardingPackageDetail.tsx	56	
+setting	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	74	OnboardingPackageDetail
+run	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	89	OnboardingPackageDetail
+openEdit	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	97	OnboardingPackageDetail
+submitEdit	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	101	OnboardingPackageDetail
+handleStatusStep	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	110	OnboardingPackageDetail
+openAddTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	119	OnboardingPackageDetail
+openEditTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	120	OnboardingPackageDetail
+submitTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	123	OnboardingPackageDetail
+deleteTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	130	OnboardingPackageDetail
+openAddHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	136	OnboardingPackageDetail
+openEditHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	137	OnboardingPackageDetail
+submitHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	140	OnboardingPackageDetail
+deleteHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	147	OnboardingPackageDetail
+openAddAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	153	OnboardingPackageDetail
+openEditAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	154	OnboardingPackageDetail
+submitAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	164	OnboardingPackageDetail
+retireAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	185	OnboardingPackageDetail
+YN	function	hr	false	component	src/components/sections/HR/OnboardingPackageDetail.tsx	190	OnboardingPackageDetail
+empty	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	191	OnboardingPackageDetail
 STATUS_FILTERS	variable	hr	false	component	src/components/sections/HR/OnboardingPackageManager.tsx	19	
 StatusFilter	type	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	20	
-statusTone	function	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	22	
+humanizeStatus	function	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	22	
 OnboardingPackageManager	function	hr	true	component	src/components/sections/HR/OnboardingPackageManager.tsx	26	
-openNew	function	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	46	OnboardingPackageManager
-submitNew	function	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	51	OnboardingPackageManager
-toggleStatus	function	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	65	OnboardingPackageManager
-CASE_STATUSES	array	hr	false		src/components/sections/HR/OnboardingReportsWorkspace.tsx	22	
-BAR_COLORS	array	hr	false		src/components/sections/HR/OnboardingReportsWorkspace.tsx	23	
-fmtCell	function	hr	false		src/components/sections/HR/OnboardingReportsWorkspace.tsx	25	
-ChartView	function	hr	false	component	src/components/sections/HR/OnboardingReportsWorkspace.tsx	35	
-OnboardingReportsWorkspace	function	hr	true	component	src/components/sections/HR/OnboardingReportsWorkspace.tsx	70	
-handleExport	function	hr	false		src/components/sections/HR/OnboardingReportsWorkspace.tsx	94	OnboardingReportsWorkspace
+openNew	function	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	62	OnboardingPackageManager
+submitNew	function	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	67	OnboardingPackageManager
+CASE_STATUSES	array	hr	false		src/components/sections/HR/OnboardingReportsWorkspace.tsx	28	
+BAR_COLORS	array	hr	false		src/components/sections/HR/OnboardingReportsWorkspace.tsx	29	
+fmtCell	function	hr	false		src/components/sections/HR/OnboardingReportsWorkspace.tsx	33	
+ChartView	function	hr	false	component	src/components/sections/HR/OnboardingReportsWorkspace.tsx	43	
+OnboardingReportsWorkspace	function	hr	true	component	src/components/sections/HR/OnboardingReportsWorkspace.tsx	91	
+handleExport	function	hr	false		src/components/sections/HR/OnboardingReportsWorkspace.tsx	119	OnboardingReportsWorkspace
+repoFile	function	hr	false	test	src/components/sections/HR/onboardingScopePresentation.test.ts	16	
+asRole	function	hr	false	test	src/components/sections/HR/onboardingScopePresentation.test.ts	21	
+MANAGER	array	hr	false	test	src/components/sections/HR/onboardingScopePresentation.test.ts	22	
+presentationFor	function	hr	false	test	src/components/sections/HR/onboardingScopePresentation.test.ts	25	
+OnboardingScopeSelectorProps	interface	hr	true		src/components/sections/HR/OnboardingScopeSelector.tsx	16	
+OnboardingScopeSelector	function	hr	true	component	src/components/sections/HR/OnboardingScopeSelector.tsx	25	
 Pill	interface	hr	true		src/components/sections/HR/onboardingStatus.ts	13	
 T	object	hr	false		src/components/sections/HR/onboardingStatus.ts	14	
 CASE_STATUS	object	hr	true		src/components/sections/HR/onboardingStatus.ts	20	
@@ -8640,37 +8781,19 @@ CASE_STATUS_OPTIONS	variable	hr	true		src/components/sections/HR/onboardingStatu
 BG_TO_CLS	object	hr	false		src/components/sections/HR/onboardingStatus.ts	63	
 pillClass	function	hr	true		src/components/sections/HR/onboardingStatus.ts	67	
 humanize	function	hr	true		src/components/sections/HR/onboardingStatus.ts	69	
-fmtDate	function	hr	true		src/components/sections/HR/onboardingStatus.ts	73	
-fmtDateTime	function	hr	true		src/components/sections/HR/onboardingStatus.ts	75	
-ViewMode	type	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	28	
-VIEWS	array	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	29	
-TASK_STATUSES	array	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	35	
-OPEN_STATUSES	variable	hr	false	component	src/components/sections/HR/OnboardingTasksWorkspace.tsx	36	
-DUE_OPTS	array	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	37	
-BOARD_COLS	array	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	41	
-isOpen	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	49	
-isOverdue	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	50	
-dueGroup	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	51	
-DUE_GROUPS	array	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	62	
-OnboardingTasksWorkspace	function	hr	true	component	src/components/sections/HR/OnboardingTasksWorkspace.tsx	70	
-run	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	112	OnboardingTasksWorkspace
-handleComplete	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	115	OnboardingTasksWorkspace
-handleBlock	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	116	OnboardingTasksWorkspace
-handleUnblock	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	117	OnboardingTasksWorkspace
-handleReassign	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	118	OnboardingTasksWorkspace
-submitAdd	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	127	OnboardingTasksWorkspace
-Pill	function	hr	false	component	src/components/sections/HR/OnboardingTasksWorkspace.tsx	138	OnboardingTasksWorkspace
-rowActions	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	142	OnboardingTasksWorkspace
-openDrawer	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	150	OnboardingTasksWorkspace
-taskCard	function	hr	false	ui-tile	src/components/sections/HR/OnboardingTasksWorkspace.tsx	152	OnboardingTasksWorkspace
-tableView	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	164	OnboardingTasksWorkspace
-boardView	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	193	OnboardingTasksWorkspace
-groupedView	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	207	OnboardingTasksWorkspace
-ownerView	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	233	OnboardingTasksWorkspace
-dueView	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	245	OnboardingTasksWorkspace
-TaskDrawer	function	hr	false	component	src/components/sections/HR/OnboardingTasksWorkspace.tsx	335	
-submitNote	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	354	TaskDrawer
-onEvidenceFile	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	360	TaskDrawer
+ordinal	function	hr	false		src/components/sections/HR/onboardingStatus.ts	73	
+fmtDate	function	hr	true		src/components/sections/HR/onboardingStatus.ts	79	
+fmtDateTime	function	hr	true		src/components/sections/HR/onboardingStatus.ts	89	
+SOURCE_LABEL	object	hr	false		src/components/sections/HR/OnboardingWorkQueue.tsx	49	
+LIFECYCLE_LABEL	object	hr	false		src/components/sections/HR/OnboardingWorkQueue.tsx	52	
+DUE_LABEL	object	hr	false		src/components/sections/HR/OnboardingWorkQueue.tsx	55	
+QUEUE_LABEL	object	hr	false		src/components/sections/HR/OnboardingWorkQueue.tsx	59	
+humanQueue	function	hr	false		src/components/sections/HR/OnboardingWorkQueue.tsx	63	
+displayDetail	function	hr	false		src/components/sections/HR/OnboardingWorkQueue.tsx	70	
+DEFAULT_FILTERS	object	hr	false		src/components/sections/HR/OnboardingWorkQueue.tsx	77	
+Filters	type	hr	false		src/components/sections/HR/OnboardingWorkQueue.tsx	83	
+DueCell	function	hr	false	component	src/components/sections/HR/OnboardingWorkQueue.tsx	86	
+OnboardingWorkQueue	function	hr	true	component	src/components/sections/HR/OnboardingWorkQueue.tsx	103	
 Opt	interface	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	35	
 ORG_UNIT_TYPES	array	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	36	
 toastResult	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	38	
@@ -8907,37 +9030,48 @@ TRAINING_TONE	object	hr	true		src/components/sections/HR/shared.tsx	38
 TRAINING_LABEL	object	hr	true		src/components/sections/HR/shared.tsx	41	
 Avatar	function	hr	true	component	src/components/sections/HR/shared.tsx	45	
 TinyAvatar	function	hr	true	component	src/components/sections/HR/shared.tsx	48	
-IconName	type	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	25	
-Icon	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	30	
-initialsOf	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	60	
-StepKey	type	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	64	
-STEPS	array	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	65	
-WorkerType	type	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	74	
-WORKER_TYPES	array	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	75	
-REASONS	array	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	80	
-PRIORITIES	array	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	81	
-CASE_OWNERS	array	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	82	
-LAUNCH_MODES	array	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	83	
-TEMPORARY_REASONS	array	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	84	
-ASSIGNMENT_LENGTHS	array	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	85	
-isRecommendedPackage	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	89	
-StartOnboardingWizard	function	hr	true	component	src/components/sections/HR/StartOnboardingWizard.tsx	95	
-setStep	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	119	StartOnboardingWizard
-toggleAction	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	191	StartOnboardingWizard
-setDocumentSelection	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	201	StartOnboardingWizard
-fieldErr	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	256	StartOnboardingWizard
-stepStatus	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	274	StartOnboardingWizard
-buildWorkerTypeDetails	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	284	StartOnboardingWizard
-launch	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	297	StartOnboardingWizard
-goNext	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	340	StartOnboardingWizard
-goPrev	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	350	StartOnboardingWizard
-StepHeader	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	819	
-Fld	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	830	
-SelFld	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	845	
-DateFld	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	864	
-WorkerSearchField	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	882	
-DocumentRequirementCard	function	hr	false	component,ui-tile	src/components/sections/HR/StartOnboardingWizard.tsx	908	
-handleWaive	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	918	DocumentRequirementCard
+IconName	type	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	37	
+Icon	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	42	
+initialsOf	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	72	
+SAFETY_CRITICAL_PACKAGE_KEY	variable	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	88	
+MODULE_ICONS	object	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	99	
+moduleIcon	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	104	
+ACTION_ICONS	object	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	116	
+actionIcon	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	122	
+actionIconClass	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	123	
+StepKey	type	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	126	
+STEPS	array	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	127	
+STEP_COPY	object	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	141	
+GeneratedModuleRow	interface	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	170	
+MODULE_ACRONYMS	object	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	177	
+moduleLabel	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	178	
+pluralise	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	179	
+ONE_OFF_OWNER_ROLES	array	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	183	
+REASONS	array	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	185	
+PRIORITIES	array	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	186	
+StartOnboardingWizard	function	hr	true	component	src/components/sections/HR/StartOnboardingWizard.tsx	188	
+setStep	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	225	StartOnboardingWizard
+toggleAction	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	282	StartOnboardingWizard
+setDocumentSelection	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	292	StartOnboardingWizard
+fieldErr	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	338	StartOnboardingWizard
+stepStatus	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	355	StartOnboardingWizard
+launch	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	368	StartOnboardingWizard
+openCreatedCase	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	424	StartOnboardingWizard
+startAnother	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	433	StartOnboardingWizard
+goNext	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	444	StartOnboardingWizard
+goPrev	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	454	StartOnboardingWizard
+Row	type	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	480	generatedModules
+rowFor	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	482	generatedModules
+OneOffActionDialog	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	1449	
+submit	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	1457	OneOffActionDialog
+ObsDialog	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	1552	
+onCancel	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	1561	ObsDialog
+GeneratedWorkDialog	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	1582	
+ActionLibraryDialog	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	1622	
+AssignOwnerDialog	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	1698	
+WorkerSearchField	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	1760	
+DocumentRequirementCard	function	hr	false	component,ui-tile	src/components/sections/HR/StartOnboardingWizard.tsx	1810	
+handleFile	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	1835	DocumentRequirementCard
 STATUS_FILTERS	variable	hr	false	component	src/components/sections/HR/TransfersOverview.tsx	27	
 humanize	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	29	
 statusTone	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	30	
@@ -8953,6 +9087,15 @@ FIELD_LABELS	array	hr	false		src/components/sections/HR/TransfersOverview.tsx	39
 TrinidadPhoneInputProps	interface	hr	false		src/components/sections/HR/TrinidadPhoneInput.tsx	10	
 TrinidadPhoneInput	function	hr	true	component	src/components/sections/HR/TrinidadPhoneInput.tsx	25	
 update	function	hr	false		src/components/sections/HR/TrinidadPhoneInput.tsx	39	TrinidadPhoneInput
+asRole	function	hr	false	test	src/components/sections/HR/useOnboardingScope.test.ts	18	
+HR_STAFF	array	hr	false	test	src/components/sections/HR/useOnboardingScope.test.ts	20	
+HR_MANAGER	array	hr	false	test	src/components/sections/HR/useOnboardingScope.test.ts	21	
+TEAM_ONLY	array	hr	false	test	src/components/sections/HR/useOnboardingScope.test.ts	22	
+OnboardingScopeOption	interface	hr	true		src/components/sections/HR/useOnboardingScope.ts	15	
+ALL_OPTIONS	array	hr	false		src/components/sections/HR/useOnboardingScope.ts	21	
+availableOnboardingScopes	function	hr	true		src/components/sections/HR/useOnboardingScope.ts	28	
+OnboardingScopeState	interface	hr	true		src/components/sections/HR/useOnboardingScope.ts	35	
+useOnboardingScope	function	hr	true	hook	src/components/sections/HR/useOnboardingScope.ts	55	
 AreaPlaceholder	function	hse	false	component	src/components/sections/HSE/AreaRouter.tsx	27	
 AreaRouter	function	hse	true	component	src/components/sections/HSE/AreaRouter.tsx	50	
 ContractorRow	interface	hse	false		src/components/sections/HSE/Contractors.tsx	16	
@@ -11029,6 +11172,27 @@ titleCase	function	communications	false		src/components/sections/Tickets/TicketD
 TicketItem	function	communications	false	component	src/components/sections/Tickets/TicketDropdown.tsx	27	
 TicketDropdown	function	communications	true	component	src/components/sections/Tickets/TicketDropdown.tsx	39	
 open	function	communications	false		src/components/sections/Tickets/TicketDropdown.tsx	61	TicketDropdown
+SECTION_ID	variable	hr	false		src/components/sections/WorkerOnboarding/module.ts	4	
+workerOnboardingModule	object	hr	true		src/components/sections/WorkerOnboarding/module.ts	5	
+mountWorkerOnboarding	function	hr	true		src/components/sections/WorkerOnboarding/mount.ts	6	
+unmountWorkerOnboarding	function	hr	true		src/components/sections/WorkerOnboarding/mount.ts	9	
+ACCEPT	variable	hr	false	component	src/components/sections/WorkerOnboarding/WorkerDocumentUpload.tsx	30	
+ALLOWED	variable	hr	false	component	src/components/sections/WorkerOnboarding/WorkerDocumentUpload.tsx	31	
+MAX_BYTES	variable	hr	false	component	src/components/sections/WorkerOnboarding/WorkerDocumentUpload.tsx	32	
+Phase	type	hr	false		src/components/sections/WorkerOnboarding/WorkerDocumentUpload.tsx	34	
+sizeMb	function	hr	false		src/components/sections/WorkerOnboarding/WorkerDocumentUpload.tsx	36	
+WorkerDocumentUpload	function	hr	true	component	src/components/sections/WorkerOnboarding/WorkerDocumentUpload.tsx	38	
+reset	function	hr	false		src/components/sections/WorkerOnboarding/WorkerDocumentUpload.tsx	54	WorkerDocumentUpload
+pick	function	hr	false		src/components/sections/WorkerOnboarding/WorkerDocumentUpload.tsx	59	WorkerDocumentUpload
+submit	function	hr	false		src/components/sections/WorkerOnboarding/WorkerDocumentUpload.tsx	68	WorkerDocumentUpload
+DONE	variable	hr	false	component	src/components/sections/WorkerOnboarding/WorkerOnboardingPage.tsx	11	
+fmtDate	function	hr	false		src/components/sections/WorkerOnboarding/WorkerOnboardingPage.tsx	12	
+titleCase	function	hr	false		src/components/sections/WorkerOnboarding/WorkerOnboardingPage.tsx	15	
+WorkerOnboardingPage	function	hr	true	component	src/components/sections/WorkerOnboarding/WorkerOnboardingPage.tsx	17	
+complete	function	hr	false		src/components/sections/WorkerOnboarding/WorkerOnboardingPage.tsx	23	WorkerOnboardingPage
+SECTION_ID	variable	hr	false	component,test	src/components/sections/WorkerOnboarding/workerOnboardingShell.test.tsx	19	
+ROOT_ID	variable	hr	false	component,test	src/components/sections/WorkerOnboarding/workerOnboardingShell.test.tsx	20	
+src	function	hr	false	test	src/components/sections/WorkerOnboarding/workerOnboardingShell.test.tsx	22	
 lIco	function	platform	false		src/components/shared/AccountPill.tsx	36	
 IcUser	function	platform	false	component	src/components/shared/AccountPill.tsx	40	
 IcSettings	function	platform	false	component	src/components/shared/AccountPill.tsx	41	
@@ -11551,20 +11715,20 @@ ctx	function	security	false	test	src/lib/permissions.test.ts	28
 override	function	security	false	test	src/lib/permissions.test.ts	36	
 expired	function	security	false	test	src/lib/permissions.test.ts	251	
 PERMISSION_KEYS	variable	security	true		src/lib/permissions.ts	55	
-PermissionKey	type	security	true		src/lib/permissions.ts	585	
-CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	590	
-COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	618	
-EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	633	
-ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	661	
-PermissionContext	interface	security	true		src/lib/permissions.ts	1425	
-resolvePermission	function	security	true		src/lib/permissions.ts	1456	
-roleDefaultGranted	function	security	true		src/lib/permissions.ts	1501	
-PermissionState	type	security	true		src/lib/permissions.ts	1507	
-permissionState	function	security	true		src/lib/permissions.ts	1513	
-permissionGroups	function	security	true		src/lib/permissions.ts	1523	
-can	function	security	true		src/lib/permissions.ts	1543	
-useCan	function	security	true	hook	src/lib/permissions.ts	1559	
-useAnyCan	function	security	true	hook	src/lib/permissions.ts	1571	
+PermissionKey	type	security	true		src/lib/permissions.ts	594	
+CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	599	
+COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	627	
+EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	642	
+ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	671	
+PermissionContext	interface	security	true		src/lib/permissions.ts	1463	
+resolvePermission	function	security	true		src/lib/permissions.ts	1494	
+roleDefaultGranted	function	security	true		src/lib/permissions.ts	1539	
+PermissionState	type	security	true		src/lib/permissions.ts	1545	
+permissionState	function	security	true		src/lib/permissions.ts	1551	
+permissionGroups	function	security	true		src/lib/permissions.ts	1561	
+can	function	security	true		src/lib/permissions.ts	1581	
+useCan	function	security	true	hook	src/lib/permissions.ts	1597	
+useAnyCan	function	security	true	hook	src/lib/permissions.ts	1609	
 ICONS	object	platform	false		src/lib/popup.ts	22	
 _svg	function	platform	false		src/lib/popup.ts	30	
 _ready	variable	platform	false		src/lib/popup.ts	36	
@@ -12536,6 +12700,22 @@ RecordHealth	function	widgets	false	component	src/ui/widgets/registry.hrEmployee
 RecordRiskMonitor	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	438	
 previewDefinition	function	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	460	
 widgets	array	widgets	true	ui-tile	src/ui/widgets/registry.hrEmployeeMaster.tsx	480	
+WidgetState	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrOnboarding.tsx	28	
+PAGE	variable	widgets	false	component	src/ui/widgets/registry.hrOnboarding.tsx	36	
+SOURCE	object	widgets	false		src/ui/widgets/registry.hrOnboarding.tsx	38	
+KPI_SIZES	array	widgets	false	ui-tile	src/ui/widgets/registry.hrOnboarding.tsx	64	
+ONBOARDING_QUEUE_FILTER_EVENT	variable	widgets	true	component	src/ui/widgets/registry.hrOnboarding.tsx	73	
+OnboardingQueueFilter	interface	widgets	true		src/ui/widgets/registry.hrOnboarding.tsx	75	
+applyQueueFilter	function	widgets	false		src/ui/widgets/registry.hrOnboarding.tsx	82	
+KpiCard	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrOnboarding.tsx	88	
+plural	function	widgets	false		src/ui/widgets/registry.hrOnboarding.tsx	101	
+DueToday	function	widgets	false	component	src/ui/widgets/registry.hrOnboarding.tsx	103	
+OverdueActions	function	widgets	false	component	src/ui/widgets/registry.hrOnboarding.tsx	110	
+StartsWithinSevenDays	function	widgets	false	component	src/ui/widgets/registry.hrOnboarding.tsx	118	
+OwnerRequired	function	widgets	false	component	src/ui/widgets/registry.hrOnboarding.tsx	124	
+withLiveData	function	widgets	false		src/ui/widgets/registry.hrOnboarding.tsx	132	
+kpiDefinition	function	widgets	false	ui-tile	src/ui/widgets/registry.hrOnboarding.tsx	145	
+widgets	array	widgets	true	ui-tile	src/ui/widgets/registry.hrOnboarding.tsx	167	
 packages	variable	widgets	false		src/ui/widgets/registry.ts	22	
 collectWidgets	function	widgets	false	ui-tile	src/ui/widgets/registry.ts	24	
 WIDGET_REGISTRY	variable	widgets	true	ui-tile	src/ui/widgets/registry.ts	54	
@@ -13094,67 +13274,88 @@ OnboardingSeverity	type	hr	true		types/hrOnboarding.ts	26
 DueState	type	hr	true		types/hrOnboarding.ts	28	
 BlockingState	type	hr	true		types/hrOnboarding.ts	29	
 ReadinessState	type	hr	true		types/hrOnboarding.ts	30	
-OnboardingPackageSummary	interface	hr	true		types/hrOnboarding.ts	33	
-OnboardingIntakeVerification	interface	hr	true		types/hrOnboarding.ts	52	
-OnboardingDocumentState	type	hr	true		types/hrOnboarding.ts	54	
-OnboardingDocumentLaunchAction	type	hr	true		types/hrOnboarding.ts	57	
-OnboardingDocumentLaunchSelection	interface	hr	true		types/hrOnboarding.ts	59	
-OnboardingIntakeDocument	interface	hr	true		types/hrOnboarding.ts	69	
-OnboardingIntakeDuplicateCase	interface	hr	true		types/hrOnboarding.ts	89	
-OnboardingIntakePreviewArgs	interface	hr	true		types/hrOnboarding.ts	90	
-OnboardingIntakePreview	interface	hr	true		types/hrOnboarding.ts	91	
-OnboardingTaskTemplateRow	interface	hr	true		types/hrOnboarding.ts	113	
-OnboardingHandoffTemplateRow	interface	hr	true		types/hrOnboarding.ts	125	
-OnboardingPackageDetail	interface	hr	true		types/hrOnboarding.ts	135	
-CreatePackageArgs	interface	hr	true		types/hrOnboarding.ts	153	
-UpdatePackageArgs	interface	hr	true		types/hrOnboarding.ts	163	
-SetPackageStatusArgs	interface	hr	true		types/hrOnboarding.ts	174	
-CreateTaskTemplateArgs	interface	hr	true		types/hrOnboarding.ts	176	
-UpdateTaskTemplateArgs	interface	hr	true		types/hrOnboarding.ts	180	
-CreateHandoffTemplateArgs	interface	hr	true		types/hrOnboarding.ts	184	
-UpdateHandoffTemplateArgs	interface	hr	true		types/hrOnboarding.ts	188	
-OnboardingCaseListArgs	interface	hr	true		types/hrOnboarding.ts	194	
-OnboardingCaseRow	interface	hr	true		types/hrOnboarding.ts	213	
-OnboardingCaseListResult	interface	hr	true		types/hrOnboarding.ts	238	
-OnboardingDashboardStatsArgs	interface	hr	true		types/hrOnboarding.ts	246	
-OnboardingDashboardStats	interface	hr	true		types/hrOnboarding.ts	253	
-OnboardingTaskListArgs	interface	hr	true		types/hrOnboarding.ts	297	
-OnboardingTaskRow	interface	hr	true		types/hrOnboarding.ts	309	
-OnboardingTaskNote	interface	hr	true		types/hrOnboarding.ts	335	
-OnboardingTaskEvidence	interface	hr	true		types/hrOnboarding.ts	343	
-OnboardingTaskDetail	interface	hr	true		types/hrOnboarding.ts	356	
-AddTaskNoteArgs	interface	hr	true		types/hrOnboarding.ts	368	
-AttachTaskEvidenceArgs	interface	hr	true		types/hrOnboarding.ts	369	
-OnboardingHandoffListArgs	interface	hr	true		types/hrOnboarding.ts	375	
-OnboardingHandoffRow	interface	hr	true		types/hrOnboarding.ts	381	
-OnboardingHandoffActionArgs	interface	hr	true		types/hrOnboarding.ts	400	
-OnboardingHandoffActionResult	interface	hr	true		types/hrOnboarding.ts	404	
-OnboardingBlockerListArgs	interface	hr	true		types/hrOnboarding.ts	412	
-OnboardingBlockerRow	interface	hr	true		types/hrOnboarding.ts	419	
-NotifyBlockerOwnerArgs	interface	hr	true		types/hrOnboarding.ts	438	
-NotifyBlockerOwnerResult	interface	hr	true		types/hrOnboarding.ts	439	
-OnboardingCommunicationType	type	hr	true		types/hrOnboarding.ts	442	
-OnboardingCommunicationChannel	type	hr	true		types/hrOnboarding.ts	444	
-OnboardingCommunicationStatus	type	hr	true		types/hrOnboarding.ts	445	
-OnboardingCommunicationRow	interface	hr	true		types/hrOnboarding.ts	447	
-OnboardingCommunicationPreview	interface	hr	true		types/hrOnboarding.ts	465	
-PreviewCommunicationArgs	interface	hr	true		types/hrOnboarding.ts	475	
-SendCommunicationArgs	interface	hr	true		types/hrOnboarding.ts	482	
-OnboardingActionType	type	hr	true		types/hrOnboarding.ts	487	
-OnboardingOwnerType	type	hr	true		types/hrOnboarding.ts	491	
-OnboardingActionPriority	type	hr	true		types/hrOnboarding.ts	492	
-OnboardingCaseActionStatus	type	hr	true		types/hrOnboarding.ts	493	
-OnboardingActionTemplate	interface	hr	true		types/hrOnboarding.ts	495	
-OnboardingCaseAction	interface	hr	true		types/hrOnboarding.ts	521	
-OnboardingReportKey	type	hr	true		types/hrOnboarding.ts	538	
-OnboardingReportMeta	interface	hr	true		types/hrOnboarding.ts	543	
-RunOnboardingReportArgs	interface	hr	true		types/hrOnboarding.ts	552	
-OnboardingReportColumn	interface	hr	true		types/hrOnboarding.ts	567	
-OnboardingReportSummaryStat	interface	hr	true		types/hrOnboarding.ts	572	
-OnboardingReportChart	interface	hr	true		types/hrOnboarding.ts	578	
-OnboardingReportResult	interface	hr	true		types/hrOnboarding.ts	583	
-OnboardingStartArgs	interface	hr	true		types/hrOnboarding.ts	596	
-OnboardingAuditRow	interface	hr	true		types/hrOnboarding.ts	615	
+OnboardingPackageMatch	interface	hr	true		types/hrOnboarding.ts	33	
+OnboardingPackageSummary	interface	hr	true		types/hrOnboarding.ts	49	
+OnboardingIntakeVerification	interface	hr	true		types/hrOnboarding.ts	70	
+OnboardingDocumentState	type	hr	true		types/hrOnboarding.ts	72	
+OnboardingDocumentLaunchAction	type	hr	true		types/hrOnboarding.ts	75	
+OnboardingDocumentLaunchSelection	interface	hr	true		types/hrOnboarding.ts	77	
+OnboardingLaunchOneOffAction	interface	hr	true		types/hrOnboarding.ts	85	
+OnboardingIntakeDocument	interface	hr	true		types/hrOnboarding.ts	101	
+OnboardingIntakeDuplicateCase	interface	hr	true		types/hrOnboarding.ts	126	
+OnboardingIntakePreviewArgs	interface	hr	true		types/hrOnboarding.ts	127	
+OnboardingIntakePreview	interface	hr	true		types/hrOnboarding.ts	128	
+OnboardingAccountPreflight	interface	hr	true		types/hrOnboarding.ts	151	
+OnboardingLaunchPreflightArgs	interface	hr	true		types/hrOnboarding.ts	165	
+OnboardingLaunchPreflight	interface	hr	true		types/hrOnboarding.ts	175	
+OnboardingTaskTemplateRow	interface	hr	true		types/hrOnboarding.ts	187	
+OnboardingHandoffTemplateRow	interface	hr	true		types/hrOnboarding.ts	199	
+OnboardingPackageDetail	interface	hr	true		types/hrOnboarding.ts	209	
+OnboardingPackageReferenceOption	interface	hr	true		types/hrOnboarding.ts	227	
+OnboardingPackageReferenceData	interface	hr	true		types/hrOnboarding.ts	233	
+CreatePackageArgs	interface	hr	true		types/hrOnboarding.ts	239	
+UpdatePackageArgs	interface	hr	true		types/hrOnboarding.ts	249	
+SetPackageStatusArgs	interface	hr	true		types/hrOnboarding.ts	260	
+CreateTaskTemplateArgs	interface	hr	true		types/hrOnboarding.ts	262	
+UpdateTaskTemplateArgs	interface	hr	true		types/hrOnboarding.ts	266	
+CreateHandoffTemplateArgs	interface	hr	true		types/hrOnboarding.ts	270	
+UpdateHandoffTemplateArgs	interface	hr	true		types/hrOnboarding.ts	274	
+OnboardingReadScope	type	hr	true		types/hrOnboarding.ts	285	
+OnboardingCaseListArgs	interface	hr	true		types/hrOnboarding.ts	287	
+OnboardingCaseRow	interface	hr	true		types/hrOnboarding.ts	311	
+OnboardingCaseListResult	interface	hr	true		types/hrOnboarding.ts	338	
+OnboardingWorkerTask	interface	hr	true		types/hrOnboarding.ts	349	
+OnboardingWorkerDocumentRequest	interface	hr	true		types/hrOnboarding.ts	359	
+OnboardingWorkerMessage	interface	hr	true		types/hrOnboarding.ts	370	
+OnboardingWorkerExperience	interface	hr	true		types/hrOnboarding.ts	378	
+OnboardingDashboardStatsArgs	interface	hr	true		types/hrOnboarding.ts	406	
+OnboardingDashboardStats	interface	hr	true		types/hrOnboarding.ts	414	
+OnboardingTaskListArgs	interface	hr	true		types/hrOnboarding.ts	466	
+OnboardingTaskRow	interface	hr	true		types/hrOnboarding.ts	479	
+OnboardingTaskNote	interface	hr	true		types/hrOnboarding.ts	505	
+OnboardingEvidenceReviewStatus	type	hr	true		types/hrOnboarding.ts	514	
+OnboardingTaskEvidence	interface	hr	true		types/hrOnboarding.ts	516	
+OnboardingTaskDetail	interface	hr	true		types/hrOnboarding.ts	536	
+AddTaskNoteArgs	interface	hr	true		types/hrOnboarding.ts	548	
+AttachTaskEvidenceArgs	interface	hr	true		types/hrOnboarding.ts	549	
+OnboardingHandoffListArgs	interface	hr	true		types/hrOnboarding.ts	555	
+OnboardingHandoffRow	interface	hr	true		types/hrOnboarding.ts	562	
+OnboardingHandoffActionArgs	interface	hr	true		types/hrOnboarding.ts	583	
+OnboardingHandoffActionResult	interface	hr	true		types/hrOnboarding.ts	587	
+OnboardingBlockerListArgs	interface	hr	true		types/hrOnboarding.ts	595	
+OnboardingBlockerRow	interface	hr	true		types/hrOnboarding.ts	603	
+NotifyBlockerOwnerArgs	interface	hr	true		types/hrOnboarding.ts	622	
+NotifyBlockerOwnerResult	interface	hr	true		types/hrOnboarding.ts	623	
+OnboardingCommunicationType	type	hr	true		types/hrOnboarding.ts	626	
+OnboardingCommunicationChannel	type	hr	true		types/hrOnboarding.ts	628	
+OnboardingCommunicationStatus	type	hr	true		types/hrOnboarding.ts	629	
+OnboardingCommunicationRow	interface	hr	true		types/hrOnboarding.ts	631	
+OnboardingCommunicationPreview	interface	hr	true		types/hrOnboarding.ts	649	
+PreviewCommunicationArgs	interface	hr	true		types/hrOnboarding.ts	659	
+SendCommunicationArgs	interface	hr	true		types/hrOnboarding.ts	666	
+OnboardingActionType	type	hr	true		types/hrOnboarding.ts	671	
+OnboardingOwnerType	type	hr	true		types/hrOnboarding.ts	675	
+OnboardingActionPriority	type	hr	true		types/hrOnboarding.ts	676	
+OnboardingCaseActionStatus	type	hr	true		types/hrOnboarding.ts	677	
+OnboardingActionTemplate	interface	hr	true		types/hrOnboarding.ts	679	
+OnboardingCaseAction	interface	hr	true		types/hrOnboarding.ts	705	
+OnboardingReportKey	type	hr	true		types/hrOnboarding.ts	722	
+OnboardingReportMeta	interface	hr	true		types/hrOnboarding.ts	727	
+RunOnboardingReportArgs	interface	hr	true		types/hrOnboarding.ts	736	
+OnboardingReportColumn	interface	hr	true		types/hrOnboarding.ts	752	
+OnboardingReportSummaryStat	interface	hr	true		types/hrOnboarding.ts	757	
+OnboardingReportChart	interface	hr	true		types/hrOnboarding.ts	763	
+OnboardingReportResult	interface	hr	true		types/hrOnboarding.ts	768	
+OnboardingStartArgs	interface	hr	true		types/hrOnboarding.ts	780	
+OnboardingAuditRow	interface	hr	true		types/hrOnboarding.ts	795	
+OnboardingWorkSourceType	type	hr	true		types/hrOnboarding.ts	816	
+OnboardingWorkLifecycle	type	hr	true		types/hrOnboarding.ts	823	
+OnboardingWorkDueState	type	hr	true		types/hrOnboarding.ts	826	
+OnboardingWorkSortField	type	hr	true		types/hrOnboarding.ts	828	
+OnboardingWorkItem	interface	hr	true		types/hrOnboarding.ts	831	
+OnboardingWorkQueueArgs	interface	hr	true		types/hrOnboarding.ts	864	
+OnboardingWorkQueueResult	interface	hr	true		types/hrOnboarding.ts	879	
+ReviewEvidenceArgs	interface	hr	true		types/hrOnboarding.ts	888	
 OrgUnitType	type	hr	true		types/hrOrganization.ts	6	
 OrgUnit	interface	hr	true		types/hrOrganization.ts	14	
 OrgUnitDetail	interface	hr	true		types/hrOrganization.ts	35	

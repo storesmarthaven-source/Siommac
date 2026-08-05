@@ -2,9 +2,9 @@
 
 # workflow Module Map
 
-Source fingerprint: `17491b032cad903ca80b7bff`
+Source fingerprint: `286425af071942cf23406065`
 
-Files: 47 | Symbols: 321 | Widgets: 0 | Unique mounted endpoints: 40 | Route definitions: 40 mounted + 0 unmounted | API calls: 8 | DB objects: 128 | E2E suites: 3
+Files: 46 | Symbols: 308 | Widgets: 0 | Unique mounted endpoints: 40 | Route definitions: 40 mounted + 0 unmounted | API calls: 8 | DB objects: 130 | E2E suites: 3
 
 ## Widgets and Tiles
 
@@ -22,15 +22,15 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/handoffs/intake` | `workflow.approve` | requirePermission | `IntakeSchema` | `netlify/functions/routes/handoffs.ts:88` | - | - |
 | `/api/handoffs/list` | `workflow.approve` | requirePermission | `-` | `netlify/functions/routes/handoffs.ts:21` | res @ src/api/workflows.ts:159 | - |
 | `/api/handoffs/retry` | `workflow.approve` | requirePermission | `-` | `netlify/functions/routes/handoffs.ts:48` | useRetryHandoff @ src/api/workflows.ts:225 | - |
-| `/api/hr/employees/workflow-summary` | `hr.employees.view` | requirePermission | `z.object({ employeeId: z.string().min(1) })` | `netlify/functions/routes/hr.ts:1581` | - | hrEmployeeMaster |
-| `/api/hr/onboarding/handoff/accept` | `hr.onboarding.case.manage` | requirePermission | `HandoffAction` | `netlify/functions/routes/hrOnboarding.ts:438` | - | hrOnboarding |
-| `/api/hr/onboarding/handoff/cancel` | `hr.onboarding.case.manage` | requirePermission | `HandoffAction` | `netlify/functions/routes/hrOnboarding.ts:450` | - | hrOnboarding |
-| `/api/hr/onboarding/handoff/complete` | `hr.onboarding.case.manage` | requirePermission | `HandoffAction` | `netlify/functions/routes/hrOnboarding.ts:444` | - | hrOnboarding |
-| `/api/hr/onboarding/handoff/retry` | `hr.onboarding.case.manage` | requirePermission | `HandoffAction` | `netlify/functions/routes/hrOnboarding.ts:432` | - | hrOnboarding |
-| `/api/hr/onboarding/handoffs/list` | `hr.onboarding.view` | requirePermission | `HandoffListSchema` | `netlify/functions/routes/hrOnboarding.ts:248` | - | hrOnboarding |
-| `/api/hr/onboarding/packages/handoff-templates/create` | `hr.onboarding.packages.manage` | requirePermission | `z.object({     packageId: z.string().uuid(), handoffKey: z.string().min(1).max(60), targetModule: z.string().min(1).max(40), handoffType: z.string().min(1).max(60),     isRequired: z.boolean().optional(), sortOrder: z.number().int().optional(), payloadTemplate: z.record(z.string(), z.unknown()).optional(),   })` | `netlify/functions/routes/hrOnboarding.ts:693` | - | hrOnboardingPackages |
-| `/api/hr/onboarding/packages/handoff-templates/delete` | `hr.onboarding.packages.manage` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/hrOnboarding.ts:711` | - | hrOnboardingPackages |
-| `/api/hr/onboarding/packages/handoff-templates/update` | `hr.onboarding.packages.manage` | requirePermission | `z.object({     id: z.string().uuid(), targetModule: z.string().min(1).max(40).optional(), handoffType: z.string().min(1).max(60).optional(),     isRequired: z.boolean().optional(), sortOrder: z.number().int().optional(), payloadTemplate: z.record(z.string(), z.unknown()).optional(),   })` | `netlify/functions/routes/hrOnboarding.ts:702` | - | hrOnboardingPackages |
+| `/api/hr/employees/workflow-summary` | `hr.employees.view` | requirePermission | `z.object({ employeeId: z.string().min(1) })` | `netlify/functions/routes/hr.ts:1625` | - | hrEmployeeMaster |
+| `/api/hr/onboarding/handoff/accept` | `hr.onboarding.case.manage` | requirePermission | `HandoffAction` | `netlify/functions/routes/hrOnboarding.ts:660` | - | hrOnboarding |
+| `/api/hr/onboarding/handoff/cancel` | `hr.onboarding.case.manage` | requirePermission | `HandoffAction` | `netlify/functions/routes/hrOnboarding.ts:672` | - | hrOnboarding |
+| `/api/hr/onboarding/handoff/complete` | `hr.onboarding.case.manage` | requirePermission | `HandoffAction` | `netlify/functions/routes/hrOnboarding.ts:666` | - | hrOnboarding |
+| `/api/hr/onboarding/handoff/retry` | `hr.onboarding.case.manage` | requirePermission | `HandoffAction` | `netlify/functions/routes/hrOnboarding.ts:654` | - | hrOnboarding |
+| `/api/hr/onboarding/handoffs/list` | `hr.onboarding.view` | requirePermission | `HandoffListSchema` | `netlify/functions/routes/hrOnboarding.ts:444` | - | hrOnboarding, hrOnboardingScope |
+| `/api/hr/onboarding/packages/handoff-templates/create` | `hr.onboarding.packages.manage` | requirePermission | `z.object({     packageId: z.string().uuid(), handoffKey: z.string().min(1).max(60), targetModule: z.string().min(1).max(40), handoffType: z.string().min(1).max(60),     isRequired: z.boolean().optional(), sortOrder: z.number().int().optional(), payloadTemplate: z.record(z.string(), z.unknown()).optional(),   })` | `netlify/functions/routes/hrOnboarding.ts:921` | - | hrOnboarding, hrOnboardingPackages |
+| `/api/hr/onboarding/packages/handoff-templates/delete` | `hr.onboarding.packages.manage` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/hrOnboarding.ts:939` | - | hrOnboardingPackages |
+| `/api/hr/onboarding/packages/handoff-templates/update` | `hr.onboarding.packages.manage` | requirePermission | `z.object({     id: z.string().uuid(), targetModule: z.string().min(1).max(40).optional(), handoffType: z.string().min(1).max(60).optional(),     isRequired: z.boolean().optional(), sortOrder: z.number().int().optional(), payloadTemplate: z.record(z.string(), z.unknown()).optional(),   })` | `netlify/functions/routes/hrOnboarding.ts:930` | - | hrOnboarding, hrOnboardingPackages |
 | `/api/orchestration/record-links/create` | `-` | requireUser | `LinkCreateSchema` | `netlify/functions/routes/orchestration.ts:71` | - | orchestration |
 | `/api/orchestration/record-links/delete` | `-` | requireUser | `LinkDeleteSchema` | `netlify/functions/routes/orchestration.ts:89` | - | orchestration |
 | `/api/orchestration/record-links/list` | `-` | requireUser | `LinkListSchema` | `netlify/functions/routes/orchestration.ts:80` | - | orchestration |
@@ -84,7 +84,6 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useCreateWorkflow` | function / hook | `src/api/workflows.ts:184` | `-` |
 | `useDecideWorkflowTask` | function / hook | `src/api/workflows.ts:206` | `-` |
 | `useRetryHandoff` | function / hook | `src/api/workflows.ts:221` | `-` |
-| `OnboardingHandoffsWorkspace` | function / component | `src/components/sections/HR/OnboardingHandoffsWorkspace.tsx:47` | `-` |
 | `ActivityTimeline` | function / component | `src/components/shared/orchestration/ActivityTimeline.tsx:58` | `-` |
 | `ApprovalInbox` | function / component | `src/components/workflow/ApprovalInbox.tsx:30` | `-` |
 | `AuditFeed` | function / component | `src/components/workflow/AuditFeed.tsx:13` | `-` |
@@ -186,5 +185,4 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/workflowAdmin.mjs` | 334 |
 | frontend-api | `src/api/orchestration.ts` | 47 |
 | frontend-api | `src/api/workflows.ts` | 233 |
-| frontend-page | `src/components/sections/HR/OnboardingHandoffsWorkspace.tsx` | 188 |
 

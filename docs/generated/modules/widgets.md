@@ -2,9 +2,9 @@
 
 # widgets Module Map
 
-Source fingerprint: `17491b032cad903ca80b7bff`
+Source fingerprint: `286425af071942cf23406065`
 
-Files: 69 | Symbols: 542 | Widgets: 21 | Unique mounted endpoints: 15 | Route definitions: 15 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
+Files: 71 | Symbols: 573 | Widgets: 25 | Unique mounted endpoints: 15 | Route definitions: 15 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
 
 ## Widgets and Tiles
 
@@ -25,6 +25,10 @@ Files: 69 | Symbols: 542 | Widgets: 21 | Unique mounted endpoints: 15 | Route de
 | `hr.employeeMaster.readinessRadar` | Employee Readiness Radar | registry | `ReadinessRadar` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:485` |
 | `hr.employeeMaster.recordQuality` | Record Quality | registry | `RecordQuality` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:480` |
 | `hr.employeeMaster.recordReadiness` | Record Readiness | registry | `RecordReadiness` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:475` |
+| `hr.onboarding.dueToday` | Due Today | registry | `DueToday` | `src/ui/widgets/registry.hrOnboarding.tsx:168` |
+| `hr.onboarding.overdueActions` | Overdue Actions | registry | `OverdueActions` | `src/ui/widgets/registry.hrOnboarding.tsx:169` |
+| `hr.onboarding.ownerRequired` | Owner Required | registry | `OwnerRequired` | `src/ui/widgets/registry.hrOnboarding.tsx:171` |
+| `hr.onboarding.startsWithin7Days` | Starting Within 7 Days | registry | `StartsWithinSevenDays` | `src/ui/widgets/registry.hrOnboarding.tsx:170` |
 | `platform.weather.current` | Weather | registry | `WeatherBandWidget` | `src/ui/widgets/registry.weather.tsx:488` |
 | `platform.weather.precipitation` | Weather · Precipitation | registry | `metricWidget('precipitation')` | `src/ui/widgets/registry.weather.tsx:502` |
 | `platform.weather.strip` | Weather · Strip | registry | `WeatherStripWidget` | `src/ui/widgets/registry.weather.tsx:495` |
@@ -80,6 +84,11 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useDashLayout` | function / hook | `src/components/sections/Dashboard/useDashLayout.ts:52` | `-` |
 | `OffboardingDashboardSkeleton` | function / component | `src/components/sections/HR/offboardingWidgets.tsx:342` | `-` |
 | `OffboardingDashboard` | function / component | `src/components/sections/HR/offboardingWidgets.tsx:358` | `-` |
+| `StartReadinessWidget` | function / component, ui-tile | `src/components/sections/HR/onboarding/CommandCentreWidgets.tsx:77` | `-` |
+| `CaseFocusWidget` | function / component, ui-tile | `src/components/sections/HR/onboarding/CommandCentreWidgets.tsx:140` | `-` |
+| `BlockedCasesWidget` | function / component, ui-tile | `src/components/sections/HR/onboarding/CommandCentreWidgets.tsx:231` | `-` |
+| `UpcomingStartsWidget` | function / component, ui-tile | `src/components/sections/HR/onboarding/CommandCentreWidgets.tsx:277` | `-` |
+| `WorkQueueWidget` | function / component, ui-tile | `src/components/sections/HR/onboarding/CommandCentreWidgets.tsx:333` | `-` |
 | `ModulePageLayout` | function / component | `src/ui/layouts/ModulePageLayout.tsx:33` | `-` |
 | `RegisterLayout` | function / component | `src/ui/layouts/RegisterLayout.tsx:30` | `-` |
 | `SplitLayout` | function / component | `src/ui/layouts/SplitLayout.tsx:11` | `-` |
@@ -136,6 +145,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `widgets` | array / ui-tile | `src/ui/widgets/registry.calendarPlanning.tsx:276` | `-` |
 | `widgets` | array / ui-tile | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:473` | `-` |
 | `widgets` | array / ui-tile | `src/ui/widgets/registry.hrEmployeeMaster.tsx:480` | `-` |
+| `ONBOARDING_QUEUE_FILTER_EVENT` | variable / component | `src/ui/widgets/registry.hrOnboarding.tsx:73` | `-` |
+| `widgets` | array / ui-tile | `src/ui/widgets/registry.hrOnboarding.tsx:167` | `-` |
 | `WIDGET_REGISTRY` | variable / ui-tile | `src/ui/widgets/registry.ts:54` | `-` |
 | `allWidgets` | function / ui-tile | `src/ui/widgets/registry.ts:57` | `-` |
 | `getWidgetDef` | function / ui-tile | `src/ui/widgets/registry.ts:62` | `-` |
@@ -250,6 +261,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/widgets.ts` | 37 |
 | frontend-page | `src/components/sections/Dashboard/useDashLayout.ts` | 174 |
 | frontend-page | `src/components/sections/HR/offboardingWidgets.tsx` | 378 |
+| frontend-page | `src/components/sections/HR/onboarding/CommandCentreWidgets.tsx` | 408 |
 | widget-platform | `src/ui/widgets/WidgetBoard.test.tsx` | 47 |
 | widget-platform | `src/ui/widgets/WidgetBoard.tsx` | 161 |
 | widget-platform | `src/ui/widgets/WidgetBoardToolbar.tsx` | 110 |
@@ -294,6 +306,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | widget-registry | `src/ui/widgets/registry.calendarPlanning.tsx` | 280 |
 | widget-registry | `src/ui/widgets/registry.hrEmployeeDashboard.tsx` | 495 |
 | widget-registry | `src/ui/widgets/registry.hrEmployeeMaster.tsx` | 528 |
+| widget-registry | `src/ui/widgets/registry.hrOnboarding.tsx` | 173 |
 | widget-registry | `src/ui/widgets/registry.test.ts` | 323 |
 | widget-registry | `src/ui/widgets/registry.ts` | 84 |
 | widget-registry | `src/ui/widgets/registry.weather.tsx` | 527 |
