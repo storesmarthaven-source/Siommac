@@ -60,7 +60,6 @@ import {
   setThreadFavourite,
   addThreadParticipants,
   removeThreadParticipant,
-  searchMessages,
   getMessageRecipients,
   createMessageAttachmentUploadUrl,
   createMessageAttachmentRecord,
@@ -790,22 +789,6 @@ router.post('/communications/messages/participants/remove', async c => {
     return c.json({ success: false, message: result.message ?? 'Error' }, status);
   }
   return c.json({ success: true });
-});
-
-// POST /api/communications/messages/search
-const SearchSchema = z.object({
-  query: z.string().min(1).max(200),
-  limit: z.number().int().min(1).max(50).default(20),
-});
-
-router.post('/communications/messages/search', async c => {
-  const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body');
-  const v = zv(c, SearchSchema, body.args);
-  if (!v.ok) return v.response;
-
-  const results = await searchMessages(user.id, v.data.query, v.data.limit);
-  return c.json({ success: true, data: results });
 });
 
 // POST /api/communications/messages/recipients

@@ -2,7 +2,7 @@
 
 # SIOMAC Codebase Index
 
-Source fingerprint: `a900c96292f8d64f54f7c962`  
+Source fingerprint: `6b6a4b0cef3f9009d7dfcdf1`  
 Generator version: `1`
 
 ## Use
@@ -18,22 +18,22 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1350 | 13719 | 62 | 981 | 982 | 17 | 354 | 1429 | 86 | 2764 |
+| 1350 | 13717 | 62 | 981 | 981 | 417 | 353 | 1429 | 86 | 2764 |
 
 ## Modules
 
 | Module | Files | Symbols | Widgets | Unique routes | Route definitions | API calls | DB objects | E2E suites | Map |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| hr | 266 | 3033 | 16 | 284 | 284 | 35 | 207 | 19 | [open](modules/hr.md) |
-| payroll | 195 | 1978 | 10 | 140 | 140 | 2 | 260 | 28 | [open](modules/payroll.md) |
-| finance | 139 | 1853 | 10 | 156 | 156 | 4 | 202 | 9 | [open](modules/finance.md) |
-| hse | 87 | 1275 | 0 | 144 | 144 | 107 | 65 | 4 | [open](modules/hse.md) |
-| communications | 112 | 1052 | 0 | 93 | 96 | 88 | 158 | 6 | [open](modules/communications.md) |
-| workflow | 46 | 308 | 0 | 40 | 40 | 8 | 130 | 3 | [open](modules/workflow.md) |
-| security | 46 | 387 | 0 | 51 | 51 | 31 | 65 | 4 | [open](modules/security.md) |
-| settings | 43 | 250 | 0 | 26 | 26 | 18 | 23 | 2 | [open](modules/settings.md) |
-| widgets | 71 | 574 | 25 | 15 | 15 | 11 | 14 | 1 | [open](modules/widgets.md) |
-| platform | 308 | 2831 | 0 | 32 | 47 | 50 | 305 | 0 | [open](modules/platform.md) |
+| hr | 266 | 3033 | 16 | 284 | 363 | 35 | 207 | 19 | [open](modules/hr.md) |
+| payroll | 195 | 1978 | 10 | 140 | 142 | 2 | 260 | 28 | [open](modules/payroll.md) |
+| finance | 139 | 1853 | 10 | 156 | 171 | 4 | 202 | 9 | [open](modules/finance.md) |
+| hse | 87 | 1275 | 0 | 144 | 212 | 107 | 65 | 4 | [open](modules/hse.md) |
+| communications | 112 | 1047 | 0 | 93 | 159 | 87 | 158 | 6 | [open](modules/communications.md) |
+| workflow | 46 | 308 | 0 | 40 | 54 | 8 | 130 | 3 | [open](modules/workflow.md) |
+| security | 46 | 387 | 0 | 51 | 97 | 31 | 65 | 4 | [open](modules/security.md) |
+| settings | 43 | 250 | 0 | 26 | 33 | 18 | 23 | 2 | [open](modules/settings.md) |
+| widgets | 71 | 574 | 25 | 15 | 17 | 11 | 14 | 1 | [open](modules/widgets.md) |
+| platform | 308 | 2834 | 0 | 32 | 150 | 50 | 305 | 0 | [open](modules/platform.md) |
 | testing | 37 | 178 | 0 | 0 | 0 | 0 | 0 | 10 | [open](modules/testing.md) |
 | enterprise | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | [open](modules/enterprise.md) |
 

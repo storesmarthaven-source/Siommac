@@ -14,7 +14,7 @@ import { apiPost } from '@lib/api';
 import type {
   MessageThread as ThreadDTO, MessagePost as PostDTO,
   MessagePin as PinDTO,
-  MessageRecipient as RecipientDTO,
+  MessageRecipient as RecipientDTO, MessageSearchHit,
 } from '../../../../../../types/messaging';
 import type { OnlineUser } from '@api/communications';
 import type { MessagingRepository } from '../domain/ports';
@@ -31,6 +31,13 @@ async function post<T>(path: string, args: Record<string, unknown> = {}): Promis
   const res = await apiPost<{ success: boolean; data?: T; message?: string }>(path, args, { retryable: false });
   if (!res.success) throw new Error(res.message ?? `Request to ${path} failed.`);
   return res.data as T;
+}
+
+interface MessageSearchResponse {
+  success:     boolean;
+  data?:       MessageSearchHit[];
+  nextCursor?: string | null;
+  message?:    string;
 }
 
 export class SiomacMessagingRepository implements MessagingRepository {
@@ -156,9 +163,17 @@ export class SiomacMessagingRepository implements MessagingRepository {
   }
 
   /** Server-side message-CONTENT search over the caller's threads (first page). */
-  async searchMessages(query: string): Promise<{ postId: string; threadId: string; subject: string; snippet: string; createdAt: string }[]> {
-    const res = await apiPost<{ success: boolean; data?: { postId: string; threadId: string; subject: string; snippet: string; createdAt: string }[]; message?: string }>(
-      'communications/messages/search', { query, limit: 20 });
+  async searchMessages(query: string): Promise<MessageSearchHit[]> {
+    // Guarded here as well as server-side: the endpoint rejects a one-character query
+    // with 400, and firing a request we know will fail just to render an error is noise.
+    const normalized = query.trim();
+    if (normalized.length < 2) return [];
+
+    // `nextCursor` is part of the transport contract even though this caller only consumes
+    // the first page — dropping it from the type would make adding pagination a contract
+    // change rather than a UI change.
+    const res = await apiPost<MessageSearchResponse>(
+      'communications/messages/search', { query: normalized, limit: 20, cursor: null });
     if (!res.success) throw new Error(res.message ?? 'Search failed');
     return res.data ?? [];
   }

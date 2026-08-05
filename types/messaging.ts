@@ -271,6 +271,25 @@ export interface MessageRecipient {
   profileImage?: string | null;
 }
 
+/**
+ * One message-content search hit, as returned by
+ * `POST /api/communications/messages/search`.
+ *
+ * Declared here because this file is the single shared messaging contract. It previously
+ * existed as a backend interface plus THREE inline copies across the messenger adapter,
+ * provider and adapter interface — and the inline copies had already drifted, omitting
+ * `authorUserId`, so the frontend could not attribute a hit even though the endpoint
+ * returned the author on every row.
+ */
+export interface MessageSearchHit {
+  postId:       string;
+  threadId:     string;
+  subject:      string;
+  snippet:      string;
+  authorUserId: string | null;
+  createdAt:    string;
+}
+
 /** Metadata-only row for the compliance thread browser (no message content). */
 export interface ComplianceThread {
   threadId:         string;

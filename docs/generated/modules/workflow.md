@@ -2,9 +2,9 @@
 
 # workflow Module Map
 
-Source fingerprint: `a900c96292f8d64f54f7c962`
+Source fingerprint: `6b6a4b0cef3f9009d7dfcdf1`
 
-Files: 46 | Symbols: 308 | Widgets: 0 | Unique mounted endpoints: 40 | Route definitions: 40 mounted + 0 unmounted | API calls: 8 | DB objects: 130 | E2E suites: 3
+Files: 46 | Symbols: 308 | Widgets: 0 | Unique mounted endpoints: 40 | Route definitions: 40 mounted + 14 unmounted | API calls: 8 | DB objects: 130 | E2E suites: 3
 
 ## Widgets and Tiles
 
@@ -58,6 +58,20 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/workflows/get` | `workflow.view` | requirePermission | `-` | `netlify/functions/routes/workflows.ts:116` | res @ src/api/workflows.ts:128 | - |
 | `/api/workflows/list` | `workflow.view` | requirePermission | `ListWorkflowsSchema` | `netlify/functions/routes/workflows.ts:87` | res @ src/api/workflows.ts:113 | - |
 | `/api/workflows/tasks` | `workflow.view` | requirePermission | `-` | `netlify/functions/routes/workflows.ts:144` | res @ src/api/workflows.ts:144 | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/handoffs.ts:23` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/handoffs.ts:50` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/handoffs.ts:67` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/handoffs.ts:90` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/orchestration.ts:64` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/orchestration.ts:73` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/orchestration.ts:82` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/orchestration.ts:91` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/workflowEngine.ts:23` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/workflows.ts:44` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/workflows.ts:89` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/workflows.ts:118` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/workflows.ts:170` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/workflows.ts:194` | - | - |
 
 ## Frontend API Calls
 

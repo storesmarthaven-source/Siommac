@@ -759,23 +759,6 @@ export function useResolveRecordThread() {
   });
 }
 
-/** Full-text search across messages. */
-export function useMessageSearch(query: string) {
-  return useQuery({
-    queryKey: messageKeys.search(query),
-    queryFn:  async ({ signal }: QueryFunctionContext) => {
-      const res = await apiPost<{ success: boolean; data: MessageThreadListItem[] }>(
-        'communications/messages/search',
-        { query, limit: 20 },
-        { signal },
-      );
-      if (!res.success) throw new Error('Search failed');
-      return res.data;
-    },
-    enabled: query.trim().length >= 2,
-  });
-}
-
 /** Recipient picker — autocomplete from the backend. */
 export function useMessageRecipients(query = '') {
   return useQuery({

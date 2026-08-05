@@ -51,59 +51,58 @@ path	module	permission	guards	schema	file	line
 /api/communications/compliance/exports/list	communications	communications.compliance_read	requirePermission	ExportsListSchema	netlify/functions/routes/communicationsCompliance.ts	467
 /api/communications/compliance/grants/revoke	communications	communications.compliance_read	requirePermission	GrantRevokeSchema	netlify/functions/routes/communicationsCompliance.ts	397
 /api/communications/compliance/summary/get	communications	communications.compliance_read	requirePermission	SummaryGetSchema	netlify/functions/routes/communicationsCompliance.ts	240
-/api/communications/messages/activity	communications	communications.view	requirePermission	z.object({ threadId: z.uuid() })	netlify/functions/routes/communications.ts	458
-/api/communications/messages/archive	communications	communications.view	requirePermission	ArchiveSchema	netlify/functions/routes/communications.ts	694
-/api/communications/messages/attachments/create	communications	communications.view	requirePermission	AttachCreateSchema	netlify/functions/routes/communications.ts	654
-/api/communications/messages/attachments/get-url	communications	communications.view	requirePermission	AttachUrlSchema	netlify/functions/routes/communications.ts	833
-/api/communications/messages/attachments/upload-url	communications	communications.view	requirePermission	AttachUploadUrlSchema	netlify/functions/routes/communications.ts	630
-/api/communications/messages/createThread	communications	communications.thread_create	requirePermission	CreateThreadSchema	netlify/functions/routes/communications.ts	524
-/api/communications/messages/delete	communications	communications.view	requirePermission,userCan	DeleteMessageSchema	netlify/functions/routes/communications.ts	905
-/api/communications/messages/draft/delete	communications	communications.view	requirePermission	DraftGetSchema	netlify/functions/routes/communications.ts	998
-/api/communications/messages/draft/get	communications	communications.view	requirePermission	DraftGetSchema	netlify/functions/routes/communications.ts	989
-/api/communications/messages/draft/save	communications	communications.view	requirePermission	DraftSaveSchema	netlify/functions/routes/communications.ts	977
-/api/communications/messages/favourites/set	communications	communications.view	requirePermission	FavouriteThreadSchema	netlify/functions/routes/communications.ts	725
-/api/communications/messages/internal-note	communications	communications.view	requirePermission,userCan	InternalNoteSchema	netlify/functions/routes/communications.ts	598
-/api/communications/messages/markRead	communications	communications.view	requirePermission	MarkReadSchema	netlify/functions/routes/communications.ts	678
-/api/communications/messages/mute	communications	communications.view	requirePermission	MuteThreadSchema	netlify/functions/routes/communications.ts	708
-/api/communications/messages/online	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	1027
-/api/communications/messages/participants/add	communications	communications.thread_manage_own	requirePermission	ParticipantsAddSchema	netlify/functions/routes/communications.ts	745
-/api/communications/messages/participants/remove	communications	communications.thread_manage_own	requirePermission,userCan	ParticipantsRemoveSchema	netlify/functions/routes/communications.ts	765
-/api/communications/messages/pins/list	communications	communications.view	requirePermission	PinsListSchema	netlify/functions/routes/communications.ts	950
-/api/communications/messages/pins/pin	communications	communications.view	requirePermission	PinSchema	netlify/functions/routes/communications.ts	861
-/api/communications/messages/pins/pinned-summary	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	962
-/api/communications/messages/pins/unpin	communications	communications.view	requirePermission	UnpinSchema	netlify/functions/routes/communications.ts	885
-/api/communications/messages/post	communications	communications.view	requirePermission	PostMessageSchema	netlify/functions/routes/communications.ts	562
-/api/communications/messages/posts	communications	communications.view	requirePermission	PostsSchema	netlify/functions/routes/communications.ts	414
-/api/communications/messages/presence/update	communications	communications.view	requirePermission	PresenceSchema	netlify/functions/routes/communications.ts	1017
-/api/communications/messages/reactions/toggle	communications	communications.view	requirePermission	ToggleReactionSchema	netlify/functions/routes/communications.ts	933
-/api/communications/messages/recipients	communications	communications.view	requirePermission	RecipientsSchema	netlify/functions/routes/communications.ts	816
-/api/communications/messages/recordThread	communications	communications.thread_create	requirePermission	RecordThreadSchema	netlify/functions/routes/communications.ts	486
-/api/communications/messages/search	communications	communications.view	requirePermission	MessageSearchSchema	netlify/functions/routes/communications.ts	442
-/api/communications/messages/search	communications	communications.view	requirePermission	SearchSchema	netlify/functions/routes/communications.ts	801
-/api/communications/messages/thread	communications	communications.view	requirePermission	ThreadGetSchema	netlify/functions/routes/communications.ts	385
-/api/communications/messages/threads	communications	communications.view	requirePermission	ThreadsListSchema	netlify/functions/routes/communications.ts	361
-/api/communications/notifications/archive	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	187
-/api/communications/notifications/broadcast	communications	communications.admin	requirePermission	BroadcastSchema	netlify/functions/routes/communications.ts	306
-/api/communications/notifications/list	communications	communications.view	requirePermission	NotifListSchema	netlify/functions/routes/communications.ts	126
-/api/communications/notifications/markAllRead	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	173
-/api/communications/notifications/markRead	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	159
-/api/communications/notifications/mute	communications	communications.view	requirePermission	MuteSchema	netlify/functions/routes/communications.ts	272
-/api/communications/notifications/preferences/get	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	209
-/api/communications/notifications/preferences/set	communications	communications.view	requirePermission	PrefSetSchema	netlify/functions/routes/communications.ts	246
-/api/communications/summary	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	107
-/api/communications/tickets/attachments/complete	communications	communications.view	requirePermission	TicketAttachmentCompleteSchema	netlify/functions/routes/communications.ts	1304
-/api/communications/tickets/attachments/get-url	communications	communications.view	requirePermission	TicketAttachmentGetSchema	netlify/functions/routes/communications.ts	1341
-/api/communications/tickets/attachments/upload-url	communications	communications.view	requirePermission	TicketAttachmentUploadSchema	netlify/functions/routes/communications.ts	1263
-/api/communications/tickets/command	communications	communications.view	requirePermission	TicketCommandSchema	netlify/functions/routes/communications.ts	1227
-/api/communications/tickets/comment	communications	communications.view	requirePermission	CommentSchema	netlify/functions/routes/communications.ts	1203
-/api/communications/tickets/create	communications	communications.view	requirePermission	CreateTicketSchema	netlify/functions/routes/communications.ts	1091
-/api/communications/tickets/get	communications	communications.view	requirePermission	TicketIdSchema	netlify/functions/routes/communications.ts	1187
-/api/communications/tickets/list	communications	communications.view	requirePermission	TicketListSchema	netlify/functions/routes/communications.ts	1155
-/api/communications/tickets/mark-read	communications	communications.view	requirePermission	TicketMarkReadSchema	netlify/functions/routes/communications.ts	1243
-/api/communications/tickets/nav-context	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	1179
-/api/communications/tickets/request-types	communications	communications.view	requirePermission	RequestTypesSchema	netlify/functions/routes/communications.ts	1048
-/api/communications/tickets/requester-search	communications	communications.view	requirePermission	RequesterSearchSchema	netlify/functions/routes/communications.ts	1064
-/api/communications/tickets/run-overdue-sweep	communications	tickets.manage	requirePermission	TicketSweepSchema	netlify/functions/routes/communications.ts	1363
+/api/communications/messages/activity	communications	communications.view	requirePermission	z.object({ threadId: z.uuid() })	netlify/functions/routes/communications.ts	457
+/api/communications/messages/archive	communications	communications.view	requirePermission	ArchiveSchema	netlify/functions/routes/communications.ts	693
+/api/communications/messages/attachments/create	communications	communications.view	requirePermission	AttachCreateSchema	netlify/functions/routes/communications.ts	653
+/api/communications/messages/attachments/get-url	communications	communications.view	requirePermission	AttachUrlSchema	netlify/functions/routes/communications.ts	816
+/api/communications/messages/attachments/upload-url	communications	communications.view	requirePermission	AttachUploadUrlSchema	netlify/functions/routes/communications.ts	629
+/api/communications/messages/createThread	communications	communications.thread_create	requirePermission	CreateThreadSchema	netlify/functions/routes/communications.ts	523
+/api/communications/messages/delete	communications	communications.view	requirePermission,userCan	DeleteMessageSchema	netlify/functions/routes/communications.ts	888
+/api/communications/messages/draft/delete	communications	communications.view	requirePermission	DraftGetSchema	netlify/functions/routes/communications.ts	981
+/api/communications/messages/draft/get	communications	communications.view	requirePermission	DraftGetSchema	netlify/functions/routes/communications.ts	972
+/api/communications/messages/draft/save	communications	communications.view	requirePermission	DraftSaveSchema	netlify/functions/routes/communications.ts	960
+/api/communications/messages/favourites/set	communications	communications.view	requirePermission	FavouriteThreadSchema	netlify/functions/routes/communications.ts	724
+/api/communications/messages/internal-note	communications	communications.view	requirePermission,userCan	InternalNoteSchema	netlify/functions/routes/communications.ts	597
+/api/communications/messages/markRead	communications	communications.view	requirePermission	MarkReadSchema	netlify/functions/routes/communications.ts	677
+/api/communications/messages/mute	communications	communications.view	requirePermission	MuteThreadSchema	netlify/functions/routes/communications.ts	707
+/api/communications/messages/online	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	1010
+/api/communications/messages/participants/add	communications	communications.thread_manage_own	requirePermission	ParticipantsAddSchema	netlify/functions/routes/communications.ts	744
+/api/communications/messages/participants/remove	communications	communications.thread_manage_own	requirePermission,userCan	ParticipantsRemoveSchema	netlify/functions/routes/communications.ts	764
+/api/communications/messages/pins/list	communications	communications.view	requirePermission	PinsListSchema	netlify/functions/routes/communications.ts	933
+/api/communications/messages/pins/pin	communications	communications.view	requirePermission	PinSchema	netlify/functions/routes/communications.ts	844
+/api/communications/messages/pins/pinned-summary	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	945
+/api/communications/messages/pins/unpin	communications	communications.view	requirePermission	UnpinSchema	netlify/functions/routes/communications.ts	868
+/api/communications/messages/post	communications	communications.view	requirePermission	PostMessageSchema	netlify/functions/routes/communications.ts	561
+/api/communications/messages/posts	communications	communications.view	requirePermission	PostsSchema	netlify/functions/routes/communications.ts	413
+/api/communications/messages/presence/update	communications	communications.view	requirePermission	PresenceSchema	netlify/functions/routes/communications.ts	1000
+/api/communications/messages/reactions/toggle	communications	communications.view	requirePermission	ToggleReactionSchema	netlify/functions/routes/communications.ts	916
+/api/communications/messages/recipients	communications	communications.view	requirePermission	RecipientsSchema	netlify/functions/routes/communications.ts	799
+/api/communications/messages/recordThread	communications	communications.thread_create	requirePermission	RecordThreadSchema	netlify/functions/routes/communications.ts	485
+/api/communications/messages/search	communications	communications.view	requirePermission	MessageSearchSchema	netlify/functions/routes/communications.ts	441
+/api/communications/messages/thread	communications	communications.view	requirePermission	ThreadGetSchema	netlify/functions/routes/communications.ts	384
+/api/communications/messages/threads	communications	communications.view	requirePermission	ThreadsListSchema	netlify/functions/routes/communications.ts	360
+/api/communications/notifications/archive	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	186
+/api/communications/notifications/broadcast	communications	communications.admin	requirePermission	BroadcastSchema	netlify/functions/routes/communications.ts	305
+/api/communications/notifications/list	communications	communications.view	requirePermission	NotifListSchema	netlify/functions/routes/communications.ts	125
+/api/communications/notifications/markAllRead	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	172
+/api/communications/notifications/markRead	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	158
+/api/communications/notifications/mute	communications	communications.view	requirePermission	MuteSchema	netlify/functions/routes/communications.ts	271
+/api/communications/notifications/preferences/get	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	208
+/api/communications/notifications/preferences/set	communications	communications.view	requirePermission	PrefSetSchema	netlify/functions/routes/communications.ts	245
+/api/communications/summary	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	106
+/api/communications/tickets/attachments/complete	communications	communications.view	requirePermission	TicketAttachmentCompleteSchema	netlify/functions/routes/communications.ts	1287
+/api/communications/tickets/attachments/get-url	communications	communications.view	requirePermission	TicketAttachmentGetSchema	netlify/functions/routes/communications.ts	1324
+/api/communications/tickets/attachments/upload-url	communications	communications.view	requirePermission	TicketAttachmentUploadSchema	netlify/functions/routes/communications.ts	1246
+/api/communications/tickets/command	communications	communications.view	requirePermission	TicketCommandSchema	netlify/functions/routes/communications.ts	1210
+/api/communications/tickets/comment	communications	communications.view	requirePermission	CommentSchema	netlify/functions/routes/communications.ts	1186
+/api/communications/tickets/create	communications	communications.view	requirePermission	CreateTicketSchema	netlify/functions/routes/communications.ts	1074
+/api/communications/tickets/get	communications	communications.view	requirePermission	TicketIdSchema	netlify/functions/routes/communications.ts	1170
+/api/communications/tickets/list	communications	communications.view	requirePermission	TicketListSchema	netlify/functions/routes/communications.ts	1138
+/api/communications/tickets/mark-read	communications	communications.view	requirePermission	TicketMarkReadSchema	netlify/functions/routes/communications.ts	1226
+/api/communications/tickets/nav-context	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	1162
+/api/communications/tickets/request-types	communications	communications.view	requirePermission	RequestTypesSchema	netlify/functions/routes/communications.ts	1031
+/api/communications/tickets/requester-search	communications	communications.view	requirePermission	RequesterSearchSchema	netlify/functions/routes/communications.ts	1047
+/api/communications/tickets/run-overdue-sweep	communications	tickets.manage	requirePermission	TicketSweepSchema	netlify/functions/routes/communications.ts	1346
 /api/confirm2faSetup	security			Setup2faConfirmSchema	netlify/functions/routes/auth.ts	481
 /api/createAccountSupportRequest	communications	employees.access.request, employees.access.view	requirePermission	CreateAccountSupportRequestSchema	netlify/functions/routes/tickets.ts	587
 /api/createTicket	communications	tickets.create_self	requirePermission	CreateTicketSchema	netlify/functions/routes/tickets.ts	220
@@ -998,3 +997,403 @@ UNMOUNTED:/contracts/templates/update	platform	hr.contracts.template.manage	requ
 UNMOUNTED:/contracts/terminate	platform	hr.contracts.terminate	requirePermission	z.object({ contractId: z.string().uuid(), reason: z.string().trim().min(1, 'A termination reason is required.').max(500), effectiveDate: z.string().nullable().optional() })	netlify/functions/routes/hrContracts.ts	120
 UNMOUNTED:/getNotifications	communications		requireUser		netlify/functions/routes/notifications.ts	22
 UNMOUNTED:/markNotificationsRead	communications		requireUser		netlify/functions/routes/notifications.ts	139
+UNMOUNTED:${...}|${...}	platform				netlify/functions/routes/hseTraining.ts	111
+UNMOUNTED:auth	security				netlify/functions/routes/auth.ts	604
+UNMOUNTED:body	security				netlify/functions/routes/adminSecurity.ts	48
+UNMOUNTED:body	security				netlify/functions/routes/adminSecurity.ts	115
+UNMOUNTED:body	security				netlify/functions/routes/adminSecurity.ts	174
+UNMOUNTED:body	security				netlify/functions/routes/adminSecurity.ts	248
+UNMOUNTED:body	hr				netlify/functions/routes/attendance.ts	36
+UNMOUNTED:body	hr				netlify/functions/routes/attendance.ts	137
+UNMOUNTED:body	hr				netlify/functions/routes/attendance.ts	162
+UNMOUNTED:body	hr				netlify/functions/routes/attendance.ts	178
+UNMOUNTED:body	hr				netlify/functions/routes/attendance.ts	227
+UNMOUNTED:body	hr				netlify/functions/routes/attendance.ts	258
+UNMOUNTED:body	hr				netlify/functions/routes/attendance.ts	306
+UNMOUNTED:body	hr				netlify/functions/routes/attendance.ts	395
+UNMOUNTED:body	hr				netlify/functions/routes/attendance.ts	509
+UNMOUNTED:body	hr				netlify/functions/routes/attendance.ts	530
+UNMOUNTED:body	security				netlify/functions/routes/auth.ts	168
+UNMOUNTED:body	security				netlify/functions/routes/auth.ts	365
+UNMOUNTED:body	security				netlify/functions/routes/auth.ts	445
+UNMOUNTED:body	security				netlify/functions/routes/auth.ts	488
+UNMOUNTED:body	security				netlify/functions/routes/auth.ts	553
+UNMOUNTED:body	security				netlify/functions/routes/auth.ts	620
+UNMOUNTED:body	security				netlify/functions/routes/auth.ts	629
+UNMOUNTED:body	security				netlify/functions/routes/auth.ts	638
+UNMOUNTED:body	security				netlify/functions/routes/auth.ts	715
+UNMOUNTED:body	security				netlify/functions/routes/auth.ts	735
+UNMOUNTED:body	security				netlify/functions/routes/auth2fa.ts	117
+UNMOUNTED:body	security				netlify/functions/routes/auth2fa.ts	170
+UNMOUNTED:body	security				netlify/functions/routes/auth2fa.ts	233
+UNMOUNTED:body	security				netlify/functions/routes/authStepUp.ts	91
+UNMOUNTED:body	platform				netlify/functions/routes/calendar.ts	200
+UNMOUNTED:body	platform				netlify/functions/routes/calendar.ts	359
+UNMOUNTED:body	platform				netlify/functions/routes/calendar.ts	413
+UNMOUNTED:body	platform				netlify/functions/routes/calendar.ts	433
+UNMOUNTED:body	platform				netlify/functions/routes/calendar.ts	459
+UNMOUNTED:body	platform				netlify/functions/routes/calendar.ts	505
+UNMOUNTED:body	platform				netlify/functions/routes/calendar.ts	565
+UNMOUNTED:body	platform				netlify/functions/routes/calendar.ts	656
+UNMOUNTED:body	platform				netlify/functions/routes/calendar.ts	842
+UNMOUNTED:body	platform				netlify/functions/routes/calendar.ts	957
+UNMOUNTED:body	platform				netlify/functions/routes/calendar.ts	1006
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	127
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	160
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	174
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	188
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	247
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	273
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	307
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	362
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	386
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	415
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	443
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	459
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	487
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	525
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	563
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	602
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	631
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	655
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	679
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	695
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	709
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	726
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	746
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	766
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	801
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	818
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	846
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	870
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	890
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	918
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	935
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	962
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	974
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	983
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	1002
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	1033
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	1049
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	1076
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	1140
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	1172
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	1188
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	1212
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	1228
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	1248
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	1289
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	1326
+UNMOUNTED:body	communications				netlify/functions/routes/communications.ts	1348
+UNMOUNTED:body	communications				netlify/functions/routes/communicationsCompliance.ts	38
+UNMOUNTED:body	hr				netlify/functions/routes/departments.ts	53
+UNMOUNTED:body	hr				netlify/functions/routes/departments.ts	66
+UNMOUNTED:body	hr				netlify/functions/routes/departments.ts	80
+UNMOUNTED:body	hr				netlify/functions/routes/employees.ts	65
+UNMOUNTED:body	hr				netlify/functions/routes/employees.ts	132
+UNMOUNTED:body	hr				netlify/functions/routes/employees.ts	202
+UNMOUNTED:body	hr				netlify/functions/routes/employees.ts	243
+UNMOUNTED:body	finance				netlify/functions/routes/financeAccountsPayable.ts	21
+UNMOUNTED:body	finance				netlify/functions/routes/financeAttachments.ts	74
+UNMOUNTED:body	finance				netlify/functions/routes/financeBankAccounts.ts	12
+UNMOUNTED:body	finance				netlify/functions/routes/financeBridges.ts	38
+UNMOUNTED:body	finance				netlify/functions/routes/financeBudgets.ts	38
+UNMOUNTED:body	finance				netlify/functions/routes/financeDisbursements.ts	26
+UNMOUNTED:body	finance				netlify/functions/routes/financeExpenses.ts	38
+UNMOUNTED:body	finance				netlify/functions/routes/financeLookups.ts	25
+UNMOUNTED:body	finance				netlify/functions/routes/financeNis.ts	26
+UNMOUNTED:body	finance				netlify/functions/routes/financeOverview.ts	27
+UNMOUNTED:body	finance				netlify/functions/routes/financePayPolicies.ts	13
+UNMOUNTED:body	payroll				netlify/functions/routes/financePayroll.ts	161
+UNMOUNTED:body	payroll				netlify/functions/routes/financePayslipTemplates.ts	20
+UNMOUNTED:body	finance				netlify/functions/routes/financePickers.ts	18
+UNMOUNTED:body	finance				netlify/functions/routes/financeRemittances.ts	37
+UNMOUNTED:body	finance				netlify/functions/routes/financeStatutory.ts	44
+UNMOUNTED:body	finance				netlify/functions/routes/financeStatutoryForms.ts	20
+UNMOUNTED:body	workflow				netlify/functions/routes/handoffs.ts	23
+UNMOUNTED:body	workflow				netlify/functions/routes/handoffs.ts	50
+UNMOUNTED:body	workflow				netlify/functions/routes/handoffs.ts	67
+UNMOUNTED:body	workflow				netlify/functions/routes/handoffs.ts	90
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	123
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	292
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	547
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	570
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	593
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	620
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	653
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	687
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	719
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	765
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	819
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	888
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	920
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	954
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	1011
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	1032
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	1061
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	1107
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	1156
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	1277
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	1435
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	1627
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	1670
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	1698
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	1792
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	1862
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	1907
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	1951
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	1994
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2013
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2036
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2057
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2460
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2476
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2489
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2527
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2560
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2597
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2645
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2663
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2686
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2721
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2739
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2752
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2780
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2808
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2824
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2845
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2865
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2884
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2899
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2920
+UNMOUNTED:body	hr				netlify/functions/routes/hr.ts	2964
+UNMOUNTED:body	hr				netlify/functions/routes/hrAttendance.ts	22
+UNMOUNTED:body	hr				netlify/functions/routes/hrCompensation.ts	26
+UNMOUNTED:body	platform				netlify/functions/routes/hrContracts.ts	19
+UNMOUNTED:body	platform				netlify/functions/routes/hrCrew.ts	34
+UNMOUNTED:body	hr				netlify/functions/routes/hrEmployeeImport.ts	31
+UNMOUNTED:body	hr				netlify/functions/routes/hrLeave.ts	18
+UNMOUNTED:body	hr				netlify/functions/routes/hrOffboarding.ts	20
+UNMOUNTED:body	hr				netlify/functions/routes/hrOnboarding.ts	38
+UNMOUNTED:body	hr				netlify/functions/routes/hrOvertime.ts	25
+UNMOUNTED:body	hr				netlify/functions/routes/hrRequests.ts	19
+UNMOUNTED:body	hr				netlify/functions/routes/hrRoster.ts	35
+UNMOUNTED:body	platform				netlify/functions/routes/hrStatutoryProfile.ts	24
+UNMOUNTED:body	platform				netlify/functions/routes/hrWorkCalendars.ts	14
+UNMOUNTED:body	platform				netlify/functions/routes/hseCapa.ts	37
+UNMOUNTED:body	platform				netlify/functions/routes/hseCapa.ts	68
+UNMOUNTED:body	platform				netlify/functions/routes/hseCapa.ts	99
+UNMOUNTED:body	platform				netlify/functions/routes/hseCapa.ts	259
+UNMOUNTED:body	hse				netlify/functions/routes/hseIncidents.ts	56
+UNMOUNTED:body	hse				netlify/functions/routes/hseIncidents.ts	87
+UNMOUNTED:body	hse				netlify/functions/routes/hseIncidents.ts	152
+UNMOUNTED:body	hse				netlify/functions/routes/hseIncidents.ts	272
+UNMOUNTED:body	hse				netlify/functions/routes/hseIncidents.ts	420
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	144
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	175
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	239
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	336
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	409
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	416
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	426
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	448
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	469
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	504
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	625
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	646
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	666
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	684
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	700
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	735
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	780
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	795
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	802
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	838
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	850
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	876
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	888
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	920
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	960
+UNMOUNTED:body	hse				netlify/functions/routes/hseInspections.ts	974
+UNMOUNTED:body	hse				netlify/functions/routes/hseInvestigations.ts	27
+UNMOUNTED:body	hse				netlify/functions/routes/hseInvestigations.ts	48
+UNMOUNTED:body	hse				netlify/functions/routes/hseInvestigations.ts	82
+UNMOUNTED:body	hse				netlify/functions/routes/hseInvestigations.ts	164
+UNMOUNTED:body	hse				netlify/functions/routes/hseInvestigations.ts	208
+UNMOUNTED:body	hse				netlify/functions/routes/hseInvestigations.ts	242
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	367
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	462
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	689
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	780
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	835
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	890
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	902
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	930
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	939
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	948
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	957
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	978
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	987
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	1002
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	1049
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	1076
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	1102
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	1111
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	1120
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	1296
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	1326
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	1382
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	1430
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	1494
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	1560
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	1616
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	1638
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	1779
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	1834
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	1896
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	1920
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	2108
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	2144
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	2207
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	2260
+UNMOUNTED:body	platform				netlify/functions/routes/hsePtw.ts	2335
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	229
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	277
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	445
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	523
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	552
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	595
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	642
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	687
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	776
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	833
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	852
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	942
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	1116
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	1161
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	1242
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	1265
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	1498
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	1519
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	1548
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	1586
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	1618
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	1655
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	1684
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	1718
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	1738
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	1751
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	1782
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	1802
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	1830
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	1850
+UNMOUNTED:body	hse				netlify/functions/routes/hseRiskJsa.ts	1907
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	162
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	205
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	222
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	236
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	250
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	261
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	274
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	293
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	310
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	323
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	336
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	357
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	400
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	436
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	447
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	454
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	460
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	468
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	477
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	490
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	506
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	539
+UNMOUNTED:body	platform				netlify/functions/routes/hseTraining.ts	549
+UNMOUNTED:body	platform				netlify/functions/routes/notify.ts	60
+UNMOUNTED:body	platform				netlify/functions/routes/notify.ts	84
+UNMOUNTED:body	platform				netlify/functions/routes/notify.ts	129
+UNMOUNTED:body	platform				netlify/functions/routes/notify.ts	166
+UNMOUNTED:body	platform				netlify/functions/routes/notify.ts	197
+UNMOUNTED:body	workflow				netlify/functions/routes/orchestration.ts	64
+UNMOUNTED:body	workflow				netlify/functions/routes/orchestration.ts	73
+UNMOUNTED:body	workflow				netlify/functions/routes/orchestration.ts	82
+UNMOUNTED:body	workflow				netlify/functions/routes/orchestration.ts	91
+UNMOUNTED:body	security				netlify/functions/routes/permissionApprovals.ts	139
+UNMOUNTED:body	security				netlify/functions/routes/permissionApprovals.ts	262
+UNMOUNTED:body	security				netlify/functions/routes/permissionApprovals.ts	302
+UNMOUNTED:body	security				netlify/functions/routes/permissionApprovals.ts	419
+UNMOUNTED:body	security				netlify/functions/routes/permissionApprovals.ts	456
+UNMOUNTED:body	settings				netlify/functions/routes/settings.ts	35
+UNMOUNTED:body	settings				netlify/functions/routes/settings.ts	55
+UNMOUNTED:body	settings				netlify/functions/routes/settings.ts	68
+UNMOUNTED:body	settings				netlify/functions/routes/settings.ts	87
+UNMOUNTED:body	settings				netlify/functions/routes/settings.ts	136
+UNMOUNTED:body	settings				netlify/functions/routes/settings.ts	243
+UNMOUNTED:body	settings				netlify/functions/routes/settingsCatalog.ts	30
+UNMOUNTED:body	platform				netlify/functions/routes/sites.ts	83
+UNMOUNTED:body	platform				netlify/functions/routes/sites.ts	99
+UNMOUNTED:body	platform				netlify/functions/routes/sites.ts	124
+UNMOUNTED:body	platform				netlify/functions/routes/sites.ts	137
+UNMOUNTED:body	platform				netlify/functions/routes/superadmin.ts	323
+UNMOUNTED:body	platform				netlify/functions/routes/superadmin.ts	339
+UNMOUNTED:body	platform				netlify/functions/routes/superadmin.ts	396
+UNMOUNTED:body	platform				netlify/functions/routes/superadmin.ts	406
+UNMOUNTED:body	platform				netlify/functions/routes/superadmin.ts	552
+UNMOUNTED:body	platform				netlify/functions/routes/superadmin.ts	590
+UNMOUNTED:body	platform				netlify/functions/routes/superadmin.ts	711
+UNMOUNTED:body	platform				netlify/functions/routes/superadmin.ts	730
+UNMOUNTED:body	platform				netlify/functions/routes/superadmin.ts	750
+UNMOUNTED:body	platform				netlify/functions/routes/superadmin.ts	779
+UNMOUNTED:body	platform				netlify/functions/routes/superadmin.ts	821
+UNMOUNTED:body	platform				netlify/functions/routes/superadmin.ts	838
+UNMOUNTED:body	platform				netlify/functions/routes/superadmin.ts	851
+UNMOUNTED:body	platform				netlify/functions/routes/superadmin.ts	866
+UNMOUNTED:body	communications				netlify/functions/routes/tickets.ts	223
+UNMOUNTED:body	communications				netlify/functions/routes/tickets.ts	226
+UNMOUNTED:body	communications				netlify/functions/routes/tickets.ts	369
+UNMOUNTED:body	communications				netlify/functions/routes/tickets.ts	425
+UNMOUNTED:body	communications				netlify/functions/routes/tickets.ts	495
+UNMOUNTED:body	communications				netlify/functions/routes/tickets.ts	590
+UNMOUNTED:body	communications				netlify/functions/routes/tickets.ts	755
+UNMOUNTED:body	communications				netlify/functions/routes/tickets.ts	810
+UNMOUNTED:body	communications				netlify/functions/routes/tickets.ts	886
+UNMOUNTED:body	communications				netlify/functions/routes/tickets.ts	1023
+UNMOUNTED:body	communications				netlify/functions/routes/tickets.ts	1071
+UNMOUNTED:body	communications				netlify/functions/routes/tickets.ts	1156
+UNMOUNTED:body	communications				netlify/functions/routes/tickets.ts	1235
+UNMOUNTED:body	communications				netlify/functions/routes/tickets.ts	1291
+UNMOUNTED:body	communications				netlify/functions/routes/tickets.ts	1346
+UNMOUNTED:body	communications				netlify/functions/routes/tickets.ts	1439
+UNMOUNTED:body	security				netlify/functions/routes/trustedDevices.ts	87
+UNMOUNTED:body	widgets				netlify/functions/routes/uiPrefs.ts	30
+UNMOUNTED:body	platform				netlify/functions/routes/weather.ts	86
+UNMOUNTED:body	security				netlify/functions/routes/webauthn.ts	117
+UNMOUNTED:body	security				netlify/functions/routes/webauthn.ts	165
+UNMOUNTED:body	security				netlify/functions/routes/webauthn.ts	179
+UNMOUNTED:body	security				netlify/functions/routes/webauthn.ts	242
+UNMOUNTED:body	security				netlify/functions/routes/webauthn.ts	257
+UNMOUNTED:body	security				netlify/functions/routes/webauthn.ts	299
+UNMOUNTED:body	security				netlify/functions/routes/webauthn.ts	331
+UNMOUNTED:body	widgets				netlify/functions/routes/widgetPackages.ts	25
+UNMOUNTED:body	workflow				netlify/functions/routes/workflowEngine.ts	23
+UNMOUNTED:body	workflow				netlify/functions/routes/workflows.ts	44
+UNMOUNTED:body	workflow				netlify/functions/routes/workflows.ts	89
+UNMOUNTED:body	workflow				netlify/functions/routes/workflows.ts	118
+UNMOUNTED:body	workflow				netlify/functions/routes/workflows.ts	170
+UNMOUNTED:body	workflow				netlify/functions/routes/workflows.ts	194
+UNMOUNTED:clientIp	security				netlify/functions/routes/auth.ts	61
+UNMOUNTED:clientIp	security				netlify/functions/routes/auth.ts	172
+UNMOUNTED:clientIp	security				netlify/functions/routes/auth.ts	232
+UNMOUNTED:clientIp	security				netlify/functions/routes/auth.ts	290
+UNMOUNTED:clientIp	security				netlify/functions/routes/auth.ts	359
+UNMOUNTED:clientIp	security				netlify/functions/routes/auth.ts	421
+UNMOUNTED:clientIp	security				netlify/functions/routes/auth.ts	482
+UNMOUNTED:clientIp	security				netlify/functions/routes/auth.ts	728
+UNMOUNTED:clientIp	security				netlify/functions/routes/trustedDevices.ts	54
+UNMOUNTED:clientIp	security				netlify/functions/routes/trustedDevices.ts	103
+UNMOUNTED:clientIp	security				netlify/functions/routes/webauthn.ts	162
+UNMOUNTED:clientIp	security				netlify/functions/routes/webauthn.ts	176
+UNMOUNTED:clientIp	security				netlify/functions/routes/webauthn.ts	290
+UNMOUNTED:clientIp	security				netlify/functions/routes/webauthn.ts	322

@@ -2,9 +2,9 @@
 
 # security Module Map
 
-Source fingerprint: `a900c96292f8d64f54f7c962`
+Source fingerprint: `6b6a4b0cef3f9009d7dfcdf1`
 
-Files: 46 | Symbols: 387 | Widgets: 0 | Unique mounted endpoints: 51 | Route definitions: 51 mounted + 0 unmounted | API calls: 31 | DB objects: 65 | E2E suites: 4
+Files: 46 | Symbols: 387 | Widgets: 0 | Unique mounted endpoints: 51 | Route definitions: 51 mounted + 46 unmounted | API calls: 31 | DB objects: 65 | E2E suites: 4
 
 ## Widgets and Tiles
 
@@ -69,6 +69,52 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/webauthn/register/preauth/options` | `-` | - | `PreauthRegOptionsSchema` | `netlify/functions/routes/webauthn.ts:161` | webauthnPreauthRegisterOptions @ src/components/auth/api.ts:173 | accountSecurity |
 | `/api/webauthn/register/preauth/verify` | `-` | - | `PreauthRegVerifySchema` | `netlify/functions/routes/webauthn.ts:175` | webauthnPreauthRegisterVerify @ src/components/auth/api.ts:183 | accountSecurity |
 | `/api/webauthn/register/verify` | `-` | requireUser | `RegisterVerifySchema` | `netlify/functions/routes/webauthn.ts:111` | useRegisterPasskey @ src/api/security.ts:239<br>webauthnRegisterVerifyWithToken @ src/components/auth/api.ts:160 | accountSecurity |
+| `UNMOUNTED:auth` | `-` | - | `-` | `netlify/functions/routes/auth.ts:604` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/adminSecurity.ts:48` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/adminSecurity.ts:115` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/adminSecurity.ts:174` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/adminSecurity.ts:248` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/auth.ts:168` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/auth.ts:365` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/auth.ts:445` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/auth.ts:488` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/auth.ts:553` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/auth.ts:620` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/auth.ts:629` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/auth.ts:638` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/auth.ts:715` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/auth.ts:735` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/auth2fa.ts:117` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/auth2fa.ts:170` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/auth2fa.ts:233` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/authStepUp.ts:91` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/permissionApprovals.ts:139` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/permissionApprovals.ts:262` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/permissionApprovals.ts:302` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/permissionApprovals.ts:419` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/permissionApprovals.ts:456` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/trustedDevices.ts:87` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/webauthn.ts:117` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/webauthn.ts:165` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/webauthn.ts:179` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/webauthn.ts:242` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/webauthn.ts:257` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/webauthn.ts:299` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/webauthn.ts:331` | - | - |
+| `UNMOUNTED:clientIp` | `-` | - | `-` | `netlify/functions/routes/auth.ts:61` | - | - |
+| `UNMOUNTED:clientIp` | `-` | - | `-` | `netlify/functions/routes/auth.ts:172` | - | - |
+| `UNMOUNTED:clientIp` | `-` | - | `-` | `netlify/functions/routes/auth.ts:232` | - | - |
+| `UNMOUNTED:clientIp` | `-` | - | `-` | `netlify/functions/routes/auth.ts:290` | - | - |
+| `UNMOUNTED:clientIp` | `-` | - | `-` | `netlify/functions/routes/auth.ts:359` | - | - |
+| `UNMOUNTED:clientIp` | `-` | - | `-` | `netlify/functions/routes/auth.ts:421` | - | - |
+| `UNMOUNTED:clientIp` | `-` | - | `-` | `netlify/functions/routes/auth.ts:482` | - | - |
+| `UNMOUNTED:clientIp` | `-` | - | `-` | `netlify/functions/routes/auth.ts:728` | - | - |
+| `UNMOUNTED:clientIp` | `-` | - | `-` | `netlify/functions/routes/trustedDevices.ts:54` | - | - |
+| `UNMOUNTED:clientIp` | `-` | - | `-` | `netlify/functions/routes/trustedDevices.ts:103` | - | - |
+| `UNMOUNTED:clientIp` | `-` | - | `-` | `netlify/functions/routes/webauthn.ts:162` | - | - |
+| `UNMOUNTED:clientIp` | `-` | - | `-` | `netlify/functions/routes/webauthn.ts:176` | - | - |
+| `UNMOUNTED:clientIp` | `-` | - | `-` | `netlify/functions/routes/webauthn.ts:290` | - | - |
+| `UNMOUNTED:clientIp` | `-` | - | `-` | `netlify/functions/routes/webauthn.ts:322` | - | - |
 
 ## Frontend API Calls
 

@@ -2,9 +2,9 @@
 
 # payroll Module Map
 
-Source fingerprint: `a900c96292f8d64f54f7c962`
+Source fingerprint: `6b6a4b0cef3f9009d7dfcdf1`
 
-Files: 195 | Symbols: 1978 | Widgets: 10 | Unique mounted endpoints: 140 | Route definitions: 140 mounted + 0 unmounted | API calls: 2 | DB objects: 260 | E2E suites: 28
+Files: 195 | Symbols: 1978 | Widgets: 10 | Unique mounted endpoints: 140 | Route definitions: 140 mounted + 2 unmounted | API calls: 2 | DB objects: 260 | E2E suites: 28
 
 ## Widgets and Tiles
 
@@ -167,6 +167,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/finance/payroll/sod-policy/propose` | `finance.payroll.sod_policy.propose` | requirePermission | `z.object({     sodLevel: z.union([z.literal(2), z.literal(3), z.literal(4)]),     reason:   z.string().trim().min(10).max(2000),   })` | `netlify/functions/routes/financePayroll.ts:514` | - | payrollSodPolicy |
 | `/api/finance/payroll/sod-policy/set-roles` | `finance.payroll.sod_policy.manage_roles` | requirePermission | `z.object({     roles: z.array(z.string().trim().min(1).max(60)).min(1).max(20),   })` | `netlify/functions/routes/financePayroll.ts:547` | - | payrollSodPolicy |
 | `/api/finance/payroll/warnings/list` | `finance.payroll.view_all` | requirePermission | `z.object({ runId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:445` | - | financePayroll |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/financePayroll.ts:161` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/financePayslipTemplates.ts:20` | - | - |
 
 ## Frontend API Calls
 

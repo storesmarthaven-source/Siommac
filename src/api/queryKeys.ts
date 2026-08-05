@@ -182,7 +182,6 @@ export const messageKeys = {
   thread:     (id: string) => [...messageKeys.all, 'thread', id]                  as const,
   posts:      (threadId: string) => [...messageKeys.all, 'posts', threadId]       as const,
   recipients: (query?: string) => [...messageKeys.all, 'recipients', query ?? ''] as const,
-  search:     (query: string) => [...messageKeys.all, 'search', query]            as const,
   // ── Rich Message Center ──
   pins:          (threadId: string) => [...messageKeys.all, 'pins', threadId]     as const,
   pinnedSummary: () => [...messageKeys.all, 'pins', 'summary']                     as const,

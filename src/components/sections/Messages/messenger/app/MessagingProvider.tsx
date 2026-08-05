@@ -21,6 +21,7 @@ import type { SiomacRepository, SiomacRealtimeGateway } from "../adapters";
 import { TYPING_TTL_MS } from "../adapters/siomacRealtime";
 import { defaultChatPreferences, type ChatPreferences } from "../domain/preferences";
 import { applyTyping, emptyTypingState, hasTyping, pruneTyping, typingUserIds, type TypingState } from "./typingState";
+import type { MessageSearchHit } from '@/../types/messaging';
 
 interface MessagingActions {
   reload(): Promise<void>;
@@ -49,7 +50,7 @@ interface MessagingActions {
   /** Append the next thread-list page (all+sent cursors advance in step). */
   loadMoreThreads(): Promise<void>;
   /** Server-side message-CONTENT search (first page of hits). */
-  searchMessages(query: string): Promise<{ postId: string; threadId: string; subject: string; snippet: string; createdAt: string }[]>;
+  searchMessages(query: string): Promise<MessageSearchHit[]>;
   /** Per-user/thread composer draft persistence (last-write-wins). */
   saveDraft(threadId: ThreadId, body: string | null, replyToPostId: string | null): Promise<void>;
   getDraft(threadId: ThreadId): Promise<{ body: string | null; replyToPostId: string | null } | null>;

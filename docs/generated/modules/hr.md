@@ -2,9 +2,9 @@
 
 # hr Module Map
 
-Source fingerprint: `a900c96292f8d64f54f7c962`
+Source fingerprint: `6b6a4b0cef3f9009d7dfcdf1`
 
-Files: 266 | Symbols: 3033 | Widgets: 16 | Unique mounted endpoints: 284 | Route definitions: 284 mounted + 0 unmounted | API calls: 35 | DB objects: 207 | E2E suites: 19
+Files: 266 | Symbols: 3033 | Widgets: 16 | Unique mounted endpoints: 284 | Route definitions: 284 mounted + 79 unmounted | API calls: 35 | DB objects: 207 | E2E suites: 19
 
 ## Widgets and Tiles
 
@@ -317,6 +317,85 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/markAttendance` | `-` | requireUser | `MarkAttendanceSchema` | `netlify/functions/routes/attendance.ts:34` | markProjectAttendance @ src/components/livemap/LiveMapModule.ts:874<br>markAttendance @ src/components/sections/AttendanceDashboard/api.ts:69 | - |
 | `/api/updateDepartment` | `departments.edit` | requirePermission | `UpdateDepartmentSchema` | `netlify/functions/routes/departments.ts:64` | res @ src/api/employees.ts:100<br>res @ src/components/sections/Employees/api.ts:103 | - |
 | `/api/updateEmployee` | `employees.edit` | assertInScope, requirePermission | `UpdateEmployeeSchema` | `netlify/functions/routes/employees.ts:130` | res @ src/api/employees.ts:72<br>res @ src/components/sections/Employees/api.ts:66 | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/attendance.ts:36` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/attendance.ts:137` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/attendance.ts:162` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/attendance.ts:178` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/attendance.ts:227` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/attendance.ts:258` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/attendance.ts:306` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/attendance.ts:395` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/attendance.ts:509` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/attendance.ts:530` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/departments.ts:53` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/departments.ts:66` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/departments.ts:80` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/employees.ts:65` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/employees.ts:132` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/employees.ts:202` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/employees.ts:243` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:123` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:292` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:547` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:570` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:593` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:620` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:653` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:687` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:719` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:765` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:819` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:888` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:920` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:954` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:1011` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:1032` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:1061` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:1107` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:1156` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:1277` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:1435` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:1627` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:1670` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:1698` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:1792` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:1862` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:1907` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:1951` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:1994` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2013` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2036` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2057` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2460` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2476` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2489` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2527` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2560` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2597` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2645` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2663` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2686` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2721` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2739` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2752` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2780` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2808` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2824` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2845` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2865` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2884` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2899` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2920` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hr.ts:2964` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hrAttendance.ts:22` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hrCompensation.ts:26` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hrEmployeeImport.ts:31` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hrLeave.ts:18` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hrOffboarding.ts:20` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hrOnboarding.ts:38` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hrOvertime.ts:25` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hrRequests.ts:19` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hrRoster.ts:35` | - | - |
 
 ## Frontend API Calls
 

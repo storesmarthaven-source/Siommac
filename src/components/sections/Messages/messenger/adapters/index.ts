@@ -5,6 +5,7 @@ import { SiomacMessagingRepository } from './siomacRepository';
 import { SiomacAttachmentService } from './siomacAttachments';
 import { SiomacRealtimeGateway } from './siomacRealtime';
 import type { AttachmentService, MessagingRepository } from '../domain/ports';
+import type { MessageSearchHit } from '@/../types/messaging';
 
 export { SiomacMessagingRepository } from './siomacRepository';
 export { SiomacAttachmentService } from './siomacAttachments';
@@ -39,7 +40,7 @@ export type SiomacRepository = MessagingRepository & {
   getDraft(threadId: string): Promise<{ body: string | null; replyToPostId: string | null } | null>;
   deleteDraft(threadId: string): Promise<void>;
   /** Server-side message-CONTENT search (first page). */
-  searchMessages(query: string): Promise<{ postId: string; threadId: string; subject: string; snippet: string; createdAt: string }[]>;
+  searchMessages(query: string): Promise<MessageSearchHit[]>;
   listRecipients(query?: string): Promise<import('../domain/models').User[]>;
   createGroup(
     name: string, participantIds: string[], actorId: string, firstMessage?: string,

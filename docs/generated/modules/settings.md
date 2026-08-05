@@ -2,9 +2,9 @@
 
 # settings Module Map
 
-Source fingerprint: `a900c96292f8d64f54f7c962`
+Source fingerprint: `6b6a4b0cef3f9009d7dfcdf1`
 
-Files: 43 | Symbols: 250 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 0 unmounted | API calls: 18 | DB objects: 23 | E2E suites: 2
+Files: 43 | Symbols: 250 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 7 unmounted | API calls: 18 | DB objects: 23 | E2E suites: 2
 
 ## Widgets and Tiles
 
@@ -44,6 +44,13 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/settings/values/set` | `-` | requireUser, userCan | `z.object({     settingKey: z.string().min(1), scopeType: z.enum(SCOPE_TYPES), scopeId: z.string().nullable().optional(),     value: z.unknown(), reason: z.string().max(500).optional(),   })` | `netlify/functions/routes/settingsCatalog.ts:181` | useSetSetting @ src/api/settingsCatalog.ts:126<br>res @ src/lib/themePreference.ts:60 | hrEmployeeSettings, hrLeave, hrOnboarding, settings |
 | `/api/updateSetting` | `-` | requireRole | `UpdateSettingSchema` | `netlify/functions/routes/settings.ts:33` | res @ src/components/sections/Settings/api.ts:84 | - |
 | `/api/uploadLogo` | `-` | requireRole | `UploadLogoSchema` | `netlify/functions/routes/settings.ts:66` | res @ src/components/sections/Settings/api.ts:137 | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/settings.ts:35` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/settings.ts:55` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/settings.ts:68` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/settings.ts:87` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/settings.ts:136` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/settings.ts:243` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/settingsCatalog.ts:30` | - | - |
 
 ## Frontend API Calls
 

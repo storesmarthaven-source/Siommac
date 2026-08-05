@@ -2,9 +2,9 @@
 
 # finance Module Map
 
-Source fingerprint: `a900c96292f8d64f54f7c962`
+Source fingerprint: `6b6a4b0cef3f9009d7dfcdf1`
 
-Files: 139 | Symbols: 1853 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
+Files: 139 | Symbols: 1853 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 15 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
 ## Widgets and Tiles
 
@@ -183,6 +183,21 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/finance/statutory/versions/retire` | `finance.statutory.manage` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeStatutory.ts:177` | - | - |
 | `/api/finance/statutory/versions/submit` | `finance.statutory.manage` | requirePermission | `z.object({ id: z.string().uuid(), idempotencyKey: z.string().min(1).max(200) })` | `netlify/functions/routes/financeStatutory.ts:133` | - | financeStatutory |
 | `/api/finance/statutory/versions/update` | `finance.statutory.manage` | requirePermission | `z.object({     id: z.string().uuid(),     label: z.string().min(1).max(200).optional(),     payePersonalAllowance: z.number().nonnegative().optional(),     payeBand1Ceiling: z.number().nonnegative().optional(),     payeBand1Rate: z.number().min(0).max(1).optional(),     payeBand2Rate: z.number().min(0).max(1).optional(),     hsMonthlyThreshold: z.number().nonnegative().optional(),     hsWeeklyHigh: z.number().nonnegative().optional(),     hsWeeklyLow: z.number().nonnegative().optional(),     nisMonthyCeiling: z.number().nonnegative().nullable().optional(),   })` | `netlify/functions/routes/financeStatutory.ts:111` | - | financeStatutory |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/financeAccountsPayable.ts:21` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/financeAttachments.ts:74` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/financeBankAccounts.ts:12` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/financeBridges.ts:38` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/financeBudgets.ts:38` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/financeDisbursements.ts:26` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/financeExpenses.ts:38` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/financeLookups.ts:25` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/financeNis.ts:26` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/financeOverview.ts:27` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/financePayPolicies.ts:13` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/financePickers.ts:18` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/financeRemittances.ts:37` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/financeStatutory.ts:44` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/financeStatutoryForms.ts:20` | - | - |
 
 ## Frontend API Calls
 

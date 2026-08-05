@@ -2,9 +2,9 @@
 
 # hse Module Map
 
-Source fingerprint: `a900c96292f8d64f54f7c962`
+Source fingerprint: `6b6a4b0cef3f9009d7dfcdf1`
 
-Files: 87 | Symbols: 1275 | Widgets: 0 | Unique mounted endpoints: 144 | Route definitions: 144 mounted + 0 unmounted | API calls: 107 | DB objects: 65 | E2E suites: 4
+Files: 87 | Symbols: 1275 | Widgets: 0 | Unique mounted endpoints: 144 | Route definitions: 144 mounted + 68 unmounted | API calls: 107 | DB objects: 65 | E2E suites: 4
 
 ## Widgets and Tiles
 
@@ -162,6 +162,74 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/hse/training/requirements/delete` | `hse.training.manage` | requirePermission | `z.object({ requirementId: z.string().uuid() })` | `netlify/functions/routes/hseTraining.ts:308` | useDeleteRequirement @ src/api/hse/training.ts:202 | training |
 | `/api/hse/training/requirements/list` | `hse.training.view` | requirePermission | `z.object({ roleName: z.string().optional(), competencyId: z.string().uuid().optional(), activeOnly: z.boolean().default(true) })` | `netlify/functions/routes/hseTraining.ts:272` | useRequirements @ src/api/hse/training.ts:113 | - |
 | `/api/hse/training/stats` | `hse.training.view` | requirePermission | `-` | `netlify/functions/routes/hseTraining.ts:199` | useTrainingStats @ src/api/hse/training.ts:77 | training |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseIncidents.ts:56` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseIncidents.ts:87` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseIncidents.ts:152` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseIncidents.ts:272` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseIncidents.ts:420` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:144` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:175` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:239` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:336` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:409` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:416` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:426` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:448` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:469` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:504` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:625` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:646` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:666` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:684` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:700` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:735` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:780` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:795` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:802` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:838` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:850` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:876` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:888` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:920` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:960` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInspections.ts:974` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInvestigations.ts:27` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInvestigations.ts:48` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInvestigations.ts:82` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInvestigations.ts:164` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInvestigations.ts:208` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseInvestigations.ts:242` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:229` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:277` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:445` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:523` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:552` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:595` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:642` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:687` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:776` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:833` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:852` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:942` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:1116` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:1161` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:1242` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:1265` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:1498` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:1519` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:1548` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:1586` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:1618` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:1655` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:1684` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:1718` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:1738` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:1751` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:1782` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:1802` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:1830` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:1850` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseRiskJsa.ts:1907` | - | - |
 
 ## Frontend API Calls
 

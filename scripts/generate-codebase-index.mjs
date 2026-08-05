@@ -27,6 +27,8 @@ if (!['--write', '--check'].includes(mode)) {
 }
 
 const CODE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
+// Terminal HTTP handlers. NOT `use` — middleware legitimately repeats on a path.
+const TERMINAL_ROUTE_VERBS = new Set(['get', 'post', 'put', 'patch', 'delete']);
 const EXCLUDED_DIRS = new Set([
   '.git', '.netlify', '.claude', '.Codex', 'coverage', 'dist', 'node_modules',
 ]);
@@ -530,11 +532,15 @@ function collectRoutes() {
     };
 
     const visit = (node) => {
+      // Terminal route handlers only. `use()` is deliberately excluded: middleware is
+      // registered many times against the same path by design, so folding it in here would
+      // make the duplicate-route gate below fire on correct code.
       if (
         ts.isCallExpression(node)
         && ts.isPropertyAccessExpression(node.expression)
-        && node.expression.name.text === 'post'
+        && TERMINAL_ROUTE_VERBS.has(node.expression.name.text)
       ) {
+        const method = node.expression.name.text.toUpperCase();
         const bindings = routeBindings(node);
         const localPaths = bindings.length
           ? unique(bindings.map(binding => staticString(node.arguments[0], binding)).filter(Boolean))
@@ -569,6 +575,7 @@ function collectRoutes() {
                 ? `UNMOUNTED:${localPath}`
                 : `${prefix}/${localPath}`.replace(/\/{2,}/g, '/');
               routes.push({
+                method,
                 path: fullPath,
                 localPath,
                 router: owner.text,
@@ -931,7 +938,41 @@ function checkOutputs(outputs) {
   }
 }
 
+/**
+ * Two implementations must never own the same mounted endpoint.
+ *
+ * Hono dispatches in registration order and a handler that returns a Response ends
+ * processing, so a second registration of the same method+path is unreachable — it looks
+ * live in review, is never executed, and drifts from the handler that actually serves the
+ * traffic. `/api/communications/messages/search` was registered twice for exactly this
+ * reason: the shadowed copy had a different validation floor, no cursor support and a
+ * different response shape, and the frontend had been typed against the wrong one.
+ *
+ * This fails the build in BOTH modes. Generating a "valid" index over a duplicated route
+ * would just record the contradiction.
+ */
+function assertNoDuplicateRoutes(routes) {
+  const byKey = new Map();
+  for (const route of routes) {
+    if (route.path.startsWith('UNMOUNTED:')) continue;   // not dispatchable; nothing to collide
+    const key = `${route.method} ${route.path}`;
+    if (!byKey.has(key)) byKey.set(key, []);
+    byKey.get(key).push(route);
+  }
+  const duplicates = [...byKey.entries()].filter(([, list]) => list.length > 1);
+  if (!duplicates.length) return;
+
+  console.error('Duplicate mounted route:');
+  for (const [key, list] of duplicates) {
+    console.error(`  ${key}`);
+    for (const route of list) console.error(`    - ${route.file}:${route.line}`);
+  }
+  console.error('\nOnly the FIRST registration is reachable. Delete the others.');
+  process.exit(1);
+}
+
 const index = buildIndex();
+assertNoDuplicateRoutes(index.routes ?? []);
 const outputs = expectedOutputs(index);
 if (mode === '--write') writeOutputs(outputs);
 else checkOutputs(outputs);

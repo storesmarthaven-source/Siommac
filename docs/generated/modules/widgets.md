@@ -2,9 +2,9 @@
 
 # widgets Module Map
 
-Source fingerprint: `a900c96292f8d64f54f7c962`
+Source fingerprint: `6b6a4b0cef3f9009d7dfcdf1`
 
-Files: 71 | Symbols: 574 | Widgets: 25 | Unique mounted endpoints: 15 | Route definitions: 15 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
+Files: 71 | Symbols: 574 | Widgets: 25 | Unique mounted endpoints: 15 | Route definitions: 15 mounted + 2 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
 
 ## Widgets and Tiles
 
@@ -57,6 +57,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/widgets/packages/install` | `ui.widgets.packages.manage` | requirePermission | `-` | `netlify/functions/routes/widgetPackages.ts:95` | res @ src/api/widgets.ts:29 | widgets |
 | `/api/widgets/packages/list` | `ui.widgets.packages.view` | requirePermission | `-` | `netlify/functions/routes/widgetPackages.ts:81` | res @ src/api/widgets.ts:18 | widgets |
 | `/api/widgets/packages/uninstall` | `ui.widgets.packages.manage` | requirePermission | `-` | `netlify/functions/routes/widgetPackages.ts:142` | res @ src/api/widgets.ts:34 | widgets |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/uiPrefs.ts:30` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/widgetPackages.ts:25` | - | - |
 
 ## Frontend API Calls
 

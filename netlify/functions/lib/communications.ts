@@ -29,7 +29,7 @@ import {
 } from './messaging/messagingRpc';
 import type {
   MessageThread, MessageParticipant, MessagePost, MessageAttachment,
-  MessageRecipient, ThreadActivityEntry, ThreadSourceRecord,
+  MessageRecipient, MessageSearchHit, ThreadActivityEntry, ThreadSourceRecord,
 } from '../../../types/messaging';
 
 // ── Messaging attachments bucket ───────────────────────────────────────────────
@@ -1405,14 +1405,8 @@ export async function getThreadPosts(
 
 // ── Message-content search (slice 2) ─────────────────────────────────────────
 
-export interface MessageSearchHit {
-  postId:       string;
-  threadId:     string;
-  subject:      string;
-  snippet:      string;
-  authorUserId: string | null;
-  createdAt:    string;
-}
+/** @see MessageSearchHit in types/messaging.ts (shared contract) */
+export type { MessageSearchHit };
 
 export interface MessageSearchResult {
   ok:          boolean;
@@ -1927,63 +1921,6 @@ export async function removeThreadParticipant(
     const err = e as { status?: number; message?: string };
     console.error('[communications] removeThreadParticipant RPC failed:', err.message ?? e);
     return Object.assign({ ok: false, message: err.message ?? 'Internal error' }, err.status ? { status: err.status } : {});
-  }
-}
-
-// ── searchMessages ─────────────────────────────────────────────────────────────
-
-export interface SearchMessageResult {
-  threadId:      string;
-  threadSubject: string;
-  postId:        string;
-  postPreview:   string;
-  authorName:    string | null;
-  createdAt:     string;
-}
-
-export async function searchMessages(userId: string, query: string, limit = 20): Promise<SearchMessageResult[]> {
-  try {
-    // Get thread ids the user participates in (active)
-    const { data: parts } = await sb
-      .from('message_participants')
-      .select('thread_id')
-      .eq('user_id', userId)
-      .is('removed_at', null) as { data: { thread_id: string }[] | null };
-
-    const threadIds = (parts ?? []).map(p => p.thread_id);
-    if (threadIds.length === 0) return [];
-
-    interface PostWithAuthorAndThread {
-      id:             string;
-      thread_id:      string;
-      body:           string;
-      created_at:     string;
-      app_users:      { full_name: string | null; email: string } | null;
-      message_threads: { subject: string } | null;
-    }
-
-    const { data: posts } = await sb
-      .from('message_posts')
-      .select('id, thread_id, body, created_at, app_users!author_user_id(full_name, email), message_threads(subject)')
-      .in('thread_id', threadIds)
-      .is('deleted_at', null)
-      // Author-only internal notes are never returned to other participants.
-      .or(`is_internal.eq.false,author_user_id.eq.${userId}`)
-      .ilike('body', `%${query}%`)
-      .order('created_at', { ascending: false })
-      .limit(limit) as { data: PostWithAuthorAndThread[] | null };
-
-    return (posts ?? []).map(p => ({
-      threadId:      p.thread_id,
-      threadSubject: p.message_threads?.subject ?? '',
-      postId:        p.id,
-      postPreview:   p.body.slice(0, 200),
-      authorName:    p.app_users?.full_name ?? p.app_users?.email ?? null,
-      createdAt:     p.created_at,
-    }));
-  } catch (e) {
-    console.error('[communications] searchMessages failed:', e);
-    return [];
   }
 }
 

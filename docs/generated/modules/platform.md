@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `a900c96292f8d64f54f7c962`
+Source fingerprint: `6b6a4b0cef3f9009d7dfcdf1`
 
-Files: 308 | Symbols: 2831 | Widgets: 0 | Unique mounted endpoints: 32 | Route definitions: 32 mounted + 15 unmounted | API calls: 50 | DB objects: 305 | E2E suites: 0
+Files: 308 | Symbols: 2834 | Widgets: 0 | Unique mounted endpoints: 32 | Route definitions: 32 mounted + 118 unmounted | API calls: 50 | DB objects: 305 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -65,6 +65,109 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `UNMOUNTED:/contracts/templates/retire` | `hr.contracts.template.manage` | requirePermission | `z.object({ templateId: z.string().uuid() })` | `netlify/functions/routes/hrContracts.ts:162` | - | - |
 | `UNMOUNTED:/contracts/templates/update` | `hr.contracts.template.manage` | requirePermission | `z.object({     templateId: z.string().uuid(), name: z.string().trim().optional(), description: z.string().nullable().optional(),     contractType: z.enum(CONTRACT_TYPES).optional(), workerTypes: z.array(z.string()).optional(), bodyTemplate: z.string().optional(),     clauses: z.array(clauseInput).optional(), defaultDurationMonths: z.number().int().nullable().optional(), probationMonths: z.number().int().nullable().optional(),   })` | `netlify/functions/routes/hrContracts.ts:151` | - | - |
 | `UNMOUNTED:/contracts/terminate` | `hr.contracts.terminate` | requirePermission | `z.object({ contractId: z.string().uuid(), reason: z.string().trim().min(1, 'A termination reason is required.').max(500), effectiveDate: z.string().nullable().optional() })` | `netlify/functions/routes/hrContracts.ts:120` | - | - |
+| `UNMOUNTED:${...}\|${...}` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:111` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/calendar.ts:200` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/calendar.ts:359` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/calendar.ts:413` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/calendar.ts:433` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/calendar.ts:459` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/calendar.ts:505` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/calendar.ts:565` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/calendar.ts:656` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/calendar.ts:842` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/calendar.ts:957` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/calendar.ts:1006` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hrContracts.ts:19` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hrCrew.ts:34` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hrStatutoryProfile.ts:24` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hrWorkCalendars.ts:14` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseCapa.ts:37` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseCapa.ts:68` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseCapa.ts:99` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseCapa.ts:259` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:367` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:462` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:689` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:780` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:835` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:890` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:902` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:930` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:939` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:948` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:957` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:978` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:987` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:1002` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:1049` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:1076` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:1102` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:1111` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:1120` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:1296` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:1326` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:1382` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:1430` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:1494` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:1560` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:1616` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:1638` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:1779` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:1834` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:1896` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:1920` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:2108` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:2144` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:2207` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:2260` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hsePtw.ts:2335` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:162` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:205` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:222` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:236` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:250` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:261` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:274` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:293` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:310` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:323` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:336` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:357` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:400` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:436` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:447` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:454` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:460` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:468` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:477` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:490` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:506` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:539` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/hseTraining.ts:549` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/notify.ts:60` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/notify.ts:84` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/notify.ts:129` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/notify.ts:166` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/notify.ts:197` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/sites.ts:83` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/sites.ts:99` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/sites.ts:124` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/sites.ts:137` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/superadmin.ts:323` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/superadmin.ts:339` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/superadmin.ts:396` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/superadmin.ts:406` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/superadmin.ts:552` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/superadmin.ts:590` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/superadmin.ts:711` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/superadmin.ts:730` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/superadmin.ts:750` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/superadmin.ts:779` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/superadmin.ts:821` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/superadmin.ts:838` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/superadmin.ts:851` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/superadmin.ts:866` | - | - |
+| `UNMOUNTED:body` | `-` | - | `-` | `netlify/functions/routes/weather.ts:86` | - | - |
 
 ## Frontend API Calls
 
@@ -470,7 +573,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/weather.ts` | 189 |
 | frontend-api | `src/api/calendar.ts` | 173 |
 | frontend-api | `src/api/index.ts` | 34 |
-| frontend-api | `src/api/queryKeys.ts` | 298 |
+| frontend-api | `src/api/queryKeys.ts` | 297 |
 | frontend-api | `src/api/schemas/index.ts` | 21 |
 | frontend-api | `src/api/schemas/site.ts` | 61 |
 | frontend-api | `src/api/sites.ts` | 167 |
@@ -536,7 +639,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | shared-types | `types/db.ts` | 244 |
 | shared-types | `types/hrContracts.ts` | 179 |
 | shared-types | `types/hrDocuments.ts` | 132 |
-| shared-types | `types/messaging.ts` | 287 |
+| shared-types | `types/messaging.ts` | 306 |
 | shared-types | `types/messagingCompliance.ts` | 318 |
 | shared-types | `types/supabase.ts` | 135 |
 | shared-types | `types/trinidadPhone.ts` | 32 |
