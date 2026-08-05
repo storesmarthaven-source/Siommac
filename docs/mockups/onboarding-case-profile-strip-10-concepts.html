@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SIOMAC — Onboarding Profile Strip Concepts</title>
+  <style>
+    :root{--navy:#0b2b59;--navy-2:#183c72;--blue:#075ee8;--page:#f3f6fa;--card:#fff;--line:#dce4ef;--soft:#f7f9fc;--text:#17243b;--muted:#66758c;--red:#d92d3a;--red-soft:#fff0f1;--green:#16834b;--green-soft:#eaf7ef;--amber:#b96808;--amber-soft:#fff5e7;--shadow:0 8px 26px rgba(16,42,82,.07)}
+    *{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+    .page{width:min(1480px,calc(100% - 44px));margin:0 auto;padding:36px 0 70px}.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:24px}.page-head h1{margin:0;color:var(--navy);font-size:30px;letter-spacing:-.035em}.page-head p{max-width:720px;margin:8px 0 0;color:var(--muted);font-size:15px;line-height:1.5}.back{color:var(--blue);font-size:14px;font-weight:750;text-decoration:none}
+    .concepts{display:grid;gap:22px}.concept{padding:14px;border:1px solid var(--line);border-radius:18px;background:#eef2f7}.concept.selected{border-color:#8cb8f4;background:#eaf2ff;box-shadow:0 0 0 3px rgba(7,94,232,.09)}.concept-label{display:flex;align-items:center;justify-content:space-between;margin:0 3px 11px}.concept-label strong{color:var(--navy);font-size:15px}.concept-label span{color:var(--muted);font-size:12px}.selected .concept-label span{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;background:var(--green-soft);color:var(--green);font-weight:850}.selected .concept-label span:before{content:"✓";font-size:12px}.strip{overflow:hidden;border:1px solid #d8e1ec;border-radius:14px;background:var(--card);box-shadow:var(--shadow)}
+    .avatar{width:48px;height:48px;display:grid;place-items:center;flex:0 0 48px;border:1px solid #bdd3f5;border-radius:50%;background:#e9f2ff;color:#0756c9;font-size:16px;font-weight:850}.avatar.sm{width:34px;height:34px;flex-basis:34px;font-size:12px}.avatar.navy{border-color:rgba(255,255,255,.32);background:rgba(255,255,255,.13);color:#fff}
+    .person{display:flex;align-items:center;gap:12px;min-width:0}.person-copy{min-width:0}.person-copy strong,.person-copy span,.person-copy small{display:block}.person-copy strong{color:var(--navy);font-size:17px}.person-copy span{margin-top:2px;color:#465875;font-size:13px}.person-copy small{margin-top:3px;color:var(--muted);font-size:12px}.navy .person-copy strong,.navy .person-copy span{color:#fff}.navy .person-copy small{color:#c9d6eb}
+    .fact{min-width:0}.fact>span{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:11px;font-weight:750;text-transform:uppercase;letter-spacing:.055em}.fact>span svg{width:15px;height:15px}.fact strong{display:block;overflow:hidden;margin-top:5px;color:var(--navy);font-size:14px;text-overflow:ellipsis;white-space:nowrap}.fact small{display:block;margin-top:3px;color:var(--muted);font-size:11px}.fact-owner-name{display:flex;align-items:center;gap:7px;margin-top:5px}.fact-owner-name img{width:24px;height:24px;flex:0 0 24px;border:1px solid #c8d5e7;border-radius:50%;object-fit:cover}.fact-owner-name strong{margin:0}
+    .tag{display:inline-flex;align-items:center;gap:6px;width:max-content;padding:6px 9px;border-radius:999px;font-size:11px;font-weight:800;line-height:1}.tag:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}.tag.red{background:var(--red-soft);color:var(--red)}.tag.green{background:var(--green-soft);color:var(--green)}.tag.amber{background:var(--amber-soft);color:var(--amber)}.tag.blue{background:#eaf2ff;color:var(--blue)}
+    .icon-box{width:38px;height:38px;display:grid;place-items:center;flex:0 0 38px;border-radius:10px;background:#edf3fc;color:var(--navy)}.mini-owner{display:flex;align-items:center;gap:8px}.mini-owner strong{margin:0;font-size:13px}.mini-owner small{margin-top:2px}
+
+    /* 01 */
+    .c1{display:grid;grid-template-columns:minmax(280px,1.55fr) repeat(4,minmax(145px,1fr))}.c1>div{min-height:104px;padding:17px 18px;border-right:1px solid var(--line)}.c1>div:last-child{border-right:0}.c1 .identity{display:flex;align-items:center;background:var(--navy)}
+    /* 02 */
+    .c2{display:grid;grid-template-columns:360px 1fr}.c2 .identity{display:flex;align-items:center;padding:18px 20px;background:linear-gradient(130deg,var(--navy),#143e78)}.c2 .facts{display:grid;grid-template-columns:repeat(4,1fr);align-items:center;padding:14px 18px}.c2 .fact{min-height:62px;padding:8px 16px;border-left:1px solid var(--line)}
+    /* 03 */
+    .c3{display:grid;grid-template-columns:minmax(300px,1.2fr) minmax(0,2.8fr);padding:15px}.c3 .identity{display:flex;align-items:center;padding:8px 14px}.c3 .facts{display:grid;grid-template-columns:repeat(4,1fr);overflow:hidden;border:1px solid var(--line);border-radius:11px;background:var(--soft)}.c3 .fact{padding:13px 15px;border-right:1px solid var(--line)}.c3 .fact:last-child{border-right:0}
+    /* 04 */
+    .c4{display:grid;grid-template-columns:minmax(270px,1.1fr) 1.9fr auto;align-items:center;gap:20px;padding:17px 19px}.c4 .facts{display:flex;align-items:center;gap:0}.c4 .fact{min-width:150px;padding:4px 20px;border-left:1px solid var(--line)}.c4 .state{display:grid;justify-items:end;gap:8px;padding-left:20px;border-left:1px solid var(--line)}
+    /* 05 */
+    .c5{display:grid;grid-template-columns:340px 1fr;min-height:118px}.c5 .identity{display:flex;align-items:center;padding:20px;background:#f7faff;border-right:1px solid var(--line)}.c5 .right{display:grid;grid-template-rows:auto 1fr}.c5 .ribbon{display:flex;align-items:center;justify-content:space-between;padding:10px 17px;border-bottom:1px solid var(--line);background:#fbfcfe}.c5 .ribbon strong{color:var(--navy);font-size:13px}.c5 .facts{display:grid;grid-template-columns:repeat(4,1fr);align-items:center;padding:7px 3px}.c5 .fact{padding:6px 14px}
+    /* 06 */
+    .c6{display:flex;align-items:center;gap:0;padding:11px 14px}.c6 .identity{min-width:310px;padding:4px 18px 4px 4px}.c6 .facts{display:flex;align-items:center;flex:1;min-width:0;border-left:1px solid var(--line)}.c6 .fact{flex:1;padding:5px 18px}.c6 .state{display:flex;align-items:center;gap:10px;padding:0 4px 0 18px;border-left:1px solid var(--line)}
+    /* 07 */
+    .c7{display:grid;grid-template-columns:1.2fr repeat(4,1fr);gap:9px;padding:10px;background:#fff}.c7>div{min-height:88px;padding:13px 15px;border-radius:11px;background:var(--soft)}.c7 .identity{display:flex;align-items:center;background:var(--navy)}.c7 .fact{display:flex;flex-direction:column;justify-content:center}.c7 .status-cell{display:flex;flex-direction:column;justify-content:center}
+    /* 08 */
+    .c8{position:relative;display:grid;grid-template-columns:1.4fr repeat(4,1fr);padding-top:34px}.c8 .topline{position:absolute;inset:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:8px 15px;background:var(--navy);color:#dbe7fa;font-size:11px;font-weight:750}.c8 .topline strong{color:#fff}.c8>div:not(.topline){min-height:89px;padding:15px;border-right:1px solid var(--line)}.c8>div:last-child{border-right:0}.c8 .identity{display:flex;align-items:center}
+    /* 09 */
+    .c9{display:grid;grid-template-columns:300px 1fr}.c9 .identity{display:flex;align-items:center;padding:18px;border-right:1px solid var(--line)}.c9 .matrix{display:grid;grid-template-columns:repeat(4,1fr)}.c9 .matrix-item{display:grid;grid-template-columns:36px 1fr;align-items:center;gap:10px;padding:15px 14px;border-right:1px solid var(--line)}.c9 .matrix-item:last-child{border-right:0}
+    /* 10 */
+    .c10{display:grid;grid-template-columns:minmax(320px,1.4fr) 2fr;align-items:stretch}.c10 .identity{display:flex;align-items:center;padding:17px 20px;background:var(--navy)}.c10 .summary{display:grid;grid-template-columns:repeat(3,1fr) auto;align-items:center;padding:11px 14px}.c10 .fact{padding:7px 17px;border-right:1px solid var(--line)}.c10 .summary .tag{margin:0 10px}
+
+    @media(max-width:980px){.c1,.c2,.c3,.c5,.c7,.c8,.c9,.c10{grid-template-columns:1fr}.c1>div,.c8>div:not(.topline){border-right:0;border-bottom:1px solid var(--line)}.c2 .facts,.c3 .facts,.c5 .facts,.c7,.c8,.c9 .matrix,.c10 .summary{grid-template-columns:repeat(2,1fr)}.c4{grid-template-columns:1fr}.c4 .facts,.c6{align-items:stretch;flex-direction:column}.c6 .facts{width:100%;border-left:0;border-top:1px solid var(--line)}}
+  </style>
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs>
+  <symbol id="box" viewBox="0 0 24 24"><path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7M12 11v10"/></symbol>
+  <symbol id="user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></symbol>
+  <symbol id="route" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M8 5h4a4 4 0 0 1 4 4v1M16 14v1a4 4 0 0 1-4 4H8"/></symbol>
+  <symbol id="shield" viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 5 3 8 7 10 4-2 7-5 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="building" viewBox="0 0 24 24"><path d="M4 21V5l8-3 8 3v16M9 21v-4h6v4M8 7h1m6 0h1M8 11h1m6 0h1"/></symbol>
+</defs></svg>
+<main class="page">
+  <div class="page-head"><div><h1>Onboarding Profile Strip — 10 Concepts</h1><p>Same case data in every option. Choose the hierarchy and density that best fits the SIOMAC Case Detail hero.</p></div><a class="back" href="onboarding-case-detail-implementation-ready.html">Back to Case Detail</a></div>
+  <section class="concepts">
+    <article class="concept selected" data-approved="true"><div class="concept-label"><strong>01 · Navy Identity Anchor</strong><span>Selected · Applied to Case Detail</span></div><div class="strip c1">
+      <div class="identity navy"><div class="person"><span class="avatar navy">DB</span><span class="person-copy"><strong>Damani Baptiste</strong><span>EMP-0021 · Project Manager</span><small>Administration</small></span></div></div>
+      <div class="fact"><span><svg><use href="#box"/></svg>Package</span><strong>Standard Employee</strong><small>Version 2.3</small></div><div class="fact"><span><svg><use href="#user"/></svg>Case owner</span><div class="fact-owner-name"><img src="https://i.pravatar.cc/80?img=47" alt="Priya Patel" referrerpolicy="no-referrer"><strong>Priya Patel</strong></div><small>HR Operations</small></div><div class="fact"><span><svg><use href="#route"/></svg>Current stage</span><strong>Team Setup</strong><small>In progress</small></div><div class="fact"><span><svg><use href="#shield"/></svg>Status</span><strong>Blocked</strong><small>2 active blockers</small></div>
+    </div></article>
+
+    <article class="concept"><div class="concept-label"><strong>02 · Split Command Band</strong><span>Wide identity with evenly divided facts</span></div><div class="strip c2">
+      <div class="identity navy"><div class="person"><span class="avatar navy">DB</span><span class="person-copy"><strong>Damani Baptiste</strong><span>Project Manager</span><small>EMP-0021 · Administration</small></span></div></div>
+      <div class="facts"><div class="fact"><span>Package</span><strong>Standard Employee</strong><small>v2.3</small></div><div class="fact"><span>Owner</span><strong>Priya Patel</strong><small>HR Operations</small></div><div class="fact"><span>Stage</span><strong>Team Setup</strong><small>In progress</small></div><div class="fact"><span>Case health</span><span class="tag red" style="margin-top:7px">Blocked</span><small>2 blockers</small></div></div>
+    </div></article>
+
+    <article class="concept"><div class="concept-label"><strong>03 · Inset Facts Panel</strong><span>Softer operational summary</span></div><div class="strip c3">
+      <div class="identity"><div class="person"><span class="avatar">DB</span><span class="person-copy"><strong>Damani Baptiste</strong><span>Project Manager</span><small>EMP-0021 · Administration</small></span></div></div>
+      <div class="facts"><div class="fact"><span>Package</span><strong>Standard Employee</strong><small>Version 2.3</small></div><div class="fact"><span>Case owner</span><strong>Priya Patel</strong><small>HR Operations</small></div><div class="fact"><span>Stage</span><strong>Team Setup</strong><small>In progress</small></div><div class="fact"><span>Status</span><span class="tag red" style="margin-top:7px">Blocked</span><small>2 blockers</small></div></div>
+    </div></article>
+
+    <article class="concept"><div class="concept-label"><strong>04 · Editorial Row</strong><span>Minimal, low visual weight</span></div><div class="strip c4">
+      <div class="person"><span class="avatar">DB</span><span class="person-copy"><strong>Damani Baptiste</strong><span>EMP-0021 · Project Manager</span><small>Administration</small></span></div>
+      <div class="facts"><div class="fact"><span>Package</span><strong>Standard Employee v2.3</strong></div><div class="fact"><span>Owner</span><strong>Priya Patel</strong><small>HR Operations</small></div><div class="fact"><span>Stage</span><strong>Team Setup</strong><small>In progress</small></div></div>
+      <div class="state"><span class="tag red">Blocked</span><small>2 active blockers</small></div>
+    </div></article>
+
+    <article class="concept"><div class="concept-label"><strong>05 · Case Roster</strong><span>Profile left, operational ribbon right</span></div><div class="strip c5">
+      <div class="identity"><div class="person"><span class="avatar">DB</span><span class="person-copy"><strong>Damani Baptiste</strong><span>Project Manager</span><small>EMP-0021 · Administration</small></span></div></div>
+      <div class="right"><div class="ribbon"><strong>Standard Employee · Version 2.3</strong><span class="tag red">Blocked · 2</span></div><div class="facts"><div class="fact"><span>Owner</span><strong>Priya Patel</strong><small>HR Operations</small></div><div class="fact"><span>Stage</span><strong>Team Setup</strong><small>In progress</small></div><div class="fact"><span>Started</span><strong>10 Jul 2026</strong><small>17 days active</small></div><div class="fact"><span>Target</span><strong>14 Aug 2026</strong><small>18 days left</small></div></div></div>
+    </div></article>
+
+    <article class="concept"><div class="concept-label"><strong>06 · Compact Command Strip</strong><span>Shortest vertical footprint</span></div><div class="strip c6">
+      <div class="identity"><div class="person"><span class="avatar sm">DB</span><span class="person-copy"><strong>Damani Baptiste</strong><span>EMP-0021 · Project Manager</span></span></div></div>
+      <div class="facts"><div class="fact"><span>Package</span><strong>Standard Employee v2.3</strong></div><div class="fact"><span>Owner</span><strong>Priya Patel · HR Operations</strong></div><div class="fact"><span>Stage</span><strong>Team Setup · In progress</strong></div></div>
+      <div class="state"><span class="tag red">Blocked</span><small>2 blockers</small></div>
+    </div></article>
+
+    <article class="concept"><div class="concept-label"><strong>07 · Soft Tile Strip</strong><span>iOS-style grouped facts</span></div><div class="strip c7">
+      <div class="identity navy"><div class="person"><span class="avatar navy">DB</span><span class="person-copy"><strong>Damani Baptiste</strong><span>Project Manager</span><small>EMP-0021</small></span></div></div>
+      <div class="fact"><span>Package</span><strong>Standard Employee</strong><small>Version 2.3</small></div><div class="fact"><span>Owner</span><strong>Priya Patel</strong><small>HR Operations</small></div><div class="fact"><span>Stage</span><strong>Team Setup</strong><small>In progress</small></div><div class="status-cell"><span class="fact"><span>Status</span></span><span class="tag red" style="margin-top:7px">Blocked · 2</span></div>
+    </div></article>
+
+    <article class="concept"><div class="concept-label"><strong>08 · Status Ribbon</strong><span>Case condition always visible</span></div><div class="strip c8">
+      <div class="topline"><span>ONB-2026-DEMO03 · Active onboarding case</span><strong>2 blockers require attention</strong></div>
+      <div class="identity"><div class="person"><span class="avatar">DB</span><span class="person-copy"><strong>Damani Baptiste</strong><span>Project Manager</span><small>Administration</small></span></div></div>
+      <div class="fact"><span>Package</span><strong>Standard Employee</strong><small>v2.3</small></div><div class="fact"><span>Owner</span><strong>Priya Patel</strong><small>HR Operations</small></div><div class="fact"><span>Stage</span><strong>Team Setup</strong><small>In progress</small></div><div class="fact"><span>Status</span><span class="tag red" style="margin-top:7px">Blocked</span></div>
+    </div></article>
+
+    <article class="concept"><div class="concept-label"><strong>09 · Icon Matrix</strong><span>Most scannable operational layout</span></div><div class="strip c9">
+      <div class="identity"><div class="person"><span class="avatar">DB</span><span class="person-copy"><strong>Damani Baptiste</strong><span>Project Manager</span><small>EMP-0021</small></span></div></div>
+      <div class="matrix"><div class="matrix-item"><span class="icon-box"><svg><use href="#box"/></svg></span><div class="fact"><span>Package</span><strong>Standard Employee</strong><small>v2.3</small></div></div><div class="matrix-item"><span class="icon-box"><svg><use href="#user"/></svg></span><div class="fact"><span>Owner</span><strong>Priya Patel</strong><small>HR Operations</small></div></div><div class="matrix-item"><span class="icon-box"><svg><use href="#route"/></svg></span><div class="fact"><span>Stage</span><strong>Team Setup</strong><small>In progress</small></div></div><div class="matrix-item"><span class="icon-box" style="background:var(--red-soft);color:var(--red)"><svg><use href="#shield"/></svg></span><div class="fact"><span>Status</span><strong style="color:var(--red)">Blocked</strong><small>2 blockers</small></div></div></div>
+    </div></article>
+
+    <article class="concept"><div class="concept-label"><strong>10 · Balanced Hero Strip</strong><span>Employee Record-inspired composition</span></div><div class="strip c10">
+      <div class="identity navy"><div class="person"><span class="avatar navy">DB</span><span class="person-copy"><strong>Damani Baptiste</strong><span>EMP-0021 · Project Manager</span><small>Administration</small></span></div></div>
+      <div class="summary"><div class="fact"><span>Package</span><strong>Standard Employee</strong><small>Version 2.3</small></div><div class="fact"><span>Accountability</span><div class="mini-owner" style="margin-top:6px"><span class="avatar sm">PP</span><div><strong>Priya Patel</strong><small>HR Operations</small></div></div></div><div class="fact"><span>Current stage</span><strong>Team Setup</strong><small>In progress</small></div><span class="tag red">Blocked · 2</span></div>
+    </div></article>
+  </section>
+</main>
+</body>
+</html>

@@ -14,22 +14,74 @@ import { writeHrAudit } from '../lib/hr/employeeCore';
 import { startOnboardingCase } from '../lib/hr/onboardingCore';
 import {
   loadPackagePlan, listPackageSummaries, getPackageDetail, createPackage, updatePackage, setPackageStatus,
+  getPackageReferenceData,
   createTaskTemplate, updateTaskTemplate, deleteTaskTemplate, createHandoffTemplate, updateHandoffTemplate, deleteHandoffTemplate,
 } from '../lib/hr/onboardingPackageService';
+import { resolveOnboardingScope } from '../lib/hr/onboardingScope';
 import { getOnboardingDashboardStats, listOnboardingCases, listOnboardingTasks, listOnboardingHandoffs, listOnboardingBlockers, listRecentOnboardingActivity, getOnboardingTaskDetail } from '../lib/hr/onboardingQueries';
+import { listOnboardingWorkQueue } from '../lib/hr/onboardingWorkQueue';
+import { getMyOnboarding } from '../lib/hr/onboardingWorker';
+import { issueWorkerDocumentUploadUrl, commitWorkerDocument } from '../lib/hr/onboardingWorkerDocuments';
 import { getOnboardingIntakePreview } from '../lib/hr/onboardingIntake';
-import { addOnboardingTask, blockOnboardingTask, unblockOnboardingTask, completeOnboardingCase, pauseOnboardingCase, resumeOnboardingCase, reassignOnboardingOwner, markOnboardingReady, resolveOnboardingBlocker, escalateOnboardingBlocker, waiveOnboardingBlocker, notifyOnboardingBlockerOwner, listOnboardingAudit, addOnboardingTaskNote, attachOnboardingTaskEvidence, taskEvidenceMissing, retryOnboardingHandoff, acceptOnboardingHandoff, completeOnboardingHandoff, cancelOnboardingHandoff } from '../lib/hr/onboardingMutations';
+import { getOnboardingLaunchPreflight } from '../lib/hr/onboardingLaunchPreflight';
+import { addOnboardingTask, blockOnboardingTask, unblockOnboardingTask, completeOnboardingCase, pauseOnboardingCase, resumeOnboardingCase, reassignOnboardingOwner, markOnboardingReady, resolveOnboardingBlocker, escalateOnboardingBlocker, waiveOnboardingBlocker, notifyOnboardingBlockerOwner, listOnboardingAudit, addOnboardingTaskNote, attachOnboardingTaskEvidence, reviewOnboardingTaskEvidence, taskEvidenceMissing, retryOnboardingHandoff, acceptOnboardingHandoff, completeOnboardingHandoff, cancelOnboardingHandoff } from '../lib/hr/onboardingMutations';
 import { createAttachmentUploadUrl } from '../lib/upload';
 import { listActionTemplates, createActionTemplate, updateActionTemplate, retireActionTemplate, listCaseActions, addCaseAction, updateCaseAction, completeCaseAction, cancelCaseAction, type ActionTemplateInput, type AddCaseActionInput } from '../lib/hr/onboardingCustomActions';
-import { provisionAccount, acceptAccountInvite } from '../lib/hr/accountProvisioning';
+import { getAccountProvisioningPreflight, provisionAccount, acceptAccountInvite } from '../lib/hr/accountProvisioning';
 import { previewOnboardingCommunication, listOnboardingCommunications, sendOnboardingCommunication, resendOnboardingCommunication } from '../lib/hr/onboardingCommunications';
 import { listOnboardingReports, runOnboardingReport, exportOnboardingReport } from '../lib/hr/onboardingReports';
 import type { RunOnboardingReportArgs } from '../../../types/hrOnboarding';
-import type { OnboardingCaseListArgs, OnboardingDashboardStatsArgs, OnboardingTaskListArgs, OnboardingHandoffListArgs, OnboardingBlockerListArgs } from '../../../types/hrOnboarding';
+import type { OnboardingCaseListArgs, OnboardingDashboardStatsArgs, OnboardingTaskListArgs, OnboardingHandoffListArgs, OnboardingBlockerListArgs, OnboardingWorkQueueArgs } from '../../../types/hrOnboarding';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
 const body = (c: { get: (k: string) => unknown }) => (c.get('body') as Record<string, unknown>).args ?? {};
+
+// Worker self-service is deliberately separate from the HR read-scope ladder. The
+// projection binds its subject to actor.id and excludes internal case operations.
+// The worker's own onboarding. The subject is ALWAYS the authenticated actor — this route
+// accepts no employee id, so it cannot be pointed at anyone else.
+router.post('/onboarding/my', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.self.view');
+  try { return c.json({ success: true, data: await getMyOnboarding(actor.id) }); }
+  catch (e) {
+    // Without this the projection's thrown { status, message } escaped as an unhandled 500
+    // and the worker saw a blank page instead of a stated failure.
+    const err = e as { status?: number; message?: string };
+    return c.json({ success: false, message: err.message ?? 'Your onboarding could not be loaded.' }, (err.status ?? 500) as 200);
+  }
+});
+
+// ── worker document upload / commit ─────────────────────────────────────────────
+// Gated on the WORKER's own self-service key — not the cross-employee HR document
+// permission. Neither route accepts an employee id; the subject is the token.
+const WorkerDocFile = {
+  fileName: z.string().min(1).max(160),
+  mimeType: z.string().min(3).max(120),
+  fileSize: z.number().int().positive(),
+};
+
+router.post('/onboarding/my/document/upload-url', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.self.view');
+  const v = zv(c, z.object({ requestId: z.string().uuid(), ...WorkerDocFile }), body(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await issueWorkerDocumentUploadUrl(actor.id, v.data) }); }
+  catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Could not start the upload.' }, (er.status ?? 500) as 200); }
+});
+
+router.post('/onboarding/my/document/commit', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.self.view');
+  const v = zv(c, z.object({
+    requestId: z.string().uuid(),
+    // Bounded and validated again server-side against the issued prefix.
+    path: z.string().min(1).max(400),
+    expiryDate: z.string().max(20).nullable().optional(),
+    ...WorkerDocFile,
+  }), body(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await commitWorkerDocument(actor.id, v.data) }); }
+  catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Could not submit the document.' }, (er.status ?? 500) as 200); }
+});
 
 // ── 1. preview-package ────────────────────────────────────────────────────────
 router.post('/onboarding/preview-package', async c => {
@@ -49,18 +101,63 @@ router.post('/onboarding/preview-package', async c => {
 // ── 1a. intake-preview (Start Onboarding wizard: verification + documents + duplicate + task/handoff preview) ──
 router.post('/onboarding/intake-preview', async c => {
   await requirePermission(c, 'hr.onboarding.view');
-  const v = zv(c, z.object({ employeeId: z.string().min(1), packageKey: z.string().min(1) }), body(c));
+  const v = zv(c, z.object({
+    employeeId: z.string().min(1),
+    packageKey: z.string().min(1),
+    targetStartDate: z.string().max(20).nullable().optional(),
+  }), body(c));
   if (!v.ok) return v.response;
   try { return c.json({ success: true, data: await getOnboardingIntakePreview(v.data) }); }
   catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed to load intake preview.' }, (er.status ?? 500) as 200); }
 });
 
+router.post('/onboarding/account-preflight', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.view');
+  const v = zv(c, z.object({
+    employeeId: z.string().min(1),
+    packageKey: z.string().min(1),
+    ownerId: z.string().nullable().optional(),
+  }), body(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await getAccountProvisioningPreflight({ ...v.data, ownerId: v.data.ownerId ?? actor.id }) }); }
+  catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed to resolve account setup.' }, (er.status ?? 500) as 200); }
+});
+
+router.post('/onboarding/launch-preflight', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.start');
+  const v = zv(c, z.object({
+    employeeId: z.string().min(1), packageKey: z.string().min(1), ownerId: z.string().nullable().optional(),
+    targetStartDate: z.string().max(20).nullable().optional(),
+    includeActionTemplateIds: z.array(z.string().uuid()).max(100).nullable().optional(),
+    oneOffActions: z.array(z.object({
+      actionName: z.string().min(2).max(120),
+      actionType: z.enum(['custom_task','custom_handoff','custom_document_request','custom_training_request','custom_notification','custom_checklist_item','custom_external_action']),
+      description: z.string().max(500).nullable().optional(), instructions: z.string().max(2000).nullable().optional(),
+      ownerRole: z.string().max(80).nullable().optional(), ownerEmployeeId: z.string().max(120).nullable().optional(),
+      ownerDepartmentId: z.string().uuid().nullable().optional(), dueOffsetDays: z.number().int().min(-365).max(365).nullable().optional(),
+      priority: z.enum(['low','normal','high','critical']).optional(), blocksOnboarding: z.boolean().optional(), requiresEvidence: z.boolean().optional(),
+      externalSystemKey: z.string().max(100).nullable().optional(), externalActionUrl: z.string().url().max(500).nullable().optional(),
+    })).max(25).nullable().optional(),
+    documentSelections: z.array(z.object({
+      requirementId: z.string().min(1), action: z.enum(['use_existing','request_from_worker','waive','none']),
+      existingDocumentId: z.string().uuid().nullable().optional(), waiverReason: z.string().max(500).nullable().optional(),
+    })).max(100).nullable().optional(),
+  }), body(c));
+  if (!v.ok) return v.response;
+  const authority = {
+    canWaiveDocuments: await userCan(actor, 'hr.onboarding.documents.waive'),
+    canCreateOneOff: await userCan(actor, 'hr.onboarding.custom_actions.create'),
+  };
+  try { return c.json({ success: true, data: await getOnboardingLaunchPreflight(actor.id, v.data, authority) }); }
+  catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed to validate onboarding launch.' }, (er.status ?? 500) as 200); }
+});
+
 // ── 1b. packages/list (wizard picker + package manager) ──────────────────────────
 router.post('/onboarding/packages/list', async c => {
   await requirePermission(c, 'hr.onboarding.view');
-  const v = zv(c, z.object({ includeRetired: z.boolean().optional() }), body(c));
+  const v = zv(c, z.object({ includeRetired: z.boolean().optional(), employeeId: z.string().min(1).optional() }), body(c));
   if (!v.ok) return v.response;
-  try { return c.json({ success: true, data: await listPackageSummaries(v.data.includeRetired ?? false) }); }
+  try { return c.json({ success: true, data: await listPackageSummaries(v.data.includeRetired ?? false, v.data.employeeId) }); }
   catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed to list packages.' }, (er.status ?? 500) as 200); }
 });
 
@@ -68,33 +165,51 @@ router.post('/onboarding/packages/list', async c => {
 router.post('/onboarding/start', async c => {
   const actor = await requirePermission(c, 'hr.onboarding.start');
   const v = zv(c, z.object({
+    requestId:  z.string().uuid(),
     employeeId: z.string().min(1),
     packageKey: z.string().min(1),
     ownerId:    z.string().nullable().optional(),
-    dueAt:      z.string().nullable().optional(),
     reason:          z.string().max(60).nullable().optional(),
     priority:        z.string().max(30).nullable().optional(),
     targetStartDate: z.string().max(20).nullable().optional(),
-    launchMode:      z.string().max(30).nullable().optional(),
-    caseOwner:       z.string().max(80).nullable().optional(),
-    workerType:      z.string().max(30).nullable().optional(),
-    includeActionTemplateIds: z.array(z.string().uuid()).nullable().optional(),
+    includeActionTemplateIds: z.array(z.string().uuid()).max(100).nullable().optional(),
+    oneOffActions: z.array(z.object({
+      actionName: z.string().min(2).max(120),
+      actionType: z.enum(['custom_task','custom_handoff','custom_document_request','custom_training_request','custom_notification','custom_checklist_item','custom_external_action']),
+      description: z.string().max(500).nullable().optional(),
+      instructions: z.string().max(2000).nullable().optional(),
+      ownerRole: z.string().max(80).nullable().optional(),
+      ownerEmployeeId: z.string().max(120).nullable().optional(),
+      ownerDepartmentId: z.string().uuid().nullable().optional(),
+      dueOffsetDays: z.number().int().min(-365).max(365).nullable().optional(),
+      priority: z.enum(['low','normal','high','critical']).optional(),
+      blocksOnboarding: z.boolean().optional(),
+      requiresEvidence: z.boolean().optional(),
+      externalSystemKey: z.string().max(100).nullable().optional(),
+      externalActionUrl: z.string().url().max(500).nullable().optional(),
+    })).max(25).nullable().optional(),
     documentSelections: z.array(z.object({
       requirementId: z.string().min(1),
-      action: z.enum(['use_existing', 'uploaded', 'request_from_worker', 'waive', 'none']),
+      action: z.enum(['use_existing', 'request_from_worker', 'waive', 'none']),
       existingDocumentId: z.string().uuid().nullable().optional(),
-      uploadedFilePath: z.string().nullable().optional(),
       waiverReason: z.string().max(500).nullable().optional(),
-    })).nullable().optional(),
-    scheduledLaunchAt: z.string().nullable().optional(),
-    // Case-type-specific intake fields (contractor/temporary) — persisted on case metadata.
-    // Bounded record of primitive values to keep the payload honest (no nested blobs).
-    workerTypeDetails: z.record(z.string(), z.union([z.string().max(200), z.number(), z.boolean(), z.null()])).nullable().optional(),
+    })).max(100).nullable().optional(),
   }), body(c));
   if (!v.ok) return v.response;
 
+  const authority = {
+    canWaiveDocuments: await userCan(actor, 'hr.onboarding.documents.waive'),
+    canCreateOneOff: await userCan(actor, 'hr.onboarding.custom_actions.create'),
+  };
+  if (v.data.documentSelections?.some(selection => selection.action === 'waive') && !authority.canWaiveDocuments) {
+    return c.json({ success: false, message: 'Document waiver permission is required.' }, 403 as 200);
+  }
+  if (v.data.oneOffActions?.length && !authority.canCreateOneOff) {
+    return c.json({ success: false, message: 'One-off onboarding action permission is required.' }, 403 as 200);
+  }
+
   try {
-    const r = await startOnboardingCase(actor.id, v.data);
+    const r = await startOnboardingCase(actor.id, v.data, authority);
     return c.json({ success: true, data: { caseId: r.caseId, caseNo: r.caseNo, status: 'in_progress', taskCount: r.taskCount, handoffCount: r.handoffCount } });
   } catch (e) {
     const err = e as { status?: number; message?: string };
@@ -108,7 +223,10 @@ router.post('/onboarding/task/complete', async c => {
   const v = zv(c, z.object({ taskId: z.string().uuid() }), body(c));
   if (!v.ok) return v.response;
 
-  const { data: task } = await sb.from('hr_onboarding_tasks').select('id, case_id, assigned_to, status, task_key').eq('id', v.data.taskId).maybeSingle<{ id: string; case_id: string; assigned_to: string | null; status: string; task_key: string }>();
+  const taskRead = await sb.from('hr_onboarding_tasks').select('id, case_id, assigned_to, status, task_key, task_title').eq('id', v.data.taskId).maybeSingle<{ id: string; case_id: string; assigned_to: string | null; status: string; task_key: string; task_title: string }>();
+  // A failed lookup is NOT "not found" — reporting 404 on a broken read hides an outage.
+  if (taskRead.error) return c.json({ success: false, message: taskRead.error.message }, 500 as 200);
+  const task = taskRead.data;
   if (!task) return c.json({ success: false, message: 'Onboarding task not found.' }, 404 as 200);
   // The assigned user may complete their own task; otherwise the manage permission is required.
   if (task.assigned_to !== actor.id && !(await userCan(actor, 'hr.onboarding.task.manage'))) {
@@ -121,18 +239,41 @@ router.post('/onboarding/task/complete', async c => {
     return c.json({ success: false, message: 'This task requires evidence — attach it before completing (per settings).' }, 400 as 200);
   }
 
-  await sb.from('hr_onboarding_tasks').update({ status: 'completed', completed_by: actor.id, completed_at: new Date().toISOString() }).eq('id', task.id);
+  // Guarded on the prior state so two concurrent completions cannot both "succeed": the
+  // second matches zero rows and is reported rather than silently double-completing.
+  const completed = await sb.from('hr_onboarding_tasks')
+    .update({ status: 'completed', completed_by: actor.id, completed_at: new Date().toISOString() })
+    .eq('id', task.id).not('status', 'in', '("completed","skipped")')
+    .select('id').maybeSingle<{ id: string }>();
+  if (completed.error) return c.json({ success: false, message: completed.error.message }, 500 as 200);
+  if (!completed.data) return c.json({ success: false, message: 'This task was completed by someone else. Reload and try again.' }, 409 as 200);
+
+  // Every successful completion emits its OWN task-level event. Previously the only event
+  // was `onboarding.completed`, and only when the whole case closed — so an individual
+  // completion left no event trail at all (spec §2 requires one per mutation).
+  await emitAppEvent({
+    eventType: 'onboarding.task.completed', sourceModule: 'hr', sourceEntityType: 'onboarding_case',
+    sourceEntityId: task.case_id, actorUserId: actor.id, severity: 'info',
+    payload: { taskId: task.id, taskKey: task.task_key, taskTitle: task.task_title },
+  });
 
   // Auto-complete the case when no open (non-completed/skipped) tasks remain.
-  const { count: openCount } = await sb.from('hr_onboarding_tasks').select('id', { count: 'exact', head: true })
+  const openRead = await sb.from('hr_onboarding_tasks').select('id', { count: 'exact', head: true })
     .eq('case_id', task.case_id).not('status', 'in', '("completed","skipped")');
+  // Fail loudly: a swallowed error here would report 0 open tasks and close the case.
+  if (openRead.error) return c.json({ success: false, message: openRead.error.message }, 500 as 200);
   let caseCompleted = false;
-  if ((openCount ?? 0) === 0) {
-    await sb.from('hr_onboarding_cases').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', task.case_id);
+  if ((openRead.count ?? 0) === 0) {
+    const closed = await sb.from('hr_onboarding_cases')
+      .update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', task.case_id);
+    if (closed.error) return c.json({ success: false, message: closed.error.message }, 500 as 200);
     caseCompleted = true;
-    const { data: kase } = await sb.from('hr_onboarding_cases').select('employee_id, case_no').eq('id', task.case_id).maybeSingle<{ employee_id: string | null; case_no: string }>();
-    void emitAppEvent({ eventType: 'onboarding.completed', sourceModule: 'hr', sourceEntityType: 'onboarding_case',
-      sourceEntityId: task.case_id, actorUserId: actor.id, severity: 'info', payload: { employeeId: kase?.employee_id, caseNo: kase?.case_no } });
+    const kaseRead = await sb.from('hr_onboarding_cases').select('employee_id, case_no').eq('id', task.case_id).maybeSingle<{ employee_id: string | null; case_no: string }>();
+    if (kaseRead.error) return c.json({ success: false, message: kaseRead.error.message }, 500 as 200);
+    // The case-level event is PRESERVED alongside the task-level one — they mean different
+    // things and downstream consumers subscribe to them separately.
+    await emitAppEvent({ eventType: 'onboarding.completed', sourceModule: 'hr', sourceEntityType: 'onboarding_case',
+      sourceEntityId: task.case_id, actorUserId: actor.id, severity: 'info', payload: { employeeId: kaseRead.data?.employee_id, caseNo: kaseRead.data?.case_no } });
   }
   await writeHrAudit({ submoduleKey: 'onboarding', recordId: task.case_id, actorId: actor.id, action: 'hr.onboarding.task_completed', newState: { taskKey: task.task_key, caseCompleted } });
   return c.json({ success: true, data: { taskId: task.id, status: 'completed', caseCompleted } });
@@ -208,7 +349,11 @@ const CaseListSchema = z.object({
   readinessState: z.enum(['all', 'ready', 'not_ready']).optional(),
   page: z.number().int().positive().optional(),
   pageSize: z.number().int().positive().max(200).optional(),
-  sort: z.object({ field: z.enum(['case_no', 'due_at', 'started_at', 'status', 'progress']), direction: z.enum(['asc', 'desc']) }).optional(),
+  // Upcoming Starts + Owner Required drill-throughs. Bounded so a caller cannot request an
+  // unbounded start window.
+  startsWithinDays: z.number().int().min(0).max(365).optional(),
+  unassignedOwner: z.boolean().optional(),
+  sort: z.object({ field: z.enum(['case_no', 'due_at', 'started_at', 'status', 'progress', 'target_start_date']), direction: z.enum(['asc', 'desc']) }).optional(),
 });
 const TaskListSchema = z.object({
   caseId: z.string().uuid().optional(), statuses: StrArr, ownerRoles: StrArr, moduleKeys: StrArr, packageKeys: StrArr,
@@ -217,12 +362,50 @@ const TaskListSchema = z.object({
 const HandoffListSchema = z.object({ caseId: z.string().uuid().optional(), targetModules: StrArr, statuses: StrArr });
 const BlockerListSchema = z.object({ caseId: z.string().uuid().optional(), blockingModules: StrArr, statuses: StrArr, severities: StrArr });
 
+// ── Onboarding read scope ───────────────────────────────────────────────────────
+// ONE Zod schema and ONE resolution path for every scoped read, so no surface can accept
+// a scope the others reject. Omitted => 'my'. An unauthorised 'team'/'all' throws 403 from
+// the resolver and is never downgraded to a narrower scope.
+const ScopeSchema = z.enum(['my', 'team', 'all']).optional();
+
+// ── Unified Work Queue ───────────────────────────────────────────────────────────
+// Every input is bounded and enum-constrained. Unlike the older StrArr filters, the id
+// lists here have an explicit cap on both element count and element length: they are
+// forwarded into a single SQL call, so an unbounded array would be an unbounded query.
+// `scope` is validated HERE rather than being coerced downstream — an unrecognised scope is
+// a 400, never a silent fall back to 'my', which would hide a caller's bug.
+const IdArr = z.array(z.string().min(1).max(120)).max(100).optional();
+const WorkQueueSchema = z.object({
+  scope: ScopeSchema,
+  sourceTypes: z.array(z.enum(['task', 'handoff', 'blocker', 'evidence'])).max(4).optional(),
+  lifecycles: z.array(z.enum(['open', 'in_progress', 'blocked', 'done', 'cancelled'])).max(5).optional(),
+  dueState: z.enum(['all', 'overdue', 'due_today', 'due_this_week', 'unscheduled']).optional(),
+  departmentIds: IdArr, queues: IdArr, accountableIds: IdArr,
+  unassigned: z.boolean().optional(),
+  query: z.string().max(200).optional(),
+  sort: z.object({
+    field: z.enum(['due_at', 'title', 'employee_name', 'case_no', 'source_type', 'status', 'created_at']),
+    direction: z.enum(['asc', 'desc']),
+  }).optional(),
+  page: z.number().int().positive().max(10000).optional(),
+  pageSize: z.number().int().positive().max(200).optional(),
+});
+
+async function readScope(c: Parameters<typeof requireUser>[0], raw: unknown) {
+  const actor = await requireUser(c);
+  const parsed = ScopeSchema.safeParse(raw);
+  if (!parsed.success) {
+    throw Object.assign(new Error('Invalid onboarding scope. Expected my, team or all.'), { status: 400 });
+  }
+  return resolveOnboardingScope({ id: actor.id, role: actor.role }, parsed.data);
+}
+
 // ── 7. dashboard-stats (Overview KPIs) ──────────────────────────────────────────
 router.post('/onboarding/dashboard-stats', async c => {
   await requirePermission(c, 'hr.onboarding.view');
   const v = zv(c, DashSchema, body(c));
   if (!v.ok) return v.response;
-  try { return c.json({ success: true, data: await getOnboardingDashboardStats(v.data as OnboardingDashboardStatsArgs) }); }
+  try { return c.json({ success: true, data: await getOnboardingDashboardStats(v.data as OnboardingDashboardStatsArgs, await readScope(c, (body(c) as Record<string, unknown>).scope)) }); }
   catch (e) { const err = e as { status?: number; message?: string }; return c.json({ success: false, message: err.message ?? 'Failed to load stats.' }, (err.status ?? 500) as 200); }
 });
 
@@ -231,7 +414,7 @@ router.post('/onboarding/list', async c => {
   await requirePermission(c, 'hr.onboarding.view');
   const v = zv(c, CaseListSchema, body(c));
   if (!v.ok) return v.response;
-  try { return c.json({ success: true, data: await listOnboardingCases(v.data as OnboardingCaseListArgs) }); }
+  try { return c.json({ success: true, data: await listOnboardingCases(v.data as OnboardingCaseListArgs, await readScope(c, (body(c) as Record<string, unknown>).scope)) }); }
   catch (e) { const err = e as { status?: number; message?: string }; return c.json({ success: false, message: err.message ?? 'Failed to list cases.' }, (err.status ?? 500) as 200); }
 });
 
@@ -240,7 +423,7 @@ router.post('/onboarding/tasks/list', async c => {
   await requirePermission(c, 'hr.onboarding.view');
   const v = zv(c, TaskListSchema, body(c));
   if (!v.ok) return v.response;
-  try { return c.json({ success: true, data: await listOnboardingTasks(v.data as OnboardingTaskListArgs) }); }
+  try { return c.json({ success: true, data: await listOnboardingTasks(v.data as OnboardingTaskListArgs, await readScope(c, (body(c) as Record<string, unknown>).scope)) }); }
   catch (e) { const err = e as { status?: number; message?: string }; return c.json({ success: false, message: err.message ?? 'Failed to list tasks.' }, (err.status ?? 500) as 200); }
 });
 
@@ -249,7 +432,7 @@ router.post('/onboarding/handoffs/list', async c => {
   await requirePermission(c, 'hr.onboarding.view');
   const v = zv(c, HandoffListSchema, body(c));
   if (!v.ok) return v.response;
-  try { return c.json({ success: true, data: await listOnboardingHandoffs(v.data as OnboardingHandoffListArgs) }); }
+  try { return c.json({ success: true, data: await listOnboardingHandoffs(v.data as OnboardingHandoffListArgs, await readScope(c, (body(c) as Record<string, unknown>).scope)) }); }
   catch (e) { const err = e as { status?: number; message?: string }; return c.json({ success: false, message: err.message ?? 'Failed to list handoffs.' }, (err.status ?? 500) as 200); }
 });
 
@@ -258,8 +441,19 @@ router.post('/onboarding/blockers/list', async c => {
   await requirePermission(c, 'hr.onboarding.view');
   const v = zv(c, BlockerListSchema, body(c));
   if (!v.ok) return v.response;
-  try { return c.json({ success: true, data: await listOnboardingBlockers(v.data as OnboardingBlockerListArgs) }); }
+  try { return c.json({ success: true, data: await listOnboardingBlockers(v.data as OnboardingBlockerListArgs, await readScope(c, (body(c) as Record<string, unknown>).scope)) }); }
   catch (e) { const err = e as { status?: number; message?: string }; return c.json({ success: false, message: err.message ?? 'Failed to list blockers.' }, (err.status ?? 500) as 200); }
+});
+
+// ── 11a. work-queue/list — the unified executable-work queue ─────────────────────
+// One RPC over tasks + handoffs + blockers + evidence submissions. Filtering, sorting,
+// pagination and the EXACT total all happen in Postgres; nothing is merged or sliced here.
+router.post('/onboarding/work-queue/list', async c => {
+  await requirePermission(c, 'hr.onboarding.view');
+  const v = zv(c, WorkQueueSchema, body(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await listOnboardingWorkQueue(v.data as OnboardingWorkQueueArgs, await readScope(c, (body(c) as Record<string, unknown>).scope)) }); }
+  catch (e) { const err = e as { status?: number; message?: string }; return c.json({ success: false, message: err.message ?? 'Failed to load the work queue.' }, (err.status ?? 500) as 200); }
 });
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -321,6 +515,21 @@ router.post('/onboarding/task/attach-evidence', async c => {
   const gate = await requireTaskActor(c, v.data.taskId);
   if (gate instanceof Response) return gate;
   return mutate(c, () => attachOnboardingTaskEvidence(gate.actorId, v.data));
+});
+
+// ── task/review-evidence — approve or return ONE submission ──────────────────────
+// Gated on hr.onboarding.task.manage, NOT requireTaskActor: submitting evidence and ruling
+// on it are different acts, and the assignee must not be able to approve their own upload.
+router.post('/onboarding/task/review-evidence', async c => {
+  await requirePermission(c, 'hr.onboarding.task.manage');
+  const v = zv(c, z.object({
+    evidenceId: z.string().uuid(),
+    decision: z.enum(['approved', 'returned']),
+    note: z.string().max(1000).nullable().optional(),
+  }), body(c));
+  if (!v.ok) return v.response;
+  const actor = await requireUser(c);
+  return mutate(c, () => reviewOnboardingTaskEvidence(actor.id, v.data));
 });
 
 // ── 12. task/add (one-off task on a case) ────────────────────────────────────────
@@ -485,6 +694,7 @@ router.post('/onboarding/communications/resend', async c => {
 const ReportKey = z.enum(['cycle_time', 'blocked_cases', 'task_owner_performance', 'handoff_completion', 'package_effectiveness', 'activation_readiness', 'overdue_tasks', 'contractor_onboarding', 'safety_critical_onboarding']);
 const RunReportSchema = z.object({
   reportKey: ReportKey, dateFrom: z.string().nullable().optional(), dateTo: z.string().nullable().optional(),
+  scope: ScopeSchema,
   departmentIds: StrArr, siteIds: StrArr, packageKeys: StrArr, ownerIds: StrArr, workerTypes: StrArr, status: StrArr,
   groupBy: z.enum(['day', 'week', 'month', 'department', 'package', 'owner']).optional(),
   page: z.number().int().positive().optional(), pageSize: z.number().int().positive().max(1000).optional(),
@@ -497,13 +707,13 @@ router.post('/onboarding/reports/run', async c => {
   await requirePermission(c, 'hr.onboarding.reports.view');
   const v = zv(c, RunReportSchema, body(c));
   if (!v.ok) return v.response;
-  return mutate(c, () => runOnboardingReport(v.data as RunOnboardingReportArgs));
+  return mutate(c, async () => runOnboardingReport(v.data as RunOnboardingReportArgs, await readScope(c, v.data.scope)));
 });
 router.post('/onboarding/reports/export', async c => {
   const actor = await requirePermission(c, 'hr.onboarding.reports.export');
   const v = zv(c, RunReportSchema, body(c));
   if (!v.ok) return v.response;
-  return mutate(c, () => exportOnboardingReport(actor.id, v.data as RunOnboardingReportArgs));
+  return mutate(c, async () => exportOnboardingReport(actor.id, v.data as RunOnboardingReportArgs, await readScope(c, v.data.scope)));
 });
 
 // ── 23. audit (case Audit tab) ───────────────────────────────────────────────────
@@ -631,6 +841,11 @@ router.post('/onboarding/packages/get', async c => {
   return c.json({ success: true, data: detail });
 });
 
+router.post('/onboarding/packages/reference-data', async c => {
+  await requirePermission(c, 'hr.onboarding.packages.manage');
+  return mutate(c, getPackageReferenceData);
+});
+
 // ── 34. packages/create ──────────────────────────────────────────────────────────
 router.post('/onboarding/packages/create', async c => {
   const actor = await requirePermission(c, 'hr.onboarding.packages.manage');
@@ -720,7 +935,7 @@ router.post('/onboarding/activity/recent', async c => {
   await requirePermission(c, 'hr.onboarding.view');
   const v = zv(c, z.object({ limit: z.number().int().positive().max(50).optional() }), body(c));
   if (!v.ok) return v.response;
-  return mutate(c, () => listRecentOnboardingActivity(v.data.limit ?? 15));
+  return mutate(c, async () => listRecentOnboardingActivity(v.data.limit ?? 15, await readScope(c, (body(c) as Record<string, unknown>).scope)));
 });
 
 // ════════════════════════════════════════════════════════════════════════════════

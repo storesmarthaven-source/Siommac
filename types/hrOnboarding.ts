@@ -30,6 +30,22 @@ export type BlockingState = 'all' | 'blocked' | 'not_blocked';
 export type ReadinessState = 'all' | 'ready' | 'not_ready';
 
 // ── Packages (Phase 4) ───────────────────────────────────────────────────────────
+export interface OnboardingPackageMatch {
+  eligible: boolean;
+  /** Higher values are a more specific match. The server owns this ranking. */
+  rank: number;
+  reasons: string[];
+  facts: {
+    workerCategory: string;
+    employmentType: string | null;
+    departmentId: string | null;
+    departmentName: string | null;
+    siteId: string | null;
+    siteName: string | null;
+    role: string | null;
+  };
+}
+
 export interface OnboardingPackageSummary {
   id: string;
   key: string;
@@ -46,6 +62,8 @@ export interface OnboardingPackageSummary {
   versionNo: number;
   /** Days of probation for this package. null = no probation period (e.g. contractors). */
   probationDays: number | null;
+  /** Present when evaluated for a selected Employee Master record. */
+  match: OnboardingPackageMatch | null;
 }
 
 // ── Start Onboarding wizard: intake-preview (verification + documents + duplicate + task/handoff preview) ──
@@ -54,16 +72,30 @@ export interface OnboardingIntakeVerification { id: string; label: string; statu
 export type OnboardingDocumentState = 'present_verified' | 'present_unverified' | 'expired' | 'missing';
 
 /** Selection the wizard makes for a document requirement (how it will be satisfied at launch). */
-export type OnboardingDocumentLaunchAction = 'use_existing' | 'uploaded' | 'request_from_worker' | 'waive' | 'none';
+export type OnboardingDocumentLaunchAction = 'use_existing' | 'request_from_worker' | 'waive' | 'none';
 
 export interface OnboardingDocumentLaunchSelection {
   requirementId: string;
   action: OnboardingDocumentLaunchAction;
   /** doc ID when action === 'use_existing' */
   existingDocumentId?: string | null;
-  /** path when action === 'uploaded' */
-  uploadedFilePath?: string | null;
   waiverReason?: string | null;
+}
+
+export interface OnboardingLaunchOneOffAction {
+  actionName: string;
+  actionType: Exclude<OnboardingActionType, 'custom_approval'>;
+  description?: string | null;
+  instructions?: string | null;
+  ownerRole?: string | null;
+  ownerEmployeeId?: string | null;
+  ownerDepartmentId?: string | null;
+  dueOffsetDays?: number | null;
+  priority?: OnboardingActionPriority;
+  blocksOnboarding?: boolean;
+  requiresEvidence?: boolean;
+  externalSystemKey?: string | null;
+  externalActionUrl?: string | null;
 }
 
 export interface OnboardingIntakeDocument {
@@ -86,8 +118,13 @@ export interface OnboardingIntakeDocument {
   expiresAt: string | null;
 }
 
-export interface OnboardingIntakeDuplicateCase { caseId: string; caseNo: string; status: OnboardingCaseStatus }
-export interface OnboardingIntakePreviewArgs { employeeId: string; packageKey: string }
+/**
+ * Minimum safe conflict projection for the wizard's Duplicate Check card.
+ * Deliberately carries NO caseId: the conflicting case may be outside the actor's read
+ * scope, and an opaque id invites a follow-up fetch the read gate would have to refuse.
+ */
+export interface OnboardingIntakeDuplicateCase { caseNo: string }
+export interface OnboardingIntakePreviewArgs { employeeId: string; packageKey: string; targetStartDate?: string | null }
 export interface OnboardingIntakePreview {
   preview: {
     package: string;
@@ -107,6 +144,43 @@ export interface OnboardingIntakePreview {
     expiredCount: number;
   };
   duplicate: { hasDuplicate: boolean; checkedAt: string; cases: OnboardingIntakeDuplicateCase[] };
+  /** Same server decision used by selection, preview and launch validation. */
+  packageMatch: OnboardingPackageMatch;
+}
+
+export interface OnboardingAccountPreflight {
+  required: boolean;
+  ready: boolean;
+  operatingModel: 'hr_managed' | 'it_managed' | 'hybrid';
+  owningTeam: { id: 'hr_operations' | 'it_service_desk'; label: string };
+  accountablePerson: { id: string; name: string | null } | null;
+  accessProfile: string;
+  proposedWorkEmail: string | null;
+  credentialMethod: 'invite_link';
+  invitationTiming: { mode: 'before_start'; offsetDays: number } | { mode: 'after_account_handoff' };
+  provisioningAuthority: 'hr.onboarding.provision_account';
+  blockers: string[];
+}
+
+export interface OnboardingLaunchPreflightArgs {
+  employeeId: string;
+  packageKey: string;
+  ownerId?: string | null;
+  targetStartDate?: string | null;
+  includeActionTemplateIds?: string[] | null;
+  oneOffActions?: OnboardingLaunchOneOffAction[] | null;
+  documentSelections?: OnboardingDocumentLaunchSelection[] | null;
+}
+
+export interface OnboardingLaunchPreflight {
+  ready: boolean;
+  validatedAt: string;
+  blockers: { step: 'worker' | 'package' | 'optional' | 'documents'; message: string }[];
+  followUps: { step: 'optional' | 'documents'; label: string; owner: string; dueAt: string | null }[];
+  package: { id: string; key: string; label: string; versionNo: number };
+  counts: { tasks: number; handoffs: number; documentRequests: number; actions: number };
+  owner: { id: string; name: string | null };
+  accountPolicy: OnboardingAccountPreflight;
 }
 
 // ── Package Manager (task templates, handoff templates, package CRUD) ───────────
@@ -150,6 +224,18 @@ export interface OnboardingPackageDetail {
   handoffTemplates: OnboardingHandoffTemplateRow[];
 }
 
+export interface OnboardingPackageReferenceOption {
+  id: string;
+  label: string;
+  detail: string | null;
+}
+
+export interface OnboardingPackageReferenceData {
+  documentRequirements: OnboardingPackageReferenceOption[];
+  trainingRequirements: OnboardingPackageReferenceOption[];
+  workflowTemplates: OnboardingPackageReferenceOption[];
+}
+
 export interface CreatePackageArgs {
   label: string;
   description?: string | null;
@@ -191,7 +277,15 @@ export interface UpdateHandoffTemplateArgs {
 }
 
 // ── Cases list ──────────────────────────────────────────────────────────────────
+/**
+ * Onboarding read scope. Resolved SERVER-side (netlify/functions/lib/hr/onboardingScope.ts);
+ * the client only states which scope it is asking for. Omitted => 'my'. An unauthorised
+ * 'team'/'all' request returns 403 — the server never downgrades it.
+ */
+export type OnboardingReadScope = 'my' | 'team' | 'all';
+
 export interface OnboardingCaseListArgs {
+  scope?: OnboardingReadScope;
   query?: string;
   statuses?: string[];
   packageKeys?: string[];
@@ -207,7 +301,11 @@ export interface OnboardingCaseListArgs {
   readinessState?: ReadinessState;
   page?: number;
   pageSize?: number;
-  sort?: { field: 'case_no' | 'due_at' | 'started_at' | 'status' | 'progress'; direction: 'asc' | 'desc' };
+  /** Only cases whose `target_start_date` is within N days of today (inclusive). */
+  startsWithinDays?: number;
+  /** Only cases with no accountable owner — the Owner Required KPI's drill-through. */
+  unassignedOwner?: boolean;
+  sort?: { field: 'case_no' | 'due_at' | 'started_at' | 'status' | 'progress' | 'target_start_date'; direction: 'asc' | 'desc' };
 }
 
 export interface OnboardingCaseRow {
@@ -233,6 +331,8 @@ export interface OnboardingCaseRow {
   ready: boolean;
   dueAt: string | null;
   startedAt: string | null;
+  /** Planned first day (`hr_onboarding_cases.target_start_date`). Drives Upcoming Starts. */
+  targetStartDate: string | null;
 }
 
 export interface OnboardingCaseListResult {
@@ -242,8 +342,69 @@ export interface OnboardingCaseListResult {
   pageSize: number;
 }
 
+// ── Worker self-service ─────────────────────────────────────────────────────
+// This projection is intentionally narrower than Case Detail. It contains only
+// the signed-in worker's case, work explicitly assigned to them, their document
+// requests, messages addressed to them, and the people they may contact.
+export interface OnboardingWorkerTask {
+  taskId: string;
+  title: string;
+  status: OnboardingTaskStatus;
+  dueAt: string | null;
+  requiresEvidence: boolean;
+  isBlocking: boolean;
+  moduleLabel: string | null;
+}
+
+export interface OnboardingWorkerDocumentRequest {
+  requestId: string;
+  label: string;
+  documentType: string;
+  status: 'pending' | 'uploaded' | 'use_existing' | 'waived' | 'verified' | 'rejected';
+  isRequired: boolean;
+  rejectionReason: string | null;
+  /** The worker must supply an expiry date when submitting this document. */
+  requiresExpiry: boolean;
+}
+
+export interface OnboardingWorkerMessage {
+  messageId: string;
+  subject: string | null;
+  body: string | null;
+  channel: OnboardingCommunicationChannel;
+  sentAt: string | null;
+}
+
+export interface OnboardingWorkerExperience {
+  caseId: string;
+  caseNo: string;
+  employeeName: string;
+  employeePhotoUrl: string | null;
+  packageLabel: string;
+  status: OnboardingCaseStatus;
+  targetStartDate: string | null;
+  /** Over the worker's OWN visible population (assigned tasks + required documents). */
+  progressPercent: number;
+  /**
+   * False when the worker has nothing assigned at all. Without this, "no worker actions"
+   * and "every worker action complete" both render as 100% and are indistinguishable.
+   */
+  hasWorkerActions: boolean;
+  /**
+   * Day-One readiness is the CASE's authoritative state, narrowed by the worker's own
+   * outstanding items. It is never true merely because the worker was assigned nothing.
+   */
+  dayOneReady: boolean;
+  caseOwner: { id: string; name: string | null } | null;
+  supervisor: { id: string; name: string | null } | null;
+  tasks: OnboardingWorkerTask[];
+  documentRequests: OnboardingWorkerDocumentRequest[];
+  messages: OnboardingWorkerMessage[];
+}
+
 // ── Dashboard stats ─────────────────────────────────────────────────────────────
 export interface OnboardingDashboardStatsArgs {
+  scope?: OnboardingReadScope;
   departmentIds?: string[];
   siteIds?: string[];
   ownerIds?: string[];
@@ -271,6 +432,14 @@ export interface OnboardingDashboardStats {
     dueIn7Days: number;
     criticalOverdue: number;
   };
+  /**
+   * Active cases whose `target_start_date` falls in the canonical seven-day window
+   * [today, today+7]. This is a COHORT count (people starting), deliberately distinct from
+   * `dueThisWeek.dueIn7Days`, which counts TASKS falling due.
+   */
+  startsWithin7Days: number;
+  /** Active cases with no accountable case owner (`owner_id is null`). */
+  ownerRequired: number;
   activationReadiness: {
     readyPercent: number;
     profileReadyPercent: number;
@@ -295,6 +464,7 @@ export interface OnboardingDashboardStats {
 
 // ── Tasks ─────────────────────────────────────────────────────────────────────--
 export interface OnboardingTaskListArgs {
+  scope?: OnboardingReadScope;
   caseId?: string;
   statuses?: string[];
   ownerRoles?: string[];
@@ -340,6 +510,9 @@ export interface OnboardingTaskNote {
   at: string;
 }
 
+/** Exactly three review states — no reviewer-routing or approval-chain states. */
+export type OnboardingEvidenceReviewStatus = 'pending_review' | 'approved' | 'returned';
+
 export interface OnboardingTaskEvidence {
   id: string;
   fileName: string;
@@ -349,6 +522,13 @@ export interface OnboardingTaskEvidence {
   byId: string | null;
   byName: string | null;
   at: string;
+  reviewStatus: OnboardingEvidenceReviewStatus;
+  reviewedById: string | null;
+  reviewedByName: string | null;
+  reviewedAt: string | null;
+  reviewNote: string | null;
+  /** Copied from the pre-table metadata.evidence array; may lack a usable storage path. */
+  isLegacy: boolean;
 }
 
 /** Full single-task view for the workspace drawer: the list row + notes/evidence +
@@ -373,6 +553,7 @@ export interface AttachTaskEvidenceArgs {
 
 // ── Handoffs ──────────────────────────────────────────────────────────────────--
 export interface OnboardingHandoffListArgs {
+  scope?: OnboardingReadScope;
   caseId?: string;
   targetModules?: string[];
   statuses?: string[];
@@ -389,6 +570,8 @@ export interface OnboardingHandoffRow {
   status: OnboardingHandoffStatus;
   ownerId: string | null;
   ownerName: string | null;
+  /** Planned completion date resolved from the handoff template's due rule. */
+  dueAt: string | null;
   failureReason: string | null;
   payload: Record<string, unknown>;
   createdAt: string;
@@ -410,6 +593,7 @@ export interface OnboardingHandoffActionResult {
 
 // ── Blockers ──────────────────────────────────────────────────────────────────--
 export interface OnboardingBlockerListArgs {
+  scope?: OnboardingReadScope;
   caseId?: string;
   blockingModules?: string[];
   statuses?: string[];
@@ -551,6 +735,7 @@ export interface OnboardingReportMeta {
 
 export interface RunOnboardingReportArgs {
   reportKey: OnboardingReportKey;
+  scope?: OnboardingReadScope;
   dateFrom?: string | null;
   dateTo?: string | null;
   departmentIds?: string[];
@@ -591,24 +776,19 @@ export interface OnboardingReportResult {
 }
 
 // ── Start Onboarding: launch args extension ──────────────────────────────────────
-/** Extended start args: document selections + scheduled launch. Consumed by the route
- *  zod schema + onboardingCore.ts. */
+/** Governed five-step wizard launch contract. Consumed by the route schema and core. */
 export interface OnboardingStartArgs {
+  /** Stable for one wizard submission; a new legitimate cycle receives a new id. */
+  requestId: string;
   employeeId: string;
   packageKey: string;
   ownerId?: string | null;
-  dueAt?: string | null;
   reason?: string | null;
   priority?: string | null;
   targetStartDate?: string | null;
-  launchMode?: string | null;
-  caseOwner?: string | null;
-  workerType?: string | null;
   includeActionTemplateIds?: string[] | null;
   /** Per-requirement document disposition selections from the Documents wizard step. */
   documentSelections?: OnboardingDocumentLaunchSelection[] | null;
-  /** ISO datetime when the case should transition to active (Scheduled mode). */
-  scheduledLaunchAt?: string | null;
 }
 
 // ── Audit (case Audit tab — Phase 3) ─────────────────────────────────────────────
@@ -621,4 +801,92 @@ export interface OnboardingAuditRow {
   previousState: unknown;
   newState: unknown;
   createdAt: string;
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Unified Work Queue — executable work across tasks, handoffs, blockers and evidence.
+//
+// This is a READ PROJECTION over the four existing stores (see the
+// hr_onboarding_work_queue RPC). It is not a work store: every row points back at the
+// authoritative record via sourceType + sourceId, and every mutation continues to go
+// through that source's own endpoint.
+// ════════════════════════════════════════════════════════════════════════════════
+
+/** Which store a queue row came from. Drives both the row action and the Case Detail tab. */
+export type OnboardingWorkSourceType = 'task' | 'handoff' | 'blocker' | 'evidence';
+
+/**
+ * The single normalised lifecycle. The three stores use three different status
+ * vocabularies (7 / 8 / 6 values) with overlapping meanings; one Status filter is only
+ * possible against this mapping, which is defined server-side in the RPC.
+ */
+export type OnboardingWorkLifecycle = 'open' | 'in_progress' | 'blocked' | 'done' | 'cancelled';
+
+/** `unscheduled` is a first-class state: work with no deterministic due date. */
+export type OnboardingWorkDueState = 'all' | 'overdue' | 'due_today' | 'due_this_week' | 'unscheduled';
+
+export type OnboardingWorkSortField =
+  | 'due_at' | 'title' | 'employee_name' | 'case_no' | 'source_type' | 'status' | 'created_at';
+
+export interface OnboardingWorkItem {
+  sourceType: OnboardingWorkSourceType;
+  /** Primary key WITHIN its source table — unique only together with sourceType. */
+  sourceId: string;
+  caseId: string;
+  caseNo: string;
+  employeeId: string | null;
+  employeeName: string | null;
+  /** The SUBJECT's org unit, not the performer's. Distinct from owningQueue. */
+  departmentId: string | null;
+  departmentName: string | null;
+  siteId: string | null;
+  siteName: string | null;
+  title: string;
+  detail: string | null;
+  /** The role/module queue that performs the work (IT, Payroll, HSE …). */
+  owningQueue: string | null;
+  /** The accountable PERSON. Null means unassigned — still visible in its queue. */
+  accountableId: string | null;
+  accountableName: string | null;
+  /** The row's own store-specific status, preserved verbatim. */
+  sourceStatus: string;
+  normalizedStatus: OnboardingWorkLifecycle;
+  /** Null = Unscheduled. Never inferred from createdAt. */
+  dueAt: string | null;
+  severity: string | null;
+  isBlocking: boolean;
+  /** Set so an evidence or blocker row can open its authoritative task. */
+  relatedTaskId: string | null;
+  relatedHandoffId: string | null;
+  createdAt: string;
+}
+
+export interface OnboardingWorkQueueArgs {
+  scope?: OnboardingReadScope;
+  sourceTypes?: OnboardingWorkSourceType[];
+  lifecycles?: OnboardingWorkLifecycle[];
+  dueState?: OnboardingWorkDueState;
+  departmentIds?: string[];
+  queues?: string[];
+  accountableIds?: string[];
+  unassigned?: boolean;
+  query?: string;
+  sort?: { field: OnboardingWorkSortField; direction: 'asc' | 'desc' };
+  page?: number;
+  pageSize?: number;
+}
+
+export interface OnboardingWorkQueueResult {
+  rows: OnboardingWorkItem[];
+  /** An EXACT count from Postgres, not the length of a truncated fetch. */
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/** Approve or return ONE evidence submission. A return must carry a reason. */
+export interface ReviewEvidenceArgs {
+  evidenceId: string;
+  decision: 'approved' | 'returned';
+  note?: string | null;
 }

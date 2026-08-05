@@ -1288,6 +1288,8 @@
   background: var(--ob-blue-soft); color: var(--ob-blue); white-space: nowrap;
 }
 .mock-onboarding-start .ob-tag-warn { background: var(--ob-orange-soft); color: var(--ob-orange); }
+.mock-onboarding-start .ob-tag-ok { background: var(--ob-green-soft); color: var(--ob-green); }
+.mock-onboarding-start .ob-doc-blocking-alert.is-ready { background: var(--ob-green-soft); border-color: color-mix(in srgb, var(--ob-green) 28%, transparent); color: var(--ob-green); }
 
 .mock-onboarding-start .ob-review-list { display: grid; gap: 0; margin-top: 18px; }
 .mock-onboarding-start .ob-review-row {

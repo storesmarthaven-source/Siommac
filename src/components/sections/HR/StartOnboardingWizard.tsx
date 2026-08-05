@@ -4,22 +4,23 @@
  * HR ▸ Onboarding ▸ Start Onboarding — the full-PAGE case-intake wizard (replaces the modal
  * OnboardingWizard). Faithful port of the `start-onboarding` mockup (scoped `.mock-onboarding-start`,
  * StartOnboarding.css), wired end-to-end:
- *   Worker → Package → Tasks (+ Custom Actions) → Handoffs → Documents → Review (+ Owner/Due) → Launch.
+ *   Employee & Timing → Package → Optional Work → Documents → Review & Launch.
  * Live panels (verification · documents · duplicate · task/handoff preview) come from ONE read,
  * `useOnboardingIntakePreview(employeeId, packageKey)`; launch calls `hrOnboardingApi.start`.
  */
 import { type JSX, type VNode } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { useQueryClient } from '@tanstack/preact-query';
-import { hrOnboardingApi, useOnboardingPackages, useOnboardingActionTemplates, useOnboardingIntakePreview } from '@api/hr/onboarding';
+import { hrOnboardingApi, useOnboardingPackages, useOnboardingActionTemplates, useOnboardingIntakePreview, useOnboardingAccountPreflight, useOnboardingLaunchPreflight } from '@api/hr/onboarding';
 import { useHrEmployees, type HrEmployeeRow } from '@api/hr/employees';
 import { hrEmployeeKeys } from '@api/queryKeys';
 import { toast } from '@store';
 import { dialog } from '@lib/dialog';
-import { PersonSearchSelect, type PersonSearchOption, EmptyState } from '@ui';
+import { can } from '@lib/permissions';
+import { PersonSearchSelect, type PersonSearchOption, EmptyState, Modal, ModalSection } from '@ui';
 import { rowName } from './shared';
 import { humanize } from './onboardingStatus';
-import type { OnboardingDocumentLaunchSelection, OnboardingIntakeDocument } from '../../../../types/hrOnboarding';
+import type { OnboardingDocumentLaunchSelection, OnboardingIntakeDocument, OnboardingLaunchOneOffAction } from '../../../../types/hrOnboarding';
 import './StartOnboarding.css';
 
 type IconName =
@@ -61,52 +62,37 @@ function initialsOf(name: string): string {
   return name ? name.split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() : '—';
 }
 
-type StepKey = 'worker' | 'package' | 'tasks' | 'handoffs' | 'documents' | 'review';
+type StepKey = 'worker' | 'package' | 'optional' | 'documents' | 'review';
 const STEPS: { no: number; key: StepKey; label: string; description: string; icon: IconName }[] = [
-  { no: 1, key: 'worker',    label: 'Worker',    description: 'Worker and intake details',    icon: 'user' },
-  { no: 2, key: 'package',   label: 'Package',   description: 'Choose the onboarding package', icon: 'package' },
-  { no: 3, key: 'tasks',     label: 'Tasks',     description: 'Review generated tasks',       icon: 'task' },
-  { no: 4, key: 'handoffs',  label: 'Handoffs',  description: 'Assign owners and approvers',  icon: 'handoff' },
-  { no: 5, key: 'documents', label: 'Documents', description: 'Collect required documents',   icon: 'documents' },
-  { no: 6, key: 'review',    label: 'Review',    description: 'Validate and launch case',     icon: 'review' },
+  { no: 1, key: 'worker',    label: 'Employee & Timing', description: 'Select the employee and first day', icon: 'user' },
+  { no: 2, key: 'package',   label: 'Package',           description: 'Choose the matched package',       icon: 'package' },
+  { no: 3, key: 'optional',  label: 'Optional Work',     description: 'Add non-required work',            icon: 'task' },
+  { no: 4, key: 'documents', label: 'Documents',         description: 'Resolve required documents',       icon: 'documents' },
+  { no: 5, key: 'review',    label: 'Review & Launch',   description: 'Validate and create the case',      icon: 'review' },
 ];
 
-type WorkerType = 'employee' | 'contractor' | 'temporary';
-const WORKER_TYPES: { id: WorkerType; label: string; icon: IconName; desc: string }[] = [
-  { id: 'employee',   label: 'Employee',   icon: 'user',   desc: 'Full-time or permanent worker' },
-  { id: 'contractor', label: 'Contractor', icon: 'people', desc: 'External, agency or vendor worker' },
-  { id: 'temporary',  label: 'Temporary',  icon: 'clock',  desc: 'Short-term, seasonal or fixed-period' },
-];
 const REASONS = ['New hire', 'Rehire', 'Role change', 'Contract conversion', 'Transfer in'];
 const PRIORITIES = ['Normal', 'High', 'Urgent'];
-const CASE_OWNERS = ['HR Operations', 'HR Manager', 'Site HR', 'Talent Team'];
-const LAUNCH_MODES = ['Start now', 'Scheduled'];
-const TEMPORARY_REASONS = ['Seasonal coverage', 'Project support', 'Leave coverage', 'Short-term replacement', 'Probationary assignment'];
-const ASSIGNMENT_LENGTHS = ['Less than 1 month', '1–3 months', '3–6 months', '6–12 months'];
-
-/** The "Recommended" badge is worker-type-aware — the default package for each case type.
- *  Keyed on the REAL seeded package keys (verified against the DB), not aspirational ones. */
-function isRecommendedPackage(key: string, workerType: WorkerType): boolean {
-  if (workerType === 'employee') return key === 'standard_employee';
-  if (workerType === 'contractor') return key === 'contractor_worker';
-  return false; // no seeded temporary package yet — nothing to recommend
-}
 
 export function StartOnboardingWizard(
   { employeeId: preset, onBack }:
   { employeeId?: string | null; onBack: () => void },
 ): VNode {
   const qc = useQueryClient();
-  const empQ = useHrEmployees({ limit: 500 });
+  const canWaiveDocuments = can('hr.onboarding.documents.waive');
+  const canCreateOneOff = can('hr.onboarding.custom_actions.create');
+  const [employeeSearch, setEmployeeSearch] = useState('');
+  const [ownerSearch, setOwnerSearch] = useState('');
+  const empQ = useHrEmployees({ search: employeeSearch || undefined, limit: 25 });
+  const ownerQ = useHrEmployees({ search: ownerSearch || undefined, limit: 25 });
   const employees: HrEmployeeRow[] = useMemo(() => empQ.data ?? [], [empQ.data]);
-  const { data: packagesQ = [] } = useOnboardingPackages();
-  // Safety-Critical Employee is a specialised HSE-gated package, not offered from this general intake flow.
-  // Standard Employee always leads the list and carries the "Recommended" badge, regardless of API order.
-  const packages = useMemo(() => packagesQ
-    .filter(p => p.key !== 'safety_critical_employee')
-    .slice()
-    .sort((a, b) => (a.key === 'standard_employee' ? -1 : b.key === 'standard_employee' ? 1 : 0)),
-  [packagesQ]);
+  const owners: HrEmployeeRow[] = useMemo(() => ownerQ.data ?? [], [ownerQ.data]);
+  const [employeeId, setEmployeeId] = useState(preset ?? '');
+  const [selectedEmployee, setSelectedEmployee] = useState<HrEmployeeRow | null>(null);
+  const [requestId] = useState(() => crypto.randomUUID());
+  // Package eligibility and rank are server-owned and evaluated against the selected Employee
+  // Master assignment. The browser never invents or widens the compatible package set.
+  const { data: packages = [] } = useOnboardingPackages(false, employeeId || null);
 
   const [step, setStepRaw] = useState<StepKey>('worker');
   // Worker step gets its own validation trigger — set true when the user tries to advance/launch
@@ -120,40 +106,23 @@ export function StartOnboardingWizard(
     setStepRaw(key);
     setVisitedSteps(prev => (prev.has(key) ? prev : new Set(prev).add(key)));
   }
-  const [employeeId, setEmployeeId] = useState(preset ?? '');
   const [packageKey, setPackageKey] = useState('');
-  const [workerType, setWorkerType] = useState<WorkerType>('employee');
   const [reason, setReason] = useState('New hire');
   const [priority, setPriority] = useState('Normal');
   const [targetStartDate, setTargetStartDate] = useState('');
-  const [caseOwner, setCaseOwner] = useState('HR Operations');
-  const [launchMode, setLaunchMode] = useState('Start now');
   const [ownerId, setOwnerId] = useState('');
-  const [dueAt, setDueAt] = useState('');
   const [includedActionIds, setIncludedActionIds] = useState<Set<string>>(new Set());
+  const [oneOffActions, setOneOffActions] = useState<OnboardingLaunchOneOffAction[]>([]);
+  const [oneOffOpen, setOneOffOpen] = useState(false);
   const [documentSelections, setDocumentSelections] = useState<Record<string, OnboardingDocumentLaunchSelection>>({});
-  const [scheduledLaunchAt, setScheduledLaunchAt] = useState('');
   const [busy, setBusy] = useState(false);
+  // Employee Master is authoritative for worker category; the launch wizard never offers
+  // a second, conflicting worker-type control.
+  const workerType = selectedEmployee?.workerType ?? 'employee';
   const [done, setDone] = useState<{ caseNo: string; taskCount: number } | null>(null);
-  // Contractor-case intake (persisted on case metadata as workerTypeDetails).
-  const [contractorCompany, setContractorCompany] = useState('');
-  const [contractNumber, setContractNumber] = useState('');
-  const [contractStartDate, setContractStartDate] = useState('');
-  const [contractEndDate, setContractEndDate] = useState('');
-  const [vendorContactName, setVendorContactName] = useState('');
-  const [vendorContactEmail, setVendorContactEmail] = useState('');
-  const [insuranceExpiryDate, setInsuranceExpiryDate] = useState('');
-  // Temporary-case intake.
-  const [temporaryEndDate, setTemporaryEndDate] = useState('');
-  const [temporaryReason, setTemporaryReason] = useState('');
-  const [assignmentLength, setAssignmentLength] = useState('');
-
-  const selectedEmp = employees.find(e => e.id === employeeId);
+  const selectedEmp = employees.find(e => e.id === employeeId) ?? selectedEmployee ?? undefined;
   const empName = selectedEmp ? rowName(selectedEmp) : '';
   const pkg = packages.find(p => p.key === packageKey);
-  // Packages compatible with the selected case type — its worker_types must include the case type.
-  // (Employee ↔ Contractor is backed by seeded data; Temporary has no package yet, so it shows empty.)
-  const eligiblePackages = useMemo(() => packages.filter(p => p.workerTypes.includes(workerType)), [packages, workerType]);
   /** Derived probation end date (client-side, mirrors what the backend computes).
    *  Shown read-only in the Review step and the Case Preview card. */
   const probationEndDate: string | null = (() => {
@@ -165,29 +134,36 @@ export function StartOnboardingWizard(
   })();
   // The 4th preview/review "end date" fact adapts to the case type so it always maps to a real
   // input: Employee → package-derived probation; Contractor → contract end; Temporary → assignment end.
-  const endFact: { label: string; value: string | null } =
-    workerType === 'contractor' ? { label: 'Contract Ends', value: contractEndDate || null }
-    : workerType === 'temporary' ? { label: 'Assignment Ends', value: temporaryEndDate || null }
-    : { label: 'Probation Ends', value: probationEndDate };
+  const endFact: { label: string; value: string | null } = { label: 'Probation Ends', value: probationEndDate };
   const { data: actionTemplates = [] } = useOnboardingActionTemplates(packageKey);
-  const intakeQ = useOnboardingIntakePreview(employeeId || null, packageKey || null);
+  const intakeQ = useOnboardingIntakePreview(employeeId || null, packageKey || null, targetStartDate || null);
   const intake = intakeQ.data;
+  const accountPreflightQ = useOnboardingAccountPreflight(employeeId || null, packageKey || null, ownerId || null);
+  const accountPreflight = accountPreflightQ.data;
+  const launchPayload = useMemo(() => employeeId && packageKey ? ({
+    employeeId, packageKey, ownerId: ownerId || null, targetStartDate: targetStartDate || null,
+    includeActionTemplateIds: Array.from(includedActionIds), oneOffActions,
+    documentSelections: Object.values(documentSelections),
+  }) : null, [employeeId, packageKey, ownerId, targetStartDate, includedActionIds, oneOffActions, documentSelections]);
+  const launchPreflightQ = useOnboardingLaunchPreflight(launchPayload);
+  const launchPreflight = launchPreflightQ.data;
 
-  // Default the package to the recommended eligible one (else the first eligible), and worker type
-  // from the employee's contractor flag.
+  // The server returns eligible packages in specificity order, so the first option is the honest
+  // recommendation. Changing employee clears any selection no longer returned by the server.
   useEffect(() => {
-    if (packageKey || !eligiblePackages.length) return;
-    const recommended = eligiblePackages.find(p => isRecommendedPackage(p.key, workerType)) ?? eligiblePackages[0]!;
-    setPackageKey(recommended.key);
-  }, [eligiblePackages, packageKey, workerType]);
-  // If the case type changes and the chosen package is no longer eligible, clear it so the user
-  // must pick a compatible one (or hits the empty state if none exists).
+    if (packageKey || !packages.length) return;
+    setPackageKey(packages[0]!.key);
+  }, [packages, packageKey]);
   useEffect(() => {
-    if (packageKey && !eligiblePackages.some(p => p.key === packageKey)) setPackageKey('');
-  }, [eligiblePackages, packageKey]);
-  useEffect(() => { if (selectedEmp) setWorkerType(selectedEmp.contractor_flag ? 'contractor' : 'employee'); }, [employeeId]);
-  // Every returned (active) action template defaults to included; switching packages resets.
-  useEffect(() => { setIncludedActionIds(new Set(actionTemplates.map(t => t.id))); }, [actionTemplates]);
+    if (packageKey && !packages.some(p => p.key === packageKey)) setPackageKey('');
+  }, [packages, packageKey]);
+  useEffect(() => {
+    if (!selectedEmp) return;
+    setSelectedEmployee(selectedEmp);
+  }, [selectedEmp]);
+  // Optional work is opt-in. Required actions are deliberately absent from this control and
+  // are enforced by the launch command even if a client omits them.
+  useEffect(() => { setIncludedActionIds(new Set()); setOneOffActions([]); }, [packageKey]);
   function toggleAction(id: string, isRequired: boolean): void {
     if (isRequired) return;
     setIncludedActionIds(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
@@ -206,17 +182,22 @@ export function StartOnboardingWizard(
   // collected) — surfaced in the right-rail "Worker Verification" panel, not a wizard step.
   const criticalPending = verification.filter(v => v.critical && v.status !== 'verified');
 
-  // Blocking document failures: any blocking-flagged doc that is missing/expired and has
-  // no wizard selection satisfying it (use_existing, uploaded, or waive).
+  const unresolvedDocumentDecisions = (documents?.items ?? []).filter(d =>
+    d.state !== 'present_verified' && !documentSelections[d.requirementId]);
+
+  // A blocking document requires verified evidence or an authorised waiver. Requesting
+  // it from the worker creates follow-up work but cannot satisfy the launch gate.
   const blockingDocFailures = (documents?.items ?? []).filter(d => {
     if (!d.isBlocking) return false;
-    if (d.state === 'present_verified' || d.state === 'present_unverified') return false;
+    if (d.state === 'present_verified') return false;
     const sel = documentSelections[d.requirementId];
-    if (sel && (sel.action === 'use_existing' || sel.action === 'uploaded' || sel.action === 'waive')) return false;
+    if (sel?.action === 'waive') return false;
     return true;
   });
-  const hasBlockingLaunchFailure = criticalPending.length > 0 || blockingDocFailures.length > 0 || !!duplicate?.hasDuplicate
-    || (launchMode === 'Scheduled' && !scheduledLaunchAt);
+  const hasBlockingLaunchFailure = !employeeId || !targetStartDate || !packageKey || criticalPending.length > 0
+    || blockingDocFailures.length > 0 || !!duplicate?.hasDuplicate
+    || (!!accountPreflight?.required && !accountPreflight.ready)
+    || (!!employeeId && !!packageKey && (!launchPreflight || !launchPreflight.ready));
 
   // Visible pass/fail list on the Review step — every condition `launch()` itself enforces,
   // surfaced so the user can see exactly why the button is disabled before clicking it.
@@ -227,29 +208,15 @@ export function StartOnboardingWizard(
     { label: 'Critical verification complete', passed: criticalPending.length === 0 },
     { label: 'No active duplicate case', passed: !duplicate?.hasDuplicate },
     { label: 'Blocking documents resolved', passed: blockingDocFailures.length === 0 },
-    ...(launchMode === 'Scheduled' ? [{ label: 'Scheduled launch date set', passed: !!scheduledLaunchAt }] : []),
+    { label: 'Account setup policy resolved', passed: !accountPreflight?.required || accountPreflight.ready },
   ];
   const docsTotal = documents?.requiredCount ?? 0;
   const docsCollected = documents ? documents.requiredCount - documents.missingCount : 0;
-  const readinessDenom = verification.length + docsTotal;
-  const readiness = readinessDenom > 0
-    ? Math.round(((verification.filter(v => v.status === 'verified').length + docsCollected) / readinessDenom) * 100)
-    : 0;
-  const readinessLabel = !employeeId ? 'Awaiting Worker'
-    : readiness >= 100 ? 'Ready to Launch'
-    : readiness >= 60 ? 'On Track'
-    : readiness > 0 ? 'In Progress' : 'Getting Started';
-
   // Per-field validity for the Worker step — the required set depends on the case type. Drives both
   // the inline error state on each input (once `triedWorker`) and the step-completion gate.
   const workerFieldErrors = {
     employeeId:        !employeeId,
     targetStartDate:   !targetStartDate,
-    contractorCompany: workerType === 'contractor' && !contractorCompany.trim(),
-    contractStartDate: workerType === 'contractor' && !contractStartDate,
-    contractEndDate:   workerType === 'contractor' && !contractEndDate,
-    temporaryEndDate:  workerType === 'temporary' && !temporaryEndDate,
-    temporaryReason:   workerType === 'temporary' && !temporaryReason,
   };
   const workerDetailsReady = !Object.values(workerFieldErrors).some(Boolean);
   /** Show an inline error on a field only after the user has tried to advance/launch. */
@@ -263,9 +230,8 @@ export function StartOnboardingWizard(
   const stepDone: Record<StepKey, boolean> = {
     worker: workerDetailsReady,
     package: !!packageKey,
-    tasks: true,
-    handoffs: true,
-    documents: true,
+    optional: true,
+    documents: unresolvedDocumentDecisions.length === 0,
     review: true,
   };
   const reachableIndex = !stepDone.worker ? 0 : !stepDone.package ? 1 : STEPS.length - 1;
@@ -279,61 +245,46 @@ export function StartOnboardingWizard(
     return visitedSteps.has(key) ? 'complete' : 'pending';
   };
 
-  /** Case-type-specific intake fields sent to the backend and stored on the case metadata.
-   *  Only the fields relevant to the selected case type are included. */
-  function buildWorkerTypeDetails(): Record<string, string> {
-    if (workerType === 'contractor') {
-      return {
-        contractorCompany, contractNumber, contractStartDate, contractEndDate,
-        vendorContactName, vendorContactEmail, insuranceExpiryDate,
-      };
-    }
-    if (workerType === 'temporary') {
-      return { temporaryEndDate, temporaryReason, assignmentLength };
-    }
-    return {};
-  }
-
-  function launch(): void {
+  async function launch(): Promise<void> {
     if (!employeeId) { setTriedWorker(true); toast.warning('Select the worker to onboard.'); setStep('worker'); return; }
     if (!targetStartDate) { setTriedWorker(true); toast.warning('Set the target start date.'); setStep('worker'); return; }
-    // Case-type-specific required fields (mirrors the backend gate; shows inline errors).
-    if (!workerDetailsReady) {
-      setTriedWorker(true);
-      toast.warning(workerType === 'contractor'
-        ? 'Complete the contractor company and contract start/end dates.'
-        : 'Complete the temporary assignment end date and reason.');
-      setStep('worker');
-      return;
-    }
     if (!packageKey) { toast.warning('Choose an onboarding package.'); setStep('package'); return; }
     if (criticalPending.length) { toast.warning('Resolve the critical verification items before launching.'); setStep('worker'); return; }
     if (duplicate?.hasDuplicate) { toast.warning('This worker already has an active onboarding case.'); setStep('worker'); return; }
+    if (unresolvedDocumentDecisions.length > 0) {
+      toast.warning(`Choose what to do with ${unresolvedDocumentDecisions.length} outstanding document requirement(s).`);
+      setStep('documents');
+      return;
+    }
     if (blockingDocFailures.length > 0) {
       toast.warning(`${blockingDocFailures.length} blocking document(s) must be attached or waived before launch.`);
       setStep('documents');
       return;
     }
-    if (launchMode === 'Scheduled' && !scheduledLaunchAt) {
-      toast.warning('Set the scheduled launch date/time.');
-      setStep('review');
+    if (accountPreflight?.required && !accountPreflight.ready) {
+      toast.warning(accountPreflight.blockers[0] ?? 'Resolve the account setup policy before launch.');
+      setStep('optional');
       return;
     }
     setBusy(true);
-    hrOnboardingApi.start({
-      employeeId, packageKey, ownerId: ownerId || null, dueAt: dueAt || null,
-      reason, priority, targetStartDate: targetStartDate || null,
-      launchMode, caseOwner, workerType,
-      includeActionTemplateIds: Array.from(includedActionIds),
-      documentSelections: Object.values(documentSelections),
-      scheduledLaunchAt: launchMode === 'Scheduled' && scheduledLaunchAt ? scheduledLaunchAt : null,
-      workerTypeDetails: buildWorkerTypeDetails(),
-    }).then(r => {
+    try {
+      const fresh = await launchPreflightQ.refetch();
+      if (!fresh.data?.ready) {
+        const blocker = fresh.data?.blockers[0];
+        if (blocker) setStep(blocker.step);
+        toast.warning(blocker?.message ?? 'The launch preflight is not ready.');
+        return;
+      }
+      const r = await hrOnboardingApi.start({ requestId, ...launchPayload!, reason, priority });
       setDone({ caseNo: r.caseNo, taskCount: r.taskCount });
       void qc.invalidateQueries({ queryKey: hrEmployeeKeys.all });
       void qc.invalidateQueries({ queryKey: ['hr', 'onboarding'] });
       toast.success(`Onboarding started — ${r.caseNo} (${r.taskCount} tasks)`);
-    }).catch((e: unknown) => toast.error(e instanceof Error ? e.message : 'Request failed.')).finally(() => setBusy(false));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Request failed.');
+    } finally {
+      setBusy(false);
+    }
   }
 
   const stepIndex = STEPS.findIndex(s => s.key === step);
@@ -366,9 +317,6 @@ export function StartOnboardingWizard(
         <div class="ob-page-actions" aria-label="Page actions">
           <button class="ob-action-button ob-action-button-ghost" type="button" onClick={onBack}>
             <Icon name="arrowLeft" />Back to Board
-          </button>
-          <button class="ob-action-button ob-action-button-primary" type="button" disabled={busy || !!done || hasBlockingLaunchFailure} onClick={launch}>
-            <Icon name="launch" />{busy ? 'Launching…' : 'Launch Case'}
           </button>
         </div>
       </div>
@@ -410,25 +358,16 @@ export function StartOnboardingWizard(
             <div class="ob-step-panel" key={step}>
             {step === 'worker' && (
               <>
-                <StepHeader icon="user" title="Worker Selection" desc="Choose the case type, then search and select the worker and intake details." />
-
-                <div class="ob-casetype-select">
-                  <span class="ob-casetype-label">Case Type</span>
-                  <div class="ob-casetype-cards" role="group" aria-label="Case type">
-                    {WORKER_TYPES.map(t => (
-                      <button class={`ob-casetype-card ${workerType === t.id ? 'is-active' : ''}`} type="button" key={t.id} aria-pressed={workerType === t.id} onClick={() => setWorkerType(t.id)}>
-                        <span class="ob-casetype-icon"><Icon name={t.icon} /></span>
-                        <span class="ob-casetype-copy"><strong>{t.label}</strong><small>{t.desc}</small></span>
-                        <span class="ob-casetype-check" aria-hidden="true"><Icon name="check" /></span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <StepHeader icon="user" title="Employee & Timing" desc="Choose an existing Employee Master record, confirm ownership, and set the employee's first day." />
 
                 <div class="ob-worker-form-grid">
                   <label class={`ob-field${fieldErr('employeeId') ? ' is-error' : ''}`}>
                     <span class="ob-field-label">Search Worker<span class="ob-required">*</span></span>
-                    <WorkerSearchField employees={employees} value={employeeId} onChange={setEmployeeId} />
+                    <WorkerSearchField
+                      employees={employees} value={employeeId} onChange={setEmployeeId}
+                      onSearch={setEmployeeSearch} loading={empQ.isFetching}
+                      error={empQ.error instanceof Error ? empQ.error.message : null}
+                    />
                     {fieldErr('employeeId') ? <span class="ob-field-error">Select a worker</span> : null}
                   </label>
                   {/* Employee-record read-only context — only the fields relevant to the case type.
@@ -440,46 +379,31 @@ export function StartOnboardingWizard(
                   {workerType === 'employee' && <Fld label="Job Title" value={selectedEmp?.position ?? '—'} readOnly />}
                   <Fld label="Site / Location" value={selectedEmp?.siteName ?? '—'} readOnly />
                   {workerType !== 'contractor' && <Fld label="Manager / Supervisor" value={selectedEmp?.supervisorName ?? '—'} readOnly />}
+                  <Fld label="Worker Category" value={humanize(workerType)} readOnly />
+                  <Fld label="Employment Type" value={selectedEmp?.employment_type ? humanize(selectedEmp.employment_type) : '—'} readOnly />
                   <SelFld label="Onboarding Reason" value={reason} options={REASONS} onInput={setReason} />
                   <SelFld label="Priority" value={priority} options={PRIORITIES} onInput={setPriority} />
-                  <SelFld label="Case Owner" value={caseOwner} options={CASE_OWNERS} onInput={setCaseOwner} />
+                  <label class="ob-field">
+                    <span class="ob-field-label">Case Owner</span>
+                    <PersonSearchSelect
+                      options={owners.map(e => ({ id: e.id, name: rowName(e), subtitle: [e.employee_number, e.position, e.departmentName].filter(Boolean).join(' · '), photoUrl: e.profile_image_url }))}
+                      value={ownerId} onChange={setOwnerId} onSearch={setOwnerSearch}
+                      loading={ownerQ.isFetching} error={ownerQ.error instanceof Error ? ownerQ.error.message : null}
+                      minimumQueryLength={2} placeholder="Search an accountable owner…" emptyLabel="No eligible owner found"
+                    />
+                    {!ownerId ? <small class="ob-field-hint">Leave empty to assign the signed-in HR coordinator.</small> : null}
+                  </label>
                   <DateFld label="Target Start Date" value={targetStartDate} onInput={setTargetStartDate} required error={fieldErr('targetStartDate')} />
-                  <SelFld label="Launch Mode" value={launchMode} options={LAUNCH_MODES} onInput={setLaunchMode} />
                 </div>
 
-                {workerType === 'contractor' && (
-                  <div class="ob-worker-typeblock">
-                    <StepHeader icon="people" title="Contractor Details" desc="External / agency intake — required to launch a contractor case." />
-                    <div class="ob-worker-form-grid">
-                      <Fld label="Contractor Company / Agency" value={contractorCompany} onInput={setContractorCompany} required error={fieldErr('contractorCompany')} placeholder="e.g. Acme Field Services" />
-                      <Fld label="Contract / PO Number" value={contractNumber} onInput={setContractNumber} placeholder="Optional" />
-                      <DateFld label="Contract Start Date" value={contractStartDate} onInput={setContractStartDate} required error={fieldErr('contractStartDate')} />
-                      <DateFld label="Contract End Date" value={contractEndDate} onInput={setContractEndDate} required error={fieldErr('contractEndDate')} />
-                      <Fld label="Vendor Contact Name" value={vendorContactName} onInput={setVendorContactName} placeholder="Optional" />
-                      <Fld label="Vendor Contact Email" value={vendorContactEmail} onInput={setVendorContactEmail} type="email" placeholder="Optional" />
-                      <DateFld label="Insurance Expiry Date" value={insuranceExpiryDate} onInput={setInsuranceExpiryDate} />
-                    </div>
-                  </div>
-                )}
-
-                {workerType === 'temporary' && (
-                  <div class="ob-worker-typeblock">
-                    <StepHeader icon="clock" title="Temporary Assignment" desc="Fixed-period intake — required to launch a temporary case." />
-                    <div class="ob-worker-form-grid">
-                      <DateFld label="Temporary End Date" value={temporaryEndDate} onInput={setTemporaryEndDate} required error={fieldErr('temporaryEndDate')} />
-                      <SelFld label="Temporary Reason" value={temporaryReason} options={TEMPORARY_REASONS} onInput={setTemporaryReason} required error={fieldErr('temporaryReason')} placeholder="Select a reason…" />
-                      <SelFld label="Assignment Length" value={assignmentLength} options={ASSIGNMENT_LENGTHS} onInput={setAssignmentLength} placeholder="Select…" />
-                    </div>
-                  </div>
-                )}
               </>
             )}
 
             {step === 'package' && (
               <>
                 <StepHeader icon="package" title="Onboarding Package" desc="Sets the tasks, owners, handoffs & documents for this case." />
-                <p class="ob-package-filter-note">Showing packages available for {humanize(workerType)} onboarding.</p>
-                {eligiblePackages.length === 0
+                <p class="ob-package-filter-note">Matched from the selected employee's worker category, employment type, department, site and role.</p>
+                {packages.length === 0
                   ? (
                     <div class="ob-empty-package-state">
                       <span class="ob-empty-package-icon"><Icon name="package" /></span>
@@ -489,9 +413,9 @@ export function StartOnboardingWizard(
                   )
                   : (
                     <div class="ob-package-grid">
-                    {eligiblePackages.map(p => (
+                    {packages.map((p, packageIndex) => (
                       <button class={`ob-package-card ${packageKey === p.key ? 'is-selected' : ''}`} type="button" key={p.key} onClick={() => setPackageKey(p.key)}>
-                        {isRecommendedPackage(p.key, workerType) ? <span class="ob-recommended-badge">Recommended</span> : null}
+                        {packageIndex === 0 ? <span class="ob-recommended-badge">Recommended</span> : null}
                         <div class="ob-package-card-head">
                           <span class="ob-package-card-icon"><Icon name="package" /></span>
                           <div class="ob-package-card-title"><h3>{p.label}</h3><p>{p.description ?? p.owners}</p></div>
@@ -503,73 +427,67 @@ export function StartOnboardingWizard(
                           <div class="ob-package-stat"><strong>{p.defaultSlaDays}d</strong><small>Duration</small></div>
                         </div>
                         <div class="ob-package-tags">
-                          {p.workerTypes.map(wt => <span class="ob-package-tag" key={wt}>{humanize(wt)}</span>)}
+                          <span class="ob-package-tag">Version {p.versionNo}</span>
+                          {(p.match?.reasons ?? []).map(reasonText => <span class="ob-package-tag" key={reasonText}>{reasonText}</span>)}
                         </div>
                       </button>
                     ))}
                     </div>
                   )}
-              </>
-            )}
-
-            {step === 'tasks' && (
-              <>
-                <StepHeader icon="task" title="Generated Tasks" desc={preview ? `${preview.taskCount} tasks will be created from ${pkg?.label ?? 'the package'}.` : 'Select a package to preview its tasks.'} />
-                {preview?.tasks.length
-                  ? (
-                    <div class="ob-feed">
-                      {preview.tasks.map((t, i) => (
-                        <div class="ob-feed-item" key={t.taskKey}>
-                          <span class="ob-feed-node">{i + 1}</span>
-                          <div class="ob-feed-copy">
-                            <strong>{t.taskTitle}</strong>
-                            <small>{humanize(t.moduleKey ?? 'hr')} module · owner {humanize(t.ownerRole)}</small>
-                          </div>
-                          <span class="ob-feed-chip">{humanize(t.ownerRole)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )
-                  : <div class="ob-flow-empty"><Icon name="task" /><span>Select a package to preview its tasks.</span></div>}
-
                 <div class="ob-subsection">
-                  <div class="ob-subsection-head"><span class="ob-subsection-icon"><Icon name="gate" /></span><h3>Custom Actions</h3></div>
-                  {actionTemplates.length === 0
-                    ? <p class="ob-flow-note-plain">This package has no custom action templates.</p>
-                    : <div class="ob-action-list">
-                        {actionTemplates.map(t => (
-                          <label class={`ob-action-row ${includedActionIds.has(t.id) ? 'is-on' : ''}`} key={t.id}>
-                            <input type="checkbox" checked={includedActionIds.has(t.id)} disabled={t.isRequired} onChange={() => toggleAction(t.id, t.isRequired)} />
-                            <span class="ob-action-copy"><strong>{t.actionName}</strong><small>{humanize(t.actionType)} · {humanize(t.ownerType)}{t.ownerRole ? ` (${t.ownerRole})` : ''}</small></span>
-                            {t.isRequired ? <span class="ob-tag">Required</span> : null}
-                            {t.blocksOnboarding ? <span class="ob-tag ob-tag-warn">Blocking</span> : null}
-                          </label>
-                        ))}
-                      </div>}
+                  <div class="ob-subsection-head"><span class="ob-subsection-icon"><Icon name="archive" /></span><h3>What SIOMAC Will Create</h3></div>
+                  <div class="ob-doc-summary">
+                    <span class="ob-doc-summary-chip"><strong>{preview?.taskCount ?? 0}</strong> Required Tasks</span>
+                    <span class="ob-doc-summary-chip"><strong>{preview?.handoffCount ?? 0}</strong> Team Handoffs</span>
+                    <span class="ob-doc-summary-chip"><strong>{documents?.requiredCount ?? 0}</strong> Documents</span>
+                    <span class="ob-doc-summary-chip"><strong>{pkg?.defaultSlaDays ?? 0}</strong> Day Plan</span>
+                  </div>
                 </div>
               </>
             )}
 
-            {step === 'handoffs' && (
+            {step === 'optional' && (
               <>
-                <StepHeader icon="handoff" title="Cross-Module Handoffs" desc={preview ? `${preview.handoffCount} handoff intents to downstream modules.` : 'Select a package to preview handoffs.'} />
-                {preview?.handoffs.length
-                  ? (
-                    <div class="ob-feed">
-                      {preview.handoffs.map((h, i) => (
-                        <div class="ob-feed-item" key={`${h.targetModule}-${i}`}>
-                          <span class="ob-feed-node is-mod"><Icon name="handoff" /></span>
-                          <div class="ob-feed-copy">
-                            <strong>{humanize(h.targetModule)}</strong>
-                            <small>{humanize(h.handoffType)}</small>
-                          </div>
-                          <span class="ob-feed-chip is-pending">Pending</span>
-                        </div>
-                      ))}
+                <StepHeader icon="task" title="Optional Work" desc="Required package work is locked. Add only the extra actions needed for this employee." />
+                <div class="ob-subsection">
+                  <div class="ob-subsection-head"><span class="ob-subsection-icon"><Icon name="gate" /></span><h3>Available Add-ons</h3><span>{includedActionIds.size + oneOffActions.length} selected</span></div>
+                  {actionTemplates.filter(t => !t.isRequired).length === 0
+                    ? <p class="ob-flow-note-plain">This package has no optional work. Continue to documents.</p>
+                    : <div class="ob-action-list">
+                        {actionTemplates.filter(t => !t.isRequired).map(t => (
+                          <label class={`ob-action-row ${includedActionIds.has(t.id) ? 'is-on' : ''}`} key={t.id}>
+                            <input type="checkbox" checked={includedActionIds.has(t.id)} onChange={() => toggleAction(t.id, false)} />
+                            <span class="ob-action-copy"><strong>{t.actionName}</strong><small>{humanize(t.actionType)} · {humanize(t.ownerType)}{t.ownerRole ? ` (${t.ownerRole})` : ''}</small></span>
+                            {t.blocksOnboarding ? <span class="ob-tag ob-tag-warn">Blocking</span> : null}
+                          </label>
+                        ))}
+                      </div>}
+                  {canCreateOneOff ? <button class="ob-action-button ob-action-button-ghost" type="button" onClick={() => setOneOffOpen(true)}><Icon name="task" />Create One-Off Action</button> : null}
+                  {oneOffActions.map((action, index) => (
+                    <div class="ob-action-row is-on" key={`${action.actionName}-${index}`}>
+                      <span class="ob-action-copy"><strong>{action.actionName}</strong><small>{humanize(action.actionType)} · {humanize(action.ownerRole ?? 'queue')}</small></span>
+                      <button type="button" class="ob-link-button" onClick={() => setOneOffActions(current => current.filter((_, itemIndex) => itemIndex !== index))}>Remove</button>
                     </div>
-                  )
-                  : <div class="ob-flow-empty"><Icon name="handoff" /><span>Select a package to preview handoffs.</span></div>}
-                <p class="ob-flow-note"><Icon name="warning" />Handoffs are recorded as intents and emit events; delivery to HSE / Training / Payroll is a later phase.</p>
+                  ))}
+                </div>
+                {accountPreflight?.required ? (
+                  <div class="ob-subsection">
+                    <div class="ob-subsection-head">
+                      <span class="ob-subsection-icon"><Icon name="lock" /></span>
+                      <h3>Account Setup Policy</h3>
+                      <span class={`ob-tag ${accountPreflight.ready ? 'ob-tag-ok' : 'ob-tag-warn'}`}>{accountPreflight.ready ? 'Policy resolved' : 'Configuration required'}</span>
+                    </div>
+                    <div class="ob-review-list">
+                      <div class="ob-review-row"><span>Operating model</span><strong>HR managed</strong></div>
+                      <div class="ob-review-row"><span>Owning team</span><strong>{accountPreflight.owningTeam.label}</strong></div>
+                      <div class="ob-review-row"><span>Accountable person</span><strong>{accountPreflight.accountablePerson?.name ?? 'Assigned case owner after launch'}</strong></div>
+                      <div class="ob-review-row"><span>Access profile</span><strong>{accountPreflight.accessProfile}</strong></div>
+                      <div class="ob-review-row"><span>Proposed work email</span><strong>{accountPreflight.proposedWorkEmail ?? 'Not configured'}</strong></div>
+                      <div class="ob-review-row"><span>Invitation</span><strong>After account handoff</strong></div>
+                    </div>
+                    {accountPreflight.blockers.map(blocker => <p class="ob-flow-note-plain" key={blocker}>{blocker}</p>)}
+                  </div>
+                ) : null}
               </>
             )}
 
@@ -595,6 +513,7 @@ export function StartOnboardingWizard(
                     <DocumentRequirementCard
                       key={d.requirementId}
                       doc={d}
+                      canWaive={canWaiveDocuments}
                       selection={documentSelections[d.requirementId] ?? null}
                       onSelect={(sel) => setDocumentSelection(d.requirementId, sel)}
                     />
@@ -612,46 +531,22 @@ export function StartOnboardingWizard(
             {step === 'review' && (
               <>
                 <StepHeader icon="review" title="Review & Launch" desc="Creates the onboarding case, its tasks, the handoff intents, and any included custom actions." />
-                <div class="ob-worker-form-grid">
-                  <label class="ob-field">
-                    <span class="ob-field-label">Case Owner (user)</span>
-                    <span class="ob-control ob-control-select">
-                      <select value={ownerId} onChange={e => setOwnerId((e.target as HTMLSelectElement).value)}>
-                        <option value="">Me (default)</option>
-                        {employees.map(e => <option value={e.id} key={e.id}>{rowName(e)}</option>)}
-                      </select>
-                      <Icon name="chevronRight" className="ob-control-icon ob-control-chevron" />
-                    </span>
-                  </label>
-                  <label class="ob-field">
-                    <span class="ob-field-label">Due Date</span>
-                    <span class="ob-control ob-control-date">
-                      <Icon name="calendar" className="ob-control-icon" />
-                      <input type="date" value={dueAt} onInput={e => setDueAt((e.target as HTMLInputElement).value)} />
-                    </span>
-                  </label>
-                  {launchMode === 'Scheduled' ? (
-                    <label class="ob-field">
-                      <span class="ob-field-label">Scheduled Launch Date<span class="ob-required">*</span></span>
-                      <span class="ob-control ob-control-date">
-                        <Icon name="calendar" className="ob-control-icon" />
-                        <input type="date" value={scheduledLaunchAt} onInput={e => setScheduledLaunchAt((e.target as HTMLInputElement).value)} />
-                      </span>
-                    </label>
-                  ) : null}
-                </div>
                 <div class="ob-subsection">
+                  <div class={`ob-doc-blocking-alert ${launchPreflight?.ready ? 'is-ready' : ''}`}>
+                    <Icon name={launchPreflight?.ready ? 'check' : 'warning'} />
+                    <span><strong>{launchPreflightQ.isFetching ? 'Validating launch' : launchPreflight?.ready ? 'Ready to launch' : 'Launch blocked'}</strong>{launchPreflight?.blockers[0] ? ` — ${launchPreflight.blockers[0].message}` : ''}</span>
+                  </div>
                   <div class="ob-subsection-head"><span class="ob-subsection-icon"><Icon name="idCard" /></span><h3>Case Summary</h3></div>
                   <div class="ob-review-list">
                     <div class="ob-review-row"><span>Worker</span><strong>{empName || '—'}</strong></div>
                     <div class="ob-review-row"><span>Case Type</span><strong>{humanize(workerType)}</strong></div>
                     <div class="ob-review-row"><span>Reason · Priority</span><strong>{reason} · {priority}</strong></div>
                     <div class="ob-review-row"><span>Package</span><strong>{pkg?.label ?? '—'}</strong></div>
-                    <div class="ob-review-row"><span>Tasks · Handoffs</span><strong>{preview ? `${preview.taskCount} · ${preview.handoffCount}` : '—'}</strong></div>
-                    <div class="ob-review-row"><span>Custom actions</span><strong>{includedActionIds.size} of {actionTemplates.length} included</strong></div>
+                    <div class="ob-review-row"><span>Tasks · Handoffs</span><strong>{launchPreflight ? `${launchPreflight.counts.tasks} · ${launchPreflight.counts.handoffs}` : '—'}</strong></div>
+                    <div class="ob-review-row"><span>Optional work</span><strong>{includedActionIds.size} package add-ons · {oneOffActions.length} one-off</strong></div>
                     <div class="ob-review-row"><span>Documents outstanding</span><strong>{documents ? documents.missingCount : '—'}</strong></div>
                     <div class="ob-review-row"><span>{endFact.label}</span><strong>{endFact.value ?? '—'}</strong></div>
-                    <div class="ob-review-row"><span>Launch · Due</span><strong>{launchMode}{launchMode === 'Scheduled' && scheduledLaunchAt ? ` · ${scheduledLaunchAt}` : ''}{dueAt ? ` · Due ${dueAt}` : ''}</strong></div>
+                    <div class="ob-review-row"><span>Launch</span><strong>Immediately after confirmation</strong></div>
                   </div>
                 </div>
 
@@ -674,7 +569,7 @@ export function StartOnboardingWizard(
             <div class="ob-step-nav">
               <button class="ob-action-button ob-action-button-ghost" type="button" disabled={stepIndex === 0} onClick={goPrev}><Icon name="arrowLeft" />Back</button>
               {step === 'review'
-                ? <button class="ob-action-button ob-action-button-primary" type="button" disabled={busy || !!done || hasBlockingLaunchFailure} onClick={launch}><Icon name="launch" />{busy ? 'Launching…' : 'Launch Case'}</button>
+                ? <button class="ob-action-button ob-action-button-primary" type="button" disabled={busy || !!done || hasBlockingLaunchFailure} onClick={() => void launch()}><Icon name="launch" />{busy ? 'Launching…' : 'Launch Case'}</button>
                 : <button class="ob-action-button ob-action-button-secondary" type="button" disabled={step !== 'worker' && !stepDone[step]} onClick={goNext}>Continue<Icon name="chevronRight" /></button>}
             </div>
           </section>
@@ -684,13 +579,9 @@ export function StartOnboardingWizard(
         <aside class="ob-side-stack" aria-label="Onboarding case status">
           <section class="ob-preview-card ob-preview-ring-card">
             <div class="ob-preview-kicker"><Icon name="idCard" />Case Preview</div>
-            <div class="ob-ring-hero">
+            <div class="ob-ring-hero ob-profile-hero">
               <div class="ob-ring-access-row">
                 <div class="ob-ring-wrap">
-                  <svg class="ob-ring" viewBox="0 0 72 72" aria-hidden="true">
-                    <circle class="ob-ring-track" cx="36" cy="36" r="30" />
-                    <circle class="ob-ring-value" cx="36" cy="36" r="30" pathLength={100} style={`stroke-dashoffset:${100 - (employeeId ? readiness : 0)}`} />
-                  </svg>
                   <span class="ob-ring-photo">
                     {selectedEmp?.profile_image_url
                       ? <img src={selectedEmp.profile_image_url} alt="" />
@@ -705,14 +596,6 @@ export function StartOnboardingWizard(
                     ? <span class="ob-ring-role-tag"><Icon name="briefcase" />{selectedEmp?.position ?? humanize(workerType)}</span>
                     : <small>Select a worker to preview</small>}
                 </div>
-                {employeeId
-                  ? (
-                    <div class="ob-ring-status-col">
-                      <span class="ob-ring-pct">{readiness}%</span>
-                      <span class="ob-ring-label">{readinessLabel}</span>
-                    </div>
-                  )
-                  : null}
               </div>
             </div>
             <div class="ob-preview-facts">
@@ -810,12 +693,53 @@ export function StartOnboardingWizard(
           </section>
         </aside>
       </div>
+      {oneOffOpen ? <OneOffActionDialog onClose={() => setOneOffOpen(false)} onAdd={action => { setOneOffActions(current => [...current, action]); setOneOffOpen(false); }} /> : null}
     </div>
   );
 }
 
 // Step-workspace header — icon badge (relevant to the section) + title + description, matching the
 // obv-activation-title-row pattern from the Onboarding Command Center dashboard.
+function OneOffActionDialog({ onClose, onAdd }: { onClose: () => void; onAdd: (action: OnboardingLaunchOneOffAction) => void }): VNode {
+  const [name, setName] = useState('');
+  const [actionType, setActionType] = useState<OnboardingLaunchOneOffAction['actionType']>('custom_task');
+  const [ownerRole, setOwnerRole] = useState('hr');
+  const [instructions, setInstructions] = useState('');
+  const [dueOffset, setDueOffset] = useState('0');
+  const [blocks, setBlocks] = useState(false);
+  const [evidence, setEvidence] = useState(false);
+  const submit = (): void => {
+    if (!name.trim()) { toast.warning('Enter a name for the one-off action.'); return; }
+    if (!ownerRole) { toast.warning('Choose the owning team.'); return; }
+    const parsedOffset = Number(dueOffset);
+    if (!Number.isInteger(parsedOffset) || parsedOffset < -365 || parsedOffset > 365) {
+      toast.warning('Due offset must be a whole number from -365 to 365.'); return;
+    }
+    onAdd({
+      actionName: name.trim(), actionType, ownerRole,
+      instructions: instructions.trim() || null, dueOffsetDays: parsedOffset,
+      blocksOnboarding: blocks, requiresEvidence: evidence,
+    });
+  };
+  return (
+    <Modal open title="Create One-Off Action" sub="Adds work to this case only. The reusable package is not changed." icon="fa-list-check" size="lg" onClose={onClose} onSubmit={submit} submitLabel="Add Action">
+      <ModalSection title="Action" desc="Describe the operational result and assign its accountable queue.">
+        <div class="ob-worker-form-grid">
+          <Fld label="Action Name" value={name} onInput={setName} required placeholder="e.g. Arrange specialist access" />
+          <SelFld label="Creates" value={actionType} onInput={value => setActionType(value as OnboardingLaunchOneOffAction['actionType'])}
+            options={['custom_task','custom_checklist_item','custom_handoff','custom_notification']} />
+          <SelFld label="Owning Team" value={ownerRole} onInput={setOwnerRole}
+            options={['hr','supervisor','it','hse','training','payroll','facilities']} />
+          <Fld label="Due Offset (days from start)" value={dueOffset} onInput={setDueOffset} type="number" />
+          <label class="ob-action-row"><input type="checkbox" checked={blocks} onChange={event => setBlocks((event.target as HTMLInputElement).checked)} /><span class="ob-action-copy"><strong>Blocks Day One</strong><small>Keep off for follow-up work that may continue after launch.</small></span></label>
+          <label class="ob-action-row"><input type="checkbox" checked={evidence} onChange={event => setEvidence((event.target as HTMLInputElement).checked)} /><span class="ob-action-copy"><strong>Evidence required</strong><small>Completion requires approved supporting evidence.</small></span></label>
+        </div>
+        <label class="ob-field"><span class="ob-field-label">Instructions</span><textarea class="ob-control" value={instructions} onInput={event => setInstructions((event.target as HTMLTextAreaElement).value)} rows={4} placeholder="What must be completed?" /></label>
+      </ModalSection>
+    </Modal>
+  );
+}
+
 function StepHeader({ icon, title, desc }: { icon: IconName; title: string; desc?: string | VNode }): VNode {
   return (
     <div class="ob-worker-header">
@@ -880,7 +804,8 @@ function DateFld(
 // Searchable worker field — thin adapter over the UI-kit's PersonSearchSelect
 // (filters by name/ID, shows each match's profile photo/initials).
 function WorkerSearchField(
-  { employees, value, onChange }: { employees: HrEmployeeRow[]; value: string; onChange: (id: string) => void },
+  { employees, value, onChange, onSearch, loading, error }:
+  { employees: HrEmployeeRow[]; value: string; onChange: (id: string) => void; onSearch: (query: string) => void; loading: boolean; error: string | null },
 ): VNode {
   const options: PersonSearchOption[] = useMemo(() => employees.map(e => ({
     id: e.id,
@@ -894,7 +819,11 @@ function WorkerSearchField(
       options={options}
       value={value}
       onChange={onChange}
-      placeholder="Search worker by name or ID…"
+      onSearch={onSearch}
+      loading={loading}
+      error={error}
+      minimumQueryLength={2}
+      placeholder="Search by name, employee number or work email…"
       emptyLabel="No workers found"
     />
   );
@@ -906,25 +835,25 @@ function WorkerSearchField(
 // selection here is what `documentSelections` sends to hr/onboarding/start; blocking documents
 // with no satisfying selection are what `blockingDocFailures` uses to gate the Launch button.
 function DocumentRequirementCard(
-  { doc, selection, onSelect }:
-  { doc: OnboardingIntakeDocument; selection: OnboardingDocumentLaunchSelection | null; onSelect: (sel: OnboardingDocumentLaunchSelection) => void },
+  { doc, selection, canWaive, onSelect }:
+  { doc: OnboardingIntakeDocument; selection: OnboardingDocumentLaunchSelection | null; canWaive: boolean; onSelect: (sel: OnboardingDocumentLaunchSelection) => void },
 ): VNode {
   const stateLabel: Record<OnboardingIntakeDocument['state'], string> = {
     present_verified: 'Verified', present_unverified: 'Pending verification', expired: 'Expired', missing: 'Missing',
   };
-  const satisfied = doc.state === 'present_verified' || doc.state === 'present_unverified'
-    || selection?.action === 'use_existing' || selection?.action === 'uploaded' || selection?.action === 'waive';
+  const satisfied = doc.state === 'present_verified'
+    || selection?.action === 'waive' || (!doc.isBlocking && selection?.action === 'request_from_worker');
 
   async function handleWaive(): Promise<void> {
     const reason = await dialog.prompt({ title: `Waive ${doc.label}`, text: 'Why is this document being waived?', placeholder: 'Waiver reason' });
     if (reason === null) return;
-    onSelect({ requirementId: doc.requirementId, action: 'waive', waiverReason: reason });
+    if (!reason.trim()) { toast.warning('Enter a reason for the document waiver.'); return; }
+    onSelect({ requirementId: doc.requirementId, action: 'waive', waiverReason: reason.trim() });
   }
 
-  const alreadyOnFile = doc.state === 'present_verified' || doc.state === 'present_unverified';
+  const alreadyOnFile = doc.state === 'present_verified';
   const statusText = alreadyOnFile ? 'On file'
     : selection?.action === 'use_existing' ? 'Will attach'
-    : selection?.action === 'uploaded' ? 'Uploaded'
     : selection?.action === 'waive' ? 'Waived'
     : selection?.action === 'request_from_worker' ? 'Requested'
     : stateLabel[doc.state];
@@ -947,21 +876,11 @@ function DocumentRequirementCard(
       </div>
       {!alreadyOnFile && (
         <div class="ob-doc-card-actions">
-          {doc.existingDocumentId ? (
-            <button type="button" class={selection?.action === 'use_existing' ? 'is-active' : ''}
-              onClick={() => onSelect({ requirementId: doc.requirementId, action: 'use_existing', existingDocumentId: doc.existingDocumentId })}>
-              Attach existing
-            </button>
-          ) : null}
-          <button type="button" class={selection?.action === 'uploaded' ? 'is-active' : ''}
-            onClick={() => onSelect({ requirementId: doc.requirementId, action: 'uploaded' })}>
-            Quick upload
-          </button>
           <button type="button" class={selection?.action === 'request_from_worker' ? 'is-active' : ''}
             onClick={() => onSelect({ requirementId: doc.requirementId, action: 'request_from_worker' })}>
             Request from worker
           </button>
-          {doc.canWaive ? (
+          {doc.canWaive && canWaive ? (
             <button type="button" class={selection?.action === 'waive' ? 'is-active' : ''} onClick={() => void handleWaive()}>
               Waive
             </button>

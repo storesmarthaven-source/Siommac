@@ -26,11 +26,44 @@
 export const title = 'HR Onboarding';
 
 export default async function run(h) {
-  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const { api: rawApi, test, expect, ok, fails, mint, sb, TAG } = h;
+
+  /**
+   * Launch now REFUSES a case unless every unsatisfied document requirement carries an
+   * explicit disposition (wizard step 4). That is deliberate — it is what stops the wizard
+   * accepting input the backend ignores — but it means a bare `start` no longer succeeds.
+   *
+   * These suites are not testing the Documents step, so rather than hand-maintaining a
+   * selection list per package, this resolves the real requirements from intake-preview and
+   * asks the worker for anything not already satisfied. A caller that IS testing dispositions
+   * passes its own `documentSelections` and this leaves them untouched.
+   */
+  async function defaultDocumentSelections(token, args) {
+    if (args.documentSelections !== undefined) return args.documentSelections;
+    if (!args.employeeId || !args.packageKey) return undefined;
+    const preview = await rawApi('hr/onboarding/intake-preview', token, {
+      employeeId: args.employeeId, packageKey: args.packageKey,
+      targetStartDate: args.targetStartDate ?? '2027-01-01',
+    });
+    const items = preview.body?.data?.documents?.items ?? [];
+    return items
+      .filter(item => !(item.state === 'present_verified'))
+      .map(item => ({ requirementId: item.requirementId, action: 'request_from_worker' }));
+  }
+
+  const api = async (path, token, args = {}) => {
+    if (path !== 'hr/onboarding/start') return rawApi(path, token, args);
+    const documentSelections = await defaultDocumentSelections(token, args);
+    return rawApi(path, token, {
+      requestId: crypto.randomUUID(), targetStartDate: '2027-01-01',
+      ...(documentSelections === undefined ? {} : { documentSelections }),
+      ...args,
+    });
+  };
   const { admin } = h.users;
   const A = mint(admin);
 
-  const ctx = { caseId: null, cancelCaseId: null, mCaseId: null, cCaseId: null, templateId: null, tplName: `${TAG}-ca-tpl`, empId: null, empTok: null, mgrTok: null, taskIds: [], mTaskIds: [] };
+  const ctx = { caseId: null, cancelCaseId: null, mCaseId: null, cCaseId: null, packageId: null, packageKey: null, packageTaskId: null, packageHandoffId: null, templateId: null, tplName: `${TAG}-ca-tpl`, empId: null, contractorEmpId: null, empTok: null, mgrTok: null, taskIds: [], mTaskIds: [] };
 
   // Poll a predicate until true (or timeout) — for fire-and-forget app_event asserts
   // that can lose a race under full-suite load. Returns true on success, false on timeout.
@@ -38,6 +71,26 @@ export default async function run(h) {
     const t0 = Date.now();
     while (Date.now() - t0 < ms) { if (await check()) return true; await new Promise(r => setTimeout(r, 250)); }
     return false;
+  };
+
+  // Remove this run's custom-action template AND any abandoned one left by an earlier run.
+  // "Abandoned" = E2E-named and older than ABANDONED_MS, so a suite running concurrently in
+  // another process can never have its live fixture deleted out from under it.
+  const ABANDONED_MS = 6 * 60 * 60 * 1000;
+  const sweepLeakedActionTemplates = async () => {
+    const { data: rows } = await sb.from('hr_onboarding_action_templates')
+      .select('id, action_name, created_at').like('action_name', 'TEST-E2E-%-ca-tpl');
+    const cutoff = Date.now() - ABANDONED_MS;
+    const doomed = (rows ?? []).filter(r =>
+      r.action_name === ctx.tplName || new Date(r.created_at).getTime() < cutoff);
+    if (!doomed.length) return;
+    const ids = doomed.map(r => r.id);
+    try { await sb.from('app_events').delete().in('source_entity_id', ids); } catch { /* optional */ }
+    try { await sb.from('hr_audit_log').delete().in('record_id', ids); } catch { /* optional */ }
+    for (const r of doomed) {
+      try { await sb.from('app_events').delete().eq('event_type', 'onboarding.custom_action_template.created').eq('payload->>actionName', r.action_name); } catch { /* optional */ }
+    }
+    try { await sb.from('hr_onboarding_action_templates').delete().in('id', ids); } catch { /* FK-held → reported by the next run */ }
   };
 
   h.onCleanup(async () => {
@@ -49,11 +102,15 @@ export default async function run(h) {
     if (caseIds.length) await sb.from('hr_onboarding_cases').delete().in('id', caseIds);   // cascades tasks + handoffs + case_actions + communications
     if (ctx.exportAuditId) await sb.from('hr_audit_log').delete().eq('id', ctx.exportAuditId);   // report export has no record_id → delete by id
     // Custom-action template lives on a seeded package → remove it + its events/audit.
-    if (ctx.templateId) {
-      await sb.from('app_events').delete().eq('source_entity_id', ctx.templateId);
-      await sb.from('hr_audit_log').delete().eq('record_id', ctx.templateId);
-      await sb.from('app_events').delete().eq('event_type', 'onboarding.custom_action_template.created').eq('payload->>actionName', ctx.tplName);
-      await sb.from('hr_onboarding_action_templates').delete().eq('id', ctx.templateId);
+    // Swept by NAME, not just by ctx.templateId: an id-only sweep leaks the row whenever a
+    // run aborts between create and cleanup, and a leaked ACTIVE template on a shared
+    // package is then auto-included in every later launch of that package — which is
+    // exactly how three orphans once broke the office_admin start path.
+    await sweepLeakedActionTemplates();
+    if (ctx.packageId) {
+      await sb.from('app_events').delete().eq('source_entity_id', ctx.packageId);
+      await sb.from('hr_audit_log').delete().eq('record_id', ctx.packageId);
+      await sb.from('hr_onboarding_packages').delete().eq('id', ctx.packageId);
     }
     for (const id of (ctx.createdEmpIds ?? []).filter(Boolean)) {
       // (employeeId, packageKey)-keyed artifacts this run created for the TAGGED test
@@ -82,12 +139,15 @@ export default async function run(h) {
     const { data: mgr } = await sb.from('app_users').select('id, username, role, department_id').eq('role', 'manager').eq('status', 'active').neq('id', admin.id).limit(1).maybeSingle();
     if (mgr) ctx.mgrTok = mint(mgr);
     const mk = (suffix) => ({ id: `ONB-${suffix}-${TAG}`, username: `${TAG}_onb_${suffix.toLowerCase()}`, full_name: `Onboarding E2E ${suffix}`, role: 'employee', status: 'active', employment_type: 'employee', supervisor_id: mgr?.id ?? null });
-    const empRow = mk('EMPA'), emp2Row = mk('EMPB');
-    const { error: empErr } = await sb.from('app_users').insert([empRow, emp2Row]);
+    const empRow = { ...mk('EMPA'), contractor_flag: false };
+    const emp2Row = { ...mk('EMPB'), contractor_flag: false };
+    const contractorRow = { ...mk('CONTRACTOR'), contractor_flag: true };
+    const { error: empErr } = await sb.from('app_users').insert([empRow, emp2Row, contractorRow]);
     if (empErr) throw new Error(`onboarding: failed to seed tagged test employees: ${empErr.message}`);
     ctx.empId = empRow.id; ctx.empTok = mint({ id: empRow.id, username: empRow.username, role: 'employee', department_id: null });
     ctx.empId2 = emp2Row.id;
-    ctx.createdEmpIds = [empRow.id, emp2Row.id];
+    ctx.contractorEmpId = contractorRow.id;
+    ctx.createdEmpIds = [empRow.id, emp2Row.id, contractorRow.id];
   }
 
   // Cancel every currently-active onboarding case for an employee — used between `start`
@@ -113,12 +173,26 @@ export default async function run(h) {
     'hr_onboarding.block_activation_until_hse_complete',
     'hr_onboarding.block_activation_until_payroll_complete',
     'hr_onboarding.require_owner_on_start',
+    'hr_onboarding.work_email_domain',
   ];
+  // Self-heal before anything launches: an abandoned ACTIVE custom-action template from a
+  // killed earlier run is auto-included in every launch of the package it sits on, and its
+  // unresolved owner then fails the start with "Choose an owning team or accountable person".
+  await test('sweep abandoned custom-action templates from earlier runs (setup)', async () => {
+    await sweepLeakedActionTemplates();
+    const { data: left } = await sb.from('hr_onboarding_action_templates')
+      .select('id, action_name, created_at, is_active').like('action_name', 'TEST-E2E-%-ca-tpl').eq('is_active', true);
+    const stale = (left ?? []).filter(r => Date.now() - new Date(r.created_at).getTime() > ABANDONED_MS);
+    expect(stale.length === 0, `abandoned active E2E templates still present: ${stale.map(r => r.action_name).join(', ')}`);
+  });
+
   await test('settings: catalog sync + pin gates/owner off (setup)', async () => {
     ok(await api('settings/catalog/sync', A, {}), 'catalog sync');
     for (const k of ctx.settingKeys) {
+      if (k === 'hr_onboarding.work_email_domain') continue;
       ok(await api('settings/values/set', A, { settingKey: k, scopeType: 'global', scopeId: null, value: false }), `pin ${k}=false`);
     }
+    ok(await api('settings/values/set', A, { settingKey: 'hr_onboarding.work_email_domain', scopeType: 'global', scopeId: null, value: 'e2e.invalid' }), 'pin work email domain');
   });
 
   // (No defensive "clear leftover state" step is needed: the onboarding target employees
@@ -142,9 +216,10 @@ export default async function run(h) {
   await test('start (admin) → creates case + tasks + handoff intents', async () => {
     // contractor_worker is a contractor-only package → the case type must be 'contractor'
     // (enforced by validateWorkerTypeAndPackage), and contractor required fields must be supplied.
+    ctx.launchRequestId = crypto.randomUUID();
     const r = await api('hr/onboarding/start', A, {
-      employeeId: ctx.empId, packageKey: 'contractor_worker', workerType: 'contractor',
-      workerTypeDetails: { contractorCompany: 'E2E Agency', contractStartDate: '2027-01-01', contractEndDate: '2027-06-30' },
+      requestId: ctx.launchRequestId,
+      employeeId: ctx.contractorEmpId, packageKey: 'contractor_worker', targetStartDate: '2027-01-01',
     });
     ok(r, 'start');
     expect(!!r.body.data.caseId, 'caseId returned');
@@ -163,6 +238,20 @@ export default async function run(h) {
     expect((hos ?? []).length >= 1 && hos.every(x => x.status === 'pending'), 'handoff intents pending');
   });
 
+  await test('start retry with the same request id returns the same frozen case', async () => {
+    const replay = await api('hr/onboarding/start', A, {
+      requestId: ctx.launchRequestId,
+      employeeId: ctx.contractorEmpId,
+      packageKey: 'contractor_worker',
+      targetStartDate: '2027-01-01',
+    });
+    ok(replay, 'idempotent replay');
+    expect(replay.body.data.caseId === ctx.caseId, 'same case returned');
+    const { count } = await sb.from('hr_onboarding_cases').select('id', { count: 'exact', head: true })
+      .eq('launch_request_id', ctx.launchRequestId);
+    expect(count === 1, `one case for request id, got ${count}`);
+  });
+
   await test('start unauthorized (employee) → denied', async () => {
     const r = await api('hr/onboarding/start', ctx.empTok, { employeeId: ctx.empId, packageKey: 'office_admin' });
     fails(r, 'employee cannot start');
@@ -174,29 +263,27 @@ export default async function run(h) {
   });
 
   // ── worker-type ⇄ package eligibility + case-type required fields (backend gate) ──
-  await test('contractor start stored workerTypeDetails on case metadata', async () => {
+  await test('contractor worker type and package snapshot are server-derived', async () => {
     // The contractor start above (ctx.caseId) must have persisted its intake fields.
-    const { data: kase } = await sb.from('hr_onboarding_cases').select('metadata, worker_type').eq('id', ctx.caseId).maybeSingle();
+    const { data: kase } = await sb.from('hr_onboarding_cases')
+      .select('metadata, worker_type, package_id, package_version_no, launch_snapshot')
+      .eq('id', ctx.caseId).maybeSingle();
     expect(kase?.worker_type === 'contractor', `worker_type = ${kase?.worker_type}`);
-    expect(kase?.metadata?.workerTypeDetails?.contractorCompany === 'E2E Agency', 'contractorCompany persisted in metadata');
+    expect(!kase?.metadata?.workerTypeDetails, 'no shadow contractor intake copied into case metadata');
+    expect(!!kase?.package_id && Number.isInteger(kase?.package_version_no), 'package id and version frozen');
+    expect(kase?.launch_snapshot?.package?.id === kase?.package_id, 'snapshot carries package identity');
   });
 
   await test('employee case with a contractor-only package → rejected (eligibility gate)', async () => {
-    const r = await api('hr/onboarding/start', A, { employeeId: ctx.empId, packageKey: 'contractor_worker', workerType: 'employee' });
+    const r = await api('hr/onboarding/start', A, { employeeId: ctx.empId, packageKey: 'contractor_worker', targetStartDate: '2027-01-01' });
     fails(r, 'employee cannot use a contractor-only package');
   });
 
   await test('contractor case with an employee-only package → rejected (eligibility gate)', async () => {
     const r = await api('hr/onboarding/start', A, {
-      employeeId: ctx.empId, packageKey: 'standard_employee', workerType: 'contractor',
-      workerTypeDetails: { contractorCompany: 'X', contractStartDate: '2027-01-01', contractEndDate: '2027-02-01' },
+      employeeId: ctx.contractorEmpId, packageKey: 'standard_employee', targetStartDate: '2027-01-01',
     });
     fails(r, 'contractor cannot use an employee-only package');
-  });
-
-  await test('contractor case missing required contractor fields → rejected', async () => {
-    const r = await api('hr/onboarding/start', A, { employeeId: ctx.empId, packageKey: 'contractor_worker', workerType: 'contractor' });
-    fails(r, 'contractor case requires company + contract dates');
   });
 
   // ── get ───────────────────────────────────────────────────────────────────────
@@ -277,6 +364,32 @@ export default async function run(h) {
     expect(keys.includes('standard_employee') && keys.includes('contractor_worker'), 'seeded packages present');
     const std = r.body.data.find(p => p.key === 'standard_employee');
     expect(std && std.taskCount > 0 && typeof std.owners === 'string', 'package summary has taskCount + owners');
+  });
+
+  await test('packages/reference-data returns governed selector catalogues', async () => {
+    const r = await api('hr/onboarding/packages/reference-data', A, {});
+    ok(r, 'reference data');
+    expect(Array.isArray(r.body.data.documentRequirements), 'document requirements array');
+    expect(Array.isArray(r.body.data.trainingRequirements), 'training requirements array');
+    expect(Array.isArray(r.body.data.workflowTemplates), 'workflow templates array');
+    fails(await api('hr/onboarding/packages/reference-data', ctx.empTok, {}), 'employee cannot read package-authoring catalogues');
+  });
+
+  await test('package draft setup creates the governed template test fixture', async () => {
+    const created = await api('hr/onboarding/packages/create', A, {
+      label: `${TAG} Package`, description: 'E2E-owned package definition', workerTypes: ['employee'], defaultSlaDays: 10, defaultOwnerRole: 'hr',
+    });
+    ok(created, 'package create');
+    ctx.packageId = created.body.data.id;
+    ctx.packageKey = created.body.data.key;
+    const task = await api('hr/onboarding/packages/task-templates/create', A, {
+      packageId: ctx.packageId, taskKey: `${TAG}_task`, taskTitle: 'E2E package task', ownerRole: 'hr', sortOrder: 10,
+    });
+    ok(task, 'task template create'); ctx.packageTaskId = task.body.data.id;
+    const handoff = await api('hr/onboarding/packages/handoff-templates/create', A, {
+      packageId: ctx.packageId, handoffKey: `${TAG}_handoff`, targetModule: 'hr', handoffType: 'e2e_review', sortOrder: 10,
+    });
+    ok(handoff, 'handoff template create'); ctx.packageHandoffId = handoff.body.data.id;
   });
 
   // ════════════════════════════════════════════════════════════════════════════
@@ -508,15 +621,18 @@ export default async function run(h) {
     expect(au && au.length >= 1, 'evidence audit row');
   });
 
-  await test('evidence gate: requires_evidence task cannot complete until evidence attached — 7b', async () => {
+  await test('evidence gate: requires_evidence task cannot complete until evidence is approved — 7b', async () => {
     const gateKey = 'hr_onboarding.task_completion_requires_evidence';
     ctx.settingKeys.push(gateKey);
     const add = await api('hr/onboarding/task/add', A, { caseId: ctx.mCaseId, taskTitle: `${TAG} evidence-gated`, requiresEvidence: true });
     ok(add, 'add gated task'); const gatedId = add.body.data.taskId;
     ok(await api('settings/values/set', A, { settingKey: gateKey, scopeType: 'global', scopeId: null, value: true }), 'gate on');
     fails(await api('hr/onboarding/task/complete', A, { taskId: gatedId }), 'complete blocked without evidence');
-    ok(await api('hr/onboarding/task/attach-evidence', A, { taskId: gatedId, fileName: `${TAG}-gate.pdf`, filePath: `onboarding-evidence/${TAG}-gate.pdf` }), 'attach evidence');
-    ok(await api('hr/onboarding/task/complete', A, { taskId: gatedId }), 'complete allowed with evidence');
+    const attached = await api('hr/onboarding/task/attach-evidence', A, { taskId: gatedId, fileName: `${TAG}-gate.pdf`, filePath: `onboarding-evidence/${TAG}-gate.pdf` });
+    ok(attached, 'attach evidence');
+    fails(await api('hr/onboarding/task/complete', A, { taskId: gatedId }), 'pending evidence does not satisfy the gate');
+    ok(await api('hr/onboarding/task/review-evidence', A, { evidenceId: attached.body.data.evidenceId, decision: 'approved' }), 'approve evidence');
+    ok(await api('hr/onboarding/task/complete', A, { taskId: gatedId }), 'complete allowed with approved evidence');
     ok(await api('settings/values/set', A, { settingKey: gateKey, scopeType: 'global', scopeId: null, value: false }), 'gate off');
   });
 
@@ -541,9 +657,9 @@ export default async function run(h) {
   });
 
   await test('actions/templates/create (admin) → package custom-action template', async () => {
-    const r = await api('hr/onboarding/actions/templates/create', A, { packageKey: 'office_admin', actionName: ctx.tplName, actionType: 'custom_task', instructions: 'tagged e2e template' });
+    const r = await api('hr/onboarding/actions/templates/create', A, { packageKey: ctx.packageKey, actionName: ctx.tplName, actionType: 'custom_task', instructions: 'tagged e2e template' });
     ok(r, 'template create'); ctx.templateId = r.body.data.templateId;
-    const list = await api('hr/onboarding/actions/templates/list', A, { packageKey: 'office_admin' });
+    const list = await api('hr/onboarding/actions/templates/list', A, { packageKey: ctx.packageKey });
     expect(list.body.data.some(t => t.id === ctx.templateId), 'template listed');
   });
 
@@ -712,13 +828,21 @@ export default async function run(h) {
   }
 
   await test('reports/run honors the package filter', async () => {
-    const r = await api('hr/onboarding/reports/run', A, { reportKey: 'package_effectiveness', packageKeys: ['standard_employee'] });
+    const r = await api('hr/onboarding/reports/run', A, { reportKey: 'package_effectiveness', scope: 'all', packageKeys: ['standard_employee'] });
     ok(r, 'filtered run');
     expect(r.body.data.rows.every(row => row.package), 'rows scoped');
   });
 
+  await test('reports use the shared onboarding scope contract', async () => {
+    const mine = await api('hr/onboarding/reports/run', A, { reportKey: 'activation_readiness', scope: 'my' });
+    const all = await api('hr/onboarding/reports/run', A, { reportKey: 'activation_readiness', scope: 'all' });
+    ok(mine, 'my-scope report'); ok(all, 'all-scope report');
+    expect(all.body.data.totalRows >= mine.body.data.totalRows, 'wider scope cannot report fewer visible rows');
+    fails(await api('hr/onboarding/reports/run', A, { reportKey: 'cycle_time', scope: 'invalid' }), 'invalid scope rejected');
+  });
+
   await test('reports/export writes an audit row (data egress)', async () => {
-    const r = await api('hr/onboarding/reports/export', A, { reportKey: 'cycle_time' });
+    const r = await api('hr/onboarding/reports/export', A, { reportKey: 'cycle_time', scope: 'all' });
     ok(r, 'export'); expect(r.body.data.reportKey === 'cycle_time', 'returns the report for client CSV');
     const { data: au } = await sb.from('hr_audit_log').select('id').eq('action', 'hr.onboarding.report_exported').order('created_at', { ascending: false }).limit(1);
     expect(au && au.length >= 1, 'export audit row written');
@@ -733,15 +857,23 @@ export default async function run(h) {
   await test('actions/templates update → retire (admin)', async () => {
     ok(await api('hr/onboarding/actions/templates/update', A, { id: ctx.templateId, displayOrder: 5 }), 'update');
     ok(await api('hr/onboarding/actions/templates/retire', A, { id: ctx.templateId }), 'retire');
-    const active = await api('hr/onboarding/actions/templates/list', A, { packageKey: 'office_admin' });
+    const active = await api('hr/onboarding/actions/templates/list', A, { packageKey: ctx.packageKey });
     expect(!active.body.data.some(t => t.id === ctx.templateId), 'retired template hidden by default');
-    const all = await api('hr/onboarding/actions/templates/list', A, { packageKey: 'office_admin', includeInactive: true });
+    const all = await api('hr/onboarding/actions/templates/list', A, { packageKey: ctx.packageKey, includeInactive: true });
     expect(all.body.data.some(t => t.id === ctx.templateId), 'retired template shown with includeInactive');
   });
 
   // access control — custom actions
   await test('actions/templates/create unauthorized (employee) → denied', async () => {
-    fails(await api('hr/onboarding/actions/templates/create', ctx.empTok, { packageKey: 'office_admin', actionName: 'x', actionType: 'custom_task' }), 'employee cannot create template');
+    fails(await api('hr/onboarding/actions/templates/create', ctx.empTok, { packageKey: ctx.packageKey, actionName: 'x', actionType: 'custom_task' }), 'employee cannot create template');
+  });
+
+  await test('publishing freezes the package definition', async () => {
+    ok(await api('hr/onboarding/packages/set-status', A, { id: ctx.packageId, status: 'active' }), 'publish');
+    fails(await api('hr/onboarding/packages/update', A, { id: ctx.packageId, label: 'Must not change' }), 'published package details are immutable');
+    fails(await api('hr/onboarding/packages/task-templates/update', A, { id: ctx.packageTaskId, taskTitle: 'Must not change' }), 'published task template is immutable');
+    fails(await api('hr/onboarding/packages/handoff-templates/update', A, { id: ctx.packageHandoffId, handoffType: 'must_not_change' }), 'published handoff template is immutable');
+    fails(await api('hr/onboarding/actions/templates/create', A, { packageKey: ctx.packageKey, actionName: 'Must not add', actionType: 'custom_task' }), 'published action template is immutable');
   });
   await test('actions/case/add unauthorized (employee) → denied', async () => {
     fails(await api('hr/onboarding/actions/case/add', ctx.empTok, { caseId: ctx.cCaseId, actionName: 'x', actionType: 'custom_task' }), 'employee cannot add case action');
@@ -764,6 +896,9 @@ export default async function run(h) {
     // Uses empId2 (not ctx.empId): ctx.empId already has a completed (employeeId,
     // standard_employee) idempotency key from "start case C" above — reusing it here would
     // short-circuit to case C's cached result instead of actually running this start.
+    // It must NOT be ctx.contractorEmpId either: standard_employee is an employee-only
+    // package, so a contractor target is refused by the eligibility gate before probation
+    // is ever derived (that direction is already covered as a negative path above).
     const probEmpId = ctx.empId2 ?? ctx.empId;
     if (!probEmpId) return; // no real employee available — skip gracefully
     // The handoff-retry case above is still active on empId2 — close it first.
@@ -776,6 +911,7 @@ export default async function run(h) {
 
     const targetStartDate = '2027-01-01';
     const r = await api('hr/onboarding/start', A, {
+      requestId: crypto.randomUUID(),
       employeeId: probEmpId,
       packageKey: 'standard_employee',
       targetStartDate,
@@ -805,24 +941,24 @@ export default async function run(h) {
   });
 
   await test('start case with contractor package → probation_end_date NOT written', async () => {
-    // Same employee as the probation test above (verifying the SAME worker's probation
-    // state isn't overwritten by a non-probation package) — not ctx.empId.
-    const probEmpId = ctx.empId2 ?? ctx.empId;
+    // Must be the CONTRACTOR target: contractor_worker is a contractor-only package, so
+    // pairing it with an employee is refused by the eligibility gate before probation is
+    // ever derived. That means this can't reuse the probation test's worker — the two
+    // packages are mutually exclusive per worker type by design — so the assertion is
+    // "probation_end_date is never written", not "isn't overwritten".
+    const probEmpId = ctx.contractorEmpId;
     if (!probEmpId) return;
-    // The probation case above is still active — close it before starting the next one.
+    // The contractor case from the start tests is still active — close it before the next one.
     await closeActiveCasesFor(probEmpId);
-    // contractor_worker has probation_days = NULL → probation_end_date must not be overwritten.
+    // contractor_worker has probation_days = NULL → probation_end_date must stay untouched.
     const { data: worker_before } = await sb.from('app_users')
       .select('probation_end_date').eq('id', probEmpId).maybeSingle();
     const prevDate = worker_before?.probation_end_date ?? null;
 
     const r = await api('hr/onboarding/start', A, {
+      requestId: crypto.randomUUID(),
       employeeId: probEmpId,
       packageKey: 'contractor_worker',
-      // contractor_worker is a contractor-only package: the case type must be 'contractor'
-      // and the contractor required fields must be supplied (validateWorkerTypeAndPackage).
-      workerType: 'contractor',
-      workerTypeDetails: { contractorCompany: 'E2E Agency', contractStartDate: '2027-02-01', contractEndDate: '2027-08-01' },
       targetStartDate: '2027-02-01',
     });
     ok(r, 'start with contractor package succeeds');
@@ -830,9 +966,10 @@ export default async function run(h) {
 
     const { data: worker_after } = await sb.from('app_users')
       .select('probation_end_date').eq('id', probEmpId).maybeSingle();
-    // The date should be unchanged (still whatever the previous test set, or null).
-    expect(worker_after?.probation_end_date === prevDate || worker_after?.probation_end_date !== '2027-05-02',
-      `contractor case must not set probation_end_date to a contractor-derived value`);
+    const after = worker_after?.probation_end_date ?? null;
+    // A package with no probation_days must leave the column exactly as it found it.
+    expect(after === prevDate,
+      `probation_end_date changed from ${prevDate ?? 'NULL'} to ${after ?? 'NULL'} on a no-probation package`);
   });
 
 
@@ -851,5 +988,117 @@ export default async function run(h) {
     const { data: kase } = await sb.from('hr_onboarding_cases').select('owner_id').eq('id', ctx.ownerCaseId).maybeSingle();
     expect(kase && !!kase.owner_id, 'case has an owner (the actor) even with require_owner_on_start = true');
     ok(await api('settings/values/set', A, { settingKey: 'hr_onboarding.require_owner_on_start', scopeType: 'global', scopeId: null, value: false }), 'require owner off');
+  });
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // Atomic launch contract (hr_onboarding_launch_tx, migration 20260804024501).
+  // The migration states three operator checks; the replay one is proven above by
+  // "start retry with the same request id returns the same frozen case". These two
+  // cover the other two — rollback and the frozen snapshot — and they drive the RPC
+  // through the service-role client because it is service-role-only by grant, so
+  // there is no HTTP path that can inject a deliberately invalid child row.
+  // ════════════════════════════════════════════════════════════════════════════
+  h.section('Onboarding › Atomic launch contract');
+
+  await test('forced child failure rolls the entire launch back — no orphan rows', async () => {
+    const requestId = crypto.randomUUID();
+    const caseId = crypto.randomUUID();
+    const employeeId = `ONB-ATOMIC-${TAG}`;
+    // A worker of its own: the RPC aborts early if the employee already has an active
+    // case, and that would abort for the WRONG reason and fake a pass.
+    const { error: empErr } = await sb.from('app_users').insert({
+      id: employeeId, username: `${TAG}_onb_atomic`, full_name: 'Onboarding E2E Atomic',
+      role: 'employee', status: 'active', employment_type: 'employee', contractor_flag: false,
+    });
+    expect(!empErr, `seed atomic-launch employee: ${empErr?.message ?? ''}`);
+    ctx.createdEmpIds.push(employeeId);
+
+    const { data: pkg } = await sb.from('hr_onboarding_packages')
+      .select('id, package_key, version_no').eq('package_key', 'standard_employee').maybeSingle();
+    expect(!!pkg, 'standard_employee package must exist');
+
+    const { error } = await sb.rpc('hr_onboarding_launch_tx', {
+      p_request_id: requestId,
+      p_actor_id: admin.id,
+      p_case: {
+        id: caseId, caseNo: `ONB-ATOMIC-${TAG}`, employeeId, workerType: 'employee',
+        packageKey: pkg.package_key, packageId: pkg.id, packageVersionNo: pkg.version_no ?? 1,
+        launchSnapshot: { schemaVersion: 1, probe: 'atomic-rollback' }, ownerId: admin.id,
+        targetStartDate: '2027-03-01',
+      },
+      p_tasks: [{ id: crypto.randomUUID(), taskKey: 'e2e_atomic_task', taskTitle: 'Atomic probe task', ownerRole: 'hr' }],
+      // The handoff loop also writes handoff_outbox + an app_events row, so a rollback
+      // that only covered the case table would still leave these two behind.
+      p_handoffs: [{ id: crypto.randomUUID(), handoffKey: 'e2e_atomic_handoff', targetModule: 'it', handoffType: 'account_setup', payload: {} }],
+      // FORCED FAILURE — requirement_id is FK'd to hr_document_requirements, so a random
+      // uuid raises 23503 only AFTER the case, task, handoff, outbox row and handoff event
+      // have already been inserted in this transaction.
+      p_documents: [{
+        id: crypto.randomUUID(), requirementId: crypto.randomUUID(), documentType: 'id_card',
+        label: 'Atomic probe document', status: 'pending',
+      }],
+      p_actions: [],
+      p_notifications: [{ userId: admin.id, title: 'Atomic probe', body: 'should never exist' }],
+      p_probation_end_date: null,
+    });
+    expect(!!error, 'the RPC must reject the invalid child row');
+    // Pin WHERE it failed. If a future change makes the launch abort earlier (e.g. at the
+    // case insert), the rollback assertions below become vacuous — this keeps them honest.
+    expect(error?.code === '23503' && /hr_onboarding_document_requests/.test(error?.message ?? ''),
+      `expected the FK violation on hr_onboarding_document_requests (i.e. AFTER the case/task/handoff writes), got ${error?.code ?? '?'}: ${error?.message ?? ''}`);
+
+    // Nothing whatsoever may survive for this request/case — every table the RPC touches.
+    const countWhere = async (table, col, val, op = 'eq') => {
+      const q = sb.from(table).select('*', { count: 'exact', head: true });
+      const { count } = await (op === 'like' ? q.like(col, val) : q.eq(col, val));
+      return count ?? 0;
+    };
+    const survivors = [];
+    const check = async (label, table, col, val, op) => {
+      const n = await countWhere(table, col, val, op);
+      if (n > 0) survivors.push(`${label} (${n})`);
+    };
+    await check('case', 'hr_onboarding_cases', 'launch_request_id', requestId);
+    await check('task', 'hr_onboarding_tasks', 'case_id', caseId);
+    await check('handoff', 'hr_onboarding_handoffs', 'case_id', caseId);
+    await check('document request', 'hr_onboarding_document_requests', 'case_id', caseId);
+    await check('case action', 'hr_onboarding_case_actions', 'case_id', caseId);
+    await check('handoff outbox', 'handoff_outbox', 'source_entity_id', caseId);
+    await check('app event', 'app_events', 'dedupe_key', `hr.onboarding.launch:${requestId}%`, 'like');
+    await check('audit log', 'audit_logs', 'record_id', caseId);
+    await check('hr audit log', 'hr_audit_log', 'record_id', caseId);
+    await check('notification', 'notifications', 'source_id', caseId);
+    expect(survivors.length === 0, `rollback leaked rows: ${survivors.join(', ')}`);
+
+    // The employee's probation column must be untouched too (the RPC writes it inline).
+    const { data: worker } = await sb.from('app_users').select('probation_end_date').eq('id', employeeId).maybeSingle();
+    expect((worker?.probation_end_date ?? null) === null, 'rolled-back launch wrote probation_end_date');
+  });
+
+  await test('launch_snapshot is written at launch and frozen against later package change', async () => {
+    // ctx.ownerCaseId was launched from safety_critical_employee just above.
+    expect(!!ctx.ownerCaseId, 'need a launched case to inspect');
+    const { data: before } = await sb.from('hr_onboarding_cases')
+      .select('launch_snapshot, package_id, package_version_no').eq('id', ctx.ownerCaseId).maybeSingle();
+    const snap = before?.launch_snapshot ?? null;
+    expect(!!snap && snap.schemaVersion === 1, `launch_snapshot missing or unversioned: ${JSON.stringify(snap)}`);
+    expect(snap.package?.id === before.package_id && snap.package?.versionNo === before.package_version_no,
+      'snapshot package identity does not match the frozen columns');
+    expect(Array.isArray(snap.tasks) && snap.tasks.length > 0, 'snapshot did not freeze the task plan');
+    const frozen = JSON.stringify(snap);
+
+    // Mutate the world the snapshot was generated from: bump the package's version by
+    // retiring it, and complete a task on the case. Neither may rewrite the snapshot.
+    await sb.from('hr_onboarding_packages').update({ status: 'retired' }).eq('id', before.package_id);
+    const { data: firstTask } = await sb.from('hr_onboarding_tasks').select('id').eq('case_id', ctx.ownerCaseId).limit(1).maybeSingle();
+    if (firstTask) await api('hr/onboarding/task/complete', A, { taskId: firstTask.id });
+
+    const { data: after } = await sb.from('hr_onboarding_cases')
+      .select('launch_snapshot, package_id, package_version_no').eq('id', ctx.ownerCaseId).maybeSingle();
+    expect(JSON.stringify(after?.launch_snapshot) === frozen, 'launch_snapshot changed after the package/case was mutated');
+    expect(after?.package_version_no === before.package_version_no, 'package_version_no drifted after launch');
+
+    // Restore the seeded package so the suite leaves the roster as it found it.
+    await sb.from('hr_onboarding_packages').update({ status: 'active' }).eq('id', before.package_id);
   });
 }

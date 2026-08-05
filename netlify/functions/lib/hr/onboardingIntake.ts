@@ -7,10 +7,10 @@
 //   • documents    ← getComplianceForEmployee (required doc types × the worker's actual docs)
 //   • duplicate    ← existing active onboarding case(s) for the worker
 import { sb } from '../db';
-import { loadPackagePlan } from './onboardingPackageService';
+import { loadPackagePlan, requireCompatiblePackage } from './onboardingPackageService';
 import { getComplianceForEmployee } from './documentsCompliance';
 import { listRequirements } from './documentsRequirements';
-import { listOnboardingCases } from './onboardingQueries';
+import { detectActiveOnboardingDuplicate } from './onboardingDuplicateCheck';
 import type {
   OnboardingCaseStatus, OnboardingIntakePreview, OnboardingIntakePreviewArgs,
   OnboardingDocumentState,
@@ -20,9 +20,9 @@ import type {
 const ACTIVE_CASE_STATUSES: OnboardingCaseStatus[] = ['draft', 'open', 'in_progress', 'blocked', 'paused', 'ready_for_activation'];
 
 export async function getOnboardingIntakePreview(args: OnboardingIntakePreviewArgs): Promise<OnboardingIntakePreview> {
-  const { employeeId, packageKey } = args;
+  const { employeeId, packageKey, targetStartDate } = args;
 
-  const [empRes, statRes, plan, compliance, dup] = await Promise.all([
+  const [empRes, statRes, plan, compliance, dup, packageMatch] = await Promise.all([
     sb.from('app_users')
       .select('id, email, phone, employment_type, department_id')
       .eq('id', employeeId)
@@ -35,7 +35,11 @@ export async function getOnboardingIntakePreview(args: OnboardingIntakePreviewAr
     // canSeeSensitive: true — the route is HR-gated and we only surface required-type names + a
     // collected/missing flag here, never document contents.
     getComplianceForEmployee(true, employeeId),
-    listOnboardingCases({ employeeIds: [employeeId], statuses: ACTIVE_CASE_STATUSES, page: 1, pageSize: 10 }),
+    // Dedicated internal detector — see onboardingDuplicateCheck.ts. Intentionally NOT a
+    // scoped read (a hidden case is still a duplicate) and intentionally not a general
+    // case list (which would be an authorisation-bypass pattern).
+    detectActiveOnboardingDuplicate(employeeId),
+    requireCompatiblePackage(employeeId, packageKey),
   ]);
 
   const emp = empRes.data;
@@ -57,8 +61,11 @@ export async function getOnboardingIntakePreview(args: OnboardingIntakePreviewAr
 
   const items = compliance.map(r => {
     const req = reqById.get(r.requirementId);
-    const state = r.state as OnboardingDocumentState;
-    const collected = state === 'present_verified' || state === 'present_unverified';
+    const expiresBeforeStart = !!targetStartDate && !!r.expiryDate
+      && new Date(`${r.expiryDate.slice(0, 10)}T00:00:00.000Z`).getTime()
+        < new Date(`${targetStartDate.slice(0, 10)}T00:00:00.000Z`).getTime();
+    const state = (expiresBeforeStart ? 'expired' : r.state) as OnboardingDocumentState;
+    const collected = state === 'present_verified';
     return {
       requirementId: r.requirementId,
       type: r.requiredType,
@@ -74,7 +81,7 @@ export async function getOnboardingIntakePreview(args: OnboardingIntakePreviewAr
     };
   });
 
-  const blockingMissingCount = items.filter(i => i.isBlocking && (i.state === 'missing' || i.state === 'expired')).length;
+  const blockingMissingCount = items.filter(i => i.isBlocking && i.state !== 'present_verified').length;
   const pendingVerificationCount = items.filter(i => i.state === 'present_unverified').length;
   const expiredCount = items.filter(i => i.state === 'expired').length;
 
@@ -93,15 +100,16 @@ export async function getOnboardingIntakePreview(args: OnboardingIntakePreviewAr
     documents: {
       items,
       requiredCount: items.length,
-      missingCount: items.filter(i => i.state === 'missing' || i.state === 'expired').length,
+      missingCount: items.filter(i => i.state !== 'present_verified').length,
       blockingMissingCount,
       pendingVerificationCount,
       expiredCount,
     },
     duplicate: {
-      hasDuplicate: dup.rows.length > 0,
+      hasDuplicate: dup.hasDuplicate,
       checkedAt: new Date().toISOString(),
-      cases: dup.rows.map(c => ({ caseId: c.caseId, caseNo: c.caseNo, status: c.status })),
+      cases: dup.cases,
     },
+    packageMatch,
   };
 }

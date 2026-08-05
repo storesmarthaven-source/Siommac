@@ -27,12 +27,23 @@ export default async function run(h) {
 
   let staffId;
   const label = `E2E Package ${TAG}`;
-  const ctx = { packageId: null, packageKey: null, taskTemplateId: null, handoffTemplateId: null, createdUserIds: [] };
+  const ctx = {
+    packageId: null, packageKey: null, taskTemplateId: null, handoffTemplateId: null,
+    // Templates are only mutable while their package is a draft (requireDraftPackageById),
+    // and `retired → draft` is forbidden, so the deletion tests need their OWN throwaway
+    // draft package — the lifecycle package above is retired by the time we get there.
+    draftPackageId: null, draftPackageKey: null, draftTaskTemplateId: null, draftHandoffTemplateId: null,
+    createdUserIds: [],
+  };
+  const packageIds = () => [ctx.packageId, ctx.draftPackageId].filter(Boolean);
 
   h.onCleanup(async () => {
-    try { await sb.from('hr_audit_log').delete().eq('record_id', ctx.packageId); } catch {}
-    try { await sb.from('app_events').delete().eq('source_entity_id', ctx.packageId); } catch {}
-    try { if (ctx.packageId) await sb.from('hr_onboarding_packages').delete().eq('id', ctx.packageId); } catch {} // cascades templates
+    const ids = packageIds();
+    if (ids.length) {
+      try { await sb.from('hr_audit_log').delete().in('record_id', ids); } catch {}
+      try { await sb.from('app_events').delete().in('source_entity_id', ids); } catch {}
+      try { await sb.from('hr_onboarding_packages').delete().in('id', ids); } catch {} // cascades templates
+    }
     try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
   });
 
@@ -165,18 +176,60 @@ export default async function run(h) {
     ok(r); expect(r.body.data.status === 'retired', 'status not retired');
   });
 
-  // ── Cleanup: delete template rows explicitly before the package cascade check ────
-  h.section('Package Manager › Template deletion');
-  await test('task-templates/delete', async () => {
+  // ── Published-package immutability (negative path) ───────────────────────────────
+  // The package above is now RETIRED and still owns both templates, so it is the exact
+  // fixture for proving the requireDraftPackageById guard on the delete routes.
+  h.section('Package Manager › Published-package immutability');
+  await test('task-templates/delete is refused on a non-draft package', async () => {
     const r = await api('hr/onboarding/packages/task-templates/delete', T.admin, { id: ctx.taskTemplateId });
-    ok(r, 'delete failed');
+    fails(r, 'deleting a task template from a retired package should be refused');
     const { data } = await sb.from('hr_onboarding_task_templates').select('id').eq('id', ctx.taskTemplateId).maybeSingle();
+    expect(!!data, 'refused delete must not have removed the task template');
+  });
+  await test('handoff-templates/delete is refused on a non-draft package', async () => {
+    const r = await api('hr/onboarding/packages/handoff-templates/delete', T.admin, { id: ctx.handoffTemplateId });
+    fails(r, 'deleting a handoff template from a retired package should be refused');
+    const { data } = await sb.from('hr_onboarding_handoff_templates').select('id').eq('id', ctx.handoffTemplateId).maybeSingle();
+    expect(!!data, 'refused delete must not have removed the handoff template');
+  });
+
+  // ── Template deletion (own draft package) ───────────────────────────────────────
+  h.section('Package Manager › Template deletion');
+  await test('setup: a throwaway draft package with one task + one handoff template', async () => {
+    const r = await api('hr/onboarding/packages/create', T.admin, {
+      label: `${label} (deletable)`, description: 'E2E deletion fixture', workerTypes: ['full_time'], defaultSlaDays: 12, defaultOwnerRole: 'hr',
+    });
+    ok(r, 'draft package create failed');
+    ctx.draftPackageId = r.body.data.id; ctx.draftPackageKey = r.body.data.key;
+
+    const tr = await api('hr/onboarding/packages/task-templates/create', T.admin, {
+      packageId: ctx.draftPackageId, taskKey: 'e2e_deletable_task', taskTitle: 'Deletable task', ownerRole: 'hr',
+    });
+    ok(tr, 'draft task template create failed');
+    ctx.draftTaskTemplateId = tr.body.data.id;
+
+    const hr_ = await api('hr/onboarding/packages/handoff-templates/create', T.admin, {
+      packageId: ctx.draftPackageId, handoffKey: 'e2e_deletable_handoff', targetModule: 'it', handoffType: 'account_setup',
+    });
+    ok(hr_, 'draft handoff template create failed');
+    ctx.draftHandoffTemplateId = hr_.body.data.id;
+  });
+  await test('task-templates/delete', async () => {
+    const r = await api('hr/onboarding/packages/task-templates/delete', T.admin, { id: ctx.draftTaskTemplateId });
+    ok(r, 'delete failed');
+    const { data } = await sb.from('hr_onboarding_task_templates').select('id').eq('id', ctx.draftTaskTemplateId).maybeSingle();
     expect(!data, 'task template still exists after delete');
   });
   await test('handoff-templates/delete', async () => {
-    const r = await api('hr/onboarding/packages/handoff-templates/delete', T.admin, { id: ctx.handoffTemplateId });
+    const r = await api('hr/onboarding/packages/handoff-templates/delete', T.admin, { id: ctx.draftHandoffTemplateId });
     ok(r, 'delete failed');
-    const { data } = await sb.from('hr_onboarding_handoff_templates').select('id').eq('id', ctx.handoffTemplateId).maybeSingle();
+    const { data } = await sb.from('hr_onboarding_handoff_templates').select('id').eq('id', ctx.draftHandoffTemplateId).maybeSingle();
     expect(!data, 'handoff template still exists after delete');
+  });
+  await test('deletion wrote its audit rows against the owning package', async () => {
+    const { data } = await sb.from('hr_audit_log').select('action').eq('record_id', ctx.draftPackageId).eq('submodule_key', 'onboarding');
+    const actions = (data ?? []).map(r => r.action);
+    expect(actions.includes('hr.onboarding.task_template_deleted'), 'missing task_template_deleted audit row');
+    expect(actions.includes('hr.onboarding.handoff_template_deleted'), 'missing handoff_template_deleted audit row');
   });
 }

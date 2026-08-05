@@ -9,20 +9,35 @@
 import { sb } from '../db';
 import { packageLabelMap } from './onboardingPackageService';
 import { taskCategory, READINESS_CATS, type TaskCategory } from './onboardingTaskCategory';
+import { intersectScope, type ResolvedOnboardingScope } from './onboardingScope';
+/**
+ * Scope helpers — every read below funnels through these so a surface cannot invent its
+ * own rule. `caseIds === null` is UNCONSTRAINED (scope `all`); `[]` is a real "no visible
+ * cases" and MUST yield zero/empty aggregates rather than falling through to every row.
+ */
+function scopeIsEmpty(scope: ResolvedOnboardingScope): boolean {
+  return scope.caseIds !== null && scope.caseIds.length === 0;
+}
+
+/** Case ids to filter on, after narrowing by any caller-supplied ids. Null = no filter. */
+function scopedCaseIds(scope: ResolvedOnboardingScope, requested?: string[] | null): string[] | null {
+  return intersectScope(scope, requested);
+}
+
 import type {
   OnboardingCaseListArgs, OnboardingCaseListResult, OnboardingCaseRow, OnboardingCaseStatus,
   OnboardingDashboardStats, OnboardingDashboardStatsArgs,
   OnboardingTaskListArgs, OnboardingTaskRow, OnboardingTaskStatus, OnboardingTaskDetail,
-  OnboardingTaskNote, OnboardingTaskEvidence,
+  OnboardingTaskNote, OnboardingTaskEvidence, OnboardingEvidenceReviewStatus,
   OnboardingHandoffListArgs, OnboardingHandoffRow, OnboardingHandoffStatus,
   OnboardingBlockerListArgs, OnboardingBlockerRow, OnboardingBlockerStatus, OnboardingSeverity,
   OnboardingAuditRow, DueState,
 } from '../../../../types/hrOnboarding';
 
 // ── DB row shapes (the columns we actually select) ──────────────────────────────
-interface CaseDB { id: string; case_no: string; employee_id: string | null; worker_type: string | null; package_key: string; status: string; owner_id: string | null; due_at: string | null; started_at: string | null; reason: string | null }
+interface CaseDB { id: string; case_no: string; employee_id: string | null; worker_type: string | null; package_key: string; status: string; owner_id: string | null; due_at: string | null; started_at: string | null; reason: string | null; target_start_date: string | null }
 interface TaskDB { id: string; case_id: string; task_key: string; task_title: string; owner_role: string | null; module_key: string | null; assigned_to: string | null; status: string; due_at: string | null; completed_at: string | null; is_blocking: boolean | null; requires_evidence: boolean | null; priority: string | null }
-interface HandoffDB { id: string; case_id: string; target_module: string; handoff_type: string | null; handoff_key: string | null; status: string; owner_id: string | null; failure_reason: string | null; payload: unknown; created_at: string; last_event_at: string | null }
+interface HandoffDB { id: string; case_id: string; target_module: string; handoff_type: string | null; handoff_key: string | null; status: string; owner_id: string | null; due_at: string | null; failure_reason: string | null; payload: unknown; created_at: string; last_event_at: string | null }
 interface BlockerDB { id: string; case_id: string; blocker_key: string; blocker_title: string; blocking_module: string; severity: string; status: string; owner_id: string | null; due_at: string | null; created_at: string; task_id: string | null; handoff_id: string | null }
 interface EmpDB { id: string; full_name: string | null; employee_number: string | null; department_id: string | null; site_id: string | null; contractor_flag: boolean | null; profile_image_url: string | null }
 interface CaseLite { id: string; case_no: string; employee_id: string | null; package_key?: string }
@@ -32,6 +47,85 @@ const CLOSED_TASK = new Set(['completed', 'skipped', 'cancelled']);
 const DONE_TASK = new Set(['completed', 'skipped']);
 const ACTIVE_CASE = ['draft', 'open', 'in_progress', 'blocked', 'paused', 'ready_for_activation'];
 const isOpenTask = (s: string): boolean => !CLOSED_TASK.has(s);
+
+/** Canonical inclusive date window [today, today+days] as YYYY-MM-DD keys. */
+function startWindow(days: number, now = new Date()): { from: string; to: string } {
+  const from = new Date(now); from.setHours(0, 0, 0, 0);
+  const to = new Date(from); to.setDate(to.getDate() + days);
+  return { from: isoDate(from), to: isoDate(to) };
+}
+
+
+/**
+ * Every scoped ACTIVE case, loaded in pages — no row ceiling.
+ *
+ * The dashboard's aggregates (trend, blocking mix, readiness split, cohort counts) are only
+ * correct over the COMPLETE population. A fixed `.limit(1000)` silently produced capped
+ * totals on a larger tenant: the number looked plausible, reconciled with nothing, and got
+ * worse as the tenant grew. Documenting that ceiling would not have made the KPI accurate.
+ *
+ * Ordering is stable (`id`) so `.range()` windows cannot overlap or skip rows between pages —
+ * ordering by a mutable column such as `started_at` can shift a row across a page boundary
+ * mid-read. Every page's error is checked; a partial read must fail, never silently truncate.
+ */
+const CASE_PAGE = 1000;
+
+async function loadAllActiveCases(
+  scopedIds: string[] | null,
+  args: OnboardingDashboardStatsArgs,
+): Promise<CaseDB[]> {
+  const out: CaseDB[] = [];
+  for (let from = 0; ; from += CASE_PAGE) {
+    let q = sb.from('hr_onboarding_cases')
+      .select('id, case_no, employee_id, worker_type, package_key, status, owner_id, due_at, started_at, reason, target_start_date')
+      .in('status', ACTIVE_CASE)
+      .order('id', { ascending: true })
+      .range(from, from + CASE_PAGE - 1);
+    if (scopedIds !== null)       q = q.in('id', scopedIds);
+    if (args.packageKeys?.length) q = q.in('package_key', args.packageKeys);
+    if (args.ownerIds?.length)    q = q.in('owner_id', args.ownerIds);
+
+    const { data, error } = await q;
+    if (error) throw Object.assign(new Error(error.message), { status: 500 });
+    const page = (data ?? []) as CaseDB[];
+    out.push(...page);
+    if (page.length < CASE_PAGE) return out;
+  }
+}
+
+/** Complete case population for the register. Search and joined/computed filters happen
+ * after this load, so a fixed SQL limit would make both `total` and later pages lie. */
+async function loadAllCasesForList(
+  scopedIds: string[] | null,
+  args: OnboardingCaseListArgs,
+  now: Date,
+): Promise<CaseDB[]> {
+  const out: CaseDB[] = [];
+  for (let from = 0; ; from += CASE_PAGE) {
+    let q = sb.from('hr_onboarding_cases')
+      .select('id, case_no, employee_id, worker_type, package_key, status, owner_id, due_at, started_at, reason, target_start_date')
+      .order('id', { ascending: true })
+      .range(from, from + CASE_PAGE - 1);
+    if (scopedIds !== null)        q = q.in('id', scopedIds);
+    if (args.statuses?.length)     q = q.in('status', args.statuses);
+    if (args.packageKeys?.length)  q = q.in('package_key', args.packageKeys);
+    if (args.ownerIds?.length)     q = q.in('owner_id', args.ownerIds);
+    if (args.employeeIds?.length)  q = q.in('employee_id', args.employeeIds);
+    if (args.workerTypes?.length)  q = q.in('worker_type', args.workerTypes);
+    if (args.reasons?.length)      q = q.in('reason', args.reasons);
+    if (typeof args.startsWithinDays === 'number') {
+      const w = startWindow(args.startsWithinDays, now);
+      q = q.not('target_start_date', 'is', null).gte('target_start_date', w.from).lte('target_start_date', w.to);
+    }
+    if (args.unassignedOwner) q = q.is('owner_id', null);
+
+    const { data, error } = await q;
+    if (error) throw Object.assign(new Error(error.message), { status: 500 });
+    const page = (data ?? []) as CaseDB[];
+    out.push(...page);
+    if (page.length < CASE_PAGE) return out;
+  }
+}
 
 // ── per-case task aggregate ──────────────────────────────────────────────────────
 interface CaseAgg { total: number; done: number; open: number; blocking: number; cats: Map<TaskCategory, { total: number; openTasks: number }> }
@@ -58,16 +152,18 @@ function aggregateTasks(tasks: TaskDB[]): Map<string, CaseAgg> {
 // ── lookups ──────────────────────────────────────────────────────────────────────
 async function loadTasks(caseIds: string[]): Promise<TaskDB[]> {
   if (!caseIds.length) return [];
-  const { data } = await sb.from('hr_onboarding_tasks')
+  const { data, error } = await sb.from('hr_onboarding_tasks')
     .select('id, case_id, task_key, task_title, owner_role, module_key, assigned_to, status, due_at, completed_at, is_blocking, requires_evidence, priority')
     .in('case_id', caseIds);
+  if (error) throw Object.assign(new Error(error.message), { status: 500 });
   return (data ?? []) as TaskDB[];
 }
 
 async function activeBlockerCounts(caseIds: string[]): Promise<Map<string, number>> {
   const m = new Map<string, number>();
   if (!caseIds.length) return m;
-  const { data } = await sb.from('hr_onboarding_blockers').select('case_id, status').in('case_id', caseIds);
+  const { data, error } = await sb.from('hr_onboarding_blockers').select('case_id, status').in('case_id', caseIds);
+  if (error) throw Object.assign(new Error(error.message), { status: 500 });
   for (const b of (data ?? []) as { case_id: string; status: string }[]) {
     if (ACTIVE_BLOCKER.has(b.status)) m.set(b.case_id, (m.get(b.case_id) ?? 0) + 1);
   }
@@ -77,7 +173,8 @@ async function activeBlockerCounts(caseIds: string[]): Promise<Map<string, numbe
 async function nameMap(ids: string[]): Promise<Record<string, string | null>> {
   const uniq = [...new Set(ids.filter(Boolean))];
   if (!uniq.length) return {};
-  const { data } = await sb.from('app_users').select('id, full_name').in('id', uniq);
+  const { data, error } = await sb.from('app_users').select('id, full_name').in('id', uniq);
+  if (error) throw Object.assign(new Error(error.message), { status: 500 });
   return Object.fromEntries(((data ?? []) as { id: string; full_name: string | null }[]).map(u => [u.id, u.full_name]));
 }
 
@@ -87,18 +184,22 @@ async function nameMap(ids: string[]): Promise<Record<string, string | null>> {
 async function photoMap(ids: string[]): Promise<Record<string, string | null>> {
   const uniq = [...new Set(ids.filter(Boolean))];
   if (!uniq.length) return {};
-  const { data } = await sb.from('app_users').select('id, profile_image_url').in('id', uniq);
+  const { data, error } = await sb.from('app_users').select('id, profile_image_url').in('id', uniq);
+  if (error) throw Object.assign(new Error(error.message), { status: 500 });
   return Object.fromEntries(((data ?? []) as { id: string; profile_image_url: string | null }[]).map(u => [u.id, u.profile_image_url]));
 }
 
 async function employeeMaps(ids: string[]): Promise<{ emp: Record<string, EmpDB>; deptMap: Record<string, string>; siteMap: Record<string, string> }> {
   const uniq = [...new Set(ids.filter(Boolean))];
   if (!uniq.length) return { emp: {}, deptMap: {}, siteMap: {} };
-  const [{ data: emps }, { data: depts }, { data: sites }] = await Promise.all([
+  const [empRes, deptRes, siteRes] = await Promise.all([
     sb.from('app_users').select('id, full_name, employee_number, department_id, site_id, contractor_flag, profile_image_url').in('id', uniq),
     sb.from('departments').select('id, name'),
     sb.from('project_sites').select('id, name'),
   ]);
+  const failed = empRes.error ?? deptRes.error ?? siteRes.error;
+  if (failed) throw Object.assign(new Error(failed.message), { status: 500 });
+  const emps = empRes.data, depts = deptRes.data, sites = siteRes.data;
   return {
     emp: Object.fromEntries(((emps ?? []) as EmpDB[]).map(e => [e.id, e])),
     deptMap: Object.fromEntries(((depts ?? []) as { id: string; name: string }[]).map(d => [d.id, d.name])),
@@ -109,7 +210,8 @@ async function employeeMaps(ids: string[]): Promise<{ emp: Record<string, EmpDB>
 async function caseLiteMap(caseIds: string[], withPackage = false): Promise<Record<string, CaseLite>> {
   if (!caseIds.length) return {};
   const cols = withPackage ? 'id, case_no, employee_id, package_key' : 'id, case_no, employee_id';
-  const { data } = await sb.from('hr_onboarding_cases').select(cols).in('id', caseIds);
+  const { data, error } = await sb.from('hr_onboarding_cases').select(cols).in('id', caseIds);
+  if (error) throw Object.assign(new Error(error.message), { status: 500 });
   return Object.fromEntries(((data ?? []) as unknown as CaseLite[]).map(c => [c.id, c]));
 }
 
@@ -141,22 +243,26 @@ const isoDate = (d: Date): string => d.toISOString().slice(0, 10);
 // ════════════════════════════════════════════════════════════════════════════════
 // 1. Cases list
 // ════════════════════════════════════════════════════════════════════════════════
-export async function listOnboardingCases(args: OnboardingCaseListArgs): Promise<OnboardingCaseListResult> {
+export async function listOnboardingCases(
+  args: OnboardingCaseListArgs,
+  scope: ResolvedOnboardingScope,
+): Promise<OnboardingCaseListResult> {
   const now = new Date();
-  let q = sb.from('hr_onboarding_cases')
-    .select('id, case_no, employee_id, worker_type, package_key, status, owner_id, due_at, started_at, reason')
-    .order('started_at', { ascending: false })
-    .limit(500);
-  if (args.statuses?.length)    q = q.in('status', args.statuses);
-  if (args.packageKeys?.length) q = q.in('package_key', args.packageKeys);
-  if (args.ownerIds?.length)    q = q.in('owner_id', args.ownerIds);
-  if (args.employeeIds?.length) q = q.in('employee_id', args.employeeIds);
-  if (args.caseIds?.length)     q = q.in('id', args.caseIds);
-  if (args.workerTypes?.length) q = q.in('worker_type', args.workerTypes);
-  if (args.reasons?.length)     q = q.in('reason', args.reasons);
-  const { data: casesRaw, error } = await q;
-  if (error) throw Object.assign(new Error(error.message), { status: 500 });
-  const cases = (casesRaw ?? []) as CaseDB[];
+  // An empty scope returns an empty page — never an unfiltered query.
+  if (scopeIsEmpty(scope)) {
+    return { rows: [], total: 0, page: Math.max(1, args.page ?? 1), pageSize: Math.min(200, Math.max(1, args.pageSize ?? 25)) };
+  }
+  // Explicit caseIds may only NARROW the resolved scope, never widen it.
+  const visibleIds = scopedCaseIds(scope, args.caseIds);
+  if (visibleIds !== null && !visibleIds.length) {
+    return { rows: [], total: 0, page: Math.max(1, args.page ?? 1), pageSize: Math.min(200, Math.max(1, args.pageSize ?? 25)) };
+  }
+  // Upcoming Starts: a real server-side window on target_start_date, not a client filter over
+  // a due-date-sorted page.
+  // The complete loader applies the date window and owner predicate server-side on every
+  // page, then the joined/computed filters below operate on the complete population.
+  // Owner Required drill-through — the same predicate the KPI counts.
+  const cases = await loadAllCasesForList(visibleIds, args, now);
   const caseIds = cases.map(c => c.id);
 
   const [tasks, blockers, maps, ownerNames, labels] = await Promise.all([
@@ -195,6 +301,7 @@ export async function listOnboardingCases(args: OnboardingCaseListArgs): Promise
       ready,
       dueAt: c.due_at ?? null,
       startedAt: c.started_at ?? null,
+      targetStartDate: c.target_start_date ?? null,
     };
   });
 
@@ -227,6 +334,15 @@ export async function listOnboardingCases(args: OnboardingCaseListArgs): Promise
         case 'status':     return dir * a2.status.localeCompare(b2.status);
         case 'progress':   return dir * (a2.progressPercent - b2.progressPercent);
         case 'due_at':     return dir * ((a2.dueAt ?? '').localeCompare(b2.dueAt ?? ''));
+        case 'target_start_date': {
+          // Cases without a planned start sort last in either direction — an absent date is
+          // not "earliest".
+          const av = a2.targetStartDate ?? '', bv = b2.targetStartDate ?? '';
+          if (!av && !bv) return 0;
+          if (!av) return 1;
+          if (!bv) return -1;
+          return dir * av.localeCompare(bv);
+        }
         case 'started_at':
         default:           return dir * ((a2.startedAt ?? '').localeCompare(b2.startedAt ?? ''));
       }
@@ -243,16 +359,14 @@ export async function listOnboardingCases(args: OnboardingCaseListArgs): Promise
 // ════════════════════════════════════════════════════════════════════════════════
 // 2. Dashboard stats
 // ════════════════════════════════════════════════════════════════════════════════
-export async function getOnboardingDashboardStats(args: OnboardingDashboardStatsArgs): Promise<OnboardingDashboardStats> {
+export async function getOnboardingDashboardStats(
+  args: OnboardingDashboardStatsArgs,
+  scope: ResolvedOnboardingScope,
+): Promise<OnboardingDashboardStats> {
   const now = new Date();
-  let q = sb.from('hr_onboarding_cases')
-    .select('id, case_no, employee_id, worker_type, package_key, status, owner_id, due_at, started_at, reason')
-    .in('status', ACTIVE_CASE).limit(1000);
-  if (args.packageKeys?.length) q = q.in('package_key', args.packageKeys);
-  if (args.ownerIds?.length)    q = q.in('owner_id', args.ownerIds);
-  const { data: casesRaw, error } = await q;
-  if (error) throw Object.assign(new Error(error.message), { status: 500 });
-  let cases = (casesRaw ?? []) as CaseDB[];
+  const scopedIds = scopedCaseIds(scope, null);
+  // Complete scoped population — every aggregate below is computed over ALL rows.
+  let cases = await loadAllActiveCases(scopedIds, args);
 
   // department / site filters need the employee join
   if (args.departmentIds?.length || args.siteIds?.length) {
@@ -280,7 +394,11 @@ export async function getOnboardingDashboardStats(args: OnboardingDashboardStats
 
   // weekly trend — cases started in each of the last 8 weeks (all cases, not just active)
   const eightWeeksAgo = weekStart(now); eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 7 * 7);
-  const { data: startedRaw } = await sb.from('hr_onboarding_cases').select('started_at').gte('started_at', eightWeeksAgo.toISOString());
+  // Scoped like every other aggregate: an unfiltered trend would leak organisation-wide
+  // start counts into the chart even when the register beside it is correctly scoped.
+  let trendQ = sb.from('hr_onboarding_cases').select('started_at').gte('started_at', eightWeeksAgo.toISOString());
+  if (scopedIds !== null) trendQ = trendQ.in('id', scopedIds);
+  const { data: startedRaw } = await trendQ;
   const buckets: { week: string; count: number }[] = [];
   for (let i = 0; i < 8; i++) { const w = new Date(eightWeeksAgo); w.setDate(w.getDate() + i * 7); buckets.push({ week: isoDate(w), count: 0 }); }
   const bucketIndex = new Map(buckets.map((b, i) => [b.week, i]));
@@ -289,6 +407,16 @@ export async function getOnboardingDashboardStats(args: OnboardingDashboardStats
     const wk = isoDate(weekStart(new Date(s.started_at)));
     const i = bucketIndex.get(wk); if (i !== undefined) buckets[i]!.count += 1;
   }
+
+  // ── Starts Within 7 Days + Owner Required ──────────────────────────────────────
+  // Computed over the COMPLETE, fully-filtered population above — exact for every accepted
+  // filter combination, including department/site. These previously used separate count
+  // queries that could not honour the employee-join filters, so a filtered request returned
+  // an unfiltered (and therefore wrong) total.
+  const startWin = startWindow(7, now);
+  const startsWithin7Days = cases.filter(c =>
+    !!c.target_start_date && c.target_start_date >= startWin.from && c.target_start_date <= startWin.to).length;
+  const ownerRequired = cases.filter(c => !c.owner_id).length;
 
   // blocking — count OPEN BLOCKING tasks by category across active cases
   const blockingByCat = { documents: 0, training: 0, hse: 0, payroll: 0 };
@@ -351,6 +479,8 @@ export async function getOnboardingDashboardStats(args: OnboardingDashboardStats
     activeCases: { total, newHires, transfers, contractors, weeklyTrend: buckets },
     blockingTasks: { blockedCases, documents: blockingByCat.documents, training: blockingByCat.training, hse: blockingByCat.hse, payroll: blockingByCat.payroll },
     dueThisWeek: due,
+    startsWithin7Days,
+    ownerRequired,
     activationReadiness: {
       readyPercent: pct(readyCount),
       profileReadyPercent: pct(catReady.profile),
@@ -370,11 +500,43 @@ export async function getOnboardingDashboardStats(args: OnboardingDashboardStats
 // tab's DTO. hr_audit_log already captures every onboarding mutation (cases, tasks,
 // blockers, custom actions, packages) via writeHrAudit — nothing new to instrument.
 // ════════════════════════════════════════════════════════════════════════════════
-export async function listRecentOnboardingActivity(limit = 15): Promise<OnboardingAuditRow[]> {
-  const { data } = await sb.from('hr_audit_log')
-    .select('id, actor_id, action, previous_state, new_state, reason, created_at')
+export async function listRecentOnboardingActivity(
+  limit = 15,
+  scope: ResolvedOnboardingScope,
+): Promise<OnboardingAuditRow[]> {
+  // The cross-case activity feed is scoped like every other surface. Unscoped, the Command
+  // Centre's Recent Activity would narrate work on cases the actor cannot open — a leak of
+  // employee names and actions through an aggregate rather than through the register.
+  // `record_id` carries the onboarding case id (see writeHrAudit in employeeCore.ts).
+  // The feed carries TWO kinds of row: case-linked activity (record_id = case id) and
+  // package/governance activity (record_id = package id, no case). Scope constrains the
+  // CASE-linked rows only. Filtering the whole feed by case id silently deleted every
+  // package event for any scope except `all` — the feed is not purely case-scoped.
+  const { data: raw, error: auditError } = await sb.from('hr_audit_log')
+    .select('id, actor_id, action, previous_state, new_state, reason, created_at, record_id')
     .eq('submodule_key', 'onboarding')
-    .order('created_at', { ascending: false }).limit(limit);
+    .order('created_at', { ascending: false }).limit(Math.max(limit * 4, limit));
+  if (auditError) throw Object.assign(new Error(auditError.message), { status: 500 });
+
+  const candidates = (raw ?? []) as { record_id: string | null }[] as Array<Record<string, unknown>>;
+  let data = candidates;
+  if (scope.caseIds !== null) {
+    const allowed = new Set(scope.caseIds);
+    // Which of these record_ids are onboarding CASES? Anything else is not case-scoped.
+    const recordIds = [...new Set(candidates.map(r => r.record_id as string | null).filter((x): x is string => !!x))];
+    const caseRecordIds = new Set<string>();
+    if (recordIds.length) {
+      const { data: knownCases, error: caseError } = await sb.from('hr_onboarding_cases').select('id').in('id', recordIds);
+      if (caseError) throw Object.assign(new Error(caseError.message), { status: 500 });
+      for (const c of knownCases ?? []) caseRecordIds.add(c.id as string);
+    }
+    data = candidates.filter(r => {
+      const rid = r.record_id as string | null;
+      if (rid && caseRecordIds.has(rid)) return allowed.has(rid);  // case row → must be in scope
+      return true;                                                  // non-case governance row
+    });
+  }
+  data = data.slice(0, limit);
   const rows = (data ?? []) as { id: string; actor_id: string | null; action: string; previous_state: unknown; new_state: unknown; reason: string | null; created_at: string }[];
   const names = await nameMap(rows.map(r => r.actor_id).filter((x): x is string => !!x));
   return rows.map(r => ({
@@ -386,10 +548,17 @@ export async function listRecentOnboardingActivity(limit = 15): Promise<Onboardi
 // ════════════════════════════════════════════════════════════════════════════════
 // 3. Tasks list
 // ════════════════════════════════════════════════════════════════════════════════
-export async function listOnboardingTasks(args: OnboardingTaskListArgs): Promise<OnboardingTaskRow[]> {
+export async function listOnboardingTasks(
+  args: OnboardingTaskListArgs,
+  scope: ResolvedOnboardingScope,
+): Promise<OnboardingTaskRow[]> {
+  if (scopeIsEmpty(scope)) return [];
+  const visibleIds = scopedCaseIds(scope, args.caseId ? [args.caseId] : null);
+  if (visibleIds !== null && !visibleIds.length) return [];
   let q = sb.from('hr_onboarding_tasks')
     .select('id, case_id, task_key, task_title, owner_role, module_key, assigned_to, status, due_at, completed_at, is_blocking, requires_evidence, priority')
     .order('sort_order').limit(2000);
+  if (visibleIds !== null)    q = q.in('case_id', visibleIds);
   if (args.caseId)            q = q.eq('case_id', args.caseId);
   if (args.statuses?.length)  q = q.in('status', args.statuses);
   if (args.ownerRoles?.length)q = q.in('owner_role', args.ownerRoles);
@@ -443,24 +612,67 @@ interface TaskDetailDB extends TaskDB {
   completed_by: string | null; completed_at: string | null; created_at: string; metadata: unknown;
 }
 const asNoteArr = (v: unknown): OnboardingTaskNote[] => (Array.isArray(v) ? v.filter((x): x is OnboardingTaskNote => !!x && typeof x === 'object' && typeof (x as { note?: unknown }).note === 'string') : []);
-const asEvidenceArr = (v: unknown): OnboardingTaskEvidence[] => (Array.isArray(v) ? v.filter((x): x is OnboardingTaskEvidence => !!x && typeof x === 'object' && typeof (x as { filePath?: unknown }).filePath === 'string') : []);
+/**
+ * Evidence now comes from hr_onboarding_task_evidence, NOT task metadata. The old JSON array
+ * carried no review decision, so a document could only ever be shown as "attached" — the
+ * table is what lets an approval or a return be a recorded fact. Legacy entries were copied
+ * into the table as pending_review, so this single read covers both old and new submissions
+ * and there is no second read path to keep in step.
+ */
+interface EvidenceDB {
+  id: string; file_name: string | null; file_path: string | null; mime_type: string | null;
+  file_size: number | string | null; submitted_by: string | null; submitted_at: string;
+  review_status: OnboardingEvidenceReviewStatus; reviewed_by: string | null;
+  reviewed_at: string | null; review_note: string | null; is_legacy: boolean | null;
+}
+
+async function loadTaskEvidence(taskId: string): Promise<EvidenceDB[]> {
+  const { data, error } = await sb.from('hr_onboarding_task_evidence')
+    .select('id, file_name, file_path, mime_type, file_size, submitted_by, submitted_at, review_status, reviewed_by, reviewed_at, review_note, is_legacy')
+    .eq('task_id', taskId)
+    .order('submitted_at', { ascending: true });
+  // A failed evidence read must not masquerade as "no evidence attached" on a task whose
+  // completion may be gated on it.
+  if (error) throw Object.assign(new Error(error.message), { status: 500 });
+  return (data ?? []) as EvidenceDB[];
+}
 
 export async function getOnboardingTaskDetail(taskId: string): Promise<OnboardingTaskDetail> {
-  const { data: t } = await sb.from('hr_onboarding_tasks')
+  const { data: t, error } = await sb.from('hr_onboarding_tasks')
     .select('id, case_id, task_key, task_title, owner_role, module_key, assigned_to, status, due_at, is_blocking, requires_evidence, priority, blocked_reason, dependency_keys, sort_order, completed_by, completed_at, created_at, metadata')
     .eq('id', taskId).maybeSingle<TaskDetailDB>();
+  if (error) throw Object.assign(new Error(error.message), { status: 500 });
   if (!t) throw Object.assign(new Error('Onboarding task not found.'), { status: 404 });
 
   const meta = (t.metadata && typeof t.metadata === 'object' ? t.metadata : {}) as Record<string, unknown>;
   const notes = asNoteArr(meta['notes']);
-  const evidence = asEvidenceArr(meta['evidence']);
+  const evidenceRows = await loadTaskEvidence(t.id);
 
   const caseMap = await caseLiteMap([t.case_id], true);
   const c = caseMap[t.case_id];
   const names = await nameMap([
     c?.employee_id ?? '', t.assigned_to ?? '', t.completed_by ?? '',
-    ...notes.map(n => n.byId ?? ''), ...evidence.map(e => e.byId ?? ''),
+    ...notes.map(n => n.byId ?? ''),
+    ...evidenceRows.map(e => e.submitted_by ?? ''), ...evidenceRows.map(e => e.reviewed_by ?? ''),
   ].filter(Boolean));
+
+  const evidence: OnboardingTaskEvidence[] = evidenceRows.map(e => ({
+    id: e.id,
+    // A legacy row may have neither, and is labelled rather than hidden.
+    fileName: e.file_name ?? 'Legacy evidence',
+    filePath: e.file_path ?? '',
+    mimeType: e.mime_type,
+    fileSize: e.file_size === null ? null : Number(e.file_size),
+    byId: e.submitted_by,
+    byName: e.submitted_by ? names[e.submitted_by] ?? null : null,
+    at: e.submitted_at,
+    reviewStatus: e.review_status,
+    reviewedById: e.reviewed_by,
+    reviewedByName: e.reviewed_by ? names[e.reviewed_by] ?? null : null,
+    reviewedAt: e.reviewed_at,
+    reviewNote: e.review_note,
+    isLegacy: !!e.is_legacy,
+  }));
 
   return {
     taskId: t.id,
@@ -496,10 +708,17 @@ export async function getOnboardingTaskDetail(taskId: string): Promise<Onboardin
 // ════════════════════════════════════════════════════════════════════════════════
 // 4. Handoffs list
 // ════════════════════════════════════════════════════════════════════════════════
-export async function listOnboardingHandoffs(args: OnboardingHandoffListArgs): Promise<OnboardingHandoffRow[]> {
+export async function listOnboardingHandoffs(
+  args: OnboardingHandoffListArgs,
+  scope: ResolvedOnboardingScope,
+): Promise<OnboardingHandoffRow[]> {
+  if (scopeIsEmpty(scope)) return [];
+  const visibleIds = scopedCaseIds(scope, args.caseId ? [args.caseId] : null);
+  if (visibleIds !== null && !visibleIds.length) return [];
   let q = sb.from('hr_onboarding_handoffs')
-    .select('id, case_id, target_module, handoff_type, handoff_key, status, owner_id, failure_reason, payload, created_at, last_event_at')
+    .select('id, case_id, target_module, handoff_type, handoff_key, status, owner_id, due_at, failure_reason, payload, created_at, last_event_at')
     .order('created_at', { ascending: false }).limit(2000);
+  if (visibleIds !== null)      q = q.in('case_id', visibleIds);
   if (args.caseId)              q = q.eq('case_id', args.caseId);
   if (args.targetModules?.length) q = q.in('target_module', args.targetModules);
   if (args.statuses?.length)    q = q.in('status', args.statuses);
@@ -524,6 +743,7 @@ export async function listOnboardingHandoffs(args: OnboardingHandoffListArgs): P
       status: h.status as OnboardingHandoffStatus,
       ownerId: h.owner_id ?? null,
       ownerName: h.owner_id ? names[h.owner_id] ?? null : null,
+      dueAt: h.due_at ?? null,
       failureReason: h.failure_reason ?? null,
       payload: (h.payload && typeof h.payload === 'object' ? h.payload : {}) as Record<string, unknown>,
       createdAt: h.created_at,
@@ -535,10 +755,17 @@ export async function listOnboardingHandoffs(args: OnboardingHandoffListArgs): P
 // ════════════════════════════════════════════════════════════════════════════════
 // 5. Blockers list
 // ════════════════════════════════════════════════════════════════════════════════
-export async function listOnboardingBlockers(args: OnboardingBlockerListArgs): Promise<OnboardingBlockerRow[]> {
+export async function listOnboardingBlockers(
+  args: OnboardingBlockerListArgs,
+  scope: ResolvedOnboardingScope,
+): Promise<OnboardingBlockerRow[]> {
+  if (scopeIsEmpty(scope)) return [];
+  const visibleIds = scopedCaseIds(scope, args.caseId ? [args.caseId] : null);
+  if (visibleIds !== null && !visibleIds.length) return [];
   let q = sb.from('hr_onboarding_blockers')
     .select('id, case_id, blocker_key, blocker_title, blocking_module, severity, status, owner_id, due_at, created_at, task_id, handoff_id')
     .order('created_at', { ascending: true }).limit(2000);
+  if (visibleIds !== null)       q = q.in('case_id', visibleIds);
   if (args.caseId)               q = q.eq('case_id', args.caseId);
   if (args.blockingModules?.length) q = q.in('blocking_module', args.blockingModules);
   if (args.statuses?.length)     q = q.in('status', args.statuses);

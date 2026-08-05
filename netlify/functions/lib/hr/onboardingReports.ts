@@ -15,6 +15,7 @@ import type {
   OnboardingReportKey, OnboardingReportMeta, OnboardingReportResult, RunOnboardingReportArgs,
   OnboardingReportColumn, OnboardingReportSummaryStat,
 } from '../../../../types/hrOnboarding';
+import type { ResolvedOnboardingScope } from './onboardingScope';
 
 // ── catalogue ─────────────────────────────────────────────────────────────────────
 export const REPORT_CATALOGUE: OnboardingReportMeta[] = [
@@ -54,6 +55,36 @@ interface ReportData {
   labels: Record<string, string>; names: Record<string, string | null>; now: number;
 }
 
+async function loadReportCases(
+  args: RunOnboardingReportArgs,
+  scope: ResolvedOnboardingScope,
+  extra?: { workerTypes?: string[]; packageKeys?: string[] },
+): Promise<CaseDB[]> {
+  if (scope.caseIds !== null && scope.caseIds.length === 0) return [];
+  const rows: CaseDB[] = [];
+  const pageSize = 1000;
+  for (let from = 0; ; from += pageSize) {
+    let query = sb.from('hr_onboarding_cases')
+      .select('id, case_no, employee_id, worker_type, package_key, status, owner_id, due_at, started_at, completed_at, reason')
+      .order('id', { ascending: true })
+      .range(from, from + pageSize - 1);
+    if (scope.caseIds !== null) query = query.in('id', scope.caseIds);
+    if (args.dateFrom) query = query.gte('started_at', args.dateFrom);
+    if (args.dateTo) query = query.lte('started_at', args.dateTo);
+    const packageKeys = extra?.packageKeys ?? args.packageKeys;
+    if (packageKeys?.length) query = query.in('package_key', packageKeys);
+    if (args.ownerIds?.length) query = query.in('owner_id', args.ownerIds);
+    if (args.status?.length) query = query.in('status', args.status);
+    const workerTypes = extra?.workerTypes ?? args.workerTypes;
+    if (workerTypes?.length) query = query.in('worker_type', workerTypes);
+    const { data, error } = await query;
+    if (error) throw Object.assign(new Error(error.message), { status: 500 });
+    const page = (data ?? []) as CaseDB[];
+    rows.push(...page);
+    if (page.length < pageSize) return rows;
+  }
+}
+
 async function nameMap(ids: (string | null)[]): Promise<Record<string, string | null>> {
   const uniq = [...new Set(ids.filter((x): x is string => !!x))];
   if (!uniq.length) return {};
@@ -61,21 +92,11 @@ async function nameMap(ids: (string | null)[]): Promise<Record<string, string | 
   return Object.fromEntries(((data ?? []) as { id: string; full_name: string | null }[]).map(u => [u.id, u.full_name]));
 }
 
-async function loadReportData(args: RunOnboardingReportArgs, extra?: { workerTypes?: string[]; packageKeys?: string[] }): Promise<ReportData> {
-  let q = sb.from('hr_onboarding_cases')
-    .select('id, case_no, employee_id, worker_type, package_key, status, owner_id, due_at, started_at, completed_at, reason')
-    .order('started_at', { ascending: false }).limit(5000);
-  if (args.dateFrom) q = q.gte('started_at', args.dateFrom);
-  if (args.dateTo)   q = q.lte('started_at', args.dateTo);
-  const pkgKeys = extra?.packageKeys ?? args.packageKeys;
-  if (pkgKeys?.length)         q = q.in('package_key', pkgKeys);
-  if (args.ownerIds?.length)   q = q.in('owner_id', args.ownerIds);
-  if (args.status?.length)     q = q.in('status', args.status);
-  const workerTypes = extra?.workerTypes ?? args.workerTypes;
-  if (workerTypes?.length)     q = q.in('worker_type', workerTypes);
-  const { data: casesRaw, error } = await q;
-  if (error) throw Object.assign(new Error(error.message), { status: 500 });
-  let cases = (casesRaw ?? []) as CaseDB[];
+async function loadReportData(args: RunOnboardingReportArgs, scope: ResolvedOnboardingScope, extra?: { workerTypes?: string[]; packageKeys?: string[] }): Promise<ReportData> {
+  if (scope.caseIds !== null && scope.caseIds.length === 0) {
+    return { cases: [], tasks: [], blockers: [], handoffs: [], labels: await packageLabelMap(), names: {}, now: Date.now() };
+  }
+  let cases = await loadReportCases(args, scope, extra);
 
   // department / site filters need the employee join (same pattern as the dashboard).
   if (args.departmentIds?.length || args.siteIds?.length) {
@@ -336,24 +357,24 @@ function reportCohort(d: ReportData, key: OnboardingReportKey, title: string): O
 }
 
 // ── dispatch ──────────────────────────────────────────────────────────────────────
-export async function runOnboardingReport(args: RunOnboardingReportArgs): Promise<OnboardingReportResult> {
+export async function runOnboardingReport(args: RunOnboardingReportArgs, scope: ResolvedOnboardingScope): Promise<OnboardingReportResult> {
   switch (args.reportKey) {
-    case 'cycle_time':                 return reportCycleTime(await loadReportData(args));
-    case 'blocked_cases':              return reportBlockedCases(await loadReportData(args));
-    case 'task_owner_performance':     return reportTaskOwnerPerformance(await loadReportData(args));
-    case 'handoff_completion':         return reportHandoffCompletion(await loadReportData(args));
-    case 'package_effectiveness':      return reportPackageEffectiveness(await loadReportData(args));
-    case 'activation_readiness':       return reportActivationReadiness(await loadReportData(args));
-    case 'overdue_tasks':              return reportOverdueTasks(await loadReportData(args));
-    case 'contractor_onboarding':      return reportCohort(await loadReportData(args, { workerTypes: ['contractor', 'contractor_worker'] }), 'contractor_onboarding', 'Contractor Onboarding');
-    case 'safety_critical_onboarding': return reportCohort(await loadReportData(args, { packageKeys: ['safety_critical_employee'] }), 'safety_critical_onboarding', 'Safety-Critical Onboarding');
+    case 'cycle_time':                 return reportCycleTime(await loadReportData(args, scope));
+    case 'blocked_cases':              return reportBlockedCases(await loadReportData(args, scope));
+    case 'task_owner_performance':     return reportTaskOwnerPerformance(await loadReportData(args, scope));
+    case 'handoff_completion':         return reportHandoffCompletion(await loadReportData(args, scope));
+    case 'package_effectiveness':      return reportPackageEffectiveness(await loadReportData(args, scope));
+    case 'activation_readiness':       return reportActivationReadiness(await loadReportData(args, scope));
+    case 'overdue_tasks':              return reportOverdueTasks(await loadReportData(args, scope));
+    case 'contractor_onboarding':      return reportCohort(await loadReportData(args, scope, { workerTypes: ['contractor', 'contractor_worker'] }), 'contractor_onboarding', 'Contractor Onboarding');
+    case 'safety_critical_onboarding': return reportCohort(await loadReportData(args, scope, { packageKeys: ['safety_critical_employee'] }), 'safety_critical_onboarding', 'Safety-Critical Onboarding');
     default: throw Object.assign(new Error(`Unknown report: ${args.reportKey as string}`), { status: 400 });
   }
 }
 
 /** Run + audit the export (data egress). Returns the same result the client serialises. */
-export async function exportOnboardingReport(actorId: string, args: RunOnboardingReportArgs): Promise<OnboardingReportResult> {
-  const result = await runOnboardingReport(args);
-  await writeHrAudit({ submoduleKey: 'onboarding', actorId, action: 'hr.onboarding.report_exported', newState: { reportKey: args.reportKey, rowCount: result.totalRows, filters: { dateFrom: args.dateFrom ?? null, dateTo: args.dateTo ?? null, packageKeys: args.packageKeys ?? [], status: args.status ?? [] } } });
+export async function exportOnboardingReport(actorId: string, args: RunOnboardingReportArgs, scope: ResolvedOnboardingScope): Promise<OnboardingReportResult> {
+  const result = await runOnboardingReport(args, scope);
+  await writeHrAudit({ submoduleKey: 'onboarding', actorId, action: 'hr.onboarding.report_exported', newState: { reportKey: args.reportKey, rowCount: result.totalRows, scope: scope.scope, filters: { dateFrom: args.dateFrom ?? null, dateTo: args.dateTo ?? null, packageKeys: args.packageKeys ?? [], status: args.status ?? [] } } });
   return result;
 }
