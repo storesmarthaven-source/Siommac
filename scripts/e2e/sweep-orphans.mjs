@@ -192,9 +192,12 @@ export async function sweepOrphans(sb, { apply = false, verbose = false, log = (
     if (!ids.length) return;
     let found = 0, failedMsg = null;
     for (const part of chunk(ids)) {
-      const { data, error } = await sb.from(table).select('id').in(column, part);
+      // Count with head:true rather than select('id') — junction tables with a
+      // composite primary key (finance_employee_pay_group_assignments) have NO `id`
+      // column, and selecting one errored out, so that entry never swept anything.
+      const { count, error } = await sb.from(table).select('*', { count: 'exact', head: true }).in(column, part);
       if (error) { vlog(`  ~ skip ${table}.${column}: ${error.message}`); return; }
-      const n = data?.length ?? 0;
+      const n = count ?? 0;
       if (!n) continue;
       found += n;
       if (apply) {
@@ -469,6 +472,62 @@ export async function sweepOrphans(sb, { apply = false, verbose = false, log = (
     const { data: claims } = await sb.from('finance_expense_claims').select('id').in('claimant_id', userIds);
     await sweepByIds('finance_cost_entries', 'expense_claim_id', (claims ?? []).map(c => c.id));
     await sweepByIds('finance_expense_claims', 'claimant_id', userIds);
+  }
+
+  // 3c ── HR Onboarding fixtures. Two leaks here are invisible to every pass above:
+  //  (a) packages + their templates are keyed only by their OWN tagged text, so no
+  //      user delete ever reaches them (6 accumulated across aborted runs);
+  //  (b) suites stamp tasks/blockers onto a REAL case (a demo employee's), which the
+  //      user-keyed sweep can't touch because the case owner is not a test user.
+  //  A leaked `is_active` custom-action template on a PRODUCTION package is the worst
+  //  case: it auto-includes in every real launch and fails it outright.
+  //  Package keys carry BOTH separators (`test-e2e-…` and `test_e2e_…`) depending on
+  //  the suite, so match either.
+  vlog('HR Onboarding fixtures:');
+  {
+    const UMARK = MARKER.replace('-', '_');
+    const tagIds = async (table, column) => {
+      const { data, error } = await sb.from(table).select('id').ilike(column, `%${MARKER}%`);
+      if (error) { vlog(`  ~ skip ${table}.${column}: ${error.message}`); return []; }
+      return (data ?? []).map(r => r.id);
+    };
+
+    const taskIds = [...new Set([
+      ...await tagIds('hr_onboarding_tasks', 'task_title'),
+      ...await tagIds('hr_onboarding_tasks', 'task_key'),
+    ])];
+    await sweepByIds('hr_onboarding_task_evidence', 'task_id', taskIds);
+    await sweepByIds('hr_onboarding_blockers', 'task_id', taskIds);
+    for (const col of ['blocker_title', 'blocker_key'])
+      await sweepByIds('hr_onboarding_blockers', 'id', await tagIds('hr_onboarding_blockers', col));
+    await sweepByIds('hr_onboarding_document_requests', 'id', await tagIds('hr_onboarding_document_requests', 'label'));
+    await sweepByIds('hr_onboarding_handoffs', 'id', await tagIds('hr_onboarding_handoffs', 'handoff_key'));
+    await sweepByIds('hr_onboarding_tasks', 'id', taskIds);
+
+    // Templates first, by their OWN tag — this is what catches one leaked onto a
+    // package the package pass below will (correctly) never delete.
+    for (const [t, c] of [
+      ['hr_onboarding_task_templates', 'task_key'], ['hr_onboarding_task_templates', 'task_title'],
+      ['hr_onboarding_handoff_templates', 'handoff_key'], ['hr_onboarding_action_templates', 'action_name'],
+    ]) await sweepByIds(t, 'id', await tagIds(t, c));
+
+    const { data: pkgs, error: pErr } = await sb.from('hr_onboarding_packages').select('id')
+      .or(`package_name.ilike.%${MARKER}%,package_key.ilike.%${MARKER}%,package_key.ilike.%${UMARK}%`);
+    if (pErr) vlog(`  ~ skip hr_onboarding_packages: ${pErr.message}`);
+    const pkgIds = (pkgs ?? []).map(p => p.id);
+    if (pkgIds.length) {
+      // A case still pinned to a test package FK-blocks it. Skip those packages rather
+      // than fail the whole chunk's delete — the case is swept with its test user, and
+      // the next sweep then clears the package.
+      const { data: pinned } = await sb.from('hr_onboarding_cases').select('package_id').in('package_id', pkgIds);
+      const stuck = new Set((pinned ?? []).map(c => c.package_id));
+      if (stuck.size) log(`  ! ${stuck.size} test package(s) still referenced by an onboarding case — left for the next sweep`);
+      // Templates that survived the tag pass (untagged children of a tagged package).
+      const deletable = pkgIds.filter(id => !stuck.has(id));
+      for (const t of ['hr_onboarding_task_templates', 'hr_onboarding_handoff_templates', 'hr_onboarding_action_templates'])
+        await sweepByIds(t, 'package_id', deletable);
+      await sweepByIds('hr_onboarding_packages', 'id', deletable);
+    }
   }
 
   // 4 ── non-user-keyed TAG-stamped text columns.

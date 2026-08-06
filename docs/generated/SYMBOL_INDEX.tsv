@@ -4368,14 +4368,15 @@ sweepOrphans	function	testing	true		scripts/e2e/sweep-orphans.mjs	178
 vlog	function	testing	false		scripts/e2e/sweep-orphans.mjs	180	sweepOrphans
 chunk	function	testing	false		scripts/e2e/sweep-orphans.mjs	185	sweepOrphans
 sweepByIds	function	testing	false		scripts/e2e/sweep-orphans.mjs	191	sweepOrphans
-collectIds	function	testing	false		scripts/e2e/sweep-orphans.mjs	211	sweepOrphans
-sweepPlatformChains	function	testing	false		scripts/e2e/sweep-orphans.mjs	230	sweepOrphans
-sweepPattern	function	testing	false		scripts/e2e/sweep-orphans.mjs	240	sweepOrphans
-sweepPayrollRunsOwnedBy	function	testing	false		scripts/e2e/sweep-orphans.mjs	264	sweepOrphans
-countWhere	function	testing	false		scripts/e2e/sweep-orphans.mjs	265	sweepPayrollRunsOwnedBy
-delWhere	function	testing	false		scripts/e2e/sweep-orphans.mjs	270	sweepPayrollRunsOwnedBy
-delIn	function	testing	false		scripts/e2e/sweep-orphans.mjs	279	sweepPayrollRunsOwnedBy
-selIn	function	testing	false		scripts/e2e/sweep-orphans.mjs	284	sweepPayrollRunsOwnedBy
+collectIds	function	testing	false		scripts/e2e/sweep-orphans.mjs	214	sweepOrphans
+sweepPlatformChains	function	testing	false		scripts/e2e/sweep-orphans.mjs	233	sweepOrphans
+sweepPattern	function	testing	false		scripts/e2e/sweep-orphans.mjs	243	sweepOrphans
+sweepPayrollRunsOwnedBy	function	testing	false		scripts/e2e/sweep-orphans.mjs	267	sweepOrphans
+countWhere	function	testing	false		scripts/e2e/sweep-orphans.mjs	268	sweepPayrollRunsOwnedBy
+delWhere	function	testing	false		scripts/e2e/sweep-orphans.mjs	273	sweepPayrollRunsOwnedBy
+delIn	function	testing	false		scripts/e2e/sweep-orphans.mjs	282	sweepPayrollRunsOwnedBy
+selIn	function	testing	false		scripts/e2e/sweep-orphans.mjs	287	sweepPayrollRunsOwnedBy
+tagIds	function	testing	false		scripts/e2e/sweep-orphans.mjs	489	sweepOrphans
 REQ	array	finance	false		scripts/e2e/verify-finance-ui.mjs	11	
 env	object	finance	false		scripts/e2e/verify-finance-ui.mjs	12	
 line	variable	finance	false		scripts/e2e/verify-finance-ui.mjs	13	
