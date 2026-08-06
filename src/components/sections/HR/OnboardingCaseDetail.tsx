@@ -23,7 +23,7 @@
  */import { type VNode } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
-import { PageHeader, Modal, Field, FormGrid, TextInput, SelectInput, LucideIcon } from '@ui';
+import { Modal, Field, FormGrid, TextInput, SelectInput, LucideIcon, PersonSearchSelect } from '@ui';
 import {
   WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget, placeWidgetsAtBottom,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeDef, type WidgetSizeKey,
@@ -48,6 +48,8 @@ import type {
   OnboardingCommunicationType, OnboardingCommunicationChannel, OnboardingHandoffRow,
 } from '../../../../types/hrOnboarding';
 import { useOnboardingCaseStore } from '@store/onboardingCase';
+import { openHrEmployeeRecord, openOnboardingPackages } from './hrDeepLink';
+import { rowName } from './shared';
 import { humanize, fmtDate, fmtDateTime } from './onboardingStatus';
 import { isOpen } from './onboardingCase.helpers';
 import {
@@ -147,6 +149,8 @@ export function OnboardingCaseDetail({
     ownerRole: '', ownerEmployeeId: '', dueDate: '', priority: 'normal' as OnboardingActionPriority,
     blocksOnboarding: false, requiresEvidence: false,
   });
+  const [ownerModalOpen, setOwnerModalOpen] = useState(false);
+  const [ownerDraftId, setOwnerDraftId] = useState('');
   const [communicationModalOpen, setCommunicationModalOpen] = useState(false);
   const [communicationForm, setCommunicationForm] = useState({
     communicationType: 'employee_welcome' as OnboardingCommunicationType,
@@ -187,6 +191,8 @@ export function OnboardingCaseDetail({
   const actions = actionsQ.data ?? [];
   const employees = empsQ.data ?? [];
   const ownerEmployee = employees.find(e => e.id === caseRow.ownerId);
+  // The case row carries the employee's number but not their job title; the register row does.
+  const caseEmployee = employees.find(e => e.id === caseRow.employeeId);
 
   // ── seven-tab shell ─────────────────────────────────────────────────────────────
   // A drill-through from the Work Queue opens its owning tab; a direct open lands on
@@ -651,57 +657,142 @@ export function OnboardingCaseDetail({
   };
 
   // ── lifecycle action buttons (PageHeader actions slot) ──────────────────────────
-  const headerActions = (
-    <div class="obx-actions">
-      {canManageCase && <>
-      {caseRow.status === 'in_progress' && <button class="obx-btn amber" onClick={() => void handlePause()}>Pause</button>}
-      {caseRow.status === 'paused' && <button class="obx-btn" onClick={() => void handleResume()}>Resume</button>}
-      {(caseRow.status === 'in_progress' || caseRow.status === 'paused') && <button class="obx-btn primary" onClick={() => void handleMarkReady()}>Mark Ready</button>}
-      {caseRow.status === 'ready_for_activation' && <button class="obx-btn primary" onClick={() => void handleComplete()}>Complete</button>}
-      {caseRow.employeeId && <button class="obx-btn" onClick={() => void handleProvision()}>Provision</button>}
-      {!['completed', 'cancelled'].includes(caseRow.status) && <button class="obx-btn danger" onClick={() => void handleCancel()}>Cancel</button>}
-      <label class="obx-owner">Owner
-        <select value={caseRow.ownerId ?? ''} onChange={e => void handleReassignOwner((e.target as HTMLSelectElement).value)}>
-          <option value="">Unassigned</option>
-          {employees.map(e => <option key={e.id} value={e.id}>{e.full_name ?? e.email ?? e.id}</option>)}
-        </select>
-      </label>
+  // Owner reassignment moved from a bare header <select> into the mockup's More popover +
+  // a real dialog. An owner is an FK'd person, so it uses the shared person picker rather
+  // than a free-text/opaque list (Feature Completeness: pickers, not free text).
+  const ownerDialog = (
+    <Modal
+      open={ownerModalOpen}
+      title="Reassign case owner"
+      onClose={() => setOwnerModalOpen(false)}
+      footer={<>
+        <button class="btn" type="button" onClick={() => setOwnerModalOpen(false)}>Cancel</button>
+        <button class="btn primary" type="button"
+          disabled={!ownerDraftId || ownerDraftId === (caseRow.ownerId ?? '')}
+          onClick={() => { void handleReassignOwner(ownerDraftId); setOwnerModalOpen(false); }}
+        >Reassign</button>
       </>}
-    </div>
+    >
+      <FormGrid>
+        <Field label="New case owner">
+          <PersonSearchSelect
+            options={employees.map(e => ({
+              id: e.id,
+              name: rowName(e),
+              subtitle: [e.employee_number, e.position].filter(Boolean).join(' · ') || null,
+              photoUrl: e.profile_image_url,
+            }))}
+            value={ownerDraftId}
+            onChange={setOwnerDraftId}
+            placeholder="Search by name or employee number…"
+            emptyLabel="No employees found"
+          />
+        </Field>
+      </FormGrid>
+    </Modal>
   );
 
-  // ── render — standard PageHeader + Customize grid ───────────────────────────────
+  // ── render — the mockup's case-header + profile strip, then the seven-tab shell ───
+  // Ported from docs/mockups/onboarding-case-detail-implementation-ready.html. The generic
+  // PageHeader was replaced by the design's own `case-header` (breadcrumb · title · status ·
+  // actions · More popover), which is what OnboardingCaseDetail.mockup.css actually styles —
+  // that stylesheet was imported but almost entirely dead against the previous markup.
+  //
+  // Every control here is wired to a handler that already existed; nothing is a placeholder.
+  // Destructive and accountability actions stay behind `canManageCase`, as they were.
   return (
     <div class="hr-onboarding-case ocd-root">
-      <button class="obx-back" onClick={onBack}>← Onboarding Cases</button>
+      <div class="breadcrumb">
+        <a href="#" onClick={e => { e.preventDefault(); onBack(); }}>Onboarding Command Centre</a>
+        <span>›</span><span>{caseRow.caseNo}</span>
+      </div>
 
-      <PageHeader
-        icon="fa-user-check"
-        module="HR · Onboarding"
-        title={caseRow.employeeName ?? caseRow.caseNo}
-        sub={`${caseRow.caseNo} · ${caseRow.packageLabel}`}
-        actions={headerActions}
-      />
-
+      <header class="case-header">
+        <div class="header-top">
+          <div class="case-title">
+            <h1>{caseRow.caseNo}</h1>
+            <span class={`status ${tone(caseRow.status)}`}>{humanize(caseRow.status)}</span>
+          </div>
+          <div class="header-actions">
+            {caseRow.employeeId && (
+              <button class="btn" type="button" onClick={() => openHrEmployeeRecord(caseRow.employeeId!, 'overview')}>
+                <LucideIcon name="IdCard" size={15} />View Employee Record
+              </button>
+            )}
+            <details class="case-more-menu">
+              <summary class="btn"><LucideIcon name="Ellipsis" size={15} />More</summary>
+              <div class="case-more-popover">
+                {canEdit && (
+                  <button type="button" onClick={() => { setTab('overview'); setEditing(true); }}>
+                    <LucideIcon name="LayoutGrid" size={15} />
+                    <span><strong>Customize overview</strong><small>Arrange the summary widgets.</small></span>
+                  </button>
+                )}
+                {canManageCase && <>
+                  <button type="button" onClick={() => { setOwnerDraftId(caseRow.ownerId ?? ''); setOwnerModalOpen(true); }}>
+                    <LucideIcon name="Users" size={15} />
+                    <span><strong>Reassign owner</strong><small>Change case accountability.</small></span>
+                  </button>
+                  {caseRow.status === 'in_progress' && (
+                    <button type="button" onClick={() => void handlePause()}>
+                      <LucideIcon name="Clock" size={15} />
+                      <span><strong>Pause case</strong><small>Temporarily stop progression.</small></span>
+                    </button>
+                  )}
+                  {caseRow.status === 'paused' && (
+                    <button type="button" onClick={() => void handleResume()}>
+                      <LucideIcon name="Play" size={15} />
+                      <span><strong>Resume case</strong><small>Continue progression.</small></span>
+                    </button>
+                  )}
+                  {caseRow.employeeId && (
+                    <button type="button" onClick={() => void handleProvision()}>
+                      <LucideIcon name="KeyRound" size={15} />
+                      <span><strong>Provision account</strong><small>Create system access.</small></span>
+                    </button>
+                  )}
+                  {!['completed', 'cancelled'].includes(caseRow.status) && (
+                    <button class="danger" type="button" onClick={() => void handleCancel()}>
+                      <LucideIcon name="TriangleAlert" size={15} />
+                      <span><strong>Cancel case</strong><small>Close with a mandatory reason.</small></span>
+                    </button>
+                  )}
+                </>}
+              </div>
+            </details>
+            {canManageCase && (caseRow.status === 'in_progress' || caseRow.status === 'paused') && (
+              <button class="btn primary" type="button" onClick={() => void handleMarkReady()}>
+                <LucideIcon name="Check" size={15} />Review Readiness
+              </button>
+            )}
+            {canManageCase && caseRow.status === 'ready_for_activation' && (
+              <button class="btn primary" type="button" onClick={() => void handleComplete()}>
+                <LucideIcon name="Check" size={15} />Complete Onboarding
+              </button>
+            )}
+          </div>
+        </div>
 
       {/* ── approved profile strip: one navy identity cell + four white fact cells ── */}
-      <section class="case-profile-strip" aria-label="Case summary">
-        <div class="case-profile-cell case-person">
+      <section class="case-profile-strip" aria-label="Onboarding case profile">
+        <button class="case-profile-cell case-person" type="button"
+          disabled={!caseRow.employeeId}
+          onClick={() => caseRow.employeeId && openHrEmployeeRecord(caseRow.employeeId, 'overview')}>
           {caseRow.employeePhotoUrl
             ? <img class="avatar" src={caseRow.employeePhotoUrl} alt="" />
             : <span class="avatar" aria-hidden="true">{_initials(caseRow.employeeName)}</span>}
-          <div class="case-profile-copy">
-            <span>Employee</span>
+          <span class="case-profile-copy">
             <strong>{caseRow.employeeName ?? '—'}</strong>
-            <small>{caseRow.caseNo} · {caseRow.departmentName ?? 'Department unassigned'}</small>
-          </div>
-        </div>
-        <div class="case-profile-cell case-profile-fact">
+            <span>{[caseRow.employeeNo, caseEmployee?.position].filter(Boolean).join(' · ') || caseRow.caseNo}</span>
+            <small>{caseRow.departmentName ?? 'Department unassigned'}</small>
+          </span>
+        </button>
+        <button class="case-profile-cell case-profile-fact" type="button" onClick={() => openOnboardingPackages()}>
           <span><LucideIcon name="Package" size={16} />Package</span><strong>{caseRow.packageLabel}</strong>
-          <small>{humanize(caseRow.workerType ?? 'employee')}</small>
-        </div>
+          <small class="link">{humanize(caseRow.workerType ?? 'employee')}</small>
+        </button>
         <div class="case-profile-cell case-profile-fact">
-          <span><LucideIcon name="UserRound" size={16} />Case Owner</span>
+          <span><LucideIcon name="UserRound" size={16} />Case owner</span>
           <div class="case-owner-name">
             {ownerEmployee?.profile_image_url
               ? <img src={ownerEmployee.profile_image_url} alt="" />
@@ -711,15 +802,21 @@ export function OnboardingCaseDetail({
           <small>{caseRow.departmentName ?? '—'}</small>
         </div>
         <div class="case-profile-cell case-profile-fact case-stage">
-          <span><LucideIcon name="Route" size={16} />Current Stage</span><strong>{readiness.percent}% complete</strong>
-          <span class="case-stage-progress" aria-hidden="true"><i style={{ width: `${readiness.percent}%` }} /></span>
-          <small>{readiness.completed} of {readiness.total} tasks complete</small>
+          <span><LucideIcon name="Route" size={16} />Current stage</span>
+          <strong>{humanize(caseRow.status)}</strong>
+          <div class="case-stage-meter">
+            <span class="case-stage-progress" aria-label={`${readiness.percent} percent complete`}>
+              <i style={{ width: `${readiness.percent}%` }} />
+            </span>
+            <small>{readiness.percent}% complete · {readiness.completed} of {readiness.total} tasks</small>
+          </div>
         </div>
         <div class="case-profile-cell case-profile-fact">
           <span><LucideIcon name="ShieldCheck" size={16} />Status</span><strong class={`ocd-status ${tone(caseRow.status)}`}>{humanize(caseRow.status)}</strong>
           <small>{blocked.reason}</small>
         </div>
       </section>
+      </header>
 
       {/* ── the seven permanent tabs. Counts come from the queries already loaded. ── */}
       <nav class="tabs ocd-tabs" role="tablist" aria-label="Onboarding case sections">
@@ -840,6 +937,7 @@ export function OnboardingCaseDetail({
       />
 
       <OnboardingAddTaskModal open={taskModalOpen} caseId={caseId} onClose={() => setTaskModalOpen(false)} onToast={onToast} />
+      {ownerDialog}
 
       <Modal
         open={actionModalOpen} title="Add Custom Action" icon="fa-bolt" onClose={() => setActionModalOpen(false)}
