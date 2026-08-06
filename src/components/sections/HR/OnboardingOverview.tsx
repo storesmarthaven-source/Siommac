@@ -6,10 +6,11 @@
  * a single case opens from the Command Centre widgets or queue into Case Detail.
  */
 import { type VNode } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import { showSection } from '@components/nav/navCore';
 import { useOnboardingCases } from '@api/hr/onboarding';
-import type { OnboardingCaseRow } from '../../../../types/hrOnboarding';
+import { recordReadScope } from './useOnboardingScope';
+import type { OnboardingCaseRow, OnboardingReadScope } from '../../../../types/hrOnboarding';
 import { OnboardingCommandCenter } from './OnboardingCommandCenter';
 import type { OnboardingSurface as CommandCenterSurface } from './OnboardingCommandCenter.helpers';
 import { StartOnboardingWizard } from './StartOnboardingWizard';
@@ -34,9 +35,14 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
 
   useEffect(() => { if (initialCaseId) setJumpCaseId(initialCaseId); }, [initialCaseId]);
 
+  // A by-id open is not a browse: without this the API applied its default `my` scope and
+  // resolved zero rows for any case the user did not personally own, so Case Detail never
+  // mounted. See recordReadScope().
+  const lookupScope = useMemo<OnboardingReadScope>(recordReadScope, []);
+
   const lookupId = jumpCaseId ?? selectedCase?.caseId ?? null;
   const caseQ = useOnboardingCases(
-    { caseIds: lookupId ? [lookupId] : [], page: 1, pageSize: 1 },
+    { scope: lookupScope, caseIds: lookupId ? [lookupId] : [], page: 1, pageSize: 1 },
     { enabled: !!lookupId },
   );
 

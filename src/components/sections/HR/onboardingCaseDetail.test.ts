@@ -47,31 +47,45 @@ describe('the seven permanent tabs', () => {
   });
 });
 
-describe('only Overview carries a WidgetBoard', () => {
-  it('gates the board and its customize controls on the Overview tab', () => {
-    // Paren/whitespace-tolerant; the assertion is that the board is gated on Overview.
-    expect(SRC).toMatch(/tab === 'overview' && \(\s*<WidgetBoard/);
-    expect(SRC).toMatch(/tab === 'overview' && canEdit && \(/);
+/**
+ * SUPERSEDED CONTRACT — recorded openly rather than quietly deleted.
+ *
+ * This block previously asserted that Overview carried a customizable WidgetBoard whose
+ * default layout was four approved widgets ("only Overview carries a WidgetBoard", "mounts
+ * exactly one board", "defaults to the four approved widgets"). That came from an earlier
+ * reading of ONBOARDING_UI_PAGES_SPEC §2.
+ *
+ * The approved design — docs/mockups/onboarding-case-detail-implementation-ready.html — is
+ * the authority for this page, and it specifies Overview as a FIXED `work-area` composition:
+ * Priority Tasks and Readiness by Domain in the primary column, Key Blockers in the rail.
+ * There is no board, no customize strip and no widget library on Case Detail. Activation
+ * Readiness is not a fourth tile either: the design reports it in the matrix summary strip
+ * and in the profile strip's stage meter, which is where it now lives.
+ *
+ * The Command Centre remains a WidgetBoard. Only Case Detail changed.
+ */
+describe('Overview is the approved fixed composition, not a board', () => {
+  it('mounts no WidgetBoard and imports nothing from the widget system', () => {
+    expect(SRC).not.toContain('<WidgetBoard');
+    expect(SRC).not.toContain('WidgetBoardToolbar');
+    expect(SRC).not.toContain('WidgetLibraryModal');
+    expect(SRC).not.toContain('useBoardLayout');
+    expect(SRC).not.toContain('@ui/widgets');
   });
 
-  it('mounts exactly one board', () => {
-    expect((SRC.match(/<WidgetBoard\s/g) ?? []).length).toBe(1);
-  });
-
-  it('defaults to the four approved widgets and nothing else', () => {
-    const layout = SRC.slice(SRC.indexOf('defaultCaseLayout'), SRC.indexOf('export function OnboardingCaseDetail'));
-    for (const id of ['activeTasks', 'activationReadiness', 'readinessByDomain', 'blockersTable']) {
-      expect(layout).toContain(`hr.onboarding.case.${id}`);
+  it('renders the three approved Overview surfaces inside the mockup work-area', () => {
+    expect(SRC).toMatch(/class="work-area"/);
+    expect(SRC).toMatch(/class="case-primary-column"/);
+    expect(SRC).toMatch(/class="rail"/);
+    for (const surface of ['priorityTasksWidget()', 'readinessMatrixWidget()', 'keyBlockersWidget()']) {
+      expect(SRC).toContain(surface);
     }
-    // Handoffs has its own permanent tab; case actions are rows inside Tasks.
-    expect(layout).not.toContain('handoffsTable');
-    expect(layout).not.toContain('customActions');
-    expect((layout.match(/defInst\(/g) ?? []).length).toBe(4);
   });
 
-  it('keeps the existing production widget keys (not the mockup data-* names)', () => {
-    expect(SRC).not.toContain('hr.onboarding.case.active-tasks');
-    expect(SRC).not.toContain('hr.onboarding.case.readiness-matrix');
+  it('keeps no customize affordance, since there is nothing left to customize', () => {
+    expect(SRC).not.toContain('Customize overview');
+    expect(SRC).not.toContain('customize-strip');
+    expect(SRC).not.toContain('setEditing');
   });
 });
 
@@ -120,10 +134,12 @@ describe('Work Queue drill-through', () => {
     expect(SRC).toMatch(/no longer linked to a task/);
   });
 
-  it('highlights the focused row by class, with no DOM polling', () => {
-    expect(SRC).toMatch(/focusedRecordId === t\.taskId \? "ocd-focused"/);
-    expect(SRC).toMatch(/focusedRecordId === b\.blockerId \? "ocd-focused"/);
-    expect(SRC).toMatch(/focusedRecordId === h\.handoffId \? "ocd-focused"/);
+  it('highlights the focused record by class, with no DOM polling', () => {
+    // Tasks is a table; Handoffs and Blockers are card lists in the approved design — all
+    // three carry the same class, applied by comparison rather than by a DOM query.
+    expect(SRC).toMatch(/focusedRecordId === r\.id \? 'ocd-focused'/);
+    expect(SRC).toMatch(/focusedRecordId === b\.blockerId \? ' ocd-focused'/);
+    expect(SRC).toMatch(/focusedRecordId === h\.handoffId \? ' ocd-focused'/);
     expect(SRC).not.toContain('scrollIntoView');
     expect(SRC).not.toContain('setTimeout(tick');
   });
@@ -160,31 +176,83 @@ describe('states and data reuse', () => {
     expect(SRC).not.toMatch(/useOnboardingReadiness|readiness\/list|case\/readiness/);
   });
 
-  it('reuses the existing renderers for the three work tabs', () => {
-    for (const body of ['tasksBody()', 'handoffsBody()', 'blockersBody()']) {
+  it('gives every tab its own workspace renderer, all on the existing hooks', () => {
+    for (const body of [
+      'overviewWorkspace()', 'tasksWorkspace()', 'handoffsWorkspace()', 'blockersWorkspace()',
+      'communicationsWorkspace()', 'timelineWorkspace()', 'auditWorkspace()',
+    ]) {
       expect(SRC).toContain(body);
     }
   });
 
   it('keeps routing queues distinct from accountable people', () => {
-    expect(SRC).toContain('Queue · Accountable');
+    // "HSE Queue" is where work routes; the assignee is who is personally accountable. The
+    // design shows the short domain in a column header and the queue where a person would
+    // route to it — they must never collapse into one label.
     expect(SRC).toContain('queueLabel(t.moduleKey ?? t.ownerRole)');
+    expect(SRC).toContain('domainLabel(t.moduleKey ?? t.ownerRole)');
     expect(SRC).toContain("t.assignedToName ?? 'Unassigned'");
+    expect(SRC).toMatch(/Routing stays with \{queueLabel/);
   });
 
-  it('provides real handoff and communication actions with permission gates', () => {
-    for (const action of ['handleRetryHandoff', 'handleAcceptHandoff', 'handleCompleteHandoff', 'handleCancelHandoff']) {
+  it('provides real handoff, blocker and communication actions with permission gates', () => {
+    for (const action of [
+      'handleRetryHandoff', 'handleAcceptHandoff', 'handleCompleteHandoff', 'handleCancelHandoff',
+      'handleResolve', 'handleEscalate', 'handleWaive', 'handleNotifyBlockerOwner',
+    ]) {
       expect(SRC).toContain(action);
     }
     expect(SRC).toMatch(/canManageCase && c\.status === 'failed'/);
-    expect(SRC).toContain('Send Message');
+    expect(SRC).toContain('New Message');
     expect(SRC).toContain('submitCommunication');
   });
 
   it('keeps the Overview priority list concise and links to the full Tasks workspace', () => {
     expect(SRC).toMatch(/\.slice\(0, 5\)/);
-    expect(SRC).toContain('priorityTasksBody()');
+    expect(SRC).toContain('priorityTasksWidget()');
     expect(SRC).toMatch(/onClick=\{\(\) => setTab\('tasks'\)\}>View all/);
+  });
+
+  it('makes every toolbar filter real — each one applies AND can be cleared', () => {
+    // A filter that renders but never narrows anything is a dead control. Each workspace
+    // filters the rows it already holds, and each offers a Clear once it is engaged.
+    for (const state of [
+      'taskFiltersActive', 'blockerFiltersActive', 'commFiltersActive',
+      'filteredWorkRows', 'filteredHandoffs', 'filteredBlockers',
+    ]) {
+      expect(SRC).toContain(state);
+    }
+    expect(SRC).toContain('clearTaskFilters');
+    expect((SRC.match(/>Clear</g) ?? []).length).toBeGreaterThanOrEqual(4);
+  });
+});
+
+describe('the ported design owns the whole page body', () => {
+  it('emits the mockup vocabulary for every workspace', () => {
+    for (const cls of [
+      'work-area', 'case-primary-column', 'priority-task-list', 'readiness-matrix',
+      'case-blocker-compact-list', 'tab-workspace', 'workspace-grid', 'workspace-main',
+      'workspace-rail', 'table-wrap', 'blocker-work-item', 'handoff-work-item',
+      'thread', 'timeline-full', 'audit-change',
+    ]) {
+      expect(SRC).toContain(cls);
+    }
+  });
+
+  it('carries no legacy Case Detail presentation', () => {
+    // The `obx-*` vocabulary belonged to the pre-rebuild body. onboardingCase.css is imported
+    // by 11 other files and must never be deleted — it is simply no longer imported HERE.
+    expect(SRC).not.toMatch(/\bobx-/);
+    expect(SRC).not.toContain("import './onboardingCase.css'");
+    expect(SRC).not.toContain('ocd-workspace');
+  });
+
+  it('never emits data-tab-panel, which the port hides by default', () => {
+    // `.ocd-root [data-tab-panel]{display:none}` comes straight from the mockup's own JS tab
+    // switcher. Panels here are rendered conditionally, so emitting it would hide every one.
+    expect(SRC).not.toContain('data-tab-panel');
+    const css = read('src/components/sections/HR/OnboardingCaseDetail.mockup.css');
+    expect(css).toContain('[data-tab-panel]');
   });
 });
 

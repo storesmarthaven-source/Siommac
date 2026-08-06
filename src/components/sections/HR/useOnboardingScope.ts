@@ -32,6 +32,29 @@ export function availableOnboardingScopes(): OnboardingScopeOption[] {
     || (o.key === 'all'  && can('hr.onboarding.view_all')));
 }
 
+/**
+ * The scope for a read that is ALREADY pinned to one record.
+ *
+ * A browse ("show me cases") starts at `my` on purpose — see `useOnboardingScope` below. A
+ * RECORD read is a different question: the user has already clicked a specific case in a list
+ * they were authorised to see, and every one of these queries is constrained by that caseId.
+ * Re-applying the browse default there does not narrow a list, it empties one.
+ *
+ * That was a live defect: the by-id case lookup and Case Detail's own task / handoff / blocker
+ * reads all sent no scope, so the API applied `my` and returned zero rows for any case the
+ * signed-in user did not personally own. Case Detail either never mounted at all, or mounted
+ * with every tab empty on a case that plainly had work.
+ *
+ * This widens nothing. The options are permission-derived, and
+ * netlify/functions/lib/hr/onboardingScope.ts independently re-resolves the visible case set
+ * and 403s an unauthorised scope. A user holding only `my` still asks for `my`, and a case
+ * outside their scope still returns nothing — from the server, which is the authority.
+ */
+export function recordReadScope(): OnboardingReadScope {
+  const keys = availableOnboardingScopes().map(o => o.key);
+  return keys.includes('all') ? 'all' : keys.includes('team') ? 'team' : 'my';
+}
+
 export interface OnboardingScopeState {
   /** The scope the data currently shown was loaded for. */
   scope: OnboardingReadScope;
