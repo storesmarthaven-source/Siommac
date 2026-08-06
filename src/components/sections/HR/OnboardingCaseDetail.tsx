@@ -21,7 +21,7 @@
  * docs/ONBOARDING_UI_PAGES_SPEC.md. Every tab reuses the existing onboarding API; no tab
  * introduces a second data system. All mutations invalidate ['hr','onboarding'].
  */import { type VNode } from 'preact';
-import { useEffect, useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
 import { PageHeader, Modal, Field, FormGrid, TextInput, SelectInput, LucideIcon } from '@ui';
 import {
@@ -195,7 +195,19 @@ export function OnboardingCaseDetail({
   const [tab, setTab] = useState<CaseTab>(() => focusTab(focus));
   const focusedRecordId = focusRecordId(focus);
   const focusedEvidenceId = focusEvidenceId(focus);
-  useEffect(() => { setTab(focusTab(focus)); }, [focus]);
+  // Keyed on the drill-through TARGET, not on `focus` object identity. The parent holds `focus`
+  // beside other state, so any parent re-render can hand down an equivalent-but-new object; an
+  // identity-keyed effect re-ran on each of those and silently forced the tab back, discarding
+  // the user's own selection. Keying on the target means the tab is re-aimed only when a
+  // genuinely different record is drilled into.
+  const focusKey = focus ? `${focus.sourceType}:${focus.sourceId}:${focus.relatedTaskId ?? ''}` : '';
+  const focusTabValue = focusTab(focus);
+  const lastAppliedFocusKey = useRef<string | null>(null);
+  useEffect(() => {
+    if (lastAppliedFocusKey.current === focusKey) return;
+    lastAppliedFocusKey.current = focusKey;
+    setTab(focusTabValue);
+  }, [focusKey, focusTabValue]);
 
   const showAudit = can('hr.onboarding.audit.view');
   // Audit is ABSENT without the permission, not disabled — and a stale tab selection can

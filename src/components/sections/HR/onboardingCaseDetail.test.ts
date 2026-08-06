@@ -128,8 +128,17 @@ describe('Work Queue drill-through', () => {
     expect(SRC).not.toContain('setTimeout(tick');
   });
 
-  it('re-targets the tab when the focus changes', () => {
-    expect(SRC).toMatch(/useEffect\(\(\) => \{ setTab\(focusTab\(focus\)\); \}, \[focus\]\)/);
+  // Behaviour (re-target on a new target, KEEP the user's tab on an equivalent re-render) is
+  // asserted for real in OnboardingCaseDetail.tabs.test.tsx. This guards the one structural
+  // property a render test cannot see: that the effect keys on the drill-through TARGET and
+  // not on `focus` object identity. Identity-keying re-ran on every parent re-render and
+  // silently forced the tab back, which read as "clicking a tab does nothing".
+  it('re-targets on a new focus TARGET, never on focus object identity', () => {
+    expect(SRC).toMatch(/const focusKey = focus \? `\$\{focus\.sourceType\}:\$\{focus\.sourceId\}/);
+    expect(SRC).toMatch(/lastAppliedFocusKey\.current === focusKey/);
+    expect(SRC).toMatch(/\}, \[focusKey, focusTabValue\]\)/);
+    // The old identity-keyed effect must not come back.
+    expect(SRC).not.toMatch(/setTab\(focusTab\(focus\)\); \}, \[focus\]\)/);
   });
 });
 
