@@ -65,6 +65,20 @@ import './onboardingCaseDetail.page.css';
 const _initials = (n: string | null | undefined): string =>
   (n ?? '').split(/\s+/).filter(Boolean).slice(0, 2).map(s => (s[0] ?? '').toUpperCase()).join('') || '?';
 
+/**
+ * Is a blocker still open?
+ *
+ * MODULE scope on purpose. This was a `const` inside the component declared BELOW the
+ * `blocked` useMemo that calls it, so the memo read it from the temporal dead zone. It
+ * survived an empty list — `[].filter(cb)` never invokes `cb` — and then threw
+ * "Cannot access 'blockerOpen' before initialization" on the first render after real
+ * blockers arrived. A throw during render aborts the update, so the page froze with its
+ * last-painted DOM: clicks ran their handlers, state changed, and nothing ever repainted.
+ * That is what made every tab look dead. It has no closure dependencies, so it lives here.
+ */
+const blockerOpen = (s: string): boolean =>
+  ['active', 'acknowledged', 'waiting_on_owner', 'escalated'].includes(s);
+
 function tone(s: string): string {
   if (['completed', 'delivered', 'accepted', 'resolved', 'received', 'waived', 'ready_for_activation'].includes(s)) return 'green';
   if (['blocked', 'failed', 'escalated', 'active'].includes(s)) return 'red';
@@ -405,8 +419,6 @@ export function OnboardingCaseDetail({
     await run(() => cancelActionMut.mutateAsync({ id: a.id, reason: res.reason ?? null }), 'Action cancelled');
   }
   async function handleUpdateActionStatus(a: OnboardingCaseAction, status: OnboardingCaseActionStatus): Promise<void> { await run(() => updateActionMut.mutateAsync({ id: a.id, status }), 'Action updated'); }
-
-  const blockerOpen = (s: string): boolean => ['active', 'acknowledged', 'waiting_on_owner', 'escalated'].includes(s);
 
   // ── page-local TABLE widgets (functional, drag/resize like Employee Master's register) ──
   const wcard = (title: string, icon: string, body: VNode, action?: VNode): VNode => (
@@ -808,7 +820,10 @@ export function OnboardingCaseDetail({
             <span class="case-stage-progress" aria-label={`${readiness.percent} percent complete`}>
               <i style={{ width: `${readiness.percent}%` }} />
             </span>
-            <small>{readiness.percent}% complete · {readiness.completed} of {readiness.total} tasks</small>
+            {/* Caption stays short. `.case-stage-meter` is a flex row where the caption is
+                `flex:0 0 auto; white-space:nowrap`, so a longer string starves the 82px bar —
+                appending the task counts here shrank it to 8px. Counts live on the Tasks tab. */}
+            <small>{readiness.percent}% complete</small>
           </div>
         </div>
         <div class="case-profile-cell case-profile-fact">

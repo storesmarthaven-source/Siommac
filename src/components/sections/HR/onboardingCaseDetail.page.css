@@ -152,3 +152,26 @@
   background: var(--blue-50, #eaf1fe) !important;
   box-shadow: inset 3px 0 0 var(--blue-500, #2f6fed);
 }
+
+/* The mockup's identity and Package cells are anchors. They are <button>s here because they
+   trigger in-app navigation (openHrEmployeeRecord / openOnboardingPackages) rather than a URL,
+   and a button is the correct control for that. A button is NOT an anchor to the UA though: it
+   arrives with a 2px outset border, a grey background, centred text and its own 16px font that
+   does not inherit. Reset those four so the cell renders exactly as the ported anchor rules
+   intend, and keep the pointer affordance.
+
+   Deliberately does NOT touch background or padding: the ported rules set those (the identity
+   cell is navy, the fact cells white), and any author declaration already beats the UA default,
+   so overriding here would only fight the design — an earlier attempt at `background: none`
+   flattened the navy identity cell. */
+.ocd-root .case-profile-strip button.case-profile-cell {
+  width: 100%;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.ocd-root .case-profile-strip button.case-profile-cell:disabled { cursor: default; }
