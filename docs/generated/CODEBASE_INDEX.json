@@ -1,20 +1,20 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "b732a013fd2bcdb5b28a5b9ac4b5741560b03351",
+    "head": "fb97f5bd41d5c92a6b1e4332ed0a2fcb884ae0ac",
     "branch": "feat/email-delivery-resend",
-    "fingerprint": "01d42ff89140cb9233e36a2f",
-    "indexedFiles": 1703
+    "fingerprint": "55f8282455498d9a53323e53",
+    "indexedFiles": 1705
   },
   "summary": {
-    "files": 1350,
-    "symbols": 13595,
+    "files": 1351,
+    "symbols": 13609,
     "widgets": 51,
     "routes": 974,
     "routeDefinitions": 975,
     "unmountedRoutes": 17,
     "apiCalls": 354,
-    "databaseObjects": 1414,
+    "databaseObjects": 1426,
     "e2eSuites": 85,
     "e2eTests": 2682
   },
@@ -139,13 +139,13 @@
     {
       "id": "platform",
       "counts": {
-        "files": 314,
-        "symbols": 2845,
+        "files": 315,
+        "symbols": 2856,
         "widgets": 0,
         "routes": 34,
         "routeDefinitions": 49,
         "apiCalls": 50,
-        "databaseObjects": 305,
+        "databaseObjects": 317,
         "e2eSuites": 0
       }
     },
@@ -153,7 +153,7 @@
       "id": "testing",
       "counts": {
         "files": 39,
-        "symbols": 185,
+        "symbols": 188,
         "widgets": 0,
         "routes": 0,
         "routeDefinitions": 0,
@@ -318,25 +318,32 @@
       "hash": "967b2ee4e65885fb"
     },
     {
+      "path": "netlify/functions/lib/email/emailDeliveryRecord.ts",
+      "module": "platform",
+      "role": "backend-lib",
+      "lines": 168,
+      "hash": "5048ae382b6475a0"
+    },
+    {
       "path": "netlify/functions/lib/email/emailService.ts",
       "module": "platform",
       "role": "backend-lib",
-      "lines": 167,
-      "hash": "c75d51cacb166270"
+      "lines": 217,
+      "hash": "1504d19d6f7dd9bf"
     },
     {
       "path": "netlify/functions/lib/email/emailTransport.ts",
       "module": "platform",
       "role": "backend-lib",
-      "lines": 66,
-      "hash": "1f0e49aa31ea1aff"
+      "lines": 70,
+      "hash": "be93611a036e9a27"
     },
     {
       "path": "netlify/functions/lib/email/resendTransport.ts",
       "module": "platform",
       "role": "backend-lib",
       "lines": 63,
-      "hash": "5220efba97775a80"
+      "hash": "caddc67880d8ebe1"
     },
     {
       "path": "netlify/functions/lib/finance/accountsPayable.ts",
@@ -524,8 +531,8 @@
       "path": "netlify/functions/lib/finance/payrollPayslipDelivery.ts",
       "module": "payroll",
       "role": "backend-lib",
-      "lines": 239,
-      "hash": "fe97c0f9de75ea0e"
+      "lines": 251,
+      "hash": "1516a654e6c9d766"
     },
     {
       "path": "netlify/functions/lib/finance/payrollPayslips.ts",
@@ -811,8 +818,8 @@
       "path": "netlify/functions/lib/hr/accountProvisioning.ts",
       "module": "hr",
       "role": "backend-lib",
-      "lines": 175,
-      "hash": "a557cbdcc5a60762"
+      "lines": 186,
+      "hash": "5e33fb826383c4f1"
     },
     {
       "path": "netlify/functions/lib/hr/attendanceCapture.ts",
@@ -1413,8 +1420,8 @@
       "path": "netlify/functions/lib/notify.ts",
       "module": "platform",
       "role": "backend-lib",
-      "lines": 417,
-      "hash": "d89d93674c313396"
+      "lines": 433,
+      "hash": "e47a790ceb536c59"
     },
     {
       "path": "netlify/functions/lib/orchestration/recordLinkService.ts",
@@ -2036,8 +2043,8 @@
       "path": "netlify/functions/routes/emailDelivery.ts",
       "module": "platform",
       "role": "backend-route",
-      "lines": 98,
-      "hash": "4cbb4013e223d34a"
+      "lines": 118,
+      "hash": "e90d714ee6ed7ceb"
     },
     {
       "path": "netlify/functions/routes/employees.ts",
@@ -9302,8 +9309,8 @@
       "path": "tests/vitest/emailDelivery.test.ts",
       "module": "testing",
       "role": "test",
-      "lines": 270,
-      "hash": "c3dc4c4171f6111e"
+      "lines": 288,
+      "hash": "439e96a909b5ee25"
     },
     {
       "path": "tests/vitest/employeeAttention.test.ts",
@@ -11940,10 +11947,120 @@
       "tags": []
     },
     {
+      "name": "EMAIL_LIFECYCLE",
+      "kind": "variable",
+      "file": "netlify/functions/lib/email/emailDeliveryRecord.ts",
+      "line": 18,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailDeliveryStatus",
+      "kind": "type",
+      "file": "netlify/functions/lib/email/emailDeliveryRecord.ts",
+      "line": 21,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "RANK",
+      "kind": "object",
+      "file": "netlify/functions/lib/email/emailDeliveryRecord.ts",
+      "line": 31,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TIMESTAMP_COLUMN",
+      "kind": "object",
+      "file": "netlify/functions/lib/email/emailDeliveryRecord.ts",
+      "line": 36,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailContext",
+      "kind": "interface",
+      "file": "netlify/functions/lib/email/emailDeliveryRecord.ts",
+      "line": 42,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailDeliveryRow",
+      "kind": "interface",
+      "file": "netlify/functions/lib/email/emailDeliveryRecord.ts",
+      "line": 60,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SELECT",
+      "kind": "variable",
+      "file": "netlify/functions/lib/email/emailDeliveryRecord.ts",
+      "line": 71,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "isAlreadyDelivered",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailDeliveryRecord.ts",
+      "line": 74,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "findDeliveryByIdempotencyKey",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailDeliveryRecord.ts",
+      "line": 77,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "openDelivery",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailDeliveryRecord.ts",
+      "line": 92,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "advanceDelivery",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailDeliveryRecord.ts",
+      "line": 137,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "transport",
       "kind": "variable",
       "file": "netlify/functions/lib/email/emailService.ts",
-      "line": 22,
+      "line": 24,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -11953,7 +12070,7 @@
       "name": "EmailSendResult",
       "kind": "type",
       "file": "netlify/functions/lib/email/emailService.ts",
-      "line": 24,
+      "line": 26,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -11963,7 +12080,7 @@
       "name": "SendEmailOptions",
       "kind": "interface",
       "file": "netlify/functions/lib/email/emailService.ts",
-      "line": 45,
+      "line": 56,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -11973,7 +12090,7 @@
       "name": "normaliseRecipients",
       "kind": "function",
       "file": "netlify/functions/lib/email/emailService.ts",
-      "line": 58,
+      "line": 69,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -11983,7 +12100,7 @@
       "name": "sendEmail",
       "kind": "function",
       "file": "netlify/functions/lib/email/emailService.ts",
-      "line": 86,
+      "line": 97,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -11993,7 +12110,7 @@
       "name": "EmailDeliveryStatus",
       "kind": "interface",
       "file": "netlify/functions/lib/email/emailService.ts",
-      "line": 132,
+      "line": 182,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -12003,7 +12120,7 @@
       "name": "getEmailDeliveryStatus",
       "kind": "function",
       "file": "netlify/functions/lib/email/emailService.ts",
-      "line": 153,
+      "line": 203,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -12063,7 +12180,7 @@
       "name": "EmailFailureReason",
       "kind": "type",
       "file": "netlify/functions/lib/email/emailTransport.ts",
-      "line": 61,
+      "line": 65,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -20875,7 +20992,7 @@
       "name": "DeliverRunResult",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/payrollPayslipDelivery.ts",
-      "line": 200,
+      "line": 212,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -20885,7 +21002,7 @@
       "name": "deliverRunPayslips",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payrollPayslipDelivery.ts",
-      "line": 202,
+      "line": 214,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -20895,7 +21012,7 @@
       "name": "listRunDeliveries",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payrollPayslipDelivery.ts",
-      "line": 233,
+      "line": 245,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -24965,7 +25082,7 @@
       "name": "ProvisionResult",
       "kind": "interface",
       "file": "netlify/functions/lib/hr/accountProvisioning.ts",
-      "line": 69,
+      "line": 80,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -24975,7 +25092,7 @@
       "name": "provisionAccount",
       "kind": "function",
       "file": "netlify/functions/lib/hr/accountProvisioning.ts",
-      "line": 75,
+      "line": 86,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -24985,7 +25102,7 @@
       "name": "acceptAccountInvite",
       "kind": "function",
       "file": "netlify/functions/lib/hr/accountProvisioning.ts",
-      "line": 147,
+      "line": 158,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -35185,7 +35302,7 @@
       "name": "_sendWhatsApp",
       "kind": "function",
       "file": "netlify/functions/lib/notify.ts",
-      "line": 356,
+      "line": 372,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -35195,7 +35312,7 @@
       "name": "notifyMany",
       "kind": "function",
       "file": "netlify/functions/lib/notify.ts",
-      "line": 407,
+      "line": 423,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145718,10 +145835,46 @@
       ]
     },
     {
+      "name": "openMock",
+      "kind": "variable",
+      "file": "tests/vitest/emailDelivery.test.ts",
+      "line": 20,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "advanceMock",
+      "kind": "variable",
+      "file": "tests/vitest/emailDelivery.test.ts",
+      "line": 21,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "CTX",
+      "kind": "object",
+      "file": "tests/vitest/emailDelivery.test.ts",
+      "line": 28,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
       "name": "GOOD_ENV",
       "kind": "variable",
       "file": "tests/vitest/emailDelivery.test.ts",
-      "line": 18,
+      "line": 30,
       "module": "testing",
       "exported": false,
       "container": "",
@@ -145733,7 +145886,7 @@
       "name": "load",
       "kind": "function",
       "file": "tests/vitest/emailDelivery.test.ts",
-      "line": 103,
+      "line": 121,
       "module": "testing",
       "exported": false,
       "container": "",
@@ -145745,7 +145898,7 @@
       "name": "load",
       "kind": "function",
       "file": "tests/vitest/emailDelivery.test.ts",
-      "line": 221,
+      "line": 239,
       "module": "testing",
       "exported": false,
       "container": "",
@@ -145757,7 +145910,7 @@
       "name": "load",
       "kind": "function",
       "file": "tests/vitest/emailDelivery.test.ts",
-      "line": 252,
+      "line": 270,
       "module": "testing",
       "exported": false,
       "container": "",
@@ -154233,7 +154386,7 @@
       ],
       "schema": "TestSendSchema",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 48,
+      "line": 50,
       "module": "platform"
     },
     {
@@ -178373,6 +178526,90 @@
       "file": "supabase/migrations/20260929000003_hr_employee_assignment_tx.sql",
       "line": 36,
       "module": "hr"
+    },
+    {
+      "name": "public.email_deliveries",
+      "kind": "table",
+      "file": "supabase/migrations/20261101000000_email_delivery_backbone.sql",
+      "line": 31,
+      "module": "platform"
+    },
+    {
+      "name": "email_deliveries_idempotency_uidx",
+      "kind": "index",
+      "file": "supabase/migrations/20261101000000_email_delivery_backbone.sql",
+      "line": 93,
+      "module": "platform"
+    },
+    {
+      "name": "email_deliveries_provider_msg_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20261101000000_email_delivery_backbone.sql",
+      "line": 98,
+      "module": "platform"
+    },
+    {
+      "name": "email_deliveries_status_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20261101000000_email_delivery_backbone.sql",
+      "line": 103,
+      "module": "platform"
+    },
+    {
+      "name": "email_deliveries_source_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20261101000000_email_delivery_backbone.sql",
+      "line": 105,
+      "module": "platform"
+    },
+    {
+      "name": "email_deliveries_module_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20261101000000_email_delivery_backbone.sql",
+      "line": 108,
+      "module": "platform"
+    },
+    {
+      "name": "public.email_delivery_events",
+      "kind": "table",
+      "file": "supabase/migrations/20261101000000_email_delivery_backbone.sql",
+      "line": 123,
+      "module": "platform"
+    },
+    {
+      "name": "email_delivery_events_provider_event_uidx",
+      "kind": "index",
+      "file": "supabase/migrations/20261101000000_email_delivery_backbone.sql",
+      "line": 151,
+      "module": "platform"
+    },
+    {
+      "name": "email_delivery_events_delivery_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20261101000000_email_delivery_backbone.sql",
+      "line": 153,
+      "module": "platform"
+    },
+    {
+      "name": "email_delivery_events_unmatched_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20261101000000_email_delivery_backbone.sql",
+      "line": 157,
+      "module": "platform"
+    },
+    {
+      "name": "public.tg_email_deliveries_touch",
+      "kind": "function",
+      "file": "supabase/migrations/20261101000000_email_delivery_backbone.sql",
+      "line": 179,
+      "module": "platform"
+    },
+    {
+      "name": "email_deliveries_touch",
+      "kind": "trigger",
+      "file": "supabase/migrations/20261101000000_email_delivery_backbone.sql",
+      "line": 187,
+      "module": "platform"
     }
   ],
   "e2eSuites": [

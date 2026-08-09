@@ -17,6 +17,8 @@ import { readEmailConfig, type EmailConfigProblem, type EmailSender } from './em
 import { resendTransport } from './resendTransport';
 import { isEmailAddress } from './emailConfig';
 import type { EmailFailureReason, EmailMessage, NormalisedEmailMessage } from './emailTransport';
+import { openDelivery, advanceDelivery, isAlreadyDelivered, type EmailContext } from './emailDeliveryRecord';
+export type { EmailContext } from './emailDeliveryRecord';
 
 /** The single transport. See emailTransport.ts for why the boundary exists with only one. */
 const transport = resendTransport;
@@ -32,6 +34,13 @@ export type EmailSendResult =
       recipients: string[];
       /** True when configuration and message were validated but nothing was transmitted. */
       dryRun: boolean;
+      /** The authoritative delivery record. Null only on a dry run, which records nothing. */
+      deliveryId: string | null;
+      /**
+       * True when this idempotency key had ALREADY reached the provider, so nothing was sent a
+       * second time. The caller succeeded — it just did not cause a new email.
+       */
+      deduplicated: boolean;
     }
   | {
       ok: false;
@@ -40,6 +49,8 @@ export type EmailSendResult =
       message: string;
       /** Present only for `not_configured`, naming the variables at fault. */
       problems?: EmailConfigProblem[];
+      /** Set once a delivery record exists. Absent when the failure preceded it. */
+      deliveryId?: string;
     };
 
 export interface SendEmailOptions {
@@ -83,7 +94,11 @@ function normaliseRecipients(to: string | string[]): { ok: true; to: string[] } 
  * different operational problem from "this particular message is malformed", and an operator
  * staring at a missing sender should not first be told about a blank subject.
  */
-export async function sendEmail(message: EmailMessage, options: SendEmailOptions = {}): Promise<EmailSendResult> {
+export async function sendEmail(
+  message: EmailMessage,
+  context: EmailContext,
+  options: SendEmailOptions = {},
+): Promise<EmailSendResult> {
   const configResult = readEmailConfig();
   if (!configResult.configured) {
     return {
@@ -111,19 +126,54 @@ export async function sendEmail(message: EmailMessage, options: SendEmailOptions
     replyTo: message.replyTo ?? config.replyTo,
   };
 
+  // A dry run transmits nothing, so it records nothing. Opening a delivery row here would put an
+  // email in the audit trail that never left the building — and would burn the idempotency key,
+  // making the real send that follows look like a duplicate.
   if (options.dryRun) {
     return {
       ok: true, providerMessageId: null, sender: config.sender.formatted,
       transport: transport.name, recipients: normalised.to, dryRun: true,
+      deliveryId: null, deduplicated: false,
     };
   }
 
-  const outcome = await transport.send(config, normalised);
-  if (!outcome.ok) return { ok: false, reason: 'transport_error', message: outcome.message };
+  const delivery = await openDelivery(context, {
+    recipient: normalised.to.join(', '),
+    sender: config.sender.formatted,
+    replyTo: normalised.replyTo,
+    subject: normalised.subject,
+    provider: transport.name,
+  });
+
+  // DURABLE IDEMPOTENCY. This key has already reached the provider, so the email exists — sending
+  // again would deliver a second copy to a real person. The caller is told it succeeded, because
+  // it did: the email they asked for is out. `deduplicated` says no new one was created.
+  if (isAlreadyDelivered(delivery.status)) {
+    return {
+      ok: true, providerMessageId: delivery.provider_message_id, sender: delivery.sender,
+      transport: transport.name, recipients: normalised.to, dryRun: false,
+      deliveryId: delivery.id, deduplicated: true,
+    };
+  }
+
+  // The provider's own idempotency is passed as an ADDITIONAL safeguard, never the primary one:
+  // Resend's retention window is finite, the unique index above is not.
+  const outcome = await transport.send(config, normalised, context.idempotencyKey);
+
+  if (!outcome.ok) {
+    await advanceDelivery(delivery.id, 'failed', { errorCode: 'transport_error', errorMessage: outcome.message });
+    return { ok: false, reason: 'transport_error', message: outcome.message, deliveryId: delivery.id };
+  }
+
+  // `sent` means the PROVIDER ACCEPTED it. `delivered` is a different fact and only a webhook may
+  // set it — inferring delivery from acceptance is exactly the false evidence this table exists
+  // to prevent.
+  await advanceDelivery(delivery.id, 'sent', { providerMessageId: outcome.providerMessageId });
 
   return {
     ok: true, providerMessageId: outcome.providerMessageId, sender: config.sender.formatted,
     transport: transport.name, recipients: normalised.to, dryRun: false,
+    deliveryId: delivery.id, deduplicated: false,
   };
 }
 

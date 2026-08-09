@@ -324,10 +324,26 @@ async function _sendEmail(
   // Configuration, sender resolution and provider handling all live in the canonical service.
   // This function's only job is to turn a notification into a message, record what happened, and
   // log it — it no longer knows that Resend exists, nor what the sender address is.
+  // Key derived from the notification itself — the same notification can never mail twice.
+  // With no notifications row (in-app opted out) it falls back to the caller's dedupe key or the
+  // user+type+title, which is still CONTENT, never a random value that could not dedupe.
+  const idempotencyKey = notificationId
+    ? `notification:${notificationId}`
+    : `notification:${payload.userId}:${payload.type}:${payload.dedupeKey ?? payload.title}`;
+
   const result = await sendEmail({
     to:      user.email!,
     subject: payload.title,
     html:    buildEmailHtml(payload, user.fullName, companyName),
+  }, {
+    moduleKey: payload.module ?? 'platform',
+    useCase: 'notification',
+    idempotencyKey,
+    sourceModule: payload.module ?? 'platform',
+    sourceEntityType: payload.sourceType ?? 'notification',
+    sourceEntityId: payload.sourceId ?? notificationId,
+    notificationId,
+    actorUserId: payload.userId,
   });
 
   if (result.ok) {

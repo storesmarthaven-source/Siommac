@@ -21,7 +21,7 @@ import type { EmailTransport, NormalisedEmailMessage, TransportOutcome } from '.
 export const resendTransport: EmailTransport = {
   name: 'resend',
 
-  async send(config: EmailConfig, message: NormalisedEmailMessage): Promise<TransportOutcome> {
+  async send(config: EmailConfig, message: NormalisedEmailMessage, idempotencyKey?: string): Promise<TransportOutcome> {
     try {
       const { Resend } = await import('resend');
       const client = new Resend(config.apiKey);
@@ -42,7 +42,7 @@ export const resendTransport: EmailTransport = {
               })),
             }
           : {}),
-      });
+      }, idempotencyKey ? { idempotencyKey } : undefined);
 
       if (error) {
         // The provider's own words are the most useful thing an operator can be given here

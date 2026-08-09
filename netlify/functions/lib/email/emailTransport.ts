@@ -49,7 +49,11 @@ export type TransportOutcome =
 export interface EmailTransport {
   /** Stable identifier surfaced by the status endpoint and recorded against deliveries. */
   readonly name: 'resend';
-  send(config: EmailConfig, message: NormalisedEmailMessage): Promise<TransportOutcome>;
+  /**
+   * `idempotencyKey` is forwarded to the provider as a SECOND line of defence. SIOMAC's own
+   * unique index is the primary guarantee — provider retention windows are finite.
+   */
+  send(config: EmailConfig, message: NormalisedEmailMessage, idempotencyKey?: string): Promise<TransportOutcome>;
 }
 
 /**

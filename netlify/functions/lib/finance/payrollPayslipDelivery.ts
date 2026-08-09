@@ -162,6 +162,18 @@ export async function deliverPayslip(payslipId: string, actorId: string): Promis
         subject: `Payslip ${snapshot.payslipNo} — ${snapshot.periodLabel}`,
         html: buildDeliveryHtml(snapshot.payslipNo, snapshot.periodLabel, snapshot.employer.name, snapshot.employee.name),
         attachments: [{ filename: `Payslip-${snapshot.payslipNo}.pdf`, contentBase64: pdf.toString('base64'), contentType: 'application/pdf' }],
+      }, {
+        moduleKey: 'finance_payroll',
+        useCase: 'payslip',
+        // Keyed to THIS delivery attempt, not to the payslip: re-delivering a payslip is a
+        // legitimate operator action that must actually send, while retrying the SAME attempt
+        // (a crash between send and record) must not deliver a second copy.
+        idempotencyKey: `payslip:${ps.id}:${queued.id}`,
+        sourceModule: 'finance_payroll',
+        sourceEntityType: 'payslip',
+        sourceEntityId: ps.id,
+        actorUserId: actorId,
+        metadata: { runId: ps.run_id, payslipNo: ps.payslip_no, employeeId: ps.employee_id },
       });
       if (!sendResult.ok) {
         // Configuration was checked above, so reaching here unconfigured means it changed

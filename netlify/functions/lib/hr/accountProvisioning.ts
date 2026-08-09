@@ -56,12 +56,23 @@ async function uniqueWorkEmail(local: string, domain: string, excludeUserId: str
  * boolean rather than throwing — and why an unconfigured platform must still return false rather
  * than pretending, which is what a hardcoded sender fallback used to make possible.
  */
-async function sendInviteEmail(to: string, link: string, name: string): Promise<boolean> {
+async function sendInviteEmail(to: string, link: string, name: string, employeeId: string): Promise<boolean> {
   if (!to) return false;
   const result = await sendEmail({
     to,
     subject: 'Set up your work account',
     html: `<p>Hi ${name || 'there'},</p><p>Your work account is ready. Click below to set your password and finish setup:</p><p><a href="${link}">Set my password</a></p><p>This link expires in 7 days. If you didn't expect this, ignore it.</p>`,
+  }, {
+    moduleKey: 'hr_onboarding',
+    useCase: 'account_invite',
+    // Derived from the invite TOKEN, which is minted fresh per invite. So re-sending the same
+    // invite cannot mail twice, while reissuing an expired invite — a legitimate HR act that
+    // revokes the old token and mints a new one — produces a new key and really sends.
+    idempotencyKey: `account_invite:${createHash('sha256').update(link).digest('hex').slice(0, 32)}`,
+    sourceModule: 'hr_onboarding',
+    sourceEntityType: 'employee',
+    sourceEntityId: employeeId,
+    actorUserId: employeeId,
   });
   return result.ok;
 }
@@ -116,7 +127,7 @@ export async function provisionAccount(actorId: string, args: { employeeId: stri
   await sb.from('hr_onboarding_account_invites').update({ status: 'revoked' }).eq('user_id', emp.id).eq('status', 'pending');
 
   const link = `${appBaseUrl()}/set-password?token=${token}`;
-  const sent = (args.sendInvite ?? true) ? await sendInviteEmail(emp.personal_email ?? '', link, emp.full_name ?? '') : false;
+  const sent = (args.sendInvite ?? true) ? await sendInviteEmail(emp.personal_email ?? '', link, emp.full_name ?? '', emp.id) : false;
 
   const { error: iErr } = await sb.from('hr_onboarding_account_invites').insert({
     user_id: emp.id, case_id: kase?.id ?? null, token_hash: tokenHash, work_email: workEmail,

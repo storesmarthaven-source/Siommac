@@ -230,19 +230,30 @@ ADDRESS_RE	variable	platform	false		netlify/functions/lib/email/emailConfig.ts	5
 isEmailAddress	function	platform	true		netlify/functions/lib/email/emailConfig.ts	53	
 parseSender	function	platform	true		netlify/functions/lib/email/emailConfig.ts	59	
 readEmailConfig	function	platform	true		netlify/functions/lib/email/emailConfig.ts	86	
-transport	variable	platform	false		netlify/functions/lib/email/emailService.ts	22	
-EmailSendResult	type	platform	true		netlify/functions/lib/email/emailService.ts	24	
-SendEmailOptions	interface	platform	true		netlify/functions/lib/email/emailService.ts	45	
-normaliseRecipients	function	platform	false		netlify/functions/lib/email/emailService.ts	58	
-sendEmail	function	platform	true		netlify/functions/lib/email/emailService.ts	86	
-EmailDeliveryStatus	interface	platform	true		netlify/functions/lib/email/emailService.ts	132	
-getEmailDeliveryStatus	function	platform	true		netlify/functions/lib/email/emailService.ts	153	
+EMAIL_LIFECYCLE	variable	platform	true		netlify/functions/lib/email/emailDeliveryRecord.ts	18	
+EmailDeliveryStatus	type	platform	true		netlify/functions/lib/email/emailDeliveryRecord.ts	21	
+RANK	object	platform	false		netlify/functions/lib/email/emailDeliveryRecord.ts	31	
+TIMESTAMP_COLUMN	object	platform	false		netlify/functions/lib/email/emailDeliveryRecord.ts	36	
+EmailContext	interface	platform	true		netlify/functions/lib/email/emailDeliveryRecord.ts	42	
+EmailDeliveryRow	interface	platform	true		netlify/functions/lib/email/emailDeliveryRecord.ts	60	
+SELECT	variable	platform	false		netlify/functions/lib/email/emailDeliveryRecord.ts	71	
+isAlreadyDelivered	function	platform	true		netlify/functions/lib/email/emailDeliveryRecord.ts	74	
+findDeliveryByIdempotencyKey	function	platform	true		netlify/functions/lib/email/emailDeliveryRecord.ts	77	
+openDelivery	function	platform	true		netlify/functions/lib/email/emailDeliveryRecord.ts	92	
+advanceDelivery	function	platform	true		netlify/functions/lib/email/emailDeliveryRecord.ts	137	
+transport	variable	platform	false		netlify/functions/lib/email/emailService.ts	24	
+EmailSendResult	type	platform	true		netlify/functions/lib/email/emailService.ts	26	
+SendEmailOptions	interface	platform	true		netlify/functions/lib/email/emailService.ts	56	
+normaliseRecipients	function	platform	false		netlify/functions/lib/email/emailService.ts	69	
+sendEmail	function	platform	true		netlify/functions/lib/email/emailService.ts	97	
+EmailDeliveryStatus	interface	platform	true		netlify/functions/lib/email/emailService.ts	182	
+getEmailDeliveryStatus	function	platform	true		netlify/functions/lib/email/emailService.ts	203	
 EmailAttachment	interface	platform	true		netlify/functions/lib/email/emailTransport.ts	18	
 EmailMessage	interface	platform	true		netlify/functions/lib/email/emailTransport.ts	26	
 NormalisedEmailMessage	interface	platform	true		netlify/functions/lib/email/emailTransport.ts	39	
 TransportOutcome	type	platform	true		netlify/functions/lib/email/emailTransport.ts	45	
 EmailTransport	interface	platform	true		netlify/functions/lib/email/emailTransport.ts	49	
-EmailFailureReason	type	platform	true		netlify/functions/lib/email/emailTransport.ts	61	
+EmailFailureReason	type	platform	true		netlify/functions/lib/email/emailTransport.ts	65	
 resendTransport	object	platform	true		netlify/functions/lib/email/resendTransport.ts	21	
 send	method	platform	false		netlify/functions/lib/email/resendTransport.ts	24	resendTransport
 ApBillStatus	type	finance	true		netlify/functions/lib/finance/accountsPayable.ts	18	
@@ -1120,9 +1131,9 @@ maskEmail	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDe
 escHtml	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	77	
 buildDeliveryHtml	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	83	
 deliverPayslip	function	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	105	
-DeliverRunResult	interface	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	200	
-deliverRunPayslips	function	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	202	
-listRunDeliveries	function	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	233	
+DeliverRunResult	interface	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	212	
+deliverRunPayslips	function	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	214	
+listRunDeliveries	function	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	245	
 PayslipDto	interface	payroll	true		netlify/functions/lib/finance/payrollPayslips.ts	32	
 DbPayslipRow	interface	payroll	false		netlify/functions/lib/finance/payrollPayslips.ts	44	
 notifyPayslipReady	function	payroll	false		netlify/functions/lib/finance/payrollPayslips.ts	57	
@@ -1529,9 +1540,9 @@ slugPart	function	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	31
 deriveLocalPart	function	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	33	
 uniqueWorkEmail	function	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	40	
 sendInviteEmail	function	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	59	
-ProvisionResult	interface	hr	true		netlify/functions/lib/hr/accountProvisioning.ts	69	
-provisionAccount	function	hr	true		netlify/functions/lib/hr/accountProvisioning.ts	75	
-acceptAccountInvite	function	hr	true		netlify/functions/lib/hr/accountProvisioning.ts	147	
+ProvisionResult	interface	hr	true		netlify/functions/lib/hr/accountProvisioning.ts	80	
+provisionAccount	function	hr	true		netlify/functions/lib/hr/accountProvisioning.ts	86	
+acceptAccountInvite	function	hr	true		netlify/functions/lib/hr/accountProvisioning.ts	158	
 err	function	hr	false		netlify/functions/lib/hr/attendanceCapture.ts	13	
 distanceMeters	function	hr	false		netlify/functions/lib/hr/attendanceCapture.ts	16	
 checkGeofence	function	hr	false		netlify/functions/lib/hr/attendanceCapture.ts	25	
@@ -2551,8 +2562,8 @@ EmailDeliveryStatus	type	platform	false		netlify/functions/lib/notify.ts	249
 emailDeliveryStatusFor	function	platform	true		netlify/functions/lib/notify.ts	260	
 _recordEmailDelivery	function	platform	false		netlify/functions/lib/notify.ts	278	
 _sendEmail	function	platform	false		netlify/functions/lib/notify.ts	313	
-_sendWhatsApp	function	platform	false		netlify/functions/lib/notify.ts	356	
-notifyMany	function	platform	true		netlify/functions/lib/notify.ts	407	
+_sendWhatsApp	function	platform	false		netlify/functions/lib/notify.ts	372	
+notifyMany	function	platform	true		netlify/functions/lib/notify.ts	423	
 RecordRefInput	interface	workflow	true		netlify/functions/lib/orchestration/recordLinkService.ts	13	
 LinkActor	interface	workflow	true		netlify/functions/lib/orchestration/recordLinkService.ts	22	
 assertCanView	function	workflow	false		netlify/functions/lib/orchestration/recordLinkService.ts	24	
@@ -12954,10 +12965,13 @@ TODAY	variable	testing	false	test	tests/vitest/documentHealth.test.ts	14
 req	function	testing	false	test	tests/vitest/documentHealth.test.ts	16	
 doc	function	testing	false	test	tests/vitest/documentHealth.test.ts	24	
 sendMock	variable	testing	false	test	tests/vitest/emailDelivery.test.ts	13	
-GOOD_ENV	variable	testing	false	test	tests/vitest/emailDelivery.test.ts	18	
-load	function	testing	false	test	tests/vitest/emailDelivery.test.ts	103	
-load	function	testing	false	test	tests/vitest/emailDelivery.test.ts	221	
-load	function	testing	false	test	tests/vitest/emailDelivery.test.ts	252	
+openMock	variable	testing	false	test	tests/vitest/emailDelivery.test.ts	20	
+advanceMock	variable	testing	false	test	tests/vitest/emailDelivery.test.ts	21	
+CTX	object	testing	false	test	tests/vitest/emailDelivery.test.ts	28	
+GOOD_ENV	variable	testing	false	test	tests/vitest/emailDelivery.test.ts	30	
+load	function	testing	false	test	tests/vitest/emailDelivery.test.ts	121	
+load	function	testing	false	test	tests/vitest/emailDelivery.test.ts	239	
+load	function	testing	false	test	tests/vitest/emailDelivery.test.ts	270	
 TODAY	variable	hr	false	test	tests/vitest/employeeAttention.test.ts	14	
 input	function	hr	false	test	tests/vitest/employeeAttention.test.ts	16	
 ROOT	variable	hr	false	test	tests/vitest/employeeImportCreatePath.test.ts	20	

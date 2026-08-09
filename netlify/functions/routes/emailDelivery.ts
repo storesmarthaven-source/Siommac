@@ -43,6 +43,8 @@ const TestSendSchema = z.object({
   to: z.string().min(3).max(320),
   subject: z.string().min(1).max(200).optional(),
   dryRun: z.boolean().optional(),
+  /** Optional caller-supplied key so a retried request cannot mail twice. */
+  idempotencyKey: z.string().min(8).max(200).optional(),
 });
 
 router.post('/email/test-send', async c => {
@@ -52,11 +54,25 @@ router.post('/email/test-send', async c => {
 
   const dryRun = v.data.dryRun !== false;
   const subject = v.data.subject?.trim() || 'Siomac email delivery test';
+  // The OPERATION being made idempotent here is this request. An operator who clicks Test twice
+  // means two tests, so a content-derived key would be wrong — it would silently swallow the
+  // second. A caller may pass its own key to make a specific retry safe (e.g. a UI resubmitting
+  // after a timeout), and that retry then dedupes exactly as it should.
+  const idempotencyKey = v.data.idempotencyKey?.trim() || `test_email:${actor.id}:${crypto.randomUUID()}`;
+
   const result = await sendEmail({
     to: v.data.to,
     subject,
     html: `<p>This is a test of Siomac email delivery.</p><p>If you received it, the platform's outbound email is configured correctly.</p>`,
     text: 'This is a test of Siomac email delivery. If you received it, the platform\'s outbound email is configured correctly.',
+  }, {
+    moduleKey: 'platform',
+    useCase: 'test_email',
+    idempotencyKey,
+    sourceModule: 'platform',
+    sourceEntityType: 'email_delivery_test',
+    sourceEntityId: actor.id,
+    actorUserId: actor.id,
   }, { dryRun });
 
   // A REAL test send is an administrative act against an external service: it is recorded, with
@@ -87,9 +103,13 @@ router.post('/email/test-send', async c => {
       transport: result.transport,
       recipients: result.recipients,
       providerMessageId: result.providerMessageId,
-      message: result.dryRun
-        ? 'Configuration and message are valid. Nothing was sent — set dryRun to false to deliver a real test email.'
-        : 'Test email accepted by the provider.',
+      deliveryId: result.deliveryId,
+      deduplicated: result.deduplicated,
+      message: result.deduplicated
+        ? 'This idempotency key had already reached the provider — nothing was sent again.'
+        : result.dryRun
+          ? 'Configuration and message are valid. Nothing was sent — set dryRun to false to deliver a real test email.'
+          : 'Test email accepted by the provider.',
     },
   });
 });

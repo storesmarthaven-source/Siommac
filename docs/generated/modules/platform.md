@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `01d42ff89140cb9233e36a2f`
+Source fingerprint: `55f8282455498d9a53323e53`
 
-Files: 314 | Symbols: 2845 | Widgets: 0 | Unique mounted endpoints: 34 | Route definitions: 34 mounted + 15 unmounted | API calls: 50 | DB objects: 305 | E2E suites: 0
+Files: 315 | Symbols: 2856 | Widgets: 0 | Unique mounted endpoints: 34 | Route definitions: 34 mounted + 15 unmounted | API calls: 50 | DB objects: 317 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -32,7 +32,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/calendar/update` | `calendar.view` | requirePermission, userCan | `UpdateSchema` | `netlify/functions/routes/calendar.ts:840` | useUpdateEntry @ src/api/calendar.ts:113 | calendar |
 | `/api/deleteProjectSite` | `sites.delete` | assertInScope, requirePermission | `DeleteSiteSchema` | `netlify/functions/routes/sites.ts:122` | res @ src/api/sites.ts:152<br>deleteProjectSiteApi @ src/components/sections/ProjectSites/api.ts:115 | - |
 | `/api/email/status` | `settings.system.view` | requirePermission | `-` | `netlify/functions/routes/emailDelivery.ts:28` | - | emailDelivery |
-| `/api/email/test-send` | `settings.system.manage` | requirePermission | `TestSendSchema` | `netlify/functions/routes/emailDelivery.ts:48` | - | emailDelivery |
+| `/api/email/test-send` | `settings.system.manage` | requirePermission | `TestSendSchema` | `netlify/functions/routes/emailDelivery.ts:50` | - | emailDelivery |
 | `/api/getMyPreferences` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:113` | res @ src/api/notifications.ts:137 | - |
 | `/api/getUnreadCount` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:149` | res @ src/api/notifications.ts:73 | - |
 | `/api/listProjectSites` | `-` | requireUser | `-` | `netlify/functions/routes/sites.ts:58` | initializeMap @ src/components/livemap/LiveMapModule.ts:192<br>res @ src/components/sections/AttendanceDashboard/api.ts:53<br>res @ src/components/sections/ProjectSites/api.ts:43 | - |
@@ -445,6 +445,10 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | function | `public.hr_access_assignment_revoke_tx` | `supabase/migrations/20260928000002_hr_access_assignment_tx.sql:148` |
 | function | `public.hr_readiness_recalculate` | `supabase/migrations/20260929000001_hr_readiness_lifecycle_tx.sql:143` |
 | function | `public.hr_readiness_work_item_transition_tx` | `supabase/migrations/20260929000001_hr_readiness_lifecycle_tx.sql:183` |
+| table | `public.email_deliveries` | `supabase/migrations/20261101000000_email_delivery_backbone.sql:31` |
+| table | `public.email_delivery_events` | `supabase/migrations/20261101000000_email_delivery_backbone.sql:123` |
+| function | `public.tg_email_deliveries_touch` | `supabase/migrations/20261101000000_email_delivery_backbone.sql:179` |
+| trigger | `email_deliveries_touch` | `supabase/migrations/20261101000000_email_delivery_backbone.sql:187` |
 
 ## E2E Suites
 
@@ -459,7 +463,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | Role | Path | Lines |
 |---|---|---:|
 | backend-route | `netlify/functions/routes/calendar.ts` | 1062 |
-| backend-route | `netlify/functions/routes/emailDelivery.ts` | 98 |
+| backend-route | `netlify/functions/routes/emailDelivery.ts` | 118 |
 | backend-route | `netlify/functions/routes/hrContracts.ts` | 170 |
 | backend-route | `netlify/functions/routes/hrCrew.ts` | 186 |
 | backend-route | `netlify/functions/routes/hrStatutoryProfile.ts` | 87 |

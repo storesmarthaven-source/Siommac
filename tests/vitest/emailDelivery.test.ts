@@ -15,6 +15,18 @@ vi.mock('resend', () => ({
   Resend: class { emails = { send: sendMock }; },
 }));
 
+// The delivery-record layer talks to Postgres; these tests are about what emailService DOES with
+// it, so it is stubbed here and proven for real by scripts/e2e/suites/emailDeliveryLifecycle.mjs.
+const openMock = vi.hoisted(() => vi.fn());
+const advanceMock = vi.hoisted(() => vi.fn());
+vi.mock('../../netlify/functions/lib/email/emailDeliveryRecord', async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, openDelivery: openMock, advanceDelivery: advanceMock };
+});
+
+/** Minimal business context. Every send needs one — that is what makes an unrecorded email impossible. */
+const CTX = { moduleKey: 'platform', useCase: 'unit_test', idempotencyKey: 'unit:test:key' };
+
 const GOOD_ENV = {
   RESEND_API_KEY: 're_test_key_value',
   RESEND_FROM_EMAIL: 'Siomac <no-reply@example.com>',
@@ -96,6 +108,12 @@ describe('sendEmail', () => {
   beforeEach(() => {
     vi.resetModules();
     sendMock.mockReset();
+    openMock.mockReset();
+    advanceMock.mockReset();
+    openMock.mockResolvedValue({ id: 'del_1', status: 'pending', provider_message_id: null,
+      idempotency_key: CTX.idempotencyKey, recipient: 'someone@example.com', sender: 'Siomac <no-reply@example.com>',
+      sent_at: null, delivered_at: null });
+    advanceMock.mockResolvedValue({ status: 'sent', moved: true });
     process.env = { ...ORIGINAL, ...GOOD_ENV };
   });
   afterEach(() => { process.env = ORIGINAL; });
@@ -105,7 +123,7 @@ describe('sendEmail', () => {
   it('sends through the transport and returns the resolved sender', async () => {
     sendMock.mockResolvedValue({ data: { id: 'msg_1' }, error: null });
     const sendEmail = await load();
-    const result = await sendEmail({ to: 'someone@example.com', subject: 'Hi', html: '<p>Hi</p>' });
+    const result = await sendEmail({ to: 'someone@example.com', subject: 'Hi', html: '<p>Hi</p>' }, CTX);
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -119,7 +137,7 @@ describe('sendEmail', () => {
   it('classifies a missing configuration as not_configured and never calls the transport', async () => {
     process.env = { ...ORIGINAL, RESEND_API_KEY: '', RESEND_FROM_EMAIL: '' };
     const sendEmail = await load();
-    const result = await sendEmail({ to: 'someone@example.com', subject: 'Hi', html: '<p>Hi</p>' });
+    const result = await sendEmail({ to: 'someone@example.com', subject: 'Hi', html: '<p>Hi</p>' }, CTX);
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -133,7 +151,7 @@ describe('sendEmail', () => {
     // transport_error => failed (tried and rejected).
     sendMock.mockResolvedValue({ data: null, error: { message: 'The example.com domain is not verified' } });
     const sendEmail = await load();
-    const result = await sendEmail({ to: 'someone@example.com', subject: 'Hi', html: '<p>Hi</p>' });
+    const result = await sendEmail({ to: 'someone@example.com', subject: 'Hi', html: '<p>Hi</p>' }, CTX);
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -144,7 +162,7 @@ describe('sendEmail', () => {
   it('treats a thrown transport error as transport_error rather than escaping', async () => {
     sendMock.mockRejectedValue(new Error('socket hang up'));
     const sendEmail = await load();
-    const result = await sendEmail({ to: 'someone@example.com', subject: 'Hi', html: '<p>Hi</p>' });
+    const result = await sendEmail({ to: 'someone@example.com', subject: 'Hi', html: '<p>Hi</p>' }, CTX);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.reason).toBe('transport_error');
@@ -152,7 +170,7 @@ describe('sendEmail', () => {
 
   it('rejects an invalid recipient by name, without calling the transport', async () => {
     const sendEmail = await load();
-    const result = await sendEmail({ to: 'nope', subject: 'Hi', html: '<p>Hi</p>' });
+    const result = await sendEmail({ to: 'nope', subject: 'Hi', html: '<p>Hi</p>' }, CTX);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.reason).toBe('invalid_recipient');
@@ -163,7 +181,7 @@ describe('sendEmail', () => {
   it('de-duplicates recipients case-insensitively', async () => {
     sendMock.mockResolvedValue({ data: { id: 'msg_2' }, error: null });
     const sendEmail = await load();
-    const result = await sendEmail({ to: ['A@example.com', 'a@example.com'], subject: 'Hi', html: '<p>Hi</p>' });
+    const result = await sendEmail({ to: ['A@example.com', 'a@example.com'], subject: 'Hi', html: '<p>Hi</p>' }, CTX);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.recipients).toEqual(['A@example.com']);
@@ -174,7 +192,7 @@ describe('sendEmail', () => {
     ['body', { to: 'a@example.com', subject: 'Hi', html: '   ' }],
   ])('refuses a message with no %s', async (_label, message) => {
     const sendEmail = await load();
-    const result = await sendEmail(message);
+    const result = await sendEmail(message, CTX);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.reason).toBe('invalid_message');
@@ -183,7 +201,7 @@ describe('sendEmail', () => {
 
   it('a dry run validates everything but transmits nothing', async () => {
     const sendEmail = await load();
-    const result = await sendEmail({ to: 'someone@example.com', subject: 'Hi', html: '<p>Hi</p>' }, { dryRun: true });
+    const result = await sendEmail({ to: 'someone@example.com', subject: 'Hi', html: '<p>Hi</p>' }, CTX, { dryRun: true });
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -196,7 +214,7 @@ describe('sendEmail', () => {
   it('a dry run still reports a configuration problem rather than passing', async () => {
     process.env = { ...ORIGINAL, RESEND_API_KEY: '', RESEND_FROM_EMAIL: '' };
     const sendEmail = await load();
-    const result = await sendEmail({ to: 'a@example.com', subject: 'Hi', html: '<p>x</p>' }, { dryRun: true });
+    const result = await sendEmail({ to: 'a@example.com', subject: 'Hi', html: '<p>x</p>' }, CTX, { dryRun: true });
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.reason).toBe('not_configured');
@@ -208,7 +226,7 @@ describe('sendEmail', () => {
     await sendEmail({
       to: 'a@example.com', subject: 'Payslip', html: '<p>x</p>',
       attachments: [{ filename: 'p.pdf', contentBase64: 'QUJD', contentType: 'application/pdf' }],
-    });
+    }, CTX);
     expect(sendMock.mock.calls[0]?.[0].attachments).toEqual([
       { filename: 'p.pdf', content: 'QUJD', contentType: 'application/pdf' },
     ]);
