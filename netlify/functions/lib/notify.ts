@@ -22,7 +22,7 @@
  * @see docs/ARCHITECTURE.md
  */
 
-import { sendEmail } from './email/emailService';
+import { sendEmail, type EmailSendResult } from './email/emailService';
 import { sb }      from './db';
 
 const logger = {
@@ -164,6 +164,10 @@ export async function notify(payload: NotifyPayload): Promise<void> {
     if (!prefs.in_app && !prefs.email && !prefs.whatsapp) return;
 
     // 2. Persist the in-app notification (rich columns) + record the delivery.
+    // The id is captured because notification_deliveries.notification_id is NOT NULL: every
+    // per-channel delivery record hangs off this row, so the email leg below can only be
+    // recorded when it exists.
+    let notificationId: string | null = null;
     if (prefs.in_app) {
       const insRes = await sb.from('notifications').insert({
         user_id:         userId,
@@ -192,6 +196,7 @@ export async function notify(payload: NotifyPayload): Promise<void> {
           logger.warn('[notify] Failed to persist notification', { userId, type, error: insRes.error.message });
         }
       } else if (insRes.data) {
+        notificationId = insRes.data.id;
         void sb.from('notification_deliveries').insert({
           notification_id: insRes.data.id,
           channel:         'in_app',
@@ -212,9 +217,21 @@ export async function notify(payload: NotifyPayload): Promise<void> {
       .maybeSingle<{ value: string }>()
       .then(r => r.data?.value ?? 'Siomac');
 
-    // 3. Email delivery (Resend)
-    if (prefs.email && user.email) {
-      void _sendEmail(payload, user, companyName);
+    // 3. Email delivery.
+    // AWAITED, unlike the fire-and-forget call this replaces: an outcome you did not wait for is
+    // an outcome you cannot record, and the whole point of this leg is that it leaves evidence.
+    // notify() is already called as a side effect (`void notify(...)`) by its callers, so the
+    // added latency never delays a business action.
+    if (prefs.email) {
+      if (user.email) {
+        await _sendEmail(payload, user, companyName, notificationId);
+      } else {
+        // Opted in with nowhere to send. That is a real, reportable skip — silence here is how
+        // "why did this person never get the email?" becomes unanswerable.
+        await _recordEmailDelivery(notificationId, 'skipped', {
+          error: 'No email address on file for this user.',
+        });
+      }
     }
 
     // 4. WhatsApp delivery (Meta Cloud API)
@@ -229,14 +246,84 @@ export async function notify(payload: NotifyPayload): Promise<void> {
 
 // ── Email via Resend ──────────────────────────────────────────────────────────
 
+type EmailDeliveryStatus = 'pending' | 'sent' | 'failed' | 'skipped';
+
+/**
+ * The rule that decides what an email attempt is RECORDED as.
+ *
+ * Exported and pure so the invariant can be proven directly rather than inferred from a live
+ * send: `sent` is reachable ONLY from an accepted result, so no provider rejection can ever be
+ * recorded as a delivery. `not_configured` is separated from real transport failure because they
+ * are different operational facts — nothing was transmitted versus the provider refused it, and
+ * only the second is worth investigating or retrying.
+ */
+export function emailDeliveryStatusFor(result: EmailSendResult): EmailDeliveryStatus {
+  if (result.ok) return 'sent';
+  return result.reason === 'not_configured' ? 'skipped' : 'failed';
+}
+
+/**
+ * Write (or update) the email leg's row in notification_deliveries.
+ *
+ * ⛔ The email channel previously recorded NOTHING. `notification_deliveries` has carried
+ * `channel`, `provider_message_id` and `error` columns since the table was created, and only
+ * `in_app` rows were ever written — so "did this person actually get the email?" had no answer
+ * anywhere in the system. This is that evidence gap closed.
+ *
+ * ⚠ `notification_id` is NOT NULL with an FK, so a delivery row cannot exist without a
+ * notifications row. A user who opts OUT of in-app but IN to email therefore has no parent to
+ * hang evidence from. That combination is not silently ignored — it is logged as an explicit
+ * recording failure, because pretending to record is worse than admitting the limit.
+ */
+async function _recordEmailDelivery(
+  notificationId: string | null,
+  status: EmailDeliveryStatus,
+  extra: { providerMessageId?: string | null; error?: string | null } = {},
+  deliveryId?: string | null,
+): Promise<string | null> {
+  if (!notificationId) {
+    logger.warn('[notify/email] Cannot record email delivery: no in-app notification row exists for it', { status });
+    return null;
+  }
+  const row = {
+    notification_id:     notificationId,
+    channel:             'email' as const,
+    status,
+    provider_message_id: extra.providerMessageId ?? null,
+    error:               extra.error ?? null,
+    attempted_at:        new Date().toISOString(),
+  };
+
+  if (deliveryId) {
+    const { error } = await sb.from('notification_deliveries')
+      .update({ status, provider_message_id: row.provider_message_id, error: row.error, attempted_at: row.attempted_at })
+      .eq('id', deliveryId);
+    if (error) logger.warn('[notify/email] Failed to finalise email delivery record', { error: error.message });
+    return deliveryId;
+  }
+
+  const { data, error } = await sb.from('notification_deliveries').insert(row).select('id').single<{ id: string }>();
+  if (error) {
+    logger.warn('[notify/email] Failed to record email delivery', { error: error.message, status });
+    return null;
+  }
+  return data.id;
+}
+
 async function _sendEmail(
   payload:      NotifyPayload,
   user:         UserDeliveryInfo,
   companyName:  string,
+  notificationId: string | null,
 ): Promise<void> {
+  // Queued-first, the same rule finance/payrollPayslipDelivery.ts follows: the attempt is
+  // recorded BEFORE the send, so a crash between sending and recording leaves a visible
+  // `pending` row rather than an email that reached someone with no trace that it was ever tried.
+  const deliveryId = await _recordEmailDelivery(notificationId, 'pending');
+
   // Configuration, sender resolution and provider handling all live in the canonical service.
-  // This function's only job is to turn a notification into a message and log the outcome —
-  // it no longer knows that Resend exists, nor what the sender address is.
+  // This function's only job is to turn a notification into a message, record what happened, and
+  // log it — it no longer knows that Resend exists, nor what the sender address is.
   const result = await sendEmail({
     to:      user.email!,
     subject: payload.title,
@@ -244,11 +331,19 @@ async function _sendEmail(
   });
 
   if (result.ok) {
-    logger.info('[notify/email] Sent', { to: user.email, type: payload.type });
+    // `sent` is written ONLY here — on an accepted send. A provider rejection can never reach
+    // this branch, so the record can never claim a delivery the provider refused.
+    await _recordEmailDelivery(notificationId, emailDeliveryStatusFor(result), { providerMessageId: result.providerMessageId }, deliveryId);
+    logger.info('[notify/email] Sent', { to: user.email, type: payload.type, providerMessageId: result.providerMessageId });
     return;
   }
+
   // `not_configured` is an environment state, not an incident — it is the normal case in dev and
-  // in E2E, and logging it at error level trained everyone to ignore this logger.
+  // in E2E, and logging it at error level trained everyone to ignore this logger. It is recorded
+  // as SKIPPED because nothing was transmitted: there is no failed delivery to investigate or
+  // retry, which is a different operational fact from a provider that rejected the message.
+  await _recordEmailDelivery(notificationId, emailDeliveryStatusFor(result), { error: result.message }, deliveryId);
+
   if (result.reason === 'not_configured') {
     logger.warn('[notify/email] Email delivery is not configured — skipping', { reason: result.message });
     return;

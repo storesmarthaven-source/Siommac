@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `896bd9b0216705ed235f93978a79dc993c06d320`  
-Source fingerprint: `60aaadca1bc3bcf394f873cf`  
+Source HEAD: `b732a013fd2bcdb5b28a5b9ac4b5741560b03351`  
+Source fingerprint: `01d42ff89140cb9233e36a2f`  
 Generator version: `1`
 
 ## Use
@@ -19,7 +19,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1349 | 13586 | 51 | 974 | 975 | 17 | 354 | 1414 | 84 | 2677 |
+| 1350 | 13595 | 51 | 974 | 975 | 17 | 354 | 1414 | 85 | 2682 |
 
 ## Modules
 
@@ -29,13 +29,13 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | payroll | 195 | 1978 | 11 | 140 | 140 | 2 | 260 | 28 | [open](modules/payroll.md) |
 | finance | 139 | 1853 | 9 | 156 | 156 | 4 | 202 | 9 | [open](modules/finance.md) |
 | hse | 87 | 1275 | 0 | 144 | 144 | 107 | 65 | 4 | [open](modules/hse.md) |
-| communications | 112 | 1052 | 0 | 93 | 96 | 88 | 158 | 6 | [open](modules/communications.md) |
+| communications | 113 | 1057 | 0 | 93 | 96 | 88 | 158 | 7 | [open](modules/communications.md) |
 | workflow | 47 | 321 | 0 | 40 | 40 | 8 | 128 | 3 | [open](modules/workflow.md) |
 | security | 46 | 387 | 0 | 51 | 51 | 31 | 65 | 4 | [open](modules/security.md) |
 | settings | 43 | 250 | 0 | 26 | 26 | 18 | 21 | 2 | [open](modules/settings.md) |
 | widgets | 72 | 581 | 21 | 15 | 15 | 11 | 14 | 1 | [open](modules/widgets.md) |
-| platform | 314 | 2842 | 0 | 34 | 49 | 50 | 305 | 0 | [open](modules/platform.md) |
-| testing | 39 | 184 | 0 | 0 | 0 | 0 | 0 | 11 | [open](modules/testing.md) |
+| platform | 314 | 2845 | 0 | 34 | 49 | 50 | 305 | 0 | [open](modules/platform.md) |
+| testing | 39 | 185 | 0 | 0 | 0 | 0 | 0 | 11 | [open](modules/testing.md) |
 | enterprise | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | [open](modules/enterprise.md) |
 
 ## Widget and Tile Directory

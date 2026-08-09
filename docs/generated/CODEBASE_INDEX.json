@@ -1,22 +1,22 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "896bd9b0216705ed235f93978a79dc993c06d320",
+    "head": "b732a013fd2bcdb5b28a5b9ac4b5741560b03351",
     "branch": "feat/email-delivery-resend",
-    "fingerprint": "60aaadca1bc3bcf394f873cf",
-    "indexedFiles": 1702
+    "fingerprint": "01d42ff89140cb9233e36a2f",
+    "indexedFiles": 1703
   },
   "summary": {
-    "files": 1349,
-    "symbols": 13586,
+    "files": 1350,
+    "symbols": 13595,
     "widgets": 51,
     "routes": 974,
     "routeDefinitions": 975,
     "unmountedRoutes": 17,
     "apiCalls": 354,
     "databaseObjects": 1414,
-    "e2eSuites": 84,
-    "e2eTests": 2677
+    "e2eSuites": 85,
+    "e2eTests": 2682
   },
   "modules": [
     {
@@ -74,14 +74,14 @@
     {
       "id": "communications",
       "counts": {
-        "files": 112,
-        "symbols": 1052,
+        "files": 113,
+        "symbols": 1057,
         "widgets": 0,
         "routes": 93,
         "routeDefinitions": 96,
         "apiCalls": 88,
         "databaseObjects": 158,
-        "e2eSuites": 6
+        "e2eSuites": 7
       }
     },
     {
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 314,
-        "symbols": 2842,
+        "symbols": 2845,
         "widgets": 0,
         "routes": 34,
         "routeDefinitions": 49,
@@ -153,7 +153,7 @@
       "id": "testing",
       "counts": {
         "files": 39,
-        "symbols": 184,
+        "symbols": 185,
         "widgets": 0,
         "routes": 0,
         "routeDefinitions": 0,
@@ -1413,8 +1413,8 @@
       "path": "netlify/functions/lib/notify.ts",
       "module": "platform",
       "role": "backend-lib",
-      "lines": 322,
-      "hash": "259dc1dee4b41ebf"
+      "lines": 417,
+      "hash": "d89d93674c313396"
     },
     {
       "path": "netlify/functions/lib/orchestration/recordLinkService.ts",
@@ -2885,6 +2885,13 @@
       "role": "e2e-suite",
       "lines": 228,
       "hash": "103d8b74bd02b602"
+    },
+    {
+      "path": "scripts/e2e/suites/notificationDeliveries.mjs",
+      "module": "communications",
+      "role": "e2e-suite",
+      "lines": 145,
+      "hash": "5987ce7c8d157f5a"
     },
     {
       "path": "scripts/e2e/suites/orchestration.mjs",
@@ -9295,8 +9302,8 @@
       "path": "tests/vitest/emailDelivery.test.ts",
       "module": "testing",
       "role": "test",
-      "lines": 241,
-      "hash": "d6a023ecd691b1bd"
+      "lines": 270,
+      "hash": "c3dc4c4171f6111e"
     },
     {
       "path": "tests/vitest/employeeAttention.test.ts",
@@ -35135,10 +35142,40 @@
       "tags": []
     },
     {
+      "name": "EmailDeliveryStatus",
+      "kind": "type",
+      "file": "netlify/functions/lib/notify.ts",
+      "line": 249,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "emailDeliveryStatusFor",
+      "kind": "function",
+      "file": "netlify/functions/lib/notify.ts",
+      "line": 260,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "_recordEmailDelivery",
+      "kind": "function",
+      "file": "netlify/functions/lib/notify.ts",
+      "line": 278,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "_sendEmail",
       "kind": "function",
       "file": "netlify/functions/lib/notify.ts",
-      "line": 232,
+      "line": 313,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -35148,7 +35185,7 @@
       "name": "_sendWhatsApp",
       "kind": "function",
       "file": "netlify/functions/lib/notify.ts",
-      "line": 261,
+      "line": 356,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -35158,7 +35195,7 @@
       "name": "notifyMany",
       "kind": "function",
       "file": "netlify/functions/lib/notify.ts",
-      "line": 312,
+      "line": 407,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -52003,6 +52040,66 @@
       "kind": "function",
       "file": "scripts/e2e/suites/messengerRealtime.mjs",
       "line": 109,
+      "module": "communications",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "title",
+      "kind": "variable",
+      "file": "scripts/e2e/suites/notificationDeliveries.mjs",
+      "line": 23,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "run",
+      "kind": "function",
+      "file": "scripts/e2e/suites/notificationDeliveries.mjs",
+      "line": 25,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "fire",
+      "kind": "function",
+      "file": "scripts/e2e/suites/notificationDeliveries.mjs",
+      "line": 48,
+      "module": "communications",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "seed",
+      "kind": "function",
+      "file": "scripts/e2e/suites/notificationDeliveries.mjs",
+      "line": 67,
+      "module": "communications",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "setPrefs",
+      "kind": "function",
+      "file": "scripts/e2e/suites/notificationDeliveries.mjs",
+      "line": 74,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -145648,7 +145745,19 @@
       "name": "load",
       "kind": "function",
       "file": "tests/vitest/emailDelivery.test.ts",
-      "line": 223,
+      "line": 221,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "load",
+      "kind": "function",
+      "file": "tests/vitest/emailDelivery.test.ts",
+      "line": 252,
       "module": "testing",
       "exported": false,
       "container": "",
@@ -186085,6 +186194,37 @@
         "/api/communications/messages/markRead",
         "/api/communications/messages/post",
         "/api/communications/summary"
+      ]
+    },
+    {
+      "name": "notificationDeliveries",
+      "title": "Platform — notification delivery records (email channel)",
+      "module": "communications",
+      "file": "scripts/e2e/suites/notificationDeliveries.mjs",
+      "tests": [
+        {
+          "name": "a user opted OUT of email gets an in_app record and NO email record",
+          "line": 82
+        },
+        {
+          "name": "opted in with NO address on file is recorded as skipped, with the reason",
+          "line": 96
+        },
+        {
+          "name": "opted in with an INVALID address is recorded as failed — never as sent",
+          "line": 108
+        },
+        {
+          "name": "exactly ONE email delivery row per notification — queued-first updates, not duplicates",
+          "line": 124
+        },
+        {
+          "name": "no delivery row is ever left stranded in pending",
+          "line": 135
+        }
+      ],
+      "apiPaths": [
+        "/api/sendNotification"
       ]
     },
     {

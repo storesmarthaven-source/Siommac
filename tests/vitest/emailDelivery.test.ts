@@ -215,6 +215,35 @@ describe('sendEmail', () => {
   });
 });
 
+describe('emailDeliveryStatusFor — what an attempt is RECORDED as', () => {
+  // The invariant, proven directly rather than inferred from a live send: `sent` is reachable
+  // ONLY from an accepted result, so a provider rejection can never be recorded as a delivery.
+  const load = async () => (await import('../../netlify/functions/lib/notify')).emailDeliveryStatusFor;
+
+  it('records an accepted send as sent', async () => {
+    const fn = await load();
+    expect(fn({ ok: true, providerMessageId: 'm1', sender: 's', transport: 'resend', recipients: ['a@b.com'], dryRun: false })).toBe('sent');
+  });
+
+  it('records missing configuration as skipped — nothing was transmitted', async () => {
+    const fn = await load();
+    expect(fn({ ok: false, reason: 'not_configured', message: 'x' })).toBe('skipped');
+  });
+
+  it.each(['transport_error', 'invalid_recipient', 'invalid_message'] as const)(
+    'records %s as failed, never as sent', async reason => {
+      const fn = await load();
+      expect(fn({ ok: false, reason, message: 'x' })).toBe('failed');
+    });
+
+  it('has NO path from a rejected result to sent', async () => {
+    const fn = await load();
+    const rejections = (['not_configured', 'transport_error', 'invalid_recipient', 'invalid_message'] as const)
+      .map(reason => fn({ ok: false, reason, message: 'x' }));
+    expect(rejections).not.toContain('sent');
+  });
+});
+
 describe('getEmailDeliveryStatus', () => {
   const ORIGINAL = process.env;
   beforeEach(() => { vi.resetModules(); process.env = { ...ORIGINAL, ...GOOD_ENV }; });

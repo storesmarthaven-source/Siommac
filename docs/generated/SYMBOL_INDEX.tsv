@@ -2547,9 +2547,12 @@ DeliveryPrefs	interface	platform	false		netlify/functions/lib/notify.ts	68
 buildEmailHtml	function	platform	false		netlify/functions/lib/notify.ts	80	
 buildWhatsAppText	function	platform	false		netlify/functions/lib/notify.ts	111	
 notify	function	platform	true		netlify/functions/lib/notify.ts	126	
-_sendEmail	function	platform	false		netlify/functions/lib/notify.ts	232	
-_sendWhatsApp	function	platform	false		netlify/functions/lib/notify.ts	261	
-notifyMany	function	platform	true		netlify/functions/lib/notify.ts	312	
+EmailDeliveryStatus	type	platform	false		netlify/functions/lib/notify.ts	249	
+emailDeliveryStatusFor	function	platform	true		netlify/functions/lib/notify.ts	260	
+_recordEmailDelivery	function	platform	false		netlify/functions/lib/notify.ts	278	
+_sendEmail	function	platform	false		netlify/functions/lib/notify.ts	313	
+_sendWhatsApp	function	platform	false		netlify/functions/lib/notify.ts	356	
+notifyMany	function	platform	true		netlify/functions/lib/notify.ts	407	
 RecordRefInput	interface	workflow	true		netlify/functions/lib/orchestration/recordLinkService.ts	13	
 LinkActor	interface	workflow	true		netlify/functions/lib/orchestration/recordLinkService.ts	22	
 assertCanView	function	workflow	false		netlify/functions/lib/orchestration/recordLinkService.ts	24	
@@ -4194,6 +4197,11 @@ run	function	communications	true	test	scripts/e2e/suites/messengerRealtime.mjs	2
 openSession	function	communications	false	test	scripts/e2e/suites/messengerRealtime.mjs	73	run
 subscribe	function	communications	false	test	scripts/e2e/suites/messengerRealtime.mjs	86	openSession
 waitFor	function	communications	false	test	scripts/e2e/suites/messengerRealtime.mjs	109	run
+title	variable	communications	true	test	scripts/e2e/suites/notificationDeliveries.mjs	23	
+run	function	communications	true	test	scripts/e2e/suites/notificationDeliveries.mjs	25	
+fire	function	communications	false	test	scripts/e2e/suites/notificationDeliveries.mjs	48	run
+seed	function	communications	false	test	scripts/e2e/suites/notificationDeliveries.mjs	67	run
+setPrefs	function	communications	false	test	scripts/e2e/suites/notificationDeliveries.mjs	74	run
 title	variable	workflow	true	test	scripts/e2e/suites/orchestration.mjs	6	
 run	function	workflow	true	test	scripts/e2e/suites/orchestration.mjs	8	
 title	variable	payroll	true	test	scripts/e2e/suites/payrollBackPay.mjs	18	
@@ -12948,7 +12956,8 @@ doc	function	testing	false	test	tests/vitest/documentHealth.test.ts	24
 sendMock	variable	testing	false	test	tests/vitest/emailDelivery.test.ts	13	
 GOOD_ENV	variable	testing	false	test	tests/vitest/emailDelivery.test.ts	18	
 load	function	testing	false	test	tests/vitest/emailDelivery.test.ts	103	
-load	function	testing	false	test	tests/vitest/emailDelivery.test.ts	223	
+load	function	testing	false	test	tests/vitest/emailDelivery.test.ts	221	
+load	function	testing	false	test	tests/vitest/emailDelivery.test.ts	252	
 TODAY	variable	hr	false	test	tests/vitest/employeeAttention.test.ts	14	
 input	function	hr	false	test	tests/vitest/employeeAttention.test.ts	16	
 ROOT	variable	hr	false	test	tests/vitest/employeeImportCreatePath.test.ts	20	

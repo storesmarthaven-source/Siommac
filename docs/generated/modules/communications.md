@@ -2,9 +2,9 @@
 
 # communications Module Map
 
-Source fingerprint: `60aaadca1bc3bcf394f873cf`
+Source fingerprint: `01d42ff89140cb9233e36a2f`
 
-Files: 112 | Symbols: 1052 | Widgets: 0 | Unique mounted endpoints: 93 | Route definitions: 94 mounted + 2 unmounted | API calls: 88 | DB objects: 158 | E2E suites: 6
+Files: 113 | Symbols: 1057 | Widgets: 0 | Unique mounted endpoints: 93 | Route definitions: 94 mounted + 2 unmounted | API calls: 88 | DB objects: 158 | E2E suites: 7
 
 ## Widgets and Tiles
 
@@ -107,7 +107,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/restoreAccount` | `employees.access.restore` | requirePermission | `AccountAccessActionSchema` | `netlify/functions/routes/tickets.ts:1152` | - | - |
 | `/api/revokeUserDevices` | `employees.access.revoke_devices` | requirePermission | `AccountAccessActionSchema` | `netlify/functions/routes/tickets.ts:1287` | - | - |
 | `/api/revokeUserSessions` | `employees.access.revoke_sessions` | requirePermission | `AccountAccessActionSchema` | `netlify/functions/routes/tickets.ts:1231` | - | - |
-| `/api/sendNotification` | `-` | requireRole | `SendNotifSchema` | `netlify/functions/routes/notify.ts:195` | res @ src/api/notifications.ts:121 | - |
+| `/api/sendNotification` | `-` | requireRole | `SendNotifSchema` | `netlify/functions/routes/notify.ts:195` | res @ src/api/notifications.ts:121 | notificationDeliveries |
 | `/api/suspendAccount` | `employees.access.suspend` | requirePermission | `AccountAccessActionSchema` | `netlify/functions/routes/tickets.ts:1067` | - | serviceRequests |
 | `/api/updateAccountSupportConfig` | `tickets.manage` | requirePermission | `UpdateAccountSupportConfigSchema` | `netlify/functions/routes/tickets.ts:1436` | - | serviceRequests |
 | `/api/updateAccountSupportRequest` | `tickets.manage` | requirePermission | `UpdateAccountSupportRequestSchema` | `netlify/functions/routes/tickets.ts:807` | - | serviceRequests |
@@ -469,6 +469,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | Messenger Compliance V1 (Cases, Scoped Read, Evidence, Exports) | 45 | 19 | `scripts/e2e/suites/communicationsCompliance.mjs` |
 | Messaging — Typing & Presence slice | 8 | 1 | `scripts/e2e/suites/messagingTypingPresence.mjs` |
 | Messenger — two-session realtime verification | 8 | 4 | `scripts/e2e/suites/messengerRealtime.mjs` |
+| Platform — notification delivery records (email channel) | 5 | 1 | `scripts/e2e/suites/notificationDeliveries.mjs` |
 | Ticket Center | 46 | 15 | `scripts/e2e/suites/ticketCenter.mjs` |
 
 ## Navigation Files
@@ -486,6 +487,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/communicationsCompliance.mjs` | 1221 |
 | e2e-suite | `scripts/e2e/suites/messagingTypingPresence.mjs` | 160 |
 | e2e-suite | `scripts/e2e/suites/messengerRealtime.mjs` | 228 |
+| e2e-suite | `scripts/e2e/suites/notificationDeliveries.mjs` | 145 |
 | e2e-suite | `scripts/e2e/suites/ticketCenter.mjs` | 782 |
 | frontend-api | `src/api/communications.markTicketRead.test.tsx` | 53 |
 | frontend-api | `src/api/communications.ts` | 1096 |
