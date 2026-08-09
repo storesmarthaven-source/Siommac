@@ -4129,6 +4129,9 @@ createRunFixture	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	
 expectBlock	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	630	run
 title	variable	testing	true	test	scripts/e2e/suites/emailDelivery.mjs	18	
 run	function	testing	true	test	scripts/e2e/suites/emailDelivery.mjs	20	
+title	variable	testing	true	test	scripts/e2e/suites/emailProgramme.mjs	29	
+SUITES	array	testing	false	test	scripts/e2e/suites/emailProgramme.mjs	36	
+run	function	testing	true	test	scripts/e2e/suites/emailProgramme.mjs	46	
 title	variable	testing	true	test	scripts/e2e/suites/emailReconciliation.mjs	16	
 run	function	testing	true	test	scripts/e2e/suites/emailReconciliation.mjs	18	
 seed	function	testing	false	test	scripts/e2e/suites/emailReconciliation.mjs	36	run

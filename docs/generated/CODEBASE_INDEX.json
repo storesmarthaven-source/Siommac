@@ -1,21 +1,21 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "ddcc1723fd10873ece4c19ce3f9f11aa356738e8",
+    "head": "5c15683dd8995f06bc7a5e3da947782fe1e4ea8a",
     "branch": "feat/email-delivery-resend",
-    "fingerprint": "f798f66822ad9f8fbfb7dcaa",
-    "indexedFiles": 1733
+    "fingerprint": "55d1bfcc66339ec6096d161d",
+    "indexedFiles": 1734
   },
   "summary": {
-    "files": 1378,
-    "symbols": 14049,
+    "files": 1379,
+    "symbols": 14052,
     "widgets": 51,
     "routes": 978,
     "routeDefinitions": 979,
     "unmountedRoutes": 17,
     "apiCalls": 356,
     "databaseObjects": 1436,
-    "e2eSuites": 90,
+    "e2eSuites": 91,
     "e2eTests": 2729
   },
   "modules": [
@@ -152,14 +152,14 @@
     {
       "id": "testing",
       "counts": {
-        "files": 44,
-        "symbols": 216,
+        "files": 45,
+        "symbols": 219,
         "widgets": 0,
         "routes": 0,
         "routeDefinitions": 0,
         "apiCalls": 0,
         "databaseObjects": 0,
-        "e2eSuites": 15
+        "e2eSuites": 16
       }
     },
     {
@@ -2661,6 +2661,13 @@
       "role": "e2e-suite",
       "lines": 158,
       "hash": "6df0cac0078784b7"
+    },
+    {
+      "path": "scripts/e2e/suites/emailProgramme.mjs",
+      "module": "testing",
+      "role": "e2e-suite",
+      "lines": 52,
+      "hash": "0477a890bb711d78"
     },
     {
       "path": "scripts/e2e/suites/emailReconciliation.mjs",
@@ -51286,6 +51293,42 @@
       "kind": "function",
       "file": "scripts/e2e/suites/emailDelivery.mjs",
       "line": 20,
+      "module": "testing",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "title",
+      "kind": "variable",
+      "file": "scripts/e2e/suites/emailProgramme.mjs",
+      "line": 29,
+      "module": "testing",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "SUITES",
+      "kind": "array",
+      "file": "scripts/e2e/suites/emailProgramme.mjs",
+      "line": 36,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "run",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailProgramme.mjs",
+      "line": 46,
       "module": "testing",
       "exported": true,
       "container": "",
@@ -184756,6 +184799,14 @@
         "/api/email/test-send",
         "/api/hr/onboarding/provision-account"
       ]
+    },
+    {
+      "name": "emailProgramme",
+      "title": "Platform — EMAIL DELIVERY PROGRAMME (aggregate)",
+      "module": "testing",
+      "file": "scripts/e2e/suites/emailProgramme.mjs",
+      "tests": [],
+      "apiPaths": []
     },
     {
       "name": "emailReconciliation",

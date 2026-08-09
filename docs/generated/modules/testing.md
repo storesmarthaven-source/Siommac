@@ -2,9 +2,9 @@
 
 # testing Module Map
 
-Source fingerprint: `f798f66822ad9f8fbfb7dcaa`
+Source fingerprint: `55d1bfcc66339ec6096d161d`
 
-Files: 44 | Symbols: 216 | Widgets: 0 | Unique mounted endpoints: 0 | Route definitions: 0 mounted + 0 unmounted | API calls: 0 | DB objects: 0 | E2E suites: 15
+Files: 45 | Symbols: 219 | Widgets: 0 | Unique mounted endpoints: 0 | Route definitions: 0 mounted + 0 unmounted | API calls: 0 | DB objects: 0 | E2E suites: 16
 
 ## Widgets and Tiles
 
@@ -46,6 +46,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 |---|---:|---:|---|
 | Calendar | 33 | 11 | `scripts/e2e/suites/calendar.mjs` |
 | Platform — email delivery service | 11 | 3 | `scripts/e2e/suites/emailDelivery.mjs` |
+| Platform — EMAIL DELIVERY PROGRAMME (aggregate) | 0 | 0 | `scripts/e2e/suites/emailProgramme.mjs` |
 | Platform — email reconciliation and delivery status | 10 | 2 | `scripts/e2e/suites/emailReconciliation.mjs` |
 | Platform — email retry dispatch | 10 | 1 | `scripts/e2e/suites/emailRetry.mjs` |
 | Platform — Email Template Studio send path | 10 | 1 | `scripts/e2e/suites/emailTemplateSend.mjs` |
@@ -68,6 +69,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 |---|---|---:|
 | e2e-suite | `scripts/e2e/suites/calendar.mjs` | 497 |
 | e2e-suite | `scripts/e2e/suites/emailDelivery.mjs` | 158 |
+| e2e-suite | `scripts/e2e/suites/emailProgramme.mjs` | 52 |
 | e2e-suite | `scripts/e2e/suites/emailReconciliation.mjs` | 214 |
 | e2e-suite | `scripts/e2e/suites/emailRetry.mjs` | 185 |
 | e2e-suite | `scripts/e2e/suites/emailTemplateSend.mjs` | 205 |
