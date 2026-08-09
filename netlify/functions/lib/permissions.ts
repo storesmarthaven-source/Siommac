@@ -251,6 +251,10 @@ export const PERMISSION_KEYS = [
   'settings.global.manage',
   'settings.system.view',
   'settings.system.manage',
+  // Composing a template is not the same authority as mailing real people from the
+  // platform's verified domain, so sending has its own key. Granted in migration
+  // 20261102000000 — a key absent from role_permissions is dead on arrival.
+  'platform.email_templates.send',
   'settings.critical.view',
   'settings.critical.manage',
   'settings.security.view',

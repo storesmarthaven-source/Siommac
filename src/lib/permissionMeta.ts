@@ -1916,4 +1916,10 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Read the server-proxied weather snapshot and place search used by the Weather widget. Public forecast data — no organisation records are exposed; the permission exists so the proxy can’t be called anonymously.',
     risk: 'low',
   },
+  'platform.email_templates.send': {
+    module: 'Platform', group: 'Email',
+    label: 'Send Email Templates',
+    description: 'Send a real email from an approved Email Template Studio template to real recipients, through the canonical delivery service. Separate from authoring on purpose: composing a template is not the same authority as mailing people from the platform’s verified sending domain.',
+    risk: 'high',
+  },
 };
