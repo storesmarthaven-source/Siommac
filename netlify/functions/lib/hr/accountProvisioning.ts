@@ -3,7 +3,8 @@
 // HR-created employees have an app_users row but no Supabase Auth login. Provisioning:
 //   1. derives a work email (settings domain + pattern),
 //   2. creates the Supabase Auth login (admin.createUser — same pattern as employees.ts),
-//   3. issues a single-use invite token (sha256 stored; raw emailed via Resend to the
+//   3. issues a single-use invite token (sha256 stored; raw emailed via the canonical
+//      email service to the
 //      employee's PERSONAL email, since the work mailbox doesn't exist yet),
 //   4. raises a PENDING IT handoff for the real mailbox (we don't run mail/directory),
 //   5. on accept, sets the chosen password (admin.updateUserById) and activates.
@@ -14,6 +15,7 @@ import { sb } from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from './employeeCore';
 import { resolveSettingValue } from '../settings/resolveSetting';
+import { sendEmail } from '../email/emailService';
 
 const err = (status: number, message: string): Error => Object.assign(new Error(message), { status });
 const nowISO = (): string => new Date().toISOString();
@@ -46,20 +48,22 @@ async function uniqueWorkEmail(local: string, domain: string, excludeUserId: str
   return `${local}.${Date.now().toString(36)}@${domain}`.toLowerCase();
 }
 
-/** Resend invite to the PERSONAL email (work mailbox doesn't exist yet). Returns sent? */
+/**
+ * Send the invite to the PERSONAL email (the work mailbox does not exist yet). Returns sent?
+ *
+ * A false return is not swallowed by the caller: `provisionAccount` reports `inviteSent: false`
+ * and hands back `inviteLink` so a human can deliver it. That contract is why this returns a
+ * boolean rather than throwing — and why an unconfigured platform must still return false rather
+ * than pretending, which is what a hardcoded sender fallback used to make possible.
+ */
 async function sendInviteEmail(to: string, link: string, name: string): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey || !to) return false;
-  try {
-    const { Resend } = await import('resend');
-    const resend = new Resend(apiKey);
-    const from = process.env.RESEND_FROM_EMAIL ?? 'Siomac <no-reply@siomac.app>';
-    const { error } = await resend.emails.send({
-      from, to: [to], subject: 'Set up your work account',
-      html: `<p>Hi ${name || 'there'},</p><p>Your work account is ready. Click below to set your password and finish setup:</p><p><a href="${link}">Set my password</a></p><p>This link expires in 7 days. If you didn't expect this, ignore it.</p>`,
-    });
-    return !error;
-  } catch { return false; }
+  if (!to) return false;
+  const result = await sendEmail({
+    to,
+    subject: 'Set up your work account',
+    html: `<p>Hi ${name || 'there'},</p><p>Your work account is ready. Click below to set your password and finish setup:</p><p><a href="${link}">Set my password</a></p><p>This link expires in 7 days. If you didn't expect this, ignore it.</p>`,
+  });
+  return result.ok;
 }
 
 export interface ProvisionResult {

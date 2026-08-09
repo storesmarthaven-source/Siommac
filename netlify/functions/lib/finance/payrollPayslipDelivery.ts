@@ -7,8 +7,9 @@
 // finance_payslip_deliveries so Finance can see status + resend.
 //
 // Decoupled from the run: a failed/skipped send NEVER invalidates the run.
-// When RESEND_API_KEY is absent (dev / E2E), the send is recorded as 'skipped'
-// rather than 'failed', so downstream flows/tests don't depend on a live mailbox.
+// When email delivery is not configured (dev / E2E), the send is recorded as
+// 'skipped' rather than 'failed' — nothing was transmitted, so there is nothing
+// to retry — and downstream flows/tests don't depend on a live mailbox.
 // Password = employee date of birth DDMMYYYY (a standard T&T payroll convention).
 // A payslip is NEVER emailed unprotected: with no DOB on file the delivery is
 // recorded as 'skipped' and the employee uses the authenticated ESS download.
@@ -19,6 +20,7 @@
 
 import { sb } from '../db';
 import { emitAppEvent } from '../appEvents';
+import { sendEmail, getEmailDeliveryStatus } from '../email/emailService';
 import { writeHrAudit } from '../hr/employeeCore';
 import { buildPayslipSnapshot, renderPayslipPdf, renderPayslipPdfWithDesign } from './payslipPdf';
 import { getEmployerProfile } from './employerProfile';
@@ -117,14 +119,17 @@ export async function deliverPayslip(payslipId: string, actorId: string): Promis
   const recipient = emp?.email?.trim() || emp?.personal_email?.trim() || null;
   const password = derivePassword(emp?.date_of_birth);
   const snapshot = await buildPayslipSnapshot(payslipId);
-  const apiKey = process.env.RESEND_API_KEY;
+  // Configuration is owned by the canonical email service. Asked BEFORE the attempt because an
+  // unconfigured platform means nothing was tried — that is a SKIP, not a failure, and the
+  // distinction is what tells an operator whether there is anything to retry.
+  const emailStatus = getEmailDeliveryStatus();
 
   // Skip reasons that make sending impossible or UNSAFE. A payslip is NEVER
   // emailed without password protection — no DOB means ESS download only.
   const skipReason =
     !recipient ? 'No email address on file for this employee.' :
     !password  ? 'No date of birth on file — the PDF cannot be password-protected. Employee must download via the self-service portal.' :
-    !apiKey    ? 'Email delivery disabled (RESEND_API_KEY not set).' :
+    !emailStatus.configured ? `Email delivery is not configured. ${emailStatus.problems.map(p => p.message).join(' ')}` :
     null;
 
   // Record the delivery attempt BEFORE sending (queued-first): a crash between
@@ -152,16 +157,19 @@ export async function deliverPayslip(payslipId: string, actorId: string): Promis
       const pdf = design
         ? await renderPayslipPdfWithDesign(snapshot, design, employer, { password: password! })
         : await renderPayslipPdf(snapshot, { password: password! });
-      const { Resend } = await import('resend');
-      const resend = new Resend(apiKey!);
-      const from = process.env.RESEND_FROM_EMAIL ?? 'Siomac <no-reply@siomac.app>';
-      const { error: sendErr } = await resend.emails.send({
-        from, to: [recipient!],
+      const sendResult = await sendEmail({
+        to: recipient!,
         subject: `Payslip ${snapshot.payslipNo} — ${snapshot.periodLabel}`,
         html: buildDeliveryHtml(snapshot.payslipNo, snapshot.periodLabel, snapshot.employer.name, snapshot.employee.name),
-        attachments: [{ filename: `Payslip-${snapshot.payslipNo}.pdf`, content: pdf.toString('base64') }],
+        attachments: [{ filename: `Payslip-${snapshot.payslipNo}.pdf`, contentBase64: pdf.toString('base64'), contentType: 'application/pdf' }],
       });
-      if (sendErr) { status = 'failed'; error = typeof sendErr === 'object' ? JSON.stringify(sendErr) : String(sendErr); }
+      if (!sendResult.ok) {
+        // Configuration was checked above, so reaching here unconfigured means it changed
+        // mid-run; it is still "nothing was transmitted", so it stays a skip rather than
+        // becoming a phantom failure an operator would retry.
+        status = sendResult.reason === 'not_configured' ? 'skipped' : 'failed';
+        error = sendResult.message;
+      }
     } catch (e) { status = 'failed'; error = (e as Error).message; }
   }
 

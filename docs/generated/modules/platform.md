@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `fe1dea9ec28b611f31c9811d`
+Source fingerprint: `60aaadca1bc3bcf394f873cf`
 
-Files: 309 | Symbols: 2816 | Widgets: 0 | Unique mounted endpoints: 32 | Route definitions: 32 mounted + 15 unmounted | API calls: 50 | DB objects: 305 | E2E suites: 0
+Files: 314 | Symbols: 2842 | Widgets: 0 | Unique mounted endpoints: 34 | Route definitions: 34 mounted + 15 unmounted | API calls: 50 | DB objects: 305 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -31,6 +31,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/calendar/task/status` | `calendar.view` | requirePermission, userCan | `StatusSchema` | `netlify/functions/routes/calendar.ts:955` | useTaskStatus @ src/api/calendar.ts:126 | calendar |
 | `/api/calendar/update` | `calendar.view` | requirePermission, userCan | `UpdateSchema` | `netlify/functions/routes/calendar.ts:840` | useUpdateEntry @ src/api/calendar.ts:113 | calendar |
 | `/api/deleteProjectSite` | `sites.delete` | assertInScope, requirePermission | `DeleteSiteSchema` | `netlify/functions/routes/sites.ts:122` | res @ src/api/sites.ts:152<br>deleteProjectSiteApi @ src/components/sections/ProjectSites/api.ts:115 | - |
+| `/api/email/status` | `settings.system.view` | requirePermission | `-` | `netlify/functions/routes/emailDelivery.ts:28` | - | emailDelivery |
+| `/api/email/test-send` | `settings.system.manage` | requirePermission | `TestSendSchema` | `netlify/functions/routes/emailDelivery.ts:48` | - | emailDelivery |
 | `/api/getMyPreferences` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:113` | res @ src/api/notifications.ts:137 | - |
 | `/api/getUnreadCount` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:149` | res @ src/api/notifications.ts:73 | - |
 | `/api/listProjectSites` | `-` | requireUser | `-` | `netlify/functions/routes/sites.ts:58` | initializeMap @ src/components/livemap/LiveMapModule.ts:192<br>res @ src/components/sections/AttendanceDashboard/api.ts:53<br>res @ src/components/sections/ProjectSites/api.ts:43 | - |
@@ -457,6 +459,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | Role | Path | Lines |
 |---|---|---:|
 | backend-route | `netlify/functions/routes/calendar.ts` | 1062 |
+| backend-route | `netlify/functions/routes/emailDelivery.ts` | 98 |
 | backend-route | `netlify/functions/routes/hrContracts.ts` | 170 |
 | backend-route | `netlify/functions/routes/hrCrew.ts` | 186 |
 | backend-route | `netlify/functions/routes/hrStatutoryProfile.ts` | 87 |

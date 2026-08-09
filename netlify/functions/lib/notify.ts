@@ -6,7 +6,7 @@
  * Responsibilities:
  *   1. Persist a `notifications` row for the target user (in-app)
  *   2. Load that user's delivery preferences (email / whatsapp)
- *   3. Fire email via Resend (if opted in + RESEND_API_KEY set)
+ *   3. Fire email via the canonical service (lib/email/emailService) — if opted in
  *   4. Fire WhatsApp via Meta WhatsApp Business Cloud API (if opted in + tokens set)
  *
  * All delivery is fire-and-forget — errors are logged but never thrown back
@@ -14,8 +14,7 @@
  * always succeeds even when the notification fails.
  *
  * Environment variables (Netlify → Site settings → Environment variables):
- *   RESEND_API_KEY              — Resend API key (re_...)
- *   RESEND_FROM_EMAIL           — Sender address, e.g. "Siomac <no-reply@siomac.app>"
+ *   Email delivery config is owned by lib/email/emailConfig.ts — see there.
  *   WHATSAPP_PHONE_NUMBER_ID    — Meta phone number ID (from Business API dashboard)
  *   WHATSAPP_ACCESS_TOKEN       — Permanent / long-lived access token
  *
@@ -23,7 +22,7 @@
  * @see docs/ARCHITECTURE.md
  */
 
-import { Resend }  from 'resend';
+import { sendEmail } from './email/emailService';
 import { sb }      from './db';
 
 const logger = {
@@ -235,30 +234,26 @@ async function _sendEmail(
   user:         UserDeliveryInfo,
   companyName:  string,
 ): Promise<void> {
-  const apiKey   = process.env.RESEND_API_KEY;
-  const fromAddr = process.env.RESEND_FROM_EMAIL ?? `Siomac <no-reply@siomac.app>`;
+  // Configuration, sender resolution and provider handling all live in the canonical service.
+  // This function's only job is to turn a notification into a message and log the outcome —
+  // it no longer knows that Resend exists, nor what the sender address is.
+  const result = await sendEmail({
+    to:      user.email!,
+    subject: payload.title,
+    html:    buildEmailHtml(payload, user.fullName, companyName),
+  });
 
-  if (!apiKey) {
-    logger.warn('[notify/email] RESEND_API_KEY not set — skipping email delivery');
+  if (result.ok) {
+    logger.info('[notify/email] Sent', { to: user.email, type: payload.type });
     return;
   }
-
-  try {
-    const resend = new Resend(apiKey);
-    const { error } = await resend.emails.send({
-      from:    fromAddr,
-      to:      [user.email!],
-      subject: payload.title,
-      html:    buildEmailHtml(payload, user.fullName, companyName),
-    });
-    if (error) {
-      logger.warn('[notify/email] Resend delivery failed', { to: user.email, error: JSON.stringify(error) });
-    } else {
-      logger.info('[notify/email] Sent', { to: user.email, type: payload.type });
-    }
-  } catch (err) {
-    logger.error('[notify/email] Unexpected error', { err: String(err) });
+  // `not_configured` is an environment state, not an incident — it is the normal case in dev and
+  // in E2E, and logging it at error level trained everyone to ignore this logger.
+  if (result.reason === 'not_configured') {
+    logger.warn('[notify/email] Email delivery is not configured — skipping', { reason: result.message });
+    return;
   }
+  logger.warn('[notify/email] Delivery failed', { to: user.email, type: payload.type, reason: result.reason, detail: result.message });
 }
 
 // ── WhatsApp via Meta Cloud API ───────────────────────────────────────────────

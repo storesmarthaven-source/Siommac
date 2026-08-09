@@ -1,11 +1,11 @@
 symbol	kind	module	exported	tags	file	line	container
-ALLOWED_ORIGINS	variable	platform	false		netlify/functions/api.ts	89	
-isAllowedOrigin	function	platform	false		netlify/functions/api.ts	102	
-app	variable	platform	false		netlify/functions/api.ts	111	
-_legacyDispatch	function	platform	false		netlify/functions/api.ts	272	
-NetlifyV1Event	interface	platform	false		netlify/functions/api.ts	302	
-NetlifyV1Context	interface	platform	false		netlify/functions/api.ts	311	
-handler	function	platform	true		netlify/functions/api.ts	315	
+ALLOWED_ORIGINS	variable	platform	false		netlify/functions/api.ts	90	
+isAllowedOrigin	function	platform	false		netlify/functions/api.ts	103	
+app	variable	platform	false		netlify/functions/api.ts	112	
+_legacyDispatch	function	platform	false		netlify/functions/api.ts	274	
+NetlifyV1Event	interface	platform	false		netlify/functions/api.ts	304	
+NetlifyV1Context	interface	platform	false		netlify/functions/api.ts	313	
+handler	function	platform	true		netlify/functions/api.ts	317	
 TZ	variable	platform	false		netlify/functions/auto-checkout.ts	10	
 today24	function	platform	false		netlify/functions/auto-checkout.ts	12	
 hhmm24	function	platform	false		netlify/functions/auto-checkout.ts	15	
@@ -222,6 +222,29 @@ canUserSuppressMessage	function	platform	true		netlify/functions/lib/deliveryPro
 DeliveryProtectionError	class	platform	true		netlify/functions/lib/deliveryProtection.ts	33	
 ParticipantGuardRow	interface	platform	true		netlify/functions/lib/deliveryProtection.ts	38	
 assertCanRemoveParticipant	function	platform	true		netlify/functions/lib/deliveryProtection.ts	48	
+EmailSender	interface	platform	true		netlify/functions/lib/email/emailConfig.ts	19	
+EmailConfig	interface	platform	true		netlify/functions/lib/email/emailConfig.ts	28	
+EmailConfigProblem	interface	platform	true		netlify/functions/lib/email/emailConfig.ts	36	
+EmailConfigResult	type	platform	true		netlify/functions/lib/email/emailConfig.ts	43	
+ADDRESS_RE	variable	platform	false		netlify/functions/lib/email/emailConfig.ts	51	
+isEmailAddress	function	platform	true		netlify/functions/lib/email/emailConfig.ts	53	
+parseSender	function	platform	true		netlify/functions/lib/email/emailConfig.ts	59	
+readEmailConfig	function	platform	true		netlify/functions/lib/email/emailConfig.ts	86	
+transport	variable	platform	false		netlify/functions/lib/email/emailService.ts	22	
+EmailSendResult	type	platform	true		netlify/functions/lib/email/emailService.ts	24	
+SendEmailOptions	interface	platform	true		netlify/functions/lib/email/emailService.ts	45	
+normaliseRecipients	function	platform	false		netlify/functions/lib/email/emailService.ts	58	
+sendEmail	function	platform	true		netlify/functions/lib/email/emailService.ts	86	
+EmailDeliveryStatus	interface	platform	true		netlify/functions/lib/email/emailService.ts	132	
+getEmailDeliveryStatus	function	platform	true		netlify/functions/lib/email/emailService.ts	153	
+EmailAttachment	interface	platform	true		netlify/functions/lib/email/emailTransport.ts	18	
+EmailMessage	interface	platform	true		netlify/functions/lib/email/emailTransport.ts	26	
+NormalisedEmailMessage	interface	platform	true		netlify/functions/lib/email/emailTransport.ts	39	
+TransportOutcome	type	platform	true		netlify/functions/lib/email/emailTransport.ts	45	
+EmailTransport	interface	platform	true		netlify/functions/lib/email/emailTransport.ts	49	
+EmailFailureReason	type	platform	true		netlify/functions/lib/email/emailTransport.ts	61	
+resendTransport	object	platform	true		netlify/functions/lib/email/resendTransport.ts	21	
+send	method	platform	false		netlify/functions/lib/email/resendTransport.ts	24	resendTransport
 ApBillStatus	type	finance	true		netlify/functions/lib/finance/accountsPayable.ts	18	
 ApPaymentMethod	type	finance	true		netlify/functions/lib/finance/accountsPayable.ts	19	
 ApVendorStatus	type	finance	true		netlify/functions/lib/finance/accountsPayable.ts	20	
@@ -1089,17 +1112,17 @@ BULK_OVERRIDE_MAX	variable	payroll	true		netlify/functions/lib/finance/payrollOv
 addOverridesBulk	function	payroll	true		netlify/functions/lib/finance/payrollOverrides.ts	137	
 removeOverride	function	payroll	true		netlify/functions/lib/finance/payrollOverrides.ts	207	
 listOverrides	function	payroll	true		netlify/functions/lib/finance/payrollOverrides.ts	240	
-PayslipDeliveryDto	interface	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	27	
-DbDeliveryRow	interface	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	42	
-toDeliveryDto	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	49	
-derivePassword	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	59	
-maskEmail	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	68	
-escHtml	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	75	
-buildDeliveryHtml	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	81	
-deliverPayslip	function	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	103	
-DeliverRunResult	interface	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	192	
-deliverRunPayslips	function	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	194	
-listRunDeliveries	function	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	225	
+PayslipDeliveryDto	interface	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	29	
+DbDeliveryRow	interface	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	44	
+toDeliveryDto	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	51	
+derivePassword	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	61	
+maskEmail	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	70	
+escHtml	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	77	
+buildDeliveryHtml	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	83	
+deliverPayslip	function	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	105	
+DeliverRunResult	interface	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	200	
+deliverRunPayslips	function	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	202	
+listRunDeliveries	function	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	233	
 PayslipDto	interface	payroll	true		netlify/functions/lib/finance/payrollPayslips.ts	32	
 DbPayslipRow	interface	payroll	false		netlify/functions/lib/finance/payrollPayslips.ts	44	
 notifyPayslipReady	function	payroll	false		netlify/functions/lib/finance/payrollPayslips.ts	57	
@@ -1497,18 +1520,18 @@ rpcFailure	function	hr	false		netlify/functions/lib/hr/accessAssignments.ts	196
 callCommand	function	hr	false		netlify/functions/lib/hr/accessAssignments.ts	209	
 grantAccessAssignment	function	hr	true		netlify/functions/lib/hr/accessAssignments.ts	224	
 revokeAccessAssignment	function	hr	true		netlify/functions/lib/hr/accessAssignments.ts	237	
-err	function	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	18	
-nowISO	function	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	19	
-SCOPE	object	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	20	
-appBaseUrl	function	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	21	
-EmpRow	interface	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	23	
-slugPart	function	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	29	
-deriveLocalPart	function	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	31	
-uniqueWorkEmail	function	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	38	
-sendInviteEmail	function	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	50	
-ProvisionResult	interface	hr	true		netlify/functions/lib/hr/accountProvisioning.ts	65	
-provisionAccount	function	hr	true		netlify/functions/lib/hr/accountProvisioning.ts	71	
-acceptAccountInvite	function	hr	true		netlify/functions/lib/hr/accountProvisioning.ts	143	
+err	function	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	20	
+nowISO	function	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	21	
+SCOPE	object	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	22	
+appBaseUrl	function	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	23	
+EmpRow	interface	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	25	
+slugPart	function	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	31	
+deriveLocalPart	function	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	33	
+uniqueWorkEmail	function	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	40	
+sendInviteEmail	function	hr	false		netlify/functions/lib/hr/accountProvisioning.ts	59	
+ProvisionResult	interface	hr	true		netlify/functions/lib/hr/accountProvisioning.ts	69	
+provisionAccount	function	hr	true		netlify/functions/lib/hr/accountProvisioning.ts	75	
+acceptAccountInvite	function	hr	true		netlify/functions/lib/hr/accountProvisioning.ts	147	
 err	function	hr	false		netlify/functions/lib/hr/attendanceCapture.ts	13	
 distanceMeters	function	hr	false		netlify/functions/lib/hr/attendanceCapture.ts	16	
 checkGeofence	function	hr	false		netlify/functions/lib/hr/attendanceCapture.ts	25	
@@ -2517,16 +2540,16 @@ ModuleMutationResult	interface	platform	true		netlify/functions/lib/moduleServic
 runModuleMutation	function	platform	true		netlify/functions/lib/moduleServiceAdapter.ts	96	
 TimelineEntry	interface	platform	true		netlify/functions/lib/moduleTimeline.ts	12	
 getModuleTimeline	function	platform	true		netlify/functions/lib/moduleTimeline.ts	23	
-logger	object	platform	false		netlify/functions/lib/notify.ts	29	
-NotifyPayload	interface	platform	true		netlify/functions/lib/notify.ts	37	
-UserDeliveryInfo	interface	platform	false		netlify/functions/lib/notify.ts	63	
-DeliveryPrefs	interface	platform	false		netlify/functions/lib/notify.ts	69	
-buildEmailHtml	function	platform	false		netlify/functions/lib/notify.ts	81	
-buildWhatsAppText	function	platform	false		netlify/functions/lib/notify.ts	112	
-notify	function	platform	true		netlify/functions/lib/notify.ts	127	
-_sendEmail	function	platform	false		netlify/functions/lib/notify.ts	233	
-_sendWhatsApp	function	platform	false		netlify/functions/lib/notify.ts	266	
-notifyMany	function	platform	true		netlify/functions/lib/notify.ts	317	
+logger	object	platform	false		netlify/functions/lib/notify.ts	28	
+NotifyPayload	interface	platform	true		netlify/functions/lib/notify.ts	36	
+UserDeliveryInfo	interface	platform	false		netlify/functions/lib/notify.ts	62	
+DeliveryPrefs	interface	platform	false		netlify/functions/lib/notify.ts	68	
+buildEmailHtml	function	platform	false		netlify/functions/lib/notify.ts	80	
+buildWhatsAppText	function	platform	false		netlify/functions/lib/notify.ts	111	
+notify	function	platform	true		netlify/functions/lib/notify.ts	126	
+_sendEmail	function	platform	false		netlify/functions/lib/notify.ts	232	
+_sendWhatsApp	function	platform	false		netlify/functions/lib/notify.ts	261	
+notifyMany	function	platform	true		netlify/functions/lib/notify.ts	312	
 RecordRefInput	interface	workflow	true		netlify/functions/lib/orchestration/recordLinkService.ts	13	
 LinkActor	interface	workflow	true		netlify/functions/lib/orchestration/recordLinkService.ts	22	
 assertCanView	function	workflow	false		netlify/functions/lib/orchestration/recordLinkService.ts	24	
@@ -3271,6 +3294,9 @@ router	variable	hr	false		netlify/functions/routes/departments.ts	7
 DeptRow	interface	hr	false		netlify/functions/routes/departments.ts	9	
 UserRow	interface	hr	false		netlify/functions/routes/departments.ts	17	
 _listDepartments	function	hr	false		netlify/functions/routes/departments.ts	24	
+router	variable	platform	false		netlify/functions/routes/emailDelivery.ts	23	
+body	function	platform	false		netlify/functions/routes/emailDelivery.ts	26	
+TestSendSchema	variable	platform	false		netlify/functions/routes/emailDelivery.ts	42	
 router	variable	hr	false		netlify/functions/routes/employees.ts	13	
 _nextEmployeeNumber	function	hr	false		netlify/functions/routes/employees.ts	15	
 router	variable	finance	false		netlify/functions/routes/financeAccountsPayable.ts	20	
@@ -4031,6 +4057,8 @@ evCount	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	73	run
 auditCount	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	75	run
 createRunFixture	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	212	run
 expectBlock	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	630	run
+title	variable	testing	true	test	scripts/e2e/suites/emailDelivery.mjs	18	
+run	function	testing	true	test	scripts/e2e/suites/emailDelivery.mjs	20	
 title	variable	finance	true	test	scripts/e2e/suites/financeAp.mjs	18	
 run	function	finance	true	test	scripts/e2e/suites/financeAp.mjs	20	
 title	variable	finance	true	test	scripts/e2e/suites/financeBudgets.mjs	36	
@@ -12917,6 +12945,10 @@ makeAttachment	function	testing	false	test	tests/vitest/attachmentGrouping.regre
 TODAY	variable	testing	false	test	tests/vitest/documentHealth.test.ts	14	
 req	function	testing	false	test	tests/vitest/documentHealth.test.ts	16	
 doc	function	testing	false	test	tests/vitest/documentHealth.test.ts	24	
+sendMock	variable	testing	false	test	tests/vitest/emailDelivery.test.ts	13	
+GOOD_ENV	variable	testing	false	test	tests/vitest/emailDelivery.test.ts	18	
+load	function	testing	false	test	tests/vitest/emailDelivery.test.ts	103	
+load	function	testing	false	test	tests/vitest/emailDelivery.test.ts	223	
 TODAY	variable	hr	false	test	tests/vitest/employeeAttention.test.ts	14	
 input	function	hr	false	test	tests/vitest/employeeAttention.test.ts	16	
 ROOT	variable	hr	false	test	tests/vitest/employeeImportCreatePath.test.ts	20	

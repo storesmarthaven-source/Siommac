@@ -26,6 +26,7 @@ import settingsRouter      from './routes/settings';
 import settingsCatalogRouter from './routes/settingsCatalog';
 import ticketsRouter       from './routes/tickets';
 import notifyRouter         from './routes/notify';
+import emailDeliveryRouter  from './routes/emailDelivery';
 import { superadminRouter } from './routes/superadmin';
 import workflowsRouter      from './routes/workflows';
 import workflowEngineRouter from './routes/workflowEngine';
@@ -196,6 +197,7 @@ app.post('/api/ping', c => c.json({ ok: true, ts: new Date().toISOString() }));
 
 // ── Route groups ──────────────────────────────────────────────────────────────
 app.route('/api', authRouter);
+app.route('/api', emailDeliveryRouter);
 app.route('/api', employeesRouter);
 app.route('/api/hr', hrRouter);
 app.route('/api/hr', hrEmployeeImportRouter);

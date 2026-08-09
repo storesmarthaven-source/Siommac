@@ -2,7 +2,7 @@
 
 # hr Module Map
 
-Source fingerprint: `fe1dea9ec28b611f31c9811d`
+Source fingerprint: `60aaadca1bc3bcf394f873cf`
 
 Files: 255 | Symbols: 2863 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 35 | DB objects: 196 | E2E suites: 16
 
@@ -210,7 +210,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/hr/onboarding/packages/update` | `hr.onboarding.packages.manage` | requirePermission | `z.object({     id: z.string().uuid(), label: z.string().min(1).max(200).optional(), description: nstr, workerTypes: z.array(z.string()).optional(),     defaultSlaDays: z.number().int().positive().optional(), defaultOwnerRole: nstr,     appliesToDepartments: z.array(z.string()).optional(), appliesToSites: z.array(z.string()).optional(),   })` | `netlify/functions/routes/hrOnboarding.ts:647` | - | hrOnboardingPackages |
 | `/api/hr/onboarding/pause` | `hr.onboarding.case.manage` | requirePermission | `z.object({ caseId: z.string().uuid(), reason: z.string().max(500).nullable().optional() })` | `netlify/functions/routes/hrOnboarding.ts:365` | - | hrOnboarding |
 | `/api/hr/onboarding/preview-package` | `hr.onboarding.view` | requirePermission | `z.object({ packageKey: z.string().min(1) })` | `netlify/functions/routes/hrOnboarding.ts:35` | - | hrOnboarding |
-| `/api/hr/onboarding/provision-account` | `hr.onboarding.provision_account` | requirePermission | `z.object({ employeeId: z.string().min(1), sendInvite: z.boolean().optional() })` | `netlify/functions/routes/hrOnboarding.ts:731` | - | - |
+| `/api/hr/onboarding/provision-account` | `hr.onboarding.provision_account` | requirePermission | `z.object({ employeeId: z.string().min(1), sendInvite: z.boolean().optional() })` | `netlify/functions/routes/hrOnboarding.ts:731` | - | emailDelivery |
 | `/api/hr/onboarding/ready` | `hr.onboarding.case.manage` | requirePermission | `z.object({ caseId: z.string().uuid() })` | `netlify/functions/routes/hrOnboarding.ts:389` | - | hrOnboarding |
 | `/api/hr/onboarding/reassign-owner` | `hr.onboarding.case.manage` | requirePermission | `z.object({ caseId: z.string().uuid(), ownerId: z.string().nullable() })` | `netlify/functions/routes/hrOnboarding.ts:381` | - | hrOnboarding |
 | `/api/hr/onboarding/reports/export` | `hr.onboarding.reports.export` | requirePermission | `RunReportSchema` | `netlify/functions/routes/hrOnboarding.ts:502` | - | hrOnboarding |

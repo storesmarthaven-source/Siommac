@@ -2,9 +2,9 @@
 
 # testing Module Map
 
-Source fingerprint: `fe1dea9ec28b611f31c9811d`
+Source fingerprint: `60aaadca1bc3bcf394f873cf`
 
-Files: 37 | Symbols: 178 | Widgets: 0 | Unique mounted endpoints: 0 | Route definitions: 0 mounted + 0 unmounted | API calls: 0 | DB objects: 0 | E2E suites: 10
+Files: 39 | Symbols: 184 | Widgets: 0 | Unique mounted endpoints: 0 | Route definitions: 0 mounted + 0 unmounted | API calls: 0 | DB objects: 0 | E2E suites: 11
 
 ## Widgets and Tiles
 
@@ -45,6 +45,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | Suite | Tests | API paths | Location |
 |---|---:|---:|---|
 | Calendar | 33 | 11 | `scripts/e2e/suites/calendar.mjs` |
+| Platform — email delivery service | 11 | 3 | `scripts/e2e/suites/emailDelivery.mjs` |
 | HR Documents | 27 | 9 | `scripts/e2e/suites/hrDocuments.mjs` |
 | HR/Finance — Employee Statutory Profile / NIS Verification (Phase 2.5) | 35 | 7 | `scripts/e2e/suites/hrStatutoryProfile.mjs` |
 | Messaging — P0 Hardening (create/send/membership/pin/read) | 64 | 14 | `scripts/e2e/suites/messaging.mjs` |
@@ -62,6 +63,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | Role | Path | Lines |
 |---|---|---:|
 | e2e-suite | `scripts/e2e/suites/calendar.mjs` | 497 |
+| e2e-suite | `scripts/e2e/suites/emailDelivery.mjs` | 158 |
 | e2e-suite | `scripts/e2e/suites/hrDocuments.mjs` | 400 |
 | e2e-suite | `scripts/e2e/suites/hrStatutoryProfile.mjs` | 479 |
 | e2e-suite | `scripts/e2e/suites/messaging.mjs` | 766 |
