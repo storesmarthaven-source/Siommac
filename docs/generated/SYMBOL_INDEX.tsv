@@ -2,10 +2,10 @@ symbol	kind	module	exported	tags	file	line	container
 ALLOWED_ORIGINS	variable	platform	false		netlify/functions/api.ts	90	
 isAllowedOrigin	function	platform	false		netlify/functions/api.ts	103	
 app	variable	platform	false		netlify/functions/api.ts	112	
-_legacyDispatch	function	platform	false		netlify/functions/api.ts	274	
-NetlifyV1Event	interface	platform	false		netlify/functions/api.ts	304	
-NetlifyV1Context	interface	platform	false		netlify/functions/api.ts	313	
-handler	function	platform	true		netlify/functions/api.ts	317	
+_legacyDispatch	function	platform	false		netlify/functions/api.ts	279	
+NetlifyV1Event	interface	platform	false		netlify/functions/api.ts	309	
+NetlifyV1Context	interface	platform	false		netlify/functions/api.ts	318	
+handler	function	platform	true		netlify/functions/api.ts	322	
 TZ	variable	platform	false		netlify/functions/auto-checkout.ts	10	
 today24	function	platform	false		netlify/functions/auto-checkout.ts	12	
 hhmm24	function	platform	false		netlify/functions/auto-checkout.ts	15	
@@ -240,7 +240,10 @@ SELECT	variable	platform	false		netlify/functions/lib/email/emailDeliveryRecord.
 isAlreadyDelivered	function	platform	true		netlify/functions/lib/email/emailDeliveryRecord.ts	74	
 findDeliveryByIdempotencyKey	function	platform	true		netlify/functions/lib/email/emailDeliveryRecord.ts	77	
 openDelivery	function	platform	true		netlify/functions/lib/email/emailDeliveryRecord.ts	92	
-advanceDelivery	function	platform	true		netlify/functions/lib/email/emailDeliveryRecord.ts	137	
+WebhookRecordResult	interface	platform	true		netlify/functions/lib/email/emailDeliveryRecord.ts	130	
+recordWebhookEvent	function	platform	true		netlify/functions/lib/email/emailDeliveryRecord.ts	151	
+findDeliveryByProviderMessageId	function	platform	true		netlify/functions/lib/email/emailDeliveryRecord.ts	201	
+advanceDelivery	function	platform	true		netlify/functions/lib/email/emailDeliveryRecord.ts	216	
 transport	variable	platform	false		netlify/functions/lib/email/emailService.ts	24	
 EmailSendResult	type	platform	true		netlify/functions/lib/email/emailService.ts	26	
 SendEmailOptions	interface	platform	true		netlify/functions/lib/email/emailService.ts	56	
@@ -256,6 +259,14 @@ EmailTransport	interface	platform	true		netlify/functions/lib/email/emailTranspo
 EmailFailureReason	type	platform	true		netlify/functions/lib/email/emailTransport.ts	65	
 resendTransport	object	platform	true		netlify/functions/lib/email/resendTransport.ts	21	
 send	method	platform	false		netlify/functions/lib/email/resendTransport.ts	24	resendTransport
+WebhookVerificationFailure	type	platform	true		netlify/functions/lib/email/webhookSignature.ts	20	
+WebhookVerificationResult	type	platform	true		netlify/functions/lib/email/webhookSignature.ts	27	
+WEBHOOK_TOLERANCE_SECONDS	variable	platform	true		netlify/functions/lib/email/webhookSignature.ts	35	
+SvixHeaders	interface	platform	true		netlify/functions/lib/email/webhookSignature.ts	37	
+decodeSecret	function	platform	false		netlify/functions/lib/email/webhookSignature.ts	43	
+safeEqual	function	platform	false		netlify/functions/lib/email/webhookSignature.ts	47	
+signWebhookPayload	function	platform	true		netlify/functions/lib/email/webhookSignature.ts	56	
+verifyWebhookSignature	function	platform	true		netlify/functions/lib/email/webhookSignature.ts	68	
 ApBillStatus	type	finance	true		netlify/functions/lib/finance/accountsPayable.ts	18	
 ApPaymentMethod	type	finance	true		netlify/functions/lib/finance/accountsPayable.ts	19	
 ApVendorStatus	type	finance	true		netlify/functions/lib/finance/accountsPayable.ts	20	
@@ -3308,9 +3319,11 @@ router	variable	hr	false		netlify/functions/routes/departments.ts	7
 DeptRow	interface	hr	false		netlify/functions/routes/departments.ts	9	
 UserRow	interface	hr	false		netlify/functions/routes/departments.ts	17	
 _listDepartments	function	hr	false		netlify/functions/routes/departments.ts	24	
-router	variable	platform	false		netlify/functions/routes/emailDelivery.ts	23	
-body	function	platform	false		netlify/functions/routes/emailDelivery.ts	26	
-TestSendSchema	variable	platform	false		netlify/functions/routes/emailDelivery.ts	42	
+router	variable	platform	false		netlify/functions/routes/emailDelivery.ts	26	
+body	function	platform	false		netlify/functions/routes/emailDelivery.ts	29	
+TestSendSchema	variable	platform	false		netlify/functions/routes/emailDelivery.ts	45	
+WEBHOOK_STATUS	object	platform	false		netlify/functions/routes/emailDelivery.ts	134	
+NOTEWORTHY	variable	platform	false		netlify/functions/routes/emailDelivery.ts	144	
 router	variable	hr	false		netlify/functions/routes/employees.ts	13	
 _nextEmployeeNumber	function	hr	false		netlify/functions/routes/employees.ts	15	
 router	variable	finance	false		netlify/functions/routes/financeAccountsPayable.ts	20	
@@ -3934,13 +3947,13 @@ staleWaivers	variable	testing	false		scripts/e2e/coverage-gate.mjs	97
 mode	variable	testing	false		scripts/e2e/coverage-gate.mjs	99	
 REQUIRED_ENV	array	testing	false		scripts/e2e/harness.mjs	25	
 OPTIONAL_ENV	array	testing	false		scripts/e2e/harness.mjs	28	
-loadEnv	function	testing	false		scripts/e2e/harness.mjs	35	
-Harness	class	testing	true		scripts/e2e/harness.mjs	56	
-isServerUp	method	testing	false		scripts/e2e/harness.mjs	165	Harness
-ping	method	testing	false		scripts/e2e/harness.mjs	175	Harness
-pickUsers	method	testing	false		scripts/e2e/harness.mjs	189	Harness
-runCleanup	method	testing	false		scripts/e2e/harness.mjs	394	Harness
-report	method	testing	false		scripts/e2e/harness.mjs	402	Harness
+loadEnv	function	testing	false		scripts/e2e/harness.mjs	37	
+Harness	class	testing	true		scripts/e2e/harness.mjs	58	
+isServerUp	method	testing	false		scripts/e2e/harness.mjs	167	Harness
+ping	method	testing	false		scripts/e2e/harness.mjs	177	Harness
+pickUsers	method	testing	false		scripts/e2e/harness.mjs	191	Harness
+runCleanup	method	testing	false		scripts/e2e/harness.mjs	396	Harness
+report	method	testing	false		scripts/e2e/harness.mjs	404	Harness
 fixturePolicyCode	function	testing	false		scripts/e2e/helpers/payPolicyFixture.mjs	36	
 attachActivePolicy	function	testing	true		scripts/e2e/helpers/payPolicyFixture.mjs	60	
 purgeRunArtifacts	function	payroll	true		scripts/e2e/helpers/payrollCertificationFixture.mjs	40	
@@ -4073,6 +4086,13 @@ createRunFixture	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	
 expectBlock	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	630	run
 title	variable	testing	true	test	scripts/e2e/suites/emailDelivery.mjs	18	
 run	function	testing	true	test	scripts/e2e/suites/emailDelivery.mjs	20	
+title	variable	testing	true	test	scripts/e2e/suites/emailWebhook.mjs	21	
+run	function	testing	true	test	scripts/e2e/suites/emailWebhook.mjs	23	
+sign	function	testing	false	test	scripts/e2e/suites/emailWebhook.mjs	44	run
+post	function	testing	false	test	scripts/e2e/suites/emailWebhook.mjs	48	run
+seedDelivery	function	testing	false	test	scripts/e2e/suites/emailWebhook.mjs	69	run
+readDelivery	function	testing	false	test	scripts/e2e/suites/emailWebhook.mjs	83	run
+evt	function	testing	false	test	scripts/e2e/suites/emailWebhook.mjs	89	run
 title	variable	finance	true	test	scripts/e2e/suites/financeAp.mjs	18	
 run	function	finance	true	test	scripts/e2e/suites/financeAp.mjs	20	
 title	variable	finance	true	test	scripts/e2e/suites/financeBudgets.mjs	36	
@@ -13015,6 +13035,13 @@ ResolveInput	type	testing	false	test	tests/vitest/recipientResolverActorConfirma
 input	function	testing	false	test	tests/vitest/recipientResolverActorConfirmation.test.ts	31	
 CONFIRMATION_EVENTS	array	testing	false	test	tests/vitest/recipientResolverActorConfirmation.test.ts	43	
 view	function	testing	false	test	tests/vitest/uiPreferencesContract.test.ts	27	
+SECRET	variable	testing	false	test	tests/vitest/webhookSignature.test.ts	13	
+ID	variable	testing	false	test	tests/vitest/webhookSignature.test.ts	14	
+NOW	variable	testing	false	test	tests/vitest/webhookSignature.test.ts	15	
+TS	variable	testing	false	test	tests/vitest/webhookSignature.test.ts	16	
+RAW	variable	testing	false	test	tests/vitest/webhookSignature.test.ts	17	
+headersFor	function	testing	false	test	tests/vitest/webhookSignature.test.ts	19	
+verify	function	testing	false	test	tests/vitest/webhookSignature.test.ts	24	
 makeInput	function	testing	false	test	tests/vitest/writePlatformAudit.test.ts	43	
 ApiResponse	interface	platform	true		types/api.ts	6	
 ApiOk	interface	platform	true		types/api.ts	11	
@@ -13025,8 +13052,8 @@ Verify2faResponse	interface	platform	true		types/api.ts	73
 TwoFactorStatusResponse	interface	platform	true		types/api.ts	98	
 JwtPayload	interface	platform	true		types/api.ts	106	
 HonoVariables	interface	platform	true		types/api.ts	127	
-RateLimitResult	interface	platform	true		types/api.ts	134	
-Payslip	interface	platform	true		types/api.ts	140	
+RateLimitResult	interface	platform	true		types/api.ts	143	
+Payslip	interface	platform	true		types/api.ts	149	
 CalendarItemType	type	platform	true		types/calendar.ts	17	
 CalendarItemOrigin	type	platform	true		types/calendar.ts	18	
 CalendarTaskStatus	type	platform	true		types/calendar.ts	20	

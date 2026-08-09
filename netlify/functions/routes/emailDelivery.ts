@@ -3,6 +3,7 @@
  *
  *   POST /email/status     — is email delivery configured, and as whom?
  *   POST /email/test-send  — prove it, to an address the operator names
+ *   POST /email/webhook    — Resend lifecycle events (PUBLIC; signature IS the authentication)
  *
  * Both are gated on `settings.system.*`, which already exists in both permission catalogues and
  * is already granted to admin + superadmin in role_permissions. Email transport credentials ARE
@@ -17,6 +18,8 @@ import { Hono } from 'hono';
 import { requirePermission } from '../lib/auth';
 import { z, zv } from '../lib/validate';
 import { sendEmail, getEmailDeliveryStatus } from '../lib/email/emailService';
+import { recordWebhookEvent, type EmailDeliveryStatus } from '../lib/email/emailDeliveryRecord';
+import { verifyWebhookSignature } from '../lib/email/webhookSignature';
 import { emitAppEvent } from '../lib/appEvents';
 import type { HonoVariables } from '../../../types/api';
 
@@ -111,6 +114,92 @@ router.post('/email/test-send', async c => {
           ? 'Configuration and message are valid. Nothing was sent — set dryRun to false to deliver a real test email.'
           : 'Test email accepted by the provider.',
     },
+  });
+});
+
+// ── Provider webhook ────────────────────────────────────────────────────────────
+/**
+ * POST /email/webhook — Resend delivery lifecycle events. PUBLIC by necessity.
+ *
+ * Authentication IS the signature. There is no permission gate because the caller is Resend, not
+ * a SIOMAC user, and the raw body is verified against RESEND_WEBHOOK_SECRET before a single row
+ * is written. An unconfigured secret fails CLOSED — a public endpoint that writes
+ * provider-attributed state on an unverified request is worse than one that is switched off.
+ *
+ * Returns 200 for anything successfully accounted for, INCLUDING duplicates and events for
+ * message ids we do not recognise. Resend retries on a non-2xx, so returning an error for
+ * something we have already handled — or can never handle — turns a benign event into an
+ * indefinite retry loop.
+ */
+const WEBHOOK_STATUS: Record<string, EmailDeliveryStatus> = {
+  'email.sent': 'sent',
+  'email.delivered': 'delivered',
+  'email.delivery_delayed': 'delayed',
+  'email.failed': 'failed',
+  'email.bounced': 'bounced',
+  'email.complained': 'complained',
+};
+
+/** Outcomes an operator genuinely needs told about. A `sent` webhook is not news. */
+const NOTEWORTHY = new Set<EmailDeliveryStatus>(['failed', 'bounced', 'complained']);
+
+router.post('/email/webhook', async c => {
+  const rawBody = c.get('rawBody') ?? '';
+  const verification = verifyWebhookSignature({
+    secret: process.env.RESEND_WEBHOOK_SECRET,
+    headers: {
+      id: c.req.header('svix-id') ?? null,
+      timestamp: c.req.header('svix-timestamp') ?? null,
+      signature: c.req.header('svix-signature') ?? null,
+    },
+    rawBody,
+  });
+
+  if (!verification.ok) {
+    // The reason is logged, never returned: telling an unverified caller WHY it failed helps it
+    // iterate towards a forgery.
+    console.warn('[email/webhook] rejected', { reason: verification.reason });
+    return c.json({ success: false, message: 'Invalid webhook signature.' }, 401 as 200);
+  }
+
+  const payload = (c.get('body') ?? {}) as { type?: string; created_at?: string; data?: Record<string, unknown> };
+  const eventType = String(payload.type ?? '');
+  const status = WEBHOOK_STATUS[eventType];
+  const providerMessageId = payload.data && typeof payload.data['email_id'] === 'string'
+    ? String(payload.data['email_id']) : null;
+  const eventId = c.req.header('svix-id') ?? '';
+  const occurredAt = typeof payload.created_at === 'string' ? payload.created_at : null;
+
+  // An event type we do not model is recorded and acknowledged, never guessed at. Subscribing to
+  // a new type in the Resend dashboard should not silently mutate deliveries here.
+  const result = await recordWebhookEvent({
+    providerEventId: eventId,
+    eventType,
+    providerMessageId,
+    occurredAt,
+    payload: payload as Record<string, unknown>,
+    status: status ?? null,
+  });
+
+  if (result.outcome === 'duplicate') {
+    // Idempotency: the unique index already held this event. A retry is a successful no-op, and
+    // crucially no app_event is emitted a second time.
+    return c.json({ success: true, data: { outcome: 'duplicate', eventType } });
+  }
+
+  // Meaningful failures are surfaced ONCE — this line is only reachable for a first-seen event.
+  if (status && NOTEWORTHY.has(status) && result.deliveryId) {
+    void emitAppEvent({
+      eventType: `platform.email.${status}`,
+      sourceModule: 'platform', sourceEntityType: 'email_delivery', sourceEntityId: result.deliveryId,
+      actorUserId: null, severity: status === 'failed' ? 'warning' : 'critical',
+      payload: { providerMessageId, eventType, recipient: result.recipient },
+    });
+  }
+
+  return c.json({
+    success: true,
+    data: { outcome: result.outcome, eventType, deliveryId: result.deliveryId, statusApplied: result.statusApplied },
   });
 });
 

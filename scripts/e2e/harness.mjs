@@ -25,7 +25,9 @@ import { createClient } from '@supabase/supabase-js';
 const REQUIRED_ENV = ['JWT_SECRET', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_ANON_KEY'];
 // Present in .env only once their slice is configured — suites that need them
 // guard explicitly (e.g. messagingTypingPresence requires the ES256 realtime key).
-const OPTIONAL_ENV = ['SUPABASE_JWT_ES256_PRIVATE_KEY', 'SUPABASE_JWT_ES256_KID'];
+const OPTIONAL_ENV = ['SUPABASE_JWT_ES256_PRIVATE_KEY', 'SUPABASE_JWT_ES256_KID',
+  // emailWebhook signs its own payloads; it guards on this being present.
+  'RESEND_WEBHOOK_SECRET'];
 
 /**
  * Load credentials from the process first (CI, Netlify, isolated worktrees),

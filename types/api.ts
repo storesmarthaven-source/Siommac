@@ -126,6 +126,15 @@ export interface JwtPayload {
 // These are set by middleware and available via c.get(key).
 export interface HonoVariables {
   body:     Record<string, unknown>;
+  /**
+   * The EXACT request body text, captured before parsing.
+   *
+   * Provider webhook signatures (Resend/Svix) are computed over the raw bytes, so a route that
+   * re-serialises the parsed object verifies a DIFFERENT string and rejects every genuine call.
+   * Captured once in the body middleware so the guarantee does not depend on Hono's internal
+   * body cache.
+   */
+  rawBody:  string;
   auth:     JwtPayload | null;
   clientIp: string;
 }

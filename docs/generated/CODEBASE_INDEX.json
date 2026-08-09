@@ -1,22 +1,22 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "fb97f5bd41d5c92a6b1e4332ed0a2fcb884ae0ac",
+    "head": "1ca2fcec85ad2edaed1cea09fd49e71b894a2697",
     "branch": "feat/email-delivery-resend",
-    "fingerprint": "55f8282455498d9a53323e53",
-    "indexedFiles": 1705
+    "fingerprint": "af86caf8e721e428531ac4c6",
+    "indexedFiles": 1708
   },
   "summary": {
-    "files": 1351,
-    "symbols": 13609,
+    "files": 1354,
+    "symbols": 13636,
     "widgets": 51,
-    "routes": 974,
-    "routeDefinitions": 975,
+    "routes": 975,
+    "routeDefinitions": 976,
     "unmountedRoutes": 17,
     "apiCalls": 354,
     "databaseObjects": 1426,
-    "e2eSuites": 85,
-    "e2eTests": 2682
+    "e2eSuites": 86,
+    "e2eTests": 2692
   },
   "modules": [
     {
@@ -139,11 +139,11 @@
     {
       "id": "platform",
       "counts": {
-        "files": 315,
-        "symbols": 2856,
+        "files": 316,
+        "symbols": 2869,
         "widgets": 0,
-        "routes": 34,
-        "routeDefinitions": 49,
+        "routes": 35,
+        "routeDefinitions": 50,
         "apiCalls": 50,
         "databaseObjects": 317,
         "e2eSuites": 0
@@ -152,14 +152,14 @@
     {
       "id": "testing",
       "counts": {
-        "files": 39,
-        "symbols": 188,
+        "files": 41,
+        "symbols": 202,
         "widgets": 0,
         "routes": 0,
         "routeDefinitions": 0,
         "apiCalls": 0,
         "databaseObjects": 0,
-        "e2eSuites": 11
+        "e2eSuites": 12
       }
     },
     {
@@ -181,8 +181,8 @@
       "path": "netlify/functions/api.ts",
       "module": "platform",
       "role": "backend",
-      "lines": 356,
-      "hash": "833e1b6b0487ef0d"
+      "lines": 361,
+      "hash": "0daa28f5c2dad5e1"
     },
     {
       "path": "netlify/functions/auto-checkout.ts",
@@ -321,8 +321,8 @@
       "path": "netlify/functions/lib/email/emailDeliveryRecord.ts",
       "module": "platform",
       "role": "backend-lib",
-      "lines": 168,
-      "hash": "5048ae382b6475a0"
+      "lines": 247,
+      "hash": "1f70138e1aa7fed9"
     },
     {
       "path": "netlify/functions/lib/email/emailService.ts",
@@ -344,6 +344,13 @@
       "role": "backend-lib",
       "lines": 63,
       "hash": "caddc67880d8ebe1"
+    },
+    {
+      "path": "netlify/functions/lib/email/webhookSignature.ts",
+      "module": "platform",
+      "role": "backend-lib",
+      "lines": 100,
+      "hash": "992aeec9a37f249a"
     },
     {
       "path": "netlify/functions/lib/finance/accountsPayable.ts",
@@ -2043,8 +2050,8 @@
       "path": "netlify/functions/routes/emailDelivery.ts",
       "module": "platform",
       "role": "backend-route",
-      "lines": 118,
-      "hash": "e90d714ee6ed7ceb"
+      "lines": 207,
+      "hash": "442a3072e557ce2e"
     },
     {
       "path": "netlify/functions/routes/employees.ts",
@@ -2533,8 +2540,8 @@
       "path": "scripts/e2e/harness.mjs",
       "module": "testing",
       "role": "tooling",
-      "lines": 415,
-      "hash": "b3b1fa3e5035a79b"
+      "lines": 417,
+      "hash": "a05d209fb921d147"
     },
     {
       "path": "scripts/e2e/helpers/payPolicyFixture.mjs",
@@ -2633,6 +2640,13 @@
       "role": "e2e-suite",
       "lines": 158,
       "hash": "6df0cac0078784b7"
+    },
+    {
+      "path": "scripts/e2e/suites/emailWebhook.mjs",
+      "module": "testing",
+      "role": "e2e-suite",
+      "lines": 230,
+      "hash": "74d6ca42142f473f"
     },
     {
       "path": "scripts/e2e/suites/financeAp.mjs",
@@ -9432,6 +9446,13 @@
       "hash": "b65df98465897ef9"
     },
     {
+      "path": "tests/vitest/webhookSignature.test.ts",
+      "module": "testing",
+      "role": "test",
+      "lines": 105,
+      "hash": "089e7317313ca584"
+    },
+    {
       "path": "tests/vitest/writePlatformAudit.test.ts",
       "module": "testing",
       "role": "test",
@@ -9442,8 +9463,8 @@
       "path": "types/api.ts",
       "module": "platform",
       "role": "shared-types",
-      "lines": 149,
-      "hash": "5922d2f57fa43452"
+      "lines": 158,
+      "hash": "d6c5d4eb51bdcf0f"
     },
     {
       "path": "types/calendar.ts",
@@ -9670,7 +9691,7 @@
       "name": "_legacyDispatch",
       "kind": "function",
       "file": "netlify/functions/api.ts",
-      "line": 274,
+      "line": 279,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -9680,7 +9701,7 @@
       "name": "NetlifyV1Event",
       "kind": "interface",
       "file": "netlify/functions/api.ts",
-      "line": 304,
+      "line": 309,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -9690,7 +9711,7 @@
       "name": "NetlifyV1Context",
       "kind": "interface",
       "file": "netlify/functions/api.ts",
-      "line": 313,
+      "line": 318,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -9700,7 +9721,7 @@
       "name": "handler",
       "kind": "function",
       "file": "netlify/functions/api.ts",
-      "line": 317,
+      "line": 322,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -12047,10 +12068,40 @@
       "tags": []
     },
     {
+      "name": "WebhookRecordResult",
+      "kind": "interface",
+      "file": "netlify/functions/lib/email/emailDeliveryRecord.ts",
+      "line": 130,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "recordWebhookEvent",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailDeliveryRecord.ts",
+      "line": 151,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "findDeliveryByProviderMessageId",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailDeliveryRecord.ts",
+      "line": 201,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "advanceDelivery",
       "kind": "function",
       "file": "netlify/functions/lib/email/emailDeliveryRecord.ts",
-      "line": 137,
+      "line": 216,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -12204,6 +12255,86 @@
       "module": "platform",
       "exported": false,
       "container": "resendTransport",
+      "tags": []
+    },
+    {
+      "name": "WebhookVerificationFailure",
+      "kind": "type",
+      "file": "netlify/functions/lib/email/webhookSignature.ts",
+      "line": 20,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WebhookVerificationResult",
+      "kind": "type",
+      "file": "netlify/functions/lib/email/webhookSignature.ts",
+      "line": 27,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WEBHOOK_TOLERANCE_SECONDS",
+      "kind": "variable",
+      "file": "netlify/functions/lib/email/webhookSignature.ts",
+      "line": 35,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SvixHeaders",
+      "kind": "interface",
+      "file": "netlify/functions/lib/email/webhookSignature.ts",
+      "line": 37,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "decodeSecret",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/webhookSignature.ts",
+      "line": 43,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "safeEqual",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/webhookSignature.ts",
+      "line": 47,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "signWebhookPayload",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/webhookSignature.ts",
+      "line": 56,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "verifyWebhookSignature",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/webhookSignature.ts",
+      "line": 68,
+      "module": "platform",
+      "exported": true,
+      "container": "",
       "tags": []
     },
     {
@@ -42762,7 +42893,7 @@
       "name": "router",
       "kind": "variable",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 23,
+      "line": 26,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -42772,7 +42903,7 @@
       "name": "body",
       "kind": "function",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 26,
+      "line": 29,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -42782,7 +42913,27 @@
       "name": "TestSendSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 42,
+      "line": 45,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WEBHOOK_STATUS",
+      "kind": "object",
+      "file": "netlify/functions/routes/emailDelivery.ts",
+      "line": 134,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NOTEWORTHY",
+      "kind": "variable",
+      "file": "netlify/functions/routes/emailDelivery.ts",
+      "line": 144,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -49028,7 +49179,7 @@
       "name": "loadEnv",
       "kind": "function",
       "file": "scripts/e2e/harness.mjs",
-      "line": 35,
+      "line": 37,
       "module": "testing",
       "exported": false,
       "container": "",
@@ -49038,7 +49189,7 @@
       "name": "Harness",
       "kind": "class",
       "file": "scripts/e2e/harness.mjs",
-      "line": 56,
+      "line": 58,
       "module": "testing",
       "exported": true,
       "container": "",
@@ -49048,7 +49199,7 @@
       "name": "isServerUp",
       "kind": "method",
       "file": "scripts/e2e/harness.mjs",
-      "line": 165,
+      "line": 167,
       "module": "testing",
       "exported": false,
       "container": "Harness",
@@ -49058,7 +49209,7 @@
       "name": "ping",
       "kind": "method",
       "file": "scripts/e2e/harness.mjs",
-      "line": 175,
+      "line": 177,
       "module": "testing",
       "exported": false,
       "container": "Harness",
@@ -49068,7 +49219,7 @@
       "name": "pickUsers",
       "kind": "method",
       "file": "scripts/e2e/harness.mjs",
-      "line": 189,
+      "line": 191,
       "module": "testing",
       "exported": false,
       "container": "Harness",
@@ -49078,7 +49229,7 @@
       "name": "runCleanup",
       "kind": "method",
       "file": "scripts/e2e/harness.mjs",
-      "line": 394,
+      "line": 396,
       "module": "testing",
       "exported": false,
       "container": "Harness",
@@ -49088,7 +49239,7 @@
       "name": "report",
       "kind": "method",
       "file": "scripts/e2e/harness.mjs",
-      "line": 402,
+      "line": 404,
       "module": "testing",
       "exported": false,
       "container": "Harness",
@@ -50540,6 +50691,90 @@
       "module": "testing",
       "exported": true,
       "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "title",
+      "kind": "variable",
+      "file": "scripts/e2e/suites/emailWebhook.mjs",
+      "line": 21,
+      "module": "testing",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "run",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailWebhook.mjs",
+      "line": 23,
+      "module": "testing",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "sign",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailWebhook.mjs",
+      "line": 44,
+      "module": "testing",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "post",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailWebhook.mjs",
+      "line": 48,
+      "module": "testing",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "seedDelivery",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailWebhook.mjs",
+      "line": 69,
+      "module": "testing",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "readDelivery",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailWebhook.mjs",
+      "line": 83,
+      "module": "testing",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "evt",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailWebhook.mjs",
+      "line": 89,
+      "module": "testing",
+      "exported": false,
+      "container": "run",
       "tags": [
         "test"
       ]
@@ -146435,6 +146670,90 @@
       ]
     },
     {
+      "name": "SECRET",
+      "kind": "variable",
+      "file": "tests/vitest/webhookSignature.test.ts",
+      "line": 13,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "ID",
+      "kind": "variable",
+      "file": "tests/vitest/webhookSignature.test.ts",
+      "line": 14,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "NOW",
+      "kind": "variable",
+      "file": "tests/vitest/webhookSignature.test.ts",
+      "line": 15,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "TS",
+      "kind": "variable",
+      "file": "tests/vitest/webhookSignature.test.ts",
+      "line": 16,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "RAW",
+      "kind": "variable",
+      "file": "tests/vitest/webhookSignature.test.ts",
+      "line": 17,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "headersFor",
+      "kind": "function",
+      "file": "tests/vitest/webhookSignature.test.ts",
+      "line": 19,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "verify",
+      "kind": "function",
+      "file": "tests/vitest/webhookSignature.test.ts",
+      "line": 24,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
       "name": "makeInput",
       "kind": "function",
       "file": "tests/vitest/writePlatformAudit.test.ts",
@@ -146540,7 +146859,7 @@
       "name": "RateLimitResult",
       "kind": "interface",
       "file": "types/api.ts",
-      "line": 134,
+      "line": 143,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146550,7 +146869,7 @@
       "name": "Payslip",
       "kind": "interface",
       "file": "types/api.ts",
-      "line": 140,
+      "line": 149,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -154373,7 +154692,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 28,
+      "line": 31,
       "module": "platform"
     },
     {
@@ -154386,7 +154705,18 @@
       ],
       "schema": "TestSendSchema",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 50,
+      "line": 53,
+      "module": "platform"
+    },
+    {
+      "path": "/api/email/webhook",
+      "localPath": "/email/webhook",
+      "router": "router",
+      "permission": "",
+      "guards": [],
+      "schema": "",
+      "file": "netlify/functions/routes/emailDelivery.ts",
+      "line": 146,
       "module": "platform"
     },
     {
@@ -179818,6 +180148,55 @@
         "/api/email/test-send",
         "/api/hr/onboarding/provision-account"
       ]
+    },
+    {
+      "name": "emailWebhook",
+      "title": "Platform — Resend webhook (signature, idempotency, lifecycle)",
+      "module": "testing",
+      "file": "scripts/e2e/suites/emailWebhook.mjs",
+      "tests": [
+        {
+          "name": "setup: the webhook secret is configured for this run",
+          "line": 93
+        },
+        {
+          "name": "an INVALID signature is rejected with 401 and writes nothing",
+          "line": 97
+        },
+        {
+          "name": "⭐ a body altered after signing is rejected — the raw-body guarantee",
+          "line": 110
+        },
+        {
+          "name": "email.delivered advances the delivery and stamps delivered_at",
+          "line": 121
+        },
+        {
+          "name": "email.delivery_delayed and email.bounced are applied",
+          "line": 134
+        },
+        {
+          "name": "email.complained becomes the outcome while earlier moments survive",
+          "line": 151
+        },
+        {
+          "name": "⭐ an OUT-OF-ORDER sent webhook does not regress a delivered record",
+          "line": 163
+        },
+        {
+          "name": "the SAME provider event id twice is a successful no-op",
+          "line": 179
+        },
+        {
+          "name": "a duplicate webhook does not emit a second app_event",
+          "line": 197
+        },
+        {
+          "name": "an UNKNOWN provider message id is retained and modifies no delivery",
+          "line": 211
+        }
+      ],
+      "apiPaths": []
     },
     {
       "name": "financeAp",

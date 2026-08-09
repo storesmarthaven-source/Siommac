@@ -163,13 +163,18 @@ app.use('*', async (c, next) => {
 //   { action: "routeName", args: { ... }, token: "..." }
 app.use('*', async (c, next) => {
   let body: Record<string, unknown> = {};
+  let text = '';
   try {
-    const text = await c.req.text();
+    text = await c.req.text();
     if (text) body = JSON.parse(text) as Record<string, unknown>;
   } catch {
     return c.json({ success: false, message: 'Invalid JSON' }, 400);
   }
   c.set('body', body);
+  // The untouched bytes, for routes that must verify a signature over exactly what was sent.
+  // Re-serialising the parsed object would produce a different string (key order, spacing,
+  // unicode escaping) and fail verification on every genuine provider call.
+  c.set('rawBody', text);
   await next();
 });
 

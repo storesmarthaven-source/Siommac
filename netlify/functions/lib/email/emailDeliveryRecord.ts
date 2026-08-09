@@ -127,6 +127,85 @@ export async function openDelivery(
   return data;
 }
 
+export interface WebhookRecordResult {
+  /** `recorded` = first sight; `duplicate` = the unique index already had it; `unmatched` = no such delivery. */
+  outcome: 'recorded' | 'duplicate' | 'unmatched';
+  deliveryId: string | null;
+  recipient: string | null;
+  /** The status the delivery now holds — unchanged when the event was older than current state. */
+  statusApplied: EmailDeliveryStatus | null;
+}
+
+/**
+ * Record a verified provider event and apply it to its delivery.
+ *
+ * ⭐ IDEMPOTENCY IS THE UNIQUE INDEX, not a pre-check. Inserting FIRST and treating 23505 as
+ * "already handled" is race-free; a select-then-insert would let two concurrent redeliveries both
+ * see nothing and both transition the delivery. The database decides who was first.
+ *
+ * ⭐ An event whose message id matches no delivery is RETAINED with a null delivery_id and
+ * reported as `unmatched`. It must never fall back to "closest" or "most recent" delivery —
+ * attributing a bounce to the wrong email is worse than not attributing it at all — and
+ * discarding it would hide a real integration fault from reconciliation.
+ */
+export async function recordWebhookEvent(args: {
+  providerEventId: string;
+  eventType: string;
+  providerMessageId: string | null;
+  occurredAt: string | null;
+  payload: Record<string, unknown>;
+  status: EmailDeliveryStatus | null;
+}): Promise<WebhookRecordResult> {
+  const delivery = args.providerMessageId
+    ? await findDeliveryByProviderMessageId(args.providerMessageId)
+    : null;
+
+  const insert = await sb.from('email_delivery_events').insert({
+    provider: 'resend',
+    provider_event_id: args.providerEventId,
+    event_type: args.eventType,
+    provider_message_id: args.providerMessageId,
+    delivery_id: delivery?.id ?? null,
+    occurred_at: args.occurredAt,
+    payload: args.payload,
+  }).select('id').single<{ id: string }>();
+
+  if (insert.error) {
+    if ((insert.error as { code?: string }).code === '23505') {
+      return {
+        outcome: 'duplicate',
+        deliveryId: delivery?.id ?? null,
+        recipient: delivery?.recipient ?? null,
+        statusApplied: delivery?.status ?? null,
+      };
+    }
+    throw Object.assign(new Error(`Webhook event could not be recorded: ${insert.error.message}`), { status: 500 });
+  }
+
+  if (!delivery) {
+    return { outcome: 'unmatched', deliveryId: null, recipient: null, statusApplied: null };
+  }
+
+  // Monotonic. A late `sent` after `delivered`, or a stale `delayed`, stamps its own timestamp
+  // and leaves `status` where it is — the trail keeps every moment without letting arrival order
+  // rewrite the outcome.
+  let statusApplied: EmailDeliveryStatus = delivery.status;
+  if (args.status) {
+    const advanced = await advanceDelivery(delivery.id, args.status, { occurredAt: args.occurredAt });
+    statusApplied = advanced.status;
+  }
+
+  return { outcome: 'recorded', deliveryId: delivery.id, recipient: delivery.recipient, statusApplied };
+}
+
+export async function findDeliveryByProviderMessageId(providerMessageId: string): Promise<EmailDeliveryRow | null> {
+  const { data, error } = await sb.from('email_deliveries').select(SELECT)
+    .eq('provider', 'resend').eq('provider_message_id', providerMessageId)
+    .maybeSingle<EmailDeliveryRow>();
+  if (error) throw Object.assign(new Error(`Delivery lookup failed: ${error.message}`), { status: 500 });
+  return data ?? null;
+}
+
 /**
  * Advance a delivery to a lifecycle point.
  *
