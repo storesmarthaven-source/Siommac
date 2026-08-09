@@ -5,6 +5,7 @@
  *   POST /email/test-send  — prove it, to an address the operator names
  *   POST /email/reconciliation — deliveries and provider events that need a human
  *   POST /email/retry      — one generic Retry, dispatched to an origin-specific handler
+ *   POST /email/template-send — send an Email Template Studio template (server-compiled)
  *   POST /email/webhook    — Resend lifecycle events (PUBLIC; signature IS the authentication)
  *
  * Both are gated on `settings.system.*`, which already exists in both permission catalogues and
@@ -24,6 +25,7 @@ import { recordWebhookEvent, type EmailDeliveryStatus } from '../lib/email/email
 import { verifyWebhookSignature } from '../lib/email/webhookSignature';
 import { getWebhookCapability, getDeliveryHealth, buildReconciliationReport } from '../lib/email/emailReconciliation';
 import { retryDelivery } from '../lib/email/emailRetry';
+import { sendTemplateEmail } from '../lib/email/emailTemplateSend';
 import { emitAppEvent } from '../lib/appEvents';
 import type { HonoVariables } from '../../../types/api';
 
@@ -201,6 +203,78 @@ router.post('/email/test-send', async c => {
         : result.dryRun
           ? 'Configuration and message are valid. Nothing was sent — set dryRun to false to deliver a real test email.'
           : 'Test email accepted by the provider.',
+    },
+  });
+});
+
+// ── Email Template Studio → canonical delivery ──────────────────────────────────
+/**
+ * POST /email/template-send
+ *
+ * The ONLY production send path for Studio templates. The caller names a template KEY and
+ * variables; the body comes from the published version, compiled server-side. A rendered document
+ * is deliberately NOT accepted — that would let the client dictate mail sent under the platform's
+ * verified sending domain.
+ *
+ * Gated on `platform.email_templates.send`, which is separate from authoring: composing a template
+ * is not the same authority as mailing real people.
+ *
+ * `dryRun` defaults to TRUE, for the same reason the test-send endpoint does — the irreversible
+ * half is the half that must be asked for. A dry run validates, resolves and COMPILES for real,
+ * then records nothing and transmits nothing.
+ */
+const TemplateSendSchema = z.object({
+  templateKey: z.string().min(1).max(120),
+  to: z.union([z.string().min(3).max(320), z.array(z.string().min(3).max(320)).min(1).max(50)]),
+  variables: z.record(z.string(), z.string()).optional(),
+  dryRun: z.boolean().optional(),
+  idempotencyKey: z.string().min(8).max(200).optional(),
+});
+
+router.post('/email/template-send', async c => {
+  const actor = await requirePermission(c, 'platform.email_templates.send');
+  const v = zv(c, TemplateSendSchema, body(c));
+  if (!v.ok) return v.response;
+
+  const result = await sendTemplateEmail({
+    templateKey: v.data.templateKey,
+    to: v.data.to,
+    variables: v.data.variables ?? {},
+    actorId: actor.id,
+    dryRun: v.data.dryRun !== false,
+    ...(v.data.idempotencyKey ? { idempotencyKey: v.data.idempotencyKey } : {}),
+  });
+
+  if (!result.ok) {
+    // 404 only when the template genuinely does not exist; everything else is a 422 the author
+    // must fix (unpublished, missing variables, unhosted assets, invalid MJML).
+    const status = result.refusal === 'template_not_found' ? 404 : 422;
+    return c.json({ success: false, message: result.message, data: { refusal: result.refusal, detail: result.detail ?? [] } }, status as 200);
+  }
+
+  // Only a REAL send is an event. A dry run transmitted nothing.
+  if (!result.dryRun) {
+    void emitAppEvent({
+      eventType: 'platform.email.template_sent',
+      sourceModule: 'platform', sourceEntityType: 'email_delivery', sourceEntityId: result.deliveryId ?? result.templateKey,
+      actorUserId: actor.id, severity: 'info',
+      payload: { templateKey: result.templateKey, versionNo: result.versionNo, recipients: result.recipients.length, providerMessageId: result.providerMessageId },
+    });
+  }
+
+  return c.json({
+    success: true,
+    data: {
+      templateKey: result.templateKey,
+      versionNo: result.versionNo,
+      recipients: result.recipients,
+      deliveryId: result.deliveryId,
+      providerMessageId: result.providerMessageId,
+      dryRun: result.dryRun,
+      deduplicated: result.deduplicated,
+      message: result.dryRun
+        ? 'Template compiled and validated. Nothing was sent — set dryRun to false to deliver it.'
+        : 'Template email accepted by the provider.',
     },
   });
 });

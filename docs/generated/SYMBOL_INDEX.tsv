@@ -283,6 +283,15 @@ normaliseRecipients	function	platform	false		netlify/functions/lib/email/emailSe
 sendEmail	function	platform	true		netlify/functions/lib/email/emailService.ts	97	
 EmailDeliveryStatus	interface	platform	true		netlify/functions/lib/email/emailService.ts	182	
 getEmailDeliveryStatus	function	platform	true		netlify/functions/lib/email/emailService.ts	203	
+TemplateSendRefusal	type	platform	true		netlify/functions/lib/email/emailTemplateSend.ts	25	
+TemplateSendResult	type	platform	true		netlify/functions/lib/email/emailTemplateSend.ts	32	
+TOKEN_RE	variable	platform	false		netlify/functions/lib/email/emailTemplateSend.ts	46	
+resolveTemplateVariables	function	platform	true		netlify/functions/lib/email/emailTemplateSend.ts	55	
+findUnhostedAssets	function	platform	true		netlify/functions/lib/email/emailTemplateSend.ts	75	
+VersionRow	interface	platform	false		netlify/functions/lib/email/emailTemplateSend.ts	87	
+TemplateRow	interface	platform	false		netlify/functions/lib/email/emailTemplateSend.ts	91	
+TemplateSendArgs	interface	platform	true		netlify/functions/lib/email/emailTemplateSend.ts	93	
+sendTemplateEmail	function	platform	true		netlify/functions/lib/email/emailTemplateSend.ts	104	
 EmailAttachment	interface	platform	true		netlify/functions/lib/email/emailTransport.ts	18	
 EmailMessage	interface	platform	true		netlify/functions/lib/email/emailTransport.ts	26	
 NormalisedEmailMessage	interface	platform	true		netlify/functions/lib/email/emailTransport.ts	39	
@@ -2631,26 +2640,26 @@ COMPLIANCE_APPROVER_KEYS	variable	security	true		netlify/functions/lib/permissio
 ApproverCandidate	interface	security	true		netlify/functions/lib/permissionApprovalScope.ts	39	
 selectEligibleApprovers	function	security	true		netlify/functions/lib/permissionApprovalScope.ts	56	
 PERMISSION_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	26	
-PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	505	
-CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	514	
-isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	526	
-COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	546	
-ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	555	
-PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	1068	
-resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	1088	
-resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	1113	
-ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1123	
-_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1124	
-invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1127	
-loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1143	
-loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1178	
-RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1190	
-_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1191	
-invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1194	
-loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1204	
-DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1217	
-deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1225	
-assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1236	
+PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	509	
+CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	518	
+isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	530	
+COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	550	
+ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	559	
+PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	1072	
+resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	1092	
+resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	1117	
+ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1127	
+_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1128	
+invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1131	
+loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1147	
+loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1182	
+RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1194	
+_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1195	
+invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1198	
+loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1208	
+DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1221	
+deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1229	
+assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1240	
 SIGNED_TTL	variable	platform	false		netlify/functions/lib/photos.ts	7	
 SIGNED_REFRESH_BEFORE	variable	platform	false		netlify/functions/lib/photos.ts	8	
 SIGNED_CACHE_TTL_MS	variable	platform	false		netlify/functions/lib/photos.ts	9	
@@ -3351,12 +3360,13 @@ router	variable	hr	false		netlify/functions/routes/departments.ts	7
 DeptRow	interface	hr	false		netlify/functions/routes/departments.ts	9	
 UserRow	interface	hr	false		netlify/functions/routes/departments.ts	17	
 _listDepartments	function	hr	false		netlify/functions/routes/departments.ts	24	
-router	variable	platform	false		netlify/functions/routes/emailDelivery.ts	30	
-body	function	platform	false		netlify/functions/routes/emailDelivery.ts	33	
-RetrySchema	variable	platform	false		netlify/functions/routes/emailDelivery.ts	86	
-TestSendSchema	variable	platform	false		netlify/functions/routes/emailDelivery.ts	133	
-WEBHOOK_STATUS	object	platform	false		netlify/functions/routes/emailDelivery.ts	222	
-NOTEWORTHY	variable	platform	false		netlify/functions/routes/emailDelivery.ts	232	
+router	variable	platform	false		netlify/functions/routes/emailDelivery.ts	32	
+body	function	platform	false		netlify/functions/routes/emailDelivery.ts	35	
+RetrySchema	variable	platform	false		netlify/functions/routes/emailDelivery.ts	88	
+TestSendSchema	variable	platform	false		netlify/functions/routes/emailDelivery.ts	135	
+TemplateSendSchema	variable	platform	false		netlify/functions/routes/emailDelivery.ts	226	
+WEBHOOK_STATUS	object	platform	false		netlify/functions/routes/emailDelivery.ts	296	
+NOTEWORTHY	variable	platform	false		netlify/functions/routes/emailDelivery.ts	306	
 router	variable	hr	false		netlify/functions/routes/employees.ts	13	
 _nextEmployeeNumber	function	hr	false		netlify/functions/routes/employees.ts	15	
 router	variable	finance	false		netlify/functions/routes/financeAccountsPayable.ts	20	
@@ -4135,6 +4145,12 @@ seedPayslip	function	payroll	false	test	scripts/e2e/suites/emailRetryPayslip.mjs
 seedDelivery	function	payroll	false	test	scripts/e2e/suites/emailRetryPayslip.mjs	94	run
 financeDeliveryCount	function	payroll	false	test	scripts/e2e/suites/emailRetryPayslip.mjs	107	run
 retryWithCount	function	payroll	false	test	scripts/e2e/suites/emailRetryPayslip.mjs	115	run
+title	variable	testing	true	test	scripts/e2e/suites/emailTemplateSend.mjs	17	
+run	function	testing	true	test	scripts/e2e/suites/emailTemplateSend.mjs	19	
+starterSchema	function	testing	false	test	scripts/e2e/suites/emailTemplateSend.mjs	44	run
+seedTemplate	function	testing	false	test	scripts/e2e/suites/emailTemplateSend.mjs	53	run
+deriveVariables	function	testing	false	test	scripts/e2e/suites/emailTemplateSend.mjs	76	run
+send	function	testing	false	test	scripts/e2e/suites/emailTemplateSend.mjs	89	run
 title	variable	testing	true	test	scripts/e2e/suites/emailWebhook.mjs	21	
 run	function	testing	true	test	scripts/e2e/suites/emailWebhook.mjs	23	
 sign	function	testing	false	test	scripts/e2e/suites/emailWebhook.mjs	44	run
@@ -12006,20 +12022,20 @@ ctx	function	security	false	test	src/lib/permissions.test.ts	28
 override	function	security	false	test	src/lib/permissions.test.ts	36	
 expired	function	security	false	test	src/lib/permissions.test.ts	251	
 PERMISSION_KEYS	variable	security	true		src/lib/permissions.ts	55	
-PermissionKey	type	security	true		src/lib/permissions.ts	585	
-CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	590	
-COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	618	
-EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	633	
-ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	661	
-PermissionContext	interface	security	true		src/lib/permissions.ts	1425	
-resolvePermission	function	security	true		src/lib/permissions.ts	1456	
-roleDefaultGranted	function	security	true		src/lib/permissions.ts	1501	
-PermissionState	type	security	true		src/lib/permissions.ts	1507	
-permissionState	function	security	true		src/lib/permissions.ts	1513	
-permissionGroups	function	security	true		src/lib/permissions.ts	1523	
-can	function	security	true		src/lib/permissions.ts	1543	
-useCan	function	security	true	hook	src/lib/permissions.ts	1559	
-useAnyCan	function	security	true	hook	src/lib/permissions.ts	1571	
+PermissionKey	type	security	true		src/lib/permissions.ts	589	
+CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	594	
+COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	622	
+EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	637	
+ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	665	
+PermissionContext	interface	security	true		src/lib/permissions.ts	1429	
+resolvePermission	function	security	true		src/lib/permissions.ts	1460	
+roleDefaultGranted	function	security	true		src/lib/permissions.ts	1505	
+PermissionState	type	security	true		src/lib/permissions.ts	1511	
+permissionState	function	security	true		src/lib/permissions.ts	1517	
+permissionGroups	function	security	true		src/lib/permissions.ts	1527	
+can	function	security	true		src/lib/permissions.ts	1547	
+useCan	function	security	true	hook	src/lib/permissions.ts	1563	
+useAnyCan	function	security	true	hook	src/lib/permissions.ts	1575	
 ICONS	object	platform	false		src/lib/popup.ts	22	
 _svg	function	platform	false		src/lib/popup.ts	30	
 _ready	variable	platform	false		src/lib/popup.ts	36	
@@ -13835,6 +13851,10 @@ ComplianceExportDownloadResponse	interface	platform	true		types/messagingComplia
 MjmlError	interface	platform	false		types/mjml-browser.d.ts	3	
 MjmlResult	interface	platform	false		types/mjml-browser.d.ts	9	
 mjml	function	platform	true		types/mjml-browser.d.ts	13	
+MjmlError	interface	platform	false		types/mjml.d.ts	7	
+MjmlResult	interface	platform	false		types/mjml.d.ts	13	
+MjmlOptions	interface	platform	false		types/mjml.d.ts	17	
+mjml2html	function	platform	true		types/mjml.d.ts	22	
 PayrollRunRegisterTab	type	payroll	true		types/payrollControlCenter.ts	8	
 PayrollControlCenterRequest	interface	payroll	true		types/payrollControlCenter.ts	10	
 HealthState	type	payroll	true		types/payrollControlCenter.ts	23	

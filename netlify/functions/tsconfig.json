@@ -17,7 +17,11 @@
   },
   "include": [
     "./**/*.ts",
-    "../../types/**/*.ts"
+    "../../types/**/*.ts",
+    // The Studio's MJML renderer is shared, not duplicated: production sending must compile from
+    // the SAME renderer the editor uses, or what arrives differs from what was designed. It is
+    // pure string-building (no DOM, no preact), which is what makes it server-safe.
+    "../../src/lib/emailTemplateDocument.ts"
   ],
   "exclude": ["node_modules"]
 }

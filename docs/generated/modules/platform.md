@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `7132aa438a5d92b43ac28a41`
+Source fingerprint: `f798f66822ad9f8fbfb7dcaa`
 
-Files: 324 | Symbols: 3033 | Widgets: 0 | Unique mounted endpoints: 37 | Route definitions: 37 mounted + 15 unmounted | API calls: 50 | DB objects: 317 | E2E suites: 0
+Files: 326 | Symbols: 3047 | Widgets: 0 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -31,11 +31,12 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/calendar/task/status` | `calendar.view` | requirePermission, userCan | `StatusSchema` | `netlify/functions/routes/calendar.ts:955` | useTaskStatus @ src/api/calendar.ts:126 | calendar |
 | `/api/calendar/update` | `calendar.view` | requirePermission, userCan | `UpdateSchema` | `netlify/functions/routes/calendar.ts:840` | useUpdateEntry @ src/api/calendar.ts:113 | calendar |
 | `/api/deleteProjectSite` | `sites.delete` | assertInScope, requirePermission | `DeleteSiteSchema` | `netlify/functions/routes/sites.ts:122` | res @ src/api/sites.ts:152<br>deleteProjectSiteApi @ src/components/sections/ProjectSites/api.ts:115 | - |
-| `/api/email/reconciliation` | `settings.system.view` | requirePermission | `-` | `netlify/functions/routes/emailDelivery.ts:74` | - | emailReconciliation |
-| `/api/email/retry` | `settings.system.manage` | requirePermission | `RetrySchema` | `netlify/functions/routes/emailDelivery.ts:91` | - | emailRetry, emailRetryPayslip |
-| `/api/email/status` | `settings.system.view` | requirePermission | `-` | `netlify/functions/routes/emailDelivery.ts:47` | - | emailDelivery, emailReconciliation |
-| `/api/email/test-send` | `settings.system.manage` | requirePermission | `TestSendSchema` | `netlify/functions/routes/emailDelivery.ts:141` | - | emailDelivery |
-| `/api/email/webhook` | `-` | - | `-` | `netlify/functions/routes/emailDelivery.ts:234` | - | - |
+| `/api/email/reconciliation` | `settings.system.view` | requirePermission | `-` | `netlify/functions/routes/emailDelivery.ts:76` | - | emailReconciliation |
+| `/api/email/retry` | `settings.system.manage` | requirePermission | `RetrySchema` | `netlify/functions/routes/emailDelivery.ts:93` | - | emailRetry, emailRetryPayslip |
+| `/api/email/status` | `settings.system.view` | requirePermission | `-` | `netlify/functions/routes/emailDelivery.ts:49` | - | emailDelivery, emailReconciliation |
+| `/api/email/template-send` | `platform.email_templates.send` | requirePermission | `TemplateSendSchema` | `netlify/functions/routes/emailDelivery.ts:234` | - | emailTemplateSend |
+| `/api/email/test-send` | `settings.system.manage` | requirePermission | `TestSendSchema` | `netlify/functions/routes/emailDelivery.ts:143` | - | emailDelivery |
+| `/api/email/webhook` | `-` | - | `-` | `netlify/functions/routes/emailDelivery.ts:308` | - | - |
 | `/api/getMyPreferences` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:113` | res @ src/api/notifications.ts:137 | - |
 | `/api/getUnreadCount` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:149` | res @ src/api/notifications.ts:73 | - |
 | `/api/listProjectSites` | `-` | requireUser | `-` | `netlify/functions/routes/sites.ts:58` | initializeMap @ src/components/livemap/LiveMapModule.ts:192<br>res @ src/components/sections/AttendanceDashboard/api.ts:53<br>res @ src/components/sections/ProjectSites/api.ts:43 | - |
@@ -452,6 +453,11 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | table | `public.email_delivery_events` | `supabase/migrations/20261101000000_email_delivery_backbone.sql:123` |
 | function | `public.tg_email_deliveries_touch` | `supabase/migrations/20261101000000_email_delivery_backbone.sql:179` |
 | trigger | `email_deliveries_touch` | `supabase/migrations/20261101000000_email_delivery_backbone.sql:187` |
+| table | `public.email_templates` | `supabase/migrations/20261102000000_email_template_store.sql:28` |
+| table | `public.email_template_versions` | `supabase/migrations/20261102000000_email_template_store.sql:67` |
+| function | `public.tg_email_templates_touch` | `supabase/migrations/20261102000000_email_template_store.sql:133` |
+| trigger | `email_templates_touch` | `supabase/migrations/20261102000000_email_template_store.sql:141` |
+| trigger | `email_template_versions_touch` | `supabase/migrations/20261102000000_email_template_store.sql:146` |
 
 ## E2E Suites
 
@@ -466,7 +472,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | Role | Path | Lines |
 |---|---|---:|
 | backend-route | `netlify/functions/routes/calendar.ts` | 1062 |
-| backend-route | `netlify/functions/routes/emailDelivery.ts` | 295 |
+| backend-route | `netlify/functions/routes/emailDelivery.ts` | 369 |
 | backend-route | `netlify/functions/routes/hrContracts.ts` | 170 |
 | backend-route | `netlify/functions/routes/hrCrew.ts` | 186 |
 | backend-route | `netlify/functions/routes/hrStatutoryProfile.ts` | 87 |
@@ -550,6 +556,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | shared-types | `types/messaging.ts` | 287 |
 | shared-types | `types/messagingCompliance.ts` | 318 |
 | shared-types | `types/mjml-browser.d.ts` | 15 |
+| shared-types | `types/mjml.d.ts` | 24 |
 | shared-types | `types/supabase.ts` | 135 |
 | shared-types | `types/trinidadPhone.ts` | 32 |
 | shared-types | `types/uiPreferences.ts` | 253 |

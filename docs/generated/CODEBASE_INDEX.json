@@ -1,22 +1,22 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "bad827419f10637ae2b9cb92f93311e635a37911",
+    "head": "ddcc1723fd10873ece4c19ce3f9f11aa356738e8",
     "branch": "feat/email-delivery-resend",
-    "fingerprint": "7132aa438a5d92b43ac28a41",
-    "indexedFiles": 1729
+    "fingerprint": "f798f66822ad9f8fbfb7dcaa",
+    "indexedFiles": 1733
   },
   "summary": {
-    "files": 1375,
-    "symbols": 14029,
+    "files": 1378,
+    "symbols": 14049,
     "widgets": 51,
-    "routes": 977,
-    "routeDefinitions": 978,
+    "routes": 978,
+    "routeDefinitions": 979,
     "unmountedRoutes": 17,
     "apiCalls": 356,
-    "databaseObjects": 1426,
-    "e2eSuites": 89,
-    "e2eTests": 2719
+    "databaseObjects": 1436,
+    "e2eSuites": 90,
+    "e2eTests": 2729
   },
   "modules": [
     {
@@ -139,27 +139,27 @@
     {
       "id": "platform",
       "counts": {
-        "files": 324,
-        "symbols": 3033,
+        "files": 326,
+        "symbols": 3047,
         "widgets": 0,
-        "routes": 37,
-        "routeDefinitions": 52,
+        "routes": 38,
+        "routeDefinitions": 53,
         "apiCalls": 50,
-        "databaseObjects": 317,
+        "databaseObjects": 327,
         "e2eSuites": 0
       }
     },
     {
       "id": "testing",
       "counts": {
-        "files": 43,
-        "symbols": 210,
+        "files": 44,
+        "symbols": 216,
         "widgets": 0,
         "routes": 0,
         "routeDefinitions": 0,
         "apiCalls": 0,
         "databaseObjects": 0,
-        "e2eSuites": 14
+        "e2eSuites": 15
       }
     },
     {
@@ -344,6 +344,13 @@
       "role": "backend-lib",
       "lines": 217,
       "hash": "1504d19d6f7dd9bf"
+    },
+    {
+      "path": "netlify/functions/lib/email/emailTemplateSend.ts",
+      "module": "platform",
+      "role": "backend-lib",
+      "lines": 222,
+      "hash": "86a65ec238a9d6af"
     },
     {
       "path": "netlify/functions/lib/email/emailTransport.ts",
@@ -1469,8 +1476,8 @@
       "path": "netlify/functions/lib/permissions.ts",
       "module": "security",
       "role": "backend-lib",
-      "lines": 1247,
-      "hash": "56e23496ce7fe10d"
+      "lines": 1251,
+      "hash": "9871d034a8bbe4ab"
     },
     {
       "path": "netlify/functions/lib/photos.ts",
@@ -2064,8 +2071,8 @@
       "path": "netlify/functions/routes/emailDelivery.ts",
       "module": "platform",
       "role": "backend-route",
-      "lines": 295,
-      "hash": "061fc4c8c125400b"
+      "lines": 369,
+      "hash": "32823f0901a45160"
     },
     {
       "path": "netlify/functions/routes/employees.ts",
@@ -2675,6 +2682,13 @@
       "role": "e2e-suite",
       "lines": 223,
       "hash": "08823a71114d6be4"
+    },
+    {
+      "path": "scripts/e2e/suites/emailTemplateSend.mjs",
+      "module": "testing",
+      "role": "e2e-suite",
+      "lines": 205,
+      "hash": "830c2f393c3e5264"
     },
     {
       "path": "scripts/e2e/suites/emailWebhook.mjs",
@@ -7888,8 +7902,8 @@
       "path": "src/lib/permissionMeta.ts",
       "module": "security",
       "role": "frontend",
-      "lines": 1920,
-      "hash": "736c5dda959f65c9"
+      "lines": 1926,
+      "hash": "e580fe51c04a5f82"
     },
     {
       "path": "src/lib/permissions.test.ts",
@@ -7902,8 +7916,8 @@
       "path": "src/lib/permissions.ts",
       "module": "security",
       "role": "frontend",
-      "lines": 1582,
-      "hash": "feedd715a13714e7"
+      "lines": 1586,
+      "hash": "7db55acedb2b5d46"
     },
     {
       "path": "src/lib/popup.ts",
@@ -9717,6 +9731,13 @@
       "role": "shared-types",
       "lines": 15,
       "hash": "845ce2bff3433fc4"
+    },
+    {
+      "path": "types/mjml.d.ts",
+      "module": "platform",
+      "role": "shared-types",
+      "lines": 24,
+      "hash": "89d6d32214fa7ae0"
     },
     {
       "path": "types/payrollControlCenter.ts",
@@ -12639,6 +12660,96 @@
       "kind": "function",
       "file": "netlify/functions/lib/email/emailService.ts",
       "line": 203,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TemplateSendRefusal",
+      "kind": "type",
+      "file": "netlify/functions/lib/email/emailTemplateSend.ts",
+      "line": 25,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TemplateSendResult",
+      "kind": "type",
+      "file": "netlify/functions/lib/email/emailTemplateSend.ts",
+      "line": 32,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TOKEN_RE",
+      "kind": "variable",
+      "file": "netlify/functions/lib/email/emailTemplateSend.ts",
+      "line": 46,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "resolveTemplateVariables",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailTemplateSend.ts",
+      "line": 55,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "findUnhostedAssets",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailTemplateSend.ts",
+      "line": 75,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "VersionRow",
+      "kind": "interface",
+      "file": "netlify/functions/lib/email/emailTemplateSend.ts",
+      "line": 87,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TemplateRow",
+      "kind": "interface",
+      "file": "netlify/functions/lib/email/emailTemplateSend.ts",
+      "line": 91,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TemplateSendArgs",
+      "kind": "interface",
+      "file": "netlify/functions/lib/email/emailTemplateSend.ts",
+      "line": 93,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sendTemplateEmail",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailTemplateSend.ts",
+      "line": 104,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -36160,7 +36271,7 @@
       "name": "PermissionKey",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 505,
+      "line": 509,
       "module": "security",
       "exported": true,
       "container": "",
@@ -36170,7 +36281,7 @@
       "name": "CRITICAL_GRANT_KEYS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 514,
+      "line": 518,
       "module": "security",
       "exported": true,
       "container": "",
@@ -36180,7 +36291,7 @@
       "name": "isCriticalGrant",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 526,
+      "line": 530,
       "module": "security",
       "exported": true,
       "container": "",
@@ -36190,7 +36301,7 @@
       "name": "COMPLIANCE_GATED_KEYS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 546,
+      "line": 550,
       "module": "security",
       "exported": true,
       "container": "",
@@ -36200,7 +36311,7 @@
       "name": "ROLE_PERMISSIONS",
       "kind": "object",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 555,
+      "line": 559,
       "module": "security",
       "exported": false,
       "container": "",
@@ -36210,7 +36321,7 @@
       "name": "PermissionOverrideRow",
       "kind": "interface",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1068,
+      "line": 1072,
       "module": "security",
       "exported": true,
       "container": "",
@@ -36220,7 +36331,7 @@
       "name": "resolveWithSet",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1088,
+      "line": 1092,
       "module": "security",
       "exported": true,
       "container": "",
@@ -36230,7 +36341,7 @@
       "name": "resolvePermission",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1113,
+      "line": 1117,
       "module": "security",
       "exported": true,
       "container": "",
@@ -36240,7 +36351,7 @@
       "name": "ROLE_CACHE_TTL_MS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1123,
+      "line": 1127,
       "module": "security",
       "exported": false,
       "container": "",
@@ -36250,7 +36361,7 @@
       "name": "_roleCache",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1124,
+      "line": 1128,
       "module": "security",
       "exported": false,
       "container": "",
@@ -36260,7 +36371,7 @@
       "name": "invalidateRolePermissions",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1127,
+      "line": 1131,
       "module": "security",
       "exported": true,
       "container": "",
@@ -36270,7 +36381,7 @@
       "name": "loadRolePermissions",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1143,
+      "line": 1147,
       "module": "security",
       "exported": true,
       "container": "",
@@ -36280,7 +36391,7 @@
       "name": "loadRoleIsEmployee",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1178,
+      "line": 1182,
       "module": "security",
       "exported": true,
       "container": "",
@@ -36290,7 +36401,7 @@
       "name": "RoleScope",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1190,
+      "line": 1194,
       "module": "security",
       "exported": true,
       "container": "",
@@ -36300,7 +36411,7 @@
       "name": "_scopeCache",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1191,
+      "line": 1195,
       "module": "security",
       "exported": false,
       "container": "",
@@ -36310,7 +36421,7 @@
       "name": "invalidateRoleScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1194,
+      "line": 1198,
       "module": "security",
       "exported": true,
       "container": "",
@@ -36320,7 +36431,7 @@
       "name": "loadRoleScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1204,
+      "line": 1208,
       "module": "security",
       "exported": true,
       "container": "",
@@ -36330,7 +36441,7 @@
       "name": "DeptScope",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1217,
+      "line": 1221,
       "module": "security",
       "exported": true,
       "container": "",
@@ -36340,7 +36451,7 @@
       "name": "deptScopeFilter",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1225,
+      "line": 1229,
       "module": "security",
       "exported": true,
       "container": "",
@@ -36350,7 +36461,7 @@
       "name": "assertInScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1236,
+      "line": 1240,
       "module": "security",
       "exported": true,
       "container": "",
@@ -43360,7 +43471,7 @@
       "name": "router",
       "kind": "variable",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 30,
+      "line": 32,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -43370,7 +43481,7 @@
       "name": "body",
       "kind": "function",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 33,
+      "line": 35,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -43380,7 +43491,7 @@
       "name": "RetrySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 86,
+      "line": 88,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -43390,7 +43501,17 @@
       "name": "TestSendSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 133,
+      "line": 135,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TemplateSendSchema",
+      "kind": "variable",
+      "file": "netlify/functions/routes/emailDelivery.ts",
+      "line": 226,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -43400,7 +43521,7 @@
       "name": "WEBHOOK_STATUS",
       "kind": "object",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 222,
+      "line": 296,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -43410,7 +43531,7 @@
       "name": "NOTEWORTHY",
       "kind": "variable",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 232,
+      "line": 306,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -51358,6 +51479,78 @@
       "file": "scripts/e2e/suites/emailRetryPayslip.mjs",
       "line": 115,
       "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "title",
+      "kind": "variable",
+      "file": "scripts/e2e/suites/emailTemplateSend.mjs",
+      "line": 17,
+      "module": "testing",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "run",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailTemplateSend.mjs",
+      "line": 19,
+      "module": "testing",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "starterSchema",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailTemplateSend.mjs",
+      "line": 44,
+      "module": "testing",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "seedTemplate",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailTemplateSend.mjs",
+      "line": 53,
+      "module": "testing",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "deriveVariables",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailTemplateSend.mjs",
+      "line": 76,
+      "module": "testing",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "send",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailTemplateSend.mjs",
+      "line": 89,
+      "module": "testing",
       "exported": false,
       "container": "run",
       "tags": [
@@ -135408,7 +135601,7 @@
       "name": "PermissionKey",
       "kind": "type",
       "file": "src/lib/permissions.ts",
-      "line": 585,
+      "line": 589,
       "module": "security",
       "exported": true,
       "container": "",
@@ -135418,7 +135611,7 @@
       "name": "CRITICAL_GRANT_KEYS",
       "kind": "variable",
       "file": "src/lib/permissions.ts",
-      "line": 590,
+      "line": 594,
       "module": "security",
       "exported": true,
       "container": "",
@@ -135428,7 +135621,7 @@
       "name": "COMPLIANCE_GATED_KEYS",
       "kind": "variable",
       "file": "src/lib/permissions.ts",
-      "line": 618,
+      "line": 622,
       "module": "security",
       "exported": true,
       "container": "",
@@ -135438,7 +135631,7 @@
       "name": "EMPLOYEE_BASELINE",
       "kind": "variable",
       "file": "src/lib/permissions.ts",
-      "line": 633,
+      "line": 637,
       "module": "security",
       "exported": false,
       "container": "",
@@ -135448,7 +135641,7 @@
       "name": "ROLE_PERMISSIONS",
       "kind": "object",
       "file": "src/lib/permissions.ts",
-      "line": 661,
+      "line": 665,
       "module": "security",
       "exported": true,
       "container": "",
@@ -135458,7 +135651,7 @@
       "name": "PermissionContext",
       "kind": "interface",
       "file": "src/lib/permissions.ts",
-      "line": 1425,
+      "line": 1429,
       "module": "security",
       "exported": true,
       "container": "",
@@ -135468,7 +135661,7 @@
       "name": "resolvePermission",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1456,
+      "line": 1460,
       "module": "security",
       "exported": true,
       "container": "",
@@ -135478,7 +135671,7 @@
       "name": "roleDefaultGranted",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1501,
+      "line": 1505,
       "module": "security",
       "exported": true,
       "container": "",
@@ -135488,7 +135681,7 @@
       "name": "PermissionState",
       "kind": "type",
       "file": "src/lib/permissions.ts",
-      "line": 1507,
+      "line": 1511,
       "module": "security",
       "exported": true,
       "container": "",
@@ -135498,7 +135691,7 @@
       "name": "permissionState",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1513,
+      "line": 1517,
       "module": "security",
       "exported": true,
       "container": "",
@@ -135508,7 +135701,7 @@
       "name": "permissionGroups",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1523,
+      "line": 1527,
       "module": "security",
       "exported": true,
       "container": "",
@@ -135518,7 +135711,7 @@
       "name": "can",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1543,
+      "line": 1547,
       "module": "security",
       "exported": true,
       "container": "",
@@ -135528,7 +135721,7 @@
       "name": "useCan",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1559,
+      "line": 1563,
       "module": "security",
       "exported": true,
       "container": "",
@@ -135540,7 +135733,7 @@
       "name": "useAnyCan",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1571,
+      "line": 1575,
       "module": "security",
       "exported": true,
       "container": "",
@@ -155006,6 +155199,46 @@
       "tags": []
     },
     {
+      "name": "MjmlError",
+      "kind": "interface",
+      "file": "types/mjml.d.ts",
+      "line": 7,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "MjmlResult",
+      "kind": "interface",
+      "file": "types/mjml.d.ts",
+      "line": 13,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "MjmlOptions",
+      "kind": "interface",
+      "file": "types/mjml.d.ts",
+      "line": 17,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "mjml2html",
+      "kind": "function",
+      "file": "types/mjml.d.ts",
+      "line": 22,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "PayrollRunRegisterTab",
       "kind": "type",
       "file": "types/payrollControlCenter.ts",
@@ -158942,7 +159175,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 74,
+      "line": 76,
       "module": "platform"
     },
     {
@@ -158955,7 +159188,7 @@
       ],
       "schema": "RetrySchema",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 91,
+      "line": 93,
       "module": "platform"
     },
     {
@@ -158968,7 +159201,20 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 47,
+      "line": 49,
+      "module": "platform"
+    },
+    {
+      "path": "/api/email/template-send",
+      "localPath": "/email/template-send",
+      "router": "router",
+      "permission": "platform.email_templates.send",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "TemplateSendSchema",
+      "file": "netlify/functions/routes/emailDelivery.ts",
+      "line": 234,
       "module": "platform"
     },
     {
@@ -158981,7 +159227,7 @@
       ],
       "schema": "TestSendSchema",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 141,
+      "line": 143,
       "module": "platform"
     },
     {
@@ -158992,7 +159238,7 @@
       "guards": [],
       "schema": "",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 234,
+      "line": 308,
       "module": "platform"
     },
     {
@@ -183232,6 +183478,76 @@
       "file": "supabase/migrations/20261101000000_email_delivery_backbone.sql",
       "line": 187,
       "module": "platform"
+    },
+    {
+      "name": "public.email_templates",
+      "kind": "table",
+      "file": "supabase/migrations/20261102000000_email_template_store.sql",
+      "line": 28,
+      "module": "platform"
+    },
+    {
+      "name": "email_templates_key_uidx",
+      "kind": "index",
+      "file": "supabase/migrations/20261102000000_email_template_store.sql",
+      "line": 61,
+      "module": "platform"
+    },
+    {
+      "name": "email_templates_trigger_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20261102000000_email_template_store.sql",
+      "line": 63,
+      "module": "platform"
+    },
+    {
+      "name": "public.email_template_versions",
+      "kind": "table",
+      "file": "supabase/migrations/20261102000000_email_template_store.sql",
+      "line": 67,
+      "module": "platform"
+    },
+    {
+      "name": "email_template_versions_no_uidx",
+      "kind": "index",
+      "file": "supabase/migrations/20261102000000_email_template_store.sql",
+      "line": 109,
+      "module": "platform"
+    },
+    {
+      "name": "email_template_versions_one_published_uidx",
+      "kind": "index",
+      "file": "supabase/migrations/20261102000000_email_template_store.sql",
+      "line": 113,
+      "module": "platform"
+    },
+    {
+      "name": "email_template_versions_status_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20261102000000_email_template_store.sql",
+      "line": 116,
+      "module": "platform"
+    },
+    {
+      "name": "public.tg_email_templates_touch",
+      "kind": "function",
+      "file": "supabase/migrations/20261102000000_email_template_store.sql",
+      "line": 133,
+      "module": "platform"
+    },
+    {
+      "name": "email_templates_touch",
+      "kind": "trigger",
+      "file": "supabase/migrations/20261102000000_email_template_store.sql",
+      "line": 141,
+      "module": "platform"
+    },
+    {
+      "name": "email_template_versions_touch",
+      "kind": "trigger",
+      "file": "supabase/migrations/20261102000000_email_template_store.sql",
+      "line": 146,
+      "module": "platform"
     }
   ],
   "e2eSuites": [
@@ -184581,6 +184897,57 @@
       ],
       "apiPaths": [
         "/api/email/retry"
+      ]
+    },
+    {
+      "name": "emailTemplateSend",
+      "title": "Platform — Email Template Studio send path",
+      "module": "testing",
+      "file": "scripts/e2e/suites/emailTemplateSend.mjs",
+      "tests": [
+        {
+          "name": "setup: a REAL user without the send permission",
+          "line": 93
+        },
+        {
+          "name": "sending is denied without platform.email_templates.send",
+          "line": 102
+        },
+        {
+          "name": "an unknown template key is a 404",
+          "line": 111
+        },
+        {
+          "name": "⛔ a template with no PUBLISHED version cannot be sent",
+          "line": 118
+        },
+        {
+          "name": "⭐ missing variables are REFUSED and named — never sent as placeholders",
+          "line": 128
+        },
+        {
+          "name": "⭐ an unresolved token in the SUBJECT is caught too",
+          "line": 141
+        },
+        {
+          "name": "⭐ relative asset paths are REFUSED — they arrive broken in a mail client",
+          "line": 154
+        },
+        {
+          "name": "⭐ a valid template COMPILES server-side and reports its version",
+          "line": 168
+        },
+        {
+          "name": "⛔ a dry run creates NO delivery record and NO app_event",
+          "line": 182
+        },
+        {
+          "name": "the route schema rejects a malformed request",
+          "line": 199
+        }
+      ],
+      "apiPaths": [
+        "/api/email/template-send"
       ]
     },
     {
