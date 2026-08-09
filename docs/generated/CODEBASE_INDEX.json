@@ -1,22 +1,22 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "1ca2fcec85ad2edaed1cea09fd49e71b894a2697",
+    "head": "cebcc1f6d2ec656e5e398ab0525f49cba341cc84",
     "branch": "feat/email-delivery-resend",
-    "fingerprint": "af86caf8e721e428531ac4c6",
-    "indexedFiles": 1708
+    "fingerprint": "f972366603ee5a3f8a9682a1",
+    "indexedFiles": 1710
   },
   "summary": {
-    "files": 1354,
-    "symbols": 13636,
+    "files": 1356,
+    "symbols": 13658,
     "widgets": 51,
-    "routes": 975,
-    "routeDefinitions": 976,
+    "routes": 976,
+    "routeDefinitions": 977,
     "unmountedRoutes": 17,
     "apiCalls": 354,
     "databaseObjects": 1426,
-    "e2eSuites": 86,
-    "e2eTests": 2692
+    "e2eSuites": 87,
+    "e2eTests": 2702
   },
   "modules": [
     {
@@ -139,11 +139,11 @@
     {
       "id": "platform",
       "counts": {
-        "files": 316,
-        "symbols": 2869,
+        "files": 317,
+        "symbols": 2887,
         "widgets": 0,
-        "routes": 35,
-        "routeDefinitions": 50,
+        "routes": 36,
+        "routeDefinitions": 51,
         "apiCalls": 50,
         "databaseObjects": 317,
         "e2eSuites": 0
@@ -152,14 +152,14 @@
     {
       "id": "testing",
       "counts": {
-        "files": 41,
-        "symbols": 202,
+        "files": 42,
+        "symbols": 206,
         "widgets": 0,
         "routes": 0,
         "routeDefinitions": 0,
         "apiCalls": 0,
         "databaseObjects": 0,
-        "e2eSuites": 12
+        "e2eSuites": 13
       }
     },
     {
@@ -323,6 +323,13 @@
       "role": "backend-lib",
       "lines": 247,
       "hash": "1f70138e1aa7fed9"
+    },
+    {
+      "path": "netlify/functions/lib/email/emailReconciliation.ts",
+      "module": "platform",
+      "role": "backend-lib",
+      "lines": 222,
+      "hash": "6ef831f4e2bbbae7"
     },
     {
       "path": "netlify/functions/lib/email/emailService.ts",
@@ -2050,8 +2057,8 @@
       "path": "netlify/functions/routes/emailDelivery.ts",
       "module": "platform",
       "role": "backend-route",
-      "lines": 207,
-      "hash": "442a3072e557ce2e"
+      "lines": 248,
+      "hash": "865579381903dacf"
     },
     {
       "path": "netlify/functions/routes/employees.ts",
@@ -2640,6 +2647,13 @@
       "role": "e2e-suite",
       "lines": 158,
       "hash": "6df0cac0078784b7"
+    },
+    {
+      "path": "scripts/e2e/suites/emailReconciliation.mjs",
+      "module": "testing",
+      "role": "e2e-suite",
+      "lines": 214,
+      "hash": "d1fddf4e86ca2c0c"
     },
     {
       "path": "scripts/e2e/suites/emailWebhook.mjs",
@@ -12102,6 +12116,186 @@
       "kind": "function",
       "file": "netlify/functions/lib/email/emailDeliveryRecord.ts",
       "line": 216,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PENDING_STUCK_MINUTES",
+      "kind": "variable",
+      "file": "netlify/functions/lib/email/emailReconciliation.ts",
+      "line": 20,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SENT_UNCONFIRMED_HOURS",
+      "kind": "variable",
+      "file": "netlify/functions/lib/email/emailReconciliation.ts",
+      "line": 22,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DELAYED_STALE_HOURS",
+      "kind": "variable",
+      "file": "netlify/functions/lib/email/emailReconciliation.ts",
+      "line": 24,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WebhookCapability",
+      "kind": "interface",
+      "file": "netlify/functions/lib/email/emailReconciliation.ts",
+      "line": 33,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "getWebhookCapability",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailReconciliation.ts",
+      "line": 39,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ReconciliationEntry",
+      "kind": "interface",
+      "file": "netlify/functions/lib/email/emailReconciliation.ts",
+      "line": 51,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "UnmatchedEvent",
+      "kind": "interface",
+      "file": "netlify/functions/lib/email/emailReconciliation.ts",
+      "line": 68,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ReconciliationReport",
+      "kind": "interface",
+      "file": "netlify/functions/lib/email/emailReconciliation.ts",
+      "line": 76,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "RETRYABLE",
+      "kind": "variable",
+      "file": "netlify/functions/lib/email/emailReconciliation.ts",
+      "line": 108,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "isRetryableStatus",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailReconciliation.ts",
+      "line": 110,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SELECT",
+      "kind": "variable",
+      "file": "netlify/functions/lib/email/emailReconciliation.ts",
+      "line": 112,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Row",
+      "kind": "type",
+      "file": "netlify/functions/lib/email/emailReconciliation.ts",
+      "line": 115,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "toEntry",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailReconciliation.ts",
+      "line": 121,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "agoISO",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailReconciliation.ts",
+      "line": 128,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "buildReconciliationReport",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailReconciliation.ts",
+      "line": 130,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "query",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailReconciliation.ts",
+      "line": 133,
+      "module": "platform",
+      "exported": false,
+      "container": "buildReconciliationReport",
+      "tags": []
+    },
+    {
+      "name": "DeliveryHealth",
+      "kind": "interface",
+      "file": "netlify/functions/lib/email/emailReconciliation.ts",
+      "line": 195,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "getDeliveryHealth",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailReconciliation.ts",
+      "line": 203,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -42893,7 +43087,7 @@
       "name": "router",
       "kind": "variable",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 26,
+      "line": 28,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -42903,7 +43097,7 @@
       "name": "body",
       "kind": "function",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 29,
+      "line": 31,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -42913,7 +43107,7 @@
       "name": "TestSendSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 45,
+      "line": 86,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -42923,7 +43117,7 @@
       "name": "WEBHOOK_STATUS",
       "kind": "object",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 134,
+      "line": 175,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -42933,7 +43127,7 @@
       "name": "NOTEWORTHY",
       "kind": "variable",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 144,
+      "line": 185,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -50691,6 +50885,54 @@
       "module": "testing",
       "exported": true,
       "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "title",
+      "kind": "variable",
+      "file": "scripts/e2e/suites/emailReconciliation.mjs",
+      "line": 16,
+      "module": "testing",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "run",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailReconciliation.mjs",
+      "line": 18,
+      "module": "testing",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "seed",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailReconciliation.mjs",
+      "line": 36,
+      "module": "testing",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "clearWebhookEvidence",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailReconciliation.mjs",
+      "line": 49,
+      "module": "testing",
+      "exported": false,
+      "container": "run",
       "tags": [
         "test"
       ]
@@ -154683,6 +154925,19 @@
       "module": "security"
     },
     {
+      "path": "/api/email/reconciliation",
+      "localPath": "/email/reconciliation",
+      "router": "router",
+      "permission": "settings.system.view",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "",
+      "file": "netlify/functions/routes/emailDelivery.ts",
+      "line": 72,
+      "module": "platform"
+    },
+    {
       "path": "/api/email/status",
       "localPath": "/email/status",
       "router": "router",
@@ -154692,7 +154947,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 31,
+      "line": 45,
       "module": "platform"
     },
     {
@@ -154705,7 +154960,7 @@
       ],
       "schema": "TestSendSchema",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 53,
+      "line": 94,
       "module": "platform"
     },
     {
@@ -154716,7 +154971,7 @@
       "guards": [],
       "schema": "",
       "file": "netlify/functions/routes/emailDelivery.ts",
-      "line": 146,
+      "line": 187,
       "module": "platform"
     },
     {
@@ -180147,6 +180402,58 @@
         "/api/email/status",
         "/api/email/test-send",
         "/api/hr/onboarding/provision-account"
+      ]
+    },
+    {
+      "name": "emailReconciliation",
+      "title": "Platform — email reconciliation and delivery status",
+      "module": "testing",
+      "file": "scripts/e2e/suites/emailReconciliation.mjs",
+      "tests": [
+        {
+          "name": "setup: a REAL non-admin user",
+          "line": 56
+        },
+        {
+          "name": "both surfaces are denied without settings.system.view",
+          "line": 65
+        },
+        {
+          "name": "status reports webhook state and a counts-only health summary",
+          "line": 75
+        },
+        {
+          "name": "⛔ neither the API key nor the webhook secret is ever returned",
+          "line": 91
+        },
+        {
+          "name": "⭐ with NO webhook evidence, sent deliveries are NOT called stuck",
+          "line": 104
+        },
+        {
+          "name": "⭐ once a verified webhook exists, sent-aging turns ON",
+          "line": 132
+        },
+        {
+          "name": "pending and failed are surfaced REGARDLESS of webhook readiness",
+          "line": 159
+        },
+        {
+          "name": "⛔ bounced and complained are NEVER offered as retryable",
+          "line": 169
+        },
+        {
+          "name": "an unmatched provider event is surfaced for operator review",
+          "line": 190
+        },
+        {
+          "name": "the report states its own thresholds rather than hiding them",
+          "line": 205
+        }
+      ],
+      "apiPaths": [
+        "/api/email/reconciliation",
+        "/api/email/status"
       ]
     },
     {

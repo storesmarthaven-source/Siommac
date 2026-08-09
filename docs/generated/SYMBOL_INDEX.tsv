@@ -244,6 +244,24 @@ WebhookRecordResult	interface	platform	true		netlify/functions/lib/email/emailDe
 recordWebhookEvent	function	platform	true		netlify/functions/lib/email/emailDeliveryRecord.ts	151	
 findDeliveryByProviderMessageId	function	platform	true		netlify/functions/lib/email/emailDeliveryRecord.ts	201	
 advanceDelivery	function	platform	true		netlify/functions/lib/email/emailDeliveryRecord.ts	216	
+PENDING_STUCK_MINUTES	variable	platform	false		netlify/functions/lib/email/emailReconciliation.ts	20	
+SENT_UNCONFIRMED_HOURS	variable	platform	false		netlify/functions/lib/email/emailReconciliation.ts	22	
+DELAYED_STALE_HOURS	variable	platform	false		netlify/functions/lib/email/emailReconciliation.ts	24	
+WebhookCapability	interface	platform	true		netlify/functions/lib/email/emailReconciliation.ts	33	
+getWebhookCapability	function	platform	true		netlify/functions/lib/email/emailReconciliation.ts	39	
+ReconciliationEntry	interface	platform	true		netlify/functions/lib/email/emailReconciliation.ts	51	
+UnmatchedEvent	interface	platform	true		netlify/functions/lib/email/emailReconciliation.ts	68	
+ReconciliationReport	interface	platform	true		netlify/functions/lib/email/emailReconciliation.ts	76	
+RETRYABLE	variable	platform	false		netlify/functions/lib/email/emailReconciliation.ts	108	
+isRetryableStatus	function	platform	true		netlify/functions/lib/email/emailReconciliation.ts	110	
+SELECT	variable	platform	false		netlify/functions/lib/email/emailReconciliation.ts	112	
+Row	type	platform	false		netlify/functions/lib/email/emailReconciliation.ts	115	
+toEntry	function	platform	false		netlify/functions/lib/email/emailReconciliation.ts	121	
+agoISO	function	platform	false		netlify/functions/lib/email/emailReconciliation.ts	128	
+buildReconciliationReport	function	platform	true		netlify/functions/lib/email/emailReconciliation.ts	130	
+query	function	platform	false		netlify/functions/lib/email/emailReconciliation.ts	133	buildReconciliationReport
+DeliveryHealth	interface	platform	true		netlify/functions/lib/email/emailReconciliation.ts	195	
+getDeliveryHealth	function	platform	true		netlify/functions/lib/email/emailReconciliation.ts	203	
 transport	variable	platform	false		netlify/functions/lib/email/emailService.ts	24	
 EmailSendResult	type	platform	true		netlify/functions/lib/email/emailService.ts	26	
 SendEmailOptions	interface	platform	true		netlify/functions/lib/email/emailService.ts	56	
@@ -3319,11 +3337,11 @@ router	variable	hr	false		netlify/functions/routes/departments.ts	7
 DeptRow	interface	hr	false		netlify/functions/routes/departments.ts	9	
 UserRow	interface	hr	false		netlify/functions/routes/departments.ts	17	
 _listDepartments	function	hr	false		netlify/functions/routes/departments.ts	24	
-router	variable	platform	false		netlify/functions/routes/emailDelivery.ts	26	
-body	function	platform	false		netlify/functions/routes/emailDelivery.ts	29	
-TestSendSchema	variable	platform	false		netlify/functions/routes/emailDelivery.ts	45	
-WEBHOOK_STATUS	object	platform	false		netlify/functions/routes/emailDelivery.ts	134	
-NOTEWORTHY	variable	platform	false		netlify/functions/routes/emailDelivery.ts	144	
+router	variable	platform	false		netlify/functions/routes/emailDelivery.ts	28	
+body	function	platform	false		netlify/functions/routes/emailDelivery.ts	31	
+TestSendSchema	variable	platform	false		netlify/functions/routes/emailDelivery.ts	86	
+WEBHOOK_STATUS	object	platform	false		netlify/functions/routes/emailDelivery.ts	175	
+NOTEWORTHY	variable	platform	false		netlify/functions/routes/emailDelivery.ts	185	
 router	variable	hr	false		netlify/functions/routes/employees.ts	13	
 _nextEmployeeNumber	function	hr	false		netlify/functions/routes/employees.ts	15	
 router	variable	finance	false		netlify/functions/routes/financeAccountsPayable.ts	20	
@@ -4086,6 +4104,10 @@ createRunFixture	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	
 expectBlock	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	630	run
 title	variable	testing	true	test	scripts/e2e/suites/emailDelivery.mjs	18	
 run	function	testing	true	test	scripts/e2e/suites/emailDelivery.mjs	20	
+title	variable	testing	true	test	scripts/e2e/suites/emailReconciliation.mjs	16	
+run	function	testing	true	test	scripts/e2e/suites/emailReconciliation.mjs	18	
+seed	function	testing	false	test	scripts/e2e/suites/emailReconciliation.mjs	36	run
+clearWebhookEvidence	function	testing	false	test	scripts/e2e/suites/emailReconciliation.mjs	49	run
 title	variable	testing	true	test	scripts/e2e/suites/emailWebhook.mjs	21	
 run	function	testing	true	test	scripts/e2e/suites/emailWebhook.mjs	23	
 sign	function	testing	false	test	scripts/e2e/suites/emailWebhook.mjs	44	run

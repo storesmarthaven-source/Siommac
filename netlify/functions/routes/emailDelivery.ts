@@ -3,6 +3,7 @@
  *
  *   POST /email/status     — is email delivery configured, and as whom?
  *   POST /email/test-send  — prove it, to an address the operator names
+ *   POST /email/reconciliation — deliveries and provider events that need a human
  *   POST /email/webhook    — Resend lifecycle events (PUBLIC; signature IS the authentication)
  *
  * Both are gated on `settings.system.*`, which already exists in both permission catalogues and
@@ -20,6 +21,7 @@ import { z, zv } from '../lib/validate';
 import { sendEmail, getEmailDeliveryStatus } from '../lib/email/emailService';
 import { recordWebhookEvent, type EmailDeliveryStatus } from '../lib/email/emailDeliveryRecord';
 import { verifyWebhookSignature } from '../lib/email/webhookSignature';
+import { getWebhookCapability, getDeliveryHealth, buildReconciliationReport } from '../lib/email/emailReconciliation';
 import { emitAppEvent } from '../lib/appEvents';
 import type { HonoVariables } from '../../../types/api';
 
@@ -28,9 +30,48 @@ const router = new Hono<{ Variables: HonoVariables }>();
 // apiPost/authPost wrap the payload as { args }, so every route reads body.args.
 const body = (c: { get: (k: string) => unknown }) => (c.get('body') as Record<string, unknown>).args ?? {};
 
+/**
+ * The Email Delivery settings/status surface.
+ *
+ * Composed here rather than inside getEmailDeliveryStatus() so that function stays pure and
+ * synchronous — configuration validation needs no database, and keeping it that way is what lets
+ * it be unit-tested against a plain env object.
+ *
+ * ⛔ Nothing secret crosses this boundary: not the API key, not the webhook secret, not a masked
+ * form of either. `configured` and `webhook.configured` answer every question an operator can act
+ * on. The health summary is COUNTS ONLY — no recipients, no subjects, no provider error text —
+ * because this is a configuration screen, not a mail log.
+ */
 router.post('/email/status', async c => {
   await requirePermission(c, 'settings.system.view');
-  return c.json({ success: true, data: getEmailDeliveryStatus() });
+  const [webhook, health] = await Promise.all([getWebhookCapability(), getDeliveryHealth()]);
+  return c.json({
+    success: true,
+    data: {
+      ...getEmailDeliveryStatus(),
+      webhook: {
+        // "Configured" is the SECRET being present. Whether Resend can actually reach us is a
+        // different fact, and `everReceived` is the only honest evidence of it.
+        configured: !!(process.env.RESEND_WEBHOOK_SECRET ?? '').trim(),
+        everReceived: webhook.everReceived,
+        lastReceivedAt: webhook.lastReceivedAt,
+        lastEventType: webhook.lastEventType,
+      },
+      health,
+    },
+  });
+});
+
+/**
+ * POST /email/reconciliation — what needs a human.
+ *
+ * Separate from status because it reads recipient and error detail, which a configuration screen
+ * has no business showing. Same permission for now; the split keeps the two payloads honest about
+ * what they carry.
+ */
+router.post('/email/reconciliation', async c => {
+  await requirePermission(c, 'settings.system.view');
+  return c.json({ success: true, data: await buildReconciliationReport() });
 });
 
 /**

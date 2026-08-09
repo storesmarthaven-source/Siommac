@@ -113,9 +113,10 @@ path	module	permission	guards	schema	file	line
 /api/deleteProjectSite	platform	sites.delete	assertInScope,requirePermission	DeleteSiteSchema	netlify/functions/routes/sites.ts	122
 /api/deleteTicket	communications		requireUser	GetTicketSchema	netlify/functions/routes/tickets.ts	493
 /api/disable2fa	security		requireUser	Disable2faSchema	netlify/functions/routes/auth.ts	551
-/api/email/status	platform	settings.system.view	requirePermission		netlify/functions/routes/emailDelivery.ts	31
-/api/email/test-send	platform	settings.system.manage	requirePermission	TestSendSchema	netlify/functions/routes/emailDelivery.ts	53
-/api/email/webhook	platform				netlify/functions/routes/emailDelivery.ts	146
+/api/email/reconciliation	platform	settings.system.view	requirePermission		netlify/functions/routes/emailDelivery.ts	72
+/api/email/status	platform	settings.system.view	requirePermission		netlify/functions/routes/emailDelivery.ts	45
+/api/email/test-send	platform	settings.system.manage	requirePermission	TestSendSchema	netlify/functions/routes/emailDelivery.ts	94
+/api/email/webhook	platform				netlify/functions/routes/emailDelivery.ts	187
 /api/finance/ap/aging	finance	finance.ap.view	requirePermission		netlify/functions/routes/financeAccountsPayable.ts	100
 /api/finance/ap/bills/approve	finance	finance.ap.bills.approve	requirePermission	z.object({ id: z.string().uuid() })	netlify/functions/routes/financeAccountsPayable.ts	200
 /api/finance/ap/bills/audit	finance	finance.ap.view	requirePermission	z.object({ id: z.string().uuid() })	netlify/functions/routes/financeAccountsPayable.ts	238
