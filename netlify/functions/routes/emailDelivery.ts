@@ -4,6 +4,7 @@
  *   POST /email/status     — is email delivery configured, and as whom?
  *   POST /email/test-send  — prove it, to an address the operator names
  *   POST /email/reconciliation — deliveries and provider events that need a human
+ *   POST /email/retry      — one generic Retry, dispatched to an origin-specific handler
  *   POST /email/webhook    — Resend lifecycle events (PUBLIC; signature IS the authentication)
  *
  * Both are gated on `settings.system.*`, which already exists in both permission catalogues and
@@ -22,6 +23,7 @@ import { sendEmail, getEmailDeliveryStatus } from '../lib/email/emailService';
 import { recordWebhookEvent, type EmailDeliveryStatus } from '../lib/email/emailDeliveryRecord';
 import { verifyWebhookSignature } from '../lib/email/webhookSignature';
 import { getWebhookCapability, getDeliveryHealth, buildReconciliationReport } from '../lib/email/emailReconciliation';
+import { retryDelivery } from '../lib/email/emailRetry';
 import { emitAppEvent } from '../lib/appEvents';
 import type { HonoVariables } from '../../../types/api';
 
@@ -72,6 +74,51 @@ router.post('/email/status', async c => {
 router.post('/email/reconciliation', async c => {
   await requirePermission(c, 'settings.system.view');
   return c.json({ success: true, data: await buildReconciliationReport() });
+});
+
+/**
+ * POST /email/retry — re-send ONE delivery, rebuilt from its authoritative business record.
+ *
+ * `force` exists solely for `delayed`: the provider already holds that message, so a re-send risks
+ * a duplicate and needs a human to say so explicitly. It does NOT unlock `bounced` or
+ * `complained` — those stay terminal whatever anyone passes.
+ */
+const RetrySchema = z.object({
+  deliveryId: z.string().uuid(),
+  force: z.boolean().optional(),
+});
+
+router.post('/email/retry', async c => {
+  const actor = await requirePermission(c, 'settings.system.manage');
+  const v = zv(c, RetrySchema, body(c));
+  if (!v.ok) return v.response;
+
+  const result = await retryDelivery(v.data.deliveryId, { force: v.data.force === true });
+
+  if (!result.ok) {
+    // 409 — the delivery's own state or origin forbids it. Not a server fault, and not something
+    // retrying the REQUEST will fix, so it must not read as a transient error.
+    return c.json({ success: false, message: result.message, data: { refusal: result.refusal } }, 409 as 200);
+  }
+
+  void emitAppEvent({
+    eventType: 'platform.email.retried',
+    sourceModule: 'platform', sourceEntityType: 'email_delivery', sourceEntityId: result.deliveryId,
+    actorUserId: actor.id, severity: 'info',
+    payload: { providerMessageId: result.providerMessageId, deduplicated: result.deduplicated },
+  });
+
+  return c.json({
+    success: true,
+    data: {
+      deliveryId: result.deliveryId,
+      providerMessageId: result.providerMessageId,
+      deduplicated: result.deduplicated,
+      message: result.deduplicated
+        ? 'This delivery had already reached the provider — nothing was sent again.'
+        : 'The email was rebuilt from its source and re-sent.',
+    },
+  });
 });
 
 /**

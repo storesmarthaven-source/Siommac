@@ -61,8 +61,13 @@ export interface ReconciliationEntry {
   providerMessageId: string | null;
   sourceEntityType: string | null;
   sourceEntityId: string | null;
-  /** Whether re-sending this delivery is permitted. See RETRYABLE below. */
+  /** Safe to re-send without a human decision: pending or failed only. */
   retryable: boolean;
+  /**
+   * The provider already accepted this message (delayed), so a re-send risks a duplicate. Offered
+   * only behind an explicit operator override, never automatically.
+   */
+  requiresOperatorDecision: boolean;
 }
 
 export interface UnmatchedEvent {
@@ -104,10 +109,19 @@ export interface ReconciliationReport {
  * rejected the mail — retrying earns a worse sender reputation. A complaint means the recipient
  * marked it as spam; mailing them again is the single most damaging thing a sender can do. Neither
  * is retried automatically OR manually through this path.
+ *
+ * ⛔ `delayed` is ALSO absent, and that is a deliberate tightening. The provider has already
+ * ACCEPTED a delayed message — it is queued at their end, not lost — so sending it again risks
+ * delivering two copies. A delay is an operator/reconciliation state: surface it and wait for a
+ * terminal provider event, unless a human explicitly decides a new send is warranted.
  */
-const RETRYABLE = new Set<EmailDeliveryStatus>(['pending', 'failed', 'delayed']);
+const RETRYABLE = new Set<EmailDeliveryStatus>(['pending', 'failed']);
+
+/** Delayed is not auto-retryable, but a human may override with an explicit decision. */
+const OPERATOR_OVERRIDABLE = new Set<EmailDeliveryStatus>(['delayed']);
 
 export const isRetryableStatus = (status: EmailDeliveryStatus): boolean => RETRYABLE.has(status);
+export const requiresOperatorDecision = (status: EmailDeliveryStatus): boolean => OPERATOR_OVERRIDABLE.has(status);
 
 const SELECT = 'id, module_key, use_case, recipient, subject, status, queued_at, sent_at, ' +
   'error_message, provider_message_id, source_entity_type, source_entity_id';
@@ -123,6 +137,7 @@ const toEntry = (r: Row): ReconciliationEntry => ({
   status: r.status, queuedAt: r.queued_at, sentAt: r.sent_at, errorMessage: r.error_message,
   providerMessageId: r.provider_message_id, sourceEntityType: r.source_entity_type,
   sourceEntityId: r.source_entity_id, retryable: isRetryableStatus(r.status),
+  requiresOperatorDecision: requiresOperatorDecision(r.status),
 });
 
 const agoISO = (ms: number): string => new Date(Date.now() - ms).toISOString();

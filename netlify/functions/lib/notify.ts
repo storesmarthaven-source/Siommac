@@ -76,8 +76,12 @@ interface DeliveryPrefs {
 /**
  * Build a simple HTML email body.
  * Kept intentionally minimal — a branded template can be added later.
+ *
+ * Exported so the retry dispatcher can RECONSTRUCT a notification email from the notifications
+ * row instead of persisting the rendered HTML. One builder, so a retried email is byte-identical
+ * to the original rather than a second rendering that drifts.
  */
-function buildEmailHtml(payload: NotifyPayload, recipientName: string, companyName: string): string {
+export function buildNotificationEmailHtml(payload: NotifyPayload, recipientName: string, companyName: string): string {
   const bodyText = payload.body ? `<p style="color:#444;font-size:15px;line-height:1.5;">${payload.body}</p>` : '';
   const linkHtml = payload.link
     ? `<p style="margin-top:16px;"><a href="${payload.link}" style="color:#1b2d54;font-weight:600;">View details →</a></p>`
@@ -334,7 +338,7 @@ async function _sendEmail(
   const result = await sendEmail({
     to:      user.email!,
     subject: payload.title,
-    html:    buildEmailHtml(payload, user.fullName, companyName),
+    html:    buildNotificationEmailHtml(payload, user.fullName, companyName),
   }, {
     moduleKey: payload.module ?? 'platform',
     useCase: 'notification',

@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `f972366603ee5a3f8a9682a1`
+Source fingerprint: `f5971947453dc6bcc4e43361`
 
-Files: 317 | Symbols: 2887 | Widgets: 0 | Unique mounted endpoints: 36 | Route definitions: 36 mounted + 15 unmounted | API calls: 50 | DB objects: 317 | E2E suites: 0
+Files: 318 | Symbols: 2901 | Widgets: 0 | Unique mounted endpoints: 37 | Route definitions: 37 mounted + 15 unmounted | API calls: 50 | DB objects: 317 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -31,10 +31,11 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/calendar/task/status` | `calendar.view` | requirePermission, userCan | `StatusSchema` | `netlify/functions/routes/calendar.ts:955` | useTaskStatus @ src/api/calendar.ts:126 | calendar |
 | `/api/calendar/update` | `calendar.view` | requirePermission, userCan | `UpdateSchema` | `netlify/functions/routes/calendar.ts:840` | useUpdateEntry @ src/api/calendar.ts:113 | calendar |
 | `/api/deleteProjectSite` | `sites.delete` | assertInScope, requirePermission | `DeleteSiteSchema` | `netlify/functions/routes/sites.ts:122` | res @ src/api/sites.ts:152<br>deleteProjectSiteApi @ src/components/sections/ProjectSites/api.ts:115 | - |
-| `/api/email/reconciliation` | `settings.system.view` | requirePermission | `-` | `netlify/functions/routes/emailDelivery.ts:72` | - | emailReconciliation |
-| `/api/email/status` | `settings.system.view` | requirePermission | `-` | `netlify/functions/routes/emailDelivery.ts:45` | - | emailDelivery, emailReconciliation |
-| `/api/email/test-send` | `settings.system.manage` | requirePermission | `TestSendSchema` | `netlify/functions/routes/emailDelivery.ts:94` | - | emailDelivery |
-| `/api/email/webhook` | `-` | - | `-` | `netlify/functions/routes/emailDelivery.ts:187` | - | - |
+| `/api/email/reconciliation` | `settings.system.view` | requirePermission | `-` | `netlify/functions/routes/emailDelivery.ts:74` | - | emailReconciliation |
+| `/api/email/retry` | `settings.system.manage` | requirePermission | `RetrySchema` | `netlify/functions/routes/emailDelivery.ts:91` | - | emailRetry |
+| `/api/email/status` | `settings.system.view` | requirePermission | `-` | `netlify/functions/routes/emailDelivery.ts:47` | - | emailDelivery, emailReconciliation |
+| `/api/email/test-send` | `settings.system.manage` | requirePermission | `TestSendSchema` | `netlify/functions/routes/emailDelivery.ts:141` | - | emailDelivery |
+| `/api/email/webhook` | `-` | - | `-` | `netlify/functions/routes/emailDelivery.ts:234` | - | - |
 | `/api/getMyPreferences` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:113` | res @ src/api/notifications.ts:137 | - |
 | `/api/getUnreadCount` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:149` | res @ src/api/notifications.ts:73 | - |
 | `/api/listProjectSites` | `-` | requireUser | `-` | `netlify/functions/routes/sites.ts:58` | initializeMap @ src/components/livemap/LiveMapModule.ts:192<br>res @ src/components/sections/AttendanceDashboard/api.ts:53<br>res @ src/components/sections/ProjectSites/api.ts:43 | - |
@@ -465,7 +466,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | Role | Path | Lines |
 |---|---|---:|
 | backend-route | `netlify/functions/routes/calendar.ts` | 1062 |
-| backend-route | `netlify/functions/routes/emailDelivery.ts` | 248 |
+| backend-route | `netlify/functions/routes/emailDelivery.ts` | 295 |
 | backend-route | `netlify/functions/routes/hrContracts.ts` | 170 |
 | backend-route | `netlify/functions/routes/hrCrew.ts` | 186 |
 | backend-route | `netlify/functions/routes/hrStatutoryProfile.ts` | 87 |
