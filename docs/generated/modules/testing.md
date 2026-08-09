@@ -2,7 +2,7 @@
 
 # testing Module Map
 
-Source fingerprint: `f5971947453dc6bcc4e43361`
+Source fingerprint: `7a5f775e4eb8262cafa82871`
 
 Files: 43 | Symbols: 210 | Widgets: 0 | Unique mounted endpoints: 0 | Route definitions: 0 mounted + 0 unmounted | API calls: 0 | DB objects: 0 | E2E suites: 14
 
@@ -68,7 +68,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/calendar.mjs` | 497 |
 | e2e-suite | `scripts/e2e/suites/emailDelivery.mjs` | 158 |
 | e2e-suite | `scripts/e2e/suites/emailReconciliation.mjs` | 214 |
-| e2e-suite | `scripts/e2e/suites/emailRetry.mjs` | 181 |
+| e2e-suite | `scripts/e2e/suites/emailRetry.mjs` | 185 |
 | e2e-suite | `scripts/e2e/suites/emailWebhook.mjs` | 230 |
 | e2e-suite | `scripts/e2e/suites/hrDocuments.mjs` | 400 |
 | e2e-suite | `scripts/e2e/suites/hrStatutoryProfile.mjs` | 479 |

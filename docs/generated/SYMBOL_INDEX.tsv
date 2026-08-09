@@ -272,9 +272,10 @@ RetryHandler	type	platform	false		netlify/functions/lib/email/emailRetry.ts	51
 DELIVERY_COLUMNS	variable	platform	false		netlify/functions/lib/email/emailRetry.ts	53	
 notificationHandler	function	platform	false		netlify/functions/lib/email/emailRetry.ts	63	
 accountInviteHandler	function	platform	false		netlify/functions/lib/email/emailRetry.ts	111	
-testEmailHandler	function	platform	false		netlify/functions/lib/email/emailRetry.ts	134	
-HANDLERS	object	platform	false		netlify/functions/lib/email/emailRetry.ts	155	
-retryDelivery	function	platform	true		netlify/functions/lib/email/emailRetry.ts	163	
+payslipHandler	function	platform	false		netlify/functions/lib/email/emailRetry.ts	150	
+testEmailHandler	function	platform	false		netlify/functions/lib/email/emailRetry.ts	209	
+HANDLERS	object	platform	false		netlify/functions/lib/email/emailRetry.ts	227	
+retryDelivery	function	platform	true		netlify/functions/lib/email/emailRetry.ts	236	
 transport	variable	platform	false		netlify/functions/lib/email/emailService.ts	24	
 EmailSendResult	type	platform	true		netlify/functions/lib/email/emailService.ts	26	
 SendEmailOptions	interface	platform	true		netlify/functions/lib/email/emailService.ts	56	
@@ -1168,14 +1169,14 @@ listOverrides	function	payroll	true		netlify/functions/lib/finance/payrollOverri
 PayslipDeliveryDto	interface	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	29	
 DbDeliveryRow	interface	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	44	
 toDeliveryDto	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	51	
-derivePassword	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	61	
-maskEmail	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	70	
-escHtml	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	77	
-buildDeliveryHtml	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	83	
-deliverPayslip	function	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	105	
-DeliverRunResult	interface	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	212	
-deliverRunPayslips	function	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	214	
-listRunDeliveries	function	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	245	
+derivePassword	function	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	67	
+maskEmail	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	76	
+escHtml	function	payroll	false		netlify/functions/lib/finance/payrollPayslipDelivery.ts	83	
+buildDeliveryHtml	function	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	93	
+deliverPayslip	function	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	115	
+DeliverRunResult	interface	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	222	
+deliverRunPayslips	function	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	224	
+listRunDeliveries	function	payroll	true		netlify/functions/lib/finance/payrollPayslipDelivery.ts	255	
 PayslipDto	interface	payroll	true		netlify/functions/lib/finance/payrollPayslips.ts	32	
 DbPayslipRow	interface	payroll	false		netlify/functions/lib/finance/payrollPayslips.ts	44	
 notifyPayslipReady	function	payroll	false		netlify/functions/lib/finance/payrollPayslips.ts	57	
@@ -4126,6 +4127,14 @@ title	variable	testing	true	test	scripts/e2e/suites/emailRetry.mjs	12
 run	function	testing	true	test	scripts/e2e/suites/emailRetry.mjs	14	
 seed	function	testing	false	test	scripts/e2e/suites/emailRetry.mjs	35	run
 retry	function	testing	false	test	scripts/e2e/suites/emailRetry.mjs	47	run
+title	variable	payroll	true	test	scripts/e2e/suites/emailRetryPayslip.mjs	17	
+run	function	payroll	true	test	scripts/e2e/suites/emailRetryPayslip.mjs	19	
+seedEmployee	function	payroll	false	test	scripts/e2e/suites/emailRetryPayslip.mjs	42	run
+borrowRunAndLine	function	payroll	false	test	scripts/e2e/suites/emailRetryPayslip.mjs	68	run
+seedPayslip	function	payroll	false	test	scripts/e2e/suites/emailRetryPayslip.mjs	80	run
+seedDelivery	function	payroll	false	test	scripts/e2e/suites/emailRetryPayslip.mjs	94	run
+financeDeliveryCount	function	payroll	false	test	scripts/e2e/suites/emailRetryPayslip.mjs	107	run
+retryWithCount	function	payroll	false	test	scripts/e2e/suites/emailRetryPayslip.mjs	115	run
 title	variable	testing	true	test	scripts/e2e/suites/emailWebhook.mjs	21	
 run	function	testing	true	test	scripts/e2e/suites/emailWebhook.mjs	23	
 sign	function	testing	false	test	scripts/e2e/suites/emailWebhook.mjs	44	run

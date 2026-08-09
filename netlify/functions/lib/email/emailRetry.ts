@@ -130,6 +130,81 @@ const accountInviteHandler: RetryHandler = async delivery => {
   };
 };
 
+/**
+ * Payslips rebuild from the IMMUTABLE payroll snapshot.
+ *
+ * ⛔ This must NOT call `deliverPayslip()`. That function is the business operation: it writes a
+ * fresh `finance_payslip_deliveries` row per attempt, and the idempotency key is derived from that
+ * row's id. Re-running it would mint a NEW finance delivery record and a NEW key — breaking both
+ * "a retry creates no duplicate business records" and "a retry reuses the same key" in one move,
+ * and turning Retry into a second delivery attempt in the payroll audit trail.
+ *
+ * So the PDF and the covering email are rebuilt DIRECTLY from `buildPayslipSnapshot` (which reads
+ * the immutable payslip) using the shared `derivePassword` and `buildDeliveryHtml`, and sent with
+ * the STORED key.
+ *
+ * Prerequisites are checked BEFORE rendering: generating a password-protected PDF is expensive and
+ * pointless if there is no address to send it to, and refusing early keeps the refusal accurate
+ * rather than surfacing as a generic send failure.
+ */
+const payslipHandler: RetryHandler = async delivery => {
+  const payslipId = delivery.source_entity_id;
+  if (!payslipId) {
+    return { ok: false, refusal: 'origin_missing', message: 'This delivery has no payslip to rebuild from.' };
+  }
+
+  const { data: ps, error } = await sb.from('finance_payslips')
+    .select('id, payslip_no, run_id, employee_id, file_path').eq('id', payslipId)
+    .maybeSingle<{ id: string; payslip_no: string; run_id: string; employee_id: string; file_path: string | null }>();
+  if (error) throw Object.assign(new Error(`Payslip lookup failed: ${error.message}`), { status: 500 });
+  if (!ps) {
+    return { ok: false, refusal: 'origin_missing', message: 'The payslip this email was built from no longer exists.' };
+  }
+  if (!ps.file_path) {
+    return { ok: false, refusal: 'origin_invalid', message: 'The payslip PDF has not been rendered, so there is nothing to attach. Render it before re-sending.' };
+  }
+
+  const { data: emp } = await sb.from('app_users')
+    .select('email, personal_email, date_of_birth, full_name').eq('id', ps.employee_id)
+    .maybeSingle<{ email: string | null; personal_email: string | null; date_of_birth: string | null; full_name: string | null }>();
+
+  const recipient = emp?.email?.trim() || emp?.personal_email?.trim() || null;
+  if (!recipient) {
+    return { ok: false, refusal: 'origin_invalid', message: 'No email address is on file for this employee, so the payslip cannot be re-sent.' };
+  }
+
+  // ⛔ The same rule the original send enforces: a payslip is NEVER emailed unprotected. Without a
+  // date of birth there is no password, and the employee uses the authenticated ESS download.
+  const { derivePassword, buildDeliveryHtml } = await import('../finance/payrollPayslipDelivery.js');
+  const password = derivePassword(emp?.date_of_birth);
+  if (!password) {
+    return {
+      ok: false, refusal: 'origin_invalid',
+      message: 'No date of birth is on file, so the PDF cannot be password-protected. A payslip is never emailed unprotected — the employee must use the self-service download.',
+    };
+  }
+
+  const { buildPayslipSnapshot, renderPayslipPdf, renderPayslipPdfWithDesign } = await import('../finance/payslipPdf.js');
+  const { getEmployerProfile } = await import('../finance/employerProfile.js');
+  const { loadRenderTemplate } = await import('../finance/payrollPayslips.js');
+
+  const snapshot = await buildPayslipSnapshot(payslipId);
+  const [design, employer] = await Promise.all([loadRenderTemplate(snapshot.runId), getEmployerProfile()]);
+  const pdf = design
+    ? await renderPayslipPdfWithDesign(snapshot, design, employer, { password })
+    : await renderPayslipPdf(snapshot, { password });
+
+  return {
+    ok: true,
+    message: {
+      to: recipient,
+      subject: `Payslip ${snapshot.payslipNo} — ${snapshot.periodLabel}`,
+      html: buildDeliveryHtml(snapshot.payslipNo, snapshot.periodLabel, snapshot.employer.name, snapshot.employee.name),
+      attachments: [{ filename: `Payslip-${snapshot.payslipNo}.pdf`, contentBase64: pdf.toString('base64'), contentType: 'application/pdf' }],
+    },
+  };
+};
+
 /** The platform test email is static, so it rebuilds exactly. */
 const testEmailHandler: RetryHandler = async delivery => ({
   ok: true,
@@ -148,13 +223,11 @@ const testEmailHandler: RetryHandler = async delivery => ({
  * honest answer — offering Retry on something the backend cannot rebuild would be a control that
  * lies about what it does.
  *
- * ⬜ `payslip` is deliberately NOT registered yet: rebuilding it means re-rendering the
- * password-protected PDF from the immutable snapshot, which is real work and deserves its own
- * verification rather than being bolted on here.
  */
 const HANDLERS: Record<string, RetryHandler> = {
   notification: notificationHandler,
   account_invite: accountInviteHandler,
+  payslip: payslipHandler,
   test_email: testEmailHandler,
 };
 

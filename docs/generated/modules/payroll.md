@@ -2,9 +2,9 @@
 
 # payroll Module Map
 
-Source fingerprint: `f5971947453dc6bcc4e43361`
+Source fingerprint: `7a5f775e4eb8262cafa82871`
 
-Files: 195 | Symbols: 1978 | Widgets: 11 | Unique mounted endpoints: 140 | Route definitions: 140 mounted + 0 unmounted | API calls: 2 | DB objects: 260 | E2E suites: 28
+Files: 196 | Symbols: 1986 | Widgets: 11 | Unique mounted endpoints: 140 | Route definitions: 140 mounted + 0 unmounted | API calls: 2 | DB objects: 260 | E2E suites: 29
 
 ## Widgets and Tiles
 
@@ -446,6 +446,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | Suite | Tests | API paths | Location |
 |---|---:|---:|---|
 | crewPayroll | 16 | 14 | `scripts/e2e/suites/crewPayroll.mjs` |
+| Platform — payslip retry handler | 7 | 1 | `scripts/e2e/suites/emailRetryPayslip.mjs` |
 | Finance — Payroll Runs (Phase 3 — full lifecycle) | 143 | 50 | `scripts/e2e/suites/financePayroll.mjs` |
 | Finance F3 - Payslip Distribution & ESS | 20 | 8 | `scripts/e2e/suites/financePayslipsEss.mjs` |
 | Payroll — Back pay (retro adjustment, P2-a rebuild) | 14 | 3 | `scripts/e2e/suites/payrollBackPay.mjs` |
@@ -483,6 +484,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/financePayroll.ts` | 1961 |
 | backend-route | `netlify/functions/routes/financePayslipTemplates.ts` | 177 |
 | e2e-suite | `scripts/e2e/suites/crewPayroll.mjs` | 718 |
+| e2e-suite | `scripts/e2e/suites/emailRetryPayslip.mjs` | 223 |
 | e2e-suite | `scripts/e2e/suites/financePayroll.mjs` | 3546 |
 | e2e-suite | `scripts/e2e/suites/financePayslipsEss.mjs` | 340 |
 | e2e-suite | `scripts/e2e/suites/payrollBackPay.mjs` | 316 |

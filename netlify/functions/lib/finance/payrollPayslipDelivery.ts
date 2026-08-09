@@ -57,8 +57,14 @@ function toDeliveryDto(r: DbDeliveryRow): PayslipDeliveryDto {
   };
 }
 
-/** Date of birth (YYYY-MM-DD) → DDMMYYYY, or null. */
-function derivePassword(dob: string | null | undefined): string | null {
+/**
+ * Date of birth (YYYY-MM-DD) → DDMMYYYY, or null.
+ *
+ * Exported so the retry handler applies the SAME password rule. A retried payslip that opened
+ * with a different password than the original would be indistinguishable from a corrupt file to
+ * the employee holding it.
+ */
+export function derivePassword(dob: string | null | undefined): string | null {
   if (!dob) return null;
   const d = new Date(dob + 'T00:00:00Z');
   if (Number.isNaN(d.getTime())) return null;
@@ -80,7 +86,11 @@ function escHtml(s: string): string {
   )[c] ?? c);
 }
 
-function buildDeliveryHtml(payslipNo: string, period: string, employer: string, employeeName: string): string {
+/**
+ * Exported so the retry handler RECONSTRUCTS the covering email rather than re-rendering it a
+ * second way. One builder, so a retried payslip email is byte-identical to the original.
+ */
+export function buildDeliveryHtml(payslipNo: string, period: string, employer: string, employeeName: string): string {
   const emp = escHtml(employer);
   return `<!DOCTYPE html><html><body style="font-family:Arial,Helvetica,sans-serif;color:#1b2d54;">
   <div style="max-width:560px;margin:0 auto;padding:24px;">

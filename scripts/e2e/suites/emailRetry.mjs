@@ -106,11 +106,15 @@ export default async function run(h) {
   h.section('Retry › Origin dispatch');
 
   await test('an unregistered use case refuses with no_handler rather than guessing', async () => {
-    const d = await seed('payslip', 'failed');
+    // Deliberately a use case no handler will ever claim. This test previously used `payslip`,
+    // which stopped being unregistered the moment the payslip handler shipped — a test whose
+    // meaning silently changed under it. Use a value that cannot become real.
+    const d = await seed('no_such_use_case_ever', 'failed');
     const r = await retry(d.id);
-    fails(r, 'payslip has no registered handler yet');
+    fails(r, 'an unregistered use case cannot be rebuilt');
     expect(r.body.data.refusal === 'no_handler', `expected no_handler, got ${r.body.data.refusal}`);
-    expect(/payslip/.test(r.body.message ?? ''), `the refusal names the use case — got ${r.body.message}`);
+    expect(/no_such_use_case_ever/.test(r.body.message ?? ''),
+      `the refusal names the use case — got ${r.body.message}`);
   });
 
   await test('⭐ an account invitation can NEVER be retried — it requires Reissue', async () => {

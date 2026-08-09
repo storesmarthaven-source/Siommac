@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `f5971947453dc6bcc4e43361`
+Source fingerprint: `7a5f775e4eb8262cafa82871`
 
-Files: 318 | Symbols: 2901 | Widgets: 0 | Unique mounted endpoints: 37 | Route definitions: 37 mounted + 15 unmounted | API calls: 50 | DB objects: 317 | E2E suites: 0
+Files: 318 | Symbols: 2902 | Widgets: 0 | Unique mounted endpoints: 37 | Route definitions: 37 mounted + 15 unmounted | API calls: 50 | DB objects: 317 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -32,7 +32,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/calendar/update` | `calendar.view` | requirePermission, userCan | `UpdateSchema` | `netlify/functions/routes/calendar.ts:840` | useUpdateEntry @ src/api/calendar.ts:113 | calendar |
 | `/api/deleteProjectSite` | `sites.delete` | assertInScope, requirePermission | `DeleteSiteSchema` | `netlify/functions/routes/sites.ts:122` | res @ src/api/sites.ts:152<br>deleteProjectSiteApi @ src/components/sections/ProjectSites/api.ts:115 | - |
 | `/api/email/reconciliation` | `settings.system.view` | requirePermission | `-` | `netlify/functions/routes/emailDelivery.ts:74` | - | emailReconciliation |
-| `/api/email/retry` | `settings.system.manage` | requirePermission | `RetrySchema` | `netlify/functions/routes/emailDelivery.ts:91` | - | emailRetry |
+| `/api/email/retry` | `settings.system.manage` | requirePermission | `RetrySchema` | `netlify/functions/routes/emailDelivery.ts:91` | - | emailRetry, emailRetryPayslip |
 | `/api/email/status` | `settings.system.view` | requirePermission | `-` | `netlify/functions/routes/emailDelivery.ts:47` | - | emailDelivery, emailReconciliation |
 | `/api/email/test-send` | `settings.system.manage` | requirePermission | `TestSendSchema` | `netlify/functions/routes/emailDelivery.ts:141` | - | emailDelivery |
 | `/api/email/webhook` | `-` | - | `-` | `netlify/functions/routes/emailDelivery.ts:234` | - | - |

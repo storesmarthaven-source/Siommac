@@ -1,22 +1,22 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "39122257d55245575324eaaff6b309a164ac58e7",
+    "head": "11cf9c409c0510e83092a83c41edd46519bc1c2a",
     "branch": "feat/email-delivery-resend",
-    "fingerprint": "f5971947453dc6bcc4e43361",
-    "indexedFiles": 1712
+    "fingerprint": "7a5f775e4eb8262cafa82871",
+    "indexedFiles": 1713
   },
   "summary": {
-    "files": 1358,
-    "symbols": 13676,
+    "files": 1359,
+    "symbols": 13685,
     "widgets": 51,
     "routes": 977,
     "routeDefinitions": 978,
     "unmountedRoutes": 17,
     "apiCalls": 354,
     "databaseObjects": 1426,
-    "e2eSuites": 88,
-    "e2eTests": 2712
+    "e2eSuites": 89,
+    "e2eTests": 2719
   },
   "modules": [
     {
@@ -35,14 +35,14 @@
     {
       "id": "payroll",
       "counts": {
-        "files": 195,
-        "symbols": 1978,
+        "files": 196,
+        "symbols": 1986,
         "widgets": 11,
         "routes": 140,
         "routeDefinitions": 140,
         "apiCalls": 2,
         "databaseObjects": 260,
-        "e2eSuites": 28
+        "e2eSuites": 29
       }
     },
     {
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 318,
-        "symbols": 2901,
+        "symbols": 2902,
         "widgets": 0,
         "routes": 37,
         "routeDefinitions": 52,
@@ -335,8 +335,8 @@
       "path": "netlify/functions/lib/email/emailRetry.ts",
       "module": "platform",
       "role": "backend-lib",
-      "lines": 224,
-      "hash": "09e667b408c5dc5e"
+      "lines": 297,
+      "hash": "1d7fc6ac22ca6e0b"
     },
     {
       "path": "netlify/functions/lib/email/emailService.ts",
@@ -552,8 +552,8 @@
       "path": "netlify/functions/lib/finance/payrollPayslipDelivery.ts",
       "module": "payroll",
       "role": "backend-lib",
-      "lines": 251,
-      "hash": "1516a654e6c9d766"
+      "lines": 261,
+      "hash": "67f1194510e1a1e8"
     },
     {
       "path": "netlify/functions/lib/finance/payrollPayslips.ts",
@@ -2666,8 +2666,15 @@
       "path": "scripts/e2e/suites/emailRetry.mjs",
       "module": "testing",
       "role": "e2e-suite",
-      "lines": 181,
-      "hash": "e04023c3aa6c6325"
+      "lines": 185,
+      "hash": "0ab5cdec7889b61c"
+    },
+    {
+      "path": "scripts/e2e/suites/emailRetryPayslip.mjs",
+      "module": "payroll",
+      "role": "e2e-suite",
+      "lines": 223,
+      "hash": "08823a71114d6be4"
     },
     {
       "path": "scripts/e2e/suites/emailWebhook.mjs",
@@ -12416,10 +12423,20 @@
       "tags": []
     },
     {
+      "name": "payslipHandler",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailRetry.ts",
+      "line": 150,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "testEmailHandler",
       "kind": "function",
       "file": "netlify/functions/lib/email/emailRetry.ts",
-      "line": 134,
+      "line": 209,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -12429,7 +12446,7 @@
       "name": "HANDLERS",
       "kind": "object",
       "file": "netlify/functions/lib/email/emailRetry.ts",
-      "line": 155,
+      "line": 227,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -12439,7 +12456,7 @@
       "name": "retryDelivery",
       "kind": "function",
       "file": "netlify/functions/lib/email/emailRetry.ts",
-      "line": 163,
+      "line": 236,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -21411,9 +21428,9 @@
       "name": "derivePassword",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payrollPayslipDelivery.ts",
-      "line": 61,
+      "line": 67,
       "module": "payroll",
-      "exported": false,
+      "exported": true,
       "container": "",
       "tags": []
     },
@@ -21421,7 +21438,7 @@
       "name": "maskEmail",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payrollPayslipDelivery.ts",
-      "line": 70,
+      "line": 76,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -21431,7 +21448,7 @@
       "name": "escHtml",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payrollPayslipDelivery.ts",
-      "line": 77,
+      "line": 83,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -21441,9 +21458,9 @@
       "name": "buildDeliveryHtml",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payrollPayslipDelivery.ts",
-      "line": 83,
+      "line": 93,
       "module": "payroll",
-      "exported": false,
+      "exported": true,
       "container": "",
       "tags": []
     },
@@ -21451,7 +21468,7 @@
       "name": "deliverPayslip",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payrollPayslipDelivery.ts",
-      "line": 105,
+      "line": 115,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -21461,7 +21478,7 @@
       "name": "DeliverRunResult",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/payrollPayslipDelivery.ts",
-      "line": 212,
+      "line": 222,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -21471,7 +21488,7 @@
       "name": "deliverRunPayslips",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payrollPayslipDelivery.ts",
-      "line": 214,
+      "line": 224,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -21481,7 +21498,7 @@
       "name": "listRunDeliveries",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payrollPayslipDelivery.ts",
-      "line": 245,
+      "line": 255,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -51133,6 +51150,102 @@
       "file": "scripts/e2e/suites/emailRetry.mjs",
       "line": 47,
       "module": "testing",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "title",
+      "kind": "variable",
+      "file": "scripts/e2e/suites/emailRetryPayslip.mjs",
+      "line": 17,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "run",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailRetryPayslip.mjs",
+      "line": 19,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "seedEmployee",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailRetryPayslip.mjs",
+      "line": 42,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "borrowRunAndLine",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailRetryPayslip.mjs",
+      "line": 68,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "seedPayslip",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailRetryPayslip.mjs",
+      "line": 80,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "seedDelivery",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailRetryPayslip.mjs",
+      "line": 94,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "financeDeliveryCount",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailRetryPayslip.mjs",
+      "line": 107,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "retryWithCount",
+      "kind": "function",
+      "file": "scripts/e2e/suites/emailRetryPayslip.mjs",
+      "line": 115,
+      "module": "payroll",
       "exported": false,
       "container": "run",
       "tags": [
@@ -180703,19 +180816,58 @@
         },
         {
           "name": "⭐ an account invitation can NEVER be retried — it requires Reissue",
-          "line": 116
+          "line": 120
         },
         {
           "name": "a notification whose origin is gone refuses with origin_missing",
-          "line": 129
+          "line": 133
         },
         {
           "name": "⭐ a real reconstruction reuses the SAME delivery row and the SAME idempotency key",
-          "line": 138
+          "line": 142
         },
         {
           "name": "a retry never creates a new idempotency key",
-          "line": 173
+          "line": 177
+        }
+      ],
+      "apiPaths": [
+        "/api/email/retry"
+      ]
+    },
+    {
+      "name": "emailRetryPayslip",
+      "title": "Platform — payslip retry handler",
+      "module": "payroll",
+      "file": "scripts/e2e/suites/emailRetryPayslip.mjs",
+      "tests": [
+        {
+          "name": "a missing payslip refuses with origin_missing",
+          "line": 127
+        },
+        {
+          "name": "an unrendered payslip refuses — there is nothing to attach",
+          "line": 134
+        },
+        {
+          "name": "⛔ no date of birth ⇒ REFUSED, because a payslip is never emailed unprotected",
+          "line": 146
+        },
+        {
+          "name": "no email address on file refuses rather than rendering a PDF it cannot send",
+          "line": 161
+        },
+        {
+          "name": "⭐ a refused retry leaves the delivery row and its key untouched",
+          "line": 174
+        },
+        {
+          "name": "⛔ bounced and complained payslips are never re-sent",
+          "line": 189
+        },
+        {
+          "name": "⭐ the PDF is rebuilt from the immutable snapshot and stops at validation",
+          "line": 204
         }
       ],
       "apiPaths": [
