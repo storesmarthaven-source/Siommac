@@ -1,0 +1,1049 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Email Studio — 5 Library Designs</title>
+<style>
+  :root {
+    --navy: #102a56; --brand: #1F2D51; --gold: #f7b900; --blue: #0b57d0;
+    --ink: #1a2333; --muted: #6a7590; --faint: #99a1b6;
+    --line: #e4e8ef; --line-soft: #eef1f6; --soft: #f6f8fa; --page: #f2f4f8;
+    --green: #1d7a3f; --green-bg: #e9f5ee; --amber: #8a6511; --amber-bg: #faf1d7; --gray: #5b6579; --gray-bg: #eef1f5;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e5e8ee; color: var(--ink); font-size: 13.5px; -webkit-font-smoothing: antialiased; }
+  svg { display: block; flex-shrink: 0; }
+
+  .chooser { position: sticky; top: 0; z-index: 90; display: flex; align-items: center; gap: 7px; padding: 10px 22px; background: #fff; border-bottom: 1px solid var(--line); }
+  .chooser h1 { margin: 0 14px 0 0; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .chooser button { padding: 7px 13px; border: 1px solid var(--line); border-radius: 7px; background: #fff; color: var(--muted); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .chooser button.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .frame { display: none; padding: 20px; }
+  .frame.on { display: block; }
+  .canvas { max-width: 1500px; margin: 0 auto; border: 1px solid #d8dde6; border-radius: 12px; background: var(--page); box-shadow: 0 14px 44px rgba(23,33,60,.10); overflow: hidden; }
+  .caption { max-width: 1500px; margin: 12px auto 0; color: var(--muted); font-size: 12.5px; line-height: 1.55; }
+  .caption b { color: var(--ink); }
+
+  .page { padding: 22px 26px 30px; }
+  .crumb { color: var(--faint); font-size: 12px; margin-bottom: 12px; }
+  .crumb b { color: var(--muted); font-weight: 600; }
+  .phead { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .pico { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: var(--brand); color: #fff; }
+  .phead h2 { margin: 0; font-size: 19px; font-weight: 650; letter-spacing: -.2px; }
+  .phead p { margin: 3px 0 0; color: var(--muted); font-size: 12.5px; }
+  .spacer { flex: 1; }
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .btn.primary { border-color: var(--brand); background: var(--brand); color: #fff; }
+  .btn.quiet { border-color: transparent; background: transparent; color: var(--muted); }
+  .btn.sm { padding: 6px 11px; font-size: 12px; }
+  .pill { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; font-size: 10.5px; font-weight: 700; white-space: nowrap; }
+  .pill .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .pill.published { background: var(--green-bg); color: var(--green); }
+  .pill.draft { background: var(--amber-bg); color: var(--amber); }
+  .pill.archived { background: var(--gray-bg); color: var(--gray); }
+  .searchbox { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--faint); font-size: 12.5px; }
+  .select { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+  .select svg { color: var(--faint); }
+  .mono { font-family: Consolas, "SF Mono", monospace; font-size: 11px; color: #44507a; background: var(--soft); border: 1px solid var(--line-soft); border-radius: 5px; padding: 2px 7px; font-weight: 500; white-space: nowrap; }
+  .panel { border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+
+  /* miniature email */
+  .mail { overflow: hidden; border-radius: 7px; background: #fff; box-shadow: 0 1px 3px rgba(23,33,60,.14), 0 8px 22px rgba(23,33,60,.10); }
+  .m-band { display: flex; align-items: center; height: 26px; padding: 0 11px; background: var(--brand); }
+  .m-logo { display: flex; gap: 4px; align-items: center; color: #fff; font-size: 8px; font-weight: 700; letter-spacing: 1.6px; }
+  .m-logo::before { content: ""; width: 10px; height: 10px; border-radius: 2.5px; background: var(--gold); }
+  .m-gold { height: 2.5px; background: var(--gold); }
+  .m-pad { padding: 12px 13px; display: grid; gap: 6px; }
+  .bar { height: 5.5px; border-radius: 3px; background: #e3e8f1; }
+  .bar.d { background: #33415f; }
+  .bar.b { background: #c3cddd; }
+  .m-hero { grid-template-columns: 1fr 46px; display: grid; gap: 11px; }
+  .m-hero .bars { display: grid; gap: 6px; align-content: start; }
+  .m-btn { width: 64px; height: 13px; margin-top: 5px; border-radius: 4px; background: #222D4E; }
+  .m-side { display: grid; justify-items: center; gap: 5px; align-content: start; }
+  .m-ava { width: 27px; height: 27px; border-radius: 50%; background: #d3dce9; }
+  .m-chip { width: 44px; height: 9px; border: 1px solid #dfe6ef; border-radius: 3px; background: #fbfcfe; }
+  .m-tiles { display: grid; grid-template-columns: repeat(4,1fr); border-top: 1px solid #e9edf3; }
+  .m-tiles span { display: grid; justify-items: center; gap: 3px; padding: 7px 3px; border-left: 1px solid #e9edf3; }
+  .m-tiles span:first-child { border-left: 0; }
+  .m-tiles i { width: 10px; height: 10px; border: 1px solid #dfe6ef; border-radius: 3px; background: #fff; }
+  .m-tiles u { width: 66%; height: 4px; border-radius: 2px; background: #e3e8f1; text-decoration: none; }
+  .m-cta { margin: 0 13px 11px; padding: 9px; border: 1px solid #D9E5F3; border-radius: 6px; background: #F4F8FD; display: grid; gap: 5px; }
+  .m-cta .m-btn { margin-top: 2px; }
+  .m-support { display: grid; gap: 5px; padding: 10px 13px; background: #222D4E; }
+  .m-support .bar { background: #414f78; }
+  .m-support .bar.lite { background: #67759f; }
+  .m-prog { height: 6px; border-radius: 999px; background: #e8edf4; position: relative; }
+  .m-prog::after { content: ""; position: absolute; inset: 0 35% 0 0; border-radius: 999px; background: #2f9e63; }
+  .m-rows { display: grid; gap: 6px; }
+  .m-rows span { display: flex; gap: 7px; align-items: center; }
+  .m-rows i { width: 10px; height: 10px; border-radius: 50%; background: var(--green-bg); border: 1px solid #cfe7d8; }
+  .m-illu { width: 34px; height: 34px; border-radius: 50%; background: #e8edf4; border: 1px solid #dfe6ef; justify-self: center; }
+
+  /* ═══ A · REGISTRY + DRAWER ═══ */
+  .a-table { width: 100%; border-collapse: collapse; background: #fff; }
+  .a-wrap { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .a-table th { padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--soft); color: var(--muted); font-size: 10.5px; font-weight: 700; letter-spacing: .9px; text-transform: uppercase; text-align: left; }
+  .a-table td { padding: 13px 16px; border-bottom: 1px solid var(--line-soft); font-size: 13px; vertical-align: middle; }
+  .a-table tr:last-child td { border-bottom: 0; }
+  .a-table tr.rowsel { background: #f3f6fb; box-shadow: inset 2px 0 0 var(--brand); }
+  .a-table tbody tr { cursor: pointer; }
+  .a-table tbody tr:hover { background: #f8fafc; }
+  .a-name b { display: block; font-size: 13px; }
+  .a-name small { color: var(--muted); font-size: 11.5px; }
+  .a-owner { color: var(--muted); }
+  .a-shell { position: relative; }
+  .a-drawer { position: absolute; top: -22px; right: -26px; bottom: -30px; width: 560px; background: #fff; border-left: 1px solid var(--line); box-shadow: -22px 0 48px rgba(23,33,60,.13); display: grid; grid-template-rows: auto auto minmax(0,1fr) auto; }
+  .a-dfoot { background: #fff; }
+  .a-dhead { display: flex; align-items: center; gap: 10px; padding: 15px 20px 12px; border-bottom: 1px solid var(--line-soft); }
+  .a-dhead h3 { margin: 0; font-size: 15px; font-weight: 650; }
+  .a-dhead small { color: var(--muted); }
+  .a-dclose { margin-left: auto; display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--line); border-radius: 7px; background: #fff; color: var(--muted); cursor: pointer; }
+  .a-dmeta { display: flex; flex-wrap: wrap; gap: 18px; row-gap: 8px; padding: 12px 20px; border-bottom: 1px solid var(--line-soft); font-size: 12px; }
+  .a-dmeta div { display: grid; gap: 2px; }
+  .a-dmeta small { color: var(--faint); font-size: 9.5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; }
+  .a-dmeta b { font-weight: 600; font-size: 12.5px; }
+  .a-dbody { overflow: auto; display: grid; justify-items: center; align-content: start; padding: 20px; background: var(--soft); }
+  .a-dbody .mail { width: 340px; font-size: 10px; }
+  .a-dfoot { display: flex; gap: 8px; padding: 13px 20px; border-top: 1px solid var(--line-soft); }
+  .a-dfoot .btn { flex: 1; justify-content: center; }
+
+  /* ═══ B · MAIL CLIENT ═══ */
+  .b-shell { display: grid; grid-template-columns: 348px minmax(0,1fr); gap: 0; border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; min-height: 660px; }
+  .b-list { border-right: 1px solid var(--line); display: grid; grid-template-rows: auto auto 1fr; }
+  .b-tools { padding: 12px 12px 10px; display: grid; gap: 9px; border-bottom: 1px solid var(--line-soft); }
+  .b-chips { display: flex; gap: 6px; }
+  .chip { padding: 5px 11px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--muted); font-size: 11.5px; font-weight: 600; cursor: pointer; }
+  .chip.on { border-color: var(--brand); background: var(--brand); color: #fff; }
+  .b-rows { overflow: auto; }
+  .b-row { display: grid; gap: 4px; padding: 12px 15px; border-bottom: 1px solid var(--line-soft); cursor: pointer; border-left: 2px solid transparent; }
+  .b-row:hover { background: #f8fafc; }
+  .b-row.sel { background: #f3f6fb; border-left-color: var(--brand); }
+  .b-row .r1 { display: flex; align-items: center; gap: 8px; }
+  .b-row h4 { margin: 0; font-size: 13px; font-weight: 650; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .b-row .r2 { display: flex; justify-content: space-between; color: var(--muted); font-size: 11.5px; }
+  .b-row .r2 em { font-style: normal; color: var(--faint); }
+  .b-detail { display: grid; grid-template-rows: auto auto 1fr; min-width: 0; }
+  .b-head { display: grid; gap: 10px; padding: 16px 22px 14px; border-bottom: 1px solid var(--line-soft); }
+  .b-head .t { display: flex; align-items: center; gap: 10px; }
+  .b-head h3 { margin: 0; font-size: 16px; font-weight: 650; }
+  .b-facts { display: flex; flex-wrap: wrap; gap: 22px; row-gap: 6px; }
+  .b-facts div { display: flex; gap: 7px; align-items: baseline; font-size: 12.5px; }
+  .b-facts small { color: var(--faint); font-size: 11px; font-weight: 600; }
+  .b-facts b { font-weight: 600; }
+  .b-tabs { display: flex; gap: 2px; padding: 0 22px; border-bottom: 1px solid var(--line); background: #fff; }
+  .b-tab { padding: 10px 14px 11px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .b-tab.on { color: var(--ink); border-bottom-color: var(--brand); }
+  .b-stage { display: grid; justify-items: center; align-content: start; padding: 26px; background: var(--soft); overflow: auto; }
+  .b-stage .mail { width: 430px; font-size: 11px; }
+  .b-stagebar { display: flex; align-items: center; gap: 10px; width: 430px; margin-bottom: 12px; }
+  .seg { display: flex; overflow: hidden; border: 1px solid var(--line); border-radius: 7px; background: #fff; }
+  .seg button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border: 0; border-left: 1px solid var(--line); background: #fff; color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .seg button:first-child { border-left: 0; }
+  .seg button.on { background: var(--soft); color: var(--ink); }
+  .toggle { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .tk { width: 28px; height: 16px; border-radius: 999px; background: var(--brand); position: relative; }
+  .tk::after { content: ""; position: absolute; top: 2px; right: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; }
+
+  /* ═══ C · WIDE CARDS ═══ */
+  .c-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .c-toolbar .searchbox { flex: 0 1 300px; }
+  .c-group { margin: 22px 0 10px; display: flex; align-items: baseline; gap: 10px; }
+  .c-group h3 { margin: 0; font-size: 13.5px; font-weight: 700; }
+  .c-group span { color: var(--faint); font-size: 12px; }
+  .c-card { display: grid; grid-template-columns: 168px minmax(0,1.3fr) minmax(0,1fr) auto; gap: 22px; align-items: center; padding: 16px 20px 16px 16px; border: 1px solid var(--line); border-radius: 12px; background: #fff; margin-bottom: 12px; cursor: pointer; transition: border-color .13s, box-shadow .13s; }
+  .c-card:hover { border-color: #c8d0dd; box-shadow: 0 10px 26px rgba(23,33,60,.08); }
+  .c-shot { height: 118px; overflow: hidden; border-radius: 8px; background: var(--soft); border: 1px solid var(--line-soft); display: grid; justify-items: center; padding: 10px 10px 0; }
+  .c-shot .mail { width: 128px; font-size: 7px; border-radius: 5px 5px 0 0; }
+  .c-shot .m-band { height: 16px; padding: 0 7px; }
+  .c-shot .m-logo { font-size: 6px; letter-spacing: 1px; }
+  .c-shot .m-logo::before { width: 7px; height: 7px; }
+  .c-shot .m-pad { padding: 7px 8px; gap: 4px; }
+  .c-shot .bar { height: 3.5px; }
+  .c-shot .m-btn { width: 40px; height: 8px; margin-top: 3px; }
+  .c-shot .m-ava { width: 17px; height: 17px; }
+  .c-shot .m-chip { width: 28px; height: 6px; }
+  .c-shot .m-hero { grid-template-columns: 1fr 30px; gap: 7px; }
+  .c-shot .m-illu { width: 22px; height: 22px; }
+  .c-shot .m-tiles i { width: 7px; height: 7px; }
+  .c-main { display: grid; gap: 6px; min-width: 0; }
+  .c-main .t { display: flex; align-items: center; gap: 9px; }
+  .c-main h4 { margin: 0; font-size: 14px; font-weight: 650; }
+  .c-main p { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+  .c-main .sub { color: var(--faint); font-size: 12px; }
+  .c-main .sub b { color: var(--muted); font-weight: 600; }
+  .c-stats { display: grid; grid-template-columns: repeat(3, auto); gap: 8px 26px; font-size: 12px; align-items: start; }
+  .c-stats div { display: grid; gap: 2px; }
+  .c-stats small { color: var(--faint); font-size: 9.5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; }
+  .c-stats b { font-weight: 600; font-size: 12.5px; white-space: nowrap; }
+  .c-act { display: grid; gap: 7px; justify-items: stretch; }
+
+  /* ═══ D · COMMAND CENTER ═══ */
+  .d-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .kpi { display: grid; gap: 3px; padding: 14px 17px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+  .kpi small { color: var(--muted); font-size: 11px; font-weight: 600; }
+  .kpi b { font-size: 20px; font-weight: 650; letter-spacing: -.3px; }
+  .kpi span { color: var(--faint); font-size: 11px; }
+  .kpi.hero { background: var(--brand); border-color: var(--brand); }
+  .kpi.hero small, .kpi.hero span { color: #aeb9d6; }
+  .kpi.hero b { color: #fff; }
+  .d-split { display: grid; grid-template-columns: minmax(0,1fr) 372px; gap: 14px; align-items: start; }
+  .d-list { border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; }
+  .d-lhead { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .d-lhead .searchbox { flex: 0 1 260px; background: var(--soft); border-color: var(--line-soft); }
+  .d-grouphead { padding: 10px 16px 7px; background: var(--soft); border-bottom: 1px solid var(--line-soft); color: var(--muted); font-size: 10.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; display: flex; justify-content: space-between; }
+  .d-row { display: grid; grid-template-columns: minmax(0,1.5fr) auto auto auto; gap: 16px; align-items: center; padding: 11px 16px; border-bottom: 1px solid var(--line-soft); cursor: pointer; }
+  .d-row:hover { background: #f8fafc; }
+  .d-row.sel { background: #f3f6fb; box-shadow: inset 2px 0 0 var(--brand); }
+  .d-row .nm b { display: block; font-size: 13px; font-weight: 650; }
+  .d-row .nm small { color: var(--muted); font-size: 11.5px; }
+  .d-row .u { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .d-row .w { color: var(--faint); font-size: 11.5px; white-space: nowrap; }
+  .d-side { display: grid; gap: 12px; position: sticky; top: 72px; }
+  .d-prevcard { border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; }
+  .d-prevbar { display: flex; align-items: center; gap: 9px; padding: 10px 13px; border-bottom: 1px solid var(--line-soft); }
+  .d-prevbar b { font-size: 13px; }
+  .d-prevbody { display: grid; justify-items: center; padding: 16px; background: var(--soft); max-height: 350px; overflow: auto; }
+  .d-prevbody .mail { width: 300px; font-size: 10px; }
+  .d-infocard { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 13px 16px 15px; display: grid; gap: 9px; }
+  .d-kv { display: grid; grid-template-columns: 86px 1fr; row-gap: 8px; font-size: 12.5px; align-items: center; }
+  .d-kv b { color: var(--muted); font-weight: 500; }
+  .d-kv span { font-weight: 600; }
+  .d-actions { display: flex; gap: 8px; }
+  .d-actions .btn { flex: 1; justify-content: center; }
+
+  /* ═══ E · FILMSTRIP FOCUS ═══ */
+  .e-strip { display: flex; gap: 11px; padding: 4px 2px 14px; overflow-x: auto; }
+  .e-thumb { flex: 0 0 128px; border: 1px solid var(--line); border-radius: 10px; background: #fff; overflow: hidden; cursor: pointer; }
+  .e-thumb.sel { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); }
+  .e-thumb .sh { height: 74px; background: var(--soft); display: grid; justify-items: center; padding: 7px 7px 0; overflow: hidden; border-bottom: 1px solid var(--line-soft); }
+  .e-thumb .sh .mail { width: 88px; font-size: 5px; border-radius: 4px 4px 0 0; box-shadow: 0 1px 2px rgba(23,33,60,.14), 0 5px 12px rgba(23,33,60,.10); }
+  .e-thumb .sh .m-band { height: 11px; padding: 0 5px; }
+  .e-thumb .sh .m-logo { font-size: 4.5px; letter-spacing: .8px; }
+  .e-thumb .sh .m-logo::before { width: 5px; height: 5px; }
+  .e-thumb .sh .m-gold { height: 1.5px; }
+  .e-thumb .sh .m-pad { padding: 5px 6px; gap: 3px; }
+  .e-thumb .sh .bar { height: 2.5px; }
+  .e-thumb .sh .m-btn { width: 26px; height: 5px; margin-top: 2px; }
+  .e-thumb .sh .m-ava { width: 11px; height: 11px; }
+  .e-thumb .sh .m-chip { width: 18px; height: 4px; }
+  .e-thumb .sh .m-hero { grid-template-columns: 1fr 19px; gap: 4px; }
+  .e-thumb .sh .m-illu { width: 15px; height: 15px; }
+  .e-thumb figcaption { display: grid; gap: 2px; padding: 7px 9px 8px; }
+  .e-thumb figcaption b { font-size: 11px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .e-thumb figcaption span { display: flex; justify-content: space-between; align-items: center; color: var(--faint); font-size: 9.5px; }
+  .e-stage { display: grid; grid-template-columns: minmax(0,1fr) 296px; border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; }
+  .e-view { display: grid; grid-template-rows: auto 1fr; min-width: 0; border-right: 1px solid var(--line); }
+  .e-viewbar { display: flex; align-items: center; gap: 11px; padding: 10px 16px; border-bottom: 1px solid var(--line-soft); }
+  .e-viewbar .subject { color: var(--muted); font-size: 12px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .e-viewbar .subject b { color: var(--ink); font-weight: 600; }
+  .e-viewbody { display: grid; justify-items: center; align-content: start; padding: 26px; background: var(--soft); overflow: auto; max-height: 560px; }
+  .e-viewbody .mail { width: 470px; font-size: 11px; }
+  .e-side { display: grid; align-content: start; }
+  .e-block { padding: 14px 18px 15px; border-bottom: 1px solid var(--line-soft); display: grid; gap: 9px; }
+  .e-block:last-child { border-bottom: 0; }
+  .e-block h5 { margin: 0; color: var(--faint); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .e-kv { display: grid; grid-template-columns: 92px 1fr; row-gap: 9px; font-size: 12px; align-items: start; }
+  .e-kv b { color: var(--muted); font-weight: 500; }
+  .e-kv span { font-weight: 600; }
+  .e-vrow { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .e-vrow .end { margin-left: auto; color: var(--faint); font-size: 11px; }
+  .e-actions { display: grid; gap: 7px; }
+  .e-actions .btn { justify-content: center; }
+
+  /* ═══ F · WIDE CARDS + DETAIL RAIL ═══ */
+  .f-head { display: flex; align-items: center; gap: 13px; margin-bottom: 6px; }
+  .f-head .pico { width: 38px; height: 38px; border-radius: 9px; }
+  .f-head h2 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -.2px; }
+  .f-head h2 span { color: var(--faint); font-weight: 500; font-size: 13px; margin-left: 8px; }
+  .f-head p { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; }
+  .f-tabs { display: flex; gap: 2px; margin: 14px 0 0; border-bottom: 1px solid var(--line); }
+  .f-tab { padding: 8px 13px 10px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .f-tab.on { color: var(--ink); border-bottom-color: var(--brand); }
+  .f-tab i { font-style: normal; color: var(--faint); font-weight: 500; margin-left: 5px; font-size: 11px; }
+  .f-toolbar { display: flex; align-items: center; gap: 10px; margin: 14px 0 16px; }
+  .f-toolbar .searchbox { flex: 0 1 280px; }
+  .f-shell { display: grid; grid-template-columns: minmax(0,1fr) 372px; gap: 18px; align-items: start; }
+  .f-cards { min-width: 0; }
+  .f-group { margin: 4px 0 9px; display: flex; align-items: baseline; gap: 9px; }
+  .f-group:not(:first-child) { margin-top: 22px; }
+  .f-group h3 { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .f-group span { color: var(--faint); font-size: 11px; }
+  .f-card { display: grid; grid-template-columns: 128px minmax(0,1fr); gap: 16px; align-items: center; padding: 13px 16px 13px 13px; border: 1px solid var(--line); border-radius: 10px; background: #fff; margin-bottom: 10px; cursor: pointer; transition: border-color .13s, box-shadow .13s, background .13s; }
+  .f-card:hover { border-color: #ccd3df; box-shadow: 0 6px 18px rgba(23,33,60,.07); }
+  .f-card.sel { background: #f8fafd; border-color: #b9c4d6; }
+  .f-card .c-shot { height: 92px; padding: 9px 9px 0; border-radius: 7px; }
+  .f-card .c-shot .mail { width: 102px; }
+  .f-main { display: grid; gap: 5px; min-width: 0; }
+  .f-main .t { display: flex; align-items: center; gap: 9px; }
+  .f-main h4 { margin: 0; font-size: 13.5px; font-weight: 650; }
+  .f-main .t .pill { margin-left: auto; }
+  .f-main p { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .f-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 5px 0; color: var(--faint); font-size: 11.5px; margin-top: 2px; }
+  .f-meta b { color: var(--muted); font-weight: 600; }
+  .f-meta .sep { margin: 0 8px; width: 3px; height: 3px; border-radius: 50%; background: #ccd3df; }
+  .f-rail { position: sticky; top: 72px; border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; display: grid; }
+  .f-railhead { display: grid; gap: 3px; padding: 14px 17px 13px; border-bottom: 1px solid var(--line-soft); }
+  .f-railhead .t { display: flex; align-items: center; gap: 9px; }
+  .f-railhead h4 { margin: 0; font-size: 14.5px; font-weight: 650; flex: 1; min-width: 0; }
+  .f-railhead .sub { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .f-railhead .sub b { color: var(--ink); font-weight: 600; }
+  .f-prevbody { display: grid; justify-items: center; padding: 20px 18px; background: var(--soft); border-bottom: 1px solid var(--line-soft); }
+  .f-prevbody .mail { width: 292px; font-size: 10px; }
+  .f-quiet-link { text-align: center; padding: 4px 0 2px; color: #a04552; font-size: 12px; font-weight: 600; cursor: pointer; }
+  /* rail v2 — streamlined info */
+  .g-inbox { display: grid; grid-template-columns: 38px minmax(0,1fr); gap: 11px; padding: 13px 17px 14px; border-bottom: 1px solid var(--line-soft); background: var(--soft); }
+  .g-from { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--brand); color: var(--gold); font-size: 15px; font-weight: 700; }
+  .g-inbox .who { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .g-inbox .subj { display: block; margin-top: 1px; font-size: 13px; font-weight: 650; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .g-inbox .pre { display: block; margin-top: 1px; color: var(--faint); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .g-list { display: grid; padding: 6px 0; }
+  .g-row { display: grid; grid-template-columns: 30px minmax(0,1fr); gap: 12px; align-items: start; padding: 10px 17px; }
+  .g-row + .g-row { border-top: 1px solid var(--line-soft); }
+  .g-ico { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--line-soft); border-radius: 8px; background: var(--soft); color: #55628a; }
+  .g-row b { display: block; font-size: 12.5px; font-weight: 650; color: var(--ink); line-height: 1.4; }
+  .g-row span { display: block; margin-top: 1px; color: var(--muted); font-size: 11.5px; line-height: 1.5; }
+  /* rail comparison */
+  .r-compare { display: grid; grid-template-columns: repeat(3, 372px); gap: 22px; justify-content: center; align-items: start; }
+  .r-col > h3 { margin: 0 0 10px; text-align: center; font-size: 13px; font-weight: 700; color: var(--muted); }
+  .r-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; padding: 14px 16px; border-bottom: 1px solid var(--line-soft); }
+  .r-tile { display: grid; gap: 3px; padding: 10px 12px; border: 1px solid var(--line-soft); border-radius: 9px; background: var(--soft); }
+  .r-tile small { color: var(--faint); font-size: 9.5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; }
+  .r-tile b { font-size: 13px; font-weight: 650; }
+  .r-tile b .lite { color: var(--muted); font-weight: 500; font-size: 11.5px; }
+  .r-sub { padding: 12px 16px; border-bottom: 1px solid var(--line-soft); }
+  .r-sub small { display: block; color: var(--faint); font-size: 9.5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; margin-bottom: 3px; }
+  .r-sub b { font-size: 12.5px; font-weight: 600; line-height: 1.45; display: block; }
+  .r-kv { padding: 12px 16px; display: grid; grid-template-columns: 92px 1fr; row-gap: 9px; font-size: 12.5px; align-items: center; border-bottom: 1px solid var(--line-soft); }
+  .r-kv b { color: var(--muted); font-weight: 500; }
+  .r-kv span { font-weight: 600; }
+  .r-flat { display: grid; }
+  .r-flat .row { display: flex; align-items: center; gap: 10px; padding: 10px 17px; font-size: 12.5px; }
+  .r-flat .row + .row { border-top: 1px solid var(--line-soft); }
+  .r-flat .row b { color: var(--muted); font-weight: 500; flex: 0 0 88px; }
+  .r-flat .row span { font-weight: 600; min-width: 0; }
+  .r-flat .row .end { margin-left: auto; color: var(--faint); font-weight: 500; font-size: 11.5px; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <g id="i-mail"><rect x="2" y="4" width="20" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m22 7-8.99 5.73a2 2 0 0 1-2.02 0L2 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></g>
+    <g id="i-search"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m21 21-4.3-4.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></g>
+    <g id="i-plus"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></g>
+    <g id="i-chev"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <g id="i-x"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></g>
+    <g id="i-monitor"><rect x="2" y="3" width="20" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></g>
+    <g id="i-phone"><rect x="7" y="2" width="10" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M11 18h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></g>
+    <g id="i-zap"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></g>
+    <g id="i-users"><circle cx="9" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.6a3.5 3.5 0 0 1 0 6.8M21.5 20a6.5 6.5 0 0 0-4.5-6.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></g>
+    <g id="i-layers"><path d="m12 3 9 5-9 5-9-5 9-5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m3 13 9 5 9-5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></g>
+    <g id="i-link"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></g>
+    <g id="i-user"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></g>
+  </defs>
+</svg>
+
+<div class="chooser">
+  <h1>Email Studio · designs</h1>
+  <button onclick="show(0,this)">A · Registry + Drawer</button>
+  <button onclick="show(1,this)">B · Mail Client</button>
+  <button onclick="show(2,this)">C · Wide Cards</button>
+  <button onclick="show(3,this)">D · Command Center</button>
+  <button onclick="show(4,this)">E · Filmstrip Focus</button>
+  <button class="on" onclick="show(5,this)">F · Wide Cards + Detail Rail</button>
+  <button onclick="show(6,this)">G · Rail options</button>
+  <button onclick="show(-1,this)">Show all</button>
+</div>
+
+<!-- ═════════════ A · REGISTRY + DRAWER ═════════════ -->
+<div class="frame">
+  <div class="canvas"><div class="page a-shell">
+    <div class="crumb">HR · Onboarding &nbsp;/&nbsp; <b>Email Templates</b></div>
+    <div class="phead">
+      <span class="pico"><svg width="19" height="19" viewBox="0 0 24 24"><use href="#i-mail"/></svg></span>
+      <div><h2>Email Templates</h2><p>Create and govern transactional emails for onboarding, account invitations, and workers.</p></div>
+      <span class="spacer"></span>
+      <span class="searchbox" style="width:260px"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#i-search"/></svg>Search templates…</span>
+      <span class="select">All families<svg width="13" height="13" viewBox="0 0 24 24"><use href="#i-chev"/></svg></span>
+      <button class="btn primary"><svg width="13" height="13" viewBox="0 0 24 24"><use href="#i-plus"/></svg>New Template</button>
+    </div>
+
+    <div class="a-wrap">
+      <table class="a-table">
+        <thead><tr><th style="width:30%">Template</th><th>Family</th><th>Status</th><th>Version</th><th>Usage</th><th>Owner</th><th>Updated</th></tr></thead>
+        <tbody>
+          <tr class="rowsel"><td class="a-name"><b>Employee Welcome</b><small>Onboarding case created</small></td><td>Onboarding</td><td><span class="pill published"><span class="dot"></span>Published</span></td><td>v4</td><td>2 active</td><td class="a-owner">People Operations</td><td class="a-owner">2d ago</td></tr>
+          <tr><td class="a-name"><b>Complete Your Onboarding Tasks</b><small>Tasks pending reminder</small></td><td>Onboarding</td><td><span class="pill published"><span class="dot"></span>Published</span></td><td>v2</td><td>1 active</td><td class="a-owner">People Operations</td><td class="a-owner">5d ago</td></tr>
+          <tr><td class="a-name"><b>Missing Documents Reminder</b><small>Documents missing</small></td><td>Onboarding</td><td><span class="pill draft"><span class="dot"></span>Draft</span></td><td>v1</td><td>—</td><td class="a-owner">People Operations</td><td class="a-owner">1w ago</td></tr>
+          <tr><td class="a-name"><b>Day-One Instructions</b><small>Start date approaching</small></td><td>Onboarding</td><td><span class="pill published"><span class="dot"></span>Published</span></td><td>v3</td><td>1 active</td><td class="a-owner">People Operations</td><td class="a-owner">1w ago</td></tr>
+          <tr><td class="a-name"><b>Account Invitation</b><small>Invitation created</small></td><td>User invitation</td><td><span class="pill published"><span class="dot"></span>Published</span></td><td>v2</td><td>3 active</td><td class="a-owner">IT Security</td><td class="a-owner">3d ago</td></tr>
+          <tr><td class="a-name"><b>Invitation Reminder</b><small>Invitation pending</small></td><td>User invitation</td><td><span class="pill published"><span class="dot"></span>Published</span></td><td>v1</td><td>1 active</td><td class="a-owner">IT Security</td><td class="a-owner">2w ago</td></tr>
+          <tr><td class="a-name"><b>Invitation Expiring Soon</b><small>Expiry approaching</small></td><td>User invitation</td><td><span class="pill archived"><span class="dot"></span>Archived</span></td><td>v1</td><td>—</td><td class="a-owner">IT Security</td><td class="a-owner">3w ago</td></tr>
+          <tr><td class="a-name"><b>Worker Registration Invitation</b><small>Worker invitation created</small></td><td>Worker invitation</td><td><span class="pill published"><span class="dot"></span>Published</span></td><td>v2</td><td>2 active</td><td class="a-owner">Site Operations</td><td class="a-owner">4d ago</td></tr>
+          <tr><td class="a-name"><b>Site Assignment Invitation</b><small>Site assignment created</small></td><td>Worker invitation</td><td><span class="pill published"><span class="dot"></span>Published</span></td><td>v1</td><td>1 active</td><td class="a-owner">Site Operations</td><td class="a-owner">2w ago</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- slide-over drawer -->
+    <aside class="a-drawer">
+      <div class="a-dhead">
+        <h3>Employee Welcome</h3><span class="pill published"><span class="dot"></span>Published</span>
+        <span class="a-dclose"><svg width="13" height="13" viewBox="0 0 24 24"><use href="#i-x"/></svg></span>
+      </div>
+      <div class="a-dmeta">
+        <div><small>Subject</small><b>Welcome to SIOMAC, {{recipient.firstName}}</b></div>
+        <div><small>Trigger</small><span class="mono">onboarding.case_created</span></div>
+        <div><small>Version</small><b>v4 · 2d ago</b></div>
+        <div><small>Usage</small><b>2 bindings</b></div>
+        <div><small>Audience</small><b>Employee</b></div>
+        <div><small>Owner</small><b>People Operations</b></div>
+      </div>
+      <div class="a-dbody">
+        <div class="mail">
+          <div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div>
+          <div class="m-pad m-hero">
+            <div class="bars"><span class="bar d" style="width:72%;height:8px"></span><span class="bar d" style="width:44%;height:8px"></span><span class="bar" style="width:92%"></span><span class="bar" style="width:84%"></span><span class="m-btn"></span></div>
+            <div class="m-side"><span class="m-ava"></span><span class="bar b" style="width:34px"></span><span class="m-chip"></span></div>
+          </div>
+          <div class="m-tiles"><span><i></i><u></u></span><span><i></i><u></u></span><span><i></i><u></u></span><span><i></i><u></u></span></div>
+          <div class="m-pad" style="padding-bottom:0"><div class="m-cta" style="margin:0"><span class="bar d" style="width:32%"></span><span class="bar" style="width:86%"></span><span class="m-btn"></span></div></div>
+          <div class="m-pad"><span class="bar" style="width:60%"></span><span class="bar" style="width:44%"></span></div>
+          <div class="m-support"><span class="bar lite" style="width:40%"></span><span class="bar" style="width:74%"></span></div>
+        </div>
+      </div>
+      <div class="a-dfoot">
+        <button class="btn primary">Open in Builder</button>
+        <button class="btn">Duplicate</button>
+        <button class="btn quiet">Archive…</button>
+      </div>
+    </aside>
+  </div></div>
+  <p class="caption"><b>A · Registry + Drawer.</b> Governance-first: a clean registry table carrying all metadata in columns; selecting a row slides in a wide drawer with subject, key facts, the live render, and actions. The table stays visible behind the drawer.</p>
+</div>
+
+<!-- ═════════════ B · MAIL CLIENT ═════════════ -->
+<div class="frame">
+  <div class="canvas"><div class="page">
+    <div class="crumb">HR · Onboarding &nbsp;/&nbsp; <b>Email Templates</b></div>
+    <div class="phead">
+      <span class="pico"><svg width="19" height="19" viewBox="0 0 24 24"><use href="#i-mail"/></svg></span>
+      <div><h2>Email Templates</h2><p>Create and govern transactional emails for onboarding, account invitations, and workers.</p></div>
+      <span class="spacer"></span>
+      <button class="btn primary"><svg width="13" height="13" viewBox="0 0 24 24"><use href="#i-plus"/></svg>New Template</button>
+    </div>
+
+    <div class="b-shell">
+      <aside class="b-list">
+        <div class="b-tools">
+          <span class="searchbox"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#i-search"/></svg>Search templates…</span>
+          <div class="b-chips"><span class="chip on">All</span><span class="chip">Onboarding</span><span class="chip">User</span><span class="chip">Worker</span></div>
+        </div>
+        <div></div>
+        <div class="b-rows">
+          <div class="b-row sel"><div class="r1"><h4>Employee Welcome</h4><span class="pill published"><span class="dot"></span>Published</span></div><div class="r2"><span>Onboarding case created</span><em>v4 · 2d</em></div></div>
+          <div class="b-row"><div class="r1"><h4>Complete Your Onboarding Tasks</h4><span class="pill published"><span class="dot"></span>Published</span></div><div class="r2"><span>Tasks pending reminder</span><em>v2 · 5d</em></div></div>
+          <div class="b-row"><div class="r1"><h4>Missing Documents Reminder</h4><span class="pill draft"><span class="dot"></span>Draft</span></div><div class="r2"><span>Documents missing</span><em>v1 · 1w</em></div></div>
+          <div class="b-row"><div class="r1"><h4>Day-One Instructions</h4><span class="pill published"><span class="dot"></span>Published</span></div><div class="r2"><span>Start date approaching</span><em>v3 · 1w</em></div></div>
+          <div class="b-row"><div class="r1"><h4>Onboarding Completed</h4><span class="pill published"><span class="dot"></span>Published</span></div><div class="r2"><span>Case completed</span><em>v1 · 2w</em></div></div>
+          <div class="b-row"><div class="r1"><h4>Account Invitation</h4><span class="pill published"><span class="dot"></span>Published</span></div><div class="r2"><span>Invitation created</span><em>v2 · 3d</em></div></div>
+          <div class="b-row"><div class="r1"><h4>Invitation Reminder</h4><span class="pill published"><span class="dot"></span>Published</span></div><div class="r2"><span>Invitation pending</span><em>v1 · 2w</em></div></div>
+          <div class="b-row"><div class="r1"><h4>Worker Registration Invitation</h4><span class="pill published"><span class="dot"></span>Published</span></div><div class="r2"><span>Worker invitation created</span><em>v2 · 4d</em></div></div>
+        </div>
+      </aside>
+
+      <section class="b-detail">
+        <div class="b-head">
+          <div class="t">
+            <h3>Employee Welcome</h3>
+            <span class="pill published"><span class="dot"></span>Published</span>
+            <span class="spacer"></span>
+            <button class="btn sm">Duplicate</button>
+            <button class="btn sm primary">Open in Builder</button>
+          </div>
+          <div class="b-facts">
+            <div><small>Subject</small><b>Welcome to SIOMAC, {{recipient.firstName}}</b></div>
+            <div><small>Trigger</small><span class="mono">onboarding.case_created</span></div>
+            <div><small>Version</small><b>v4</b></div>
+            <div><small>Usage</small><b>2 bindings</b></div>
+            <div><small>Owner</small><b>People Operations</b></div>
+            <div><small>Updated</small><b>1 Aug 2026</b></div>
+          </div>
+        </div>
+        <div class="b-tabs">
+          <button class="b-tab on">Preview</button>
+          <button class="b-tab">Versions</button>
+          <button class="b-tab">Usage</button>
+          <button class="b-tab">Activity</button>
+        </div>
+        <div class="b-stage">
+          <div class="b-stagebar">
+            <div class="seg">
+              <button class="on"><svg width="13" height="13" viewBox="0 0 24 24"><use href="#i-monitor"/></svg>Desktop</button>
+              <button><svg width="13" height="13" viewBox="0 0 24 24"><use href="#i-phone"/></svg>Mobile</button>
+            </div>
+            <span class="toggle"><span class="tk"></span>Demo data</span>
+          </div>
+          <div class="mail">
+            <div class="m-band" style="height:32px"><span class="m-logo" style="font-size:9px">SIOMAC</span></div><div class="m-gold"></div>
+            <div class="m-pad m-hero" style="padding:16px 17px">
+              <div class="bars"><span class="bar d" style="width:70%;height:10px"></span><span class="bar d" style="width:44%;height:10px"></span><span class="bar" style="width:93%;margin-top:3px"></span><span class="bar" style="width:85%"></span><span class="m-btn" style="width:88px;height:15px"></span></div>
+              <div class="m-side"><span class="m-ava" style="width:36px;height:36px"></span><span class="bar b" style="width:46px"></span><span class="m-chip" style="width:56px"></span></div>
+            </div>
+            <div class="m-tiles"><span><i></i><u></u><u style="width:44%"></u></span><span><i></i><u></u><u style="width:44%"></u></span><span><i></i><u></u><u style="width:44%"></u></span><span><i></i><u></u><u style="width:44%"></u></span></div>
+            <div class="m-pad"><div class="m-cta" style="margin:0"><span class="bar d" style="width:30%"></span><span class="bar" style="width:86%"></span><span class="m-btn" style="width:92px"></span></div></div>
+            <div class="m-support"><span class="bar lite" style="width:38%"></span><span class="bar" style="width:74%"></span><span class="bar" style="width:48%"></span></div>
+            <div class="m-pad"><span class="bar" style="width:52%"></span><span class="bar" style="width:64%"></span></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div></div>
+  <p class="caption"><b>B · Mail Client.</b> Two panes like a modern mail app: compact searchable list with family chips; the whole right side belongs to the selected template — a meta header with subject and key facts, then tabs (Preview / Versions / Usage / Activity) so info never crowds the render.</p>
+</div>
+
+<!-- ═════════════ C · WIDE CARDS ═════════════ -->
+<div class="frame">
+  <div class="canvas"><div class="page">
+    <div class="crumb">HR · Onboarding &nbsp;/&nbsp; <b>Email Templates</b></div>
+    <div class="phead">
+      <span class="pico"><svg width="19" height="19" viewBox="0 0 24 24"><use href="#i-mail"/></svg></span>
+      <div><h2>Email Templates</h2><p>Create and govern transactional emails for onboarding, account invitations, and workers.</p></div>
+      <span class="spacer"></span>
+      <button class="btn primary"><svg width="13" height="13" viewBox="0 0 24 24"><use href="#i-plus"/></svg>New Template</button>
+    </div>
+
+    <div class="c-toolbar">
+      <span class="searchbox" style="flex:0 1 300px"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#i-search"/></svg>Search templates…</span>
+      <span class="select">All statuses<svg width="13" height="13" viewBox="0 0 24 24"><use href="#i-chev"/></svg></span>
+      <span class="spacer"></span>
+      <span style="color:var(--faint);font-size:12px">13 templates</span>
+    </div>
+
+    <div class="c-group"><h3>Onboarding</h3><span>5 templates</span></div>
+
+    <div class="c-card">
+      <div class="c-shot"><div class="mail">
+        <div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div>
+        <div class="m-pad m-hero"><div class="bars"><span class="bar d" style="width:76%;height:5px"></span><span class="bar" style="width:92%"></span><span class="bar" style="width:78%"></span><span class="m-btn"></span></div><div class="m-side"><span class="m-ava"></span><span class="m-chip"></span></div></div>
+        <div class="m-tiles"><span><i></i><u></u></span><span><i></i><u></u></span><span><i></i><u></u></span><span><i></i><u></u></span></div>
+      </div></div>
+      <div class="c-main">
+        <div class="t"><h4>Employee Welcome</h4><span class="pill published"><span class="dot"></span>Published</span></div>
+        <p>First touch after an onboarding case is created — brand hero, first-day overview, and the onboarding workspace call-to-action.</p>
+        <div class="sub">Subject&nbsp; <b>Welcome to SIOMAC, {{recipient.firstName}}</b></div>
+      </div>
+      <div class="c-stats">
+        <div><small>Trigger</small><b class="mono">onboarding.case_created</b></div>
+        <div><small>Version</small><b>v4</b></div>
+        <div><small>Usage</small><b>2 active</b></div>
+        <div><small>Owner</small><b>People Operations</b></div>
+        <div><small>Audience</small><b>Employee</b></div>
+        <div><small>Updated</small><b>2d ago</b></div>
+      </div>
+      <div class="c-act">
+        <button class="btn sm primary">Open</button>
+        <button class="btn sm">Preview</button>
+        <button class="btn sm quiet">More…</button>
+      </div>
+    </div>
+
+    <div class="c-card">
+      <div class="c-shot"><div class="mail">
+        <div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div>
+        <div class="m-pad"><span class="m-illu"></span><span class="bar d" style="width:56%;height:5px;justify-self:center"></span><span class="bar" style="width:82%;justify-self:center"></span><span class="m-prog"></span><div class="m-rows"><span><i></i><span class="bar" style="width:64%"></span></span><span><i></i><span class="bar" style="width:48%"></span></span></div></div>
+      </div></div>
+      <div class="c-main">
+        <div class="t"><h4>Complete Your Onboarding Tasks</h4><span class="pill published"><span class="dot"></span>Published</span></div>
+        <p>Reminder sent while onboarding tasks remain open — progress bar, task checklist, and a link back to the hub.</p>
+        <div class="sub">Subject&nbsp; <b>You have onboarding tasks waiting</b></div>
+      </div>
+      <div class="c-stats">
+        <div><small>Trigger</small><b class="mono">onboarding.tasks_pending</b></div>
+        <div><small>Version</small><b>v2</b></div>
+        <div><small>Usage</small><b>1 active</b></div>
+        <div><small>Owner</small><b>People Operations</b></div>
+        <div><small>Audience</small><b>Employee</b></div>
+        <div><small>Updated</small><b>5d ago</b></div>
+      </div>
+      <div class="c-act">
+        <button class="btn sm primary">Open</button>
+        <button class="btn sm">Preview</button>
+        <button class="btn sm quiet">More…</button>
+      </div>
+    </div>
+
+    <div class="c-card">
+      <div class="c-shot"><div class="mail">
+        <div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div>
+        <div class="m-pad"><span class="m-illu"></span><span class="bar d" style="width:60%;height:5px;justify-self:center"></span><span class="bar" style="width:76%;justify-self:center"></span><div class="m-rows"><span><i style="background:var(--amber-bg);border-color:#e8d8a8"></i><span class="bar" style="width:62%"></span></span><span><i style="background:var(--amber-bg);border-color:#e8d8a8"></i><span class="bar" style="width:44%"></span></span></div></div>
+      </div></div>
+      <div class="c-main">
+        <div class="t"><h4>Missing Documents Reminder</h4><span class="pill draft"><span class="dot"></span>Draft</span></div>
+        <p>Escalation for outstanding documents — lists exactly what is missing with an upload call-to-action.</p>
+        <div class="sub">Subject&nbsp; <b>Action needed: missing documents</b></div>
+      </div>
+      <div class="c-stats">
+        <div><small>Trigger</small><b class="mono">onboarding.documents_missing</b></div>
+        <div><small>Version</small><b>v1</b></div>
+        <div><small>Usage</small><b>Not bound</b></div>
+        <div><small>Owner</small><b>People Operations</b></div>
+        <div><small>Audience</small><b>Employee</b></div>
+        <div><small>Updated</small><b>1w ago</b></div>
+      </div>
+      <div class="c-act">
+        <button class="btn sm primary">Open</button>
+        <button class="btn sm">Preview</button>
+        <button class="btn sm quiet">More…</button>
+      </div>
+    </div>
+
+    <div class="c-group"><h3>User invitations</h3><span>4 templates</span></div>
+
+    <div class="c-card">
+      <div class="c-shot"><div class="mail">
+        <div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div>
+        <div class="m-pad"><span class="m-illu"></span><span class="bar d" style="width:52%;height:5px;justify-self:center"></span><span class="bar" style="width:74%;justify-self:center"></span><span class="m-btn" style="justify-self:center"></span></div>
+      </div></div>
+      <div class="c-main">
+        <div class="t"><h4>Account Invitation</h4><span class="pill published"><span class="dot"></span>Published</span></div>
+        <p>Secure account setup invitation with a single-use activation link and expiry note.</p>
+        <div class="sub">Subject&nbsp; <b>Set up your SIOMAC account</b></div>
+      </div>
+      <div class="c-stats">
+        <div><small>Trigger</small><b class="mono">identity.invitation_created</b></div>
+        <div><small>Version</small><b>v2</b></div>
+        <div><small>Usage</small><b>3 active</b></div>
+        <div><small>Owner</small><b>IT Security</b></div>
+        <div><small>Audience</small><b>New user</b></div>
+        <div><small>Updated</small><b>3d ago</b></div>
+      </div>
+      <div class="c-act">
+        <button class="btn sm primary">Open</button>
+        <button class="btn sm">Preview</button>
+        <button class="btn sm quiet">More…</button>
+      </div>
+    </div>
+  </div></div>
+  <p class="caption"><b>C · Wide Cards.</b> One row per template grouped by family — thumbnail, purpose description with subject line, full stat block, and actions all visible without selecting anything. Zero clicks to compare templates; scales with scrolling.</p>
+</div>
+
+<!-- ═════════════ D · COMMAND CENTER ═════════════ -->
+<div class="frame">
+  <div class="canvas"><div class="page">
+    <div class="crumb">HR · Onboarding &nbsp;/&nbsp; <b>Email Templates</b></div>
+    <div class="phead">
+      <span class="pico"><svg width="19" height="19" viewBox="0 0 24 24"><use href="#i-mail"/></svg></span>
+      <div><h2>Email Templates</h2><p>Create and govern transactional emails for onboarding, account invitations, and workers.</p></div>
+      <span class="spacer"></span>
+      <button class="btn primary"><svg width="13" height="13" viewBox="0 0 24 24"><use href="#i-plus"/></svg>New Template</button>
+    </div>
+
+    <div class="d-kpis">
+      <div class="kpi hero"><small>Templates</small><b>13</b><span>3 families</span></div>
+      <div class="kpi"><small>Published</small><b>10</b><span>live &amp; immutable</span></div>
+      <div class="kpi"><small>Drafts</small><b>2</b><span>1 awaiting review</span></div>
+      <div class="kpi"><small>Active bindings</small><b>11</b><span>across 6 workflows</span></div>
+    </div>
+
+    <div class="d-split">
+      <div class="d-list">
+        <div class="d-lhead">
+          <span class="searchbox"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#i-search"/></svg>Search templates…</span>
+          <span class="select">All statuses<svg width="13" height="13" viewBox="0 0 24 24"><use href="#i-chev"/></svg></span>
+          <span class="spacer"></span>
+          <span style="color:var(--faint);font-size:12px">13 templates</span>
+        </div>
+        <div class="d-grouphead"><span>Onboarding</span><span>5</span></div>
+        <div class="d-row sel"><div class="nm"><b>Employee Welcome</b><small>Onboarding case created</small></div><span class="pill published"><span class="dot"></span>Published</span><span class="u">v4 · 2 usages</span><span class="w">2d ago</span></div>
+        <div class="d-row"><div class="nm"><b>Complete Your Onboarding Tasks</b><small>Tasks pending reminder</small></div><span class="pill published"><span class="dot"></span>Published</span><span class="u">v2 · 1 usage</span><span class="w">5d ago</span></div>
+        <div class="d-row"><div class="nm"><b>Missing Documents Reminder</b><small>Documents missing</small></div><span class="pill draft"><span class="dot"></span>Draft</span><span class="u">v1 · unbound</span><span class="w">1w ago</span></div>
+        <div class="d-row"><div class="nm"><b>Day-One Instructions</b><small>Start date approaching</small></div><span class="pill published"><span class="dot"></span>Published</span><span class="u">v3 · 1 usage</span><span class="w">1w ago</span></div>
+        <div class="d-grouphead"><span>User invitations</span><span>4</span></div>
+        <div class="d-row"><div class="nm"><b>Account Invitation</b><small>Invitation created</small></div><span class="pill published"><span class="dot"></span>Published</span><span class="u">v2 · 3 usages</span><span class="w">3d ago</span></div>
+        <div class="d-row"><div class="nm"><b>Invitation Reminder</b><small>Invitation pending</small></div><span class="pill published"><span class="dot"></span>Published</span><span class="u">v1 · 1 usage</span><span class="w">2w ago</span></div>
+        <div class="d-grouphead"><span>Worker invitations</span><span>4</span></div>
+        <div class="d-row"><div class="nm"><b>Worker Registration Invitation</b><small>Worker invitation created</small></div><span class="pill published"><span class="dot"></span>Published</span><span class="u">v2 · 2 usages</span><span class="w">4d ago</span></div>
+        <div class="d-row"><div class="nm"><b>Site Assignment Invitation</b><small>Site assignment created</small></div><span class="pill published"><span class="dot"></span>Published</span><span class="u">v1 · 1 usage</span><span class="w">2w ago</span></div>
+      </div>
+
+      <aside class="d-side">
+        <div class="d-prevcard">
+          <div class="d-prevbar">
+            <b>Employee Welcome</b>
+            <span class="spacer"></span>
+            <div class="seg">
+              <button class="on"><svg width="12" height="12" viewBox="0 0 24 24"><use href="#i-monitor"/></svg></button>
+              <button><svg width="12" height="12" viewBox="0 0 24 24"><use href="#i-phone"/></svg></button>
+            </div>
+          </div>
+          <div class="d-prevbody">
+            <div class="mail">
+              <div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div>
+              <div class="m-pad m-hero"><div class="bars"><span class="bar d" style="width:72%;height:7px"></span><span class="bar" style="width:92%"></span><span class="bar" style="width:80%"></span><span class="m-btn"></span></div><div class="m-side"><span class="m-ava"></span><span class="m-chip"></span></div></div>
+              <div class="m-tiles"><span><i></i><u></u></span><span><i></i><u></u></span><span><i></i><u></u></span><span><i></i><u></u></span></div>
+              <div class="m-pad"><div class="m-cta" style="margin:0"><span class="bar d" style="width:30%"></span><span class="bar" style="width:82%"></span><span class="m-btn"></span></div></div>
+              <div class="m-support"><span class="bar lite" style="width:38%"></span><span class="bar" style="width:72%"></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="d-infocard">
+          <div class="d-kv">
+            <b>Subject</b><span>Welcome to SIOMAC, {{recipient.firstName}}</span>
+            <b>Trigger</b><span class="mono">onboarding.case_created</span>
+            <b>Version</b><span>v4 · 2d ago</span>
+            <b>Usage</b><span>2 bindings</span>
+            <b>Owner</b><span>People Operations</span>
+          </div>
+          <div class="d-actions">
+            <button class="btn primary">Open in Builder</button>
+            <button class="btn">Duplicate</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div></div>
+  <p class="caption"><b>D · Command Center.</b> Governance dashboard: KPI band on top (templates / published / drafts / bindings), a dense grouped directory below, and a compact side panel with the selected template's render + facts. Best overview of the whole estate at once.</p>
+</div>
+
+<!-- ═════════════ E · FILMSTRIP FOCUS ═════════════ -->
+<div class="frame">
+  <div class="canvas"><div class="page">
+    <div class="crumb">HR · Onboarding &nbsp;/&nbsp; <b>Email Templates</b></div>
+    <div class="phead">
+      <span class="pico"><svg width="19" height="19" viewBox="0 0 24 24"><use href="#i-mail"/></svg></span>
+      <div><h2>Email Templates</h2><p>Create and govern transactional emails for onboarding, account invitations, and workers.</p></div>
+      <span class="spacer"></span>
+      <span class="searchbox" style="width:250px"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#i-search"/></svg>Search templates…</span>
+      <span class="select">All families<svg width="13" height="13" viewBox="0 0 24 24"><use href="#i-chev"/></svg></span>
+      <button class="btn primary"><svg width="13" height="13" viewBox="0 0 24 24"><use href="#i-plus"/></svg>New Template</button>
+    </div>
+
+    <div class="e-strip">
+      <figure class="e-thumb sel" style="margin:0">
+        <div class="sh"><div class="mail"><div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div><div class="m-pad m-hero"><div class="bars"><span class="bar d" style="width:76%"></span><span class="bar" style="width:90%"></span><span class="m-btn"></span></div><div class="m-side"><span class="m-ava"></span><span class="m-chip"></span></div></div></div></div>
+        <figcaption><b>Employee Welcome</b><span>v4<i class="pill published" style="padding:1px 6px"><i class="dot"></i></i></span></figcaption>
+      </figure>
+      <figure class="e-thumb" style="margin:0">
+        <div class="sh"><div class="mail"><div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div><div class="m-pad"><span class="m-illu"></span><span class="bar d" style="width:56%;justify-self:center"></span><span class="m-prog"></span></div></div></div>
+        <figcaption><b>Onboarding Tasks</b><span>v2<i class="pill published" style="padding:1px 6px"><i class="dot"></i></i></span></figcaption>
+      </figure>
+      <figure class="e-thumb" style="margin:0">
+        <div class="sh"><div class="mail"><div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div><div class="m-pad"><span class="m-illu"></span><span class="bar d" style="width:60%;justify-self:center"></span><span class="bar" style="width:72%;justify-self:center"></span></div></div></div>
+        <figcaption><b>Missing Documents</b><span>v1<i class="pill draft" style="padding:1px 6px"><i class="dot"></i></i></span></figcaption>
+      </figure>
+      <figure class="e-thumb" style="margin:0">
+        <div class="sh"><div class="mail"><div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div><div class="m-pad"><span class="bar d" style="width:52%"></span><span class="bar" style="width:84%"></span><span class="bar" style="width:70%"></span></div></div></div>
+        <figcaption><b>Day-One Instructions</b><span>v3<i class="pill published" style="padding:1px 6px"><i class="dot"></i></i></span></figcaption>
+      </figure>
+      <figure class="e-thumb" style="margin:0">
+        <div class="sh"><div class="mail"><div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div><div class="m-pad"><span class="m-illu"></span><span class="bar d" style="width:54%;justify-self:center"></span><span class="m-btn" style="justify-self:center"></span></div></div></div>
+        <figcaption><b>Onboarding Completed</b><span>v1<i class="pill published" style="padding:1px 6px"><i class="dot"></i></i></span></figcaption>
+      </figure>
+      <figure class="e-thumb" style="margin:0">
+        <div class="sh"><div class="mail"><div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div><div class="m-pad"><span class="m-illu"></span><span class="bar d" style="width:50%;justify-self:center"></span><span class="m-btn" style="justify-self:center"></span></div></div></div>
+        <figcaption><b>Account Invitation</b><span>v2<i class="pill published" style="padding:1px 6px"><i class="dot"></i></i></span></figcaption>
+      </figure>
+      <figure class="e-thumb" style="margin:0">
+        <div class="sh"><div class="mail"><div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div><div class="m-pad"><span class="bar d" style="width:56%"></span><span class="bar" style="width:80%"></span><span class="m-btn"></span></div></div></div>
+        <figcaption><b>Invitation Reminder</b><span>v1<i class="pill published" style="padding:1px 6px"><i class="dot"></i></i></span></figcaption>
+      </figure>
+      <figure class="e-thumb" style="margin:0">
+        <div class="sh"><div class="mail"><div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div><div class="m-pad"><span class="bar d" style="width:58%"></span><span class="bar" style="width:82%"></span><span class="bar" style="width:66%"></span></div></div></div>
+        <figcaption><b>Worker Registration</b><span>v2<i class="pill published" style="padding:1px 6px"><i class="dot"></i></i></span></figcaption>
+      </figure>
+    </div>
+
+    <div class="e-stage">
+      <div class="e-view">
+        <div class="e-viewbar">
+          <div class="seg">
+            <button class="on"><svg width="13" height="13" viewBox="0 0 24 24"><use href="#i-monitor"/></svg>Desktop</button>
+            <button><svg width="13" height="13" viewBox="0 0 24 24"><use href="#i-phone"/></svg>Mobile</button>
+          </div>
+          <span class="toggle"><span class="tk"></span>Demo data</span>
+          <span class="spacer"></span>
+          <span class="subject">Subject&nbsp; <b>Welcome to SIOMAC, {{recipient.firstName}}</b></span>
+        </div>
+        <div class="e-viewbody">
+          <div class="mail">
+            <div class="m-band" style="height:32px"><span class="m-logo" style="font-size:9px">SIOMAC</span></div><div class="m-gold"></div>
+            <div class="m-pad m-hero" style="padding:17px 18px">
+              <div class="bars"><span class="bar d" style="width:70%;height:10px"></span><span class="bar d" style="width:44%;height:10px"></span><span class="bar" style="width:93%;margin-top:3px"></span><span class="bar" style="width:85%"></span><span class="m-btn" style="width:90px;height:15px"></span></div>
+              <div class="m-side"><span class="m-ava" style="width:38px;height:38px"></span><span class="bar b" style="width:48px"></span><span class="m-chip" style="width:58px"></span></div>
+            </div>
+            <div class="m-tiles"><span><i></i><u></u><u style="width:44%"></u></span><span><i></i><u></u><u style="width:44%"></u></span><span><i></i><u></u><u style="width:44%"></u></span><span><i></i><u></u><u style="width:44%"></u></span></div>
+            <div class="m-pad"><div class="m-cta" style="margin:0"><span class="bar d" style="width:30%"></span><span class="bar" style="width:86%"></span><span class="m-btn" style="width:94px"></span></div></div>
+            <div class="m-support"><span class="bar lite" style="width:38%"></span><span class="bar" style="width:74%"></span><span class="bar" style="width:48%"></span></div>
+            <div class="m-pad"><span class="bar" style="width:52%"></span><span class="bar" style="width:64%"></span></div>
+          </div>
+        </div>
+      </div>
+      <aside class="e-side">
+        <div class="e-block">
+          <h5>Details</h5>
+          <div class="e-kv">
+            <b>Status</b><span><span class="pill published"><span class="dot"></span>Published</span></span>
+            <b>Family</b><span>Onboarding</span>
+            <b>Trigger</b><span class="mono">onboarding.case_created</span>
+            <b>Audience</b><span>Employee</span>
+            <b>Owner</b><span>People Operations</span>
+            <b>Updated</b><span>1 Aug 2026</span>
+          </div>
+        </div>
+        <div class="e-block">
+          <h5>Versions</h5>
+          <div class="e-vrow"><b style="min-width:24px">v4</b><span class="pill published"><span class="dot"></span>Live</span><span class="end">2d ago</span></div>
+          <div class="e-vrow"><b style="min-width:24px">v3</b><span style="color:var(--muted)">Superseded</span><span class="end">3w ago</span></div>
+        </div>
+        <div class="e-block">
+          <h5>Usage — 2 bindings</h5>
+          <div class="e-vrow"><span>Onboarding case created</span><span class="end">Active</span></div>
+          <div class="e-vrow"><span>Manual send · HR console</span><span class="end">Allowed</span></div>
+        </div>
+        <div class="e-block e-actions">
+          <button class="btn primary">Open in Builder</button>
+          <button class="btn">Duplicate as Draft</button>
+        </div>
+      </aside>
+    </div>
+  </div></div>
+  <p class="caption"><b>E · Filmstrip Focus.</b> Horizontal filmstrip of render thumbnails across the top for fast visual switching; below it the selected template gets a large centred preview with a slim structured info rail (details / versions / usage / actions).</p>
+</div>
+
+<!-- ═════════════ F · WIDE CARDS + DETAIL RAIL ═════════════ -->
+<div class="frame on">
+  <div class="canvas"><div class="page">
+    <div class="crumb">HR · Onboarding &nbsp;/&nbsp; <b>Email Templates</b></div>
+    <div class="f-head">
+      <span class="pico"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#i-mail"/></svg></span>
+      <div><h2>Email Templates<span>13 templates · 3 families</span></h2><p>Create and govern transactional emails for onboarding, account invitations, and workers.</p></div>
+      <span class="spacer"></span>
+      <button class="btn primary"><svg width="13" height="13" viewBox="0 0 24 24"><use href="#i-plus"/></svg>New Template</button>
+    </div>
+
+    <div class="f-tabs">
+      <button class="f-tab on">All<i>13</i></button>
+      <button class="f-tab">Onboarding<i>5</i></button>
+      <button class="f-tab">User invitations<i>4</i></button>
+      <button class="f-tab">Worker invitations<i>4</i></button>
+    </div>
+
+    <div class="f-toolbar">
+      <span class="searchbox"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#i-search"/></svg>Search templates…</span>
+      <span class="select">All statuses<svg width="13" height="13" viewBox="0 0 24 24"><use href="#i-chev"/></svg></span>
+      <span class="select">Recently updated<svg width="13" height="13" viewBox="0 0 24 24"><use href="#i-chev"/></svg></span>
+    </div>
+
+    <div class="f-shell">
+      <div class="f-cards">
+        <div class="f-group"><h3>Onboarding</h3><span>5 templates</span></div>
+
+        <div class="f-card sel">
+          <div class="c-shot"><div class="mail">
+            <div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div>
+            <div class="m-pad m-hero"><div class="bars"><span class="bar d" style="width:76%;height:5px"></span><span class="bar" style="width:92%"></span><span class="bar" style="width:78%"></span><span class="m-btn"></span></div><div class="m-side"><span class="m-ava"></span><span class="m-chip"></span></div></div>
+            <div class="m-tiles"><span><i></i><u></u></span><span><i></i><u></u></span><span><i></i><u></u></span><span><i></i><u></u></span></div>
+          </div></div>
+          <div class="f-main">
+            <div class="t"><h4>Employee Welcome</h4><span class="pill published"><span class="dot"></span>Published</span></div>
+            <p>First touch after an onboarding case is created — brand hero, first-day overview, and the onboarding workspace call-to-action.</p>
+            <div class="f-meta"><span>Onboarding case created</span><span class="sep"></span><span><b>v4</b></span><span class="sep"></span><span><b>2 active</b> usages</span><span class="sep"></span><span>2d ago</span></div>
+          </div>
+        </div>
+
+        <div class="f-card">
+          <div class="c-shot"><div class="mail">
+            <div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div>
+            <div class="m-pad"><span class="m-illu"></span><span class="bar d" style="width:56%;height:5px;justify-self:center"></span><span class="bar" style="width:82%;justify-self:center"></span><span class="m-prog"></span><div class="m-rows"><span><i></i><span class="bar" style="width:64%"></span></span><span><i></i><span class="bar" style="width:48%"></span></span></div></div>
+          </div></div>
+          <div class="f-main">
+            <div class="t"><h4>Complete Your Onboarding Tasks</h4><span class="pill published"><span class="dot"></span>Published</span></div>
+            <p>Reminder sent while onboarding tasks remain open — progress bar, task checklist, and a link back to the hub.</p>
+            <div class="f-meta"><span>Tasks pending reminder</span><span class="sep"></span><span><b>v2</b></span><span class="sep"></span><span><b>1 active</b> usage</span><span class="sep"></span><span>5d ago</span></div>
+          </div>
+        </div>
+
+        <div class="f-card">
+          <div class="c-shot"><div class="mail">
+            <div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div>
+            <div class="m-pad"><span class="m-illu"></span><span class="bar d" style="width:60%;height:5px;justify-self:center"></span><span class="bar" style="width:76%;justify-self:center"></span><div class="m-rows"><span><i style="background:var(--amber-bg);border-color:#e8d8a8"></i><span class="bar" style="width:62%"></span></span><span><i style="background:var(--amber-bg);border-color:#e8d8a8"></i><span class="bar" style="width:44%"></span></span></div></div>
+          </div></div>
+          <div class="f-main">
+            <div class="t"><h4>Missing Documents Reminder</h4><span class="pill draft"><span class="dot"></span>Draft</span></div>
+            <p>Escalation for outstanding documents — lists exactly what is missing with an upload call-to-action.</p>
+            <div class="f-meta"><span>Documents missing</span><span class="sep"></span><span><b>v1</b></span><span class="sep"></span><span>Not bound</span><span class="sep"></span><span>1w ago</span></div>
+          </div>
+        </div>
+
+        <div class="f-card">
+          <div class="c-shot"><div class="mail">
+            <div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div>
+            <div class="m-pad"><span class="bar d" style="width:50%;height:5px"></span><span class="bar" style="width:86%"></span><div class="m-tiles" style="border:0"><span><i></i><u></u></span><span><i></i><u></u></span><span><i></i><u></u></span><span><i></i><u></u></span></div><span class="bar b" style="width:38%"></span><span class="bar" style="width:72%"></span></div>
+          </div></div>
+          <div class="f-main">
+            <div class="t"><h4>Day-One Instructions</h4><span class="pill published"><span class="dot"></span>Published</span></div>
+            <p>Everything for the first day — schedule timeline, what to bring, worksite map, and support contacts.</p>
+            <div class="f-meta"><span>Start date approaching</span><span class="sep"></span><span><b>v3</b></span><span class="sep"></span><span><b>1 active</b> usage</span><span class="sep"></span><span>1w ago</span></div>
+          </div>
+        </div>
+
+        <div class="f-group"><h3>User invitations</h3><span>4 templates</span></div>
+
+        <div class="f-card">
+          <div class="c-shot"><div class="mail">
+            <div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div>
+            <div class="m-pad"><span class="m-illu"></span><span class="bar d" style="width:52%;height:5px;justify-self:center"></span><span class="bar" style="width:74%;justify-self:center"></span><span class="m-btn" style="justify-self:center"></span></div>
+          </div></div>
+          <div class="f-main">
+            <div class="t"><h4>Account Invitation</h4><span class="pill published"><span class="dot"></span>Published</span></div>
+            <p>Secure account setup invitation with a single-use activation link and expiry note.</p>
+            <div class="f-meta"><span>Invitation created</span><span class="sep"></span><span><b>v2</b></span><span class="sep"></span><span><b>3 active</b> usages</span><span class="sep"></span><span>3d ago</span></div>
+          </div>
+        </div>
+
+        <div class="f-card">
+          <div class="c-shot"><div class="mail">
+            <div class="m-band"><span class="m-logo">SIOMAC</span></div><div class="m-gold"></div>
+            <div class="m-pad"><span class="bar d" style="width:56%;height:5px"></span><span class="bar" style="width:80%"></span><span class="bar" style="width:64%"></span><span class="m-btn"></span></div>
+          </div></div>
+          <div class="f-main">
+            <div class="t"><h4>Invitation Reminder</h4><span class="pill published"><span class="dot"></span>Published</span></div>
+            <p>Nudges users whose account invitation is still pending, restating the activation link.</p>
+            <div class="f-meta"><span>Invitation pending</span><span class="sep"></span><span><b>v1</b></span><span class="sep"></span><span><b>1 active</b> usage</span><span class="sep"></span><span>2w ago</span></div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="f-rail">
+        <div class="f-railhead"><div class="t"><h4>Employee Welcome</h4><span class="pill published"><span class="dot"></span>Published</span></div></div>
+        <div class="e-block">
+          <h5>Details</h5>
+          <div class="e-kv">
+            <b>Sent to</b><span>Employee</span>
+            <b>Owner</b><span>People Operations</span>
+            <b>Last updated</b><span>1 Aug 2026</span>
+          </div>
+        </div>
+        <div class="e-block" style="border-top:1px solid var(--line-soft)">
+          <h5>Versions</h5>
+          <div class="e-vrow"><b style="min-width:24px">v4</b><span class="pill published"><span class="dot"></span>Live</span><span class="end">2d ago</span></div>
+          <div class="e-vrow"><b style="min-width:24px">v3</b><span style="color:var(--muted)">Superseded</span><span class="end">3w ago</span></div>
+        </div>
+        <div class="e-block" style="border-top:1px solid var(--line-soft)">
+          <h5>Usage — 2 bindings</h5>
+          <div class="e-vrow"><span>Onboarding case created</span><span class="end">Active</span></div>
+          <div class="e-vrow"><span>Manual send · HR console</span><span class="end">Allowed</span></div>
+        </div>
+        <div class="e-block e-actions" style="border-top:1px solid var(--line-soft)">
+          <button class="btn primary">Open in Builder</button>
+          <button class="btn">Duplicate as Draft</button>
+          <span class="f-quiet-link">Archive template…</span>
+        </div>
+      </aside>
+    </div>
+  </div></div>
+  <p class="caption"><b>F · Wide Cards + Detail Rail.</b> Family tabs + search/status/sort toolbar · wide-card directory grouped by family (render thumbnail, one-line description, dot-separated meta, status pill) · compact info rail for the selected template: one Details section (Sent to, Owner, Last updated), Versions, Usage, actions with Archive as a quiet link.</p>
+</div>
+
+<!-- G · RAIL OPTIONS -->
+<div class="frame">
+  <div class="canvas"><div class="page">
+    <div class="crumb">Detail rail — three treatments for the selected template (shown at real width)</div>
+    <div class="r-compare">
+
+      <div class="r-col">
+        <h3>R1 · Stat tiles</h3>
+        <aside class="f-rail" style="position:static">
+          <div class="f-railhead"><div class="t"><h4>Employee Welcome</h4><span class="pill published"><span class="dot"></span>Published</span></div></div>
+          <div class="r-sub"><small>Subject</small><b>Welcome to SIOMAC, {{recipient.firstName}}</b></div>
+          <div class="r-tiles">
+            <div class="r-tile"><small>Version</small><b>v4 <span class="lite">· Live</span></b></div>
+            <div class="r-tile"><small>Usage</small><b>2 <span class="lite">workflows</span></b></div>
+            <div class="r-tile"><small>Audience</small><b>Employee</b></div>
+            <div class="r-tile"><small>Updated</small><b>2d ago</b></div>
+          </div>
+          <div class="r-kv" style="border-bottom:0">
+            <b>Trigger</b><span>Onboarding case created</span>
+            <b>Family</b><span>Onboarding</span>
+            <b>Owner</b><span>People Operations</span>
+          </div>
+          <div class="e-block e-actions" style="border-top:1px solid var(--line-soft)">
+            <button class="btn primary">Open in Builder</button>
+            <button class="btn">Duplicate as Draft</button>
+            <span class="f-quiet-link">Archive template…</span>
+          </div>
+        </aside>
+      </div>
+
+      <div class="r-col">
+        <h3>R2 · Sectioned lists</h3>
+        <aside class="f-rail" style="position:static">
+          <div class="f-railhead"><div class="t"><h4>Employee Welcome</h4><span class="pill published"><span class="dot"></span>Published</span></div></div>
+          <div class="r-sub"><small>Subject</small><b>Welcome to SIOMAC, {{recipient.firstName}}</b></div>
+          <div class="e-block">
+            <h5>Details</h5>
+            <div class="e-kv">
+              <b>Trigger</b><span>Onboarding case created</span>
+              <b>Family</b><span>Onboarding</span>
+              <b>Audience</b><span>Employee</span>
+              <b>Owner</b><span>People Operations</span>
+              <b>Updated</b><span>1 Aug 2026</span>
+            </div>
+          </div>
+          <div class="e-block" style="border-top:1px solid var(--line-soft)">
+            <h5>Versions</h5>
+            <div class="e-vrow"><b style="min-width:24px">v4</b><span class="pill published"><span class="dot"></span>Live</span><span class="end">2d ago</span></div>
+            <div class="e-vrow"><b style="min-width:24px">v3</b><span style="color:var(--muted)">Superseded</span><span class="end">3w ago</span></div>
+          </div>
+          <div class="e-block" style="border-top:1px solid var(--line-soft)">
+            <h5>Usage — 2 bindings</h5>
+            <div class="e-vrow"><span>Onboarding case created</span><span class="end">Active</span></div>
+            <div class="e-vrow"><span>Manual send · HR console</span><span class="end">Allowed</span></div>
+          </div>
+          <div class="e-block e-actions" style="border-top:1px solid var(--line-soft)">
+            <button class="btn primary">Open in Builder</button>
+            <button class="btn">Duplicate as Draft</button>
+            <span class="f-quiet-link">Archive template…</span>
+          </div>
+        </aside>
+      </div>
+
+      <div class="r-col">
+        <h3>R3 · Single flat list</h3>
+        <aside class="f-rail" style="position:static">
+          <div class="f-railhead"><div class="t"><h4>Employee Welcome</h4><span class="pill published"><span class="dot"></span>Published</span></div></div>
+          <div class="r-sub"><small>Subject</small><b>Welcome to SIOMAC, {{recipient.firstName}}</b></div>
+          <div class="r-flat">
+            <div class="row"><b>Trigger</b><span>Onboarding case created</span></div>
+            <div class="row"><b>Family</b><span>Onboarding</span></div>
+            <div class="row"><b>Audience</b><span>Employee</span></div>
+            <div class="row"><b>Version</b><span>v4 · Live</span><span class="end">2d ago</span></div>
+            <div class="row"><b>Usage</b><span>2 active workflows</span></div>
+            <div class="row"><b>Owner</b><span>People Operations</span></div>
+            <div class="row"><b>Updated</b><span>1 Aug 2026</span></div>
+          </div>
+          <div class="e-block e-actions" style="border-top:1px solid var(--line-soft)">
+            <button class="btn primary">Open in Builder</button>
+            <button class="btn">Duplicate as Draft</button>
+            <span class="f-quiet-link">Archive template…</span>
+          </div>
+        </aside>
+      </div>
+
+    </div>
+  </div></div>
+  <p class="caption"><b>G · Rail options.</b> Three treatments for the right rail, all with the same header (name + status) and subject block: <b>R1</b> leads with four stat tiles then key facts; <b>R2</b> keeps labelled sections (Details / Versions / Usage); <b>R3</b> is one flat label–value list, no sections. Actions identical in all three.</p>
+</div>
+
+<script>
+  function show(i, btn) {
+    document.querySelectorAll('.frame').forEach((f, k) => f.classList.toggle('on', i === -1 || k === i));
+    document.querySelectorAll('.chooser button').forEach(b => b.classList.toggle('on', b === btn));
+  }
+</script>
+</body>
+</html>

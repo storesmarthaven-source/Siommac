@@ -1,19 +1,19 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "11cf9c409c0510e83092a83c41edd46519bc1c2a",
+    "head": "bad827419f10637ae2b9cb92f93311e635a37911",
     "branch": "feat/email-delivery-resend",
-    "fingerprint": "7a5f775e4eb8262cafa82871",
-    "indexedFiles": 1713
+    "fingerprint": "7132aa438a5d92b43ac28a41",
+    "indexedFiles": 1729
   },
   "summary": {
-    "files": 1359,
-    "symbols": 13685,
+    "files": 1375,
+    "symbols": 14029,
     "widgets": 51,
     "routes": 977,
     "routeDefinitions": 978,
     "unmountedRoutes": 17,
-    "apiCalls": 354,
+    "apiCalls": 356,
     "databaseObjects": 1426,
     "e2eSuites": 89,
     "e2eTests": 2719
@@ -22,12 +22,12 @@
     {
       "id": "hr",
       "counts": {
-        "files": 255,
-        "symbols": 2863,
+        "files": 265,
+        "symbols": 3076,
         "widgets": 9,
         "routes": 275,
         "routeDefinitions": 275,
-        "apiCalls": 35,
+        "apiCalls": 37,
         "databaseObjects": 196,
         "e2eSuites": 16
       }
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 318,
-        "symbols": 2902,
+        "files": 324,
+        "symbols": 3033,
         "widgets": 0,
         "routes": 37,
         "routeDefinitions": 52,
@@ -3573,6 +3573,41 @@
       "hash": "e97c52cc8ec8b739"
     },
     {
+      "path": "src/api/hr/emailTemplateAssets.test.ts",
+      "module": "hr",
+      "role": "frontend-api",
+      "lines": 27,
+      "hash": "a955f4adbd09799d"
+    },
+    {
+      "path": "src/api/hr/emailTemplateAssets.ts",
+      "module": "hr",
+      "role": "frontend-api",
+      "lines": 101,
+      "hash": "611a794c4ac7f0a7"
+    },
+    {
+      "path": "src/api/hr/emailTemplates.dev.test.ts",
+      "module": "hr",
+      "role": "frontend-api",
+      "lines": 76,
+      "hash": "9068da9cd6a56fb1"
+    },
+    {
+      "path": "src/api/hr/emailTemplates.dev.ts",
+      "module": "hr",
+      "role": "frontend-api",
+      "lines": 335,
+      "hash": "dcd0511599b1320d"
+    },
+    {
+      "path": "src/api/hr/emailTemplates.ts",
+      "module": "hr",
+      "role": "frontend-api",
+      "lines": 163,
+      "hash": "7357ab51d8dd1238"
+    },
+    {
       "path": "src/api/hr/employeeAccountSupport.ts",
       "module": "hr",
       "role": "frontend-api",
@@ -5482,6 +5517,41 @@
       "role": "frontend-page",
       "lines": 65,
       "hash": "c220d4529434ee9d"
+    },
+    {
+      "path": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.test.tsx",
+      "module": "hr",
+      "role": "frontend-page",
+      "lines": 423,
+      "hash": "8a0a1c7ea646c984"
+    },
+    {
+      "path": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "module": "hr",
+      "role": "frontend-page",
+      "lines": 6058,
+      "hash": "6c4081637b0deb0e"
+    },
+    {
+      "path": "src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx",
+      "module": "hr",
+      "role": "frontend-page",
+      "lines": 145,
+      "hash": "b4d17cd6e6f46570"
+    },
+    {
+      "path": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "module": "hr",
+      "role": "frontend-page",
+      "lines": 471,
+      "hash": "29c3f84a80ad1223"
+    },
+    {
+      "path": "src/components/sections/HR/emailStudio/EmailTemplateStudioPage.tsx",
+      "module": "hr",
+      "role": "frontend-page",
+      "lines": 21,
+      "hash": "be067cc997eafa80"
     },
     {
       "path": "src/components/sections/HR/employeeMasterAccess.test.ts",
@@ -7724,6 +7794,34 @@
       "hash": "721d6fc5a1275375"
     },
     {
+      "path": "src/lib/emailMjmlCompiler.test.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 50,
+      "hash": "29481777d5924514"
+    },
+    {
+      "path": "src/lib/emailMjmlCompiler.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 54,
+      "hash": "fd3deaf042d36d6c"
+    },
+    {
+      "path": "src/lib/emailTemplateDocument.test.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 218,
+      "hash": "c1f7d171cf1df245"
+    },
+    {
+      "path": "src/lib/emailTemplateDocument.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 1573,
+      "hash": "010387d5074d633f"
+    },
+    {
       "path": "src/lib/env.ts",
       "module": "platform",
       "role": "frontend",
@@ -9516,6 +9614,13 @@
       "hash": "d1ac59599bfa501d"
     },
     {
+      "path": "types/emailTemplates.ts",
+      "module": "platform",
+      "role": "shared-types",
+      "lines": 316,
+      "hash": "398591b5049728e8"
+    },
+    {
       "path": "types/hrAttendance.ts",
       "module": "hr",
       "role": "shared-types",
@@ -9605,6 +9710,13 @@
       "role": "shared-types",
       "lines": 318,
       "hash": "2331ad56cff5d212"
+    },
+    {
+      "path": "types/mjml-browser.d.ts",
+      "module": "platform",
+      "role": "shared-types",
+      "lines": 15,
+      "hash": "845ce2bff3433fc4"
     },
     {
       "path": "types/payrollControlCenter.ts",
@@ -64456,6 +64568,542 @@
       ]
     },
     {
+      "name": "EmailTemplateAsset",
+      "kind": "interface",
+      "file": "src/api/hr/emailTemplateAssets.ts",
+      "line": 3,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ALLOWED_IMAGE_TYPES",
+      "kind": "variable",
+      "file": "src/api/hr/emailTemplateAssets.ts",
+      "line": 14,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "MAX_IMAGE_BYTES",
+      "kind": "variable",
+      "file": "src/api/hr/emailTemplateAssets.ts",
+      "line": 15,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "validateImage",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplateAssets.ts",
+      "line": 17,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "dimensionsFromUrl",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplateAssets.ts",
+      "line": 22,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "dimensions",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplateAssets.ts",
+      "line": 31,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "developmentUpload",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplateAssets.ts",
+      "line": 41,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "uploadEmailTemplateAsset",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplateAssets.ts",
+      "line": 68,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "blockTypes",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.dev.test.ts",
+      "line": 8,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "defaultSchema",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 25,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "seedDefinitions",
+      "kind": "array",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 33,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "seedRows",
+      "kind": "variable",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 75,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "rows",
+      "kind": "variable",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 104,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "developmentLatency",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 106,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SAVED_SECTIONS_KEY",
+      "kind": "variable",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 110,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CHROME_KEY",
+      "kind": "variable",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 111,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "readChrome",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 113,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "writeChrome",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 127,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "readSavedSections",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 135,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "writeSavedSections",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 145,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "developmentCatalog",
+      "kind": "object",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 153,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "applyFilters",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 160,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "developmentEmailTemplateService",
+      "kind": "object",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 178,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "catalog",
+      "kind": "method",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 179,
+      "module": "hr",
+      "exported": false,
+      "container": "developmentEmailTemplateService",
+      "tags": []
+    },
+    {
+      "name": "list",
+      "kind": "method",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 183,
+      "module": "hr",
+      "exported": false,
+      "container": "developmentEmailTemplateService",
+      "tags": []
+    },
+    {
+      "name": "get",
+      "kind": "method",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 187,
+      "module": "hr",
+      "exported": false,
+      "container": "developmentEmailTemplateService",
+      "tags": []
+    },
+    {
+      "name": "create",
+      "kind": "method",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 193,
+      "module": "hr",
+      "exported": false,
+      "container": "developmentEmailTemplateService",
+      "tags": []
+    },
+    {
+      "name": "updateDraft",
+      "kind": "method",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 233,
+      "module": "hr",
+      "exported": false,
+      "container": "developmentEmailTemplateService",
+      "tags": []
+    },
+    {
+      "name": "duplicate",
+      "kind": "method",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 248,
+      "module": "hr",
+      "exported": false,
+      "container": "developmentEmailTemplateService",
+      "tags": []
+    },
+    {
+      "name": "listSavedSections",
+      "kind": "method",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 265,
+      "module": "hr",
+      "exported": false,
+      "container": "developmentEmailTemplateService",
+      "tags": []
+    },
+    {
+      "name": "createSavedSection",
+      "kind": "method",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 269,
+      "module": "hr",
+      "exported": false,
+      "container": "developmentEmailTemplateService",
+      "tags": []
+    },
+    {
+      "name": "deleteSavedSection",
+      "kind": "method",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 286,
+      "module": "hr",
+      "exported": false,
+      "container": "developmentEmailTemplateService",
+      "tags": []
+    },
+    {
+      "name": "archive",
+      "kind": "method",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 292,
+      "module": "hr",
+      "exported": false,
+      "container": "developmentEmailTemplateService",
+      "tags": []
+    },
+    {
+      "name": "getChrome",
+      "kind": "method",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 298,
+      "module": "hr",
+      "exported": false,
+      "container": "developmentEmailTemplateService",
+      "tags": []
+    },
+    {
+      "name": "updateChrome",
+      "kind": "method",
+      "file": "src/api/hr/emailTemplates.dev.ts",
+      "line": 302,
+      "module": "hr",
+      "exported": false,
+      "container": "developmentEmailTemplateService",
+      "tags": []
+    },
+    {
+      "name": "EmailTemplateService",
+      "kind": "interface",
+      "file": "src/api/hr/emailTemplates.ts",
+      "line": 18,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "call",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.ts",
+      "line": 33,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "apiService",
+      "kind": "object",
+      "file": "src/api/hr/emailTemplates.ts",
+      "line": 39,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "emailTemplateService",
+      "kind": "variable",
+      "file": "src/api/hr/emailTemplates.ts",
+      "line": 56,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "useEmailTemplateCatalog",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.ts",
+      "line": 60,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useEmailTemplates",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.ts",
+      "line": 68,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useEmailTemplate",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.ts",
+      "line": 76,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useCreateEmailTemplate",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.ts",
+      "line": 84,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useUpdateEmailTemplateDraft",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.ts",
+      "line": 92,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useDuplicateEmailTemplate",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.ts",
+      "line": 103,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useEmailChrome",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.ts",
+      "line": 111,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useUpdateEmailChrome",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.ts",
+      "line": 119,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useSavedSections",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.ts",
+      "line": 132,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useCreateSavedSection",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.ts",
+      "line": 140,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useDeleteSavedSection",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.ts",
+      "line": 148,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useArchiveEmailTemplate",
+      "kind": "function",
+      "file": "src/api/hr/emailTemplates.ts",
+      "line": 156,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
       "name": "AccountSupportRequest",
       "kind": "interface",
       "file": "src/api/hr/employeeAccountSupport.ts",
@@ -94994,6 +95642,1735 @@
       "module": "hr",
       "exported": false,
       "container": "StatutorySurface",
+      "tags": []
+    },
+    {
+      "name": "template",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.test.tsx",
+      "line": 32,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "dataTransfer",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.test.tsx",
+      "line": 73,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "Props",
+      "kind": "interface",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 63,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SaveState",
+      "kind": "type",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 71,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PreviewMode",
+      "kind": "type",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 72,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "LeftTab",
+      "kind": "type",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 73,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EMAIL_FONT_SIZE_PRESETS",
+      "kind": "variable",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 74,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "BLOCK_MIME",
+      "kind": "variable",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 76,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "EXISTING_MIME",
+      "kind": "variable",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 77,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "GROUPS",
+      "kind": "variable",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 78,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "VARIABLES",
+      "kind": "variable",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 79,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "TRANSACTIONAL_DETAILS",
+      "kind": "object",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 90,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TRANSACTIONAL_CARD_COPY",
+      "kind": "object",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 164,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "ICON_LIST_OPTIONS",
+      "kind": "variable",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 179,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "TransactionalCardArt",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 190,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "pretty",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 301,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DemoDataContext",
+      "kind": "variable",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 311,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "findBlock",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 313,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "findParentBlock",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 326,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "mapBlocks",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 338,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "removeBlock",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 352,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "BlockLocation",
+      "kind": "interface",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 365,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DropTarget",
+      "kind": "type",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 370,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "findLocation",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 372,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "updateContainer",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 387,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "pruneEmptiedSection",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 410,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "insertBlockAt",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 425,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "replaceBlockAt",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 442,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "blockHasRichText",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 459,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "layoutBlock",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 463,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "placeBlockBeside",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 493,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "styleValue",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 522,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "FloatingTextToolbar",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 550,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "close",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 585,
+      "module": "hr",
+      "exported": false,
+      "container": "FloatingTextToolbar",
+      "tags": []
+    },
+    {
+      "name": "updatePosition",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 597,
+      "module": "hr",
+      "exported": false,
+      "container": "FloatingTextToolbar",
+      "tags": []
+    },
+    {
+      "name": "refreshActiveFormats",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 628,
+      "module": "hr",
+      "exported": false,
+      "container": "FloatingTextToolbar",
+      "tags": []
+    },
+    {
+      "name": "measure",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 690,
+      "module": "hr",
+      "exported": false,
+      "container": "FloatingTextToolbar",
+      "tags": []
+    },
+    {
+      "name": "reposition",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 696,
+      "module": "hr",
+      "exported": false,
+      "container": "FloatingTextToolbar",
+      "tags": []
+    },
+    {
+      "name": "applyCommand",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 718,
+      "module": "hr",
+      "exported": false,
+      "container": "FloatingTextToolbar",
+      "tags": []
+    },
+    {
+      "name": "close",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 742,
+      "module": "hr",
+      "exported": false,
+      "container": "FloatingTextToolbar",
+      "tags": []
+    },
+    {
+      "name": "openLinkMenu",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 749,
+      "module": "hr",
+      "exported": false,
+      "container": "FloatingTextToolbar",
+      "tags": []
+    },
+    {
+      "name": "applyLink",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 772,
+      "module": "hr",
+      "exported": false,
+      "container": "FloatingTextToolbar",
+      "tags": []
+    },
+    {
+      "name": "verticalFlex",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 1086,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "COLOR_SWATCHES",
+      "kind": "variable",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 1093,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ColorControl",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 1101,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "close",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 1121,
+      "module": "hr",
+      "exported": false,
+      "container": "ColorControl",
+      "tags": []
+    },
+    {
+      "name": "commitDraft",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 1127,
+      "module": "hr",
+      "exported": false,
+      "container": "ColorControl",
+      "tags": []
+    },
+    {
+      "name": "DragPreview",
+      "kind": "interface",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 1233,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DropGuide",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 1238,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "SideDropZone",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 1280,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "IconPicker",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 1326,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "close",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 1342,
+      "module": "hr",
+      "exported": false,
+      "container": "IconPicker",
+      "tags": []
+    },
+    {
+      "name": "SliderField",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 1417,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "SpacingEditor",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 1466,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "TRANSACTIONAL_LIST_TYPES",
+      "kind": "array",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 1529,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SECTION_PRESETS",
+      "kind": "array",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 1536,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TRANSACTIONAL_CANVAS_TYPES",
+      "kind": "array",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 1562,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TransactionalCanvasContent",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 1579,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "richCopy",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 1593,
+      "module": "hr",
+      "exported": false,
+      "container": "TransactionalCanvasContent",
+      "tags": []
+    },
+    {
+      "name": "LayerTree",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 1873,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "CanvasBlock",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 1941,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "beginResize",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 2023,
+      "module": "hr",
+      "exported": false,
+      "container": "CanvasBlock",
+      "tags": []
+    },
+    {
+      "name": "move",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 2045,
+      "module": "hr",
+      "exported": false,
+      "container": "beginResize",
+      "tags": []
+    },
+    {
+      "name": "finish",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 2085,
+      "module": "hr",
+      "exported": false,
+      "container": "beginResize",
+      "tags": []
+    },
+    {
+      "name": "renderChildren",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 2102,
+      "module": "hr",
+      "exported": false,
+      "container": "CanvasBlock",
+      "tags": []
+    },
+    {
+      "name": "beginDrag",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 2188,
+      "module": "hr",
+      "exported": false,
+      "container": "CanvasBlock",
+      "tags": []
+    },
+    {
+      "name": "finishBlockDrag",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 2198,
+      "module": "hr",
+      "exported": false,
+      "container": "CanvasBlock",
+      "tags": []
+    },
+    {
+      "name": "EmailTemplateBuilder",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 2511,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "walk",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 2707,
+      "module": "hr",
+      "exported": false,
+      "container": "selectedChromeRole",
+      "tags": []
+    },
+    {
+      "name": "handleFocus",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 2732,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "handlePointer",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 2745,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "handleSelection",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 2760,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "handleKeyDown",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 2827,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "queueAutosave",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 2876,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "commit",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 2887,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "persist",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 2900,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "applyChromeToAllTemplates",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 2937,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "addBlock",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 2972,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "addLayout",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 2995,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "addColumnToSection",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3004,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "mergeColumnsToSection",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3064,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "addMany",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3085,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "updateSelected",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3095,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "updateBlock",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3102,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "moveBlock",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3112,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "duplicateBlock",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3132,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "deleteBlock",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3146,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "undoChange",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3161,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "redoChange",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3174,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "dropAt",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3187,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "updateTypography",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3295,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "copyLayoutJson",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3310,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "updateStatusItem",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3333,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "moveStatusItem",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3346,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "removeStatusItem",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3359,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "addStatusItem",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3371,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "updateFactTile",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3384,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "moveFactTile",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3394,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "removeFactTile",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3407,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "addFactTile",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3419,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "track",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3449,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "step",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3453,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "uploadBackground",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3480,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "insertPreset",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3513,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "saveSelectionAsSection",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3522,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "removeSavedSection",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3542,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "activateDrop",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3555,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "finishDrag",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3560,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "setMetadata",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3566,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "leaveBuilder",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3585,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "uploadImage",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3592,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "insertVariable",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3628,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "updateStyle",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+      "line": 3642,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateBuilder",
+      "tags": []
+    },
+    {
+      "name": "FAMILY_OPTIONS",
+      "kind": "array",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx",
+      "line": 7,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "STARTING_POINTS",
+      "kind": "variable",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx",
+      "line": 13,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "Props",
+      "kind": "interface",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx",
+      "line": 20,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailTemplateCreateDialog",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx",
+      "line": 28,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "chooseFamily",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx",
+      "line": 46,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateCreateDialog",
+      "tags": []
+    },
+    {
+      "name": "chooseTrigger",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx",
+      "line": 52,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateCreateDialog",
+      "tags": []
+    },
+    {
+      "name": "resetAndClose",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx",
+      "line": 61,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateCreateDialog",
+      "tags": []
+    },
+    {
+      "name": "create",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx",
+      "line": 70,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateCreateDialog",
+      "tags": []
+    },
+    {
+      "name": "FAMILY_FILTERS",
+      "kind": "array",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 15,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "LibraryView",
+      "kind": "type",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 18,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "LIBRARY_VIEWS",
+      "kind": "array",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 19,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "FAMILY_LABELS",
+      "kind": "object",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 23,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "STATUS_FILTERS",
+      "kind": "array",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 28,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "STATUS_LABELS",
+      "kind": "object",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 31,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "STATUS_TONES",
+      "kind": "object",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 41,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TemplateStatus",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 50,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "APPROVAL_LABELS",
+      "kind": "object",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 53,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "date",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 61,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TRIGGER_IMAGES",
+      "kind": "object",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 69,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "FAMILY_FALLBACK_IMAGES",
+      "kind": "object",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 84,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "templateImage",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 89,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Icon",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 92,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "IconInfo",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 95,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "IconBack",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 96,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "IconMore",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 97,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "IconEye",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 98,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "IconMail",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 99,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "IconDuplicate",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 100,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "IconPerson",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 101,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "IconHistory",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 102,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "IconExternal",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 103,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "IconTrigger",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 104,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "IconBadge",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 105,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "IconApproval",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 106,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "IconVersion",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 107,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "IconShield",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 108,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "IconKey",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 109,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "IconLink",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 110,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "Fact",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 112,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "TemplatePreviewDialog",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 117,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "CardFact",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 142,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "TemplateCard",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 146,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "COLUMNS",
+      "kind": "array",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 251,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailTemplateLibrary",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 270,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "close",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 301,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateLibrary",
+      "tags": []
+    },
+    {
+      "name": "duplicate",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 306,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateLibrary",
+      "tags": []
+    },
+    {
+      "name": "archive",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
+      "line": 315,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateLibrary",
+      "tags": []
+    },
+    {
+      "name": "EmailTemplateStudioPage",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateStudioPage.tsx",
+      "line": 6,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "notify",
+      "kind": "function",
+      "file": "src/components/sections/HR/emailStudio/EmailTemplateStudioPage.tsx",
+      "line": 9,
+      "module": "hr",
+      "exported": false,
+      "container": "EmailTemplateStudioPage",
       "tags": []
     },
     {
@@ -131190,6 +133567,980 @@
       "tags": []
     },
     {
+      "name": "STARTERS",
+      "kind": "variable",
+      "file": "src/lib/emailMjmlCompiler.test.ts",
+      "line": 10,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "CompiledEmail",
+      "kind": "interface",
+      "file": "src/lib/emailMjmlCompiler.ts",
+      "line": 14,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "MjmlCompileResult",
+      "kind": "type",
+      "file": "src/lib/emailMjmlCompiler.ts",
+      "line": 25,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "MjmlCompiler",
+      "kind": "type",
+      "file": "src/lib/emailMjmlCompiler.ts",
+      "line": 29,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "compilerPromise",
+      "kind": "variable",
+      "file": "src/lib/emailMjmlCompiler.ts",
+      "line": 31,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "loadCompiler",
+      "kind": "function",
+      "file": "src/lib/emailMjmlCompiler.ts",
+      "line": 33,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "compileEmailDocument",
+      "kind": "function",
+      "file": "src/lib/emailMjmlCompiler.ts",
+      "line": 40,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailBlockGroup",
+      "kind": "type",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 16,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailBlockDefinition",
+      "kind": "interface",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 18,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EMAIL_BLOCK_DEFINITIONS",
+      "kind": "variable",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 26,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EMAIL_FONT_STACK",
+      "kind": "variable",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 58,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DEFAULT_STYLES",
+      "kind": "object",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 60,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "uid",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 74,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ZERO_SPACING",
+      "kind": "variable",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 75,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DEFAULT_FOOTER_LINKS",
+      "kind": "array",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 83,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DEFAULT_REPLY_NOTICE",
+      "kind": "variable",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 87,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "defaultsByType",
+      "kind": "object",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 89,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "createEmailBlock",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 158,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "isEmailContainer",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 173,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "createEmailSection",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 181,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "normalizeEmailDocument",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 206,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "normalizeContainer",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 207,
+      "module": "platform",
+      "exported": false,
+      "container": "normalizeEmailDocument",
+      "tags": []
+    },
+    {
+      "name": "DEFAULT_EMAIL_TYPOGRAPHY",
+      "kind": "object",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 243,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DEFAULT_EMAIL_SETTINGS",
+      "kind": "object",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 252,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "normalizeEmailSettings",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 263,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "applyDocumentTypography",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 286,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "createBlankEmailDocument",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 318,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "polishBlock",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 326,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "emailSection",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 337,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "headingSection",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 344,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "flushSection",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 351,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "createCallToActionSection",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 363,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "emailColumns",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 396,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "welcomeHeroSection",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 413,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "createFirstDayOverviewSection",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 474,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "brandSection",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 502,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "supportSection",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 514,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "legalSection",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 543,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "supportAndLegal",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 557,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "asChrome",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 560,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "createDefaultEmailChrome",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 569,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "extractEmailChrome",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 577,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "documentMatchesChrome",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 585,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "strip",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 591,
+      "module": "platform",
+      "exported": false,
+      "container": "documentMatchesChrome",
+      "tags": []
+    },
+    {
+      "name": "applyEmailChrome",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 605,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "copy",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 610,
+      "module": "platform",
+      "exported": false,
+      "container": "applyEmailChrome",
+      "tags": []
+    },
+    {
+      "name": "EMAIL_ASSET_BASE",
+      "kind": "variable",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 627,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "illustrationHero",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 630,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "contentSection",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 680,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sectionTitle",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 689,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sectionRule",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 698,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "infoCard",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 707,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "statusList",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 717,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "progressBar",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 723,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "factGrid",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 731,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "primaryButton",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 746,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "expiryNote",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 755,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "createStarterEmailDocument",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 764,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "cloneEmailBlock",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1023,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "renew",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1025,
+      "module": "platform",
+      "exported": false,
+      "container": "cloneEmailBlock",
+      "tags": []
+    },
+    {
+      "name": "richTextHref",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1033,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sanitizeRichText",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1038,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "escapeHtml",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1069,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "cssValue",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1071,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "backgroundImageCss",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1072,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "css",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1082,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "safeHref",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1088,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sampleList",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1093,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "transactionalIcon",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1100,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "LucideIconNode",
+      "kind": "type",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1119,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "lucideNode",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1121,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EMAIL_ICON_CHOICES",
+      "kind": "variable",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1127,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "renderLucideIcon",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1135,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "renderTransactionalContent",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1149,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "cell",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1224,
+      "module": "platform",
+      "exported": false,
+      "container": "renderTransactionalContent",
+      "tags": []
+    },
+    {
+      "name": "chip",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1253,
+      "module": "platform",
+      "exported": false,
+      "container": "renderTransactionalContent",
+      "tags": []
+    },
+    {
+      "name": "renderBlock",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1273,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "renderEmailMjml",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1347,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "pad",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1350,
+      "module": "platform",
+      "exported": false,
+      "container": "renderEmailMjml",
+      "tags": []
+    },
+    {
+      "name": "combinePad",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1352,
+      "module": "platform",
+      "exported": false,
+      "container": "renderEmailMjml",
+      "tags": []
+    },
+    {
+      "name": "rawBlock",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1363,
+      "module": "platform",
+      "exported": false,
+      "container": "renderEmailMjml",
+      "tags": []
+    },
+    {
+      "name": "isPlainText",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1368,
+      "module": "platform",
+      "exported": false,
+      "container": "renderEmailMjml",
+      "tags": []
+    },
+    {
+      "name": "isPlainGeometry",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1376,
+      "module": "platform",
+      "exported": false,
+      "container": "renderEmailMjml",
+      "tags": []
+    },
+    {
+      "name": "contentBlock",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1379,
+      "module": "platform",
+      "exported": false,
+      "container": "renderEmailMjml",
+      "tags": []
+    },
+    {
+      "name": "isNativeContent",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1408,
+      "module": "platform",
+      "exported": false,
+      "container": "renderEmailMjml",
+      "tags": []
+    },
+    {
+      "name": "columnsSection",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1415,
+      "module": "platform",
+      "exported": false,
+      "container": "renderEmailMjml",
+      "tags": []
+    },
+    {
+      "name": "columnCarriesSurface",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1427,
+      "module": "platform",
+      "exported": false,
+      "container": "columnsSection",
+      "tags": []
+    },
+    {
+      "name": "wrapperFor",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1452,
+      "module": "platform",
+      "exported": false,
+      "container": "renderEmailMjml",
+      "tags": []
+    },
+    {
+      "name": "flush",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1456,
+      "module": "platform",
+      "exported": false,
+      "container": "wrapperFor",
+      "tags": []
+    },
+    {
+      "name": "headingRule",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1484,
+      "module": "platform",
+      "exported": false,
+      "container": "renderEmailMjml",
+      "tags": []
+    },
+    {
+      "name": "renderEmailPreview",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1498,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "headingRule",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1504,
+      "module": "platform",
+      "exported": false,
+      "container": "renderEmailPreview",
+      "tags": []
+    },
+    {
+      "name": "flatten",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1517,
+      "module": "platform",
+      "exported": false,
+      "container": "renderEmailPreview",
+      "tags": []
+    },
+    {
+      "name": "SAMPLE_PROFILE_PHOTO",
+      "kind": "variable",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1526,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SAMPLE_COMPANY_LOGO",
+      "kind": "variable",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1527,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SAMPLE_VARIABLES",
+      "kind": "object",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1529,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "applySampleVariables",
+      "kind": "function",
+      "file": "src/lib/emailTemplateDocument.ts",
+      "line": 1568,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "RequiredEnv",
       "kind": "interface",
       "file": "src/lib/env.ts",
@@ -147883,6 +151234,318 @@
       "tags": []
     },
     {
+      "name": "EmailTemplateFamily",
+      "kind": "type",
+      "file": "types/emailTemplates.ts",
+      "line": 1,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailTemplateStatus",
+      "kind": "type",
+      "file": "types/emailTemplates.ts",
+      "line": 2,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailApprovalState",
+      "kind": "type",
+      "file": "types/emailTemplates.ts",
+      "line": 10,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailBlockType",
+      "kind": "type",
+      "file": "types/emailTemplates.ts",
+      "line": 11,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailTextAlign",
+      "kind": "type",
+      "file": "types/emailTemplates.ts",
+      "line": 43,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailVerticalAlign",
+      "kind": "type",
+      "file": "types/emailTemplates.ts",
+      "line": 44,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailBlockTone",
+      "kind": "type",
+      "file": "types/emailTemplates.ts",
+      "line": 45,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailBoxSpacing",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 47,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailBlockStyles",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 54,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailStatusItem",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 70,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailFactTile",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 77,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "EmailFooterLink",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 85,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailBlockProperties",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 90,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailTemplateBlock",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 150,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailTypographyStyle",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 162,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailTypographyScale",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 167,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailDocumentSettings",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 176,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailEditorSchema",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 188,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailTemplateSummary",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 194,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailTemplateDraft",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 214,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailChromeRole",
+      "kind": "type",
+      "file": "types/emailTemplates.ts",
+      "line": 227,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailChromeDocument",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 234,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "UpdateEmailChromeArgs",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 241,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailChromeSyncResult",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 247,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailSavedSection",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 254,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CreateSavedSectionArgs",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 262,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailTemplateTriggerDefinition",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 267,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailTemplateCatalog",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 274,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmailTemplateListArgs",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 281,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CreateEmailTemplateArgs",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 292,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "UpdateEmailTemplateDraftArgs",
+      "kind": "interface",
+      "file": "types/emailTemplates.ts",
+      "line": 307,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "AttendanceStatus",
       "kind": "type",
       "file": "types/hrAttendance.ts",
@@ -151307,6 +154970,36 @@
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
       "line": 313,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "MjmlError",
+      "kind": "interface",
+      "file": "types/mjml-browser.d.ts",
+      "line": 3,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "MjmlResult",
+      "kind": "interface",
+      "file": "types/mjml-browser.d.ts",
+      "line": 9,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "mjml",
+      "kind": "function",
+      "file": "types/mjml-browser.d.ts",
+      "line": 13,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -167971,6 +171664,22 @@
       "file": "src/api/workflows.ts",
       "line": 225,
       "module": "workflow"
+    },
+    {
+      "path": "/api/hr/email-templates/assets/complete",
+      "helper": "apiPost",
+      "caller": "completed",
+      "file": "src/api/hr/emailTemplateAssets.ts",
+      "line": 93,
+      "module": "hr"
+    },
+    {
+      "path": "/api/hr/email-templates/assets/upload-url",
+      "helper": "apiPost",
+      "caller": "signed",
+      "file": "src/api/hr/emailTemplateAssets.ts",
+      "line": 72,
+      "module": "hr"
     },
     {
       "path": "/api/hr/onboarding/task/evidence-upload-url",

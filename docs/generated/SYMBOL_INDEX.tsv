@@ -5333,6 +5333,57 @@ useRetireRequirement	function	hr	true	hook	src/api/hr/documents.ts	106
 useComplianceForEmployee	function	hr	true	hook	src/api/hr/documents.ts	117	
 useComplianceOverview	function	hr	true	hook	src/api/hr/documents.ts	126	
 useRunExpirySweep	function	hr	true	hook	src/api/hr/documents.ts	136	
+EmailTemplateAsset	interface	hr	true		src/api/hr/emailTemplateAssets.ts	3	
+ALLOWED_IMAGE_TYPES	variable	hr	false		src/api/hr/emailTemplateAssets.ts	14	
+MAX_IMAGE_BYTES	variable	hr	false		src/api/hr/emailTemplateAssets.ts	15	
+validateImage	function	hr	false		src/api/hr/emailTemplateAssets.ts	17	
+dimensionsFromUrl	function	hr	false		src/api/hr/emailTemplateAssets.ts	22	
+dimensions	function	hr	false		src/api/hr/emailTemplateAssets.ts	31	
+developmentUpload	function	hr	false		src/api/hr/emailTemplateAssets.ts	41	
+uploadEmailTemplateAsset	function	hr	true		src/api/hr/emailTemplateAssets.ts	68	
+blockTypes	function	hr	false	test	src/api/hr/emailTemplates.dev.test.ts	8	
+defaultSchema	function	hr	false		src/api/hr/emailTemplates.dev.ts	25	
+seedDefinitions	array	hr	false		src/api/hr/emailTemplates.dev.ts	33	
+seedRows	variable	hr	false		src/api/hr/emailTemplates.dev.ts	75	
+rows	variable	hr	false		src/api/hr/emailTemplates.dev.ts	104	
+developmentLatency	function	hr	false		src/api/hr/emailTemplates.dev.ts	106	
+SAVED_SECTIONS_KEY	variable	hr	false		src/api/hr/emailTemplates.dev.ts	110	
+CHROME_KEY	variable	hr	false		src/api/hr/emailTemplates.dev.ts	111	
+readChrome	function	hr	false		src/api/hr/emailTemplates.dev.ts	113	
+writeChrome	function	hr	false		src/api/hr/emailTemplates.dev.ts	127	
+readSavedSections	function	hr	false		src/api/hr/emailTemplates.dev.ts	135	
+writeSavedSections	function	hr	false		src/api/hr/emailTemplates.dev.ts	145	
+developmentCatalog	object	hr	false		src/api/hr/emailTemplates.dev.ts	153	
+applyFilters	function	hr	false		src/api/hr/emailTemplates.dev.ts	160	
+developmentEmailTemplateService	object	hr	true		src/api/hr/emailTemplates.dev.ts	178	
+catalog	method	hr	false		src/api/hr/emailTemplates.dev.ts	179	developmentEmailTemplateService
+list	method	hr	false		src/api/hr/emailTemplates.dev.ts	183	developmentEmailTemplateService
+get	method	hr	false		src/api/hr/emailTemplates.dev.ts	187	developmentEmailTemplateService
+create	method	hr	false		src/api/hr/emailTemplates.dev.ts	193	developmentEmailTemplateService
+updateDraft	method	hr	false		src/api/hr/emailTemplates.dev.ts	233	developmentEmailTemplateService
+duplicate	method	hr	false		src/api/hr/emailTemplates.dev.ts	248	developmentEmailTemplateService
+listSavedSections	method	hr	false		src/api/hr/emailTemplates.dev.ts	265	developmentEmailTemplateService
+createSavedSection	method	hr	false		src/api/hr/emailTemplates.dev.ts	269	developmentEmailTemplateService
+deleteSavedSection	method	hr	false		src/api/hr/emailTemplates.dev.ts	286	developmentEmailTemplateService
+archive	method	hr	false		src/api/hr/emailTemplates.dev.ts	292	developmentEmailTemplateService
+getChrome	method	hr	false		src/api/hr/emailTemplates.dev.ts	298	developmentEmailTemplateService
+updateChrome	method	hr	false		src/api/hr/emailTemplates.dev.ts	302	developmentEmailTemplateService
+EmailTemplateService	interface	hr	true		src/api/hr/emailTemplates.ts	18	
+call	function	hr	false		src/api/hr/emailTemplates.ts	33	
+apiService	object	hr	false		src/api/hr/emailTemplates.ts	39	
+emailTemplateService	variable	hr	true		src/api/hr/emailTemplates.ts	56	
+useEmailTemplateCatalog	function	hr	true	hook	src/api/hr/emailTemplates.ts	60	
+useEmailTemplates	function	hr	true	hook	src/api/hr/emailTemplates.ts	68	
+useEmailTemplate	function	hr	true	hook	src/api/hr/emailTemplates.ts	76	
+useCreateEmailTemplate	function	hr	true	hook	src/api/hr/emailTemplates.ts	84	
+useUpdateEmailTemplateDraft	function	hr	true	hook	src/api/hr/emailTemplates.ts	92	
+useDuplicateEmailTemplate	function	hr	true	hook	src/api/hr/emailTemplates.ts	103	
+useEmailChrome	function	hr	true	hook	src/api/hr/emailTemplates.ts	111	
+useUpdateEmailChrome	function	hr	true	hook	src/api/hr/emailTemplates.ts	119	
+useSavedSections	function	hr	true	hook	src/api/hr/emailTemplates.ts	132	
+useCreateSavedSection	function	hr	true	hook	src/api/hr/emailTemplates.ts	140	
+useDeleteSavedSection	function	hr	true	hook	src/api/hr/emailTemplates.ts	148	
+useArchiveEmailTemplate	function	hr	true	hook	src/api/hr/emailTemplates.ts	156	
 AccountSupportRequest	interface	hr	true		src/api/hr/employeeAccountSupport.ts	25	
 CreateAccountSupportInput	interface	hr	true		src/api/hr/employeeAccountSupport.ts	48	
 AccountSupportReceipt	interface	hr	true		src/api/hr/employeeAccountSupport.ts	59	
@@ -8198,6 +8249,168 @@ StatutorySurface	function	hr	false	component	src/components/sections/HR/Compensa
 set	function	hr	false		src/components/sections/HR/CompensationOverview.tsx	242	StatutorySurface
 capture	function	hr	false		src/components/sections/HR/CompensationOverview.tsx	255	StatutorySurface
 submit	function	hr	false		src/components/sections/HR/CompensationOverview.tsx	272	StatutorySurface
+template	function	hr	false	test	src/components/sections/HR/emailStudio/EmailTemplateBuilder.test.tsx	32	
+dataTransfer	function	hr	false	test	src/components/sections/HR/emailStudio/EmailTemplateBuilder.test.tsx	73	
+Props	interface	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	63	
+SaveState	type	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	71	
+PreviewMode	type	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	72	
+LeftTab	type	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	73	
+EMAIL_FONT_SIZE_PRESETS	variable	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	74	
+BLOCK_MIME	variable	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	76	
+EXISTING_MIME	variable	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	77	
+GROUPS	variable	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	78	
+VARIABLES	variable	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	79	
+TRANSACTIONAL_DETAILS	object	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	90	
+TRANSACTIONAL_CARD_COPY	object	hr	false	ui-tile	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	164	
+ICON_LIST_OPTIONS	variable	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	179	
+TransactionalCardArt	function	hr	false	component,ui-tile	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	190	
+pretty	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	301	
+DemoDataContext	variable	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	311	
+findBlock	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	313	
+findParentBlock	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	326	
+mapBlocks	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	338	
+removeBlock	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	352	
+BlockLocation	interface	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	365	
+DropTarget	type	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	370	
+findLocation	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	372	
+updateContainer	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	387	
+pruneEmptiedSection	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	410	
+insertBlockAt	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	425	
+replaceBlockAt	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	442	
+blockHasRichText	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	459	
+layoutBlock	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	463	
+placeBlockBeside	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	493	
+styleValue	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	522	
+FloatingTextToolbar	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	550	
+close	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	585	FloatingTextToolbar
+updatePosition	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	597	FloatingTextToolbar
+refreshActiveFormats	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	628	FloatingTextToolbar
+measure	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	690	FloatingTextToolbar
+reposition	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	696	FloatingTextToolbar
+applyCommand	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	718	FloatingTextToolbar
+close	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	742	FloatingTextToolbar
+openLinkMenu	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	749	FloatingTextToolbar
+applyLink	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	772	FloatingTextToolbar
+verticalFlex	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	1086	
+COLOR_SWATCHES	variable	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	1093	
+ColorControl	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	1101	
+close	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	1121	ColorControl
+commitDraft	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	1127	ColorControl
+DragPreview	interface	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	1233	
+DropGuide	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	1238	
+SideDropZone	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	1280	
+IconPicker	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	1326	
+close	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	1342	IconPicker
+SliderField	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	1417	
+SpacingEditor	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	1466	
+TRANSACTIONAL_LIST_TYPES	array	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	1529	
+SECTION_PRESETS	array	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	1536	
+TRANSACTIONAL_CANVAS_TYPES	array	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	1562	
+TransactionalCanvasContent	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	1579	
+richCopy	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	1593	TransactionalCanvasContent
+LayerTree	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	1873	
+CanvasBlock	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	1941	
+beginResize	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	2023	CanvasBlock
+move	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	2045	beginResize
+finish	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	2085	beginResize
+renderChildren	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	2102	CanvasBlock
+beginDrag	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	2188	CanvasBlock
+finishBlockDrag	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	2198	CanvasBlock
+EmailTemplateBuilder	function	hr	true	component	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	2511	
+walk	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	2707	selectedChromeRole
+handleFocus	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	2732	EmailTemplateBuilder
+handlePointer	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	2745	EmailTemplateBuilder
+handleSelection	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	2760	EmailTemplateBuilder
+handleKeyDown	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	2827	EmailTemplateBuilder
+queueAutosave	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	2876	EmailTemplateBuilder
+commit	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	2887	EmailTemplateBuilder
+persist	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	2900	EmailTemplateBuilder
+applyChromeToAllTemplates	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	2937	EmailTemplateBuilder
+addBlock	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	2972	EmailTemplateBuilder
+addLayout	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	2995	EmailTemplateBuilder
+addColumnToSection	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3004	EmailTemplateBuilder
+mergeColumnsToSection	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3064	EmailTemplateBuilder
+addMany	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3085	EmailTemplateBuilder
+updateSelected	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3095	EmailTemplateBuilder
+updateBlock	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3102	EmailTemplateBuilder
+moveBlock	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3112	EmailTemplateBuilder
+duplicateBlock	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3132	EmailTemplateBuilder
+deleteBlock	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3146	EmailTemplateBuilder
+undoChange	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3161	EmailTemplateBuilder
+redoChange	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3174	EmailTemplateBuilder
+dropAt	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3187	EmailTemplateBuilder
+updateTypography	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3295	EmailTemplateBuilder
+copyLayoutJson	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3310	EmailTemplateBuilder
+updateStatusItem	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3333	EmailTemplateBuilder
+moveStatusItem	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3346	EmailTemplateBuilder
+removeStatusItem	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3359	EmailTemplateBuilder
+addStatusItem	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3371	EmailTemplateBuilder
+updateFactTile	function	hr	false	ui-tile	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3384	EmailTemplateBuilder
+moveFactTile	function	hr	false	ui-tile	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3394	EmailTemplateBuilder
+removeFactTile	function	hr	false	ui-tile	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3407	EmailTemplateBuilder
+addFactTile	function	hr	false	ui-tile	src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3419	EmailTemplateBuilder
+track	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3449	EmailTemplateBuilder
+step	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3453	EmailTemplateBuilder
+uploadBackground	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3480	EmailTemplateBuilder
+insertPreset	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3513	EmailTemplateBuilder
+saveSelectionAsSection	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3522	EmailTemplateBuilder
+removeSavedSection	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3542	EmailTemplateBuilder
+activateDrop	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3555	EmailTemplateBuilder
+finishDrag	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3560	EmailTemplateBuilder
+setMetadata	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3566	EmailTemplateBuilder
+leaveBuilder	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3585	EmailTemplateBuilder
+uploadImage	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3592	EmailTemplateBuilder
+insertVariable	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3628	EmailTemplateBuilder
+updateStyle	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx	3642	EmailTemplateBuilder
+FAMILY_OPTIONS	array	hr	false		src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx	7	
+STARTING_POINTS	variable	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx	13	
+Props	interface	hr	false		src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx	20	
+EmailTemplateCreateDialog	function	hr	true	component	src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx	28	
+chooseFamily	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx	46	EmailTemplateCreateDialog
+chooseTrigger	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx	52	EmailTemplateCreateDialog
+resetAndClose	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx	61	EmailTemplateCreateDialog
+create	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx	70	EmailTemplateCreateDialog
+FAMILY_FILTERS	array	hr	false		src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	15	
+LibraryView	type	hr	false		src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	18	
+LIBRARY_VIEWS	array	hr	false		src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	19	
+FAMILY_LABELS	object	hr	false		src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	23	
+STATUS_FILTERS	array	hr	false		src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	28	
+STATUS_LABELS	object	hr	false		src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	31	
+STATUS_TONES	object	hr	false		src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	41	
+TemplateStatus	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	50	
+APPROVAL_LABELS	object	hr	false		src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	53	
+date	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	61	
+TRIGGER_IMAGES	object	hr	false		src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	69	
+FAMILY_FALLBACK_IMAGES	object	hr	false		src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	84	
+templateImage	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	89	
+Icon	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	92	
+IconInfo	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	95	
+IconBack	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	96	
+IconMore	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	97	
+IconEye	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	98	
+IconMail	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	99	
+IconDuplicate	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	100	
+IconPerson	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	101	
+IconHistory	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	102	
+IconExternal	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	103	
+IconTrigger	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	104	
+IconBadge	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	105	
+IconApproval	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	106	
+IconVersion	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	107	
+IconShield	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	108	
+IconKey	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	109	
+IconLink	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	110	
+Fact	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	112	
+TemplatePreviewDialog	function	hr	false	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	117	
+CardFact	function	hr	false	component,ui-tile	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	142	
+TemplateCard	function	hr	false	component,ui-tile	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	146	
+COLUMNS	array	hr	false		src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	251	
+EmailTemplateLibrary	function	hr	true	component	src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	270	
+close	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	301	EmailTemplateLibrary
+duplicate	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	306	EmailTemplateLibrary
+archive	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx	315	EmailTemplateLibrary
+EmailTemplateStudioPage	function	hr	true	component	src/components/sections/HR/emailStudio/EmailTemplateStudioPage.tsx	6	
+notify	function	hr	false		src/components/sections/HR/emailStudio/EmailTemplateStudioPage.tsx	9	EmailTemplateStudioPage
 readSrc	function	hr	false	test	src/components/sections/HR/EmployeeCreatePage.test.ts	271	
 usedClasses	function	hr	false	test	src/components/sections/HR/EmployeeCreatePage.test.ts	276	
 definedClasses	function	hr	false	test	src/components/sections/HR/EmployeeCreatePage.test.ts	289	
@@ -11613,6 +11826,103 @@ PromptOptions	interface	platform	true		src/lib/dialog.ts	33
 dialog	object	platform	true		src/lib/dialog.ts	44	
 confirm	method	platform	false		src/lib/dialog.ts	55	dialog
 prompt	method	platform	false		src/lib/dialog.ts	67	dialog
+STARTERS	variable	platform	false	test	src/lib/emailMjmlCompiler.test.ts	10	
+CompiledEmail	interface	platform	true		src/lib/emailMjmlCompiler.ts	14	
+MjmlCompileResult	type	platform	false		src/lib/emailMjmlCompiler.ts	25	
+MjmlCompiler	type	platform	false		src/lib/emailMjmlCompiler.ts	29	
+compilerPromise	variable	platform	false		src/lib/emailMjmlCompiler.ts	31	
+loadCompiler	function	platform	false		src/lib/emailMjmlCompiler.ts	33	
+compileEmailDocument	function	platform	true		src/lib/emailMjmlCompiler.ts	40	
+EmailBlockGroup	type	platform	true		src/lib/emailTemplateDocument.ts	16	
+EmailBlockDefinition	interface	platform	true		src/lib/emailTemplateDocument.ts	18	
+EMAIL_BLOCK_DEFINITIONS	variable	platform	true		src/lib/emailTemplateDocument.ts	26	
+EMAIL_FONT_STACK	variable	platform	true		src/lib/emailTemplateDocument.ts	58	
+DEFAULT_STYLES	object	platform	false		src/lib/emailTemplateDocument.ts	60	
+uid	function	platform	false		src/lib/emailTemplateDocument.ts	74	
+ZERO_SPACING	variable	platform	false		src/lib/emailTemplateDocument.ts	75	
+DEFAULT_FOOTER_LINKS	array	platform	true		src/lib/emailTemplateDocument.ts	83	
+DEFAULT_REPLY_NOTICE	variable	platform	true		src/lib/emailTemplateDocument.ts	87	
+defaultsByType	object	platform	false		src/lib/emailTemplateDocument.ts	89	
+createEmailBlock	function	platform	true		src/lib/emailTemplateDocument.ts	158	
+isEmailContainer	function	platform	true		src/lib/emailTemplateDocument.ts	173	
+createEmailSection	function	platform	true		src/lib/emailTemplateDocument.ts	181	
+normalizeEmailDocument	function	platform	true		src/lib/emailTemplateDocument.ts	206	
+normalizeContainer	function	platform	false		src/lib/emailTemplateDocument.ts	207	normalizeEmailDocument
+DEFAULT_EMAIL_TYPOGRAPHY	object	platform	true		src/lib/emailTemplateDocument.ts	243	
+DEFAULT_EMAIL_SETTINGS	object	platform	true		src/lib/emailTemplateDocument.ts	252	
+normalizeEmailSettings	function	platform	true		src/lib/emailTemplateDocument.ts	263	
+applyDocumentTypography	function	platform	true		src/lib/emailTemplateDocument.ts	286	
+createBlankEmailDocument	function	platform	true		src/lib/emailTemplateDocument.ts	318	
+polishBlock	function	platform	false		src/lib/emailTemplateDocument.ts	326	
+emailSection	function	platform	false		src/lib/emailTemplateDocument.ts	337	
+headingSection	function	platform	false		src/lib/emailTemplateDocument.ts	344	
+flushSection	function	platform	false		src/lib/emailTemplateDocument.ts	351	
+createCallToActionSection	function	platform	true		src/lib/emailTemplateDocument.ts	363	
+emailColumns	function	platform	false		src/lib/emailTemplateDocument.ts	396	
+welcomeHeroSection	function	platform	false		src/lib/emailTemplateDocument.ts	413	
+createFirstDayOverviewSection	function	platform	true		src/lib/emailTemplateDocument.ts	474	
+brandSection	function	platform	false		src/lib/emailTemplateDocument.ts	502	
+supportSection	function	platform	false		src/lib/emailTemplateDocument.ts	514	
+legalSection	function	platform	false		src/lib/emailTemplateDocument.ts	543	
+supportAndLegal	function	platform	false		src/lib/emailTemplateDocument.ts	557	
+asChrome	function	platform	false		src/lib/emailTemplateDocument.ts	560	
+createDefaultEmailChrome	function	platform	true		src/lib/emailTemplateDocument.ts	569	
+extractEmailChrome	function	platform	true		src/lib/emailTemplateDocument.ts	577	
+documentMatchesChrome	function	platform	true		src/lib/emailTemplateDocument.ts	585	
+strip	function	platform	false		src/lib/emailTemplateDocument.ts	591	documentMatchesChrome
+applyEmailChrome	function	platform	true		src/lib/emailTemplateDocument.ts	605	
+copy	function	platform	false		src/lib/emailTemplateDocument.ts	610	applyEmailChrome
+EMAIL_ASSET_BASE	variable	platform	false		src/lib/emailTemplateDocument.ts	627	
+illustrationHero	function	platform	false		src/lib/emailTemplateDocument.ts	630	
+contentSection	function	platform	false		src/lib/emailTemplateDocument.ts	680	
+sectionTitle	function	platform	false		src/lib/emailTemplateDocument.ts	689	
+sectionRule	function	platform	false		src/lib/emailTemplateDocument.ts	698	
+infoCard	function	platform	false	ui-tile	src/lib/emailTemplateDocument.ts	707	
+statusList	function	platform	false		src/lib/emailTemplateDocument.ts	717	
+progressBar	function	platform	false		src/lib/emailTemplateDocument.ts	723	
+factGrid	function	platform	false		src/lib/emailTemplateDocument.ts	731	
+primaryButton	function	platform	false		src/lib/emailTemplateDocument.ts	746	
+expiryNote	function	platform	false		src/lib/emailTemplateDocument.ts	755	
+createStarterEmailDocument	function	platform	true		src/lib/emailTemplateDocument.ts	764	
+cloneEmailBlock	function	platform	true		src/lib/emailTemplateDocument.ts	1023	
+renew	function	platform	false		src/lib/emailTemplateDocument.ts	1025	cloneEmailBlock
+richTextHref	function	platform	false		src/lib/emailTemplateDocument.ts	1033	
+sanitizeRichText	function	platform	true		src/lib/emailTemplateDocument.ts	1038	
+escapeHtml	function	platform	false		src/lib/emailTemplateDocument.ts	1069	
+cssValue	function	platform	false		src/lib/emailTemplateDocument.ts	1071	
+backgroundImageCss	function	platform	false		src/lib/emailTemplateDocument.ts	1072	
+css	function	platform	false		src/lib/emailTemplateDocument.ts	1082	
+safeHref	function	platform	false		src/lib/emailTemplateDocument.ts	1088	
+sampleList	function	platform	false		src/lib/emailTemplateDocument.ts	1093	
+transactionalIcon	function	platform	false		src/lib/emailTemplateDocument.ts	1100	
+LucideIconNode	type	platform	false		src/lib/emailTemplateDocument.ts	1119	
+lucideNode	function	platform	false		src/lib/emailTemplateDocument.ts	1121	
+EMAIL_ICON_CHOICES	variable	platform	true		src/lib/emailTemplateDocument.ts	1127	
+renderLucideIcon	function	platform	false		src/lib/emailTemplateDocument.ts	1135	
+renderTransactionalContent	function	platform	false		src/lib/emailTemplateDocument.ts	1149	
+cell	function	platform	false		src/lib/emailTemplateDocument.ts	1224	renderTransactionalContent
+chip	function	platform	false		src/lib/emailTemplateDocument.ts	1253	renderTransactionalContent
+renderBlock	function	platform	false		src/lib/emailTemplateDocument.ts	1273	
+renderEmailMjml	function	platform	true		src/lib/emailTemplateDocument.ts	1347	
+pad	function	platform	false		src/lib/emailTemplateDocument.ts	1350	renderEmailMjml
+combinePad	function	platform	false		src/lib/emailTemplateDocument.ts	1352	renderEmailMjml
+rawBlock	function	platform	false		src/lib/emailTemplateDocument.ts	1363	renderEmailMjml
+isPlainText	function	platform	false		src/lib/emailTemplateDocument.ts	1368	renderEmailMjml
+isPlainGeometry	function	platform	false		src/lib/emailTemplateDocument.ts	1376	renderEmailMjml
+contentBlock	function	platform	false		src/lib/emailTemplateDocument.ts	1379	renderEmailMjml
+isNativeContent	function	platform	false		src/lib/emailTemplateDocument.ts	1408	renderEmailMjml
+columnsSection	function	platform	false		src/lib/emailTemplateDocument.ts	1415	renderEmailMjml
+columnCarriesSurface	function	platform	false		src/lib/emailTemplateDocument.ts	1427	columnsSection
+wrapperFor	function	platform	false		src/lib/emailTemplateDocument.ts	1452	renderEmailMjml
+flush	function	platform	false		src/lib/emailTemplateDocument.ts	1456	wrapperFor
+headingRule	function	platform	false		src/lib/emailTemplateDocument.ts	1484	renderEmailMjml
+renderEmailPreview	function	platform	true		src/lib/emailTemplateDocument.ts	1498	
+headingRule	function	platform	false		src/lib/emailTemplateDocument.ts	1504	renderEmailPreview
+flatten	function	platform	false		src/lib/emailTemplateDocument.ts	1517	renderEmailPreview
+SAMPLE_PROFILE_PHOTO	variable	platform	true		src/lib/emailTemplateDocument.ts	1526	
+SAMPLE_COMPANY_LOGO	variable	platform	true		src/lib/emailTemplateDocument.ts	1527	
+SAMPLE_VARIABLES	object	platform	true		src/lib/emailTemplateDocument.ts	1529	
+applySampleVariables	function	platform	true		src/lib/emailTemplateDocument.ts	1568	
 RequiredEnv	interface	platform	false		src/lib/env.ts	20	
 OptionalEnv	interface	platform	false		src/lib/env.ts	25	
 AppEnv	type	platform	true		src/lib/env.ts	31	
@@ -13148,6 +13458,37 @@ Ticket	interface	platform	true		types/db.ts	202
 NotificationType	type	platform	true		types/db.ts	214	
 Notification	interface	platform	true		types/db.ts	225	
 NotificationPreference	interface	platform	true		types/db.ts	236	
+EmailTemplateFamily	type	platform	true		types/emailTemplates.ts	1	
+EmailTemplateStatus	type	platform	true		types/emailTemplates.ts	2	
+EmailApprovalState	type	platform	true		types/emailTemplates.ts	10	
+EmailBlockType	type	platform	true		types/emailTemplates.ts	11	
+EmailTextAlign	type	platform	true		types/emailTemplates.ts	43	
+EmailVerticalAlign	type	platform	true		types/emailTemplates.ts	44	
+EmailBlockTone	type	platform	true		types/emailTemplates.ts	45	
+EmailBoxSpacing	interface	platform	true		types/emailTemplates.ts	47	
+EmailBlockStyles	interface	platform	true		types/emailTemplates.ts	54	
+EmailStatusItem	interface	platform	true		types/emailTemplates.ts	70	
+EmailFactTile	interface	platform	true	ui-tile	types/emailTemplates.ts	77	
+EmailFooterLink	interface	platform	true		types/emailTemplates.ts	85	
+EmailBlockProperties	interface	platform	true		types/emailTemplates.ts	90	
+EmailTemplateBlock	interface	platform	true		types/emailTemplates.ts	150	
+EmailTypographyStyle	interface	platform	true		types/emailTemplates.ts	162	
+EmailTypographyScale	interface	platform	true		types/emailTemplates.ts	167	
+EmailDocumentSettings	interface	platform	true		types/emailTemplates.ts	176	
+EmailEditorSchema	interface	platform	true		types/emailTemplates.ts	188	
+EmailTemplateSummary	interface	platform	true		types/emailTemplates.ts	194	
+EmailTemplateDraft	interface	platform	true		types/emailTemplates.ts	214	
+EmailChromeRole	type	platform	true		types/emailTemplates.ts	227	
+EmailChromeDocument	interface	platform	true		types/emailTemplates.ts	234	
+UpdateEmailChromeArgs	interface	platform	true		types/emailTemplates.ts	241	
+EmailChromeSyncResult	interface	platform	true		types/emailTemplates.ts	247	
+EmailSavedSection	interface	platform	true		types/emailTemplates.ts	254	
+CreateSavedSectionArgs	interface	platform	true		types/emailTemplates.ts	262	
+EmailTemplateTriggerDefinition	interface	platform	true		types/emailTemplates.ts	267	
+EmailTemplateCatalog	interface	platform	true		types/emailTemplates.ts	274	
+EmailTemplateListArgs	interface	platform	true		types/emailTemplates.ts	281	
+CreateEmailTemplateArgs	interface	platform	true		types/emailTemplates.ts	292	
+UpdateEmailTemplateDraftArgs	interface	platform	true		types/emailTemplates.ts	307	
 AttendanceStatus	type	hr	true		types/hrAttendance.ts	5	
 TimesheetStatus	type	hr	true		types/hrAttendance.ts	9	
 ExceptionType	type	hr	true		types/hrAttendance.ts	12	
@@ -13491,6 +13832,9 @@ ComplianceExportsListResponse	interface	platform	true		types/messagingCompliance
 ComplianceExportCreateRequest	interface	platform	true		types/messagingCompliance.ts	297	
 ComplianceExportDownloadRequest	interface	platform	true		types/messagingCompliance.ts	308	
 ComplianceExportDownloadResponse	interface	platform	true		types/messagingCompliance.ts	313	
+MjmlError	interface	platform	false		types/mjml-browser.d.ts	3	
+MjmlResult	interface	platform	false		types/mjml-browser.d.ts	9	
+mjml	function	platform	true		types/mjml-browser.d.ts	13	
 PayrollRunRegisterTab	type	payroll	true		types/payrollControlCenter.ts	8	
 PayrollControlCenterRequest	interface	payroll	true		types/payrollControlCenter.ts	10	
 HealthState	type	payroll	true		types/payrollControlCenter.ts	23	

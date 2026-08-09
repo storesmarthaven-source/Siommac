@@ -2,9 +2,9 @@
 
 # hr Module Map
 
-Source fingerprint: `7a5f775e4eb8262cafa82871`
+Source fingerprint: `7132aa438a5d92b43ac28a41`
 
-Files: 255 | Symbols: 2863 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 35 | DB objects: 196 | E2E suites: 16
+Files: 265 | Symbols: 3076 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 37 | DB objects: 196 | E2E suites: 16
 
 ## Widgets and Tiles
 
@@ -326,6 +326,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/getMyHistory` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:115` |
 | `/api/getMyStatus` | `apiPost` | `res` | `src/components/sections/AttendanceDashboard/api.ts:43` |
 | `/api/getRecentAttendance` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:143` |
+| `/api/hr/email-templates/assets/complete` | `apiPost` | `completed` | `src/api/hr/emailTemplateAssets.ts:93` |
+| `/api/hr/email-templates/assets/upload-url` | `apiPost` | `signed` | `src/api/hr/emailTemplateAssets.ts:72` |
 | `/api/hr/onboarding/task/evidence-upload-url` | `apiPost` | `signed` | `src/api/hr/onboarding.ts:77` |
 | `/api/listAssignableRoles` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:91` |
 | `/api/listDepartments` | `apiPost` | `res` | `src/api/employees.ts:84` |
@@ -378,6 +380,18 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useComplianceForEmployee` | function / hook | `src/api/hr/documents.ts:117` | `-` |
 | `useComplianceOverview` | function / hook | `src/api/hr/documents.ts:126` | `-` |
 | `useRunExpirySweep` | function / hook | `src/api/hr/documents.ts:136` | `-` |
+| `useEmailTemplateCatalog` | function / hook | `src/api/hr/emailTemplates.ts:60` | `-` |
+| `useEmailTemplates` | function / hook | `src/api/hr/emailTemplates.ts:68` | `-` |
+| `useEmailTemplate` | function / hook | `src/api/hr/emailTemplates.ts:76` | `-` |
+| `useCreateEmailTemplate` | function / hook | `src/api/hr/emailTemplates.ts:84` | `-` |
+| `useUpdateEmailTemplateDraft` | function / hook | `src/api/hr/emailTemplates.ts:92` | `-` |
+| `useDuplicateEmailTemplate` | function / hook | `src/api/hr/emailTemplates.ts:103` | `-` |
+| `useEmailChrome` | function / hook | `src/api/hr/emailTemplates.ts:111` | `-` |
+| `useUpdateEmailChrome` | function / hook | `src/api/hr/emailTemplates.ts:119` | `-` |
+| `useSavedSections` | function / hook | `src/api/hr/emailTemplates.ts:132` | `-` |
+| `useCreateSavedSection` | function / hook | `src/api/hr/emailTemplates.ts:140` | `-` |
+| `useDeleteSavedSection` | function / hook | `src/api/hr/emailTemplates.ts:148` | `-` |
+| `useArchiveEmailTemplate` | function / hook | `src/api/hr/emailTemplates.ts:156` | `-` |
 | `useEmployeeAccountSupportRequests` | function / hook | `src/api/hr/employeeAccountSupport.ts:75` | `-` |
 | `useCreateAccountSupportRequest` | function / hook | `src/api/hr/employeeAccountSupport.ts:96` | `-` |
 | `useEmployeeProfileShell` | function / hook | `src/api/hr/employeeProfile.ts:42` | `-` |
@@ -494,19 +508,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useOnboardingDeleteHandoffTemplate` | function / hook | `src/api/hr/onboarding.ts:376` | `-` |
 | `useOrgUnits` | function / hook | `src/api/hr/organization.ts:79` | `-` |
 | `useOrgUnit` | function / hook | `src/api/hr/organization.ts:80` | `-` |
-| `useOrgStats` | function / hook | `src/api/hr/organization.ts:81` | `-` |
-| `useOrgHealth` | function / hook | `src/api/hr/organization.ts:82` | `-` |
-| `usePositions` | function / hook | `src/api/hr/organization.ts:83` | `-` |
-| `usePosition` | function / hook | `src/api/hr/organization.ts:84` | `-` |
-| `useCostCenters` | function / hook | `src/api/hr/organization.ts:85` | `-` |
-| `useOrgChangeRequests` | function / hook | `src/api/hr/organization.ts:86` | `-` |
-| `useCreateOrgUnit` | function / hook | `src/api/hr/organization.ts:100` | `-` |
-| `useUpdateOrgUnit` | function / hook | `src/api/hr/organization.ts:101` | `-` |
-| `useMoveOrgUnit` | function / hook | `src/api/hr/organization.ts:102` | `-` |
-| `useArchiveOrgUnit` | function / hook | `src/api/hr/organization.ts:103` | `-` |
-| `useDeleteOrgUnit` | function / hook | `src/api/hr/organization.ts:104` | `-` |
-| `useCreatePosition` | function / hook | `src/api/hr/organization.ts:106` | `-` |
-| ... | 128 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 144 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -665,6 +667,11 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/hr/compensation.ts` | 75 |
 | frontend-api | `src/api/hr/contracts.ts` | 77 |
 | frontend-api | `src/api/hr/documents.ts` | 149 |
+| frontend-api | `src/api/hr/emailTemplateAssets.test.ts` | 27 |
+| frontend-api | `src/api/hr/emailTemplateAssets.ts` | 101 |
+| frontend-api | `src/api/hr/emailTemplates.dev.test.ts` | 76 |
+| frontend-api | `src/api/hr/emailTemplates.dev.ts` | 335 |
+| frontend-api | `src/api/hr/emailTemplates.ts` | 163 |
 | frontend-api | `src/api/hr/employeeAccountSupport.ts` | 113 |
 | frontend-api | `src/api/hr/employeeExports.ts` | 123 |
 | frontend-api | `src/api/hr/employeeImport.ts` | 70 |
@@ -739,6 +746,11 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/StartOnboardingWizard.tsx` | 974 |
 | frontend-page | `src/components/sections/HR/TransfersOverview.tsx` | 405 |
 | frontend-page | `src/components/sections/HR/TrinidadPhoneInput.tsx` | 65 |
+| frontend-page | `src/components/sections/HR/emailStudio/EmailTemplateBuilder.test.tsx` | 423 |
+| frontend-page | `src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx` | 6058 |
+| frontend-page | `src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx` | 145 |
+| frontend-page | `src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx` | 471 |
+| frontend-page | `src/components/sections/HR/emailStudio/EmailTemplateStudioPage.tsx` | 21 |
 | frontend-page | `src/components/sections/HR/employeeMasterAccess.test.ts` | 72 |
 | frontend-page | `src/components/sections/HR/employeeMasterAccess.ts` | 87 |
 | frontend-page | `src/components/sections/HR/employeeMasterSkeleton.test.tsx` | 256 |

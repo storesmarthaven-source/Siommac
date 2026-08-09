@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `7a5f775e4eb8262cafa82871`
+Source fingerprint: `7132aa438a5d92b43ac28a41`
 
-Files: 318 | Symbols: 2902 | Widgets: 0 | Unique mounted endpoints: 37 | Route definitions: 37 mounted + 15 unmounted | API calls: 50 | DB objects: 317 | E2E suites: 0
+Files: 324 | Symbols: 3033 | Widgets: 0 | Unique mounted endpoints: 37 | Route definitions: 37 mounted + 15 unmounted | API calls: 50 | DB objects: 317 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -290,7 +290,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `SkeletonFields` | function / component | `src/ui/components/Skeleton.tsx:144` | `-` |
 | `SkeletonStatGrid` | function / component | `src/ui/components/Skeleton.tsx:163` | `-` |
 | `WidgetSkeletonVariant` | type / ui-tile | `src/ui/components/Skeleton.tsx:180` | `-` |
-| ... | 54 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 55 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -544,10 +544,12 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | shared-types | `types/api.ts` | 158 |
 | shared-types | `types/calendar.ts` | 181 |
 | shared-types | `types/db.ts` | 244 |
+| shared-types | `types/emailTemplates.ts` | 316 |
 | shared-types | `types/hrContracts.ts` | 179 |
 | shared-types | `types/hrDocuments.ts` | 132 |
 | shared-types | `types/messaging.ts` | 287 |
 | shared-types | `types/messagingCompliance.ts` | 318 |
+| shared-types | `types/mjml-browser.d.ts` | 15 |
 | shared-types | `types/supabase.ts` | 135 |
 | shared-types | `types/trinidadPhone.ts` | 32 |
 | shared-types | `types/uiPreferences.ts` | 253 |

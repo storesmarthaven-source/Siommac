@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SIOMAC — Email Templates</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --navy-950: #061a36;
+      --navy-900: #082a55;
+      --navy-800: #0d3d75;
+      --blue-600: #0b57d0;
+      --yellow-500: #f4b400;
+      --yellow-600: #d99b00;
+      --ink: #10213f;
+      --muted: #65738a;
+      --line: #d9e1ec;
+      --line-soft: #e9eef5;
+      --surface: #ffffff;
+      --surface-soft: #f7f9fc;
+      --page: #eef2f7;
+      --green: #168a4b;
+      --green-soft: #eaf7ef;
+      --amber: #a95d00;
+      --amber-soft: #fff5e8;
+      --radius: 12px;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--page); color: var(--ink); font-size: 14px; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+    .email-page { min-height: 100vh; }
+    .app-shell { min-height: 100vh; display: grid; grid-template-columns: 220px minmax(0, 1fr); }
+    .app-sidebar { position: sticky; top: 0; height: 100vh; padding: 22px 14px 18px; display: flex; flex-direction: column; color: #fff; background: linear-gradient(180deg, #0b315f 0%, #062348 100%); }
+    .sidebar-brand { padding: 0 8px 22px; font-size: 23px; font-weight: 700; letter-spacing: .08em; }
+    .sidebar-brand small { display: block; margin-top: 2px; color: #adc1dc; font-size: 10px; font-weight: 500; letter-spacing: .2em; }
+    .sidebar-label { margin: 8px 10px 8px; color: #78adf7; font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+    .sidebar-nav { display: grid; gap: 4px; }
+    .sidebar-link { min-height: 42px; padding: 0 11px; display: flex; align-items: center; gap: 11px; border: 0; border-radius: 8px; background: transparent; color: #dce7f6; font-size: 13px; text-align: left; }
+    .sidebar-link svg { width: 18px; height: 18px; flex: 0 0 auto; }
+    .sidebar-link:hover { background: rgba(255,255,255,.08); }
+    .sidebar-link.active { background: #0b63e6; color: #fff; box-shadow: 0 7px 18px rgba(0, 28, 70, .22); }
+    .sidebar-spacer { flex: 1; }
+    .sidebar-account { margin-top: 18px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,.14); }
+    .app-workspace { min-width: 0; }
+    .utility-bar { height: 64px; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; background: var(--navy-950); color: #fff; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-word { font-size: 25px; letter-spacing: .08em; font-weight: 600; }
+    .brand-word i { color: var(--yellow-500); font-style: normal; }
+    .brand-module { padding-left: 12px; border-left: 1px solid rgba(255,255,255,.24); color: #c7d4e6; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+    .utility-actions { display: flex; align-items: center; gap: 8px; }
+    .icon-button { width: 38px; height: 38px; border: 0; border-radius: 9px; background: transparent; color: inherit; display: grid; place-items: center; }
+    .icon-button:hover { background: rgba(255,255,255,.1); }
+    .user-chip { display: flex; align-items: center; gap: 9px; padding-left: 10px; }
+    .user-avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: #1f508c; font-size: 12px; }
+    .user-copy { display: grid; gap: 1px; }
+    .user-copy small { color: #9fb0c8; font-size: 11px; }
+
+    main { max-width: 1500px; margin: 0 auto; padding: 26px 38px 32px; display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; }
+    .page-heading { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end; margin-bottom: 22px; }
+    .page-heading h1 { margin: 0 0 6px; font-size: 30px; line-height: 1.12; letter-spacing: -.02em; }
+    .page-heading p { margin: 0; color: var(--muted); font-size: 15px; }
+    .heading-actions { display: flex; gap: 10px; align-items: center; }
+    .search-box { width: 300px; height: 44px; border: 1px solid #cbd5e3; border-radius: 9px; background: #fff; display: flex; align-items: center; gap: 9px; padding: 0 13px; color: var(--muted); }
+    .search-box input { width: 100%; border: 0; outline: 0; color: var(--ink); background: transparent; }
+    .filter-select { height: 44px; min-width: 165px; border: 1px solid #cbd5e3; border-radius: 9px; padding: 0 36px 0 13px; background: #fff; color: var(--ink); }
+    .button { height: 42px; padding: 0 16px; border: 1px solid #cbd5e3; border-radius: 8px; background: #fff; color: var(--ink); display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 500; }
+    .button:hover { border-color: #9caec4; }
+    .button.primary { background: var(--yellow-500); border-color: var(--yellow-500); color: #141b26; }
+    .button.primary:hover { background: var(--yellow-600); border-color: var(--yellow-600); }
+    .button.navy { background: var(--navy-900); border-color: var(--navy-900); color: #fff; }
+    .button.ghost { border-color: transparent; background: transparent; color: var(--blue-600); }
+    .button.square { width: 42px; padding: 0; }
+
+    .featured { display: none; }
+    .featured::-webkit-scrollbar { width: 7px; }
+    .featured::-webkit-scrollbar-thumb { border-radius: 999px; background: #b8c4d4; }
+    .featured-preview { padding: 16px; display: grid; place-items: center; background: #edf1f6; border-bottom: 1px solid var(--line-soft); }
+    .email-preview { width: 100%; aspect-ratio: 4 / 3; overflow: hidden; background: #fff; border: 1px solid #cfd8e4; border-radius: 6px; box-shadow: 0 10px 28px rgba(17, 44, 79, .12); }
+    .email-preview-image { width: 100%; height: 100%; background-image: url("assets/email-templates/designed-redesign/employee-welcome.png"); background-size: cover; background-repeat: no-repeat; background-position: center; transition: background-image .2s ease; }
+
+    .featured-info { min-height: 310px; padding: 21px 22px 17px; display: flex; flex-direction: column; }
+    .featured-label { color: var(--blue-600); font-size: 10px; letter-spacing: .12em; font-weight: 600; }
+    .featured-title-row { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin: 8px 0 10px; }
+    .featured-title-row h2 { margin: 0; font-size: 24px; letter-spacing: -.015em; }
+    .status { display: inline-flex; align-items: center; min-height: 24px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+    .status.published { color: var(--green); background: var(--green-soft); }
+    .status.draft { color: var(--amber); background: var(--amber-soft); }
+    .status.in_review { color: #0b57d0; background: #eaf2ff; }
+    .featured-description { color: var(--muted); line-height: 1.55; margin: 0 0 18px; }
+    .feature-facts { display: grid; gap: 11px; margin: 0; }
+    .fact { display: grid; grid-template-columns: 24px 98px 1fr; align-items: center; gap: 4px; }
+    .fact svg { color: #647690; width: 16px; height: 16px; }
+    .fact dt { color: var(--muted); }
+    .fact dd { margin: 0; font-weight: 500; }
+    .featured-actions { display: flex; gap: 14px; margin-top: auto; padding-top: 18px; border-top: 1px solid var(--line-soft); }
+    .featured-actions .button:not(.square) { min-width: 128px; }
+    .featured-actions .square { margin-left: auto; }
+
+    .library-heading { grid-column: 1; grid-row: 2; display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 12px; }
+    .library-heading h2 { margin: 0 0 4px; font-size: 20px; }
+    .library-heading p { margin: 0; color: var(--muted); }
+    .library-count { color: var(--muted); font-size: 12px; }
+    .family-tabs { grid-column: 1; grid-row: 3; display: flex; align-items: stretch; gap: 28px; margin-bottom: 15px; border-bottom: 1px solid var(--line); }
+    .family-tab { position: relative; min-width: 0; min-height: 58px; padding: 2px 1px 12px; display: flex; align-items: flex-start; gap: 9px; border: 0; background: transparent; color: #67768c; text-align: left; }
+    .family-tab::after { content: ""; position: absolute; right: 0; bottom: -1px; left: 0; height: 3px; border-radius: 3px 3px 0 0; background: transparent; }
+    .family-tab:hover { color: var(--ink); }
+    .family-tab.active { color: var(--navy-900); }
+    .family-tab.active::after { background: var(--navy-900); }
+    .family-tab-copy { display: grid; gap: 3px; }
+    .family-tab-copy strong { font-size: 13px; font-weight: 600; }
+    .family-tab-copy small { color: var(--muted); font-size: 10.5px; font-weight: 400; white-space: nowrap; }
+    .family-tab-count { min-width: 23px; height: 21px; margin-top: -1px; padding: 0 6px; display: inline-grid; place-items: center; border: 1px solid #ced7e3; border-radius: 999px; background: #fff; color: #66758a; font-size: 10px; }
+    .family-tab.active .family-tab-count { border-color: #aebed2; color: var(--navy-900); }
+    .template-grid { grid-column: 1; grid-row: 4; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .template-card { min-height: 490px; padding: 0; text-align: left; overflow: hidden; position: relative; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease; perspective: 1400px; }
+    .template-card:hover { transform: translateY(-2px); border-color: #afbdd0; box-shadow: 0 10px 25px rgba(17,44,79,.08); }
+    .template-card.selected { border-color: var(--line); box-shadow: none; }
+    .card-face { position: absolute; inset: 0; display: flex; flex-direction: column; background: #fff; backface-visibility: hidden; transform-style: preserve-3d; transition: transform .38s cubic-bezier(.2,.72,.2,1), opacity .22s ease; }
+    .card-face[hidden] { display: flex; opacity: 0; pointer-events: none; transform: rotateY(8deg) translateX(12px); }
+    .card-face:not([hidden]) { opacity: 1; pointer-events: auto; transform: rotateY(0) translateX(0); }
+    .card-front { position: absolute; inset: 0; }
+    .card-front .card-preview { aspect-ratio: 16 / 9; }
+    .card-preview { width: 100%; min-width: 0; min-height: 0; aspect-ratio: 4 / 3; display: grid; grid-template-columns: 1fr; background: #fff; border-bottom: 1px solid var(--line-soft); overflow: hidden; }
+    .card-preview-copy { display: none; }
+    .card-preview-copy.dark { background: var(--navy-900); color: #fff; }
+    .mini-logo { font-size: 10px; letter-spacing: .1em; font-weight: 600; }
+    .mini-logo i { color: var(--yellow-500); font-style: normal; }
+    .mini-kicker { margin-top: auto; color: var(--blue-600); font-size: 8px; letter-spacing: .1em; }
+    .dark .mini-kicker { color: #f6c843; }
+    .card-preview-copy h3 { margin: 5px 0 6px; font-size: 15px; line-height: 1.15; }
+    .card-preview-copy p { margin: 0; font-size: 9px; color: #6c788b; line-height: 1.4; }
+    .dark p { color: #d6e1ee; }
+    .mini-cta { margin-top: 10px; align-self: flex-start; padding: 5px 8px; border-radius: 3px; background: var(--yellow-500); color: #141b26; font-size: 8px; font-weight: 600; }
+    .card-image { grid-column: 1 / -1; width: 100%; height: 100%; object-fit: cover; object-position: center; background: #f6f8fb; }
+    .card-meta { position: relative; min-width: 0; padding: 14px 16px 15px; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: start; gap: 7px 12px; }
+    .card-meta::after { content: "•••"; position: absolute; right: 13px; bottom: 12px; color: var(--ink); letter-spacing: 2px; }
+    .card-title { max-width: calc(100% - 4px); font-size: 15px; line-height: 1.24; font-weight: 600; overflow-wrap: anywhere; }
+    .card-purpose { grid-column: 1 / -1; display: -webkit-box; overflow: hidden; color: var(--muted); font-size: 11px; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+    .card-trigger { grid-column: 1; justify-self: start; padding: 3px 7px; border: 1px solid #d9e1eb; border-radius: 999px; background: #f7f9fc; color: #506078; font-size: 10px; line-height: 1.2; }
+    .card-meta::after { display: none; }
+    .card-subtitle { display: none; }
+    .card-footer { grid-column: 1; display: flex; align-items: center; gap: 14px; color: var(--muted); font-size: 11px; }
+    .card-footer span { display: inline-flex; align-items: center; gap: 5px; }
+    .card-footer svg { width: 14px; height: 14px; }
+    .card-actions { grid-column: 1 / -1; display: flex; gap: 8px; margin-top: 3px; }
+    .card-action { min-height: 34px; padding: 0 12px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #cbd5e3; border-radius: 7px; background: #fff; color: var(--navy-900); font-size: 12px; font-weight: 500; }
+    .card-action:hover { border-color: #92a4ba; background: #f7f9fc; }
+    .card-action svg { width: 15px; height: 15px; }
+    .card-action.primary { background: var(--navy-900); border-color: var(--navy-900); color: #fff; }
+    .card-view-head { min-height: 54px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line-soft); }
+    .card-view-head strong { font-size: 14px; font-weight: 600; }
+    .card-back { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid #d4dce7; border-radius: 7px; background: #fff; color: var(--ink); }
+    .card-back svg { width: 16px; height: 16px; }
+    .card-preview-face .card-preview { flex: 1; aspect-ratio: auto; border: 0; }
+    .card-preview-face .card-image { object-fit: contain; padding: 10px; }
+    .card-details-body { flex: 1; padding: 22px; display: flex; flex-direction: column; }
+    .card-details-kicker { color: var(--blue-600); font-size: 10px; font-weight: 600; letter-spacing: .12em; }
+    .card-details-body h3 { margin: 7px 0 9px; font-size: 23px; line-height: 1.18; }
+    .card-details-body > p { margin: 0 0 19px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+    .card-details-list { display: grid; gap: 0; margin: 0; border-top: 1px solid var(--line-soft); }
+    .card-details-list div { min-height: 45px; display: grid; grid-template-columns: 105px 1fr; align-items: center; border-bottom: 1px solid var(--line-soft); }
+    .card-details-list dt { color: var(--muted); font-size: 12px; }
+    .card-details-list dd { margin: 0; color: var(--ink); font-size: 12px; font-weight: 500; }
+    .card-details-footer { margin-top: auto; padding-top: 16px; }
+    .empty-result { display: none; grid-column: 1/-1; padding: 40px; text-align: center; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); color: var(--muted); }
+    .showing-count { grid-column: 1; grid-row: 5; padding-top: 20px; text-align: center; color: var(--muted); font-size: 12px; }
+
+    .toast { position: fixed; right: 24px; bottom: 24px; max-width: 330px; padding: 13px 16px; border-radius: 9px; background: var(--navy-950); color: #fff; box-shadow: 0 14px 35px rgba(4,22,46,.25); opacity: 0; transform: translateY(10px); pointer-events: none; transition: .2s ease; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 1180px) {
+      .app-shell { display: block; }
+      .app-sidebar { display: none; }
+      main { display: block; }
+      .page-heading { grid-template-columns: 1fr; }
+      .heading-actions { flex-wrap: wrap; }
+      .featured { position: static; grid-template-columns: 1fr; margin-bottom: 22px; }
+      .featured-preview { border-right: 0; border-bottom: 1px solid var(--line); }
+      .template-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .family-tabs { grid-template-columns: repeat(3,minmax(0,1fr)); }
+      .library-heading { margin-top: 0; }
+    }
+    @media (max-width: 720px) {
+      .utility-bar { padding: 0 16px; }
+      .brand-module,.user-copy { display: none; }
+      main { padding: 20px 14px; }
+      .heading-actions { display: grid; grid-template-columns: 1fr auto; }
+      .search-box { width: 100%; grid-column: 1/-1; }
+      .filter-select { min-width: 0; }
+      .email-preview { width: 100%; }
+      .template-grid { grid-template-columns: 1fr; }
+      .family-tabs { grid-template-columns: 1fr; }
+      .featured-actions { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <div class="email-page">
+    <div class="app-shell">
+      <aside class="app-sidebar" aria-label="HR navigation">
+        <div class="sidebar-brand">SIOMAC<small>HR MODULE</small></div>
+        <div class="sidebar-label">Workspace</div>
+        <nav class="sidebar-nav">
+          <button class="sidebar-link"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/></svg>Dashboard</button>
+          <button class="sidebar-link"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-4 2.5-6 6-6s6 2 6 6"/><path d="M17 8h4M19 6v4"/></svg>Employee Master</button>
+          <button class="sidebar-link active"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4z"/><path d="m4 9 8 5 8-5"/></svg>Onboarding</button>
+          <button class="sidebar-link"><svg viewBox="0 0 24 24"><path d="M4 20v-8M10 20V4M16 20v-5M22 20H2"/></svg>Organization</button>
+          <button class="sidebar-link"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Attendance</button>
+          <button class="sidebar-link"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 2v4M16 2v4M8 10h8"/></svg>Leave Management</button>
+          <button class="sidebar-link"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h4"/></svg>Payroll</button>
+          <button class="sidebar-link"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>Performance</button>
+          <button class="sidebar-link"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg>Recruitment</button>
+          <button class="sidebar-link"><svg viewBox="0 0 24 24"><path d="m3 8 9-5 9 5-9 5z"/><path d="M7 11v5c3 2 7 2 10 0v-5"/></svg>Training</button>
+          <button class="sidebar-link"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>Documents</button>
+        </nav>
+        <div class="sidebar-spacer"></div>
+        <nav class="sidebar-nav sidebar-account">
+          <button class="sidebar-link"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg>Settings</button>
+        </nav>
+      </aside>
+      <div class="app-workspace">
+    <header class="utility-bar">
+      <div class="brand"><span class="brand-module" style="border:0;padding-left:0">HR</span><span class="brand-module">Onboarding</span><span class="brand-module">Email Templates</span></div>
+      <div class="utility-actions">
+        <button class="icon-button" aria-label="Help"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.7"/><path d="M12 17h.01"/></svg></button>
+        <button class="icon-button" aria-label="Notifications"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"/><path d="M10 19h4"/></svg></button>
+        <div class="user-chip"><span class="user-avatar">HR</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"/></svg></div>
+      </div>
+    </header>
+
+    <main>
+      <section class="page-heading">
+        <div><h1>Email Templates</h1><p>Review each template’s purpose, trigger, status, and usage before opening it in Email Studio.</p></div>
+        <div class="heading-actions">
+          <label class="search-box"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="template-search" type="search" placeholder="Search templates…" aria-label="Search templates"></label>
+          <select id="status-filter" class="filter-select" aria-label="Filter templates by status"><option value="all">All Statuses</option><option value="published">Active</option><option value="in_review">In Review</option><option value="draft">Draft</option></select>
+          <button class="button primary" data-action="new"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New Template</button>
+        </div>
+      </section>
+
+      <section class="featured" aria-label="Selected template preview">
+        <div class="featured-preview">
+          <article class="email-preview" aria-label="Selected template hero preview">
+            <div id="featured-image" class="email-preview-image" role="img" aria-label="Employee Welcome email hero"></div>
+          </article>
+        </div>
+        <div class="featured-info">
+          <span class="featured-label">TEMPLATE DETAILS</span>
+          <div class="featured-title-row"><h2 id="featured-title">Employee Welcome</h2></div>
+          <p id="featured-description" class="featured-description">Sent to new hires on their official start date to welcome them to the organization and set the tone for their onboarding experience.</p>
+          <dl class="feature-facts">
+            <div class="fact"><svg viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M4.2 6.2l2.8 2.8M17 15l2.8 2.8M3 12h4M17 12h4"/><circle cx="12" cy="12" r="3"/></svg><dt>Sends when</dt><dd id="featured-trigger">Case created</dd></div>
+            <div class="fact"><svg viewBox="0 0 24 24"><path d="M12 3v18M5 8h14M5 16h14"/></svg><dt>Family</dt><dd id="featured-category">Onboarding</dd></div>
+            <div class="fact"><svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M4.2 6.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 17.8l2.1-2.1M17.7 6.3l2.1-2.1"/><circle cx="12" cy="12" r="3"/></svg><dt>Status</dt><dd><span id="featured-status" class="status published">Active</span></dd></div>
+            <div class="fact"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><dt>Last edited</dt><dd id="featured-edited">May 13, 2024 by HR Team</dd></div>
+            <div class="fact"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg><dt>Usage</dt><dd id="featured-usage">1,248 sent</dd></div>
+          </dl>
+          <div class="featured-actions"><button class="button" data-action="preview"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>Preview</button><button class="button" data-action="duplicate"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>Duplicate</button><button class="button square" data-action="more" aria-label="More actions"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="19" cy="12" r="1" fill="currentColor"/></svg></button></div>
+        </div>
+      </section>
+
+      <div class="library-heading"><div><h2>Template Library</h2><p>Choose a communication family, then manage only the templates relevant to that workflow.</p></div><span id="result-count" class="library-count">5 templates</span></div>
+      <nav class="family-tabs" aria-label="Template families" role="tablist">
+        <button class="family-tab active" type="button" role="tab" aria-selected="true" data-family="Onboarding"><span class="family-tab-copy"><strong>Onboarding</strong><small>Employee journey messages</small></span><span class="family-tab-count">5</span></button>
+        <button class="family-tab" type="button" role="tab" aria-selected="false" data-family="User Invitations"><span class="family-tab-copy"><strong>User Invitations</strong><small>Portal and account access</small></span><span class="family-tab-count">4</span></button>
+        <button class="family-tab" type="button" role="tab" aria-selected="false" data-family="Worker Invitations"><span class="family-tab-copy"><strong>Worker Invitations</strong><small>External worker access</small></span><span class="family-tab-count">4</span></button>
+      </nav>
+      <section id="template-grid" class="template-grid" aria-label="Email template library">
+        <button class="template-card selected" data-name="Employee Welcome" data-status="published" data-category="Onboarding" data-trigger="Case created" data-edited="28 Jul 2026 · HR Operations" data-usage="1,248 sent" data-image="assets/email-templates/designed-redesign/employee-welcome.png" data-kicker="EMPLOYEE WELCOME" data-email-title="Welcome, {{FirstName}}" data-email-copy="Your onboarding workspace brings together the people, tasks, and resources you need before day one." data-cta="Open Onboarding" data-description="Welcomes a new employee and introduces the people, resources, and guided onboarding journey available from case creation.">
+          <span class="card-preview"><img class="card-image" src="assets/email-templates/designed-redesign/employee-welcome.png" alt="Employee welcome email preview"></span><span class="card-meta"><span class="card-title">Employee Welcome</span><span class="status published">Active</span><span class="card-footer"><span><svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>1,248 sent</span><span>28 Jul 2026</span></span></span>
+        </button>
+
+        <button class="template-card" data-name="Complete Your Onboarding Tasks" data-status="published" data-category="Onboarding" data-trigger="Tasks pending" data-edited="27 Jul 2026 · People Operations" data-usage="1,037 sent" data-image="assets/email-templates/designed-flat/complete-onboarding-tasks.png" data-kicker="KEEP MOVING FORWARD" data-email-title="Complete your onboarding tasks" data-email-copy="Finish the remaining items to stay on track for a successful start." data-cta="Go to My Tasks" data-description="Groups pending onboarding work into one focused employee reminder.">
+          <span class="card-preview"><img class="card-image" src="assets/email-templates/designed-flat/complete-onboarding-tasks.png" alt="Onboarding task checklist illustration"></span><span class="card-meta"><span class="card-title">Complete Your Onboarding Tasks</span><span class="status published">Active</span><span class="card-footer"><span><svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>1,037 sent</span><span>27 Jul 2026</span></span></span>
+        </button>
+
+        <button class="template-card" data-name="Missing Documents Reminder" data-status="published" data-category="Onboarding" data-trigger="Documents missing" data-edited="26 Jul 2026 · People Operations" data-usage="654 sent" data-image="assets/email-templates/designed-flat/missing-documents-reminder.png" data-kicker="ACTION REQUIRED" data-email-title="Documents need your attention" data-email-copy="Review outstanding requirements and upload documents through the secure employee portal." data-cta="Upload Documents" data-description="Requests missing onboarding documents without exposing confidential details in email.">
+          <span class="card-preview"><img class="card-image" src="assets/email-templates/designed-flat/missing-documents-reminder.png" alt="Missing documents reminder preview"></span><span class="card-meta"><span class="card-title">Missing Documents Reminder</span><span class="status published">Active</span><span class="card-footer"><span><svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>654 sent</span><span>26 Jul 2026</span></span></span>
+        </button>
+
+        <button class="template-card" data-name="Day-One Instructions" data-status="in_review" data-category="Onboarding" data-trigger="Start approaching" data-edited="25 Jul 2026 · HR Operations" data-usage="0 sent" data-image="assets/email-templates/designed-flat/day-one-instructions.png" data-kicker="YOUR FIRST DAY" data-email-title="Everything you need for day one" data-email-copy="Review your arrival time, worksite, manager, schedule, and support contacts." data-cta="View Day-One Plan" data-description="Provides practical arrival instructions shortly before the employee’s start date.">
+          <span class="card-preview"><img class="card-image" src="assets/email-templates/designed-flat/day-one-instructions.png" alt="Day-one instructions preview"></span><span class="card-meta"><span class="card-title">Day-One Instructions</span><span class="status in_review">In Review</span><span class="card-footer"><span><svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>0 sent</span><span>25 Jul 2026</span></span></span>
+        </button>
+
+        <button class="template-card" data-name="Onboarding Completed" data-status="draft" data-category="Onboarding" data-trigger="Case completed" data-edited="24 Jul 2026 · People Operations" data-usage="0 sent" data-image="assets/email-templates/designed-flat/onboarding-completed.png" data-kicker="YOU’RE ALL SET" data-email-title="Onboarding complete" data-email-copy="Your onboarding is complete. Continue to your permanent employee hub." data-cta="Open Employee Hub" data-description="Confirms completion to the employee and manager and closes the onboarding journey.">
+          <span class="card-preview"><img class="card-image" src="assets/email-templates/designed-flat/onboarding-completed.png" alt="Onboarding completion preview"></span><span class="card-meta"><span class="card-title">Onboarding Completed</span><span class="status draft">Draft</span><span class="card-footer"><span><svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>0 sent</span><span>24 Jul 2026</span></span></span>
+        </button>
+
+        <button class="template-card" data-name="Account Invitation" data-status="draft" data-category="User Invitations" data-trigger="Invitation created" data-edited="23 Jul 2026 · People Operations" data-usage="0 sent" data-image="assets/email-templates/designed-flat/account-invitation.png" data-kicker="SECURE ACCESS" data-email-title="Your account invitation is ready" data-email-copy="Create your secure account to access onboarding tasks, documents, and important information." data-cta="Accept Invitation" data-description="Delivers the server-issued, time-limited account invitation.">
+          <span class="card-preview"><img class="card-image" src="assets/email-templates/designed-flat/account-invitation.png" alt="Account invitation preview"></span><span class="card-meta"><span class="card-title">Account Invitation</span><span class="status draft">Draft</span><span class="card-footer"><span><svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>0 sent</span><span>23 Jul 2026</span></span></span>
+        </button>
+
+        <button class="template-card" data-name="Invitation Reminder" data-status="draft" data-category="User Invitations" data-trigger="Invitation reminder" data-edited="22 Jul 2026 · HR Operations" data-usage="0 sent" data-image="assets/email-templates/designed-flat/invitation-reminder.png" data-kicker="JUST A REMINDER" data-email-title="Your invitation is still waiting" data-email-copy="Accept your secure invitation to begin your onboarding journey." data-cta="Accept Invitation" data-description="Reminds an invited user who has not yet completed account activation.">
+          <span class="card-preview"><img class="card-image" src="assets/email-templates/designed-flat/invitation-reminder.png" alt="Secure invitation reminder illustration"></span><span class="card-meta"><span class="card-title">Invitation Reminder</span><span class="status draft">Draft</span><span class="card-footer"><span><svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>0 sent</span><span>22 Jul 2026</span></span></span>
+        </button>
+
+        <button class="template-card" data-name="Invitation Expiring Soon" data-status="draft" data-category="User Invitations" data-trigger="Invitation expiring" data-edited="21 Jul 2026 · People Operations" data-usage="0 sent" data-image="assets/email-templates/designed-flat/invitation-expiring-soon.png" data-kicker="TIME SENSITIVE" data-email-title="Your invitation expires soon" data-email-copy="Complete registration before the secure invitation reaches its expiry time." data-cta="Complete Registration" data-description="Warns an invited user before their server-issued link expires.">
+          <span class="card-preview"><img class="card-image" src="assets/email-templates/designed-flat/invitation-expiring-soon.png" alt="Expiring invitation illustration"></span><span class="card-meta"><span class="card-title">Invitation Expiring Soon</span><span class="status draft">Draft</span><span class="card-footer"><span><svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>0 sent</span><span>21 Jul 2026</span></span></span>
+        </button>
+
+        <button class="template-card" data-name="Invitation Reissued" data-status="draft" data-category="User Invitations" data-trigger="Invitation reissued" data-edited="20 Jul 2026 · People Operations" data-usage="0 sent" data-image="assets/email-templates/designed-flat/invitation-reissued.png" data-kicker="NEW SECURE LINK" data-email-title="We’ve reissued your invitation" data-email-copy="Your previous invitation was replaced. Use this new secure link to continue." data-cta="Accept New Invitation" data-description="Explains that an earlier invitation was invalidated and replaced.">
+          <span class="card-preview"><img class="card-image" src="assets/email-templates/designed-flat/invitation-reissued.png" alt="Reissued invitation illustration"></span><span class="card-meta"><span class="card-title">Invitation Reissued</span><span class="status draft">Draft</span><span class="card-footer"><span><svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>0 sent</span><span>20 Jul 2026</span></span></span>
+        </button>
+
+        <button class="template-card" data-name="Worker Registration Invitation" data-status="draft" data-category="Worker Invitations" data-trigger="Worker invitation created" data-edited="19 Jul 2026 · HR Operations" data-usage="0 sent" data-image="assets/email-templates/designed-flat/worker-registration.png" data-kicker="WORKER REGISTRATION" data-email-title="Complete your worker registration" data-email-copy="Create your secure worker profile and provide the information required for assignment readiness." data-cta="Start Registration" data-description="Starts the governed registration journey for a contractor or external worker.">
+          <span class="card-preview"><img class="card-image" src="assets/email-templates/designed-flat/worker-registration.png" alt="Worker registration invitation illustration"></span><span class="card-meta"><span class="card-title">Worker Registration Invitation</span><span class="status draft">Draft</span><span class="card-footer"><span><svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>0 sent</span><span>19 Jul 2026</span></span></span>
+        </button>
+
+        <button class="template-card" data-name="Site Assignment Invitation" data-status="draft" data-category="Worker Invitations" data-trigger="Site assigned" data-edited="18 Jul 2026 · People Operations" data-usage="0 sent" data-image="assets/email-templates/designed-flat/site-assignment.png" data-kicker="SITE ASSIGNMENT" data-email-title="Your assignment details are ready" data-email-copy="Review the site, reporting contact, timing, and requirements for your assignment." data-cta="View Assignment" data-description="Notifies a worker when a governed site assignment is created.">
+          <span class="card-preview"><img class="card-image" src="assets/email-templates/designed-flat/site-assignment.png" alt="Site assignment handoff preview"></span><span class="card-meta"><span class="card-title">Site Assignment Invitation</span><span class="status draft">Draft</span><span class="card-footer"><span><svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>0 sent</span><span>18 Jul 2026</span></span></span>
+        </button>
+
+        <button class="template-card" data-name="Worker Compliance Requirements" data-status="draft" data-category="Worker Invitations" data-trigger="Documents required" data-edited="17 Jul 2026 · People Operations" data-usage="0 sent" data-image="assets/email-templates/designed-flat/worker-compliance.png" data-kicker="COMPLIANCE REQUIRED" data-email-title="Complete your compliance requirements" data-email-copy="Upload the required documents and review the safety requirements for your assignment." data-cta="Continue Compliance" data-description="Presents required worker documents and compliance actions securely.">
+          <span class="card-preview"><img class="card-image" src="assets/email-templates/designed-flat/worker-compliance.png" alt="Worker compliance requirements illustration"></span><span class="card-meta"><span class="card-title">Worker Compliance Requirements</span><span class="status draft">Draft</span><span class="card-footer"><span><svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>0 sent</span><span>17 Jul 2026</span></span></span>
+        </button>
+
+        <button class="template-card" data-name="Worker Invitation Reminder" data-status="draft" data-category="Worker Invitations" data-trigger="Invitation reminder" data-edited="16 Jul 2026 · HR Operations" data-usage="0 sent" data-image="assets/email-templates/designed-flat/worker-invitation-reminder.png" data-kicker="REGISTRATION REMINDER" data-email-title="Continue your worker registration" data-email-copy="Your secure worker invitation is waiting. Complete the remaining steps to stay on schedule." data-cta="Continue Registration" data-description="Reminds a worker to finish an incomplete invitation flow.">
+          <span class="card-preview"><img class="card-image" src="assets/email-templates/designed-flat/worker-invitation-reminder.png" alt="Worker invitation reminder illustration"></span><span class="card-meta"><span class="card-title">Worker Invitation Reminder</span><span class="status draft">Draft</span><span class="card-footer"><span><svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>0 sent</span><span>16 Jul 2026</span></span></span>
+        </button>
+
+        <div id="empty-result" class="empty-result">No templates match the current search and status filter.</div>
+      </section>
+      <div id="showing-count" class="showing-count">Showing 1–5 of 5 Onboarding templates</div>
+    </main>
+      </div>
+    </div>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const cards = [...document.querySelectorAll('.template-card')].map((source) => {
+      const card = document.createElement('article');
+      [...source.attributes].forEach((attribute) => card.setAttribute(attribute.name, attribute.value));
+      card.innerHTML = source.innerHTML;
+      source.replaceWith(card);
+      return card;
+    });
+    const search = document.querySelector('#template-search');
+    const filter = document.querySelector('#status-filter');
+    const familyTabs = [...document.querySelectorAll('.family-tab')];
+    const resultCount = document.querySelector('#result-count');
+    const empty = document.querySelector('#empty-result');
+    const featuredImage = document.querySelector('#featured-image');
+    const toast = document.querySelector('#toast');
+    let activeFamily = 'Onboarding';
+    let toastTimer;
+
+    function selectTemplate(card) {
+      cards.forEach((candidate) => candidate.classList.toggle('selected', candidate === card));
+      const data = card.dataset;
+      featuredImage.style.backgroundImage = `url("${data.image}")`;
+      document.querySelector('#featured-title').textContent = data.name;
+      featuredImage.setAttribute('aria-label', `${data.name} email hero`);
+      document.querySelector('#featured-description').textContent = data.description;
+      document.querySelector('#featured-trigger').textContent = data.trigger;
+      document.querySelector('#featured-category').textContent = data.category;
+      document.querySelector('#featured-edited').textContent = data.edited;
+      document.querySelector('#featured-usage').textContent = data.usage;
+      const status = document.querySelector('#featured-status');
+      status.textContent = data.status === 'published' ? 'Active' : data.status === 'in_review' ? 'In Review' : 'Draft';
+      status.className = `status ${data.status}`;
+    }
+
+    function updateResults() {
+      const query = search.value.trim().toLowerCase();
+      const statusFilter = filter.value;
+      const familyTotal = cards.filter((card) => card.dataset.category === activeFamily).length;
+      let visible = 0;
+      cards.forEach((card) => {
+        const match = card.dataset.name.toLowerCase().includes(query)
+          && card.dataset.category === activeFamily
+          && (statusFilter === 'all' || card.dataset.status === statusFilter);
+        card.hidden = !match;
+        if (match) visible += 1;
+      });
+      resultCount.textContent = `${visible} ${visible === 1 ? 'template' : 'templates'}`;
+      document.querySelector('#showing-count').textContent = `Showing ${visible ? `1–${visible}` : '0'} of ${familyTotal} ${activeFamily} templates`;
+      empty.style.display = visible ? 'none' : 'block';
+    }
+
+    function showToast(message) {
+      window.clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.classList.add('show');
+      toastTimer = window.setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    false && cards.forEach((card) => {
+      const metadata = card.querySelector('.card-meta');
+      const status = metadata.querySelector('.status');
+      const purpose = document.createElement('span');
+      purpose.className = 'card-purpose';
+      purpose.textContent = card.dataset.description;
+      const trigger = document.createElement('span');
+      trigger.className = 'card-trigger';
+      trigger.textContent = `Trigger · ${card.dataset.trigger}`;
+      metadata.insertBefore(purpose, status);
+      metadata.insertBefore(trigger, status);
+      card.addEventListener('click', () => selectTemplate(card));
+    });
+    function icon(path) {
+      return `<svg viewBox="0 0 24 24" aria-hidden="true">${path}</svg>`;
+    }
+
+    function showCardFace(card, faceName) {
+      card.querySelectorAll('.card-face').forEach((face) => {
+        const visible = faceName === 'front' ? face.classList.contains('card-front') : face.classList.contains(`card-${faceName}-face`);
+        face.hidden = !visible;
+      });
+    }
+
+    cards.forEach((card) => {
+      const metadata = card.querySelector('.card-meta');
+      const status = metadata.querySelector('.status');
+      const purpose = document.createElement('span');
+      purpose.className = 'card-purpose';
+      purpose.textContent = card.dataset.description;
+      const trigger = document.createElement('span');
+      trigger.className = 'card-trigger';
+      trigger.textContent = `Trigger · ${card.dataset.trigger}`;
+      metadata.insertBefore(purpose, status);
+      metadata.insertBefore(trigger, status);
+      const front = document.createElement('div');
+      front.className = 'card-face card-front';
+      [...card.children].forEach((child) => front.appendChild(child));
+      const actions = document.createElement('div');
+      actions.className = 'card-actions';
+      actions.innerHTML = `<button class="card-action primary" type="button" data-card-view="preview">${icon('<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/>')}Preview</button><button class="card-action" type="button" data-card-view="details">${icon('<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>')}Details</button>`;
+      metadata.appendChild(actions);
+      card.appendChild(front);
+
+      const previewFace = document.createElement('div');
+      previewFace.className = 'card-face card-preview-face';
+      previewFace.hidden = true;
+      previewFace.innerHTML = `<div class="card-view-head"><strong>${card.dataset.name} preview</strong><button class="card-back" type="button" aria-label="Back to template card">${icon('<path d="m15 18-6-6 6-6"/>')}</button></div><span class="card-preview"><img class="card-image" src="${card.dataset.image}" alt="${card.dataset.name} template preview"></span>`;
+      card.appendChild(previewFace);
+
+      const audience = card.dataset.category === 'Worker Invitations' ? 'External worker' : card.dataset.category === 'User Invitations' ? 'Invited user' : card.dataset.name === 'Onboarding Completed' ? 'Employee and manager' : 'New employee';
+      const detailsFace = document.createElement('div');
+      detailsFace.className = 'card-face card-details-face';
+      detailsFace.hidden = true;
+      detailsFace.innerHTML = `<div class="card-view-head"><strong>Template details</strong><button class="card-back" type="button" aria-label="Back to template card">${icon('<path d="m15 18-6-6 6-6"/>')}</button></div><div class="card-details-body"><span class="card-details-kicker">${card.dataset.category}</span><h3>${card.dataset.name}</h3><p>${card.dataset.description}</p><dl class="card-details-list"><div><dt>Sends when</dt><dd>${card.dataset.trigger}</dd></div><div><dt>Audience</dt><dd>${audience}</dd></div><div><dt>Status</dt><dd>${status.textContent}</dd></div><div><dt>Last edited</dt><dd>${card.dataset.edited}</dd></div><div><dt>Usage</dt><dd>${card.dataset.usage}</dd></div></dl><div class="card-details-footer"><button class="card-action primary" type="button" data-card-edit>Open in Email Studio</button></div></div>`;
+      card.appendChild(detailsFace);
+
+      card.querySelectorAll('[data-card-view]').forEach((button) => button.addEventListener('click', () => showCardFace(card, button.dataset.cardView)));
+      card.querySelectorAll('.card-back').forEach((button) => button.addEventListener('click', () => showCardFace(card, 'front')));
+      card.querySelector('[data-card-edit]').addEventListener('click', () => showToast(`Opening ${card.dataset.name} in Email Studio`));
+    });
+
+    familyTabs.forEach((tab) => tab.addEventListener('click', () => {
+      activeFamily = tab.dataset.family;
+      familyTabs.forEach((candidate) => {
+        const active = candidate === tab;
+        candidate.classList.toggle('active', active);
+        candidate.setAttribute('aria-selected', String(active));
+      });
+      updateResults();
+      const firstVisibleCard = cards.find((card) => !card.hidden);
+      if (firstVisibleCard) selectTemplate(firstVisibleCard);
+    }));
+    search.addEventListener('input', updateResults);
+    filter.addEventListener('change', updateResults);
+    document.querySelectorAll('[data-action]').forEach((button) => button.addEventListener('click', () => {
+      const selected = document.querySelector('.template-card.selected')?.dataset.name ?? 'template';
+      const messages = { new: 'New template flow', studio: `Opening ${selected} in Email Studio`, preview: `Previewing ${selected}`, duplicate: `Duplicate ${selected}`, more: `More actions for ${selected}` };
+      showToast(messages[button.dataset.action]);
+    }));
+    updateResults();
+  </script>
+</body>
+</html>
