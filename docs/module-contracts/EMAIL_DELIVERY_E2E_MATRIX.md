@@ -106,3 +106,36 @@ packages installed there do not reach the other worktrees.
 This has nothing to do with email delivery — it is why a runtime `Cannot find package 'mjml'`
 appeared while typecheck was clean, and it will bite any worktree that adds a dependency. Check
 `dir /AL` and resolve-from-`dist` before assuming a shared `node_modules`.
+
+---
+
+## Layer 2 — controlled real sends (2026-08-10)
+
+Four authorised sends to a single controlled address, from the local dev server against the
+non-production database. Recorded here because the fixtures behind them were deleted afterwards:
+evidence belongs in the repository, not in mutable non-production rows.
+
+| Origin | `use_case` | status | Resend message id |
+|---|---|---|---|
+| Test Email | `test_email` | `sent` | `fa18f421-e49a-47b8-a643-43f6ad6d8dfc` |
+| Onboarding invitation | `account_invite` | `sent` | `c9bd5e6a-2148-481e-bb2e-0bea626f1c5b` |
+| Notification | `notification` | `sent` | `f25fdaa9-3360-4ea2-bd05-9dc262fbc89f` |
+| Email Template Studio | `email_studio` | `sent` | `d5b24295-caa0-40d3-ba7e-d3dbc8eae626` |
+
+Every row carried `provider = resend`, the expected recipient and sender
+(`Siomac <store@smarthaven.shop>`), and a populated `sent_at`. Asserted explicitly: no delivery
+went to any other address, and none failed.
+
+⭐ **The cross-layer check:** the notification's `notification_deliveries` row (email channel) and
+its `email_deliveries` row carried the SAME `provider_message_id` — both SIOMAC audit layers point
+at one physical Resend message, which is the property the two-table design exists to guarantee.
+
+`delivered_at` was null on all four, correctly: only a verified provider webhook can set it, and
+none had been received. That is the deployment gap above, not a defect.
+
+### Known limits of this layer
+- **Studio images do not render** — the published fixture used placeholder asset URLs. Hosted
+  assets remain an open Studio item, so "visually matches preview" is NOT yet proven.
+- **Reply-To was unset**, so replies go to the From address. Open decision.
+- **Payslip was not sent** — it needs a fixture with a real date of birth, since the PDF password
+  is the employee's DOB as `DDMMYYYY`.
