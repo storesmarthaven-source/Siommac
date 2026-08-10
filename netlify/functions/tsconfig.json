@@ -25,7 +25,10 @@
     // Icon rendering is shared for the same reason, and additionally feeds the asset publisher:
     // scripts/publish-email-assets.mjs rasterizes from THIS list and THIS palette, so the icons
     // that exist in the bucket cannot drift from the icons the renderer is willing to emit.
-    "../../src/lib/emailIcons.ts"
+    "../../src/lib/emailIcons.ts",
+    // The starter-template catalogue, shared with the Studio's dev adapter so the browser and the
+    // server-side store cannot disagree about what a template is.
+    "../../src/lib/emailTemplateSeeds.ts"
   ],
   "exclude": ["node_modules"]
 }
