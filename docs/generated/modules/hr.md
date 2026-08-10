@@ -2,7 +2,7 @@
 
 # hr Module Map
 
-Source fingerprint: `75bb8d722c1d91072450b4a7`
+Source fingerprint: `82f8c479e45ee243383a07e9`
 
 Files: 265 | Symbols: 3076 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 37 | DB objects: 196 | E2E suites: 16
 
@@ -670,7 +670,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/hr/emailTemplateAssets.test.ts` | 27 |
 | frontend-api | `src/api/hr/emailTemplateAssets.ts` | 101 |
 | frontend-api | `src/api/hr/emailTemplates.dev.test.ts` | 76 |
-| frontend-api | `src/api/hr/emailTemplates.dev.ts` | 335 |
+| frontend-api | `src/api/hr/emailTemplates.dev.ts` | 296 |
 | frontend-api | `src/api/hr/emailTemplates.ts` | 163 |
 | frontend-api | `src/api/hr/employeeAccountSupport.ts` | 113 |
 | frontend-api | `src/api/hr/employeeExports.ts` | 123 |
@@ -747,7 +747,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/TransfersOverview.tsx` | 405 |
 | frontend-page | `src/components/sections/HR/TrinidadPhoneInput.tsx` | 65 |
 | frontend-page | `src/components/sections/HR/emailStudio/EmailTemplateBuilder.test.tsx` | 423 |
-| frontend-page | `src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx` | 6058 |
+| frontend-page | `src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx` | 6152 |
 | frontend-page | `src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx` | 145 |
 | frontend-page | `src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx` | 471 |
 | frontend-page | `src/components/sections/HR/emailStudio/EmailTemplateStudioPage.tsx` | 21 |
