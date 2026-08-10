@@ -122,6 +122,12 @@ export interface EmailBlockProperties {
   iconItems?: Array<{ icon: string; text: string; label?: string; meta?: string }>;
   /** Set on blocks owned by the shared header/footer chrome. */
   chromeRole?: EmailChromeRole;
+  /**
+   * Section opt-out from the document gutter: the band reaches the full content width.
+   * The genuine special case the single-authority rule allows — a coloured header or footer band
+   * is meant to touch both edges, and its own children carry the inset instead.
+   */
+  fullBleed?: boolean;
   /** Legal footer: repeatable policy links rendered as one separated row. */
   footerLinks?: EmailFooterLink[];
   /** Legal footer: closing notice under the links. Empty hides the line. */
@@ -197,6 +203,15 @@ export interface EmailTypographyScale {
 
 export interface EmailDocumentSettings {
   width: number;
+  /**
+   * The document's horizontal gutter, in px — the ONE authority for left/right inset.
+   *
+   * Sections own VERTICAL spacing only; blocks own their internal spacing. Before this existed the
+   * gutter was authored per section and had drifted to 0/8/34/36/48 inside a single template, so
+   * changing one value moved nothing predictably. A section may opt out with `fullBleed` when its
+   * band is genuinely meant to reach the edge.
+   */
+  pagePadding: number;
   outerBackground: string;
   contentBackground: string;
   linkColor: string;

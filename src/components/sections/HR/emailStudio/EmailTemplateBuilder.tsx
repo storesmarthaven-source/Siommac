@@ -33,6 +33,7 @@ import {
   cloneEmailBlock,
   applyDocumentTypography,
   EMAIL_FONT_STACK,
+  applyPageGutter,
   createCallToActionSection,
   createFirstDayOverviewSection,
   createBlankEmailDocument,
@@ -1473,22 +1474,29 @@ function SpacingEditor({
   value,
   max = 60,
   onChange,
+  axis = "all",
 }: {
   label: string;
   value: EmailBlockStyles["padding"];
   max?: number;
   onChange: (value: EmailBlockStyles["padding"]) => void;
+  /**
+   * `vertical` hides the horizontal sides for a top-level section, whose left/right inset is owned
+   * by the document's Page padding. Showing them would be a control that changes a value nothing
+   * renders — the accept-and-drop failure this codebase forbids.
+   */
+  axis?: "all" | "vertical";
 }): VNode {
-  const uniform = value.top === value.right &&
-    value.top === value.bottom &&
-    value.top === value.left;
+  const verticalOnly = axis === "vertical";
+  const uniform = verticalOnly
+    ? value.top === value.bottom
+    : value.top === value.right &&
+      value.top === value.bottom &&
+      value.top === value.left;
   const [perSide, setPerSide] = useState(!uniform);
-  const sides = [
-    ["top", "Top"],
-    ["right", "Right"],
-    ["bottom", "Bottom"],
-    ["left", "Left"],
-  ] as const;
+  const sides = (verticalOnly
+    ? ([["top", "Top"], ["bottom", "Bottom"]] as const)
+    : ([["top", "Top"], ["right", "Right"], ["bottom", "Bottom"], ["left", "Left"]] as const));
   return (
     <div class="etb-spacing-editor">
       <div class="etb-spacing-head">
@@ -1499,7 +1507,9 @@ function SpacingEditor({
           max={max}
           readout={uniform ? `${value.top}px` : "Mixed"}
           onChange={(next) =>
-            onChange({ top: next, right: next, bottom: next, left: next })
+            onChange(verticalOnly
+              ? { ...value, top: next, bottom: next }
+              : { top: next, right: next, bottom: next, left: next })
           }
         />
         <button
@@ -2730,6 +2740,25 @@ export function EmailTemplateBuilder({
     bottom: 0,
     left: 0,
   };
+
+  /**
+   * The canvas draws the SAME gutter projection the email renderer applies, so what the editor
+   * shows is what gets sent. It is render-only: every edit path resolves the block by id from
+   * `documentRef.current`, so a projected padding can never be written back into the model and
+   * become a second authority for the gutter.
+   */
+  const canvasBlocks = useMemo(
+    () => applyPageGutter(emailDocument).blocks,
+    [emailDocument],
+  );
+
+  /**
+   * A TOP-LEVEL section: the only kind whose horizontal inset comes from the document's Page
+   * padding. A nested section sits inside that gutter already and keeps its own four-side control.
+   */
+  const isPageSection =
+    selected?.type === "section" &&
+    emailDocument.blocks.some((block) => block.id === selected.id);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -4127,7 +4156,7 @@ export function EmailTemplateBuilder({
                     </p>
                   </div>
                 )}
-                {emailDocument.blocks.map((block, index) => (
+                {canvasBlocks.map((block, index) => (
                   <div
                     class={`etb-canvas-slot ${block.id === activeSectionId && index > 0 ? "section-gap-before" : ""} ${block.id === activeSectionId && index < emailDocument.blocks.length - 1 ? "section-gap-after" : ""} ${block.properties.chromeRole ? "is-chrome" : "is-content"}`}
                     style={`--etb-space-top:${block.properties.outerSpacing?.top ?? 0}px;--etb-space-right:${block.properties.outerSpacing?.right ?? 0}px;--etb-space-bottom:${block.properties.outerSpacing?.bottom ?? 0}px;--etb-space-left:${block.properties.outerSpacing?.left ?? 0}px`}
@@ -5536,8 +5565,33 @@ export function EmailTemplateBuilder({
                   <SpacingEditor
                     label="Inner spacing"
                     value={selected.styles.padding}
+                    axis={isPageSection ? "vertical" : "all"}
                     onChange={(value) => updateStyle("padding", value)}
                   />
+                  {isPageSection && (
+                    <label class="etb-toggle-field">
+                      <input
+                        type="checkbox"
+                        checked={selected.properties.fullBleed === true}
+                        onChange={(event) =>
+                          updateSelected((block) => ({
+                            ...block,
+                            properties: {
+                              ...block.properties,
+                              fullBleed: event.currentTarget.checked,
+                            },
+                          }))
+                        }
+                      />
+                      <span>
+                        Full bleed
+                        <small>
+                          Ignore the page padding so this band reaches both
+                          edges. Its own blocks supply the inset.
+                        </small>
+                      </span>
+                    </label>
+                  )}
                   <SpacingEditor
                     label="Outer spacing"
                     value={selectedOuterSpacing}
@@ -5704,6 +5758,25 @@ export function EmailTemplateBuilder({
                       commit({
                         ...documentRef.current,
                         settings: { ...documentRef.current.settings, width },
+                      })
+                    }
+                  />
+                  {/*
+                    The ONE horizontal gutter for the whole email. Sections own vertical spacing;
+                    blocks own their internal spacing. Before this existed the inset was authored
+                    per section and had drifted to 0/8/34/36/48 inside a single template, so
+                    changing one number moved nothing predictably.
+                  */}
+                  <SliderField
+                    label="Page padding"
+                    value={emailDocument.settings.pagePadding}
+                    min={0}
+                    max={72}
+                    step={1}
+                    onChange={(pagePadding) =>
+                      commit({
+                        ...documentRef.current,
+                        settings: { ...documentRef.current.settings, pagePadding },
                       })
                     }
                   />

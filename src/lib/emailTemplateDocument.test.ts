@@ -7,6 +7,7 @@ import {
   createEmailBlock,
   createEmailSection,
   createStarterEmailDocument,
+  applyPageGutter,
   normalizeEmailDocument,
   renderEmailMjml,
   renderEmailPreview,
@@ -214,6 +215,63 @@ describe('emailTemplateDocument', () => {
     // Ordinary content keeps the normal section chrome.
     const text = createEmailSection([createEmailBlock('paragraph')]);
     expect(text.styles.backgroundColor).toBe('#ffffff');
+  });
+
+  describe('page padding — one authority for the horizontal gutter', () => {
+    it('lifts drifted per-section gutters onto the document', () => {
+      // The starters authored 0/8/34/36/48 within a single template, which is why changing one
+      // section moved nothing predictably.
+      const doc = createStarterEmailDocument('onboarding');
+      expect(doc.settings.pagePadding).toBeGreaterThan(0);
+      for (const section of doc.blocks) {
+        expect(section.styles.padding.left).toBe(0);
+        expect(section.styles.padding.right).toBe(0);
+      }
+    });
+
+    it('keeps a zero-gutter band full-bleed instead of re-insetting it', () => {
+      // A coloured header/footer band is MEANT to touch both edges. Migrating it to the new
+      // document gutter would inset it and break the design.
+      const doc = createStarterEmailDocument('onboarding');
+      const bleed = doc.blocks.filter(s => s.properties.fullBleed);
+      expect(bleed.length).toBe(2);
+      const rendered = applyPageGutter(doc);
+      for (const section of rendered.blocks) {
+        const expected = section.properties.fullBleed ? 0 : doc.settings.pagePadding;
+        expect(section.styles.padding.left).toBe(expected);
+        expect(section.styles.padding.right).toBe(expected);
+      }
+    });
+
+    it('derives the gutter from the MEDIAN, so an outlier band cannot set it', () => {
+      const base = createStarterEmailDocument('onboarding');
+      const legacy = JSON.parse(JSON.stringify(base));
+      delete legacy.settings.pagePadding;
+      // Four content sections at 30, plus one 96px outlier. The mean would be 43; the median is 30.
+      legacy.blocks.forEach((s: { styles: { padding: Record<string, number> } }, i: number) => {
+        const value = i === 0 ? 96 : 30;
+        s.styles.padding.left = value;
+        s.styles.padding.right = value;
+      });
+      expect(normalizeEmailDocument(legacy).settings.pagePadding).toBe(30);
+    });
+
+    it('is applied at render time, never written back into the sections', () => {
+      // Two copies of the gutter could disagree — the exact problem this replaced.
+      const doc = createStarterEmailDocument('onboarding');
+      const before = JSON.stringify(doc);
+      renderEmailMjml(doc, 'Welcome');
+      renderEmailPreview(doc, 'Welcome');
+      expect(JSON.stringify(doc)).toBe(before);
+    });
+
+    it('changing the setting moves the rendered gutter', () => {
+      const doc = createStarterEmailDocument('onboarding');
+      const wide = renderEmailMjml({ ...doc, settings: { ...doc.settings, pagePadding: 60 } }, 'W');
+      const tight = renderEmailMjml({ ...doc, settings: { ...doc.settings, pagePadding: 4 } }, 'W');
+      expect(wide).toContain('60px');
+      expect(wide).not.toBe(tight);
+    });
   });
 
   /**

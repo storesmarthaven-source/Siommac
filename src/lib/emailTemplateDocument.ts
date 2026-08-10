@@ -254,12 +254,78 @@ export function normalizeEmailDocument(document: EmailEditorSchema): EmailEditor
     return normalized;
   };
 
+  const sections = document.blocks.map(block => isEmailContainer(block)
+    ? normalizeContainer(structuredClone(block))
+    : normalizeContainer(createEmailSection([structuredClone(block)])));
+
+  // ── page-gutter migration ──
+  // Documents authored before `pagePadding` existed carry the gutter on each section, where it had
+  // drifted (0/8/34/36/48 within one template). Lift it to the document ONCE, here in the model, so
+  // the editor immediately shows the value it will actually render with.
+  const migrating = (document.settings as Partial<EmailDocumentSettings> | undefined)?.pagePadding === undefined;
+  const settings = normalizeEmailSettings(
+    migrating
+      ? { ...document.settings, pagePadding: derivePagePadding(sections) }
+      : document.settings,
+  );
+
   return {
     ...structuredClone(document),
-    settings: normalizeEmailSettings(document.settings),
-    blocks: document.blocks.map(block => isEmailContainer(block)
-      ? normalizeContainer(structuredClone(block))
-      : normalizeContainer(createEmailSection([structuredClone(block)]))),
+    settings,
+    // Horizontal padding is no longer a section concern. A section that had NO gutter was
+    // deliberately full-bleed (a coloured band reaching both edges), and that intent is preserved
+    // explicitly rather than being silently re-inset by the new document-wide value.
+    blocks: migrating ? sections.map(section => ({
+      ...section,
+      properties: section.styles.padding.left === 0 && section.styles.padding.right === 0
+        ? { ...section.properties, fullBleed: true }
+        : section.properties,
+      styles: { ...section.styles, padding: { ...section.styles.padding, left: 0, right: 0 } },
+    })) : sections,
+  };
+}
+
+/**
+ * The gutter a pre-`pagePadding` document was really using: the MEDIAN non-zero horizontal padding,
+ * counted once per section.
+ *
+ * ⭐ Median, not mode and not mean. The mode is useless here — a section contributes its value
+ * twice (left and right), so every distinct value ties and the tie-break decides, which picked a
+ * 48px outlier band over the 36px the content actually used. The mean is dragged by the same
+ * outliers (a full-width 48px band and an 8px footer shell). The median lands on what the reader
+ * perceives as the page margin, because that is whatever the bulk of the content sections share.
+ *
+ * ⛔ Full-bleed sections (zero padding) are excluded — they are not expressing a gutter at all, and
+ * counting their zeros would drag the result toward nothing.
+ */
+function derivePagePadding(sections: EmailTemplateBlock[]): number {
+  const gutters = sections
+    .map(section => (section.styles.padding.left + section.styles.padding.right) / 2)
+    .filter(value => value > 0)
+    .sort((a, b) => a - b);
+  if (!gutters.length) return DEFAULT_EMAIL_PAGE_PADDING;
+  const mid = Math.floor(gutters.length / 2);
+  const median = gutters.length % 2 === 1
+    ? (gutters[mid] as number)
+    : ((gutters[mid - 1] as number) + (gutters[mid] as number)) / 2;
+  return Math.round(median);
+}
+
+/**
+ * Project the document gutter onto its top-level sections for rendering.
+ *
+ * ⭐ Render-time, not stored. The model keeps ONE copy of the gutter (in settings); writing it back
+ * onto every section would create a second authority that could disagree with the first — exactly
+ * the problem this replaced. Nested sections are untouched: they sit INSIDE the gutter already.
+ */
+export function applyPageGutter(document: EmailEditorSchema): EmailEditorSchema {
+  const gutter = Math.max(0, document.settings.pagePadding ?? DEFAULT_EMAIL_PAGE_PADDING);
+  return {
+    ...document,
+    blocks: document.blocks.map(block => {
+      if (block.type !== 'section' || block.properties.fullBleed) return block;
+      return { ...block, styles: { ...block.styles, padding: { ...block.styles.padding, left: gutter, right: gutter } } };
+    }),
   };
 }
 
@@ -272,8 +338,15 @@ export const DEFAULT_EMAIL_TYPOGRAPHY: EmailTypographyScale = {
   headingLineHeight: 1.25,
 };
 
+/**
+ * The gutter every starter family already used for its main content sections (36px). Chosen so a
+ * document migrated onto the new model looks unchanged where it was already consistent.
+ */
+export const DEFAULT_EMAIL_PAGE_PADDING = 36;
+
 export const DEFAULT_EMAIL_SETTINGS: EmailDocumentSettings = {
   width: 640,
+  pagePadding: DEFAULT_EMAIL_PAGE_PADDING,
   outerBackground: '#eef1f5',
   contentBackground: '#ffffff',
   linkColor: '#0b57d0',
@@ -568,7 +641,10 @@ const legalSection = (): EmailTemplateBlock => {
     html: '{{company.legalName}}<br><span style="font-weight:400">{{company.address}}</span>',
   }, {
     backgroundColor: '#ffffff', color: '#74849b', fontSize: 12, lineHeight: 1.55,
-    padding: { top: 28, right: 48, bottom: 34, left: 48 },
+    // No horizontal padding: the page gutter owns the inset. This block used to carry 48px to
+    // compensate for a section that only had 8px, which left the footer indented further than
+    // every other line on the page — the drift that made a single gutter setting necessary.
+    padding: { top: 28, right: 0, bottom: 34, left: 0 },
   });
   footer.name = 'Legal Footer';
   const section = emailSection(footer);
@@ -1040,7 +1116,14 @@ export function createStarterEmailDocument(family: EmailTemplateFamily, triggerK
 
   sections.push(...supportAndLegal().map(block => asChrome(block, 'footer')));
   document.blocks = sections;
-  return document;
+
+  // The section factories above author their own horizontal padding, which is how they read best
+  // as source. Run the result through the SAME migration a legacy document takes, so a starter and
+  // a migrated template converge on exactly one shape and the gutter has a single home. Dropping
+  // `pagePadding` is what selects that path — it is not a value the starter should hardcode.
+  const settings: Partial<EmailDocumentSettings> = { ...document.settings };
+  delete settings.pagePadding;
+  return normalizeEmailDocument({ ...document, settings: settings as EmailDocumentSettings });
 }
 
 export function cloneEmailBlock(block: EmailTemplateBlock): EmailTemplateBlock {
@@ -1336,7 +1419,10 @@ function renderBlock(block: EmailTemplateBlock, target: EmailRenderTarget): stri
  * with bespoke geometry (surfaces, smart blocks, transactional designs) embed
  * their table markup via mj-raw, which MJML passes through untouched.
  */
-export function renderEmailMjml(document: EmailEditorSchema, title: string): string {
+export function renderEmailMjml(input: EmailEditorSchema, title: string): string {
+  // The document gutter is projected onto top-level sections here, so every renderer gets the
+  // same inset from the same single setting.
+  const document = applyPageGutter(input);
   const settings = normalizeEmailSettings(document.settings);
   const { typography } = settings;
   const pad = (spacing: EmailTemplateBlock['styles']['padding']): string =>
@@ -1487,7 +1573,8 @@ export function renderEmailMjml(document: EmailEditorSchema, title: string): str
     + `</mjml>`;
 }
 
-export function renderEmailPreview(document: EmailEditorSchema, title: string): { html: string; text: string } {
+export function renderEmailPreview(input: EmailEditorSchema, title: string): { html: string; text: string } {
+  const document = applyPageGutter(input);
   const rows = document.blocks.map(block => renderBlock(block, 'canvas')).join('');
   const settings = normalizeEmailSettings(document.settings);
   const { typography } = settings;
