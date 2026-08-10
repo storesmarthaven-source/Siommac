@@ -12,7 +12,7 @@ npm run test:e2e -- emailProgramme
 ⚠ Run it by that **exact** name. The runner selects suites by substring, so `-- email` matches the
 six real suites *and* the aggregate, executing everything twice.
 
-**63 assertions across 6 suites. No test sends real email.**
+**64 assertions across 6 suites. No test sends real email.**
 
 ---
 
@@ -25,11 +25,12 @@ six real suites *and* the aggregate, executing everything twice.
 | `emailWebhook.mjs` | 10 | signature verification, idempotency, monotonic lifecycle |
 | `emailRetry.mjs` | 17 | retry status gate + origin dispatch (incl. `emailRetryPayslip`) |
 | `emailRetryPayslip.mjs` | 7 | payslip rebuild from the immutable snapshot |
-| `emailTemplateSend.mjs` | 10 | Studio → server compile → canonical delivery |
+| `emailTemplateSend.mjs` | 11 | Studio → server compile → asset resolution → canonical delivery |
 | `emailReconciliation.mjs` | 10 | operator surfaces, webhook-capability gate, permissions |
 
-Unit coverage that needs no server: `tests/vitest/emailDelivery.test.ts` (34) and
-`tests/vitest/webhookSignature.test.ts` (15) — provider SDK mocked, pure crypto and pure rules.
+Unit coverage that needs no server: `tests/vitest/emailDelivery.test.ts` (34),
+`tests/vitest/webhookSignature.test.ts` (15) and `tests/vitest/emailAssetResolver.test.ts` (11) —
+provider SDK mocked, pure crypto and pure string rules. **60 in total.**
 
 ---
 
@@ -44,6 +45,7 @@ Unit coverage that needs no server: `tests/vitest/emailDelivery.test.ts` (34) an
 | 5 | Payslip evidence | `emailRetryPayslip` | *an unrendered payslip refuses* · *no date of birth ⇒ REFUSED* |
 | 6 | Payslip retry adds no `finance_payslip_deliveries` row | `emailRetryPayslip` | every case runs through `retryWithCount()`, which brackets the retry with the table count |
 | 7 | Studio compile + send evidence | `emailTemplateSend` | *a valid template COMPILES server-side and reports its version* |
+| 7b | Studio assets resolve to public URLs | `emailTemplateSend` | *AUTHORED asset paths are RESOLVED to public URLs, not refused* · *a relative path OUTSIDE the authored prefix is still REFUSED* |
 | 8 | Studio invalid template/variable refusal | `emailTemplateSend` | *missing variables are REFUSED and named* · *an unresolved token in the SUBJECT is caught too* · *relative asset paths are REFUSED* · *a template with no PUBLISHED version cannot be sent* |
 | 9 | Webhook signature rejection | `emailWebhook` | *an INVALID signature is rejected with 401 and writes nothing* · *a body altered after signing is rejected* |
 | 10 | `sent` → `delivered` | `emailWebhook` | *email.delivered advances the delivery and stamps delivered_at* |
@@ -134,8 +136,11 @@ at one physical Resend message, which is the property the two-table design exist
 none had been received. That is the deployment gap above, not a defect.
 
 ### Known limits of this layer
-- **Studio images do not render** — the published fixture used placeholder asset URLs. Hosted
-  assets remain an open Studio item, so "visually matches preview" is NOT yet proven.
+- **Studio images did not render in that send** — the fixture used placeholder asset URLs, because
+  hosted assets did not exist yet. ✅ RESOLVED afterwards: `npm run email:publish-assets` publishes
+  the 12 email illustrations to the public `branding/email/` bucket, and the send path now resolves
+  authored `/assets/images/email/...` paths to those URLs server-side. A re-send would render.
+  Visual parity is therefore *unblocked* but still unproven — it needs one more approved send.
 - **Reply-To was unset**, so replies go to the From address. Open decision.
 - **Payslip was not sent** — it needs a fixture with a real date of birth, since the PDF password
   is the employee's DOB as `DDMMYYYY`.

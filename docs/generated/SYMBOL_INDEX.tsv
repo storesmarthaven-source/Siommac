@@ -222,6 +222,11 @@ canUserSuppressMessage	function	platform	true		netlify/functions/lib/deliveryPro
 DeliveryProtectionError	class	platform	true		netlify/functions/lib/deliveryProtection.ts	33	
 ParticipantGuardRow	interface	platform	true		netlify/functions/lib/deliveryProtection.ts	38	
 assertCanRemoveParticipant	function	platform	true		netlify/functions/lib/deliveryProtection.ts	48	
+AUTHORED_PREFIX	variable	platform	false		netlify/functions/lib/email/emailAssetResolver.ts	19	
+emailAssetBaseUrl	function	platform	true		netlify/functions/lib/email/emailAssetResolver.ts	28	
+AssetResolution	interface	platform	true		netlify/functions/lib/email/emailAssetResolver.ts	36	
+isAbsolute	function	platform	false		netlify/functions/lib/email/emailAssetResolver.ts	44	
+resolveEmailAssets	function	platform	true		netlify/functions/lib/email/emailAssetResolver.ts	53	
 EmailSender	interface	platform	true		netlify/functions/lib/email/emailConfig.ts	19	
 EmailConfig	interface	platform	true		netlify/functions/lib/email/emailConfig.ts	28	
 EmailConfigProblem	interface	platform	true		netlify/functions/lib/email/emailConfig.ts	36	
@@ -283,15 +288,14 @@ normaliseRecipients	function	platform	false		netlify/functions/lib/email/emailSe
 sendEmail	function	platform	true		netlify/functions/lib/email/emailService.ts	97	
 EmailDeliveryStatus	interface	platform	true		netlify/functions/lib/email/emailService.ts	182	
 getEmailDeliveryStatus	function	platform	true		netlify/functions/lib/email/emailService.ts	203	
-TemplateSendRefusal	type	platform	true		netlify/functions/lib/email/emailTemplateSend.ts	25	
-TemplateSendResult	type	platform	true		netlify/functions/lib/email/emailTemplateSend.ts	32	
-TOKEN_RE	variable	platform	false		netlify/functions/lib/email/emailTemplateSend.ts	46	
-resolveTemplateVariables	function	platform	true		netlify/functions/lib/email/emailTemplateSend.ts	55	
-findUnhostedAssets	function	platform	true		netlify/functions/lib/email/emailTemplateSend.ts	75	
-VersionRow	interface	platform	false		netlify/functions/lib/email/emailTemplateSend.ts	87	
-TemplateRow	interface	platform	false		netlify/functions/lib/email/emailTemplateSend.ts	91	
-TemplateSendArgs	interface	platform	true		netlify/functions/lib/email/emailTemplateSend.ts	93	
-sendTemplateEmail	function	platform	true		netlify/functions/lib/email/emailTemplateSend.ts	104	
+TemplateSendRefusal	type	platform	true		netlify/functions/lib/email/emailTemplateSend.ts	26	
+TemplateSendResult	type	platform	true		netlify/functions/lib/email/emailTemplateSend.ts	33	
+TOKEN_RE	variable	platform	false		netlify/functions/lib/email/emailTemplateSend.ts	47	
+resolveTemplateVariables	function	platform	true		netlify/functions/lib/email/emailTemplateSend.ts	56	
+VersionRow	interface	platform	false		netlify/functions/lib/email/emailTemplateSend.ts	69	
+TemplateRow	interface	platform	false		netlify/functions/lib/email/emailTemplateSend.ts	73	
+TemplateSendArgs	interface	platform	true		netlify/functions/lib/email/emailTemplateSend.ts	75	
+sendTemplateEmail	function	platform	true		netlify/functions/lib/email/emailTemplateSend.ts	86	
 EmailAttachment	interface	platform	true		netlify/functions/lib/email/emailTransport.ts	18	
 EmailMessage	interface	platform	true		netlify/functions/lib/email/emailTransport.ts	26	
 NormalisedEmailMessage	interface	platform	true		netlify/functions/lib/email/emailTransport.ts	39	
@@ -4152,8 +4156,8 @@ title	variable	testing	true	test	scripts/e2e/suites/emailTemplateSend.mjs	17
 run	function	testing	true	test	scripts/e2e/suites/emailTemplateSend.mjs	19	
 starterSchema	function	testing	false	test	scripts/e2e/suites/emailTemplateSend.mjs	44	run
 seedTemplate	function	testing	false	test	scripts/e2e/suites/emailTemplateSend.mjs	53	run
-deriveVariables	function	testing	false	test	scripts/e2e/suites/emailTemplateSend.mjs	76	run
-send	function	testing	false	test	scripts/e2e/suites/emailTemplateSend.mjs	89	run
+deriveVariables	function	testing	false	test	scripts/e2e/suites/emailTemplateSend.mjs	81	run
+send	function	testing	false	test	scripts/e2e/suites/emailTemplateSend.mjs	94	run
 title	variable	testing	true	test	scripts/e2e/suites/emailWebhook.mjs	21	
 run	function	testing	true	test	scripts/e2e/suites/emailWebhook.mjs	23	
 sign	function	testing	false	test	scripts/e2e/suites/emailWebhook.mjs	44	run
@@ -4603,6 +4607,19 @@ r	variable	payroll	false		scripts/preflight-paygroup-overlaps.mjs	35
 conflicts	array	payroll	false		scripts/preflight-paygroup-overlaps.mjs	37	
 fixed	variable	payroll	false		scripts/preflight-paygroup-overlaps.mjs	70	
 manual	variable	payroll	false		scripts/preflight-paygroup-overlaps.mjs	70	
+DRY	variable	platform	false		scripts/publish-email-assets.mjs	20	
+SOURCE_DIR	variable	platform	false		scripts/publish-email-assets.mjs	21	
+BUCKET	variable	platform	false		scripts/publish-email-assets.mjs	22	
+PREFIX	variable	platform	false		scripts/publish-email-assets.mjs	23	
+env	variable	platform	false		scripts/publish-email-assets.mjs	25	
+key	variable	platform	false		scripts/publish-email-assets.mjs	30	
+CONTENT_TYPE	object	platform	false		scripts/publish-email-assets.mjs	34	
+sb	variable	platform	false		scripts/publish-email-assets.mjs	39	
+dir	variable	platform	false		scripts/publish-email-assets.mjs	42	
+files	variable	platform	false		scripts/publish-email-assets.mjs	43	
+failed	variable	platform	false		scripts/publish-email-assets.mjs	46	
+published	variable	platform	false		scripts/publish-email-assets.mjs	46	
+file	variable	platform	false		scripts/publish-email-assets.mjs	48	
 URL	variable	security	false		scripts/recover-2fa.mjs	27	
 KEY	variable	security	false		scripts/recover-2fa.mjs	28	
 username	variable	security	false		scripts/recover-2fa.mjs	34	
@@ -13362,6 +13379,8 @@ makeAttachment	function	testing	false	test	tests/vitest/attachmentGrouping.regre
 TODAY	variable	testing	false	test	tests/vitest/documentHealth.test.ts	14	
 req	function	testing	false	test	tests/vitest/documentHealth.test.ts	16	
 doc	function	testing	false	test	tests/vitest/documentHealth.test.ts	24	
+ENV	variable	testing	false	test	tests/vitest/emailAssetResolver.test.ts	11	
+BASE	variable	testing	false	test	tests/vitest/emailAssetResolver.test.ts	12	
 sendMock	variable	testing	false	test	tests/vitest/emailDelivery.test.ts	13	
 openMock	variable	testing	false	test	tests/vitest/emailDelivery.test.ts	20	
 advanceMock	variable	testing	false	test	tests/vitest/emailDelivery.test.ts	21	

@@ -50,7 +50,7 @@ export default async function run(h) {
     return JSON.parse(json);
   };
 
-  const seedTemplate = async (suffix, { published = true, hostAssets = false, subject = 'Welcome' } = {}) => {
+  const seedTemplate = async (suffix, { published = true, hostAssets = false, subject = 'Welcome', strayAsset = null } = {}) => {
     const key = `tpl_${TAG}_${suffix}`.toLowerCase();
     const { data: tpl, error } = await sb.from('email_templates').insert({
       template_key: key, name: `Studio E2E ${suffix}`, family: 'onboarding', trigger_key: 'onboarding.welcome',
@@ -60,7 +60,12 @@ export default async function run(h) {
 
     const { error: verErr } = await sb.from('email_template_versions').insert({
       template_id: tpl.id, version_no: 1, subject,
-      editor_schema: starterSchema({ hostAssets }),
+      editor_schema: strayAsset
+        // An image the resolver has no mapping for, to prove resolution did not become a
+        // catch-all that invents URLs.
+        ? JSON.parse(JSON.stringify(starterSchema({ hostAssets }))
+            .replace(/"https:\/\/cdn\.example\.com\/company-logo\.png"/, JSON.stringify(strayAsset)))
+        : starterSchema({ hostAssets }),
       status: published ? 'published' : 'draft',
     });
     expect(!verErr, `seed version: ${verErr?.message ?? ''}`);
@@ -151,15 +156,26 @@ export default async function run(h) {
       `the subject's token is named — got ${JSON.stringify(r.body.data.detail)}`);
   });
 
-  await test('⭐ relative asset paths are REFUSED — they arrive broken in a mail client', async () => {
-    // The Studio authors against repo-relative paths, which resolve on the canvas and resolve to
-    // nothing in an inbox. A real send must not ship a broken image.
-    const key = await seedTemplate('assets', { hostAssets: false });
+  await test('⭐ AUTHORED asset paths are RESOLVED to public URLs, not refused', async () => {
+    // The Studio authors `/assets/images/email/...`. Those used to be refused; the server now maps
+    // them to the published public bucket at send time, so a template stays portable and no author
+    // has to paste an infrastructure URL into content.
+    const key = await seedTemplate('resolved', { hostAssets: false });
     const r = await send({ templateKey: key, to: 'a@example.com', variables: ALL_VARIABLES });
-    fails(r, 'unhosted assets');
+    ok(r, `authored paths must resolve: ${r.body.message ?? ''}`);
+    expect(r.body.data.dryRun === true, 'still a dry run');
+  });
+
+  await test('⛔ a relative path OUTSIDE the authored prefix is still REFUSED', async () => {
+    // Resolution widens what can be sent; it must not weaken the guarantee. An unknown relative
+    // path is NOT pointed at the email bucket — inventing a URL would swap a visible refusal for a
+    // broken image in a real inbox.
+    const key = await seedTemplate('stray', { hostAssets: true, strayAsset: '/uploads/not-an-email-asset.png' });
+    const r = await send({ templateKey: key, to: 'a@example.com', variables: ALL_VARIABLES });
+    fails(r, 'a stray relative path cannot be reached by a mail client');
     expect(r.status === 422, `expected 422, got ${r.status}`);
     expect(r.body.data.refusal === 'unhosted_assets', `got ${r.body.data.refusal}`);
-    expect((r.body.data.detail ?? []).some(a => a.startsWith('/assets/')),
+    expect((r.body.data.detail ?? []).includes('/uploads/not-an-email-asset.png'),
       `the offending path is named — got ${JSON.stringify(r.body.data.detail)}`);
   });
 

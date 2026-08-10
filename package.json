@@ -30,7 +30,8 @@
     "gen:types": "supabase gen types typescript --project-id YOUR_PROJECT_ID > types/supabase-generated.ts",
     "prepare": "husky",
     "lint:backend": "eslint netlify/functions --ext .ts",
-    "lint": "npm run lint:frontend && npm run lint:backend"
+    "lint": "npm run lint:frontend && npm run lint:backend",
+    "email:publish-assets": "node scripts/publish-email-assets.mjs"
   },
   "jest": {
     "testEnvironment": "node",

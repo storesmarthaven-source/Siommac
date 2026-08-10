@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `5c15683dd8995f06bc7a5e3da947782fe1e4ea8a`  
-Source fingerprint: `55d1bfcc66339ec6096d161d`  
+Source HEAD: `8fc455cae4939908171508f1352a34a0750a263f`  
+Source fingerprint: `75bb8d722c1d91072450b4a7`  
 Generator version: `1`
 
 ## Use
@@ -19,7 +19,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1379 | 14052 | 51 | 978 | 979 | 17 | 356 | 1436 | 91 | 2729 |
+| 1382 | 14071 | 51 | 978 | 979 | 17 | 356 | 1436 | 91 | 2730 |
 
 ## Modules
 
@@ -34,8 +34,8 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | security | 46 | 387 | 0 | 51 | 51 | 31 | 65 | 4 | [open](modules/security.md) |
 | settings | 43 | 250 | 0 | 26 | 26 | 18 | 21 | 2 | [open](modules/settings.md) |
 | widgets | 72 | 581 | 21 | 15 | 15 | 11 | 14 | 1 | [open](modules/widgets.md) |
-| platform | 326 | 3047 | 0 | 38 | 53 | 50 | 327 | 0 | [open](modules/platform.md) |
-| testing | 45 | 219 | 0 | 0 | 0 | 0 | 0 | 16 | [open](modules/testing.md) |
+| platform | 328 | 3064 | 0 | 38 | 53 | 50 | 327 | 0 | [open](modules/platform.md) |
+| testing | 46 | 221 | 0 | 0 | 0 | 0 | 0 | 16 | [open](modules/testing.md) |
 | enterprise | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | [open](modules/enterprise.md) |
 
 ## Widget and Tile Directory

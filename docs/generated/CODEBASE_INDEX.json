@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "5c15683dd8995f06bc7a5e3da947782fe1e4ea8a",
+    "head": "8fc455cae4939908171508f1352a34a0750a263f",
     "branch": "feat/email-delivery-resend",
-    "fingerprint": "55d1bfcc66339ec6096d161d",
-    "indexedFiles": 1734
+    "fingerprint": "75bb8d722c1d91072450b4a7",
+    "indexedFiles": 1737
   },
   "summary": {
-    "files": 1379,
-    "symbols": 14052,
+    "files": 1382,
+    "symbols": 14071,
     "widgets": 51,
     "routes": 978,
     "routeDefinitions": 979,
@@ -16,7 +16,7 @@
     "apiCalls": 356,
     "databaseObjects": 1436,
     "e2eSuites": 91,
-    "e2eTests": 2729
+    "e2eTests": 2730
   },
   "modules": [
     {
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 326,
-        "symbols": 3047,
+        "files": 328,
+        "symbols": 3064,
         "widgets": 0,
         "routes": 38,
         "routeDefinitions": 53,
@@ -152,8 +152,8 @@
     {
       "id": "testing",
       "counts": {
-        "files": 45,
-        "symbols": 219,
+        "files": 46,
+        "symbols": 221,
         "widgets": 0,
         "routes": 0,
         "routeDefinitions": 0,
@@ -311,6 +311,13 @@
       "hash": "e02779f90f92298f"
     },
     {
+      "path": "netlify/functions/lib/email/emailAssetResolver.ts",
+      "module": "platform",
+      "role": "backend-lib",
+      "lines": 78,
+      "hash": "7cc1bd73b97a371b"
+    },
+    {
       "path": "netlify/functions/lib/email/emailConfig.ts",
       "module": "platform",
       "role": "backend-lib",
@@ -349,8 +356,8 @@
       "path": "netlify/functions/lib/email/emailTemplateSend.ts",
       "module": "platform",
       "role": "backend-lib",
-      "lines": 222,
-      "hash": "86a65ec238a9d6af"
+      "lines": 208,
+      "hash": "881b2f42d6a9b84e"
     },
     {
       "path": "netlify/functions/lib/email/emailTransport.ts",
@@ -2694,8 +2701,8 @@
       "path": "scripts/e2e/suites/emailTemplateSend.mjs",
       "module": "testing",
       "role": "e2e-suite",
-      "lines": 205,
-      "hash": "830c2f393c3e5264"
+      "lines": 221,
+      "hash": "48531958d096d590"
     },
     {
       "path": "scripts/e2e/suites/emailWebhook.mjs",
@@ -3277,6 +3284,13 @@
       "role": "tooling",
       "lines": 83,
       "hash": "c10b5aca7bb8fa7a"
+    },
+    {
+      "path": "scripts/publish-email-assets.mjs",
+      "module": "platform",
+      "role": "tooling",
+      "lines": 70,
+      "hash": "3c31ff56c35a3508"
     },
     {
       "path": "scripts/recover-2fa.mjs",
@@ -9474,6 +9488,13 @@
       "hash": "059cc95427c3a45a"
     },
     {
+      "path": "tests/vitest/emailAssetResolver.test.ts",
+      "module": "testing",
+      "role": "test",
+      "lines": 86,
+      "hash": "b91a0d9d2d9de494"
+    },
+    {
       "path": "tests/vitest/emailDelivery.test.ts",
       "module": "testing",
       "role": "test",
@@ -12063,6 +12084,56 @@
       "tags": []
     },
     {
+      "name": "AUTHORED_PREFIX",
+      "kind": "variable",
+      "file": "netlify/functions/lib/email/emailAssetResolver.ts",
+      "line": 19,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "emailAssetBaseUrl",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailAssetResolver.ts",
+      "line": 28,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AssetResolution",
+      "kind": "interface",
+      "file": "netlify/functions/lib/email/emailAssetResolver.ts",
+      "line": 36,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "isAbsolute",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailAssetResolver.ts",
+      "line": 44,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "resolveEmailAssets",
+      "kind": "function",
+      "file": "netlify/functions/lib/email/emailAssetResolver.ts",
+      "line": 53,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "EmailSender",
       "kind": "interface",
       "file": "netlify/functions/lib/email/emailConfig.ts",
@@ -12676,7 +12747,7 @@
       "name": "TemplateSendRefusal",
       "kind": "type",
       "file": "netlify/functions/lib/email/emailTemplateSend.ts",
-      "line": 25,
+      "line": 26,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -12686,7 +12757,7 @@
       "name": "TemplateSendResult",
       "kind": "type",
       "file": "netlify/functions/lib/email/emailTemplateSend.ts",
-      "line": 32,
+      "line": 33,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -12696,7 +12767,7 @@
       "name": "TOKEN_RE",
       "kind": "variable",
       "file": "netlify/functions/lib/email/emailTemplateSend.ts",
-      "line": 46,
+      "line": 47,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -12706,17 +12777,7 @@
       "name": "resolveTemplateVariables",
       "kind": "function",
       "file": "netlify/functions/lib/email/emailTemplateSend.ts",
-      "line": 55,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "findUnhostedAssets",
-      "kind": "function",
-      "file": "netlify/functions/lib/email/emailTemplateSend.ts",
-      "line": 75,
+      "line": 56,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -12726,7 +12787,7 @@
       "name": "VersionRow",
       "kind": "interface",
       "file": "netlify/functions/lib/email/emailTemplateSend.ts",
-      "line": 87,
+      "line": 69,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -12736,7 +12797,7 @@
       "name": "TemplateRow",
       "kind": "interface",
       "file": "netlify/functions/lib/email/emailTemplateSend.ts",
-      "line": 91,
+      "line": 73,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -12746,7 +12807,7 @@
       "name": "TemplateSendArgs",
       "kind": "interface",
       "file": "netlify/functions/lib/email/emailTemplateSend.ts",
-      "line": 93,
+      "line": 75,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -12756,7 +12817,7 @@
       "name": "sendTemplateEmail",
       "kind": "function",
       "file": "netlify/functions/lib/email/emailTemplateSend.ts",
-      "line": 104,
+      "line": 86,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -51580,7 +51641,7 @@
       "name": "deriveVariables",
       "kind": "function",
       "file": "scripts/e2e/suites/emailTemplateSend.mjs",
-      "line": 76,
+      "line": 81,
       "module": "testing",
       "exported": false,
       "container": "run",
@@ -51592,7 +51653,7 @@
       "name": "send",
       "kind": "function",
       "file": "scripts/e2e/suites/emailTemplateSend.mjs",
-      "line": 89,
+      "line": 94,
       "module": "testing",
       "exported": false,
       "container": "run",
@@ -56766,6 +56827,136 @@
       "file": "scripts/preflight-paygroup-overlaps.mjs",
       "line": 70,
       "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DRY",
+      "kind": "variable",
+      "file": "scripts/publish-email-assets.mjs",
+      "line": 20,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SOURCE_DIR",
+      "kind": "variable",
+      "file": "scripts/publish-email-assets.mjs",
+      "line": 21,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "BUCKET",
+      "kind": "variable",
+      "file": "scripts/publish-email-assets.mjs",
+      "line": 22,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PREFIX",
+      "kind": "variable",
+      "file": "scripts/publish-email-assets.mjs",
+      "line": 23,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "env",
+      "kind": "variable",
+      "file": "scripts/publish-email-assets.mjs",
+      "line": 25,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "key",
+      "kind": "variable",
+      "file": "scripts/publish-email-assets.mjs",
+      "line": 30,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CONTENT_TYPE",
+      "kind": "object",
+      "file": "scripts/publish-email-assets.mjs",
+      "line": 34,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sb",
+      "kind": "variable",
+      "file": "scripts/publish-email-assets.mjs",
+      "line": 39,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "dir",
+      "kind": "variable",
+      "file": "scripts/publish-email-assets.mjs",
+      "line": 42,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "files",
+      "kind": "variable",
+      "file": "scripts/publish-email-assets.mjs",
+      "line": 43,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "failed",
+      "kind": "variable",
+      "file": "scripts/publish-email-assets.mjs",
+      "line": 46,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "published",
+      "kind": "variable",
+      "file": "scripts/publish-email-assets.mjs",
+      "line": 46,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "file",
+      "kind": "variable",
+      "file": "scripts/publish-email-assets.mjs",
+      "line": 48,
+      "module": "platform",
       "exported": false,
       "container": "",
       "tags": []
@@ -150202,6 +150393,30 @@
       ]
     },
     {
+      "name": "ENV",
+      "kind": "variable",
+      "file": "tests/vitest/emailAssetResolver.test.ts",
+      "line": 11,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "BASE",
+      "kind": "variable",
+      "file": "tests/vitest/emailAssetResolver.test.ts",
+      "line": 12,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
       "name": "sendMock",
       "kind": "variable",
       "file": "tests/vitest/emailDelivery.test.ts",
@@ -184958,43 +185173,47 @@
       "tests": [
         {
           "name": "setup: a REAL user without the send permission",
-          "line": 93
+          "line": 98
         },
         {
           "name": "sending is denied without platform.email_templates.send",
-          "line": 102
+          "line": 107
         },
         {
           "name": "an unknown template key is a 404",
-          "line": 111
+          "line": 116
         },
         {
           "name": "⛔ a template with no PUBLISHED version cannot be sent",
-          "line": 118
+          "line": 123
         },
         {
           "name": "⭐ missing variables are REFUSED and named — never sent as placeholders",
-          "line": 128
+          "line": 133
         },
         {
           "name": "⭐ an unresolved token in the SUBJECT is caught too",
-          "line": 141
+          "line": 146
         },
         {
-          "name": "⭐ relative asset paths are REFUSED — they arrive broken in a mail client",
-          "line": 154
+          "name": "⭐ AUTHORED asset paths are RESOLVED to public URLs, not refused",
+          "line": 159
+        },
+        {
+          "name": "⛔ a relative path OUTSIDE the authored prefix is still REFUSED",
+          "line": 169
         },
         {
           "name": "⭐ a valid template COMPILES server-side and reports its version",
-          "line": 168
+          "line": 184
         },
         {
           "name": "⛔ a dry run creates NO delivery record and NO app_event",
-          "line": 182
+          "line": 198
         },
         {
           "name": "the route schema rejects a malformed request",
-          "line": 199
+          "line": 215
         }
       ],
       "apiPaths": [

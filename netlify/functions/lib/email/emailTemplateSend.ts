@@ -20,6 +20,7 @@
 import { sb } from '../db';
 import { sendEmail } from './emailService';
 import { renderEmailMjml } from '../../../../src/lib/emailTemplateDocument';
+import { resolveEmailAssets } from './emailAssetResolver';
 import type { EmailEditorSchema } from '../../../../types/emailTemplates';
 
 export type TemplateSendRefusal =
@@ -63,25 +64,6 @@ export function resolveTemplateVariables(
     return String(value);
   });
   return missing.size ? { ok: false, missing: [...missing].sort() } : { ok: true, text };
-}
-
-/**
- * Every image must already be hosted at an absolute URL.
- *
- * The Studio authors against repo-relative asset paths (`/assets/images/email/...`), which resolve
- * in the canvas and in a preview iframe and resolve to NOTHING in a mail client — the recipient
- * gets broken images. A real send therefore refuses them rather than shipping a broken email.
- */
-export function findUnhostedAssets(html: string): string[] {
-  const unhosted = new Set<string>();
-  for (const match of html.matchAll(/<img[^>]+src=["']([^"']+)["']/gi)) {
-    const src = (match[1] ?? '').trim();
-    if (!src) continue;
-    // data: URIs are self-contained and therefore fine; everything else must be absolute http(s).
-    if (/^https?:\/\//i.test(src) || /^data:/i.test(src)) continue;
-    unhosted.add(src);
-  }
-  return [...unhosted].sort();
 }
 
 interface VersionRow {
@@ -172,13 +154,17 @@ export async function sendTemplateEmail(args: TemplateSendArgs): Promise<Templat
     return { ok: false, refusal: 'compile_failed', message: `MJML compilation failed: ${e instanceof Error ? e.message : String(e)}` };
   }
 
-  // ── 3. assets must already be hosted ──
-  const unhosted = findUnhostedAssets(html);
-  if (unhosted.length) {
+  // ── 3. resolve authored asset paths, then refuse anything still unreachable ──
+  // Authors write repo-relative paths; the server maps them to the published public URLs. A mail
+  // client fetches images with no session, so anything still relative after this WOULD arrive
+  // broken — and is refused rather than sent.
+  const assets = resolveEmailAssets(html);
+  html = assets.html;
+  if (assets.unresolved.length) {
     return {
       ok: false, refusal: 'unhosted_assets',
-      message: `These images are not hosted at an absolute URL and would arrive broken: ${unhosted.join(', ')}. Upload them and update the template before sending.`,
-      detail: unhosted,
+      message: `These images cannot be reached by a mail client and would arrive broken: ${assets.unresolved.join(', ')}. Publish them (scripts/publish-email-assets.mjs) or use an absolute URL.`,
+      detail: assets.unresolved,
     };
   }
 

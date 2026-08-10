@@ -2,9 +2,9 @@
 
 # testing Module Map
 
-Source fingerprint: `55d1bfcc66339ec6096d161d`
+Source fingerprint: `75bb8d722c1d91072450b4a7`
 
-Files: 45 | Symbols: 219 | Widgets: 0 | Unique mounted endpoints: 0 | Route definitions: 0 mounted + 0 unmounted | API calls: 0 | DB objects: 0 | E2E suites: 16
+Files: 46 | Symbols: 221 | Widgets: 0 | Unique mounted endpoints: 0 | Route definitions: 0 mounted + 0 unmounted | API calls: 0 | DB objects: 0 | E2E suites: 16
 
 ## Widgets and Tiles
 
@@ -49,7 +49,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | Platform — EMAIL DELIVERY PROGRAMME (aggregate) | 0 | 0 | `scripts/e2e/suites/emailProgramme.mjs` |
 | Platform — email reconciliation and delivery status | 10 | 2 | `scripts/e2e/suites/emailReconciliation.mjs` |
 | Platform — email retry dispatch | 10 | 1 | `scripts/e2e/suites/emailRetry.mjs` |
-| Platform — Email Template Studio send path | 10 | 1 | `scripts/e2e/suites/emailTemplateSend.mjs` |
+| Platform — Email Template Studio send path | 11 | 1 | `scripts/e2e/suites/emailTemplateSend.mjs` |
 | Platform — Resend webhook (signature, idempotency, lifecycle) | 10 | 0 | `scripts/e2e/suites/emailWebhook.mjs` |
 | HR Documents | 27 | 9 | `scripts/e2e/suites/hrDocuments.mjs` |
 | HR/Finance — Employee Statutory Profile / NIS Verification (Phase 2.5) | 35 | 7 | `scripts/e2e/suites/hrStatutoryProfile.mjs` |
@@ -72,7 +72,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/emailProgramme.mjs` | 52 |
 | e2e-suite | `scripts/e2e/suites/emailReconciliation.mjs` | 214 |
 | e2e-suite | `scripts/e2e/suites/emailRetry.mjs` | 185 |
-| e2e-suite | `scripts/e2e/suites/emailTemplateSend.mjs` | 205 |
+| e2e-suite | `scripts/e2e/suites/emailTemplateSend.mjs` | 221 |
 | e2e-suite | `scripts/e2e/suites/emailWebhook.mjs` | 230 |
 | e2e-suite | `scripts/e2e/suites/hrDocuments.mjs` | 400 |
 | e2e-suite | `scripts/e2e/suites/hrStatutoryProfile.mjs` | 479 |
