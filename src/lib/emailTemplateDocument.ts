@@ -6,12 +6,18 @@ import type {
   EmailChromeRole,
   EmailFactTile,
   EmailFooterLink,
+  EmailIconColor,
   EmailStatusItem,
   EmailTemplateBlock,
   EmailTemplateFamily,
   EmailTypographyScale,
 } from '../../types/emailTemplates';
-import * as lucide from 'lucide';
+import {
+  DEFAULT_EMAIL_ICON_COLOR,
+  normalizeEmailIconColor,
+  renderEmailIcon,
+  type EmailRenderTarget,
+} from './emailIcons';
 
 export type EmailBlockGroup = 'Basics' | 'Media' | 'Actions' | 'Smart Blocks' | 'Transactional';
 
@@ -98,7 +104,7 @@ const defaultsByType: Partial<Record<EmailBlockType, Partial<EmailTemplateBlock>
   information_card: { properties: { html: '<strong>Helpful information</strong><br>Add supporting details here.' }, styles: { ...DEFAULT_STYLES, backgroundColor: '#f5f7fa', borderWidth: 1, borderRadius: 8, padding: { top: 18, right: 20, bottom: 18, left: 20 } } },
   callout: { properties: { html: '<strong>Please note</strong><br>Add an important message here.', tone: 'brand' }, styles: { ...DEFAULT_STYLES, backgroundColor: '#eef4ff', borderColor: '#bfd2f5', borderWidth: 1, borderRadius: 8, padding: { top: 18, right: 20, bottom: 18, left: 20 } } },
   signature: { properties: { html: 'Kind regards,<br><strong>{{sender.displayName}}</strong><br>{{company.name}}' } },
-  icon_list: { properties: { iconItems: [{ icon: 'Mail', text: '{{support.email}}' }, { icon: 'Phone', text: '{{support.phone}}' }], iconShape: 'rounded', iconTreatment: 'outline', iconColor: '#173f76', iconBackground: '#ffffff' }, styles: { ...DEFAULT_STYLES, color: '#24314d', padding: { top: 14, right: 24, bottom: 14, left: 24 } } },
+  icon_list: { properties: { iconItems: [{ icon: 'Mail', text: '{{support.email}}' }, { icon: 'Phone', text: '{{support.phone}}' }], iconShape: 'rounded', iconTreatment: 'outline', iconColor: 'navy', iconBackground: '#ffffff' }, styles: { ...DEFAULT_STYLES, color: '#24314d', padding: { top: 14, right: 24, bottom: 14, left: 24 } } },
   smart_fact_grid: {
     properties: {
       html: 'Your first-day overview',
@@ -111,7 +117,7 @@ const defaultsByType: Partial<Record<EmailBlockType, Partial<EmailTemplateBlock>
       ],
       iconTreatment: 'outline',
       iconShape: 'rounded',
-      iconColor: '#173f76',
+      iconColor: 'navy',
       iconBackground: '#ffffff',
       iconSize: 38,
       factTileAlign: 'center',
@@ -204,15 +210,32 @@ export function createEmailSection(children: EmailTemplateBlock[] = []): EmailTe
  * container and every columns child becomes a section-owned column.
  */
 export function normalizeEmailDocument(document: EmailEditorSchema): EmailEditorSchema {
+  /**
+   * Migrate `iconColor` to a palette token HERE, in the model, rather than at render time.
+   * A document authored before the palette existed carries a hex; resolving it only while
+   * rendering would leave the editor showing a colour the delivered email can never use, and
+   * the author would keep "fixing" a difference that is not in their document.
+   */
+  const normalizeProperties = (block: EmailTemplateBlock): EmailTemplateBlock =>
+    block.properties.iconColor === undefined
+      ? block
+      : {
+          ...block,
+          properties: {
+            ...block.properties,
+            iconColor: normalizeEmailIconColor(block.properties.iconColor),
+          },
+        };
+
   const normalizeContainer = (block: EmailTemplateBlock): EmailTemplateBlock => {
-    const normalized = {
+    const normalized = normalizeProperties({
       ...block,
       styles: {
         ...DEFAULT_STYLES,
         ...block.styles,
         padding: { ...DEFAULT_STYLES.padding, ...block.styles.padding },
       },
-    };
+    });
     if (normalized.type === 'columns') {
       const columns = normalized.children.map(child => child.type === 'section'
         ? normalizeContainer(child)
@@ -222,10 +245,10 @@ export function normalizeEmailDocument(document: EmailEditorSchema): EmailEditor
     if (normalized.type === 'section') {
       return {
         ...normalized,
-        children: normalized.children.map(child => isEmailContainer(child) ? normalizeContainer(child) : {
+        children: normalized.children.map(child => isEmailContainer(child) ? normalizeContainer(child) : normalizeProperties({
           ...child,
           styles: { ...DEFAULT_STYLES, ...child.styles, padding: { ...DEFAULT_STYLES.padding, ...child.styles.padding } },
-        }),
+        })),
       };
     }
     return normalized;
@@ -527,7 +550,7 @@ const supportSection = (): EmailTemplateBlock => {
     ],
     iconShape: 'rounded',
     iconTreatment: 'plain',
-    iconColor: '#FFFFFF',
+    iconColor: 'white',
     iconBackground: '#f7b900',
   }, {
     backgroundColor: 'transparent', color: '#ffffff', fontSize: 12, fontWeight: 600,
@@ -800,7 +823,7 @@ export function createStarterEmailDocument(family: EmailTemplateFamily, triggerK
             { icon: 'FileText', text: 'Tax documents — personal tax registration form' },
             { icon: 'UserRound', text: 'Emergency contact — add your emergency contacts' },
           ],
-          iconShape: 'rounded', iconTreatment: 'outline', iconColor: '#173f76', iconBackground: '#ffffff',
+          iconShape: 'rounded', iconTreatment: 'outline', iconColor: 'navy', iconBackground: '#ffffff',
         }, { color: '#405471', fontSize: 12, lineHeight: 1.55, padding: { top: 0, right: 0, bottom: 16, left: 0 } }),
         primaryButton('Continue my tasks', '{{onboarding.hubUrl}}'),
       ),
@@ -820,7 +843,7 @@ export function createStarterEmailDocument(family: EmailTemplateFamily, triggerK
             { icon: 'Award', text: 'Education certificate — highest qualification certificate' },
             { icon: 'FileText', text: 'Tax registration — TIN or TRN document' },
           ],
-          iconShape: 'rounded', iconTreatment: 'outline', iconColor: '#173f76', iconBackground: '#ffffff',
+          iconShape: 'rounded', iconTreatment: 'outline', iconColor: 'navy', iconBackground: '#ffffff',
         }, { color: '#405471', fontSize: 12, lineHeight: 1.55, padding: { top: 0, right: 0, bottom: 16, left: 0 } }),
         primaryButton('Upload documents', '{{onboarding.hubUrl}}'),
       ),
@@ -949,7 +972,7 @@ export function createStarterEmailDocument(family: EmailTemplateFamily, triggerK
             { icon: 'ShieldCheck', text: 'Work eligibility — right to work in Trinidad & Tobago' },
             { icon: 'Phone', text: 'Contact details — personal email and phone number' },
           ],
-          iconShape: 'rounded', iconTreatment: 'outline', iconColor: '#173f76', iconBackground: '#ffffff',
+          iconShape: 'rounded', iconTreatment: 'outline', iconColor: 'navy', iconBackground: '#ffffff',
         }, { color: '#405471', fontSize: 12, lineHeight: 1.55, padding: { top: 0, right: 0, bottom: 0, left: 0 } }),
       ),
     );
@@ -1110,43 +1133,7 @@ const transactionalIcon = (type: EmailBlockType): string => {
   return 'i';
 };
 
-/**
- * Email SVG is generated from Lucide's own icon data, so the canvas and the
- * delivered email always draw the SAME glyph. Hand-copied paths previously
- * capped the set at eight icons and silently substituted a checkmark for
- * anything else.
- */
-type LucideIconNode = [string, Record<string, string | number>][];
-
-const lucideNode = (name: string): LucideIconNode | null => {
-  const candidate = (lucide as unknown as Record<string, unknown>)[name];
-  return Array.isArray(candidate) ? (candidate as LucideIconNode) : null;
-};
-
-/** Icons offered by the picker. Every one renders in both surfaces. */
-export const EMAIL_ICON_CHOICES: readonly string[] = [
-  'CalendarDays', 'Clock3', 'MapPin', 'UserRound', 'Users', 'Mail', 'Phone', 'Globe',
-  'Briefcase', 'Building2', 'Laptop', 'Key', 'FileText', 'BookOpen', 'GraduationCap', 'Award',
-  'HardHat', 'ShieldCheck', 'CheckCircle', 'Info', 'Bell', 'Star', 'Target', 'Heart',
-  'Coffee', 'Gift', 'Home', 'Car', 'Truck', 'Package', 'CreditCard', 'Wallet',
-  'Lock', 'Wifi',
-].filter(name => lucideNode(name) !== null);
-
-const renderLucideIcon = (name: string, color: string, size = 18): string => {
-  const node = lucideNode(name) ?? lucideNode('CheckCircle');
-  const inner = (node ?? [])
-    .map(([tag, attrs]) => {
-      const parts = Object.entries(attrs)
-        .filter(([key]) => key !== 'key')
-        .map(([key, value]) => `${key}="${escapeHtml(String(value))}"`)
-        .join(' ');
-      return `<${tag} ${parts}/>`;
-    })
-    .join('');
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${escapeHtml(color)}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
-};
-
-function renderTransactionalContent(block: EmailTemplateBlock): string | null {
+function renderTransactionalContent(block: EmailTemplateBlock, target: EmailRenderTarget): string | null {
   const html = sanitizeRichText(block.properties.html ?? '');
   if (block.type === 'welcome_header') {
     return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#102a56;background-image:linear-gradient(135deg,rgba(255,255,255,.055),rgba(16,42,86,0) 48%)"><tr><td align="center" style="padding-bottom:10px"><span style="display:inline-block;width:38px;height:38px;line-height:38px;border:1px solid #806f31;border-radius:50%;background:#233c63;color:#f3c02f;text-align:center;font-size:18px">&#10022;</span></td></tr><tr><td align="center" style="padding-bottom:10px;color:#f3c02f;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase">Welcome to SIOMAC</td></tr><tr><td align="center" style="color:inherit;font-size:inherit;font-weight:inherit;line-height:inherit">${html}</td></tr><tr><td align="center" style="padding-top:14px"><span style="display:inline-block;width:42px;border-top:3px solid #f3c02f">&nbsp;</span></td></tr></table>`;
@@ -1173,11 +1160,11 @@ function renderTransactionalContent(block: EmailTemplateBlock): string | null {
   if (block.type === 'icon_list') {
     const plainIcon = block.properties.iconTreatment === 'plain';
     const radius = plainIcon ? '0' : block.properties.iconShape === 'circle' ? '50%' : block.properties.iconShape === 'square' ? '0' : '7px';
-    const iconColor = block.properties.iconColor ?? block.styles.color;
+    const iconColor = normalizeEmailIconColor(block.properties.iconColor);
     const iconBackground = plainIcon ? 'transparent' : (block.properties.iconBackground ?? '#ffffff');
     const iconBorder = plainIcon || block.properties.iconTreatment === 'solid' ? 'none' : '1px solid #dce5ef';
     const rowPad = Math.max(1, Math.round(Math.max(2, (block.styles.lineHeight - 1) * block.styles.fontSize) / 2));
-    const rows = (block.properties.iconItems ?? []).map(item => `<tr><td width="38" valign="middle" style="padding:${rowPad}px 10px ${rowPad}px 0"><span style="display:inline-block;width:28px;height:23px;padding-top:5px;border:${iconBorder};border-radius:${radius};background:${escapeHtml(iconBackground)};text-align:center">${renderLucideIcon(item.icon, iconColor)}</span></td><td valign="middle" style="padding:${rowPad}px 0;color:${escapeHtml(block.styles.color)};font-size:${block.styles.fontSize}px;line-height:${block.styles.lineHeight}">${escapeHtml(item.text)}</td></tr>`).join('');
+    const rows = (block.properties.iconItems ?? []).map(item => `<tr><td width="38" valign="middle" style="padding:${rowPad}px 10px ${rowPad}px 0"><span style="display:inline-block;width:28px;height:23px;padding-top:5px;border:${iconBorder};border-radius:${radius};background:${escapeHtml(iconBackground)};text-align:center">${renderEmailIcon({ name: item.icon, color: iconColor, size: 18, target })}</span></td><td valign="middle" style="padding:${rowPad}px 0;color:${escapeHtml(block.styles.color)};font-size:${block.styles.fontSize}px;line-height:${block.styles.lineHeight}">${escapeHtml(item.text)}</td></tr>`).join('');
     return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>`;
   }
   if (block.type === 'smart_progress') {
@@ -1213,7 +1200,7 @@ function renderTransactionalContent(block: EmailTemplateBlock): string | null {
     const iconSize = Math.max(16, block.properties.iconSize ?? 28);
     const plainIcon = block.properties.iconTreatment === 'plain';
     const radius = plainIcon ? '0' : block.properties.iconShape === 'circle' ? '50%' : block.properties.iconShape === 'square' ? '0' : '7px';
-    const iconColor = block.properties.iconColor ?? block.styles.color;
+    const iconColor = normalizeEmailIconColor(block.properties.iconColor);
     const iconBackground = plainIcon ? 'transparent' : (block.properties.iconBackground ?? '#ffffff');
     const iconBorder = plainIcon || block.properties.iconTreatment === 'solid' ? 'none' : '1px solid #dce5ef';
     // Email HTML is CONTENT-box: padding-top must come OUT of the height or
@@ -1225,7 +1212,7 @@ function renderTransactionalContent(block: EmailTemplateBlock): string | null {
       `<td class="stack-tile" width="${cellWidth}%" valign="top" align="${tileAlign}" style="width:${cellWidth}%;padding:18px 10px;${dividers && position > 0 ? `border-left:${rule};` : ''}">`
       + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">`
       + (tile.icon.trim()
-        ? `<tr><td align="${tileAlign}" style="padding-bottom:10px"><span style="display:inline-block;width:${iconSize}px;height:${iconSize - iconPad}px;padding-top:${iconPad}px;border:${iconBorder};border-radius:${radius};background:${escapeHtml(iconBackground)};text-align:center">${renderLucideIcon(tile.icon, iconColor, glyphSize)}</span></td></tr>`
+        ? `<tr><td align="${tileAlign}" style="padding-bottom:10px"><span style="display:inline-block;width:${iconSize}px;height:${iconSize - iconPad}px;padding-top:${iconPad}px;border:${iconBorder};border-radius:${radius};background:${escapeHtml(iconBackground)};text-align:center">${renderEmailIcon({ name: tile.icon, color: iconColor, size: glyphSize, target })}</span></td></tr>`
         : '')
       + `<tr><td align="${tileAlign}" style="padding-bottom:5px;color:#74849b;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase">${escapeHtml(tile.label)}</td></tr>`
       + `<tr><td align="${tileAlign}" style="padding-bottom:4px;color:${escapeHtml(block.styles.color)};font-size:14px;font-weight:700;line-height:1.38">${escapeHtml(tile.value)}</td></tr>`
@@ -1249,9 +1236,9 @@ function renderTransactionalContent(block: EmailTemplateBlock): string | null {
     return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td width="42" valign="middle"><span style="display:inline-block;width:30px;height:30px;line-height:30px;border:1px solid ${escapeHtml(block.styles.borderColor)};border-radius:50%;background:#ffffff;color:#102a56;text-align:center;font-size:12px;font-weight:700">${transactionalIcon(block.type)}</span></td><td valign="middle" style="color:inherit;font-size:inherit;line-height:inherit">${html}</td></tr></table>`;
   }
   if (block.type === 'legal_footer') {
-    // Trust chips mirror the canvas rendering: real Lucide icons in 34px bordered chips.
+    // Trust chips mirror the canvas rendering: the same Lucide glyphs in 34px bordered chips.
     const chip = (icon: string): string =>
-      `<span style="display:inline-block;width:34px;height:25px;padding-top:9px;border:1px solid #dce5ef;border-radius:6px;background:#ffffff;text-align:center">${renderLucideIcon(icon, '#173f76', 16)}</span>`;
+      `<span style="display:inline-block;width:34px;height:25px;padding-top:9px;border:1px solid #dce5ef;border-radius:6px;background:#ffffff;text-align:center">${renderEmailIcon({ name: icon, color: 'navy', size: 16, target })}</span>`;
     const links = (block.properties.footerLinks ?? DEFAULT_FOOTER_LINKS)
       .filter(link => link.label.trim())
       .map(link => (link.href.trim()
@@ -1270,7 +1257,12 @@ function renderTransactionalContent(block: EmailTemplateBlock): string | null {
   return null;
 }
 
-function renderBlock(block: EmailTemplateBlock): string {
+/**
+ * `target` decides which primitive an icon is drawn with — see `emailIcons.ts`. Everything else
+ * about the block is identical between the two surfaces, which is the point: one layout, one set
+ * of styles, and exactly one construct that differs because one client cannot render it.
+ */
+function renderBlock(block: EmailTemplateBlock, target: EmailRenderTarget): string {
   if (block.hidden) return '';
   const buttonBlock = block.type === 'button' || block.type === 'invitation_action';
   const style = block.type === 'divider'
@@ -1295,7 +1287,7 @@ function renderBlock(block: EmailTemplateBlock): string {
   const open = `<tr><td align="${block.styles.align}" style="padding:${outer.top}px ${outer.right}px ${outer.bottom}px ${outer.left}px"><table role="presentation" width="${width}%" cellpadding="0" cellspacing="0" align="${block.styles.align}" style="width:${width}%;min-height:${minHeight}px;border-collapse:separate;table-layout:fixed"><tr><td valign="${verticalAlign}"${innerMinHeight ? ` height="${innerMinHeight}"` : ''} style="${style};min-height:${innerMinHeight}px">`;
   const close = '</td></tr></table></td></tr>';
   if (block.type === 'section') {
-    const children = block.children.map(renderBlock).join('');
+    const children = block.children.map(child => renderBlock(child, target)).join('');
     return `${open}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:separate">${children}</table>${close}`;
   }
   if (block.type === 'columns') {
@@ -1309,7 +1301,7 @@ function renderBlock(block: EmailTemplateBlock): string {
       // Render the column block itself — a section column carries its own surface and
       // resize geometry (widthPercent/minHeight/background/border/padding), which the
       // canvas always shows. Unwrapping to its children silently dropped all of it.
-      return `<td class="stack-col" width="${columnWidth.toFixed(2)}%" valign="${column.properties.verticalAlign ?? 'top'}"${columnMinHeight ? ` height="${columnMinHeight}"` : ''} style="width:${columnWidth.toFixed(2)}%;min-height:${columnMinHeight}px;padding:0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:separate">${renderBlock(column)}</table></td>`;
+      return `<td class="stack-col" width="${columnWidth.toFixed(2)}%" valign="${column.properties.verticalAlign ?? 'top'}"${columnMinHeight ? ` height="${columnMinHeight}"` : ''} style="width:${columnWidth.toFixed(2)}%;min-height:${columnMinHeight}px;padding:0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:separate">${renderBlock(column, target)}</table></td>`;
     }).join('');
     // Fixed layout keeps the stack-col percentage widths firm (matches the canvas flex
     // basis); auto layout would let a long cell steal width from its siblings.
@@ -1331,7 +1323,7 @@ function renderBlock(block: EmailTemplateBlock): string {
   if (buttonBlock) {
     return `${open}<a href="${escapeHtml(safeHref(block.properties.href))}" style="display:inline-block;width:auto;background:${escapeHtml(block.styles.backgroundColor)};color:${escapeHtml(block.styles.color)};font-family:${escapeHtml(EMAIL_FONT_STACK)};font-size:${block.styles.fontSize}px;font-weight:${block.styles.fontWeight};line-height:${block.styles.lineHeight};letter-spacing:${block.styles.letterSpacing}px;text-decoration:none;border-radius:${block.styles.borderRadius}px;padding:${block.styles.padding.top}px ${block.styles.padding.right}px ${block.styles.padding.bottom}px ${block.styles.padding.left}px">${escapeHtml(block.properties.label ?? 'Continue')}</a>${close}`;
   }
-  const transactional = renderTransactionalContent(block);
+  const transactional = renderTransactionalContent(block, target);
   if (transactional !== null) return `${open}${transactional}${close}`;
   return `${open}${sanitizeRichText(block.properties.html ?? '')}${close}`;
 }
@@ -1361,7 +1353,7 @@ export function renderEmailMjml(document: EmailEditorSchema, title: string): str
   // mj-text places its content inside a proper <td><div>, where a nested table is valid,
   // so the enclosing section/wrapper geometry survives intact.
   const rawBlock = (block: EmailTemplateBlock): string =>
-    `<mj-text align="left" padding="0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:separate">${renderBlock(block)}</table></mj-text>`;
+    `<mj-text align="left" padding="0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:separate">${renderBlock(block, 'email')}</table></mj-text>`;
   // Only the genuinely simple rich types map to mj-text; every block with a
   // bespoke table design (transactional, smart, icon list) travels via mj-raw.
   const plainTextTypes: EmailBlockType[] = ['paragraph', 'heading', 'signature'];
@@ -1496,7 +1488,7 @@ export function renderEmailMjml(document: EmailEditorSchema, title: string): str
 }
 
 export function renderEmailPreview(document: EmailEditorSchema, title: string): { html: string; text: string } {
-  const rows = document.blocks.map(renderBlock).join('');
+  const rows = document.blocks.map(block => renderBlock(block, 'canvas')).join('');
   const settings = normalizeEmailSettings(document.settings);
   const { typography } = settings;
   // `<style>` content is RAWTEXT: HTML entities are NOT decoded there, so

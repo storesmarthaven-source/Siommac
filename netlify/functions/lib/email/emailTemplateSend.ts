@@ -21,6 +21,7 @@ import { sb } from '../db';
 import { sendEmail } from './emailService';
 import { renderEmailMjml } from '../../../../src/lib/emailTemplateDocument';
 import { resolveEmailAssets } from './emailAssetResolver';
+import { checkEmailCompatibility } from './emailCompatibility';
 import type { EmailEditorSchema } from '../../../../types/emailTemplates';
 
 export type TemplateSendRefusal =
@@ -28,6 +29,8 @@ export type TemplateSendRefusal =
   | 'no_published_version'
   | 'unresolved_variables'
   | 'unhosted_assets'
+  /** Compiled cleanly but uses constructs a real mail client would drop — see emailCompatibility. */
+  | 'incompatible_html'
   | 'compile_failed';
 
 export type TemplateSendResult =
@@ -165,6 +168,19 @@ export async function sendTemplateEmail(args: TemplateSendArgs): Promise<Templat
       ok: false, refusal: 'unhosted_assets',
       message: `These images cannot be reached by a mail client and would arrive broken: ${assets.unresolved.join(', ')}. Publish them (scripts/publish-email-assets.mjs) or use an absolute URL.`,
       detail: assets.unresolved,
+    };
+  }
+
+  // ── 3b. production-email compatibility gate ──
+  // Compiling is not rendering. This is the only check that inspects the FINAL bytes for
+  // constructs a mail client silently drops — the class of defect that let nine inline-SVG icons
+  // ship to a real inbox while every preview, both renderers and the whole suite stayed green.
+  const compatibility = checkEmailCompatibility(html);
+  if (!compatibility.ok) {
+    return {
+      ok: false, refusal: 'incompatible_html',
+      message: `This template compiles but would not render correctly in a real inbox: ${compatibility.issues.map(i => i.message).join(' ')}`,
+      detail: compatibility.issues.map(i => i.code),
     };
   }
 

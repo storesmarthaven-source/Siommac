@@ -13,6 +13,11 @@
  * and a fixture that is not a real Studio document would prove nothing about real templates.
  */
 import { createStarterEmailDocument, renderEmailMjml } from '../../../dist/src/lib/emailTemplateDocument.js';
+import {
+  EMAIL_ICON_CHOICES,
+  EMAIL_ICON_COLORS,
+  emailIconFileName,
+} from '../../../dist/src/lib/emailIcons.js';
 
 export const title = 'Platform — Email Template Studio send path';
 
@@ -216,5 +221,86 @@ export default async function run(h) {
     const r = await send({ to: 'a@example.com' });
     fails(r, 'templateKey is required');
     expect(r.status === 400, `expected 400 from the schema, got ${r.status}`);
+  });
+
+  h.section('Studio send › Icon assets (Gmail strips inline SVG)');
+
+  await test('⭐⭐ EVERY icon x colour is published as a PNG in the public bucket', async () => {
+    // The renderer emits a URL for any (icon, colour) the picker offers. If even one asset is
+    // missing, that combination is a broken image in a real inbox — and nothing else would catch
+    // it, because the markup would still be perfectly well-formed.
+    const colors = Object.keys(EMAIL_ICON_COLORS);
+    const expected = EMAIL_ICON_CHOICES.map(name => `${emailIconFileName(name)}.png`).sort();
+    expect(expected.length === 34, `the picker offers 34 icons, got ${expected.length}`);
+    expect(colors.length === 7, `the palette is 7 colours, got ${colors.length}`);
+
+    const missing = [];
+    const wrongType = [];
+    for (const color of colors) {
+      const { data, error } = await sb.storage.from('branding').list(`email/icons/${color}`, { limit: 500 });
+      expect(!error, `list email/icons/${color}: ${error?.message ?? ''}`);
+      const present = new Map((data ?? []).map(entry => [entry.name, entry]));
+      for (const file of expected) {
+        const entry = present.get(file);
+        if (!entry) { missing.push(`${color}/${file}`); continue; }
+        if (entry.metadata?.mimetype !== 'image/png') wrongType.push(`${color}/${file}=${entry.metadata?.mimetype}`);
+      }
+    }
+    expect(missing.length === 0, `unpublished icon assets: ${missing.slice(0, 10).join(', ')}${missing.length > 10 ? ` (+${missing.length - 10})` : ''}`);
+    expect(wrongType.length === 0, `icons must be image/png: ${wrongType.slice(0, 10).join(', ')}`);
+  });
+
+  await test('⭐ published icons are fetchable with NO session, as a mail client fetches them', async () => {
+    // The service-role listing above proves the objects exist. It does NOT prove they are publicly
+    // readable — and a recipient's mail client has no cookie, no bearer token and no signed URL.
+    const base = `${h.env.SUPABASE_URL}/storage/v1/object/public/branding/email/icons`;
+    for (const color of Object.keys(EMAIL_ICON_COLORS)) {
+      const file = `${emailIconFileName(EMAIL_ICON_CHOICES[0])}.png`;
+      const res = await fetch(`${base}/${color}/${file}`);
+      expect(res.status === 200, `anonymous GET ${color}/${file} -> ${res.status}`);
+      expect(res.headers.get('content-type') === 'image/png', `content-type ${res.headers.get('content-type')}`);
+      const bytes = Buffer.from(await res.arrayBuffer());
+      expect(bytes.length > 0 && bytes.subarray(1, 4).toString() === 'PNG', 'the body is a real PNG');
+    }
+  });
+
+  h.section('Studio send › Production-email compatibility gate');
+
+  await test('⭐⭐ the REAL welcome template passes the compatibility gate', async () => {
+    // This is the assertion that closes the Gmail defect end to end. The gate refuses any compiled
+    // body containing inline <svg>, or an icon that is not on the approved asset host — so a
+    // successful send here PROVES the production HTML has zero inline SVG and every icon hosted.
+    // Asserting the refusal rule rather than counting tags is deliberate: it keeps holding as the
+    // template changes.
+    const key = await seedTemplate('icons', { hostAssets: false });
+    const r = await send({ templateKey: key, to: 'studio-icons@example.com', variables: ALL_VARIABLES });
+    ok(r, `the welcome template must survive the compatibility gate: ${r.body.message ?? ''}`);
+    expect(r.body.data.dryRun === true, 'still a dry run');
+  });
+
+  await test('⛔ a localhost URL in a variable VALUE is refused as incompatible', async () => {
+    // Proves the gate actually fires on the FINAL bytes. A staging URL arriving through a supplied
+    // value is the realistic way one leaks — the template itself is clean, so no earlier check sees
+    // it. Recipients would get a link that resolves only on the machine that built the message.
+    const key = await seedTemplate('localurl', { hostAssets: true });
+    const vars = { ...ALL_VARIABLES, 'onboarding.hubUrl': 'http://localhost:8888/onboarding' };
+    const r = await send({ templateKey: key, to: 'a@example.com', variables: vars });
+    fails(r, 'a localhost URL cannot reach a recipient');
+    expect(r.status === 422, `expected 422, got ${r.status}`);
+    expect(r.body.data.refusal === 'incompatible_html', `got ${r.body.data.refusal}`);
+    expect((r.body.data.detail ?? []).includes('local_url'),
+      `the offending rule is named — got ${JSON.stringify(r.body.data.detail)}`);
+  });
+
+  await test('⛔ a placeholder smuggled in through a variable VALUE is refused', async () => {
+    // The pre-compile pass checks the TEMPLATE for unresolved tokens; it structurally cannot see a
+    // token that arrives inside a value. Only a check on the final HTML catches it.
+    const key = await seedTemplate('tokenvalue', { hostAssets: true });
+    const vars = { ...ALL_VARIABLES, 'company.name': 'Acme {{company.legalName}}' };
+    const r = await send({ templateKey: key, to: 'a@example.com', variables: vars });
+    fails(r, 'a visible {{token}} in delivered mail is permanent');
+    expect(r.body.data.refusal === 'incompatible_html', `got ${r.body.data.refusal}`);
+    expect((r.body.data.detail ?? []).includes('unresolved_variable'),
+      `the offending rule is named — got ${JSON.stringify(r.body.data.detail)}`);
   });
 }

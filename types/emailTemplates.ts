@@ -81,6 +81,23 @@ export interface EmailFactTile {
   caption: string;
 }
 
+/**
+ * Semantic icon colours.
+ *
+ * Icons are NOT arbitrary hex in production email: Gmail strips inline SVG, so a delivered icon is
+ * a pre-rendered PNG and its colour is baked into the file. A closed set keeps the published asset
+ * matrix finite and guarantees every authored colour actually has an asset behind it. See
+ * `src/lib/emailIcons.ts`.
+ */
+export type EmailIconColor =
+  | 'navy'
+  | 'blue'
+  | 'green'
+  | 'amber'
+  | 'red'
+  | 'slate'
+  | 'white';
+
 /** One link in the legal footer's policy row. */
 export interface EmailFooterLink {
   label: string;
@@ -125,7 +142,12 @@ export interface EmailBlockProperties {
   statusItems?: EmailStatusItem[];
   iconShape?: 'circle' | 'square' | 'rounded';
   iconTreatment?: 'plain' | 'outline' | 'solid';
-  iconColor?: string;
+  /**
+   * Semantic token, never a hex value — the email renderer resolves it to a published PNG.
+   * `normalizeEmailDocument` rewrites legacy hex to the nearest token, so a stored document is
+   * migrated in the MODEL rather than silently reinterpreted at render time.
+   */
+  iconColor?: EmailIconColor;
   iconBackground?: string;
   columns?: 1 | 2 | 3 | 4;
   /** Width of the block inside the email canvas. Email tables use this value as a percentage. */

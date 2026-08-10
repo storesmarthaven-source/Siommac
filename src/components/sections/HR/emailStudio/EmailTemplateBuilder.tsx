@@ -24,11 +24,16 @@ import {
 import { uploadEmailTemplateAsset } from "@api/hr/emailTemplateAssets";
 import { compileEmailDocument } from "@lib/emailMjmlCompiler";
 import {
+  EMAIL_ICON_CHOICES,
+  EMAIL_ICON_COLOR_CHOICES,
+  emailIconHex,
+  normalizeEmailIconColor,
+} from "@lib/emailIcons";
+import {
   cloneEmailBlock,
   applyDocumentTypography,
   EMAIL_FONT_STACK,
   createCallToActionSection,
-  EMAIL_ICON_CHOICES,
   createFirstDayOverviewSection,
   createBlankEmailDocument,
   createEmailBlock,
@@ -1624,7 +1629,7 @@ function TransactionalCanvasContent({
     return (
       <div
         class="etb-icon-list"
-        style={`--etb-list-icon-color:${block.properties.iconColor ?? block.styles.color};--etb-list-icon-bg:${block.properties.iconBackground ?? "#ffffff"};row-gap:${rowGap}px`}
+        style={`--etb-list-icon-color:${emailIconHex(normalizeEmailIconColor(block.properties.iconColor))};--etb-list-icon-bg:${block.properties.iconBackground ?? "#ffffff"};row-gap:${rowGap}px`}
       >
         {(block.properties.iconItems ?? []).map((item) => (
           <div>
@@ -1689,7 +1694,7 @@ function TransactionalCanvasContent({
     return (
       <div
         class="etb-fact-grid-block"
-        style={`--etb-list-icon-color:${block.properties.iconColor ?? block.styles.color};--etb-list-icon-bg:${block.properties.iconBackground ?? "#ffffff"};--etb-fact-rule:${block.styles.borderColor};--etb-fact-icon:${iconSize}px`}
+        style={`--etb-list-icon-color:${emailIconHex(normalizeEmailIconColor(block.properties.iconColor))};--etb-list-icon-bg:${block.properties.iconBackground ?? "#ffffff"};--etb-fact-rule:${block.styles.borderColor};--etb-fact-icon:${iconSize}px`}
       >
         {richCopy("etb-fact-grid-heading")}
         <div
@@ -4860,18 +4865,34 @@ export function EmailTemplateBuilder({
                         </label>
                         <label>
                           <span>Icon colour</span>
-                          <ColorControl
-                            value={
-                              selected.properties.iconColor ??
-                              selected.styles.color
-                            }
-                            onChange={(iconColor) =>
+                          {/*
+                            A closed palette, not a colour picker: a delivered email icon is a
+                            pre-rendered PNG, so only colours that have a published asset can be
+                            offered. An arbitrary hex here would author a broken image.
+                          */}
+                          <select
+                            class="etb-icon-color-select"
+                            value={normalizeEmailIconColor(
+                              selected.properties.iconColor,
+                            )}
+                            onInput={(event) =>
                               updateSelected((block) => ({
                                 ...block,
-                                properties: { ...block.properties, iconColor },
+                                properties: {
+                                  ...block.properties,
+                                  iconColor: normalizeEmailIconColor(
+                                    event.currentTarget.value,
+                                  ),
+                                },
                               }))
                             }
-                          />
+                          >
+                            {EMAIL_ICON_COLOR_CHOICES.map((choice) => (
+                              <option value={choice.value}>
+                                {choice.label}
+                              </option>
+                            ))}
+                          </select>
                         </label>
                         {(selected.properties.iconTreatment ?? "outline") !==
                           "plain" && <label>
