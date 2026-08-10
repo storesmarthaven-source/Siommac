@@ -123,6 +123,7 @@ evidence belongs in the repository, not in mutable non-production rows.
 | Onboarding invitation | `account_invite` | `sent` | `c9bd5e6a-2148-481e-bb2e-0bea626f1c5b` |
 | Notification | `notification` | `sent` | `f25fdaa9-3360-4ea2-bd05-9dc262fbc89f` |
 | Email Template Studio | `email_studio` | `sent` | `d5b24295-caa0-40d3-ba7e-d3dbc8eae626` |
+| Studio — visual parity (2026-08-10) | `email_studio` | `sent` | `79f05115-8aaf-440e-b832-846e81e7a96a` |
 
 Every row carried `provider = resend`, the expected recipient and sender
 (`Siomac <store@smarthaven.shop>`), and a populated `sent_at`. Asserted explicitly: no delivery
@@ -140,7 +141,16 @@ none had been received. That is the deployment gap above, not a defect.
   hosted assets did not exist yet. ✅ RESOLVED afterwards: `npm run email:publish-assets` publishes
   the 12 email illustrations to the public `branding/email/` bucket, and the send path now resolves
   authored `/assets/images/email/...` paths to those URLs server-side. A re-send would render.
-  Visual parity is therefore *unblocked* but still unproven — it needs one more approved send.
+  ✅ A visual-parity send followed (`79f05115-8aaf-440e-b832-846e81e7a96a`), from a template
+  seeded with the AUTHORED relative paths so the server-side resolver is what ran. Delivery
+  metadata carries the template key and version, and exactly one send and one
+  `platform.email.template_sent` event were recorded.
+
+  ⚠ **A welcome send exercises ONE hosted asset, not twelve.** Only 3 of the 12 published assets
+  are referenced by any starter family — `onboarding` uses `company-logo.png`, `user_invitation`
+  adds `envelope-user.png`, `worker_invitation` adds `worker-avatar.png`. The other nine belong to
+  templates outside the starter factory. Full asset coverage would need sends of the other
+  families; it is not proven by one email, and should not be claimed.
 - **Reply-To was unset**, so replies go to the From address. Open decision.
 - **Payslip was not sent** — it needs a fixture with a real date of birth, since the PDF password
   is the employee's DOB as `DDMMYYYY`.
