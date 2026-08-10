@@ -1479,7 +1479,7 @@ export function renderEmailMjml(document: EmailEditorSchema, title: string): str
     + `<mj-head>`
     + `<mj-title>${escapeHtml(title)}</mj-title>`
     + `<mj-attributes><mj-all font-family="${escapeHtml(EMAIL_FONT_STACK)}" /></mj-attributes>`
-    + `<mj-style>a { color: ${cssValue(settings.linkColor)}; text-decoration: ${settings.linkUnderline ? 'underline' : 'none'}; } p { margin: 0; font-size: inherit; color: inherit; line-height: inherit; } ${headingRule('h1', typography.h1)} ${headingRule('h2', typography.h2)} ${headingRule('h3', typography.h3)} @media only screen and (max-width:620px){ .stack-col{display:block!important;width:100%!important;box-sizing:border-box} .stack-tile{display:inline-block!important;width:50%!important;box-sizing:border-box;vertical-align:top} }</mj-style>`
+    + `<mj-style>a { color: ${cssValue(settings.linkColor)}; text-decoration: ${settings.linkUnderline ? 'underline' : 'none'}; } p { margin: 0; font-size: inherit; color: inherit; line-height: inherit; } ${headingRule('h1', typography.h1)} ${headingRule('h2', typography.h2)} ${headingRule('h3', typography.h3)} @media only screen and (max-width:620px){ .stack-col{display:block!important;width:100%!important;box-sizing:border-box;height:auto!important} .stack-tile{display:inline-block!important;width:50%!important;box-sizing:border-box;vertical-align:top;height:auto!important} }</mj-style>`
     + `</mj-head>`
     + `<mj-body width="${settings.width}px" background-color="${escapeHtml(settings.outerBackground)}">`
     + document.blocks.map(wrapperFor).join('')

@@ -8,6 +8,7 @@ import {
   createEmailSection,
   createStarterEmailDocument,
   normalizeEmailDocument,
+  renderEmailMjml,
   renderEmailPreview,
   sanitizeRichText,
 } from './emailTemplateDocument';
@@ -213,5 +214,37 @@ describe('emailTemplateDocument', () => {
     // Ordinary content keeps the normal section chrome.
     const text = createEmailSection([createEmailBlock('paragraph')]);
     expect(text.styles.backgroundColor).toBe('#ffffff');
+  });
+
+  /**
+   * ⭐⭐ A stacked column MUST release its canvas height, or it overlaps the next one.
+   *
+   * The columns carry `height="<minHeight>"` from the canvas, where it means a MINIMUM — a `<td>`
+   * grows past it to fit content. The responsive rule forces `display:block`, and a BLOCK BOX
+   * treats the same value as a FIXED height: content that reflows taller at phone width overflows
+   * instead of growing, and the following column is laid out on top of it.
+   *
+   * Measured in Chrome at 375px before the fix: the left column was clamped to 224px while its
+   * content needed 256px, so the avatar started 32px above the button's bottom edge and covered it.
+   * `height:auto` restores growth while `min-height` keeps doing its real job.
+   */
+  it('⭐ releases fixed heights when columns stack, so they cannot overlap', () => {
+    const mjml = renderEmailMjml(createStarterEmailDocument('onboarding'), 'Welcome');
+    const media = mjml.match(/@media only screen and \(max-width:620px\)\{([^]*?)\}\s*<\/mj-style>/);
+    expect(media).not.toBeNull();
+    const rules = media?.[1] ?? '';
+
+    const stackCol = rules.match(/\.stack-col\{([^}]*)\}/)?.[1] ?? '';
+    expect(stackCol).toContain('display:block!important');
+    expect(stackCol).toContain('height:auto!important');
+
+    // Same box-model change, same hazard.
+    const stackTile = rules.match(/\.stack-tile\{([^}]*)\}/)?.[1] ?? '';
+    expect(stackTile).toContain('display:inline-block!important');
+    expect(stackTile).toContain('height:auto!important');
+
+    // The canvas height must still be EMITTED — the fix relaxes it responsively, it does not
+    // delete the author's minimum.
+    expect(mjml).toMatch(/class="stack-col"[^>]*min-height:\d+px/);
   });
 });
