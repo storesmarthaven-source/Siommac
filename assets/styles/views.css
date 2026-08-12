@@ -1352,12 +1352,8 @@
   animation: chartSpin .7s linear infinite;
 }
 @keyframes chartSpin { to { transform: rotate(360deg); } }
-.chart-badge {
-  font-size: 0.72rem; font-weight: var(--font-weight-bold);
-  color: #fff; background: rgba(255,255,255,0.18);
-  padding: 4px 12px; border-radius: 8px;
-  white-space: nowrap;
-}
+/* `.chart-badge` retired — the navy chart header now uses
+   <Badge tone="neutral" contrast="inverse">, the canonical on-dark treatment. */
 
 /* ─── Chart split: stats left, canvas right ─── */
 .dash-chart-split {

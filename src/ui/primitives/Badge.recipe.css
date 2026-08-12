@@ -87,6 +87,33 @@
   .ui-badge--solid   { background: var(--badge-solid); color: #fff; }
   .ui-badge--outline { background: transparent; color: var(--badge-fg); border-color: var(--badge-solid); }
 
+  /* Contrast is a SURFACE axis, not a tone. Every rule below only lightens what
+     the tone already decided, so `warning` on navy is still amber — never a
+     second vocabulary of `inverseWarning` tones. Geometry is untouched.
+
+     Specificity does the switching: these are 2- and 3-class selectors against
+     the 1-class variant rules above, inside the same @layer. */
+  .ui-badge--inverse.ui-badge--soft {
+    background: color-mix(in srgb, var(--badge-solid) 20%, transparent);
+    color: color-mix(in srgb, var(--badge-solid) 40%, #fff);
+  }
+  .ui-badge--inverse.ui-badge--outline {
+    color: color-mix(in srgb, var(--badge-solid) 40%, #fff);
+    border-color: color-mix(in srgb, var(--badge-solid) 55%, transparent);
+  }
+  /* Neutral has no hue to lighten — on a dark surface it is the translucent
+     white treatment the legacy on-dark pills already used. */
+  .ui-badge--neutral.ui-badge--inverse.ui-badge--soft {
+    background: rgba(255, 255, 255, .15);
+    color: var(--ui-color-text-inverse);
+  }
+  .ui-badge--neutral.ui-badge--inverse.ui-badge--outline {
+    color: var(--ui-color-text-inverse);
+    border-color: rgba(255, 255, 255, .35);
+  }
+  /* `solid` is deliberately unchanged: white on a saturated fill already reads
+     on either surface, so inverting it would only reduce contrast. */
+
   .ui-badge-dot {
     width: var(--ui-badge-dot-size);
     height: var(--ui-badge-dot-size);

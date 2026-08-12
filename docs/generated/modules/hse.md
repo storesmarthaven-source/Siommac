@@ -2,7 +2,7 @@
 
 # hse Module Map
 
-Source fingerprint: `170d420ad257f005dd2d8bd7`
+Source fingerprint: `4e3d89c992baf53fd778bdb6`
 
 Files: 87 | Symbols: 1277 | Widgets: 0 | Unique mounted endpoints: 144 | Route definitions: 144 mounted + 0 unmounted | API calls: 107 | DB objects: 65 | E2E suites: 4
 
@@ -514,7 +514,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HSE/RiskJsa.tsx` | 636 |
 | frontend-page | `src/components/sections/HSE/Toolbox.tsx` | 234 |
 | frontend-page | `src/components/sections/HSE/Training.tsx` | 251 |
-| frontend-page | `src/components/sections/HSE/Workflows.tsx` | 764 |
+| frontend-page | `src/components/sections/HSE/Workflows.tsx` | 760 |
 | frontend-page | `src/components/sections/HSE/index.ts` | 10 |
 | frontend-page | `src/components/sections/HSE/inspections/FindingDetailDrawer.tsx` | 134 |
 | frontend-page | `src/components/sections/HSE/inspections/InspectionDetailDrawer.tsx` | 223 |

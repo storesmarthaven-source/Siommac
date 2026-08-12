@@ -2,7 +2,7 @@
 
 # widgets Module Map
 
-Source fingerprint: `170d420ad257f005dd2d8bd7`
+Source fingerprint: `4e3d89c992baf53fd778bdb6`
 
 Files: 72 | Symbols: 581 | Widgets: 21 | Unique mounted endpoints: 15 | Route definitions: 15 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
 

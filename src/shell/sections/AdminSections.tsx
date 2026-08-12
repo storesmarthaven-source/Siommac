@@ -20,7 +20,7 @@
 
 import { AdminStatCards, AdminRecentTable } from '@sections/AdminDashboard';
 import { AppSection } from './AppSection';
-import { Button } from '@ui';
+import { Badge, Button } from '@ui';
 
 
 // ── Statutory Rates Modal (wired by HourlyRates / Payroll sections) ──────────
@@ -473,7 +473,7 @@ function AdminDashboardSection() {
           <div class="chart-card-header">
             <h3><i class="fas fa-chart-line" style="color:var(--siomac-red);margin-right:8px;" />Weekly Attendance Trend</h3>
             <div style="display:flex;align-items:center;gap:8px;">
-              <span class="chart-badge" id="trendBadge">Last 30 days</span>
+              <Badge tone="neutral" contrast="inverse">Last 30 days</Badge>
               <button class="dash-hide-btn" data-widget-id="trend" title="Hide widget"><i class="fas fa-eye-slash" /></button>
             </div>
           </div>

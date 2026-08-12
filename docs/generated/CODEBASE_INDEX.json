@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "fb6f4d181dc2dbe6f719ba7b892d7a931c2bce68",
+    "head": "16e129a17505f76cfd026e09e9dd6e3ad968025c",
     "branch": "ui-kit/overnight-completion",
-    "fingerprint": "170d420ad257f005dd2d8bd7",
-    "indexedFiles": 1814
+    "fingerprint": "4e3d89c992baf53fd778bdb6",
+    "indexedFiles": 1815
   },
   "summary": {
-    "files": 1459,
-    "symbols": 14685,
+    "files": 1460,
+    "symbols": 14688,
     "widgets": 63,
     "routes": 978,
     "routeDefinitions": 979,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 403,
-        "symbols": 3673,
+        "files": 404,
+        "symbols": 3676,
         "widgets": 12,
         "routes": 38,
         "routeDefinitions": 53,
@@ -6019,8 +6019,8 @@
       "path": "src/components/sections/HSE/Workflows.tsx",
       "module": "hse",
       "role": "frontend-page",
-      "lines": 764,
-      "hash": "20392e89cc0f3388"
+      "lines": 760,
+      "hash": "c22771fd33229000"
     },
     {
       "path": "src/components/sections/HSE/index.ts",
@@ -8197,7 +8197,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 616,
-      "hash": "018f5192ca123e15"
+      "hash": "549cb4b6e34195d2"
     },
     {
       "path": "src/shell/sections/AppSection.tsx",
@@ -9019,11 +9019,18 @@
       "hash": "294b5b90bf55b52f"
     },
     {
+      "path": "src/ui/primitives/Badge.test.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 90,
+      "hash": "169547ece27f6d35"
+    },
+    {
       "path": "src/ui/primitives/Badge.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 73,
-      "hash": "e0099129323bb8fc"
+      "lines": 85,
+      "hash": "a0336c5c922195a6"
     },
     {
       "path": "src/ui/primitives/Button.test.tsx",
@@ -118025,7 +118032,7 @@
       "name": "STATUS_TONE",
       "kind": "object",
       "file": "src/components/sections/HSE/Workflows.tsx",
-      "line": 39,
+      "line": 43,
       "module": "hse",
       "exported": false,
       "container": "",
@@ -118035,7 +118042,7 @@
       "name": "StatusPill",
       "kind": "function",
       "file": "src/components/sections/HSE/Workflows.tsx",
-      "line": 55,
+      "line": 59,
       "module": "hse",
       "exported": false,
       "container": "",
@@ -118059,7 +118066,7 @@
       "name": "MODULE_ICON",
       "kind": "object",
       "file": "src/components/sections/HSE/Workflows.tsx",
-      "line": 73,
+      "line": 69,
       "module": "hse",
       "exported": false,
       "container": "",
@@ -118069,7 +118076,7 @@
       "name": "fmtDate",
       "kind": "function",
       "file": "src/components/sections/HSE/Workflows.tsx",
-      "line": 78,
+      "line": 74,
       "module": "hse",
       "exported": false,
       "container": "",
@@ -118079,7 +118086,7 @@
       "name": "isOpenStatus",
       "kind": "function",
       "file": "src/components/sections/HSE/Workflows.tsx",
-      "line": 83,
+      "line": 79,
       "module": "hse",
       "exported": false,
       "container": "",
@@ -118089,7 +118096,7 @@
       "name": "Skeleton",
       "kind": "function",
       "file": "src/components/sections/HSE/Workflows.tsx",
-      "line": 89,
+      "line": 85,
       "module": "hse",
       "exported": false,
       "container": "",
@@ -118101,7 +118108,7 @@
       "name": "ApprovalsTab",
       "kind": "function",
       "file": "src/components/sections/HSE/Workflows.tsx",
-      "line": 101,
+      "line": 97,
       "module": "hse",
       "exported": false,
       "container": "",
@@ -118113,7 +118120,7 @@
       "name": "handleDecide",
       "kind": "function",
       "file": "src/components/sections/HSE/Workflows.tsx",
-      "line": 118,
+      "line": 114,
       "module": "hse",
       "exported": false,
       "container": "ApprovalsTab",
@@ -118123,7 +118130,7 @@
       "name": "RegisterTab",
       "kind": "function",
       "file": "src/components/sections/HSE/Workflows.tsx",
-      "line": 243,
+      "line": 239,
       "module": "hse",
       "exported": false,
       "container": "",
@@ -118135,7 +118142,7 @@
       "name": "WorkflowDetailPanel",
       "kind": "function",
       "file": "src/components/sections/HSE/Workflows.tsx",
-      "line": 354,
+      "line": 350,
       "module": "hse",
       "exported": false,
       "container": "",
@@ -118147,7 +118154,7 @@
       "name": "AuditTab",
       "kind": "function",
       "file": "src/components/sections/HSE/Workflows.tsx",
-      "line": 423,
+      "line": 419,
       "module": "hse",
       "exported": false,
       "container": "",
@@ -118159,7 +118166,7 @@
       "name": "HandoffsTab",
       "kind": "function",
       "file": "src/components/sections/HSE/Workflows.tsx",
-      "line": 544,
+      "line": 540,
       "module": "hse",
       "exported": false,
       "container": "",
@@ -118171,7 +118178,7 @@
       "name": "SeededTemplate",
       "kind": "interface",
       "file": "src/components/sections/HSE/Workflows.tsx",
-      "line": 642,
+      "line": 638,
       "module": "hse",
       "exported": false,
       "container": "",
@@ -118181,7 +118188,7 @@
       "name": "SEEDED_TEMPLATES",
       "kind": "array",
       "file": "src/components/sections/HSE/Workflows.tsx",
-      "line": 649,
+      "line": 645,
       "module": "hse",
       "exported": false,
       "container": "",
@@ -118191,7 +118198,7 @@
       "name": "WorkflowsArea",
       "kind": "function",
       "file": "src/components/sections/HSE/Workflows.tsx",
-      "line": 712,
+      "line": 708,
       "module": "hse",
       "exported": true,
       "container": "",
@@ -146820,10 +146827,34 @@
       ]
     },
     {
+      "name": "TONES",
+      "kind": "array",
+      "file": "src/ui/primitives/Badge.test.tsx",
+      "line": 14,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "classesOf",
+      "kind": "function",
+      "file": "src/ui/primitives/Badge.test.tsx",
+      "line": 16,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
       "name": "BadgeTone",
       "kind": "type",
       "file": "src/ui/primitives/Badge.tsx",
-      "line": 21,
+      "line": 26,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146833,7 +146864,17 @@
       "name": "BadgeVariant",
       "kind": "type",
       "file": "src/ui/primitives/Badge.tsx",
-      "line": 22,
+      "line": 27,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "BadgeContrast",
+      "kind": "type",
+      "file": "src/ui/primitives/Badge.tsx",
+      "line": 28,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146843,7 +146884,7 @@
       "name": "BadgeProps",
       "kind": "interface",
       "file": "src/ui/primitives/Badge.tsx",
-      "line": 24,
+      "line": 30,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146853,7 +146894,7 @@
       "name": "Badge",
       "kind": "function",
       "file": "src/ui/primitives/Badge.tsx",
-      "line": 43,
+      "line": 54,
       "module": "platform",
       "exported": true,
       "container": "",

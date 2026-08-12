@@ -8,7 +8,12 @@
  *
  *   tone     what it MEANS      success | warning | danger | info | neutral | accent
  *   variant  how loud it is     soft (default) | solid | outline
+ *   contrast what it SITS ON    default (light) | inverse (dark surface)
  *   onRemove makes it a tag     a removable chip, not a second component
+ *
+ * `tone` and `contrast` are separate axes on purpose. A badge on a navy panel
+ * still MEANS the same thing; only its contrast changes. That is why there is no
+ * `inverse` tone and no `inverseWarning` — one vocabulary, two questions.
  *
  * A dot is available for dense rows where a filled pill is too heavy — still the
  * same component, because "status shown small" is not a different concept.
@@ -20,11 +25,17 @@ import './Badge.recipe.css';
 
 export type BadgeTone = 'success' | 'warning' | 'danger' | 'info' | 'neutral' | 'accent';
 export type BadgeVariant = 'soft' | 'solid' | 'outline';
+export type BadgeContrast = 'default' | 'inverse';
 
 export interface BadgeProps {
   children: ComponentChildren;
   tone?: BadgeTone;
   variant?: BadgeVariant;
+  /**
+   * The surface the badge sits on. `inverse` adjusts contrast only — the tone
+   * keeps its semantic colour, lightened to read on a dark panel.
+   */
+  contrast?: BadgeContrast;
   /** Leading icon. Keep it to a glyph — a badge is not a button. */
   icon?: VNode;
   /**
@@ -41,7 +52,7 @@ export interface BadgeProps {
 }
 
 export function Badge({
-  children, tone = 'neutral', variant = 'soft', icon, dot = false,
+  children, tone = 'neutral', variant = 'soft', contrast = 'default', icon, dot = false,
   size = 'md', onRemove, removeLabel, class: extra,
 }: BadgeProps): VNode {
   return (
@@ -50,6 +61,7 @@ export function Badge({
         'ui-badge',
         `ui-badge--${tone}`,
         `ui-badge--${variant}`,
+        contrast !== 'default' ? `ui-badge--${contrast}` : '',
         size !== 'md' ? `ui-badge--${size}` : '',
         extra ?? '',
       ].filter(Boolean).join(' ')}

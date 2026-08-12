@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
-import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, type AreaTab, type SparkDef } from '@ui';
+import { Badge, PageHeader, MetricRow, TabBar, withCounts, SparkCard, type AreaTab, type SparkDef, type BadgeTone } from '@ui';
 import { dialog } from '@lib/dialog';
 import {
   useWorkflowList,
@@ -32,42 +32,38 @@ const TABS: AreaTab[] = [
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const PRIORITY_TONE: Record<string, string> = {
-  critical: '#ef4444', high: '#f59e0b', medium: '#60a5fa', normal: '#60a5fa', low: '#94a3b8',
+const PRIORITY_TONE: Record<string, { tone: BadgeTone; label: string }> = {
+  critical: { tone: 'danger',  label: 'Critical' },
+  high:     { tone: 'warning', label: 'High'     },
+  medium:   { tone: 'info',    label: 'Medium'   },
+  normal:   { tone: 'info',    label: 'Normal'   },
+  low:      { tone: 'neutral', label: 'Low'      },
 };
 
-const STATUS_TONE: Record<string, { bg: string; color: string; label: string }> = {
-  pending:              { bg: 'rgba(245,158,11,.15)',  color: '#fcd34d', label: 'Pending'   },
-  submitted:            { bg: 'rgba(245,158,11,.15)',  color: '#fcd34d', label: 'Submitted' },
-  in_review:            { bg: 'rgba(96,165,250,.15)',  color: '#93c5fd', label: 'In Review' },
-  open:                 { bg: 'rgba(96,165,250,.15)',  color: '#93c5fd', label: 'Open'      },
-  approved:             { bg: 'rgba(34,197,94,.15)',   color: '#4ade80', label: 'Approved'  },
-  returned:             { bg: 'rgba(251,146,60,.15)',  color: '#fdba74', label: 'Returned'  },
-  rejected:             { bg: 'rgba(239,68,68,.15)',   color: '#fca5a5', label: 'Rejected'  },
-  closed:               { bg: 'rgba(100,116,139,.15)', color: '#94a3b8', label: 'Closed'    },
-  completed:            { bg: 'rgba(34,197,94,.15)',   color: '#4ade80', label: 'Completed' },
-  failed:               { bg: 'rgba(239,68,68,.2)',    color: '#f87171', label: 'Failed'    },
-  cancelled:            { bg: 'rgba(100,116,139,.15)', color: '#94a3b8', label: 'Cancelled' },
-  awaiting_approval:    { bg: 'rgba(96,165,250,.15)',  color: '#93c5fd', label: 'Awaiting'  },
-  awaiting_evidence:    { bg: 'rgba(245,158,11,.15)',  color: '#fcd34d', label: 'Evidence'  },
+const STATUS_TONE: Record<string, { tone: BadgeTone; label: string }> = {
+  pending:           { tone: 'warning', label: 'Pending'   },
+  submitted:         { tone: 'warning', label: 'Submitted' },
+  in_review:         { tone: 'info',    label: 'In Review' },
+  open:              { tone: 'info',    label: 'Open'      },
+  approved:          { tone: 'success', label: 'Approved'  },
+  returned:          { tone: 'warning', label: 'Returned'  },
+  rejected:          { tone: 'danger',  label: 'Rejected'  },
+  closed:            { tone: 'neutral', label: 'Closed'    },
+  completed:         { tone: 'success', label: 'Completed' },
+  failed:            { tone: 'danger',  label: 'Failed'    },
+  cancelled:         { tone: 'neutral', label: 'Cancelled' },
+  awaiting_approval: { tone: 'info',    label: 'Awaiting'  },
+  awaiting_evidence: { tone: 'warning', label: 'Evidence'  },
 };
 
 function StatusPill({ status }: { status: string }): VNode {
-  const t = STATUS_TONE[status] ?? { bg: 'rgba(148,163,184,.12)', color: '#94a3b8', label: status };
-  return (
-    <span style={{ background: t.bg, color: t.color, padding: '3px 10px', borderRadius: '999px', fontSize: '0.68rem', fontWeight: 'var(--font-weight-bold)', letterSpacing: '0.03em' }}>
-      {t.label}
-    </span>
-  );
+  const t = STATUS_TONE[status] ?? { tone: 'neutral' as BadgeTone, label: status };
+  return <Badge tone={t.tone} contrast="inverse">{t.label}</Badge>;
 }
 
 function PriorityChip({ priority }: { priority: string }): VNode {
-  const color = PRIORITY_TONE[priority] ?? '#94a3b8';
-  return (
-    <span style={{ background: `${color}22`, color, padding: '2px 8px', borderRadius: '999px', fontSize: '0.64rem', fontWeight: 'var(--font-weight-bold)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-      {priority}
-    </span>
-  );
+  const p = PRIORITY_TONE[priority] ?? { tone: 'neutral' as BadgeTone, label: priority };
+  return <Badge tone={p.tone} contrast="inverse">{p.label}</Badge>;
 }
 
 const MODULE_ICON: Record<string, string> = {

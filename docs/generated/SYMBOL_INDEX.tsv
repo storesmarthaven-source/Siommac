@@ -10306,22 +10306,22 @@ PpeKitRow	interface	hse	true		src/components/sections/HSE/types.ts	597
 mockPpeKits	array	hse	true		src/components/sections/HSE/types.ts	606	
 TABS	array	hse	false		src/components/sections/HSE/Workflows.tsx	26	
 PRIORITY_TONE	object	hse	false		src/components/sections/HSE/Workflows.tsx	35	
-STATUS_TONE	object	hse	false		src/components/sections/HSE/Workflows.tsx	39	
-StatusPill	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	55	
+STATUS_TONE	object	hse	false		src/components/sections/HSE/Workflows.tsx	43	
+StatusPill	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	59	
 PriorityChip	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	64	
-MODULE_ICON	object	hse	false		src/components/sections/HSE/Workflows.tsx	73	
-fmtDate	function	hse	false		src/components/sections/HSE/Workflows.tsx	78	
-isOpenStatus	function	hse	false		src/components/sections/HSE/Workflows.tsx	83	
-Skeleton	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	89	
-ApprovalsTab	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	101	
-handleDecide	function	hse	false		src/components/sections/HSE/Workflows.tsx	118	ApprovalsTab
-RegisterTab	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	243	
-WorkflowDetailPanel	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	354	
-AuditTab	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	423	
-HandoffsTab	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	544	
-SeededTemplate	interface	hse	false		src/components/sections/HSE/Workflows.tsx	642	
-SEEDED_TEMPLATES	array	hse	false		src/components/sections/HSE/Workflows.tsx	649	
-WorkflowsArea	function	hse	true	component	src/components/sections/HSE/Workflows.tsx	712	
+MODULE_ICON	object	hse	false		src/components/sections/HSE/Workflows.tsx	69	
+fmtDate	function	hse	false		src/components/sections/HSE/Workflows.tsx	74	
+isOpenStatus	function	hse	false		src/components/sections/HSE/Workflows.tsx	79	
+Skeleton	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	85	
+ApprovalsTab	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	97	
+handleDecide	function	hse	false		src/components/sections/HSE/Workflows.tsx	114	ApprovalsTab
+RegisterTab	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	239	
+WorkflowDetailPanel	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	350	
+AuditTab	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	419	
+HandoffsTab	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	540	
+SeededTemplate	interface	hse	false		src/components/sections/HSE/Workflows.tsx	638	
+SEEDED_TEMPLATES	array	hse	false		src/components/sections/HSE/Workflows.tsx	645	
+WorkflowsArea	function	hse	true	component	src/components/sections/HSE/Workflows.tsx	708	
 ApiResponse	interface	platform	false		src/components/sections/LiveMap/api.ts	12	
 LiveAttendanceRow	interface	platform	true		src/components/sections/LiveMap/api.ts	14	
 LiveResponse	interface	platform	false		src/components/sections/LiveMap/api.ts	39	
@@ -13024,10 +13024,13 @@ DropdownButtonProps	interface	platform	true		src/ui/primitives/actions.tsx	109
 DropdownButton	function	platform	true	component	src/ui/primitives/actions.tsx	123	
 SplitButtonProps	interface	platform	true		src/ui/primitives/actions.tsx	166	
 SplitButton	function	platform	true	component	src/ui/primitives/actions.tsx	189	
-BadgeTone	type	platform	true		src/ui/primitives/Badge.tsx	21	
-BadgeVariant	type	platform	true		src/ui/primitives/Badge.tsx	22	
-BadgeProps	interface	platform	true		src/ui/primitives/Badge.tsx	24	
-Badge	function	platform	true	component	src/ui/primitives/Badge.tsx	43	
+TONES	array	platform	false	test	src/ui/primitives/Badge.test.tsx	14	
+classesOf	function	platform	false	test	src/ui/primitives/Badge.test.tsx	16	
+BadgeTone	type	platform	true		src/ui/primitives/Badge.tsx	26	
+BadgeVariant	type	platform	true		src/ui/primitives/Badge.tsx	27	
+BadgeContrast	type	platform	true		src/ui/primitives/Badge.tsx	28	
+BadgeProps	interface	platform	true		src/ui/primitives/Badge.tsx	30	
+Badge	function	platform	true	component	src/ui/primitives/Badge.tsx	54	
 Icon	function	platform	false	component,test	src/ui/primitives/Button.test.tsx	17	
 ButtonVariant	type	platform	true		src/ui/primitives/Button.tsx	39	
 ButtonTone	type	platform	true		src/ui/primitives/Button.tsx	53	
