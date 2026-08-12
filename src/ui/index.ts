@@ -219,7 +219,6 @@ export { EmptyState, type EmptyStateProps, type EmptyTone } from './components/E
 // ── Data ──
 /** DEPRECATED — superseded by the canonical `Tabs` below. Kept under a loud
  *  name while its remaining drawer consumers migrate; deleted when they have. */
-export { Tabs as LegacyTabs, type TabDef as LegacyTabDef } from './components/Tabs';
 export { RegisterTable, type Column } from './components/RegisterTable';
 export { Pagination, usePagination, DEFAULT_PAGE_SIZE, type PaginationProps, type PaginationState } from './components/Pagination';
 

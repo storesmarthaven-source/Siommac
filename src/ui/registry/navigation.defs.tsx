@@ -64,9 +64,10 @@ export const tabsDef: ComponentDef = {
   migration: {
     replaces: ['.inv-tab-bar', '.inv-tab-btn', '.hse-tabs-bar', '.hse-tab', '.ui-panel-tab', '.record-tabs', '.run-tabs'],
     deprecatedImports: ['LegacyTabs', 'ModuleTabs', 'TabBar', 'AreaTabs', 'PanelTabs', 'VerticalTabs'],
-    nextSurface: 'HSE Inspections / Permits / RiskJsa (the remaining TabBar pages)',
+    nextSurface: 'Dialog',
     notes: [
-      'PanelTabs and the AreaTabs alias are DELETED — they have no consumers left. TabBar (12 pages), ModuleTabs (1) and LegacyTabs (10 drawers) survive under loud names and go as their consumers move.',
+      'The clean overview family is migrated: Environmental, Emergency Response, Documents, Contractors, Workflows, Training, Legal Compliance, Toolbox and Notification Centre now use canonical Tabs + TabPanel. HR Organization Structure and the clean Worker Profile drawer moved in the same batch.',
+      'The pre-v2 generic Tabs runtime is DELETED. Four TabBar pages and nine old-signature drawer/detail call sites remain exact debt because their files have unrelated lint blockers; the unused ModulePageLayout composition is not a live application surface.',
       'A migration is not finished when <Tabs> appears in the JSX: the superseded tab CSS must be deleted in the same change, because a recipe can never out-rank a legacy rule (RECIPES.md §4). `.ui-panel-tab*` was removed with the Statutory drawer, and the dark-drawer skin now re-points --ui-tab-* variables instead of overriding rules.',
       'Wrap each tab body in <TabPanel>. Every tab emits aria-controls pointing at the panel it renders; a bare `{tab === "x" && …}` conditional leaves those references dangling, which is worse than having none.',
       'Use activation="manual" when a panel fires a network request — under the default, arrowing past four tabs selects four tabs.',

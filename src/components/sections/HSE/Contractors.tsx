@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, type AreaTab, type SparkDef, Badge } from '@ui';
+import { PageHeader, MetricRow, Tabs, TabPanel, SparkCard, HseModal, Field, TextInput, SelectInput, type TabItem, type SparkDef, Badge } from '@ui';
 import { HSE_SITES, hseBadgeTone, type HseSeverity } from './types';
 
 // ── Mock data ────────────────────────────────────────────────────────────────
@@ -94,11 +94,11 @@ const TRADES = ['Civil / Excavation', 'Mechanical Maintenance', 'Marine / Offsho
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 
-const TABS: AreaTab[] = [
-  { key: 'register',  label: 'Contractor Register', icon: 'fa-clipboard-list' },
-  { key: 'induction', label: 'Induction Log',       icon: 'fa-person-chalkboard' },
-  { key: 'files',     label: 'HSE Files',           icon: 'fa-folder-open' },
-  { key: 'access',    label: 'Site Access',         icon: 'fa-door-open' },
+const TABS: readonly TabItem[] = [
+  { id: 'register',  label: 'Contractor Register', icon: <i class="fas fa-clipboard-list" /> },
+  { id: 'induction', label: 'Induction Log',       icon: <i class="fas fa-person-chalkboard" /> },
+  { id: 'files',     label: 'HSE Files',           icon: <i class="fas fa-folder-open" /> },
+  { id: 'access',    label: 'Site Access',         icon: <i class="fas fa-door-open" /> },
 ];
 
 function RegisterTab(): VNode {
@@ -385,11 +385,17 @@ export function ContractorsArea({ tab }: { tab: string }): VNode {
 
       <MetricRow pageKey="hse.contractors" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />
 
-      <TabBar tabs={withCounts(TABS, { register: mockContractors.length })} active={active} onSelect={setActive} />
-      {active === 'register'  && <RegisterTab />}
-      {active === 'induction' && <InductionTab />}
-      {active === 'files'     && <FilesTab />}
-      {active === 'access'    && <AccessTab />}
+      <Tabs
+        id="hse-contractors-tabs"
+        items={TABS.map(item => ({ ...item, badge: item.id === 'register' ? mockContractors.length : undefined }))}
+        value={active}
+        onChange={setActive}
+        label="Contractor sections"
+      />
+      <TabPanel tabsId="hse-contractors-tabs" tabId="register" value={active}><RegisterTab /></TabPanel>
+      <TabPanel tabsId="hse-contractors-tabs" tabId="induction" value={active}><InductionTab /></TabPanel>
+      <TabPanel tabsId="hse-contractors-tabs" tabId="files" value={active}><FilesTab /></TabPanel>
+      <TabPanel tabsId="hse-contractors-tabs" tabId="access" value={active}><AccessTab /></TabPanel>
     </div>
   );
 }

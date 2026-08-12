@@ -11,8 +11,8 @@
 import { type VNode, type ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  PageHeader, TabBar, NewMenu, withCounts, SidePanel,
-  type AreaTab, type SidePanelSection,
+    PageHeader, Tabs, TabPanel, NewMenu, SidePanel,
+  type TabItem, type SidePanelSection,
 } from '@ui';
 import { TrainingInsightCards } from './training/TrainingInsightCards';
 import {
@@ -23,9 +23,9 @@ import { WorkerProfileDrawer } from './training/WorkerProfileDrawer';
 import { CertificateDetailDrawer } from './training/CertificateDetailDrawer';
 import { AddCertificateDialog, AssignTrainingDialog, CreateRequirementDialog } from './training/TrainingDialogs';
 
-const TABS: AreaTab[] = [
-  { key: 'matrix', label: 'Competency Matrix', sublabel: 'Coverage by role',   icon: 'fa-table-cells' },
-  { key: 'certs',  label: 'Certifications',    sublabel: 'Certificate records', icon: 'fa-certificate' },
+const TABS: readonly TabItem[] = [
+  { id: 'matrix', label: 'Competency Matrix', description: 'Coverage by role', icon: <i class="fas fa-table-cells" /> },
+  { id: 'certs', label: 'Certifications', description: 'Certificate records', icon: <i class="fas fa-certificate" /> },
 ];
 
 const titleCase = (s?: string | null) => (s ?? '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -93,7 +93,7 @@ function Spark({ label, value, sub, color }: { label: string; value: ComponentCh
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function TrainingArea({ tab }: { tab: string }): VNode {
-  const [active, setActive] = useState(TABS.some(t => t.key === tab) ? tab : 'matrix');
+  const [active, setActive] = useState(TABS.some(t => t.id === tab) ? tab : 'matrix');
   const [openWorker, setOpenWorker] = useState<MatrixRow | null>(null);
   const [openCert, setOpenCert] = useState<string | null>(null);
   const [addCertOpen, setAddCertOpen] = useState(false);
@@ -114,7 +114,7 @@ export function TrainingArea({ tab }: { tab: string }): VNode {
   const dueWorkers   = matrix.filter(m => m.overallStatus === 'due_soon');
   const pendingCerts  = certs.filter(c => c.status === 'pending_verification');
 
-  const tabsWithCounts = withCounts(TABS, { matrix: matrix.length, certs: certs.length });
+  const tabsWithCounts = TABS.map(item => ({ ...item, badge: item.id === 'matrix' ? matrix.length : certs.length }));
 
   return (
     <div class="hse-tab hse-dash" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -125,18 +125,18 @@ export function TrainingArea({ tab }: { tab: string }): VNode {
 
       <TrainingInsightCards active={active} />
 
-      <div style={{ display: 'flex', alignItems: 'stretch', gap: '12px', marginTop: '6px' }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <TabBar tabs={tabsWithCounts} active={active} onSelect={setActive} />
-        </div>
-        <div style={{ flexShrink: 0 }}>
-          <NewMenu label="Add Certificate" fill items={[
+      <Tabs
+        id="hse-training-tabs"
+        items={tabsWithCounts}
+        value={active}
+        onChange={setActive}
+        label="Training and competency sections"
+        actions={<NewMenu label="Add Certificate" fill items={[
             { label: 'Add Certificate', icon: 'Award', sub: 'Record a worker certificate', onSelect: () => { setPresetWorker(undefined); setAddCertOpen(true); } },
             { label: 'Assign Training', icon: 'GraduationCap', sub: 'Assign training to a worker', onSelect: () => { setPresetWorker(undefined); setAssignOpen(true); } },
             { label: 'Create Role Requirement', icon: 'ListChecks', sub: 'Define a role competency rule', onSelect: () => setReqOpen(true) },
-          ]} />
-        </div>
-      </div>
+          ]} />}
+      />
 
       {/* Compact KPI spark row (under the nav) */}
       {active === 'matrix' ? (
@@ -156,7 +156,7 @@ export function TrainingArea({ tab }: { tab: string }): VNode {
       )}
 
       {/* Competency Matrix tab */}
-      {active === 'matrix' && (
+      <TabPanel tabsId="hse-training-tabs" tabId="matrix" value={active}>
         <div class="hse-main-grid">
           <div class="hse-left-col">
             <div class="vt-table-card">
@@ -192,10 +192,10 @@ export function TrainingArea({ tab }: { tab: string }): VNode {
             <MatrixRail matrix={matrix} onOpen={setOpenWorker} />
           </div>
         </div>
-      )}
+      </TabPanel>
 
       {/* Certifications tab */}
-      {active === 'certs' && (
+      <TabPanel tabsId="hse-training-tabs" tabId="certs" value={active}>
         <div class="hse-main-grid">
           <div class="hse-left-col">
             <div class="vt-table-card">
@@ -232,7 +232,7 @@ export function TrainingArea({ tab }: { tab: string }): VNode {
             <CertRail certs={certs} onOpen={setOpenCert} />
           </div>
         </div>
-      )}
+      </TabPanel>
 
       <AddCertificateDialog open={addCertOpen} onClose={() => setAddCertOpen(false)} presetWorkerId={presetWorker} />
       <AssignTrainingDialog open={assignOpen} onClose={() => setAssignOpen(false)} presetWorkerId={presetWorker} />

@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, type AreaTab, type SparkDef, Badge } from '@ui';
+import { PageHeader, MetricRow, Tabs, TabPanel, SparkCard, HseModal, Field, TextInput, SelectInput, type TabItem, type SparkDef, Badge } from '@ui';
 import { HSE_SITES, hseBadgeTone, type HseSeverity } from './types';
 
 // ── Mock data ────────────────────────────────────────────────────────────────
@@ -91,11 +91,11 @@ const mockCalendar: CalendarEvent[] = [
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 
-const TABS: AreaTab[] = [
-  { key: 'obligations', label: 'OSH Obligations',    icon: 'fa-list-check' },
-  { key: 'permits',     label: 'EMA Permits',         icon: 'fa-file-contract' },
-  { key: 'breaches',    label: 'Breach Log',          icon: 'fa-triangle-exclamation' },
-  { key: 'calendar',   label: 'Regulatory Calendar', icon: 'fa-calendar-days' },
+const TABS: readonly TabItem[] = [
+  { id: 'obligations', label: 'OSH Obligations',    icon: <i class="fas fa-list-check" /> },
+  { id: 'permits',     label: 'EMA Permits',         icon: <i class="fas fa-file-contract" /> },
+  { id: 'breaches',    label: 'Breach Log',          icon: <i class="fas fa-triangle-exclamation" /> },
+  { id: 'calendar',    label: 'Regulatory Calendar', icon: <i class="fas fa-calendar-days" /> },
 ];
 
 function ObligationsTab(): VNode {
@@ -402,11 +402,17 @@ export function LegalComplianceArea({ tab }: { tab: string }): VNode {
 
       <MetricRow pageKey="hse.legal" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />
 
-      <TabBar tabs={withCounts(TABS, { obligations: mockObligations.length, permits: mockEmaPermits.length })} active={active} onSelect={setActive} />
-      {active === 'obligations' && <ObligationsTab />}
-      {active === 'permits'     && <EmaPermitsTab />}
-      {active === 'breaches'    && <BreachesTab />}
-      {active === 'calendar'    && <CalendarTab />}
+      <Tabs
+        id="hse-legal-tabs"
+        items={TABS.map(item => ({ ...item, badge: { obligations: mockObligations.length, permits: mockEmaPermits.length }[item.id] }))}
+        value={active}
+        onChange={setActive}
+        label="Legal compliance sections"
+      />
+      <TabPanel tabsId="hse-legal-tabs" tabId="obligations" value={active}><ObligationsTab /></TabPanel>
+      <TabPanel tabsId="hse-legal-tabs" tabId="permits" value={active}><EmaPermitsTab /></TabPanel>
+      <TabPanel tabsId="hse-legal-tabs" tabId="breaches" value={active}><BreachesTab /></TabPanel>
+      <TabPanel tabsId="hse-legal-tabs" tabId="calendar" value={active}><CalendarTab /></TabPanel>
     </div>
   );
 }

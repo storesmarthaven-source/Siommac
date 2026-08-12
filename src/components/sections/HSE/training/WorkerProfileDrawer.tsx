@@ -6,13 +6,13 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { Drawer, Tabs, type TabDef } from '@ui';
+import { Drawer, Tabs, TabPanel, type TabItem } from '@ui';
 import { useCertificates, useAssignments, type MatrixRow, type CellStatus } from '@api/hse/training';
 import { hsePill } from '../types';
 
 type TabKey = 'competencies' | 'certificates' | 'assignments';
-const TABS: TabDef<TabKey>[] = [
-  { key: 'competencies', label: 'Required' }, { key: 'certificates', label: 'Certificates' }, { key: 'assignments', label: 'Assignments' },
+const TABS: readonly TabItem[] = [
+  { id: 'competencies', label: 'Required' }, { id: 'certificates', label: 'Certificates' }, { id: 'assignments', label: 'Assignments' },
 ];
 const fmt = (iso?: string | null) => iso ? new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
 
@@ -44,9 +44,9 @@ export function WorkerProfileDrawer({ row, onClose, onOpenCert, onAssign, onAddC
             <span class={hsePill(row.overallStatus)}>{row.overallStatus.replace(/_/g, ' ')}</span>
             <span class="vt-cell-subtext">{row.compliantCount}/{row.requiredCount} compliant · {row.expiredCount} expired · {row.missingCount} missing</span>
           </div>
-          <Tabs<TabKey> tabs={TABS} active={tab} onChange={setTab} />
+          <Tabs id="worker-training-profile-tabs" items={TABS} value={tab} onChange={id => setTab(id as TabKey)} label="Worker training profile sections" />
 
-          {tab === 'competencies' && (
+          <TabPanel tabsId="worker-training-profile-tabs" tabId="competencies" value={tab}>
             <div style={{ marginTop: '12px', display: 'grid', gap: '6px' }}>
               {row.competencies.length === 0 && <div class="hse-muted">No required competencies for this role.</div>}
               {row.competencies.map(c => {
@@ -60,9 +60,9 @@ export function WorkerProfileDrawer({ row, onClose, onOpenCert, onAssign, onAddC
                 );
               })}
             </div>
-          )}
+          </TabPanel>
 
-          {tab === 'certificates' && (
+          <TabPanel tabsId="worker-training-profile-tabs" tabId="certificates" value={tab}>
             <div style={{ marginTop: '12px', display: 'grid', gap: '6px' }}>
               {certs.length === 0 && <div class="hse-muted">No certificates on file.</div>}
               {certs.map(ct => (
@@ -72,9 +72,9 @@ export function WorkerProfileDrawer({ row, onClose, onOpenCert, onAssign, onAddC
                 </div>
               ))}
             </div>
-          )}
+          </TabPanel>
 
-          {tab === 'assignments' && (
+          <TabPanel tabsId="worker-training-profile-tabs" tabId="assignments" value={tab}>
             <div style={{ marginTop: '12px', display: 'grid', gap: '6px' }}>
               {assignments.length === 0 && <div class="hse-muted">No training assignments.</div>}
               {assignments.map(a => (
@@ -84,7 +84,7 @@ export function WorkerProfileDrawer({ row, onClose, onOpenCert, onAssign, onAddC
                 </div>
               ))}
             </div>
-          )}
+          </TabPanel>
         </>
       )}
     </Drawer>

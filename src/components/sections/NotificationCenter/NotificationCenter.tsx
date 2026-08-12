@@ -9,7 +9,7 @@
 
 import { type VNode } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { PageHeader, TabBar, withCounts, type AreaTab } from '@ui';
+import { PageHeader, Tabs, TabPanel, type TabItem } from '@ui';
 import { useCan } from '@lib/permissions';
 import {
   useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead,
@@ -21,11 +21,11 @@ import { BroadcastComposer } from './BroadcastComposer';
 import { NotificationPreferencesPanel } from './NotificationPreferencesPanel';
 import { openNotificationTarget, openTicketNotification } from './notifAction';
 
-const TABS: AreaTab[] = [
-  { key: 'all',      label: 'All',             icon: 'fa-inbox' },
-  { key: 'unread',   label: 'Unread',          icon: 'fa-envelope' },
-  { key: 'action',   label: 'Action Required', icon: 'fa-clipboard-check' },
-  { key: 'archived', label: 'Archived',        icon: 'fa-box-archive' },
+const TABS: readonly TabItem[] = [
+  { id: 'all', label: 'All', icon: <i class="fas fa-inbox" /> },
+  { id: 'unread', label: 'Unread', icon: <i class="fas fa-envelope" /> },
+  { id: 'action', label: 'Action Required', icon: <i class="fas fa-clipboard-check" /> },
+  { id: 'archived', label: 'Archived', icon: <i class="fas fa-box-archive" /> },
 ];
 
 const MODULE_OPTIONS: { value: string; label: string }[] = [
@@ -116,12 +116,13 @@ export function NotificationCenter(): VNode {
   const markAll = useMarkAllNotificationsRead();
   const archive = useArchiveNotification();
 
-  const tabs = withCounts(TABS, {
-    all:      summary?.notificationsTotal,
-    unread:   summary?.notificationsUnread,
-    action:   summary?.notificationsActionRequired,
+  const tabCounts: Record<string, number | undefined> = {
+    all: summary?.notificationsTotal,
+    unread: summary?.notificationsUnread,
+    action: summary?.notificationsActionRequired,
     archived: summary?.notificationsArchived,
-  });
+  };
+  const tabs = TABS.map(item => ({ ...item, badge: tabCounts[item.id] }));
 
   function open(n: CanonicalNotification) {
     if (!n.is_read) markRead.mutate(n.id);
@@ -144,7 +145,7 @@ export function NotificationCenter(): VNode {
       {/* Tabs row — status on the left, list/utility actions on the right. */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <TabBar tabs={tabs} active={tab} onSelect={setTab} />
+          <Tabs id="notification-center-tabs" items={tabs} value={tab} onChange={setTab} label="Notification views" />
         </div>
 
         {unread > 0 && (
@@ -178,6 +179,7 @@ export function NotificationCenter(): VNode {
         </div>
       </div>
 
+      <TabPanel tabsId="notification-center-tabs" tabId={tab} value={tab}>
       {/* Filter toolbar */}
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginTop: '8px' }}>
         <div class="vt-search" style={{ flex: '1 1 200px' }}>
@@ -243,6 +245,7 @@ export function NotificationCenter(): VNode {
           </div>
         ))}
       </div>
+      </TabPanel>
 
       <BroadcastComposer open={broadcastOpen} onClose={() => setBroadcastOpen(false)} />
       <NotificationPreferencesPanel open={prefsOpen} onClose={() => setPrefsOpen(false)} />

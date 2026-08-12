@@ -103,11 +103,11 @@ export const TABS_COMPARISON: ComparisonSet = {
 
   retire: [
     { name: 'TabBar (.hse-tabs-bar)', source: 'src/ui/components/ModuleTabs.tsx',
-      usedBy: '12 HSE pages + the Notification Centre', uses: 13 },
+      usedBy: '4 exact deferred HSE pages: Inspections, Permits, Risk/JSA and Incidents.', uses: 4 },
     { name: 'ModuleTabs / AreaTabs (.hse-tabs-container)', source: 'src/ui/components/ModuleTabs.tsx',
-      usedBy: '1 file via ModulePageLayout. Its header duplicates PageHeader.', uses: 1 },
-    { name: '@ui/Tabs (.inv-tab-btn, LegacyTabs)', source: 'src/ui/components/Tabs.tsx',
-      usedBy: '10 HSE + HR detail drawers', uses: 10 },
+      usedBy: 'No live application surface; only the unused ModulePageLayout export remains.', uses: 0 },
+    { name: '@ui/Tabs (.inv-tab-btn, deleted runtime)', source: 'src/ui/components/Tabs.tsx — deleted',
+      usedBy: '9 exact deferred old-signature drawer/detail call sites; no legacy runtime remains.', uses: 0 },
   ],
 
   keepRegardless: [

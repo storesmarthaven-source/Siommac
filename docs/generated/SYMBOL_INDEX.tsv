@@ -9162,26 +9162,27 @@ nameFrom	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	
 CostCenterModal	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	366	
 submit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	377	CostCenterModal
 Tab	type	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	433	
-ModalState	type	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	434	
-OrgStructureOverview	function	hr	true	component	src/components/sections/HR/OrgStructureOverview.tsx	441	
-toggle	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	481	OrgStructureOverview
-runImpact	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	483	OrgStructureOverview
-confirmImpact	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	488	OrgStructureOverview
-onArchiveUnit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	497	OrgStructureOverview
-onDeleteUnit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	501	OrgStructureOverview
-onActivateUnit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	505	OrgStructureOverview
-StatRow	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	562	OrgStructureOverview
-HealthPanel	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	572	OrgStructureOverview
-renderTree	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	595	OrgStructureOverview
-PositionsTab	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	636	OrgStructureOverview
-onRetire	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	641	PositionsTab
-onReactivate	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	645	PositionsTab
-CostCentersTab	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	688	OrgStructureOverview
-onRetire	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	693	CostCentersTab
-onReactivate	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	697	CostCentersTab
-ChangeRequestsTab	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	738	OrgStructureOverview
-onCancel	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	742	ChangeRequestsTab
-riskTone	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	747	ChangeRequestsTab
+ORG_TABS	array	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	434	
+ModalState	type	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	440	
+OrgStructureOverview	function	hr	true	component	src/components/sections/HR/OrgStructureOverview.tsx	447	
+toggle	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	487	OrgStructureOverview
+runImpact	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	489	OrgStructureOverview
+confirmImpact	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	494	OrgStructureOverview
+onArchiveUnit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	503	OrgStructureOverview
+onDeleteUnit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	507	OrgStructureOverview
+onActivateUnit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	511	OrgStructureOverview
+StatRow	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	565	OrgStructureOverview
+HealthPanel	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	575	OrgStructureOverview
+renderTree	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	598	OrgStructureOverview
+PositionsTab	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	639	OrgStructureOverview
+onRetire	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	644	PositionsTab
+onReactivate	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	648	PositionsTab
+CostCentersTab	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	691	OrgStructureOverview
+onRetire	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	696	CostCentersTab
+onReactivate	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	700	CostCentersTab
+ChangeRequestsTab	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	741	OrgStructureOverview
+onCancel	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	745	ChangeRequestsTab
+riskTone	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	750	ChangeRequestsTab
 empName	function	hr	false		src/components/sections/HR/OvertimeOverview.tsx	24	
 STATUS_FILTERS	variable	hr	false	component	src/components/sections/HR/OvertimeOverview.tsx	26	
 OT_TYPES	array	hr	false		src/components/sections/HR/OvertimeOverview.tsx	34	
@@ -9426,6 +9427,7 @@ TrinidadPhoneInput	function	hr	true	component	src/components/sections/HR/Trinida
 update	function	hr	false		src/components/sections/HR/TrinidadPhoneInput.tsx	39	TrinidadPhoneInput
 AreaPlaceholder	function	hse	false	component	src/components/sections/HSE/AreaRouter.tsx	27	
 AreaRouter	function	hse	true	component	src/components/sections/HSE/AreaRouter.tsx	50	
+migratedSurfaces	variable	hse	false	test	src/components/sections/HSE/canonicalTabsMigration.test.ts	5	
 ContractorRow	interface	hse	false		src/components/sections/HSE/Contractors.tsx	16	
 mockContractors	array	hse	false		src/components/sections/HSE/Contractors.tsx	29	
 InductionRow	interface	hse	false		src/components/sections/HSE/Contractors.tsx	38	
@@ -10757,8 +10759,8 @@ dateGroup	function	communications	false		src/components/sections/NotificationCen
 groupByDate	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	53	
 NotificationCenter	function	communications	true	component	src/components/sections/NotificationCenter/NotificationCenter.tsx	62	
 onDown	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	80	NotificationCenter
-open	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	126	NotificationCenter
-clearFilters	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	131	NotificationCenter
+open	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	127	NotificationCenter
+clearFilters	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	132	NotificationCenter
 _isModalOpen	variable	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	6	
 NotificationsArgs	type	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	11	
 NotificationsFn	type	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	12	
@@ -12623,9 +12625,6 @@ StepperProps	interface	platform	true		src/ui/components/Stepper.tsx	22
 Stepper	function	platform	true	component	src/ui/components/Stepper.tsx	37	
 SystemActionsPanelProps	interface	platform	true		src/ui/components/SystemActionsPanel.tsx	16	
 SystemActionsPanel	function	platform	true	component	src/ui/components/SystemActionsPanel.tsx	27	
-TabDef	interface	platform	true		src/ui/components/Tabs.tsx	14	
-TabsProps	interface	platform	false		src/ui/components/Tabs.tsx	19	
-Tabs	function	platform	true	component	src/ui/components/Tabs.tsx	28	
 ToolbarProps	interface	platform	false		src/ui/components/Toolbar.tsx	14	
 Toolbar	function	platform	true	component	src/ui/components/Toolbar.tsx	19	
 SearchInputProps	interface	platform	false		src/ui/components/Toolbar.tsx	27	
@@ -13128,7 +13127,7 @@ CASE_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	30
 PLAIN_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	38	
 MANY_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	44	
 tabsDef	object	platform	true		src/ui/registry/navigation.defs.tsx	56	
-NAVIGATION_DEFS	array	platform	true		src/ui/registry/navigation.defs.tsx	271	
+NAVIGATION_DEFS	array	platform	true		src/ui/registry/navigation.defs.tsx	272	
 Planned	interface	platform	false		src/ui/registry/planned.ts	22	
 PLANNED	array	platform	false		src/ui/registry/planned.ts	33	
 PLANNED_DEFS	variable	platform	true		src/ui/registry/planned.ts	140	

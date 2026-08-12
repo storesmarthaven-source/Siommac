@@ -13,7 +13,7 @@ import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
-import { PageHeader, Modal, Field, FormGrid, SearchField, TextInput, TextareaInput, SelectInput, Tabs, EmptyState, Callout, FieldList, FieldRow } from '@ui';
+import { PageHeader, Modal, Field, FormGrid, SearchField, TextInput, TextareaInput, SelectInput, Tabs, TabPanel, EmptyState, Callout, FieldList, FieldRow, type TabItem } from '@ui';
 import { EnterpriseFormModal, orgPositionContext, orgCostCenterContext, moveOrgUnitContext } from '@/components/common/dialogs';
 import {
   useOrgUnits, useOrgStats, useOrgHealth, usePositions, useCostCenters,
@@ -431,6 +431,12 @@ function CostCenterModal({ open: _open, editing, costCenters, units, positions, 
 }
 
 type Tab = 'structure' | 'positions' | 'costcenters' | 'changerequests';
+const ORG_TABS: readonly TabItem[] = [
+  { id: 'structure', label: 'Structure' },
+  { id: 'positions', label: 'Positions' },
+  { id: 'costcenters', label: 'Cost Centres' },
+  { id: 'changerequests', label: 'Change Requests' },
+];
 type ModalState =
   | { kind: 'none' }
   | { kind: 'unit'; editing: OrgUnit | null; parentId: string | null }
@@ -526,12 +532,9 @@ export function OrgStructureOverview(): VNode {
       <StatRow />
       <HealthPanel />
 
-      <Tabs<Tab>
-        tabs={[{ key: 'structure', label: 'Structure' }, { key: 'positions', label: 'Positions' }, { key: 'costcenters', label: 'Cost Centres' }, { key: 'changerequests', label: 'Change Requests' }]}
-        active={tab} onChange={setTab}
-      />
+      <Tabs id="hr-org-structure-tabs" items={ORG_TABS} value={tab} onChange={id => setTab(id as Tab)} label="Organization structure sections" />
 
-      {tab === 'structure' && (
+      <TabPanel tabsId="hr-org-structure-tabs" tabId="structure" value={tab}>
         <div class="obx-section"><div class="obx-section-body">
           {loadingUnits ? <div class="obx-empty">Loading…</div>
             : !units.length ? <EmptyState icon="fa-sitemap" title="No org units yet" text={canOrg ? 'Create your first unit to build the structure.' : 'No organization units have been defined.'} />
@@ -542,11 +545,11 @@ export function OrgStructureOverview(): VNode {
               </table>
             )}
         </div></div>
-      )}
+      </TabPanel>
 
-      {tab === 'positions' && <PositionsTab />}
-      {tab === 'costcenters' && <CostCentersTab />}
-      {tab === 'changerequests' && <ChangeRequestsTab />}
+      <TabPanel tabsId="hr-org-structure-tabs" tabId="positions" value={tab}><PositionsTab /></TabPanel>
+      <TabPanel tabsId="hr-org-structure-tabs" tabId="costcenters" value={tab}><CostCentersTab /></TabPanel>
+      <TabPanel tabsId="hr-org-structure-tabs" tabId="changerequests" value={tab}><ChangeRequestsTab /></TabPanel>
 
       {/* Modals */}
       {modal.kind === 'unit' && <UnitModal open editing={modal.editing} defaultParentId={modal.parentId} units={units} siteOpts={siteOpts} ccOpts={ccOpts} peopleOpts={peopleOpts} onClose={() => setModal({ kind: 'none' })} />}

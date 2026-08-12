@@ -2,9 +2,9 @@
 
 # hse Module Map
 
-Source fingerprint: `8fb327fca52b8ccc2e295561`
+Source fingerprint: `a0261a4f95de48d40610c6b5`
 
-Files: 87 | Symbols: 1277 | Widgets: 0 | Unique mounted endpoints: 144 | Route definitions: 144 mounted + 0 unmounted | API calls: 107 | DB objects: 65 | E2E suites: 4
+Files: 88 | Symbols: 1278 | Widgets: 0 | Unique mounted endpoints: 144 | Route definitions: 144 mounted + 0 unmounted | API calls: 107 | DB objects: 65 | E2E suites: 4
 
 ## Widgets and Tiles
 
@@ -500,21 +500,22 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/hse/riskJsa.ts` | 758 |
 | frontend-api | `src/api/hse/training.ts` | 225 |
 | frontend-page | `src/components/sections/HSE/AreaRouter.tsx` | 68 |
-| frontend-page | `src/components/sections/HSE/Contractors.tsx` | 396 |
+| frontend-page | `src/components/sections/HSE/Contractors.tsx` | 402 |
 | frontend-page | `src/components/sections/HSE/Documents.tsx` | 387 |
-| frontend-page | `src/components/sections/HSE/EmergencyResponse.tsx` | 424 |
-| frontend-page | `src/components/sections/HSE/Environmental.tsx` | 440 |
+| frontend-page | `src/components/sections/HSE/EmergencyResponse.tsx` | 430 |
+| frontend-page | `src/components/sections/HSE/Environmental.tsx` | 446 |
 | frontend-page | `src/components/sections/HSE/HSEDashboard.tsx` | 1017 |
 | frontend-page | `src/components/sections/HSE/HSESection.tsx` | 69 |
 | frontend-page | `src/components/sections/HSE/Incidents.tsx` | 3879 |
 | frontend-page | `src/components/sections/HSE/Inspections.tsx` | 349 |
-| frontend-page | `src/components/sections/HSE/LegalCompliance.tsx` | 413 |
+| frontend-page | `src/components/sections/HSE/LegalCompliance.tsx` | 419 |
 | frontend-page | `src/components/sections/HSE/PPEManager.tsx` | 831 |
 | frontend-page | `src/components/sections/HSE/Permits.tsx` | 564 |
 | frontend-page | `src/components/sections/HSE/RiskJsa.tsx` | 636 |
 | frontend-page | `src/components/sections/HSE/Toolbox.tsx` | 234 |
 | frontend-page | `src/components/sections/HSE/Training.tsx` | 251 |
-| frontend-page | `src/components/sections/HSE/Workflows.tsx` | 760 |
+| frontend-page | `src/components/sections/HSE/Workflows.tsx` | 766 |
+| frontend-page | `src/components/sections/HSE/canonicalTabsMigration.test.ts` | 34 |
 | frontend-page | `src/components/sections/HSE/index.ts` | 10 |
 | frontend-page | `src/components/sections/HSE/inspections/FindingDetailDrawer.tsx` | 134 |
 | frontend-page | `src/components/sections/HSE/inspections/InspectionDetailDrawer.tsx` | 223 |

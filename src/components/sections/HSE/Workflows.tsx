@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
-import { Badge, PageHeader, MetricRow, TabBar, withCounts, SparkCard, type AreaTab, type SparkDef, type BadgeTone } from '@ui';
+import { Badge, PageHeader, MetricRow, Tabs, TabPanel, SparkCard, type TabItem, type SparkDef, type BadgeTone } from '@ui';
 import { dialog } from '@lib/dialog';
 import {
   useWorkflowList,
@@ -23,11 +23,11 @@ import {
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 
-const TABS: AreaTab[] = [
-  { key: 'approvals', label: 'Approvals',        icon: 'fa-inbox' },
-  { key: 'register',  label: 'Workflow Register', icon: 'fa-diagram-project' },
-  { key: 'audit',     label: 'Audit Log',         icon: 'fa-shield-halved' },
-  { key: 'handoffs',  label: 'Handoffs',          icon: 'fa-handshake' },
+const TABS: readonly TabItem[] = [
+  { id: 'approvals', label: 'Approvals',         icon: <i class="fas fa-inbox" /> },
+  { id: 'register',  label: 'Workflow Register', icon: <i class="fas fa-diagram-project" /> },
+  { id: 'audit',     label: 'Audit Log',         icon: <i class="fas fa-shield-halved" /> },
+  { id: 'handoffs',  label: 'Handoffs',          icon: <i class="fas fa-handshake" /> },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -706,7 +706,7 @@ const SEEDED_TEMPLATES: SeededTemplate[] = [
 // ── Root area component ───────────────────────────────────────────────────────
 
 export function WorkflowsArea({ tab }: { tab: string }): VNode {
-  const [active, setActive] = useState(TABS.some(item => item.key === tab) ? tab : 'approvals');
+  const [active, setActive] = useState(TABS.some(item => item.id === tab) ? tab : 'approvals');
   const tasksQ    = useMyWorkflowTasks();
   const workflowQ = useWorkflowList();
 
@@ -748,12 +748,18 @@ export function WorkflowsArea({ tab }: { tab: string }): VNode {
 
       <MetricRow pageKey="hse.workflows" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />
 
-      <TabBar tabs={withCounts(TABS, { approvals: pending, register: open })} active={active} onSelect={setActive} />
+      <Tabs
+        id="hse-workflows-tabs"
+        items={TABS.map(item => ({ ...item, badge: item.id === 'approvals' ? pending : item.id === 'register' ? open : undefined }))}
+        value={active}
+        onChange={setActive}
+        label="Workflow sections"
+      />
 
-      {active === 'approvals' && <ApprovalsTab />}
-      {active === 'register'  && <RegisterTab />}
-      {active === 'audit'     && <AuditTab />}
-      {active === 'handoffs'  && <HandoffsTab />}
+      <TabPanel tabsId="hse-workflows-tabs" tabId="approvals" value={active}><ApprovalsTab /></TabPanel>
+      <TabPanel tabsId="hse-workflows-tabs" tabId="register" value={active}><RegisterTab /></TabPanel>
+      <TabPanel tabsId="hse-workflows-tabs" tabId="audit" value={active}><AuditTab /></TabPanel>
+      <TabPanel tabsId="hse-workflows-tabs" tabId="handoffs" value={active}><HandoffsTab /></TabPanel>
     </div>
   );
 }

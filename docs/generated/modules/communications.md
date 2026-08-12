@@ -2,7 +2,7 @@
 
 # communications Module Map
 
-Source fingerprint: `8fb327fca52b8ccc2e295561`
+Source fingerprint: `a0261a4f95de48d40610c6b5`
 
 Files: 113 | Symbols: 1057 | Widgets: 0 | Unique mounted endpoints: 93 | Route definitions: 94 mounted + 2 unmounted | API calls: 88 | DB objects: 158 | E2E suites: 7
 
@@ -545,7 +545,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Messages/threadDisplay.test.ts` | 47 |
 | frontend-page | `src/components/sections/Messages/threadDisplay.ts` | 43 |
 | frontend-page | `src/components/sections/NotificationCenter/BroadcastComposer.tsx` | 106 |
-| frontend-page | `src/components/sections/NotificationCenter/NotificationCenter.tsx` | 252 |
+| frontend-page | `src/components/sections/NotificationCenter/NotificationCenter.tsx` | 255 |
 | frontend-page | `src/components/sections/NotificationCenter/NotificationDropdown.test.tsx` | 73 |
 | frontend-page | `src/components/sections/NotificationCenter/NotificationDropdown.tsx` | 186 |
 | frontend-page | `src/components/sections/NotificationCenter/NotificationDropdownItem.tsx` | 65 |

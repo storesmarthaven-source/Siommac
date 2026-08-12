@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, TextareaInput, type AreaTab, type SparkDef, Badge } from '@ui';
+import { PageHeader, MetricRow, Tabs, TabPanel, SparkCard, HseModal, Field, TextInput, SelectInput, TextareaInput, type TabItem, type SparkDef, Badge } from '@ui';
 import { HSE_SITES, hseBadgeTone, type HseSeverity } from './types';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
@@ -97,11 +97,11 @@ const mockMonitoring: MonitoringRow[] = [
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 
-const TABS: AreaTab[] = [
-  { key: 'spills',     label: 'Spill Register',    icon: 'fa-droplet' },
-  { key: 'waste',      label: 'Waste Manifests',   icon: 'fa-trash-can' },
-  { key: 'ema',        label: 'EMA Notifications', icon: 'fa-file-lines' },
-  { key: 'monitoring', label: 'Env Monitoring',    icon: 'fa-chart-line' },
+const TABS: readonly TabItem[] = [
+  { id: 'spills',     label: 'Spill Register',    icon: <i class="fas fa-droplet" /> },
+  { id: 'waste',      label: 'Waste Manifests',   icon: <i class="fas fa-trash-can" /> },
+  { id: 'ema',        label: 'EMA Notifications', icon: <i class="fas fa-file-lines" /> },
+  { id: 'monitoring', label: 'Env Monitoring',    icon: <i class="fas fa-chart-line" /> },
 ];
 
 function SpillsTab(): VNode {
@@ -429,11 +429,17 @@ export function EnvironmentalArea({ tab }: { tab: string }): VNode {
 
       <MetricRow pageKey="hse.environmental" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />
 
-      <TabBar tabs={withCounts(TABS, { spills: mockSpills.length, waste: mockWaste.length, ema: mockEmaNotifications.length })} active={active} onSelect={setActive} />
-      {active === 'spills'     && <SpillsTab />}
-      {active === 'waste'      && <WasteTab />}
-      {active === 'ema'        && <EmaTab />}
-      {active === 'monitoring' && <MonitoringTab />}
+      <Tabs
+        id="hse-environmental-tabs"
+        items={TABS.map(item => ({ ...item, badge: { spills: mockSpills.length, waste: mockWaste.length, ema: mockEmaNotifications.length }[item.id] }))}
+        value={active}
+        onChange={setActive}
+        label="Environmental sections"
+      />
+      <TabPanel tabsId="hse-environmental-tabs" tabId="spills" value={active}><SpillsTab /></TabPanel>
+      <TabPanel tabsId="hse-environmental-tabs" tabId="waste" value={active}><WasteTab /></TabPanel>
+      <TabPanel tabsId="hse-environmental-tabs" tabId="ema" value={active}><EmaTab /></TabPanel>
+      <TabPanel tabsId="hse-environmental-tabs" tabId="monitoring" value={active}><MonitoringTab /></TabPanel>
     </div>
   );
 }

@@ -6,15 +6,15 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, SelectInput, TextInput,
-  type AreaTab, type SparkDef, Badge } from '@ui';
+    PageHeader, MetricRow, Tabs, TabPanel, SparkCard, HseModal, Field, SelectInput, TextInput,
+  type TabItem, type SparkDef, Badge } from '@ui';
 import {
   mockToolboxTalks, TOOLBOX_TOPICS, HSE_SITES, hseBadgeTone,
   type ToolboxTalkRow,
 } from './types';
 
-const TABS: AreaTab[] = [
-  { key: 'log', label: 'Talk Log', sublabel: 'All briefings', icon: 'fa-clipboard-list' },
+const TABS: readonly TabItem[] = [
+  { id: 'log', label: 'Talk Log', description: 'All briefings', icon: <i class="fas fa-clipboard-list" /> },
 ];
 
 const TOPIC_ICONS: Record<string, string> = {
@@ -65,7 +65,7 @@ export function ToolboxArea({ tab }: { tab: string }): VNode {
     },
   ];
 
-  const tabsWithCounts = withCounts(TABS, { log: talks.length });
+  const tabsWithCounts = TABS.map(item => ({ ...item, badge: talks.length }));
 
   return (
     <div class="hse-tab hse-dash">
@@ -80,9 +80,9 @@ export function ToolboxArea({ tab }: { tab: string }): VNode {
 
       <div class="hse-main-grid">
         <div class="hse-left-col">
-          <TabBar tabs={tabsWithCounts} active={active} onSelect={setActive} />
+          <Tabs id="hse-toolbox-tabs" items={tabsWithCounts} value={active} onChange={setActive} label="Toolbox talk sections" />
 
-      {active === 'log' && (
+      <TabPanel tabsId="hse-toolbox-tabs" tabId="log" value={active}>
         <div class="ppe-tab-content">
           <div class="ppe-screen-grid">
             <div class="ppe-screen-main">
@@ -182,7 +182,7 @@ export function ToolboxArea({ tab }: { tab: string }): VNode {
             </aside>
           </div>
         </div>
-      )}
+      </TabPanel>
         </div>
 
         <div class="hse-right-col">

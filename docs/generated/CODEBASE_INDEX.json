@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "2467f5cd820c2cb7a3631e2049e44154aeb13291",
+    "head": "9c957cb2c959be9f1d53ec7f0263d708a2ff238f",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "8fb327fca52b8ccc2e295561",
+    "fingerprint": "a0261a4f95de48d40610c6b5",
     "indexedFiles": 1813
   },
   "summary": {
     "files": 1458,
-    "symbols": 14667,
+    "symbols": 14666,
     "widgets": 63,
     "routes": 978,
     "routeDefinitions": 979,
@@ -23,7 +23,7 @@
       "id": "hr",
       "counts": {
         "files": 265,
-        "symbols": 3076,
+        "symbols": 3077,
         "widgets": 9,
         "routes": 275,
         "routeDefinitions": 275,
@@ -61,8 +61,8 @@
     {
       "id": "hse",
       "counts": {
-        "files": 87,
-        "symbols": 1277,
+        "files": 88,
+        "symbols": 1278,
         "widgets": 0,
         "routes": 144,
         "routeDefinitions": 144,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 401,
-        "symbols": 3655,
+        "files": 400,
+        "symbols": 3652,
         "widgets": 12,
         "routes": 38,
         "routeDefinitions": 53,
@@ -5543,8 +5543,8 @@
       "path": "src/components/sections/HR/OrgStructureOverview.tsx",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 777,
-      "hash": "462359ee63ac9c79"
+      "lines": 780,
+      "hash": "a965b5b17cf73c24"
     },
     {
       "path": "src/components/sections/HR/OvertimeOverview.tsx",
@@ -5928,29 +5928,29 @@
       "path": "src/components/sections/HSE/Contractors.tsx",
       "module": "hse",
       "role": "frontend-page",
-      "lines": 396,
-      "hash": "0fb107f65b0cee4a"
+      "lines": 402,
+      "hash": "8195668036f333f2"
     },
     {
       "path": "src/components/sections/HSE/Documents.tsx",
       "module": "hse",
       "role": "frontend-page",
       "lines": 387,
-      "hash": "08f39cefb9944cd0"
+      "hash": "14dc3f6a46fa5302"
     },
     {
       "path": "src/components/sections/HSE/EmergencyResponse.tsx",
       "module": "hse",
       "role": "frontend-page",
-      "lines": 424,
-      "hash": "876eeda0fd5f3c40"
+      "lines": 430,
+      "hash": "193dbb810d1adff1"
     },
     {
       "path": "src/components/sections/HSE/Environmental.tsx",
       "module": "hse",
       "role": "frontend-page",
-      "lines": 440,
-      "hash": "d0adbf6df22a4fdd"
+      "lines": 446,
+      "hash": "af250362edc334b2"
     },
     {
       "path": "src/components/sections/HSE/HSEDashboard.tsx",
@@ -5984,8 +5984,8 @@
       "path": "src/components/sections/HSE/LegalCompliance.tsx",
       "module": "hse",
       "role": "frontend-page",
-      "lines": 413,
-      "hash": "a5cb31e09df7d6c0"
+      "lines": 419,
+      "hash": "1b6dd25819a26abd"
     },
     {
       "path": "src/components/sections/HSE/PPEManager.tsx",
@@ -6013,21 +6013,28 @@
       "module": "hse",
       "role": "frontend-page",
       "lines": 234,
-      "hash": "a211dd63bb2f500f"
+      "hash": "cc7640259a959460"
     },
     {
       "path": "src/components/sections/HSE/Training.tsx",
       "module": "hse",
       "role": "frontend-page",
       "lines": 251,
-      "hash": "c82485f454b6405b"
+      "hash": "6d582e4febda4a4d"
     },
     {
       "path": "src/components/sections/HSE/Workflows.tsx",
       "module": "hse",
       "role": "frontend-page",
-      "lines": 760,
-      "hash": "c22771fd33229000"
+      "lines": 766,
+      "hash": "4b80b1c8cb59c8e6"
+    },
+    {
+      "path": "src/components/sections/HSE/canonicalTabsMigration.test.ts",
+      "module": "hse",
+      "role": "frontend-page",
+      "lines": 34,
+      "hash": "d5948449c27fccc7"
     },
     {
       "path": "src/components/sections/HSE/index.ts",
@@ -6384,7 +6391,7 @@
       "module": "hse",
       "role": "frontend-page",
       "lines": 93,
-      "hash": "0393eaf239bf8762"
+      "hash": "8345d63c5506697c"
     },
     {
       "path": "src/components/sections/HSE/types.ts",
@@ -6803,8 +6810,8 @@
       "path": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 252,
-      "hash": "0e838eb659dc861b"
+      "lines": 255,
+      "hash": "195611bca6ebf645"
     },
     {
       "path": "src/components/sections/NotificationCenter/NotificationDropdown.test.tsx",
@@ -8501,13 +8508,6 @@
       "hash": "56885d940c522d70"
     },
     {
-      "path": "src/ui/components/Tabs.tsx",
-      "module": "platform",
-      "role": "frontend",
-      "lines": 54,
-      "hash": "caedfda1ad17d1ca"
-    },
-    {
       "path": "src/ui/components/Toolbar.tsx",
       "module": "platform",
       "role": "frontend",
@@ -8882,8 +8882,8 @@
       "path": "src/ui/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 253,
-      "hash": "24bb1f955d2d5bdc"
+      "lines": 252,
+      "hash": "b6a11331395911cd"
     },
     {
       "path": "src/ui/layouts/ModulePageLayout.tsx",
@@ -9100,7 +9100,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 121,
-      "hash": "0357b4d6930a92ac"
+      "hash": "dc0f59eed8bd2655"
     },
     {
       "path": "src/ui/registry/containers.defs.tsx",
@@ -9141,8 +9141,8 @@
       "path": "src/ui/registry/navigation.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 272,
-      "hash": "035eaf4b725e4c11"
+      "lines": 273,
+      "hash": "fa31c686b2e04710"
     },
     {
       "path": "src/ui/registry/planned.ts",
@@ -105875,10 +105875,20 @@
       "tags": []
     },
     {
+      "name": "ORG_TABS",
+      "kind": "array",
+      "file": "src/components/sections/HR/OrgStructureOverview.tsx",
+      "line": 434,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "ModalState",
       "kind": "type",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 434,
+      "line": 440,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -105888,7 +105898,7 @@
       "name": "OrgStructureOverview",
       "kind": "function",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 441,
+      "line": 447,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -105900,7 +105910,7 @@
       "name": "toggle",
       "kind": "function",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 481,
+      "line": 487,
       "module": "hr",
       "exported": false,
       "container": "OrgStructureOverview",
@@ -105910,7 +105920,7 @@
       "name": "runImpact",
       "kind": "function",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 483,
+      "line": 489,
       "module": "hr",
       "exported": false,
       "container": "OrgStructureOverview",
@@ -105920,7 +105930,7 @@
       "name": "confirmImpact",
       "kind": "function",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 488,
+      "line": 494,
       "module": "hr",
       "exported": false,
       "container": "OrgStructureOverview",
@@ -105930,7 +105940,7 @@
       "name": "onArchiveUnit",
       "kind": "function",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 497,
+      "line": 503,
       "module": "hr",
       "exported": false,
       "container": "OrgStructureOverview",
@@ -105940,7 +105950,7 @@
       "name": "onDeleteUnit",
       "kind": "function",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 501,
+      "line": 507,
       "module": "hr",
       "exported": false,
       "container": "OrgStructureOverview",
@@ -105950,7 +105960,7 @@
       "name": "onActivateUnit",
       "kind": "function",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 505,
+      "line": 511,
       "module": "hr",
       "exported": false,
       "container": "OrgStructureOverview",
@@ -105960,7 +105970,7 @@
       "name": "StatRow",
       "kind": "function",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 562,
+      "line": 565,
       "module": "hr",
       "exported": false,
       "container": "OrgStructureOverview",
@@ -105972,7 +105982,7 @@
       "name": "HealthPanel",
       "kind": "function",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 572,
+      "line": 575,
       "module": "hr",
       "exported": false,
       "container": "OrgStructureOverview",
@@ -105984,7 +105994,7 @@
       "name": "renderTree",
       "kind": "function",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 595,
+      "line": 598,
       "module": "hr",
       "exported": false,
       "container": "OrgStructureOverview",
@@ -105994,7 +106004,7 @@
       "name": "PositionsTab",
       "kind": "function",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 636,
+      "line": 639,
       "module": "hr",
       "exported": false,
       "container": "OrgStructureOverview",
@@ -106006,7 +106016,7 @@
       "name": "onRetire",
       "kind": "function",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 641,
+      "line": 644,
       "module": "hr",
       "exported": false,
       "container": "PositionsTab",
@@ -106016,7 +106026,7 @@
       "name": "onReactivate",
       "kind": "function",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 645,
+      "line": 648,
       "module": "hr",
       "exported": false,
       "container": "PositionsTab",
@@ -106026,7 +106036,7 @@
       "name": "CostCentersTab",
       "kind": "function",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 688,
+      "line": 691,
       "module": "hr",
       "exported": false,
       "container": "OrgStructureOverview",
@@ -106038,7 +106048,7 @@
       "name": "onRetire",
       "kind": "function",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 693,
+      "line": 696,
       "module": "hr",
       "exported": false,
       "container": "CostCentersTab",
@@ -106048,7 +106058,7 @@
       "name": "onReactivate",
       "kind": "function",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 697,
+      "line": 700,
       "module": "hr",
       "exported": false,
       "container": "CostCentersTab",
@@ -106058,7 +106068,7 @@
       "name": "ChangeRequestsTab",
       "kind": "function",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 738,
+      "line": 741,
       "module": "hr",
       "exported": false,
       "container": "OrgStructureOverview",
@@ -106070,7 +106080,7 @@
       "name": "onCancel",
       "kind": "function",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 742,
+      "line": 745,
       "module": "hr",
       "exported": false,
       "container": "ChangeRequestsTab",
@@ -106080,7 +106090,7 @@
       "name": "riskTone",
       "kind": "function",
       "file": "src/components/sections/HR/OrgStructureOverview.tsx",
-      "line": 747,
+      "line": 750,
       "module": "hr",
       "exported": false,
       "container": "ChangeRequestsTab",
@@ -108663,6 +108673,18 @@
       "container": "",
       "tags": [
         "component"
+      ]
+    },
+    {
+      "name": "migratedSurfaces",
+      "kind": "variable",
+      "file": "src/components/sections/HSE/canonicalTabsMigration.test.ts",
+      "line": 5,
+      "module": "hse",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
       ]
     },
     {
@@ -122877,7 +122899,7 @@
       "name": "open",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
-      "line": 126,
+      "line": 127,
       "module": "communications",
       "exported": false,
       "container": "NotificationCenter",
@@ -122887,7 +122909,7 @@
       "name": "clearFilters",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
-      "line": 131,
+      "line": 132,
       "module": "communications",
       "exported": false,
       "container": "NotificationCenter",
@@ -142403,38 +142425,6 @@
       ]
     },
     {
-      "name": "TabDef",
-      "kind": "interface",
-      "file": "src/ui/components/Tabs.tsx",
-      "line": 14,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "TabsProps",
-      "kind": "interface",
-      "file": "src/ui/components/Tabs.tsx",
-      "line": 19,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "Tabs",
-      "kind": "function",
-      "file": "src/ui/components/Tabs.tsx",
-      "line": 28,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
       "name": "ToolbarProps",
       "kind": "interface",
       "file": "src/ui/components/Toolbar.tsx",
@@ -147885,7 +147875,7 @@
       "name": "NAVIGATION_DEFS",
       "kind": "array",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 271,
+      "line": 272,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -164715,7 +164705,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>\n          <Tabs id=\"ex-underline\" label=\"Underline\" items={PLAIN_TABS} value=\"overview\" onChange={noop} />\n          <Tabs id=\"ex-contained\" label=\"Contained\" variant=\"contained\" size=\"sm\" items={PLAIN_TABS} value=\"tasks\" onChange={noop} />\n          <Tabs id=\"ex-subtle\" label=\"Subtle\" variant=\"subtle\" size=\"sm\" items={PLAIN_TABS} value=\"files\" onChange={noop} />\n        </div>\n      )",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 215
+      "line": 216
     },
     {
       "id": "one-surface",
@@ -164735,7 +164725,7 @@
       "kind": "registry",
       "render": "() => (\n        <Tabs\n          id=\"ex-overflow\"\n          label=\"Rate version sections\"\n          variant=\"contained\"\n          size=\"sm\"\n          items={MANY_TABS}\n          maxVisible={4}\n          value=\"timeline\"\n          onChange={noop}\n        />\n      )",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 251
+      "line": 252
     },
     {
       "id": "platform.weather.current",
@@ -164865,7 +164855,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>\n          <Tabs\n            id=\"ex-vertical\"\n            label=\"Settings sections\"\n            orientation=\"vertical\"\n            items={[\n              { id: 'general', label: 'General', icon: <LucideIcon name=\"Settings\" /> },\n              { id: 'security', label: 'Security', icon: <LucideIcon name=\"ShieldCheck\" />, badge: 2 },\n              { id: 'notifications', label: 'Notifications', icon: <LucideIcon name=\"Bell\" /> },\n            ]}\n            value=\"security\"\n            onChange={noop}\n          />\n          <TabPanel tabsId=\"ex-vertical\" tabId=\"security\" value=\"security\">\n            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Two security settings need review.</span>\n          </TabPanel>\n        </div>\n      )",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 227
+      "line": 228
     },
     {
       "id": "w.floored",

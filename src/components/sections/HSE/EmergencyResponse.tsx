@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, type AreaTab, type SparkDef, Badge } from '@ui';
+import { PageHeader, MetricRow, Tabs, TabPanel, SparkCard, HseModal, Field, TextInput, SelectInput, type TabItem, type SparkDef, Badge } from '@ui';
 import { HSE_SITES, hseBadgeTone, type HseSeverity } from './types';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
@@ -99,11 +99,11 @@ const mockErtMembers: ErtMember[] = [
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 
-const TABS: AreaTab[] = [
-  { key: 'plans',  label: 'Emergency Plans', icon: 'fa-map-location-dot' },
-  { key: 'muster', label: 'Muster Points',   icon: 'fa-people-group' },
-  { key: 'drills', label: 'Drill Log',       icon: 'fa-stopwatch' },
-  { key: 'ert',    label: 'ERT Register',    icon: 'fa-shield-halved' },
+const TABS: readonly TabItem[] = [
+  { id: 'plans',  label: 'Emergency Plans', icon: <i class="fas fa-map-location-dot" /> },
+  { id: 'muster', label: 'Muster Points',   icon: <i class="fas fa-people-group" /> },
+  { id: 'drills', label: 'Drill Log',       icon: <i class="fas fa-stopwatch" /> },
+  { id: 'ert',    label: 'ERT Register',    icon: <i class="fas fa-shield-halved" /> },
 ];
 
 function PlansTab(): VNode {
@@ -413,11 +413,17 @@ export function EmergencyResponseArea({ tab }: { tab: string }): VNode {
 
       <MetricRow pageKey="hse.emergency" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />
 
-      <TabBar tabs={withCounts(TABS, { plans: mockPlans.length, muster: mockMusterPoints.length })} active={active} onSelect={setActive} />
-      {active === 'plans'  && <PlansTab />}
-      {active === 'muster' && <MusterTab />}
-      {active === 'drills' && <DrillsTab />}
-      {active === 'ert'    && <ErtTab />}
+      <Tabs
+        id="hse-emergency-tabs"
+        items={TABS.map(item => ({ ...item, badge: { plans: mockPlans.length, muster: mockMusterPoints.length }[item.id] }))}
+        value={active}
+        onChange={setActive}
+        label="Emergency response sections"
+      />
+      <TabPanel tabsId="hse-emergency-tabs" tabId="plans" value={active}><PlansTab /></TabPanel>
+      <TabPanel tabsId="hse-emergency-tabs" tabId="muster" value={active}><MusterTab /></TabPanel>
+      <TabPanel tabsId="hse-emergency-tabs" tabId="drills" value={active}><DrillsTab /></TabPanel>
+      <TabPanel tabsId="hse-emergency-tabs" tabId="ert" value={active}><ErtTab /></TabPanel>
     </div>
   );
 }

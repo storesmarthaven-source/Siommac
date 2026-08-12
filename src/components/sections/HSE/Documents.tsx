@@ -6,17 +6,17 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, SelectInput, TextInput,
-  type AreaTab, type SparkDef,
+  PageHeader, MetricRow, Tabs, TabPanel, SparkCard, HseModal, Field, SelectInput, TextInput,
+  type TabItem, type SparkDef,
 } from '@ui';
 import {
   mockHseDocs, mockSds, hsePill, HSE_DOC_TYPES,
   type HseDocRow, type SdsRow,
 } from './types';
 
-const TABS: AreaTab[] = [
-  { key: 'docs', label: 'Documents',  sublabel: 'Controlled library', icon: 'fa-folder-open' },
-  { key: 'sds',  label: 'SDS Library', sublabel: 'Chemical register', icon: 'fa-flask' },
+const TABS: readonly TabItem[] = [
+  { id: 'docs', label: 'Documents', description: 'Controlled library', icon: <i class="fas fa-folder-open" /> },
+  { id: 'sds', label: 'SDS Library', description: 'Chemical register', icon: <i class="fas fa-flask" /> },
 ];
 
 const TYPE_ICONS: Record<string, string> = {
@@ -299,7 +299,7 @@ export function DocumentsArea({ tab }: { tab: string }): VNode {
     },
   ];
 
-  const tabsWithCounts = withCounts(TABS, { docs: docs.length, sds: sds.length });
+  const tabsWithCounts = TABS.map(item => ({ ...item, badge: item.id === 'docs' ? docs.length : sds.length }));
 
   return (
     <div class="hse-tab hse-dash">
@@ -314,10 +314,10 @@ export function DocumentsArea({ tab }: { tab: string }): VNode {
 
       <div class="hse-main-grid">
         <div class="hse-left-col">
-          <TabBar tabs={tabsWithCounts} active={active} onSelect={setActive} />
+          <Tabs id="hse-documents-tabs" items={tabsWithCounts} value={active} onChange={setActive} label="HSE document sections" />
 
-          {active === 'docs' && <DocsTab docs={docs} onUpload={() => setModal(true)} />}
-          {active === 'sds'  && <SdsTab sds={sds} />}
+          <TabPanel tabsId="hse-documents-tabs" tabId="docs" value={active}><DocsTab docs={docs} onUpload={() => setModal(true)} /></TabPanel>
+          <TabPanel tabsId="hse-documents-tabs" tabId="sds" value={active}><SdsTab sds={sds} /></TabPanel>
         </div>
 
         <div class="hse-right-col">

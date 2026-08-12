@@ -242,23 +242,62 @@ Dirty/deferred register     RECORDED DEBT
 
 The next canonical component is Tabs.
 
+## Tabs programme — frozen
+
+Clean family completed:
+
+- migrated the nine clean overview surfaces — Environmental, Emergency
+  Response, Documents, Contractors, Workflows, Training, Legal Compliance,
+  Toolbox and Notification Centre — from `TabBar` to canonical `Tabs`;
+- migrated HR Organization Structure and the clean Worker Profile drawer in
+  the same batch;
+- replaced legacy key/sublabel/count adapters with canonical `TabItem`
+  configuration, including real icon nodes, descriptions, badges and actions;
+- wired every migrated body through `TabPanel`, preserving the tablist / tab /
+  tabpanel accessibility relationship and canonical keyboard model;
+- deleted the unused pre-v2 generic `src/ui/components/Tabs.tsx` runtime and
+  its `LegacyTabs` barrel export;
+- added regression coverage for all eleven migrated surfaces and the deleted
+  legacy runtime;
+- passed all 39 focused Tabs/migration tests with zero lint errors, reduced the
+  known frontend typecheck baseline from 52 to 49 errors, and reduced
+  deprecated-import files from 89 to 83;
+- browser-verified the representative Environmental set with one canonical
+  tablist, four tabs, one correctly linked panel, working tab selection, zero
+  legacy tab bars and no runtime diagnostics in the isolated preview.
+
+Tabs classification is now frozen:
+
+```text
+Tabs canonical system       COMPLETE
+Clean overview migration    COMPLETE
+Legacy generic runtime      DELETED
+Dirty/deferred call sites   RECORDED DEBT
+```
+
+The exact debt is four HSE `TabBar` pages (`Inspections.tsx`, `Permits.tsx`,
+`RiskJsa.tsx`, `Incidents.tsx`) and nine old-signature drawer/detail files with
+pre-existing lint blockers. The unused `ModulePageLayout` export is not counted
+as an application consumer. Tabs must not be reopened solely to chase those
+counts.
+
+The next canonical component is Dialog.
+
 ## Remaining programme
 
-The overall mandate is not yet complete. After Card, continue automatically:
+The overall mandate is not yet complete. Continue automatically:
 
-1. DataTable
-2. Tabs
-3. Dialog
-4. Wizard / Stepper
-5. PageHeader / PageActionBar
-6. EmptyState
-7. Skeleton / Loading
-8. Checkbox / RadioGroup / Switch
-9. Menu
-10. remaining registered canonical components
-11. polished UI Kit Studio interface
-12. Brand Theme application preview at all required breakpoints
-13. final full-suite and browser verification gate
+1. Dialog
+2. Wizard / Stepper
+3. PageHeader / PageActionBar
+4. EmptyState
+5. Skeleton / Loading
+6. Checkbox / RadioGroup / Switch
+7. Menu
+8. remaining registered canonical components
+9. polished UI Kit Studio interface
+10. Brand Theme application preview at all required breakpoints
+11. final full-suite and browser verification gate
 
 No component should chase mathematical zero. Exact dirty files and genuine
 domain/interaction exceptions remain recorded debt; clean generic migration is

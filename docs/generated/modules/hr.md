@@ -2,9 +2,9 @@
 
 # hr Module Map
 
-Source fingerprint: `8fb327fca52b8ccc2e295561`
+Source fingerprint: `a0261a4f95de48d40610c6b5`
 
-Files: 265 | Symbols: 3076 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 37 | DB objects: 196 | E2E suites: 16
+Files: 265 | Symbols: 3077 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 37 | DB objects: 196 | E2E suites: 16
 
 ## Widgets and Tiles
 
@@ -738,7 +738,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/OnboardingPackageManager.tsx` | 130 |
 | frontend-page | `src/components/sections/HR/OnboardingReportsWorkspace.tsx` | 172 |
 | frontend-page | `src/components/sections/HR/OnboardingTasksWorkspace.tsx` | 449 |
-| frontend-page | `src/components/sections/HR/OrgStructureOverview.tsx` | 777 |
+| frontend-page | `src/components/sections/HR/OrgStructureOverview.tsx` | 780 |
 | frontend-page | `src/components/sections/HR/OvertimeOverview.tsx` | 233 |
 | frontend-page | `src/components/sections/HR/ProfileDrawer.test.tsx` | 307 |
 | frontend-page | `src/components/sections/HR/ProfileDrawer.tsx` | 1072 |
