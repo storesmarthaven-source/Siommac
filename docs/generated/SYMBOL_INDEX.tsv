@@ -10520,14 +10520,14 @@ StatusPill	function	communications	false	component	src/components/sections/Messa
 CaseTableSkeleton	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	203	
 ComplianceCaseDetailRail	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	213	
 GrantPill	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	290	
-fmtClock	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	25	
-fmtDay	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	28	
-fmtExpiry	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	31	
-fmtSize	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	36	
-ComplianceConversationsView	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	43	
-ConversationRailItem	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	230	
-ComplianceTimeline	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	259	
-ComplianceMessageRow	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	276	
+fmtClock	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	26	
+fmtDay	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	29	
+fmtExpiry	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	32	
+fmtSize	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	37	
+ComplianceConversationsView	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	44	
+ConversationRailItem	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	231	
+ComplianceTimeline	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	258	
+ComplianceMessageRow	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	275	
 ComplianceSubview	type	communications	true		src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx	13	
 ComplianceStateValue	interface	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx	15	
 ComplianceStateContext	variable	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx	26	
@@ -11306,17 +11306,17 @@ uploadLogoApi	function	settings	true		src/components/sections/Settings/api.ts	14
 applyCompanyNameToDom	function	settings	true		src/components/sections/Settings/domSync.ts	15	
 applyCompanyLogoToDom	function	settings	true		src/components/sections/Settings/domSync.ts	23	
 STATUS_LABEL	object	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	24	
-STATUS_CLASS	object	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	27	
-REVIEWERS	array	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	31	
-StatusPill	function	settings	false	component	src/components/sections/Settings/ManifestReviewPanel.tsx	41	
-ManifestDetail	function	settings	false	component	src/components/sections/Settings/ManifestReviewPanel.tsx	47	
-submit	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	76	ManifestDetail
-approve	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	77	ManifestDetail
-manifestRecord	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	78	ManifestDetail
-deprecate	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	85	ManifestDetail
-ret	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	96	ManifestDetail
-review	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	108	ManifestDetail
-ManifestReviewPanel	function	settings	true	component	src/components/sections/Settings/ManifestReviewPanel.tsx	220	
+STATUS_TONE	object	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	30	
+REVIEWERS	array	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	34	
+StatusPill	function	settings	false	component	src/components/sections/Settings/ManifestReviewPanel.tsx	44	
+ManifestDetail	function	settings	false	component	src/components/sections/Settings/ManifestReviewPanel.tsx	50	
+submit	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	79	ManifestDetail
+approve	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	80	ManifestDetail
+manifestRecord	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	81	ManifestDetail
+deprecate	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	88	ManifestDetail
+ret	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	99	ManifestDetail
+review	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	111	ManifestDetail
+ManifestReviewPanel	function	settings	true	component	src/components/sections/Settings/ManifestReviewPanel.tsx	223	
 mountSettingsSection	function	settings	true		src/components/sections/Settings/mount.ts	15	
 unmountSettingsSection	function	settings	true		src/components/sections/Settings/mount.ts	32	
 SwzPageKind	type	settings	true		src/components/sections/Settings/settingsNav.ts	12	

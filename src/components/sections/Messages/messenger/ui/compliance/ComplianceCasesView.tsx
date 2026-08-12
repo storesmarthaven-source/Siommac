@@ -11,7 +11,7 @@ import type { VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { useComplianceCases, useComplianceCase, useComplianceSummary } from '@api/communicationsCompliance';
 import type { ComplianceCaseSummary, ComplianceCaseStatus, ComplianceCaseType } from '../../../../../../../types/messagingCompliance';
-import { KpiTile } from '@ui';
+import { Badge, KpiTile, type BadgeTone } from '@ui';
 import { useComplianceState } from './ComplianceState';
 import { DecideComplianceCaseDialog, CloseComplianceCaseDialog } from './ComplianceActionDialogs';
 import { Search, MessageSquare, Clock3, CheckCircle2, ShieldCheck, ShieldX, LockKeyhole, X, type IconProps } from '../components/icons';
@@ -37,11 +37,11 @@ const STATUS_ICON: Record<ComplianceCaseStatus, (props: IconProps) => preact.VNo
   pending_approval: Clock3, approved: CheckCircle2, rejected: ShieldX, closed: LockKeyhole,
 };
 
-function statusTone(s: ComplianceCaseStatus): string {
-  if (s === 'approved') return 'ok';
-  if (s === 'pending_approval') return 'warn';
-  if (s === 'rejected') return 'bad';
-  return 'muted';
+function statusTone(s: ComplianceCaseStatus): BadgeTone {
+  if (s === 'approved') return 'success';
+  if (s === 'pending_approval') return 'warning';
+  if (s === 'rejected') return 'danger';
+  return 'neutral';
 }
 
 function fmtDate(iso: string | null): string {
@@ -197,7 +197,7 @@ export function ComplianceCasesView(): VNode {
 
 function StatusPill({ status }: { status: ComplianceCaseStatus }) {
   const Icon = STATUS_ICON[status];
-  return <span className={`smc-pill smc-pill--${statusTone(status)}`}><Icon /> {STATUS_LABEL[status]}</span>;
+  return <Badge tone={statusTone(status)} icon={<Icon />}>{STATUS_LABEL[status]}</Badge>;
 }
 
 function CaseTableSkeleton() {
@@ -291,10 +291,10 @@ function GrantPill({ status, expiresAt }: { status: string; expiresAt: string | 
   if (status === 'active') {
     const soon = isExpiringSoon(expiresAt);
     return soon
-      ? <span className="smc-gpill smc-gpill--warn"><Clock3 /> Expiring</span>
-      : <span className="smc-gpill smc-gpill--ok"><CheckCircle2 /> Active</span>;
+      ? <Badge tone="warning" icon={<Clock3 />}>Expiring</Badge>
+      : <Badge tone="success" icon={<CheckCircle2 />}>Active</Badge>;
   }
-  if (status === 'expired') return <span className="smc-gpill smc-gpill--muted"><Clock3 /> Expired</span>;
-  if (status === 'revoked') return <span className="smc-gpill smc-gpill--bad">Revoked</span>;
-  return <span className="smc-gpill smc-gpill--muted">None</span>;
+  if (status === 'expired') return <Badge tone="neutral" icon={<Clock3 />}>Expired</Badge>;
+  if (status === 'revoked') return <Badge tone="danger">Revoked</Badge>;
+  return <Badge tone="neutral">None</Badge>;
 }

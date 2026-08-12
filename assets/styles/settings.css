@@ -436,12 +436,6 @@
 .stg-mf-item-label { font-size: 0.84rem; font-weight: 600; color: var(--text-primary, #111); }
 .stg-mf-item-sub { font-size: 0.7rem; color: var(--text-muted, #9ca3af); margin-top: 2px; }
 
-.stg-mf-status { flex-shrink: 0; font-size: 0.64rem; font-weight: var(--font-weight-bold); padding: 2px 9px; border-radius: 20px; letter-spacing: .02em; white-space: nowrap; }
-.stg-mf-status.draft     { background: #f3f4f6; color: #6b7280; }
-.stg-mf-status.pending   { background: #fef3c7; color: #b45309; }
-.stg-mf-status.approved  { background: #d1fae5; color: #065f46; }
-.stg-mf-status.returned  { background: #fee2e2; color: #b91c1c; }
-.stg-mf-status.deprecated{ background: #ede9fe; color: #6d28d9; }
 
 .stg-mf-pane { align-self: start; }
 .stg-mf-detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }

@@ -2,7 +2,7 @@
 
 # communications Module Map
 
-Source fingerprint: `7d9d0caba0994f01c03e948d`
+Source fingerprint: `b4e9c976779157dafe2648dc`
 
 Files: 113 | Symbols: 1057 | Widgets: 0 | Unique mounted endpoints: 93 | Route definitions: 94 mounted + 2 unmounted | API calls: 88 | DB objects: 158 | E2E suites: 7
 
@@ -283,7 +283,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `RevokeComplianceGrantDialog` | function / component | `src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx:100` | `-` |
 | `ComplianceExportDialog` | function / component | `src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx:135` | `-` |
 | `ComplianceCasesView` | function / component | `src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx:74` | `-` |
-| `ComplianceConversationsView` | function / component | `src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx:43` | `-` |
+| `ComplianceConversationsView` | function / component | `src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx:44` | `-` |
 | `ComplianceStateProvider` | function / component | `src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx:28` | `-` |
 | `useComplianceState` | function / hook | `src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx:47` | `-` |
 | `ComplianceSubnav` | function / component | `src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx:37` | `-` |
@@ -520,7 +520,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Messages/messenger/ui/compliance/ComplianceAccessLogView.tsx` | 137 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx` | 191 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx` | 301 |
-| frontend-page | `src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx` | 302 |
+| frontend-page | `src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx` | 301 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx` | 52 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx` | 200 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx` | 176 |

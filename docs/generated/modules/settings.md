@@ -2,7 +2,7 @@
 
 # settings Module Map
 
-Source fingerprint: `7d9d0caba0994f01c03e948d`
+Source fingerprint: `b4e9c976779157dafe2648dc`
 
 Files: 44 | Symbols: 253 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 0 unmounted | API calls: 18 | DB objects: 21 | E2E suites: 2
 
@@ -83,7 +83,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useManifestsList` | function / hook | `src/api/settingsCatalog.ts:215` | `-` |
 | `useManifest` | function / hook | `src/api/settingsCatalog.ts:223` | `-` |
 | `useManifestAction` | function / hook | `src/api/settingsCatalog.ts:242` | `-` |
-| `ManifestReviewPanel` | function / component | `src/components/sections/Settings/ManifestReviewPanel.tsx:220` | `-` |
+| `ManifestReviewPanel` | function / component | `src/components/sections/Settings/ManifestReviewPanel.tsx:223` | `-` |
 | `TotpSetupModal` | function / component | `src/components/sections/Settings/SettingsSection.tsx:446` | `-` |
 | `TotpDisableModal` | function / component | `src/components/sections/Settings/SettingsSection.tsx:646` | `-` |
 | `SettingsSection` | function / component | `src/components/sections/Settings/SettingsSection.tsx:1305` | `-` |
@@ -131,7 +131,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/schemas/settings.ts` | 56 |
 | frontend-api | `src/api/settings.ts` | 93 |
 | frontend-api | `src/api/settingsCatalog.ts` | 250 |
-| frontend-page | `src/components/sections/Settings/ManifestReviewPanel.tsx` | 255 |
+| frontend-page | `src/components/sections/Settings/ManifestReviewPanel.tsx` | 258 |
 | frontend-page | `src/components/sections/Settings/SettingsSection.tsx` | 1419 |
 | frontend-page | `src/components/sections/Settings/SwzCard.tsx` | 193 |
 | frontend-page | `src/components/sections/Settings/SwzCatalogPage.tsx` | 185 |

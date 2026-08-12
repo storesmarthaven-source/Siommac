@@ -119,12 +119,6 @@
 .smc-muted { color: var(--smc-muted); }
 
 /* ── Pills ──────────────────────────────────────────────────────────────── */
-.smc-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
-.smc-pill svg { width: 13px; height: 13px; }
-.smc-pill--ok   { background: #e5f4ec; color: #1a7f4b; }
-.smc-pill--warn { background: #fdf1dd; color: #9a6a12; }
-.smc-pill--bad  { background: #fbe6e6; color: #b3322e; }
-.smc-pill--muted{ background: #eef1f6; color: #5a6a82; }
 
 /* ── Detail rail ────────────────────────────────────────────────────────── */
 .smc-detail {
@@ -136,8 +130,7 @@
 .smc-detail--empty .smc-detail__emptyicon svg { width: 26px; height: 26px; color: #9aa7bd; }
 /* The status pill is a direct grid child of .smc-detail — without this it
    inherits justify-self:stretch and spans the whole column (long + narrow). */
-.smc-detail > .smc-pill { justify-self: start; }
-.smc-detail__no { margin: 0; font-size: 18px; font-weight: 700; }
+.smc-detail > .smc-detail__no { margin: 0; font-size: 18px; font-weight: 700; }
 .smc-detail__summary { margin: 0; font-size: 13px; color: #46536b; line-height: 1.45; }
 .smc-detail__block { display: grid; gap: 8px; border-top: 1px solid var(--smc-line-2); padding-top: 12px; }
 .smc-detail__block h4 { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--smc-muted); }
@@ -152,13 +145,7 @@
 .smc-workspace .smc-scoped__ic svg { width: 14px; height: 14px; }
 .smc-scoped__title { min-width: 0; font-size: 12.5px; font-weight: 500; color: var(--smc-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.smc-gpill { display: inline-flex; align-items: center; gap: 3px; padding: 1px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 600; white-space: nowrap; }
-.smc-workspace .smc-gpill svg { width: 11px; height: 11px; }
-.smc-gpill--ok   { background: #e5f4ec; color: #1a7f4b; }
-.smc-gpill--warn { background: #fdf1dd; color: #9a6a12; }
-.smc-gpill--bad  { background: #fbe6e6; color: #b3322e; }
-.smc-gpill--muted{ background: #eef1f6; color: #5a6a82; }
-
+.smc-workspace 
 /* ── Buttons ────────────────────────────────────────────────────────────── */
 /* Secondary is the default: a branded navy-tinted button (never bare black text
    on white — on the light cards/dialogs that read as an unstyled label). */
@@ -242,8 +229,7 @@
 .smc-conv__listitem.is-active { background: #eef3fb; border-color: #c3d3ee; }
 .smc-conv__listitem.is-locked { opacity: .6; cursor: not-allowed; }
 .smc-conv__listitem.is-locked:hover { background: var(--smc-card); }
-.smc-conv__listmain .smc-gpill { justify-self: start; }
-.smc-conv__listic { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 7px; background: #eef1f6; color: #58718b; }
+.smc-conv__listmain .smc-conv__listic { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 7px; background: #eef1f6; color: #58718b; }
 .smc-conv__listic svg { width: 15px; height: 15px; }
 .smc-conv__listmain { min-width: 0; display: grid; gap: 3px; }
 .smc-conv__listmain strong { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

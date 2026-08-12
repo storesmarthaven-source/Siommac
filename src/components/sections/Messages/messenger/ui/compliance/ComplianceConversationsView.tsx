@@ -17,6 +17,7 @@ import {
 } from '@api/communicationsCompliance';
 import type { ComplianceMessage } from '../../../../../../../types/messagingCompliance';
 import { useComplianceState } from './ComplianceState';
+import { Badge, type BadgeTone } from '@ui';
 import { ComplianceExportDialog, RevokeComplianceGrantDialog } from './ComplianceActionDialogs';
 import {
   LockKeyhole, Download, MessageSquare, Clock3, CheckCircle2, ShieldX, Eye, ArrowUpRight, Search, Paperclip,
@@ -176,7 +177,7 @@ export function ComplianceConversationsView() {
       <aside className="smc-conv__context" aria-label="Case and access context">
         <div className="smc-conv__ctxhead">
           <h4>Investigation Case</h4>
-          {detail ? <span className={`smc-pill smc-pill--${detail.status === 'rejected' ? 'bad' : detail.status === 'pending_approval' ? 'warn' : 'ok'}`}>{detail.status === 'approved' ? 'Approved' : detail.status}</span> : null}
+          {detail ? <Badge tone={detail.status === 'rejected' ? 'danger' : detail.status === 'pending_approval' ? 'warning' : 'success'}>{detail.status === 'approved' ? 'Approved' : detail.status}</Badge> : null}
         </div>
         {detail ? (
           <>
@@ -232,7 +233,7 @@ function ConversationRailItem(
   { title: string; subtitle: string; grantStatus: string; readable: boolean; active: boolean; onSelect: () => void },
 ) {
   const state = !readable ? 'Locked' : grantStatus === 'active' ? 'Access active' : grantStatus === 'expired' ? 'Expired' : grantStatus === 'revoked' ? 'Revoked' : 'No grant';
-  const tone = !readable ? 'muted' : grantStatus === 'active' ? 'ok' : grantStatus === 'expired' ? 'warn' : 'muted';
+  const tone: BadgeTone = !readable ? 'neutral' : grantStatus === 'active' ? 'success' : grantStatus === 'expired' ? 'warning' : 'neutral';
   return (
     <li>
       <button
@@ -247,9 +248,7 @@ function ConversationRailItem(
         <span className="smc-conv__listmain">
           <strong>{title}</strong>
           <small>{subtitle}</small>
-          <span className={`smc-gpill smc-gpill--${tone}`}>
-            {!readable ? <LockKeyhole /> : grantStatus === 'active' ? <CheckCircle2 /> : <Clock3 />} {state}
-          </span>
+          <Badge tone={tone} icon={!readable ? <LockKeyhole /> : grantStatus === 'active' ? <CheckCircle2 /> : <Clock3 />}>{state}</Badge>
         </span>
       </button>
     </li>

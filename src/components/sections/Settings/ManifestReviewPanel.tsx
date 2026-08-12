@@ -19,13 +19,16 @@ import {
   useManifestsList, useManifest, useManifestAction,
   type ManifestRow, type ReviewerRole, type ManifestReviewStatus,
 } from '@api/settingsCatalog';
-import { Button }                from '@ui';
+import { Badge, Button, type BadgeTone } from '@ui';
 
 const STATUS_LABEL: Record<ManifestReviewStatus, string> = {
   draft: 'Draft', pending_review: 'Pending review', approved: 'Approved', returned: 'Returned', deprecated: 'Deprecated',
 };
-const STATUS_CLASS: Record<ManifestReviewStatus, string> = {
-  draft: 'draft', pending_review: 'pending', approved: 'approved', returned: 'returned', deprecated: 'deprecated',
+/** Read from the CSS, not the names: `returned` was RED here (#b91c1c), unlike
+ *  payroll's amber `returned`. `deprecated` was purple, which has no canonical
+ *  tone — it becomes neutral, and its distinct LABEL carries the difference. */
+const STATUS_TONE: Record<ManifestReviewStatus, BadgeTone> = {
+  draft: 'neutral', pending_review: 'warning', approved: 'success', returned: 'danger', deprecated: 'neutral',
 };
 
 const REVIEWERS: { role: ReviewerRole; label: string; col: keyof ManifestRow }[] = [
@@ -39,7 +42,7 @@ const REVIEWERS: { role: ReviewerRole; label: string; col: keyof ManifestRow }[]
 ];
 
 function StatusPill({ status }: { status: ManifestReviewStatus }): VNode {
-  return <span class={`stg-mf-status ${STATUS_CLASS[status]}`}>{STATUS_LABEL[status]}</span>;
+  return <Badge tone={STATUS_TONE[status]}>{STATUS_LABEL[status]}</Badge>;
 }
 
 // ── Detail pane ─────────────────────────────────────────────────────────────────
