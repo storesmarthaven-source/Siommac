@@ -273,6 +273,42 @@
   .ui-btn--link:hover:not(:disabled),
   .ui-btn--link[data-ui-state~='hover'] { color: var(--ui-button-link-fg-hover); }
 
+  /* ── Tone: quiet destructive ───────────────────────────────────────────────
+     Intent WITHOUT emphasis. `variant="danger"` is the filled, loud treatment;
+     `tone="danger"` recolours a quiet variant so a low-emphasis destructive
+     action can exist at all — the legacy `.sfp-btn-danger` (white surface, red
+     border, red text) is exactly this, and migrating it to filled red would
+     have shouted where the original whispered.
+
+     Geometry, focus and disabled are untouched: tone changes colour only, so a
+     quiet destructive button is still a BTN-01 button. */
+  .ui-btn--tone-danger {
+    color: var(--ui-color-danger);
+    border-color: var(--ui-color-danger);
+  }
+  /* `ghost` has no border of its own and must not grow one. */
+  .ui-btn--ghost.ui-btn--tone-danger { border-color: transparent; }
+
+  .ui-btn--tone-danger:hover:not(:disabled):not([aria-busy='true']),
+  .ui-btn--tone-danger[data-ui-state~='hover'] {
+    background: var(--st-danger-tint);
+    color: var(--ui-color-danger);
+    border-color: var(--ui-color-danger);
+  }
+  .ui-btn--ghost.ui-btn--tone-danger:hover:not(:disabled),
+  .ui-btn--ghost.ui-btn--tone-danger[data-ui-state~='hover'] { border-color: transparent; }
+
+  .ui-btn--tone-danger:active:not(:disabled),
+  .ui-btn--tone-danger[data-ui-state~='active'] { background: var(--st-danger-tint); }
+
+  /* Disabled is the canonical flat state — a disabled destructive action must
+     not keep signalling danger it can no longer do. */
+  .ui-btn--tone-danger:disabled,
+  .ui-btn--tone-danger[data-ui-state~='disabled'] {
+    color: var(--ui-disabled-fg);
+    border-color: var(--ui-disabled-border);
+  }
+
   /* ── Focus ────────────────────────────────────────────────────────────────
      `:focus-visible`, not `:focus` — a mouse click should not leave a ring
      behind. Outline plus a soft ring so the indicator survives on both light
@@ -308,35 +344,26 @@
 
   /* ── Loading ──────────────────────────────────────────────────────────────
      Keeps the variant's own colours (a saving button should still look like the
-     primary action) but blocks pointer events so it cannot be double-submitted.
-     The label stays in the flow and is hidden with visibility, so the button
-     does not resize and shift the layout underneath the user's cursor. */
+     primary action) and blocks pointer events so it cannot be double-submitted.
+
+     The LABEL STAYS VISIBLE. It used to be hidden behind a centred spinner, so
+     `<Button loading>Save</Button>` rendered a wordless button and every call
+     site had to supply `loadingText` to keep its own label — which, across a
+     migration, means inventing user-facing copy that never existed. The spinner
+     now takes the leading icon's place instead: same width, label intact, and
+     `loadingText` is a genuine opt-in override. */
   .ui-btn[aria-busy='true'],
   .ui-btn[data-ui-state~='loading'] { cursor: progress; }
 
-  .ui-btn[aria-busy='true'] .ui-btn-label,
-  .ui-btn[data-ui-state~='loading'] .ui-btn-label { visibility: hidden; }
-
-  .ui-btn[aria-busy='true'] > svg,
+  /* Forced state for the Gallery: no real `loading` prop is set, so the spinner
+     is not in the DOM and the icon must be hidden to show the same geometry. */
   .ui-btn[data-ui-state~='loading'] > svg { visibility: hidden; }
 
-  /* A loading button with explicit loading TEXT shows that text instead of
-     hiding the label, so "Saving…" reads normally. */
-  .ui-btn[aria-busy='true'] .ui-btn-label--loading,
-  .ui-btn[data-ui-state~='loading'] .ui-btn-label--loading { visibility: visible; }
-
   .ui-btn-spinner {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    pointer-events: none;
-  }
-  /* When loading text is shown the spinner sits beside it rather than centred
-     over it, so the two never overlap. */
-  .ui-btn--loading-text .ui-btn-spinner {
-    position: static;
     display: inline-grid;
+    place-items: center;
+    flex-shrink: 0;
+    pointer-events: none;
   }
   .ui-btn-spinner::after {
     content: '';

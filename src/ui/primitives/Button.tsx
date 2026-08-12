@@ -37,8 +37,28 @@ import './Button.recipe.css';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'link';
 
+/**
+ * Intent, kept SEPARATE from emphasis.
+ *
+ * `variant` says how loud an action is; `tone` says what kind of action it is.
+ * Conflating them forces every destructive action to be a filled red block —
+ * but "Delete band", sitting quietly beside a primary Save, is destructive AND
+ * low-emphasis. The legacy `.sfp-btn-danger` (white surface, red border, red
+ * text) expressed exactly that, and it would have been lost on migration.
+ *
+ * Deliberately just two values. This is not the start of a tone system; it is
+ * the one axis a real migration proved was missing.
+ */
+export type ButtonTone = 'default' | 'danger';
+
 interface ButtonBase {
   variant?: ButtonVariant;
+  /**
+   * Intent. Composes with the quiet variants (`outline`, `ghost`, `secondary`)
+   * to give a low-emphasis destructive action. `variant="danger"` remains the
+   * filled treatment for the loud case; `tone` on it is redundant and ignored.
+   */
+  tone?: ButtonTone;
   size?: ControlSize;
 
   iconLeft?: VNode;
@@ -117,6 +137,7 @@ type ResolvedButtonProps = ButtonBase & {
 export function Button(props: ButtonProps): VNode {
   const {
     variant = 'secondary',
+    tone = 'default',
     size = 'md',
     iconLeft,
     iconRight,
@@ -147,6 +168,7 @@ export function Button(props: ButtonProps): VNode {
     'ui-btn',
     `ui-btn--${variant}`,
     size !== 'md' ? `ui-btn--${size}` : '',
+    tone === 'danger' && variant !== 'danger' ? 'ui-btn--tone-danger' : '',
     iconOnly ? 'ui-btn--icon' : '',
     fullWidth ? 'ui-btn--full' : '',
     loading && loadingText ? 'ui-btn--loading-text' : '',
@@ -157,8 +179,12 @@ export function Button(props: ButtonProps): VNode {
 
   const content = (
     <>
-      {iconLeft}
-      {loading && <span class="ui-btn-spinner" aria-hidden="true" />}
+      {/* While loading the spinner stands IN PLACE OF the leading icon, so the
+          button does not change width and the layout under the cursor holds. */}
+      {loading ? <span class="ui-btn-spinner" aria-hidden="true" /> : iconLeft}
+      {/* The label stays. `loadingText` is an explicit override, not the
+          default: defaulting to it would have forced every migrated call site
+          to invent new user-facing copy ("Saving…") that never existed. */}
       {loading && loadingText
         ? <span class="ui-btn-label ui-btn-label--loading">{loadingText}</span>
         : children != null && <span class="ui-btn-label">{children}</span>}

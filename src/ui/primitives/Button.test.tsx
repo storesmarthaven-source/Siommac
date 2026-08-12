@@ -73,10 +73,49 @@ describe('Button', () => {
     expect(screen.getByRole<HTMLButtonElement>('button').disabled).toBe(false);
   });
 
+  it('KEEPS the label while loading, so a migration invents no new copy', () => {
+    /* The label used to be hidden behind a centred spinner, which meant every
+       call site had to supply `loadingText` just to keep the words it already
+       had. Across a migration that is hundreds of invented strings. */
+    render(<Button loading>Save</Button>);
+    expect(screen.getByRole('button').textContent).toContain('Save');
+  });
+
+  it('puts the spinner where the leading icon was, so width does not jump', () => {
+    const icon = <svg data-testid="icon" />;
+    const { container, rerender } = render(<Button iconLeft={icon}>Save</Button>);
+    expect(container.querySelector('[data-testid="icon"]')).not.toBeNull();
+    expect(container.querySelector('.ui-btn-spinner')).toBeNull();
+
+    rerender(<Button iconLeft={icon} loading>Save</Button>);
+    expect(container.querySelector('[data-testid="icon"]'), 'icon should yield to the spinner').toBeNull();
+    expect(container.querySelector('.ui-btn-spinner')).not.toBeNull();
+  });
+
   it('shows loadingText in place of the label when provided', () => {
     render(<Button loading loadingText="Saving…">Save</Button>);
     expect(screen.getByRole('button').textContent).toContain('Saving…');
     expect(screen.getByRole('button').textContent).not.toContain('Save app');
+  });
+
+  it('composes tone="danger" with a quiet variant for low-emphasis destruction', () => {
+    // Intent and emphasis are separate axes: "Delete band" beside a primary
+    // Save is destructive AND quiet. Forcing it to filled red shouts.
+    const { container } = render(<Button variant="outline" tone="danger">Delete band</Button>);
+    const btn = container.querySelector('button')!;
+    expect(btn.className).toContain('ui-btn--outline');
+    expect(btn.className).toContain('ui-btn--tone-danger');
+    expect(btn.className).not.toContain('ui-btn--danger ');
+  });
+
+  it('ignores tone on the filled danger variant, which already carries intent', () => {
+    const { container } = render(<Button variant="danger" tone="danger">Delete</Button>);
+    expect(container.querySelector('button')!.className).not.toContain('ui-btn--tone-danger');
+  });
+
+  it('defaults to no tone', () => {
+    const { container } = render(<Button variant="outline">Edit</Button>);
+    expect(container.querySelector('button')!.className).not.toContain('tone-danger');
   });
 
   it('renders a spinner while loading', () => {
