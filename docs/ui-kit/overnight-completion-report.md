@@ -6,9 +6,39 @@ Updated: 2026-08-12
 
 ```
 branch  codex/ui-kit-v2-completion
-HEAD    fe58cbf8
+HEAD    c715e604
 objective  Build the actual SIOMAC Design System Studio, using the canonical
            system this programme has spent its whole life creating.
+```
+
+### Cold-start sequence
+```
+1. Read AGENTS.md                      (commit-trailer + worktree rules were fixed)
+2. Read this report
+3. Verify  branch = codex/ui-kit-v2-completion
+           HEAD   = c715e604
+           tree   = clean
+4. RE-MEASURE the typecheck baseline before claiming it
+5. Begin Studio implementation
+```
+⚠ **Step 4 is not optional.** The "49-error frontend typecheck baseline" is
+INHERITED, not verified — it was carried forward through several sessions and was
+last measured before `fe58cbf8`/`c715e604`. Neither commit touches TypeScript
+that compiles into the app (a coverage script, a registry doc comment, two
+markdown files), so it *should* be unchanged — but "should be" is exactly the
+assume-don't-verify failure AGENTS.md opens with. Measure it from `c715e604` and
+record the real number before treating any later count as a regression.
+
+### Implementation order
+```
+Studio shell + navigation
+→ real registry integration
+→ built / planned / pattern classification
+→ component workbench
+→ Brand Overview / Theme Generator
+→ scoped theme previews
+→ Application Preview
+→ responsive Desktop / Tablet / Mobile
 ```
 
 ⛔ **Do NOT reopen broad consumer migration just because coverage numbers exist.**
