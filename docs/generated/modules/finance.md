@@ -2,9 +2,9 @@
 
 # finance Module Map
 
-Source fingerprint: `4e3d89c992baf53fd778bdb6`
+Source fingerprint: `7d9d0caba0994f01c03e948d`
 
-Files: 139 | Symbols: 1848 | Widgets: 9 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
+Files: 139 | Symbols: 1845 | Widgets: 9 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
 ## Widgets and Tiles
 
@@ -356,7 +356,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `IconChevronLeft` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:36` | `-` |
 | `IconChevronLeftBadge` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:38` | `-` |
 | `IconCoins` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:44` | `-` |
-| ... | 82 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 81 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -551,7 +551,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/PayablesOverview.tsx` | 347 |
 | frontend-page | `src/components/sections/Finance/RemittancesOverview.tsx` | 1840 |
 | frontend-page | `src/components/sections/Finance/StatNewVersionPage.tsx` | 358 |
-| frontend-page | `src/components/sections/Finance/StatNisBandPage.tsx` | 383 |
+| frontend-page | `src/components/sections/Finance/StatNisBandPage.tsx` | 379 |
 | frontend-page | `src/components/sections/Finance/StatNisImportPage.tsx` | 347 |
 | frontend-page | `src/components/sections/Finance/StatPayComponentPage.tsx` | 222 |
 | frontend-page | `src/components/sections/Finance/StatTable.tsx` | 212 |
@@ -561,7 +561,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/_shared/EmployeeCell.tsx` | 133 |
 | frontend-page | `src/components/sections/Finance/_shared/pickers.tsx` | 301 |
 | frontend-page | `src/components/sections/Finance/_shared/reports.tsx` | 339 |
-| frontend-page | `src/components/sections/Finance/_shared/sfpKit.tsx` | 216 |
+| frontend-page | `src/components/sections/Finance/_shared/sfpKit.tsx` | 197 |
 | frontend-page | `src/components/sections/Finance/financeShared.ts` | 70 |
 | frontend-page | `src/components/sections/Finance/hrfinFormat.ts` | 38 |
 | frontend-page | `src/components/sections/Finance/index.ts` | 11 |

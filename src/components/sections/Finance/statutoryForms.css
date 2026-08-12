@@ -71,12 +71,6 @@
 .sfp-divider{height:1px;background:var(--sfp-line);margin:0 26px}
 
 /* ── Pills ──────────────────────────────────────────────────────────────── */
-.sfp-pill{font-size:11px;font-weight:600;padding:4px 11px;border-radius:20px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
-.sfp-pill .sfp-dot{width:7px;height:7px;border-radius:50%;background:currentColor}
-.sfp-pill.active{background:var(--sfp-green-bg);color:var(--sfp-green);border:1px solid var(--sfp-green-bd)}
-.sfp-pill.pending{background:var(--sfp-amber-bg);color:var(--sfp-amber);border:1px solid var(--sfp-amber-bd)}
-.sfp-pill.approved{background:var(--sfp-info-bg);color:var(--sfp-info);border:1px solid var(--sfp-info-bd)}
-.sfp-pill.locked,.sfp-pill.retired,.sfp-pill.draft{background:#eff1f5;color:#6b7688;border:1px solid #e2e6ec}
 
 /* ── Body layout ────────────────────────────────────────────────────────── */
 .sfp-body{display:grid;grid-template-columns:minmax(0,1.95fr) minmax(0,1fr);gap:26px;padding:22px 26px}
@@ -195,10 +189,6 @@
 .sfp-head-icon.grad{background:var(--siomac-navy,#16213d);border-color:transparent;color:#fff}
 
 /* pill variants used by derived compliance/treatment rows */
-.sfp-pill.yes{background:var(--sfp-green-bg);color:var(--sfp-green);border:1px solid var(--sfp-green-bd)}
-.sfp-pill.no{background:var(--sfp-gray-bg);color:#6b7688;border:1px solid #e2e6ec}
-.sfp-pill.earn{background:var(--sfp-info-bg);color:var(--sfp-primary-600);border:1px solid var(--sfp-info-bd)}
-.sfp-pill.deduct{background:var(--sfp-amber-bg);color:var(--sfp-amber);border:1px solid var(--sfp-amber-bd)}
 
 /* ── Wizard stepper ─────────────────────────────────────────────────────── */
 .sfp-stepper{display:flex;align-items:center;padding:4px 26px 18px;gap:0}

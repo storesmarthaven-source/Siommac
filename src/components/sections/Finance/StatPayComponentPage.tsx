@@ -28,7 +28,7 @@ import {
   IconEye, IconShield, IconClock, IconOkBadge, IconCoins,
   TextField, SelectField, ToggleField, StatFormShell, minLenError,
 } from './_shared/sfpKit';
-import { Button } from '@ui';
+import { Badge, Button } from '@ui';
 import './statutoryForms.css';
 
 const CODE_RE = /^[A-Za-z0-9_]+$/;
@@ -109,7 +109,7 @@ export function StatPayComponentPage({ edit, onClose }: {
   const isEarn = f.kind === 'earning';
 
   const flagRow = (label: string, on: boolean): VNode => (
-    <div class="sfp-mrow"><span class="k">{label}</span><span class="v"><span class={`sfp-pill ${on ? 'yes' : 'no'}`}>{on ? 'Yes' : 'No'}</span></span></div>
+    <div class="sfp-mrow"><span class="k">{label}</span><span class="v"><Badge tone={on ? 'success' : 'neutral'}>{on ? 'Yes' : 'No'}</Badge></span></div>
   );
 
   return (
@@ -165,7 +165,7 @@ export function StatPayComponentPage({ edit, onClose }: {
             <div class="sfp-aside">
               <div class="sfp-panel">
                 <div class="sfp-panel-head"><span class="ic"><IconEye /></span>Payroll Treatment</div>
-                <div class="sfp-mrow"><span class="k">Category</span><span class="v"><span class={`sfp-pill ${isEarn ? 'earn' : 'deduct'}`}>{isEarn ? 'Earning' : 'Deduction'}</span></span></div>
+                <div class="sfp-mrow"><span class="k">Category</span><span class="v"><Badge tone={isEarn ? 'info' : 'warning'}>{isEarn ? 'Earning' : 'Deduction'}</Badge></span></div>
                 <div class="sfp-mrow"><span class="k">{isEarn ? 'Added to' : 'Deducted from'}</span><span class="v">{isEarn ? (f.isTaxable ? 'Gross (taxable) pay' : 'Gross (non-taxable) pay') : 'Net pay'}</span></div>
                 <div class="sfp-mrow"><span class="k">GL account</span><span class="v">{f.glAccountCode.trim() || '—'}</span></div>
                 <div class="sfp-xs">This is how the component will be treated in payroll, derived from the flags below.</div>

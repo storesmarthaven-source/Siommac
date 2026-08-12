@@ -52,25 +52,6 @@ export const IconTrash = ({ size = 16 }: IconProps): VNode => svg(size, <path d=
 export const IconGavel = ({ size = 16 }: IconProps): VNode => svg(size, <><path d="m14 13-7.5 7.5a2.12 2.12 0 0 1-3-3L11 10"/><path d="m16 16 6-6M8 8l6-6M9 7l8 8M21 11l-8-8"/></>);
 export const IconSpark = ({ size = 16 }: IconProps): VNode => svg(size, <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>);
 
-// ── Version status pill ─────────────────────────────────────────────────────────
-export type VersionStatus = 'draft' | 'pending_approval' | 'approved' | 'active' | 'retired';
-export function pillClass(status: string): string {
-  switch (status) {
-    case 'active':           return 'active';
-    case 'pending_approval': return 'pending';
-    case 'approved':         return 'approved';
-    case 'retired':          return 'retired';
-    default:                 return 'draft';
-  }
-}
-export function StatusPill({ status, label }: { status: string; label: string }): VNode {
-  return (
-    <span class={`sfp-pill ${pillClass(status)}`}>
-      {status === 'active' && <span class="sfp-dot" />}
-      {label}
-    </span>
-  );
-}
 
 // ── Standard page shell for the Statutory full pages ────────────────────────────
 // Renders like every other Siomac sub-module page: a back link + the standard

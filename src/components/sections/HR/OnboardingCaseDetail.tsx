@@ -16,7 +16,7 @@
 import { type VNode } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
-import { PageHeader, Modal, Field, FormGrid, TextInput, SelectInput, Button } from '@ui';
+import { Badge, PageHeader, Modal, Field, FormGrid, TextInput, SelectInput, Button, type BadgeTone } from '@ui';
 import {
   WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget, placeWidgetsAtBottom,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeDef, type WidgetSizeKey,
@@ -46,14 +46,17 @@ import './onboardingCase.css';
 const _initials = (n: string | null | undefined): string =>
   (n ?? '').split(/\s+/).filter(Boolean).slice(0, 2).map(s => (s[0] ?? '').toUpperCase()).join('') || '?';
 
-function tone(s: string): string {
-  if (['completed', 'delivered', 'accepted', 'resolved', 'received', 'waived', 'ready_for_activation'].includes(s)) return 'green';
-  if (['blocked', 'failed', 'escalated', 'active'].includes(s)) return 'red';
-  if (['in_progress', 'sent', 'acknowledged', 'waiting_on_owner', 'paused'].includes(s)) return 'amber';
-  if (['cancelled', 'skipped', 'draft'].includes(s)) return 'gray';
-  return 'blue';
+function tone(s: string): BadgeTone {
+  if (['completed', 'delivered', 'accepted', 'resolved', 'received', 'waived', 'ready_for_activation'].includes(s)) return 'success';
+  // ⚠ 'active' resolving to DANGER is preserved exactly as it behaved before the
+  //   migration. It reads wrong, and it is recorded under the status-semantic
+  //   audit — but changing it here would be a product decision, not a migration.
+  if (['blocked', 'failed', 'escalated', 'active'].includes(s)) return 'danger';
+  if (['in_progress', 'sent', 'acknowledged', 'waiting_on_owner', 'paused'].includes(s)) return 'warning';
+  if (['cancelled', 'skipped', 'draft'].includes(s)) return 'neutral';
+  return 'info';
 }
-const Pill = ({ s }: { s: string }): VNode => <span class={`obx-pill ${tone(s)}`}>{humanize(s)}</span>;
+const Pill = ({ s }: { s: string }): VNode => <Badge tone={tone(s)}>{humanize(s)}</Badge>;
 
 // .v2 retires layouts saved against the old coarse 88px grid — their row counts mean a ~5×
 // smaller tile on the canonical grid. normalizePageKey ignores the version when matching

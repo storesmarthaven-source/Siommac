@@ -29,7 +29,7 @@ import {
 } from '@api/finance/statutory';
 import { fmtMoney, fmtDate, humanize } from './financeShared';
 import { StatFormShell, IconOkBadge, IconLayers } from './_shared/sfpKit';
-import { Button, LucideIcon } from '@ui';
+import { Badge, Button, LucideIcon, type BadgeTone } from '@ui';
 import './statutoryForms.css';
 
 const WEEKS_PER_MONTH = 52 / 12; // ≈ 4.333 — annualised monthly ESTIMATE, never stored.
@@ -41,16 +41,12 @@ const numOrNull = (s: string): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
-/** Version status → sfp-pill variant class. */
-function pillClass(status: StatutoryVersionStatus): string {
-  switch (status) {
-    case 'active':           return 'active';
-    case 'pending_approval': return 'pending';
-    case 'approved':         return 'approved';
-    case 'retired':          return 'retired';
-    default:                 return 'draft';
-  }
-}
+/** Version status → Badge tone. `approved` is INFO, not success: the CSS it
+ *  replaced painted it blue, and approved-but-not-yet-active is not a success
+ *  state. */
+const STATUS_TONE: Partial<Record<StatutoryVersionStatus, BadgeTone>> = {
+  active: 'success', pending_approval: 'warning', approved: 'info', retired: 'neutral',
+};
 
 // ── Inline icons (ported from the mockup) ──────────────────────────────────────
 const IconOk = (): VNode => (
@@ -326,7 +322,7 @@ export function StatNisBandPage({ versionId, edit, onClose, onViewVersion }: {
                   <div class="sfp-panel">
                     <div class="sfp-panel-head"><span class="ic"><IconBook /></span>Rate Version</div>
                     <div class="sfp-mrow"><span class="k">Version</span><span class="v">{version.label}</span></div>
-                    <div class="sfp-mrow"><span class="k">Status</span><span class="v"><span class={`sfp-pill ${pillClass(version.status)}`}>{version.status === 'active' && <span class="sfp-dot" />}{humanize(version.status)}</span></span></div>
+                    <div class="sfp-mrow"><span class="k">Status</span><span class="v"><Badge tone={STATUS_TONE[version.status] ?? 'neutral'} dot={version.status === 'active'}>{humanize(version.status)}</Badge></span></div>
                     <div class="sfp-mrow"><span class="k">Effective from</span><span class="v">{fmtDate(version.effectiveFrom)}</span></div>
                     <div class="sfp-mrow"><span class="k">NIS monthly ceiling</span><span class="v">{version.nisMonthyCeiling != null ? fmtMoney(version.nisMonthyCeiling) : '—'}</span></div>
                     <div class="sfp-mrow"><span class="k">Payroll runs linked</span><span class="v">{version.linkedPayrollRunCount ?? 0}</span></div>

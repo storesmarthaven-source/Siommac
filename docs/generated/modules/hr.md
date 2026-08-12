@@ -2,7 +2,7 @@
 
 # hr Module Map
 
-Source fingerprint: `4e3d89c992baf53fd778bdb6`
+Source fingerprint: `7d9d0caba0994f01c03e948d`
 
 Files: 265 | Symbols: 3076 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 37 | DB objects: 196 | E2E suites: 16
 
@@ -15,10 +15,10 @@ Files: 265 | Symbols: 3076 | Widgets: 9 | Unique mounted endpoints: 275 | Route 
 | `bundle.hr.onboarding.manager` | Onboarding Manager Pack | registry | `` | `src/ui/widgets/bundles.ts:76` |
 | `hr.employeeMaster.lifecycleActivity` | Workforce Activity | registry | `LifecycleActivity` | `src/ui/widgets/registry.hrEmployeeMaster.tsx:533` |
 | `hr.employees.register` | Employee Register | local | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:855` |
-| `hr.onboarding.case.activeTasks` | Active Tasks | local | `() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <Button variant="primary" size="sm" onClick={openAddTask} iconLeft={<i class="fas fa-plus" />}>Add</Button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:329` |
-| `hr.onboarding.case.blockersTable` | Blockers | local | `() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:330` |
-| `hr.onboarding.case.customActions` | Custom Actions | local | `() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <Button variant="primary" size="sm" onClick={openAddAction} iconLeft={<i class="fas fa-plus" />}>Add</Button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:332` |
-| `hr.onboarding.case.handoffsTable` | Handoffs | local | `() => wcard('Handoffs', 'fa-arrow-right-arrow-left', handoffsBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:331` |
+| `hr.onboarding.case.activeTasks` | Active Tasks | local | `() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <Button variant="primary" size="sm" onClick={openAddTask} iconLeft={<i class="fas fa-plus" />}>Add</Button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:332` |
+| `hr.onboarding.case.blockersTable` | Blockers | local | `() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:333` |
+| `hr.onboarding.case.customActions` | Custom Actions | local | `() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <Button variant="primary" size="sm" onClick={openAddAction} iconLeft={<i class="fas fa-plus" />}>Add</Button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:335` |
+| `hr.onboarding.case.handoffsTable` | Handoffs | local | `() => wcard('Handoffs', 'fa-arrow-right-arrow-left', handoffsBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:334` |
 
 ## Route Definitions
 
@@ -729,7 +729,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/OffboardingOverview.tsx` | 269 |
 | frontend-page | `src/components/sections/HR/OnboardingAddTaskModal.tsx` | 94 |
 | frontend-page | `src/components/sections/HR/OnboardingBlockedBoard.tsx` | 157 |
-| frontend-page | `src/components/sections/HR/OnboardingCaseDetail.tsx` | 448 |
+| frontend-page | `src/components/sections/HR/OnboardingCaseDetail.tsx` | 451 |
 | frontend-page | `src/components/sections/HR/OnboardingCommandCenter.adapters.ts` | 143 |
 | frontend-page | `src/components/sections/HR/OnboardingCommandCenter.helpers.ts` | 196 |
 | frontend-page | `src/components/sections/HR/OnboardingCommandCenter.tsx` | 199 |

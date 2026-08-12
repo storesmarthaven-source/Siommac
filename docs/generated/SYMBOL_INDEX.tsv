@@ -7110,16 +7110,13 @@ IconAlert	function	finance	true	component	src/components/sections/Finance/_share
 IconTrash	function	finance	true	component	src/components/sections/Finance/_shared/sfpKit.tsx	51	
 IconGavel	function	finance	true	component	src/components/sections/Finance/_shared/sfpKit.tsx	52	
 IconSpark	function	finance	true	component	src/components/sections/Finance/_shared/sfpKit.tsx	53	
-VersionStatus	type	finance	true		src/components/sections/Finance/_shared/sfpKit.tsx	56	
-pillClass	function	finance	true		src/components/sections/Finance/_shared/sfpKit.tsx	57	
-StatusPill	function	finance	true	component	src/components/sections/Finance/_shared/sfpKit.tsx	66	
-StatFormShell	function	finance	true	component	src/components/sections/Finance/_shared/sfpKit.tsx	79	
-minLenError	function	finance	true		src/components/sections/Finance/_shared/sfpKit.tsx	116	
-InfoHint	function	finance	false	component	src/components/sections/Finance/_shared/sfpKit.tsx	123	
-TextField	function	finance	true	component	src/components/sections/Finance/_shared/sfpKit.tsx	127	
-MoneyField	function	finance	true	component	src/components/sections/Finance/_shared/sfpKit.tsx	152	
-SelectField	function	finance	true	component	src/components/sections/Finance/_shared/sfpKit.tsx	175	
-ToggleField	function	finance	true	component	src/components/sections/Finance/_shared/sfpKit.tsx	200	
+StatFormShell	function	finance	true	component	src/components/sections/Finance/_shared/sfpKit.tsx	60	
+minLenError	function	finance	true		src/components/sections/Finance/_shared/sfpKit.tsx	97	
+InfoHint	function	finance	false	component	src/components/sections/Finance/_shared/sfpKit.tsx	104	
+TextField	function	finance	true	component	src/components/sections/Finance/_shared/sfpKit.tsx	108	
+MoneyField	function	finance	true	component	src/components/sections/Finance/_shared/sfpKit.tsx	133	
+SelectField	function	finance	true	component	src/components/sections/Finance/_shared/sfpKit.tsx	156	
+ToggleField	function	finance	true	component	src/components/sections/Finance/_shared/sfpKit.tsx	181	
 ApAdvFilters	interface	finance	true		src/components/sections/Finance/ApAdvancedFilterPanel.tsx	15	
 countAdvFilters	function	finance	true		src/components/sections/Finance/ApAdvancedFilterPanel.tsx	21	
 ApAdvancedFilterPanel	function	finance	true	component	src/components/sections/Finance/ApAdvancedFilterPanel.tsx	26	
@@ -8127,19 +8124,19 @@ submit	function	finance	false		src/components/sections/Finance/StatNewVersionPag
 setBand	function	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	215	StatNewVersionPage
 WEEKS_PER_MONTH	variable	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	35	
 numOrNull	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	37	
-pillClass	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	45	
-IconOk	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	56	
-IconBad	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	59	
-IconCoins	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	62	
-IconBook	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	65	
-IconClock	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	68	
-IconArrow	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	71	
-IconInfo	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	74	
-MoneyField	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	79	
-StatNisBandPage	function	finance	true	component	src/components/sections/Finance/StatNisBandPage.tsx	102	
-set	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	127	StatNisBandPage
-save	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	195	StatNisBandPage
-remove	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	225	StatNisBandPage
+STATUS_TONE	object	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	47	
+IconOk	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	52	
+IconBad	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	55	
+IconCoins	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	58	
+IconBook	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	61	
+IconClock	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	64	
+IconArrow	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	67	
+IconInfo	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	70	
+MoneyField	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	75	
+StatNisBandPage	function	finance	true	component	src/components/sections/Finance/StatNisBandPage.tsx	98	
+set	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	123	StatNisBandPage
+save	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	191	StatNisBandPage
+remove	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	221	StatNisBandPage
 TEMPLATE	variable	finance	false	component	src/components/sections/Finance/StatNisImportPage.tsx	32	
 STEPS	array	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	33	
 Severity	type	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	40	
@@ -8945,45 +8942,45 @@ GaugeArc	function	hr	true	component	src/components/sections/HR/onboardingCase.he
 Bars	function	hr	true	component	src/components/sections/HR/onboardingCase.helpers.tsx	131	
 _initials	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	46	
 tone	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	49	
-Pill	function	hr	false	component	src/components/sections/HR/OnboardingCaseDetail.tsx	56	
-CASE_PAGE_KEY	variable	hr	false	component	src/components/sections/HR/OnboardingCaseDetail.tsx	61	
-CASE_ZONE	variable	hr	false	component	src/components/sections/HR/OnboardingCaseDetail.tsx	62	
-defInst	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	63	
-defaultCaseLayout	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	66	
-OnboardingCaseDetail	function	hr	true	component	src/components/sections/HR/OnboardingCaseDetail.tsx	87	
-placeBottom	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	117	OnboardingCaseDetail
-commitPreview	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	124	OnboardingCaseDetail
-discardPreview	function	hr	false	ui-tile	src/components/sections/HR/OnboardingCaseDetail.tsx	125	OnboardingCaseDetail
-run	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	147	OnboardingCaseDetail
-caseRecord	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	152	OnboardingCaseDetail
-handlePause	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	157	OnboardingCaseDetail
-handleResume	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	161	OnboardingCaseDetail
-handleMarkReady	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	165	OnboardingCaseDetail
-handleComplete	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	169	OnboardingCaseDetail
-handleCancel	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	173	OnboardingCaseDetail
-handleReassignOwner	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	177	OnboardingCaseDetail
-handleProvision	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	178	OnboardingCaseDetail
-openAddTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	185	OnboardingCaseDetail
-handleCompleteTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	186	OnboardingCaseDetail
-handleBlockTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	187	OnboardingCaseDetail
-handleUnblockTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	192	OnboardingCaseDetail
-handleReassignTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	193	OnboardingCaseDetail
-handleResolve	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	196	OnboardingCaseDetail
-handleEscalate	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	201	OnboardingCaseDetail
-handleWaive	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	206	OnboardingCaseDetail
-openAddAction	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	213	OnboardingCaseDetail
-submitAddAction	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	217	OnboardingCaseDetail
-handleCompleteAction	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	227	OnboardingCaseDetail
-handleCancelAction	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	228	OnboardingCaseDetail
-handleUpdateActionStatus	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	233	OnboardingCaseDetail
-blockerOpen	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	235	OnboardingCaseDetail
-wcard	function	hr	false	ui-tile	src/components/sections/HR/OnboardingCaseDetail.tsx	238	OnboardingCaseDetail
-empty	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	244	OnboardingCaseDetail
-tasksBody	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	246	OnboardingCaseDetail
-blockersBody	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	269	OnboardingCaseDetail
-handoffsBody	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	288	OnboardingCaseDetail
-actionsBody	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	304	OnboardingCaseDetail
-floor	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	327	OnboardingCaseDetail
+Pill	function	hr	false	component	src/components/sections/HR/OnboardingCaseDetail.tsx	59	
+CASE_PAGE_KEY	variable	hr	false	component	src/components/sections/HR/OnboardingCaseDetail.tsx	64	
+CASE_ZONE	variable	hr	false	component	src/components/sections/HR/OnboardingCaseDetail.tsx	65	
+defInst	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	66	
+defaultCaseLayout	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	69	
+OnboardingCaseDetail	function	hr	true	component	src/components/sections/HR/OnboardingCaseDetail.tsx	90	
+placeBottom	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	120	OnboardingCaseDetail
+commitPreview	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	127	OnboardingCaseDetail
+discardPreview	function	hr	false	ui-tile	src/components/sections/HR/OnboardingCaseDetail.tsx	128	OnboardingCaseDetail
+run	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	150	OnboardingCaseDetail
+caseRecord	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	155	OnboardingCaseDetail
+handlePause	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	160	OnboardingCaseDetail
+handleResume	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	164	OnboardingCaseDetail
+handleMarkReady	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	168	OnboardingCaseDetail
+handleComplete	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	172	OnboardingCaseDetail
+handleCancel	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	176	OnboardingCaseDetail
+handleReassignOwner	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	180	OnboardingCaseDetail
+handleProvision	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	181	OnboardingCaseDetail
+openAddTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	188	OnboardingCaseDetail
+handleCompleteTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	189	OnboardingCaseDetail
+handleBlockTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	190	OnboardingCaseDetail
+handleUnblockTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	195	OnboardingCaseDetail
+handleReassignTask	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	196	OnboardingCaseDetail
+handleResolve	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	199	OnboardingCaseDetail
+handleEscalate	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	204	OnboardingCaseDetail
+handleWaive	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	209	OnboardingCaseDetail
+openAddAction	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	216	OnboardingCaseDetail
+submitAddAction	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	220	OnboardingCaseDetail
+handleCompleteAction	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	230	OnboardingCaseDetail
+handleCancelAction	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	231	OnboardingCaseDetail
+handleUpdateActionStatus	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	236	OnboardingCaseDetail
+blockerOpen	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	238	OnboardingCaseDetail
+wcard	function	hr	false	ui-tile	src/components/sections/HR/OnboardingCaseDetail.tsx	241	OnboardingCaseDetail
+empty	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	247	OnboardingCaseDetail
+tasksBody	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	249	OnboardingCaseDetail
+blockersBody	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	272	OnboardingCaseDetail
+handoffsBody	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	291	OnboardingCaseDetail
+actionsBody	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	307	OnboardingCaseDetail
+floor	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	330	OnboardingCaseDetail
 adaptCase	function	hr	true		src/components/sections/HR/OnboardingCommandCenter.adapters.ts	11	
 adaptTask	function	hr	true		src/components/sections/HR/OnboardingCommandCenter.adapters.ts	25	
 adaptBlocker	function	hr	true		src/components/sections/HR/OnboardingCommandCenter.adapters.ts	37	

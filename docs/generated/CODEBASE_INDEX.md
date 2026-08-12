@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `16e129a17505f76cfd026e09e9dd6e3ad968025c`  
-Source fingerprint: `4e3d89c992baf53fd778bdb6`  
+Source HEAD: `e702e50f5bbe548dbf8a8eb82496909f299c7314`  
+Source fingerprint: `7d9d0caba0994f01c03e948d`  
 Generator version: `1`
 
 ## Use
@@ -19,7 +19,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1460 | 14688 | 63 | 978 | 979 | 17 | 356 | 1436 | 91 | 2742 |
+| 1460 | 14685 | 63 | 978 | 979 | 17 | 356 | 1436 | 91 | 2742 |
 
 ## Modules
 
@@ -27,7 +27,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|
 | hr | 265 | 3076 | 9 | 275 | 275 | 37 | 196 | 16 | [open](modules/hr.md) |
 | payroll | 196 | 1986 | 11 | 140 | 140 | 2 | 260 | 29 | [open](modules/payroll.md) |
-| finance | 139 | 1848 | 9 | 156 | 156 | 4 | 202 | 9 | [open](modules/finance.md) |
+| finance | 139 | 1845 | 9 | 156 | 156 | 4 | 202 | 9 | [open](modules/finance.md) |
 | hse | 87 | 1277 | 0 | 144 | 144 | 107 | 65 | 4 | [open](modules/hse.md) |
 | communications | 113 | 1057 | 0 | 93 | 96 | 88 | 158 | 7 | [open](modules/communications.md) |
 | workflow | 47 | 323 | 0 | 40 | 40 | 8 | 128 | 3 | [open](modules/workflow.md) |
@@ -84,10 +84,10 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `hr.employeeMaster.recordReadiness` | Record Readiness | registry | widgets | `RecordReadiness` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:614` |
 | `hr.employees.register` | Employee Register | local | hr | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:855` |
 | `hr.employees.register` |  | local | widgets | `() => <div />` | `src/ui/widgets/BoardSkeleton.test.tsx:30` |
-| `hr.onboarding.case.activeTasks` | Active Tasks | local | hr | `() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <Button variant="primary" size="sm" onClick={openAddTask} iconLeft={<i class="fas fa-plus" />}>Add</Button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:329` |
-| `hr.onboarding.case.blockersTable` | Blockers | local | hr | `() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:330` |
-| `hr.onboarding.case.customActions` | Custom Actions | local | hr | `() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <Button variant="primary" size="sm" onClick={openAddAction} iconLeft={<i class="fas fa-plus" />}>Add</Button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:332` |
-| `hr.onboarding.case.handoffsTable` | Handoffs | local | hr | `() => wcard('Handoffs', 'fa-arrow-right-arrow-left', handoffsBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:331` |
+| `hr.onboarding.case.activeTasks` | Active Tasks | local | hr | `() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <Button variant="primary" size="sm" onClick={openAddTask} iconLeft={<i class="fas fa-plus" />}>Add</Button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:332` |
+| `hr.onboarding.case.blockersTable` | Blockers | local | hr | `() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:333` |
+| `hr.onboarding.case.customActions` | Custom Actions | local | hr | `() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <Button variant="primary" size="sm" onClick={openAddAction} iconLeft={<i class="fas fa-plus" />}>Add</Button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:335` |
+| `hr.onboarding.case.handoffsTable` | Handoffs | local | hr | `() => wcard('Handoffs', 'fa-arrow-right-arrow-left', handoffsBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:334` |
 | `one-component` | One component, three appearances | registry | platform | `() => (         <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>           <Tabs id="ex-underline" label="Underline" items={PLAIN_TABS} value="overview" onChange={noop} />           <Tabs id="ex-contained" label="Contained" variant="contained" size="sm" items={PLAIN_TABS} value="tasks" onChange={noop} />           <Tabs id="ex-subtle" label="Subtle" variant="subtle" size="sm" items={PLAIN_TABS} value="files" onChange={noop} />         </div>       )` | `src/ui/registry/navigation.defs.tsx:215` |
 | `one-surface` | One surface, four rhythms | registry | platform | `() => (         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px' }}>           <Card variant="metric" density="compact" header={<CardHeader title="Open incidents" level={null} />}>             <Figure value="18" caption="4 overdue" />           </Card>           <Card variant="surface" header={<CardHeader title="Site note" />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Night shift handover completed.</span>           </Card>           <Card variant="panel" density="compact" header={<CardHeader title="Corrective actions" actions={<Badge tone="warning" size="sm">2 open</Badge>} />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Both due this Friday.</span>           </Card>           <Card variant="action" onClick={noop} actionLabel="Start a new inspection"             header={<CardHeader icon={<LucideIcon name="ClipboardCheck" />} title="New inspection" description="Start from a template" />} />         </div>       )` | `src/ui/registry/containers.defs.tsx:216` |
 | `overflow` | Nine tabs in a drawer | registry | platform | `() => (         <Tabs           id="ex-overflow"           label="Rate version sections"           variant="contained"           size="sm"           items={MANY_TABS}           maxVisible={4}           value="timeline"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:251` |
