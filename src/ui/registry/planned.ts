@@ -6,6 +6,17 @@
  * weeks; now it is a number the coverage report prints and a set of cards the
  * Gallery shows greyed out with their planned API.
  *
+ * ⭐ `category: 'patterns'` entries are NOT kit gaps. They are module-owned
+ * compositions — `PayrollApprovalTable` is payroll, `DayOneGateCard` is
+ * onboarding, `HseActionMenu` is HSE — built FROM canonical primitives by the
+ * module that owns the domain. A design system that owns them is not a design
+ * system; it is the application. `check-ui-kit-coverage.mjs` therefore excludes
+ * them from catalogue completeness and reports them on their own line. No built
+ * component has ever used this category, and none should.
+ *
+ * Counting them as gaps read as "45% complete" against a real primitive gap of
+ * eight — a number that argued for building payroll features inside the kit.
+ *
  * Rules for this file:
  *   • An entry moves OUT of here the moment the component is built — it is not a
  *     backlog that lives alongside the implementation, it is the absence of one.

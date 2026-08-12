@@ -9,7 +9,8 @@
   },
   "informational": {
     "canonicalComponents": 23,
-    "missingComponents": 28,
+    "missingPrimitives": 8,
+    "modulePatterns": 20,
     "totalRegistered": 51
   }
 }

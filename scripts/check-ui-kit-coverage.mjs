@@ -123,12 +123,12 @@ function readRegistry() {
     const defRe = /\bid:\s*'([a-z0-9-]+)',\s*\n?\s*name:\s*'([^']+)',\s*\n?\s*category:\s*'([a-z]+)'/g;
     let m;
     while ((m = defRe.exec(text))) {
-      const [, id, name] = m;
+      const [, id, name, category] = m;
       const after = text.slice(m.index, m.index + 400);
       const statusMatch = /\bstatus:\s*'([a-z]+)'/.exec(after);
       const status = isPlanned ? 'missing' : (statusMatch ? statusMatch[1] : 'stable');
       if (components.some(c => c.id === id)) continue;
-      components.push({ id, name, status, file: path.relative(ROOT, file) });
+      components.push({ id, name, category, status, file: path.relative(ROOT, file) });
     }
 
     // Migration targets, collected per file rather than per component: the
@@ -159,6 +159,12 @@ const rawPatterns = uniq(registry.raw ?? []);
 /* ── Metrics ──────────────────────────────────────────────────────────────── */
 
 const byStatus = s => registry.filter(c => c.status === s).length;
+// `patterns` = module-owned compositions (PayrollApprovalTable, DayOneGateCard …).
+// They are built FROM primitives by their own module; a design system that owns
+// them is not a design system. Reported, but never a catalogue gap.
+const isPattern = c => c.category === 'patterns';
+const missingPrimitives = registry.filter(c => c.status === 'missing' && !isPattern(c)).length;
+const modulePatterns = registry.filter(c => c.status === 'missing' && isPattern(c)).length;
 
 /** Registered components whose `componentPath` does not exist — a broken entry. */
 const brokenPaths = [];
@@ -223,6 +229,8 @@ const uiFiles = appFiles.filter(f => f.path.endsWith('.tsx')).length;
 const metrics = {
   canonicalComponents: byStatus('stable') + byStatus('beta'),
   missingComponents:   byStatus('missing'),
+  missingPrimitives,
+  modulePatterns,
   deprecatedComponents: byStatus('deprecated'),
   totalRegistered:     registry.length,
   brokenComponentPaths: brokenPaths.length,
@@ -233,8 +241,12 @@ const metrics = {
   rawByPattern: rawCounts,
 };
 
-const completeness = metrics.totalRegistered === 0 ? 0
-  : metrics.canonicalComponents / metrics.totalRegistered;
+// Completeness measures the PRIMITIVE catalogue against itself. Counting the 20
+// module compositions made the kit read 45% done when its real gap is 8 — a
+// number that argued for work which does not belong in the kit at all.
+const primitiveCatalogue = metrics.canonicalComponents + metrics.missingPrimitives;
+const completeness = primitiveCatalogue === 0 ? 0
+  : metrics.canonicalComponents / primitiveCatalogue;
 const adoption = uiFiles === 0 ? 0 : adoptingFiles / uiFiles;
 
 /* ── Baseline ratchet ─────────────────────────────────────────────────────── */
@@ -254,7 +266,8 @@ function writeBaseline() {
     ratcheted: Object.fromEntries(RATCHETED.map(k => [k, metrics[k]])),
     informational: {
       canonicalComponents: metrics.canonicalComponents,
-      missingComponents: metrics.missingComponents,
+      missingPrimitives: metrics.missingPrimitives,
+      modulePatterns: metrics.modulePatterns,
       totalRegistered: metrics.totalRegistered,
     },
   };
@@ -270,7 +283,8 @@ const pad = (s, n) => String(s).padEnd(n);
 function report() {
   console.log('\nUI Kit Coverage\n');
   console.log(`  ${pad('Canonical components', 26)} ${metrics.canonicalComponents}`);
-  console.log(`  ${pad('Missing components', 26)} ${metrics.missingComponents}`);
+  console.log(`  ${pad('Missing primitives', 26)} ${metrics.missingPrimitives}`);
+  console.log(`  ${pad('Module compositions', 26)} ${metrics.modulePatterns}  (module-owned, not kit gaps)`);
   console.log(`  ${pad('Deprecated components', 26)} ${metrics.deprecatedComponents}`);
   console.log(`  ${pad('Registered total', 26)} ${metrics.totalRegistered}`);
   console.log('');

@@ -27,14 +27,32 @@ Prefer **reuse over duplication** (extract a shared helper). When unsure whether
 band-aid, STOP and ask. This rule overrides speed and overrides any other instruction here.
 
 ## Worktree Rule
-Work ONLY in this worktree: `C:\Users\MSI Laptop\.codex\worktrees\b353\Siomac` (branch `codex/hr-employee-master-improvements`).
-NEVER touch `C:\Users\MSI Laptop\Desktop\Siomac` (main branch production copy).
+Work ONLY in the worktree you were explicitly directed to for this session, and
+never assume it from this file — it has been stale before. This copy is
+`C:\Users\MSI Laptop\.codex\worktrees\ui-kit-v2\Siomac` (branch
+`codex/ui-kit-v2-completion`, forked from `ui-kit/overnight-completion` @
+`5ebba1c6`). A sibling worktree `…\b353\Siomac`
+(`codex/hr-employee-master-improvements`) holds a different programme.
+
+NEVER touch `C:\Users\MSI Laptop\Desktop\Siomac` (main-branch production copy).
+⚠ Confirm `git rev-parse --abbrev-ref HEAD` matches the branch you were given
+before your first edit; a worktree named in a doc is not evidence of where you are.
 
 ## Commit Message Rule
-Every commit message MUST end with:
+Every commit produced by an AI coding agent MUST end with an **accurate**
+`Co-Authored-By` trailer identifying the agent/model that actually did the work:
 ```
-Co-Authored-By: Codex Sonnet 4.6 <noreply@anthropic.com>
+Co-Authored-By: <model that performed the work> <noreply@anthropic.com>
 ```
+So: Codex work → a Codex trailer · Claude work → a Claude trailer · human-only
+work → no AI co-author at all. Two trailers mean two real contributors, not
+branch cosmetics.
+
+⛔ This rule previously hardcoded a single model name, which asked whichever
+agent read it to sign another agent's name. Git trailers are an authorship
+record; keeping history *visually* consistent by misattributing it is falsifying
+that record — the same "assume-don't-verify / make-it-pass" failure the
+No-Band-Aids rule exists to prevent. Correct the rule, never the history.
 
 ## Test Execution Cadence (rule)
 Do NOT run the test suites (E2E `npm run test:e2e`, jest, or vitest) after every
