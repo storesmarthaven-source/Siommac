@@ -62,7 +62,14 @@ export const checkboxDef: ComponentDef = {
   status: 'stable',
   componentPath: 'src/ui/primitives/choice.tsx',
   importFrom: '@ui',
-  migration: { rawPatterns: ['type="checkbox"'], nextSurface: 'Settings' },
+  migration: {
+    rawPatterns: ['type="checkbox"'],
+    nextSurface: 'Menu',
+    notes: [
+      'Calendar create-item is the clean form migration: its all-day value now uses canonical Checkbox and the raw input sizing rule is deleted.',
+      'Remaining raw checkboxes are named consumer debt; broad form sweeps stop after this family.',
+    ],
+  },
 
   props: {
     label:         { type: 'text',    label: 'Label', default: 'Include archived records' },
@@ -136,7 +143,14 @@ export const radioGroupDef: ComponentDef = {
   status: 'stable',
   componentPath: 'src/ui/primitives/choice.tsx',
   importFrom: '@ui',
-  migration: { rawPatterns: ['type="radio"'] },
+  migration: {
+    rawPatterns: ['type="radio"'],
+    nextSurface: 'Menu',
+    notes: [
+      'The clean governed pay-policy and segregation-of-duties choice-card flows now compose canonical Radio while preserving their domain card layouts.',
+      'Dirty wizard/dialog radios remain exact consumer debt.',
+    ],
+  },
 
   props: {
     value:    { type: 'select',  label: 'Selected', options: ['weekly', 'fortnightly', 'monthly'], default: 'fortnightly' },
@@ -190,7 +204,14 @@ export const switchDef: ComponentDef = {
   status: 'stable',
   componentPath: 'src/ui/primitives/choice.tsx',
   importFrom: '@ui',
-  migration: { deprecatedImports: ['NavCustomizer Switch'], nextSurface: 'Settings' },
+  migration: {
+    deprecatedImports: ['NavCustomizer Switch'],
+    nextSurface: 'Menu',
+    notes: [
+      'The only module-local Switch, in NavCustomizer, is deleted with all .navcust-switch CSS; visibility still applies immediately.',
+      'NotificationPreferences has a second Toggle-shaped local control but is deferred because the file has an existing lint blocker.',
+    ],
+  },
 
   props: {
     label:       { type: 'text',    label: 'Label', default: 'Require MFA for admins' },

@@ -2,7 +2,7 @@
 
 # payroll Module Map
 
-Source fingerprint: `2e0983cca10b4809915121e3`
+Source fingerprint: `a0733254f06ae4ee6187ce5b`
 
 Files: 196 | Symbols: 1986 | Widgets: 11 | Unique mounted endpoints: 140 | Route definitions: 140 mounted + 0 unmounted | API calls: 2 | DB objects: 260 | E2E suites: 29
 
@@ -223,9 +223,9 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `CrewInputReconciliation` | function / component | `src/components/sections/Finance/payroll/run/crewSections.tsx:79` | `-` |
 | `CrewCostAllocation` | function / component | `src/components/sections/Finance/payroll/run/crewSections.tsx:150` | `-` |
 | `PayPolicySetup` | function / component | `src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx:53` | `-` |
-| `PayPolicyWizard` | function / component | `src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx:77` | `-` |
+| `PayPolicyWizard` | function / component | `src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx:78` | `-` |
 | `SodChainDialog` | function / component | `src/components/sections/Finance/payroll/setup/SodChainDialog.tsx:29` | `-` |
-| `SodChangeWizard` | function / component | `src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx:39` | `-` |
+| `SodChangeWizard` | function / component | `src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx:40` | `-` |
 | `SodPolicyPanel` | function / component | `src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx:37` | `-` |
 | `WorkCalendarPage` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:55` | `-` |
 | `WorkCalendarSetup` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:66` | `-` |
@@ -533,9 +533,9 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/payroll/run/crewSections.test.tsx` | 106 |
 | frontend-page | `src/components/sections/Finance/payroll/run/crewSections.tsx` | 198 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx` | 432 |
-| frontend-page | `src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx` | 469 |
+| frontend-page | `src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx` | 475 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/SodChainDialog.tsx` | 114 |
-| frontend-page | `src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx` | 204 |
+| frontend-page | `src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx` | 205 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx` | 241 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.test.tsx` | 203 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx` | 874 |

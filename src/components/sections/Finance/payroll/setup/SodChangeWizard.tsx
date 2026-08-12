@@ -20,6 +20,7 @@ import { useState } from 'preact/hooks';
 import './sodChain.css';
 import { Modal } from '@ui/components/Modal';
 import { Button } from '@ui/components/Button';
+import { Radio } from '@ui';
 import type { PayrollSodChainStep, PayrollSodLevelFeasibility } from '@api/finance/payroll';
 
 const SEAT_SHORT: Record<PayrollSodChainStep['key'], string> = {
@@ -111,12 +112,12 @@ export function SodChangeWizard({ activeLevel, feasibility, busy, onSubmit, onCl
                 const isCurrent = l === activeLevel;
                 const blocked = fit ? !fit.feasible : false;
                 return (
-                  <label key={l}
-                    class={`sodw-level${level === l ? ' is-picked' : ''}${blocked ? ' is-blocked' : ''}${isCurrent ? ' is-current' : ''}`}>
-                    <input type="radio" name="sodw-level" checked={level === l}
-                      disabled={isCurrent || blocked}
-                      onChange={() => { setLevel(l as 2 | 3 | 4); setErrors({}); }} />
-                    <span class="sodw-level-main">
+                  <Radio key={l}
+                    class={`sodw-level${level === l ? ' is-picked' : ''}${blocked ? ' is-blocked' : ''}${isCurrent ? ' is-current' : ''}`}
+                    name="sodw-level" value={`${l}`} checked={level === l}
+                    disabled={isCurrent || blocked}
+                    onChange={() => { setLevel(l as 2 | 3 | 4); setErrors({}); }}
+                    label={<span class="sodw-level-main">
                       <span class="sodw-level-title">
                         {LEVEL_TITLE[l]}{isCurrent && <em> — current</em>}
                       </span>
@@ -129,8 +130,8 @@ export function SodChangeWizard({ activeLevel, feasibility, busy, onSubmit, onCl
                               + `nobody is left to ${fit.shortfallSeats.map(s => SEAT_SHORT[s].toLowerCase()).join(' or ')}`}
                         </span>
                       )}
-                    </span>
-                  </label>
+                    </span>}
+                  />
                 );
               })}
             </div>

@@ -18,6 +18,7 @@
 
 import { h, render, type VNode } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { Switch } from '@ui';
 import {
   navGlobalCatalog,
   REQUIRED_MODULE_IDS,
@@ -80,17 +81,6 @@ const GripDots = (): VNode => (
 
 function NavIcon({ fa }: { fa: string }): VNode {
   return <span class="navcust-row-icon" dangerouslySetInnerHTML={{ __html: navIconSvg(fa) }} />;
-}
-
-interface SwitchProps { on: boolean; label: string; disabled?: boolean; onToggle: () => void; }
-function Switch({ on, label, disabled = false, onToggle }: SwitchProps): VNode {
-  return (
-    <button type="button"
-      class={`navcust-switch${on ? ' on' : ''}${disabled ? ' locked' : ''}`}
-      role="switch" aria-checked={on} disabled={disabled}
-      aria-label={`${on ? 'Hide' : 'Show'} ${label}`}
-      onClick={disabled ? undefined : onToggle} />
-  );
 }
 
 // ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ────
@@ -376,7 +366,7 @@ function GlobalCustomizer({ onClose }: { onClose: () => void }): VNode {
                             {mod.required ? (
                               <span class="navcfg-lock-wrap" title="Required — cannot be hidden"><IcoLock /></span>
                             ) : (
-                              <Switch on={mod.visible} label={mod.label} onToggle={() => toggleItem(mod)} />
+                              <Switch checked={mod.visible} aria-label={`${mod.visible ? 'Hide' : 'Show'} ${mod.label}`} onChange={() => toggleItem(mod)} />
                             )}
                           </span>
                         </div>
@@ -406,7 +396,7 @@ function GlobalCustomizer({ onClose }: { onClose: () => void }): VNode {
                                     {child.required ? (
                                       <span class="navcfg-lock-wrap" title="Required — cannot be hidden"><IcoLock /></span>
                                     ) : (
-                                      <Switch on={child.visible} label={child.label} disabled={inherited} onToggle={() => toggleChild(mod.id, child.id, child.visible)} />
+                                      <Switch checked={child.visible} aria-label={`${child.visible ? 'Hide' : 'Show'} ${child.label}`} disabled={inherited} onChange={() => toggleChild(mod.id, child.id, child.visible)} />
                                     )}
                                   </span>
                                 </div>

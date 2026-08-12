@@ -2,6 +2,7 @@ import { type VNode } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { useCreateActivity, useCreateTask, type CalendarVisibility } from '@api/calendar';
 import { can } from '@lib/permissions';
+import { Checkbox } from '@ui';
 
 type CreateType = 'task' | 'activity';
 
@@ -115,7 +116,7 @@ export function CreateCalendarItemDialog({ open, initialDate, initialType = 'tas
             <label>Title<input autoFocus value={title} maxLength={200} onInput={event => setTitle(event.currentTarget.value)} placeholder={type === 'task' ? 'Review payroll inputs' : 'Team planning meeting'} /></label>
             <div class="cal-form-grid">
               <label>Date<input type="date" value={date} onInput={event => setDate(event.currentTarget.value)} /></label>
-              <label class="cal-checkbox"><input type="checkbox" checked={allDay} onChange={event => setAllDay(event.currentTarget.checked)} /> All-day item</label>
+              <div class="cal-checkbox"><Checkbox checked={allDay} onChange={setAllDay} label="All-day item" /></div>
             </div>
             {!allDay ? <div class="cal-form-grid"><label>Start time<input type="time" value={startTime} onInput={event => setStartTime(event.currentTarget.value)} /></label><label>End time<input type="time" value={endTime} onInput={event => setEndTime(event.currentTarget.value)} /></label></div> : null}
             {temporalError ? <small class="cal-field-error">{temporalError}</small> : null}

@@ -19,6 +19,7 @@ import {
   type PayPolicyDraftInput, type PayPolicySourceRuleInput, type PayPolicyType, type PayPolicyWorkspace,
 } from '@api/finance/payPolicies';
 import { useHrEmployees, type HrEmployeeRow } from '@api/hr/employees';
+import { Radio } from '@ui';
 import {
   buildPayPolicySources, defaultComponentBinding, isCrewPolicyType,
   PAY_POLICY_WIZARD_STEPS, payPolicyDraftStepInvalid,
@@ -201,10 +202,15 @@ export function PayPolicyWizard({ onClose, onCreated, workspace }: {
           <div class="ppw-field"><label>Start from</label>
             <div class="ppw-choice-grid">
               {STARTERS.map(st => (
-                <label key={st.value} class={`ppw-choice${draft.policyType === st.value ? ' on' : ''}`}>
-                  <input type="radio" name="ppw-starter" checked={draft.policyType === st.value} onChange={() => setPolicyType(st.value)} />
-                  <span><strong>{st.label}</strong><small>{st.blurb}</small></span>
-                </label>
+                <Radio
+                  key={st.value}
+                  class={`ppw-choice${draft.policyType === st.value ? ' on' : ''}`}
+                  name="ppw-starter"
+                  value={st.value}
+                  checked={draft.policyType === st.value}
+                  onChange={() => setPolicyType(st.value)}
+                  label={<span><strong>{st.label}</strong><small>{st.blurb}</small></span>}
+                />
               ))}
             </div>
           </div>

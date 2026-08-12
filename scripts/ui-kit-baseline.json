@@ -3,8 +3,8 @@
   "ratcheted": {
     "legacyClassUsages": 463,
     "deprecatedImportFiles": 75,
-    "localPrimitives": 25,
-    "unmanagedRaw": 2977,
+    "localPrimitives": 24,
+    "unmanagedRaw": 2970,
     "brokenComponentPaths": 0
   },
   "informational": {

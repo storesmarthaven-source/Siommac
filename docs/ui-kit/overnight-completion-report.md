@@ -431,16 +431,52 @@ files were already deferred for existing blockers. Broader `.hrfin-empty` and
 `.obx-empty` text states migrate only during natural feature work. The next
 canonical family is Checkbox / RadioGroup / Switch.
 
+## Checkbox / RadioGroup / Switch programme — frozen
+
+The canonical choice controls were already implemented and registered; this
+cycle verified their native behavior and completed the highest-leverage clean
+family:
+
+- added focused coverage for the real native checkbox indeterminate property,
+  read-only enforcement, radio grouping/value selection and Switch pending
+  state with `aria-busy`;
+- deleted NavCustomizer's module-local button-based Switch and its entire
+  `.navcust-switch` CSS system; navigation visibility still applies immediately
+  through canonical Switch and retains state-specific accessible names;
+- migrated Calendar's all-day form value to canonical Checkbox and removed its
+  raw input sizing rule;
+- migrated the lint-clean Pay Policy and segregation-of-duties governed choice
+  cards to canonical Radio while deliberately preserving their business card
+  layout and feasibility/current-state treatments;
+- passed all five focused behavior/migration tests with zero new lint errors,
+  held the 49-error known frontend typecheck baseline, reduced module-local
+  primitives from 25 to 24 and reduced unmanaged raw markup by seven;
+- browser-verified real selected indicators, the two governed card layouts,
+  working radio selection, Switch state/name updates and zero legacy switches.
+
+Choice-control classification is now frozen:
+
+```text
+Checkbox canonical system     COMPLETE
+RadioGroup canonical system   COMPLETE
+Switch canonical system       COMPLETE
+Clean choice family           COMPLETE
+Raw/dirty consumers           RECORDED DEBT
+```
+
+`NotificationPreferences.tsx` retains a Toggle-shaped local control because the
+file has an existing lint blocker. Remaining raw checkbox/radio sites are named
+consumer debt and do not justify a broad forms sweep. The next component is Menu.
+
 ## Remaining programme
 
 The overall mandate is not yet complete. Continue automatically:
 
-1. Checkbox / RadioGroup / Switch
-2. Menu
-3. remaining small registered canonical components
-4. polished UI Kit Studio interface
-5. Brand Theme application preview at all required breakpoints
-6. final full-suite and browser verification gate
+1. Menu
+2. remaining small registered canonical components
+3. polished UI Kit Studio interface
+4. Brand Theme application preview at all required breakpoints
+5. final full-suite and browser verification gate
 
 No component should chase mathematical zero. Exact dirty files and genuine
 domain/interaction exceptions remain recorded debt; clean generic migration is

@@ -6561,40 +6561,38 @@ _sbBadgeLabelByBtn	variable	platform	false		src/components/nav/navCore.ts	815
 _setSbBadge	function	platform	false		src/components/nav/navCore.ts	817	
 setNavSectionBadge	function	platform	true		src/components/nav/navCore.ts	847	
 refreshNavBadges	function	platform	true		src/components/nav/navCore.ts	856	
-currentRole	function	platform	false		src/components/nav/NavCustomizer.tsx	38	
-rebuildSidebar	function	platform	false		src/components/nav/NavCustomizer.tsx	42	
-Svg	function	platform	false	component	src/components/nav/NavCustomizer.tsx	49	
-IcoLayers	function	platform	false	component	src/components/nav/NavCustomizer.tsx	59	
-IcoEye	function	platform	false	component	src/components/nav/NavCustomizer.tsx	60	
-IcoEyeOff	function	platform	false	component	src/components/nav/NavCustomizer.tsx	61	
-IcoGrid	function	platform	false	component	src/components/nav/NavCustomizer.tsx	62	
-IcoSearch	function	platform	false	component	src/components/nav/NavCustomizer.tsx	63	
-IcoChevRight	function	platform	false	component	src/components/nav/NavCustomizer.tsx	64	
-IcoChevDown	function	platform	false	component	src/components/nav/NavCustomizer.tsx	65	
-IcoLock	function	platform	false	component	src/components/nav/NavCustomizer.tsx	66	
-IcoReset	function	platform	false	component	src/components/nav/NavCustomizer.tsx	67	
-IcoInfo	function	platform	false	component	src/components/nav/NavCustomizer.tsx	68	
-IcoClose	function	platform	false	component	src/components/nav/NavCustomizer.tsx	69	
-GripDots	function	platform	false	component	src/components/nav/NavCustomizer.tsx	71	
-NavIcon	function	platform	false	component	src/components/nav/NavCustomizer.tsx	81	
-SwitchProps	interface	platform	false		src/components/nav/NavCustomizer.tsx	85	
-Switch	function	platform	false	component	src/components/nav/NavCustomizer.tsx	86	
-FilterKey	type	platform	false		src/components/nav/NavCustomizer.tsx	100	
-DragSession	interface	platform	false		src/components/nav/NavCustomizer.tsx	105	
-GlobalCustomizer	function	platform	false	component	src/components/nav/NavCustomizer.tsx	111	
-freshCatalog	function	platform	false		src/components/nav/NavCustomizer.tsx	113	GlobalCustomizer
-reload	function	platform	false		src/components/nav/NavCustomizer.tsx	121	GlobalCustomizer
-itemMatches	function	platform	false		src/components/nav/NavCustomizer.tsx	126	GlobalCustomizer
-toggleItem	function	platform	false		src/components/nav/NavCustomizer.tsx	142	GlobalCustomizer
-toggleChild	function	platform	false		src/components/nav/NavCustomizer.tsx	148	GlobalCustomizer
-toggleExpand	function	platform	false		src/components/nav/NavCustomizer.tsx	154	GlobalCustomizer
-resetAll	function	platform	false		src/components/nav/NavCustomizer.tsx	163	GlobalCustomizer
-startDrag	function	platform	false		src/components/nav/NavCustomizer.tsx	175	GlobalCustomizer
-onDragMove	function	platform	false		src/components/nav/NavCustomizer.tsx	200	GlobalCustomizer
-onDragUp	function	platform	false		src/components/nav/NavCustomizer.tsx	219	GlobalCustomizer
-NavCustomizerRoot	function	platform	false	component	src/components/nav/NavCustomizer.tsx	452	
-onKey	function	platform	false		src/components/nav/NavCustomizer.tsx	459	NavCustomizerRoot
-mountNavCustomizer	function	platform	true		src/components/nav/NavCustomizer.tsx	476	
+currentRole	function	platform	false		src/components/nav/NavCustomizer.tsx	39	
+rebuildSidebar	function	platform	false		src/components/nav/NavCustomizer.tsx	43	
+Svg	function	platform	false	component	src/components/nav/NavCustomizer.tsx	50	
+IcoLayers	function	platform	false	component	src/components/nav/NavCustomizer.tsx	60	
+IcoEye	function	platform	false	component	src/components/nav/NavCustomizer.tsx	61	
+IcoEyeOff	function	platform	false	component	src/components/nav/NavCustomizer.tsx	62	
+IcoGrid	function	platform	false	component	src/components/nav/NavCustomizer.tsx	63	
+IcoSearch	function	platform	false	component	src/components/nav/NavCustomizer.tsx	64	
+IcoChevRight	function	platform	false	component	src/components/nav/NavCustomizer.tsx	65	
+IcoChevDown	function	platform	false	component	src/components/nav/NavCustomizer.tsx	66	
+IcoLock	function	platform	false	component	src/components/nav/NavCustomizer.tsx	67	
+IcoReset	function	platform	false	component	src/components/nav/NavCustomizer.tsx	68	
+IcoInfo	function	platform	false	component	src/components/nav/NavCustomizer.tsx	69	
+IcoClose	function	platform	false	component	src/components/nav/NavCustomizer.tsx	70	
+GripDots	function	platform	false	component	src/components/nav/NavCustomizer.tsx	72	
+NavIcon	function	platform	false	component	src/components/nav/NavCustomizer.tsx	82	
+FilterKey	type	platform	false		src/components/nav/NavCustomizer.tsx	90	
+DragSession	interface	platform	false		src/components/nav/NavCustomizer.tsx	95	
+GlobalCustomizer	function	platform	false	component	src/components/nav/NavCustomizer.tsx	101	
+freshCatalog	function	platform	false		src/components/nav/NavCustomizer.tsx	103	GlobalCustomizer
+reload	function	platform	false		src/components/nav/NavCustomizer.tsx	111	GlobalCustomizer
+itemMatches	function	platform	false		src/components/nav/NavCustomizer.tsx	116	GlobalCustomizer
+toggleItem	function	platform	false		src/components/nav/NavCustomizer.tsx	132	GlobalCustomizer
+toggleChild	function	platform	false		src/components/nav/NavCustomizer.tsx	138	GlobalCustomizer
+toggleExpand	function	platform	false		src/components/nav/NavCustomizer.tsx	144	GlobalCustomizer
+resetAll	function	platform	false		src/components/nav/NavCustomizer.tsx	153	GlobalCustomizer
+startDrag	function	platform	false		src/components/nav/NavCustomizer.tsx	165	GlobalCustomizer
+onDragMove	function	platform	false		src/components/nav/NavCustomizer.tsx	190	GlobalCustomizer
+onDragUp	function	platform	false		src/components/nav/NavCustomizer.tsx	209	GlobalCustomizer
+NavCustomizerRoot	function	platform	false	component	src/components/nav/NavCustomizer.tsx	442	
+onKey	function	platform	false		src/components/nav/NavCustomizer.tsx	449	NavCustomizerRoot
+mountNavCustomizer	function	platform	true		src/components/nav/NavCustomizer.tsx	466	
 IconNode	type	platform	false		src/components/nav/navIcons.ts	12	
 FA_TO_LUCIDE	object	platform	false		src/components/nav/navIcons.ts	15	
 FALLBACK	variable	platform	false		src/components/nav/navIcons.ts	102	
@@ -6892,11 +6890,11 @@ filterCalendarItems	function	platform	true		src/components/sections/Calendar/cal
 groupItemsByDate	function	platform	true		src/components/sections/Calendar/calendarViewModel.ts	95	
 upcomingActionItems	function	platform	true		src/components/sections/Calendar/calendarViewModel.ts	109	
 activeFilterCount	function	platform	true		src/components/sections/Calendar/calendarViewModel.ts	123	
-CreateType	type	platform	false		src/components/sections/Calendar/CreateCalendarItemDialog.tsx	6	
-localTimestamp	function	platform	false		src/components/sections/Calendar/CreateCalendarItemDialog.tsx	8	
-CreateCalendarItemDialog	function	platform	true	component	src/components/sections/Calendar/CreateCalendarItemDialog.tsx	12	
-close	function	platform	false		src/components/sections/Calendar/CreateCalendarItemDialog.tsx	47	CreateCalendarItemDialog
-submit	function	platform	false		src/components/sections/Calendar/CreateCalendarItemDialog.tsx	69	CreateCalendarItemDialog
+CreateType	type	platform	false		src/components/sections/Calendar/CreateCalendarItemDialog.tsx	7	
+localTimestamp	function	platform	false		src/components/sections/Calendar/CreateCalendarItemDialog.tsx	9	
+CreateCalendarItemDialog	function	platform	true	component	src/components/sections/Calendar/CreateCalendarItemDialog.tsx	13	
+close	function	platform	false		src/components/sections/Calendar/CreateCalendarItemDialog.tsx	48	CreateCalendarItemDialog
+submit	function	platform	false		src/components/sections/Calendar/CreateCalendarItemDialog.tsx	70	CreateCalendarItemDialog
 CALENDAR_ROOT_ID	variable	platform	false		src/components/sections/Calendar/module.ts	12	
 calendarModule	object	platform	true		src/components/sections/Calendar/module.ts	14	
 item	function	platform	false	test	src/components/sections/Calendar/MonthView.test.tsx	7	
@@ -7601,40 +7599,40 @@ doEndAssignment	function	payroll	false		src/components/sections/Finance/payroll/
 doRetire	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	340	PayPolicyDetail
 PolicyTab	function	payroll	false	component	src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	389	
 compareVersions	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx	398	PolicyTab
-today	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	28	
-reqKey	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	29	
-title	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	30	
-empName	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	31	
-STEPS	array	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	34	
-STARTERS	array	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	44	
-OWNER_ROLES	array	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	51	
-initialDraft	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	58	
-draftFromWorkspace	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	64	
-PayPolicyWizard	function	payroll	true	component	src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	77	
-setPolicyType	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	96	PayPolicyWizard
-addComponent	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	103	PayPolicyWizard
-save	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	110	PayPolicyWizard
-renderStep	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	183	PayPolicyWizard
-stepIdentity	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	195	PayPolicyWizard
-stepWorkPattern	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	253	PayPolicyWizard
-dayClass	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	257	stepWorkPattern
-stepComponents	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	281	PayPolicyWizard
-stepSources	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	315	PayPolicyWizard
-stepStatutory	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	338	PayPolicyWizard
-stepCosting	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	355	PayPolicyWizard
-stepGovernance	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	372	PayPolicyWizard
-renderSidebar	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	412	PayPolicyWizard
-sidebar	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	456	PayPolicyWizard
+today	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	29	
+reqKey	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	30	
+title	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	31	
+empName	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	32	
+STEPS	array	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	35	
+STARTERS	array	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	45	
+OWNER_ROLES	array	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	52	
+initialDraft	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	59	
+draftFromWorkspace	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	65	
+PayPolicyWizard	function	payroll	true	component	src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	78	
+setPolicyType	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	97	PayPolicyWizard
+addComponent	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	104	PayPolicyWizard
+save	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	111	PayPolicyWizard
+renderStep	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	184	PayPolicyWizard
+stepIdentity	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	196	PayPolicyWizard
+stepWorkPattern	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	259	PayPolicyWizard
+dayClass	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	263	stepWorkPattern
+stepComponents	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	287	PayPolicyWizard
+stepSources	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	321	PayPolicyWizard
+stepStatutory	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	344	PayPolicyWizard
+stepCosting	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	361	PayPolicyWizard
+stepGovernance	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	378	PayPolicyWizard
+renderSidebar	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	418	PayPolicyWizard
+sidebar	function	payroll	false		src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx	462	PayPolicyWizard
 SEAT_SHORT	object	payroll	false		src/components/sections/Finance/payroll/setup/SodChainDialog.tsx	24	
 SodChainDialog	function	payroll	true	component	src/components/sections/Finance/payroll/setup/SodChainDialog.tsx	29	
 nameOf	function	payroll	false		src/components/sections/Finance/payroll/setup/SodChainDialog.tsx	37	SodChainDialog
-SEAT_SHORT	object	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	25	
-LEVEL_TITLE	object	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	30	
-LEVEL_DETAIL	object	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	31	
-Step	type	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	37	
-SodChangeWizard	function	payroll	true	component	src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	39	
-fitFor	function	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	52	SodChangeWizard
-next	function	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	66	SodChangeWizard
+SEAT_SHORT	object	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	26	
+LEVEL_TITLE	object	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	31	
+LEVEL_DETAIL	object	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	32	
+Step	type	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	38	
+SodChangeWizard	function	payroll	true	component	src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	40	
+fitFor	function	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	53	SodChangeWizard
+next	function	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	67	SodChangeWizard
 LEVELS	array	payroll	false		src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx	29	
 ALL_ROLES	array	payroll	false		src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx	35	
 SodPolicyPanel	function	payroll	true	component	src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx	37	
@@ -13038,6 +13036,7 @@ CheckboxGroup	function	platform	true	component	src/ui/primitives/choice.tsx	282
 toggle	function	platform	false		src/ui/primitives/choice.tsx	290	CheckboxGroup
 RadioGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	328	
 RadioGroup	function	platform	true	component	src/ui/primitives/choice.tsx	342	
+read	function	platform	false	test	src/ui/primitives/choiceMigration.test.ts	4	
 TextInputType	type	platform	true		src/ui/primitives/TextInput.tsx	40	
 TextInputProps	interface	platform	true		src/ui/primitives/TextInput.tsx	44	
 FORCEABLE	variable	platform	false	component	src/ui/primitives/TextInput.tsx	97	
@@ -13109,18 +13108,18 @@ noop	function	platform	false		src/ui/registry/forms.defs.tsx	32
 CHOICE_STYLE	array	platform	false		src/ui/registry/forms.defs.tsx	34	
 CONTROL_STYLE	array	platform	false		src/ui/registry/forms.defs.tsx	45	
 checkboxDef	object	platform	true		src/ui/registry/forms.defs.tsx	57	
-radioGroupDef	object	platform	true		src/ui/registry/forms.defs.tsx	131	
-switchDef	object	platform	true		src/ui/registry/forms.defs.tsx	185	
-textInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	253	
-shell	function	platform	false		src/ui/registry/forms.defs.tsx	354	textInputDef
-dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	418	
-fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	494	
-otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	583	
-DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	631	
-GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	640	
-selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	658	
-search	function	platform	false		src/ui/registry/forms.defs.tsx	761	selectDef
-FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	792	
+radioGroupDef	object	platform	true		src/ui/registry/forms.defs.tsx	138	
+switchDef	object	platform	true		src/ui/registry/forms.defs.tsx	199	
+textInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	274	
+shell	function	platform	false		src/ui/registry/forms.defs.tsx	375	textInputDef
+dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	439	
+fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	515	
+otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	604	
+DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	652	
+GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	661	
+selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	679	
+search	function	platform	false		src/ui/registry/forms.defs.tsx	782	selectDef
+FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	813	
 COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	46	
 CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	57	
 CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	73	

@@ -77,7 +77,7 @@
 .ppw-choice.on { border-color: var(--br); background: var(--br-soft); }
 /* Pin the radio/checkbox size — the app's global input rule otherwise stretches them
    full-width, which shoves the label to the far side of the card. */
-.ppw-choice input[type="radio"], .ppw-check input[type="checkbox"] {
+.ppw-check input[type="checkbox"] {
   width: 16px; height: 16px; flex: 0 0 16px; margin: 2px 0 0; accent-color: var(--br);
 }
 .ppw-choice strong { display: block; font-size: 13px; color: #14213a; }

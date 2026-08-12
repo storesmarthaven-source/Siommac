@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `12866cfea4a197759ebb14d33586a27dc20000f6`  
-Source fingerprint: `2e0983cca10b4809915121e3`  
+Source HEAD: `8208dd9a09c34f7b3aec059ecca8a407001ab578`  
+Source fingerprint: `a0733254f06ae4ee6187ce5b`  
 Generator version: `1`
 
 ## Use
@@ -19,7 +19,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1468 | 14679 | 63 | 978 | 979 | 17 | 356 | 1436 | 91 | 2742 |
+| 1470 | 14678 | 63 | 978 | 979 | 17 | 356 | 1436 | 91 | 2742 |
 
 ## Modules
 
@@ -34,7 +34,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | security | 46 | 387 | 0 | 51 | 51 | 31 | 65 | 4 | [open](modules/security.md) |
 | settings | 44 | 252 | 0 | 26 | 26 | 18 | 21 | 2 | [open](modules/settings.md) |
 | widgets | 72 | 581 | 21 | 15 | 15 | 11 | 14 | 1 | [open](modules/widgets.md) |
-| platform | 408 | 3665 | 12 | 38 | 53 | 50 | 327 | 0 | [open](modules/platform.md) |
+| platform | 410 | 3664 | 12 | 38 | 53 | 50 | 327 | 0 | [open](modules/platform.md) |
 | testing | 47 | 224 | 0 | 0 | 0 | 0 | 0 | 16 | [open](modules/testing.md) |
 | enterprise | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | [open](modules/enterprise.md) |
 
@@ -97,7 +97,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `platform.weather.uv` | Weather · UV index | registry | widgets | `metricWidget('uv')` | `src/ui/widgets/registry.weather.tsx:510` |
 | `platform.weather.wind` | Weather · Wind | registry | widgets | `metricWidget('wind')` | `src/ui/widgets/registry.weather.tsx:518` |
 | `row-actions` | Icon-only row actions | registry | platform | `() => (         <div style={{ display: 'flex', gap: '4px' }}>           <Button variant="ghost" size="sm" iconOnly aria-label="Edit" iconLeft={<LucideIcon name="Pencil" />} />           <Button variant="ghost" size="sm" iconOnly aria-label="Duplicate" iconLeft={<LucideIcon name="Copy" />} />           <Button variant="ghost" size="sm" iconOnly aria-label="More actions" iconLeft={<LucideIcon name="EllipsisVertical" />} />         </div>       )` | `src/ui/registry/actions.defs.tsx:214` |
-| `select-all` | Select-all with a partial selection | registry | platform | `() => (         <CheckboxGroup           label="Modules"           selectAllLabel="All modules"           values={['hr']}           onChange={noop}           options={[             { value: 'hr', label: 'Human Resources' },             { value: 'hse', label: 'HSE' },             { value: 'fin', label: 'Finance', disabled: true },           ]}         />       )` | `src/ui/registry/forms.defs.tsx:108` |
+| `select-all` | Select-all with a partial selection | registry | platform | `() => (         <CheckboxGroup           label="Modules"           selectAllLabel="All modules"           values={['hr']}           onChange={noop}           options={[             { value: 'hr', label: 'Human Resources' },             { value: 'hse', label: 'HSE' },             { value: 'fin', label: 'Finance', disabled: true },           ]}         />       )` | `src/ui/registry/forms.defs.tsx:115` |
 | `status-set` | A status set | registry | platform | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>           <Badge tone="success" dot>Active</Badge>           <Badge tone="warning" dot>Probation</Badge>           <Badge tone="info" dot>On leave</Badge>           <Badge tone="neutral" dot>Inactive</Badge>           <Badge tone="danger" dot>Terminated</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:333` |
 | `test.widget` | Test | registry | enterprise/test | `() => <div>live</div>` | `src/ui/widgets/platform.test.tsx:14` |
 | `toggle-and-link` | Toggle and link — props, not components | registry | platform | `() => (         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>           <Button variant="outline" pressed iconLeft={<LucideIcon name="Filter" />}>Only my cases</Button>           <Button variant="link" href="#audit" iconRight={<LucideIcon name="ArrowRight" />}>View audit trail</Button>         </div>       )` | `src/ui/registry/actions.defs.tsx:243` |

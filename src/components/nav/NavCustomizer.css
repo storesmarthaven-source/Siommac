@@ -3,14 +3,14 @@
  *
  * One customizer surface:
  *   .navcfg-*   — global enterprise full-modal (super-admin)
- *   .navcust-*  — two shared controls (icon chip + switch) reused by the modal
+ *   .navcust-*  — the shared icon chip reused by the modal
  */
 @layer sections {
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SHARED CONTROLS (.navcust-*) — consumed by the global modal below via the
-   NavIcon chip (.navcust-row-icon) and the show/hide Switch (.navcust-switch).
-   The legacy per-group panel was removed; these two rule-sets are all that
+   NavIcon chip (.navcust-row-icon). The show/hide control is canonical Switch.
+   The legacy per-group panel was removed; this rule-set is all that
    remain of the .navcust- namespace.
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -21,21 +21,6 @@
   display: flex; align-items: center; justify-content: center;
 }
 .navcust-row-icon svg { width: 18px; height: 18px; }
-
-/* Show/hide switch — shared by the legend and every module/section row. */
-.navcust-switch {
-  flex-shrink: 0; width: 42px; height: 24px; border-radius: 999px; background: #d0d5dd;
-  border: none; padding: 0; position: relative; cursor: pointer; transition: background .16s;
-}
-.navcust-switch::after {
-  content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
-  border-radius: 50%; background: #fff;
-  box-shadow: 0 1px 3px rgba(16,24,40,.28); transition: transform .16s;
-}
-.navcust-switch.on { background: var(--siomac-navy, #1b2d54); }
-.navcust-switch.on::after { transform: translateX(18px); }
-.navcust-switch.locked { opacity: 0.45; cursor: not-allowed; }
-
 
 /* ═══════════════════════════════════════════════════════════════════════════
    GLOBAL ENTERPRISE MODAL (.navcfg-*)

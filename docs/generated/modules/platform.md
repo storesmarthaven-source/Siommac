@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `2e0983cca10b4809915121e3`
+Source fingerprint: `a0733254f06ae4ee6187ce5b`
 
-Files: 408 | Symbols: 3665 | Widgets: 12 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
+Files: 410 | Symbols: 3664 | Widgets: 12 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -16,7 +16,7 @@ Files: 408 | Symbols: 3665 | Widgets: 12 | Unique mounted endpoints: 38 | Route 
 | `one-surface` | One surface, four rhythms | registry | `() => (         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px' }}>           <Card variant="metric" density="compact" header={<CardHeader title="Open incidents" level={null} />}>             <Figure value="18" caption="4 overdue" />           </Card>           <Card variant="surface" header={<CardHeader title="Site note" />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Night shift handover completed.</span>           </Card>           <Card variant="panel" density="compact" header={<CardHeader title="Corrective actions" actions={<Badge tone="warning" size="sm">2 open</Badge>} />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Both due this Friday.</span>           </Card>           <Card variant="action" onClick={noop} actionLabel="Start a new inspection"             header={<CardHeader icon={<LucideIcon name="ClipboardCheck" />} title="New inspection" description="Start from a template" />} />         </div>       )` | `src/ui/registry/containers.defs.tsx:219` |
 | `overflow` | Nine tabs in a drawer | registry | `() => (         <Tabs           id="ex-overflow"           label="Rate version sections"           variant="contained"           size="sm"           items={MANY_TABS}           maxVisible={4}           value="timeline"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:253` |
 | `row-actions` | Icon-only row actions | registry | `() => (         <div style={{ display: 'flex', gap: '4px' }}>           <Button variant="ghost" size="sm" iconOnly aria-label="Edit" iconLeft={<LucideIcon name="Pencil" />} />           <Button variant="ghost" size="sm" iconOnly aria-label="Duplicate" iconLeft={<LucideIcon name="Copy" />} />           <Button variant="ghost" size="sm" iconOnly aria-label="More actions" iconLeft={<LucideIcon name="EllipsisVertical" />} />         </div>       )` | `src/ui/registry/actions.defs.tsx:214` |
-| `select-all` | Select-all with a partial selection | registry | `() => (         <CheckboxGroup           label="Modules"           selectAllLabel="All modules"           values={['hr']}           onChange={noop}           options={[             { value: 'hr', label: 'Human Resources' },             { value: 'hse', label: 'HSE' },             { value: 'fin', label: 'Finance', disabled: true },           ]}         />       )` | `src/ui/registry/forms.defs.tsx:108` |
+| `select-all` | Select-all with a partial selection | registry | `() => (         <CheckboxGroup           label="Modules"           selectAllLabel="All modules"           values={['hr']}           onChange={noop}           options={[             { value: 'hr', label: 'Human Resources' },             { value: 'hse', label: 'HSE' },             { value: 'fin', label: 'Finance', disabled: true },           ]}         />       )` | `src/ui/registry/forms.defs.tsx:115` |
 | `status-set` | A status set | registry | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>           <Badge tone="success" dot>Active</Badge>           <Badge tone="warning" dot>Probation</Badge>           <Badge tone="info" dot>On leave</Badge>           <Badge tone="neutral" dot>Inactive</Badge>           <Badge tone="danger" dot>Terminated</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:333` |
 | `toggle-and-link` | Toggle and link — props, not components | registry | `() => (         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>           <Button variant="outline" pressed iconLeft={<LucideIcon name="Filter" />}>Only my cases</Button>           <Button variant="link" href="#audit" iconRight={<LucideIcon name="ArrowRight" />}>View audit trail</Button>         </div>       )` | `src/ui/registry/actions.defs.tsx:243` |
 | `tone-scale` | Tone is meaning, not decoration | registry | `() => (         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>           {(['success', 'warning', 'danger', 'info'] as CardTone[]).map(tone => (             <Card key={tone} variant="metric" density="compact" tone={tone}               header={<CardHeader title={`${tone[0]!.toUpperCase()}${tone.slice(1)} signal`} level={null} />}>               <Figure value="7" caption="this week" />             </Card>           ))}         </div>       )` | `src/ui/registry/containers.defs.tsx:239` |
@@ -177,7 +177,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `CalendarItemDialog` | function / component | `src/components/sections/Calendar/CalendarItemDialog.tsx:21` | `-` |
 | `CalendarPage` | function / component | `src/components/sections/Calendar/CalendarPage.tsx:82` | `-` |
 | `CalendarRail` | function / component | `src/components/sections/Calendar/CalendarRail.tsx:26` | `-` |
-| `CreateCalendarItemDialog` | function / component | `src/components/sections/Calendar/CreateCalendarItemDialog.tsx:12` | `-` |
+| `CreateCalendarItemDialog` | function / component | `src/components/sections/Calendar/CreateCalendarItemDialog.tsx:13` | `-` |
 | `MonthView` | function / component | `src/components/sections/Calendar/MonthView.tsx:18` | `-` |
 | `TimeGridView` | function / component | `src/components/sections/Calendar/TimeGridView.tsx:68` | `-` |
 | `DashboardController` | function / component | `src/components/sections/Dashboard/DashboardController.tsx:96` | `-` |
@@ -527,7 +527,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Calendar/CalendarItemDialog.tsx` | 237 |
 | frontend-page | `src/components/sections/Calendar/CalendarPage.tsx` | 204 |
 | frontend-page | `src/components/sections/Calendar/CalendarRail.tsx` | 101 |
-| frontend-page | `src/components/sections/Calendar/CreateCalendarItemDialog.tsx` | 144 |
+| frontend-page | `src/components/sections/Calendar/CreateCalendarItemDialog.tsx` | 145 |
 | frontend-page | `src/components/sections/Calendar/MonthView.test.tsx` | 102 |
 | frontend-page | `src/components/sections/Calendar/MonthView.tsx` | 62 |
 | frontend-page | `src/components/sections/Calendar/TimeGridView.tsx` | 142 |
