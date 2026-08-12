@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "a22fa82c2d70ba731916f1979ddb6cbf79cc8b28",
+    "head": "c50fb8d15c8800dcfb80db749f2b32fbd75e3def",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "68d92134193d7877b93489d7",
-    "indexedFiles": 1826
+    "fingerprint": "6f80191e037db75dc57596c4",
+    "indexedFiles": 1827
   },
   "summary": {
-    "files": 1471,
-    "symbols": 14686,
+    "files": 1472,
+    "symbols": 14696,
     "widgets": 63,
     "routes": 978,
     "routeDefinitions": 979,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 411,
-        "symbols": 3672,
+        "files": 412,
+        "symbols": 3682,
         "widgets": 12,
         "routes": 38,
         "routeDefinitions": 53,
@@ -9267,8 +9267,15 @@
       "path": "src/ui/studio/Studio.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 217,
-      "hash": "44d27739b42a39cd"
+      "lines": 238,
+      "hash": "4a52061778804df3"
+    },
+    {
+      "path": "src/ui/studio/Workbench.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 388,
+      "hash": "075c799275e3d6a5"
     },
     {
       "path": "src/ui/table/FilterBar.tsx",
@@ -148534,7 +148541,7 @@
       "name": "StudioProps",
       "kind": "interface",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 40,
+      "line": 41,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148544,7 +148551,7 @@
       "name": "SectionId",
       "kind": "type",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 50,
+      "line": 51,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148554,7 +148561,7 @@
       "name": "NavGroup",
       "kind": "interface",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 56,
+      "line": 57,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148564,7 +148571,7 @@
       "name": "NAV",
       "kind": "array",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 58,
+      "line": 59,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148574,7 +148581,7 @@
       "name": "StatusChip",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 81,
+      "line": 82,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148586,7 +148593,7 @@
       "name": "ComponentCard",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 87,
+      "line": 93,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148599,7 +148606,7 @@
       "name": "Catalogue",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 104,
+      "line": 118,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148611,7 +148618,7 @@
       "name": "PhasePlaceholder",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 146,
+      "line": 160,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148623,9 +148630,119 @@
       "name": "Studio",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 155,
+      "line": 169,
       "module": "platform",
       "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "Tab",
+      "kind": "type",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 31,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TABS",
+      "kind": "array",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 32,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "VIEWPORTS",
+      "kind": "array",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 47,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Control",
+      "kind": "function",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 56,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "Workbench",
+      "kind": "function",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 112,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "set",
+      "kind": "function",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 118,
+      "module": "platform",
+      "exported": false,
+      "container": "Workbench",
+      "tags": []
+    },
+    {
+      "name": "specimen",
+      "kind": "function",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 122,
+      "module": "platform",
+      "exported": false,
+      "container": "Workbench",
+      "tags": []
+    },
+    {
+      "name": "OverviewSpecimens",
+      "kind": "function",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 211,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "UsageTab",
+      "kind": "function",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 298,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "A11yTab",
+      "kind": "function",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 340,
+      "module": "platform",
+      "exported": false,
       "container": "",
       "tags": [
         "component"

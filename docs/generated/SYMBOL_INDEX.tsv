@@ -13183,15 +13183,25 @@ toneFromWorkflowStatus	function	platform	true		src/ui/status/statusTokens.ts	141
 toneFromPriority	function	platform	true		src/ui/status/statusTokens.ts	157	
 colorFromSeverity	function	platform	true		src/ui/status/statusTokens.ts	169	
 statusLabel	function	platform	true		src/ui/status/statusTokens.ts	179	
-StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	40	
-SectionId	type	platform	false		src/ui/studio/Studio.tsx	50	
-NavGroup	interface	platform	false		src/ui/studio/Studio.tsx	56	
-NAV	array	platform	false		src/ui/studio/Studio.tsx	58	
-StatusChip	function	platform	false	component	src/ui/studio/Studio.tsx	81	
-ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	87	
-Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	104	
-PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	146	
-Studio	function	platform	true	component	src/ui/studio/Studio.tsx	155	
+StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	41	
+SectionId	type	platform	false		src/ui/studio/Studio.tsx	51	
+NavGroup	interface	platform	false		src/ui/studio/Studio.tsx	57	
+NAV	array	platform	false		src/ui/studio/Studio.tsx	59	
+StatusChip	function	platform	false	component	src/ui/studio/Studio.tsx	82	
+ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	93	
+Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	118	
+PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	160	
+Studio	function	platform	true	component	src/ui/studio/Studio.tsx	169	
+Tab	type	platform	false		src/ui/studio/Workbench.tsx	31	
+TABS	array	platform	false		src/ui/studio/Workbench.tsx	32	
+VIEWPORTS	array	platform	false		src/ui/studio/Workbench.tsx	47	
+Control	function	platform	false	component	src/ui/studio/Workbench.tsx	56	
+Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	112	
+set	function	platform	false		src/ui/studio/Workbench.tsx	118	Workbench
+specimen	function	platform	false		src/ui/studio/Workbench.tsx	122	Workbench
+OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	211	
+UsageTab	function	platform	false	component	src/ui/studio/Workbench.tsx	298	
+A11yTab	function	platform	false	component	src/ui/studio/Workbench.tsx	340	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	

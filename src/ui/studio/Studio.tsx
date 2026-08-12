@@ -28,8 +28,9 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
+import { Workbench } from './Workbench';
 import {
-  COMPONENT_DEFS, componentsByCategory, registryTotals,
+  COMPONENT_DEFS, componentsByCategory, registryTotals, findComponent,
   isBuilt, type ComponentDef,
 } from '../registry';
 import { useGalleryDraft } from '../gallery/galleryStore';
@@ -84,10 +85,15 @@ function StatusChip({ def }: { def: ComponentDef }): VNode {
   return <span class="sds-chip sds-chip--planned">Planned</span>;
 }
 
-function ComponentCard({ def }: { def: ComponentDef }): VNode {
+/**
+ * Built components open the workbench; planned ones and application patterns do
+ * not, because there is nothing real to put in it. A card that opened an empty
+ * workbench would be a control that lies about what exists.
+ */
+function ComponentCard({ def, onOpen }: { def: ComponentDef; onOpen?: (id: string) => void }): VNode {
   const built = isBuilt(def);
-  return (
-    <article class={`sds-card${built ? '' : ' sds-card--unbuilt'}`}>
+  const body = (
+    <>
       <header class="sds-card__head">
         <h4>{def.name}</h4>
         <StatusChip def={def} />
@@ -97,11 +103,19 @@ function ComponentCard({ def }: { def: ComponentDef }): VNode {
         /* An honest planned state — never a fabricated specimen. */
         <pre class="sds-card__api">{def.plannedApi}</pre>
       )}
-    </article>
+    </>
+  );
+
+  if (!built || !onOpen) return <article class="sds-card sds-card--unbuilt">{body}</article>;
+
+  return (
+    <button type="button" class="sds-card sds-card--open" onClick={() => onOpen(def.id)}>
+      {body}
+    </button>
   );
 }
 
-function Catalogue(): VNode {
+function Catalogue({ onOpen }: { onOpen: (id: string) => void }): VNode {
   const groups = componentsByCategory();
   const patterns = groups.filter(g => g.category === 'patterns');
   const primitives = groups.filter(g => g.category !== 'patterns');
@@ -119,7 +133,7 @@ function Catalogue(): VNode {
       {primitives.map(g => (
         <section class="sds-shelf" key={g.category}>
           <h3 class="sds-shelf__title">{g.label}<small>{g.built}/{g.total} built</small></h3>
-          <div class="sds-grid">{g.items.map(d => <ComponentCard def={d} key={d.id} />)}</div>
+          <div class="sds-grid">{g.items.map(d => <ComponentCard def={d} key={d.id} onOpen={onOpen} />)}</div>
         </section>
       ))}
 
@@ -154,6 +168,7 @@ function PhasePlaceholder({ title, phase }: { title: string; phase: number }): V
 
 export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNode {
   const [active, setActive] = useState<SectionId>('components');
+  const [openId, setOpenId] = useState<string | null>(null);
   const draft = useGalleryDraft();
 
   const flat = NAV.flatMap(g => g.items);
@@ -191,17 +206,23 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
       </aside>
 
       <main class="sds-main">
-        <header class="sds-head">
-          <h1>{current.label}</h1>
-          <p class="sds-head__sub">
-            {COMPONENT_DEFS.length} registered definitions · the registry is the source of truth
-          </p>
-        </header>
+        {/* The workbench carries its own title and breadcrumb, so the section
+            header stands down rather than showing "Catalogue" above "Button". */}
+        {!openId && (
+          <header class="sds-head">
+            <h1>{current.label}</h1>
+            <p class="sds-head__sub">
+              {COMPONENT_DEFS.length} registered definitions · the registry is the source of truth
+            </p>
+          </header>
+        )}
 
         {/* Only preview surfaces carry the customer draft scope — the Studio
             chrome itself stays neutral. See the second-root note in semantic.css. */}
         <div class="sds-body">
-          {active === 'components'  && <Catalogue />}
+          {active === 'components' && (openId
+            ? <Workbench def={findComponent(openId)!} onBack={() => setOpenId(null)} />
+            : <Catalogue onOpen={setOpenId} />)}
           {active === 'foundations' && <div data-ui-preview-scope><FoundationsPanel draft={draft} /></div>}
           {active === 'brand-theme' && (
             <div data-ui-preview-scope>
