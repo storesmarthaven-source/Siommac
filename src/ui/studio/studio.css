@@ -1,0 +1,184 @@
+/**
+ * src/ui/studio/studio.css — Studio chrome.
+ *
+ * NEUTRAL by contract. The Studio frame must never take the customer's brand
+ * colours: when a draft theme is being previewed, the chrome is the fixed
+ * reference the preview is judged against. Only elements inside
+ * `[data-ui-preview-scope]` receive draft variables.
+ *
+ * Professional scale, deliberately larger than a developer tool:
+ *   ~15px body · 17–22px section/component headings · ~26px page title
+ *   40–44px controls · generous preview canvases
+ * No gradients. Restrained shadows. No microtext.
+ */
+
+.sds {
+  --sds-bg:      #f7f8fa;
+  --sds-surface: #ffffff;
+  --sds-line:    #e3e7ee;
+  --sds-ink:     #1c2433;
+  --sds-ink-2:   #5b6880;
+  --sds-accent:  #2f4a7d;
+
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr);
+  min-height: 100vh;
+  background: var(--sds-bg);
+  color: var(--sds-ink);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ── Navigation ─────────────────────────────────────────────────────────── */
+.sds-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 24px 18px;
+  background: var(--sds-surface);
+  border-right: 1px solid var(--sds-line);
+}
+.sds-nav__brand { display: flex; flex-direction: column; gap: 2px; padding: 0 8px 6px; }
+.sds-nav__mark { font-size: 17px; font-weight: 700; letter-spacing: .01em; }
+.sds-nav__sub  { font-size: 14px; color: var(--sds-ink-2); }
+
+.sds-nav__group h2 {
+  margin: 0 0 6px;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--sds-ink-2);
+}
+.sds-nav__group ul { list-style: none; margin: 0; padding: 0; }
+
+.sds-nav__item {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--sds-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sds-nav__item:hover { background: #eef1f6; }
+.sds-nav__item.is-active { background: #e8edf6; color: var(--sds-accent); font-weight: 600; }
+.sds-nav__item:focus-visible { outline: 2px solid var(--sds-accent); outline-offset: 1px; }
+
+.sds-nav__exit {
+  margin-top: auto;
+  min-height: 40px;
+  padding: 9px 12px;
+  border: 1px solid var(--sds-line);
+  border-radius: 8px;
+  background: var(--sds-surface);
+  font: inherit;
+  cursor: pointer;
+}
+.sds-nav__exit:hover { background: #eef1f6; }
+
+/* ── Main ───────────────────────────────────────────────────────────────── */
+.sds-main { min-width: 0; padding: 28px 32px 56px; }
+.sds-head { margin-bottom: 22px; }
+.sds-head h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.01em; }
+.sds-head__sub { margin: 4px 0 0; font-size: 14px; color: var(--sds-ink-2); }
+
+/* ── Catalogue ──────────────────────────────────────────────────────────── */
+.sds-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.sds-metric {
+  padding: 16px 18px;
+  background: var(--sds-surface);
+  border: 1px solid var(--sds-line);
+  border-radius: 12px;
+}
+.sds-metric b { display: block; font-size: 24px; line-height: 1.2; }
+.sds-metric span { font-size: 14px; color: var(--sds-ink-2); }
+.sds-metric--muted b { color: var(--sds-ink-2); }
+
+.sds-shelf { margin-bottom: 32px; }
+.sds-shelf__title {
+  display: flex; align-items: baseline; gap: 10px;
+  margin: 0 0 12px;
+  font-size: 19px; font-weight: 700;
+}
+.sds-shelf__title small { font-size: 14px; font-weight: 500; color: var(--sds-ink-2); }
+.sds-shelf__note {
+  max-width: 68ch;
+  margin: -4px 0 14px;
+  font-size: 14px;
+  color: var(--sds-ink-2);
+}
+.sds-shelf--patterns { padding-top: 22px; border-top: 1px solid var(--sds-line); }
+
+.sds-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  gap: 14px;
+}
+.sds-card {
+  padding: 16px 18px;
+  background: var(--sds-surface);
+  border: 1px solid var(--sds-line);
+  border-radius: 12px;
+}
+.sds-card--unbuilt { background: #fbfcfd; border-style: dashed; }
+.sds-card__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.sds-card__head h4 { margin: 0; font-size: 17px; font-weight: 650; }
+.sds-card__desc { margin: 8px 0 0; font-size: 14px; color: var(--sds-ink-2); }
+.sds-card__api {
+  margin: 10px 0 0; padding: 10px 12px;
+  background: #f4f6f9; border-radius: 8px;
+  font-size: 13px; white-space: pre-wrap; overflow-x: auto;
+}
+
+.sds-chip {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.sds-chip--built   { background: #e6f4ec; color: #166b41; }
+.sds-chip--planned { background: #eef1f6; color: #5b6880; }
+.sds-chip--pattern { background: #eceaf7; color: #4b3f8f; }
+
+.sds-placeholder {
+  padding: 28px 24px;
+  background: var(--sds-surface);
+  border: 1px dashed var(--sds-line);
+  border-radius: 12px;
+}
+.sds-placeholder h3 { margin: 0 0 6px; font-size: 19px; }
+.sds-placeholder p { margin: 0; max-width: 62ch; color: var(--sds-ink-2); }
+
+/* ── Responsive workspace foundation ────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .sds { grid-template-columns: 1fr; }
+  .sds-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 18px;
+    border-right: 0;
+    border-bottom: 1px solid var(--sds-line);
+  }
+  .sds-nav__group ul { display: flex; flex-wrap: wrap; gap: 4px; }
+  .sds-nav__item { width: auto; }
+  .sds-nav__exit { margin-top: 0; }
+  .sds-main { padding: 22px 20px 44px; }
+}
+@media (max-width: 640px) {
+  .sds-head h1 { font-size: 22px; }
+  .sds-grid { grid-template-columns: 1fr; }
+}

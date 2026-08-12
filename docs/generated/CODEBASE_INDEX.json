@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "513c579f4c3c26c578e6a15a5ba8e27accbeced3",
+    "head": "1326ccc64d44567a574156c8175f3a6cae37b958",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "9304fffb8e5fe357aa8c16d8",
-    "indexedFiles": 1825
+    "fingerprint": "465a0bbae2e3ae5fe5b8d3b0",
+    "indexedFiles": 1826
   },
   "summary": {
-    "files": 1470,
-    "symbols": 14677,
+    "files": 1471,
+    "symbols": 14686,
     "widgets": 63,
     "routes": 978,
     "routeDefinitions": 979,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 410,
-        "symbols": 3663,
+        "files": 411,
+        "symbols": 3672,
         "widgets": 12,
         "routes": 38,
         "routeDefinitions": 53,
@@ -7602,7 +7602,7 @@
       "module": "platform",
       "role": "frontend-page",
       "lines": 43,
-      "hash": "69f166d88fb295c6"
+      "hash": "0d1577e6195d95d0"
     },
     {
       "path": "src/components/sections/index.ts",
@@ -9262,6 +9262,13 @@
       "role": "frontend",
       "lines": 182,
       "hash": "0af2d3c848de89e0"
+    },
+    {
+      "path": "src/ui/studio/Studio.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 217,
+      "hash": "44d27739b42a39cd"
     },
     {
       "path": "src/ui/table/FilterBar.tsx",
@@ -148522,6 +148529,107 @@
       "exported": true,
       "container": "",
       "tags": []
+    },
+    {
+      "name": "StudioProps",
+      "kind": "interface",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 40,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SectionId",
+      "kind": "type",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 50,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NavGroup",
+      "kind": "interface",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 56,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NAV",
+      "kind": "array",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 58,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "StatusChip",
+      "kind": "function",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 81,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ComponentCard",
+      "kind": "function",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 87,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "Catalogue",
+      "kind": "function",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 104,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "PhasePlaceholder",
+      "kind": "function",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 146,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "Studio",
+      "kind": "function",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 155,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
     },
     {
       "name": "registerTabs",

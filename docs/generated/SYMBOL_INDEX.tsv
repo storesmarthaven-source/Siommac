@@ -13183,6 +13183,15 @@ toneFromWorkflowStatus	function	platform	true		src/ui/status/statusTokens.ts	141
 toneFromPriority	function	platform	true		src/ui/status/statusTokens.ts	157	
 colorFromSeverity	function	platform	true		src/ui/status/statusTokens.ts	169	
 statusLabel	function	platform	true		src/ui/status/statusTokens.ts	179	
+StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	40	
+SectionId	type	platform	false		src/ui/studio/Studio.tsx	50	
+NavGroup	interface	platform	false		src/ui/studio/Studio.tsx	56	
+NAV	array	platform	false		src/ui/studio/Studio.tsx	58	
+StatusChip	function	platform	false	component	src/ui/studio/Studio.tsx	81	
+ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	87	
+Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	104	
+PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	146	
+Studio	function	platform	true	component	src/ui/studio/Studio.tsx	155	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	

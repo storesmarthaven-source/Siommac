@@ -17,7 +17,7 @@ import { h, render }           from 'preact';
 import { QueryClientProvider } from '@tanstack/preact-query';
 import type { QueryClient }    from '@tanstack/query-core';
 import { showSection }         from '@components/nav/navCore';
-import { UiKitGallery }        from '@ui/gallery/UiKitGallery';
+import { Studio }              from '@ui/studio/Studio';
 import { useSessionStore }     from '@store/session';
 import { uploadLogoApi }       from '@sections/Settings/api';
 
@@ -27,7 +27,7 @@ const EXIT_SECTION = 's-adm-dashboard';
 export function mountUiKitSection(container: Element, opts: { queryClient: QueryClient }): void {
   render(
     h(QueryClientProvider, { client: opts.queryClient },
-      h(UiKitGallery, {
+      h(Studio, {
         onExit: () => showSection(EXIT_SECTION),
         logoUrl: useSessionStore.getState().companyLogoUrl,
         onUploadLogo: (dataUrl: string) => uploadLogoApi(dataUrl),
