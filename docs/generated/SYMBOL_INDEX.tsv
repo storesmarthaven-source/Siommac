@@ -8116,32 +8116,32 @@ submit	function	finance	false		src/components/sections/Finance/RemittancesOvervi
 RemMarkFiledDialog	function	finance	false	component	src/components/sections/Finance/RemittancesOverview.tsx	1646	
 validate	function	finance	false		src/components/sections/Finance/RemittancesOverview.tsx	1661	RemMarkFiledDialog
 submit	function	finance	false		src/components/sections/Finance/RemittancesOverview.tsx	1669	RemMarkFiledDialog
-STEPS	array	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	39	
-n	function	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	46	
-BandRow	interface	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	48	
-emptyBand	function	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	49	
-bandHasData	function	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	50	
-StatNewVersionPage	function	finance	true	component	src/components/sections/Finance/StatNewVersionPage.tsx	52	
-set	function	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	74	StatNewVersionPage
-copyFrom	function	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	82	StatNewVersionPage
-copyBands	function	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	99	StatNewVersionPage
-submit	function	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	186	StatNewVersionPage
-setBand	function	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	214	StatNewVersionPage
-WEEKS_PER_MONTH	variable	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	34	
-numOrNull	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	36	
-pillClass	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	44	
-IconOk	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	55	
-IconBad	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	58	
-IconCoins	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	61	
-IconBook	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	64	
-IconClock	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	67	
-IconArrow	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	70	
-IconInfo	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	73	
-MoneyField	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	78	
-StatNisBandPage	function	finance	true	component	src/components/sections/Finance/StatNisBandPage.tsx	101	
-set	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	126	StatNisBandPage
-save	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	194	StatNisBandPage
-remove	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	224	StatNisBandPage
+STEPS	array	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	40	
+n	function	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	47	
+BandRow	interface	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	49	
+emptyBand	function	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	50	
+bandHasData	function	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	51	
+StatNewVersionPage	function	finance	true	component	src/components/sections/Finance/StatNewVersionPage.tsx	53	
+set	function	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	75	StatNewVersionPage
+copyFrom	function	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	83	StatNewVersionPage
+copyBands	function	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	100	StatNewVersionPage
+submit	function	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	187	StatNewVersionPage
+setBand	function	finance	false		src/components/sections/Finance/StatNewVersionPage.tsx	215	StatNewVersionPage
+WEEKS_PER_MONTH	variable	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	35	
+numOrNull	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	37	
+pillClass	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	45	
+IconOk	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	56	
+IconBad	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	59	
+IconCoins	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	62	
+IconBook	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	65	
+IconClock	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	68	
+IconArrow	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	71	
+IconInfo	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	74	
+MoneyField	function	finance	false	component	src/components/sections/Finance/StatNisBandPage.tsx	79	
+StatNisBandPage	function	finance	true	component	src/components/sections/Finance/StatNisBandPage.tsx	102	
+set	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	127	StatNisBandPage
+save	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	195	StatNisBandPage
+remove	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	225	StatNisBandPage
 TEMPLATE	variable	finance	false	component	src/components/sections/Finance/StatNisImportPage.tsx	31	
 STEPS	array	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	32	
 Severity	type	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	39	

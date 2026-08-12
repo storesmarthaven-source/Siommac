@@ -198,7 +198,7 @@ export function StatNisImportPage({ versionId, onClose }: { versionId: string; o
                     onClick={() => fileRef.current?.click()}
                     onDragOver={e => { e.preventDefault(); setDragging(true); }}
                     onDragLeave={() => setDragging(false)}
-                    onDrop={e => { e.preventDefault(); setDragging(false); onFile(e.dataTransfer?.files?.[0]); }}>
+                    onDrop={e => { e.preventDefault(); setDragging(false); onFile(e.dataTransfer?.files[0]); }}>
                     <span class="cloud"><IconUpload size={30} /></span>
                     <p>Drag and drop your CSV file here</p>
                     <span class="sfp-dz-or">or</span>
