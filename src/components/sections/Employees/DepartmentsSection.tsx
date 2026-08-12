@@ -18,6 +18,7 @@ import type { Department }                           from './types';
 import { useDepartmentList, useDeleteDepartment }    from './hooks';
 import { StatCard }                                  from './StatCard';
 import { DepartmentModal }                           from './DepartmentModal';
+import { Button } from '@ui';
 
 export function DepartmentsSection(): VNode {
   const { data: departments = [], isLoading, error, refetch } = useDepartmentList();
@@ -76,13 +77,14 @@ export function DepartmentsSection(): VNode {
           <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 'var(--font-weight-bold)', color: '#111827' }}>Departments</h1>
           <p style={{ margin: '4px 0 0', fontSize: '14px', color: '#6b7280' }}>Manage your organisational structure</p>
         </div>
-        <button
-          type="button"
-          class="btn btn-danger-primary btn-sm"
+        <Button
+          variant="primary"
+          size="sm"
           onClick={() => setModalDept(null)}
+          iconLeft={<i class="fas fa-plus" aria-hidden="true" />}
         >
-          <i class="fas fa-plus" aria-hidden="true" /> Add Department
-        </button>
+          Add Department
+        </Button>
       </div>
 
       {/* Stats */}

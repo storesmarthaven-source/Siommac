@@ -17,6 +17,7 @@
  */
 
 import { AppSection } from './AppSection';
+import { Button } from '@ui';
 
 
 /** Employee attendance home — the main employee dashboard. */
@@ -154,9 +155,9 @@ function EmpAttendanceSection() {
 
       {/* View history link */}
       <div style="text-align:center;margin-top:4px;">
-        <button id="viewHistoryBtn" class="btn btn-secondary btn-sm">
-          <i class="fas fa-history" /> <span id="viewHistoryText">View My Full History</span>
-        </button>
+        <Button id="viewHistoryBtn" variant="secondary" size="sm" iconLeft={<i class="fas fa-history" />}>
+          <span id="viewHistoryText">View My Full History</span>
+        </Button>
       </div>
 
     </AppSection>

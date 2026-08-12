@@ -21,6 +21,7 @@ import { toast } from '@store';
 import { fmtMoney } from '../financeShared';
 import { EmployeeCell } from '../_shared/EmployeeCell';
 import { Modal } from '@ui/components/Modal';
+import { Button } from '@ui';
 
 const RELEASED = new Set(['released', 'exported']);
 
@@ -85,7 +86,7 @@ export function CloseReleaseCard({ run, preflight }: {
             <div class="close-control">
               <span class="control-state warn">!</span>
               <div><strong>Funding confirmation required</strong><small>Record the confirmed payroll funding before release.</small></div>
-              <button type="button" class="btn sm primary" onClick={() => setFundingOpen(true)}>Confirm funding</button>
+              <Button variant="primary" size="sm" onClick={() => setFundingOpen(true)}>Confirm funding</Button>
             </div>
           )}
         </div>
@@ -124,10 +125,12 @@ export function CloseReleaseCard({ run, preflight }: {
                 <span>I confirm the approved calculation version, control totals and downstream handoff population are complete and correct.</span>
               </label>
               <div class="close-actions">
-                <button type="button" class="btn primary" disabled={!readyToIssue || !attested || releaseMut.isPending}
-                  onClick={() => releaseMut.mutate()}>
-                  <i class="fa-solid fa-certificate" /> {releaseMut.isPending ? 'Issuing…' : 'Issue release certificate'}
-                </button>
+                <Button variant="primary" disabled={!readyToIssue || !attested}
+                  loading={releaseMut.isPending} loadingText="Issuing…"
+                  onClick={() => releaseMut.mutate()}
+                  iconLeft={<i class="fa-solid fa-certificate" />}>
+                  Issue release certificate
+                </Button>
               </div>
               {!canRelease && <small class="prw-hint">You do not have the payroll release permission (segregation of duties).</small>}
               {!readyToIssue && canRelease && run.status === 'locked' && pf && !pf.ready && (

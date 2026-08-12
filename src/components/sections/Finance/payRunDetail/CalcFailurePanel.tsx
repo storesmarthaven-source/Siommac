@@ -25,6 +25,7 @@ import { type PayrollRunWorkspace, type PayrollCalculationAttempt } from '@api/f
 import { humanize } from '../financeShared';
 import { EmployeeCell } from '../_shared/EmployeeCell';
 import { fmtDateTime } from './interactiveTabs';
+import { Button } from '@ui';
 
 function shortId(id: string | null | undefined): string {
   if (!id) return '—';
@@ -145,7 +146,7 @@ export function CalcFailurePanel({ workspace }: {
               <div class="sec-title">Diagnostic detail</div>
               <div class="sec-sub">Support-safe technical evidence — employee pay amounts are excluded.</div>
             </div>
-            <div class="aux"><button type="button" class="btn" onClick={copyCorrelation}>{copied ? 'Copied ✓' : 'Copy correlation ID'}</button></div>
+            <div class="aux"><Button variant="secondary" onClick={copyCorrelation}>{copied ? 'Copied ✓' : 'Copy correlation ID'}</Button></div>
           </div>
           <div class="panel-body">
             <div class="failure-code">{[

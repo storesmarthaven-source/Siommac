@@ -6970,16 +6970,16 @@ inputStyle	function	hr	false		src/components/sections/Employees/DepartmentModal.
 errorStyle	object	hr	false		src/components/sections/Employees/DepartmentModal.tsx	158	
 cancelBtnStyle	object	hr	false		src/components/sections/Employees/DepartmentModal.tsx	164	
 submitBtnStyle	function	hr	false		src/components/sections/Employees/DepartmentModal.tsx	175	
-DepartmentsSection	function	hr	true	component	src/components/sections/Employees/DepartmentsSection.tsx	22	
-DepartmentCard	function	hr	false	component,ui-tile	src/components/sections/Employees/DepartmentsSection.tsx	146	
+DepartmentsSection	function	hr	true	component	src/components/sections/Employees/DepartmentsSection.tsx	23	
+DepartmentCard	function	hr	false	component,ui-tile	src/components/sections/Employees/DepartmentsSection.tsx	148	
 EmployeeCardProps	interface	hr	false	ui-tile	src/components/sections/Employees/EmployeeCard.tsx	19	
 ROLE_LABEL	object	hr	false		src/components/sections/Employees/EmployeeCard.tsx	27	
 TODAY_BADGE_CLASS	object	hr	false		src/components/sections/Employees/EmployeeCard.tsx	35	
 EmployeeCard	function	hr	true	component,ui-tile	src/components/sections/Employees/EmployeeCard.tsx	41	
-EmployeeDrawerProps	interface	hr	false		src/components/sections/Employees/EmployeeDrawer.tsx	26	
-ROLE_LABEL	object	hr	false		src/components/sections/Employees/EmployeeDrawer.tsx	34	
-EmployeeDrawer	function	hr	true	component	src/components/sections/Employees/EmployeeDrawer.tsx	38	
-handler	function	hr	false		src/components/sections/Employees/EmployeeDrawer.tsx	53	EmployeeDrawer
+EmployeeDrawerProps	interface	hr	false		src/components/sections/Employees/EmployeeDrawer.tsx	27	
+ROLE_LABEL	object	hr	false		src/components/sections/Employees/EmployeeDrawer.tsx	35	
+EmployeeDrawer	function	hr	true	component	src/components/sections/Employees/EmployeeDrawer.tsx	39	
+handler	function	hr	false		src/components/sections/Employees/EmployeeDrawer.tsx	54	EmployeeDrawer
 Mode	type	hr	false		src/components/sections/Employees/EmployeeModal.tsx	44	
 EmployeeModalProps	interface	hr	false		src/components/sections/Employees/EmployeeModal.tsx	46	
 FormState	interface	hr	false		src/components/sections/Employees/EmployeeModal.tsx	58	
@@ -6994,11 +6994,11 @@ inputStyle	function	hr	false		src/components/sections/Employees/EmployeeModal.ts
 cancelBtnStyle	object	hr	false		src/components/sections/Employees/EmployeeModal.tsx	717	
 submitBtnStyle	function	hr	false		src/components/sections/Employees/EmployeeModal.tsx	728	
 outlineBtnStyle	function	hr	false		src/components/sections/Employees/EmployeeModal.tsx	746	
-EmpRow	type	hr	false		src/components/sections/Employees/EmployeesSection.tsx	39	
-COLUMNS	variable	hr	false	component	src/components/sections/Employees/EmployeesSection.tsx	41	
-EmployeesSectionProps	interface	hr	false		src/components/sections/Employees/EmployeesSection.tsx	98	
-EmployeesSection	function	hr	true	component	src/components/sections/Employees/EmployeesSection.tsx	103	
-ViewToggleBtn	function	hr	false	component	src/components/sections/Employees/EmployeesSection.tsx	348	
+EmpRow	type	hr	false		src/components/sections/Employees/EmployeesSection.tsx	40	
+COLUMNS	variable	hr	false	component	src/components/sections/Employees/EmployeesSection.tsx	42	
+EmployeesSectionProps	interface	hr	false		src/components/sections/Employees/EmployeesSection.tsx	99	
+EmployeesSection	function	hr	true	component	src/components/sections/Employees/EmployeesSection.tsx	104	
+ViewToggleBtn	function	hr	false	component	src/components/sections/Employees/EmployeesSection.tsx	350	
 COLUMNS	variable	hr	false	component	src/components/sections/Employees/HistorySection.tsx	35	
 HistorySection	function	hr	true	component	src/components/sections/Employees/HistorySection.tsx	74	
 useEmployeeList	function	hr	true	hook	src/components/sections/Employees/hooks.ts	40	
@@ -7939,11 +7939,11 @@ makeRun	function	finance	false	test	src/components/sections/Finance/payRunDetail
 makeAttempt	function	finance	false	test	src/components/sections/Finance/payRunDetail/CalcFailurePanel.test.tsx	35	
 makeFinding	function	finance	false	test	src/components/sections/Finance/payRunDetail/CalcFailurePanel.test.tsx	46	
 makeWorkspace	function	finance	false	test	src/components/sections/Finance/payRunDetail/CalcFailurePanel.test.tsx	58	
-shortId	function	finance	false		src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx	29	
-failedAttemptOf	function	finance	false		src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx	35	
-CalcFailurePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx	43	
-copyCorrelation	function	finance	false		src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx	55	CalcFailurePanel
-RecoveryStep	function	finance	false	component	src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx	178	
+shortId	function	finance	false		src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx	30	
+failedAttemptOf	function	finance	false		src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx	36	
+CalcFailurePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx	44	
+copyCorrelation	function	finance	false		src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx	56	CalcFailurePanel
+RecoveryStep	function	finance	false	component	src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx	179	
 AttestKey	type	finance	false		src/components/sections/Finance/payRunDetail/CertifySubmitModal.tsx	24	
 ATTESTATIONS	array	finance	false		src/components/sections/Finance/payRunDetail/CertifySubmitModal.tsx	28	
 CertifySubmitModal	function	finance	true	component	src/components/sections/Finance/payRunDetail/CertifySubmitModal.tsx	37	
@@ -7954,11 +7954,11 @@ preflight	function	finance	false	test	src/components/sections/Finance/payRunDeta
 renderCard	function	finance	false	ui-tile,test	src/components/sections/Finance/payRunDetail/CloseReleaseCard.test.tsx	47	
 issueBtn	function	finance	false	test	src/components/sections/Finance/payRunDetail/CloseReleaseCard.test.tsx	51	
 isDisabled	function	finance	false	test	src/components/sections/Finance/payRunDetail/CloseReleaseCard.test.tsx	52	
-RELEASED	variable	finance	false	component	src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx	25	
-CloseReleaseCard	function	finance	true	component,ui-tile	src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx	27	
-invalidate	function	finance	false		src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx	41	CloseReleaseCard
-ConfirmFundingModal	function	finance	false	component	src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx	156	
-submit	function	finance	false		src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx	175	ConfirmFundingModal
+RELEASED	variable	finance	false	component	src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx	26	
+CloseReleaseCard	function	finance	true	component,ui-tile	src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx	28	
+invalidate	function	finance	false		src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx	42	CloseReleaseCard
+ConfirmFundingModal	function	finance	false	component	src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx	159	
+submit	function	finance	false		src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx	178	ConfirmFundingModal
 makeRun	function	finance	false	test	src/components/sections/Finance/payRunDetail/headerActions.test.tsx	13	
 noCaps	object	finance	false	test	src/components/sections/Finance/payRunDetail/headerActions.test.tsx	23	
 drawerActions	variable	finance	false	test	src/components/sections/Finance/payRunDetail/headerActions.test.tsx	30	
@@ -8028,8 +8028,8 @@ InputsPanel	function	finance	true	component	src/components/sections/Finance/payR
 PolicyEvidencePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	438	
 ExceptionsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	539	
 ReleasePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	580	
-PanelStateProps	interface	finance	true		src/components/sections/Finance/payRunDetail/PanelState.tsx	14	
-PayrollPanelState	function	finance	true	component	src/components/sections/Finance/payRunDetail/PanelState.tsx	32	
+PanelStateProps	interface	finance	true		src/components/sections/Finance/payRunDetail/PanelState.tsx	15	
+PayrollPanelState	function	finance	true	component	src/components/sections/Finance/payRunDetail/PanelState.tsx	33	
 fmtCompact	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	15	
 initials	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	22	
 monthLabel	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	30	
@@ -12368,14 +12368,14 @@ MessageModal	function	communications	true	component	src/shell/modals/MessageModa
 NotificationModal	function	communications	true	component	src/shell/modals/NotificationModal.tsx	11	
 ProjectSiteModal	function	platform	true	component	src/shell/modals/ProjectSiteModal.tsx	15	
 TicketModal	function	communications	true	component	src/shell/modals/TicketModal.tsx	5	
-StatutoryRatesModal	function	platform	false	component	src/shell/sections/AdminSections.tsx	27	
-PayrollSettingsModal	function	platform	false	component	src/shell/sections/AdminSections.tsx	303	
-AdminDashboardSection	function	platform	false	component	src/shell/sections/AdminSections.tsx	424	
-AdminSections	function	platform	true	component	src/shell/sections/AdminSections.tsx	569	
+StatutoryRatesModal	function	platform	false	component	src/shell/sections/AdminSections.tsx	28	
+PayrollSettingsModal	function	platform	false	component	src/shell/sections/AdminSections.tsx	304	
+AdminDashboardSection	function	platform	false	component	src/shell/sections/AdminSections.tsx	425	
+AdminSections	function	platform	true	component	src/shell/sections/AdminSections.tsx	572	
 AppSectionProps	interface	platform	false		src/shell/sections/AppSection.tsx	18	
 AppSection	function	platform	true	component	src/shell/sections/AppSection.tsx	26	
-EmpAttendanceSection	function	hr	false	component	src/shell/sections/EmployeeSections.tsx	23	
-EmployeeSections	function	hr	true	component	src/shell/sections/EmployeeSections.tsx	166	
+EmpAttendanceSection	function	hr	false	component	src/shell/sections/EmployeeSections.tsx	24	
+EmployeeSections	function	hr	true	component	src/shell/sections/EmployeeSections.tsx	167	
 ManagerSections	function	platform	true	component	src/shell/sections/ManagerSections.tsx	17	
 LiveMapSection	function	platform	false	component	src/shell/sections/SharedSections.tsx	23	
 AboutSection	function	platform	false	component	src/shell/sections/SharedSections.tsx	99	

@@ -2,7 +2,7 @@
 
 # platform Module Map
 
-Source fingerprint: `2d84b45b3ef95edb85dd62b6`
+Source fingerprint: `cdcda4ed8a8b7e84b78f7197`
 
 Files: 404 | Symbols: 3682 | Widgets: 12 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
 
@@ -223,7 +223,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `AppShell` | function / component | `src/shell/AppShell.tsx:130` | `-` |
 | `LoginShell` | function / component | `src/shell/LoginShell.tsx:51` | `-` |
 | `ProjectSiteModal` | function / component | `src/shell/modals/ProjectSiteModal.tsx:15` | `-` |
-| `AdminSections` | function / component | `src/shell/sections/AdminSections.tsx:569` | `-` |
+| `AdminSections` | function / component | `src/shell/sections/AdminSections.tsx:572` | `-` |
 | `AppSection` | function / component | `src/shell/sections/AppSection.tsx:26` | `-` |
 | `ManagerSections` | function / component | `src/shell/sections/ManagerSections.tsx:17` | `-` |
 | `SharedSections` | function / component | `src/shell/sections/SharedSections.tsx:178` | `-` |

@@ -20,6 +20,7 @@
 
 import { AdminStatCards, AdminRecentTable } from '@sections/AdminDashboard';
 import { AppSection } from './AppSection';
+import { Button } from '@ui';
 
 
 // ── Statutory Rates Modal (wired by HourlyRates / Payroll sections) ──────────
@@ -532,12 +533,14 @@ function AdminDashboardSection() {
             <h2><i class="fas fa-history" /> Recent Attendance Activity</h2>
             <div style="display:flex;align-items:center;gap:8px;">
               {/* INTENTIONAL: onclick inline — navigates to attendance section via window global */}
-              <button
-                class="btn btn-sm btn-outline-primary"
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => { (window as unknown as Record<string, Record<string, (s: string) => void>>).AttendanceSystem?.goTo?.('s-hr-attendance'); }}
+                iconLeft={<i class="fas fa-arrow-right" />}
               >
-                <i class="fas fa-arrow-right" /> View All
-              </button>
+                View All
+              </Button>
               <button class="dash-hide-btn" data-widget-id="activity" title="Hide widget"><i class="fas fa-eye-slash" /></button>
             </div>
           </div>

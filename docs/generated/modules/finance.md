@@ -2,7 +2,7 @@
 
 # finance Module Map
 
-Source fingerprint: `2d84b45b3ef95edb85dd62b6`
+Source fingerprint: `cdcda4ed8a8b7e84b78f7197`
 
 Files: 139 | Symbols: 1850 | Widgets: 9 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
@@ -568,11 +568,11 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/module.ts` | 174 |
 | frontend-page | `src/components/sections/Finance/mount.ts` | 25 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/CalcFailurePanel.test.tsx` | 148 |
-| frontend-page | `src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx` | 189 |
+| frontend-page | `src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx` | 190 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/CertifySubmitModal.tsx` | 104 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/CloseReleaseCard.test.tsx` | 89 |
-| frontend-page | `src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx` | 203 |
-| frontend-page | `src/components/sections/Finance/payRunDetail/PanelState.tsx` | 73 |
+| frontend-page | `src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx` | 206 |
+| frontend-page | `src/components/sections/Finance/payRunDetail/PanelState.tsx` | 74 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/headerActions.test.tsx` | 86 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/interactiveTabs.tsx` | 1112 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/pageGate.test.tsx` | 125 |

@@ -22,6 +22,7 @@ import { useEffect, useRef }     from 'preact/hooks';
 import { Avatar }                from '@shared/Avatar';
 import type { EmployeeListItem } from './types';
 import { TODAY_STATUS_LABEL }    from './utils';
+import { Button } from '@ui';
 
 interface EmployeeDrawerProps {
   emp:      EmployeeListItem | null;
@@ -144,20 +145,22 @@ export function EmployeeDrawer({ emp, isAdmin, onClose, onEdit, onDelete }: Empl
             {/* Footer — admin actions */}
             {isAdmin && (
               <div class="emp-drawer-footer">
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary btn-sm"
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => { onClose(); onEdit(emp); }}
+                  iconLeft={<i class="fas fa-pencil-alt" aria-hidden="true" />}
                 >
-                  <i class="fas fa-pencil-alt" aria-hidden="true" /> Edit
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-danger btn-sm"
+                  Edit
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
                   onClick={() => { onClose(); onDelete(emp); }}
+                  iconLeft={<i class="fas fa-trash" aria-hidden="true" />}
                 >
-                  <i class="fas fa-trash" aria-hidden="true" /> Delete
-                </button>
+                  Delete
+                </Button>
               </div>
             )}
           </>

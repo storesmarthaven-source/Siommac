@@ -33,6 +33,7 @@ import { EmployeeCard }                              from './EmployeeCard';
 import { EmployeeDrawer }                            from './EmployeeDrawer';
 import { EmployeeModal }                             from './EmployeeModal';
 import { TODAY_STATUS_LABEL, TODAY_STATUS_COLOR }    from './utils';
+import { Button } from '@ui';
 
 // ── Column definitions for DataTable ─────────────────────────────────────────
 
@@ -202,13 +203,14 @@ export function EmployeesSection({ currentRole: _currentRole, currentUsername: _
           </p>
         </div>
         {canAdd && (
-          <button
-            type="button"
-            class="btn btn-danger-primary btn-sm"
+          <Button
+            variant="primary"
+            size="sm"
             onClick={() => setAddOpen(true)}
+            iconLeft={<i class="fas fa-plus" aria-hidden="true" />}
           >
-            <i class="fas fa-plus" aria-hidden="true" /> Add Employee
-          </button>
+            Add Employee
+          </Button>
         )}
       </div>
 

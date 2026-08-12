@@ -21,7 +21,7 @@ import {
   WIDGET_REGISTRY, commitPreviewWidget, placeWidgetsAtBottom,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeDef, type WidgetSizeKey,
 } from '@ui/widgets';
-import { PageHeader, KpiTile } from '@ui';
+import { PageHeader, KpiTile, Button } from '@ui';
 import { can } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
 import { toast } from '@store';
@@ -774,7 +774,7 @@ function ApprovalsWidget({ data }: { data?: PayrollControlCenterResponse }): VNo
           </div>
           <div class="approval-command">
             <div class="approval-context"><span><i class="fa-regular fa-calendar" /> {a.payDate ? `Pays ${fmtDay(a.payDate)}` : 'No pay date'}</span><span><i class="fa-solid fa-users" /> {a.employeeCount} employee{a.employeeCount !== 1 ? 's' : ''}</span></div>
-            <button type="button" class="btn primary" onClick={() => goToExceptions({ tab: 'approvals', search: a.runNo })}><i class="fa-solid fa-user-check" /> Review <i class="fa-solid fa-arrow-right" /></button>
+            <Button variant="primary" onClick={() => goToExceptions({ tab: 'approvals', search: a.runNo })} iconLeft={<i class="fa-solid fa-user-check" />} iconRight={<i class="fa-solid fa-arrow-right" />}>Review</Button>
           </div>
         </div>
       ) : (

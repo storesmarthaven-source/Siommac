@@ -10,6 +10,7 @@
  */
 import type { ComponentChildren, VNode } from 'preact';
 import { PayrollApiError } from '@api/finance/payroll';
+import { Button } from '@ui';
 
 export interface PanelStateProps {
   /** Initial load (no data yet). Background refetches do NOT re-skeleton. */
@@ -52,7 +53,7 @@ export function PayrollPanelState({ loading, error, onRetry, empty, label, empty
             </small>
           )}
         </div>
-        {onRetry && <button type="button" class="btn" onClick={onRetry}>Retry</button>}
+        {onRetry && <Button variant="secondary" onClick={onRetry}>Retry</Button>}
       </div>
     );
   }
