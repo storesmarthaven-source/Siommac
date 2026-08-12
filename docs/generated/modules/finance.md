@@ -2,7 +2,7 @@
 
 # finance Module Map
 
-Source fingerprint: `e6abd1719e8ffbdabb76cb22`
+Source fingerprint: `1ec6fb1849f6a5a2e273aeb7`
 
 Files: 139 | Symbols: 1850 | Widgets: 9 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
@@ -554,7 +554,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/StatNisBandPage.tsx` | 383 |
 | frontend-page | `src/components/sections/Finance/StatNisImportPage.tsx` | 347 |
 | frontend-page | `src/components/sections/Finance/StatPayComponentPage.tsx` | 222 |
-| frontend-page | `src/components/sections/Finance/StatTable.tsx` | 204 |
+| frontend-page | `src/components/sections/Finance/StatTable.tsx` | 212 |
 | frontend-page | `src/components/sections/Finance/StatutoryConfigOverview.tsx` | 1639 |
 | frontend-page | `src/components/sections/Finance/StatutoryDashboard.tsx` | 756 |
 | frontend-page | `src/components/sections/Finance/StatutoryFormsOverview.tsx` | 286 |

@@ -12,7 +12,7 @@
 
 import { type VNode, type ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
-import { RowActionMenu, type RowActionItem } from '@ui';
+import { RowActionMenu, Badge, type RowActionItem, type BadgeTone } from '@ui';
 
 export interface StatColumn<T> {
   key: string;
@@ -53,11 +53,19 @@ export interface StatTableProps<T> {
   onSort?: (field: string, dir: 'asc' | 'desc') => void;
 }
 
-// ── Scoped status badge (replaces the Aurora HrfinPill inside cells) ──────────
+/**
+ * Statutory's short tone vocabulary -> canonical Badge.
+ *
+ * Kept as an ADAPTER, not a badge: `ok/bad/wn/nu/dr` is domain shorthand its
+ * call sites already speak, and translating it here is cheaper than rewriting
+ * every cell. It owns no colours, geometry or classes.
+ */
 export type StatTone = 'ok' | 'bad' | 'wn' | 'nu' | 'dr';
-const TONE_CLASS: Record<StatTone, string> = { ok: 'green', bad: 'red', wn: 'amber', nu: 'blue', dr: 'grey' };
+const TONE_BADGE: Record<StatTone, BadgeTone> = {
+  ok: 'success', bad: 'danger', wn: 'warning', nu: 'info', dr: 'neutral',
+};
 export function StatBadge({ tone = 'dr', children }: { tone?: StatTone; children: ComponentChildren }): VNode {
-  return <span class={`sdb-badge sdb-badge--${TONE_CLASS[tone]}`}>{children}</span>;
+  return <Badge tone={TONE_BADGE[tone]}>{children}</Badge>;
 }
 
 function pageWindow(page: number, count: number): (number | '…')[] {

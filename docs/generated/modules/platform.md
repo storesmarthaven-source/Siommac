@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `e6abd1719e8ffbdabb76cb22`
+Source fingerprint: `1ec6fb1849f6a5a2e273aeb7`
 
-Files: 405 | Symbols: 3686 | Widgets: 12 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
+Files: 403 | Symbols: 3673 | Widgets: 12 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -206,7 +206,6 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useCancelGrant` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:339` | `-` |
 | `AccountPill` | function / component | `src/components/shared/AccountPill.tsx:93` | `-` |
 | `Avatar` | function / component | `src/components/shared/Avatar.tsx:107` | `-` |
-| `Badge` | function / component | `src/components/shared/Badge.tsx:112` | `-` |
 | `ConfirmDialog` | function / component | `src/components/shared/ConfirmDialog.tsx:72` | `-` |
 | `DataTable` | function / component | `src/components/shared/DataTable.tsx:114` | `-` |
 | `ErrorBoundary` | class / component | `src/components/shared/ErrorBoundary.tsx:65` | `-` |
@@ -302,7 +301,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `SystemActionsPanel` | function / component | `src/ui/components/SystemActionsPanel.tsx:27` | `-` |
 | `Tabs` | function / component | `src/ui/components/Tabs.tsx:28` | `-` |
 | `Toolbar` | function / component | `src/ui/components/Toolbar.tsx:19` | `-` |
-| ... | 106 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| `SearchInput` | function / component | `src/ui/components/Toolbar.tsx:35` | `-` |
+| ... | 105 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 

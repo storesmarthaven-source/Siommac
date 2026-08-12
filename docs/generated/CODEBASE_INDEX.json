@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "22dfdcc4792ff27cedcfdac268d2f5d912d50a74",
+    "head": "371d3db294c2d407b356e4f10698d9d5229340f1",
     "branch": "ui-kit/overnight-completion",
-    "fingerprint": "e6abd1719e8ffbdabb76cb22",
-    "indexedFiles": 1816
+    "fingerprint": "1ec6fb1849f6a5a2e273aeb7",
+    "indexedFiles": 1814
   },
   "summary": {
-    "files": 1461,
-    "symbols": 14700,
+    "files": 1459,
+    "symbols": 14687,
     "widgets": 63,
     "routes": 978,
     "routeDefinitions": 979,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 405,
-        "symbols": 3686,
+        "files": 403,
+        "symbols": 3673,
         "widgets": 12,
         "routes": 38,
         "routeDefinitions": 53,
@@ -5053,8 +5053,8 @@
       "path": "src/components/sections/Finance/StatTable.tsx",
       "module": "finance",
       "role": "frontend-page",
-      "lines": 204,
-      "hash": "36c323a64e37318e"
+      "lines": 212,
+      "hash": "b9152deac8770bba"
     },
     {
       "path": "src/components/sections/Finance/StatutoryConfigOverview.tsx",
@@ -7619,20 +7619,6 @@
       "hash": "55e4daa7932b574c"
     },
     {
-      "path": "src/components/shared/Badge.test.tsx",
-      "module": "platform",
-      "role": "frontend",
-      "lines": 47,
-      "hash": "fc46ccf4b3b53d34"
-    },
-    {
-      "path": "src/components/shared/Badge.tsx",
-      "module": "platform",
-      "role": "frontend",
-      "lines": 157,
-      "hash": "1bdc026ebf27c752"
-    },
-    {
       "path": "src/components/shared/ConfirmDialog.test.tsx",
       "module": "platform",
       "role": "frontend",
@@ -7720,8 +7706,8 @@
       "path": "src/components/shared/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 19,
-      "hash": "fb9618d9a40af766"
+      "lines": 18,
+      "hash": "9d8eafdfb5892887"
     },
     {
       "path": "src/components/shared/orchestration/ActivityTimeline.tsx",
@@ -9135,7 +9121,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 358,
-      "hash": "5d55e8d1700069ca"
+      "hash": "44efa9c36173eb55"
     },
     {
       "path": "src/ui/registry/definitions.tsx",
@@ -95306,17 +95292,17 @@
       "name": "StatTone",
       "kind": "type",
       "file": "src/components/sections/Finance/StatTable.tsx",
-      "line": 57,
+      "line": 63,
       "module": "finance",
       "exported": true,
       "container": "",
       "tags": []
     },
     {
-      "name": "TONE_CLASS",
+      "name": "TONE_BADGE",
       "kind": "object",
       "file": "src/components/sections/Finance/StatTable.tsx",
-      "line": 58,
+      "line": 64,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -95326,7 +95312,7 @@
       "name": "StatBadge",
       "kind": "function",
       "file": "src/components/sections/Finance/StatTable.tsx",
-      "line": 59,
+      "line": 67,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -95338,7 +95324,7 @@
       "name": "pageWindow",
       "kind": "function",
       "file": "src/components/sections/Finance/StatTable.tsx",
-      "line": 63,
+      "line": 71,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -95348,7 +95334,7 @@
       "name": "StatTable",
       "kind": "function",
       "file": "src/components/sections/Finance/StatTable.tsx",
-      "line": 73,
+      "line": 81,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -131304,138 +131290,6 @@
       "kind": "function",
       "file": "src/components/shared/Avatar.tsx",
       "line": 107,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "UserStatus",
-      "kind": "type",
-      "file": "src/components/shared/Badge.tsx",
-      "line": 21,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "AttendanceStatus",
-      "kind": "type",
-      "file": "src/components/shared/Badge.tsx",
-      "line": 22,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "LeaveStatus",
-      "kind": "type",
-      "file": "src/components/shared/Badge.tsx",
-      "line": 23,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "PayrollStatus",
-      "kind": "type",
-      "file": "src/components/shared/Badge.tsx",
-      "line": 24,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "SiteStatus",
-      "kind": "type",
-      "file": "src/components/shared/Badge.tsx",
-      "line": 25,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "RealtimeStatus",
-      "kind": "type",
-      "file": "src/components/shared/Badge.tsx",
-      "line": 26,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "DomainStatus",
-      "kind": "type",
-      "file": "src/components/shared/Badge.tsx",
-      "line": 28,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "BadgeVariant",
-      "kind": "type",
-      "file": "src/components/shared/Badge.tsx",
-      "line": 38,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "STATUS_VARIANT",
-      "kind": "object",
-      "file": "src/components/shared/Badge.tsx",
-      "line": 42,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "STATUS_LABEL",
-      "kind": "object",
-      "file": "src/components/shared/Badge.tsx",
-      "line": 67,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "VARIANT_STYLE",
-      "kind": "object",
-      "file": "src/components/shared/Badge.tsx",
-      "line": 87,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "BadgeProps",
-      "kind": "interface",
-      "file": "src/components/shared/Badge.tsx",
-      "line": 98,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "Badge",
-      "kind": "function",
-      "file": "src/components/shared/Badge.tsx",
-      "line": 112,
       "module": "platform",
       "exported": true,
       "container": "",

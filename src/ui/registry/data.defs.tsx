@@ -259,7 +259,7 @@ export const badgeDef: ComponentDef = {
   importFrom: '@ui',
   migration: {
     replaces: ['.pill', '.obx-pill', '.hrfin-pill', '.stat-badge'],
-    deprecatedImports: ['HrfinPill', '@shared/Badge', 'StatusPill'],
+    deprecatedImports: ['HrfinPill', 'StatusPill'],
     nextSurface: 'Employee Master',
     notes: ['TEN implementations exist across HSE, Finance, Settings, HR and the messenger, each with its own hex for "active".'],
   },

@@ -8167,11 +8167,11 @@ retire	function	finance	false		src/components/sections/Finance/StatPayComponentP
 flagRow	function	finance	false		src/components/sections/Finance/StatPayComponentPage.tsx	111	StatPayComponentPage
 StatColumn	interface	finance	true		src/components/sections/Finance/StatTable.tsx	17	
 StatTableProps	interface	finance	true		src/components/sections/Finance/StatTable.tsx	27	
-StatTone	type	finance	true		src/components/sections/Finance/StatTable.tsx	57	
-TONE_CLASS	object	finance	false		src/components/sections/Finance/StatTable.tsx	58	
-StatBadge	function	finance	true	component	src/components/sections/Finance/StatTable.tsx	59	
-pageWindow	function	finance	false		src/components/sections/Finance/StatTable.tsx	63	
-StatTable	function	finance	true	component	src/components/sections/Finance/StatTable.tsx	73	
+StatTone	type	finance	true		src/components/sections/Finance/StatTable.tsx	63	
+TONE_BADGE	object	finance	false		src/components/sections/Finance/StatTable.tsx	64	
+StatBadge	function	finance	true	component	src/components/sections/Finance/StatTable.tsx	67	
+pageWindow	function	finance	false		src/components/sections/Finance/StatTable.tsx	71	
+StatTable	function	finance	true	component	src/components/sections/Finance/StatTable.tsx	81	
 StatSubView	type	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	57	
 statusTone	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	65	
 statusPillTone	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	77	
@@ -11546,19 +11546,6 @@ getInitials	function	platform	false		src/components/shared/Avatar.tsx	58
 nameToColor	function	platform	false		src/components/shared/Avatar.tsx	84	
 isPreloaded	function	platform	false		src/components/shared/Avatar.tsx	97	
 Avatar	function	platform	true	component	src/components/shared/Avatar.tsx	107	
-UserStatus	type	platform	true		src/components/shared/Badge.tsx	21	
-AttendanceStatus	type	platform	true		src/components/shared/Badge.tsx	22	
-LeaveStatus	type	platform	true		src/components/shared/Badge.tsx	23	
-PayrollStatus	type	platform	true		src/components/shared/Badge.tsx	24	
-SiteStatus	type	platform	true		src/components/shared/Badge.tsx	25	
-RealtimeStatus	type	platform	true		src/components/shared/Badge.tsx	26	
-DomainStatus	type	platform	true		src/components/shared/Badge.tsx	28	
-BadgeVariant	type	platform	true		src/components/shared/Badge.tsx	38	
-STATUS_VARIANT	object	platform	false		src/components/shared/Badge.tsx	42	
-STATUS_LABEL	object	platform	false		src/components/shared/Badge.tsx	67	
-VARIANT_STYLE	object	platform	false		src/components/shared/Badge.tsx	87	
-BadgeProps	interface	platform	true		src/components/shared/Badge.tsx	98	
-Badge	function	platform	true	component	src/components/shared/Badge.tsx	112	
 ConfirmVariant	type	platform	true		src/components/shared/ConfirmDialog.tsx	35	
 ConfirmDialogProps	interface	platform	true		src/components/shared/ConfirmDialog.tsx	37	
 VARIANT_ICON	object	platform	false		src/components/shared/ConfirmDialog.tsx	52	
