@@ -55,9 +55,7 @@ const PLANNED: Planned[] = [
   { id: 'breadcrumbs', name: 'Breadcrumbs', category: 'navigation',
     description: 'Ancestor trail with overflow collapsing.',
     plannedApi: `<Breadcrumbs items={[{label:'HR', href:'/hr'}, {label:'Onboarding'}]} />` },
-  { id: 'page-action-bar', name: 'PageActionBar', category: 'navigation',
-    description: 'The standard page-level action row — primary action, secondary actions, overflow.',
-    plannedApi: `<PageActionBar primary={<Button…/>} secondary={[…]} overflow={ACTIONS} />` },
+  /* PageActionBar moved OUT when it was built — see page-header.def.tsx. */
   /* ── Feedback ───────────────────────────────────────────────────────────*/
   { id: 'alert', name: 'Alert', category: 'feedback',
     description: 'ONE message component. Inline vs page-level banner is a `placement` prop, not a second component.',

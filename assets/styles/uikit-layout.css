@@ -961,19 +961,12 @@ body[data-theme="dark"] .ui-page-head-rule { background: rgba(255, 255, 255, .18
 .ui-page-crumb-current { color: var(--siomac-navy); font-weight: 600; }
 .ui-page-title {
   font-size: 1.3rem; font-weight: var(--font-weight-bold, 700); color: var(--siomac-navy);
-  line-height: 1.15; letter-spacing: -.01em;
+  line-height: 1.15; letter-spacing: -.01em; margin: 0;
 }
 .ui-page-sub {
   font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;
   margin-top: 4px; max-width: 680px;
 }
-.ui-page-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-.ui-page-meta-chip {
-  display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px;
-  border-radius: var(--radius-pill); background: var(--bg-subtle); border: 1px solid var(--border);
-  font-size: 0.68rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;
-}
-.ui-page-meta-chip i { font-size: 0.62rem; color: var(--siomac-navy); }
 .ui-page-head-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
 @media (max-width: 600px) { .ui-page-head-actions { width: 100%; } }
 

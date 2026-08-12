@@ -28,7 +28,8 @@ export {
   ModuleTabs, TabBar, withCounts,
   type ModuleTab, type AreaTab, type ModuleTabsProps,
 } from './components/ModuleTabs';
-export { PageHeader, type PageHeaderProps, type PageMetaChip } from './components/PageHeader';
+export { PageHeader, type PageHeaderProps } from './components/PageHeader';
+export { PageActionBar, type PageActionBarProps } from './navigation/PageActionBar';
 export { Stepper, type StepperProps, type StepperStep } from './components/Stepper';
 export { SectionHead, type SectionHeadProps } from './components/SectionHead';
 export { MetricRow, ReorderableRow, type MetricRowProps, type MetricCardItem } from './components/MetricRow';

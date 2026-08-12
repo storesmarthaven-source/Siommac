@@ -1,0 +1,43 @@
+@layer recipes {
+  :root,
+  [data-ui-preview-scope] {
+    --ui-page-actions-gap: var(--space-2);
+    --ui-page-actions-min-height: 36px;
+  }
+
+  .ui-page-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-height: var(--ui-page-actions-min-height);
+    min-width: 0;
+  }
+
+  .ui-page-actions-start {
+    min-width: 0;
+    color: var(--ui-color-text-secondary);
+    font-size: var(--ui-font-size-body-sm);
+  }
+
+  .ui-page-actions-end {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--ui-page-actions-gap);
+    flex-wrap: wrap;
+    margin-left: auto;
+  }
+
+  .ui-page-actions-overflow {
+    position: relative;
+    display: inline-flex;
+  }
+
+  @media (max-width: 600px) {
+    .ui-page-actions,
+    .ui-page-actions-end {
+      width: 100%;
+    }
+  }
+}

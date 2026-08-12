@@ -16,7 +16,6 @@
 
 import { type VNode } from 'preact';
 import { dialog } from '@lib/dialog';
-import type { PageMetaChip } from '@ui/components/PageHeader';
 import { AccountPill } from './AccountPill';
 
 function openSearch(): void {
@@ -41,11 +40,13 @@ export interface UserPillProps {
   /** Extra breadcrumb segments after the module (e.g. a parent area). */
   crumbs?: string[];
   /** Meta shown as chips in the footer strip, alongside the breadcrumb. */
-  meta?: PageMetaChip[];
+  meta?: UserPillMetaChip[];
   /** A module sub-nav rendered in the footer strip (left side). Style its buttons with
    *  `.app-topbar-nav` / `.app-topbar-nav-btn` so they sit on the dark footer band. */
   nav?: VNode;
 }
+
+export interface UserPillMetaChip { icon?: string; label: string; }
 
 export function UserPill({ icon, title, sub, module, crumbs = [], meta = [], nav }: UserPillProps): VNode {
   // Breadcrumb trail ends at the current page (title) — the footer strip is now

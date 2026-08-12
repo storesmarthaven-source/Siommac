@@ -13,7 +13,7 @@ import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
-import { PageHeader, Modal, Field, FormGrid, SearchField, TextInput, TextareaInput, SelectInput, Tabs, TabPanel, EmptyState, Callout, FieldList, FieldRow, type TabItem } from '@ui';
+import { PageHeader, PageActionBar, Button, Modal, Field, FormGrid, SearchField, TextInput, TextareaInput, SelectInput, Tabs, TabPanel, EmptyState, Callout, FieldList, FieldRow, type TabItem } from '@ui';
 import { EnterpriseFormModal, orgPositionContext, orgCostCenterContext, moveOrgUnitContext } from '@/components/common/dialogs';
 import {
   useOrgUnits, useOrgStats, useOrgHealth, usePositions, useCostCenters,
@@ -515,16 +515,20 @@ export function OrgStructureOverview(): VNode {
   }
 
   const loadingUnits = unitsQ.isLoading;
+  const pageAction = tab === 'structure' && canOrg
+    ? <Button variant="primary" onClick={() => setModal({ kind: 'unit', editing: null, parentId: null })}>New Unit</Button>
+    : tab === 'positions' && canPos
+      ? <Button variant="primary" onClick={() => setModal({ kind: 'position', editing: null })}>New Position</Button>
+      : tab === 'costcenters' && canCc
+        ? <Button variant="primary" onClick={() => setModal({ kind: 'costcenter', editing: null })}>New Cost Centre</Button>
+        : undefined;
 
   return (
     <div class="hr-org-structure">
       <PageHeader
         icon="fa-sitemap" module="HR · Organization" title="Organization Structure"
         sub="Org units, positions, cost centres &amp; reporting lines."
-        actions={tab === 'structure' && canOrg ? <button class="obx-btn primary" onClick={() => setModal({ kind: 'unit', editing: null, parentId: null })}>+ New Unit</button>
-          : tab === 'positions' && canPos ? <button class="obx-btn primary" onClick={() => setModal({ kind: 'position', editing: null })}>+ New Position</button>
-          : tab === 'costcenters' && canCc ? <button class="obx-btn primary" onClick={() => setModal({ kind: 'costcenter', editing: null })}>+ New Cost Centre</button>
-          : undefined}
+        actions={pageAction ? <PageActionBar label="Organization actions" primary={pageAction} /> : undefined}
       />
 
       <HRQueryNotice queries={[unitsQ, statsQ, healthQ, positionsQ, ccQ, peopleQ, sitesQ]} />

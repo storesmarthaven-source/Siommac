@@ -3948,40 +3948,40 @@ files	variable	platform	false		scripts/check-ui-kit-coverage.mjs	61
 appFiles	variable	platform	false		scripts/check-ui-kit-coverage.mjs	66	
 countOccurrences	function	platform	false		scripts/check-ui-kit-coverage.mjs	68	
 BUILT_REGISTRY_FILES	array	platform	false		scripts/check-ui-kit-coverage.mjs	93	
-readRegistry	function	platform	false		scripts/check-ui-kit-coverage.mjs	103	
-grab	function	platform	false		scripts/check-ui-kit-coverage.mjs	135	readRegistry
-registry	variable	platform	false		scripts/check-ui-kit-coverage.mjs	151	
-uniq	function	platform	false		scripts/check-ui-kit-coverage.mjs	152	
-replacesClasses	variable	platform	false		scripts/check-ui-kit-coverage.mjs	153	
-deprecatedImports	variable	platform	false		scripts/check-ui-kit-coverage.mjs	154	
-rawPatterns	variable	platform	false		scripts/check-ui-kit-coverage.mjs	155	
-byStatus	function	platform	false		scripts/check-ui-kit-coverage.mjs	159	
-brokenPaths	array	platform	false		scripts/check-ui-kit-coverage.mjs	162	
-file	variable	platform	false		scripts/check-ui-kit-coverage.mjs	163	
-rawCounts	object	platform	false		scripts/check-ui-kit-coverage.mjs	173	
-pattern	variable	platform	false		scripts/check-ui-kit-coverage.mjs	174	
-unmanagedRaw	variable	platform	false		scripts/check-ui-kit-coverage.mjs	177	
-legacyClassCounts	object	platform	false		scripts/check-ui-kit-coverage.mjs	180	
-cls	variable	platform	false		scripts/check-ui-kit-coverage.mjs	181	
-legacyClassUsages	variable	platform	false		scripts/check-ui-kit-coverage.mjs	192	
-deprecatedCounts	object	platform	false		scripts/check-ui-kit-coverage.mjs	195	
-sym	variable	platform	false		scripts/check-ui-kit-coverage.mjs	196	
-deprecatedUsages	variable	platform	false		scripts/check-ui-kit-coverage.mjs	202	
-LOCAL_PRIMITIVE_RE	variable	platform	false		scripts/check-ui-kit-coverage.mjs	205	
-localPrimitives	array	platform	false		scripts/check-ui-kit-coverage.mjs	207	
-f	variable	platform	false		scripts/check-ui-kit-coverage.mjs	208	
-KIT_SYMBOLS	array	platform	false		scripts/check-ui-kit-coverage.mjs	215	
-adoptingFiles	variable	platform	false		scripts/check-ui-kit-coverage.mjs	216	
-uiFiles	variable	platform	false		scripts/check-ui-kit-coverage.mjs	219	
-metrics	object	platform	false		scripts/check-ui-kit-coverage.mjs	221	
-completeness	variable	platform	false		scripts/check-ui-kit-coverage.mjs	234	
-adoption	variable	platform	false		scripts/check-ui-kit-coverage.mjs	236	
-RATCHETED	array	platform	false		scripts/check-ui-kit-coverage.mjs	242	
-loadBaseline	function	platform	false		scripts/check-ui-kit-coverage.mjs	244	
-writeBaseline	function	platform	false		scripts/check-ui-kit-coverage.mjs	249	
-pct	function	platform	false		scripts/check-ui-kit-coverage.mjs	265	
-pad	function	platform	false		scripts/check-ui-kit-coverage.mjs	266	
-report	function	platform	false		scripts/check-ui-kit-coverage.mjs	268	
+readRegistry	function	platform	false		scripts/check-ui-kit-coverage.mjs	104	
+grab	function	platform	false		scripts/check-ui-kit-coverage.mjs	136	readRegistry
+registry	variable	platform	false		scripts/check-ui-kit-coverage.mjs	152	
+uniq	function	platform	false		scripts/check-ui-kit-coverage.mjs	153	
+replacesClasses	variable	platform	false		scripts/check-ui-kit-coverage.mjs	154	
+deprecatedImports	variable	platform	false		scripts/check-ui-kit-coverage.mjs	155	
+rawPatterns	variable	platform	false		scripts/check-ui-kit-coverage.mjs	156	
+byStatus	function	platform	false		scripts/check-ui-kit-coverage.mjs	160	
+brokenPaths	array	platform	false		scripts/check-ui-kit-coverage.mjs	163	
+file	variable	platform	false		scripts/check-ui-kit-coverage.mjs	164	
+rawCounts	object	platform	false		scripts/check-ui-kit-coverage.mjs	174	
+pattern	variable	platform	false		scripts/check-ui-kit-coverage.mjs	175	
+unmanagedRaw	variable	platform	false		scripts/check-ui-kit-coverage.mjs	178	
+legacyClassCounts	object	platform	false		scripts/check-ui-kit-coverage.mjs	181	
+cls	variable	platform	false		scripts/check-ui-kit-coverage.mjs	182	
+legacyClassUsages	variable	platform	false		scripts/check-ui-kit-coverage.mjs	193	
+deprecatedCounts	object	platform	false		scripts/check-ui-kit-coverage.mjs	196	
+sym	variable	platform	false		scripts/check-ui-kit-coverage.mjs	197	
+deprecatedUsages	variable	platform	false		scripts/check-ui-kit-coverage.mjs	203	
+LOCAL_PRIMITIVE_RE	variable	platform	false		scripts/check-ui-kit-coverage.mjs	206	
+localPrimitives	array	platform	false		scripts/check-ui-kit-coverage.mjs	208	
+f	variable	platform	false		scripts/check-ui-kit-coverage.mjs	209	
+KIT_SYMBOLS	array	platform	false		scripts/check-ui-kit-coverage.mjs	216	
+adoptingFiles	variable	platform	false		scripts/check-ui-kit-coverage.mjs	217	
+uiFiles	variable	platform	false		scripts/check-ui-kit-coverage.mjs	220	
+metrics	object	platform	false		scripts/check-ui-kit-coverage.mjs	222	
+completeness	variable	platform	false		scripts/check-ui-kit-coverage.mjs	235	
+adoption	variable	platform	false		scripts/check-ui-kit-coverage.mjs	237	
+RATCHETED	array	platform	false		scripts/check-ui-kit-coverage.mjs	243	
+loadBaseline	function	platform	false		scripts/check-ui-kit-coverage.mjs	245	
+writeBaseline	function	platform	false		scripts/check-ui-kit-coverage.mjs	250	
+pct	function	platform	false		scripts/check-ui-kit-coverage.mjs	266	
+pad	function	platform	false		scripts/check-ui-kit-coverage.mjs	267	
+report	function	platform	false		scripts/check-ui-kit-coverage.mjs	269	
 __dirname	variable	platform	false		scripts/check-wave2b-migrations.mjs	9	
 url	variable	platform	false		scripts/check-wave2b-migrations.mjs	12	
 key	variable	platform	false		scripts/check-wave2b-migrations.mjs	13	
@@ -9171,18 +9171,18 @@ confirmImpact	function	hr	false		src/components/sections/HR/OrgStructureOverview
 onArchiveUnit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	503	OrgStructureOverview
 onDeleteUnit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	507	OrgStructureOverview
 onActivateUnit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	511	OrgStructureOverview
-StatRow	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	565	OrgStructureOverview
-HealthPanel	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	575	OrgStructureOverview
-renderTree	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	598	OrgStructureOverview
-PositionsTab	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	639	OrgStructureOverview
-onRetire	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	644	PositionsTab
-onReactivate	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	648	PositionsTab
-CostCentersTab	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	691	OrgStructureOverview
-onRetire	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	696	CostCentersTab
-onReactivate	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	700	CostCentersTab
-ChangeRequestsTab	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	741	OrgStructureOverview
-onCancel	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	745	ChangeRequestsTab
-riskTone	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	750	ChangeRequestsTab
+StatRow	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	569	OrgStructureOverview
+HealthPanel	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	579	OrgStructureOverview
+renderTree	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	602	OrgStructureOverview
+PositionsTab	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	643	OrgStructureOverview
+onRetire	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	648	PositionsTab
+onReactivate	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	652	PositionsTab
+CostCentersTab	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	695	OrgStructureOverview
+onRetire	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	700	CostCentersTab
+onReactivate	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	704	CostCentersTab
+ChangeRequestsTab	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	745	OrgStructureOverview
+onCancel	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	749	ChangeRequestsTab
+riskTone	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	754	ChangeRequestsTab
 empName	function	hr	false		src/components/sections/HR/OvertimeOverview.tsx	24	
 STATUS_FILTERS	variable	hr	false	component	src/components/sections/HR/OvertimeOverview.tsx	26	
 OT_TYPES	array	hr	false		src/components/sections/HR/OvertimeOverview.tsx	34	
@@ -11597,10 +11597,11 @@ itemsOn	function	platform	false		src/components/shared/UpcomingDeadlinesCard.tsx
 shiftWeek	function	platform	false		src/components/shared/UpcomingDeadlinesCard.tsx	64	UpcomingDeadlinesCard
 showUpcoming	function	platform	false		src/components/shared/UpcomingDeadlinesCard.tsx	71	UpcomingDeadlinesCard
 showToday	function	platform	false		src/components/shared/UpcomingDeadlinesCard.tsx	72	UpcomingDeadlinesCard
-openSearch	function	platform	false		src/components/shared/UserPill.tsx	22	
-openAI	function	platform	false		src/components/shared/UserPill.tsx	26	
-UserPillProps	interface	platform	true		src/components/shared/UserPill.tsx	32	
-UserPill	function	platform	true	component	src/components/shared/UserPill.tsx	50	
+openSearch	function	platform	false		src/components/shared/UserPill.tsx	21	
+openAI	function	platform	false		src/components/shared/UserPill.tsx	25	
+UserPillProps	interface	platform	true		src/components/shared/UserPill.tsx	31	
+UserPillMetaChip	interface	platform	true		src/components/shared/UserPill.tsx	49	
+UserPill	function	platform	true	component	src/components/shared/UserPill.tsx	51	
 TaskCard	function	workflow	false	component,ui-tile	src/components/workflow/ApprovalInbox.tsx	16	
 ApprovalInbox	function	workflow	true	component	src/components/workflow/ApprovalInbox.tsx	31	
 act	function	workflow	false		src/components/workflow/ApprovalInbox.tsx	39	ApprovalInbox
@@ -12559,9 +12560,8 @@ MENU_ICON_COLOR	variable	platform	true	component	src/ui/components/NewMenu.tsx	2
 NewMenuItem	interface	platform	true		src/ui/components/NewMenu.tsx	27	
 NewMenuProps	interface	platform	true		src/ui/components/NewMenu.tsx	38	
 NewMenu	function	platform	true	component	src/ui/components/NewMenu.tsx	50	
-PageMetaChip	interface	platform	true		src/ui/components/PageHeader.tsx	16	
-PageHeaderProps	interface	platform	true		src/ui/components/PageHeader.tsx	18	
-PageHeader	function	platform	true	component	src/ui/components/PageHeader.tsx	39	
+PageHeaderProps	interface	platform	true		src/ui/components/PageHeader.tsx	16	
+PageHeader	function	platform	true	component	src/ui/components/PageHeader.tsx	32	
 HeroStatDef	interface	platform	true		src/ui/components/PageHero.tsx	23	
 HeroFooterItem	interface	platform	true		src/ui/components/PageHero.tsx	33	
 HeroMetric	interface	platform	true		src/ui/components/PageHero.tsx	45	
@@ -12904,7 +12904,7 @@ RailCardProps	interface	platform	true	ui-tile	src/ui/hrfin/RailCard.tsx	9
 RailCard	function	platform	true	component,ui-tile	src/ui/hrfin/RailCard.tsx	18	
 RowActionItem	interface	platform	true		src/ui/hrfin/RowActionMenu.tsx	12	
 RowActionMenu	function	platform	true	component	src/ui/hrfin/RowActionMenu.tsx	22	
-DtColumn	interface	platform	true		src/ui/index.ts	85	
+DtColumn	interface	platform	true		src/ui/index.ts	86	
 InfoTipProps	interface	platform	true		src/ui/InfoTip.tsx	12	
 InfoTip	function	platform	true	component	src/ui/InfoTip.tsx	22	
 ModulePageLayoutProps	interface	widgets	true		src/ui/layouts/ModulePageLayout.tsx	24	
@@ -12924,6 +12924,8 @@ onKey	function	platform	false		src/ui/lib/useOverlayA11y.ts	68	useOverlayA11y
 IconNode	type	platform	false		src/ui/LucideIcon.tsx	11	
 LucideName	type	platform	true		src/ui/LucideIcon.tsx	12	
 LucideIcon	function	platform	true	component	src/ui/LucideIcon.tsx	14	
+PageActionBarProps	interface	platform	true		src/ui/navigation/PageActionBar/PageActionBar.tsx	15	
+PageActionBar	function	platform	true	component	src/ui/navigation/PageActionBar/PageActionBar.tsx	29	
 ITEMS	array	platform	false	test	src/ui/navigation/Tabs/Tabs.test.tsx	15	
 tabs	function	platform	false	test	src/ui/navigation/Tabs/Tabs.test.tsx	22	
 tabEl	function	platform	false	test	src/ui/navigation/Tabs/Tabs.test.tsx	30	
@@ -13121,17 +13123,21 @@ componentsByCategory	function	platform	true		src/ui/registry/index.ts	90
 findComponent	function	platform	true		src/ui/registry/index.ts	107	
 RegistryTotals	interface	platform	true		src/ui/registry/index.ts	111	
 registryTotals	function	platform	true		src/ui/registry/index.ts	121	
-s	function	platform	false		src/ui/registry/navigation.defs.tsx	24	
-b	function	platform	false		src/ui/registry/navigation.defs.tsx	25	
-noop	function	platform	false		src/ui/registry/navigation.defs.tsx	26	
-CASE_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	30	
-PLAIN_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	38	
-MANY_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	44	
-tabsDef	object	platform	true		src/ui/registry/navigation.defs.tsx	56	
-NAVIGATION_DEFS	array	platform	true		src/ui/registry/navigation.defs.tsx	272	
+s	function	platform	false		src/ui/registry/navigation.defs.tsx	25	
+b	function	platform	false		src/ui/registry/navigation.defs.tsx	26	
+noop	function	platform	false		src/ui/registry/navigation.defs.tsx	27	
+CASE_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	31	
+PLAIN_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	39	
+MANY_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	45	
+tabsDef	object	platform	true		src/ui/registry/navigation.defs.tsx	57	
+NAVIGATION_DEFS	array	platform	true		src/ui/registry/navigation.defs.tsx	273	
+noop	function	platform	false		src/ui/registry/page-header.def.tsx	8	
+previewActions	variable	platform	false		src/ui/registry/page-header.def.tsx	10	
+pageHeaderDef	object	platform	true		src/ui/registry/page-header.def.tsx	19	
+pageActionBarDef	object	platform	true		src/ui/registry/page-header.def.tsx	70	
 Planned	interface	platform	false		src/ui/registry/planned.ts	22	
 PLANNED	array	platform	false		src/ui/registry/planned.ts	33	
-PLANNED_DEFS	variable	platform	true		src/ui/registry/planned.ts	140	
+PLANNED_DEFS	variable	platform	true		src/ui/registry/planned.ts	138	
 PropControl	type	platform	true		src/ui/registry/types.ts	41	
 PropValues	type	platform	true		src/ui/registry/types.ts	49	
 StyleControl	interface	platform	true		src/ui/registry/types.ts	60	

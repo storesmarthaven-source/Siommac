@@ -355,20 +355,55 @@ must not be reopened solely to chase those counts.
 
 The next canonical component is PageHeader / PageActionBar.
 
+## PageHeader / PageActionBar programme — frozen
+
+Canonical promotion and clean action-family migration completed:
+
+- corrected PageHeader at the source: it is now a native page landmark with
+  one semantic `h1`, keyed breadcrumb fragments and decorative icons removed
+  from the accessibility tree;
+- deleted the no-op `meta` and `hidePill` contract, relocated the only shared
+  meta-chip type to its actual owner (`UserPill`), and removed PageHeader's
+  unreachable meta surface CSS;
+- built PageActionBar as the canonical labelled action group for context,
+  secondary actions, one primary action and the shared DropdownMenu overflow;
+- migrated the complete Organization Structure header-action family from
+  `.obx-btn` controls to PageActionBar plus canonical Buttons;
+- registered both real components and removed PageActionBar from the planned
+  catalogue; catalogue completeness is now 42% (20 canonical components),
+  with app adoption held at 31%;
+- passed all three focused tests with zero lint errors, held the 49-error known
+  frontend typecheck baseline and browser-verified one page `h1`, the labelled
+  action group, working overflow menu and zero legacy header buttons.
+
+PageHeader / PageActionBar classification is now frozen:
+
+```text
+PageHeader canonical system     COMPLETE
+PageActionBar canonical system  COMPLETE
+Clean action family migration   COMPLETE
+Hrfin/dirty header consumers    RECORDED DEBT
+```
+
+The nine `HrfinPageHeader` consumers remain named migration debt. They do not
+justify another broad header sweep; migrate them only when their owning feature
+is naturally touched. The next canonical component is EmptyState.
+
 ## Remaining programme
 
 The overall mandate is not yet complete. Continue automatically:
 
-1. PageHeader / PageActionBar
-2. EmptyState
-3. Skeleton / Loading
-4. Checkbox / RadioGroup / Switch
-5. Menu
-6. remaining registered canonical components
-7. polished UI Kit Studio interface
-8. Brand Theme application preview at all required breakpoints
-9. final full-suite and browser verification gate
+1. EmptyState
+2. Skeleton / Loading
+3. Checkbox / RadioGroup / Switch
+4. Menu
+5. remaining small registered canonical components
+6. polished UI Kit Studio interface
+7. Brand Theme application preview at all required breakpoints
+8. final full-suite and browser verification gate
 
 No component should chase mathematical zero. Exact dirty files and genuine
 domain/interaction exceptions remain recorded debt; clean generic migration is
-the completion criterion.
+the completion criterion. After Empty/Loading, choice controls and Menu are
+stable, broad legacy sweeps stop: the majority of effort moves to the Studio
+and its real registry-backed Brand/Application workbench.

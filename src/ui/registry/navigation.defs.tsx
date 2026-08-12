@@ -18,6 +18,7 @@ import {
   type TabsOrientation, type TabsVariant, type TabsSize, type TabsActivation,
 } from '../navigation/Tabs';
 import { wizardDef } from './wizard.def';
+import { pageActionBarDef, pageHeaderDef } from './page-header.def';
 import { TABS_COMPARISON } from './comparisons';
 import { type ComponentDef, type PropValues } from './types';
 
@@ -269,4 +270,9 @@ export const tabsDef: ComponentDef = {
   ],
 };
 
-export const NAVIGATION_DEFS: readonly ComponentDef[] = [tabsDef, wizardDef];
+export const NAVIGATION_DEFS: readonly ComponentDef[] = [
+  tabsDef,
+  wizardDef,
+  pageHeaderDef,
+  pageActionBarDef,
+];
