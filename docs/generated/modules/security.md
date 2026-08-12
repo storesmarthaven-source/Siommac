@@ -2,7 +2,7 @@
 
 # security Module Map
 
-Source fingerprint: `cd066928999e313edfe0c230`
+Source fingerprint: `bc3b8511b8d71dd95463040e`
 
 Files: 46 | Symbols: 387 | Widgets: 0 | Unique mounted endpoints: 51 | Route definitions: 51 mounted + 0 unmounted | API calls: 31 | DB objects: 65 | E2E suites: 4
 
@@ -136,8 +136,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `SetPasswordPage` | function / component | `src/components/auth/SetPasswordPage.tsx:34` | `-` |
 | `TotpSetupPanel` | function / component | `src/components/auth/TotpSetupPanel.tsx:33` | `-` |
 | `TwoFactorVerifyPanel` | function / component | `src/components/auth/TwoFactorVerifyPanel.tsx:37` | `-` |
-| `SecurityPolicyTab` | function / component | `src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx:138` | `-` |
-| `UserSecurityPanel` | function / component | `src/components/sections/SuperadminConsole/tabs/UserSecurityPanel.tsx:25` | `-` |
+| `SecurityPolicyTab` | function / component | `src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx:139` | `-` |
+| `UserSecurityPanel` | function / component | `src/components/sections/SuperadminConsole/tabs/UserSecurityPanel.tsx:26` | `-` |
 | `AuthGate` | function / component | `src/components/shared/AuthGate.tsx:93` | `-` |
 | `useCan` | function / hook | `src/lib/permissions.ts:1563` | `-` |
 | `useAnyCan` | function / hook | `src/lib/permissions.ts:1575` | `-` |
@@ -200,6 +200,6 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/auth.ts` | 53 |
 | frontend-api | `src/api/schemas/auth.ts` | 123 |
 | frontend-api | `src/api/security.ts` | 470 |
-| frontend-page | `src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx` | 380 |
-| frontend-page | `src/components/sections/SuperadminConsole/tabs/UserSecurityPanel.tsx` | 259 |
+| frontend-page | `src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx` | 376 |
+| frontend-page | `src/components/sections/SuperadminConsole/tabs/UserSecurityPanel.tsx` | 260 |
 

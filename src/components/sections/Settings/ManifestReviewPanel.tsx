@@ -19,6 +19,7 @@ import {
   useManifestsList, useManifest, useManifestAction,
   type ManifestRow, type ReviewerRole, type ManifestReviewStatus,
 } from '@api/settingsCatalog';
+import { Button }                from '@ui';
 
 const STATUS_LABEL: Record<ManifestReviewStatus, string> = {
   draft: 'Draft', pending_review: 'Pending review', approved: 'Approved', returned: 'Returned', deprecated: 'Deprecated',
@@ -171,8 +172,8 @@ function ManifestDetail({ moduleKey }: { moduleKey: string }): VNode {
             <select class="stg-set-input" value={reviewerRole} disabled={busy} onChange={e => setReviewerRole((e.target as HTMLSelectElement).value as ReviewerRole)}>
               {REVIEWERS.map(r => <option key={r.role} value={r.role}>{r.label}</option>)}
             </select>
-            <button type="button" class="stg-btn-save" disabled={busy} onClick={() => void review('approved')}><i class="fas fa-check" /> Sign off</button>
-            <button type="button" class="stg-btn-outline" disabled={busy} onClick={() => void review('returned')}><i class="fas fa-rotate-left" /> Request changes</button>
+            <Button variant="primary" disabled={busy} onClick={() => void review('approved')} iconLeft={<i class="fas fa-check" />}>Sign off</Button>
+            <Button variant="secondary" disabled={busy} onClick={() => void review('returned')} iconLeft={<i class="fas fa-rotate-left" />}>Request changes</Button>
           </div>
         </>
       )}
@@ -196,16 +197,18 @@ function ManifestDetail({ moduleKey }: { moduleKey: string }): VNode {
       {/* Lifecycle actions */}
       <div class="stg-mf-actions">
         {canSubmit && (status === 'draft' || status === 'returned') && (
-          <button type="button" class="stg-btn-save" disabled={busy} onClick={submit}><i class="fas fa-paper-plane" /> Submit for review</button>
+          <Button variant="primary" disabled={busy} onClick={submit} iconLeft={<i class="fas fa-paper-plane" />}>Submit for review</Button>
         )}
         {canApprove && status === 'pending_review' && (
-          <button type="button" class="stg-btn-save" disabled={busy} onClick={approve}><i class="fas fa-circle-check" /> Approve</button>
+          <Button variant="primary" disabled={busy} onClick={approve} iconLeft={<i class="fas fa-circle-check" />}>Approve</Button>
         )}
         {canReturn && (status === 'pending_review' || status === 'approved') && (
-          <button type="button" class="stg-btn-outline" disabled={busy} onClick={() => void ret()}><i class="fas fa-rotate-left" /> Return</button>
+          <Button variant="secondary" disabled={busy} onClick={() => void ret()} iconLeft={<i class="fas fa-rotate-left" />}>Return</Button>
         )}
+        {/* `.stg-danger-label` was an !important red recolour of the outline
+            button — that is `tone`, so the class goes with the migration. */}
         {canDeprecate && status !== 'deprecated' && (
-          <button type="button" class="stg-btn-outline stg-danger-label" disabled={busy} onClick={() => void deprecate()}><i class="fas fa-ban" /> Deprecate</button>
+          <Button variant="outline" tone="danger" disabled={busy} onClick={() => void deprecate()} iconLeft={<i class="fas fa-ban" />}>Deprecate</Button>
         )}
       </div>
     </div>

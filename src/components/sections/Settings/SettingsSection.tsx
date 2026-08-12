@@ -45,6 +45,7 @@ import { showSection, buildSidebar } from '@/components/nav/navCore';
 import { UserSecurityPanel } from '@/components/sections/SuperadminConsole/tabs/UserSecurityPanel';
 import { SecurityPolicyTab } from '@/components/sections/SuperadminConsole/tabs/SecurityPolicyTab';
 import { useStepUp, withStepUp } from '@/hooks/useStepUp';
+import { Button }          from '@ui';
 import {
   useTotpStatus,
   useStartTotpSetup,
@@ -319,15 +320,16 @@ function TrustedDevicesCard(): VNode {
                     {lastUsed && <span><i class="fas fa-clock" style={{ marginRight: 3 }} />Last used {lastUsed}</span>}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  class="stg-btn-outline"
-                  style={{ padding: '3px 10px', fontSize: '0.78rem', flexShrink: 0, color: 'var(--danger,#ef4444)', borderColor: 'var(--danger,#ef4444)' }}
+                <Button
+                  variant="outline"
+                  tone="danger"
+                  size="sm"
                   onClick={() => void handleRevoke(device)}
                   disabled={revokeMut.isPending || revokeAllMut.isPending}
+                  iconLeft={<i class="fas fa-trash-can" />}
                 >
-                  <i class="fas fa-trash-can" /> Revoke
-                </button>
+                  Revoke
+                </Button>
               </div>
             );
           })}
@@ -336,18 +338,17 @@ function TrustedDevicesCard(): VNode {
 
       {!isLoading && devices.length > 0 && (
         <div class="totp-card-actions" style={{ marginTop: '14px' }}>
-          <button
-            type="button"
-            class="stg-btn-outline"
-            style={{ color: 'var(--danger,#ef4444)', borderColor: 'var(--danger,#ef4444)' }}
+          <Button
+            variant="outline"
+            tone="danger"
             onClick={() => void handleRevokeAll()}
-            disabled={revokeAllMut.isPending || revokeMut.isPending}
+            disabled={revokeMut.isPending}
+            loading={revokeAllMut.isPending}
+            loadingText="Revoking…"
+            iconLeft={<i class="fas fa-ban" />}
           >
-            {revokeAllMut.isPending
-              ? <><i class="fas fa-spinner fa-spin" /> Revoking…</>
-              : <><i class="fas fa-ban" /> Revoke all trusted devices</>
-            }
-          </button>
+            Revoke all trusted devices
+          </Button>
         </div>
       )}
     </div>
@@ -550,15 +551,15 @@ export function TotpSetupModal({ onClose, onEnabled }: TotpSetupModalProps): VNo
               </>
             )}
             <div class="totp-modal-footer">
-              <button type="button" class="stg-btn-outline" onClick={onClose}>Cancel</button>
-              <button
-                type="button"
-                class="stg-btn-save"
+              <Button variant="secondary" onClick={onClose}>Cancel</Button>
+              <Button
+                variant="primary"
                 disabled={!qrDataUrl || startSetup.isPending}
                 onClick={() => { setStep('confirm'); setCode(''); setError(''); }}
+                iconRight={<i class="fas fa-arrow-right" />}
               >
-                Next — Enter Code <i class="fas fa-arrow-right" />
-              </button>
+                Next — Enter Code
+              </Button>
             </div>
           </div>
         )}
@@ -586,15 +587,16 @@ export function TotpSetupModal({ onClose, onEnabled }: TotpSetupModalProps): VNo
             </div>
             {error && <div class="totp-error"><i class="fas fa-circle-exclamation" /> {error}</div>}
             <div class="totp-modal-footer">
-              <button type="button" class="stg-btn-outline" onClick={() => { setStep('qr'); setError(''); }}>Back</button>
-              <button
-                type="button"
-                class="stg-btn-save"
-                disabled={code.length !== 6 || confirmTotp.isPending}
+              <Button variant="secondary" onClick={() => { setStep('qr'); setError(''); }}>Back</Button>
+              <Button
+                variant="primary"
+                disabled={code.length !== 6}
+                loading={confirmTotp.isPending}
+                loadingText="Verifying…"
                 onClick={handleConfirm}
               >
-                {confirmTotp.isPending ? <><i class="fas fa-spinner fa-spin" /> Verifying…</> : 'Enable 2FA'}
-              </button>
+                Enable 2FA
+              </Button>
             </div>
           </div>
         )}
@@ -615,18 +617,17 @@ export function TotpSetupModal({ onClose, onEnabled }: TotpSetupModalProps): VNo
               ))}
             </div>
             <div class="totp-codes-actions">
-              <button type="button" class="stg-btn-outline" onClick={handleCopyCodes}>
-                <i class={copied ? 'fas fa-check' : 'fas fa-copy'} />
+              <Button variant="secondary" onClick={handleCopyCodes} iconLeft={<i class={copied ? 'fas fa-check' : 'fas fa-copy'} />}>
                 {copied ? 'Copied!' : 'Copy codes'}
-              </button>
-              <button type="button" class="stg-btn-outline" onClick={handleDownloadCodes}>
-                <i class="fas fa-download" /> Download
-              </button>
+              </Button>
+              <Button variant="secondary" onClick={handleDownloadCodes} iconLeft={<i class="fas fa-download" />}>
+                Download
+              </Button>
             </div>
             <div class="totp-modal-footer">
-              <button type="button" class="stg-btn-save" onClick={onClose}>
+              <Button variant="primary" onClick={onClose}>
                 Done — I have saved my codes
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -696,15 +697,17 @@ export function TotpDisableModal({ onClose, onDisabled }: TotpDisableModalProps)
           </div>
           {error && <div class="totp-error"><i class="fas fa-circle-exclamation" /> {error}</div>}
           <div class="totp-modal-footer">
-            <button type="button" class="stg-btn-outline" onClick={onClose}>Cancel</button>
-            <button
-              type="button"
-              style={{ background: '#DC2626', color: '#fff', border: 'none', borderRadius: '10px', padding: '9px 20px', fontWeight: 600, cursor: 'pointer', fontSize: '0.83rem' }}
-              disabled={code.length < 6 || disableTotp.isPending}
+            <Button variant="secondary" onClick={onClose}>Cancel</Button>
+            {/* Was a hand-rolled filled #DC2626 button — that is `variant="danger"`. */}
+            <Button
+              variant="danger"
+              disabled={code.length < 6}
+              loading={disableTotp.isPending}
+              loadingText="Disabling…"
               onClick={handleDisable}
             >
-              {disableTotp.isPending ? <><i class="fas fa-spinner fa-spin" /> Disabling…</> : 'Disable 2FA'}
-            </button>
+              Disable 2FA
+            </Button>
           </div>
         </div>
       </div>
@@ -791,15 +794,16 @@ function TotpRegenModal({ onClose }: TotpRegenModalProps): VNode {
               </div>
               {error && <div class="totp-error"><i class="fas fa-circle-exclamation" /> {error}</div>}
               <div class="totp-modal-footer">
-                <button type="button" class="stg-btn-outline" onClick={onClose}>Cancel</button>
-                <button
-                  type="button"
-                  class="stg-btn-save"
-                  disabled={code.length < 6 || regenCodes.isPending}
+                <Button variant="secondary" onClick={onClose}>Cancel</Button>
+                <Button
+                  variant="primary"
+                  disabled={code.length < 6}
+                  loading={regenCodes.isPending}
+                  loadingText="Generating…"
                   onClick={handleRegen}
                 >
-                  {regenCodes.isPending ? <><i class="fas fa-spinner fa-spin" /> Generating…</> : 'Generate New Codes'}
-                </button>
+                  Generate New Codes
+                </Button>
               </div>
             </>
           ) : (
@@ -816,16 +820,15 @@ function TotpRegenModal({ onClose }: TotpRegenModalProps): VNode {
                 ))}
               </div>
               <div class="totp-codes-actions">
-                <button type="button" class="stg-btn-outline" onClick={handleCopy}>
-                  <i class={copied ? 'fas fa-check' : 'fas fa-copy'} />
+                <Button variant="secondary" onClick={handleCopy} iconLeft={<i class={copied ? 'fas fa-check' : 'fas fa-copy'} />}>
                   {copied ? 'Copied!' : 'Copy codes'}
-                </button>
-                <button type="button" class="stg-btn-outline" onClick={handleDownload}>
-                  <i class="fas fa-download" /> Download
-                </button>
+                </Button>
+                <Button variant="secondary" onClick={handleDownload} iconLeft={<i class="fas fa-download" />}>
+                  Download
+                </Button>
               </div>
               <div class="totp-modal-footer">
-                <button type="button" class="stg-btn-save" onClick={onClose}>Done</button>
+                <Button variant="primary" onClick={onClose}>Done</Button>
               </div>
             </>
           )}
@@ -977,24 +980,25 @@ function PasskeysCard(): VNode {
                 )}
               </div>
               <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                <button
-                  type="button"
-                  class="stg-btn-outline"
-                  style={{ padding: '3px 10px', fontSize: '0.78rem' }}
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => void handleRename(cred)}
                   disabled={renameMut.isPending}
+                  iconLeft={<i class="fas fa-pencil" />}
                 >
-                  <i class="fas fa-pencil" /> Rename
-                </button>
-                <button
-                  type="button"
-                  class="stg-btn-outline"
-                  style={{ padding: '3px 10px', fontSize: '0.78rem', color: 'var(--danger,#ef4444)', borderColor: 'var(--danger,#ef4444)' }}
+                  Rename
+                </Button>
+                <Button
+                  variant="outline"
+                  tone="danger"
+                  size="sm"
                   onClick={() => void handleDelete(cred)}
                   disabled={deleteMut.isPending}
+                  iconLeft={<i class="fas fa-trash-can" />}
                 >
-                  <i class="fas fa-trash-can" /> Remove
-                </button>
+                  Remove
+                </Button>
               </div>
             </div>
           ))}
@@ -1003,17 +1007,15 @@ function PasskeysCard(): VNode {
 
       {!isLoading && (
         <div class="totp-card-actions">
-          <button
-            type="button"
-            class="stg-btn-save"
+          <Button
+            variant="primary"
             onClick={() => void handleAdd()}
-            disabled={registerMut.isPending}
+            loading={registerMut.isPending}
+            loadingText="Registering…"
+            iconLeft={<i class="fas fa-plus" />}
           >
-            {registerMut.isPending
-              ? <><i class="fas fa-spinner fa-spin" /> Registering…</>
-              : <><i class="fas fa-plus" /> Add Passkey</>
-            }
-          </button>
+            Add Passkey
+          </Button>
         </div>
       )}
     </div>
@@ -1086,31 +1088,31 @@ function AuthenticatorCard(): VNode {
         {!isLoading && (
           <div class="totp-card-actions">
             {!enabled ? (
-              <button
-                type="button"
-                class="stg-btn-save"
+              <Button
+                variant="primary"
                 onClick={() => setShowSetup(true)}
+                iconLeft={<i class="fas fa-plus" />}
               >
-                <i class="fas fa-plus" /> Set up authenticator app
-              </button>
+                Set up authenticator app
+              </Button>
             ) : (
               <>
-                <button
-                  type="button"
-                  class="stg-btn-outline"
+                <Button
+                  variant="secondary"
                   disabled={mandatory}
                   title={mandatory ? 'Two-factor is required for your role and cannot be disabled.' : undefined}
                   onClick={() => { if (!mandatory) setShowDisable(true); }}
+                  iconLeft={<i class="fas fa-lock-open" />}
                 >
-                  <i class="fas fa-lock-open" /> Disable
-                </button>
-                <button
-                  type="button"
-                  class="stg-btn-outline"
+                  Disable
+                </Button>
+                <Button
+                  variant="secondary"
                   onClick={() => setShowRegen(true)}
+                  iconLeft={<i class="fas fa-rotate" />}
                 >
-                  <i class="fas fa-rotate" /> Regenerate backup codes
-                </button>
+                  Regenerate backup codes
+                </Button>
               </>
             )}
           </div>
@@ -1165,9 +1167,9 @@ function SecurityPanel(): VNode {
           </div>
           <div class="totp-card-actions">
             {/* TODO: implement password change in a later phase */}
-            <button type="button" class="stg-btn-outline" disabled title="Coming soon">
-              <i class="fas fa-key" /> Change Password
-            </button>
+            <Button variant="secondary" disabled title="Coming soon" iconLeft={<i class="fas fa-key" />}>
+              Change Password
+            </Button>
           </div>
         </div>
       </div>
@@ -1221,13 +1223,14 @@ function SecurityPanel(): VNode {
         <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.6 }}>
           Clear all locally cached preferences, theme choices, and session tokens, then reload the page. Your server-side data is not affected.
         </p>
-        <button
-          type="button"
-          class="stg-btn-outline stg-danger-label"
+        <Button
+          variant="outline"
+          tone="danger"
           onClick={handleClearCache}
+          iconLeft={<i class="fas fa-trash-can" />}
         >
-          <i class="fas fa-trash-can" /> Clear Local Settings
-        </button>
+          Clear Local Settings
+        </Button>
       </div>
     </div>
   );

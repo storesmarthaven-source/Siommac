@@ -11308,18 +11308,18 @@ saveWorkHoursApi	function	settings	true		src/components/sections/Settings/api.ts
 uploadLogoApi	function	settings	true		src/components/sections/Settings/api.ts	144	
 applyCompanyNameToDom	function	settings	true		src/components/sections/Settings/domSync.ts	15	
 applyCompanyLogoToDom	function	settings	true		src/components/sections/Settings/domSync.ts	23	
-STATUS_LABEL	object	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	23	
-STATUS_CLASS	object	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	26	
-REVIEWERS	array	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	30	
-StatusPill	function	settings	false	component	src/components/sections/Settings/ManifestReviewPanel.tsx	40	
-ManifestDetail	function	settings	false	component	src/components/sections/Settings/ManifestReviewPanel.tsx	46	
-submit	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	75	ManifestDetail
-approve	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	76	ManifestDetail
-manifestRecord	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	77	ManifestDetail
-deprecate	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	84	ManifestDetail
-ret	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	95	ManifestDetail
-review	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	107	ManifestDetail
-ManifestReviewPanel	function	settings	true	component	src/components/sections/Settings/ManifestReviewPanel.tsx	217	
+STATUS_LABEL	object	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	24	
+STATUS_CLASS	object	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	27	
+REVIEWERS	array	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	31	
+StatusPill	function	settings	false	component	src/components/sections/Settings/ManifestReviewPanel.tsx	41	
+ManifestDetail	function	settings	false	component	src/components/sections/Settings/ManifestReviewPanel.tsx	47	
+submit	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	76	ManifestDetail
+approve	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	77	ManifestDetail
+manifestRecord	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	78	ManifestDetail
+deprecate	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	85	ManifestDetail
+ret	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	96	ManifestDetail
+review	function	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	108	ManifestDetail
+ManifestReviewPanel	function	settings	true	component	src/components/sections/Settings/ManifestReviewPanel.tsx	220	
 mountSettingsSection	function	settings	true		src/components/sections/Settings/mount.ts	15	
 unmountSettingsSection	function	settings	true		src/components/sections/Settings/mount.ts	32	
 SwzPageKind	type	settings	true		src/components/sections/Settings/settingsNav.ts	12	
@@ -11331,35 +11331,35 @@ getSwzPage	function	settings	true		src/components/sections/Settings/settingsNav.
 visibleSwzPages	function	settings	true		src/components/sections/Settings/settingsNav.ts	98	
 escAttr	function	settings	false		src/components/sections/Settings/settingsNav.ts	102	
 buildSettingsMenuHtml	function	settings	true		src/components/sections/Settings/settingsNav.ts	109	
-CardLabel	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	69	
-BrandingPanelProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	83	
-BrandingPanel	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	88	
-field	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	147	BrandingPanel
-TrustedDevicesCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	209	
-TIMEOUT_OPTIONS	array	settings	false		src/components/sections/Settings/SettingsSection.tsx	360	
-TIMEOUT_ROLE_LABEL	object	settings	false		src/components/sections/Settings/SettingsSection.tsx	371	
-SessionTimeoutCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	376	
-SetupStep	type	settings	false		src/components/sections/Settings/SettingsSection.tsx	438	
-TotpSetupModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	440	
-TotpSetupModal	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	445	
-TotpDisableModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	640	
-TotpDisableModal	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	645	
-TotpRegenModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	717	
-TotpRegenModal	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	721	
-webauthnAvailable	variable	settings	false		src/components/sections/Settings/SettingsSection.tsx	841	
-PasskeysCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	843	
-AuthenticatorCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	1025	
-SecurityPanel	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1136	
-LegacyPage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1238	
-PlaceholderPage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1263	
-CONSOLE_BODIES	object	settings	false		src/components/sections/Settings/SettingsSection.tsx	1281	
-ConsolePage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1286	
-SettingsSection	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	1302	
-enter	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1338	SettingsSection
-exit	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1348	SettingsSection
-onSection	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1353	SettingsSection
-onMenuClick	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1358	SettingsSection
-emptySettings	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1407	
+CardLabel	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	70	
+BrandingPanelProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	84	
+BrandingPanel	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	89	
+field	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	148	BrandingPanel
+TrustedDevicesCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	210	
+TIMEOUT_OPTIONS	array	settings	false		src/components/sections/Settings/SettingsSection.tsx	361	
+TIMEOUT_ROLE_LABEL	object	settings	false		src/components/sections/Settings/SettingsSection.tsx	372	
+SessionTimeoutCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	377	
+SetupStep	type	settings	false		src/components/sections/Settings/SettingsSection.tsx	439	
+TotpSetupModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	441	
+TotpSetupModal	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	446	
+TotpDisableModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	641	
+TotpDisableModal	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	646	
+TotpRegenModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	720	
+TotpRegenModal	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	724	
+webauthnAvailable	variable	settings	false		src/components/sections/Settings/SettingsSection.tsx	844	
+PasskeysCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	846	
+AuthenticatorCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	1027	
+SecurityPanel	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1138	
+LegacyPage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1241	
+PlaceholderPage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1266	
+CONSOLE_BODIES	object	settings	false		src/components/sections/Settings/SettingsSection.tsx	1284	
+ConsolePage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1289	
+SettingsSection	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	1305	
+enter	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1341	SettingsSection
+exit	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1351	SettingsSection
+onSection	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1356	SettingsSection
+onMenuClick	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1361	SettingsSection
+emptySettings	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1410	
 valStr	function	settings	false		src/components/sections/Settings/SwzCard.tsx	17	
 toInput	function	settings	false		src/components/sections/Settings/SwzCard.tsx	24	
 classPill	function	settings	false		src/components/sections/Settings/SwzCard.tsx	30	
@@ -11409,14 +11409,14 @@ useApproveGrant	function	platform	true	hook	src/components/sections/SuperadminCo
 useRejectGrant	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	315	
 useCancelGrant	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	339	
 consoleKeys	object	platform	true		src/components/sections/SuperadminConsole/queryKeys.ts	10	
-PolicyForm	interface	security	false		src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx	30	
-DEFAULT_FORM	object	security	false		src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx	43	
-clamp	function	security	false		src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx	58	
-Toggle	function	security	false	component	src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx	64	
-NumberInput	function	security	false	component	src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx	99	
-Divider	function	security	false	component	src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx	132	
-SecurityPolicyTab	function	security	true	component	src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx	138	
-UserSecurityPanel	function	security	true	component	src/components/sections/SuperadminConsole/tabs/UserSecurityPanel.tsx	25	
+PolicyForm	interface	security	false		src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx	31	
+DEFAULT_FORM	object	security	false		src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx	44	
+clamp	function	security	false		src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx	59	
+Toggle	function	security	false	component	src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx	65	
+NumberInput	function	security	false	component	src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx	100	
+Divider	function	security	false	component	src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx	133	
+SecurityPolicyTab	function	security	true	component	src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx	139	
+UserSecurityPanel	function	security	true	component	src/components/sections/SuperadminConsole/tabs/UserSecurityPanel.tsx	26	
 ticketModule	object	communications	true		src/components/sections/Tickets/module.ts	4	
 mountTicketCenter	function	communications	true		src/components/sections/Tickets/mount.ts	8	
 unmountTicketCenter	function	communications	true		src/components/sections/Tickets/mount.ts	12	

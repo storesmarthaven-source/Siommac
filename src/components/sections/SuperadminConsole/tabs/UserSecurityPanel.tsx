@@ -21,6 +21,7 @@ import {
 } from '@api/security';
 import { confirm }          from '@components/shared/ConfirmDialog';
 import { useConsoleUsers }  from '../hooks';
+import { Button }           from '@ui';
 
 export function UserSecurityPanel(): VNode {
   const canView          = useCan('auth.security.view');
@@ -210,35 +211,35 @@ export function UserSecurityPanel(): VNode {
               {/* Admin actions */}
               {(canRevokeKeys || canRevokeDevices) && (
                 <div style={{ marginTop: '16px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  {/* Quiet destructive: these were `.stg-btn-outline` recoloured
+                      inline to danger — which is exactly `outline` + `tone`. */}
                   {canRevokeKeys && (
-                    <button
-                      type="button"
-                      class="stg-btn-outline"
-                      style={{ color: 'var(--danger, #ef4444)', borderColor: 'var(--danger, #ef4444)', fontSize: '13px' }}
+                    <Button
+                      variant="outline"
+                      tone="danger"
                       onClick={() => void handleRevokePasskeys()}
                       disabled={busy || status.passkeyCount === 0}
+                      loading={revokeKeysMut.isPending}
+                      loadingText="Revoking…"
                       title={status.passkeyCount === 0 ? 'No passkeys to revoke' : undefined}
+                      iconLeft={<i class="fas fa-trash-can" />}
                     >
-                      {revokeKeysMut.isPending
-                        ? <><i class="fas fa-spinner fa-spin" /> Revoking…</>
-                        : <><i class="fas fa-trash-can" /> Revoke all passkeys</>
-                      }
-                    </button>
+                      Revoke all passkeys
+                    </Button>
                   )}
                   {canRevokeDevices && (
-                    <button
-                      type="button"
-                      class="stg-btn-outline"
-                      style={{ color: 'var(--danger, #ef4444)', borderColor: 'var(--danger, #ef4444)', fontSize: '13px' }}
+                    <Button
+                      variant="outline"
+                      tone="danger"
                       onClick={() => void handleRevokeDevices()}
                       disabled={busy || status.trustedDeviceCount === 0}
+                      loading={revokeDevicesMut.isPending}
+                      loadingText="Revoking…"
                       title={status.trustedDeviceCount === 0 ? 'No trusted devices to revoke' : undefined}
+                      iconLeft={<i class="fas fa-ban" />}
                     >
-                      {revokeDevicesMut.isPending
-                        ? <><i class="fas fa-spinner fa-spin" /> Revoking…</>
-                        : <><i class="fas fa-ban" /> Revoke all trusted devices</>
-                      }
-                    </button>
+                      Revoke all trusted devices
+                    </Button>
                   )}
                 </div>
               )}

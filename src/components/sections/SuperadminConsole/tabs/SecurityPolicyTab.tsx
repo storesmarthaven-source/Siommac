@@ -24,6 +24,7 @@ import {
   useUpdateSecurityPolicy,
   type SecurityPolicyUpdatePayload,
 } from '@api/security';
+import { Button }          from '@ui';
 
 // ── Local form state (mirrors the DB columns we can edit) ─────────────────────
 
@@ -340,21 +341,16 @@ export function SecurityPolicyTab(): VNode {
 
       {/* ── Save bar ─────────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <button
-          type="button"
-          class="stg-btn-primary"
+        <Button
+          variant="primary"
           onClick={() => void handleSave()}
-          disabled={busy || !dirty}
-          style={{
-            opacity: busy || !dirty ? 0.55 : 1,
-            cursor:  busy || !dirty ? 'not-allowed' : 'pointer',
-          }}
+          disabled={!dirty}
+          loading={busy}
+          loadingText="Saving…"
+          iconLeft={<i class="fas fa-floppy-disk" />}
         >
-          {busy
-            ? <><i class="fas fa-spinner fa-spin" style={{ marginRight: 6 }} />Saving…</>
-            : <><i class="fas fa-floppy-disk" style={{ marginRight: 6 }} />Save policy</>
-          }
-        </button>
+          Save policy
+        </Button>
 
         {!dirty && savedAt && (
           <span style={{ fontSize: '12px', color: '#16a34a' }}>
