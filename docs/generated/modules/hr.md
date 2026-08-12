@@ -2,9 +2,9 @@
 
 # hr Module Map
 
-Source fingerprint: `fdaf842ea7078b1515985569`
+Source fingerprint: `e6abd1719e8ffbdabb76cb22`
 
-Files: 265 | Symbols: 3075 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 37 | DB objects: 196 | E2E suites: 16
+Files: 265 | Symbols: 3076 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 37 | DB objects: 196 | E2E suites: 16
 
 ## Widgets and Tiles
 
@@ -719,7 +719,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/EmployeeMaster.tsx` | 1031 |
 | frontend-page | `src/components/sections/HR/EmployeeOnboardingSummary.tsx` | 97 |
 | frontend-page | `src/components/sections/HR/EmployeeProfilePage.test.tsx` | 564 |
-| frontend-page | `src/components/sections/HR/EmployeeProfilePage.tsx` | 1673 |
+| frontend-page | `src/components/sections/HR/EmployeeProfilePage.tsx` | 1694 |
 | frontend-page | `src/components/sections/HR/HRDocumentsOverview.tsx` | 728 |
 | frontend-page | `src/components/sections/HR/HRQueryState.tsx` | 54 |
 | frontend-page | `src/components/sections/HR/HRRequestsOverview.tsx` | 424 |

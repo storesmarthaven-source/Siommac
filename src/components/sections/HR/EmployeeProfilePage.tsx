@@ -29,7 +29,8 @@
 
 import { type ComponentChildren, type VNode } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { ListSkeleton, Skeleton, SkeletonFields, SkeletonStatGrid, SkeletonText } from '@ui';
+import { ListSkeleton, Skeleton, SkeletonFields, SkeletonStatGrid, SkeletonText, Badge } from '@ui';
+import { type BadgeToneName } from '@ui/status/statusTokens';
 import {
   useEmployeeProfileShell, useEmployeeAttention, tabIndicatorFor,
   type EmployeeAttentionItem, type ProfileTabKey,
@@ -92,6 +93,26 @@ type OpenDialog =
   | { kind: 'activity'; entry: HrAuditEntry };
 
 /** Attention domain → the reference's icon for that row. */
+/**
+ * This page's legacy `.badge` modifier -> canonical Badge tone.
+ *
+ * ⚠ The bare class was GREEN, not neutral: `.epf-root .badge` shipped
+ * `background: var(--green-soft)` with `.warning`/`.danger`/`.neutral`/`.blue`
+ * as overrides. Reading "no modifier" as "no tone" would have silently turned
+ * ten passing states grey — the opposite of what they say.
+ *
+ * Adapter only: it decides semantics and renders nothing.
+ */
+function epfBadgeTone(mod: string): BadgeToneName {
+  switch (mod.trim()) {
+    case 'warning': return 'warning';
+    case 'danger':  return 'danger';
+    case 'neutral': return 'neutral';
+    case 'blue':    return 'info';
+    default:        return 'success';
+  }
+}
+
 const DOMAIN_ICON: Record<EmployeeAttentionItem['domain'], ProfilePageIconId> = {
   employment: 'briefcase', statutory: 'shield', payroll: 'key', documents: 'file',
   training: 'calendar', access: 'lock', onboarding: 'user', offboarding: 'exit',
@@ -454,7 +475,7 @@ export function EmployeeProfilePage({
               {shell.attentionTotal > 0 && <div class="attention-strip">
                 <div class="attention-title">
                   <span class="attention-heading-icon"><PageIcon id="alert" /></span>
-                  Needs Attention <span class="badge warning">{shell.attentionTotal}</span>
+                  Needs Attention <Badge tone="warning">{shell.attentionTotal}</Badge>
                 </div>
                 {attentionItems.map((item, index) => (
                   <article
@@ -551,16 +572,16 @@ export function EmployeeProfilePage({
                   />
                   {shell.accountHealth ? (
                     <dl class="definition-list">
-                      <Row label="Account" value={<span class="badge">{titleCase(shell.accountHealth.accountStatus)}</span>} />
+                      <Row label="Account" value={<Badge tone="success">{titleCase(shell.accountHealth.accountStatus)}</Badge>} />
                       <Row
                         label="MFA"
                         value={!access.viewAccountSecurity
-                          ? <span class="badge neutral">Restricted</span>
+                          ? <Badge tone="neutral">Restricted</Badge>
                           : security.isPending
-                            ? <span class="badge neutral">Loading</span>
+                            ? <Badge tone="neutral">Loading</Badge>
                             : security.data?.totpEnabled || (security.data?.passkeyCount ?? 0) > 0
-                              ? <span class="badge">Enabled</span>
-                              : <span class="badge warning">Not Enrolled</span>}
+                              ? <Badge tone="success">Enabled</Badge>
+                              : <Badge tone="warning">Not Enrolled</Badge>}
                       />
                       <Row
                         label="Last Sign-In"
@@ -570,14 +591,14 @@ export function EmployeeProfilePage({
                       <Row
                         label="Open Assistance"
                         value={shell.accountHealth.openSupportRequests > 0
-                          ? <span class="badge warning">{shell.accountHealth.openSupportRequests} In Review</span>
-                          : <span class="badge neutral">None</span>}
+                          ? <Badge tone="warning">{shell.accountHealth.openSupportRequests} In Review</Badge>
+                          : <Badge tone="neutral">None</Badge>}
                       />
                       <Row
                         label="Sign-In Identity"
                         value={shell.accountHealth.hasLoginIdentity
-                          ? <span class="badge">Provisioned</span>
-                          : <span class="badge warning">Not Provisioned</span>}
+                          ? <Badge tone="success">Provisioned</Badge>
+                          : <Badge tone="warning">Not Provisioned</Badge>}
                       />
                     </dl>
                   ) : (
@@ -669,9 +690,9 @@ export function EmployeeProfilePage({
                       label="Probation"
                       value={(() => {
                         const state = probationState(facts.probationEndDate);
-                        if (state === 'completed') return <span class="badge">Completed</span>;
-                        if (state === 'in_progress') return <span class="badge warning">In Progress</span>;
-                        return <span class="badge neutral">Not Recorded</span>;
+                        if (state === 'completed') return <Badge tone="success">Completed</Badge>;
+                        if (state === 'in_progress') return <Badge tone="warning">In Progress</Badge>;
+                        return <Badge tone="neutral">Not Recorded</Badge>;
                       })()}
                     />
                     <Row label="Probation Ended" value={formatDate(facts.probationEndDate)} />
@@ -696,10 +717,10 @@ export function EmployeeProfilePage({
                       <Row
                         label="Bank Record"
                         value={employment.data.bank.verificationState === 'verified'
-                          ? <span class="badge">Verified</span>
+                          ? <Badge tone="success">Verified</Badge>
                           : employment.data.bank.verificationState === 'missing'
-                            ? <span class="badge danger">Missing</span>
-                            : <span class="badge warning">Reverify</span>}
+                            ? <Badge tone="danger">Missing</Badge>
+                            : <Badge tone="warning">Reverify</Badge>}
                       />
                       <Row label="Last Verified" value={formatDate(employment.data.bank.lastVerifiedAt)} />
                     </dl>
@@ -713,23 +734,23 @@ export function EmployeeProfilePage({
                       <Row
                         label="NIS Registration"
                         value={detail?.statutory?.nis_status === 'registered'
-                          ? <span class="badge">Registered</span>
-                          : <span class="badge warning">{titleCase(detail?.statutory?.nis_status ?? 'not recorded')}</span>}
+                          ? <Badge tone="success">Registered</Badge>
+                          : <Badge tone="warning">{titleCase(detail?.statutory?.nis_status ?? 'not recorded')}</Badge>}
                       />
                       <Row
                         label="Tax Profile"
                         value={detail?.statutory?.bir_file_number
-                          ? <span class="badge">On File</span>
-                          : <span class="badge warning">Required</span>}
+                          ? <Badge tone="success">On File</Badge>
+                          : <Badge tone="warning">Required</Badge>}
                       />
                       <Row label="PAYE" value={detail?.statutory?.paye_applicable ? 'Applicable' : 'Not Applicable'} />
                       <Row
                         label="Payroll Readiness"
                         value={shell.readiness?.payrollStatus === 'ready'
-                          ? <span class="badge">Ready</span>
-                          : <span class={`badge ${shell.readiness?.payrollStatus === 'blocked' ? 'danger' : 'warning'}`}>
+                          ? <Badge tone="success">Ready</Badge>
+                          : <Badge tone={epfBadgeTone(shell.readiness?.payrollStatus === 'blocked' ? 'danger' : 'warning')}>
                             {titleCase(shell.readiness?.payrollStatus ?? 'pending')}
-                          </span>}
+                          </Badge>}
                       />
                     </dl>
                   </section>
@@ -935,7 +956,7 @@ export function EmployeeProfilePage({
                                   <tr key={`${row.categoryKey}:${row.documentId ?? row.requirementId ?? row.title}`}>
                                     <td><strong>{row.title}</strong><small>{row.detail}</small></td>
                                     <td>{row.categoryLabel}</td>
-                                    <td><span class={`badge ${badge.tone}`.trim()}>{badge.label}</span></td>
+                                    <td><Badge tone={epfBadgeTone(badge.tone)}>{badge.label}</Badge></td>
                                     <td>{formatDate(row.issuedAt)}</td>
                                     <td>{formatDate(row.expiryDate)}</td>
                                     <td>{row.required ? 'Required' : 'Supplementary'}</td>
@@ -1065,7 +1086,7 @@ export function EmployeeProfilePage({
                               <strong>{entry.workItem?.nextResponsibleParty ?? titleCase(entry.control.resolutionType)}</strong>
                             </div>
                             <div class="readiness-work-state">
-                              <span class={`badge ${state.tone}`.trim()}>{state.label}</span>
+                              <Badge tone={epfBadgeTone(state.tone)}>{state.label}</Badge>
                             </div>
                             <button
                               class={`button${entry.control.isBlocking ? ' primary' : ''}`} type="button"
@@ -1099,7 +1120,7 @@ export function EmployeeProfilePage({
                                   <td>{titleCase(entry.state)}</td>
                                   <td>{entry.owner.status === 'resolved' ? entry.owner.ownerLabel : 'Owner Required'}</td>
                                   <td>{formatDate(entry.evaluatedAt)}</td>
-                                  <td><span class={`badge ${badge.tone}`.trim()}>{badge.label}</span></td>
+                                  <td><Badge tone={epfBadgeTone(badge.tone)}>{badge.label}</Badge></td>
                                   <td>
                                     <button class="link" type="button" onClick={() => setDialog({ kind: 'readiness', entry })}>
                                       Open
@@ -1180,15 +1201,15 @@ export function EmployeeProfilePage({
                           <Row
                             label="Sign-In Identity"
                             value={health?.hasLoginIdentity
-                              ? <span class="badge">Provisioned</span>
-                              : <span class="badge warning">Not Provisioned</span>}
+                              ? <Badge tone="success">Provisioned</Badge>
+                              : <Badge tone="warning">Not Provisioned</Badge>}
                           />
                           <Row label="Sign-In Methods" value={access.viewAccountSecurity ? methods : 'Restricted'} />
                           <Row
                             label="Account State"
                             value={health?.accountStatus === 'active'
-                              ? <span class="badge neutral">Not Restricted</span>
-                              : <span class="badge warning">{titleCase(health?.accountStatus)}</span>}
+                              ? <Badge tone="neutral">Not Restricted</Badge>
+                              : <Badge tone="warning">{titleCase(health?.accountStatus)}</Badge>}
                           />
                         </dl>
                       </section>
@@ -1231,9 +1252,9 @@ export function EmployeeProfilePage({
                               <span>The current approved business-access assignment for this employee.</span>
                             </div>
                           </div>
-                          <span class={`badge ${activeAssignment.status === 'active' ? '' : 'warning'}`.trim()}>
+                          <Badge tone={epfBadgeTone(activeAssignment.status === 'active' ? '' : 'warning')}>
                             {titleCase(activeAssignment.status)}
-                          </span>
+                          </Badge>
                         </div>
                         <div class="access-profile-facts">
                           <div><span>Source</span><strong>{titleCase(activeAssignment.assignmentType)}</strong></div>
@@ -1276,7 +1297,7 @@ export function EmployeeProfilePage({
                               <div class="security-row">
                                 <span class="access-icon"><PageIcon id="alert" /></span>
                                 <div class="security-copy"><strong>{concern.title}</strong><span>{concern.detail}</span></div>
-                                <span class={`badge ${concern.tone}`}>Needs Help</span>
+                                <Badge tone={epfBadgeTone(concern.tone)}>Needs Help</Badge>
                               </div>
                             ) : (
                               <div class="security-row">
@@ -1285,7 +1306,7 @@ export function EmployeeProfilePage({
                                   <strong>No Account Concerns</strong>
                                   <span>No lockout, suspension, or unresolved sign-in warning requires HR action</span>
                                 </div>
-                                <span class="badge">Healthy</span>
+                                <Badge tone="success">Healthy</Badge>
                               </div>
                             );
                           })()}
@@ -1324,7 +1345,7 @@ export function EmployeeProfilePage({
                                     <span>{request.ticketNumber} · Submitted {formatDate(request.createdAt)}</span>
                                     <small>Owner: Account Support</small>
                                   </div>
-                                  <span class={`badge ${badge.tone}`.trim()}>{badge.label}</span>
+                                  <Badge tone={epfBadgeTone(badge.tone)}>{badge.label}</Badge>
                                 </div>
                               );
                             })}
@@ -1537,9 +1558,9 @@ export function EmployeeProfilePage({
                       <p>Case {phase.active.caseNo} is coordinating the employee&rsquo;s final working arrangements.</p>
                     </div>
                     <div class="section-actions">
-                      <span class={`badge ${phase.active.status === 'blocked' ? 'danger' : 'warning'}`}>
+                      <Badge tone={epfBadgeTone(phase.active.status === 'blocked' ? 'danger' : 'warning')}>
                         {titleCase(phase.active.status)}
-                      </span>
+                      </Badge>
                       <button class="button primary" type="button" onClick={() => showSection('s-hr-offboarding')}>
                         Open Offboarding Workspace
                       </button>
@@ -1572,7 +1593,7 @@ export function EmployeeProfilePage({
                               <small>{task.dueAt ? `Due ${formatDate(task.dueAt)}` : 'No due date recorded'}</small>
                             </div>
                             <span>{task.assignedToName ?? titleCase(task.ownerRole ?? task.moduleKey ?? 'Unassigned')}</span>
-                            <span class={`badge ${badge.tone}`.trim()}>{badge.label}</span>
+                            <Badge tone={epfBadgeTone(badge.tone)}>{badge.label}</Badge>
                           </div>
                         );
                       })}
@@ -1584,9 +1605,9 @@ export function EmployeeProfilePage({
                             <small>Raised {formatDate(handoff.createdAt)}</small>
                           </div>
                           <span>{titleCase(handoff.targetModule)}</span>
-                          <span class={`badge ${handoff.status === 'delivered' ? '' : 'warning'}`.trim()}>
+                          <Badge tone={epfBadgeTone(handoff.status === 'delivered' ? '' : 'warning')}>
                             {titleCase(handoff.status)}
-                          </span>
+                          </Badge>
                         </div>
                       ))}
                     </div>
@@ -1604,7 +1625,7 @@ export function EmployeeProfilePage({
                         <strong>No Previous Offboarding Cases</strong>
                         <span>Completed or cancelled cases will remain available here as protected employee history.</span>
                       </div>
-                      <span class="badge neutral">None</span>
+                      <Badge tone="neutral">None</Badge>
                     </div>
                   ) : phase.history.map(row => (
                     <div class="offboarding-state-card" key={row.id}>
@@ -1616,9 +1637,9 @@ export function EmployeeProfilePage({
                           {row.ownerName ? ` · Case owner ${row.ownerName}` : ''}
                         </span>
                       </div>
-                      <span class={`badge ${row.status === 'completed' ? '' : 'neutral'}`.trim()}>
+                      <Badge tone={epfBadgeTone(row.status === 'completed' ? '' : 'neutral')}>
                         {titleCase(row.status)}
-                      </span>
+                      </Badge>
                     </div>
                   ))}
                 </section>

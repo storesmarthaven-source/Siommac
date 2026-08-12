@@ -8679,22 +8679,23 @@ fullAccess	variable	hr	false	test	src/components/sections/HR/EmployeeProfilePage
 renderPage	function	hr	false	test	src/components/sections/HR/EmployeeProfilePage.test.tsx	229	
 openTab	function	hr	false	test	src/components/sections/HR/EmployeeProfilePage.test.tsx	242	
 selectOption	function	hr	false	test	src/components/sections/HR/EmployeeProfilePage.test.tsx	258	
-EmployeeProfilePageProps	interface	hr	true		src/components/sections/HR/EmployeeProfilePage.tsx	74	
-OpenDialog	type	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	82	
-DOMAIN_ICON	object	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	95	
-CONTROL_ICON	object	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	101	
-ACTIVITY_VISUAL	object	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	107	
-Row	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	115	
-CardHead	function	hr	false	component,ui-tile	src/components/sections/HR/EmployeeProfilePage.tsx	120	
-LinkButton	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	127	
-SectionHead	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	136	
-Gauge	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	148	
-initialsOf	function	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	164	
-EmployeeProfilePageSkeleton	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	169	
-ProfileSectionSkeleton	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	215	
-EmployeeProfilePage	function	hr	true	component	src/components/sections/HR/EmployeeProfilePage.tsx	224	
-goToTab	function	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	272	EmployeeProfilePage
-onTabKeyDown	function	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	278	EmployeeProfilePage
+EmployeeProfilePageProps	interface	hr	true		src/components/sections/HR/EmployeeProfilePage.tsx	75	
+OpenDialog	type	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	83	
+epfBadgeTone	function	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	106	
+DOMAIN_ICON	object	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	116	
+CONTROL_ICON	object	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	122	
+ACTIVITY_VISUAL	object	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	128	
+Row	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	136	
+CardHead	function	hr	false	component,ui-tile	src/components/sections/HR/EmployeeProfilePage.tsx	141	
+LinkButton	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	148	
+SectionHead	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	157	
+Gauge	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	169	
+initialsOf	function	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	185	
+EmployeeProfilePageSkeleton	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	190	
+ProfileSectionSkeleton	function	hr	false	component	src/components/sections/HR/EmployeeProfilePage.tsx	236	
+EmployeeProfilePage	function	hr	true	component	src/components/sections/HR/EmployeeProfilePage.tsx	245	
+goToTab	function	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	293	EmployeeProfilePage
+onTabKeyDown	function	hr	false		src/components/sections/HR/EmployeeProfilePage.tsx	299	EmployeeProfilePage
 EmployeeRegisterColumn	interface	hr	true		src/components/sections/HR/employeeRegisterColumns.ts	12	
 EMPLOYEE_REGISTER_COLUMNS	variable	hr	true		src/components/sections/HR/employeeRegisterColumns.ts	20	
 sanitizeEmployeeRegisterColumns	function	hr	true		src/components/sections/HR/employeeRegisterColumns.ts	35	
