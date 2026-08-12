@@ -13183,15 +13183,30 @@ toneFromWorkflowStatus	function	platform	true		src/ui/status/statusTokens.ts	141
 toneFromPriority	function	platform	true		src/ui/status/statusTokens.ts	157	
 colorFromSeverity	function	platform	true		src/ui/status/statusTokens.ts	169	
 statusLabel	function	platform	true		src/ui/status/statusTokens.ts	179	
-StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	41	
-SectionId	type	platform	false		src/ui/studio/Studio.tsx	51	
-NavGroup	interface	platform	false		src/ui/studio/Studio.tsx	57	
-NAV	array	platform	false		src/ui/studio/Studio.tsx	59	
-StatusChip	function	platform	false	component	src/ui/studio/Studio.tsx	82	
-ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	93	
-Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	118	
-PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	160	
-Studio	function	platform	true	component	src/ui/studio/Studio.tsx	169	
+ROLE_ACTION	array	platform	false		src/ui/studio/BrandOverview.tsx	41	
+ROLE_FOCUS	array	platform	false		src/ui/studio/BrandOverview.tsx	42	
+ROLE_SELECTION_EDGE	array	platform	false		src/ui/studio/BrandOverview.tsx	43	
+ROLE_SELECTION_FILL	array	platform	false		src/ui/studio/BrandOverview.tsx	44	
+ROLE_NAV_ACTIVE	array	platform	false		src/ui/studio/BrandOverview.tsx	45	
+ROLE_LINK	array	platform	false		src/ui/studio/BrandOverview.tsx	46	
+SEEDS	array	platform	false		src/ui/studio/BrandOverview.tsx	47	
+ThemeDirection	type	platform	true		src/ui/studio/BrandOverview.tsx	49	
+DIRECTIONS	array	platform	true		src/ui/studio/BrandOverview.tsx	51	
+BOARD	array	platform	false		src/ui/studio/BrandOverview.tsx	64	
+Specimen	function	platform	false	component	src/ui/studio/BrandOverview.tsx	75	
+Swatch	function	platform	false	component	src/ui/studio/BrandOverview.tsx	88	
+BrandOverview	function	platform	true	component	src/ui/studio/BrandOverview.tsx	102	
+applyDirection	function	platform	false		src/ui/studio/BrandOverview.tsx	130	BrandOverview
+publish	function	platform	false		src/ui/studio/BrandOverview.tsx	141	BrandOverview
+StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	42	
+SectionId	type	platform	false		src/ui/studio/Studio.tsx	52	
+NavGroup	interface	platform	false		src/ui/studio/Studio.tsx	58	
+NAV	array	platform	false		src/ui/studio/Studio.tsx	60	
+StatusChip	function	platform	false	component	src/ui/studio/Studio.tsx	83	
+ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	94	
+Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	119	
+PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	161	
+Studio	function	platform	true	component	src/ui/studio/Studio.tsx	170	
 Tab	type	platform	false		src/ui/studio/Workbench.tsx	31	
 TABS	array	platform	false		src/ui/studio/Workbench.tsx	32	
 VIEWPORTS	array	platform	false		src/ui/studio/Workbench.tsx	47	

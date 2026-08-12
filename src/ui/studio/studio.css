@@ -300,3 +300,78 @@
   .sds-ov__row { grid-template-columns: 1fr; gap: 6px; }
   .sds-use dl > div { grid-template-columns: 1fr; gap: 4px; }
 }
+
+/* ── Brand Overview ─────────────────────────────────────────────────────────
+   The bar, direction switch and publish button are CHROME — they must keep the
+   neutral palette so the themed board below has a stable reference frame. */
+.sds-bo__bar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 16px 18px;
+  background: var(--sds-surface); border: 1px solid var(--sds-line); border-radius: 12px;
+}
+.sds-bo__id { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.sds-bo__id strong { display: block; font-size: 17px; }
+.sds-bo__status { font-size: 14px; color: var(--sds-ink-2); }
+.sds-bo__logo { width: 48px; height: 48px; object-fit: contain; border-radius: 8px; background: #f4f6f9; }
+.sds-bo__logo--empty {
+  display: grid; place-items: center;
+  font-size: 12px; color: var(--sds-ink-2); text-align: center;
+}
+.sds-bo__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.sds-bo__publish {
+  min-height: 40px; padding: 9px 16px;
+  border: 1px solid var(--sds-accent); border-radius: 8px;
+  background: var(--sds-accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer;
+}
+.sds-bo__publish:disabled { background: #eef1f6; border-color: var(--sds-line); color: var(--sds-ink-2); cursor: not-allowed; }
+.sds-bo__blurb { max-width: 88ch; margin: 10px 0 22px; color: var(--sds-ink-2); }
+
+.sds-bo__section { margin-bottom: 30px; }
+.sds-bo__section > h3 { margin: 0 0 4px; font-size: 19px; }
+.sds-bo__hint { margin: 0 0 14px; font-size: 14px; color: var(--sds-ink-2); max-width: 84ch; }
+
+.sds-bo__three { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.sds-bo__panel {
+  min-width: 0; padding: 18px;
+  background: var(--sds-surface); border: 1px solid var(--sds-line); border-radius: 12px;
+}
+.sds-bo__panel h4 { margin: 0 0 12px; font-size: 17px; }
+.sds-bo__biglogo {
+  width: 100%; max-width: 120px; height: 96px; object-fit: contain;
+  border-radius: 10px; background: #f4f6f9;
+}
+.sds-bo__roles { margin: 0; }
+.sds-bo__roles > div { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 10px; padding: 7px 0; border-top: 1px solid var(--sds-line); }
+.sds-bo__roles dt { font-weight: 600; }
+.sds-bo__roles dd { margin: 0; color: var(--sds-ink-2); font-size: 14px; }
+
+.sds-sw { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; min-width: 0; }
+.sds-sw__chip { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--sds-line); flex-shrink: 0; }
+.sds-sw--big .sds-sw__chip { width: 56px; height: 56px; border-radius: 10px; }
+.sds-sw__meta { min-width: 0; }
+.sds-sw__meta strong { display: block; font-size: 14px; }
+.sds-sw__meta code { font-size: 13px; color: var(--sds-ink-2); }
+.sds-bo__sws { padding-top: 6px; border-top: 1px solid var(--sds-line); margin-top: 10px; }
+
+.sds-bo__board { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.sds-bo__tile {
+  min-width: 0; padding: 18px;
+  background: var(--sds-surface); border: 1px solid var(--sds-line); border-radius: 12px;
+}
+.sds-bo__tile h4 { margin: 0 0 12px; font-size: 17px; }
+.sds-bo__tilebody { display: flex; flex-direction: column; gap: 14px; }
+.sds-bo__spec { min-width: 0; }
+.sds-bo__specname { display: block; margin-bottom: 6px; font-size: 13px; color: var(--sds-ink-2); }
+
+.sds-bo__disclose {
+  min-height: 40px; padding: 8px 12px;
+  border: 1px solid var(--sds-line); border-radius: 8px;
+  background: var(--sds-surface); font: inherit; font-weight: 600; cursor: pointer;
+}
+.sds-bo__disclose:hover { background: #eef1f6; }
+.sds-bo__advanced { margin-top: 16px; }
+
+@media (max-width: 640px) {
+  .sds-bo__bar { flex-direction: column; align-items: stretch; }
+  .sds-bo__roles > div { grid-template-columns: 1fr; gap: 2px; }
+}

@@ -29,6 +29,7 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { Workbench } from './Workbench';
+import { BrandOverview } from './BrandOverview';
 import {
   COMPONENT_DEFS, componentsByCategory, registryTotals, findComponent,
   isBuilt, type ComponentDef,
@@ -58,7 +59,7 @@ interface NavGroup { label: string; items: { id: SectionId; label: string; phase
 
 const NAV: NavGroup[] = [
   { label: 'Brand', items: [
-    { id: 'brand-overview', label: 'Brand Overview', phase: 3 },
+    { id: 'brand-overview', label: 'Brand Overview' },
     { id: 'brand-theme',    label: 'Theme Generator' },
     { id: 'brand-assets',   label: 'Logo & Assets', phase: 3 },
   ] },
@@ -220,6 +221,9 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
         {/* Only preview surfaces carry the customer draft scope — the Studio
             chrome itself stays neutral. See the second-root note in semantic.css. */}
         <div class="sds-body">
+          {active === 'brand-overview' && (
+            <BrandOverview draft={draft} logoUrl={logoUrl} onUploadLogo={onUploadLogo} />
+          )}
           {active === 'components' && (openId
             ? <Workbench def={findComponent(openId)!} onBack={() => setOpenId(null)} />
             : <Catalogue onOpen={setOpenId} />)}

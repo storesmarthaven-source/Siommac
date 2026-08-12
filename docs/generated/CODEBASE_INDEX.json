@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "c50fb8d15c8800dcfb80db749f2b32fbd75e3def",
+    "head": "19f256d8696b020f13b648de468cfac9f1dc0a84",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "6f80191e037db75dc57596c4",
-    "indexedFiles": 1827
+    "fingerprint": "60f855a7cc08719d3c440222",
+    "indexedFiles": 1828
   },
   "summary": {
-    "files": 1472,
-    "symbols": 14696,
+    "files": 1473,
+    "symbols": 14711,
     "widgets": 63,
     "routes": 978,
     "routeDefinitions": 979,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 412,
-        "symbols": 3682,
+        "files": 413,
+        "symbols": 3697,
         "widgets": 12,
         "routes": 38,
         "routeDefinitions": 53,
@@ -9264,11 +9264,18 @@
       "hash": "0af2d3c848de89e0"
     },
     {
+      "path": "src/ui/studio/BrandOverview.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 271,
+      "hash": "e471e004d66d4932"
+    },
+    {
       "path": "src/ui/studio/Studio.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 238,
-      "hash": "4a52061778804df3"
+      "lines": 242,
+      "hash": "7ca58eb6df8b8cf4"
     },
     {
       "path": "src/ui/studio/Workbench.tsx",
@@ -148538,10 +148545,166 @@
       "tags": []
     },
     {
+      "name": "ROLE_ACTION",
+      "kind": "array",
+      "file": "src/ui/studio/BrandOverview.tsx",
+      "line": 41,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ROLE_FOCUS",
+      "kind": "array",
+      "file": "src/ui/studio/BrandOverview.tsx",
+      "line": 42,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ROLE_SELECTION_EDGE",
+      "kind": "array",
+      "file": "src/ui/studio/BrandOverview.tsx",
+      "line": 43,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ROLE_SELECTION_FILL",
+      "kind": "array",
+      "file": "src/ui/studio/BrandOverview.tsx",
+      "line": 44,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ROLE_NAV_ACTIVE",
+      "kind": "array",
+      "file": "src/ui/studio/BrandOverview.tsx",
+      "line": 45,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ROLE_LINK",
+      "kind": "array",
+      "file": "src/ui/studio/BrandOverview.tsx",
+      "line": 46,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SEEDS",
+      "kind": "array",
+      "file": "src/ui/studio/BrandOverview.tsx",
+      "line": 47,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ThemeDirection",
+      "kind": "type",
+      "file": "src/ui/studio/BrandOverview.tsx",
+      "line": 49,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DIRECTIONS",
+      "kind": "array",
+      "file": "src/ui/studio/BrandOverview.tsx",
+      "line": 51,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "BOARD",
+      "kind": "array",
+      "file": "src/ui/studio/BrandOverview.tsx",
+      "line": 64,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Specimen",
+      "kind": "function",
+      "file": "src/ui/studio/BrandOverview.tsx",
+      "line": 75,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "Swatch",
+      "kind": "function",
+      "file": "src/ui/studio/BrandOverview.tsx",
+      "line": 88,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "BrandOverview",
+      "kind": "function",
+      "file": "src/ui/studio/BrandOverview.tsx",
+      "line": 102,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "applyDirection",
+      "kind": "function",
+      "file": "src/ui/studio/BrandOverview.tsx",
+      "line": 130,
+      "module": "platform",
+      "exported": false,
+      "container": "BrandOverview",
+      "tags": []
+    },
+    {
+      "name": "publish",
+      "kind": "function",
+      "file": "src/ui/studio/BrandOverview.tsx",
+      "line": 141,
+      "module": "platform",
+      "exported": false,
+      "container": "BrandOverview",
+      "tags": []
+    },
+    {
       "name": "StudioProps",
       "kind": "interface",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 41,
+      "line": 42,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148551,7 +148714,7 @@
       "name": "SectionId",
       "kind": "type",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 51,
+      "line": 52,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148561,7 +148724,7 @@
       "name": "NavGroup",
       "kind": "interface",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 57,
+      "line": 58,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148571,7 +148734,7 @@
       "name": "NAV",
       "kind": "array",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 59,
+      "line": 60,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148581,7 +148744,7 @@
       "name": "StatusChip",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 82,
+      "line": 83,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148593,7 +148756,7 @@
       "name": "ComponentCard",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 93,
+      "line": 94,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148606,7 +148769,7 @@
       "name": "Catalogue",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 118,
+      "line": 119,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148618,7 +148781,7 @@
       "name": "PhasePlaceholder",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 160,
+      "line": 161,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148630,7 +148793,7 @@
       "name": "Studio",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 169,
+      "line": 170,
       "module": "platform",
       "exported": true,
       "container": "",
