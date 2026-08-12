@@ -7564,13 +7564,13 @@ goToStep	function	finance	false		src/components/sections/Finance/PayNewRunWizard
 create	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	232	PayNewRunWizard
 NAMES	object	payroll	false	test	src/components/sections/Finance/payroll/run/crewSections.test.tsx	18	
 makeCrew	function	payroll	false	test	src/components/sections/Finance/payroll/run/crewSections.test.tsx	20	
-CrewProps	interface	payroll	false		src/components/sections/Finance/payroll/run/crewSections.tsx	19	
-name	function	payroll	false		src/components/sections/Finance/payroll/run/crewSections.tsx	24	
-Sec	function	payroll	false	component	src/components/sections/Finance/payroll/run/crewSections.tsx	26	
-CrewPopulationControls	function	payroll	true	component	src/components/sections/Finance/payroll/run/crewSections.tsx	44	
-ReconRow	interface	payroll	false		src/components/sections/Finance/payroll/run/crewSections.tsx	72	
-CrewInputReconciliation	function	payroll	true	component	src/components/sections/Finance/payroll/run/crewSections.tsx	81	
-CrewCostAllocation	function	payroll	true	component	src/components/sections/Finance/payroll/run/crewSections.tsx	152	
+CrewProps	interface	payroll	false		src/components/sections/Finance/payroll/run/crewSections.tsx	20	
+name	function	payroll	false		src/components/sections/Finance/payroll/run/crewSections.tsx	25	
+Sec	function	payroll	false	component	src/components/sections/Finance/payroll/run/crewSections.tsx	27	
+CrewPopulationControls	function	payroll	true	component	src/components/sections/Finance/payroll/run/crewSections.tsx	45	
+ReconRow	interface	payroll	false		src/components/sections/Finance/payroll/run/crewSections.tsx	73	
+CrewInputReconciliation	function	payroll	true	component	src/components/sections/Finance/payroll/run/crewSections.tsx	82	
+CrewCostAllocation	function	payroll	true	component	src/components/sections/Finance/payroll/run/crewSections.tsx	153	
 draft	function	payroll	false	test	src/components/sections/Finance/payroll/setup/payPolicyRules.test.ts	4	
 isCrewPolicyType	function	payroll	true		src/components/sections/Finance/payroll/setup/payPolicyRules.ts	5	
 defaultComponentBinding	function	payroll	true		src/components/sections/Finance/payroll/setup/payPolicyRules.ts	12	
@@ -8029,19 +8029,18 @@ ExceptionsPanel	function	finance	true	component	src/components/sections/Finance/
 ReleasePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	577	
 PanelStateProps	interface	finance	true		src/components/sections/Finance/payRunDetail/PanelState.tsx	15	
 PayrollPanelState	function	finance	true	component	src/components/sections/Finance/payRunDetail/PanelState.tsx	33	
-fmtCompact	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	15	
-initials	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	22	
-monthLabel	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	30	
-dayLabel	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	41	
-runTitle	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	54	
-humanFreq	function	finance	false		src/components/sections/Finance/payRunDetail/parts.tsx	59	
-PillIntent	type	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	65	
-statusIntent	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	67	
-LifecycleStep	interface	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	78	
-LIFECYCLE_ORDER	array	finance	false		src/components/sections/Finance/payRunDetail/parts.tsx	80	
-lifecycleSteps	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	91	
-PolicyChip	function	finance	true	component	src/components/sections/Finance/payRunDetail/parts.tsx	111	
-CalendarChip	function	finance	true	component	src/components/sections/Finance/payRunDetail/parts.tsx	124	
+fmtCompact	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	16	
+initials	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	23	
+monthLabel	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	31	
+dayLabel	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	42	
+runTitle	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	55	
+humanFreq	function	finance	false		src/components/sections/Finance/payRunDetail/parts.tsx	60	
+statusTone	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	66	
+LifecycleStep	interface	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	77	
+LIFECYCLE_ORDER	array	finance	false		src/components/sections/Finance/payRunDetail/parts.tsx	79	
+lifecycleSteps	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	90	
+PolicyChip	function	finance	true	component	src/components/sections/Finance/payRunDetail/parts.tsx	110	
+CalendarChip	function	finance	true	component	src/components/sections/Finance/payRunDetail/parts.tsx	123	
 CHECKSUM	variable	finance	false	component,test	src/components/sections/Finance/payRunDetail/payRunDetail.test.tsx	19	
 makeRun	function	finance	false	test	src/components/sections/Finance/payRunDetail/payRunDetail.test.tsx	21	
 makeEvidence	function	finance	false	test	src/components/sections/Finance/payRunDetail/payRunDetail.test.tsx	40	
@@ -8052,14 +8051,14 @@ noActions	object	finance	false	test	src/components/sections/Finance/payRunDetail
 makeRun	function	finance	false	test	src/components/sections/Finance/payRunDetail/tabsA11y.test.tsx	35	
 makeWorkspace	function	finance	false	test	src/components/sections/Finance/payRunDetail/tabsA11y.test.tsx	44	
 renderPage	function	finance	false	test	src/components/sections/Finance/payRunDetail/tabsA11y.test.tsx	51	
-TabKey	type	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	35	
-TAB_DEFS	array	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	37	
-PayRunDetailPage	function	finance	true	component	src/components/sections/Finance/PayRunDetailPage.tsx	50	
-RunAct	interface	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	277	
-HeaderActions	function	finance	true	component	src/components/sections/Finance/PayRunDetailPage.tsx	279	
-Metric	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	357	
-NextActionBanner	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	366	
-humanizeStatus	function	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	419	
+TabKey	type	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	36	
+TAB_DEFS	array	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	38	
+PayRunDetailPage	function	finance	true	component	src/components/sections/Finance/PayRunDetailPage.tsx	51	
+RunAct	interface	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	278	
+HeaderActions	function	finance	true	component	src/components/sections/Finance/PayRunDetailPage.tsx	280	
+Metric	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	358	
+NextActionBanner	function	finance	false	component	src/components/sections/Finance/PayRunDetailPage.tsx	367	
+humanizeStatus	function	finance	false		src/components/sections/Finance/PayRunDetailPage.tsx	420	
 severityTone	function	finance	false		src/components/sections/Finance/PayWarningResolveDialog.tsx	15	
 PayWarningResolveDialog	function	finance	true	component	src/components/sections/Finance/PayWarningResolveDialog.tsx	21	
 submit	function	finance	false		src/components/sections/Finance/PayWarningResolveDialog.tsx	33	PayWarningResolveDialog

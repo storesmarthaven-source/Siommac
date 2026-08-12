@@ -21,7 +21,7 @@ import { toast } from '@store';
 import { fmtMoney } from '../financeShared';
 import { EmployeeCell } from '../_shared/EmployeeCell';
 import { Modal } from '@ui/components/Modal';
-import { Button } from '@ui';
+import { Badge, Button } from '@ui';
 
 const RELEASED = new Set(['released', 'exported']);
 
@@ -71,14 +71,14 @@ export function CloseReleaseCard({ run, preflight }: {
         <div class="sec-head">
           <div class="sec-ico">✓</div>
           <div><div class="sec-title">Close controls</div><div class="sec-sub">Every control must pass before the release certificate can be issued.</div></div>
-          <div class="aux"><span class={`pill ${pf?.ready ? 'green' : 'amber'}`}>{controls.filter(c => c.ok).length}/{controls.length} passed</span></div>
+          <div class="aux"><Badge tone={pf?.ready ? 'success' : 'warning'}>{controls.filter(c => c.ok).length}/{controls.length} passed</Badge></div>
         </div>
         <div class="panel-body">
           {pf ? controls.map(c => (
             <div class="close-control" key={c.title}>
               <span class={`control-state${c.ok ? '' : c.warn ? ' warn' : ' pend'}`}>{c.ok ? '✓' : '!'}</span>
               <div><strong>{c.title}</strong><small>{c.detail}</small></div>
-              <span class={`pill ${c.ok ? 'green' : c.warn ? 'red' : 'amber'}`}>{c.ok ? 'Passed' : c.warn ? 'Blocked' : 'Pending'}</span>
+              <Badge tone={c.ok ? 'success' : c.warn ? 'danger' : 'warning'}>{c.ok ? 'Passed' : c.warn ? 'Blocked' : 'Pending'}</Badge>
             </div>
           )) : <div class="prw-empty">Awaiting the approved, locked calculation version.</div>}
 
@@ -96,7 +96,7 @@ export function CloseReleaseCard({ run, preflight }: {
       <section class="card">
         <div class="sec-head">
           <div><div class="sec-title">Payroll release certificate</div><div class="sec-sub">Issued only after every control passes and the close owner attests.</div></div>
-          <span class={`pill ${released ? 'green' : 'grey'}`}>{released ? 'Issued' : 'Draft'}</span>
+          <Badge tone={released ? 'success' : 'neutral'}>{released ? 'Issued' : 'Draft'}</Badge>
         </div>
         <div class="panel-body">
           <div class="certificate">

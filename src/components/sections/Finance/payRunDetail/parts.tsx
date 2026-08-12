@@ -8,6 +8,7 @@
 
 import { type VNode } from 'preact';
 import { type PayrollRun } from '@api/finance/payroll';
+import { type BadgeTone } from '@ui';
 
 // ── Formatting ──────────────────────────────────────────────────────────────────
 
@@ -60,16 +61,14 @@ function humanFreq(f: string): string {
   return f.replace(/_/g, '-').replace(/\b\w/g, c => c.toUpperCase());
 }
 
-// ── Status pill tone (mockup .pill colour intents) ──────────────────────────────
+// ── Run status → Badge tone ───────────────────────────────────────────────────
 
-export type PillIntent = 'green' | 'amber' | 'red' | 'grey' | 'blue';
-
-export function statusIntent(status: string): PillIntent {
+export function statusTone(status: string): BadgeTone {
   switch (status) {
-    case 'locked': case 'approved': case 'released': return 'green';
-    case 'pending_approval': case 'calculated': case 'input_locked': return 'amber';
-    case 'returned': case 'cancelled': case 'calculation_failed': return 'red';
-    default: return 'grey';
+    case 'locked': case 'approved': case 'released': return 'success';
+    case 'pending_approval': case 'calculated': case 'input_locked': return 'warning';
+    case 'returned': case 'cancelled': case 'calculation_failed': return 'danger';
+    default: return 'neutral';
   }
 }
 

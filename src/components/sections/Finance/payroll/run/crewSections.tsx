@@ -15,6 +15,7 @@
 import { type VNode, type ComponentChildren } from 'preact';
 import { type CrewRunEvidence } from '@api/finance/payroll';
 import { fmtMoney, humanize } from '../../financeShared';
+import { Badge } from '@ui';
 
 interface CrewProps {
   crew: CrewRunEvidence;
@@ -129,9 +130,9 @@ export function CrewInputReconciliation({ crew, names }: CrewProps): VNode {
           <div class="attention-list">
             {open.map(r => (
               <div class="attention-row" key={r.key}>
-                <span class={`pill ${r.severity === 'blocker' ? 'red' : 'amber'}`}>
+                <Badge tone={r.severity === 'blocker' ? 'danger' : 'warning'}>
                   {r.severity === 'blocker' ? 'Blocker' : 'Review'}
-                </span>
+                </Badge>
                 <div class="row-copy">
                   <div class="act-t">{r.label} · {r.count}</div>
                   <div class="act-s">{r.detail}</div>

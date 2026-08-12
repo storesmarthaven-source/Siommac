@@ -11,7 +11,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/preact';
-import { PolicyChip, CalendarChip, lifecycleSteps, statusIntent, fmtCompact } from './parts';
+import { PolicyChip, CalendarChip, lifecycleSteps, statusTone, fmtCompact } from './parts';
 import { PolicyEvidencePanel } from './panels';
 import { matchCreateBlocker } from '../PayNewRunWizard';
 import { type PayrollRun, type PolicyEvidence } from '@api/finance/payroll';
@@ -157,9 +157,9 @@ describe('lifecycle + format helpers', () => {
     expect(steps.find(s => s.key === 'pending_approval')?.state).toBe('fail');
   });
 
-  it('statusIntent + fmtCompact behave', () => {
-    expect(statusIntent('locked')).toBe('green');
-    expect(statusIntent('returned')).toBe('red');
+  it('statusTone + fmtCompact behave', () => {
+    expect(statusTone('locked')).toBe('success');
+    expect(statusTone('returned')).toBe('danger');
     expect(fmtCompact(9_243_600)).toBe('TTD 9.24M');
     expect(fmtCompact(500)).toBe('TTD 500');
   });

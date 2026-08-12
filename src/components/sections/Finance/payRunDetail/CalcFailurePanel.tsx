@@ -25,7 +25,7 @@ import { type PayrollRunWorkspace, type PayrollCalculationAttempt } from '@api/f
 import { humanize } from '../financeShared';
 import { EmployeeCell } from '../_shared/EmployeeCell';
 import { fmtDateTime } from './interactiveTabs';
-import { Button } from '@ui';
+import { Badge, Button, type BadgeTone } from '@ui';
 
 function shortId(id: string | null | undefined): string {
   if (!id) return '—';
@@ -88,7 +88,7 @@ export function CalcFailurePanel({ workspace }: {
             <div class="sec-title">Root-cause diagnosis</div>
             <div class="sec-sub">Fix these at the source, then retry — payroll never overrides a failed control.</div>
           </div>
-          <div class="aux"><span class={`pill ${blockers.length > 0 ? 'red' : 'green'}`}>{blockers.length} blocking record{blockers.length === 1 ? '' : 's'}</span></div>
+          <div class="aux"><Badge tone={blockers.length > 0 ? 'danger' : 'success'}>{blockers.length} blocking record{blockers.length === 1 ? '' : 's'}</Badge></div>
         </div>
         {blockers.length > 0 ? (
           <div class="table-wrap">
@@ -101,7 +101,7 @@ export function CalcFailurePanel({ workspace }: {
                     <td><strong>{humanize(f.domain)}</strong><small>{humanize(f.findingType)}</small></td>
                     <td><strong>{f.title}</strong>{f.detail && <small>{f.detail}</small>}</td>
                     <td>{f.assigneeId ? <EmployeeCell employeeId={f.assigneeId} /> : <span class="muted">{humanize(f.domain)} owner</span>}</td>
-                    <td><span class={`pill ${f.state === 'in_progress' ? 'amber' : 'red'}`}>{humanize(f.state)}</span></td>
+                    <td><Badge tone={f.state === 'in_progress' ? 'warning' : 'danger'}>{humanize(f.state)}</Badge></td>
                   </tr>
                 ))}
               </tbody>
@@ -124,16 +124,16 @@ export function CalcFailurePanel({ workspace }: {
         <div>
           <RecoveryStep n={1} title="Correct the authoritative source records"
             detail="Update and approve the effective records in their owning module — do not override the failure in payroll."
-            pill={clear ? { cls: 'green', label: 'Done' } : { cls: 'amber', label: 'Action needed' }} />
+            pill={clear ? { tone: 'success', label: 'Done' } : { tone: 'warning', label: 'Action needed' }} />
           <RecoveryStep n={2} title="Refresh and re-check source readiness"
             detail="Re-validate the inputs so the retry runs against corrected data."
-            pill={{ cls: 'grey', label: 'Manual' }} />
+            pill={{ tone: 'neutral', label: 'Manual' }} />
           <RecoveryStep n={3} title="Retain snapshot + failed attempt as evidence"
             detail="The failed attempt and its input snapshot stay immutable for audit; the retry creates the next attempt."
-            pill={{ cls: 'grey', label: 'Automatic' }} />
+            pill={{ tone: 'neutral', label: 'Automatic' }} />
           <RecoveryStep n={4} title="Retry as the next calculation attempt"
             detail="Uses an idempotent job key and commits a new result version only after every employee completes."
-            pill={clear ? { cls: 'green', label: 'Ready' } : { cls: 'red', label: 'Blocked' }} />
+            pill={clear ? { tone: 'success', label: 'Ready' } : { tone: 'danger', label: 'Blocked' }} />
         </div>
       </section>
 
@@ -177,13 +177,13 @@ export function CalcFailurePanel({ workspace }: {
 }
 
 function RecoveryStep({ n, title, detail, pill }: {
-  n: number; title: string; detail: string; pill: { cls: string; label: string };
+  n: number; title: string; detail: string; pill: { tone: BadgeTone; label: string };
 }): VNode {
   return (
     <div class="recovery-step">
       <div class="n">{n}</div>
       <div><strong>{title}</strong><small>{detail}</small></div>
-      <span class={`pill ${pill.cls}`}>{pill.label}</span>
+      <Badge tone={pill.tone}>{pill.label}</Badge>
     </div>
   );
 }

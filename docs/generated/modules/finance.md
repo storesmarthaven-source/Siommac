@@ -2,9 +2,9 @@
 
 # finance Module Map
 
-Source fingerprint: `c457425f604fd78830f330e5`
+Source fingerprint: `170d420ad257f005dd2d8bd7`
 
-Files: 139 | Symbols: 1849 | Widgets: 9 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
+Files: 139 | Symbols: 1848 | Widgets: 9 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
 ## Widgets and Tiles
 
@@ -546,7 +546,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/FinanceSection.tsx` | 112 |
 | frontend-page | `src/components/sections/Finance/PayBridgeDialog.tsx` | 185 |
 | frontend-page | `src/components/sections/Finance/PayNewRunWizard.tsx` | 654 |
-| frontend-page | `src/components/sections/Finance/PayRunDetailPage.tsx` | 420 |
+| frontend-page | `src/components/sections/Finance/PayRunDetailPage.tsx` | 421 |
 | frontend-page | `src/components/sections/Finance/PayWarningResolveDialog.tsx` | 96 |
 | frontend-page | `src/components/sections/Finance/PayablesOverview.tsx` | 347 |
 | frontend-page | `src/components/sections/Finance/RemittancesOverview.tsx` | 1840 |
@@ -578,7 +578,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/payRunDetail/pageGate.test.tsx` | 125 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/panelState.test.tsx` | 61 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/panels.tsx` | 657 |
-| frontend-page | `src/components/sections/Finance/payRunDetail/parts.tsx` | 135 |
+| frontend-page | `src/components/sections/Finance/payRunDetail/parts.tsx` | 134 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/payRunDetail.test.tsx` | 167 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/tabsA11y.test.tsx` | 112 |
 

@@ -18,10 +18,11 @@ import {
   type PayrollRun, type PayrollRunActions,
 } from '@api/finance/payroll';
 import { humanize } from './financeShared';
+import { Badge } from '@ui';
 import { useEmployeeNames } from '@api/finance/lookups';
 import { type PayRunDrawerActions } from './payRunDetail/interactiveTabs';
 import {
-  PolicyChip, CalendarChip, lifecycleSteps, statusIntent, runTitle,
+  PolicyChip, CalendarChip, lifecycleSteps, statusTone, runTitle,
   dayLabel, initials, fmtCompact, monthLabel,
 } from './payRunDetail/parts';
 import {
@@ -153,7 +154,7 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApp
         </div>
         <div class="rh-cell">
           <div class="rh-ci">i</div>
-          <div><div class="k">Status</div><span class={`pill ${statusIntent(run.status)}`}>{humanizeStatus(run.status)}</span></div>
+          <div><div class="k">Status</div><Badge tone={statusTone(run.status)}>{humanizeStatus(run.status)}</Badge></div>
         </div>
         <div class="rh-cell">
           <div><div class="k">Current stage</div><div class="v">{curStage}</div>
@@ -238,7 +239,7 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApp
                 tabIndex={tab === t.key ? 0 : -1}
                 class={`tab${tab === t.key ? ' on' : ''}`} key={t.key} onClick={() => setTab(t.key)}>
                 {t.label}
-                {t.key === 'exceptions' && blockers > 0 && <span class="pill red" style={{ padding: '2px 8px', fontSize: 11 }}>{blockers}</span>}
+                {t.key === 'exceptions' && blockers > 0 && <Badge tone="danger" size="sm">{blockers}</Badge>}
               </button>
             ))}
           </nav>

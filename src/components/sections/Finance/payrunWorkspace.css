@@ -170,13 +170,8 @@
 .prw .employee strong, .prw .employee small { display: block; }
 .prw .employee small { font-size: 10px; color: var(--muted); margin-top: 2px; }
 
-/* ── Pills / chips / signals / step numbers ──────────────────────────────── */
-.prw .pill { display: inline-flex; align-items: center; padding: 4px 13px; border-radius: 15px; font-size: 12px; font-weight: 700; white-space: nowrap; }
-.prw .pill.blue { background: var(--brand-soft); color: var(--brand-ink); }
-.prw .pill.green { background: var(--green-soft); color: var(--green-ink); }
-.prw .pill.amber { background: var(--amber-soft); color: var(--amber-ink); }
-.prw .pill.red { background: var(--red-soft); color: var(--red); }
-.prw .pill.grey { background: #eef0f4; color: var(--muted); }
+/* ── Chips / signals / step numbers ──────────────────────────────────────── */
+/* `.prw .pill` retired — every consumer is canonical <Badge>. */
 
 /* ── Calc-failure recovery (F-05): attempt band · controlled-recovery steps · diagnostic code ── */
 .prw .attempt-band { display: grid; grid-template-columns: minmax(220px,1.4fr) repeat(4,minmax(120px,.7fr)); gap: 14px; background: #fff; border: 1px solid #f1c9c6; border-left: 5px solid var(--red); border-radius: 8px; padding: 16px 18px; align-items: center; }
