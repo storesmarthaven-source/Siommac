@@ -16,16 +16,30 @@ import {
   toneFromWorkflowStatus,
   toneFromPriority,
   statusLabel as statusLabelShared,
+  badgeTone,
+  type BadgeToneName,
 } from '@ui/status/statusTokens';
 
-/** Workflow/approval status → .vt-pill variant. */
+/** Workflow/approval status → .vt-pill variant.
+    NOTE: emits a legacy class. Prefer `statusBadgeTone()` with `<Badge>`. */
 export function statusPill(status: WorkflowStatus): string {
   return toneClass(toneFromWorkflowStatus(status));
 }
 
-/** Priority → .vt-pill variant. */
+/** Workflow/approval status → canonical Badge tone. */
+export function statusBadgeTone(status: WorkflowStatus): BadgeToneName {
+  return badgeTone(toneFromWorkflowStatus(status));
+}
+
+/** Priority → .vt-pill variant.
+    NOTE: emits a legacy class. Prefer `priorityBadgeTone()` with `<Badge>`. */
 export function priorityPill(p: Priority): string {
   return toneClass(toneFromPriority(p));
+}
+
+/** Priority → canonical Badge tone. */
+export function priorityBadgeTone(p: Priority): BadgeToneName {
+  return badgeTone(toneFromPriority(p));
 }
 
 /** Human label for a status. */

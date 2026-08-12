@@ -12,6 +12,8 @@ import {
   toneFromText,
   toneFromPpeStatus,
   colorFromSeverity,
+  badgeTone,
+  type BadgeToneName,
 } from '@ui/status/statusTokens';
 
 // ── HSE Dashboard (T&T HSE command view) ──────────────────────────────────────
@@ -115,9 +117,18 @@ export const mockReadiness: ReadinessRow[] = [
 ];
 
 /** HSE status text → Siomac .vt-pill variant. Delegates to the shared
-    status source of truth (@ui/status/statusTokens). */
+    status source of truth (@ui/status/statusTokens).
+    NOTE: emits a legacy class. Prefer `hseBadgeTone()` with `<Badge>`; this stays
+    un-deprecated until its last consumer is migrated, because tagging it while
+    consumers remain turns their lint red for a change they cannot make yet. */
 export function hsePill(text: string | null | undefined): string {
   return toneClass(toneFromText(text));
+}
+
+/** HSE status text → canonical Badge tone. Same semantic decision as
+    `hsePill()`, expressed as a prop instead of a class name. */
+export function hseBadgeTone(text: string | null | undefined): BadgeToneName {
+  return badgeTone(toneFromText(text));
 }
 
 /** Severity → left-accent color (for KPI/readiness cards). */
@@ -219,9 +230,15 @@ export const PPE_MATRIX_COLUMNS = ['Helmet', 'Gloves', 'Glasses', 'Ear', 'Vest',
 // ── Status-pill mapping (mock status → Siomac .vt-pill variant) ───────────────
 
 /** PPE enum status → Siomac .vt-pill variant. Delegates to the shared
-    status source of truth (@ui/status/statusTokens). */
+    status source of truth (@ui/status/statusTokens).
+    NOTE: emits a legacy class. Prefer `ppeBadgeTone()` with `<Badge>`. */
 export function ppePillClass(status: string): string {
   return toneClass(toneFromPpeStatus(status));
+}
+
+/** PPE enum status → canonical Badge tone. */
+export function ppeBadgeTone(status: string): BadgeToneName {
+  return badgeTone(toneFromPpeStatus(status));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

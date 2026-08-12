@@ -9,8 +9,9 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { useMyWorkflowTasks, useDecideWorkflowTask, type WorkflowTask } from '@api/workflows';
-import { statusPill, statusLabel } from '@lib/workflow';
+import { statusBadgeTone, statusLabel } from '@lib/workflow';
 import type { WorkflowStatus } from '@lib/workflow/types';
+import { Badge } from '@ui';
 
 function TaskCard({ task, onOpen }: { task: WorkflowTask; onOpen: (t: WorkflowTask) => void }): VNode {
   const inst = task.workflow_instances;
@@ -22,7 +23,7 @@ function TaskCard({ task, onOpen }: { task: WorkflowTask; onOpen: (t: WorkflowTa
         <strong>{task.step_key} · {task.task_type}</strong>
         <span>{ref} · Due {task.due_at ? new Date(task.due_at).toLocaleDateString('en-GB') : 'No deadline'} · {task.assigned_role ?? 'Unassigned'}</span>
       </div>
-      <span class={statusPill(task.status as WorkflowStatus)}>{statusLabel(task.status as WorkflowStatus)}</span>
+      <Badge tone={statusBadgeTone(task.status as WorkflowStatus)}>{statusLabel(task.status as WorkflowStatus)}</Badge>
     </article>
   );
 }

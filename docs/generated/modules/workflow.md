@@ -2,9 +2,9 @@
 
 # workflow Module Map
 
-Source fingerprint: `0964f5ec20f84787956f57e0`
+Source fingerprint: `ba6a68ed790af959778de851`
 
-Files: 47 | Symbols: 321 | Widgets: 0 | Unique mounted endpoints: 40 | Route definitions: 40 mounted + 0 unmounted | API calls: 8 | DB objects: 128 | E2E suites: 3
+Files: 47 | Symbols: 323 | Widgets: 0 | Unique mounted endpoints: 40 | Route definitions: 40 mounted + 0 unmounted | API calls: 8 | DB objects: 128 | E2E suites: 3
 
 ## Widgets and Tiles
 
@@ -86,10 +86,10 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useRetryHandoff` | function / hook | `src/api/workflows.ts:221` | `-` |
 | `OnboardingHandoffsWorkspace` | function / component | `src/components/sections/HR/OnboardingHandoffsWorkspace.tsx:47` | `-` |
 | `ActivityTimeline` | function / component | `src/components/shared/orchestration/ActivityTimeline.tsx:58` | `-` |
-| `ApprovalInbox` | function / component | `src/components/workflow/ApprovalInbox.tsx:30` | `-` |
-| `AuditFeed` | function / component | `src/components/workflow/AuditFeed.tsx:13` | `-` |
+| `ApprovalInbox` | function / component | `src/components/workflow/ApprovalInbox.tsx:31` | `-` |
+| `AuditFeed` | function / component | `src/components/workflow/AuditFeed.tsx:14` | `-` |
 | `HandoffList` | function / component | `src/components/workflow/HandoffList.tsx:29` | `-` |
-| `WorkflowDrawer` | function / component | `src/components/workflow/WorkflowDrawer.tsx:15` | `-` |
+| `WorkflowDrawer` | function / component | `src/components/workflow/WorkflowDrawer.tsx:16` | `-` |
 | `useWorkflow` | function / hook | `src/lib/workflow/useWorkflow.ts:36` | `-` |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.

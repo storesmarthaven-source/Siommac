@@ -8,8 +8,8 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, type AreaTab, type SparkDef } from '@ui';
-import { HSE_SITES, hsePill, type HseSeverity } from './types';
+import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, type AreaTab, type SparkDef, Badge } from '@ui';
+import { HSE_SITES, hseBadgeTone, type HseSeverity } from './types';
 
 // ── Mock data ────────────────────────────────────────────────────────────────
 
@@ -132,7 +132,7 @@ function ObligationsTab(): VNode {
                       <td style={{ fontSize: '0.76rem', maxWidth: '260px' }}>{o.topic}</td>
                       <td style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>{o.owner}</td>
                       <td class="vt-cell-mono" style={{ fontSize: '0.76rem', color: o.status === 'Overdue' ? 'var(--siomac-red)' : o.status === 'Due' ? '#d97706' : 'inherit' }}>{o.due}</td>
-                      <td><span class={hsePill(o.status)}>{o.status}</span></td>
+                      <td><Badge tone={hseBadgeTone(o.status)}>{o.status}</Badge></td>
                     </tr>
                   ))}
                 </tbody>
@@ -215,7 +215,7 @@ function EmaPermitsTab(): VNode {
                       <td style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>{p.site}</td>
                       <td class="vt-cell-mono">{p.issued}</td>
                       <td class="vt-cell-mono" style={{ color: p.status === 'Expired' ? 'var(--siomac-red)' : p.status === 'Due' ? '#d97706' : 'inherit', fontWeight: p.status !== 'Current' ? 600 : 400 }}>{p.expiry}</td>
-                      <td><span class={hsePill(p.status)}>{p.status}</span></td>
+                      <td><Badge tone={hseBadgeTone(p.status)}>{p.status}</Badge></td>
                     </tr>
                   ))}
                 </tbody>
@@ -299,7 +299,7 @@ function BreachesTab(): VNode {
                       <td class="vt-cell-mono">{b.date}</td>
                       <td style={{ fontSize: '0.75rem', maxWidth: '220px' }}>{b.description}</td>
                       <td style={{ color: 'var(--text-muted)', fontSize: '0.73rem' }}>{b.action}</td>
-                      <td><span class={hsePill(b.status)}>{b.status}</span></td>
+                      <td><Badge tone={hseBadgeTone(b.status)}>{b.status}</Badge></td>
                     </tr>
                   ))}
                 </tbody>
@@ -348,7 +348,7 @@ function CalendarTab(): VNode {
                   <td style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{e.regulation}</td>
                   <td class="vt-cell-mono" style={{ color: e.status === 'Overdue' ? 'var(--siomac-red)' : e.status === 'Due' ? '#d97706' : 'inherit', fontWeight: e.status === 'Overdue' || e.status === 'Due' ? 600 : 400 }}>{e.due}</td>
                   <td style={{ color: 'var(--text-muted)' }}>{e.owner}</td>
-                  <td><span class={hsePill(e.status)}>{e.status}</span></td>
+                  <td><Badge tone={hseBadgeTone(e.status)}>{e.status}</Badge></td>
                 </tr>
               ))}
             </tbody>

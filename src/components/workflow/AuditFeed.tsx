@@ -7,8 +7,9 @@
 
 import { type VNode } from 'preact';
 import { useWorkflowList } from '@api/workflows';
-import { statusPill, statusLabel } from '@lib/workflow';
+import { statusBadgeTone, statusLabel } from '@lib/workflow';
 import type { WorkflowStatus } from '@lib/workflow/types';
+import { Badge } from '@ui';
 
 export function AuditFeed({ limit }: { limit?: number }): VNode {
   const listQ   = useWorkflowList({ limit: limit ?? 50 });
@@ -31,7 +32,7 @@ export function AuditFeed({ limit }: { limit?: number }): VNode {
             <span>{w.source_module.toUpperCase()} · {w.source_entity_id}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-            <span class={statusPill(w.status as WorkflowStatus)}>{statusLabel(w.status as WorkflowStatus)}</span>
+            <Badge tone={statusBadgeTone(w.status as WorkflowStatus)}>{statusLabel(w.status as WorkflowStatus)}</Badge>
             <span class="wf-audit-meta">{new Date(w.created_at).toLocaleDateString('en-GB')}</span>
           </div>
         </article>

@@ -2,9 +2,9 @@
 
 # hse Module Map
 
-Source fingerprint: `0964f5ec20f84787956f57e0`
+Source fingerprint: `ba6a68ed790af959778de851`
 
-Files: 87 | Symbols: 1275 | Widgets: 0 | Unique mounted endpoints: 144 | Route definitions: 144 mounted + 0 unmounted | API calls: 107 | DB objects: 65 | E2E suites: 4
+Files: 87 | Symbols: 1277 | Widgets: 0 | Unique mounted endpoints: 144 | Route definitions: 144 mounted + 0 unmounted | API calls: 107 | DB objects: 65 | E2E suites: 4
 
 ## Widgets and Tiles
 
@@ -512,7 +512,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HSE/PPEManager.tsx` | 831 |
 | frontend-page | `src/components/sections/HSE/Permits.tsx` | 564 |
 | frontend-page | `src/components/sections/HSE/RiskJsa.tsx` | 636 |
-| frontend-page | `src/components/sections/HSE/Toolbox.tsx` | 235 |
+| frontend-page | `src/components/sections/HSE/Toolbox.tsx` | 234 |
 | frontend-page | `src/components/sections/HSE/Training.tsx` | 251 |
 | frontend-page | `src/components/sections/HSE/Workflows.tsx` | 764 |
 | frontend-page | `src/components/sections/HSE/index.ts` | 10 |
@@ -566,5 +566,5 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HSE/training/TrainingDialogs.tsx` | 146 |
 | frontend-page | `src/components/sections/HSE/training/TrainingInsightCards.tsx` | 252 |
 | frontend-page | `src/components/sections/HSE/training/WorkerProfileDrawer.tsx` | 93 |
-| frontend-page | `src/components/sections/HSE/types.ts` | 596 |
+| frontend-page | `src/components/sections/HSE/types.ts` | 613 |
 

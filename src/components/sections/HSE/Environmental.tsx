@@ -8,8 +8,8 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, TextareaInput, type AreaTab, type SparkDef } from '@ui';
-import { HSE_SITES, hsePill, type HseSeverity } from './types';
+import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, TextareaInput, type AreaTab, type SparkDef, Badge } from '@ui';
+import { HSE_SITES, hseBadgeTone, type HseSeverity } from './types';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
@@ -164,7 +164,7 @@ function SpillsTab(): VNode {
                           {s.emaNotified ? 'Yes' : s.tier === 'Tier 1' ? 'N/A' : 'Pending'}
                         </span>
                       </td>
-                      <td><span class={hsePill(s.status)}>{s.status}</span></td>
+                      <td><Badge tone={hseBadgeTone(s.status)}>{s.status}</Badge></td>
                     </tr>
                   ))}
                 </tbody>
@@ -253,7 +253,7 @@ function WasteTab(): VNode {
                       <td style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{w.carrier}</td>
                       <td style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{w.disposal}</td>
                       <td><span class="vt-cell-mono" style={{ fontSize: '0.72rem' }}>{w.manifest || '—'}</span></td>
-                      <td><span class={hsePill(w.status)}>{w.status}</span></td>
+                      <td><Badge tone={hseBadgeTone(w.status)}>{w.status}</Badge></td>
                     </tr>
                   ))}
                 </tbody>
@@ -309,7 +309,7 @@ function EmaTab(): VNode {
                   <td><span class={`vt-pill ${n.tier === 'Tier 2' ? 'is-warn' : 'is-info'}`}>{n.tier}</span></td>
                   <td style={{ color: 'var(--text-muted)' }}>{n.notifiedWithin}</td>
                   <td><span class="vt-cell-mono" style={{ fontSize: '0.72rem' }}>{n.refNumber}</span></td>
-                  <td><span class={hsePill(n.status)}>{n.status}</span></td>
+                  <td><Badge tone={hseBadgeTone(n.status)}>{n.status}</Badge></td>
                 </tr>
               ))}
             </tbody>
@@ -354,7 +354,7 @@ function MonitoringTab(): VNode {
                       <td class="vt-cell-mono" style={{ color: m.status === 'Sample Due' ? '#d97706' : 'inherit', fontWeight: m.status === 'Sample Due' ? 600 : 400 }}>{m.nextSample}</td>
                       <td style={{ fontWeight: 500 }}>{m.result}</td>
                       <td style={{ color: 'var(--text-muted)', fontSize: '0.74rem' }}>{m.limit}</td>
-                      <td><span class={hsePill(m.status)}>{m.status}</span></td>
+                      <td><Badge tone={hseBadgeTone(m.status)}>{m.status}</Badge></td>
                     </tr>
                   ))}
                 </tbody>

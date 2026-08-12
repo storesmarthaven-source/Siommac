@@ -7,10 +7,9 @@ import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
   PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, SelectInput, TextInput,
-  type AreaTab, type SparkDef,
-} from '@ui';
+  type AreaTab, type SparkDef, Badge } from '@ui';
 import {
-  mockToolboxTalks, TOOLBOX_TOPICS, HSE_SITES, hsePill,
+  mockToolboxTalks, TOOLBOX_TOPICS, HSE_SITES, hseBadgeTone,
   type ToolboxTalkRow,
 } from './types';
 
@@ -129,7 +128,7 @@ export function ToolboxArea({ tab }: { tab: string }): VNode {
                               <span style={{ fontWeight: t.attendees === 0 ? 400 : 500 }}>{t.attendees === 0 ? '—' : t.attendees}</span>
                             </div>
                           </td>
-                          <td><span class={hsePill(t.status)}>{t.status}</span></td>
+                          <td><Badge tone={hseBadgeTone(t.status)}>{t.status}</Badge></td>
                         </tr>
                       ))}
                     </tbody>

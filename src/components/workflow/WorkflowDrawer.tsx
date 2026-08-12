@@ -9,8 +9,9 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { useWorkflow, useDecideWorkflowTask } from '@api/workflows';
-import { statusPill, statusLabel, priorityPill } from '@lib/workflow';
+import { statusBadgeTone, statusLabel, priorityBadgeTone } from '@lib/workflow';
 import type { WorkflowStatus, Priority } from '@lib/workflow/types';
+import { Badge } from '@ui';
 
 export function WorkflowDrawer({ workflowId, onClose }: { workflowId: string | null; onClose: () => void }): VNode {
   const detailQ = useWorkflow(workflowId ?? '');
@@ -48,8 +49,8 @@ export function WorkflowDrawer({ workflowId, onClose }: { workflowId: string | n
           {instance && (
             <>
               <div class="hse-drawer-grid">
-                <div class="hse-drawer-card"><span>Status</span><strong><span class={statusPill(instance.status as WorkflowStatus)}>{statusLabel(instance.status as WorkflowStatus)}</span></strong></div>
-                <div class="hse-drawer-card"><span>Priority</span><strong><span class={priorityPill(instance.priority as Priority)}>{instance.priority}</span></strong></div>
+                <div class="hse-drawer-card"><span>Status</span><strong><Badge tone={statusBadgeTone(instance.status as WorkflowStatus)}>{statusLabel(instance.status as WorkflowStatus)}</Badge></strong></div>
+                <div class="hse-drawer-card"><span>Priority</span><strong><Badge tone={priorityBadgeTone(instance.priority as Priority)}>{instance.priority}</Badge></strong></div>
                 <div class="hse-drawer-card"><span>Due</span><strong>{instance.due_at ? new Date(instance.due_at).toLocaleDateString('en-GB') : '—'}</strong></div>
                 <div class="hse-drawer-card"><span>Step</span><strong>{instance.current_step}</strong></div>
               </div>
@@ -65,7 +66,7 @@ export function WorkflowDrawer({ workflowId, onClose }: { workflowId: string | n
                           {t.assigned_role ?? 'Unassigned'}
                           {t.decision ? ` · ${t.decision}` : ''}
                         </span>
-                        <span class={statusPill(t.status as WorkflowStatus)}>{statusLabel(t.status as WorkflowStatus)}</span>
+                        <Badge tone={statusBadgeTone(t.status as WorkflowStatus)}>{statusLabel(t.status as WorkflowStatus)}</Badge>
                       </div>
                     ))}
                   </div>

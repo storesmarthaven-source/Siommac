@@ -8,8 +8,8 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, type AreaTab, type SparkDef } from '@ui';
-import { HSE_SITES, hsePill, type HseSeverity } from './types';
+import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, type AreaTab, type SparkDef, Badge } from '@ui';
+import { HSE_SITES, hseBadgeTone, type HseSeverity } from './types';
 
 // ── Mock data ────────────────────────────────────────────────────────────────
 
@@ -141,10 +141,10 @@ function RegisterTab(): VNode {
                       <td style={{ color: 'var(--text-muted)' }}>{c.contact}</td>
                       <td style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>{c.trade}</td>
                       <td style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>{c.site}</td>
-                      <td><span class={hsePill(c.stow)}>{c.stow}</span></td>
-                      <td><span class={hsePill(c.insurance)}>{c.insurance}</span></td>
-                      <td><span class={hsePill(c.medicals)}>{c.medicals}</span></td>
-                      <td><span class={hsePill(c.status)}>{c.status}</span></td>
+                      <td><Badge tone={hseBadgeTone(c.stow)}>{c.stow}</Badge></td>
+                      <td><Badge tone={hseBadgeTone(c.insurance)}>{c.insurance}</Badge></td>
+                      <td><Badge tone={hseBadgeTone(c.medicals)}>{c.medicals}</Badge></td>
+                      <td><Badge tone={hseBadgeTone(c.status)}>{c.status}</Badge></td>
                     </tr>
                   ))}
                 </tbody>
@@ -226,7 +226,7 @@ function InductionTab(): VNode {
                   <td class="vt-cell-mono">{i.date}</td>
                   <td style={{ color: 'var(--text-muted)' }}>{i.conductor}</td>
                   <td style={{ color: 'var(--text-muted)', fontSize: '0.73rem', maxWidth: '200px' }}>{i.topics}</td>
-                  <td><span class={hsePill(i.status)}>{i.status}</span></td>
+                  <td><Badge tone={hseBadgeTone(i.status)}>{i.status}</Badge></td>
                 </tr>
               ))}
             </tbody>
@@ -266,7 +266,7 @@ function FilesTab(): VNode {
                       <td><span class="vt-cell-name">{f.company}</span></td>
                       <td>{f.docType}</td>
                       <td class="vt-cell-mono" style={{ color: f.status === 'Expired' ? 'var(--siomac-red)' : f.status === 'Due' ? '#d97706' : 'inherit', fontWeight: f.status !== 'Current' ? 600 : 400 }}>{f.expiry}</td>
-                      <td><span class={hsePill(f.status)}>{f.status}</span></td>
+                      <td><Badge tone={hseBadgeTone(f.status)}>{f.status}</Badge></td>
                     </tr>
                   ))}
                 </tbody>

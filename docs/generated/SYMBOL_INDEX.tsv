@@ -10167,9 +10167,9 @@ JSA_EXPORT_COLS	array	hse	false		src/components/sections/HSE/RiskJsa.tsx	341
 HazardTab	function	hse	false	component	src/components/sections/HSE/RiskJsa.tsx	351	
 AssessmentsTab	function	hse	false	component	src/components/sections/HSE/RiskJsa.tsx	457	
 JsaTab	function	hse	false	component	src/components/sections/HSE/RiskJsa.tsx	550	
-TABS	array	hse	false		src/components/sections/HSE/Toolbox.tsx	17	
-TOPIC_ICONS	object	hse	false		src/components/sections/HSE/Toolbox.tsx	21	
-ToolboxArea	function	hse	true	component	src/components/sections/HSE/Toolbox.tsx	32	
+TABS	array	hse	false		src/components/sections/HSE/Toolbox.tsx	16	
+TOPIC_ICONS	object	hse	false		src/components/sections/HSE/Toolbox.tsx	20	
+ToolboxArea	function	hse	true	component	src/components/sections/HSE/Toolbox.tsx	31	
 TABS	array	hse	false		src/components/sections/HSE/Training.tsx	26	
 titleCase	function	hse	false		src/components/sections/HSE/Training.tsx	31	
 fmtDate	function	hse	false		src/components/sections/HSE/Training.tsx	32	
@@ -10219,90 +10219,92 @@ TABS	array	hse	false		src/components/sections/HSE/training/WorkerProfileDrawer.t
 fmt	function	hse	false		src/components/sections/HSE/training/WorkerProfileDrawer.tsx	17	
 CELL_PILL	object	hse	false		src/components/sections/HSE/training/WorkerProfileDrawer.tsx	19	
 WorkerProfileDrawer	function	hse	true	component	src/components/sections/HSE/training/WorkerProfileDrawer.tsx	24	
-HseSeverity	type	hse	true		src/components/sections/HSE/types.ts	20	
-HeroStat	interface	hse	true		src/components/sections/HSE/types.ts	23	
-mockHeroStats	array	hse	true		src/components/sections/HSE/types.ts	25	
-HSE_HEALTH_SCORE	variable	hse	true		src/components/sections/HSE/types.ts	33	
-HseKpi	interface	hse	true	ui-tile	src/components/sections/HSE/types.ts	36	
-mockHseKpis	array	hse	true	ui-tile	src/components/sections/HSE/types.ts	44	
-TrendPoint	interface	hse	true		src/components/sections/HSE/types.ts	54	
-mockTrend	array	hse	true		src/components/sections/HSE/types.ts	56	
-QueueItem	interface	hse	true		src/components/sections/HSE/types.ts	66	
-mockQueue	array	hse	true		src/components/sections/HSE/types.ts	68	
-HseIncident	interface	hse	true		src/components/sections/HSE/types.ts	76	
-mockHseIncidents	array	hse	true		src/components/sections/HSE/types.ts	80	
-SiteRisk	interface	hse	true		src/components/sections/HSE/types.ts	89	
-mockSiteRisk	array	hse	true		src/components/sections/HSE/types.ts	91	
-Permit	interface	hse	true		src/components/sections/HSE/types.ts	98	
-mockPermits	array	hse	true		src/components/sections/HSE/types.ts	100	
-ReadinessRow	interface	hse	true		src/components/sections/HSE/types.ts	108	
-mockReadiness	array	hse	true		src/components/sections/HSE/types.ts	110	
-hsePill	function	hse	true		src/components/sections/HSE/types.ts	119	
-hseSeverityColor	function	hse	true		src/components/sections/HSE/types.ts	124	
-hseStatusClass	function	hse	true		src/components/sections/HSE/types.ts	133	
-HSE_SITE_OPTIONS	array	hse	true		src/components/sections/HSE/types.ts	141	
-HSE_PERIOD_OPTIONS	array	hse	true		src/components/sections/HSE/types.ts	142	
-HSE_RISK_OPTIONS	array	hse	true		src/components/sections/HSE/types.ts	143	
-HSE_OWNER_OPTIONS	array	hse	true		src/components/sections/HSE/types.ts	144	
-splitSiteDetail	function	hse	true		src/components/sections/HSE/types.ts	147	
-PpeStatus	type	hse	true		src/components/sections/HSE/types.ts	154	
-PpeItem	interface	hse	true		src/components/sections/HSE/types.ts	156	
-mockPpeItems	array	hse	true		src/components/sections/HSE/types.ts	168	
-PpeEmployee	interface	hse	true		src/components/sections/HSE/types.ts	182	
-mockPpeEmployees	array	hse	true		src/components/sections/HSE/types.ts	191	
-RoleMatrixRow	interface	hse	true		src/components/sections/HSE/types.ts	203	
-mockRoleMatrix	array	hse	true		src/components/sections/HSE/types.ts	208	
-PPE_MATRIX_COLUMNS	variable	hse	true		src/components/sections/HSE/types.ts	217	
-ppePillClass	function	hse	true		src/components/sections/HSE/types.ts	223	
-HseWorker	interface	hse	true		src/components/sections/HSE/types.ts	233	
-HSE_SITES	variable	hse	true		src/components/sections/HSE/types.ts	235	
-mockHseWorkers	array	hse	true		src/components/sections/HSE/types.ts	237	
-IncidentType	type	hse	true		src/components/sections/HSE/types.ts	252	
-IncidentRecord	interface	hse	true		src/components/sections/HSE/types.ts	254	
-mockIncidents	array	hse	true		src/components/sections/HSE/types.ts	262	
-Investigation	interface	hse	true		src/components/sections/HSE/types.ts	271	
-mockInvestigations	array	hse	true		src/components/sections/HSE/types.ts	292	
-CapaItem	interface	hse	true		src/components/sections/HSE/types.ts	327	
-mockCapa	array	hse	true		src/components/sections/HSE/types.ts	332	
-HazardRow	interface	hse	true		src/components/sections/HSE/types.ts	341	
-mockHazards	array	hse	true		src/components/sections/HSE/types.ts	345	
-RiskAssessmentRow	interface	hse	true		src/components/sections/HSE/types.ts	353	
-mockRiskAssessments	array	hse	true		src/components/sections/HSE/types.ts	357	
-JsaRow	interface	hse	true		src/components/sections/HSE/types.ts	363	
-mockJsas	array	hse	true		src/components/sections/HSE/types.ts	365	
-riskRating	function	hse	true		src/components/sections/HSE/types.ts	372	
-PermitRow	interface	hse	true		src/components/sections/HSE/types.ts	382	
-mockPermitRows	array	hse	true		src/components/sections/HSE/types.ts	386	
-PERMIT_TYPES	variable	hse	true		src/components/sections/HSE/types.ts	393	
-InspectionRow	interface	hse	true		src/components/sections/HSE/types.ts	397	
-mockInspections	array	hse	true		src/components/sections/HSE/types.ts	401	
-FindingRow	interface	hse	true		src/components/sections/HSE/types.ts	408	
-mockFindings	array	hse	true		src/components/sections/HSE/types.ts	412	
-TRAINING_COURSES	variable	hse	true		src/components/sections/HSE/types.ts	420	
-CompetencyStatus	type	hse	true		src/components/sections/HSE/types.ts	422	
-CompetencyCell	interface	hse	true		src/components/sections/HSE/types.ts	424	
-CompetencyRow	interface	hse	true		src/components/sections/HSE/types.ts	425	
-mockCompetency	variable	hse	true		src/components/sections/HSE/types.ts	427	
-CertificationRow	interface	hse	true		src/components/sections/HSE/types.ts	436	
-mockCertifications	array	hse	true		src/components/sections/HSE/types.ts	440	
-ToolboxTalkRow	interface	hse	true		src/components/sections/HSE/types.ts	450	
-mockToolboxTalks	array	hse	true		src/components/sections/HSE/types.ts	454	
-TOOLBOX_TOPICS	variable	hse	true		src/components/sections/HSE/types.ts	461	
-HseDocRow	interface	hse	true		src/components/sections/HSE/types.ts	465	
-mockHseDocs	array	hse	true		src/components/sections/HSE/types.ts	469	
-HSE_DOC_TYPES	variable	hse	true		src/components/sections/HSE/types.ts	476	
-SdsRow	interface	hse	true		src/components/sections/HSE/types.ts	478	
-mockSds	array	hse	true		src/components/sections/HSE/types.ts	482	
-PpeAssignment	interface	hse	true		src/components/sections/HSE/types.ts	491	
-mockPpeAssignments	array	hse	true		src/components/sections/HSE/types.ts	502	
-PpeRenewalRow	interface	hse	true		src/components/sections/HSE/types.ts	519	
-mockPpeRenewals	array	hse	true		src/components/sections/HSE/types.ts	529	
-PpeReturnRow	interface	hse	true		src/components/sections/HSE/types.ts	540	
-mockPpeReturns	array	hse	true		src/components/sections/HSE/types.ts	551	
-PpeRequestRow	interface	hse	true		src/components/sections/HSE/types.ts	559	
-mockPpeRequests	array	hse	true		src/components/sections/HSE/types.ts	571	
-PpeKitRow	interface	hse	true		src/components/sections/HSE/types.ts	580	
-mockPpeKits	array	hse	true		src/components/sections/HSE/types.ts	589	
+HseSeverity	type	hse	true		src/components/sections/HSE/types.ts	22	
+HeroStat	interface	hse	true		src/components/sections/HSE/types.ts	25	
+mockHeroStats	array	hse	true		src/components/sections/HSE/types.ts	27	
+HSE_HEALTH_SCORE	variable	hse	true		src/components/sections/HSE/types.ts	35	
+HseKpi	interface	hse	true	ui-tile	src/components/sections/HSE/types.ts	38	
+mockHseKpis	array	hse	true	ui-tile	src/components/sections/HSE/types.ts	46	
+TrendPoint	interface	hse	true		src/components/sections/HSE/types.ts	56	
+mockTrend	array	hse	true		src/components/sections/HSE/types.ts	58	
+QueueItem	interface	hse	true		src/components/sections/HSE/types.ts	68	
+mockQueue	array	hse	true		src/components/sections/HSE/types.ts	70	
+HseIncident	interface	hse	true		src/components/sections/HSE/types.ts	78	
+mockHseIncidents	array	hse	true		src/components/sections/HSE/types.ts	82	
+SiteRisk	interface	hse	true		src/components/sections/HSE/types.ts	91	
+mockSiteRisk	array	hse	true		src/components/sections/HSE/types.ts	93	
+Permit	interface	hse	true		src/components/sections/HSE/types.ts	100	
+mockPermits	array	hse	true		src/components/sections/HSE/types.ts	102	
+ReadinessRow	interface	hse	true		src/components/sections/HSE/types.ts	110	
+mockReadiness	array	hse	true		src/components/sections/HSE/types.ts	112	
+hsePill	function	hse	true		src/components/sections/HSE/types.ts	124	
+hseBadgeTone	function	hse	true		src/components/sections/HSE/types.ts	130	
+hseSeverityColor	function	hse	true		src/components/sections/HSE/types.ts	135	
+hseStatusClass	function	hse	true		src/components/sections/HSE/types.ts	144	
+HSE_SITE_OPTIONS	array	hse	true		src/components/sections/HSE/types.ts	152	
+HSE_PERIOD_OPTIONS	array	hse	true		src/components/sections/HSE/types.ts	153	
+HSE_RISK_OPTIONS	array	hse	true		src/components/sections/HSE/types.ts	154	
+HSE_OWNER_OPTIONS	array	hse	true		src/components/sections/HSE/types.ts	155	
+splitSiteDetail	function	hse	true		src/components/sections/HSE/types.ts	158	
+PpeStatus	type	hse	true		src/components/sections/HSE/types.ts	165	
+PpeItem	interface	hse	true		src/components/sections/HSE/types.ts	167	
+mockPpeItems	array	hse	true		src/components/sections/HSE/types.ts	179	
+PpeEmployee	interface	hse	true		src/components/sections/HSE/types.ts	193	
+mockPpeEmployees	array	hse	true		src/components/sections/HSE/types.ts	202	
+RoleMatrixRow	interface	hse	true		src/components/sections/HSE/types.ts	214	
+mockRoleMatrix	array	hse	true		src/components/sections/HSE/types.ts	219	
+PPE_MATRIX_COLUMNS	variable	hse	true		src/components/sections/HSE/types.ts	228	
+ppePillClass	function	hse	true		src/components/sections/HSE/types.ts	235	
+ppeBadgeTone	function	hse	true		src/components/sections/HSE/types.ts	240	
+HseWorker	interface	hse	true		src/components/sections/HSE/types.ts	250	
+HSE_SITES	variable	hse	true		src/components/sections/HSE/types.ts	252	
+mockHseWorkers	array	hse	true		src/components/sections/HSE/types.ts	254	
+IncidentType	type	hse	true		src/components/sections/HSE/types.ts	269	
+IncidentRecord	interface	hse	true		src/components/sections/HSE/types.ts	271	
+mockIncidents	array	hse	true		src/components/sections/HSE/types.ts	279	
+Investigation	interface	hse	true		src/components/sections/HSE/types.ts	288	
+mockInvestigations	array	hse	true		src/components/sections/HSE/types.ts	309	
+CapaItem	interface	hse	true		src/components/sections/HSE/types.ts	344	
+mockCapa	array	hse	true		src/components/sections/HSE/types.ts	349	
+HazardRow	interface	hse	true		src/components/sections/HSE/types.ts	358	
+mockHazards	array	hse	true		src/components/sections/HSE/types.ts	362	
+RiskAssessmentRow	interface	hse	true		src/components/sections/HSE/types.ts	370	
+mockRiskAssessments	array	hse	true		src/components/sections/HSE/types.ts	374	
+JsaRow	interface	hse	true		src/components/sections/HSE/types.ts	380	
+mockJsas	array	hse	true		src/components/sections/HSE/types.ts	382	
+riskRating	function	hse	true		src/components/sections/HSE/types.ts	389	
+PermitRow	interface	hse	true		src/components/sections/HSE/types.ts	399	
+mockPermitRows	array	hse	true		src/components/sections/HSE/types.ts	403	
+PERMIT_TYPES	variable	hse	true		src/components/sections/HSE/types.ts	410	
+InspectionRow	interface	hse	true		src/components/sections/HSE/types.ts	414	
+mockInspections	array	hse	true		src/components/sections/HSE/types.ts	418	
+FindingRow	interface	hse	true		src/components/sections/HSE/types.ts	425	
+mockFindings	array	hse	true		src/components/sections/HSE/types.ts	429	
+TRAINING_COURSES	variable	hse	true		src/components/sections/HSE/types.ts	437	
+CompetencyStatus	type	hse	true		src/components/sections/HSE/types.ts	439	
+CompetencyCell	interface	hse	true		src/components/sections/HSE/types.ts	441	
+CompetencyRow	interface	hse	true		src/components/sections/HSE/types.ts	442	
+mockCompetency	variable	hse	true		src/components/sections/HSE/types.ts	444	
+CertificationRow	interface	hse	true		src/components/sections/HSE/types.ts	453	
+mockCertifications	array	hse	true		src/components/sections/HSE/types.ts	457	
+ToolboxTalkRow	interface	hse	true		src/components/sections/HSE/types.ts	467	
+mockToolboxTalks	array	hse	true		src/components/sections/HSE/types.ts	471	
+TOOLBOX_TOPICS	variable	hse	true		src/components/sections/HSE/types.ts	478	
+HseDocRow	interface	hse	true		src/components/sections/HSE/types.ts	482	
+mockHseDocs	array	hse	true		src/components/sections/HSE/types.ts	486	
+HSE_DOC_TYPES	variable	hse	true		src/components/sections/HSE/types.ts	493	
+SdsRow	interface	hse	true		src/components/sections/HSE/types.ts	495	
+mockSds	array	hse	true		src/components/sections/HSE/types.ts	499	
+PpeAssignment	interface	hse	true		src/components/sections/HSE/types.ts	508	
+mockPpeAssignments	array	hse	true		src/components/sections/HSE/types.ts	519	
+PpeRenewalRow	interface	hse	true		src/components/sections/HSE/types.ts	536	
+mockPpeRenewals	array	hse	true		src/components/sections/HSE/types.ts	546	
+PpeReturnRow	interface	hse	true		src/components/sections/HSE/types.ts	557	
+mockPpeReturns	array	hse	true		src/components/sections/HSE/types.ts	568	
+PpeRequestRow	interface	hse	true		src/components/sections/HSE/types.ts	576	
+mockPpeRequests	array	hse	true		src/components/sections/HSE/types.ts	588	
+PpeKitRow	interface	hse	true		src/components/sections/HSE/types.ts	597	
+mockPpeKits	array	hse	true		src/components/sections/HSE/types.ts	606	
 TABS	array	hse	false		src/components/sections/HSE/Workflows.tsx	26	
 PRIORITY_TONE	object	hse	false		src/components/sections/HSE/Workflows.tsx	35	
 STATUS_TONE	object	hse	false		src/components/sections/HSE/Workflows.tsx	39	
@@ -11620,15 +11622,15 @@ openSearch	function	platform	false		src/components/shared/UserPill.tsx	22
 openAI	function	platform	false		src/components/shared/UserPill.tsx	26	
 UserPillProps	interface	platform	true		src/components/shared/UserPill.tsx	32	
 UserPill	function	platform	true	component	src/components/shared/UserPill.tsx	50	
-TaskCard	function	workflow	false	component,ui-tile	src/components/workflow/ApprovalInbox.tsx	15	
-ApprovalInbox	function	workflow	true	component	src/components/workflow/ApprovalInbox.tsx	30	
-act	function	workflow	false		src/components/workflow/ApprovalInbox.tsx	38	ApprovalInbox
-AuditFeed	function	workflow	true	component	src/components/workflow/AuditFeed.tsx	13	
+TaskCard	function	workflow	false	component,ui-tile	src/components/workflow/ApprovalInbox.tsx	16	
+ApprovalInbox	function	workflow	true	component	src/components/workflow/ApprovalInbox.tsx	31	
+act	function	workflow	false		src/components/workflow/ApprovalInbox.tsx	39	ApprovalInbox
+AuditFeed	function	workflow	true	component	src/components/workflow/AuditFeed.tsx	14	
 TARGET_ICON	object	workflow	false		src/components/workflow/HandoffList.tsx	12	
 STATUS_TONE	object	workflow	false		src/components/workflow/HandoffList.tsx	22	
 HandoffList	function	workflow	true	component	src/components/workflow/HandoffList.tsx	29	
-WorkflowDrawer	function	workflow	true	component	src/components/workflow/WorkflowDrawer.tsx	15	
-act	function	workflow	false		src/components/workflow/WorkflowDrawer.tsx	25	WorkflowDrawer
+WorkflowDrawer	function	workflow	true	component	src/components/workflow/WorkflowDrawer.tsx	16	
+act	function	workflow	false		src/components/workflow/WorkflowDrawer.tsx	26	WorkflowDrawer
 API_BASE	variable	platform	true		src/config/index.ts	19	
 API_URL	variable	platform	true		src/config/index.ts	22	
 SUPABASE_URL	variable	platform	true		src/config/index.ts	26	
@@ -12322,9 +12324,11 @@ resetWorkflow	function	workflow	true		src/lib/workflow/store.ts	257
 STAGES	array	workflow	false		src/lib/workflow/templates.ts	13	
 WORKFLOW_TEMPLATES	array	workflow	true		src/lib/workflow/templates.ts	22	
 templateById	function	workflow	true		src/lib/workflow/templates.ts	138	
-statusPill	function	workflow	true		src/lib/workflow/tone.ts	22	
-priorityPill	function	workflow	true		src/lib/workflow/tone.ts	27	
-statusLabel	function	workflow	true		src/lib/workflow/tone.ts	32	
+statusPill	function	workflow	true		src/lib/workflow/tone.ts	25	
+statusBadgeTone	function	workflow	true		src/lib/workflow/tone.ts	30	
+priorityPill	function	workflow	true		src/lib/workflow/tone.ts	36	
+priorityBadgeTone	function	workflow	true		src/lib/workflow/tone.ts	41	
+statusLabel	function	workflow	true		src/lib/workflow/tone.ts	46	
 ModuleKey	type	workflow	true		src/lib/workflow/types.ts	20	
 Priority	type	workflow	true		src/lib/workflow/types.ts	24	
 WorkflowStatus	type	workflow	true		src/lib/workflow/types.ts	30	

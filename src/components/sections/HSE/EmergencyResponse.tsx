@@ -8,8 +8,8 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, type AreaTab, type SparkDef } from '@ui';
-import { HSE_SITES, hsePill, type HseSeverity } from './types';
+import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, type AreaTab, type SparkDef, Badge } from '@ui';
+import { HSE_SITES, hseBadgeTone, type HseSeverity } from './types';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
@@ -138,7 +138,7 @@ function PlansTab(): VNode {
                       <td style={{ color: 'var(--text-muted)' }}>{p.owner}</td>
                       <td class="vt-cell-mono">{p.reviewed}</td>
                       <td class="vt-cell-mono" style={{ color: p.status === 'Review Due' ? '#d97706' : 'inherit', fontWeight: p.status === 'Review Due' ? 600 : 400 }}>{p.nextReview}</td>
-                      <td><span class={hsePill(p.status)}>{p.status}</span></td>
+                      <td><Badge tone={hseBadgeTone(p.status)}>{p.status}</Badge></td>
                     </tr>
                   ))}
                 </tbody>
@@ -196,7 +196,7 @@ function MusterTab(): VNode {
                   <td class="vt-cell-mono">{m.capacity}</td>
                   <td style={{ color: 'var(--text-muted)' }}>{m.warden}</td>
                   <td class="vt-cell-mono">{m.lastDrill}</td>
-                  <td><span class={hsePill(m.status)}>{m.status}</span></td>
+                  <td><Badge tone={hseBadgeTone(m.status)}>{m.status}</Badge></td>
                 </tr>
               ))}
             </tbody>
@@ -250,7 +250,7 @@ function DrillsTab(): VNode {
                           ? <span style={{ fontWeight: 600, color: d.score >= 85 ? '#22c55e' : d.score >= 70 ? '#f59e0b' : '#ef4444' }}>{d.score}%</span>
                           : <span style={{ color: 'var(--text-muted)' }}>—</span>}
                       </td>
-                      <td><span class={hsePill(d.status)}>{d.status}</span></td>
+                      <td><Badge tone={hseBadgeTone(d.status)}>{d.status}</Badge></td>
                     </tr>
                   ))}
                 </tbody>
@@ -339,10 +339,10 @@ function ErtTab(): VNode {
                       <td style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>{m.role}</td>
                       <td style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>{m.site}</td>
                       <td style={{ fontSize: '0.75rem', fontWeight: 500 }}>{m.ertRole}</td>
-                      <td><span class={hsePill(m.firstAid)}>{m.firstAid}</span></td>
-                      <td><span class={hsePill(m.fireWarden)}>{m.fireWarden}</span></td>
+                      <td><Badge tone={hseBadgeTone(m.firstAid)}>{m.firstAid}</Badge></td>
+                      <td><Badge tone={hseBadgeTone(m.fireWarden)}>{m.fireWarden}</Badge></td>
                       <td class="vt-cell-mono">{m.lastTraining}</td>
-                      <td><span class={hsePill(m.status)}>{m.status}</span></td>
+                      <td><Badge tone={hseBadgeTone(m.status)}>{m.status}</Badge></td>
                     </tr>
                   ))}
                 </tbody>
