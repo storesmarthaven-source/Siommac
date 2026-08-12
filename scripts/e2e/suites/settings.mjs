@@ -199,6 +199,98 @@ export default async function run(h) {
     fails(await api('settings/manifests/approve', Tadmin, { moduleKey: 'training' }), 'admin should not approve manifests');
   });
 
+  // ── Company branding (legacy /api/* settings routes) ─────────────────────────
+  //
+  // This section exists because `/api/uploadLogo` was on the coverage waiver
+  // list, and under that waiver the endpoint was BROKEN in production for as
+  // long as anyone can tell: the frontend posted `{ base64 }` while
+  // `UploadLogoSchema` requires `imageBase64`, so every save failed validation.
+  // A route-coverage waiver is a decision to not find that class of bug. The
+  // contract assertion below — the exact key the schema demands — is the point
+  // of the whole section.
+  h.section('Settings › Company branding');
+
+  // A 1×1 transparent PNG as a data URI: the smallest input that exercises the
+  // real path (MIME sniffing, base64 decode, storage upload) without shipping a
+  // fixture file. `uploadBase64` rejects anything that is not a real image type.
+  const PNG_1X1 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
+  // Restore whatever the tenant had before this suite ran. Branding is a real
+  // app-wide setting — leaving an E2E logo behind changes the login screen.
+  const { data: priorLogo } = await sb.from('settings').select('value').eq('key', 'companyLogoUrl').maybeSingle();
+  const uploadedPaths = [];
+  h.onCleanup(async () => {
+    if (uploadedPaths.length) {
+      try { await sb.storage.from('branding').remove(uploadedPaths); } catch {}
+    }
+    try {
+      if (priorLogo?.value !== undefined) {
+        await sb.from('settings').upsert(
+          { key: 'companyLogoUrl', value: priorLogo.value, updated_at: new Date().toISOString() },
+          { onConflict: 'key' },
+        );
+      } else {
+        await sb.from('settings').delete().eq('key', 'companyLogoUrl');
+      }
+    } catch {}
+  });
+
+  await test('uploadLogo accepts the key the schema declares (imageBase64)', async () => {
+    const r = await api('uploadLogo', T.admin, { imageBase64: PNG_1X1 });
+    ok(r, 'uploadLogo failed');
+    expect(typeof r.body.url === 'string' && r.body.url.length > 0, `no url returned — got ${JSON.stringify(r.body).slice(0, 200)}`);
+    const path = r.body.url.split('/branding/').pop();
+    if (path) uploadedPaths.push(decodeURIComponent(path.split('?')[0]));
+  });
+
+  await test('uploadLogo REJECTS the old `base64` key (regression guard)', async () => {
+    // The exact shape the frontend used to send. If this ever starts passing,
+    // someone has added a both-keys alias — which is the band-aid this fix
+    // deliberately avoided.
+    fails(await api('uploadLogo', T.admin, { base64: PNG_1X1 }), 'legacy `base64` key should not validate');
+  });
+
+  await test('uploadLogo persists companyLogoUrl and getPublicBranding serves it', async () => {
+    const r = await api('uploadLogo', T.admin, { imageBase64: PNG_1X1 });
+    ok(r, 'uploadLogo failed');
+    const path = r.body.url.split('/branding/').pop();
+    if (path) uploadedPaths.push(decodeURIComponent(path.split('?')[0]));
+
+    const { data: row } = await sb.from('settings').select('value').eq('key', 'companyLogoUrl').maybeSingle();
+    expect(row?.value === r.body.url, `settings.companyLogoUrl not updated — stored ${row?.value}`);
+
+    // The login screen reads this public endpoint; it must see the new logo
+    // without a redeploy, which is what invalidateSettingsCache() is for.
+    const pub = await api('getPublicBranding', null, {});
+    ok(pub, 'getPublicBranding failed');
+    expect(pub.body.companyLogoUrl === r.body.url, `public branding still ${pub.body.companyLogoUrl}`);
+  });
+
+  await test('uploadLogo writes an activity_logs row', async () => {
+    const { data: rows } = await sb.from('activity_logs')
+      .select('action, entity, user_id')
+      .eq('entity', 'companyLogoUrl')
+      .order('created_at', { ascending: false })
+      .limit(1);
+    expect(rows?.length === 1 && rows[0].action === 'update', 'no audit row for the logo upload');
+  });
+
+  await test('uploadLogo validation rejects an empty and a non-image payload', async () => {
+    fails(await api('uploadLogo', T.admin, { imageBase64: '' }), 'empty payload should be rejected');
+    fails(await api('uploadLogo', T.admin, {}), 'missing payload should be rejected');
+    // Passes the schema (a non-empty string) and must be stopped by uploadBase64's
+    // MIME allow-list instead — the two guards cover different things.
+    fails(await api('uploadLogo', T.admin, { imageBase64: 'data:application/pdf;base64,JVBERi0=' }), 'non-image type should be rejected');
+  });
+
+  await test('ACCESS: employee denied uploadLogo', async () => {
+    fails(await api('uploadLogo', T.b, { imageBase64: PNG_1X1 }), 'employee should not change company branding');
+  });
+
+  await test('ACCESS: anonymous denied uploadLogo', async () => {
+    fails(await api('uploadLogo', null, { imageBase64: PNG_1X1 }), 'anonymous should not change company branding');
+  });
+
   if (Tsuper) {
     await test('superadmin review + approve → approved', async () => {
       ok(await api('settings/manifests/review', Tsuper, { moduleKey: 'training', reviewerRole: 'hse', decision: 'approved', comment: 'E2E' }), 'review failed');

@@ -2,7 +2,7 @@
 
 # settings Module Map
 
-Source fingerprint: `2c93e80a46ceec81903ab39b`
+Source fingerprint: `5b6f41ad0172c6162fbb42e6`
 
 Files: 44 | Symbols: 253 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 0 unmounted | API calls: 18 | DB objects: 21 | E2E suites: 2
 
@@ -19,13 +19,13 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | Path | Permission | Guards | Schema | Location | Frontend callers | E2E suites |
 |---|---|---|---|---|---|---|
 | `/api/getPublicBranding` | `-` | - | `-` | `netlify/functions/routes/settings.ts:15` | - | settings |
-| `/api/getSettings` | `-` | requireUser | `-` | `netlify/functions/routes/settings.ts:23` | res @ src/components/sections/Settings/api.ts:46<br>res @ src/components/sections/Settings/api.ts:103 | - |
+| `/api/getSettings` | `-` | requireUser | `-` | `netlify/functions/routes/settings.ts:23` | res @ src/components/sections/Settings/api.ts:49<br>res @ src/components/sections/Settings/api.ts:106 | - |
 | `/api/getWorkHours` | `-` | requireUser | `-` | `netlify/functions/routes/settings.ts:45` | - | - |
 | `/api/profile-photo/commit` | `-` | requireUser, userCan | `ProfilePhotoCommitSchema` | `netlify/functions/routes/settings.ts:134` | commit @ src/components/sections/Profile/api.ts:164 | - |
 | `/api/profile-photo/enhance` | `-` | requireUser | `-` | `netlify/functions/routes/settings.ts:232` | res @ src/components/sections/Profile/api.ts:191 | - |
 | `/api/profile-photo/remove` | `-` | requireUser | `-` | `netlify/functions/routes/settings.ts:187` | res @ src/components/sections/Profile/api.ts:201 | - |
 | `/api/profile-photo/upload-url` | `-` | requireUser | `-` | `netlify/functions/routes/settings.ts:85` | pres @ src/components/sections/Profile/api.ts:157 | - |
-| `/api/saveWorkHours` | `-` | requireRole | `SaveWorkHoursSchema` | `netlify/functions/routes/settings.ts:53` | res @ src/components/sections/Settings/api.ts:125 | - |
+| `/api/saveWorkHours` | `-` | requireRole | `SaveWorkHoursSchema` | `netlify/functions/routes/settings.ts:53` | res @ src/components/sections/Settings/api.ts:128 | - |
 | `/api/settings/audit/list` | `settings.audit_policy.view` | requirePermission | `z.object({ settingKey: z.string().optional(), moduleKey: z.string().optional() })` | `netlify/functions/routes/settingsCatalog.ts:269` | useSettingAudit @ src/api/settingsCatalog.ts:108 | hrEmployeeSettings, settings |
 | `/api/settings/catalog/list` | `-` | requireUser | `z.object({ moduleKey: z.string().min(1) })` | `netlify/functions/routes/settingsCatalog.ts:60` | useSettingsCatalog @ src/api/settingsCatalog.ts:98 | hrEmployeeSettings, settings |
 | `/api/settings/catalog/sync` | `settings.manage` | requirePermission | `-` | `netlify/functions/routes/settingsCatalog.ts:49` | useSyncSettingsCatalog @ src/api/settingsCatalog.ts:145 | hrEmployeeSettings, hrOnboarding, settings |
@@ -42,18 +42,18 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/settings/resolve` | `-` | requireUser | `z.object({ settingKey: z.string().min(1), moduleKey: z.string().min(1) })` | `netlify/functions/routes/settingsCatalog.ts:165` | - | hrEmployeeSettings, settings |
 | `/api/settings/values/reset` | `-` | requireUser, userCan | `z.object({     settingKey: z.string().min(1), scopeType: z.enum(SCOPE_TYPES), scopeId: z.string().nullable().optional(), reason: z.string().max(500).optional(),   })` | `netlify/functions/routes/settingsCatalog.ts:233` | useResetSetting @ src/api/settingsCatalog.ts:136 | hrEmployeeSettings, settings |
 | `/api/settings/values/set` | `-` | requireUser, userCan | `z.object({     settingKey: z.string().min(1), scopeType: z.enum(SCOPE_TYPES), scopeId: z.string().nullable().optional(),     value: z.unknown(), reason: z.string().max(500).optional(),   })` | `netlify/functions/routes/settingsCatalog.ts:181` | useSetSetting @ src/api/settingsCatalog.ts:126<br>res @ src/lib/themePreference.ts:60 | hrEmployeeSettings, hrLeave, hrOnboarding, settings |
-| `/api/updateSetting` | `-` | requireRole | `UpdateSettingSchema` | `netlify/functions/routes/settings.ts:33` | res @ src/components/sections/Settings/api.ts:84 | - |
-| `/api/uploadLogo` | `-` | requireRole | `UploadLogoSchema` | `netlify/functions/routes/settings.ts:66` | res @ src/components/sections/Settings/api.ts:145 | settings |
+| `/api/updateSetting` | `-` | requireRole | `UpdateSettingSchema` | `netlify/functions/routes/settings.ts:33` | res @ src/components/sections/Settings/api.ts:87 | - |
+| `/api/uploadLogo` | `-` | requireRole | `UploadLogoSchema` | `netlify/functions/routes/settings.ts:66` | res @ src/components/sections/Settings/api.ts:148 | settings |
 
 ## Frontend API Calls
 
 | Path | Helper | Caller | Location |
 |---|---|---|---|
-| `/api/getSettings` | `apiPost` | `res` | `src/components/sections/Settings/api.ts:46` |
-| `/api/getSettings` | `apiPost` | `res` | `src/components/sections/Settings/api.ts:103` |
+| `/api/getSettings` | `apiPost` | `res` | `src/components/sections/Settings/api.ts:49` |
+| `/api/getSettings` | `apiPost` | `res` | `src/components/sections/Settings/api.ts:106` |
 | `/api/saveSettings` | `apiPost` | `res` | `src/api/settings.ts:52` |
 | `/api/saveStatutoryRates` | `apiPost` | `res` | `src/api/settings.ts:63` |
-| `/api/saveWorkHours` | `apiPost` | `res` | `src/components/sections/Settings/api.ts:125` |
+| `/api/saveWorkHours` | `apiPost` | `res` | `src/components/sections/Settings/api.ts:128` |
 | `/api/settings/audit/list` | `apiPost` | `useSettingAudit` | `src/api/settingsCatalog.ts:108` |
 | `/api/settings/catalog/list` | `apiPost` | `useSettingsCatalog` | `src/api/settingsCatalog.ts:98` |
 | `/api/settings/catalog/sync` | `apiPost` | `useSyncSettingsCatalog` | `src/api/settingsCatalog.ts:145` |
@@ -65,8 +65,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/settings/my-preferences` | `apiPost` | `useMyPreferences` | `src/api/settingsCatalog.ts:156` |
 | `/api/settings/values/reset` | `apiPost` | `useResetSetting` | `src/api/settingsCatalog.ts:136` |
 | `/api/settings/values/set` | `apiPost` | `useSetSetting` | `src/api/settingsCatalog.ts:126` |
-| `/api/updateSetting` | `apiPost` | `res` | `src/components/sections/Settings/api.ts:84` |
-| `/api/uploadLogo` | `apiPost` | `res` | `src/components/sections/Settings/api.ts:145` |
+| `/api/updateSetting` | `apiPost` | `res` | `src/components/sections/Settings/api.ts:87` |
+| `/api/uploadLogo` | `apiPost` | `res` | `src/components/sections/Settings/api.ts:148` |
 
 ## Key Components, Hooks, and UI Functions
 
@@ -135,7 +135,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Settings/SettingsSection.tsx` | 1411 |
 | frontend-page | `src/components/sections/Settings/SwzCard.tsx` | 193 |
 | frontend-page | `src/components/sections/Settings/SwzCatalogPage.tsx` | 185 |
-| frontend-page | `src/components/sections/Settings/api.ts` | 153 |
+| frontend-page | `src/components/sections/Settings/api.ts` | 156 |
 | frontend-page | `src/components/sections/Settings/domSync.ts` | 73 |
 | frontend-page | `src/components/sections/Settings/index.ts` | 11 |
 | frontend-page | `src/components/sections/Settings/mount.ts` | 35 |

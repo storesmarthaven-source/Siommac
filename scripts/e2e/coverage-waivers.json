@@ -184,7 +184,6 @@
     "/api/updateProjectSite",
     "/api/updateSetting",
     "/api/updateTicketStatus",
-    "/api/uploadLogo",
     "/api/verify2fa",
     "/api/verifyPassword",
     "/api/workflows/audit",

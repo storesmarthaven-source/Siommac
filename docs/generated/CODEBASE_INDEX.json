@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "f9923c264097d0e8b4e7b2fbefe7e4c61e1e1672",
+    "head": "46f6ec9f08ad9b615eff5509103dfc8221a9d79d",
     "branch": "main",
-    "fingerprint": "2c93e80a46ceec81903ab39b",
+    "fingerprint": "5b6f41ad0172c6162fbb42e6",
     "indexedFiles": 1812
   },
   "summary": {
@@ -7391,8 +7391,8 @@
       "path": "src/components/sections/Settings/api.ts",
       "module": "settings",
       "role": "frontend-page",
-      "lines": 153,
-      "hash": "7110a391c3dee599"
+      "lines": 156,
+      "hash": "94181b7ab5aa60b5"
     },
     {
       "path": "src/components/sections/Settings/domSync.ts",
@@ -128419,7 +128419,7 @@
       "name": "updateSetting",
       "kind": "function",
       "file": "src/components/sections/Settings/api.ts",
-      "line": 79,
+      "line": 82,
       "module": "settings",
       "exported": true,
       "container": "",
@@ -128429,7 +128429,7 @@
       "name": "TimeoutRole",
       "kind": "type",
       "file": "src/components/sections/Settings/api.ts",
-      "line": 94,
+      "line": 97,
       "module": "settings",
       "exported": true,
       "container": "",
@@ -128439,7 +128439,7 @@
       "name": "SESSION_TIMEOUT_DEFAULTS",
       "kind": "object",
       "file": "src/components/sections/Settings/api.ts",
-      "line": 97,
+      "line": 100,
       "module": "settings",
       "exported": true,
       "container": "",
@@ -128449,7 +128449,7 @@
       "name": "fetchSessionTimeouts",
       "kind": "function",
       "file": "src/components/sections/Settings/api.ts",
-      "line": 102,
+      "line": 105,
       "module": "settings",
       "exported": true,
       "container": "",
@@ -128459,7 +128459,7 @@
       "name": "setSessionTimeout",
       "kind": "function",
       "file": "src/components/sections/Settings/api.ts",
-      "line": 116,
+      "line": 119,
       "module": "settings",
       "exported": true,
       "container": "",
@@ -128469,7 +128469,7 @@
       "name": "saveWorkHoursApi",
       "kind": "function",
       "file": "src/components/sections/Settings/api.ts",
-      "line": 120,
+      "line": 123,
       "module": "settings",
       "exported": true,
       "container": "",
@@ -128479,7 +128479,7 @@
       "name": "uploadLogoApi",
       "kind": "function",
       "file": "src/components/sections/Settings/api.ts",
-      "line": 141,
+      "line": 144,
       "module": "settings",
       "exported": true,
       "container": "",
@@ -179133,7 +179133,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/components/sections/Settings/api.ts",
-      "line": 46,
+      "line": 49,
       "module": "settings"
     },
     {
@@ -179141,7 +179141,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/components/sections/Settings/api.ts",
-      "line": 103,
+      "line": 106,
       "module": "settings"
     },
     {
@@ -180317,7 +180317,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/components/sections/Settings/api.ts",
-      "line": 125,
+      "line": 128,
       "module": "settings"
     },
     {
@@ -180565,7 +180565,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/components/sections/Settings/api.ts",
-      "line": 84,
+      "line": 87,
       "module": "settings"
     },
     {
@@ -180573,7 +180573,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/components/sections/Settings/api.ts",
-      "line": 145,
+      "line": 148,
       "module": "settings"
     },
     {

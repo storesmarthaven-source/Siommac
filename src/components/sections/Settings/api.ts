@@ -43,7 +43,10 @@ interface RawSettings {
 }
 
 export async function fetchSettings(signal?: AbortSignal): Promise<AppSettings> {
-  const res = await apiPost<{ success: boolean; data: RawSettings }>(
+  // `data` is OPTIONAL because a failed response carries none. Typing it as
+  // always-present made the `?? {}` below look redundant to the linter while
+  // being the only thing standing between a failed fetch and a crash.
+  const res = await apiPost<{ success: boolean; data?: RawSettings }>(
     'getSettings',
     {},
     signal ? { signal } : undefined,
@@ -100,7 +103,7 @@ export const SESSION_TIMEOUT_DEFAULTS: Record<TimeoutRole, number> = {
 
 /** Read the configured per-role idle timeouts (minutes) from settings. */
 export async function fetchSessionTimeouts(signal?: AbortSignal): Promise<Record<TimeoutRole, number>> {
-  const res = await apiPost<{ success: boolean; data: Record<string, string> }>(
+  const res = await apiPost<{ success: boolean; data?: Record<string, string> }>(
     'getSettings', {}, signal ? { signal } : undefined,
   );
   const raw = res.data ?? {};
@@ -130,13 +133,21 @@ export async function saveWorkHoursApi(
   if (!res.success) throw new Error(res.message ?? 'Could not save work hours');
 }
 
+/**
+ * Upload a new company logo.
+ *
+ * `imageBase64` is a full data URI (`data:image/png;base64,…`) — that is what
+ * `FileReader.readAsDataURL` produces and what `uploadBase64` parses to recover
+ * the MIME type. The key name matches `UploadLogoSchema` exactly; it previously
+ * sent `base64`, so every upload failed server-side validation.
+ */
 export async function uploadLogoApi(
-  base64: string,
+  imageBase64: string,
   signal?: AbortSignal,
 ): Promise<string> {
   const res = await apiPost<{ success: boolean; url?: string; message?: string }>(
     'uploadLogo',
-    { base64 },
+    { imageBase64 },
     signal ? { signal } : undefined,
   );
   if (!res.success) throw new Error(res.message ?? 'Upload failed');
