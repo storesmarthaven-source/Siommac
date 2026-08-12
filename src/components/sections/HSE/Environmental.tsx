@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { PageHeader, MetricRow, Tabs, TabPanel, SparkCard, HseModal, Field, TextInput, SelectInput, TextareaInput, type TabItem, type SparkDef, Badge } from '@ui';
+import { PageHeader, MetricRow, Tabs, TabPanel, SparkCard, Dialog, Button, Field, TextInput, SelectInput, TextareaInput, type TabItem, type SparkDef, Badge } from '@ui';
 import { HSE_SITES, hseBadgeTone, type HseSeverity } from './types';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
@@ -203,18 +203,22 @@ function SpillsTab(): VNode {
         </aside>
       </div>
 
-      <HseModal open={modalOpen} onClose={() => setModal(false)}
-        title="Report Environmental Spill" sub="Log a spill event. Tier 2 and above triggers an EMA notification task automatically."
-        submitLabel="Report Spill"
-        onSubmit={handleReport}>
-        <div class="hse-form-grid">
-          <Field label="Site"><SelectInput value={newSite} onInput={setSite} options={[...HSE_SITES]} /></Field>
-          <Field label="Substance spilled"><TextInput value={newSubstance} onInput={setSubstance} placeholder="e.g. Diesel, Hydraulic Oil" /></Field>
-          <Field label="Estimated volume"><TextInput value={newVolume} onInput={setVolume} placeholder="e.g. ~80 L" /></Field>
-          <Field label="Environmental media"><SelectInput value={newMedia} onInput={setMedia} options={['Soil', 'Storm drain', 'Water', 'Air', 'Containment bund']} /></Field>
-          <Field label="Circumstances" wide><TextareaInput value={newDesc} onInput={setDesc} placeholder="Describe how the spill occurred and immediate actions taken…" /></Field>
-        </div>
-      </HseModal>
+      <Dialog open={modalOpen} onClose={() => setModal(false)} variant="form">
+        <Dialog.Header title="Report Environmental Spill" sub="Log a spill event. Tier 2 and above triggers an EMA notification task automatically." icon={<i class="fas fa-droplet" />} onClose={() => setModal(false)} />
+        <Dialog.Body>
+          <div class="hse-form-grid">
+            <Field label="Site"><SelectInput value={newSite} onInput={setSite} options={[...HSE_SITES]} /></Field>
+            <Field label="Substance spilled"><TextInput value={newSubstance} onInput={setSubstance} placeholder="e.g. Diesel, Hydraulic Oil" /></Field>
+            <Field label="Estimated volume"><TextInput value={newVolume} onInput={setVolume} placeholder="e.g. ~80 L" /></Field>
+            <Field label="Environmental media"><SelectInput value={newMedia} onInput={setMedia} options={['Soil', 'Storm drain', 'Water', 'Air', 'Containment bund']} /></Field>
+            <Field label="Circumstances" wide><TextareaInput value={newDesc} onInput={setDesc} placeholder="Describe how the spill occurred and immediate actions taken…" /></Field>
+          </div>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Button variant="outline" onClick={() => setModal(false)}>Cancel</Button>
+          <Button variant="primary" onClick={handleReport}>Report Spill</Button>
+        </Dialog.Footer>
+      </Dialog>
     </div>
   );
 }

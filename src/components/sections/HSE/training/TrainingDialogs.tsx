@@ -6,7 +6,7 @@
 
 import { type VNode } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { DateInput, HseModal, Field, SelectInput, TextInput } from '@ui';
+import { DateInput, Dialog, Button, Field, SelectInput, TextInput } from '@ui';
 import {
   useCreateCertificate, useRenewCertificate, useAssignTraining, useCreateRequirement,
   useCompetencies, useCourses,
@@ -46,9 +46,9 @@ export function AddCertificateDialog({ open, onClose, presetWorkerId }: { open: 
   };
 
   return (
-    <HseModal open={open} onClose={onClose} title="Add Certificate" sub="Record and verify a worker training certificate."
-      submitLabel={create.isPending ? 'Saving…' : 'Add Certificate'} onSubmit={submit}>
-      <div class="hse-form-grid">
+    <Dialog open={open} onClose={onClose} variant="form" busy={create.isPending}>
+      <Dialog.Header title="Add Certificate" sub="Record and verify a worker training certificate." icon={<i class="fas fa-certificate" />} onClose={onClose} />
+      <Dialog.Body><div class="hse-form-grid">
         <Field label="Worker"><SelectInput value={workerId} onInput={setWorkerId} options={[{ value: '', label: 'Select worker' }, ...users]} /></Field>
         <Field label="Competency"><SelectInput value={competencyId} onInput={setCompetencyId} options={[{ value: '', label: 'None' }, ...comps.map(c => ({ value: c.id, label: c.name }))]} /></Field>
         <Field label="Course"><SelectInput value={courseId} onInput={v => { setCourseId(v); const c = courses.find(x => x.id === v); if (c) setCourseName(c.name); }} options={[{ value: '', label: 'None / free text' }, ...courses.map(c => ({ value: c.id, label: c.name }))]} /></Field>
@@ -63,8 +63,12 @@ export function AddCertificateDialog({ open, onClose, presetWorkerId }: { open: 
             <span>Requires verification before it counts toward compliance</span>
           </label>
         </Field>
-      </div>
-    </HseModal>
+      </div></Dialog.Body>
+      <Dialog.Footer>
+        <Button variant="outline" onClick={onClose}>Cancel</Button>
+        <Button variant="primary" onClick={submit} disabled={create.isPending}>{create.isPending ? 'Saving…' : 'Add Certificate'}</Button>
+      </Dialog.Footer>
+    </Dialog>
   );
 }
 
@@ -80,14 +84,18 @@ export function RenewCertificateDialog({ certificateId, open, onClose }: { certi
       { onSuccess: () => { setIssuedAt(''); setExpiresAt(''); setCertNumber(''); onClose(); } });
   };
   return (
-    <HseModal open={open} onClose={onClose} title="Renew Certificate" sub="Issue a new version; the previous is archived."
-      submitLabel={renew.isPending ? 'Renewing…' : 'Renew'} onSubmit={submit}>
-      <div class="hse-form-grid">
+    <Dialog open={open} onClose={onClose} variant="form" busy={renew.isPending}>
+      <Dialog.Header title="Renew Certificate" sub="Issue a new version; the previous is archived." icon={<i class="fas fa-rotate" />} onClose={onClose} />
+      <Dialog.Body><div class="hse-form-grid">
         <Field label="New issued date"><DateInput value={issuedAt} onChange={setIssuedAt} /></Field>
         <Field label="New expiry date"><DateInput value={expiresAt} onChange={setExpiresAt} /></Field>
         <Field label="Certificate number" wide><TextInput value={certNumber} onInput={setCertNumber} placeholder="Optional" /></Field>
-      </div>
-    </HseModal>
+      </div></Dialog.Body>
+      <Dialog.Footer>
+        <Button variant="outline" onClick={onClose}>Cancel</Button>
+        <Button variant="primary" onClick={submit} disabled={renew.isPending}>{renew.isPending ? 'Renewing…' : 'Renew'}</Button>
+      </Dialog.Footer>
+    </Dialog>
   );
 }
 
@@ -108,16 +116,20 @@ export function AssignTrainingDialog({ open, onClose, presetWorkerId, presetComp
       { onSuccess: () => { setReason(''); setDueAt(''); onClose(); } });
   };
   return (
-    <HseModal open={open} onClose={onClose} title="Assign Training" sub="Assign training to close a competency gap."
-      submitLabel={assign.isPending ? 'Assigning…' : 'Assign Training'} onSubmit={submit}>
-      <div class="hse-form-grid">
+    <Dialog open={open} onClose={onClose} variant="form" busy={assign.isPending}>
+      <Dialog.Header title="Assign Training" sub="Assign training to close a competency gap." icon={<i class="fas fa-graduation-cap" />} onClose={onClose} />
+      <Dialog.Body><div class="hse-form-grid">
         <Field label="Worker"><SelectInput value={workerId} onInput={setWorkerId} options={[{ value: '', label: 'Select worker' }, ...users]} /></Field>
         <Field label="Competency"><SelectInput value={competencyId} onInput={setCompetencyId} options={[{ value: '', label: 'None' }, ...comps.map(c => ({ value: c.id, label: c.name }))]} /></Field>
         <Field label="Priority"><SelectInput value={priority} onInput={setPriority} options={['low', 'medium', 'high', 'critical'].map(p => ({ value: p, label: titleCase(p) }))} /></Field>
         <Field label="Due date"><DateInput value={dueAt} onChange={setDueAt} /></Field>
         <Field label="Reason" wide><TextInput value={reason} onInput={setReason} placeholder="e.g. expired Confined Space cert" /></Field>
-      </div>
-    </HseModal>
+      </div></Dialog.Body>
+      <Dialog.Footer>
+        <Button variant="outline" onClick={onClose}>Cancel</Button>
+        <Button variant="primary" onClick={submit} disabled={assign.isPending}>{assign.isPending ? 'Assigning…' : 'Assign Training'}</Button>
+      </Dialog.Footer>
+    </Dialog>
   );
 }
 
@@ -133,13 +145,17 @@ export function CreateRequirementDialog({ open, onClose }: { open: boolean; onCl
     create.mutate({ competencyId, roleName, requirementLevel: level }, { onSuccess: () => { setRoleName(''); onClose(); } });
   };
   return (
-    <HseModal open={open} onClose={onClose} title="Create Role Requirement" sub="Define a competency required for a role."
-      submitLabel={create.isPending ? 'Saving…' : 'Create Requirement'} onSubmit={submit}>
-      <div class="hse-form-grid">
+    <Dialog open={open} onClose={onClose} variant="form" busy={create.isPending}>
+      <Dialog.Header title="Create Role Requirement" sub="Define a competency required for a role." icon={<i class="fas fa-list-check" />} onClose={onClose} />
+      <Dialog.Body><div class="hse-form-grid">
         <Field label="Competency"><SelectInput value={competencyId} onInput={setCompetencyId} options={[{ value: '', label: 'Select competency' }, ...comps.map(c => ({ value: c.id, label: c.name }))]} /></Field>
         <Field label="Role"><SelectInput value={roleName} onInput={setRoleName} options={[{ value: '', label: 'Select role' }, ...['employee', 'manager', 'admin'].map(r => ({ value: r, label: titleCase(r) }))]} /></Field>
         <Field label="Requirement level"><SelectInput value={level} onInput={setLevel} options={['required', 'recommended', 'optional', 'site_specific', 'task_specific'].map(l => ({ value: l, label: titleCase(l) }))} /></Field>
-      </div>
-    </HseModal>
+      </div></Dialog.Body>
+      <Dialog.Footer>
+        <Button variant="outline" onClick={onClose}>Cancel</Button>
+        <Button variant="primary" onClick={submit} disabled={create.isPending}>{create.isPending ? 'Saving…' : 'Create Requirement'}</Button>
+      </Dialog.Footer>
+    </Dialog>
   );
 }

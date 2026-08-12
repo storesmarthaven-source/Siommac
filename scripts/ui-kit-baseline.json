@@ -2,7 +2,7 @@
   "_comment": "UI Kit adoption ratchet. These counts may go DOWN, never UP. Regenerate with: node scripts/check-ui-kit-coverage.mjs --write",
   "ratcheted": {
     "legacyClassUsages": 336,
-    "deprecatedImportFiles": 83,
+    "deprecatedImportFiles": 78,
     "localPrimitives": 26,
     "unmanagedRaw": 2980,
     "brokenComponentPaths": 0

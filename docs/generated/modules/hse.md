@@ -2,9 +2,9 @@
 
 # hse Module Map
 
-Source fingerprint: `a0261a4f95de48d40610c6b5`
+Source fingerprint: `2755fad8542cccab889b1670`
 
-Files: 88 | Symbols: 1278 | Widgets: 0 | Unique mounted endpoints: 144 | Route definitions: 144 mounted + 0 unmounted | API calls: 107 | DB objects: 65 | E2E suites: 4
+Files: 89 | Symbols: 1279 | Widgets: 0 | Unique mounted endpoints: 144 | Route definitions: 144 mounted + 0 unmounted | API calls: 107 | DB objects: 65 | E2E suites: 4
 
 ## Widgets and Tiles
 
@@ -385,10 +385,10 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useAssignTraining` | function / hook | `src/api/hse/training.ts:210` | `-` |
 | `useAssignmentAction` | function / hook | `src/api/hse/training.ts:217` | `-` |
 | `AreaRouter` | function / component | `src/components/sections/HSE/AreaRouter.tsx:50` | `-` |
-| `ContractorsArea` | function / component | `src/components/sections/HSE/Contractors.tsx:347` | `-` |
+| `ContractorsArea` | function / component | `src/components/sections/HSE/Contractors.tsx:351` | `-` |
 | `DocumentsArea` | function / component | `src/components/sections/HSE/Documents.tsx:266` | `-` |
-| `EmergencyResponseArea` | function / component | `src/components/sections/HSE/EmergencyResponse.tsx:375` | `-` |
-| `EnvironmentalArea` | function / component | `src/components/sections/HSE/Environmental.tsx:392` | `-` |
+| `EmergencyResponseArea` | function / component | `src/components/sections/HSE/EmergencyResponse.tsx:379` | `-` |
+| `EnvironmentalArea` | function / component | `src/components/sections/HSE/Environmental.tsx:396` | `-` |
 | `HSEDashboard` | function / component | `src/components/sections/HSE/HSEDashboard.tsx:909` | `-` |
 | `HSESection` | function / component | `src/components/sections/HSE/HSESection.tsx:42` | `-` |
 | `OWQPanel` | function / component | `src/components/sections/HSE/Incidents.tsx:248` | `-` |
@@ -404,7 +404,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `TemplateBuilderDialog` | function / component | `src/components/sections/HSE/inspections/InspectionDialogs.tsx:159` | `-` |
 | `InspectionInsightCards` | function / component, ui-tile | `src/components/sections/HSE/inspections/InspectionInsightCards.tsx:158` | `-` |
 | `useEmployeeOptions` | function / hook | `src/components/sections/HSE/inspections/useEmployeeOptions.ts:14` | `-` |
-| `LegalComplianceArea` | function / component | `src/components/sections/HSE/LegalCompliance.tsx:364` | `-` |
+| `LegalComplianceArea` | function / component | `src/components/sections/HSE/LegalCompliance.tsx:368` | `-` |
 | `PermitsArea` | function / component | `src/components/sections/HSE/Permits.tsx:446` | `-` |
 | `PpeBody` | function / component | `src/components/sections/HSE/PPEManager.tsx:794` | `-` |
 | `CustomHazardDialog` | function / component | `src/components/sections/HSE/ptw/dialogs/CustomHazardDialog.tsx:105` | `-` |
@@ -500,21 +500,22 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/hse/riskJsa.ts` | 758 |
 | frontend-api | `src/api/hse/training.ts` | 225 |
 | frontend-page | `src/components/sections/HSE/AreaRouter.tsx` | 68 |
-| frontend-page | `src/components/sections/HSE/Contractors.tsx` | 402 |
-| frontend-page | `src/components/sections/HSE/Documents.tsx` | 387 |
-| frontend-page | `src/components/sections/HSE/EmergencyResponse.tsx` | 430 |
-| frontend-page | `src/components/sections/HSE/Environmental.tsx` | 446 |
+| frontend-page | `src/components/sections/HSE/Contractors.tsx` | 406 |
+| frontend-page | `src/components/sections/HSE/Documents.tsx` | 389 |
+| frontend-page | `src/components/sections/HSE/EmergencyResponse.tsx` | 434 |
+| frontend-page | `src/components/sections/HSE/Environmental.tsx` | 450 |
 | frontend-page | `src/components/sections/HSE/HSEDashboard.tsx` | 1017 |
 | frontend-page | `src/components/sections/HSE/HSESection.tsx` | 69 |
 | frontend-page | `src/components/sections/HSE/Incidents.tsx` | 3879 |
 | frontend-page | `src/components/sections/HSE/Inspections.tsx` | 349 |
-| frontend-page | `src/components/sections/HSE/LegalCompliance.tsx` | 419 |
+| frontend-page | `src/components/sections/HSE/LegalCompliance.tsx` | 423 |
 | frontend-page | `src/components/sections/HSE/PPEManager.tsx` | 831 |
 | frontend-page | `src/components/sections/HSE/Permits.tsx` | 564 |
 | frontend-page | `src/components/sections/HSE/RiskJsa.tsx` | 636 |
-| frontend-page | `src/components/sections/HSE/Toolbox.tsx` | 234 |
+| frontend-page | `src/components/sections/HSE/Toolbox.tsx` | 236 |
 | frontend-page | `src/components/sections/HSE/Training.tsx` | 251 |
 | frontend-page | `src/components/sections/HSE/Workflows.tsx` | 766 |
+| frontend-page | `src/components/sections/HSE/canonicalDialogMigration.test.ts` | 31 |
 | frontend-page | `src/components/sections/HSE/canonicalTabsMigration.test.ts` | 34 |
 | frontend-page | `src/components/sections/HSE/index.ts` | 10 |
 | frontend-page | `src/components/sections/HSE/inspections/FindingDetailDrawer.tsx` | 134 |
@@ -564,7 +565,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HSE/risk-jsa/shared/RiskScorePill.tsx` | 55 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/shared/exportPdf.ts` | 142 |
 | frontend-page | `src/components/sections/HSE/training/CertificateDetailDrawer.tsx` | 137 |
-| frontend-page | `src/components/sections/HSE/training/TrainingDialogs.tsx` | 146 |
+| frontend-page | `src/components/sections/HSE/training/TrainingDialogs.tsx` | 162 |
 | frontend-page | `src/components/sections/HSE/training/TrainingInsightCards.tsx` | 252 |
 | frontend-page | `src/components/sections/HSE/training/WorkerProfileDrawer.tsx` | 93 |
 | frontend-page | `src/components/sections/HSE/types.ts` | 613 |

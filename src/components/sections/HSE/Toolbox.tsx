@@ -6,7 +6,7 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-    PageHeader, MetricRow, Tabs, TabPanel, SparkCard, HseModal, Field, SelectInput, TextInput,
+    PageHeader, MetricRow, Tabs, TabPanel, SparkCard, Dialog, Button, Field, SelectInput, TextInput,
   type TabItem, type SparkDef, Badge } from '@ui';
 import {
   mockToolboxTalks, TOOLBOX_TOPICS, HSE_SITES, hseBadgeTone,
@@ -212,22 +212,24 @@ export function ToolboxArea({ tab }: { tab: string }): VNode {
         </div>
       </div>
 
-      <HseModal
-        open={modalOpen} onClose={() => setModal(false)}
-        title="New Toolbox Talk" sub="Log a scheduled or delivered toolbox talk."
-        submitLabel="Log Talk"
-        onSubmit={() => {
-          const ref = `TBT-${100 + talks.length}`;
-          setTalks([{ ref, topic: newTopic, date: '19 Jun 2026', site: newSite, presenter: newPres || 'HSE Officer', attendees: 0, status: 'Scheduled' }, ...talks]);
-          setModal(false); setPres('');
-        }}
-      >
-        <div class="hse-form-grid">
-          <Field label="Topic"><SelectInput value={newTopic} onInput={setTopic} options={[...TOOLBOX_TOPICS]} /></Field>
-          <Field label="Site"><SelectInput value={newSite} onInput={setSite} options={[...HSE_SITES]} /></Field>
-          <Field label="Presenter"><TextInput value={newPres} onInput={setPres} placeholder="Name of the presenter" /></Field>
-        </div>
-      </HseModal>
+      <Dialog open={modalOpen} onClose={() => setModal(false)} variant="form">
+        <Dialog.Header title="New Toolbox Talk" sub="Log a scheduled or delivered toolbox talk." icon={<i class="fas fa-comments" />} onClose={() => setModal(false)} />
+        <Dialog.Body>
+          <div class="hse-form-grid">
+            <Field label="Topic"><SelectInput value={newTopic} onInput={setTopic} options={[...TOOLBOX_TOPICS]} /></Field>
+            <Field label="Site"><SelectInput value={newSite} onInput={setSite} options={[...HSE_SITES]} /></Field>
+            <Field label="Presenter"><TextInput value={newPres} onInput={setPres} placeholder="Name of the presenter" /></Field>
+          </div>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Button variant="outline" onClick={() => setModal(false)}>Cancel</Button>
+          <Button variant="primary" onClick={() => {
+            const ref = `TBT-${100 + talks.length}`;
+            setTalks([{ ref, topic: newTopic, date: '19 Jun 2026', site: newSite, presenter: newPres || 'HSE Officer', attendees: 0, status: 'Scheduled' }, ...talks]);
+            setModal(false); setPres('');
+          }}>Log Talk</Button>
+        </Dialog.Footer>
+      </Dialog>
     </div>
   );
 }

@@ -186,8 +186,12 @@ const dialogDef: ComponentDef = {
   migration: {
     replaces: ['.ui-modal', '.mp76-modal-btn'],
     deprecatedImports: ['@shared/Modal', 'HseModal', 'HrfinWizardModal'],
-    nextSurface: 'HR Onboarding',
-    notes: ['225 distinct overlay class families exist across modules; each is removed as its surface migrates.'],
+    nextSurface: 'Wizard / Stepper',
+    notes: [
+      'The clean HSE form family is migrated: six overview create/report flows and all four live Training flows compose Dialog.Header, Dialog.Body and Dialog.Footer with canonical Button actions.',
+      'Four HseModal files remain exact lint-blocked HSE debt (Incidents, Inspections, PPEManager and InspectionDialogs). The broader pre-v2 Modal and HrfinWizardModal consumers are named debt for their owning component cycles; they do not justify keeping Dialog open indefinitely.',
+      '225 distinct overlay class families exist across modules; each is removed only when its owning surface is naturally migrated.',
+    ],
   },
 
   props: {

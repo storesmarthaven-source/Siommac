@@ -6,7 +6,7 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  PageHeader, MetricRow, Tabs, TabPanel, SparkCard, HseModal, Field, SelectInput, TextInput,
+  PageHeader, MetricRow, Tabs, TabPanel, SparkCard, Dialog, Button, Field, SelectInput, TextInput,
   type TabItem, type SparkDef,
 } from '@ui';
 import {
@@ -362,25 +362,27 @@ export function DocumentsArea({ tab }: { tab: string }): VNode {
         </div>
       </div>
 
-      <HseModal
-        open={modalOpen} onClose={() => setModal(false)}
-        title="Upload Document" sub="Upload a new or revised controlled document. This opens a document-approval workflow."
-        submitLabel="Upload & Route for Approval"
-        onSubmit={() => {
-          const ref = `DOC-HSE-${String(docs.length + 300).padStart(4, '0')}`;
-          const newDoc: HseDocRow = { ref, title: newTitle || 'Untitled document', type: newType, owner: newOwner, version: 'v1.0', status: 'Draft', review: '19 Jun 2027' };
-          setDocs([newDoc, ...docs]);
-          // Document approval will start from a backend document.submitted event
-          // (via a workflow binding) when the Documents module is wired to the API.
-          setModal(false); setTitle('');
-        }}
-      >
-        <div class="hse-form-grid">
-          <Field label="Document title" wide><TextInput value={newTitle} onInput={setTitle} placeholder="e.g. Confined Space Entry Procedure" /></Field>
-          <Field label="Document type"><SelectInput value={newType} onInput={setType} options={[...HSE_DOC_TYPES]} /></Field>
-          <Field label="Document owner"><TextInput value={newOwner} onInput={setOwner} placeholder="Department or person responsible" /></Field>
-        </div>
-      </HseModal>
+      <Dialog open={modalOpen} onClose={() => setModal(false)} variant="form">
+        <Dialog.Header title="Upload Document" sub="Upload a new or revised controlled document. This opens a document-approval workflow." icon={<i class="fas fa-file-arrow-up" />} onClose={() => setModal(false)} />
+        <Dialog.Body>
+          <div class="hse-form-grid">
+            <Field label="Document title" wide><TextInput value={newTitle} onInput={setTitle} placeholder="e.g. Confined Space Entry Procedure" /></Field>
+            <Field label="Document type"><SelectInput value={newType} onInput={setType} options={[...HSE_DOC_TYPES]} /></Field>
+            <Field label="Document owner"><TextInput value={newOwner} onInput={setOwner} placeholder="Department or person responsible" /></Field>
+          </div>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Button variant="outline" onClick={() => setModal(false)}>Cancel</Button>
+          <Button variant="primary" onClick={() => {
+            const ref = `DOC-HSE-${String(docs.length + 300).padStart(4, '0')}`;
+            const newDoc: HseDocRow = { ref, title: newTitle || 'Untitled document', type: newType, owner: newOwner, version: 'v1.0', status: 'Draft', review: '19 Jun 2027' };
+            setDocs([newDoc, ...docs]);
+            // Document approval will start from a backend document.submitted event
+            // (via a workflow binding) when the Documents module is wired to the API.
+            setModal(false); setTitle('');
+          }}>Upload &amp; Route for Approval</Button>
+        </Dialog.Footer>
+      </Dialog>
     </div>
   );
 }

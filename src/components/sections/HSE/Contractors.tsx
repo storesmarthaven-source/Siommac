@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { PageHeader, MetricRow, Tabs, TabPanel, SparkCard, HseModal, Field, TextInput, SelectInput, type TabItem, type SparkDef, Badge } from '@ui';
+import { PageHeader, MetricRow, Tabs, TabPanel, SparkCard, Dialog, Button, Field, TextInput, SelectInput, type TabItem, type SparkDef, Badge } from '@ui';
 import { HSE_SITES, hseBadgeTone, type HseSeverity } from './types';
 
 // ── Mock data ────────────────────────────────────────────────────────────────
@@ -177,21 +177,25 @@ function RegisterTab(): VNode {
         </aside>
       </div>
 
-      <HseModal open={modalOpen} onClose={() => setModal(false)}
-        title="Register Contractor" sub="Add a company to the approved contractor register. All HSE files must be uploaded before site access is granted."
-        submitLabel="Register"
-        onSubmit={() => {
-          const ref = `CON-${String(contractors.length + 1).padStart(3, '0')}`;
-          setContractors([{ ref, company: newCompany || 'New Contractor', contact: newContact || '—', trade: newTrade, site: newSite, stow: 'Pending', insurance: 'Pending', medicals: 'Pending', status: 'Pending', severity: 'warning' }, ...contractors]);
-          setModal(false); setCompany(''); setContact('');
-        }}>
-        <div class="hse-form-grid">
-          <Field label="Company name"><TextInput value={newCompany} onInput={setCompany} placeholder="e.g. Caribbean Civil Works Ltd" /></Field>
-          <Field label="HSE contact"><TextInput value={newContact} onInput={setContact} placeholder="Full name of HSE representative" /></Field>
-          <Field label="Trade / scope"><SelectInput value={newTrade} onInput={setTrade} options={[...TRADES]} /></Field>
-          <Field label="Primary site"><SelectInput value={newSite} onInput={setSite} options={[...HSE_SITES]} /></Field>
-        </div>
-      </HseModal>
+      <Dialog open={modalOpen} onClose={() => setModal(false)} variant="form">
+        <Dialog.Header title="Register Contractor" sub="Add a company to the approved contractor register. All HSE files must be uploaded before site access is granted." icon={<i class="fas fa-helmet-safety" />} onClose={() => setModal(false)} />
+        <Dialog.Body>
+          <div class="hse-form-grid">
+            <Field label="Company name"><TextInput value={newCompany} onInput={setCompany} placeholder="e.g. Caribbean Civil Works Ltd" /></Field>
+            <Field label="HSE contact"><TextInput value={newContact} onInput={setContact} placeholder="Full name of HSE representative" /></Field>
+            <Field label="Trade / scope"><SelectInput value={newTrade} onInput={setTrade} options={[...TRADES]} /></Field>
+            <Field label="Primary site"><SelectInput value={newSite} onInput={setSite} options={[...HSE_SITES]} /></Field>
+          </div>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Button variant="outline" onClick={() => setModal(false)}>Cancel</Button>
+          <Button variant="primary" onClick={() => {
+            const ref = `CON-${String(contractors.length + 1).padStart(3, '0')}`;
+            setContractors([{ ref, company: newCompany || 'New Contractor', contact: newContact || '—', trade: newTrade, site: newSite, stow: 'Pending', insurance: 'Pending', medicals: 'Pending', status: 'Pending', severity: 'warning' }, ...contractors]);
+            setModal(false); setCompany(''); setContact('');
+          }}>Register</Button>
+        </Dialog.Footer>
+      </Dialog>
     </div>
   );
 }

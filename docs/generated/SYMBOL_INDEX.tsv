@@ -9427,6 +9427,7 @@ TrinidadPhoneInput	function	hr	true	component	src/components/sections/HR/Trinida
 update	function	hr	false		src/components/sections/HR/TrinidadPhoneInput.tsx	39	TrinidadPhoneInput
 AreaPlaceholder	function	hse	false	component	src/components/sections/HSE/AreaRouter.tsx	27	
 AreaRouter	function	hse	true	component	src/components/sections/HSE/AreaRouter.tsx	50	
+migratedDialogSurfaces	variable	hse	false	test	src/components/sections/HSE/canonicalDialogMigration.test.ts	5	
 migratedSurfaces	variable	hse	false	test	src/components/sections/HSE/canonicalTabsMigration.test.ts	5	
 ContractorRow	interface	hse	false		src/components/sections/HSE/Contractors.tsx	16	
 mockContractors	array	hse	false		src/components/sections/HSE/Contractors.tsx	29	
@@ -9439,10 +9440,10 @@ mockAccess	array	hse	false		src/components/sections/HSE/Contractors.tsx	86
 TRADES	variable	hse	false	component	src/components/sections/HSE/Contractors.tsx	93	
 TABS	array	hse	false		src/components/sections/HSE/Contractors.tsx	97	
 RegisterTab	function	hse	false	component	src/components/sections/HSE/Contractors.tsx	104	
-InductionTab	function	hse	false	component	src/components/sections/HSE/Contractors.tsx	199	
-FilesTab	function	hse	false	component	src/components/sections/HSE/Contractors.tsx	240	
-AccessTab	function	hse	false	component	src/components/sections/HSE/Contractors.tsx	307	
-ContractorsArea	function	hse	true	component	src/components/sections/HSE/Contractors.tsx	347	
+InductionTab	function	hse	false	component	src/components/sections/HSE/Contractors.tsx	203	
+FilesTab	function	hse	false	component	src/components/sections/HSE/Contractors.tsx	244	
+AccessTab	function	hse	false	component	src/components/sections/HSE/Contractors.tsx	311	
+ContractorsArea	function	hse	true	component	src/components/sections/HSE/Contractors.tsx	351	
 TABS	array	hse	false		src/components/sections/HSE/Documents.tsx	17	
 TYPE_ICONS	object	hse	false		src/components/sections/HSE/Documents.tsx	22	
 HAZARD_COLORS	object	hse	false		src/components/sections/HSE/Documents.tsx	27	
@@ -9461,8 +9462,8 @@ TABS	array	hse	false		src/components/sections/HSE/EmergencyResponse.tsx	102
 PlansTab	function	hse	false	component	src/components/sections/HSE/EmergencyResponse.tsx	109	
 MusterTab	function	hse	false	component	src/components/sections/HSE/EmergencyResponse.tsx	176	
 DrillsTab	function	hse	false	component	src/components/sections/HSE/EmergencyResponse.tsx	210	
-ErtTab	function	hse	false	component	src/components/sections/HSE/EmergencyResponse.tsx	313	
-EmergencyResponseArea	function	hse	true	component	src/components/sections/HSE/EmergencyResponse.tsx	375	
+ErtTab	function	hse	false	component	src/components/sections/HSE/EmergencyResponse.tsx	317	
+EmergencyResponseArea	function	hse	true	component	src/components/sections/HSE/EmergencyResponse.tsx	379	
 SpillRow	interface	hse	false		src/components/sections/HSE/Environmental.tsx	16	
 mockSpills	array	hse	false		src/components/sections/HSE/Environmental.tsx	30	
 WasteRow	interface	hse	false		src/components/sections/HSE/Environmental.tsx	37	
@@ -9474,10 +9475,10 @@ mockMonitoring	array	hse	false		src/components/sections/HSE/Environmental.tsx	89
 TABS	array	hse	false		src/components/sections/HSE/Environmental.tsx	100	
 SpillsTab	function	hse	false	component	src/components/sections/HSE/Environmental.tsx	107	
 handleReport	function	hse	false		src/components/sections/HSE/Environmental.tsx	119	SpillsTab
-WasteTab	function	hse	false	component	src/components/sections/HSE/Environmental.tsx	222	
-EmaTab	function	hse	false	component	src/components/sections/HSE/Environmental.tsx	289	
-MonitoringTab	function	hse	false	component	src/components/sections/HSE/Environmental.tsx	323	
-EnvironmentalArea	function	hse	true	component	src/components/sections/HSE/Environmental.tsx	392	
+WasteTab	function	hse	false	component	src/components/sections/HSE/Environmental.tsx	226	
+EmaTab	function	hse	false	component	src/components/sections/HSE/Environmental.tsx	293	
+MonitoringTab	function	hse	false	component	src/components/sections/HSE/Environmental.tsx	327	
+EnvironmentalArea	function	hse	true	component	src/components/sections/HSE/Environmental.tsx	396	
 C	object	hse	false		src/components/sections/HSE/HSEDashboard.tsx	29	
 DD	interface	hse	false		src/components/sections/HSE/HSEDashboard.tsx	39	
 Drawer	function	hse	false	component	src/components/sections/HSE/HSEDashboard.tsx	41	
@@ -9692,9 +9693,9 @@ mockCalendar	array	hse	false		src/components/sections/HSE/LegalCompliance.tsx	83
 TABS	array	hse	false		src/components/sections/HSE/LegalCompliance.tsx	94	
 ObligationsTab	function	hse	false	component	src/components/sections/HSE/LegalCompliance.tsx	101	
 EmaPermitsTab	function	hse	false	component	src/components/sections/HSE/LegalCompliance.tsx	178	
-BreachesTab	function	hse	false	component	src/components/sections/HSE/LegalCompliance.tsx	272	
-CalendarTab	function	hse	false	component	src/components/sections/HSE/LegalCompliance.tsx	330	
-LegalComplianceArea	function	hse	true	component	src/components/sections/HSE/LegalCompliance.tsx	364	
+BreachesTab	function	hse	false	component	src/components/sections/HSE/LegalCompliance.tsx	276	
+CalendarTab	function	hse	false	component	src/components/sections/HSE/LegalCompliance.tsx	334	
+LegalComplianceArea	function	hse	true	component	src/components/sections/HSE/LegalCompliance.tsx	368	
 HSE_ROOT_ID	variable	hse	false		src/components/sections/HSE/module.ts	16	
 HSE_VIS_NAMESPACE	variable	hse	false		src/components/sections/HSE/module.ts	22	
 HSE_DASHBOARD_ID	variable	hse	false		src/components/sections/HSE/module.ts	24	
@@ -10195,12 +10196,12 @@ titleCase	function	hse	false		src/components/sections/HSE/training/TrainingDialo
 AddCertificateDialog	function	hse	true	component	src/components/sections/HSE/training/TrainingDialogs.tsx	19	
 reset	function	hse	false		src/components/sections/HSE/training/TrainingDialogs.tsx	36	AddCertificateDialog
 submit	function	hse	false		src/components/sections/HSE/training/TrainingDialogs.tsx	37	AddCertificateDialog
-RenewCertificateDialog	function	hse	true	component	src/components/sections/HSE/training/TrainingDialogs.tsx	72	
-submit	function	hse	false		src/components/sections/HSE/training/TrainingDialogs.tsx	77	RenewCertificateDialog
-AssignTrainingDialog	function	hse	true	component	src/components/sections/HSE/training/TrainingDialogs.tsx	95	
-submit	function	hse	false		src/components/sections/HSE/training/TrainingDialogs.tsx	105	AssignTrainingDialog
-CreateRequirementDialog	function	hse	true	component	src/components/sections/HSE/training/TrainingDialogs.tsx	125	
-submit	function	hse	false		src/components/sections/HSE/training/TrainingDialogs.tsx	131	CreateRequirementDialog
+RenewCertificateDialog	function	hse	true	component	src/components/sections/HSE/training/TrainingDialogs.tsx	76	
+submit	function	hse	false		src/components/sections/HSE/training/TrainingDialogs.tsx	81	RenewCertificateDialog
+AssignTrainingDialog	function	hse	true	component	src/components/sections/HSE/training/TrainingDialogs.tsx	103	
+submit	function	hse	false		src/components/sections/HSE/training/TrainingDialogs.tsx	113	AssignTrainingDialog
+CreateRequirementDialog	function	hse	true	component	src/components/sections/HSE/training/TrainingDialogs.tsx	137	
+submit	function	hse	false		src/components/sections/HSE/training/TrainingDialogs.tsx	143	CreateRequirementDialog
 MONTH_ABBR	array	hse	false		src/components/sections/HSE/training/TrainingInsightCards.tsx	20	
 PALETTE	array	hse	false		src/components/sections/HSE/training/TrainingInsightCards.tsx	21	
 _titleCase	function	hse	false		src/components/sections/HSE/training/TrainingInsightCards.tsx	22	
@@ -13090,7 +13091,7 @@ DEMO_PEOPLE	array	platform	false		src/ui/registry/definitions.tsx	39
 DEMO_DEPARTMENTS	array	platform	false		src/ui/registry/definitions.tsx	47	
 personDef	object	platform	false		src/ui/registry/definitions.tsx	62	
 dialogDef	object	platform	false		src/ui/registry/definitions.tsx	178	
-COMPONENT_DEFS	array	platform	true		src/ui/registry/definitions.tsx	307	
+COMPONENT_DEFS	array	platform	true		src/ui/registry/definitions.tsx	311	
 s	function	platform	false		src/ui/registry/forms.defs.tsx	25	
 b	function	platform	false		src/ui/registry/forms.defs.tsx	26	
 n	function	platform	false		src/ui/registry/forms.defs.tsx	27	

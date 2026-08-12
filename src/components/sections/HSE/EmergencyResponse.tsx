@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { PageHeader, MetricRow, Tabs, TabPanel, SparkCard, HseModal, Field, TextInput, SelectInput, type TabItem, type SparkDef, Badge } from '@ui';
+import { PageHeader, MetricRow, Tabs, TabPanel, SparkCard, Dialog, Button, Field, TextInput, SelectInput, type TabItem, type SparkDef, Badge } from '@ui';
 import { HSE_SITES, hseBadgeTone, type HseSeverity } from './types';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
@@ -292,20 +292,24 @@ function DrillsTab(): VNode {
         </aside>
       </div>
 
-      <HseModal open={modalOpen} onClose={() => setModal(false)}
-        title="Log Emergency Drill" sub="Record a completed or scheduled emergency drill."
-        submitLabel="Log Drill"
-        onSubmit={() => {
-          const ref = `DRL-${String(drills.length + 20).padStart(3, '0')}`;
-          setDrills([{ ref, site: newSite, drillType: newType, date: '25 Jun 2026', duration: '—', scenario: newScenario || 'Full site drill', participants: 0, score: 0, findings: '—', status: 'Scheduled' }, ...drills]);
-          setModal(false); setScenario('');
-        }}>
-        <div class="hse-form-grid">
-          <Field label="Site"><SelectInput value={newSite} onInput={setSite} options={[...HSE_SITES]} /></Field>
-          <Field label="Drill type"><SelectInput value={newType} onInput={setType} options={['Fire & Evacuation', 'Spill Response', 'Man Overboard (MOB)', 'Medical Emergency', 'Chemical Incident', 'Confined Space Rescue']} /></Field>
-          <Field label="Scenario description" wide><TextInput value={newScenario} onInput={setScenario} placeholder="Describe the drill scenario…" /></Field>
-        </div>
-      </HseModal>
+      <Dialog open={modalOpen} onClose={() => setModal(false)} variant="form">
+        <Dialog.Header title="Log Emergency Drill" sub="Record a completed or scheduled emergency drill." icon={<i class="fas fa-stopwatch" />} onClose={() => setModal(false)} />
+        <Dialog.Body>
+          <div class="hse-form-grid">
+            <Field label="Site"><SelectInput value={newSite} onInput={setSite} options={[...HSE_SITES]} /></Field>
+            <Field label="Drill type"><SelectInput value={newType} onInput={setType} options={['Fire & Evacuation', 'Spill Response', 'Man Overboard (MOB)', 'Medical Emergency', 'Chemical Incident', 'Confined Space Rescue']} /></Field>
+            <Field label="Scenario description" wide><TextInput value={newScenario} onInput={setScenario} placeholder="Describe the drill scenario…" /></Field>
+          </div>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Button variant="outline" onClick={() => setModal(false)}>Cancel</Button>
+          <Button variant="primary" onClick={() => {
+            const ref = `DRL-${String(drills.length + 20).padStart(3, '0')}`;
+            setDrills([{ ref, site: newSite, drillType: newType, date: '25 Jun 2026', duration: '—', scenario: newScenario || 'Full site drill', participants: 0, score: 0, findings: '—', status: 'Scheduled' }, ...drills]);
+            setModal(false); setScenario('');
+          }}>Log Drill</Button>
+        </Dialog.Footer>
+      </Dialog>
     </div>
   );
 }

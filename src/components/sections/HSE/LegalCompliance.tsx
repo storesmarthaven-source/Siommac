@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { PageHeader, MetricRow, Tabs, TabPanel, SparkCard, HseModal, Field, TextInput, SelectInput, type TabItem, type SparkDef, Badge } from '@ui';
+import { PageHeader, MetricRow, Tabs, TabPanel, SparkCard, Dialog, Button, Field, TextInput, SelectInput, type TabItem, type SparkDef, Badge } from '@ui';
 import { HSE_SITES, hseBadgeTone, type HseSeverity } from './types';
 
 // ── Mock data ────────────────────────────────────────────────────────────────
@@ -250,21 +250,25 @@ function EmaPermitsTab(): VNode {
         </aside>
       </div>
 
-      <HseModal open={modalOpen} onClose={() => setModal(false)}
-        title="Add EMA Permit" sub="Record an EMA permit or environmental clearance for a T&T site activity."
-        submitLabel="Add Permit"
-        onSubmit={() => {
-          const ref = `EMA-2026-${String(permits.length + 1).padStart(3, '0')}`;
-          setPermits([{ ref, type: newType, activity: newActivity || 'New activity', site: newSite, issued: '19 Jun 2026', expiry: newExpiry || 'TBD', status: 'Current', severity: 'success' }, ...permits]);
-          setModal(false); setActivity(''); setExpiry('');
-        }}>
-        <div class="hse-form-grid">
-          <Field label="Permit type"><SelectInput value={newType} onInput={setType} options={['CEC', 'Trade Effluent Permit', 'Air Emission Permit', 'Noise Permit', 'Waste Management Approval']} /></Field>
-          <Field label="Site"><SelectInput value={newSite} onInput={setSite} options={[...HSE_SITES]} /></Field>
-          <Field label="Activity description" wide><TextInput value={newActivity} onInput={setActivity} placeholder="e.g. Fuel storage tank expansion" /></Field>
-          <Field label="Expiry date"><TextInput value={newExpiry} onInput={setExpiry} placeholder="e.g. 14 Mar 2027" /></Field>
-        </div>
-      </HseModal>
+      <Dialog open={modalOpen} onClose={() => setModal(false)} variant="form">
+        <Dialog.Header title="Add EMA Permit" sub="Record an EMA permit or environmental clearance for a T&amp;T site activity." icon={<i class="fas fa-file-contract" />} onClose={() => setModal(false)} />
+        <Dialog.Body>
+          <div class="hse-form-grid">
+            <Field label="Permit type"><SelectInput value={newType} onInput={setType} options={['CEC', 'Trade Effluent Permit', 'Air Emission Permit', 'Noise Permit', 'Waste Management Approval']} /></Field>
+            <Field label="Site"><SelectInput value={newSite} onInput={setSite} options={[...HSE_SITES]} /></Field>
+            <Field label="Activity description" wide><TextInput value={newActivity} onInput={setActivity} placeholder="e.g. Fuel storage tank expansion" /></Field>
+            <Field label="Expiry date"><TextInput value={newExpiry} onInput={setExpiry} placeholder="e.g. 14 Mar 2027" /></Field>
+          </div>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Button variant="outline" onClick={() => setModal(false)}>Cancel</Button>
+          <Button variant="primary" onClick={() => {
+            const ref = `EMA-2026-${String(permits.length + 1).padStart(3, '0')}`;
+            setPermits([{ ref, type: newType, activity: newActivity || 'New activity', site: newSite, issued: '19 Jun 2026', expiry: newExpiry || 'TBD', status: 'Current', severity: 'success' }, ...permits]);
+            setModal(false); setActivity(''); setExpiry('');
+          }}>Add Permit</Button>
+        </Dialog.Footer>
+      </Dialog>
     </div>
   );
 }

@@ -283,21 +283,57 @@ counts.
 
 The next canonical component is Dialog.
 
+## Dialog programme — frozen
+
+Clean HSE form family completed:
+
+- migrated the Environmental spill report, Emergency drill log, HSE document
+  upload, contractor registration, EMA permit and Toolbox Talk flows from
+  `HseModal` to canonical compound `Dialog` composition;
+- migrated all four live Training flows — add certificate, renew certificate,
+  assign training and create role requirement — with canonical busy state and
+  disabled submit actions during mutations;
+- preserved every form field, submit side effect, reset and close path while
+  replacing the legacy title/sub/submit props bag with explicit
+  `Dialog.Header`, `Dialog.Body` and `Dialog.Footer` ownership;
+- passed all 29 focused Dialog/migration tests with zero lint errors, held the
+  49-error known frontend typecheck baseline and reduced deprecated-import
+  files from 83 to 78;
+- browser-verified the canonical form dialog with matched `aria-labelledby`,
+  canonical footer actions, working close behaviour, one canonical sheet and
+  zero legacy `.ui-modal` frames.
+
+Dialog classification is now frozen:
+
+```text
+Dialog canonical system     COMPLETE
+Clean HSE form migration    COMPLETE
+Business dialog flows       PRESERVED
+Dirty/deferred overlays     RECORDED DEBT
+```
+
+The exact remaining HSE `HseModal` debt is `Incidents.tsx`, `Inspections.tsx`,
+`PPEManager.tsx` and `inspections/InspectionDialogs.tsx`; each has pre-existing
+lint blockers. The broader pre-v2 `Modal` and `HrfinWizardModal` consumers are
+named ownership debt for later natural touches and the Wizard cycle rather than
+a reason to keep Dialog open.
+
+The next canonical component is Wizard / Stepper.
+
 ## Remaining programme
 
 The overall mandate is not yet complete. Continue automatically:
 
-1. Dialog
-2. Wizard / Stepper
-3. PageHeader / PageActionBar
-4. EmptyState
-5. Skeleton / Loading
-6. Checkbox / RadioGroup / Switch
-7. Menu
-8. remaining registered canonical components
-9. polished UI Kit Studio interface
-10. Brand Theme application preview at all required breakpoints
-11. final full-suite and browser verification gate
+1. Wizard / Stepper
+2. PageHeader / PageActionBar
+3. EmptyState
+4. Skeleton / Loading
+5. Checkbox / RadioGroup / Switch
+6. Menu
+7. remaining registered canonical components
+8. polished UI Kit Studio interface
+9. Brand Theme application preview at all required breakpoints
+10. final full-suite and browser verification gate
 
 No component should chase mathematical zero. Exact dirty files and genuine
 domain/interaction exceptions remain recorded debt; clean generic migration is
