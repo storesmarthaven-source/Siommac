@@ -11331,35 +11331,35 @@ getSwzPage	function	settings	true		src/components/sections/Settings/settingsNav.
 visibleSwzPages	function	settings	true		src/components/sections/Settings/settingsNav.ts	98	
 escAttr	function	settings	false		src/components/sections/Settings/settingsNav.ts	102	
 buildSettingsMenuHtml	function	settings	true		src/components/sections/Settings/settingsNav.ts	109	
-CardLabel	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	70	
-BrandingPanelProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	84	
-BrandingPanel	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	89	
-field	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	148	BrandingPanel
-TrustedDevicesCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	210	
-TIMEOUT_OPTIONS	array	settings	false		src/components/sections/Settings/SettingsSection.tsx	361	
-TIMEOUT_ROLE_LABEL	object	settings	false		src/components/sections/Settings/SettingsSection.tsx	372	
-SessionTimeoutCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	377	
-SetupStep	type	settings	false		src/components/sections/Settings/SettingsSection.tsx	439	
-TotpSetupModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	441	
-TotpSetupModal	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	446	
-TotpDisableModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	641	
-TotpDisableModal	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	646	
-TotpRegenModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	718	
-TotpRegenModal	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	722	
-webauthnAvailable	variable	settings	false		src/components/sections/Settings/SettingsSection.tsx	842	
-PasskeysCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	844	
-AuthenticatorCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	1026	
-SecurityPanel	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1137	
-LegacyPage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1239	
-PlaceholderPage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1264	
-CONSOLE_BODIES	object	settings	false		src/components/sections/Settings/SettingsSection.tsx	1282	
-ConsolePage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1288	
-SettingsSection	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	1304	
-enter	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1335	SettingsSection
-exit	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1345	SettingsSection
-onSection	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1350	SettingsSection
-onMenuClick	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1355	SettingsSection
-emptySettings	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1404	
+CardLabel	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	69	
+BrandingPanelProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	83	
+BrandingPanel	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	88	
+field	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	147	BrandingPanel
+TrustedDevicesCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	209	
+TIMEOUT_OPTIONS	array	settings	false		src/components/sections/Settings/SettingsSection.tsx	360	
+TIMEOUT_ROLE_LABEL	object	settings	false		src/components/sections/Settings/SettingsSection.tsx	371	
+SessionTimeoutCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	376	
+SetupStep	type	settings	false		src/components/sections/Settings/SettingsSection.tsx	438	
+TotpSetupModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	440	
+TotpSetupModal	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	445	
+TotpDisableModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	640	
+TotpDisableModal	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	645	
+TotpRegenModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	717	
+TotpRegenModal	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	721	
+webauthnAvailable	variable	settings	false		src/components/sections/Settings/SettingsSection.tsx	841	
+PasskeysCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	843	
+AuthenticatorCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	1025	
+SecurityPanel	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1136	
+LegacyPage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1238	
+PlaceholderPage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1263	
+CONSOLE_BODIES	object	settings	false		src/components/sections/Settings/SettingsSection.tsx	1281	
+ConsolePage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1286	
+SettingsSection	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	1302	
+enter	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1338	SettingsSection
+exit	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1348	SettingsSection
+onSection	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1353	SettingsSection
+onMenuClick	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1358	SettingsSection
+emptySettings	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1407	
 valStr	function	settings	false		src/components/sections/Settings/SwzCard.tsx	17	
 toInput	function	settings	false		src/components/sections/Settings/SwzCard.tsx	24	
 classPill	function	settings	false		src/components/sections/Settings/SwzCard.tsx	30	

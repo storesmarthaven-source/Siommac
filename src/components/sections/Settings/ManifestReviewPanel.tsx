@@ -38,7 +38,7 @@ const REVIEWERS: { role: ReviewerRole; label: string; col: keyof ManifestRow }[]
 ];
 
 function StatusPill({ status }: { status: ManifestReviewStatus }): VNode {
-  return <span class={`stg-mf-status ${STATUS_CLASS[status] ?? 'draft'}`}>{STATUS_LABEL[status] ?? status}</span>;
+  return <span class={`stg-mf-status ${STATUS_CLASS[status]}`}>{STATUS_LABEL[status]}</span>;
 }
 
 // ── Detail pane ─────────────────────────────────────────────────────────────────
@@ -77,8 +77,8 @@ function ManifestDetail({ moduleKey }: { moduleKey: string }): VNode {
   const manifestRecord = () => toActionRecord({
     title: m.module_label, subtitle: `${m.module_key}${m.manifest_version ? ` · v${m.manifest_version}` : ''}`, icon: 'fa-file-shield',
     fields: [
-      { label: 'Settings', value: String(m.settings_count ?? 0) },
-      { label: 'Critical', value: String(m.critical_settings_count ?? 0) },
+      { label: 'Settings', value: String(m.settings_count) },
+      { label: 'Critical', value: String(m.critical_settings_count) },
     ],
   });
   const deprecate = async () => {
@@ -121,9 +121,9 @@ function ManifestDetail({ moduleKey }: { moduleKey: string }): VNode {
       </div>
 
       <div class="stg-mf-stats">
-        <div><b>{m.settings_count ?? 0}</b><span>settings</span></div>
-        <div><b>{m.critical_settings_count ?? 0}</b><span>critical</span></div>
-        <div><b>{m.user_preferences_count ?? 0}</b><span>prefs</span></div>
+        <div><b>{m.settings_count}</b><span>settings</span></div>
+        <div><b>{m.critical_settings_count}</b><span>critical</span></div>
+        <div><b>{m.user_preferences_count}</b><span>prefs</span></div>
       </div>
 
       {(m.requires_security_review || m.requires_compliance_review || m.requires_hse_review) && (
@@ -237,7 +237,7 @@ export function ManifestReviewPanel(): VNode {
           >
             <div class="stg-mf-item-main">
               <div class="stg-mf-item-label">{m.module_label}</div>
-              <div class="stg-mf-item-sub">{m.settings_count ?? 0} settings{m.critical_settings_count ? ` · ${m.critical_settings_count} critical` : ''}</div>
+              <div class="stg-mf-item-sub">{m.settings_count} settings{m.critical_settings_count ? ` · ${m.critical_settings_count} critical` : ''}</div>
             </div>
             <StatusPill status={m.review_status} />
           </button>

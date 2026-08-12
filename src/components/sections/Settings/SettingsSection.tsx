@@ -44,7 +44,6 @@ import { showSection, buildSidebar } from '@/components/nav/navCore';
 // to the top-level Access Control section. Only the non-RBAC security tools remain here.
 import { UserSecurityPanel } from '@/components/sections/SuperadminConsole/tabs/UserSecurityPanel';
 import { SecurityPolicyTab } from '@/components/sections/SuperadminConsole/tabs/SecurityPolicyTab';
-import { UIKitPage }         from '@ui/examples/UIKitPage';
 import { useStepUp, withStepUp } from '@/hooks/useStepUp';
 import {
   useTotpStatus,
@@ -1282,7 +1281,6 @@ function PlaceholderPage({ meta }: { meta: SwzPage }): VNode {
 const CONSOLE_BODIES: Record<string, ComponentType> = {
   'user-security':   UserSecurityPanel,
   'security-policy': SecurityPolicyTab,
-  'ui-kit':          UIKitPage,
 };
 
 function ConsolePage({ meta }: { meta: SwzPage }): VNode {
@@ -1322,8 +1320,13 @@ export function SettingsSection(): VNode {
     setSettings(prev => prev ? { ...prev, companyName: name, companyLogoUrl: logoUrl } : prev);
   }, []);
 
-  // Refs so the mount-once nav listener reads current values.
-  const pageRef = useRef(page); pageRef.current = page;
+  // Refs so the mount-once nav listener reads current values. The write happens
+  // in an effect, not during render: `pageRef` is only ever READ from DOM event
+  // handlers registered by the mount-once effect below, which cannot run before
+  // a commit — so post-commit assignment is equivalent, and writing a ref during
+  // render is what `react-hooks/refs` (rightly) rejects.
+  const pageRef = useRef(page);
+  useEffect(() => { pageRef.current = page; }, [page]);
   const inSettingsRef = useRef(false);
   const prevSectionRef = useRef('s-adm-dashboard');
 
