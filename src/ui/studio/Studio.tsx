@@ -30,6 +30,8 @@ import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { Workbench } from './Workbench';
 import { BrandOverview } from './BrandOverview';
+import { AppPreview, type Scene } from './AppPreview';
+import { PreviewScope } from './PreviewScope';
 import {
   COMPONENT_DEFS, componentsByCategory, registryTotals, findComponent,
   isBuilt, type ComponentDef,
@@ -70,13 +72,19 @@ const NAV: NavGroup[] = [
     { id: 'components', label: 'Catalogue' },
   ] },
   { label: 'Application', items: [
-    { id: 'app-shell',    label: 'App Shell',  phase: 4 },
-    { id: 'app-dashboard',label: 'Dashboard',  phase: 4 },
-    { id: 'app-forms',    label: 'Forms',      phase: 4 },
-    { id: 'app-data',     label: 'Data Views', phase: 4 },
-    { id: 'app-workflow', label: 'Workflow',   phase: 4 },
+    { id: 'app-shell',    label: 'App Shell' },
+    { id: 'app-dashboard',label: 'Dashboard' },
+    { id: 'app-forms',    label: 'Forms' },
+    { id: 'app-data',     label: 'Data Views' },
+    { id: 'app-workflow', label: 'Workflow' },
   ] },
 ];
+
+/** Which scene each Application nav item opens on. */
+const APP_SCENE: Partial<Record<SectionId, Scene>> = {
+  'app-shell': 'dashboard', 'app-dashboard': 'dashboard', 'app-forms': 'forms',
+  'app-data': 'data', 'app-workflow': 'workflow',
+};
 
 /* ── Catalogue ──────────────────────────────────────────────────────────────*/
 
@@ -171,6 +179,10 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
   const [active, setActive] = useState<SectionId>('components');
   const [openId, setOpenId] = useState<string | null>(null);
   const draft = useGalleryDraft();
+  /* Destructured so the lint rule can tell a scope-callback from a ref: every
+     preview surface below must ATTACH the scope, not merely carry the attribute
+     — the draft applies its values to the one element handed to attachScope. */
+  const attachScope = draft.attachScope;
 
   const flat = NAV.flatMap(g => g.items);
   const current = flat.find(i => i.id === active) ?? flat[0]!;
@@ -221,17 +233,24 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
         {/* Only preview surfaces carry the customer draft scope — the Studio
             chrome itself stays neutral. See the second-root note in semantic.css. */}
         <div class="sds-body">
+          {APP_SCENE[active] && (
+            /* One preview; the nav item chooses its opening scene. `key` remounts it
+               so switching nav actually moves the scene rather than keeping stale state. */
+            <PreviewScope attach={attachScope}>
+              <AppPreview key={active} initialScene={APP_SCENE[active]} />
+            </PreviewScope>
+          )}
           {active === 'brand-overview' && (
             <BrandOverview draft={draft} logoUrl={logoUrl} onUploadLogo={onUploadLogo} />
           )}
           {active === 'components' && (openId
             ? <Workbench def={findComponent(openId)!} onBack={() => setOpenId(null)} />
             : <Catalogue onOpen={setOpenId} />)}
-          {active === 'foundations' && <div data-ui-preview-scope><FoundationsPanel draft={draft} /></div>}
+          {active === 'foundations' && <PreviewScope attach={attachScope}><FoundationsPanel draft={draft} /></PreviewScope>}
           {active === 'brand-theme' && (
-            <div data-ui-preview-scope>
+            <PreviewScope attach={attachScope}>
               <BrandThemePanel draft={draft} logoUrl={logoUrl ?? null} onUploadLogo={onUploadLogo} />
-            </div>
+            </PreviewScope>
           )}
           {current.phase != null && <PhasePlaceholder title={current.label} phase={current.phase} />}
         </div>

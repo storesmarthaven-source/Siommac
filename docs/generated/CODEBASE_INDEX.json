@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "19f256d8696b020f13b648de468cfac9f1dc0a84",
+    "head": "a6018742c155bbfd1f04dc329dab1363402870f0",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "60f855a7cc08719d3c440222",
-    "indexedFiles": 1828
+    "fingerprint": "db858944a012e023db8c4c27",
+    "indexedFiles": 1830
   },
   "summary": {
-    "files": 1473,
-    "symbols": 14711,
+    "files": 1475,
+    "symbols": 14729,
     "widgets": 63,
     "routes": 978,
     "routeDefinitions": 979,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 413,
-        "symbols": 3697,
+        "files": 415,
+        "symbols": 3715,
         "widgets": 12,
         "routes": 38,
         "routeDefinitions": 53,
@@ -9264,6 +9264,13 @@
       "hash": "0af2d3c848de89e0"
     },
     {
+      "path": "src/ui/studio/AppPreview.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 334,
+      "hash": "39154dec65b4837e"
+    },
+    {
       "path": "src/ui/studio/BrandOverview.tsx",
       "module": "platform",
       "role": "frontend",
@@ -9271,11 +9278,18 @@
       "hash": "e471e004d66d4932"
     },
     {
+      "path": "src/ui/studio/PreviewScope.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 32,
+      "hash": "4fde2c84284e7843"
+    },
+    {
       "path": "src/ui/studio/Studio.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 242,
-      "hash": "7ca58eb6df8b8cf4"
+      "lines": 261,
+      "hash": "0ba9a98bd6397e89"
     },
     {
       "path": "src/ui/studio/Workbench.tsx",
@@ -148545,6 +148559,178 @@
       "tags": []
     },
     {
+      "name": "Scene",
+      "kind": "type",
+      "file": "src/ui/studio/AppPreview.tsx",
+      "line": 35,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SCENES",
+      "kind": "array",
+      "file": "src/ui/studio/AppPreview.tsx",
+      "line": 36,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PreviewWidth",
+      "kind": "type",
+      "file": "src/ui/studio/AppPreview.tsx",
+      "line": 43,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WIDTHS",
+      "kind": "array",
+      "file": "src/ui/studio/AppPreview.tsx",
+      "line": 44,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NAV",
+      "kind": "array",
+      "file": "src/ui/studio/AppPreview.tsx",
+      "line": 52,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "METRICS",
+      "kind": "array",
+      "file": "src/ui/studio/AppPreview.tsx",
+      "line": 54,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ACTIVITY",
+      "kind": "array",
+      "file": "src/ui/studio/AppPreview.tsx",
+      "line": 61,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DEPARTMENTS",
+      "kind": "array",
+      "file": "src/ui/studio/AppPreview.tsx",
+      "line": 68,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EMPLOYMENT",
+      "kind": "array",
+      "file": "src/ui/studio/AppPreview.tsx",
+      "line": 69,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SITES",
+      "kind": "array",
+      "file": "src/ui/studio/AppPreview.tsx",
+      "line": 70,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Registry",
+      "kind": "function",
+      "file": "src/ui/studio/AppPreview.tsx",
+      "line": 73,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "kind": "function",
+      "file": "src/ui/studio/AppPreview.tsx",
+      "line": 81,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "Forms",
+      "kind": "function",
+      "file": "src/ui/studio/AppPreview.tsx",
+      "line": 130,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "Data",
+      "kind": "function",
+      "file": "src/ui/studio/AppPreview.tsx",
+      "line": 195,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "Workflow",
+      "kind": "function",
+      "file": "src/ui/studio/AppPreview.tsx",
+      "line": 223,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "AppPreview",
+      "kind": "function",
+      "file": "src/ui/studio/AppPreview.tsx",
+      "line": 264,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "ROLE_ACTION",
       "kind": "array",
       "file": "src/ui/studio/BrandOverview.tsx",
@@ -148701,10 +148887,22 @@
       "tags": []
     },
     {
+      "name": "PreviewScope",
+      "kind": "function",
+      "file": "src/ui/studio/PreviewScope.tsx",
+      "line": 20,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "StudioProps",
       "kind": "interface",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 42,
+      "line": 44,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148714,7 +148912,7 @@
       "name": "SectionId",
       "kind": "type",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 52,
+      "line": 54,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148724,7 +148922,7 @@
       "name": "NavGroup",
       "kind": "interface",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 58,
+      "line": 60,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148734,7 +148932,17 @@
       "name": "NAV",
       "kind": "array",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 60,
+      "line": 62,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "APP_SCENE",
+      "kind": "object",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 84,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148744,7 +148952,7 @@
       "name": "StatusChip",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 83,
+      "line": 91,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148756,7 +148964,7 @@
       "name": "ComponentCard",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 94,
+      "line": 102,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148769,7 +148977,7 @@
       "name": "Catalogue",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 119,
+      "line": 127,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148781,7 +148989,7 @@
       "name": "PhasePlaceholder",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 161,
+      "line": 169,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148793,7 +149001,7 @@
       "name": "Studio",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 170,
+      "line": 178,
       "module": "platform",
       "exported": true,
       "container": "",

@@ -13183,6 +13183,22 @@ toneFromWorkflowStatus	function	platform	true		src/ui/status/statusTokens.ts	141
 toneFromPriority	function	platform	true		src/ui/status/statusTokens.ts	157	
 colorFromSeverity	function	platform	true		src/ui/status/statusTokens.ts	169	
 statusLabel	function	platform	true		src/ui/status/statusTokens.ts	179	
+Scene	type	platform	true		src/ui/studio/AppPreview.tsx	35	
+SCENES	array	platform	true		src/ui/studio/AppPreview.tsx	36	
+PreviewWidth	type	platform	true		src/ui/studio/AppPreview.tsx	43	
+WIDTHS	array	platform	true		src/ui/studio/AppPreview.tsx	44	
+NAV	array	platform	false		src/ui/studio/AppPreview.tsx	52	
+METRICS	array	platform	false		src/ui/studio/AppPreview.tsx	54	
+ACTIVITY	array	platform	false		src/ui/studio/AppPreview.tsx	61	
+DEPARTMENTS	array	platform	false		src/ui/studio/AppPreview.tsx	68	
+EMPLOYMENT	array	platform	false		src/ui/studio/AppPreview.tsx	69	
+SITES	array	platform	false		src/ui/studio/AppPreview.tsx	70	
+Registry	function	platform	false	component	src/ui/studio/AppPreview.tsx	73	
+Dashboard	function	platform	false	component	src/ui/studio/AppPreview.tsx	81	
+Forms	function	platform	false	component	src/ui/studio/AppPreview.tsx	130	
+Data	function	platform	false	component	src/ui/studio/AppPreview.tsx	195	
+Workflow	function	platform	false	component	src/ui/studio/AppPreview.tsx	223	
+AppPreview	function	platform	true	component	src/ui/studio/AppPreview.tsx	264	
 ROLE_ACTION	array	platform	false		src/ui/studio/BrandOverview.tsx	41	
 ROLE_FOCUS	array	platform	false		src/ui/studio/BrandOverview.tsx	42	
 ROLE_SELECTION_EDGE	array	platform	false		src/ui/studio/BrandOverview.tsx	43	
@@ -13198,15 +13214,17 @@ Swatch	function	platform	false	component	src/ui/studio/BrandOverview.tsx	88
 BrandOverview	function	platform	true	component	src/ui/studio/BrandOverview.tsx	102	
 applyDirection	function	platform	false		src/ui/studio/BrandOverview.tsx	130	BrandOverview
 publish	function	platform	false		src/ui/studio/BrandOverview.tsx	141	BrandOverview
-StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	42	
-SectionId	type	platform	false		src/ui/studio/Studio.tsx	52	
-NavGroup	interface	platform	false		src/ui/studio/Studio.tsx	58	
-NAV	array	platform	false		src/ui/studio/Studio.tsx	60	
-StatusChip	function	platform	false	component	src/ui/studio/Studio.tsx	83	
-ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	94	
-Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	119	
-PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	161	
-Studio	function	platform	true	component	src/ui/studio/Studio.tsx	170	
+PreviewScope	function	platform	true	component	src/ui/studio/PreviewScope.tsx	20	
+StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	44	
+SectionId	type	platform	false		src/ui/studio/Studio.tsx	54	
+NavGroup	interface	platform	false		src/ui/studio/Studio.tsx	60	
+NAV	array	platform	false		src/ui/studio/Studio.tsx	62	
+APP_SCENE	object	platform	false		src/ui/studio/Studio.tsx	84	
+StatusChip	function	platform	false	component	src/ui/studio/Studio.tsx	91	
+ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	102	
+Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	127	
+PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	169	
+Studio	function	platform	true	component	src/ui/studio/Studio.tsx	178	
 Tab	type	platform	false		src/ui/studio/Workbench.tsx	31	
 TABS	array	platform	false		src/ui/studio/Workbench.tsx	32	
 VIEWPORTS	array	platform	false		src/ui/studio/Workbench.tsx	47	

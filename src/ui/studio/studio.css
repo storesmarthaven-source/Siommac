@@ -20,14 +20,24 @@
   --sds-ink-2:   #5b6880;
   --sds-accent:  #2f4a7d;
 
+  box-sizing: border-box;
+  /* Full-page takeover, matching .payslip-studio-root: a fixed overlay above the
+     ERP shell (topbar + sidebar) so the Studio is a distraction-free full-screen
+     tool. Out of document flow, so it no longer depends on the host section's
+     height — and the rail/main scroll independently rather than the page. */
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  overflow: hidden;
+
   display: grid;
   grid-template-columns: 264px minmax(0, 1fr);
-  min-height: 100vh;
   background: var(--sds-bg);
   color: var(--sds-ink);
   font-size: 15px;
   line-height: 1.5;
 }
+.sds * { box-sizing: border-box; }
 
 /* ── Navigation ─────────────────────────────────────────────────────────── */
 .sds-nav {
@@ -37,6 +47,7 @@
   padding: 24px 18px;
   background: var(--sds-surface);
   border-right: 1px solid var(--sds-line);
+  overflow-y: auto;
 }
 .sds-nav__brand { display: flex; flex-direction: column; gap: 2px; padding: 0 8px 6px; }
 .sds-nav__mark { font-size: 17px; font-weight: 700; letter-spacing: .01em; }
@@ -83,7 +94,7 @@
 .sds-nav__exit:hover { background: #eef1f6; }
 
 /* ── Main ───────────────────────────────────────────────────────────────── */
-.sds-main { min-width: 0; padding: 28px 32px 56px; }
+.sds-main { min-width: 0; padding: 28px 32px 56px; overflow-y: auto; }
 .sds-head { margin-bottom: 22px; }
 .sds-head h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.01em; }
 .sds-head__sub { margin: 4px 0 0; font-size: 14px; color: var(--sds-ink-2); }
@@ -171,7 +182,7 @@
 
 /* ── Responsive workspace foundation ────────────────────────────────────── */
 @media (max-width: 1024px) {
-  .sds { grid-template-columns: 1fr; }
+  .sds { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
   .sds-nav {
     flex-direction: row;
     flex-wrap: wrap;
@@ -374,4 +385,69 @@
 @media (max-width: 640px) {
   .sds-bo__bar { flex-direction: column; align-items: stretch; }
   .sds-bo__roles > div { grid-template-columns: 1fr; gap: 2px; }
+}
+
+/* ── Application Preview ────────────────────────────────────────────────────
+   `.ap` is the previewed APPLICATION's own frame, not Studio chrome. It sits
+   inside data-ui-preview-scope, so it takes the customer draft theme; the scene
+   and width switches above it do not. Width is set inline and CONSTRAINS the
+   layout — there is no transform anywhere in this block, by design. */
+.sds-ap__bar { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; margin-bottom: 8px; }
+.sds-ap__stage { overflow-x: auto; padding: 4px 0 12px; }
+
+.ap {
+  display: grid; grid-template-columns: 232px minmax(0, 1fr);
+  min-height: 560px;
+  /* NO max-width. Capping the frame at the pane width silently overrode the
+     inline width, so "Desktop" laid out at 416px and every responsive claim the
+     preview made was false. The stage scrolls instead — an honest 1440px frame
+     in a narrow pane is the correct trade. */
+  flex: none;
+  border: 1px solid var(--sds-line); border-radius: 14px; overflow: hidden;
+  background: #f6f8fb;
+}
+.ap--mobile { grid-template-columns: 1fr; }
+.ap__rail { background: #1b2d54; color: #fff; padding: 18px 14px; }
+.ap__brand { font-weight: 700; letter-spacing: .02em; margin-bottom: 18px; }
+.ap__rail nav { display: flex; flex-direction: column; gap: 2px; }
+.ap__navitem { padding: 9px 11px; border-radius: 8px; font-size: 14px; color: rgba(255,255,255,.78); }
+/* The one branded surface in the rail — nav-active is a brand role. */
+.ap__navitem.is-on { background: var(--ui-color-nav-active-background); color: var(--ui-color-nav-active-text, #fff); font-weight: 600; }
+.ap__body { display: flex; flex-direction: column; min-width: 0; }
+.ap__topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 18px; background: #fff; border-bottom: 1px solid var(--sds-line);
+}
+.ap__burger { border: 0; background: transparent; font-size: 20px; cursor: pointer; }
+.ap__avatar {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center; background: #e8edf6; font-size: 13px; font-weight: 600;
+}
+.ap__page { padding: 22px; min-width: 0; }
+.ap__page h1 { margin: 0; font-size: 22px; }
+.ap__page > * + * { margin-top: 18px; }
+
+.ap-page__head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.ap-page__head p { margin: 4px 0 0; font-size: 14px; color: #5b6880; }
+.ap-page__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ap-page__actions--end { justify-content: flex-end; }
+
+.ap-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.ap-metric__v { display: block; font-size: 26px; font-weight: 700; line-height: 1.15; }
+.ap-metric__l { font-size: 14px; color: #5b6880; }
+
+.ap-split { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 14px; }
+.ap-activity { list-style: none; margin: 0; padding: 0; }
+.ap-activity li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--sds-line); }
+.ap-activity li:first-child { border-top: 0; }
+.ap-activity strong { display: block; font-size: 14px; }
+.ap-activity span { display: block; font-size: 14px; color: #5b6880; }
+.ap-activity small { font-size: 13px; color: #8a95a8; }
+
+.ap-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px 18px; }
+.ap-form__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--sds-line); }
+.ap-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+
+@media (max-width: 900px) {
+  .ap-split { grid-template-columns: 1fr; }
 }
