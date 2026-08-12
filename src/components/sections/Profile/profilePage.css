@@ -951,14 +951,6 @@
 }
 .mp76-clean-preview-head strong { display: inline-flex; align-items: center; gap: 7px; color: #1b2d54; font-weight: 650; }
 .mp76-clean-preview-head strong svg { width: 14px; height: 14px; color: #1b2d54; stroke: currentColor !important; fill: none !important; }
-.mp76-clean-status-pill {
-  min-height: 24px; display: inline-flex; align-items: center;
-  padding: 0 9px; border-radius: 999px;
-  background: #eef2f6; color: #667085; border: 1px solid #e3e9f2;
-  font-size: 0.65rem; font-weight: 500; font-style: normal; white-space: nowrap;
-}
-.mp76-clean-status-pill.ready { color: #166534; background: #ecfdf3; border-color: #bbf7d0; }
-
 .mp76-clean-photo-stage {
   position: relative; height: 255px;
   display: grid; place-items: center;

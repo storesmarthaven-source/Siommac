@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "597bb94c76c9d8b0340c77291ccad973f3fad192",
+    "head": "de5187fb7b9f7853980acec92848748fee63adc2",
     "branch": "ui-kit/overnight-completion",
-    "fingerprint": "1ec6fb1849f6a5a2e273aeb7",
+    "fingerprint": "cdb6bec81b22592d261ef6c9",
     "indexedFiles": 1814
   },
   "summary": {
@@ -7315,7 +7315,7 @@
       "module": "platform",
       "role": "frontend-page",
       "lines": 1737,
-      "hash": "4d46f96f4de0a385"
+      "hash": "41626d11a346cf7b"
     },
     {
       "path": "src/components/sections/Profile/api.ts",

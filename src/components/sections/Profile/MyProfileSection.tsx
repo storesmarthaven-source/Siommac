@@ -11,7 +11,7 @@
 
 import { type VNode } from 'preact';
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
-import { PageHeader } from '@ui';
+import { Badge, PageHeader } from '@ui';
 import { useSessionStore, toast } from '@store';
 import { resolvePermission } from '@lib/permissions';
 import {
@@ -857,8 +857,8 @@ function ChangePhotoModal({
                     <div class="mp76-clean-preview-head">
                       <strong><DlgIco d={IC_USER} /> Original</strong>
                       {croppedUrl
-                        ? <em class="mp76-clean-status-pill ready">Cropped</em>
-                        : <em class="mp76-clean-status-pill">{hasPhoto ? 'Preview' : showingCurrentPhoto ? 'Current' : 'Waiting'}</em>}
+                        ? <Badge tone="success">Cropped</Badge>
+                        : <Badge>{hasPhoto ? 'Preview' : showingCurrentPhoto ? 'Current' : 'Waiting'}</Badge>}
                     </div>
 
                     {/* Hidden img = source for the canvas cropper */}
@@ -909,8 +909,8 @@ function ChangePhotoModal({
                     <div class="mp76-clean-preview-head">
                       <strong><DlgIco d={IC_SPARK_AI} /> AI Enhanced</strong>
                       {enhancedUrl
-                        ? <em class="mp76-clean-status-pill ready">Ready</em>
-                        : <em class="mp76-clean-status-pill">{enhancing ? 'Processing…' : 'Not Generated'}</em>}
+                        ? <Badge tone="success">Ready</Badge>
+                        : <Badge>{enhancing ? 'Processing…' : 'Not Generated'}</Badge>}
                     </div>
 
                     <div class="mp76-clean-photo-stage" style={{ position: 'relative' }}>
@@ -1611,9 +1611,9 @@ export function MyProfileSection(): VNode {
                   </div>
                 </div>
                 {totpStatusLoading ? (
-                  <span class="mp76-clean-status-pill">Loading…</span>
+                  <Badge>Loading…</Badge>
                 ) : totpStatus?.mandatory || role === 'superadmin' ? (
-                  <span class="mp76-clean-status-pill">In Security Settings</span>
+                  <Badge>In Security Settings</Badge>
                 ) : (
                   <div
                     class={`switch${totpStatus?.enabled ? '' : ' off'}`}
