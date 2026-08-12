@@ -42,6 +42,7 @@ Current verification:
 | Badge focused tests | 22/22 passed |
 | TextInput/FormField focused tests | 26/26 passed |
 | Select + field compatibility focused tests | 60/60 passed |
+| Card + first-family focused tests | 40/40 passed |
 | Repository index | Green after every commit |
 | Full test suite | Reserved for the final programme gate per `AGENTS.md` |
 
@@ -143,7 +144,7 @@ These are inventory metrics, not completion claims. Raw markup includes native
 controls intentionally owned by DateInput, FileInput, OTP, calendar, editor and
 other specialized behaviours.
 
-## Card pickup point
+## Card programme — in progress
 
 Canonical Card already owns the correct surface contract: variant, density,
 tone, accent, interaction, selection, disabled, loading, flush body, header and
@@ -156,10 +157,24 @@ footer. The remaining named cards must be classified by content ownership:
 - raw `*-card` classes: migrate only when their surface CSS is deleted in the
   same batch.
 
-Do not wrap these with Card while leaving legacy border/padding/elevation CSS in
-force. That would be patch-on-top, not consolidation. The next safe Card batch
-is a complete build-new → consumer migration → legacy surface CSS deletion for
-one lint-clean family.
+First clean family completed:
+
+- migrated all 17 payroll creation wizard surfaces to canonical `Card` and
+  `CardHeader`;
+- preserved `WizardPanel` and `SummaryCard` as payroll content compositions;
+- mapped the three statutory tiles to the canonical metric variant;
+- removed the complete `.pcrw .card`, `.sec-head`, `.sec-ico`, `.sec-title`,
+  `.sec-head .aux` and `.panel-body` surface family rather than retaining a
+  second frame underneath Card;
+- added a regression test that proves the first step renders three canonical
+  panels and none of the retired wrapper/header/body classes;
+- browser-verified the real wizard at desktop width with correct canonical
+  heading rhythm, frame, body spacing and zero console warnings/errors.
+
+The next largest lint-clean pure-surface family is the Finance payroll run
+workspace (`PayRunDetailPage.tsx`, `payRunDetail/*.tsx`, and its scoped
+`payrunWorkspace.css`). Domain compositions remain intact while their shared
+outer frame moves to Card.
 
 ## Remaining programme
 

@@ -2,9 +2,9 @@
 
 # finance Module Map
 
-Source fingerprint: `2a39ec68941c00d9bf289e21`
+Source fingerprint: `1ba82f7cccceed7e493769f3`
 
-Files: 139 | Symbols: 1846 | Widgets: 9 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
+Files: 140 | Symbols: 1848 | Widgets: 9 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
 ## Widgets and Tiles
 
@@ -545,7 +545,8 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/FinanceOverview.tsx` | 300 |
 | frontend-page | `src/components/sections/Finance/FinanceSection.tsx` | 112 |
 | frontend-page | `src/components/sections/Finance/PayBridgeDialog.tsx` | 185 |
-| frontend-page | `src/components/sections/Finance/PayNewRunWizard.tsx` | 655 |
+| frontend-page | `src/components/sections/Finance/PayNewRunWizard.card.test.tsx` | 38 |
+| frontend-page | `src/components/sections/Finance/PayNewRunWizard.tsx` | 710 |
 | frontend-page | `src/components/sections/Finance/PayRunDetailPage.tsx` | 421 |
 | frontend-page | `src/components/sections/Finance/PayWarningResolveDialog.tsx` | 96 |
 | frontend-page | `src/components/sections/Finance/PayablesOverview.tsx` | 347 |

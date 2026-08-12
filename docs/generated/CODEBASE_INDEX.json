@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "b0a689407e791433fb7c0b30b9ec75e622ad0ecc",
+    "head": "fef6bad73522fc7a4cbd922860ab0a55bafe1155",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "2a39ec68941c00d9bf289e21",
-    "indexedFiles": 1815
+    "fingerprint": "1ba82f7cccceed7e493769f3",
+    "indexedFiles": 1816
   },
   "summary": {
-    "files": 1460,
-    "symbols": 14684,
+    "files": 1461,
+    "symbols": 14686,
     "widgets": 63,
     "routes": 978,
     "routeDefinitions": 979,
@@ -48,8 +48,8 @@
     {
       "id": "finance",
       "counts": {
-        "files": 139,
-        "symbols": 1846,
+        "files": 140,
+        "symbols": 1848,
         "widgets": 9,
         "routes": 156,
         "routeDefinitions": 156,
@@ -4917,11 +4917,18 @@
       "hash": "f4ec75c830b74d5f"
     },
     {
+      "path": "src/components/sections/Finance/PayNewRunWizard.card.test.tsx",
+      "module": "finance",
+      "role": "frontend-page",
+      "lines": 38,
+      "hash": "f979290b26a0bb3e"
+    },
+    {
       "path": "src/components/sections/Finance/PayNewRunWizard.tsx",
       "module": "finance",
       "role": "frontend-page",
-      "lines": 655,
-      "hash": "2fe2e34d4acf5718"
+      "lines": 710,
+      "hash": "7db0e2e28a81cead"
     },
     {
       "path": "src/components/sections/Finance/PayRunDetailPage.tsx",
@@ -9120,8 +9127,8 @@
       "path": "src/ui/registry/containers.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 278,
-      "hash": "5568185400795590"
+      "lines": 279,
+      "hash": "7fa02b7dcffd3968"
     },
     {
       "path": "src/ui/registry/data.defs.tsx",
@@ -88677,10 +88684,32 @@
       "tags": []
     },
     {
+      "name": "WizardPanelProps",
+      "kind": "interface",
+      "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
+      "line": 131,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WizardPanel",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
+      "line": 141,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "SummaryCard",
       "kind": "function",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 131,
+      "line": 165,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -88693,7 +88722,7 @@
       "name": "PendingBlock",
       "kind": "function",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 142,
+      "line": 178,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -88705,7 +88734,7 @@
       "name": "PayNewRunWizard",
       "kind": "function",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 153,
+      "line": 189,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -88717,7 +88746,7 @@
       "name": "selectGroup",
       "kind": "function",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 224,
+      "line": 260,
       "module": "finance",
       "exported": false,
       "container": "PayNewRunWizard",
@@ -88727,7 +88756,7 @@
       "name": "goToStep",
       "kind": "function",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 231,
+      "line": 267,
       "module": "finance",
       "exported": false,
       "container": "PayNewRunWizard",
@@ -88737,7 +88766,7 @@
       "name": "create",
       "kind": "function",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 233,
+      "line": 269,
       "module": "finance",
       "exported": false,
       "container": "PayNewRunWizard",
@@ -147503,7 +147532,7 @@
       "name": "CONTAINER_DEFS",
       "kind": "array",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 277,
+      "line": 278,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -164455,7 +164484,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ maxWidth: '320px' }}>\n          <Card\n            variant=\"action\"\n            onClick={noop}\n            actionLabel=\"View Sarah James\"\n            header={<CardHeader\n              icon={<LucideIcon name=\"User\" />}\n              title=\"Sarah James\"\n              description=\"Safety Officer · EMP-00484\"\n              actions={<Button variant=\"ghost\" size=\"sm\" iconOnly aria-label=\"Edit Sarah James\" iconLeft={<LucideIcon name=\"Pencil\" />} />}\n            />}\n            footer={<CardFooter><span>Started 8 Mar 2021</span><Badge tone=\"success\" size=\"sm\" dot>Active</Badge></CardFooter>}\n          >\n            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>HSE · Georgetown</span>\n          </Card>\n        </div>\n      )",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 251
+      "line": 252
     },
     {
       "id": "bundle.hr.attendance.ops",
@@ -164925,7 +164954,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px' }}>\n          <Card variant=\"metric\" density=\"compact\" header={<CardHeader title=\"Open incidents\" level={null} />}>\n            <Figure value=\"18\" caption=\"4 overdue\" />\n          </Card>\n          <Card variant=\"surface\" header={<CardHeader title=\"Site note\" />}>\n            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Night shift handover completed.</span>\n          </Card>\n          <Card variant=\"panel\" density=\"compact\" header={<CardHeader title=\"Corrective actions\" actions={<Badge tone=\"warning\" size=\"sm\">2 open</Badge>} />}>\n            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Both due this Friday.</span>\n          </Card>\n          <Card variant=\"action\" onClick={noop} actionLabel=\"Start a new inspection\"\n            header={<CardHeader icon={<LucideIcon name=\"ClipboardCheck\" />} title=\"New inspection\" description=\"Start from a template\" />} />\n        </div>\n      )",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 216
+      "line": 217
     },
     {
       "id": "overflow",
@@ -165045,7 +165074,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>\n          {(['success', 'warning', 'danger', 'info'] as CardTone[]).map(tone => (\n            <Card key={tone} variant=\"metric\" density=\"compact\" tone={tone}\n              header={<CardHeader title={`${tone[0]!.toUpperCase()}${tone.slice(1)} signal`} level={null} />}>\n              <Figure value=\"7\" caption=\"this week\" />\n            </Card>\n          ))}\n        </div>\n      )",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 236
+      "line": 237
     },
     {
       "id": "variants",

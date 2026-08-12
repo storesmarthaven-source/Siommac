@@ -56,13 +56,10 @@
 .pcrw .pcrw-aside { display: grid; gap: 15px; align-content: start; min-width: 0; }
 
 /* ── Card ───────────────────────────────────────────────────────────────── */
-.pcrw .card { background: var(--pcrw-surface); border: 1px solid var(--pcrw-border); border-radius: var(--pcrw-radius); overflow: hidden; }
-.pcrw .sec-head { display: flex; align-items: flex-start; gap: 13px; padding: 18px 22px; border-bottom: 1px solid var(--pcrw-border-soft); }
-.pcrw .sec-ico { width: 30px; height: 30px; border-radius: 8px; background: var(--pcrw-surface-2); color: var(--pcrw-accent); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex-shrink: 0; }
-.pcrw .sec-title { font-size: 15px; font-weight: 700; }
+.pcrw .pcrw-card-step { width: 30px; height: 30px; border-radius: 8px; background: var(--pcrw-surface-2); color: var(--pcrw-accent); display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; }
 .pcrw .sec-sub { font-size: 12px; color: var(--pcrw-muted); margin-top: 2px; }
-.pcrw .sec-head .aux { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-.pcrw .panel-body { padding: 20px 22px; }
+.pcrw .pcrw-flush-inset { padding: 20px; }
+.pcrw .pcrw-flush-inset--error { padding-top: 0; }
 .pcrw .stack { display: grid; gap: 16px; }
 
 /* ── Run-type choice cards ──────────────────────────────────────────────── */

@@ -15,7 +15,7 @@
  * honest "pending" states that Slices 1–4 fill — never fabricated numbers.
  */
 
-import { Fragment, type VNode } from 'preact';
+import { Fragment, type ComponentChildren, type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { useQuery } from '@tanstack/preact-query';
 import { toast } from '@store';
@@ -34,7 +34,7 @@ import {
   type InputSourceReadiness,
 } from '@api/finance/payroll';
 import { runsRegisterApi } from '@api/finance/payrollRunsRegister';
-import { Badge, type BadgeTone } from '@ui';
+import { Badge, Card, CardHeader, type BadgeTone } from '@ui';
 import { PayrollPanelState } from './payRunDetail/PanelState';
 import './payrunWizard.css';
 
@@ -128,14 +128,50 @@ function lastOfMonth(ym: string): string {
 
 // ── Sidebar helpers ─────────────────────────────────────────────────────────────
 
+interface WizardPanelProps {
+  title: string;
+  description?: string;
+  stepNumber?: number;
+  actions?: ComponentChildren;
+  children: ComponentChildren;
+  bodyClass?: string;
+  flush?: boolean;
+}
+
+function WizardPanel({
+  title, description, stepNumber, actions, children, bodyClass, flush,
+}: WizardPanelProps): VNode {
+  return (
+    <Card
+      variant="panel"
+      density="comfortable"
+      header={(
+        <CardHeader
+          title={title}
+          description={description}
+          icon={stepNumber != null ? <span class="pcrw-card-step">{stepNumber}</span> : undefined}
+          actions={actions}
+          level={2}
+        />
+      )}
+      bodyClass={bodyClass}
+      flush={flush}
+    >
+      {children}
+    </Card>
+  );
+}
+
 function SummaryCard({ title, rows }: { title: string; rows: [string, string][] }): VNode {
   return (
-    <section class="card">
-      <div class="sec-head"><div class="sec-title">{title}</div></div>
-      <div class="panel-body summary-rows">
-        {rows.map(([k, v]) => <div class="summary-row" key={k}><span>{k}</span><strong>{v}</strong></div>)}
-      </div>
-    </section>
+    <Card
+      variant="panel"
+      density="compact"
+      header={<CardHeader title={title} level={2} />}
+      bodyClass="summary-rows"
+    >
+      {rows.map(([k, v]) => <div class="summary-row" key={k}><span>{k}</span><strong>{v}</strong></div>)}
+    </Card>
   );
 }
 
@@ -310,9 +346,12 @@ export function PayNewRunWizard({
       {/* ── Step 1 · Run Type ── */}
       {step === 0 && (
         <div class="pcrw-content">
-          <section class="card">
-            <div class="sec-head"><div class="sec-ico">1</div><div><div class="sec-title">Run type and ownership</div><div class="sec-sub">Identify why this payroll is being created and who is accountable for preparation.</div></div></div>
-            <div class="panel-body stack">
+          <WizardPanel
+            title="Run type and ownership"
+            description="Identify why this payroll is being created and who is accountable for preparation."
+            stepNumber={1}
+            bodyClass="stack"
+          >
               <div class="choice-grid">
                 {RUN_TYPES.map(rt => (
                   <label key={rt.value} class={`choice ${runType === rt.value ? 'on' : ''}`}>
@@ -350,18 +389,17 @@ export function PayNewRunWizard({
                 <label>Internal description</label>
                 <textarea class="textarea" value={internalDescription} onInput={e => setInternalDescription((e.currentTarget).value)} placeholder="Optional context recorded on the draft (e.g. Regular monthly payroll for salaried employees)." maxLength={2000} />
               </div>
-            </div>
-          </section>
+          </WizardPanel>
           <aside class="pcrw-aside">
             <SummaryCard title="Run impact" rows={[
               ['Run classification', RUN_TYPES.find(r => r.value === runType)?.title ?? '—'],
               ['Expected approvals', '1 (segregated)'],
               ['Correction linkage', runType === 'correction' ? (sourceRunId ? 'Linked' : 'Required') : 'Not applicable'],
             ]} />
-            <section class="card"><div class="sec-head"><div class="sec-title">Control reminders</div></div><div class="panel-body stack" style={{ gap: 10 }}>
+            <WizardPanel title="Control reminders" bodyClass="stack">
               <div class="readiness-row"><div class="rc ok">✓</div><div class="rt"><strong>Maker-checker enforced</strong><small>The preparer cannot approve this run.</small></div></div>
               <div class="readiness-row"><div class="rc ok">✓</div><div class="rt"><strong>Statutory version pinned on create</strong><small>The active version is stamped and immutable for this run.</small></div></div>
-            </div></section>
+            </WizardPanel>
           </aside>
         </div>
       )}
@@ -369,15 +407,19 @@ export function PayNewRunWizard({
       {/* ── Step 2 · Pay Group ── */}
       {step === 1 && (
         <div class="pcrw-content">
-          <section class="card">
-            <div class="sec-head"><div class="sec-ico">2</div><div><div class="sec-title">Select pay group</div><div class="sec-sub">The group defines frequency, membership and the effective pay policy.</div></div></div>
+          <WizardPanel
+            title="Select pay group"
+            description="The group defines frequency, membership and the effective pay policy."
+            stepNumber={2}
+            flush
+          >
             {payGroupsQ.isLoading || payGroupsQ.isError
               // P1-7: a failed pay-group load must not read as "No pay groups configured".
-              ? <div class="panel-body"><PayrollPanelState loading={payGroupsQ.isLoading}
+              ? <div class="pcrw-flush-inset"><PayrollPanelState loading={payGroupsQ.isLoading}
                   error={payGroupsQ.isError ? payGroupsQ.error : undefined}
                   onRetry={() => void payGroupsQ.refetch()} label="pay groups" /></div>
               : groups.length === 0
-                ? <div class="panel-body"><PendingBlock title="No pay groups configured" detail="Create a pay group in Payroll Setup before creating a run." /></div>
+                ? <div class="pcrw-flush-inset"><PendingBlock title="No pay groups configured" detail="Create a pay group in Payroll Setup before creating a run." /></div>
                 : (
                   <div class="table-wrap"><table class="data-table">
                     <thead><tr><th /><th>Pay group</th><th>Frequency</th><th class="num">Members</th><th>Default pay day</th></tr></thead>
@@ -394,8 +436,8 @@ export function PayNewRunWizard({
                     </tbody>
                   </table></div>
                 )}
-            {errors.payGroupId && <div class="panel-body" style={{ paddingTop: 0 }}><span class="err-msg">{errors.payGroupId}</span></div>}
-          </section>
+            {errors.payGroupId && <div class="pcrw-flush-inset pcrw-flush-inset--error"><span class="err-msg">{errors.payGroupId}</span></div>}
+          </WizardPanel>
           <aside class="pcrw-aside">
             <SummaryCard title="Selected group" rows={payGroupId ? [
               ['Pay group', payGroupName || '—'],
@@ -410,9 +452,12 @@ export function PayNewRunWizard({
       {/* ── Step 3 · Pay Period & Dates ── */}
       {step === 2 && (
         <div class="pcrw-content">
-          <section class="card">
-            <div class="sec-head"><div class="sec-ico">3</div><div><div class="sec-title">Pay period and operational dates</div><div class="sec-sub">Set the period the run covers and the payment and cut-off dates.</div></div></div>
-            <div class="panel-body stack">
+          <WizardPanel
+            title="Pay period and operational dates"
+            description="Set the period the run covers and the payment and cut-off dates."
+            stepNumber={3}
+            bodyClass="stack"
+          >
               <div class="field-grid three">
                 <div class="field-group"><label for="pcrw-period-start">Period start *</label><input id="pcrw-period-start" class={`field ${errors.periodStart ? 'err' : ''}`} type="date" value={periodStart} onInput={e => { const v = (e.currentTarget).value; setPeriodStart(v); if (v && !periodEnd) setPeriodEnd(lastOfMonth(v)); }} />{errors.periodStart && <span class="err-msg">{errors.periodStart}</span>}</div>
                 <div class="field-group"><label for="pcrw-period-end">Period end *</label><input id="pcrw-period-end" class={`field ${errors.periodEnd ? 'err' : ''}`} type="date" value={periodEnd} onInput={e => setPeriodEnd((e.currentTarget).value)} />{errors.periodEnd && <span class="err-msg">{errors.periodEnd}</span>}</div>
@@ -432,8 +477,7 @@ export function PayNewRunWizard({
                 <label for="pcrw-release-window">Release window</label>
                 <input id="pcrw-release-window" class="field" type="text" value={releaseWindow} onInput={e => setReleaseWindow((e.currentTarget).value)} placeholder="e.g. 30 Jul 18:00 – 31 Jul 08:00" maxLength={120} />
               </div>
-            </div>
-          </section>
+          </WizardPanel>
           <aside class="pcrw-aside">
             <SummaryCard title="Calendar timeline" rows={[
               ['Period', periodStart && periodEnd ? `${periodStart} → ${periodEnd}` : '—'],
@@ -447,21 +491,24 @@ export function PayNewRunWizard({
       {/* ── Step 4 · Statutory Version ── */}
       {step === 3 && (
         <div class="pcrw-content">
-          <section class="card">
-            <div class="sec-head"><div class="sec-ico">4</div><div><div class="sec-title">Statutory configuration snapshot</div><div class="sec-sub">The active statutory version is resolved from the pay date and permanently stamped on the run.</div></div><div class="aux"><Badge tone="success">Auto-pinned</Badge></div></div>
-            <div class="panel-body stack">
+          <WizardPanel
+            title="Statutory configuration snapshot"
+            description="The active statutory version is resolved from the pay date and permanently stamped on the run."
+            stepNumber={4}
+            actions={<Badge tone="success">Auto-pinned</Badge>}
+            bodyClass="stack"
+          >
               <div class="field-grid">
                 <div class="field-group"><label>Jurisdiction</label><div class="ro">Trinidad &amp; Tobago</div></div>
                 <div class="field-group"><label>Resolved version</label><div class="ro">Active TT statutory version</div><span class="hint">Resolved and stamped server-side at creation from Statutory Configuration.</span></div>
               </div>
               <div class="field-grid three">
-                <div class="card panel-body" style={{ borderRadius: 10 }}><Badge tone="info">PAYE</Badge><div style={{ fontWeight: 700, marginTop: 6 }}>Income tax</div><div class="sec-sub">Personal allowance + band rates.</div></div>
-                <div class="card panel-body" style={{ borderRadius: 10 }}><Badge tone="info">NIS</Badge><div style={{ fontWeight: 700, marginTop: 6 }}>National Insurance</div><div class="sec-sub">Weekly class table, EE/ER rates.</div></div>
-                <div class="card panel-body" style={{ borderRadius: 10 }}><Badge tone="info">HS</Badge><div style={{ fontWeight: 700, marginTop: 6 }}>Health Surcharge</div><div class="sec-sub">Weekly/monthly thresholds.</div></div>
+                <Card variant="metric" density="compact"><Badge tone="info">PAYE</Badge><div style={{ fontWeight: 700 }}>Income tax</div><div class="sec-sub">Personal allowance + band rates.</div></Card>
+                <Card variant="metric" density="compact"><Badge tone="info">NIS</Badge><div style={{ fontWeight: 700 }}>National Insurance</div><div class="sec-sub">Weekly class table, EE/ER rates.</div></Card>
+                <Card variant="metric" density="compact"><Badge tone="info">HS</Badge><div style={{ fontWeight: 700 }}>Health Surcharge</div><div class="sec-sub">Weekly/monthly thresholds.</div></Card>
               </div>
               <div class="banner info"><div class="b-ico">i</div><div><div class="b-title">Version is immutable once stamped</div><div class="b-sub">To change the basis, activate a different statutory version in Statutory Configuration before creating this run.</div></div></div>
-            </div>
-          </section>
+          </WizardPanel>
           <aside class="pcrw-aside">
             <div class="banner info"><div class="b-ico">i</div><div><div class="b-title">Statutory coverage</div><div class="b-sub">Employees missing a verified statutory profile are listed in the Employee Population step; per policy they are excluded or blocked at calculation, never paid on incomplete statutory data.</div></div></div>
           </aside>
@@ -471,10 +518,14 @@ export function PayNewRunWizard({
       {/* ── Step 5 · Employee Population ── */}
       {step === 4 && (
         <div class="pcrw-content">
-          <section class="card">
-            <div class="sec-head"><div class="sec-ico">5</div><div><div class="sec-title">Employee population</div><div class="sec-sub">Active employees who will be included{periodMonth ? ` for ${periodMonth}` : ''}. Final membership freezes at Lock Inputs.</div></div></div>
+          <WizardPanel
+            title="Employee population"
+            description={`Active employees who will be included${periodMonth ? ` for ${periodMonth}` : ''}. Final membership freezes at Lock Inputs.`}
+            stepNumber={5}
+            bodyClass="stack"
+          >
             {populationQ.isLoading || populationQ.isError
-              ? <div class="panel-body">
+              ? <div>
                   <PayrollPanelState loading={populationQ.isLoading}
                     error={populationQ.isError ? populationQ.error : undefined}
                     onRetry={() => void populationQ.refetch()} label="population preview" />
@@ -488,7 +539,7 @@ export function PayNewRunWizard({
                   <div class="metric"><div class="m-ico amber">−</div><div><div class="k">Terminations</div><div class="v">{pop?.terminations ?? '—'}</div></div></div>
                 </div>
               )}
-            <div class="panel-body stack">
+            <div class="stack">
               {(!payGroupId || !periodStart || !periodEnd)
                 ? <PendingBlock title="Select a pay group and period to reconcile" detail="The per-rule reconciliation, department distribution and prior-run comparison are scoped to the chosen pay group and run period. Set them in the earlier steps." />
                 : reconQ.isLoading
@@ -533,7 +584,7 @@ export function PayNewRunWizard({
                       </>
                     )}
             </div>
-          </section>
+          </WizardPanel>
           <aside class="pcrw-aside">
             <SummaryCard title="Snapshot" rows={[
               ['Population source', payGroupName || 'Pay group members'],
@@ -555,9 +606,11 @@ export function PayNewRunWizard({
       {/* ── Step 6 · Input Sources ── */}
       {step === 5 && (
         <div class="pcrw-content single">
-          <section class="card">
-            <div class="sec-head"><div class="sec-ico">6</div><div><div class="sec-title">Input-source readiness</div><div class="sec-sub">Freshness, approval state and ownership across every payroll input source.</div></div></div>
-            <div class="panel-body">
+          <WizardPanel
+            title="Input-source readiness"
+            description="Freshness, approval state and ownership across every payroll input source."
+            stepNumber={6}
+          >
               {(!payGroupId || !periodStart || !periodEnd)
                 ? <PendingBlock title="Select a pay group and period" detail="Input-source readiness is scoped to the chosen pay group and run period. Set them in the earlier steps." />
                 : readinessQ.isLoading
@@ -576,8 +629,7 @@ export function PayNewRunWizard({
                         <Badge tone={READINESS_TONE[s.state]}>{READINESS_LABEL[s.state]}</Badge>
                       </div>
                     ))}
-            </div>
-          </section>
+          </WizardPanel>
         </div>
       )}
 
@@ -585,9 +637,13 @@ export function PayNewRunWizard({
       {step === 6 && (
         <div class="pcrw-content">
           <div class="stack">
-            <section class="card">
-              <div class="sec-head"><div class="sec-ico">7</div><div><div class="sec-title">Run configuration</div><div class="sec-sub">Final configuration recorded on the draft.</div></div><div class="aux"><button type="button" class="btn" style={{ height: 30, fontSize: 12 }} onClick={() => goToStep(0)}>Edit</button></div></div>
-              <div class="panel-body field-grid three" style={{ gap: 20 }}>
+            <WizardPanel
+              title="Run configuration"
+              description="Final configuration recorded on the draft."
+              stepNumber={7}
+              actions={<button type="button" class="btn" style={{ height: 30, fontSize: 12 }} onClick={() => goToStep(0)}>Edit</button>}
+              bodyClass="field-grid three"
+            >
                 <div class="summary-rows">
                   <div class="summary-row"><span>Run type</span><strong>{RUN_TYPES.find(r => r.value === runType)?.title}</strong></div>
                   <div class="summary-row"><span>Pay group</span><strong>{payGroupName || '—'}</strong></div>
@@ -603,18 +659,18 @@ export function PayNewRunWizard({
                   <div class="summary-row"><span>Weeks</span><strong>{weeksInPeriod}</strong></div>
                   <div class="summary-row"><span>Statutory</span><strong>Auto-pinned</strong></div>
                 </div>
-              </div>
-            </section>
+            </WizardPanel>
 
             {blocker && (
-              <section class="card"><div class="panel-body">
+              <Card density="comfortable" tone="danger">
                 <div class="banner danger" role="alert"><div class="b-ico">!</div><div><div class="b-title">Can’t create this run — {blocker.title}</div><div class="b-sub">{blocker.detail}</div><div class="b-sub" style={{ fontFamily: 'var(--font-mono, monospace)', marginTop: 4 }}>{blocker.code}</div></div></div>
-              </div></section>
+              </Card>
             )}
 
-            <section class="card">
-              <div class="sec-head"><div><div class="sec-title">Confirmation</div><div class="sec-sub">These attestations gate creation and are recorded in the audit history server-side.</div></div></div>
-              <div class="panel-body">
+            <WizardPanel
+              title="Confirmation"
+              description="These attestations gate creation and are recorded in the audit history server-side."
+            >
                 {[
                   ['The run purpose, pay group and dates are correct', 'I reviewed the scheduled calendar and expected population.'],
                   ['I understand any unresolved preflight findings', 'The draft cannot lock inputs until blocking findings are resolved.'],
@@ -625,8 +681,7 @@ export function PayNewRunWizard({
                     <div><strong>{t}</strong><small>{s}</small></div>
                   </label>
                 ))}
-              </div>
-            </section>
+            </WizardPanel>
           </div>
           <aside class="pcrw-aside">
             <SummaryCard title="On creation" rows={[

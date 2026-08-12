@@ -7554,12 +7554,14 @@ CreateBlocker	interface	finance	false		src/components/sections/Finance/PayNewRun
 CREATE_BLOCKERS	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	95	
 matchCreateBlocker	function	finance	true		src/components/sections/Finance/PayNewRunWizard.tsx	114	
 lastOfMonth	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	121	
-SummaryCard	function	finance	false	component,ui-tile	src/components/sections/Finance/PayNewRunWizard.tsx	131	
-PendingBlock	function	finance	false	component	src/components/sections/Finance/PayNewRunWizard.tsx	142	
-PayNewRunWizard	function	finance	true	component	src/components/sections/Finance/PayNewRunWizard.tsx	153	
-selectGroup	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	224	PayNewRunWizard
-goToStep	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	231	PayNewRunWizard
-create	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	233	PayNewRunWizard
+WizardPanelProps	interface	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	131	
+WizardPanel	function	finance	false	component	src/components/sections/Finance/PayNewRunWizard.tsx	141	
+SummaryCard	function	finance	false	component,ui-tile	src/components/sections/Finance/PayNewRunWizard.tsx	165	
+PendingBlock	function	finance	false	component	src/components/sections/Finance/PayNewRunWizard.tsx	178	
+PayNewRunWizard	function	finance	true	component	src/components/sections/Finance/PayNewRunWizard.tsx	189	
+selectGroup	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	260	PayNewRunWizard
+goToStep	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	267	PayNewRunWizard
+create	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	269	PayNewRunWizard
 NAMES	object	payroll	false	test	src/components/sections/Finance/payroll/run/crewSections.test.tsx	18	
 makeCrew	function	payroll	false	test	src/components/sections/Finance/payroll/run/crewSections.test.tsx	20	
 CrewProps	interface	payroll	false		src/components/sections/Finance/payroll/run/crewSections.tsx	20	
@@ -13087,7 +13089,7 @@ b	function	platform	false		src/ui/registry/containers.defs.tsx	20
 noop	function	platform	false		src/ui/registry/containers.defs.tsx	21	
 Figure	function	platform	false	component	src/ui/registry/containers.defs.tsx	24	
 cardDef	object	platform	true	ui-tile	src/ui/registry/containers.defs.tsx	36	
-CONTAINER_DEFS	array	platform	true		src/ui/registry/containers.defs.tsx	277	
+CONTAINER_DEFS	array	platform	true		src/ui/registry/containers.defs.tsx	278	
 s	function	platform	false		src/ui/registry/data.defs.tsx	20	
 b	function	platform	false		src/ui/registry/data.defs.tsx	21	
 noop	function	platform	false		src/ui/registry/data.defs.tsx	22	

@@ -44,10 +44,11 @@ export const cardDef: ComponentDef = {
   migration: {
     replaces: ['.inc-mini-card', '.hse-spark-card', '.ppe-mini-card', '.ui-stat-card', '.ui-kpi', '.ui-info-card', '.emp-card'],
     deprecatedImports: ['MetricCard', 'ChartCard', 'MiniCard', 'RecordRow', 'StatsCard', 'SparkCard', 'KpiTile', 'InfoCard', 'StatCard'],
-    nextSurface: 'HSE Incidents (StatsCard strip)',
+    nextSurface: 'Finance payroll run workspace panels',
     notes: [
       'MetricCard, ChartCard and MiniCard/RecordRow are DELETED. StatsCard, SparkCard, KpiTile and InfoCard survive as legacy CONTENT compositions and migrate one surface at a time — build-new → migrate → delete, never a dual system.',
       'A migration is not finished when <Card> appears in the JSX. The superseded surface CSS must be deleted in the same change, because a recipe can never out-rank a legacy `!important` (RECIPES.md §4).',
+      'The payroll creation wizard is the first completed pure-surface family: all 17 legacy `.card` frames and their duplicate frame/header/body CSS were removed while its SummaryCard composition was preserved.',
       'An actionable card is a <div> with a stretched control on top, not a <button> wrapping the content: a <button> may not contain the edit/delete overlays and drill-through links real cards carry. The trade-off is that text in an actionable card is not selectable.',
     ],
   },
