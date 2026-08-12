@@ -37,6 +37,8 @@ No unrelated programme failures were repaired to make UI Kit commits look green.
 ## 3. Commits produced on the integration branch
 
 ```
+597bb94c  ui: delete the legacy shared Badge and collapse StatBadge onto canonical
+371d3db2  docs(ui-kit): record the autonomous run state and what was not reached
 22dfdcc4  ui(hr): migrate the Employee Profile badges to canonical Badge
 ```
 
@@ -59,9 +61,13 @@ d326e306  fix(settings): clear the lint blockers on the Settings surfaces
 ## 4. Badge programme — state
 
 ```
-Legacy Badge usages remaining: 425
-Canonical Badge usages:         74
+Legacy Badge usages remaining: 423
+Canonical Badge usages:         75
 ```
+
+Wrappers: `src/components/shared/Badge.tsx` **deleted** (zero consumers, proven by
+search across src / netlify / scripts / tests). `StatBadge` collapsed to an
+adapter over canonical Badge. `StatusPill` already an adapter.
 
 Architecture landed and proven:
 
@@ -115,6 +121,24 @@ pursued, per the freeze.
 showed "Active" and "Expired" both rendering info blue, because `toneFromText`
 matches neither keyword list. Badge faithfully renders the decision it receives;
 this is a status-model question, deliberately untouched.
+
+## 8b. Exact resume point (cold-start ready)
+
+```
+branch  ui-kit/overnight-completion   HEAD 597bb94c
+next    Badge, remaining clean surfaces:
+          MyProfileSection.tsx      7  .mp76-clean-status-pill[.ready]  -> success/neutral
+          AdminSections.tsx        ~6  overview-date-badge / chart-badge / prc-input-badge
+                                       (NOT prs-pill x6 — those are segmented CONTROLS)
+          StatutoryDashboard.tsx   11  .sdb-nis-chip + -k/-v  = key/value composition,
+                                       migrate the VALUE indicator only
+          ProjectSitesSection.tsx   7  .ps-picker-chip*  = picker token w/ avatar+remove,
+                                       owned by the picker, NOT Badge
+        then remaining B3 wrappers (33), then zero-consumer badge CSS
+gates   typecheck 12 (Email Studio only) · src/ui 638 · known fail:
+        EmployeeProfilePage "filters the activity table"
+recipe  isolate-commit: stash unrelated src → repo:index → check → add → commit → pop
+```
 
 ## 9. NOT reached (the honest list)
 
