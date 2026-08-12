@@ -164,7 +164,7 @@ export function OnboardingTasksWorkspace({
   const tableView = (): VNode => (
     <div class="obx-section">
       <div class="obx-section-body">
-        {tasksQ.isLoading && !tasksQ.data ? <div class="obx-empty">Loading…</div> : !rows.length ? <div class="obx-empty">No tasks match these filters.</div> : (
+        {tasksQ.isLoading ? <div class="obx-empty">Loading…</div> : !rows.length ? <div class="obx-empty">No tasks match these filters.</div> : (
           <table class="obx-table">
             <thead><tr><th>Task</th><th>Case</th><th>Employee</th><th>Owner</th><th>Assignee</th><th>Status</th><th>Due</th><th>Actions</th></tr></thead>
             <tbody>{rows.map(t => (

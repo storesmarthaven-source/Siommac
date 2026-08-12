@@ -93,7 +93,7 @@ export function OnboardingPackageManager({
 
       <div class="obx-section">
         <div class="obx-section-body">
-          {pkgsQ.isLoading && !pkgsQ.data ? <div class="obx-empty">Loading…</div> : !rows.length ? <div class="obx-empty">No packages match these filters.</div> : (
+          {pkgsQ.isLoading ? <div class="obx-empty">Loading…</div> : !rows.length ? <div class="obx-empty">No packages match these filters.</div> : (
             <table class="obx-table">
               <thead><tr><th>Package</th><th>Status</th><th>Worker types</th><th>Templates</th><th>SLA</th><th>Probation</th><th>Actions</th></tr></thead>
               <tbody>{rows.map(p => (

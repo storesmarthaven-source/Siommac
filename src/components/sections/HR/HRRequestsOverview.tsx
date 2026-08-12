@@ -22,7 +22,7 @@ import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components
 function humanize(s: string): string { return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
 function requestRecord(req: HrRequestRow) {
   return toActionRecord({
-    title: req.title, subtitle: `${req.requestNo ?? ''} · ${humanize(req.requestType)}`.replace(/^ · /, ''), icon: 'fa-inbox',
+    title: req.title, subtitle: `${req.requestNo} · ${humanize(req.requestType)}`.replace(/^ · /, ''), icon: 'fa-inbox',
     badges: [statusBadge(req.status)], fields: [],
   });
 }
@@ -59,7 +59,7 @@ function NewRequestModal({ types, onClose, onSubmitted }: NewRequestModalProps):
 
   async function submit(): Promise<void> {
     if (!title.trim()) { toast('Please enter a title.'); return; }
-    if (!submitKeyRef.current) submitKeyRef.current = crypto.randomUUID();
+    submitKeyRef.current ??= crypto.randomUUID();
     setBusy(true);
     try {
       await hrRequestsApi.submit({
@@ -150,7 +150,7 @@ function MyRequestsTab(): VNode {
         <button class="obx-btn primary" onClick={() => setNewOpen(true)}>+ New Request</button>
       </div>
 
-      {requestsQ.isLoading && !requestsQ.data
+      {requestsQ.isLoading
         ? <div class="obx-section"><div class="obx-section-body"><table class="obx-table"><tbody><TableSkeleton rows={4} cols={7} /></tbody></table></div></div>
         : !rows.length
           ? <EmptyState icon="fa-inbox" title="No requests yet" text="Submit a request to get started." />
@@ -346,7 +346,7 @@ function TriageTab(): VNode {
         </select>
       </div>
 
-      {requestsQ.isLoading && !requestsQ.data
+      {requestsQ.isLoading
         ? <div class="obx-section"><div class="obx-section-body"><table class="obx-table"><tbody><TableSkeleton rows={5} cols={7} /></tbody></table></div></div>
         : !rows.length
           ? <EmptyState icon="fa-inbox" title="No requests" text="No HR requests match this filter." />

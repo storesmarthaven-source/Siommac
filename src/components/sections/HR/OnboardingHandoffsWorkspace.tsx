@@ -138,7 +138,7 @@ export function OnboardingHandoffsWorkspace({
         </select>
       </div>
 
-      {handoffsQ.isLoading && !handoffsQ.data ? <div class="obx-empty">Loading…</div>
+      {handoffsQ.isLoading ? <div class="obx-empty">Loading…</div>
         : !rows.length ? <div class="obx-section"><div class="obx-empty">No handoffs match these filters.</div></div>
         : lanes.map(([mod, items]) => (
           <div class="obx-lane" key={mod}>
@@ -179,7 +179,7 @@ export function OnboardingHandoffsWorkspace({
           <div style={{ marginBottom: 10, fontSize: 13, color: '#64748b' }}>
             {payloadRow.caseNo}{payloadRow.employeeName ? ` · ${payloadRow.employeeName}` : ''} · {humanize(payloadRow.handoffType ?? '—')}
           </div>
-          <pre class="obx-payload">{JSON.stringify(payloadRow.payload ?? {}, null, 2)}</pre>
+          <pre class="obx-payload">{JSON.stringify(payloadRow.payload, null, 2)}</pre>
         </Modal>
       )}
     </div>
