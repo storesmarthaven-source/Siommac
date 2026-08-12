@@ -22,9 +22,8 @@ import { can } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
 import {
   HrfinWizardModal, Drawer, exportCsv, NewMenu,
-  LegacyDataTable, type DtColumn, type DtAction,
+  DataTable, type DataTableColumn, type DataTableAction,
   FilterDropdown, AdvancedFilter, useFilterDropdowns,
-  type RowActionItem,
   Tabs, TabPanel, MiniTable, Pill, PanelEmpty,
   type TabItem,
   Skeleton, LucideIcon,
@@ -305,34 +304,33 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
     return rows;
   }, [versions, search, status, effFrom, effTo, rateMin, rateMax, owner, sortField, sortDir]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageRows  = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   // Locked register columns (T&T-tailored): Version · Effective · NIS Rate · Status ·
   // Owner · Linked Runs · Approval. PAYE bands + Health Surcharge tiers live in the
   // version drawer, not the list. NIS Rate is the headline effective-rate marker.
-  const columns: DtColumn<StatutoryVersion>[] = [
+  const columns: DataTableColumn<StatutoryVersion>[] = [
     {
-      key: 'label', label: 'Version', isPinned: true, sortAccessor: v => v.label,
-      renderCell: v => <span class="sdb-vname">{v.label}</span>,
+      id: 'label', header: 'Version', pinned: true, alwaysVisible: true, sortable: true, sortValue: v => v.label,
+      cell: v => <span class="sdb-vname">{v.label}</span>,
     },
     {
-      key: 'effectiveFrom', label: 'Effective', sortAccessor: v => v.effectiveFrom,
-      renderCell: v => <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtDate(v.effectiveFrom)}</span>,
+      id: 'effectiveFrom', header: 'Effective', sortable: true, sortValue: v => v.effectiveFrom,
+      cell: v => <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtDate(v.effectiveFrom)}</span>,
     },
     {
-      key: 'nisRatePercent', label: 'NIS Rate', align: 'right', sortAccessor: v => v.nisRatePercent ?? -1,
-      renderCell: v => v.nisRatePercent != null
+      id: 'nisRatePercent', header: 'NIS Rate', align: 'right', sortable: true, sortValue: v => v.nisRatePercent ?? -1,
+      cell: v => v.nisRatePercent != null
         ? <b style={{ fontVariantNumeric: 'tabular-nums' }}>{v.nisRatePercent}%</b>
         : <span class="sdb-muted-txt">—</span>,
     },
     {
-      key: 'status', label: 'Status', sortAccessor: v => v.status,
-      renderCell: v => <StatBadge tone={statusTone(v.status)}>{v.isActive ? 'Active' : humanize(v.status)}</StatBadge>,
+      id: 'status', header: 'Status', sortable: true, sortValue: v => v.status,
+      cell: v => <StatBadge tone={statusTone(v.status)}>{v.isActive ? 'Active' : humanize(v.status)}</StatBadge>,
     },
     {
-      key: 'owner', label: 'Version Owner',
-      renderCell: v => {
+      id: 'owner', header: 'Version Owner',
+      cell: v => {
         if (!v.createdBy) return <span class="sdb-muted-txt">—</span>;
         if (!nameMap) return <EmployeeCellResolved resolved={undefined} />;   // still loading
         const r = nameMap.get(v.createdBy);
@@ -343,8 +341,8 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
       },
     },
     {
-      key: 'linkedRuns', label: 'Linked Runs', align: 'center',
-      renderCell: v => {
+      id: 'linkedRuns', header: 'Linked Runs', align: 'center',
+      cell: v => {
         const count = v.linkedPayrollRunCount ?? 0;
         return count > 0
           ? <button type="button" class="sdb-link" onClick={e => { e.stopPropagation(); onOpenDrawerAtRuns(v.id); }}>{count} run{count !== 1 ? 's' : ''}</button>
@@ -352,8 +350,8 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
       },
     },
     {
-      key: 'approvalState', label: 'Approval',
-      renderCell: v => {
+      id: 'approvalState', header: 'Approval',
+      cell: v => {
         // Retired versions are superseded — approval state no longer applies.
         if (v.status === 'retired') return <span class="sdb-muted-txt">—</span>;
         if (v.status === 'draft') return <span class="sdb-cell-sub">Not submitted</span>;
@@ -364,35 +362,35 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
     },
   ];
 
-  const rowActions = (v: StatutoryVersion): RowActionItem[] => {
+  const rowActions = (v: StatutoryVersion): DataTableAction[] => {
     // Segregation of duties (mirrors the backend `assertDifferentApprover`): the creator
     // of a version must not see Approve on their own submission — they'd only hit a 422.
     const isOwnVersion = !!currentUserId && v.createdBy === currentUserId;
     return [
-      { key: 'view', label: 'View details', icon: 'file', onClick: () => onOpenDrawer(v.id) },
+      { id: 'view', label: 'View details', onSelect: () => onOpenDrawer(v.id) },
       ...(canManage && v.status === 'draft' ? [
-        { key: 'edit', label: 'Edit rates', icon: 'refresh' as const, onClick: () => onEdit(v) },
-        { key: 'submit', label: 'Submit for approval', icon: 'send' as const, onClick: () => { const key = submitKeys.current.get(v.id) ?? crypto.randomUUID(); submitKeys.current.set(v.id, key); void run(submitMut.mutateAsync({ id: v.id, idempotencyKey: key }).then(r => { submitKeys.current.delete(v.id); return r; }), 'Submitted for approval.'); } },
+        { id: 'edit', label: 'Edit rates', onSelect: () => onEdit(v) },
+        { id: 'submit', label: 'Submit for approval', onSelect: () => { const key = submitKeys.current.get(v.id) ?? crypto.randomUUID(); submitKeys.current.set(v.id, key); void run(submitMut.mutateAsync({ id: v.id, idempotencyKey: key }).then(r => { submitKeys.current.delete(v.id); return r; }), 'Submitted for approval.'); } },
       ] : []),
       ...(canApprove && v.status === 'pending_approval' ? [
-        ...(!isOwnVersion ? [{ key: 'approve', label: 'Approve', icon: 'check' as const, onClick: () => run(approveMut.mutateAsync({ id: v.id }), 'Version approved.') }] : []),
-        { key: 'reject', label: 'Reject', icon: 'close' as const, tone: 'danger' as const, onClick: async () => {
+        ...(!isOwnVersion ? [{ id: 'approve', label: 'Approve', onSelect: () => run(approveMut.mutateAsync({ id: v.id }), 'Version approved.') }] : []),
+        { id: 'reject', label: 'Reject', tone: 'danger' as const, onSelect: async () => {
           const reason = await dialog.prompt({ title: 'Rejection reason', text: 'Provide a reason for returning this version to draft.', placeholder: 'Rejection reason (required)', confirmText: 'Reject' });
           if (!reason?.trim()) return;
           await run(rejectMut.mutateAsync({ id: v.id, reason }), 'Version returned to draft.');
         } },
       ] : []),
       ...(canApprove && v.status === 'approved' ? [{
-        key: 'activate', label: 'Activate', icon: 'check' as const,
-        onClick: async () => {
+        id: 'activate', label: 'Activate',
+        onSelect: async () => {
           const ok = await dialog.confirm({ title: `Activate "${v.label}"?`, text: 'This becomes the active statutory configuration and retires the currently-active version. All new payroll runs will use these rates.', confirmText: 'Activate' });
           if (!ok) return;
           await run(activateMut.mutateAsync({ id: v.id }), 'Version activated.');
         },
       }] : []),
       ...(canManage && v.status === 'active' ? [{
-        key: 'retire', label: 'Retire', icon: 'close' as const, tone: 'danger' as const,
-        onClick: async () => {
+        id: 'retire', label: 'Retire', tone: 'danger' as const,
+        onSelect: async () => {
           const ok = await dialog.confirm({ title: `Retire "${v.label}"?`, text: 'The active version will be retired and no longer used for new payroll runs. Activate another version to replace it.', danger: true, confirmText: 'Retire' });
           if (!ok) return;
           await run(retireMut.mutateAsync({ id: v.id }), 'Version retired.');
@@ -402,37 +400,37 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
   };
 
   return (
-    <LegacyDataTable<StatutoryVersion>
+    <DataTable<StatutoryVersion>
+      label="Statutory rate versions"
       columns={columns}
       rows={pageRows}
-      rowKey={v => v.id}
+      getRowId={v => v.id}
       rowActions={rowActions}
       onRowClick={v => onOpenDrawer(v.id)}
       loading={loading}
       emptyState={{ icon: 'fa-file-invoice-dollar', title: error ? 'Could not load versions' : 'No rate versions', text: error ?? 'Create a rate version to configure PAYE, NIS and Health Surcharge.' }}
-      globalSearch={{ value: search, onChange: v => { setSearch(v); setPage(0); }, placeholder: 'Search by label or date…' }}
-      filterChips={
-        <FilterDropdown id="ver-status" label="Status" openId={openId} setOpenId={setOpenId} labelFn={humanize}
-          options={['draft', 'pending_approval', 'approved', 'active', 'retired']}
-          selected={status} onChange={v => { setStatus(v); setPage(0); }} />
+      search={{ value: search, onChange: v => { setSearch(v); setPage(0); }, placeholder: 'Search by label or date…' }}
+      toolbarContent={
+        <>
+          <FilterDropdown id="ver-status" label="Status" openId={openId} setOpenId={setOpenId} labelFn={humanize}
+            options={['draft', 'pending_approval', 'approved', 'active', 'retired']}
+            selected={status} onChange={v => { setStatus(v); setPage(0); }} />
+          <AdvancedFilter openId={openId} setOpenId={setOpenId}
+            onReset={() => { setEffFrom(''); setEffTo(''); setRateMin(''); setRateMax(''); setOwner([]); setPage(0); }}
+            tabs={[
+              { name: 'Version', blurb: 'Filter by effective date and NIS rate.', sections: [
+                { type: 'dateRange', title: 'Effective date', from: effFrom, to: effTo, onChange: (f, t) => { setEffFrom(f); setEffTo(t); setPage(0); } },
+                { type: 'numberRange', title: 'NIS rate', unit: '%', step: '0.1', min: rateMin, max: rateMax, onChange: (mn, mx) => { setRateMin(mn); setRateMax(mx); setPage(0); } },
+              ] },
+              { name: 'Version Owner', blurb: 'Filter by who created the version.', sections: [
+                { type: 'checklist', title: 'Version Owner', options: ownerOptions, selected: owner, onChange: v => { setOwner(v); setPage(0); },
+                  labelFn: id => { const r = nameMap?.get(id); return r && r.fullName !== r.id ? toTitleCase(r.fullName) : id; } },
+              ] },
+            ]} />
+        </>
       }
-      advancedFilter={
-        <AdvancedFilter openId={openId} setOpenId={setOpenId}
-          onReset={() => { setEffFrom(''); setEffTo(''); setRateMin(''); setRateMax(''); setOwner([]); setPage(0); }}
-          tabs={[
-            { name: 'Version', blurb: 'Filter by effective date and NIS rate.', sections: [
-              { type: 'dateRange', title: 'Effective date', from: effFrom, to: effTo, onChange: (f, t) => { setEffFrom(f); setEffTo(t); setPage(0); } },
-              { type: 'numberRange', title: 'NIS rate', unit: '%', step: '0.1', min: rateMin, max: rateMax, onChange: (mn, mx) => { setRateMin(mn); setRateMax(mx); setPage(0); } },
-            ] },
-            { name: 'Version Owner', blurb: 'Filter by who created the version.', sections: [
-              { type: 'checklist', title: 'Version Owner', options: ownerOptions, selected: owner, onChange: v => { setOwner(v); setPage(0); },
-                labelFn: id => { const r = nameMap?.get(id); return r && r.fullName !== r.id ? toTitleCase(r.fullName) : id; } },
-            ] },
-          ]} />
-      }
-      sort={{ field: sortField, dir: sortDir, onSort: (f, d) => { setSortField(f); setSortDir(d); setPage(0); } }}
-      pagination={{ page, pageCount, total: filtered.length, onPage: setPage }}
-      noun="versions"
+      sorting={{ value: { columnId: sortField, direction: sortDir }, onChange: s => { if (s) { setSortField(s.columnId); setSortDir(s.direction); } setPage(0); } }}
+      pagination={{ page: page + 1, pageSize: PAGE_SIZE, total: filtered.length, onPageChange: p => setPage(p - 1) }}
     />
   );
 }
@@ -487,38 +485,37 @@ function NisClassesTab({ versions, versionsError, canManage, onAdd, onEdit, onIm
   // NIBTT schedule reference — kept complete (Assumed Avg is the contribution basis,
   // Class Z is the over-pensionable-age rate). Weekly Min/Max merged into one range.
   const tnum = { fontVariantNumeric: 'tabular-nums' as const };
-  const columns: DtColumn<NisClass>[] = [
-    { key: 'classNo', label: 'Class', isPinned: true, align: 'center', renderCell: c => <b>{toRoman(c.classNo)}</b> },
+  const columns: DataTableColumn<NisClass>[] = [
+    { id: 'classNo', header: 'Class', pinned: true, alwaysVisible: true, align: 'center', cell: c => <b>{toRoman(c.classNo)}</b> },
     {
-      key: 'weeklyEarnings', label: 'Weekly Earnings',
-      renderCell: c => <span style={tnum}>{fmtMoney(c.weeklyMin)} {c.weeklyMax == null ? <span class="sdb-muted-txt">and over</span> : <>– {fmtMoney(c.weeklyMax)}</>}</span>,
+      id: 'weeklyEarnings', header: 'Weekly Earnings',
+      cell: c => <span style={tnum}>{fmtMoney(c.weeklyMin)} {c.weeklyMax == null ? <span class="sdb-muted-txt">and over</span> : <>– {fmtMoney(c.weeklyMax)}</>}</span>,
     },
-    { key: 'assumedAvg', label: 'Assumed Avg', align: 'right', renderCell: c => c.assumedAverageWeekly == null ? <span class="sdb-muted-txt">—</span> : <span style={tnum}>{fmtMoney(c.assumedAverageWeekly)}</span> },
-    { key: 'employeeWeekly', label: 'Employee', align: 'right', renderCell: c => <span style={tnum}>{fmtMoney(c.employeeWeekly)}</span> },
-    { key: 'employerWeekly', label: 'Employer', align: 'right', renderCell: c => <span style={tnum}>{fmtMoney(c.employerWeekly)}</span> },
-    { key: 'totalWeekly', label: 'Total', align: 'right', renderCell: c => <b style={tnum}>{fmtMoney(c.employeeWeekly + c.employerWeekly)}</b> },
-    { key: 'classZ', label: 'Class Z', align: 'right', renderCell: c => c.classZWeekly == null ? <span class="sdb-muted-txt">—</span> : <span class="sdb-muted-txt" style={tnum}>{fmtMoney(c.classZWeekly)}</span> },
+    { id: 'assumedAvg', header: 'Assumed Avg', align: 'right', cell: c => c.assumedAverageWeekly == null ? <span class="sdb-muted-txt">—</span> : <span style={tnum}>{fmtMoney(c.assumedAverageWeekly)}</span> },
+    { id: 'employeeWeekly', header: 'Employee', align: 'right', cell: c => <span style={tnum}>{fmtMoney(c.employeeWeekly)}</span> },
+    { id: 'employerWeekly', header: 'Employer', align: 'right', cell: c => <span style={tnum}>{fmtMoney(c.employerWeekly)}</span> },
+    { id: 'totalWeekly', header: 'Total', align: 'right', cell: c => <b style={tnum}>{fmtMoney(c.employeeWeekly + c.employerWeekly)}</b> },
+    { id: 'classZ', header: 'Class Z', align: 'right', cell: c => c.classZWeekly == null ? <span class="sdb-muted-txt">—</span> : <span class="sdb-muted-txt" style={tnum}>{fmtMoney(c.classZWeekly)}</span> },
   ];
 
   // Delete is draft-only (server gate) — do NOT offer it on approved versions.
   const rowActions = canDraftOps
-    ? (c: NisClass): DtAction<NisClass>[] => [{ key: 'del', label: 'Delete band', icon: 'close', tone: 'danger', onClick: () => void handleDelete(c.id, c.classNo) }]
+    ? (c: NisClass): DataTableAction[] => [{ id: 'del', label: 'Delete band', tone: 'danger', onSelect: () => void handleDelete(c.id, c.classNo) }]
     : undefined;
-
-  const pageCount = Math.max(1, Math.ceil(classes.length / PAGE_SIZE));
 
   return (
     <>
-      <LegacyDataTable<NisClass>
+      <DataTable<NisClass>
+        label="NIS contribution bands"
         columns={columns}
         rows={classes.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)}
-        rowKey={c => c.id}
+        getRowId={c => c.id}
         rowActions={rowActions}
         onRowClick={c => onEdit(effectiveId, c)}
         loading={classesQ.isLoading}
         emptyState={{ icon: 'fa-layer-group', title: 'No contribution bands', text: versionsError ?? (classesQ.error ? String(classesQ.error) : 'This version has no NIS bands yet.') }}
-        globalSearch={{ value: search, onChange: v => { setSearch(v); setPage(0); }, placeholder: 'Search by class # or amount…' }}
-        filterChips={
+        search={{ value: search, onChange: v => { setSearch(v); setPage(0); }, placeholder: 'Search by class # or amount…' }}
+        toolbarContent={
           <div class="tf-wrap">
             <button type="button" class="tf-select" style={{ minWidth: 240 }} aria-haspopup="menu" aria-expanded={openId === 'nis-version'}
               onClick={e => { e.stopPropagation(); setOpenId(openId === 'nis-version' ? null : 'nis-version'); }}>
@@ -546,15 +543,14 @@ function NisClassesTab({ versions, versionsError, canManage, onAdd, onEdit, onIm
             )}
           </div>
         }
-        toolbarRight={canEdit
+        toolbarActions={canEdit
           ? <>
               {/* Import CSV is draft-only (server gate); Add Band works on draft + approved. */}
               {canDraftOps && <button type="button" class="sdb-btn" onClick={() => onImport(effectiveId)}>Import CSV</button>}
               <button type="button" class="sdb-btn sdb-btn--pri" onClick={() => onAdd(effectiveId)}>+ Add Band</button>
             </>
           : undefined}
-        pagination={{ page, pageCount, total: classes.length, onPage: setPage }}
-        noun="bands"
+        pagination={{ page: page + 1, pageSize: PAGE_SIZE, total: classes.length, onPageChange: p => setPage(p - 1) }}
       />
       <p class="sdb-note">
         NIBTT weekly Earnings-Class schedule (contribution rate 16.2% — employee ⅓, employer ⅔). “Assumed Avg” is the earnings figure the contribution is based on. “Class Z” is the reduced weekly rate for workers over pensionable age (employment-injury portion only).
@@ -628,18 +624,16 @@ function PayComponentsTab({ components, loading, error, canManage, canApproveCom
     return rows;
   }, [components, kinds, statuses, search, sortField, sortDir]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-
   // Build a set of component IDs with a pending CR for badge display.
   const pendingCrComponentIds = useMemo(
     () => new Set(pendingCRs.map(cr => cr.componentId).filter((id): id is string => id != null)),
     [pendingCRs],
   );
 
-  const columns: DtColumn<PayComponent>[] = [
+  const columns: DataTableColumn<PayComponent>[] = [
     {
-      key: 'name', label: 'Component', isPinned: true, sortAccessor: c => c.name,
-      renderCell: c => (
+      id: 'name', header: 'Component', pinned: true, alwaysVisible: true, sortable: true, sortValue: c => c.name,
+      cell: c => (
         <div>
           <div class="sdb-vname">
             {c.name}
@@ -651,21 +645,21 @@ function PayComponentsTab({ components, loading, error, canManage, canApproveCom
         </div>
       ),
     },
-    { key: 'kind', label: 'Category', sortAccessor: c => c.kind, renderCell: c => <StatBadge tone={c.kind === 'earning' ? 'ok' : 'wn'}>{humanize(c.kind)}</StatBadge> },
-    { key: 'taxable', label: 'Taxable', align: 'center', renderCell: c => c.isTaxable ? <span class="sdb-ck tax">Taxable</span> : <span class="sdb-muted-txt">—</span> },
-    { key: 'statutory', label: 'Statutory', align: 'center', renderCell: c => c.isStatutory ? <span class="sdb-ck stat">Statutory</span> : <span class="sdb-muted-txt">—</span> },
+    { id: 'kind', header: 'Category', sortable: true, sortValue: c => c.kind, cell: c => <StatBadge tone={c.kind === 'earning' ? 'ok' : 'wn'}>{humanize(c.kind)}</StatBadge> },
+    { id: 'taxable', header: 'Taxable', align: 'center', cell: c => c.isTaxable ? <span class="sdb-ck tax">Taxable</span> : <span class="sdb-muted-txt">—</span> },
+    { id: 'statutory', header: 'Statutory', align: 'center', cell: c => c.isStatutory ? <span class="sdb-ck stat">Statutory</span> : <span class="sdb-muted-txt">—</span> },
     {
-      key: 'calculation', label: 'Calculation', align: 'center',
-      renderCell: c => c.kind === 'deduction'
+      id: 'calculation', header: 'Calculation', align: 'center',
+      cell: c => c.kind === 'deduction'
         ? (c.reducesChargeable ? <span class="sdb-ck pre">Pre-tax</span> : <span class="sdb-ck post">Post-tax</span>)
         : <span class="sdb-muted-txt">—</span>,
     },
-    { key: 'isActive', label: 'Status', sortAccessor: c => c.isActive ? '1' : '0', renderCell: c => <StatBadge tone={c.isActive ? 'ok' : 'dr'}>{c.isActive ? 'Active' : 'Retired'}</StatBadge> },
+    { id: 'isActive', header: 'Status', sortable: true, sortValue: c => c.isActive ? '1' : '0', cell: c => <StatBadge tone={c.isActive ? 'ok' : 'dr'}>{c.isActive ? 'Active' : 'Retired'}</StatBadge> },
   ];
 
   const rowActions = canManage
-    ? (c: PayComponent): DtAction<PayComponent>[] => (c.isActive && !c.isStatutory
-        ? [{ key: 'retire', label: 'Submit retire request', icon: 'close', tone: 'danger', onClick: () => void handleRetire(c) }]
+    ? (c: PayComponent): DataTableAction[] => (c.isActive && !c.isStatutory
+        ? [{ id: 'retire', label: 'Submit retire request', tone: 'danger', onSelect: () => void handleRetire(c) }]
         : [])
     : undefined;
 
@@ -674,16 +668,17 @@ function PayComponentsTab({ components, loading, error, canManage, canApproveCom
 
   return (
     <div>
-      <LegacyDataTable<PayComponent>
+      <DataTable<PayComponent>
+        label="Pay components"
         columns={columns}
         rows={filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)}
-        rowKey={c => c.id}
+        getRowId={c => c.id}
         rowActions={rowActions}
         onRowClick={canManage ? (c => onEdit(c)) : undefined}
         loading={loading}
         emptyState={{ icon: 'fa-money-bill-wave', title: error ? 'Could not load components' : 'No pay components', text: error ?? 'Add earnings and deductions to build the payroll catalogue.' }}
-        globalSearch={{ value: search, onChange: v => { setSearch(v); setPage(0); }, placeholder: 'Search by code or name…' }}
-        filterChips={
+        search={{ value: search, onChange: v => { setSearch(v); setPage(0); }, placeholder: 'Search by code or name…' }}
+        toolbarContent={
           <>
             <FilterDropdown id="pc-kind" label="Category" openId={openId} setOpenId={setOpenId} labelFn={humanize}
               options={['earning', 'deduction']} selected={kinds} onChange={v => { setKinds(v); setPage(0); }} />
@@ -691,9 +686,8 @@ function PayComponentsTab({ components, loading, error, canManage, canApproveCom
               options={['active', 'retired']} selected={statuses} onChange={v => { setStatuses(v); setPage(0); }} />
           </>
         }
-        sort={{ field: sortField, dir: sortDir, onSort: (f, d) => { setSortField(f); setSortDir(d); setPage(0); } }}
-        pagination={{ page, pageCount, total: filtered.length, onPage: setPage }}
-        noun="components"
+        sorting={{ value: { columnId: sortField, direction: sortDir }, onChange: s => { if (s) { setSortField(s.columnId); setSortDir(s.direction); } setPage(0); } }}
+        pagination={{ page: page + 1, pageSize: PAGE_SIZE, total: filtered.length, onPageChange: p => setPage(p - 1) }}
       />
 
       {/* Pending Changes panel — visible to users with approve permission */}
@@ -830,51 +824,49 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
     });
   }, [profiles, search, sortField, sortDir]);
 
-  const columns: DtColumn<NisProfileRow>[] = [
+  const columns: DataTableColumn<NisProfileRow>[] = [
     {
-      key: 'employeeId', label: 'Employee', isPinned: true, sortAccessor: r => dv(r, 'employeeId', 'employee_id'),
-      renderCell: r => {
+      id: 'employeeId', header: 'Employee', pinned: true, alwaysVisible: true, sortable: true, sortValue: r => dv(r, 'employeeId', 'employee_id'),
+      cell: r => {
         const empId = dv(r, 'employeeId', 'employee_id');
         return empId === '—' ? <span class="sdb-muted-txt">—</span> : <EmployeeCellResolved resolved={nameMap?.get(empId)} fallbackId={empId} />;
       },
     },
-    { key: 'nisNumber', label: 'NIS #', sortAccessor: r => dv(r, 'nisNumber', 'nis_number'), renderCell: r => dv(r, 'nisNumber', 'nis_number') },
+    { id: 'nisNumber', header: 'NIS #', sortable: true, sortValue: r => dv(r, 'nisNumber', 'nis_number'), cell: r => dv(r, 'nisNumber', 'nis_number') },
     {
-      key: 'prevEmployer', label: 'Previous Employer', sortAccessor: r => dv(r, 'previousEmployerName', 'previous_employer_name'),
-      renderCell: r => { const v = dv(r, 'previousEmployerName', 'previous_employer_name'); return v === '—' ? <span class="sdb-muted-txt">—</span> : v; },
+      id: 'prevEmployer', header: 'Previous Employer', sortable: true, sortValue: r => dv(r, 'previousEmployerName', 'previous_employer_name'),
+      cell: r => { const v = dv(r, 'previousEmployerName', 'previous_employer_name'); return v === '—' ? <span class="sdb-muted-txt">—</span> : v; },
     },
-    { key: 'nisStatus', label: 'Status', sortAccessor: r => r.nisStatus ?? r.nis_status ?? '', renderCell: r => <StatBadge tone="wn">{humanize(r.nisStatus ?? r.nis_status ?? 'pending_verification')}</StatBadge> },
+    { id: 'nisStatus', header: 'Status', sortable: true, sortValue: r => r.nisStatus ?? r.nis_status ?? '', cell: r => <StatBadge tone="wn">{humanize(r.nisStatus ?? r.nis_status ?? 'pending_verification')}</StatBadge> },
     {
-      key: 'lastVerified', label: 'Last Verified',
-      renderCell: r => { const v = dv(r, 'verifiedAt', 'verified_at'); return v === '—' ? <span class="sdb-muted-txt">Never</span> : <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtDate(v)}</span>; },
+      id: 'lastVerified', header: 'Last Verified',
+      cell: r => { const v = dv(r, 'verifiedAt', 'verified_at'); return v === '—' ? <span class="sdb-muted-txt">Never</span> : <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtDate(v)}</span>; },
     },
   ];
 
   // Row actions live in the ⋮ overflow menu (verify / reject the pending NIS profile).
   const rowActions = canVerify
-    ? (r: NisProfileRow): DtAction<NisProfileRow>[] => {
+    ? (r: NisProfileRow): DataTableAction[] => {
         if (!r.id) return [];
         return [
-          { key: 'verify', label: 'Verify', icon: 'check', onClick: () => void verify(r) },
-          { key: 'reject', label: 'Reject', icon: 'close', tone: 'danger', onClick: () => void reject(r) },
+          { id: 'verify', label: 'Verify', onSelect: () => void verify(r) },
+          { id: 'reject', label: 'Reject', tone: 'danger', onSelect: () => void reject(r) },
         ];
       }
     : undefined;
 
-  const pageCount = Math.max(1, Math.ceil(filteredProfiles.length / PAGE_SIZE));
-
   return (
-    <LegacyDataTable<NisProfileRow>
+    <DataTable<NisProfileRow>
+      label="NIS verification queue"
       columns={columns}
       rows={filteredProfiles.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)}
-      rowKey={r => r.id}
+      getRowId={r => r.id}
       rowActions={rowActions}
       loading={profilesQ.isLoading}
       emptyState={{ icon: 'fa-user-check', title: 'Queue clear', text: profilesQ.error ? String(profilesQ.error) : 'No NIS profiles are awaiting verification.' }}
-      globalSearch={{ value: search, onChange: v => { setSearch(v); setPage(0); }, placeholder: 'Search by NIS #, employee or employer…' }}
-      sort={{ field: sortField, dir: sortDir, onSort: (f, d) => { setSortField(f); setSortDir(d); setPage(0); } }}
-      pagination={{ page, pageCount, total: filteredProfiles.length, onPage: setPage }}
-      noun="profiles"
+      search={{ value: search, onChange: v => { setSearch(v); setPage(0); }, placeholder: 'Search by NIS #, employee or employer…' }}
+      sorting={{ value: { columnId: sortField, direction: sortDir }, onChange: s => { if (s) { setSortField(s.columnId); setSortDir(s.direction); } setPage(0); } }}
+      pagination={{ page: page + 1, pageSize: PAGE_SIZE, total: filteredProfiles.length, onPageChange: p => setPage(p - 1) }}
     />
   );
 }

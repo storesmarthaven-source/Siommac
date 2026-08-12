@@ -625,12 +625,6 @@
    active-filter bar, pagination and the first/last table cells each carry the SAME 20px
    inset, so the search field, first column and everything below line up on one edge.
    The table's own rounded box/side borders are dropped — the register card frames it. */
-.sdb-table-card .dt-toolbar        { padding: 0 20px 12px; }
-.sdb-table-card .dt-active-filters { padding: 0 20px 12px; }
-.sdb-table-card .dt-pagination     { padding: 12px 20px 0; }
-.sdb-table-card .dt-scroll { border-left: 0; border-right: 0; border-radius: 0; }
-.sdb-table-card .dt-table th:first-child, .sdb-table-card .dt-table td:first-child { padding-left: 20px; }
-.sdb-table-card .dt-table th:last-child,  .sdb-table-card .dt-table td:last-child  { padding-right: 20px; }
 
 /* ── Register table (tab content) — faithful to the mockup's bottom table ──── */
 .sdb-toolbar {

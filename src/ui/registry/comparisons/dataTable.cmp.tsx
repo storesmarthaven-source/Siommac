@@ -163,7 +163,7 @@ export const DATA_TABLE_COMPARISON: ComparisonSet = {
   retire: [
     { name: '.vt-table + RegisterTable', source: 'assets/styles — .vt-table · src/ui/components/RegisterTable.tsx',
       usedBy: 'HSE (145) · HR leftovers (8) · Finance leftovers (3)', uses: 156 },
-    { name: '@ui/DataTable (pre-v2, LegacyDataTable)', source: 'src/ui/DataTable.tsx',
+    { name: '@ui/DataTable (pre-v2, deleted)', source: 'src/ui/DataTable.tsx — deleted',
       usedBy: '2 files. Visually .vt-table with a toolbar.', uses: 2 },
     { name: '@shared/DataTable', source: 'src/components/shared/DataTable.tsx',
       usedBy: '3 files. The oldest generic table in the tree.', uses: 3 },

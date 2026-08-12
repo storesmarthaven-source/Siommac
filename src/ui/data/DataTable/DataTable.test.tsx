@@ -85,6 +85,11 @@ describe('DataTable — capabilities are optional', () => {
     const { container } = table({ search: { value: '', onChange: vi.fn() } });
     expect(container.querySelector('.ui-dt-toolbar')).not.toBeNull();
   });
+
+  it('places module-owned filter compositions inside the canonical toolbar', () => {
+    table({ toolbarContent: <button type="button">Advanced filter</button> });
+    expect(screen.getByRole('button', { name: 'Advanced filter' }).closest('.ui-dt-toolbar')).not.toBeNull();
+  });
 });
 
 describe('DataTable — sorting', () => {

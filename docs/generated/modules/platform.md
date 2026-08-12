@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `dffd549e844a868d762ddbb8`
+Source fingerprint: `8fb327fca52b8ccc2e295561`
 
-Files: 402 | Symbols: 3665 | Widgets: 12 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
+Files: 401 | Symbols: 3655 | Widgets: 12 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -17,10 +17,10 @@ Files: 402 | Symbols: 3665 | Widgets: 12 | Unique mounted endpoints: 38 | Route 
 | `overflow` | Nine tabs in a drawer | registry | `() => (         <Tabs           id="ex-overflow"           label="Rate version sections"           variant="contained"           size="sm"           items={MANY_TABS}           maxVisible={4}           value="timeline"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:251` |
 | `row-actions` | Icon-only row actions | registry | `() => (         <div style={{ display: 'flex', gap: '4px' }}>           <Button variant="ghost" size="sm" iconOnly aria-label="Edit" iconLeft={<LucideIcon name="Pencil" />} />           <Button variant="ghost" size="sm" iconOnly aria-label="Duplicate" iconLeft={<LucideIcon name="Copy" />} />           <Button variant="ghost" size="sm" iconOnly aria-label="More actions" iconLeft={<LucideIcon name="EllipsisVertical" />} />         </div>       )` | `src/ui/registry/actions.defs.tsx:214` |
 | `select-all` | Select-all with a partial selection | registry | `() => (         <CheckboxGroup           label="Modules"           selectAllLabel="All modules"           values={['hr']}           onChange={noop}           options={[             { value: 'hr', label: 'Human Resources' },             { value: 'hse', label: 'HSE' },             { value: 'fin', label: 'Finance', disabled: true },           ]}         />       )` | `src/ui/registry/forms.defs.tsx:108` |
-| `status-set` | A status set | registry | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>           <Badge tone="success" dot>Active</Badge>           <Badge tone="warning" dot>Probation</Badge>           <Badge tone="info" dot>On leave</Badge>           <Badge tone="neutral" dot>Inactive</Badge>           <Badge tone="danger" dot>Terminated</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:332` |
+| `status-set` | A status set | registry | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>           <Badge tone="success" dot>Active</Badge>           <Badge tone="warning" dot>Probation</Badge>           <Badge tone="info" dot>On leave</Badge>           <Badge tone="neutral" dot>Inactive</Badge>           <Badge tone="danger" dot>Terminated</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:333` |
 | `toggle-and-link` | Toggle and link — props, not components | registry | `() => (         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>           <Button variant="outline" pressed iconLeft={<LucideIcon name="Filter" />}>Only my cases</Button>           <Button variant="link" href="#audit" iconRight={<LucideIcon name="ArrowRight" />}>View audit trail</Button>         </div>       )` | `src/ui/registry/actions.defs.tsx:243` |
 | `tone-scale` | Tone is meaning, not decoration | registry | `() => (         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>           {(['success', 'warning', 'danger', 'info'] as CardTone[]).map(tone => (             <Card key={tone} variant="metric" density="compact" tone={tone}               header={<CardHeader title={`${tone[0]!.toUpperCase()}${tone.slice(1)} signal`} level={null} />}>               <Figure value="7" caption="this week" />             </Card>           ))}         </div>       )` | `src/ui/registry/containers.defs.tsx:239` |
-| `variants` | Soft, solid, outline — and tags | registry | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>           <Badge tone="danger" variant="soft">Overdue</Badge>           <Badge tone="danger" variant="solid">Critical</Badge>           <Badge tone="danger" variant="outline">Escalated</Badge>           <Badge tone="accent" size="sm" onRemove={noop}>Night shift</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:346` |
+| `variants` | Soft, solid, outline — and tags | registry | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>           <Badge tone="danger" variant="soft">Overdue</Badge>           <Badge tone="danger" variant="solid">Critical</Badge>           <Badge tone="danger" variant="outline">Escalated</Badge>           <Badge tone="accent" size="sm" onRemove={noop}>Night shift</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:347` |
 | `vertical` | Vertical is an orientation, not a component | registry | `() => (         <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>           <Tabs             id="ex-vertical"             label="Settings sections"             orientation="vertical"             items={[               { id: 'general', label: 'General', icon: <LucideIcon name="Settings" /> },               { id: 'security', label: 'Security', icon: <LucideIcon name="ShieldCheck" />, badge: 2 },               { id: 'notifications', label: 'Notifications', icon: <LucideIcon name="Bell" /> },             ]}             value="security"             onChange={noop}           />           <TabPanel tabsId="ex-vertical" tabId="security" value="security">             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Two security settings need review.</span>           </TabPanel>         </div>       )` | `src/ui/registry/navigation.defs.tsx:227` |
 
 ## Route Definitions
@@ -302,7 +302,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `SearchInput` | function / component | `src/ui/components/Toolbar.tsx:35` | `-` |
 | `FilterSelect` | function / component | `src/ui/components/Toolbar.tsx:58` | `-` |
 | `Wizard` | function / component | `src/ui/components/Wizard.tsx:44` | `-` |
-| ... | 103 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 102 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 

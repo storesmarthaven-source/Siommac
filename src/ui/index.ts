@@ -81,13 +81,16 @@ export {
 // ── Inputs & forms ──
 export { LucideIcon, type LucideName } from './LucideIcon';
 export { InfoTip, type InfoTipProps } from './InfoTip';
-/** DEPRECATED — superseded by the canonical `DataTable` below. Kept under a
- *  loud name while its remaining consumers migrate; deleted when they have. */
-export {
-  DataTable as LegacyDataTable,
-  type DataTableProps as LegacyDataTableProps,
-  type DtColumn, type DtAction, type DtAlign, type DtRowStatus, type DtActiveFilter,
-} from './DataTable';
+/** Type-only debt for blocked EmailTemplateLibrary.tsx; no legacy runtime remains. */
+export interface DtColumn<T> {
+  key: string;
+  label: string;
+  renderCell: (row: T) => preact.ComponentChildren;
+  sortAccessor?: (row: T) => string | number | null | undefined;
+  align?: 'left' | 'center' | 'right';
+  width?: string;
+  isPinned?: boolean;
+}
 export {
   TableSearch, FilterDropdown, AdvancedFilter, ActiveFilters, useFilterDropdowns, FILTER_DROPDOWN_ATTR,
   type FilterDropdownProps, type AdvancedFilterProps, type AdvTab, type AdvSection, type ActiveChip,

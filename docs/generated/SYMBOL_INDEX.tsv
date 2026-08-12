@@ -8171,54 +8171,54 @@ TONE_BADGE	object	finance	false		src/components/sections/Finance/StatTable.tsx	6
 StatBadge	function	finance	true	component	src/components/sections/Finance/StatTable.tsx	67	
 pageWindow	function	finance	false		src/components/sections/Finance/StatTable.tsx	71	
 StatTable	function	finance	true	component	src/components/sections/Finance/StatTable.tsx	81	
-StatSubView	type	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	57	
-statusTone	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	65	
-statusPillTone	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	77	
-PAGE_SIZE	variable	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	87	
-toTitleCase	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	90	
-MainTab	type	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	96	
-StatutoryConfigOverview	function	finance	true	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	100	
-openDrawer	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	107	StatutoryConfigOverview
-openDrawerAtRuns	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	108	StatutoryConfigOverview
-handleExport	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	136	StatutoryConfigOverview
-VersionsTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	241	
-run	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	279	VersionsTab
-rowActions	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	367	VersionsTab
-NisClassesTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	442	
-handleDelete	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	480	NisClassesTab
-PayComponentsTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	568	
-handleApprove	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	592	PayComponentsTab
-handleReject	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	599	PayComponentsTab
-handleRetire	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	607	PayComponentsTab
-NisVerifyTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	758	
-verify	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	776	NisVerifyTab
-reject	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	792	NisVerifyTab
-val	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	803	NisVerifyTab
-dv	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	811	NisVerifyTab
-REPORTS	array	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	884	
-REPORT_COLUMNS	object	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	891	
-StatReportsTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	928	
-DrawerTab	type	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	948	
-DRAWER_TABS	array	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	956	
-DRAWER_VISIBLE_TABS	variable	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	967	
-labelSkeletonWidth	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	978	
-StatVersionDrawer	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	980	
-run	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1020	StatVersionDrawer
-actorName	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1026	StatVersionDrawer
-railSub	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1042	StatVersionDrawer
-tlEvent	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1062	StatVersionDrawer
-stepDate	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1067	StatVersionDrawer
-stepBy	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1068	StatVersionDrawer
-retireVersion	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1096	StatVersionDrawer
-lifeDotColor	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1401	
-lifeLabel	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1411	
-SvdTile	function	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryConfigOverview.tsx	1418	
-SvdSection	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1429	
-SvdRailItem	interface	finance	true		src/components/sections/Finance/StatutoryConfigOverview.tsx	1438	
-SvdSteps	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1448	
-SvdRail	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1475	
-StatEditVersionDialog	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1506	
-submit	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1530	StatEditVersionDialog
+StatSubView	type	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	56	
+statusTone	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	64	
+statusPillTone	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	76	
+PAGE_SIZE	variable	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	86	
+toTitleCase	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	89	
+MainTab	type	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	95	
+StatutoryConfigOverview	function	finance	true	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	99	
+openDrawer	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	106	StatutoryConfigOverview
+openDrawerAtRuns	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	107	StatutoryConfigOverview
+handleExport	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	135	StatutoryConfigOverview
+VersionsTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	240	
+run	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	278	VersionsTab
+rowActions	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	365	VersionsTab
+NisClassesTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	440	
+handleDelete	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	478	NisClassesTab
+PayComponentsTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	564	
+handleApprove	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	588	PayComponentsTab
+handleReject	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	595	PayComponentsTab
+handleRetire	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	603	PayComponentsTab
+NisVerifyTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	752	
+verify	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	770	NisVerifyTab
+reject	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	786	NisVerifyTab
+val	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	797	NisVerifyTab
+dv	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	805	NisVerifyTab
+REPORTS	array	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	876	
+REPORT_COLUMNS	object	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	883	
+StatReportsTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	920	
+DrawerTab	type	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	940	
+DRAWER_TABS	array	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	948	
+DRAWER_VISIBLE_TABS	variable	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	959	
+labelSkeletonWidth	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	970	
+StatVersionDrawer	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	972	
+run	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1012	StatVersionDrawer
+actorName	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1018	StatVersionDrawer
+railSub	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1034	StatVersionDrawer
+tlEvent	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1054	StatVersionDrawer
+stepDate	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1059	StatVersionDrawer
+stepBy	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1060	StatVersionDrawer
+retireVersion	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1088	StatVersionDrawer
+lifeDotColor	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1393	
+lifeLabel	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1403	
+SvdTile	function	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryConfigOverview.tsx	1410	
+SvdSection	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1421	
+SvdRailItem	interface	finance	true		src/components/sections/Finance/StatutoryConfigOverview.tsx	1430	
+SvdSteps	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1440	
+SvdRail	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1467	
+StatEditVersionDialog	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1498	
+submit	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1522	StatEditVersionDialog
 MainTab	type	finance	true		src/components/sections/Finance/StatutoryDashboard.tsx	67	
 TABS	array	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	69	
 PAGE_KEY	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	86	
@@ -12664,8 +12664,8 @@ Row	interface	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	15
 ROWS	array	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	17	
 COLUMNS	array	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	23	
 table	function	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	29	
-sel	function	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	175	
-actions	function	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	233	
+sel	function	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	180	
+actions	function	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	238	
 DataTable	function	platform	true	component	src/ui/data/DataTable/DataTable.tsx	41	
 RowActions	function	platform	false	component	src/ui/data/DataTable/DataTable.tsx	229	
 DataTablePaginationBar	function	platform	false	component	src/ui/data/DataTable/DataTable.tsx	273	
@@ -12688,17 +12688,6 @@ Params	interface	platform	false		src/ui/data/DataTable/useDataTable.ts	15
 DataTableState	interface	platform	true		src/ui/data/DataTable/useDataTable.ts	25	
 compareValues	function	platform	false		src/ui/data/DataTable/useDataTable.ts	47	
 useDataTable	function	platform	true	hook	src/ui/data/DataTable/useDataTable.ts	57	
-DtAlign	type	platform	true		src/ui/DataTable.tsx	17	
-DtRowStatus	type	platform	true		src/ui/DataTable.tsx	19	
-DtColumn	interface	platform	true		src/ui/DataTable.tsx	21	
-DtAction	interface	platform	true		src/ui/DataTable.tsx	35	
-DtActiveFilter	interface	platform	true		src/ui/DataTable.tsx	43	
-DataTableProps	interface	platform	true		src/ui/DataTable.tsx	45	
-ACT_ICON	object	platform	false		src/ui/DataTable.tsx	84	
-DtActionMenu	function	platform	false	component	src/ui/DataTable.tsx	92	
-pageWindow	function	platform	false		src/ui/DataTable.tsx	119	
-DataTable	function	platform	true	component	src/ui/DataTable.tsx	130	
-colStyle	function	platform	false		src/ui/DataTable.tsx	138	DataTable
 ComboboxProps	interface	platform	true		src/ui/forms/Combobox.tsx	35	
 Combobox	function	platform	true	component	src/ui/forms/Combobox.tsx	72	
 NativeDateType	type	platform	false		src/ui/forms/dateInputs.tsx	28	
@@ -12915,6 +12904,7 @@ RailCardProps	interface	platform	true	ui-tile	src/ui/hrfin/RailCard.tsx	9
 RailCard	function	platform	true	component,ui-tile	src/ui/hrfin/RailCard.tsx	18	
 RowActionItem	interface	platform	true		src/ui/hrfin/RowActionMenu.tsx	12	
 RowActionMenu	function	platform	true	component	src/ui/hrfin/RowActionMenu.tsx	22	
+DtColumn	interface	platform	true		src/ui/index.ts	85	
 InfoTipProps	interface	platform	true		src/ui/InfoTip.tsx	12	
 InfoTip	function	platform	true	component	src/ui/InfoTip.tsx	22	
 ModulePageLayoutProps	interface	widgets	true		src/ui/layouts/ModulePageLayout.tsx	24	
@@ -13090,8 +13080,8 @@ STATUS_TONE	object	platform	false		src/ui/registry/data.defs.tsx	46
 COLUMNS	array	platform	false		src/ui/registry/data.defs.tsx	57	
 ROW_ACTIONS	function	platform	false	component	src/ui/registry/data.defs.tsx	80	
 dataTableDef	object	platform	true		src/ui/registry/data.defs.tsx	88	
-badgeDef	object	platform	true		src/ui/registry/data.defs.tsx	254	
-DATA_DEFS	array	platform	true		src/ui/registry/data.defs.tsx	362	
+badgeDef	object	platform	true		src/ui/registry/data.defs.tsx	255	
+DATA_DEFS	array	platform	true		src/ui/registry/data.defs.tsx	363	
 PropValue	type	platform	false		src/ui/registry/definitions.tsx	28	
 s	function	platform	false		src/ui/registry/definitions.tsx	29	
 b	function	platform	false		src/ui/registry/definitions.tsx	30	

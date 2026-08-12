@@ -218,10 +218,29 @@ First clean family completed:
   27 to 26, and unmanaged raw tables from 213 to 210;
 - passed all 36 canonical DataTable tests with zero lint errors.
 
-The next complete family is the four lint-clean Finance Statutory Configuration
-registers that still use `LegacyDataTable`. The email-template table has an
-existing type contract mismatch and remains exact debt until its owning Studio
-surface is naturally touched.
+Second clean family completed:
+
+- migrated all four Finance Statutory Configuration registers (versions, NIS
+  bands, pay components and NIS verification) to canonical DataTable;
+- promoted pinned identity columns and module-owned toolbar compositions into
+  the canonical contract, preserving advanced filters, sorting, row actions and
+  server-style pagination;
+- deleted the Finance `.dt-*` overrides and both pre-v2 DataTable runtime/style
+  pairs (`src/ui/DataTable.*` and `src/components/shared/DataTable.*`);
+- retained one type-only `DtColumn` debt marker for
+  `EmailTemplateLibrary.tsx`, whose seven existing lint errors make it an exact
+  deferred Studio-owned file rather than a reason to keep the old runtime.
+
+DataTable classification is now frozen:
+
+```text
+DataTable canonical system  COMPLETE
+Clean register migration    COMPLETE
+Legacy runtimes/styles      DELETED
+Dirty/deferred register     RECORDED DEBT
+```
+
+The next canonical component is Tabs.
 
 ## Remaining programme
 
