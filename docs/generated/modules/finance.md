@@ -2,7 +2,7 @@
 
 # finance Module Map
 
-Source fingerprint: `ba6a68ed790af959778de851`
+Source fingerprint: `fdaf842ea7078b1515985569`
 
 Files: 139 | Symbols: 1850 | Widgets: 9 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
@@ -577,7 +577,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/payRunDetail/interactiveTabs.tsx` | 1112 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/pageGate.test.tsx` | 125 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/panelState.test.tsx` | 61 |
-| frontend-page | `src/components/sections/Finance/payRunDetail/panels.tsx` | 660 |
+| frontend-page | `src/components/sections/Finance/payRunDetail/panels.tsx` | 661 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/parts.tsx` | 135 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/payRunDetail.test.tsx` | 167 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/tabsA11y.test.tsx` | 112 |

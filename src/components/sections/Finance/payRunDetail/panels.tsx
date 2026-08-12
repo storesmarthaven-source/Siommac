@@ -27,6 +27,7 @@ import { PayrollPanelState } from './PanelState';
 import { PayCreateDisbursementDialog, PayCreateRemittanceDialog } from '../PayBridgeDialog';
 import { CloseReleaseCard } from './CloseReleaseCard';
 import { initials, dayLabel } from './parts';
+import { Badge } from '@ui';
 
 // ── shared atoms ────────────────────────────────────────────────────────────────
 
@@ -331,10 +332,10 @@ export function ApprovalsPanel({ run }: { run: PayrollRun }): VNode {
   }
 
   function decisionChip(status: string, decision: string | null): VNode {
-    if (decision === 'approved') return <span class="chip ok">Approved</span>;
-    if (decision === 'rejected' || decision === 'returned') return <span class="chip aw">Returned</span>;
-    if (status === 'completed') return <span class="chip ok">Complete</span>;
-    return <span class="chip wt">Waiting</span>;
+    if (decision === 'approved') return <Badge tone="success">Approved</Badge>;
+    if (decision === 'rejected' || decision === 'returned') return <Badge tone="warning">Returned</Badge>;
+    if (status === 'completed') return <Badge tone="success">Complete</Badge>;
+    return <Badge tone="neutral">Waiting</Badge>;
   }
 
   return (
@@ -498,7 +499,7 @@ export function PolicyEvidencePanel({ evidence }: { evidence: PolicyEvidence }):
 
         {evidence.excludedEmployees.length > 0 && (
           <div style={{ marginTop: 10 }}>
-            <span class="pill red">{evidence.excludedEmployees.length} employee(s) excluded from calculation</span>
+            <Badge tone="danger">{evidence.excludedEmployees.length} employee(s) excluded from calculation</Badge>
           </div>
         )}
 

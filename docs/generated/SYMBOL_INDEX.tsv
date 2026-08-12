@@ -8012,22 +8012,22 @@ drawerActions	variable	finance	false	test	src/components/sections/Finance/payRun
 makeRun	function	finance	false	test	src/components/sections/Finance/payRunDetail/pageGate.test.tsx	40	
 makeWorkspace	function	finance	false	test	src/components/sections/Finance/payRunDetail/pageGate.test.tsx	49	
 pageProps	object	finance	false	test	src/components/sections/Finance/payRunDetail/pageGate.test.tsx	70	
-Pill	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	33	
-SecHead	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	37	
-Empty	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	47	
-Gate	interface	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	55	
-deriveGates	function	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	57	
-SummaryPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	93	
-VariationRow	interface	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	177	
-PopulationPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	179	
-ReconciliationPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	248	
-ApprovalsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	317	
-decisionChip	function	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	333	ApprovalsPanel
-AuditPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	382	
-InputsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	411	
-PolicyEvidencePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	438	
-ExceptionsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	539	
-ReleasePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	580	
+Pill	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	34	
+SecHead	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	38	
+Empty	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	48	
+Gate	interface	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	56	
+deriveGates	function	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	58	
+SummaryPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	94	
+VariationRow	interface	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	178	
+PopulationPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	180	
+ReconciliationPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	249	
+ApprovalsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	318	
+decisionChip	function	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	334	ApprovalsPanel
+AuditPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	383	
+InputsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	412	
+PolicyEvidencePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	439	
+ExceptionsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	540	
+ReleasePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	581	
 PanelStateProps	interface	finance	true		src/components/sections/Finance/payRunDetail/PanelState.tsx	15	
 PayrollPanelState	function	finance	true	component	src/components/sections/Finance/payRunDetail/PanelState.tsx	33	
 fmtCompact	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	15	

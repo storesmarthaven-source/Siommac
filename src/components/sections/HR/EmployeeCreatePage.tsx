@@ -29,7 +29,7 @@
 
 import { type VNode } from 'preact';
 import { useState, useEffect, useMemo, useCallback, useId, useRef } from 'preact/hooks';
-import { Stepper, LucideIcon, type StepperStep } from '@ui';
+import { Stepper, LucideIcon, Badge, type StepperStep } from '@ui';
 import './EmployeeCreatePage.css';
 import { toast } from '@store';
 import {
@@ -387,12 +387,12 @@ function SubmissionReceipt({ receipt, onClose }: { receipt: CreateEmployeeReceip
           <div class="outcome">
             <span class="status-icon"><LucideIcon name="IdCard" size={20} /></span>
             <span><strong>Employee record</strong><p>Created and audited.</p></span>
-            <span class="outcome-tail"><span class="badge green">Done</span></span>
+            <span class="outcome-tail"><Badge tone="success">Done</Badge></span>
           </div>
           <div class="outcome">
             <span class="status-icon"><LucideIcon name="Mail" size={20} /></span>
             <span><strong>Account</strong><p>No login created — request access separately</p></span>
-            <span class="outcome-tail"><span class="badge">Not requested</span></span>
+            <span class="outcome-tail"><Badge tone="neutral">Not requested</Badge></span>
           </div>
           <div class="outcome">
             <span class="status-icon"><LucideIcon name="ListChecks" size={20} /></span>
@@ -883,12 +883,12 @@ export function EmployeeCreatePage({ onClose }: { onClose: () => void }): VNode 
             <div class="outcome">
               <span class="status-icon"><LucideIcon name="IdCard" size={20} /></span>
               <span><strong>Employee record</strong><p>Created and audited</p></span>
-              <span class="outcome-tail"><span class="badge blue">Always</span></span>
+              <span class="outcome-tail"><Badge tone="info">Always</Badge></span>
             </div>
             <div class="outcome">
               <span class="status-icon"><LucideIcon name="Mail" size={20} /></span>
               <span><strong>Account</strong><p>No login is created — access is requested separately</p></span>
-              <span class="outcome-tail"><span class="badge">Later</span></span>
+              <span class="outcome-tail"><Badge tone="neutral">Later</Badge></span>
             </div>
             <div class={`outcome${form.prepareOnboarding ? '' : ''}`}>
               <span class="status-icon"><LucideIcon name="ListChecks" size={20} /></span>
@@ -1021,7 +1021,7 @@ export function EmployeeCreatePage({ onClose }: { onClose: () => void }): VNode 
             <button type="button" class="btn ghost" onClick={back} disabled={createMut.isPending}>Back</button>
           )}
           <span class="push" />
-          <span class="badge">Step {step + 1} of {WIZARD_STEPS.length}</span>
+          <Badge tone="neutral">Step {step + 1} of {WIZARD_STEPS.length}</Badge>
           {step < WIZARD_STEPS.length - 1 ? (
             <button type="button" class="btn primary" onClick={next} disabled={!canAdvance}>Continue</button>
           ) : (
