@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `cdcda4ed8a8b7e84b78f7197`
+Source fingerprint: `0964f5ec20f84787956f57e0`
 
-Files: 404 | Symbols: 3682 | Widgets: 12 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
+Files: 405 | Symbols: 3686 | Widgets: 12 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -297,7 +297,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `Spinner` | function / component | `src/ui/components/Spinner.tsx:23` | `-` |
 | `StatsCardProps` | interface / ui-tile | `src/ui/components/StatsCard.tsx:37` | `-` |
 | `StatsCard` | function / component, ui-tile | `src/ui/components/StatsCard.tsx:70` | `-` |
-| `StatusPill` | function / component | `src/ui/components/StatusPill.tsx:24` | `-` |
+| `StatusPill` | function / component | `src/ui/components/StatusPill.tsx:33` | `-` |
 | `Stepper` | function / component | `src/ui/components/Stepper.tsx:37` | `-` |
 | `SystemActionsPanel` | function / component | `src/ui/components/SystemActionsPanel.tsx:27` | `-` |
 | `Tabs` | function / component | `src/ui/components/Tabs.tsx:28` | `-` |

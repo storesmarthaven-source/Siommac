@@ -49,6 +49,45 @@ export const TONE: Record<Tone, ToneVisual> = {
   neutral:  { pillClass: 'vt-pill is-off',      color: 'var(--st-neutral)', tint: 'var(--st-neutral-tint)' },
 };
 
+/* ── Bridge: domain Tone → canonical Badge tone ───────────────────────────────
+   The two vocabularies stay SEPARATE on purpose. `Tone` is the domain model and
+   keeps a distinction Badge does not need to know about:
+
+     negative  off / inactive / expired   → slate
+     critical  urgent, hard-stop          → red
+
+   Collapsing `negative` into `danger` would turn every ordinary "inactive" and
+   "off" state red, which is the single most common way a status system starts
+   shouting. So the bridge maps it to `neutral` — matching what `.vt-pill.is-off`
+   already renders today — and only `critical` becomes `danger`.
+
+   ⚠ Note for whoever revisits the status model: `toneFromText`,
+   `toneFromPpeStatus` and `toneFromPriority` currently return `negative` (slate)
+   for overdue / expired / failed / blocked / critical-priority. That is faithful
+   to what the app renders TODAY, and this bridge preserves it exactly — but it
+   means those states are grey rather than red. Changing that is a status-model
+   decision, not a Badge migration, and must be made deliberately. */
+export type BadgeToneName = 'success' | 'warning' | 'danger' | 'info' | 'neutral' | 'accent';
+
+const TONE_TO_BADGE: Record<Tone, BadgeToneName> = {
+  positive: 'success',
+  caution:  'warning',
+  negative: 'neutral',
+  critical: 'danger',
+  info:     'info',
+  neutral:  'neutral',
+};
+
+/** Domain tone → the canonical Badge `tone` prop. */
+export function badgeTone(tone: Tone): BadgeToneName {
+  return TONE_TO_BADGE[tone];
+}
+
+/** Free-text status → Badge tone, in one step. */
+export function badgeToneFromText(text: string | null | undefined): BadgeToneName {
+  return badgeTone(toneFromText(text));
+}
+
 /** Tone → status chip className. */
 export function toneClass(tone: Tone): string {
   return TONE[tone].pillClass;

@@ -12637,8 +12637,8 @@ Spinner	function	platform	true	component	src/ui/components/Spinner.tsx	23
 StatStatus	interface	platform	true		src/ui/components/StatsCard.tsx	30	
 StatsCardProps	interface	platform	true	ui-tile	src/ui/components/StatsCard.tsx	37	
 StatsCard	function	platform	true	component,ui-tile	src/ui/components/StatsCard.tsx	70	
-StatusPillProps	interface	platform	false		src/ui/components/StatusPill.tsx	17	
-StatusPill	function	platform	true	component	src/ui/components/StatusPill.tsx	24	
+StatusPillProps	interface	platform	false		src/ui/components/StatusPill.tsx	26	
+StatusPill	function	platform	true	component	src/ui/components/StatusPill.tsx	33	
 StepperStep	interface	platform	true		src/ui/components/Stepper.tsx	15	
 StepperProps	interface	platform	true		src/ui/components/Stepper.tsx	22	
 Stepper	function	platform	true	component	src/ui/components/Stepper.tsx	37	
@@ -13188,15 +13188,19 @@ wizardDef	object	platform	true		src/ui/registry/wizard.def.tsx	44
 Tone	type	platform	true		src/ui/status/statusTokens.ts	31	
 ToneVisual	interface	platform	false		src/ui/status/statusTokens.ts	33	
 TONE	object	platform	true		src/ui/status/statusTokens.ts	43	
-toneClass	function	platform	true		src/ui/status/statusTokens.ts	53	
-toneColor	function	platform	true		src/ui/status/statusTokens.ts	57	
-toneTint	function	platform	true		src/ui/status/statusTokens.ts	61	
-toneFromText	function	platform	true		src/ui/status/statusTokens.ts	68	
-toneFromPpeStatus	function	platform	true		src/ui/status/statusTokens.ts	78	
-toneFromWorkflowStatus	function	platform	true		src/ui/status/statusTokens.ts	102	
-toneFromPriority	function	platform	true		src/ui/status/statusTokens.ts	118	
-colorFromSeverity	function	platform	true		src/ui/status/statusTokens.ts	130	
-statusLabel	function	platform	true		src/ui/status/statusTokens.ts	140	
+BadgeToneName	type	platform	true		src/ui/status/statusTokens.ts	70	
+TONE_TO_BADGE	object	platform	false		src/ui/status/statusTokens.ts	72	
+badgeTone	function	platform	true		src/ui/status/statusTokens.ts	82	
+badgeToneFromText	function	platform	true		src/ui/status/statusTokens.ts	87	
+toneClass	function	platform	true		src/ui/status/statusTokens.ts	92	
+toneColor	function	platform	true		src/ui/status/statusTokens.ts	96	
+toneTint	function	platform	true		src/ui/status/statusTokens.ts	100	
+toneFromText	function	platform	true		src/ui/status/statusTokens.ts	107	
+toneFromPpeStatus	function	platform	true		src/ui/status/statusTokens.ts	117	
+toneFromWorkflowStatus	function	platform	true		src/ui/status/statusTokens.ts	141	
+toneFromPriority	function	platform	true		src/ui/status/statusTokens.ts	157	
+colorFromSeverity	function	platform	true		src/ui/status/statusTokens.ts	169	
+statusLabel	function	platform	true		src/ui/status/statusTokens.ts	179	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	

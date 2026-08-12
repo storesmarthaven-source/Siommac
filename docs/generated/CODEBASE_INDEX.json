@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "7cc5e5a912e134aa8569777d5703e960f9b86403",
+    "head": "b2da1c24dd1b1076b645bb1dcc7ec9489c14b120",
     "branch": "main",
-    "fingerprint": "cdcda4ed8a8b7e84b78f7197",
-    "indexedFiles": 1815
+    "fingerprint": "0964f5ec20f84787956f57e0",
+    "indexedFiles": 1816
   },
   "summary": {
-    "files": 1460,
-    "symbols": 14691,
+    "files": 1461,
+    "symbols": 14695,
     "widgets": 63,
     "routes": 978,
     "routeDefinitions": 979,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 404,
-        "symbols": 3682,
+        "files": 405,
+        "symbols": 3686,
         "widgets": 12,
         "routes": 38,
         "routeDefinitions": 53,
@@ -8511,8 +8511,8 @@
       "path": "src/ui/components/StatusPill.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 29,
-      "hash": "aa66e5cdb095a47b"
+      "lines": 41,
+      "hash": "8a9836bfe35b4fa5"
     },
     {
       "path": "src/ui/components/Stepper.tsx",
@@ -9187,11 +9187,18 @@
       "hash": "89659a7193b0aa42"
     },
     {
+      "path": "src/ui/status/statusBridge.test.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 74,
+      "hash": "d0fe65a5017ef8a0"
+    },
+    {
       "path": "src/ui/status/statusTokens.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 143,
-      "hash": "6c8dd8ce02c72b0a"
+      "lines": 182,
+      "hash": "0af2d3c848de89e0"
     },
     {
       "path": "src/ui/table/FilterBar.tsx",
@@ -142574,7 +142581,7 @@
       "name": "StatusPillProps",
       "kind": "interface",
       "file": "src/ui/components/StatusPill.tsx",
-      "line": 17,
+      "line": 26,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -142584,7 +142591,7 @@
       "name": "StatusPill",
       "kind": "function",
       "file": "src/ui/components/StatusPill.tsx",
-      "line": 24,
+      "line": 33,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148520,10 +148527,50 @@
       "tags": []
     },
     {
+      "name": "BadgeToneName",
+      "kind": "type",
+      "file": "src/ui/status/statusTokens.ts",
+      "line": 70,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TONE_TO_BADGE",
+      "kind": "object",
+      "file": "src/ui/status/statusTokens.ts",
+      "line": 72,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "badgeTone",
+      "kind": "function",
+      "file": "src/ui/status/statusTokens.ts",
+      "line": 82,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "badgeToneFromText",
+      "kind": "function",
+      "file": "src/ui/status/statusTokens.ts",
+      "line": 87,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "toneClass",
       "kind": "function",
       "file": "src/ui/status/statusTokens.ts",
-      "line": 53,
+      "line": 92,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148533,7 +148580,7 @@
       "name": "toneColor",
       "kind": "function",
       "file": "src/ui/status/statusTokens.ts",
-      "line": 57,
+      "line": 96,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148543,7 +148590,7 @@
       "name": "toneTint",
       "kind": "function",
       "file": "src/ui/status/statusTokens.ts",
-      "line": 61,
+      "line": 100,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148553,7 +148600,7 @@
       "name": "toneFromText",
       "kind": "function",
       "file": "src/ui/status/statusTokens.ts",
-      "line": 68,
+      "line": 107,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148563,7 +148610,7 @@
       "name": "toneFromPpeStatus",
       "kind": "function",
       "file": "src/ui/status/statusTokens.ts",
-      "line": 78,
+      "line": 117,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148573,7 +148620,7 @@
       "name": "toneFromWorkflowStatus",
       "kind": "function",
       "file": "src/ui/status/statusTokens.ts",
-      "line": 102,
+      "line": 141,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148583,7 +148630,7 @@
       "name": "toneFromPriority",
       "kind": "function",
       "file": "src/ui/status/statusTokens.ts",
-      "line": 118,
+      "line": 157,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148593,7 +148640,7 @@
       "name": "colorFromSeverity",
       "kind": "function",
       "file": "src/ui/status/statusTokens.ts",
-      "line": 130,
+      "line": 169,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148603,7 +148650,7 @@
       "name": "statusLabel",
       "kind": "function",
       "file": "src/ui/status/statusTokens.ts",
-      "line": 140,
+      "line": 179,
       "module": "platform",
       "exported": true,
       "container": "",

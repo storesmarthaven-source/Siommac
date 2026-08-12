@@ -1,18 +1,27 @@
 /**
  * src/ui/components/StatusPill.tsx
  *
- * The one status chip. Wraps the existing `.vt-pill` classes and routes every
- * colour decision through @ui/status/statusTokens — so no page ever writes its
- * own status→colour logic again.
+ * A thin DOMAIN adapter over the canonical Badge — not a second badge system.
+ *
+ * It exists for one reason: its callers speak the ERP's status vocabulary
+ * (free-text statuses, and the `positive/caution/negative/critical/info/neutral`
+ * tone model), while Badge speaks the design system's
+ * `success/warning/danger/info/neutral/accent`. This translates, then renders
+ * the real component. It owns no colours, no geometry and no classes of its own.
  *
  * Give it EITHER:
- *   - `tone`   → explicit semantic tone (positive/caution/negative/critical/info/neutral)
+ *   - `tone`   → explicit domain tone
  *   - `status` → free-text status; tone is derived via toneFromText()
  * Label defaults to the status string (or children).
+ *
+ * ⚠ Deprecated as a NAME: new code should call `<Badge tone={badgeTone(t)}>`
+ * directly. It stays only so the 17 existing call sites migrate to the canonical
+ * rendering without 17 separate edits; delete it once they are converted.
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
-import { type Tone, toneClass, toneFromText } from '@ui/status/statusTokens';
+import { type Tone, badgeTone, toneFromText } from '@ui/status/statusTokens';
+import { Badge } from '../primitives/Badge';
 
 interface StatusPillProps {
   tone?: Tone;
@@ -23,6 +32,9 @@ interface StatusPillProps {
 
 export function StatusPill({ tone, status, class: extra, children }: StatusPillProps): VNode {
   const resolved: Tone = tone ?? (status ? toneFromText(status) : 'info');
-  const cls = `${toneClass(resolved)}${extra ? ' ' + extra : ''}`;
-  return <span class={cls}>{children ?? status}</span>;
+  return (
+    <Badge tone={badgeTone(resolved)} variant="soft" class={extra}>
+      {children ?? status}
+    </Badge>
+  );
 }
