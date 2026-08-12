@@ -33,6 +33,7 @@ import { FORM_DEFS } from './forms.defs';
 import { DATA_DEFS } from './data.defs';
 import { CONTAINER_DEFS } from './containers.defs';
 import { NAVIGATION_DEFS } from './navigation.defs';
+import { FEEDBACK_DEFS } from './feedback.defs';
 import { PLANNED_DEFS } from './planned';
 import { type ComponentCategory, type ComponentDef, isBuilt } from './types';
 
@@ -49,6 +50,7 @@ export const COMPONENT_DEFS: readonly ComponentDef[] = [
   ...DATA_DEFS,
   ...CONTAINER_DEFS,
   ...NAVIGATION_DEFS,
+  ...FEEDBACK_DEFS,
   ...PLANNED_DEFS,
 ];
 

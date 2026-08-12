@@ -99,6 +99,7 @@ const BUILT_REGISTRY_FILES = [
   'src/ui/registry/navigation.defs.tsx',
   'src/ui/registry/wizard.def.tsx',
   'src/ui/registry/page-header.def.tsx',
+  'src/ui/registry/feedback.defs.tsx',
 ];
 
 function readRegistry() {

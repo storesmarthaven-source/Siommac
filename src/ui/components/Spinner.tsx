@@ -24,7 +24,7 @@ export function Spinner({ size = 18, label, center = false }: SpinnerProps): VNo
   const spinner = (
     <span class="ui-spinner-wrap" role="status" aria-live="polite">
       <span class="ui-spinner" style={{ width: `${size}px`, height: `${size}px` }} aria-hidden="true" />
-      {label && <span class="ui-spinner-label">{label}</span>}
+      {label ? <span class="ui-spinner-label">{label}</span> : <span class="sr-only">Loading…</span>}
     </span>
   );
   return center ? <div class="ui-spinner-center">{spinner}</div> : spinner;

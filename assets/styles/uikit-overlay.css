@@ -228,18 +228,6 @@
 .ui-panel-empty { padding: 22px; text-align: center; color: #64748b; font-size: 12px; font-weight: var(--font-weight-bold, 700); }
 
 /* ── Rich section empty state — src/ui/components/EmptyState.tsx ────────────── */
-.ui-empty { display: grid; place-items: center; text-align: center; padding: 30px 20px; }
-.ui-empty-inner { display: grid; justify-items: center; gap: 11px; max-width: 420px; }
-.ui-empty-icon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; flex: none; }
-.ui-empty-icon.tone-blue   { background: #e8f1ff; color: #0b55d8; }
-.ui-empty-icon.tone-amber  { background: #fffbeb; color: #b45309; }
-.ui-empty-icon.tone-green  { background: #ecfdf5; color: #15803d; }
-.ui-empty-icon.tone-purple { background: #f5f3ff; color: #7c3aed; }
-.ui-empty-icon.tone-gray   { background: #f1f5f9; color: #64748b; }
-.ui-empty-title { margin: 2px 0 0; font-size: 15px; font-weight: var(--font-weight-bold); color: #0f172a; letter-spacing: -.01em; }
-.ui-empty-text { margin: 0; font-size: 13px; color: #475569; line-height: 1.45; }
-.ui-empty-note { margin: 0; font-size: 11.5px; color: #94a3b8; line-height: 1.45; }
-.ui-empty-actions { margin-top: 6px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 
 /* ── Pill (v36 .pill) ──────────────────────────────────────────────────────── */
 .ui-pill {
@@ -468,14 +456,6 @@
 
 /* Empty state */
 .ui-rdrawer .ui-panel-empty { color: rgba(226,238,252,.68); }
-.ui-rdrawer .ui-empty-title { color: #fff; }
-.ui-rdrawer .ui-empty-text { color: rgba(226,238,252,.82); }
-.ui-rdrawer .ui-empty-note { color: rgba(226,238,252,.60); }
-.ui-rdrawer .ui-empty-icon.tone-blue   { background: rgba(204,227,255,.22); color: #bfdbfe; }
-.ui-rdrawer .ui-empty-icon.tone-amber  { background: rgba(251,191,36,.22); color: #fde68a; }
-.ui-rdrawer .ui-empty-icon.tone-green  { background: rgba(134,239,172,.20); color: #bbf7d0; }
-.ui-rdrawer .ui-empty-icon.tone-purple { background: rgba(196,181,253,.22); color: #ddd6fe; }
-.ui-rdrawer .ui-empty-icon.tone-gray   { background: rgba(255,255,255,.10); color: rgba(226,238,252,.82); }
 
 /* Activity list */
 .ui-rdrawer .ui-activity-title { color: #fff; }

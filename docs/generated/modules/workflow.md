@@ -2,7 +2,7 @@
 
 # workflow Module Map
 
-Source fingerprint: `7d4cd0fad026b8a9d0c7e4c0`
+Source fingerprint: `2e0983cca10b4809915121e3`
 
 Files: 47 | Symbols: 323 | Widgets: 0 | Unique mounted endpoints: 40 | Route definitions: 40 mounted + 0 unmounted | API calls: 8 | DB objects: 128 | E2E suites: 3
 
@@ -88,7 +88,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `ActivityTimeline` | function / component | `src/components/shared/orchestration/ActivityTimeline.tsx:58` | `-` |
 | `ApprovalInbox` | function / component | `src/components/workflow/ApprovalInbox.tsx:31` | `-` |
 | `AuditFeed` | function / component | `src/components/workflow/AuditFeed.tsx:14` | `-` |
-| `HandoffList` | function / component | `src/components/workflow/HandoffList.tsx:29` | `-` |
+| `HandoffList` | function / component | `src/components/workflow/HandoffList.tsx:30` | `-` |
 | `WorkflowDrawer` | function / component | `src/components/workflow/WorkflowDrawer.tsx:16` | `-` |
 | `useWorkflow` | function / hook | `src/lib/workflow/useWorkflow.ts:36` | `-` |
 

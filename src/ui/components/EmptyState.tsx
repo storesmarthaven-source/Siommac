@@ -1,37 +1,42 @@
 /**
- * src/ui/components/EmptyState.tsx
- *
- * The standard "nothing here yet" panel for a section/card: a tonal icon disc, a
- * title, a short description, an optional smaller note, and optional actions.
- * Replaces bare one-line empty text for sections that deserve guidance (documents,
- * statutory, history, …). Light by default; the navy drawer overrides live in
- * assets/styles/uikit-overlay.css. `tone` defaults to the standard brand blue.
+ * The canonical "nothing here yet" surface for sections, cards and drawers.
+ * The component owns structure and visual semantics; actions remain composed
+ * canonical Buttons. Static states are quiet by default, while async result
+ * changes can opt into status or alert announcement semantics.
  */
-
-import { type VNode, type ComponentChildren } from 'preact';
+import { type ComponentChildren, type JSX, type VNode } from 'preact';
+import './emptyState.recipe.css';
 
 export type EmptyTone = 'blue' | 'amber' | 'green' | 'purple' | 'gray';
+export type EmptyStateSize = 'compact' | 'default';
 
 export interface EmptyStateProps {
-  /** Font Awesome class, e.g. 'fa-folder-open'. */
-  icon: string;
+  /** Font Awesome class, e.g. 'fa-folder-open', or a canonical icon node. */
+  icon: string | ComponentChildren;
   title: string;
-  /** One-line description under the title. */
   text?: string;
-  /** Smaller supporting note (what will appear here once populated). */
   note?: string;
-  /** Icon disc colour — defaults to the standard brand blue. */
   tone?: EmptyTone;
-  /** Optional action buttons row. */
+  /** Compact is for drawers, cards and table states; default is for sections. */
+  size?: EmptyStateSize;
+  /** Match the surrounding document outline. */
+  headingLevel?: 2 | 3 | 4;
   actions?: ComponentChildren;
+  /** Optional announcement semantics for async results or failures. */
+  role?: 'status' | 'alert';
 }
 
-export function EmptyState({ icon, title, text, note, tone = 'blue', actions }: EmptyStateProps): VNode {
+export function EmptyState({
+  icon, title, text, note, tone = 'blue', size = 'default', headingLevel = 3, actions, role,
+}: EmptyStateProps): VNode {
+  const Heading = `h${headingLevel}` as keyof JSX.IntrinsicElements;
   return (
-    <div class="ui-empty">
+    <div class={`ui-empty ui-empty--${size}`} role={role}>
       <div class="ui-empty-inner">
-        <span class={`ui-empty-icon tone-${tone}`} aria-hidden="true"><i class={`fas ${icon}`} /></span>
-        <h4 class="ui-empty-title">{title}</h4>
+        <span class={`ui-empty-icon tone-${tone}`} aria-hidden="true">
+          {typeof icon === 'string' ? <i class={`fas ${icon}`} /> : icon}
+        </span>
+        <Heading class="ui-empty-title">{title}</Heading>
         {text && <p class="ui-empty-text">{text}</p>}
         {note && <p class="ui-empty-note">{note}</p>}
         {actions && <div class="ui-empty-actions">{actions}</div>}

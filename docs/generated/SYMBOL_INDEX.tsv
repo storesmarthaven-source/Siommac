@@ -3948,40 +3948,40 @@ files	variable	platform	false		scripts/check-ui-kit-coverage.mjs	61
 appFiles	variable	platform	false		scripts/check-ui-kit-coverage.mjs	66	
 countOccurrences	function	platform	false		scripts/check-ui-kit-coverage.mjs	68	
 BUILT_REGISTRY_FILES	array	platform	false		scripts/check-ui-kit-coverage.mjs	93	
-readRegistry	function	platform	false		scripts/check-ui-kit-coverage.mjs	104	
-grab	function	platform	false		scripts/check-ui-kit-coverage.mjs	136	readRegistry
-registry	variable	platform	false		scripts/check-ui-kit-coverage.mjs	152	
-uniq	function	platform	false		scripts/check-ui-kit-coverage.mjs	153	
-replacesClasses	variable	platform	false		scripts/check-ui-kit-coverage.mjs	154	
-deprecatedImports	variable	platform	false		scripts/check-ui-kit-coverage.mjs	155	
-rawPatterns	variable	platform	false		scripts/check-ui-kit-coverage.mjs	156	
-byStatus	function	platform	false		scripts/check-ui-kit-coverage.mjs	160	
-brokenPaths	array	platform	false		scripts/check-ui-kit-coverage.mjs	163	
-file	variable	platform	false		scripts/check-ui-kit-coverage.mjs	164	
-rawCounts	object	platform	false		scripts/check-ui-kit-coverage.mjs	174	
-pattern	variable	platform	false		scripts/check-ui-kit-coverage.mjs	175	
-unmanagedRaw	variable	platform	false		scripts/check-ui-kit-coverage.mjs	178	
-legacyClassCounts	object	platform	false		scripts/check-ui-kit-coverage.mjs	181	
-cls	variable	platform	false		scripts/check-ui-kit-coverage.mjs	182	
-legacyClassUsages	variable	platform	false		scripts/check-ui-kit-coverage.mjs	193	
-deprecatedCounts	object	platform	false		scripts/check-ui-kit-coverage.mjs	196	
-sym	variable	platform	false		scripts/check-ui-kit-coverage.mjs	197	
-deprecatedUsages	variable	platform	false		scripts/check-ui-kit-coverage.mjs	203	
-LOCAL_PRIMITIVE_RE	variable	platform	false		scripts/check-ui-kit-coverage.mjs	206	
-localPrimitives	array	platform	false		scripts/check-ui-kit-coverage.mjs	208	
-f	variable	platform	false		scripts/check-ui-kit-coverage.mjs	209	
-KIT_SYMBOLS	array	platform	false		scripts/check-ui-kit-coverage.mjs	216	
-adoptingFiles	variable	platform	false		scripts/check-ui-kit-coverage.mjs	217	
-uiFiles	variable	platform	false		scripts/check-ui-kit-coverage.mjs	220	
-metrics	object	platform	false		scripts/check-ui-kit-coverage.mjs	222	
-completeness	variable	platform	false		scripts/check-ui-kit-coverage.mjs	235	
-adoption	variable	platform	false		scripts/check-ui-kit-coverage.mjs	237	
-RATCHETED	array	platform	false		scripts/check-ui-kit-coverage.mjs	243	
-loadBaseline	function	platform	false		scripts/check-ui-kit-coverage.mjs	245	
-writeBaseline	function	platform	false		scripts/check-ui-kit-coverage.mjs	250	
-pct	function	platform	false		scripts/check-ui-kit-coverage.mjs	266	
-pad	function	platform	false		scripts/check-ui-kit-coverage.mjs	267	
-report	function	platform	false		scripts/check-ui-kit-coverage.mjs	269	
+readRegistry	function	platform	false		scripts/check-ui-kit-coverage.mjs	105	
+grab	function	platform	false		scripts/check-ui-kit-coverage.mjs	137	readRegistry
+registry	variable	platform	false		scripts/check-ui-kit-coverage.mjs	153	
+uniq	function	platform	false		scripts/check-ui-kit-coverage.mjs	154	
+replacesClasses	variable	platform	false		scripts/check-ui-kit-coverage.mjs	155	
+deprecatedImports	variable	platform	false		scripts/check-ui-kit-coverage.mjs	156	
+rawPatterns	variable	platform	false		scripts/check-ui-kit-coverage.mjs	157	
+byStatus	function	platform	false		scripts/check-ui-kit-coverage.mjs	161	
+brokenPaths	array	platform	false		scripts/check-ui-kit-coverage.mjs	164	
+file	variable	platform	false		scripts/check-ui-kit-coverage.mjs	165	
+rawCounts	object	platform	false		scripts/check-ui-kit-coverage.mjs	175	
+pattern	variable	platform	false		scripts/check-ui-kit-coverage.mjs	176	
+unmanagedRaw	variable	platform	false		scripts/check-ui-kit-coverage.mjs	179	
+legacyClassCounts	object	platform	false		scripts/check-ui-kit-coverage.mjs	182	
+cls	variable	platform	false		scripts/check-ui-kit-coverage.mjs	183	
+legacyClassUsages	variable	platform	false		scripts/check-ui-kit-coverage.mjs	194	
+deprecatedCounts	object	platform	false		scripts/check-ui-kit-coverage.mjs	197	
+sym	variable	platform	false		scripts/check-ui-kit-coverage.mjs	198	
+deprecatedUsages	variable	platform	false		scripts/check-ui-kit-coverage.mjs	204	
+LOCAL_PRIMITIVE_RE	variable	platform	false		scripts/check-ui-kit-coverage.mjs	207	
+localPrimitives	array	platform	false		scripts/check-ui-kit-coverage.mjs	209	
+f	variable	platform	false		scripts/check-ui-kit-coverage.mjs	210	
+KIT_SYMBOLS	array	platform	false		scripts/check-ui-kit-coverage.mjs	217	
+adoptingFiles	variable	platform	false		scripts/check-ui-kit-coverage.mjs	218	
+uiFiles	variable	platform	false		scripts/check-ui-kit-coverage.mjs	221	
+metrics	object	platform	false		scripts/check-ui-kit-coverage.mjs	223	
+completeness	variable	platform	false		scripts/check-ui-kit-coverage.mjs	236	
+adoption	variable	platform	false		scripts/check-ui-kit-coverage.mjs	238	
+RATCHETED	array	platform	false		scripts/check-ui-kit-coverage.mjs	244	
+loadBaseline	function	platform	false		scripts/check-ui-kit-coverage.mjs	246	
+writeBaseline	function	platform	false		scripts/check-ui-kit-coverage.mjs	251	
+pct	function	platform	false		scripts/check-ui-kit-coverage.mjs	267	
+pad	function	platform	false		scripts/check-ui-kit-coverage.mjs	268	
+report	function	platform	false		scripts/check-ui-kit-coverage.mjs	270	
 __dirname	variable	platform	false		scripts/check-wave2b-migrations.mjs	9	
 url	variable	platform	false		scripts/check-wave2b-migrations.mjs	12	
 key	variable	platform	false		scripts/check-wave2b-migrations.mjs	13	
@@ -10316,16 +10316,15 @@ PriorityChip	function	hse	false	component	src/components/sections/HSE/Workflows.
 MODULE_ICON	object	hse	false		src/components/sections/HSE/Workflows.tsx	69	
 fmtDate	function	hse	false		src/components/sections/HSE/Workflows.tsx	74	
 isOpenStatus	function	hse	false		src/components/sections/HSE/Workflows.tsx	79	
-Skeleton	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	85	
-ApprovalsTab	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	97	
-handleDecide	function	hse	false		src/components/sections/HSE/Workflows.tsx	114	ApprovalsTab
-RegisterTab	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	239	
-WorkflowDetailPanel	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	350	
-AuditTab	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	419	
-HandoffsTab	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	540	
-SeededTemplate	interface	hse	false		src/components/sections/HSE/Workflows.tsx	638	
-SEEDED_TEMPLATES	array	hse	false		src/components/sections/HSE/Workflows.tsx	645	
-WorkflowsArea	function	hse	true	component	src/components/sections/HSE/Workflows.tsx	708	
+ApprovalsTab	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	85	
+handleDecide	function	hse	false		src/components/sections/HSE/Workflows.tsx	102	ApprovalsTab
+RegisterTab	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	223	
+WorkflowDetailPanel	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	334	
+AuditTab	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	403	
+HandoffsTab	function	hse	false	component	src/components/sections/HSE/Workflows.tsx	524	
+SeededTemplate	interface	hse	false		src/components/sections/HSE/Workflows.tsx	618	
+SEEDED_TEMPLATES	array	hse	false		src/components/sections/HSE/Workflows.tsx	625	
+WorkflowsArea	function	hse	true	component	src/components/sections/HSE/Workflows.tsx	688	
 ApiResponse	interface	platform	false		src/components/sections/LiveMap/api.ts	12	
 LiveAttendanceRow	interface	platform	true		src/components/sections/LiveMap/api.ts	14	
 LiveResponse	interface	platform	false		src/components/sections/LiveMap/api.ts	39	
@@ -11606,9 +11605,9 @@ TaskCard	function	workflow	false	component,ui-tile	src/components/workflow/Appro
 ApprovalInbox	function	workflow	true	component	src/components/workflow/ApprovalInbox.tsx	31	
 act	function	workflow	false		src/components/workflow/ApprovalInbox.tsx	39	ApprovalInbox
 AuditFeed	function	workflow	true	component	src/components/workflow/AuditFeed.tsx	14	
-TARGET_ICON	object	workflow	false		src/components/workflow/HandoffList.tsx	12	
-STATUS_TONE	object	workflow	false		src/components/workflow/HandoffList.tsx	22	
-HandoffList	function	workflow	true	component	src/components/workflow/HandoffList.tsx	29	
+TARGET_ICON	object	workflow	false		src/components/workflow/HandoffList.tsx	13	
+STATUS_TONE	object	workflow	false		src/components/workflow/HandoffList.tsx	23	
+HandoffList	function	workflow	true	component	src/components/workflow/HandoffList.tsx	30	
 WorkflowDrawer	function	workflow	true	component	src/components/workflow/WorkflowDrawer.tsx	16	
 act	function	workflow	false		src/components/workflow/WorkflowDrawer.tsx	26	WorkflowDrawer
 API_BASE	variable	platform	true		src/config/index.ts	19	
@@ -12507,8 +12506,9 @@ DrawerProps	interface	platform	true		src/ui/components/Drawer.tsx	29
 Drawer	function	platform	true	component	src/ui/components/Drawer.tsx	59	
 HseDrawer	variable	platform	true	component	src/ui/components/Drawer.tsx	134	
 DetailDrawer	variable	platform	true	component	src/ui/components/Drawer.tsx	135	
-EmptyTone	type	platform	true		src/ui/components/EmptyState.tsx	13	
-EmptyStateProps	interface	platform	true		src/ui/components/EmptyState.tsx	15	
+EmptyTone	type	platform	true		src/ui/components/EmptyState.tsx	10	
+EmptyStateSize	type	platform	true		src/ui/components/EmptyState.tsx	11	
+EmptyStateProps	interface	platform	true		src/ui/components/EmptyState.tsx	13	
 EmptyState	function	platform	true	component	src/ui/components/EmptyState.tsx	29	
 initialsOf	function	platform	false		src/ui/components/EntityHead.tsx	13	
 EntityHeadProps	interface	platform	true		src/ui/components/EntityHead.tsx	18	
@@ -13094,6 +13094,12 @@ DEMO_DEPARTMENTS	array	platform	false		src/ui/registry/definitions.tsx	47
 personDef	object	platform	false		src/ui/registry/definitions.tsx	62	
 dialogDef	object	platform	false		src/ui/registry/definitions.tsx	178	
 COMPONENT_DEFS	array	platform	true		src/ui/registry/definitions.tsx	311	
+s	function	platform	false		src/ui/registry/feedback.defs.tsx	9	
+b	function	platform	false		src/ui/registry/feedback.defs.tsx	10	
+emptyStateDef	object	platform	true		src/ui/registry/feedback.defs.tsx	12	
+skeletonDef	object	platform	true		src/ui/registry/feedback.defs.tsx	75	
+spinnerDef	object	platform	true		src/ui/registry/feedback.defs.tsx	114	
+FEEDBACK_DEFS	array	platform	true		src/ui/registry/feedback.defs.tsx	144	
 s	function	platform	false		src/ui/registry/forms.defs.tsx	25	
 b	function	platform	false		src/ui/registry/forms.defs.tsx	26	
 n	function	platform	false		src/ui/registry/forms.defs.tsx	27	
@@ -13115,14 +13121,14 @@ GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	640
 selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	658	
 search	function	platform	false		src/ui/registry/forms.defs.tsx	761	selectDef
 FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	792	
-COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	45	
-CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	55	
-CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	71	
-CategoryGroup	interface	platform	true		src/ui/registry/index.ts	76	
-componentsByCategory	function	platform	true		src/ui/registry/index.ts	90	
-findComponent	function	platform	true		src/ui/registry/index.ts	107	
-RegistryTotals	interface	platform	true		src/ui/registry/index.ts	111	
-registryTotals	function	platform	true		src/ui/registry/index.ts	121	
+COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	46	
+CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	57	
+CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	73	
+CategoryGroup	interface	platform	true		src/ui/registry/index.ts	78	
+componentsByCategory	function	platform	true		src/ui/registry/index.ts	92	
+findComponent	function	platform	true		src/ui/registry/index.ts	109	
+RegistryTotals	interface	platform	true		src/ui/registry/index.ts	113	
+registryTotals	function	platform	true		src/ui/registry/index.ts	123	
 s	function	platform	false		src/ui/registry/navigation.defs.tsx	25	
 b	function	platform	false		src/ui/registry/navigation.defs.tsx	26	
 noop	function	platform	false		src/ui/registry/navigation.defs.tsx	27	

@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
-import { Badge, PageHeader, MetricRow, Tabs, TabPanel, SparkCard, type TabItem, type SparkDef, type BadgeTone } from '@ui';
+import { Badge, EmptyState, ListSkeleton, PageHeader, MetricRow, Tabs, TabPanel, SparkCard, type TabItem, type SparkDef, type BadgeTone } from '@ui';
 import { dialog } from '@lib/dialog';
 import {
   useWorkflowList,
@@ -80,18 +80,6 @@ function isOpenStatus(s: string): boolean {
   return /submitted|in_review|open|awaiting/.test(s);
 }
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
-
-function Skeleton({ rows = 4 }: { rows?: number }): VNode {
-  return (
-    <div style={{ padding: '12px 0' }}>
-      {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} style={{ height: '40px', background: 'rgba(255,255,255,.05)', borderRadius: '6px', marginBottom: '8px' }} class="vt-skeleton" />
-      ))}
-    </div>
-  );
-}
-
 // ── Approvals tab ─────────────────────────────────────────────────────────────
 
 function ApprovalsTab(): VNode {
@@ -155,15 +143,11 @@ function ApprovalsTab(): VNode {
         ))}
       </div>
 
-      {tasksQ.isLoading && <Skeleton />}
+      {tasksQ.isLoading && <ListSkeleton rows={4} avatar={false} />}
       {tasksQ.isError  && <div class="hse-error-bar"><i class="fas fa-triangle-exclamation" /> Failed to load approval tasks.</div>}
 
       {!tasksQ.isLoading && filtered.length === 0 && (
-        <div class="wf-empty">
-          <i class="fas fa-circle-check" />
-          <strong>All clear</strong>
-          <span>No {filter === 'all' ? '' : filter} approval tasks.</span>
-        </div>
+        <EmptyState size="compact" tone="green" icon="fa-circle-check" title="All clear" text={`No ${filter === 'all' ? '' : `${filter} `}approval tasks.`} />
       )}
 
       <div class="wf-inbox-list">
@@ -297,7 +281,7 @@ function RegisterTab(): VNode {
             </select>
           </div>
 
-          {listQ.isLoading && <Skeleton />}
+          {listQ.isLoading && <ListSkeleton rows={4} avatar={false} />}
           {listQ.isError   && <div class="hse-error-bar"><i class="fas fa-triangle-exclamation" /> Failed to load workflows.</div>}
 
           <div class="vt-table-card">
@@ -374,7 +358,7 @@ function WorkflowDetailPanel({ inst, onClose }: { inst: WorkflowInstance; onClos
         </div>
       </div>
 
-      {detailQ.isLoading && <Skeleton rows={3} />}
+      {detailQ.isLoading && <ListSkeleton rows={3} avatar={false} />}
 
       {detail && detail.tasks.length > 0 && (
         <div style={{ marginBottom: '16px' }}>
@@ -471,7 +455,7 @@ function AuditTab(): VNode {
             </div>
           </div>
 
-          {listQ.isLoading && <Skeleton />}
+          {listQ.isLoading && <ListSkeleton rows={4} avatar={false} />}
 
           <div class="vt-table-card">
             <div class="vt-table-scroll">
@@ -510,7 +494,7 @@ function AuditTab(): VNode {
               <span style={{ fontSize: '0.8rem' }}>Select a workflow to view its immutable event log.</span>
             </div>
           ) : detailQ.isLoading ? (
-            <Skeleton rows={5} />
+            <ListSkeleton rows={5} avatar={false} />
           ) : events.length === 0 ? (
             <div style={{ padding: '24px 16px', textAlign: 'center', color: 'rgba(255,255,255,.4)', fontSize: '0.8rem' }}>No events yet.</div>
           ) : (
@@ -572,15 +556,11 @@ function HandoffsTab(): VNode {
         </div>
       </div>
 
-      {handoffsQ.isLoading && <Skeleton />}
+      {handoffsQ.isLoading && <ListSkeleton rows={4} avatar={false} />}
       {handoffsQ.isError   && <div class="hse-error-bar"><i class="fas fa-triangle-exclamation" /> Failed to load handoffs.</div>}
 
       {!handoffsQ.isLoading && handoffs.length === 0 && (
-        <div class="wf-empty">
-          <i class="fas fa-handshake" />
-          <strong>No handoffs yet</strong>
-          <span>Approving an incident workflow emits cross-module handoffs here.</span>
-        </div>
+        <EmptyState size="compact" icon="fa-handshake" title="No handoffs yet" text="Approving an incident workflow emits cross-module handoffs here." />
       )}
 
       {handoffs.length > 0 && (

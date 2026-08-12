@@ -389,18 +389,58 @@ The nine `HrfinPageHeader` consumers remain named migration debt. They do not
 justify another broad header sweep; migrate them only when their owning feature
 is naturally touched. The next canonical component is EmptyState.
 
+## EmptyState / Skeleton / Loading programme — frozen
+
+Canonical feedback states and the clean workflow family are complete:
+
+- promoted EmptyState into a component-owned recipe with default/compact sizes,
+  Font Awesome or canonical icon nodes, configurable heading level and opt-in
+  status/alert announcement semantics;
+- retained static absence as quiet content by default rather than making every
+  empty card an unsolicited live-region announcement;
+- registered the existing canonical Skeleton shape family and compact Spinner,
+  and corrected Spinner so an omitted visible label still has a screen-reader
+  loading name;
+- migrated the complete platform/HSE workflow family from two conflicting
+  `.wf-empty` systems to canonical EmptyState and Spinner;
+- deleted HSE Workflows' module-local Skeleton and migrated all six cold paths
+  to canonical ListSkeleton, reducing module-local primitives from 26 to 25;
+- deleted both `.wf-empty` CSS definitions and moved EmptyState's base, navy
+  drawer and light Finance drawer styling into its canonical recipe;
+- passed all four focused tests with zero new lint errors, held the 49-error
+  known frontend typecheck baseline and browser-verified default and compact
+  treatments, semantic headings, dark-drawer contrast, the loading status and
+  three aria-hidden skeleton rows;
+- catalogue completeness is now 45% (23 canonical components). The newly
+  registered `.hrfin-empty` and `.obx-empty` debt is measured but is not a
+  mandate for another broad migration sweep.
+
+Feedback-state classification is now frozen:
+
+```text
+EmptyState canonical system    COMPLETE
+Skeleton canonical system      COMPLETE
+Spinner / Loading system       COMPLETE
+Clean workflow family          COMPLETE
+Dirty/local empty states       RECORDED DEBT
+```
+
+The exact local EmptyState debt remains in `PermitDetailDrawer.tsx`,
+`HazardDrawer.tsx`, `JsaDrawer.tsx` and `RiskAssessmentDrawer.tsx`; those HSE
+files were already deferred for existing blockers. Broader `.hrfin-empty` and
+`.obx-empty` text states migrate only during natural feature work. The next
+canonical family is Checkbox / RadioGroup / Switch.
+
 ## Remaining programme
 
 The overall mandate is not yet complete. Continue automatically:
 
-1. EmptyState
-2. Skeleton / Loading
-3. Checkbox / RadioGroup / Switch
-4. Menu
-5. remaining small registered canonical components
-6. polished UI Kit Studio interface
-7. Brand Theme application preview at all required breakpoints
-8. final full-suite and browser verification gate
+1. Checkbox / RadioGroup / Switch
+2. Menu
+3. remaining small registered canonical components
+4. polished UI Kit Studio interface
+5. Brand Theme application preview at all required breakpoints
+6. final full-suite and browser verification gate
 
 No component should chase mathematical zero. Exact dirty files and genuine
 domain/interaction exceptions remain recorded debt; clean generic migration is

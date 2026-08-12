@@ -11,7 +11,7 @@ import { useState } from 'preact/hooks';
 import { useMyWorkflowTasks, useDecideWorkflowTask, type WorkflowTask } from '@api/workflows';
 import { statusBadgeTone, statusLabel } from '@lib/workflow';
 import type { WorkflowStatus } from '@lib/workflow/types';
-import { Badge } from '@ui';
+import { Badge, EmptyState, Spinner } from '@ui';
 
 function TaskCard({ task, onOpen }: { task: WorkflowTask; onOpen: (t: WorkflowTask) => void }): VNode {
   const inst = task.workflow_instances;
@@ -44,13 +44,13 @@ export function ApprovalInbox(): VNode {
   }
 
   if (tasksQ.isLoading) {
-    return <div class="wf-inbox"><div class="wf-empty"><i class="fas fa-spinner fa-spin" /><div><strong>Loading approvals…</strong></div></div></div>;
+    return <div class="wf-inbox"><Spinner label="Loading approvals…" center /></div>;
   }
 
   return (
     <div class="wf-inbox">
       {tasks.length === 0 ? (
-        <div class="wf-empty"><i class="fas fa-inbox" /><div><strong>No approvals waiting</strong><p>Submitted workflows route here for a decision.</p></div></div>
+        <EmptyState size="compact" icon="fa-inbox" title="No approvals waiting" text="Submitted workflows route here for a decision." />
       ) : tasks.map(t => <TaskCard key={t.id} task={t} onOpen={setActive} />)}
 
       {active && (

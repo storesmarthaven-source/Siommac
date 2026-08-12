@@ -2,9 +2,9 @@
 
 # hse Module Map
 
-Source fingerprint: `7d4cd0fad026b8a9d0c7e4c0`
+Source fingerprint: `2e0983cca10b4809915121e3`
 
-Files: 89 | Symbols: 1279 | Widgets: 0 | Unique mounted endpoints: 144 | Route definitions: 144 mounted + 0 unmounted | API calls: 107 | DB objects: 65 | E2E suites: 4
+Files: 89 | Symbols: 1278 | Widgets: 0 | Unique mounted endpoints: 144 | Route definitions: 144 mounted + 0 unmounted | API calls: 107 | DB objects: 65 | E2E suites: 4
 
 ## Widgets and Tiles
 
@@ -514,7 +514,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HSE/RiskJsa.tsx` | 636 |
 | frontend-page | `src/components/sections/HSE/Toolbox.tsx` | 236 |
 | frontend-page | `src/components/sections/HSE/Training.tsx` | 251 |
-| frontend-page | `src/components/sections/HSE/Workflows.tsx` | 766 |
+| frontend-page | `src/components/sections/HSE/Workflows.tsx` | 746 |
 | frontend-page | `src/components/sections/HSE/canonicalDialogMigration.test.ts` | 31 |
 | frontend-page | `src/components/sections/HSE/canonicalTabsMigration.test.ts` | 34 |
 | frontend-page | `src/components/sections/HSE/index.ts` | 10 |

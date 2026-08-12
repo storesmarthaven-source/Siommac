@@ -213,7 +213,7 @@ export {
   type WidgetSkeletonVariant,
 } from './components/Skeleton';
 export { Spinner, type SpinnerProps } from './components/Spinner';
-export { EmptyState, type EmptyStateProps, type EmptyTone } from './components/EmptyState';
+export { EmptyState, type EmptyStateProps, type EmptyStateSize, type EmptyTone } from './components/EmptyState';
 
 // ── Widget library (v2: instance/zone board + preview-on-board) lives under '@ui/widgets' ──
 

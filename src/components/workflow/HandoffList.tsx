@@ -8,6 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useHandoffList } from '@api/workflows';
+import { EmptyState, Spinner } from '@ui';
 
 const TARGET_ICON: Record<string, string> = {
   finance:   'fa-file-invoice-dollar',
@@ -32,15 +33,15 @@ export function HandoffList({ limit }: { limit?: number }): VNode {
   const rows      = limit ? all.slice(0, limit) : all;
 
   if (handoffsQ.isLoading) {
-    return <div class="wf-handoffs"><div class="wf-empty"><i class="fas fa-spinner fa-spin" /><div><strong>Loading handoffs…</strong></div></div></div>;
+    return <div class="wf-handoffs"><Spinner label="Loading handoffs…" center /></div>;
   }
 
   return (
     <div class="wf-handoffs">
       {rows.length === 0 ? (
-        <div class="wf-empty"><i class="fas fa-right-left" /><div><strong>No handoffs yet</strong><p>Approved workflows hand off cost and impact to other modules.</p></div></div>
+        <EmptyState size="compact" icon="fa-right-left" title="No handoffs yet" text="Approved workflows hand off cost and impact to other modules." />
       ) : rows.map(h => {
-        const tone = STATUS_TONE[h.status] ?? STATUS_TONE.pending!;
+        const tone = STATUS_TONE[h.status] ?? { bg: 'rgba(245,158,11,.15)', color: '#fcd34d', label: 'Pending' };
         return (
           <article class="wf-handoff" key={h.id}>
             <i class={`fas ${TARGET_ICON[h.target_module] ?? 'fa-right-left'}`} />

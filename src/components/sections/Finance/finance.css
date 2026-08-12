@@ -943,7 +943,6 @@ body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-stat-line,
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-stat-line strong,
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-field-row-value,
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-mini-table td,
-body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-title,
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-activity-title,
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-entity-name h2,
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-wf-mini-text { color: var(--surface-text); }
@@ -954,8 +953,6 @@ body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-stat > small,
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-field-row-label,
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-mini-table th,
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-empty,
-body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-text,
-body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-note,
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-entity-meta,
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-entity-ref,
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-activity-desc,
@@ -1029,12 +1026,7 @@ body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-pill.amber  { backgroun
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-pill.red    { background: #fdeaea; color: #b91c1c; }
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-pill.purple { background: #f1ecfe; color: #6d28d9; }
 
-/* Empty-state icon washes */
-body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-icon.tone-blue   { background: #e6efff; color: #2563eb; }
-body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-icon.tone-amber  { background: #fdf1dd; color: #b45309; }
-body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-icon.tone-green  { background: #e3f7ea; color: #15803d; }
-body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-icon.tone-purple { background: #f1ecfe; color: #6d28d9; }
-body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-icon.tone-gray   { background: #eef1f7; color: #475569; }
+/* Activity / workflow accents */
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-activity-icon,
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-wf-mini-eye { color: var(--surface-focus); }
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-wf-mini-ico { background: var(--surface-accent-bg); color: var(--surface-accent-text); }

@@ -9,7 +9,7 @@ import { type VNode } from 'preact';
 import { useWorkflowList } from '@api/workflows';
 import { statusBadgeTone, statusLabel } from '@lib/workflow';
 import type { WorkflowStatus } from '@lib/workflow/types';
-import { Badge } from '@ui';
+import { Badge, EmptyState, Spinner } from '@ui';
 
 export function AuditFeed({ limit }: { limit?: number }): VNode {
   const listQ   = useWorkflowList({ limit: limit ?? 50 });
@@ -17,13 +17,13 @@ export function AuditFeed({ limit }: { limit?: number }): VNode {
   const rows    = limit ? workflows.slice(0, limit) : workflows;
 
   if (listQ.isLoading) {
-    return <div class="wf-audit"><div class="wf-empty"><i class="fas fa-spinner fa-spin" /><div><strong>Loading audit log…</strong></div></div></div>;
+    return <div class="wf-audit"><Spinner label="Loading audit log…" center /></div>;
   }
 
   return (
     <div class="wf-audit">
       {rows.length === 0 ? (
-        <div class="wf-empty"><i class="fas fa-shield-halved" /><div><strong>No audit events yet</strong><p>Every workflow decision is logged here.</p></div></div>
+        <EmptyState size="compact" icon="fa-shield-halved" title="No audit events yet" text="Every workflow decision is logged here." />
       ) : rows.map(w => (
         <article class="wf-audit-row" key={w.id}>
           <i class="fas fa-shield-halved" />

@@ -1,0 +1,62 @@
+@layer recipes {
+  :root,
+  [data-ui-preview-scope] {
+    --ui-empty-padding: 30px 20px;
+    --ui-empty-gap: 11px;
+    --ui-empty-max-width: 420px;
+    --ui-empty-icon-size: 56px;
+    --ui-empty-icon-font-size: 22px;
+    --ui-empty-title-size: 15px;
+    --ui-empty-title-color: #0f172a;
+    --ui-empty-text-color: #475569;
+    --ui-empty-note-color: #94a3b8;
+  }
+
+  .ui-empty { display: grid; place-items: center; text-align: center; padding: var(--ui-empty-padding); }
+  .ui-empty--compact {
+    --ui-empty-padding: 18px 16px;
+    --ui-empty-gap: 8px;
+    --ui-empty-icon-size: 42px;
+    --ui-empty-icon-font-size: 17px;
+  }
+  .ui-empty-inner { display: grid; justify-items: center; gap: var(--ui-empty-gap); max-width: var(--ui-empty-max-width); }
+  .ui-empty-icon {
+    width: var(--ui-empty-icon-size); height: var(--ui-empty-icon-size); border-radius: 50%;
+    display: grid; place-items: center; font-size: var(--ui-empty-icon-font-size); flex: none;
+  }
+  .ui-empty-icon.tone-blue { background: #e8f1ff; color: #0b55d8; }
+  .ui-empty-icon.tone-amber { background: #fffbeb; color: #b45309; }
+  .ui-empty-icon.tone-green { background: #ecfdf5; color: #15803d; }
+  .ui-empty-icon.tone-purple { background: #f5f3ff; color: #7c3aed; }
+  .ui-empty-icon.tone-gray { background: #f1f5f9; color: #64748b; }
+  .ui-empty-title {
+    margin: 2px 0 0; font-size: var(--ui-empty-title-size); font-weight: var(--font-weight-bold, 700);
+    color: var(--ui-empty-title-color); letter-spacing: -.01em;
+  }
+  .ui-empty-text, .ui-empty-note { margin: 0; line-height: 1.45; }
+  .ui-empty-text { font-size: 13px; color: var(--ui-empty-text-color); }
+  .ui-empty-note { font-size: 11.5px; color: var(--ui-empty-note-color); }
+  .ui-empty-actions { margin-top: 6px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+  .ui-rdrawer .ui-empty {
+    --ui-empty-title-color: #fff;
+    --ui-empty-text-color: rgba(226,238,252,.82);
+    --ui-empty-note-color: rgba(226,238,252,.60);
+  }
+  .ui-rdrawer .ui-empty-icon.tone-blue { background: rgba(204,227,255,.22); color: #bfdbfe; }
+  .ui-rdrawer .ui-empty-icon.tone-amber { background: rgba(251,191,36,.22); color: #fde68a; }
+  .ui-rdrawer .ui-empty-icon.tone-green { background: rgba(134,239,172,.20); color: #bbf7d0; }
+  .ui-rdrawer .ui-empty-icon.tone-purple { background: rgba(196,181,253,.22); color: #ddd6fe; }
+  .ui-rdrawer .ui-empty-icon.tone-gray { background: rgba(255,255,255,.10); color: rgba(226,238,252,.82); }
+
+  body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty {
+    --ui-empty-title-color: var(--surface-text);
+    --ui-empty-text-color: var(--surface-muted);
+    --ui-empty-note-color: var(--surface-muted);
+  }
+  body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-icon.tone-blue { background: #e6efff; color: #2563eb; }
+  body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-icon.tone-amber { background: #fdf1dd; color: #b45309; }
+  body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-icon.tone-green { background: #e3f7ea; color: #15803d; }
+  body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-icon.tone-purple { background: #f1ecfe; color: #6d28d9; }
+  body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-empty-icon.tone-gray { background: #eef1f7; color: #475569; }
+}

@@ -11,7 +11,7 @@ import { useState } from 'preact/hooks';
 import { useWorkflow, useDecideWorkflowTask } from '@api/workflows';
 import { statusBadgeTone, statusLabel, priorityBadgeTone } from '@lib/workflow';
 import type { WorkflowStatus, Priority } from '@lib/workflow/types';
-import { Badge } from '@ui';
+import { Badge, Spinner } from '@ui';
 
 export function WorkflowDrawer({ workflowId, onClose }: { workflowId: string | null; onClose: () => void }): VNode {
   const detailQ = useWorkflow(workflowId ?? '');
@@ -43,9 +43,7 @@ export function WorkflowDrawer({ workflowId, onClose }: { workflowId: string | n
         </div>
 
         <div class="hse-drawer-body">
-          {detailQ.isLoading && (
-            <div class="wf-empty"><i class="fas fa-spinner fa-spin" /><div><strong>Loading…</strong></div></div>
-          )}
+          {detailQ.isLoading && <Spinner label="Loading workflow…" center />}
           {instance && (
             <>
               <div class="hse-drawer-grid">

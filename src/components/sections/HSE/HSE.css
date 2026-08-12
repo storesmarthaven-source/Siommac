@@ -1036,15 +1036,6 @@ body[data-theme="dark"] .ppe-hero-panel .stat-card-icon.gold  { background: rgba
   background: var(--siomac-navy); color: #fff; border-color: var(--siomac-navy);
 }
 
-/* Empty state */
-.wf-empty {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 8px; padding: 48px 20px; text-align: center;
-}
-.wf-empty i { font-size: 2rem; color: var(--siomac-navy); opacity: 0.25; display: grid !important; place-items: center !important; }
-.wf-empty strong { font-size: 0.9rem; color: var(--text-primary); }
-.wf-empty span { font-size: 0.78rem; color: var(--text-muted); max-width: 320px; }
-
 /* Approvals inbox cards */
 .wf-inbox-list { display: flex; flex-direction: column; gap: 12px; }
 
