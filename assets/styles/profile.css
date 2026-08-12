@@ -144,17 +144,6 @@
 .rat-dept { font-size: 12px; color: var(--text-muted); background: var(--bg-subtle); padding: 2px 8px; border-radius: 20px; display: inline-block; }
 .rat-time { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--text-primary); }
 
-/* Status badges for recent activity */
-.rat-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 4px 10px; border-radius: 40px;
-  font-size: 11.5px; font-weight: 600;
-}
-.rat-present { background: rgba(46,125,50,0.1);  color: #1b5e20; }
-.rat-out     { background: rgba(27,45,85,0.1);   color: var(--siomac-navy); }
-.rat-late    { background: rgba(198,124,0,0.12); color: #7a5900; }
-.rat-absent  { background: rgba(198,40,40,0.1);  color: #b71c1c; }
-
 /* ─── Sections (formerly tab panes) ─── */
 .app-section { display: none; }
 .app-section.active { display: block; animation: fadeIn .18s ease; }

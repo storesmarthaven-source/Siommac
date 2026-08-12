@@ -129,12 +129,6 @@
 .hrfin tbody tr.is-clickable { cursor:pointer; }
 .hrfin tbody tr.is-clickable:hover { background:var(--surface-soft); }
 .hrfin td button { border:0; background:transparent; color:var(--muted); cursor:pointer; }
-.hrfin .hrfin-status { display:inline-flex; align-items:center; min-height:22px; border-radius:999px; padding:3px 9px; font-size:12px; font-weight:650; }
-.hrfin .hrfin-status.is-success { background:var(--success-soft); color:var(--success); }
-.hrfin .hrfin-status.is-danger { background:var(--danger-soft); color:var(--danger); }
-.hrfin .hrfin-status.is-warning { background:var(--warning-soft); color:var(--warning); }
-.hrfin .hrfin-status.is-info { background:var(--info-soft); color:var(--info); }
-.hrfin .hrfin-status.is-muted { background:var(--row); color:var(--muted); }
 .hrfin .hrfin-pager { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-top:1px solid var(--row); color:var(--muted); }
 .hrfin .hrfin-pager div { display:flex; gap:6px; align-items:center; }
 .hrfin .hrfin-pager button { min-width:30px; height:30px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--muted); cursor:pointer; font-family:inherit; }

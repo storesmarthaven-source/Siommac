@@ -2,9 +2,11 @@
  * src/components/sections/Finance/financeShared.ts
  *
  * Small shared helpers for the Finance pages — money/percent/date formatting,
- * status → pill-tone mapping, and label humanization. Kept dependency-free so both
- * the Statutory and Payroll overviews can import it.
+ * status → pill-tone mapping, and label humanization. Kept free of runtime
+ * dependencies so both the Statutory and Payroll overviews can import it.
  */
+
+import type { BadgeTone } from '@ui';
 
 const MONEY = new Intl.NumberFormat('en-TT', { style: 'currency', currency: 'TTD', minimumFractionDigits: 2 });
 
@@ -43,7 +45,7 @@ export function toRoman(n: number | null | undefined): string {
   return out;
 }
 
-/** Lifecycle status → obx-pill tone. */
+/** Legacy lifecycle colour vocabulary retained for the remaining raw consumers. */
 export function statusTone(status: string): string {
   switch (status) {
     case 'active':
@@ -65,5 +67,15 @@ export function statusTone(status: string): string {
       return 'red';
     default:
       return 'gray';
+  }
+}
+
+/** The same lifecycle decision expressed in canonical Badge vocabulary. */
+export function statusBadgeTone(status: string): BadgeTone {
+  switch (statusTone(status)) {
+    case 'green': return 'success';
+    case 'amber': return 'warning';
+    case 'red': return 'danger';
+    default: return 'neutral';
   }
 }

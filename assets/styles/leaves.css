@@ -113,31 +113,6 @@
 .lv-dept-label { font-size: 0.75rem; color: var(--text-muted); text-align: left; }
 .lv-reason-cell { max-width: 180px; color: var(--text-muted); font-size: 0.78rem; text-align: center; }
 
-/* Days pill */
-.lv-days-pill {
-  background: rgba(27,45,85,.08); color: var(--siomac-navy);
-  padding: 2px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600;
-}
-
-/* Type badges */
-.lv-type-badge {
-  display: inline-block; padding: 4px 12px; border-radius: 30px;
-  font-size: 0.68rem; font-weight: var(--font-weight-bold); white-space: nowrap;
-}
-.lv-type-sick    { background: #FFEBEE; color: #C62828; }
-.lv-type-casual  { background: #E3F2FD; color: #1565C0; }
-.lv-type-annual  { background: #E8F5E9; color: #2E7D32; }
-.lv-type-medical { background: #FFF3E0; color: #EF6C00; }
-
-/* Status badges */
-.lv-status-badge {
-  display: inline-block; padding: 4px 12px; border-radius: 30px;
-  font-size: 0.68rem; font-weight: var(--font-weight-bold); white-space: nowrap;
-}
-.lv-status-pending  { background: #FFF8E1; color: #F57C00; }
-.lv-status-approved { background: #E8F5E9; color: #2E7D32; }
-.lv-status-rejected { background: #FFEBEE; color: #C62828; }
-
 /* Pill action buttons with labels */
 .lv-action-btns { display: flex; gap: 6px; flex-wrap: wrap; padding: 2px 0; }
 .lv-act-btn {

@@ -319,12 +319,7 @@
 .totp-card-info { flex: 1; min-width: 0; }
 .totp-card-title { font-size: 0.9rem; font-weight: var(--font-weight-bold); color: var(--text-primary, #111); }
 .totp-card-desc  { font-size: 0.78rem; color: var(--text-secondary, #6b7280); margin-top: 3px; line-height: 1.5; }
-.totp-badge {
-  flex-shrink: 0; border-radius: 20px; padding: 3px 12px;
-  font-size: 0.72rem; font-weight: var(--font-weight-bold); letter-spacing: .03em;
-}
-.totp-badge--on  { background: #d1fae5; color: #065f46; }
-.totp-badge--off { background: #f3f4f6; color: #6b7280; }
+.totp-card-header > .ui-badge { flex-shrink: 0; }
 
 .totp-enrolled-meta {
   display: flex; flex-wrap: wrap; gap: 12px;
@@ -376,11 +371,6 @@
 .stg-set-desc { font-size: 0.76rem; color: var(--text-secondary, #6b7280); margin-top: 3px; line-height: 1.5; }
 .stg-set-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
 
-.stg-set-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.62rem; font-weight: var(--font-weight-bold); padding: 1px 7px; border-radius: 20px; letter-spacing: .02em; }
-.stg-set-badge.crit  { background: #fef2f2; color: #b91c1c; }
-.stg-set-badge.sens  { background: #fff7ed; color: #b45309; }
-.stg-set-badge.audit { background: #eff6ff; color: #1d4ed8; }
-
 .stg-set-source { font-size: 0.64rem; font-weight: var(--font-weight-bold); padding: 1px 8px; border-radius: 20px; letter-spacing: .03em; text-transform: uppercase; }
 .stg-set-source.over { background: rgba(27,45,85,.10); color: var(--siomac-navy, #1B2D55); }
 .stg-set-source.def  { background: #f3f4f6; color: #9ca3af; }
@@ -391,10 +381,6 @@
 .stg-set-control .stg-set-input { width: 100%; }
 .stg-set-control .stg-set-textarea { text-align: left; }
 .stg-set-ro-val { font-size: 0.82rem; color: var(--text-secondary, #6b7280); text-align: right; word-break: break-word; }
-.stg-set-ro-pill { font-size: 0.72rem; font-weight: var(--font-weight-bold); padding: 2px 12px; border-radius: 20px; }
-.stg-set-ro-pill.on  { background: #d1fae5; color: #065f46; }
-.stg-set-ro-pill.off { background: #f3f4f6; color: #6b7280; }
-
 .stg-set-actions { display: flex; justify-content: center; }
 .stg-set-reset {
   width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border, #d8e0ec);

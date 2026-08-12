@@ -10,6 +10,7 @@
 import { type ComparisonSet } from '../types';
 import { DataTable, type DataTableColumn } from '../../data/DataTable';
 import { HrfinTable, type HrfinColumn } from '../../hrfin/HrfinTable';
+import { HrfinPill } from '../../hrfin/HrfinPill';
 import { Badge } from '../../primitives/Badge';
 import { Button } from '../../primitives/Button';
 import { PersonCell } from '../../table/PersonCell';
@@ -54,7 +55,7 @@ export const DATA_TABLE_COMPARISON: ComparisonSet = {
                   <tr key={p.id}>
                     <td><b>{p.name}</b></td>
                     <td class="obx-meta">{p.dept}</td>
-                    <td><span class="obx-pill blue">{LABEL[p.status]}</span></td>
+                    <td><Badge tone="info">{LABEL[p.status]}</Badge></td>
                     <td><div class="obx-rowbtns">
                       <button type="button" class="obx-mini">Edit</button>
                       <button type="button" class="obx-mini">Open</button>
@@ -87,7 +88,7 @@ export const DATA_TABLE_COMPARISON: ComparisonSet = {
             columns={[
               { key: 'name', label: 'Employee', sortable: true, render: r => <b>{r.name}</b> },
               { key: 'dept', label: 'Department', render: r => r.dept },
-              { key: 'status', label: 'Status', render: r => <span class={`hrfin-pill is-${r.status === 'active' ? 'success' : 'muted'}`}>{LABEL[r.status]}</span> },
+              { key: 'status', label: 'Status', render: r => <HrfinPill tone={r.status === 'active' ? 'ok' : 'dr'}>{LABEL[r.status]}</HrfinPill> },
               { key: 'start', label: 'Started', render: r => r.start },
             ] as HrfinColumn<Person>[]}
             rows={PEOPLE}

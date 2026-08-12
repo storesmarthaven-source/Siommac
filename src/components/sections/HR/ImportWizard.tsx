@@ -12,7 +12,7 @@
 import { type VNode, type ComponentChildren } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { useQueryClient } from '@tanstack/preact-query';
-import { WizardShell, type WizardStepDef } from '@ui';
+import { Badge, WizardShell, type BadgeTone, type WizardStepDef } from '@ui';
 import { hrImportApi, type ImportMode, type ImportPolicy, type ImportUploadResult, type ImportValidateSummary, type ImportReport } from '@api/hr/employeeImport';
 import { useHrOrgUnits, useHrSites } from '@api/hr/employees';
 import { hrEmployeeKeys } from '@api/queryKeys';
@@ -75,6 +75,17 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 const cap = (s: string) => s.replace(/[_-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+function mappingTone(mapped: boolean, required: boolean | undefined): BadgeTone {
+  if (mapped) return 'success';
+  return required ? 'warning' : 'neutral';
+}
+
+function exceptionTone(status: string): BadgeTone {
+  if (status === 'blocked') return 'danger';
+  if (status === 'duplicate') return 'accent';
+  return 'warning';
+}
 
 function Fld({ label, children, full }: { label: string; children: ComponentChildren; full?: boolean }): VNode {
   return <div class={`form-field ${full ? 'full' : ''}`}><label>{label}</label>{children}</div>;
@@ -264,7 +275,7 @@ export function ImportWizard({ onClose, onToast }: { onClose: () => void; onToas
                       </select>
                     </td>
                     <td>{f.required ? 'Required' : 'Optional'}</td>
-                    <td><span class={`pill ${mapping[f.key] ? 'green' : f.required ? 'amber' : 'gray'}`}>{mapping[f.key] ? 'Mapped' : f.required ? 'Required' : 'Unmapped'}</span></td>
+                    <td><Badge tone={mappingTone(Boolean(mapping[f.key]), f.required)}>{mapping[f.key] ? 'Mapped' : f.required ? 'Required' : 'Unmapped'}</Badge></td>
                   </tr>
                 ))}
               </tbody>
@@ -294,7 +305,7 @@ export function ImportWizard({ onClose, onToast }: { onClose: () => void; onToas
                   <tr>
                     <td>{r.row_no}</td>
                     <td>{`${r.mapped_data.firstName ?? ''} ${r.mapped_data.lastName ?? ''}`.trim() || '—'}</td>
-                    <td><span class={`pill ${r.status === 'blocked' ? 'red' : r.status === 'duplicate' ? 'purple' : 'amber'}`}>{cap(r.status)}</span></td>
+                    <td><Badge tone={exceptionTone(r.status)}>{cap(r.status)}</Badge></td>
                     <td>{(errorsByRow.get(r.id) ?? []).join('; ') || '—'}</td>
                     <td><div class="ui-mini-btn-row">
                       {r.status === 'warning' && <button class="ui-mini-btn" type="button" disabled={busy} onClick={() => resolve(r.id, 'ignore')}>Ignore</button>}

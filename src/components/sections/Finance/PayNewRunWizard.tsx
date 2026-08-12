@@ -34,6 +34,7 @@ import {
   type InputSourceReadiness,
 } from '@api/finance/payroll';
 import { runsRegisterApi } from '@api/finance/payrollRunsRegister';
+import { Badge, type BadgeTone } from '@ui';
 import { PayrollPanelState } from './payRunDetail/PanelState';
 import './payrunWizard.css';
 
@@ -55,8 +56,8 @@ const RUN_TYPES: { value: PayrollRunType; title: string; desc: string }[] = [
 ];
 
 // Population-reconciliation rule presentation (Slice 2)
-const RECON_STATE_PILL: Record<PopulationReconciliationRule['state'], string> = {
-  included: 'green', warning: 'amber', review: 'blue', blocker: 'red',
+const RECON_STATE_TONE: Record<PopulationReconciliationRule['state'], BadgeTone> = {
+  included: 'success', warning: 'warning', review: 'info', blocker: 'danger',
 };
 const RECON_STATE_LABEL: Record<PopulationReconciliationRule['state'], string> = {
   included: 'Included', warning: 'Warning', review: 'Review', blocker: 'Blocker',
@@ -75,8 +76,8 @@ const READINESS_ICON: Record<InputSourceReadiness['state'], string> = {
 const READINESS_LABEL: Record<InputSourceReadiness['state'], string> = {
   ready: 'Ready', pending: 'Awaiting approval', review: 'Needs review',
 };
-const READINESS_PILL: Record<InputSourceReadiness['state'], string> = {
-  ready: 'green', pending: 'amber', review: 'red',
+const READINESS_TONE: Record<InputSourceReadiness['state'], BadgeTone> = {
+  ready: 'success', pending: 'warning', review: 'danger',
 };
 
 const STEPS = [
@@ -447,16 +448,16 @@ export function PayNewRunWizard({
       {step === 3 && (
         <div class="pcrw-content">
           <section class="card">
-            <div class="sec-head"><div class="sec-ico">4</div><div><div class="sec-title">Statutory configuration snapshot</div><div class="sec-sub">The active statutory version is resolved from the pay date and permanently stamped on the run.</div></div><div class="aux"><span class="pill green">Auto-pinned</span></div></div>
+            <div class="sec-head"><div class="sec-ico">4</div><div><div class="sec-title">Statutory configuration snapshot</div><div class="sec-sub">The active statutory version is resolved from the pay date and permanently stamped on the run.</div></div><div class="aux"><Badge tone="success">Auto-pinned</Badge></div></div>
             <div class="panel-body stack">
               <div class="field-grid">
                 <div class="field-group"><label>Jurisdiction</label><div class="ro">Trinidad &amp; Tobago</div></div>
                 <div class="field-group"><label>Resolved version</label><div class="ro">Active TT statutory version</div><span class="hint">Resolved and stamped server-side at creation from Statutory Configuration.</span></div>
               </div>
               <div class="field-grid three">
-                <div class="card panel-body" style={{ borderRadius: 10 }}><span class="pill blue">PAYE</span><div style={{ fontWeight: 700, marginTop: 6 }}>Income tax</div><div class="sec-sub">Personal allowance + band rates.</div></div>
-                <div class="card panel-body" style={{ borderRadius: 10 }}><span class="pill blue">NIS</span><div style={{ fontWeight: 700, marginTop: 6 }}>National Insurance</div><div class="sec-sub">Weekly class table, EE/ER rates.</div></div>
-                <div class="card panel-body" style={{ borderRadius: 10 }}><span class="pill blue">HS</span><div style={{ fontWeight: 700, marginTop: 6 }}>Health Surcharge</div><div class="sec-sub">Weekly/monthly thresholds.</div></div>
+                <div class="card panel-body" style={{ borderRadius: 10 }}><Badge tone="info">PAYE</Badge><div style={{ fontWeight: 700, marginTop: 6 }}>Income tax</div><div class="sec-sub">Personal allowance + band rates.</div></div>
+                <div class="card panel-body" style={{ borderRadius: 10 }}><Badge tone="info">NIS</Badge><div style={{ fontWeight: 700, marginTop: 6 }}>National Insurance</div><div class="sec-sub">Weekly class table, EE/ER rates.</div></div>
+                <div class="card panel-body" style={{ borderRadius: 10 }}><Badge tone="info">HS</Badge><div style={{ fontWeight: 700, marginTop: 6 }}>Health Surcharge</div><div class="sec-sub">Weekly/monthly thresholds.</div></div>
               </div>
               <div class="banner info"><div class="b-ico">i</div><div><div class="b-title">Version is immutable once stamped</div><div class="b-sub">To change the basis, activate a different statutory version in Statutory Configuration before creating this run.</div></div></div>
             </div>
@@ -505,7 +506,7 @@ export function PayNewRunWizard({
                                   <td><strong>{r.label}</strong><div class="cell-sub">{r.rule}</div></td>
                                   <td class="num">{r.count}</td>
                                   <td>{RECON_OWNER_LABEL[r.ownerRole]}</td>
-                                  <td><span class={`pill ${RECON_STATE_PILL[r.state]}`}>{RECON_STATE_LABEL[r.state]}</span></td>
+                                  <td><Badge tone={RECON_STATE_TONE[r.state]}>{RECON_STATE_LABEL[r.state]}</Badge></td>
                                   <td>{r.count > 0 && r.action ? r.action : '—'}</td>
                                 </tr>
                               ))}
@@ -572,7 +573,7 @@ export function PayNewRunWizard({
                           <strong>{s.label}</strong>
                           <small>{s.records} record{s.records === 1 ? '' : 's'} · {RECON_OWNER_LABEL[s.ownerRole]} · {s.freshnessAt ? `updated ${s.freshnessAt.slice(0, 10)}` : 'no dated feed'}</small>
                         </div>
-                        <span class={`pill ${READINESS_PILL[s.state]}`}>{READINESS_LABEL[s.state]}</span>
+                        <Badge tone={READINESS_TONE[s.state]}>{READINESS_LABEL[s.state]}</Badge>
                       </div>
                     ))}
             </div>

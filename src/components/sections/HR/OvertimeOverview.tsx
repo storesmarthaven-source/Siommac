@@ -12,12 +12,12 @@ import { type VNode } from 'preact';
 import { useMemo, useRef, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { can } from '@lib/permissions';
-import { PageHeader, EmptyState, Button } from '@ui';
+import { Badge, PageHeader, EmptyState, Button } from '@ui';
 import { useOvertimeEntries, useOvertimeMutation, hrOvertimeApi, type OvertimeEntry, type OvertimeType } from '@api/hr/overtime';
 import { openActionModal, rejectAction, cancelAction, toActionRecord, statusBadge } from '@/components/common/actions';
 import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import { useHrEmployees, type HrEmployeeRow } from '@api/hr/employees';
-import { fmtDate, humanize, statusTone } from '../Finance/financeShared';
+import { fmtDate, humanize, statusBadgeTone } from '../Finance/financeShared';
 import '../Finance/finance.css';
 import { HRQueryNotice } from './HRQueryState';
 
@@ -121,7 +121,7 @@ export function OvertimeOverview(): VNode {
                   <td class="obx-meta">{e.hours}</td>
                   <td class="obx-meta">{e.multiplier}×</td>
                   <td class="obx-meta">{e.reason ?? '—'}</td>
-                  <td><span class={`obx-pill ${statusTone(e.status)}`}>{humanize(e.status)}</span></td>
+                  <td><Badge tone={statusBadgeTone(e.status)}>{humanize(e.status)}</Badge></td>
                   <td style={{ textAlign: 'right' }}>
                     <div class="obx-rowbtns" style={{ justifyContent: 'flex-end' }}>
                       {canApprove && e.status === 'submitted' && (

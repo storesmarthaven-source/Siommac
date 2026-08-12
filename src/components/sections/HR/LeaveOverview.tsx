@@ -12,7 +12,7 @@ import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components
 import { toast } from '@store';
 import { can } from '@lib/permissions';
 import { useSessionStore } from '@store/session';
-import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, Button } from '@ui';
+import { Badge, PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, Button, type BadgeTone } from '@ui';
 import {
   useMyLeaveRequests, useAllLeaveRequests, useLeaveTypes, useLeaveStats, useLeaveBalances,
   useSubmitLeave, useApproveLeave, useRejectLeave, useCancelLeave,
@@ -29,11 +29,10 @@ const STATUS_OPTIONS: { v: LeaveStatus | 'all'; label: string }[] = [
   { v: 'cancelled', label: 'Cancelled' },
 ];
 
-function statusTone(s: LeaveStatus): 'green' | 'orange' | 'red' | 'gray' {
-  if (s === 'approved')         return 'green';
-  if (s === 'pending_approval') return 'orange';
-  if (s === 'rejected')         return 'red';
-  return 'gray';
+function statusTone(s: LeaveStatus): BadgeTone {
+  if (s === 'approved') return 'success';
+  if (s === 'rejected') return 'danger';
+  return 'neutral';
 }
 
 function humanize(str: string): string {
@@ -278,7 +277,7 @@ export function LeaveOverview(): VNode {
                   <td>{row.leaveType?.label ?? row.leaveTypeId}</td>
                   <td>{row.fromDate}</td><td>{row.toDate}</td>
                   <td style={{ textAlign: 'center' }}>{row.days ?? '—'}</td>
-                  <td><span class={'obx-pill ' + tone}>{humanize(row.status)}</span></td>
+                  <td><Badge tone={tone}>{humanize(row.status)}</Badge></td>
                   <td>
                     {canApprove && row.status === 'pending_approval' && (
                       <span style={{ display: 'inline-flex', gap: 4 }}>

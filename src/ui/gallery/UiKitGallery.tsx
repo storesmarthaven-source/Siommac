@@ -28,6 +28,7 @@ import { type VNode } from 'preact';
 import { useCallback, useMemo, useState } from 'preact/hooks';
 import { LucideIcon, type LucideName } from '../LucideIcon';
 import { Button } from '../primitives/Button';
+import { Badge, type BadgeTone } from '../primitives/Badge';
 import { TextInput } from '../primitives/TextInput';
 import { SegmentedControl } from '../primitives/actions';
 import { PREVIEW_WIDTHS, type UiState } from '../tokens';
@@ -496,7 +497,10 @@ function migrationSummary(def: ComponentDef): string {
 }
 
 function StatusPill({ status }: { status: ComponentDef['status'] }): VNode {
-  return <span class={`ui-gal-status ui-gal-status--${status}`}>{status}</span>;
+  const tone: Record<ComponentDef['status'], BadgeTone> = {
+    stable: 'success', beta: 'info', deprecated: 'danger', missing: 'warning',
+  };
+  return <Badge tone={tone[status]}>{status}</Badge>;
 }
 
 /* ── Missing-component detail ──────────────────────────────────────────────*/

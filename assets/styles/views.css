@@ -109,15 +109,6 @@
 
 .hr-emp-name { font-weight: 600; font-size: 0.88rem; }
 
-/* role badges */
-.hr-role-badge {
-  display: inline-block; padding: 4px 13px; border-radius: 30px;
-  font-size: 0.68rem; font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: .3px;
-}
-.hr-role-admin    { background: #FFEBEE; color: #C62828; }
-.hr-role-manager  { background: #E3F2FD; color: #1565C0; }
-.hr-role-employee { background: #E8F5E9; color: #2E7D32; }
-
 /* rate input cell */
 .hr-rate-cell {
   display: flex; align-items: center; justify-content: center; gap: 7px;
@@ -322,31 +313,6 @@
 .lv-dept-label { font-size: 0.75rem; color: var(--text-muted); text-align: left; }
 .lv-reason-cell { max-width: 180px; color: var(--text-muted); font-size: 0.78rem; text-align: center; }
 
-/* Days pill */
-.lv-days-pill {
-  background: rgba(27,45,85,.08); color: var(--siomac-navy);
-  padding: 2px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600;
-}
-
-/* Type badges */
-.lv-type-badge {
-  display: inline-block; padding: 4px 12px; border-radius: 30px;
-  font-size: 0.68rem; font-weight: var(--font-weight-bold); white-space: nowrap;
-}
-.lv-type-sick    { background: #FFEBEE; color: #C62828; }
-.lv-type-casual  { background: #E3F2FD; color: #1565C0; }
-.lv-type-annual  { background: #E8F5E9; color: #2E7D32; }
-.lv-type-medical { background: #FFF3E0; color: #EF6C00; }
-
-/* Status badges */
-.lv-status-badge {
-  display: inline-block; padding: 4px 12px; border-radius: 30px;
-  font-size: 0.68rem; font-weight: var(--font-weight-bold); white-space: nowrap;
-}
-.lv-status-pending  { background: #FFF8E1; color: #F57C00; }
-.lv-status-approved { background: #E8F5E9; color: #2E7D32; }
-.lv-status-rejected { background: #FFEBEE; color: #C62828; }
-
 /* Pill action buttons with labels */
 .lv-action-btns { display: flex; gap: 6px; flex-wrap: wrap; padding: 2px 0; }
 .lv-act-btn {
@@ -500,14 +466,6 @@
 }
 /* keep old count id working if referenced */
 .ps-section-count { display: none; }
-
-/* Status badge on card */
-.ps-status-badge {
-  font-size: 0.68rem; font-weight: var(--font-weight-bold); padding: 3px 10px;
-  border-radius: 40px; white-space: nowrap;
-}
-.ps-status-badge.active   { background: rgba(46,125,50,0.18); color: #2E7D32; }
-.ps-status-badge.inactive { background: rgba(158,158,158,0.18); color: #757575; }
 
 /* Cards grid — sits inside .ps-section-container below the header */
 .ps-projects-grid {
@@ -1124,17 +1082,6 @@
 .rat-name { font-weight: 600; color: var(--siomac-navy); }
 .rat-dept { font-size: 12px; color: var(--text-muted); background: var(--bg-subtle); padding: 2px 8px; border-radius: 20px; display: inline-block; }
 .rat-time { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--text-primary); }
-
-/* Status badges for recent activity */
-.rat-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 4px 10px; border-radius: 40px;
-  font-size: 11.5px; font-weight: 600;
-}
-.rat-present { background: rgba(46,125,50,0.1);  color: #1b5e20; }
-.rat-out     { background: rgba(27,45,85,0.1);   color: var(--siomac-navy); }
-.rat-late    { background: rgba(198,124,0,0.12); color: #7a5900; }
-.rat-absent  { background: rgba(198,40,40,0.1);  color: #b71c1c; }
 
 /* ─── Sections (formerly tab panes) ─── */
 .app-section { display: none; }
@@ -2106,12 +2053,6 @@
 .dept-table-name-cell { display: flex; align-items: center; gap: 12px; }
 .dept-table-name { font-weight: var(--font-weight-bold); color: var(--siomac-navy); margin-bottom: 2px; }
 .dept-table-id { font-size: 11px; color: var(--text-muted); }
-.dept-table-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  background: rgba(27,45,85,0.08); color: var(--siomac-navy);
-  font-size: 11.5px; font-weight: 600;
-  padding: 4px 10px; border-radius: 20px;
-}
 .dept-table-actions { display: flex; gap: 6px; justify-content: flex-end; }
 .dept-table-btn {
   background: transparent; border: none; padding: 6px 12px;
@@ -2619,23 +2560,8 @@
 
 /* Table decorations */
 .att-name { color: var(--siomac-navy); font-weight: 600; }
-.att-dept-pill {
-  font-size: 11.5px; color: var(--text-muted);
-  background: var(--bg-subtle); padding: 3px 10px; border-radius: 20px;
-}
 .att-date, .att-time { font-variant-numeric: tabular-nums; font-size: 13px; }
 .att-hours { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--siomac-navy); }
-
-/* Status badges */
-.att-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 4px 11px; border-radius: 40px;
-  font-size: 11.5px; font-weight: 600;
-}
-.att-badge i { font-size: 7px; }
-.att-present { background: rgba(46,125,50,0.1);  color: #1b5e20; }
-.att-late    { background: rgba(255,183,18,0.15); color: #7a5900; }
-.att-absent  { background: rgba(228,12,12,0.1);   color: var(--siomac-red); }
 
 /* Selfie thumbnail */
 .att-selfie-thumb {
@@ -2770,12 +2696,6 @@
 .adp-dept, .adp-period {
   font-size: 11.5px; opacity: 0.78;
   display: flex; align-items: center; gap: 5px; white-space: nowrap;
-}
-.adp-rate-pill {
-  padding: 6px 14px; border-radius: 40px;
-  font-size: 13px; font-weight: var(--font-weight-bold);
-  display: flex; align-items: center; gap: 6px;
-  flex-shrink: 0;
 }
 
 /* Stat cards strip */
@@ -3001,14 +2921,6 @@
 .ep-hero-role {
   font-size: 0.85rem; color: var(--text-muted); margin: 0;
 }
-.ep-active-badge {
-  display: inline-block;
-  background: rgba(228,12,12,.1); color: var(--siomac-red);
-  padding: 4px 12px; border-radius: 30px; font-size: 0.7rem; font-weight: 600;
-  margin-top: 10px;
-}
-.ep-active-badge i { font-size: 9px; }
-
 .ep-remove-photo-btn {
   display: inline-flex; align-items: center; gap: 6px;
   background: none; border: 1.5px solid var(--border);
@@ -3688,13 +3600,6 @@ body[data-theme="dark"] .dash-overview-panel .dash-layout-btn-primary:hover {
 .pr-emp-list-empty {
   padding: 18px 14px; text-align: center; color: var(--text-muted); font-size: 0.82rem;
 }
-/* Badge on search input showing selection count */
-.pr-search-badge {
-  position: absolute; top: 50%; right: 14px; transform: translateY(-50%);
-  background: var(--siomac-navy); color: #fff;
-  font-size: 0.7rem; font-weight: var(--font-weight-bold); border-radius: 20px;
-  padding: 2px 8px; pointer-events: none;
-}
 /* Divider between search and date controls */
 .pr-filters-divider {
   width: 1px; height: 28px; background: var(--border); flex-shrink: 0;
@@ -3823,16 +3728,6 @@ body[data-theme="dark"] .dash-overview-panel .dash-layout-btn-primary:hover {
 .pr-hs    { color: #7c3aed; }
 .pr-paye  { color: #ca8a04; }
 .pr-net strong { color: var(--siomac-navy); font-weight: var(--font-weight-bold); }
-
-/* Cycle badge */
-.pr-cycle-badge {
-  display: inline-block; padding: 3px 10px; border-radius: 20px;
-  font-size: 0.68rem; font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: .4px;
-}
-.pr-cycle-daily       { background: rgba(234,179,8,.12); color: #b45309; }
-.pr-cycle-weekly      { background: rgba(59,130,246,.1);  color: #1d4ed8; }
-.pr-cycle-fortnightly { background: rgba(139,92,246,.1);  color: #6d28d9; }
-.pr-cycle-monthly     { background: rgba(71,144,74,.1);   color: #166534; }
 
 /* Hours input */
 .pr-hours-cell { display: flex; align-items: center; gap: 6px; }
@@ -4655,11 +4550,6 @@ body[data-theme="dark"] .dash-overview-panel .dash-layout-btn-primary:hover {
 }
 .emp-payslip-card-month {
   font-size: 1rem; font-weight: var(--font-weight-bold); color: var(--text-primary);
-}
-.emp-payslip-card-cycle-tag {
-  background: rgba(27,45,85,.08); color: var(--siomac-navy);
-  border-radius: 20px; padding: 3px 10px;
-  font-size: 0.72rem; font-weight: var(--font-weight-bold); letter-spacing: .3px;
 }
 
 /* Net pay hero */

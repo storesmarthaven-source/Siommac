@@ -66,14 +66,6 @@
 .ep-hero-role {
   font-size: 0.85rem; color: var(--text-muted); margin: 0;
 }
-.ep-active-badge {
-  display: inline-block;
-  background: rgba(228,12,12,.1); color: var(--siomac-red);
-  padding: 4px 12px; border-radius: 30px; font-size: 0.7rem; font-weight: 600;
-  margin-top: 10px;
-}
-.ep-active-badge i { font-size: 9px; }
-
 .ep-remove-photo-btn {
   display: inline-flex; align-items: center; gap: 6px;
   background: none; border: 1.5px solid var(--border);

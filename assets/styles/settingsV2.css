@@ -122,16 +122,7 @@
 .swz .switch:disabled{opacity:.55;cursor:not-allowed;}
 .swz .badge-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
 .swz .setting-side .badge-row{margin-top:0;}
-.swz .pill{height:22px;border-radius:999px;display:inline-flex;align-items:center;padding:0 8px;font-size:11px;font-weight: 500;white-space:nowrap;}
-.swz .source-default,.swz .source-global{background:#eef4fb;color:#36537a}
-.swz .source-site{background:#edf7f0;color:#2d6c46}.swz .source-role{background:#f7f0e6;color:#8a641a}
-.swz .source-user{background:#f1e9ff;color:#6042ad}.swz .source-department,.swz .source-module{background:#eef4fb;color:#36537a}
-.swz .class-policy,.swz .class-module{background:#f3f5f9;color:#55657d}
-.swz .class-safety{background:#fff1f1;color:#bd3030}.swz .class-security{background:#eef3fb;color:#36537a}
-.swz .class-workflow,.swz .class-validation,.swz .class-governance{background:#f3f5f9;color:#55657d}
-.swz .class-notification{background:#eef7f0;color:#2d6c46}.swz .class-audit{background:#f7f0e6;color:#8a641a}
-.swz .critical-lock{position:absolute;right:14px;top:13px;border:1px solid #ffd4d4;background:#fff5f5;color:#c82020;height:24px;border-radius:999px;padding:0 8px;display:flex;align-items:center;gap:5px;font-weight:750;font-size:10.5px;}
-.swz .critical-lock svg{width:12px;height:12px;stroke-width:2;}
+.swz .critical-lock{position:absolute;right:14px;top:13px;}
 .swz .card-footer{border-top:1px solid var(--section-border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:#fbfcfe;}
 @media (max-width: 1180px){.swz .card-main{grid-template-columns:34px minmax(0,1fr);} .swz .setting-side{grid-column:2;}}
 @media (max-width: 900px){.swz .workspace{grid-template-columns:1fr;}}

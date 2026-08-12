@@ -1,14 +1,14 @@
-/**
- * src/ui/hrfin/HrfinPill.tsx — Aurora status pill (1:1 with the mockup
- * `.hrfin-status`). Tones map to the mockup's is-* classes.
- */
+/** Finance's compact domain tones translated into the canonical Badge. */
 
 import { type VNode, type ComponentChildren } from 'preact';
+import { Badge, type BadgeTone } from '../primitives/Badge';
 
 export type HrfinTone = 'ok' | 'bad' | 'wn' | 'nu' | 'dr';
 
-const CLS: Record<HrfinTone, string> = { ok: 'is-success', bad: 'is-danger', wn: 'is-warning', nu: 'is-info', dr: 'is-muted' };
+const TONE: Record<HrfinTone, BadgeTone> = {
+  ok: 'success', bad: 'danger', wn: 'warning', nu: 'info', dr: 'neutral',
+};
 
 export function HrfinPill({ tone, children }: { tone: HrfinTone; children: ComponentChildren }): VNode {
-  return <span class={`hrfin-status ${CLS[tone]}`}>{children}</span>;
+  return <Badge tone={TONE[tone]}>{children}</Badge>;
 }

@@ -115,14 +115,6 @@
 /* keep old count id working if referenced */
 .ps-section-count { display: none; }
 
-/* Status badge on card */
-.ps-status-badge {
-  font-size: 0.68rem; font-weight: var(--font-weight-bold); padding: 3px 10px;
-  border-radius: 40px; white-space: nowrap;
-}
-.ps-status-badge.active   { background: rgba(46,125,50,0.18); color: #2E7D32; }
-.ps-status-badge.inactive { background: rgba(158,158,158,0.18); color: #757575; }
-
 /* Cards grid — sits inside .ps-section-container below the header */
 .ps-projects-grid {
   display: grid;

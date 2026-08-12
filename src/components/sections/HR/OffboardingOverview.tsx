@@ -13,7 +13,7 @@ import { toast } from '@store';
 import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
 import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import { can } from '@lib/permissions';
-import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, Button } from '@ui';
+import { Badge, PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, Button, type BadgeTone } from '@ui';
 import {
   useOffboardingCases, useOffboardingCase, useOffboardingStats, useOffboardingMutation, hrOffboardingApi,
 } from '@api/hr/offboarding';
@@ -26,8 +26,8 @@ import { HRQueryNotice } from './HRQueryState';
 const REASONS: OffboardingReason[] = ['resignation', 'termination', 'redundancy', 'end_of_contract', 'retirement'];
 const STATUS_FILTERS = ['all', 'in_progress', 'open', 'paused', 'blocked', 'ready_for_exit', 'draft', 'completed', 'cancelled'] as const;
 function humanize(s: string): string { return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
-function statusTone(s: string): 'green' | 'gray' | 'red' {
-  return s === 'completed' ? 'green' : s === 'cancelled' ? 'red' : 'gray';
+function statusTone(s: string): BadgeTone {
+  return s === 'completed' ? 'success' : s === 'cancelled' ? 'danger' : 'neutral';
 }
 
 export function OffboardingOverview(): VNode {
@@ -78,7 +78,7 @@ export function OffboardingOverview(): VNode {
                   <td class="obx-meta">{c.ownerName ?? '—'}</td>
                   <td class="obx-meta" style={{ textAlign: 'center' }}>{c.taskCount - c.openTaskCount}/{c.taskCount}</td>
                   <td class="obx-meta">{c.lastWorkingDay ?? '—'}</td>
-                  <td><span class={`obx-pill ${statusTone(c.status)}`}>{humanize(c.status)}</span></td>
+                  <td><Badge tone={statusTone(c.status)}>{humanize(c.status)}</Badge></td>
                 </tr>
               ))}</tbody>
             </table>
@@ -234,7 +234,7 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }):
                 <td><b>{t.taskTitle}</b><div class="obx-meta" style={{ fontSize: 12 }}>{t.moduleKey ?? '—'}</div></td>
                 <td class="obx-meta">{t.assignedToName ?? t.ownerRole ?? '—'}</td>
                 <td class="obx-meta">{t.isBlocking ? 'Yes' : '—'}</td>
-                <td><span class={`obx-pill ${t.status === 'completed' ? 'green' : 'gray'}`}>{humanize(t.status)}</span></td>
+                <td><Badge tone={t.status === 'completed' ? 'success' : 'neutral'}>{humanize(t.status)}</Badge></td>
                 <td>{canTask && t.status !== 'completed' && !terminal ? <button class="obx-mini" onClick={() => void run(completeTaskMut.mutateAsync({ taskId: t.id }), 'Task completed')}>Complete</button> : <span class="obx-meta">—</span>}</td>
               </tr>
             ))}</tbody>
@@ -247,7 +247,7 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }):
           <table class="obx-table">
             <thead><tr><th>Target</th><th>Type</th><th>Status</th></tr></thead>
             <tbody>{handoffs.map(h => (
-              <tr key={h.id}><td class="obx-meta">{humanize(h.targetModule)}</td><td class="obx-meta">{humanize(h.handoffType ?? '—')}</td><td><span class="obx-pill gray">{humanize(h.status)}</span></td></tr>
+              <tr key={h.id}><td class="obx-meta">{humanize(h.targetModule)}</td><td class="obx-meta">{humanize(h.handoffType ?? '—')}</td><td><Badge tone="neutral">{humanize(h.status)}</Badge></td></tr>
             ))}</tbody>
           </table>
         )}
@@ -258,7 +258,7 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }):
           <table class="obx-table">
             <thead><tr><th>Blocker</th><th>Severity</th><th>Status</th></tr></thead>
             <tbody>{blockers.map(b => (
-              <tr key={b.id}><td><b>{b.title}</b></td><td class="obx-meta">{humanize(b.severity)}</td><td><span class="obx-pill gray">{humanize(b.status)}</span></td></tr>
+              <tr key={b.id}><td><b>{b.title}</b></td><td class="obx-meta">{humanize(b.severity)}</td><td><Badge tone="neutral">{humanize(b.status)}</Badge></td></tr>
             ))}</tbody>
           </table>
         </div></div>

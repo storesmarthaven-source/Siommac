@@ -11,17 +11,13 @@
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
-import { PageHeader, Modal, Field, FormGrid, TextInput, TextareaInput, Button } from '@ui';
+import { Badge, PageHeader, Modal, Field, FormGrid, TextInput, TextareaInput, Button } from '@ui';
 import { useOnboardingPackages, useOnboardingCreatePackage, useOnboardingSetPackageStatus } from '@api/hr/onboarding';
 import type { OnboardingPackageSummary } from '../../../../types/hrOnboarding';
 import './onboardingCase.css';
 
 const STATUS_FILTERS = ['all', 'draft', 'active', 'retired'] as const;
 type StatusFilter = typeof STATUS_FILTERS[number];
-
-function statusTone(s: string): 'gray' | 'green' {
-  return s === 'active' ? 'green' : 'gray';
-}
 
 export function OnboardingPackageManager({
   onBack, onOpenPackage, onToast,
@@ -102,7 +98,7 @@ export function OnboardingPackageManager({
                     <b>{p.label}</b>
                     <div class="obx-meta" style={{ fontSize: 12 }}>{p.key} · v{p.versionNo}</div>
                   </td>
-                  <td><span class={`obx-pill ${statusTone(p.status)}`}>{p.status}</span></td>
+                  <td><Badge tone={p.status === 'active' ? 'success' : 'neutral'}>{p.status}</Badge></td>
                   <td class="obx-meta">{p.workerTypes.length ? p.workerTypes.join(', ') : '—'}</td>
                   <td class="obx-meta">{p.taskCount} tasks · {p.handoffCount} handoffs</td>
                   <td class="obx-meta">{p.defaultSlaDays} days</td>

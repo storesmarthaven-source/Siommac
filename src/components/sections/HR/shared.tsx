@@ -8,8 +8,7 @@
 
 import { type VNode } from 'preact';
 import { type TrainingStatus, type HrEmployeeRow } from '@api/hr/employees';
-
-export type PillTone = 'green' | 'amber' | 'red' | 'purple' | 'blue' | 'gray';
+import type { BadgeTone } from '@ui';
 
 /** "role_change" → "Role Change". */
 export function humanize(s: string): string {
@@ -25,18 +24,18 @@ export function initials(name: string): string {
   return parts.map(w => (w[0] ?? '').toUpperCase()).join('') || '?';
 }
 
-export function statusTone(status: string): PillTone {
+export function statusTone(status: string): BadgeTone {
   const s = status.toLowerCase();
-  if (s.includes('active') && !s.includes('inactive')) return 'green';
-  if (s.includes('probation')) return 'blue';
-  if (s.includes('leave')) return 'amber';
-  if (s.includes('suspend')) return 'red';
-  if (s.includes('terminat')) return 'red';
-  return 'gray';
+  if (s.includes('active') && !s.includes('inactive')) return 'success';
+  if (s.includes('probation')) return 'info';
+  if (s.includes('leave')) return 'warning';
+  if (s.includes('suspend')) return 'danger';
+  if (s.includes('terminat')) return 'danger';
+  return 'neutral';
 }
 
-export const TRAINING_TONE: Record<TrainingStatus, PillTone> = {
-  current: 'green', due_soon: 'amber', expired: 'red', none: 'gray',
+export const TRAINING_TONE: Record<TrainingStatus, BadgeTone> = {
+  current: 'success', due_soon: 'warning', expired: 'danger', none: 'neutral',
 };
 export const TRAINING_LABEL: Record<TrainingStatus, string> = {
   current: 'Current', due_soon: 'Due Soon', expired: 'Expired', none: 'None',

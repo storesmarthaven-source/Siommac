@@ -96,12 +96,6 @@
 .dept-table-name-cell { display: flex; align-items: center; gap: 12px; }
 .dept-table-name { font-weight: var(--font-weight-bold); color: var(--siomac-navy); margin-bottom: 2px; }
 .dept-table-id { font-size: 11px; color: var(--text-muted); }
-.dept-table-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  background: rgba(27,45,85,0.08); color: var(--siomac-navy);
-  font-size: 11.5px; font-weight: 600;
-  padding: 4px 10px; border-radius: 20px;
-}
 .dept-table-actions { display: flex; gap: 6px; justify-content: flex-end; }
 .dept-table-btn {
   background: transparent; border: none; padding: 6px 12px;

@@ -56,7 +56,7 @@ function tone(s: string): BadgeTone {
   if (['cancelled', 'skipped', 'draft'].includes(s)) return 'neutral';
   return 'info';
 }
-const Pill = ({ s }: { s: string }): VNode => <Badge tone={tone(s)}>{humanize(s)}</Badge>;
+const CaseStatusBadge = ({ s }: { s: string }): VNode => <Badge tone={tone(s)}>{humanize(s)}</Badge>;
 
 // .v2 retires layouts saved against the old coarse 88px grid — their row counts mean a ~5×
 // smaller tile on the canonical grid. normalizePageKey ignores the version when matching
@@ -251,7 +251,7 @@ export function OnboardingCaseDetail({
       <thead><tr><th>Task</th><th>Assignee</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>
       <tbody>{tasks.map(t => (
         <tr key={t.taskId}>
-          <td><b>{t.taskTitle}</b>{t.isBlocking && <span class="obx-pill red" style={{ marginLeft: 8 }}>blocking</span>}</td>
+          <td><b>{t.taskTitle}</b>{t.isBlocking && <Badge tone="danger" class="obx-inline-badge">blocking</Badge>}</td>
           <td>
             <select class="obx-mini-select" value={t.assignedTo ?? ''} onChange={e => void handleReassignTask(t, (e.target as HTMLSelectElement).value)} title="Reassign">
               <option value="">{humanize(t.ownerRole ?? 'Unassigned')}</option>
@@ -259,7 +259,7 @@ export function OnboardingCaseDetail({
             </select>
           </td>
           <td>{fmtDate(t.dueAt)}</td>
-          <td><Pill s={t.status} /></td>
+          <td><CaseStatusBadge s={t.status} /></td>
           <td><div class="obx-rowbtns">
             {isOpen(t.status) && <button class="obx-mini" onClick={() => void handleCompleteTask(t)}>Complete</button>}
             {t.status === 'blocked' ? <button class="obx-mini" onClick={() => void handleUnblockTask(t)}>Unblock</button> : isOpen(t.status) && <button class="obx-mini" onClick={() => void handleBlockTask(t)}>Block</button>}
@@ -276,8 +276,8 @@ export function OnboardingCaseDetail({
         <tr key={b.blockerId}>
           <td><b>{b.blockerTitle}</b></td>
           <td>{humanize(b.blockingModule)}</td>
-          <td><Pill s={b.severity} /></td>
-          <td><Pill s={b.status} /></td>
+          <td><CaseStatusBadge s={b.severity} /></td>
+          <td><CaseStatusBadge s={b.status} /></td>
           <td>{blockerOpen(b.status) ? <div class="obx-rowbtns">
             <button class="obx-mini" onClick={() => void handleResolve(b)}>Resolve</button>
             <button class="obx-mini" onClick={() => void handleEscalate(b)}>Escalate</button>
@@ -296,7 +296,7 @@ export function OnboardingCaseDetail({
           <td><b>{humanize(h.targetModule)}</b></td>
           <td>{humanize(h.handoffType ?? '—')}</td>
           <td>{h.ownerName ?? 'Unassigned'}</td>
-          <td><Pill s={h.status} /></td>
+          <td><CaseStatusBadge s={h.status} /></td>
           <td>{fmtDateTime(h.lastEventAt ?? h.createdAt)}</td>
         </tr>
       ))}</tbody>

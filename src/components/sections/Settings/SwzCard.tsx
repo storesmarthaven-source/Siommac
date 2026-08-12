@@ -12,6 +12,7 @@ import { toast } from '@store';
 import { dialog } from '@lib/dialog';
 import { openActionModal, toActionRecord } from '@/components/common/actions';
 import { useSetSetting, useResetSetting, type EffectiveSetting, type SettingScopeType } from '@api/settingsCatalog';
+import { Badge } from '@ui';
 import { SwzIcon, swzCardIconName } from './swzIcons';
 
 function valStr(s: EffectiveSetting): string {
@@ -27,15 +28,6 @@ function toInput(v: unknown): string {
   // eslint-disable-next-line @typescript-eslint/no-base-to-string -- v is pre-screened for null/object; remaining type is string|number|bigint|boolean
   return String(v);
 }
-function classPill(cls: string): string {
-  if (cls.includes('safety')) return 'class-safety';
-  if (cls.includes('security')) return 'class-security';
-  if (cls.includes('workflow')) return 'class-workflow';
-  if (cls.includes('notification')) return 'class-notification';
-  if (cls.includes('audit')) return 'class-audit';
-  return 'class-policy';
-}
-
 export interface SwzCardProps {
   s: EffectiveSetting;
   index: number;
@@ -163,7 +155,7 @@ export function SwzCard({ s, index, scopeType, scopeId, canEdit, canAudit = true
     <article class="setting-card wz-section">
       <div class="card-main">
         <div class="card-icon"><SwzIcon name={swzCardIconName(index)} /></div>
-        {s.isCritical && <span class="critical-lock"><SwzIcon name="LOCK" />Critical</span>}
+        {s.isCritical && <Badge tone="danger" icon={<SwzIcon name="LOCK" />} class="critical-lock">Critical</Badge>}
         <div class="card-copy">
           <h3>{s.label}</h3>
           <p>{s.description || 'Configure this setting for the current scope.'}</p>
@@ -171,8 +163,8 @@ export function SwzCard({ s, index, scopeType, scopeId, canEdit, canAudit = true
         <div class="setting-side">
           <div class="setting-control-row">{control}</div>
           <div class="badge-row">
-            <span class={`pill source-${s.effectiveSource}`}>source: {s.effectiveSource}</span>
-            <span class={`pill ${classPill(s.settingClass)}`}>class: {s.settingClass}</span>
+            <Badge tone="accent">source: {s.effectiveSource}</Badge>
+            <Badge tone="neutral" variant="outline">class: {s.settingClass}</Badge>
           </div>
           <span class="setting-subtext">Effective value: {valStr(s)}{canEdit ? '' : ' · read-only for your role'}</span>
         </div>

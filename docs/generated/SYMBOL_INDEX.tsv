@@ -7487,13 +7487,14 @@ PAYSLIP_DESIGNER_ID	variable	finance	false	component	src/components/sections/Fin
 isFinanceSection	function	finance	false		src/components/sections/Finance/FinanceSection.tsx	47	
 FinanceSection	function	finance	true	component	src/components/sections/Finance/FinanceSection.tsx	67	
 onSection	function	finance	false		src/components/sections/Finance/FinanceSection.tsx	73	FinanceSection
-MONEY	variable	finance	false		src/components/sections/Finance/financeShared.ts	9	
-fmtMoney	function	finance	true		src/components/sections/Finance/financeShared.ts	11	
-fmtPercent	function	finance	true		src/components/sections/Finance/financeShared.ts	16	
-fmtDate	function	finance	true		src/components/sections/Finance/financeShared.ts	22	
-humanize	function	finance	true		src/components/sections/Finance/financeShared.ts	28	
-toRoman	function	finance	true		src/components/sections/Finance/financeShared.ts	34	
-statusTone	function	finance	true		src/components/sections/Finance/financeShared.ts	47	
+MONEY	variable	finance	false		src/components/sections/Finance/financeShared.ts	11	
+fmtMoney	function	finance	true		src/components/sections/Finance/financeShared.ts	13	
+fmtPercent	function	finance	true		src/components/sections/Finance/financeShared.ts	18	
+fmtDate	function	finance	true		src/components/sections/Finance/financeShared.ts	24	
+humanize	function	finance	true		src/components/sections/Finance/financeShared.ts	30	
+toRoman	function	finance	true		src/components/sections/Finance/financeShared.ts	36	
+statusTone	function	finance	true		src/components/sections/Finance/financeShared.ts	49	
+statusBadgeTone	function	finance	true		src/components/sections/Finance/financeShared.ts	74	
 money	function	finance	true		src/components/sections/Finance/hrfinFormat.ts	9	
 moneyCompact	function	finance	true		src/components/sections/Finance/hrfinFormat.ts	15	
 deltaLabel	function	finance	true		src/components/sections/Finance/hrfinFormat.ts	26	
@@ -7538,27 +7539,27 @@ submit	function	finance	false		src/components/sections/Finance/PayBridgeDialog.t
 _AUTHORITIES	array	finance	false		src/components/sections/Finance/PayBridgeDialog.tsx	92	
 PayCreateRemittanceDialog	function	finance	true	component	src/components/sections/Finance/PayBridgeDialog.tsx	98	
 submit	function	finance	false		src/components/sections/Finance/PayBridgeDialog.tsx	114	PayCreateRemittanceDialog
-PAY_FREQS	array	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	42	
-WEEKS_MAP	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	48	
-RUN_TYPES	array	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	50	
-RECON_STATE_PILL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	58	
-RECON_STATE_LABEL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	61	
-RECON_OWNER_LABEL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	64	
-READINESS_RC	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	69	
-READINESS_ICON	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	72	
-READINESS_LABEL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	75	
-READINESS_PILL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	78	
-STEPS	variable	finance	false	component	src/components/sections/Finance/PayNewRunWizard.tsx	82	
-CreateBlocker	interface	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	93	
-CREATE_BLOCKERS	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	94	
-matchCreateBlocker	function	finance	true		src/components/sections/Finance/PayNewRunWizard.tsx	113	
-lastOfMonth	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	120	
-SummaryCard	function	finance	false	component,ui-tile	src/components/sections/Finance/PayNewRunWizard.tsx	130	
-PendingBlock	function	finance	false	component	src/components/sections/Finance/PayNewRunWizard.tsx	141	
-PayNewRunWizard	function	finance	true	component	src/components/sections/Finance/PayNewRunWizard.tsx	152	
-selectGroup	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	223	PayNewRunWizard
-goToStep	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	230	PayNewRunWizard
-create	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	232	PayNewRunWizard
+PAY_FREQS	array	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	43	
+WEEKS_MAP	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	49	
+RUN_TYPES	array	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	51	
+RECON_STATE_TONE	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	59	
+RECON_STATE_LABEL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	62	
+RECON_OWNER_LABEL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	65	
+READINESS_RC	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	70	
+READINESS_ICON	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	73	
+READINESS_LABEL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	76	
+READINESS_TONE	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	79	
+STEPS	variable	finance	false	component	src/components/sections/Finance/PayNewRunWizard.tsx	83	
+CreateBlocker	interface	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	94	
+CREATE_BLOCKERS	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	95	
+matchCreateBlocker	function	finance	true		src/components/sections/Finance/PayNewRunWizard.tsx	114	
+lastOfMonth	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	121	
+SummaryCard	function	finance	false	component,ui-tile	src/components/sections/Finance/PayNewRunWizard.tsx	131	
+PendingBlock	function	finance	false	component	src/components/sections/Finance/PayNewRunWizard.tsx	142	
+PayNewRunWizard	function	finance	true	component	src/components/sections/Finance/PayNewRunWizard.tsx	153	
+selectGroup	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	224	PayNewRunWizard
+goToStep	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	231	PayNewRunWizard
+create	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	233	PayNewRunWizard
 NAMES	object	payroll	false	test	src/components/sections/Finance/payroll/run/crewSections.test.tsx	18	
 makeCrew	function	payroll	false	test	src/components/sections/Finance/payroll/run/crewSections.test.tsx	20	
 CrewProps	interface	payroll	false		src/components/sections/Finance/payroll/run/crewSections.tsx	20	
@@ -8747,21 +8748,21 @@ HRQueryNotice	function	hr	true	component	src/components/sections/HR/HRQueryState
 humanize	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	22	
 requestRecord	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	23	
 statusTone	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	30	
-TERMINAL	variable	hr	false	component	src/components/sections/HR/HRRequestsOverview.tsx	38	
-NewRequestModalProps	interface	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	42	
-NewRequestModal	function	hr	false	component	src/components/sections/HR/HRRequestsOverview.tsx	48	
-submit	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	60	NewRequestModal
-MyRequestsTab	function	hr	false	component	src/components/sections/HR/HRRequestsOverview.tsx	127	
-handleCancel	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	136	MyRequestsTab
-DecideModalProps	interface	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	190	
-DecideModal	function	hr	false	component	src/components/sections/HR/HRRequestsOverview.tsx	196	
-submit	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	201	DecideModal
-FulfillModalProps	interface	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	258	
-FulfillModal	function	hr	false	component	src/components/sections/HR/HRRequestsOverview.tsx	264	
-submit	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	269	FulfillModal
-TriageTab	function	hr	false	component	src/components/sections/HR/HRRequestsOverview.tsx	310	
-handleCancel	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	322	TriageTab
-HRRequestsOverview	function	hr	true	component	src/components/sections/HR/HRRequestsOverview.tsx	391	
+TERMINAL	variable	hr	false	component	src/components/sections/HR/HRRequestsOverview.tsx	37	
+NewRequestModalProps	interface	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	41	
+NewRequestModal	function	hr	false	component	src/components/sections/HR/HRRequestsOverview.tsx	47	
+submit	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	59	NewRequestModal
+MyRequestsTab	function	hr	false	component	src/components/sections/HR/HRRequestsOverview.tsx	126	
+handleCancel	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	135	MyRequestsTab
+DecideModalProps	interface	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	189	
+DecideModal	function	hr	false	component	src/components/sections/HR/HRRequestsOverview.tsx	195	
+submit	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	200	DecideModal
+FulfillModalProps	interface	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	257	
+FulfillModal	function	hr	false	component	src/components/sections/HR/HRRequestsOverview.tsx	263	
+submit	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	268	FulfillModal
+TriageTab	function	hr	false	component	src/components/sections/HR/HRRequestsOverview.tsx	309	
+handleCancel	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	321	TriageTab
+HRRequestsOverview	function	hr	true	component	src/components/sections/HR/HRRequestsOverview.tsx	390	
 EMP_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	32	
 ONB_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	33	
 ORG_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	34	
@@ -8791,29 +8792,31 @@ guessMapping	function	hr	false		src/components/sections/HR/ImportWizard.tsx	54
 DEFAULT_POLICY	object	hr	false		src/components/sections/HR/ImportWizard.tsx	63	
 fileToBase64	function	hr	false		src/components/sections/HR/ImportWizard.tsx	69	
 cap	function	hr	false		src/components/sections/HR/ImportWizard.tsx	77	
-Fld	function	hr	false	component	src/components/sections/HR/ImportWizard.tsx	79	
-Section	function	hr	false	component	src/components/sections/HR/ImportWizard.tsx	82	
-ImportWizard	function	hr	true	component	src/components/sections/HR/ImportWizard.tsx	91	
-setMap	function	hr	false		src/components/sections/HR/ImportWizard.tsx	113	ImportWizard
-setPol	function	hr	false		src/components/sections/HR/ImportWizard.tsx	114	ImportWizard
-guard	function	hr	false		src/components/sections/HR/ImportWizard.tsx	117	ImportWizard
-doUpload	function	hr	false		src/components/sections/HR/ImportWizard.tsx	122	ImportWizard
-doMap	function	hr	false		src/components/sections/HR/ImportWizard.tsx	136	ImportWizard
-loadReport	function	hr	false		src/components/sections/HR/ImportWizard.tsx	142	ImportWizard
-doValidate	function	hr	false		src/components/sections/HR/ImportWizard.tsx	143	ImportWizard
-resolve	function	hr	false		src/components/sections/HR/ImportWizard.tsx	144	ImportWizard
-doCommit	function	hr	false		src/components/sections/HR/ImportWizard.tsx	145	ImportWizard
+mappingTone	function	hr	false		src/components/sections/HR/ImportWizard.tsx	79	
+exceptionTone	function	hr	false		src/components/sections/HR/ImportWizard.tsx	84	
+Fld	function	hr	false	component	src/components/sections/HR/ImportWizard.tsx	90	
+Section	function	hr	false	component	src/components/sections/HR/ImportWizard.tsx	93	
+ImportWizard	function	hr	true	component	src/components/sections/HR/ImportWizard.tsx	102	
+setMap	function	hr	false		src/components/sections/HR/ImportWizard.tsx	124	ImportWizard
+setPol	function	hr	false		src/components/sections/HR/ImportWizard.tsx	125	ImportWizard
+guard	function	hr	false		src/components/sections/HR/ImportWizard.tsx	128	ImportWizard
+doUpload	function	hr	false		src/components/sections/HR/ImportWizard.tsx	133	ImportWizard
+doMap	function	hr	false		src/components/sections/HR/ImportWizard.tsx	147	ImportWizard
+loadReport	function	hr	false		src/components/sections/HR/ImportWizard.tsx	153	ImportWizard
+doValidate	function	hr	false		src/components/sections/HR/ImportWizard.tsx	154	ImportWizard
+resolve	function	hr	false		src/components/sections/HR/ImportWizard.tsx	155	ImportWizard
+doCommit	function	hr	false		src/components/sections/HR/ImportWizard.tsx	156	ImportWizard
 STATUS_OPTIONS	array	hr	false		src/components/sections/HR/LeaveOverview.tsx	24	
 statusTone	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	32	
-humanize	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	39	
-SubmitDialogProps	interface	hr	false		src/components/sections/HR/LeaveOverview.tsx	45	
-workingDays	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	48	
-SubmitLeaveDialog	function	hr	false	component	src/components/sections/HR/LeaveOverview.tsx	57	
-handleSubmit	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	87	SubmitLeaveDialog
-LeaveOverview	function	hr	true	component	src/components/sections/HR/LeaveOverview.tsx	153	
-leaveRecord	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	160	LeaveOverview
-onReview	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	166	LeaveOverview
-handleCancel	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	211	LeaveOverview
+humanize	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	38	
+SubmitDialogProps	interface	hr	false		src/components/sections/HR/LeaveOverview.tsx	44	
+workingDays	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	47	
+SubmitLeaveDialog	function	hr	false	component	src/components/sections/HR/LeaveOverview.tsx	56	
+handleSubmit	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	86	SubmitLeaveDialog
+LeaveOverview	function	hr	true	component	src/components/sections/HR/LeaveOverview.tsx	152	
+leaveRecord	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	159	LeaveOverview
+onReview	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	165	LeaveOverview
+handleCancel	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	210	LeaveOverview
 HR_ROOT_ID	variable	hr	false		src/components/sections/HR/module.ts	13	
 EMPLOYEE_MASTER_ITEM	object	hr	false		src/components/sections/HR/module.ts	15	
 ONBOARDING_ITEM	object	hr	false		src/components/sections/HR/module.ts	23	
@@ -8942,7 +8945,7 @@ GaugeArc	function	hr	true	component	src/components/sections/HR/onboardingCase.he
 Bars	function	hr	true	component	src/components/sections/HR/onboardingCase.helpers.tsx	131	
 _initials	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	46	
 tone	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	49	
-Pill	function	hr	false	component	src/components/sections/HR/OnboardingCaseDetail.tsx	59	
+CaseStatusBadge	function	hr	false	component	src/components/sections/HR/OnboardingCaseDetail.tsx	59	
 CASE_PAGE_KEY	variable	hr	false	component	src/components/sections/HR/OnboardingCaseDetail.tsx	64	
 CASE_ZONE	variable	hr	false	component	src/components/sections/HR/OnboardingCaseDetail.tsx	65	
 defInst	function	hr	false		src/components/sections/HR/OnboardingCaseDetail.tsx	66	
@@ -9077,19 +9080,18 @@ YN	function	hr	false	component	src/components/sections/HR/OnboardingPackageDetai
 empty	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	161	OnboardingPackageDetail
 STATUS_FILTERS	variable	hr	false	component	src/components/sections/HR/OnboardingPackageManager.tsx	19	
 StatusFilter	type	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	20	
-statusTone	function	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	22	
-OnboardingPackageManager	function	hr	true	component	src/components/sections/HR/OnboardingPackageManager.tsx	26	
-openNew	function	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	46	OnboardingPackageManager
-submitNew	function	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	51	OnboardingPackageManager
-toggleStatus	function	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	65	OnboardingPackageManager
+OnboardingPackageManager	function	hr	true	component	src/components/sections/HR/OnboardingPackageManager.tsx	22	
+openNew	function	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	42	OnboardingPackageManager
+submitNew	function	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	47	OnboardingPackageManager
+toggleStatus	function	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	61	OnboardingPackageManager
 CASE_STATUSES	array	hr	false		src/components/sections/HR/OnboardingReportsWorkspace.tsx	22	
 BAR_COLORS	array	hr	false		src/components/sections/HR/OnboardingReportsWorkspace.tsx	23	
 fmtCell	function	hr	false		src/components/sections/HR/OnboardingReportsWorkspace.tsx	25	
 ChartView	function	hr	false	component	src/components/sections/HR/OnboardingReportsWorkspace.tsx	35	
 OnboardingReportsWorkspace	function	hr	true	component	src/components/sections/HR/OnboardingReportsWorkspace.tsx	70	
 handleExport	function	hr	false		src/components/sections/HR/OnboardingReportsWorkspace.tsx	94	OnboardingReportsWorkspace
-Pill	interface	hr	true		src/components/sections/HR/onboardingStatus.ts	13	
-T	object	hr	false		src/components/sections/HR/onboardingStatus.ts	14	
+Pill	interface	hr	true		src/components/sections/HR/onboardingStatus.ts	14	
+T	variable	hr	false		src/components/sections/HR/onboardingStatus.ts	15	
 CASE_STATUS	object	hr	true		src/components/sections/HR/onboardingStatus.ts	20	
 TASK_STATUS	object	hr	true		src/components/sections/HR/onboardingStatus.ts	26	
 HANDOFF_STATUS	object	hr	true		src/components/sections/HR/onboardingStatus.ts	32	
@@ -9104,7 +9106,7 @@ blockerStatusPill	function	hr	true		src/components/sections/HR/onboardingStatus.
 severityPill	function	hr	true		src/components/sections/HR/onboardingStatus.ts	58	
 caseActionPill	function	hr	true		src/components/sections/HR/onboardingStatus.ts	59	
 CASE_STATUS_OPTIONS	variable	hr	true		src/components/sections/HR/onboardingStatus.ts	61	
-BG_TO_CLS	object	hr	false		src/components/sections/HR/onboardingStatus.ts	63	
+TONE_TO_CLASS	object	hr	false		src/components/sections/HR/onboardingStatus.ts	64	
 pillClass	function	hr	true		src/components/sections/HR/onboardingStatus.ts	67	
 humanize	function	hr	true		src/components/sections/HR/onboardingStatus.ts	69	
 fmtDate	function	hr	true		src/components/sections/HR/onboardingStatus.ts	73	
@@ -9126,7 +9128,7 @@ handleBlock	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspa
 handleUnblock	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	117	OnboardingTasksWorkspace
 handleReassign	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	118	OnboardingTasksWorkspace
 submitAdd	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	127	OnboardingTasksWorkspace
-Pill	function	hr	false	component	src/components/sections/HR/OnboardingTasksWorkspace.tsx	138	OnboardingTasksWorkspace
+TaskStatusBadge	function	hr	false	component	src/components/sections/HR/OnboardingTasksWorkspace.tsx	138	OnboardingTasksWorkspace
 rowActions	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	142	OnboardingTasksWorkspace
 openDrawer	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	150	OnboardingTasksWorkspace
 taskCard	function	hr	false	ui-tile	src/components/sections/HR/OnboardingTasksWorkspace.tsx	152	OnboardingTasksWorkspace
@@ -9349,31 +9351,30 @@ fmtDate	function	hr	false		src/components/sections/HR/RosterOverview.tsx	33
 isoWeekStart	function	hr	false		src/components/sections/HR/RosterOverview.tsx	34	
 isoWeekEnd	function	hr	false		src/components/sections/HR/RosterOverview.tsx	38	
 statusTone	function	hr	false		src/components/sections/HR/RosterOverview.tsx	42	
-Tab	type	hr	false		src/components/sections/HR/RosterOverview.tsx	50	
-RosterOverview	function	hr	true	component	src/components/sections/HR/RosterOverview.tsx	54	
-RostersTab	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	101	
-RosterDetail	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	162	
-rosterRecord	function	hr	false		src/components/sections/HR/RosterOverview.tsx	178	RosterDetail
-onPublish	function	hr	false		src/components/sections/HR/RosterOverview.tsx	184	RosterDetail
-onReopen	function	hr	false		src/components/sections/HR/RosterOverview.tsx	202	RosterDetail
-onSyncLeave	function	hr	false		src/components/sections/HR/RosterOverview.tsx	220	RosterDetail
-onGenerate	function	hr	false		src/components/sections/HR/RosterOverview.tsx	227	RosterDetail
-onCellClick	function	hr	false		src/components/sections/HR/RosterOverview.tsx	258	RosterDetail
-TemplatesTab	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	385	
-MyShiftsTab	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	516	
-NewRosterModal	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	565	
-submit	function	hr	false		src/components/sections/HR/RosterOverview.tsx	575	NewRosterModal
-NewShiftTemplateModal	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	637	
-submit	function	hr	false		src/components/sections/HR/RosterOverview.tsx	641	NewShiftTemplateModal
-PillTone	type	hr	true		src/components/sections/HR/shared.tsx	12	
-humanize	function	hr	true		src/components/sections/HR/shared.tsx	15	
-rowName	function	hr	true		src/components/sections/HR/shared.tsx	19	
-initials	function	hr	true		src/components/sections/HR/shared.tsx	23	
-statusTone	function	hr	true		src/components/sections/HR/shared.tsx	28	
-TRAINING_TONE	object	hr	true		src/components/sections/HR/shared.tsx	38	
-TRAINING_LABEL	object	hr	true		src/components/sections/HR/shared.tsx	41	
-Avatar	function	hr	true	component	src/components/sections/HR/shared.tsx	45	
-TinyAvatar	function	hr	true	component	src/components/sections/HR/shared.tsx	48	
+Tab	type	hr	false		src/components/sections/HR/RosterOverview.tsx	49	
+RosterOverview	function	hr	true	component	src/components/sections/HR/RosterOverview.tsx	53	
+RostersTab	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	100	
+RosterDetail	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	161	
+rosterRecord	function	hr	false		src/components/sections/HR/RosterOverview.tsx	177	RosterDetail
+onPublish	function	hr	false		src/components/sections/HR/RosterOverview.tsx	183	RosterDetail
+onReopen	function	hr	false		src/components/sections/HR/RosterOverview.tsx	201	RosterDetail
+onSyncLeave	function	hr	false		src/components/sections/HR/RosterOverview.tsx	219	RosterDetail
+onGenerate	function	hr	false		src/components/sections/HR/RosterOverview.tsx	226	RosterDetail
+onCellClick	function	hr	false		src/components/sections/HR/RosterOverview.tsx	257	RosterDetail
+TemplatesTab	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	384	
+MyShiftsTab	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	515	
+NewRosterModal	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	564	
+submit	function	hr	false		src/components/sections/HR/RosterOverview.tsx	574	NewRosterModal
+NewShiftTemplateModal	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	636	
+submit	function	hr	false		src/components/sections/HR/RosterOverview.tsx	640	NewShiftTemplateModal
+humanize	function	hr	true		src/components/sections/HR/shared.tsx	14	
+rowName	function	hr	true		src/components/sections/HR/shared.tsx	18	
+initials	function	hr	true		src/components/sections/HR/shared.tsx	22	
+statusTone	function	hr	true		src/components/sections/HR/shared.tsx	27	
+TRAINING_TONE	object	hr	true		src/components/sections/HR/shared.tsx	37	
+TRAINING_LABEL	object	hr	true		src/components/sections/HR/shared.tsx	40	
+Avatar	function	hr	true	component	src/components/sections/HR/shared.tsx	44	
+TinyAvatar	function	hr	true	component	src/components/sections/HR/shared.tsx	47	
 IconName	type	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	25	
 Icon	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	30	
 initialsOf	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	60	
@@ -11357,11 +11358,10 @@ exit	function	settings	false		src/components/sections/Settings/SettingsSection.t
 onSection	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1356	SettingsSection
 onMenuClick	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1361	SettingsSection
 emptySettings	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1410	
-valStr	function	settings	false		src/components/sections/Settings/SwzCard.tsx	17	
-toInput	function	settings	false		src/components/sections/Settings/SwzCard.tsx	24	
-classPill	function	settings	false		src/components/sections/Settings/SwzCard.tsx	30	
-SwzCardProps	interface	settings	true	ui-tile	src/components/sections/Settings/SwzCard.tsx	39	
-SwzCard	function	settings	true	component,ui-tile	src/components/sections/Settings/SwzCard.tsx	50	
+valStr	function	settings	false		src/components/sections/Settings/SwzCard.tsx	18	
+toInput	function	settings	false		src/components/sections/Settings/SwzCard.tsx	25	
+SwzCardProps	interface	settings	true	ui-tile	src/components/sections/Settings/SwzCard.tsx	31	
+SwzCard	function	settings	true	component,ui-tile	src/components/sections/Settings/SwzCard.tsx	42	
 CLASS_ORDER	array	settings	false		src/components/sections/Settings/SwzCatalogPage.tsx	24	
 CLASS_LABEL	object	settings	false		src/components/sections/Settings/SwzCatalogPage.tsx	29	
 MODULE_LABEL	object	settings	false		src/components/sections/Settings/SwzCatalogPage.tsx	34	
@@ -12849,26 +12849,26 @@ Harness	function	platform	false	component,test	src/ui/gallery/semanticDraft.test
 ACTION_PRIMARY	variable	platform	false	component,test	src/ui/gallery/semanticDraft.test.tsx	52	
 NAV_BG	variable	platform	false	component,test	src/ui/gallery/semanticDraft.test.tsx	53	
 BORDER	variable	platform	false	component,test	src/ui/gallery/semanticDraft.test.tsx	54	
-Mode	type	platform	false		src/ui/gallery/UiKitGallery.tsx	47	
-OVERVIEW	variable	platform	false	component	src/ui/gallery/UiKitGallery.tsx	48	
-FOUNDATIONS	variable	platform	false	component	src/ui/gallery/UiKitGallery.tsx	49	
-BRAND_THEME	variable	platform	false	component	src/ui/gallery/UiKitGallery.tsx	52	
-CATEGORY_ICON	object	platform	false		src/ui/gallery/UiKitGallery.tsx	54	
-UiKitGalleryProps	interface	platform	true		src/ui/gallery/UiKitGallery.tsx	68	
-UiKitGallery	function	platform	true	component	src/ui/gallery/UiKitGallery.tsx	81	
-select	function	platform	false		src/ui/gallery/UiKitGallery.tsx	119	UiKitGallery
-GallerySidebar	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	306	
-Overview	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	380	
-ComponentCard	function	platform	false	component,ui-tile	src/ui/gallery/UiKitGallery.tsx	452	
-migrationSummary	function	platform	false		src/ui/gallery/UiKitGallery.tsx	489	
-StatusPill	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	498	
-MissingDetail	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	504	
-Examples	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	538	
-BackBar	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	557	
-GalleryActions	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	566	
-exportTheme	function	platform	false		src/ui/gallery/UiKitGallery.tsx	567	GalleryActions
-GridMode	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	596	
-CompareMode	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	632	
+Mode	type	platform	false		src/ui/gallery/UiKitGallery.tsx	48	
+OVERVIEW	variable	platform	false	component	src/ui/gallery/UiKitGallery.tsx	49	
+FOUNDATIONS	variable	platform	false	component	src/ui/gallery/UiKitGallery.tsx	50	
+BRAND_THEME	variable	platform	false	component	src/ui/gallery/UiKitGallery.tsx	53	
+CATEGORY_ICON	object	platform	false		src/ui/gallery/UiKitGallery.tsx	55	
+UiKitGalleryProps	interface	platform	true		src/ui/gallery/UiKitGallery.tsx	69	
+UiKitGallery	function	platform	true	component	src/ui/gallery/UiKitGallery.tsx	82	
+select	function	platform	false		src/ui/gallery/UiKitGallery.tsx	120	UiKitGallery
+GallerySidebar	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	307	
+Overview	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	381	
+ComponentCard	function	platform	false	component,ui-tile	src/ui/gallery/UiKitGallery.tsx	453	
+migrationSummary	function	platform	false		src/ui/gallery/UiKitGallery.tsx	490	
+StatusPill	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	499	
+MissingDetail	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	508	
+Examples	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	542	
+BackBar	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	561	
+GalleryActions	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	570	
+exportTheme	function	platform	false		src/ui/gallery/UiKitGallery.tsx	571	GalleryActions
+GridMode	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	600	
+CompareMode	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	636	
 ActivityItem	interface	platform	true		src/ui/hrfin/ActivityFeed.tsx	9	
 ActivityFeed	function	platform	true	component	src/ui/hrfin/ActivityFeed.tsx	15	
 DonutRingProps	interface	platform	true		src/ui/hrfin/charts/DonutRing.tsx	9	
@@ -12894,8 +12894,8 @@ handler	function	platform	false		src/ui/hrfin/EntityPicker.tsx	100	EntityPicker
 HrfinChip	interface	platform	true		src/ui/hrfin/HrfinPageHeader.tsx	9	
 HrfinPageHeaderProps	interface	platform	true		src/ui/hrfin/HrfinPageHeader.tsx	15	
 HrfinPageHeader	function	platform	true	component	src/ui/hrfin/HrfinPageHeader.tsx	22	
-HrfinTone	type	platform	true		src/ui/hrfin/HrfinPill.tsx	8	
-CLS	object	platform	false		src/ui/hrfin/HrfinPill.tsx	10	
+HrfinTone	type	platform	true		src/ui/hrfin/HrfinPill.tsx	6	
+TONE	object	platform	false		src/ui/hrfin/HrfinPill.tsx	8	
 HrfinPill	function	platform	true	component	src/ui/hrfin/HrfinPill.tsx	12	
 HrfinColumn	interface	platform	true		src/ui/hrfin/HrfinTable.tsx	12	
 HrfinTab	interface	platform	true		src/ui/hrfin/HrfinTable.tsx	19	
@@ -13075,14 +13075,14 @@ Row	function	platform	false	component	src/ui/registry/comparisons/button.cmp.tsx
 BUTTON_COMPARISON	object	platform	true		src/ui/registry/comparisons/button.cmp.tsx	24	
 noop	function	platform	false		src/ui/registry/comparisons/card.cmp.tsx	22	
 CARD_COMPARISON	object	platform	true	ui-tile	src/ui/registry/comparisons/card.cmp.tsx	24	
-noop	function	platform	false		src/ui/registry/comparisons/dataTable.cmp.tsx	18	
-Person	interface	platform	false		src/ui/registry/comparisons/dataTable.cmp.tsx	20	
-PEOPLE	array	platform	false		src/ui/registry/comparisons/dataTable.cmp.tsx	22	
-TONE	variable	platform	false	component	src/ui/registry/comparisons/dataTable.cmp.tsx	29	
-LABEL	variable	platform	false	component	src/ui/registry/comparisons/dataTable.cmp.tsx	30	
-DATA_TABLE_COMPARISON	object	platform	true		src/ui/registry/comparisons/dataTable.cmp.tsx	32	
-noop	function	platform	false		src/ui/registry/comparisons/tabs.cmp.tsx	22	
-TABS_COMPARISON	object	platform	true		src/ui/registry/comparisons/tabs.cmp.tsx	24	
+noop	function	platform	false		src/ui/registry/comparisons/dataTable.cmp.tsx	19	
+Person	interface	platform	false		src/ui/registry/comparisons/dataTable.cmp.tsx	21	
+PEOPLE	array	platform	false		src/ui/registry/comparisons/dataTable.cmp.tsx	23	
+TONE	variable	platform	false	component	src/ui/registry/comparisons/dataTable.cmp.tsx	30	
+LABEL	variable	platform	false	component	src/ui/registry/comparisons/dataTable.cmp.tsx	31	
+DATA_TABLE_COMPARISON	object	platform	true		src/ui/registry/comparisons/dataTable.cmp.tsx	33	
+noop	function	platform	false		src/ui/registry/comparisons/tabs.cmp.tsx	23	
+TABS_COMPARISON	object	platform	true		src/ui/registry/comparisons/tabs.cmp.tsx	25	
 s	function	platform	false		src/ui/registry/containers.defs.tsx	19	
 b	function	platform	false		src/ui/registry/containers.defs.tsx	20	
 noop	function	platform	false		src/ui/registry/containers.defs.tsx	21	
@@ -13099,7 +13099,7 @@ COLUMNS	array	platform	false		src/ui/registry/data.defs.tsx	57
 ROW_ACTIONS	function	platform	false	component	src/ui/registry/data.defs.tsx	80	
 dataTableDef	object	platform	true		src/ui/registry/data.defs.tsx	88	
 badgeDef	object	platform	true		src/ui/registry/data.defs.tsx	252	
-DATA_DEFS	array	platform	true		src/ui/registry/data.defs.tsx	357	
+DATA_DEFS	array	platform	true		src/ui/registry/data.defs.tsx	360	
 PropValue	type	platform	false		src/ui/registry/definitions.tsx	28	
 s	function	platform	false		src/ui/registry/definitions.tsx	29	
 b	function	platform	false		src/ui/registry/definitions.tsx	30	

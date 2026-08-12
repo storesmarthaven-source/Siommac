@@ -97,12 +97,6 @@
   font-size: 11.5px; opacity: 0.78;
   display: flex; align-items: center; gap: 5px; white-space: nowrap;
 }
-.adp-rate-pill {
-  padding: 6px 14px; border-radius: 40px;
-  font-size: 13px; font-weight: var(--font-weight-bold);
-  display: flex; align-items: center; gap: 6px;
-  flex-shrink: 0;
-}
 
 /* Stat cards strip */
 .adp-stats {

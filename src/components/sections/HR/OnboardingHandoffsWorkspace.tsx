@@ -16,13 +16,13 @@
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
-import { PageHeader, Modal, Button } from '@ui';
+import { Badge, PageHeader, Modal, Button } from '@ui';
 import {
   useOnboardingHandoffsList,
   useOnboardingRetryHandoff, useOnboardingAcceptHandoff, useOnboardingCompleteHandoff, useOnboardingCancelHandoff,
 } from '@api/hr/onboarding';
 import type { OnboardingHandoffRow } from '../../../../types/hrOnboarding';
-import { handoffStatusPill, pillClass, humanize, fmtDateTime } from './onboardingStatus';
+import { handoffStatusPill, humanize, fmtDateTime } from './onboardingStatus';
 import './onboardingCase.css';
 
 const HANDOFF_STATUSES = ['pending', 'sent', 'accepted', 'blocked', 'delivered', 'completed', 'failed', 'cancelled'];
@@ -154,7 +154,7 @@ export function OnboardingHandoffsWorkspace({
                       <td class="obx-meta">{humanize(h.handoffType ?? '—')}</td>
                       <td class="obx-meta">{h.ownerName ?? '—'}</td>
                       <td>
-                        <span class={`obx-pill ${pillClass(handoffStatusPill(h.status))}`}>{handoffStatusPill(h.status).label}</span>
+                        <Badge tone={handoffStatusPill(h.status).tone}>{handoffStatusPill(h.status).label}</Badge>
                         {h.status === 'failed' && h.failureReason && <div class="obx-meta" style={{ fontSize: 11, color: '#dc2626', marginTop: 2 }}>{h.failureReason}</div>}
                       </td>
                       <td class="obx-meta">{fmtDateTime(h.lastEventAt ?? h.createdAt)}</td>

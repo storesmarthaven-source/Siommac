@@ -325,21 +325,7 @@
   .ui-gal-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
   .ui-gal-card-head h3 { margin: 0; font-size: 12px; font-weight: 750; color: var(--text-primary); }
   .ui-gal-card-sub { display: block; margin-top: 3px; color: var(--text-muted); font-size: 9px; }
-
-  .ui-gal-status {
-    flex-shrink: 0;
-    padding: 2px 7px;
-    border: 1px solid transparent;
-    border-radius: var(--radius-pill);
-    font-size: 8px;
-    font-weight: var(--font-weight-bold);
-    letter-spacing: .04em;
-    text-transform: uppercase;
-  }
-  .ui-gal-status--stable     { background: #e7f7ee; color: #218457; border-color: #cfead9; }
-  .ui-gal-status--beta       { background: var(--st-info-tint); color: var(--st-info-strong); }
-  .ui-gal-status--deprecated { background: var(--st-danger-tint); color: var(--st-danger-strong); }
-  .ui-gal-status--missing    { background: #fff4da; color: #b97414; }
+  .ui-gal-card-head > .ui-badge { flex-shrink: 0; }
 
   .ui-gal-card-preview {
     flex: 1 1 auto;

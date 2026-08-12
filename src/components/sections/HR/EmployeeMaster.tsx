@@ -25,7 +25,7 @@ import { EmployeeCreatePage } from './EmployeeCreatePage';
 import { ContactDialog, StatusDialog, OffboardingDialog, ChangeRequestDialog, DocumentDialog, StatutoryDialog } from './ActionDialogs';
 import { ImportWizard } from './ImportWizard';
 import { StartOnboardingWizard } from './StartOnboardingWizard';
-import { PageHeaderSkeleton, TableSkeleton, Button, EmptyState, LucideIcon, PageHeader, Pagination } from '@ui';
+import { Badge, PageHeaderSkeleton, TableSkeleton, Button, EmptyState, LucideIcon, PageHeader, Pagination } from '@ui';
 import {
   BoardSkeleton, WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget, insertWidgetsAtRow, findWidgetDef,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeDef, type WidgetSizeKey,
@@ -199,7 +199,7 @@ function EmployeeRow(
         ? <div class="supervisor-cell"><TinyAvatar name={supervisorName} />{supervisorName}</div>
         : <span style={{ color: '#94a3b8' }}>No supervisor</span>}</td>}
       {visibleColumns.includes('employmentType') && <td data-column="employmentType">{humanize(type)}</td>}
-      {visibleColumns.includes('status') && <td data-column="status"><span class={`pill ${statusTone(emp.status)}`}>{humanize(emp.status)}</span></td>}
+      {visibleColumns.includes('status') && <td data-column="status"><Badge tone={statusTone(emp.status)}>{humanize(emp.status)}</Badge></td>}
       {visibleColumns.includes('readiness') && <td data-column="readiness">
         {emp.readiness ? <div class="em-readiness" aria-label={`${emp.readiness.percent}% ready${emp.readiness.blockedDomains.length ? `; blockers: ${emp.readiness.blockedDomains.join(', ')}` : ''}`}>
           <div><span>Record readiness</span><strong>{emp.readiness.percent}%</strong></div>
@@ -208,7 +208,7 @@ function EmployeeRow(
           <i aria-hidden="true"><b style={readinessFillStyle(emp.readiness.percent)} /></i>
         </div> : <span class="em-readiness-restricted">Restricted</span>}
       </td>}
-      {visibleColumns.includes('trainingStatus') && <td data-column="trainingStatus"><span class={`pill ${TRAINING_TONE[emp.trainingStatus]}`}>{TRAINING_LABEL[emp.trainingStatus]}</span></td>}
+      {visibleColumns.includes('trainingStatus') && <td data-column="trainingStatus"><Badge tone={TRAINING_TONE[emp.trainingStatus]}>{TRAINING_LABEL[emp.trainingStatus]}</Badge></td>}
       {visibleColumns.includes('actions') && <td data-column="actions" class="kebab" onClick={e => e.stopPropagation()}>
         <EmployeeRowMenu emp={emp} name={name} menuId={kebabId} isOpen={isOpen} setOpenId={setOpenId}
           access={access} onSelect={onSelect} onAction={onAction} />

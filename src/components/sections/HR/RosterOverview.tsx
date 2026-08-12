@@ -12,7 +12,7 @@ import { useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
-import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, Button } from '@ui';
+import { Badge, PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, Button, type BadgeTone } from '@ui';
 import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
 import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import {
@@ -39,11 +39,10 @@ function isoWeekEnd(start: string): string {
   const d = new Date(start + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + 6);
   return d.toISOString().slice(0, 10);
 }
-function statusTone(s: RosterStatus): string {
-  if (s === 'published') return 'green';
-  if (s === 'draft' || s === 'returned') return 'gray';
-  if (s === 'archived') return 'red';
-  return 'gray';
+function statusTone(s: RosterStatus): BadgeTone {
+  if (s === 'published') return 'success';
+  if (s === 'archived') return 'danger';
+  return 'neutral';
 }
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
@@ -144,7 +143,7 @@ function RostersTab({ canManage, canPublish }: { canManage: boolean; canPublish:
                     <td class="obx-meta">{fmtDate(r.periodStart)} – {fmtDate(r.periodEnd)}</td>
                     <td class="obx-meta" style={{ textAlign: 'center' }}>{r.assignmentCount}</td>
                     <td class="obx-meta">{r.publishedAt ? fmtDate(r.publishedAt) : '—'}</td>
-                    <td><span class={`obx-pill ${statusTone(r.status)}`}>{humanize(r.status)}</span></td>
+                    <td><Badge tone={statusTone(r.status)}>{humanize(r.status)}</Badge></td>
                   </tr>
                 ))}
               </tbody>
@@ -280,7 +279,7 @@ function RosterDetail({ rosterId, canManage, canPublish, onBack }: {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
         <button class="obx-back" onClick={onBack}>← Rosters</button>
         <h2 style={{ margin: 0, fontSize: 18 }}>{roster.rosterNo} — {roster.title}</h2>
-        <span class={`obx-pill ${statusTone(roster.status)}`}>{humanize(roster.status)}</span>
+        <Badge tone={statusTone(roster.status)}>{humanize(roster.status)}</Badge>
         <span class="obx-meta">{fmtDate(roster.periodStart)} – {fmtDate(roster.periodEnd)}</span>
       </div>
 
@@ -428,7 +427,7 @@ function TemplatesTab({ canManage }: { canManage: boolean }): VNode {
                         <td class="obx-meta">{t.paidHours}h</td>
                         <td class="obx-meta">{t.breakMinutes}m</td>
                         <td class="obx-meta">{t.siteId ? 'Site' : 'All'}</td>
-                        <td><span class={`obx-pill ${t.isActive ? 'green' : 'gray'}`}>{t.isActive ? 'Active' : 'Inactive'}</span></td>
+                        <td><Badge tone={t.isActive ? 'success' : 'neutral'}>{t.isActive ? 'Active' : 'Inactive'}</Badge></td>
                         {canManage && (
                           <td>
                             <Button variant="outline" tone="danger" size="sm" onClick={() => { void (async () => {
@@ -473,7 +472,7 @@ function TemplatesTab({ canManage }: { canManage: boolean }): VNode {
                       <td><b>{r.code}</b></td><td>{r.name}</td>
                       <td class="obx-meta">{r.cycleDays}</td>
                       <td class="obx-meta">{r.pattern.length} day(s) defined</td>
-                      <td><span class={`obx-pill ${r.isActive ? 'green' : 'gray'}`}>{r.isActive ? 'Active' : 'Inactive'}</span></td>
+                      <td><Badge tone={r.isActive ? 'success' : 'neutral'}>{r.isActive ? 'Active' : 'Inactive'}</Badge></td>
                     </tr>
                   ))}
                 </tbody>
@@ -499,7 +498,7 @@ function TemplatesTab({ canManage }: { canManage: boolean }): VNode {
                       <td class="obx-meta">{r.departmentId ?? 'All'}</td>
                       <td class="obx-meta">{r.requiredHeadcount}</td>
                       <td class="obx-meta">{r.dayOfWeek !== null ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][r.dayOfWeek] ?? '?' : 'Every day'}</td>
-                      <td><span class={`obx-pill ${r.isActive ? 'green' : 'gray'}`}>{r.isActive ? 'Active' : 'Inactive'}</span></td>
+                      <td><Badge tone={r.isActive ? 'success' : 'neutral'}>{r.isActive ? 'Active' : 'Inactive'}</Badge></td>
                     </tr>
                   ))}
                 </tbody>
@@ -539,11 +538,11 @@ function MyShiftsTab(): VNode {
               <tbody>
                 {shifts.map(s => (
                   <tr key={s.workDate} style={{ background: s.workDate === today ? '#f0fdf4' : undefined }}>
-                    <td><b>{fmtDate(s.workDate)}</b>{s.workDate === today ? <span class="obx-pill green" style={{ marginLeft: 6, fontSize: 10 }}>Today</span> : null}</td>
+                    <td><b>{fmtDate(s.workDate)}</b>{s.workDate === today ? <Badge tone="success" size="sm" class="obx-inline-badge">Today</Badge> : null}</td>
                     <td>
                       {s.kind === 'shift'
                         ? <b>{s.shiftName ?? s.shiftCode ?? 'Shift'}</b>
-                        : <span class={`obx-pill ${s.kind === 'leave' ? 'gray' : 'gray'}`}>{humanize(s.kind)}</span>}
+                        : <Badge tone="neutral">{humanize(s.kind)}</Badge>}
                     </td>
                     <td class="obx-meta">{s.startsAt?.slice(0,5) ?? '—'}</td>
                     <td class="obx-meta">{s.endsAt?.slice(0,5) ?? '—'}</td>

@@ -14,7 +14,7 @@
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
-import { PageHeader, Drawer, Field, FormGrid, TextInput, SelectInput, Modal, Button, FileInput } from '@ui';
+import { Badge, PageHeader, Drawer, Field, FormGrid, TextInput, SelectInput, Modal, Button, FileInput } from '@ui';
 import {
   useOnboardingTasksList, useOnboardingTaskDetail, useOnboardingPackages,
   useOnboardingCompleteTask, useOnboardingReassignTask, useOnboardingBlockTask, useOnboardingUnblockTask,
@@ -22,7 +22,7 @@ import {
 } from '@api/hr/onboarding';
 import { useHrEmployees } from '@api/hr/employees';
 import type { OnboardingTaskRow, DueState } from '../../../../types/hrOnboarding';
-import { taskStatusPill, pillClass, humanize, fmtDate, fmtDateTime } from './onboardingStatus';
+import { taskStatusPill, humanize, fmtDate, fmtDateTime } from './onboardingStatus';
 import './onboardingCase.css';
 
 type ViewMode = 'table' | 'board' | 'owner' | 'due';
@@ -135,9 +135,9 @@ export function OnboardingTasksWorkspace({
   }
 
   // ── shared row bits ──────────────────────────────────────────────────────────--
-  const Pill = ({ s }: { s: OnboardingTaskRow['status'] }): VNode => {
+  const TaskStatusBadge = ({ s }: { s: OnboardingTaskRow['status'] }): VNode => {
     const p = taskStatusPill(s);
-    return <span class={`obx-pill ${pillClass(p)}`}>{p.label}</span>;
+    return <Badge tone={p.tone}>{p.label}</Badge>;
   };
   const rowActions = (t: OnboardingTaskRow): VNode => (
     <div class="obx-rowbtns">
@@ -151,7 +151,7 @@ export function OnboardingTasksWorkspace({
 
   const taskCard = (t: OnboardingTaskRow): VNode => (
     <button type="button" class="obx-taskcard" key={t.taskId} onClick={() => openDrawer(t)}>
-      <div class="obx-taskcard-title">{t.taskTitle}{t.isBlocking && <span class="obx-pill red" style={{ marginLeft: 6 }}>blocking</span>}</div>
+      <div class="obx-taskcard-title">{t.taskTitle}{t.isBlocking && <Badge tone="danger" class="obx-inline-badge">blocking</Badge>}</div>
       <div class="obx-taskcard-meta">{t.caseNo}{t.employeeName ? ` · ${t.employeeName}` : ''}</div>
       <div class="obx-taskcard-foot">
         <span class="obx-meta">{t.assignedToName ?? humanize(t.ownerRole ?? 'Unassigned')}</span>
@@ -169,7 +169,7 @@ export function OnboardingTasksWorkspace({
             <thead><tr><th>Task</th><th>Case</th><th>Employee</th><th>Owner</th><th>Assignee</th><th>Status</th><th>Due</th><th>Actions</th></tr></thead>
             <tbody>{rows.map(t => (
               <tr key={t.taskId} style={{ cursor: 'pointer' }} onClick={() => openDrawer(t)}>
-                <td><b>{t.taskTitle}</b>{t.isBlocking && <span class="obx-pill red" style={{ marginLeft: 8 }}>blocking</span>}</td>
+                <td><b>{t.taskTitle}</b>{t.isBlocking && <Badge tone="danger" class="obx-inline-badge">blocking</Badge>}</td>
                 <td class="obx-meta">{t.caseNo}</td>
                 <td class="obx-meta">{t.employeeName ?? '—'}</td>
                 <td class="obx-meta">{humanize(t.ownerRole ?? '—')}</td>
@@ -179,7 +179,7 @@ export function OnboardingTasksWorkspace({
                     {employees.map(e2 => <option key={e2.id} value={e2.id}>{e2.full_name ?? e2.email ?? e2.id}</option>)}
                   </select>
                 </td>
-                <td><Pill s={t.status} /></td>
+                <td><TaskStatusBadge s={t.status} /></td>
                 <td class={isOverdue(t) ? 'obx-overdue' : 'obx-meta'}>{fmtDate(t.dueAt)}</td>
                 <td onClick={e => e.stopPropagation()}>{rowActions(t)}</td>
               </tr>
@@ -217,7 +217,7 @@ export function OnboardingTasksWorkspace({
                   <tr key={t.taskId} style={{ cursor: 'pointer' }} onClick={() => openDrawer(t)}>
                     <td><b>{t.taskTitle}</b></td>
                     <td class="obx-meta">{t.caseNo}{t.employeeName ? ` · ${t.employeeName}` : ''}</td>
-                    <td><Pill s={t.status} /></td>
+                    <td><TaskStatusBadge s={t.status} /></td>
                     <td class={isOverdue(t) ? 'obx-overdue' : 'obx-meta'}>{fmtDate(t.dueAt)}</td>
                     <td onClick={e => e.stopPropagation()}>{rowActions(t)}</td>
                   </tr>
@@ -385,7 +385,7 @@ function TaskDrawer({
             <div class="obx-section-head"><h2><i class="fas fa-circle-info" />Details</h2></div>
             <div class="obx-section-body" style={{ padding: '10px 16px' }}>
               <table class="obx-table"><tbody>
-                <tr><td class="obx-meta">Status</td><td><span class={`obx-pill ${pillClass(taskStatusPill(t.status))}`}>{taskStatusPill(t.status).label}</span></td></tr>
+                <tr><td class="obx-meta">Status</td><td><Badge tone={taskStatusPill(t.status).tone}>{taskStatusPill(t.status).label}</Badge></td></tr>
                 <tr><td class="obx-meta">Package</td><td>{humanize(t.packageKey)}</td></tr>
                 <tr><td class="obx-meta">Owner role</td><td>{humanize(t.ownerRole ?? '—')}</td></tr>
                 <tr><td class="obx-meta">Assignee</td><td>
@@ -397,7 +397,7 @@ function TaskDrawer({
                 <tr><td class="obx-meta">Module</td><td>{t.moduleKey ? humanize(t.moduleKey) : '—'}</td></tr>
                 <tr><td class="obx-meta">Due</td><td>{fmtDate(t.dueAt)}</td></tr>
                 <tr><td class="obx-meta">Priority</td><td>{humanize(t.priority ?? 'normal')}</td></tr>
-                <tr><td class="obx-meta">Blocking</td><td>{t.isBlocking ? <span class="obx-pill red">Yes</span> : 'No'}</td></tr>
+                <tr><td class="obx-meta">Blocking</td><td>{t.isBlocking ? <Badge tone="danger">Yes</Badge> : 'No'}</td></tr>
                 <tr><td class="obx-meta">Evidence required</td><td>{t.requiresEvidence ? 'Yes' : 'No'}</td></tr>
                 {t.blockedReason && <tr><td class="obx-meta">Blocked reason</td><td>{t.blockedReason}</td></tr>}
                 {t.dependencyKeys.length > 0 && <tr><td class="obx-meta">Depends on</td><td class="obx-meta">{t.dependencyKeys.map(humanize).join(', ')}</td></tr>}

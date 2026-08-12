@@ -9,13 +9,13 @@ import type {
   OnboardingCaseStatus, OnboardingTaskStatus, OnboardingHandoffStatus,
   OnboardingBlockerStatus, OnboardingSeverity, OnboardingCaseActionStatus,
 } from '../../../../types/hrOnboarding';
+import type { BadgeTone } from '@ui';
 
-export interface Pill { label: string; c: string; b: string }
+export interface Pill { label: string; tone: BadgeTone }
 const T = {
-  gray:  { c: '#475569', b: '#eef2f7' }, blue:  { c: '#1d4ed8', b: '#eaf2ff' },
-  green: { c: '#15803d', b: '#dcfce7' }, amber: { c: '#b45309', b: '#fef3c7' },
-  red:   { c: '#b91c1c', b: '#fee2e2' }, purple:{ c: '#6d28d9', b: '#f1efff' },
-};
+  gray: { tone: 'neutral' }, blue: { tone: 'info' }, green: { tone: 'success' },
+  amber: { tone: 'warning' }, red: { tone: 'danger' }, purple: { tone: 'accent' },
+} satisfies Record<string, { tone: BadgeTone }>;
 
 export const CASE_STATUS: Record<OnboardingCaseStatus, Pill> = {
   draft:                { label: 'Draft', ...T.gray },   open:        { label: 'Open', ...T.gray },
@@ -51,20 +51,20 @@ export const CASE_ACTION_STATUS: Record<OnboardingCaseActionStatus, Pill> = {
 };
 
 const fallback = (s: string): Pill => ({ label: humanize(s), ...T.gray });
-export const caseStatusPill    = (s: OnboardingCaseStatus): Pill => CASE_STATUS[s] ?? fallback(s);
-export const taskStatusPill    = (s: OnboardingTaskStatus): Pill => TASK_STATUS[s] ?? fallback(s);
-export const handoffStatusPill = (s: OnboardingHandoffStatus): Pill => HANDOFF_STATUS[s] ?? fallback(s);
-export const blockerStatusPill = (s: OnboardingBlockerStatus): Pill => BLOCKER_STATUS[s] ?? fallback(s);
-export const severityPill      = (s: OnboardingSeverity): Pill => SEVERITY[s] ?? fallback(s);
-export const caseActionPill    = (s: OnboardingCaseActionStatus): Pill => CASE_ACTION_STATUS[s] ?? fallback(s);
+export const caseStatusPill = (s: string): Pill => (CASE_STATUS as Partial<Record<string, Pill>>)[s] ?? fallback(s);
+export const taskStatusPill = (s: string): Pill => (TASK_STATUS as Partial<Record<string, Pill>>)[s] ?? fallback(s);
+export const handoffStatusPill = (s: string): Pill => (HANDOFF_STATUS as Partial<Record<string, Pill>>)[s] ?? fallback(s);
+export const blockerStatusPill = (s: string): Pill => (BLOCKER_STATUS as Partial<Record<string, Pill>>)[s] ?? fallback(s);
+export const severityPill = (s: string): Pill => (SEVERITY as Partial<Record<string, Pill>>)[s] ?? fallback(s);
+export const caseActionPill = (s: string): Pill => (CASE_ACTION_STATUS as Partial<Record<string, Pill>>)[s] ?? fallback(s);
 
 export const CASE_STATUS_OPTIONS = Object.keys(CASE_STATUS) as OnboardingCaseStatus[];
 
-const BG_TO_CLS: Record<string, string> = {
-  [T.gray.b]: 'gray', [T.blue.b]: 'blue', [T.green.b]: 'green',
-  [T.amber.b]: 'amber', [T.red.b]: 'red', [T.purple.b]: 'purple',
+/** Temporary class bridge for the two lint-blocked onboarding surfaces. */
+const TONE_TO_CLASS: Record<BadgeTone, string> = {
+  neutral: 'gray', info: 'blue', success: 'green', warning: 'amber', danger: 'red', accent: 'purple',
 };
-export const pillClass = (p: Pill): string => BG_TO_CLS[p.b] ?? 'gray';
+export const pillClass = (p: Pill): string => TONE_TO_CLASS[p.tone];
 
 export function humanize(s: string | null | undefined): string {
   if (!s) return '—';

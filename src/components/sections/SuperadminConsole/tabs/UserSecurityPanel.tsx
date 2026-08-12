@@ -21,7 +21,7 @@ import {
 } from '@api/security';
 import { confirm }          from '@components/shared/ConfirmDialog';
 import { useConsoleUsers }  from '../hooks';
-import { Button }           from '@ui';
+import { Badge, Button }    from '@ui';
 
 export function UserSecurityPanel(): VNode {
   const canView          = useCan('auth.security.view');
@@ -140,9 +140,7 @@ export function UserSecurityPanel(): VNode {
               <div class="totp-card-desc">Current authentication factors for this user.</div>
             </div>
             {status?.mfaMandatory && (
-              <div class="totp-badge totp-badge--on" style={{ fontSize: '0.72rem' }}>
-                MFA required
-              </div>
+              <Badge tone="success">MFA required</Badge>
             )}
           </div>
 

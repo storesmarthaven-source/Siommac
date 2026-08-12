@@ -258,10 +258,13 @@ export const badgeDef: ComponentDef = {
   componentPath: 'src/ui/primitives/Badge.tsx',
   importFrom: '@ui',
   migration: {
-    replaces: ['.pill', '.obx-pill', '.hrfin-pill', '.stat-badge'],
-    deprecatedImports: ['HrfinPill', 'StatusPill'],
-    nextSurface: 'Employee Master',
-    notes: ['TEN implementations exist across HSE, Finance, Settings, HR and the messenger, each with its own hex for "active".'],
+    replaces: ['.pill', '.obx-pill', '.stat-badge', '.totp-badge'],
+    deprecatedImports: ['StatusPill'],
+    nextSurface: 'TextInput / FormField',
+    notes: [
+      'Generic status labels now use semantic Badge tones. Domain adapters such as HrfinPill may remain only when they translate a bounded domain vocabulary into Badge props.',
+      'Identity, date, presence, interactive toggle/filter chips and HSE risk-score indicators remain separate by design; they are not generic statuses.',
+    ],
   },
 
   props: {

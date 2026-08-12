@@ -11,7 +11,7 @@ import { type VNode } from 'preact';
 import { useRef, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { can } from '@lib/permissions';
-import { PageHeader, EmptyState, Button } from '@ui';
+import { Badge, PageHeader, EmptyState, Button, type BadgeTone } from '@ui';
 import {
   useAttendanceRecords, useTimesheets, useAttendanceExceptions, useAttendanceStats,
   useWaiveException, useResolveException, useSubmitTimesheet, useReopenTimesheet, useCorrectRecord, fmtMinutes,
@@ -51,14 +51,14 @@ const SURFACES: { id: Surface; label: string }[] = [
   { id: 'exceptions',  label: 'Exceptions' },
 ];
 
-function tsTone(s: string): string {
-  return s === 'approved' ? 'green' : s === 'rejected' ? 'red' : s === 'submitted' || s === 'in_review' ? 'amber' : 'gray';
+function tsTone(s: string): BadgeTone {
+  return s === 'approved' ? 'success' : s === 'rejected' ? 'danger' : s === 'submitted' || s === 'in_review' ? 'warning' : 'neutral';
 }
-function excTone(s: string): string {
-  return s === 'resolved' ? 'green' : s === 'waived' ? 'gray' : 'amber';
+function excTone(s: string): BadgeTone {
+  return s === 'resolved' ? 'success' : s === 'waived' ? 'neutral' : 'warning';
 }
-function statTone(s: string): string {
-  return s === 'present' ? 'green' : s === 'absent' || s === 'missing_punch' ? 'red' : s === 'on_leave' || s === 'holiday' ? 'gray' : 'amber';
+function statTone(s: string): BadgeTone {
+  return s === 'present' ? 'success' : s === 'absent' || s === 'missing_punch' ? 'danger' : s === 'on_leave' || s === 'holiday' ? 'neutral' : 'warning';
 }
 const fmtTime = (iso: string | null): string => (iso ? new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—');
 
@@ -176,7 +176,7 @@ export function AttendanceOverview(): VNode {
                     <td class="obx-meta">{fmtMinutes(r.workedMinutes)}</td>
                     <td class="obx-meta">{r.lateMinutes ? fmtMinutes(r.lateMinutes) : '—'}</td>
                     <td class="obx-meta">{r.overtimeMinutes ? fmtMinutes(r.overtimeMinutes) : '—'}</td>
-                    <td><span class={`obx-pill ${statTone(r.status)}`}>{humanize(r.status)}</span></td>
+                    <td><Badge tone={statTone(r.status)}>{humanize(r.status)}</Badge></td>
                     {canCorrect && <td style={{ textAlign: 'right' }}><Button variant="secondary" size="sm" onClick={() => setCorrecting(r)} iconLeft={<i class="fas fa-pen" />}>Correct</Button></td>}
                   </tr>
                 ))}</tbody>
@@ -203,7 +203,7 @@ export function AttendanceOverview(): VNode {
                       <td class="obx-meta">{fmtMinutes(t.totalWorkedMinutes)}</td>
                       <td class="obx-meta">{t.totalOvertimeMinutes ? fmtMinutes(t.totalOvertimeMinutes) : '—'}</td>
                       <td class="obx-meta" style={{ textAlign: 'center' }}>{t.openExceptionCount}</td>
-                      <td><span class={`obx-pill ${tsTone(t.status)}`}>{humanize(t.status)}</span></td>
+                      <td><Badge tone={tsTone(t.status)}>{humanize(t.status)}</Badge></td>
                       <td>
                         {canSubmit && <button class="obx-mini" onClick={() => { const key = submitKeys.current.get(t.id) ?? crypto.randomUUID(); submitKeys.current.set(t.id, key); void run(submitMut.mutateAsync({ timesheetId: t.id, idempotencyKey: key }).then(r => { submitKeys.current.delete(t.id); return r; }), 'Timesheet submitted.'); }}>Submit</button>}
                         {canReopen && <button class="obx-mini" onClick={() => void run(reopenMut.mutateAsync({ timesheetId: t.id }), 'Timesheet reopened.')}>Reopen</button>}
@@ -231,7 +231,7 @@ export function AttendanceOverview(): VNode {
                     <td class="obx-meta">{x.employeeId}</td>
                     <td class="obx-meta">{humanize(x.exceptionType)}</td>
                     <td class="obx-meta">{x.minutes != null ? fmtMinutes(x.minutes) : '—'}</td>
-                    <td><span class={`obx-pill ${excTone(x.status)}`}>{humanize(x.status)}</span></td>
+                    <td><Badge tone={excTone(x.status)}>{humanize(x.status)}</Badge></td>
                     <td>
                       {canManageExc && x.status === 'open' ? (
                         <>

@@ -2,9 +2,9 @@
 
 # settings Module Map
 
-Source fingerprint: `b4e9c976779157dafe2648dc`
+Source fingerprint: `77864fb4d420d818b6487708`
 
-Files: 44 | Symbols: 253 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 0 unmounted | API calls: 18 | DB objects: 21 | E2E suites: 2
+Files: 44 | Symbols: 252 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 0 unmounted | API calls: 18 | DB objects: 21 | E2E suites: 2
 
 ## Widgets and Tiles
 
@@ -87,8 +87,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `TotpSetupModal` | function / component | `src/components/sections/Settings/SettingsSection.tsx:446` | `-` |
 | `TotpDisableModal` | function / component | `src/components/sections/Settings/SettingsSection.tsx:646` | `-` |
 | `SettingsSection` | function / component | `src/components/sections/Settings/SettingsSection.tsx:1305` | `-` |
-| `SwzCardProps` | interface / ui-tile | `src/components/sections/Settings/SwzCard.tsx:39` | `-` |
-| `SwzCard` | function / component, ui-tile | `src/components/sections/Settings/SwzCard.tsx:50` | `-` |
+| `SwzCardProps` | interface / ui-tile | `src/components/sections/Settings/SwzCard.tsx:31` | `-` |
+| `SwzCard` | function / component, ui-tile | `src/components/sections/Settings/SwzCard.tsx:42` | `-` |
 | `SwzCatalogPage` | function / component | `src/components/sections/Settings/SwzCatalogPage.tsx:39` | `-` |
 | `SwzIcon` | function / component | `src/components/sections/Settings/swzIcons.tsx:34` | `-` |
 | `swzCardIconName` | function / ui-tile | `src/components/sections/Settings/swzIcons.tsx:40` | `-` |
@@ -133,7 +133,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/settingsCatalog.ts` | 250 |
 | frontend-page | `src/components/sections/Settings/ManifestReviewPanel.tsx` | 258 |
 | frontend-page | `src/components/sections/Settings/SettingsSection.tsx` | 1419 |
-| frontend-page | `src/components/sections/Settings/SwzCard.tsx` | 193 |
+| frontend-page | `src/components/sections/Settings/SwzCard.tsx` | 185 |
 | frontend-page | `src/components/sections/Settings/SwzCatalogPage.tsx` | 185 |
 | frontend-page | `src/components/sections/Settings/api.ts` | 156 |
 | frontend-page | `src/components/sections/Settings/domSync.ts` | 73 |

@@ -2,7 +2,7 @@
 
 # security Module Map
 
-Source fingerprint: `b4e9c976779157dafe2648dc`
+Source fingerprint: `77864fb4d420d818b6487708`
 
 Files: 46 | Symbols: 387 | Widgets: 0 | Unique mounted endpoints: 51 | Route definitions: 51 mounted + 0 unmounted | API calls: 31 | DB objects: 65 | E2E suites: 4
 
@@ -201,5 +201,5 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/schemas/auth.ts` | 123 |
 | frontend-api | `src/api/security.ts` | 470 |
 | frontend-page | `src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx` | 376 |
-| frontend-page | `src/components/sections/SuperadminConsole/tabs/UserSecurityPanel.tsx` | 260 |
+| frontend-page | `src/components/sections/SuperadminConsole/tabs/UserSecurityPanel.tsx` | 258 |
 

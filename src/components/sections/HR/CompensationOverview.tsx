@@ -14,14 +14,14 @@ import { type VNode } from 'preact';
 import { useMemo, useRef, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { can } from '@lib/permissions';
-import { PageHeader, EmptyState, Button } from '@ui';
+import { Badge, PageHeader, EmptyState, Button } from '@ui';
 import { usePayItems, useCompensationMutation, hrCompensationApi, type CreatePayItemArgs, type PayItem } from '@api/hr/compensation';
 import { openActionModal, rejectAction, retireAction, toActionRecord, statusBadge } from '@/components/common/actions';
 import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import { usePayComponents, type PayComponent } from '@api/finance/statutory';
 import { useStatutoryProfile, useStatutoryProfileMutation, hrStatutoryProfileApi, type CaptureStatutoryProfileArgs } from '@api/hr/statutoryProfile';
 import { useHrEmployees, type HrEmployeeRow } from '@api/hr/employees';
-import { fmtMoney, fmtDate, humanize, statusTone } from '../Finance/financeShared';
+import { fmtMoney, fmtDate, humanize, statusBadgeTone } from '../Finance/financeShared';
 import '../Finance/finance.css';
 import { HRQueryNotice } from './HRQueryState';
 
@@ -112,7 +112,7 @@ function PayItemsSurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id:
                 <td class="obx-meta">{compName(it.componentId)}</td>
                 <td class="obx-meta">{it.amount != null ? fmtMoney(it.amount) : it.percent != null ? `${it.percent}%` : '—'}</td>
                 <td class="obx-meta">{fmtDate(it.effectiveFrom)}{it.effectiveTo ? ` → ${fmtDate(it.effectiveTo)}` : ''}</td>
-                <td><span class={`obx-pill ${statusTone(it.status)}`}>{humanize(it.status)}</span></td>
+                <td><Badge tone={statusBadgeTone(it.status)}>{humanize(it.status)}</Badge></td>
                 <td style={{ textAlign: 'right' }}>
                   <div class="obx-rowbtns" style={{ justifyContent: 'flex-end' }}>
                     {canManage && it.status === 'draft' && <Button variant="secondary" size="sm" onClick={() => { const key = submitKeys.current.get(it.id) ?? crypto.randomUUID(); submitKeys.current.set(it.id, key); void run(submitMut.mutateAsync({ id: it.id, idempotencyKey: key }).then(r => { submitKeys.current.delete(it.id); return r; }), 'Submitted for approval.'); }}>Submit</Button>}
@@ -298,7 +298,7 @@ function StatutorySurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id
           <option value="">— select —</option>
           {emps.map(em => <option value={em.id} key={em.id}>{nameOf(em.id)}</option>)}
         </select>
-        {profile && <span class={`obx-pill ${statusTone(profile.nisStatus)}`}>{humanize(profile.nisStatus)}</span>}
+        {profile && <Badge tone={statusBadgeTone(profile.nisStatus)}>{humanize(profile.nisStatus)}</Badge>}
         {canCapture && employeeId && <Button variant="secondary" size="sm" onClick={() => setEditOpen(true)} iconLeft={<i class="fas fa-pen" />}>Capture / Edit profile</Button>}
         {canCapture && profile && (profile.nisStatus === 'pending_verification' || profile.nisStatus === 'not_available') && (
           <Button variant="primary" size="sm" loading={submitMut.isPending} onClick={() => void submit()}>Submit to Finance</Button>

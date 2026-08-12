@@ -13,7 +13,7 @@ import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
-import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, Button } from '@ui';
+import { Badge, PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, Button, type BadgeTone } from '@ui';
 import {
   useTransfers, useTransfersMutation, hrTransfersApi,
 } from '@api/hr/transfers';
@@ -27,10 +27,10 @@ import { HRQueryNotice } from './HRQueryState';
 const STATUS_FILTERS = ['all', 'submitted', 'in_review', 'returned', 'applied', 'rejected', 'cancelled'] as const;
 
 function humanize(s: string): string { return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
-function statusTone(s: string): 'green' | 'gray' | 'red' {
-  if (s === 'applied')   return 'green';
-  if (s === 'rejected' || s === 'cancelled') return 'red';
-  return 'gray';
+function statusTone(s: string): BadgeTone {
+  if (s === 'applied') return 'success';
+  if (s === 'rejected' || s === 'cancelled') return 'danger';
+  return 'neutral';
 }
 
 export function TransfersOverview(): VNode {
@@ -96,7 +96,7 @@ export function TransfersOverview(): VNode {
                       <td class="obx-meta">{r.effectiveDate ?? '—'}</td>
                       <td class="obx-meta">{r.requestedByName ?? r.requestedBy}</td>
                       <td class="obx-meta" style={{ fontSize: 12 }}>{summarizeChanges(r)}</td>
-                      <td><span class={`obx-pill ${statusTone(r.status)}`}>{humanize(r.status)}</span></td>
+                      <td><Badge tone={statusTone(r.status)}>{humanize(r.status)}</Badge></td>
                     </tr>
                   ))}
                 </tbody>

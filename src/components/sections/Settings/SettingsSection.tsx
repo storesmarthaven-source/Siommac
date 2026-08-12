@@ -45,7 +45,7 @@ import { showSection, buildSidebar } from '@/components/nav/navCore';
 import { UserSecurityPanel } from '@/components/sections/SuperadminConsole/tabs/UserSecurityPanel';
 import { SecurityPolicyTab } from '@/components/sections/SuperadminConsole/tabs/SecurityPolicyTab';
 import { useStepUp, withStepUp } from '@/hooks/useStepUp';
-import { Button }          from '@ui';
+import { Badge, Button }   from '@ui';
 import {
   useTotpStatus,
   useStartTotpSetup,
@@ -268,9 +268,9 @@ function TrustedDevicesCard(): VNode {
           </div>
         </div>
         {!isLoading && (
-          <div class={`totp-badge ${devices.length > 0 ? 'totp-badge--on' : 'totp-badge--off'}`}>
+          <Badge tone={devices.length > 0 ? 'success' : 'neutral'}>
             {devices.length > 0 ? `${devices.length} trusted` : 'None'}
-          </div>
+          </Badge>
         )}
       </div>
 
@@ -938,9 +938,9 @@ function PasskeysCard(): VNode {
           </div>
         </div>
         {!isLoading && (
-          <div class={`totp-badge ${passkeys.length > 0 ? 'totp-badge--on' : 'totp-badge--off'}`}>
+          <Badge tone={passkeys.length > 0 ? 'success' : 'neutral'}>
             {passkeys.length > 0 ? `${passkeys.length} registered` : 'None'}
-          </div>
+          </Badge>
         )}
       </div>
 
@@ -1059,9 +1059,9 @@ function AuthenticatorCard(): VNode {
             </div>
           </div>
           {!isLoading && (
-            <div class={`totp-badge ${enabled ? 'totp-badge--on' : 'totp-badge--off'}`}>
+            <Badge tone={enabled ? 'success' : 'neutral'}>
               {enabled ? 'Enabled' : 'Disabled'}
-            </div>
+            </Badge>
           )}
         </div>
 

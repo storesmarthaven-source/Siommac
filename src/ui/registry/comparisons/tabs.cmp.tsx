@@ -18,6 +18,7 @@
 import { type ComparisonSet } from '../types';
 import { Tabs } from '../../navigation/Tabs';
 import { LucideIcon } from '../../LucideIcon';
+import { Badge } from '../../primitives/Badge';
 
 const noop = (): void => { /* preview */ };
 
@@ -41,7 +42,7 @@ export const TABS_COMPARISON: ComparisonSet = {
           <div style={{ display: 'flex', gap: '18px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
             {[['Task templates', '12'], ['Handoff templates', '3'], ['Custom actions', '5']].map(([l, n], i) => (
               <button key={l} type="button" class={`obx-btn${i === 0 ? ' primary' : ''}`} style={{ border: 'none', background: 'transparent', fontWeight: 600, color: i === 0 ? 'var(--siomac-navy)' : 'var(--text-muted)' }}>
-                {l} <span class="obx-pill blue" style={{ marginLeft: 4 }}>{n}</span>
+                {l} <Badge tone="info" size="sm">{n}</Badge>
               </button>
             ))}
           </div>

@@ -109,15 +109,6 @@
 
 .hr-emp-name { font-weight: 600; font-size: 0.88rem; }
 
-/* role badges */
-.hr-role-badge {
-  display: inline-block; padding: 4px 13px; border-radius: 30px;
-  font-size: 0.68rem; font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: .3px;
-}
-.hr-role-admin    { background: #FFEBEE; color: #C62828; }
-.hr-role-manager  { background: #E3F2FD; color: #1565C0; }
-.hr-role-employee { background: #E8F5E9; color: #2E7D32; }
-
 /* rate input cell */
 .hr-rate-cell {
   display: flex; align-items: center; justify-content: center; gap: 7px;

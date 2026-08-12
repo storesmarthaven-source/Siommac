@@ -12,7 +12,7 @@ import { type VNode } from 'preact';
 import { useRef, useState } from 'preact/hooks';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
-import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, TableSkeleton, Button } from '@ui';
+import { Badge, PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, TableSkeleton, Button, type BadgeTone } from '@ui';
 import {
   useRequestTypes, useMyRequests, useAllRequests, useRequestsMutation, hrRequestsApi,
 } from '@api/hr/requests';
@@ -27,12 +27,11 @@ function requestRecord(req: HrRequestRow) {
   });
 }
 
-function statusTone(s: string): 'green' | 'gray' | 'red' | 'blue' | 'orange' {
-  if (s === 'fulfilled' || s === 'approved') return 'green';
-  if (s === 'rejected' || s === 'cancelled') return 'red';
-  if (s === 'in_review') return 'blue';
-  if (s === 'returned') return 'orange';
-  return 'gray';
+function statusTone(s: string): BadgeTone {
+  if (s === 'fulfilled' || s === 'approved') return 'success';
+  if (s === 'rejected' || s === 'cancelled') return 'danger';
+  if (s === 'in_review') return 'info';
+  return 'neutral';
 }
 
 const TERMINAL = new Set(['approved', 'rejected', 'fulfilled', 'cancelled']);
@@ -164,7 +163,7 @@ function MyRequestsTab(): VNode {
                     <td class="obx-meta">{humanize(r.requestType)}</td>
                     <td>{r.title}</td>
                     <td class="obx-meta" style={{ textTransform: 'capitalize' }}>{r.priority}</td>
-                    <td><span class={`obx-pill ${statusTone(r.status)}`}>{humanize(r.status)}</span></td>
+                    <td><Badge tone={statusTone(r.status)}>{humanize(r.status)}</Badge></td>
                     <td class="obx-meta">{r.requestedAt ? new Date(r.requestedAt).toLocaleDateString() : '—'}</td>
                     <td>
                       {!TERMINAL.has(r.status) && (
@@ -360,7 +359,7 @@ function TriageTab(): VNode {
                     <td class="obx-meta">{r.employeeName ?? r.employeeId}</td>
                     <td class="obx-meta">{humanize(r.requestType)}</td>
                     <td>{r.title}</td>
-                    <td><span class={`obx-pill ${statusTone(r.status)}`}>{humanize(r.status)}</span></td>
+                    <td><Badge tone={statusTone(r.status)}>{humanize(r.status)}</Badge></td>
                     <td class="obx-meta">{r.requestedAt ? new Date(r.requestedAt).toLocaleDateString() : '—'}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>
                       {(r.status === 'submitted' || r.status === 'in_review') && (
