@@ -9,7 +9,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { HrfinWizardModal } from '@ui';
+import { Dialog, Wizard, type WizardStep } from '@ui';
 import { CostCentrePicker, BudgetCategoryPicker } from './_shared/pickers';
 import {
   financeBudgetsApi,
@@ -157,13 +157,6 @@ export function BudCopyLastYearDialog({ open, onClose, onSuccess }: BudCopyLastY
     return null;
   }
 
-  function handleNext(): void {
-    const err = validate();
-    if (err) { setError(err); return; }
-    setError(null);
-    patch({ step: 1 });
-  }
-
   async function handleSubmit(): Promise<void> {
     const err = validate();
     if (err) { setError(err); return; }
@@ -191,26 +184,7 @@ export function BudCopyLastYearDialog({ open, onClose, onSuccess }: BudCopyLastY
     }
   }
 
-  const primaryLabel = state.step === 0 ? 'Preview →' : 'Copy Budget Lines';
-
-  function handlePrimary(): void {
-    if (state.step === 0) handleNext();
-    else void handleSubmit();
-  }
-
-  return (
-    <HrfinWizardModal
-      open={open}
-      title={state.step === 0 ? 'Copy Budget — Settings' : 'Copy Budget — Preview & Confirm'}
-      stepCount={2}
-      activeStep={state.step}
-      onClose={() => { onClose(); setState(EMPTY); }}
-      onBack={state.step === 1 ? () => patch({ step: 0 }) : undefined}
-      primaryLabel={primaryLabel}
-      onPrimary={handlePrimary}
-      primaryLoading={submitting}
-      primaryDisabled={submitting}
-    >
+  const stepContent = (
       <div class="hrfin">
         {error && (
           <div style={{
@@ -296,6 +270,42 @@ export function BudCopyLastYearDialog({ open, onClose, onSuccess }: BudCopyLastY
 
         {state.step === 1 && <PreviewStep state={state} />}
       </div>
-    </HrfinWizardModal>
+  );
+
+  const steps: WizardStep[] = [
+    {
+      id: 'settings',
+      label: 'Settings',
+      description: 'Years, scope and adjustment',
+      validate,
+      render: () => stepContent,
+    },
+    {
+      id: 'preview',
+      label: 'Preview & confirm',
+      description: 'Review lines before copying',
+      render: () => stepContent,
+    },
+  ];
+
+  const close = (): void => { onClose(); setState(EMPTY); };
+
+  return (
+    <Dialog open={open} onClose={close} size="lg" variant="workspace" busy={submitting} class="hrfin">
+      <Dialog.Header title="Copy Budget" sub="Copy eligible budget lines into a new fiscal year." onClose={close} />
+      <Dialog.Body>
+        <Wizard
+          id="copy-budget-wizard"
+          label="Copy budget steps"
+          steps={steps}
+          value={state.step === 0 ? 'settings' : 'preview'}
+          onChange={id => patch({ step: id === 'settings' ? 0 : 1 })}
+          onSubmit={handleSubmit}
+          submitLabel="Copy Budget Lines"
+          busy={submitting}
+          onCancel={close}
+        />
+      </Dialog.Body>
+    </Dialog>
   );
 }

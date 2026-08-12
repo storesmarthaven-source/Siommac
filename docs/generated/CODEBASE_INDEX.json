@@ -1,13 +1,13 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "7797298f70a3c30ba573f33c64043126342cd8dc",
+    "head": "6ac8eefd2860ae2b426162c97c3e09e22d6562af",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "2755fad8542cccab889b1670",
-    "indexedFiles": 1814
+    "fingerprint": "faabbe86c8d528c029c6523a",
+    "indexedFiles": 1815
   },
   "summary": {
-    "files": 1459,
+    "files": 1460,
     "symbols": 14667,
     "widgets": 63,
     "routes": 978,
@@ -48,7 +48,7 @@
     {
       "id": "finance",
       "counts": {
-        "files": 140,
+        "files": 141,
         "symbols": 1849,
         "widgets": 9,
         "routes": 156,
@@ -4759,8 +4759,8 @@
       "path": "src/components/sections/Finance/ApRecordPaymentDialog.tsx",
       "module": "finance",
       "role": "frontend-page",
-      "lines": 238,
-      "hash": "21454feb16bc04b0"
+      "lines": 234,
+      "hash": "b89fde367e029309"
     },
     {
       "path": "src/components/sections/Finance/ApStatusFilterMenu.tsx",
@@ -4794,8 +4794,8 @@
       "path": "src/components/sections/Finance/BudCopyLastYearDialog.tsx",
       "module": "finance",
       "role": "frontend-page",
-      "lines": 302,
-      "hash": "c4f3eb4bb27e425d"
+      "lines": 312,
+      "hash": "3b2644f0996d54b9"
     },
     {
       "path": "src/components/sections/Finance/BudLineDrawer.tsx",
@@ -4913,8 +4913,8 @@
       "path": "src/components/sections/Finance/PayBridgeDialog.tsx",
       "module": "finance",
       "role": "frontend-page",
-      "lines": 185,
-      "hash": "f4ec75c830b74d5f"
+      "lines": 175,
+      "hash": "a52bb497ffd9beb3"
     },
     {
       "path": "src/components/sections/Finance/PayNewRunWizard.card.test.tsx",
@@ -4941,8 +4941,8 @@
       "path": "src/components/sections/Finance/PayWarningResolveDialog.tsx",
       "module": "finance",
       "role": "frontend-page",
-      "lines": 96,
-      "hash": "9bbdf59b9323ff33"
+      "lines": 91,
+      "hash": "44e3588aa2c567db"
     },
     {
       "path": "src/components/sections/Finance/PayablesOverview.tsx",
@@ -5111,6 +5111,13 @@
       "role": "frontend-page",
       "lines": 197,
       "hash": "5ee8505893748297"
+    },
+    {
+      "path": "src/components/sections/Finance/canonicalWizardMigration.test.ts",
+      "module": "finance",
+      "role": "frontend-page",
+      "lines": 27,
+      "hash": "17459e2a1b103d08"
     },
     {
       "path": "src/components/sections/Finance/financeShared.ts",
@@ -9169,8 +9176,8 @@
       "path": "src/ui/registry/wizard.def.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 233,
-      "hash": "89659a7193b0aa42"
+      "lines": 236,
+      "hash": "5683fc4d5872f41a"
     },
     {
       "path": "src/ui/status/statusBridge.test.tsx",
@@ -85507,7 +85514,7 @@
       "tags": []
     },
     {
-      "name": "handleNext",
+      "name": "handleSubmit",
       "kind": "function",
       "file": "src/components/sections/Finance/BudCopyLastYearDialog.tsx",
       "line": 160,
@@ -85517,20 +85524,10 @@
       "tags": []
     },
     {
-      "name": "handleSubmit",
+      "name": "close",
       "kind": "function",
       "file": "src/components/sections/Finance/BudCopyLastYearDialog.tsx",
-      "line": 167,
-      "module": "finance",
-      "exported": false,
-      "container": "BudCopyLastYearDialog",
-      "tags": []
-    },
-    {
-      "name": "handlePrimary",
-      "kind": "function",
-      "file": "src/components/sections/Finance/BudCopyLastYearDialog.tsx",
-      "line": 196,
+      "line": 291,
       "module": "finance",
       "exported": false,
       "container": "BudCopyLastYearDialog",
@@ -86140,6 +86137,18 @@
       "container": "",
       "tags": [
         "component"
+      ]
+    },
+    {
+      "name": "source",
+      "kind": "function",
+      "file": "src/components/sections/Finance/canonicalWizardMigration.test.ts",
+      "line": 5,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
       ]
     },
     {
@@ -88485,7 +88494,7 @@
       "name": "_AUTHORITIES",
       "kind": "array",
       "file": "src/components/sections/Finance/PayBridgeDialog.tsx",
-      "line": 92,
+      "line": 87,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -88495,7 +88504,7 @@
       "name": "PayCreateRemittanceDialog",
       "kind": "function",
       "file": "src/components/sections/Finance/PayBridgeDialog.tsx",
-      "line": 98,
+      "line": 93,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -88507,7 +88516,7 @@
       "name": "submit",
       "kind": "function",
       "file": "src/components/sections/Finance/PayBridgeDialog.tsx",
-      "line": 114,
+      "line": 109,
       "module": "finance",
       "exported": false,
       "container": "PayCreateRemittanceDialog",

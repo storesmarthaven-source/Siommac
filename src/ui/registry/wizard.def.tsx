@@ -52,13 +52,16 @@ export const wizardDef: ComponentDef = {
   migration: {
     replaces: ['.wz-modal', '.wz-step-tab', '.ui-wz-modal', '.ui-wz-step', '.hrfin-wiz-modal', '.hrfin-wiz-step-bar', '.ui-stepper-step'],
     deprecatedImports: ['LegacyWizard', 'WizardShell', 'HrfinWizardModal', 'Stepper'],
-    nextSurface: 'Finance — the remaining 13 HrfinWizardModal flows',
+    nextSurface: 'PageHeader / PageActionBar',
     notes: [
+      'Copy Budget is the first clean ordered Finance flow on canonical Wizard + Dialog. Its two steps retain validation, backward navigation, preview and terminal submit semantics.',
+      'Four clean one-step Finance flows were classified correctly as Dialogs, not mechanically migrated to Wizard: record payment, resolve warning, create disbursement and create remittance.',
+      'The remaining true multi-step HrfinWizardModal flows and four Stepper consumers are named ownership debt. Dirty HSE wizard call sites remain exact deferred files; none justify another migration cycle before Studio.',
       'Each of the three implementations owned its own backdrop, sheet, header and close button. That is what made them un-reusable on a page, and why a wizard never looked like the app\'s other dialogs. The canonical one owns the STEPS; Dialog owns the sheet.',
       'It is not a Tabs variant, and that is deliberate (RECIPES.md §7): a wizard is an ORDERED, GATED sequence with completed/skipped states and a terminal submit. Its steps are aria-current="step" in a <nav>, never role="tab".',
       'Validation does not disable the primary button. A disabled control states no reason — the wizard refuses the click and announces exactly what is missing in a role="alert" list. `submitDisabled` remains for server preconditions validation cannot express.',
       'Use `onBeforeNext` for work that must happen on the way OUT of a step (a duplicate check, a reservation). It is awaited and the wizard shows its own busy state, so the caller keeps no spinner flag.',
-      '`Stepper` is absorbed: the step rail IS the wizard\'s. Its 5 remaining consumers move as their flows migrate.',
+      '`Stepper` is absorbed: the step rail IS the wizard\'s. Its 4 remaining consumers move as their flows are naturally touched.',
     ],
   },
 

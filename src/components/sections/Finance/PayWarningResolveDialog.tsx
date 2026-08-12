@@ -9,7 +9,7 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { toast } from '@store';
-import { HrfinWizardModal, HrfinPill } from '@ui';
+import { Dialog, Button, HrfinPill } from '@ui';
 import { useResolveWarning, type PayrollRunWarning } from '@api/finance/payroll';
 
 function severityTone(s: string): import('@ui').HrfinTone {
@@ -41,18 +41,9 @@ export function PayWarningResolveDialog({
   }
 
   return (
-    <HrfinWizardModal
-      open
-      title="Resolve Warning"
-      stepCount={1}
-      activeStep={0}
-      onClose={onClose}
-      primaryLabel={resolveMut.isPending ? 'Resolving…' : 'Resolve Warning'}
-      onPrimary={() => void submit()}
-      primaryDisabled={resolveMut.isPending}
-      primaryLoading={resolveMut.isPending}
-    >
-      <div class="hrfin" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <Dialog open onClose={onClose} variant="form" busy={resolveMut.isPending} class="hrfin">
+      <Dialog.Header title="Resolve Warning" onClose={onClose} />
+      <Dialog.Body><div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <HrfinPill tone={severityTone(warning.severity)}>
             {warning.severity.toUpperCase()}
@@ -89,7 +80,11 @@ export function PayWarningResolveDialog({
           Resolving this warning records your decision in the audit log and notifies the
           payroll admin.
         </p>
-      </div>
-    </HrfinWizardModal>
+      </div></Dialog.Body>
+      <Dialog.Footer>
+        <Button variant="outline" onClick={onClose}>Cancel</Button>
+        <Button variant="primary" onClick={() => { void submit(); }} disabled={resolveMut.isPending} loading={resolveMut.isPending}>Resolve Warning</Button>
+      </Dialog.Footer>
+    </Dialog>
   );
 }

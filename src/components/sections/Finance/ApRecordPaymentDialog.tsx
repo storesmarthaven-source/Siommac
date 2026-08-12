@@ -12,7 +12,7 @@
 import { type VNode } from 'preact';
 import { useState, useEffect, useCallback } from 'preact/hooks';
 import { toast } from '@store';
-import { HrfinWizardModal, HrfinPill, HrfinIcon, type HrfinTone } from '@ui';
+import { Dialog, Button, HrfinPill, HrfinIcon, type HrfinTone } from '@ui';
 import { useRecordPayment, type ApBill, type ApPaymentMethod } from '@api/finance/accountsPayable';
 import { money } from './hrfinFormat';
 
@@ -119,17 +119,9 @@ export function ApRecordPaymentDialog({ open, bill, onClose, onPaid }: ApRecordP
   }
 
   return (
-    <HrfinWizardModal
-      open={open}
-      title="Record payment"
-      stepCount={1}
-      activeStep={0}
-      onClose={onClose}
-      primaryLabel="Record payment"
-      primaryLoading={recordPayment.isPending}
-      onPrimary={() => void submit()}
-    >
-      {bill && (
+    <Dialog open={open} onClose={onClose} variant="form" busy={recordPayment.isPending} class="hrfin">
+      <Dialog.Header title="Record payment" onClose={onClose} />
+      <Dialog.Body>{bill && (
         <div class="hrfin-dialog-body">
           {/* Bill context header */}
           <div class="hrfin-review-block" style={{ marginBottom: 20 }}>
@@ -231,7 +223,11 @@ export function ApRecordPaymentDialog({ open, bill, onClose, onPaid }: ApRecordP
             </div>
           )}
         </div>
-      )}
-    </HrfinWizardModal>
+      )}</Dialog.Body>
+      <Dialog.Footer>
+        <Button variant="outline" onClick={onClose}>Cancel</Button>
+        <Button variant="primary" onClick={() => { void submit(); }} loading={recordPayment.isPending}>Record payment</Button>
+      </Dialog.Footer>
+    </Dialog>
   );
 }

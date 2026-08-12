@@ -7254,9 +7254,8 @@ BudCopyLastYearDialogProps	interface	finance	true		src/components/sections/Finan
 BudCopyLastYearDialog	function	finance	true	component	src/components/sections/Finance/BudCopyLastYearDialog.tsx	140	
 patch	function	finance	false		src/components/sections/Finance/BudCopyLastYearDialog.tsx	147	BudCopyLastYearDialog
 validate	function	finance	false		src/components/sections/Finance/BudCopyLastYearDialog.tsx	151	BudCopyLastYearDialog
-handleNext	function	finance	false		src/components/sections/Finance/BudCopyLastYearDialog.tsx	160	BudCopyLastYearDialog
-handleSubmit	function	finance	false		src/components/sections/Finance/BudCopyLastYearDialog.tsx	167	BudCopyLastYearDialog
-handlePrimary	function	finance	false		src/components/sections/Finance/BudCopyLastYearDialog.tsx	196	BudCopyLastYearDialog
+handleSubmit	function	finance	false		src/components/sections/Finance/BudCopyLastYearDialog.tsx	160	BudCopyLastYearDialog
+close	function	finance	false		src/components/sections/Finance/BudCopyLastYearDialog.tsx	291	BudCopyLastYearDialog
 CURRENT_YEAR	variable	finance	false	component	src/components/sections/Finance/BudgetsOverview.tsx	56	
 YEAR_OPTS	variable	finance	false	component	src/components/sections/Finance/BudgetsOverview.tsx	57	
 PAGE_SIZE	variable	finance	false	component	src/components/sections/Finance/BudgetsOverview.tsx	58	
@@ -7314,6 +7313,7 @@ handleDownload	function	finance	false		src/components/sections/Finance/BudLineDr
 handleDelete	function	finance	false		src/components/sections/Finance/BudLineDrawer.tsx	500	AttachmentsTab
 BudLineDrawerProps	interface	finance	true		src/components/sections/Finance/BudLineDrawer.tsx	576	
 BudLineDrawer	function	finance	true	component	src/components/sections/Finance/BudLineDrawer.tsx	584	
+source	function	finance	false	test	src/components/sections/Finance/canonicalWizardMigration.test.ts	5	
 STEPS	array	finance	false		src/components/sections/Finance/DisbComputeWizard.tsx	31	
 PaymentSettings	interface	finance	false		src/components/sections/Finance/DisbComputeWizard.tsx	39	
 CURRENCIES	array	finance	false		src/components/sections/Finance/DisbComputeWizard.tsx	45	
@@ -7536,9 +7536,9 @@ openPay	function	finance	false		src/components/sections/Finance/PayablesOverview
 exportBills	function	finance	false		src/components/sections/Finance/PayablesOverview.tsx	135	PayablesOverview
 PayCreateDisbursementDialog	function	finance	true	component	src/components/sections/Finance/PayBridgeDialog.tsx	24	
 submit	function	finance	false		src/components/sections/Finance/PayBridgeDialog.tsx	35	PayCreateDisbursementDialog
-_AUTHORITIES	array	finance	false		src/components/sections/Finance/PayBridgeDialog.tsx	92	
-PayCreateRemittanceDialog	function	finance	true	component	src/components/sections/Finance/PayBridgeDialog.tsx	98	
-submit	function	finance	false		src/components/sections/Finance/PayBridgeDialog.tsx	114	PayCreateRemittanceDialog
+_AUTHORITIES	array	finance	false		src/components/sections/Finance/PayBridgeDialog.tsx	87	
+PayCreateRemittanceDialog	function	finance	true	component	src/components/sections/Finance/PayBridgeDialog.tsx	93	
+submit	function	finance	false		src/components/sections/Finance/PayBridgeDialog.tsx	109	PayCreateRemittanceDialog
 PAY_FREQS	array	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	43	
 WEEKS_MAP	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	49	
 RUN_TYPES	array	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	51	

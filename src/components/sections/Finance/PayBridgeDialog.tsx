@@ -13,7 +13,7 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { toast } from '@store';
-import { HrfinWizardModal, HrfinPill } from '@ui';
+import { Dialog, Button, HrfinPill } from '@ui';
 import { useCreateDisbursementFromRun, useCreateRemittanceFromRun } from '@api/finance/bridges';
 import { AuthorityPicker } from './_shared/pickers';
 import { fmtMoney } from './financeShared';
@@ -47,18 +47,9 @@ export function PayCreateDisbursementDialog({
   }
 
   return (
-    <HrfinWizardModal
-      open
-      title="Create Disbursement from Run"
-      stepCount={1}
-      activeStep={0}
-      onClose={onClose}
-      primaryLabel={createMut.isPending ? 'Creating…' : 'Create Disbursement'}
-      onPrimary={() => void submit()}
-      primaryDisabled={createMut.isPending}
-      primaryLoading={createMut.isPending}
-    >
-      <div class="hrfin" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <Dialog open onClose={onClose} variant="form" busy={createMut.isPending} class="hrfin">
+      <Dialog.Header title="Create Disbursement from Run" onClose={onClose} />
+      <Dialog.Body><div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div class="hrfin-metric-list">
           <div class="hrfin-metric-row">
             <span>Run</span><b>{run.runNo}</b>
@@ -82,8 +73,12 @@ export function PayCreateDisbursementDialog({
           will include all net-pay lines and bank file details. This action is idempotent
           — calling it again returns the existing disbursement.
         </p>
-      </div>
-    </HrfinWizardModal>
+      </div></Dialog.Body>
+      <Dialog.Footer>
+        <Button variant="outline" onClick={onClose}>Cancel</Button>
+        <Button variant="primary" onClick={() => { void submit(); }} disabled={createMut.isPending} loading={createMut.isPending}>Create Disbursement</Button>
+      </Dialog.Footer>
+    </Dialog>
   );
 }
 
@@ -131,18 +126,9 @@ export function PayCreateRemittanceDialog({
   }
 
   return (
-    <HrfinWizardModal
-      open
-      title="Create Remittance from Run"
-      stepCount={1}
-      activeStep={0}
-      onClose={onClose}
-      primaryLabel={createMut.isPending ? 'Creating…' : 'Create Remittance'}
-      onPrimary={() => void submit()}
-      primaryDisabled={createMut.isPending || !authority}
-      primaryLoading={createMut.isPending}
-    >
-      <div class="hrfin" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <Dialog open onClose={onClose} variant="form" busy={createMut.isPending} class="hrfin">
+      <Dialog.Header title="Create Remittance from Run" onClose={onClose} />
+      <Dialog.Body><div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div class="hrfin-metric-list">
           <div class="hrfin-metric-row">
             <span>Run</span><b>{run.runNo}</b>
@@ -178,7 +164,11 @@ export function PayCreateRemittanceDialog({
           Creates a draft remittance for the selected statutory authority from this payroll run.
           Idempotent — a second call for the same (run, authority) pair returns the existing record.
         </p>
-      </div>
-    </HrfinWizardModal>
+      </div></Dialog.Body>
+      <Dialog.Footer>
+        <Button variant="outline" onClick={onClose}>Cancel</Button>
+        <Button variant="primary" onClick={() => { void submit(); }} disabled={createMut.isPending || !authority} loading={createMut.isPending}>Create Remittance</Button>
+      </Dialog.Footer>
+    </Dialog>
   );
 }

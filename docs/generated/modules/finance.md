@@ -2,9 +2,9 @@
 
 # finance Module Map
 
-Source fingerprint: `2755fad8542cccab889b1670`
+Source fingerprint: `faabbe86c8d528c029c6523a`
 
-Files: 140 | Symbols: 1849 | Widgets: 9 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
+Files: 141 | Symbols: 1849 | Widgets: 9 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
 ## Widgets and Tiles
 
@@ -523,12 +523,12 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/ApImportWizard.tsx` | 250 |
 | frontend-page | `src/components/sections/Finance/ApNewBillWizard.tsx` | 176 |
 | frontend-page | `src/components/sections/Finance/ApPaymentRunBuilder.tsx` | 317 |
-| frontend-page | `src/components/sections/Finance/ApRecordPaymentDialog.tsx` | 238 |
+| frontend-page | `src/components/sections/Finance/ApRecordPaymentDialog.tsx` | 234 |
 | frontend-page | `src/components/sections/Finance/ApStatusFilterMenu.tsx` | 58 |
 | frontend-page | `src/components/sections/Finance/ApVendorDialog.tsx` | 464 |
 | frontend-page | `src/components/sections/Finance/ApVendorDrawer.tsx` | 235 |
 | frontend-page | `src/components/sections/Finance/BudBulkUpsertWizard.tsx` | 505 |
-| frontend-page | `src/components/sections/Finance/BudCopyLastYearDialog.tsx` | 302 |
+| frontend-page | `src/components/sections/Finance/BudCopyLastYearDialog.tsx` | 312 |
 | frontend-page | `src/components/sections/Finance/BudLineDrawer.tsx` | 665 |
 | frontend-page | `src/components/sections/Finance/BudgetsOverview.tsx` | 1067 |
 | frontend-page | `src/components/sections/Finance/DisbComputeWizard.tsx` | 388 |
@@ -544,11 +544,11 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/FinanceKpiDrilldownDrawer.tsx` | 108 |
 | frontend-page | `src/components/sections/Finance/FinanceOverview.tsx` | 300 |
 | frontend-page | `src/components/sections/Finance/FinanceSection.tsx` | 112 |
-| frontend-page | `src/components/sections/Finance/PayBridgeDialog.tsx` | 185 |
+| frontend-page | `src/components/sections/Finance/PayBridgeDialog.tsx` | 175 |
 | frontend-page | `src/components/sections/Finance/PayNewRunWizard.card.test.tsx` | 38 |
 | frontend-page | `src/components/sections/Finance/PayNewRunWizard.tsx` | 710 |
 | frontend-page | `src/components/sections/Finance/PayRunDetailPage.tsx` | 421 |
-| frontend-page | `src/components/sections/Finance/PayWarningResolveDialog.tsx` | 96 |
+| frontend-page | `src/components/sections/Finance/PayWarningResolveDialog.tsx` | 91 |
 | frontend-page | `src/components/sections/Finance/PayablesOverview.tsx` | 347 |
 | frontend-page | `src/components/sections/Finance/RemittancesOverview.tsx` | 1840 |
 | frontend-page | `src/components/sections/Finance/StatNewVersionPage.tsx` | 358 |
@@ -563,6 +563,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/_shared/pickers.tsx` | 301 |
 | frontend-page | `src/components/sections/Finance/_shared/reports.tsx` | 339 |
 | frontend-page | `src/components/sections/Finance/_shared/sfpKit.tsx` | 197 |
+| frontend-page | `src/components/sections/Finance/canonicalWizardMigration.test.ts` | 27 |
 | frontend-page | `src/components/sections/Finance/financeShared.ts` | 82 |
 | frontend-page | `src/components/sections/Finance/hrfinFormat.ts` | 38 |
 | frontend-page | `src/components/sections/Finance/index.ts` | 11 |
