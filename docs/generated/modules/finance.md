@@ -2,7 +2,7 @@
 
 # finance Module Map
 
-Source fingerprint: `13f29dcb898300019e55fd07`
+Source fingerprint: `512037219c0382ca7983bab7`
 
 Files: 139 | Symbols: 1850 | Widgets: 9 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
@@ -521,7 +521,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/ApDuplicateReviewDrawer.tsx` | 168 |
 | frontend-page | `src/components/sections/Finance/ApDuplicateRiskBanner.tsx` | 30 |
 | frontend-page | `src/components/sections/Finance/ApImportWizard.tsx` | 250 |
-| frontend-page | `src/components/sections/Finance/ApNewBillWizard.tsx` | 237 |
+| frontend-page | `src/components/sections/Finance/ApNewBillWizard.tsx` | 176 |
 | frontend-page | `src/components/sections/Finance/ApPaymentRunBuilder.tsx` | 317 |
 | frontend-page | `src/components/sections/Finance/ApRecordPaymentDialog.tsx` | 238 |
 | frontend-page | `src/components/sections/Finance/ApStatusFilterMenu.tsx` | 58 |

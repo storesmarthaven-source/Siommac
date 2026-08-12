@@ -2,9 +2,9 @@
 
 # hse Module Map
 
-Source fingerprint: `13f29dcb898300019e55fd07`
+Source fingerprint: `512037219c0382ca7983bab7`
 
-Files: 84 | Symbols: 1258 | Widgets: 0 | Unique mounted endpoints: 144 | Route definitions: 144 mounted + 0 unmounted | API calls: 107 | DB objects: 65 | E2E suites: 4
+Files: 87 | Symbols: 1275 | Widgets: 0 | Unique mounted endpoints: 144 | Route definitions: 144 mounted + 0 unmounted | API calls: 107 | DB objects: 65 | E2E suites: 4
 
 ## Widgets and Tiles
 
@@ -386,7 +386,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useAssignmentAction` | function / hook | `src/api/hse/training.ts:217` | `-` |
 | `AreaRouter` | function / component | `src/components/sections/HSE/AreaRouter.tsx:50` | `-` |
 | `ContractorsArea` | function / component | `src/components/sections/HSE/Contractors.tsx:347` | `-` |
-| `DocumentsArea` | function / component | `src/components/sections/HSE/Documents.tsx:269` | `-` |
+| `DocumentsArea` | function / component | `src/components/sections/HSE/Documents.tsx:266` | `-` |
 | `EmergencyResponseArea` | function / component | `src/components/sections/HSE/EmergencyResponse.tsx:375` | `-` |
 | `EnvironmentalArea` | function / component | `src/components/sections/HSE/Environmental.tsx:392` | `-` |
 | `HSEDashboard` | function / component | `src/components/sections/HSE/HSEDashboard.tsx:909` | `-` |
@@ -406,7 +406,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useEmployeeOptions` | function / hook | `src/components/sections/HSE/inspections/useEmployeeOptions.ts:14` | `-` |
 | `LegalComplianceArea` | function / component | `src/components/sections/HSE/LegalCompliance.tsx:364` | `-` |
 | `PermitsArea` | function / component | `src/components/sections/HSE/Permits.tsx:446` | `-` |
-| `PpeBody` | function / component | `src/components/sections/HSE/PPEManager.tsx:801` | `-` |
+| `PpeBody` | function / component | `src/components/sections/HSE/PPEManager.tsx:794` | `-` |
 | `CustomHazardDialog` | function / component | `src/components/sections/HSE/ptw/dialogs/CustomHazardDialog.tsx:105` | `-` |
 | `NewPermitWizard` | function / component | `src/components/sections/HSE/ptw/dialogs/NewPermitWizard.tsx:547` | `-` |
 | `ApprovePermitDialog` | function / component | `src/components/sections/HSE/ptw/dialogs/PermitLifecycleDialogs.tsx:37` | `-` |
@@ -431,15 +431,15 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `HazardLibraryDrawer` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/LibraryDrawers.tsx:21` | `-` |
 | `ControlLibraryDrawer` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/LibraryDrawers.tsx:99` | `-` |
 | `LinkCapaDialog` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/LinkCapaDialog.tsx:31` | `-` |
-| `NewAssessmentWizard` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx:160` | `-` |
-| `NewHazardDialog` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx:36` | `-` |
+| `NewAssessmentWizard` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx:169` | `-` |
+| `NewHazardDialog` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx:43` | `-` |
 | `NewJsaWizard` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx:116` | `-` |
 | `ReviewRenewDialog` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/ReviewRenewDialog.tsx:30` | `-` |
 | `SubmitForReviewDialog` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/SubmitForReviewDialog.tsx:31` | `-` |
 | `DialogError` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/SubmitForReviewDialog.tsx:87` | `-` |
 | `TemplateDialog` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/TemplateDialog.tsx:18` | `-` |
 | `VerifyControlButton` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/VerifyControlButton.tsx:20` | `-` |
-| ... | 28 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 33 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -501,7 +501,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/hse/training.ts` | 225 |
 | frontend-page | `src/components/sections/HSE/AreaRouter.tsx` | 68 |
 | frontend-page | `src/components/sections/HSE/Contractors.tsx` | 396 |
-| frontend-page | `src/components/sections/HSE/Documents.tsx` | 401 |
+| frontend-page | `src/components/sections/HSE/Documents.tsx` | 387 |
 | frontend-page | `src/components/sections/HSE/EmergencyResponse.tsx` | 424 |
 | frontend-page | `src/components/sections/HSE/Environmental.tsx` | 440 |
 | frontend-page | `src/components/sections/HSE/HSEDashboard.tsx` | 1017 |
@@ -509,7 +509,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HSE/Incidents.tsx` | 3879 |
 | frontend-page | `src/components/sections/HSE/Inspections.tsx` | 349 |
 | frontend-page | `src/components/sections/HSE/LegalCompliance.tsx` | 413 |
-| frontend-page | `src/components/sections/HSE/PPEManager.tsx` | 838 |
+| frontend-page | `src/components/sections/HSE/PPEManager.tsx` | 831 |
 | frontend-page | `src/components/sections/HSE/Permits.tsx` | 564 |
 | frontend-page | `src/components/sections/HSE/RiskJsa.tsx` | 636 |
 | frontend-page | `src/components/sections/HSE/Toolbox.tsx` | 235 |
@@ -542,8 +542,8 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/GenerateJsaDialog.tsx` | 80 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/LibraryDrawers.tsx` | 154 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/LinkCapaDialog.tsx` | 104 |
-| frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx` | 560 |
-| frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx` | 428 |
+| frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx` | 528 |
+| frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx` | 399 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx` | 700 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/ReviewRenewDialog.tsx` | 94 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/SubmitForReviewDialog.tsx` | 100 |
@@ -555,7 +555,10 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HSE/risk-jsa/drawers/RiskAssessmentDrawer.tsx` | 300 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/shared/AttachmentsPanel.tsx` | 87 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/shared/ControlsTable.tsx` | 95 |
+| frontend-page | `src/components/sections/HSE/risk-jsa/shared/InsightCard.tsx` | 131 |
+| frontend-page | `src/components/sections/HSE/risk-jsa/shared/QueueItem.tsx` | 69 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/shared/RiskMatrixPicker.tsx` | 82 |
+| frontend-page | `src/components/sections/HSE/risk-jsa/shared/RiskMatrixSnapshot.tsx` | 37 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/shared/RiskMiniBar.tsx` | 53 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/shared/RiskScorePill.tsx` | 55 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/shared/exportPdf.ts` | 142 |

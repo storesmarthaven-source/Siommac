@@ -2,7 +2,7 @@
 
 # platform Module Map
 
-Source fingerprint: `13f29dcb898300019e55fd07`
+Source fingerprint: `512037219c0382ca7983bab7`
 
 Files: 404 | Symbols: 3682 | Widgets: 12 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
 
@@ -161,14 +161,14 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `skelStatCards` | function / ui-tile | `src/components/nav/navCore.ts:761` | `-` |
 | `skelCards` | function / ui-tile | `src/components/nav/navCore.ts:768` | `-` |
 | `AccessControlSection` | function / component | `src/components/sections/AccessControl/AccessControlSection.tsx:32` | `-` |
-| `AcApprovalsPage` | function / component | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx:39` | `-` |
-| `AcAuditPage` | function / component | `src/components/sections/AccessControl/pages/AcAuditPage.tsx:39` | `-` |
+| `AcApprovalsPage` | function / component | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx:27` | `-` |
+| `AcAuditPage` | function / component | `src/components/sections/AccessControl/pages/AcAuditPage.tsx:17` | `-` |
 | `AcCoveragePage` | function / component | `src/components/sections/AccessControl/pages/AcCoveragePage.tsx:39` | `-` |
 | `AcCreateRolePage` | function / component | `src/components/sections/AccessControl/pages/AcCreateRolePage.tsx:33` | `-` |
 | `AcExportDrawer` | function / component | `src/components/sections/AccessControl/pages/AcExportDrawer.tsx:33` | `-` |
 | `AcOverviewPage` | function / component | `src/components/sections/AccessControl/pages/AcOverviewPage.tsx:152` | `-` |
 | `AcRolesPage` | function / component | `src/components/sections/AccessControl/pages/AcRolesPage.tsx:70` | `-` |
-| `AcSessionsPage` | function / component | `src/components/sections/AccessControl/pages/AcSessionsPage.tsx:54` | `-` |
+| `AcSessionsPage` | function / component | `src/components/sections/AccessControl/pages/AcSessionsPage.tsx:25` | `-` |
 | `AcUsersPage` | function / component | `src/components/sections/AccessControl/pages/AcUsersPage.tsx:64` | `-` |
 | `ComplianceRevokeDialog` | function / component | `src/components/sections/AccessControl/pages/ComplianceRevokeDialog.tsx:16` | `-` |
 | `AdminStatCards` | function / component, ui-tile | `src/components/sections/AdminDashboard/AdminDashboardController.tsx:59` | `-` |
@@ -508,14 +508,14 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/AccessControl/index.ts` | 10 |
 | frontend-page | `src/components/sections/AccessControl/module.ts` | 43 |
 | frontend-page | `src/components/sections/AccessControl/mount.ts` | 26 |
-| frontend-page | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx` | 189 |
-| frontend-page | `src/components/sections/AccessControl/pages/AcAuditPage.tsx` | 159 |
+| frontend-page | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx` | 124 |
+| frontend-page | `src/components/sections/AccessControl/pages/AcAuditPage.tsx` | 99 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcCoveragePage.tsx` | 200 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcCreateRolePage.tsx` | 276 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcExportDrawer.tsx` | 131 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcOverviewPage.tsx` | 562 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcRolesPage.tsx` | 734 |
-| frontend-page | `src/components/sections/AccessControl/pages/AcSessionsPage.tsx` | 143 |
+| frontend-page | `src/components/sections/AccessControl/pages/AcSessionsPage.tsx` | 76 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcUsersPage.tsx` | 556 |
 | frontend-page | `src/components/sections/AccessControl/pages/ComplianceRevokeDialog.tsx` | 61 |
 | frontend-page | `src/components/sections/AdminDashboard/AdminDashboardController.tsx` | 155 |

@@ -6683,16 +6683,16 @@ ITEMS	array	platform	false		src/components/sections/AccessControl/module.ts	17
 accessControlModule	object	platform	true		src/components/sections/AccessControl/module.ts	28	
 mountAccessControlSection	function	platform	true		src/components/sections/AccessControl/mount.ts	14	
 unmountAccessControlSection	function	platform	true		src/components/sections/AccessControl/mount.ts	23	
-STATUSES	array	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	33	
-dateLong	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	37	
-AcApprovalsPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	39	
-onSection	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	57	AcApprovalsPage
-doReject	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	73	AcApprovalsPage
-dateLong	function	platform	false		src/components/sections/AccessControl/pages/AcAuditPage.tsx	25	
-AuditRow	interface	platform	false		src/components/sections/AccessControl/pages/AcAuditPage.tsx	28	
-AcAuditPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcAuditPage.tsx	39	
-exportCsv	function	platform	false		src/components/sections/AccessControl/pages/AcAuditPage.tsx	62	AcAuditPage
-onFilter	function	platform	false		src/components/sections/AccessControl/pages/AcAuditPage.tsx	86	AcAuditPage
+STATUSES	array	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	21	
+dateLong	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	25	
+AcApprovalsPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	27	
+onSection	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	45	AcApprovalsPage
+doReject	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	61	AcApprovalsPage
+PAGE	variable	platform	false	component	src/components/sections/AccessControl/pages/AcAuditPage.tsx	14	
+dateLong	function	platform	false		src/components/sections/AccessControl/pages/AcAuditPage.tsx	15	
+AcAuditPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcAuditPage.tsx	17	
+reset	function	platform	false		src/components/sections/AccessControl/pages/AcAuditPage.tsx	36	AcAuditPage
+exportCsv	function	platform	false		src/components/sections/AccessControl/pages/AcAuditPage.tsx	37	AcAuditPage
 RoleKey	type	platform	false		src/components/sections/AccessControl/pages/AcCoveragePage.tsx	16	
 COV_ROLES	array	platform	false		src/components/sections/AccessControl/pages/AcCoveragePage.tsx	17	
 Cov	type	platform	false		src/components/sections/AccessControl/pages/AcCoveragePage.tsx	24	
@@ -6779,11 +6779,11 @@ bulk	function	platform	false		src/components/sections/AccessControl/pages/AcRole
 discard	function	platform	false	ui-tile	src/components/sections/AccessControl/pages/AcRolesPage.tsx	510	RoleEditor
 save	function	platform	false		src/components/sections/AccessControl/pages/AcRolesPage.tsx	515	RoleEditor
 toggleMod	function	platform	false		src/components/sections/AccessControl/pages/AcRolesPage.tsx	542	RoleEditor
-ago	function	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	21	
-device	function	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	29	
-SessionRow	interface	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	43	
-AcSessionsPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcSessionsPage.tsx	54	
-doRevoke	function	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	60	AcSessionsPage
+initials	function	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	14	
+ago	function	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	15	
+device	function	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	17	
+AcSessionsPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcSessionsPage.tsx	25	
+doRevoke	function	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	31	AcSessionsPage
 MODULE_LUCIDE	object	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	32	
 moduleLucide	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	38	
 OvState	type	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	40	
@@ -6972,10 +6972,10 @@ cancelBtnStyle	object	hr	false		src/components/sections/Employees/DepartmentModa
 submitBtnStyle	function	hr	false		src/components/sections/Employees/DepartmentModal.tsx	175	
 DepartmentsSection	function	hr	true	component	src/components/sections/Employees/DepartmentsSection.tsx	22	
 DepartmentCard	function	hr	false	component,ui-tile	src/components/sections/Employees/DepartmentsSection.tsx	146	
-EmployeeCardProps	interface	hr	false	ui-tile	src/components/sections/Employees/EmployeeCard.tsx	30	
-ROLE_LABEL	object	hr	false		src/components/sections/Employees/EmployeeCard.tsx	38	
-TODAY_BADGE_CLASS	object	hr	false		src/components/sections/Employees/EmployeeCard.tsx	46	
-EmployeeCard	function	hr	true	component,ui-tile	src/components/sections/Employees/EmployeeCard.tsx	52	
+EmployeeCardProps	interface	hr	false	ui-tile	src/components/sections/Employees/EmployeeCard.tsx	19	
+ROLE_LABEL	object	hr	false		src/components/sections/Employees/EmployeeCard.tsx	27	
+TODAY_BADGE_CLASS	object	hr	false		src/components/sections/Employees/EmployeeCard.tsx	35	
+EmployeeCard	function	hr	true	component,ui-tile	src/components/sections/Employees/EmployeeCard.tsx	41	
 EmployeeDrawerProps	interface	hr	false		src/components/sections/Employees/EmployeeDrawer.tsx	26	
 ROLE_LABEL	object	hr	false		src/components/sections/Employees/EmployeeDrawer.tsx	34	
 EmployeeDrawer	function	hr	true	component	src/components/sections/Employees/EmployeeDrawer.tsx	38	
@@ -7171,7 +7171,7 @@ H	function	finance	false	component	src/components/sections/Finance/ApNewBillWiza
 reset	function	finance	false		src/components/sections/Finance/ApNewBillWizard.tsx	71	ApNewBillWizard
 close	function	finance	false		src/components/sections/Finance/ApNewBillWizard.tsx	72	ApNewBillWizard
 pickVendor	function	finance	false		src/components/sections/Finance/ApNewBillWizard.tsx	73	ApNewBillWizard
-submit	function	finance	false		src/components/sections/Finance/ApNewBillWizard.tsx	75	ApNewBillWizard
+next	function	finance	false		src/components/sections/Finance/ApNewBillWizard.tsx	81	ApNewBillWizard
 METHODS	array	finance	false		src/components/sections/Finance/ApPaymentRunBuilder.tsx	28	
 fmtDue	function	finance	false		src/components/sections/Finance/ApPaymentRunBuilder.tsx	34	
 STEPS	array	finance	false		src/components/sections/Finance/ApPaymentRunBuilder.tsx	37	
@@ -8308,19 +8308,19 @@ submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	130	Conta
 StatusDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	185	
 submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	193	StatusDialog
 OffboardingDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	219	
-submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	237	OffboardingDialog
-ChangeRequestDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	295	
-set	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	304	ChangeRequestDialog
-fields	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	306	ChangeRequestDialog
-requestedValue	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	317	ChangeRequestDialog
-submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	329	ChangeRequestDialog
-DOC_TYPES	array	hr	false		src/components/sections/HR/ActionDialogs.tsx	356	
-CONFIDENTIALITY	array	hr	false		src/components/sections/HR/ActionDialogs.tsx	357	
-DocumentDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	359	
-submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	367	DocumentDialog
-StatutoryDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	395	
-set	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	404	StatutoryDialog
-submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	415	StatutoryDialog
+submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	231	OffboardingDialog
+ChangeRequestDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	283	
+set	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	292	ChangeRequestDialog
+fields	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	294	ChangeRequestDialog
+requestedValue	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	305	ChangeRequestDialog
+submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	317	ChangeRequestDialog
+DOC_TYPES	array	hr	false		src/components/sections/HR/ActionDialogs.tsx	344	
+CONFIDENTIALITY	array	hr	false		src/components/sections/HR/ActionDialogs.tsx	345	
+DocumentDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	347	
+submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	355	DocumentDialog
+StatutoryDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	383	
+set	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	392	StatutoryDialog
+submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	403	StatutoryDialog
 ExcRow	interface	hr	false		src/components/sections/HR/AttendanceOverview.tsx	28	
 STATUS_OPTIONS	array	hr	false		src/components/sections/HR/AttendanceOverview.tsx	30	
 SOURCE_OPTIONS	array	hr	false		src/components/sections/HR/AttendanceOverview.tsx	31	
@@ -9054,32 +9054,32 @@ notify	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	154	
 renderCases	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	267	OnboardingOverview
 handleOpenSurface	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	376	OnboardingOverview
 PkgTab	type	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	31	
-TABS	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	35	
-ACTION_TYPES	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	40	
-OWNER_TYPES	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	41	
-PRIORITIES	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	42	
-emptyTaskForm	object	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	43	
-emptyHandoffForm	object	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	44	
-emptyActionForm	object	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	45	
-OnboardingPackageDetail	function	hr	true	component	src/components/sections/HR/OnboardingPackageDetail.tsx	51	
-run	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	72	OnboardingPackageDetail
-openEdit	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	80	OnboardingPackageDetail
-submitEdit	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	84	OnboardingPackageDetail
-handleStatusStep	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	93	OnboardingPackageDetail
-openAddTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	101	OnboardingPackageDetail
-openEditTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	102	OnboardingPackageDetail
-submitTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	105	OnboardingPackageDetail
-deleteTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	112	OnboardingPackageDetail
-openAddHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	118	OnboardingPackageDetail
-openEditHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	119	OnboardingPackageDetail
-submitHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	122	OnboardingPackageDetail
-deleteHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	129	OnboardingPackageDetail
-openAddAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	135	OnboardingPackageDetail
-openEditAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	136	OnboardingPackageDetail
-submitAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	144	OnboardingPackageDetail
-retireAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	158	OnboardingPackageDetail
-YN	function	hr	false	component	src/components/sections/HR/OnboardingPackageDetail.tsx	163	OnboardingPackageDetail
-empty	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	164	OnboardingPackageDetail
+TABS	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	32	
+ACTION_TYPES	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	37	
+OWNER_TYPES	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	38	
+PRIORITIES	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	39	
+emptyTaskForm	object	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	40	
+emptyHandoffForm	object	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	41	
+emptyActionForm	object	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	42	
+OnboardingPackageDetail	function	hr	true	component	src/components/sections/HR/OnboardingPackageDetail.tsx	48	
+run	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	69	OnboardingPackageDetail
+openEdit	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	77	OnboardingPackageDetail
+submitEdit	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	81	OnboardingPackageDetail
+handleStatusStep	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	90	OnboardingPackageDetail
+openAddTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	98	OnboardingPackageDetail
+openEditTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	99	OnboardingPackageDetail
+submitTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	102	OnboardingPackageDetail
+deleteTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	109	OnboardingPackageDetail
+openAddHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	115	OnboardingPackageDetail
+openEditHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	116	OnboardingPackageDetail
+submitHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	119	OnboardingPackageDetail
+deleteHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	126	OnboardingPackageDetail
+openAddAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	132	OnboardingPackageDetail
+openEditAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	133	OnboardingPackageDetail
+submitAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	141	OnboardingPackageDetail
+retireAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	155	OnboardingPackageDetail
+YN	function	hr	false	component	src/components/sections/HR/OnboardingPackageDetail.tsx	160	OnboardingPackageDetail
+empty	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	161	OnboardingPackageDetail
 STATUS_FILTERS	variable	hr	false	component	src/components/sections/HR/OnboardingPackageManager.tsx	19	
 StatusFilter	type	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	20	
 statusTone	function	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	22	
@@ -9408,8 +9408,8 @@ Fld	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard
 SelFld	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	845	
 DateFld	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	864	
 WorkerSearchField	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	882	
-DocumentRequirementCard	function	hr	false	component,ui-tile	src/components/sections/HR/StartOnboardingWizard.tsx	912	
-handleWaive	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	922	DocumentRequirementCard
+DocumentRequirementCard	function	hr	false	component,ui-tile	src/components/sections/HR/StartOnboardingWizard.tsx	908	
+handleWaive	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	918	DocumentRequirementCard
 STATUS_FILTERS	variable	hr	false	component	src/components/sections/HR/TransfersOverview.tsx	27	
 humanize	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	29	
 statusTone	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	30	
@@ -9442,12 +9442,12 @@ InductionTab	function	hse	false	component	src/components/sections/HSE/Contractor
 FilesTab	function	hse	false	component	src/components/sections/HSE/Contractors.tsx	240	
 AccessTab	function	hse	false	component	src/components/sections/HSE/Contractors.tsx	307	
 ContractorsArea	function	hse	true	component	src/components/sections/HSE/Contractors.tsx	347	
-TABS	array	hse	false		src/components/sections/HSE/Documents.tsx	20	
-TYPE_ICONS	object	hse	false		src/components/sections/HSE/Documents.tsx	25	
-HAZARD_COLORS	object	hse	false		src/components/sections/HSE/Documents.tsx	30	
-DocsTab	function	hse	false	component	src/components/sections/HSE/Documents.tsx	35	
-SdsTab	function	hse	false	component	src/components/sections/HSE/Documents.tsx	157	
-DocumentsArea	function	hse	true	component	src/components/sections/HSE/Documents.tsx	269	
+TABS	array	hse	false		src/components/sections/HSE/Documents.tsx	17	
+TYPE_ICONS	object	hse	false		src/components/sections/HSE/Documents.tsx	22	
+HAZARD_COLORS	object	hse	false		src/components/sections/HSE/Documents.tsx	27	
+DocsTab	function	hse	false	component	src/components/sections/HSE/Documents.tsx	32	
+SdsTab	function	hse	false	component	src/components/sections/HSE/Documents.tsx	154	
+DocumentsArea	function	hse	true	component	src/components/sections/HSE/Documents.tsx	266	
 EmergencyPlan	interface	hse	false		src/components/sections/HSE/EmergencyResponse.tsx	16	
 mockPlans	array	hse	false		src/components/sections/HSE/EmergencyResponse.tsx	28	
 MusterPoint	interface	hse	false		src/components/sections/HSE/EmergencyResponse.tsx	38	
@@ -9732,32 +9732,32 @@ PtwSparkRow	function	hse	false	component	src/components/sections/HSE/Permits.tsx
 PermitsArea	function	hse	true	component	src/components/sections/HSE/Permits.tsx	446	
 PpeTab	type	hse	false		src/components/sections/HSE/PPEManager.tsx	24	
 SectionHead	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	31	
-MiniCard	function	hse	false	component,ui-tile	src/components/sections/HSE/PPEManager.tsx	52	
-Record	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	62	
-DashboardTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	76	
-required	function	hse	false		src/components/sections/HSE/PPEManager.tsx	78	DashboardTab
-InventoryTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	154	
-PPE_ZONES	array	hse	false		src/components/sections/HSE/PPEManager.tsx	194	
-AssignTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	204	
-toggleZone	function	hse	false		src/components/sections/HSE/PPEManager.tsx	213	AssignTab
-handleAssign	function	hse	false		src/components/sections/HSE/PPEManager.tsx	223	AssignTab
-EmployeesTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	310	
-required	function	hse	false		src/components/sections/HSE/PPEManager.tsx	311	EmployeesTab
-assigned	function	hse	false		src/components/sections/HSE/PPEManager.tsx	312	EmployeesTab
-RenewalsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	349	
-ReturnsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	389	
-RequestsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	420	
-handleSubmit	function	hse	false		src/components/sections/HSE/PPEManager.tsx	434	RequestsTab
-InspectionsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	516	
-FitTestingTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	552	
-ProcurementTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	586	
-KitsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	623	
-MatrixTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	672	
-has	function	hse	false		src/components/sections/HSE/PPEManager.tsx	673	MatrixTab
-ReportsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	717	
-SettingsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	752	
-PPE_TAB_BODIES	object	hse	true		src/components/sections/HSE/PPEManager.tsx	783	
-PpeBody	function	hse	true	component	src/components/sections/HSE/PPEManager.tsx	801	
+MiniCard	function	hse	false	component,ui-tile	src/components/sections/HSE/PPEManager.tsx	45	
+Record	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	55	
+DashboardTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	69	
+required	function	hse	false		src/components/sections/HSE/PPEManager.tsx	71	DashboardTab
+InventoryTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	147	
+PPE_ZONES	array	hse	false		src/components/sections/HSE/PPEManager.tsx	187	
+AssignTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	197	
+toggleZone	function	hse	false		src/components/sections/HSE/PPEManager.tsx	206	AssignTab
+handleAssign	function	hse	false		src/components/sections/HSE/PPEManager.tsx	216	AssignTab
+EmployeesTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	303	
+required	function	hse	false		src/components/sections/HSE/PPEManager.tsx	304	EmployeesTab
+assigned	function	hse	false		src/components/sections/HSE/PPEManager.tsx	305	EmployeesTab
+RenewalsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	342	
+ReturnsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	382	
+RequestsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	413	
+handleSubmit	function	hse	false		src/components/sections/HSE/PPEManager.tsx	427	RequestsTab
+InspectionsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	509	
+FitTestingTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	545	
+ProcurementTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	579	
+KitsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	616	
+MatrixTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	665	
+has	function	hse	false		src/components/sections/HSE/PPEManager.tsx	666	MatrixTab
+ReportsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	710	
+SettingsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	745	
+PPE_TAB_BODIES	object	hse	true		src/components/sections/HSE/PPEManager.tsx	776	
+PpeBody	function	hse	true	component	src/components/sections/HSE/PPEManager.tsx	794	
 CustomHazard	interface	hse	true		src/components/sections/HSE/ptw/dialogs/CustomHazardDialog.tsx	25	
 CATEGORY_OPTIONS	array	hse	false		src/components/sections/HSE/ptw/dialogs/CustomHazardDialog.tsx	39	
 RISK_LEVEL_OPTIONS	array	hse	false		src/components/sections/HSE/ptw/dialogs/CustomHazardDialog.tsx	57	
@@ -9944,22 +9944,26 @@ ASSESSMENT_TYPES	variable	hse	false	component	src/components/sections/HSE/risk-j
 HAZARD_CATEGORIES	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	37	
 REVIEW_CYCLES	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	42	
 SITE_OPTIONS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	50	
-HazardEntry	interface	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	54	
-TypeCard	function	hse	false	component,ui-tile	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	66	
-HazardRow	function	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	96	
-NewAssessmentWizard	function	hse	true	component	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	160	
-addHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	177	NewAssessmentWizard
-patchHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	189	NewAssessmentWizard
-removeHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	193	NewAssessmentWizard
-addLibraryHazards	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	198	NewAssessmentWizard
-handleSubmit	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	213	NewAssessmentWizard
-HAZARD_CATEGORIES	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	22	
-SITE_OPTIONS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	27	
-NewHazardDialogProps	interface	hse	true		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	31	
-NewHazardDialog	function	hse	true	component	src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	36	
-addLibraryControl	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	62	NewHazardDialog
-handleClose	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	86	NewHazardDialog
-handleSubmit	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	98	NewHazardDialog
+WIZARD_STEPS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	52	
+HazardEntry	interface	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	63	
+TypeCard	function	hse	false	component,ui-tile	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	75	
+HazardRow	function	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	105	
+NewAssessmentWizard	function	hse	true	component	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	169	
+addHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	185	NewAssessmentWizard
+patchHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	197	NewAssessmentWizard
+removeHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	201	NewAssessmentWizard
+addLibraryHazards	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	206	NewAssessmentWizard
+canAdvance	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	221	NewAssessmentWizard
+handleSubmit	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	230	NewAssessmentWizard
+STEPS	array	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	22	
+HAZARD_CATEGORIES	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	29	
+SITE_OPTIONS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	34	
+NewHazardDialogProps	interface	hse	true		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	38	
+NewHazardDialog	function	hse	true	component	src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	43	
+addLibraryControl	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	69	NewHazardDialog
+canAdvance	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	93	NewHazardDialog
+handleClose	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	101	NewHazardDialog
+handleSubmit	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	113	NewHazardDialog
 WIZARD_STEPS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	29	
 PPE_ITEMS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	38	
 SCALE_OPTIONS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	52	
@@ -10109,6 +10113,17 @@ shell	function	hse	false		src/components/sections/HSE/risk-jsa/shared/exportPdf.
 launch	function	hse	false		src/components/sections/HSE/risk-jsa/shared/exportPdf.ts	52	
 exportJsaPdf	function	hse	true		src/components/sections/HSE/risk-jsa/shared/exportPdf.ts	64	
 exportAssessmentPdf	function	hse	true		src/components/sections/HSE/risk-jsa/shared/exportPdf.ts	114	
+InsightCardVariant	type	hse	true	ui-tile	src/components/sections/HSE/risk-jsa/shared/InsightCard.tsx	17	
+InsightTone	type	hse	true		src/components/sections/HSE/risk-jsa/shared/InsightCard.tsx	18	
+InsightCardProps	interface	hse	true	ui-tile	src/components/sections/HSE/risk-jsa/shared/InsightCard.tsx	20	
+TONE_VALUE	object	hse	false		src/components/sections/HSE/risk-jsa/shared/InsightCard.tsx	33	
+Donut	function	hse	false	component	src/components/sections/HSE/risk-jsa/shared/InsightCard.tsx	38	
+Visual	function	hse	false	component	src/components/sections/HSE/risk-jsa/shared/InsightCard.tsx	60	
+InsightCard	function	hse	true	component,ui-tile	src/components/sections/HSE/risk-jsa/shared/InsightCard.tsx	103	
+QueueItemProps	interface	hse	true		src/components/sections/HSE/risk-jsa/shared/QueueItem.tsx	11	
+TAG_BG	object	hse	false		src/components/sections/HSE/risk-jsa/shared/QueueItem.tsx	24	
+TAG_FG	object	hse	false		src/components/sections/HSE/risk-jsa/shared/QueueItem.tsx	30	
+QueueItem	function	hse	true	component	src/components/sections/HSE/risk-jsa/shared/QueueItem.tsx	37	
 SCALE	variable	hse	false	component	src/components/sections/HSE/risk-jsa/shared/RiskMatrixPicker.tsx	13	
 LIKELIHOOD_LABELS	array	hse	false		src/components/sections/HSE/risk-jsa/shared/RiskMatrixPicker.tsx	15	
 SEVERITY_LABELS	array	hse	false		src/components/sections/HSE/risk-jsa/shared/RiskMatrixPicker.tsx	16	
@@ -10117,6 +10132,8 @@ BAND_TEXT	object	hse	false		src/components/sections/HSE/risk-jsa/shared/RiskMatr
 RiskMatrixPickerProps	interface	hse	true		src/components/sections/HSE/risk-jsa/shared/RiskMatrixPicker.tsx	28	
 RiskMatrixPicker	function	hse	true	component	src/components/sections/HSE/risk-jsa/shared/RiskMatrixPicker.tsx	36	
 cell	function	hse	false		src/components/sections/HSE/risk-jsa/shared/RiskMatrixPicker.tsx	37	RiskMatrixPicker
+RiskMatrixSnapshotProps	interface	hse	true		src/components/sections/HSE/risk-jsa/shared/RiskMatrixSnapshot.tsx	11	
+RiskMatrixSnapshot	function	hse	true	component	src/components/sections/HSE/risk-jsa/shared/RiskMatrixSnapshot.tsx	16	
 RiskMiniBarProps	interface	hse	true		src/components/sections/HSE/risk-jsa/shared/RiskMiniBar.tsx	10	
 SEGMENTS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/shared/RiskMiniBar.tsx	19	
 RiskMiniBar	function	hse	true	component	src/components/sections/HSE/risk-jsa/shared/RiskMiniBar.tsx	26	
@@ -11309,40 +11326,40 @@ SwzPageKind	type	settings	true		src/components/sections/Settings/settingsNav.ts	
 SwzLegacy	type	settings	true		src/components/sections/Settings/settingsNav.ts	13	
 SwzPage	interface	settings	true		src/components/sections/Settings/settingsNav.ts	15	
 SWZ_PAGES	array	settings	true		src/components/sections/Settings/settingsNav.ts	30	
-SWZ_GROUP_ORDER	array	settings	true		src/components/sections/Settings/settingsNav.ts	93	
-getSwzPage	function	settings	true		src/components/sections/Settings/settingsNav.ts	95	
-visibleSwzPages	function	settings	true		src/components/sections/Settings/settingsNav.ts	100	
-escAttr	function	settings	false		src/components/sections/Settings/settingsNav.ts	104	
-buildSettingsMenuHtml	function	settings	true		src/components/sections/Settings/settingsNav.ts	111	
-CardLabel	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	69	
-BrandingPanelProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	83	
-BrandingPanel	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	88	
-field	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	147	BrandingPanel
-TrustedDevicesCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	209	
-TIMEOUT_OPTIONS	array	settings	false		src/components/sections/Settings/SettingsSection.tsx	360	
-TIMEOUT_ROLE_LABEL	object	settings	false		src/components/sections/Settings/SettingsSection.tsx	371	
-SessionTimeoutCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	376	
-SetupStep	type	settings	false		src/components/sections/Settings/SettingsSection.tsx	438	
-TotpSetupModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	440	
-TotpSetupModal	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	445	
-TotpDisableModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	640	
-TotpDisableModal	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	645	
-TotpRegenModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	717	
-TotpRegenModal	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	721	
-webauthnAvailable	variable	settings	false		src/components/sections/Settings/SettingsSection.tsx	841	
-PasskeysCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	843	
-AuthenticatorCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	1025	
-SecurityPanel	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1136	
-LegacyPage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1238	
-PlaceholderPage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1263	
-CONSOLE_BODIES	object	settings	false		src/components/sections/Settings/SettingsSection.tsx	1281	
-ConsolePage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1286	
-SettingsSection	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	1302	
-enter	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1333	SettingsSection
-exit	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1343	SettingsSection
-onSection	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1348	SettingsSection
-onMenuClick	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1353	SettingsSection
-emptySettings	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1402	
+SWZ_GROUP_ORDER	array	settings	true		src/components/sections/Settings/settingsNav.ts	91	
+getSwzPage	function	settings	true		src/components/sections/Settings/settingsNav.ts	93	
+visibleSwzPages	function	settings	true		src/components/sections/Settings/settingsNav.ts	98	
+escAttr	function	settings	false		src/components/sections/Settings/settingsNav.ts	102	
+buildSettingsMenuHtml	function	settings	true		src/components/sections/Settings/settingsNav.ts	109	
+CardLabel	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	70	
+BrandingPanelProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	84	
+BrandingPanel	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	89	
+field	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	148	BrandingPanel
+TrustedDevicesCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	210	
+TIMEOUT_OPTIONS	array	settings	false		src/components/sections/Settings/SettingsSection.tsx	361	
+TIMEOUT_ROLE_LABEL	object	settings	false		src/components/sections/Settings/SettingsSection.tsx	372	
+SessionTimeoutCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	377	
+SetupStep	type	settings	false		src/components/sections/Settings/SettingsSection.tsx	439	
+TotpSetupModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	441	
+TotpSetupModal	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	446	
+TotpDisableModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	641	
+TotpDisableModal	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	646	
+TotpRegenModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	718	
+TotpRegenModal	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	722	
+webauthnAvailable	variable	settings	false		src/components/sections/Settings/SettingsSection.tsx	842	
+PasskeysCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	844	
+AuthenticatorCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	1026	
+SecurityPanel	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1137	
+LegacyPage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1239	
+PlaceholderPage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1264	
+CONSOLE_BODIES	object	settings	false		src/components/sections/Settings/SettingsSection.tsx	1282	
+ConsolePage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1288	
+SettingsSection	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	1304	
+enter	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1335	SettingsSection
+exit	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1345	SettingsSection
+onSection	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1350	SettingsSection
+onMenuClick	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1355	SettingsSection
+emptySettings	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1404	
 valStr	function	settings	false		src/components/sections/Settings/SwzCard.tsx	17	
 toInput	function	settings	false		src/components/sections/Settings/SwzCard.tsx	24	
 classPill	function	settings	false		src/components/sections/Settings/SwzCard.tsx	30	

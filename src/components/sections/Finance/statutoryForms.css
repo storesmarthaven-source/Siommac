@@ -165,20 +165,8 @@
 .sfp-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 24px;
   background:rgb(244 246 249);border-top:1px solid rgba(27,45,84,.10);border-radius:0 0 16px 16px}
 .sfp-footer .right{margin-left:auto;display:flex;gap:12px}
-.sfp-btn{height:44px;padding:0 20px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;border:1px solid transparent}
 /* Button labels are always Title Case. */
-.sfp-btn,.sfp-back,.sfp-browse{text-transform:capitalize}
-.sfp-btn:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
-.sfp-btn-ghost{background:#fff;border-color:var(--sfp-line-input);color:#475569;box-shadow:0 1px 2px rgba(16,24,40,.05)}
-.sfp-btn-ghost:hover:not(:disabled){background:#f8fafc}
-.sfp-btn-danger{background:#fff;border-color:#f3c4c5;color:var(--sfp-err);box-shadow:0 1px 2px rgba(16,24,40,.05)}
-.sfp-btn-danger:hover:not(:disabled){background:#fdf1f1}
-.sfp-btn-primary{background:var(--siomac-navy,#1b2d54);color:#fff}
-.sfp-btn-primary:hover:not(:disabled){background:#16233f}
-
-/* spinner for pending actions */
-.sfp-spin{width:15px;height:15px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:sfp-spin .7s linear infinite}
-@keyframes sfp-spin{to{transform:rotate(360deg)}}
+.sfp-back,.sfp-browse{text-transform:capitalize}
 
 /* ── Select (native, styled as an input) ────────────────────────────────── */
 .sfp-select{height:44px;border:1px solid var(--sfp-line-input);border-radius:9px;background:#fff;padding:0 38px 0 13px;
