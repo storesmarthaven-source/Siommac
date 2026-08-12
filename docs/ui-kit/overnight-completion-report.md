@@ -60,6 +60,49 @@ both wrong and are fixed) · this report · `src/ui/registry/`.
 - ⭐ **Do not wait to build all eight before starting the Studio.** Show them
   honestly as missing/planned and implement them later where required.
 
+### ✅ Phase 1 — BUILT AND BROWSER-VERIFIED
+
+Shell at `72f05f5a`; verification and its two fixes at `a22fa82c` / the Studio
+responsive commit. Verified live at `localhost:5243` (worktree Vite proxying the
+Desktop repo's API on 8888), superadmin dev session injected:
+
+| Check | Result |
+|---|---|
+| Studio renders, no white screen | ✅ 1 `.sds` root, 23 app sections, 605KB body |
+| Brand / Foundations / Components / Application nav | ✅ 4 groups, 10 items, click switches title + panel |
+| `FoundationsPanel` inside Studio | ✅ renders, 83KB, inside `data-ui-preview-scope` |
+| `BrandThemePanel` inside Studio | ✅ renders, 27KB, inside the scope |
+| Chrome stays neutral | ✅ **proven** — forced `--ui-color-action-primary:#ff00ff` inside the scope; scope read `#ff00ff`, chrome still `#E40C0C`. No leak. |
+| Built / Planned / Application-pattern states | ✅ 23 + 8 + 20 = 51 chips = 51 registered definitions |
+| No duplicate catalogue | ✅ 51 cards, one nav, one root |
+| Console clean | ⚠️ see below |
+| Desktop / tablet / mobile | ✅ after fixing a real defect, below |
+
+**Two real defects found by doing this, both fixed:**
+1. `SodChangeWizard.tsx` imported `@ui/components/Button|Modal` — paths that do
+   not exist. Vite aborts the module graph on an unresolvable import, so the app
+   rendered an empty body with zero sections. This is the long-standing "dev app
+   renders an empty body" blocker. Typecheck 50 → **49**, which reconciles the
+   inherited baseline: the extra error WAS this import.
+2. Studio pattern cards rendered **421px inside a 311px column** at 375px wide.
+   A grid item defaults to `min-width: auto` and will not shrink below its
+   content's min-content width; the planned-API `<pre>` holds long unbroken JSX
+   signatures. Fixed with `min-width: 0` on the card and `overflow-wrap: anywhere`
+   on the `<pre>`. All 51 cards now a uniform 311px, zero overflow.
+
+⚠️ **Console is not clean:** repeated 503s. They are API calls from other ERP
+sections booting, not the Studio — the Studio issues no network requests, it
+reads the registry. The worktree Vite proxies to the Desktop repo's netlify
+instance, which is on a different branch. Not a Studio defect; worth confirming
+once the worktree can run its own API.
+
+⚠️ **Worktree has no `.env`** — the app cannot boot without
+`VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`. A minimal gitignored `.env` with
+only those two public client vars now exists locally; service-role secrets were
+deliberately NOT copied.
+
+⛔ **Phase 1 shell is FROZEN.** Do not redesign it while building Phase 2.
+
 ### Phase 1 — new Studio shell (the first commit)
 Built from the ground up, NOT a reskin of the small existing Gallery.
 ```

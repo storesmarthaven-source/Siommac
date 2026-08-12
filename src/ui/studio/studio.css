@@ -126,6 +126,11 @@
   gap: 14px;
 }
 .sds-card {
+  /* A grid item defaults to `min-width: auto`, i.e. it refuses to shrink below
+     its content's min-content width. The planned-API <pre> below contains long
+     unbroken tokens (`<PermissionAwareActionMenu record={r} …>`), which pushed
+     the pattern cards to 421px inside a 311px column at 375px wide. */
+  min-width: 0;
   padding: 16px 18px;
   background: var(--sds-surface);
   border: 1px solid var(--sds-line);
@@ -139,6 +144,8 @@
   margin: 10px 0 0; padding: 10px 12px;
   background: #f4f6f9; border-radius: 8px;
   font-size: 13px; white-space: pre-wrap; overflow-x: auto;
+  /* `pre-wrap` alone breaks on whitespace only; a long JSX signature has none. */
+  overflow-wrap: anywhere;
 }
 
 .sds-chip {
