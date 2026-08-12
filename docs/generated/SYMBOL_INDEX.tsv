@@ -8012,22 +8012,21 @@ drawerActions	variable	finance	false	test	src/components/sections/Finance/payRun
 makeRun	function	finance	false	test	src/components/sections/Finance/payRunDetail/pageGate.test.tsx	40	
 makeWorkspace	function	finance	false	test	src/components/sections/Finance/payRunDetail/pageGate.test.tsx	49	
 pageProps	object	finance	false	test	src/components/sections/Finance/payRunDetail/pageGate.test.tsx	70	
-Pill	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	34	
-SecHead	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	38	
-Empty	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	48	
-Gate	interface	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	56	
-deriveGates	function	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	58	
-SummaryPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	94	
-VariationRow	interface	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	178	
-PopulationPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	180	
-ReconciliationPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	249	
-ApprovalsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	318	
-decisionChip	function	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	334	ApprovalsPanel
-AuditPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	383	
-InputsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	412	
-PolicyEvidencePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	439	
-ExceptionsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	540	
-ReleasePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	581	
+SecHead	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	34	
+Empty	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	44	
+Gate	interface	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	52	
+deriveGates	function	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	54	
+SummaryPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	90	
+VariationRow	interface	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	174	
+PopulationPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	176	
+ReconciliationPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	245	
+ApprovalsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	314	
+decisionChip	function	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	330	ApprovalsPanel
+AuditPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	379	
+InputsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	408	
+PolicyEvidencePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	435	
+ExceptionsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	536	
+ReleasePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	577	
 PanelStateProps	interface	finance	true		src/components/sections/Finance/payRunDetail/PanelState.tsx	15	
 PayrollPanelState	function	finance	true	component	src/components/sections/Finance/payRunDetail/PanelState.tsx	33	
 fmtCompact	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	15	

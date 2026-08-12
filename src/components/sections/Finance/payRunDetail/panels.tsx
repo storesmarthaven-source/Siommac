@@ -27,13 +27,9 @@ import { PayrollPanelState } from './PanelState';
 import { PayCreateDisbursementDialog, PayCreateRemittanceDialog } from '../PayBridgeDialog';
 import { CloseReleaseCard } from './CloseReleaseCard';
 import { initials, dayLabel } from './parts';
-import { Badge } from '@ui';
+import { Badge, type BadgeTone } from '@ui';
 
 // ── shared atoms ────────────────────────────────────────────────────────────────
-
-function Pill({ intent, children }: { intent: 'green' | 'amber' | 'red' | 'grey' | 'blue'; children: ComponentChildren }): VNode {
-  return <span class={`pill ${intent}`}>{children}</span>;
-}
 
 function SecHead({ ico, title, sub, aux }: { ico: string; title: string; sub?: string; aux?: VNode | string }): VNode {
   return (
@@ -53,7 +49,7 @@ function Empty({ children }: { children: ComponentChildren }): VNode {
 // Summary
 // ═══════════════════════════════════════════════════════════════════════════════
 
-interface Gate { label: string; intent: 'green' | 'amber' | 'red' | 'grey'; result: string; evidence: string; }
+interface Gate { label: string; intent: BadgeTone; result: string; evidence: string; }
 
 function deriveGates(workspace: PayrollRunWorkspace | undefined, preflight: PayrollReleasePreflight | undefined): Gate[] {
   const snap = workspace?.inputSnapshot ?? null;
@@ -61,31 +57,31 @@ function deriveGates(workspace: PayrollRunWorkspace | undefined, preflight: Payr
   const blockers = workspace?.findingSummary.blockers ?? 0;
   return [
     { label: 'Input snapshot complete',
-      intent: snap ? 'green' : 'grey',
+      intent: snap ? 'success' : 'neutral',
       result: snap ? 'Passed' : 'Pending',
       evidence: snap ? `Snapshot v${snap.snapshotNo} · checksum ${snap.checksum.slice(0, 8)}…` : 'Lock inputs to snapshot' },
     { label: 'Calculation current',
-      intent: calc ? 'green' : 'grey',
+      intent: calc ? 'success' : 'neutral',
       result: calc ? 'Passed' : 'Pending',
       evidence: calc ? `Version ${calc.versionNo} · ${calc.employeeCount} employees` : 'Run Calculate' },
     { label: 'Findings clear',
-      intent: blockers === 0 ? 'green' : 'red',
+      intent: blockers === 0 ? 'success' : 'danger',
       result: blockers === 0 ? 'Passed' : 'Blocked',
       evidence: blockers === 0 ? 'No open blocking findings' : `${blockers} blocking finding${blockers === 1 ? '' : 's'} open` },
     { label: 'Bank accounts ready',
-      intent: (preflight?.missingBankAccountCount ?? 0) === 0 ? 'green' : 'red',
+      intent: (preflight?.missingBankAccountCount ?? 0) === 0 ? 'success' : 'danger',
       result: (preflight?.missingBankAccountCount ?? 0) === 0 ? 'Passed' : 'Blocked',
       evidence: (preflight?.missingBankAccountCount ?? 0) === 0 ? 'All payees have a primary account' : `${preflight?.missingBankAccountCount} missing bank account(s)` },
     { label: 'Approval certified',
-      intent: preflight?.certificationId ? 'green' : 'grey',
+      intent: preflight?.certificationId ? 'success' : 'neutral',
       result: preflight?.certificationId ? 'Certified' : 'Pending',
       evidence: preflight?.certificationId ? 'Control certification recorded' : 'Certified at submission' },
     { label: 'Funding confirmed',
-      intent: preflight?.fundingConfirmationId ? 'green' : 'grey',
+      intent: preflight?.fundingConfirmationId ? 'success' : 'neutral',
       result: preflight?.fundingConfirmationId ? 'Confirmed' : 'Pending',
       evidence: preflight?.fundingConfirmationId ? 'Treasury confirmed funding' : 'Confirmed before release' },
     { label: 'Journal posted',
-      intent: preflight?.glJournalId ? 'green' : 'grey',
+      intent: preflight?.glJournalId ? 'success' : 'neutral',
       result: preflight?.glJournalId ? 'Posted' : 'Pending',
       evidence: preflight?.glJournalId ? 'GL journal posted' : 'Posted after approval' },
   ];
@@ -95,7 +91,7 @@ export function SummaryPanel({ run, workspace, preflight }: {
   run: PayrollRun; workspace: PayrollRunWorkspace | undefined; preflight: PayrollReleasePreflight | undefined;
 }): VNode {
   const gates = deriveGates(workspace, preflight);
-  const passed = gates.filter(g => g.intent === 'green').length;
+  const passed = gates.filter(g => g.intent === 'success').length;
   const findings = workspace?.priorityFindings ?? [];
   const audit = workspace?.audit ?? [];
   const employerCost = run.grossTotal + run.nisEmployerTotal;
@@ -105,7 +101,7 @@ export function SummaryPanel({ run, workspace, preflight }: {
       <div class="stack">
         <section class="card">
           <SecHead ico="✓" title="Control certification" sub="Evidence required before the payroll can enter approval."
-            aux={<Pill intent={passed === gates.length ? 'green' : 'amber'}>{passed} of {gates.length} passed</Pill>} />
+            aux={<Badge tone={passed === gates.length ? 'success' : 'warning'}>{passed} of {gates.length} passed</Badge>} />
           <div class="table-wrap">
             <table class="data-table">
               <thead><tr><th>Control</th><th>Result</th><th>Evidence</th></tr></thead>
@@ -113,7 +109,7 @@ export function SummaryPanel({ run, workspace, preflight }: {
                 {gates.map(g => (
                   <tr key={g.label}>
                     <td><strong>{g.label}</strong></td>
-                    <td><Pill intent={g.intent}>{g.result}</Pill></td>
+                    <td><Badge tone={g.intent}>{g.result}</Badge></td>
                     <td>{g.evidence}</td>
                   </tr>
                 ))}
@@ -124,8 +120,8 @@ export function SummaryPanel({ run, workspace, preflight }: {
 
         <section class="card">
           <SecHead ico="!" title="Exceptions & findings" sub="Open control findings prioritised by severity."
-            aux={<Pill intent={(workspace?.findingSummary.blockers ?? 0) > 0 ? 'red' : (workspace?.findingSummary.warnings ?? 0) > 0 ? 'amber' : 'green'}>
-              {workspace?.findingSummary.actionable ?? 0} actionable</Pill>} />
+            aux={<Badge tone={(workspace?.findingSummary.blockers ?? 0) > 0 ? 'danger' : (workspace?.findingSummary.warnings ?? 0) > 0 ? 'warning' : 'success'}>
+              {workspace?.findingSummary.actionable ?? 0} actionable</Badge>} />
           {findings.length === 0
             ? <Empty>No open findings for this run.</Empty>
             : (
@@ -230,7 +226,7 @@ export function PopulationPanel({ runId }: { runId: string }): VNode {
                   <td class={`num ${pct == null ? '' : pct >= 0 ? 'delta-up' : 'delta-down'}`}>
                     {v == null ? '—' : v.status === 'added' ? 'New' : delta == null ? '—' : `${delta >= 0 ? '+' : ''}${fmtMoney(delta)}`}
                   </td>
-                  <td>{v == null ? <Pill intent="grey">No prior</Pill> : v.status === 'added' ? <Pill intent="blue">New hire</Pill> : v.status === 'changed' ? <Pill intent="amber">Changed</Pill> : <Pill intent="green">Unchanged</Pill>}</td>
+                  <td>{v == null ? <Badge tone="neutral">No prior</Badge> : v.status === 'added' ? <Badge tone="info">New hire</Badge> : v.status === 'changed' ? <Badge tone="warning">Changed</Badge> : <Badge tone="success">Unchanged</Badge>}</td>
                 </tr>
               );
             })}
@@ -267,7 +263,7 @@ export function ReconciliationPanel({ runId }: { runId: string }): VNode {
     <div class="section-grid">
       <section class="card">
         <SecHead ico="R" title="Payroll reconciliation" sub="Calculation version history and version-over-version movement."
-          aux={<Pill intent="grey">{versions.length} version{versions.length === 1 ? '' : 's'}</Pill>} />
+          aux={<Badge tone="neutral">{versions.length} version{versions.length === 1 ? '' : 's'}</Badge>} />
         <div class="table-wrap">
           <table class="data-table">
             <thead><tr><th>Version</th><th class="num">Employees</th><th class="num">Gross</th><th class="num">Net</th><th class="num">Employer NIS</th><th>Published</th></tr></thead>
@@ -325,7 +321,7 @@ export function ApprovalsPanel({ run }: { run: PayrollRun }): VNode {
     return (
       <section class="card">
         <SecHead ico="A" title="Approval route" sub="Sequential maker-checker route starts after all submission controls pass."
-          aux={<Pill intent="grey">Not submitted</Pill>} />
+          aux={<Badge tone="neutral">Not submitted</Badge>} />
         <Empty>This run has not been submitted for approval yet. The route appears once it is submitted.</Empty>
       </section>
     );
@@ -341,7 +337,7 @@ export function ApprovalsPanel({ run }: { run: PayrollRun }): VNode {
   return (
     <section class="card">
       <SecHead ico="A" title="Approval route" sub="Sequential maker-checker route — creator cannot approve their own run."
-        aux={<Pill intent={run.status === 'approved' ? 'green' : run.status === 'returned' ? 'red' : 'amber'}>{humanize(run.status)}</Pill>} />
+        aux={<Badge tone={run.status === 'approved' ? 'success' : run.status === 'returned' ? 'danger' : 'warning'}>{humanize(run.status)}</Badge>} />
       {wf.isLoading
         ? <Empty>Loading approval route…</Empty>
         : tasks.length === 0
@@ -385,7 +381,7 @@ export function AuditPanel({ runId }: { runId: string }): VNode {
   return (
     <section class="card">
       <SecHead ico="A" title="Audit history" sub="Immutable record of state changes, calculation attempts, control decisions and exports."
-        aux={<Pill intent="grey">{entries ? `${entries.length} events` : '—'}</Pill>} />
+        aux={<Badge tone="neutral">{entries ? `${entries.length} events` : '—'}</Badge>} />
       <div class="panel-body">
         {isLoading || isError
           ? <PayrollPanelState loading={isLoading} error={isError ? error : undefined}
@@ -418,7 +414,7 @@ export function InputsPanel({ run, canManage, inputSnapshot }: {
       <section class="card">
         <SecHead ico="I" title="Frozen input snapshot"
           sub={inputSnapshot ? `Snapshot v${inputSnapshot.snapshotNo} · locked ${fmtDateTime(inputSnapshot.lockedAt)} · checksum ${inputSnapshot.checksum.slice(0, 8)}…` : 'Inputs not locked yet.'}
-          aux={inputSnapshot ? <Pill intent="green">{inputSnapshot.employeeCount} employees</Pill> : <Pill intent="grey">Draft</Pill>} />
+          aux={inputSnapshot ? <Badge tone="success">{inputSnapshot.employeeCount} employees</Badge> : <Badge tone="neutral">Draft</Badge>} />
         <div class="panel-body">
           <InputsTab runId={run.id} runStatus={run.status} canManage={canManage} />
         </div>
@@ -455,7 +451,7 @@ export function PolicyEvidencePanel({ evidence }: { evidence: PolicyEvidence }):
                       <td><strong>{c.componentCode ?? c.componentId.slice(0, 8)}</strong></td>
                       <td>{humanize(c.calculationBasis ?? '—')}</td>
                       <td>{humanize(c.rateSource ?? '—')}</td>
-                      <td>{c.isRequired ? <Pill intent="blue">Required</Pill> : <Pill intent="grey">Optional</Pill>}</td>
+                      <td>{c.isRequired ? <Badge tone="info">Required</Badge> : <Badge tone="neutral">Optional</Badge>}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -546,7 +542,7 @@ export function ExceptionsPanel({ run, workspace, canManage }: {
     <div class="section-grid">
       <section class="card">
         <SecHead ico="!" title="Blocking exceptions" sub="The run cannot be submitted while any blocker remains open."
-          aux={<Pill intent={blockers.length > 0 ? 'red' : 'green'}>{blockers.length} open</Pill>} />
+          aux={<Badge tone={blockers.length > 0 ? 'danger' : 'success'}>{blockers.length} open</Badge>} />
         {findings.length === 0
           ? <Empty>No control findings for this run.</Empty>
           : (
@@ -585,22 +581,22 @@ export function ReleasePanel({ run, preflight, canManage, actions }: {
   const locked = run.status === 'locked' || run.status === 'exported' || run.status === 'released';
   const pf = preflight;
 
-  const items: { intent: 'green' | 'amber' | 'red' | 'grey'; state: string; title: string; body: string; action?: VNode }[] = [
-    { intent: pf?.disbursementId ? 'green' : locked ? 'amber' : 'grey', state: pf?.disbursementId ? 'Created' : locked ? 'Ready' : 'Locked',
+  const items: { intent: BadgeTone; state: string; title: string; body: string; action?: VNode }[] = [
+    { intent: pf?.disbursementId ? 'success' : locked ? 'warning' : 'neutral', state: pf?.disbursementId ? 'Created' : locked ? 'Ready' : 'Locked',
       title: 'Bank disbursement', body: 'Create the bank file from eligible net-pay lines and reconcile the control total.',
       action: canManage && locked ? <button class="btn sm primary" type="button" onClick={() => setBridge('disb')}>Create / open</button> : <button class="btn sm" type="button" disabled>Prepare file</button> },
-    { intent: (pf?.missingBankAccountCount ?? 0) > 0 ? 'red' : pf?.fundingConfirmationId ? 'green' : 'grey',
+    { intent: (pf?.missingBankAccountCount ?? 0) > 0 ? 'danger' : pf?.fundingConfirmationId ? 'success' : 'neutral',
       state: pf?.fundingConfirmationId ? 'Confirmed' : (pf?.missingBankAccountCount ?? 0) > 0 ? 'Blocked' : 'Pending',
       title: 'Payroll funding', body: pf ? `Net disbursement ${fmtMoney(pf.netPayroll)}. Treasury confirmation required before release.` : 'Funding confirmation required before release.' },
-    { intent: pf?.glJournalId ? 'green' : (pf?.invalidGlAccountCount ?? 0) > 0 ? 'red' : 'grey',
+    { intent: pf?.glJournalId ? 'success' : (pf?.invalidGlAccountCount ?? 0) > 0 ? 'danger' : 'neutral',
       state: pf?.glJournalId ? 'Posted' : (pf?.invalidGlAccountCount ?? 0) > 0 ? 'Blocked' : 'Locked',
       title: 'General ledger', body: 'Post a balanced journal using the approved payroll GL mappings and dimensions. See the GL card below.' },
-    { intent: (pf?.renderedPayslipCount ?? 0) > 0 ? 'green' : 'grey', state: pf ? `${pf.renderedPayslipCount}/${pf.payslipCount}` : 'Locked',
+    { intent: (pf?.renderedPayslipCount ?? 0) > 0 ? 'success' : 'neutral', state: pf ? `${pf.renderedPayslipCount}/${pf.payslipCount}` : 'Locked',
       title: 'Payslips', body: 'Render and distribute password-protected employee payslips. See the payslips card below.',
       action: canManage && locked ? <button class="btn sm" type="button" onClick={() => actions.onGenPayslips(run)}>Generate</button> : undefined },
-    { intent: 'grey', state: locked ? 'Ready' : 'Locked', title: 'Statutory remittances', body: 'Create PAYE, NIS and Health Surcharge remittance records.',
+    { intent: 'neutral', state: locked ? 'Ready' : 'Locked', title: 'Statutory remittances', body: 'Create PAYE, NIS and Health Surcharge remittance records.',
       action: canManage && locked ? <button class="btn sm" type="button" onClick={() => setBridge('rem')}>Create</button> : <button class="btn sm" type="button" disabled>Create records</button> },
-    { intent: pf?.alreadyReleased ? 'green' : 'grey', state: pf?.alreadyReleased ? 'Released' : 'Locked', title: 'Release certificate',
+    { intent: pf?.alreadyReleased ? 'success' : 'neutral', state: pf?.alreadyReleased ? 'Released' : 'Locked', title: 'Release certificate',
       body: 'Capture output checksums, totals, actors and the release timestamp.',
       action: canManage && run.status === 'locked' ? <button class="btn sm" type="button" onClick={() => actions.onExport(run)}>Export run</button> : undefined },
   ];
@@ -613,11 +609,11 @@ export function ReleasePanel({ run, preflight, canManage, actions }: {
       <div class="section-grid">
         <section class="card">
           <SecHead ico="L" title="Release and accounting outputs" sub="Available from the approved and locked calculation version."
-            aux={<Pill intent={pf?.ready ? 'green' : locked ? 'amber' : 'grey'}>{pf?.alreadyReleased ? 'Released' : pf?.ready ? 'Ready' : locked ? 'In progress' : 'Awaiting approval'}</Pill>} />
+            aux={<Badge tone={pf?.ready ? 'success' : locked ? 'warning' : 'neutral'}>{pf?.alreadyReleased ? 'Released' : pf?.ready ? 'Ready' : locked ? 'In progress' : 'Awaiting approval'}</Badge>} />
           <div class="release-grid">
             {items.map(it => (
               <div class="release-item" key={it.title}>
-                <span class={`pill ${it.intent}`}>{it.state}</span>
+                <Badge tone={it.intent}>{it.state}</Badge>
                 <h3>{it.title}</h3>
                 <p>{it.body}</p>
                 {it.action}
