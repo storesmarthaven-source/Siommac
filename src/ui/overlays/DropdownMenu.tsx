@@ -18,13 +18,15 @@
  */
 
 import { type VNode } from 'preact';
-import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { AnchoredPopup } from './AnchoredPopup';
 import '../primitives/actions.recipe.css';
 
 export interface MenuAction {
   id: string;
   label: string;
+  /** Optional supporting line for actions whose consequence needs context. */
+  description?: string;
   icon?: VNode;
   /** Keyboard hint shown right-aligned. Display only — bind the key yourself. */
   shortcut?: string;
@@ -66,8 +68,8 @@ export interface DropdownMenuProps {
 export function DropdownMenu({
   open, anchor, onClose, items, label, matchAnchorWidth = false, id,
 }: DropdownMenuProps): VNode | null {
-  const groups = toGroups(items);
-  const flat = groups.flatMap(g => g.items);
+  const groups = useMemo(() => toGroups(items), [items]);
+  const flat = useMemo(() => groups.flatMap(g => g.items), [groups]);
   const [activeIndex, setActiveIndex] = useState(-1);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const typeBuffer = useRef({ text: '', at: 0 });
@@ -88,7 +90,7 @@ export function DropdownMenu({
     if (!open) { setActiveIndex(-1); return; }
     const first = flat.findIndex(i => !i.disabled);
     setActiveIndex(first);
-  }, [open]);
+  }, [flat, open]);
 
   useEffect(() => {
     if (!open || activeIndex < 0) return;
@@ -166,6 +168,7 @@ export function DropdownMenu({
                   type="button"
                   role="menuitem"
                   class="ui-menu-item"
+                  data-description={item.description ? 'true' : undefined}
                   data-active={i === activeIndex ? 'true' : 'false'}
                   data-danger={item.danger ? 'true' : undefined}
                   aria-disabled={item.disabled ? 'true' : undefined}
@@ -174,7 +177,10 @@ export function DropdownMenu({
                   onPointerEnter={() => { if (!item.disabled) setActiveIndex(i); }}
                 >
                   {item.icon}
-                  <span>{item.label}</span>
+                  <span class="ui-menu-item-copy">
+                    <span>{item.label}</span>
+                    {item.description && <span class="ui-menu-item-description">{item.description}</span>}
+                  </span>
                   {item.shortcut && <span class="ui-menu-item-shortcut">{item.shortcut}</span>}
                 </button>
               );

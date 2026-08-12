@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "8208dd9a09c34f7b3aec059ecca8a407001ab578",
+    "head": "c851827826a313ef55eb820d1bfb5e5bf097c58d",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "a0733254f06ae4ee6187ce5b",
+    "fingerprint": "27ae0f1a454d01bdf58f2e93",
     "indexedFiles": 1825
   },
   "summary": {
     "files": 1470,
-    "symbols": 14678,
+    "symbols": 14672,
     "widgets": 63,
     "routes": 978,
     "routeDefinitions": 979,
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 410,
-        "symbols": 3664,
+        "symbols": 3658,
         "widgets": 12,
         "routes": 38,
         "routeDefinitions": 53,
@@ -5068,7 +5068,7 @@
       "module": "finance",
       "role": "frontend-page",
       "lines": 1631,
-      "hash": "8143bc949112e295"
+      "hash": "2c866804f1f3af01"
     },
     {
       "path": "src/components/sections/Finance/StatutoryDashboard.tsx",
@@ -6027,7 +6027,7 @@
       "module": "hse",
       "role": "frontend-page",
       "lines": 251,
-      "hash": "6d582e4febda4a4d"
+      "hash": "0a5a57456ff4a1f2"
     },
     {
       "path": "src/components/sections/HSE/Workflows.tsx",
@@ -8410,13 +8410,6 @@
       "hash": "9c595d7235668768"
     },
     {
-      "path": "src/ui/components/Menu.tsx",
-      "module": "platform",
-      "role": "frontend",
-      "lines": 112,
-      "hash": "4fa5cf8e683a9dfe"
-    },
-    {
       "path": "src/ui/components/MetricRow.tsx",
       "module": "platform",
       "role": "frontend",
@@ -8917,8 +8910,8 @@
       "path": "src/ui/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 253,
-      "hash": "145dd75f72e3e80e"
+      "lines": 252,
+      "hash": "5b403bc90acc2f36"
     },
     {
       "path": "src/ui/layouts/ModulePageLayout.tsx",
@@ -9043,8 +9036,8 @@
       "path": "src/ui/overlays/DropdownMenu.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 188,
-      "hash": "6c426a9022c8fe8c"
+      "lines": 194,
+      "hash": "63188768e2cf5b8e"
     },
     {
       "path": "src/ui/overlays/portalRoot.test.tsx",
@@ -9099,8 +9092,8 @@
       "path": "src/ui/primitives/actions.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 200,
-      "hash": "7942f8a8dd9d8bfd"
+      "lines": 207,
+      "hash": "6d1faa193a013a5c"
     },
     {
       "path": "src/ui/primitives/actions.tsx",
@@ -9131,11 +9124,18 @@
       "hash": "e0764ae52beb981d"
     },
     {
+      "path": "src/ui/primitives/menuMigration.test.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 21,
+      "hash": "a99476114fe1f372"
+    },
+    {
       "path": "src/ui/registry/actions.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 461,
-      "hash": "5d6bcf5b6950e714"
+      "lines": 466,
+      "hash": "d1a2034ed2333bc3"
     },
     {
       "path": "src/ui/registry/comparisons/button.cmp.tsx",
@@ -141476,78 +141476,6 @@
       ]
     },
     {
-      "name": "MENU_LUCIDE",
-      "kind": "object",
-      "file": "src/ui/components/Menu.tsx",
-      "line": 26,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "menuLucide",
-      "kind": "function",
-      "file": "src/ui/components/Menu.tsx",
-      "line": 37,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "MenuItem",
-      "kind": "interface",
-      "file": "src/ui/components/Menu.tsx",
-      "line": 39,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "MenuProps",
-      "kind": "interface",
-      "file": "src/ui/components/Menu.tsx",
-      "line": 50,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "Menu",
-      "kind": "function",
-      "file": "src/ui/components/Menu.tsx",
-      "line": 58,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "toggle",
-      "kind": "function",
-      "file": "src/ui/components/Menu.tsx",
-      "line": 65,
-      "module": "platform",
-      "exported": false,
-      "container": "Menu",
-      "tags": []
-    },
-    {
-      "name": "onKey",
-      "kind": "function",
-      "file": "src/ui/components/Menu.tsx",
-      "line": 83,
-      "module": "platform",
-      "exported": false,
-      "container": "Menu",
-      "tags": []
-    },
-    {
       "name": "MetricCardItem",
       "kind": "interface",
       "file": "src/ui/components/MetricRow.tsx",
@@ -146407,7 +146335,7 @@
       "name": "MenuGroup",
       "kind": "interface",
       "file": "src/ui/overlays/DropdownMenu.tsx",
-      "line": 37,
+      "line": 39,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146417,7 +146345,7 @@
       "name": "MenuItems",
       "kind": "type",
       "file": "src/ui/overlays/DropdownMenu.tsx",
-      "line": 43,
+      "line": 45,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146427,7 +146355,7 @@
       "name": "isGrouped",
       "kind": "function",
       "file": "src/ui/overlays/DropdownMenu.tsx",
-      "line": 45,
+      "line": 47,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146437,7 +146365,7 @@
       "name": "toGroups",
       "kind": "function",
       "file": "src/ui/overlays/DropdownMenu.tsx",
-      "line": 50,
+      "line": 52,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146447,7 +146375,7 @@
       "name": "DropdownMenuProps",
       "kind": "interface",
       "file": "src/ui/overlays/DropdownMenu.tsx",
-      "line": 54,
+      "line": 56,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146457,7 +146385,7 @@
       "name": "DropdownMenu",
       "kind": "function",
       "file": "src/ui/overlays/DropdownMenu.tsx",
-      "line": 66,
+      "line": 68,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146469,7 +146397,7 @@
       "name": "activate",
       "kind": "function",
       "file": "src/ui/overlays/DropdownMenu.tsx",
-      "line": 98,
+      "line": 100,
       "module": "platform",
       "exported": false,
       "container": "DropdownMenu",
@@ -146479,7 +146407,7 @@
       "name": "onKeyDown",
       "kind": "function",
       "file": "src/ui/overlays/DropdownMenu.tsx",
-      "line": 106,
+      "line": 108,
       "module": "platform",
       "exported": false,
       "container": "DropdownMenu",
@@ -147038,6 +146966,18 @@
       ]
     },
     {
+      "name": "read",
+      "kind": "function",
+      "file": "src/ui/primitives/menuMigration.test.ts",
+      "line": 4,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
       "name": "TextInputType",
       "kind": "type",
       "file": "src/ui/primitives/TextInput.tsx",
@@ -147209,7 +147149,7 @@
       "name": "ACTION_DEFS",
       "kind": "array",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 456,
+      "line": 461,
       "module": "platform",
       "exported": true,
       "container": "",

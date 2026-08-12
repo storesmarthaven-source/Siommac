@@ -132,6 +132,10 @@
     cursor: pointer;
   }
   .ui-menu-item > svg { width: var(--ui-icon-sm); height: var(--ui-icon-sm); flex-shrink: 0; }
+  .ui-menu-item[data-description='true'] { min-height: 48px; padding-block: 7px; align-items: flex-start; }
+  .ui-menu-item[data-description='true'] > svg { margin-top: 1px; }
+  .ui-menu-item-copy { display: grid; gap: 1px; min-width: 0; }
+  .ui-menu-item-description { color: var(--ui-color-text-secondary); font-size: var(--ui-font-size-caption); line-height: var(--ui-line-height-base); }
   .ui-menu-item-shortcut {
     margin-left: auto;
     color: var(--text-muted);

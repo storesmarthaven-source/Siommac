@@ -12531,13 +12531,6 @@ KpiTone	type	platform	true	ui-tile	src/ui/components/KpiTile.tsx	28
 KpiTileLink	interface	platform	true	ui-tile	src/ui/components/KpiTile.tsx	30	
 KpiTileProps	interface	platform	true	ui-tile	src/ui/components/KpiTile.tsx	35	
 KpiTile	function	platform	true	component,ui-tile	src/ui/components/KpiTile.tsx	56	
-MENU_LUCIDE	object	platform	false		src/ui/components/Menu.tsx	26	
-menuLucide	function	platform	false		src/ui/components/Menu.tsx	37	
-MenuItem	interface	platform	true		src/ui/components/Menu.tsx	39	
-MenuProps	interface	platform	true		src/ui/components/Menu.tsx	50	
-Menu	function	platform	true	component	src/ui/components/Menu.tsx	58	
-toggle	function	platform	false		src/ui/components/Menu.tsx	65	Menu
-onKey	function	platform	false		src/ui/components/Menu.tsx	83	Menu
 MetricCardItem	interface	platform	true	ui-tile	src/ui/components/MetricRow.tsx	16	
 MetricRowProps	interface	platform	true		src/ui/components/MetricRow.tsx	18	
 useFlip	function	platform	false	hook	src/ui/components/MetricRow.tsx	31	
@@ -12979,14 +12972,14 @@ DialogFooter	function	platform	false	component	src/ui/overlays/Dialog.tsx	172
 DialogSection	function	platform	false	component	src/ui/overlays/Dialog.tsx	182	
 Dialog	variable	platform	true	component	src/ui/overlays/Dialog.tsx	196	
 MenuAction	interface	platform	true		src/ui/overlays/DropdownMenu.tsx	25	
-MenuGroup	interface	platform	true		src/ui/overlays/DropdownMenu.tsx	37	
-MenuItems	type	platform	true		src/ui/overlays/DropdownMenu.tsx	43	
-isGrouped	function	platform	false		src/ui/overlays/DropdownMenu.tsx	45	
-toGroups	function	platform	false		src/ui/overlays/DropdownMenu.tsx	50	
-DropdownMenuProps	interface	platform	true		src/ui/overlays/DropdownMenu.tsx	54	
-DropdownMenu	function	platform	true	component	src/ui/overlays/DropdownMenu.tsx	66	
-activate	function	platform	false		src/ui/overlays/DropdownMenu.tsx	98	DropdownMenu
-onKeyDown	function	platform	false		src/ui/overlays/DropdownMenu.tsx	106	DropdownMenu
+MenuGroup	interface	platform	true		src/ui/overlays/DropdownMenu.tsx	39	
+MenuItems	type	platform	true		src/ui/overlays/DropdownMenu.tsx	45	
+isGrouped	function	platform	false		src/ui/overlays/DropdownMenu.tsx	47	
+toGroups	function	platform	false		src/ui/overlays/DropdownMenu.tsx	52	
+DropdownMenuProps	interface	platform	true		src/ui/overlays/DropdownMenu.tsx	56	
+DropdownMenu	function	platform	true	component	src/ui/overlays/DropdownMenu.tsx	68	
+activate	function	platform	false		src/ui/overlays/DropdownMenu.tsx	100	DropdownMenu
+onKeyDown	function	platform	false		src/ui/overlays/DropdownMenu.tsx	108	DropdownMenu
 noop	function	platform	false	test	src/ui/overlays/portalRoot.test.tsx	25	
 Scoped	function	platform	false	component,test	src/ui/overlays/portalRoot.test.tsx	27	
 Harness	function	platform	false	component,test	src/ui/overlays/portalRoot.test.tsx	80	
@@ -13037,6 +13030,7 @@ toggle	function	platform	false		src/ui/primitives/choice.tsx	290	CheckboxGroup
 RadioGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	328	
 RadioGroup	function	platform	true	component	src/ui/primitives/choice.tsx	342	
 read	function	platform	false	test	src/ui/primitives/choiceMigration.test.ts	4	
+read	function	platform	false	test	src/ui/primitives/menuMigration.test.ts	4	
 TextInputType	type	platform	true		src/ui/primitives/TextInput.tsx	40	
 TextInputProps	interface	platform	true		src/ui/primitives/TextInput.tsx	44	
 FORCEABLE	variable	platform	false	component	src/ui/primitives/TextInput.tsx	97	
@@ -13053,7 +13047,7 @@ noop	function	platform	false		src/ui/registry/actions.defs.tsx	48
 buttonDef	object	platform	true		src/ui/registry/actions.defs.tsx	52	
 segmentedDef	object	platform	true		src/ui/registry/actions.defs.tsx	261	
 menuDef	object	platform	true		src/ui/registry/actions.defs.tsx	335	
-ACTION_DEFS	array	platform	true		src/ui/registry/actions.defs.tsx	456	
+ACTION_DEFS	array	platform	true		src/ui/registry/actions.defs.tsx	461	
 Row	function	platform	false	component	src/ui/registry/comparisons/button.cmp.tsx	20	
 BUTTON_COMPARISON	object	platform	true		src/ui/registry/comparisons/button.cmp.tsx	24	
 noop	function	platform	false		src/ui/registry/comparisons/card.cmp.tsx	22	

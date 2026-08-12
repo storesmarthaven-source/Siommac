@@ -233,7 +233,6 @@ export { WizardShell, type WizardShellProps, type WizardStepDef, type WizardInfo
 export { Drawer, HseDrawer, DetailDrawer, type DrawerProps, type DrawerDetail } from './components/Drawer';
 export { DetailGrid, type DetailGridProps, type DetailItem } from './components/DetailGrid';
 export { SidePanel, type SidePanelProps, type SidePanelSection } from './components/SidePanel';
-export { Menu, type MenuProps, type MenuItem } from './components/Menu';
 
 // ── Rich detail-panel primitives (SidePanel/Drawer body + dialogs) ──
 export { EntityHead, PanelStats, type EntityHeadProps, type PanelStatItem } from './components/EntityHead';

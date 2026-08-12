@@ -144,24 +144,17 @@
 .ui-pending-photo-copy strong { font-size: 0.82rem; color: var(--text-primary, #1b2d54); }
 .ui-pending-photo-copy span { font-size: 0.74rem; color: var(--text-secondary, #67787c); line-height: 1.35; }
 .ui-pending-photo-actions { display: flex; gap: 8px; flex: none; }
-.ui-panel-actions .ui-menu-wrap { display: block; }
-.ui-panel-actions .ui-menu-wrap > button { width: 100%; }
-
 /* Panel tabs (.ui-panel-tab*) DELETED with the Tabs consolidation — the drawer
    tab strip is now the canonical `<Tabs variant="contained" maxVisible>`, whose
    recipe lives in src/ui/navigation/Tabs/tabs.recipe.css. Removed rather than
    left to be out-ranked: a recipe can never beat a legacy rule (RECIPES.md §4). */
 
 /* ── Reusable dropdown Menu (v36 .dropdown-menu / .menu-row) ────────────────── */
-.ui-menu-wrap { position: relative; display: inline-flex; }
-.ui-menu-overlay { position: fixed; inset: 0; z-index: 60; }
 .ui-menu {
   position: absolute; top: calc(100% + 8px); z-index: 61;
   min-width: 236px; max-width: 320px; background: #fff; border: 1px solid #d8e0ec;
   border-radius: 12px; overflow: hidden; box-shadow: 0 18px 40px rgba(15,23,42,.12); padding: 8px;
 }
-.ui-menu.is-right { right: 0; }
-.ui-menu.is-left { left: 0; }
 .ui-menu-item {
   width: 100%; border: 0; background: #fff; min-height: 36px;
   display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 8px;
@@ -171,8 +164,6 @@
 .ui-menu-item:disabled { opacity: .5; cursor: not-allowed; }
 /* Inline icon, no chip container — flat Lucide glyph in the menu accent grey. */
 .ui-menu-ico { flex: none; color: #667085; }
-.ui-menu-item.danger { color: #b91c1c; }
-.ui-menu-item.danger .ui-menu-ico { color: #dc2626; }
 
 /* ── Panel body — uniform 14px stack for a tab's cards (InfoCard, Callout, …) ── */
 .ui-panel-body { display: grid; gap: 14px; }
@@ -475,8 +466,6 @@
 .ui-rdrawer .ui-menu-item { background: transparent; color: #e5eefb; }
 .ui-rdrawer .ui-menu-item:hover { background: rgba(255,255,255,.08); }
 .ui-rdrawer .ui-menu-ico { color: #dbeafe; }
-.ui-rdrawer .ui-menu-item.danger { color: #fecaca; }
-.ui-rdrawer .ui-menu-item.danger .ui-menu-ico { color: #fecaca; }
 
 /* ════════════════════════════════════════════════════════════════════════════
  * Orchestration — ActivityTimeline (cross-module record feed), design v4.

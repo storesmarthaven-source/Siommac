@@ -21,7 +21,7 @@ import { useSessionStore, selectUserId } from '@store/session';
 import { can } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
 import {
-  HrfinWizardModal, Drawer, exportCsv, NewMenu,
+  DropdownButton, HrfinWizardModal, Drawer, exportCsv,
   DataTable, type DataTableColumn, type DataTableAction,
   FilterDropdown, AdvancedFilter, useFilterDropdowns,
   Tabs, TabPanel, MiniTable, Pill, PanelEmpty,
@@ -188,10 +188,10 @@ export function StatutoryConfigOverview(): VNode {
     <>
       <button type="button" class="hse-btn" onClick={handleExport}><i class="fas fa-download" /> Export</button>
       {canManage && (
-        <NewMenu items={[
-          { label: 'New Rate Version',  icon: 'FilePlus2', onSelect: () => setSubView({ kind: 'newVersion' }) },
-          { label: 'New Pay Component', icon: 'Layers',    onSelect: () => setSubView({ kind: 'payComponent' }) },
-          { label: 'Import NIS Classes', icon: 'FileInput', sub: activeVer ? undefined : 'Needs an active version',
+        <DropdownButton label="New" variant="primary" iconLeft={<LucideIcon name="Plus" />} items={[
+          { id: 'version', label: 'New Rate Version',  icon: <LucideIcon name="FilePlus2" />, onSelect: () => setSubView({ kind: 'newVersion' }) },
+          { id: 'component', label: 'New Pay Component', icon: <LucideIcon name="Layers" />, onSelect: () => setSubView({ kind: 'payComponent' }) },
+          { id: 'import', label: 'Import NIS Classes', icon: <LucideIcon name="FileInput" />, description: activeVer ? undefined : 'Needs an active version', disabled: !activeVer,
             onSelect: () => { if (activeVer) setSubView({ kind: 'import', versionId: activeVer.id }); } },
         ]} />
       )}

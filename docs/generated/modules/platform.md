@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `a0733254f06ae4ee6187ce5b`
+Source fingerprint: `27ae0f1a454d01bdf58f2e93`
 
-Files: 410 | Symbols: 3664 | Widgets: 12 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
+Files: 410 | Symbols: 3658 | Widgets: 12 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -255,7 +255,6 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `KpiTileLink` | interface / ui-tile | `src/ui/components/KpiTile.tsx:30` | `-` |
 | `KpiTileProps` | interface / ui-tile | `src/ui/components/KpiTile.tsx:35` | `-` |
 | `KpiTile` | function / component, ui-tile | `src/ui/components/KpiTile.tsx:56` | `-` |
-| `Menu` | function / component | `src/ui/components/Menu.tsx:58` | `-` |
 | `MetricCardItem` | interface / ui-tile | `src/ui/components/MetricRow.tsx:16` | `-` |
 | `MetricRow` | function / component | `src/ui/components/MetricRow.tsx:59` | `-` |
 | `ReorderableRow` | function / component | `src/ui/components/MetricRow.tsx:100` | `-` |
@@ -302,7 +301,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `FilterSelect` | function / component | `src/ui/components/Toolbar.tsx:58` | `-` |
 | `Wizard` | function / component | `src/ui/components/Wizard.tsx:44` | `-` |
 | `WizardShell` | function / component | `src/ui/components/WizardShell.tsx:44` | `-` |
-| ... | 102 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| `CardVariant` | type / ui-tile | `src/ui/containers/Card/Card.tsx:47` | `-` |
+| ... | 101 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 

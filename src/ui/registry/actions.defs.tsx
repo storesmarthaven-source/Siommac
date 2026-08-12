@@ -342,7 +342,12 @@ export const menuDef: ComponentDef = {
   importFrom: '@ui',
   migration: {
     deprecatedImports: ['NewMenu', 'RowActionMenu', '@ui/components/Menu'],
-    nextSurface: 'Employee Master',
+    nextSurface: 'UI Kit Studio',
+    notes: [
+      'Canonical Menu now supports a real supporting description; the clean Training and Statutory Configuration action menus migrated without dropping their guidance.',
+      'The unused pre-v2 Menu runtime and its outside-click overlay CSS are deleted.',
+      'RiskJsa.tsx, Incidents.tsx, Inspections.tsx and Permits.tsx retain NewMenu as exact dirty-file debt. RowActionMenu consumers remain natural-touch debt.',
+    ],
   },
 
   props: {

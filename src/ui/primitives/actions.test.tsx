@@ -144,6 +144,13 @@ describe('DropdownMenu', () => {
     expect(screen.getByRole('separator')).toBeTruthy();
   });
 
+  it('renders supporting descriptions without changing action identity', () => {
+    open([{ id: 'assign', label: 'Assign training', description: 'Assign training to a worker' }]);
+    const item = screen.getByRole('menuitem', { name: /Assign training/ });
+    expect(item.textContent).toContain('Assign training to a worker');
+    expect(item.getAttribute('data-description')).toBe('true');
+  });
+
   it('renders nothing when closed', () => {
     const anchor = document.createElement('button');
     render(<DropdownMenu open={false} anchor={anchor} onClose={vi.fn()} items={MENU} label="M" />);

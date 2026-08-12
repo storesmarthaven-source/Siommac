@@ -11,7 +11,7 @@
 import { type VNode, type ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-    PageHeader, Tabs, TabPanel, NewMenu, SidePanel,
+    DropdownButton, LucideIcon, PageHeader, Tabs, TabPanel, SidePanel,
   type TabItem, type SidePanelSection,
 } from '@ui';
 import { TrainingInsightCards } from './training/TrainingInsightCards';
@@ -131,10 +131,10 @@ export function TrainingArea({ tab }: { tab: string }): VNode {
         value={active}
         onChange={setActive}
         label="Training and competency sections"
-        actions={<NewMenu label="Add Certificate" fill items={[
-            { label: 'Add Certificate', icon: 'Award', sub: 'Record a worker certificate', onSelect: () => { setPresetWorker(undefined); setAddCertOpen(true); } },
-            { label: 'Assign Training', icon: 'GraduationCap', sub: 'Assign training to a worker', onSelect: () => { setPresetWorker(undefined); setAssignOpen(true); } },
-            { label: 'Create Role Requirement', icon: 'ListChecks', sub: 'Define a role competency rule', onSelect: () => setReqOpen(true) },
+        actions={<DropdownButton label="Add Certificate" variant="primary" iconLeft={<LucideIcon name="Plus" />} items={[
+            { id: 'certificate', label: 'Add Certificate', icon: <LucideIcon name="Award" />, description: 'Record a worker certificate', onSelect: () => { setPresetWorker(undefined); setAddCertOpen(true); } },
+            { id: 'training', label: 'Assign Training', icon: <LucideIcon name="GraduationCap" />, description: 'Assign training to a worker', onSelect: () => { setPresetWorker(undefined); setAssignOpen(true); } },
+            { id: 'requirement', label: 'Create Role Requirement', icon: <LucideIcon name="ListChecks" />, description: 'Define a role competency rule', onSelect: () => setReqOpen(true) },
           ]} />}
       />
 

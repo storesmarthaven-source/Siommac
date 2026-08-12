@@ -468,18 +468,54 @@ Raw/dirty consumers           RECORDED DEBT
 file has an existing lint blocker. Remaining raw checkbox/radio sites are named
 consumer debt and do not justify a broad forms sweep. The next component is Menu.
 
+## Menu programme — frozen
+
+The canonical action-menu system and its clean described-action family are
+complete:
+
+- extended canonical DropdownMenu actions with optional descriptions while
+  preserving keyboard navigation, type-ahead, disabled-item skipping, Escape
+  dismissal and focus return;
+- corrected the menu's open-state focus effect so it follows the actual flattened
+  item collection rather than a stale derived value;
+- migrated Training and Statutory Configuration from `NewMenu` to canonical
+  DropdownButton, retaining icons, disabled rules and explanatory copy;
+- deleted the unused pre-v2 `Menu.tsx` runtime, its barrel export and the surface
+  CSS owned only by that implementation;
+- passed all 24 focused action/menu tests with zero lint errors in changed files,
+  held the 49-error known frontend typecheck baseline and browser-verified initial
+  focus, arrow navigation, disabled-item skipping, wraparound, Escape dismissal
+  and trigger focus restoration;
+- catalogue completeness remains 45% (23 canonical components), while app
+  adoption advances to 32% (107 of 331 measured consumers).
+
+Menu classification is now frozen:
+
+```text
+Menu canonical system             COMPLETE
+Clean described-action migration  COMPLETE
+Unused pre-v2 runtime             DELETED
+Dirty/local action menus          RECORDED DEBT
+```
+
+The remaining `NewMenu` consumers in `RiskJsa.tsx`, `Incidents.tsx`,
+`Inspections.tsx` and `Permits.tsx` are exact dirty-file debt. Existing
+RowActionMenu compositions remain domain-owned debt and migrate only during
+natural feature work. Menu must not be reopened to chase those counts.
+
 ## Remaining programme
 
 The overall mandate is not yet complete. Continue automatically:
 
-1. Menu
-2. remaining small registered canonical components
-3. polished UI Kit Studio interface
-4. Brand Theme application preview at all required breakpoints
-5. final full-suite and browser verification gate
+1. one bounded classification/promotion pass for genuinely small registered
+   canonical components
+2. polished UI Kit Studio interface
+3. Brand Theme application preview at all required breakpoints
+4. final full-suite and browser verification gate
 
 No component should chase mathematical zero. Exact dirty files and genuine
 domain/interaction exceptions remain recorded debt; clean generic migration is
-the completion criterion. After Empty/Loading, choice controls and Menu are
-stable, broad legacy sweeps stop: the majority of effort moves to the Studio
-and its real registry-backed Brand/Application workbench.
+the completion criterion. The hard migration boundary has now been reached:
+after the bounded small-component pass, broad legacy sweeps stop and the Studio
+plus its real registry-backed Brand/Application workbench becomes the primary
+workstream.
