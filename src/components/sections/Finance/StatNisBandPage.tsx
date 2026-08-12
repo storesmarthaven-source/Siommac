@@ -198,7 +198,7 @@ export function StatNisBandPage({ versionId, edit, onClose, onViewVersion }: {
     // Shape-C re-approval: generate a stable per-attempt idempotency key so the
     // backend RPC can deduplicate retries. The key is cleared on success; if the
     // user retries after a network error the SAME key re-uses the existing workflow.
-    const isReapprovalPath = version?.status === 'approved';
+    const isReapprovalPath = version.status === 'approved';
     if (isReapprovalPath && reapprovalKeyRef.current === null) {
       reapprovalKeyRef.current = crypto.randomUUID();
     }

@@ -1227,7 +1227,7 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
                 <Pill tone={statusPillTone(d.status, d.isActive)}>{d.isActive ? 'Active' : humanize(d.status)}</Pill>
               </div>
               <div class="svd-meta">
-                {d.jurisdiction} · {d.currency}{d.linkedPayrollRunCount > 0 ? ` · ${d.linkedPayrollRunCount} linked run${d.linkedPayrollRunCount !== 1 ? 's' : ''}` : ''}
+                {d.jurisdiction} · {d.currency}{(d.linkedPayrollRunCount ?? 0) > 0 ? ` · ${d.linkedPayrollRunCount} linked run${d.linkedPayrollRunCount !== 1 ? 's' : ''}` : ''}
               </div>
             </div>
             {showRetire && (
@@ -1337,7 +1337,7 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
 
           <TabPanel tabsId="statutory-version" tabId="runs" value={dtab}>
             <SvdSection label="Linked Payroll Runs"
-              action={d.linkedPayrollRunCount > 0
+              action={(d.linkedPayrollRunCount ?? 0) > 0
                 ? <button class="ui-mini-btn" type="button" onClick={() => {
                     onClose();
                     window.dispatchEvent(new CustomEvent('siomac:section', { detail: 's-finance-payroll' }));

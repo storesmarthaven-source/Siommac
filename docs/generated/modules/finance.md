@@ -2,7 +2,7 @@
 
 # finance Module Map
 
-Source fingerprint: `5b6f41ad0172c6162fbb42e6`
+Source fingerprint: `7d511c129f198a2e15156a85`
 
 Files: 139 | Symbols: 1850 | Widgets: 9 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
@@ -324,14 +324,14 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useCancelRemittance` | function / hook | `src/api/finance/remittances.ts:256` | `-` |
 | `useCreateRemittance` | function / hook | `src/api/finance/remittances.ts:257` | `-` |
 | `useRemittanceAudit` | function / hook | `src/api/finance/remittances.ts:271` | `-` |
-| `useStatutoryVersions` | function / hook | `src/api/finance/statutory.ts:267` | `-` |
-| `useNisClasses` | function / hook | `src/api/finance/statutory.ts:270` | `-` |
-| `usePayComponents` | function / hook | `src/api/finance/statutory.ts:277` | `-` |
-| `usePayComponentChangeRequests` | function / hook | `src/api/finance/statutory.ts:282` | `-` |
-| `useVersionDetail` | function / hook | `src/api/finance/statutory.ts:291` | `-` |
-| `useApprovalTimeline` | function / hook | `src/api/finance/statutory.ts:298` | `-` |
-| `useStatutoryReport` | function / hook | `src/api/finance/statutory.ts:305` | `-` |
-| `useStatutoryMutation` | function / hook | `src/api/finance/statutory.ts:315` | `-` |
+| `useStatutoryVersions` | function / hook | `src/api/finance/statutory.ts:275` | `-` |
+| `useNisClasses` | function / hook | `src/api/finance/statutory.ts:278` | `-` |
+| `usePayComponents` | function / hook | `src/api/finance/statutory.ts:285` | `-` |
+| `usePayComponentChangeRequests` | function / hook | `src/api/finance/statutory.ts:290` | `-` |
+| `useVersionDetail` | function / hook | `src/api/finance/statutory.ts:299` | `-` |
+| `useApprovalTimeline` | function / hook | `src/api/finance/statutory.ts:306` | `-` |
+| `useStatutoryReport` | function / hook | `src/api/finance/statutory.ts:313` | `-` |
+| `useStatutoryMutation` | function / hook | `src/api/finance/statutory.ts:323` | `-` |
 | `useEmployerProfile` | function / hook | `src/api/finance/statutoryForms.ts:72` | `-` |
 | `useStatutoryForms` | function / hook | `src/api/finance/statutoryForms.ts:80` | `-` |
 | `useStatutoryFormMutation` | function / hook | `src/api/finance/statutoryForms.ts:87` | `-` |
@@ -513,7 +513,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/finance/payPolicies.ts` | 79 |
 | frontend-api | `src/api/finance/pickers.ts` | 112 |
 | frontend-api | `src/api/finance/remittances.ts` | 279 |
-| frontend-api | `src/api/finance/statutory.ts` | 325 |
+| frontend-api | `src/api/finance/statutory.ts` | 333 |
 | frontend-api | `src/api/finance/statutoryForms.ts` | 94 |
 | frontend-page | `src/components/sections/Finance/ApAdvancedFilterPanel.tsx` | 77 |
 | frontend-page | `src/components/sections/Finance/ApBillDrawer.tsx` | 164 |
@@ -553,7 +553,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/StatNewVersionPage.tsx` | 357 |
 | frontend-page | `src/components/sections/Finance/StatNisBandPage.tsx` | 371 |
 | frontend-page | `src/components/sections/Finance/StatNisImportPage.tsx` | 346 |
-| frontend-page | `src/components/sections/Finance/StatPayComponentPage.tsx` | 209 |
+| frontend-page | `src/components/sections/Finance/StatPayComponentPage.tsx` | 222 |
 | frontend-page | `src/components/sections/Finance/StatTable.tsx` | 204 |
 | frontend-page | `src/components/sections/Finance/StatutoryConfigOverview.tsx` | 1639 |
 | frontend-page | `src/components/sections/Finance/StatutoryDashboard.tsx` | 756 |

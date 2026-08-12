@@ -5368,21 +5368,21 @@ NisClassImportRow	interface	finance	true		src/api/finance/statutory.ts	113
 NisClassImportResult	interface	finance	true		src/api/finance/statutory.ts	123	
 ApprovalTimelineEntry	interface	finance	true		src/api/finance/statutory.ts	128	
 StatutoryVersionDetail	interface	finance	true		src/api/finance/statutory.ts	138	
-StatutoryReportResult	interface	finance	true		src/api/finance/statutory.ts	144	
-StatutoryReportKey	type	finance	true		src/api/finance/statutory.ts	150	
-CreatePayComponentArgs	interface	finance	true		src/api/finance/statutory.ts	152	
-PayComponentChangeRequest	interface	finance	true		src/api/finance/statutory.ts	167	
-call	function	finance	false		src/api/finance/statutory.ts	182	
-financeStatutoryApi	object	finance	true		src/api/finance/statutory.ts	190	
-financeStatutoryKeys	object	finance	true		src/api/finance/statutory.ts	253	
-useStatutoryVersions	function	finance	true	hook	src/api/finance/statutory.ts	267	
-useNisClasses	function	finance	true	hook	src/api/finance/statutory.ts	270	
-usePayComponents	function	finance	true	hook	src/api/finance/statutory.ts	277	
-usePayComponentChangeRequests	function	finance	true	hook	src/api/finance/statutory.ts	282	
-useVersionDetail	function	finance	true	hook	src/api/finance/statutory.ts	291	
-useApprovalTimeline	function	finance	true	hook	src/api/finance/statutory.ts	298	
-useStatutoryReport	function	finance	true	hook	src/api/finance/statutory.ts	305	
-useStatutoryMutation	function	finance	true	hook	src/api/finance/statutory.ts	315	
+StatutoryReportResult	interface	finance	true		src/api/finance/statutory.ts	152	
+StatutoryReportKey	type	finance	true		src/api/finance/statutory.ts	158	
+CreatePayComponentArgs	interface	finance	true		src/api/finance/statutory.ts	160	
+PayComponentChangeRequest	interface	finance	true		src/api/finance/statutory.ts	175	
+call	function	finance	false		src/api/finance/statutory.ts	190	
+financeStatutoryApi	object	finance	true		src/api/finance/statutory.ts	198	
+financeStatutoryKeys	object	finance	true		src/api/finance/statutory.ts	261	
+useStatutoryVersions	function	finance	true	hook	src/api/finance/statutory.ts	275	
+useNisClasses	function	finance	true	hook	src/api/finance/statutory.ts	278	
+usePayComponents	function	finance	true	hook	src/api/finance/statutory.ts	285	
+usePayComponentChangeRequests	function	finance	true	hook	src/api/finance/statutory.ts	290	
+useVersionDetail	function	finance	true	hook	src/api/finance/statutory.ts	299	
+useApprovalTimeline	function	finance	true	hook	src/api/finance/statutory.ts	306	
+useStatutoryReport	function	finance	true	hook	src/api/finance/statutory.ts	313	
+useStatutoryMutation	function	finance	true	hook	src/api/finance/statutory.ts	323	
 StatutoryFormType	type	finance	true		src/api/finance/statutoryForms.ts	10	
 EmployerProfile	interface	finance	true		src/api/finance/statutoryForms.ts	12	
 StatutoryForm	interface	finance	true		src/api/finance/statutoryForms.ts	25	
@@ -8159,12 +8159,12 @@ loadText	function	finance	false		src/components/sections/Finance/StatNisImportPa
 onFile	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	161	StatNisImportPage
 doImport	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	168	StatNisImportPage
 rowsHaveData	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	343	
-CODE_RE	variable	finance	false	component	src/components/sections/Finance/StatPayComponentPage.tsx	33	
-StatPayComponentPage	function	finance	true	component	src/components/sections/Finance/StatPayComponentPage.tsx	35	
-set	function	finance	false		src/components/sections/Finance/StatPayComponentPage.tsx	55	StatPayComponentPage
-save	function	finance	false		src/components/sections/Finance/StatPayComponentPage.tsx	71	StatPayComponentPage
-retire	function	finance	false		src/components/sections/Finance/StatPayComponentPage.tsx	94	StatPayComponentPage
-flagRow	function	finance	false		src/components/sections/Finance/StatPayComponentPage.tsx	110	StatPayComponentPage
+CODE_RE	variable	finance	false	component	src/components/sections/Finance/StatPayComponentPage.tsx	34	
+StatPayComponentPage	function	finance	true	component	src/components/sections/Finance/StatPayComponentPage.tsx	36	
+set	function	finance	false		src/components/sections/Finance/StatPayComponentPage.tsx	56	StatPayComponentPage
+save	function	finance	false		src/components/sections/Finance/StatPayComponentPage.tsx	72	StatPayComponentPage
+retire	function	finance	false		src/components/sections/Finance/StatPayComponentPage.tsx	95	StatPayComponentPage
+flagRow	function	finance	false		src/components/sections/Finance/StatPayComponentPage.tsx	111	StatPayComponentPage
 StatColumn	interface	finance	true		src/components/sections/Finance/StatTable.tsx	17	
 StatTableProps	interface	finance	true		src/components/sections/Finance/StatTable.tsx	27	
 StatTone	type	finance	true		src/components/sections/Finance/StatTable.tsx	57	
@@ -13024,15 +13024,16 @@ BadgeProps	interface	platform	true		src/ui/primitives/Badge.tsx	24
 Badge	function	platform	true	component	src/ui/primitives/Badge.tsx	43	
 Icon	function	platform	false	component,test	src/ui/primitives/Button.test.tsx	17	
 ButtonVariant	type	platform	true		src/ui/primitives/Button.tsx	38	
-ButtonBase	interface	platform	false		src/ui/primitives/Button.tsx	40	
-IconOnlyButton	interface	platform	false		src/ui/primitives/Button.tsx	93	
-LabelledButton	interface	platform	false		src/ui/primitives/Button.tsx	99	
-ButtonProps	type	platform	true		src/ui/primitives/Button.tsx	105	
-FORCEABLE	variable	platform	false	component	src/ui/primitives/Button.tsx	108	
-ResolvedButtonProps	type	platform	false		src/ui/primitives/Button.tsx	111	
-Button	function	platform	true	component	src/ui/primitives/Button.tsx	117	
-handleClick	function	platform	false		src/ui/primitives/Button.tsx	189	Button
-ButtonGroup	function	platform	true	component	src/ui/primitives/Button.tsx	221	
+ButtonTone	type	platform	true		src/ui/primitives/Button.tsx	52	
+ButtonBase	interface	platform	false		src/ui/primitives/Button.tsx	54	
+IconOnlyButton	interface	platform	false		src/ui/primitives/Button.tsx	113	
+LabelledButton	interface	platform	false		src/ui/primitives/Button.tsx	119	
+ButtonProps	type	platform	true		src/ui/primitives/Button.tsx	125	
+FORCEABLE	variable	platform	false	component	src/ui/primitives/Button.tsx	128	
+ResolvedButtonProps	type	platform	false		src/ui/primitives/Button.tsx	131	
+Button	function	platform	true	component	src/ui/primitives/Button.tsx	137	
+handleClick	function	platform	false		src/ui/primitives/Button.tsx	215	Button
+ButtonGroup	function	platform	true	component	src/ui/primitives/Button.tsx	247	
 FORCEABLE	variable	platform	false	component	src/ui/primitives/choice.tsx	27	
 forcedAttr	function	platform	false		src/ui/primitives/choice.tsx	29	
 CheckboxProps	interface	platform	true		src/ui/primitives/choice.tsx	35	

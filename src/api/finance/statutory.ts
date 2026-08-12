@@ -138,7 +138,15 @@ export interface ApprovalTimelineEntry {
 export interface StatutoryVersionDetail extends StatutoryVersion {
   nisClasses: NisClass[];
   approvalTimeline: ApprovalTimelineEntry[];
-  linkedPayrollRunCount: number;
+  /**
+   * OPTIONAL because nothing verifies the endpoint always sends it.
+   *
+   * Declared required, it made the `?? 0` fallback at the call site look dead to
+   * the linter — and deleting a runtime guard on the strength of a type nobody
+   * has checked is how a missing field becomes `undefined` on screen. The type
+   * should describe what the client can actually receive.
+   */
+  linkedPayrollRunCount?: number;
 }
 
 export interface StatutoryReportResult {
