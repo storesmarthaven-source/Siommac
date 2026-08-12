@@ -501,6 +501,8 @@ export const fileInputDef: ComponentDef = {
     maxFiles:   { type: 'number',  label: 'Max files', default: 5, min: 1, max: 20 },
     validation: { type: 'select',  label: 'Validation', options: ['none', 'error', 'warning', 'success'], default: 'none' },
     disabled:   { type: 'boolean', label: 'Disabled', default: false },
+    trigger:    { type: 'boolean', label: 'Compact trigger', default: false },
+    size:       { type: 'select',  label: 'Trigger size', options: ['sm', 'md', 'lg'], default: 'md' },
   },
   style: [
     { label: 'Drop zone', controls: [
@@ -510,6 +512,9 @@ export const fileInputDef: ComponentDef = {
       { name: '--ui-file-radius',        label: 'Corner radius', kind: 'size' },
       { name: '--ui-file-pad',           label: 'Padding', kind: 'size' },
     ] },
+    /* The trigger has no tokens of its own ON PURPOSE — it is drawn entirely
+       from `--ui-button-*`, so re-theming Button re-themes it and the two can
+       never drift. Edit it on the Button entry. */
   ],
   states: ['default', 'hover', 'focus', 'disabled', 'error'],
   a11y: {
@@ -520,9 +525,23 @@ export const fileInputDef: ComponentDef = {
     notes: [
       'Selection only — it does not upload. Progress belongs to whoever owns the request; baking a transport in would make it unusable for the app’s three upload paths.',
       'The native input is reset after each pick so choosing the SAME file again still fires a change.',
+      'The compact trigger is a <label> wrapping the real input, NOT a Button. Activating a file picker is native label behaviour; Button renders <button>/<a> and does not take a polymorphic escape hatch. It borrows the --ui-button-* tokens so the two stay visually identical without sharing an element.',
     ],
   },
-  render: (p, st) => (
+  render: (p, st) => b(p.trigger) ? (
+    <FileInput
+      files={[]}
+      onChange={noop}
+      accept={s(p.accept, '.pdf')}
+      multiple={b(p.multiple)}
+      maxSizeMb={n(p.maxSizeMb, 10)}
+      triggerLabel="Attach file"
+      size={s(p.size, 'md') as 'sm' | 'md' | 'lg'}
+      disabled={b(p.disabled) || st === 'disabled'}
+      forceState={st}
+      aria-label="Attach file"
+    />
+  ) : (
     <FormField label="Evidence" helpText="Attached to the requirement and recorded on the audit trail." disabled={b(p.disabled) || st === 'disabled'}>
       <FileInput
         files={[]}
@@ -537,7 +556,13 @@ export const fileInputDef: ComponentDef = {
       />
     </FormField>
   ),
-  code: p => `<FormField label="Evidence">
+  code: p => b(p.trigger) ? `<FileInput
+  files={files}
+  onChange={setFiles}
+  accept="${s(p.accept, '.pdf')}"
+  triggerLabel="Attach file"
+  size="${s(p.size, 'md')}"
+/>` : `<FormField label="Evidence">
   <FileInput
     files={files}
     onChange={setFiles}

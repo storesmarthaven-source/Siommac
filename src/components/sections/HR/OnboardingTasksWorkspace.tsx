@@ -14,7 +14,7 @@
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
-import { PageHeader, Drawer, Field, FormGrid, TextInput, SelectInput, Modal } from '@ui';
+import { PageHeader, Drawer, Field, FormGrid, TextInput, SelectInput, Modal, Button, FileInput } from '@ui';
 import {
   useOnboardingTasksList, useOnboardingTaskDetail, useOnboardingPackages,
   useOnboardingCompleteTask, useOnboardingReassignTask, useOnboardingBlockTask, useOnboardingUnblockTask,
@@ -258,7 +258,7 @@ export function OnboardingTasksWorkspace({
         module="HR · Onboarding"
         title="Tasks"
         sub="Cross-case execution queue — every onboarding task, one workspace."
-        actions={<button class="obx-btn primary" onClick={() => { setAddForm({ caseNo: '', taskTitle: '', assignedTo: '', dueAt: '', priority: 'normal', isBlocking: false }); setAddOpen(true); }}>+ Add Task</button>}
+        actions={<Button variant="primary" onClick={() => { setAddForm({ caseNo: '', taskTitle: '', assignedTo: '', dueAt: '', priority: 'normal', isBlocking: false }); setAddOpen(true); }} iconLeft={<i class="fas fa-plus" />}>Add Task</Button>}
       />
 
       <div class="obx-toolbar">
@@ -357,10 +357,8 @@ function TaskDrawer({
     try { await noteMut.mutateAsync({ taskId, note }); setNoteText(''); onToast('Note added'); }
     catch (e) { onToast(e instanceof Error ? e.message : 'Failed to add note'); }
   }
-  async function onEvidenceFile(e: Event): Promise<void> {
-    const input = e.target as HTMLInputElement;
-    const file = (input.files ?? [])[0];
-    input.value = '';
+  async function onEvidenceFile(files: File[]): Promise<void> {
+    const file = files[0];
     if (!file || !taskId) return;
     try { await evidenceMut.mutateAsync({ taskId, file }); onToast('Evidence attached'); }
     catch (err) { onToast(err instanceof Error ? err.message : 'Evidence upload failed'); }
@@ -373,11 +371,11 @@ function TaskDrawer({
       onClose={onClose}
       foot={
         <div class="obx-rowbtns" style={{ justifyContent: 'flex-end', width: '100%' }}>
-          {t && <button class="obx-btn" onClick={() => { onOpenCase(t.caseId); onClose(); }}>Open Case</button>}
-          {t && OPEN_STATUSES.has(t.status) && <button class="obx-btn primary" onClick={() => void onComplete(t)}>Complete</button>}
+          {t && <Button variant="secondary" onClick={() => { onOpenCase(t.caseId); onClose(); }}>Open Case</Button>}
+          {t && OPEN_STATUSES.has(t.status) && <Button variant="primary" onClick={() => void onComplete(t)}>Complete</Button>}
           {t && (t.status === 'blocked'
-            ? <button class="obx-btn amber" onClick={() => void onUnblock(t)}>Unblock</button>
-            : OPEN_STATUSES.has(t.status) && <button class="obx-btn amber" onClick={() => void onBlock(t)}>Block</button>)}
+            ? <Button variant="secondary" onClick={() => void onUnblock(t)}>Unblock</Button>
+            : OPEN_STATUSES.has(t.status) && <Button variant="secondary" onClick={() => void onBlock(t)}>Block</Button>)}
         </div>
       }
     >
@@ -412,10 +410,18 @@ function TaskDrawer({
             <div class="obx-section-head">
               <h2><i class="fas fa-paperclip" />Evidence ({t.evidence.length})</h2>
               {OPEN_STATUSES.has(t.status) && (
-                <label class="obx-btn obx-btn-sm" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}>
-                  {evidenceMut.isPending ? 'Uploading…' : '+ Attach'}
-                  <input type="file" style={{ display: 'none' }} disabled={evidenceMut.isPending} onChange={e => void onEvidenceFile(e)} />
-                </label>
+                /* Not a Button: activating a file picker is native `<label>`
+                   behaviour, so this is FileInput's trigger treatment — same
+                   BTN-01 tokens, correct semantics. */
+                <FileInput
+                  files={[]}
+                  onChange={files => void onEvidenceFile(files)}
+                  onReject={rejections => onToast(rejections[0]?.message ?? 'File rejected.')}
+                  triggerLabel={evidenceMut.isPending ? 'Uploading…' : 'Attach'}
+                  size="sm"
+                  disabled={evidenceMut.isPending}
+                  aria-label="Attach evidence"
+                />
               )}
             </div>
             <div class="obx-section-body">
@@ -446,7 +452,7 @@ function TaskDrawer({
                 <input class="ui-input" style={{ flex: 1 }} placeholder="Add a note…" value={noteText}
                   onInput={e => setNoteText((e.target as HTMLInputElement).value)}
                   onKeyDown={e => { if (e.key === 'Enter') void submitNote(); }} />
-                <button class="obx-btn primary obx-btn-sm" style={{ height: 36 }} disabled={noteMut.isPending || !noteText.trim()} onClick={() => void submitNote()}>Add</button>
+                <Button variant="primary" size="sm" disabled={!noteText.trim()} loading={noteMut.isPending} onClick={() => void submitNote()}>Add</Button>
               </div>
             </div>
           </div>

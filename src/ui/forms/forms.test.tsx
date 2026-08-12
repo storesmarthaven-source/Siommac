@@ -364,6 +364,67 @@ describe('FileInput', () => {
     expect((onReject.mock.calls[0]?.[0] as FileRejection[])[0]?.reason).toBe('count');
   });
 
+  /* ── Trigger treatment ───────────────────────────────────────────────────
+     The compact trigger exists because a file picker is NOT a Button: a
+     `<label>` natively activates the input it wraps, and Button renders
+     `<button>`/`<a>`. These assert the semantics that justify the separation,
+     not the pixels. */
+  it('renders the trigger as a LABEL wrapping the real file input, never a button', () => {
+    const { container } = render(
+      <FileInput files={[]} onChange={vi.fn()} triggerLabel="Attach" aria-label="Attach evidence" />,
+    );
+    const label = container.querySelector('label.ui-file-trigger');
+    expect(label).toBeTruthy();
+    // The input must be INSIDE the label — that containment is what makes a
+    // click on the label open the OS picker with no JS at all.
+    expect(label?.querySelector('input[type="file"]')).toBeTruthy();
+    // No <button>: if this ever becomes one, the native activation is gone and
+    // the only thing left holding it together would be a click handler.
+    expect(container.querySelector('button')).toBeNull();
+  });
+
+  it('keeps the trigger input focusable rather than `hidden`', () => {
+    // `hidden` would remove it from the tab order and strand keyboard users,
+    // which is exactly what the legacy `style="display:none"` markup did.
+    const { container } = render(<FileInput files={[]} onChange={vi.fn()} triggerLabel="Attach" aria-label="A" />);
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    expect(input.hidden).toBe(false);
+    expect(input.getAttribute('style')).toBeNull();
+  });
+
+  it('validates a trigger pick exactly like the dropzone', () => {
+    const onChange = vi.fn();
+    const onReject = vi.fn();
+    const { container } = render(
+      <FileInput files={[]} onChange={onChange} onReject={onReject} accept=".pdf" triggerLabel="Attach" aria-label="A" />,
+    );
+    pickFiles(container.querySelector<HTMLInputElement>('input[type="file"]')!, [file('a.exe', 'application/x-msdownload', 10)]);
+    expect((onReject.mock.calls[0]?.[0] as FileRejection[])[0]?.reason).toBe('type');
+    expect(onChange.mock.calls[0]?.[0] as File[]).toHaveLength(0);
+  });
+
+  it('shows the caller-supplied label and disables the input', () => {
+    const { container } = render(
+      <FileInput files={[]} onChange={vi.fn()} triggerLabel="Uploading…" disabled aria-label="A" />,
+    );
+    expect(screen.getByText('Uploading…')).toBeTruthy();
+    expect(container.querySelector<HTMLInputElement>('input[type="file"]')?.disabled).toBe(true);
+    expect(container.querySelector('.ui-file-trigger--disabled')).toBeTruthy();
+  });
+
+  it('carries the size modifier so it matches Button geometry', () => {
+    const { container } = render(
+      <FileInput files={[]} onChange={vi.fn()} triggerLabel="Attach" size="sm" aria-label="A" />,
+    );
+    expect(container.querySelector('.ui-file-trigger--sm')).toBeTruthy();
+  });
+
+  it('renders the dropzone, not a trigger, when no triggerLabel is given', () => {
+    const { container } = render(<FileInput files={[]} onChange={vi.fn()} aria-label="A" />);
+    expect(container.querySelector('.ui-file-trigger')).toBeNull();
+    expect(container.querySelector('.ui-file')).toBeTruthy();
+  });
+
   it('lists selected files with a remove control', () => {
     const onChange = vi.fn();
     render(<FileInput files={[file('report.pdf', 'application/pdf', 2048)]} onChange={onChange} aria-label="E" />);

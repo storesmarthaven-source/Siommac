@@ -16,7 +16,7 @@
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
-import { PageHeader, Modal } from '@ui';
+import { PageHeader, Modal, Button } from '@ui';
 import {
   useOnboardingHandoffsList,
   useOnboardingRetryHandoff, useOnboardingAcceptHandoff, useOnboardingCompleteHandoff, useOnboardingCancelHandoff,
@@ -123,7 +123,7 @@ export function OnboardingHandoffsWorkspace({
         module="HR · Onboarding"
         title="Handoffs"
         sub="Cross-case module handoff queue — retry, accept, complete, or cancel."
-        actions={<button class="obx-btn" onClick={() => void retryAllFailed()}>Retry Failed</button>}
+        actions={<Button variant="secondary" onClick={() => void retryAllFailed()}>Retry Failed</Button>}
       />
 
       <div class="obx-toolbar">
@@ -175,7 +175,7 @@ export function OnboardingHandoffsWorkspace({
 
       {payloadRow && (
         <Modal open title={`Handoff payload — ${moduleLabel(payloadRow.targetModule)}`} icon="fa-code" onClose={() => setPayloadRow(null)}
-          footer={<button class="obx-btn" onClick={() => setPayloadRow(null)}>Close</button>}>
+          footer={<Button variant="secondary" onClick={() => setPayloadRow(null)}>Close</Button>}>
           <div style={{ marginBottom: 10, fontSize: 13, color: '#64748b' }}>
             {payloadRow.caseNo}{payloadRow.employeeName ? ` · ${payloadRow.employeeName}` : ''} · {humanize(payloadRow.handoffType ?? '—')}
           </div>

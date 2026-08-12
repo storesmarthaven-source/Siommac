@@ -14,7 +14,7 @@
 import { type VNode } from 'preact';
 import { useId, useRef, useState } from 'preact/hooks';
 import { LucideIcon } from '../LucideIcon';
-import { type UiState, type ValidationState } from '../tokens';
+import { type ControlSize, type UiState, type ValidationState } from '../tokens';
 import { useFieldContext, resolveFieldState } from './fieldContext';
 import './fileInput.recipe.css';
 
@@ -40,6 +40,23 @@ export interface FileInputProps {
   validation?: ValidationState;
   /** Replaces the default "Drop files here" copy. */
   hint?: string;
+  /**
+   * Renders the COMPACT TRIGGER instead of the dropzone: a single button-shaped
+   * control that opens the OS picker, for row/toolbar placements where a
+   * dashed drop target is far too much furniture.
+   *
+   * Its presence is what selects the treatment — one source of truth, so there
+   * is no second `variant` prop that can disagree with it.
+   *
+   * ⭐ It is a `<label>` wrapping the real `<input type="file">`, NOT a
+   * `<Button>`. Activating a file picker is native `<label>` behaviour; giving
+   * Button a polymorphic escape hatch to emit `<label>` would trade a real
+   * semantic boundary for a visual one. The trigger BORROWS the Button recipe's
+   * tokens so the two stay visually identical without sharing an element.
+   */
+  triggerLabel?: string;
+  /** Trigger only — matches Button's control sizes. */
+  size?: ControlSize;
   id?: string;
   name?: string;
   'aria-label'?: string;
@@ -67,7 +84,7 @@ function matchesAccept(file: File, accept: string | undefined): boolean {
 export function FileInput({
   files, onChange, accept, multiple = false, maxSizeMb, maxFiles,
   onReject, disabled: ownDisabled, readOnly: ownReadOnly, validation: ownValidation,
-  hint, id: ownId, name, forceState, class: extra, ...aria
+  hint, triggerLabel, size = 'md', id: ownId, name, forceState, class: extra, ...aria
 }: FileInputProps): VNode {
   const ctx = useFieldContext();
   const { id, describedBy, validation, disabled, readOnly } =
@@ -113,6 +130,49 @@ export function FileInput({
 
   const forced = forceState === 'hover' || forceState === 'focus' ? forceState : undefined;
 
+  /* The native input, shared by both treatments. `hidden` is deliberately NOT
+     used on the trigger: a `hidden` input is not focusable, so keyboard users
+     would lose the picker entirely. It is clipped instead and the label makes
+     the whole control activate it. */
+  const nativeInput = (
+    <input
+      ref={inputRef}
+      id={id}
+      name={name}
+      type="file"
+      class="ui-file-input"
+      accept={accept}
+      multiple={multiple}
+      disabled={inert}
+      aria-describedby={[describedBy, hintId].filter(Boolean).join(' ') || undefined}
+      aria-label={aria['aria-label']}
+      /* `onInput`, not `onChange`. The app loads `preact/compat`, which
+         remaps `onChange` on form controls to the `input` event — so an
+         `onChange` handler here fires on `input` anyway, and binding the
+         event explicitly means the component behaves the same with or
+         without compat loaded. File inputs fire both natively. */
+      onInput={e => { const f = (e.target as HTMLInputElement).files; if (f?.length) accept_(f); }}
+    />
+  );
+
+  if (triggerLabel !== undefined) {
+    return (
+      <label
+        class={[
+          'ui-file-trigger',
+          size !== 'md' ? `ui-file-trigger--${size}` : '',
+          inert ? 'ui-file-trigger--disabled' : '',
+          extra ?? '',
+        ].filter(Boolean).join(' ')}
+        data-ui-state={forced}
+      >
+        <LucideIcon name="Paperclip" />
+        <span class="ui-file-trigger-label">{triggerLabel}</span>
+        {nativeInput}
+      </label>
+    );
+  }
+
   return (
     <div class={extra}>
       <div
@@ -134,24 +194,7 @@ export function FileInput({
       >
         {/* A real file input, visually hidden but focusable and labelled — so
             keyboard users get the OS picker exactly as mouse users do. */}
-        <input
-          ref={inputRef}
-          id={id}
-          name={name}
-          type="file"
-          class="ui-file-input"
-          accept={accept}
-          multiple={multiple}
-          disabled={inert}
-          aria-describedby={[describedBy, hintId].filter(Boolean).join(' ') || undefined}
-          aria-label={aria['aria-label']}
-          /* `onInput`, not `onChange`. The app loads `preact/compat`, which
-             remaps `onChange` on form controls to the `input` event — so an
-             `onChange` handler here fires on `input` anyway, and binding the
-             event explicitly means the component behaves the same with or
-             without compat loaded. File inputs fire both natively. */
-          onInput={e => { const f = (e.target as HTMLInputElement).files; if (f?.length) accept_(f); }}
-        />
+        {nativeInput}
         <LucideIcon name="Upload" class="ui-file-icon" />
         <div class="ui-file-copy">
           <span class="ui-file-cta">

@@ -11,7 +11,7 @@
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
-import { PageHeader, Modal, Field, FormGrid, TextInput, TextareaInput } from '@ui';
+import { PageHeader, Modal, Field, FormGrid, TextInput, TextareaInput, Button } from '@ui';
 import { useOnboardingPackages, useOnboardingCreatePackage, useOnboardingSetPackageStatus } from '@api/hr/onboarding';
 import type { OnboardingPackageSummary } from '../../../../types/hrOnboarding';
 import './onboardingCase.css';
@@ -81,7 +81,7 @@ export function OnboardingPackageManager({
         module="HR · Onboarding"
         title="Packages"
         sub="Configure onboarding packages, task &amp; handoff templates, and custom actions."
-        actions={<button class="obx-btn primary" onClick={openNew}>+ New Package</button>}
+        actions={<Button variant="primary" onClick={openNew} iconLeft={<i class="fas fa-plus" />}>New Package</Button>}
       />
 
       <div style={{ display: 'flex', gap: 10, margin: '14px 0' }}>

@@ -12,7 +12,7 @@ import { type VNode } from 'preact';
 import { useRef, useState } from 'preact/hooks';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
-import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, TableSkeleton } from '@ui';
+import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, TableSkeleton, Button } from '@ui';
 import {
   useRequestTypes, useMyRequests, useAllRequests, useRequestsMutation, hrRequestsApi,
 } from '@api/hr/requests';
@@ -147,7 +147,7 @@ function MyRequestsTab(): VNode {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-        <button class="obx-btn primary" onClick={() => setNewOpen(true)}>+ New Request</button>
+        <Button variant="primary" onClick={() => setNewOpen(true)} iconLeft={<i class="fas fa-plus" />}>New Request</Button>
       </div>
 
       {requestsQ.isLoading
@@ -168,7 +168,7 @@ function MyRequestsTab(): VNode {
                     <td class="obx-meta">{r.requestedAt ? new Date(r.requestedAt).toLocaleDateString() : '—'}</td>
                     <td>
                       {!TERMINAL.has(r.status) && (
-                        <button class="obx-btn sm" onClick={() => void handleCancel(r)}>Cancel</button>
+                        <Button variant="secondary" size="sm" onClick={() => void handleCancel(r)}>Cancel</Button>
                       )}
                     </td>
                   </tr>
@@ -364,13 +364,13 @@ function TriageTab(): VNode {
                     <td class="obx-meta">{r.requestedAt ? new Date(r.requestedAt).toLocaleDateString() : '—'}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>
                       {(r.status === 'submitted' || r.status === 'in_review') && (
-                        <button class="obx-btn sm" style={{ marginRight: 4 }} onClick={() => setDecideReq(r)}>Decide</button>
+                        <Button variant="secondary" size="sm" onClick={() => setDecideReq(r)}>Decide</Button>
                       )}
                       {r.status === 'approved' && (
-                        <button class="obx-btn sm primary" style={{ marginRight: 4 }} onClick={() => setFulfillReq(r)}>Fulfill</button>
+                        <Button variant="primary" size="sm" onClick={() => setFulfillReq(r)}>Fulfill</Button>
                       )}
                       {!TERMINAL.has(r.status) && (
-                        <button class="obx-btn sm" onClick={() => void handleCancel(r)}>Cancel</button>
+                        <Button variant="secondary" size="sm" onClick={() => void handleCancel(r)}>Cancel</Button>
                       )}
                     </td>
                   </tr>

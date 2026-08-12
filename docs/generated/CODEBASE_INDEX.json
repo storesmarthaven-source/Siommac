@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "5ed9173f1344d43fed70ab580ecc86ea245afa4c",
+    "head": "9a7195ad74306458fa9e09285d31d5c75f63dcf1",
     "branch": "main",
-    "fingerprint": "364d2263c385fd09a49440f6",
+    "fingerprint": "2d84b45b3ef95edb85dd62b6",
     "indexedFiles": 1815
   },
   "summary": {
@@ -5418,7 +5418,7 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 424,
-      "hash": "ee7b2527036bd6c7"
+      "hash": "95121ac622daaaef"
     },
     {
       "path": "src/components/sections/HR/HRSection.tsx",
@@ -5495,7 +5495,7 @@
       "module": "workflow",
       "role": "frontend-page",
       "lines": 188,
-      "hash": "e2bdbce8750d84c4"
+      "hash": "6e65f095c81369a4"
     },
     {
       "path": "src/components/sections/HR/OnboardingOverview.tsx",
@@ -5516,7 +5516,7 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 135,
-      "hash": "1d868812e5f6ba08"
+      "hash": "b4c5cf0e71ad11ea"
     },
     {
       "path": "src/components/sections/HR/OnboardingReportsWorkspace.tsx",
@@ -5529,8 +5529,8 @@
       "path": "src/components/sections/HR/OnboardingTasksWorkspace.tsx",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 458,
-      "hash": "3fa6318f688b346f"
+      "lines": 464,
+      "hash": "033964a9fcad0868"
     },
     {
       "path": "src/components/sections/HR/OrgStructureOverview.tsx",
@@ -8637,8 +8637,8 @@
       "path": "src/ui/forms/FileInput.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 271,
-      "hash": "47115275d71a3736"
+      "lines": 314,
+      "hash": "a061d1f47c354662"
     },
     {
       "path": "src/ui/forms/FormField.test.tsx",
@@ -8707,8 +8707,8 @@
       "path": "src/ui/forms/forms.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 488,
-      "hash": "11f89de4462347db"
+      "lines": 549,
+      "hash": "d3fd1ec2f2f2c9ea"
     },
     {
       "path": "src/ui/forms/inputs.tsx",
@@ -9148,8 +9148,8 @@
       "path": "src/ui/registry/forms.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 770,
-      "hash": "63262b05695ccc48"
+      "lines": 795,
+      "hash": "a3b2d25dc2d40010"
     },
     {
       "path": "src/ui/registry/index.ts",
@@ -143692,7 +143692,7 @@
       "name": "formatBytes",
       "kind": "function",
       "file": "src/ui/forms/FileInput.tsx",
-      "line": 50,
+      "line": 67,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -143702,7 +143702,7 @@
       "name": "matchesAccept",
       "kind": "function",
       "file": "src/ui/forms/FileInput.tsx",
-      "line": 57,
+      "line": 74,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -143712,7 +143712,7 @@
       "name": "FileInput",
       "kind": "function",
       "file": "src/ui/forms/FileInput.tsx",
-      "line": 67,
+      "line": 84,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -143724,7 +143724,7 @@
       "name": "accept_",
       "kind": "function",
       "file": "src/ui/forms/FileInput.tsx",
-      "line": 82,
+      "line": 99,
       "module": "platform",
       "exported": false,
       "container": "FileInput",
@@ -143734,7 +143734,7 @@
       "name": "OtpInputProps",
       "kind": "interface",
       "file": "src/ui/forms/FileInput.tsx",
-      "line": 197,
+      "line": 240,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -143744,7 +143744,7 @@
       "name": "OtpInput",
       "kind": "function",
       "file": "src/ui/forms/FileInput.tsx",
-      "line": 215,
+      "line": 258,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -143756,7 +143756,7 @@
       "name": "commit",
       "kind": "function",
       "file": "src/ui/forms/FileInput.tsx",
-      "line": 222,
+      "line": 265,
       "module": "platform",
       "exported": false,
       "container": "OtpInput",
@@ -147989,7 +147989,7 @@
       "name": "otpInputDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 551,
+      "line": 576,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147999,7 +147999,7 @@
       "name": "DEPARTMENTS",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 599,
+      "line": 624,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148009,7 +148009,7 @@
       "name": "GROUPED_DEPARTMENTS",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 608,
+      "line": 633,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148019,7 +148019,7 @@
       "name": "selectDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 626,
+      "line": 651,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148029,7 +148029,7 @@
       "name": "search",
       "kind": "function",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 729,
+      "line": 754,
       "module": "platform",
       "exported": false,
       "container": "selectDef",
@@ -148039,7 +148039,7 @@
       "name": "FORM_DEFS",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 760,
+      "line": 785,
       "module": "platform",
       "exported": true,
       "container": "",
