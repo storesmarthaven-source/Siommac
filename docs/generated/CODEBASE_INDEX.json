@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "1d03fdec179677965f93f90bbf6609a5bcb92576",
+    "head": "632d12664b04a30f68c9a0eb0418767855ac77e3",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "77864fb4d420d818b6487708",
+    "fingerprint": "bc5ba9de1d62e57d7c12029e",
     "indexedFiles": 1815
   },
   "summary": {
     "files": 1460,
-    "symbols": 14685,
+    "symbols": 14684,
     "widgets": 63,
     "routes": 978,
     "routeDefinitions": 979,
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 404,
-        "symbols": 3676,
+        "symbols": 3675,
         "widgets": 12,
         "routes": 38,
         "routeDefinitions": 53,
@@ -5418,7 +5418,7 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 423,
-      "hash": "1f9ae7c8d2c5fc36"
+      "hash": "b00c97170cc0ab9c"
     },
     {
       "path": "src/components/sections/HR/HRSection.tsx",
@@ -5487,15 +5487,15 @@
       "path": "src/components/sections/HR/OnboardingCommandCenter.tsx",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 199,
-      "hash": "9e26088d7a9b15f0"
+      "lines": 200,
+      "hash": "cdb6698f83cffa09"
     },
     {
       "path": "src/components/sections/HR/OnboardingHandoffsWorkspace.tsx",
       "module": "workflow",
       "role": "frontend-page",
       "lines": 188,
-      "hash": "3948047d564e6a18"
+      "hash": "f543ad771cf59d5b"
     },
     {
       "path": "src/components/sections/HR/OnboardingOverview.tsx",
@@ -5516,28 +5516,28 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 131,
-      "hash": "911646dffd850cf9"
+      "hash": "37eed9b2d91cf215"
     },
     {
       "path": "src/components/sections/HR/OnboardingReportsWorkspace.tsx",
       "module": "hr",
       "role": "frontend-page",
       "lines": 178,
-      "hash": "14917c33664f61bc"
+      "hash": "1024745266f0eab6"
     },
     {
       "path": "src/components/sections/HR/OnboardingTasksWorkspace.tsx",
       "module": "hr",
       "role": "frontend-page",
       "lines": 464,
-      "hash": "2f0ddebeb3297cbf"
+      "hash": "854a4b469a55439e"
     },
     {
       "path": "src/components/sections/HR/OrgStructureOverview.tsx",
       "module": "hr",
       "role": "frontend-page",
       "lines": 777,
-      "hash": "5637d78cf0717c24"
+      "hash": "462359ee63ac9c79"
     },
     {
       "path": "src/components/sections/HR/OvertimeOverview.tsx",
@@ -5565,7 +5565,7 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 685,
-      "hash": "850832f363da0353"
+      "hash": "8d780b882ef648e9"
     },
     {
       "path": "src/components/sections/HR/StartOnboardingWizard.tsx",
@@ -6229,8 +6229,8 @@
       "path": "src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx",
       "module": "hse",
       "role": "frontend-page",
-      "lines": 700,
-      "hash": "8ae5313f2dd41ea3"
+      "lines": 698,
+      "hash": "44c4165613c000bf"
     },
     {
       "path": "src/components/sections/HSE/risk-jsa/dialogs/ReviewRenewDialog.tsx",
@@ -6300,7 +6300,7 @@
       "module": "hse",
       "role": "frontend-page",
       "lines": 95,
-      "hash": "090125f390cde4dc"
+      "hash": "0f20bc429f652443"
     },
     {
       "path": "src/components/sections/HSE/risk-jsa/shared/InsightCard.tsx",
@@ -6363,7 +6363,7 @@
       "module": "hse",
       "role": "frontend-page",
       "lines": 146,
-      "hash": "c922e5a755c75b2a"
+      "hash": "04e11f0ddd5f7b97"
     },
     {
       "path": "src/components/sections/HSE/training/TrainingInsightCards.tsx",
@@ -8196,8 +8196,8 @@
       "path": "src/shell/sections/AdminSections.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 616,
-      "hash": "549cb4b6e34195d2"
+      "lines": 607,
+      "hash": "8613a39a71501ce1"
     },
     {
       "path": "src/shell/sections/AppSection.tsx",
@@ -8371,8 +8371,8 @@
       "path": "src/ui/components/Field.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 74,
-      "hash": "741f70728128dbdc"
+      "lines": 48,
+      "hash": "df2d5575d06dd186"
     },
     {
       "path": "src/ui/components/InfoCard.tsx",
@@ -8630,8 +8630,8 @@
       "path": "src/ui/forms/FormField.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 224,
-      "hash": "dd897a40dfb4ee82"
+      "lines": 247,
+      "hash": "dda23918cb2b0713"
     },
     {
       "path": "src/ui/forms/FormField.tsx",
@@ -8679,8 +8679,8 @@
       "path": "src/ui/forms/dateInputs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 217,
-      "hash": "7424275b42dc71b3"
+      "lines": 219,
+      "hash": "8b6ca5c2d11f597e"
     },
     {
       "path": "src/ui/forms/fieldContext.ts",
@@ -8701,7 +8701,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 226,
-      "hash": "8c0f1aa50fbb338f"
+      "hash": "60f3433a96b7bf9a"
     },
     {
       "path": "src/ui/forms/options.ts",
@@ -9050,8 +9050,8 @@
       "path": "src/ui/primitives/TextInput.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 223,
-      "hash": "872eb1cc5b58994b"
+      "lines": 252,
+      "hash": "51c77c50152fa1e0"
     },
     {
       "path": "src/ui/primitives/actions.test.tsx",
@@ -9141,8 +9141,8 @@
       "path": "src/ui/registry/forms.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 795,
-      "hash": "a3b2d25dc2d40010"
+      "lines": 802,
+      "hash": "f59002fafe948cdd"
     },
     {
       "path": "src/ui/registry/index.ts",
@@ -139569,7 +139569,7 @@
       "name": "PayrollSettingsModal",
       "kind": "function",
       "file": "src/shell/sections/AdminSections.tsx",
-      "line": 304,
+      "line": 295,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -139581,7 +139581,7 @@
       "name": "AdminDashboardSection",
       "kind": "function",
       "file": "src/shell/sections/AdminSections.tsx",
-      "line": 425,
+      "line": 416,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -139593,7 +139593,7 @@
       "name": "AdminSections",
       "kind": "function",
       "file": "src/shell/sections/AdminSections.tsx",
-      "line": 572,
+      "line": 563,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -141255,19 +141255,7 @@
       "name": "Field",
       "kind": "function",
       "file": "src/ui/components/Field.tsx",
-      "line": 17,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "LegacyTextInput",
-      "kind": "function",
-      "file": "src/ui/components/Field.tsx",
-      "line": 32,
+      "line": 8,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -141279,7 +141267,7 @@
       "name": "SelectInput",
       "kind": "function",
       "file": "src/ui/components/Field.tsx",
-      "line": 43,
+      "line": 17,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -141291,7 +141279,7 @@
       "name": "TextareaInput",
       "kind": "function",
       "file": "src/ui/components/Field.tsx",
-      "line": 59,
+      "line": 33,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -141303,7 +141291,7 @@
       "name": "FormGrid",
       "kind": "function",
       "file": "src/ui/components/Field.tsx",
-      "line": 71,
+      "line": 45,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -143392,7 +143380,7 @@
       "name": "ICON",
       "kind": "object",
       "file": "src/ui/forms/dateInputs.tsx",
-      "line": 49,
+      "line": 50,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -143402,7 +143390,7 @@
       "name": "NativeDateControl",
       "kind": "function",
       "file": "src/ui/forms/dateInputs.tsx",
-      "line": 57,
+      "line": 58,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -143414,7 +143402,7 @@
       "name": "DateInput",
       "kind": "function",
       "file": "src/ui/forms/dateInputs.tsx",
-      "line": 107,
+      "line": 109,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -143426,7 +143414,7 @@
       "name": "TimeInput",
       "kind": "function",
       "file": "src/ui/forms/dateInputs.tsx",
-      "line": 112,
+      "line": 114,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -143438,7 +143426,7 @@
       "name": "DateTimeInput",
       "kind": "function",
       "file": "src/ui/forms/dateInputs.tsx",
-      "line": 117,
+      "line": 119,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -143450,7 +143438,7 @@
       "name": "MonthInput",
       "kind": "function",
       "file": "src/ui/forms/dateInputs.tsx",
-      "line": 122,
+      "line": 124,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -143462,7 +143450,7 @@
       "name": "DateRange",
       "kind": "interface",
       "file": "src/ui/forms/dateInputs.tsx",
-      "line": 128,
+      "line": 130,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -143472,7 +143460,7 @@
       "name": "DateRangeInputProps",
       "kind": "interface",
       "file": "src/ui/forms/dateInputs.tsx",
-      "line": 133,
+      "line": 135,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -143482,7 +143470,7 @@
       "name": "DateRangeInput",
       "kind": "function",
       "file": "src/ui/forms/dateInputs.tsx",
-      "line": 157,
+      "line": 159,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147155,7 +147143,7 @@
       "name": "TextInputType",
       "kind": "type",
       "file": "src/ui/primitives/TextInput.tsx",
-      "line": 35,
+      "line": 40,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147165,7 +147153,7 @@
       "name": "TextInputProps",
       "kind": "interface",
       "file": "src/ui/primitives/TextInput.tsx",
-      "line": 39,
+      "line": 44,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147175,7 +147163,7 @@
       "name": "FORCEABLE",
       "kind": "variable",
       "file": "src/ui/primitives/TextInput.tsx",
-      "line": 84,
+      "line": 97,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147187,7 +147175,7 @@
       "name": "VALIDATION_ICON",
       "kind": "variable",
       "file": "src/ui/primitives/TextInput.tsx",
-      "line": 86,
+      "line": 99,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147199,7 +147187,7 @@
       "name": "TextInput",
       "kind": "function",
       "file": "src/ui/primitives/TextInput.tsx",
-      "line": 92,
+      "line": 105,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147211,7 +147199,7 @@
       "name": "handleClear",
       "kind": "function",
       "file": "src/ui/primitives/TextInput.tsx",
-      "line": 128,
+      "line": 144,
       "module": "platform",
       "exported": false,
       "container": "TextInput",
@@ -147221,7 +147209,7 @@
       "name": "SearchInput",
       "kind": "function",
       "file": "src/ui/primitives/TextInput.tsx",
-      "line": 209,
+      "line": 238,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147857,7 +147845,7 @@
       "name": "shell",
       "kind": "function",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 349,
+      "line": 354,
       "module": "platform",
       "exported": false,
       "container": "textInputDef",
@@ -147867,7 +147855,7 @@
       "name": "dateInputDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 411,
+      "line": 418,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147877,7 +147865,7 @@
       "name": "fileInputDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 487,
+      "line": 494,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147887,7 +147875,7 @@
       "name": "otpInputDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 576,
+      "line": 583,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147897,7 +147885,7 @@
       "name": "DEPARTMENTS",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 624,
+      "line": 631,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147907,7 +147895,7 @@
       "name": "GROUPED_DEPARTMENTS",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 633,
+      "line": 640,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147917,7 +147905,7 @@
       "name": "selectDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 651,
+      "line": 658,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147927,7 +147915,7 @@
       "name": "search",
       "kind": "function",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 754,
+      "line": 761,
       "module": "platform",
       "exported": false,
       "container": "selectDef",
@@ -147937,7 +147925,7 @@
       "name": "FORM_DEFS",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 785,
+      "line": 792,
       "module": "platform",
       "exported": true,
       "container": "",

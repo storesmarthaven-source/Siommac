@@ -196,11 +196,18 @@
   }
 
   .ui-ctrl-lead,
-  .ui-ctrl-trail {
+  .ui-ctrl-trail,
+  .ui-ctrl-affix {
     display: inline-flex;
     align-items: center;
     flex-shrink: 0;
     color: var(--ui-control-icon);
+  }
+  .ui-ctrl-affix {
+    color: var(--ui-color-text-secondary);
+    font-size: var(--ui-font-size-caption);
+    font-weight: var(--font-weight-semibold);
+    white-space: nowrap;
   }
   .ui-ctrl-lead > svg,
   .ui-ctrl-trail > svg { width: var(--ui-icon-md); height: var(--ui-icon-md); }

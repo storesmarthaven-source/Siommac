@@ -12,7 +12,7 @@ import { type VNode } from 'preact';
 import { useRef, useState } from 'preact/hooks';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
-import { Badge, PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, TableSkeleton, Button, type BadgeTone } from '@ui';
+import { Badge, PageHeader, Field, FormGrid, SelectInput, Textarea, TextInput, EmptyState, TableSkeleton, Button, type BadgeTone } from '@ui';
 import {
   useRequestTypes, useMyRequests, useAllRequests, useRequestsMutation, hrRequestsApi,
 } from '@api/hr/requests';
@@ -112,7 +112,7 @@ function NewRequestModal({ types, onClose, onSubmitted }: NewRequestModalProps):
           <TextInput value={title} onInput={setTitle} placeholder="Brief description of your request" />
         </Field>
         <Field label="Details" wide>
-          <textarea class="ui-input" rows={4} value={details} onInput={e => setDetails((e.target as HTMLTextAreaElement).value)} placeholder="Provide any relevant details…" />
+          <Textarea rows={4} value={details} onInput={setDetails} placeholder="Provide any relevant details…" />
         </Field>
         <Field label="Priority">
           <SelectInput value={priority} onInput={setPriority}
@@ -247,7 +247,7 @@ function DecideModal({ req, onClose, onDone }: DecideModalProps): VNode {
             options={[{ value: 'approved', label: 'Approve' }, { value: 'returned', label: 'Return to requester' }, { value: 'rejected', label: 'Reject' }]} />
         </Field>
         <Field label={`Comment${needsComment ? ' (required)' : ''}`} wide>
-          <textarea class="ui-input" rows={3} value={comment} onInput={e => setComment((e.target as HTMLTextAreaElement).value)} placeholder="Add a note…" />
+          <Textarea rows={3} value={comment} onInput={setComment} placeholder="Add a note…" />
         </Field>
       </FormGrid>
     </EnterpriseFormModal>
@@ -296,7 +296,7 @@ function FulfillModal({ req, onClose, onDone }: FulfillModalProps): VNode {
       onSubmit={() => void submit()}>
       <FormGrid>
         <Field label="Fulfillment note" wide>
-          <textarea class="ui-input" rows={3} value={note} onInput={e => setNote((e.target as HTMLTextAreaElement).value)} placeholder="Describe what was delivered…" />
+          <Textarea rows={3} value={note} onInput={setNote} placeholder="Describe what was delivered…" />
         </Field>
         <Field label="Artifact / document reference" wide>
           <TextInput value={artifactRef} onInput={setArtRef} placeholder="e.g. doc ID, file name, SharePoint link" />

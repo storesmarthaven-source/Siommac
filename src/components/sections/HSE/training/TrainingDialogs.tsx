@@ -6,7 +6,7 @@
 
 import { type VNode } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { HseModal, Field, SelectInput, TextInput } from '@ui';
+import { DateInput, HseModal, Field, SelectInput, TextInput } from '@ui';
 import {
   useCreateCertificate, useRenewCertificate, useAssignTraining, useCreateRequirement,
   useCompetencies, useCourses,
@@ -55,8 +55,8 @@ export function AddCertificateDialog({ open, onClose, presetWorkerId }: { open: 
         <Field label="Course name"><TextInput value={courseName} onInput={setCourseName} placeholder="e.g. Confined Space Entry L1" /></Field>
         <Field label="Provider"><TextInput value={provider} onInput={setProvider} placeholder="Training provider" /></Field>
         <Field label="Certificate number"><TextInput value={certNumber} onInput={setCertNumber} placeholder="Optional" /></Field>
-        <Field label="Issued date"><input class="ui-input" type="date" value={issuedAt} onInput={e => setIssuedAt((e.target as HTMLInputElement).value)} /></Field>
-        <Field label="Expiry date"><input class="ui-input" type="date" value={expiresAt} onInput={e => setExpiresAt((e.target as HTMLInputElement).value)} /></Field>
+        <Field label="Issued date"><DateInput value={issuedAt} onChange={setIssuedAt} /></Field>
+        <Field label="Expiry date"><DateInput value={expiresAt} onChange={setExpiresAt} /></Field>
         <Field label="" wide>
           <label style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '0.8rem' }}>
             <input type="checkbox" checked={verify} onInput={e => setVerify((e.target as HTMLInputElement).checked)} />
@@ -83,8 +83,8 @@ export function RenewCertificateDialog({ certificateId, open, onClose }: { certi
     <HseModal open={open} onClose={onClose} title="Renew Certificate" sub="Issue a new version; the previous is archived."
       submitLabel={renew.isPending ? 'Renewing…' : 'Renew'} onSubmit={submit}>
       <div class="hse-form-grid">
-        <Field label="New issued date"><input class="ui-input" type="date" value={issuedAt} onInput={e => setIssuedAt((e.target as HTMLInputElement).value)} /></Field>
-        <Field label="New expiry date"><input class="ui-input" type="date" value={expiresAt} onInput={e => setExpiresAt((e.target as HTMLInputElement).value)} /></Field>
+        <Field label="New issued date"><DateInput value={issuedAt} onChange={setIssuedAt} /></Field>
+        <Field label="New expiry date"><DateInput value={expiresAt} onChange={setExpiresAt} /></Field>
         <Field label="Certificate number" wide><TextInput value={certNumber} onInput={setCertNumber} placeholder="Optional" /></Field>
       </div>
     </HseModal>
@@ -114,7 +114,7 @@ export function AssignTrainingDialog({ open, onClose, presetWorkerId, presetComp
         <Field label="Worker"><SelectInput value={workerId} onInput={setWorkerId} options={[{ value: '', label: 'Select worker' }, ...users]} /></Field>
         <Field label="Competency"><SelectInput value={competencyId} onInput={setCompetencyId} options={[{ value: '', label: 'None' }, ...comps.map(c => ({ value: c.id, label: c.name }))]} /></Field>
         <Field label="Priority"><SelectInput value={priority} onInput={setPriority} options={['low', 'medium', 'high', 'critical'].map(p => ({ value: p, label: titleCase(p) }))} /></Field>
-        <Field label="Due date"><input class="ui-input" type="date" value={dueAt} onInput={e => setDueAt((e.target as HTMLInputElement).value)} /></Field>
+        <Field label="Due date"><DateInput value={dueAt} onChange={setDueAt} /></Field>
         <Field label="Reason" wide><TextInput value={reason} onInput={setReason} placeholder="e.g. expired Confined Space cert" /></Field>
       </div>
     </HseModal>

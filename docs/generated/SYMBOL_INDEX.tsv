@@ -12356,9 +12356,9 @@ NotificationModal	function	communications	true	component	src/shell/modals/Notifi
 ProjectSiteModal	function	platform	true	component	src/shell/modals/ProjectSiteModal.tsx	15	
 TicketModal	function	communications	true	component	src/shell/modals/TicketModal.tsx	5	
 StatutoryRatesModal	function	platform	false	component	src/shell/sections/AdminSections.tsx	28	
-PayrollSettingsModal	function	platform	false	component	src/shell/sections/AdminSections.tsx	304	
-AdminDashboardSection	function	platform	false	component	src/shell/sections/AdminSections.tsx	425	
-AdminSections	function	platform	true	component	src/shell/sections/AdminSections.tsx	572	
+PayrollSettingsModal	function	platform	false	component	src/shell/sections/AdminSections.tsx	295	
+AdminDashboardSection	function	platform	false	component	src/shell/sections/AdminSections.tsx	416	
+AdminSections	function	platform	true	component	src/shell/sections/AdminSections.tsx	563	
 AppSectionProps	interface	platform	false		src/shell/sections/AppSection.tsx	18	
 AppSection	function	platform	true	component	src/shell/sections/AppSection.tsx	26	
 EmpAttendanceSection	function	hr	false	component	src/shell/sections/EmployeeSections.tsx	24	
@@ -12518,11 +12518,10 @@ EntityHeadProps	interface	platform	true		src/ui/components/EntityHead.tsx	18
 EntityHead	function	platform	true	component	src/ui/components/EntityHead.tsx	29	
 PanelStatItem	interface	platform	true		src/ui/components/EntityHead.tsx	54	
 PanelStats	function	platform	true	component	src/ui/components/EntityHead.tsx	61	
-Field	function	platform	true	component	src/ui/components/Field.tsx	17	
-LegacyTextInput	function	platform	true	component	src/ui/components/Field.tsx	32	
-SelectInput	function	platform	true	component	src/ui/components/Field.tsx	43	
-TextareaInput	function	platform	true	component	src/ui/components/Field.tsx	59	
-FormGrid	function	platform	true	component	src/ui/components/Field.tsx	71	
+Field	function	platform	true	component	src/ui/components/Field.tsx	8	
+SelectInput	function	platform	true	component	src/ui/components/Field.tsx	17	
+TextareaInput	function	platform	true	component	src/ui/components/Field.tsx	33	
+FormGrid	function	platform	true	component	src/ui/components/Field.tsx	45	
 PillTone	type	platform	true		src/ui/components/InfoCard.tsx	21	
 InfoCard	function	platform	true	component,ui-tile	src/ui/components/InfoCard.tsx	23	
 FieldList	function	platform	true	component	src/ui/components/InfoCard.tsx	35	
@@ -12711,15 +12710,15 @@ ComboboxProps	interface	platform	true		src/ui/forms/Combobox.tsx	35
 Combobox	function	platform	true	component	src/ui/forms/Combobox.tsx	72	
 NativeDateType	type	platform	false		src/ui/forms/dateInputs.tsx	28	
 BaseDateProps	interface	platform	false		src/ui/forms/dateInputs.tsx	30	
-ICON	object	platform	false		src/ui/forms/dateInputs.tsx	49	
-NativeDateControl	function	platform	false	component	src/ui/forms/dateInputs.tsx	57	
-DateInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	107	
-TimeInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	112	
-DateTimeInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	117	
-MonthInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	122	
-DateRange	interface	platform	true		src/ui/forms/dateInputs.tsx	128	
-DateRangeInputProps	interface	platform	true		src/ui/forms/dateInputs.tsx	133	
-DateRangeInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	157	
+ICON	object	platform	false		src/ui/forms/dateInputs.tsx	50	
+NativeDateControl	function	platform	false	component	src/ui/forms/dateInputs.tsx	58	
+DateInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	109	
+TimeInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	114	
+DateTimeInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	119	
+MonthInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	124	
+DateRange	interface	platform	true		src/ui/forms/dateInputs.tsx	130	
+DateRangeInputProps	interface	platform	true		src/ui/forms/dateInputs.tsx	135	
+DateRangeInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	159	
 FieldContextValue	interface	platform	true		src/ui/forms/fieldContext.ts	27	
 FieldContext	variable	platform	true		src/ui/forms/fieldContext.ts	43	
 useFieldContext	function	platform	true	hook	src/ui/forms/fieldContext.ts	45	
@@ -13054,13 +13053,13 @@ CheckboxGroup	function	platform	true	component	src/ui/primitives/choice.tsx	282
 toggle	function	platform	false		src/ui/primitives/choice.tsx	290	CheckboxGroup
 RadioGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	328	
 RadioGroup	function	platform	true	component	src/ui/primitives/choice.tsx	342	
-TextInputType	type	platform	true		src/ui/primitives/TextInput.tsx	35	
-TextInputProps	interface	platform	true		src/ui/primitives/TextInput.tsx	39	
-FORCEABLE	variable	platform	false	component	src/ui/primitives/TextInput.tsx	84	
-VALIDATION_ICON	variable	platform	false	component	src/ui/primitives/TextInput.tsx	86	
-TextInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	92	
-handleClear	function	platform	false		src/ui/primitives/TextInput.tsx	128	TextInput
-SearchInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	209	
+TextInputType	type	platform	true		src/ui/primitives/TextInput.tsx	40	
+TextInputProps	interface	platform	true		src/ui/primitives/TextInput.tsx	44	
+FORCEABLE	variable	platform	false	component	src/ui/primitives/TextInput.tsx	97	
+VALIDATION_ICON	variable	platform	false	component	src/ui/primitives/TextInput.tsx	99	
+TextInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	105	
+handleClear	function	platform	false		src/ui/primitives/TextInput.tsx	144	TextInput
+SearchInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	238	
 s	function	platform	false		src/ui/registry/actions.defs.tsx	26	
 b	function	platform	false		src/ui/registry/actions.defs.tsx	27	
 size	function	platform	false		src/ui/registry/actions.defs.tsx	28	
@@ -13122,15 +13121,15 @@ checkboxDef	object	platform	true		src/ui/registry/forms.defs.tsx	57
 radioGroupDef	object	platform	true		src/ui/registry/forms.defs.tsx	131	
 switchDef	object	platform	true		src/ui/registry/forms.defs.tsx	185	
 textInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	253	
-shell	function	platform	false		src/ui/registry/forms.defs.tsx	349	textInputDef
-dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	411	
-fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	487	
-otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	576	
-DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	624	
-GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	633	
-selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	651	
-search	function	platform	false		src/ui/registry/forms.defs.tsx	754	selectDef
-FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	785	
+shell	function	platform	false		src/ui/registry/forms.defs.tsx	354	textInputDef
+dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	418	
+fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	494	
+otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	583	
+DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	631	
+GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	640	
+selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	658	
+search	function	platform	false		src/ui/registry/forms.defs.tsx	761	selectDef
+FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	792	
 COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	45	
 CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	55	
 CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	71	

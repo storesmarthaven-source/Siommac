@@ -12,7 +12,7 @@
  */
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
-import { PageHeader, exportCsv, Button } from '@ui';
+import { DateInput, PageHeader, exportCsv, Button } from '@ui';
 import { can } from '@lib/permissions';
 import { useOnboardingReportList, useOnboardingReport, useOnboardingPackages, hrOnboardingApi } from '@api/hr/onboarding';
 import type { OnboardingReportKey, RunOnboardingReportArgs, OnboardingReportColumn, OnboardingReportChart } from '../../../../types/hrOnboarding';
@@ -119,8 +119,8 @@ export function OnboardingReportsWorkspace({ onBack, onToast }: { onBack: () => 
       />
 
       <div class="obx-toolbar">
-        <label class="obx-meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>From <input class="ui-input" type="date" value={dateFrom} onInput={e => setDateFrom((e.target as HTMLInputElement).value)} /></label>
-        <label class="obx-meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>To <input class="ui-input" type="date" value={dateTo} onInput={e => setDateTo((e.target as HTMLInputElement).value)} /></label>
+        <label class="obx-meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>From <DateInput value={dateFrom} onChange={setDateFrom} /></label>
+        <label class="obx-meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>To <DateInput value={dateTo} onChange={setDateTo} /></label>
         <select class="ui-select" value={pkgKey} onChange={e => setPkgKey((e.target as HTMLSelectElement).value)}>
           <option value="">All packages</option>
           {packages.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}

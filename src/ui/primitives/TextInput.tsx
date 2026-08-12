@@ -10,6 +10,9 @@
  * `aria-invalid`, `required`, `disabled` and `readOnly` all arrive through
  * context. Its own props still win when passed, so a single locked control
  * inside an editable field is expressible.
+ * Native forms and retained DOM integrations may omit `value` and use
+ * `defaultValue`; edits are then held internally instead of being accepted and
+ * discarded by a fake no-op controlled callback.
  *
  * ── Trailing affordance priority ────────────────────────────────────────────
  * Exactly one trailing element renders, chosen in this fixed order:
@@ -18,10 +21,12 @@
  *
  * Enforced here in TS, never by CSS stacking — that is what guarantees they can
  * never overlap, which was the visible bug in the old person-search control.
+ * Prefix/suffix affixes are persistent value context, not affordances, so they
+ * remain visible alongside whichever trailing element wins that priority.
  */
 
-import { type VNode } from 'preact';
-import { useRef } from 'preact/hooks';
+import { type ComponentChildren, type CSSProperties, type VNode } from 'preact';
+import { useRef, useState } from 'preact/hooks';
 import { LucideIcon } from '../LucideIcon';
 import { type ControlSize, type UiState, type ValidationState } from '../tokens';
 import { useFieldContext, resolveFieldState } from '../forms/fieldContext';
@@ -37,8 +42,11 @@ export type TextInputType =
   | 'date' | 'time' | 'datetime-local' | 'month' | 'week' | 'color';
 
 export interface TextInputProps {
-  value: string;
-  onInput: (value: string) => void;
+  /** Controlled value. Omit for native-form/legacy-DOM integration. */
+  value?: string;
+  /** Initial value for uncontrolled use. Ignored when `value` is provided. */
+  defaultValue?: string;
+  onInput?: (value: string) => void;
 
   size?: ControlSize;
   type?: TextInputType;
@@ -50,6 +58,9 @@ export interface TextInputProps {
 
   iconLeft?: VNode;
   iconRight?: VNode;
+  /** Persistent display affixes. Unlike icons, these never yield to validation or loading. */
+  prefix?: ComponentChildren;
+  suffix?: ComponentChildren;
   /** Show a clear button once there is a value. */
   clearable?: boolean;
 
@@ -72,6 +83,7 @@ export interface TextInputProps {
   onBlur?: () => void;
   onFocus?: () => void;
   onKeyDown?: (e: KeyboardEvent) => void;
+  onClick?: (e: MouseEvent) => void;
 
   /** Accessible name when used OUTSIDE a FormField (toolbars, table filters). */
   'aria-label'?: string;
@@ -79,6 +91,7 @@ export interface TextInputProps {
   /** Gallery-only forced visual state. See src/ui/RECIPES.md §5. */
   forceState?: UiState;
   class?: string;
+  style?: CSSProperties;
 }
 
 const FORCEABLE: ReadonlySet<UiState> = new Set(['hover', 'focus', 'open']);
@@ -90,15 +103,15 @@ const VALIDATION_ICON = {
 } as const;
 
 export function TextInput({
-  value, onInput,
+  value: controlledValue, defaultValue = '', onInput,
   size = 'md', type = 'text', placeholder,
   multiline = false, rows = 3,
-  iconLeft, iconRight, clearable = false,
+  iconLeft, iconRight, prefix, suffix, clearable = false,
   disabled: ownDisabled, readOnly: ownReadOnly, loading = false,
   validation: ownValidation,
   maxLength, minLength, min, max, step, autoComplete, name, id: ownId, inputMode,
-  onBlur, onFocus, onKeyDown,
-  forceState, class: extra,
+  onBlur, onFocus, onKeyDown, onClick,
+  forceState, class: extra, style,
   ...aria
 }: TextInputProps): VNode {
   const ctx = useFieldContext();
@@ -106,6 +119,9 @@ export function TextInput({
     resolveFieldState(ctx, { validation: ownValidation, disabled: ownDisabled, readOnly: ownReadOnly, id: ownId });
 
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
+  const isControlled = controlledValue !== undefined;
+  const value = isControlled ? controlledValue : uncontrolledValue;
 
   // Fixed trailing priority — at most one of these ever renders.
   const showSpinner   = loading;
@@ -126,7 +142,8 @@ export function TextInput({
   ].filter(Boolean).join(' ');
 
   function handleClear(): void {
-    onInput('');
+    if (!isControlled) setUncontrolledValue('');
+    onInput?.('');
     // Return focus to the field: a clear button that steals focus forces the
     // user to click back in before they can type the replacement value.
     inputRef.current?.focus();
@@ -150,11 +167,13 @@ export function TextInput({
     onBlur,
     onFocus,
     onKeyDown,
+    onClick,
   };
 
   return (
-    <div class={boxClass} data-ui-state={forced}>
+    <div class={boxClass} data-ui-state={forced} style={style}>
       {iconLeft && <span class="ui-ctrl-lead" aria-hidden="true">{iconLeft}</span>}
+      {prefix != null && <span class="ui-ctrl-affix ui-ctrl-prefix" aria-hidden="true">{prefix}</span>}
 
       {multiline
         ? (
@@ -162,7 +181,11 @@ export function TextInput({
             {...shared}
             ref={el => { inputRef.current = el; }}
             rows={rows}
-            onInput={e => onInput((e.target as HTMLTextAreaElement).value)}
+            onInput={e => {
+              const next = (e.target as HTMLTextAreaElement).value;
+              if (!isControlled) setUncontrolledValue(next);
+              onInput?.(next);
+            }}
           />
         )
         : (
@@ -174,9 +197,15 @@ export function TextInput({
             min={min}
             max={max}
             step={step}
-            onInput={e => onInput((e.target as HTMLInputElement).value)}
+            onInput={e => {
+              const next = (e.target as HTMLInputElement).value;
+              if (!isControlled) setUncontrolledValue(next);
+              onInput?.(next);
+            }}
           />
         )}
+
+      {suffix != null && <span class="ui-ctrl-affix ui-ctrl-suffix" aria-hidden="true">{suffix}</span>}
 
       {showSpinner && <span class="ui-ctrl-trail"><span class="ui-ctrl-spinner" role="status" aria-label="Loading" /></span>}
 

@@ -260,9 +260,12 @@ export const textInputDef: ComponentDef = {
   importFrom: '@ui',
   migration: {
     replaces: ['.ui-input', '.ui-textarea'],
-    deprecatedImports: ['LegacyTextInput'],
     rawPatterns: ['<input', '<textarea', 'type="password"', 'type="number"', 'type="tel"'],
-    nextSurface: 'Settings',
+    nextSurface: 'Select / Combobox',
+    notes: [
+      'Prefix and suffix are persistent value context; iconLeft/iconRight are affordances. Validation, clear and loading may replace an icon but never a unit affix.',
+      'Uncontrolled mode is reserved for native-form or retained DOM integration. Application state should continue to use value + onInput.',
+    ],
   },
 
   props: {
@@ -270,6 +273,8 @@ export const textInputDef: ComponentDef = {
                   help: 'Chooses inputMode, autoComplete and how the value is parsed. Not a styling switch.' },
     label:      { type: 'text',      label: 'Field label', default: 'Employee name' },
     placeholder:{ type: 'text',      label: 'Placeholder', default: 'e.g. Sarah James' },
+    prefix:     { type: 'text',      label: 'Prefix affix', default: '' },
+    suffix:     { type: 'text',      label: 'Suffix affix', default: '' },
     helpText:   { type: 'text',      label: 'Help text', default: 'Shown under the label — always visible, never a tooltip.' },
     size:       { type: 'segmented', label: 'Size', options: ['sm', 'md', 'lg'], default: 'md' },
     validation: { type: 'select',    label: 'Validation', options: ['none', 'error', 'warning', 'success'], default: 'none' },
@@ -376,6 +381,8 @@ export const textInputDef: ComponentDef = {
             value=""
             onInput={noop}
             placeholder={s(p.placeholder)}
+            prefix={s(p.prefix) || undefined}
+            suffix={s(p.suffix) || undefined}
             clearable={b(p.clearable)}
             disabled={disabled}
             readOnly={readOnly}

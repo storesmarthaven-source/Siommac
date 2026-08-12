@@ -17,7 +17,7 @@
  * string on the way in or out.
  */
 
-import { type VNode } from 'preact';
+import { type CSSProperties, type VNode } from 'preact';
 import { useId } from 'preact/hooks';
 import { LucideIcon } from '../LucideIcon';
 import { type ControlSize, type UiState, type ValidationState } from '../tokens';
@@ -44,6 +44,7 @@ interface BaseDateProps {
   'aria-label'?: string;
   forceState?: UiState;
   class?: string;
+  style?: CSSProperties;
 }
 
 const ICON: Record<NativeDateType, 'Calendar' | 'Clock' | 'CalendarClock'> = {
@@ -73,6 +74,7 @@ function NativeDateControl({ type, ...p }: BaseDateProps & { type: NativeDateTyp
         p.class ?? '',
       ].filter(Boolean).join(' ')}
       data-ui-state={forced}
+      style={p.style}
     >
       <span class="ui-ctrl-lead" aria-hidden="true"><LucideIcon name={ICON[type]} /></span>
       <input

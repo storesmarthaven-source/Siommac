@@ -7,7 +7,7 @@
  */
 
 import { type VNode } from 'preact';
-import { Button } from '@ui';
+import { Button, DateInput, TextInput } from '@ui';
 
 export const CONTROL_TYPES = [
   { value: 'elimination',        label: 'Elimination' },
@@ -58,8 +58,8 @@ export function ControlsTable({ controls, onChange }: ControlsTableProps): VNode
         {controls.map((c, i) => (
           <div key={i} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '10px', background: 'var(--bg-subtle)' }}>
             <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start' }}>
-              <input class="ui-input" style={{ flex: 2 }} placeholder="Control description…"
-                value={c.description} onInput={e => update(i, { description: (e.target as HTMLInputElement).value })} />
+              <TextInput style={{ flex: 2 }} placeholder="Control description…"
+                value={c.description} onInput={value => update(i, { description: value })} />
               <select class="ui-select" style={{ width: '170px' }}
                 value={c.controlType} onChange={e => update(i, { controlType: (e.target as HTMLSelectElement).value })}>
                 {CONTROL_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
@@ -74,8 +74,8 @@ export function ControlsTable({ controls, onChange }: ControlsTableProps): VNode
               </button>
             </div>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '6px' }}>
-              <input class="ui-input" type="date" style={{ width: '160px' }}
-                value={c.dueAt ?? ''} onInput={e => update(i, { dueAt: (e.target as HTMLInputElement).value || null })} />
+              <DateInput style={{ width: '160px' }}
+                value={c.dueAt ?? ''} onChange={value => update(i, { dueAt: value || null })} />
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
                 <input type="checkbox" checked={c.verificationRequired}
                   onChange={e => update(i, { verificationRequired: (e.target as HTMLInputElement).checked })}

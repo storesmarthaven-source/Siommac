@@ -16,7 +16,7 @@
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
-import { Badge, PageHeader, Modal, Button } from '@ui';
+import { Badge, PageHeader, Modal, SearchField, Button } from '@ui';
 import {
   useOnboardingHandoffsList,
   useOnboardingRetryHandoff, useOnboardingAcceptHandoff, useOnboardingCompleteHandoff, useOnboardingCancelHandoff,
@@ -127,7 +127,7 @@ export function OnboardingHandoffsWorkspace({
       />
 
       <div class="obx-toolbar">
-        <input class="ui-input" style={{ flex: 1, minWidth: 160 }} placeholder="Search case, employee, type…" value={query} onInput={e => setQuery((e.target as HTMLInputElement).value)} />
+        <SearchField style={{ flex: 1, minWidth: 160 }} placeholder="Search case, employee, type…" value={query} onInput={setQuery} aria-label="Search onboarding handoffs" />
         <select class="ui-select" value={module} onChange={e => setModule((e.target as HTMLSelectElement).value)}>
           <option value="">All modules</option>
           {modules.map(m => <option key={m} value={m}>{moduleLabel(m)}</option>)}

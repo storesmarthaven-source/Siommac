@@ -20,7 +20,7 @@
 
 import { AdminStatCards, AdminRecentTable } from '@sections/AdminDashboard';
 import { AppSection } from './AppSection';
-import { Badge, Button } from '@ui';
+import { Badge, Button, TextInput } from '@ui';
 
 
 // ── Statutory Rates Modal (wired by HourlyRates / Payroll sections) ──────────
@@ -96,10 +96,7 @@ function StatutoryRatesModal() {
                   </span>
                 </div>
                 <div class="prc-input-row">
-                  <div class="prc-input-box prc-input-pct">
-                    <input type="number" id="prcNisRate" step="0.01" min="0" max="100" placeholder="6" />
-                    <span class="prc-input-badge">%</span>
-                  </div>
+                  <TextInput class="prc-rate-input" type="number" id="prcNisRate" step={0.01} min={0} max={100} placeholder="6" suffix="%" />
                 </div>
                 <div class="prc-field-hint">Enter as a percentage — e.g. <strong>6</strong> for 6%</div>
               </div>
@@ -259,10 +256,7 @@ function StatutoryRatesModal() {
                     <div class="prc-paye-band-sub">Applied to chargeable income up to the high-rate threshold</div>
                   </div>
                 </div>
-                <div class="prc-input-box prc-input-pct" style="max-width:140px;">
-                  <input type="number" id="prcPayeRateLow" step="0.01" min="0" max="100" placeholder="25" />
-                  <span class="prc-input-badge">%</span>
-                </div>
+                <TextInput class="prc-rate-input" type="number" id="prcPayeRateLow" step={0.01} min={0} max={100} placeholder="25" suffix="%" />
                 <div class="prc-field-hint">Enter as a percentage — e.g. <strong>25</strong> for 25%</div>
               </div>
               <div class="prc-paye-band prc-paye-high">
@@ -273,10 +267,7 @@ function StatutoryRatesModal() {
                     <div class="prc-paye-band-sub">Applied to chargeable income exceeding the threshold</div>
                   </div>
                 </div>
-                <div class="prc-input-box prc-input-pct" style="max-width:140px;">
-                  <input type="number" id="prcPayeRateHigh" step="0.01" min="0" max="100" placeholder="30" />
-                  <span class="prc-input-badge">%</span>
-                </div>
+                <TextInput class="prc-rate-input" type="number" id="prcPayeRateHigh" step={0.01} min={0} max={100} placeholder="30" suffix="%" />
                 <div class="prc-field-hint">Enter as a percentage — e.g. <strong>30</strong> for 30%</div>
               </div>
             </div>

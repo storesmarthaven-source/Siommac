@@ -13,7 +13,7 @@ import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
-import { PageHeader, Modal, Field, FormGrid, TextInput, TextareaInput, SelectInput, Tabs, EmptyState, Callout, FieldList, FieldRow } from '@ui';
+import { PageHeader, Modal, Field, FormGrid, SearchField, TextInput, TextareaInput, SelectInput, Tabs, EmptyState, Callout, FieldList, FieldRow } from '@ui';
 import { EnterpriseFormModal, orgPositionContext, orgCostCenterContext, moveOrgUnitContext } from '@/components/common/dialogs';
 import {
   useOrgUnits, useOrgStats, useOrgHealth, usePositions, useCostCenters,
@@ -650,7 +650,7 @@ export function OrgStructureOverview(): VNode {
     return (
       <div class="obx-section"><div class="obx-section-body">
         <div class="org-toolbar">
-          <input class="ui-input" style={{ flex: 1 }} placeholder="Search positions…" value={q} onInput={e => setQ((e.target as HTMLInputElement).value)} />
+          <SearchField style={{ flex: 1 }} placeholder="Search positions…" value={q} onInput={setQ} aria-label="Search positions" />
           <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }} class="obx-meta"><input type="checkbox" checked={showInactive} onChange={e => setShowInactive((e.target as HTMLInputElement).checked)} /> Show inactive</label>
         </div>
         {positionsQ.isLoading ? <div class="obx-empty">Loading…</div>
@@ -702,7 +702,7 @@ export function OrgStructureOverview(): VNode {
     return (
       <div class="obx-section"><div class="obx-section-body">
         <div class="org-toolbar">
-          <input class="ui-input" style={{ flex: 1 }} placeholder="Search cost centres…" value={q} onInput={e => setQ((e.target as HTMLInputElement).value)} />
+          <SearchField style={{ flex: 1 }} placeholder="Search cost centres…" value={q} onInput={setQ} aria-label="Search cost centres" />
           <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }} class="obx-meta"><input type="checkbox" checked={showInactive} onChange={e => setShowInactive((e.target as HTMLInputElement).checked)} /> Show inactive</label>
         </div>
         {ccQ.isLoading ? <div class="obx-empty">Loading…</div>

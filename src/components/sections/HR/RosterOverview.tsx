@@ -12,7 +12,7 @@ import { useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
-import { Badge, PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, Button, type BadgeTone } from '@ui';
+import { Badge, DateInput, PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, Button, type BadgeTone } from '@ui';
 import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
 import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import {
@@ -523,9 +523,9 @@ function MyShiftsTab(): VNode {
     <div>
       <div style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'center' }}>
         <label style={{ fontSize: 13 }}>From</label>
-        <input type="date" class="ui-input" value={from} onInput={e => setFrom((e.target as HTMLInputElement).value)} />
+        <DateInput value={from} onChange={setFrom} />
         <label style={{ fontSize: 13 }}>To</label>
-        <input type="date" class="ui-input" value={to} onInput={e => setTo((e.target as HTMLInputElement).value)} />
+        <DateInput value={to} onChange={setTo} />
       </div>
       <div class="obx-section"><div class="obx-section-body">
         {shiftsQ.isLoading

@@ -1,15 +1,6 @@
 /**
- * src/ui/components/Field.tsx
- *
- * The app-wide STANDARD FORM primitives. Every form field in every module uses
- * these (`.ui-field` / `.ui-input` / `.ui-select` / `.ui-textarea` in uikit.css):
- *   • Field        — labelled wrapper; `wide` spans both grid columns
- *   • TextInput    — single-line text
- *   • SelectInput  — dropdown from a string list
- *   • TextareaInput— multi-line
- *   • FormGrid     — the standard 2-column responsive field grid
- *
- * Promoted from HSE `_shared.tsx`; standardised onto the uikit form spec.
+ * Legacy field-layout family retained while FormField and Select migrations
+ * complete. Text entry itself is owned exclusively by canonical TextInput.
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
@@ -20,23 +11,6 @@ export function Field({ label, children, wide }: { label: string; children: Comp
       <label class="ui-field-label">{label}</label>
       {children}
     </div>
-  );
-}
-
-/**
- * DEPRECATED — superseded by `src/ui/primitives/TextInput.tsx`, which owns the
- * `TextInput` name in the barrel. Kept unexported-from-@ui only so this file
- * still compiles while `Field`/`SelectInput`/`TextareaInput` await migration.
- * Nothing should import it; it goes when those three do.
- */
-export function LegacyTextInput({ value, onInput, placeholder, type = 'text' }: {
-  value: string; onInput: (v: string) => void; placeholder?: string; type?: string;
-}): VNode {
-  return (
-    <input
-      class="ui-input" type={type} value={value} placeholder={placeholder}
-      onInput={e => onInput((e.target as HTMLInputElement).value)}
-    />
   );
 }
 

@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `77864fb4d420d818b6487708`
+Source fingerprint: `bc5ba9de1d62e57d7c12029e`
 
-Files: 404 | Symbols: 3676 | Widgets: 12 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
+Files: 404 | Symbols: 3675 | Widgets: 12 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -222,7 +222,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `AppShell` | function / component | `src/shell/AppShell.tsx:130` | `-` |
 | `LoginShell` | function / component | `src/shell/LoginShell.tsx:51` | `-` |
 | `ProjectSiteModal` | function / component | `src/shell/modals/ProjectSiteModal.tsx:15` | `-` |
-| `AdminSections` | function / component | `src/shell/sections/AdminSections.tsx:572` | `-` |
+| `AdminSections` | function / component | `src/shell/sections/AdminSections.tsx:563` | `-` |
 | `AppSection` | function / component | `src/shell/sections/AppSection.tsx:26` | `-` |
 | `ManagerSections` | function / component | `src/shell/sections/ManagerSections.tsx:17` | `-` |
 | `SharedSections` | function / component | `src/shell/sections/SharedSections.tsx:178` | `-` |
@@ -240,11 +240,10 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `EmptyState` | function / component | `src/ui/components/EmptyState.tsx:29` | `-` |
 | `EntityHead` | function / component | `src/ui/components/EntityHead.tsx:29` | `-` |
 | `PanelStats` | function / component | `src/ui/components/EntityHead.tsx:61` | `-` |
-| `Field` | function / component | `src/ui/components/Field.tsx:17` | `-` |
-| `LegacyTextInput` | function / component | `src/ui/components/Field.tsx:32` | `-` |
-| `SelectInput` | function / component | `src/ui/components/Field.tsx:43` | `-` |
-| `TextareaInput` | function / component | `src/ui/components/Field.tsx:59` | `-` |
-| `FormGrid` | function / component | `src/ui/components/Field.tsx:71` | `-` |
+| `Field` | function / component | `src/ui/components/Field.tsx:8` | `-` |
+| `SelectInput` | function / component | `src/ui/components/Field.tsx:17` | `-` |
+| `TextareaInput` | function / component | `src/ui/components/Field.tsx:33` | `-` |
+| `FormGrid` | function / component | `src/ui/components/Field.tsx:45` | `-` |
 | `InfoCard` | function / component, ui-tile | `src/ui/components/InfoCard.tsx:23` | `-` |
 | `FieldList` | function / component | `src/ui/components/InfoCard.tsx:35` | `-` |
 | `FieldRow` | function / component | `src/ui/components/InfoCard.tsx:39` | `-` |
@@ -302,7 +301,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `Tabs` | function / component | `src/ui/components/Tabs.tsx:28` | `-` |
 | `Toolbar` | function / component | `src/ui/components/Toolbar.tsx:19` | `-` |
 | `SearchInput` | function / component | `src/ui/components/Toolbar.tsx:35` | `-` |
-| ... | 105 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| `FilterSelect` | function / component | `src/ui/components/Toolbar.tsx:58` | `-` |
+| ... | 104 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 

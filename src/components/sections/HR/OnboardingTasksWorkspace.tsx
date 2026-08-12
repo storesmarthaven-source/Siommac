@@ -14,7 +14,7 @@
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
-import { Badge, PageHeader, Drawer, Field, FormGrid, TextInput, SelectInput, Modal, Button, FileInput } from '@ui';
+import { Badge, PageHeader, Drawer, Field, FormGrid, SearchField, TextInput, SelectInput, Modal, Button, FileInput } from '@ui';
 import {
   useOnboardingTasksList, useOnboardingTaskDetail, useOnboardingPackages,
   useOnboardingCompleteTask, useOnboardingReassignTask, useOnboardingBlockTask, useOnboardingUnblockTask,
@@ -269,7 +269,7 @@ export function OnboardingTasksWorkspace({
             </button>
           ))}
         </div>
-        <input class="ui-input" style={{ flex: 1, minWidth: 160 }} placeholder="Search task, employee, case…" value={query} onInput={e => setQuery((e.target as HTMLInputElement).value)} />
+        <SearchField style={{ flex: 1, minWidth: 160 }} placeholder="Search task, employee, case…" value={query} onInput={setQuery} aria-label="Search onboarding tasks" />
         <select class="ui-select" value={status} onChange={e => setStatus((e.target as HTMLSelectElement).value)}>
           <option value="">All statuses</option>
           {TASK_STATUSES.map(s => <option key={s} value={s}>{humanize(s)}</option>)}
@@ -449,8 +449,8 @@ function TaskDrawer({
                 </div>
               ))}
               <div style={{ display: 'flex', gap: 8 }}>
-                <input class="ui-input" style={{ flex: 1 }} placeholder="Add a note…" value={noteText}
-                  onInput={e => setNoteText((e.target as HTMLInputElement).value)}
+                <TextInput style={{ flex: 1 }} placeholder="Add a note…" value={noteText}
+                  onInput={setNoteText}
                   onKeyDown={e => { if (e.key === 'Enter') void submitNote(); }} />
                 <Button variant="primary" size="sm" disabled={!noteText.trim()} loading={noteMut.isPending} onClick={() => void submitNote()}>Add</Button>
               </div>

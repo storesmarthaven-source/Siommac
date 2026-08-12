@@ -427,8 +427,8 @@ export function NewJsaWizard({ open, onClose, prefill }: { open: boolean; onClos
               <div key={i} style={{ padding: '12px', background: 'var(--surface-alt)', borderRadius: '8px', border: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                   <span style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', fontSize: '0.85rem', minWidth: '20px' }}>{row.stepNumber}</span>
-                  <input class="ui-input" style={{ flex: 1 }} placeholder="Task step description *" value={row.taskStep}
-                    onInput={e => patchStep(i, { taskStep: (e.target as HTMLInputElement).value })} />
+                  <TextInput style={{ flex: 1 }} placeholder="Task step description *" value={row.taskStep}
+                    onInput={value => patchStep(i, { taskStep: value })} />
                   <button class="hse-btn ghost" style={{ padding: '4px 8px', fontSize: '0.75rem' }} onClick={() => moveStepUp(i)} disabled={i === 0} title="Move up"><i class="fas fa-arrow-up" /></button>
                   <button class="hse-btn ghost" style={{ padding: '4px 8px', fontSize: '0.75rem' }} onClick={() => moveStepDown(i)} disabled={i === stepRows.length - 1} title="Move down"><i class="fas fa-arrow-down" /></button>
                   <button class="hse-btn ghost" style={{ padding: '4px 8px', fontSize: '0.75rem', color: 'var(--color-danger)' }} onClick={() => removeStepRow(i)} disabled={stepRows.length === 1} title="Remove step"><i class="fas fa-trash" /></button>
@@ -441,8 +441,8 @@ export function NewJsaWizard({ open, onClose, prefill }: { open: boolean; onClos
                     return (
                       <div key={hi} style={{ border: '1px solid var(--border)', borderRadius: '8px', padding: '10px', background: 'var(--bg-card)' }}>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <input class="ui-input" style={{ flex: 1 }} placeholder="Hazard description" value={h.description}
-                            onInput={e => patchHazard(i, hi, { description: (e.target as HTMLInputElement).value })} />
+                          <TextInput style={{ flex: 1 }} placeholder="Hazard description" value={h.description}
+                            onInput={value => patchHazard(i, hi, { description: value })} />
                           <button class="hse-btn-icon-remove" onClick={() => removeHazard(i, hi)} aria-label="Remove hazard"><i class="fas fa-trash" /></button>
                         </div>
                         <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginTop: '6px' }}>
@@ -457,8 +457,8 @@ export function NewJsaWizard({ open, onClose, prefill }: { open: boolean; onClos
                         <div style={{ marginTop: '8px', paddingLeft: '10px', borderLeft: '2px solid var(--border)', display: 'grid', gap: '6px' }}>
                           {h.controls.map((c, ci) => (
                             <div key={ci} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                              <input class="ui-input" style={{ flex: 1 }} placeholder="Control measure" value={c.description}
-                                onInput={e => patchControl(i, hi, ci, { description: (e.target as HTMLInputElement).value })} />
+                              <TextInput style={{ flex: 1 }} placeholder="Control measure" value={c.description}
+                                onInput={value => patchControl(i, hi, ci, { description: value })} />
                               <select class="ui-select" style={{ width: '140px' }} value={c.controlType} onChange={e => patchControl(i, hi, ci, { controlType: (e.target as HTMLSelectElement).value })}>
                                 {CONTROL_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                               </select>
@@ -512,12 +512,11 @@ export function NewJsaWizard({ open, onClose, prefill }: { open: boolean; onClos
                 />
                 <span style={{ fontWeight: row.required ? 600 : 400 }}>{row.ppeItem}</span>
                 {row.required && (
-                  <input
-                    class="ui-input"
+                  <TextInput
                     style={{ width: '160px', fontSize: '0.75rem' }}
                     placeholder="Notes…"
                     value={row.notes}
-                    onInput={e => patchPpeNotes(i, (e.target as HTMLInputElement).value)}
+                    onInput={value => patchPpeNotes(i, value)}
                     onClick={e => e.stopPropagation()}
                   />
                 )}
@@ -547,12 +546,11 @@ export function NewJsaWizard({ open, onClose, prefill }: { open: boolean; onClos
                 }}
               >
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-                  <input
-                    class="ui-input"
+                  <TextInput
                     style={{ flex: 1 }}
                     placeholder="Training requirement description *"
                     value={row.requirementDescription}
-                    onInput={e => patchTraining(i, { requirementDescription: (e.target as HTMLInputElement).value })}
+                    onInput={value => patchTraining(i, { requirementDescription: value })}
                   />
                   <button
                     class="hse-btn ghost"

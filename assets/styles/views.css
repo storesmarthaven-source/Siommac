@@ -4355,18 +4355,14 @@ body[data-theme="dark"] .dash-overview-panel .dash-layout-btn-primary:hover {
   color: var(--text-muted); background: var(--bg-subtle, #f8fafe);
   border-right: 1px solid var(--border); white-space: nowrap; flex-shrink: 0;
 }
-.prc-input-badge {
-  padding: 9px 11px 9px 7px; font-size: 0.75rem; font-weight: var(--font-weight-bold);
-  color: var(--siomac-navy); background: var(--bg-subtle, #f8fafe);
-  border-left: 1px solid var(--border); white-space: nowrap; flex-shrink: 0;
-}
 .prc-input-box input {
   border: none; outline: none; padding: 9px 10px;
   font-size: 0.9rem; font-weight: 600; font-family: inherit;
   background: transparent; color: var(--text-primary);
   font-variant-numeric: tabular-nums; min-width: 0; width: 100%;
 }
-.prc-input-pct { min-width: 110px; flex: 0 0 auto; }
+.prc-rate-input { min-width: 110px; max-width: 200px; flex: 0 0 auto; }
+.prc-paye-band > .prc-rate-input { max-width: 140px; }
 
 /* Tooltip */
 .prc-tooltip { position: relative; display: inline-flex; cursor: help; }

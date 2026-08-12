@@ -220,4 +220,27 @@ describe('TextInput', () => {
     const dis = render(<TextInput disabled value="v" onInput={vi.fn()} aria-label="B" />);
     expect(dis.container.querySelector('.ui-ctrl')?.className).toContain('ui-ctrl--disabled');
   });
+
+  it('renders persistent prefix and suffix affixes alongside a validation affordance', () => {
+    const { container } = render(
+      <TextInput prefix="TTD" suffix="%" validation="error" value="25" onInput={vi.fn()} aria-label="Rate" />,
+    );
+    expect(container.querySelector('.ui-ctrl-prefix')?.textContent).toBe('TTD');
+    expect(container.querySelector('.ui-ctrl-suffix')?.textContent).toBe('%');
+    expect(container.querySelector('.ui-ctrl-validation-icon--error')).not.toBeNull();
+  });
+
+  it('supports an uncontrolled native-form field without accepting and dropping edits', () => {
+    render(<TextInput defaultValue="6" suffix="%" aria-label="Rate" />);
+    const input = screen.getByLabelText<HTMLInputElement>('Rate');
+    fireEvent.input(input, { target: { value: '8.5' } });
+    expect(input.value).toBe('8.5');
+  });
+
+  it('clears an uncontrolled field and restores focus', () => {
+    const { container } = render(<TextInput defaultValue="6" clearable aria-label="Rate" />);
+    fireEvent.click(screen.getByLabelText('Clear'));
+    expect(screen.getByLabelText<HTMLInputElement>('Rate').value).toBe('');
+    expect(document.activeElement).toBe(container.querySelector('input'));
+  });
 });

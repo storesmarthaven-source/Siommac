@@ -94,7 +94,7 @@ export function NumberInput({ value, onChange, unit, ...rest }: NumberInputProps
       type="text"
       inputMode="decimal"
       value={text}
-      iconRight={unit ? <span style={{ fontSize: 'var(--ui-font-size-caption)' }}>{unit}</span> : undefined}
+      suffix={unit}
       onInput={t => {
         const clean = t.replace(/[^\d.-]/g, '');
         setText(clean);
@@ -137,7 +137,7 @@ export function CurrencyInput({ valueMinor, onChange, currency = 'TTD', ...rest 
       type="text"
       inputMode="decimal"
       value={text}
-      iconLeft={<span style={{ fontSize: 'var(--ui-font-size-caption)', fontWeight: 600 }}>{currency}</span>}
+      prefix={currency}
       onInput={t => {
         // Accept only what a money amount can contain, so a stray letter never
         // silently becomes NaN → 0.
@@ -172,7 +172,7 @@ export function PercentageInput({ value, onChange, decimals = 2, ...rest }: Perc
       type="text"
       inputMode="decimal"
       value={text}
-      iconRight={<span style={{ fontSize: 'var(--ui-font-size-caption)' }}>%</span>}
+      suffix="%"
       onInput={t => {
         const clean = t.replace(/[^\d.]/g, '');
         setText(clean);

@@ -11,7 +11,7 @@
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
-import { Badge, PageHeader, Modal, Field, FormGrid, TextInput, TextareaInput, Button } from '@ui';
+import { Badge, PageHeader, Modal, Field, FormGrid, SearchField, TextInput, TextareaInput, Button } from '@ui';
 import { useOnboardingPackages, useOnboardingCreatePackage, useOnboardingSetPackageStatus } from '@api/hr/onboarding';
 import type { OnboardingPackageSummary } from '../../../../types/hrOnboarding';
 import './onboardingCase.css';
@@ -81,7 +81,7 @@ export function OnboardingPackageManager({
       />
 
       <div style={{ display: 'flex', gap: 10, margin: '14px 0' }}>
-        <input class="ui-input" style={{ flex: 1 }} placeholder="Search packages…" value={query} onInput={e => setQuery((e.target as HTMLInputElement).value)} />
+        <SearchField style={{ flex: 1 }} placeholder="Search packages…" value={query} onInput={setQuery} aria-label="Search onboarding packages" />
         <select class="ui-select" style={{ width: 160 }} value={status} onChange={e => setStatus((e.target as HTMLSelectElement).value as StatusFilter)}>
           {STATUS_FILTERS.map(s => <option key={s} value={s}>{s === 'all' ? 'All statuses' : s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
         </select>

@@ -20,7 +20,7 @@ import {
   type OnboardingSurfaceFilters,
 } from './OnboardingCommandCenter.helpers';
 import { Icon } from './onboarding/primitives';
-import { Button } from '@ui';
+import { Button, SearchField } from '@ui';
 import {
   ActivationCompletionCard, BlockedCasesCard, CasePerformanceCard, CommandCenterHealthBanner,
   CommandMetricStrip, MorningGoalCard, RecentActivityCard, RecentProjectWorkCard,
@@ -119,11 +119,12 @@ export function OnboardingCommandCenter({
             >
               Show Empty States
             </Button>
-            <input
-              class="ui-input obv-hidden-filter-input"
+            <SearchField
+              class="obv-hidden-filter-input"
               value={query}
               placeholder="Filter recent cases..."
-              onInput={event => setQuery((event.target as HTMLInputElement).value)}
+              onInput={setQuery}
+              aria-label="Filter recent onboarding cases"
             />
             <Button variant="secondary" onClick={() => setAddTaskOpen(true)} iconLeft={<Icon name="plus" />}>Add Task</Button>
             <Button variant="primary" onClick={startNewCase} iconLeft={<Icon name="plus" />}>New Case</Button>
