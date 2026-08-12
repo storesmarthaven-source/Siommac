@@ -2,6 +2,69 @@
 
 Updated: 2026-08-12
 
+## ⭐⭐ NEXT SESSION — BUILD THE STUDIO. Do not resume migration.
+
+```
+branch  codex/ui-kit-v2-completion
+HEAD    fe58cbf8
+objective  Build the actual SIOMAC Design System Studio, using the canonical
+           system this programme has spent its whole life creating.
+```
+
+⛔ **Do NOT reopen broad consumer migration just because coverage numbers exist.**
+The consolidation has produced enough stable foundation to realise the product.
+Remaining component debt continues later; the Studio is the priority now.
+
+**Read first:** the corrected `AGENTS.md` (commit-trailer + worktree rules were
+both wrong and are fixed) · this report · `src/ui/registry/`.
+
+**Classification is settled — honour it:**
+- `category: 'patterns'` (20) = module/business compositions. Excluded from
+  primitive catalogue completeness. Show them separately *only* if useful as
+  application/domain patterns, NEVER as missing canonical components.
+- Real catalogue debt is **8 primitives**: Popover · Tooltip · Breadcrumbs ·
+  AvatarGroup · Alert · Progress · Accordion · Drawer (a 3-export consolidation).
+- ⭐ **Do not wait to build all eight before starting the Studio.** Show them
+  honestly as missing/planned and implement them later where required.
+
+### Phase 1 — new Studio shell (the first commit)
+Built from the ground up, NOT a reskin of the small existing Gallery.
+```
+SIOMAC Design System
+├── Brand         Brand Overview · Theme Generator · Logo & Assets
+├── Foundations   Colors · Typography · Spacing · Radius · Icons
+├── Components    registry-driven canonical catalogue
+└── Application   App Shell · Dashboard · Forms · Data Views · Workflow
+```
+Scale: ~15px body · 17–22px section/component headings · ~26px primary title ·
+40–44px controls · large readable preview canvases. Neutral professional chrome —
+no gradients, restrained shadows, and none of the microtext-dense developer-tool
+look. First commit contains: page structure · navigation · neutral shell ·
+registry integration · built/missing/pattern classification · responsive
+workspace foundation. Workbench, Brand board and Application Preview layer on top
+in SEPARATE commits.
+
+### Phase 2 — registry-driven catalogue + workbench
+The Components area consumes the REAL registry. ⛔ No duplicate JS list, no
+static mock catalogue, no mock components duplicating canonical ones. Per built
+component: Overview · Playground · Usage · Accessibility · Code. For the 8
+missing primitives: an honest planned/missing state — never a fabricated
+specimen.
+
+### Phase 3 — Brand experience (REUSE, do not rebuild)
+The engine already exists: logo extraction · HCT / Material Color Utilities ·
+semantic role mapping · accessibility · Draft → Preview → Apply · persistence.
+Build the polished workflow *around* it: Upload Logo → Analyze Brand → Generate
+Theme → Enterprise / Balanced / Brand Forward → Component System Preview →
+Application Preview → Apply. ⛔ Studio chrome stays NEUTRAL; only explicit
+preview scopes receive customer draft variables (see the `[data-ui-preview-scope]`
+second-root rule — a var() resolves where it is DECLARED).
+
+### Phase 4 — Application Preview
+Dashboard · Forms · Data · Workflow, each at Desktop · Tablet · Mobile, built
+from real canonical components. It must read as a realistic SIOMAC application,
+not a specimen sheet.
+
 ## Authoritative working state
 
 | Item | Current value |
