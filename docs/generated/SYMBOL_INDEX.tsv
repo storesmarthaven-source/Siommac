@@ -8762,7 +8762,7 @@ FulfillModal	function	hr	false	component	src/components/sections/HR/HRRequestsOv
 submit	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	268	FulfillModal
 TriageTab	function	hr	false	component	src/components/sections/HR/HRRequestsOverview.tsx	309	
 handleCancel	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	321	TriageTab
-HRRequestsOverview	function	hr	true	component	src/components/sections/HR/HRRequestsOverview.tsx	390	
+HRRequestsOverview	function	hr	true	component	src/components/sections/HR/HRRequestsOverview.tsx	384	
 EMP_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	32	
 ONB_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	33	
 ORG_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	34	
@@ -8846,16 +8846,16 @@ STATUS_FILTERS	variable	hr	false	component	src/components/sections/HR/Offboardin
 humanize	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	28	
 statusTone	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	29	
 OffboardingOverview	function	hr	true	component	src/components/sections/HR/OffboardingOverview.tsx	33	
-NewCaseModal	function	hr	false	component	src/components/sections/HR/OffboardingOverview.tsx	93	
-submit	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	99	NewCaseModal
-CaseDetail	function	hr	false	component	src/components/sections/HR/OffboardingOverview.tsx	144	
-run	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	158	CaseDetail
-onPause	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	173	CaseDetail
-onResume	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	177	CaseDetail
-onReady	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	181	CaseDetail
-onComplete	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	185	CaseDetail
-onFinalize	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	189	CaseDetail
-onCancel	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	198	CaseDetail
+NewCaseModal	function	hr	false	component	src/components/sections/HR/OffboardingOverview.tsx	92	
+submit	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	98	NewCaseModal
+CaseDetail	function	hr	false	component	src/components/sections/HR/OffboardingOverview.tsx	143	
+run	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	157	CaseDetail
+onPause	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	172	CaseDetail
+onResume	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	176	CaseDetail
+onReady	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	180	CaseDetail
+onComplete	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	184	CaseDetail
+onFinalize	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	188	CaseDetail
+onCancel	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	197	CaseDetail
 STATUS_META	object	widgets	false		src/components/sections/HR/offboardingWidgets.tsx	17	
 REASON_META	object	widgets	false		src/components/sections/HR/offboardingWidgets.tsx	27	
 MODULE_META	object	widgets	false		src/components/sections/HR/offboardingWidgets.tsx	34	
@@ -9137,9 +9137,9 @@ boardView	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace
 groupedView	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	207	OnboardingTasksWorkspace
 ownerView	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	233	OnboardingTasksWorkspace
 dueView	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	245	OnboardingTasksWorkspace
-TaskDrawer	function	hr	false	component	src/components/sections/HR/OnboardingTasksWorkspace.tsx	335	
-submitNote	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	354	TaskDrawer
-onEvidenceFile	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	360	TaskDrawer
+TaskDrawer	function	hr	false	component	src/components/sections/HR/OnboardingTasksWorkspace.tsx	320	
+submitNote	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	339	TaskDrawer
+onEvidenceFile	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	345	TaskDrawer
 Opt	interface	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	35	
 ORG_UNIT_TYPES	array	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	36	
 toastResult	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	38	
@@ -9354,19 +9354,19 @@ statusTone	function	hr	false		src/components/sections/HR/RosterOverview.tsx	42
 Tab	type	hr	false		src/components/sections/HR/RosterOverview.tsx	49	
 RosterOverview	function	hr	true	component	src/components/sections/HR/RosterOverview.tsx	53	
 RostersTab	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	100	
-RosterDetail	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	161	
-rosterRecord	function	hr	false		src/components/sections/HR/RosterOverview.tsx	177	RosterDetail
-onPublish	function	hr	false		src/components/sections/HR/RosterOverview.tsx	183	RosterDetail
-onReopen	function	hr	false		src/components/sections/HR/RosterOverview.tsx	201	RosterDetail
-onSyncLeave	function	hr	false		src/components/sections/HR/RosterOverview.tsx	219	RosterDetail
-onGenerate	function	hr	false		src/components/sections/HR/RosterOverview.tsx	226	RosterDetail
-onCellClick	function	hr	false		src/components/sections/HR/RosterOverview.tsx	257	RosterDetail
-TemplatesTab	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	384	
-MyShiftsTab	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	515	
-NewRosterModal	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	564	
-submit	function	hr	false		src/components/sections/HR/RosterOverview.tsx	574	NewRosterModal
-NewShiftTemplateModal	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	636	
-submit	function	hr	false		src/components/sections/HR/RosterOverview.tsx	640	NewShiftTemplateModal
+RosterDetail	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	159	
+rosterRecord	function	hr	false		src/components/sections/HR/RosterOverview.tsx	175	RosterDetail
+onPublish	function	hr	false		src/components/sections/HR/RosterOverview.tsx	181	RosterDetail
+onReopen	function	hr	false		src/components/sections/HR/RosterOverview.tsx	199	RosterDetail
+onSyncLeave	function	hr	false		src/components/sections/HR/RosterOverview.tsx	217	RosterDetail
+onGenerate	function	hr	false		src/components/sections/HR/RosterOverview.tsx	224	RosterDetail
+onCellClick	function	hr	false		src/components/sections/HR/RosterOverview.tsx	255	RosterDetail
+TemplatesTab	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	382	
+MyShiftsTab	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	513	
+NewRosterModal	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	562	
+submit	function	hr	false		src/components/sections/HR/RosterOverview.tsx	572	NewRosterModal
+NewShiftTemplateModal	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	634	
+submit	function	hr	false		src/components/sections/HR/RosterOverview.tsx	638	NewShiftTemplateModal
 humanize	function	hr	true		src/components/sections/HR/shared.tsx	14	
 rowName	function	hr	true		src/components/sections/HR/shared.tsx	18	
 initials	function	hr	true		src/components/sections/HR/shared.tsx	22	
@@ -9410,14 +9410,14 @@ STATUS_FILTERS	variable	hr	false	component	src/components/sections/HR/TransfersO
 humanize	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	29	
 statusTone	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	30	
 TransfersOverview	function	hr	true	component	src/components/sections/HR/TransfersOverview.tsx	36	
-summarizeChanges	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	119	
-NewRequestModal	function	hr	false	component	src/components/sections/HR/TransfersOverview.tsx	134	
-submit	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	158	NewRequestModal
-RequestDetail	function	hr	false	component	src/components/sections/HR/TransfersOverview.tsx	263	
-transferRecord	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	273	RequestDetail
-decide	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	281	RequestDetail
-onCancel	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	302	RequestDetail
-FIELD_LABELS	array	hr	false		src/components/sections/HR/TransfersOverview.tsx	396	
+summarizeChanges	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	112	
+NewRequestModal	function	hr	false	component	src/components/sections/HR/TransfersOverview.tsx	127	
+submit	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	151	NewRequestModal
+RequestDetail	function	hr	false	component	src/components/sections/HR/TransfersOverview.tsx	256	
+transferRecord	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	266	RequestDetail
+decide	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	274	RequestDetail
+onCancel	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	295	RequestDetail
+FIELD_LABELS	array	hr	false		src/components/sections/HR/TransfersOverview.tsx	389	
 TrinidadPhoneInputProps	interface	hr	false		src/components/sections/HR/TrinidadPhoneInput.tsx	10	
 TrinidadPhoneInput	function	hr	true	component	src/components/sections/HR/TrinidadPhoneInput.tsx	25	
 update	function	hr	false		src/components/sections/HR/TrinidadPhoneInput.tsx	39	TrinidadPhoneInput
@@ -9960,41 +9960,41 @@ addLibraryControl	function	hse	false		src/components/sections/HSE/risk-jsa/dialo
 canAdvance	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	93	NewHazardDialog
 handleClose	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	101	NewHazardDialog
 handleSubmit	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	113	NewHazardDialog
-WIZARD_STEPS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	29	
-PPE_ITEMS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	38	
-SCALE_OPTIONS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	52	
-ControlSub	interface	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	62	
-HazardSub	interface	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	63	
-StepRow	interface	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	64	
-PpeRow	interface	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	70	
-TrainingRow	interface	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	76	
-CrewRow	interface	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	82	
-emptyStep	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	91	
-emptyHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	94	
-highestRiskBand	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	98	
-NewJsaWizard	function	hse	true	component	src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	116	
-addSuggestedStep	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	154	NewJsaWizard
-addStepRow	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	172	NewJsaWizard
-removeStepRow	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	176	NewJsaWizard
-moveStepUp	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	182	NewJsaWizard
-moveStepDown	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	193	NewJsaWizard
-patchStep	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	204	NewJsaWizard
-addHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	210	NewJsaWizard
-removeHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	213	NewJsaWizard
-patchHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	216	NewJsaWizard
-addControl	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	220	NewJsaWizard
-removeControl	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	224	NewJsaWizard
-patchControl	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	228	NewJsaWizard
-togglePpe	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	236	NewJsaWizard
-patchPpeNotes	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	240	NewJsaWizard
-addTraining	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	246	NewJsaWizard
-removeTraining	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	250	NewJsaWizard
-patchTraining	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	254	NewJsaWizard
-addCrew	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	260	NewJsaWizard
-removeCrew	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	263	NewJsaWizard
-patchCrew	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	266	NewJsaWizard
-canAdvance	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	272	NewJsaWizard
-handleSubmit	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	280	NewJsaWizard
+WIZARD_STEPS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	30	
+PPE_ITEMS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	39	
+SCALE_OPTIONS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	53	
+ControlSub	interface	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	63	
+HazardSub	interface	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	64	
+StepRow	interface	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	65	
+PpeRow	interface	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	71	
+TrainingRow	interface	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	77	
+CrewRow	interface	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	83	
+emptyStep	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	92	
+emptyHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	95	
+highestRiskBand	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	99	
+NewJsaWizard	function	hse	true	component	src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	117	
+addSuggestedStep	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	155	NewJsaWizard
+addStepRow	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	173	NewJsaWizard
+removeStepRow	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	177	NewJsaWizard
+moveStepUp	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	183	NewJsaWizard
+moveStepDown	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	194	NewJsaWizard
+patchStep	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	205	NewJsaWizard
+addHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	211	NewJsaWizard
+removeHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	214	NewJsaWizard
+patchHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	217	NewJsaWizard
+addControl	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	221	NewJsaWizard
+removeControl	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	225	NewJsaWizard
+patchControl	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	229	NewJsaWizard
+togglePpe	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	237	NewJsaWizard
+patchPpeNotes	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	241	NewJsaWizard
+addTraining	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	247	NewJsaWizard
+removeTraining	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	251	NewJsaWizard
+patchTraining	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	255	NewJsaWizard
+addCrew	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	261	NewJsaWizard
+removeCrew	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	264	NewJsaWizard
+patchCrew	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	267	NewJsaWizard
+canAdvance	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	273	NewJsaWizard
+handleSubmit	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	281	NewJsaWizard
 ReviewRenewDialogProps	interface	hse	true		src/components/sections/HSE/risk-jsa/dialogs/ReviewRenewDialog.tsx	15	
 EFFECTIVENESS	array	hse	false		src/components/sections/HSE/risk-jsa/dialogs/ReviewRenewDialog.tsx	24	
 ReviewRenewDialog	function	hse	true	component	src/components/sections/HSE/risk-jsa/dialogs/ReviewRenewDialog.tsx	30	
@@ -12518,10 +12518,10 @@ EntityHeadProps	interface	platform	true		src/ui/components/EntityHead.tsx	18
 EntityHead	function	platform	true	component	src/ui/components/EntityHead.tsx	29	
 PanelStatItem	interface	platform	true		src/ui/components/EntityHead.tsx	54	
 PanelStats	function	platform	true	component	src/ui/components/EntityHead.tsx	61	
-Field	function	platform	true	component	src/ui/components/Field.tsx	8	
-SelectInput	function	platform	true	component	src/ui/components/Field.tsx	17	
+Field	function	platform	true	component	src/ui/components/Field.tsx	12	
+SelectInput	function	platform	true	component	src/ui/components/Field.tsx	16	
 TextareaInput	function	platform	true	component	src/ui/components/Field.tsx	33	
-FormGrid	function	platform	true	component	src/ui/components/Field.tsx	45	
+FormGrid	function	platform	true	component	src/ui/components/Field.tsx	40	
 PillTone	type	platform	true		src/ui/components/InfoCard.tsx	21	
 InfoCard	function	platform	true	component,ui-tile	src/ui/components/InfoCard.tsx	23	
 FieldList	function	platform	true	component	src/ui/components/InfoCard.tsx	35	
@@ -12780,8 +12780,8 @@ OPTS	array	platform	false	test	src/ui/forms/Select.test.tsx	17
 GROUPED	array	platform	false	test	src/ui/forms/Select.test.tsx	23	
 openSelect	function	platform	false	test	src/ui/forms/Select.test.tsx	28	
 SelectProps	interface	platform	true		src/ui/forms/Select.tsx	33	
-Select	function	platform	true	component	src/ui/forms/Select.tsx	61	
-handleClear	function	platform	false		src/ui/forms/Select.tsx	125	Select
+Select	function	platform	true	component	src/ui/forms/Select.tsx	63	
+handleClear	function	platform	false		src/ui/forms/Select.tsx	128	Select
 ListboxKeyboard	interface	platform	true		src/ui/forms/useListboxKeyboard.ts	26	
 Params	interface	platform	false		src/ui/forms/useListboxKeyboard.ts	43	
 step	function	platform	false		src/ui/forms/useListboxKeyboard.ts	59	

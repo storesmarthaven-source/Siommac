@@ -12,7 +12,7 @@ import { useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
-import { Badge, DateInput, PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, Button, type BadgeTone } from '@ui';
+import { Badge, DateInput, PageHeader, Field, FormGrid, Select, SelectInput, TextInput, EmptyState, Button, type BadgeTone } from '@ui';
 import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
 import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import {
@@ -112,11 +112,9 @@ function RostersTab({ canManage, canPublish }: { canManage: boolean; canPublish:
     <div>
       <HRQueryNotice queries={[rostersQ]} />
       <div style={{ display: 'flex', gap: 10, margin: '0 0 10px', alignItems: 'center' }}>
-        <select class="ui-select" style={{ width: 180 }} value={statusFilter} onChange={e => setStatusFilter((e.target as HTMLSelectElement).value)}>
-          {['all','draft','pending_approval','published','returned','archived'].map(s => (
-            <option key={s} value={s}>{s === 'all' ? 'All statuses' : humanize(s)}</option>
-          ))}
-        </select>
+        <Select style={{ width: 180 }} value={statusFilter} onChange={setStatusFilter}
+          options={['all','draft','pending_approval','published','returned','archived'].map(value => ({ value, label: value === 'all' ? 'All statuses' : humanize(value) }))}
+          aria-label="Filter rosters by status" />
         {canManage && <Button variant="primary" onClick={() => setNewOpen(true)} iconLeft={<i class="fas fa-plus" />}>New Roster</Button>}
       </div>
 

@@ -13,7 +13,7 @@ import { toast } from '@store';
 import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
 import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import { can } from '@lib/permissions';
-import { Badge, PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, Button, type BadgeTone } from '@ui';
+import { Badge, PageHeader, Field, FormGrid, Select, SelectInput, TextInput, EmptyState, Button, type BadgeTone } from '@ui';
 import {
   useOffboardingCases, useOffboardingCase, useOffboardingStats, useOffboardingMutation, hrOffboardingApi,
 } from '@api/hr/offboarding';
@@ -59,9 +59,8 @@ export function OffboardingOverview(): VNode {
         : <OffboardingDashboardSkeleton />}
 
       <div style={{ display: 'flex', gap: 10, margin: '10px 0' }}>
-        <select class="ui-select" style={{ width: 180 }} value={statusFilter} onChange={e => setStatusFilter((e.target as HTMLSelectElement).value)}>
-          {STATUS_FILTERS.map(f => <option key={f} value={f}>{f === 'all' ? 'All statuses' : humanize(f)}</option>)}
-        </select>
+        <Select style={{ width: 180 }} value={statusFilter} onChange={setStatusFilter}
+          options={STATUS_FILTERS.map(value => ({ value, label: value === 'all' ? 'All statuses' : humanize(value) }))} aria-label="Filter offboarding cases by status" />
       </div>
 
       <div class="obx-section"><div class="obx-section-body">

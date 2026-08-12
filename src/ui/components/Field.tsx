@@ -1,17 +1,16 @@
 /**
- * Legacy field-layout family retained while FormField and Select migrations
- * complete. Text entry itself is owned exclusively by canonical TextInput.
+ * Compatibility names for the original field family. Each delegates to the
+ * canonical owner, so retained call sites do not preserve a second visual or
+ * interaction implementation.
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
+import { FormField } from '../forms/FormField';
+import { Select } from '../forms/Select';
+import { Textarea } from '../forms/inputs';
 
 export function Field({ label, children, wide }: { label: string; children: ComponentChildren; wide?: boolean }): VNode {
-  return (
-    <div class={`ui-field${wide ? ' ui-field--wide' : ''}`}>
-      <label class="ui-field-label">{label}</label>
-      {children}
-    </div>
-  );
+  return <FormField label={label} wide={wide}>{children}</FormField>;
 }
 
 export function SelectInput({ value, onInput, options, placeholder }: {
@@ -19,26 +18,22 @@ export function SelectInput({ value, onInput, options, placeholder }: {
   options: readonly string[] | readonly { value: string; label: string }[];
   placeholder?: string;
 }): VNode {
+  const normalized = options.map(o => typeof o === 'string' ? { value: o, label: o } : o);
+  const emptyLabel = normalized.find(o => o.value === '')?.label;
   return (
-    <select class="ui-select" value={value} onChange={e => onInput((e.target as HTMLSelectElement).value)}>
-      {placeholder && <option value="">{placeholder}</option>}
-      {options.map(o => {
-        const opt = typeof o === 'string' ? { value: o, label: o } : o;
-        return <option key={opt.value} value={opt.value}>{opt.label}</option>;
-      })}
-    </select>
+    <Select
+      value={value}
+      onChange={onInput}
+      options={normalized}
+      placeholder={placeholder ?? emptyLabel}
+    />
   );
 }
 
 export function TextareaInput({ value, onInput, placeholder, rows }: {
   value: string; onInput: (v: string) => void; placeholder?: string; rows?: number;
 }): VNode {
-  return (
-    <textarea
-      class="ui-textarea" rows={rows} value={value} placeholder={placeholder}
-      onInput={e => onInput((e.target as HTMLTextAreaElement).value)}
-    />
-  );
+  return <Textarea rows={rows} value={value} placeholder={placeholder} onInput={onInput} />;
 }
 
 /** The standard 2-column responsive form grid. */

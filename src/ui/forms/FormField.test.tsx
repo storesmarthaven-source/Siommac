@@ -11,6 +11,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/preact';
 import { FormField } from './FormField';
 import { TextInput } from '../primitives/TextInput';
+import { Field, SelectInput, TextareaInput } from '../components/Field';
 
 describe('FormField', () => {
   it('associates the label with the control', () => {
@@ -242,5 +243,37 @@ describe('TextInput', () => {
     fireEvent.click(screen.getByLabelText('Clear'));
     expect(screen.getByLabelText<HTMLInputElement>('Rate').value).toBe('');
     expect(document.activeElement).toBe(container.querySelector('input'));
+  });
+});
+
+describe('legacy field names', () => {
+  it('delegate to canonical FormField and Select with an associated label', () => {
+    const { container } = render(
+      <Field label="Priority">
+        <SelectInput value="normal" onInput={vi.fn()} options={['low', 'normal', 'high']} />
+      </Field>,
+    );
+    expect(screen.getByLabelText('Priority').getAttribute('role')).toBe('combobox');
+    expect(container.querySelector('.ui-field2')).not.toBeNull();
+    expect(container.querySelector('.ui-select')).toBeNull();
+  });
+
+  it('preserves an empty option as the canonical placeholder and list option', () => {
+    render(
+      <Field label="Owner">
+        <SelectInput value="" onInput={vi.fn()} options={[{ value: '', label: 'None' }, { value: 'hr', label: 'HR' }]} />
+      </Field>,
+    );
+    expect(screen.getByLabelText('Owner').textContent).toContain('None');
+    fireEvent.click(screen.getByLabelText('Owner'));
+    expect(screen.getByRole('option', { name: 'None' })).toBeTruthy();
+  });
+
+  it('delegates TextareaInput to the canonical textarea control', () => {
+    const { container } = render(
+      <Field label="Notes"><TextareaInput value="Context" onInput={vi.fn()} /></Field>,
+    );
+    expect(screen.getByLabelText('Notes').tagName).toBe('TEXTAREA');
+    expect(container.querySelector('.ui-textarea')).toBeNull();
   });
 });

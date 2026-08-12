@@ -14,7 +14,7 @@
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
-import { Badge, PageHeader, Drawer, Field, FormGrid, SearchField, TextInput, SelectInput, Modal, Button, FileInput } from '@ui';
+import { Badge, PageHeader, Drawer, Field, FormGrid, SearchField, Select, TextInput, SelectInput, Modal, Button, FileInput } from '@ui';
 import {
   useOnboardingTasksList, useOnboardingTaskDetail, useOnboardingPackages,
   useOnboardingCompleteTask, useOnboardingReassignTask, useOnboardingBlockTask, useOnboardingUnblockTask,
@@ -270,21 +270,10 @@ export function OnboardingTasksWorkspace({
           ))}
         </div>
         <SearchField style={{ flex: 1, minWidth: 160 }} placeholder="Search task, employee, case…" value={query} onInput={setQuery} aria-label="Search onboarding tasks" />
-        <select class="ui-select" value={status} onChange={e => setStatus((e.target as HTMLSelectElement).value)}>
-          <option value="">All statuses</option>
-          {TASK_STATUSES.map(s => <option key={s} value={s}>{humanize(s)}</option>)}
-        </select>
-        <select class="ui-select" value={ownerRole} onChange={e => setOwnerRole((e.target as HTMLSelectElement).value)}>
-          <option value="">All owner roles</option>
-          {ownerRoles.map(r => <option key={r} value={r}>{humanize(r)}</option>)}
-        </select>
-        <select class="ui-select" value={pkgKey} onChange={e => setPkgKey((e.target as HTMLSelectElement).value)}>
-          <option value="">All packages</option>
-          {(pkgsQ.data ?? []).map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
-        </select>
-        <select class="ui-select" value={dueState} onChange={e => setDueState((e.target as HTMLSelectElement).value as DueState)}>
-          {DUE_OPTS.map(o => <option key={o.v} value={o.v}>{o.label}</option>)}
-        </select>
+        <Select value={status} onChange={setStatus} options={[{ value: '', label: 'All statuses' }, ...TASK_STATUSES.map(value => ({ value, label: humanize(value) }))]} aria-label="Filter tasks by status" />
+        <Select value={ownerRole} onChange={setOwnerRole} options={[{ value: '', label: 'All owner roles' }, ...ownerRoles.map(value => ({ value, label: humanize(value) }))]} aria-label="Filter tasks by owner role" />
+        <Select value={pkgKey} onChange={setPkgKey} options={[{ value: '', label: 'All packages' }, ...(pkgsQ.data ?? []).map(p => ({ value: p.key, label: p.label }))]} aria-label="Filter tasks by package" />
+        <Select value={dueState} onChange={value => setDueState(value as DueState)} options={DUE_OPTS.map(o => ({ value: o.v, label: o.label }))} aria-label="Filter tasks by due date" />
         <label class="obx-checkline" style={{ marginTop: 0, whiteSpace: 'nowrap' }}>
           <input type="checkbox" checked={blockingOnly} onChange={e => setBlockingOnly((e.target as HTMLInputElement).checked)} /> Blocking only
         </label>
@@ -310,17 +299,13 @@ export function OnboardingTasksWorkspace({
       >
         <FormGrid>
           <Field label="Case" wide>
-            <select class="ui-select" value={addForm.caseNo} onChange={e => setAddForm(f => ({ ...f, caseNo: (e.target as HTMLSelectElement).value }))}>
-              <option value="">Select a case…</option>
-              {caseOptions.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-            </select>
+            <Select value={addForm.caseNo} onChange={caseNo => setAddForm(f => ({ ...f, caseNo }))}
+              options={[{ value: '', label: 'Select a case…' }, ...caseOptions.map(c => ({ value: c.id, label: c.label }))]} />
           </Field>
           <Field label="Task title" wide><TextInput value={addForm.taskTitle} onInput={v => setAddForm(f => ({ ...f, taskTitle: v }))} placeholder="e.g. Collect signed contract" /></Field>
           <Field label="Assignee">
-            <select class="ui-select" value={addForm.assignedTo} onChange={e => setAddForm(f => ({ ...f, assignedTo: (e.target as HTMLSelectElement).value }))}>
-              <option value="">Unassigned</option>
-              {employees.map(e2 => <option key={e2.id} value={e2.id}>{e2.full_name ?? e2.email ?? e2.id}</option>)}
-            </select>
+            <Select value={addForm.assignedTo} onChange={assignedTo => setAddForm(f => ({ ...f, assignedTo }))}
+              options={[{ value: '', label: 'Unassigned' }, ...employees.map(e2 => ({ value: e2.id, label: e2.full_name ?? e2.email ?? e2.id }))]} />
           </Field>
           <Field label="Due date"><TextInput type="date" value={addForm.dueAt} onInput={v => setAddForm(f => ({ ...f, dueAt: v }))} /></Field>
           <Field label="Priority"><SelectInput value={addForm.priority} onInput={v => setAddForm(f => ({ ...f, priority: v }))} options={['low', 'normal', 'high', 'critical']} /></Field>

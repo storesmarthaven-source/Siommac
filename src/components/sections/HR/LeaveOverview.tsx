@@ -12,7 +12,7 @@ import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components
 import { toast } from '@store';
 import { can } from '@lib/permissions';
 import { useSessionStore } from '@store/session';
-import { Badge, PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, Button, type BadgeTone } from '@ui';
+import { Badge, PageHeader, Field, FormGrid, Select, SelectInput, TextInput, EmptyState, Button, type BadgeTone } from '@ui';
 import {
   useMyLeaveRequests, useAllLeaveRequests, useLeaveTypes, useLeaveStats, useLeaveBalances,
   useSubmitLeave, useApproveLeave, useRejectLeave, useCancelLeave,
@@ -245,12 +245,8 @@ export function LeaveOverview(): VNode {
       </div>
 
       <div style={{ display: 'flex', gap: 10, margin: '10px 0' }}>
-        <select class='ui-select' style={{ width: 200 }}
-          value={statusFilter}
-          onChange={e => setStatusFilter((e.target as HTMLSelectElement).value as never)}
-        >
-          {STATUS_OPTIONS.map(opt => <option key={opt.v} value={opt.v}>{opt.label}</option>)}
-        </select>
+        <Select style={{ width: 200 }} value={statusFilter} onChange={value => setStatusFilter(value as typeof statusFilter)}
+          options={STATUS_OPTIONS.map(opt => ({ value: opt.v, label: opt.label }))} aria-label="Filter leave requests by status" />
       </div>
 
       <div class='obx-section'><div class='obx-section-body'>

@@ -18,7 +18,7 @@
 /* eslint-disable react-hooks/refs -- `ref={hook.setSomething}` is a ref CALLBACK
    returned from a hook, not a ref object being read during render. The rule
    cannot tell the two apart; the callback form is the pattern it wants. */
-import { type VNode } from 'preact';
+import { type CSSProperties, type VNode } from 'preact';
 import { useId, useMemo, useState, useCallback } from 'preact/hooks';
 import { LucideIcon } from '../LucideIcon';
 import { AnchoredPopup } from '../overlays/AnchoredPopup';
@@ -53,9 +53,11 @@ export interface SelectProps<T extends string = string> {
   id?: string;
   name?: string;
   'aria-label'?: string;
+  title?: string;
   /** Gallery-only forced visual state. See src/ui/RECIPES.md §5. */
   forceState?: UiState;
   class?: string;
+  style?: CSSProperties;
 }
 
 export function Select<T extends string = string>({
@@ -64,7 +66,7 @@ export function Select<T extends string = string>({
   placeholder = 'Select…', emptyLabel = 'No options', size = 'md',
   disabled: ownDisabled, readOnly: ownReadOnly, loading = false, error = null,
   validation: ownValidation,
-  id: ownId, name, forceState, class: extra,
+  id: ownId, name, forceState, class: extra, style, title,
   ...aria
 }: SelectProps<T>): VNode {
   const ctx = useFieldContext();
@@ -83,6 +85,7 @@ export function Select<T extends string = string>({
   );
   const flat = useMemo(() => flattenOptions(visible), [visible]);
   const selected = findOption(options, value);
+  const emptyOption = value === '' ? flattenOptions(options).find(opt => opt.value === '') : undefined;
 
   const commit = useCallback((opt: Option<T>) => {
     onChange(opt.value);
@@ -136,6 +139,8 @@ export function Select<T extends string = string>({
         name={name}
         type="button"
         class={boxClass}
+        style={style}
+        title={title}
         data-ui-state={forced}
         disabled={disabled}
         role="combobox"
@@ -151,7 +156,7 @@ export function Select<T extends string = string>({
         onKeyDown={kb.onKeyDown}
       >
         <span class={`ui-ctrl-value${selected ? '' : ' ui-ctrl-value--placeholder'}`}>
-          {selected ? selected.label : placeholder}
+          {selected?.label ?? emptyOption?.label ?? placeholder}
         </span>
 
         {loading && <span class="ui-ctrl-trail"><span class="ui-ctrl-spinner" role="status" aria-label="Loading" /></span>}

@@ -667,7 +667,7 @@ export const selectDef: ComponentDef = {
     replaces: ['.ui-select'],
     deprecatedImports: ['SelectInput', 'EntityPicker'],
     rawPatterns: ['<select'],
-    nextSurface: 'Settings',
+    nextSurface: 'Card',
     notes: [
       'Three exports (Select / Combobox / MultiSelect) for four modes. They are NOT three implementations — the keyboard model, popup, option list and CSS are shared. They stay separate only because press-to-open and type-to-filter are different interactions, and T vs T[] is a different contract.',
     ],

@@ -2,7 +2,7 @@
 
 # platform Module Map
 
-Source fingerprint: `bc5ba9de1d62e57d7c12029e`
+Source fingerprint: `2a39ec68941c00d9bf289e21`
 
 Files: 404 | Symbols: 3675 | Widgets: 12 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
 
@@ -240,10 +240,10 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `EmptyState` | function / component | `src/ui/components/EmptyState.tsx:29` | `-` |
 | `EntityHead` | function / component | `src/ui/components/EntityHead.tsx:29` | `-` |
 | `PanelStats` | function / component | `src/ui/components/EntityHead.tsx:61` | `-` |
-| `Field` | function / component | `src/ui/components/Field.tsx:8` | `-` |
-| `SelectInput` | function / component | `src/ui/components/Field.tsx:17` | `-` |
+| `Field` | function / component | `src/ui/components/Field.tsx:12` | `-` |
+| `SelectInput` | function / component | `src/ui/components/Field.tsx:16` | `-` |
 | `TextareaInput` | function / component | `src/ui/components/Field.tsx:33` | `-` |
-| `FormGrid` | function / component | `src/ui/components/Field.tsx:45` | `-` |
+| `FormGrid` | function / component | `src/ui/components/Field.tsx:40` | `-` |
 | `InfoCard` | function / component, ui-tile | `src/ui/components/InfoCard.tsx:23` | `-` |
 | `FieldList` | function / component | `src/ui/components/InfoCard.tsx:35` | `-` |
 | `FieldRow` | function / component | `src/ui/components/InfoCard.tsx:39` | `-` |

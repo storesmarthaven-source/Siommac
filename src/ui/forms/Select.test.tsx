@@ -37,6 +37,11 @@ describe('Select', () => {
     expect(screen.getByRole('combobox').textContent).toContain('Pick one');
   });
 
+  it('uses an explicit empty-value option as the placeholder label', () => {
+    render(<Select value="" onChange={vi.fn()} options={[{ value: '', label: 'All statuses' }, ...OPTS]} aria-label="S" />);
+    expect(screen.getByRole('combobox').textContent).toContain('All statuses');
+  });
+
   it('shows the selected option label', () => {
     render(<Select value="c" onChange={vi.fn()} options={OPTS} aria-label="S" />);
     expect(screen.getByRole('combobox').textContent).toContain('Charlie');

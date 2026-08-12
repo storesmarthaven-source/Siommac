@@ -2,7 +2,7 @@
 
 # hse Module Map
 
-Source fingerprint: `bc5ba9de1d62e57d7c12029e`
+Source fingerprint: `2a39ec68941c00d9bf289e21`
 
 Files: 87 | Symbols: 1277 | Widgets: 0 | Unique mounted endpoints: 144 | Route definitions: 144 mounted + 0 unmounted | API calls: 107 | DB objects: 65 | E2E suites: 4
 
@@ -433,7 +433,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `LinkCapaDialog` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/LinkCapaDialog.tsx:31` | `-` |
 | `NewAssessmentWizard` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx:169` | `-` |
 | `NewHazardDialog` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx:43` | `-` |
-| `NewJsaWizard` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx:116` | `-` |
+| `NewJsaWizard` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx:117` | `-` |
 | `ReviewRenewDialog` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/ReviewRenewDialog.tsx:30` | `-` |
 | `SubmitForReviewDialog` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/SubmitForReviewDialog.tsx:31` | `-` |
 | `DialogError` | function / component | `src/components/sections/HSE/risk-jsa/dialogs/SubmitForReviewDialog.tsx:87` | `-` |
@@ -544,7 +544,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/LinkCapaDialog.tsx` | 104 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx` | 528 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx` | 399 |
-| frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx` | 698 |
+| frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx` | 696 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/ReviewRenewDialog.tsx` | 94 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/SubmitForReviewDialog.tsx` | 100 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/TemplateDialog.tsx` | 76 |
@@ -554,7 +554,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HSE/risk-jsa/drawers/JsaDrawer.tsx` | 339 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/drawers/RiskAssessmentDrawer.tsx` | 300 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/shared/AttachmentsPanel.tsx` | 87 |
-| frontend-page | `src/components/sections/HSE/risk-jsa/shared/ControlsTable.tsx` | 95 |
+| frontend-page | `src/components/sections/HSE/risk-jsa/shared/ControlsTable.tsx` | 93 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/shared/InsightCard.tsx` | 131 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/shared/QueueItem.tsx` | 69 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/shared/RiskMatrixPicker.tsx` | 82 |

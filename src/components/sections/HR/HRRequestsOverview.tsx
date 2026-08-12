@@ -12,7 +12,7 @@ import { type VNode } from 'preact';
 import { useRef, useState } from 'preact/hooks';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
-import { Badge, PageHeader, Field, FormGrid, SelectInput, Textarea, TextInput, EmptyState, TableSkeleton, Button, type BadgeTone } from '@ui';
+import { Badge, PageHeader, Field, FormGrid, Select, SelectInput, Textarea, TextInput, EmptyState, TableSkeleton, Button, type BadgeTone } from '@ui';
 import {
   useRequestTypes, useMyRequests, useAllRequests, useRequestsMutation, hrRequestsApi,
 } from '@api/hr/requests';
@@ -333,16 +333,10 @@ function TriageTab(): VNode {
   return (
     <div>
       <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-        <select class="ui-select" style={{ width: 160 }} value={statusFilter} onChange={e => setStatusFilter((e.target as HTMLSelectElement).value)}>
-          <option value="">All statuses</option>
-          {['submitted','in_review','returned','approved','rejected','fulfilled','cancelled'].map(s => (
-            <option key={s} value={s}>{humanize(s)}</option>
-          ))}
-        </select>
-        <select class="ui-select" style={{ width: 180 }} value={typeFilter} onChange={e => setTypeFilter((e.target as HTMLSelectElement).value)}>
-          <option value="">All types</option>
-          {types.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
-        </select>
+        <Select style={{ width: 160 }} value={statusFilter} onChange={setStatusFilter} aria-label="Filter by request status"
+          options={[{ value: '', label: 'All statuses' }, ...['submitted','in_review','returned','approved','rejected','fulfilled','cancelled'].map(s => ({ value: s, label: humanize(s) }))]} />
+        <Select style={{ width: 180 }} value={typeFilter} onChange={setTypeFilter} aria-label="Filter by request type"
+          options={[{ value: '', label: 'All types' }, ...types.map(t => ({ value: t.key, label: t.label }))]} />
       </div>
 
       {requestsQ.isLoading

@@ -16,7 +16,7 @@
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
-import { Badge, PageHeader, Modal, SearchField, Button } from '@ui';
+import { Badge, PageHeader, Modal, SearchField, Select, Button } from '@ui';
 import {
   useOnboardingHandoffsList,
   useOnboardingRetryHandoff, useOnboardingAcceptHandoff, useOnboardingCompleteHandoff, useOnboardingCancelHandoff,
@@ -128,14 +128,8 @@ export function OnboardingHandoffsWorkspace({
 
       <div class="obx-toolbar">
         <SearchField style={{ flex: 1, minWidth: 160 }} placeholder="Search case, employee, type…" value={query} onInput={setQuery} aria-label="Search onboarding handoffs" />
-        <select class="ui-select" value={module} onChange={e => setModule((e.target as HTMLSelectElement).value)}>
-          <option value="">All modules</option>
-          {modules.map(m => <option key={m} value={m}>{moduleLabel(m)}</option>)}
-        </select>
-        <select class="ui-select" value={status} onChange={e => setStatus((e.target as HTMLSelectElement).value)}>
-          <option value="">All statuses</option>
-          {HANDOFF_STATUSES.map(s => <option key={s} value={s}>{humanize(s)}</option>)}
-        </select>
+        <Select value={module} onChange={setModule} options={[{ value: '', label: 'All modules' }, ...modules.map(value => ({ value, label: moduleLabel(value) }))]} aria-label="Filter handoffs by module" />
+        <Select value={status} onChange={setStatus} options={[{ value: '', label: 'All statuses' }, ...HANDOFF_STATUSES.map(value => ({ value, label: humanize(value) }))]} aria-label="Filter handoffs by status" />
       </div>
 
       {handoffsQ.isLoading ? <div class="obx-empty">Loading…</div>

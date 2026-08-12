@@ -2,7 +2,7 @@
 
 # hr Module Map
 
-Source fingerprint: `bc5ba9de1d62e57d7c12029e`
+Source fingerprint: `2a39ec68941c00d9bf289e21`
 
 Files: 265 | Symbols: 3076 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 37 | DB objects: 196 | E2E suites: 16
 
@@ -722,29 +722,29 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/EmployeeProfilePage.tsx` | 1694 |
 | frontend-page | `src/components/sections/HR/HRDocumentsOverview.tsx` | 728 |
 | frontend-page | `src/components/sections/HR/HRQueryState.tsx` | 54 |
-| frontend-page | `src/components/sections/HR/HRRequestsOverview.tsx` | 423 |
+| frontend-page | `src/components/sections/HR/HRRequestsOverview.tsx` | 417 |
 | frontend-page | `src/components/sections/HR/HRSection.tsx` | 129 |
 | frontend-page | `src/components/sections/HR/ImportWizard.tsx` | 348 |
-| frontend-page | `src/components/sections/HR/LeaveOverview.tsx` | 303 |
-| frontend-page | `src/components/sections/HR/OffboardingOverview.tsx` | 269 |
-| frontend-page | `src/components/sections/HR/OnboardingAddTaskModal.tsx` | 94 |
+| frontend-page | `src/components/sections/HR/LeaveOverview.tsx` | 299 |
+| frontend-page | `src/components/sections/HR/OffboardingOverview.tsx` | 268 |
+| frontend-page | `src/components/sections/HR/OnboardingAddTaskModal.tsx` | 90 |
 | frontend-page | `src/components/sections/HR/OnboardingBlockedBoard.tsx` | 157 |
-| frontend-page | `src/components/sections/HR/OnboardingCaseDetail.tsx` | 451 |
+| frontend-page | `src/components/sections/HR/OnboardingCaseDetail.tsx` | 446 |
 | frontend-page | `src/components/sections/HR/OnboardingCommandCenter.adapters.ts` | 143 |
 | frontend-page | `src/components/sections/HR/OnboardingCommandCenter.helpers.ts` | 196 |
 | frontend-page | `src/components/sections/HR/OnboardingCommandCenter.tsx` | 200 |
 | frontend-page | `src/components/sections/HR/OnboardingOverview.tsx` | 408 |
 | frontend-page | `src/components/sections/HR/OnboardingPackageDetail.tsx` | 326 |
-| frontend-page | `src/components/sections/HR/OnboardingPackageManager.tsx` | 131 |
-| frontend-page | `src/components/sections/HR/OnboardingReportsWorkspace.tsx` | 178 |
-| frontend-page | `src/components/sections/HR/OnboardingTasksWorkspace.tsx` | 464 |
+| frontend-page | `src/components/sections/HR/OnboardingPackageManager.tsx` | 130 |
+| frontend-page | `src/components/sections/HR/OnboardingReportsWorkspace.tsx` | 172 |
+| frontend-page | `src/components/sections/HR/OnboardingTasksWorkspace.tsx` | 449 |
 | frontend-page | `src/components/sections/HR/OrgStructureOverview.tsx` | 777 |
 | frontend-page | `src/components/sections/HR/OvertimeOverview.tsx` | 233 |
 | frontend-page | `src/components/sections/HR/ProfileDrawer.test.tsx` | 307 |
 | frontend-page | `src/components/sections/HR/ProfileDrawer.tsx` | 1072 |
-| frontend-page | `src/components/sections/HR/RosterOverview.tsx` | 685 |
+| frontend-page | `src/components/sections/HR/RosterOverview.tsx` | 683 |
 | frontend-page | `src/components/sections/HR/StartOnboardingWizard.tsx` | 974 |
-| frontend-page | `src/components/sections/HR/TransfersOverview.tsx` | 405 |
+| frontend-page | `src/components/sections/HR/TransfersOverview.tsx` | 398 |
 | frontend-page | `src/components/sections/HR/TrinidadPhoneInput.tsx` | 65 |
 | frontend-page | `src/components/sections/HR/emailStudio/EmailTemplateBuilder.test.tsx` | 423 |
 | frontend-page | `src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx` | 6152 |

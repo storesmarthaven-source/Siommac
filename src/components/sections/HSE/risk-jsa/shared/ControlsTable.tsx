@@ -7,7 +7,7 @@
  */
 
 import { type VNode } from 'preact';
-import { Button, DateInput, TextInput } from '@ui';
+import { Button, DateInput, Select, TextInput } from '@ui';
 
 export const CONTROL_TYPES = [
   { value: 'elimination',        label: 'Elimination' },
@@ -60,10 +60,8 @@ export function ControlsTable({ controls, onChange }: ControlsTableProps): VNode
             <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start' }}>
               <TextInput style={{ flex: 2 }} placeholder="Control description…"
                 value={c.description} onInput={value => update(i, { description: value })} />
-              <select class="ui-select" style={{ width: '170px' }}
-                value={c.controlType} onChange={e => update(i, { controlType: (e.target as HTMLSelectElement).value })}>
-                {CONTROL_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
+              <Select style={{ width: '170px' }} value={c.controlType} onChange={value => update(i, { controlType: value })}
+                options={CONTROL_TYPES} aria-label="Control type" />
               <button type="button" title="Duplicate" onClick={() => duplicate(i)}
                 style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-xs)', width: '32px', height: '32px', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <i class="fas fa-copy" />

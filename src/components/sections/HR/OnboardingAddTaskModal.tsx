@@ -8,7 +8,7 @@
  */
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { Modal, Field, FormGrid, TextInput, SelectInput } from '@ui';
+import { Modal, Field, FormGrid, Select, TextInput, SelectInput } from '@ui';
 import { useHrEmployees } from '@api/hr/employees';
 import { useOnboardingAddTask, useOnboardingCases } from '@api/hr/onboarding';
 
@@ -68,18 +68,14 @@ export function OnboardingAddTaskModal({ open, caseId, onClose, onToast, onAdded
       <FormGrid>
         {needsCasePicker && (
           <Field label="Case" wide>
-            <select class="ui-select" value={selectedCaseId} onChange={e => setSelectedCaseId((e.target as HTMLSelectElement).value)}>
-              <option value="">{casesQ.isLoading ? 'Loading cases…' : 'Select a case…'}</option>
-              {cases.map(c => <option key={c.caseId} value={c.caseId}>{c.caseNo} · {c.employeeName ?? '—'}</option>)}
-            </select>
+            <Select value={selectedCaseId} onChange={setSelectedCaseId} loading={casesQ.isLoading}
+              options={[{ value: '', label: casesQ.isLoading ? 'Loading cases…' : 'Select a case…' }, ...cases.map(c => ({ value: c.caseId, label: `${c.caseNo} · ${c.employeeName ?? '—'}` }))]} />
           </Field>
         )}
         <Field label="Task title" wide><TextInput value={form.taskTitle} onInput={v => setForm(f => ({ ...f, taskTitle: v }))} placeholder="e.g. Collect signed contract" /></Field>
         <Field label="Assignee">
-          <select class="ui-select" value={form.assignedTo} onChange={e => setForm(f => ({ ...f, assignedTo: (e.target as HTMLSelectElement).value }))}>
-            <option value="">Unassigned</option>
-            {employees.map(e => <option key={e.id} value={e.id}>{e.full_name ?? e.email ?? e.id}</option>)}
-          </select>
+          <Select value={form.assignedTo} onChange={assignedTo => setForm(f => ({ ...f, assignedTo }))}
+            options={[{ value: '', label: 'Unassigned' }, ...employees.map(e => ({ value: e.id, label: e.full_name ?? e.email ?? e.id }))]} />
         </Field>
         <Field label="Due date"><TextInput type="date" value={form.dueAt} onInput={v => setForm(f => ({ ...f, dueAt: v }))} /></Field>
         <Field label="Priority">

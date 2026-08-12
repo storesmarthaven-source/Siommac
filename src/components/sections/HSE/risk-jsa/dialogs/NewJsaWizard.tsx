@@ -10,6 +10,7 @@ import { type VNode } from 'preact';
 import {
   Wizard,
   Field,
+  Select,
   TextInput,
   SelectInput,
   TextareaInput,
@@ -446,12 +447,10 @@ export function NewJsaWizard({ open, onClose, prefill }: { open: boolean; onClos
                           <button class="hse-btn-icon-remove" onClick={() => removeHazard(i, hi)} aria-label="Remove hazard"><i class="fas fa-trash" /></button>
                         </div>
                         <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginTop: '6px' }}>
-                          <select class="ui-select" style={{ flex: 1 }} value={h.likelihood} onChange={e => patchHazard(i, hi, { likelihood: (e.target as HTMLSelectElement).value })} title="Likelihood">
-                            <option value="">Likelihood</option>{SCALE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                          </select>
-                          <select class="ui-select" style={{ flex: 1 }} value={h.severity} onChange={e => patchHazard(i, hi, { severity: (e.target as HTMLSelectElement).value })} title="Severity">
-                            <option value="">Severity</option>{SCALE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                          </select>
+                          <Select style={{ flex: 1 }} value={h.likelihood} onChange={value => patchHazard(i, hi, { likelihood: value })}
+                            options={[{ value: '', label: 'Likelihood' }, ...SCALE_OPTIONS]} aria-label="Likelihood" />
+                          <Select style={{ flex: 1 }} value={h.severity} onChange={value => patchHazard(i, hi, { severity: value })}
+                            options={[{ value: '', label: 'Severity' }, ...SCALE_OPTIONS]} aria-label="Severity" />
                           {l > 0 && sv > 0 && <RiskScorePill likelihood={l} severity={sv} />}
                         </div>
                         <div style={{ marginTop: '8px', paddingLeft: '10px', borderLeft: '2px solid var(--border)', display: 'grid', gap: '6px' }}>
@@ -459,9 +458,8 @@ export function NewJsaWizard({ open, onClose, prefill }: { open: boolean; onClos
                             <div key={ci} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                               <TextInput style={{ flex: 1 }} placeholder="Control measure" value={c.description}
                                 onInput={value => patchControl(i, hi, ci, { description: value })} />
-                              <select class="ui-select" style={{ width: '140px' }} value={c.controlType} onChange={e => patchControl(i, hi, ci, { controlType: (e.target as HTMLSelectElement).value })}>
-                                {CONTROL_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                              </select>
+                              <Select style={{ width: '140px' }} value={c.controlType} onChange={value => patchControl(i, hi, ci, { controlType: value })}
+                                options={CONTROL_TYPES} aria-label="Control type" />
                               <button class="hse-btn-icon-remove" onClick={() => removeControl(i, hi, ci)} aria-label="Remove control"><i class="fas fa-xmark" /></button>
                             </div>
                           ))}

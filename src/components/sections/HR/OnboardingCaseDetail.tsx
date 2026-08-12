@@ -16,7 +16,7 @@
 import { type VNode } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
-import { Badge, PageHeader, Modal, Field, FormGrid, TextInput, SelectInput, Button, type BadgeTone } from '@ui';
+import { Badge, PageHeader, Modal, Field, FormGrid, Select, TextInput, SelectInput, Button, type BadgeTone } from '@ui';
 import {
   WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget, placeWidgetsAtBottom,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeDef, type WidgetSizeKey,
@@ -417,25 +417,20 @@ export function OnboardingCaseDetail({
         <FormGrid>
           <Field label="Action name" wide><TextInput value={actionForm.actionName} onInput={v => setActionForm(f => ({ ...f, actionName: v }))} placeholder="e.g. Return company laptop" /></Field>
           <Field label="Type">
-            <select class="ui-select" value={actionForm.actionType} onChange={e => setActionForm(f => ({ ...f, actionType: (e.target as HTMLSelectElement).value as OnboardingActionType }))}>
-              {(['custom_task', 'custom_checklist_item', 'custom_external_action', 'custom_handoff', 'custom_document_request', 'custom_training_request', 'custom_approval', 'custom_notification'] as OnboardingActionType[])
-                .map(t => <option key={t} value={t}>{humanize(t)}</option>)}
-            </select>
+            <Select value={actionForm.actionType} onChange={actionType => setActionForm(f => ({ ...f, actionType: actionType as OnboardingActionType }))}
+              options={(['custom_task', 'custom_checklist_item', 'custom_external_action', 'custom_handoff', 'custom_document_request', 'custom_training_request', 'custom_approval', 'custom_notification'] as OnboardingActionType[]).map(value => ({ value, label: humanize(value) }))} />
           </Field>
           <Field label="Priority">
             <SelectInput value={actionForm.priority} onInput={v => setActionForm(f => ({ ...f, priority: v as OnboardingActionPriority }))} options={['low', 'normal', 'high', 'critical']} />
           </Field>
           <Field label="Owner type">
-            <select class="ui-select" value={actionForm.ownerType} onChange={e => setActionForm(f => ({ ...f, ownerType: (e.target as HTMLSelectElement).value as OnboardingOwnerType }))}>
-              {(['role', 'employee', 'department', 'system', 'external'] as OnboardingOwnerType[]).map(t => <option key={t} value={t}>{humanize(t)}</option>)}
-            </select>
+            <Select value={actionForm.ownerType} onChange={ownerType => setActionForm(f => ({ ...f, ownerType: ownerType as OnboardingOwnerType }))}
+              options={(['role', 'employee', 'department', 'system', 'external'] as OnboardingOwnerType[]).map(value => ({ value, label: humanize(value) }))} />
           </Field>
           {actionForm.ownerType === 'employee'
             ? <Field label="Owner (employee)">
-                <select class="ui-select" value={actionForm.ownerEmployeeId} onChange={e => setActionForm(f => ({ ...f, ownerEmployeeId: (e.target as HTMLSelectElement).value }))}>
-                  <option value="">Select…</option>
-                  {employees.map(e => <option key={e.id} value={e.id}>{e.full_name ?? e.email ?? e.id}</option>)}
-                </select>
+                <Select value={actionForm.ownerEmployeeId} onChange={ownerEmployeeId => setActionForm(f => ({ ...f, ownerEmployeeId }))}
+                  options={[{ value: '', label: 'Select…' }, ...employees.map(e => ({ value: e.id, label: e.full_name ?? e.email ?? e.id }))]} />
               </Field>
             : actionForm.ownerType === 'role'
               ? <Field label="Owner role"><TextInput value={actionForm.ownerRole} onInput={v => setActionForm(f => ({ ...f, ownerRole: v }))} placeholder="e.g. hr, it, supervisor" /></Field>

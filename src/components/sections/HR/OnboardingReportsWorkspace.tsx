@@ -12,7 +12,7 @@
  */
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
-import { DateInput, PageHeader, exportCsv, Button } from '@ui';
+import { DateInput, PageHeader, Select, exportCsv, Button } from '@ui';
 import { can } from '@lib/permissions';
 import { useOnboardingReportList, useOnboardingReport, useOnboardingPackages, hrOnboardingApi } from '@api/hr/onboarding';
 import type { OnboardingReportKey, RunOnboardingReportArgs, OnboardingReportColumn, OnboardingReportChart } from '../../../../types/hrOnboarding';
@@ -121,14 +121,8 @@ export function OnboardingReportsWorkspace({ onBack, onToast }: { onBack: () => 
       <div class="obx-toolbar">
         <label class="obx-meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>From <DateInput value={dateFrom} onChange={setDateFrom} /></label>
         <label class="obx-meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>To <DateInput value={dateTo} onChange={setDateTo} /></label>
-        <select class="ui-select" value={pkgKey} onChange={e => setPkgKey((e.target as HTMLSelectElement).value)}>
-          <option value="">All packages</option>
-          {packages.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
-        </select>
-        <select class="ui-select" value={status} onChange={e => setStatus((e.target as HTMLSelectElement).value)}>
-          <option value="">All statuses</option>
-          {CASE_STATUSES.map(s => <option key={s} value={s}>{humanize(s)}</option>)}
-        </select>
+        <Select value={pkgKey} onChange={setPkgKey} options={[{ value: '', label: 'All packages' }, ...packages.map(p => ({ value: p.key, label: p.label }))]} aria-label="Filter report by package" />
+        <Select value={status} onChange={setStatus} options={[{ value: '', label: 'All statuses' }, ...CASE_STATUSES.map(value => ({ value, label: humanize(value) }))]} aria-label="Filter report by status" />
       </div>
 
       <div class="obx-reports">
