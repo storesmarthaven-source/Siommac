@@ -2,7 +2,7 @@
 
 # payroll Module Map
 
-Source fingerprint: `465a0bbae2e3ae5fe5b8d3b0`
+Source fingerprint: `68d92134193d7877b93489d7`
 
 Files: 196 | Symbols: 1986 | Widgets: 11 | Unique mounted endpoints: 140 | Route definitions: 140 mounted + 0 unmounted | API calls: 2 | DB objects: 260 | E2E suites: 29
 
@@ -225,7 +225,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `PayPolicySetup` | function / component | `src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx:53` | `-` |
 | `PayPolicyWizard` | function / component | `src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx:78` | `-` |
 | `SodChainDialog` | function / component | `src/components/sections/Finance/payroll/setup/SodChainDialog.tsx:29` | `-` |
-| `SodChangeWizard` | function / component | `src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx:40` | `-` |
+| `SodChangeWizard` | function / component | `src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx:38` | `-` |
 | `SodPolicyPanel` | function / component | `src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx:37` | `-` |
 | `WorkCalendarPage` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:55` | `-` |
 | `WorkCalendarSetup` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:66` | `-` |
@@ -535,7 +535,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx` | 432 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx` | 475 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/SodChainDialog.tsx` | 114 |
-| frontend-page | `src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx` | 205 |
+| frontend-page | `src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx` | 203 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx` | 241 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.test.tsx` | 203 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx` | 874 |

@@ -7630,13 +7630,13 @@ sidebar	function	payroll	false		src/components/sections/Finance/payroll/setup/Pa
 SEAT_SHORT	object	payroll	false		src/components/sections/Finance/payroll/setup/SodChainDialog.tsx	24	
 SodChainDialog	function	payroll	true	component	src/components/sections/Finance/payroll/setup/SodChainDialog.tsx	29	
 nameOf	function	payroll	false		src/components/sections/Finance/payroll/setup/SodChainDialog.tsx	37	SodChainDialog
-SEAT_SHORT	object	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	26	
-LEVEL_TITLE	object	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	31	
-LEVEL_DETAIL	object	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	32	
-Step	type	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	38	
-SodChangeWizard	function	payroll	true	component	src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	40	
-fitFor	function	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	53	SodChangeWizard
-next	function	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	67	SodChangeWizard
+SEAT_SHORT	object	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	24	
+LEVEL_TITLE	object	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	29	
+LEVEL_DETAIL	object	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	30	
+Step	type	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	36	
+SodChangeWizard	function	payroll	true	component	src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	38	
+fitFor	function	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	51	SodChangeWizard
+next	function	payroll	false		src/components/sections/Finance/payroll/setup/SodChangeWizard.tsx	65	SodChangeWizard
 LEVELS	array	payroll	false		src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx	29	
 ALL_ROLES	array	payroll	false		src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx	35	
 SodPolicyPanel	function	payroll	true	component	src/components/sections/Finance/payroll/setup/SodPolicyPanel.tsx	37	

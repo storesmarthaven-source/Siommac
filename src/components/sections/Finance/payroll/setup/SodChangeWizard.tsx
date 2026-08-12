@@ -18,9 +18,7 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import './sodChain.css';
-import { Modal } from '@ui/components/Modal';
-import { Button } from '@ui/components/Button';
-import { Radio } from '@ui';
+import { Button, Modal, Radio } from '@ui';
 import type { PayrollSodChainStep, PayrollSodLevelFeasibility } from '@api/finance/payroll';
 
 const SEAT_SHORT: Record<PayrollSodChainStep['key'], string> = {
