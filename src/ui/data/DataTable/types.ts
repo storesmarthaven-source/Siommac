@@ -33,6 +33,8 @@ export interface DataTableColumn<T> {
   minWidth?: number;
   maxWidth?: number;
   align?: 'left' | 'center' | 'right';
+  /** Keep an identity column visible while the table scrolls horizontally. */
+  pinned?: boolean;
   sortable?: boolean;
   /** Hidden by default; the column chooser can bring it back. */
   hidden?: boolean;
@@ -166,6 +168,8 @@ export interface DataTableProps<T> {
   emptyState?: DataTableEmptyState;
   /** Accessible name for the table. */
   label: string;
+  /** Module-specific filter controls placed after search and before actions. */
+  toolbarContent?: ComponentChildren;
   /** Extra toolbar content, right-aligned — a "New" button, an export. */
   toolbarActions?: ComponentChildren;
   class?: string;

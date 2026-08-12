@@ -97,10 +97,12 @@ export const dataTableDef: ComponentDef = {
     replaces: ['.ui-dt-legacy'],
     deprecatedImports: ['@shared/DataTable', 'HrfinTable', 'RegisterTable', 'LegacyDataTable'],
     rawPatterns: ['<table'],
-    nextSurface: 'HSE Incidents',
+    nextSurface: 'Finance Statutory Configuration registers',
     notes: [
       'Four table implementations and 186 raw <table> exist today. Migrate a surface only when its local table CSS is deleted too — see RECIPES.md §4.',
       'No virtualisation, deliberately. Server pagination covers the datasets SIOMAC has, and virtualisation costs accessibility, sticky headers, keyboard navigation and testability. Build it when a measured page needs it.',
+      'The Employees and Attendance History registers are the first clean family: both now use canonical JSX cells, sorting and pagination; the imperative jQuery/DataTables wrapper and its HTML-string rendering path are deleted.',
+      'Pinned identity columns are a canonical column capability, not module CSS. The four remaining LegacyDataTable consumers are isolated to StatutoryConfigOverview.tsx for the next complete family.',
     ],
   },
 

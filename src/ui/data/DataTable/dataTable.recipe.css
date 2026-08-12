@@ -126,6 +126,15 @@
   .ui-dt-th--right  { text-align: right; }
   .ui-dt-th--check, .ui-dt-td--check { width: 40px; padding-right: 0; }
   .ui-dt-th--actions, .ui-dt-td--actions { width: 48px; text-align: right; }
+  .ui-dt-th--pinned,
+  .ui-dt-td--pinned {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--ui-dt-bg);
+    box-shadow: 1px 0 0 var(--ui-dt-grid-line);
+  }
+  .ui-dt-th--pinned { z-index: calc(var(--z-sticky) + 1); background: var(--ui-dt-header-bg); }
 
   /* Sticky header: the cells stick, not the row — `position: sticky` on a <tr>
      does nothing in most browsers. */

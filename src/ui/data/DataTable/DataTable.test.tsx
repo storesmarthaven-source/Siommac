@@ -60,6 +60,16 @@ describe('DataTable — structure', () => {
     table({ columns: cols });
     expect(screen.queryByRole('columnheader', { name: 'Extra' })).toBeNull();
   });
+
+  it('pins identity columns through the canonical column contract', () => {
+    const columns: DataTableColumn<Row>[] = [
+      { ...COLUMNS[0]!, pinned: true },
+      ...COLUMNS.slice(1),
+    ];
+    table({ columns });
+    expect(screen.getByRole('columnheader', { name: /Name/ }).classList.contains('ui-dt-th--pinned')).toBe(true);
+    expect(screen.getAllByRole('cell')[0]!.classList.contains('ui-dt-td--pinned')).toBe(true);
+  });
 });
 
 describe('DataTable — capabilities are optional', () => {

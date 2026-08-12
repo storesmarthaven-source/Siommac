@@ -23,7 +23,6 @@
 import { type VNode }                               from 'preact';
 import { useState, useMemo, useCallback }            from 'preact/hooks';
 import { Spinner }                                   from '@shared/Spinner';
-import { DataTable }                                 from '@shared/DataTable';
 import { confirm }                                   from '@shared/ConfirmDialog';
 import { useCan }                                     from '@lib/permissions';
 import type { EmployeeListItem, UserRole }            from './types';
@@ -32,67 +31,52 @@ import { StatCard }                                  from './StatCard';
 import { EmployeeCard }                              from './EmployeeCard';
 import { EmployeeDrawer }                            from './EmployeeDrawer';
 import { EmployeeModal }                             from './EmployeeModal';
-import { TODAY_STATUS_LABEL, TODAY_STATUS_COLOR }    from './utils';
-import { Button } from '@ui';
+import { TODAY_STATUS_LABEL }                        from './utils';
+import { Badge, Button, DataTable, type DataTableColumn, type DataTableSort } from '@ui';
 
 // ── Column definitions for DataTable ─────────────────────────────────────────
 
 type EmpRow = EmployeeListItem;
 
-const COLUMNS = [
+const COLUMNS: DataTableColumn<EmpRow>[] = [
   {
-    title: '#',
-    data:  'idx' as keyof EmpRow,
+    id: 'idx', header: '#', cell: row => row.idx,
+    sortValue: row => row.idx,
+    sortable: true,
     width: '50px',
-    orderable: true,
   },
   {
-    title: 'Employee',
-    data:  null,
-    render: (_v: unknown, _t: string, row: EmpRow) =>
-      `<div style="display:flex;align-items:center;gap:10px">
-         <img src="${row.profileImage || ''}" alt="${row.fullName}"
-              onerror="this.style.display='none'"
-              style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0"
-              ${row.profileImage ? '' : 'style="display:none"'} />
-         <div>
-           <div style="font-weight:600;font-size:13px;color:#111827">${row.fullName}</div>
-           <div style="font-size:11px;color:#6b7280">@${row.username}</div>
-           ${row.email ? `<div style="font-size:11px;color:#9ca3af">${row.email}</div>` : ''}
-         </div>
-       </div>`,
+    id: 'employee', header: 'Employee', pinned: true, alwaysVisible: true,
+    sortValue: row => row.fullName, sortable: true,
+    cell: row => (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        {row.profileImage && (
+          <img src={row.profileImage} alt="" onError={e => { e.currentTarget.style.display = 'none'; }}
+            style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+        )}
+        <div>
+          <div style={{ fontWeight: 600, fontSize: 13, color: '#111827' }}>{row.fullName}</div>
+          <div style={{ fontSize: 11, color: '#6b7280' }}>@{row.username}</div>
+          {row.email && <div style={{ fontSize: 11, color: '#9ca3af' }}>{row.email}</div>}
+        </div>
+      </div>
+    ),
   },
-  { title: 'Dept',     data: 'department'     as keyof EmpRow },
-  { title: 'Position', data: 'position'       as keyof EmpRow },
+  { id: 'department', header: 'Dept', cell: row => row.department, sortValue: row => row.department, sortable: true },
+  { id: 'position', header: 'Position', cell: row => row.position, sortValue: row => row.position, sortable: true },
   {
-    title: 'Role',
-    data:  'role' as keyof EmpRow,
-    render: (v: unknown) => {
-      const role = String(v);
-      const color = role === 'admin' ? '#7c3aed' : role === 'manager' ? '#2563eb' : '#374151';
-      return `<span style="font-size:11px;font-weight:600;color:${color};background:${color}18;padding:2px 8px;border-radius:999px">${role.charAt(0).toUpperCase() + role.slice(1)}</span>`;
-    },
+    id: 'role', header: 'Role', sortValue: row => row.role, sortable: true,
+    cell: row => <Badge tone={row.role === 'admin' ? 'accent' : row.role === 'manager' ? 'info' : 'neutral'}>{row.role.charAt(0).toUpperCase() + row.role.slice(1)}</Badge>,
   },
   {
-    title: 'Status',
-    data:  'status' as keyof EmpRow,
-    render: (v: unknown) => {
-      const s = String(v);
-      const c = s === 'Active' ? '#16a34a' : '#9ca3af';
-      return `<span style="font-size:11px;font-weight:600;color:${c};background:${c}18;padding:2px 8px;border-radius:999px">${s}</span>`;
-    },
+    id: 'status', header: 'Status', sortValue: row => row.status, sortable: true,
+    cell: row => <Badge tone={row.status === 'Active' ? 'success' : 'neutral'}>{row.status}</Badge>,
   },
   {
-    title: 'Today',
-    data:  'todayStatus' as keyof EmpRow,
-    render: (v: unknown) => {
-      const s = v as EmployeeListItem['todayStatus'];
-      const c = TODAY_STATUS_COLOR[s];
-      const l = TODAY_STATUS_LABEL[s];
-      return `<span style="font-size:11px;font-weight:600;color:${c};background:${c}18;padding:2px 8px;border-radius:999px">${l}</span>`;
-    },
+    id: 'todayStatus', header: 'Today', sortValue: row => row.todayStatus, sortable: true,
+    cell: row => <Badge tone={row.todayStatus === 'checkedin' ? 'success' : row.todayStatus === 'checkedout' ? 'info' : 'neutral'}>{TODAY_STATUS_LABEL[row.todayStatus]}</Badge>,
   },
-] as const;
+];
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -123,6 +107,9 @@ export function EmployeesSection({ currentRole: _currentRole, currentUsername: _
   const [addOpen,         setAddOpen]        = useState(false);
   const [editUsername,    setEditUsername]   = useState<string | null>(null);
   const [editListItem,    setEditListItem]   = useState<EmployeeListItem | null>(null);
+  const [tableSort,       setTableSort]      = useState<DataTableSort | null>(null);
+  const [tablePage,       setTablePage]      = useState(1);
+  const [tablePageSize,   setTablePageSize]  = useState(25);
 
   // Fetch detail for edit modal
   const { data: editDetail } = useEmployee(editUsername);
@@ -230,7 +217,7 @@ export function EmployeesSection({ currentRole: _currentRole, currentUsername: _
           <input
             type="search"
             value={search}
-            onInput={e => setSearch((e.target as HTMLInputElement).value)}
+            onInput={e => { setSearch((e.target as HTMLInputElement).value); setTablePage(1); }}
             placeholder="Search by name, position…"
             aria-label="Search employees"
           />
@@ -241,7 +228,7 @@ export function EmployeesSection({ currentRole: _currentRole, currentUsername: _
           <select
             class="emp-filter-select"
             value={roleFilter}
-            onChange={e => setRoleFilter((e.target as HTMLSelectElement).value as '' | UserRole)}
+            onChange={e => { setRoleFilter((e.target as HTMLSelectElement).value as '' | UserRole); setTablePage(1); }}
             aria-label="Filter by role"
           >
             <option value="">All Roles</option>
@@ -253,7 +240,7 @@ export function EmployeesSection({ currentRole: _currentRole, currentUsername: _
           <select
             class="emp-filter-select"
             value={statusFilter}
-            onChange={e => setStatusFilter((e.target as HTMLSelectElement).value as '' | 'Active' | 'Inactive')}
+            onChange={e => { setStatusFilter((e.target as HTMLSelectElement).value as '' | 'Active' | 'Inactive'); setTablePage(1); }}
             aria-label="Filter by status"
           >
             <option value="">All Status</option>
@@ -309,10 +296,13 @@ export function EmployeesSection({ currentRole: _currentRole, currentUsername: _
         </div>
       ) : (
         <DataTable
-          id="employees-datatable"
-          columns={COLUMNS as unknown as import('@shared/DataTable').DataTableColumn<EmpRow>[]}
-          data={filtered}
-          emptyMessage="No employees match the current filters."
+          label="Employees"
+          columns={COLUMNS}
+          rows={filtered}
+          getRowId={row => row.id}
+          sorting={{ value: tableSort, onChange: sort => { setTableSort(sort); setTablePage(1); }, client: true }}
+          pagination={{ page: tablePage, pageSize: tablePageSize, onPageChange: setTablePage, onPageSizeChange: setTablePageSize }}
+          emptyState={{ title: 'No employees', text: 'No employees match the current filters.' }}
         />
       )}
 

@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `02927813051586d7e72c95c8b24e7e85682f866d`  
-Source fingerprint: `f06f04f27d18df759db1c415`  
+Source HEAD: `5d245cb7a71fed5aa97bd5160d3525f395626386`  
+Source fingerprint: `dffd549e844a868d762ddbb8`  
 Generator version: `1`
 
 ## Use
@@ -19,7 +19,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1461 | 14687 | 63 | 978 | 979 | 17 | 356 | 1436 | 91 | 2742 |
+| 1459 | 14677 | 63 | 978 | 979 | 17 | 356 | 1436 | 91 | 2742 |
 
 ## Modules
 
@@ -34,7 +34,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | security | 46 | 387 | 0 | 51 | 51 | 31 | 65 | 4 | [open](modules/security.md) |
 | settings | 44 | 252 | 0 | 26 | 26 | 18 | 21 | 2 | [open](modules/settings.md) |
 | widgets | 72 | 581 | 21 | 15 | 15 | 11 | 14 | 1 | [open](modules/widgets.md) |
-| platform | 404 | 3675 | 12 | 38 | 53 | 50 | 327 | 0 | [open](modules/platform.md) |
+| platform | 402 | 3665 | 12 | 38 | 53 | 50 | 327 | 0 | [open](modules/platform.md) |
 | testing | 47 | 224 | 0 | 0 | 0 | 0 | 0 | 16 | [open](modules/testing.md) |
 | enterprise | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | [open](modules/enterprise.md) |
 
@@ -98,11 +98,11 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `platform.weather.wind` | Weather · Wind | registry | widgets | `metricWidget('wind')` | `src/ui/widgets/registry.weather.tsx:518` |
 | `row-actions` | Icon-only row actions | registry | platform | `() => (         <div style={{ display: 'flex', gap: '4px' }}>           <Button variant="ghost" size="sm" iconOnly aria-label="Edit" iconLeft={<LucideIcon name="Pencil" />} />           <Button variant="ghost" size="sm" iconOnly aria-label="Duplicate" iconLeft={<LucideIcon name="Copy" />} />           <Button variant="ghost" size="sm" iconOnly aria-label="More actions" iconLeft={<LucideIcon name="EllipsisVertical" />} />         </div>       )` | `src/ui/registry/actions.defs.tsx:214` |
 | `select-all` | Select-all with a partial selection | registry | platform | `() => (         <CheckboxGroup           label="Modules"           selectAllLabel="All modules"           values={['hr']}           onChange={noop}           options={[             { value: 'hr', label: 'Human Resources' },             { value: 'hse', label: 'HSE' },             { value: 'fin', label: 'Finance', disabled: true },           ]}         />       )` | `src/ui/registry/forms.defs.tsx:108` |
-| `status-set` | A status set | registry | platform | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>           <Badge tone="success" dot>Active</Badge>           <Badge tone="warning" dot>Probation</Badge>           <Badge tone="info" dot>On leave</Badge>           <Badge tone="neutral" dot>Inactive</Badge>           <Badge tone="danger" dot>Terminated</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:330` |
+| `status-set` | A status set | registry | platform | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>           <Badge tone="success" dot>Active</Badge>           <Badge tone="warning" dot>Probation</Badge>           <Badge tone="info" dot>On leave</Badge>           <Badge tone="neutral" dot>Inactive</Badge>           <Badge tone="danger" dot>Terminated</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:332` |
 | `test.widget` | Test | registry | enterprise/test | `() => <div>live</div>` | `src/ui/widgets/platform.test.tsx:14` |
 | `toggle-and-link` | Toggle and link — props, not components | registry | platform | `() => (         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>           <Button variant="outline" pressed iconLeft={<LucideIcon name="Filter" />}>Only my cases</Button>           <Button variant="link" href="#audit" iconRight={<LucideIcon name="ArrowRight" />}>View audit trail</Button>         </div>       )` | `src/ui/registry/actions.defs.tsx:243` |
 | `tone-scale` | Tone is meaning, not decoration | registry | platform | `() => (         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>           {(['success', 'warning', 'danger', 'info'] as CardTone[]).map(tone => (             <Card key={tone} variant="metric" density="compact" tone={tone}               header={<CardHeader title={`${tone[0]!.toUpperCase()}${tone.slice(1)} signal`} level={null} />}>               <Figure value="7" caption="this week" />             </Card>           ))}         </div>       )` | `src/ui/registry/containers.defs.tsx:239` |
-| `variants` | Soft, solid, outline — and tags | registry | platform | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>           <Badge tone="danger" variant="soft">Overdue</Badge>           <Badge tone="danger" variant="solid">Critical</Badge>           <Badge tone="danger" variant="outline">Escalated</Badge>           <Badge tone="accent" size="sm" onRemove={noop}>Night shift</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:344` |
+| `variants` | Soft, solid, outline — and tags | registry | platform | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>           <Badge tone="danger" variant="soft">Overdue</Badge>           <Badge tone="danger" variant="solid">Critical</Badge>           <Badge tone="danger" variant="outline">Escalated</Badge>           <Badge tone="accent" size="sm" onRemove={noop}>Night shift</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:346` |
 | `vertical` | Vertical is an orientation, not a component | registry | platform | `() => (         <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>           <Tabs             id="ex-vertical"             label="Settings sections"             orientation="vertical"             items={[               { id: 'general', label: 'General', icon: <LucideIcon name="Settings" /> },               { id: 'security', label: 'Security', icon: <LucideIcon name="ShieldCheck" />, badge: 2 },               { id: 'notifications', label: 'Notifications', icon: <LucideIcon name="Bell" /> },             ]}             value="security"             onChange={noop}           />           <TabPanel tabsId="ex-vertical" tabId="security" value="security">             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Two security settings need review.</span>           </TabPanel>         </div>       )` | `src/ui/registry/navigation.defs.tsx:227` |
 | `w.floored` |  | local | widgets | `() => <div />` | `src/ui/widgets/platform.test.tsx:182` |
 

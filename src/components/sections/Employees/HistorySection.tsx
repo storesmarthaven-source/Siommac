@@ -20,54 +20,42 @@
 
 import { type VNode }                   from 'preact';
 import { useState, useMemo, useCallback } from 'preact/hooks';
-import { DataTable }                     from '@shared/DataTable';
 import { Spinner }                       from '@shared/Spinner';
+import { Badge, DataTable, type DataTableColumn, type DataTableSort } from '@ui';
 import type { HistoryRecord, AttendanceStatus } from './types';
 import { useMyHistory }                  from './hooks';
 import { StatCard }                      from './StatCard';
 import {
   fmtLocalTime, dayOfWeek, downloadCsv,
-  ATTENDANCE_STATUS_COLOR,
 } from './utils';
 
 // ── Column definitions ────────────────────────────────────────────────────────
 
-const COLUMNS = [
-  { title: 'Date',      data: 'date'      as keyof HistoryRecord },
-  { title: 'Day',       data: null, render: (_v: unknown, _t: string, row: HistoryRecord) => dayOfWeek(row.date) },
-  { title: 'Check In',  data: null, render: (_v: unknown, _t: string, row: HistoryRecord) => row.checkIn  ? fmtLocalTime(row.checkIn)  : '—' },
-  { title: 'Check Out', data: null, render: (_v: unknown, _t: string, row: HistoryRecord) => row.checkOut ? fmtLocalTime(row.checkOut) : '—' },
-  { title: 'Hours',     data: null, render: (_v: unknown, _t: string, row: HistoryRecord) => row.hours != null ? `${row.hours.toFixed(1)}h` : '—' },
+const COLUMNS: DataTableColumn<HistoryRecord>[] = [
+  { id: 'date', header: 'Date', cell: row => row.date, sortValue: row => row.date, sortable: true },
+  { id: 'day', header: 'Day', cell: row => dayOfWeek(row.date), sortValue: row => dayOfWeek(row.date), sortable: true },
+  { id: 'checkIn', header: 'Check In', cell: row => row.checkIn ? fmtLocalTime(row.checkIn) : '—', sortValue: row => row.checkIn, sortable: true },
+  { id: 'checkOut', header: 'Check Out', cell: row => row.checkOut ? fmtLocalTime(row.checkOut) : '—', sortValue: row => row.checkOut, sortable: true },
+  { id: 'hours', header: 'Hours', align: 'right', cell: row => row.hours != null ? `${row.hours.toFixed(1)}h` : '—', sortValue: row => row.hours, sortable: true },
   {
-    title: 'Status',
-    data:  null,
-    render: (_v: unknown, _t: string, row: HistoryRecord) => {
-      if (!row.status) return '—';
-      const meta = ATTENDANCE_STATUS_COLOR[row.status];
-      return `<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:${meta.bg};color:${meta.text}">${row.status.charAt(0).toUpperCase() + row.status.slice(1)}</span>`;
-    },
+    id: 'status', header: 'Status', sortValue: row => row.status, sortable: true,
+    cell: row => row.status
+      ? <Badge tone={row.status === 'present' ? 'success' : row.status === 'late' ? 'warning' : 'danger'}>{row.status.charAt(0).toUpperCase() + row.status.slice(1)}</Badge>
+      : '—',
   },
   {
-    title: 'In Photo',
-    data:  null,
-    orderable: false,
-    searchable: false,
-    render: (_v: unknown, _t: string, row: HistoryRecord) =>
-      row.checkInPhotoUrl
-        ? `<a href="${row.checkInPhotoUrl}" target="_blank" rel="noopener"><img src="${row.checkInPhotoUrl}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #e5e7eb" alt="Check-in photo"></a>`
-        : '<i class="fas fa-camera-slash" style="color:#d1d5db;font-size:13px"></i>',
+    id: 'checkInPhoto', header: 'In Photo', align: 'center',
+    cell: row => row.checkInPhotoUrl
+      ? <a href={row.checkInPhotoUrl} target="_blank" rel="noopener"><img src={row.checkInPhotoUrl} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '2px solid #e5e7eb' }} alt="Check-in photo" /></a>
+      : <i class="fas fa-camera-slash" style={{ color: '#d1d5db', fontSize: 13 }} aria-label="No check-in photo" />,
   },
   {
-    title: 'Out Photo',
-    data:  null,
-    orderable: false,
-    searchable: false,
-    render: (_v: unknown, _t: string, row: HistoryRecord) =>
-      row.checkOutPhotoUrl
-        ? `<a href="${row.checkOutPhotoUrl}" target="_blank" rel="noopener"><img src="${row.checkOutPhotoUrl}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #e5e7eb" alt="Check-out photo"></a>`
-        : '<i class="fas fa-camera-slash" style="color:#d1d5db;font-size:13px"></i>',
+    id: 'checkOutPhoto', header: 'Out Photo', align: 'center',
+    cell: row => row.checkOutPhotoUrl
+      ? <a href={row.checkOutPhotoUrl} target="_blank" rel="noopener"><img src={row.checkOutPhotoUrl} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '2px solid #e5e7eb' }} alt="Check-out photo" /></a>
+      : <i class="fas fa-camera-slash" style={{ color: '#d1d5db', fontSize: 13 }} aria-label="No check-out photo" />,
   },
-] as const;
+];
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -76,6 +64,9 @@ export function HistorySection(): VNode {
 
   const [search,       setSearch]      = useState('');
   const [statusFilter, setStatusFilter] = useState<'' | AttendanceStatus>('');
+  const [tableSort, setTableSort] = useState<DataTableSort | null>(null);
+  const [tablePage, setTablePage] = useState(1);
+  const [tablePageSize, setTablePageSize] = useState(25);
 
   // ── Filters ───────────────────────────────────────────────────────────────
   const filtered = useMemo(() => {
@@ -118,7 +109,7 @@ export function HistorySection(): VNode {
     downloadCsv(rows, `attendance_history_${new Date().toISOString().slice(0, 10)}.csv`);
   }, [history]);
 
-  const handleReset = useCallback(() => { setSearch(''); setStatusFilter(''); }, []);
+  const handleReset = useCallback(() => { setSearch(''); setStatusFilter(''); setTablePage(1); }, []);
 
   if (error) {
     return (
@@ -183,7 +174,7 @@ export function HistorySection(): VNode {
           <input
             type="search"
             value={search}
-            onInput={e => setSearch((e.target as HTMLInputElement).value)}
+            onInput={e => { setSearch((e.target as HTMLInputElement).value); setTablePage(1); }}
             placeholder="Search by date or day…"
             aria-label="Search history"
             style={{ width: '100%', padding: '7px 10px 7px 30px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box' }}
@@ -191,7 +182,7 @@ export function HistorySection(): VNode {
         </div>
         <select
           value={statusFilter}
-          onChange={e => setStatusFilter((e.target as HTMLSelectElement).value as '' | AttendanceStatus)}
+          onChange={e => { setStatusFilter((e.target as HTMLSelectElement).value as '' | AttendanceStatus); setTablePage(1); }}
           aria-label="Filter by status"
           style={{ padding: '7px 10px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px', background: '#fff', cursor: 'pointer' }}
         >
@@ -218,10 +209,13 @@ export function HistorySection(): VNode {
         </div>
       ) : (
         <DataTable
-          id="history-datatable"
-          columns={COLUMNS as unknown as import('@shared/DataTable').DataTableColumn<HistoryRecord>[]}
-          data={filtered}
-          emptyMessage="No attendance records match the current filters."
+          label="Attendance history"
+          columns={COLUMNS}
+          rows={filtered}
+          getRowId={row => row.date}
+          sorting={{ value: tableSort, onChange: sort => { setTableSort(sort); setTablePage(1); }, client: true }}
+          pagination={{ page: tablePage, pageSize: tablePageSize, onPageChange: setTablePage, onPageSizeChange: setTablePageSize }}
+          emptyState={{ title: 'No attendance records', text: 'No attendance records match the current filters.' }}
         />
       )}
     </div>

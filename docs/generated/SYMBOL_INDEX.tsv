@@ -6994,13 +6994,13 @@ inputStyle	function	hr	false		src/components/sections/Employees/EmployeeModal.ts
 cancelBtnStyle	object	hr	false		src/components/sections/Employees/EmployeeModal.tsx	717	
 submitBtnStyle	function	hr	false		src/components/sections/Employees/EmployeeModal.tsx	728	
 outlineBtnStyle	function	hr	false		src/components/sections/Employees/EmployeeModal.tsx	746	
-EmpRow	type	hr	false		src/components/sections/Employees/EmployeesSection.tsx	40	
-COLUMNS	variable	hr	false	component	src/components/sections/Employees/EmployeesSection.tsx	42	
-EmployeesSectionProps	interface	hr	false		src/components/sections/Employees/EmployeesSection.tsx	99	
-EmployeesSection	function	hr	true	component	src/components/sections/Employees/EmployeesSection.tsx	104	
-ViewToggleBtn	function	hr	false	component	src/components/sections/Employees/EmployeesSection.tsx	350	
-COLUMNS	variable	hr	false	component	src/components/sections/Employees/HistorySection.tsx	35	
-HistorySection	function	hr	true	component	src/components/sections/Employees/HistorySection.tsx	74	
+EmpRow	type	hr	false		src/components/sections/Employees/EmployeesSection.tsx	39	
+COLUMNS	array	hr	false		src/components/sections/Employees/EmployeesSection.tsx	41	
+EmployeesSectionProps	interface	hr	false		src/components/sections/Employees/EmployeesSection.tsx	83	
+EmployeesSection	function	hr	true	component	src/components/sections/Employees/EmployeesSection.tsx	88	
+ViewToggleBtn	function	hr	false	component	src/components/sections/Employees/EmployeesSection.tsx	340	
+COLUMNS	array	hr	false		src/components/sections/Employees/HistorySection.tsx	34	
+HistorySection	function	hr	true	component	src/components/sections/Employees/HistorySection.tsx	62	
 useEmployeeList	function	hr	true	hook	src/components/sections/Employees/hooks.ts	40	
 useEmployee	function	hr	true	hook	src/components/sections/Employees/hooks.ts	50	
 useAddEmployee	function	hr	true	hook	src/components/sections/Employees/hooks.ts	61	
@@ -11554,16 +11554,6 @@ ConfirmOptions	interface	platform	true		src/components/shared/ConfirmDialog.tsx	
 confirm	function	platform	true		src/components/shared/ConfirmDialog.tsx	204	
 cleanup	function	platform	false		src/components/shared/ConfirmDialog.tsx	209	confirm
 Dialog	function	platform	false	component	src/components/shared/ConfirmDialog.tsx	218	confirm
-mockDestroy	variable	platform	false	test	src/components/shared/DataTable.test.tsx	16	
-mockDataTable	variable	platform	false	test	src/components/shared/DataTable.test.tsx	17	
-COLUMNS	array	platform	false	test	src/components/shared/DataTable.test.tsx	28	
-DATA	array	platform	false	test	src/components/shared/DataTable.test.tsx	33	
-DataTablesInstance	interface	platform	false		src/components/shared/DataTable.tsx	44	
-JQueryWithDataTable	interface	platform	false		src/components/shared/DataTable.tsx	47	
-DataTableColumn	interface	platform	true		src/components/shared/DataTable.tsx	51	
-DataTableProps	interface	platform	true		src/components/shared/DataTable.tsx	74	
-DT_DEFAULTS	object	platform	false		src/components/shared/DataTable.tsx	89	
-DataTable	function	platform	true	component	src/components/shared/DataTable.tsx	114	
 Bomb	function	platform	false	component,test	src/components/shared/ErrorBoundary.test.tsx	13	
 FallbackProps	interface	platform	true		src/components/shared/ErrorBoundary.tsx	36	
 ErrorBoundaryProps	interface	platform	true		src/components/shared/ErrorBoundary.tsx	42	
@@ -12674,26 +12664,26 @@ Row	interface	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	15
 ROWS	array	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	17	
 COLUMNS	array	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	23	
 table	function	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	29	
-sel	function	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	165	
-actions	function	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	223	
+sel	function	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	175	
+actions	function	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	233	
 DataTable	function	platform	true	component	src/ui/data/DataTable/DataTable.tsx	41	
-RowActions	function	platform	false	component	src/ui/data/DataTable/DataTable.tsx	228	
-DataTablePaginationBar	function	platform	false	component	src/ui/data/DataTable/DataTable.tsx	272	
+RowActions	function	platform	false	component	src/ui/data/DataTable/DataTable.tsx	229	
+DataTablePaginationBar	function	platform	false	component	src/ui/data/DataTable/DataTable.tsx	273	
 ToolbarProps	interface	platform	false		src/ui/data/DataTable/DataTableToolbar.tsx	26	
-DataTableToolbar	function	platform	true	component	src/ui/data/DataTable/DataTableToolbar.tsx	36	
-DataTableBulkBar	function	platform	true	component	src/ui/data/DataTable/DataTableToolbar.tsx	154	
+DataTableToolbar	function	platform	true	component	src/ui/data/DataTable/DataTableToolbar.tsx	37	
+DataTableBulkBar	function	platform	true	component	src/ui/data/DataTable/DataTableToolbar.tsx	157	
 DataTableColumn	interface	platform	true		src/ui/data/DataTable/types.ts	26	
-DataTableSort	interface	platform	true		src/ui/data/DataTable/types.ts	50	
-DataTableSorting	interface	platform	true		src/ui/data/DataTable/types.ts	55	
-DataTablePagination	interface	platform	true		src/ui/data/DataTable/types.ts	66	
-DataTableSelection	interface	platform	true		src/ui/data/DataTable/types.ts	81	
-DataTableBulkAction	interface	platform	true		src/ui/data/DataTable/types.ts	90	
-DataTableSearch	interface	platform	true		src/ui/data/DataTable/types.ts	99	
-DataTableFilter	interface	platform	true		src/ui/data/DataTable/types.ts	106	
-DataTableAction	interface	platform	true		src/ui/data/DataTable/types.ts	115	
-DataTableEmptyState	interface	platform	true		src/ui/data/DataTable/types.ts	124	
-DataTableDensity	type	platform	true		src/ui/data/DataTable/types.ts	132	
-DataTableProps	interface	platform	true		src/ui/data/DataTable/types.ts	136	
+DataTableSort	interface	platform	true		src/ui/data/DataTable/types.ts	52	
+DataTableSorting	interface	platform	true		src/ui/data/DataTable/types.ts	57	
+DataTablePagination	interface	platform	true		src/ui/data/DataTable/types.ts	68	
+DataTableSelection	interface	platform	true		src/ui/data/DataTable/types.ts	83	
+DataTableBulkAction	interface	platform	true		src/ui/data/DataTable/types.ts	92	
+DataTableSearch	interface	platform	true		src/ui/data/DataTable/types.ts	101	
+DataTableFilter	interface	platform	true		src/ui/data/DataTable/types.ts	108	
+DataTableAction	interface	platform	true		src/ui/data/DataTable/types.ts	117	
+DataTableEmptyState	interface	platform	true		src/ui/data/DataTable/types.ts	126	
+DataTableDensity	type	platform	true		src/ui/data/DataTable/types.ts	134	
+DataTableProps	interface	platform	true		src/ui/data/DataTable/types.ts	138	
 Params	interface	platform	false		src/ui/data/DataTable/useDataTable.ts	15	
 DataTableState	interface	platform	true		src/ui/data/DataTable/useDataTable.ts	25	
 compareValues	function	platform	false		src/ui/data/DataTable/useDataTable.ts	47	
@@ -13100,8 +13090,8 @@ STATUS_TONE	object	platform	false		src/ui/registry/data.defs.tsx	46
 COLUMNS	array	platform	false		src/ui/registry/data.defs.tsx	57	
 ROW_ACTIONS	function	platform	false	component	src/ui/registry/data.defs.tsx	80	
 dataTableDef	object	platform	true		src/ui/registry/data.defs.tsx	88	
-badgeDef	object	platform	true		src/ui/registry/data.defs.tsx	252	
-DATA_DEFS	array	platform	true		src/ui/registry/data.defs.tsx	360	
+badgeDef	object	platform	true		src/ui/registry/data.defs.tsx	254	
+DATA_DEFS	array	platform	true		src/ui/registry/data.defs.tsx	362	
 PropValue	type	platform	false		src/ui/registry/definitions.tsx	28	
 s	function	platform	false		src/ui/registry/definitions.tsx	29	
 b	function	platform	false		src/ui/registry/definitions.tsx	30	

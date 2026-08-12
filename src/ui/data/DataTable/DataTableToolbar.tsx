@@ -30,17 +30,18 @@ interface ToolbarProps<T> {
   hiddenIds: readonly string[];
   onToggleColumn: (id: string) => void;
   columnChooser?: boolean;
+  content?: preact.ComponentChildren;
   actions?: preact.ComponentChildren;
 }
 
 export function DataTableToolbar<T>({
-  search, filters, columns, hiddenIds, onToggleColumn, columnChooser, actions,
+  search, filters, columns, hiddenIds, onToggleColumn, columnChooser, content, actions,
 }: ToolbarProps<T>): VNode | null {
   const [chooserAnchor, setChooserAnchor] = useState<HTMLElement | null>(null);
   const [chooserOpen, setChooserOpen] = useState(false);
 
   const hasFilters = (filters?.length ?? 0) > 0;
-  if (!search && !hasFilters && !columnChooser && !actions) return null;
+  if (!search && !hasFilters && !columnChooser && !content && !actions) return null;
 
   const activeChips = (filters ?? []).flatMap(f =>
     f.values.map(v => ({
@@ -78,6 +79,8 @@ export function DataTableToolbar<T>({
             />
           </div>
         ))}
+
+        {content}
 
         <div class="ui-dt-toolbar-end">
           {actions}

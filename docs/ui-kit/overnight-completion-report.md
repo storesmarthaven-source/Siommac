@@ -204,6 +204,25 @@ belong to later HSE work. Card must not be reopened solely to chase those counts
 
 The next canonical component is DataTable.
 
+## DataTable programme â€” in progress
+
+First clean family completed:
+
+- migrated Employees and Attendance History from the imperative
+  `@shared/DataTable` wrapper to canonical DataTable;
+- replaced HTML-string cell renderers with typed Preact cells and canonical
+  badges, preserving client sorting and pagination;
+- added pinned identity columns as an explicit canonical column capability;
+- deleted the jQuery/CDN DataTables wrapper, its tests and barrel export;
+- reduced deprecated-import files from 91 to 89, module-local primitives from
+  27 to 26, and unmanaged raw tables from 213 to 210;
+- passed all 36 canonical DataTable tests with zero lint errors.
+
+The next complete family is the four lint-clean Finance Statutory Configuration
+registers that still use `LegacyDataTable`. The email-template table has an
+existing type contract mismatch and remains exact debt until its owning Studio
+surface is naturally touched.
+
 ## Remaining programme
 
 The overall mandate is not yet complete. After Card, continue automatically:

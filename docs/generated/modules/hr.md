@@ -2,7 +2,7 @@
 
 # hr Module Map
 
-Source fingerprint: `f06f04f27d18df759db1c415`
+Source fingerprint: `dffd549e844a868d762ddbb8`
 
 Files: 265 | Symbols: 3076 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 37 | DB objects: 196 | E2E suites: 16
 
@@ -701,8 +701,8 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Employees/EmployeeCard.tsx` | 119 |
 | frontend-page | `src/components/sections/Employees/EmployeeDrawer.tsx` | 172 |
 | frontend-page | `src/components/sections/Employees/EmployeeModal.tsx` | 761 |
-| frontend-page | `src/components/sections/Employees/EmployeesSection.tsx` | 368 |
-| frontend-page | `src/components/sections/Employees/HistorySection.tsx` | 230 |
+| frontend-page | `src/components/sections/Employees/EmployeesSection.tsx` | 358 |
+| frontend-page | `src/components/sections/Employees/HistorySection.tsx` | 224 |
 | frontend-page | `src/components/sections/Employees/ManagerDashboard.tsx` | 115 |
 | frontend-page | `src/components/sections/Employees/StatCard.tsx` | 85 |
 | frontend-page | `src/components/sections/Employees/api.ts` | 146 |

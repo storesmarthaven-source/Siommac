@@ -45,7 +45,7 @@ export function DataTable<T>({
   sorting, pagination, selection, search, filters,
   rowActions, onRowClick, isRowActive,
   columnChooser = false,
-  emptyState, label, toolbarActions, class: extra,
+  emptyState, label, toolbarContent, toolbarActions, class: extra,
 }: DataTableProps<T>): VNode {
   const uid = useId();
   const t = useDataTable({ rows, columns, getRowId, sorting, pagination, selection, columnChooser });
@@ -62,6 +62,7 @@ export function DataTable<T>({
         hiddenIds={t.hiddenIds}
         onToggleColumn={t.toggleColumn}
         columnChooser={columnChooser}
+        content={toolbarContent}
         actions={toolbarActions}
       />
 
@@ -98,7 +99,7 @@ export function DataTable<T>({
                 return (
                   <th
                     key={col.id}
-                    class={`ui-dt-th ui-dt-th--${col.align ?? 'left'}${col.sortable && sorting ? ' ui-dt-th--sortable' : ''}`}
+                    class={`ui-dt-th ui-dt-th--${col.align ?? 'left'}${col.sortable && sorting ? ' ui-dt-th--sortable' : ''}${col.pinned ? ' ui-dt-th--pinned' : ''}`}
                     scope="col"
                     style={{ width: col.width, minWidth: col.minWidth, maxWidth: col.maxWidth }}
                     // aria-sort belongs on the header cell, not the button — it
@@ -192,7 +193,7 @@ export function DataTable<T>({
                   {t.visibleColumns.map(col => (
                     <td
                       key={col.id}
-                      class={`ui-dt-td ui-dt-td--${col.align ?? 'left'}`}
+                      class={`ui-dt-td ui-dt-td--${col.align ?? 'left'}${col.pinned ? ' ui-dt-td--pinned' : ''}`}
                       style={{ width: col.width, minWidth: col.minWidth, maxWidth: col.maxWidth }}
                     >
                       {col.cell(row)}
