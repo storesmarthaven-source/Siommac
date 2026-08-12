@@ -228,6 +228,15 @@ export default function SharedSections() {
           The actual Settings UI is rendered by the Preact SettingsSection component above.
           The IDs in this block (setCompanyName, setCompanyAddress, etc.) are referenced
           by attSystem.ts for reading/writing settings values.
+
+          The four `.stg-btn-*` buttons that used to live here are GONE, not
+          migrated to the canonical Button: the block is `display:none`, so no
+          click could ever originate from them, and their delegated handlers
+          (`window.pickLogo` / `saveLogo` / `savePayrollSettings` /
+          `_stgResetDefaults`) are not defined anywhere in the codebase. The real
+          branding controls are BrandingPanel in SettingsSection.tsx. Only the
+          INPUT ids are read by attSystem.ts; nothing looks the buttons up, and
+          its `closest('#pickLogoBtn')` delegation is a no-op either way.
         */}
         <div style="display:none" aria-hidden="true">
           <div class="stg-layout">
@@ -313,15 +322,9 @@ export default function SharedSections() {
                     </div>
                     <div>
                       <input type="file" id="logoFileInput" accept="image/*" style="display:none;" />
-                      <button class="stg-btn-outline" id="pickLogoBtn"><i class="fas fa-upload" /> Choose Logo</button>
-                      <button class="stg-btn-save" id="saveLogoBtn" disabled><i class="fas fa-check" /> Save Logo</button>
                       <div id="logoFileName" />
                     </div>
                   </div>
-                </div>
-                <div class="stg-card-actions admin-only">
-                  <button class="stg-btn-outline" id="resetDefaultsBtn"><i class="fas fa-rotate-left" /> Reset Defaults</button>
-                  <button class="stg-btn-primary" id="saveAllSettingsBtn"><i class="fas fa-check" /> Save Changes</button>
                 </div>
               </div>
             </div>

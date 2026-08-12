@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "d326e3061a0dce53e65683fdbcf46928ad87e335",
+    "head": "1f0c5aa7b1c2ae42b42e03a6643326a5d0775360",
     "branch": "main",
-    "fingerprint": "bc3b8511b8d71dd95463040e",
+    "fingerprint": "a18111674d3e6583cae27ca9",
     "indexedFiles": 1815
   },
   "summary": {
@@ -8238,8 +8238,8 @@
       "path": "src/shell/sections/SharedSections.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 336,
-      "hash": "5e229b3bb7442ef6"
+      "lines": 339,
+      "hash": "7192797bea15c2a4"
     },
     {
       "path": "src/shell/sections/useActiveSection.ts",

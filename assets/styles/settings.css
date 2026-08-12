@@ -177,40 +177,6 @@
 .stg-danger-zone {
   background: #fff8f8; border-color: #fecdcd;
 }
-.stg-danger-label { color: #c62828 !important; }
-.stg-danger-label i { color: #c62828 !important; }
-
-/* Buttons */
-.stg-btn-primary {
-  background: var(--siomac-navy); border: none; padding: 10px 22px;
-  border-radius: 40px; color: white; font-weight: var(--font-weight-bold); font-size: 0.83rem;
-  cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
-  transition: opacity .2s; font-family: inherit;
-}
-.stg-btn-primary:hover { opacity: .87; }
-.stg-btn-primary:disabled { opacity: .5; cursor: not-allowed; }
-.stg-btn-outline {
-  background: transparent; border: 1.5px solid var(--border); padding: 9px 20px;
-  border-radius: 40px; font-size: 0.83rem; font-weight: 600; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 7px; font-family: inherit;
-  transition: border-color .2s, color .2s; color: var(--text-primary);
-}
-.stg-btn-outline:hover { border-color: var(--siomac-navy); color: var(--siomac-navy); }
-.stg-btn-save {
-  background: var(--siomac-navy); border: none; padding: 9px 18px;
-  border-radius: 40px; color: white; font-weight: 600; font-size: 0.83rem;
-  cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
-  font-family: inherit; transition: opacity .2s;
-}
-.stg-btn-save:disabled { opacity: .45; cursor: not-allowed; }
-.stg-btn-save:not(:disabled):hover { opacity: .85; }
-.stg-btn-danger {
-  background: #c62828; border: none; padding: 10px 22px; border-radius: 40px;
-  color: white; font-weight: var(--font-weight-bold); font-size: 0.83rem; cursor: pointer;
-  font-family: inherit; display: inline-flex; align-items: center; gap: 7px;
-  transition: opacity .2s;
-}
-.stg-btn-danger:hover { opacity: .88; }
 
 /* Responsive */
 @media (max-width: 860px) {
