@@ -6,9 +6,40 @@
  * initials — all scoped to the `.prw` page CSS.
  */
 
-import { type VNode } from 'preact';
+import { type ComponentChildren, type CSSProperties, type VNode } from 'preact';
 import { type PayrollRun } from '@api/finance/payroll';
-import { type BadgeTone } from '@ui';
+import { Card, CardHeader, type BadgeTone } from '@ui';
+
+export interface RunPanelProps {
+  title: string;
+  ico?: string;
+  sub?: string;
+  aux?: ComponentChildren;
+  children?: ComponentChildren;
+  bodyClass?: string;
+  flush?: boolean;
+  class?: string;
+  style?: CSSProperties;
+}
+
+/** Payroll content composition; canonical Card remains the sole surface owner. */
+export function RunPanel({
+  title, ico, sub, aux, children, bodyClass, flush = false, class: className, style,
+}: RunPanelProps): VNode {
+  return (
+    <Card
+      variant="panel"
+      density="comfortable"
+      header={<CardHeader title={title} description={sub} icon={ico ? <span class="prw-card-icon">{ico}</span> : undefined} actions={aux} level={2} />}
+      bodyClass={bodyClass}
+      flush={flush}
+      class={className}
+      style={style}
+    >
+      {children}
+    </Card>
+  );
+}
 
 // ── Formatting ──────────────────────────────────────────────────────────────────
 

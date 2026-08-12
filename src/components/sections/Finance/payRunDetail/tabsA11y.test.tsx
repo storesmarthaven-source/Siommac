@@ -64,6 +64,14 @@ beforeEach(() => {
 });
 
 describe('WP-6 run-workspace tabs ARIA + keyboard', () => {
+  it('uses canonical Card surfaces without retaining the legacy payroll card frame', () => {
+    const { container } = renderPage();
+    expect(container.querySelectorAll('.ui-card').length).toBeGreaterThan(0);
+    expect(container.querySelector('.card')).toBeNull();
+    expect(container.querySelector('.sec-head')).toBeNull();
+    expect(container.querySelector('.panel-body')).toBeNull();
+  });
+
   it('renders tablist/tab/tabpanel with aria-selected, aria-controls and roving tabindex', () => {
     renderPage();
     const tablist = screen.getByRole('tablist');

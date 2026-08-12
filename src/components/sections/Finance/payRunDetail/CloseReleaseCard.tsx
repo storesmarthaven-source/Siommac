@@ -22,6 +22,7 @@ import { fmtMoney } from '../financeShared';
 import { EmployeeCell } from '../_shared/EmployeeCell';
 import { Modal } from '@ui/components/Modal';
 import { Badge, Button } from '@ui';
+import { RunPanel } from './parts';
 
 const RELEASED = new Set(['released', 'exported']);
 
@@ -67,13 +68,12 @@ export function CloseReleaseCard({ run, preflight }: {
   return (
     <div class="stack">
       {/* ── Close controls ── */}
-      <section class="card">
-        <div class="sec-head">
-          <div class="sec-ico">✓</div>
-          <div><div class="sec-title">Close controls</div><div class="sec-sub">Every control must pass before the release certificate can be issued.</div></div>
-          <div class="aux"><Badge tone={pf?.ready ? 'success' : 'warning'}>{controls.filter(c => c.ok).length}/{controls.length} passed</Badge></div>
-        </div>
-        <div class="panel-body">
+      <RunPanel
+        ico="✓"
+        title="Close controls"
+        sub="Every control must pass before the release certificate can be issued."
+        aux={<Badge tone={pf?.ready ? 'success' : 'warning'}>{controls.filter(c => c.ok).length}/{controls.length} passed</Badge>}
+      >
           {pf ? controls.map(c => (
             <div class="close-control" key={c.title}>
               <span class={`control-state${c.ok ? '' : c.warn ? ' warn' : ' pend'}`}>{c.ok ? '✓' : '!'}</span>
@@ -89,16 +89,14 @@ export function CloseReleaseCard({ run, preflight }: {
               <Button variant="primary" size="sm" onClick={() => setFundingOpen(true)}>Confirm funding</Button>
             </div>
           )}
-        </div>
-      </section>
+      </RunPanel>
 
       {/* ── Release certificate ── */}
-      <section class="card">
-        <div class="sec-head">
-          <div><div class="sec-title">Payroll release certificate</div><div class="sec-sub">Issued only after every control passes and the close owner attests.</div></div>
-          <Badge tone={released ? 'success' : 'neutral'}>{released ? 'Issued' : 'Draft'}</Badge>
-        </div>
-        <div class="panel-body">
+      <RunPanel
+        title="Payroll release certificate"
+        sub="Issued only after every control passes and the close owner attests."
+        aux={<Badge tone={released ? 'success' : 'neutral'}>{released ? 'Issued' : 'Draft'}</Badge>}
+      >
           <div class="certificate">
             <div class="summary-row"><span>Run</span><strong>{run.runNo}</strong></div>
             <div class="summary-row"><span>Net control total</span><strong>{fmtMoney(pf?.netPayroll ?? run.netTotal)}</strong></div>
@@ -138,18 +136,14 @@ export function CloseReleaseCard({ run, preflight }: {
               )}
             </>
           )}
-        </div>
-      </section>
+      </RunPanel>
 
       {/* ── Correction boundary (governance guidance) ── */}
-      <section class="card">
-        <div class="sec-head"><div class="sec-title">Correction boundary</div></div>
-        <div class="panel-body correction-grid">
+      <RunPanel title="Correction boundary" bodyClass="correction-grid">
           <div class="summary-block"><span>Before lock</span><strong>Return to processor</strong><small>Approval is reopened and a new calculation version is required.</small></div>
           <div class="summary-block"><span>After lock</span><strong>Controlled reopen with reason</strong><small>Allowed only before an irreversible export or downstream settlement.</small></div>
           <div class="summary-block"><span>After release</span><strong>New correction run</strong><small>Never edit the released run or replace its evidence.</small></div>
-        </div>
-      </section>
+      </RunPanel>
 
       {fundingOpen && <ConfirmFundingModal run={run} defaultAmount={pf?.netPayroll ?? run.netTotal} onClose={() => setFundingOpen(false)} onDone={() => { invalidate(); setFundingOpen(false); }} />}
     </div>

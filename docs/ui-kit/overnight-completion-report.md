@@ -171,10 +171,38 @@ First clean family completed:
 - browser-verified the real wizard at desktop width with correct canonical
   heading rhythm, frame, body spacing and zero console warnings/errors.
 
-The next largest lint-clean pure-surface family is the Finance payroll run
-workspace (`PayRunDetailPage.tsx`, `payRunDetail/*.tsx`, and its scoped
-`payrunWorkspace.css`). Domain compositions remain intact while their shared
-outer frame moves to Card.
+Second clean family completed:
+
+- migrated 33 payroll run workspace frame definitions/call sites to canonical
+  `Card`, including the page summary strips and the preserved `RunPanel`,
+  close/release, calculation-failure and crew content compositions;
+- deleted the complete scoped `.prw .card`, `.panel-body`, `.sec-head`,
+  `.sec-ico`, `.sec-title` and `.sec-head .aux` surface implementation;
+- retained full-bleed table/list layouts through Card's body slot and `flush`
+  contract rather than layering old padding or borders underneath it;
+- added full-page regression coverage proving canonical Card adoption and the
+  absence of all retired surface wrappers;
+- passed 73 focused tests across canonical Card and the payroll workspace;
+- browser-verified representative run-header, table-panel and financial-summary
+  surfaces with three canonical cards, zero legacy cards and no runtime or
+  console diagnostics.
+
+Card classification is now frozen:
+
+```text
+Card canonical system       COMPLETE
+Clean surface migration     COMPLETE
+Domain compositions         PRESERVED
+Dirty/deferred surfaces     RECORDED DEBT
+```
+
+`StatsCard`, `KpiTile`, `SparkCard`, `InfoCard`, `EmployeeCard`, weather,
+deadline, widget and toast cards remain domain or interactive compositions.
+`PPEManager.tsx` (11 metric mini-cards) and `Incidents.tsx` (8 incident/CAPA
+cards) are exact deferred files because they have existing lint blockers and
+belong to later HSE work. Card must not be reopened solely to chase those counts.
+
+The next canonical component is DataTable.
 
 ## Remaining programme
 

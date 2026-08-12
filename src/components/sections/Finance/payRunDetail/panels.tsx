@@ -26,20 +26,10 @@ import { InputsTab, WorksheetTab, WarningsTab, PayslipsTab, GlTab, ExportsTab, f
 import { PayrollPanelState } from './PanelState';
 import { PayCreateDisbursementDialog, PayCreateRemittanceDialog } from '../PayBridgeDialog';
 import { CloseReleaseCard } from './CloseReleaseCard';
-import { initials, dayLabel } from './parts';
+import { initials, dayLabel, RunPanel } from './parts';
 import { Badge, type BadgeTone } from '@ui';
 
 // ── shared atoms ────────────────────────────────────────────────────────────────
-
-function SecHead({ ico, title, sub, aux }: { ico: string; title: string; sub?: string; aux?: VNode | string }): VNode {
-  return (
-    <div class="sec-head">
-      <div class="sec-ico">{ico}</div>
-      <div><div class="sec-title">{title}</div>{sub && <div class="sec-sub">{sub}</div>}</div>
-      {aux != null && <div class="aux">{aux}</div>}
-    </div>
-  );
-}
 
 function Empty({ children }: { children: ComponentChildren }): VNode {
   return <div class="prw-empty">{children}</div>;
@@ -99,9 +89,8 @@ export function SummaryPanel({ run, workspace, preflight }: {
   return (
     <div class="section-grid">
       <div class="stack">
-        <section class="card">
-          <SecHead ico="✓" title="Control certification" sub="Evidence required before the payroll can enter approval."
-            aux={<Badge tone={passed === gates.length ? 'success' : 'warning'}>{passed} of {gates.length} passed</Badge>} />
+        <RunPanel ico="✓" title="Control certification" sub="Evidence required before the payroll can enter approval." flush
+            aux={<Badge tone={passed === gates.length ? 'success' : 'warning'}>{passed} of {gates.length} passed</Badge>}>
           <div class="table-wrap">
             <table class="data-table">
               <thead><tr><th>Control</th><th>Result</th><th>Evidence</th></tr></thead>
@@ -116,12 +105,11 @@ export function SummaryPanel({ run, workspace, preflight }: {
               </tbody>
             </table>
           </div>
-        </section>
+        </RunPanel>
 
-        <section class="card">
-          <SecHead ico="!" title="Exceptions & findings" sub="Open control findings prioritised by severity."
+        <RunPanel ico="!" title="Exceptions & findings" sub="Open control findings prioritised by severity." flush
             aux={<Badge tone={(workspace?.findingSummary.blockers ?? 0) > 0 ? 'danger' : (workspace?.findingSummary.warnings ?? 0) > 0 ? 'warning' : 'success'}>
-              {workspace?.findingSummary.actionable ?? 0} actionable</Badge>} />
+              {workspace?.findingSummary.actionable ?? 0} actionable</Badge>}>
           {findings.length === 0
             ? <Empty>No open findings for this run.</Empty>
             : (
@@ -135,12 +123,11 @@ export function SummaryPanel({ run, workspace, preflight }: {
                 ))}
               </div>
             )}
-        </section>
+        </RunPanel>
       </div>
 
       <aside class="stack">
-        <section class="card">
-          <SecHead ico="$" title="Financial summary" />
+        <RunPanel ico="$" title="Financial summary" flush>
           <div class="fin">
             <div class="fin-row"><span class="k">Gross payroll</span><span class="v">{fmtMoney(run.grossTotal)}</span></div>
             <div class="fin-row"><span class="k">Total deductions</span><span class="v">{fmtMoney(run.deductionTotal)}</span></div>
@@ -148,10 +135,9 @@ export function SummaryPanel({ run, workspace, preflight }: {
             <div class="fin-mini"><span>Employer NIS</span><span class="v">{fmtMoney(run.nisEmployerTotal)}</span></div>
             <div class="fin-mini"><span>Employer cost</span><span class="v">{fmtMoney(employerCost)}</span></div>
           </div>
-        </section>
+        </RunPanel>
 
-        <section class="card">
-          <SecHead ico="↻" title="Recent activity" />
+        <RunPanel ico="↻" title="Recent activity" flush>
           {audit.length === 0
             ? <Empty>No activity recorded yet.</Empty>
             : audit.slice(0, 6).map(a => (
@@ -161,7 +147,7 @@ export function SummaryPanel({ run, workspace, preflight }: {
                 <div class="act-m">{fmtDateTime(a.createdAt)}</div>
               </div>
             ))}
-        </section>
+        </RunPanel>
       </aside>
     </div>
   );
@@ -190,17 +176,16 @@ export function PopulationPanel({ runId }: { runId: string }): VNode {
 
   if (isLoading || isError || !lines?.length) {
     return (
-      <section class="card"><SecHead ico="P" title="Calculated employee population" />
+      <RunPanel ico="P" title="Calculated employee population" flush>
         <PayrollPanelState loading={isLoading} error={isError ? error : undefined}
           onRetry={() => void refetch()} empty label="calculated population"
           emptyText="No calculated lines yet — run Calculate first." />
-      </section>
+      </RunPanel>
     );
   }
 
   return (
-    <section class="card">
-      <SecHead ico="P" title="Calculated employee population" sub={`${lines.length} employees${variationQ.data ? ' · net variance vs prior period' : ''}.`} />
+    <RunPanel ico="P" title="Calculated employee population" sub={`${lines.length} employees${variationQ.data ? ' · net variance vs prior period' : ''}.`} flush>
       <div class="table-wrap">
         <table class="data-table">
           <thead>
@@ -234,7 +219,7 @@ export function PopulationPanel({ runId }: { runId: string }): VNode {
         </table>
       </div>
       {variationQ.isError && <div class="prw-empty" style={{ padding: '10px 22px' }}>Prior-period comparison unavailable (no earlier run).</div>}
-    </section>
+    </RunPanel>
   );
 }
 
@@ -251,19 +236,18 @@ export function ReconciliationPanel({ runId }: { runId: string }): VNode {
 
   if (isLoading || isError || !versions?.length) {
     return (
-      <section class="card"><SecHead ico="R" title="Payroll reconciliation" />
+      <RunPanel ico="R" title="Payroll reconciliation" flush>
         <PayrollPanelState loading={isLoading} error={isError ? error : undefined}
           onRetry={() => void refetch()} empty label="calculation versions"
           emptyText="No calculation versions yet — run Calculate first." />
-      </section>
+      </RunPanel>
     );
   }
 
   return (
     <div class="section-grid">
-      <section class="card">
-        <SecHead ico="R" title="Payroll reconciliation" sub="Calculation version history and version-over-version movement."
-          aux={<Badge tone="neutral">{versions.length} version{versions.length === 1 ? '' : 's'}</Badge>} />
+      <RunPanel ico="R" title="Payroll reconciliation" sub="Calculation version history and version-over-version movement." flush
+          aux={<Badge tone="neutral">{versions.length} version{versions.length === 1 ? '' : 's'}</Badge>}>
         <div class="table-wrap">
           <table class="data-table">
             <thead><tr><th>Version</th><th class="num">Employees</th><th class="num">Gross</th><th class="num">Net</th><th class="num">Employer NIS</th><th>Published</th></tr></thead>
@@ -281,11 +265,10 @@ export function ReconciliationPanel({ runId }: { runId: string }): VNode {
             </tbody>
           </table>
         </div>
-      </section>
+      </RunPanel>
 
       <aside class="stack">
-        <section class="card">
-          <SecHead ico="Δ" title="Latest movement" sub={prev && latest ? `v${prev.versionNo} → v${latest.versionNo}` : 'Single version'} />
+        <RunPanel ico="Δ" title="Latest movement" sub={prev && latest ? `v${prev.versionNo} → v${latest.versionNo}` : 'Single version'} flush>
           {!prev || !latest
             ? <Empty>Only one calculation version — nothing to compare.</Empty>
             : cmp.isLoading
@@ -301,7 +284,7 @@ export function ReconciliationPanel({ runId }: { runId: string }): VNode {
                   </div>
                 )
                 : <Empty>Comparison unavailable.</Empty>}
-        </section>
+        </RunPanel>
       </aside>
     </div>
   );
@@ -319,11 +302,10 @@ export function ApprovalsPanel({ run }: { run: PayrollRun }): VNode {
 
   if (!run.workflowId) {
     return (
-      <section class="card">
-        <SecHead ico="A" title="Approval route" sub="Sequential maker-checker route starts after all submission controls pass."
-          aux={<Badge tone="neutral">Not submitted</Badge>} />
+      <RunPanel ico="A" title="Approval route" sub="Sequential maker-checker route starts after all submission controls pass." flush
+          aux={<Badge tone="neutral">Not submitted</Badge>}>
         <Empty>This run has not been submitted for approval yet. The route appears once it is submitted.</Empty>
-      </section>
+      </RunPanel>
     );
   }
 
@@ -335,9 +317,8 @@ export function ApprovalsPanel({ run }: { run: PayrollRun }): VNode {
   }
 
   return (
-    <section class="card">
-      <SecHead ico="A" title="Approval route" sub="Sequential maker-checker route — creator cannot approve their own run."
-        aux={<Badge tone={run.status === 'approved' ? 'success' : run.status === 'returned' ? 'danger' : 'warning'}>{humanize(run.status)}</Badge>} />
+    <RunPanel ico="A" title="Approval route" sub="Sequential maker-checker route — creator cannot approve their own run." flush
+        aux={<Badge tone={run.status === 'approved' ? 'success' : run.status === 'returned' ? 'danger' : 'warning'}>{humanize(run.status)}</Badge>}>
       {wf.isLoading
         ? <Empty>Loading approval route…</Empty>
         : tasks.length === 0
@@ -368,7 +349,7 @@ export function ApprovalsPanel({ run }: { run: PayrollRun }): VNode {
               </table>
             </div>
           )}
-    </section>
+    </RunPanel>
   );
 }
 
@@ -379,10 +360,9 @@ export function ApprovalsPanel({ run }: { run: PayrollRun }): VNode {
 export function AuditPanel({ runId }: { runId: string }): VNode {
   const { data: entries, isLoading, isError, error, refetch } = useRunAuditLog(runId);
   return (
-    <section class="card">
-      <SecHead ico="A" title="Audit history" sub="Immutable record of state changes, calculation attempts, control decisions and exports."
-        aux={<Badge tone="neutral">{entries ? `${entries.length} events` : '—'}</Badge>} />
-      <div class="panel-body">
+    <RunPanel ico="A" title="Audit history" sub="Immutable record of state changes, calculation attempts, control decisions and exports."
+        aux={<Badge tone="neutral">{entries ? `${entries.length} events` : '—'}</Badge>}>
+      <div>
         {isLoading || isError
           ? <PayrollPanelState loading={isLoading} error={isError ? error : undefined}
               onRetry={() => void refetch()} label="audit history" />
@@ -397,7 +377,7 @@ export function AuditPanel({ runId }: { runId: string }): VNode {
               </div>
             ))}
       </div>
-    </section>
+    </RunPanel>
   );
 }
 
@@ -411,23 +391,21 @@ export function InputsPanel({ run, canManage, inputSnapshot }: {
   const ev = usePolicyEvidence(run.currentInputSnapshotId ? run.id : null);
   return (
     <div class="stack">
-      <section class="card">
-        <SecHead ico="I" title="Frozen input snapshot"
+      <RunPanel ico="I" title="Frozen input snapshot"
           sub={inputSnapshot ? `Snapshot v${inputSnapshot.snapshotNo} · locked ${fmtDateTime(inputSnapshot.lockedAt)} · checksum ${inputSnapshot.checksum.slice(0, 8)}…` : 'Inputs not locked yet.'}
-          aux={inputSnapshot ? <Badge tone="success">{inputSnapshot.employeeCount} employees</Badge> : <Badge tone="neutral">Draft</Badge>} />
-        <div class="panel-body">
+          aux={inputSnapshot ? <Badge tone="success">{inputSnapshot.employeeCount} employees</Badge> : <Badge tone="neutral">Draft</Badge>}>
+        <div>
           <InputsTab runId={run.id} runStatus={run.status} canManage={canManage} />
         </div>
-      </section>
+      </RunPanel>
 
       {ev.data && <PolicyEvidencePanel evidence={ev.data} />}
 
-      <section class="card">
-        <SecHead ico="W" title="Worksheet adjustments" sub="Per-employee earnings / deductions, mass-edit and back pay (pre-approval only)." />
-        <div class="panel-body">
+      <RunPanel ico="W" title="Worksheet adjustments" sub="Per-employee earnings / deductions, mass-edit and back pay (pre-approval only).">
+        <div>
           <WorksheetTab runId={run.id} runStatus={run.status} />
         </div>
-      </section>
+      </RunPanel>
     </div>
   );
 }
@@ -435,10 +413,9 @@ export function InputsPanel({ run, canManage, inputSnapshot }: {
 export function PolicyEvidencePanel({ evidence }: { evidence: PolicyEvidence }): VNode {
   const cal = evidence.calendar;
   return (
-    <section class="card">
-      <SecHead ico="§" title="Pay-policy evidence" sub="The governed pay policy pinned to this run's input snapshot."
-        aux={evidence.checksum ? <span class="evchip"><span class="k">checksum</span><code>{evidence.checksum.slice(0, 12)}</code></span> : undefined} />
-      <div class="panel-body">
+    <RunPanel ico="§" title="Pay-policy evidence" sub="The governed pay policy pinned to this run's input snapshot."
+        aux={evidence.checksum ? <span class="evchip"><span class="k">checksum</span><code>{evidence.checksum.slice(0, 12)}</code></span> : undefined}>
+      <div>
         {evidence.components.length > 0 && (
           <>
             <div class="sec-sub" style={{ marginBottom: 6 }}>Components ({evidence.components.length})</div>
@@ -525,7 +502,7 @@ export function PolicyEvidencePanel({ evidence }: { evidence: PolicyEvidence }):
           </>
         )}
       </div>
-    </section>
+    </RunPanel>
   );
 }
 
@@ -540,9 +517,8 @@ export function ExceptionsPanel({ run, workspace, canManage }: {
   const blockers = findings.filter((f: PayrollControlFinding) => f.severity === 'blocker');
   return (
     <div class="section-grid">
-      <section class="card">
-        <SecHead ico="!" title="Blocking exceptions" sub="The run cannot be submitted while any blocker remains open."
-          aux={<Badge tone={blockers.length > 0 ? 'danger' : 'success'}>{blockers.length} open</Badge>} />
+      <RunPanel ico="!" title="Blocking exceptions" sub="The run cannot be submitted while any blocker remains open." flush
+          aux={<Badge tone={blockers.length > 0 ? 'danger' : 'success'}>{blockers.length} open</Badge>}>
         {findings.length === 0
           ? <Empty>No control findings for this run.</Empty>
           : (
@@ -556,15 +532,14 @@ export function ExceptionsPanel({ run, workspace, canManage }: {
               ))}
             </div>
           )}
-      </section>
+      </RunPanel>
 
       <aside class="stack">
-        <section class="card">
-          <SecHead ico="⚠" title="Calculation warnings" sub="NIS / statutory input warnings raised at calculation." />
-          <div class="panel-body">
+        <RunPanel ico="⚠" title="Calculation warnings" sub="NIS / statutory input warnings raised at calculation.">
+          <div>
             <WarningsTab runId={run.id} canManage={canManage} />
           </div>
-        </section>
+        </RunPanel>
       </aside>
     </div>
   );
@@ -607,9 +582,8 @@ export function ReleasePanel({ run, preflight, canManage, actions }: {
       <CloseReleaseCard run={run} preflight={preflight} />
 
       <div class="section-grid">
-        <section class="card">
-          <SecHead ico="L" title="Release and accounting outputs" sub="Available from the approved and locked calculation version."
-            aux={<Badge tone={pf?.ready ? 'success' : locked ? 'warning' : 'neutral'}>{pf?.alreadyReleased ? 'Released' : pf?.ready ? 'Ready' : locked ? 'In progress' : 'Awaiting approval'}</Badge>} />
+        <RunPanel ico="L" title="Release and accounting outputs" sub="Available from the approved and locked calculation version." flush
+            aux={<Badge tone={pf?.ready ? 'success' : locked ? 'warning' : 'neutral'}>{pf?.alreadyReleased ? 'Released' : pf?.ready ? 'Ready' : locked ? 'In progress' : 'Awaiting approval'}</Badge>}>
           <div class="release-grid">
             {items.map(it => (
               <div class="release-item" key={it.title}>
@@ -620,34 +594,30 @@ export function ReleasePanel({ run, preflight, canManage, actions }: {
               </div>
             ))}
           </div>
-        </section>
+        </RunPanel>
 
         <aside class="stack">
-          <section class="card">
-            <SecHead ico="$" title="Funding forecast" />
+          <RunPanel ico="$" title="Funding forecast" flush>
             <div class="fin">
               <div class="fin-row"><span class="k">Expected net disbursement</span><span class="v">{fmtMoney(pf?.netPayroll ?? run.netTotal)}</span></div>
               <div class="fin-row"><span class="k">GL debit / credit</span><span class="v">{fmtMoney(pf?.glDebit ?? 0)} / {fmtMoney(pf?.glCredit ?? 0)}</span></div>
               <div class="fin-row total"><span class="k">Missing bank accounts</span><span class="v" style={{ color: (pf?.missingBankAccountCount ?? 0) > 0 ? 'var(--red)' : undefined }}>{pf?.missingBankAccountCount ?? 0}</span></div>
             </div>
-          </section>
+          </RunPanel>
         </aside>
       </div>
 
-      <section class="card">
-        <SecHead ico="G" title="General ledger" sub="Balanced journal preview and posting." />
-        <div class="panel-body"><GlTab runId={run.id} runStatus={run.status} /></div>
-      </section>
+      <RunPanel ico="G" title="General ledger" sub="Balanced journal preview and posting.">
+        <div><GlTab runId={run.id} runStatus={run.status} /></div>
+      </RunPanel>
 
-      <section class="card">
-        <SecHead ico="P" title="Payslips" sub="Render, download and distribute employee payslips." />
-        <div class="panel-body"><PayslipsTab run={run} canManage={canManage} /></div>
-      </section>
+      <RunPanel ico="P" title="Payslips" sub="Render, download and distribute employee payslips.">
+        <div><PayslipsTab run={run} canManage={canManage} /></div>
+      </RunPanel>
 
-      <section class="card">
-        <SecHead ico="E" title="Bank & statutory exports" sub="Generated export files for this run." />
-        <div class="panel-body"><ExportsTab runId={run.id} canExport={canManage} /></div>
-      </section>
+      <RunPanel ico="E" title="Bank & statutory exports" sub="Generated export files for this run.">
+        <div><ExportsTab runId={run.id} canExport={canManage} /></div>
+      </RunPanel>
 
       {bridge === 'disb' && <PayCreateDisbursementDialog run={run} onClose={() => setBridge(null)} onCreated={() => setBridge(null)} />}
       {bridge === 'rem' && <PayCreateRemittanceDialog run={run} onClose={() => setBridge(null)} onCreated={() => setBridge(null)} />}

@@ -2,7 +2,7 @@
 
 # payroll Module Map
 
-Source fingerprint: `1ba82f7cccceed7e493769f3`
+Source fingerprint: `f06f04f27d18df759db1c415`
 
 Files: 196 | Symbols: 1986 | Widgets: 11 | Unique mounted endpoints: 140 | Route definitions: 140 mounted + 0 unmounted | API calls: 2 | DB objects: 260 | E2E suites: 29
 
@@ -219,9 +219,9 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useRunCalendar` | function / hook | `src/api/finance/payrollRunsRegister.ts:58` | `-` |
 | `useRunViewMutations` | function / hook | `src/api/finance/payrollRunsRegister.ts:68` | `-` |
 | `MyPayslipsOverview` | function / component | `src/components/sections/Finance/MyPayslipsOverview.tsx:37` | `-` |
-| `CrewPopulationControls` | function / component | `src/components/sections/Finance/payroll/run/crewSections.tsx:45` | `-` |
-| `CrewInputReconciliation` | function / component | `src/components/sections/Finance/payroll/run/crewSections.tsx:82` | `-` |
-| `CrewCostAllocation` | function / component | `src/components/sections/Finance/payroll/run/crewSections.tsx:153` | `-` |
+| `CrewPopulationControls` | function / component | `src/components/sections/Finance/payroll/run/crewSections.tsx:42` | `-` |
+| `CrewInputReconciliation` | function / component | `src/components/sections/Finance/payroll/run/crewSections.tsx:79` | `-` |
+| `CrewCostAllocation` | function / component | `src/components/sections/Finance/payroll/run/crewSections.tsx:150` | `-` |
 | `PayPolicySetup` | function / component | `src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx:53` | `-` |
 | `PayPolicyWizard` | function / component | `src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx:77` | `-` |
 | `SodChainDialog` | function / component | `src/components/sections/Finance/payroll/setup/SodChainDialog.tsx:29` | `-` |
@@ -531,7 +531,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/PayrollSetupOverview.tsx` | 928 |
 | frontend-page | `src/components/sections/Finance/payrollReportsContract.test.ts` | 43 |
 | frontend-page | `src/components/sections/Finance/payroll/run/crewSections.test.tsx` | 106 |
-| frontend-page | `src/components/sections/Finance/payroll/run/crewSections.tsx` | 201 |
+| frontend-page | `src/components/sections/Finance/payroll/run/crewSections.tsx` | 198 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx` | 432 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/PayPolicyWizard.tsx` | 469 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/SodChainDialog.tsx` | 114 |

@@ -26,6 +26,7 @@ import { humanize } from '../financeShared';
 import { EmployeeCell } from '../_shared/EmployeeCell';
 import { fmtDateTime } from './interactiveTabs';
 import { Badge, Button, type BadgeTone } from '@ui';
+import { RunPanel } from './parts';
 
 function shortId(id: string | null | undefined): string {
   if (!id) return '—';
@@ -81,15 +82,14 @@ export function CalcFailurePanel({ workspace }: {
       )}
 
       {/* root-cause diagnosis — blocker findings */}
-      <section class="card" style={{ marginTop: 16 }}>
-        <div class="sec-head">
-          <div class="sec-ico">R</div>
-          <div>
-            <div class="sec-title">Root-cause diagnosis</div>
-            <div class="sec-sub">Fix these at the source, then retry — payroll never overrides a failed control.</div>
-          </div>
-          <div class="aux"><Badge tone={blockers.length > 0 ? 'danger' : 'success'}>{blockers.length} blocking record{blockers.length === 1 ? '' : 's'}</Badge></div>
-        </div>
+      <RunPanel
+        ico="R"
+        title="Root-cause diagnosis"
+        sub="Fix these at the source, then retry — payroll never overrides a failed control."
+        aux={<Badge tone={blockers.length > 0 ? 'danger' : 'success'}>{blockers.length} blocking record{blockers.length === 1 ? '' : 's'}</Badge>}
+        style={{ marginTop: 16 }}
+        flush
+      >
         {blockers.length > 0 ? (
           <div class="table-wrap">
             <table class="data-table">
@@ -108,19 +108,18 @@ export function CalcFailurePanel({ workspace }: {
             </table>
           </div>
         ) : (
-          <div class="panel-body"><div class="prw-empty">No blocking findings were recorded for this attempt — see the diagnostic detail below for the failure cause.</div></div>
+          <div class="prw-empty">No blocking findings were recorded for this attempt — see the diagnostic detail below for the failure cause.</div>
         )}
-      </section>
+      </RunPanel>
 
       {/* controlled recovery — derived from the real blocker state */}
-      <section class="card" style={{ marginTop: 16 }}>
-        <div class="sec-head">
-          <div class="sec-ico">1</div>
-          <div>
-            <div class="sec-title">Controlled recovery</div>
-            <div class="sec-sub">Retry is enabled only when every blocking control passes against refreshed source data.</div>
-          </div>
-        </div>
+      <RunPanel
+        ico="1"
+        title="Controlled recovery"
+        sub="Retry is enabled only when every blocking control passes against refreshed source data."
+        style={{ marginTop: 16 }}
+        flush
+      >
         <div>
           <RecoveryStep n={1} title="Correct the authoritative source records"
             detail="Update and approve the effective records in their owning module — do not override the failure in payroll."
@@ -135,20 +134,17 @@ export function CalcFailurePanel({ workspace }: {
             detail="Uses an idempotent job key and commits a new result version only after every employee completes."
             pill={clear ? { tone: 'success', label: 'Ready' } : { tone: 'danger', label: 'Blocked' }} />
         </div>
-      </section>
+      </RunPanel>
 
       {/* diagnostic detail — support-safe technical evidence */}
       {attempt && (
-        <section class="card" style={{ marginTop: 16 }}>
-          <div class="sec-head">
-            <div class="sec-ico">D</div>
-            <div>
-              <div class="sec-title">Diagnostic detail</div>
-              <div class="sec-sub">Support-safe technical evidence — employee pay amounts are excluded.</div>
-            </div>
-            <div class="aux"><Button variant="secondary" onClick={copyCorrelation}>{copied ? 'Copied ✓' : 'Copy correlation ID'}</Button></div>
-          </div>
-          <div class="panel-body">
+        <RunPanel
+          ico="D"
+          title="Diagnostic detail"
+          sub="Support-safe technical evidence — employee pay amounts are excluded."
+          aux={<Button variant="secondary" onClick={copyCorrelation}>{copied ? 'Copied ✓' : 'Copy correlation ID'}</Button>}
+          style={{ marginTop: 16 }}
+        >
             <div class="failure-code">{[
               attempt.errorCode ?? 'PAYROLL_CALCULATION_FAILED',
               `attempt_id: ${attempt.id}`,
@@ -157,21 +153,19 @@ export function CalcFailurePanel({ workspace }: {
               `correlation_id: ${attempt.correlationId}`,
               ...(attempt.errorMessage ? ['', attempt.errorMessage] : []),
             ].join('\n')}</div>
-          </div>
-        </section>
+        </RunPanel>
       )}
 
       {/* recent activity */}
-      <section class="card" style={{ marginTop: 16 }}>
-        <div class="sec-head"><div class="sec-title">Recent activity</div></div>
+      <RunPanel title="Recent activity" style={{ marginTop: 16 }} flush>
         {activity.length > 0 ? activity.map(a => (
           <div class="act-row" key={a.id}>
             <div class={`act-dot ${a.action.includes('fail') || a.action.includes('reject') ? 'red' : a.action.includes('lock') || a.action.includes('release') ? 'green' : 'blue'}`}>•</div>
             <div><div class="act-t">{humanize(a.action)}</div><div class="act-s">{a.actorId ? <EmployeeCell employeeId={a.actorId} /> : 'System'}{a.reason ? ` · ${a.reason}` : ''}</div></div>
             <div class="act-m">{fmtDateTime(a.createdAt)}</div>
           </div>
-        )) : <div class="panel-body"><div class="prw-empty">No recent activity recorded for this run.</div></div>}
-      </section>
+        )) : <div class="prw-empty">No recent activity recorded for this run.</div>}
+      </RunPanel>
     </div>
   );
 }

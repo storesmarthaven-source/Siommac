@@ -2,9 +2,9 @@
 
 # finance Module Map
 
-Source fingerprint: `1ba82f7cccceed7e493769f3`
+Source fingerprint: `f06f04f27d18df759db1c415`
 
-Files: 140 | Symbols: 1848 | Widgets: 9 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
+Files: 140 | Symbols: 1849 | Widgets: 9 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
 ## Widgets and Tiles
 
@@ -356,7 +356,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `IconChevronLeft` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:36` | `-` |
 | `IconChevronLeftBadge` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:38` | `-` |
 | `IconCoins` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:44` | `-` |
-| ... | 81 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 82 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -569,17 +569,17 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/module.ts` | 174 |
 | frontend-page | `src/components/sections/Finance/mount.ts` | 25 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/CalcFailurePanel.test.tsx` | 148 |
-| frontend-page | `src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx` | 190 |
+| frontend-page | `src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx` | 184 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/CertifySubmitModal.tsx` | 104 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/CloseReleaseCard.test.tsx` | 89 |
-| frontend-page | `src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx` | 206 |
+| frontend-page | `src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx` | 200 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/PanelState.tsx` | 74 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/headerActions.test.tsx` | 86 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/interactiveTabs.tsx` | 1112 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/pageGate.test.tsx` | 125 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/panelState.test.tsx` | 61 |
-| frontend-page | `src/components/sections/Finance/payRunDetail/panels.tsx` | 657 |
-| frontend-page | `src/components/sections/Finance/payRunDetail/parts.tsx` | 134 |
+| frontend-page | `src/components/sections/Finance/payRunDetail/panels.tsx` | 627 |
+| frontend-page | `src/components/sections/Finance/payRunDetail/parts.tsx` | 165 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/payRunDetail.test.tsx` | 167 |
-| frontend-page | `src/components/sections/Finance/payRunDetail/tabsA11y.test.tsx` | 112 |
+| frontend-page | `src/components/sections/Finance/payRunDetail/tabsA11y.test.tsx` | 120 |
 

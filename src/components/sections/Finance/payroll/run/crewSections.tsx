@@ -16,6 +16,7 @@ import { type VNode, type ComponentChildren } from 'preact';
 import { type CrewRunEvidence } from '@api/finance/payroll';
 import { fmtMoney, humanize } from '../../financeShared';
 import { Badge } from '@ui';
+import { RunPanel } from '../../payRunDetail/parts';
 
 interface CrewProps {
   crew: CrewRunEvidence;
@@ -28,13 +29,9 @@ function Sec({ ico, title, sub, children }: {
   ico: string; title: string; sub?: string; children: ComponentChildren;
 }): VNode {
   return (
-    <section class="card crew-sec">
-      <div class="sec-head">
-        <div class="sec-ico">{ico}</div>
-        <div><div class="sec-title">{title}</div>{sub && <div class="sec-sub">{sub}</div>}</div>
-      </div>
+    <RunPanel ico={ico} title={title} sub={sub} class="crew-sec" flush>
       {children}
-    </section>
+    </RunPanel>
   );
 }
 

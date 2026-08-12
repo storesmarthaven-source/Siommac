@@ -18,7 +18,7 @@ import {
   type PayrollRun, type PayrollRunActions,
 } from '@api/finance/payroll';
 import { humanize } from './financeShared';
-import { Badge } from '@ui';
+import { Badge, Card } from '@ui';
 import { useEmployeeNames } from '@api/finance/lookups';
 import { type PayRunDrawerActions } from './payRunDetail/interactiveTabs';
 import {
@@ -147,7 +147,7 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApp
       </div>
 
       {/* run header card */}
-      <section class="card runhead">
+      <Card flush bodyClass="runhead">
         <div class="rh-cell">
           <div class="rh-ico">P</div>
           <div><div class="rh-name">{monthLabel(run.periodMonth)}</div><div class="rh-id">{run.runNo}</div></div>
@@ -174,10 +174,10 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApp
           <PolicyChip run={run} />
           <CalendarChip run={run} />
         </div>
-      </section>
+      </Card>
 
       {/* lifecycle stepper */}
-      <section class="card">
+      <Card flush>
         <div class="lifecycle">
           {steps.map((s, i) => (
             <Fragment key={s.key}>
@@ -198,17 +198,17 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove: _canApp
           <div class="lc-stat"><span>◷</span><div><div class="k">Attempts</div><div class="v">{workspace.calculationAttempts.length}</div></div></div>
           <div class="lc-stat"><span>✓</span><div><div class="k">Open findings</div><div class="v">{workspace.findingSummary.actionable}</div></div></div>
         </div>
-      </section>
+      </Card>
 
       {/* metrics strip */}
-      <section class="card metrics">
+      <Card flush bodyClass="metrics">
         <Metric ico="#" tone="blue" k="Employees" v={String(run.employeeCount)} s="on this run" />
         <Metric ico="$" tone="blue" k="Gross payroll" v={fmtCompact(run.grossTotal)} s="period gross" />
         <Metric ico="$" tone="green" k="Net payroll" v={fmtCompact(run.netTotal)} s="to be paid" />
         <Metric ico="%" tone="blue" k="Deductions" v={fmtCompact(run.deductionTotal)} s={`${deductionPct}% of gross`} />
         <Metric ico="!" tone="red" k="Blockers" v={String(blockers)} s={blockers > 0 ? 'submission disabled' : 'none open'} />
         <Metric ico="↗" tone="amber" k="Warnings" v={String(warnings)} s="open findings" />
-      </section>
+      </Card>
 
       {/* next-action banner */}
       <NextActionBanner status={run.status} blockers={blockers} attempt={workspace.calculationAttempts.length} preflight={preflight} onGo={() => setTab('exceptions')} />
