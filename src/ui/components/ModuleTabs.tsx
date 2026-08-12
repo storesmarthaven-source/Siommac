@@ -8,7 +8,10 @@
  * This is the canonical "navigation tab" for the whole ERP. Promoted from the
  * HSE `_shared.tsx` `AreaTabs` (zero visual change — same `.hse-tabs-*` classes).
  *
- * Legacy alias: `AreaTabs`.
+ * DEPRECATED — superseded by the canonical `<Tabs>` (src/ui/navigation/Tabs).
+ * `TabBar` is `<Tabs variant="underline">`; `ModuleTabs` is that bar inside a
+ * `<Card variant="panel">` header. Both are deleted as their consumers move.
+ * The `AreaTabs` alias has already been removed: it had no consumers left.
  */
 
 import { type VNode } from 'preact';
@@ -125,6 +128,5 @@ export function ModuleTabs({
   );
 }
 
-/** Legacy aliases used by HSE pages during migration. */
-export const AreaTabs = ModuleTabs;
+/** Legacy type alias still used by pages awaiting the `Tabs` migration. */
 export type AreaTab = ModuleTab;

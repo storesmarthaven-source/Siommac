@@ -969,13 +969,33 @@ body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-activity-time { color: 
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-mini-table th,
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-mini-table td { border-color: var(--surface-border); }
 
-/* Tabs */
-body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-tabs { border-bottom-color: var(--surface-border); }
-body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-tab { color: var(--surface-muted); }
-body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-tab:hover,
-body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-tab.active { color: var(--surface-text); }
-body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-tab.active::after { background: var(--surface-focus); }
-body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-panel-tab-sep { background: var(--surface-border); }
+/* Tabs — the light counterpart to the dark drawer skin at uikit-overlay.css:418.
+   Re-points the recipe VARIABLES rather than overriding its rules (RECIPES.md §1),
+   mirroring that block one for one.
+
+   This replaces a `.ui-panel-tab*` block that was dead: those base rules were
+   deleted from uikit-overlay.css with `PanelTabs.tsx`, so it was colouring
+   nothing (`.ui-panel-tab.active::after` had no `content`/`position` left, so
+   there was no underline to recolour). The drawer renders the canonical
+   `<Tabs variant="contained" size="sm">`, which had a dark skin and no light one
+   — so in light theme its tabs inherited the dark palette and read as pale text
+   on a pale surface. */
+body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-tabs {
+  --ui-tabs-rail: var(--surface-border);
+  --ui-tab-fg: var(--surface-muted);
+  --ui-tab-fg-hover: var(--surface-text);
+  --ui-tab-fg-selected: var(--surface-text);
+  --ui-tab-bg-hover: var(--surface-hover);
+  --ui-tab-indicator: var(--surface-focus);
+  --ui-tab-desc-fg: var(--surface-muted);
+  --ui-tab-badge-bg: var(--surface-hover);
+  --ui-tab-badge-fg: var(--surface-muted);
+  --ui-tab-badge-bg-selected: var(--surface-focus);
+  --ui-tab-badge-fg-selected: var(--surface);
+  --ui-tabs-contained-bg: var(--surface-subtle);
+  --ui-tabs-contained-selected-bg: var(--surface);
+  --ui-tabs-contained-selected-shadow: var(--shadow-card);
+}
 
 /* Controls */
 body:not([data-theme="dark"]) .ui-rdrawer.svd-drawer .ui-mini-btn,

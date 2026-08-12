@@ -1,0 +1,682 @@
+/**
+ * src/ui/gallery/gallery.css — the UI Kit workbench chrome.
+ *
+ * Ported from the approved mockup (siomac-ui-kit-gallery/index.html + styles.css).
+ * Structure and proportions follow it; the VALUES are kit tokens rather than the
+ * mockup's literals, so the workbench is themed by the same system it edits —
+ * a design-system tool hardcoding its own hexes would be the first thing to
+ * drift.
+ *
+ *   ┌────────────┬──────────────────────────────┬─────────────┐
+ *   │ Sidebar    │ Topbar                       │             │
+ *   │ (own nav)  ├──────────────────────────────┤ Inspector   │
+ *   │            │ Canvas                       │             │
+ *   │ Foundations│  Overview / Canvas / Compare │ Props Style │
+ *   │ Components │                              │ States A11Y │
+ *   │ Patterns   │                              │ Code Migr.  │
+ *   └────────────┴──────────────────────────────┴─────────────┘
+ *
+ * The gallery keeps its own accent (green) distinct from SIOMAC's brand red.
+ * That is deliberate: the workbench chrome must never be mistaken for the
+ * component being previewed, and a red "Apply" next to a red primary Button is
+ * exactly that mistake.
+ *
+ * @layer recipes, no `!important` — the workbench follows the rules it enforces.
+ */
+
+@layer recipes {
+  :root {
+    --ui-gal-sidebar-w: 196px;
+    --ui-gal-inspector-w: 300px;
+    --ui-gal-topbar-h: 70px;
+
+    --ui-gal-navy: #071b2e;
+    --ui-gal-navy-2: #082135;
+    --ui-gal-accent: #27815e;
+    --ui-gal-accent-soft: #ecf8f2;
+    --ui-gal-accent-line: #cce7da;
+    --ui-gal-nav-fg: #d7e0e8;
+    --ui-gal-nav-muted: #8295a5;
+    --ui-gal-nav-active: #245f50;
+    --ui-gal-canvas-bg: #fbfcfd;
+  }
+
+  /* Full-page takeover, the same pattern as Payslip Studio: a fixed overlay
+     covering the ERP shell (topbar + sidebar), out of document flow so it does
+     not depend on the host section's height.
+     
+     The workbench needs it more than most tools. It has its OWN sidebar, and
+     showing two sidebars side by side both wastes the canvas and makes it
+     ambiguous which chrome belongs to the app and which to the kit. Inside the
+     ERP shell the canvas was ~310–540px; here it is the viewport. */
+  .ui-kit-section.app-section { padding: 0; }
+
+  .ui-gallery-shell {
+    container-type: inline-size;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    overflow: hidden;
+    background: var(--ui-gal-canvas-bg);
+  }
+
+  .ui-gallery {
+    display: grid;
+    grid-template-columns: var(--ui-gal-sidebar-w) minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--ui-gal-canvas-bg);
+    font-size: var(--ui-font-size-body-sm);
+  }
+
+  /* ── Sidebar ───────────────────────────────────────────────────────────────*/
+  .ui-gal-sidebar {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: linear-gradient(180deg, var(--ui-gal-navy-2) 0%, var(--ui-gal-navy) 55%, #071828 100%);
+    color: var(--ui-gal-nav-fg);
+    border-right: 1px solid #0d314a;
+  }
+  .ui-gal-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 66px;
+    flex-shrink: 0;
+    padding: 0 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+  }
+  .ui-gal-brand-mark { width: 31px; height: 31px; color: #18a06f; flex-shrink: 0; }
+  .ui-gal-brand-mark > svg { width: 100%; height: 100%; }
+  .ui-gal-brand-title { color: #fff; font-size: 17px; font-weight: 800; letter-spacing: .2px; line-height: 1.1; }
+  .ui-gal-brand-sub { color: #34c187; font-size: 10px; font-weight: 700; margin-top: 1px; }
+
+  .ui-gal-nav {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 12px 8px 16px;
+  }
+  .ui-gal-nav-section {
+    margin: 15px 10px 7px;
+    color: var(--ui-gal-nav-muted);
+    font-size: 9px;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .ui-gal-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 25px;
+    padding: 0 9px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--ui-gal-nav-fg);
+    font: inherit;
+    font-size: 11px;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .ui-gal-nav-item:hover { background: rgba(255, 255, 255, .06); }
+  .ui-gal-nav-item[aria-current='true'] { background: var(--ui-gal-nav-active); color: #fff; }
+  .ui-gal-nav-item:focus-visible { outline: 2px solid #34c187; outline-offset: -2px; }
+  .ui-gal-nav-item > svg { width: 12px; height: 12px; flex-shrink: 0; color: #b6c5d1; }
+  .ui-gal-nav-item[aria-current='true'] > svg { color: #d9fff0; }
+  .ui-gal-nav-label { overflow: hidden; text-overflow: ellipsis; }
+
+  /* A missing component still gets a nav row — the gap is the point. Dimmed and
+     suffixed so it is never mistaken for something that exists. */
+  .ui-gal-nav-item[data-missing='true'] { color: #7d8fa0; }
+  .ui-gal-nav-count {
+    margin-left: auto;
+    padding-left: 6px;
+    color: var(--ui-gal-nav-muted);
+    font-size: 9px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ui-gal-sidebar-foot { flex-shrink: 0; padding: 11px 12px 16px; }
+  .ui-gal-sidebar-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    height: 34px;
+    border: 1px solid #31506a;
+    border-radius: 5px;
+    background: transparent;
+    color: #dce5ed;
+    font: inherit;
+    font-size: 10px;
+    cursor: pointer;
+  }
+  .ui-gal-sidebar-btn:hover { background: rgba(255, 255, 255, .06); }
+  .ui-gal-sidebar-btn > svg { width: 13px; height: 13px; }
+  /* The only way out of a full-page takeover — it must be obvious, so it is the
+     one filled control in the sidebar. */
+  .ui-gal-exit { margin-top: 8px; border-color: #2f6b55; background: rgba(39, 129, 94, .18); color: #b9f0d7; }
+  .ui-gal-exit:hover { background: rgba(39, 129, 94, .32); }
+
+  /* ── Main area ─────────────────────────────────────────────────────────────*/
+  .ui-gal-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .ui-gal-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    height: var(--ui-gal-topbar-h);
+    min-height: var(--ui-gal-topbar-h);
+    flex-shrink: 0;
+    padding: 0 20px 0 26px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+  }
+  .ui-gal-title-row { display: flex; align-items: center; gap: 8px; }
+  .ui-gal-topbar h1 { margin: 0; font-size: 21px; font-weight: 750; line-height: 1; color: var(--text-primary); }
+  .ui-gal-topbar p {
+    margin: 6px 0 0;
+    color: var(--text-muted);
+    font-size: 11px;
+    max-width: 72ch;
+  }
+  .ui-gal-version {
+    padding: 3px 8px;
+    border: 1px solid var(--ui-gal-accent-line);
+    border-radius: var(--radius-pill);
+    background: var(--ui-gal-accent-soft);
+    color: #277c5f;
+    font-size: 10px;
+    font-weight: var(--font-weight-semibold);
+  }
+  .ui-gal-top-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .ui-gal-search { width: min(300px, 26vw); }
+  .ui-gal-apply {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 34px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 5px;
+    background: var(--ui-gal-accent);
+    color: #fff;
+    font: inherit;
+    font-size: 11px;
+    font-weight: var(--font-weight-bold);
+    cursor: pointer;
+  }
+  .ui-gal-apply:hover:not(:disabled) { background: #1f6b4d; }
+  .ui-gal-apply:disabled { background: var(--ui-disabled-bg); color: var(--ui-disabled-fg); cursor: var(--ui-disabled-cursor); }
+  .ui-gal-apply > svg { width: 14px; height: 14px; }
+
+  /* ── Workspace ─────────────────────────────────────────────────────────────*/
+  .ui-gal-workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--ui-gal-inspector-w);
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .ui-gal-workspace--wide { grid-template-columns: minmax(0, 1fr); }
+
+  .ui-gallery-canvas {
+    min-width: 0;
+    min-height: 0;
+    padding: 20px 24px 36px 26px;
+    overflow: auto;
+    scrollbar-gutter: stable;
+    background: var(--ui-gal-canvas-bg);
+  }
+
+  /* ── Coverage dashboard ────────────────────────────────────────────────────*/
+  .ui-gal-coverage { display: grid; gap: var(--space-4); margin-bottom: var(--space-5); }
+  .ui-gal-cov-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-card);
+    overflow: hidden;
+  }
+  .ui-gal-cov-stat { padding: 13px 16px; border-right: 1px solid var(--border); min-width: 0; }
+  .ui-gal-cov-stat:last-child { border-right: 0; }
+  .ui-gal-cov-value {
+    font-size: 22px;
+    font-weight: 750;
+    line-height: 1.1;
+    color: var(--siomac-navy);
+    font-variant-numeric: tabular-nums;
+  }
+  .ui-gal-cov-value--missing { color: var(--st-warning-strong); }
+  .ui-gal-cov-value--accent { color: var(--ui-gal-accent); }
+  .ui-gal-cov-label { margin-top: 4px; color: var(--text-muted); font-size: 10px; }
+
+  .ui-gal-cov-cats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+    gap: 10px;
+  }
+  .ui-gal-cov-cat {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-card);
+  }
+  .ui-gal-cov-cat-name {
+    font-size: 9px;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--ui-letter-spacing-caps);
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .ui-gal-cov-cat-count { margin-top: 4px; font-size: 14px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .ui-gal-cov-cat-note { margin-top: 2px; font-size: 9px; color: var(--st-warning-strong); }
+  .ui-gal-cov-bar { height: 4px; margin-top: 8px; border-radius: 999px; background: var(--border); overflow: hidden; }
+  .ui-gal-cov-bar > i { display: block; height: 100%; background: var(--ui-gal-accent); }
+
+  /* ── Overview cards ────────────────────────────────────────────────────────*/
+  .ui-gal-section-h {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: var(--space-5) 0 var(--space-3);
+  }
+  .ui-gal-section-h > h2 { margin: 0; font-size: 13px; font-weight: 750; color: var(--text-primary); }
+  .ui-gal-section-h > span { color: var(--text-muted); font-size: 10px; }
+
+  .ui-gal-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(258px, 1fr));
+    gap: 12px;
+  }
+  .ui-gal-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 200px;
+    padding: 14px 14px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-card);
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    transition: border-color var(--ui-motion-fast), box-shadow var(--ui-motion-fast);
+  }
+  .ui-gal-card:hover { border-color: #b9cdc3; box-shadow: var(--elev-2); }
+  .ui-gal-card:focus-visible { outline: 2px solid var(--ui-gal-accent); outline-offset: 1px; }
+  .ui-gal-card--missing { background: repeating-linear-gradient(135deg, var(--bg-card) 0 8px, #fcfdfd 8px 16px); }
+
+  .ui-gal-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+  .ui-gal-card-head h3 { margin: 0; font-size: 12px; font-weight: 750; color: var(--text-primary); }
+  .ui-gal-card-sub { display: block; margin-top: 3px; color: var(--text-muted); font-size: 9px; }
+
+  .ui-gal-status {
+    flex-shrink: 0;
+    padding: 2px 7px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+    font-size: 8px;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .ui-gal-status--stable     { background: #e7f7ee; color: #218457; border-color: #cfead9; }
+  .ui-gal-status--beta       { background: var(--st-info-tint); color: var(--st-info-strong); }
+  .ui-gal-status--deprecated { background: var(--st-danger-tint); color: var(--st-danger-strong); }
+  .ui-gal-status--missing    { background: #fff4da; color: #b97414; }
+
+  .ui-gal-card-preview {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 92px;
+    padding: 10px 4px;
+    overflow: hidden;
+  }
+  /* A preview must never capture clicks: the whole card is the navigation
+     target, and a live Button inside it would swallow the click. */
+  .ui-gal-card-preview > * { pointer-events: none; max-width: 100%; }
+
+  .ui-gal-card-planned {
+    flex: 1 1 auto;
+    margin: 0;
+    padding: 9px 10px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow: hidden;
+  }
+
+  .ui-gal-card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 9px;
+  }
+  .ui-gal-card-link { color: #168359; font-weight: var(--font-weight-semibold); }
+
+  /* ── Detail view ───────────────────────────────────────────────────────────*/
+  .ui-gal-detail-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-4);
+  }
+  .ui-gal-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 10px;
+    cursor: pointer;
+  }
+  .ui-gal-back:hover { color: var(--siomac-navy); }
+  .ui-gal-back > svg { width: 13px; height: 13px; }
+
+  .ui-gallery-frame {
+    container-type: inline-size;
+    box-sizing: border-box;
+    margin: 0 auto;
+    padding: var(--space-5);
+    border: 1px dashed rgba(27, 45, 84, .18);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    transition: width var(--ui-motion-base) var(--ui-ease-standard);
+  }
+  .ui-gallery-stage { display: flex; align-items: flex-start; justify-content: center; min-height: 96px; }
+  .ui-gallery-stage--stretch > * { width: 100%; }
+
+  .ui-gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--space-3); }
+  .ui-gallery-compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--space-3); }
+  .ui-gallery-cell {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+  }
+  .ui-gallery-cell-label {
+    color: var(--text-muted);
+    font-size: var(--ui-font-size-caption);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--ui-letter-spacing-caps);
+    text-transform: uppercase;
+  }
+  .ui-gallery-cell-body { display: flex; align-items: center; justify-content: center; min-height: 52px; }
+
+  .ui-gallery-empty {
+    display: grid;
+    place-items: center;
+    gap: var(--space-2);
+    padding: var(--space-10);
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  /* ── Inspector ─────────────────────────────────────────────────────────────*/
+  .ui-gallery-inspector {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    background: var(--bg-card);
+    border-left: 1px solid var(--border);
+  }
+  .ui-gal-inspector-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 49px;
+    min-height: 49px;
+    flex-shrink: 0;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+  }
+  .ui-gal-inspector-head b { font-size: 12px; }
+  .ui-gal-inspector-reset {
+    margin-left: auto;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 10px;
+    cursor: pointer;
+  }
+  .ui-gal-inspector-reset:hover { color: var(--siomac-navy); }
+
+  .ui-gallery-tabs { display: flex; flex-shrink: 0; border-bottom: 1px solid var(--border); background: var(--bg-subtle); }
+  .ui-gallery-tab {
+    flex: 1 1 auto;
+    padding: 9px 2px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 8.5px;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .ui-gallery-tab:hover { color: var(--siomac-navy); }
+  .ui-gallery-tab[aria-selected='true'] { color: var(--ui-gal-accent); border-bottom-color: var(--ui-gal-accent); background: var(--bg-card); }
+  .ui-gallery-tab:focus-visible { outline: 2px solid var(--ui-gal-accent); outline-offset: -2px; }
+
+  .ui-gallery-panel {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 12px 16px 28px;
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+  }
+
+  .ui-gallery-section-title {
+    color: var(--siomac-navy);
+    font-size: 10px;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--ui-letter-spacing-caps);
+    text-transform: uppercase;
+  }
+  .ui-gallery-control { display: grid; gap: 5px; min-width: 0; }
+  .ui-gallery-control-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    color: var(--text-primary);
+    font-size: 10px;
+    font-weight: var(--font-weight-semibold);
+  }
+  .ui-gallery-control-help { color: var(--text-muted); font-size: 9px; line-height: var(--ui-line-height-base); }
+  .ui-gallery-var { color: var(--text-muted); font-family: var(--font-mono); font-size: 8px; overflow: hidden; text-overflow: ellipsis; }
+  .ui-gallery-control--dirty .ui-gallery-control-label { color: var(--ui-gal-accent); }
+  .ui-gallery-revert {
+    display: inline-grid; place-items: center;
+    width: 18px; height: 18px; padding: 0;
+    border: none; border-radius: 50%;
+    background: transparent; color: var(--text-muted); cursor: pointer;
+  }
+  .ui-gallery-revert:hover { background: rgba(27, 45, 84, .10); color: var(--siomac-navy); }
+  .ui-gallery-revert > svg { width: 12px; height: 12px; }
+
+  .ui-gallery-swatch-row { display: flex; align-items: center; gap: var(--space-2); }
+  .ui-gallery-swatch { width: 28px; height: 28px; padding: 0; border: 1px solid var(--border); border-radius: var(--radius-xs); background: none; cursor: pointer; flex-shrink: 0; }
+  .ui-gal-select {
+    width: 100%;
+    height: 31px;
+    padding: 0 9px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 10px;
+  }
+
+  .ui-gallery-seg { display: inline-flex; padding: 2px; border: 1px solid var(--border); border-radius: 5px; background: var(--bg-subtle); }
+  .ui-gallery-seg > button {
+    padding: 5px 11px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 10px;
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+  }
+  .ui-gallery-seg > button[aria-pressed='true'] { background: var(--ui-gal-accent); color: #fff; }
+
+  .ui-gallery-check { display: flex; align-items: center; gap: var(--space-2); cursor: pointer; font-size: 10px; }
+
+  .ui-gallery-kv { display: grid; gap: 3px; }
+  .ui-gallery-kv-key {
+    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--ui-letter-spacing-caps);
+    text-transform: uppercase;
+  }
+  .ui-gallery-kv-val { color: var(--text-primary); font-size: 10px; line-height: var(--ui-line-height-base); }
+  .ui-gallery-keys { display: grid; gap: 6px; }
+  .ui-gallery-key-row { display: grid; grid-template-columns: minmax(68px, auto) 1fr; gap: var(--space-2); align-items: start; }
+  .ui-gallery-kbd {
+    justify-self: start;
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    border-radius: var(--radius-xs);
+    background: var(--bg-subtle);
+    color: var(--siomac-navy);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    white-space: nowrap;
+  }
+  .ui-gallery-note {
+    display: flex;
+    gap: 6px;
+    padding: 8px 10px;
+    border-left: 2px solid var(--st-info);
+    border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+    background: var(--st-info-tint);
+    color: var(--text-primary);
+    font-size: 9px;
+    line-height: var(--ui-line-height-base);
+  }
+  .ui-gallery-note > svg { flex-shrink: 0; margin-top: 1px; }
+  .ui-gallery-note--warn { border-left-color: var(--st-warning); background: var(--st-warning-tint); }
+
+  .ui-gallery-code {
+    margin: 0;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: #0d2036;
+    color: #d9e7ff;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow: auto;
+  }
+
+  /* ── Migration tab ─────────────────────────────────────────────────────────*/
+  .ui-gal-mig-stat { display: flex; align-items: baseline; gap: 8px; }
+  .ui-gal-mig-num { font-size: 18px; font-weight: 750; color: var(--siomac-navy); font-variant-numeric: tabular-nums; }
+  .ui-gal-mig-num--legacy { color: var(--st-warning-strong); }
+  .ui-gal-chiplist { display: flex; flex-wrap: wrap; gap: 5px; }
+  .ui-gal-chip {
+    padding: 2px 7px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    background: var(--bg-subtle);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+  }
+  .ui-gal-chip--danger { border-color: #f1caca; background: #fff0f0; color: var(--st-danger-strong); }
+
+  .ui-gallery-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    flex-shrink: 0;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-subtle) 100%);
+  }
+  .ui-gallery-dirty { margin-right: auto; color: var(--ui-gal-accent); font-size: 9px; font-weight: var(--font-weight-semibold); }
+  .ui-gallery-clean { margin-right: auto; color: var(--text-muted); font-size: 9px; }
+
+  /* Dialog previews render inline: a modal covering the workbench could not be
+     inspected while open. */
+  .ui-gallery-dialog-frame { display: flex; justify-content: center; width: 100%; }
+  .ui-gallery-dialog-frame > .ui-dialog {
+    position: relative;
+    max-height: none;
+    animation: none;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+    /* The real recipe caps the sheet at 100% so it fits a phone; that cap was
+       clamping the preview to the canvas width instead of its declared size. */
+    max-width: none;
+  }
+
+  /* ── Responsive ────────────────────────────────────────────────────────────
+     Container queries, not viewport: the gallery is not always the full window
+     width, and a media query would be measuring the wrong box. */
+  @container (max-width: 1180px) {
+    .ui-gallery { grid-template-columns: 164px minmax(0, 1fr); }
+    .ui-gal-workspace { grid-template-columns: minmax(0, 1fr) 250px; }
+    .ui-gallery-canvas { padding: 16px 16px 32px; }
+  }
+  @container (max-width: 940px) {
+    .ui-gallery { grid-template-columns: 150px minmax(0, 1fr); }
+    .ui-gal-workspace { grid-template-columns: minmax(0, 1fr) 224px; }
+    .ui-gal-search { display: none; }
+  }
+  @container (max-width: 760px) {
+    .ui-gal-workspace { grid-template-columns: minmax(0, 1fr); }
+    .ui-gallery-inspector { display: none; }
+  }
+}

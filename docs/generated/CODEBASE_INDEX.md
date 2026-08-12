@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `e3024af33397ded0c1d316b2ebbff9fb64f64d9c`  
-Source fingerprint: `82f8c479e45ee243383a07e9`  
+Source HEAD: `f9923c264097d0e8b4e7b2fbefe7e4c61e1e1672`  
+Source fingerprint: `2c93e80a46ceec81903ab39b`  
 Generator version: `1`
 
 ## Use
@@ -19,7 +19,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1389 | 14140 | 51 | 978 | 979 | 17 | 356 | 1436 | 91 | 2735 |
+| 1457 | 14674 | 63 | 978 | 979 | 17 | 356 | 1436 | 91 | 2742 |
 
 ## Modules
 
@@ -27,14 +27,14 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|
 | hr | 265 | 3076 | 9 | 275 | 275 | 37 | 196 | 16 | [open](modules/hr.md) |
 | payroll | 196 | 1986 | 11 | 140 | 140 | 2 | 260 | 29 | [open](modules/payroll.md) |
-| finance | 139 | 1853 | 9 | 156 | 156 | 4 | 202 | 9 | [open](modules/finance.md) |
-| hse | 87 | 1275 | 0 | 144 | 144 | 107 | 65 | 4 | [open](modules/hse.md) |
+| finance | 139 | 1850 | 9 | 156 | 156 | 4 | 202 | 9 | [open](modules/finance.md) |
+| hse | 84 | 1258 | 0 | 144 | 144 | 107 | 65 | 4 | [open](modules/hse.md) |
 | communications | 113 | 1057 | 0 | 93 | 96 | 88 | 158 | 7 | [open](modules/communications.md) |
 | workflow | 47 | 321 | 0 | 40 | 40 | 8 | 128 | 3 | [open](modules/workflow.md) |
 | security | 46 | 387 | 0 | 51 | 51 | 31 | 65 | 4 | [open](modules/security.md) |
-| settings | 43 | 250 | 0 | 26 | 26 | 18 | 21 | 2 | [open](modules/settings.md) |
+| settings | 44 | 253 | 0 | 26 | 26 | 18 | 21 | 2 | [open](modules/settings.md) |
 | widgets | 72 | 581 | 21 | 15 | 15 | 11 | 14 | 1 | [open](modules/widgets.md) |
-| platform | 334 | 3130 | 0 | 38 | 53 | 50 | 327 | 0 | [open](modules/platform.md) |
+| platform | 404 | 3681 | 12 | 38 | 53 | 50 | 327 | 0 | [open](modules/platform.md) |
 | testing | 47 | 224 | 0 | 0 | 0 | 0 | 0 | 16 | [open](modules/testing.md) |
 | enterprise | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | [open](modules/enterprise.md) |
 
@@ -42,6 +42,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | ID | Title | Kind | Module/area | Render | Location |
 |---|---|---|---|---|---|
+| `actionable-with-controls` | An actionable card that still has its own controls | registry | platform | `() => (         <div style={{ maxWidth: '320px' }}>           <Card             variant="action"             onClick={noop}             actionLabel="View Sarah James"             header={<CardHeader               icon={<LucideIcon name="User" />}               title="Sarah James"               description="Safety Officer · EMP-00484"               actions={<Button variant="ghost" size="sm" iconOnly aria-label="Edit Sarah James" iconLeft={<LucideIcon name="Pencil" />} />}             />}             footer={<CardFooter><span>Started 8 Mar 2021</span><Badge tone="success" size="sm" dot>Active</Badge></CardFooter>}           >             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>HSE · Georgetown</span>           </Card>         </div>       )` | `src/ui/registry/containers.defs.tsx:251` |
 | `bundle.hr.attendance.ops` | Attendance & Leave Ops | registry | hr | `` | `src/ui/widgets/bundles.ts:116` |
 | `bundle.hr.employees.essentials` | Employee Master Essentials | registry | hr | `` | `src/ui/widgets/bundles.ts:90` |
 | `bundle.hr.onboarding.manager` | Onboarding Manager Pack | registry | hr | `` | `src/ui/widgets/bundles.ts:76` |
@@ -66,6 +67,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `finance.statutory.nisChart` | NIS Contribution Schedule | local | finance | `renderChart` | `src/components/sections/Finance/StatutoryDashboard.tsx:676` |
 | `finance.statutory.readiness` | Statutory Readiness | local | finance | `renderReadiness` | `src/components/sections/Finance/StatutoryDashboard.tsx:677` |
 | `finance.statutory.register` | Statutory Register | local | finance | `renderRegister` | `src/components/sections/Finance/StatutoryDashboard.tsx:678` |
+| `group` | ButtonGroup — several INDEPENDENT actions | registry | platform | `() => (         <ButtonGroup label="Record actions">           <Button variant="outline" iconLeft={<LucideIcon name="Download" />}>Export</Button>           <Button variant="outline" iconLeft={<LucideIcon name="Printer" />}>Print</Button>           <Button variant="outline" iconLeft={<LucideIcon name="Share2" />}>Share</Button>         </ButtonGroup>       )` | `src/ui/registry/actions.defs.tsx:227` |
 | `hr.employeeMaster.activeWorkforce` | Active Workforce | registry | widgets | `ActiveWorkforce` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:613` |
 | `hr.employeeMaster.departures` | Departures | registry | widgets | `Departures` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:617` |
 | `hr.employeeMaster.employeeAttentionNeutral` | Employee Attention — Neutral | registry | widgets | `EmployeeAttentionNeutralWidget` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:619` |
@@ -86,12 +88,22 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `hr.onboarding.case.blockersTable` | Blockers | local | hr | `() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:330` |
 | `hr.onboarding.case.customActions` | Custom Actions | local | hr | `() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddAction}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:332` |
 | `hr.onboarding.case.handoffsTable` | Handoffs | local | hr | `() => wcard('Handoffs', 'fa-arrow-right-arrow-left', handoffsBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:331` |
+| `one-component` | One component, three appearances | registry | platform | `() => (         <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>           <Tabs id="ex-underline" label="Underline" items={PLAIN_TABS} value="overview" onChange={noop} />           <Tabs id="ex-contained" label="Contained" variant="contained" size="sm" items={PLAIN_TABS} value="tasks" onChange={noop} />           <Tabs id="ex-subtle" label="Subtle" variant="subtle" size="sm" items={PLAIN_TABS} value="files" onChange={noop} />         </div>       )` | `src/ui/registry/navigation.defs.tsx:215` |
+| `one-surface` | One surface, four rhythms | registry | platform | `() => (         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px' }}>           <Card variant="metric" density="compact" header={<CardHeader title="Open incidents" level={null} />}>             <Figure value="18" caption="4 overdue" />           </Card>           <Card variant="surface" header={<CardHeader title="Site note" />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Night shift handover completed.</span>           </Card>           <Card variant="panel" density="compact" header={<CardHeader title="Corrective actions" actions={<Badge tone="warning" size="sm">2 open</Badge>} />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Both due this Friday.</span>           </Card>           <Card variant="action" onClick={noop} actionLabel="Start a new inspection"             header={<CardHeader icon={<LucideIcon name="ClipboardCheck" />} title="New inspection" description="Start from a template" />} />         </div>       )` | `src/ui/registry/containers.defs.tsx:216` |
+| `overflow` | Nine tabs in a drawer | registry | platform | `() => (         <Tabs           id="ex-overflow"           label="Rate version sections"           variant="contained"           size="sm"           items={MANY_TABS}           maxVisible={4}           value="timeline"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:251` |
 | `platform.weather.current` | Weather | registry | widgets | `WeatherBandWidget` | `src/ui/widgets/registry.weather.tsx:488` |
 | `platform.weather.precipitation` | Weather · Precipitation | registry | widgets | `metricWidget('precipitation')` | `src/ui/widgets/registry.weather.tsx:502` |
 | `platform.weather.strip` | Weather · Strip | registry | widgets | `WeatherStripWidget` | `src/ui/widgets/registry.weather.tsx:495` |
 | `platform.weather.uv` | Weather · UV index | registry | widgets | `metricWidget('uv')` | `src/ui/widgets/registry.weather.tsx:510` |
 | `platform.weather.wind` | Weather · Wind | registry | widgets | `metricWidget('wind')` | `src/ui/widgets/registry.weather.tsx:518` |
+| `row-actions` | Icon-only row actions | registry | platform | `() => (         <div style={{ display: 'flex', gap: '4px' }}>           <Button variant="ghost" size="sm" iconOnly aria-label="Edit" iconLeft={<LucideIcon name="Pencil" />} />           <Button variant="ghost" size="sm" iconOnly aria-label="Duplicate" iconLeft={<LucideIcon name="Copy" />} />           <Button variant="ghost" size="sm" iconOnly aria-label="More actions" iconLeft={<LucideIcon name="EllipsisVertical" />} />         </div>       )` | `src/ui/registry/actions.defs.tsx:214` |
+| `select-all` | Select-all with a partial selection | registry | platform | `() => (         <CheckboxGroup           label="Modules"           selectAllLabel="All modules"           values={['hr']}           onChange={noop}           options={[             { value: 'hr', label: 'Human Resources' },             { value: 'hse', label: 'HSE' },             { value: 'fin', label: 'Finance', disabled: true },           ]}         />       )` | `src/ui/registry/forms.defs.tsx:108` |
+| `status-set` | A status set | registry | platform | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>           <Badge tone="success" dot>Active</Badge>           <Badge tone="warning" dot>Probation</Badge>           <Badge tone="info" dot>On leave</Badge>           <Badge tone="neutral" dot>Inactive</Badge>           <Badge tone="danger" dot>Terminated</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:327` |
 | `test.widget` | Test | registry | enterprise/test | `() => <div>live</div>` | `src/ui/widgets/platform.test.tsx:14` |
+| `toggle-and-link` | Toggle and link — props, not components | registry | platform | `() => (         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>           <Button variant="outline" pressed iconLeft={<LucideIcon name="Filter" />}>Only my cases</Button>           <Button variant="link" href="#audit" iconRight={<LucideIcon name="ArrowRight" />}>View audit trail</Button>         </div>       )` | `src/ui/registry/actions.defs.tsx:243` |
+| `tone-scale` | Tone is meaning, not decoration | registry | platform | `() => (         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>           {(['success', 'warning', 'danger', 'info'] as CardTone[]).map(tone => (             <Card key={tone} variant="metric" density="compact" tone={tone}               header={<CardHeader title={`${tone[0]!.toUpperCase()}${tone.slice(1)} signal`} level={null} />}>               <Figure value="7" caption="this week" />             </Card>           ))}         </div>       )` | `src/ui/registry/containers.defs.tsx:236` |
+| `variants` | Soft, solid, outline — and tags | registry | platform | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>           <Badge tone="danger" variant="soft">Overdue</Badge>           <Badge tone="danger" variant="solid">Critical</Badge>           <Badge tone="danger" variant="outline">Escalated</Badge>           <Badge tone="accent" size="sm" onRemove={noop}>Night shift</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:341` |
+| `vertical` | Vertical is an orientation, not a component | registry | platform | `() => (         <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>           <Tabs             id="ex-vertical"             label="Settings sections"             orientation="vertical"             items={[               { id: 'general', label: 'General', icon: <LucideIcon name="Settings" /> },               { id: 'security', label: 'Security', icon: <LucideIcon name="ShieldCheck" />, badge: 2 },               { id: 'notifications', label: 'Notifications', icon: <LucideIcon name="Bell" /> },             ]}             value="security"             onChange={noop}           />           <TabPanel tabsId="ex-vertical" tabId="security" value="security">             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Two security settings need review.</span>           </TabPanel>         </div>       )` | `src/ui/registry/navigation.defs.tsx:227` |
 | `w.floored` |  | local | widgets | `() => <div />` | `src/ui/widgets/platform.test.tsx:182` |
 
 ## Important limitation

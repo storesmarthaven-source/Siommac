@@ -2,7 +2,7 @@
 
 # widgets Module Map
 
-Source fingerprint: `82f8c479e45ee243383a07e9`
+Source fingerprint: `2c93e80a46ceec81903ab39b`
 
 Files: 72 | Symbols: 581 | Widgets: 21 | Unique mounted endpoints: 15 | Route definitions: 15 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
 
@@ -284,7 +284,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | widget-platform | `src/ui/widgets/createWidgetInstance.ts` | 25 |
 | widget-platform | `src/ui/widgets/dataSources.ts` | 13 |
 | widget-platform | `src/ui/widgets/deadlineDesignCard.tsx` | 362 |
-| widget-platform | `src/ui/widgets/declarative/DeclarativeWidgetView.tsx` | 45 |
+| widget-platform | `src/ui/widgets/declarative/DeclarativeWidgetView.tsx` | 59 |
 | widget-platform | `src/ui/widgets/declarative/declarativeToWidgetDef.tsx` | 42 |
 | widget-platform | `src/ui/widgets/declarative/parsePackageFile.ts` | 124 |
 | widget-platform | `src/ui/widgets/declarative/types.ts` | 44 |

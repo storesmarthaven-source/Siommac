@@ -1,0 +1,302 @@
+/**
+ * src/ui/navigation/Wizard/wizard.recipe.css — the one wizard recipe.
+ *
+ * @layer recipes, no `!important` — see src/ui/RECIPES.md §4.
+ *
+ * The wizard is a three-row grid (nav · body · footer) when horizontal, and a
+ * two-column grid with the nav as a rail when vertical. It owns NO overlay:
+ * a modal wizard is `<Dialog><Wizard /></Dialog>`, so the sheet, the backdrop,
+ * the focus trap and the scroll lock all stay in one place.
+ *
+ * Sizing is `height: 100%` + `min-height: 0` throughout, so the body scrolls
+ * and the footer stays pinned when the wizard is inside a Dialog. The three
+ * implementations this replaces each solved that with a different hardcoded
+ * max-height.
+ */
+
+@layer recipes {
+  /* `[data-ui-preview-scope]` is a SECOND ROOT. See the note in semantic.css:
+     a var() is substituted where the property is DECLARED, so tokens declared
+     only on :root are already resolved before a scoped draft can reach them. */
+  :root,
+  [data-ui-preview-scope] {
+    --ui-wizard-gap: var(--space-4);
+    --ui-wizard-pad: var(--space-4);
+    --ui-wizard-rail-width: 232px;
+    --ui-wizard-rail-bg: var(--ui-color-surface-subtle);
+    --ui-wizard-rail-fg: var(--ui-color-text-primary);
+    --ui-wizard-divider: var(--ui-color-border-default);
+
+    --ui-wizard-marker-size: 26px;
+    --ui-wizard-marker-bg: var(--ui-color-surface-default);
+    --ui-wizard-marker-fg: var(--ui-color-text-secondary);
+    --ui-wizard-marker-border: var(--ui-color-border-default);
+
+    --ui-wizard-current-bg: var(--ui-color-selection-border);
+    --ui-wizard-current-fg: var(--ui-color-text-inverse);
+    --ui-wizard-complete-bg: var(--ui-color-success);
+    --ui-wizard-complete-fg: var(--ui-color-text-inverse);
+    --ui-wizard-invalid-bg: var(--ui-color-danger);
+    --ui-wizard-invalid-fg: var(--ui-color-text-inverse);
+    --ui-wizard-skipped-fg: var(--ui-color-text-secondary);
+
+    --ui-wizard-label-fg: var(--ui-color-text-primary);
+    --ui-wizard-label-fg-muted: var(--ui-color-text-secondary);
+    --ui-wizard-label-font-size: var(--ui-font-size-body-sm);
+    --ui-wizard-desc-font-size: var(--ui-font-size-caption);
+
+    --ui-wizard-connector: var(--ui-color-border-default);
+    --ui-wizard-connector-done: var(--ui-color-success);
+
+    --ui-wizard-issue-bg: var(--st-danger-tint);
+    --ui-wizard-issue-fg: var(--ui-color-danger);
+    --ui-wizard-issue-radius: var(--radius-sm);
+
+    --ui-wizard-foot-bg: var(--ui-color-surface-subtle);
+  }
+
+  /* ── Root ─────────────────────────────────────────────────────────────────*/
+  .ui-wizard {
+    display: grid;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    background: var(--bg-card);
+  }
+  .ui-wizard--horizontal {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+  .ui-wizard--vertical {
+    grid-template-columns: var(--ui-wizard-rail-width) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .ui-wizard--vertical > .ui-wizard-nav  { grid-row: 1 / span 2; }
+  .ui-wizard--vertical > .ui-wizard-main { grid-column: 2; }
+  .ui-wizard--vertical > .ui-wizard-foot { grid-column: 2; }
+
+  /* ── Step navigation ──────────────────────────────────────────────────────*/
+  .ui-wizard-nav { min-width: 0; }
+  .ui-wizard--horizontal > .ui-wizard-nav {
+    padding: var(--space-3) var(--ui-wizard-pad);
+    border-bottom: var(--ui-border-width) solid var(--ui-wizard-divider);
+  }
+  .ui-wizard--vertical > .ui-wizard-nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--ui-wizard-pad);
+    background: var(--ui-wizard-rail-bg);
+    color: var(--ui-wizard-rail-fg);
+    border-right: var(--ui-border-width) solid var(--ui-wizard-divider);
+    overflow-y: auto;
+  }
+
+  .ui-wizard-steps {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+  }
+  .ui-wizard--horizontal .ui-wizard-steps { flex-direction: row; gap: var(--space-2); overflow-x: auto; scrollbar-width: thin; }
+  .ui-wizard--vertical   .ui-wizard-steps { flex-direction: column; gap: 2px; }
+
+  .ui-wizard-step { position: relative; min-width: 0; }
+  .ui-wizard--horizontal .ui-wizard-step { flex: 1 1 0; min-width: 132px; }
+
+  /* The connector is drawn from the step, so it can never fall out of step with
+     the markers the way an absolutely-positioned rail does. */
+  .ui-wizard--horizontal .ui-wizard-step + .ui-wizard-step::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--ui-wizard-marker-size) / 2);
+    left: calc(-1 * var(--space-2));
+    width: var(--space-2);
+    height: 2px;
+    background: var(--ui-wizard-connector);
+  }
+  .ui-wizard--horizontal .ui-wizard-step.is-complete::before,
+  .ui-wizard--horizontal .ui-wizard-step.is-skipped::before {
+    background: var(--ui-wizard-connector-done);
+  }
+
+  .ui-wizard-step-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    width: 100%;
+    padding: 6px;
+    border: none;
+    border-radius: var(--radius-xs);
+    background: transparent;
+    text-align: left;
+    font-family: inherit;
+    cursor: pointer;
+    min-width: 0;
+  }
+  .ui-wizard-step-btn:disabled { cursor: default; }
+  .ui-wizard-step-btn:not(:disabled):hover { background: rgba(27, 45, 84, .05); }
+  .ui-wizard-step-btn:focus-visible {
+    outline: var(--ui-focus-outline-width) solid var(--ui-focus-outline-color);
+    outline-offset: -2px;
+  }
+
+  .ui-wizard-marker {
+    display: inline-grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: var(--ui-wizard-marker-size);
+    height: var(--ui-wizard-marker-size);
+    border-radius: 50%;
+    border: var(--ui-border-width) solid var(--ui-wizard-marker-border);
+    background: var(--ui-wizard-marker-bg);
+    color: var(--ui-wizard-marker-fg);
+    font-size: var(--ui-font-size-label);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1;
+  }
+  .ui-wizard-marker > svg { width: 14px; height: 14px; }
+
+  .ui-wizard-step-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-top: 3px; }
+  .ui-wizard-step-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--ui-wizard-label-font-size);
+    font-weight: var(--font-weight-semibold);
+    color: var(--ui-wizard-label-fg-muted);
+    line-height: var(--ui-line-height-tight);
+    min-width: 0;
+  }
+  .ui-wizard-step-desc {
+    font-size: var(--ui-wizard-desc-font-size);
+    font-weight: var(--font-weight-regular);
+    color: var(--ui-wizard-label-fg-muted);
+    line-height: 1.35;
+  }
+  .ui-wizard-optional {
+    flex-shrink: 0;
+    padding: 0 5px;
+    border-radius: var(--radius-pill);
+    background: var(--st-neutral-tint);
+    color: var(--text-muted);
+    font-size: var(--ui-font-size-caption);
+    font-weight: var(--font-weight-regular);
+  }
+
+  /* ── Step states ──────────────────────────────────────────────────────────*/
+  .ui-wizard-step.is-current .ui-wizard-marker {
+    background: var(--ui-wizard-current-bg);
+    color: var(--ui-wizard-current-fg);
+    border-color: var(--ui-wizard-current-bg);
+  }
+  .ui-wizard-step.is-current .ui-wizard-step-label { color: var(--ui-wizard-label-fg); }
+
+  .ui-wizard-step.is-complete .ui-wizard-marker {
+    background: var(--ui-wizard-complete-bg);
+    color: var(--ui-wizard-complete-fg);
+    border-color: var(--ui-wizard-complete-bg);
+  }
+  .ui-wizard-step.is-complete .ui-wizard-step-label { color: var(--ui-wizard-label-fg); }
+
+  .ui-wizard-step.is-invalid .ui-wizard-marker {
+    background: var(--ui-wizard-invalid-bg);
+    color: var(--ui-wizard-invalid-fg);
+    border-color: var(--ui-wizard-invalid-bg);
+  }
+  .ui-wizard-step.is-invalid .ui-wizard-step-label { color: var(--ui-wizard-invalid-bg); }
+
+  .ui-wizard-step.is-skipped .ui-wizard-marker { color: var(--ui-wizard-skipped-fg); }
+  .ui-wizard-step.is-skipped .ui-wizard-step-label { color: var(--ui-wizard-skipped-fg); text-decoration: line-through; }
+
+  .ui-wizard-step.is-disabled { opacity: .5; }
+
+  /* ── Mobile progress summary ──────────────────────────────────────────────*/
+  /* Hidden until the step list stops fitting. Both exist in the DOM so the
+     switch is a media query rather than a resize listener, and it is
+     aria-hidden because the <ol> already announces the position. */
+  .ui-wizard-progress { display: none; flex-direction: column; gap: 6px; }
+  .ui-wizard-progress-text { font-size: var(--ui-font-size-body-sm); font-weight: var(--font-weight-semibold); color: var(--text-primary); }
+  .ui-wizard-progress-track { display: block; height: 4px; border-radius: var(--radius-pill); background: var(--ui-wizard-connector); overflow: hidden; }
+  .ui-wizard-progress-fill { display: block; height: 100%; background: var(--ui-wizard-current-bg); transition: width var(--ui-motion-base) var(--ui-ease-standard); }
+
+  .ui-wizard-aside { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+  .ui-wizard--horizontal .ui-wizard-aside { margin-top: var(--space-3); }
+
+  /* ── Body ─────────────────────────────────────────────────────────────────*/
+  .ui-wizard-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-height: 0;
+    min-width: 0;
+    padding: var(--ui-wizard-pad);
+    overflow-y: auto;
+  }
+  .ui-wizard-panel { min-width: 0; }
+  .ui-wizard-panel:focus { outline: none; }
+  .ui-wizard-panel:focus-visible {
+    outline: var(--ui-focus-outline-width) solid var(--ui-focus-outline-color);
+    outline-offset: 4px;
+  }
+
+  .ui-wizard-issues {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: 10px 12px;
+    border-radius: var(--ui-wizard-issue-radius);
+    background: var(--ui-wizard-issue-bg);
+    color: var(--ui-wizard-issue-fg);
+    font-size: var(--ui-font-size-body-sm);
+  }
+  .ui-wizard-issues > svg { flex-shrink: 0; margin-top: 1px; }
+  .ui-wizard-issues strong { display: block; font-weight: var(--font-weight-semibold); }
+  .ui-wizard-issues ul { margin: 4px 0 0; padding-left: 18px; }
+  .ui-wizard-issues li { line-height: 1.45; }
+
+  /* ── Footer ───────────────────────────────────────────────────────────────*/
+  .ui-wizard-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--ui-wizard-pad);
+    background: var(--ui-wizard-foot-bg);
+    border-top: var(--ui-border-width) solid var(--ui-wizard-divider);
+    flex-wrap: wrap;
+  }
+  .ui-wizard-foot-left,
+  .ui-wizard-foot-right { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+  .ui-wizard-foot-note { font-size: var(--ui-font-size-caption); color: var(--text-muted); }
+
+  /* ── Responsive ───────────────────────────────────────────────────────────*/
+  /* Container queries would be better, but the wizard's parent is a Dialog whose
+     width is a viewport clamp — the viewport IS the constraint here. */
+  @media (max-width: 720px) {
+    :root { --ui-wizard-pad: var(--space-3); }
+
+    .ui-wizard--vertical {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr) auto;
+    }
+    .ui-wizard--vertical > .ui-wizard-nav {
+      grid-row: auto;
+      border-right: none;
+      border-bottom: var(--ui-border-width) solid var(--ui-wizard-divider);
+    }
+    .ui-wizard--vertical > .ui-wizard-main,
+    .ui-wizard--vertical > .ui-wizard-foot { grid-column: 1; }
+
+    .ui-wizard-steps { display: none; }
+    .ui-wizard-progress { display: flex; }
+
+    /* The primary action must stay reachable with a thumb, so the footer
+       becomes a single full-width column rather than a wrapped row whose
+       buttons land in a different order than they read. */
+    .ui-wizard-foot { flex-direction: column-reverse; align-items: stretch; }
+    .ui-wizard-foot-left,
+    .ui-wizard-foot-right { justify-content: stretch; }
+    .ui-wizard-foot-right > .ui-btn { flex: 1 1 auto; }
+  }
+}

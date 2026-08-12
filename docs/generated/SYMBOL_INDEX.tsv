@@ -3936,6 +3936,52 @@ manifest	object	widgets	false		scripts/build-widget-package.mjs	68
 archive	variable	widgets	false		scripts/build-widget-package.mjs	74	
 __dirname	variable	platform	false		scripts/check-role-perms-schema.mjs	7	
 sb	variable	platform	false		scripts/check-role-perms-schema.mjs	10	
+ROOT	variable	platform	false		scripts/check-ui-kit-coverage.mjs	38	
+SRC	variable	platform	false		scripts/check-ui-kit-coverage.mjs	39	
+BASELINE_PATH	variable	platform	false		scripts/check-ui-kit-coverage.mjs	40	
+args	variable	platform	false		scripts/check-ui-kit-coverage.mjs	42	
+MODE	variable	platform	false		scripts/check-ui-kit-coverage.mjs	43	
+KIT_PREFIXES	array	platform	false		scripts/check-ui-kit-coverage.mjs	48	
+SKIP_DIRS	variable	platform	false		scripts/check-ui-kit-coverage.mjs	49	
+walk	function	platform	false		scripts/check-ui-kit-coverage.mjs	51	
+files	variable	platform	false		scripts/check-ui-kit-coverage.mjs	61	
+appFiles	variable	platform	false		scripts/check-ui-kit-coverage.mjs	66	
+countOccurrences	function	platform	false		scripts/check-ui-kit-coverage.mjs	68	
+BUILT_REGISTRY_FILES	array	platform	false		scripts/check-ui-kit-coverage.mjs	93	
+readRegistry	function	platform	false		scripts/check-ui-kit-coverage.mjs	103	
+grab	function	platform	false		scripts/check-ui-kit-coverage.mjs	135	readRegistry
+registry	variable	platform	false		scripts/check-ui-kit-coverage.mjs	151	
+uniq	function	platform	false		scripts/check-ui-kit-coverage.mjs	152	
+replacesClasses	variable	platform	false		scripts/check-ui-kit-coverage.mjs	153	
+deprecatedImports	variable	platform	false		scripts/check-ui-kit-coverage.mjs	154	
+rawPatterns	variable	platform	false		scripts/check-ui-kit-coverage.mjs	155	
+byStatus	function	platform	false		scripts/check-ui-kit-coverage.mjs	159	
+brokenPaths	array	platform	false		scripts/check-ui-kit-coverage.mjs	162	
+file	variable	platform	false		scripts/check-ui-kit-coverage.mjs	163	
+rawCounts	object	platform	false		scripts/check-ui-kit-coverage.mjs	173	
+pattern	variable	platform	false		scripts/check-ui-kit-coverage.mjs	174	
+unmanagedRaw	variable	platform	false		scripts/check-ui-kit-coverage.mjs	177	
+legacyClassCounts	object	platform	false		scripts/check-ui-kit-coverage.mjs	180	
+cls	variable	platform	false		scripts/check-ui-kit-coverage.mjs	181	
+legacyClassUsages	variable	platform	false		scripts/check-ui-kit-coverage.mjs	192	
+deprecatedCounts	object	platform	false		scripts/check-ui-kit-coverage.mjs	195	
+sym	variable	platform	false		scripts/check-ui-kit-coverage.mjs	196	
+deprecatedUsages	variable	platform	false		scripts/check-ui-kit-coverage.mjs	202	
+LOCAL_PRIMITIVE_RE	variable	platform	false		scripts/check-ui-kit-coverage.mjs	205	
+localPrimitives	array	platform	false		scripts/check-ui-kit-coverage.mjs	207	
+f	variable	platform	false		scripts/check-ui-kit-coverage.mjs	208	
+KIT_SYMBOLS	array	platform	false		scripts/check-ui-kit-coverage.mjs	215	
+adoptingFiles	variable	platform	false		scripts/check-ui-kit-coverage.mjs	216	
+uiFiles	variable	platform	false		scripts/check-ui-kit-coverage.mjs	219	
+metrics	object	platform	false		scripts/check-ui-kit-coverage.mjs	221	
+completeness	variable	platform	false		scripts/check-ui-kit-coverage.mjs	234	
+adoption	variable	platform	false		scripts/check-ui-kit-coverage.mjs	236	
+RATCHETED	array	platform	false		scripts/check-ui-kit-coverage.mjs	242	
+loadBaseline	function	platform	false		scripts/check-ui-kit-coverage.mjs	244	
+writeBaseline	function	platform	false		scripts/check-ui-kit-coverage.mjs	249	
+pct	function	platform	false		scripts/check-ui-kit-coverage.mjs	265	
+pad	function	platform	false		scripts/check-ui-kit-coverage.mjs	266	
+report	function	platform	false		scripts/check-ui-kit-coverage.mjs	268	
 __dirname	variable	platform	false		scripts/check-wave2b-migrations.mjs	9	
 url	variable	platform	false		scripts/check-wave2b-migrations.mjs	12	
 key	variable	platform	false		scripts/check-wave2b-migrations.mjs	13	
@@ -6637,16 +6683,16 @@ ITEMS	array	platform	false		src/components/sections/AccessControl/module.ts	17
 accessControlModule	object	platform	true		src/components/sections/AccessControl/module.ts	28	
 mountAccessControlSection	function	platform	true		src/components/sections/AccessControl/mount.ts	14	
 unmountAccessControlSection	function	platform	true		src/components/sections/AccessControl/mount.ts	23	
-STATUSES	array	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	21	
-dateLong	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	25	
-AcApprovalsPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	27	
-onSection	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	45	AcApprovalsPage
-doReject	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	61	AcApprovalsPage
-PAGE	variable	platform	false	component	src/components/sections/AccessControl/pages/AcAuditPage.tsx	14	
-dateLong	function	platform	false		src/components/sections/AccessControl/pages/AcAuditPage.tsx	15	
-AcAuditPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcAuditPage.tsx	17	
-reset	function	platform	false		src/components/sections/AccessControl/pages/AcAuditPage.tsx	36	AcAuditPage
-exportCsv	function	platform	false		src/components/sections/AccessControl/pages/AcAuditPage.tsx	37	AcAuditPage
+STATUSES	array	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	33	
+dateLong	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	37	
+AcApprovalsPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	39	
+onSection	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	57	AcApprovalsPage
+doReject	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	73	AcApprovalsPage
+dateLong	function	platform	false		src/components/sections/AccessControl/pages/AcAuditPage.tsx	25	
+AuditRow	interface	platform	false		src/components/sections/AccessControl/pages/AcAuditPage.tsx	28	
+AcAuditPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcAuditPage.tsx	39	
+exportCsv	function	platform	false		src/components/sections/AccessControl/pages/AcAuditPage.tsx	62	AcAuditPage
+onFilter	function	platform	false		src/components/sections/AccessControl/pages/AcAuditPage.tsx	86	AcAuditPage
 RoleKey	type	platform	false		src/components/sections/AccessControl/pages/AcCoveragePage.tsx	16	
 COV_ROLES	array	platform	false		src/components/sections/AccessControl/pages/AcCoveragePage.tsx	17	
 Cov	type	platform	false		src/components/sections/AccessControl/pages/AcCoveragePage.tsx	24	
@@ -6733,11 +6779,11 @@ bulk	function	platform	false		src/components/sections/AccessControl/pages/AcRole
 discard	function	platform	false	ui-tile	src/components/sections/AccessControl/pages/AcRolesPage.tsx	510	RoleEditor
 save	function	platform	false		src/components/sections/AccessControl/pages/AcRolesPage.tsx	515	RoleEditor
 toggleMod	function	platform	false		src/components/sections/AccessControl/pages/AcRolesPage.tsx	542	RoleEditor
-initials	function	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	14	
-ago	function	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	15	
-device	function	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	17	
-AcSessionsPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcSessionsPage.tsx	25	
-doRevoke	function	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	31	AcSessionsPage
+ago	function	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	21	
+device	function	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	29	
+SessionRow	interface	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	43	
+AcSessionsPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcSessionsPage.tsx	54	
+doRevoke	function	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	60	AcSessionsPage
 MODULE_LUCIDE	object	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	32	
 moduleLucide	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	38	
 OvState	type	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	40	
@@ -6926,10 +6972,10 @@ cancelBtnStyle	object	hr	false		src/components/sections/Employees/DepartmentModa
 submitBtnStyle	function	hr	false		src/components/sections/Employees/DepartmentModal.tsx	175	
 DepartmentsSection	function	hr	true	component	src/components/sections/Employees/DepartmentsSection.tsx	22	
 DepartmentCard	function	hr	false	component,ui-tile	src/components/sections/Employees/DepartmentsSection.tsx	146	
-EmployeeCardProps	interface	hr	false	ui-tile	src/components/sections/Employees/EmployeeCard.tsx	19	
-ROLE_LABEL	object	hr	false		src/components/sections/Employees/EmployeeCard.tsx	27	
-TODAY_BADGE_CLASS	object	hr	false		src/components/sections/Employees/EmployeeCard.tsx	35	
-EmployeeCard	function	hr	true	component,ui-tile	src/components/sections/Employees/EmployeeCard.tsx	41	
+EmployeeCardProps	interface	hr	false	ui-tile	src/components/sections/Employees/EmployeeCard.tsx	30	
+ROLE_LABEL	object	hr	false		src/components/sections/Employees/EmployeeCard.tsx	38	
+TODAY_BADGE_CLASS	object	hr	false		src/components/sections/Employees/EmployeeCard.tsx	46	
+EmployeeCard	function	hr	true	component,ui-tile	src/components/sections/Employees/EmployeeCard.tsx	52	
 EmployeeDrawerProps	interface	hr	false		src/components/sections/Employees/EmployeeDrawer.tsx	26	
 ROLE_LABEL	object	hr	false		src/components/sections/Employees/EmployeeDrawer.tsx	34	
 EmployeeDrawer	function	hr	true	component	src/components/sections/Employees/EmployeeDrawer.tsx	38	
@@ -7125,7 +7171,7 @@ H	function	finance	false	component	src/components/sections/Finance/ApNewBillWiza
 reset	function	finance	false		src/components/sections/Finance/ApNewBillWizard.tsx	71	ApNewBillWizard
 close	function	finance	false		src/components/sections/Finance/ApNewBillWizard.tsx	72	ApNewBillWizard
 pickVendor	function	finance	false		src/components/sections/Finance/ApNewBillWizard.tsx	73	ApNewBillWizard
-next	function	finance	false		src/components/sections/Finance/ApNewBillWizard.tsx	81	ApNewBillWizard
+submit	function	finance	false		src/components/sections/Finance/ApNewBillWizard.tsx	75	ApNewBillWizard
 METHODS	array	finance	false		src/components/sections/Finance/ApPaymentRunBuilder.tsx	28	
 fmtDue	function	finance	false		src/components/sections/Finance/ApPaymentRunBuilder.tsx	34	
 STEPS	array	finance	false		src/components/sections/Finance/ApPaymentRunBuilder.tsx	37	
@@ -8126,57 +8172,54 @@ TONE_CLASS	object	finance	false		src/components/sections/Finance/StatTable.tsx	5
 StatBadge	function	finance	true	component	src/components/sections/Finance/StatTable.tsx	59	
 pageWindow	function	finance	false		src/components/sections/Finance/StatTable.tsx	63	
 StatTable	function	finance	true	component	src/components/sections/Finance/StatTable.tsx	73	
-StatSubView	type	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	56	
-statusTone	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	64	
-statusPillTone	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	76	
-PAGE_SIZE	variable	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	86	
-toTitleCase	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	89	
-MainTab	type	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	95	
-StatutoryConfigOverview	function	finance	true	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	99	
-openDrawer	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	106	StatutoryConfigOverview
-openDrawerAtRuns	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	107	StatutoryConfigOverview
-handleExport	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	135	StatutoryConfigOverview
-VersionsTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	240	
-run	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	278	VersionsTab
-rowActions	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	366	VersionsTab
-NisClassesTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	441	
-handleDelete	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	479	NisClassesTab
-PayComponentsTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	567	
-handleApprove	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	591	PayComponentsTab
-handleReject	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	598	PayComponentsTab
-handleRetire	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	606	PayComponentsTab
-NisVerifyTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	757	
-verify	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	775	NisVerifyTab
-reject	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	791	NisVerifyTab
-val	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	802	NisVerifyTab
-dv	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	810	NisVerifyTab
-REPORTS	array	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	883	
-REPORT_COLUMNS	object	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	890	
-StatReportsTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	927	
-DrawerTab	type	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	947	
-DRAWER_TABS	array	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	948	
-DRAWER_PRIMARY_TABS	variable	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	960	
-DRAWER_MORE_TABS	variable	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	961	
-DRAWER_MORE_ICONS	object	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	963	
-drawerTabLabel	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	970	
-drawerTabKey	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	971	
-StatVersionDrawer	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	973	
-run	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1013	StatVersionDrawer
-actorName	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1019	StatVersionDrawer
-railSub	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1035	StatVersionDrawer
-tlEvent	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1055	StatVersionDrawer
-stepDate	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1060	StatVersionDrawer
-stepBy	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1061	StatVersionDrawer
-retireVersion	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1089	StatVersionDrawer
-lifeDotColor	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1367	
-lifeLabel	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1377	
-SvdTile	function	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryConfigOverview.tsx	1384	
-SvdSection	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1395	
-SvdRailItem	interface	finance	true		src/components/sections/Finance/StatutoryConfigOverview.tsx	1404	
-SvdSteps	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1414	
-SvdRail	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1441	
-StatEditVersionDialog	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1472	
-submit	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1496	StatEditVersionDialog
+StatSubView	type	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	57	
+statusTone	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	65	
+statusPillTone	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	77	
+PAGE_SIZE	variable	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	87	
+toTitleCase	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	90	
+MainTab	type	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	96	
+StatutoryConfigOverview	function	finance	true	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	100	
+openDrawer	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	107	StatutoryConfigOverview
+openDrawerAtRuns	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	108	StatutoryConfigOverview
+handleExport	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	136	StatutoryConfigOverview
+VersionsTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	241	
+run	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	279	VersionsTab
+rowActions	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	367	VersionsTab
+NisClassesTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	442	
+handleDelete	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	480	NisClassesTab
+PayComponentsTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	568	
+handleApprove	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	592	PayComponentsTab
+handleReject	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	599	PayComponentsTab
+handleRetire	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	607	PayComponentsTab
+NisVerifyTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	758	
+verify	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	776	NisVerifyTab
+reject	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	792	NisVerifyTab
+val	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	803	NisVerifyTab
+dv	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	811	NisVerifyTab
+REPORTS	array	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	884	
+REPORT_COLUMNS	object	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	891	
+StatReportsTab	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	928	
+DrawerTab	type	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	948	
+DRAWER_TABS	array	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	956	
+DRAWER_VISIBLE_TABS	variable	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	967	
+labelSkeletonWidth	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	978	
+StatVersionDrawer	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	980	
+run	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1020	StatVersionDrawer
+actorName	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1026	StatVersionDrawer
+railSub	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1042	StatVersionDrawer
+tlEvent	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1062	StatVersionDrawer
+stepDate	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1067	StatVersionDrawer
+stepBy	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1068	StatVersionDrawer
+retireVersion	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1096	StatVersionDrawer
+lifeDotColor	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1401	
+lifeLabel	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1411	
+SvdTile	function	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryConfigOverview.tsx	1418	
+SvdSection	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1429	
+SvdRailItem	interface	finance	true		src/components/sections/Finance/StatutoryConfigOverview.tsx	1438	
+SvdSteps	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1448	
+SvdRail	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1475	
+StatEditVersionDialog	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1506	
+submit	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1530	StatEditVersionDialog
 MainTab	type	finance	true		src/components/sections/Finance/StatutoryDashboard.tsx	67	
 TABS	array	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	69	
 PAGE_KEY	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	86	
@@ -8265,19 +8308,19 @@ submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	130	Conta
 StatusDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	185	
 submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	193	StatusDialog
 OffboardingDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	219	
-submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	231	OffboardingDialog
-ChangeRequestDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	283	
-set	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	292	ChangeRequestDialog
-fields	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	294	ChangeRequestDialog
-requestedValue	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	305	ChangeRequestDialog
-submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	317	ChangeRequestDialog
-DOC_TYPES	array	hr	false		src/components/sections/HR/ActionDialogs.tsx	344	
-CONFIDENTIALITY	array	hr	false		src/components/sections/HR/ActionDialogs.tsx	345	
-DocumentDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	347	
-submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	355	DocumentDialog
-StatutoryDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	383	
-set	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	392	StatutoryDialog
-submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	403	StatutoryDialog
+submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	237	OffboardingDialog
+ChangeRequestDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	295	
+set	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	304	ChangeRequestDialog
+fields	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	306	ChangeRequestDialog
+requestedValue	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	317	ChangeRequestDialog
+submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	329	ChangeRequestDialog
+DOC_TYPES	array	hr	false		src/components/sections/HR/ActionDialogs.tsx	356	
+CONFIDENTIALITY	array	hr	false		src/components/sections/HR/ActionDialogs.tsx	357	
+DocumentDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	359	
+submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	367	DocumentDialog
+StatutoryDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	395	
+set	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	404	StatutoryDialog
+submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	415	StatutoryDialog
 ExcRow	interface	hr	false		src/components/sections/HR/AttendanceOverview.tsx	28	
 STATUS_OPTIONS	array	hr	false		src/components/sections/HR/AttendanceOverview.tsx	30	
 SOURCE_OPTIONS	array	hr	false		src/components/sections/HR/AttendanceOverview.tsx	31	
@@ -9011,32 +9054,32 @@ notify	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	154	
 renderCases	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	267	OnboardingOverview
 handleOpenSurface	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	376	OnboardingOverview
 PkgTab	type	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	31	
-TABS	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	32	
-ACTION_TYPES	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	37	
-OWNER_TYPES	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	38	
-PRIORITIES	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	39	
-emptyTaskForm	object	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	40	
-emptyHandoffForm	object	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	41	
-emptyActionForm	object	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	42	
-OnboardingPackageDetail	function	hr	true	component	src/components/sections/HR/OnboardingPackageDetail.tsx	48	
-run	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	69	OnboardingPackageDetail
-openEdit	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	77	OnboardingPackageDetail
-submitEdit	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	81	OnboardingPackageDetail
-handleStatusStep	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	90	OnboardingPackageDetail
-openAddTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	98	OnboardingPackageDetail
-openEditTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	99	OnboardingPackageDetail
-submitTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	102	OnboardingPackageDetail
-deleteTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	109	OnboardingPackageDetail
-openAddHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	115	OnboardingPackageDetail
-openEditHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	116	OnboardingPackageDetail
-submitHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	119	OnboardingPackageDetail
-deleteHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	126	OnboardingPackageDetail
-openAddAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	132	OnboardingPackageDetail
-openEditAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	133	OnboardingPackageDetail
-submitAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	141	OnboardingPackageDetail
-retireAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	155	OnboardingPackageDetail
-YN	function	hr	false	component	src/components/sections/HR/OnboardingPackageDetail.tsx	160	OnboardingPackageDetail
-empty	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	161	OnboardingPackageDetail
+TABS	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	35	
+ACTION_TYPES	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	40	
+OWNER_TYPES	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	41	
+PRIORITIES	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	42	
+emptyTaskForm	object	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	43	
+emptyHandoffForm	object	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	44	
+emptyActionForm	object	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	45	
+OnboardingPackageDetail	function	hr	true	component	src/components/sections/HR/OnboardingPackageDetail.tsx	51	
+run	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	72	OnboardingPackageDetail
+openEdit	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	80	OnboardingPackageDetail
+submitEdit	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	84	OnboardingPackageDetail
+handleStatusStep	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	93	OnboardingPackageDetail
+openAddTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	101	OnboardingPackageDetail
+openEditTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	102	OnboardingPackageDetail
+submitTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	105	OnboardingPackageDetail
+deleteTask	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	112	OnboardingPackageDetail
+openAddHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	118	OnboardingPackageDetail
+openEditHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	119	OnboardingPackageDetail
+submitHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	122	OnboardingPackageDetail
+deleteHandoff	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	129	OnboardingPackageDetail
+openAddAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	135	OnboardingPackageDetail
+openEditAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	136	OnboardingPackageDetail
+submitAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	144	OnboardingPackageDetail
+retireAction	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	158	OnboardingPackageDetail
+YN	function	hr	false	component	src/components/sections/HR/OnboardingPackageDetail.tsx	163	OnboardingPackageDetail
+empty	function	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	164	OnboardingPackageDetail
 STATUS_FILTERS	variable	hr	false	component	src/components/sections/HR/OnboardingPackageManager.tsx	19	
 StatusFilter	type	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	20	
 statusTone	function	hr	false		src/components/sections/HR/OnboardingPackageManager.tsx	22	
@@ -9365,8 +9408,8 @@ Fld	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard
 SelFld	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	845	
 DateFld	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	864	
 WorkerSearchField	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	882	
-DocumentRequirementCard	function	hr	false	component,ui-tile	src/components/sections/HR/StartOnboardingWizard.tsx	908	
-handleWaive	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	918	DocumentRequirementCard
+DocumentRequirementCard	function	hr	false	component,ui-tile	src/components/sections/HR/StartOnboardingWizard.tsx	912	
+handleWaive	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	922	DocumentRequirementCard
 STATUS_FILTERS	variable	hr	false	component	src/components/sections/HR/TransfersOverview.tsx	27	
 humanize	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	29	
 statusTone	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	30	
@@ -9399,12 +9442,12 @@ InductionTab	function	hse	false	component	src/components/sections/HSE/Contractor
 FilesTab	function	hse	false	component	src/components/sections/HSE/Contractors.tsx	240	
 AccessTab	function	hse	false	component	src/components/sections/HSE/Contractors.tsx	307	
 ContractorsArea	function	hse	true	component	src/components/sections/HSE/Contractors.tsx	347	
-TABS	array	hse	false		src/components/sections/HSE/Documents.tsx	17	
-TYPE_ICONS	object	hse	false		src/components/sections/HSE/Documents.tsx	22	
-HAZARD_COLORS	object	hse	false		src/components/sections/HSE/Documents.tsx	27	
-DocsTab	function	hse	false	component	src/components/sections/HSE/Documents.tsx	32	
-SdsTab	function	hse	false	component	src/components/sections/HSE/Documents.tsx	154	
-DocumentsArea	function	hse	true	component	src/components/sections/HSE/Documents.tsx	266	
+TABS	array	hse	false		src/components/sections/HSE/Documents.tsx	20	
+TYPE_ICONS	object	hse	false		src/components/sections/HSE/Documents.tsx	25	
+HAZARD_COLORS	object	hse	false		src/components/sections/HSE/Documents.tsx	30	
+DocsTab	function	hse	false	component	src/components/sections/HSE/Documents.tsx	35	
+SdsTab	function	hse	false	component	src/components/sections/HSE/Documents.tsx	157	
+DocumentsArea	function	hse	true	component	src/components/sections/HSE/Documents.tsx	269	
 EmergencyPlan	interface	hse	false		src/components/sections/HSE/EmergencyResponse.tsx	16	
 mockPlans	array	hse	false		src/components/sections/HSE/EmergencyResponse.tsx	28	
 MusterPoint	interface	hse	false		src/components/sections/HSE/EmergencyResponse.tsx	38	
@@ -9689,32 +9732,32 @@ PtwSparkRow	function	hse	false	component	src/components/sections/HSE/Permits.tsx
 PermitsArea	function	hse	true	component	src/components/sections/HSE/Permits.tsx	446	
 PpeTab	type	hse	false		src/components/sections/HSE/PPEManager.tsx	24	
 SectionHead	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	31	
-MiniCard	function	hse	false	component,ui-tile	src/components/sections/HSE/PPEManager.tsx	45	
-Record	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	55	
-DashboardTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	69	
-required	function	hse	false		src/components/sections/HSE/PPEManager.tsx	71	DashboardTab
-InventoryTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	147	
-PPE_ZONES	array	hse	false		src/components/sections/HSE/PPEManager.tsx	187	
-AssignTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	197	
-toggleZone	function	hse	false		src/components/sections/HSE/PPEManager.tsx	206	AssignTab
-handleAssign	function	hse	false		src/components/sections/HSE/PPEManager.tsx	216	AssignTab
-EmployeesTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	303	
-required	function	hse	false		src/components/sections/HSE/PPEManager.tsx	304	EmployeesTab
-assigned	function	hse	false		src/components/sections/HSE/PPEManager.tsx	305	EmployeesTab
-RenewalsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	342	
-ReturnsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	382	
-RequestsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	413	
-handleSubmit	function	hse	false		src/components/sections/HSE/PPEManager.tsx	427	RequestsTab
-InspectionsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	509	
-FitTestingTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	545	
-ProcurementTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	579	
-KitsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	616	
-MatrixTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	665	
-has	function	hse	false		src/components/sections/HSE/PPEManager.tsx	666	MatrixTab
-ReportsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	710	
-SettingsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	745	
-PPE_TAB_BODIES	object	hse	true		src/components/sections/HSE/PPEManager.tsx	776	
-PpeBody	function	hse	true	component	src/components/sections/HSE/PPEManager.tsx	794	
+MiniCard	function	hse	false	component,ui-tile	src/components/sections/HSE/PPEManager.tsx	52	
+Record	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	62	
+DashboardTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	76	
+required	function	hse	false		src/components/sections/HSE/PPEManager.tsx	78	DashboardTab
+InventoryTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	154	
+PPE_ZONES	array	hse	false		src/components/sections/HSE/PPEManager.tsx	194	
+AssignTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	204	
+toggleZone	function	hse	false		src/components/sections/HSE/PPEManager.tsx	213	AssignTab
+handleAssign	function	hse	false		src/components/sections/HSE/PPEManager.tsx	223	AssignTab
+EmployeesTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	310	
+required	function	hse	false		src/components/sections/HSE/PPEManager.tsx	311	EmployeesTab
+assigned	function	hse	false		src/components/sections/HSE/PPEManager.tsx	312	EmployeesTab
+RenewalsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	349	
+ReturnsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	389	
+RequestsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	420	
+handleSubmit	function	hse	false		src/components/sections/HSE/PPEManager.tsx	434	RequestsTab
+InspectionsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	516	
+FitTestingTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	552	
+ProcurementTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	586	
+KitsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	623	
+MatrixTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	672	
+has	function	hse	false		src/components/sections/HSE/PPEManager.tsx	673	MatrixTab
+ReportsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	717	
+SettingsTab	function	hse	false	component	src/components/sections/HSE/PPEManager.tsx	752	
+PPE_TAB_BODIES	object	hse	true		src/components/sections/HSE/PPEManager.tsx	783	
+PpeBody	function	hse	true	component	src/components/sections/HSE/PPEManager.tsx	801	
 CustomHazard	interface	hse	true		src/components/sections/HSE/ptw/dialogs/CustomHazardDialog.tsx	25	
 CATEGORY_OPTIONS	array	hse	false		src/components/sections/HSE/ptw/dialogs/CustomHazardDialog.tsx	39	
 RISK_LEVEL_OPTIONS	array	hse	false		src/components/sections/HSE/ptw/dialogs/CustomHazardDialog.tsx	57	
@@ -9901,26 +9944,22 @@ ASSESSMENT_TYPES	variable	hse	false	component	src/components/sections/HSE/risk-j
 HAZARD_CATEGORIES	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	37	
 REVIEW_CYCLES	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	42	
 SITE_OPTIONS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	50	
-WIZARD_STEPS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	52	
-HazardEntry	interface	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	63	
-TypeCard	function	hse	false	component,ui-tile	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	75	
-HazardRow	function	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	105	
-NewAssessmentWizard	function	hse	true	component	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	169	
-addHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	185	NewAssessmentWizard
-patchHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	197	NewAssessmentWizard
-removeHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	201	NewAssessmentWizard
-addLibraryHazards	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	206	NewAssessmentWizard
-canAdvance	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	221	NewAssessmentWizard
-handleSubmit	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	230	NewAssessmentWizard
-STEPS	array	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	22	
-HAZARD_CATEGORIES	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	29	
-SITE_OPTIONS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	34	
-NewHazardDialogProps	interface	hse	true		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	38	
-NewHazardDialog	function	hse	true	component	src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	43	
-addLibraryControl	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	69	NewHazardDialog
-canAdvance	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	93	NewHazardDialog
-handleClose	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	101	NewHazardDialog
-handleSubmit	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	113	NewHazardDialog
+HazardEntry	interface	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	54	
+TypeCard	function	hse	false	component,ui-tile	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	66	
+HazardRow	function	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	96	
+NewAssessmentWizard	function	hse	true	component	src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	160	
+addHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	177	NewAssessmentWizard
+patchHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	189	NewAssessmentWizard
+removeHazard	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	193	NewAssessmentWizard
+addLibraryHazards	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	198	NewAssessmentWizard
+handleSubmit	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewAssessmentWizard.tsx	213	NewAssessmentWizard
+HAZARD_CATEGORIES	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	22	
+SITE_OPTIONS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	27	
+NewHazardDialogProps	interface	hse	true		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	31	
+NewHazardDialog	function	hse	true	component	src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	36	
+addLibraryControl	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	62	NewHazardDialog
+handleClose	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	86	NewHazardDialog
+handleSubmit	function	hse	false		src/components/sections/HSE/risk-jsa/dialogs/NewHazardDialog.tsx	98	NewHazardDialog
 WIZARD_STEPS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	29	
 PPE_ITEMS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	38	
 SCALE_OPTIONS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/dialogs/NewJsaWizard.tsx	52	
@@ -10070,17 +10109,6 @@ shell	function	hse	false		src/components/sections/HSE/risk-jsa/shared/exportPdf.
 launch	function	hse	false		src/components/sections/HSE/risk-jsa/shared/exportPdf.ts	52	
 exportJsaPdf	function	hse	true		src/components/sections/HSE/risk-jsa/shared/exportPdf.ts	64	
 exportAssessmentPdf	function	hse	true		src/components/sections/HSE/risk-jsa/shared/exportPdf.ts	114	
-InsightCardVariant	type	hse	true	ui-tile	src/components/sections/HSE/risk-jsa/shared/InsightCard.tsx	17	
-InsightTone	type	hse	true		src/components/sections/HSE/risk-jsa/shared/InsightCard.tsx	18	
-InsightCardProps	interface	hse	true	ui-tile	src/components/sections/HSE/risk-jsa/shared/InsightCard.tsx	20	
-TONE_VALUE	object	hse	false		src/components/sections/HSE/risk-jsa/shared/InsightCard.tsx	33	
-Donut	function	hse	false	component	src/components/sections/HSE/risk-jsa/shared/InsightCard.tsx	38	
-Visual	function	hse	false	component	src/components/sections/HSE/risk-jsa/shared/InsightCard.tsx	60	
-InsightCard	function	hse	true	component,ui-tile	src/components/sections/HSE/risk-jsa/shared/InsightCard.tsx	103	
-QueueItemProps	interface	hse	true		src/components/sections/HSE/risk-jsa/shared/QueueItem.tsx	11	
-TAG_BG	object	hse	false		src/components/sections/HSE/risk-jsa/shared/QueueItem.tsx	24	
-TAG_FG	object	hse	false		src/components/sections/HSE/risk-jsa/shared/QueueItem.tsx	30	
-QueueItem	function	hse	true	component	src/components/sections/HSE/risk-jsa/shared/QueueItem.tsx	37	
 SCALE	variable	hse	false	component	src/components/sections/HSE/risk-jsa/shared/RiskMatrixPicker.tsx	13	
 LIKELIHOOD_LABELS	array	hse	false		src/components/sections/HSE/risk-jsa/shared/RiskMatrixPicker.tsx	15	
 SEVERITY_LABELS	array	hse	false		src/components/sections/HSE/risk-jsa/shared/RiskMatrixPicker.tsx	16	
@@ -10089,8 +10117,6 @@ BAND_TEXT	object	hse	false		src/components/sections/HSE/risk-jsa/shared/RiskMatr
 RiskMatrixPickerProps	interface	hse	true		src/components/sections/HSE/risk-jsa/shared/RiskMatrixPicker.tsx	28	
 RiskMatrixPicker	function	hse	true	component	src/components/sections/HSE/risk-jsa/shared/RiskMatrixPicker.tsx	36	
 cell	function	hse	false		src/components/sections/HSE/risk-jsa/shared/RiskMatrixPicker.tsx	37	RiskMatrixPicker
-RiskMatrixSnapshotProps	interface	hse	true		src/components/sections/HSE/risk-jsa/shared/RiskMatrixSnapshot.tsx	11	
-RiskMatrixSnapshot	function	hse	true	component	src/components/sections/HSE/risk-jsa/shared/RiskMatrixSnapshot.tsx	16	
 RiskMiniBarProps	interface	hse	true		src/components/sections/HSE/risk-jsa/shared/RiskMiniBar.tsx	10	
 SEGMENTS	variable	hse	false	component	src/components/sections/HSE/risk-jsa/shared/RiskMiniBar.tsx	19	
 RiskMiniBar	function	hse	true	component	src/components/sections/HSE/risk-jsa/shared/RiskMiniBar.tsx	26	
@@ -11262,7 +11288,7 @@ SESSION_TIMEOUT_DEFAULTS	object	settings	true		src/components/sections/Settings/
 fetchSessionTimeouts	function	settings	true		src/components/sections/Settings/api.ts	102	
 setSessionTimeout	function	settings	true		src/components/sections/Settings/api.ts	116	
 saveWorkHoursApi	function	settings	true		src/components/sections/Settings/api.ts	120	
-uploadLogoApi	function	settings	true		src/components/sections/Settings/api.ts	133	
+uploadLogoApi	function	settings	true		src/components/sections/Settings/api.ts	141	
 applyCompanyNameToDom	function	settings	true		src/components/sections/Settings/domSync.ts	15	
 applyCompanyLogoToDom	function	settings	true		src/components/sections/Settings/domSync.ts	23	
 STATUS_LABEL	object	settings	false		src/components/sections/Settings/ManifestReviewPanel.tsx	23	
@@ -11283,40 +11309,40 @@ SwzPageKind	type	settings	true		src/components/sections/Settings/settingsNav.ts	
 SwzLegacy	type	settings	true		src/components/sections/Settings/settingsNav.ts	13	
 SwzPage	interface	settings	true		src/components/sections/Settings/settingsNav.ts	15	
 SWZ_PAGES	array	settings	true		src/components/sections/Settings/settingsNav.ts	30	
-SWZ_GROUP_ORDER	array	settings	true		src/components/sections/Settings/settingsNav.ts	91	
-getSwzPage	function	settings	true		src/components/sections/Settings/settingsNav.ts	93	
-visibleSwzPages	function	settings	true		src/components/sections/Settings/settingsNav.ts	98	
-escAttr	function	settings	false		src/components/sections/Settings/settingsNav.ts	102	
-buildSettingsMenuHtml	function	settings	true		src/components/sections/Settings/settingsNav.ts	109	
-CardLabel	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	70	
-BrandingPanelProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	84	
-BrandingPanel	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	89	
-field	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	148	BrandingPanel
-TrustedDevicesCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	210	
-TIMEOUT_OPTIONS	array	settings	false		src/components/sections/Settings/SettingsSection.tsx	361	
-TIMEOUT_ROLE_LABEL	object	settings	false		src/components/sections/Settings/SettingsSection.tsx	372	
-SessionTimeoutCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	377	
-SetupStep	type	settings	false		src/components/sections/Settings/SettingsSection.tsx	439	
-TotpSetupModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	441	
-TotpSetupModal	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	446	
-TotpDisableModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	641	
-TotpDisableModal	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	646	
-TotpRegenModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	718	
-TotpRegenModal	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	722	
-webauthnAvailable	variable	settings	false		src/components/sections/Settings/SettingsSection.tsx	842	
-PasskeysCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	844	
-AuthenticatorCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	1026	
-SecurityPanel	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1137	
-LegacyPage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1239	
-PlaceholderPage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1264	
-CONSOLE_BODIES	object	settings	false		src/components/sections/Settings/SettingsSection.tsx	1282	
-ConsolePage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1288	
-SettingsSection	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	1304	
-enter	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1335	SettingsSection
-exit	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1345	SettingsSection
-onSection	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1350	SettingsSection
-onMenuClick	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1355	SettingsSection
-emptySettings	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1404	
+SWZ_GROUP_ORDER	array	settings	true		src/components/sections/Settings/settingsNav.ts	93	
+getSwzPage	function	settings	true		src/components/sections/Settings/settingsNav.ts	95	
+visibleSwzPages	function	settings	true		src/components/sections/Settings/settingsNav.ts	100	
+escAttr	function	settings	false		src/components/sections/Settings/settingsNav.ts	104	
+buildSettingsMenuHtml	function	settings	true		src/components/sections/Settings/settingsNav.ts	111	
+CardLabel	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	69	
+BrandingPanelProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	83	
+BrandingPanel	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	88	
+field	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	147	BrandingPanel
+TrustedDevicesCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	209	
+TIMEOUT_OPTIONS	array	settings	false		src/components/sections/Settings/SettingsSection.tsx	360	
+TIMEOUT_ROLE_LABEL	object	settings	false		src/components/sections/Settings/SettingsSection.tsx	371	
+SessionTimeoutCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	376	
+SetupStep	type	settings	false		src/components/sections/Settings/SettingsSection.tsx	438	
+TotpSetupModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	440	
+TotpSetupModal	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	445	
+TotpDisableModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	640	
+TotpDisableModal	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	645	
+TotpRegenModalProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	717	
+TotpRegenModal	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	721	
+webauthnAvailable	variable	settings	false		src/components/sections/Settings/SettingsSection.tsx	841	
+PasskeysCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	843	
+AuthenticatorCard	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	1025	
+SecurityPanel	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1136	
+LegacyPage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1238	
+PlaceholderPage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1263	
+CONSOLE_BODIES	object	settings	false		src/components/sections/Settings/SettingsSection.tsx	1281	
+ConsolePage	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	1286	
+SettingsSection	function	settings	true	component	src/components/sections/Settings/SettingsSection.tsx	1302	
+enter	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1333	SettingsSection
+exit	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1343	SettingsSection
+onSection	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1348	SettingsSection
+onMenuClick	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1353	SettingsSection
+emptySettings	function	settings	false		src/components/sections/Settings/SettingsSection.tsx	1402	
 valStr	function	settings	false		src/components/sections/Settings/SwzCard.tsx	17	
 toInput	function	settings	false		src/components/sections/Settings/SwzCard.tsx	24	
 classPill	function	settings	false		src/components/sections/Settings/SwzCard.tsx	30	
@@ -11336,6 +11362,9 @@ SWZ_ICONS	object	settings	true		src/components/sections/Settings/swzIcons.tsx	10
 SwzIcon	function	settings	true	component	src/components/sections/Settings/swzIcons.tsx	34	
 CARD_CYCLE	array	settings	false	ui-tile	src/components/sections/Settings/swzIcons.tsx	39	
 swzCardIconName	function	settings	true	ui-tile	src/components/sections/Settings/swzIcons.tsx	40	
+apiPost	variable	settings	false	test	src/components/sections/Settings/uploadLogoContract.test.ts	23	
+TINY_GIF	variable	settings	false	test	src/components/sections/Settings/uploadLogoContract.test.ts	30	
+callUpload	function	settings	false	test	src/components/sections/Settings/uploadLogoContract.test.ts	32	
 GrantValidity	interface	platform	true		src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx	18	
 toLocalInput	function	platform	false		src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx	21	
 pad	function	platform	false		src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx	22	toLocalInput
@@ -11458,6 +11487,12 @@ titleCase	function	communications	false		src/components/sections/Tickets/TicketD
 TicketItem	function	communications	false	component	src/components/sections/Tickets/TicketDropdown.tsx	27	
 TicketDropdown	function	communications	true	component	src/components/sections/Tickets/TicketDropdown.tsx	39	
 open	function	communications	false		src/components/sections/Tickets/TicketDropdown.tsx	61	TicketDropdown
+UI_KIT_ROOT_ID	variable	platform	false		src/components/sections/UiKit/module.ts	21	
+ITEMS	array	platform	false		src/components/sections/UiKit/module.ts	23	
+uiKitModule	object	platform	true		src/components/sections/UiKit/module.ts	33	
+EXIT_SECTION	variable	platform	false		src/components/sections/UiKit/mount.ts	25	
+mountUiKitSection	function	platform	true		src/components/sections/UiKit/mount.ts	27	
+unmountUiKitSection	function	platform	true		src/components/sections/UiKit/mount.ts	40	
 lIco	function	platform	false		src/components/shared/AccountPill.tsx	36	
 IcUser	function	platform	false	component	src/components/shared/AccountPill.tsx	40	
 IcSettings	function	platform	false	component	src/components/shared/AccountPill.tsx	41	
@@ -12295,12 +12330,12 @@ SubmitWorkflowInput	interface	workflow	true		src/lib/workflow/types.ts	186
 DEMO_ACTOR	object	workflow	false		src/lib/workflow/useWorkflow.ts	19	
 UseWorkflow	interface	workflow	true		src/lib/workflow/useWorkflow.ts	21	
 useWorkflow	function	workflow	true	hook	src/lib/workflow/useWorkflow.ts	36	
-queryClient	variable	platform	false		src/main.tsx	95	
-SCRIPTS	array	platform	false		src/main.tsx	105	
-loadScript	function	platform	false		src/main.tsx	126	
-loadScripts	function	platform	false		src/main.tsx	136	
-bootApp	function	platform	false		src/main.tsx	145	
-_mountEmp	function	platform	false		src/main.tsx	320	bootApp
+queryClient	variable	platform	false		src/main.tsx	96	
+SCRIPTS	array	platform	false		src/main.tsx	106	
+loadScript	function	platform	false		src/main.tsx	127	
+loadScripts	function	platform	false		src/main.tsx	137	
+bootApp	function	platform	false		src/main.tsx	146	
+_mountEmp	function	platform	false		src/main.tsx	321	bootApp
 CommsBridgeInner	function	platform	false	component	src/shell/AppShell.tsx	51	
 CommsBridge	function	platform	false	component	src/shell/AppShell.tsx	64	
 ThemeBridge	function	platform	false	component	src/shell/AppShell.tsx	74	
@@ -12464,15 +12499,6 @@ ProgressBarProps	interface	platform	true		src/ui/charts/ProgressBar.tsx	10
 ProgressBar	function	platform	true	component	src/ui/charts/ProgressBar.tsx	17	
 SparklineProps	interface	platform	true		src/ui/charts/Sparkline.tsx	11	
 Sparkline	function	platform	true	component	src/ui/charts/Sparkline.tsx	18	
-ButtonVariant	type	platform	true		src/ui/components/Button.tsx	18	
-ButtonProps	interface	platform	false		src/ui/components/Button.tsx	20	
-VARIANT_CLASS	object	platform	false		src/ui/components/Button.tsx	33	
-Button	function	platform	true	component	src/ui/components/Button.tsx	41	
-MiniCard	function	platform	true	component,ui-tile	src/ui/components/Card.tsx	13	
-RecordRow	function	platform	true	component	src/ui/components/Card.tsx	23	
-Record	variable	platform	true	component	src/ui/components/Card.tsx	36	
-ChartCardProps	interface	platform	true	ui-tile	src/ui/components/ChartCard.tsx	12	
-ChartCard	function	platform	true	component,ui-tile	src/ui/components/ChartCard.tsx	23	
 DetailItem	interface	platform	true		src/ui/components/DetailGrid.tsx	21	
 DetailGridProps	interface	platform	true		src/ui/components/DetailGrid.tsx	28	
 DetailGrid	function	platform	true	component	src/ui/components/DetailGrid.tsx	40	
@@ -12490,10 +12516,10 @@ EntityHead	function	platform	true	component	src/ui/components/EntityHead.tsx	29
 PanelStatItem	interface	platform	true		src/ui/components/EntityHead.tsx	54	
 PanelStats	function	platform	true	component	src/ui/components/EntityHead.tsx	61	
 Field	function	platform	true	component	src/ui/components/Field.tsx	17	
-TextInput	function	platform	true	component	src/ui/components/Field.tsx	26	
-SelectInput	function	platform	true	component	src/ui/components/Field.tsx	37	
-TextareaInput	function	platform	true	component	src/ui/components/Field.tsx	53	
-FormGrid	function	platform	true	component	src/ui/components/Field.tsx	65	
+LegacyTextInput	function	platform	true	component	src/ui/components/Field.tsx	32	
+SelectInput	function	platform	true	component	src/ui/components/Field.tsx	43	
+TextareaInput	function	platform	true	component	src/ui/components/Field.tsx	59	
+FormGrid	function	platform	true	component	src/ui/components/Field.tsx	71	
 PillTone	type	platform	true		src/ui/components/InfoCard.tsx	21	
 InfoCard	function	platform	true	component,ui-tile	src/ui/components/InfoCard.tsx	23	
 FieldList	function	platform	true	component	src/ui/components/InfoCard.tsx	35	
@@ -12515,9 +12541,6 @@ MenuProps	interface	platform	true		src/ui/components/Menu.tsx	50
 Menu	function	platform	true	component	src/ui/components/Menu.tsx	58	
 toggle	function	platform	false		src/ui/components/Menu.tsx	65	Menu
 onKey	function	platform	false		src/ui/components/Menu.tsx	83	Menu
-CardProps	interface	platform	true	ui-tile	src/ui/components/MetricCard.tsx	22	
-Card	function	platform	true	component,ui-tile	src/ui/components/MetricCard.tsx	40	
-MetricCard	variable	platform	true	component,ui-tile	src/ui/components/MetricCard.tsx	63	
 MetricCardItem	interface	platform	true	ui-tile	src/ui/components/MetricRow.tsx	16	
 MetricRowProps	interface	platform	true		src/ui/components/MetricRow.tsx	18	
 useFlip	function	platform	false	hook	src/ui/components/MetricRow.tsx	31	
@@ -12528,13 +12551,12 @@ ModalProps	interface	platform	true		src/ui/components/Modal.tsx	26
 Modal	function	platform	true	component	src/ui/components/Modal.tsx	46	
 HseModal	variable	platform	true	component	src/ui/components/Modal.tsx	85	
 ModalSection	function	platform	true	component	src/ui/components/Modal.tsx	93	
-ModuleTab	interface	platform	true		src/ui/components/ModuleTabs.tsx	16	
-withCounts	function	platform	true		src/ui/components/ModuleTabs.tsx	29	
-ModuleTabsProps	interface	platform	true		src/ui/components/ModuleTabs.tsx	33	
-TabBar	function	platform	true	component	src/ui/components/ModuleTabs.tsx	51	
-ModuleTabs	function	platform	true	component	src/ui/components/ModuleTabs.tsx	76	
-AreaTabs	variable	platform	true	component	src/ui/components/ModuleTabs.tsx	129	
-AreaTab	type	platform	true		src/ui/components/ModuleTabs.tsx	130	
+ModuleTab	interface	platform	true		src/ui/components/ModuleTabs.tsx	19	
+withCounts	function	platform	true		src/ui/components/ModuleTabs.tsx	32	
+ModuleTabsProps	interface	platform	true		src/ui/components/ModuleTabs.tsx	36	
+TabBar	function	platform	true	component	src/ui/components/ModuleTabs.tsx	54	
+ModuleTabs	function	platform	true	component	src/ui/components/ModuleTabs.tsx	79	
+AreaTab	type	platform	true		src/ui/components/ModuleTabs.tsx	132	
 MENU_ICON_COLOR	variable	platform	true	component	src/ui/components/NewMenu.tsx	25	
 NewMenuItem	interface	platform	true		src/ui/components/NewMenu.tsx	27	
 NewMenuProps	interface	platform	true		src/ui/components/NewMenu.tsx	38	
@@ -12557,13 +12579,6 @@ usePagination	function	platform	true	hook	src/ui/components/Pagination.tsx	26
 pageWindow	function	platform	false		src/ui/components/Pagination.tsx	36	
 PaginationProps	interface	platform	true		src/ui/components/Pagination.tsx	44	
 Pagination	function	platform	true	component	src/ui/components/Pagination.tsx	54	
-PanelTabsProps	interface	platform	true		src/ui/components/PanelTabs.tsx	14	
-PanelTabs	function	platform	true	component	src/ui/components/PanelTabs.tsx	25	
-PersonSearchOption	interface	platform	true		src/ui/components/PersonSearchSelect.tsx	14	
-initialsOf	function	platform	false		src/ui/components/PersonSearchSelect.tsx	22	
-PersonSearchSelectProps	interface	platform	true		src/ui/components/PersonSearchSelect.tsx	27	
-PersonSearchSelect	function	platform	true	component	src/ui/components/PersonSearchSelect.tsx	35	
-pick	function	platform	false		src/ui/components/PersonSearchSelect.tsx	48	PersonSearchSelect
 Column	interface	platform	true		src/ui/components/RegisterTable.tsx	15	
 RegisterTableProps	interface	platform	false		src/ui/components/RegisterTable.tsx	21	
 RegisterTable	function	platform	true	component	src/ui/components/RegisterTable.tsx	38	
@@ -12633,6 +12648,51 @@ WizardInfoRow	interface	platform	true		src/ui/components/WizardShell.tsx	19
 WizardInfoPanel	interface	platform	true		src/ui/components/WizardShell.tsx	20	
 WizardShellProps	interface	platform	true		src/ui/components/WizardShell.tsx	22	
 WizardShell	function	platform	true	component	src/ui/components/WizardShell.tsx	44	
+CardVariant	type	platform	true	ui-tile	src/ui/containers/Card/Card.tsx	47	
+CardTone	type	platform	true	ui-tile	src/ui/containers/Card/Card.tsx	48	
+CardAccent	type	platform	true	ui-tile	src/ui/containers/Card/Card.tsx	49	
+CardDensity	type	platform	true	ui-tile	src/ui/containers/Card/Card.tsx	50	
+RootAttrs	type	platform	false		src/ui/containers/Card/Card.tsx	52	
+CardBaseProps	interface	platform	false	ui-tile	src/ui/containers/Card/Card.tsx	57	
+CardStaticProps	interface	platform	false	ui-tile	src/ui/containers/Card/Card.tsx	110	
+CardButtonProps	interface	platform	false	ui-tile	src/ui/containers/Card/Card.tsx	120	
+CardLinkProps	interface	platform	false	ui-tile	src/ui/containers/Card/Card.tsx	129	
+CardProps	type	platform	true	ui-tile	src/ui/containers/Card/Card.tsx	137	
+ResolvedCardProps	type	platform	false	ui-tile	src/ui/containers/Card/Card.tsx	140	
+Card	function	platform	true	component,ui-tile	src/ui/containers/Card/Card.tsx	148	
+CardBodySkeleton	function	platform	false	component,ui-tile	src/ui/containers/Card/Card.tsx	237	
+CardHeaderProps	interface	platform	true	ui-tile	src/ui/containers/Card/Card.tsx	257	
+CardHeader	function	platform	true	component,ui-tile	src/ui/containers/Card/Card.tsx	276	
+CardFooterProps	interface	platform	true	ui-tile	src/ui/containers/Card/Card.tsx	294	
+CardFooter	function	platform	true	component,ui-tile	src/ui/containers/Card/Card.tsx	305	
+Row	interface	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	15	
+ROWS	array	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	17	
+COLUMNS	array	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	23	
+table	function	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	29	
+sel	function	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	165	
+actions	function	platform	false	test	src/ui/data/DataTable/DataTable.test.tsx	223	
+DataTable	function	platform	true	component	src/ui/data/DataTable/DataTable.tsx	41	
+RowActions	function	platform	false	component	src/ui/data/DataTable/DataTable.tsx	228	
+DataTablePaginationBar	function	platform	false	component	src/ui/data/DataTable/DataTable.tsx	272	
+ToolbarProps	interface	platform	false		src/ui/data/DataTable/DataTableToolbar.tsx	26	
+DataTableToolbar	function	platform	true	component	src/ui/data/DataTable/DataTableToolbar.tsx	36	
+DataTableBulkBar	function	platform	true	component	src/ui/data/DataTable/DataTableToolbar.tsx	154	
+DataTableColumn	interface	platform	true		src/ui/data/DataTable/types.ts	26	
+DataTableSort	interface	platform	true		src/ui/data/DataTable/types.ts	50	
+DataTableSorting	interface	platform	true		src/ui/data/DataTable/types.ts	55	
+DataTablePagination	interface	platform	true		src/ui/data/DataTable/types.ts	66	
+DataTableSelection	interface	platform	true		src/ui/data/DataTable/types.ts	81	
+DataTableBulkAction	interface	platform	true		src/ui/data/DataTable/types.ts	90	
+DataTableSearch	interface	platform	true		src/ui/data/DataTable/types.ts	99	
+DataTableFilter	interface	platform	true		src/ui/data/DataTable/types.ts	106	
+DataTableAction	interface	platform	true		src/ui/data/DataTable/types.ts	115	
+DataTableEmptyState	interface	platform	true		src/ui/data/DataTable/types.ts	124	
+DataTableDensity	type	platform	true		src/ui/data/DataTable/types.ts	132	
+DataTableProps	interface	platform	true		src/ui/data/DataTable/types.ts	136	
+Params	interface	platform	false		src/ui/data/DataTable/useDataTable.ts	15	
+DataTableState	interface	platform	true		src/ui/data/DataTable/useDataTable.ts	25	
+compareValues	function	platform	false		src/ui/data/DataTable/useDataTable.ts	47	
+useDataTable	function	platform	true	hook	src/ui/data/DataTable/useDataTable.ts	57	
 DtAlign	type	platform	true		src/ui/DataTable.tsx	17	
 DtRowStatus	type	platform	true		src/ui/DataTable.tsx	19	
 DtColumn	interface	platform	true		src/ui/DataTable.tsx	21	
@@ -12644,35 +12704,168 @@ DtActionMenu	function	platform	false	component	src/ui/DataTable.tsx	92
 pageWindow	function	platform	false		src/ui/DataTable.tsx	119	
 DataTable	function	platform	true	component	src/ui/DataTable.tsx	130	
 colStyle	function	platform	false		src/ui/DataTable.tsx	138	DataTable
-RGBA	interface	platform	false		src/ui/examples/ColorField.tsx	17	
-PRESETS	array	platform	false		src/ui/examples/ColorField.tsx	19	
-clamp	function	platform	false		src/ui/examples/ColorField.tsx	24	
-parseColor	function	platform	false		src/ui/examples/ColorField.tsx	26	
-toHex	function	platform	false		src/ui/examples/ColorField.tsx	45	
-format	function	platform	false		src/ui/examples/ColorField.tsx	49	
-cssOf	function	platform	false		src/ui/examples/ColorField.tsx	54	
-CHECKER	variable	platform	false	component	src/ui/examples/ColorField.tsx	56	
-ColorField	function	platform	true	component	src/ui/examples/ColorField.tsx	58	
-onDoc	function	platform	false		src/ui/examples/ColorField.tsx	67	ColorField
-emit	function	platform	false		src/ui/examples/ColorField.tsx	72	ColorField
-ThemeEditor	function	platform	true	component	src/ui/examples/ThemeEditor.tsx	24	
-valueOf	function	platform	false		src/ui/examples/ThemeEditor.tsx	46	ThemeEditor
-setToken	function	platform	false		src/ui/examples/ThemeEditor.tsx	50	ThemeEditor
-revertToken	function	platform	false		src/ui/examples/ThemeEditor.tsx	56	ThemeEditor
-save	function	platform	false		src/ui/examples/ThemeEditor.tsx	62	ThemeEditor
-resetAll	function	platform	false		src/ui/examples/ThemeEditor.tsx	75	ThemeEditor
-applyImport	function	platform	false		src/ui/examples/ThemeEditor.tsx	81	ThemeEditor
-TokenRow	function	platform	false	component	src/ui/examples/ThemeEditor.tsx	163	
-Section	function	platform	false	component	src/ui/examples/UIKitPage.tsx	36	
-DEMO_PEOPLE	array	platform	false		src/ui/examples/UIKitPage.tsx	48	
-Demo	function	platform	false	component	src/ui/examples/UIKitPage.tsx	55	
-Grid	function	platform	false	component	src/ui/examples/UIKitPage.tsx	68	
-SAMPLE_TABS	variable	platform	false	component	src/ui/examples/UIKitPage.tsx	74	
-DRAWER_TABS	array	platform	false		src/ui/examples/UIKitPage.tsx	83	
-TABLE_COLS	array	platform	false		src/ui/examples/UIKitPage.tsx	88	
-TONES	variable	platform	false	component	src/ui/examples/UIKitPage.tsx	92	
-UIKitPage	function	platform	true	component	src/ui/examples/UIKitPage.tsx	96	
-cap	function	platform	false		src/ui/examples/UIKitPage.tsx	115	UIKitPage
+ComboboxProps	interface	platform	true		src/ui/forms/Combobox.tsx	35	
+Combobox	function	platform	true	component	src/ui/forms/Combobox.tsx	72	
+NativeDateType	type	platform	false		src/ui/forms/dateInputs.tsx	28	
+BaseDateProps	interface	platform	false		src/ui/forms/dateInputs.tsx	30	
+ICON	object	platform	false		src/ui/forms/dateInputs.tsx	49	
+NativeDateControl	function	platform	false	component	src/ui/forms/dateInputs.tsx	57	
+DateInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	107	
+TimeInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	112	
+DateTimeInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	117	
+MonthInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	122	
+DateRange	interface	platform	true		src/ui/forms/dateInputs.tsx	128	
+DateRangeInputProps	interface	platform	true		src/ui/forms/dateInputs.tsx	133	
+DateRangeInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	157	
+FieldContextValue	interface	platform	true		src/ui/forms/fieldContext.ts	27	
+FieldContext	variable	platform	true		src/ui/forms/fieldContext.ts	43	
+useFieldContext	function	platform	true	hook	src/ui/forms/fieldContext.ts	45	
+resolveFieldState	function	platform	true		src/ui/forms/fieldContext.ts	56	
+FileRejection	interface	platform	true		src/ui/forms/FileInput.tsx	21	
+FileInputProps	interface	platform	true		src/ui/forms/FileInput.tsx	27	
+formatBytes	function	platform	false		src/ui/forms/FileInput.tsx	50	
+matchesAccept	function	platform	false		src/ui/forms/FileInput.tsx	57	
+FileInput	function	platform	true	component	src/ui/forms/FileInput.tsx	67	
+accept_	function	platform	false		src/ui/forms/FileInput.tsx	82	FileInput
+OtpInputProps	interface	platform	true		src/ui/forms/FileInput.tsx	197	
+OtpInput	function	platform	true	component	src/ui/forms/FileInput.tsx	215	
+commit	function	platform	false		src/ui/forms/FileInput.tsx	222	OtpInput
+FormFieldProps	interface	platform	true		src/ui/forms/FormField.tsx	26	
+VALIDATION_ICON	variable	platform	false	component	src/ui/forms/FormField.tsx	53	
+FormField	function	platform	true	component	src/ui/forms/FormField.tsx	59	
+FormGrid	function	platform	true	component	src/ui/forms/FormField.tsx	137	
+file	function	platform	false	test	src/ui/forms/forms.test.tsx	308	
+pickFiles	function	platform	false	test	src/ui/forms/forms.test.tsx	319	
+Base	type	platform	false		src/ui/forms/inputs.tsx	24	
+PasswordInputProps	interface	platform	true		src/ui/forms/inputs.tsx	28	
+PasswordInput	function	platform	true	component	src/ui/forms/inputs.tsx	34	
+NumberInputProps	interface	platform	true		src/ui/forms/inputs.tsx	65	
+NumberInput	function	platform	true	component	src/ui/forms/inputs.tsx	75	
+CurrencyInputProps	interface	platform	true		src/ui/forms/inputs.tsx	120	
+CurrencyInput	function	platform	true	component	src/ui/forms/inputs.tsx	129	
+toText	function	platform	false		src/ui/forms/inputs.tsx	130	CurrencyInput
+PercentageInputProps	interface	platform	true		src/ui/forms/inputs.tsx	157	
+PercentageInput	function	platform	true	component	src/ui/forms/inputs.tsx	164	
+toText	function	platform	false		src/ui/forms/inputs.tsx	165	PercentageInput
+EmailInput	function	platform	true	component	src/ui/forms/inputs.tsx	189	
+UrlInput	function	platform	true	component	src/ui/forms/inputs.tsx	193	
+PhoneInputProps	interface	platform	true		src/ui/forms/inputs.tsx	197	
+PhoneInput	function	platform	true	component	src/ui/forms/inputs.tsx	202	
+TextareaProps	interface	platform	true		src/ui/forms/inputs.tsx	218	
+Textarea	function	platform	true	component	src/ui/forms/inputs.tsx	223	
+MultiSelectProps	interface	platform	true		src/ui/forms/MultiSelect.tsx	32	
+MultiSelect	function	platform	true	component	src/ui/forms/MultiSelect.tsx	57	
+OptionListProps	interface	platform	true		src/ui/forms/OptionList.tsx	18	
+OptionList	function	platform	true	component	src/ui/forms/OptionList.tsx	33	
+Option	interface	platform	true		src/ui/forms/options.ts	10	
+OptionGroup	interface	platform	true		src/ui/forms/options.ts	20	
+OptionsInput	type	platform	true		src/ui/forms/options.ts	25	
+isGroup	function	platform	false		src/ui/forms/options.ts	29	
+hasGroups	function	platform	true		src/ui/forms/options.ts	34	
+flattenOptions	function	platform	true		src/ui/forms/options.ts	46	
+toGroups	function	platform	true		src/ui/forms/options.ts	52	
+filterOptions	function	platform	true		src/ui/forms/options.ts	58	
+match	function	platform	false		src/ui/forms/options.ts	61	filterOptions
+findOption	function	platform	true		src/ui/forms/options.ts	70	
+PersonOption	interface	platform	true		src/ui/forms/PersonSearchSelect.tsx	32	
+PersonSearchSelectProps	interface	platform	true		src/ui/forms/PersonSearchSelect.tsx	45	
+initialsOf	function	platform	false		src/ui/forms/PersonSearchSelect.tsx	72	
+metaLine	function	platform	false		src/ui/forms/PersonSearchSelect.tsx	78	
+Avatar	function	platform	false	component	src/ui/forms/PersonSearchSelect.tsx	85	
+toOption	function	platform	false		src/ui/forms/PersonSearchSelect.tsx	96	
+PersonSearchSelect	function	platform	true	component	src/ui/forms/PersonSearchSelect.tsx	106	
+OPTS	array	platform	false	test	src/ui/forms/Select.test.tsx	17	
+GROUPED	array	platform	false	test	src/ui/forms/Select.test.tsx	23	
+openSelect	function	platform	false	test	src/ui/forms/Select.test.tsx	28	
+SelectProps	interface	platform	true		src/ui/forms/Select.tsx	33	
+Select	function	platform	true	component	src/ui/forms/Select.tsx	61	
+handleClear	function	platform	false		src/ui/forms/Select.tsx	125	Select
+ListboxKeyboard	interface	platform	true		src/ui/forms/useListboxKeyboard.ts	26	
+Params	interface	platform	false		src/ui/forms/useListboxKeyboard.ts	43	
+step	function	platform	false		src/ui/forms/useListboxKeyboard.ts	59	
+firstEnabled	function	platform	false		src/ui/forms/useListboxKeyboard.ts	72	
+useListboxKeyboard	function	platform	true	hook	src/ui/forms/useListboxKeyboard.ts	79	
+NEUTRALS	object	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	35	
+mountPanel	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	48	
+Harness	function	platform	false	component,test	src/ui/gallery/BrandThemePanel.test.tsx	50	mountPanel
+setSeed	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	66	
+selectLogoFile	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	227	
+publishButton	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	244	
+byText	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	248	
+DEFAULT_SEEDS	object	platform	false		src/ui/gallery/BrandThemePanel.tsx	49	
+BrandThemePanelProps	interface	platform	true		src/ui/gallery/BrandThemePanel.tsx	53	
+BrandThemePanel	function	platform	true	component	src/ui/gallery/BrandThemePanel.tsx	61	
+SeedCard	function	platform	false	component,ui-tile	src/ui/gallery/BrandThemePanel.tsx	391	
+ScaleRow	function	platform	false	component	src/ui/gallery/BrandThemePanel.tsx	416	
+RoleMapping	function	platform	false	component	src/ui/gallery/BrandThemePanel.tsx	439	
+source	function	platform	false		src/ui/gallery/BrandThemePanel.tsx	442	RoleMapping
+ACCENT_ROLES	variable	platform	false	component	src/ui/gallery/BrandThemePanel.tsx	483	
+PairingTable	function	platform	false	component	src/ui/gallery/BrandThemePanel.tsx	490	
+Crew	interface	platform	false		src/ui/gallery/BrandThemePanel.tsx	518	
+CREW	array	platform	false		src/ui/gallery/BrandThemePanel.tsx	520	
+LivePreview	function	platform	false	component	src/ui/gallery/BrandThemePanel.tsx	539	
+KEY	variable	platform	false	component	src/ui/gallery/CompareExisting.tsx	46	
+FamilyDecision	type	platform	true		src/ui/gallery/CompareExisting.tsx	48	
+AllDecisions	type	platform	false		src/ui/gallery/CompareExisting.tsx	49	
+readDecisions	function	platform	false		src/ui/gallery/CompareExisting.tsx	51	
+useDecisions	function	platform	false	hook	src/ui/gallery/CompareExisting.tsx	58	
+GENERATION	object	platform	false		src/ui/gallery/CompareExisting.tsx	84	
+SpecimenCard	function	platform	false	component,ui-tile	src/ui/gallery/CompareExisting.tsx	94	
+DecisionPanel	function	platform	false	component	src/ui/gallery/CompareExisting.tsx	143	
+brief	function	platform	false		src/ui/gallery/CompareExisting.tsx	150	DecisionPanel
+copy	function	platform	false		src/ui/gallery/CompareExisting.tsx	166	DecisionPanel
+CompareExisting	function	platform	true	component	src/ui/gallery/CompareExisting.tsx	243	
+InspectorTab	type	platform	true		src/ui/gallery/ComponentInspector.tsx	25	
+INSPECTOR_TABS	array	platform	true		src/ui/gallery/ComponentInspector.tsx	27	
+ComponentInspectorProps	interface	platform	true		src/ui/gallery/ComponentInspector.tsx	36	
+ComponentInspector	function	platform	true	component	src/ui/gallery/ComponentInspector.tsx	51	
+PropsTab	function	platform	false	component	src/ui/gallery/ComponentInspector.tsx	87	
+PropRow	function	platform	false	component	src/ui/gallery/ComponentInspector.tsx	116	
+StyleTab	function	platform	false	component	src/ui/gallery/ComponentInspector.tsx	203	
+StyleRow	function	platform	false	component	src/ui/gallery/ComponentInspector.tsx	226	
+toHex	function	platform	false		src/ui/gallery/ComponentInspector.tsx	278	
+hex	function	platform	false		src/ui/gallery/ComponentInspector.tsx	284	toHex
+STATE_NOTE	object	platform	false		src/ui/gallery/ComponentInspector.tsx	292	
+StatesTab	function	platform	false	component	src/ui/gallery/ComponentInspector.tsx	305	
+A11yTab	function	platform	false	component	src/ui/gallery/ComponentInspector.tsx	332	
+CodeTab	function	platform	false	component	src/ui/gallery/ComponentInspector.tsx	377	
+MigrationTab	function	platform	false	component	src/ui/gallery/ComponentInspector.tsx	406	
+FoundationsPanel	function	platform	true	component	src/ui/gallery/FoundationsPanel.tsx	21	
+TokenCard	function	platform	false	component,ui-tile	src/ui/gallery/FoundationsPanel.tsx	75	
+hexOf	function	platform	false		src/ui/gallery/FoundationsPanel.tsx	134	
+hx	function	platform	false		src/ui/gallery/FoundationsPanel.tsx	140	hexOf
+DRAFT_KEY	variable	platform	false		src/ui/gallery/galleryStore.ts	25	
+GalleryDraft	interface	platform	true		src/ui/gallery/galleryStore.ts	27	
+readStoredDraft	function	platform	false		src/ui/gallery/galleryStore.ts	57	
+storeDraft	function	platform	false		src/ui/gallery/galleryStore.ts	64	
+useGalleryDraft	function	platform	true	hook	src/ui/gallery/galleryStore.ts	68	
+saveThemeTokens	variable	platform	false	test	src/ui/gallery/semanticDraft.test.tsx	28	
+loadThemeTokens	variable	platform	false	test	src/ui/gallery/semanticDraft.test.tsx	29	
+mountDraft	function	platform	false	test	src/ui/gallery/semanticDraft.test.tsx	36	
+Harness	function	platform	false	component,test	src/ui/gallery/semanticDraft.test.tsx	38	mountDraft
+ACTION_PRIMARY	variable	platform	false	component,test	src/ui/gallery/semanticDraft.test.tsx	52	
+NAV_BG	variable	platform	false	component,test	src/ui/gallery/semanticDraft.test.tsx	53	
+BORDER	variable	platform	false	component,test	src/ui/gallery/semanticDraft.test.tsx	54	
+Mode	type	platform	false		src/ui/gallery/UiKitGallery.tsx	47	
+OVERVIEW	variable	platform	false	component	src/ui/gallery/UiKitGallery.tsx	48	
+FOUNDATIONS	variable	platform	false	component	src/ui/gallery/UiKitGallery.tsx	49	
+BRAND_THEME	variable	platform	false	component	src/ui/gallery/UiKitGallery.tsx	52	
+CATEGORY_ICON	object	platform	false		src/ui/gallery/UiKitGallery.tsx	54	
+UiKitGalleryProps	interface	platform	true		src/ui/gallery/UiKitGallery.tsx	68	
+UiKitGallery	function	platform	true	component	src/ui/gallery/UiKitGallery.tsx	81	
+select	function	platform	false		src/ui/gallery/UiKitGallery.tsx	119	UiKitGallery
+GallerySidebar	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	306	
+Overview	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	380	
+ComponentCard	function	platform	false	component,ui-tile	src/ui/gallery/UiKitGallery.tsx	452	
+migrationSummary	function	platform	false		src/ui/gallery/UiKitGallery.tsx	489	
+StatusPill	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	498	
+MissingDetail	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	504	
+Examples	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	538	
+BackBar	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	557	
+GalleryActions	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	566	
+exportTheme	function	platform	false		src/ui/gallery/UiKitGallery.tsx	567	GalleryActions
+GridMode	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	596	
+CompareMode	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	632	
 ActivityItem	interface	platform	true		src/ui/hrfin/ActivityFeed.tsx	9	
 ActivityFeed	function	platform	true	component	src/ui/hrfin/ActivityFeed.tsx	15	
 DonutRingProps	interface	platform	true		src/ui/hrfin/charts/DonutRing.tsx	9	
@@ -12739,12 +12932,242 @@ csvField	function	platform	false		src/ui/lib/exportCsv.ts	21
 toCsv	function	platform	true		src/ui/lib/exportCsv.ts	27	
 exportCsv	function	platform	true		src/ui/lib/exportCsv.ts	37	
 FOCUSABLE	variable	platform	false		src/ui/lib/useOverlayA11y.ts	15	
-useOverlayA11y	function	platform	true	hook	src/ui/lib/useOverlayA11y.ts	18	
-focusables	function	platform	false		src/ui/lib/useOverlayA11y.ts	26	useOverlayA11y
-onKey	function	platform	false		src/ui/lib/useOverlayA11y.ts	34	useOverlayA11y
+isVisible	function	platform	false		src/ui/lib/useOverlayA11y.ts	29	
+useOverlayA11y	function	platform	true	hook	src/ui/lib/useOverlayA11y.ts	39	
+focusables	function	platform	false		src/ui/lib/useOverlayA11y.ts	60	useOverlayA11y
+onKey	function	platform	false		src/ui/lib/useOverlayA11y.ts	68	useOverlayA11y
 IconNode	type	platform	false		src/ui/LucideIcon.tsx	11	
 LucideName	type	platform	true		src/ui/LucideIcon.tsx	12	
 LucideIcon	function	platform	true	component	src/ui/LucideIcon.tsx	14	
+ITEMS	array	platform	false	test	src/ui/navigation/Tabs/Tabs.test.tsx	15	
+tabs	function	platform	false	test	src/ui/navigation/Tabs/Tabs.test.tsx	22	
+tabEl	function	platform	false	test	src/ui/navigation/Tabs/Tabs.test.tsx	30	
+TabsOrientation	type	platform	true		src/ui/navigation/Tabs/Tabs.tsx	40	
+TabsVariant	type	platform	true		src/ui/navigation/Tabs/Tabs.tsx	41	
+TabsSize	type	platform	true		src/ui/navigation/Tabs/Tabs.tsx	42	
+TabsActivation	type	platform	true		src/ui/navigation/Tabs/Tabs.tsx	48	
+TabItem	interface	platform	true		src/ui/navigation/Tabs/Tabs.tsx	50	
+TabsProps	interface	platform	true		src/ui/navigation/Tabs/Tabs.tsx	68	
+tabDomId	function	platform	true		src/ui/navigation/Tabs/Tabs.tsx	101	
+panelDomId	function	platform	true		src/ui/navigation/Tabs/Tabs.tsx	102	
+Tabs	function	platform	true	component	src/ui/navigation/Tabs/Tabs.tsx	104	
+onKeyDown	function	platform	false		src/ui/navigation/Tabs/Tabs.tsx	167	Tabs
+renderTab	function	platform	false		src/ui/navigation/Tabs/Tabs.tsx	201	Tabs
+TabPanelProps	interface	platform	true		src/ui/navigation/Tabs/Tabs.tsx	295	
+TabPanel	function	platform	true	component	src/ui/navigation/Tabs/Tabs.tsx	317	
+step	function	platform	false	test	src/ui/navigation/Wizard/Wizard.test.tsx	15	
+STEPS	array	platform	false	test	src/ui/navigation/Wizard/Wizard.test.tsx	22	
+wiz	function	platform	false	test	src/ui/navigation/Wizard/Wizard.test.tsx	24	
+primary	function	platform	false	test	src/ui/navigation/Wizard/Wizard.test.tsx	34	
+WizardOrientation	type	platform	true		src/ui/navigation/Wizard/Wizard.tsx	46	
+WizardStepStatus	type	platform	true		src/ui/navigation/Wizard/Wizard.tsx	53	
+WizardIssues	type	platform	true		src/ui/navigation/Wizard/Wizard.tsx	57	
+WizardStep	interface	platform	true		src/ui/navigation/Wizard/Wizard.tsx	59	
+WizardProps	interface	platform	true		src/ui/navigation/Wizard/Wizard.tsx	103	
+toIssues	function	platform	false		src/ui/navigation/Wizard/Wizard.tsx	151	
+wizardStepDomId	function	platform	true		src/ui/navigation/Wizard/Wizard.tsx	155	
+wizardPanelDomId	function	platform	true		src/ui/navigation/Wizard/Wizard.tsx	156	
+Wizard	function	platform	true	component	src/ui/navigation/Wizard/Wizard.tsx	158	
+goTo	function	platform	false		src/ui/navigation/Wizard/Wizard.tsx	222	Wizard
+back	function	platform	false		src/ui/navigation/Wizard/Wizard.tsx	227	Wizard
+advance	function	platform	false		src/ui/navigation/Wizard/Wizard.tsx	229	Wizard
+skip	function	platform	false		src/ui/navigation/Wizard/Wizard.tsx	245	Wizard
+submit	function	platform	false		src/ui/navigation/Wizard/Wizard.tsx	251	Wizard
+AnchoredPopupProps	interface	platform	true		src/ui/overlays/AnchoredPopup.tsx	33	
+Position	interface	platform	false		src/ui/overlays/AnchoredPopup.tsx	58	
+AnchoredPopup	function	platform	true	component	src/ui/overlays/AnchoredPopup.tsx	66	
+place	function	platform	false		src/ui/overlays/AnchoredPopup.tsx	79	AnchoredPopup
+onScroll	function	platform	false		src/ui/overlays/AnchoredPopup.tsx	111	AnchoredPopup
+onPointerDown	function	platform	false		src/ui/overlays/AnchoredPopup.tsx	122	AnchoredPopup
+Basic	function	platform	false	component,test	src/ui/overlays/Dialog.test.tsx	15	
+Harness	function	platform	false	component,test	src/ui/overlays/Dialog.test.tsx	98	
+DialogSize	type	platform	true		src/ui/overlays/Dialog.tsx	40	
+DialogVariant	type	platform	true		src/ui/overlays/Dialog.tsx	41	
+DialogProps	interface	platform	true		src/ui/overlays/Dialog.tsx	43	
+DialogTitleId	variable	platform	false	component	src/ui/overlays/Dialog.tsx	73	
+DialogComponent	interface	platform	false		src/ui/overlays/Dialog.tsx	75	
+DialogRoot	function	platform	false	component	src/ui/overlays/Dialog.tsx	83	
+DialogHeaderProps	interface	platform	true		src/ui/overlays/Dialog.tsx	137	
+DialogHeader	function	platform	false	component	src/ui/overlays/Dialog.tsx	147	
+DialogBody	function	platform	false	component	src/ui/overlays/Dialog.tsx	168	
+DialogFooter	function	platform	false	component	src/ui/overlays/Dialog.tsx	172	
+DialogSection	function	platform	false	component	src/ui/overlays/Dialog.tsx	182	
+Dialog	variable	platform	true	component	src/ui/overlays/Dialog.tsx	196	
+MenuAction	interface	platform	true		src/ui/overlays/DropdownMenu.tsx	25	
+MenuGroup	interface	platform	true		src/ui/overlays/DropdownMenu.tsx	37	
+MenuItems	type	platform	true		src/ui/overlays/DropdownMenu.tsx	43	
+isGrouped	function	platform	false		src/ui/overlays/DropdownMenu.tsx	45	
+toGroups	function	platform	false		src/ui/overlays/DropdownMenu.tsx	50	
+DropdownMenuProps	interface	platform	true		src/ui/overlays/DropdownMenu.tsx	54	
+DropdownMenu	function	platform	true	component	src/ui/overlays/DropdownMenu.tsx	66	
+activate	function	platform	false		src/ui/overlays/DropdownMenu.tsx	98	DropdownMenu
+onKeyDown	function	platform	false		src/ui/overlays/DropdownMenu.tsx	106	DropdownMenu
+noop	function	platform	false	test	src/ui/overlays/portalRoot.test.tsx	25	
+Scoped	function	platform	false	component,test	src/ui/overlays/portalRoot.test.tsx	27	
+Harness	function	platform	false	component,test	src/ui/overlays/portalRoot.test.tsx	80	
+PortalRootContext	variable	platform	true		src/ui/overlays/portalRoot.ts	37	
+PREVIEW_PORTAL_ATTR	variable	platform	true		src/ui/overlays/portalRoot.ts	40	
+usePortalRoot	function	platform	true	hook	src/ui/overlays/portalRoot.ts	48	
+OPTIONS	variable	platform	false	component,test	src/ui/primitives/actions.test.tsx	15	
+MENU	array	platform	false	test	src/ui/primitives/actions.test.tsx	21	
+open	function	platform	false	test	src/ui/primitives/actions.test.tsx	71	
+SegmentedOption	interface	platform	true		src/ui/primitives/actions.tsx	31	
+SegmentedControlProps	interface	platform	true		src/ui/primitives/actions.tsx	38	
+SegmentedControl	function	platform	true	component	src/ui/primitives/actions.tsx	51	
+DropdownButtonProps	interface	platform	true		src/ui/primitives/actions.tsx	109	
+DropdownButton	function	platform	true	component	src/ui/primitives/actions.tsx	123	
+SplitButtonProps	interface	platform	true		src/ui/primitives/actions.tsx	166	
+SplitButton	function	platform	true	component	src/ui/primitives/actions.tsx	189	
+BadgeTone	type	platform	true		src/ui/primitives/Badge.tsx	21	
+BadgeVariant	type	platform	true		src/ui/primitives/Badge.tsx	22	
+BadgeProps	interface	platform	true		src/ui/primitives/Badge.tsx	24	
+Badge	function	platform	true	component	src/ui/primitives/Badge.tsx	43	
+Icon	function	platform	false	component,test	src/ui/primitives/Button.test.tsx	17	
+ButtonVariant	type	platform	true		src/ui/primitives/Button.tsx	38	
+ButtonBase	interface	platform	false		src/ui/primitives/Button.tsx	40	
+IconOnlyButton	interface	platform	false		src/ui/primitives/Button.tsx	93	
+LabelledButton	interface	platform	false		src/ui/primitives/Button.tsx	99	
+ButtonProps	type	platform	true		src/ui/primitives/Button.tsx	105	
+FORCEABLE	variable	platform	false	component	src/ui/primitives/Button.tsx	108	
+ResolvedButtonProps	type	platform	false		src/ui/primitives/Button.tsx	111	
+Button	function	platform	true	component	src/ui/primitives/Button.tsx	117	
+handleClick	function	platform	false		src/ui/primitives/Button.tsx	189	Button
+ButtonGroup	function	platform	true	component	src/ui/primitives/Button.tsx	221	
+FORCEABLE	variable	platform	false	component	src/ui/primitives/choice.tsx	27	
+forcedAttr	function	platform	false		src/ui/primitives/choice.tsx	29	
+CheckboxProps	interface	platform	true		src/ui/primitives/choice.tsx	35	
+Checkbox	function	platform	true	component	src/ui/primitives/choice.tsx	58	
+RadioProps	interface	platform	true		src/ui/primitives/choice.tsx	126	
+Radio	function	platform	true	component	src/ui/primitives/choice.tsx	138	
+SwitchProps	interface	platform	true		src/ui/primitives/choice.tsx	189	
+Switch	function	platform	true	component	src/ui/primitives/choice.tsx	211	
+ChoiceOption	interface	platform	true		src/ui/primitives/choice.tsx	260	
+CheckboxGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	267	
+CheckboxGroup	function	platform	true	component	src/ui/primitives/choice.tsx	282	
+toggle	function	platform	false		src/ui/primitives/choice.tsx	290	CheckboxGroup
+RadioGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	328	
+RadioGroup	function	platform	true	component	src/ui/primitives/choice.tsx	342	
+TextInputType	type	platform	true		src/ui/primitives/TextInput.tsx	35	
+TextInputProps	interface	platform	true		src/ui/primitives/TextInput.tsx	39	
+FORCEABLE	variable	platform	false	component	src/ui/primitives/TextInput.tsx	84	
+VALIDATION_ICON	variable	platform	false	component	src/ui/primitives/TextInput.tsx	86	
+TextInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	92	
+handleClear	function	platform	false		src/ui/primitives/TextInput.tsx	128	TextInput
+SearchInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	209	
+s	function	platform	false		src/ui/registry/actions.defs.tsx	26	
+b	function	platform	false		src/ui/registry/actions.defs.tsx	27	
+size	function	platform	false		src/ui/registry/actions.defs.tsx	28	
+DEMO_MENU	array	platform	false		src/ui/registry/actions.defs.tsx	30	
+SAVE_MENU	array	platform	false		src/ui/registry/actions.defs.tsx	42	
+noop	function	platform	false		src/ui/registry/actions.defs.tsx	48	
+buttonDef	object	platform	true		src/ui/registry/actions.defs.tsx	52	
+segmentedDef	object	platform	true		src/ui/registry/actions.defs.tsx	261	
+menuDef	object	platform	true		src/ui/registry/actions.defs.tsx	335	
+ACTION_DEFS	array	platform	true		src/ui/registry/actions.defs.tsx	456	
+Row	function	platform	false	component	src/ui/registry/comparisons/button.cmp.tsx	20	
+BUTTON_COMPARISON	object	platform	true		src/ui/registry/comparisons/button.cmp.tsx	24	
+noop	function	platform	false		src/ui/registry/comparisons/card.cmp.tsx	22	
+CARD_COMPARISON	object	platform	true	ui-tile	src/ui/registry/comparisons/card.cmp.tsx	24	
+noop	function	platform	false		src/ui/registry/comparisons/dataTable.cmp.tsx	18	
+Person	interface	platform	false		src/ui/registry/comparisons/dataTable.cmp.tsx	20	
+PEOPLE	array	platform	false		src/ui/registry/comparisons/dataTable.cmp.tsx	22	
+TONE	variable	platform	false	component	src/ui/registry/comparisons/dataTable.cmp.tsx	29	
+LABEL	variable	platform	false	component	src/ui/registry/comparisons/dataTable.cmp.tsx	30	
+DATA_TABLE_COMPARISON	object	platform	true		src/ui/registry/comparisons/dataTable.cmp.tsx	32	
+noop	function	platform	false		src/ui/registry/comparisons/tabs.cmp.tsx	22	
+TABS_COMPARISON	object	platform	true		src/ui/registry/comparisons/tabs.cmp.tsx	24	
+s	function	platform	false		src/ui/registry/containers.defs.tsx	19	
+b	function	platform	false		src/ui/registry/containers.defs.tsx	20	
+noop	function	platform	false		src/ui/registry/containers.defs.tsx	21	
+Figure	function	platform	false	component	src/ui/registry/containers.defs.tsx	24	
+cardDef	object	platform	true	ui-tile	src/ui/registry/containers.defs.tsx	36	
+CONTAINER_DEFS	array	platform	true		src/ui/registry/containers.defs.tsx	277	
+s	function	platform	false		src/ui/registry/data.defs.tsx	20	
+b	function	platform	false		src/ui/registry/data.defs.tsx	21	
+noop	function	platform	false		src/ui/registry/data.defs.tsx	22	
+DemoEmployee	interface	platform	false		src/ui/registry/data.defs.tsx	27	
+EMPLOYEES	array	platform	false		src/ui/registry/data.defs.tsx	38	
+STATUS_TONE	object	platform	false		src/ui/registry/data.defs.tsx	46	
+COLUMNS	array	platform	false		src/ui/registry/data.defs.tsx	57	
+ROW_ACTIONS	function	platform	false	component	src/ui/registry/data.defs.tsx	80	
+dataTableDef	object	platform	true		src/ui/registry/data.defs.tsx	88	
+badgeDef	object	platform	true		src/ui/registry/data.defs.tsx	252	
+DATA_DEFS	array	platform	true		src/ui/registry/data.defs.tsx	357	
+PropValue	type	platform	false		src/ui/registry/definitions.tsx	28	
+s	function	platform	false		src/ui/registry/definitions.tsx	29	
+b	function	platform	false		src/ui/registry/definitions.tsx	30	
+size	function	platform	false		src/ui/registry/definitions.tsx	31	
+validation	function	platform	false		src/ui/registry/definitions.tsx	32	
+DEMO_PEOPLE	array	platform	false		src/ui/registry/definitions.tsx	39	
+DEMO_DEPARTMENTS	array	platform	false		src/ui/registry/definitions.tsx	47	
+personDef	object	platform	false		src/ui/registry/definitions.tsx	62	
+dialogDef	object	platform	false		src/ui/registry/definitions.tsx	178	
+COMPONENT_DEFS	array	platform	true		src/ui/registry/definitions.tsx	307	
+s	function	platform	false		src/ui/registry/forms.defs.tsx	25	
+b	function	platform	false		src/ui/registry/forms.defs.tsx	26	
+n	function	platform	false		src/ui/registry/forms.defs.tsx	27	
+size	function	platform	false		src/ui/registry/forms.defs.tsx	28	
+val	function	platform	false		src/ui/registry/forms.defs.tsx	29	
+noop	function	platform	false		src/ui/registry/forms.defs.tsx	32	
+CHOICE_STYLE	array	platform	false		src/ui/registry/forms.defs.tsx	34	
+CONTROL_STYLE	array	platform	false		src/ui/registry/forms.defs.tsx	45	
+checkboxDef	object	platform	true		src/ui/registry/forms.defs.tsx	57	
+radioGroupDef	object	platform	true		src/ui/registry/forms.defs.tsx	131	
+switchDef	object	platform	true		src/ui/registry/forms.defs.tsx	185	
+textInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	253	
+shell	function	platform	false		src/ui/registry/forms.defs.tsx	349	textInputDef
+dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	411	
+fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	487	
+otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	551	
+DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	599	
+GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	608	
+selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	626	
+search	function	platform	false		src/ui/registry/forms.defs.tsx	729	selectDef
+FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	760	
+COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	45	
+CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	55	
+CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	71	
+CategoryGroup	interface	platform	true		src/ui/registry/index.ts	76	
+componentsByCategory	function	platform	true		src/ui/registry/index.ts	90	
+findComponent	function	platform	true		src/ui/registry/index.ts	107	
+RegistryTotals	interface	platform	true		src/ui/registry/index.ts	111	
+registryTotals	function	platform	true		src/ui/registry/index.ts	121	
+s	function	platform	false		src/ui/registry/navigation.defs.tsx	24	
+b	function	platform	false		src/ui/registry/navigation.defs.tsx	25	
+noop	function	platform	false		src/ui/registry/navigation.defs.tsx	26	
+CASE_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	30	
+PLAIN_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	38	
+MANY_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	44	
+tabsDef	object	platform	true		src/ui/registry/navigation.defs.tsx	56	
+NAVIGATION_DEFS	array	platform	true		src/ui/registry/navigation.defs.tsx	271	
+Planned	interface	platform	false		src/ui/registry/planned.ts	22	
+PLANNED	array	platform	false		src/ui/registry/planned.ts	33	
+PLANNED_DEFS	variable	platform	true		src/ui/registry/planned.ts	140	
+PropControl	type	platform	true		src/ui/registry/types.ts	41	
+PropValues	type	platform	true		src/ui/registry/types.ts	49	
+StyleControl	interface	platform	true		src/ui/registry/types.ts	60	
+StyleGroup	interface	platform	true		src/ui/registry/types.ts	68	
+KeyBinding	interface	platform	true		src/ui/registry/types.ts	75	
+A11yInfo	interface	platform	true		src/ui/registry/types.ts	80	
+ComponentExample	interface	platform	true		src/ui/registry/types.ts	99	
+MigrationInfo	interface	platform	true		src/ui/registry/types.ts	118	
+ImplGeneration	type	platform	true		src/ui/registry/types.ts	145	
+ImplSpecimen	interface	platform	true		src/ui/registry/types.ts	152	
+ComparisonAspect	interface	platform	true		src/ui/registry/types.ts	181	
+RetiredImpl	interface	platform	true		src/ui/registry/types.ts	198	
+ComparisonSet	interface	platform	true		src/ui/registry/types.ts	207	
+ComponentCategory	type	platform	true		src/ui/registry/types.ts	225	
+ComponentStatus	type	platform	true		src/ui/registry/types.ts	237	
+ComponentDef	interface	platform	true		src/ui/registry/types.ts	239	
+defaultProps	function	platform	true		src/ui/registry/types.ts	302	
+styleVarNames	function	platform	true		src/ui/registry/types.ts	309	
+isBuilt	function	platform	true		src/ui/registry/types.ts	314	
+s	function	platform	false		src/ui/registry/wizard.def.tsx	16	
+b	function	platform	false		src/ui/registry/wizard.def.tsx	17	
+noop	function	platform	false		src/ui/registry/wizard.def.tsx	18	
+Body	function	platform	false	component	src/ui/registry/wizard.def.tsx	21	
+ReviewBody	function	platform	false	component	src/ui/registry/wizard.def.tsx	30	
+wizardDef	object	platform	true		src/ui/registry/wizard.def.tsx	44	
 Tone	type	platform	true		src/ui/status/statusTokens.ts	31	
 ToneVisual	interface	platform	false		src/ui/status/statusTokens.ts	33	
 TONE	object	platform	true		src/ui/status/statusTokens.ts	43	
@@ -12783,18 +13206,119 @@ PersonCell	function	platform	true	component	src/ui/table/PersonCell.tsx	33
 LS_KEY	variable	platform	false		src/ui/theme/applyTheme.ts	15	
 ThemeOverrides	type	platform	true		src/ui/theme/applyTheme.ts	17	
 applyThemeOverrides	function	platform	true		src/ui/theme/applyTheme.ts	20	
-clearThemeOverride	function	platform	true		src/ui/theme/applyTheme.ts	28	
-clearThemeOverrides	function	platform	true		src/ui/theme/applyTheme.ts	33	
-readTokenValue	function	platform	true		src/ui/theme/applyTheme.ts	39	
-cacheTheme	function	platform	true		src/ui/theme/applyTheme.ts	43	
-readCachedTheme	function	platform	true		src/ui/theme/applyTheme.ts	47	
-initTheme	function	platform	true		src/ui/theme/applyTheme.ts	56	
-TokenKind	type	platform	true		src/ui/theme/tokens.ts	17	
-TokenDef	interface	platform	true		src/ui/theme/tokens.ts	19	
-TokenGroup	interface	platform	true		src/ui/theme/tokens.ts	27	
-WEIGHT_OPTIONS	variable	platform	false		src/ui/theme/tokens.ts	34	
-TOKEN_GROUPS	array	platform	true		src/ui/theme/tokens.ts	41	
-ALL_TOKEN_NAMES	variable	platform	true		src/ui/theme/tokens.ts	151	
+PREVIEW_SCOPE_ATTR	variable	platform	true		src/ui/theme/applyTheme.ts	49	
+applyScopedOverrides	function	platform	true		src/ui/theme/applyTheme.ts	59	
+clearScopedOverrides	function	platform	true		src/ui/theme/applyTheme.ts	68	
+clearAllScopedOverrides	function	platform	true		src/ui/theme/applyTheme.ts	74	
+readScopedTokenValue	function	platform	true		src/ui/theme/applyTheme.ts	88	
+clearThemeOverride	function	platform	true		src/ui/theme/applyTheme.ts	94	
+clearThemeOverrides	function	platform	true		src/ui/theme/applyTheme.ts	99	
+readTokenValue	function	platform	true		src/ui/theme/applyTheme.ts	105	
+cacheTheme	function	platform	true		src/ui/theme/applyTheme.ts	109	
+readCachedTheme	function	platform	true		src/ui/theme/applyTheme.ts	113	
+initTheme	function	platform	true		src/ui/theme/applyTheme.ts	122	
+SIOMAC	object	platform	false	test	src/ui/theme/brand/brandTheme.test.ts	27	
+NEUTRAL_DEFAULTS	object	platform	false	test	src/ui/theme/brand/brandTheme.test.ts	30	
+pixels	function	platform	false	test	src/ui/theme/brand/brandTheme.test.ts	111	
+FIXTURES	array	platform	false	test	src/ui/theme/brand/brandTheme.test.ts	259	
+read	function	platform	false	test	src/ui/theme/brand/brandTheme.test.ts	439	
+baseline	function	platform	false	test	src/ui/theme/brand/brandTheme.test.ts	501	
+BRAND_THEME_VERSION	variable	platform	true		src/ui/theme/brand/brandTheme.ts	83	
+BrandSeeds	interface	platform	true		src/ui/theme/brand/brandTheme.ts	85	
+BrandTheme	interface	platform	true		src/ui/theme/brand/brandTheme.ts	100	
+SEED_PRIMARY_TOKEN	variable	platform	true		src/ui/theme/brand/brandTheme.ts	107	
+SEED_ACCENT_TOKEN	variable	platform	true		src/ui/theme/brand/brandTheme.ts	108	
+LIGHT_SURFACE	variable	platform	false		src/ui/theme/brand/brandTheme.ts	111	
+SHELL_DARK	variable	platform	false		src/ui/theme/brand/brandTheme.ts	122	
+NAV_ACTIVE_TINT_ALPHA	variable	platform	false		src/ui/theme/brand/brandTheme.ts	125	
+FOCUS_RING_ALPHA	variable	platform	false		src/ui/theme/brand/brandTheme.ts	127	
+HOVER_TONE_STEP	variable	platform	false		src/ui/theme/brand/brandTheme.ts	129	
+ACCENT_MIN_HUE_DELTA	variable	platform	true		src/ui/theme/brand/brandTheme.ts	138	
+ACCENT_MIN_CHROMA	variable	platform	true		src/ui/theme/brand/brandTheme.ts	140	
+BrandThemeBuild	interface	platform	true		src/ui/theme/brand/brandTheme.ts	142	
+isDistinctAccent	function	platform	true		src/ui/theme/brand/brandTheme.ts	158	
+nearestAccessible	function	platform	true		src/ui/theme/brand/brandTheme.ts	174	
+brandThemeToTokens	function	platform	true		src/ui/theme/brand/brandTheme.ts	200	
+resolve	function	platform	false		src/ui/theme/brand/brandTheme.ts	213	brandThemeToTokens
+withAlpha	function	platform	true		src/ui/theme/brand/brandTheme.ts	303	
+assertNoLockedRoles	function	platform	false		src/ui/theme/brand/brandTheme.ts	315	
+NEUTRAL_BY_POLICY	variable	platform	true		src/ui/theme/brand/brandTheme.ts	331	
+assertNoNeutralRoles	function	platform	false		src/ui/theme/brand/brandTheme.ts	338	
+brandThemeFromTokens	function	platform	true		src/ui/theme/brand/brandTheme.ts	349	
+brandTokenNames	function	platform	true		src/ui/theme/brand/brandTheme.ts	362	
+toRgb	variable	platform	false		src/ui/theme/brand/contrast.ts	25	
+AA_TEXT	variable	platform	true		src/ui/theme/brand/contrast.ts	27	
+AA_LARGE_TEXT	variable	platform	true		src/ui/theme/brand/contrast.ts	28	
+AA_NON_TEXT	variable	platform	true		src/ui/theme/brand/contrast.ts	29	
+contrastRatio	function	platform	true		src/ui/theme/brand/contrast.ts	32	
+compositeOver	function	platform	true		src/ui/theme/brand/contrast.ts	49	
+flatten	function	platform	false		src/ui/theme/brand/contrast.ts	64	
+ForegroundChoice	interface	platform	true		src/ui/theme/brand/contrast.ts	69	
+pickForeground	function	platform	true		src/ui/theme/brand/contrast.ts	84	
+PairingKind	type	platform	true		src/ui/theme/brand/contrast.ts	97	
+PairingDef	interface	platform	true		src/ui/theme/brand/contrast.ts	99	
+PAIRINGS	array	platform	true		src/ui/theme/brand/contrast.ts	130	
+thresholdFor	function	platform	true		src/ui/theme/brand/contrast.ts	189	
+PairingResult	interface	platform	true		src/ui/theme/brand/contrast.ts	193	
+evaluatePairings	function	platform	true		src/ui/theme/brand/contrast.ts	209	
+publishBlocked	function	platform	true		src/ui/theme/brand/contrast.ts	227	
+SAMPLE_EDGE	variable	platform	true		src/ui/theme/brand/palette.ts	23	
+ALPHA_FLOOR	variable	platform	false		src/ui/theme/brand/palette.ts	26	
+ExtractOptions	interface	platform	true		src/ui/theme/brand/palette.ts	28	
+extractSeeds	function	platform	true		src/ui/theme/brand/palette.ts	40	
+decodeImage	function	platform	true		src/ui/theme/brand/palette.ts	64	
+loadImage	function	platform	false		src/ui/theme/brand/palette.ts	84	
+fileToDataUrl	function	platform	true		src/ui/theme/brand/palette.ts	98	
+TONAL_STEPS	variable	platform	true		src/ui/theme/brand/tonal.ts	39	
+TonalStep	type	platform	true		src/ui/theme/brand/tonal.ts	40	
+BRAND_STEP	variable	platform	true		src/ui/theme/brand/tonal.ts	43	
+BRAND_HOVER_STEP	variable	platform	true		src/ui/theme/brand/tonal.ts	44	
+TonalScale	type	platform	true		src/ui/theme/brand/tonal.ts	46	
+LIGHT_END_TONE	variable	platform	false		src/ui/theme/brand/tonal.ts	49	
+DARK_END_TONE	variable	platform	false		src/ui/theme/brand/tonal.ts	50	
+ANCHOR_MIN_TONE	variable	platform	true		src/ui/theme/brand/tonal.ts	53	
+ANCHOR_MAX_TONE	variable	platform	true		src/ui/theme/brand/tonal.ts	54	
+clampAnchor	function	platform	true		src/ui/theme/brand/tonal.ts	56	
+toneForStep	function	platform	true		src/ui/theme/brand/tonal.ts	64	
+tonalScale	function	platform	true		src/ui/theme/brand/tonal.ts	82	
+toneOf	function	platform	true		src/ui/theme/brand/tonal.ts	92	
+chromaOf	function	platform	true		src/ui/theme/brand/tonal.ts	97	
+hueOf	function	platform	true		src/ui/theme/brand/tonal.ts	102	
+toneAdjusted	function	platform	true		src/ui/theme/brand/tonal.ts	115	
+scaleToTokens	function	platform	true		src/ui/theme/brand/tonal.ts	128	
+DECL	variable	platform	false		src/ui/theme/cssTokenGraph.ts	25	
+VAR_REF	variable	platform	false		src/ui/theme/cssTokenGraph.ts	28	
+DeclMap	type	platform	true		src/ui/theme/cssTokenGraph.ts	30	
+ROOT_BLOCK	variable	platform	false		src/ui/theme/cssTokenGraph.ts	41	
+collectDecls	function	platform	true		src/ui/theme/cssTokenGraph.ts	58	
+ResolveResult	interface	platform	true		src/ui/theme/cssTokenGraph.ts	71	
+resolveToken	function	platform	true		src/ui/theme/cssTokenGraph.ts	88	
+resolveLiteral	function	platform	false		src/ui/theme/cssTokenGraph.ts	120	
+collectVarRefs	function	platform	true		src/ui/theme/cssTokenGraph.ts	142	
+root	variable	platform	false	test	src/ui/theme/semanticTokens.test.ts	26	
+read	function	platform	false	test	src/ui/theme/semanticTokens.test.ts	27	
+BASE_CSS	variable	platform	false	test	src/ui/theme/semanticTokens.test.ts	29	
+TOKENS_CSS	variable	platform	false	test	src/ui/theme/semanticTokens.test.ts	30	
+SEMANTIC_CSS	variable	platform	false	test	src/ui/theme/semanticTokens.test.ts	31	
+RECIPES	array	platform	false	test	src/ui/theme/semanticTokens.test.ts	33	
+decls	variable	platform	false	test	src/ui/theme/semanticTokens.test.ts	50	
+resolveRole	function	platform	false	test	src/ui/theme/semanticTokens.test.ts	220	
+SemanticGroupId	type	platform	true		src/ui/theme/semanticTokens.ts	28	
+SemanticRole	interface	platform	true		src/ui/theme/semanticTokens.ts	32	
+SemanticGroup	interface	platform	true		src/ui/theme/semanticTokens.ts	46	
+SEMANTIC_GROUPS	array	platform	true		src/ui/theme/semanticTokens.ts	52	
+SEMANTIC_ROLES	array	platform	true		src/ui/theme/semanticTokens.ts	63	
+SEMANTIC_TOKEN_NAMES	variable	platform	true		src/ui/theme/semanticTokens.ts	112	
+BRAND_DRIVEN_ROLES	variable	platform	true		src/ui/theme/semanticTokens.ts	115	
+BRAND_LOCKED_ROLES	variable	platform	true		src/ui/theme/semanticTokens.ts	122	
+semanticRolesIn	function	platform	true		src/ui/theme/semanticTokens.ts	124	
+TokenKind	type	platform	true		src/ui/theme/tokens.ts	19	
+TokenDef	interface	platform	true		src/ui/theme/tokens.ts	21	
+TokenGroup	interface	platform	true		src/ui/theme/tokens.ts	29	
+WEIGHT_OPTIONS	variable	platform	false		src/ui/theme/tokens.ts	36	
+SEMANTIC_TOKEN_GROUPS	variable	platform	false		src/ui/theme/tokens.ts	49	
+TOKEN_GROUPS	array	platform	true		src/ui/theme/tokens.ts	61	
+ALL_TOKEN_NAMES	variable	platform	true		src/ui/theme/tokens.ts	257	
 LS	function	widgets	false		src/ui/theme/useModuleLayout.ts	16	
 reconcile	function	widgets	false		src/ui/theme/useModuleLayout.ts	19	
 ModuleLayout	interface	widgets	true		src/ui/theme/useModuleLayout.ts	28	
@@ -12854,6 +13378,16 @@ ToastOptions	interface	platform	true		src/ui/toast/toastTypes.ts	30
 ToastActionOptions	interface	platform	true		src/ui/toast/toastTypes.ts	40	
 ToastRichOptions	interface	platform	true		src/ui/toast/toastTypes.ts	51	
 ToastRecord	interface	platform	true		src/ui/toast/toastTypes.ts	63	
+BREAKPOINTS	variable	platform	true		src/ui/tokens/index.ts	27	
+BreakpointKey	type	platform	true		src/ui/tokens/index.ts	36	
+PREVIEW_WIDTHS	array	platform	true		src/ui/tokens/index.ts	39	
+ControlSize	type	platform	true		src/ui/tokens/index.ts	49	
+CONTROL_SIZES	array	platform	true		src/ui/tokens/index.ts	50	
+Density	type	platform	true		src/ui/tokens/index.ts	53	
+DENSITIES	array	platform	true		src/ui/tokens/index.ts	54	
+ValidationState	type	platform	true		src/ui/tokens/index.ts	60	
+VALIDATION_STATES	array	platform	true		src/ui/tokens/index.ts	61	
+UiState	type	platform	true		src/ui/tokens/index.ts	70	
 WidgetAccessContext	interface	widgets	true	ui-tile	src/ui/widgets/access.ts	5	
 WidgetAccessDecision	interface	widgets	true	ui-tile	src/ui/widgets/access.ts	6	
 resolveWidgetAccess	function	widgets	true	ui-tile	src/ui/widgets/access.ts	7	

@@ -1,0 +1,194 @@
+/**
+ * src/ui/primitives/actions.recipe.css — the rest of the Actions family.
+ *
+ * Button/IconButton/ButtonGroup live in Button.recipe.css; this covers the
+ * composed action controls that sit on top of them: SegmentedControl,
+ * ToggleButton, DropdownButton, SplitButton and the menu surface they share.
+ *
+ * @layer recipes, no `!important` — see src/ui/RECIPES.md §4.
+ */
+
+@layer recipes {
+  /* `[data-ui-preview-scope]` is a SECOND ROOT. See the note in semantic.css:
+     a var() is substituted where the property is DECLARED, so tokens declared
+     only on :root are already resolved before a scoped draft can reach them. */
+  :root,
+  [data-ui-preview-scope] {
+    /* ── Segmented control ──────────────────────────────────────────────────*/
+    --ui-segmented-bg: var(--ui-color-surface-subtle);
+    --ui-segmented-border: var(--ui-color-border-default);
+    --ui-segmented-radius: var(--radius-pill);
+    --ui-segmented-pad: 2px;
+    --ui-segmented-item-fg: var(--ui-color-text-secondary);
+    --ui-segmented-item-fg-selected: var(--ui-color-text-inverse);
+    --ui-segmented-item-bg-selected: var(--ui-color-selection-border);
+    --ui-segmented-item-bg-hover: rgba(27, 45, 84, .07);
+
+    /* ── Toggle button ──────────────────────────────────────────────────────*/
+    --ui-toggle-bg-on: rgba(27, 45, 84, .10);
+    --ui-toggle-fg-on: var(--ui-color-selection-border);
+    --ui-toggle-border-on: var(--ui-color-selection-border);
+
+    /* ── Menu surface ───────────────────────────────────────────────────────*/
+    --ui-menu-bg: var(--ui-color-surface-raised);
+    --ui-menu-border: var(--ui-color-border-default);
+    --ui-menu-radius: var(--radius-sm);
+    --ui-menu-shadow: var(--elev-4);
+    --ui-menu-pad: 4px;
+    --ui-menu-min-width: 180px;
+
+    --ui-menu-item-height: 32px;
+    --ui-menu-item-pad-x: 10px;
+    --ui-menu-item-radius: var(--radius-xs);
+    --ui-menu-item-fg: var(--ui-color-text-primary);
+    --ui-menu-item-bg-active: var(--row-hover);
+    --ui-menu-item-fg-danger: var(--ui-color-danger);
+    --ui-menu-item-bg-danger-active: var(--st-danger-tint);
+  }
+
+  /* ── SegmentedControl ─────────────────────────────────────────────────────
+     A single-choice control that looks like a switch, not a set of buttons.
+     Distinct from ButtonGroup: a group is several INDEPENDENT actions joined
+     visually; a segmented control is ONE value with several options, so it
+     carries radiogroup semantics and roving focus. */
+  .ui-segmented {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    padding: var(--ui-segmented-pad);
+    border: var(--ui-border-width) solid var(--ui-segmented-border);
+    border-radius: var(--ui-segmented-radius);
+    background: var(--ui-segmented-bg);
+  }
+  .ui-segmented-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: calc(var(--ui-control-sm) - 6px);
+    padding: 0 12px;
+    border: none;
+    border-radius: var(--ui-segmented-radius);
+    background: transparent;
+    color: var(--ui-segmented-item-fg);
+    font: inherit;
+    font-size: var(--ui-font-size-caption);
+    font-weight: var(--font-weight-semibold);
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color var(--ui-motion-fast) var(--ui-ease-standard),
+      color var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+  .ui-segmented-item > svg { width: var(--ui-icon-sm); height: var(--ui-icon-sm); }
+  .ui-segmented-item:hover:not([aria-checked='true']):not(:disabled),
+  .ui-segmented-item[data-ui-state~='hover'] { background: var(--ui-segmented-item-bg-hover); }
+  .ui-segmented-item[aria-checked='true'] {
+    background: var(--ui-segmented-item-bg-selected);
+    color: var(--ui-segmented-item-fg-selected);
+  }
+  .ui-segmented-item:focus-visible,
+  .ui-segmented-item[data-ui-state~='focus'] {
+    outline: var(--ui-focus-outline-width) solid var(--ui-focus-outline-color);
+    outline-offset: 1px;
+  }
+  .ui-segmented-item:disabled { color: var(--ui-disabled-fg); cursor: var(--ui-disabled-cursor); }
+  .ui-segmented--full { display: flex; width: 100%; }
+  .ui-segmented--full .ui-segmented-item { flex: 1 1 0; }
+
+  /* ── ToggleButton ─────────────────────────────────────────────────────────
+     A button with an on/off value. `aria-pressed`, not `aria-checked` — it is a
+     toggle, not a radio, and screen readers announce the two differently. */
+  .ui-btn[aria-pressed='true'],
+  .ui-btn[data-ui-state~='selected'] {
+    background: var(--ui-toggle-bg-on);
+    color: var(--ui-toggle-fg-on);
+    border-color: var(--ui-toggle-border-on);
+  }
+
+  /* ── Menu surface ─────────────────────────────────────────────────────────*/
+  .ui-menu {
+    min-width: var(--ui-menu-min-width);
+    padding: var(--ui-menu-pad);
+    border: var(--ui-border-width) solid var(--ui-menu-border);
+    border-radius: var(--ui-menu-radius);
+    background: var(--ui-menu-bg);
+    box-shadow: var(--ui-menu-shadow);
+  }
+  .ui-menu-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    min-height: var(--ui-menu-item-height);
+    padding: 0 var(--ui-menu-item-pad-x);
+    border: none;
+    border-radius: var(--ui-menu-item-radius);
+    background: transparent;
+    color: var(--ui-menu-item-fg);
+    font: inherit;
+    font-size: var(--ui-font-size-body-sm);
+    text-align: left;
+    cursor: pointer;
+  }
+  .ui-menu-item > svg { width: var(--ui-icon-sm); height: var(--ui-icon-sm); flex-shrink: 0; }
+  .ui-menu-item-shortcut {
+    margin-left: auto;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--ui-font-size-caption);
+  }
+  /* ACTIVE is the keyboard cursor, driven by an attribute rather than :hover, so
+     mouse and keyboard can never both claim a highlight. */
+  .ui-menu-item[data-active='true'] { background: var(--ui-menu-item-bg-active); }
+  .ui-menu-item[data-danger='true'] { color: var(--ui-menu-item-fg-danger); }
+  .ui-menu-item[data-danger='true'][data-active='true'] { background: var(--ui-menu-item-bg-danger-active); }
+  .ui-menu-item[aria-disabled='true'] {
+    color: var(--ui-disabled-fg);
+    cursor: var(--ui-disabled-cursor);
+    background: transparent;
+  }
+  .ui-menu-separator {
+    height: var(--ui-border-width);
+    margin: var(--ui-menu-pad) 0;
+    background: var(--border);
+  }
+  .ui-menu-label {
+    padding: 6px var(--ui-menu-item-pad-x) 3px;
+    color: var(--text-muted);
+    font-size: var(--ui-font-size-caption);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--ui-letter-spacing-caps);
+    text-transform: uppercase;
+  }
+
+  /* ── SplitButton ──────────────────────────────────────────────────────────
+     Two BUTTONS sharing one silhouette: the default action, and a menu of the
+     alternatives. It must not be one button that guesses which half was clicked
+     — that is unusable by keyboard and ambiguous by touch. */
+  .ui-split {
+    display: inline-flex;
+    align-items: stretch;
+  }
+  .ui-split > .ui-btn:first-child {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .ui-split > .ui-btn:last-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    padding: 0 8px;
+    /* A hairline between the halves so the split is legible on a filled
+       variant, where two adjacent same-colour buttons read as one. */
+    box-shadow: inset 1px 0 0 rgba(255, 255, 255, .28);
+    margin-left: calc(var(--ui-button-border-width) * -1);
+  }
+  .ui-split > .ui-btn--outline:last-child,
+  .ui-split > .ui-btn--ghost:last-child { box-shadow: inset 1px 0 0 var(--border); }
+  .ui-split > .ui-btn:hover,
+  .ui-split > .ui-btn:focus-visible { z-index: 1; }
+
+  /* Chevron rotates while its menu is open, so the control says what it is doing. */
+  .ui-btn-chevron { transition: transform var(--ui-motion-fast) var(--ui-ease-standard); }
+  .ui-btn[aria-expanded='true'] .ui-btn-chevron { transform: rotate(180deg); }
+}

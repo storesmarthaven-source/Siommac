@@ -23,7 +23,13 @@ export function Field({ label, children, wide }: { label: string; children: Comp
   );
 }
 
-export function TextInput({ value, onInput, placeholder, type = 'text' }: {
+/**
+ * DEPRECATED — superseded by `src/ui/primitives/TextInput.tsx`, which owns the
+ * `TextInput` name in the barrel. Kept unexported-from-@ui only so this file
+ * still compiles while `Field`/`SelectInput`/`TextareaInput` await migration.
+ * Nothing should import it; it goes when those three do.
+ */
+export function LegacyTextInput({ value, onInput, placeholder, type = 'text' }: {
   value: string; onInput: (v: string) => void; placeholder?: string; type?: string;
 }): VNode {
   return (

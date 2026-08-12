@@ -147,34 +147,10 @@
 .ui-panel-actions .ui-menu-wrap { display: block; }
 .ui-panel-actions .ui-menu-wrap > button { width: 100%; }
 
-/* ── Panel tabs (v36 .drawer-tabs) — bleeds to the .ui-rdrawer-scroll padding ── */
-.ui-panel-tabs {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  border-bottom: 1px solid #e5eaf2; position: relative; margin: 0 -18px 18px; padding: 0 18px;
-}
-/* Primary list scrolls horizontally so it never overlaps the "More" button when
-   the strip is wider than the (narrow) drawer. */
-.ui-panel-tab-list { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1 1 auto; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
-.ui-panel-tab-list::-webkit-scrollbar { display: none; }
-.ui-panel-tab-list .ui-panel-tab { flex: 0 0 auto; }
-/* "More" overflow trigger keeps its size and never grows past a cap — a long
-   selected tab name (e.g. "Statutory Profile") truncates instead of overlapping. */
-.ui-panel-tabs > .ui-menu-wrap { flex: none; }
-.ui-panel-tabs > .ui-menu-wrap .ui-panel-tab { max-width: 150px; }
-.ui-panel-tabs > .ui-menu-wrap .ui-panel-tab > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ui-panel-tab {
-  position: relative; height: 42px; display: flex; align-items: center; gap: 5px;
-  font-size: 13px; font-weight: var(--font-weight-semibold, 600); color: #526178;
-  white-space: nowrap; border: 0; background: transparent; padding: 0; cursor: pointer;
-}
-.ui-panel-tab:hover { color: #0f172a; }
-.ui-panel-tab.active { color: #0757df; }
-/* bottom: 0 (not -1px) so the underline isn't clipped by the scroll container. */
-.ui-panel-tab.active::after { content: ""; position: absolute; left: 0; bottom: 0; width: 100%; height: 3px; border-radius: 3px 3px 0 0; background: #0757df; }
-.ui-panel-tab-caret { font-size: 12px; opacity: .65; flex: none; }
-/* Divider between the primary tab row and the "More" overflow button. */
-.ui-panel-tab-sep { flex: none; align-self: center; width: 1px; height: 18px; margin: 0 4px; background: #e5eaf2; }
-.ui-rdrawer .ui-panel-tab-sep { background: rgba(255, 255, 255, .16); }
+/* Panel tabs (.ui-panel-tab*) DELETED with the Tabs consolidation — the drawer
+   tab strip is now the canonical `<Tabs variant="contained" maxVisible>`, whose
+   recipe lives in src/ui/navigation/Tabs/tabs.recipe.css. Removed rather than
+   left to be out-ranked: a recipe can never beat a legacy rule (RECIPES.md §4). */
 
 /* ── Reusable dropdown Menu (v36 .dropdown-menu / .menu-row) ────────────────── */
 .ui-menu-wrap { position: relative; display: inline-flex; }
@@ -436,12 +412,33 @@
 }
 .ui-rdrawer .ui-panel-actions .ui-btn-secondary:hover { background: rgba(7,20,38,.48); color: #fff; }
 
-/* Tabs */
-.ui-rdrawer .ui-panel-tabs { border-bottom-color: rgba(255,255,255,.10); }
-.ui-rdrawer .ui-panel-tab { color: rgba(226,238,252,.62); }
-.ui-rdrawer .ui-panel-tab:hover { color: #fff; }
-.ui-rdrawer .ui-panel-tab.active { color: #fff; }
-.ui-rdrawer .ui-panel-tab.active::after { background: #808ba8; }
+/* Tabs — the dark-drawer skin of the canonical <Tabs>. It re-points the recipe
+   VARIABLES rather than overriding its rules, which is the sanctioned way to
+   theme a kit component for a surface (RECIPES.md §1). */
+.ui-rdrawer .ui-tabs {
+  --ui-tabs-rail: rgba(255,255,255,.10);
+  --ui-tab-fg: rgba(226,238,252,.62);
+  --ui-tab-fg-hover: #fff;
+  --ui-tab-fg-selected: #fff;
+  --ui-tab-bg-hover: rgba(255,255,255,.06);
+  --ui-tab-indicator: #808ba8;
+  --ui-tab-desc-fg: rgba(226,238,252,.45);
+  --ui-tab-badge-bg: rgba(255,255,255,.10);
+  --ui-tab-badge-fg: rgba(226,238,252,.75);
+  --ui-tab-badge-bg-selected: #fff;
+  --ui-tab-badge-fg-selected: var(--siomac-navy);
+
+  /* The contained rail. These were RULE overrides
+     (`.ui-rdrawer .ui-tabs--contained > .ui-tabs-list { … }`) until 2026-08-10
+     and had never once applied: this file is `@layer components` and the recipe
+     is `@layer recipes`, which is declared later and therefore wins regardless
+     of specificity. The visible result was a light `--bg-subtle` rail sitting
+     inside the navy drawer. Re-pointing the recipe's variables is the override
+     that actually works from outside the recipe — RECIPES.md §1. */
+  --ui-tabs-contained-bg: rgba(7,20,38,.42);
+  --ui-tabs-contained-selected-bg: rgba(255,255,255,.12);
+  --ui-tabs-contained-selected-shadow: none;
+}
 
 /* Small inline action buttons */
 .ui-rdrawer .ui-mini-btn { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.14); color: #e5eefb; }

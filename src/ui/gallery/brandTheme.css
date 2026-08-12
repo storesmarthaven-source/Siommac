@@ -1,0 +1,347 @@
+/**
+ * src/ui/gallery/brandTheme.css — layout for the Brand Theme workspace.
+ *
+ * Workbench chrome only. Every colour here is a SEMANTIC role, so the panel
+ * re-themes with the draft it is editing — a brand workspace that stayed
+ * SIOMAC-red while previewing a teal brand would be its own counter-example.
+ *
+ * The navigation and selected-row blocks are the exception worth naming: they
+ * consume `--ui-color-nav-*` / `--ui-color-selection-*` directly because no
+ * canonical component owns those roles yet. They are role demonstrations, and
+ * the panel labels them as such.
+ */
+
+@layer sections {
+  .ui-brand {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .ui-brand-intro {
+    margin: 0;
+    max-width: 78ch;
+    color: var(--ui-color-text-secondary);
+    font-size: var(--ui-font-size-body-sm);
+    line-height: var(--ui-line-height-base);
+  }
+
+  .ui-brand-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px var(--space-3);
+    border: 1px solid var(--ui-color-danger);
+    border-radius: var(--radius-sm);
+    color: var(--ui-color-danger);
+    font-size: var(--ui-font-size-body-sm);
+  }
+
+  .ui-brand-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--space-4);
+  }
+
+  /* ── Logo ─────────────────────────────────────────────────────────────────*/
+  .ui-brand-logo-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+  .ui-brand-logo-frame {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 96px;
+    height: 96px;
+    border: 1px dashed var(--ui-color-border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--ui-color-surface-subtle);
+    color: var(--ui-color-text-muted);
+    overflow: hidden;
+  }
+  .ui-brand-logo-frame img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+  .ui-brand-logo-ctrls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+
+  /* The file input is visually replaced by a button-shaped label; the real
+     input keeps its native keyboard behaviour rather than being reimplemented
+     with a click handler that a keyboard user cannot reach. */
+  .ui-brand-file input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .ui-brand-file { position: relative; display: inline-flex; cursor: pointer; }
+  .ui-brand-file input:focus-visible + span {
+    outline: var(--ui-focus-outline-width) solid var(--ui-focus-outline-color);
+    outline-offset: 2px;
+  }
+
+  .ui-brand-note {
+    margin: 0;
+    flex-basis: 100%;
+    color: var(--ui-color-text-secondary);
+    font-size: var(--ui-font-size-caption);
+    line-height: var(--ui-line-height-base);
+  }
+  .ui-brand-note--warn { color: var(--ui-color-warning); }
+
+  /* ── Extracted swatches ───────────────────────────────────────────────────*/
+  .ui-brand-swatches { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+  .ui-brand-swatch-col { display: grid; gap: 4px; justify-items: center; }
+  .ui-brand-swatch {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--ui-color-border-default);
+  }
+  .ui-brand-swatch-col code { font-size: var(--ui-font-size-caption); color: var(--ui-color-text-secondary); }
+  .ui-brand-swatch-actions { display: flex; gap: 4px; }
+  .ui-brand-swatch-actions button {
+    border: 1px solid var(--ui-color-border-default);
+    border-radius: var(--radius-xs);
+    background: transparent;
+    padding: 2px 6px;
+    color: var(--ui-color-text-secondary);
+    font-size: var(--ui-font-size-caption);
+    cursor: pointer;
+  }
+  .ui-brand-swatch-actions button:hover {
+    border-color: var(--ui-color-action-secondary);
+    color: var(--ui-color-action-secondary);
+  }
+
+  /* ── Seeds ────────────────────────────────────────────────────────────────*/
+  .ui-brand-seed { display: flex; align-items: center; gap: var(--space-3); }
+  .ui-brand-seed input[type='color'] {
+    width: 52px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--ui-color-border-default);
+    border-radius: var(--radius-xs);
+    background: none;
+    cursor: pointer;
+  }
+  .ui-brand-seed > :last-child { flex: 1 1 auto; min-width: 0; }
+
+  /* ── Scales ───────────────────────────────────────────────────────────────*/
+  .ui-brand-scale { display: grid; gap: 4px; margin-bottom: var(--space-3); }
+  .ui-brand-scale-label {
+    color: var(--ui-color-text-secondary);
+    font-size: var(--ui-font-size-label);
+    font-weight: var(--font-weight-semibold);
+  }
+  .ui-brand-scale-strip { display: flex; gap: 2px; }
+  .ui-brand-scale-cell { flex: 1 1 0; display: grid; gap: 2px; justify-items: center; min-width: 0; }
+  .ui-brand-scale-cell span {
+    display: block;
+    width: 100%;
+    height: 34px;
+    border-radius: var(--radius-xs);
+    border: 1px solid var(--ui-color-border-default);
+  }
+  .ui-brand-scale-cell em {
+    font-style: normal;
+    font-size: var(--ui-font-size-caption);
+    color: var(--ui-color-text-muted);
+  }
+
+  /* ── Tables (mapping + pairings) ──────────────────────────────────────────*/
+  .ui-brand-table { width: 100%; border-collapse: collapse; font-size: var(--ui-font-size-body-sm); }
+  .ui-brand-table th {
+    text-align: left;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--ui-color-border-default);
+    color: var(--ui-color-text-secondary);
+    font-size: var(--ui-font-size-caption);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--ui-letter-spacing-caps);
+  }
+  .ui-brand-table td {
+    padding: 8px;
+    border-bottom: 1px solid var(--ui-color-border-default);
+    color: var(--ui-color-text-primary);
+    vertical-align: middle;
+  }
+  .ui-brand-table td small {
+    display: block;
+    max-width: 52ch;
+    color: var(--ui-color-text-secondary);
+    font-size: var(--ui-font-size-caption);
+    line-height: var(--ui-line-height-base);
+  }
+  .ui-brand-table tr.is-fail td { background: var(--st-danger-tint); }
+  .ui-brand-table tr.is-warn td { background: var(--st-warning-tint); }
+
+  .ui-brand-chip { display: inline-flex; align-items: center; gap: 6px; }
+  .ui-brand-chip i {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1px solid var(--ui-color-border-default);
+  }
+
+  .ui-brand-pair {
+    display: inline-grid;
+    place-items: center;
+    width: 28px;
+    height: 22px;
+    margin-right: 8px;
+    border-radius: var(--radius-xs);
+    border: 1px solid var(--ui-color-border-default);
+    font-weight: var(--font-weight-bold);
+    vertical-align: middle;
+  }
+
+  /* ── Live preview ─────────────────────────────────────────────────────────*/
+  .ui-brand-preview { display: grid; gap: var(--space-4); }
+  .ui-brand-preview-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+
+  .ui-brand-link {
+    color: var(--ui-color-text-link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-size: var(--ui-font-size-body-sm);
+  }
+
+  .ui-brand-nav {
+    display: grid;
+    gap: 2px;
+    max-width: 260px;
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+    background: var(--ui-color-nav-background);
+  }
+  .ui-brand-nav-title {
+    margin-bottom: 4px;
+    color: var(--ui-color-nav-text);
+    font-size: var(--ui-font-size-caption);
+    text-transform: uppercase;
+    letter-spacing: var(--ui-letter-spacing-caps);
+    opacity: .75;
+  }
+  .ui-brand-nav-item {
+    padding: 7px 10px;
+    border-radius: var(--radius-xs);
+    color: var(--ui-color-nav-text);
+    font-size: var(--ui-font-size-body-sm);
+    font-weight: var(--font-weight-semibold);
+  }
+  .ui-brand-nav-item.is-active {
+    background: var(--ui-color-nav-active-background);
+    color: var(--ui-color-nav-active-text);
+  }
+
+  .ui-brand-rows { display: grid; max-width: 360px; border: 1px solid var(--ui-color-border-default); border-radius: var(--radius-sm); overflow: hidden; }
+  .ui-brand-row {
+    padding: 9px var(--space-3);
+    background: var(--ui-color-surface-default);
+    color: var(--ui-color-text-primary);
+    font-size: var(--ui-font-size-body-sm);
+  }
+  .ui-brand-row.is-selected {
+    background: var(--ui-color-selection-background);
+    box-shadow: inset 3px 0 0 var(--ui-color-selection-border);
+  }
+
+  /* ── Actions ──────────────────────────────────────────────────────────────*/
+  .ui-brand-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--ui-color-border-default);
+  }
+  .ui-brand-actions-spacer { flex: 1 1 auto; }
+  .ui-brand-block {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--ui-color-danger);
+    font-size: var(--ui-font-size-body-sm);
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+@layer sections {
+  /* ── Role-mapping table ───────────────────────────────────────────────────
+     Added when the mapping table grew from "roles the engine wrote" to EVERY
+     role: the question users actually ask is "why is there a dark red here?",
+     and the answer is usually a role the engine did NOT write. */
+  .ui-brand-table-group td {
+    padding-top: var(--space-4);
+    color: var(--ui-color-text-secondary);
+    font-size: var(--ui-font-size-caption);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--ui-letter-spacing-caps);
+    border-bottom-color: transparent;
+  }
+
+  .ui-brand-src {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    font-size: var(--ui-font-size-caption);
+    font-weight: var(--font-weight-semibold);
+    white-space: nowrap;
+  }
+  /* Brand-sourced rows are tinted with the SELECTION role rather than a status
+     colour: this is "the brand reaches here", not a success/warning signal. */
+  .ui-brand-src--brand   { background: var(--ui-color-selection-background); color: var(--ui-color-selection-border); }
+  .ui-brand-src--neutral { background: var(--ui-color-surface-subtle); color: var(--ui-color-text-secondary); }
+  .ui-brand-src--locked  { background: transparent; color: var(--ui-color-text-muted); }
+
+  .ui-brand-dim { color: var(--ui-color-text-muted); }
+
+  /* ── Surface role demonstrations ──────────────────────────────────────────*/
+  .ui-brand-preview-row--top { align-items: flex-start; }
+
+  .ui-brand-nav-item.is-active { position: relative; }
+  /* The 3px indicator bar the rail draws beside the current page — the one
+     place the brand is allowed into the navigation chrome. */
+  .ui-brand-nav-item.is-active > i {
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--ui-color-nav-active-indicator);
+  }
+
+  .ui-brand-menu,
+  .ui-brand-dialog {
+    flex: 1 1 220px;
+    max-width: 280px;
+    padding: var(--space-3);
+    border: 1px solid var(--ui-color-border-default);
+    border-radius: var(--radius-sm);
+    background: var(--ui-color-surface-raised);
+    box-shadow: var(--elev-4);
+  }
+  .ui-brand-menu-title,
+  .ui-brand-dialog-head {
+    margin-bottom: 6px;
+    color: var(--ui-color-text-secondary);
+    font-size: var(--ui-font-size-caption);
+    text-transform: uppercase;
+    letter-spacing: var(--ui-letter-spacing-caps);
+  }
+  .ui-brand-menu-item {
+    padding: 7px 8px;
+    border-radius: var(--radius-xs);
+    color: var(--ui-color-text-primary);
+    font-size: var(--ui-font-size-body-sm);
+  }
+  .ui-brand-menu-item.is-selected {
+    background: var(--ui-color-selection-background);
+    color: var(--ui-color-selection-border);
+    font-weight: var(--font-weight-semibold);
+  }
+  .ui-brand-menu-item.is-danger { color: var(--ui-color-danger); }
+
+  .ui-brand-dialog p {
+    margin: 0 0 var(--space-3);
+    color: var(--ui-color-text-secondary);
+    font-size: var(--ui-font-size-body-sm);
+    line-height: var(--ui-line-height-base);
+  }
+}

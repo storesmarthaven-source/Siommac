@@ -1,0 +1,374 @@
+/**
+ * src/ui/primitives/Button.recipe.css — canonical Button recipe.
+ *
+ * @layer recipes — declared LAST in src/styles/index.css, so this out-ranks any
+ * legacy module rule by layer order alone.
+ *
+ * NO `!important` ANYWHERE IN THIS FILE. Layer priority reverses for important
+ * declarations (the earliest layer wins), so an `!important` here would LOSE to
+ * the `sections` layer it is meant to supersede. Legacy overrides are removed by
+ * deletion, not by escalation. See src/ui/RECIPES.md §4.
+ *
+ * ── Where the default values come from: BTN-01, the approved design ─────────
+ * `.hse-btn` (HSE.css) won the visual selection pass: 40px tall, 10px radius,
+ * 1px border, 0.8rem bold, card shadow. Defaults reproduce it.
+ *
+ * ⭐ BTN-01 has THREE treatments, and the mapping matters more than it looks:
+ *
+ *     .hse-btn           white + border + neutral text   →  `secondary`
+ *     .hse-btn.accent    filled brand red                →  `primary`
+ *     .hse-btn.primary   filled navy                     →  (retired)
+ *
+ * The recipe previously called the FILLED NAVY one `secondary`, which inverted
+ * the hierarchy: a secondary action is the one you did not come to the page to
+ * take, and a dark slab does not recede. The quiet bordered base — 145 of
+ * BTN-01's usages — is the real second-rank button, so it takes the name.
+ *
+ * Retiring filled-navy is a real decision with a migration consequence: the 164
+ * `.hse-btn.primary` call sites do NOT become `secondary`. Each is a judgement —
+ * `primary` where it is the page's main action, `secondary` where it was only
+ * "emphasised because it was next to something quieter".
+ *
+ * ── Three states BTN-01 does not have ───────────────────────────────────────
+ * Neither `.hse-btn` nor the mockup defines disabled, focus or loading, so they
+ * are DESIGNED here in BTN-01's own language rather than borrowed from a
+ * rejected design: disabled drops the shadow and goes flat and muted (never an
+ * opacity fade — that dims the label as much as the fill); focus keeps the
+ * shape and adds an outline plus a soft ring; loading holds the variant's own
+ * colours so a saving button still reads as the action it is.
+ *
+ * ── Hover/active are derived, not hardcoded ─────────────────────────────────
+ * `color-mix` darkens the base fill, so re-theming the brand colour in the token
+ * editor automatically produces a correct hover — instead of leaving a stale
+ * hand-picked hex behind, which is how `.inc-action-btn.blue:hover { #15305a }`
+ * ended up unable to follow the theme.
+ */
+
+@layer recipes {
+  /* `[data-ui-preview-scope]` is a SECOND ROOT. See the note in semantic.css:
+     a var() is substituted where the property is DECLARED, so tokens declared
+     only on :root are already resolved before a scoped draft can reach them. */
+  :root,
+  [data-ui-preview-scope] {
+    /* ── Geometry — BTN-01 (`.hse-btn`, the approved design) ────────────────
+       40px tall, 10px radius, 1px border, 0.8rem bold, 8px gap, card shadow.
+       `md` is the default and matches the 40px input rhythm, so a button and a
+       field finally line up without per-page correction. */
+    --ui-button-height-sm: 32px;
+    --ui-button-height-md: 40px;
+    --ui-button-height-lg: 48px;
+
+    --ui-button-pad-x-sm: 10px;
+    --ui-button-pad-x-md: 14px;
+    --ui-button-pad-x-lg: 20px;
+
+    --ui-button-font-size-sm: 0.74rem;
+    --ui-button-font-size-md: 0.8rem;
+    --ui-button-font-size-lg: var(--ui-font-size-body);
+
+    --ui-button-radius: var(--radius-sm);
+    --ui-button-font-weight: var(--font-weight-bold);
+    --ui-button-gap: 8px;
+    --ui-button-icon-size: var(--ui-icon-md);
+    --ui-button-border-width: var(--ui-border-width);
+    --ui-button-shadow: var(--shadow-card);
+
+    /* ── primary — filled brand red. The one main CTA on a surface. ─────────*/
+    --ui-button-primary-bg: var(--ui-color-action-primary);
+    --ui-button-primary-fg: var(--ui-color-action-primary-text);
+    --ui-button-primary-border: transparent;
+    --ui-button-primary-bg-hover: var(--ui-color-action-primary-hover);
+    --ui-button-primary-bg-active: color-mix(in srgb, var(--ui-color-action-primary-hover) 88%, #000);
+
+    /* ── secondary — NEUTRAL surface, bordered. BTN-01's quiet base. ────────
+       This is the workhorse: `.hse-btn` with no modifier, 145 of BTN-01's uses.
+       It was previously a FILLED NAVY button, which is BTN-01's `.primary`
+       EMPHASIS treatment wearing the wrong name. A secondary action is the one
+       you did not come to the page to take — it should recede, and a dark slab
+       does the opposite. Fixing the brand engine's dark-red secondary by making
+       it dark navy instead would have kept the real mistake. */
+    --ui-button-secondary-bg: var(--ui-color-surface-default);
+    --ui-button-secondary-fg: var(--ui-color-text-primary);
+    --ui-button-secondary-border: var(--ui-color-border-default);
+    --ui-button-secondary-bg-hover: var(--ui-color-surface-subtle);
+    --ui-button-secondary-fg-hover: var(--ui-color-selection-border);
+    --ui-button-secondary-border-hover: var(--ui-color-selection-border);
+    --ui-button-secondary-bg-active: var(--ui-color-border-default);
+
+    /* ── outline — transparent, brand border and text. ──────────────────────
+       Distinct from `secondary`: same weight of emphasis, but it carries the
+       BRAND rather than staying neutral. Use it when the quiet action is still
+       the branded one — a "Save draft" beside a primary "Submit". */
+    --ui-button-outline-bg: transparent;
+    --ui-button-outline-fg: var(--ui-color-selection-border);
+    --ui-button-outline-border: var(--ui-color-selection-border);
+    --ui-button-outline-bg-hover: var(--ui-color-selection-background);
+    --ui-button-outline-fg-hover: var(--ui-color-selection-border);
+    --ui-button-outline-border-hover: var(--ui-color-selection-border);
+    --ui-button-outline-bg-active: var(--ui-color-selection-background);
+
+    /* ── ghost — no fill, no border, brand text. Toolbars and icon actions. ─*/
+    --ui-button-ghost-bg: transparent;
+    --ui-button-ghost-fg: var(--ui-color-text-secondary);
+    --ui-button-ghost-border: transparent;
+    --ui-button-ghost-bg-hover: var(--ui-color-selection-background);
+    --ui-button-ghost-fg-hover: var(--ui-color-selection-border);
+    --ui-button-ghost-bg-active: var(--ui-color-selection-background);
+
+    /* ── danger — filled STATUS red, not brand red. ─────────────────────────
+       Deliberately a different red from `primary`. Brand red means "this is the
+       main action"; status red means "this destroys something". Using one hue
+       for both would make every save button look like a delete button. */
+    --ui-button-danger-bg: var(--ui-color-danger);
+    --ui-button-danger-fg: var(--ui-color-text-inverse);
+    --ui-button-danger-border: transparent;
+    --ui-button-danger-bg-hover: color-mix(in srgb, var(--ui-color-danger) 88%, #000);
+    --ui-button-danger-bg-active: color-mix(in srgb, var(--ui-color-danger) 78%, #000);
+
+    /* ── link — text only. Reads as a link, acts as a button. ───────────────*/
+    --ui-button-link-fg: var(--ui-color-text-link);
+    --ui-button-link-fg-hover: var(--ui-color-action-primary);
+  }
+
+  /* ── Base ─────────────────────────────────────────────────────────────────*/
+  .ui-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ui-button-gap);
+    box-sizing: border-box;
+    min-height: var(--ui-button-height-md);
+    padding: 0 var(--ui-button-pad-x-md);
+    border: var(--ui-button-border-width) solid transparent;
+    border-radius: var(--ui-button-radius);
+    box-shadow: var(--ui-button-shadow);
+    font-family: inherit;
+    font-size: var(--ui-button-font-size-md);
+    font-weight: var(--ui-button-font-weight);
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    position: relative;
+    text-decoration: none;
+    transition:
+      background-color var(--ui-motion-fast) var(--ui-ease-standard),
+      border-color     var(--ui-motion-fast) var(--ui-ease-standard),
+      color            var(--ui-motion-fast) var(--ui-ease-standard),
+      box-shadow       var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+
+  /* Icons size from the recipe, not from the icon component's own attributes,
+     so icon scale is a token decision rather than 1,679 individual choices. */
+  .ui-btn > svg {
+    width: var(--ui-button-icon-size);
+    height: var(--ui-button-icon-size);
+    flex-shrink: 0;
+  }
+
+  /* ── Sizes ────────────────────────────────────────────────────────────────*/
+  .ui-btn--sm {
+    min-height: var(--ui-button-height-sm);
+    padding: 0 var(--ui-button-pad-x-sm);
+    font-size: var(--ui-button-font-size-sm);
+  }
+  .ui-btn--lg {
+    min-height: var(--ui-button-height-lg);
+    padding: 0 var(--ui-button-pad-x-lg);
+    font-size: var(--ui-button-font-size-lg);
+    --ui-button-icon-size: var(--ui-icon-md);
+  }
+
+  /* Icon-only: square, no horizontal padding, still meets the height target. */
+  .ui-btn--icon {
+    padding: 0;
+    width: var(--ui-button-height-md);
+  }
+  .ui-btn--icon.ui-btn--sm { width: var(--ui-button-height-sm); }
+  .ui-btn--icon.ui-btn--lg { width: var(--ui-button-height-lg); }
+
+  .ui-btn--full { width: 100%; }
+
+  /* ── Variants ─────────────────────────────────────────────────────────────
+     Every interactive rule pairs its pseudo-class with a [data-ui-state~='…']
+     selector so the Gallery can FORCE the state for preview. The forced form is
+     the same declaration block, never a Gallery-only copy — otherwise Compare
+     mode would be showing something no user ever sees. See RECIPES.md §5. */
+
+  .ui-btn--primary {
+    background: var(--ui-button-primary-bg);
+    color: var(--ui-button-primary-fg);
+    border-color: var(--ui-button-primary-border);
+  }
+  .ui-btn--primary:hover:not(:disabled):not([aria-busy='true']),
+  .ui-btn--primary[data-ui-state~='hover'] { background: var(--ui-button-primary-bg-hover); }
+  .ui-btn--primary:active:not(:disabled),
+  .ui-btn--primary[data-ui-state~='active'] { background: var(--ui-button-primary-bg-active); }
+
+  .ui-btn--secondary {
+    background: var(--ui-button-secondary-bg);
+    color: var(--ui-button-secondary-fg);
+    border-color: var(--ui-button-secondary-border);
+  }
+  .ui-btn--secondary:hover:not(:disabled):not([aria-busy='true']),
+  .ui-btn--secondary[data-ui-state~='hover'] {
+    background: var(--ui-button-secondary-bg-hover);
+    color: var(--ui-button-secondary-fg-hover);
+    border-color: var(--ui-button-secondary-border-hover);
+  }
+  .ui-btn--secondary:active:not(:disabled),
+  .ui-btn--secondary[data-ui-state~='active'] { background: var(--ui-button-secondary-bg-active); }
+
+  .ui-btn--outline {
+    background: var(--ui-button-outline-bg);
+    color: var(--ui-button-outline-fg);
+    border-color: var(--ui-button-outline-border);
+  }
+  .ui-btn--outline:hover:not(:disabled):not([aria-busy='true']),
+  .ui-btn--outline[data-ui-state~='hover'] {
+    background: var(--ui-button-outline-bg-hover);
+    color: var(--ui-button-outline-fg-hover);
+    border-color: var(--ui-button-outline-border-hover);
+  }
+  .ui-btn--outline:active:not(:disabled),
+  .ui-btn--outline[data-ui-state~='active'] { background: var(--ui-button-outline-bg-active); }
+
+  .ui-btn--ghost {
+    background: var(--ui-button-ghost-bg);
+    color: var(--ui-button-ghost-fg);
+    border-color: var(--ui-button-ghost-border);
+    /* No fill and no border, so the card shadow the other variants carry would
+       be a shadow cast by nothing. BTN-01's shadow belongs to its BOX; ghost
+       has no box until you hover it. */
+    box-shadow: none;
+  }
+  .ui-btn--ghost:hover:not(:disabled):not([aria-busy='true']),
+  .ui-btn--ghost[data-ui-state~='hover'] {
+    background: var(--ui-button-ghost-bg-hover);
+    color: var(--ui-button-ghost-fg-hover);
+  }
+  .ui-btn--ghost:active:not(:disabled),
+  .ui-btn--ghost[data-ui-state~='active'] { background: var(--ui-button-ghost-bg-active); }
+
+  .ui-btn--danger {
+    background: var(--ui-button-danger-bg);
+    color: var(--ui-button-danger-fg);
+    border-color: var(--ui-button-danger-border);
+  }
+  .ui-btn--danger:hover:not(:disabled):not([aria-busy='true']),
+  .ui-btn--danger[data-ui-state~='hover'] { background: var(--ui-button-danger-bg-hover); }
+  .ui-btn--danger:active:not(:disabled),
+  .ui-btn--danger[data-ui-state~='active'] { background: var(--ui-button-danger-bg-active); }
+
+  .ui-btn--link {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    color: var(--ui-button-link-fg);
+    min-height: auto;
+    padding: 0;
+    border-radius: var(--radius-xs);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .ui-btn--link:hover:not(:disabled),
+  .ui-btn--link[data-ui-state~='hover'] { color: var(--ui-button-link-fg-hover); }
+
+  /* ── Focus ────────────────────────────────────────────────────────────────
+     `:focus-visible`, not `:focus` — a mouse click should not leave a ring
+     behind. Outline plus a soft ring so the indicator survives on both light
+     and filled backgrounds. */
+  .ui-btn:focus-visible,
+  .ui-btn[data-ui-state~='focus'] {
+    outline: var(--ui-focus-outline-width) solid var(--ui-focus-outline-color);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 var(--ui-focus-ring-width) var(--ui-focus-ring-color);
+  }
+
+  /* ── Disabled ─────────────────────────────────────────────────────────────
+     A real disabled treatment, not `opacity: .5`. An opacity fade washes out
+     the label as much as the fill, which is how disabled buttons end up
+     illegible; and it leaves the control looking active on dark surfaces. */
+  .ui-btn:disabled,
+  .ui-btn[data-ui-state~='disabled'] {
+    background: var(--ui-disabled-bg);
+    color: var(--ui-disabled-fg);
+    border-color: var(--ui-disabled-border);
+    cursor: var(--ui-disabled-cursor);
+    box-shadow: none;
+  }
+  .ui-btn:disabled > svg,
+  .ui-btn[data-ui-state~='disabled'] > svg { color: var(--ui-disabled-icon); }
+
+  .ui-btn--link:disabled,
+  .ui-btn--link[data-ui-state~='disabled'] {
+    background: transparent;
+    border-color: transparent;
+    text-decoration: none;
+  }
+
+  /* ── Loading ──────────────────────────────────────────────────────────────
+     Keeps the variant's own colours (a saving button should still look like the
+     primary action) but blocks pointer events so it cannot be double-submitted.
+     The label stays in the flow and is hidden with visibility, so the button
+     does not resize and shift the layout underneath the user's cursor. */
+  .ui-btn[aria-busy='true'],
+  .ui-btn[data-ui-state~='loading'] { cursor: progress; }
+
+  .ui-btn[aria-busy='true'] .ui-btn-label,
+  .ui-btn[data-ui-state~='loading'] .ui-btn-label { visibility: hidden; }
+
+  .ui-btn[aria-busy='true'] > svg,
+  .ui-btn[data-ui-state~='loading'] > svg { visibility: hidden; }
+
+  /* A loading button with explicit loading TEXT shows that text instead of
+     hiding the label, so "Saving…" reads normally. */
+  .ui-btn[aria-busy='true'] .ui-btn-label--loading,
+  .ui-btn[data-ui-state~='loading'] .ui-btn-label--loading { visibility: visible; }
+
+  .ui-btn-spinner {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+  }
+  /* When loading text is shown the spinner sits beside it rather than centred
+     over it, so the two never overlap. */
+  .ui-btn--loading-text .ui-btn-spinner {
+    position: static;
+    display: inline-grid;
+  }
+  .ui-btn-spinner::after {
+    content: '';
+    width: var(--ui-button-icon-size);
+    height: var(--ui-button-icon-size);
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    animation: ui-btn-spin 620ms linear infinite;
+  }
+  @keyframes ui-btn-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .ui-btn-spinner::after { animation-duration: 2.4s; }
+  }
+
+  /* ── Button group ─────────────────────────────────────────────────────────
+     Joins adjacent buttons into one control. Squares the inner corners so the
+     seam reads as a single segmented control rather than overlapping pills. */
+  .ui-btn-group {
+    display: inline-flex;
+    align-items: center;
+  }
+  .ui-btn-group > .ui-btn:not(:first-child) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    margin-left: calc(var(--ui-button-border-width) * -1);
+  }
+  .ui-btn-group > .ui-btn:not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  /* The hovered/focused segment must paint over its neighbour's shared border. */
+  .ui-btn-group > .ui-btn:hover,
+  .ui-btn-group > .ui-btn:focus-visible { z-index: 1; }
+}

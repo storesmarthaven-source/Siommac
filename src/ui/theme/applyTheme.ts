@@ -24,6 +24,72 @@ export function applyThemeOverrides(map: ThemeOverrides): void {
   }
 }
 
+/* ── Preview-scoped drafts (UI Kit v2) ───────────────────────────────────────
+ *
+ * Everything above writes to `:root`, which is correct for a PUBLISHED theme and
+ * wrong for an interactive workbench: every slider drag would re-theme the live
+ * app, and saving pushed it to every user. The Gallery needs a place to
+ * experiment that is visible only inside its own canvas.
+ *
+ * The mechanism is the same one the cascade already gives us — custom properties
+ * inherit, and a value set on an element beats the one it inherits from `:root`.
+ * So a draft is just the same override map applied to a scope element instead of
+ * the document root. Nothing about the components changes; they keep reading the
+ * same variable names.
+ *
+ * This covers RECIPE variables (`--ui-button-primary-bg`) as well as foundation
+ * tokens, because both are ordinary custom properties. One mechanism, both jobs.
+ *
+ *   Published ──▶ :root (all users, via app_theme)
+ *   Draft     ──▶ [data-ui-preview-scope] (this tab only)
+ *   Apply     ──▶ promotes draft to published
+ */
+
+/** The attribute the Gallery canvas carries; also the CSS hook for scoped rules. */
+export const PREVIEW_SCOPE_ATTR = 'data-ui-preview-scope';
+
+/**
+ * Apply a draft override map to a scope element rather than `:root`.
+ *
+ * Values are set inline, so they beat any stylesheet rule targeting the same
+ * element and are inherited by everything inside it. Passing an empty string
+ * REMOVES the property — that is how the inspector reverts one control without
+ * having to know the token's default.
+ */
+export function applyScopedOverrides(el: HTMLElement | null, map: ThemeOverrides): void {
+  if (!el) return;
+  for (const [name, value] of Object.entries(map)) {
+    if (value) el.style.setProperty(name, value);
+    else el.style.removeProperty(name);
+  }
+}
+
+/** Remove specific draft overrides from a scope element. */
+export function clearScopedOverrides(el: HTMLElement | null, names: string[]): void {
+  if (!el) return;
+  names.forEach(n => el.style.removeProperty(n));
+}
+
+/** Remove every draft override from a scope element (Reset all). */
+export function clearAllScopedOverrides(el: HTMLElement | null): void {
+  if (!el) return;
+  // Iterate a snapshot: removeProperty mutates the live CSSStyleDeclaration.
+  const names = Array.from({ length: el.style.length }, (_, i) => el.style.item(i));
+  names.filter(n => n.startsWith('--')).forEach(n => el.style.removeProperty(n));
+}
+
+/**
+ * Read a token's effective value AS SEEN INSIDE a scope — draft value if the
+ * scope overrides it, otherwise whatever it inherits.
+ *
+ * The inspector must use this rather than `readTokenValue`, or every control
+ * would display the published value while the canvas showed the draft.
+ */
+export function readScopedTokenValue(el: HTMLElement | null, name: string): string {
+  if (!el) return readTokenValue(name);
+  return getComputedStyle(el).getPropertyValue(name).trim();
+}
+
 /** Remove a single inline override (reverts the token to its base.css default). */
 export function clearThemeOverride(name: string): void {
   document.documentElement.style.removeProperty(name);

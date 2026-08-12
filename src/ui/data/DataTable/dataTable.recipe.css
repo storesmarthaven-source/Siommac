@@ -1,0 +1,222 @@
+/**
+ * src/ui/data/DataTable/dataTable.recipe.css — the one table recipe.
+ *
+ * @layer recipes, no `!important` — see src/ui/RECIPES.md §4.
+ *
+ * Density is a data attribute on the root that remaps three variables. Compact,
+ * standard and comfortable are therefore the SAME table with different rhythm,
+ * not three components — which is the whole point.
+ */
+
+@layer recipes {
+  /* `[data-ui-preview-scope]` is a SECOND ROOT. See the note in semantic.css:
+     a var() is substituted where the property is DECLARED, so tokens declared
+     only on :root are already resolved before a scoped draft can reach them. */
+  :root,
+  [data-ui-preview-scope] {
+    --ui-dt-radius: var(--radius-sm);
+    --ui-dt-border: var(--ui-color-border-default);
+    --ui-dt-bg: var(--ui-color-surface-default);
+
+    --ui-dt-header-h: 38px;
+    --ui-dt-row-h: 44px;
+    --ui-dt-cell-pad-x: 12px;
+    --ui-dt-cell-pad-y: 8px;
+
+    --ui-dt-header-bg: var(--ui-color-surface-subtle);
+    --ui-dt-header-fg: var(--ui-color-text-secondary);
+    --ui-dt-header-font-size: var(--ui-font-size-caption);
+    --ui-dt-font-size: var(--ui-font-size-body-sm);
+
+    --ui-dt-row-hover: var(--row-hover);
+    --ui-dt-row-selected: var(--ui-color-selection-background);
+    --ui-dt-row-active: rgba(27, 45, 84, .10);
+    --ui-dt-grid-line: var(--ui-color-border-default);
+    --ui-dt-zebra: var(--ui-color-surface-subtle);
+  }
+
+  .ui-dt {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border: var(--ui-border-width) solid var(--ui-dt-border);
+    border-radius: var(--ui-dt-radius);
+    background: var(--ui-dt-bg);
+    overflow: hidden;
+  }
+
+  /* Density — the same table, three rhythms. */
+  .ui-dt--compact     { --ui-dt-row-h: 34px; --ui-dt-header-h: 32px; --ui-dt-cell-pad-y: 4px; --ui-dt-cell-pad-x: 10px; }
+  .ui-dt--comfortable { --ui-dt-row-h: 56px; --ui-dt-header-h: 44px; --ui-dt-cell-pad-y: 14px; --ui-dt-cell-pad-x: 16px; }
+
+  /* ── Toolbar ───────────────────────────────────────────────────────────────*/
+  .ui-dt-toolbar {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border-bottom: var(--ui-border-width) solid var(--ui-dt-border);
+  }
+  .ui-dt-toolbar-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+  .ui-dt-search { flex: 1 1 220px; min-width: 180px; max-width: 340px; }
+  .ui-dt-filter { flex: 0 1 190px; min-width: 140px; }
+  .ui-dt-toolbar-end { display: flex; align-items: center; gap: var(--space-2); margin-left: auto; }
+  .ui-dt-chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+  .ui-dt-chooser { padding: var(--space-2); min-width: 200px; }
+  .ui-dt-chooser-title {
+    padding: 2px 6px 6px;
+    color: var(--text-muted);
+    font-size: var(--ui-font-size-caption);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--ui-letter-spacing-caps);
+    text-transform: uppercase;
+  }
+  .ui-dt-chooser-row { padding: 4px 6px; }
+
+  /* ── Bulk bar ──────────────────────────────────────────────────────────────
+     Appears in flow rather than floating over the rows: an overlay bar covers
+     the last row of a short page, which is exactly the row you just ticked. */
+  .ui-dt-bulk {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    padding: var(--space-2) var(--space-3);
+    background: var(--ui-dt-row-selected);
+    border-bottom: var(--ui-border-width) solid var(--ui-dt-border);
+  }
+  .ui-dt-bulk-count {
+    color: var(--ui-color-selection-border);
+    font-size: var(--ui-font-size-body-sm);
+    font-weight: var(--font-weight-semibold);
+  }
+  .ui-dt-bulk-clear { margin-left: auto; }
+
+  /* ── Table ─────────────────────────────────────────────────────────────────*/
+  .ui-dt-scroll { min-width: 0; overflow: auto; }
+  .ui-dt-scroll--sticky { max-height: 60vh; }
+
+  .ui-dt-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: var(--ui-dt-font-size);
+  }
+
+  .ui-dt-th {
+    position: relative;
+    height: var(--ui-dt-header-h);
+    padding: 0 var(--ui-dt-cell-pad-x);
+    background: var(--ui-dt-header-bg);
+    color: var(--ui-dt-header-fg);
+    font-size: var(--ui-dt-header-font-size);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--ui-letter-spacing-caps);
+    text-transform: uppercase;
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: var(--ui-border-width) solid var(--ui-dt-grid-line);
+  }
+  .ui-dt-th--center { text-align: center; }
+  .ui-dt-th--right  { text-align: right; }
+  .ui-dt-th--check, .ui-dt-td--check { width: 40px; padding-right: 0; }
+  .ui-dt-th--actions, .ui-dt-td--actions { width: 48px; text-align: right; }
+
+  /* Sticky header: the cells stick, not the row — `position: sticky` on a <tr>
+     does nothing in most browsers. */
+  .ui-dt-scroll--sticky .ui-dt-th {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+  }
+
+  .ui-dt-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    cursor: pointer;
+  }
+  .ui-dt-sort:hover { color: var(--ui-color-action-secondary); }
+  .ui-dt-sort:focus-visible {
+    outline: var(--ui-focus-outline-width) solid var(--ui-focus-outline-color);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+  .ui-dt-sort-icon { width: 12px; height: 12px; opacity: .45; }
+  .ui-dt-sort-icon.is-active { opacity: 1; color: var(--ui-color-selection-border); }
+
+  .ui-dt-td {
+    height: var(--ui-dt-row-h);
+    padding: var(--ui-dt-cell-pad-y) var(--ui-dt-cell-pad-x);
+    border-bottom: var(--ui-border-width) solid var(--ui-dt-grid-line);
+    color: var(--text-primary);
+    vertical-align: middle;
+  }
+  .ui-dt-td--center { text-align: center; }
+  .ui-dt-td--right  { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .ui-dt-tr:last-child .ui-dt-td { border-bottom: none; }
+  .ui-dt-tr.is-clickable { cursor: pointer; }
+  .ui-dt-tr:hover .ui-dt-td { background: var(--ui-dt-row-hover); }
+  .ui-dt-tr.is-selected .ui-dt-td { background: var(--ui-dt-row-selected); }
+  .ui-dt-tr.is-active .ui-dt-td { background: var(--ui-dt-row-active); }
+  .ui-dt-table--zebra .ui-dt-tr:nth-child(even) .ui-dt-td { background: var(--ui-dt-zebra); }
+  .ui-dt-table--zebra .ui-dt-tr:hover .ui-dt-td { background: var(--ui-dt-row-hover); }
+
+  /* Row actions stay hidden until the row is hovered or something inside it has
+     focus — a ⋮ per row on a 50-row page is visual noise. `:focus-within` is
+     what keeps them reachable by keyboard. */
+  .ui-dt-td--actions .ui-btn { opacity: 0; transition: opacity var(--ui-motion-fast); }
+  .ui-dt-tr:hover .ui-dt-td--actions .ui-btn,
+  .ui-dt-td--actions:focus-within .ui-btn,
+  .ui-dt-td--actions .ui-btn[aria-expanded='true'] { opacity: 1; }
+  @media (hover: none) {
+    /* No hover on touch — always show them. */
+    .ui-dt-td--actions .ui-btn { opacity: 1; }
+  }
+
+  .ui-dt-state { padding: 0; border-bottom: none; }
+  .ui-dt-state .ui-empty { padding: var(--space-8) var(--space-4); }
+
+  /* ── Pagination ────────────────────────────────────────────────────────────*/
+  .ui-dt-pagination {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    padding: var(--space-2) var(--space-3);
+    border-top: var(--ui-border-width) solid var(--ui-dt-border);
+    background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-subtle) 100%);
+    font-size: var(--ui-font-size-caption);
+    color: var(--text-muted);
+  }
+  .ui-dt-count { font-variant-numeric: tabular-nums; }
+  .ui-dt-count strong { color: var(--text-primary); font-weight: var(--font-weight-semibold); }
+
+  .ui-dt-pagesize { display: inline-flex; align-items: center; gap: 6px; }
+  .ui-dt-pagesize-select {
+    height: 28px;
+    padding: 0 6px;
+    border: var(--ui-border-width) solid var(--border);
+    border-radius: var(--radius-xs);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: var(--ui-font-size-caption);
+  }
+
+  .ui-dt-pager { display: inline-flex; align-items: center; gap: var(--space-2); margin-left: auto; }
+  .ui-dt-pageno { font-variant-numeric: tabular-nums; white-space: nowrap; }
+}

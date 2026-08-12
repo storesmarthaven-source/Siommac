@@ -22,12 +22,13 @@ import { can } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
 import {
   HrfinWizardModal, Drawer, exportCsv, NewMenu,
-  DataTable, type DtColumn, type DtAction,
+  LegacyDataTable, type DtColumn, type DtAction,
   FilterDropdown, AdvancedFilter, useFilterDropdowns,
   type RowActionItem,
-  PanelTabs, MiniTable, Pill, PanelEmpty,
-  Skeleton,
-  type PillTone, type LucideName,
+  Tabs, TabPanel, MiniTable, Pill, PanelEmpty,
+  type TabItem,
+  Skeleton, LucideIcon,
+  type PillTone,
 } from '@ui';
 import { StatBadge } from './StatTable';
 import { StatutoryDashboard, type MainTab as StatMainTab } from './StatutoryDashboard';
@@ -401,7 +402,7 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
   };
 
   return (
-    <DataTable<StatutoryVersion>
+    <LegacyDataTable<StatutoryVersion>
       columns={columns}
       rows={pageRows}
       rowKey={v => v.id}
@@ -508,7 +509,7 @@ function NisClassesTab({ versions, versionsError, canManage, onAdd, onEdit, onIm
 
   return (
     <>
-      <DataTable<NisClass>
+      <LegacyDataTable<NisClass>
         columns={columns}
         rows={classes.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)}
         rowKey={c => c.id}
@@ -673,7 +674,7 @@ function PayComponentsTab({ components, loading, error, canManage, canApproveCom
 
   return (
     <div>
-      <DataTable<PayComponent>
+      <LegacyDataTable<PayComponent>
         columns={columns}
         rows={filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)}
         rowKey={c => c.id}
@@ -863,7 +864,7 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
   const pageCount = Math.max(1, Math.ceil(filteredProfiles.length / PAGE_SIZE));
 
   return (
-    <DataTable<NisProfileRow>
+    <LegacyDataTable<NisProfileRow>
       columns={columns}
       rows={filteredProfiles.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)}
       rowKey={r => r.id}
@@ -945,30 +946,36 @@ function StatReportsTab(): VNode {
 // ── Rate Version Drawer ───────────────────────────────────────────────────────
 
 type DrawerTab = 'summary' | 'paye' | 'nis' | 'hs' | 'components' | 'runs' | 'history' | 'timeline' | 'audit';
-const DRAWER_TABS: { key: DrawerTab; label: string }[] = [
-  { key: 'summary',    label: 'Summary' },
-  { key: 'paye',       label: 'PAYE Bands' },
-  { key: 'nis',        label: 'NIS Classes' },
-  { key: 'hs',         label: 'Health Surcharge' },
-  { key: 'components', label: 'Pay Components' },
-  { key: 'runs',       label: 'Linked Runs' },
-  { key: 'history',    label: 'Approval History' },
-  { key: 'timeline',   label: 'Timeline' },
-  { key: 'audit',      label: 'Audit' },
+
+/**
+ * Nine tabs in a drawer. `maxVisible` collapses everything past the fourth into
+ * the canonical "More" menu — the same primary/overflow split `PanelTabs` did
+ * with two hand-maintained label ARRAYS plus a label→key lookup in both
+ * directions. One list, keyed by id, and the overflow is a number.
+ */
+const DRAWER_TABS: TabItem[] = [
+  { id: 'summary',    label: 'Summary' },
+  { id: 'paye',       label: 'PAYE Bands' },
+  { id: 'nis',        label: 'NIS Classes' },
+  { id: 'hs',         label: 'Health Surcharge' },
+  { id: 'components', label: 'Pay Components' },
+  { id: 'runs',       label: 'Linked Runs' },
+  { id: 'history',    label: 'Approval History' },
+  { id: 'timeline',   label: 'Timeline' },
+  { id: 'audit',      label: 'Audit' },
 ];
-// PanelTabs (the EM-profile tab strip) splits into a primary row + a "More ▾" menu.
-const DRAWER_PRIMARY_TABS = DRAWER_TABS.slice(0, 4).map(t => t.label);
-const DRAWER_MORE_TABS    = DRAWER_TABS.slice(4).map(t => t.label);
-// Respective Lucide glyph for each More-menu tab.
-const DRAWER_MORE_ICONS: Record<string, LucideName> = {
-  'Pay Components':   'Layers',
-  'Linked Runs':      'Link',
-  'Approval History': 'History',
-  'Timeline':         'Activity',
-  'Audit':            'ClipboardCheck',
-};
-const drawerTabLabel = (k: DrawerTab): string => DRAWER_TABS.find(t => t.key === k)?.label ?? 'Summary';
-const drawerTabKey   = (label: string): DrawerTab => DRAWER_TABS.find(t => t.label === label)?.key ?? 'summary';
+const DRAWER_VISIBLE_TABS = 4;
+
+/**
+ * Width of the shimmer bar standing in for a tab label, in px.
+ *
+ * Measured from the label itself rather than hardcoded, so the placeholder keeps
+ * matching when DRAWER_TABS changes — a fixed list of widths is exactly how the
+ * previous placeholder drifted out of sync with what it was standing in for.
+ * 6.2px/char approximates `--ui-font-size-label` at the semibold tab weight;
+ * the floor keeps a one-word tab from collapsing to a dot.
+ */
+const labelSkeletonWidth = (label: string): number => Math.max(28, Math.round(label.length * 6.2));
 
 function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManage, canApprove, onShowNisForm }: {
   id: string | null;
@@ -1151,9 +1158,30 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
               </div>
             ))}
           </div>
-          <div class="ui-panel-tabs">
-            <div class="ui-panel-tab-list">
-              {[56, 60, 52, 44].map((w, k) => <Skeleton key={k} height={13} width={w} />)}
+          {/* Tab rail — the REAL `.ui-tabs--contained --sm` shape the loaded state
+              renders below, so the rail, its 3px inset, the tab padding and the
+              overflow trigger are all live recipe CSS. It previously used
+              `.ui-panel-tabs`, whose rules were deleted with `PanelTabs.tsx`, so
+              the placeholder was unstyled boxes and the bar visibly changed shape
+              on load. Derived from DRAWER_TABS so the two states cannot drift:
+              edit the tab list and both follow. Divs, not buttons — a placeholder
+              must not be focusable, and `aria-hidden` keeps a screen reader from
+              announcing a tablist of empty tabs. */}
+          <div class="ui-tabs ui-tabs--contained ui-tabs--horizontal ui-tabs--sm" aria-hidden="true">
+            <div class="ui-tabs-list">
+              {DRAWER_TABS.slice(0, DRAWER_VISIBLE_TABS).map((t, k) => (
+                <div class={`ui-tab${k === 0 ? ' is-selected' : ''}`} key={t.id}>
+                  <span class="ui-tab-text">
+                    <span class="ui-tab-label"><Skeleton height={11} width={labelSkeletonWidth(t.label)} /></span>
+                  </span>
+                </div>
+              ))}
+              <div class="ui-tab ui-tab--more">
+                <span class="ui-tab-text">
+                  <span class="ui-tab-label"><Skeleton height={11} width={labelSkeletonWidth('More')} /></span>
+                </span>
+                <LucideIcon name="ChevronDown" size={13} />
+              </div>
             </div>
           </div>
           {/* Summary: Lifecycle stepper — reuse the real .svd-steps so shape + spacing match. */}
@@ -1223,12 +1251,18 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
             <SvdTile label="NIS Classes" value={d.nisClasses.length} sub="weekly bands" />
           </div>
 
-          <PanelTabs
-            primary={DRAWER_PRIMARY_TABS} more={DRAWER_MORE_TABS} moreIcons={DRAWER_MORE_ICONS}
-            active={drawerTabLabel(dtab)} onChange={label => setDtab(drawerTabKey(label))}
+          <Tabs
+            id="statutory-version"
+            label="Rate version sections"
+            variant="contained"
+            size="sm"
+            items={DRAWER_TABS}
+            maxVisible={DRAWER_VISIBLE_TABS}
+            value={dtab}
+            onChange={t => setDtab(t as DrawerTab)}
           />
 
-          {dtab === 'summary' && (
+          <TabPanel tabsId="statutory-version" tabId="summary" value={dtab}>
             <>
               <SvdSection label="Lifecycle">
                 <SvdSteps items={fullLifecycle} />
@@ -1242,9 +1276,9 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
                 </div>
               </SvdSection>
             </>
-          )}
+          </TabPanel>
 
-          {dtab === 'paye' && (
+          <TabPanel tabsId="statutory-version" tabId="paye" value={dtab}>
             <SvdSection label="PAYE Bands">
               <div class="svd-grid">
                 <SvdTile label="Personal Allowance" value={fmtMoney(d.payePersonalAllowance)} sub="annual" />
@@ -1253,9 +1287,9 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
                 <SvdTile label="Band 2 Rate" value={fmtPercent(d.payeBand2Rate)} sub="above ceiling" />
               </div>
             </SvdSection>
-          )}
+          </TabPanel>
 
-          {dtab === 'nis' && (
+          <TabPanel tabsId="statutory-version" tabId="nis" value={dtab}>
             <SvdSection label="NIS Contribution Classes"
               action={canManage && d.status === 'draft'
                 ? <button class="ui-mini-btn" type="button" onClick={() => onShowNisForm(d.id)}>+ Add Class</button>
@@ -1273,9 +1307,9 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
                 ))}
               </MiniTable>
             </SvdSection>
-          )}
+          </TabPanel>
 
-          {dtab === 'hs' && (
+          <TabPanel tabsId="statutory-version" tabId="hs" value={dtab}>
             <SvdSection label="Health Surcharge">
               <div class="svd-grid">
                 <SvdTile label="Monthly Threshold" value={fmtMoney(d.hsMonthlyThreshold)} />
@@ -1283,9 +1317,9 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
                 <SvdTile label="Weekly Rate (Low)" value={fmtMoney(d.hsWeeklyLow)} sub="below threshold" />
               </div>
             </SvdSection>
-          )}
+          </TabPanel>
 
-          {dtab === 'components' && (
+          <TabPanel tabsId="statutory-version" tabId="components" value={dtab}>
             <SvdSection label="Statutory Pay Components">
               <MiniTable cols={['Code', 'Component', 'Category']}
                 empty={<PanelEmpty>No statutory pay components found. Manage the catalogue in the Pay Components tab.</PanelEmpty>}
@@ -1299,9 +1333,9 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
                 ))}
               </MiniTable>
             </SvdSection>
-          )}
+          </TabPanel>
 
-          {dtab === 'runs' && (
+          <TabPanel tabsId="statutory-version" tabId="runs" value={dtab}>
             <SvdSection label="Linked Payroll Runs"
               action={d.linkedPayrollRunCount > 0
                 ? <button class="ui-mini-btn" type="button" onClick={() => {
@@ -1318,9 +1352,9 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
                 </div>
               )}
             </SvdSection>
-          )}
+          </TabPanel>
 
-          {dtab === 'history' && (
+          <TabPanel tabsId="statutory-version" tabId="history" value={dtab}>
             <SvdSection label="Approval History">
               {lifeItems.length <= 1 ? (
                 <PanelEmpty>No approval events recorded for this version.</PanelEmpty>
@@ -1328,9 +1362,9 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
                 <SvdRail items={lifeItems} />
               )}
             </SvdSection>
-          )}
+          </TabPanel>
 
-          {dtab === 'timeline' && (
+          <TabPanel tabsId="statutory-version" tabId="timeline" value={dtab}>
             <SvdSection label="Timeline">
               {timelineItems.length === 0 ? (
                 <PanelEmpty>No timeline events found.</PanelEmpty>
@@ -1338,9 +1372,9 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
                 <SvdRail items={timelineItems} />
               )}
             </SvdSection>
-          )}
+          </TabPanel>
 
-          {dtab === 'audit' && (
+          <TabPanel tabsId="statutory-version" tabId="audit" value={dtab}>
             <SvdSection label="Audit Trail">
               <MiniTable cols={['At', 'Actor', 'Action', 'Reason']}
                 empty={<PanelEmpty>No audit log entries found.</PanelEmpty>}>
@@ -1354,7 +1388,7 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
                 ))}
               </MiniTable>
             </SvdSection>
-          )}
+          </TabPanel>
         </>
       )}
     </Drawer>

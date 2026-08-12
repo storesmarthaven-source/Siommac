@@ -2,15 +2,26 @@
 
 # platform Module Map
 
-Source fingerprint: `82f8c479e45ee243383a07e9`
+Source fingerprint: `2c93e80a46ceec81903ab39b`
 
-Files: 334 | Symbols: 3130 | Widgets: 0 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
+Files: 404 | Symbols: 3681 | Widgets: 12 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
 
 ## Widgets and Tiles
 
 | ID | Title | Kind | Render | Location |
 |---|---|---|---|---|
-| - | - | - | - | - |
+| `actionable-with-controls` | An actionable card that still has its own controls | registry | `() => (         <div style={{ maxWidth: '320px' }}>           <Card             variant="action"             onClick={noop}             actionLabel="View Sarah James"             header={<CardHeader               icon={<LucideIcon name="User" />}               title="Sarah James"               description="Safety Officer · EMP-00484"               actions={<Button variant="ghost" size="sm" iconOnly aria-label="Edit Sarah James" iconLeft={<LucideIcon name="Pencil" />} />}             />}             footer={<CardFooter><span>Started 8 Mar 2021</span><Badge tone="success" size="sm" dot>Active</Badge></CardFooter>}           >             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>HSE · Georgetown</span>           </Card>         </div>       )` | `src/ui/registry/containers.defs.tsx:251` |
+| `group` | ButtonGroup — several INDEPENDENT actions | registry | `() => (         <ButtonGroup label="Record actions">           <Button variant="outline" iconLeft={<LucideIcon name="Download" />}>Export</Button>           <Button variant="outline" iconLeft={<LucideIcon name="Printer" />}>Print</Button>           <Button variant="outline" iconLeft={<LucideIcon name="Share2" />}>Share</Button>         </ButtonGroup>       )` | `src/ui/registry/actions.defs.tsx:227` |
+| `one-component` | One component, three appearances | registry | `() => (         <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>           <Tabs id="ex-underline" label="Underline" items={PLAIN_TABS} value="overview" onChange={noop} />           <Tabs id="ex-contained" label="Contained" variant="contained" size="sm" items={PLAIN_TABS} value="tasks" onChange={noop} />           <Tabs id="ex-subtle" label="Subtle" variant="subtle" size="sm" items={PLAIN_TABS} value="files" onChange={noop} />         </div>       )` | `src/ui/registry/navigation.defs.tsx:215` |
+| `one-surface` | One surface, four rhythms | registry | `() => (         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px' }}>           <Card variant="metric" density="compact" header={<CardHeader title="Open incidents" level={null} />}>             <Figure value="18" caption="4 overdue" />           </Card>           <Card variant="surface" header={<CardHeader title="Site note" />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Night shift handover completed.</span>           </Card>           <Card variant="panel" density="compact" header={<CardHeader title="Corrective actions" actions={<Badge tone="warning" size="sm">2 open</Badge>} />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Both due this Friday.</span>           </Card>           <Card variant="action" onClick={noop} actionLabel="Start a new inspection"             header={<CardHeader icon={<LucideIcon name="ClipboardCheck" />} title="New inspection" description="Start from a template" />} />         </div>       )` | `src/ui/registry/containers.defs.tsx:216` |
+| `overflow` | Nine tabs in a drawer | registry | `() => (         <Tabs           id="ex-overflow"           label="Rate version sections"           variant="contained"           size="sm"           items={MANY_TABS}           maxVisible={4}           value="timeline"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:251` |
+| `row-actions` | Icon-only row actions | registry | `() => (         <div style={{ display: 'flex', gap: '4px' }}>           <Button variant="ghost" size="sm" iconOnly aria-label="Edit" iconLeft={<LucideIcon name="Pencil" />} />           <Button variant="ghost" size="sm" iconOnly aria-label="Duplicate" iconLeft={<LucideIcon name="Copy" />} />           <Button variant="ghost" size="sm" iconOnly aria-label="More actions" iconLeft={<LucideIcon name="EllipsisVertical" />} />         </div>       )` | `src/ui/registry/actions.defs.tsx:214` |
+| `select-all` | Select-all with a partial selection | registry | `() => (         <CheckboxGroup           label="Modules"           selectAllLabel="All modules"           values={['hr']}           onChange={noop}           options={[             { value: 'hr', label: 'Human Resources' },             { value: 'hse', label: 'HSE' },             { value: 'fin', label: 'Finance', disabled: true },           ]}         />       )` | `src/ui/registry/forms.defs.tsx:108` |
+| `status-set` | A status set | registry | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>           <Badge tone="success" dot>Active</Badge>           <Badge tone="warning" dot>Probation</Badge>           <Badge tone="info" dot>On leave</Badge>           <Badge tone="neutral" dot>Inactive</Badge>           <Badge tone="danger" dot>Terminated</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:327` |
+| `toggle-and-link` | Toggle and link — props, not components | registry | `() => (         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>           <Button variant="outline" pressed iconLeft={<LucideIcon name="Filter" />}>Only my cases</Button>           <Button variant="link" href="#audit" iconRight={<LucideIcon name="ArrowRight" />}>View audit trail</Button>         </div>       )` | `src/ui/registry/actions.defs.tsx:243` |
+| `tone-scale` | Tone is meaning, not decoration | registry | `() => (         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>           {(['success', 'warning', 'danger', 'info'] as CardTone[]).map(tone => (             <Card key={tone} variant="metric" density="compact" tone={tone}               header={<CardHeader title={`${tone[0]!.toUpperCase()}${tone.slice(1)} signal`} level={null} />}>               <Figure value="7" caption="this week" />             </Card>           ))}         </div>       )` | `src/ui/registry/containers.defs.tsx:236` |
+| `variants` | Soft, solid, outline — and tags | registry | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>           <Badge tone="danger" variant="soft">Overdue</Badge>           <Badge tone="danger" variant="solid">Critical</Badge>           <Badge tone="danger" variant="outline">Escalated</Badge>           <Badge tone="accent" size="sm" onRemove={noop}>Night shift</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:341` |
+| `vertical` | Vertical is an orientation, not a component | registry | `() => (         <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>           <Tabs             id="ex-vertical"             label="Settings sections"             orientation="vertical"             items={[               { id: 'general', label: 'General', icon: <LucideIcon name="Settings" /> },               { id: 'security', label: 'Security', icon: <LucideIcon name="ShieldCheck" />, badge: 2 },               { id: 'notifications', label: 'Notifications', icon: <LucideIcon name="Bell" /> },             ]}             value="security"             onChange={noop}           />           <TabPanel tabsId="ex-vertical" tabId="security" value="security">             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Two security settings need review.</span>           </TabPanel>         </div>       )` | `src/ui/registry/navigation.defs.tsx:227` |
 
 ## Route Definitions
 
@@ -150,14 +161,14 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `skelStatCards` | function / ui-tile | `src/components/nav/navCore.ts:761` | `-` |
 | `skelCards` | function / ui-tile | `src/components/nav/navCore.ts:768` | `-` |
 | `AccessControlSection` | function / component | `src/components/sections/AccessControl/AccessControlSection.tsx:32` | `-` |
-| `AcApprovalsPage` | function / component | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx:27` | `-` |
-| `AcAuditPage` | function / component | `src/components/sections/AccessControl/pages/AcAuditPage.tsx:17` | `-` |
+| `AcApprovalsPage` | function / component | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx:39` | `-` |
+| `AcAuditPage` | function / component | `src/components/sections/AccessControl/pages/AcAuditPage.tsx:39` | `-` |
 | `AcCoveragePage` | function / component | `src/components/sections/AccessControl/pages/AcCoveragePage.tsx:39` | `-` |
 | `AcCreateRolePage` | function / component | `src/components/sections/AccessControl/pages/AcCreateRolePage.tsx:33` | `-` |
 | `AcExportDrawer` | function / component | `src/components/sections/AccessControl/pages/AcExportDrawer.tsx:33` | `-` |
 | `AcOverviewPage` | function / component | `src/components/sections/AccessControl/pages/AcOverviewPage.tsx:152` | `-` |
 | `AcRolesPage` | function / component | `src/components/sections/AccessControl/pages/AcRolesPage.tsx:70` | `-` |
-| `AcSessionsPage` | function / component | `src/components/sections/AccessControl/pages/AcSessionsPage.tsx:25` | `-` |
+| `AcSessionsPage` | function / component | `src/components/sections/AccessControl/pages/AcSessionsPage.tsx:54` | `-` |
 | `AcUsersPage` | function / component | `src/components/sections/AccessControl/pages/AcUsersPage.tsx:64` | `-` |
 | `ComplianceRevokeDialog` | function / component | `src/components/sections/AccessControl/pages/ComplianceRevokeDialog.tsx:16` | `-` |
 | `AdminStatCards` | function / component, ui-tile | `src/components/sections/AdminDashboard/AdminDashboardController.tsx:59` | `-` |
@@ -223,12 +234,6 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `BarRow` | function / component | `src/ui/charts/BarRow.tsx:18` | `-` |
 | `ProgressBar` | function / component | `src/ui/charts/ProgressBar.tsx:17` | `-` |
 | `Sparkline` | function / component | `src/ui/charts/Sparkline.tsx:18` | `-` |
-| `Button` | function / component | `src/ui/components/Button.tsx:41` | `-` |
-| `MiniCard` | function / component, ui-tile | `src/ui/components/Card.tsx:13` | `-` |
-| `RecordRow` | function / component | `src/ui/components/Card.tsx:23` | `-` |
-| `Record` | variable / component | `src/ui/components/Card.tsx:36` | `-` |
-| `ChartCardProps` | interface / ui-tile | `src/ui/components/ChartCard.tsx:12` | `-` |
-| `ChartCard` | function / component, ui-tile | `src/ui/components/ChartCard.tsx:23` | `-` |
 | `DetailGrid` | function / component | `src/ui/components/DetailGrid.tsx:40` | `-` |
 | `Drawer` | function / component | `src/ui/components/Drawer.tsx:59` | `-` |
 | `HseDrawer` | variable / component | `src/ui/components/Drawer.tsx:134` | `-` |
@@ -237,10 +242,10 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `EntityHead` | function / component | `src/ui/components/EntityHead.tsx:29` | `-` |
 | `PanelStats` | function / component | `src/ui/components/EntityHead.tsx:61` | `-` |
 | `Field` | function / component | `src/ui/components/Field.tsx:17` | `-` |
-| `TextInput` | function / component | `src/ui/components/Field.tsx:26` | `-` |
-| `SelectInput` | function / component | `src/ui/components/Field.tsx:37` | `-` |
-| `TextareaInput` | function / component | `src/ui/components/Field.tsx:53` | `-` |
-| `FormGrid` | function / component | `src/ui/components/Field.tsx:65` | `-` |
+| `LegacyTextInput` | function / component | `src/ui/components/Field.tsx:32` | `-` |
+| `SelectInput` | function / component | `src/ui/components/Field.tsx:43` | `-` |
+| `TextareaInput` | function / component | `src/ui/components/Field.tsx:59` | `-` |
+| `FormGrid` | function / component | `src/ui/components/Field.tsx:71` | `-` |
 | `InfoCard` | function / component, ui-tile | `src/ui/components/InfoCard.tsx:23` | `-` |
 | `FieldList` | function / component | `src/ui/components/InfoCard.tsx:35` | `-` |
 | `FieldRow` | function / component | `src/ui/components/InfoCard.tsx:39` | `-` |
@@ -254,18 +259,14 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `KpiTileProps` | interface / ui-tile | `src/ui/components/KpiTile.tsx:35` | `-` |
 | `KpiTile` | function / component, ui-tile | `src/ui/components/KpiTile.tsx:56` | `-` |
 | `Menu` | function / component | `src/ui/components/Menu.tsx:58` | `-` |
-| `CardProps` | interface / ui-tile | `src/ui/components/MetricCard.tsx:22` | `-` |
-| `Card` | function / component, ui-tile | `src/ui/components/MetricCard.tsx:40` | `-` |
-| `MetricCard` | variable / component, ui-tile | `src/ui/components/MetricCard.tsx:63` | `-` |
 | `MetricCardItem` | interface / ui-tile | `src/ui/components/MetricRow.tsx:16` | `-` |
 | `MetricRow` | function / component | `src/ui/components/MetricRow.tsx:59` | `-` |
 | `ReorderableRow` | function / component | `src/ui/components/MetricRow.tsx:100` | `-` |
 | `Modal` | function / component | `src/ui/components/Modal.tsx:46` | `-` |
 | `HseModal` | variable / component | `src/ui/components/Modal.tsx:85` | `-` |
 | `ModalSection` | function / component | `src/ui/components/Modal.tsx:93` | `-` |
-| `TabBar` | function / component | `src/ui/components/ModuleTabs.tsx:51` | `-` |
-| `ModuleTabs` | function / component | `src/ui/components/ModuleTabs.tsx:76` | `-` |
-| `AreaTabs` | variable / component | `src/ui/components/ModuleTabs.tsx:129` | `-` |
+| `TabBar` | function / component | `src/ui/components/ModuleTabs.tsx:54` | `-` |
+| `ModuleTabs` | function / component | `src/ui/components/ModuleTabs.tsx:79` | `-` |
 | `MENU_ICON_COLOR` | variable / component | `src/ui/components/NewMenu.tsx:25` | `-` |
 | `NewMenu` | function / component | `src/ui/components/NewMenu.tsx:50` | `-` |
 | `PageHeader` | function / component | `src/ui/components/PageHeader.tsx:39` | `-` |
@@ -275,8 +276,6 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `DEFAULT_PAGE_SIZE` | variable / component | `src/ui/components/Pagination.tsx:14` | `-` |
 | `usePagination` | function / hook | `src/ui/components/Pagination.tsx:26` | `-` |
 | `Pagination` | function / component | `src/ui/components/Pagination.tsx:54` | `-` |
-| `PanelTabs` | function / component | `src/ui/components/PanelTabs.tsx:25` | `-` |
-| `PersonSearchSelect` | function / component | `src/ui/components/PersonSearchSelect.tsx:35` | `-` |
 | `RegisterTable` | function / component | `src/ui/components/RegisterTable.tsx:38` | `-` |
 | `CardDragProps` | interface / ui-tile | `src/ui/components/reorder.tsx:18` | `-` |
 | `CardReorder` | interface / ui-tile | `src/ui/components/reorder.tsx:26` | `-` |
@@ -291,7 +290,19 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `SkeletonFields` | function / component | `src/ui/components/Skeleton.tsx:144` | `-` |
 | `SkeletonStatGrid` | function / component | `src/ui/components/Skeleton.tsx:163` | `-` |
 | `WidgetSkeletonVariant` | type / ui-tile | `src/ui/components/Skeleton.tsx:180` | `-` |
-| ... | 55 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| `WidgetSkeletonProps` | interface / ui-tile | `src/ui/components/Skeleton.tsx:182` | `-` |
+| `WidgetSkeleton` | function / component, ui-tile | `src/ui/components/Skeleton.tsx:189` | `-` |
+| `PageHeaderSkeleton` | function / component | `src/ui/components/Skeleton.tsx:227` | `-` |
+| `SparkCard` | function / component, ui-tile | `src/ui/components/SparkCard.tsx:28` | `-` |
+| `Spinner` | function / component | `src/ui/components/Spinner.tsx:23` | `-` |
+| `StatsCardProps` | interface / ui-tile | `src/ui/components/StatsCard.tsx:37` | `-` |
+| `StatsCard` | function / component, ui-tile | `src/ui/components/StatsCard.tsx:70` | `-` |
+| `StatusPill` | function / component | `src/ui/components/StatusPill.tsx:24` | `-` |
+| `Stepper` | function / component | `src/ui/components/Stepper.tsx:37` | `-` |
+| `SystemActionsPanel` | function / component | `src/ui/components/SystemActionsPanel.tsx:27` | `-` |
+| `Tabs` | function / component | `src/ui/components/Tabs.tsx:28` | `-` |
+| `Toolbar` | function / component | `src/ui/components/Toolbar.tsx:19` | `-` |
+| ... | 106 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -497,14 +508,14 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/AccessControl/index.ts` | 10 |
 | frontend-page | `src/components/sections/AccessControl/module.ts` | 43 |
 | frontend-page | `src/components/sections/AccessControl/mount.ts` | 26 |
-| frontend-page | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx` | 124 |
-| frontend-page | `src/components/sections/AccessControl/pages/AcAuditPage.tsx` | 99 |
+| frontend-page | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx` | 189 |
+| frontend-page | `src/components/sections/AccessControl/pages/AcAuditPage.tsx` | 159 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcCoveragePage.tsx` | 200 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcCreateRolePage.tsx` | 276 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcExportDrawer.tsx` | 131 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcOverviewPage.tsx` | 562 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcRolesPage.tsx` | 734 |
-| frontend-page | `src/components/sections/AccessControl/pages/AcSessionsPage.tsx` | 76 |
+| frontend-page | `src/components/sections/AccessControl/pages/AcSessionsPage.tsx` | 143 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcUsersPage.tsx` | 556 |
 | frontend-page | `src/components/sections/AccessControl/pages/ComplianceRevokeDialog.tsx` | 61 |
 | frontend-page | `src/components/sections/AdminDashboard/AdminDashboardController.tsx` | 155 |
@@ -546,6 +557,9 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx` | 119 |
 | frontend-page | `src/components/sections/SuperadminConsole/hooks.ts` | 353 |
 | frontend-page | `src/components/sections/SuperadminConsole/queryKeys.ts` | 25 |
+| frontend-page | `src/components/sections/UiKit/index.ts` | 9 |
+| frontend-page | `src/components/sections/UiKit/module.ts` | 60 |
+| frontend-page | `src/components/sections/UiKit/mount.ts` | 43 |
 | frontend-page | `src/components/sections/index.ts` | 19 |
 | shared-types | `types/api.ts` | 158 |
 | shared-types | `types/calendar.ts` | 181 |

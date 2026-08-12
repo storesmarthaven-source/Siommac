@@ -1,0 +1,213 @@
+/**
+ * src/ui/primitives/choice.recipe.css — Checkbox, Radio, Switch.
+ *
+ * @layer recipes, no `!important` — see src/ui/RECIPES.md §4.
+ *
+ * All three are built on a REAL native input, visually hidden and paired with a
+ * drawn control. Not a div with a click handler: the native element is what
+ * gives keyboard operation, form participation, `:checked`, the indeterminate
+ * property, and correct announcement — none of which is worth reimplementing,
+ * and all of which the app's 84 hand-rolled checkboxes get wrong in some mix.
+ *
+ * The native input keeps its own focus; the drawn control renders the ring via
+ * `:focus-visible` on the sibling, so the ring appears on the thing you can see.
+ */
+
+@layer recipes {
+  /* `[data-ui-preview-scope]` is a SECOND ROOT. See the note in semantic.css:
+     a var() is substituted where the property is DECLARED, so tokens declared
+     only on :root are already resolved before a scoped draft can reach them. */
+  :root,
+  [data-ui-preview-scope] {
+    --ui-choice-size: 16px;
+    --ui-choice-radius: 4px;
+    --ui-choice-bg: var(--ui-color-surface-default);
+    --ui-choice-border: var(--ui-color-border-strong);
+    --ui-choice-border-hover: var(--ui-color-selection-border);
+    --ui-choice-bg-checked: var(--ui-color-selection-border);
+    --ui-choice-border-checked: var(--ui-color-selection-border);
+    --ui-choice-mark: var(--ui-color-text-inverse);
+    --ui-choice-gap: 8px;
+    --ui-choice-label-fg: var(--ui-color-text-primary);
+    --ui-choice-desc-fg: var(--ui-color-text-secondary);
+
+    --ui-switch-w: 34px;
+    --ui-switch-h: 18px;
+    --ui-switch-bg: #cbd2d8;
+    --ui-switch-bg-on: var(--ui-color-success);
+    --ui-switch-knob: #fff;
+    --ui-switch-pad: 2px;
+  }
+
+  /* ── Shared row ────────────────────────────────────────────────────────────*/
+  .ui-choice {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: var(--ui-choice-gap);
+    min-width: 0;
+    cursor: pointer;
+    font-size: var(--ui-font-size-body-sm);
+    color: var(--ui-choice-label-fg);
+    line-height: var(--ui-line-height-tight);
+  }
+  .ui-choice--block { display: flex; }
+  .ui-choice--disabled { cursor: var(--ui-disabled-cursor); color: var(--ui-disabled-fg); }
+
+  /* The real input. Positioned rather than `display:none`, because a hidden
+     input is removed from the accessibility tree and stops being focusable. */
+  .ui-choice-input {
+    position: absolute;
+    width: var(--ui-choice-size);
+    height: var(--ui-choice-size);
+    margin: 0;
+    opacity: 0;
+    cursor: inherit;
+  }
+
+  .ui-choice-copy { display: grid; gap: 2px; min-width: 0; }
+  .ui-choice-label { min-width: 0; }
+  .ui-choice-desc { color: var(--ui-choice-desc-fg); font-size: var(--ui-font-size-caption); line-height: var(--ui-line-height-base); }
+
+  /* ── Checkbox / Radio box ──────────────────────────────────────────────────*/
+  .ui-choice-box {
+    position: relative;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: var(--ui-choice-size);
+    height: var(--ui-choice-size);
+    /* Optical alignment with the first line of the label rather than its box. */
+    margin-top: 1px;
+    border: var(--ui-border-width) solid var(--ui-choice-border);
+    border-radius: var(--ui-choice-radius);
+    background: var(--ui-choice-bg);
+    transition:
+      background-color var(--ui-motion-fast) var(--ui-ease-standard),
+      border-color var(--ui-motion-fast) var(--ui-ease-standard),
+      box-shadow var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+  .ui-choice-box--radio { border-radius: 50%; }
+
+  .ui-choice:hover .ui-choice-box,
+  .ui-choice[data-ui-state~='hover'] .ui-choice-box { border-color: var(--ui-choice-border-hover); }
+
+  .ui-choice-input:focus-visible + .ui-choice-box,
+  .ui-choice[data-ui-state~='focus'] .ui-choice-box {
+    outline: var(--ui-focus-outline-width) solid var(--ui-focus-outline-color);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 var(--ui-focus-ring-width) var(--ui-focus-ring-color);
+  }
+
+  .ui-choice-input:checked + .ui-choice-box,
+  .ui-choice-input:indeterminate + .ui-choice-box,
+  .ui-choice[data-ui-state~='selected'] .ui-choice-box {
+    background: var(--ui-choice-bg-checked);
+    border-color: var(--ui-choice-border-checked);
+  }
+
+  /* The mark is drawn with CSS rather than an icon component: it must appear and
+     disappear purely from `:checked`, with no render pass in between. */
+  .ui-choice-mark {
+    display: block;
+    width: 100%;
+    height: 100%;
+    color: var(--ui-choice-mark);
+    opacity: 0;
+    transform: scale(.6);
+    transition: opacity var(--ui-motion-instant), transform var(--ui-motion-fast) var(--ui-ease-emphasized);
+  }
+  .ui-choice-input:checked + .ui-choice-box .ui-choice-mark,
+  .ui-choice[data-ui-state~='selected'] .ui-choice-box .ui-choice-mark { opacity: 1; transform: scale(1); }
+  /* Indeterminate hides the tick and shows the dash instead — they are different
+     statements ("some selected" vs "all selected"), so they must not co-render. */
+  .ui-choice-input:indeterminate + .ui-choice-box .ui-choice-mark { opacity: 0; }
+
+  .ui-choice-dash {
+    position: absolute;
+    width: 8px;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--ui-choice-mark);
+    opacity: 0;
+  }
+  .ui-choice-input:indeterminate + .ui-choice-box .ui-choice-dash { opacity: 1; }
+
+  /* Radio dot */
+  .ui-choice-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ui-choice-mark);
+    opacity: 0;
+    transform: scale(.5);
+    transition: opacity var(--ui-motion-instant), transform var(--ui-motion-fast) var(--ui-ease-emphasized);
+  }
+  .ui-choice-input:checked + .ui-choice-box .ui-choice-dot { opacity: 1; transform: scale(1); }
+
+  /* ── Disabled ──────────────────────────────────────────────────────────────*/
+  .ui-choice-input:disabled + .ui-choice-box,
+  .ui-choice--disabled .ui-choice-box {
+    background: var(--ui-disabled-bg);
+    border-color: var(--ui-disabled-border);
+  }
+  .ui-choice-input:disabled:checked + .ui-choice-box,
+  .ui-choice-input:disabled:indeterminate + .ui-choice-box {
+    background: var(--ui-disabled-fg);
+    border-color: var(--ui-disabled-fg);
+  }
+
+  /* ── Error ─────────────────────────────────────────────────────────────────
+     A required checkbox that was not ticked must look wrong, or the only signal
+     is a message the user has already scrolled past. */
+  .ui-choice--error .ui-choice-box { border-color: var(--ui-validation-error-border); }
+  .ui-choice--error .ui-choice-input:focus-visible + .ui-choice-box {
+    box-shadow: 0 0 0 var(--ui-focus-ring-width) var(--ui-validation-error-ring);
+  }
+
+  /* ── Switch ────────────────────────────────────────────────────────────────*/
+  .ui-switch-track {
+    position: relative;
+    flex-shrink: 0;
+    width: var(--ui-switch-w);
+    height: var(--ui-switch-h);
+    margin-top: 1px;
+    border-radius: var(--radius-pill);
+    background: var(--ui-switch-bg);
+    transition: background-color var(--ui-motion-base) var(--ui-ease-standard);
+  }
+  .ui-switch-knob {
+    position: absolute;
+    top: var(--ui-switch-pad);
+    left: var(--ui-switch-pad);
+    width: calc(var(--ui-switch-h) - var(--ui-switch-pad) * 2);
+    height: calc(var(--ui-switch-h) - var(--ui-switch-pad) * 2);
+    border-radius: 50%;
+    background: var(--ui-switch-knob);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .18);
+    transition: transform var(--ui-motion-base) var(--ui-ease-emphasized);
+  }
+  .ui-choice-input:checked ~ .ui-switch-track,
+  .ui-choice[data-ui-state~='selected'] .ui-switch-track { background: var(--ui-switch-bg-on); }
+  .ui-choice-input:checked ~ .ui-switch-track .ui-switch-knob,
+  .ui-choice[data-ui-state~='selected'] .ui-switch-track .ui-switch-knob {
+    transform: translateX(calc(var(--ui-switch-w) - var(--ui-switch-h)));
+  }
+  .ui-choice-input:focus-visible ~ .ui-switch-track,
+  .ui-choice[data-ui-state~='focus'] .ui-switch-track {
+    outline: var(--ui-focus-outline-width) solid var(--ui-focus-outline-color);
+    outline-offset: 2px;
+  }
+  .ui-choice-input:disabled ~ .ui-switch-track { background: var(--ui-disabled-border); }
+  .ui-choice-input:disabled:checked ~ .ui-switch-track { background: var(--ui-disabled-fg); }
+
+  /* ── Groups ────────────────────────────────────────────────────────────────*/
+  .ui-choice-group { display: grid; gap: 9px; min-width: 0; }
+  .ui-choice-group--inline { display: flex; flex-wrap: wrap; gap: var(--space-4); }
+  /* A select-all sits above its options, separated, so it does not read as one
+     of them. */
+  .ui-choice-group-all {
+    padding-bottom: 9px;
+    margin-bottom: 2px;
+    border-bottom: var(--ui-border-width) solid var(--border);
+  }
+}

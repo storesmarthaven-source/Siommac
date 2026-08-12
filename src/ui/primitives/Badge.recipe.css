@@ -1,0 +1,120 @@
+/**
+ * src/ui/primitives/Badge.recipe.css — the one badge system.
+ *
+ * @layer recipes, no `!important` — see src/ui/RECIPES.md §4.
+ *
+ * Tone is driven by three variables per tone (solid fill, soft fill, text), set
+ * once and consumed by all three variants. That is what makes "change the
+ * warning amber" a single edit instead of ten — the state the ten legacy pill
+ * implementations left the app in.
+ */
+
+@layer recipes {
+  /* `[data-ui-preview-scope]` is a SECOND ROOT. See the note in semantic.css:
+     a var() is substituted where the property is DECLARED, so tokens declared
+     only on :root are already resolved before a scoped draft can reach them. */
+  :root,
+  [data-ui-preview-scope] {
+    --ui-badge-radius: var(--radius-pill);
+    --ui-badge-height: 20px;
+    --ui-badge-height-sm: 17px;
+    --ui-badge-pad-x: 8px;
+    --ui-badge-font-size: var(--ui-font-size-caption);
+    --ui-badge-font-weight: var(--font-weight-semibold);
+    --ui-badge-gap: 5px;
+    --ui-badge-border-width: var(--ui-border-width);
+    --ui-badge-dot-size: 6px;
+
+    /* Per tone: solid fill · soft fill · text-on-soft. All alias status tokens,
+       so the theme editor moves every badge in the app at once. */
+    --ui-badge-success-solid: var(--ui-color-success);
+    --ui-badge-success-soft:  var(--st-success-tint);
+    --ui-badge-success-fg:    var(--ui-color-success);
+
+    --ui-badge-warning-solid: var(--ui-color-warning);
+    --ui-badge-warning-soft:  var(--st-warning-tint);
+    --ui-badge-warning-fg:    var(--ui-color-warning);
+
+    --ui-badge-danger-solid:  var(--ui-color-danger);
+    --ui-badge-danger-soft:   var(--st-danger-tint);
+    --ui-badge-danger-fg:     var(--ui-color-danger);
+
+    --ui-badge-info-solid:    var(--ui-color-info);
+    --ui-badge-info-soft:     var(--st-info-tint);
+    --ui-badge-info-fg:       var(--ui-color-info);
+
+    --ui-badge-neutral-solid: var(--ui-color-text-secondary);
+    --ui-badge-neutral-soft:  var(--st-neutral-tint);
+    --ui-badge-neutral-fg:    var(--ui-color-text-secondary);
+
+    --ui-badge-accent-solid:  var(--ui-color-selection-border);
+    --ui-badge-accent-soft:   var(--ui-color-selection-background);
+    --ui-badge-accent-fg:     var(--ui-color-selection-border);
+  }
+
+  .ui-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ui-badge-gap);
+    min-height: var(--ui-badge-height);
+    padding: 0 var(--ui-badge-pad-x);
+    border: var(--ui-badge-border-width) solid transparent;
+    border-radius: var(--ui-badge-radius);
+    font-size: var(--ui-badge-font-size);
+    font-weight: var(--ui-badge-font-weight);
+    line-height: 1;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  .ui-badge--sm {
+    min-height: var(--ui-badge-height-sm);
+    padding: 0 6px;
+    --ui-badge-gap: 4px;
+  }
+  .ui-badge > svg { width: 12px; height: 12px; flex-shrink: 0; }
+  .ui-badge-label { overflow: hidden; text-overflow: ellipsis; }
+
+  /* Tone × variant. Each tone sets three locals; the variants below read them,
+     so adding a tone is three lines and adding a variant is one rule. */
+  .ui-badge--success { --badge-solid: var(--ui-badge-success-solid); --badge-soft: var(--ui-badge-success-soft); --badge-fg: var(--ui-badge-success-fg); }
+  .ui-badge--warning { --badge-solid: var(--ui-badge-warning-solid); --badge-soft: var(--ui-badge-warning-soft); --badge-fg: var(--ui-badge-warning-fg); }
+  .ui-badge--danger  { --badge-solid: var(--ui-badge-danger-solid);  --badge-soft: var(--ui-badge-danger-soft);  --badge-fg: var(--ui-badge-danger-fg); }
+  .ui-badge--info    { --badge-solid: var(--ui-badge-info-solid);    --badge-soft: var(--ui-badge-info-soft);    --badge-fg: var(--ui-badge-info-fg); }
+  .ui-badge--neutral { --badge-solid: var(--ui-badge-neutral-solid); --badge-soft: var(--ui-badge-neutral-soft); --badge-fg: var(--ui-badge-neutral-fg); }
+  .ui-badge--accent  { --badge-solid: var(--ui-badge-accent-solid);  --badge-soft: var(--ui-badge-accent-soft);  --badge-fg: var(--ui-badge-accent-fg); }
+
+  .ui-badge--soft    { background: var(--badge-soft); color: var(--badge-fg); }
+  .ui-badge--solid   { background: var(--badge-solid); color: #fff; }
+  .ui-badge--outline { background: transparent; color: var(--badge-fg); border-color: var(--badge-solid); }
+
+  .ui-badge-dot {
+    width: var(--ui-badge-dot-size);
+    height: var(--ui-badge-dot-size);
+    border-radius: 50%;
+    background: var(--badge-solid);
+    flex-shrink: 0;
+  }
+  .ui-badge--solid .ui-badge-dot { background: rgba(255, 255, 255, .85); }
+
+  .ui-badge-remove {
+    display: inline-grid;
+    place-items: center;
+    width: 14px;
+    height: 14px;
+    margin-right: -3px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: currentColor;
+    cursor: pointer;
+    opacity: .65;
+  }
+  .ui-badge-remove:hover { opacity: 1; background: rgba(0, 0, 0, .08); }
+  .ui-badge-remove:focus-visible {
+    outline: var(--ui-focus-outline-width) solid var(--ui-focus-outline-color);
+    outline-offset: 1px;
+    opacity: 1;
+  }
+  .ui-badge-remove > svg { width: 9px; height: 9px; }
+}

@@ -31,7 +31,10 @@
     "prepare": "husky",
     "lint:backend": "eslint netlify/functions --ext .ts",
     "lint": "npm run lint:frontend && npm run lint:backend",
-    "email:publish-assets": "node scripts/publish-email-assets.mjs"
+    "email:publish-assets": "node scripts/publish-email-assets.mjs",
+    "ui:coverage": "node scripts/check-ui-kit-coverage.mjs",
+    "ui:coverage:check": "node scripts/check-ui-kit-coverage.mjs --check",
+    "ui:coverage:write": "node scripts/check-ui-kit-coverage.mjs --write"
   },
   "jest": {
     "testEnvironment": "node",
@@ -63,6 +66,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
+    "@material/material-color-utilities": "^0.4.0",
     "@motionone/dom": "^10.18.0",
     "@netlify/functions": "^2.0.0",
     "@simplewebauthn/browser": "^13.3.0",
@@ -75,6 +79,7 @@
     "bcryptjs": "^2.4.3",
     "bootstrap": "^5.3.2",
     "chart.js": "^4.5.1",
+    "culori": "^4.0.2",
     "dotenv": "17.4.2",
     "fflate": "^0.8.3",
     "flatpickr": "^4.6.13",
@@ -98,10 +103,11 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@resvg/resvg-js": "2.6.2",
     "@preact/preset-vite": "^2.10.5",
+    "@resvg/resvg-js": "2.6.2",
     "@testing-library/preact": "^3.2.4",
     "@types/bcryptjs": "^2.4.6",
+    "@types/culori": "^4.0.1",
     "@types/flatpickr": "^3.0.2",
     "@types/jest": "^30.0.0",
     "@types/jquery": "^4.0.0",

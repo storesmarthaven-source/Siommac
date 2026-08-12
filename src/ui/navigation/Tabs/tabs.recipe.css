@@ -1,0 +1,250 @@
+/**
+ * src/ui/navigation/Tabs/tabs.recipe.css — the one tab recipe.
+ *
+ * @layer recipes, no `!important` — see src/ui/RECIPES.md §4.
+ *
+ * Three axes, one component:
+ *   variant      underline (default) | contained | subtle
+ *   orientation  horizontal | vertical
+ *   size         sm | md | lg
+ *
+ * The selected indicator is a pseudo-element on the tab, not a separately
+ * positioned bar. A measured bar has to be re-measured on resize, on font load
+ * and on every count change — five of the implementations this replaces either
+ * did that wrong or gave up and used a border, which is what is used here.
+ */
+
+@layer recipes {
+  /* `[data-ui-preview-scope]` is a SECOND ROOT. See the note in semantic.css:
+     a var() is substituted where the property is DECLARED, so tokens declared
+     only on :root are already resolved before a scoped draft can reach them. */
+  :root,
+  [data-ui-preview-scope] {
+    --ui-tabs-gap: 2px;
+    --ui-tabs-rail: var(--ui-color-border-default);
+    --ui-tabs-rail-width: 1px;
+
+    --ui-tab-pad-x: 14px;
+    --ui-tab-pad-y: 10px;
+    --ui-tab-gap: 8px;
+    --ui-tab-radius: var(--radius-xs);
+    --ui-tab-font-size: var(--ui-font-size-body-sm);
+    --ui-tab-font-weight: var(--font-weight-semibold);
+    --ui-tab-icon-size: var(--ui-icon-md);
+
+    --ui-tab-fg: var(--ui-color-text-secondary);
+    --ui-tab-fg-hover: var(--ui-color-text-primary);
+    --ui-tab-fg-selected: var(--ui-color-selection-border);
+    --ui-tab-bg: transparent;
+    --ui-tab-bg-hover: var(--ui-color-surface-subtle);
+    --ui-tab-bg-selected: transparent;
+
+    --ui-tab-indicator: var(--ui-color-action-primary);
+    --ui-tab-indicator-size: 2px;
+
+    --ui-tab-desc-fg: var(--ui-color-text-secondary);
+    --ui-tab-desc-font-size: var(--ui-font-size-caption);
+
+    --ui-tab-badge-bg: var(--st-neutral-tint);
+    --ui-tab-badge-fg: var(--ui-color-text-secondary);
+    --ui-tab-badge-bg-selected: var(--ui-color-selection-border);
+    --ui-tab-badge-fg-selected: var(--ui-color-text-inverse);
+    --ui-tab-badge-font-size: var(--ui-font-size-caption);
+
+    --ui-tab-disabled-fg: var(--ui-disabled-fg);
+
+    /* variant: contained. These are VARIABLES rather than values inlined into
+       the `.ui-tabs--contained` rules because a surface skin (the dark rich
+       drawer, its light counterpart) cannot override those rules: a skin lives
+       in the `components` layer or a section stylesheet, and `recipes` is
+       declared LAST, so a competing rule loses on layer order no matter how
+       specific it is. Re-pointing a variable is the only override that works
+       from outside this file — RECIPES.md §1. */
+    --ui-tabs-contained-bg: var(--ui-color-surface-subtle);
+    --ui-tabs-contained-selected-bg: var(--ui-color-surface-default);
+    --ui-tabs-contained-selected-shadow: var(--shadow-card);
+
+    --ui-tab-panel-pad-y: var(--space-3);
+  }
+
+  /* ── Root ─────────────────────────────────────────────────────────────────*/
+  .ui-tabs {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+  .ui-tabs-list {
+    display: flex;
+    align-items: stretch;
+    gap: var(--ui-tabs-gap);
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .ui-tabs-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-shrink: 0;
+  }
+
+  /* Horizontal: the list scrolls rather than wrapping. A wrapped tab bar
+     changes height as the window narrows and pushes the page content down. */
+  .ui-tabs--horizontal > .ui-tabs-list {
+    flex-direction: row;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .ui-tabs--vertical {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0;
+  }
+  .ui-tabs--vertical > .ui-tabs-list {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* ── Sizes ────────────────────────────────────────────────────────────────*/
+  .ui-tabs--sm { --ui-tab-pad-x: 10px; --ui-tab-pad-y: 6px; --ui-tab-gap: 6px; --ui-tab-font-size: var(--ui-font-size-label); --ui-tab-icon-size: var(--ui-icon-sm); }
+  .ui-tabs--lg { --ui-tab-pad-x: 18px; --ui-tab-pad-y: 14px; --ui-tab-font-size: var(--ui-font-size-body); --ui-tab-icon-size: var(--ui-icon-lg); }
+
+  /* ── The tab ──────────────────────────────────────────────────────────────*/
+  .ui-tab {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ui-tab-gap);
+    padding: var(--ui-tab-pad-y) var(--ui-tab-pad-x);
+    border: none;
+    border-radius: var(--ui-tab-radius);
+    background: var(--ui-tab-bg);
+    color: var(--ui-tab-fg);
+    font-family: inherit;
+    font-size: var(--ui-tab-font-size);
+    font-weight: var(--ui-tab-font-weight);
+    line-height: var(--ui-line-height-tight);
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      color var(--ui-motion-fast) var(--ui-ease-standard),
+      background var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+  .ui-tab:hover:not(:disabled),
+  .ui-tab[data-ui-state~='hover'] {
+    color: var(--ui-tab-fg-hover);
+    background: var(--ui-tab-bg-hover);
+  }
+  .ui-tab:focus-visible,
+  .ui-tab[data-ui-state~='focus'] {
+    outline: var(--ui-focus-outline-width) solid var(--ui-focus-outline-color);
+    outline-offset: -2px;
+  }
+  .ui-tab.is-selected {
+    color: var(--ui-tab-fg-selected);
+    background: var(--ui-tab-bg-selected);
+  }
+  .ui-tab:disabled {
+    color: var(--ui-tab-disabled-fg);
+    background: transparent;
+    cursor: var(--ui-disabled-cursor);
+  }
+
+  .ui-tab-icon { display: inline-grid; place-items: center; flex-shrink: 0; }
+  .ui-tab-icon > svg { width: var(--ui-tab-icon-size); height: var(--ui-tab-icon-size); }
+  .ui-tab-icon > i { font-size: calc(var(--ui-tab-icon-size) - 2px); }
+
+  .ui-tab-text { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
+  .ui-tab-label { overflow: hidden; text-overflow: ellipsis; }
+  .ui-tab-desc {
+    font-size: var(--ui-tab-desc-font-size);
+    font-weight: var(--font-weight-regular);
+    color: var(--ui-tab-desc-fg);
+  }
+
+  .ui-tab-badge {
+    display: inline-grid;
+    place-items: center;
+    min-width: 18px;
+    height: 17px;
+    padding: 0 5px;
+    border-radius: var(--radius-pill);
+    background: var(--ui-tab-badge-bg);
+    color: var(--ui-tab-badge-fg);
+    font-size: var(--ui-tab-badge-font-size);
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .ui-tab.is-selected .ui-tab-badge {
+    background: var(--ui-tab-badge-bg-selected);
+    color: var(--ui-tab-badge-fg-selected);
+  }
+  .ui-tab:disabled .ui-tab-badge { background: var(--ui-disabled-bg); color: var(--ui-disabled-fg); }
+
+  /* ── variant: underline ───────────────────────────────────────────────────*/
+  /* The rail is on the LIST, and the indicator is a pseudo-element on the tab
+     that overlaps it — so the two always line up without measurement. */
+  .ui-tabs--underline.ui-tabs--horizontal > .ui-tabs-list {
+    box-shadow: inset 0 calc(var(--ui-tabs-rail-width) * -1) 0 var(--ui-tabs-rail);
+    --ui-tabs-gap: 0;
+  }
+  .ui-tabs--underline.ui-tabs--vertical > .ui-tabs-list {
+    box-shadow: inset calc(var(--ui-tabs-rail-width) * -1) 0 0 var(--ui-tabs-rail);
+    --ui-tabs-gap: 0;
+  }
+  .ui-tabs--underline .ui-tab { border-radius: 0; }
+  .ui-tabs--underline .ui-tab.is-selected::after {
+    content: '';
+    position: absolute;
+    background: var(--ui-tab-indicator);
+  }
+  .ui-tabs--underline.ui-tabs--horizontal .ui-tab.is-selected::after {
+    inset: auto 0 0 0;
+    height: var(--ui-tab-indicator-size);
+  }
+  .ui-tabs--underline.ui-tabs--vertical .ui-tab.is-selected::after {
+    inset: 0 0 0 auto;
+    width: var(--ui-tab-indicator-size);
+  }
+  .ui-tabs--underline.ui-tabs--vertical .ui-tab { justify-content: flex-start; }
+
+  /* ── variant: contained ───────────────────────────────────────────────────*/
+  /* A segmented pill bar. Distinct from `SegmentedControl`, which is a
+     radiogroup that picks a VALUE — this still selects a panel. */
+  .ui-tabs--contained > .ui-tabs-list {
+    padding: 3px;
+    border: var(--ui-border-width) solid var(--ui-tabs-rail);
+    border-radius: var(--radius-sm);
+    background: var(--ui-tabs-contained-bg);
+    flex: 0 1 auto;
+  }
+  .ui-tabs--contained .ui-tab { --ui-tab-pad-y: 7px; }
+  .ui-tabs--contained .ui-tab.is-selected {
+    background: var(--ui-tabs-contained-selected-bg);
+    box-shadow: var(--ui-tabs-contained-selected-shadow);
+  }
+  .ui-tabs--contained.ui-tabs--vertical > .ui-tabs-list { flex: 0 0 auto; }
+  .ui-tabs--contained.ui-tabs--vertical .ui-tab { justify-content: flex-start; }
+
+  /* ── variant: subtle ──────────────────────────────────────────────────────*/
+  /* No rail, no indicator — selection is carried by a tinted chip. For tabs
+     inside an already-bordered surface (a drawer, a card) where another rule
+     would be the third horizontal line in 40px. */
+  .ui-tabs--subtle .ui-tab.is-selected {
+    background: var(--st-neutral-tint);
+    color: var(--ui-tab-fg-selected);
+  }
+  .ui-tabs--subtle.ui-tabs--vertical .ui-tab { justify-content: flex-start; }
+
+  /* ── Overflow ("More") ────────────────────────────────────────────────────*/
+  .ui-tab--more { color: var(--ui-tab-fg); }
+  .ui-tab--more > svg { flex-shrink: 0; opacity: .7; }
+
+  /* ── Panel ────────────────────────────────────────────────────────────────*/
+  .ui-tab-panel { padding-block: var(--ui-tab-panel-pad-y); min-width: 0; }
+  .ui-tab-panel:focus-visible {
+    outline: var(--ui-focus-outline-width) solid var(--ui-focus-outline-color);
+    outline-offset: 2px;
+  }
+  .ui-tabs--vertical + .ui-tab-panel { padding-block: 0; }
+}

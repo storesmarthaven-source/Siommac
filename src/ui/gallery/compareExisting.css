@@ -1,0 +1,194 @@
+/**
+ * src/ui/gallery/compareExisting.css — the visual selection pass.
+ *
+ * @layer recipes, no `!important` — see src/ui/RECIPES.md §4.
+ *
+ * Deliberately plain: this screen is a measuring instrument, so its own
+ * styling must not compete with the implementations it is showing. Neutral
+ * frame, one accent, no elevation on the chrome — every shadow and radius you
+ * see inside a preview belongs to the specimen, not to this page.
+ */
+
+@layer recipes {
+  .ui-cmp { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+
+  .ui-cmp-head h2 { margin: 0; font-size: 1.05rem; color: var(--siomac-navy); }
+  .ui-cmp-head p { margin: 6px 0 0; font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; max-width: 76ch; }
+  .ui-cmp-caveat { font-size: 0.72rem; }
+  .ui-cmp-caveat code { font-size: 0.7rem; background: var(--bg-subtle); padding: 1px 4px; border-radius: 4px; }
+
+  /* One column per specimen, wrapping. Min 340px: narrower than that and a
+     table specimen reflows into something that is no longer what it looks
+     like in the app, which would make the comparison lie. */
+  .ui-cmp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: var(--space-3);
+    align-items: start;
+  }
+
+  .ui-cmp-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    overflow: hidden;
+  }
+
+  .ui-cmp-card-head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-subtle);
+  }
+  .ui-cmp-letter {
+    display: grid; place-items: center;
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: var(--siomac-navy);
+    color: #fff;
+    font-size: 0.74rem; font-weight: var(--font-weight-bold);
+  }
+  .ui-cmp-card-title { min-width: 0; }
+  .ui-cmp-card-title h3 { margin: 0; font-size: 0.86rem; color: var(--text-primary); line-height: 1.25; }
+  .ui-cmp-card-title code {
+    display: block; margin-top: 3px;
+    font-size: 0.66rem; color: var(--text-muted);
+    overflow-wrap: anywhere;
+  }
+  .ui-cmp-card-tags { grid-column: 2; display: flex; flex-wrap: wrap; gap: 4px; }
+
+  /* The preview well. A dotted frame and the app background, so a specimen with
+     no border of its own is still visibly a card-sized thing. */
+  .ui-cmp-preview {
+    padding: 16px;
+    background: var(--bg-app);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    min-height: 96px;
+  }
+
+  .ui-cmp-facts { margin: 0; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+  .ui-cmp-facts > div { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 10px; }
+  .ui-cmp-facts dt {
+    font-size: var(--ui-font-size-caption);
+    text-transform: uppercase;
+    letter-spacing: var(--ui-letter-spacing-caps);
+    color: var(--text-muted);
+    padding-top: 1px;
+  }
+  .ui-cmp-facts dd { margin: 0; font-size: 0.76rem; color: var(--text-primary); line-height: 1.45; min-width: 0; }
+  .ui-cmp-facts ul { margin: 0; padding-left: 15px; display: flex; flex-direction: column; gap: 3px; }
+  .ui-cmp-note { display: block; color: var(--text-muted); font-size: 0.72rem; margin-top: 2px; }
+  .ui-cmp-defects dd { color: var(--st-danger-strong); }
+
+  /* ── Decision panel ───────────────────────────────────────────────────────*/
+  .ui-cmp-decide {
+    display: flex; flex-direction: column; gap: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+  }
+  .ui-cmp-decide-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+  .ui-cmp-decide-head h3 { margin: 0; font-size: 0.95rem; color: var(--siomac-navy); }
+  .ui-cmp-decide-head p { margin: 4px 0 0; font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; max-width: 70ch; }
+
+  .ui-cmp-aspects {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-3);
+  }
+  .ui-cmp-aspect { margin: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-xs); }
+  .ui-cmp-aspect legend { padding: 0 4px; font-size: 0.78rem; font-weight: var(--font-weight-semibold); color: var(--text-primary); }
+  .ui-cmp-aspect-q { margin: 2px 0 8px; font-size: 0.72rem; color: var(--text-muted); line-height: 1.45; }
+
+  .ui-cmp-choices { display: flex; flex-wrap: wrap; gap: 5px; }
+  .ui-cmp-choice {
+    width: 30px; height: 28px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    font-family: inherit; font-size: 0.76rem; font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+  }
+  .ui-cmp-choice:hover { border-color: var(--siomac-navy); color: var(--text-primary); }
+  .ui-cmp-choice:focus-visible {
+    outline: var(--ui-focus-outline-width) solid var(--ui-focus-outline-color);
+    outline-offset: 1px;
+  }
+  .ui-cmp-choice.is-active {
+    background: var(--siomac-navy);
+    border-color: var(--siomac-navy);
+    color: #fff;
+  }
+
+  .ui-cmp-keep {
+    padding: 10px 12px;
+    border-radius: var(--radius-xs);
+    background: var(--st-success-tint);
+  }
+  .ui-cmp-keep h4 {
+    display: flex; align-items: center; gap: 6px;
+    margin: 0 0 6px; font-size: 0.76rem; color: var(--st-success-strong);
+  }
+  .ui-cmp-keep ul { margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 3px; }
+  .ui-cmp-keep li { font-size: 0.74rem; color: var(--text-primary); line-height: 1.45; }
+
+  .ui-cmp-decide-foot { display: flex; gap: var(--space-2); justify-content: flex-end; }
+
+  .ui-cmp-brief {
+    margin: 0;
+    padding: 12px;
+    border-radius: var(--radius-xs);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    overflow-x: auto;
+  }
+
+  /* ── Retire table ─────────────────────────────────────────────────────────*/
+  .ui-cmp-retire {
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+  }
+  .ui-cmp-retire h3 {
+    display: flex; align-items: center; gap: 6px;
+    margin: 0; font-size: 0.88rem; color: var(--st-danger-strong);
+  }
+  .ui-cmp-retire > p { margin: 4px 0 12px; font-size: 0.76rem; color: var(--text-muted); }
+  .ui-cmp-retire table { width: 100%; border-collapse: collapse; font-size: 0.76rem; }
+  .ui-cmp-retire th {
+    text-align: left; padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+    font-size: var(--ui-font-size-caption);
+    text-transform: uppercase; letter-spacing: var(--ui-letter-spacing-caps);
+    color: var(--text-muted); font-weight: var(--font-weight-semibold);
+  }
+  .ui-cmp-retire td { padding: 8px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-primary); }
+  .ui-cmp-retire td code { display: block; margin-top: 2px; font-size: 0.66rem; color: var(--text-muted); overflow-wrap: anywhere; }
+  .ui-cmp-num { text-align: right; font-family: var(--font-mono); white-space: nowrap; }
+  .ui-cmp-retire-total td { border-bottom: none; font-weight: var(--font-weight-semibold); color: var(--st-danger-strong); }
+
+  /* ── Not-yet-surveyed ─────────────────────────────────────────────────────*/
+  .ui-cmp-empty {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: var(--space-5) var(--space-4);
+    text-align: center;
+    color: var(--text-muted);
+  }
+  .ui-cmp-empty strong { color: var(--text-primary); font-size: 0.9rem; }
+  .ui-cmp-empty p { margin: 0; font-size: 0.78rem; line-height: 1.55; max-width: 54ch; }
+}

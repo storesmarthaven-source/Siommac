@@ -205,6 +205,13 @@ export default function SharedSections() {
         <div id="preact-access-control-root" />
       </AppSection>
 
+      {/* UI Kit — superadmin only. Full-bleed: the design-system workbench needs
+          the whole content area, and judging component geometry inside a padded
+          card would be judging the card. */}
+      <AppSection id="s-ui-kit" class="ui-kit-section">
+        <div id="preact-ui-kit-root" />
+      </AppSection>
+
       {/* My Profile — every role.
           NO wrapper <UserPill> here: the Preact component's <PageHeader>
           already renders the single standard pill. A second one duplicates it. */}

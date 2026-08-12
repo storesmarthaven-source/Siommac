@@ -2,7 +2,7 @@
 
 # hr Module Map
 
-Source fingerprint: `82f8c479e45ee243383a07e9`
+Source fingerprint: `2c93e80a46ceec81903ab39b`
 
 Files: 265 | Symbols: 3076 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 37 | DB objects: 196 | E2E suites: 16
 
@@ -698,7 +698,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/AttendanceDashboard/types.ts` | 51 |
 | frontend-page | `src/components/sections/Employees/DepartmentModal.tsx` | 190 |
 | frontend-page | `src/components/sections/Employees/DepartmentsSection.tsx` | 213 |
-| frontend-page | `src/components/sections/Employees/EmployeeCard.tsx` | 119 |
+| frontend-page | `src/components/sections/Employees/EmployeeCard.tsx` | 129 |
 | frontend-page | `src/components/sections/Employees/EmployeeDrawer.tsx` | 169 |
 | frontend-page | `src/components/sections/Employees/EmployeeModal.tsx` | 761 |
 | frontend-page | `src/components/sections/Employees/EmployeesSection.tsx` | 366 |
@@ -711,7 +711,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Employees/queryKeys.ts` | 49 |
 | frontend-page | `src/components/sections/Employees/types.ts` | 206 |
 | frontend-page | `src/components/sections/Employees/utils.ts` | 150 |
-| frontend-page | `src/components/sections/HR/ActionDialogs.tsx` | 447 |
+| frontend-page | `src/components/sections/HR/ActionDialogs.tsx` | 459 |
 | frontend-page | `src/components/sections/HR/AttendanceOverview.tsx` | 512 |
 | frontend-page | `src/components/sections/HR/CompensationOverview.tsx` | 347 |
 | frontend-page | `src/components/sections/HR/EmployeeCreatePage.test.ts` | 350 |
@@ -734,7 +734,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/OnboardingCommandCenter.helpers.ts` | 196 |
 | frontend-page | `src/components/sections/HR/OnboardingCommandCenter.tsx` | 195 |
 | frontend-page | `src/components/sections/HR/OnboardingOverview.tsx` | 408 |
-| frontend-page | `src/components/sections/HR/OnboardingPackageDetail.tsx` | 326 |
+| frontend-page | `src/components/sections/HR/OnboardingPackageDetail.tsx` | 342 |
 | frontend-page | `src/components/sections/HR/OnboardingPackageManager.tsx` | 135 |
 | frontend-page | `src/components/sections/HR/OnboardingReportsWorkspace.tsx` | 178 |
 | frontend-page | `src/components/sections/HR/OnboardingTasksWorkspace.tsx` | 458 |
@@ -743,7 +743,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/ProfileDrawer.test.tsx` | 307 |
 | frontend-page | `src/components/sections/HR/ProfileDrawer.tsx` | 1072 |
 | frontend-page | `src/components/sections/HR/RosterOverview.tsx` | 686 |
-| frontend-page | `src/components/sections/HR/StartOnboardingWizard.tsx` | 974 |
+| frontend-page | `src/components/sections/HR/StartOnboardingWizard.tsx` | 978 |
 | frontend-page | `src/components/sections/HR/TransfersOverview.tsx` | 405 |
 | frontend-page | `src/components/sections/HR/TrinidadPhoneInput.tsx` | 65 |
 | frontend-page | `src/components/sections/HR/emailStudio/EmailTemplateBuilder.test.tsx` | 423 |

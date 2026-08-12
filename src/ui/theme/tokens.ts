@@ -14,6 +14,8 @@
  *   'text'        → free text (sizes, font stacks)
  */
 
+import { SEMANTIC_GROUPS, semanticRolesIn } from './semanticTokens';
+
 export type TokenKind = 'color' | 'color-alpha' | 'select' | 'text';
 
 export interface TokenDef {
@@ -38,7 +40,26 @@ const WEIGHT_OPTIONS = [
   { value: '700', label: '700 — Bold' },
 ] as const;
 
+/* ── Semantic colour roles (src/ui/tokens/semantic.css) ──────────────────────
+   Generated from the ONE manifest in ./semanticTokens.ts rather than retyped,
+   so a role can never exist in the editor and not in the CSS (or the reverse).
+   They lead the list because they are the layer you re-theme from: editing a
+   ROLE changes every canonical component that plays that role, while editing a
+   brand colour below changes only what still reads the palette directly. */
+const SEMANTIC_TOKEN_GROUPS: TokenGroup[] = SEMANTIC_GROUPS.map(g => ({
+  id:     `semantic-${g.id}`,
+  label:  `Semantic — ${g.label}`,
+  desc:   g.desc,
+  tokens: semanticRolesIn(g.id).map<TokenDef>(r => ({
+    name:  r.name,
+    label: r.label,
+    kind:  r.alpha ? 'color-alpha' : 'color',
+    hint:  `defaults from ${r.defaultsFrom}${r.brandDriven ? '' : ' · not brand-driven'}`,
+  })),
+}));
+
 export const TOKEN_GROUPS: TokenGroup[] = [
+  ...SEMANTIC_TOKEN_GROUPS,
   {
     id: 'brand', label: 'Brand colours', desc: 'Primary identity colours for buttons, headers, links and accents.',
     tokens: [
@@ -143,6 +164,91 @@ export const TOKEN_GROUPS: TokenGroup[] = [
       { name: '--font-sans', label: 'UI font (body & headings)',   kind: 'text' },
       { name: '--font-nav',  label: 'Navigation rail font',        kind: 'text' },
       { name: '--font-mono', label: 'Mono font (IDs, figures)',    kind: 'text' },
+    ],
+  },
+
+  /* ── UI Kit v2 foundations (src/ui/tokens/tokens.css) ──────────────────────
+     Added by the v2 programme. base.css never owned control heights or type
+     SIZES, which is why those values ended up hardcoded in ~4,000 inline
+     styles. Editing them here re-scales every canonical component at once. */
+  {
+    id: 'control', label: 'Control sizing', desc: 'The three canonical interactive heights and their paired horizontal padding. Every button, input, select and combobox sizes from these.',
+    tokens: [
+      { name: '--ui-control-sm',     label: 'Small control height',   kind: 'text', hint: 'px' },
+      { name: '--ui-control-md',     label: 'Medium control height (default)', kind: 'text', hint: 'px' },
+      { name: '--ui-control-lg',     label: 'Large control height',   kind: 'text', hint: 'px' },
+      { name: '--ui-control-pad-sm', label: 'Small — horizontal padding',  kind: 'text', hint: 'px' },
+      { name: '--ui-control-pad-md', label: 'Medium — horizontal padding', kind: 'text', hint: 'px' },
+      { name: '--ui-control-pad-lg', label: 'Large — horizontal padding',  kind: 'text', hint: 'px' },
+    ],
+  },
+  {
+    id: 'typescale', label: 'Type scale', desc: 'Font sizes for each role. The font FAMILIES and WEIGHTS are set above; these are the sizes.',
+    tokens: [
+      { name: '--ui-font-size-caption', label: 'Caption — micro-labels, table meta', kind: 'text', hint: 'rem' },
+      { name: '--ui-font-size-label',   label: 'Label — field labels, chips',        kind: 'text', hint: 'rem' },
+      { name: '--ui-font-size-button',  label: 'Button text',                        kind: 'text', hint: 'rem' },
+      { name: '--ui-font-size-body-sm', label: 'Body small — dense text, table cells', kind: 'text', hint: 'rem' },
+      { name: '--ui-font-size-body',    label: 'Body — inputs, standard text',       kind: 'text', hint: 'rem' },
+      { name: '--ui-font-size-section', label: 'Section heading',                    kind: 'text', hint: 'rem' },
+      { name: '--ui-font-size-title',   label: 'Title — dialogs, page headers',      kind: 'text', hint: 'rem' },
+      { name: '--ui-line-height-tight', label: 'Line height — tight (headings)',     kind: 'text' },
+      { name: '--ui-line-height-base',  label: 'Line height — base (body)',          kind: 'text' },
+    ],
+  },
+  {
+    id: 'icon', label: 'Icons', desc: 'Icon geometry for the Lucide set. Kit components take icon nodes, so these are the only place icon size is decided.',
+    tokens: [
+      { name: '--ui-icon-sm',     label: 'Small icon',   kind: 'text', hint: 'px' },
+      { name: '--ui-icon-md',     label: 'Medium icon',  kind: 'text', hint: 'px' },
+      { name: '--ui-icon-lg',     label: 'Large icon',   kind: 'text', hint: 'px' },
+      { name: '--ui-icon-stroke', label: 'Stroke weight', kind: 'text' },
+    ],
+  },
+  {
+    id: 'focus', label: 'Focus & borders', desc: 'Keyboard-focus geometry and the default border width. The focus COLOUR is under Interaction states above.',
+    tokens: [
+      { name: '--ui-focus-ring-width',    label: 'Soft focus ring width',    kind: 'text', hint: 'px' },
+      { name: '--ui-focus-outline-width', label: 'Keyboard outline width',   kind: 'text', hint: 'px' },
+      { name: '--ui-focus-outline-color', label: 'Keyboard outline colour',  kind: 'color' },
+      { name: '--ui-border-width',        label: 'Default border width',     kind: 'text', hint: 'px' },
+      { name: '--ui-border-width-thick',  label: 'Emphasis border width',    kind: 'text', hint: 'px' },
+    ],
+  },
+  {
+    id: 'motion', label: 'Motion', desc: 'Transition durations and easing. All are forced to 0ms when the OS requests reduced motion.',
+    tokens: [
+      { name: '--ui-motion-fast',      label: 'Fast — hover/colour changes', kind: 'text', hint: 'ms' },
+      { name: '--ui-motion-base',      label: 'Base — most transitions',     kind: 'text', hint: 'ms' },
+      { name: '--ui-motion-slow',      label: 'Slow — overlays, panels',     kind: 'text', hint: 'ms' },
+      { name: '--ui-ease-standard',    label: 'Standard easing',             kind: 'text' },
+      { name: '--ui-ease-emphasized',  label: 'Emphasized easing',           kind: 'text' },
+    ],
+  },
+  {
+    id: 'inert', label: 'Disabled & read-only', desc: 'Two DIFFERENT states with two different token sets. Neither is an opacity fade — that dims real data the user is still meant to read.',
+    tokens: [
+      { name: '--ui-disabled-bg',     label: 'Disabled — background', kind: 'color' },
+      { name: '--ui-disabled-border', label: 'Disabled — border',     kind: 'color' },
+      { name: '--ui-disabled-fg',     label: 'Disabled — text',       kind: 'color' },
+      { name: '--ui-disabled-icon',   label: 'Disabled — icon',       kind: 'color' },
+      { name: '--ui-readonly-bg',     label: 'Read-only — background', kind: 'color' },
+      { name: '--ui-readonly-border', label: 'Read-only — border',    kind: 'color' },
+      { name: '--ui-readonly-fg',     label: 'Read-only — text (stays legible)', kind: 'color' },
+    ],
+  },
+  {
+    id: 'validation', label: 'Validation', desc: 'ONE visual language for error, warning and success across every module. Nothing may define its own error red.',
+    tokens: [
+      { name: '--ui-validation-error-border',   label: 'Error — border',   kind: 'color' },
+      { name: '--ui-validation-error-fg',       label: 'Error — text/icon', kind: 'color' },
+      { name: '--ui-validation-error-ring',     label: 'Error — focus ring', kind: 'color-alpha' },
+      { name: '--ui-validation-warning-border', label: 'Warning — border',  kind: 'color' },
+      { name: '--ui-validation-warning-fg',     label: 'Warning — text/icon', kind: 'color' },
+      { name: '--ui-validation-warning-ring',   label: 'Warning — focus ring', kind: 'color-alpha' },
+      { name: '--ui-validation-success-border', label: 'Success — border',  kind: 'color' },
+      { name: '--ui-validation-success-fg',     label: 'Success — text/icon', kind: 'color' },
+      { name: '--ui-validation-success-ring',   label: 'Success — focus ring', kind: 'color-alpha' },
     ],
   },
 ];

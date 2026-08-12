@@ -1,0 +1,219 @@
+/**
+ * src/ui/forms/listbox.recipe.css — the dropdown surface and option rows.
+ *
+ * Shared by Select, Combobox, MultiSelect and PersonSearchSelect so every
+ * dropdown in the app looks and behaves identically.
+ *
+ * @layer recipes, no `!important` — see src/ui/RECIPES.md §4.
+ *
+ * Note on the ACTIVE vs SELECTED distinction, which is the thing most dropdowns
+ * get wrong: "active" is where the keyboard cursor is, "selected" is what the
+ * field's value currently is. They are frequently different rows and must look
+ * different, or arrow-keying through a list looks like it is changing the value
+ * on every keypress.
+ */
+
+@layer recipes {
+  /* `[data-ui-preview-scope]` is a SECOND ROOT. See the note in semantic.css:
+     a var() is substituted where the property is DECLARED, so tokens declared
+     only on :root are already resolved before a scoped draft can reach them. */
+  :root,
+  [data-ui-preview-scope] {
+    --ui-popup-bg: var(--ui-color-surface-raised);
+    --ui-popup-border: var(--ui-color-border-default);
+    --ui-popup-radius: var(--radius-sm);
+    --ui-popup-shadow: var(--elev-4);
+    --ui-popup-pad: 4px;
+
+    --ui-option-height: 34px;
+    --ui-option-pad-x: 10px;
+    --ui-option-radius: var(--radius-xs);
+    --ui-option-fg: var(--ui-color-text-primary);
+    --ui-option-subtitle-fg: var(--ui-color-text-secondary);
+    --ui-option-bg-active: var(--row-hover);
+    --ui-option-fg-active: var(--ui-color-selection-border);
+    --ui-option-bg-selected: var(--ui-color-selection-background);
+    --ui-option-fg-selected: var(--ui-color-selection-border);
+    --ui-option-group-fg: var(--ui-color-text-secondary);
+  }
+
+  .ui-popup {
+    z-index: var(--z-popover);
+    box-sizing: border-box;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: var(--ui-popup-pad);
+    border: var(--ui-border-width) solid var(--ui-popup-border);
+    border-radius: var(--ui-popup-radius);
+    background: var(--ui-popup-bg);
+    box-shadow: var(--ui-popup-shadow);
+  }
+
+  /* Filter box pinned inside a searchable Select's surface. */
+  .ui-popup-search {
+    position: sticky;
+    top: calc(var(--ui-popup-pad) * -1);
+    z-index: 1;
+    margin: calc(var(--ui-popup-pad) * -1) calc(var(--ui-popup-pad) * -1) var(--ui-popup-pad);
+    padding: 8px 10px;
+    border-bottom: var(--ui-border-width) solid var(--ui-popup-border);
+    background: var(--ui-popup-bg);
+  }
+  .ui-popup-search .ui-ctrl-input { font-size: var(--ui-font-size-body-sm); }
+
+  .ui-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    box-sizing: border-box;
+    width: 100%;
+    min-height: var(--ui-option-height);
+    padding: 5px var(--ui-option-pad-x);
+    border: none;
+    border-radius: var(--ui-option-radius);
+    background: transparent;
+    color: var(--ui-option-fg);
+    font: inherit;
+    font-size: var(--ui-font-size-body-sm);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  /* ACTIVE = keyboard cursor position. Driven by an attribute, not :hover, so
+     the mouse and the keyboard can never both claim a highlight at once. */
+  .ui-option[data-active='true'] {
+    background: var(--ui-option-bg-active);
+    color: var(--ui-option-fg-active);
+  }
+
+  /* SELECTED = the field's current value. Deliberately a different, heavier
+     treatment than active, plus a check mark, so arrow-keying past a row never
+     looks like it has changed the value. */
+  .ui-option[aria-selected='true'] {
+    background: var(--ui-option-bg-selected);
+    color: var(--ui-option-fg-selected);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .ui-option[aria-disabled='true'] {
+    color: var(--ui-disabled-fg);
+    cursor: var(--ui-disabled-cursor);
+    background: transparent;
+  }
+
+  .ui-option-copy { display: grid; gap: 1px; min-width: 0; flex: 1 1 auto; }
+  .ui-option-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ui-option-subtitle {
+    color: var(--ui-option-subtitle-fg);
+    font-size: var(--ui-font-size-caption);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ui-option[aria-selected='true'] .ui-option-subtitle { color: var(--ui-option-subtitle-fg); }
+
+  .ui-option-check { flex-shrink: 0; color: var(--ui-option-fg-selected); }
+  .ui-option-check > svg { width: var(--ui-icon-sm); height: var(--ui-icon-sm); }
+
+  .ui-option-group-label {
+    padding: 8px var(--ui-option-pad-x) 4px;
+    color: var(--ui-option-group-fg);
+    font-size: var(--ui-font-size-caption);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--ui-letter-spacing-caps);
+    text-transform: uppercase;
+  }
+
+  /* Empty / loading / error rows inside the surface. These are states, not
+     decorations — a dropdown that renders nothing when a search fails leaves
+     the user unable to tell "no matches" from "request broke". */
+  .ui-popup-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--ui-option-pad-x);
+    color: var(--text-muted);
+    font-size: var(--ui-font-size-body-sm);
+    text-align: center;
+  }
+  .ui-popup-state--error { color: var(--ui-validation-error-fg); }
+  .ui-popup-state > .ui-ctrl-spinner { border-color: var(--text-muted); border-top-color: transparent; }
+
+  /* ── Person option ─────────────────────────────────────────────────────────*/
+  .ui-person-avatar {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--ui-option-bg-selected);
+    color: var(--ui-color-selection-border);
+    font-size: var(--ui-font-size-caption);
+    font-weight: var(--font-weight-bold);
+  }
+  .ui-person-avatar > img { width: 100%; height: 100%; object-fit: cover; }
+  .ui-person-avatar--lg { width: 30px; height: 30px; }
+
+  .ui-person-badges { display: inline-flex; gap: 4px; flex-shrink: 0; }
+  .ui-person-badge {
+    padding: 1px 6px;
+    border-radius: var(--radius-pill);
+    background: var(--st-info-tint);
+    color: var(--st-info-strong);
+    font-size: var(--ui-font-size-caption);
+    font-weight: var(--font-weight-semibold);
+    white-space: nowrap;
+  }
+
+  /* The resolved selection shown inside the control box. */
+  .ui-person-selected {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .ui-person-selected-copy { display: grid; gap: 0; min-width: 0; }
+  .ui-person-selected-name {
+    color: var(--ui-control-fg);
+    font-size: var(--ui-font-size-body-sm);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ui-person-selected-meta {
+    color: var(--text-muted);
+    font-size: var(--ui-font-size-caption);
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ── Select trigger ────────────────────────────────────────────────────────
+     A <button> styled as the control box. Using a button (not a div with a
+     click handler) is what gives Enter/Space activation and focusability for
+     free. */
+  button.ui-ctrl {
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .ui-ctrl-value {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ui-ctrl-value--placeholder { color: var(--ui-control-placeholder); }
+}

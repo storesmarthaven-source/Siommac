@@ -67,6 +67,7 @@ import '@sections/MyPayslips';          // self-registers My Payslips (self-serv
 import '@sections/Calendar';            // self-registers the Calendar & Tasks module
 import '@sections/Tickets';             // self-registers the canonical Ticket Center
 import '@sections/AccessControl';       // self-registers the Access Control module (RBAC console)
+import '@sections/UiKit';               // self-registers the UI Kit workbench (design system, superadmin)
 import { getModules } from '@lib/moduleRegistry';
 import { h, render }           from 'preact';
 import { QueryClientProvider }  from '@tanstack/preact-query';

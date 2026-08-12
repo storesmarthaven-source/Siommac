@@ -57,9 +57,15 @@ export default defineConfig({
     // NOTE: the react-grid-layout stack (WidgetBoardZone) is CJS-only; vitest can't alias its
     // `require('react')` the way the vite BUILD does, so board-RENDER tests aren't run under
     // vitest — RGL-under-preact/compat is verified via the production bundler (proven working).
+    //
+    // @material/material-color-utilities (Brand Theme engine) is inlined for a
+    // different reason: it publishes ESM with EXTENSIONLESS relative imports, so
+    // Node's own ESM resolver cannot load it. Vite's resolver can, and inlining
+    // is what routes it through Vite instead of Node externalisation. The
+    // production build never hits this — dep pre-bundling resolves it natively.
     server: {
       deps: {
-        inline: ['zustand'],
+        inline: ['zustand', '@material/material-color-utilities'],
       },
     },
 

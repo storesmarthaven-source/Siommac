@@ -2345,23 +2345,18 @@
 }
 
 /* Individual employee card */
-.emp-card {
-  background: var(--bg-card);
-  border-radius: 24px;
-  box-shadow: var(--shadow-card);
-  border: 1px solid var(--border);
-  overflow: hidden;
-  transition: transform .25s, box-shadow .25s;
-  display: flex; flex-direction: column;
-  cursor: pointer;
-}
-.emp-card:hover { transform: translateY(-4px); box-shadow: 0 20px 30px -12px rgba(0,0,0,0.12); }
+/* The surface — background, border, radius, elevation, hover lift and the
+   pointer affordance — is now the canonical `<Card variant="action">`. Those
+   declarations were DELETED here rather than left to fight the recipe layer
+   (RECIPES.md §4: legacy is removed by deletion, never out-ranked).
+   `overflow` is all that remains: it clips the full-bleed navy header band to
+   the card's corner radius, which the card cannot decide for its content. */
+.emp-card { overflow: hidden; }
 
 /* Card header */
 .emp-card-header {
   padding: 16px 20px;
   display: flex; align-items: center; gap: 12px;
-  border-radius: 24px 24px 0 0;
 }
 .emp-card-header--active {
   background: #1b2d54;

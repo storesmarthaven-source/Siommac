@@ -719,12 +719,13 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
 .ppe-section-title p { color: var(--text-muted); font-size: 0.78rem; margin-top: 4px; max-width: 640px; }
 .ppe-section-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 
-/* ── Mini cards (MiniCard) ──────────────────────────────────────────────── */
-/* ── Mini cards ── */
-.ppe-mini-card { padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-card); box-shadow: var(--shadow-card); }
-.ppe-mini-card i { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; background: rgba(228,12,12,.1); color: var(--siomac-red); margin-bottom: 10px; font-size: 1rem; }
-.ppe-mini-card strong { display: block; color: var(--siomac-navy); font-size: 1.5rem; line-height: 1; margin-bottom: 5px; font-family: var(--font-mono); }
-.ppe-mini-card span { color: var(--text-muted); font-size: 0.76rem; line-height: 1.35; }
+/* ── PPE figure tiles — CONTENT ONLY ─────────────────────────────────────── */
+/* The surface (padding, border, radius, background, elevation) is the canonical
+   `<Card variant="metric">`; `.ppe-mini-card` was deleted with that migration.
+   What is left is PPE's own figure look, which the design system does not own. */
+.ppe-kpi-ico { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; background: rgba(228,12,12,.1); color: var(--siomac-red); font-size: 1rem; margin-bottom: 6px; }
+.ppe-kpi-val { display: block; color: var(--siomac-navy); font-size: 1.5rem; line-height: 1; font-family: var(--font-mono); }
+.ppe-kpi-cap { color: var(--text-muted); font-size: 0.76rem; line-height: 1.35; }
 
 /* ── Record rows (RecordRow) ────────────────────────────────────────────── */
 /* ── Records ── */
@@ -738,7 +739,7 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
    HSE AREA LAYOUT SYSTEM
    Each area (Incidents, Risk, Permits, Inspections, Training, Toolbox, Documents)
    uses the same composition:
-     1. .hse-area-kpi-strip — row of MiniCards (reuses .ppe-mini-card)
+     1. .hse-area-kpi-strip — row of metric Cards
      2. .hse-area-split     — main panel (table/content) + aside panel
      3. .hse-aside-card     — white card blocks in the aside
    This produces the same density as the Dashboard + PPE Manager.

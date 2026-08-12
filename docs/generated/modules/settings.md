@@ -2,9 +2,9 @@
 
 # settings Module Map
 
-Source fingerprint: `82f8c479e45ee243383a07e9`
+Source fingerprint: `2c93e80a46ceec81903ab39b`
 
-Files: 43 | Symbols: 250 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 0 unmounted | API calls: 18 | DB objects: 21 | E2E suites: 2
+Files: 44 | Symbols: 253 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 0 unmounted | API calls: 18 | DB objects: 21 | E2E suites: 2
 
 ## Widgets and Tiles
 
@@ -18,7 +18,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 
 | Path | Permission | Guards | Schema | Location | Frontend callers | E2E suites |
 |---|---|---|---|---|---|---|
-| `/api/getPublicBranding` | `-` | - | `-` | `netlify/functions/routes/settings.ts:15` | - | - |
+| `/api/getPublicBranding` | `-` | - | `-` | `netlify/functions/routes/settings.ts:15` | - | settings |
 | `/api/getSettings` | `-` | requireUser | `-` | `netlify/functions/routes/settings.ts:23` | res @ src/components/sections/Settings/api.ts:46<br>res @ src/components/sections/Settings/api.ts:103 | - |
 | `/api/getWorkHours` | `-` | requireUser | `-` | `netlify/functions/routes/settings.ts:45` | - | - |
 | `/api/profile-photo/commit` | `-` | requireUser, userCan | `ProfilePhotoCommitSchema` | `netlify/functions/routes/settings.ts:134` | commit @ src/components/sections/Profile/api.ts:164 | - |
@@ -43,7 +43,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/settings/values/reset` | `-` | requireUser, userCan | `z.object({     settingKey: z.string().min(1), scopeType: z.enum(SCOPE_TYPES), scopeId: z.string().nullable().optional(), reason: z.string().max(500).optional(),   })` | `netlify/functions/routes/settingsCatalog.ts:233` | useResetSetting @ src/api/settingsCatalog.ts:136 | hrEmployeeSettings, settings |
 | `/api/settings/values/set` | `-` | requireUser, userCan | `z.object({     settingKey: z.string().min(1), scopeType: z.enum(SCOPE_TYPES), scopeId: z.string().nullable().optional(),     value: z.unknown(), reason: z.string().max(500).optional(),   })` | `netlify/functions/routes/settingsCatalog.ts:181` | useSetSetting @ src/api/settingsCatalog.ts:126<br>res @ src/lib/themePreference.ts:60 | hrEmployeeSettings, hrLeave, hrOnboarding, settings |
 | `/api/updateSetting` | `-` | requireRole | `UpdateSettingSchema` | `netlify/functions/routes/settings.ts:33` | res @ src/components/sections/Settings/api.ts:84 | - |
-| `/api/uploadLogo` | `-` | requireRole | `UploadLogoSchema` | `netlify/functions/routes/settings.ts:66` | res @ src/components/sections/Settings/api.ts:137 | - |
+| `/api/uploadLogo` | `-` | requireRole | `UploadLogoSchema` | `netlify/functions/routes/settings.ts:66` | res @ src/components/sections/Settings/api.ts:145 | settings |
 
 ## Frontend API Calls
 
@@ -66,7 +66,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/settings/values/reset` | `apiPost` | `useResetSetting` | `src/api/settingsCatalog.ts:136` |
 | `/api/settings/values/set` | `apiPost` | `useSetSetting` | `src/api/settingsCatalog.ts:126` |
 | `/api/updateSetting` | `apiPost` | `res` | `src/components/sections/Settings/api.ts:84` |
-| `/api/uploadLogo` | `apiPost` | `res` | `src/components/sections/Settings/api.ts:137` |
+| `/api/uploadLogo` | `apiPost` | `res` | `src/components/sections/Settings/api.ts:145` |
 
 ## Key Components, Hooks, and UI Functions
 
@@ -84,9 +84,9 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useManifest` | function / hook | `src/api/settingsCatalog.ts:223` | `-` |
 | `useManifestAction` | function / hook | `src/api/settingsCatalog.ts:242` | `-` |
 | `ManifestReviewPanel` | function / component | `src/components/sections/Settings/ManifestReviewPanel.tsx:217` | `-` |
-| `TotpSetupModal` | function / component | `src/components/sections/Settings/SettingsSection.tsx:446` | `-` |
-| `TotpDisableModal` | function / component | `src/components/sections/Settings/SettingsSection.tsx:646` | `-` |
-| `SettingsSection` | function / component | `src/components/sections/Settings/SettingsSection.tsx:1304` | `-` |
+| `TotpSetupModal` | function / component | `src/components/sections/Settings/SettingsSection.tsx:445` | `-` |
+| `TotpDisableModal` | function / component | `src/components/sections/Settings/SettingsSection.tsx:645` | `-` |
+| `SettingsSection` | function / component | `src/components/sections/Settings/SettingsSection.tsx:1302` | `-` |
 | `SwzCardProps` | interface / ui-tile | `src/components/sections/Settings/SwzCard.tsx:39` | `-` |
 | `SwzCard` | function / component, ui-tile | `src/components/sections/Settings/SwzCard.tsx:50` | `-` |
 | `SwzCatalogPage` | function / component | `src/components/sections/Settings/SwzCatalogPage.tsx:39` | `-` |
@@ -116,7 +116,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | Suite | Tests | API paths | Location |
 |---|---:|---:|---|
 | HR Employee Master Settings | 9 | 7 | `scripts/e2e/suites/hrEmployeeSettings.mjs` |
-| Settings & Preferences | 24 | 14 | `scripts/e2e/suites/settings.mjs` |
+| Settings & Preferences | 31 | 16 | `scripts/e2e/suites/settings.mjs` |
 
 ## Navigation Files
 
@@ -127,18 +127,19 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/settings.ts` | 322 |
 | backend-route | `netlify/functions/routes/settingsCatalog.ts` | 373 |
 | e2e-suite | `scripts/e2e/suites/hrEmployeeSettings.mjs` | 106 |
-| e2e-suite | `scripts/e2e/suites/settings.mjs` | 213 |
+| e2e-suite | `scripts/e2e/suites/settings.mjs` | 305 |
 | frontend-api | `src/api/schemas/settings.ts` | 56 |
 | frontend-api | `src/api/settings.ts` | 93 |
 | frontend-api | `src/api/settingsCatalog.ts` | 250 |
 | frontend-page | `src/components/sections/Settings/ManifestReviewPanel.tsx` | 252 |
-| frontend-page | `src/components/sections/Settings/SettingsSection.tsx` | 1413 |
+| frontend-page | `src/components/sections/Settings/SettingsSection.tsx` | 1411 |
 | frontend-page | `src/components/sections/Settings/SwzCard.tsx` | 193 |
 | frontend-page | `src/components/sections/Settings/SwzCatalogPage.tsx` | 185 |
-| frontend-page | `src/components/sections/Settings/api.ts` | 145 |
+| frontend-page | `src/components/sections/Settings/api.ts` | 153 |
 | frontend-page | `src/components/sections/Settings/domSync.ts` | 73 |
 | frontend-page | `src/components/sections/Settings/index.ts` | 11 |
 | frontend-page | `src/components/sections/Settings/mount.ts` | 35 |
-| frontend-page | `src/components/sections/Settings/settingsNav.ts` | 136 |
+| frontend-page | `src/components/sections/Settings/settingsNav.ts` | 138 |
 | frontend-page | `src/components/sections/Settings/swzIcons.tsx` | 43 |
+| frontend-page | `src/components/sections/Settings/uploadLogoContract.test.ts` | 86 |
 

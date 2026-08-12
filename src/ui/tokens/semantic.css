@@ -1,0 +1,169 @@
+/**
+ * src/ui/tokens/semantic.css — UI Kit v2 SEMANTIC colour layer.
+ *
+ * The layer this file adds is the one the system never had:
+ *
+ *     foundation / brand palette        (--siomac-navy, --bg-card, --st-danger…)
+ *              ↓
+ *     SEMANTIC tokens                   (--ui-color-action-primary…)   ← this file
+ *              ↓
+ *     component recipes                 (--ui-button-primary-bg…)
+ *              ↓
+ *     canonical components              (.ui-btn, .ui-dialog…)
+ *
+ * Why it matters: a recipe that says `--ui-button-primary-bg: var(--siomac-red)`
+ * has hardcoded a BRAND FACT into a COMPONENT. Re-theming for a customer whose
+ * primary is teal means editing every recipe. With this layer the recipe says
+ * "the primary action colour", and re-theming is one edit per ROLE.
+ *
+ * ── Rules this file obeys ───────────────────────────────────────────────────
+ * 1. ADDITIVE ONLY. Nothing here redefines or removes a foundation token.
+ *    `--bg-app`, `--border`, `--radius-sm`, `--font-weight-bold` and the rest
+ *    keep their meaning and their consumers; the ~4,000 unmigrated call sites
+ *    that read them are untouched. This layer sits BETWEEN palette and recipe,
+ *    it does not replace the token system.
+ * 2. EVERY default resolves to the value the app renders TODAY — with ONE
+ *    documented exception, `--ui-color-nav-text` (see below). Introducing this
+ *    layer is otherwise a zero-visual-change refactor by construction; if a
+ *    default differed silently, the migration would be a redesign in disguise.
+ *    A divergence is allowed only when keeping the legacy value would make the
+ *    canonical baseline fail its own accessibility gate, and it is stated at
+ *    the token.
+ * 3. COLOUR ONLY. Spacing, radius, type and motion are not semantic roles in
+ *    the same sense and stay in tokens.css. Scope creep here is how a token
+ *    taxonomy grows to 400 entries nobody can hold in their head.
+ * 4. SMALL ON PURPOSE. A role is added when an APPROVED canonical component
+ *    proves it is needed — never speculatively.
+ *
+ * ── How the Brand Theme engine uses it ──────────────────────────────────────
+ * The engine does NOT rewrite this file. It emits an override map (brand scales
+ * `--ui-brand-*` plus explicit `--ui-color-*` values) through the SAME draft →
+ * preview → Apply path the Foundations editor already uses. Defaults below are
+ * therefore the un-themed baseline, and a published brand simply out-ranks them
+ * as an inline custom property on `:root`.
+ *
+ * ⭐ WHY EVERY TOKEN BLOCK CARRIES `[data-ui-preview-scope]` ─────────────────
+ * A `var()` is substituted where the property is DECLARED, not where it is
+ * used. So `--ui-button-primary-bg: var(--ui-color-action-primary)` declared on
+ * `:root` resolves to red AT `:root`, and every descendant inherits that
+ * already-resolved red. Setting `--ui-color-action-primary` on the Gallery's
+ * preview scope therefore changed NOTHING downstream — the derived value had
+ * been computed one level above, before the draft could reach it. The panel's
+ * navigation and selected-row blocks re-themed correctly (they read the roles
+ * directly in a rule body), the primary button did not. Caught in the browser;
+ * no unit test could see it, because jsdom does not implement this cascade.
+ *
+ * The fix is to make the preview scope a SECOND ROOT: every block that declares
+ * derived tokens is selected by `:root, [data-ui-preview-scope]`, so inside the
+ * scope the whole chain is re-declared and re-resolves against the drafted
+ * values. Costs one extra selector; makes scoped theming of a layered token
+ * system work at all.
+ *
+ * @see src/ui/theme/semanticTokens.ts — the TS manifest (labels, roles,
+ *      contrast pairings). It and this file are kept in lockstep by
+ *      semanticTokens.test.ts, which fails if either drifts.
+ */
+
+@layer base {
+  /* The preview scope is a second root — see the note above. */
+  :root,
+  [data-ui-preview-scope] {
+    /* ── ACTION ───────────────────────────────────────────────────────────────
+       The two ranks of call-to-action. `primary` is the one main action on a
+       surface; `secondary` is the second rank. Status colours are NOT actions —
+       a destructive button is `danger` (below), not a red primary. */
+    --ui-color-action-primary:        var(--siomac-red);
+    --ui-color-action-primary-hover:  var(--siomac-red-dark);
+    --ui-color-action-primary-text:   #ffffff;
+    --ui-color-action-secondary:      var(--siomac-navy);
+    --ui-color-action-secondary-text: #ffffff;
+
+    /* ── SURFACE ──────────────────────────────────────────────────────────────
+       Four planes, from the page backdrop up to floating overlays. `default`
+       and `raised` share a value today but are different ROLES: changing what
+       a menu/dialog floats on must not repaint every card. */
+    --ui-color-surface-page:    var(--bg-app);
+    --ui-color-surface-default: var(--bg-card);
+    --ui-color-surface-subtle:  var(--bg-subtle);
+    --ui-color-surface-raised:  var(--bg-card);
+
+    /* ── TEXT ─────────────────────────────────────────────────────────────────
+       Three weights of emphasis plus inverse (text on a filled/brand surface)
+       and link. `muted` is deliberately lighter than `secondary`: placeholders
+       and disabled-adjacent hints, never body copy. */
+    --ui-color-text-primary:   var(--text-primary);
+    --ui-color-text-secondary: var(--text-muted);
+    --ui-color-text-muted:     var(--field-placeholder);
+    --ui-color-text-inverse:   #ffffff;
+    --ui-color-text-link:      var(--siomac-navy);
+
+    /* ── BORDER ───────────────────────────────────────────────────────────────
+       `default` = dividers and card edges. `strong` = the edge of an
+       interactive control, which must read as heavier than a divider or the
+       input disappears into the card. */
+    --ui-color-border-default: var(--border);
+    --ui-color-border-strong:  var(--field-border);
+
+    /* ── FOCUS ────────────────────────────────────────────────────────────────
+       Two colours, because focus is drawn twice: a soft translucent halo and an
+       opaque outline. Geometry lives in tokens.css (--ui-focus-ring-width).
+
+       `--ui-color-focus-outline` was added when the brand engine stopped writing
+       `--ui-color-action-secondary`: the outline had been routed through that
+       role, so focus silently stopped following the brand even though the
+       mapping contract says it should. A role the contract promises must exist
+       as a role. */
+    --ui-color-focus-ring:    var(--focus-ring);
+    --ui-color-focus-outline: var(--siomac-navy);
+
+    /* ── NAVIGATION ───────────────────────────────────────────────────────────
+       The app rail is its own colour context — dark chrome around light
+       content — so it gets explicit roles rather than borrowing surface/text.
+       Values reproduce assets/styles/layout.css, except for the item text.
+
+       ⭐ `--ui-color-nav-text` is the ONE deliberate divergence in this file.
+       The rail currently renders `#6b7a94` on this navy, which measures
+       **3.12:1** — below the 4.5:1 WCAG AA bar for normal text, on the one
+       surface that is on screen every second of the working day. Copying it
+       here would have made the canonical baseline fail the accessibility gate
+       the Brand Theme engine enforces on every generated theme, which is not a
+       standard worth shipping.
+
+       The replacement is the same hue and chroma (HCT 260°/21) lifted from tone
+       51 to tone 64 — the nearest tone that clears AA with headroom (4.89:1),
+       so the rail keeps its intended dim-grey-blue character rather than being
+       recoloured. Idle 4.89:1 against active white ~13.5:1 preserves the
+       hierarchy: the current page still reads as the emphasised row.
+
+       ⚠ assets/styles/layout.css still hardcodes the old value; the legacy
+       sidebar is a consumer and is corrected when the app shell migrates onto
+       these roles. This token is the canonical baseline, not a live override. */
+    --ui-color-nav-background:        var(--siomac-navy);
+    --ui-color-nav-text:              #8d9cb7;
+    --ui-color-nav-active-background: rgba(99, 112, 141, .3);
+    --ui-color-nav-active-text:       #ffffff;
+    /* The 3px bar beside the current page (layout.css draws it today). This is
+       the ONE place the brand is allowed to appear in the rail, which is why it
+       exists as its own role rather than being folded into the active fill. */
+    --ui-color-nav-active-indicator:  #7382a1;
+
+    /* ── SELECTION ────────────────────────────────────────────────────────────
+       "This row/card/option is chosen" — distinct from hover, which is only
+       "your pointer is here". Conflating them is why selected rows vanish the
+       moment the cursor moves. Value = the v2 DataTable's selected fill. */
+    --ui-color-selection-background: rgba(27, 45, 84, .06);
+    --ui-color-selection-border:     var(--siomac-navy);
+
+    /* ── OPERATIONAL STATES ───────────────────────────────────────────────────
+       Success / warning / danger / info carry MEANING, not identity. The Brand
+       Theme engine is forbidden from deriving these from a customer logo: a
+       green-branded company still needs red to mean "this destroys data". They
+       resolve to the `-strong` status family because these values are used as
+       text and as fills behind white text, where the bright family fails
+       contrast. Soft fills stay on `--st-*-tint`. */
+    --ui-color-success: var(--st-success-strong);
+    --ui-color-warning: var(--st-warning-strong);
+    --ui-color-danger:  var(--st-danger-strong);
+    --ui-color-info:    var(--st-info-strong);
+  }
+}

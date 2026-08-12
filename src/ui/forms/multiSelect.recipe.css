@@ -1,0 +1,98 @@
+/**
+ * src/ui/forms/multiSelect.recipe.css — chips inside the control, and the
+ * multi-select option tick.
+ *
+ * @layer recipes, no `!important` — see src/ui/RECIPES.md §4.
+ */
+
+@layer recipes {
+  /* `[data-ui-preview-scope]` is a SECOND ROOT. See the note in semantic.css:
+     a var() is substituted where the property is DECLARED, so tokens declared
+     only on :root are already resolved before a scoped draft can reach them. */
+  :root,
+  [data-ui-preview-scope] {
+    --ui-ms-chip-bg: var(--ui-color-surface-subtle);
+    --ui-ms-chip-border: var(--ui-color-border-default);
+    --ui-ms-chip-fg: var(--ui-color-text-primary);
+    --ui-ms-chip-radius: var(--radius-xs);
+    --ui-ms-tick-size: 15px;
+  }
+
+  /* The control grows with its chips instead of clipping them, but the chips are
+     capped in TS (`maxChips`) so it can never grow without bound. */
+  .ui-ctrl--multi {
+    height: auto;
+    min-height: var(--ui-control-md);
+    padding-top: 4px;
+    padding-bottom: 4px;
+    align-items: center;
+  }
+  .ui-ctrl--multi.ui-ctrl--sm { min-height: var(--ui-control-sm); }
+  .ui-ctrl--multi.ui-ctrl--lg { min-height: var(--ui-control-lg); }
+
+  .ui-ms-chips {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .ui-ms-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    padding: 2px 4px 2px 7px;
+    border: var(--ui-border-width) solid var(--ui-ms-chip-border);
+    border-radius: var(--ui-ms-chip-radius);
+    background: var(--ui-ms-chip-bg);
+    color: var(--ui-ms-chip-fg);
+    font-size: var(--ui-font-size-caption);
+    line-height: 1.6;
+  }
+  .ui-ms-chip-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ui-ms-chip-x {
+    display: inline-grid;
+    place-items: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    color: var(--text-muted);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .ui-ms-chip-x:hover { background: var(--ui-color-selection-background); color: var(--ui-color-action-secondary); }
+  .ui-ms-chip-x > svg { width: 10px; height: 10px; }
+
+  .ui-ms-more {
+    color: var(--text-muted);
+    font-size: var(--ui-font-size-caption);
+    white-space: nowrap;
+  }
+
+  .ui-ctrl--disabled .ui-ms-chip,
+  .ui-ctrl--readonly .ui-ms-chip { background: transparent; }
+  .ui-ctrl--disabled .ui-ms-chip { color: var(--ui-disabled-fg); border-color: var(--ui-disabled-border); }
+
+  /* Option tick — a box, not a check mark on its own, so an unselected row still
+     shows WHERE the selection state lives. A bare tick that only appears when on
+     makes a long list read as "nothing is selectable". */
+  .ui-ms-tick {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: var(--ui-ms-tick-size);
+    height: var(--ui-ms-tick-size);
+    border: var(--ui-border-width) solid var(--ui-choice-border, var(--field-border));
+    border-radius: 4px;
+    background: #fff;
+    color: #fff;
+  }
+  .ui-ms-tick.is-on {
+    background: var(--ui-choice-bg-checked, var(--ui-color-selection-border));
+    border-color: var(--ui-choice-border-checked, var(--ui-color-selection-border));
+  }
+  .ui-ms-tick > svg { width: 11px; height: 11px; }
+}

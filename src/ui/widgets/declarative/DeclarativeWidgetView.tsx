@@ -2,7 +2,7 @@
 // declarative spec's `view` onto our primitives, OR (kind:'html') a bespoke design card inside
 // a locked-down sandboxed iframe (null-origin + CSP default-src 'none' → no network/app access).
 import type { VNode } from 'preact';
-import { StatsCard, ChartCard } from '@ui';
+import { StatsCard, Card, CardHeader } from '@ui';
 import { DonutPct, TrendArea, MiniBars, ListRow, WidgetList } from '../inlinePrimitives';
 import type { DeclHtml, DeclarativeWidgetSpec } from './types';
 
@@ -32,10 +32,24 @@ export function DeclarativeWidgetView({ spec }: { spec: DeclarativeWidgetSpec })
       return <StatsCard icon={spec.icon} title={spec.title} metric={v.metric} supporting={v.supporting} footer={v.footer} />;
     case 'donut':
       return <StatsCard icon={spec.icon} title={spec.title} metric={`${v.percent}%`} supporting={v.supporting} chart={<DonutPct percent={v.percent} />} footer={v.footer} />;
+    // A titled visual is the canonical Card with a header — `ChartCard` was a
+    // fixed-prop wrapper around `.hse-spark-card` and has been deleted. The
+    // title is `level={null}`: a widget in a board cell is not a document
+    // section, and emitting an <h3> per cell wrecks the page's heading outline.
     case 'trend':
-      return <ChartCard label={spec.title}><TrendArea points={v.points} /></ChartCard>;
+      return (
+        <Card variant="panel" density="compact" style={{ height: '100%' }}
+          header={<CardHeader title={spec.title} level={null} />}>
+          <TrendArea points={v.points} />
+        </Card>
+      );
     case 'bars':
-      return <ChartCard label={spec.title}><MiniBars rows={v.rows} /></ChartCard>;
+      return (
+        <Card variant="panel" density="compact" style={{ height: '100%' }}
+          header={<CardHeader title={spec.title} level={null} />}>
+          <MiniBars rows={v.rows} />
+        </Card>
+      );
     case 'list':
       return <WidgetList loading={false} empty="No data" rows={v.rows.map((r, i) => <ListRow key={i} primary={r.primary} secondary={r.secondary} right={r.right} tone={r.tone} />)} />;
     case 'html':

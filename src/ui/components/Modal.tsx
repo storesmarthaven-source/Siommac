@@ -20,7 +20,7 @@
 
 import { type VNode, type ComponentChildren } from 'preact';
 import { createPortal } from 'preact/compat';
-import { Button } from './Button';
+import { Button } from '../primitives/Button';
 import { useOverlayA11y } from '../lib/useOverlayA11y';
 
 export interface ModalProps {

@@ -8,16 +8,35 @@
  *   bootstrap  — vendor reset/components (lowest priority)
  *   base       — design tokens (:root) + layout primitives
  *   components — shared component styles (buttons, tables, popups, …)
- *   sections   — per-section styles + responsive @media overrides (highest)
+ *   sections   — per-section styles + responsive @media overrides
+ *   recipes    — UI Kit v2 canonical component recipes (highest)
  *
  * Per-section CSS files live beside their Preact component and self-wrap their
  * body in `@layer sections { … }` (a TS `import './x.css'` cannot carry a
  * layer() token, so the file wraps itself).
  *
- * @see docs/ARCHITECTURE.md
+ * ── The `recipes` layer (UI Kit v2) ─────────────────────────────────────────
+ * Canonical kit components own their styling in `@layer recipes`, declared LAST
+ * so a kit recipe out-ranks a legacy module rule by layer order alone — no
+ * specificity escalation needed.
+ *
+ * NON-NEGOTIABLE: recipe CSS never uses `!important`.
+ *
+ * Layer priority REVERSES for `!important` declarations — the *earliest* layer
+ * wins. So a `sections` `!important` rule beats a `recipes` `!important` rule,
+ * and beats any `recipes` normal declaration outright. There is no ordering
+ * trick that lets the kit override legacy `!important` from a later layer, and
+ * adding `!important` to a recipe starts an escalation war the kit is
+ * structurally guaranteed to lose.
+ *
+ * The mechanism for legacy overrides is DELETION: a component migration is not
+ * complete until the module rules it supersedes — especially `!important` ones
+ * — are removed. Layer order is only what keeps the clean case clean.
+ *
+ * @see docs/ARCHITECTURE.md, docs/UI_KIT_V2_AUDIT.md §B1, src/ui/RECIPES.md
  */
 
-@layer bootstrap, base, components, sections;
+@layer bootstrap, base, components, sections, recipes;
 
 /* ── Vendor (lowest priority) ─────────────────────────────────────────────── */
 @import 'bootstrap/dist/css/bootstrap.min.css' layer(bootstrap);

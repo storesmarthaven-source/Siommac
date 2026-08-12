@@ -1,0 +1,328 @@
+/**
+ * src/ui/containers/Card/card.recipe.css — the one card recipe.
+ *
+ * @layer recipes, no `!important` — see src/ui/RECIPES.md §4.
+ *
+ * The card owns the SURFACE: padding, border, radius, background, elevation,
+ * header/footer spacing, the interactive/selected/disabled states and the
+ * semantic accent. It owns nothing about content — a KPI number, a donut and a
+ * detail list are all just children, which is why nine card components could
+ * collapse into this one.
+ *
+ * Three axes, no new components:
+ *   variant   the surface's SHAPE   surface | panel | metric | action
+ *   density   its RHYTHM            compact | standard | comfortable
+ *   tone      its MEANING           neutral | accent | success | warning | danger | info
+ */
+
+@layer recipes {
+  /* `[data-ui-preview-scope]` is a SECOND ROOT. See the note in semantic.css:
+     a var() is substituted where the property is DECLARED, so tokens declared
+     only on :root are already resolved before a scoped draft can reach them. */
+  :root,
+  [data-ui-preview-scope] {
+    /* ── Frame ──────────────────────────────────────────────────────────────*/
+    --ui-card-radius:       var(--radius-sm);
+    --ui-card-border:       var(--ui-color-border-default);
+    --ui-card-border-width: var(--ui-border-width);
+    --ui-card-bg:           var(--ui-color-surface-default);
+    --ui-card-fg:           var(--ui-color-text-primary);
+    --ui-card-shadow:       var(--shadow-card);
+
+    /* ── Rhythm (standard density) ──────────────────────────────────────────*/
+    --ui-card-pad-x: 16px;
+    --ui-card-pad-y: 14px;
+    --ui-card-gap:   10px;
+
+    /* ── Header ─────────────────────────────────────────────────────────────*/
+    --ui-card-header-bg:          transparent;
+    --ui-card-header-fg:          var(--ui-color-text-primary);
+    --ui-card-header-border:      transparent;
+    --ui-card-header-gap:         10px;
+    --ui-card-header-font-size:   var(--ui-font-size-section);
+    --ui-card-header-font-weight: var(--font-weight-semibold);
+    --ui-card-header-icon-size:   var(--ui-icon-md);
+    --ui-card-desc-fg:            var(--ui-color-text-secondary);
+    --ui-card-desc-font-size:     var(--ui-font-size-body-sm);
+
+    /* ── Footer ─────────────────────────────────────────────────────────────*/
+    --ui-card-footer-bg:        var(--ui-color-surface-subtle);
+    --ui-card-footer-fg:        var(--ui-color-text-secondary);
+    --ui-card-footer-border:    var(--ui-color-border-default);
+    --ui-card-footer-font-size: var(--ui-font-size-body-sm);
+
+    /* ── Interaction ────────────────────────────────────────────────────────*/
+    --ui-card-hover-bg:      var(--ui-color-surface-default);
+    --ui-card-hover-border:  var(--ui-card-tone);
+    --ui-card-hover-shadow:  var(--shadow-hover);
+    --ui-card-hover-lift:    -1px;
+    --ui-card-active-lift:   0px;
+    --ui-card-selected-bg:     var(--ui-color-surface-subtle);
+    --ui-card-selected-border: var(--ui-card-tone);
+    --ui-card-selected-ring:   var(--ui-color-selection-background);
+    --ui-card-selected-ring-width: 3px;
+    --ui-card-disabled-opacity: .55;
+
+    /* ── Accent ─────────────────────────────────────────────────────────────*/
+    --ui-card-accent-width: 3px;
+
+    /* ── Tones. Each aliases a status token, so re-theming moves every card. ─*/
+    /* Neutral resolves to the muted TEXT colour, not to the border colour: the
+       tone also paints the header glyph and the hover border, and a border-grey
+       glyph on a white card is invisible. */
+    --ui-card-tone-neutral: var(--ui-color-text-secondary);
+    --ui-card-tone-accent:  var(--ui-color-selection-border);
+    --ui-card-tone-success: var(--ui-color-success);
+    --ui-card-tone-warning: var(--ui-color-warning);
+    --ui-card-tone-danger:  var(--ui-color-danger);
+    --ui-card-tone-info:    var(--ui-color-info);
+  }
+
+  /* ── Root ─────────────────────────────────────────────────────────────────*/
+  .ui-card {
+    --ui-card-tone: var(--ui-card-tone-neutral);
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border: var(--ui-card-border-width) solid var(--ui-card-border);
+    border-radius: var(--ui-card-radius);
+    background: var(--ui-card-bg);
+    color: var(--ui-card-fg);
+    box-shadow: var(--ui-card-shadow);
+    transition:
+      border-color var(--ui-motion-fast) var(--ui-ease-standard),
+      box-shadow   var(--ui-motion-fast) var(--ui-ease-standard),
+      transform    var(--ui-motion-fast) var(--ui-ease-standard),
+      background   var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+
+  /* Tone. Only the accent bar, the hover border and the selected ring read it —
+     a tone must never repaint the whole surface, or a "warning" card stops being
+     readable as data and becomes a banner. Use Alert for that. */
+  .ui-card--accent  { --ui-card-tone: var(--ui-card-tone-accent);  --ui-card-selected-ring: rgba(27, 45, 84, .12); }
+  .ui-card--success { --ui-card-tone: var(--ui-card-tone-success); --ui-card-selected-ring: rgba(21, 128, 61, .12); }
+  .ui-card--warning { --ui-card-tone: var(--ui-card-tone-warning); --ui-card-selected-ring: rgba(217, 119, 6, .12); }
+  .ui-card--danger  { --ui-card-tone: var(--ui-card-tone-danger);  --ui-card-selected-ring: rgba(220, 38, 38, .12); }
+  .ui-card--info    { --ui-card-tone: var(--ui-card-tone-info);    --ui-card-selected-ring: rgba(37, 99, 235, .12); }
+
+  /* Density — the same card, three rhythms. */
+  .ui-card--compact     { --ui-card-pad-x: 12px; --ui-card-pad-y: 10px; --ui-card-gap: 6px; }
+  .ui-card--comfortable { --ui-card-pad-x: 20px; --ui-card-pad-y: 18px; --ui-card-gap: 14px; }
+
+  /* ── Variants ─────────────────────────────────────────────────────────────*/
+
+  /* panel — a titled section container. The header sits on its own band with a
+     rule under it, because a panel groups other components rather than showing
+     one figure. */
+  .ui-card--panel {
+    --ui-card-header-bg: var(--ui-color-surface-subtle);
+    --ui-card-header-border: var(--ui-color-border-default);
+  }
+
+  /* metric — a compact figure tile. Tighter rhythm only; the number, the unit
+     and any sparkline are CONTENT, deliberately not props of the card. */
+  .ui-card--metric {
+    --ui-card-pad-y: 12px;
+    --ui-card-gap: 4px;
+    --ui-card-header-font-size: var(--ui-font-size-label);
+  }
+
+  /* action — the card IS the control, so it lifts harder on hover than a card
+     that merely happens to be clickable. Rhythm only: an action card imposes
+     nothing on its content's layout. */
+  .ui-card--action { --ui-card-hover-lift: -2px; }
+
+  /* ── Slots ────────────────────────────────────────────────────────────────*/
+  .ui-card-head {
+    padding: var(--ui-card-pad-y) var(--ui-card-pad-x);
+    background: var(--ui-card-header-bg);
+    border-bottom: var(--ui-card-border-width) solid var(--ui-card-header-border);
+    border-radius: calc(var(--ui-card-radius) - var(--ui-card-border-width))
+                   calc(var(--ui-card-radius) - var(--ui-card-border-width)) 0 0;
+  }
+
+  /* A header with nothing under it is the whole card — it must not draw a rule
+     across the bottom of itself. */
+  .ui-card-head:last-child {
+    border-bottom-color: transparent;
+    border-radius: inherit;
+  }
+
+  .ui-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-card-gap);
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: var(--ui-card-pad-y) var(--ui-card-pad-x);
+  }
+  /* A header already carries the top padding — the body must not double it. */
+  .ui-card-head + .ui-card-body { padding-top: var(--ui-card-gap); }
+
+  .ui-card-foot {
+    padding: calc(var(--ui-card-pad-y) * .75) var(--ui-card-pad-x);
+    background: var(--ui-card-footer-bg);
+    color: var(--ui-card-footer-fg);
+    font-size: var(--ui-card-footer-font-size);
+    border-top: var(--ui-card-border-width) solid var(--ui-card-footer-border);
+    border-radius: 0 0 calc(var(--ui-card-radius) - var(--ui-card-border-width))
+                         calc(var(--ui-card-radius) - var(--ui-card-border-width));
+  }
+
+  /* flush — the frame only. For cards whose content owns its own padding
+     (a full-bleed media band, a table, a legacy body being migrated). */
+  .ui-card--flush > .ui-card-body { padding: 0; gap: 0; }
+  .ui-card--flush > .ui-card-body > * { min-width: 0; }
+
+  /* ── Header content ───────────────────────────────────────────────────────*/
+  .ui-card-header {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-card-header-gap);
+    min-width: 0;
+  }
+  .ui-card-header-icon {
+    display: inline-grid;
+    place-items: center;
+    flex-shrink: 0;
+    color: var(--ui-card-tone);
+  }
+  .ui-card-header-icon > svg { width: var(--ui-card-header-icon-size); height: var(--ui-card-header-icon-size); }
+  .ui-card-header-text { min-width: 0; flex: 1 1 auto; }
+  .ui-card-title {
+    margin: 0;
+    font-size: var(--ui-card-header-font-size);
+    font-weight: var(--ui-card-header-font-weight);
+    color: var(--ui-card-header-fg);
+    line-height: var(--ui-line-height-tight);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ui-card-desc {
+    margin: 2px 0 0;
+    font-size: var(--ui-card-desc-font-size);
+    color: var(--ui-card-desc-fg);
+    line-height: var(--ui-line-height-base);
+  }
+  .ui-card-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-shrink: 0;
+  }
+
+  .ui-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+
+  /* ── Accent ───────────────────────────────────────────────────────────────*/
+  /* Drawn with a pseudo-element rather than a fat border, so turning an accent
+     on never changes the card's box size and never re-flows a grid of cards. */
+  .ui-card--accent-left::before,
+  .ui-card--accent-top::before {
+    content: '';
+    position: absolute;
+    z-index: 3;
+    background: var(--ui-card-tone);
+    pointer-events: none;
+  }
+  .ui-card--accent-left::before {
+    inset: 0 auto 0 0;
+    width: var(--ui-card-accent-width);
+    border-radius: calc(var(--ui-card-radius) - var(--ui-card-border-width)) 0 0
+                   calc(var(--ui-card-radius) - var(--ui-card-border-width));
+  }
+  .ui-card--accent-top::before {
+    inset: 0 0 auto 0;
+    height: var(--ui-card-accent-width);
+    border-radius: calc(var(--ui-card-radius) - var(--ui-card-border-width))
+                   calc(var(--ui-card-radius) - var(--ui-card-border-width)) 0 0;
+  }
+  /* The accent bar must not sit under the text. */
+  .ui-card--accent-left > .ui-card-head,
+  .ui-card--accent-left > .ui-card-body,
+  .ui-card--accent-left > .ui-card-foot {
+    padding-left: calc(var(--ui-card-pad-x) + var(--ui-card-accent-width));
+  }
+
+  /* ── The action overlay ───────────────────────────────────────────────────*/
+  /* An interactive card is a <div> with a stretched control on top, NOT a
+     <button> wrapping the content — a <button> may not contain the edit/delete
+     buttons and links these cards legitimately carry. The overlay keeps the
+     whole surface clickable, keyboard-reachable and focus-ringed while nested
+     controls stay valid; they sit above it via .ui-card-actions / .ui-card-raise. */
+  .ui-card-hit {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: none;
+    border-radius: inherit;
+    background: transparent;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  /* The ring is drawn INSIDE the surface (negative offset). Cards legitimately
+     clip their content — a full-bleed header band needs `overflow: hidden` —
+     and an outset ring on a descendant is silently clipped away by it, leaving
+     a keyboard user with no visible focus at all. */
+  .ui-card-hit:focus-visible {
+    outline: var(--ui-focus-outline-width) solid var(--ui-focus-outline-color);
+    outline-offset: -2px;
+  }
+  .ui-card-actions,
+  .ui-card-raise { position: relative; z-index: 2; }
+
+  .ui-card.is-interactive:hover,
+  .ui-card.is-interactive[data-ui-state~='hover'] {
+    background: var(--ui-card-hover-bg);
+    border-color: var(--ui-card-hover-border);
+    box-shadow: var(--ui-card-hover-shadow);
+    transform: translateY(var(--ui-card-hover-lift));
+  }
+  .ui-card.is-interactive:active,
+  .ui-card.is-interactive[data-ui-state~='active'] {
+    transform: translateY(var(--ui-card-active-lift));
+    box-shadow: var(--ui-card-shadow);
+  }
+  .ui-card.is-interactive:focus-within,
+  .ui-card.is-interactive[data-ui-state~='focus'] {
+    border-color: var(--ui-card-tone);
+  }
+
+  /* ── Selected ─────────────────────────────────────────────────────────────*/
+  .ui-card.is-selected,
+  .ui-card[data-ui-state~='selected'] {
+    background: var(--ui-card-selected-bg);
+    border-color: var(--ui-card-selected-border);
+    box-shadow: 0 0 0 var(--ui-card-selected-ring-width) var(--ui-card-selected-ring);
+  }
+
+  /* ── Disabled ─────────────────────────────────────────────────────────────*/
+  /* Opacity is acceptable HERE, unlike on a control: a disabled card is a whole
+     surface being taken out of play, not a label whose text must stay legible. */
+  .ui-card.is-disabled,
+  .ui-card[data-ui-state~='disabled'] {
+    opacity: var(--ui-card-disabled-opacity);
+    box-shadow: none;
+    transform: none;
+  }
+  .ui-card.is-disabled .ui-card-hit { cursor: var(--ui-disabled-cursor); }
+  .ui-card.is-disabled:hover {
+    border-color: var(--ui-card-border);
+    box-shadow: none;
+    transform: none;
+  }
+
+  /* ── Loading ──────────────────────────────────────────────────────────────*/
+  .ui-card-skeleton { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+}
