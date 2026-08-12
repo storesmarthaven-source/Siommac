@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "c715e604f9665c4dc77185b598894d7785d6cc11",
+    "head": "513c579f4c3c26c578e6a15a5ba8e27accbeced3",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "152b25c8f4878ed5b3dcfa8f",
+    "fingerprint": "9304fffb8e5fe357aa8c16d8",
     "indexedFiles": 1825
   },
   "summary": {
     "files": 1470,
-    "symbols": 14676,
+    "symbols": 14677,
     "widgets": 63,
     "routes": 978,
     "routeDefinitions": 979,
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 410,
-        "symbols": 3662,
+        "symbols": 3663,
         "widgets": 12,
         "routes": 38,
         "routeDefinitions": 53,
@@ -9211,8 +9211,8 @@
       "path": "src/ui/registry/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 134,
-      "hash": "220ce3688e3bf5bd"
+      "lines": 153,
+      "hash": "112c489b3fd9d1df"
     },
     {
       "path": "src/ui/registry/navigation.defs.tsx",
@@ -147943,10 +147943,20 @@
       "name": "registryTotals",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 123,
+      "line": 139,
       "module": "platform",
       "exported": true,
       "container": "",
+      "tags": []
+    },
+    {
+      "name": "isPattern",
+      "kind": "function",
+      "file": "src/ui/registry/index.ts",
+      "line": 140,
+      "module": "platform",
+      "exported": false,
+      "container": "registryTotals",
       "tags": []
     },
     {

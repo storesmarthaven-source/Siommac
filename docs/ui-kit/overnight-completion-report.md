@@ -18,16 +18,19 @@ objective  Build the actual SIOMAC Design System Studio, using the canonical
 3. Verify  branch = codex/ui-kit-v2-completion
            HEAD   = c715e604
            tree   = clean
-4. RE-MEASURE the typecheck baseline before claiming it
+4. ✅ typecheck baseline MEASURED — see below
 5. Begin Studio implementation
 ```
-⚠ **Step 4 is not optional.** The "49-error frontend typecheck baseline" is
-INHERITED, not verified — it was carried forward through several sessions and was
-last measured before `fe58cbf8`/`c715e604`. Neither commit touches TypeScript
-that compiles into the app (a coverage script, a registry doc comment, two
-markdown files), so it *should* be unchanged — but "should be" is exactly the
-assume-don't-verify failure AGENTS.md opens with. Measure it from `c715e604` and
-record the real number before treating any later count as a regression.
+✅ **Step 4 is done, and the inherited number was wrong.** Measured at
+`513c579f`: `npm run typecheck:frontend` = **50 errors, not 49**. The 49 figure
+had been carried across sessions unverified. Zero of the 50 are in `src/ui/`.
+Top files: EmailTemplateBuilder 6 · EmailTemplateLibrary 5 ·
+NewAssessmentWizard 4 · NewPermitWizard 4 · EmployeeMaster 3.
+
+⭐ **Use 50 as the baseline.** Had the next session measured 50 against an
+expected 49, it would have hunted a phantom regression; had it introduced one and
+measured 50, it would have waved a real one through. An off-by-one in an
+inherited baseline is exactly how that happens.
 
 ### Implementation order
 ```

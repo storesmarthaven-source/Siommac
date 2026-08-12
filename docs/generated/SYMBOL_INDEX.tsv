@@ -13125,7 +13125,8 @@ CategoryGroup	interface	platform	true		src/ui/registry/index.ts	78
 componentsByCategory	function	platform	true		src/ui/registry/index.ts	92	
 findComponent	function	platform	true		src/ui/registry/index.ts	109	
 RegistryTotals	interface	platform	true		src/ui/registry/index.ts	113	
-registryTotals	function	platform	true		src/ui/registry/index.ts	123	
+registryTotals	function	platform	true		src/ui/registry/index.ts	139	
+isPattern	function	platform	false		src/ui/registry/index.ts	140	registryTotals
 s	function	platform	false		src/ui/registry/navigation.defs.tsx	25	
 b	function	platform	false		src/ui/registry/navigation.defs.tsx	26	
 noop	function	platform	false		src/ui/registry/navigation.defs.tsx	27	

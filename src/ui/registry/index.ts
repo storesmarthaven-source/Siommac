@@ -114,20 +114,39 @@ export interface RegistryTotals {
   canonical: number;
   beta: number;
   deprecated: number;
-  missing: number;
+  /** Missing PRIMITIVES — the kit's real catalogue debt. */
+  missingPrimitives: number;
+  /** Missing `patterns` — module-owned compositions. NOT kit debt. */
+  modulePatterns: number;
   total: number;
-  /** Share of the intended catalogue that exists, 0–1. */
+  /** Share of the PRIMITIVE catalogue that exists, 0–1. */
   completeness: number;
 }
 
+/**
+ * Totals for the Studio header and the coverage dashboard.
+ *
+ * ⭐ `patterns` are module-owned compositions (PayrollApprovalTable is payroll,
+ * DayOneGateCard is onboarding). They are built FROM primitives by the domain
+ * that owns them, so they are neither part of the kit's catalogue nor a gap in
+ * it — a design system that owns payroll approval is the application.
+ *
+ * Counting them dropped completeness from 74% to 45% and made the number argue
+ * for building business features inside the kit. This mirrors
+ * `scripts/check-ui-kit-coverage.mjs` exactly; the two must not disagree, or the
+ * Studio and the build gate report different truths about the same registry.
+ */
 export function registryTotals(): RegistryTotals {
+  const isPattern = (d: ComponentDef): boolean => d.category === 'patterns';
   const canonical  = COMPONENT_DEFS.filter(d => d.status === 'stable').length;
   const beta       = COMPONENT_DEFS.filter(d => d.status === 'beta').length;
   const deprecated = COMPONENT_DEFS.filter(d => d.status === 'deprecated').length;
-  const missing    = COMPONENT_DEFS.filter(d => d.status === 'missing').length;
-  const total      = COMPONENT_DEFS.length;
+  const missingPrimitives = COMPONENT_DEFS.filter(d => d.status === 'missing' && !isPattern(d)).length;
+  const modulePatterns    = COMPONENT_DEFS.filter(d => d.status === 'missing' && isPattern(d)).length;
+  const primitiveCatalogue = canonical + beta + missingPrimitives;
   return {
-    canonical, beta, deprecated, missing, total,
-    completeness: total === 0 ? 0 : (canonical + beta) / total,
+    canonical, beta, deprecated, missingPrimitives, modulePatterns,
+    total: COMPONENT_DEFS.length,
+    completeness: primitiveCatalogue === 0 ? 0 : (canonical + beta) / primitiveCatalogue,
   };
 }
