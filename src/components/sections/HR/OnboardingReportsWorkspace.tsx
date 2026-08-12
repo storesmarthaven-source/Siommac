@@ -12,7 +12,7 @@
  */
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
-import { PageHeader, exportCsv } from '@ui';
+import { PageHeader, exportCsv, Button } from '@ui';
 import { can } from '@lib/permissions';
 import { useOnboardingReportList, useOnboardingReport, useOnboardingPackages, hrOnboardingApi } from '@api/hr/onboarding';
 import type { OnboardingReportKey, RunOnboardingReportArgs, OnboardingReportColumn, OnboardingReportChart } from '../../../../types/hrOnboarding';
@@ -115,7 +115,7 @@ export function OnboardingReportsWorkspace({ onBack, onToast }: { onBack: () => 
         module="HR · Onboarding"
         title="Reports"
         sub="Operational analytics and compliance reporting."
-        actions={canExport ? <button class="obx-btn" disabled={!result || exporting} onClick={() => void handleExport()}>{exporting ? 'Exporting…' : 'Export CSV'}</button> : undefined}
+        actions={canExport ? <Button variant="secondary" disabled={!result} loading={exporting} loadingText="Exporting…" onClick={() => void handleExport()}>Export CSV</Button> : undefined}
       />
 
       <div class="obx-toolbar">

@@ -14,7 +14,7 @@ import { type VNode } from 'preact';
 import { useMemo, useRef, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { can } from '@lib/permissions';
-import { PageHeader, EmptyState } from '@ui';
+import { PageHeader, EmptyState, Button } from '@ui';
 import { usePayItems, useCompensationMutation, hrCompensationApi, type CreatePayItemArgs, type PayItem } from '@api/hr/compensation';
 import { openActionModal, rejectAction, retireAction, toActionRecord, statusBadge } from '@/components/common/actions';
 import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
@@ -95,7 +95,7 @@ function PayItemsSurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id:
     <div class="obx-section"><div class="obx-section-body">
       {canManage && (
         <div class="obx-toolbar" style={{ marginBottom: 10 }}>
-          <button class="obx-btn" onClick={() => setShowForm(v => !v)}><i class={`fas ${showForm ? 'fa-xmark' : 'fa-plus'}`} /> {showForm ? 'Cancel' : 'New pay item'}</button>
+          <Button variant="secondary" onClick={() => setShowForm(v => !v)} iconLeft={<i class={`fas ${showForm ? 'fa-xmark' : 'fa-plus'}`} />}>{showForm ? 'Cancel' : 'New pay item'}</Button>
         </div>
       )}
       {showForm && <NewPayItemForm emps={emps} components={components} onDone={() => setShowForm(false)} />}
@@ -115,22 +115,22 @@ function PayItemsSurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id:
                 <td><span class={`obx-pill ${statusTone(it.status)}`}>{humanize(it.status)}</span></td>
                 <td style={{ textAlign: 'right' }}>
                   <div class="obx-rowbtns" style={{ justifyContent: 'flex-end' }}>
-                    {canManage && it.status === 'draft' && <button class="obx-btn obx-btn-sm" onClick={() => { const key = submitKeys.current.get(it.id) ?? crypto.randomUUID(); submitKeys.current.set(it.id, key); void run(submitMut.mutateAsync({ id: it.id, idempotencyKey: key }).then(r => { submitKeys.current.delete(it.id); return r; }), 'Submitted for approval.'); }}>Submit</button>}
+                    {canManage && it.status === 'draft' && <Button variant="secondary" size="sm" onClick={() => { const key = submitKeys.current.get(it.id) ?? crypto.randomUUID(); submitKeys.current.set(it.id, key); void run(submitMut.mutateAsync({ id: it.id, idempotencyKey: key }).then(r => { submitKeys.current.delete(it.id); return r; }), 'Submitted for approval.'); }}>Submit</Button>}
                     {canApprove && it.status === 'pending_approval' && (
                       <>
-                        <button class="obx-btn obx-btn-sm" onClick={() => void run(approveMut.mutateAsync({ id: it.id }), 'Approved.')}>Approve</button>
-                        <button class="obx-btn obx-btn-sm" onClick={() => { void (async () => {
+                        <Button variant="secondary" size="sm" onClick={() => void run(approveMut.mutateAsync({ id: it.id }), 'Approved.')}>Approve</Button>
+                        <Button variant="outline" tone="danger" size="sm" onClick={() => { void (async () => {
                           const res = await openActionModal(rejectAction({ noun: 'pay item', record: payItemRecord(it), whatNext: ['Returns the pay item to draft for correction.'] }));
                           if (!res.confirmed) return;
                           await run(rejectMut.mutateAsync({ id: it.id, reason: res.reason ?? undefined }), 'Rejected.');
-                        })(); }}>Reject</button>
+                        })(); }}>Reject</Button>
                       </>
                     )}
-                    {canManage && (it.status === 'active' || it.status === 'approved') && <button class="obx-btn obx-btn-sm" onClick={() => { void (async () => {
+                    {canManage && (it.status === 'active' || it.status === 'approved') && <Button variant="outline" tone="danger" size="sm" onClick={() => { void (async () => {
                       const res = await openActionModal(retireAction({ noun: 'pay item', record: payItemRecord(it), whatNext: ['Stops this recurring earning/deduction on future payroll runs.'] }));
                       if (!res.confirmed) return;
                       void run(retireMut.mutateAsync({ id: it.id }), 'Retired.');
-                    })(); }}>Retire</button>}
+                    })(); }}>Retire</Button>}
                   </div>
                 </td>
               </tr>
@@ -299,9 +299,9 @@ function StatutorySurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id
           {emps.map(em => <option value={em.id} key={em.id}>{nameOf(em.id)}</option>)}
         </select>
         {profile && <span class={`obx-pill ${statusTone(profile.nisStatus)}`}>{humanize(profile.nisStatus)}</span>}
-        {canCapture && employeeId && <button class="obx-btn obx-btn-sm" style={{ marginLeft: 'auto' }} onClick={() => setEditOpen(true)}><i class="fas fa-pen" /> Capture / Edit profile</button>}
+        {canCapture && employeeId && <Button variant="secondary" size="sm" onClick={() => setEditOpen(true)} iconLeft={<i class="fas fa-pen" />}>Capture / Edit profile</Button>}
         {canCapture && profile && (profile.nisStatus === 'pending_verification' || profile.nisStatus === 'not_available') && (
-          <button class="obx-btn obx-btn-sm" disabled={submitMut.isPending} onClick={() => void submit()}>Submit to Finance</button>
+          <Button variant="primary" size="sm" loading={submitMut.isPending} onClick={() => void submit()}>Submit to Finance</Button>
         )}
       </div>
 

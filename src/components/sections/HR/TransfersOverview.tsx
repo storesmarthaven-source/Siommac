@@ -13,7 +13,7 @@ import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
-import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState } from '@ui';
+import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, Button } from '@ui';
 import {
   useTransfers, useTransfersMutation, hrTransfersApi,
 } from '@api/hr/transfers';
@@ -53,7 +53,7 @@ export function TransfersOverview(): VNode {
         title="Transfers &amp; Promotions"
         sub="Bundled dept / site / position / role / pay changes — submitted, approved &amp; applied via workflow."
         actions={canRequest
-          ? <button class="obx-btn primary" onClick={() => setNewOpen(true)}>+ New Request</button>
+          ? <Button variant="primary" onClick={() => setNewOpen(true)} iconLeft={<i class="fas fa-plus" />}>New Request</Button>
           : undefined}
       />
 

@@ -1,5 +1,5 @@
 // Onboarding Command Center — shared UI primitives (byte-identical to the original monolith).
-import { type ComponentChildren, type VNode } from 'preact';
+import { type VNode } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
 import { animate } from '@motionone/dom';
 import { Avatar } from '../shared';
@@ -42,10 +42,6 @@ function Icon({ name }: { name: KpiRow['icon'] | ActivityRow['icon'] | 'bell' | 
  *  OnboardingCommandCenter.css. */
 function PersonAvatar({ name, img = null, size = 'md' }: { name: string; img?: string | null; size?: 'sm' | 'md' | 'lg' }): VNode {
   return <span class={`obv-person-avatar obv-person-avatar-${size}`}><Avatar name={name} img={img} /></span>;
-}
-
-function Button({ children, className = '', onClick }: { children: ComponentChildren; className?: string; onClick?: () => void }): VNode {
-  return <button class={`obx-btn obv-button ${className}`} type="button" onClick={onClick}>{children}</button>;
 }
 
 function MetricGauge({ tone, percent, change, trend }: { tone: Tone; percent: number; change: string; trend: 'up' | 'down' }): VNode {
@@ -133,4 +129,4 @@ function taskIconFor(task: TaskRow): 'mail' | 'shield' | 'people' | 'upload' | '
   return 'upload';
 }
 
-export { Icon, PersonAvatar, Button, MetricGauge, MetricMicroChart, InsightGlyph, taskIconFor };
+export { Icon, PersonAvatar, MetricGauge, MetricMicroChart, InsightGlyph, taskIconFor };

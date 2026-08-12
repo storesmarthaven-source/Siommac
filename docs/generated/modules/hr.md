@@ -2,9 +2,9 @@
 
 # hr Module Map
 
-Source fingerprint: `a18111674d3e6583cae27ca9`
+Source fingerprint: `f0d2f64f8d06c19548d4e0fa`
 
-Files: 265 | Symbols: 3076 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 37 | DB objects: 196 | E2E suites: 16
+Files: 265 | Symbols: 3075 | Widgets: 9 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 37 | DB objects: 196 | E2E suites: 16
 
 ## Widgets and Tiles
 
@@ -15,9 +15,9 @@ Files: 265 | Symbols: 3076 | Widgets: 9 | Unique mounted endpoints: 275 | Route 
 | `bundle.hr.onboarding.manager` | Onboarding Manager Pack | registry | `` | `src/ui/widgets/bundles.ts:76` |
 | `hr.employeeMaster.lifecycleActivity` | Workforce Activity | registry | `LifecycleActivity` | `src/ui/widgets/registry.hrEmployeeMaster.tsx:533` |
 | `hr.employees.register` | Employee Register | local | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:855` |
-| `hr.onboarding.case.activeTasks` | Active Tasks | local | `() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddTask}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:329` |
+| `hr.onboarding.case.activeTasks` | Active Tasks | local | `() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <Button variant="primary" size="sm" onClick={openAddTask} iconLeft={<i class="fas fa-plus" />}>Add</Button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:329` |
 | `hr.onboarding.case.blockersTable` | Blockers | local | `() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:330` |
-| `hr.onboarding.case.customActions` | Custom Actions | local | `() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddAction}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:332` |
+| `hr.onboarding.case.customActions` | Custom Actions | local | `() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <Button variant="primary" size="sm" onClick={openAddAction} iconLeft={<i class="fas fa-plus" />}>Add</Button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:332` |
 | `hr.onboarding.case.handoffsTable` | Handoffs | local | `() => wcard('Handoffs', 'fa-arrow-right-arrow-left', handoffsBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:331` |
 
 ## Route Definitions
@@ -721,7 +721,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/EmployeeProfilePage.test.tsx` | 564 |
 | frontend-page | `src/components/sections/HR/EmployeeProfilePage.tsx` | 1673 |
 | frontend-page | `src/components/sections/HR/HRDocumentsOverview.tsx` | 728 |
-| frontend-page | `src/components/sections/HR/HRQueryState.tsx` | 52 |
+| frontend-page | `src/components/sections/HR/HRQueryState.tsx` | 54 |
 | frontend-page | `src/components/sections/HR/HRRequestsOverview.tsx` | 424 |
 | frontend-page | `src/components/sections/HR/HRSection.tsx` | 129 |
 | frontend-page | `src/components/sections/HR/ImportWizard.tsx` | 337 |
@@ -732,7 +732,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/OnboardingCaseDetail.tsx` | 448 |
 | frontend-page | `src/components/sections/HR/OnboardingCommandCenter.adapters.ts` | 143 |
 | frontend-page | `src/components/sections/HR/OnboardingCommandCenter.helpers.ts` | 196 |
-| frontend-page | `src/components/sections/HR/OnboardingCommandCenter.tsx` | 195 |
+| frontend-page | `src/components/sections/HR/OnboardingCommandCenter.tsx` | 199 |
 | frontend-page | `src/components/sections/HR/OnboardingOverview.tsx` | 408 |
 | frontend-page | `src/components/sections/HR/OnboardingPackageDetail.tsx` | 326 |
 | frontend-page | `src/components/sections/HR/OnboardingPackageManager.tsx` | 135 |
@@ -783,7 +783,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/onboarding/cards/TasksPlannerCard.tsx` | 190 |
 | frontend-page | `src/components/sections/HR/onboarding/cards/UpcomingDeadlinesCard.tsx` | 84 |
 | frontend-page | `src/components/sections/HR/onboarding/cards/index.ts` | 12 |
-| frontend-page | `src/components/sections/HR/onboarding/primitives.tsx` | 137 |
+| frontend-page | `src/components/sections/HR/onboarding/primitives.tsx` | 133 |
 | frontend-page | `src/components/sections/HR/profile/EmployeeProfileDialogs.tsx` | 1989 |
 | frontend-page | `src/components/sections/HR/profile/ProfileIconSprite.tsx` | 84 |
 | frontend-page | `src/components/sections/HR/profile/ProfilePageIconSprite.tsx` | 79 |

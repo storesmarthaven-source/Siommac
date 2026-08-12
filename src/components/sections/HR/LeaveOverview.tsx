@@ -12,7 +12,7 @@ import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components
 import { toast } from '@store';
 import { can } from '@lib/permissions';
 import { useSessionStore } from '@store/session';
-import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState } from '@ui';
+import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, Button } from '@ui';
 import {
   useMyLeaveRequests, useAllLeaveRequests, useLeaveTypes, useLeaveStats, useLeaveBalances,
   useSubmitLeave, useApproveLeave, useRejectLeave, useCancelLeave,
@@ -228,9 +228,9 @@ export function LeaveOverview(): VNode {
         icon='fa-calendar-minus' module='HR · Leave' title='Leave & Absence'
         sub='Submit, track and approve employee leave requests.'
         actions={canSubmit ? (
-          <button class='obx-btn primary' onClick={() => setSubmitOpen(true)}>
-            + Request Leave
-          </button>
+          <Button variant="primary" onClick={() => setSubmitOpen(true)} iconLeft={<i class="fas fa-plus" />}>
+            Request Leave
+          </Button>
         ) : undefined}
       />
 
@@ -282,12 +282,12 @@ export function LeaveOverview(): VNode {
                   <td>
                     {canApprove && row.status === 'pending_approval' && (
                       <span style={{ display: 'inline-flex', gap: 4 }}>
-                        <button class='obx-btn small' onClick={() => { void onReview(row, 'approve'); }}>Approve</button>
-                        <button class='obx-btn small danger' onClick={() => { void onReview(row, 'reject'); }}>Reject</button>
+                        <Button variant="secondary" size="sm" onClick={() => { void onReview(row, 'approve'); }}>Approve</Button>
+                        <Button variant="outline" tone="danger" size="sm" onClick={() => { void onReview(row, 'reject'); }}>Reject</Button>
                       </span>
                     )}
                     {(['pending_approval', 'approved'] as LeaveStatus[]).includes(row.status) && (
-                      <button class='obx-btn small' onClick={() => { void handleCancel(row); }}>Cancel</button>
+                      <Button variant="secondary" size="sm" onClick={() => { void handleCancel(row); }}>Cancel</Button>
                     )}
                   </td>
                 </tr>

@@ -1,5 +1,6 @@
 import { type VNode } from 'preact';
 import { HrApiError } from '@api/hr/client';
+import { Button } from '@ui';
 
 export interface HrQueryStateLike {
   data?: unknown;
@@ -32,9 +33,10 @@ export function HRQueryNotice({ queries }: { queries: readonly HrQueryStateLike[
           <strong>Unable to refresh HR data</strong>
           <p>{messageFor(failed.error)}</p>
         </div>
-        <button class="obx-btn obx-btn-sm" type="button" onClick={() => void failed.refetch()}>
-          <i class="fas fa-rotate-right" aria-hidden="true" /> Retry
-        </button>
+        <Button variant="secondary" size="sm" onClick={() => void failed.refetch()}
+          iconLeft={<i class="fas fa-rotate-right" aria-hidden="true" />}>
+          Retry
+        </Button>
       </div>
     );
   }

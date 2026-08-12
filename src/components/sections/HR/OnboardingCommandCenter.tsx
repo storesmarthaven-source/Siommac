@@ -19,7 +19,8 @@ import {
   type OnboardingSurface,
   type OnboardingSurfaceFilters,
 } from './OnboardingCommandCenter.helpers';
-import { Button, Icon } from './onboarding/primitives';
+import { Icon } from './onboarding/primitives';
+import { Button } from '@ui';
 import {
   ActivationCompletionCard, BlockedCasesCard, CasePerformanceCard, CommandCenterHealthBanner,
   CommandMetricStrip, MorningGoalCard, RecentActivityCard, RecentProjectWorkCard,
@@ -107,22 +108,25 @@ export function OnboardingCommandCenter({
                 HR Staff
               </button>
             </div>
-            <button
-              class={`obx-btn ${previewEmptyStates ? 'is-active' : ''}`}
-              type="button"
+            {/* A real toggle, not a one-shot action — `pressed` is what the
+                `is-active` class was standing in for, and it announces the
+                on/off state instead of only painting it. */}
+            <Button
+              variant="secondary"
+              pressed={previewEmptyStates}
               title="Preview every card's empty state"
               onClick={() => setPreviewEmptyStates(v => !v)}
             >
               Show Empty States
-            </button>
+            </Button>
             <input
               class="ui-input obv-hidden-filter-input"
               value={query}
               placeholder="Filter recent cases..."
               onInput={event => setQuery((event.target as HTMLInputElement).value)}
             />
-            <Button onClick={() => setAddTaskOpen(true)}><Icon name="plus" />Add Task</Button>
-            <button class="obx-btn primary obv-primary-button" type="button" onClick={startNewCase}><Icon name="plus" />New Case</button>
+            <Button variant="secondary" onClick={() => setAddTaskOpen(true)} iconLeft={<Icon name="plus" />}>Add Task</Button>
+            <Button variant="primary" onClick={startNewCase} iconLeft={<Icon name="plus" />}>New Case</Button>
           </div>
         </section>
 

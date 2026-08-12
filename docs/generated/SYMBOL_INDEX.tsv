@@ -8745,9 +8745,9 @@ TABS	array	hr	false		src/components/sections/HR/HRDocumentsOverview.tsx	703
 HRDocumentsOverview	function	hr	true	component	src/components/sections/HR/HRDocumentsOverview.tsx	709	
 item	function	hr	false	test	src/components/sections/HR/hrFoundation.test.tsx	10	
 query	function	hr	false	test	src/components/sections/HR/hrFoundation.test.tsx	37	
-HrQueryStateLike	interface	hr	true		src/components/sections/HR/HRQueryState.tsx	4	
-messageFor	function	hr	false		src/components/sections/HR/HRQueryState.tsx	12	
-HRQueryNotice	function	hr	true	component	src/components/sections/HR/HRQueryState.tsx	24	
+HrQueryStateLike	interface	hr	true		src/components/sections/HR/HRQueryState.tsx	5	
+messageFor	function	hr	false		src/components/sections/HR/HRQueryState.tsx	13	
+HRQueryNotice	function	hr	true	component	src/components/sections/HR/HRQueryState.tsx	25	
 humanize	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	22	
 requestRecord	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	23	
 statusTone	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	30	
@@ -8904,11 +8904,10 @@ UpcomingDeadlinesCard	function	hr	false	component,ui-tile	src/components/section
 moveDateWindow	function	hr	false		src/components/sections/HR/onboarding/cards/UpcomingDeadlinesCard.tsx	19	UpcomingDeadlinesCard
 Icon	function	hr	false	component	src/components/sections/HR/onboarding/primitives.tsx	8	
 PersonAvatar	function	hr	false	component	src/components/sections/HR/onboarding/primitives.tsx	43	
-Button	function	hr	false	component	src/components/sections/HR/onboarding/primitives.tsx	47	
-MetricGauge	function	hr	false	component	src/components/sections/HR/onboarding/primitives.tsx	51	
-MetricMicroChart	function	hr	false	component	src/components/sections/HR/onboarding/primitives.tsx	93	
-InsightGlyph	function	hr	false	component	src/components/sections/HR/onboarding/primitives.tsx	123	
-taskIconFor	function	hr	false		src/components/sections/HR/onboarding/primitives.tsx	128	
+MetricGauge	function	hr	false	component	src/components/sections/HR/onboarding/primitives.tsx	47	
+MetricMicroChart	function	hr	false	component	src/components/sections/HR/onboarding/primitives.tsx	89	
+InsightGlyph	function	hr	false	component	src/components/sections/HR/onboarding/primitives.tsx	119	
+taskIconFor	function	hr	false		src/components/sections/HR/onboarding/primitives.tsx	124	
 OnboardingAddTaskModalProps	interface	hr	true		src/components/sections/HR/OnboardingAddTaskModal.tsx	15	
 EMPTY_FORM	object	hr	false		src/components/sections/HR/OnboardingAddTaskModal.tsx	24	
 OnboardingAddTaskModal	function	hr	true	component	src/components/sections/HR/OnboardingAddTaskModal.tsx	26	
@@ -9017,11 +9016,11 @@ weekWindow	function	hr	true		src/components/sections/HR/OnboardingCommandCenter.
 blockerMeta	function	hr	true		src/components/sections/HR/OnboardingCommandCenter.helpers.ts	156	
 relativeDueLabel	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.helpers.ts	162	
 deriveDeadlines	function	hr	true		src/components/sections/HR/OnboardingCommandCenter.helpers.ts	174	
-OnboardingCommandCenter	function	hr	true	component	src/components/sections/HR/OnboardingCommandCenter.tsx	31	
-openSurface	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	45	OnboardingCommandCenter
-openCase	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	46	OnboardingCommandCenter
-startNewCase	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	47	OnboardingCommandCenter
-handleCompleteTask	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	80	OnboardingCommandCenter
+OnboardingCommandCenter	function	hr	true	component	src/components/sections/HR/OnboardingCommandCenter.tsx	32	
+openSurface	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	46	OnboardingCommandCenter
+openCase	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	47	OnboardingCommandCenter
+startNewCase	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	48	OnboardingCommandCenter
+handleCompleteTask	function	hr	false		src/components/sections/HR/OnboardingCommandCenter.tsx	81	OnboardingCommandCenter
 HANDOFF_STATUSES	array	workflow	false		src/components/sections/HR/OnboardingHandoffsWorkspace.tsx	28	
 OPEN_HANDOFF	variable	workflow	false	component	src/components/sections/HR/OnboardingHandoffsWorkspace.tsx	29	
 MODULE_META	object	workflow	false		src/components/sections/HR/OnboardingHandoffsWorkspace.tsx	33	
@@ -13040,17 +13039,17 @@ BadgeVariant	type	platform	true		src/ui/primitives/Badge.tsx	22
 BadgeProps	interface	platform	true		src/ui/primitives/Badge.tsx	24	
 Badge	function	platform	true	component	src/ui/primitives/Badge.tsx	43	
 Icon	function	platform	false	component,test	src/ui/primitives/Button.test.tsx	17	
-ButtonVariant	type	platform	true		src/ui/primitives/Button.tsx	38	
-ButtonTone	type	platform	true		src/ui/primitives/Button.tsx	52	
-ButtonBase	interface	platform	false		src/ui/primitives/Button.tsx	54	
-IconOnlyButton	interface	platform	false		src/ui/primitives/Button.tsx	113	
-LabelledButton	interface	platform	false		src/ui/primitives/Button.tsx	119	
-ButtonProps	type	platform	true		src/ui/primitives/Button.tsx	125	
-FORCEABLE	variable	platform	false	component	src/ui/primitives/Button.tsx	128	
-ResolvedButtonProps	type	platform	false		src/ui/primitives/Button.tsx	131	
-Button	function	platform	true	component	src/ui/primitives/Button.tsx	137	
-handleClick	function	platform	false		src/ui/primitives/Button.tsx	215	Button
-ButtonGroup	function	platform	true	component	src/ui/primitives/Button.tsx	247	
+ButtonVariant	type	platform	true		src/ui/primitives/Button.tsx	39	
+ButtonTone	type	platform	true		src/ui/primitives/Button.tsx	53	
+ButtonBase	interface	platform	false		src/ui/primitives/Button.tsx	55	
+IconOnlyButton	interface	platform	false		src/ui/primitives/Button.tsx	114	
+LabelledButton	interface	platform	false		src/ui/primitives/Button.tsx	120	
+ButtonProps	type	platform	true		src/ui/primitives/Button.tsx	126	
+FORCEABLE	variable	platform	false	component	src/ui/primitives/Button.tsx	129	
+ResolvedButtonProps	type	platform	false		src/ui/primitives/Button.tsx	132	
+Button	function	platform	true	component	src/ui/primitives/Button.tsx	138	
+handleClick	function	platform	false		src/ui/primitives/Button.tsx	216	Button
+ButtonGroup	function	platform	true	component	src/ui/primitives/Button.tsx	248	
 FORCEABLE	variable	platform	false	component	src/ui/primitives/choice.tsx	27	
 forcedAttr	function	platform	false		src/ui/primitives/choice.tsx	29	
 CheckboxProps	interface	platform	true		src/ui/primitives/choice.tsx	35	

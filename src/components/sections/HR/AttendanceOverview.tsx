@@ -11,7 +11,7 @@ import { type VNode } from 'preact';
 import { useRef, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { can } from '@lib/permissions';
-import { PageHeader, EmptyState } from '@ui';
+import { PageHeader, EmptyState, Button } from '@ui';
 import {
   useAttendanceRecords, useTimesheets, useAttendanceExceptions, useAttendanceStats,
   useWaiveException, useResolveException, useSubmitTimesheet, useReopenTimesheet, useCorrectRecord, fmtMinutes,
@@ -158,7 +158,7 @@ export function AttendanceOverview(): VNode {
         <div class="obx-section">
           {canCorrect && (
             <div class="obx-toolbar" style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, padding: '8px 10px' }}>
-              <button class="obx-btn obx-btn-sm" onClick={() => setImporting(true)}><i class="fas fa-file-import" /> Import CSV</button>
+              <Button variant="secondary" size="sm" onClick={() => setImporting(true)} iconLeft={<i class="fas fa-file-import" />}>Import CSV</Button>
             </div>
           )}
           <div class="obx-section-body">
@@ -177,7 +177,7 @@ export function AttendanceOverview(): VNode {
                     <td class="obx-meta">{r.lateMinutes ? fmtMinutes(r.lateMinutes) : '—'}</td>
                     <td class="obx-meta">{r.overtimeMinutes ? fmtMinutes(r.overtimeMinutes) : '—'}</td>
                     <td><span class={`obx-pill ${statTone(r.status)}`}>{humanize(r.status)}</span></td>
-                    {canCorrect && <td style={{ textAlign: 'right' }}><button class="obx-btn obx-btn-sm" onClick={() => setCorrecting(r)}><i class="fas fa-pen" /> Correct</button></td>}
+                    {canCorrect && <td style={{ textAlign: 'right' }}><Button variant="secondary" size="sm" onClick={() => setCorrecting(r)} iconLeft={<i class="fas fa-pen" />}>Correct</Button></td>}
                   </tr>
                 ))}</tbody>
               </table>
@@ -501,9 +501,9 @@ function ImportAttendanceModal({ onClose }: { onClose: () => void }): VNode {
               </span>
             </span>
           </label>
-          <button type="button" class="obx-btn obx-btn-sm" style={{ justifySelf: 'start' }} onClick={() => setText(CSV_TEMPLATE)}>
-            <i class="fas fa-file-lines" /> Load sample
-          </button>
+          <Button variant="secondary" size="sm" onClick={() => setText(CSV_TEMPLATE)} iconLeft={<i class="fas fa-file-lines" />}>
+            Load sample
+          </Button>
         </div>
       )}
     </EnterpriseFormModal>

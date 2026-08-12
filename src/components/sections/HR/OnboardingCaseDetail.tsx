@@ -16,7 +16,7 @@
 import { type VNode } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
-import { PageHeader, Modal, Field, FormGrid, TextInput, SelectInput } from '@ui';
+import { PageHeader, Modal, Field, FormGrid, TextInput, SelectInput, Button } from '@ui';
 import {
   WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget, placeWidgetsAtBottom,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeDef, type WidgetSizeKey,
@@ -326,21 +326,21 @@ export function OnboardingCaseDetail({
   // falls back to a generic 2 cells — 24px on this grid, i.e. a table draggable into a sliver.
   const floor = (w: number, h: number): WidgetSizeDef[] => [{ key: 'wide', label: 'Default', grid: { w, h } }];
   const localWidgets: LocalWidgetMap = {
-    'hr.onboarding.case.activeTasks':   { chrome: 'none', title: 'Active Tasks', allowedSizes: floor(4, 12), render: () => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddTask}>+ Add</button>) },
+    'hr.onboarding.case.activeTasks':   { chrome: 'none', title: 'Active Tasks', allowedSizes: floor(4, 12), render: () => wcard('Active Tasks', 'fa-list-check', tasksBody(), <Button variant="primary" size="sm" onClick={openAddTask} iconLeft={<i class="fas fa-plus" />}>Add</Button>) },
     'hr.onboarding.case.blockersTable': { chrome: 'none', title: 'Blockers', allowedSizes: floor(3, 12), render: () => wcard('Blockers', 'fa-triangle-exclamation', blockersBody()) },
     'hr.onboarding.case.handoffsTable': { chrome: 'none', title: 'Handoffs', allowedSizes: floor(3, 12), render: () => wcard('Handoffs', 'fa-arrow-right-arrow-left', handoffsBody()) },
-    'hr.onboarding.case.customActions': { chrome: 'none', title: 'Custom Actions', allowedSizes: floor(3, 12), render: () => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddAction}>+ Add</button>) },
+    'hr.onboarding.case.customActions': { chrome: 'none', title: 'Custom Actions', allowedSizes: floor(3, 12), render: () => wcard('Custom Actions', 'fa-bolt', actionsBody(), <Button variant="primary" size="sm" onClick={openAddAction} iconLeft={<i class="fas fa-plus" />}>Add</Button>) },
   };
 
   // ── lifecycle action buttons (PageHeader actions slot) ──────────────────────────
   const headerActions = (
     <div class="obx-actions">
-      {caseRow.status === 'in_progress' && <button class="obx-btn amber" onClick={() => void handlePause()}>Pause</button>}
-      {caseRow.status === 'paused' && <button class="obx-btn" onClick={() => void handleResume()}>Resume</button>}
-      {(caseRow.status === 'in_progress' || caseRow.status === 'paused') && <button class="obx-btn primary" onClick={() => void handleMarkReady()}>Mark Ready</button>}
-      {caseRow.status === 'ready_for_activation' && <button class="obx-btn primary" onClick={() => void handleComplete()}>Complete</button>}
-      {caseRow.employeeId && <button class="obx-btn" onClick={() => void handleProvision()}>Provision</button>}
-      {!['completed', 'cancelled'].includes(caseRow.status) && <button class="obx-btn danger" onClick={() => void handleCancel()}>Cancel</button>}
+      {caseRow.status === 'in_progress' && <Button variant="secondary" onClick={() => void handlePause()}>Pause</Button>}
+      {caseRow.status === 'paused' && <Button variant="secondary" onClick={() => void handleResume()}>Resume</Button>}
+      {(caseRow.status === 'in_progress' || caseRow.status === 'paused') && <Button variant="primary" onClick={() => void handleMarkReady()}>Mark Ready</Button>}
+      {caseRow.status === 'ready_for_activation' && <Button variant="primary" onClick={() => void handleComplete()}>Complete</Button>}
+      {caseRow.employeeId && <Button variant="secondary" onClick={() => void handleProvision()}>Provision</Button>}
+      {!['completed', 'cancelled'].includes(caseRow.status) && <Button variant="outline" tone="danger" onClick={() => void handleCancel()}>Cancel</Button>}
       <label class="obx-owner">Owner
         <select value={caseRow.ownerId ?? ''} onChange={e => void handleReassignOwner((e.target as HTMLSelectElement).value)}>
           <option value="">Unassigned</option>
@@ -378,7 +378,7 @@ export function OnboardingCaseDetail({
       {preview && (
         <div class="wmock-preview-banner">
           <span><i class="fas fa-eye" /> Previewing a widget — drag and resize it on the grid, then add or discard.</span>
-          <button class="obx-btn" onClick={discardPreview}>Discard preview</button>
+          <Button variant="secondary" onClick={discardPreview}>Discard preview</Button>
         </div>
       )}
 

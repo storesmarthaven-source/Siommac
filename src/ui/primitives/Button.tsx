@@ -15,7 +15,8 @@
  *
  * ── Variants ────────────────────────────────────────────────────────────────
  *   primary    filled brand red     the one main CTA on a surface
- *   secondary  filled brand navy    second-rank CTA
+ *   secondary  quiet bordered       white surface, navy text, subtle border —
+ *                                   the supporting action beside a primary
  *   outline    bordered, no fill    neutral / quiet action
  *   ghost      no fill, no border   toolbars, icon actions, row controls
  *   danger     filled status red    destructive only

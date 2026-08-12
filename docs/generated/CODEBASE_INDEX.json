@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "1f0c5aa7b1c2ae42b42e03a6643326a5d0775360",
+    "head": "e6f7458f031f28a8d62b84ed6f92d502c47f0dd0",
     "branch": "main",
-    "fingerprint": "a18111674d3e6583cae27ca9",
+    "fingerprint": "f0d2f64f8d06c19548d4e0fa",
     "indexedFiles": 1815
   },
   "summary": {
     "files": 1460,
-    "symbols": 14692,
+    "symbols": 14691,
     "widgets": 63,
     "routes": 978,
     "routeDefinitions": 979,
@@ -23,7 +23,7 @@
       "id": "hr",
       "counts": {
         "files": 265,
-        "symbols": 3076,
+        "symbols": 3075,
         "widgets": 9,
         "routes": 275,
         "routeDefinitions": 275,
@@ -5348,14 +5348,14 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 512,
-      "hash": "b3d40dd2a1761882"
+      "hash": "37ba490e2f7cfbf8"
     },
     {
       "path": "src/components/sections/HR/CompensationOverview.tsx",
       "module": "hr",
       "role": "frontend-page",
       "lines": 347,
-      "hash": "3ab6065cdbbb51ef"
+      "hash": "e29a001aec8609db"
     },
     {
       "path": "src/components/sections/HR/EmployeeCreatePage.test.ts",
@@ -5410,8 +5410,8 @@
       "path": "src/components/sections/HR/HRQueryState.tsx",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 52,
-      "hash": "2378856067bde1cd"
+      "lines": 54,
+      "hash": "36bf8611219bf939"
     },
     {
       "path": "src/components/sections/HR/HRRequestsOverview.tsx",
@@ -5439,14 +5439,14 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 304,
-      "hash": "50587e5d25653f18"
+      "hash": "4884749154625ab5"
     },
     {
       "path": "src/components/sections/HR/OffboardingOverview.tsx",
       "module": "hr",
       "role": "frontend-page",
       "lines": 269,
-      "hash": "7f37e3722b17de94"
+      "hash": "89d656653d621abb"
     },
     {
       "path": "src/components/sections/HR/OnboardingAddTaskModal.tsx",
@@ -5467,7 +5467,7 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 448,
-      "hash": "3a26276bc4ec4c53"
+      "hash": "2e3ce4972b69fe47"
     },
     {
       "path": "src/components/sections/HR/OnboardingCommandCenter.adapters.ts",
@@ -5487,8 +5487,8 @@
       "path": "src/components/sections/HR/OnboardingCommandCenter.tsx",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 195,
-      "hash": "b4f3f81a407d58bf"
+      "lines": 199,
+      "hash": "9e26088d7a9b15f0"
     },
     {
       "path": "src/components/sections/HR/OnboardingHandoffsWorkspace.tsx",
@@ -5523,7 +5523,7 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 178,
-      "hash": "a8ed149f3afbd9c7"
+      "hash": "14917c33664f61bc"
     },
     {
       "path": "src/components/sections/HR/OnboardingTasksWorkspace.tsx",
@@ -5544,7 +5544,7 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 233,
-      "hash": "fdbfa5c025a97786"
+      "hash": "8930acce8dbcfec2"
     },
     {
       "path": "src/components/sections/HR/ProfileDrawer.test.tsx",
@@ -5565,7 +5565,7 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 686,
-      "hash": "1798ecd662bbd99d"
+      "hash": "8c3df496357edb3a"
     },
     {
       "path": "src/components/sections/HR/StartOnboardingWizard.tsx",
@@ -5579,7 +5579,7 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 405,
-      "hash": "b945e6dd7dca85ab"
+      "hash": "db49209c8a04ca66"
     },
     {
       "path": "src/components/sections/HR/TrinidadPhoneInput.tsx",
@@ -5858,8 +5858,8 @@
       "path": "src/components/sections/HR/onboarding/primitives.tsx",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 137,
-      "hash": "239a829cfd882e77"
+      "lines": 133,
+      "hash": "03a2eaac114649c3"
     },
     {
       "path": "src/components/sections/HR/profile/EmployeeProfileDialogs.tsx",
@@ -9050,8 +9050,8 @@
       "path": "src/ui/primitives/Button.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 256,
-      "hash": "596eb976a5f29a32"
+      "lines": 257,
+      "hash": "3d272906c12d68c9"
     },
     {
       "path": "src/ui/primitives/TextInput.tsx",
@@ -101504,7 +101504,7 @@
       "name": "HrQueryStateLike",
       "kind": "interface",
       "file": "src/components/sections/HR/HRQueryState.tsx",
-      "line": 4,
+      "line": 5,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -101514,7 +101514,7 @@
       "name": "messageFor",
       "kind": "function",
       "file": "src/components/sections/HR/HRQueryState.tsx",
-      "line": 12,
+      "line": 13,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -101524,7 +101524,7 @@
       "name": "HRQueryNotice",
       "kind": "function",
       "file": "src/components/sections/HR/HRQueryState.tsx",
-      "line": 24,
+      "line": 25,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -103237,7 +103237,7 @@
       ]
     },
     {
-      "name": "Button",
+      "name": "MetricGauge",
       "kind": "function",
       "file": "src/components/sections/HR/onboarding/primitives.tsx",
       "line": 47,
@@ -103249,22 +103249,10 @@
       ]
     },
     {
-      "name": "MetricGauge",
-      "kind": "function",
-      "file": "src/components/sections/HR/onboarding/primitives.tsx",
-      "line": 51,
-      "module": "hr",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
       "name": "MetricMicroChart",
       "kind": "function",
       "file": "src/components/sections/HR/onboarding/primitives.tsx",
-      "line": 93,
+      "line": 89,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -103276,7 +103264,7 @@
       "name": "InsightGlyph",
       "kind": "function",
       "file": "src/components/sections/HR/onboarding/primitives.tsx",
-      "line": 123,
+      "line": 119,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -103288,7 +103276,7 @@
       "name": "taskIconFor",
       "kind": "function",
       "file": "src/components/sections/HR/onboarding/primitives.tsx",
-      "line": 128,
+      "line": 124,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -104410,7 +104398,7 @@
       "name": "OnboardingCommandCenter",
       "kind": "function",
       "file": "src/components/sections/HR/OnboardingCommandCenter.tsx",
-      "line": 31,
+      "line": 32,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -104422,7 +104410,7 @@
       "name": "openSurface",
       "kind": "function",
       "file": "src/components/sections/HR/OnboardingCommandCenter.tsx",
-      "line": 45,
+      "line": 46,
       "module": "hr",
       "exported": false,
       "container": "OnboardingCommandCenter",
@@ -104432,7 +104420,7 @@
       "name": "openCase",
       "kind": "function",
       "file": "src/components/sections/HR/OnboardingCommandCenter.tsx",
-      "line": 46,
+      "line": 47,
       "module": "hr",
       "exported": false,
       "container": "OnboardingCommandCenter",
@@ -104442,7 +104430,7 @@
       "name": "startNewCase",
       "kind": "function",
       "file": "src/components/sections/HR/OnboardingCommandCenter.tsx",
-      "line": 47,
+      "line": 48,
       "module": "hr",
       "exported": false,
       "container": "OnboardingCommandCenter",
@@ -104452,7 +104440,7 @@
       "name": "handleCompleteTask",
       "kind": "function",
       "file": "src/components/sections/HR/OnboardingCommandCenter.tsx",
-      "line": 80,
+      "line": 81,
       "module": "hr",
       "exported": false,
       "container": "OnboardingCommandCenter",
@@ -147001,7 +146989,7 @@
       "name": "ButtonVariant",
       "kind": "type",
       "file": "src/ui/primitives/Button.tsx",
-      "line": 38,
+      "line": 39,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147011,7 +146999,7 @@
       "name": "ButtonTone",
       "kind": "type",
       "file": "src/ui/primitives/Button.tsx",
-      "line": 52,
+      "line": 53,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147021,7 +147009,7 @@
       "name": "ButtonBase",
       "kind": "interface",
       "file": "src/ui/primitives/Button.tsx",
-      "line": 54,
+      "line": 55,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147031,7 +147019,7 @@
       "name": "IconOnlyButton",
       "kind": "interface",
       "file": "src/ui/primitives/Button.tsx",
-      "line": 113,
+      "line": 114,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147041,7 +147029,7 @@
       "name": "LabelledButton",
       "kind": "interface",
       "file": "src/ui/primitives/Button.tsx",
-      "line": 119,
+      "line": 120,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147051,7 +147039,7 @@
       "name": "ButtonProps",
       "kind": "type",
       "file": "src/ui/primitives/Button.tsx",
-      "line": 125,
+      "line": 126,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147061,7 +147049,7 @@
       "name": "FORCEABLE",
       "kind": "variable",
       "file": "src/ui/primitives/Button.tsx",
-      "line": 128,
+      "line": 129,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147073,7 +147061,7 @@
       "name": "ResolvedButtonProps",
       "kind": "type",
       "file": "src/ui/primitives/Button.tsx",
-      "line": 131,
+      "line": 132,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147083,7 +147071,7 @@
       "name": "Button",
       "kind": "function",
       "file": "src/ui/primitives/Button.tsx",
-      "line": 137,
+      "line": 138,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147095,7 +147083,7 @@
       "name": "handleClick",
       "kind": "function",
       "file": "src/ui/primitives/Button.tsx",
-      "line": 215,
+      "line": 216,
       "module": "platform",
       "exported": false,
       "container": "Button",
@@ -147105,7 +147093,7 @@
       "name": "ButtonGroup",
       "kind": "function",
       "file": "src/ui/primitives/Button.tsx",
-      "line": 247,
+      "line": 248,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -164959,7 +164947,7 @@
       "module": "hr",
       "area": "",
       "kind": "local",
-      "render": "() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class=\"obx-btn primary obx-btn-sm\" onClick={openAddTask}>+ Add</button>)",
+      "render": "() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <Button variant=\"primary\" size=\"sm\" onClick={openAddTask} iconLeft={<i class=\"fas fa-plus\" />}>Add</Button>)",
       "file": "src/components/sections/HR/OnboardingCaseDetail.tsx",
       "line": 329
     },
@@ -164979,7 +164967,7 @@
       "module": "hr",
       "area": "",
       "kind": "local",
-      "render": "() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class=\"obx-btn primary obx-btn-sm\" onClick={openAddAction}>+ Add</button>)",
+      "render": "() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <Button variant=\"primary\" size=\"sm\" onClick={openAddAction} iconLeft={<i class=\"fas fa-plus\" />}>Add</Button>)",
       "file": "src/components/sections/HR/OnboardingCaseDetail.tsx",
       "line": 332
     },

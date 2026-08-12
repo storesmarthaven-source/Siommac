@@ -12,7 +12,7 @@ import { useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
-import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState } from '@ui';
+import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, Button } from '@ui';
 import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
 import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import {
@@ -118,7 +118,7 @@ function RostersTab({ canManage, canPublish }: { canManage: boolean; canPublish:
             <option key={s} value={s}>{s === 'all' ? 'All statuses' : humanize(s)}</option>
           ))}
         </select>
-        {canManage && <button class="obx-btn primary" onClick={() => setNewOpen(true)}>+ New Roster</button>}
+        {canManage && <Button variant="primary" onClick={() => setNewOpen(true)} iconLeft={<i class="fas fa-plus" />}>New Roster</Button>}
       </div>
 
       <div class="obx-section"><div class="obx-section-body">
@@ -288,23 +288,23 @@ function RosterDetail({ rosterId, canManage, canPublish, onBack }: {
       <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
         {canManage && !isLocked && (
           <>
-            <button class="obx-btn" onClick={() => void onGenerate()} disabled={generateMut.isPending}>
-              <i class="fa fa-wand-magic-sparkles" /> Generate from Rotation
-            </button>
-            <button class="obx-btn" onClick={() => void onSyncLeave()} disabled={syncLeaveMut.isPending}>
-              <i class="fa fa-calendar-xmark" /> Sync Leave
-            </button>
+            <Button variant="secondary" onClick={() => void onGenerate()} loading={generateMut.isPending} iconLeft={<i class="fa fa-wand-magic-sparkles" />}>
+              Generate from Rotation
+            </Button>
+            <Button variant="secondary" onClick={() => void onSyncLeave()} loading={syncLeaveMut.isPending} iconLeft={<i class="fa fa-calendar-xmark" />}>
+              Sync Leave
+            </Button>
           </>
         )}
         {canPublish && !isLocked && (
-          <button class="obx-btn primary" onClick={() => void onPublish()} disabled={publishMut.isPending}>
-            <i class="fa fa-paper-plane" /> Publish
-          </button>
+          <Button variant="primary" onClick={() => void onPublish()} loading={publishMut.isPending} iconLeft={<i class="fa fa-paper-plane" />}>
+            Publish
+          </Button>
         )}
         {canManage && roster.status === 'published' && (
-          <button class="obx-btn" onClick={() => void onReopen()} disabled={reopenMut.isPending}>
-            <i class="fa fa-lock-open" /> Reopen
-          </button>
+          <Button variant="secondary" onClick={() => void onReopen()} loading={reopenMut.isPending} iconLeft={<i class="fa fa-lock-open" />}>
+            Reopen
+          </Button>
         )}
       </div>
 
@@ -408,7 +408,7 @@ function TemplatesTab({ canManage }: { canManage: boolean }): VNode {
       {section === 'shifts' && (
         <div>
           <div style={{ marginBottom: 10 }}>
-            {canManage && <button class="obx-btn primary" onClick={() => setNewShiftOpen(true)}>+ New Shift Template</button>}
+            {canManage && <Button variant="primary" onClick={() => setNewShiftOpen(true)} iconLeft={<i class="fas fa-plus" />}>New Shift Template</Button>}
           </div>
           <div class="obx-section"><div class="obx-section-body">
             {templatesQ.isLoading
@@ -431,7 +431,7 @@ function TemplatesTab({ canManage }: { canManage: boolean }): VNode {
                         <td><span class={`obx-pill ${t.isActive ? 'green' : 'gray'}`}>{t.isActive ? 'Active' : 'Inactive'}</span></td>
                         {canManage && (
                           <td>
-                            <button class="obx-btn-sm danger" onClick={() => { void (async () => {
+                            <Button variant="outline" tone="danger" size="sm" onClick={() => { void (async () => {
                               const res = await openActionModal({
                                 title: 'Deactivate shift template', subtitle: t.name, icon: 'fa-power-off', tone: 'danger',
                                 record: toActionRecord({
@@ -445,7 +445,7 @@ function TemplatesTab({ canManage }: { canManage: boolean }): VNode {
                               if (!res.confirmed) return;
                               try { await removeShift.mutateAsync({ id: t.id }); toast('Template deactivated'); }
                               catch (e) { toast(e instanceof Error ? e.message : 'Failed'); }
-                            })(); }}>Remove</button>
+                            })(); }}>Remove</Button>
                           </td>
                         )}
                       </tr>

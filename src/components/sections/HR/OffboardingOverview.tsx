@@ -13,7 +13,7 @@ import { toast } from '@store';
 import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
 import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import { can } from '@lib/permissions';
-import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState } from '@ui';
+import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, Button } from '@ui';
 import {
   useOffboardingCases, useOffboardingCase, useOffboardingStats, useOffboardingMutation, hrOffboardingApi,
 } from '@api/hr/offboarding';
@@ -49,7 +49,7 @@ export function OffboardingOverview(): VNode {
       <PageHeader
         icon="fa-door-open" module="HR · Offboarding" title="Offboarding"
         sub="Employee exits — clearance, asset return, access removal & final pay."
-        actions={canStart ? <button class="obx-btn primary" onClick={() => setNewOpen(true)}>+ New Case</button> : undefined}
+        actions={canStart ? <Button variant="primary" onClick={() => setNewOpen(true)} iconLeft={<i class="fas fa-plus" />}>New Case</Button> : undefined}
       />
 
       <HRQueryNotice queries={[casesQ, allCasesQ, statsQ]} />

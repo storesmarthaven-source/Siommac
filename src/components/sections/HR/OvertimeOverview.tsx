@@ -12,7 +12,7 @@ import { type VNode } from 'preact';
 import { useMemo, useRef, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { can } from '@lib/permissions';
-import { PageHeader, EmptyState } from '@ui';
+import { PageHeader, EmptyState, Button } from '@ui';
 import { useOvertimeEntries, useOvertimeMutation, hrOvertimeApi, type OvertimeEntry, type OvertimeType } from '@api/hr/overtime';
 import { openActionModal, rejectAction, cancelAction, toActionRecord, statusBadge } from '@/components/common/actions';
 import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
@@ -101,7 +101,7 @@ export function OvertimeOverview(): VNode {
           <option value="">All</option>
           {STATUS_FILTERS.map(s => <option value={s} key={s}>{humanize(s)}</option>)}
         </select>
-        {canSubmit && <button class="obx-btn obx-btn-sm" style={{ marginLeft: 'auto' }} onClick={() => setShowForm(v => !v)}><i class={`fas ${showForm ? 'fa-xmark' : 'fa-plus'}`} /> {showForm ? 'Cancel' : 'Log overtime'}</button>}
+        {canSubmit && <Button variant="secondary" size="sm" onClick={() => setShowForm(v => !v)} iconLeft={<i class={`fas ${showForm ? 'fa-xmark' : 'fa-plus'}`} />}>{showForm ? 'Cancel' : 'Log overtime'}</Button>}
       </div>
 
       {showForm && <LogOvertimeForm onDone={() => setShowForm(false)} />}
@@ -126,20 +126,20 @@ export function OvertimeOverview(): VNode {
                     <div class="obx-rowbtns" style={{ justifyContent: 'flex-end' }}>
                       {canApprove && e.status === 'submitted' && (
                         <>
-                          <button class="obx-btn obx-btn-sm" onClick={() => void run(approveMut.mutateAsync({ id: e.id }), 'Overtime approved.')}>Approve</button>
-                          <button class="obx-btn obx-btn-sm" onClick={() => { void (async () => {
+                          <Button variant="secondary" size="sm" onClick={() => void run(approveMut.mutateAsync({ id: e.id }), 'Overtime approved.')}>Approve</Button>
+                          <Button variant="outline" tone="danger" size="sm" onClick={() => { void (async () => {
                             const res = await openActionModal(rejectAction({ noun: 'overtime', record: otRecord(e), whatNext: ['The overtime is rejected and will not feed payroll.'] }));
                             if (!res.confirmed) return;
                             await run(rejectMut.mutateAsync({ id: e.id, reason: res.reason ?? undefined }), 'Rejected.');
-                          })(); }}>Reject</button>
+                          })(); }}>Reject</Button>
                         </>
                       )}
                       {canApprove && (e.status === 'submitted' || e.status === 'approved') && (
-                        <button class="obx-btn obx-btn-sm" onClick={() => { void (async () => {
+                        <Button variant="secondary" size="sm" onClick={() => { void (async () => {
                           const res = await openActionModal(cancelAction({ noun: 'overtime entry', reasonRequired: false, record: otRecord(e), whatNext: ['The overtime entry is voided.'] }));
                           if (!res.confirmed) return;
                           void run(cancelMut.mutateAsync({ id: e.id }), 'Cancelled.');
-                        })(); }}>Cancel</button>
+                        })(); }}>Cancel</Button>
                       )}
                     </div>
                   </td>
