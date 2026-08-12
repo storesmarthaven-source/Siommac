@@ -8142,23 +8142,23 @@ StatNisBandPage	function	finance	true	component	src/components/sections/Finance/
 set	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	127	StatNisBandPage
 save	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	195	StatNisBandPage
 remove	function	finance	false		src/components/sections/Finance/StatNisBandPage.tsx	225	StatNisBandPage
-TEMPLATE	variable	finance	false	component	src/components/sections/Finance/StatNisImportPage.tsx	31	
-STEPS	array	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	32	
-Severity	type	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	39	
-ValRow	interface	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	40	
-pf	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	54	
-norm	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	55	
-validateCsv	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	58	
-idx	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	62	validateCsv
-flagErr	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	84	validateCsv
-_flagWarn	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	85	validateCsv
-COL_MAP	array	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	123	
-RULES	array	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	130	
-StatNisImportPage	function	finance	true	component	src/components/sections/Finance/StatNisImportPage.tsx	137	
-loadText	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	160	StatNisImportPage
-onFile	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	161	StatNisImportPage
-doImport	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	168	StatNisImportPage
-rowsHaveData	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	343	
+TEMPLATE	variable	finance	false	component	src/components/sections/Finance/StatNisImportPage.tsx	32	
+STEPS	array	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	33	
+Severity	type	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	40	
+ValRow	interface	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	41	
+pf	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	55	
+norm	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	56	
+validateCsv	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	59	
+idx	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	63	validateCsv
+flagErr	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	85	validateCsv
+_flagWarn	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	86	validateCsv
+COL_MAP	array	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	124	
+RULES	array	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	131	
+StatNisImportPage	function	finance	true	component	src/components/sections/Finance/StatNisImportPage.tsx	138	
+loadText	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	161	StatNisImportPage
+onFile	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	162	StatNisImportPage
+doImport	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	169	StatNisImportPage
+rowsHaveData	function	finance	false		src/components/sections/Finance/StatNisImportPage.tsx	344	
 CODE_RE	variable	finance	false	component	src/components/sections/Finance/StatPayComponentPage.tsx	34	
 StatPayComponentPage	function	finance	true	component	src/components/sections/Finance/StatPayComponentPage.tsx	36	
 set	function	finance	false		src/components/sections/Finance/StatPayComponentPage.tsx	56	StatPayComponentPage

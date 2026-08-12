@@ -34,6 +34,7 @@ import {
   IconOk, IconOkBadge, IconClose, IconAlert, IconArrow, IconInfo, IconFile,
   TextField, MoneyField, SelectField, StatFormShell, minLenError,
 } from './_shared/sfpKit';
+import { Button } from '@ui';
 import './statutoryForms.css';
 
 const STEPS: StepperStep[] = [
@@ -345,10 +346,10 @@ export function StatNewVersionPage({ onClose }: { onClose: () => void }): VNode 
           {/* Footer */}
           <div class="sfp-footer">
             <div class="right">
-              <button type="button" class="sfp-btn sfp-btn-ghost" onClick={onClose} disabled={busy}>Cancel</button>
+              <Button variant="secondary" onClick={onClose} disabled={busy}>Cancel</Button>
               {step < STEPS.length - 1
-                ? <button type="button" class="sfp-btn sfp-btn-primary" onClick={() => setStep(step + 1)} disabled={!canNext}>Continue<IconArrow /></button>
-                : <button type="button" class="sfp-btn sfp-btn-primary" onClick={() => void submit()} disabled={busy || (submitAttempted && !canCreate)}>{busy ? <span class="sfp-spin" /> : <IconOkBadge />}Create version</button>}
+                ? <Button variant="primary" onClick={() => setStep(step + 1)} disabled={!canNext} iconRight={<IconArrow />}>Continue</Button>
+                : <Button variant="primary" onClick={() => void submit()} disabled={busy || (submitAttempted && !canCreate)} loading={busy} iconLeft={<IconOkBadge />}>Create version</Button>}
             </div>
           </div>
     </StatFormShell>

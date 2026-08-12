@@ -28,6 +28,7 @@ import {
   IconEye, IconShield, IconClock, IconOkBadge, IconCoins,
   TextField, SelectField, ToggleField, StatFormShell, minLenError,
 } from './_shared/sfpKit';
+import { Button } from '@ui';
 import './statutoryForms.css';
 
 const CODE_RE = /^[A-Za-z0-9_]+$/;
@@ -190,17 +191,29 @@ export function StatPayComponentPage({ edit, onClose }: {
 
           {/* Footer */}
           <div class="sfp-footer">
-            <button type="button" class="sfp-btn sfp-btn-ghost" onClick={onClose} disabled={busy}>Cancel</button>
+            <Button variant="secondary" onClick={onClose} disabled={busy}>Cancel</Button>
             <div class="right">
+              {/* Quiet destructive — see StatNisBandPage. */}
               {edit && canManage && !retired && (
-                <button type="button" class="sfp-btn sfp-btn-danger" onClick={() => void retire()} disabled={busy}>
-                  {retireMut.isPending ? <span class="sfp-spin" /> : null} Submit retire request
-                </button>
+                <Button
+                  variant="outline"
+                  tone="danger"
+                  onClick={() => void retire()}
+                  disabled={busy}
+                  loading={retireMut.isPending}
+                >
+                  Submit retire request
+                </Button>
               )}
-              <button type="button" class="sfp-btn sfp-btn-primary" onClick={() => void save()} disabled={busy || readOnly || (show && hasErrors)}>
-                {createMut.isPending || updateMut.isPending ? <span class="sfp-spin" /> : <IconOkBadge />}
-                {edit ? 'Submit for approval' : 'Submit for approval'}
-              </button>
+              <Button
+                variant="primary"
+                onClick={() => void save()}
+                disabled={busy || readOnly || (show && hasErrors)}
+                loading={createMut.isPending || updateMut.isPending}
+                iconLeft={<IconOkBadge />}
+              >
+                Submit for approval
+              </Button>
             </div>
           </div>
     </StatFormShell>

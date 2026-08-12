@@ -29,6 +29,7 @@ import {
 } from '@api/finance/statutory';
 import { fmtMoney, fmtDate, humanize } from './financeShared';
 import { StatFormShell, IconOkBadge, IconLayers } from './_shared/sfpKit';
+import { Button, LucideIcon } from '@ui';
 import './statutoryForms.css';
 
 const WEEKS_PER_MONTH = 52 / 12; // ≈ 4.333 — annualised monthly ESTIMATE, never stored.
@@ -347,20 +348,31 @@ export function StatNisBandPage({ versionId, edit, onClose, onViewVersion }: {
 
               {/* Footer */}
               <div class="sfp-footer">
-                <button type="button" class="sfp-btn sfp-btn-ghost" onClick={onClose} disabled={busy}>Cancel</button>
+                <Button variant="secondary" onClick={onClose} disabled={busy}>Cancel</Button>
                 <div class="right">
+                  {/* Quiet destructive: `.sfp-btn-danger` was a white surface
+                      with a red border and red text, not a filled red block. */}
                   {edit && canDelete && editable && (
-                    <button type="button" class="sfp-btn sfp-btn-danger" onClick={() => void remove()} disabled={busy}>
-                      {deleteMut.isPending ? <span class="sfp-spin" /> : (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-                      )}
+                    <Button
+                      variant="outline"
+                      tone="danger"
+                      onClick={() => void remove()}
+                      disabled={busy}
+                      loading={deleteMut.isPending}
+                      iconLeft={<LucideIcon name="Trash2" />}
+                    >
                       Delete band
-                    </button>
+                    </Button>
                   )}
-                  <button type="button" class="sfp-btn sfp-btn-primary" onClick={() => void save()} disabled={busy || readOnly || (show && hasErrors)}>
-                    {upsertMut.isPending ? <span class="sfp-spin" /> : <IconOkBadge />}
+                  <Button
+                    variant="primary"
+                    onClick={() => void save()}
+                    disabled={busy || readOnly || (show && hasErrors)}
+                    loading={upsertMut.isPending}
+                    iconLeft={<IconOkBadge />}
+                  >
                     {edit ? 'Save changes' : 'Add band'}
-                  </button>
+                  </Button>
                 </div>
               </div>
         </>

@@ -26,6 +26,7 @@ import { fmtMoney, humanize } from './financeShared';
 import {
   IconUpload, IconOk, IconBad, IconAlert, IconInfo, IconArrow, IconDoc, StatFormShell,
 } from './_shared/sfpKit';
+import { Button } from '@ui';
 import './statutoryForms.css';
 
 const TEMPLATE = 'class_no,weekly_min,weekly_max,employee_weekly,employer_weekly\n1,0,299.99,12.95,19.40\n2,300,399.99,17.15,25.70\n3,400,,21.35,32.00';
@@ -327,13 +328,13 @@ export function StatNisImportPage({ versionId, onClose }: { versionId: string; o
 
           {/* Footer */}
           <div class="sfp-footer">
-            {step > 0 && step < 3 && <button type="button" class="sfp-btn sfp-btn-ghost" onClick={() => setStep(step - 1)} disabled={busy}>Back</button>}
+            {step > 0 && step < 3 && <Button variant="secondary" onClick={() => setStep(step - 1)} disabled={busy}>Back</Button>}
             <div class="right">
-              <button type="button" class="sfp-btn sfp-btn-ghost" onClick={onClose} disabled={busy}>{step === 3 ? 'Close' : 'Cancel'}</button>
-              {step === 0 && <button type="button" class="sfp-btn sfp-btn-primary" onClick={() => setStep(1)} disabled={rows.length === 0}>Continue<IconArrow /></button>}
-              {step === 1 && <button type="button" class="sfp-btn sfp-btn-primary" onClick={() => setStep(2)} disabled={errorCount > 0 || importable.length === 0}>Continue to Review<IconArrow /></button>}
-              {step === 2 && <button type="button" class="sfp-btn sfp-btn-primary" onClick={() => void doImport()} disabled={busy || importable.length === 0}>{busy ? <span class="sfp-spin" /> : null}Import {importable.length} band{importable.length !== 1 ? 's' : ''}</button>}
-              {step === 3 && <button type="button" class="sfp-btn sfp-btn-primary" onClick={onClose}>Done</button>}
+              <Button variant="secondary" onClick={onClose} disabled={busy}>{step === 3 ? 'Close' : 'Cancel'}</Button>
+              {step === 0 && <Button variant="primary" onClick={() => setStep(1)} disabled={rows.length === 0} iconRight={<IconArrow />}>Continue</Button>}
+              {step === 1 && <Button variant="primary" onClick={() => setStep(2)} disabled={errorCount > 0 || importable.length === 0} iconRight={<IconArrow />}>Continue to Review</Button>}
+              {step === 2 && <Button variant="primary" onClick={() => void doImport()} disabled={busy || importable.length === 0} loading={busy}>Import {importable.length} band{importable.length !== 1 ? 's' : ''}</Button>}
+              {step === 3 && <Button variant="primary" onClick={onClose}>Done</Button>}
             </div>
           </div>
     </StatFormShell>
