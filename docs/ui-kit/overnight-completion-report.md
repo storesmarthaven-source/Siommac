@@ -2,6 +2,92 @@
 
 Updated: 2026-08-12
 
+## ⭐⭐⭐ SESSION HANDOFF — 2026-08-12 (read this first)
+
+```
+branch  codex/ui-kit-v2-completion
+HEAD    e0da32ab          tree CLEAN
+typecheck baseline  47    (see the warning below — it is 46 with the stash applied)
+registry  53 definitions · 25 built primitives
+```
+
+### ⛔ THERE IS UNCOMMITTED WORK IN A STASH. Recover it before anything else.
+
+```
+stash@{0}  "wip: blue in lint-blocked files"   ← created on THIS branch
+```
+
+⚠ **The index is not stable** — five older stashes from other branches sit
+beneath it. Find it by MESSAGE, never by number:
+
+```bash
+git stash list | grep "blue in lint-blocked"
+```
+
+It contains a finished, verified two-file change: `variant="blue"` →
+`variant="primary"` in `EmailTemplateBuilder.tsx` (2 sites) and
+`EmailTemplateLibrary.tsx` (1 site).
+
+**Why it is stashed rather than committed.** `variant="blue"` is not part of the
+Button contract and produces type errors, so removing it was agreed. But
+`lint-staged` runs `eslint --quiet` over the WHOLE staged file, and those two
+files carry **17 pre-existing lint errors on lines the change never touches**
+(unused vars, `any` member access, a deprecated `execCommand`, unnecessary
+conditionals). Measured both ways: **17 errors before the change and 17 after** —
+it makes nothing worse and cannot land anyway. `--no-verify` is forbidden.
+
+**The decision the next session needs from the user:**
+1. Land a prerequisite commit fixing those 17 unrelated Email Studio lint errors
+   (the repo's documented pattern — "budget ~1 prerequisite commit per 2 files"),
+   then land the stash. Cost: real work in a 6,000-line file, and it is exactly
+   the "other Email Studio repair" the user excluded from this task.
+2. Drop the stash and record `variant="blue"` × 3 as accepted debt — but the user
+   explicitly did not want to close UI Kit v2 while app code calls a nonexistent
+   Button variant.
+
+### Typecheck baseline — measure, do not inherit
+
+```
+49  inherited, unverified        (was wrong)
+50  measured at 513c579f
+48  after retiring UiKitGallery + Compare
+47  CURRENT, committed at e0da32ab
+46  achievable the moment the stash lands
+```
+
+### Done this session (14 commits, a6018742 → e0da32ab)
+
+Phase 3 Brand Overview · Phase 4 Application Preview · full-page Studio takeover ·
+seed × direction matrix as 86 assertions · UiKitGallery retired · Compare system
+removed whole (1,128 lines) · Studio layout rebuilt to the Untitled UI reference ·
+per-component nav · scroll fix · Overview+Playground merged · variant axis ·
+Button inventory with structural normalization · DropdownButton and SplitButton
+given their own definitions.
+
+### Recorded debt — do NOT sweep these
+
+| Item | Why it is deliberate |
+|---|---|
+| `EmployeeDrawer` `variant="danger" size="sm"` | The only filled-danger app site against 15 `outline + tone=danger`. Whether it wants high prominence is SEMANTIC — normalizing by popularity is the wrong consistency. Needs review, not a rewrite. |
+| `Card action` variant, 0 consumers | Its only difference from `surface` is interactive, so nothing has ever exercised that affordance. An untested interaction, not merely an unused style. |
+| `Badge solid`, `Tabs subtle` | Documented-only but coherent design points. Kept — breaking a public API to save CSS is the wrong side of an asymmetric risk. |
+| 544 legacy `<button class="btn…">` in 121 files | Still larger than the 239 canonical sites. ⛔ Do NOT start this hunt. |
+| `icon="fa-…"` on Button in Email Studio | Not a Button prop; part of the same 17-error debt above. |
+| Workbench canvas does not `attachScope` | Component specimens do not reflect the customer draft theme; only Brand, Foundations and App Preview do. Same defect class as the Phase 4 one, not yet fixed. |
+
+### Remaining programme — the close
+
+```
+1. Resolve the stash decision above
+2. Full frontend typecheck vs 47 (or 46)
+3. Full vitest + jest
+4. Production build
+5. Browser Studio checklist
+6. Final completion report
+```
+⚠ E2E is NOT runnable in this worktree — no `.env` beyond the two public Vite
+vars, so the API cannot start. Report it as not-run rather than implying green.
+
 ## ⭐⭐ NEXT SESSION — BUILD THE STUDIO. Do not resume migration.
 
 ```
