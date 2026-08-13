@@ -81,10 +81,9 @@
        colour, the role is a MEANING. "The primary action is navy" is a
        statement about the role.
 
-       ⭐ Tabs reads this role too, so its active indicator becomes navy with
-       the buttons. That is the semantic layer working as designed — one
-       decision, every primary-action surface — not a side effect to route
-       around. `--siomac-red` remains the brand colour and is untouched. */
+       Tabs does NOT read this role. A tab marks location; a button performs an
+       action. Their colours may coincide through a deliberate brand mapping,
+       but changing Button styling must not recolour navigation. */
     --ui-color-action-primary:        var(--siomac-navy);
     --ui-color-action-primary-hover:  color-mix(in srgb, var(--siomac-navy) 88%, #000);
     --ui-color-action-primary-text:   #ffffff;

@@ -1,0 +1,221 @@
+/**
+ * Credits — a non-canonical, application-specific Button treatment.
+ *
+ * This file deliberately does NOT add `.ui-btn--credits` and Credits is not a
+ * `ButtonVariant`. It borrows Button's geometry, typography, focus contract and
+ * motion scale, then adds one SIOMAC-aware decoration for one named surface.
+ *
+ * Flat colours only. The fold, border trace, motes and SVG stroke carry the
+ * animation; there is no purple, no gradient and no second styling runtime.
+ */
+
+@layer recipes {
+  :root,
+  [data-ui-preview-scope] {
+    --ui-credits-bg: var(--ui-color-action-primary);
+    --ui-credits-bg-hover: var(--ui-color-action-primary-hover);
+    --ui-credits-fg: var(--ui-color-text-inverse);
+    --ui-credits-accent: var(--ui-brand-accent-500, var(--siomac-gold));
+    --ui-credits-signal: var(--ui-brand-seed-primary, var(--siomac-red));
+  }
+
+  .ui-credits {
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ui-button-gap);
+    box-sizing: border-box;
+    min-height: var(--ui-button-height-md);
+    padding: 0 var(--ui-button-pad-x-md);
+    overflow: hidden;
+    border: var(--ui-button-border-width) solid var(--ui-credits-bg);
+    border-radius: var(--ui-button-radius);
+    background: var(--ui-credits-bg);
+    box-shadow: var(--ui-button-shadow);
+    color: var(--ui-credits-fg);
+    font: inherit;
+    font-size: var(--ui-button-font-size-md);
+    font-weight: var(--ui-button-font-weight);
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color var(--ui-motion-fast) var(--ui-ease-standard),
+      border-color var(--ui-motion-fast) var(--ui-ease-standard),
+      box-shadow var(--ui-motion-fast) var(--ui-ease-standard),
+      transform var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+
+  .ui-credits:hover:not(:disabled) {
+    background: var(--ui-credits-bg-hover);
+    border-color: var(--ui-credits-bg-hover);
+    transform: translateY(-1px);
+  }
+
+  .ui-credits:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  .ui-credits:focus-visible {
+    outline: var(--ui-focus-outline-width) solid var(--ui-focus-outline-color);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 var(--ui-focus-ring-width) var(--ui-focus-ring-color);
+  }
+
+  .ui-credits:disabled {
+    background: var(--ui-disabled-bg);
+    border-color: var(--ui-disabled-border);
+    box-shadow: none;
+    color: var(--ui-disabled-fg);
+    cursor: var(--ui-disabled-cursor);
+  }
+
+  .ui-credits__inner {
+    position: relative;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ui-button-gap);
+  }
+
+  .ui-credits__icon {
+    width: var(--ui-button-icon-size);
+    height: var(--ui-button-icon-size);
+    flex: none;
+    color: var(--ui-credits-accent);
+    stroke-dasharray: 72;
+    stroke-dashoffset: 0;
+    animation: ui-credits-stroke 3.2s var(--ui-ease-standard) infinite;
+  }
+
+  /* Flat edge segments. The red/gold alternation is intentionally restrained:
+     one pixel around a navy surface, never another filled colour block. */
+  .ui-credits__border,
+  .ui-credits__edge {
+    position: absolute;
+    z-index: 4;
+    pointer-events: none;
+  }
+  .ui-credits__border { inset: 0; }
+  .ui-credits__edge { display: block; background: var(--ui-credits-accent); }
+  .ui-credits__edge--top,
+  .ui-credits__edge--bottom {
+    left: 8px;
+    right: 8px;
+    height: 1px;
+    transform: scaleX(.18);
+    animation: ui-credits-edge-x 2.8s var(--ui-ease-standard) infinite alternate;
+  }
+  .ui-credits__edge--top { top: 0; transform-origin: left; }
+  .ui-credits__edge--bottom {
+    bottom: 0;
+    transform-origin: right;
+    background: var(--ui-credits-signal);
+    animation-delay: -1.4s;
+  }
+  .ui-credits__edge--left,
+  .ui-credits__edge--right {
+    top: 8px;
+    bottom: 8px;
+    width: 1px;
+    transform: scaleY(.18);
+    animation: ui-credits-edge-y 2.8s var(--ui-ease-standard) infinite alternate;
+  }
+  .ui-credits__edge--left {
+    left: 0;
+    transform-origin: bottom;
+    background: var(--ui-credits-signal);
+    animation-delay: -.7s;
+  }
+  .ui-credits__edge--right { right: 0; transform-origin: top; animation-delay: -2.1s; }
+
+  .ui-credits__fold {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 13px 13px 0;
+    border-color: transparent var(--ui-credits-accent) transparent transparent;
+    transform-origin: top right;
+    animation: ui-credits-fold 2.8s var(--ui-ease-standard) infinite alternate;
+    pointer-events: none;
+  }
+
+  .ui-credits__particles {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .ui-credits__particle {
+    --credits-x: 50%;
+    --credits-y: 70%;
+    --credits-dx: 0px;
+    position: absolute;
+    left: var(--credits-x);
+    top: var(--credits-y);
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: var(--ui-credits-accent);
+    opacity: 0;
+    animation: ui-credits-mote 3.4s ease-out infinite;
+  }
+  .ui-credits__particle:nth-child(even) { background: var(--ui-credits-signal); }
+  .ui-credits__particle:nth-child(1)  { --credits-x: 10%; --credits-y: 78%; --credits-dx: -4px; animation-delay: -2.8s; }
+  .ui-credits__particle:nth-child(2)  { --credits-x: 18%; --credits-y: 46%; --credits-dx:  5px; animation-delay: -1.1s; }
+  .ui-credits__particle:nth-child(3)  { --credits-x: 28%; --credits-y: 86%; --credits-dx: -2px; animation-delay: -2.2s; }
+  .ui-credits__particle:nth-child(4)  { --credits-x: 39%; --credits-y: 60%; --credits-dx:  4px; animation-delay: -.4s; }
+  .ui-credits__particle:nth-child(5)  { --credits-x: 49%; --credits-y: 82%; --credits-dx: -5px; animation-delay: -1.8s; }
+  .ui-credits__particle:nth-child(6)  { --credits-x: 60%; --credits-y: 54%; --credits-dx:  3px; animation-delay: -3.1s; }
+  .ui-credits__particle:nth-child(7)  { --credits-x: 69%; --credits-y: 88%; --credits-dx: -3px; animation-delay: -.8s; }
+  .ui-credits__particle:nth-child(8)  { --credits-x: 78%; --credits-y: 48%; --credits-dx:  5px; animation-delay: -2.5s; }
+  .ui-credits__particle:nth-child(9)  { --credits-x: 87%; --credits-y: 76%; --credits-dx: -4px; animation-delay: -1.5s; }
+  .ui-credits__particle:nth-child(10) { --credits-x: 94%; --credits-y: 58%; --credits-dx:  2px; animation-delay: -.1s; }
+
+  .ui-credits:disabled .ui-credits__border,
+  .ui-credits:disabled .ui-credits__fold,
+  .ui-credits:disabled .ui-credits__particles { display: none; }
+  .ui-credits:disabled .ui-credits__icon { color: currentColor; animation: none; }
+
+  @keyframes ui-credits-edge-x {
+    from { transform: scaleX(.18); opacity: .5; }
+    to { transform: scaleX(1); opacity: 1; }
+  }
+  @keyframes ui-credits-edge-y {
+    from { transform: scaleY(.18); opacity: .5; }
+    to { transform: scaleY(1); opacity: 1; }
+  }
+  @keyframes ui-credits-fold {
+    from { transform: scale(.72); opacity: .72; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  @keyframes ui-credits-stroke {
+    0%, 22%, 100% { stroke-dashoffset: 0; }
+    48% { stroke-dashoffset: 72; }
+    49% { stroke-dashoffset: -72; }
+  }
+  @keyframes ui-credits-mote {
+    0% { opacity: 0; transform: translate(0, 5px) scale(.6); }
+    18% { opacity: .72; }
+    72% { opacity: .16; }
+    100% { opacity: 0; transform: translate(var(--credits-dx), -20px) scale(1.25); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ui-credits,
+    .ui-credits__edge,
+    .ui-credits__fold,
+    .ui-credits__particle,
+    .ui-credits__icon { animation: none; transition: none; }
+    .ui-credits__edge { opacity: .8; transform: none; }
+    .ui-credits__particle { display: none; }
+  }
+}

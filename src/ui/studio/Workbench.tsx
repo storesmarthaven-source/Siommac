@@ -24,11 +24,11 @@
 import { type VNode, type ComponentChildren } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import {
-  defaultProps, CATEGORY_LABELS, COMPOUND_OF,
-  type ComponentDef, type PropValues, type PropControl,
+  defaultProps, CATEGORY_LABELS, COMPOUND_OF, findComponent,
+  type ComponentDef, type ComponentFamily, type PropValues, type PropControl,
 } from '../registry';
 import { type UiState } from '../tokens';
-import { InAppUsage } from './InAppUsage';
+import { SpecialTreatments } from '../special/SpecialTreatments';
 
 type Tab = 'overview' | 'usage' | 'accessibility' | 'code';
 const TABS: { id: Tab; label: string }[] = [
@@ -49,9 +49,9 @@ const TABS: { id: Tab; label: string }[] = [
  */
 const CONTROL_GROUPS: { title: string; names: string[] }[] = [
   { title: 'Appearance', names: ['variant', 'tone', 'size', 'contrast', 'shape', 'density', 'accent'] },
-  { title: 'Content',    names: ['label', 'text', 'placeholder', 'icon', 'iconSide', 'iconOnly', 'helpText', 'suffix', 'prefix'] },
+  { title: 'Content',    names: ['label', 'text', 'placeholder', 'iconLeft', 'iconRight', 'icon', 'iconSide', 'iconOnly', 'helpText', 'suffix', 'prefix'] },
   { title: 'State',      names: ['disabled', 'loading', 'loadingText', 'pressed', 'readOnly', 'required', 'error', 'checked', 'selected'] },
-  { title: 'Behaviour',  names: ['href', 'fullWidth', 'clearable', 'multiline', 'rows'] },
+  { title: 'Behaviour',  names: ['action', 'href', 'fullWidth', 'clearable', 'multiline', 'rows'] },
 ];
 
 function groupControls(
@@ -74,26 +74,42 @@ function groupControls(
 
 /* ── Playground controls ───────────────────────────────────────────────────── */
 
-function Control({ name, control, value, onChange }: {
+function Control({ name, control, value, onChange, disabled = false }: {
   name: string; control: PropControl; value: string | number | boolean;
   onChange: (v: string | number | boolean) => void;
+  /** Locked while the canvas shows canonical defaults. */
+  disabled?: boolean;
 }): VNode {
   const id = `wb-${name}`;
+
+  if (control.type === 'boolean') {
+    return (
+      <>
+        <label class="sds-toggle-row" for={id}>
+          <span>{control.label}</span>
+          <input id={id} type="checkbox" checked={Boolean(value)} disabled={disabled}
+            onChange={e => onChange((e.target as HTMLInputElement).checked)} />
+        </label>
+        {control.help && <p class="sds-ctl__help">{control.help}</p>}
+      </>
+    );
+  }
+
   return (
     <div class="sds-ctl">
       <label class="sds-ctl__label" for={id}>{control.label}</label>
 
       {control.type === 'select' && (
-        <select id={id} class="sds-ctl__input" value={String(value)}
+        <select id={id} class="sds-ctl__input" value={String(value)} disabled={disabled}
           onChange={e => onChange((e.target as HTMLSelectElement).value)}>
           {control.options.map(o => <option value={o} key={o}>{o}</option>)}
         </select>
       )}
 
       {control.type === 'segmented' && (
-        <div class="sds-seg" role="group" aria-label={control.label}>
+        <div class="sds-seg sds-seg--wide" role="group" aria-label={control.label}>
           {control.options.map(o => (
-            <button type="button" key={o}
+            <button type="button" key={o} disabled={disabled}
               class={`sds-seg__btn${String(value) === o ? ' is-on' : ''}`}
               aria-pressed={String(value) === o}
               onClick={() => onChange(o)}>{o}</button>
@@ -101,25 +117,21 @@ function Control({ name, control, value, onChange }: {
         </div>
       )}
 
-      {control.type === 'boolean' && (
-        <input id={id} type="checkbox" class="sds-ctl__check" checked={Boolean(value)}
-          onChange={e => onChange((e.target as HTMLInputElement).checked)} />
-      )}
 
       {control.type === 'text' && (
-        <input id={id} type="text" class="sds-ctl__input" value={String(value)}
+        <input id={id} type="text" class="sds-ctl__input" value={String(value)} disabled={disabled}
           placeholder={control.placeholder}
           onInput={e => onChange((e.target as HTMLInputElement).value)} />
       )}
 
       {control.type === 'number' && (
-        <input id={id} type="number" class="sds-ctl__input" value={Number(value)}
+        <input id={id} type="number" class="sds-ctl__input" value={Number(value)} disabled={disabled}
           min={control.min} max={control.max} step={control.step}
           onInput={e => onChange(Number((e.target as HTMLInputElement).value))} />
       )}
 
       {control.type === 'icon' && (
-        <input id={id} type="text" class="sds-ctl__input" value={String(value)}
+        <input id={id} type="text" class="sds-ctl__input" value={String(value)} disabled={disabled}
           onInput={e => onChange((e.target as HTMLInputElement).value)} />
       )}
 
@@ -128,33 +140,73 @@ function Control({ name, control, value, onChange }: {
   );
 }
 
+/**
+ * The exported symbol, read from the definition's own code example.
+ *
+ * A catalogue name may differ from the import — Button is shown as "Action
+ * Button" so it reads as a sibling of Dropdown and Split Button. Deriving the
+ * symbol from `def.code` rather than from `def.name` means the badge and the
+ * Code tab cannot disagree: they have one source. Falls back to the name with
+ * spaces removed for a definition that ships no snippet.
+ */
+function symbolOf(def: ComponentDef): string {
+  const snippet = def.code?.(defaultProps(def), 'default') ?? '';
+  return /<([A-Z][A-Za-z0-9]*)/.exec(snippet)?.[1] ?? def.name.replace(/\s+/g, '');
+}
+
 /* ── Workbench ─────────────────────────────────────────────────────────────── */
 
-export function Workbench({ def, onBack }: { def: ComponentDef; onBack: () => void }): VNode {
+export interface WorkbenchProps {
+  def: ComponentDef;
+  /** Set when `def` belongs to a family — renders the subtype selector. */
+  family?: ComponentFamily;
+  onSelectMember?: (componentId: string) => void;
+  onBack: () => void;
+}
+
+export function Workbench({ def, family, onSelectMember, onBack }: WorkbenchProps): VNode {
   const [tab, setTab] = useState<Tab>('overview');
-  const [values, setValues] = useState<PropValues>(() => defaultProps(def));
+
+  /*
+    Prop values are kept PER COMPONENT, not reset on every switch.
+    `useState(() => defaultProps(def))` would keep the first subtype's values
+    when `def` changed — Action Button's `iconSide` surviving into Split Button.
+    Remounting on `key={def.id}` would fix that but throw away the tab, so
+    switching subtype while reading Accessibility would bounce you to Overview.
+    Keying by id gives each subtype its own complete schema AND its own edits.
+  */
+  const [valuesById, setValuesById] = useState<Record<string, PropValues>>({});
+  const values = valuesById[def.id] ?? defaultProps(def);
+
+  /* Canonical mode shows the component at its DECLARED defaults with the
+     inspector locked. Edits are kept, not discarded, so switching back restores
+     what you were driving. */
+  const [canonical, setCanonical] = useState(false);
+  const shown = canonical ? defaultProps(def) : values;
+
+  const setValues = (next: PropValues): void =>
+    setValuesById(prev => ({ ...prev, [def.id]: next }));
 
   const set = (k: string, v: string | number | boolean): void =>
-    setValues(prev => ({ ...prev, [k]: v }));
+    setValuesById(prev => ({
+      ...prev,
+      [def.id]: { ...(prev[def.id] ?? defaultProps(def)), [k]: v },
+    }));
+
+  const members = family
+    ? family.componentIds
+      .map(id => findComponent(id))
+      .filter((d): d is ComponentDef => d !== undefined)
+    : [];
 
   /** One specimen renderer for every tab, so no tab can drift from another. */
   const specimen = (props: PropValues, state: UiState = 'default'): VNode | null =>
     def.render ? def.render(props, state) : null;
 
   const codeSnippet = useMemo(
-    () => (def.code ? def.code(values, 'default') : ''),
-    [def, values],
+    () => (def.code ? def.code(shown, 'default') : ''),
+    [def, shown],
   );
-
-  /**
-   * The variant axis, when this component opts in. Empty for everything else,
-   * which is what keeps DataTable and Dialog rendering a single specimen.
-   */
-  const axis = useMemo((): readonly string[] => {
-    if (def.previewAxis !== 'variant') return [];
-    const ctl = def.props?.variant;
-    return ctl && (ctl.type === 'select' || ctl.type === 'segmented') ? ctl.options : [];
-  }, [def]);
 
   return (
     <div class="sds-wb">
@@ -162,10 +214,45 @@ export function Workbench({ def, onBack }: { def: ComponentDef; onBack: () => vo
         ← Components
       </button>
 
-      <header class="sds-wb__head">
-        <h2>{def.name}</h2>
-        <p>{def.description}</p>
+      {/* On a family page the heading is the FAMILY. The selector names the
+          subtype, and the description below it follows the selection — so the
+          page says what "Buttons" contains before it says what one of them does. */}
+      <header class={`sds-wb__head${family ? ' sds-wb__head--family' : ''}`}>
+        <div>
+          <h2>{family ? family.name : def.name}</h2>
+          <p>{family ? family.description : def.description}</p>
+        </div>
+        {family && <span class="sds-family-chip">{members.length} button types</span>}
       </header>
+
+      {family && members.length > 0 && (
+        /*
+          Each option carries a live specimen, its role in the family and its
+          ownership. That is the point of the family page: "Performs one action"
+          beside "Reveals related actions" IS the distinction, and a user should
+          not have to open all three to find it.
+
+          `tablist`, not a radiogroup: these are three components, not three
+          values of one setting. Each option swaps the subject of the panel below.
+        */
+        <div class="sds-family" role="tablist" aria-label={`${family.name} types`}>
+          {members.map(m => (
+            <button type="button" key={m.id} role="tab"
+              aria-selected={m.id === def.id}
+              class={`sds-family__type${m.id === def.id ? ' is-on' : ''}`}
+              onClick={() => onSelectMember?.(m.id)}>
+              {/* Pointer-events off in CSS — the specimen illustrates the
+                  option; the option itself takes the click. */}
+              <span class="sds-family__preview">{m.render?.(defaultProps(m), 'default')}</span>
+              <span class="sds-family__copy">
+                <strong>{m.name}</strong>
+                <small>{family.roles[m.id] ?? CATEGORY_LABELS[m.category]}</small>
+              </span>
+              <span class="sds-family__state">{COMPOUND_OF[m.id] ?? 'Canonical'}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       <div class="sds-wb__tabs" role="tablist" aria-label={`${def.name} workbench`}>
         {TABS.map(t => (
@@ -190,30 +277,46 @@ export function Workbench({ def, onBack }: { def: ComponentDef; onBack: () => vo
         <div data-ui-preview-scope>
           <div class="sds-pg">
             <div class="sds-pg__stage">
-              <div class="sds-canvas sds-canvas--hero">
-                {axis.length > 0
-                  /* Every variant at once, driven together by the other props:
-                     toggle `loading` and all of them enter loading, change size
-                     and the whole rhythm shifts. One row answers "what does this
-                     component do" better than any single specimen, and it
-                     replaces the Variants block rather than adding to it. */
-                  ? (
-                    <div class="sds-axis">
-                      {axis.map(v => (
-                        <div class="sds-axis__cell" key={v}>
-                          <div class="sds-axis__spec">{specimen({ ...values, variant: v })}</div>
-                          <code>{v}</code>
-                        </div>
-                      ))}
-                    </div>
-                  )
-                  : <div class="sds-canvas__single">{specimen(values)}</div>}
+              <section class="sds-preview-block">
+              {/* Names the specimen and its ownership right above the canvas.
+                  On a family page the page heading is the family, so without
+                  this the viewport would show an unlabelled control. */}
+              <header class="sds-preview-block__head">
+                <div>
+                  <span class="sds-preview-block__eyebrow">Live preview</span>
+                  <strong>{def.name}</strong>
+                </div>
+                <span class="sds-preview-block__meta">
+                  {COMPOUND_OF[def.id]
+                    ? `Compound control · ${COMPOUND_OF[def.id]}`
+                    : `Canonical component · ${CATEGORY_LABELS[def.category]}`}
+                </span>
+              </header>
+
+              <div class="sds-canvas sds-canvas--hero sds-tech-canvas">
+                {/* Measurement guides. Decoration with a job: a centred rule and
+                    corner nodes give the eye a reference, so a control that is
+                    off-centre or the wrong height is visible without a ruler. */}
+                <div class="sds-tech-canvas__guides" aria-hidden="true">
+                  <i class="v" /><i class="h" />
+                  <i class="n n1" /><i class="n n2" /><i class="n n3" /><i class="n n4" />
+                </div>
+                {/* ONE specimen. The hero answers "what is this control", and a
+                    row of six answers a different question — which is what the
+                    Variants section below is for. */}
+                <div class="sds-canvas__single">{specimen(shown)}</div>
               </div>
               <p class="sds-wb__note">
-                {axis.length > 0
-                  ? `All ${axis.length} ${def.name} variants, live — every control below drives them together.`
-                  : `Live ${def.name} — driven by the inspector, and the same component the app renders.`}
+                Live {def.name} — driven by the inspector, and the same component the app renders.
               </p>
+              </section>
+
+              {/* Reference sections live in the STAGE column, beside the sticky
+                  Properties rail — not full-width beneath it. A variant strip that
+                  runs under the inspector reads as page content rather than as
+                  documentation of the specimen above it. */}
+              <div class="sds-wb__rule" />
+              <OverviewSpecimens def={def} specimen={specimen} />
             </div>
 
             <aside class="sds-pg__panel" aria-label={`${def.name} properties`}>
@@ -226,50 +329,63 @@ export function Workbench({ def, onBack }: { def: ComponentDef; onBack: () => vo
                   kind of button rather than a composition of two things they
                   already know. */}
               <header class="sds-pg__who">
-                <strong>{def.name}</strong>
-                <span>
-                  {COMPOUND_OF[def.id]
-                    ? `Compound control · uses ${COMPOUND_OF[def.id]}`
-                    : `Canonical component · ${CATEGORY_LABELS[def.category]}`}
-                </span>
+                <div>
+                  <strong>{def.name}</strong>
+                  <span>
+                    {COMPOUND_OF[def.id]
+                      ? `Compound control · uses ${COMPOUND_OF[def.id]}`
+                      : `Canonical component · ${CATEGORY_LABELS[def.category]}`}
+                  </span>
+                </div>
+                {/* The SYMBOL, so a catalogue rename can never leave someone
+                    guessing what to import. "Action Button" is the card; this
+                    says the code is still <Button>. */}
+                <span class="sds-who-badge">{symbolOf(def)}</span>
               </header>
-              {def.presets && def.presets.length > 0 && (
-                <section class="sds-pg__grp">
-                  <h4>Presets</h4>
-                  <div class="sds-presets">
-                    {def.presets.map(p => (
-                      <button type="button" key={p.label} class="sds-preset"
-                        onClick={() => setValues({ ...defaultProps(def), ...p.props })}>{p.label}</button>
-                    ))}
-                  </div>
-                </section>
-              )}
+              {/*
+                Editing mode. A REAL control, not the mockup's placeholder:
+                "Canonical defaults" renders the component at its declared
+                defaults and locks the inspector, so you can see what a developer
+                gets by writing the component with no props — then switch back
+                and your edits are still there. It does NOT publish anything,
+                which is exactly what the caption says.
+              */}
+              <section class="sds-pg__mode">
+                <div class="sds-pg__modehead">
+                  <strong>Editing mode</strong>
+                  <span>{canonical ? 'Read-only' : 'Preview only'}</span>
+                </div>
+                <div class="sds-seg sds-seg--wide" role="group" aria-label="Editing mode">
+                  <button type="button" class={`sds-seg__btn${canonical ? '' : ' is-on'}`}
+                    aria-pressed={!canonical} onClick={() => setCanonical(false)}>Preview</button>
+                  <button type="button" class={`sds-seg__btn${canonical ? ' is-on' : ''}`}
+                    aria-pressed={canonical} onClick={() => setCanonical(true)}>Canonical defaults</button>
+                </div>
+                <p>Preview changes affect this specimen only. App-wide publishing is a separate workflow.</p>
+              </section>
 
-              {groupControls(def, axis.length > 0 ? ['variant'] : []).map(group => (
+              {groupControls(def).map(group => (
                 <section class="sds-pg__grp" key={group.title}>
                   <h4>{group.title}</h4>
                   {group.entries.map(([name, control]) => (
-                    <Control key={name} name={name} control={control}
-                      value={values[name] ?? ''} onChange={v => set(name, v)} />
+                    <Control key={name} name={name} control={control} disabled={canonical}
+                      value={shown[name] ?? ''} onChange={v => set(name, v)} />
                   ))}
                 </section>
               ))}
 
               <button type="button" class="sds-pg__reset"
-                onClick={() => setValues(defaultProps(def))}>Reset to defaults</button>
+                onClick={() => setValues(defaultProps(def))}>Reset preview</button>
             </aside>
           </div>
 
-          <div class="sds-wb__rule" />
-          <OverviewSpecimens def={def} specimen={specimen} hideVariants={axis.length > 0} />
-          <InAppUsage def={def} />
         </div>
       )}
 
       {tab === 'code' && (
         <div class="sds-canvas-wrap">
           <div class="sds-canvas" data-ui-preview-scope>
-            <div class="sds-canvas__single">{specimen(values)}</div>
+            <div class="sds-canvas__single">{specimen(shown)}</div>
           </div>
         </div>
       )}
@@ -315,91 +431,62 @@ function Block({ title, hint, children }: {
  * The variant × size matrix is derived from the definition's own `select` and
  * `segmented` options, so it cannot list a variant the component does not have.
  */
-function OverviewSpecimens({ def, specimen, hideVariants = false }: {
+function OverviewSpecimens({ def, specimen }: {
   def: ComponentDef;
   specimen: (p: PropValues, s?: UiState) => VNode | null;
-  /** The preview is already showing the variant axis — do not state it twice. */
-  hideVariants?: boolean;
 }): VNode {
   const base = defaultProps(def);
   const variantCtl = def.props?.variant;
-  const sizeCtl = def.props?.size;
   const variants = variantCtl && (variantCtl.type === 'select' || variantCtl.type === 'segmented')
     ? variantCtl.options : [];
-  const sizes = sizeCtl && (sizeCtl.type === 'select' || sizeCtl.type === 'segmented')
-    ? sizeCtl.options : [];
 
   return (
     <div class="sds-ov">
-      {variants.length > 0 && !hideVariants && (
-        <Block title="Variants" hint="How loud the control is. One component — these are values of the `variant` prop, not separate components.">
-          <dl class="sds-ov__rows">
+      {variants.length > 0 && (
+        <Block title="Variants" hint="The canonical appearances. All of them still belong to the same component — these are values of the `variant` prop, not separate components.">
+          <div class="sds-axis">
             {variants.map(v => (
-              <div class="sds-ov__row" key={v}>
-                <dt><code>{v}</code></dt>
-                <dd>{specimen({ ...base, variant: v })}</dd>
-              </div>
-            ))}
-          </dl>
-        </Block>
-      )}
-
-      {sizes.length > 0 && (
-        <Block title="Sizes" hint="The same control at each supported size, side by side so the rhythm is comparable.">
-          <div class="sds-ov__inline">
-            {sizes.map(s => (
-              <div class="sds-ov__chip" key={s}>
-                <span>{s}</span>
-                {specimen({ ...base, size: s })}
+              <div class="sds-axis__cell" key={v}>
+                <div class="sds-axis__spec">{specimen({ ...base, variant: v })}</div>
+                <code>{v}</code>
               </div>
             ))}
           </div>
-        </Block>
-      )}
-
-      {def.presets && def.presets.length > 0 && (
-        <Block title="Key combinations" hint="The configurations worth knowing — each is a real preset you can load in the Playground.">
-          <dl class="sds-ov__rows">
-            {def.presets.map(p => (
-              <div class="sds-ov__row" key={p.label}>
-                <dt><code>{p.label}</code></dt>
-                <dd>{specimen({ ...base, ...p.props })}</dd>
-              </div>
-            ))}
-          </dl>
-        </Block>
-      )}
-
-      {def.states && def.states.length > 0 && (
-        <Block title="States" hint="Every state the component can be previewed in. Listing one here is a promise that render() honours it.">
-          <dl class="sds-ov__rows">
-            {def.states.map(s => (
-              <div class="sds-ov__row" key={s}>
-                <dt><code>{s}</code></dt>
-                <dd>{specimen(base, s)}</dd>
-              </div>
-            ))}
-          </dl>
         </Block>
       )}
 
       {def.examples && def.examples.length > 0 && (
+        /* A compound's examples are PATTERNS ("Export menu", "Row actions") —
+           each is a whole control with a caption. A canonical component's are
+           CONTEXTS ("Dialog footer") — a row of controls in a situation. Same
+           data, two layouts, chosen from what the component is rather than from
+           a flag someone has to remember to set. */
         <section class="sds-ov__sec">
           <div class="sds-ov__hd">
-            <h4>In context</h4>
-            <p>Real compositions, not isolated specimens — where this component actually appears.</p>
+            <h4>{COMPOUND_OF[def.id] ? 'Typical patterns' : 'Common application use'}</h4>
+            <p>
+              {COMPOUND_OF[def.id]
+                ? 'The same Button recipe every time — only the menu behaviour changes.'
+                : 'Context owns the action. The component still owns its visual and interaction contract.'}
+            </p>
           </div>
-          {def.examples.map(ex => (
-            <article class="sds-ov__example" key={ex.id}>
-              <header>
-                <strong>{ex.title}</strong>
-                {ex.description && <p>{ex.description}</p>}
-              </header>
-              <div class="sds-ov__surface">{ex.render()}</div>
-            </article>
-          ))}
+          <div class={COMPOUND_OF[def.id]
+            ? `sds-pattern-grid${def.examples.length === 2 ? ' sds-pattern-grid--two' : ''}`
+            : 'sds-use-context'}>
+            {def.examples.map(ex => (
+              <article key={ex.id}>
+                <span class="ctx-kicker">{ex.title}</span>
+                <div>{ex.render()}</div>
+                {ex.description && <small>{ex.description}</small>}
+              </article>
+            ))}
+          </div>
         </section>
       )}
+
+      {/* Explicitly outside the variant axis and the canonical registry. The
+          special-treatment owner decides whether this component has any. */}
+      <SpecialTreatments componentId={def.id} />
     </div>
   );
 }

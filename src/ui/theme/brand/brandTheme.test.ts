@@ -445,6 +445,7 @@ describe('a generated brand reaches the canonical components', () => {
     read('src/ui/containers/Card/card.recipe.css'),
     read('src/ui/primitives/control.recipe.css'),
     read('src/ui/data/DataTable/dataTable.recipe.css'),
+    read('src/ui/navigation/Tabs/tabs.recipe.css'),
   ]);
 
   const built = brandThemeToTokens({ primary: '#0F766E', accent: '#3B0764' });
@@ -452,6 +453,13 @@ describe('a generated brand reaches the canonical components', () => {
   it('repaints the primary button', () => {
     expect(resolveToken('--ui-button-primary-bg', decls, built.tokens).value)
       .toBe(built.tokens['--ui-color-action-primary']);
+  });
+
+  it('repaints Tabs through navigation, never through Button action colour', () => {
+    expect(resolveToken('--ui-tab-indicator', decls, built.tokens).value)
+      .toBe(built.tokens['--ui-color-navigation-active']);
+    expect(built.tokens['--ui-color-navigation-active'])
+      .not.toBe(built.tokens['--ui-color-action-primary']);
   });
 
   it('repaints the selected table row', () => {
@@ -486,6 +494,7 @@ describe('a generated brand reaches the canonical components', () => {
   it('lists every token it can emit, so a previous brand can be cleared', () => {
     const names = brandTokenNames();
     expect(names).toContain('--ui-color-action-primary');
+    expect(names).toContain('--ui-color-navigation-active');
     expect(names).toContain('--ui-brand-primary-500');
     expect(names).toContain(SEED_ACCENT_TOKEN);
   });

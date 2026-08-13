@@ -31,7 +31,8 @@ import { AppPreview, type Scene } from './AppPreview';
 import { PreviewScope } from './PreviewScope';
 import {
   COMPONENT_DEFS, componentsByCategory, registryTotals, findComponent,
-  isBuilt, defaultProps, type ComponentDef,
+  isBuilt, defaultProps, familyOfComponent,
+  type ComponentDef, type ComponentFamily, type CatalogueNode,
 } from '../registry';
 import { LucideIcon, type LucideName } from '../LucideIcon';
 import { useGalleryDraft } from '../gallery/galleryStore';
@@ -78,10 +79,27 @@ const NAV: NavGroup[] = [
   ] },
 ];
 
-/** Built components, in catalogue order — one nav row each. */
-const BUILT_COMPONENTS: ComponentDef[] = componentsByCategory()
+/**
+ * Component nav rows, in catalogue order.
+ *
+ * A family becomes ONE parent row with its members nested beneath it, so the
+ * rail reads `Buttons ▸ Action / Dropdown / Split` instead of three unrelated
+ * siblings. Built only: a planned component has no workbench to open, and a nav
+ * row that opens nothing is a dead control.
+ */
+type NavComponentRow =
+  | { kind: 'one'; def: ComponentDef }
+  | { kind: 'family'; family: ComponentFamily; children: ComponentDef[] };
+
+const COMPONENT_ROWS: NavComponentRow[] = componentsByCategory()
   .filter(g => g.category !== 'patterns')
-  .flatMap(g => g.items.filter(isBuilt));
+  .flatMap(g => g.nodes.flatMap((node): NavComponentRow[] => {
+    if (node.kind === 'component') {
+      return isBuilt(node.def) ? [{ kind: 'one', def: node.def }] : [];
+    }
+    const children = node.members.filter(isBuilt);
+    return children.length > 0 ? [{ kind: 'family', family: node.family, children }] : [];
+  }));
 
 /** Which scene each Application nav item opens on. */
 const APP_SCENE: Partial<Record<SectionId, Scene>> = {
@@ -144,9 +162,47 @@ function ComponentCard({ def, onOpen }: { def: ComponentDef; onOpen?: (id: strin
   return <button type="button" class="sds-card sds-card--open" onClick={() => onOpen(def.id)}>{body}</button>;
 }
 
+/**
+ * A family's catalogue card — one entry, one specimen.
+ *
+ * The catalogue answers "what is in the kit", so a family reads as ONE thing
+ * here, exactly like every other card: a single specimen and a caption saying
+ * how many types it holds. Previewing all three turned one card into a stacked
+ * list and broke the grid's rhythm — the place to compare the members is the
+ * family page, where the selector shows all three side by side.
+ *
+ * The specimen is the default member, so the card previews what opening it
+ * actually gives you.
+ */
+function FamilyCard(
+  { family, members, onOpen }:
+  { family: ComponentFamily; members: ComponentDef[]; onOpen: (id: string) => void },
+): VNode {
+  const lead = members.find(m => m.id === family.defaultComponentId) ?? members[0];
+
+  return (
+    <button type="button" class="sds-card sds-card--open sds-card--family"
+      onClick={() => onOpen(family.defaultComponentId)}>
+      <div class="sds-card__preview">
+        <div class="sds-card__specimen">{lead?.render?.(defaultProps(lead), 'default')}</div>
+      </div>
+      <div class="sds-card__foot">
+        <strong>{family.name}</strong>
+        <span>{members.length} component types</span>
+      </div>
+    </button>
+  );
+}
+
+function CatalogueNodeCard(
+  { node, onOpen }: { node: CatalogueNode; onOpen?: (id: string) => void },
+): VNode {
+  if (node.kind === 'component') return <ComponentCard def={node.def} onOpen={onOpen} />;
+  return <FamilyCard family={node.family} members={node.members} onOpen={onOpen ?? (() => undefined)} />;
+}
+
 function Catalogue({ onOpen }: { onOpen: (id: string) => void }): VNode {
   const groups = componentsByCategory();
-  const patterns = groups.filter(g => g.category === 'patterns');
   const primitives = groups.filter(g => g.category !== 'patterns');
   const t = registryTotals();
 
@@ -176,23 +232,25 @@ function Catalogue({ onOpen }: { onOpen: (id: string) => void }): VNode {
         <section class="sds-sec" key={g.category}>
           <h3>{g.label} <span>{g.built}/{g.total} built</span></h3>
           {SECTION_COPY[g.category] && <p>{SECTION_COPY[g.category]}</p>}
-          <div class="sds-grid">{g.items.map(d => <ComponentCard def={d} key={d.id} onOpen={onOpen} />)}</div>
+          <div class="sds-grid">
+            {g.nodes.map(n => (
+              <CatalogueNodeCard node={n} onOpen={onOpen}
+                key={n.kind === 'family' ? n.family.id : n.def.id} />
+            ))}
+          </div>
         </section>
       ))}
 
-      <div class="sds-rule" />
+      {/*
+        The "Application patterns" section is HIDDEN from the catalogue.
 
-      {patterns.map(g => (
-        <section class="sds-sec" key={g.category}>
-          <h2>Application patterns</h2>
-          <p>
-            Compositions built FROM canonical primitives by the module that owns the domain —
-            payroll owns PayrollApprovalTable, onboarding owns DayOneGateCard. Listed so the
-            catalogue is honest about the application, never counted as design-system gaps.
-          </p>
-          <div class="sds-grid">{g.items.map(d => <ComponentCard def={d} key={d.id} />)}</div>
-        </section>
-      ))}
+        PayrollApprovalTable and DayOneGateCard are page/module compositions,
+        not kit components — listing them made the Studio look like it owned
+        payroll and onboarding. They remain registered so the coverage gate and
+        `registryTotals` still count them separately (they are `missing`, so no
+        code was deleted); this is a display decision, reversible by restoring
+        this block.
+      */}
     </div>
   );
 }
@@ -220,7 +278,14 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
 
   const flat = NAV.flatMap(g => g.items);
   const current = flat.find(i => i.id === active) ?? flat[0]!;
+  /*
+    `openId` is always a COMPONENT id, never a family id. Opening the family
+    resolves to its `defaultComponentId` at the click, so there is one kind of
+    open state and the workbench always has a real definition to render — no
+    "family mode" branch, and no second Properties system.
+  */
   const openDef = openId ? findComponent(openId) : undefined;
+  const openFamily = openId ? familyOfComponent(openId) : undefined;
   const groupOf = NAV.find(g => g.items.some(i => i.id === active))?.label ?? '';
 
   return (
@@ -255,19 +320,42 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
 
                 {/* Every built component gets its OWN row, as the reference does
                     — one list of everything was a catalogue, not navigation.
-                    Built only: a planned component has no workbench to open, and
-                    a nav row that opens nothing is a dead control. Read from the
-                    registry, so a new component appears here by existing. */}
-                {group.label === 'Components' && BUILT_COMPONENTS.map(d => (
-                  <li key={d.id}>
-                    <button type="button"
-                      class={`sds-nav__item sds-nav__item--sub${openId === d.id ? ' is-active' : ''}`}
-                      aria-current={openId === d.id ? 'page' : undefined}
-                      onClick={() => { setActive('components'); setOpenId(d.id); }}>
-                      {d.name}
-                    </button>
-                  </li>
-                ))}
+                    Read from the registry, so a new component appears here by
+                    existing. A family collapses to one row with its members
+                    nested, which is the only grouping in this rail. */}
+                {group.label === 'Components' && COMPONENT_ROWS.map(row => (row.kind === 'family'
+                  ? (
+                    <li key={row.family.id}>
+                      <button type="button"
+                        class={`sds-nav__item sds-nav__item--sub${openFamily?.id === row.family.id ? ' is-active' : ''}`}
+                        onClick={() => { setActive('components'); setOpenId(row.family.defaultComponentId); }}>
+                        {row.family.name}
+                        <span class="sds-nav__count">{row.children.length}</span>
+                      </button>
+                      <ul class="sds-nav__kids">
+                        {row.children.map(d => (
+                          <li key={d.id}>
+                            <button type="button"
+                              class={`sds-nav__item sds-nav__item--kid${openId === d.id ? ' is-active' : ''}`}
+                              aria-current={openId === d.id ? 'page' : undefined}
+                              onClick={() => { setActive('components'); setOpenId(d.id); }}>
+                              {d.name}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </li>
+                  )
+                  : (
+                    <li key={row.def.id}>
+                      <button type="button"
+                        class={`sds-nav__item sds-nav__item--sub${openId === row.def.id ? ' is-active' : ''}`}
+                        aria-current={openId === row.def.id ? 'page' : undefined}
+                        onClick={() => { setActive('components'); setOpenId(row.def.id); }}>
+                        {row.def.name}
+                      </button>
+                    </li>
+                  )))}
               </ul>
             )}
           </nav>
@@ -285,6 +373,7 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
           <nav class="sds-crumbs" aria-label="Breadcrumb">
             <span>{groupOf}</span>
             <LucideIcon name="ChevronRight" size={14} />
+            {openFamily && <><span>{openFamily.name}</span><LucideIcon name="ChevronRight" size={14} /></>}
             <span class="is-current">{openDef ? openDef.name : current.label}</span>
           </nav>
           <span class="sds-top__meta">{COMPONENT_DEFS.length} registered definitions</span>
@@ -302,7 +391,14 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
             <BrandOverview draft={draft} logoUrl={logoUrl} onUploadLogo={onUploadLogo} />
           )}
           {active === 'components' && (openDef
-            ? <Workbench def={openDef} onBack={() => setOpenId(null)} />
+            ? (
+              <Workbench
+                def={openDef}
+                family={openFamily}
+                onSelectMember={setOpenId}
+                onBack={() => setOpenId(null)}
+              />
+            )
             : <Catalogue onOpen={setOpenId} />)}
           {active === 'foundations' && (
             <PreviewScope attach={attachScope}><FoundationsPanel draft={draft} /></PreviewScope>

@@ -4720,10 +4720,24 @@ files	variable	platform	false		scripts/scan-button-usage.mjs	112
 shapes	variable	platform	false		scripts/scan-button-usage.mjs	114	
 structures	variable	platform	false		scripts/scan-button-usage.mjs	115	
 dynamicSites	variable	platform	false		scripts/scan-button-usage.mjs	116	
-legacyButtons	variable	platform	false		scripts/scan-button-usage.mjs	117	
-legacyFiles	variable	platform	false		scripts/scan-button-usage.mjs	118	
-record	function	platform	false		scripts/scan-button-usage.mjs	120	
-payload	object	platform	false		scripts/scan-button-usage.mjs	150	
+ENTRY	variable	platform	false		scripts/scan-button-usage.mjs	141	
+IN_FLIGHT	array	platform	false		scripts/scan-button-usage.mjs	150	
+inFlightReason	function	platform	false		scripts/scan-button-usage.mjs	153	
+ALIASES	array	platform	false		scripts/scan-button-usage.mjs	158	
+BARE	object	platform	false		scripts/scan-button-usage.mjs	165	
+EXTS	array	platform	false		scripts/scan-button-usage.mjs	168	
+unresolvedImports	variable	platform	false		scripts/scan-button-usage.mjs	169	
+resolveSpec	function	platform	false		scripts/scan-button-usage.mjs	171	
+reachableFromEntry	function	platform	false		scripts/scan-button-usage.mjs	190	
+REACHABLE	variable	platform	false		scripts/scan-button-usage.mjs	218	
+retirement	object	platform	false		scripts/scan-button-usage.mjs	220	
+rawTotal	variable	platform	false		scripts/scan-button-usage.mjs	227	
+classifyRaw	function	platform	false		scripts/scan-button-usage.mjs	229	
+famList	function	platform	false		scripts/scan-button-usage.mjs	260	
+legacyButtons	variable	platform	false		scripts/scan-button-usage.mjs	264	
+legacyFiles	variable	platform	false		scripts/scan-button-usage.mjs	265	
+record	function	platform	false		scripts/scan-button-usage.mjs	267	
+payload	object	platform	false		scripts/scan-button-usage.mjs	304	
 DRY	variable	platform	false		scripts/seed-email-templates.mjs	24	
 PRUNE	variable	platform	false		scripts/seed-email-templates.mjs	25	
 require_	variable	platform	false		scripts/seed-email-templates.mjs	27	
@@ -12993,7 +13007,6 @@ FORCEABLE	variable	platform	false	component	src/ui/primitives/Button.tsx	129
 ResolvedButtonProps	type	platform	false		src/ui/primitives/Button.tsx	132	
 Button	function	platform	true	component	src/ui/primitives/Button.tsx	138	
 handleClick	function	platform	false		src/ui/primitives/Button.tsx	216	Button
-ButtonGroup	function	platform	true	component	src/ui/primitives/Button.tsx	248	
 FORCEABLE	variable	platform	false	component	src/ui/primitives/choice.tsx	27	
 forcedAttr	function	platform	false		src/ui/primitives/choice.tsx	29	
 CheckboxProps	interface	platform	true		src/ui/primitives/choice.tsx	35	
@@ -13017,26 +13030,31 @@ VALIDATION_ICON	variable	platform	false	component	src/ui/primitives/TextInput.ts
 TextInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	105	
 handleClear	function	platform	false		src/ui/primitives/TextInput.tsx	144	TextInput
 SearchInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	238	
-s	function	platform	false		src/ui/registry/actions.defs.tsx	25	
-b	function	platform	false		src/ui/registry/actions.defs.tsx	26	
-size	function	platform	false		src/ui/registry/actions.defs.tsx	27	
-DEMO_MENU	array	platform	false		src/ui/registry/actions.defs.tsx	29	
-SAVE_MENU	array	platform	false		src/ui/registry/actions.defs.tsx	41	
-noop	function	platform	false		src/ui/registry/actions.defs.tsx	47	
-buttonDef	object	platform	true		src/ui/registry/actions.defs.tsx	51	
-segmentedDef	object	platform	true		src/ui/registry/actions.defs.tsx	258	
-menuDef	object	platform	true		src/ui/registry/actions.defs.tsx	333	
-ACTION_DEFS	array	platform	true		src/ui/registry/actions.defs.tsx	459	
-s	function	platform	false		src/ui/registry/compound.defs.tsx	30	
-b	function	platform	false		src/ui/registry/compound.defs.tsx	32	
-size	function	platform	false		src/ui/registry/compound.defs.tsx	33	
-RECORD_MENU	array	platform	false		src/ui/registry/compound.defs.tsx	35	
-SAVE_ALTERNATIVES	array	platform	false		src/ui/registry/compound.defs.tsx	47	
-VARIANTS	variable	platform	false	component	src/ui/registry/compound.defs.tsx	53	
-dropdownButtonDef	object	platform	false		src/ui/registry/compound.defs.tsx	57	
-splitButtonDef	object	platform	false		src/ui/registry/compound.defs.tsx	125	
-COMPOUND_DEFS	array	platform	true		src/ui/registry/compound.defs.tsx	195	
-COMPOUND_OF	object	platform	true		src/ui/registry/compound.defs.tsx	198	
+s	function	platform	false		src/ui/registry/actions.defs.tsx	26	
+b	function	platform	false		src/ui/registry/actions.defs.tsx	27	
+size	function	platform	false		src/ui/registry/actions.defs.tsx	28	
+DEMO_MENU	array	platform	false		src/ui/registry/actions.defs.tsx	30	
+SAVE_MENU	array	platform	false		src/ui/registry/actions.defs.tsx	42	
+noop	function	platform	false		src/ui/registry/actions.defs.tsx	48	
+VARIANTS	variable	platform	false	component	src/ui/registry/actions.defs.tsx	51	
+buttonDef	object	platform	true		src/ui/registry/actions.defs.tsx	55	
+icon	function	platform	false		src/ui/registry/actions.defs.tsx	172	buttonDef
+jsx	function	platform	false		src/ui/registry/actions.defs.tsx	194	buttonDef
+segmentedDef	object	platform	true		src/ui/registry/actions.defs.tsx	247	
+menuDef	object	platform	true		src/ui/registry/actions.defs.tsx	322	
+ACTION_DEFS	array	platform	true		src/ui/registry/actions.defs.tsx	448	
+s	function	platform	false		src/ui/registry/compound.defs.tsx	31	
+b	function	platform	false		src/ui/registry/compound.defs.tsx	33	
+size	function	platform	false		src/ui/registry/compound.defs.tsx	34	
+icon	function	platform	false		src/ui/registry/compound.defs.tsx	36	
+RECORD_MENU	array	platform	false		src/ui/registry/compound.defs.tsx	38	
+SAVE_ALTERNATIVES	array	platform	false		src/ui/registry/compound.defs.tsx	50	
+DROPDOWN_VARIANTS	variable	platform	false	component	src/ui/registry/compound.defs.tsx	58	
+SPLIT_VARIANTS	variable	platform	false	component	src/ui/registry/compound.defs.tsx	59	
+dropdownButtonDef	object	platform	false		src/ui/registry/compound.defs.tsx	63	
+splitButtonDef	object	platform	false		src/ui/registry/compound.defs.tsx	144	
+COMPOUND_DEFS	array	platform	true		src/ui/registry/compound.defs.tsx	223	
+COMPOUND_OF	object	platform	true		src/ui/registry/compound.defs.tsx	226	
 s	function	platform	false		src/ui/registry/containers.defs.tsx	18	
 b	function	platform	false		src/ui/registry/containers.defs.tsx	19	
 noop	function	platform	false		src/ui/registry/containers.defs.tsx	20	
@@ -13064,6 +13082,12 @@ DEMO_DEPARTMENTS	array	platform	false		src/ui/registry/definitions.tsx	47
 personDef	object	platform	false		src/ui/registry/definitions.tsx	62	
 dialogDef	object	platform	false		src/ui/registry/definitions.tsx	178	
 COMPONENT_DEFS	array	platform	true		src/ui/registry/definitions.tsx	311	
+ComponentFamily	interface	platform	true		src/ui/registry/families.ts	23	
+BUTTON_FAMILY	object	platform	true		src/ui/registry/families.ts	48	
+COMPONENT_FAMILIES	array	platform	true		src/ui/registry/families.ts	64	
+findFamily	function	platform	true		src/ui/registry/families.ts	66	
+familyOfComponent	function	platform	true		src/ui/registry/families.ts	71	
+familyMembers	function	platform	true		src/ui/registry/families.ts	81	
 s	function	platform	false		src/ui/registry/feedback.defs.tsx	9	
 b	function	platform	false		src/ui/registry/feedback.defs.tsx	10	
 emptyStateDef	object	platform	true		src/ui/registry/feedback.defs.tsx	12	
@@ -13091,15 +13115,16 @@ GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	661
 selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	679	
 search	function	platform	false		src/ui/registry/forms.defs.tsx	782	selectDef
 FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	813	
-COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	47	
-CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	59	
-CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	75	
-CategoryGroup	interface	platform	true		src/ui/registry/index.ts	80	
-componentsByCategory	function	platform	true		src/ui/registry/index.ts	94	
-findComponent	function	platform	true		src/ui/registry/index.ts	111	
-RegistryTotals	interface	platform	true		src/ui/registry/index.ts	115	
-registryTotals	function	platform	true		src/ui/registry/index.ts	141	
-isPattern	function	platform	false		src/ui/registry/index.ts	142	registryTotals
+COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	53	
+CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	65	
+CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	81	
+CatalogueNode	type	platform	true		src/ui/registry/index.ts	91	
+CategoryGroup	interface	platform	true		src/ui/registry/index.ts	95	
+componentsByCategory	function	platform	true		src/ui/registry/index.ts	116	
+findComponent	function	platform	true		src/ui/registry/index.ts	150	
+RegistryTotals	interface	platform	true		src/ui/registry/index.ts	154	
+registryTotals	function	platform	true		src/ui/registry/index.ts	180	
+isPattern	function	platform	false		src/ui/registry/index.ts	181	registryTotals
 s	function	platform	false		src/ui/registry/navigation.defs.tsx	24	
 b	function	platform	false		src/ui/registry/navigation.defs.tsx	25	
 noop	function	platform	false		src/ui/registry/navigation.defs.tsx	26	
@@ -13135,6 +13160,13 @@ noop	function	platform	false		src/ui/registry/wizard.def.tsx	18
 Body	function	platform	false	component	src/ui/registry/wizard.def.tsx	21	
 ReviewBody	function	platform	false	component	src/ui/registry/wizard.def.tsx	30	
 wizardDef	object	platform	true		src/ui/registry/wizard.def.tsx	44	
+ROOT	variable	platform	false	component,test	src/ui/special/CreditsButton.test.tsx	8	
+read	function	platform	false	test	src/ui/special/CreditsButton.test.tsx	9	
+CreditsButtonProps	interface	platform	true		src/ui/special/CreditsButton.tsx	33	
+PARTICLES	variable	platform	false	component	src/ui/special/CreditsButton.tsx	41	
+CreditsButton	function	platform	true	component	src/ui/special/CreditsButton.tsx	43	
+SpecialTreatmentsProps	interface	platform	true		src/ui/special/SpecialTreatments.tsx	10	
+SpecialTreatments	function	platform	true	component	src/ui/special/SpecialTreatments.tsx	15	
 Tone	type	platform	true		src/ui/status/statusTokens.ts	31	
 ToneVisual	interface	platform	false		src/ui/status/statusTokens.ts	33	
 TONE	object	platform	true		src/ui/status/statusTokens.ts	43	
@@ -13176,20 +13208,24 @@ ROLE_FOCUS	array	platform	false		src/ui/studio/brandDirections.ts	31
 ROLE_SELECTION_EDGE	array	platform	false		src/ui/studio/brandDirections.ts	32	
 ROLE_SELECTION_FILL	array	platform	false		src/ui/studio/brandDirections.ts	33	
 ROLE_NAV_ACTIVE	array	platform	false		src/ui/studio/brandDirections.ts	34	
-ROLE_LINK	array	platform	false		src/ui/studio/brandDirections.ts	35	
-SEEDS	array	platform	false		src/ui/studio/brandDirections.ts	36	
-LOCKED_OPERATIONAL	variable	platform	true		src/ui/studio/brandDirections.ts	39	
-LOCKED_NEUTRAL	variable	platform	true		src/ui/studio/brandDirections.ts	44	
-DirectionDef	interface	platform	true		src/ui/studio/brandDirections.ts	50	
-DIRECTIONS	array	platform	true		src/ui/studio/brandDirections.ts	57	
-directionById	function	platform	true		src/ui/studio/brandDirections.ts	75	
-tokensForDirection	function	platform	true		src/ui/studio/brandDirections.ts	88	
+ROLE_LINK	array	platform	false		src/ui/studio/brandDirections.ts	40	
+SEEDS	array	platform	false		src/ui/studio/brandDirections.ts	41	
+LOCKED_OPERATIONAL	variable	platform	true		src/ui/studio/brandDirections.ts	44	
+LOCKED_NEUTRAL	variable	platform	true		src/ui/studio/brandDirections.ts	49	
+DirectionDef	interface	platform	true		src/ui/studio/brandDirections.ts	55	
+DIRECTIONS	array	platform	true		src/ui/studio/brandDirections.ts	62	
+directionById	function	platform	true		src/ui/studio/brandDirections.ts	80	
+tokensForDirection	function	platform	true		src/ui/studio/brandDirections.ts	93	
 BOARD	array	platform	false		src/ui/studio/BrandOverview.tsx	38	
 Specimen	function	platform	false	component	src/ui/studio/BrandOverview.tsx	49	
 Swatch	function	platform	false	component	src/ui/studio/BrandOverview.tsx	62	
 BrandOverview	function	platform	true	component	src/ui/studio/BrandOverview.tsx	76	
 applyDirection	function	platform	false		src/ui/studio/BrandOverview.tsx	104	BrandOverview
 publish	function	platform	false		src/ui/studio/BrandOverview.tsx	110	BrandOverview
+MEMBERS	variable	platform	false	component,test	src/ui/studio/family.test.tsx	25	
+subtype	function	platform	false	test	src/ui/studio/family.test.tsx	28	
+openButtons	function	platform	false	test	src/ui/studio/family.test.tsx	36	
+activeSubtype	function	platform	false	test	src/ui/studio/family.test.tsx	42	
 Shape	interface	platform	false		src/ui/studio/InAppUsage.tsx	31	
 DATA	object	platform	false		src/ui/studio/InAppUsage.tsx	39	
 describe	function	platform	false		src/ui/studio/InAppUsage.tsx	43	
@@ -13198,32 +13234,39 @@ InAppUsage	function	platform	true	component	src/ui/studio/InAppUsage.tsx	72
 toggle	function	platform	false		src/ui/studio/InAppUsage.tsx	82	InAppUsage
 copySelection	function	platform	false		src/ui/studio/InAppUsage.tsx	93	InAppUsage
 settle	function	platform	false		src/ui/studio/InAppUsage.tsx	110	copySelection
+root	variable	platform	false		src/ui/studio/preview.tsx	12	
 PreviewScope	function	platform	true	component	src/ui/studio/PreviewScope.tsx	20	
-StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	42	
-SectionId	type	platform	false		src/ui/studio/Studio.tsx	51	
-NavItem	interface	platform	false		src/ui/studio/Studio.tsx	57	
-NavGroup	interface	platform	false		src/ui/studio/Studio.tsx	58	
-NAV	array	platform	false		src/ui/studio/Studio.tsx	60	
-BUILT_COMPONENTS	variable	platform	false	component	src/ui/studio/Studio.tsx	82	
-APP_SCENE	object	platform	false		src/ui/studio/Studio.tsx	87	
-SECTION_COPY	object	platform	false		src/ui/studio/Studio.tsx	93	
-variantCount	function	platform	false		src/ui/studio/Studio.tsx	113	
-ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	119	
-Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	147	
-PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	202	
-Studio	function	platform	true	component	src/ui/studio/Studio.tsx	211	
+StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	43	
+SectionId	type	platform	false		src/ui/studio/Studio.tsx	52	
+NavItem	interface	platform	false		src/ui/studio/Studio.tsx	58	
+NavGroup	interface	platform	false		src/ui/studio/Studio.tsx	59	
+NAV	array	platform	false		src/ui/studio/Studio.tsx	61	
+NavComponentRow	type	platform	false		src/ui/studio/Studio.tsx	90	
+COMPONENT_ROWS	variable	platform	false	component	src/ui/studio/Studio.tsx	94	
+APP_SCENE	object	platform	false		src/ui/studio/Studio.tsx	105	
+SECTION_COPY	object	platform	false		src/ui/studio/Studio.tsx	111	
+variantCount	function	platform	false		src/ui/studio/Studio.tsx	131	
+ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	137	
+FamilyCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	177	
+CatalogueNodeCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	197	
+Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	204	
+PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	260	
+Studio	function	platform	true	component	src/ui/studio/Studio.tsx	269	
 Tab	type	platform	false		src/ui/studio/Workbench.tsx	33	
 TABS	array	platform	false		src/ui/studio/Workbench.tsx	34	
 CONTROL_GROUPS	array	platform	false		src/ui/studio/Workbench.tsx	50	
 groupControls	function	platform	false		src/ui/studio/Workbench.tsx	57	
 Control	function	platform	false	component	src/ui/studio/Workbench.tsx	77	
-Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	133	
-set	function	platform	false		src/ui/studio/Workbench.tsx	137	Workbench
-specimen	function	platform	false		src/ui/studio/Workbench.tsx	141	Workbench
-Block	function	platform	false	component	src/ui/studio/Workbench.tsx	300	
-OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	318	
-UsageTab	function	platform	false	component	src/ui/studio/Workbench.tsx	414	
-A11yTab	function	platform	false	component	src/ui/studio/Workbench.tsx	456	
+symbolOf	function	platform	false		src/ui/studio/Workbench.tsx	152	
+WorkbenchProps	interface	platform	true		src/ui/studio/Workbench.tsx	159	
+Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	167	
+setValues	function	platform	false		src/ui/studio/Workbench.tsx	187	Workbench
+set	function	platform	false		src/ui/studio/Workbench.tsx	190	Workbench
+specimen	function	platform	false		src/ui/studio/Workbench.tsx	203	Workbench
+Block	function	platform	false	component	src/ui/studio/Workbench.tsx	416	
+OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	434	
+UsageTab	function	platform	false	component	src/ui/studio/Workbench.tsx	501	
+A11yTab	function	platform	false	component	src/ui/studio/Workbench.tsx	543	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	
@@ -13266,7 +13309,7 @@ NEUTRAL_DEFAULTS	object	platform	false	test	src/ui/theme/brand/brandTheme.test.t
 pixels	function	platform	false	test	src/ui/theme/brand/brandTheme.test.ts	111	
 FIXTURES	array	platform	false	test	src/ui/theme/brand/brandTheme.test.ts	259	
 read	function	platform	false	test	src/ui/theme/brand/brandTheme.test.ts	439	
-baseline	function	platform	false	test	src/ui/theme/brand/brandTheme.test.ts	501	
+baseline	function	platform	false	test	src/ui/theme/brand/brandTheme.test.ts	510	
 BRAND_THEME_VERSION	variable	platform	true		src/ui/theme/brand/brandTheme.ts	83	
 BrandSeeds	interface	platform	true		src/ui/theme/brand/brandTheme.ts	85	
 BrandTheme	interface	platform	true		src/ui/theme/brand/brandTheme.ts	100	
@@ -13284,12 +13327,12 @@ isDistinctAccent	function	platform	true		src/ui/theme/brand/brandTheme.ts	158
 nearestAccessible	function	platform	true		src/ui/theme/brand/brandTheme.ts	174	
 brandThemeToTokens	function	platform	true		src/ui/theme/brand/brandTheme.ts	200	
 resolve	function	platform	false		src/ui/theme/brand/brandTheme.ts	213	brandThemeToTokens
-withAlpha	function	platform	true		src/ui/theme/brand/brandTheme.ts	303	
-assertNoLockedRoles	function	platform	false		src/ui/theme/brand/brandTheme.ts	315	
-NEUTRAL_BY_POLICY	variable	platform	true		src/ui/theme/brand/brandTheme.ts	331	
-assertNoNeutralRoles	function	platform	false		src/ui/theme/brand/brandTheme.ts	338	
-brandThemeFromTokens	function	platform	true		src/ui/theme/brand/brandTheme.ts	349	
-brandTokenNames	function	platform	true		src/ui/theme/brand/brandTheme.ts	362	
+withAlpha	function	platform	true		src/ui/theme/brand/brandTheme.ts	315	
+assertNoLockedRoles	function	platform	false		src/ui/theme/brand/brandTheme.ts	327	
+NEUTRAL_BY_POLICY	variable	platform	true		src/ui/theme/brand/brandTheme.ts	343	
+assertNoNeutralRoles	function	platform	false		src/ui/theme/brand/brandTheme.ts	350	
+brandThemeFromTokens	function	platform	true		src/ui/theme/brand/brandTheme.ts	361	
+brandTokenNames	function	platform	true		src/ui/theme/brand/brandTheme.ts	374	
 toRgb	variable	platform	false		src/ui/theme/brand/contrast.ts	25	
 AA_TEXT	variable	platform	true		src/ui/theme/brand/contrast.ts	27	
 AA_LARGE_TEXT	variable	platform	true		src/ui/theme/brand/contrast.ts	28	
@@ -13346,16 +13389,16 @@ TOKENS_CSS	variable	platform	false	test	src/ui/theme/semanticTokens.test.ts	30
 SEMANTIC_CSS	variable	platform	false	test	src/ui/theme/semanticTokens.test.ts	31	
 RECIPES	array	platform	false	test	src/ui/theme/semanticTokens.test.ts	33	
 decls	variable	platform	false	test	src/ui/theme/semanticTokens.test.ts	50	
-resolveRole	function	platform	false	test	src/ui/theme/semanticTokens.test.ts	220	
+resolveRole	function	platform	false	test	src/ui/theme/semanticTokens.test.ts	231	
 SemanticGroupId	type	platform	true		src/ui/theme/semanticTokens.ts	28	
 SemanticRole	interface	platform	true		src/ui/theme/semanticTokens.ts	32	
 SemanticGroup	interface	platform	true		src/ui/theme/semanticTokens.ts	46	
 SEMANTIC_GROUPS	array	platform	true		src/ui/theme/semanticTokens.ts	52	
 SEMANTIC_ROLES	array	platform	true		src/ui/theme/semanticTokens.ts	63	
-SEMANTIC_TOKEN_NAMES	variable	platform	true		src/ui/theme/semanticTokens.ts	112	
-BRAND_DRIVEN_ROLES	variable	platform	true		src/ui/theme/semanticTokens.ts	115	
-BRAND_LOCKED_ROLES	variable	platform	true		src/ui/theme/semanticTokens.ts	122	
-semanticRolesIn	function	platform	true		src/ui/theme/semanticTokens.ts	124	
+SEMANTIC_TOKEN_NAMES	variable	platform	true		src/ui/theme/semanticTokens.ts	117	
+BRAND_DRIVEN_ROLES	variable	platform	true		src/ui/theme/semanticTokens.ts	120	
+BRAND_LOCKED_ROLES	variable	platform	true		src/ui/theme/semanticTokens.ts	127	
+semanticRolesIn	function	platform	true		src/ui/theme/semanticTokens.ts	129	
 TokenKind	type	platform	true		src/ui/theme/tokens.ts	19	
 TokenDef	interface	platform	true		src/ui/theme/tokens.ts	21	
 TokenGroup	interface	platform	true		src/ui/theme/tokens.ts	29	

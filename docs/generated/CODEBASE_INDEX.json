@@ -1,15 +1,15 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "e0da32abb84d65c0eb0696563c496569d5212104",
+    "head": "1ca096d475b341e01386609ffdc0dd536783ef85",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "251c468df4a7c5e77f9990da",
-    "indexedFiles": 1828
+    "fingerprint": "8f06b3fcc69877a4f74df3cf",
+    "indexedFiles": 1834
   },
   "summary": {
-    "files": 1473,
-    "symbols": 14718,
-    "widgets": 63,
+    "files": 1479,
+    "symbols": 14761,
+    "widgets": 68,
     "routes": 978,
     "routeDefinitions": 979,
     "unmountedRoutes": 17,
@@ -139,9 +139,9 @@
     {
       "id": "platform",
       "counts": {
-        "files": 413,
-        "symbols": 3704,
-        "widgets": 12,
+        "files": 419,
+        "symbols": 3747,
+        "widgets": 17,
         "routes": 38,
         "routeDefinitions": 53,
         "apiCalls": 50,
@@ -2541,7 +2541,7 @@
       "module": "platform",
       "role": "tooling",
       "lines": 367,
-      "hash": "faab82d55be2fc82"
+      "hash": "a455542b4bf6aa85"
     },
     {
       "path": "scripts/check-wave2b-migrations.mjs",
@@ -3331,8 +3331,8 @@
       "path": "scripts/scan-button-usage.mjs",
       "module": "platform",
       "role": "tooling",
-      "lines": 182,
-      "hash": "a9bb14d5a3d45e0a"
+      "lines": 376,
+      "hash": "10ce8b547f9e0d0c"
     },
     {
       "path": "scripts/seed-email-templates.mjs",
@@ -5376,7 +5376,7 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 512,
-      "hash": "9306ff9d8c1e2111"
+      "hash": "6d45bbafcdd76ab0"
     },
     {
       "path": "src/components/sections/HR/CompensationOverview.tsx",
@@ -5474,7 +5474,7 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 268,
-      "hash": "011b4c4dba57d828"
+      "hash": "5831bdbde3dcc771"
     },
     {
       "path": "src/components/sections/HR/OnboardingAddTaskModal.tsx",
@@ -5488,14 +5488,14 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 157,
-      "hash": "25e9cbbcdc4c0f92"
+      "hash": "cf5303b545995353"
     },
     {
       "path": "src/components/sections/HR/OnboardingCaseDetail.tsx",
       "module": "hr",
       "role": "frontend-page",
       "lines": 446,
-      "hash": "3cd6be9a6c62b6d2"
+      "hash": "1e4687068d041af0"
     },
     {
       "path": "src/components/sections/HR/OnboardingCommandCenter.adapters.ts",
@@ -5523,7 +5523,7 @@
       "module": "workflow",
       "role": "frontend-page",
       "lines": 182,
-      "hash": "14ea4d0e3bd9b41d"
+      "hash": "644191c141f10c4c"
     },
     {
       "path": "src/components/sections/HR/OnboardingOverview.tsx",
@@ -5537,14 +5537,14 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 326,
-      "hash": "0036405e2616cba6"
+      "hash": "f1534856b5162611"
     },
     {
       "path": "src/components/sections/HR/OnboardingPackageManager.tsx",
       "module": "hr",
       "role": "frontend-page",
       "lines": 130,
-      "hash": "d97e8f01f07fab96"
+      "hash": "2fb3577b47c4a744"
     },
     {
       "path": "src/components/sections/HR/OnboardingReportsWorkspace.tsx",
@@ -5558,14 +5558,14 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 449,
-      "hash": "baa1ca1f4dab68e8"
+      "hash": "613de72417523ab2"
     },
     {
       "path": "src/components/sections/HR/OrgStructureOverview.tsx",
       "module": "hr",
       "role": "frontend-page",
       "lines": 784,
-      "hash": "5c28efd1a98edab8"
+      "hash": "00401bc43f6f3e5c"
     },
     {
       "path": "src/components/sections/HR/OvertimeOverview.tsx",
@@ -5607,7 +5607,7 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 398,
-      "hash": "6d296f734460bf58"
+      "hash": "8c56f14bd1239d75"
     },
     {
       "path": "src/components/sections/HR/TrinidadPhoneInput.tsx",
@@ -8904,7 +8904,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 252,
-      "hash": "5b403bc90acc2f36"
+      "hash": "3287eeecd5ee58db"
     },
     {
       "path": "src/ui/layouts/ModulePageLayout.tsx",
@@ -9064,15 +9064,15 @@
       "path": "src/ui/primitives/Button.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 244,
-      "hash": "f6287f32cb60cf5d"
+      "lines": 232,
+      "hash": "1899123307a9fb79"
     },
     {
       "path": "src/ui/primitives/Button.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 257,
-      "hash": "3d272906c12d68c9"
+      "lines": 238,
+      "hash": "3915c94483fd086c"
     },
     {
       "path": "src/ui/primitives/TextInput.tsx",
@@ -9093,7 +9093,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 237,
-      "hash": "1b6e9ba3fc0cefa2"
+      "hash": "d6ab88a6a4c54eaf"
     },
     {
       "path": "src/ui/primitives/choice.test.tsx",
@@ -9127,15 +9127,15 @@
       "path": "src/ui/registry/actions.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 464,
-      "hash": "13b98d4f3e2ef76d"
+      "lines": 453,
+      "hash": "5bc47a9c718280be"
     },
     {
       "path": "src/ui/registry/compound.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 203,
-      "hash": "88759751ae31efb6"
+      "lines": 231,
+      "hash": "cea39d584ff8cb38"
     },
     {
       "path": "src/ui/registry/containers.defs.tsx",
@@ -9159,6 +9159,13 @@
       "hash": "5bf0a63b325dfd47"
     },
     {
+      "path": "src/ui/registry/families.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 89,
+      "hash": "1b3b9c39284f68bb"
+    },
+    {
       "path": "src/ui/registry/feedback.defs.tsx",
       "module": "platform",
       "role": "frontend",
@@ -9176,8 +9183,8 @@
       "path": "src/ui/registry/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 155,
-      "hash": "24cf951fa1b56845"
+      "lines": 194,
+      "hash": "a8391a38ebc050f6"
     },
     {
       "path": "src/ui/registry/navigation.defs.tsx",
@@ -9213,6 +9220,27 @@
       "role": "frontend",
       "lines": 236,
       "hash": "5683fc4d5872f41a"
+    },
+    {
+      "path": "src/ui/special/CreditsButton.test.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 59,
+      "hash": "c63984fea26b412f"
+    },
+    {
+      "path": "src/ui/special/CreditsButton.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 87,
+      "hash": "b56b4a8124db8680"
+    },
+    {
+      "path": "src/ui/special/SpecialTreatments.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 42,
+      "hash": "301cb436de188e8b"
     },
     {
       "path": "src/ui/status/statusBridge.test.tsx",
@@ -9260,29 +9288,43 @@
       "path": "src/ui/studio/Studio.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 321,
-      "hash": "bd61c84ab958b90f"
+      "lines": 417,
+      "hash": "e0b7c98a10cc6f00"
     },
     {
       "path": "src/ui/studio/Workbench.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 504,
-      "hash": "0ec61c696c4e4d17"
+      "lines": 591,
+      "hash": "69c823b130bf8186"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 104,
-      "hash": "8bdad45cef7669da"
+      "lines": 113,
+      "hash": "7f595632fa57d794"
     },
     {
       "path": "src/ui/studio/brandDirections.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 99,
-      "hash": "0ef7a7f701516b39"
+      "lines": 104,
+      "hash": "dcf3853e503402f0"
+    },
+    {
+      "path": "src/ui/studio/family.test.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 179,
+      "hash": "632562d980d27b06"
+    },
+    {
+      "path": "src/ui/studio/preview.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 16,
+      "hash": "bf896ba5f371ccee"
     },
     {
       "path": "src/ui/table/FilterBar.tsx",
@@ -9316,15 +9358,15 @@
       "path": "src/ui/theme/brand/brandTheme.test.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 531,
-      "hash": "d5e3f4ff2e649ea3"
+      "lines": 540,
+      "hash": "e09d000d21943c55"
     },
     {
       "path": "src/ui/theme/brand/brandTheme.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 365,
-      "hash": "c6a01e04b9fee709"
+      "lines": 377,
+      "hash": "b4f33107e612022f"
     },
     {
       "path": "src/ui/theme/brand/contrast.ts",
@@ -9358,15 +9400,15 @@
       "path": "src/ui/theme/semanticTokens.test.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 301,
-      "hash": "971c759c3e23be29"
+      "lines": 312,
+      "hash": "a0f726ae69899a29"
     },
     {
       "path": "src/ui/theme/semanticTokens.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 127,
-      "hash": "886aa61e5cdaf644"
+      "lines": 132,
+      "hash": "4bf1ea0cf7677fac"
     },
     {
       "path": "src/ui/theme/tokens.ts",
@@ -58599,10 +58641,150 @@
       "tags": []
     },
     {
+      "name": "ENTRY",
+      "kind": "variable",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 141,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "IN_FLIGHT",
+      "kind": "array",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 150,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "inFlightReason",
+      "kind": "function",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 153,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ALIASES",
+      "kind": "array",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 158,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "BARE",
+      "kind": "object",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 165,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EXTS",
+      "kind": "array",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 168,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "unresolvedImports",
+      "kind": "variable",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 169,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "resolveSpec",
+      "kind": "function",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 171,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "reachableFromEntry",
+      "kind": "function",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 190,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "REACHABLE",
+      "kind": "variable",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 218,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "retirement",
+      "kind": "object",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 220,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "rawTotal",
+      "kind": "variable",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 227,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "classifyRaw",
+      "kind": "function",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 229,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "famList",
+      "kind": "function",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 260,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "legacyButtons",
       "kind": "variable",
       "file": "scripts/scan-button-usage.mjs",
-      "line": 117,
+      "line": 264,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -58612,7 +58794,7 @@
       "name": "legacyFiles",
       "kind": "variable",
       "file": "scripts/scan-button-usage.mjs",
-      "line": 118,
+      "line": 265,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -58622,7 +58804,7 @@
       "name": "record",
       "kind": "function",
       "file": "scripts/scan-button-usage.mjs",
-      "line": 120,
+      "line": 267,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -58632,7 +58814,7 @@
       "name": "payload",
       "kind": "object",
       "file": "scripts/scan-button-usage.mjs",
-      "line": 150,
+      "line": 304,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146543,18 +146725,6 @@
       "tags": []
     },
     {
-      "name": "ButtonGroup",
-      "kind": "function",
-      "file": "src/ui/primitives/Button.tsx",
-      "line": 248,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
       "name": "FORCEABLE",
       "kind": "variable",
       "file": "src/ui/primitives/choice.tsx",
@@ -146812,16 +146982,6 @@
       "name": "s",
       "kind": "function",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 25,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "b",
-      "kind": "function",
-      "file": "src/ui/registry/actions.defs.tsx",
       "line": 26,
       "module": "platform",
       "exported": false,
@@ -146829,7 +146989,7 @@
       "tags": []
     },
     {
-      "name": "size",
+      "name": "b",
       "kind": "function",
       "file": "src/ui/registry/actions.defs.tsx",
       "line": 27,
@@ -146839,10 +146999,20 @@
       "tags": []
     },
     {
+      "name": "size",
+      "kind": "function",
+      "file": "src/ui/registry/actions.defs.tsx",
+      "line": 28,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "DEMO_MENU",
       "kind": "array",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 29,
+      "line": 30,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146852,7 +147022,7 @@
       "name": "SAVE_MENU",
       "kind": "array",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 41,
+      "line": 42,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146862,27 +147032,59 @@
       "name": "noop",
       "kind": "function",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 47,
+      "line": 48,
       "module": "platform",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
+      "name": "VARIANTS",
+      "kind": "variable",
+      "file": "src/ui/registry/actions.defs.tsx",
+      "line": 51,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "buttonDef",
       "kind": "object",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 51,
+      "line": 55,
       "module": "platform",
       "exported": true,
       "container": "",
       "tags": []
     },
     {
+      "name": "icon",
+      "kind": "function",
+      "file": "src/ui/registry/actions.defs.tsx",
+      "line": 172,
+      "module": "platform",
+      "exported": false,
+      "container": "buttonDef",
+      "tags": []
+    },
+    {
+      "name": "jsx",
+      "kind": "function",
+      "file": "src/ui/registry/actions.defs.tsx",
+      "line": 194,
+      "module": "platform",
+      "exported": false,
+      "container": "buttonDef",
+      "tags": []
+    },
+    {
       "name": "segmentedDef",
       "kind": "object",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 258,
+      "line": 247,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146892,7 +147094,7 @@
       "name": "menuDef",
       "kind": "object",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 333,
+      "line": 322,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146902,7 +147104,7 @@
       "name": "ACTION_DEFS",
       "kind": "array",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 459,
+      "line": 448,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146912,7 +147114,7 @@
       "name": "s",
       "kind": "function",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 30,
+      "line": 31,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146922,7 +147124,7 @@
       "name": "b",
       "kind": "function",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 32,
+      "line": 33,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146932,7 +147134,17 @@
       "name": "size",
       "kind": "function",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 33,
+      "line": 34,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "icon",
+      "kind": "function",
+      "file": "src/ui/registry/compound.defs.tsx",
+      "line": 36,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146942,7 +147154,7 @@
       "name": "RECORD_MENU",
       "kind": "array",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 35,
+      "line": 38,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146952,17 +147164,29 @@
       "name": "SAVE_ALTERNATIVES",
       "kind": "array",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 47,
+      "line": 50,
       "module": "platform",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "VARIANTS",
+      "name": "DROPDOWN_VARIANTS",
       "kind": "variable",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 53,
+      "line": 58,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "SPLIT_VARIANTS",
+      "kind": "variable",
+      "file": "src/ui/registry/compound.defs.tsx",
+      "line": 59,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146974,7 +147198,7 @@
       "name": "dropdownButtonDef",
       "kind": "object",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 57,
+      "line": 63,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146984,7 +147208,7 @@
       "name": "splitButtonDef",
       "kind": "object",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 125,
+      "line": 144,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146994,7 +147218,7 @@
       "name": "COMPOUND_DEFS",
       "kind": "array",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 195,
+      "line": 223,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147004,7 +147228,7 @@
       "name": "COMPOUND_OF",
       "kind": "object",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 198,
+      "line": 226,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147287,6 +147511,66 @@
       "tags": []
     },
     {
+      "name": "ComponentFamily",
+      "kind": "interface",
+      "file": "src/ui/registry/families.ts",
+      "line": 23,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "BUTTON_FAMILY",
+      "kind": "object",
+      "file": "src/ui/registry/families.ts",
+      "line": 48,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "COMPONENT_FAMILIES",
+      "kind": "array",
+      "file": "src/ui/registry/families.ts",
+      "line": 64,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "findFamily",
+      "kind": "function",
+      "file": "src/ui/registry/families.ts",
+      "line": 66,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "familyOfComponent",
+      "kind": "function",
+      "file": "src/ui/registry/families.ts",
+      "line": 71,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "familyMembers",
+      "kind": "function",
+      "file": "src/ui/registry/families.ts",
+      "line": 81,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "s",
       "kind": "function",
       "file": "src/ui/registry/feedback.defs.tsx",
@@ -147560,7 +147844,7 @@
       "name": "COMPONENT_DEFS",
       "kind": "array",
       "file": "src/ui/registry/index.ts",
-      "line": 47,
+      "line": 53,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147570,7 +147854,7 @@
       "name": "CATEGORY_LABELS",
       "kind": "object",
       "file": "src/ui/registry/index.ts",
-      "line": 59,
+      "line": 65,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147580,7 +147864,17 @@
       "name": "CATEGORY_ORDER",
       "kind": "array",
       "file": "src/ui/registry/index.ts",
-      "line": 75,
+      "line": 81,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CatalogueNode",
+      "kind": "type",
+      "file": "src/ui/registry/index.ts",
+      "line": 91,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147590,7 +147884,7 @@
       "name": "CategoryGroup",
       "kind": "interface",
       "file": "src/ui/registry/index.ts",
-      "line": 80,
+      "line": 95,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147600,7 +147894,7 @@
       "name": "componentsByCategory",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 94,
+      "line": 116,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147610,7 +147904,7 @@
       "name": "findComponent",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 111,
+      "line": 150,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147620,7 +147914,7 @@
       "name": "RegistryTotals",
       "kind": "interface",
       "file": "src/ui/registry/index.ts",
-      "line": 115,
+      "line": 154,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147630,7 +147924,7 @@
       "name": "registryTotals",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 141,
+      "line": 180,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147640,7 +147934,7 @@
       "name": "isPattern",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 142,
+      "line": 181,
       "module": "platform",
       "exported": false,
       "container": "registryTotals",
@@ -147999,6 +148293,87 @@
       "exported": true,
       "container": "",
       "tags": []
+    },
+    {
+      "name": "ROOT",
+      "kind": "variable",
+      "file": "src/ui/special/CreditsButton.test.tsx",
+      "line": 8,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "test"
+      ]
+    },
+    {
+      "name": "read",
+      "kind": "function",
+      "file": "src/ui/special/CreditsButton.test.tsx",
+      "line": 9,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "CreditsButtonProps",
+      "kind": "interface",
+      "file": "src/ui/special/CreditsButton.tsx",
+      "line": 33,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PARTICLES",
+      "kind": "variable",
+      "file": "src/ui/special/CreditsButton.tsx",
+      "line": 41,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "CreditsButton",
+      "kind": "function",
+      "file": "src/ui/special/CreditsButton.tsx",
+      "line": 43,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "SpecialTreatmentsProps",
+      "kind": "interface",
+      "file": "src/ui/special/SpecialTreatments.tsx",
+      "line": 10,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SpecialTreatments",
+      "kind": "function",
+      "file": "src/ui/special/SpecialTreatments.tsx",
+      "line": 15,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
     },
     {
       "name": "Tone",
@@ -148432,7 +148807,7 @@
       "name": "ROLE_LINK",
       "kind": "array",
       "file": "src/ui/studio/brandDirections.ts",
-      "line": 35,
+      "line": 40,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148442,7 +148817,7 @@
       "name": "SEEDS",
       "kind": "array",
       "file": "src/ui/studio/brandDirections.ts",
-      "line": 36,
+      "line": 41,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148452,7 +148827,7 @@
       "name": "LOCKED_OPERATIONAL",
       "kind": "variable",
       "file": "src/ui/studio/brandDirections.ts",
-      "line": 39,
+      "line": 44,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148462,7 +148837,7 @@
       "name": "LOCKED_NEUTRAL",
       "kind": "variable",
       "file": "src/ui/studio/brandDirections.ts",
-      "line": 44,
+      "line": 49,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148472,7 +148847,7 @@
       "name": "DirectionDef",
       "kind": "interface",
       "file": "src/ui/studio/brandDirections.ts",
-      "line": 50,
+      "line": 55,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148482,7 +148857,7 @@
       "name": "DIRECTIONS",
       "kind": "array",
       "file": "src/ui/studio/brandDirections.ts",
-      "line": 57,
+      "line": 62,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148492,7 +148867,7 @@
       "name": "directionById",
       "kind": "function",
       "file": "src/ui/studio/brandDirections.ts",
-      "line": 75,
+      "line": 80,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148502,7 +148877,7 @@
       "name": "tokensForDirection",
       "kind": "function",
       "file": "src/ui/studio/brandDirections.ts",
-      "line": 88,
+      "line": 93,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148573,6 +148948,55 @@
       "exported": false,
       "container": "BrandOverview",
       "tags": []
+    },
+    {
+      "name": "MEMBERS",
+      "kind": "variable",
+      "file": "src/ui/studio/family.test.tsx",
+      "line": 25,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "test"
+      ]
+    },
+    {
+      "name": "subtype",
+      "kind": "function",
+      "file": "src/ui/studio/family.test.tsx",
+      "line": 28,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "openButtons",
+      "kind": "function",
+      "file": "src/ui/studio/family.test.tsx",
+      "line": 36,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "activeSubtype",
+      "kind": "function",
+      "file": "src/ui/studio/family.test.tsx",
+      "line": 42,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
     },
     {
       "name": "Shape",
@@ -148660,6 +149084,16 @@
       "tags": []
     },
     {
+      "name": "root",
+      "kind": "variable",
+      "file": "src/ui/studio/preview.tsx",
+      "line": 12,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "PreviewScope",
       "kind": "function",
       "file": "src/ui/studio/PreviewScope.tsx",
@@ -148675,7 +149109,7 @@
       "name": "StudioProps",
       "kind": "interface",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 42,
+      "line": 43,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148685,7 +149119,7 @@
       "name": "SectionId",
       "kind": "type",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 51,
+      "line": 52,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148695,7 +149129,7 @@
       "name": "NavItem",
       "kind": "interface",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 57,
+      "line": 58,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148705,7 +149139,7 @@
       "name": "NavGroup",
       "kind": "interface",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 58,
+      "line": 59,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148715,17 +149149,27 @@
       "name": "NAV",
       "kind": "array",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 60,
+      "line": 61,
       "module": "platform",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "BUILT_COMPONENTS",
+      "name": "NavComponentRow",
+      "kind": "type",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 90,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "COMPONENT_ROWS",
       "kind": "variable",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 82,
+      "line": 94,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148737,7 +149181,7 @@
       "name": "APP_SCENE",
       "kind": "object",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 87,
+      "line": 105,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148747,7 +149191,7 @@
       "name": "SECTION_COPY",
       "kind": "object",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 93,
+      "line": 111,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148757,7 +149201,7 @@
       "name": "variantCount",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 113,
+      "line": 131,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148767,7 +149211,33 @@
       "name": "ComponentCard",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 119,
+      "line": 137,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "FamilyCard",
+      "kind": "function",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 177,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "CatalogueNodeCard",
+      "kind": "function",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 197,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148780,7 +149250,7 @@
       "name": "Catalogue",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 147,
+      "line": 204,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148792,7 +149262,7 @@
       "name": "PhasePlaceholder",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 202,
+      "line": 260,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148804,7 +149274,7 @@
       "name": "Studio",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 211,
+      "line": 269,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148865,10 +149335,30 @@
       ]
     },
     {
+      "name": "symbolOf",
+      "kind": "function",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 152,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WorkbenchProps",
+      "kind": "interface",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 159,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "Workbench",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 133,
+      "line": 167,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148877,10 +149367,20 @@
       ]
     },
     {
+      "name": "setValues",
+      "kind": "function",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 187,
+      "module": "platform",
+      "exported": false,
+      "container": "Workbench",
+      "tags": []
+    },
+    {
       "name": "set",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 137,
+      "line": 190,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -148890,7 +149390,7 @@
       "name": "specimen",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 141,
+      "line": 203,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -148900,7 +149400,7 @@
       "name": "Block",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 300,
+      "line": 416,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148912,7 +149412,7 @@
       "name": "OverviewSpecimens",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 318,
+      "line": 434,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148924,7 +149424,7 @@
       "name": "UsageTab",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 414,
+      "line": 501,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148936,7 +149436,7 @@
       "name": "A11yTab",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 456,
+      "line": 543,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149406,7 +149906,7 @@
       "name": "baseline",
       "kind": "function",
       "file": "src/ui/theme/brand/brandTheme.test.ts",
-      "line": 501,
+      "line": 510,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149588,7 +150088,7 @@
       "name": "withAlpha",
       "kind": "function",
       "file": "src/ui/theme/brand/brandTheme.ts",
-      "line": 303,
+      "line": 315,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149598,7 +150098,7 @@
       "name": "assertNoLockedRoles",
       "kind": "function",
       "file": "src/ui/theme/brand/brandTheme.ts",
-      "line": 315,
+      "line": 327,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149608,7 +150108,7 @@
       "name": "NEUTRAL_BY_POLICY",
       "kind": "variable",
       "file": "src/ui/theme/brand/brandTheme.ts",
-      "line": 331,
+      "line": 343,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149618,7 +150118,7 @@
       "name": "assertNoNeutralRoles",
       "kind": "function",
       "file": "src/ui/theme/brand/brandTheme.ts",
-      "line": 338,
+      "line": 350,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149628,7 +150128,7 @@
       "name": "brandThemeFromTokens",
       "kind": "function",
       "file": "src/ui/theme/brand/brandTheme.ts",
-      "line": 349,
+      "line": 361,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149638,7 +150138,7 @@
       "name": "brandTokenNames",
       "kind": "function",
       "file": "src/ui/theme/brand/brandTheme.ts",
-      "line": 362,
+      "line": 374,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150222,7 +150722,7 @@
       "name": "resolveRole",
       "kind": "function",
       "file": "src/ui/theme/semanticTokens.test.ts",
-      "line": 220,
+      "line": 231,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150284,7 +150784,7 @@
       "name": "SEMANTIC_TOKEN_NAMES",
       "kind": "variable",
       "file": "src/ui/theme/semanticTokens.ts",
-      "line": 112,
+      "line": 117,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150294,7 +150794,7 @@
       "name": "BRAND_DRIVEN_ROLES",
       "kind": "variable",
       "file": "src/ui/theme/semanticTokens.ts",
-      "line": 115,
+      "line": 120,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150304,7 +150804,7 @@
       "name": "BRAND_LOCKED_ROLES",
       "kind": "variable",
       "file": "src/ui/theme/semanticTokens.ts",
-      "line": 122,
+      "line": 127,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150314,7 +150814,7 @@
       "name": "semanticRolesIn",
       "kind": "function",
       "file": "src/ui/theme/semanticTokens.ts",
-      "line": 124,
+      "line": 129,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -164897,6 +165397,26 @@
       "line": 76
     },
     {
+      "id": "create",
+      "title": "Create with options",
+      "module": "platform",
+      "area": "",
+      "kind": "registry",
+      "render": "() => <SplitButton action={{ label: 'Create' }} items={SAVE_ALTERNATIVES} variant=\"secondary\" />",
+      "file": "src/ui/registry/compound.defs.tsx",
+      "line": 218
+    },
+    {
+      "id": "dialog-footer",
+      "title": "Dialog footer",
+      "module": "platform",
+      "area": "",
+      "kind": "registry",
+      "render": "() => (\n        <>\n          <Button variant=\"secondary\">Cancel</Button>\n          <Button variant=\"primary\">Save</Button>\n        </>\n      )",
+      "file": "src/ui/registry/actions.defs.tsx",
+      "line": 217
+    },
+    {
       "id": "enterprise.calendar.taskPlanner",
       "title": "Task Planner",
       "module": "widgets",
@@ -164915,6 +165435,26 @@
       "render": "DeadlineWidget",
       "file": "src/ui/widgets/registry.calendarPlanning.tsx",
       "line": 290
+    },
+    {
+      "id": "export",
+      "title": "Export menu",
+      "module": "platform",
+      "area": "",
+      "kind": "registry",
+      "render": "() => <DropdownButton label=\"Export\" variant=\"secondary\" items={RECORD_MENU} />",
+      "file": "src/ui/registry/compound.defs.tsx",
+      "line": 133
+    },
+    {
+      "id": "filter",
+      "title": "Filter picker",
+      "module": "platform",
+      "area": "",
+      "kind": "registry",
+      "render": "() => <DropdownButton label=\"Status: All\" variant=\"secondary\" matchWidth items={RECORD_MENU} />",
+      "file": "src/ui/registry/compound.defs.tsx",
+      "line": 137
     },
     {
       "id": "finance.payroll.assignedWork",
@@ -165105,16 +165645,6 @@
       "render": "renderRegister",
       "file": "src/components/sections/Finance/StatutoryDashboard.tsx",
       "line": 678
-    },
-    {
-      "id": "group",
-      "title": "ButtonGroup — several INDEPENDENT actions",
-      "module": "platform",
-      "area": "",
-      "kind": "registry",
-      "render": "() => (\n        <ButtonGroup label=\"Record actions\">\n          <Button variant=\"outline\" iconLeft={<LucideIcon name=\"Download\" />}>Export</Button>\n          <Button variant=\"outline\" iconLeft={<LucideIcon name=\"Printer\" />}>Print</Button>\n          <Button variant=\"outline\" iconLeft={<LucideIcon name=\"Share2\" />}>Share</Button>\n        </ButtonGroup>\n      )",
-      "file": "src/ui/registry/actions.defs.tsx",
-      "line": 224
     },
     {
       "id": "hr.employeeMaster.activeWorkforce",
@@ -165347,6 +165877,16 @@
       "line": 249
     },
     {
+      "id": "page-action",
+      "title": "Page action",
+      "module": "platform",
+      "area": "",
+      "kind": "registry",
+      "render": "() => <Button variant=\"primary\" iconLeft={<LucideIcon name=\"Plus\" />}>Add employee</Button>",
+      "file": "src/ui/registry/actions.defs.tsx",
+      "line": 237
+    },
+    {
       "id": "platform.weather.current",
       "title": "Weather",
       "module": "widgets",
@@ -165397,14 +165937,24 @@
       "line": 518
     },
     {
-      "id": "row-actions",
-      "title": "Icon-only row actions",
+      "id": "row",
+      "title": "Row actions",
       "module": "platform",
       "area": "",
       "kind": "registry",
-      "render": "() => (\n        <div style={{ display: 'flex', gap: '4px' }}>\n          <Button variant=\"ghost\" size=\"sm\" iconOnly aria-label=\"Edit\" iconLeft={<LucideIcon name=\"Pencil\" />} />\n          <Button variant=\"ghost\" size=\"sm\" iconOnly aria-label=\"Duplicate\" iconLeft={<LucideIcon name=\"Copy\" />} />\n          <Button variant=\"ghost\" size=\"sm\" iconOnly aria-label=\"More actions\" iconLeft={<LucideIcon name=\"EllipsisVertical\" />} />\n        </div>\n      )",
-      "file": "src/ui/registry/actions.defs.tsx",
-      "line": 211
+      "render": "() => <DropdownButton label=\"Actions\" variant=\"outline\" items={RECORD_MENU} />",
+      "file": "src/ui/registry/compound.defs.tsx",
+      "line": 135
+    },
+    {
+      "id": "save",
+      "title": "Save with options",
+      "module": "platform",
+      "area": "",
+      "kind": "registry",
+      "render": "() => <SplitButton action={{ label: 'Save' }} items={SAVE_ALTERNATIVES} />",
+      "file": "src/ui/registry/compound.defs.tsx",
+      "line": 216
     },
     {
       "id": "select-all",
@@ -165435,16 +165985,6 @@
       "render": "() => <div>live</div>",
       "file": "src/ui/widgets/platform.test.tsx",
       "line": 14
-    },
-    {
-      "id": "toggle-and-link",
-      "title": "Toggle and link — props, not components",
-      "module": "platform",
-      "area": "",
-      "kind": "registry",
-      "render": "() => (\n        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>\n          <Button variant=\"outline\" pressed iconLeft={<LucideIcon name=\"Filter\" />}>Only my cases</Button>\n          <Button variant=\"link\" href=\"#audit\" iconRight={<LucideIcon name=\"ArrowRight\" />}>View audit trail</Button>\n        </div>\n      )",
-      "file": "src/ui/registry/actions.defs.tsx",
-      "line": 240
     },
     {
       "id": "tone-scale",
@@ -165485,6 +166025,16 @@
       "render": "() => <div />",
       "file": "src/ui/widgets/platform.test.tsx",
       "line": 182
+    },
+    {
+      "id": "wizard-nav",
+      "title": "Wizard navigation",
+      "module": "platform",
+      "area": "",
+      "kind": "registry",
+      "render": "() => (\n        <>\n          <Button variant=\"ghost\">Back</Button>\n          <Button variant=\"primary\" iconRight={<LucideIcon name=\"ArrowRight\" />}>Continue</Button>\n        </>\n      )",
+      "file": "src/ui/registry/actions.defs.tsx",
+      "line": 227
     }
   ],
   "routes": [

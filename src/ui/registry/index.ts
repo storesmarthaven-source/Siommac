@@ -27,6 +27,11 @@ export {
 export { DEMO_PEOPLE, DEMO_DEPARTMENTS } from './definitions';
 export { COMPOUND_OF } from './compound.defs';
 
+export {
+  type ComponentFamily, COMPONENT_FAMILIES, BUTTON_FAMILY,
+  findFamily, familyOfComponent, familyMembers,
+} from './families';
+
 import { COMPONENT_DEFS as CORE_DEFS } from './definitions';
 import { ACTION_DEFS } from './actions.defs';
 import { FORM_DEFS } from './forms.defs';
@@ -37,6 +42,7 @@ import { FEEDBACK_DEFS } from './feedback.defs';
 import { COMPOUND_DEFS } from './compound.defs';
 import { PLANNED_DEFS } from './planned';
 import { type ComponentCategory, type ComponentDef, isBuilt } from './types';
+import { type ComponentFamily, familyOfComponent, familyMembers } from './families';
 
 /**
  * The whole catalogue, built and planned.
@@ -77,10 +83,22 @@ export const CATEGORY_ORDER: ComponentCategory[] = [
   'data', 'navigation', 'feedback', 'containers', 'status', 'patterns',
 ];
 
+/**
+ * One row of the catalogue: a standalone component, or a family standing in for
+ * several. The Studio's nav and its card grid both render from this, so a family
+ * can never be grouped in one place and split in the other.
+ */
+export type CatalogueNode =
+  | { kind: 'component'; def: ComponentDef }
+  | { kind: 'family'; family: ComponentFamily; members: ComponentDef[] };
+
 export interface CategoryGroup {
   category: ComponentCategory;
   label: string;
+  /** Flat component list. Coverage counts read this — grouping must not shrink it. */
   items: ComponentDef[];
+  /** The same components with families collapsed. What the Studio renders. */
+  nodes: CatalogueNode[];
   built: number;
   total: number;
 }
@@ -90,6 +108,10 @@ export interface CategoryGroup {
  *
  * Built components sort first within a category — the workbench is for working
  * on what exists, with the gaps listed after rather than interleaved.
+ *
+ * A family takes the position of its first member, so collapsing never
+ * reshuffles the rest of a category, and `built`/`total` keep counting
+ * COMPONENTS: three cards becoming one must not make coverage look smaller.
  */
 export function componentsByCategory(): CategoryGroup[] {
   return CATEGORY_ORDER
@@ -97,10 +119,27 @@ export function componentsByCategory(): CategoryGroup[] {
       const items = COMPONENT_DEFS
         .filter(d => d.category === category)
         .sort((a, b) => Number(isBuilt(b)) - Number(isBuilt(a)));
+
+      const nodes: CatalogueNode[] = [];
+      const seen = new Set<string>();
+      for (const def of items) {
+        const family = familyOfComponent(def.id);
+        if (family?.category !== category) {
+          nodes.push({ kind: 'component', def });
+          continue;
+        }
+        if (seen.has(family.id)) continue;
+        seen.add(family.id);
+        // Resolved against `items`, so a member filtered out of this category
+        // cannot reappear through the family.
+        nodes.push({ kind: 'family', family, members: familyMembers(family, items) });
+      }
+
       return {
         category,
         label: CATEGORY_LABELS[category],
         items,
+        nodes,
         built: items.filter(isBuilt).length,
         total: items.length,
       };

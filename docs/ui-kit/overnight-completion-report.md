@@ -1,6 +1,57 @@
 # UI Kit v2 — Autonomous Completion Report
 
-Updated: 2026-08-12
+Updated: 2026-08-13
+
+## Buttons family Studio batch — complete
+
+The Buttons workbench now presents one catalogue/navigation family without
+merging three distinct interaction models:
+
+- one `Buttons` catalogue card and parent navigation row own Action Button,
+  Dropdown Button and Split Button;
+- each member retains its own registry definition, prop schema, code example,
+  accessibility contract and Properties panel;
+- Action Button exposes exactly six canonical variants: `primary`, `secondary`,
+  `outline`, `ghost`, `danger` and `link`;
+- the Overview combines the live component, canonical variant axis, real
+  application contexts and the member's own inspector rather than duplicating
+  mock controls;
+- the standalone `/studio-preview.html` development entry mounts the real
+  Studio without an ERP session, so product review does not require test
+  credentials or a parallel component implementation.
+
+Two ownership corrections are locked in:
+
+1. Tabs reads `--ui-color-navigation-active`, not Button's
+   `--ui-color-action-primary`. Button-only palette changes therefore leave the
+   tab indicator untouched; an intentional generated brand direction may still
+   move Tabs through the navigation role.
+2. Credits is a **Special treatment**, below the canonical variant and context
+   sections. It is absent from `ButtonVariant`, the component registry and the
+   Buttons family. Its Preact/CSS-recipe implementation borrows canonical Button
+   geometry, typography, focus and motion tokens while using flat SIOMAC navy,
+   white text and restrained red/gold edge, fold, particle and SVG animation.
+   It introduces no purple, gradient, styled-components runtime or second
+   styling system.
+
+Verification:
+
+```text
+Affected tests                 259 / 259 passed
+Frontend suite                1820 / 1823 passed
+Frontend typecheck baseline   47 errors, unchanged
+Changed-file lint             0 errors
+UI coverage ratchet           PASSED (improved and re-baselined)
+Catalogue completeness        71%
+App adoption                  33% (108 / 331)
+Browser                       desktop + 390×844, no horizontal overflow
+```
+
+The three unrelated full-suite failures remain in HR Email Studio seed fixtures
+(two) and Employee Profile activity fixture data (one). No UI-kit/family/token
+test failed. Browser inspection proved navy Button vs red Tabs ownership,
+exactly six variant specimens, a separately labelled Special treatments section
+and a live animated Credits control with computed navy background/white text.
 
 ## ⭐ BUTTON RETIREMENT PROGRAMME — slice log
 

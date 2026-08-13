@@ -244,6 +244,16 @@ export function brandThemeToTokens(seeds: BrandSeeds): BrandThemeBuild {
     hex => contrastRatio(hex, LIGHT_SURFACE) >= AA_TEXT,
   );
 
+  /* ── Active tab/navigation indicator ────────────────────────────────────
+     Tabs live on light application surfaces, so they own a different role
+     from both primary actions and the contrast-adjusted indicator on the dark
+     navigation rail. A broad brand mapping may intentionally move this role;
+     changing Button's role alone cannot. */
+  const navigationActive = resolve(
+    '--ui-color-navigation-active', accentSource,
+    hex => contrastRatio(hex, LIGHT_SURFACE) >= AA_NON_TEXT,
+  );
+
   /* ── Active navigation indicator ─────────────────────────────────────────
      A 3px bar on the dark rail: 3:1 as a UI component. Most saturated brand
      colours are DARKER than the rail, so this one usually moves lighter. */
@@ -270,6 +280,8 @@ export function brandThemeToTokens(seeds: BrandSeeds): BrandThemeBuild {
     '--ui-color-action-primary-text':  primaryText,
 
     '--ui-color-text-link': link,
+
+    '--ui-color-navigation-active': navigationActive,
 
     '--ui-color-focus-ring':    withAlpha(accentSource, FOCUS_RING_ALPHA),
     /* The opaque outline keyboard users navigate by. Same accessible tone as

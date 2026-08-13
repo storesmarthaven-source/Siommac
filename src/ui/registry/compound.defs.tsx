@@ -21,6 +21,7 @@
  * rather than its own.
  */
 
+import { type VNode } from 'preact';
 import { LucideIcon } from '../LucideIcon';
 import { DropdownButton, SplitButton } from '../primitives/actions';
 import { type MenuItems } from '../overlays/DropdownMenu';
@@ -31,6 +32,8 @@ const s = (v: PropValues[string] | undefined, fallback = ''): string =>
   typeof v === 'string' && v !== '' ? v : fallback;
 const b = (v: PropValues[string] | undefined): boolean => v === true;
 const size = (v: PropValues[string] | undefined): ControlSize => (v === 'sm' || v === 'lg' ? v : 'md');
+/** A control that offers an icon must actually render one, or it is decoration. */
+const icon = (n: string): VNode | undefined => (n !== 'None' ? <LucideIcon name={n as never} /> : undefined);
 
 const RECORD_MENU: MenuItems = [
   { label: 'Record', items: [
@@ -50,13 +53,16 @@ const SAVE_ALTERNATIVES: MenuItems = [
   { id: 'save-new',   label: 'Save and add new', icon: <LucideIcon name="Plus" /> },
 ];
 
-const VARIANTS = ['primary', 'secondary', 'outline', 'ghost', 'danger'] as const;
+/* Per the mockup, each compound offers its own list and its own order —
+   Dropdown leads with `secondary`, Split omits `ghost` and `link`. */
+const DROPDOWN_VARIANTS = ['secondary', 'primary', 'outline', 'ghost', 'danger'] as const;
+const SPLIT_VARIANTS = ['primary', 'secondary', 'outline', 'danger'] as const;
 
 /* ── DropdownButton ────────────────────────────────────────────────────────*/
 
 const dropdownButtonDef: ComponentDef = {
   id: 'dropdown-button',
-  name: 'DropdownButton',
+  name: 'Dropdown Button',
   category: 'actions',
   description:
     'Compound control — Button appearance + Menu behaviour. Pressing it does not perform the ' +
@@ -67,8 +73,9 @@ const dropdownButtonDef: ComponentDef = {
   importFrom: '@ui',
 
   props: {
-    label:      { type: 'text',      label: 'Trigger label', default: 'Actions' },
-    variant:    { type: 'select',    label: 'Variant', options: [...VARIANTS], default: 'outline',
+    label:      { type: 'text',      label: 'Trigger label', default: 'Export' },
+    iconLeft:   { type: 'select',    label: 'Leading icon', options: ['Download', 'None', 'EllipsisVertical', 'Filter'], default: 'Download' },
+    variant:    { type: 'select',    label: 'Variant', options: [...DROPDOWN_VARIANTS], default: 'secondary',
                   help: 'The trigger borrows Button\'s appearance, so it can never drift into a third button look.' },
     size:       { type: 'segmented', label: 'Size', options: ['sm', 'md', 'lg'], default: 'md' },
     matchWidth: { type: 'boolean',   label: 'Match menu to trigger width', default: false,
@@ -94,10 +101,11 @@ const dropdownButtonDef: ComponentDef = {
 
   render: (p, state) => (
     <DropdownButton
-      label={s(p.label, 'Actions')}
+      label={s(p.label, 'Export')}
       items={RECORD_MENU}
-      variant={s(p.variant, 'outline') as never}
+      variant={s(p.variant, 'secondary') as never}
       size={size(p.size)}
+      iconLeft={icon(s(p.iconLeft, 'None'))}
       matchWidth={b(p.matchWidth)}
       disabled={b(p.disabled) || state === 'disabled'}
       forceState={state}
@@ -105,8 +113,9 @@ const dropdownButtonDef: ComponentDef = {
   ),
 
   code: (p) => `<DropdownButton
-  label="${s(p.label, 'Actions')}"
-  variant="${s(p.variant, 'outline')}"${b(p.matchWidth) ? '\n  matchWidth' : ''}${b(p.disabled) ? '\n  disabled' : ''}
+  label="${s(p.label, 'Export')}"
+  variant="${s(p.variant, 'secondary')}"${s(p.iconLeft, 'None') !== 'None' ? `
+  iconLeft={<LucideIcon name="${s(p.iconLeft)}" />}` : ''}${b(p.matchWidth) ? '\n  matchWidth' : ''}${b(p.disabled) ? '\n  disabled' : ''}
   items={[
     { id: 'edit', label: 'Edit details' },
     { id: 'export', label: 'Export to CSV' },
@@ -118,13 +127,23 @@ const dropdownButtonDef: ComponentDef = {
     { label: 'Export menu',  props: { label: 'Export', variant: 'outline', size: 'md', matchWidth: false, disabled: false } },
     { label: 'Filter picker', props: { label: 'Department', variant: 'outline', size: 'md', matchWidth: true, disabled: false } },
   ],
+
+  /* The mockup's "Typical patterns" cards. */
+  examples: [
+    { id: 'export',  title: 'Export menu', description: 'PDF · Excel · CSV',
+      render: () => <DropdownButton label="Export" variant="secondary" items={RECORD_MENU} /> },
+    { id: 'row',     title: 'Row actions', description: 'Edit · Archive · Delete',
+      render: () => <DropdownButton label="Actions" variant="outline" items={RECORD_MENU} /> },
+    { id: 'filter',  title: 'Filter picker', description: 'Can match trigger width',
+      render: () => <DropdownButton label="Status: All" variant="secondary" matchWidth items={RECORD_MENU} /> },
+  ],
 };
 
 /* ── SplitButton ───────────────────────────────────────────────────────────*/
 
 const splitButtonDef: ComponentDef = {
   id: 'split-button',
-  name: 'SplitButton',
+  name: 'Split Button',
   category: 'actions',
   description:
     'Compound control — a default action plus its alternatives. The left half performs the action ' +
@@ -135,9 +154,10 @@ const splitButtonDef: ComponentDef = {
   importFrom: '@ui',
 
   props: {
+    iconLeft:  { type: 'select',    label: 'Leading icon', options: ['Save', 'None', 'Plus'], default: 'Save' },
     label:     { type: 'text',      label: 'Primary action', default: 'Save changes',
                  help: 'The action the left half performs immediately — not a menu heading.' },
-    variant:   { type: 'select',    label: 'Variant', options: [...VARIANTS], default: 'primary' },
+    variant:   { type: 'select',    label: 'Variant', options: [...SPLIT_VARIANTS], default: 'primary' },
     size:      { type: 'segmented', label: 'Size', options: ['sm', 'md', 'lg'], default: 'md' },
     menuLabel: { type: 'text',      label: 'Menu accessible name', default: 'More save options',
                  help: 'The arrow half is its own control and needs its own name — "More save options", not "Save".' },
@@ -165,7 +185,7 @@ const splitButtonDef: ComponentDef = {
 
   render: (p, state) => (
     <SplitButton
-      action={{ label: s(p.label, 'Save changes'), icon: <LucideIcon name="Save" /> }}
+      action={{ label: s(p.label, 'Save changes'), icon: icon(s(p.iconLeft, 'None')) }}
       items={SAVE_ALTERNATIVES}
       variant={s(p.variant, 'primary') as never}
       size={size(p.size)}
@@ -177,7 +197,7 @@ const splitButtonDef: ComponentDef = {
   ),
 
   code: (p) => `<SplitButton
-  action={{ label: '${s(p.label, 'Save changes')}', onSelect: save }}
+  action={{ label: '${s(p.label, 'Save changes')}',${s(p.iconLeft, 'None') !== 'None' ? ` icon: <LucideIcon name="${s(p.iconLeft)}" />,` : ''} onSelect: save }}
   menuLabel="${s(p.menuLabel, 'More save options')}"
   variant="${s(p.variant, 'primary')}"${b(p.loading) ? '\n  loading' : ''}${b(p.disabled) ? '\n  disabled' : ''}
   items={[
@@ -189,6 +209,14 @@ const splitButtonDef: ComponentDef = {
   presets: [
     { label: 'Save with options', props: { label: 'Save changes', variant: 'primary', size: 'md', menuLabel: 'More save options', loading: false, disabled: false } },
     { label: 'Submitting',        props: { label: 'Save changes', variant: 'primary', size: 'md', menuLabel: 'More save options', loading: true,  disabled: false } },
+  ],
+
+  /* The mockup's "Use when one option is usually correct" cards. */
+  examples: [
+    { id: 'save',   title: 'Save with options', description: 'Save & close · Save draft',
+      render: () => <SplitButton action={{ label: 'Save' }} items={SAVE_ALTERNATIVES} /> },
+    { id: 'create', title: 'Create with options', description: 'Create & open · Create another',
+      render: () => <SplitButton action={{ label: 'Create' }} items={SAVE_ALTERNATIVES} variant="secondary" /> },
   ],
 };
 

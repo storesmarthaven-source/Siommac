@@ -114,6 +114,153 @@ const files = walk('src').map(f => ({ f, posix: f.split(path.sep).join('/') }));
 const shapes = new Map();      // raw prop signature      -> entry
 const structures = new Map();  // structural signature    -> entry
 let dynamicSites = 0;
+
+/* ── Retirement classification ────────────────────────────────────────────────
+   The Button retirement programme needs every raw <button> sorted into the
+   bucket that decides what happens to it — not one undifferentiated debt number:
+
+     active-legacy      a legacy family on a page the app can still reach.
+                        MIGRATE the consumer to its canonical owner, then delete
+                        the runtime/CSS once the family hits zero consumers.
+     legacy-page-only   a legacy family whose only consumers sit on pages nothing
+                        imports. Do NOT mechanically migrate.
+
+                        ⛔ UNREACHABLE IS NOT THE SAME AS OBSOLETE. A page is
+                        also unreachable when it is BUILT BUT NOT YET WIRED —
+                        the Email Studio is exactly that, and deleting it would
+                        destroy in-flight work. This bucket is a SHORTLIST FOR A
+                        HUMAN, never an auto-retire list. `inFlight` below names
+                        the surfaces already known to be not-yet-wired.
+     unresolved         no class, or `class={expr}`. Cannot be attributed to a
+                        family by any static rule, so it needs a human per site.
+                        Counted loudly rather than quietly dropped.
+
+   "Reachable" is import-graph reachability from the real entry, so a page is
+   called dead only when nothing imports it — never because it looked unused. */
+
+const ENTRY = 'src/main.tsx';
+
+/**
+ * Unreachable, but NOT obsolete — do not propose these for retirement.
+ *
+ * Each is an active programme whose page is not wired into the shell yet.
+ * Listed here rather than silently excluded, so the exemption is auditable and
+ * someone can challenge an entry that has since gone stale.
+ */
+const IN_FLIGHT = [
+  ['src/components/sections/HR/emailStudio/', 'Email Template Studio — active programme; also holds the protected stash@{0}'],
+];
+const inFlightReason = (posix) => IN_FLIGHT.find(([prefix]) => posix.startsWith(prefix))?.[1];
+
+/** vite.config.ts aliases, longest-prefix first. Kept in sync by hand — a
+ *  missing alias makes a live file look dead, so unresolved imports are counted
+ *  and reported rather than silently skipped. */
+const ALIASES = [
+  ['@api/', 'src/api/'], ['@store/', 'src/store/'], ['@lib/', 'src/lib/'],
+  ['@shared/', 'src/components/shared/'], ['@payslip/', 'src/components/sections/PayslipStudio/'],
+  ['@sections/', 'src/components/sections/'], ['@ui/', 'src/ui/'],
+  ['@components/', 'src/components/'], ['@cfg/', 'src/config/'],
+  ['@shell/', 'src/shell/'], ['@/', 'src/'],
+];
+const BARE = { '@store': 'src/store/index.ts', '@cfg': 'src/config/index.ts',
+  '@lib': 'src/lib/index.ts', '@ui': 'src/ui/index.ts', '@shell': 'src/shell/index.ts' };
+
+const EXTS = ['.tsx', '.ts', '/index.tsx', '/index.ts'];
+let unresolvedImports = 0;
+
+function resolveSpec(spec, fromPosix) {
+  let base = null;
+  if (BARE[spec]) base = BARE[spec];
+  else {
+    for (const [a, r] of ALIASES) if (spec.startsWith(a)) { base = r + spec.slice(a.length); break; }
+    if (!base && spec.startsWith('.')) {
+      base = path.posix.normalize(path.posix.join(path.posix.dirname(fromPosix), spec));
+    }
+  }
+  if (!base) return null;                       // package import — not our graph
+  for (const ext of ['', ...EXTS]) {
+    const cand = base + ext;
+    if (fs.existsSync(path.join(ROOT, cand)) && fs.statSync(path.join(ROOT, cand)).isFile()) return cand;
+  }
+  unresolvedImports += 1;
+  return null;
+}
+
+/** Files reachable from the entry by static import. */
+function reachableFromEntry() {
+  const seen = new Set();
+  const queue = [ENTRY];
+  /* Three forms, and the SECOND is the one that matters: `import '@sections/HR';`
+     is a side-effect import with no `from` clause, and it is how every module
+     self-registers. Missing it made 136 live pages look unreachable. */
+  const importRe = new RegExp(
+    String.raw`(?:import|export)[^;]*?from\s*['"]([^'"]+)['"]` + '|' +
+    String.raw`import\s+['"]([^'"]+)['"]` + '|' +
+    String.raw`import\(\s*['"]([^'"]+)['"]\s*\)`,
+    'g',
+  );
+  while (queue.length) {
+    const cur = queue.pop();
+    if (!cur || seen.has(cur)) continue;
+    seen.add(cur);
+    let text;
+    try { text = fs.readFileSync(path.join(ROOT, cur), 'utf8'); } catch { continue; }
+    importRe.lastIndex = 0;
+    let m;
+    while ((m = importRe.exec(text))) {
+      const next = resolveSpec(m[1] ?? m[2] ?? m[3], cur);
+      if (next && !seen.has(next)) queue.push(next);
+    }
+  }
+  return seen;
+}
+
+const REACHABLE = reachableFromEntry();
+
+const retirement = {
+  activeLegacy: new Map(),      // family -> { count, files:Set }
+  legacyPageOnly: new Map(),
+  unresolved: { noClass: 0, dynamic: 0, files: new Set() },
+  deadFiles: new Set(),
+  inFlightFiles: new Set(),
+};
+let rawTotal = 0;
+
+function classifyRaw(text, posix) {
+  if (zoneOf(posix) !== 'app') return;          // the kit and its docs are not debt
+  const live = REACHABLE.has(posix);
+  const re = /<button\b([^>]*)>/g;
+  let m;
+  while ((m = re.exec(text))) {
+    rawTotal += 1;
+    const attrs = m[1];
+    const cm = attrs.match(/class(?:Name)?=\{?["']([^"']+)["']/);
+    if (!cm) {
+      if (/class(?:Name)?=\{/.test(attrs)) retirement.unresolved.dynamic += 1;
+      else retirement.unresolved.noClass += 1;
+      retirement.unresolved.files.add(posix);
+      continue;
+    }
+    const inFlight = inFlightReason(posix) !== undefined;
+    if (!live && !inFlight) retirement.deadFiles.add(posix);
+    if (!live && inFlight) retirement.inFlightFiles.add(posix);
+    // An in-flight surface is neither active-legacy nor retirable. Counting it
+    // as either would put real work on a deletion list.
+    if (!live && inFlight) continue;
+    const bucket = live ? retirement.activeLegacy : retirement.legacyPageOnly;
+    for (const cls of cm[1].trim().split(/\s+/)) {
+      if (!bucket.has(cls)) bucket.set(cls, { count: 0, files: new Set() });
+      const e = bucket.get(cls);
+      e.count += 1;
+      e.files.add(posix);
+    }
+  }
+}
+
+const famList = (m) => [...m.entries()]
+  .sort((a, b) => b[1].count - a[1].count)
+  .map(([family, e]) => ({ family, count: e.count, files: [...e.files].sort() }));
+
 let legacyButtons = 0;
 const legacyFiles = new Set();
 
@@ -140,11 +287,18 @@ for (const { f, posix } of files) {
   }
 
   // Legacy raw markup — the migration debt, counted not hidden.
+  //
+  // ⚠ This pattern matches only `class="…btn…"`, which is why it reports ~544
+  // when the real figure is ~1,500: most legacy buttons carry a module family
+  // (`hse-btn`, `hrfin-action`, `obx-mini`) that never contains the token `btn`.
+  // Kept for continuity of the number; `retirement` below is the honest one.
   const legacy = text.match(/<button[^>]*class(?:Name)?="[^"]*\bbtn\b[^"]*"/g);
   if (legacy) {
     legacyButtons += legacy.length;
     legacyFiles.add(posix);
   }
+
+  classifyRaw(text, posix);
 }
 
 const payload = {
@@ -161,6 +315,38 @@ const payload = {
     dynamicSites,
     legacyButtons,
     legacyFiles: legacyFiles.size,
+    /** Every raw <button> in app code, the honest denominator for retirement. */
+    rawAppButtons: rawTotal,
+  },
+
+  /* The retirement programme's working set. One inventory, four buckets — a
+     second scanner would drift from this one within a week. */
+  retirement: {
+    _comment:
+      'active-legacy = migrate the consumer, then delete the family once it hits ' +
+      'zero. legacy-page-only = the page itself is unreachable from src/main.tsx; ' +
+      'retire page + component + styles together, do NOT mechanically migrate. ' +
+      'unresolved = no class or class={expr}; needs a decision per site.',
+    counts: {
+      activeLegacy: [...retirement.activeLegacy.values()].reduce((n, e) => n + e.count, 0),
+      legacyPageOnly: [...retirement.legacyPageOnly.values()].reduce((n, e) => n + e.count, 0),
+      unresolved: retirement.unresolved.noClass + retirement.unresolved.dynamic,
+      unreachablePages: retirement.deadFiles.size,
+      inFlightPages: retirement.inFlightFiles.size,
+      /** Aliases this scan could not resolve — a high number invalidates the split. */
+      unresolvedImports,
+    },
+    activeLegacy: famList(retirement.activeLegacy),
+    legacyPageOnly: famList(retirement.legacyPageOnly),
+    unresolved: {
+      noClass: retirement.unresolved.noClass,
+      dynamic: retirement.unresolved.dynamic,
+      files: [...retirement.unresolved.files].sort(),
+    },
+    /** Unreachable AND not known in-flight. A shortlist to confirm, not to delete. */
+    unreachablePages: [...retirement.deadFiles].sort(),
+    inFlight: IN_FLIGHT.map(([prefix, why]) => ({ prefix, why })),
+    inFlightPages: [...retirement.inFlightFiles].sort(),
   },
   /** Structural first: it is what a design review acts on. */
   structures: [...structures.values()]
@@ -178,4 +364,12 @@ console.log(
   `Button usage: ${payload.totals.canonicalSites} sites → ${payload.totals.distinctShapes} raw signatures → ` +
   `${payload.totals.structuralPatterns} STRUCTURAL patterns · ${dynamicSites} dynamic · ` +
   `${legacyButtons} legacy <button class="btn…"> across ${legacyFiles.size} files`,
+);
+console.log(
+  `Retirement: ${payload.retirement.counts.activeLegacy} active-legacy · ` +
+  `${payload.retirement.counts.legacyPageOnly} legacy-page-only ` +
+  `(${payload.retirement.counts.unreachablePages} unreachable, ` +
+  `${payload.retirement.counts.inFlightPages} in-flight excluded) · ` +
+  `${payload.retirement.counts.unresolved} unresolved · ` +
+  `${unresolvedImports} unresolved imports`,
 );

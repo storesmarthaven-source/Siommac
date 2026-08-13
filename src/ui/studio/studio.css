@@ -551,3 +551,208 @@
 .sds-pg__who { padding: 12px 0 10px; border-bottom: 1px solid var(--sds-line); }
 .sds-pg__who strong { display: block; font-size: 15px; font-weight: 600; }
 .sds-pg__who span { font-size: 12px; color: var(--sds-ink-3); }
+
+/* ── Families ────────────────────────────────────────────────────────────────
+   Ported from artifacts/studio-buttons-mockup (the approved prototype). Values
+   are the mockup's; the mockup in turn follows the Studio chrome already here,
+   so this adds a family treatment rather than a second visual language.
+
+   Grouping is NAVIGATION only — Action / Dropdown / Split Button remain three
+   components with three APIs and three Properties schemas. */
+
+/* Nav — one row per family, members nested under a rail. */
+.sds-nav__count {
+  margin-left: auto; min-width: 22px; height: 20px;
+  display: grid; place-items: center;
+  border-radius: 999px; background: #f2f2f2;
+  color: var(--sds-ink-3); font-size: 11px; font-variant-numeric: tabular-nums;
+}
+.sds-nav__kids { margin: 2px 0 4px; padding: 0 0 0 14px; list-style: none; border-left: 1px solid var(--sds-line); }
+.sds-nav__item--kid { min-height: 28px; font-size: 14px; color: var(--sds-ink-2); }
+
+/* Family page header */
+.sds-wb__head--family { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.sds-family-chip {
+  flex: none; padding: 5px 9px;
+  border: 1px solid var(--sds-line); border-radius: 999px;
+  background: #fafafa; color: var(--sds-ink-3); font-size: 12px;
+}
+
+/* Subtype selector — which COMPONENT the workbench works on. Above the tabs
+   because it is the larger decision: a tab changes how you look at a
+   component, this changes which component it is. */
+.sds-family { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 18px 0 22px; }
+.sds-family__type {
+  position: relative; min-width: 0; min-height: 86px;
+  display: grid; grid-template-columns: auto minmax(0, 1fr);
+  align-items: center; gap: 12px;
+  padding: 13px 14px;
+  border: 1px solid var(--sds-line); border-radius: 10px;
+  background: #fff;
+  text-align: left; font: inherit; color: inherit;
+  cursor: pointer;
+  transition: border-color .14s, box-shadow .14s, background .14s;
+}
+.sds-family__type:hover { border-color: #d4d4d4; background: #fcfcfc; }
+.sds-family__type:focus-visible { outline: 2px solid var(--sds-accent); outline-offset: 2px; }
+.sds-family__type.is-on { border-color: #b8c4d6; box-shadow: 0 0 0 2px rgba(47, 74, 125, .08); background: #fbfcfe; }
+.sds-family__type.is-on::before {
+  content: ""; position: absolute; left: 0; top: 12px; bottom: 12px;
+  width: 3px; border-radius: 0 3px 3px 0; background: var(--sds-accent);
+}
+.sds-family__preview {
+  display: grid; place-items: center;
+  min-width: 94px; height: 48px; padding: 0 8px;
+  border: 1px solid #eee; border-radius: 8px; background: #fafafa;
+  /* The specimen illustrates the option; the option takes the click. Without
+     this the inner button swallows it and the subtype never changes. */
+  pointer-events: none;
+}
+.sds-family__copy { min-width: 0; }
+.sds-family__copy strong { display: block; font-size: 14px; font-weight: 600; }
+.sds-family__copy small { display: block; margin-top: 2px; font-size: 12px; color: var(--sds-ink-3); }
+.sds-family__state { position: absolute; right: 10px; top: 8px; font-size: 10px; color: #8a8a8a; }
+
+/* ── Preview block ───────────────────────────────────────────────────────────
+   Frames the specimen with its name, ownership and caption. The canvas and
+   note overrides are SCOPED to this block so every other component's
+   workbench keeps the canvas it already had. */
+.sds-preview-block { overflow: hidden; border: 1px solid var(--sds-line); border-radius: 10px; background: #fff; }
+.sds-preview-block__head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 56px; padding: 10px 14px;
+  border-bottom: 1px solid var(--sds-line);
+}
+.sds-preview-block__head strong { display: block; font-size: 14px; font-weight: 600; }
+.sds-preview-block__eyebrow {
+  display: block; margin-bottom: 1px;
+  font-size: 10px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--sds-ink-3);
+}
+.sds-preview-block__meta { font-size: 11px; color: var(--sds-ink-3); }
+.sds-preview-block .sds-canvas { padding: 32px 28px; border: 0; background: #fff; }
+.sds-preview-block .sds-canvas--hero { min-height: 230px; }
+.sds-preview-block .sds-wb__note {
+  margin: 0; padding: 11px 14px;
+  border-top: 1px solid var(--sds-line); background: #fcfcfc;
+  font-size: 13px; color: var(--sds-ink-2);
+}
+
+/* Measurement guides. Decoration with a job: a centred cross and four
+   crosshair nodes give the eye a reference, so a control that is off-centre or
+   the wrong height shows without measuring it. */
+.sds-tech-canvas { position: relative; overflow: hidden; background: #fff; }
+.sds-tech-canvas .sds-canvas__single,
+.sds-tech-canvas .sds-axis { position: relative; z-index: 2; }
+.sds-tech-canvas__guides i { position: absolute; display: block; pointer-events: none; }
+.sds-tech-canvas__guides .v { top: 22px; bottom: 22px; left: 50%; width: 1px; background: rgba(15, 23, 42, .05); }
+.sds-tech-canvas__guides .h { left: 8%; right: 8%; top: 50%; height: 1px; background: rgba(15, 23, 42, .05); }
+.sds-tech-canvas__guides .n { width: 34px; height: 34px; border: 1px solid rgba(15, 23, 42, .055); border-radius: 50%; }
+.sds-tech-canvas__guides .n::before,
+.sds-tech-canvas__guides .n::after { content: ""; position: absolute; background: rgba(15, 23, 42, .04); }
+.sds-tech-canvas__guides .n::before { left: 50%; top: -11px; width: 1px; height: 56px; }
+.sds-tech-canvas__guides .n::after { top: 50%; left: -11px; width: 56px; height: 1px; }
+.sds-tech-canvas__guides .n1 { left: 21%; top: 29%; }
+.sds-tech-canvas__guides .n2 { right: 21%; top: 29%; }
+.sds-tech-canvas__guides .n3 { left: 21%; bottom: 21%; }
+.sds-tech-canvas__guides .n4 { right: 21%; bottom: 21%; }
+
+/* ── Properties ──────────────────────────────────────────────────────────── */
+.sds-pg__who { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.sds-who-badge {
+  flex: none; align-self: flex-start;
+  padding: 4px 7px; border-radius: 999px; background: #f5f5f5;
+  color: #666; font-size: 10px; white-space: nowrap;
+}
+.sds-toggle-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 34px; font-size: 13px; font-weight: 500;
+  cursor: pointer;
+}
+.sds-toggle-row input { width: 18px; height: 18px; margin: 0; accent-color: var(--sds-accent); }
+
+@media (max-width: 760px) {
+  .sds-family { grid-template-columns: 1fr; }
+  .sds-wb__head--family { display: block; }
+  .sds-family-chip { display: inline-block; margin-top: 12px; }
+}
+
+/* Common application use — context cards, ported from the mockup. */
+.sds-use-context { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.sds-use-context article {
+  min-width: 0; padding: 14px;
+  border: 1px solid var(--sds-line); border-radius: 10px; background: #fff;
+}
+.sds-use-context article div { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.ctx-kicker { font-size: 12px; font-weight: 600; color: var(--sds-ink-2); }
+@media (max-width: 760px) { .sds-use-context { grid-template-columns: 1fr; } }
+
+/* Editing mode — Preview vs canonical defaults. */
+.sds-pg__mode { padding: 12px 0; border-bottom: 1px solid var(--sds-line); }
+.sds-pg__modehead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.sds-pg__modehead strong { font-size: 12px; }
+.sds-pg__modehead span { font-size: 11px; color: #15803d; }
+.sds-pg__mode p { margin: 7px 0 0; color: var(--sds-ink-3); font-size: 11px; line-height: 1.45; }
+.sds-seg--wide { display: flex; width: 100%; }
+.sds-seg--wide .sds-seg__btn { flex: 1; }
+.sds-seg__btn:disabled { cursor: not-allowed; opacity: .55; }
+.sds-ctl__input:disabled { background: #fafafa; color: var(--sds-ink-3); cursor: not-allowed; }
+.sds-toggle-row input:disabled { cursor: not-allowed; opacity: .55; }
+
+/* Typical patterns — one whole control per card, with a caption. */
+.sds-pattern-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.sds-pattern-grid--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sds-pattern-grid article {
+  min-width: 0; min-height: 128px; padding: 14px;
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 10px;
+  border: 1px solid var(--sds-line); border-radius: 10px; background: #fff;
+}
+.sds-pattern-grid article > span:first-child { font-size: 13px; font-weight: 600; }
+.sds-pattern-grid small, .sds-use-context small { font-size: 11px; color: var(--sds-ink-3); }
+@media (max-width: 760px) {
+  .sds-pattern-grid, .sds-pattern-grid--two { grid-template-columns: 1fr; }
+}
+
+/* Special treatments — explicitly outside the canonical variant axis. */
+.sds-special { padding-top: 22px; border-top: 1px dashed var(--sds-line); }
+.sds-special__card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, .72fr);
+  gap: 22px;
+  overflow: hidden;
+  border: 1px solid var(--sds-line);
+  border-radius: 10px;
+  background: #fff;
+}
+.sds-special__copy { padding: 18px; }
+.sds-special__eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--sds-ink-3);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+.sds-special__copy h5 { margin: 0; font-size: 15px; font-weight: 650; }
+.sds-special__copy p {
+  max-width: 58ch;
+  margin: 6px 0 0;
+  color: var(--sds-ink-2);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.sds-special__copy code { font-size: 11px; }
+.sds-special__preview {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 150px;
+  padding: 26px;
+  border-left: 1px solid var(--sds-line);
+  background: var(--sds-subtle);
+}
+@media (max-width: 760px) {
+  .sds-special__card { grid-template-columns: 1fr; }
+  .sds-special__preview { border-top: 1px solid var(--sds-line); border-left: 0; }
+}

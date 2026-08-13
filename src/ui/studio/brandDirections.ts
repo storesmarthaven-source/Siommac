@@ -31,7 +31,12 @@ const ROLE_ACTION = ['--ui-color-action-primary', '--ui-color-action-primary-hov
 const ROLE_FOCUS = ['--ui-color-focus-outline', '--ui-color-focus-ring'];
 const ROLE_SELECTION_EDGE = ['--ui-color-selection-border'];
 const ROLE_SELECTION_FILL = ['--ui-color-selection-background'];
-const ROLE_NAV_ACTIVE = ['--ui-color-nav-active-background', '--ui-color-nav-active-indicator', '--ui-color-nav-active-text'];
+const ROLE_NAV_ACTIVE = [
+  '--ui-color-navigation-active',
+  '--ui-color-nav-active-background',
+  '--ui-color-nav-active-indicator',
+  '--ui-color-nav-active-text',
+];
 const ROLE_LINK = ['--ui-color-text-link'];
 const SEEDS = [SEED_PRIMARY_TOKEN, SEED_ACCENT_TOKEN];
 

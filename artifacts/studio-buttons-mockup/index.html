@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SIOMAC Design System — Buttons</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="sds">
+  <aside class="sds-nav">
+    <div class="sds-nav__brand">
+      <span class="sds-nav__mark">SIOMAC</span>
+      <span class="sds-nav__sub">Design System</span>
+    </div>
+
+    <div class="sds-nav__group">
+      <button class="sds-nav__gh" type="button">Brand <span>⌄</span></button>
+      <ul>
+        <li><button class="sds-nav__item" type="button"><span class="ico">◫</span>Brand Overview</button></li>
+        <li><button class="sds-nav__item" type="button"><span class="ico">◐</span>Theme Generator</button></li>
+        <li><button class="sds-nav__item" type="button"><span class="ico">□</span>Logo &amp; Assets</button></li>
+      </ul>
+    </div>
+
+    <div class="sds-nav__group">
+      <button class="sds-nav__gh" type="button">Foundations <span>⌄</span></button>
+      <ul>
+        <li><button class="sds-nav__item" type="button"><span class="ico">●</span>Colors</button></li>
+        <li><button class="sds-nav__item" type="button"><span class="ico">T</span>Typography</button></li>
+        <li><button class="sds-nav__item" type="button"><span class="ico">↔</span>Spacing</button></li>
+      </ul>
+    </div>
+
+    <div class="sds-nav__group">
+      <button class="sds-nav__gh" type="button">Components <span>⌄</span></button>
+      <ul>
+        <li><button class="sds-nav__item is-active" type="button"><span class="ico">▭</span>Buttons</button></li>
+        <li><button class="sds-nav__item" type="button"><span class="ico">▤</span>Text Input</button></li>
+        <li><button class="sds-nav__item" type="button"><span class="ico">⌄</span>Select</button></li>
+        <li><button class="sds-nav__item" type="button"><span class="ico">◉</span>Badge</button></li>
+        <li><button class="sds-nav__item" type="button"><span class="ico">▦</span>DataTable</button></li>
+      </ul>
+    </div>
+
+    <button class="sds-nav__exit" type="button">← Back to SIOMAC</button>
+  </aside>
+
+  <div class="sds-col">
+    <header class="sds-top">
+      <nav class="sds-crumbs" aria-label="Breadcrumb">
+        <span>Components</span>
+        <span>›</span>
+        <span class="is-current">Buttons</span>
+      </nav>
+      <span class="sds-top__meta">53 registered definitions</span>
+    </header>
+
+    <main class="sds-main">
+      <div class="sds-wb">
+        <button class="sds-wb__back" type="button">← Components</button>
+
+        <header class="sds-wb__head sds-wb__head--family">
+          <div>
+            <h2>Buttons</h2>
+            <p>
+              A single action family with three interaction patterns. They share the same visual
+              language, while each keeps the behaviour and properties appropriate to its role.
+            </p>
+          </div>
+          <span class="sds-family-chip">3 button types</span>
+        </header>
+
+        <input class="family-radio" type="radio" name="buttonFamily" id="family-action" checked />
+        <input class="family-radio" type="radio" name="buttonFamily" id="family-dropdown" />
+        <input class="family-radio" type="radio" name="buttonFamily" id="family-split" />
+
+        <div class="sds-family" role="tablist" aria-label="Button types">
+          <label for="family-action" class="sds-family__type family-action">
+            <span class="sds-family__preview"><button class="ui-btn ui-btn--primary" type="button" tabindex="-1">Save</button></span>
+            <span class="sds-family__copy">
+              <strong>Action Button</strong>
+              <small>Performs one action</small>
+            </span>
+            <span class="sds-family__state">Canonical</span>
+          </label>
+
+          <label for="family-dropdown" class="sds-family__type family-dropdown">
+            <span class="sds-family__preview"><button class="ui-btn ui-btn--secondary" type="button" tabindex="-1">Export <span class="ui-chevron">⌄</span></button></span>
+            <span class="sds-family__copy">
+              <strong>Dropdown Button</strong>
+              <small>Reveals related actions</small>
+            </span>
+            <span class="sds-family__state">Button + Menu</span>
+          </label>
+
+          <label for="family-split" class="sds-family__type family-split">
+            <span class="sds-family__preview">
+              <span class="ui-split">
+                <button class="ui-btn ui-btn--primary ui-split__main" type="button" tabindex="-1">Save</button>
+                <button class="ui-btn ui-btn--primary ui-split__menu" type="button" tabindex="-1">⌄</button>
+              </span>
+            </span>
+            <span class="sds-family__copy">
+              <strong>Split Button</strong>
+              <small>Default action + alternatives</small>
+            </span>
+            <span class="sds-family__state">Button + Menu</span>
+          </label>
+        </div>
+
+        <div class="sds-wb__tabs" role="tablist" aria-label="Buttons workbench">
+          <button type="button" role="tab" aria-selected="true" class="sds-wb__tab is-on">Overview</button>
+          <button type="button" role="tab" aria-selected="false" class="sds-wb__tab">Playground</button>
+          <button type="button" role="tab" aria-selected="false" class="sds-wb__tab">Usage</button>
+          <button type="button" role="tab" aria-selected="false" class="sds-wb__tab">Accessibility</button>
+          <button type="button" role="tab" aria-selected="false" class="sds-wb__tab">Code</button>
+        </div>
+
+        <!-- ACTION -->
+        <section class="sds-family-panel panel-action">
+          <div class="sds-pg">
+            <div class="sds-pg__stage">
+              <section class="sds-preview-block">
+                <header class="sds-preview-block__head">
+                  <div>
+                    <span class="sds-preview-block__eyebrow">Live preview</span>
+                    <strong>Action Button</strong>
+                  </div>
+                  <span class="sds-preview-block__meta">Canonical component</span>
+                </header>
+
+                <div data-ui-preview-scope="true">
+                  <div class="sds-canvas sds-canvas--hero sds-tech-canvas">
+                    <div class="sds-tech-canvas__guides" aria-hidden="true">
+                      <i class="v"></i><i class="h"></i><i class="n n1"></i><i class="n n2"></i><i class="n n3"></i><i class="n n4"></i>
+                    </div>
+                    <div class="sds-canvas__single">
+                      <button type="button" class="ui-btn ui-btn--primary">
+                        <span class="ui-btn-label">Save changes</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <p class="sds-wb__note">One immediate action. Used throughout dialogs, forms, page actions and wizard navigation.</p>
+              </section>
+
+              <div class="sds-wb__rule"></div>
+
+              <section class="sds-ov__sec">
+                <header class="sds-ov__hd">
+                  <h4>Variants</h4>
+                  <p>The six canonical appearances. All still belong to the same Action Button.</p>
+                </header>
+                <div class="sds-ov__surface">
+                  <div class="sds-axis">
+                    <div class="sds-axis__cell"><div class="sds-axis__spec"><button class="ui-btn ui-btn--primary">Save changes</button></div><code>primary</code></div>
+                    <div class="sds-axis__cell"><div class="sds-axis__spec"><button class="ui-btn ui-btn--secondary">Cancel</button></div><code>secondary</code></div>
+                    <div class="sds-axis__cell"><div class="sds-axis__spec"><button class="ui-btn ui-btn--outline">Preview</button></div><code>outline</code></div>
+                    <div class="sds-axis__cell"><div class="sds-axis__spec"><button class="ui-btn ui-btn--ghost">Back</button></div><code>ghost</code></div>
+                    <div class="sds-axis__cell"><div class="sds-axis__spec"><button class="ui-btn ui-btn--danger">Delete</button></div><code>danger</code></div>
+                    <div class="sds-axis__cell"><div class="sds-axis__spec"><button class="ui-btn ui-btn--link">View record</button></div><code>link</code></div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="sds-ov__sec">
+                <header class="sds-ov__hd">
+                  <h4>Common application use</h4>
+                  <p>Context owns the action. The Button still owns its visual and interaction contract.</p>
+                </header>
+                <div class="sds-use-context">
+                  <article><span class="ctx-kicker">Dialog footer</span><div><button class="ui-btn ui-btn--secondary">Cancel</button><button class="ui-btn ui-btn--primary">Save</button></div></article>
+                  <article><span class="ctx-kicker">Wizard navigation</span><div><button class="ui-btn ui-btn--ghost">Back</button><button class="ui-btn ui-btn--primary">Continue →</button></div></article>
+                  <article><span class="ctx-kicker">Page action</span><div><button class="ui-btn ui-btn--primary">＋ Add employee</button></div></article>
+                </div>
+              </section>
+            </div>
+
+            <aside class="sds-pg__panel">
+              <header class="sds-pg__who">
+                <div>
+                  <strong>Action Button</strong>
+                  <span>Canonical component · Actions</span>
+                </div>
+                <span class="sds-who-badge">Button</span>
+              </header>
+
+              <section class="sds-pg__mode">
+                <div class="sds-pg__modehead"><strong>Editing mode</strong><span>Preview only</span></div>
+                <div class="sds-seg sds-seg--wide">
+                  <button type="button" class="sds-seg__btn is-on">Preview</button>
+                  <button type="button" class="sds-seg__btn">Canonical defaults</button>
+                </div>
+                <p>Preview changes affect this specimen only. App-wide publishing is a separate workflow.</p>
+              </section>
+
+              <section class="sds-pg__grp">
+                <h4>Appearance</h4>
+                <div class="sds-ctl">
+                  <label class="sds-ctl__label">Variant</label>
+                  <select class="sds-ctl__input">
+                    <option>primary</option><option>secondary</option><option>outline</option><option>ghost</option><option>danger</option><option>link</option>
+                  </select>
+                </div>
+                <div class="sds-ctl">
+                  <label class="sds-ctl__label">Tone</label>
+                  <select class="sds-ctl__input"><option>default</option><option>danger</option></select>
+                </div>
+                <div class="sds-ctl">
+                  <label class="sds-ctl__label">Size</label>
+                  <div class="sds-seg sds-seg--wide"><button class="sds-seg__btn">sm</button><button class="sds-seg__btn is-on">md</button><button class="sds-seg__btn">lg</button></div>
+                </div>
+              </section>
+
+              <section class="sds-pg__grp">
+                <h4>Content</h4>
+                <div class="sds-ctl"><label class="sds-ctl__label">Label</label><input class="sds-ctl__input" value="Save changes" /></div>
+                <div class="sds-ctl"><label class="sds-ctl__label">Leading icon</label><select class="sds-ctl__input"><option>None</option><option>Save</option><option>Plus</option><option>Trash</option></select></div>
+                <div class="sds-ctl"><label class="sds-ctl__label">Trailing icon</label><select class="sds-ctl__input"><option>None</option><option>Arrow right</option><option>Chevron right</option></select></div>
+              </section>
+
+              <section class="sds-pg__grp">
+                <h4>State</h4>
+                <label class="sds-toggle-row"><span>Disabled</span><input type="checkbox" /></label>
+                <label class="sds-toggle-row"><span>Loading</span><input type="checkbox" /></label>
+                <label class="sds-toggle-row"><span>Pressed</span><input type="checkbox" /></label>
+              </section>
+
+              <section class="sds-pg__grp">
+                <h4>Behaviour</h4>
+                <div class="sds-ctl"><label class="sds-ctl__label">Action</label><select class="sds-ctl__input"><option>Button action</option><option>Link / href</option></select></div>
+              </section>
+
+              <button class="sds-pg__reset" type="button">Reset preview</button>
+            </aside>
+          </div>
+        </section>
+
+        <!-- DROPDOWN -->
+        <section class="sds-family-panel panel-dropdown">
+          <div class="sds-pg">
+            <div class="sds-pg__stage">
+              <section class="sds-preview-block">
+                <header class="sds-preview-block__head">
+                  <div>
+                    <span class="sds-preview-block__eyebrow">Live preview</span>
+                    <strong>Dropdown Button</strong>
+                  </div>
+                  <span class="sds-preview-block__meta">Compound control · Button + Menu</span>
+                </header>
+
+                <div data-ui-preview-scope="true">
+                  <div class="sds-canvas sds-canvas--hero sds-tech-canvas">
+                    <div class="sds-tech-canvas__guides" aria-hidden="true">
+                      <i class="v"></i><i class="h"></i><i class="n n1"></i><i class="n n2"></i><i class="n n3"></i><i class="n n4"></i>
+                    </div>
+                    <div class="sds-canvas__single sds-demo-stack">
+                      <button type="button" class="ui-btn ui-btn--secondary">⇩ Export <span class="ui-chevron">⌄</span></button>
+                      <div class="ui-menu">
+                        <button type="button">Export PDF</button>
+                        <button type="button">Export Excel</button>
+                        <button type="button">Export CSV</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <p class="sds-wb__note">The trigger reveals a set of related actions. It does not perform the final action itself.</p>
+              </section>
+
+              <div class="sds-wb__rule"></div>
+
+              <section class="sds-ov__sec">
+                <header class="sds-ov__hd"><h4>Typical patterns</h4><p>Use the same Button recipe; only the menu behaviour changes.</p></header>
+                <div class="sds-pattern-grid">
+                  <article><span>Export menu</span><button class="ui-btn ui-btn--secondary">Export ⌄</button><small>PDF · Excel · CSV</small></article>
+                  <article><span>Row actions</span><button class="ui-btn ui-btn--outline">Actions ⌄</button><small>Edit · Archive · Delete</small></article>
+                  <article><span>Filter picker</span><button class="ui-btn ui-btn--secondary">Status: All ⌄</button><small>Can match trigger width</small></article>
+                </div>
+              </section>
+            </div>
+
+            <aside class="sds-pg__panel">
+              <header class="sds-pg__who">
+                <div><strong>Dropdown Button</strong><span>Compound control · uses Button + Menu</span></div>
+                <span class="sds-who-badge">Button + Menu</span>
+              </header>
+
+              <section class="sds-pg__mode">
+                <div class="sds-pg__modehead"><strong>Editing mode</strong><span>Preview only</span></div>
+                <div class="sds-seg sds-seg--wide"><button class="sds-seg__btn is-on">Preview</button><button class="sds-seg__btn">Canonical defaults</button></div>
+                <p>Preview changes affect this specimen only. App-wide publishing is a separate workflow.</p>
+              </section>
+
+              <section class="sds-pg__grp">
+                <h4>Appearance</h4>
+                <div class="sds-ctl"><label class="sds-ctl__label">Variant</label><select class="sds-ctl__input"><option>secondary</option><option>primary</option><option>outline</option><option>ghost</option><option>danger</option></select></div>
+                <div class="sds-ctl"><label class="sds-ctl__label">Size</label><div class="sds-seg sds-seg--wide"><button class="sds-seg__btn">sm</button><button class="sds-seg__btn is-on">md</button><button class="sds-seg__btn">lg</button></div></div>
+              </section>
+
+              <section class="sds-pg__grp">
+                <h4>Trigger</h4>
+                <div class="sds-ctl"><label class="sds-ctl__label">Label</label><input class="sds-ctl__input" value="Export" /></div>
+                <div class="sds-ctl"><label class="sds-ctl__label">Leading icon</label><select class="sds-ctl__input"><option>Download</option><option>None</option><option>More</option></select></div>
+              </section>
+
+              <section class="sds-pg__grp">
+                <h4>Menu</h4>
+                <div class="sds-ctl"><label class="sds-ctl__label">Placement</label><select class="sds-ctl__input"><option>bottom-end</option><option>bottom-start</option><option>top-end</option></select></div>
+                <label class="sds-toggle-row"><span>Match trigger width</span><input type="checkbox" /></label>
+                <button type="button" class="sds-manage">Manage menu items <span>3</span></button>
+              </section>
+
+              <section class="sds-pg__grp">
+                <h4>State</h4>
+                <label class="sds-toggle-row"><span>Disabled</span><input type="checkbox" /></label>
+                <label class="sds-toggle-row"><span>Open</span><input type="checkbox" checked /></label>
+              </section>
+
+              <button class="sds-pg__reset" type="button">Reset preview</button>
+            </aside>
+          </div>
+        </section>
+
+        <!-- SPLIT -->
+        <section class="sds-family-panel panel-split">
+          <div class="sds-pg">
+            <div class="sds-pg__stage">
+              <section class="sds-preview-block">
+                <header class="sds-preview-block__head">
+                  <div>
+                    <span class="sds-preview-block__eyebrow">Live preview</span>
+                    <strong>Split Button</strong>
+                  </div>
+                  <span class="sds-preview-block__meta">Compound control · default action + Menu</span>
+                </header>
+
+                <div data-ui-preview-scope="true">
+                  <div class="sds-canvas sds-canvas--hero sds-tech-canvas">
+                    <div class="sds-tech-canvas__guides" aria-hidden="true">
+                      <i class="v"></i><i class="h"></i><i class="n n1"></i><i class="n n2"></i><i class="n n3"></i><i class="n n4"></i>
+                    </div>
+                    <div class="sds-canvas__single sds-demo-stack">
+                      <span class="ui-split">
+                        <button type="button" class="ui-btn ui-btn--primary ui-split__main">▣ Save changes</button>
+                        <button type="button" class="ui-btn ui-btn--primary ui-split__menu" aria-label="More save options">⌄</button>
+                      </span>
+                      <div class="ui-menu">
+                        <button type="button">Save &amp; close</button>
+                        <button type="button">Save as draft</button>
+                        <button type="button">Save &amp; create another</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <p class="sds-wb__note">The left side executes the default action immediately. The chevron opens alternatives.</p>
+              </section>
+
+              <div class="sds-wb__rule"></div>
+
+              <section class="sds-ov__sec">
+                <header class="sds-ov__hd"><h4>Use when one option is usually correct</h4><p>Keep the primary path immediate while still exposing less-common alternatives.</p></header>
+                <div class="sds-pattern-grid sds-pattern-grid--two">
+                  <article>
+                    <span>Save with options</span>
+                    <span class="ui-split"><button class="ui-btn ui-btn--primary ui-split__main">Save</button><button class="ui-btn ui-btn--primary ui-split__menu">⌄</button></span>
+                    <small>Save &amp; close · Save draft</small>
+                  </article>
+                  <article>
+                    <span>Create with options</span>
+                    <span class="ui-split"><button class="ui-btn ui-btn--secondary ui-split__main">Create</button><button class="ui-btn ui-btn--secondary ui-split__menu">⌄</button></span>
+                    <small>Create &amp; open · Create another</small>
+                  </article>
+                </div>
+              </section>
+            </div>
+
+            <aside class="sds-pg__panel">
+              <header class="sds-pg__who">
+                <div><strong>Split Button</strong><span>Compound control · uses Button + Menu</span></div>
+                <span class="sds-who-badge">Action + Menu</span>
+              </header>
+
+              <section class="sds-pg__mode">
+                <div class="sds-pg__modehead"><strong>Editing mode</strong><span>Preview only</span></div>
+                <div class="sds-seg sds-seg--wide"><button class="sds-seg__btn is-on">Preview</button><button class="sds-seg__btn">Canonical defaults</button></div>
+                <p>Preview changes affect this specimen only. App-wide publishing is a separate workflow.</p>
+              </section>
+
+              <section class="sds-pg__grp">
+                <h4>Appearance</h4>
+                <div class="sds-ctl"><label class="sds-ctl__label">Variant</label><select class="sds-ctl__input"><option>primary</option><option>secondary</option><option>outline</option><option>danger</option></select></div>
+                <div class="sds-ctl"><label class="sds-ctl__label">Size</label><div class="sds-seg sds-seg--wide"><button class="sds-seg__btn">sm</button><button class="sds-seg__btn is-on">md</button><button class="sds-seg__btn">lg</button></div></div>
+              </section>
+
+              <section class="sds-pg__grp">
+                <h4>Primary action</h4>
+                <div class="sds-ctl"><label class="sds-ctl__label">Label</label><input class="sds-ctl__input" value="Save changes" /></div>
+                <div class="sds-ctl"><label class="sds-ctl__label">Leading icon</label><select class="sds-ctl__input"><option>Save</option><option>None</option><option>Plus</option></select></div>
+                <label class="sds-toggle-row"><span>Loading</span><input type="checkbox" /></label>
+                <label class="sds-toggle-row"><span>Disabled</span><input type="checkbox" /></label>
+              </section>
+
+              <section class="sds-pg__grp">
+                <h4>Menu trigger</h4>
+                <div class="sds-ctl"><label class="sds-ctl__label">Accessible label</label><input class="sds-ctl__input" value="More save options" /></div>
+              </section>
+
+              <section class="sds-pg__grp">
+                <h4>Menu</h4>
+                <div class="sds-ctl"><label class="sds-ctl__label">Placement</label><select class="sds-ctl__input"><option>bottom-end</option><option>bottom-start</option></select></div>
+                <button type="button" class="sds-manage">Manage alternatives <span>3</span></button>
+              </section>
+
+              <button class="sds-pg__reset" type="button">Reset preview</button>
+            </aside>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+</body>
+</html>

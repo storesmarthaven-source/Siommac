@@ -92,6 +92,15 @@ describe('brand direction matrix', () => {
           expect(t['--ui-brand-seed-primary']).toBe(seed.hex);
         }
       });
+
+      it('moves Tabs only in the directions that intentionally brand navigation', () => {
+        expect(tokensForDirection(build.tokens, 'enterprise')['--ui-color-navigation-active'])
+          .toBeUndefined();
+        expect(tokensForDirection(build.tokens, 'balanced')['--ui-color-navigation-active'])
+          .toBe(build.tokens['--ui-color-navigation-active']);
+        expect(tokensForDirection(build.tokens, 'forward')['--ui-color-navigation-active'])
+          .toBe(build.tokens['--ui-color-navigation-active']);
+      });
     });
   }
 

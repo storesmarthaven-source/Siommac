@@ -2,7 +2,7 @@
  * src/ui/registry/actions.defs.tsx — Actions.
  *
  * THREE entries, not eight. An earlier pass registered IconButton, LinkButton,
- * ButtonGroup, ToggleButton, DropdownButton and SplitButton as siblings of
+ * ToggleButton, DropdownButton and SplitButton as siblings of
  * Button, which made the Gallery look like the fragmentation this kit exists to
  * remove — six cards for one component's variants.
  *
@@ -15,8 +15,9 @@
  * states or examples — never as its own card.
  */
 
+import { type VNode } from 'preact';
 import { LucideIcon } from '../LucideIcon';
-import { Button, ButtonGroup } from '../primitives/Button';
+import { Button } from '../primitives/Button';
 import { SegmentedControl, DropdownButton, SplitButton } from '../primitives/actions';
 import { type MenuItems } from '../overlays/DropdownMenu';
 import { type ComponentDef, type PropValues } from './types';
@@ -46,14 +47,21 @@ const SAVE_MENU: MenuItems = [
 
 const noop = (): void => { /* preview */ };
 
+/** Action Button's variant list, per the approved mockup. */
+const VARIANTS = ['primary', 'secondary', 'outline', 'ghost', 'danger', 'link'] as const;
+
 /* ── Button ────────────────────────────────────────────────────────────────*/
 
 export const buttonDef: ComponentDef = {
   id: 'button',
-  name: 'Button',
+  /* Shown as "Action Button" so it reads as a sibling of Dropdown and Split
+     Button rather than the generic they are variants of. The exported symbol is
+     still `Button`, and the Code tab shows that — the catalogue name cannot
+     mislead about what to import. */
+  name: 'Action Button',
   previewAxis: 'variant',
   category: 'actions',
-  description: 'The one action control. Icon-only, link, toggle, loading and destructive are props — there is no IconButton, LinkButton or ToggleButton, because none of them changed how the control behaves.',
+  description: 'Performs ONE action immediately — Save, Cancel, Next, Delete. Icon-only, link, toggle, loading and destructive are props; there is no IconButton, LinkButton or ToggleButton, because none of them changed how the control behaves.',
   status: 'stable',
   componentPath: 'src/ui/primitives/Button.tsx',
   importFrom: '@ui',
@@ -72,20 +80,35 @@ export const buttonDef: ComponentDef = {
       '151 distinct *btn* class families exist across the app; every one of them is this component with different props.',
     ],
   },
+  /*
+    The option set is the approved Studio mockup's, backed 1:1 by real props.
+    The earlier definition modelled icons as `icon` + `iconSide`, which could
+    not express a button with BOTH a leading and a trailing icon, and omitted
+    `tone` entirely — so the panel under-reported the component's own API.
+
+    `action` is the one control that is not a prop: it is the discriminator the
+    mockup uses, and `render` honours it by passing `href` only for the link
+    case. Without that mapping it would be a control that changes nothing.
+  */
   props: {
-    variant:   { type: 'select',    label: 'Variant', options: ['primary', 'secondary', 'outline', 'ghost', 'danger', 'link'], default: 'primary',
-                 help: 'danger uses the status red, primary the brand red — one means "main action", the other "this destroys something".' },
+    variant:   { type: 'select',    label: 'Variant', options: [...VARIANTS], default: 'primary',
+                 help: 'How loud the action is. `danger` is the filled destructive treatment.' },
+    tone:      { type: 'select',    label: 'Tone', options: ['default', 'danger'], default: 'default',
+                 help: 'What KIND of action it is, kept separate from emphasis. Composes with the quiet variants for a low-emphasis destructive action; redundant on variant="danger".' },
     size:      { type: 'segmented', label: 'Size', options: ['sm', 'md', 'lg'], default: 'md' },
+
     label:     { type: 'text',      label: 'Label', default: 'Save changes' },
-    icon:      { type: 'select',    label: 'Icon', options: ['none', 'Save', 'Plus', 'Trash2', 'Send', 'Download', 'Check', 'Pencil', 'EllipsisVertical'], default: 'Save' },
-    iconSide:  { type: 'segmented', label: 'Icon side', options: ['left', 'right'], default: 'left' },
-    iconOnly:  { type: 'boolean',   label: 'Icon only', default: false, help: 'The type then REQUIRES aria-label — an icon with no name is unusable with a screen reader.' },
-    pressed:   { type: 'boolean',   label: 'Toggle (pressed)', default: false, help: 'Makes it a toggle. Emits aria-pressed, announced "pressed", not "checked".' },
-    href:      { type: 'text',      label: 'href', default: '', placeholder: '/audit', help: 'Set for navigation — renders a real <a>, so middle-click and open-in-new-tab work.' },
-    fullWidth: { type: 'boolean',   label: 'Full width', default: false },
-    loading:   { type: 'boolean',   label: 'Loading', default: false },
-    loadingText: { type: 'text',    label: 'Loading text', default: '', placeholder: 'Saving…' },
+    iconLeft:  { type: 'select',    label: 'Leading icon', options: ['None', 'Save', 'Plus', 'Trash2', 'Download', 'Check', 'Pencil'], default: 'Save' },
+    iconRight: { type: 'select',    label: 'Trailing icon', options: ['None', 'ArrowRight', 'ChevronRight'], default: 'None' },
+
     disabled:  { type: 'boolean',   label: 'Disabled', default: false },
+    loading:   { type: 'boolean',   label: 'Loading', default: false,
+                 help: 'Blocks activation and sets aria-busy, but does NOT disable — a disabled button leaves the tab order and throws focus to the top of the page.' },
+    pressed:   { type: 'boolean',   label: 'Pressed', default: false,
+                 help: 'Makes it a toggle. Emits aria-pressed ("pressed"), not aria-checked ("selected").' },
+
+    action:    { type: 'select',    label: 'Action', options: ['Button action', 'Link / href'], default: 'Button action',
+                 help: 'A link renders a real <a>, so middle-click and open-in-new-tab work.' },
   },
 
   style: [
@@ -146,109 +169,75 @@ export const buttonDef: ComponentDef = {
   },
 
   render: (p, state) => {
-    const iconName = s(p.icon, 'none');
-    const icon = iconName !== 'none' ? <LucideIcon name={iconName as never} /> : undefined;
-    const onRight = s(p.iconSide) === 'right';
-    const common = {
-      variant: s(p.variant, 'primary') as never,
-      size: size(p.size),
-      loading: b(p.loading) || state === 'loading',
-      loadingText: s(p.loadingText) || undefined,
-      disabled: b(p.disabled) || state === 'disabled',
-      fullWidth: b(p.fullWidth),
-      pressed: b(p.pressed) || state === 'selected' ? true : undefined,
-      href: s(p.href) || undefined,
-      forceState: state,
-    };
-    if (b(p.iconOnly)) {
-      return <Button {...common} iconOnly aria-label={s(p.label, 'Action')} iconLeft={icon ?? <LucideIcon name="Pencil" />} />;
-    }
+    const icon = (n: string): VNode | undefined =>
+      n !== 'None' ? <LucideIcon name={n as never} /> : undefined;
+    const isLink = s(p.action, 'Button action') === 'Link / href';
     return (
-      <Button {...common} iconLeft={onRight ? undefined : icon} iconRight={onRight ? icon : undefined}>
+      <Button
+        variant={s(p.variant, 'primary') as never}
+        tone={s(p.tone, 'default') as never}
+        size={size(p.size)}
+        iconLeft={icon(s(p.iconLeft, 'None'))}
+        iconRight={icon(s(p.iconRight, 'None'))}
+        loading={b(p.loading) || state === 'loading'}
+        disabled={b(p.disabled) || state === 'disabled'}
+        pressed={b(p.pressed) || state === 'selected' ? true : undefined}
+        href={isLink ? '/audit' : undefined}
+        forceState={state}
+      >
         {s(p.label, 'Button')}
       </Button>
     );
   },
 
   code: (p, state) => {
-    const iconName = s(p.icon, 'none');
-    const iconJsx = iconName !== 'none' ? `<LucideIcon name="${iconName}" />` : undefined;
-    const side = s(p.iconSide) === 'right' ? 'iconRight' : 'iconLeft';
-    if (b(p.iconOnly)) {
-      return `<Button
-  iconOnly
-  aria-label="${s(p.label, 'Action')}"
-  variant="${s(p.variant, 'primary')}"
-  iconLeft={${iconJsx ?? '<LucideIcon name="Pencil" />'}}
-  onClick={handleEdit}
-/>`;
-    }
+    const jsx = (n: string): string | undefined =>
+      n !== 'None' ? `<LucideIcon name="${n}" />` : undefined;
+    const isLink = s(p.action, 'Button action') === 'Link / href';
+    const left = jsx(s(p.iconLeft, 'None'));
+    const right = jsx(s(p.iconRight, 'None'));
     const lines = [
       `  variant="${s(p.variant, 'primary')}"`,
+      s(p.tone, 'default') !== 'default' ? `  tone="${s(p.tone)}"` : '',
       size(p.size) !== 'md' ? `  size="${size(p.size)}"` : '',
-      iconJsx ? `  ${side}={${iconJsx}}` : '',
-      s(p.href) ? `  href="${s(p.href)}"` : '',
+      left ? `  iconLeft={${left}}` : '',
+      right ? `  iconRight={${right}}` : '',
+      isLink ? '  href="/audit"' : '',
       b(p.pressed) || state === 'selected' ? '  pressed={isOn}' : '',
-      b(p.fullWidth) ? '  fullWidth' : '',
-      b(p.loading) || state === 'loading' ? '  loading' : '',
-      s(p.loadingText) ? `  loadingText="${s(p.loadingText)}"` : '',
+      b(p.loading) || state === 'loading' ? '  loading={saving}' : '',
       b(p.disabled) || state === 'disabled' ? '  disabled' : '',
-      s(p.href) ? '' : '  onClick={handleSave}',
+      isLink ? '' : '  onClick={handleSave}',
     ].filter(Boolean);
     return `<Button\n${lines.join('\n')}\n>\n  ${s(p.label, 'Button')}\n</Button>`;
   },
 
-  presets: [
-    { label: 'Primary CTA',   props: { variant: 'primary', size: 'md', label: 'Save changes',  icon: 'Save',   iconSide: 'left', iconOnly: false, pressed: false, href: '', fullWidth: false, loading: false, loadingText: '', disabled: false } },
-    { label: 'Destructive',   props: { variant: 'danger',  size: 'md', label: 'Delete record', icon: 'Trash2', iconSide: 'left', iconOnly: false, pressed: false, href: '', fullWidth: false, loading: false, loadingText: '', disabled: false } },
-    { label: 'Icon only',     props: { variant: 'ghost',   size: 'sm', label: 'Edit row',      icon: 'Pencil', iconSide: 'left', iconOnly: true,  pressed: false, href: '', fullWidth: false, loading: false, loadingText: '', disabled: false } },
-    { label: 'Toggle',        props: { variant: 'outline', size: 'md', label: 'Only my cases', icon: 'none',   iconSide: 'left', iconOnly: false, pressed: true,  href: '', fullWidth: false, loading: false, loadingText: '', disabled: false } },
-    { label: 'Link',          props: { variant: 'link',    size: 'md', label: 'View audit trail', icon: 'none', iconSide: 'right', iconOnly: false, pressed: false, href: '/audit', fullWidth: false, loading: false, loadingText: '', disabled: false } },
-    { label: 'Submitting',    props: { variant: 'primary', size: 'md', label: 'Save changes',  icon: 'Save',   iconSide: 'left', iconOnly: false, pressed: false, href: '', fullWidth: false, loading: true,  loadingText: 'Saving…', disabled: false } },
-  ],
-
+  /* The mockup's "Common application use" cards. Context owns the action; the
+     Button still owns its visual and interaction contract. */
   examples: [
     {
-      id: 'row-actions',
-      title: 'Icon-only row actions',
-      description: 'Ghost + icon-only. A bordered button per row turns a dense table into a grid of boxes.',
+      id: 'dialog-footer',
+      title: 'Dialog footer',
       render: () => (
-        <div style={{ display: 'flex', gap: '4px' }}>
-          <Button variant="ghost" size="sm" iconOnly aria-label="Edit" iconLeft={<LucideIcon name="Pencil" />} />
-          <Button variant="ghost" size="sm" iconOnly aria-label="Duplicate" iconLeft={<LucideIcon name="Copy" />} />
-          <Button variant="ghost" size="sm" iconOnly aria-label="More actions" iconLeft={<LucideIcon name="EllipsisVertical" />} />
-        </div>
+        <>
+          <Button variant="secondary">Cancel</Button>
+          <Button variant="primary">Save</Button>
+        </>
       ),
-      code: `<Button variant="ghost" size="sm" iconOnly aria-label="Edit" iconLeft={<LucideIcon name="Pencil" />} />`,
     },
     {
-      id: 'group',
-      title: 'ButtonGroup — several INDEPENDENT actions',
-      description: 'A layout wrapper. For one value with options, use SegmentedControl instead: that is a radiogroup, and the difference changes what a screen reader announces.',
+      id: 'wizard-nav',
+      title: 'Wizard navigation',
       render: () => (
-        <ButtonGroup label="Record actions">
-          <Button variant="outline" iconLeft={<LucideIcon name="Download" />}>Export</Button>
-          <Button variant="outline" iconLeft={<LucideIcon name="Printer" />}>Print</Button>
-          <Button variant="outline" iconLeft={<LucideIcon name="Share2" />}>Share</Button>
-        </ButtonGroup>
+        <>
+          <Button variant="ghost">Back</Button>
+          <Button variant="primary" iconRight={<LucideIcon name="ArrowRight" />}>Continue</Button>
+        </>
       ),
-      code: `<ButtonGroup label="Record actions">
-  <Button variant="outline" iconLeft={<LucideIcon name="Download" />}>Export</Button>
-  <Button variant="outline" iconLeft={<LucideIcon name="Printer" />}>Print</Button>
-</ButtonGroup>`,
     },
     {
-      id: 'toggle-and-link',
-      title: 'Toggle and link — props, not components',
-      description: 'The deleted ToggleButton and LinkButton, expressed as `pressed` and `href`.',
-      render: () => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <Button variant="outline" pressed iconLeft={<LucideIcon name="Filter" />}>Only my cases</Button>
-          <Button variant="link" href="#audit" iconRight={<LucideIcon name="ArrowRight" />}>View audit trail</Button>
-        </div>
-      ),
-      code: `<Button variant="outline" pressed={onlyMine} onClick={toggle}>Only my cases</Button>
-<Button variant="link" href="/audit">View audit trail</Button>`,
+      id: 'page-action',
+      title: 'Page action',
+      render: () => <Button variant="primary" iconLeft={<LucideIcon name="Plus" />}>Add employee</Button>,
     },
   ],
 };
@@ -299,7 +288,7 @@ export const segmentedDef: ComponentDef = {
       { keys: 'Tab',   does: 'Skips the WHOLE control — roving focus means only the selected option is tabbable.' },
     ],
     focus: 'Roving tabindex: exactly one option is tabbable, and arrows move both selection and focus.',
-    notes: ['aria-checked, not aria-pressed — this is single-choice. A ButtonGroup of Buttons would announce three unrelated actions.'],
+    notes: ['aria-checked, not aria-pressed — this is single-choice. A row of plain Buttons would announce three unrelated actions.'],
   },
 
   render: (p, state) => (
@@ -334,7 +323,7 @@ export const menuDef: ComponentDef = {
   id: 'menu',
   name: 'Menu',
   category: 'overlays',
-  description: 'The one action menu. Its TRIGGERS — a dropdown button, a split button, a row ⋮ — are compositions over Button, shown here as examples rather than as separate components.',
+  description: 'The action-menu SURFACE — grouping, icons, shortcuts, destructive items, keyboard and focus. Its triggers are their own components: see Dropdown Button and Split Button under Buttons.',
   status: 'stable',
   componentPath: 'src/ui/overlays/DropdownMenu.tsx',
   importFrom: '@ui',

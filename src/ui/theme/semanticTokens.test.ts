@@ -107,10 +107,8 @@ describe('semantic layer — introducing it changed nothing visually', () => {
      repoint. If a semantic default ever drifts, this is what catches it. */
   const UNCHANGED: [string, string][] = [
     /* Were #E40C0C / #B20808 (brand red) until the approved Buttons mockup made
-       the primary ACTION navy. A deliberate product decision recorded in
-       semantic.css, so these move with it — and `--ui-tab-indicator` below moves
-       too, which is exactly what a shared semantic role is for. Every other
-       entry stays pinned, so the guard still catches accidental drift. */
+       the primary ACTION navy. Tabs remain pinned to their own navigation role;
+       the conduction tests below assert both sides of that boundary. */
     ['--ui-button-primary-bg',        '#1b2d54'],
     ['--ui-button-primary-bg-hover',  'color-mix(in srgb, #1b2d54 88%, #000)'],
     /* `--ui-button-secondary-bg` and `--ui-button-outline-border` used to be
