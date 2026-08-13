@@ -25,15 +25,6 @@ import { Studio } from './Studio';
 
 const MEMBERS = ['button', 'dropdown-button', 'split-button'] as const;
 
-/** The subtype selector option for `name`. Fails loudly rather than silently. */
-function subtype(container: Element, name: string): HTMLElement {
-  const shortName = name.replace(' Button', '');
-  const found = [...container.querySelectorAll<HTMLElement>('.sds-family__type')]
-    .find(el => el.querySelector('strong')?.textContent === shortName);
-  if (!found) throw new Error(`No "${name}" subtype option is rendered`);
-  return found;
-}
-
 /** Open the Buttons family browser from the catalogue card. */
 function openButtonBrowser(container: Element): void {
   const card = container.querySelector<HTMLElement>('.sds-card--family');
@@ -44,14 +35,15 @@ function openButtonBrowser(container: Element): void {
 /** Open the canonical Action Button editor through the family browser. */
 function openButtons(container: Element): void {
   openButtonBrowser(container);
-  const action = [...container.querySelectorAll<HTMLButtonElement>('.sds-button-browser__card')]
-    .find(card => card.querySelector('strong')?.textContent === 'Action Button');
-  if (!action) throw new Error('No Action Button browser card is rendered');
-  fireEvent.click(action);
+  openButtonMember(container, 'Action Button');
 }
 
-const activeSubtype = (c: Element): string | undefined =>
-  c.querySelector('.sds-family .is-on .sds-family__copy strong')?.textContent ?? undefined;
+function openButtonMember(container: Element, name: string): void {
+  const member = [...container.querySelectorAll<HTMLButtonElement>('.sds-button-browser__card')]
+    .find(card => card.querySelector('strong')?.textContent === name);
+  if (!member) throw new Error(`No ${name} browser card is rendered`);
+  fireEvent.click(member);
+}
 
 describe('Buttons family — registry', () => {
   it('collapses the three button components into one catalogue node', () => {
@@ -147,10 +139,9 @@ describe('Buttons family — Studio', () => {
 
     openButtons(container);
 
-    expect(container.querySelector('.sds-wb__head h2')?.textContent).toBe('Buttons');
-    expect(activeSubtype(container)).toBe('Action');
-    expect(subtype(container, 'Action Button').textContent).toContain('Button');
-    expect(subtype(container, 'Action Button').textContent).not.toContain('Save changes');
+    expect(container.querySelector('.sds-wb__head h2')?.textContent).toBe('Action Button');
+    expect(container.querySelector('.sds-family')).toBeNull();
+    expect(container.querySelector('.sds-wb__back')?.textContent).toContain('Buttons');
     expect(container.querySelector('.sds-button-settings__head strong')?.textContent).toBe('Primary button');
     expect(container.querySelector('.sds-button-picker .is-on strong')?.textContent).toBe('Primary');
     expect(container.querySelector('.sds-button-editor__intro h3')?.textContent).toBe('Variants');
@@ -169,6 +160,35 @@ describe('Buttons family — Studio', () => {
     expect(getByRole('button', { name: /Edit Action Button foundation/ })).toBeTruthy();
     expect(queryByRole('radio', { name: /AI/ })).toBeNull();
     expect(container.querySelectorAll('.sds-button-pattern__examples article')).toHaveLength(2);
+    expect(getByRole('complementary', { name: 'AI Action settings' })).toBeTruthy();
+    fireEvent.change(getByRole('combobox', { name: 'Emphasis' }), { target: { value: 'primary' } });
+    expect((getByRole('combobox', { name: 'Emphasis' }) as HTMLSelectElement).value).toBe('primary');
+    fireEvent.click(getByRole('button', { name: 'Choose AI icon' }));
+    fireEvent.click(getByRole('button', { name: 'Use recommended BrainCircuit' }));
+    expect(container.querySelector('.sds-button-pattern__stage .sds-preview-icon')).not.toBeNull();
+  });
+
+  it('gives Icon Button its own accessible-name and icon editor', () => {
+    const { container, getByRole } = render(<Studio />);
+    openButtonBrowser(container);
+    fireEvent.click(getByRole('button', { name: /Icon Button/ }));
+
+    expect(getByRole('complementary', { name: 'Icon Button settings' })).toBeTruthy();
+    fireEvent.input(getByRole('textbox', { name: 'Accessible name' }), { target: { value: 'Refresh records' } });
+    expect(getByRole('button', { name: 'Refresh records' })).toBeTruthy();
+    expect(container.querySelector('.sds-button-pattern__settings footer')?.textContent).toContain('Linked to Action Button');
+  });
+
+  it('isolates Credits controls without adding a Credits ButtonVariant', () => {
+    const { container, getByRole } = render(<Studio />);
+    openButtonBrowser(container);
+    fireEvent.click(getByRole('button', { name: /Special Treatments/ }));
+
+    expect(getByRole('complementary', { name: 'Special Treatments settings' })).toBeTruthy();
+    fireEvent.click(getByRole('button', { name: 'Choose Accent color' }));
+    fireEvent.click(getByRole('button', { name: 'Set color to #7c3aed' }));
+    expect(container.querySelector<HTMLElement>('.sds-credits-preview')?.style.cssText).toContain('#7c3aed');
+    expect(JSON.stringify(findComponent('button')?.props?.variant)).not.toContain('credits');
   });
 
   it('puts the live preview before the Button chooser', () => {
@@ -185,30 +205,22 @@ describe('Buttons family — Studio', () => {
     expect(preview.compareDocumentPosition(picker) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('swaps the active def AND the Properties schema on subtype change', () => {
+  it('opens Split Button in its own focused editor and schema', () => {
     const { container, queryByText } = render(<Studio />);
-    openButtons(container);
-
-    expect(queryByText('Style settings')).toBeNull();
-    expect(queryByText('Background')).not.toBeNull();
-    expect(queryByText('Menu accessible name')).toBeNull();
-
-    fireEvent.click(subtype(container, 'Split Button'));
+    openButtonBrowser(container);
+    openButtonMember(container, 'Split Button');
 
     // Split Button's own schema replaced it — not merged with it.
-    expect(activeSubtype(container)).toBe('Split');
     expect(container.querySelector('.sds-pg__who strong')?.textContent).toBe('Try the Split Button');
     expect(queryByText('Menu accessible name')).not.toBeNull();
     expect(queryByText('Background')).toBeNull();
-
-    expect(subtype(container, 'Split Button').textContent).toContain('Default action + alternatives');
+    expect(container.querySelector('.sds-family')).toBeNull();
   });
 
   it('renders every Properties control from the selected definition', () => {
     const { container } = render(<Studio />);
-    openButtons(container);
-
-    fireEvent.click(subtype(container, 'Dropdown Button'));
+    openButtonBrowser(container);
+    openButtonMember(container, 'Dropdown Button');
 
     // Every declared prop reaches the panel. A hand-built family properties
     // system would drift from the definition the moment a prop was added.
@@ -227,7 +239,10 @@ describe('Buttons family — Studio', () => {
     expect(container.querySelectorAll('.sds-button-picker [role="radio"]')).toHaveLength(6);
     expect(queryByText('Credits')).toBeNull();
 
-    fireEvent.click(subtype(container, 'Dropdown Button'));
+    const backToButtons = container.querySelector<HTMLElement>('.sds-wb__back');
+    if (!backToButtons) throw new Error('No back to Buttons control is rendered');
+    fireEvent.click(backToButtons);
+    openButtonMember(container, 'Dropdown Button');
     expect(queryByText('Special treatments')).toBeNull();
     expect(container.querySelector('.sds-special .ui-credits')).toBeNull();
   });

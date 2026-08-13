@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "0165667814aa8787902b0894b74a93cd9ff892c1",
+    "head": "3e0d56857953ccfe5e1da487e7098716baf5f574",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "e505e34f2238cb1bede3a6c0",
+    "fingerprint": "0c081c547ea5c19085328e6d",
     "indexedFiles": 1859
   },
   "summary": {
     "files": 1504,
-    "symbols": 14885,
+    "symbols": 14895,
     "widgets": 68,
     "routes": 983,
     "routeDefinitions": 984,
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 442,
-        "symbols": 3861,
+        "symbols": 3871,
         "widgets": 17,
         "routes": 38,
         "routeDefinitions": 53,
@@ -9253,8 +9253,8 @@
       "path": "src/ui/registry/button-patterns.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 76,
-      "hash": "fc05244e01880f89"
+      "lines": 128,
+      "hash": "1fa46ac2ff36ce6d"
     },
     {
       "path": "src/ui/registry/compound.defs.tsx",
@@ -9309,8 +9309,8 @@
       "path": "src/ui/registry/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 204,
-      "hash": "560b5ab9ee965097"
+      "lines": 205,
+      "hash": "b019996c30532515"
     },
     {
       "path": "src/ui/registry/navigation.defs.tsx",
@@ -9421,8 +9421,8 @@
       "path": "src/ui/studio/ButtonBrowser.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 79,
-      "hash": "3ac3bf38b393b9e9"
+      "lines": 132,
+      "hash": "22d6ec0b78dfd12b"
     },
     {
       "path": "src/ui/studio/InAppUsage.tsx",
@@ -9442,22 +9442,22 @@
       "path": "src/ui/studio/RecipeStyleEditor.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 334,
-      "hash": "14bf7e3e2a0fc9ec"
+      "lines": 336,
+      "hash": "b0586bb0d69d3c51"
     },
     {
       "path": "src/ui/studio/Studio.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 421,
-      "hash": "f51c00d4268a9d76"
+      "lines": 420,
+      "hash": "1bc9a0e1a16ab295"
     },
     {
       "path": "src/ui/studio/Workbench.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 429,
-      "hash": "265b13d8586aedb6"
+      "lines": 430,
+      "hash": "c96f199bf7b524c3"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -9484,8 +9484,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 298,
-      "hash": "190f39807608b64b"
+      "lines": 313,
+      "hash": "d39a22ab5354048e"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -147902,10 +147902,40 @@
       "tags": []
     },
     {
+      "name": "ButtonPatternValue",
+      "kind": "type",
+      "file": "src/ui/registry/button-patterns.tsx",
+      "line": 7,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ButtonPatternValues",
+      "kind": "type",
+      "file": "src/ui/registry/button-patterns.tsx",
+      "line": 8,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ButtonPatternControl",
+      "kind": "type",
+      "file": "src/ui/registry/button-patterns.tsx",
+      "line": 10,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "ButtonPatternExample",
       "kind": "interface",
       "file": "src/ui/registry/button-patterns.tsx",
-      "line": 6,
+      "line": 17,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147915,9 +147945,59 @@
       "name": "ButtonPattern",
       "kind": "interface",
       "file": "src/ui/registry/button-patterns.tsx",
-      "line": 16,
+      "line": 27,
       "module": "platform",
       "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "text",
+      "kind": "function",
+      "file": "src/ui/registry/button-patterns.tsx",
+      "line": 41,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "yes",
+      "kind": "function",
+      "file": "src/ui/registry/button-patterns.tsx",
+      "line": 43,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "size",
+      "kind": "function",
+      "file": "src/ui/registry/button-patterns.tsx",
+      "line": 44,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "variant",
+      "kind": "function",
+      "file": "src/ui/registry/button-patterns.tsx",
+      "line": 45,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "patternIcon",
+      "kind": "function",
+      "file": "src/ui/registry/button-patterns.tsx",
+      "line": 47,
+      "module": "platform",
+      "exported": false,
       "container": "",
       "tags": []
     },
@@ -147925,7 +148005,7 @@
       "name": "BUTTON_PATTERNS",
       "kind": "array",
       "file": "src/ui/registry/button-patterns.tsx",
-      "line": 28,
+      "line": 54,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147935,7 +148015,7 @@
       "name": "findButtonPattern",
       "kind": "function",
       "file": "src/ui/registry/button-patterns.tsx",
-      "line": 73,
+      "line": 125,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148675,7 +148755,7 @@
       "name": "COMPONENT_DEFS",
       "kind": "array",
       "file": "src/ui/registry/index.ts",
-      "line": 60,
+      "line": 61,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148685,7 +148765,7 @@
       "name": "CATEGORY_LABELS",
       "kind": "object",
       "file": "src/ui/registry/index.ts",
-      "line": 75,
+      "line": 76,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148695,7 +148775,7 @@
       "name": "CATEGORY_ORDER",
       "kind": "array",
       "file": "src/ui/registry/index.ts",
-      "line": 91,
+      "line": 92,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148705,7 +148785,7 @@
       "name": "CatalogueNode",
       "kind": "type",
       "file": "src/ui/registry/index.ts",
-      "line": 101,
+      "line": 102,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148715,7 +148795,7 @@
       "name": "CategoryGroup",
       "kind": "interface",
       "file": "src/ui/registry/index.ts",
-      "line": 105,
+      "line": 106,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148725,7 +148805,7 @@
       "name": "componentsByCategory",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 126,
+      "line": 127,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148735,7 +148815,7 @@
       "name": "findComponent",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 160,
+      "line": 161,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148745,7 +148825,7 @@
       "name": "RegistryTotals",
       "kind": "interface",
       "file": "src/ui/registry/index.ts",
-      "line": 164,
+      "line": 165,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148755,7 +148835,7 @@
       "name": "registryTotals",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 190,
+      "line": 191,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148765,7 +148845,7 @@
       "name": "isPattern",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 191,
+      "line": 192,
       "module": "platform",
       "exported": false,
       "container": "registryTotals",
@@ -150048,17 +150128,51 @@
       "name": "ButtonBrowserProps",
       "kind": "interface",
       "file": "src/ui/studio/ButtonBrowser.tsx",
-      "line": 8,
+      "line": 11,
       "module": "platform",
       "exported": true,
       "container": "",
       "tags": []
     },
     {
+      "name": "PatternControl",
+      "kind": "function",
+      "file": "src/ui/studio/ButtonBrowser.tsx",
+      "line": 19,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ButtonPatternEditor",
+      "kind": "function",
+      "file": "src/ui/studio/ButtonBrowser.tsx",
+      "line": 53,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "set",
+      "kind": "function",
+      "file": "src/ui/studio/ButtonBrowser.tsx",
+      "line": 55,
+      "module": "platform",
+      "exported": false,
+      "container": "ButtonPatternEditor",
+      "tags": []
+    },
+    {
       "name": "ButtonBrowser",
       "kind": "function",
       "file": "src/ui/studio/ButtonBrowser.tsx",
-      "line": 16,
+      "line": 84,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150080,7 +150194,7 @@
       ]
     },
     {
-      "name": "subtype",
+      "name": "openButtonBrowser",
       "kind": "function",
       "file": "src/ui/studio/family.test.tsx",
       "line": 29,
@@ -150092,22 +150206,10 @@
       ]
     },
     {
-      "name": "openButtonBrowser",
-      "kind": "function",
-      "file": "src/ui/studio/family.test.tsx",
-      "line": 38,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "test"
-      ]
-    },
-    {
       "name": "openButtons",
       "kind": "function",
       "file": "src/ui/studio/family.test.tsx",
-      "line": 45,
+      "line": 36,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150116,10 +150218,10 @@
       ]
     },
     {
-      "name": "activeSubtype",
+      "name": "openButtonMember",
       "kind": "function",
       "file": "src/ui/studio/family.test.tsx",
-      "line": 53,
+      "line": 41,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150332,7 +150434,7 @@
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
       "line": 78,
       "module": "platform",
-      "exported": false,
+      "exported": true,
       "container": "",
       "tags": [
         "component"
@@ -150366,7 +150468,7 @@
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
       "line": 154,
       "module": "platform",
-      "exported": false,
+      "exported": true,
       "container": "",
       "tags": [
         "component"
@@ -150376,7 +150478,7 @@
       "name": "choose",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 174,
+      "line": 176,
       "module": "platform",
       "exported": false,
       "container": "IconPicker",
@@ -150386,7 +150488,7 @@
       "name": "RecipeStyleEditor",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 203,
+      "line": 205,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150398,7 +150500,7 @@
       "name": "previewPropsFor",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 217,
+      "line": 219,
       "module": "platform",
       "exported": false,
       "container": "RecipeStyleEditor",
@@ -150408,7 +150510,7 @@
       "name": "setPreviewProp",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 223,
+      "line": 225,
       "module": "platform",
       "exported": false,
       "container": "RecipeStyleEditor",
@@ -150418,7 +150520,7 @@
       "name": "act",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 231,
+      "line": 233,
       "module": "platform",
       "exported": false,
       "container": "RecipeStyleEditor",
@@ -150667,7 +150769,7 @@
       "name": "Workbench",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 165,
+      "line": 166,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150679,7 +150781,7 @@
       "name": "setValues",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 179,
+      "line": 180,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -150689,7 +150791,7 @@
       "name": "set",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 182,
+      "line": 183,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -150699,7 +150801,7 @@
       "name": "specimen",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 195,
+      "line": 196,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -150709,7 +150811,7 @@
       "name": "Block",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 349,
+      "line": 350,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150721,7 +150823,7 @@
       "name": "OverviewSpecimens",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 367,
+      "line": 368,
       "module": "platform",
       "exported": false,
       "container": "",

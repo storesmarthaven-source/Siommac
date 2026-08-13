@@ -28,7 +28,8 @@ export { DEMO_PEOPLE, DEMO_DEPARTMENTS } from './definitions';
 export { COMPOUND_OF } from './compound.defs';
 export {
   BUTTON_PATTERNS, findButtonPattern,
-  type ButtonPattern, type ButtonPatternExample,
+  type ButtonPattern, type ButtonPatternExample, type ButtonPatternControl,
+  type ButtonPatternValue, type ButtonPatternValues,
 } from './button-patterns';
 
 export {

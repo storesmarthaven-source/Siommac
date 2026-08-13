@@ -159,10 +159,11 @@ export interface WorkbenchProps {
   family?: ComponentFamily;
   onSelectMember?: (componentId: string) => void;
   onBack: () => void;
+  backLabel?: string;
   draft: GalleryDraft;
 }
 
-export function Workbench({ def, family, onSelectMember, onBack, draft }: WorkbenchProps): VNode {
+export function Workbench({ def, family, onSelectMember, onBack, backLabel = 'Components', draft }: WorkbenchProps): VNode {
   /*
     Prop values are kept PER COMPONENT, not reset on every switch.
     `useState(() => defaultProps(def))` would keep the first subtype's values
@@ -196,9 +197,9 @@ export function Workbench({ def, family, onSelectMember, onBack, draft }: Workbe
     def.render ? def.render(props, state) : null;
 
   return (
-    <div class="sds-wb">
+    <div class={`sds-wb sds-wb--${def.id}`}>
       <button type="button" class="sds-wb__back" onClick={onBack}>
-        ← Components
+        ← {backLabel}
       </button>
 
       {/* On a family page the heading is the FAMILY. The selector names the

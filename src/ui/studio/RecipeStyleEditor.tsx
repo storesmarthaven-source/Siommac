@@ -75,7 +75,7 @@ function friendlyError(error: string): string {
     : error;
 }
 
-function StudioColorControl({ id, label, value, onChange }: { id: string; label: string; value: string; onChange: (value: string) => void }): VNode {
+export function StudioColorControl({ id, label, value, onChange }: { id: string; label: string; value: string; onChange: (value: string) => void }): VNode {
   const [pickerOpen, setPickerOpen] = useState(false);
   const displayColor = /^#[0-9a-f]{6}$/i.test(value) ? value : '#000000';
   const hsl = hexToHsl(displayColor);
@@ -151,20 +151,22 @@ const ICON_RECOMMENDATIONS: Record<CanonicalButtonVariant, readonly LucideName[]
   link: ['ArrowRight', 'ExternalLink', 'Link', 'ChevronRight'],
 };
 
-function IconPicker({ id, label, value, variant, position, onChange }: {
+export function IconPicker({ id, label, value, variant, position, recommendations: customRecommendations, onChange }: {
   id: string;
   label: string;
   value: string;
   variant: CanonicalButtonVariant;
   position: 'leading' | 'trailing';
+  recommendations?: readonly LucideName[];
   onChange: (value: string) => void;
 }): VNode {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(72);
+  const baseRecommendations = customRecommendations ?? ICON_RECOMMENDATIONS[variant];
   const recommendations = position === 'trailing'
-    ? [...ICON_RECOMMENDATIONS[variant]].sort(name => /Right|External|Chevron/.test(name) ? -1 : 1)
-    : ICON_RECOMMENDATIONS[variant];
+    ? [...baseRecommendations].sort(name => /Right|External|Chevron/.test(name) ? -1 : 1)
+    : baseRecommendations;
   const normalized = query.trim().toLowerCase();
   const matches = normalized.length > 0
     ? LUCIDE_NAMES.filter(name => name.toLowerCase().includes(normalized))

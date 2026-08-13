@@ -397,10 +397,9 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
             : openDef ? (
               <Workbench
                 def={openDef}
-                family={openFamily}
                 draft={draft}
-                onSelectMember={setOpenId}
-                onBack={() => setOpenId(null)}
+                backLabel={openFamily?.name}
+                onBack={() => setOpenId(openFamily?.id ?? null)}
               />
             )
             : <Catalogue onOpen={setOpenId} />)}

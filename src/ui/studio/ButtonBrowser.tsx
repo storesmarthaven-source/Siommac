@@ -1,9 +1,12 @@
 import { type VNode } from 'preact';
+import { useState } from 'preact/hooks';
 import {
   BUTTON_PATTERNS, COMPOUND_OF, defaultProps, findComponent,
-  type ButtonPattern, type ComponentDef, type ComponentFamily,
+  type ButtonPattern, type ButtonPatternControl, type ButtonPatternValues,
+  type ComponentDef, type ComponentFamily,
 } from '../registry';
 import { LucideIcon } from '../LucideIcon';
+import { IconPicker, StudioColorControl } from './RecipeStyleEditor';
 
 export interface ButtonBrowserProps {
   family: ComponentFamily;
@@ -13,29 +16,79 @@ export interface ButtonBrowserProps {
   onBack: () => void;
 }
 
+function PatternControl({ pattern, control, values, onChange }: {
+  pattern: ButtonPattern;
+  control: ButtonPatternControl;
+  values: ButtonPatternValues;
+  onChange: (name: string, value: string | boolean) => void;
+}): VNode {
+  const value = values[control.name];
+  const id = `pattern-${pattern.id}-${control.name}`;
+
+  if (control.type === 'icon') {
+    return <div class="sds-pattern-field"><span>{control.label}</span><IconPicker
+      id={`${pattern.id}-${control.name}`} label={control.label} value={String(value)}
+      variant="outline" position="leading" recommendations={control.recommendations}
+      onChange={next => onChange(control.name, next)} /></div>;
+  }
+  if (control.type === 'color') {
+    return <div class="sds-pattern-field"><span>{control.label}</span><StudioColorControl
+      id={`${pattern.id}-${control.name}`} label={control.label.replace(/ color$/i, '')} value={String(value)}
+      onChange={next => onChange(control.name, next)} /></div>;
+  }
+  if (control.type === 'boolean') {
+    return <label class="sds-pattern-toggle" for={id}><span>{control.label}</span><input id={id} aria-label={control.label} type="checkbox" checked={value === true}
+      onChange={event => onChange(control.name, (event.target as HTMLInputElement).checked)} /></label>;
+  }
+  if (control.type === 'text') {
+    return <label class="sds-pattern-field" for={id}><span>{control.label}</span><input id={id} aria-label={control.label} value={String(value)}
+      onInput={event => onChange(control.name, (event.target as HTMLInputElement).value)} />{control.help && <small>{control.help}</small>}</label>;
+  }
+  return <label class="sds-pattern-field" for={id}><span>{control.label}</span><select id={id} aria-label={control.label} value={String(value)}
+    onChange={event => onChange(control.name, (event.target as HTMLSelectElement).value)}>
+    {control.options.map(option => <option value={option.value}>{option.label}</option>)}
+  </select></label>;
+}
+
+function ButtonPatternEditor({ pattern, onBack, onEditFoundation }: { pattern: ButtonPattern; onBack: () => void; onEditFoundation: () => void }): VNode {
+  const [values, setValues] = useState<ButtonPatternValues>({ ...pattern.defaults });
+  const set = (name: string, value: string | boolean): void => setValues(previous => ({ ...previous, [name]: value }));
+
+  return (
+    <div class="sds-button-pattern">
+      <button type="button" class="sds-wb__back" onClick={onBack}>← All buttons</button>
+      <header class="sds-button-pattern__head">
+        <div><span>{pattern.badge}</span><h2>{pattern.name}</h2><p>{pattern.description}</p></div>
+        <button type="button" onClick={onEditFoundation}>Edit Action Button foundation <LucideIcon name="ArrowRight" size={15} /></button>
+      </header>
+      <section class="sds-button-pattern__editor" aria-label={`${pattern.name} editor`}>
+        <div class="sds-button-pattern__stage">
+          <header><div><span>Live preview</span><strong>{pattern.name}</strong></div><small>Preview only</small></header>
+          <div>{pattern.preview(values)}</div>
+          <aside><strong>How it is governed</strong><p>{pattern.guidance}</p><span>Inherits the published Action Button recipe</span></aside>
+        </div>
+        <aside class="sds-button-pattern__settings" aria-label={`${pattern.name} settings`}>
+          <header><div><span>Editing</span><strong>{pattern.name}</strong></div><button type="button" onClick={() => setValues({ ...pattern.defaults })}>Reset</button></header>
+          <div>{pattern.controls.map(control => <PatternControl key={control.name} pattern={pattern} control={control} values={values} onChange={set} />)}</div>
+          <footer><LucideIcon name="Link2" size={15} /><p><strong>Linked to Action Button</strong><span>Geometry, states and accessibility stay inherited. These preview choices are not published.</span></p></footer>
+        </aside>
+      </section>
+      <section class="sds-button-pattern__examples" aria-labelledby="pattern-examples-title">
+        <header><h3 id="pattern-examples-title">Approved examples</h3><p>Use these patterns consistently; labels and actions still belong to the application.</p></header>
+        <div>{pattern.examples.map(example => <article key={example.id}><span>{example.label}</span><div>{example.render()}</div></article>)}</div>
+      </section>
+    </div>
+  );
+}
+
 export function ButtonBrowser({ family, selectedPattern, onOpenComponent, onOpenPattern, onBack }: ButtonBrowserProps): VNode {
   const members = family.componentIds
     .map(findComponent)
     .filter((component): component is ComponentDef => component !== undefined);
 
   if (selectedPattern) {
-    return (
-      <div class="sds-button-pattern">
-        <button type="button" class="sds-wb__back" onClick={() => onOpenPattern(family.id)}>← All buttons</button>
-        <header class="sds-button-pattern__head">
-          <div><span>{selectedPattern.badge}</span><h2>{selectedPattern.name}</h2><p>{selectedPattern.description}</p></div>
-          <button type="button" onClick={() => onOpenComponent(selectedPattern.foundationComponentId)}>Edit Action Button foundation <LucideIcon name="ArrowRight" size={15} /></button>
-        </header>
-        <section class="sds-button-pattern__hero" aria-label={`${selectedPattern.name} preview`}>
-          <div>{selectedPattern.preview()}</div>
-          <aside><strong>How it is governed</strong><p>{selectedPattern.guidance}</p><span>Inherits the published Action Button recipe</span></aside>
-        </section>
-        <section class="sds-button-pattern__examples" aria-labelledby="pattern-examples-title">
-          <header><h3 id="pattern-examples-title">Approved examples</h3><p>Use these patterns consistently; labels and actions still belong to the application.</p></header>
-          <div>{selectedPattern.examples.map(example => <article key={example.id}><span>{example.label}</span><div>{example.render()}</div></article>)}</div>
-        </section>
-      </div>
-    );
+    return <ButtonPatternEditor pattern={selectedPattern} onBack={() => onOpenPattern(family.id)}
+      onEditFoundation={() => onOpenComponent(selectedPattern.foundationComponentId)} />;
   }
 
   return (
