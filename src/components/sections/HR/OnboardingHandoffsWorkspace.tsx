@@ -107,10 +107,10 @@ export function OnboardingHandoffsWorkspace({
   // no-ops).
   const lifecycleActions = (h: OnboardingHandoffRow): VNode => (
     <>
-      {h.status === 'failed' && <button class="obx-mini" onClick={() => void handleRetry(h)}>Retry</button>}
-      {(h.status === 'pending' || h.status === 'sent') && <button class="obx-mini" onClick={() => void handleAccept(h)}>Accept</button>}
-      {(h.status === 'accepted' || h.status === 'delivered' || h.status === 'blocked') && <button class="obx-mini" onClick={() => void handleComplete(h)}>Complete</button>}
-      {OPEN_HANDOFF.has(h.status) && <button class="obx-mini" onClick={() => void handleCancel(h)}>Cancel</button>}
+      {h.status === 'failed' && <Button variant="secondary" size="sm" onClick={() => void handleRetry(h)}>Retry</Button>}
+      {(h.status === 'pending' || h.status === 'sent') && <Button variant="secondary" size="sm" onClick={() => void handleAccept(h)}>Accept</Button>}
+      {(h.status === 'accepted' || h.status === 'delivered' || h.status === 'blocked') && <Button variant="secondary" size="sm" onClick={() => void handleComplete(h)}>Complete</Button>}
+      {OPEN_HANDOFF.has(h.status) && <Button variant="secondary" size="sm" onClick={() => void handleCancel(h)}>Cancel</Button>}
     </>
   );
 
@@ -154,8 +154,8 @@ export function OnboardingHandoffsWorkspace({
                       <td class="obx-meta">{fmtDateTime(h.lastEventAt ?? h.createdAt)}</td>
                       <td>
                         <div class="obx-rowbtns" style={{ flexWrap: 'wrap' }}>
-                          <button class="obx-mini" onClick={() => setPayloadRow(h)}>Payload</button>
-                          <button class="obx-mini" onClick={() => onOpenCase(h.caseId)}>Open Case</button>
+                          <Button variant="secondary" size="sm" onClick={() => setPayloadRow(h)}>Payload</Button>
+                          <Button variant="secondary" size="sm" onClick={() => onOpenCase(h.caseId)}>Open Case</Button>
                           {lifecycleActions(h)}
                         </div>
                       </td>

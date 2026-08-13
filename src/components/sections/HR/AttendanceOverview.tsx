@@ -205,8 +205,8 @@ export function AttendanceOverview(): VNode {
                       <td class="obx-meta" style={{ textAlign: 'center' }}>{t.openExceptionCount}</td>
                       <td><Badge tone={tsTone(t.status)}>{humanize(t.status)}</Badge></td>
                       <td>
-                        {canSubmit && <button class="obx-mini" onClick={() => { const key = submitKeys.current.get(t.id) ?? crypto.randomUUID(); submitKeys.current.set(t.id, key); void run(submitMut.mutateAsync({ timesheetId: t.id, idempotencyKey: key }).then(r => { submitKeys.current.delete(t.id); return r; }), 'Timesheet submitted.'); }}>Submit</button>}
-                        {canReopen && <button class="obx-mini" onClick={() => void run(reopenMut.mutateAsync({ timesheetId: t.id }), 'Timesheet reopened.')}>Reopen</button>}
+                        {canSubmit && <Button variant="secondary" size="sm" onClick={() => { const key = submitKeys.current.get(t.id) ?? crypto.randomUUID(); submitKeys.current.set(t.id, key); void run(submitMut.mutateAsync({ timesheetId: t.id, idempotencyKey: key }).then(r => { submitKeys.current.delete(t.id); return r; }), 'Timesheet submitted.'); }}>Submit</Button>}
+                        {canReopen && <Button variant="secondary" size="sm" onClick={() => void run(reopenMut.mutateAsync({ timesheetId: t.id }), 'Timesheet reopened.')}>Reopen</Button>}
                         {!canSubmit && !canReopen && <span class="obx-meta">—</span>}
                       </td>
                     </tr>
@@ -235,8 +235,8 @@ export function AttendanceOverview(): VNode {
                     <td>
                       {canManageExc && x.status === 'open' ? (
                         <>
-                          <button class="obx-mini" onClick={() => void onResolve(x)}>Resolve</button>
-                          <button class="obx-mini" onClick={() => void onWaive(x)}>Waive</button>
+                          <Button variant="secondary" size="sm" onClick={() => void onResolve(x)}>Resolve</Button>
+                          <Button variant="secondary" size="sm" onClick={() => void onWaive(x)}>Waive</Button>
                         </>
                       ) : <span class="obx-meta">—</span>}
                     </td>

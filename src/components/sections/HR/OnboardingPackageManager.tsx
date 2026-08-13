@@ -103,7 +103,7 @@ export function OnboardingPackageManager({
                   <td class="obx-meta">{p.defaultSlaDays} days</td>
                   <td class="obx-meta">{p.probationDays != null ? `${p.probationDays}d` : '—'}</td>
                   <td onClick={e => e.stopPropagation()}>
-                    <button class="obx-mini" onClick={() => void toggleStatus(p)}>{p.status === 'active' ? 'Retire' : 'Activate'}</button>
+                    <Button variant="secondary" size="sm" onClick={() => void toggleStatus(p)}>{p.status === 'active' ? 'Retire' : 'Activate'}</Button>
                   </td>
                 </tr>
               ))}</tbody>

@@ -623,13 +623,13 @@ export function OrgStructureOverview(): VNode {
           <td onClick={e => e.stopPropagation()}>
             {canOrg ? (
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <button class="obx-mini" onClick={() => setModal({ kind: 'unit', editing: null, parentId: u.id })}>+ Child</button>
-                <button class="obx-mini" onClick={() => setModal({ kind: 'unit', editing: u, parentId: null })}>Edit</button>
-                <button class="obx-mini" onClick={() => setModal({ kind: 'move', unit: u })}>Move</button>
+                <Button variant="secondary" size="sm" onClick={() => setModal({ kind: 'unit', editing: null, parentId: u.id })}>+ Child</Button>
+                <Button variant="secondary" size="sm" onClick={() => setModal({ kind: 'unit', editing: u, parentId: null })}>Edit</Button>
+                <Button variant="secondary" size="sm" onClick={() => setModal({ kind: 'move', unit: u })}>Move</Button>
                 {u.isActive
-                  ? <button class="obx-mini" onClick={() => onArchiveUnit(u)}>Archive</button>
-                  : <button class="obx-mini" onClick={() => void onActivateUnit(u)}>Activate</button>}
-                <button class="obx-mini danger" onClick={() => onDeleteUnit(u)}>Delete</button>
+                  ? <Button variant="secondary" size="sm" onClick={() => onArchiveUnit(u)}>Archive</Button>
+                  : <Button variant="secondary" size="sm" onClick={() => void onActivateUnit(u)}>Activate</Button>}
+                <Button variant="outline" tone="danger" size="sm" onClick={() => onDeleteUnit(u)}>Delete</Button>
               </div>
             ) : <span class="obx-meta">—</span>}
           </td>
@@ -679,8 +679,8 @@ export function OrgStructureOverview(): VNode {
                   <td onClick={e => e.stopPropagation()}>
                     {canPos ? (
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        <button class="obx-mini" onClick={() => setModal({ kind: 'position', editing: p })}>Edit</button>
-                        {p.isActive ? <button class="obx-mini" onClick={() => onRetire(p)}>Retire</button> : <button class="obx-mini" onClick={() => void onReactivate(p)}>Activate</button>}
+                        <Button variant="secondary" size="sm" onClick={() => setModal({ kind: 'position', editing: p })}>Edit</Button>
+                        {p.isActive ? <Button variant="secondary" size="sm" onClick={() => onRetire(p)}>Retire</Button> : <Button variant="secondary" size="sm" onClick={() => void onReactivate(p)}>Activate</Button>}
                       </div>
                     ) : <span class="obx-meta">—</span>}
                   </td>
@@ -729,8 +729,8 @@ export function OrgStructureOverview(): VNode {
                   <td onClick={e => e.stopPropagation()}>
                     {canCc ? (
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        <button class="obx-mini" onClick={() => setModal({ kind: 'costcenter', editing: c })}>Edit</button>
-                        {c.isActive ? <button class="obx-mini" onClick={() => onRetire(c)}>Retire</button> : <button class="obx-mini" onClick={() => void onReactivate(c)}>Activate</button>}
+                        <Button variant="secondary" size="sm" onClick={() => setModal({ kind: 'costcenter', editing: c })}>Edit</Button>
+                        {c.isActive ? <Button variant="secondary" size="sm" onClick={() => onRetire(c)}>Retire</Button> : <Button variant="secondary" size="sm" onClick={() => void onReactivate(c)}>Activate</Button>}
                       </div>
                     ) : <span class="obx-meta">—</span>}
                   </td>
@@ -770,7 +770,7 @@ export function OrgStructureOverview(): VNode {
                   <td class="obx-meta">{cr.requestedByName ?? '—'}</td>
                   <td onClick={e => e.stopPropagation()}>
                     {canOrg && ['draft', 'pending_approval', 'scheduled', 'approved'].includes(cr.status)
-                      ? <button class="obx-mini danger" onClick={() => void onCancel(cr)}>Cancel</button>
+                      ? <Button variant="outline" tone="danger" size="sm" onClick={() => void onCancel(cr)}>Cancel</Button>
                       : <span class="obx-meta">—</span>}
                   </td>
                 </tr>

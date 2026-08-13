@@ -261,8 +261,8 @@ export function OnboardingCaseDetail({
           <td>{fmtDate(t.dueAt)}</td>
           <td><CaseStatusBadge s={t.status} /></td>
           <td><div class="obx-rowbtns">
-            {isOpen(t.status) && <button class="obx-mini" onClick={() => void handleCompleteTask(t)}>Complete</button>}
-            {t.status === 'blocked' ? <button class="obx-mini" onClick={() => void handleUnblockTask(t)}>Unblock</button> : isOpen(t.status) && <button class="obx-mini" onClick={() => void handleBlockTask(t)}>Block</button>}
+            {isOpen(t.status) && <Button variant="secondary" size="sm" onClick={() => void handleCompleteTask(t)}>Complete</Button>}
+            {t.status === 'blocked' ? <Button variant="secondary" size="sm" onClick={() => void handleUnblockTask(t)}>Unblock</Button> : isOpen(t.status) && <Button variant="secondary" size="sm" onClick={() => void handleBlockTask(t)}>Block</Button>}
           </div></td>
         </tr>
       ))}</tbody>
@@ -279,9 +279,9 @@ export function OnboardingCaseDetail({
           <td><CaseStatusBadge s={b.severity} /></td>
           <td><CaseStatusBadge s={b.status} /></td>
           <td>{blockerOpen(b.status) ? <div class="obx-rowbtns">
-            <button class="obx-mini" onClick={() => void handleResolve(b)}>Resolve</button>
-            <button class="obx-mini" onClick={() => void handleEscalate(b)}>Escalate</button>
-            <button class="obx-mini" onClick={() => void handleWaive(b)}>Waive</button>
+            <Button variant="secondary" size="sm" onClick={() => void handleResolve(b)}>Resolve</Button>
+            <Button variant="secondary" size="sm" onClick={() => void handleEscalate(b)}>Escalate</Button>
+            <Button variant="secondary" size="sm" onClick={() => void handleWaive(b)}>Waive</Button>
           </div> : <span class="obx-meta">—</span>}</td>
         </tr>
       ))}</tbody>
@@ -317,8 +317,8 @@ export function OnboardingCaseDetail({
             </select>
           </td>
           <td>{isOpen(a.status) ? <div class="obx-rowbtns">
-            <button class="obx-mini" onClick={() => void handleCompleteAction(a)}>Complete</button>
-            <button class="obx-mini" onClick={() => void handleCancelAction(a)}>Cancel</button>
+            <Button variant="secondary" size="sm" onClick={() => void handleCompleteAction(a)}>Complete</Button>
+            <Button variant="secondary" size="sm" onClick={() => void handleCancelAction(a)}>Cancel</Button>
           </div> : <span class="obx-meta">—</span>}</td>
         </tr>
       ))}</tbody>

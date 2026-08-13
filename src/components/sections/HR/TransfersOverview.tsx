@@ -331,13 +331,13 @@ function RequestDetail({
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {canApprove && (
               <>
-                <button class="obx-mini" onClick={() => void decide('approve')}>Approve</button>
-                <button class="obx-mini" onClick={() => void decide('return')}>Return</button>
-                <button class="obx-mini danger" onClick={() => void decide('reject')}>Reject</button>
+                <Button variant="secondary" size="sm" onClick={() => void decide('approve')}>Approve</Button>
+                <Button variant="secondary" size="sm" onClick={() => void decide('return')}>Return</Button>
+                <Button variant="outline" tone="danger" size="sm" onClick={() => void decide('reject')}>Reject</Button>
               </>
             )}
             {canCancel && (
-              <button class="obx-mini" onClick={() => void onCancel()}>Cancel</button>
+              <Button variant="secondary" size="sm" onClick={() => void onCancel()}>Cancel</Button>
             )}
           </div>
         ) : undefined}

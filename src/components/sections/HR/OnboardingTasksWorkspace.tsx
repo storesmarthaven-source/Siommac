@@ -141,10 +141,10 @@ export function OnboardingTasksWorkspace({
   };
   const rowActions = (t: OnboardingTaskRow): VNode => (
     <div class="obx-rowbtns">
-      {isOpen(t.status) && <button class="obx-mini" onClick={e => { e.stopPropagation(); void handleComplete(t); }}>Complete</button>}
+      {isOpen(t.status) && <Button variant="secondary" size="sm" onClick={e => { e.stopPropagation(); void handleComplete(t); }}>Complete</Button>}
       {t.status === 'blocked'
-        ? <button class="obx-mini" onClick={e => { e.stopPropagation(); void handleUnblock(t); }}>Unblock</button>
-        : isOpen(t.status) && <button class="obx-mini" onClick={e => { e.stopPropagation(); void handleBlock(t); }}>Block</button>}
+        ? <Button variant="secondary" size="sm" onClick={e => { e.stopPropagation(); void handleUnblock(t); }}>Unblock</Button>
+        : isOpen(t.status) && <Button variant="secondary" size="sm" onClick={e => { e.stopPropagation(); void handleBlock(t); }}>Block</Button>}
     </div>
   );
   const openDrawer = (t: OnboardingTaskRow): void => setDrawerTaskId(t.taskId);

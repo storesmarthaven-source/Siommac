@@ -214,12 +214,12 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }):
         actions={canManage && !terminal ? (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {c.status === 'paused'
-              ? <button class="obx-mini" onClick={() => void onResume()}>Resume</button>
-              : <button class="obx-mini" onClick={() => void onPause()}>Pause</button>}
-            <button class="obx-mini" onClick={() => void onReady()}>Mark Ready for Exit</button>
-            <button class="obx-mini" onClick={() => void onComplete()}>Complete</button>
-            {canFinalize && <button class="obx-mini danger" onClick={() => void onFinalize()}>Finalize Exit</button>}
-            <button class="obx-mini" onClick={() => void onCancel()}>Cancel</button>
+              ? <Button variant="secondary" size="sm" onClick={() => void onResume()}>Resume</Button>
+              : <Button variant="secondary" size="sm" onClick={() => void onPause()}>Pause</Button>}
+            <Button variant="secondary" size="sm" onClick={() => void onReady()}>Mark Ready for Exit</Button>
+            <Button variant="secondary" size="sm" onClick={() => void onComplete()}>Complete</Button>
+            {canFinalize && <Button variant="outline" tone="danger" size="sm" onClick={() => void onFinalize()}>Finalize Exit</Button>}
+            <Button variant="secondary" size="sm" onClick={() => void onCancel()}>Cancel</Button>
           </div>
         ) : undefined}
       />
@@ -234,7 +234,7 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }):
                 <td class="obx-meta">{t.assignedToName ?? t.ownerRole ?? '—'}</td>
                 <td class="obx-meta">{t.isBlocking ? 'Yes' : '—'}</td>
                 <td><Badge tone={t.status === 'completed' ? 'success' : 'neutral'}>{humanize(t.status)}</Badge></td>
-                <td>{canTask && t.status !== 'completed' && !terminal ? <button class="obx-mini" onClick={() => void run(completeTaskMut.mutateAsync({ taskId: t.id }), 'Task completed')}>Complete</button> : <span class="obx-meta">—</span>}</td>
+                <td>{canTask && t.status !== 'completed' && !terminal ? <Button variant="secondary" size="sm" onClick={() => void run(completeTaskMut.mutateAsync({ taskId: t.id }), 'Task completed')}>Complete</Button> : <span class="obx-meta">—</span>}</td>
               </tr>
             ))}</tbody>
           </table>
