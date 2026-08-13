@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "71d24e83cd9f5f35338b49ec05bf36b4613b223b",
+    "head": "7a89c6d3f3ae4677beaa31253b4fa6e831ee8479",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "cf9a5f0923587f9a6e58e861",
-    "indexedFiles": 1825
+    "fingerprint": "5184e88e1c4502ecca6ff3da",
+    "indexedFiles": 1827
   },
   "summary": {
-    "files": 1470,
-    "symbols": 14683,
+    "files": 1472,
+    "symbols": 14702,
     "widgets": 63,
     "routes": 978,
     "routeDefinitions": 979,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 410,
-        "symbols": 3669,
+        "files": 412,
+        "symbols": 3688,
         "widgets": 12,
         "routes": 38,
         "routeDefinitions": 53,
@@ -3326,6 +3326,13 @@
       "role": "tooling",
       "lines": 291,
       "hash": "92b169b9fba85c0d"
+    },
+    {
+      "path": "scripts/scan-button-usage.mjs",
+      "module": "platform",
+      "role": "tooling",
+      "lines": 138,
+      "hash": "d0e023e34b752506"
     },
     {
       "path": "scripts/seed-email-templates.mjs",
@@ -9229,6 +9236,13 @@
       "hash": "b395ef41e0892bf3"
     },
     {
+      "path": "src/ui/studio/InAppUsage.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 187,
+      "hash": "678cae3919439b2b"
+    },
+    {
       "path": "src/ui/studio/PreviewScope.tsx",
       "module": "platform",
       "role": "frontend",
@@ -9246,8 +9260,8 @@
       "path": "src/ui/studio/Workbench.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 485,
-      "hash": "69b3ac886bee0585"
+      "lines": 487,
+      "hash": "814c77cd77573072"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -58443,6 +58457,116 @@
       "file": "scripts/reset-payroll-demo.mjs",
       "line": 287,
       "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ROOT",
+      "kind": "variable",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 27,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "OUT",
+      "kind": "variable",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 31,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "zoneOf",
+      "kind": "function",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 34,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "walk",
+      "kind": "function",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 39,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "parseProps",
+      "kind": "function",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 55,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "files",
+      "kind": "variable",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 75,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "shapes",
+      "kind": "variable",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 77,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "dynamicSites",
+      "kind": "variable",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 78,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "legacyButtons",
+      "kind": "variable",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 79,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "legacyFiles",
+      "kind": "variable",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 80,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "payload",
+      "kind": "object",
+      "file": "scripts/scan-button-usage.mjs",
+      "line": 113,
+      "module": "platform",
       "exported": false,
       "container": "",
       "tags": []
@@ -148282,6 +148406,91 @@
       "tags": []
     },
     {
+      "name": "Shape",
+      "kind": "interface",
+      "file": "src/ui/studio/InAppUsage.tsx",
+      "line": 31,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DATA",
+      "kind": "object",
+      "file": "src/ui/studio/InAppUsage.tsx",
+      "line": 39,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "describe",
+      "kind": "function",
+      "file": "src/ui/studio/InAppUsage.tsx",
+      "line": 43,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ShapeCard",
+      "kind": "function",
+      "file": "src/ui/studio/InAppUsage.tsx",
+      "line": 48,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "InAppUsage",
+      "kind": "function",
+      "file": "src/ui/studio/InAppUsage.tsx",
+      "line": 72,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "toggle",
+      "kind": "function",
+      "file": "src/ui/studio/InAppUsage.tsx",
+      "line": 82,
+      "module": "platform",
+      "exported": false,
+      "container": "InAppUsage",
+      "tags": []
+    },
+    {
+      "name": "copySelection",
+      "kind": "function",
+      "file": "src/ui/studio/InAppUsage.tsx",
+      "line": 93,
+      "module": "platform",
+      "exported": false,
+      "container": "InAppUsage",
+      "tags": []
+    },
+    {
+      "name": "settle",
+      "kind": "function",
+      "file": "src/ui/studio/InAppUsage.tsx",
+      "line": 110,
+      "module": "platform",
+      "exported": false,
+      "container": "copySelection",
+      "tags": []
+    },
+    {
       "name": "PreviewScope",
       "kind": "function",
       "file": "src/ui/studio/PreviewScope.tsx",
@@ -148438,7 +148647,7 @@
       "name": "Tab",
       "kind": "type",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 31,
+      "line": 32,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148448,7 +148657,7 @@
       "name": "TABS",
       "kind": "array",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 32,
+      "line": 33,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148458,7 +148667,7 @@
       "name": "CONTROL_GROUPS",
       "kind": "array",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 48,
+      "line": 49,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148468,7 +148677,7 @@
       "name": "groupControls",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 55,
+      "line": 56,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148478,7 +148687,7 @@
       "name": "Control",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 75,
+      "line": 76,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148490,7 +148699,7 @@
       "name": "Workbench",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 131,
+      "line": 132,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148502,7 +148711,7 @@
       "name": "set",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 135,
+      "line": 136,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -148512,7 +148721,7 @@
       "name": "specimen",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 139,
+      "line": 140,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -148522,7 +148731,7 @@
       "name": "Block",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 281,
+      "line": 283,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148534,7 +148743,7 @@
       "name": "OverviewSpecimens",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 299,
+      "line": 301,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148546,7 +148755,7 @@
       "name": "UsageTab",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 395,
+      "line": 397,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148558,7 +148767,7 @@
       "name": "A11yTab",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 437,
+      "line": 439,
       "module": "platform",
       "exported": false,
       "container": "",

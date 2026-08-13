@@ -501,3 +501,47 @@
 .sds-axis__cell { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
 .sds-axis__spec { display: grid; place-items: center; min-height: 40px; }
 .sds-axis__cell code { font-size: 11px; color: var(--sds-ink-3); }
+
+/* ── In-app usage: one prominent shape, the tail behind an expander ────────── */
+.sds-use__card { display: flex; align-items: center; gap: 18px; min-width: 0; padding: 12px 0; }
+.sds-use__card--primary {
+  align-items: center; gap: 22px;
+  padding: 18px; margin-bottom: 4px;
+  background: var(--sds-subtle); border-radius: 10px;
+}
+.sds-use__spec { flex: none; display: grid; place-items: center; min-width: 120px; }
+.sds-use__meta { min-width: 0; }
+.sds-use__meta code { display: block; font-size: 12px; color: var(--sds-ink); }
+.sds-use__meta span { font-size: 12px; color: var(--sds-ink-3); }
+
+.sds-use__more {
+  width: 100%; min-height: 34px; margin-top: 10px; padding: 7px 12px;
+  border: 1px solid var(--sds-line); border-radius: 8px;
+  background: var(--sds-surface); font: inherit; font-size: 13px; cursor: pointer;
+}
+.sds-use__more:hover { background: #f5f5f5; }
+.sds-use__grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 4px 20px; margin-top: 8px;
+}
+
+.sds-use__gaps { margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--sds-line); }
+.sds-use__gaps > div { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; padding: 6px 0; }
+.sds-use__gaps dt { font-size: 20px; font-weight: 600; color: var(--sds-ink); }
+.sds-use__gaps dd { margin: 0; font-size: 13px; color: var(--sds-ink-2); align-self: center; }
+
+/* Selection: checkboxes + copy, so a decision leaves the screen as text. */
+.sds-use__check { flex: none; width: 16px; height: 16px; margin: 0; cursor: pointer; }
+.sds-use__bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--sds-line);
+}
+.sds-use__act, .sds-use__copy {
+  min-height: 32px; padding: 6px 12px;
+  border: 1px solid var(--sds-line); border-radius: 6px;
+  background: var(--sds-surface); font: inherit; font-size: 13px; cursor: pointer;
+}
+.sds-use__act:hover:not(:disabled), .sds-use__copy:hover:not(:disabled) { background: #f5f5f5; }
+.sds-use__act:disabled, .sds-use__copy:disabled { color: var(--sds-ink-3); cursor: not-allowed; }
+.sds-use__copy { margin-left: auto; border-color: var(--sds-accent); color: var(--sds-accent); font-weight: 600; }
+.sds-use__count { font-size: 13px; color: var(--sds-ink-3); }

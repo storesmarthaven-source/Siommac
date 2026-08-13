@@ -27,6 +27,7 @@ import {
   defaultProps, type ComponentDef, type PropValues, type PropControl,
 } from '../registry';
 import { type UiState } from '../tokens';
+import { InAppUsage } from './InAppUsage';
 
 type Tab = 'overview' | 'usage' | 'accessibility' | 'code';
 const TABS: { id: Tab; label: string }[] = [
@@ -244,6 +245,7 @@ export function Workbench({ def, onBack }: { def: ComponentDef; onBack: () => vo
 
           <div class="sds-wb__rule" />
           <OverviewSpecimens def={def} specimen={specimen} hideVariants={axis.length > 0} />
+          <InAppUsage def={def} />
         </div>
       )}
 

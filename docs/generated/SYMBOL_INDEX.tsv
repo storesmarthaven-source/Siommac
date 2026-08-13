@@ -4707,6 +4707,17 @@ api	function	payroll	false		scripts/reset-payroll-demo.mjs	185
 seed	function	payroll	false		scripts/reset-payroll-demo.mjs	196	
 nameOf	function	payroll	false		scripts/reset-payroll-demo.mjs	211	seed
 res	variable	payroll	false		scripts/reset-payroll-demo.mjs	287	
+ROOT	variable	platform	false		scripts/scan-button-usage.mjs	27	
+OUT	variable	platform	false		scripts/scan-button-usage.mjs	31	
+zoneOf	function	platform	false		scripts/scan-button-usage.mjs	34	
+walk	function	platform	false		scripts/scan-button-usage.mjs	39	
+parseProps	function	platform	false		scripts/scan-button-usage.mjs	55	
+files	variable	platform	false		scripts/scan-button-usage.mjs	75	
+shapes	variable	platform	false		scripts/scan-button-usage.mjs	77	
+dynamicSites	variable	platform	false		scripts/scan-button-usage.mjs	78	
+legacyButtons	variable	platform	false		scripts/scan-button-usage.mjs	79	
+legacyFiles	variable	platform	false		scripts/scan-button-usage.mjs	80	
+payload	object	platform	false		scripts/scan-button-usage.mjs	113	
 DRY	variable	platform	false		scripts/seed-email-templates.mjs	24	
 PRUNE	variable	platform	false		scripts/seed-email-templates.mjs	25	
 require_	variable	platform	false		scripts/seed-email-templates.mjs	27	
@@ -13163,6 +13174,14 @@ Swatch	function	platform	false	component	src/ui/studio/BrandOverview.tsx	62
 BrandOverview	function	platform	true	component	src/ui/studio/BrandOverview.tsx	76	
 applyDirection	function	platform	false		src/ui/studio/BrandOverview.tsx	104	BrandOverview
 publish	function	platform	false		src/ui/studio/BrandOverview.tsx	110	BrandOverview
+Shape	interface	platform	false		src/ui/studio/InAppUsage.tsx	31	
+DATA	object	platform	false		src/ui/studio/InAppUsage.tsx	39	
+describe	function	platform	false		src/ui/studio/InAppUsage.tsx	43	
+ShapeCard	function	platform	false	component,ui-tile	src/ui/studio/InAppUsage.tsx	48	
+InAppUsage	function	platform	true	component	src/ui/studio/InAppUsage.tsx	72	
+toggle	function	platform	false		src/ui/studio/InAppUsage.tsx	82	InAppUsage
+copySelection	function	platform	false		src/ui/studio/InAppUsage.tsx	93	InAppUsage
+settle	function	platform	false		src/ui/studio/InAppUsage.tsx	110	copySelection
 PreviewScope	function	platform	true	component	src/ui/studio/PreviewScope.tsx	20	
 StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	42	
 SectionId	type	platform	false		src/ui/studio/Studio.tsx	51	
@@ -13177,18 +13196,18 @@ ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx
 Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	147	
 PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	202	
 Studio	function	platform	true	component	src/ui/studio/Studio.tsx	211	
-Tab	type	platform	false		src/ui/studio/Workbench.tsx	31	
-TABS	array	platform	false		src/ui/studio/Workbench.tsx	32	
-CONTROL_GROUPS	array	platform	false		src/ui/studio/Workbench.tsx	48	
-groupControls	function	platform	false		src/ui/studio/Workbench.tsx	55	
-Control	function	platform	false	component	src/ui/studio/Workbench.tsx	75	
-Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	131	
-set	function	platform	false		src/ui/studio/Workbench.tsx	135	Workbench
-specimen	function	platform	false		src/ui/studio/Workbench.tsx	139	Workbench
-Block	function	platform	false	component	src/ui/studio/Workbench.tsx	281	
-OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	299	
-UsageTab	function	platform	false	component	src/ui/studio/Workbench.tsx	395	
-A11yTab	function	platform	false	component	src/ui/studio/Workbench.tsx	437	
+Tab	type	platform	false		src/ui/studio/Workbench.tsx	32	
+TABS	array	platform	false		src/ui/studio/Workbench.tsx	33	
+CONTROL_GROUPS	array	platform	false		src/ui/studio/Workbench.tsx	49	
+groupControls	function	platform	false		src/ui/studio/Workbench.tsx	56	
+Control	function	platform	false	component	src/ui/studio/Workbench.tsx	76	
+Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	132	
+set	function	platform	false		src/ui/studio/Workbench.tsx	136	Workbench
+specimen	function	platform	false		src/ui/studio/Workbench.tsx	140	Workbench
+Block	function	platform	false	component	src/ui/studio/Workbench.tsx	283	
+OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	301	
+UsageTab	function	platform	false	component	src/ui/studio/Workbench.tsx	397	
+A11yTab	function	platform	false	component	src/ui/studio/Workbench.tsx	439	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	
