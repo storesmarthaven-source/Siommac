@@ -26,12 +26,13 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { Workbench } from './Workbench';
+import { ButtonBrowser } from './ButtonBrowser';
 import { BrandOverview } from './BrandOverview';
 import { AppPreview, type Scene } from './AppPreview';
 import { PreviewScope } from './PreviewScope';
 import {
   COMPONENT_DEFS, componentsByCategory, registryTotals, findComponent,
-  isBuilt, defaultProps, familyOfComponent,
+  isBuilt, defaultProps, familyOfComponent, findFamily, findButtonPattern,
   type ComponentDef, type ComponentFamily, type CatalogueNode,
 } from '../registry';
 import { LucideIcon, type LucideName } from '../LucideIcon';
@@ -168,11 +169,11 @@ function ComponentCard({ def, onOpen }: { def: ComponentDef; onOpen?: (id: strin
  * The catalogue answers "what is in the kit", so a family reads as ONE thing
  * here, exactly like every other card: a single specimen and a caption saying
  * how many types it holds. Previewing all three turned one card into a stacked
- * list and broke the grid's rhythm — the place to compare the members is the
- * family page, where the selector shows all three side by side.
+ * list and broke the grid's rhythm — the family browser is the place to compare
+ * real members with governed usage patterns.
  *
- * The specimen is the default member, so the card previews what opening it
- * actually gives you.
+ * The specimen is the default member; selecting the card opens the browser
+ * before any focused editor.
  */
 function FamilyCard(
   { family, members, onOpen }:
@@ -182,7 +183,7 @@ function FamilyCard(
 
   return (
     <button type="button" class="sds-card sds-card--open sds-card--family"
-      onClick={() => onOpen(family.defaultComponentId)}>
+      onClick={() => onOpen(family.id)}>
       <div class="sds-card__preview">
         <div class="sds-card__specimen">{lead?.render?.(defaultProps(lead), 'default')}</div>
       </div>
@@ -277,15 +278,15 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
   const attachScope = draft.attachScope;
 
   const flat = NAV.flatMap(g => g.items);
-  const current = flat.find(i => i.id === active) ?? flat[0]!;
-  /*
-    `openId` is always a COMPONENT id, never a family id. Opening the family
-    resolves to its `defaultComponentId` at the click, so there is one kind of
-    open state and the workbench always has a real definition to render — no
-    "family mode" branch, and no second Properties system.
-  */
+  const current = flat.find(i => i.id === active) ?? flat[0];
+  if (!current) throw new Error('Studio navigation is empty');
+  /* IDs resolve through authoritative registries: components open their
+     generated workbench; the family and governed patterns open the browser. */
   const openDef = openId ? findComponent(openId) : undefined;
-  const openFamily = openId ? familyOfComponent(openId) : undefined;
+  const openPattern = openId ? findButtonPattern(openId) : undefined;
+  const openFamily = openId
+    ? (findFamily(openId) ?? familyOfComponent(openId) ?? (openPattern ? findFamily('buttons') : undefined))
+    : undefined;
   const groupOf = NAV.find(g => g.items.some(i => i.id === active))?.label ?? '';
 
   return (
@@ -328,7 +329,7 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
                     <li key={row.family.id}>
                       <button type="button"
                         class={`sds-nav__item sds-nav__item--sub${openFamily?.id === row.family.id ? ' is-active' : ''}`}
-                        onClick={() => { setActive('components'); setOpenId(row.family.defaultComponentId); }}>
+                        onClick={() => { setActive('components'); setOpenId(row.family.id); }}>
                         {row.family.name}
                         <span class="sds-nav__count">{row.children.length}</span>
                       </button>
@@ -373,8 +374,8 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
           <nav class="sds-crumbs" aria-label="Breadcrumb">
             <span>{groupOf}</span>
             <LucideIcon name="ChevronRight" size={14} />
-            {openFamily && <><span>{openFamily.name}</span><LucideIcon name="ChevronRight" size={14} /></>}
-            <span class="is-current">{openDef ? openDef.name : current.label}</span>
+            {openFamily && openId !== openFamily.id && <><span>{openFamily.name}</span><LucideIcon name="ChevronRight" size={14} /></>}
+            <span class="is-current">{openDef?.name ?? openPattern?.name ?? openFamily?.name ?? current.label}</span>
           </nav>
           <span class="sds-top__meta">{COMPONENT_DEFS.length} registered definitions</span>
         </header>
@@ -390,8 +391,10 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
           {active === 'brand-overview' && (
             <BrandOverview draft={draft} logoUrl={logoUrl} onUploadLogo={onUploadLogo} />
           )}
-          {active === 'components' && (openDef
-            ? (
+          {active === 'components' && (openFamily && (openFamily.id === openId || openPattern)
+            ? <ButtonBrowser family={openFamily} selectedPattern={openPattern}
+                onOpenComponent={setOpenId} onOpenPattern={setOpenId} onBack={() => setOpenId(null)} />
+            : openDef ? (
               <Workbench
                 def={openDef}
                 family={openFamily}

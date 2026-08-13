@@ -19,6 +19,7 @@ import { render, fireEvent } from '@testing-library/preact';
 import {
   BUTTON_FAMILY, COMPONENT_FAMILIES, componentsByCategory,
   findComponent, findFamily, familyOfComponent, COMPOUND_OF,
+  BUTTON_PATTERNS, findButtonPattern,
 } from '../registry';
 import { Studio } from './Studio';
 
@@ -33,11 +34,20 @@ function subtype(container: Element, name: string): HTMLElement {
   return found;
 }
 
-/** Open the Buttons family from the catalogue card. */
-function openButtons(container: Element): void {
+/** Open the Buttons family browser from the catalogue card. */
+function openButtonBrowser(container: Element): void {
   const card = container.querySelector<HTMLElement>('.sds-card--family');
   if (!card) throw new Error('No Buttons family card is rendered');
   fireEvent.click(card);
+}
+
+/** Open the canonical Action Button editor through the family browser. */
+function openButtons(container: Element): void {
+  openButtonBrowser(container);
+  const action = [...container.querySelectorAll<HTMLButtonElement>('.sds-button-browser__card')]
+    .find(card => card.querySelector('strong')?.textContent === 'Action Button');
+  if (!action) throw new Error('No Action Button browser card is rendered');
+  fireEvent.click(action);
 }
 
 const activeSubtype = (c: Element): string | undefined =>
@@ -92,6 +102,12 @@ describe('Buttons family — registry', () => {
     expect(familyOfComponent('segmented-control')).toBeUndefined();
     expect(findFamily('buttons')).toBe(BUTTON_FAMILY);
   });
+
+  it('registers governed patterns without adding variants or components', () => {
+    expect(BUTTON_PATTERNS.map(pattern => pattern.id)).toEqual(['ai-action', 'icon-button', 'special-treatments']);
+    expect(findButtonPattern('ai-action')?.foundationComponentId).toBe('button');
+    for (const pattern of BUTTON_PATTERNS) expect(findComponent(pattern.id)).toBeUndefined();
+  });
 });
 
 describe('Buttons family — Studio', () => {
@@ -114,7 +130,19 @@ describe('Buttons family — Studio', () => {
     }
   });
 
-  it('opens on Action Button by default', () => {
+  it('opens a visual browser before any Button editor', () => {
+    const { container, getByRole } = render(<Studio />);
+
+    openButtonBrowser(container);
+
+    expect(getByRole('heading', { name: 'Buttons' })).toBeTruthy();
+    expect(container.querySelectorAll('.sds-button-browser__card')).toHaveLength(6);
+    expect(getByRole('heading', { name: 'Button components' })).toBeTruthy();
+    expect(getByRole('heading', { name: 'Governed patterns' })).toBeTruthy();
+    expect(container.querySelector('.sds-button-editor')).toBeNull();
+  });
+
+  it('opens Action Button from its browser card', () => {
     const { container } = render(<Studio />);
 
     openButtons(container);
@@ -129,6 +157,18 @@ describe('Buttons family — Studio', () => {
     expect(container.querySelectorAll('.sds-button-picker [role="radio"]')).toHaveLength(6);
     expect(container.querySelector('.sds-button-use h3')?.textContent).toBe('Common application use');
     expect(container.querySelectorAll('.sds-button-use article')).toHaveLength(3);
+  });
+
+  it('opens a governed AI pattern without creating another Button variant', () => {
+    const { container, getByRole, queryByRole } = render(<Studio />);
+    openButtonBrowser(container);
+
+    fireEvent.click(getByRole('button', { name: /AI Action/ }));
+
+    expect(getByRole('heading', { name: 'AI Action' })).toBeTruthy();
+    expect(getByRole('button', { name: /Edit Action Button foundation/ })).toBeTruthy();
+    expect(queryByRole('radio', { name: /AI/ })).toBeNull();
+    expect(container.querySelectorAll('.sds-button-pattern__examples article')).toHaveLength(2);
   });
 
   it('puts the live preview before the Button chooser', () => {
