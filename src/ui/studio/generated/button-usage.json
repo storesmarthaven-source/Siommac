@@ -3,8 +3,8 @@
   "scannedFiles": 518,
   "totals": {
     "canonicalSites": 239,
-    "distinctShapes": 51,
-    "structuralPatterns": 39,
+    "distinctShapes": 52,
+    "structuralPatterns": 41,
     "dynamicSites": 44,
     "legacyButtons": 544,
     "legacyFiles": 121
@@ -14,9 +14,9 @@
       "props": {
         "variant": "primary"
       },
-      "count": 55,
+      "count": 54,
       "zones": {
-        "app": 40,
+        "app": 39,
         "docs": 11,
         "kit": 4
       },
@@ -213,21 +213,6 @@
     {
       "props": {
         "variant": "primary",
-        "iconLeft": true
-      },
-      "count": 3,
-      "zones": {
-        "app": 3
-      },
-      "files": [
-        "src/components/sections/HR/OnboardingCommandCenter.tsx",
-        "src/components/sections/HR/OnboardingPackageManager.tsx",
-        "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx"
-      ]
-    },
-    {
-      "props": {
-        "variant": "primary",
         "size": "sm",
         "iconLeft": true
       },
@@ -254,6 +239,20 @@
       "files": [
         "src/ui/primitives/Button.test.tsx",
         "src/ui/registry/actions.defs.tsx"
+      ]
+    },
+    {
+      "props": {
+        "variant": "primary",
+        "iconLeft": true
+      },
+      "count": 2,
+      "zones": {
+        "app": 2
+      },
+      "files": [
+        "src/components/sections/HR/OnboardingCommandCenter.tsx",
+        "src/components/sections/HR/OnboardingPackageManager.tsx"
       ]
     },
     {
@@ -377,6 +376,31 @@
       },
       "files": [
         "src/components/sections/Employees/EmployeeDrawer.tsx"
+      ]
+    },
+    {
+      "props": {
+        "variant": "blue",
+        "iconLeft": true
+      },
+      "count": 1,
+      "zones": {
+        "app": 1
+      },
+      "files": [
+        "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx"
+      ]
+    },
+    {
+      "props": {
+        "variant": "blue"
+      },
+      "count": 1,
+      "zones": {
+        "app": 1
+      },
+      "files": [
+        "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx"
       ]
     },
     {
@@ -595,9 +619,9 @@
       "props": {
         "variant": "primary"
       },
-      "count": 55,
+      "count": 54,
       "zones": {
-        "app": 40,
+        "app": 39,
         "docs": 11,
         "kit": 4
       },
@@ -1034,7 +1058,7 @@
     },
     {
       "props": {
-        "variant": "primary",
+        "variant": "blue",
         "icon": "fa-floppy-disk"
       },
       "count": 1,
@@ -1043,6 +1067,18 @@
       },
       "files": [
         "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx"
+      ]
+    },
+    {
+      "props": {
+        "variant": "blue"
+      },
+      "count": 1,
+      "zones": {
+        "app": 1
+      },
+      "files": [
+        "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx"
       ]
     },
     {

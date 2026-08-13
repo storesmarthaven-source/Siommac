@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "c08a0b7247c449426346da76b4bd00993d329bab",
+    "head": "fc084e80732f54ae57d3ed5363c11c5faa35b42f",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "9b28fd40ed6e84dd1329b510",
+    "fingerprint": "251c468df4a7c5e77f9990da",
     "indexedFiles": 1828
   },
   "summary": {
@@ -5628,7 +5628,7 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 6152,
-      "hash": "b513e36e91f30662"
+      "hash": "70908f6f2badf0a1"
     },
     {
       "path": "src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx",
@@ -5642,7 +5642,7 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 471,
-      "hash": "a185de46884678b9"
+      "hash": "29c3f84a80ad1223"
     },
     {
       "path": "src/components/sections/HR/emailStudio/EmailTemplateStudioPage.tsx",

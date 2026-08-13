@@ -101,7 +101,7 @@ export function EmailTemplateCreateDialog({ open, templates, onClose, onCreated,
   const footer = (
     <>
       <Button variant="outline" onClick={step === 1 ? resetAndClose : () => setStep(value => value - 1)}>{step === 1 ? 'Cancel' : 'Back'}</Button>
-      <Button variant="blue" onClick={step === 3 ? () => void create() : () => setStep(value => value + 1)} disabled={createMutation.isPending}>
+      <Button variant="primary" onClick={step === 3 ? () => void create() : () => setStep(value => value + 1)} disabled={createMutation.isPending}>
         {step === 3 ? 'Create and Open Builder' : 'Continue'}
       </Button>
     </>
