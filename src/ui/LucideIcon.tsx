@@ -10,6 +10,10 @@ import * as lucide from 'lucide';
 
 type IconNode = [string, Record<string, string | number>][];
 export type LucideName = keyof typeof lucide;
+export const LUCIDE_NAMES = Object.entries(lucide)
+  .filter((entry): entry is [LucideName, IconNode] => Array.isArray(entry[1]))
+  .map(([name]) => name)
+  .sort((a, b) => a.localeCompare(b));
 
 export function LucideIcon(
   { name, size = 24, strokeWidth = 2, class: cls, style, title }: {

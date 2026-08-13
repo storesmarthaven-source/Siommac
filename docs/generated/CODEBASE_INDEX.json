@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "d6c58e189f091527715d169f501e0ca3f2e3ba11",
+    "head": "5c5cceae695140ecbf75d828c418ddcd993bb4fd",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "ec962f454b0f99886b159072",
+    "fingerprint": "b9ffa8fb45e2e6c018ce304f",
     "indexedFiles": 1857
   },
   "summary": {
     "files": 1502,
-    "symbols": 14871,
+    "symbols": 14878,
     "widgets": 68,
     "routes": 983,
     "routeDefinitions": 984,
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 440,
-        "symbols": 3847,
+        "symbols": 3854,
         "widgets": 17,
         "routes": 38,
         "routeDefinitions": 53,
@@ -8350,8 +8350,8 @@
       "path": "src/ui/LucideIcon.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 39,
-      "hash": "d827b52c78def851"
+      "lines": 43,
+      "hash": "b0dd21deaddd4d13"
     },
     {
       "path": "src/ui/charts/BarRow.tsx",
@@ -8960,7 +8960,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 262,
-      "hash": "8d6bc64174f433a7"
+      "hash": "42aebbee521c35d4"
     },
     {
       "path": "src/ui/layouts/ModulePageLayout.tsx",
@@ -9246,8 +9246,8 @@
       "path": "src/ui/registry/actions.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 468,
-      "hash": "2011753801f8482c"
+      "lines": 470,
+      "hash": "8cca1cf7d278b8ef"
     },
     {
       "path": "src/ui/registry/compound.defs.tsx",
@@ -9428,8 +9428,8 @@
       "path": "src/ui/studio/RecipeStyleEditor.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 242,
-      "hash": "acef6368abb7665e"
+      "lines": 334,
+      "hash": "14bf7e3e2a0fc9ec"
     },
     {
       "path": "src/ui/studio/Studio.tsx",
@@ -9470,8 +9470,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 226,
-      "hash": "01d23af3780ad509"
+      "lines": 258,
+      "hash": "8c53173175b5efb3"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -146054,10 +146054,22 @@
       "tags": []
     },
     {
+      "name": "LUCIDE_NAMES",
+      "kind": "variable",
+      "file": "src/ui/LucideIcon.tsx",
+      "line": 13,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "LucideIcon",
       "kind": "function",
       "file": "src/ui/LucideIcon.tsx",
-      "line": 14,
+      "line": 18,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147829,7 +147841,7 @@
       "name": "icon",
       "kind": "function",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 179,
+      "line": 181,
       "module": "platform",
       "exported": false,
       "container": "buttonDef",
@@ -147839,7 +147851,7 @@
       "name": "jsx",
       "kind": "function",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 201,
+      "line": 203,
       "module": "platform",
       "exported": false,
       "container": "buttonDef",
@@ -147849,7 +147861,7 @@
       "name": "segmentedDef",
       "kind": "object",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 262,
+      "line": 264,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147859,7 +147871,7 @@
       "name": "menuDef",
       "kind": "object",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 337,
+      "line": 339,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147869,7 +147881,7 @@
       "name": "ACTION_DEFS",
       "kind": "array",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 463,
+      "line": 465,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150138,7 +150150,7 @@
       "name": "Target",
       "kind": "type",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 12,
+      "line": 13,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150148,7 +150160,7 @@
       "name": "COLOR_SWATCHES",
       "kind": "variable",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 14,
+      "line": 15,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150160,7 +150172,7 @@
       "name": "HslColor",
       "kind": "interface",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 16,
+      "line": 17,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150170,7 +150182,7 @@
       "name": "hexToHsl",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 18,
+      "line": 19,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150180,7 +150192,7 @@
       "name": "hslToHex",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 33,
+      "line": 34,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150190,7 +150202,7 @@
       "name": "friendly",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 45,
+      "line": 46,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150200,7 +150212,7 @@
       "name": "friendlyGroup",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 49,
+      "line": 50,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150210,7 +150222,7 @@
       "name": "belongs",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 56,
+      "line": 57,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150220,17 +150232,17 @@
       "name": "friendlyError",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 71,
+      "line": 72,
       "module": "platform",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "TokenControl",
+      "name": "StudioColorControl",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 77,
+      "line": 78,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150239,10 +150251,54 @@
       ]
     },
     {
+      "name": "TokenControl",
+      "kind": "function",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 115,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ICON_RECOMMENDATIONS",
+      "kind": "object",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 145,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "IconPicker",
+      "kind": "function",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 154,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "choose",
+      "kind": "function",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 174,
+      "module": "platform",
+      "exported": false,
+      "container": "IconPicker",
+      "tags": []
+    },
+    {
       "name": "RecipeStyleEditor",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 137,
+      "line": 203,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150251,10 +150307,30 @@
       ]
     },
     {
+      "name": "previewPropsFor",
+      "kind": "function",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 217,
+      "module": "platform",
+      "exported": false,
+      "container": "RecipeStyleEditor",
+      "tags": []
+    },
+    {
+      "name": "setPreviewProp",
+      "kind": "function",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 223,
+      "module": "platform",
+      "exported": false,
+      "container": "RecipeStyleEditor",
+      "tags": []
+    },
+    {
       "name": "act",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 152,
+      "line": 231,
       "module": "platform",
       "exported": false,
       "container": "RecipeStyleEditor",
@@ -166715,7 +166791,7 @@
       "kind": "registry",
       "render": "() => (\n        <>\n          <Button variant=\"secondary\">Cancel</Button>\n          <Button variant=\"primary\">Save</Button>\n        </>\n      )",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 224
+      "line": 226
     },
     {
       "id": "enterprise.calendar.taskPlanner",
@@ -167185,7 +167261,7 @@
       "kind": "registry",
       "render": "() => <Button variant=\"primary\" iconLeft={<LucideIcon name=\"Plus\" />}>Add employee</Button>",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 244
+      "line": 246
     },
     {
       "id": "platform.weather.current",
@@ -167335,7 +167411,7 @@
       "kind": "registry",
       "render": "() => (\n        <>\n          <Button variant=\"ghost\">Back</Button>\n          <Button variant=\"primary\" iconRight={<LucideIcon name=\"ArrowRight\" />}>Continue</Button>\n        </>\n      )",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 234
+      "line": 236
     }
   ],
   "routes": [

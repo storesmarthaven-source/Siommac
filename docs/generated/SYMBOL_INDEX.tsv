@@ -12931,7 +12931,8 @@ focusables	function	platform	false		src/ui/lib/useOverlayA11y.ts	60	useOverlayA1
 onKey	function	platform	false		src/ui/lib/useOverlayA11y.ts	68	useOverlayA11y
 IconNode	type	platform	false		src/ui/LucideIcon.tsx	11	
 LucideName	type	platform	true		src/ui/LucideIcon.tsx	12	
-LucideIcon	function	platform	true	component	src/ui/LucideIcon.tsx	14	
+LUCIDE_NAMES	variable	platform	true	component	src/ui/LucideIcon.tsx	13	
+LucideIcon	function	platform	true	component	src/ui/LucideIcon.tsx	18	
 ITEMS	array	platform	false	test	src/ui/navigation/Breadcrumbs.test.tsx	5	
 BreadcrumbItem	interface	platform	true		src/ui/navigation/Breadcrumbs.tsx	7	
 BreadcrumbsProps	interface	platform	true		src/ui/navigation/Breadcrumbs.tsx	14	
@@ -13095,11 +13096,11 @@ SAVE_MENU	array	platform	false		src/ui/registry/actions.defs.tsx	42
 noop	function	platform	false		src/ui/registry/actions.defs.tsx	48	
 VARIANTS	variable	platform	false	component	src/ui/registry/actions.defs.tsx	51	
 buttonDef	object	platform	true		src/ui/registry/actions.defs.tsx	55	
-icon	function	platform	false		src/ui/registry/actions.defs.tsx	179	buttonDef
-jsx	function	platform	false		src/ui/registry/actions.defs.tsx	201	buttonDef
-segmentedDef	object	platform	true		src/ui/registry/actions.defs.tsx	262	
-menuDef	object	platform	true		src/ui/registry/actions.defs.tsx	337	
-ACTION_DEFS	array	platform	true		src/ui/registry/actions.defs.tsx	463	
+icon	function	platform	false		src/ui/registry/actions.defs.tsx	181	buttonDef
+jsx	function	platform	false		src/ui/registry/actions.defs.tsx	203	buttonDef
+segmentedDef	object	platform	true		src/ui/registry/actions.defs.tsx	264	
+menuDef	object	platform	true		src/ui/registry/actions.defs.tsx	339	
+ACTION_DEFS	array	platform	true		src/ui/registry/actions.defs.tsx	465	
 s	function	platform	false		src/ui/registry/compound.defs.tsx	31	
 b	function	platform	false		src/ui/registry/compound.defs.tsx	33	
 size	function	platform	false		src/ui/registry/compound.defs.tsx	34	
@@ -13319,18 +13320,24 @@ copySelection	function	platform	false		src/ui/studio/InAppUsage.tsx	93	InAppUsag
 settle	function	platform	false		src/ui/studio/InAppUsage.tsx	110	copySelection
 root	variable	platform	false		src/ui/studio/preview.tsx	12	
 PreviewScope	function	platform	true	component	src/ui/studio/PreviewScope.tsx	20	
-Target	type	platform	false		src/ui/studio/RecipeStyleEditor.tsx	12	
-COLOR_SWATCHES	variable	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	14	
-HslColor	interface	platform	false		src/ui/studio/RecipeStyleEditor.tsx	16	
-hexToHsl	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	18	
-hslToHex	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	33	
-friendly	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	45	
-friendlyGroup	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	49	
-belongs	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	56	
-friendlyError	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	71	
-TokenControl	function	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	77	
-RecipeStyleEditor	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	137	
-act	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	152	RecipeStyleEditor
+Target	type	platform	false		src/ui/studio/RecipeStyleEditor.tsx	13	
+COLOR_SWATCHES	variable	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	15	
+HslColor	interface	platform	false		src/ui/studio/RecipeStyleEditor.tsx	17	
+hexToHsl	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	19	
+hslToHex	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	34	
+friendly	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	46	
+friendlyGroup	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	50	
+belongs	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	57	
+friendlyError	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	72	
+StudioColorControl	function	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	78	
+TokenControl	function	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	115	
+ICON_RECOMMENDATIONS	object	platform	false		src/ui/studio/RecipeStyleEditor.tsx	145	
+IconPicker	function	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	154	
+choose	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	174	IconPicker
+RecipeStyleEditor	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	203	
+previewPropsFor	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	217	RecipeStyleEditor
+setPreviewProp	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	223	RecipeStyleEditor
+act	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	231	RecipeStyleEditor
 StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	43	
 SectionId	type	platform	false		src/ui/studio/Studio.tsx	52	
 NavItem	interface	platform	false		src/ui/studio/Studio.tsx	58	

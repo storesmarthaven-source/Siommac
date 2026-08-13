@@ -176,8 +176,10 @@ export const buttonDef: ComponentDef = {
   },
 
   render: (p, state) => {
+    const iconTreatment = s(p.iconTreatment, 'outline');
+    const iconColor = s(p.iconColor, 'currentColor');
     const icon = (n: string): VNode | undefined =>
-      n !== 'None' ? <LucideIcon name={n as never} /> : undefined;
+      n !== 'None' ? <span class={`sds-preview-icon sds-preview-icon--${iconTreatment}`} style={{ color: iconColor }}><LucideIcon name={n as never} /></span> : undefined;
     const isLink = s(p.action, 'Button action') === 'Link / href';
     return (
       <Button
@@ -248,12 +250,12 @@ export const buttonDef: ComponentDef = {
     },
   ],
   variantSamples: [
-    { value: 'primary', title: 'Primary', description: 'Main action', props: { label: 'Save', iconLeft: 'Save' } },
-    { value: 'secondary', title: 'Secondary', description: 'Supporting action', props: { label: 'Cancel', iconLeft: 'None' } },
-    { value: 'outline', title: 'Outline', description: 'Alternative action', props: { label: 'Preview', iconLeft: 'None' } },
-    { value: 'ghost', title: 'Ghost', description: 'Quiet navigation', props: { label: 'Back', iconLeft: 'None' } },
-    { value: 'danger', title: 'Danger', description: 'Destructive action', props: { label: 'Delete', iconLeft: 'Trash2' } },
-    { value: 'link', title: 'Link', description: 'Inline navigation', props: { label: 'View record', iconLeft: 'None', iconRight: 'ArrowRight' } },
+    { value: 'primary', title: 'Primary', description: 'Main action', props: { label: 'Next', iconLeft: 'None', iconRight: 'ArrowRight', iconTreatment: 'outline', iconColor: '#ffffff' } },
+    { value: 'secondary', title: 'Secondary', description: 'Supporting action', props: { label: 'Cancel', iconLeft: 'None', iconTreatment: 'outline', iconColor: '#334155' } },
+    { value: 'outline', title: 'Outline', description: 'Alternative action', props: { label: 'Preview', iconLeft: 'None', iconTreatment: 'outline', iconColor: '#1b2d54' } },
+    { value: 'ghost', title: 'Ghost', description: 'Quiet navigation', props: { label: 'Back', iconLeft: 'None', iconTreatment: 'outline', iconColor: '#5e6f8d' } },
+    { value: 'danger', title: 'Danger', description: 'Destructive action', props: { label: 'Delete', iconLeft: 'Trash2', iconTreatment: 'outline', iconColor: '#ffffff' } },
+    { value: 'link', title: 'Link', description: 'Inline navigation', props: { label: 'View record', iconLeft: 'None', iconRight: 'ArrowRight', iconTreatment: 'outline', iconColor: '#1b2d54' } },
   ],
 };
 

@@ -198,7 +198,7 @@ describe('Buttons family — Studio', () => {
 
     const labels = [...container.querySelectorAll('.sds-button-picker .ui-btn')]
       .map(button => button.textContent.trim());
-    expect(labels).toEqual(['Save', 'Cancel', 'Preview', 'Back', 'Delete', 'View record']);
+    expect(labels).toEqual(['Next', 'Cancel', 'Preview', 'Back', 'Delete', 'View record']);
   });
 
   it('selects the exact Button variant to edit', () => {
@@ -215,11 +215,43 @@ describe('Buttons family — Studio', () => {
     const { container, getAllByLabelText, getByRole } = render(<Studio />);
     openButtons(container);
 
-    fireEvent.click(getAllByLabelText('Use theme')[0]!);
+    const firstThemeToggle = getAllByLabelText('Use theme')[0];
+    if (!firstThemeToggle) throw new Error('Expected a theme toggle');
+    fireEvent.click(firstThemeToggle);
     fireEvent.click(getByRole('button', { name: 'Choose Background color' }));
 
     expect(getByRole('group', { name: 'Background color picker' })).toBeTruthy();
     fireEvent.click(getByRole('button', { name: 'Set color to #dc2626' }));
     expect(getByRole('button', { name: 'Choose Background color' }).textContent).toContain('#dc2626');
+  });
+
+  it('keeps each variant preview example independent and unpublished', () => {
+    const { container, getByLabelText, getByRole, queryByLabelText } = render(<Studio />);
+    openButtons(container);
+
+    expect(getByRole('button', { name: 'Next' })).toBeTruthy();
+    fireEvent.click(getByRole('button', { name: 'Choose Trailing icon' }));
+    expect(getByRole('group', { name: 'Trailing icon Lucide icon browser' }).textContent).toContain('Lucide icons');
+    fireEvent.input(getByLabelText('Search Lucide icons'), { target: { value: 'ChevronRight' } });
+    fireEvent.click(getByRole('button', { name: 'Choose ChevronRight' }));
+    expect(getByRole('button', { name: 'Clear Trailing icon' })).toBeTruthy();
+    expect(queryByLabelText('Button text')).toBeNull();
+
+    fireEvent.click(getByRole('radio', { name: /Secondary/ }));
+    fireEvent.click(getByRole('button', { name: 'Choose Leading icon' }));
+    fireEvent.click(getByRole('button', { name: 'Use recommended ArrowLeft' }));
+    fireEvent.click(getByRole('radio', { name: 'Filled circle' }));
+    fireEvent.click(getByRole('button', { name: 'Choose Icon color' }));
+    fireEvent.click(getByRole('button', { name: 'Set color to #dc2626' }));
+    expect(container.querySelector('.sds-button-preview__single .ui-btn-label')?.textContent).toBe('Cancel');
+    expect(container.querySelector('.sds-button-preview__single .sds-preview-icon--filled-circle')).not.toBeNull();
+    const previewIcon = container.querySelector<HTMLElement>('.sds-button-preview__single .sds-preview-icon');
+    expect(previewIcon?.style.color).toBe('rgb(220, 38, 38)');
+
+    fireEvent.click(getByRole('radio', { name: /Primary/ }));
+    expect(getByRole('button', { name: 'Clear Trailing icon' })).toBeTruthy();
+    fireEvent.click(getByRole('button', { name: 'Clear Trailing icon' }));
+    expect(getByRole('button', { name: 'Choose Trailing icon' }).textContent).toContain('No icon');
+    expect(container.querySelector('.sds-button-settings__actions > span')?.textContent).toBe('Up to date');
   });
 });

@@ -1,6 +1,6 @@
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
-import { defaultProps, propsForVariant, type ComponentDef, type StyleControl } from '../registry';
+import { defaultProps, propsForVariant, type ComponentDef, type PropValues, type StyleControl } from '../registry';
 import { type GalleryDraft } from '../gallery/galleryStore';
 import usage from './generated/button-usage.json';
 import {
@@ -8,6 +8,7 @@ import {
   type DesignSystemRevision,
 } from '../../../types/designSystem';
 import { PreviewScope } from './PreviewScope';
+import { LUCIDE_NAMES, LucideIcon, type LucideName } from '../LucideIcon';
 
 type Target = 'all' | CanonicalButtonVariant;
 
@@ -74,14 +75,48 @@ function friendlyError(error: string): string {
     : error;
 }
 
-function TokenControl({ control, studio }: { control: StyleControl; studio: GalleryDraft }): VNode {
+function StudioColorControl({ id, label, value, onChange }: { id: string; label: string; value: string; onChange: (value: string) => void }): VNode {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const displayColor = /^#[0-9a-f]{6}$/i.test(value) ? value : '#000000';
+  const hsl = hexToHsl(displayColor);
+
+  return (
+    <div class="sds-edit-field__control sds-edit-field__control--color">
+      <button type="button" class="sds-color-trigger" aria-label={`Choose ${label} color`} aria-expanded={pickerOpen}
+        aria-controls={`picker-${id}`} onClick={() => setPickerOpen(open => !open)}>
+        <span class="sds-color-trigger__swatch" style={{ backgroundColor: displayColor }} />
+        <span>{value}</span><span aria-hidden="true">⌄</span>
+      </button>
+      {pickerOpen && (
+        <div class="sds-color-picker" id={`picker-${id}`} role="group" aria-label={`${label} color picker`}>
+          <div class="sds-color-picker__swatches" aria-label="Suggested colors">
+            {COLOR_SWATCHES.map(color => <button type="button" key={color} aria-label={`Set color to ${color}`} aria-pressed={displayColor.toLowerCase() === color}
+              style={{ backgroundColor: color }} onClick={() => onChange(color)} />)}
+          </div>
+          <label class="sds-color-picker__native"><span>Pick any color</span><input type="color" value={displayColor}
+            aria-label={`Pick custom ${label} color`} onInput={event => onChange((event.target as HTMLInputElement).value)}
+            onChange={event => onChange((event.target as HTMLInputElement).value)} /></label>
+          <label class="sds-color-picker__hex"><span>Hex</span><input id={id} value={value}
+            onInput={event => onChange((event.target as HTMLInputElement).value)} /></label>
+          <div class="sds-color-picker__sliders">
+            <label><span>Hue <b>{hsl.h}°</b></span><input class="is-hue" type="range" min="0" max="360" value={hsl.h}
+              onInput={event => onChange(hslToHex({ ...hsl, h: Number((event.target as HTMLInputElement).value) }))} /></label>
+            <label><span>Saturation <b>{hsl.s}%</b></span><input type="range" min="0" max="100" value={hsl.s}
+              onInput={event => onChange(hslToHex({ ...hsl, s: Number((event.target as HTMLInputElement).value) }))} /></label>
+            <label><span>Lightness <b>{hsl.l}%</b></span><input type="range" min="0" max="100" value={hsl.l}
+              onInput={event => onChange(hslToHex({ ...hsl, l: Number((event.target as HTMLInputElement).value) }))} /></label>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TokenControl({ control, studio }: { control: StyleControl; studio: GalleryDraft }): VNode {
   const custom = Object.prototype.hasOwnProperty.call(studio.values, control.name);
   const read = studio.read(control.name);
   const value = read.length > 0 ? read : (control.linkedTo ?? '');
   const isColor = control.kind.startsWith('color');
-  const displayColor = /^#[0-9a-f]{6}$/i.test(value) ? value : '#000000';
-  const hsl = hexToHsl(displayColor);
 
   return (
     <div class="sds-edit-field">
@@ -96,39 +131,70 @@ function TokenControl({ control, studio }: { control: StyleControl; studio: Gall
         </label>
       </div>
       {custom ? (
-        <div class={`sds-edit-field__control${isColor ? ' sds-edit-field__control--color' : ''}`}>
-          {isColor ? (
-            <>
-              <button type="button" class="sds-color-trigger" aria-label={`Choose ${control.label} color`} aria-expanded={pickerOpen}
-                aria-controls={`picker-${control.name}`} onClick={() => setPickerOpen(open => !open)}>
-                <span class="sds-color-trigger__swatch" style={{ backgroundColor: displayColor }} />
-                <span>{value}</span><span aria-hidden="true">⌄</span>
-              </button>
-              {pickerOpen && (
-                <div class="sds-color-picker" id={`picker-${control.name}`} role="group" aria-label={`${control.label} color picker`}>
-                  <div class="sds-color-picker__preview" style={{ backgroundColor: displayColor }}><span>{displayColor.toUpperCase()}</span></div>
-                  <div class="sds-color-picker__swatches" aria-label="Suggested colors">
-                    {COLOR_SWATCHES.map(color => <button type="button" key={color} aria-label={`Set color to ${color}`} aria-pressed={displayColor.toLowerCase() === color}
-                      style={{ backgroundColor: color }} onClick={() => studio.set(control.name, color)} />)}
-                  </div>
-                  <label class="sds-color-picker__hex"><span>Hex</span><input id={`style-${control.name}`} value={value}
-                    onInput={event => studio.set(control.name, (event.target as HTMLInputElement).value)} /></label>
-                  <div class="sds-color-picker__sliders">
-                    <label><span>Hue <b>{hsl.h}°</b></span><input class="is-hue" type="range" min="0" max="360" value={hsl.h}
-                      onInput={event => studio.set(control.name, hslToHex({ ...hsl, h: Number((event.target as HTMLInputElement).value) }))} /></label>
-                    <label><span>Saturation <b>{hsl.s}%</b></span><input type="range" min="0" max="100" value={hsl.s}
-                      onInput={event => studio.set(control.name, hslToHex({ ...hsl, s: Number((event.target as HTMLInputElement).value) }))} /></label>
-                    <label><span>Lightness <b>{hsl.l}%</b></span><input type="range" min="0" max="100" value={hsl.l}
-                      onInput={event => studio.set(control.name, hslToHex({ ...hsl, l: Number((event.target as HTMLInputElement).value) }))} /></label>
-                  </div>
-                </div>
-              )}
-            </>
-          ) : <input id={`style-${control.name}`} type="text" value={value}
-            onInput={event => studio.set(control.name, (event.target as HTMLInputElement).value)} />}
-        </div>
+        isColor
+          ? <StudioColorControl id={`style-${control.name}`} label={control.label} value={value} onChange={next => studio.set(control.name, next)} />
+          : <div class="sds-edit-field__control"><input id={`style-${control.name}`} type="text" value={value}
+            onInput={event => studio.set(control.name, (event.target as HTMLInputElement).value)} /></div>
       ) : (
         <div class="sds-edit-field__theme"><span>Theme value</span><strong>{value.length > 0 ? value : 'Default'}</strong></div>
+      )}
+    </div>
+  );
+}
+
+const ICON_RECOMMENDATIONS: Record<CanonicalButtonVariant, readonly LucideName[]> = {
+  primary: ['ArrowRight', 'Check', 'Plus', 'Send'],
+  secondary: ['X', 'ArrowLeft', 'RotateCcw', 'Eye'],
+  outline: ['Eye', 'Download', 'Pencil', 'ExternalLink'],
+  ghost: ['ArrowLeft', 'ChevronLeft', 'X', 'MoreHorizontal'],
+  danger: ['Trash2', 'AlertTriangle', 'Ban', 'X'],
+  link: ['ArrowRight', 'ExternalLink', 'Link', 'ChevronRight'],
+};
+
+function IconPicker({ id, label, value, variant, position, onChange }: {
+  id: string;
+  label: string;
+  value: string;
+  variant: CanonicalButtonVariant;
+  position: 'leading' | 'trailing';
+  onChange: (value: string) => void;
+}): VNode {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [visibleCount, setVisibleCount] = useState(72);
+  const recommendations = position === 'trailing'
+    ? [...ICON_RECOMMENDATIONS[variant]].sort(name => /Right|External|Chevron/.test(name) ? -1 : 1)
+    : ICON_RECOMMENDATIONS[variant];
+  const normalized = query.trim().toLowerCase();
+  const matches = normalized.length > 0
+    ? LUCIDE_NAMES.filter(name => name.toLowerCase().includes(normalized))
+    : LUCIDE_NAMES;
+  const visible = matches.slice(0, visibleCount);
+
+  const choose = (name: string): void => { onChange(name); setOpen(false); };
+
+  return (
+    <div class="sds-icon-picker">
+      <div class="sds-icon-trigger">
+        <button id={id} type="button" class="sds-icon-trigger__main" aria-label={`Choose ${label}`} aria-expanded={open} onClick={() => setOpen(value => !value)}>
+          <span class="sds-icon-trigger__preview">{value === 'None' ? '—' : <LucideIcon name={value as LucideName} size={16} />}</span>
+          <span>{value === 'None' ? 'No icon' : friendly(value)}</span>
+        </button>
+        {value !== 'None' && <button type="button" class="sds-icon-trigger__clear" aria-label={`Clear ${label}`} onClick={() => choose('None')}><LucideIcon name="X" size={13} /></button>}
+        <button type="button" class="sds-icon-trigger__menu" aria-label={`Open ${label} menu`} aria-expanded={open} onClick={() => setOpen(value => !value)}><LucideIcon name="ChevronDown" size={14} /></button>
+      </div>
+      {open && (
+        <div class="sds-icon-browser" role="group" aria-label={`${label} Lucide icon browser`}>
+          <div class="sds-icon-browser__head"><div><strong>Choose an icon</strong><span>{LUCIDE_NAMES.length.toLocaleString()} Lucide icons</span></div><button type="button" onClick={() => setOpen(false)} aria-label="Close icon browser">×</button></div>
+          <label class="sds-icon-search"><span aria-hidden="true">⌕</span><input value={query} placeholder="Search icons…" aria-label="Search Lucide icons" onInput={event => { setQuery((event.target as HTMLInputElement).value); setVisibleCount(72); }} /></label>
+          <section><h5>Recommended for {friendly(variant)}</h5><div class="sds-icon-grid sds-icon-grid--recommended">
+            <button type="button" aria-label="Use no icon" class={value === 'None' ? 'is-on' : ''} onClick={() => choose('None')}><span>—</span><small>None</small></button>
+            {recommendations.map(name => <button type="button" key={name} aria-label={`Use recommended ${name}`} class={value === name ? 'is-on' : ''} onClick={() => choose(name)}><LucideIcon name={name} size={18} /><small>{friendly(name)}</small></button>)}
+          </div></section>
+          <section><h5>{normalized ? `${matches.length} results` : 'All icons'}</h5><div class="sds-icon-grid">
+            {visible.map(name => <button type="button" key={name} aria-label={`Choose ${name}`} class={value === name ? 'is-on' : ''} onClick={() => choose(name)}><LucideIcon name={name} size={18} /><small>{friendly(name)}</small></button>)}
+          </div>{visible.length < matches.length && <button type="button" class="sds-icon-more" onClick={() => setVisibleCount(count => count + 72)}>Load more</button>}</section>
+        </div>
       )}
     </div>
   );
@@ -141,13 +207,26 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
   const [review, setReview] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [history, setHistory] = useState<DesignSystemRevision[] | null>(null);
+  const [previewByVariant, setPreviewByVariant] = useState<Partial<Record<CanonicalButtonVariant, PropValues>>>({});
   const groups = useMemo(() => (def.style ?? []).map(group => ({
     ...group,
     controls: group.controls.filter(control => belongs(control, target, state)),
   })).filter(group => group.controls.length > 0), [def, target, state]);
   const totals = usage.totals as { canonicalSites: number };
   const selectedSample = target === 'all' ? undefined : def.variantSamples?.find(sample => sample.value === target);
-  const previewProps = target === 'all' ? defaultProps(def) : propsForVariant(def, target);
+  const previewPropsFor = (variant: CanonicalButtonVariant): PropValues => ({
+    ...propsForVariant(def, variant),
+    ...(previewByVariant[variant] ?? {}),
+  });
+  const previewProps = target === 'all' ? defaultProps(def) : previewPropsFor(target);
+
+  const setPreviewProp = (name: string, value: string): void => {
+    if (target === 'all') return;
+    setPreviewByVariant(previous => ({
+      ...previous,
+      [target]: { ...(previous[target] ?? {}), [name]: value },
+    }));
+  };
 
   const act = (operation: () => Promise<unknown>, message: string): void => {
     setNotice(null);
@@ -162,7 +241,7 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
           {target === 'all' ? (
             <div class="sds-button-preview__all">
               <div class="sds-button-preview__guides" aria-hidden="true"><i class="v" /><i class="h" /><i class="n n1" /><i class="n n2" /><i class="n n3" /><i class="n n4" /></div>
-              {BUTTON_VARIANTS.map(variant => def.render?.(propsForVariant(def, variant), 'default'))}
+              {BUTTON_VARIANTS.map(variant => def.render?.(previewPropsFor(variant), 'default'))}
             </div>
           ) : (
             <div class="sds-button-preview__single">
@@ -184,10 +263,11 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
         <div class="sds-button-picker" role="radiogroup" aria-label="Button to edit">
           {BUTTON_VARIANTS.map(variant => {
             const sample = def.variantSamples?.find(item => item.value === variant);
+            const variantPreview = previewPropsFor(variant);
             return (
               <button type="button" role="radio" aria-checked={target === variant} class={target === variant ? 'is-on' : ''}
                 onClick={() => { setTarget(variant); setState('default'); }}>
-                <span class={`ui-btn ui-btn--${variant}`} aria-hidden="true">{sample?.props.label ?? friendly(variant)}</span>
+                <span class={`ui-btn ui-btn--${variant}`} aria-hidden="true">{String(variantPreview.label ?? sample?.props.label ?? friendly(variant))}</span>
                 <strong>{sample?.title ?? friendly(variant)}</strong><small>{sample?.description ?? 'Button style'}</small>
               </button>
             );
@@ -197,7 +277,7 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
         <section class="sds-button-use" aria-labelledby="button-use-title">
           <header><h3 id="button-use-title">Common application use</h3><p>Real examples of how these variants work together in SIOMAC.</p></header>
           <div class="sds-use-context">
-            {def.examples.map(example => <article key={example.id}><span class="ctx-kicker">{example.title}</span><div>{example.render()}</div></article>)}
+            {(def.examples ?? []).map(example => <article key={example.id}><span class="ctx-kicker">{example.title}</span><div>{example.render()}</div></article>)}
           </div>
         </section>
 
@@ -216,6 +296,18 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
               {BUTTON_STATES.map(item => <option value={item}>{friendly(item)}</option>)}
             </select>
           </div>
+        )}
+
+        {target !== 'all' && (
+          <section class="sds-button-settings__example" aria-labelledby="preview-example-title">
+            <div class="sds-button-settings__example-head"><div><h4 id="preview-example-title">Preview example</h4><p>Content only — never published.</p></div><button type="button" onClick={() => setPreviewByVariant(previous => ({ ...previous, [target]: undefined }))}>Reset</button></div>
+            <div class="sds-button-settings__example-icons">
+              <div><span>Leading icon</span><IconPicker id={`leading-icon-${target}`} label="Leading icon" value={String(previewProps.iconLeft ?? 'None')} variant={target} position="leading" onChange={value => setPreviewProp('iconLeft', value)} /></div>
+              <div><span>Trailing icon</span><IconPicker id={`trailing-icon-${target}`} label="Trailing icon" value={String(previewProps.iconRight ?? 'None')} variant={target} position="trailing" onChange={value => setPreviewProp('iconRight', value)} /></div>
+            </div>
+            <div class="sds-button-settings__icon-style"><span>Icon treatment</span><div role="radiogroup" aria-label="Icon treatment">{(['outline', 'circle', 'filled-circle'] as const).map(treatment => <button type="button" role="radio" aria-checked={previewProps.iconTreatment === treatment} class={previewProps.iconTreatment === treatment ? 'is-on' : ''} onClick={() => setPreviewProp('iconTreatment', treatment)}>{friendly(treatment)}</button>)}</div></div>
+            <div class="sds-button-settings__icon-color"><span>Icon color</span><StudioColorControl id={`preview-icon-color-${target}`} label="Icon" value={String(previewProps.iconColor ?? '#1b2d54')} onChange={value => setPreviewProp('iconColor', value)} /></div>
+          </section>
         )}
 
         <div class="sds-button-settings__body">

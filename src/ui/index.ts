@@ -80,7 +80,7 @@ export {
 } from './overlays/DropdownMenu';
 
 // ── Inputs & forms ──
-export { LucideIcon, type LucideName } from './LucideIcon';
+export { LUCIDE_NAMES, LucideIcon, type LucideName } from './LucideIcon';
 export { InfoTip, type InfoTipProps } from './InfoTip';
 /** Type-only debt for blocked EmailTemplateLibrary.tsx; no legacy runtime remains. */
 export interface DtColumn<T> {
