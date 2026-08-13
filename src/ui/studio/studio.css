@@ -493,3 +493,11 @@
 /* Hero specimen on the merged Overview — the thing you drive, given room. */
 .sds-canvas--hero { display: grid; place-items: center; min-height: 200px; }
 .sds-wb__rule { height: 1px; margin: 32px 0 28px; border-top: 1px dashed var(--sds-line); }
+
+/* ── Variant axis ───────────────────────────────────────────────────────────
+   Every variant at once, driven together by the other props. Wraps rather than
+   scrolls: six Buttons fit a row, and a component with more simply takes two. */
+.sds-axis { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center; gap: 22px 26px; }
+.sds-axis__cell { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+.sds-axis__spec { display: grid; place-items: center; min-height: 40px; }
+.sds-axis__cell code { font-size: 11px; color: var(--sds-ink-3); }

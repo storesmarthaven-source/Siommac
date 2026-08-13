@@ -51,6 +51,7 @@ const noop = (): void => { /* preview */ };
 export const buttonDef: ComponentDef = {
   id: 'button',
   name: 'Button',
+  previewAxis: 'variant',
   category: 'actions',
   description: 'The one action control. Icon-only, link, toggle, loading and destructive are props — there is no IconButton, LinkButton or ToggleButton, because none of them changed how the control behaves.',
   status: 'stable',
@@ -257,6 +258,7 @@ export const buttonDef: ComponentDef = {
 export const segmentedDef: ComponentDef = {
   id: 'segmented-control',
   name: 'SegmentedControl',
+  previewAxis: 'variant',
   category: 'actions',
   description: 'ONE value, several options. Separate from Button because the interaction genuinely differs: radiogroup semantics, roving focus and arrow-key movement.',
   status: 'stable',

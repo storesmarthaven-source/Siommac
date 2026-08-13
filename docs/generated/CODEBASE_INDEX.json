@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "b12035056369271253ee1fb774d44a8e9e50e4e0",
+    "head": "71d24e83cd9f5f35338b49ec05bf36b4613b223b",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "41a3a556493b3debf60865a4",
+    "fingerprint": "cf9a5f0923587f9a6e58e861",
     "indexedFiles": 1825
   },
   "summary": {
@@ -9120,8 +9120,8 @@
       "path": "src/ui/registry/actions.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 462,
-      "hash": "1bb29efc59fd2342"
+      "lines": 464,
+      "hash": "13b98d4f3e2ef76d"
     },
     {
       "path": "src/ui/registry/containers.defs.tsx",
@@ -9134,8 +9134,8 @@
       "path": "src/ui/registry/data.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 360,
-      "hash": "1f734fabc3a721c9"
+      "lines": 361,
+      "hash": "81426b0c42344712"
     },
     {
       "path": "src/ui/registry/definitions.tsx",
@@ -9190,8 +9190,8 @@
       "path": "src/ui/registry/types.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 220,
-      "hash": "808ecb3b76ec4153"
+      "lines": 235,
+      "hash": "72cb280509375a0f"
     },
     {
       "path": "src/ui/registry/wizard.def.tsx",
@@ -9246,8 +9246,8 @@
       "path": "src/ui/studio/Workbench.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 450,
-      "hash": "8d8bb54c9128b2af"
+      "lines": 485,
+      "hash": "69b3ac886bee0585"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -146691,7 +146691,7 @@
       "name": "segmentedDef",
       "kind": "object",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 257,
+      "line": 258,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146701,7 +146701,7 @@
       "name": "menuDef",
       "kind": "object",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 331,
+      "line": 333,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146711,7 +146711,7 @@
       "name": "ACTION_DEFS",
       "kind": "array",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 457,
+      "line": 459,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146887,7 +146887,7 @@
       "name": "DATA_DEFS",
       "kind": "array",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 359,
+      "line": 360,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147617,7 +147617,7 @@
       "name": "defaultProps",
       "kind": "function",
       "file": "src/ui/registry/types.ts",
-      "line": 205,
+      "line": 220,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147627,7 +147627,7 @@
       "name": "styleVarNames",
       "kind": "function",
       "file": "src/ui/registry/types.ts",
-      "line": 212,
+      "line": 227,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147637,7 +147637,7 @@
       "name": "isBuilt",
       "kind": "function",
       "file": "src/ui/registry/types.ts",
-      "line": 217,
+      "line": 232,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148478,7 +148478,7 @@
       "name": "Control",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 71,
+      "line": 75,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148490,7 +148490,7 @@
       "name": "Workbench",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 127,
+      "line": 131,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148502,7 +148502,7 @@
       "name": "set",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 131,
+      "line": 135,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -148512,7 +148512,7 @@
       "name": "specimen",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 135,
+      "line": 139,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -148522,7 +148522,7 @@
       "name": "Block",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 249,
+      "line": 281,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148534,7 +148534,7 @@
       "name": "OverviewSpecimens",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 267,
+      "line": 299,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148546,7 +148546,7 @@
       "name": "UsageTab",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 360,
+      "line": 395,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148558,7 +148558,7 @@
       "name": "A11yTab",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 402,
+      "line": 437,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -164736,7 +164736,7 @@
       "kind": "registry",
       "render": "() => (\n        <ButtonGroup label=\"Record actions\">\n          <Button variant=\"outline\" iconLeft={<LucideIcon name=\"Download\" />}>Export</Button>\n          <Button variant=\"outline\" iconLeft={<LucideIcon name=\"Printer\" />}>Print</Button>\n          <Button variant=\"outline\" iconLeft={<LucideIcon name=\"Share2\" />}>Share</Button>\n        </ButtonGroup>\n      )",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 223
+      "line": 224
     },
     {
       "id": "hr.employeeMaster.activeWorkforce",
@@ -165026,7 +165026,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'flex', gap: '4px' }}>\n          <Button variant=\"ghost\" size=\"sm\" iconOnly aria-label=\"Edit\" iconLeft={<LucideIcon name=\"Pencil\" />} />\n          <Button variant=\"ghost\" size=\"sm\" iconOnly aria-label=\"Duplicate\" iconLeft={<LucideIcon name=\"Copy\" />} />\n          <Button variant=\"ghost\" size=\"sm\" iconOnly aria-label=\"More actions\" iconLeft={<LucideIcon name=\"EllipsisVertical\" />} />\n        </div>\n      )",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 210
+      "line": 211
     },
     {
       "id": "select-all",
@@ -165046,7 +165046,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>\n          <Badge tone=\"success\" dot>Active</Badge>\n          <Badge tone=\"warning\" dot>Probation</Badge>\n          <Badge tone=\"info\" dot>On leave</Badge>\n          <Badge tone=\"neutral\" dot>Inactive</Badge>\n          <Badge tone=\"danger\" dot>Terminated</Badge>\n        </div>\n      )",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 329
+      "line": 330
     },
     {
       "id": "test.widget",
@@ -165066,7 +165066,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>\n          <Button variant=\"outline\" pressed iconLeft={<LucideIcon name=\"Filter\" />}>Only my cases</Button>\n          <Button variant=\"link\" href=\"#audit\" iconRight={<LucideIcon name=\"ArrowRight\" />}>View audit trail</Button>\n        </div>\n      )",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 239
+      "line": 240
     },
     {
       "id": "tone-scale",
@@ -165086,7 +165086,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>\n          <Badge tone=\"danger\" variant=\"soft\">Overdue</Badge>\n          <Badge tone=\"danger\" variant=\"solid\">Critical</Badge>\n          <Badge tone=\"danger\" variant=\"outline\">Escalated</Badge>\n          <Badge tone=\"accent\" size=\"sm\" onRemove={noop}>Night shift</Badge>\n        </div>\n      )",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 343
+      "line": 344
     },
     {
       "id": "vertical",

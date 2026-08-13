@@ -199,6 +199,21 @@ export interface ComponentDef {
 
   /** Named starting points offered above the Props tab. */
   presets?: readonly { label: string; props: PropValues }[];
+
+  /**
+   * Render EVERY value of `variant` side by side in the preview, driven together
+   * by the other props, instead of one specimen at a time.
+   *
+   * Opt-in per component because it only reads well for compact specimens. Six
+   * live Buttons in a row is the clearest possible answer to "what does this
+   * component do"; six live DataTables is unreadable, and six Dialogs is absurd.
+   * So Button, SegmentedControl and Badge set it, while Card, Tabs and Dialog —
+   * which also have a `variant` prop — deliberately do not.
+   *
+   * Where it is on, the Studio drops the separate Variants reference block: the
+   * axis IS that block, and showing both would state the same thing twice.
+   */
+  previewAxis?: 'variant';
 }
 
 /** Resolve a definition's declared defaults into a starting prop set. */

@@ -13007,9 +13007,9 @@ DEMO_MENU	array	platform	false		src/ui/registry/actions.defs.tsx	29
 SAVE_MENU	array	platform	false		src/ui/registry/actions.defs.tsx	41	
 noop	function	platform	false		src/ui/registry/actions.defs.tsx	47	
 buttonDef	object	platform	true		src/ui/registry/actions.defs.tsx	51	
-segmentedDef	object	platform	true		src/ui/registry/actions.defs.tsx	257	
-menuDef	object	platform	true		src/ui/registry/actions.defs.tsx	331	
-ACTION_DEFS	array	platform	true		src/ui/registry/actions.defs.tsx	457	
+segmentedDef	object	platform	true		src/ui/registry/actions.defs.tsx	258	
+menuDef	object	platform	true		src/ui/registry/actions.defs.tsx	333	
+ACTION_DEFS	array	platform	true		src/ui/registry/actions.defs.tsx	459	
 s	function	platform	false		src/ui/registry/containers.defs.tsx	18	
 b	function	platform	false		src/ui/registry/containers.defs.tsx	19	
 noop	function	platform	false		src/ui/registry/containers.defs.tsx	20	
@@ -13026,7 +13026,7 @@ COLUMNS	array	platform	false		src/ui/registry/data.defs.tsx	56
 ROW_ACTIONS	function	platform	false	component	src/ui/registry/data.defs.tsx	79	
 dataTableDef	object	platform	true		src/ui/registry/data.defs.tsx	87	
 badgeDef	object	platform	true		src/ui/registry/data.defs.tsx	251	
-DATA_DEFS	array	platform	true		src/ui/registry/data.defs.tsx	359	
+DATA_DEFS	array	platform	true		src/ui/registry/data.defs.tsx	360	
 PropValue	type	platform	false		src/ui/registry/definitions.tsx	28	
 s	function	platform	false		src/ui/registry/definitions.tsx	29	
 b	function	platform	false		src/ui/registry/definitions.tsx	30	
@@ -13099,9 +13099,9 @@ MigrationInfo	interface	platform	true		src/ui/registry/types.ts	118
 ComponentCategory	type	platform	true		src/ui/registry/types.ts	138	
 ComponentStatus	type	platform	true		src/ui/registry/types.ts	150	
 ComponentDef	interface	platform	true		src/ui/registry/types.ts	152	
-defaultProps	function	platform	true		src/ui/registry/types.ts	205	
-styleVarNames	function	platform	true		src/ui/registry/types.ts	212	
-isBuilt	function	platform	true		src/ui/registry/types.ts	217	
+defaultProps	function	platform	true		src/ui/registry/types.ts	220	
+styleVarNames	function	platform	true		src/ui/registry/types.ts	227	
+isBuilt	function	platform	true		src/ui/registry/types.ts	232	
 s	function	platform	false		src/ui/registry/wizard.def.tsx	16	
 b	function	platform	false		src/ui/registry/wizard.def.tsx	17	
 noop	function	platform	false		src/ui/registry/wizard.def.tsx	18	
@@ -13181,14 +13181,14 @@ Tab	type	platform	false		src/ui/studio/Workbench.tsx	31
 TABS	array	platform	false		src/ui/studio/Workbench.tsx	32	
 CONTROL_GROUPS	array	platform	false		src/ui/studio/Workbench.tsx	48	
 groupControls	function	platform	false		src/ui/studio/Workbench.tsx	55	
-Control	function	platform	false	component	src/ui/studio/Workbench.tsx	71	
-Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	127	
-set	function	platform	false		src/ui/studio/Workbench.tsx	131	Workbench
-specimen	function	platform	false		src/ui/studio/Workbench.tsx	135	Workbench
-Block	function	platform	false	component	src/ui/studio/Workbench.tsx	249	
-OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	267	
-UsageTab	function	platform	false	component	src/ui/studio/Workbench.tsx	360	
-A11yTab	function	platform	false	component	src/ui/studio/Workbench.tsx	402	
+Control	function	platform	false	component	src/ui/studio/Workbench.tsx	75	
+Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	131	
+set	function	platform	false		src/ui/studio/Workbench.tsx	135	Workbench
+specimen	function	platform	false		src/ui/studio/Workbench.tsx	139	Workbench
+Block	function	platform	false	component	src/ui/studio/Workbench.tsx	281	
+OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	299	
+UsageTab	function	platform	false	component	src/ui/studio/Workbench.tsx	395	
+A11yTab	function	platform	false	component	src/ui/studio/Workbench.tsx	437	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	

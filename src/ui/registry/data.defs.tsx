@@ -251,6 +251,7 @@ ${b(p.density) ? '' : ''}${s(p.density) !== 'standard' ? `  density="${s(p.densi
 export const badgeDef: ComponentDef = {
   id: 'badge',
   name: 'Badge',
+  previewAxis: 'variant',
   category: 'status',
   description: 'ONE badge system. Status pill, tag, chip, priority and risk indicators are all this component — a tone, a variant, and an optional remove affordance.',
   status: 'stable',

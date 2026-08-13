@@ -52,8 +52,12 @@ const CONTROL_GROUPS: { title: string; names: string[] }[] = [
   { title: 'Behaviour',  names: ['href', 'fullWidth', 'clearable', 'multiline', 'rows'] },
 ];
 
-function groupControls(def: ComponentDef): { title: string; entries: [string, PropControl][] }[] {
-  const all = Object.entries(def.props ?? {});
+function groupControls(
+  def: ComponentDef,
+  /** Props the preview already exposes as an axis — a control would fight it. */
+  omit: readonly string[] = [],
+): { title: string; entries: [string, PropControl][] }[] {
+  const all = Object.entries(def.props ?? {}).filter(([n]) => !omit.includes(n));
   const taken = new Set<string>();
   const out = CONTROL_GROUPS.map(g => {
     const entries = all.filter(([n]) => g.names.includes(n));
@@ -140,6 +144,16 @@ export function Workbench({ def, onBack }: { def: ComponentDef; onBack: () => vo
     [def, values],
   );
 
+  /**
+   * The variant axis, when this component opts in. Empty for everything else,
+   * which is what keeps DataTable and Dialog rendering a single specimen.
+   */
+  const axis = useMemo((): readonly string[] => {
+    if (def.previewAxis !== 'variant') return [];
+    const ctl = def.props?.variant;
+    return ctl && (ctl.type === 'select' || ctl.type === 'segmented') ? ctl.options : [];
+  }, [def]);
+
   return (
     <div class="sds-wb">
       <button type="button" class="sds-wb__back" onClick={onBack}>
@@ -175,10 +189,28 @@ export function Workbench({ def, onBack }: { def: ComponentDef; onBack: () => vo
           <div class="sds-pg">
             <div class="sds-pg__stage">
               <div class="sds-canvas sds-canvas--hero">
-                <div class="sds-canvas__single">{specimen(values)}</div>
+                {axis.length > 0
+                  /* Every variant at once, driven together by the other props:
+                     toggle `loading` and all of them enter loading, change size
+                     and the whole rhythm shifts. One row answers "what does this
+                     component do" better than any single specimen, and it
+                     replaces the Variants block rather than adding to it. */
+                  ? (
+                    <div class="sds-axis">
+                      {axis.map(v => (
+                        <div class="sds-axis__cell" key={v}>
+                          <div class="sds-axis__spec">{specimen({ ...values, variant: v })}</div>
+                          <code>{v}</code>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                  : <div class="sds-canvas__single">{specimen(values)}</div>}
               </div>
               <p class="sds-wb__note">
-                Live {def.name} — driven by the inspector, and the same component the app renders.
+                {axis.length > 0
+                  ? `All ${axis.length} ${def.name} variants, live — every control below drives them together.`
+                  : `Live ${def.name} — driven by the inspector, and the same component the app renders.`}
               </p>
             </div>
 
@@ -195,7 +227,7 @@ export function Workbench({ def, onBack }: { def: ComponentDef; onBack: () => vo
                 </section>
               )}
 
-              {groupControls(def).map(group => (
+              {groupControls(def, axis.length > 0 ? ['variant'] : []).map(group => (
                 <section class="sds-pg__grp" key={group.title}>
                   <h4>{group.title}</h4>
                   {group.entries.map(([name, control]) => (
@@ -211,7 +243,7 @@ export function Workbench({ def, onBack }: { def: ComponentDef; onBack: () => vo
           </div>
 
           <div class="sds-wb__rule" />
-          <OverviewSpecimens def={def} specimen={specimen} />
+          <OverviewSpecimens def={def} specimen={specimen} hideVariants={axis.length > 0} />
         </div>
       )}
 
@@ -264,8 +296,11 @@ function Block({ title, hint, children }: {
  * The variant × size matrix is derived from the definition's own `select` and
  * `segmented` options, so it cannot list a variant the component does not have.
  */
-function OverviewSpecimens({ def, specimen }: {
-  def: ComponentDef; specimen: (p: PropValues, s?: UiState) => VNode | null;
+function OverviewSpecimens({ def, specimen, hideVariants = false }: {
+  def: ComponentDef;
+  specimen: (p: PropValues, s?: UiState) => VNode | null;
+  /** The preview is already showing the variant axis — do not state it twice. */
+  hideVariants?: boolean;
 }): VNode {
   const base = defaultProps(def);
   const variantCtl = def.props?.variant;
@@ -277,7 +312,7 @@ function OverviewSpecimens({ def, specimen }: {
 
   return (
     <div class="sds-ov">
-      {variants.length > 0 && (
+      {variants.length > 0 && !hideVariants && (
         <Block title="Variants" hint="How loud the control is. One component — these are values of the `variant` prop, not separate components.">
           <dl class="sds-ov__rows">
             {variants.map(v => (
