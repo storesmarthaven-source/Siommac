@@ -489,3 +489,7 @@
 @media (max-width: 640px) {
   .sds-ov__row { grid-template-columns: 1fr; gap: 6px; }
 }
+
+/* Hero specimen on the merged Overview — the thing you drive, given room. */
+.sds-canvas--hero { display: grid; place-items: center; min-height: 200px; }
+.sds-wb__rule { height: 1px; margin: 32px 0 28px; border-top: 1px dashed var(--sds-line); }

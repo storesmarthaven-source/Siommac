@@ -13179,16 +13179,16 @@ PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	202
 Studio	function	platform	true	component	src/ui/studio/Studio.tsx	211	
 Tab	type	platform	false		src/ui/studio/Workbench.tsx	31	
 TABS	array	platform	false		src/ui/studio/Workbench.tsx	32	
-CONTROL_GROUPS	array	platform	false		src/ui/studio/Workbench.tsx	49	
-groupControls	function	platform	false		src/ui/studio/Workbench.tsx	56	
-Control	function	platform	false	component	src/ui/studio/Workbench.tsx	72	
-Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	128	
-set	function	platform	false		src/ui/studio/Workbench.tsx	132	Workbench
-specimen	function	platform	false		src/ui/studio/Workbench.tsx	136	Workbench
-Block	function	platform	false	component	src/ui/studio/Workbench.tsx	244	
-OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	262	
-UsageTab	function	platform	false	component	src/ui/studio/Workbench.tsx	355	
-A11yTab	function	platform	false	component	src/ui/studio/Workbench.tsx	397	
+CONTROL_GROUPS	array	platform	false		src/ui/studio/Workbench.tsx	48	
+groupControls	function	platform	false		src/ui/studio/Workbench.tsx	55	
+Control	function	platform	false	component	src/ui/studio/Workbench.tsx	71	
+Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	127	
+set	function	platform	false		src/ui/studio/Workbench.tsx	131	Workbench
+specimen	function	platform	false		src/ui/studio/Workbench.tsx	135	Workbench
+Block	function	platform	false	component	src/ui/studio/Workbench.tsx	249	
+OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	267	
+UsageTab	function	platform	false	component	src/ui/studio/Workbench.tsx	360	
+A11yTab	function	platform	false	component	src/ui/studio/Workbench.tsx	402	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	

@@ -28,10 +28,9 @@ import {
 } from '../registry';
 import { type UiState } from '../tokens';
 
-type Tab = 'overview' | 'playground' | 'usage' | 'accessibility' | 'code';
+type Tab = 'overview' | 'usage' | 'accessibility' | 'code';
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'overview',      label: 'Overview' },
-  { id: 'playground',    label: 'Playground' },
+  { id: 'overview',      label: 'Overview' },   // specimen + inspector + reference
   { id: 'usage',         label: 'Usage' },
   { id: 'accessibility', label: 'Accessibility' },
   { id: 'code',          label: 'Code' },
@@ -161,14 +160,57 @@ export function Workbench({ def, onBack }: { def: ComponentDef; onBack: () => vo
         ))}
       </div>
 
-      {/* Overview and Code show the canvas full width; Playground docks the
-          inspector on the right, so a prop change and its result are in the same
-          glance instead of separated by a scroll. */}
-      {/* Overview is a SEQUENCE of labelled sections, each with its own surface —
-          not one box with five stacked blocks in it. Each aspect gets a heading,
-          a one-line explanation of what it is for, and its own bordered canvas. */}
+      {/* ── Overview: one page, live specimen first, reference below ──────────
+          Overview and Playground were two tabs asking the same question — "what
+          does this component do?" — and answering half of it each. You had to
+          leave the specimen you were driving to see the variant matrix, and
+          leave the matrix to try anything.
+
+          Now: a driveable specimen with its inspector docked right, then the
+          reference sections beneath it. The inspector is sticky, so the props
+          stay reachable while you read down the matrix. One canvas, one set of
+          props, one scroll. */}
       {tab === 'overview' && (
         <div data-ui-preview-scope>
+          <div class="sds-pg">
+            <div class="sds-pg__stage">
+              <div class="sds-canvas sds-canvas--hero">
+                <div class="sds-canvas__single">{specimen(values)}</div>
+              </div>
+              <p class="sds-wb__note">
+                Live {def.name} — driven by the inspector, and the same component the app renders.
+              </p>
+            </div>
+
+            <aside class="sds-pg__panel" aria-label={`${def.name} properties`}>
+              {def.presets && def.presets.length > 0 && (
+                <section class="sds-pg__grp">
+                  <h4>Presets</h4>
+                  <div class="sds-presets">
+                    {def.presets.map(p => (
+                      <button type="button" key={p.label} class="sds-preset"
+                        onClick={() => setValues({ ...defaultProps(def), ...p.props })}>{p.label}</button>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {groupControls(def).map(group => (
+                <section class="sds-pg__grp" key={group.title}>
+                  <h4>{group.title}</h4>
+                  {group.entries.map(([name, control]) => (
+                    <Control key={name} name={name} control={control}
+                      value={values[name] ?? ''} onChange={v => set(name, v)} />
+                  ))}
+                </section>
+              ))}
+
+              <button type="button" class="sds-pg__reset"
+                onClick={() => setValues(defaultProps(def))}>Reset to defaults</button>
+            </aside>
+          </div>
+
+          <div class="sds-wb__rule" />
           <OverviewSpecimens def={def} specimen={specimen} />
         </div>
       )}
@@ -178,43 +220,6 @@ export function Workbench({ def, onBack }: { def: ComponentDef; onBack: () => vo
           <div class="sds-canvas" data-ui-preview-scope>
             <div class="sds-canvas__single">{specimen(values)}</div>
           </div>
-        </div>
-      )}
-
-      {tab === 'playground' && (
-        <div class="sds-pg">
-          <div class="sds-pg__stage">
-            <div class="sds-canvas" data-ui-preview-scope>
-              <div class="sds-canvas__single">{specimen(values)}</div>
-            </div>
-          </div>
-
-          <aside class="sds-pg__panel" aria-label={`${def.name} properties`}>
-            {def.presets && def.presets.length > 0 && (
-              <section class="sds-pg__grp">
-                <h4>Presets</h4>
-                <div class="sds-presets">
-                  {def.presets.map(p => (
-                    <button type="button" key={p.label} class="sds-preset"
-                      onClick={() => setValues({ ...defaultProps(def), ...p.props })}>{p.label}</button>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {groupControls(def).map(group => (
-              <section class="sds-pg__grp" key={group.title}>
-                <h4>{group.title}</h4>
-                {group.entries.map(([name, control]) => (
-                  <Control key={name} name={name} control={control}
-                    value={values[name] ?? ''} onChange={v => set(name, v)} />
-                ))}
-              </section>
-            ))}
-
-            <button type="button" class="sds-pg__reset"
-              onClick={() => setValues(defaultProps(def))}>Reset to defaults</button>
-          </aside>
         </div>
       )}
 
