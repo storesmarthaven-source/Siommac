@@ -25,6 +25,7 @@ export {
 } from './types';
 
 export { DEMO_PEOPLE, DEMO_DEPARTMENTS } from './definitions';
+export { COMPOUND_OF } from './compound.defs';
 
 import { COMPONENT_DEFS as CORE_DEFS } from './definitions';
 import { ACTION_DEFS } from './actions.defs';
@@ -33,6 +34,7 @@ import { DATA_DEFS } from './data.defs';
 import { CONTAINER_DEFS } from './containers.defs';
 import { NAVIGATION_DEFS } from './navigation.defs';
 import { FEEDBACK_DEFS } from './feedback.defs';
+import { COMPOUND_DEFS } from './compound.defs';
 import { PLANNED_DEFS } from './planned';
 import { type ComponentCategory, type ComponentDef, isBuilt } from './types';
 
@@ -50,6 +52,7 @@ export const COMPONENT_DEFS: readonly ComponentDef[] = [
   ...CONTAINER_DEFS,
   ...NAVIGATION_DEFS,
   ...FEEDBACK_DEFS,
+  ...COMPOUND_DEFS,
   ...PLANNED_DEFS,
 ];
 

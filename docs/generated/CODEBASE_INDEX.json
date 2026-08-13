@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "f73d25f965860fd8fc6e51fc43fdab7c31e6750e",
+    "head": "c08a0b7247c449426346da76b4bd00993d329bab",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "c24ed2dd9150ea23f3f029a4",
-    "indexedFiles": 1827
+    "fingerprint": "9b28fd40ed6e84dd1329b510",
+    "indexedFiles": 1828
   },
   "summary": {
-    "files": 1472,
-    "symbols": 14708,
+    "files": 1473,
+    "symbols": 14718,
     "widgets": 63,
     "routes": 978,
     "routeDefinitions": 979,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 412,
-        "symbols": 3694,
+        "files": 413,
+        "symbols": 3704,
         "widgets": 12,
         "routes": 38,
         "routeDefinitions": 53,
@@ -5628,21 +5628,21 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 6152,
-      "hash": "70908f6f2badf0a1"
+      "hash": "b513e36e91f30662"
     },
     {
       "path": "src/components/sections/HR/emailStudio/EmailTemplateCreateDialog.tsx",
       "module": "hr",
       "role": "frontend-page",
       "lines": 145,
-      "hash": "b4d17cd6e6f46570"
+      "hash": "78c3feeabc9e36bd"
     },
     {
       "path": "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
       "module": "hr",
       "role": "frontend-page",
       "lines": 471,
-      "hash": "29c3f84a80ad1223"
+      "hash": "a185de46884678b9"
     },
     {
       "path": "src/components/sections/HR/emailStudio/EmailTemplateStudioPage.tsx",
@@ -9131,6 +9131,13 @@
       "hash": "13b98d4f3e2ef76d"
     },
     {
+      "path": "src/ui/registry/compound.defs.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 203,
+      "hash": "88759751ae31efb6"
+    },
+    {
       "path": "src/ui/registry/containers.defs.tsx",
       "module": "platform",
       "role": "frontend",
@@ -9169,8 +9176,8 @@
       "path": "src/ui/registry/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 152,
-      "hash": "e5beae074240fd27"
+      "lines": 155,
+      "hash": "24cf951fa1b56845"
     },
     {
       "path": "src/ui/registry/navigation.defs.tsx",
@@ -9260,8 +9267,8 @@
       "path": "src/ui/studio/Workbench.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 496,
-      "hash": "a1988dfd7dc0317e"
+      "lines": 504,
+      "hash": "0ec61c696c4e4d17"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -146904,6 +146911,108 @@
     {
       "name": "s",
       "kind": "function",
+      "file": "src/ui/registry/compound.defs.tsx",
+      "line": 30,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "b",
+      "kind": "function",
+      "file": "src/ui/registry/compound.defs.tsx",
+      "line": 32,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "size",
+      "kind": "function",
+      "file": "src/ui/registry/compound.defs.tsx",
+      "line": 33,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "RECORD_MENU",
+      "kind": "array",
+      "file": "src/ui/registry/compound.defs.tsx",
+      "line": 35,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SAVE_ALTERNATIVES",
+      "kind": "array",
+      "file": "src/ui/registry/compound.defs.tsx",
+      "line": 47,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "VARIANTS",
+      "kind": "variable",
+      "file": "src/ui/registry/compound.defs.tsx",
+      "line": 53,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "dropdownButtonDef",
+      "kind": "object",
+      "file": "src/ui/registry/compound.defs.tsx",
+      "line": 57,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "splitButtonDef",
+      "kind": "object",
+      "file": "src/ui/registry/compound.defs.tsx",
+      "line": 125,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "COMPOUND_DEFS",
+      "kind": "array",
+      "file": "src/ui/registry/compound.defs.tsx",
+      "line": 195,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "COMPOUND_OF",
+      "kind": "object",
+      "file": "src/ui/registry/compound.defs.tsx",
+      "line": 198,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "s",
+      "kind": "function",
       "file": "src/ui/registry/containers.defs.tsx",
       "line": 18,
       "module": "platform",
@@ -147451,7 +147560,7 @@
       "name": "COMPONENT_DEFS",
       "kind": "array",
       "file": "src/ui/registry/index.ts",
-      "line": 45,
+      "line": 47,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147461,7 +147570,7 @@
       "name": "CATEGORY_LABELS",
       "kind": "object",
       "file": "src/ui/registry/index.ts",
-      "line": 56,
+      "line": 59,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147471,7 +147580,7 @@
       "name": "CATEGORY_ORDER",
       "kind": "array",
       "file": "src/ui/registry/index.ts",
-      "line": 72,
+      "line": 75,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147481,7 +147590,7 @@
       "name": "CategoryGroup",
       "kind": "interface",
       "file": "src/ui/registry/index.ts",
-      "line": 77,
+      "line": 80,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147491,7 +147600,7 @@
       "name": "componentsByCategory",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 91,
+      "line": 94,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147501,7 +147610,7 @@
       "name": "findComponent",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 108,
+      "line": 111,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147511,7 +147620,7 @@
       "name": "RegistryTotals",
       "kind": "interface",
       "file": "src/ui/registry/index.ts",
-      "line": 112,
+      "line": 115,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147521,7 +147630,7 @@
       "name": "registryTotals",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 138,
+      "line": 141,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147531,7 +147640,7 @@
       "name": "isPattern",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 139,
+      "line": 142,
       "module": "platform",
       "exported": false,
       "container": "registryTotals",
@@ -148791,7 +148900,7 @@
       "name": "Block",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 292,
+      "line": 300,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148803,7 +148912,7 @@
       "name": "OverviewSpecimens",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 310,
+      "line": 318,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148815,7 +148924,7 @@
       "name": "UsageTab",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 406,
+      "line": 414,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148827,7 +148936,7 @@
       "name": "A11yTab",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 448,
+      "line": 456,
       "module": "platform",
       "exported": false,
       "container": "",

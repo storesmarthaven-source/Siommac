@@ -24,7 +24,7 @@
 import { type VNode, type ComponentChildren } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import {
-  defaultProps, CATEGORY_LABELS,
+  defaultProps, CATEGORY_LABELS, COMPOUND_OF,
   type ComponentDef, type PropValues, type PropControl,
 } from '../registry';
 import { type UiState } from '../tokens';
@@ -221,9 +221,17 @@ export function Workbench({ def, onBack }: { def: ComponentDef; onBack: () => vo
                   generic box of controls, and "Continue", "Cancel" and "Save"
                   start to look like they might be different components. They are
                   not: they are this one, with different props. */}
+              {/* Ownership, not just a name. "Compound control · uses Button +
+                  Menu" is what stops someone reading DropdownButton as a third
+                  kind of button rather than a composition of two things they
+                  already know. */}
               <header class="sds-pg__who">
                 <strong>{def.name}</strong>
-                <span>Canonical component · {CATEGORY_LABELS[def.category]}</span>
+                <span>
+                  {COMPOUND_OF[def.id]
+                    ? `Compound control · uses ${COMPOUND_OF[def.id]}`
+                    : `Canonical component · ${CATEGORY_LABELS[def.category]}`}
+                </span>
               </header>
               {def.presets && def.presets.length > 0 && (
                 <section class="sds-pg__grp">
