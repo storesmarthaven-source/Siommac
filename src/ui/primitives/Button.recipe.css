@@ -63,20 +63,26 @@
     --ui-button-pad-x-lg: 20px;
 
     --ui-button-font-size-sm: 0.74rem;
-    --ui-button-font-size-md: 0.8rem;
+    --ui-button-font-size-md: 13px;
     --ui-button-font-size-lg: var(--ui-font-size-body);
 
-    --ui-button-radius: var(--radius-sm);
-    --ui-button-font-weight: var(--font-weight-bold);
+    --ui-button-radius: 8px;
+    --ui-button-font-weight: 600;
     --ui-button-gap: 8px;
     --ui-button-icon-size: var(--ui-icon-md);
     --ui-button-border-width: var(--ui-border-width);
     --ui-button-shadow: var(--shadow-card);
 
-    /* ── primary — filled brand red. The one main CTA on a surface. ─────────*/
+    /* ── primary — filled NAVY, per the approved Buttons mockup. ────────────
+       The colour lives in the ROLE (`--ui-color-action-primary`, semantic.css),
+       not here. Two earlier attempts put it in this file and both were right to
+       fail: hardcoding `#1b2d54` broke the danger-override conduction test, and
+       a Button-local alias for the navy palette entry tripped the recipe
+       drift guard. A
+       recipe names a role; the role names a colour. */
     --ui-button-primary-bg: var(--ui-color-action-primary);
     --ui-button-primary-fg: var(--ui-color-action-primary-text);
-    --ui-button-primary-border: transparent;
+    --ui-button-primary-border: var(--ui-color-action-primary);
     --ui-button-primary-bg-hover: var(--ui-color-action-primary-hover);
     --ui-button-primary-bg-active: color-mix(in srgb, var(--ui-color-action-primary-hover) 88%, #000);
 
@@ -100,8 +106,8 @@
        BRAND rather than staying neutral. Use it when the quiet action is still
        the branded one — a "Save draft" beside a primary "Submit". */
     --ui-button-outline-bg: transparent;
-    --ui-button-outline-fg: var(--ui-color-selection-border);
-    --ui-button-outline-border: var(--ui-color-selection-border);
+    --ui-button-outline-fg: var(--ui-color-action-primary);
+    --ui-button-outline-border: var(--ui-color-action-primary);
     --ui-button-outline-bg-hover: var(--ui-color-selection-background);
     --ui-button-outline-fg-hover: var(--ui-color-selection-border);
     --ui-button-outline-border-hover: var(--ui-color-selection-border);
@@ -112,7 +118,7 @@
     --ui-button-ghost-fg: var(--ui-color-text-secondary);
     --ui-button-ghost-border: transparent;
     --ui-button-ghost-bg-hover: var(--ui-color-selection-background);
-    --ui-button-ghost-fg-hover: var(--ui-color-selection-border);
+    --ui-button-ghost-fg-hover: var(--ui-color-action-primary);
     --ui-button-ghost-bg-active: var(--ui-color-selection-background);
 
     /* ── danger — filled STATUS red, not brand red. ─────────────────────────

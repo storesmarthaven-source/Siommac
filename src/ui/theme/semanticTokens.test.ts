@@ -106,8 +106,13 @@ describe('semantic layer — introducing it changed nothing visually', () => {
   /* Each pair is a recipe variable and the literal the app rendered BEFORE the
      repoint. If a semantic default ever drifts, this is what catches it. */
   const UNCHANGED: [string, string][] = [
-    ['--ui-button-primary-bg',        '#E40C0C'],
-    ['--ui-button-primary-bg-hover',  '#B20808'],
+    /* Were #E40C0C / #B20808 (brand red) until the approved Buttons mockup made
+       the primary ACTION navy. A deliberate product decision recorded in
+       semantic.css, so these move with it — and `--ui-tab-indicator` below moves
+       too, which is exactly what a shared semantic role is for. Every other
+       entry stays pinned, so the guard still catches accidental drift. */
+    ['--ui-button-primary-bg',        '#1b2d54'],
+    ['--ui-button-primary-bg-hover',  'color-mix(in srgb, #1b2d54 88%, #000)'],
     /* `--ui-button-secondary-bg` and `--ui-button-outline-border` used to be
        pinned here. They are gone on purpose: the Button was restyled to BTN-01,
        which made `secondary` a NEUTRAL bordered button and `outline` a
@@ -120,7 +125,7 @@ describe('semantic layer — introducing it changed nothing visually', () => {
     ['--ui-card-footer-bg',           '#F8FAFE'],
     ['--ui-dt-header-fg',             '#5E6F8D'],
     ['--ui-dt-row-selected',          'rgba(27, 45, 84, .06)'],
-    ['--ui-tab-indicator',            '#E40C0C'],
+    ['--ui-tab-indicator',            '#1b2d54'],
     ['--ui-control-border-focus',     '#1b2d54'],
     ['--ui-control-placeholder',      '#AAB4C8'],
     ['--ui-badge-success-solid',      '#15803d'],

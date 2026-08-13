@@ -72,8 +72,21 @@
        The two ranks of call-to-action. `primary` is the one main action on a
        surface; `secondary` is the second rank. Status colours are NOT actions —
        a destructive button is `danger` (below), not a red primary. */
-    --ui-color-action-primary:        var(--siomac-red);
-    --ui-color-action-primary-hover:  var(--siomac-red-dark);
+    /* NAVY, per the approved Buttons mockup (artifacts/studio-buttons-mockup/
+       styles.css sets `--ui-color-action-primary:#1b2d54`).
+
+       Changed HERE, in the semantic role, rather than in Button's recipe. The
+       recipe drift guard in semanticTokens.test.ts forbids a recipe reading
+       `--siomac-navy` directly, and it is right to: the palette entry is a
+       colour, the role is a MEANING. "The primary action is navy" is a
+       statement about the role.
+
+       ⭐ Tabs reads this role too, so its active indicator becomes navy with
+       the buttons. That is the semantic layer working as designed — one
+       decision, every primary-action surface — not a side effect to route
+       around. `--siomac-red` remains the brand colour and is untouched. */
+    --ui-color-action-primary:        var(--siomac-navy);
+    --ui-color-action-primary-hover:  color-mix(in srgb, var(--siomac-navy) 88%, #000);
     --ui-color-action-primary-text:   #ffffff;
     --ui-color-action-secondary:      var(--siomac-navy);
     --ui-color-action-secondary-text: #ffffff;
