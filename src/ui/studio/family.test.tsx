@@ -121,8 +121,14 @@ describe('Buttons family — Studio', () => {
 
     expect(container.querySelector('.sds-wb__head h2')?.textContent).toBe('Buttons');
     expect(activeSubtype(container)).toBe('Action');
+    expect(subtype(container, 'Action Button').textContent).toContain('Button');
+    expect(subtype(container, 'Action Button').textContent).not.toContain('Save changes');
     expect(container.querySelector('.sds-button-settings__head strong')?.textContent).toBe('Primary button');
     expect(container.querySelector('.sds-button-picker .is-on strong')?.textContent).toBe('Primary');
+    expect(container.querySelector('.sds-button-editor__intro h3')?.textContent).toBe('Variants');
+    expect(container.querySelectorAll('.sds-button-picker [role="radio"]')).toHaveLength(6);
+    expect(container.querySelector('.sds-button-use h3')?.textContent).toBe('Common application use');
+    expect(container.querySelectorAll('.sds-button-use article')).toHaveLength(3);
   });
 
   it('puts the live preview before the Button chooser', () => {
@@ -178,7 +184,7 @@ describe('Buttons family — Studio', () => {
     const { container, queryByText } = render(<Studio />);
     openButtons(container);
 
-    expect(container.querySelectorAll('.sds-button-picker [role="radio"]')).toHaveLength(7);
+    expect(container.querySelectorAll('.sds-button-picker [role="radio"]')).toHaveLength(6);
     expect(queryByText('Credits')).toBeNull();
 
     fireEvent.click(subtype(container, 'Dropdown Button'));
@@ -203,5 +209,17 @@ describe('Buttons family — Studio', () => {
 
     expect(container.querySelector('.sds-button-settings__head strong')?.textContent).toBe('Danger button');
     expect(container.querySelector('.sds-button-picker .is-on strong')?.textContent).toBe('Danger');
+  });
+
+  it('opens the Studio color picker for a component override', () => {
+    const { container, getAllByLabelText, getByRole } = render(<Studio />);
+    openButtons(container);
+
+    fireEvent.click(getAllByLabelText('Use theme')[0]!);
+    fireEvent.click(getByRole('button', { name: 'Choose Background color' }));
+
+    expect(getByRole('group', { name: 'Background color picker' })).toBeTruthy();
+    fireEvent.click(getByRole('button', { name: 'Set color to #dc2626' }));
+    expect(getByRole('button', { name: 'Choose Background color' }).textContent).toContain('#dc2626');
   });
 });

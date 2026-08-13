@@ -229,7 +229,12 @@ export function Workbench({ def, family, onSelectMember, onBack, draft }: Workbe
               onClick={() => onSelectMember?.(m.id)}>
               {/* Pointer-events off in CSS — the specimen illustrates the
                   option; the option itself takes the click. */}
-              <span class="sds-family__preview">{m.render?.(defaultProps(m), 'default')}</span>
+              <span class="sds-family__preview">{m.render?.(
+                m.id === 'button'
+                  ? { ...defaultProps(m), label: 'Button', iconLeft: 'None', iconRight: 'None' }
+                  : defaultProps(m),
+                'default',
+              )}</span>
               <span class="sds-family__copy">
                 <strong>{m.name.replace(' Button', '')}</strong>
                 <small>{family.roles[m.id] ?? CATEGORY_LABELS[m.category]}</small>

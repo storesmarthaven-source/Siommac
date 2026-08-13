@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "40980aafa8346db4f27955512100929ca8f1e3b2",
+    "head": "d6c58e189f091527715d169f501e0ca3f2e3ba11",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "a3753c0271631c46d432c50e",
+    "fingerprint": "ec962f454b0f99886b159072",
     "indexedFiles": 1857
   },
   "summary": {
     "files": 1502,
-    "symbols": 14867,
+    "symbols": 14871,
     "widgets": 68,
     "routes": 983,
     "routeDefinitions": 984,
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 440,
-        "symbols": 3843,
+        "symbols": 3847,
         "widgets": 17,
         "routes": 38,
         "routeDefinitions": 53,
@@ -9428,8 +9428,8 @@
       "path": "src/ui/studio/RecipeStyleEditor.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 172,
-      "hash": "0494879a3576338f"
+      "lines": 242,
+      "hash": "acef6368abb7665e"
     },
     {
       "path": "src/ui/studio/Studio.tsx",
@@ -9442,8 +9442,8 @@
       "path": "src/ui/studio/Workbench.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 424,
-      "hash": "089f94f6b67fbad0"
+      "lines": 429,
+      "hash": "265b13d8586aedb6"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -9470,8 +9470,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 208,
-      "hash": "32d7ab049f3045ba"
+      "lines": 226,
+      "hash": "01d23af3780ad509"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -150145,17 +150145,29 @@
       "tags": []
     },
     {
-      "name": "friendly",
-      "kind": "function",
+      "name": "COLOR_SWATCHES",
+      "kind": "variable",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
       "line": 14,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "HslColor",
+      "kind": "interface",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 16,
       "module": "platform",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "friendlyGroup",
+      "name": "hexToHsl",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
       "line": 18,
@@ -150165,10 +150177,40 @@
       "tags": []
     },
     {
+      "name": "hslToHex",
+      "kind": "function",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 33,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "friendly",
+      "kind": "function",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 45,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "friendlyGroup",
+      "kind": "function",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 49,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "belongs",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 25,
+      "line": 56,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150178,7 +150220,7 @@
       "name": "friendlyError",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 40,
+      "line": 71,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150188,7 +150230,7 @@
       "name": "TokenControl",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 46,
+      "line": 77,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150200,7 +150242,7 @@
       "name": "RecipeStyleEditor",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 79,
+      "line": 137,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150212,7 +150254,7 @@
       "name": "act",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 94,
+      "line": 152,
       "module": "platform",
       "exported": false,
       "container": "RecipeStyleEditor",
@@ -150503,7 +150545,7 @@
       "name": "Block",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 344,
+      "line": 349,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150515,7 +150557,7 @@
       "name": "OverviewSpecimens",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 362,
+      "line": 367,
       "module": "platform",
       "exported": false,
       "container": "",

@@ -11,6 +11,37 @@ import { PreviewScope } from './PreviewScope';
 
 type Target = 'all' | CanonicalButtonVariant;
 
+const COLOR_SWATCHES = ['#1b2d54', '#2f4a7d', '#2563eb', '#0f766e', '#15803d', '#d97706', '#dc2626', '#7c3aed', '#111827', '#64748b', '#e2e8f0', '#ffffff'] as const;
+
+interface HslColor { h: number; s: number; l: number }
+
+function hexToHsl(hex: string): HslColor {
+  const clean = /^#[0-9a-f]{6}$/i.test(hex) ? hex.slice(1) : '000000';
+  const [r, g, b] = [0, 2, 4].map(index => parseInt(clean.slice(index, index + 2), 16) / 255) as [number, number, number];
+  const max = Math.max(r, g, b); const min = Math.min(r, g, b); const delta = max - min;
+  let h = 0;
+  if (delta) {
+    if (max === r) h = 60 * (((g - b) / delta) % 6);
+    else if (max === g) h = 60 * (((b - r) / delta) + 2);
+    else h = 60 * (((r - g) / delta) + 4);
+  }
+  const l = (max + min) / 2;
+  const s = delta === 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+  return { h: Math.round((h + 360) % 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+}
+
+function hslToHex({ h, s, l }: HslColor): string {
+  const saturation = s / 100; const lightness = l / 100;
+  const chroma = (1 - Math.abs(2 * lightness - 1)) * saturation;
+  const x = chroma * (1 - Math.abs(((h / 60) % 2) - 1));
+  const offset = lightness - chroma / 2;
+  let channels: [number, number, number];
+  if (h < 60) channels = [chroma, x, 0]; else if (h < 120) channels = [x, chroma, 0];
+  else if (h < 180) channels = [0, chroma, x]; else if (h < 240) channels = [0, x, chroma];
+  else if (h < 300) channels = [x, 0, chroma]; else channels = [chroma, 0, x];
+  return `#${channels.map(channel => Math.round((channel + offset) * 255).toString(16).padStart(2, '0')).join('')}`;
+}
+
 function friendly(value: string): string {
   return value.replace(/[-_]/g, ' ').replace(/^./, first => first.toUpperCase());
 }
@@ -44,9 +75,13 @@ function friendlyError(error: string): string {
 }
 
 function TokenControl({ control, studio }: { control: StyleControl; studio: GalleryDraft }): VNode {
+  const [pickerOpen, setPickerOpen] = useState(false);
   const custom = Object.prototype.hasOwnProperty.call(studio.values, control.name);
   const read = studio.read(control.name);
   const value = read.length > 0 ? read : (control.linkedTo ?? '');
+  const isColor = control.kind.startsWith('color');
+  const displayColor = /^#[0-9a-f]{6}$/i.test(value) ? value : '#000000';
+  const hsl = hexToHsl(displayColor);
 
   return (
     <div class="sds-edit-field">
@@ -61,13 +96,36 @@ function TokenControl({ control, studio }: { control: StyleControl; studio: Gall
         </label>
       </div>
       {custom ? (
-        <div class="sds-edit-field__control">
-          {control.kind.startsWith('color') && /^#[0-9a-f]{6}$/i.test(value) && (
-            <input type="color" value={value} aria-label={`${control.label} colour`}
-              onInput={event => studio.set(control.name, (event.target as HTMLInputElement).value)} />
-          )}
-          <input id={`style-${control.name}`} type="text" value={value}
-            onInput={event => studio.set(control.name, (event.target as HTMLInputElement).value)} />
+        <div class={`sds-edit-field__control${isColor ? ' sds-edit-field__control--color' : ''}`}>
+          {isColor ? (
+            <>
+              <button type="button" class="sds-color-trigger" aria-label={`Choose ${control.label} color`} aria-expanded={pickerOpen}
+                aria-controls={`picker-${control.name}`} onClick={() => setPickerOpen(open => !open)}>
+                <span class="sds-color-trigger__swatch" style={{ backgroundColor: displayColor }} />
+                <span>{value}</span><span aria-hidden="true">⌄</span>
+              </button>
+              {pickerOpen && (
+                <div class="sds-color-picker" id={`picker-${control.name}`} role="group" aria-label={`${control.label} color picker`}>
+                  <div class="sds-color-picker__preview" style={{ backgroundColor: displayColor }}><span>{displayColor.toUpperCase()}</span></div>
+                  <div class="sds-color-picker__swatches" aria-label="Suggested colors">
+                    {COLOR_SWATCHES.map(color => <button type="button" key={color} aria-label={`Set color to ${color}`} aria-pressed={displayColor.toLowerCase() === color}
+                      style={{ backgroundColor: color }} onClick={() => studio.set(control.name, color)} />)}
+                  </div>
+                  <label class="sds-color-picker__hex"><span>Hex</span><input id={`style-${control.name}`} value={value}
+                    onInput={event => studio.set(control.name, (event.target as HTMLInputElement).value)} /></label>
+                  <div class="sds-color-picker__sliders">
+                    <label><span>Hue <b>{hsl.h}°</b></span><input class="is-hue" type="range" min="0" max="360" value={hsl.h}
+                      onInput={event => studio.set(control.name, hslToHex({ ...hsl, h: Number((event.target as HTMLInputElement).value) }))} /></label>
+                    <label><span>Saturation <b>{hsl.s}%</b></span><input type="range" min="0" max="100" value={hsl.s}
+                      onInput={event => studio.set(control.name, hslToHex({ ...hsl, s: Number((event.target as HTMLInputElement).value) }))} /></label>
+                    <label><span>Lightness <b>{hsl.l}%</b></span><input type="range" min="0" max="100" value={hsl.l}
+                      onInput={event => studio.set(control.name, hslToHex({ ...hsl, l: Number((event.target as HTMLInputElement).value) }))} /></label>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : <input id={`style-${control.name}`} type="text" value={value}
+            onInput={event => studio.set(control.name, (event.target as HTMLInputElement).value)} />}
         </div>
       ) : (
         <div class="sds-edit-field__theme"><span>Theme value</span><strong>{value.length > 0 ? value : 'Default'}</strong></div>
@@ -102,23 +160,28 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
         <PreviewScope class="sds-button-preview" attach={studio.attachScope}>
           <header><div><span>Live preview</span><strong>{target === 'all' ? 'All buttons' : `${selectedSample?.title ?? friendly(target)} button`}</strong></div><small>Draft preview</small></header>
           {target === 'all' ? (
-            <div class="sds-button-preview__all">{BUTTON_VARIANTS.map(variant => def.render?.(propsForVariant(def, variant), 'default'))}</div>
+            <div class="sds-button-preview__all">
+              <div class="sds-button-preview__guides" aria-hidden="true"><i class="v" /><i class="h" /><i class="n n1" /><i class="n n2" /><i class="n n3" /><i class="n n4" /></div>
+              {BUTTON_VARIANTS.map(variant => def.render?.(propsForVariant(def, variant), 'default'))}
+            </div>
           ) : (
-            <div class="sds-button-preview__single">{def.render?.(previewProps, state === 'default' ? 'default' : state)}</div>
+            <div class="sds-button-preview__single">
+              <div class="sds-button-preview__guides" aria-hidden="true"><i class="v" /><i class="h" /><i class="n n1" /><i class="n n2" /><i class="n n3" /><i class="n n4" /></div>
+              {def.render?.(previewProps, state === 'default' ? 'default' : state)}
+            </div>
           )}
         </PreviewScope>
 
         <header class="sds-button-editor__intro">
-          <div><h3>Choose a button to edit</h3><p>Select one style, then change its settings on the right.</p></div>
-          <span>Published v{studio.publishedVersion}</span>
+          <div><h3>Variants</h3><p>The six canonical Button styles. Select one to edit it.</p></div>
+          <div class="sds-button-editor__meta">
+            <button type="button" class={target === 'all' ? 'is-on' : ''} aria-pressed={target === 'all'}
+              onClick={() => { setTarget('all'); setState('default'); }}>Edit shared size &amp; shape</button>
+            <span>Published v{studio.publishedVersion}</span>
+          </div>
         </header>
 
         <div class="sds-button-picker" role="radiogroup" aria-label="Button to edit">
-          <button type="button" role="radio" aria-checked={target === 'all'} class={target === 'all' ? 'is-on' : ''}
-            onClick={() => { setTarget('all'); setState('default'); }}>
-            <span class="sds-button-picker__all" aria-hidden="true"><i /><i /><i /></span>
-            <strong>All buttons</strong><small>Shared size and shape</small>
-          </button>
           {BUTTON_VARIANTS.map(variant => {
             const sample = def.variantSamples?.find(item => item.value === variant);
             return (
@@ -130,6 +193,13 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
             );
           })}
         </div>
+
+        <section class="sds-button-use" aria-labelledby="button-use-title">
+          <header><h3 id="button-use-title">Common application use</h3><p>Real examples of how these variants work together in SIOMAC.</p></header>
+          <div class="sds-use-context">
+            {def.examples.map(example => <article key={example.id}><span class="ctx-kicker">{example.title}</span><div>{example.render()}</div></article>)}
+          </div>
+        </section>
 
       </div>
 
