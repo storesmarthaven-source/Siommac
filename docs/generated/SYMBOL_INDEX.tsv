@@ -12673,6 +12673,11 @@ WizardInfoRow	interface	platform	true		src/ui/components/WizardShell.tsx	19
 WizardInfoPanel	interface	platform	true		src/ui/components/WizardShell.tsx	20	
 WizardShellProps	interface	platform	true		src/ui/components/WizardShell.tsx	22	
 WizardShell	function	platform	true	component	src/ui/components/WizardShell.tsx	44	
+ITEMS	array	platform	false	test	src/ui/containers/Accordion.test.tsx	5	
+AccordionItem	interface	platform	true		src/ui/containers/Accordion.tsx	6	
+AccordionProps	interface	platform	true		src/ui/containers/Accordion.tsx	15	
+Accordion	function	platform	true	component	src/ui/containers/Accordion.tsx	26	
+toggle	function	platform	false		src/ui/containers/Accordion.tsx	35	Accordion
 CardVariant	type	platform	true	ui-tile	src/ui/containers/Card/Card.tsx	47	
 CardTone	type	platform	true	ui-tile	src/ui/containers/Card/Card.tsx	48	
 CardAccent	type	platform	true	ui-tile	src/ui/containers/Card/Card.tsx	49	
@@ -12718,6 +12723,16 @@ Params	interface	platform	false		src/ui/data/DataTable/useDataTable.ts	15
 DataTableState	interface	platform	true		src/ui/data/DataTable/useDataTable.ts	25	
 compareValues	function	platform	false		src/ui/data/DataTable/useDataTable.ts	47	
 useDataTable	function	platform	true	hook	src/ui/data/DataTable/useDataTable.ts	57	
+AlertTone	type	platform	true		src/ui/feedback/Alert.tsx	6	
+AlertPlacement	type	platform	true		src/ui/feedback/Alert.tsx	7	
+AlertProps	interface	platform	true		src/ui/feedback/Alert.tsx	9	
+ICONS	object	platform	false		src/ui/feedback/Alert.tsx	23	
+Alert	function	platform	true	component	src/ui/feedback/Alert.tsx	27	
+ProgressShape	type	platform	true		src/ui/feedback/Progress.tsx	4	
+ProgressTone	type	platform	true		src/ui/feedback/Progress.tsx	5	
+ProgressSize	type	platform	true		src/ui/feedback/Progress.tsx	6	
+ProgressProps	interface	platform	true		src/ui/feedback/Progress.tsx	8	
+Progress	function	platform	true	component	src/ui/feedback/Progress.tsx	21	
 ComboboxProps	interface	platform	true		src/ui/forms/Combobox.tsx	35	
 Combobox	function	platform	true	component	src/ui/forms/Combobox.tsx	72	
 NativeDateType	type	platform	false		src/ui/forms/dateInputs.tsx	28	
@@ -12908,6 +12923,11 @@ onKey	function	platform	false		src/ui/lib/useOverlayA11y.ts	68	useOverlayA11y
 IconNode	type	platform	false		src/ui/LucideIcon.tsx	11	
 LucideName	type	platform	true		src/ui/LucideIcon.tsx	12	
 LucideIcon	function	platform	true	component	src/ui/LucideIcon.tsx	14	
+ITEMS	array	platform	false	test	src/ui/navigation/Breadcrumbs.test.tsx	5	
+BreadcrumbItem	interface	platform	true		src/ui/navigation/Breadcrumbs.tsx	7	
+BreadcrumbsProps	interface	platform	true		src/ui/navigation/Breadcrumbs.tsx	14	
+Crumb	function	platform	false	component	src/ui/navigation/Breadcrumbs.tsx	23	
+Breadcrumbs	function	platform	true	component	src/ui/navigation/Breadcrumbs.tsx	31	
 PageActionBarProps	interface	platform	true		src/ui/navigation/PageActionBar/PageActionBar.tsx	15	
 PageActionBar	function	platform	true	component	src/ui/navigation/PageActionBar/PageActionBar.tsx	29	
 ITEMS	array	platform	false	test	src/ui/navigation/Tabs/Tabs.test.tsx	15	
@@ -13128,16 +13148,16 @@ GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	661
 selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	679	
 search	function	platform	false		src/ui/registry/forms.defs.tsx	782	selectDef
 FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	813	
-COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	54	
-CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	67	
-CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	83	
-CatalogueNode	type	platform	true		src/ui/registry/index.ts	93	
-CategoryGroup	interface	platform	true		src/ui/registry/index.ts	97	
-componentsByCategory	function	platform	true		src/ui/registry/index.ts	118	
-findComponent	function	platform	true		src/ui/registry/index.ts	152	
-RegistryTotals	interface	platform	true		src/ui/registry/index.ts	156	
-registryTotals	function	platform	true		src/ui/registry/index.ts	182	
-isPattern	function	platform	false		src/ui/registry/index.ts	183	registryTotals
+COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	55	
+CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	69	
+CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	85	
+CatalogueNode	type	platform	true		src/ui/registry/index.ts	95	
+CategoryGroup	interface	platform	true		src/ui/registry/index.ts	99	
+componentsByCategory	function	platform	true		src/ui/registry/index.ts	120	
+findComponent	function	platform	true		src/ui/registry/index.ts	154	
+RegistryTotals	interface	platform	true		src/ui/registry/index.ts	158	
+registryTotals	function	platform	true		src/ui/registry/index.ts	184	
+isPattern	function	platform	false		src/ui/registry/index.ts	185	registryTotals
 s	function	platform	false		src/ui/registry/navigation.defs.tsx	24	
 b	function	platform	false		src/ui/registry/navigation.defs.tsx	25	
 noop	function	platform	false		src/ui/registry/navigation.defs.tsx	26	
@@ -13158,7 +13178,16 @@ pageHeaderDef	object	platform	true		src/ui/registry/page-header.def.tsx	19
 pageActionBarDef	object	platform	true		src/ui/registry/page-header.def.tsx	70	
 Planned	interface	platform	false		src/ui/registry/planned.ts	33	
 PLANNED	array	platform	false		src/ui/registry/planned.ts	44	
-PLANNED_DEFS	variable	platform	true		src/ui/registry/planned.ts	143	
+PLANNED_DEFS	variable	platform	true		src/ui/registry/planned.ts	131	
+s	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	9	
+b	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	10	
+n	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	11	
+noop	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	12	
+breadcrumbsDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	14	
+alertDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	51	
+progressDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	82	
+accordionDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	111	
+REMAINING_PRIMITIVE_DEFS	array	platform	true		src/ui/registry/remaining-primitives.defs.tsx	143	
 PropControl	type	platform	true		src/ui/registry/types.ts	41	
 PropValues	type	platform	true		src/ui/registry/types.ts	49	
 StyleControl	interface	platform	true		src/ui/registry/types.ts	60	

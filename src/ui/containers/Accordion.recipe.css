@@ -1,0 +1,28 @@
+@layer recipes {
+  :root,
+  [data-ui-preview-scope] {
+    --ui-accordion-border: var(--ui-color-border-default);
+    --ui-accordion-bg: var(--ui-color-surface-raised);
+    --ui-accordion-hover-bg: var(--row-hover);
+    --ui-accordion-radius: var(--radius-sm);
+    --ui-accordion-trigger-padding: 14px 16px;
+    --ui-accordion-panel-padding: 0 16px 16px;
+    --ui-accordion-title-fg: var(--ui-color-text-primary);
+    --ui-accordion-description-fg: var(--ui-color-text-secondary);
+  }
+  .ui-accordion { overflow: hidden; border: var(--ui-border-width) solid var(--ui-accordion-border); border-radius: var(--ui-accordion-radius); background: var(--ui-accordion-bg); }
+  .ui-accordion__item + .ui-accordion__item { border-top: var(--ui-border-width) solid var(--ui-accordion-border); }
+  .ui-accordion__heading { margin: 0; font: inherit; }
+  .ui-accordion__trigger { display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--ui-accordion-trigger-padding); border: 0; background: transparent; color: var(--ui-accordion-title-fg); font: inherit; text-align: left; cursor: pointer; }
+  .ui-accordion__trigger:hover { background: var(--ui-accordion-hover-bg); }
+  .ui-accordion__trigger:focus-visible { position: relative; z-index: 1; outline: var(--ui-focus-ring); outline-offset: calc(var(--ui-focus-ring-offset) * -1); }
+  .ui-accordion__trigger:disabled { color: var(--ui-disabled-fg); cursor: var(--ui-disabled-cursor); }
+  .ui-accordion__icon { display: grid; place-items: center; flex: 0 0 auto; color: var(--ui-color-navigation-active); }
+  .ui-accordion__copy { display: grid; flex: 1 1 auto; gap: 2px; min-width: 0; }
+  .ui-accordion__title { font-size: var(--ui-font-size-body-sm); font-weight: var(--font-weight-semibold); }
+  .ui-accordion__description { color: var(--ui-accordion-description-fg); font-size: var(--ui-font-size-caption); font-weight: var(--font-weight-normal); }
+  .ui-accordion__chevron { flex: 0 0 auto; width: 18px; height: 18px; transition: transform 160ms ease; }
+  .ui-accordion__item[data-open='true'] .ui-accordion__chevron { transform: rotate(180deg); }
+  .ui-accordion__content { padding: var(--ui-accordion-panel-padding); color: var(--ui-color-text-secondary); font-size: var(--ui-font-size-body-sm); line-height: 1.55; }
+  @media (prefers-reduced-motion: reduce) { .ui-accordion__chevron { transition: none; } }
+}

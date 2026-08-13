@@ -180,6 +180,7 @@ export {
   type TabsProps, type TabPanelProps, type TabItem,
   type TabsOrientation, type TabsVariant, type TabsSize, type TabsActivation,
 } from './navigation/Tabs';
+export { Breadcrumbs, type BreadcrumbsProps, type BreadcrumbItem } from './navigation/Breadcrumbs';
 
 // ONE Wizard. Step validation, navigation gating, optional/skipped steps and the
 // Back/Continue/Submit footer are its behaviour. It owns NO overlay — a modal
@@ -199,12 +200,17 @@ export {
   type CardProps, type CardHeaderProps, type CardFooterProps,
   type CardVariant, type CardTone, type CardAccent, type CardDensity,
 } from './containers/Card';
+export { Accordion, type AccordionProps, type AccordionItem } from './containers/Accordion';
 
 // ── Overlays (canonical, v2) ──
 export { Dialog, type DialogProps, type DialogSize, type DialogVariant } from './overlays/Dialog';
 export { AnchoredPopup, type AnchoredPopupProps } from './overlays/AnchoredPopup';
 export { Popover, type PopoverProps } from './overlays/Popover';
 export { Tooltip, type TooltipProps } from './overlays/Tooltip';
+
+// ── Feedback (canonical, v2) ──
+export { Alert, type AlertProps, type AlertTone, type AlertPlacement } from './feedback/Alert';
+export { Progress, type ProgressProps, type ProgressShape, type ProgressTone, type ProgressSize } from './feedback/Progress';
 
 // ── Loading placeholders (cold-path only) ──
 export {

@@ -1,0 +1,61 @@
+@layer recipes {
+  :root,
+  [data-ui-preview-scope] {
+    --ui-alert-radius: var(--radius-sm);
+    --ui-alert-padding: var(--space-4);
+    --ui-alert-gap: var(--space-3);
+    --ui-alert-border: var(--ui-color-border-default);
+    --ui-alert-bg: var(--ui-color-surface-raised);
+    --ui-alert-fg: var(--ui-color-text-primary);
+    --ui-alert-accent: var(--ui-color-info);
+
+    --ui-progress-track: var(--ui-color-surface-subtle);
+    --ui-progress-fill: var(--ui-color-action-primary);
+    --ui-progress-radius: var(--radius-pill);
+    --ui-progress-bar-height: 8px;
+    --ui-progress-ring-size: 54px;
+  }
+  .ui-alert { display: flex; align-items: flex-start; gap: var(--ui-alert-gap); padding: var(--ui-alert-padding); border: var(--ui-border-width) solid var(--ui-alert-border); border-left: 4px solid var(--ui-alert-accent); border-radius: var(--ui-alert-radius); background: var(--ui-alert-bg); color: var(--ui-alert-fg); }
+  .ui-alert--page { border-radius: 0; border-right: 0; border-left-width: 4px; border-left-color: var(--ui-alert-accent); }
+  .ui-alert--neutral { --ui-alert-accent: var(--ui-color-text-secondary); }
+  .ui-alert--info { --ui-alert-accent: var(--ui-color-info); }
+  .ui-alert--success { --ui-alert-accent: var(--ui-color-success); }
+  .ui-alert--warning { --ui-alert-accent: var(--ui-color-warning); }
+  .ui-alert--danger { --ui-alert-accent: var(--ui-color-danger); }
+  .ui-alert__icon { display: grid; place-items: center; flex: 0 0 auto; color: var(--ui-alert-accent); }
+  .ui-alert__icon > svg { width: 20px; height: 20px; }
+  .ui-alert__copy { display: grid; flex: 1 1 auto; gap: 4px; min-width: 0; }
+  .ui-alert__title { font-size: var(--ui-font-size-body-sm); }
+  .ui-alert__body { color: var(--ui-color-text-secondary); font-size: var(--ui-font-size-body-sm); line-height: 1.5; }
+  .ui-alert__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+  .ui-alert__dismiss { flex: 0 0 auto; margin: -5px -5px 0 0; }
+
+  .ui-progress { display: grid; gap: 7px; color: var(--ui-color-text-primary); }
+  .ui-progress--success { --ui-progress-fill: var(--ui-color-success); }
+  .ui-progress--warning { --ui-progress-fill: var(--ui-color-warning); }
+  .ui-progress--danger { --ui-progress-fill: var(--ui-color-danger); }
+  .ui-progress__track { position: relative; height: var(--ui-progress-bar-height); overflow: hidden; border-radius: var(--ui-progress-radius); background: var(--ui-progress-track); }
+  .ui-progress__value { display: block; width: calc(var(--ui-progress-value) * 1%); height: 100%; border-radius: inherit; background: var(--ui-progress-fill); transition: width 180ms ease; }
+  .ui-progress--meter .ui-progress__track { height: 12px; border-radius: var(--radius-xs); background: repeating-linear-gradient(90deg, var(--ui-progress-track) 0, var(--ui-progress-track) calc(10% - 2px), transparent calc(10% - 2px), transparent 10%); }
+  .ui-progress--meter .ui-progress__value { border-radius: var(--radius-xs); }
+  .ui-progress__copy { display: flex; justify-content: space-between; gap: var(--space-3); font-size: var(--ui-font-size-caption); }
+  .ui-progress__label { font-weight: var(--font-weight-medium); }
+  .ui-progress__text { color: var(--ui-color-text-secondary); font-variant-numeric: tabular-nums; }
+  .ui-progress--ring { position: relative; display: inline-grid; grid-template-columns: var(--ui-progress-ring-size) auto; align-items: center; width: max-content; }
+  .ui-progress__ring { width: var(--ui-progress-ring-size); height: var(--ui-progress-ring-size); transform: rotate(-90deg); }
+  .ui-progress__ring-track,
+  .ui-progress__ring-value { fill: none; stroke-width: 3; }
+  .ui-progress__ring-track { stroke: var(--ui-progress-track); }
+  .ui-progress__ring-value { stroke: var(--ui-progress-fill); stroke-linecap: round; stroke-dasharray: calc(var(--ui-progress-value) * 1) 100; transition: stroke-dasharray 180ms ease; }
+  .ui-progress--ring .ui-progress__copy { display: grid; }
+  .ui-progress--sm { --ui-progress-bar-height: 5px; --ui-progress-ring-size: 42px; }
+  .ui-progress--lg { --ui-progress-bar-height: 12px; --ui-progress-ring-size: 68px; }
+  .ui-progress--indeterminate .ui-progress__value { width: 35%; animation: ui-progress-slide 1.2s ease-in-out infinite; }
+  .ui-progress--indeterminate .ui-progress__ring-value { stroke-dasharray: 24 76; animation: ui-progress-spin 1s linear infinite; transform-origin: center; }
+  @keyframes ui-progress-slide { from { transform: translateX(-110%); } to { transform: translateX(300%); } }
+  @keyframes ui-progress-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .ui-progress__value,
+    .ui-progress__ring-value { transition: none; animation-duration: 2.4s; }
+  }
+}

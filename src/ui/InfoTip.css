@@ -12,5 +12,5 @@
   }
   .ui-infotip:hover,
   .ui-infotip:focus-visible { color: var(--ui-color-text-primary); }
-  .ui-infotip:focus-visible { box-shadow: var(--ui-focus-ring); }
+  .ui-infotip:focus-visible { outline: var(--ui-focus-ring-width) solid var(--ui-color-focus-outline); outline-offset: var(--ui-focus-ring-offset); }
 }

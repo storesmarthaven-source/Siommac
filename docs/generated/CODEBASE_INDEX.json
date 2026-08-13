@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "338477346fc7035a0475fb9f3db9ecb6522d49ac",
+    "head": "bd067d02eae6feef8b9d70d302549a92e9f3c7d1",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "f066d2c3ce568b555f27d0ff",
-    "indexedFiles": 1839
+    "fingerprint": "4e2643eb882e345e2ee500e2",
+    "indexedFiles": 1847
   },
   "summary": {
-    "files": 1484,
-    "symbols": 14780,
+    "files": 1492,
+    "symbols": 14809,
     "widgets": 68,
     "routes": 978,
     "routeDefinitions": 979,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 424,
-        "symbols": 3766,
+        "files": 432,
+        "symbols": 3795,
         "widgets": 17,
         "routes": 38,
         "routeDefinitions": 53,
@@ -8578,6 +8578,20 @@
       "hash": "0f1b7c53572ba8f1"
     },
     {
+      "path": "src/ui/containers/Accordion.test.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 43,
+      "hash": "907bc210aedfcb0b"
+    },
+    {
+      "path": "src/ui/containers/Accordion.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 80,
+      "hash": "ab80d29c7dbc57ce"
+    },
+    {
       "path": "src/ui/containers/Card/Card.test.tsx",
       "module": "platform",
       "role": "frontend",
@@ -8639,6 +8653,27 @@
       "role": "frontend",
       "lines": 146,
       "hash": "e2c22d1386418dd5"
+    },
+    {
+      "path": "src/ui/feedback/Alert.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 48,
+      "hash": "079470acda796615"
+    },
+    {
+      "path": "src/ui/feedback/Progress.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 57,
+      "hash": "17fa17a0dcb06517"
+    },
+    {
+      "path": "src/ui/feedback/feedback.test.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 43,
+      "hash": "020ed7eda216c91a"
     },
     {
       "path": "src/ui/forms/Combobox.tsx",
@@ -8903,8 +8938,8 @@
       "path": "src/ui/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 254,
-      "hash": "b29d36aff7a78cf4"
+      "lines": 260,
+      "hash": "35312e6dbeb515d6"
     },
     {
       "path": "src/ui/layouts/ModulePageLayout.tsx",
@@ -8940,6 +8975,20 @@
       "role": "frontend",
       "lines": 92,
       "hash": "691089d4e79311be"
+    },
+    {
+      "path": "src/ui/navigation/Breadcrumbs.test.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 40,
+      "hash": "8c37e722fb661581"
+    },
+    {
+      "path": "src/ui/navigation/Breadcrumbs.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 92,
+      "hash": "56c6d52c712e3315"
     },
     {
       "path": "src/ui/navigation/PageActionBar/PageActionBar.test.tsx",
@@ -9211,8 +9260,8 @@
       "path": "src/ui/registry/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 196,
-      "hash": "fcc74fbd668d44d3"
+      "lines": 198,
+      "hash": "4821060d8697c0d3"
     },
     {
       "path": "src/ui/registry/navigation.defs.tsx",
@@ -9239,8 +9288,15 @@
       "path": "src/ui/registry/planned.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 157,
-      "hash": "59e9f1ebc27b94cd"
+      "lines": 145,
+      "hash": "d41bf0dc980a7e7a"
+    },
+    {
+      "path": "src/ui/registry/remaining-primitives.defs.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 144,
+      "hash": "701202d41cdddf90"
     },
     {
       "path": "src/ui/registry/types.ts",
@@ -143095,6 +143151,60 @@
       ]
     },
     {
+      "name": "ITEMS",
+      "kind": "array",
+      "file": "src/ui/containers/Accordion.test.tsx",
+      "line": 5,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "AccordionItem",
+      "kind": "interface",
+      "file": "src/ui/containers/Accordion.tsx",
+      "line": 6,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AccordionProps",
+      "kind": "interface",
+      "file": "src/ui/containers/Accordion.tsx",
+      "line": 15,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Accordion",
+      "kind": "function",
+      "file": "src/ui/containers/Accordion.tsx",
+      "line": 26,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "toggle",
+      "kind": "function",
+      "file": "src/ui/containers/Accordion.tsx",
+      "line": 35,
+      "module": "platform",
+      "exported": false,
+      "container": "Accordion",
+      "tags": []
+    },
+    {
       "name": "CardVariant",
       "kind": "type",
       "file": "src/ui/containers/Card/Card.tsx",
@@ -143602,6 +143712,110 @@
       "container": "",
       "tags": [
         "hook"
+      ]
+    },
+    {
+      "name": "AlertTone",
+      "kind": "type",
+      "file": "src/ui/feedback/Alert.tsx",
+      "line": 6,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AlertPlacement",
+      "kind": "type",
+      "file": "src/ui/feedback/Alert.tsx",
+      "line": 7,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AlertProps",
+      "kind": "interface",
+      "file": "src/ui/feedback/Alert.tsx",
+      "line": 9,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ICONS",
+      "kind": "object",
+      "file": "src/ui/feedback/Alert.tsx",
+      "line": 23,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Alert",
+      "kind": "function",
+      "file": "src/ui/feedback/Alert.tsx",
+      "line": 27,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ProgressShape",
+      "kind": "type",
+      "file": "src/ui/feedback/Progress.tsx",
+      "line": 4,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ProgressTone",
+      "kind": "type",
+      "file": "src/ui/feedback/Progress.tsx",
+      "line": 5,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ProgressSize",
+      "kind": "type",
+      "file": "src/ui/feedback/Progress.tsx",
+      "line": 6,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ProgressProps",
+      "kind": "interface",
+      "file": "src/ui/feedback/Progress.tsx",
+      "line": 8,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Progress",
+      "kind": "function",
+      "file": "src/ui/feedback/Progress.tsx",
+      "line": 21,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
       ]
     },
     {
@@ -145680,6 +145894,62 @@
       "kind": "function",
       "file": "src/ui/LucideIcon.tsx",
       "line": 14,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ITEMS",
+      "kind": "array",
+      "file": "src/ui/navigation/Breadcrumbs.test.tsx",
+      "line": 5,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "BreadcrumbItem",
+      "kind": "interface",
+      "file": "src/ui/navigation/Breadcrumbs.tsx",
+      "line": 7,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "BreadcrumbsProps",
+      "kind": "interface",
+      "file": "src/ui/navigation/Breadcrumbs.tsx",
+      "line": 14,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Crumb",
+      "kind": "function",
+      "file": "src/ui/navigation/Breadcrumbs.tsx",
+      "line": 23,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "Breadcrumbs",
+      "kind": "function",
+      "file": "src/ui/navigation/Breadcrumbs.tsx",
+      "line": 31,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148017,7 +148287,7 @@
       "name": "COMPONENT_DEFS",
       "kind": "array",
       "file": "src/ui/registry/index.ts",
-      "line": 54,
+      "line": 55,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148027,7 +148297,7 @@
       "name": "CATEGORY_LABELS",
       "kind": "object",
       "file": "src/ui/registry/index.ts",
-      "line": 67,
+      "line": 69,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148037,7 +148307,7 @@
       "name": "CATEGORY_ORDER",
       "kind": "array",
       "file": "src/ui/registry/index.ts",
-      "line": 83,
+      "line": 85,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148047,7 +148317,7 @@
       "name": "CatalogueNode",
       "kind": "type",
       "file": "src/ui/registry/index.ts",
-      "line": 93,
+      "line": 95,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148057,7 +148327,7 @@
       "name": "CategoryGroup",
       "kind": "interface",
       "file": "src/ui/registry/index.ts",
-      "line": 97,
+      "line": 99,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148067,7 +148337,7 @@
       "name": "componentsByCategory",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 118,
+      "line": 120,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148077,7 +148347,7 @@
       "name": "findComponent",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 152,
+      "line": 154,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148087,7 +148357,7 @@
       "name": "RegistryTotals",
       "kind": "interface",
       "file": "src/ui/registry/index.ts",
-      "line": 156,
+      "line": 158,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148097,7 +148367,7 @@
       "name": "registryTotals",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 182,
+      "line": 184,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148107,7 +148377,7 @@
       "name": "isPattern",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 183,
+      "line": 185,
       "module": "platform",
       "exported": false,
       "container": "registryTotals",
@@ -148319,6 +148589,96 @@
       "name": "PLANNED_DEFS",
       "kind": "variable",
       "file": "src/ui/registry/planned.ts",
+      "line": 131,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "s",
+      "kind": "function",
+      "file": "src/ui/registry/remaining-primitives.defs.tsx",
+      "line": 9,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "b",
+      "kind": "function",
+      "file": "src/ui/registry/remaining-primitives.defs.tsx",
+      "line": 10,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "n",
+      "kind": "function",
+      "file": "src/ui/registry/remaining-primitives.defs.tsx",
+      "line": 11,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "noop",
+      "kind": "function",
+      "file": "src/ui/registry/remaining-primitives.defs.tsx",
+      "line": 12,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "breadcrumbsDef",
+      "kind": "object",
+      "file": "src/ui/registry/remaining-primitives.defs.tsx",
+      "line": 14,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "alertDef",
+      "kind": "object",
+      "file": "src/ui/registry/remaining-primitives.defs.tsx",
+      "line": 51,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "progressDef",
+      "kind": "object",
+      "file": "src/ui/registry/remaining-primitives.defs.tsx",
+      "line": 82,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "accordionDef",
+      "kind": "object",
+      "file": "src/ui/registry/remaining-primitives.defs.tsx",
+      "line": 111,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "REMAINING_PRIMITIVE_DEFS",
+      "kind": "array",
+      "file": "src/ui/registry/remaining-primitives.defs.tsx",
       "line": 143,
       "module": "platform",
       "exported": true,

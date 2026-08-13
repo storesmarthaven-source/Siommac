@@ -57,23 +57,11 @@ const PLANNED: Planned[] = [
     replaces: ['.ui-rdrawer'] },
   /* ── Data ───────────────────────────────────────────────────────────────*/
   /* ── Navigation ─────────────────────────────────────────────────────────*/
-  { id: 'breadcrumbs', name: 'Breadcrumbs', category: 'navigation',
-    description: 'Ancestor trail with overflow collapsing.',
-    plannedApi: `<Breadcrumbs items={[{label:'HR', href:'/hr'}, {label:'Onboarding'}]} />` },
   /* PageActionBar moved OUT when it was built — see page-header.def.tsx. */
   /* ── Feedback ───────────────────────────────────────────────────────────*/
-  { id: 'alert', name: 'Alert', category: 'feedback',
-    description: 'ONE message component. Inline vs page-level banner is a `placement` prop, not a second component.',
-    plannedApi: `<Alert tone="warning" placement="inline|page" title="Approval required" onDismiss={hide}>…</Alert>` },
-  { id: 'progress', name: 'Progress', category: 'feedback',
-    description: 'RECONCILED 2026-08-12 — a GENUINE gap, despite the name collision. `ProgressBar` (@ui/charts) is NOT this: it hard-codes `hse-spark-bar-*` classes, takes a raw hex `color`, and has no recipe, tokens or `role="progressbar"`. It is an HSE sparkline helper wearing the name; registering it as canonical would be accept-and-drop. Determinate and indeterminate progress — bar, ring and meter are a `shape` prop, the same value rendered three ways.',
-    plannedApi: `<Progress value={0.4} shape="bar|ring|meter" label="Uploading evidence" />` },
 
   /* ── Containers ─────────────────────────────────────────────────────────*/
   /* Card moved OUT of this file when it was built — see containers.defs.tsx. */
-  { id: 'accordion', name: 'Accordion', category: 'containers',
-    description: 'Collapsible sections with single or multiple expansion.',
-    plannedApi: `<Accordion items={SECTIONS} multiple />` },
 
   /* ── Status ─────────────────────────────────────────────────────────────*/
   /* ── Enterprise patterns ────────────────────────────────────────────────*/
