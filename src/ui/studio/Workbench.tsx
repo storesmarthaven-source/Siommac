@@ -24,7 +24,8 @@
 import { type VNode, type ComponentChildren } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import {
-  defaultProps, type ComponentDef, type PropValues, type PropControl,
+  defaultProps, CATEGORY_LABELS,
+  type ComponentDef, type PropValues, type PropControl,
 } from '../registry';
 import { type UiState } from '../tokens';
 import { InAppUsage } from './InAppUsage';
@@ -216,6 +217,14 @@ export function Workbench({ def, onBack }: { def: ComponentDef; onBack: () => vo
             </div>
 
             <aside class="sds-pg__panel" aria-label={`${def.name} properties`}>
+              {/* Say what is being configured. Without this the panel reads as a
+                  generic box of controls, and "Continue", "Cancel" and "Save"
+                  start to look like they might be different components. They are
+                  not: they are this one, with different props. */}
+              <header class="sds-pg__who">
+                <strong>{def.name}</strong>
+                <span>Canonical component · {CATEGORY_LABELS[def.category]}</span>
+              </header>
               {def.presets && def.presets.length > 0 && (
                 <section class="sds-pg__grp">
                   <h4>Presets</h4>

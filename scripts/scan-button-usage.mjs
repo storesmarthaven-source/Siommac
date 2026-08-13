@@ -46,60 +46,97 @@ function walk(dir, out = []) {
 }
 
 /**
- * Parse the props of one `<Button …>` opening tag.
+ * Button's canonical defaults, read from src/ui/primitives/Button.tsx.
  *
- * Returns `null` for a prop we cannot resolve, so the caller can bucket the
- * whole site as dynamic rather than silently dropping the unknown prop and
- * claiming a shape the code never had.
+ * Writing `variant="secondary"` and omitting it entirely produce the same
+ * button, so they must normalize to the same structure — otherwise the
+ * inventory invents a difference the rendered UI does not have.
+ */
+const DEFAULTS = { variant: 'secondary', tone: 'default', size: 'md' };
+
+/**
+ * Props whose PRESENCE is structural but whose VALUE is not.
+ *
+ * `iconLeft` is a VNode, so every icon button passes an expression. Treating
+ * that as unresolvable pushed most icon buttons into the dynamic bucket and hid
+ * them from the inventory. What matters for design consistency is that the
+ * button HAS a leading icon — not which glyph it is.
+ */
+const PRESENCE_ONLY = ['iconLeft', 'iconRight'];
+
+/** Props that say nothing about the button's design. */
+const IGNORED = [
+  'onClick', 'onKeyDown', 'onFocus', 'onBlur', 'ref', 'key', 'style', 'children',
+  'label', 'title', 'id', 'class', 'className', 'aria-label', 'type', 'form', 'name',
+  'forceState',   // a Studio preview prop, never an application design decision
+];
+
+/**
+ * Parse one `<Button …>` opening tag into a raw and a structural signature.
+ *
+ * `dynamic` is set only when a VALUE-carrying prop is an expression
+ * (`variant={tone}`), because that genuinely cannot be resolved. A presence-only
+ * prop being an expression is expected and resolvable.
  */
 function parseProps(tag) {
-  const props = {};
+  const raw = {};
+  const structural = {};
   let dynamic = false;
 
-  // string prop:  variant="primary"
-  for (const m of tag.matchAll(/(\w+)="([^"]*)"/g)) props[m[1]] = m[2];
-  // boolean shorthand:  disabled  /  loading
+  const note = (k, v) => {
+    if (IGNORED.includes(k)) return;
+    raw[k] = v;
+    if (PRESENCE_ONLY.includes(k)) { structural[k] = true; return; }
+    // An explicitly-written canonical default is not a distinct design.
+    if (DEFAULTS[k] !== undefined && DEFAULTS[k] === v) return;
+    // The icon ASSET is content, not structure — fa-plus and fa-save are one shape.
+    if (k === 'icon') { structural.iconLeft = true; return; }
+    if (k === 'href') { structural.href = true; return; }   // anchor semantics, not the URL
+    structural[k] = v;
+  };
+
+  for (const m of tag.matchAll(/(\w+)="([^"]*)"/g)) note(m[1], m[2]);
   for (const m of tag.matchAll(/(?:^|\s)(disabled|loading|fullWidth|iconOnly|pressed)(?=\s|\/|>|$)/g)) {
-    props[m[1]] = true;
+    note(m[1], true);
   }
-  // expression prop:  variant={tone}  — unresolvable
-  for (const m of tag.matchAll(/(\w+)=\{/g)) {
-    if (!['onClick', 'onKeyDown', 'ref', 'key', 'style', 'children'].includes(m[1])) {
-      props[m[1]] = '{expr}';
-      dynamic = true;
-    }
+  for (const m of tag.matchAll(/([\w-]+)=\{/g)) {
+    const k = m[1];
+    if (IGNORED.includes(k)) continue;
+    if (PRESENCE_ONLY.includes(k)) { raw[k] = '{node}'; structural[k] = true; continue; }
+    raw[k] = '{expr}';
+    dynamic = true;
   }
-  return { props, dynamic };
+  return { raw, structural, dynamic };
 }
 
 const files = walk('src').map(f => ({ f, posix: f.split(path.sep).join('/') }));
 
-const shapes = new Map();   // signature -> { props, count, files:Set, zones:{} }
+const shapes = new Map();      // raw prop signature      -> entry
+const structures = new Map();  // structural signature    -> entry
 let dynamicSites = 0;
 let legacyButtons = 0;
 const legacyFiles = new Set();
+
+const record = (map, props, posix) => {
+  const sig = JSON.stringify(Object.fromEntries(Object.entries(props).sort()));
+  const entry = map.get(sig) ?? { props, count: 0, files: new Set(), zones: {} };
+  entry.count += 1;
+  entry.files.add(posix);
+  const z = zoneOf(posix);
+  entry.zones[z] = (entry.zones[z] ?? 0) + 1;
+  map.set(sig, entry);
+};
 
 for (const { f, posix } of files) {
   const text = fs.readFileSync(f, 'utf8');
 
   // Canonical <Button …>. `s` flag: JSX props routinely span lines.
   for (const m of text.matchAll(/<Button(\s[^>]*?)\/?>/gs)) {
-    const { props, dynamic } = parseProps(m[1]);
+    if (m[1].includes('${')) continue;   // a `code:` template string, not a call site
+    const { raw, structural, dynamic } = parseProps(m[1]);
     if (dynamic) { dynamicSites += 1; continue; }
-
-    // Signature ignores the label: "primary + icon left" is one shape whether it
-    // says Save or Submit. Otherwise every button is its own unique snowflake.
-    const shape = Object.fromEntries(
-      Object.entries(props).filter(([k]) => k !== 'label' && k !== 'children'),
-    );
-    const sig = JSON.stringify(Object.fromEntries(Object.entries(shape).sort()));
-
-    const entry = shapes.get(sig) ?? { props: shape, count: 0, files: new Set(), zones: {} };
-    entry.count += 1;
-    entry.files.add(posix);
-    const z = zoneOf(posix);
-    entry.zones[z] = (entry.zones[z] ?? 0) + 1;
-    shapes.set(sig, entry);
+    record(shapes, raw, posix);
+    record(structures, structural, posix);
   }
 
   // Legacy raw markup — the migration debt, counted not hidden.
@@ -117,11 +154,18 @@ const payload = {
   scannedFiles: files.length,
   totals: {
     canonicalSites: [...shapes.values()].reduce((n, s) => n + s.count, 0),
+    /** Every distinct prop spelling — inflated by icon assets and explicit defaults. */
     distinctShapes: shapes.size,
+    /** Distinct DESIGNS. This is the number that matters for consistency. */
+    structuralPatterns: structures.size,
     dynamicSites,
     legacyButtons,
     legacyFiles: legacyFiles.size,
   },
+  /** Structural first: it is what a design review acts on. */
+  structures: [...structures.values()]
+    .sort((a, b) => b.count - a.count)
+    .map(s => ({ props: s.props, count: s.count, zones: s.zones, files: [...s.files].sort().slice(0, 8) })),
   shapes: [...shapes.values()]
     .sort((a, b) => b.count - a.count)
     .map(s => ({ props: s.props, count: s.count, zones: s.zones, files: [...s.files].sort().slice(0, 8) })),
@@ -131,7 +175,7 @@ fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, `${JSON.stringify(payload, null, 2)}\n`);
 
 console.log(
-  `Button usage: ${payload.totals.canonicalSites} canonical sites → ` +
-  `${payload.totals.distinctShapes} distinct shapes · ${dynamicSites} dynamic · ` +
+  `Button usage: ${payload.totals.canonicalSites} sites → ${payload.totals.distinctShapes} raw signatures → ` +
+  `${payload.totals.structuralPatterns} STRUCTURAL patterns · ${dynamicSites} dynamic · ` +
   `${legacyButtons} legacy <button class="btn…"> across ${legacyFiles.size} files`,
 );

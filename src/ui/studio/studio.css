@@ -545,3 +545,9 @@
 .sds-use__act:disabled, .sds-use__copy:disabled { color: var(--sds-ink-3); cursor: not-allowed; }
 .sds-use__copy { margin-left: auto; border-color: var(--sds-accent); color: var(--sds-accent); font-weight: 600; }
 .sds-use__count { font-size: 13px; color: var(--sds-ink-3); }
+
+/* Panel identity — what you are configuring, so Continue/Cancel/Save read as
+   one component with different props rather than three components. */
+.sds-pg__who { padding: 12px 0 10px; border-bottom: 1px solid var(--sds-line); }
+.sds-pg__who strong { display: block; font-size: 15px; font-weight: 600; }
+.sds-pg__who span { font-size: 12px; color: var(--sds-ink-3); }
