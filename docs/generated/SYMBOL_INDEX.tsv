@@ -4761,6 +4761,10 @@ BASE	object	platform	false		scripts/send-all-email-templates.mjs	32
 variablesFor	function	platform	false		scripts/send-all-email-templates.mjs	59	
 results	array	platform	false		scripts/send-all-email-templates.mjs	75	
 failed	variable	platform	false		scripts/send-all-email-templates.mjs	87	
+COMPONENTS	object	platform	false		scripts/variant-usage.mjs	20	
+walk	function	platform	false		scripts/variant-usage.mjs	27	
+zoneOf	function	platform	false		scripts/variant-usage.mjs	36	
+files	variable	platform	false		scripts/variant-usage.mjs	41	
 REQUIRED_ENV	array	hr	false		scripts/verify-hr-access-assignment-tx.mjs	23	
 loadEnv	function	hr	false		scripts/verify-hr-access-assignment-tx.mjs	25	
 env	variable	hr	false		scripts/verify-hr-access-assignment-tx.mjs	38	

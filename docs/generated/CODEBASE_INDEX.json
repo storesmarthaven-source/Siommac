@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "900760d1efa60b09a4a153251353bf2495511a93",
+    "head": "3337d35d27f7d54513f12f6cbad40f3c1cba95fc",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "e92df3778514ebbefa037ef9",
-    "indexedFiles": 1830
+    "fingerprint": "2116562c7acbe6dc70c1b4af",
+    "indexedFiles": 1831
   },
   "summary": {
-    "files": 1475,
-    "symbols": 14707,
+    "files": 1476,
+    "symbols": 14711,
     "widgets": 63,
     "routes": 978,
     "routeDefinitions": 979,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 415,
-        "symbols": 3693,
+        "files": 416,
+        "symbols": 3697,
         "widgets": 12,
         "routes": 38,
         "routeDefinitions": 53,
@@ -3354,6 +3354,13 @@
       "role": "tooling",
       "lines": 94,
       "hash": "c0e714e4ff5633fa"
+    },
+    {
+      "path": "scripts/variant-usage.mjs",
+      "module": "platform",
+      "role": "tooling",
+      "lines": 66,
+      "hash": "dbc63172233aff8a"
     },
     {
       "path": "scripts/verify-hr-access-assignment-tx.mjs",
@@ -59017,6 +59024,46 @@
       "kind": "variable",
       "file": "scripts/send-all-email-templates.mjs",
       "line": 87,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "COMPONENTS",
+      "kind": "object",
+      "file": "scripts/variant-usage.mjs",
+      "line": 20,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "walk",
+      "kind": "function",
+      "file": "scripts/variant-usage.mjs",
+      "line": 27,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "zoneOf",
+      "kind": "function",
+      "file": "scripts/variant-usage.mjs",
+      "line": 36,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "files",
+      "kind": "variable",
+      "file": "scripts/variant-usage.mjs",
+      "line": 41,
       "module": "platform",
       "exported": false,
       "container": "",

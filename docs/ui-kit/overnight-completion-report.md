@@ -642,6 +642,48 @@ The remaining `NewMenu` consumers in `RiskJsa.tsx`, `Incidents.tsx`,
 RowActionMenu compositions remain domain-owned debt and migrate only during
 natural feature work. Menu must not be reopened to chase those counts.
 
+## Variant usage audit (2026-08-12) — `scripts/variant-usage.mjs`
+
+"Do we use all these variants?" is now measurable rather than arguable. The
+script counts real call sites per variant and splits them three ways, because
+*used* means different things depending on who is calling:
+
+```
+app    a product surface uses it            genuine demand
+kit    another canonical component uses it  genuine — the kit composing itself
+docs   registry / studio only               it exists to be documented
+```
+
+```
+Button   primary   app=60 kit=5    secondary app=56 kit=4    outline app=47 kit=8
+         danger    app= 2 kit=2    ghost     app= 0 kit=4    link    app= 0 kit=2
+Badge    outline   app= 1 kit=1    solid  app=0 kit=0        soft      = default
+Card     panel     app= 3 kit=3    metric app=3 kit=2        surface   = default
+         action    app= 0 kit=0
+Tabs     contained app= 1          subtle app=0 kit=0        underline = default
+```
+
+⚠ **A default never appears in the count.** `secondary`, `soft`, `surface` and
+`underline` are defaults, so a zero against them means nothing. Any future run of
+this script must re-check the defaults before calling a variant unused.
+
+**Findings:**
+- Three Button variants carry the app — primary/secondary/outline, 163 explicit
+  call sites.
+- `ghost` and `link` have no app consumer but ARE used inside the kit (toolbars,
+  dialog affordances). Genuine, not dead.
+- **Documented-only: `Badge solid`, `Card action`, `Tabs subtle`.** All three are
+  KEPT — each is a coherent point in its component's design space, and breaking a
+  public API to save a few lines of CSS is the wrong side of an asymmetric risk.
+- ⚠ **`Card action` is recorded as debt.** Its only difference from `surface` is
+  interactive (hover/press affordance). With zero consumers, nothing has ever
+  exercised that behaviour — an untested interactive affordance, not merely an
+  unused style. Either something adopts it or it is removed on its own merits.
+- ⭐ **The real finding is `danger` at 2 app uses.** For an ERP full of
+  destructive actions that is implausibly low: most Delete buttons are still on
+  legacy classes, which matches the recorded `.btn-danger-primary` debt. That is
+  migration debt, not a variant problem.
+
 ## Remaining programme
 
 The overall mandate is not yet complete. Continue automatically:
