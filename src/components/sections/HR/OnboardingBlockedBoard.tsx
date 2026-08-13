@@ -127,7 +127,7 @@ export function OnboardingBlockedBoard({
         </select>
       </div>
 
-      {blockersQ.isLoading && !blockersQ.data ? <div class="obx-empty">Loading…</div>
+      {blockersQ.isLoading ? <div class="obx-empty">Loading…</div>
         : !rows.length ? <div class="obx-section"><div class="obx-empty">No active blockers — nothing is holding up onboarding right now.</div></div>
         : (
           <div class="obx-blockgrid">

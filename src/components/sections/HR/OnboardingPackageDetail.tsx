@@ -239,7 +239,7 @@ export function OnboardingPackageDetail({
         <div class="obx-section">
           <div class="obx-section-head"><h2><i class="fas fa-bolt" />Custom actions</h2><button class="obx-btn primary obx-btn-sm" onClick={openAddAction}>+ Add</button></div>
           <div class="obx-section-body">
-            {actionsQ.isLoading && !actionsQ.data ? empty('Loading…') : !actions.length ? empty('No custom action templates yet.') : (
+            {actionsQ.isLoading ? empty('Loading…') : !actions.length ? empty('No custom action templates yet.') : (
               <table class="obx-table">
                 <thead><tr><th>Name</th><th>Type</th><th>Owner</th><th>Priority</th><th>Required</th><th>Blocks</th><th>Active</th><th>Actions</th></tr></thead>
                 <tbody>{actions.map(a => (
