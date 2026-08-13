@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "bd067d02eae6feef8b9d70d302549a92e9f3c7d1",
+    "head": "ef3575b8de2aefbd8fcb592477496ac0a513657d",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "4e2643eb882e345e2ee500e2",
-    "indexedFiles": 1847
+    "fingerprint": "7d0c2fd06ed66a8b939d6dc1",
+    "indexedFiles": 1852
   },
   "summary": {
-    "files": 1492,
-    "symbols": 14809,
+    "files": 1497,
+    "symbols": 14823,
     "widgets": 68,
     "routes": 978,
     "routeDefinitions": 979,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 432,
-        "symbols": 3795,
+        "files": 437,
+        "symbols": 3809,
         "widgets": 17,
         "routes": 38,
         "routeDefinitions": 53,
@@ -7657,8 +7657,8 @@
       "path": "src/components/shared/Avatar.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 202,
-      "hash": "55e4daa7932b574c"
+      "lines": 11,
+      "hash": "6d230dcc839a9208"
     },
     {
       "path": "src/components/shared/ConfirmDialog.test.tsx",
@@ -8368,11 +8368,18 @@
       "hash": "b0d91415c34d1231"
     },
     {
+      "path": "src/ui/components/Drawer.test.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 31,
+      "hash": "ae870d414abf8084"
+    },
+    {
       "path": "src/ui/components/Drawer.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 136,
-      "hash": "b4f0786d2b08e0ad"
+      "lines": 158,
+      "hash": "9efdec2cca6d8112"
     },
     {
       "path": "src/ui/components/EmptyState.test.tsx",
@@ -8938,8 +8945,8 @@
       "path": "src/ui/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 260,
-      "hash": "35312e6dbeb515d6"
+      "lines": 262,
+      "hash": "8d6bc64174f433a7"
     },
     {
       "path": "src/ui/layouts/ModulePageLayout.tsx",
@@ -9124,6 +9131,27 @@
       "hash": "294b5b90bf55b52f"
     },
     {
+      "path": "src/ui/people/Avatar.test.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 44,
+      "hash": "77109bf8f4031167"
+    },
+    {
+      "path": "src/ui/people/Avatar.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 94,
+      "hash": "1b19ddeda1870cf0"
+    },
+    {
+      "path": "src/ui/people/AvatarGroup.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 45,
+      "hash": "beb4576fb4f6cbb7"
+    },
+    {
       "path": "src/ui/primitives/Badge.test.tsx",
       "module": "platform",
       "role": "frontend",
@@ -9260,8 +9288,8 @@
       "path": "src/ui/registry/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 198,
-      "hash": "4821060d8697c0d3"
+      "lines": 200,
+      "hash": "cbe5254765c2ddea"
     },
     {
       "path": "src/ui/registry/navigation.defs.tsx",
@@ -9285,11 +9313,18 @@
       "hash": "27b24d12a26f8985"
     },
     {
+      "path": "src/ui/registry/people-drawer.defs.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 134,
+      "hash": "9142a2400a45f713"
+    },
+    {
       "path": "src/ui/registry/planned.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 145,
-      "hash": "d41bf0dc980a7e7a"
+      "lines": 137,
+      "hash": "f6b87fa53719219d"
     },
     {
       "path": "src/ui/registry/remaining-primitives.defs.tsx",
@@ -131789,112 +131824,6 @@
       ]
     },
     {
-      "name": "AvatarVariant",
-      "kind": "type",
-      "file": "src/components/shared/Avatar.tsx",
-      "line": 26,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "AvatarSize",
-      "kind": "type",
-      "file": "src/components/shared/Avatar.tsx",
-      "line": 27,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "AvatarProps",
-      "kind": "interface",
-      "file": "src/components/shared/Avatar.tsx",
-      "line": 29,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "NAME_TITLES",
-      "kind": "variable",
-      "file": "src/components/shared/Avatar.tsx",
-      "line": 50,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "NAME_SUFFIXES",
-      "kind": "variable",
-      "file": "src/components/shared/Avatar.tsx",
-      "line": 51,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "bareWord",
-      "kind": "function",
-      "file": "src/components/shared/Avatar.tsx",
-      "line": 54,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "getInitials",
-      "kind": "function",
-      "file": "src/components/shared/Avatar.tsx",
-      "line": 58,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "nameToColor",
-      "kind": "function",
-      "file": "src/components/shared/Avatar.tsx",
-      "line": 84,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "isPreloaded",
-      "kind": "function",
-      "file": "src/components/shared/Avatar.tsx",
-      "line": 97,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "Avatar",
-      "kind": "function",
-      "file": "src/components/shared/Avatar.tsx",
-      "line": 107,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
       "name": "ConfirmVariant",
       "kind": "type",
       "file": "src/components/shared/ConfirmDialog.tsx",
@@ -141654,10 +141583,30 @@
       ]
     },
     {
+      "name": "DrawerSide",
+      "kind": "type",
+      "file": "src/ui/components/Drawer.tsx",
+      "line": 30,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DrawerSize",
+      "kind": "type",
+      "file": "src/ui/components/Drawer.tsx",
+      "line": 31,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "DrawerDetail",
       "kind": "interface",
       "file": "src/ui/components/Drawer.tsx",
-      "line": 27,
+      "line": 33,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -141667,7 +141616,7 @@
       "name": "DrawerProps",
       "kind": "interface",
       "file": "src/ui/components/Drawer.tsx",
-      "line": 29,
+      "line": 35,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -141677,31 +141626,7 @@
       "name": "Drawer",
       "kind": "function",
       "file": "src/ui/components/Drawer.tsx",
-      "line": 59,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "HseDrawer",
-      "kind": "variable",
-      "file": "src/ui/components/Drawer.tsx",
-      "line": 134,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "DetailDrawer",
-      "kind": "variable",
-      "file": "src/ui/components/Drawer.tsx",
-      "line": 135,
+      "line": 71,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146862,6 +146787,164 @@
       "tags": []
     },
     {
+      "name": "AvatarVariant",
+      "kind": "type",
+      "file": "src/ui/people/Avatar.tsx",
+      "line": 6,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AvatarNamedSize",
+      "kind": "type",
+      "file": "src/ui/people/Avatar.tsx",
+      "line": 7,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AvatarSize",
+      "kind": "type",
+      "file": "src/ui/people/Avatar.tsx",
+      "line": 8,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AvatarPresence",
+      "kind": "type",
+      "file": "src/ui/people/Avatar.tsx",
+      "line": 9,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AvatarProps",
+      "kind": "interface",
+      "file": "src/ui/people/Avatar.tsx",
+      "line": 11,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NAME_TITLES",
+      "kind": "variable",
+      "file": "src/ui/people/Avatar.tsx",
+      "line": 26,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "NAME_SUFFIXES",
+      "kind": "variable",
+      "file": "src/ui/people/Avatar.tsx",
+      "line": 27,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "bareWord",
+      "kind": "function",
+      "file": "src/ui/people/Avatar.tsx",
+      "line": 29,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "avatarInitials",
+      "kind": "function",
+      "file": "src/ui/people/Avatar.tsx",
+      "line": 33,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "paletteIndex",
+      "kind": "function",
+      "file": "src/ui/people/Avatar.tsx",
+      "line": 43,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "isPreloaded",
+      "kind": "function",
+      "file": "src/ui/people/Avatar.tsx",
+      "line": 49,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Avatar",
+      "kind": "function",
+      "file": "src/ui/people/Avatar.tsx",
+      "line": 53,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "AvatarGroupPerson",
+      "kind": "interface",
+      "file": "src/ui/people/AvatarGroup.tsx",
+      "line": 5,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AvatarGroupProps",
+      "kind": "interface",
+      "file": "src/ui/people/AvatarGroup.tsx",
+      "line": 12,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AvatarGroup",
+      "kind": "function",
+      "file": "src/ui/people/AvatarGroup.tsx",
+      "line": 21,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "OPTIONS",
       "kind": "variable",
       "file": "src/ui/primitives/actions.test.tsx",
@@ -148287,7 +148370,7 @@
       "name": "COMPONENT_DEFS",
       "kind": "array",
       "file": "src/ui/registry/index.ts",
-      "line": 55,
+      "line": 56,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148297,7 +148380,7 @@
       "name": "CATEGORY_LABELS",
       "kind": "object",
       "file": "src/ui/registry/index.ts",
-      "line": 69,
+      "line": 71,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148307,7 +148390,7 @@
       "name": "CATEGORY_ORDER",
       "kind": "array",
       "file": "src/ui/registry/index.ts",
-      "line": 85,
+      "line": 87,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148317,7 +148400,7 @@
       "name": "CatalogueNode",
       "kind": "type",
       "file": "src/ui/registry/index.ts",
-      "line": 95,
+      "line": 97,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148327,7 +148410,7 @@
       "name": "CategoryGroup",
       "kind": "interface",
       "file": "src/ui/registry/index.ts",
-      "line": 99,
+      "line": 101,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148337,7 +148420,7 @@
       "name": "componentsByCategory",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 120,
+      "line": 122,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148347,7 +148430,7 @@
       "name": "findComponent",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 154,
+      "line": 156,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148357,7 +148440,7 @@
       "name": "RegistryTotals",
       "kind": "interface",
       "file": "src/ui/registry/index.ts",
-      "line": 158,
+      "line": 160,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148367,7 +148450,7 @@
       "name": "registryTotals",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 184,
+      "line": 186,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148377,7 +148460,7 @@
       "name": "isPattern",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 185,
+      "line": 187,
       "module": "platform",
       "exported": false,
       "container": "registryTotals",
@@ -148566,6 +148649,98 @@
       "tags": []
     },
     {
+      "name": "s",
+      "kind": "function",
+      "file": "src/ui/registry/people-drawer.defs.tsx",
+      "line": 10,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "b",
+      "kind": "function",
+      "file": "src/ui/registry/people-drawer.defs.tsx",
+      "line": 11,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "n",
+      "kind": "function",
+      "file": "src/ui/registry/people-drawer.defs.tsx",
+      "line": 12,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PEOPLE",
+      "kind": "array",
+      "file": "src/ui/registry/people-drawer.defs.tsx",
+      "line": 14,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DrawerPreview",
+      "kind": "function",
+      "file": "src/ui/registry/people-drawer.defs.tsx",
+      "line": 22,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "avatarDef",
+      "kind": "object",
+      "file": "src/ui/registry/people-drawer.defs.tsx",
+      "line": 50,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "avatarGroupDef",
+      "kind": "object",
+      "file": "src/ui/registry/people-drawer.defs.tsx",
+      "line": 79,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "drawerDef",
+      "kind": "object",
+      "file": "src/ui/registry/people-drawer.defs.tsx",
+      "line": 101,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PEOPLE_DRAWER_DEFS",
+      "kind": "array",
+      "file": "src/ui/registry/people-drawer.defs.tsx",
+      "line": 132,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "Planned",
       "kind": "interface",
       "file": "src/ui/registry/planned.ts",
@@ -148589,7 +148764,7 @@
       "name": "PLANNED_DEFS",
       "kind": "variable",
       "file": "src/ui/registry/planned.ts",
-      "line": 131,
+      "line": 123,
       "module": "platform",
       "exported": true,
       "container": "",

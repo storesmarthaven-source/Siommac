@@ -45,16 +45,8 @@ const PLANNED: Planned[] = [
   /* ── Forms ──────────────────────────────────────────────────────────────*/
   /* ── Selection ──────────────────────────────────────────────────────────*/
   /* ── People ─────────────────────────────────────────────────────────────*/
-  { id: 'avatar-group', name: 'AvatarGroup', category: 'people',
-    description: 'RECONCILED 2026-08-12 — BLOCKED behind Avatar itself. Five Avatar implementations exist (HR/shared, messenger, TicketCenter, shared/Avatar, PersonSearchSelect) and only one is in @ui. Building AvatarGroup first would wrap an unconsolidated primitive and lock the duplication in. Consolidate Avatar, then this is a small wrapper. Overlapping avatars with a +N overflow.',
-    plannedApi: `<AvatarGroup people={crew} max={4} />` },
 
   /* ── Overlays ───────────────────────────────────────────────────────────*/
-  { id: 'drawer', name: 'Drawer', category: 'overlays',
-    description: 'ONE side panel. Three overlapping exports exist today (Drawer / HseDrawer / DetailDrawer); they become one `side` + `size` API.',
-    plannedApi: `<Drawer open={o} side="right" size="lg" onClose={close}>…</Drawer>`,
-    deprecatedImports: ['HseDrawer', 'DetailDrawer'],
-    replaces: ['.ui-rdrawer'] },
   /* ── Data ───────────────────────────────────────────────────────────────*/
   /* ── Navigation ─────────────────────────────────────────────────────────*/
   /* PageActionBar moved OUT when it was built — see page-header.def.tsx. */

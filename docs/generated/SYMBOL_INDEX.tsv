@@ -11573,16 +11573,6 @@ ROLE_RANK	object	security	false		src/components/shared/AuthGate.tsx	69
 roleAtLeast	function	security	false		src/components/shared/AuthGate.tsx	81	
 AuthGate	function	security	true	component	src/components/shared/AuthGate.tsx	93	
 bg	function	platform	false	test	src/components/shared/Avatar.test.tsx	62	
-AvatarVariant	type	platform	true		src/components/shared/Avatar.tsx	26	
-AvatarSize	type	platform	true		src/components/shared/Avatar.tsx	27	
-AvatarProps	interface	platform	true		src/components/shared/Avatar.tsx	29	
-NAME_TITLES	variable	platform	false	component	src/components/shared/Avatar.tsx	50	
-NAME_SUFFIXES	variable	platform	false	component	src/components/shared/Avatar.tsx	51	
-bareWord	function	platform	false		src/components/shared/Avatar.tsx	54	
-getInitials	function	platform	false		src/components/shared/Avatar.tsx	58	
-nameToColor	function	platform	false		src/components/shared/Avatar.tsx	84	
-isPreloaded	function	platform	false		src/components/shared/Avatar.tsx	97	
-Avatar	function	platform	true	component	src/components/shared/Avatar.tsx	107	
 ConfirmVariant	type	platform	true		src/components/shared/ConfirmDialog.tsx	35	
 ConfirmDialogProps	interface	platform	true		src/components/shared/ConfirmDialog.tsx	37	
 VARIANT_ICON	object	platform	false		src/components/shared/ConfirmDialog.tsx	52	
@@ -12538,11 +12528,11 @@ Sparkline	function	platform	true	component	src/ui/charts/Sparkline.tsx	18
 DetailItem	interface	platform	true		src/ui/components/DetailGrid.tsx	21	
 DetailGridProps	interface	platform	true		src/ui/components/DetailGrid.tsx	28	
 DetailGrid	function	platform	true	component	src/ui/components/DetailGrid.tsx	40	
-DrawerDetail	interface	platform	true		src/ui/components/Drawer.tsx	27	
-DrawerProps	interface	platform	true		src/ui/components/Drawer.tsx	29	
-Drawer	function	platform	true	component	src/ui/components/Drawer.tsx	59	
-HseDrawer	variable	platform	true	component	src/ui/components/Drawer.tsx	134	
-DetailDrawer	variable	platform	true	component	src/ui/components/Drawer.tsx	135	
+DrawerSide	type	platform	true		src/ui/components/Drawer.tsx	30	
+DrawerSize	type	platform	true		src/ui/components/Drawer.tsx	31	
+DrawerDetail	interface	platform	true		src/ui/components/Drawer.tsx	33	
+DrawerProps	interface	platform	true		src/ui/components/Drawer.tsx	35	
+Drawer	function	platform	true	component	src/ui/components/Drawer.tsx	71	
 EmptyTone	type	platform	true		src/ui/components/EmptyState.tsx	10	
 EmptyStateSize	type	platform	true		src/ui/components/EmptyState.tsx	11	
 EmptyStateProps	interface	platform	true		src/ui/components/EmptyState.tsx	13	
@@ -13012,6 +13002,21 @@ Tooltip	function	platform	true	component	src/ui/overlays/Tooltip.tsx	32
 clearTimers	function	platform	false		src/ui/overlays/Tooltip.tsx	43	Tooltip
 show	function	platform	false		src/ui/overlays/Tooltip.tsx	52	Tooltip
 hide	function	platform	false		src/ui/overlays/Tooltip.tsx	60	Tooltip
+AvatarVariant	type	platform	true		src/ui/people/Avatar.tsx	6	
+AvatarNamedSize	type	platform	true		src/ui/people/Avatar.tsx	7	
+AvatarSize	type	platform	true		src/ui/people/Avatar.tsx	8	
+AvatarPresence	type	platform	true		src/ui/people/Avatar.tsx	9	
+AvatarProps	interface	platform	true		src/ui/people/Avatar.tsx	11	
+NAME_TITLES	variable	platform	false	component	src/ui/people/Avatar.tsx	26	
+NAME_SUFFIXES	variable	platform	false	component	src/ui/people/Avatar.tsx	27	
+bareWord	function	platform	false		src/ui/people/Avatar.tsx	29	
+avatarInitials	function	platform	true		src/ui/people/Avatar.tsx	33	
+paletteIndex	function	platform	false		src/ui/people/Avatar.tsx	43	
+isPreloaded	function	platform	false		src/ui/people/Avatar.tsx	49	
+Avatar	function	platform	true	component	src/ui/people/Avatar.tsx	53	
+AvatarGroupPerson	interface	platform	true		src/ui/people/AvatarGroup.tsx	5	
+AvatarGroupProps	interface	platform	true		src/ui/people/AvatarGroup.tsx	12	
+AvatarGroup	function	platform	true	component	src/ui/people/AvatarGroup.tsx	21	
 OPTIONS	variable	platform	false	component,test	src/ui/primitives/actions.test.tsx	15	
 MENU	array	platform	false	test	src/ui/primitives/actions.test.tsx	21	
 open	function	platform	false	test	src/ui/primitives/actions.test.tsx	71	
@@ -13148,16 +13153,16 @@ GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	661
 selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	679	
 search	function	platform	false		src/ui/registry/forms.defs.tsx	782	selectDef
 FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	813	
-COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	55	
-CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	69	
-CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	85	
-CatalogueNode	type	platform	true		src/ui/registry/index.ts	95	
-CategoryGroup	interface	platform	true		src/ui/registry/index.ts	99	
-componentsByCategory	function	platform	true		src/ui/registry/index.ts	120	
-findComponent	function	platform	true		src/ui/registry/index.ts	154	
-RegistryTotals	interface	platform	true		src/ui/registry/index.ts	158	
-registryTotals	function	platform	true		src/ui/registry/index.ts	184	
-isPattern	function	platform	false		src/ui/registry/index.ts	185	registryTotals
+COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	56	
+CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	71	
+CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	87	
+CatalogueNode	type	platform	true		src/ui/registry/index.ts	97	
+CategoryGroup	interface	platform	true		src/ui/registry/index.ts	101	
+componentsByCategory	function	platform	true		src/ui/registry/index.ts	122	
+findComponent	function	platform	true		src/ui/registry/index.ts	156	
+RegistryTotals	interface	platform	true		src/ui/registry/index.ts	160	
+registryTotals	function	platform	true		src/ui/registry/index.ts	186	
+isPattern	function	platform	false		src/ui/registry/index.ts	187	registryTotals
 s	function	platform	false		src/ui/registry/navigation.defs.tsx	24	
 b	function	platform	false		src/ui/registry/navigation.defs.tsx	25	
 noop	function	platform	false		src/ui/registry/navigation.defs.tsx	26	
@@ -13176,9 +13181,18 @@ noop	function	platform	false		src/ui/registry/page-header.def.tsx	8
 previewActions	variable	platform	false		src/ui/registry/page-header.def.tsx	10	
 pageHeaderDef	object	platform	true		src/ui/registry/page-header.def.tsx	19	
 pageActionBarDef	object	platform	true		src/ui/registry/page-header.def.tsx	70	
+s	function	platform	false		src/ui/registry/people-drawer.defs.tsx	10	
+b	function	platform	false		src/ui/registry/people-drawer.defs.tsx	11	
+n	function	platform	false		src/ui/registry/people-drawer.defs.tsx	12	
+PEOPLE	array	platform	false		src/ui/registry/people-drawer.defs.tsx	14	
+DrawerPreview	function	platform	false	component	src/ui/registry/people-drawer.defs.tsx	22	
+avatarDef	object	platform	true		src/ui/registry/people-drawer.defs.tsx	50	
+avatarGroupDef	object	platform	true		src/ui/registry/people-drawer.defs.tsx	79	
+drawerDef	object	platform	true		src/ui/registry/people-drawer.defs.tsx	101	
+PEOPLE_DRAWER_DEFS	array	platform	true		src/ui/registry/people-drawer.defs.tsx	132	
 Planned	interface	platform	false		src/ui/registry/planned.ts	33	
 PLANNED	array	platform	false		src/ui/registry/planned.ts	44	
-PLANNED_DEFS	variable	platform	true		src/ui/registry/planned.ts	131	
+PLANNED_DEFS	variable	platform	true		src/ui/registry/planned.ts	123	
 s	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	9	
 b	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	10	
 n	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	11	

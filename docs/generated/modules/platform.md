@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `4e2643eb882e345e2ee500e2`
+Source fingerprint: `7d0c2fd06ed66a8b939d6dc1`
 
-Files: 432 | Symbols: 3795 | Widgets: 17 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
+Files: 437 | Symbols: 3809 | Widgets: 17 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -210,7 +210,6 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useRejectGrant` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:315` | `-` |
 | `useCancelGrant` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:339` | `-` |
 | `AccountPill` | function / component | `src/components/shared/AccountPill.tsx:93` | `-` |
-| `Avatar` | function / component | `src/components/shared/Avatar.tsx:107` | `-` |
 | `ConfirmDialog` | function / component | `src/components/shared/ConfirmDialog.tsx:72` | `-` |
 | `ErrorBoundary` | class / component | `src/components/shared/ErrorBoundary.tsx:65` | `-` |
 | `Modal` | function / component | `src/components/shared/Modal.tsx:110` | `-` |
@@ -238,9 +237,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `ProgressBar` | function / component | `src/ui/charts/ProgressBar.tsx:17` | `-` |
 | `Sparkline` | function / component | `src/ui/charts/Sparkline.tsx:18` | `-` |
 | `DetailGrid` | function / component | `src/ui/components/DetailGrid.tsx:40` | `-` |
-| `Drawer` | function / component | `src/ui/components/Drawer.tsx:59` | `-` |
-| `HseDrawer` | variable / component | `src/ui/components/Drawer.tsx:134` | `-` |
-| `DetailDrawer` | variable / component | `src/ui/components/Drawer.tsx:135` | `-` |
+| `Drawer` | function / component | `src/ui/components/Drawer.tsx:71` | `-` |
 | `EmptyState` | function / component | `src/ui/components/EmptyState.tsx:29` | `-` |
 | `EntityHead` | function / component | `src/ui/components/EntityHead.tsx:29` | `-` |
 | `PanelStats` | function / component | `src/ui/components/EntityHead.tsx:61` | `-` |
@@ -307,7 +304,10 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `Wizard` | function / component | `src/ui/components/Wizard.tsx:44` | `-` |
 | `WizardShell` | function / component | `src/ui/components/WizardShell.tsx:44` | `-` |
 | `Accordion` | function / component | `src/ui/containers/Accordion.tsx:26` | `-` |
-| ... | 110 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| `CardVariant` | type / ui-tile | `src/ui/containers/Card/Card.tsx:47` | `-` |
+| `CardTone` | type / ui-tile | `src/ui/containers/Card/Card.tsx:48` | `-` |
+| `CardAccent` | type / ui-tile | `src/ui/containers/Card/Card.tsx:49` | `-` |
+| ... | 109 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 

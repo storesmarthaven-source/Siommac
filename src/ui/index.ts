@@ -127,6 +127,8 @@ export {
 export { Select, type SelectProps } from './forms/Select';
 export { Combobox, type ComboboxProps } from './forms/Combobox';
 export { PersonSearchSelect, type PersonOption, type PersonSearchSelectProps } from './forms/PersonSearchSelect';
+export { Avatar, avatarInitials, type AvatarProps, type AvatarVariant, type AvatarSize, type AvatarNamedSize, type AvatarPresence } from './people/Avatar';
+export { AvatarGroup, type AvatarGroupProps, type AvatarGroupPerson } from './people/AvatarGroup';
 export { MultiSelect, type MultiSelectProps } from './forms/MultiSelect';
 
 // ── Choice controls (canonical, v2) ──
@@ -238,7 +240,7 @@ export { Modal, HseModal, ModalSection, type ModalProps } from './components/Mod
  *  is composed as <Dialog><Wizard /></Dialog>. Deleted as consumers move. */
 export { Wizard as LegacyWizard, type WizardProps as LegacyWizardProps } from './components/Wizard';
 export { WizardShell, type WizardShellProps, type WizardStepDef, type WizardInfoPanel, type WizardInfoRow } from './components/WizardShell';
-export { Drawer, HseDrawer, DetailDrawer, type DrawerProps, type DrawerDetail } from './components/Drawer';
+export { Drawer, type DrawerProps, type DrawerDetail, type DrawerSide, type DrawerSize } from './components/Drawer';
 export { DetailGrid, type DetailGridProps, type DetailItem } from './components/DetailGrid';
 export { SidePanel, type SidePanelProps, type SidePanelSection } from './components/SidePanel';
 

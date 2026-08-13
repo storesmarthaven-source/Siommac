@@ -1,0 +1,9 @@
+@layer recipes {
+  :root,
+  [data-ui-preview-scope] {
+    --ui-drawer-width-sm: 360px;
+    --ui-drawer-width-md: 480px;
+    --ui-drawer-width-lg: 640px;
+    --ui-drawer-width-xl: 800px;
+  }
+}

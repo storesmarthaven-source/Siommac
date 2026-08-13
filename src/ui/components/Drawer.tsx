@@ -22,7 +22,13 @@
 
 import { type VNode, type ComponentChildren } from 'preact';
 import { createPortal } from 'preact/compat';
+import { useId } from 'preact/hooks';
 import { useOverlayA11y } from '../lib/useOverlayA11y';
+import { usePortalRoot } from '../overlays/portalRoot';
+import './Drawer.recipe.css';
+
+export type DrawerSide = 'left' | 'right';
+export type DrawerSize = 'sm' | 'md' | 'lg' | 'xl';
 
 export interface DrawerDetail { label: string; value: VNode | string; }
 
@@ -53,13 +59,26 @@ export interface DrawerProps {
    *  the (portaled) panel so it reads `--surface-*` tokens — light by default, dark
    *  under `body[data-theme="dark"]`. The panel must consume the tokens to adapt. */
   adaptive?: boolean;
+  /** Viewport edge the panel enters from. */
+  side?: DrawerSide;
+  /** Canonical width scale. Omit to preserve a domain composition's existing width. */
+  size?: DrawerSize;
+  /** Backdrop dismissal is on by default. */
+  closeOnBackdrop?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- createPortal() returns VNode<any>
-export function Drawer({ open, title, sub, subtitle, details, children, onClose, foot, footer, noFooter, headActions, rich, panelClass, adaptive }: DrawerProps): VNode<any> {
+export function Drawer({ open, title, sub, subtitle, details, children, onClose, foot, footer, noFooter, headActions, rich, panelClass, adaptive, side = 'right', size, closeOnBackdrop = true }: DrawerProps): VNode<any> {
   const themeScope = adaptive ? 'adaptive' : undefined;
   const subText = sub ?? subtitle;
   const panelRef = useOverlayA11y(open, onClose);
+  const portalRoot = usePortalRoot();
+  const uid = useId();
+  const titleId = `ui-drawer-title-${uid}`;
+  const sideStyle = [
+    size ? `width:min(var(--ui-drawer-width-${size}),100vw)` : '',
+    side === 'left' ? `left:0;right:auto;transform:translateX(${open ? '0' : '-100%'})` : '',
+  ].filter(Boolean).join(';');
 
   if (rich) {
     // v36 rich entity panel: portal to <body>. A transparent backdrop (no dimming) sits
@@ -69,16 +88,19 @@ export function Drawer({ open, title, sub, subtitle, details, children, onClose,
     const richFoot = noFooter ? null : (foot ?? footer ?? null);
     return createPortal(
       <>
-        <div class={`ui-rdrawer-backdrop${open ? ' open' : ''}`} onClick={onClose} aria-hidden="true" data-theme-scope={themeScope} />
+        <div class={`ui-rdrawer-backdrop${open ? ' open' : ''}`} onClick={closeOnBackdrop ? onClose : undefined} aria-hidden="true" data-theme-scope={themeScope} />
         <aside
           ref={panelRef}
-          class={`ui-rdrawer${panelClass ? ' ' + panelClass : ''}${open ? ' open' : ''}`}
-          role="dialog" aria-modal="true" aria-hidden={!open}
+          class={`ui-drawer ui-rdrawer${panelClass ? ' ' + panelClass : ''}${open ? ' open' : ''}`}
+          role="dialog" aria-modal="true" aria-hidden={!open} aria-labelledby={titleId}
           data-theme-scope={themeScope}
+          data-side={side}
+          data-size={size}
+          style={sideStyle}
         >
           <div class="ui-rdrawer-top">
             <div>
-              <div class="ui-rdrawer-title">{title}</div>
+              <div class="ui-rdrawer-title" id={titleId}>{title}</div>
               {subText && <div class="ui-rdrawer-sub">{subText}</div>}
             </div>
             <div class="ui-rdrawer-icons">
@@ -90,7 +112,7 @@ export function Drawer({ open, title, sub, subtitle, details, children, onClose,
           {richFoot && <div class="ui-rdrawer-foot">{richFoot}</div>}
         </aside>
       </>,
-      document.body,
+      portalRoot,
     );
   }
 
@@ -100,16 +122,20 @@ export function Drawer({ open, title, sub, subtitle, details, children, onClose,
   // (e.g. `.hse-dash { container-type: inline-size }`, or any `transform`).
   return createPortal(
     <>
-      <div class={`hse-drawer-backdrop${open ? ' show' : ''}`} onClick={onClose} />
+      <div class={`hse-drawer-backdrop${open ? ' show' : ''}`} onClick={closeOnBackdrop ? onClose : undefined} aria-hidden="true" />
       <aside
         ref={panelRef}
-        class={`hse-drawer${panelClass ? ' ' + panelClass : ''}${open ? ' show' : ''}`}
+        class={`ui-drawer hse-drawer${panelClass ? ' ' + panelClass : ''}${open ? ' show' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-hidden={!open}
+        aria-labelledby={titleId}
+        data-side={side}
+        data-size={size}
+        style={sideStyle}
       >
         <div class="hse-drawer-head">
-          <div><h3>{title}</h3>{subText && <p>{subText}</p>}</div>
+          <div><h3 id={titleId}>{title}</h3>{subText && <p>{subText}</p>}</div>
           <div class="ui-drawer-head-actions">
             {headActions}
             <button class="hse-icon-btn" onClick={onClose} aria-label="Close"><i class="fas fa-xmark" /></button>
@@ -126,10 +152,6 @@ export function Drawer({ open, title, sub, subtitle, details, children, onClose,
         {footContent && <div class="hse-drawer-foot">{footContent}</div>}
       </aside>
     </>,
-    document.body,
+    portalRoot,
   );
 }
-
-/** Legacy aliases used by HSE pages during migration. */
-export const HseDrawer = Drawer;
-export const DetailDrawer = Drawer;

@@ -1,0 +1,58 @@
+@layer recipes {
+  :root,
+  [data-ui-preview-scope] {
+    --ui-avatar-xs: 24px;
+    --ui-avatar-sm: 30px;
+    --ui-avatar-md: 40px;
+    --ui-avatar-lg: 52px;
+    --ui-avatar-xl: 72px;
+    --ui-avatar-ring: var(--ui-color-surface-raised);
+    --ui-avatar-overflow-bg: var(--ui-color-surface-subtle);
+    --ui-avatar-overflow-fg: var(--ui-color-text-secondary);
+    --ui-avatar-group-overlap: -10px;
+    --ui-avatar-palette-1: var(--siomac-navy);
+    --ui-avatar-palette-2: var(--ui-color-success);
+    --ui-avatar-palette-3: #6a3ea1;
+    --ui-avatar-palette-4: var(--siomac-red);
+    --ui-avatar-palette-5: #00695c;
+    --ui-avatar-palette-6: #a54b12;
+    --ui-avatar-palette-7: #5143a8;
+    --ui-avatar-palette-8: #08798c;
+  }
+  .ui-avatar { position: relative; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; overflow: visible; box-sizing: border-box; background: var(--ui-avatar-color); color: var(--ui-color-text-inverse); font-family: inherit; font-size: 0.78rem; font-weight: var(--font-weight-semibold); line-height: 1; user-select: none; }
+  .ui-avatar--xs { width: var(--ui-avatar-xs); height: var(--ui-avatar-xs); font-size: 0.62rem; }
+  .ui-avatar--sm { width: var(--ui-avatar-sm); height: var(--ui-avatar-sm); font-size: 0.68rem; }
+  .ui-avatar--md { width: var(--ui-avatar-md); height: var(--ui-avatar-md); }
+  .ui-avatar--lg { width: var(--ui-avatar-lg); height: var(--ui-avatar-lg); font-size: 0.9rem; }
+  .ui-avatar--xl { width: var(--ui-avatar-xl); height: var(--ui-avatar-xl); font-size: 1.15rem; }
+  .ui-avatar--circle { border-radius: 50%; }
+  .ui-avatar--square { border-radius: var(--radius-sm); }
+  .ui-avatar[data-palette='1'] { --ui-avatar-color: var(--ui-avatar-palette-1); }
+  .ui-avatar[data-palette='2'] { --ui-avatar-color: var(--ui-avatar-palette-2); }
+  .ui-avatar[data-palette='3'] { --ui-avatar-color: var(--ui-avatar-palette-3); }
+  .ui-avatar[data-palette='4'] { --ui-avatar-color: var(--ui-avatar-palette-4); }
+  .ui-avatar[data-palette='5'] { --ui-avatar-color: var(--ui-avatar-palette-5); }
+  .ui-avatar[data-palette='6'] { --ui-avatar-color: var(--ui-avatar-palette-6); }
+  .ui-avatar[data-palette='7'] { --ui-avatar-color: var(--ui-avatar-palette-7); }
+  .ui-avatar[data-palette='8'] { --ui-avatar-color: var(--ui-avatar-palette-8); }
+  .ui-avatar > img { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
+  .ui-avatar > img:not([data-preloaded='true']) { animation: ui-avatar-reveal 160ms ease both; }
+  .ui-avatar__initials { display: grid; place-items: center; width: 100%; height: 100%; border-radius: inherit; overflow: hidden; }
+  .ui-avatar__presence { position: absolute; right: -1px; bottom: -1px; width: 24%; min-width: 7px; aspect-ratio: 1; border: 2px solid var(--ui-avatar-ring); border-radius: 50%; background: var(--ui-color-text-muted); }
+  .ui-avatar__presence--online { background: var(--ui-color-success); }
+  .ui-avatar__presence--away { background: var(--ui-color-warning); }
+  .ui-avatar__presence--busy { background: var(--ui-color-danger); }
+
+  .ui-avatar-group { --ui-avatar-group-size: var(--ui-avatar-md); display: flex; align-items: center; margin: 0; padding: 0; list-style: none; }
+  .ui-avatar-group--xs { --ui-avatar-group-size: var(--ui-avatar-xs); }
+  .ui-avatar-group--sm { --ui-avatar-group-size: var(--ui-avatar-sm); }
+  .ui-avatar-group--lg { --ui-avatar-group-size: var(--ui-avatar-lg); }
+  .ui-avatar-group--xl { --ui-avatar-group-size: var(--ui-avatar-xl); }
+  .ui-avatar-group__item { position: relative; display: grid; place-items: center; margin-left: var(--ui-avatar-group-overlap); border: 2px solid var(--ui-avatar-ring); border-radius: 50%; }
+  .ui-avatar-group__item:first-child { margin-left: 0; }
+  .ui-avatar-group__item:hover,
+  .ui-avatar-group__item:focus-within { z-index: 1; }
+  .ui-avatar-group__overflow { align-self: stretch; min-width: var(--ui-avatar-group-size); min-height: var(--ui-avatar-group-size); padding: 0 8px; background: var(--ui-avatar-overflow-bg); color: var(--ui-avatar-overflow-fg); font-size: var(--ui-font-size-caption); font-weight: var(--font-weight-semibold); }
+  @keyframes ui-avatar-reveal { from { opacity: 0; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .ui-avatar > img { animation: none; } }
+}
