@@ -848,14 +848,14 @@ path	module	permission	guards	schema	file	line
 /api/hse/training/requirements/delete	hse	hse.training.manage	requirePermission	z.object({ requirementId: z.string().uuid() })	netlify/functions/routes/hseTraining.ts	308
 /api/hse/training/requirements/list	hse	hse.training.view	requirePermission	z.object({ roleName: z.string().optional(), competencyId: z.string().uuid().optional(), activeOnly: z.boolean().default(true) })	netlify/functions/routes/hseTraining.ts	272
 /api/hse/training/stats	hse	hse.training.view	requirePermission		netlify/functions/routes/hseTraining.ts	199
-/api/layout/get	widgets		requireUser		netlify/functions/routes/uiPrefs.ts	151
-/api/layout/getInstanceLayout	widgets		requireUser		netlify/functions/routes/uiPrefs.ts	272
-/api/layout/resetInstanceLayout	widgets	ui.layout.manage	requirePermission		netlify/functions/routes/uiPrefs.ts	324
-/api/layout/resetOverride	widgets		requireUser		netlify/functions/routes/uiPrefs.ts	198
-/api/layout/saveDefault	widgets		requireRole		netlify/functions/routes/uiPrefs.ts	166
-/api/layout/saveInstanceLayout	widgets	ui.layout.manage	requirePermission		netlify/functions/routes/uiPrefs.ts	290
-/api/layout/saveInstanceLayoutDefault	widgets	ui.layout.default.manage	requirePermission		netlify/functions/routes/uiPrefs.ts	306
-/api/layout/saveOverride	widgets		requireUser		netlify/functions/routes/uiPrefs.ts	183
+/api/layout/get	widgets		requireUser		netlify/functions/routes/uiPrefs.ts	254
+/api/layout/getInstanceLayout	widgets		requireUser		netlify/functions/routes/uiPrefs.ts	375
+/api/layout/resetInstanceLayout	widgets	ui.layout.manage	requirePermission		netlify/functions/routes/uiPrefs.ts	427
+/api/layout/resetOverride	widgets		requireUser		netlify/functions/routes/uiPrefs.ts	301
+/api/layout/saveDefault	widgets		requireRole		netlify/functions/routes/uiPrefs.ts	269
+/api/layout/saveInstanceLayout	widgets	ui.layout.manage	requirePermission		netlify/functions/routes/uiPrefs.ts	393
+/api/layout/saveInstanceLayoutDefault	widgets	ui.layout.default.manage	requirePermission		netlify/functions/routes/uiPrefs.ts	409
+/api/layout/saveOverride	widgets		requireUser		netlify/functions/routes/uiPrefs.ts	286
 /api/listAssignableRoles	hr	employees.edit	requirePermission		netlify/functions/routes/employees.ts	291
 /api/listAttendance	hr		requireRole	ListAttendanceSchema	netlify/functions/routes/attendance.ts	255
 /api/listDailyLog	hr		requireRole	ListDailyLogSchema	netlify/functions/routes/attendance.ts	303
@@ -923,10 +923,15 @@ path	module	permission	guards	schema	file	line
 /api/superadmin/updateRole	platform	roles.manage	requirePermission	UpdateRoleSchema	netlify/functions/routes/superadmin.ts	748
 /api/superadmin/updateRoleCategory	platform	roles.manage	requirePermission	UpdateCategorySchema	netlify/functions/routes/superadmin.ts	836
 /api/suspendAccount	communications	employees.access.suspend	requirePermission	AccountAccessActionSchema	netlify/functions/routes/tickets.ts	1067
-/api/theme/get	widgets				netlify/functions/routes/uiPrefs.ts	65
-/api/theme/save	widgets		requireRole		netlify/functions/routes/uiPrefs.ts	70
-/api/ui-preferences/get	widgets		requireUser		netlify/functions/routes/uiPrefs.ts	97
-/api/ui-preferences/save	widgets		requireUser		netlify/functions/routes/uiPrefs.ts	118
+/api/theme/get	widgets				netlify/functions/routes/uiPrefs.ts	57
+/api/theme/studio/draft/save	widgets		requireRole		netlify/functions/routes/uiPrefs.ts	129
+/api/theme/studio/get	widgets		requireRole		netlify/functions/routes/uiPrefs.ts	113
+/api/theme/studio/history	widgets		requireRole		netlify/functions/routes/uiPrefs.ts	170
+/api/theme/studio/publish	widgets		requireRole		netlify/functions/routes/uiPrefs.ts	153
+/api/theme/studio/rollback	widgets		requireRole		netlify/functions/routes/uiPrefs.ts	178
+/api/theme/studio/validate	widgets		requireRole		netlify/functions/routes/uiPrefs.ts	123
+/api/ui-preferences/get	widgets		requireUser		netlify/functions/routes/uiPrefs.ts	200
+/api/ui-preferences/save	widgets		requireUser		netlify/functions/routes/uiPrefs.ts	221
 /api/updateAccountSupportConfig	communications	tickets.manage	requirePermission	UpdateAccountSupportConfigSchema	netlify/functions/routes/tickets.ts	1436
 /api/updateAccountSupportRequest	communications	tickets.manage	requirePermission	UpdateAccountSupportRequestSchema	netlify/functions/routes/tickets.ts	807
 /api/updateColorScheme	security		requireUser	UpdateColorSchemeSchema	netlify/functions/routes/auth.ts	618

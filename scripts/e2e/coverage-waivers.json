@@ -173,7 +173,6 @@
     "/api/setup2fa",
     "/api/submitLeave",
     "/api/theme/get",
-    "/api/theme/save",
     "/api/updateColorScheme",
     "/api/updateDepartment",
     "/api/updateEmployee",

@@ -1,165 +1,201 @@
-/**
- * src/ui/gallery/galleryStore.ts — draft state for the workbench.
- *
- * Holds the DRAFT recipe/token overrides, separate from the published theme.
- *
- *   Published tokens  ── app_theme ──▶ :root                (every user)
- *   Gallery draft     ── inline    ──▶ [data-ui-preview-scope]  (this tab only)
- *   Apply             ── promotes ───▶ :root + app_theme
- *
- * The previous ThemeEditor wrote every change straight to `:root` and persisted
- * app-wide on save, so dragging a slider re-themed production for everyone. A
- * workbench cannot be a playground under those rules, which is why the draft
- * layer exists before any component was built on it.
- *
- * Drafts survive a reload via localStorage — half an hour of tuning must not be
- * lost to a refresh — but they are never sent anywhere until Apply.
- */
-
+/** Draft state and authenticated control-plane workflow for Design System Studio. */
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import {
   applyScopedOverrides, clearAllScopedOverrides, readScopedTokenValue,
   applyThemeOverrides, cacheTheme, type ThemeOverrides,
 } from '../theme/applyTheme';
+import {
+  configurationToOverrides, emptyDesignSystemConfiguration,
+  type DesignSystemConfigurationV1, type DesignSystemDraft, type DesignSystemRevision,
+  type DesignSystemValidation,
+} from '../../../types/designSystem';
+import {
+  loadDesignSystemStudio, loadDesignSystemHistory, publishDesignSystemDraft,
+  rollbackDesignSystem, saveDesignSystemDraft,
+} from '@api/theme';
 
-const DRAFT_KEY = 'siomac.uikit.draft';
+const RECOVERY_KEY = 'siomac.uikit.draft-recovery';
 
 export interface GalleryDraft {
-  /** Current draft values, keyed by CSS custom property name. */
   values: ThemeOverrides;
-  /** Number of variables changed from published. */
   dirtyCount: number;
-  /** Read a variable as seen INSIDE the preview scope (draft value or inherited). */
   read: (name: string) => string;
   set: (name: string, value: string) => void;
-  /**
-   * Replace a whole GROUP of variables in one update: drop every name in
-   * `owned`, then apply `values`.
-   *
-   * `set()` alone could not express "this generator no longer emits that token".
-   * Regenerating a brand merged the new map over the old one, so a cleared
-   * accent, or any role a newer mapping policy stopped writing, stayed in the
-   * draft forever and kept painting the preview. The generator owns a namespace;
-   * this is how it hands the whole namespace over at once.
-   */
+  link: (name: string, previewValue: string) => void;
   replaceGroup: (owned: readonly string[], values: ThemeOverrides) => void;
   revert: (name: string) => void;
   resetAll: () => void;
-  /** Publish the draft to `:root` + persist app-wide. */
-  publish: () => Promise<void>;
-  /** Ref CALLBACK for the preview scope element. */
+  loading: boolean;
+  saving: boolean;
+  error: string | null;
+  publishedVersion: number;
+  serverDraft: DesignSystemDraft | null;
+  validation: DesignSystemValidation | null;
+  saveDraft: () => Promise<DesignSystemDraft>;
+  publish: (summary?: string) => Promise<void>;
+  history: () => Promise<DesignSystemRevision[]>;
+  rollback: (version: number, summary: string) => Promise<void>;
   attachScope: (el: HTMLElement | null) => void;
   exportJson: () => string;
   exportCss: () => string;
   importJson: (json: string) => { ok: true; count: number } | { ok: false; error: string };
 }
 
-function readStoredDraft(): ThemeOverrides {
-  try {
-    const raw = localStorage.getItem(DRAFT_KEY);
-    return raw ? (JSON.parse(raw) as ThemeOverrides) : {};
-  } catch { return {}; }
+function readRecovery(): ThemeOverrides {
+  try { return JSON.parse(localStorage.getItem(RECOVERY_KEY) ?? '{}') as ThemeOverrides; }
+  catch { return {}; }
 }
 
-function storeDraft(values: ThemeOverrides): void {
-  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(values)); } catch { /* private mode */ }
+function storeRecovery(values: ThemeOverrides): void {
+  try { localStorage.setItem(RECOVERY_KEY, JSON.stringify(values)); } catch { /* browser recovery is best-effort */ }
+}
+
+function cloneConfiguration(value: DesignSystemConfigurationV1): DesignSystemConfigurationV1 {
+  return JSON.parse(JSON.stringify(value)) as DesignSystemConfigurationV1;
 }
 
 export function useGalleryDraft(): GalleryDraft {
-  const [values, setValues] = useState<ThemeOverrides>(readStoredDraft);
-  // The scope lives in STATE, not a ref: `read()` needs it during render to
-  // report the value the user is actually looking at, and a ref's `.current` is
-  // not a render-time value. Holding it in state also re-runs the apply effect
-  // the moment the element mounts.
+  const [values, setValues] = useState<ThemeOverrides>(readRecovery);
   const [scopeEl, setScopeEl] = useState<HTMLElement | null>(null);
+  const [removed, setRemoved] = useState<Set<string>>(() => new Set());
+  const [previewLinks, setPreviewLinks] = useState<ThemeOverrides>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [published, setPublished] = useState<DesignSystemRevision>({
+    version: 0, configuration: emptyDesignSystemConfiguration(), publishedAt: null, publishedBy: null, summary: null,
+  });
+  const [serverDraft, setServerDraft] = useState<DesignSystemDraft | null>(null);
+  const [validation, setValidation] = useState<DesignSystemValidation | null>(null);
 
   const attachScope = useCallback((el: HTMLElement | null) => { setScopeEl(el); }, []);
 
-  // Re-apply the whole draft whenever it changes or the scope element appears.
   useEffect(() => {
     if (!scopeEl) return;
     clearAllScopedOverrides(scopeEl);
     applyScopedOverrides(scopeEl, values);
-  }, [values, scopeEl]);
+    applyScopedOverrides(scopeEl, previewLinks);
+  }, [values, previewLinks, scopeEl]);
+  useEffect(() => { storeRecovery(values); }, [values]);
 
-  useEffect(() => { storeDraft(values); }, [values]);
-
-  const read = useCallback(
-    (name: string) => values[name] ?? readScopedTokenValue(scopeEl, name),
-    [values, scopeEl],
-  );
-
-  const set = useCallback((name: string, value: string) => {
-    setValues(prev => ({ ...prev, [name]: value }));
+  useEffect(() => {
+    void (async () => {
+      try {
+        const state = await loadDesignSystemStudio();
+        setPublished(state.published);
+        setServerDraft(state.draft);
+        setValidation(state.draft?.validation ?? null);
+        if (state.draft) {
+          const base = configurationToOverrides(state.published.configuration);
+          const saved = configurationToOverrides(state.draft.configuration);
+          const delta: ThemeOverrides = {};
+          for (const [name, value] of Object.entries(saved)) if (base[name] !== value) delta[name] = value;
+          setRemoved(new Set(Object.keys(base).filter(name => !(name in saved))));
+          setValues(delta);
+        }
+        setError(null);
+      } catch (reason) {
+        setError(reason instanceof Error ? reason.message : 'Studio persistence is unavailable.');
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
+  const read = useCallback((name: string) => previewLinks[name] ?? values[name] ?? readScopedTokenValue(scopeEl, name), [previewLinks, values, scopeEl]);
+  const set = useCallback((name: string, value: string) => {
+    setRemoved(prev => { const next = new Set(prev); next.delete(name); return next; });
+    setPreviewLinks(prev => { const next = { ...prev }; Reflect.deleteProperty(next, name); return next; });
+    setValues(prev => ({ ...prev, [name]: value }));
+  }, []);
+  const link = useCallback((name: string, previewValue: string) => {
+    setRemoved(prev => new Set(prev).add(name));
+    setValues(prev => { const next = { ...prev }; Reflect.deleteProperty(next, name); return next; });
+    setPreviewLinks(prev => ({ ...prev, [name]: previewValue }));
+  }, []);
   const replaceGroup = useCallback((owned: readonly string[], next: ThemeOverrides) => {
     setValues(prev => {
       const out = { ...prev };
-      // One state update, so the preview never renders a half-swapped brand.
       for (const name of owned) Reflect.deleteProperty(out, name);
       return { ...out, ...next };
     });
   }, []);
-
   const revert = useCallback((name: string) => {
-    setValues(prev => {
-      const next = { ...prev };
-      Reflect.deleteProperty(next, name);
-      return next;
-    });
+    setValues(prev => { const next = { ...prev }; Reflect.deleteProperty(next, name); return next; });
+    setPreviewLinks(prev => { const next = { ...prev }; Reflect.deleteProperty(next, name); return next; });
+    setRemoved(prev => { const next = new Set(prev); next.delete(name); return next; });
   }, []);
+  const resetAll = useCallback(() => { clearAllScopedOverrides(scopeEl); setValues({}); setPreviewLinks({}); setRemoved(new Set()); }, [scopeEl]);
 
-  const resetAll = useCallback(() => {
-    clearAllScopedOverrides(scopeEl);
-    setValues({});
+  const configuration = useCallback((): DesignSystemConfigurationV1 => {
+    const next = cloneConfiguration(published.configuration);
+    for (const name of removed) {
+      Reflect.deleteProperty(next.theme.tokens, name);
+      Reflect.deleteProperty(next.recipes.button.overrides, name);
+    }
+    for (const [name, value] of Object.entries(values)) {
+      if (name.startsWith('--ui-button-') || name.startsWith('--ui-toggle-')) next.recipes.button.overrides[name] = value;
+      else next.theme.tokens[name] = value;
+    }
+    return next;
+  }, [published, removed, values]);
+
+  const saveDraft = useCallback(async (): Promise<DesignSystemDraft> => {
+    if (loading) throw new Error('Studio configuration is still loading.');
+    setSaving(true); setError(null);
+    try {
+      const saved = await saveDesignSystemDraft(configuration(), serverDraft?.revision ?? 0);
+      setServerDraft(saved); setValidation(saved.validation); return saved;
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Draft save failed.'); throw reason;
+    } finally { setSaving(false); }
+  }, [configuration, serverDraft, loading]);
+
+  const publish = useCallback(async (summary = 'Design system update from Studio') => {
+    if (loading) throw new Error('Studio configuration is still loading.');
+    setSaving(true); setError(null);
+    try {
+      const saved = await saveDesignSystemDraft(configuration(), serverDraft?.revision ?? 0);
+      const next = await publishDesignSystemDraft(saved.id, saved.revision, summary);
+      setPublished(next); setServerDraft(null); setValidation(null);
+      const runtime = configurationToOverrides(next.configuration);
+      applyThemeOverrides(runtime); cacheTheme(runtime); clearAllScopedOverrides(scopeEl); setValues({}); setPreviewLinks({}); setRemoved(new Set());
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Publish failed.'); throw reason;
+    } finally { setSaving(false); }
+  }, [configuration, serverDraft, scopeEl, loading]);
+
+  const history = useCallback(async () => {
+    return loadDesignSystemHistory();
+  }, []);
+  const rollback = useCallback(async (version: number, summary: string) => {
+    setSaving(true); setError(null);
+    try {
+      const next = await rollbackDesignSystem(version, summary);
+      setPublished(next); setServerDraft(null); setValidation(null); setValues({}); setPreviewLinks({}); setRemoved(new Set());
+      const runtime = configurationToOverrides(next.configuration);
+      applyThemeOverrides(runtime); cacheTheme(runtime); clearAllScopedOverrides(scopeEl);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Rollback failed.'); throw reason;
+    } finally { setSaving(false); }
   }, [scopeEl]);
 
-  const publish = useCallback(async () => {
-    // Promote draft → published. The import is dynamic so the workbench does not
-    // pull the theme API into every bundle that touches @ui.
-    const { saveThemeTokens } = await import('@api/theme');
-    const { loadThemeTokens } = await import('@api/theme');
-    const existing = (await loadThemeTokens()) ?? {};
-    const merged = { ...existing, ...values };
-    await saveThemeTokens(merged);
-    applyThemeOverrides(merged);
-    cacheTheme(merged);
-    // The draft is now the published value; clearing it keeps "dirty" honest.
-    clearAllScopedOverrides(scopeEl);
-    setValues({});
-  }, [values, scopeEl]);
-
-  const exportJson = useCallback(() => JSON.stringify(values, null, 2), [values]);
-
-  const exportCss = useCallback(() => {
-    const body = Object.entries(values).map(([k, v]) => `  ${k}: ${v};`).join('\n');
-    return `:root {\n${body}\n}`;
-  }, [values]);
-
+  const exportJson = useCallback(() => JSON.stringify(configuration(), null, 2), [configuration]);
+  const exportCss = useCallback(() => `:root {\n${Object.entries(values).map(([k, v]) => `  ${k}: ${v};`).join('\n')}\n}`, [values]);
   const importJson = useCallback((json: string) => {
     try {
       const parsed = JSON.parse(json) as unknown;
-      if (typeof parsed !== 'object' || parsed === null) return { ok: false as const, error: 'Expected a JSON object.' };
+      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return { ok: false as const, error: 'Expected a JSON object.' };
       const clean: ThemeOverrides = {};
-      for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
-        // Only custom properties. Anything else would be silently ignored later,
-        // which reads to the user as a successful import that did nothing.
-        if (k.startsWith('--') && typeof v === 'string') clean[k] = v;
-      }
-      if (Object.keys(clean).length === 0) return { ok: false as const, error: 'No CSS custom properties found.' };
-      setValues(clean);
-      return { ok: true as const, count: Object.keys(clean).length };
-    } catch {
-      return { ok: false as const, error: 'Invalid JSON.' };
-    }
+      for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) if (k.startsWith('--') && typeof v === 'string') clean[k] = v;
+      if (!Object.keys(clean).length) return { ok: false as const, error: 'No CSS custom properties found.' };
+      setValues(clean); return { ok: true as const, count: Object.keys(clean).length };
+    } catch { return { ok: false as const, error: 'Invalid JSON.' }; }
   }, []);
 
   return {
-    values,
-    dirtyCount: Object.keys(values).length,
-    read, set, replaceGroup, revert, resetAll, publish,
-    attachScope,
-    exportJson, exportCss, importJson,
+    values, dirtyCount: Object.keys(values).length + removed.size, read, set, link, replaceGroup, revert, resetAll,
+    loading, saving, error, publishedVersion: published.version, serverDraft, validation,
+    saveDraft, publish, history, rollback, attachScope, exportJson, exportCss, importJson,
   };
 }

@@ -3,7 +3,7 @@
  *
  * UI personalisation endpoints:
  *   POST /api/theme/get            — read the global design-system token overrides (public)
- *   POST /api/theme/save           — write them (admin/superadmin); audited + event
+ *   POST /api/theme/studio/*       — authenticated draft, validation, publish, history and rollback
  *   POST /api/layout/get           — read a page's card order (org default + this user's override)
  *   POST /api/layout/saveDefault   — set the org-wide default order (admin)
  *   POST /api/layout/saveOverride  — set the calling user's personal order
@@ -18,9 +18,12 @@ import { Hono } from 'hono';
 import type { Context } from 'hono';
 import { sb } from '../lib/db';
 import { requireUser, requireRole, requirePermission, log_ } from '../lib/auth';
-import { emitAppEvent } from '../lib/appEvents';
 import type { HonoVariables } from '../../../types/api';
 import { isKnownUiPreferenceKey, sanitizeUiPreference } from '../../../types/uiPreferences';
+import {
+  emptyDesignSystemConfiguration, sanitizeDesignSystemConfiguration,
+  type DesignSystemConfigurationV1,
+} from '../../../types/designSystem';
 
 type Ctx = Context<{ Variables: HonoVariables }>;
 
@@ -35,17 +38,6 @@ function getArgs(c: Ctx): Record<string, unknown> {
 // fails the downstream key/pageKey validation exactly as an empty value would.
 function strArg(v: unknown): string {
   return typeof v === 'string' ? v : '';
-}
-
-function cleanTokens(v: unknown): Record<string, string> | null {
-  if (typeof v !== 'object' || v === null || Array.isArray(v)) return null;
-  const out: Record<string, string> = {};
-  for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
-    if (typeof k === 'string' && k.startsWith('--') && k.length <= 64 && typeof val === 'string') {
-      out[k] = val.slice(0, 120);
-    }
-  }
-  return out;
 }
 
 function cleanOrder(v: unknown): string[] | null {
@@ -63,28 +55,139 @@ interface UiPreferenceEnvelope {
 // ── Theme ───────────────────────────────────────────────────────────────────────
 
 router.post('/theme/get', async c => {
-  const { data } = await sb.from('app_theme').select('tokens').eq('scope', 'global').maybeSingle<{ tokens: Record<string, unknown> }>();
+  const { data, error } = await sb.from('app_theme').select('tokens').eq('scope', 'global').maybeSingle<{ tokens: Record<string, unknown> }>();
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
   return c.json({ success: true, data: { tokens: (data?.tokens ?? {}) } });
 });
 
-router.post('/theme/save', async c => {
+function intArg(value: unknown): number | null {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0 ? value : null;
+}
+
+interface ThemeRootRow {
+  configuration: DesignSystemConfigurationV1;
+  version: number;
+  updated_at: string | null;
+  updated_by: string | null;
+}
+
+interface ThemeDraftRow {
+  id: string;
+  base_version: number;
+  revision: number;
+  status: 'draft' | 'published' | 'superseded';
+  configuration: DesignSystemConfigurationV1;
+  validation: unknown;
+  updated_at: string;
+  updated_by: string;
+}
+
+interface ThemeVersionRow {
+  version: number;
+  configuration: DesignSystemConfigurationV1;
+  summary: string | null;
+  published_by: string;
+  published_at: string;
+}
+
+function publishedEnvelope(row: ThemeRootRow | null | undefined) {
+  return {
+    version: row?.version ?? 0,
+    configuration: row?.configuration ?? emptyDesignSystemConfiguration(),
+    publishedAt: row?.updated_at ?? null,
+    publishedBy: row?.updated_by ?? null,
+    summary: null,
+  };
+}
+
+function draftEnvelope(row: ThemeDraftRow) {
+  return {
+    id: row.id, baseVersion: row.base_version, revision: row.revision,
+    status: row.status, configuration: row.configuration,
+    validation: row.validation,
+    updatedAt: row.updated_at, updatedBy: row.updated_by,
+  };
+}
+
+/** Authenticated Studio state. The public /theme/get endpoint exposes runtime tokens only. */
+router.post('/theme/studio/get', async c => {
+  await requireRole(c, ['admin']);
+  const [{ data: published, error: themeError }, { data: draft, error: draftError }] = await Promise.all([
+    sb.from('app_theme').select('configuration,version,updated_at,updated_by').eq('scope', 'global').maybeSingle<ThemeRootRow>(),
+    sb.from('app_theme_drafts').select('*').eq('scope', 'global').eq('status', 'draft').maybeSingle<ThemeDraftRow>(),
+  ]);
+  if (themeError || draftError) return c.json({ success: false, message: (themeError ?? draftError)!.message }, 500 as 200);
+  return c.json({ success: true, data: { published: publishedEnvelope(published), draft: draft ? draftEnvelope(draft) : null } });
+});
+
+router.post('/theme/studio/validate', async c => {
+  await requireRole(c, ['admin']);
+  const result = sanitizeDesignSystemConfiguration(getArgs(c).configuration);
+  return c.json({ success: true, data: { validation: result.validation } });
+});
+
+router.post('/theme/studio/draft/save', async c => {
   const actor = await requireRole(c, ['admin']);
-  const tokens = cleanTokens(getArgs(c).tokens);
-  if (tokens === null) return c.json({ success: false, message: 'tokens must be an object' }, 400 as 200);
+  const args = getArgs(c);
+  const expectedRevision = intArg(args.expectedRevision);
+  if (expectedRevision === null) return c.json({ success: false, message: 'expectedRevision must be a non-negative integer' }, 400 as 200);
+  const cleaned = sanitizeDesignSystemConfiguration(args.configuration);
+  if (!cleaned.validation.valid) return c.json({ success: false, message: cleaned.validation.errors.join(' ') }, 422 as 200);
 
-  const { error } = await sb.from('app_theme').upsert(
-    { scope: 'global', tokens, updated_by: actor.id, updated_at: new Date().toISOString() },
-    { onConflict: 'scope' },
-  );
+  const [{ data: theme, error: themeError }, { data: existing, error: draftError }] = await Promise.all([
+    sb.from('app_theme').select('version').eq('scope', 'global').maybeSingle<{ version: number }>(),
+    sb.from('app_theme_drafts').select('*').eq('scope', 'global').eq('status', 'draft').maybeSingle<ThemeDraftRow>(),
+  ]);
+  if (themeError || draftError) return c.json({ success: false, message: (themeError ?? draftError)!.message }, 500 as 200);
+  const currentRevision = existing?.revision ?? 0;
+  if (currentRevision !== expectedRevision) return c.json({ success: false, message: `Draft changed elsewhere (expected revision ${expectedRevision}, current ${currentRevision}).` }, 409 as 200);
+  const now = new Date().toISOString();
+  const mutation = existing
+    ? sb.from('app_theme_drafts').update({ configuration: cleaned.configuration, validation: cleaned.validation, revision: currentRevision + 1, updated_by: actor.id, updated_at: now }).eq('id', existing.id).eq('revision', currentRevision).select('*').single()
+    : sb.from('app_theme_drafts').insert({ scope: 'global', base_version: theme?.version ?? 0, revision: 1, status: 'draft', configuration: cleaned.configuration, validation: cleaned.validation, created_by: actor.id, updated_by: actor.id }).select('*').single();
+  const { data, error } = await mutation as { data: ThemeDraftRow | null; error: { message: string; code?: string } | null };
+  if (error || !data) return c.json({ success: false, message: error?.message ?? 'Draft save conflict' }, error?.code === '23505' ? 409 as 200 : 500 as 200);
+  return c.json({ success: true, data: { draft: draftEnvelope(data) } });
+});
+
+router.post('/theme/studio/publish', async c => {
+  const actor = await requireRole(c, ['admin']);
+  const args = getArgs(c);
+  const draftId = strArg(args.draftId), expectedRevision = intArg(args.expectedRevision);
+  const summary = strArg(args.summary).trim().slice(0, 240);
+  if (!draftId || expectedRevision === null || !summary) return c.json({ success: false, message: 'draftId, expectedRevision and summary are required' }, 400 as 200);
+  const { data: draft, error: draftError } = await sb.from('app_theme_drafts').select('configuration,revision').eq('id', draftId).eq('scope', 'global').eq('status', 'draft').maybeSingle<{ configuration: DesignSystemConfigurationV1; revision: number }>();
+  if (draftError) return c.json({ success: false, message: draftError.message }, 500 as 200);
+  if (draft?.revision !== expectedRevision) return c.json({ success: false, message: 'Draft is stale or no longer publishable.' }, 409 as 200);
+  const cleaned = sanitizeDesignSystemConfiguration(draft.configuration);
+  if (!cleaned.validation.valid) return c.json({ success: false, message: cleaned.validation.errors.join(' ') }, 422 as 200);
+  const rpcResult = await sb.rpc('publish_app_theme', { p_actor: actor.id, p_draft_id: draftId, p_expected_revision: expectedRevision, p_summary: summary }) as { data: unknown; error: { message: string } | null };
+  const { data: published, error } = rpcResult;
+  if (error) return c.json({ success: false, message: error.message }, error.message.includes('stale') || error.message.includes('changed') ? 409 as 200 : 500 as 200);
+  return c.json({ success: true, data: { published } });
+});
+
+router.post('/theme/studio/history', async c => {
+  await requireRole(c, ['admin']);
+  const { data, error } = await sb.from('app_theme_versions').select('version,configuration,summary,published_by,published_at').eq('scope', 'global').order('version', { ascending: false }).limit(30).overrideTypes<ThemeVersionRow[], { merge: false }>();
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  const versions = data.map(row => ({ version: row.version, configuration: row.configuration, publishedAt: row.published_at, publishedBy: row.published_by, summary: row.summary }));
+  return c.json({ success: true, data: { versions } });
+});
 
-  await log_(actor, 'update', 'app_theme', 'global', `${Object.keys(tokens).length} token overrides`);
-  await emitAppEvent({
-    eventType: 'platform.theme.updated', sourceModule: 'platform',
-    sourceEntityType: 'app_theme', sourceEntityId: 'global',
-    actorUserId: actor.id, payload: { tokenCount: Object.keys(tokens).length },
-  });
-  return c.json({ success: true });
+router.post('/theme/studio/rollback', async c => {
+  const actor = await requireRole(c, ['admin']);
+  const args = getArgs(c), targetVersion = intArg(args.version), summary = strArg(args.summary).trim().slice(0, 240);
+  if (targetVersion === null || targetVersion === 0 || !summary) return c.json({ success: false, message: 'version and summary are required' }, 400 as 200);
+  const { data: target, error: targetError } = await sb.from('app_theme_versions').select('configuration').eq('scope', 'global').eq('version', targetVersion).maybeSingle<{ configuration: DesignSystemConfigurationV1 }>();
+  if (targetError) return c.json({ success: false, message: targetError.message }, 500 as 200);
+  if (!target) return c.json({ success: false, message: 'Published version not found.' }, 404 as 200);
+  const cleaned = sanitizeDesignSystemConfiguration(target.configuration);
+  if (!cleaned.validation.valid) return c.json({ success: false, message: 'Stored version no longer passes validation.' }, 422 as 200);
+  const rpcResult = await sb.rpc('rollback_app_theme', { p_actor: actor.id, p_target_version: targetVersion, p_summary: summary }) as { data: unknown; error: { message: string } | null };
+  const { data: published, error } = rpcResult;
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  return c.json({ success: true, data: { published } });
 });
 
 // ── Per-user UI preferences ───────────────────────────────────────────────────

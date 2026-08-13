@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `ef3575b8de2aefbd8fcb592477496ac0a513657d`  
-Source fingerprint: `7d0c2fd06ed66a8b939d6dc1`  
+Source HEAD: `d69354b07c9c0f7f55c32d31045e688d71ff7236`  
+Source fingerprint: `7376a206d8ae63e734b051fa`  
 Generator version: `1`
 
 ## Use
@@ -19,7 +19,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1497 | 14823 | 68 | 978 | 979 | 17 | 356 | 1436 | 91 | 2742 |
+| 1502 | 14867 | 68 | 983 | 984 | 17 | 361 | 1445 | 92 | 2748 |
 
 ## Modules
 
@@ -33,9 +33,9 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | workflow | 47 | 323 | 0 | 40 | 40 | 8 | 128 | 3 | [open](modules/workflow.md) |
 | security | 46 | 387 | 0 | 51 | 51 | 31 | 65 | 4 | [open](modules/security.md) |
 | settings | 44 | 252 | 0 | 26 | 26 | 18 | 21 | 2 | [open](modules/settings.md) |
-| widgets | 72 | 581 | 21 | 15 | 15 | 11 | 14 | 1 | [open](modules/widgets.md) |
-| platform | 437 | 3809 | 17 | 38 | 53 | 50 | 327 | 0 | [open](modules/platform.md) |
-| testing | 47 | 224 | 0 | 0 | 0 | 0 | 0 | 16 | [open](modules/testing.md) |
+| widgets | 73 | 588 | 21 | 20 | 20 | 11 | 23 | 1 | [open](modules/widgets.md) |
+| platform | 440 | 3843 | 17 | 38 | 53 | 55 | 327 | 0 | [open](modules/platform.md) |
+| testing | 48 | 227 | 0 | 0 | 0 | 0 | 0 | 17 | [open](modules/testing.md) |
 | enterprise | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | [open](modules/enterprise.md) |
 
 ## Widget and Tile Directory
@@ -47,7 +47,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `bundle.hr.employees.essentials` | Employee Master Essentials | registry | hr | `` | `src/ui/widgets/bundles.ts:90` |
 | `bundle.hr.onboarding.manager` | Onboarding Manager Pack | registry | hr | `` | `src/ui/widgets/bundles.ts:76` |
 | `create` | Create with options | registry | platform | `() => <SplitButton action={{ label: 'Create' }} items={SAVE_ALTERNATIVES} variant="secondary" />` | `src/ui/registry/compound.defs.tsx:218` |
-| `dialog-footer` | Dialog footer | registry | platform | `() => (         <>           <Button variant="secondary">Cancel</Button>           <Button variant="primary">Save</Button>         </>       )` | `src/ui/registry/actions.defs.tsx:217` |
+| `dialog-footer` | Dialog footer | registry | platform | `() => (         <>           <Button variant="secondary">Cancel</Button>           <Button variant="primary">Save</Button>         </>       )` | `src/ui/registry/actions.defs.tsx:224` |
 | `enterprise.calendar.taskPlanner` | Task Planner | registry | widgets | `TaskPlannerWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:291` |
 | `enterprise.calendar.upcomingDeadlines` | Schedule & Deadlines | registry | widgets | `DeadlineWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:290` |
 | `export` | Export menu | registry | platform | `() => <DropdownButton label="Export" variant="secondary" items={RECORD_MENU} />` | `src/ui/registry/compound.defs.tsx:133` |
@@ -94,7 +94,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `one-component` | One component, three appearances | registry | platform | `() => (         <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>           <Tabs id="ex-underline" label="Underline" items={PLAIN_TABS} value="overview" onChange={noop} />           <Tabs id="ex-contained" label="Contained" variant="contained" size="sm" items={PLAIN_TABS} value="tasks" onChange={noop} />           <Tabs id="ex-subtle" label="Subtle" variant="subtle" size="sm" items={PLAIN_TABS} value="files" onChange={noop} />         </div>       )` | `src/ui/registry/navigation.defs.tsx:213` |
 | `one-surface` | One surface, four rhythms | registry | platform | `() => (         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px' }}>           <Card variant="metric" density="compact" header={<CardHeader title="Open incidents" level={null} />}>             <Figure value="18" caption="4 overdue" />           </Card>           <Card variant="surface" header={<CardHeader title="Site note" />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Night shift handover completed.</span>           </Card>           <Card variant="panel" density="compact" header={<CardHeader title="Corrective actions" actions={<Badge tone="warning" size="sm">2 open</Badge>} />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Both due this Friday.</span>           </Card>           <Card variant="action" onClick={noop} actionLabel="Start a new inspection"             header={<CardHeader icon={<LucideIcon name="ClipboardCheck" />} title="New inspection" description="Start from a template" />} />         </div>       )` | `src/ui/registry/containers.defs.tsx:215` |
 | `overflow` | Nine tabs in a drawer | registry | platform | `() => (         <Tabs           id="ex-overflow"           label="Rate version sections"           variant="contained"           size="sm"           items={MANY_TABS}           maxVisible={4}           value="timeline"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:249` |
-| `page-action` | Page action | registry | platform | `() => <Button variant="primary" iconLeft={<LucideIcon name="Plus" />}>Add employee</Button>` | `src/ui/registry/actions.defs.tsx:237` |
+| `page-action` | Page action | registry | platform | `() => <Button variant="primary" iconLeft={<LucideIcon name="Plus" />}>Add employee</Button>` | `src/ui/registry/actions.defs.tsx:244` |
 | `platform.weather.current` | Weather | registry | widgets | `WeatherBandWidget` | `src/ui/widgets/registry.weather.tsx:488` |
 | `platform.weather.precipitation` | Weather · Precipitation | registry | widgets | `metricWidget('precipitation')` | `src/ui/widgets/registry.weather.tsx:502` |
 | `platform.weather.strip` | Weather · Strip | registry | widgets | `WeatherStripWidget` | `src/ui/widgets/registry.weather.tsx:495` |
@@ -109,7 +109,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `variants` | Soft, solid, outline — and tags | registry | platform | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>           <Badge tone="danger" variant="soft">Overdue</Badge>           <Badge tone="danger" variant="solid">Critical</Badge>           <Badge tone="danger" variant="outline">Escalated</Badge>           <Badge tone="accent" size="sm" onRemove={noop}>Night shift</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:344` |
 | `vertical` | Vertical is an orientation, not a component | registry | platform | `() => (         <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>           <Tabs             id="ex-vertical"             label="Settings sections"             orientation="vertical"             items={[               { id: 'general', label: 'General', icon: <LucideIcon name="Settings" /> },               { id: 'security', label: 'Security', icon: <LucideIcon name="ShieldCheck" />, badge: 2 },               { id: 'notifications', label: 'Notifications', icon: <LucideIcon name="Bell" /> },             ]}             value="security"             onChange={noop}           />           <TabPanel tabsId="ex-vertical" tabId="security" value="security">             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Two security settings need review.</span>           </TabPanel>         </div>       )` | `src/ui/registry/navigation.defs.tsx:225` |
 | `w.floored` |  | local | widgets | `() => <div />` | `src/ui/widgets/platform.test.tsx:182` |
-| `wizard-nav` | Wizard navigation | registry | platform | `() => (         <>           <Button variant="ghost">Back</Button>           <Button variant="primary" iconRight={<LucideIcon name="ArrowRight" />}>Continue</Button>         </>       )` | `src/ui/registry/actions.defs.tsx:227` |
+| `wizard-nav` | Wizard navigation | registry | platform | `() => (         <>           <Button variant="ghost">Back</Button>           <Button variant="primary" iconRight={<LucideIcon name="ArrowRight" />}>Continue</Button>         </>       )` | `src/ui/registry/actions.defs.tsx:234` |
 
 ## Important limitation
 

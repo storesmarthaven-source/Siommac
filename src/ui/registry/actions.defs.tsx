@@ -113,19 +113,26 @@ export const buttonDef: ComponentDef = {
 
   style: [
     { label: 'Geometry', controls: [
-      { name: '--ui-button-height-md',    label: 'Height (md)', kind: 'size', help: 'Set to var(--ui-control-md) to align buttons with the 40px input rhythm.' },
-      { name: '--ui-button-pad-x-md',     label: 'Padding X (md)', kind: 'size' },
-      { name: '--ui-button-radius',       label: 'Corner radius', kind: 'size' },
-      { name: '--ui-button-gap',          label: 'Icon gap', kind: 'size' },
-      { name: '--ui-button-icon-size',    label: 'Icon size', kind: 'size' },
-      { name: '--ui-button-font-size-md', label: 'Font size (md)', kind: 'size' },
-      { name: '--ui-button-border-width', label: 'Border width', kind: 'size' },
+      { name: '--ui-button-height-md',    label: 'Height (md)', kind: 'size', scope: 'shared', linkedTo: 'var(--ui-control-md)', help: 'Set to var(--ui-control-md) to align buttons with the 40px input rhythm.' },
+      { name: '--ui-button-pad-x-md',     label: 'Padding X (md)', kind: 'size', scope: 'shared' },
+      { name: '--ui-button-radius',       label: 'Corner radius', kind: 'size', scope: 'shared', linkedTo: 'var(--radius-sm)' },
+      { name: '--ui-button-gap',          label: 'Icon gap', kind: 'size', scope: 'shared', linkedTo: 'var(--space-2)' },
+      { name: '--ui-button-icon-size',    label: 'Icon size', kind: 'size', scope: 'shared', linkedTo: 'var(--ui-icon-md)' },
+      { name: '--ui-button-font-size-md', label: 'Font size (md)', kind: 'size', scope: 'shared' },
+      { name: '--ui-button-border-width', label: 'Border width', kind: 'size', scope: 'shared', linkedTo: 'var(--ui-border-width)' },
     ] },
     { label: 'Primary', controls: [
       { name: '--ui-button-primary-bg',        label: 'Background', kind: 'color' },
       { name: '--ui-button-primary-fg',        label: 'Text', kind: 'color' },
       { name: '--ui-button-primary-bg-hover',  label: 'Background — hover', kind: 'color' },
       { name: '--ui-button-primary-bg-active', label: 'Background — pressed', kind: 'color' },
+    ] },
+    { label: 'Interaction states', controls: [
+      { name: '--ui-button-focus-ring-color', label: 'Focus ring', kind: 'color-alpha', scope: 'state', state: 'focus', linkedTo: 'var(--ui-focus-ring-color)' },
+      { name: '--ui-button-focus-ring-width', label: 'Focus ring width', kind: 'size', scope: 'state', state: 'focus', linkedTo: 'var(--ui-focus-ring-width)' },
+      { name: '--ui-button-disabled-bg', label: 'Disabled background', kind: 'color', scope: 'state', state: 'disabled', linkedTo: 'var(--ui-disabled-bg)' },
+      { name: '--ui-button-disabled-fg', label: 'Disabled text', kind: 'color', scope: 'state', state: 'disabled', linkedTo: 'var(--ui-disabled-fg)' },
+      { name: '--ui-button-loading-spinner', label: 'Loading spinner', kind: 'color', scope: 'state', state: 'loading', linkedTo: 'currentColor' },
     ] },
     { label: 'Secondary', controls: [
       { name: '--ui-button-secondary-bg',       label: 'Background', kind: 'color' },

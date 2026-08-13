@@ -63,6 +63,12 @@ export interface StyleControl {
   kind: 'color' | 'color-alpha' | 'size' | 'text' | 'select';
   options?: readonly { value: string; label: string }[];
   help?: string;
+  /** Theme/semantic value used when Studio mode is Linked. */
+  linkedTo?: string;
+  /** Governed scope used to generate the Studio scope navigator. */
+  scope?: 'shared' | 'variant' | 'state';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'link';
+  state?: 'default' | 'hover' | 'active' | 'focus' | 'disabled' | 'loading';
 }
 
 export interface StyleGroup {

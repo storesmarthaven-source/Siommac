@@ -29,10 +29,13 @@ import {
 } from '../registry';
 import { type UiState } from '../tokens';
 import { SpecialTreatments } from '../special/SpecialTreatments';
+import { type GalleryDraft } from '../gallery/galleryStore';
+import { RecipeStyleEditor } from './RecipeStyleEditor';
 
-type Tab = 'overview' | 'usage' | 'accessibility' | 'code';
+type Tab = 'overview' | 'style' | 'usage' | 'accessibility' | 'code';
 const TABS: { id: Tab; label: string }[] = [
   { id: 'overview',      label: 'Overview' },   // specimen + inspector + reference
+  { id: 'style',         label: 'Style' },
   { id: 'usage',         label: 'Usage' },
   { id: 'accessibility', label: 'Accessibility' },
   { id: 'code',          label: 'Code' },
@@ -162,9 +165,10 @@ export interface WorkbenchProps {
   family?: ComponentFamily;
   onSelectMember?: (componentId: string) => void;
   onBack: () => void;
+  draft: GalleryDraft;
 }
 
-export function Workbench({ def, family, onSelectMember, onBack }: WorkbenchProps): VNode {
+export function Workbench({ def, family, onSelectMember, onBack, draft }: WorkbenchProps): VNode {
   const [tab, setTab] = useState<Tab>('overview');
 
   /*
@@ -381,6 +385,10 @@ export function Workbench({ def, family, onSelectMember, onBack }: WorkbenchProp
 
         </div>
       )}
+
+      {tab === 'style' && (def.style?.length
+        ? <RecipeStyleEditor def={def} draft={draft} />
+        : <section class="sds-wb__panel"><p>This definition has no governed recipe controls yet. Add them to the canonical registry definition to generate this inspector.</p></section>)}
 
       {tab === 'code' && (
         <div class="sds-canvas-wrap">

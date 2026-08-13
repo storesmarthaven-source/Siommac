@@ -3820,18 +3820,25 @@ _insertAccountSupportTicket	function	communications	false		netlify/functions/rou
 _resolveAccountSupportAssignee	function	communications	false		netlify/functions/routes/tickets.ts	179	
 router	variable	security	false		netlify/functions/routes/trustedDevices.ts	25	
 RevokeSchema	variable	security	false		netlify/functions/routes/trustedDevices.ts	29	
-Ctx	type	widgets	false		netlify/functions/routes/uiPrefs.ts	25	
-router	variable	widgets	false		netlify/functions/routes/uiPrefs.ts	27	
-getArgs	function	widgets	false		netlify/functions/routes/uiPrefs.ts	29	
-strArg	function	widgets	false		netlify/functions/routes/uiPrefs.ts	36	
-cleanTokens	function	widgets	false		netlify/functions/routes/uiPrefs.ts	40	
-cleanOrder	function	widgets	false		netlify/functions/routes/uiPrefs.ts	51	
-UiPreferenceEnvelope	interface	widgets	false		netlify/functions/routes/uiPrefs.ts	56	
-clampInt	function	widgets	false		netlify/functions/routes/uiPrefs.ts	208	
-capStr	function	widgets	false		netlify/functions/routes/uiPrefs.ts	210	
-safeConfig	function	widgets	false		netlify/functions/routes/uiPrefs.ts	212	
-safeResponsive	function	widgets	false		netlify/functions/routes/uiPrefs.ts	218	
-cleanInstanceLayout	function	widgets	false		netlify/functions/routes/uiPrefs.ts	230	
+app	variable	widgets	false	test	netlify/functions/routes/uiPrefs.studio.test.ts	14	
+request	function	widgets	false	test	netlify/functions/routes/uiPrefs.studio.test.ts	18	
+Ctx	type	widgets	false		netlify/functions/routes/uiPrefs.ts	28	
+router	variable	widgets	false		netlify/functions/routes/uiPrefs.ts	30	
+getArgs	function	widgets	false		netlify/functions/routes/uiPrefs.ts	32	
+strArg	function	widgets	false		netlify/functions/routes/uiPrefs.ts	39	
+cleanOrder	function	widgets	false		netlify/functions/routes/uiPrefs.ts	43	
+UiPreferenceEnvelope	interface	widgets	false		netlify/functions/routes/uiPrefs.ts	48	
+intArg	function	widgets	false		netlify/functions/routes/uiPrefs.ts	63	
+ThemeRootRow	interface	widgets	false		netlify/functions/routes/uiPrefs.ts	67	
+ThemeDraftRow	interface	widgets	false		netlify/functions/routes/uiPrefs.ts	74	
+ThemeVersionRow	interface	widgets	false		netlify/functions/routes/uiPrefs.ts	85	
+publishedEnvelope	function	widgets	false		netlify/functions/routes/uiPrefs.ts	93	
+draftEnvelope	function	widgets	false		netlify/functions/routes/uiPrefs.ts	103	
+clampInt	function	widgets	false		netlify/functions/routes/uiPrefs.ts	311	
+capStr	function	widgets	false		netlify/functions/routes/uiPrefs.ts	313	
+safeConfig	function	widgets	false		netlify/functions/routes/uiPrefs.ts	315	
+safeResponsive	function	widgets	false		netlify/functions/routes/uiPrefs.ts	321	
+cleanInstanceLayout	function	widgets	false		netlify/functions/routes/uiPrefs.ts	333	
 router	variable	platform	false		netlify/functions/routes/weather.ts	27	
 FORECAST_URL	variable	platform	false		netlify/functions/routes/weather.ts	29	
 UPSTREAM_TIMEOUT_MS	variable	platform	false		netlify/functions/routes/weather.ts	31	
@@ -4188,6 +4195,9 @@ evCount	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	73	run
 auditCount	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	75	run
 createRunFixture	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	212	run
 expectBlock	function	payroll	false	test	scripts/e2e/suites/crewPayroll.mjs	630	run
+title	variable	testing	true	test	scripts/e2e/suites/designSystemStudio.mjs	2	
+config	function	testing	false	test	scripts/e2e/suites/designSystemStudio.mjs	4	
+run	function	testing	true	test	scripts/e2e/suites/designSystemStudio.mjs	10	
 title	variable	testing	true	test	scripts/e2e/suites/emailDelivery.mjs	18	
 run	function	testing	true	test	scripts/e2e/suites/emailDelivery.mjs	20	
 title	variable	testing	true	test	scripts/e2e/suites/emailProgramme.mjs	29	
@@ -6292,8 +6302,14 @@ createSite	function	platform	true		src/api/sites.ts	132
 updateSite	function	platform	true		src/api/sites.ts	141	
 deleteSite	function	platform	true		src/api/sites.ts	150	
 assignSiteMembers	function	platform	true		src/api/sites.ts	159	
-loadThemeTokens	function	platform	true		src/api/theme.ts	13	
-saveThemeTokens	function	platform	true		src/api/theme.ts	19	
+loadThemeTokens	function	platform	true		src/api/theme.ts	14	
+StudioState	interface	platform	false		src/api/theme.ts	19	
+loadDesignSystemStudio	function	platform	true		src/api/theme.ts	21	
+saveDesignSystemDraft	function	platform	true		src/api/theme.ts	27	
+validateDesignSystemDraft	function	platform	true		src/api/theme.ts	33	
+publishDesignSystemDraft	function	platform	true		src/api/theme.ts	39	
+loadDesignSystemHistory	function	platform	true		src/api/theme.ts	45	
+rollbackDesignSystem	function	platform	true		src/api/theme.ts	51	
 UiPreferenceValues	interface	platform	true		src/api/uiPreferences.ts	20	
 UiPreferenceKey	type	platform	true		src/api/uiPreferences.ts	25	
 UiPreference	interface	platform	true		src/api/uiPreferences.ts	27	
@@ -12804,13 +12820,13 @@ Params	interface	platform	false		src/ui/forms/useListboxKeyboard.ts	43
 step	function	platform	false		src/ui/forms/useListboxKeyboard.ts	59	
 firstEnabled	function	platform	false		src/ui/forms/useListboxKeyboard.ts	72	
 useListboxKeyboard	function	platform	true	hook	src/ui/forms/useListboxKeyboard.ts	79	
-NEUTRALS	object	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	35	
-mountPanel	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	48	
-Harness	function	platform	false	component,test	src/ui/gallery/BrandThemePanel.test.tsx	50	mountPanel
-setSeed	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	66	
-selectLogoFile	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	227	
-publishButton	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	244	
-byText	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	248	
+NEUTRALS	object	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	36	
+mountPanel	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	49	
+Harness	function	platform	false	component,test	src/ui/gallery/BrandThemePanel.test.tsx	51	mountPanel
+setSeed	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	67	
+selectLogoFile	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	229	
+publishButton	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	246	
+byText	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	250	
 DEFAULT_SEEDS	object	platform	false		src/ui/gallery/BrandThemePanel.tsx	49	
 BrandThemePanelProps	interface	platform	true		src/ui/gallery/BrandThemePanel.tsx	53	
 BrandThemePanel	function	platform	true	component	src/ui/gallery/BrandThemePanel.tsx	61	
@@ -12827,18 +12843,21 @@ FoundationsPanel	function	platform	true	component	src/ui/gallery/FoundationsPane
 TokenCard	function	platform	false	component,ui-tile	src/ui/gallery/FoundationsPanel.tsx	75	
 hexOf	function	platform	false		src/ui/gallery/FoundationsPanel.tsx	134	
 hx	function	platform	false		src/ui/gallery/FoundationsPanel.tsx	140	hexOf
-DRAFT_KEY	variable	platform	false		src/ui/gallery/galleryStore.ts	25	
-GalleryDraft	interface	platform	true		src/ui/gallery/galleryStore.ts	27	
-readStoredDraft	function	platform	false		src/ui/gallery/galleryStore.ts	57	
-storeDraft	function	platform	false		src/ui/gallery/galleryStore.ts	64	
-useGalleryDraft	function	platform	true	hook	src/ui/gallery/galleryStore.ts	68	
-saveThemeTokens	variable	platform	false	test	src/ui/gallery/semanticDraft.test.tsx	28	
-loadThemeTokens	variable	platform	false	test	src/ui/gallery/semanticDraft.test.tsx	29	
-mountDraft	function	platform	false	test	src/ui/gallery/semanticDraft.test.tsx	36	
-Harness	function	platform	false	component,test	src/ui/gallery/semanticDraft.test.tsx	38	mountDraft
-ACTION_PRIMARY	variable	platform	false	component,test	src/ui/gallery/semanticDraft.test.tsx	52	
-NAV_BG	variable	platform	false	component,test	src/ui/gallery/semanticDraft.test.tsx	53	
-BORDER	variable	platform	false	component,test	src/ui/gallery/semanticDraft.test.tsx	54	
+RECOVERY_KEY	variable	platform	false		src/ui/gallery/galleryStore.ts	17	
+GalleryDraft	interface	platform	true		src/ui/gallery/galleryStore.ts	19	
+readRecovery	function	platform	false		src/ui/gallery/galleryStore.ts	44	
+storeRecovery	function	platform	false		src/ui/gallery/galleryStore.ts	49	
+cloneConfiguration	function	platform	false		src/ui/gallery/galleryStore.ts	53	
+useGalleryDraft	function	platform	true	hook	src/ui/gallery/galleryStore.ts	57	
+savedConfiguration	variable	platform	false	test	src/ui/gallery/semanticDraft.test.tsx	29	
+loadDesignSystemStudio	variable	platform	false	test	src/ui/gallery/semanticDraft.test.tsx	30	
+saveDesignSystemDraft	variable	platform	false	test	src/ui/gallery/semanticDraft.test.tsx	34	
+publishDesignSystemDraft	variable	platform	false	test	src/ui/gallery/semanticDraft.test.tsx	38	
+mountDraft	function	platform	false	test	src/ui/gallery/semanticDraft.test.tsx	46	
+Harness	function	platform	false	component,test	src/ui/gallery/semanticDraft.test.tsx	48	mountDraft
+ACTION_PRIMARY	variable	platform	false	component,test	src/ui/gallery/semanticDraft.test.tsx	62	
+NAV_BG	variable	platform	false	component,test	src/ui/gallery/semanticDraft.test.tsx	63	
+BORDER	variable	platform	false	component,test	src/ui/gallery/semanticDraft.test.tsx	64	
 ActivityItem	interface	platform	true		src/ui/hrfin/ActivityFeed.tsx	9	
 ActivityFeed	function	platform	true	component	src/ui/hrfin/ActivityFeed.tsx	15	
 DonutRingProps	interface	platform	true		src/ui/hrfin/charts/DonutRing.tsx	9	
@@ -13076,11 +13095,11 @@ SAVE_MENU	array	platform	false		src/ui/registry/actions.defs.tsx	42
 noop	function	platform	false		src/ui/registry/actions.defs.tsx	48	
 VARIANTS	variable	platform	false	component	src/ui/registry/actions.defs.tsx	51	
 buttonDef	object	platform	true		src/ui/registry/actions.defs.tsx	55	
-icon	function	platform	false		src/ui/registry/actions.defs.tsx	172	buttonDef
-jsx	function	platform	false		src/ui/registry/actions.defs.tsx	194	buttonDef
-segmentedDef	object	platform	true		src/ui/registry/actions.defs.tsx	247	
-menuDef	object	platform	true		src/ui/registry/actions.defs.tsx	322	
-ACTION_DEFS	array	platform	true		src/ui/registry/actions.defs.tsx	448	
+icon	function	platform	false		src/ui/registry/actions.defs.tsx	179	buttonDef
+jsx	function	platform	false		src/ui/registry/actions.defs.tsx	201	buttonDef
+segmentedDef	object	platform	true		src/ui/registry/actions.defs.tsx	254	
+menuDef	object	platform	true		src/ui/registry/actions.defs.tsx	329	
+ACTION_DEFS	array	platform	true		src/ui/registry/actions.defs.tsx	455	
 s	function	platform	false		src/ui/registry/compound.defs.tsx	31	
 b	function	platform	false		src/ui/registry/compound.defs.tsx	33	
 size	function	platform	false		src/ui/registry/compound.defs.tsx	34	
@@ -13205,17 +13224,17 @@ REMAINING_PRIMITIVE_DEFS	array	platform	true		src/ui/registry/remaining-primitiv
 PropControl	type	platform	true		src/ui/registry/types.ts	41	
 PropValues	type	platform	true		src/ui/registry/types.ts	49	
 StyleControl	interface	platform	true		src/ui/registry/types.ts	60	
-StyleGroup	interface	platform	true		src/ui/registry/types.ts	68	
-KeyBinding	interface	platform	true		src/ui/registry/types.ts	75	
-A11yInfo	interface	platform	true		src/ui/registry/types.ts	80	
-ComponentExample	interface	platform	true		src/ui/registry/types.ts	99	
-MigrationInfo	interface	platform	true		src/ui/registry/types.ts	118	
-ComponentCategory	type	platform	true		src/ui/registry/types.ts	138	
-ComponentStatus	type	platform	true		src/ui/registry/types.ts	150	
-ComponentDef	interface	platform	true		src/ui/registry/types.ts	152	
-defaultProps	function	platform	true		src/ui/registry/types.ts	220	
-styleVarNames	function	platform	true		src/ui/registry/types.ts	227	
-isBuilt	function	platform	true		src/ui/registry/types.ts	232	
+StyleGroup	interface	platform	true		src/ui/registry/types.ts	74	
+KeyBinding	interface	platform	true		src/ui/registry/types.ts	81	
+A11yInfo	interface	platform	true		src/ui/registry/types.ts	86	
+ComponentExample	interface	platform	true		src/ui/registry/types.ts	105	
+MigrationInfo	interface	platform	true		src/ui/registry/types.ts	124	
+ComponentCategory	type	platform	true		src/ui/registry/types.ts	144	
+ComponentStatus	type	platform	true		src/ui/registry/types.ts	156	
+ComponentDef	interface	platform	true		src/ui/registry/types.ts	158	
+defaultProps	function	platform	true		src/ui/registry/types.ts	226	
+styleVarNames	function	platform	true		src/ui/registry/types.ts	233	
+isBuilt	function	platform	true		src/ui/registry/types.ts	238	
 s	function	platform	false		src/ui/registry/wizard.def.tsx	16	
 b	function	platform	false		src/ui/registry/wizard.def.tsx	17	
 noop	function	platform	false		src/ui/registry/wizard.def.tsx	18	
@@ -13298,6 +13317,13 @@ copySelection	function	platform	false		src/ui/studio/InAppUsage.tsx	93	InAppUsag
 settle	function	platform	false		src/ui/studio/InAppUsage.tsx	110	copySelection
 root	variable	platform	false		src/ui/studio/preview.tsx	12	
 PreviewScope	function	platform	true	component	src/ui/studio/PreviewScope.tsx	20	
+Scope	type	platform	false		src/ui/studio/RecipeStyleEditor.tsx	11	
+stateForPreview	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	13	
+belongs	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	17	
+valueType	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	26	
+TokenControl	function	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	30	
+RecipeStyleEditor	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	60	
+act	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	73	RecipeStyleEditor
 StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	43	
 SectionId	type	platform	false		src/ui/studio/Studio.tsx	52	
 NavItem	interface	platform	false		src/ui/studio/Studio.tsx	58	
@@ -13314,21 +13340,21 @@ CatalogueNodeCard	function	platform	false	component,ui-tile	src/ui/studio/Studio
 Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	204	
 PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	260	
 Studio	function	platform	true	component	src/ui/studio/Studio.tsx	269	
-Tab	type	platform	false		src/ui/studio/Workbench.tsx	33	
-TABS	array	platform	false		src/ui/studio/Workbench.tsx	34	
-CONTROL_GROUPS	array	platform	false		src/ui/studio/Workbench.tsx	50	
-groupControls	function	platform	false		src/ui/studio/Workbench.tsx	57	
-Control	function	platform	false	component	src/ui/studio/Workbench.tsx	77	
-symbolOf	function	platform	false		src/ui/studio/Workbench.tsx	152	
-WorkbenchProps	interface	platform	true		src/ui/studio/Workbench.tsx	159	
-Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	167	
-setValues	function	platform	false		src/ui/studio/Workbench.tsx	187	Workbench
-set	function	platform	false		src/ui/studio/Workbench.tsx	190	Workbench
-specimen	function	platform	false		src/ui/studio/Workbench.tsx	203	Workbench
-Block	function	platform	false	component	src/ui/studio/Workbench.tsx	416	
-OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	434	
-UsageTab	function	platform	false	component	src/ui/studio/Workbench.tsx	501	
-A11yTab	function	platform	false	component	src/ui/studio/Workbench.tsx	543	
+Tab	type	platform	false		src/ui/studio/Workbench.tsx	35	
+TABS	array	platform	false		src/ui/studio/Workbench.tsx	36	
+CONTROL_GROUPS	array	platform	false		src/ui/studio/Workbench.tsx	53	
+groupControls	function	platform	false		src/ui/studio/Workbench.tsx	60	
+Control	function	platform	false	component	src/ui/studio/Workbench.tsx	80	
+symbolOf	function	platform	false		src/ui/studio/Workbench.tsx	155	
+WorkbenchProps	interface	platform	true		src/ui/studio/Workbench.tsx	162	
+Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	171	
+setValues	function	platform	false		src/ui/studio/Workbench.tsx	191	Workbench
+set	function	platform	false		src/ui/studio/Workbench.tsx	194	Workbench
+specimen	function	platform	false		src/ui/studio/Workbench.tsx	207	Workbench
+Block	function	platform	false	component	src/ui/studio/Workbench.tsx	424	
+OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	442	
+UsageTab	function	platform	false	component	src/ui/studio/Workbench.tsx	509	
+A11yTab	function	platform	false	component	src/ui/studio/Workbench.tsx	551	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	
@@ -13353,19 +13379,20 @@ ActiveFilters	function	platform	true	component	src/ui/table/FilterBar.tsx	239
 PersonCellProps	interface	platform	true		src/ui/table/PersonCell.tsx	17	
 PersonCell	function	platform	true	component	src/ui/table/PersonCell.tsx	33	
 LS_KEY	variable	platform	false		src/ui/theme/applyTheme.ts	15	
-ThemeOverrides	type	platform	true		src/ui/theme/applyTheme.ts	17	
-applyThemeOverrides	function	platform	true		src/ui/theme/applyTheme.ts	20	
-PREVIEW_SCOPE_ATTR	variable	platform	true		src/ui/theme/applyTheme.ts	49	
-applyScopedOverrides	function	platform	true		src/ui/theme/applyTheme.ts	59	
-clearScopedOverrides	function	platform	true		src/ui/theme/applyTheme.ts	68	
-clearAllScopedOverrides	function	platform	true		src/ui/theme/applyTheme.ts	74	
-readScopedTokenValue	function	platform	true		src/ui/theme/applyTheme.ts	88	
-clearThemeOverride	function	platform	true		src/ui/theme/applyTheme.ts	94	
-clearThemeOverrides	function	platform	true		src/ui/theme/applyTheme.ts	99	
-readTokenValue	function	platform	true		src/ui/theme/applyTheme.ts	105	
-cacheTheme	function	platform	true		src/ui/theme/applyTheme.ts	109	
-readCachedTheme	function	platform	true		src/ui/theme/applyTheme.ts	113	
-initTheme	function	platform	true		src/ui/theme/applyTheme.ts	122	
+appliedThemeNames	variable	platform	false		src/ui/theme/applyTheme.ts	16	
+ThemeOverrides	type	platform	true		src/ui/theme/applyTheme.ts	18	
+applyThemeOverrides	function	platform	true		src/ui/theme/applyTheme.ts	21	
+PREVIEW_SCOPE_ATTR	variable	platform	true		src/ui/theme/applyTheme.ts	52	
+applyScopedOverrides	function	platform	true		src/ui/theme/applyTheme.ts	62	
+clearScopedOverrides	function	platform	true		src/ui/theme/applyTheme.ts	71	
+clearAllScopedOverrides	function	platform	true		src/ui/theme/applyTheme.ts	77	
+readScopedTokenValue	function	platform	true		src/ui/theme/applyTheme.ts	91	
+clearThemeOverride	function	platform	true		src/ui/theme/applyTheme.ts	97	
+clearThemeOverrides	function	platform	true		src/ui/theme/applyTheme.ts	102	
+readTokenValue	function	platform	true		src/ui/theme/applyTheme.ts	108	
+cacheTheme	function	platform	true		src/ui/theme/applyTheme.ts	112	
+readCachedTheme	function	platform	true		src/ui/theme/applyTheme.ts	116	
+initTheme	function	platform	true		src/ui/theme/applyTheme.ts	125	
 SIOMAC	object	platform	false	test	src/ui/theme/brand/brandTheme.test.ts	27	
 NEUTRAL_DEFAULTS	object	platform	false	test	src/ui/theme/brand/brandTheme.test.ts	30	
 pixels	function	platform	false	test	src/ui/theme/brand/brandTheme.test.ts	111	
@@ -14247,6 +14274,23 @@ Ticket	interface	platform	true		types/db.ts	202
 NotificationType	type	platform	true		types/db.ts	214	
 Notification	interface	platform	true		types/db.ts	225	
 NotificationPreference	interface	platform	true		types/db.ts	236	
+DESIGN_SYSTEM_SCHEMA_VERSION	variable	platform	true		types/designSystem.ts	2	
+BUTTON_VARIANTS	variable	platform	true		types/designSystem.ts	4	
+CanonicalButtonVariant	type	platform	true		types/designSystem.ts	5	
+BUTTON_STATES	variable	platform	true		types/designSystem.ts	6	
+ButtonRecipeState	type	platform	true		types/designSystem.ts	7	
+TokenMap	type	platform	true		types/designSystem.ts	9	
+ComponentRecipeConfiguration	interface	platform	true		types/designSystem.ts	11	
+DesignSystemConfigurationV1	interface	platform	true		types/designSystem.ts	16	
+DesignSystemRevision	interface	platform	true		types/designSystem.ts	22	
+DesignSystemDraft	interface	platform	true		types/designSystem.ts	30	
+DesignSystemValidation	interface	platform	true		types/designSystem.ts	41	
+emptyDesignSystemConfiguration	function	platform	true		types/designSystem.ts	47	
+TOKEN_NAME	variable	platform	false		types/designSystem.ts	51	
+UNSAFE_VALUE	variable	platform	false		types/designSystem.ts	52	
+cleanTokenMap	function	platform	false		types/designSystem.ts	54	
+sanitizeDesignSystemConfiguration	function	platform	true		types/designSystem.ts	74	
+configurationToOverrides	function	platform	true		types/designSystem.ts	103	
 EmailTemplateFamily	type	platform	true		types/emailTemplates.ts	1	
 EmailTemplateStatus	type	platform	true		types/emailTemplates.ts	2	
 EmailApprovalState	type	platform	true		types/emailTemplates.ts	10	

@@ -375,7 +375,7 @@ export function BrandThemePanel({ draft, logoUrl, onUploadLogo }: BrandThemePane
         )}
         <Button
           variant="primary"
-          disabled={blocked.length > 0 || draft.dirtyCount === 0}
+          disabled={draft.loading || blocked.length > 0 || draft.dirtyCount === 0}
           onClick={() => { void draft.publish(); }}
           iconLeft={<LucideIcon name="Check" />}
         >

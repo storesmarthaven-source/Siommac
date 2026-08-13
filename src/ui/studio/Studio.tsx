@@ -395,6 +395,7 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
               <Workbench
                 def={openDef}
                 family={openFamily}
+                draft={draft}
                 onSelectMember={setOpenId}
                 onBack={() => setOpenId(null)}
               />

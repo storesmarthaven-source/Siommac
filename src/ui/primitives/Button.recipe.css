@@ -72,6 +72,13 @@
     --ui-button-icon-size: var(--ui-icon-md);
     --ui-button-border-width: var(--ui-border-width);
     --ui-button-shadow: var(--shadow-card);
+    --ui-button-focus-ring-color: var(--ui-focus-ring-color);
+    --ui-button-focus-ring-width: var(--ui-focus-ring-width);
+    --ui-button-disabled-bg: var(--ui-disabled-bg);
+    --ui-button-disabled-fg: var(--ui-disabled-fg);
+    --ui-button-disabled-border: var(--ui-disabled-border);
+    --ui-button-disabled-icon: var(--ui-disabled-icon);
+    --ui-button-loading-spinner: currentColor;
 
     /* ── primary — filled NAVY, per the approved Buttons mockup. ────────────
        The colour lives in the ROLE (`--ui-color-action-primary`, semantic.css),
@@ -323,7 +330,7 @@
   .ui-btn[data-ui-state~='focus'] {
     outline: var(--ui-focus-outline-width) solid var(--ui-focus-outline-color);
     outline-offset: 2px;
-    box-shadow: 0 0 0 var(--ui-focus-ring-width) var(--ui-focus-ring-color);
+    box-shadow: 0 0 0 var(--ui-button-focus-ring-width) var(--ui-button-focus-ring-color);
   }
 
   /* ── Disabled ─────────────────────────────────────────────────────────────
@@ -332,14 +339,14 @@
      illegible; and it leaves the control looking active on dark surfaces. */
   .ui-btn:disabled,
   .ui-btn[data-ui-state~='disabled'] {
-    background: var(--ui-disabled-bg);
-    color: var(--ui-disabled-fg);
-    border-color: var(--ui-disabled-border);
+    background: var(--ui-button-disabled-bg);
+    color: var(--ui-button-disabled-fg);
+    border-color: var(--ui-button-disabled-border);
     cursor: var(--ui-disabled-cursor);
     box-shadow: none;
   }
   .ui-btn:disabled > svg,
-  .ui-btn[data-ui-state~='disabled'] > svg { color: var(--ui-disabled-icon); }
+  .ui-btn[data-ui-state~='disabled'] > svg { color: var(--ui-button-disabled-icon); }
 
   .ui-btn--link:disabled,
   .ui-btn--link[data-ui-state~='disabled'] {
@@ -360,6 +367,7 @@
      `loadingText` is a genuine opt-in override. */
   .ui-btn[aria-busy='true'],
   .ui-btn[data-ui-state~='loading'] { cursor: progress; }
+  .ui-btn[data-ui-state~='loading'] .ui-btn__spinner { color: var(--ui-button-loading-spinner); }
 
   /* Forced state for the Gallery: no real `loading` prop is set, so the spinner
      is not in the DOM and the icon must be hidden to show the same geometry. */

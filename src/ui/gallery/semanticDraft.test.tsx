@@ -24,12 +24,22 @@ import { render, act } from '@testing-library/preact';
 import { type VNode } from 'preact';
 import { useGalleryDraft, type GalleryDraft } from './galleryStore';
 import { SEMANTIC_TOKEN_NAMES } from '../theme/semanticTokens';
+import type { DesignSystemConfigurationV1 } from '../../../types/designSystem';
 
-const saveThemeTokens = vi.fn((_map: Record<string, string>) => Promise.resolve());
-const loadThemeTokens = vi.fn(() => Promise.resolve({ '--siomac-gold': '#FFB712' }));
+let savedConfiguration: DesignSystemConfigurationV1;
+const loadDesignSystemStudio = vi.fn(() => Promise.resolve({
+  published: { version: 2, configuration: { schemaVersion: 1, theme: { tokens: { '--siomac-gold': '#FFB712' } }, recipes: { button: { overrides: {} } } }, publishedAt: null, publishedBy: null, summary: null },
+  draft: null,
+}));
+const saveDesignSystemDraft = vi.fn((configuration: DesignSystemConfigurationV1, _revision?: number) => {
+  savedConfiguration = configuration;
+  return Promise.resolve({ id: 'draft-1', baseVersion: 2, revision: 1, status: 'draft', configuration, validation: { valid: true, errors: [], warnings: [] }, updatedAt: '', updatedBy: 'USR-A' });
+});
+const publishDesignSystemDraft = vi.fn((_id?: string, _revision?: number, _summary?: string) => Promise.resolve({ version: 3, configuration: savedConfiguration, publishedAt: '', publishedBy: 'USR-A', summary: 'test' }));
 vi.mock('@api/theme', () => ({
-  saveThemeTokens: (m: Record<string, string>) => saveThemeTokens(m),
-  loadThemeTokens: () => loadThemeTokens(),
+  loadDesignSystemStudio: () => loadDesignSystemStudio(),
+  saveDesignSystemDraft: (c: DesignSystemConfigurationV1, r: number) => saveDesignSystemDraft(c, r),
+  publishDesignSystemDraft: (id: string, r: number, s: string) => publishDesignSystemDraft(id, r, s),
 }));
 
 /** Mount the hook and hand back its live value plus the scope element. */
@@ -57,8 +67,9 @@ describe('semantic tokens in the draft layer', () => {
   beforeEach(() => {
     localStorage.clear();
     document.documentElement.removeAttribute('style');
-    saveThemeTokens.mockClear();
-    loadThemeTokens.mockClear();
+    saveDesignSystemDraft.mockClear();
+    publishDesignSystemDraft.mockClear();
+    loadDesignSystemStudio.mockClear();
   });
 
   it('every semantic role is draft-editable', () => {
@@ -121,22 +132,23 @@ describe('semantic tokens in the draft layer', () => {
     const second = mountDraft();   // fresh mount = the reload
     expect(second.scope.style.getPropertyValue(ACTION_PRIMARY)).toBe('#0F766E');
     expect(document.documentElement.style.getPropertyValue(ACTION_PRIMARY)).toBe('');
-    expect(saveThemeTokens).not.toHaveBeenCalled();
+    expect(saveDesignSystemDraft).not.toHaveBeenCalled();
   });
 
   it('Apply promotes the draft to :root and persists it, merged with what is published', async () => {
     const { draft, scope } = mountDraft();
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
     void act(() => { draft().set(ACTION_PRIMARY, '#0F766E'); draft().set(NAV_BG, '#101828'); });
 
     await act(async () => { await draft().publish(); });
 
     // Persisted — and the untouched published token survived the merge rather
     // than being wiped by a whole-map overwrite.
-    expect(saveThemeTokens).toHaveBeenCalledWith({
-      '--siomac-gold': '#FFB712',
-      [ACTION_PRIMARY]: '#0F766E',
-      [NAV_BG]: '#101828',
+    expect(saveDesignSystemDraft).toHaveBeenCalled();
+    expect(savedConfiguration.theme.tokens).toEqual({
+      '--siomac-gold': '#FFB712', [ACTION_PRIMARY]: '#0F766E', [NAV_BG]: '#101828',
     });
+    expect(publishDesignSystemDraft).toHaveBeenCalled();
     // Promoted to the document, so the whole app now sees it…
     expect(document.documentElement.style.getPropertyValue(ACTION_PRIMARY)).toBe('#0F766E');
     // …and the draft is empty, so "dirty" stays honest.

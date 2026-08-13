@@ -1,22 +1,22 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "ef3575b8de2aefbd8fcb592477496ac0a513657d",
+    "head": "d69354b07c9c0f7f55c32d31045e688d71ff7236",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "7d0c2fd06ed66a8b939d6dc1",
-    "indexedFiles": 1852
+    "fingerprint": "7376a206d8ae63e734b051fa",
+    "indexedFiles": 1857
   },
   "summary": {
-    "files": 1497,
-    "symbols": 14823,
+    "files": 1502,
+    "symbols": 14867,
     "widgets": 68,
-    "routes": 978,
-    "routeDefinitions": 979,
+    "routes": 983,
+    "routeDefinitions": 984,
     "unmountedRoutes": 17,
-    "apiCalls": 356,
-    "databaseObjects": 1436,
-    "e2eSuites": 91,
-    "e2eTests": 2742
+    "apiCalls": 361,
+    "databaseObjects": 1445,
+    "e2eSuites": 92,
+    "e2eTests": 2748
   },
   "modules": [
     {
@@ -126,25 +126,25 @@
     {
       "id": "widgets",
       "counts": {
-        "files": 72,
-        "symbols": 581,
+        "files": 73,
+        "symbols": 588,
         "widgets": 21,
-        "routes": 15,
-        "routeDefinitions": 15,
+        "routes": 20,
+        "routeDefinitions": 20,
         "apiCalls": 11,
-        "databaseObjects": 14,
+        "databaseObjects": 23,
         "e2eSuites": 1
       }
     },
     {
       "id": "platform",
       "counts": {
-        "files": 437,
-        "symbols": 3809,
+        "files": 440,
+        "symbols": 3843,
         "widgets": 17,
         "routes": 38,
         "routeDefinitions": 53,
-        "apiCalls": 50,
+        "apiCalls": 55,
         "databaseObjects": 327,
         "e2eSuites": 0
       }
@@ -152,14 +152,14 @@
     {
       "id": "testing",
       "counts": {
-        "files": 47,
-        "symbols": 224,
+        "files": 48,
+        "symbols": 227,
         "widgets": 0,
         "routes": 0,
         "routeDefinitions": 0,
         "apiCalls": 0,
         "databaseObjects": 0,
-        "e2eSuites": 16
+        "e2eSuites": 17
       }
     },
     {
@@ -2439,11 +2439,18 @@
       "hash": "d9bab22e4b033598"
     },
     {
+      "path": "netlify/functions/routes/uiPrefs.studio.test.ts",
+      "module": "widgets",
+      "role": "backend-route",
+      "lines": 48,
+      "hash": "d7cfb6f78d9bfd92"
+    },
+    {
       "path": "netlify/functions/routes/uiPrefs.ts",
       "module": "widgets",
       "role": "backend-route",
-      "lines": 338,
-      "hash": "5c95e48ab24ba169"
+      "lines": 441,
+      "hash": "3e584d1bbcc8ff61"
     },
     {
       "path": "netlify/functions/routes/weather.ts",
@@ -2675,6 +2682,13 @@
       "role": "e2e-suite",
       "lines": 718,
       "hash": "1c3b890fa0afd80f"
+    },
+    {
+      "path": "scripts/e2e/suites/designSystemStudio.mjs",
+      "module": "testing",
+      "role": "e2e-suite",
+      "lines": 84,
+      "hash": "9785ce3e692d9373"
     },
     {
       "path": "scripts/e2e/suites/emailDelivery.mjs",
@@ -3961,8 +3975,8 @@
       "path": "src/api/theme.ts",
       "module": "platform",
       "role": "frontend-api",
-      "lines": 23,
-      "hash": "5d00902f24b52ea4"
+      "lines": 56,
+      "hash": "a7c66f7e036d330a"
     },
     {
       "path": "src/api/uiPreferences.ts",
@@ -8791,15 +8805,15 @@
       "path": "src/ui/gallery/BrandThemePanel.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 254,
-      "hash": "99939846635d1920"
+      "lines": 256,
+      "hash": "87cc3ffe3fbf4ac3"
     },
     {
       "path": "src/ui/gallery/BrandThemePanel.tsx",
       "module": "platform",
       "role": "frontend",
       "lines": 676,
-      "hash": "edbdb04af3b99bdc"
+      "hash": "0b4e739ab0399426"
     },
     {
       "path": "src/ui/gallery/FoundationsPanel.tsx",
@@ -8812,15 +8826,15 @@
       "path": "src/ui/gallery/galleryStore.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 166,
-      "hash": "ed5c9ea0c5ba2918"
+      "lines": 202,
+      "hash": "6e7f3aa520be5bab"
     },
     {
       "path": "src/ui/gallery/semanticDraft.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 147,
-      "hash": "3ac3e7f30528b681"
+      "lines": 159,
+      "hash": "3c8d5570844d804b"
     },
     {
       "path": "src/ui/hrfin/ActivityFeed.tsx",
@@ -9232,8 +9246,8 @@
       "path": "src/ui/registry/actions.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 453,
-      "hash": "5bc47a9c718280be"
+      "lines": 460,
+      "hash": "6e2b218309364f01"
     },
     {
       "path": "src/ui/registry/compound.defs.tsx",
@@ -9337,8 +9351,8 @@
       "path": "src/ui/registry/types.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 235,
-      "hash": "72cb280509375a0f"
+      "lines": 241,
+      "hash": "2aa2696730e0aace"
     },
     {
       "path": "src/ui/registry/wizard.def.tsx",
@@ -9411,18 +9425,25 @@
       "hash": "4fde2c84284e7843"
     },
     {
+      "path": "src/ui/studio/RecipeStyleEditor.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 146,
+      "hash": "2c62a8ca21e5a2a5"
+    },
+    {
       "path": "src/ui/studio/Studio.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 417,
-      "hash": "e0b7c98a10cc6f00"
+      "lines": 418,
+      "hash": "1e5e1473bc9cafc8"
     },
     {
       "path": "src/ui/studio/Workbench.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 591,
-      "hash": "69c823b130bf8186"
+      "lines": 599,
+      "hash": "545b0d59de592f57"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -9437,6 +9458,13 @@
       "role": "frontend",
       "lines": 104,
       "hash": "dcf3853e503402f0"
+    },
+    {
+      "path": "src/ui/studio/designSystemConfig.test.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 45,
+      "hash": "65f6adf57c7f5a14"
     },
     {
       "path": "src/ui/studio/family.test.tsx",
@@ -9477,8 +9505,8 @@
       "path": "src/ui/theme/applyTheme.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 138,
-      "hash": "f00c16cd90225e34"
+      "lines": 141,
+      "hash": "93cebe0f8f4fb7ab"
     },
     {
       "path": "src/ui/theme/brand/brandTheme.test.ts",
@@ -10459,6 +10487,13 @@
       "role": "shared-types",
       "lines": 244,
       "hash": "d1ac59599bfa501d"
+    },
+    {
+      "path": "types/designSystem.ts",
+      "module": "platform",
+      "role": "shared-types",
+      "lines": 106,
+      "hash": "287fb65d04d42800"
     },
     {
       "path": "types/emailTemplates.ts",
@@ -48901,10 +48936,34 @@
       "tags": []
     },
     {
+      "name": "app",
+      "kind": "variable",
+      "file": "netlify/functions/routes/uiPrefs.studio.test.ts",
+      "line": 14,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "request",
+      "kind": "function",
+      "file": "netlify/functions/routes/uiPrefs.studio.test.ts",
+      "line": 18,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
       "name": "Ctx",
       "kind": "type",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 25,
+      "line": 28,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -48914,7 +48973,7 @@
       "name": "router",
       "kind": "variable",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 27,
+      "line": 30,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -48924,7 +48983,7 @@
       "name": "getArgs",
       "kind": "function",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 29,
+      "line": 32,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -48934,17 +48993,7 @@
       "name": "strArg",
       "kind": "function",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 36,
-      "module": "widgets",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "cleanTokens",
-      "kind": "function",
-      "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 40,
+      "line": 39,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -48954,7 +49003,7 @@
       "name": "cleanOrder",
       "kind": "function",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 51,
+      "line": 43,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -48964,7 +49013,67 @@
       "name": "UiPreferenceEnvelope",
       "kind": "interface",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 56,
+      "line": 48,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "intArg",
+      "kind": "function",
+      "file": "netlify/functions/routes/uiPrefs.ts",
+      "line": 63,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ThemeRootRow",
+      "kind": "interface",
+      "file": "netlify/functions/routes/uiPrefs.ts",
+      "line": 67,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ThemeDraftRow",
+      "kind": "interface",
+      "file": "netlify/functions/routes/uiPrefs.ts",
+      "line": 74,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ThemeVersionRow",
+      "kind": "interface",
+      "file": "netlify/functions/routes/uiPrefs.ts",
+      "line": 85,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "publishedEnvelope",
+      "kind": "function",
+      "file": "netlify/functions/routes/uiPrefs.ts",
+      "line": 93,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "draftEnvelope",
+      "kind": "function",
+      "file": "netlify/functions/routes/uiPrefs.ts",
+      "line": 103,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -48974,7 +49083,7 @@
       "name": "clampInt",
       "kind": "function",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 208,
+      "line": 311,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -48984,7 +49093,7 @@
       "name": "capStr",
       "kind": "function",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 210,
+      "line": 313,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -48994,7 +49103,7 @@
       "name": "safeConfig",
       "kind": "function",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 212,
+      "line": 315,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -49004,7 +49113,7 @@
       "name": "safeResponsive",
       "kind": "function",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 218,
+      "line": 321,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -49014,7 +49123,7 @@
       "name": "cleanInstanceLayout",
       "kind": "function",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 230,
+      "line": 333,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -52708,6 +52817,42 @@
       "module": "payroll",
       "exported": false,
       "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "title",
+      "kind": "variable",
+      "file": "scripts/e2e/suites/designSystemStudio.mjs",
+      "line": 2,
+      "module": "testing",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "config",
+      "kind": "function",
+      "file": "scripts/e2e/suites/designSystemStudio.mjs",
+      "line": 4,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "run",
+      "kind": "function",
+      "file": "scripts/e2e/suites/designSystemStudio.mjs",
+      "line": 10,
+      "module": "testing",
+      "exported": true,
+      "container": "",
       "tags": [
         "test"
       ]
@@ -75662,17 +75807,77 @@
       "name": "loadThemeTokens",
       "kind": "function",
       "file": "src/api/theme.ts",
-      "line": 13,
+      "line": 14,
       "module": "platform",
       "exported": true,
       "container": "",
       "tags": []
     },
     {
-      "name": "saveThemeTokens",
-      "kind": "function",
+      "name": "StudioState",
+      "kind": "interface",
       "file": "src/api/theme.ts",
       "line": 19,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "loadDesignSystemStudio",
+      "kind": "function",
+      "file": "src/api/theme.ts",
+      "line": 21,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "saveDesignSystemDraft",
+      "kind": "function",
+      "file": "src/api/theme.ts",
+      "line": 27,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "validateDesignSystemDraft",
+      "kind": "function",
+      "file": "src/api/theme.ts",
+      "line": 33,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "publishDesignSystemDraft",
+      "kind": "function",
+      "file": "src/api/theme.ts",
+      "line": 39,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "loadDesignSystemHistory",
+      "kind": "function",
+      "file": "src/api/theme.ts",
+      "line": 45,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "rollbackDesignSystem",
+      "kind": "function",
+      "file": "src/api/theme.ts",
+      "line": 51,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -144621,7 +144826,7 @@
       "name": "NEUTRALS",
       "kind": "object",
       "file": "src/ui/gallery/BrandThemePanel.test.tsx",
-      "line": 35,
+      "line": 36,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -144633,7 +144838,7 @@
       "name": "mountPanel",
       "kind": "function",
       "file": "src/ui/gallery/BrandThemePanel.test.tsx",
-      "line": 48,
+      "line": 49,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -144645,7 +144850,7 @@
       "name": "Harness",
       "kind": "function",
       "file": "src/ui/gallery/BrandThemePanel.test.tsx",
-      "line": 50,
+      "line": 51,
       "module": "platform",
       "exported": false,
       "container": "mountPanel",
@@ -144658,7 +144863,7 @@
       "name": "setSeed",
       "kind": "function",
       "file": "src/ui/gallery/BrandThemePanel.test.tsx",
-      "line": 66,
+      "line": 67,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -144670,7 +144875,7 @@
       "name": "selectLogoFile",
       "kind": "function",
       "file": "src/ui/gallery/BrandThemePanel.test.tsx",
-      "line": 227,
+      "line": 229,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -144682,7 +144887,7 @@
       "name": "publishButton",
       "kind": "function",
       "file": "src/ui/gallery/BrandThemePanel.test.tsx",
-      "line": 244,
+      "line": 246,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -144694,7 +144899,7 @@
       "name": "byText",
       "kind": "function",
       "file": "src/ui/gallery/BrandThemePanel.test.tsx",
-      "line": 248,
+      "line": 250,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -144883,10 +145088,10 @@
       "tags": []
     },
     {
-      "name": "DRAFT_KEY",
+      "name": "RECOVERY_KEY",
       "kind": "variable",
       "file": "src/ui/gallery/galleryStore.ts",
-      "line": 25,
+      "line": 17,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -144896,27 +145101,37 @@
       "name": "GalleryDraft",
       "kind": "interface",
       "file": "src/ui/gallery/galleryStore.ts",
-      "line": 27,
+      "line": 19,
       "module": "platform",
       "exported": true,
       "container": "",
       "tags": []
     },
     {
-      "name": "readStoredDraft",
+      "name": "readRecovery",
       "kind": "function",
       "file": "src/ui/gallery/galleryStore.ts",
-      "line": 57,
+      "line": 44,
       "module": "platform",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "storeDraft",
+      "name": "storeRecovery",
       "kind": "function",
       "file": "src/ui/gallery/galleryStore.ts",
-      "line": 64,
+      "line": 49,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "cloneConfiguration",
+      "kind": "function",
+      "file": "src/ui/gallery/galleryStore.ts",
+      "line": 53,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -144926,7 +145141,7 @@
       "name": "useGalleryDraft",
       "kind": "function",
       "file": "src/ui/gallery/galleryStore.ts",
-      "line": 68,
+      "line": 57,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -144935,19 +145150,7 @@
       ]
     },
     {
-      "name": "saveThemeTokens",
-      "kind": "variable",
-      "file": "src/ui/gallery/semanticDraft.test.tsx",
-      "line": 28,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "test"
-      ]
-    },
-    {
-      "name": "loadThemeTokens",
+      "name": "savedConfiguration",
       "kind": "variable",
       "file": "src/ui/gallery/semanticDraft.test.tsx",
       "line": 29,
@@ -144959,10 +145162,46 @@
       ]
     },
     {
+      "name": "loadDesignSystemStudio",
+      "kind": "variable",
+      "file": "src/ui/gallery/semanticDraft.test.tsx",
+      "line": 30,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "saveDesignSystemDraft",
+      "kind": "variable",
+      "file": "src/ui/gallery/semanticDraft.test.tsx",
+      "line": 34,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "publishDesignSystemDraft",
+      "kind": "variable",
+      "file": "src/ui/gallery/semanticDraft.test.tsx",
+      "line": 38,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
       "name": "mountDraft",
       "kind": "function",
       "file": "src/ui/gallery/semanticDraft.test.tsx",
-      "line": 36,
+      "line": 46,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -144974,7 +145213,7 @@
       "name": "Harness",
       "kind": "function",
       "file": "src/ui/gallery/semanticDraft.test.tsx",
-      "line": 38,
+      "line": 48,
       "module": "platform",
       "exported": false,
       "container": "mountDraft",
@@ -144987,7 +145226,7 @@
       "name": "ACTION_PRIMARY",
       "kind": "variable",
       "file": "src/ui/gallery/semanticDraft.test.tsx",
-      "line": 52,
+      "line": 62,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -145000,7 +145239,7 @@
       "name": "NAV_BG",
       "kind": "variable",
       "file": "src/ui/gallery/semanticDraft.test.tsx",
-      "line": 53,
+      "line": 63,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -145013,7 +145252,7 @@
       "name": "BORDER",
       "kind": "variable",
       "file": "src/ui/gallery/semanticDraft.test.tsx",
-      "line": 54,
+      "line": 64,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147590,7 +147829,7 @@
       "name": "icon",
       "kind": "function",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 172,
+      "line": 179,
       "module": "platform",
       "exported": false,
       "container": "buttonDef",
@@ -147600,7 +147839,7 @@
       "name": "jsx",
       "kind": "function",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 194,
+      "line": 201,
       "module": "platform",
       "exported": false,
       "container": "buttonDef",
@@ -147610,7 +147849,7 @@
       "name": "segmentedDef",
       "kind": "object",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 247,
+      "line": 254,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147620,7 +147859,7 @@
       "name": "menuDef",
       "kind": "object",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 322,
+      "line": 329,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147630,7 +147869,7 @@
       "name": "ACTION_DEFS",
       "kind": "array",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 448,
+      "line": 455,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148894,7 +149133,7 @@
       "name": "StyleGroup",
       "kind": "interface",
       "file": "src/ui/registry/types.ts",
-      "line": 68,
+      "line": 74,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148904,7 +149143,7 @@
       "name": "KeyBinding",
       "kind": "interface",
       "file": "src/ui/registry/types.ts",
-      "line": 75,
+      "line": 81,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148914,7 +149153,7 @@
       "name": "A11yInfo",
       "kind": "interface",
       "file": "src/ui/registry/types.ts",
-      "line": 80,
+      "line": 86,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148924,7 +149163,7 @@
       "name": "ComponentExample",
       "kind": "interface",
       "file": "src/ui/registry/types.ts",
-      "line": 99,
+      "line": 105,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148934,7 +149173,7 @@
       "name": "MigrationInfo",
       "kind": "interface",
       "file": "src/ui/registry/types.ts",
-      "line": 118,
+      "line": 124,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148944,7 +149183,7 @@
       "name": "ComponentCategory",
       "kind": "type",
       "file": "src/ui/registry/types.ts",
-      "line": 138,
+      "line": 144,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148954,7 +149193,7 @@
       "name": "ComponentStatus",
       "kind": "type",
       "file": "src/ui/registry/types.ts",
-      "line": 150,
+      "line": 156,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148964,7 +149203,7 @@
       "name": "ComponentDef",
       "kind": "interface",
       "file": "src/ui/registry/types.ts",
-      "line": 152,
+      "line": 158,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148974,7 +149213,7 @@
       "name": "defaultProps",
       "kind": "function",
       "file": "src/ui/registry/types.ts",
-      "line": 220,
+      "line": 226,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148984,7 +149223,7 @@
       "name": "styleVarNames",
       "kind": "function",
       "file": "src/ui/registry/types.ts",
-      "line": 227,
+      "line": 233,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148994,7 +149233,7 @@
       "name": "isBuilt",
       "kind": "function",
       "file": "src/ui/registry/types.ts",
-      "line": 232,
+      "line": 238,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149876,6 +150115,80 @@
       ]
     },
     {
+      "name": "Scope",
+      "kind": "type",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 11,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "stateForPreview",
+      "kind": "function",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 13,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "belongs",
+      "kind": "function",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 17,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "valueType",
+      "kind": "function",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 26,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TokenControl",
+      "kind": "function",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 30,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "RecipeStyleEditor",
+      "kind": "function",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 60,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "act",
+      "kind": "function",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 73,
+      "module": "platform",
+      "exported": false,
+      "container": "RecipeStyleEditor",
+      "tags": []
+    },
+    {
       "name": "StudioProps",
       "kind": "interface",
       "file": "src/ui/studio/Studio.tsx",
@@ -150056,7 +150369,7 @@
       "name": "Tab",
       "kind": "type",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 33,
+      "line": 35,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150066,7 +150379,7 @@
       "name": "TABS",
       "kind": "array",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 34,
+      "line": 36,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150076,7 +150389,7 @@
       "name": "CONTROL_GROUPS",
       "kind": "array",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 50,
+      "line": 53,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150086,7 +150399,7 @@
       "name": "groupControls",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 57,
+      "line": 60,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150096,7 +150409,7 @@
       "name": "Control",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 77,
+      "line": 80,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150108,7 +150421,7 @@
       "name": "symbolOf",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 152,
+      "line": 155,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150118,7 +150431,7 @@
       "name": "WorkbenchProps",
       "kind": "interface",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 159,
+      "line": 162,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150128,7 +150441,7 @@
       "name": "Workbench",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 167,
+      "line": 171,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150140,7 +150453,7 @@
       "name": "setValues",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 187,
+      "line": 191,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -150150,7 +150463,7 @@
       "name": "set",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 190,
+      "line": 194,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -150160,7 +150473,7 @@
       "name": "specimen",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 203,
+      "line": 207,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -150170,7 +150483,7 @@
       "name": "Block",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 416,
+      "line": 424,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150182,7 +150495,7 @@
       "name": "OverviewSpecimens",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 434,
+      "line": 442,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150194,7 +150507,7 @@
       "name": "UsageTab",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 501,
+      "line": 509,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150206,7 +150519,7 @@
       "name": "A11yTab",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 543,
+      "line": 551,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150483,10 +150796,20 @@
       "tags": []
     },
     {
+      "name": "appliedThemeNames",
+      "kind": "variable",
+      "file": "src/ui/theme/applyTheme.ts",
+      "line": 16,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "ThemeOverrides",
       "kind": "type",
       "file": "src/ui/theme/applyTheme.ts",
-      "line": 17,
+      "line": 18,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150496,7 +150819,7 @@
       "name": "applyThemeOverrides",
       "kind": "function",
       "file": "src/ui/theme/applyTheme.ts",
-      "line": 20,
+      "line": 21,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150506,7 +150829,7 @@
       "name": "PREVIEW_SCOPE_ATTR",
       "kind": "variable",
       "file": "src/ui/theme/applyTheme.ts",
-      "line": 49,
+      "line": 52,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150516,7 +150839,7 @@
       "name": "applyScopedOverrides",
       "kind": "function",
       "file": "src/ui/theme/applyTheme.ts",
-      "line": 59,
+      "line": 62,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150526,7 +150849,7 @@
       "name": "clearScopedOverrides",
       "kind": "function",
       "file": "src/ui/theme/applyTheme.ts",
-      "line": 68,
+      "line": 71,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150536,7 +150859,7 @@
       "name": "clearAllScopedOverrides",
       "kind": "function",
       "file": "src/ui/theme/applyTheme.ts",
-      "line": 74,
+      "line": 77,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150546,7 +150869,7 @@
       "name": "readScopedTokenValue",
       "kind": "function",
       "file": "src/ui/theme/applyTheme.ts",
-      "line": 88,
+      "line": 91,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150556,7 +150879,7 @@
       "name": "clearThemeOverride",
       "kind": "function",
       "file": "src/ui/theme/applyTheme.ts",
-      "line": 94,
+      "line": 97,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150566,7 +150889,7 @@
       "name": "clearThemeOverrides",
       "kind": "function",
       "file": "src/ui/theme/applyTheme.ts",
-      "line": 99,
+      "line": 102,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150576,7 +150899,7 @@
       "name": "readTokenValue",
       "kind": "function",
       "file": "src/ui/theme/applyTheme.ts",
-      "line": 105,
+      "line": 108,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150586,7 +150909,7 @@
       "name": "cacheTheme",
       "kind": "function",
       "file": "src/ui/theme/applyTheme.ts",
-      "line": 109,
+      "line": 112,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150596,7 +150919,7 @@
       "name": "readCachedTheme",
       "kind": "function",
       "file": "src/ui/theme/applyTheme.ts",
-      "line": 113,
+      "line": 116,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150606,7 +150929,7 @@
       "name": "initTheme",
       "kind": "function",
       "file": "src/ui/theme/applyTheme.ts",
-      "line": 122,
+      "line": 125,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -160367,6 +160690,176 @@
       "tags": []
     },
     {
+      "name": "DESIGN_SYSTEM_SCHEMA_VERSION",
+      "kind": "variable",
+      "file": "types/designSystem.ts",
+      "line": 2,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "BUTTON_VARIANTS",
+      "kind": "variable",
+      "file": "types/designSystem.ts",
+      "line": 4,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CanonicalButtonVariant",
+      "kind": "type",
+      "file": "types/designSystem.ts",
+      "line": 5,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "BUTTON_STATES",
+      "kind": "variable",
+      "file": "types/designSystem.ts",
+      "line": 6,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ButtonRecipeState",
+      "kind": "type",
+      "file": "types/designSystem.ts",
+      "line": 7,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TokenMap",
+      "kind": "type",
+      "file": "types/designSystem.ts",
+      "line": 9,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComponentRecipeConfiguration",
+      "kind": "interface",
+      "file": "types/designSystem.ts",
+      "line": 11,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DesignSystemConfigurationV1",
+      "kind": "interface",
+      "file": "types/designSystem.ts",
+      "line": 16,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DesignSystemRevision",
+      "kind": "interface",
+      "file": "types/designSystem.ts",
+      "line": 22,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DesignSystemDraft",
+      "kind": "interface",
+      "file": "types/designSystem.ts",
+      "line": 30,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DesignSystemValidation",
+      "kind": "interface",
+      "file": "types/designSystem.ts",
+      "line": 41,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "emptyDesignSystemConfiguration",
+      "kind": "function",
+      "file": "types/designSystem.ts",
+      "line": 47,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TOKEN_NAME",
+      "kind": "variable",
+      "file": "types/designSystem.ts",
+      "line": 51,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "UNSAFE_VALUE",
+      "kind": "variable",
+      "file": "types/designSystem.ts",
+      "line": 52,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "cleanTokenMap",
+      "kind": "function",
+      "file": "types/designSystem.ts",
+      "line": 54,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sanitizeDesignSystemConfiguration",
+      "kind": "function",
+      "file": "types/designSystem.ts",
+      "line": 74,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "configurationToOverrides",
+      "kind": "function",
+      "file": "types/designSystem.ts",
+      "line": 103,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "EmailTemplateFamily",
       "kind": "type",
       "file": "types/emailTemplates.ts",
@@ -166184,7 +166677,7 @@
       "kind": "registry",
       "render": "() => (\n        <>\n          <Button variant=\"secondary\">Cancel</Button>\n          <Button variant=\"primary\">Save</Button>\n        </>\n      )",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 217
+      "line": 224
     },
     {
       "id": "enterprise.calendar.taskPlanner",
@@ -166654,7 +167147,7 @@
       "kind": "registry",
       "render": "() => <Button variant=\"primary\" iconLeft={<LucideIcon name=\"Plus\" />}>Add employee</Button>",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 237
+      "line": 244
     },
     {
       "id": "platform.weather.current",
@@ -166804,7 +167297,7 @@
       "kind": "registry",
       "render": "() => (\n        <>\n          <Button variant=\"ghost\">Back</Button>\n          <Button variant=\"primary\" iconRight={<LucideIcon name=\"ArrowRight\" />}>Continue</Button>\n        </>\n      )",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 227
+      "line": 234
     }
   ],
   "routes": [
@@ -177873,7 +178366,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 151,
+      "line": 254,
       "module": "widgets"
     },
     {
@@ -177886,7 +178379,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 272,
+      "line": 375,
       "module": "widgets"
     },
     {
@@ -177899,7 +178392,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 324,
+      "line": 427,
       "module": "widgets"
     },
     {
@@ -177912,7 +178405,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 198,
+      "line": 301,
       "module": "widgets"
     },
     {
@@ -177925,7 +178418,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 166,
+      "line": 269,
       "module": "widgets"
     },
     {
@@ -177938,7 +178431,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 290,
+      "line": 393,
       "module": "widgets"
     },
     {
@@ -177951,7 +178444,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 306,
+      "line": 409,
       "module": "widgets"
     },
     {
@@ -177964,7 +178457,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 183,
+      "line": 286,
       "module": "widgets"
     },
     {
@@ -178846,12 +179339,12 @@
       "guards": [],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 65,
+      "line": 57,
       "module": "widgets"
     },
     {
-      "path": "/api/theme/save",
-      "localPath": "/theme/save",
+      "path": "/api/theme/studio/draft/save",
+      "localPath": "/theme/studio/draft/save",
       "router": "router",
       "permission": "",
       "guards": [
@@ -178859,7 +179352,72 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 70,
+      "line": 129,
+      "module": "widgets"
+    },
+    {
+      "path": "/api/theme/studio/get",
+      "localPath": "/theme/studio/get",
+      "router": "router",
+      "permission": "",
+      "guards": [
+        "requireRole"
+      ],
+      "schema": "",
+      "file": "netlify/functions/routes/uiPrefs.ts",
+      "line": 113,
+      "module": "widgets"
+    },
+    {
+      "path": "/api/theme/studio/history",
+      "localPath": "/theme/studio/history",
+      "router": "router",
+      "permission": "",
+      "guards": [
+        "requireRole"
+      ],
+      "schema": "",
+      "file": "netlify/functions/routes/uiPrefs.ts",
+      "line": 170,
+      "module": "widgets"
+    },
+    {
+      "path": "/api/theme/studio/publish",
+      "localPath": "/theme/studio/publish",
+      "router": "router",
+      "permission": "",
+      "guards": [
+        "requireRole"
+      ],
+      "schema": "",
+      "file": "netlify/functions/routes/uiPrefs.ts",
+      "line": 153,
+      "module": "widgets"
+    },
+    {
+      "path": "/api/theme/studio/rollback",
+      "localPath": "/theme/studio/rollback",
+      "router": "router",
+      "permission": "",
+      "guards": [
+        "requireRole"
+      ],
+      "schema": "",
+      "file": "netlify/functions/routes/uiPrefs.ts",
+      "line": 178,
+      "module": "widgets"
+    },
+    {
+      "path": "/api/theme/studio/validate",
+      "localPath": "/theme/studio/validate",
+      "router": "router",
+      "permission": "",
+      "guards": [
+        "requireRole"
+      ],
+      "schema": "",
+      "file": "netlify/functions/routes/uiPrefs.ts",
+      "line": 123,
       "module": "widgets"
     },
     {
@@ -178872,7 +179430,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 97,
+      "line": 200,
       "module": "widgets"
     },
     {
@@ -178885,7 +179443,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 118,
+      "line": 221,
       "module": "widgets"
     },
     {
@@ -182316,15 +182874,55 @@
       "helper": "authPost",
       "caller": "res",
       "file": "src/api/theme.ts",
-      "line": 14,
+      "line": 15,
       "module": "platform"
     },
     {
-      "path": "/api/theme/save",
+      "path": "/api/theme/studio/draft/save",
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/theme.ts",
-      "line": 20,
+      "line": 28,
+      "module": "platform"
+    },
+    {
+      "path": "/api/theme/studio/get",
+      "helper": "apiPost",
+      "caller": "res",
+      "file": "src/api/theme.ts",
+      "line": 22,
+      "module": "platform"
+    },
+    {
+      "path": "/api/theme/studio/history",
+      "helper": "apiPost",
+      "caller": "res",
+      "file": "src/api/theme.ts",
+      "line": 46,
+      "module": "platform"
+    },
+    {
+      "path": "/api/theme/studio/publish",
+      "helper": "apiPost",
+      "caller": "res",
+      "file": "src/api/theme.ts",
+      "line": 40,
+      "module": "platform"
+    },
+    {
+      "path": "/api/theme/studio/rollback",
+      "helper": "apiPost",
+      "caller": "res",
+      "file": "src/api/theme.ts",
+      "line": 52,
+      "module": "platform"
+    },
+    {
+      "path": "/api/theme/studio/validate",
+      "helper": "apiPost",
+      "caller": "res",
+      "file": "src/api/theme.ts",
+      "line": 34,
       "module": "platform"
     },
     {
@@ -184301,70 +184899,133 @@
       "name": "anyone read app_theme",
       "kind": "policy",
       "file": "supabase/migrations/20260623000000_ui_theme_layout.sql",
-      "line": 32,
+      "line": 43,
       "module": "widgets"
     },
     {
       "name": "service write app_theme",
       "kind": "policy",
       "file": "supabase/migrations/20260623000000_ui_theme_layout.sql",
-      "line": 33,
+      "line": 44,
       "module": "widgets"
     },
     {
       "name": "trg_app_theme_updated_at",
       "kind": "trigger",
       "file": "supabase/migrations/20260623000000_ui_theme_layout.sql",
-      "line": 36,
+      "line": 47,
+      "module": "widgets"
+    },
+    {
+      "name": "public.app_theme_drafts",
+      "kind": "table",
+      "file": "supabase/migrations/20260623000000_ui_theme_layout.sql",
+      "line": 57,
+      "module": "widgets"
+    },
+    {
+      "name": "app_theme_one_open_draft_uidx",
+      "kind": "index",
+      "file": "supabase/migrations/20260623000000_ui_theme_layout.sql",
+      "line": 70,
+      "module": "widgets"
+    },
+    {
+      "name": "service manages app_theme_drafts",
+      "kind": "policy",
+      "file": "supabase/migrations/20260623000000_ui_theme_layout.sql",
+      "line": 73,
+      "module": "widgets"
+    },
+    {
+      "name": "trg_app_theme_drafts_updated_at",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260623000000_ui_theme_layout.sql",
+      "line": 75,
+      "module": "widgets"
+    },
+    {
+      "name": "public.app_theme_versions",
+      "kind": "table",
+      "file": "supabase/migrations/20260623000000_ui_theme_layout.sql",
+      "line": 79,
+      "module": "widgets"
+    },
+    {
+      "name": "app_theme_versions_scope_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260623000000_ui_theme_layout.sql",
+      "line": 90,
+      "module": "widgets"
+    },
+    {
+      "name": "service manages app_theme_versions",
+      "kind": "policy",
+      "file": "supabase/migrations/20260623000000_ui_theme_layout.sql",
+      "line": 92,
+      "module": "widgets"
+    },
+    {
+      "name": "public.publish_app_theme",
+      "kind": "function",
+      "file": "supabase/migrations/20260623000000_ui_theme_layout.sql",
+      "line": 97,
+      "module": "widgets"
+    },
+    {
+      "name": "public.rollback_app_theme",
+      "kind": "function",
+      "file": "supabase/migrations/20260623000000_ui_theme_layout.sql",
+      "line": 127,
       "module": "widgets"
     },
     {
       "name": "public.ui_layout",
       "kind": "table",
       "file": "supabase/migrations/20260623000000_ui_theme_layout.sql",
-      "line": 48,
+      "line": 165,
       "module": "widgets"
     },
     {
       "name": "ui_layout_default_uniq",
       "kind": "index",
       "file": "supabase/migrations/20260623000000_ui_theme_layout.sql",
-      "line": 59,
+      "line": 176,
       "module": "widgets"
     },
     {
       "name": "ui_layout_user_uniq",
       "kind": "index",
       "file": "supabase/migrations/20260623000000_ui_theme_layout.sql",
-      "line": 61,
+      "line": 178,
       "module": "widgets"
     },
     {
       "name": "ui_layout_user_idx",
       "kind": "index",
       "file": "supabase/migrations/20260623000000_ui_theme_layout.sql",
-      "line": 63,
+      "line": 180,
       "module": "widgets"
     },
     {
       "name": "authenticated read ui_layout",
       "kind": "policy",
       "file": "supabase/migrations/20260623000000_ui_theme_layout.sql",
-      "line": 66,
+      "line": 183,
       "module": "security"
     },
     {
       "name": "service write ui_layout",
       "kind": "policy",
       "file": "supabase/migrations/20260623000000_ui_theme_layout.sql",
-      "line": 67,
+      "line": 184,
       "module": "widgets"
     },
     {
       "name": "trg_ui_layout_updated_at",
       "kind": "trigger",
       "file": "supabase/migrations/20260623000000_ui_theme_layout.sql",
-      "line": 70,
+      "line": 187,
       "module": "widgets"
     },
     {
@@ -193818,6 +194479,47 @@
         "/api/hr/crew/assignments/update",
         "/api/hr/crew/movements/correct",
         "/api/hr/crew/movements/record"
+      ]
+    },
+    {
+      "name": "designSystemStudio",
+      "title": "Design System Studio",
+      "module": "testing",
+      "file": "scripts/e2e/suites/designSystemStudio.mjs",
+      "tests": [
+        {
+          "name": "ACCESS: non-admin cannot read Studio state",
+          "line": 30
+        },
+        {
+          "name": "validate accepts governed configuration and rejects arbitrary CSS",
+          "line": 34
+        },
+        {
+          "name": "draft/save persists typed config with optimistic revision",
+          "line": 45
+        },
+        {
+          "name": "publish validates, versions and updates runtime tokens",
+          "line": 56
+        },
+        {
+          "name": "publish emits app event and immutable audit side effects",
+          "line": 67
+        },
+        {
+          "name": "history exposes the immutable version and rollback creates a new version",
+          "line": 74
+        }
+      ],
+      "apiPaths": [
+        "/api/theme/get",
+        "/api/theme/studio/draft/save",
+        "/api/theme/studio/get",
+        "/api/theme/studio/history",
+        "/api/theme/studio/publish",
+        "/api/theme/studio/rollback",
+        "/api/theme/studio/validate"
       ]
     },
     {

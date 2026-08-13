@@ -13,15 +13,18 @@
  */
 
 const LS_KEY = 'siomac.theme';
+let appliedThemeNames = new Set<string>();
 
 export type ThemeOverrides = Record<string, string>;
 
 /** Set each override as an inline custom property on :root (wins over base.css). */
 export function applyThemeOverrides(map: ThemeOverrides): void {
   const root = document.documentElement;
+  for (const name of appliedThemeNames) if (!(name in map)) root.style.removeProperty(name);
   for (const [name, value] of Object.entries(map)) {
     if (value) root.style.setProperty(name, value);
   }
+  appliedThemeNames = new Set(Object.keys(map));
 }
 
 /* ── Preview-scoped drafts (UI Kit v2) ───────────────────────────────────────
