@@ -12,7 +12,6 @@ import { LucideIcon } from '../LucideIcon';
 import { Badge } from '../primitives/Badge';
 import { Button } from '../primitives/Button';
 import { Card, CardHeader, CardFooter } from '../containers/Card';
-import { CARD_COMPARISON } from './comparisons';
 import { type ComponentDef, type PropValues } from './types';
 import { type CardVariant, type CardTone, type CardDensity, type CardAccent } from '../containers/Card';
 
@@ -54,9 +53,6 @@ export const cardDef: ComponentDef = {
       'An actionable card is a <div> with a stretched control on top, not a <button> wrapping the content: a <button> may not contain the edit/delete overlays and drill-through links real cards carry. The trade-off is that text in an actionable card is not selectable.',
     ],
   },
-
-
-  comparison: CARD_COMPARISON,
   props: {
     variant:     { type: 'segmented', label: 'Variant', options: ['surface', 'panel', 'metric', 'action'], default: 'surface' },
     density:     { type: 'segmented', label: 'Density', options: ['compact', 'standard', 'comfortable'], default: 'standard' },

@@ -13,7 +13,6 @@ import { Badge } from '../primitives/Badge';
 import { Button } from '../primitives/Button';
 import { PersonCell } from '../table/PersonCell';
 import { DataTable, type DataTableColumn } from '../data/DataTable';
-import { DATA_TABLE_COMPARISON } from './comparisons';
 import { type ComponentDef, type PropValues } from './types';
 import { type DataTableDensity } from '../data/DataTable';
 
@@ -106,9 +105,6 @@ export const dataTableDef: ComponentDef = {
       'The pre-v2 DataTable runtimes and styles are deleted. EmailTemplateLibrary.tsx retains one type-only DtColumn debt marker because its seven pre-existing lint blockers defer that Studio-owned migration.',
     ],
   },
-
-
-  comparison: DATA_TABLE_COMPARISON,
   props: {
     density:      { type: 'segmented', label: 'Density', options: ['compact', 'standard', 'comfortable'], default: 'standard' },
     search:       { type: 'boolean',   label: 'Search', default: true },

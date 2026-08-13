@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "3337d35d27f7d54513f12f6cbad40f3c1cba95fc",
+    "head": "840f2499f4b94893367190b4f77af5002bf8e8b5",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "2116562c7acbe6dc70c1b4af",
-    "indexedFiles": 1831
+    "fingerprint": "a1ad9e239ca06252474d5452",
+    "indexedFiles": 1825
   },
   "summary": {
-    "files": 1476,
-    "symbols": 14711,
+    "files": 1470,
+    "symbols": 14683,
     "widgets": 63,
     "routes": 978,
     "routeDefinitions": 979,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 416,
-        "symbols": 3697,
+        "files": 410,
+        "symbols": 3669,
         "widgets": 12,
         "routes": 38,
         "routeDefinitions": 53,
@@ -8753,13 +8753,6 @@
       "hash": "edbdb04af3b99bdc"
     },
     {
-      "path": "src/ui/gallery/CompareExisting.tsx",
-      "module": "platform",
-      "role": "frontend",
-      "lines": 308,
-      "hash": "04da5af94a3142ab"
-    },
-    {
       "path": "src/ui/gallery/FoundationsPanel.tsx",
       "module": "platform",
       "role": "frontend",
@@ -9127,57 +9120,22 @@
       "path": "src/ui/registry/actions.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 466,
-      "hash": "d1a2034ed2333bc3"
-    },
-    {
-      "path": "src/ui/registry/comparisons/button.cmp.tsx",
-      "module": "platform",
-      "role": "frontend",
-      "lines": 152,
-      "hash": "377849189ed65ab6"
-    },
-    {
-      "path": "src/ui/registry/comparisons/card.cmp.tsx",
-      "module": "platform",
-      "role": "frontend",
-      "lines": 163,
-      "hash": "7d231b20eed28da7"
-    },
-    {
-      "path": "src/ui/registry/comparisons/dataTable.cmp.tsx",
-      "module": "platform",
-      "role": "frontend",
-      "lines": 180,
-      "hash": "b045cfa6093b3e65"
-    },
-    {
-      "path": "src/ui/registry/comparisons/index.ts",
-      "module": "platform",
-      "role": "frontend",
-      "lines": 16,
-      "hash": "50a6fb9c030b3e79"
-    },
-    {
-      "path": "src/ui/registry/comparisons/tabs.cmp.tsx",
-      "module": "platform",
-      "role": "frontend",
-      "lines": 121,
-      "hash": "dc0f59eed8bd2655"
+      "lines": 462,
+      "hash": "1bb29efc59fd2342"
     },
     {
       "path": "src/ui/registry/containers.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 281,
-      "hash": "49f4866052ec9eda"
+      "lines": 277,
+      "hash": "2de72222eaec4dc4"
     },
     {
       "path": "src/ui/registry/data.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 364,
-      "hash": "fb61b68d14e0eedb"
+      "lines": 360,
+      "hash": "1f734fabc3a721c9"
     },
     {
       "path": "src/ui/registry/definitions.tsx",
@@ -9204,15 +9162,15 @@
       "path": "src/ui/registry/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 153,
-      "hash": "112c489b3fd9d1df"
+      "lines": 152,
+      "hash": "e5beae074240fd27"
     },
     {
       "path": "src/ui/registry/navigation.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 279,
-      "hash": "486f9816b1c1411a"
+      "lines": 275,
+      "hash": "f628e1a22af18d8f"
     },
     {
       "path": "src/ui/registry/page-header.def.tsx",
@@ -9232,8 +9190,8 @@
       "path": "src/ui/registry/types.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 317,
-      "hash": "34c8117c6d40cfa3"
+      "lines": 220,
+      "hash": "808ecb3b76ec4153"
     },
     {
       "path": "src/ui/registry/wizard.def.tsx",
@@ -9288,8 +9246,8 @@
       "path": "src/ui/studio/Workbench.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 453,
-      "hash": "b430e76ec67789e5"
+      "lines": 445,
+      "hash": "070e26fc67be7f84"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -144333,127 +144291,6 @@
       ]
     },
     {
-      "name": "KEY",
-      "kind": "variable",
-      "file": "src/ui/gallery/CompareExisting.tsx",
-      "line": 46,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "FamilyDecision",
-      "kind": "type",
-      "file": "src/ui/gallery/CompareExisting.tsx",
-      "line": 48,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "AllDecisions",
-      "kind": "type",
-      "file": "src/ui/gallery/CompareExisting.tsx",
-      "line": 49,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "readDecisions",
-      "kind": "function",
-      "file": "src/ui/gallery/CompareExisting.tsx",
-      "line": 51,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "useDecisions",
-      "kind": "function",
-      "file": "src/ui/gallery/CompareExisting.tsx",
-      "line": 58,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "hook"
-      ]
-    },
-    {
-      "name": "GENERATION",
-      "kind": "object",
-      "file": "src/ui/gallery/CompareExisting.tsx",
-      "line": 84,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "SpecimenCard",
-      "kind": "function",
-      "file": "src/ui/gallery/CompareExisting.tsx",
-      "line": 94,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component",
-        "ui-tile"
-      ]
-    },
-    {
-      "name": "DecisionPanel",
-      "kind": "function",
-      "file": "src/ui/gallery/CompareExisting.tsx",
-      "line": 143,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "brief",
-      "kind": "function",
-      "file": "src/ui/gallery/CompareExisting.tsx",
-      "line": 150,
-      "module": "platform",
-      "exported": false,
-      "container": "DecisionPanel",
-      "tags": []
-    },
-    {
-      "name": "copy",
-      "kind": "function",
-      "file": "src/ui/gallery/CompareExisting.tsx",
-      "line": 166,
-      "module": "platform",
-      "exported": false,
-      "container": "DecisionPanel",
-      "tags": []
-    },
-    {
-      "name": "CompareExisting",
-      "kind": "function",
-      "file": "src/ui/gallery/CompareExisting.tsx",
-      "line": 243,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
       "name": "FoundationsPanel",
       "kind": "function",
       "file": "src/ui/gallery/FoundationsPanel.tsx",
@@ -146784,7 +146621,7 @@
       "name": "s",
       "kind": "function",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 26,
+      "line": 25,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146794,7 +146631,7 @@
       "name": "b",
       "kind": "function",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 27,
+      "line": 26,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146804,7 +146641,7 @@
       "name": "size",
       "kind": "function",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 28,
+      "line": 27,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146814,7 +146651,7 @@
       "name": "DEMO_MENU",
       "kind": "array",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 30,
+      "line": 29,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146824,7 +146661,7 @@
       "name": "SAVE_MENU",
       "kind": "array",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 42,
+      "line": 41,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146834,7 +146671,7 @@
       "name": "noop",
       "kind": "function",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 48,
+      "line": 47,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146844,7 +146681,7 @@
       "name": "buttonDef",
       "kind": "object",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 52,
+      "line": 51,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146854,7 +146691,7 @@
       "name": "segmentedDef",
       "kind": "object",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 261,
+      "line": 257,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146864,7 +146701,7 @@
       "name": "menuDef",
       "kind": "object",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 335,
+      "line": 331,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146874,135 +146711,7 @@
       "name": "ACTION_DEFS",
       "kind": "array",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 461,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "Row",
-      "kind": "function",
-      "file": "src/ui/registry/comparisons/button.cmp.tsx",
-      "line": 20,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "BUTTON_COMPARISON",
-      "kind": "object",
-      "file": "src/ui/registry/comparisons/button.cmp.tsx",
-      "line": 24,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "noop",
-      "kind": "function",
-      "file": "src/ui/registry/comparisons/card.cmp.tsx",
-      "line": 22,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "CARD_COMPARISON",
-      "kind": "object",
-      "file": "src/ui/registry/comparisons/card.cmp.tsx",
-      "line": 24,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "ui-tile"
-      ]
-    },
-    {
-      "name": "noop",
-      "kind": "function",
-      "file": "src/ui/registry/comparisons/dataTable.cmp.tsx",
-      "line": 19,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "Person",
-      "kind": "interface",
-      "file": "src/ui/registry/comparisons/dataTable.cmp.tsx",
-      "line": 21,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "PEOPLE",
-      "kind": "array",
-      "file": "src/ui/registry/comparisons/dataTable.cmp.tsx",
-      "line": 23,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "TONE",
-      "kind": "variable",
-      "file": "src/ui/registry/comparisons/dataTable.cmp.tsx",
-      "line": 30,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "LABEL",
-      "kind": "variable",
-      "file": "src/ui/registry/comparisons/dataTable.cmp.tsx",
-      "line": 31,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "DATA_TABLE_COMPARISON",
-      "kind": "object",
-      "file": "src/ui/registry/comparisons/dataTable.cmp.tsx",
-      "line": 33,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "noop",
-      "kind": "function",
-      "file": "src/ui/registry/comparisons/tabs.cmp.tsx",
-      "line": 23,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "TABS_COMPARISON",
-      "kind": "object",
-      "file": "src/ui/registry/comparisons/tabs.cmp.tsx",
-      "line": 25,
+      "line": 457,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147012,7 +146721,7 @@
       "name": "s",
       "kind": "function",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 19,
+      "line": 18,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147022,7 +146731,7 @@
       "name": "b",
       "kind": "function",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 20,
+      "line": 19,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147032,7 +146741,7 @@
       "name": "noop",
       "kind": "function",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 21,
+      "line": 20,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147042,7 +146751,7 @@
       "name": "Figure",
       "kind": "function",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 24,
+      "line": 23,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147054,7 +146763,7 @@
       "name": "cardDef",
       "kind": "object",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 36,
+      "line": 35,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147066,7 +146775,7 @@
       "name": "CONTAINER_DEFS",
       "kind": "array",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 280,
+      "line": 276,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147076,7 +146785,7 @@
       "name": "s",
       "kind": "function",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 20,
+      "line": 19,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147086,7 +146795,7 @@
       "name": "b",
       "kind": "function",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 21,
+      "line": 20,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147096,7 +146805,7 @@
       "name": "noop",
       "kind": "function",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 22,
+      "line": 21,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147106,7 +146815,7 @@
       "name": "DemoEmployee",
       "kind": "interface",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 27,
+      "line": 26,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147116,7 +146825,7 @@
       "name": "EMPLOYEES",
       "kind": "array",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 38,
+      "line": 37,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147126,7 +146835,7 @@
       "name": "STATUS_TONE",
       "kind": "object",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 46,
+      "line": 45,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147136,7 +146845,7 @@
       "name": "COLUMNS",
       "kind": "array",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 57,
+      "line": 56,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147146,7 +146855,7 @@
       "name": "ROW_ACTIONS",
       "kind": "function",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 80,
+      "line": 79,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147158,7 +146867,7 @@
       "name": "dataTableDef",
       "kind": "object",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 88,
+      "line": 87,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147168,7 +146877,7 @@
       "name": "badgeDef",
       "kind": "object",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 255,
+      "line": 251,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147178,7 +146887,7 @@
       "name": "DATA_DEFS",
       "kind": "array",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 363,
+      "line": 359,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147558,7 +147267,7 @@
       "name": "COMPONENT_DEFS",
       "kind": "array",
       "file": "src/ui/registry/index.ts",
-      "line": 46,
+      "line": 45,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147568,7 +147277,7 @@
       "name": "CATEGORY_LABELS",
       "kind": "object",
       "file": "src/ui/registry/index.ts",
-      "line": 57,
+      "line": 56,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147578,7 +147287,7 @@
       "name": "CATEGORY_ORDER",
       "kind": "array",
       "file": "src/ui/registry/index.ts",
-      "line": 73,
+      "line": 72,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147588,7 +147297,7 @@
       "name": "CategoryGroup",
       "kind": "interface",
       "file": "src/ui/registry/index.ts",
-      "line": 78,
+      "line": 77,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147598,7 +147307,7 @@
       "name": "componentsByCategory",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 92,
+      "line": 91,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147608,7 +147317,7 @@
       "name": "findComponent",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 109,
+      "line": 108,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147618,7 +147327,7 @@
       "name": "RegistryTotals",
       "kind": "interface",
       "file": "src/ui/registry/index.ts",
-      "line": 113,
+      "line": 112,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147628,7 +147337,7 @@
       "name": "registryTotals",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 139,
+      "line": 138,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147638,7 +147347,7 @@
       "name": "isPattern",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 140,
+      "line": 139,
       "module": "platform",
       "exported": false,
       "container": "registryTotals",
@@ -147648,7 +147357,7 @@
       "name": "s",
       "kind": "function",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 25,
+      "line": 24,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147658,7 +147367,7 @@
       "name": "b",
       "kind": "function",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 26,
+      "line": 25,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147668,7 +147377,7 @@
       "name": "noop",
       "kind": "function",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 27,
+      "line": 26,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147678,7 +147387,7 @@
       "name": "CASE_TABS",
       "kind": "array",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 31,
+      "line": 30,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147688,7 +147397,7 @@
       "name": "PLAIN_TABS",
       "kind": "array",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 39,
+      "line": 38,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147698,7 +147407,7 @@
       "name": "MANY_TABS",
       "kind": "array",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 45,
+      "line": 44,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147708,7 +147417,7 @@
       "name": "tabsDef",
       "kind": "object",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 57,
+      "line": 56,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147718,7 +147427,7 @@
       "name": "NAVIGATION_DEFS",
       "kind": "array",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 273,
+      "line": 269,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147875,60 +147584,10 @@
       "tags": []
     },
     {
-      "name": "ImplGeneration",
-      "kind": "type",
-      "file": "src/ui/registry/types.ts",
-      "line": 145,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "ImplSpecimen",
-      "kind": "interface",
-      "file": "src/ui/registry/types.ts",
-      "line": 152,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "ComparisonAspect",
-      "kind": "interface",
-      "file": "src/ui/registry/types.ts",
-      "line": 181,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "RetiredImpl",
-      "kind": "interface",
-      "file": "src/ui/registry/types.ts",
-      "line": 198,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "ComparisonSet",
-      "kind": "interface",
-      "file": "src/ui/registry/types.ts",
-      "line": 207,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
       "name": "ComponentCategory",
       "kind": "type",
       "file": "src/ui/registry/types.ts",
-      "line": 225,
+      "line": 138,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147938,7 +147597,7 @@
       "name": "ComponentStatus",
       "kind": "type",
       "file": "src/ui/registry/types.ts",
-      "line": 237,
+      "line": 150,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147948,7 +147607,7 @@
       "name": "ComponentDef",
       "kind": "interface",
       "file": "src/ui/registry/types.ts",
-      "line": 239,
+      "line": 152,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147958,7 +147617,7 @@
       "name": "defaultProps",
       "kind": "function",
       "file": "src/ui/registry/types.ts",
-      "line": 302,
+      "line": 205,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147968,7 +147627,7 @@
       "name": "styleVarNames",
       "kind": "function",
       "file": "src/ui/registry/types.ts",
-      "line": 309,
+      "line": 212,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147978,7 +147637,7 @@
       "name": "isBuilt",
       "kind": "function",
       "file": "src/ui/registry/types.ts",
-      "line": 314,
+      "line": 217,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148779,7 +148438,7 @@
       "name": "Tab",
       "kind": "type",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 32,
+      "line": 31,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148789,7 +148448,7 @@
       "name": "TABS",
       "kind": "array",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 33,
+      "line": 32,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148799,7 +148458,7 @@
       "name": "CONTROL_GROUPS",
       "kind": "array",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 54,
+      "line": 49,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148809,7 +148468,7 @@
       "name": "groupControls",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 61,
+      "line": 56,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148819,7 +148478,7 @@
       "name": "Control",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 77,
+      "line": 72,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148831,7 +148490,7 @@
       "name": "Workbench",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 133,
+      "line": 128,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148843,7 +148502,7 @@
       "name": "set",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 137,
+      "line": 132,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -148853,7 +148512,7 @@
       "name": "specimen",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 141,
+      "line": 136,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -148863,7 +148522,7 @@
       "name": "Block",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 252,
+      "line": 244,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148875,7 +148534,7 @@
       "name": "OverviewSpecimens",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 270,
+      "line": 262,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148887,7 +148546,7 @@
       "name": "UsageTab",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 363,
+      "line": 355,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148899,7 +148558,7 @@
       "name": "A11yTab",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 405,
+      "line": 397,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -164827,7 +164486,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ maxWidth: '320px' }}>\n          <Card\n            variant=\"action\"\n            onClick={noop}\n            actionLabel=\"View Sarah James\"\n            header={<CardHeader\n              icon={<LucideIcon name=\"User\" />}\n              title=\"Sarah James\"\n              description=\"Safety Officer · EMP-00484\"\n              actions={<Button variant=\"ghost\" size=\"sm\" iconOnly aria-label=\"Edit Sarah James\" iconLeft={<LucideIcon name=\"Pencil\" />} />}\n            />}\n            footer={<CardFooter><span>Started 8 Mar 2021</span><Badge tone=\"success\" size=\"sm\" dot>Active</Badge></CardFooter>}\n          >\n            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>HSE · Georgetown</span>\n          </Card>\n        </div>\n      )",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 254
+      "line": 250
     },
     {
       "id": "bundle.hr.attendance.ops",
@@ -165077,7 +164736,7 @@
       "kind": "registry",
       "render": "() => (\n        <ButtonGroup label=\"Record actions\">\n          <Button variant=\"outline\" iconLeft={<LucideIcon name=\"Download\" />}>Export</Button>\n          <Button variant=\"outline\" iconLeft={<LucideIcon name=\"Printer\" />}>Print</Button>\n          <Button variant=\"outline\" iconLeft={<LucideIcon name=\"Share2\" />}>Share</Button>\n        </ButtonGroup>\n      )",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 227
+      "line": 223
     },
     {
       "id": "hr.employeeMaster.activeWorkforce",
@@ -165287,7 +164946,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>\n          <Tabs id=\"ex-underline\" label=\"Underline\" items={PLAIN_TABS} value=\"overview\" onChange={noop} />\n          <Tabs id=\"ex-contained\" label=\"Contained\" variant=\"contained\" size=\"sm\" items={PLAIN_TABS} value=\"tasks\" onChange={noop} />\n          <Tabs id=\"ex-subtle\" label=\"Subtle\" variant=\"subtle\" size=\"sm\" items={PLAIN_TABS} value=\"files\" onChange={noop} />\n        </div>\n      )",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 217
+      "line": 213
     },
     {
       "id": "one-surface",
@@ -165297,7 +164956,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px' }}>\n          <Card variant=\"metric\" density=\"compact\" header={<CardHeader title=\"Open incidents\" level={null} />}>\n            <Figure value=\"18\" caption=\"4 overdue\" />\n          </Card>\n          <Card variant=\"surface\" header={<CardHeader title=\"Site note\" />}>\n            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Night shift handover completed.</span>\n          </Card>\n          <Card variant=\"panel\" density=\"compact\" header={<CardHeader title=\"Corrective actions\" actions={<Badge tone=\"warning\" size=\"sm\">2 open</Badge>} />}>\n            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Both due this Friday.</span>\n          </Card>\n          <Card variant=\"action\" onClick={noop} actionLabel=\"Start a new inspection\"\n            header={<CardHeader icon={<LucideIcon name=\"ClipboardCheck\" />} title=\"New inspection\" description=\"Start from a template\" />} />\n        </div>\n      )",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 219
+      "line": 215
     },
     {
       "id": "overflow",
@@ -165307,7 +164966,7 @@
       "kind": "registry",
       "render": "() => (\n        <Tabs\n          id=\"ex-overflow\"\n          label=\"Rate version sections\"\n          variant=\"contained\"\n          size=\"sm\"\n          items={MANY_TABS}\n          maxVisible={4}\n          value=\"timeline\"\n          onChange={noop}\n        />\n      )",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 253
+      "line": 249
     },
     {
       "id": "platform.weather.current",
@@ -165367,7 +165026,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'flex', gap: '4px' }}>\n          <Button variant=\"ghost\" size=\"sm\" iconOnly aria-label=\"Edit\" iconLeft={<LucideIcon name=\"Pencil\" />} />\n          <Button variant=\"ghost\" size=\"sm\" iconOnly aria-label=\"Duplicate\" iconLeft={<LucideIcon name=\"Copy\" />} />\n          <Button variant=\"ghost\" size=\"sm\" iconOnly aria-label=\"More actions\" iconLeft={<LucideIcon name=\"EllipsisVertical\" />} />\n        </div>\n      )",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 214
+      "line": 210
     },
     {
       "id": "select-all",
@@ -165387,7 +165046,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>\n          <Badge tone=\"success\" dot>Active</Badge>\n          <Badge tone=\"warning\" dot>Probation</Badge>\n          <Badge tone=\"info\" dot>On leave</Badge>\n          <Badge tone=\"neutral\" dot>Inactive</Badge>\n          <Badge tone=\"danger\" dot>Terminated</Badge>\n        </div>\n      )",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 333
+      "line": 329
     },
     {
       "id": "test.widget",
@@ -165407,7 +165066,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>\n          <Button variant=\"outline\" pressed iconLeft={<LucideIcon name=\"Filter\" />}>Only my cases</Button>\n          <Button variant=\"link\" href=\"#audit\" iconRight={<LucideIcon name=\"ArrowRight\" />}>View audit trail</Button>\n        </div>\n      )",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 243
+      "line": 239
     },
     {
       "id": "tone-scale",
@@ -165417,7 +165076,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>\n          {(['success', 'warning', 'danger', 'info'] as CardTone[]).map(tone => (\n            <Card key={tone} variant=\"metric\" density=\"compact\" tone={tone}\n              header={<CardHeader title={`${tone[0]!.toUpperCase()}${tone.slice(1)} signal`} level={null} />}>\n              <Figure value=\"7\" caption=\"this week\" />\n            </Card>\n          ))}\n        </div>\n      )",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 239
+      "line": 235
     },
     {
       "id": "variants",
@@ -165427,7 +165086,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>\n          <Badge tone=\"danger\" variant=\"soft\">Overdue</Badge>\n          <Badge tone=\"danger\" variant=\"solid\">Critical</Badge>\n          <Badge tone=\"danger\" variant=\"outline\">Escalated</Badge>\n          <Badge tone=\"accent\" size=\"sm\" onRemove={noop}>Night shift</Badge>\n        </div>\n      )",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 347
+      "line": 343
     },
     {
       "id": "vertical",
@@ -165437,7 +165096,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>\n          <Tabs\n            id=\"ex-vertical\"\n            label=\"Settings sections\"\n            orientation=\"vertical\"\n            items={[\n              { id: 'general', label: 'General', icon: <LucideIcon name=\"Settings\" /> },\n              { id: 'security', label: 'Security', icon: <LucideIcon name=\"ShieldCheck\" />, badge: 2 },\n              { id: 'notifications', label: 'Notifications', icon: <LucideIcon name=\"Bell\" /> },\n            ]}\n            value=\"security\"\n            onChange={noop}\n          />\n          <TabPanel tabsId=\"ex-vertical\" tabId=\"security\" value=\"security\">\n            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Two security settings need review.</span>\n          </TabPanel>\n        </div>\n      )",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 229
+      "line": 225
     },
     {
       "id": "w.floored",

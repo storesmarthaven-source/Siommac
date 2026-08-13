@@ -12787,17 +12787,6 @@ PairingTable	function	platform	false	component	src/ui/gallery/BrandThemePanel.ts
 Crew	interface	platform	false		src/ui/gallery/BrandThemePanel.tsx	518	
 CREW	array	platform	false		src/ui/gallery/BrandThemePanel.tsx	520	
 LivePreview	function	platform	false	component	src/ui/gallery/BrandThemePanel.tsx	539	
-KEY	variable	platform	false	component	src/ui/gallery/CompareExisting.tsx	46	
-FamilyDecision	type	platform	true		src/ui/gallery/CompareExisting.tsx	48	
-AllDecisions	type	platform	false		src/ui/gallery/CompareExisting.tsx	49	
-readDecisions	function	platform	false		src/ui/gallery/CompareExisting.tsx	51	
-useDecisions	function	platform	false	hook	src/ui/gallery/CompareExisting.tsx	58	
-GENERATION	object	platform	false		src/ui/gallery/CompareExisting.tsx	84	
-SpecimenCard	function	platform	false	component,ui-tile	src/ui/gallery/CompareExisting.tsx	94	
-DecisionPanel	function	platform	false	component	src/ui/gallery/CompareExisting.tsx	143	
-brief	function	platform	false		src/ui/gallery/CompareExisting.tsx	150	DecisionPanel
-copy	function	platform	false		src/ui/gallery/CompareExisting.tsx	166	DecisionPanel
-CompareExisting	function	platform	true	component	src/ui/gallery/CompareExisting.tsx	243	
 FoundationsPanel	function	platform	true	component	src/ui/gallery/FoundationsPanel.tsx	21	
 TokenCard	function	platform	false	component,ui-tile	src/ui/gallery/FoundationsPanel.tsx	75	
 hexOf	function	platform	false		src/ui/gallery/FoundationsPanel.tsx	134	
@@ -13011,45 +13000,33 @@ VALIDATION_ICON	variable	platform	false	component	src/ui/primitives/TextInput.ts
 TextInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	105	
 handleClear	function	platform	false		src/ui/primitives/TextInput.tsx	144	TextInput
 SearchInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	238	
-s	function	platform	false		src/ui/registry/actions.defs.tsx	26	
-b	function	platform	false		src/ui/registry/actions.defs.tsx	27	
-size	function	platform	false		src/ui/registry/actions.defs.tsx	28	
-DEMO_MENU	array	platform	false		src/ui/registry/actions.defs.tsx	30	
-SAVE_MENU	array	platform	false		src/ui/registry/actions.defs.tsx	42	
-noop	function	platform	false		src/ui/registry/actions.defs.tsx	48	
-buttonDef	object	platform	true		src/ui/registry/actions.defs.tsx	52	
-segmentedDef	object	platform	true		src/ui/registry/actions.defs.tsx	261	
-menuDef	object	platform	true		src/ui/registry/actions.defs.tsx	335	
-ACTION_DEFS	array	platform	true		src/ui/registry/actions.defs.tsx	461	
-Row	function	platform	false	component	src/ui/registry/comparisons/button.cmp.tsx	20	
-BUTTON_COMPARISON	object	platform	true		src/ui/registry/comparisons/button.cmp.tsx	24	
-noop	function	platform	false		src/ui/registry/comparisons/card.cmp.tsx	22	
-CARD_COMPARISON	object	platform	true	ui-tile	src/ui/registry/comparisons/card.cmp.tsx	24	
-noop	function	platform	false		src/ui/registry/comparisons/dataTable.cmp.tsx	19	
-Person	interface	platform	false		src/ui/registry/comparisons/dataTable.cmp.tsx	21	
-PEOPLE	array	platform	false		src/ui/registry/comparisons/dataTable.cmp.tsx	23	
-TONE	variable	platform	false	component	src/ui/registry/comparisons/dataTable.cmp.tsx	30	
-LABEL	variable	platform	false	component	src/ui/registry/comparisons/dataTable.cmp.tsx	31	
-DATA_TABLE_COMPARISON	object	platform	true		src/ui/registry/comparisons/dataTable.cmp.tsx	33	
-noop	function	platform	false		src/ui/registry/comparisons/tabs.cmp.tsx	23	
-TABS_COMPARISON	object	platform	true		src/ui/registry/comparisons/tabs.cmp.tsx	25	
-s	function	platform	false		src/ui/registry/containers.defs.tsx	19	
-b	function	platform	false		src/ui/registry/containers.defs.tsx	20	
-noop	function	platform	false		src/ui/registry/containers.defs.tsx	21	
-Figure	function	platform	false	component	src/ui/registry/containers.defs.tsx	24	
-cardDef	object	platform	true	ui-tile	src/ui/registry/containers.defs.tsx	36	
-CONTAINER_DEFS	array	platform	true		src/ui/registry/containers.defs.tsx	280	
-s	function	platform	false		src/ui/registry/data.defs.tsx	20	
-b	function	platform	false		src/ui/registry/data.defs.tsx	21	
-noop	function	platform	false		src/ui/registry/data.defs.tsx	22	
-DemoEmployee	interface	platform	false		src/ui/registry/data.defs.tsx	27	
-EMPLOYEES	array	platform	false		src/ui/registry/data.defs.tsx	38	
-STATUS_TONE	object	platform	false		src/ui/registry/data.defs.tsx	46	
-COLUMNS	array	platform	false		src/ui/registry/data.defs.tsx	57	
-ROW_ACTIONS	function	platform	false	component	src/ui/registry/data.defs.tsx	80	
-dataTableDef	object	platform	true		src/ui/registry/data.defs.tsx	88	
-badgeDef	object	platform	true		src/ui/registry/data.defs.tsx	255	
-DATA_DEFS	array	platform	true		src/ui/registry/data.defs.tsx	363	
+s	function	platform	false		src/ui/registry/actions.defs.tsx	25	
+b	function	platform	false		src/ui/registry/actions.defs.tsx	26	
+size	function	platform	false		src/ui/registry/actions.defs.tsx	27	
+DEMO_MENU	array	platform	false		src/ui/registry/actions.defs.tsx	29	
+SAVE_MENU	array	platform	false		src/ui/registry/actions.defs.tsx	41	
+noop	function	platform	false		src/ui/registry/actions.defs.tsx	47	
+buttonDef	object	platform	true		src/ui/registry/actions.defs.tsx	51	
+segmentedDef	object	platform	true		src/ui/registry/actions.defs.tsx	257	
+menuDef	object	platform	true		src/ui/registry/actions.defs.tsx	331	
+ACTION_DEFS	array	platform	true		src/ui/registry/actions.defs.tsx	457	
+s	function	platform	false		src/ui/registry/containers.defs.tsx	18	
+b	function	platform	false		src/ui/registry/containers.defs.tsx	19	
+noop	function	platform	false		src/ui/registry/containers.defs.tsx	20	
+Figure	function	platform	false	component	src/ui/registry/containers.defs.tsx	23	
+cardDef	object	platform	true	ui-tile	src/ui/registry/containers.defs.tsx	35	
+CONTAINER_DEFS	array	platform	true		src/ui/registry/containers.defs.tsx	276	
+s	function	platform	false		src/ui/registry/data.defs.tsx	19	
+b	function	platform	false		src/ui/registry/data.defs.tsx	20	
+noop	function	platform	false		src/ui/registry/data.defs.tsx	21	
+DemoEmployee	interface	platform	false		src/ui/registry/data.defs.tsx	26	
+EMPLOYEES	array	platform	false		src/ui/registry/data.defs.tsx	37	
+STATUS_TONE	object	platform	false		src/ui/registry/data.defs.tsx	45	
+COLUMNS	array	platform	false		src/ui/registry/data.defs.tsx	56	
+ROW_ACTIONS	function	platform	false	component	src/ui/registry/data.defs.tsx	79	
+dataTableDef	object	platform	true		src/ui/registry/data.defs.tsx	87	
+badgeDef	object	platform	true		src/ui/registry/data.defs.tsx	251	
+DATA_DEFS	array	platform	true		src/ui/registry/data.defs.tsx	359	
 PropValue	type	platform	false		src/ui/registry/definitions.tsx	28	
 s	function	platform	false		src/ui/registry/definitions.tsx	29	
 b	function	platform	false		src/ui/registry/definitions.tsx	30	
@@ -13087,23 +13064,23 @@ GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	661
 selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	679	
 search	function	platform	false		src/ui/registry/forms.defs.tsx	782	selectDef
 FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	813	
-COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	46	
-CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	57	
-CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	73	
-CategoryGroup	interface	platform	true		src/ui/registry/index.ts	78	
-componentsByCategory	function	platform	true		src/ui/registry/index.ts	92	
-findComponent	function	platform	true		src/ui/registry/index.ts	109	
-RegistryTotals	interface	platform	true		src/ui/registry/index.ts	113	
-registryTotals	function	platform	true		src/ui/registry/index.ts	139	
-isPattern	function	platform	false		src/ui/registry/index.ts	140	registryTotals
-s	function	platform	false		src/ui/registry/navigation.defs.tsx	25	
-b	function	platform	false		src/ui/registry/navigation.defs.tsx	26	
-noop	function	platform	false		src/ui/registry/navigation.defs.tsx	27	
-CASE_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	31	
-PLAIN_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	39	
-MANY_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	45	
-tabsDef	object	platform	true		src/ui/registry/navigation.defs.tsx	57	
-NAVIGATION_DEFS	array	platform	true		src/ui/registry/navigation.defs.tsx	273	
+COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	45	
+CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	56	
+CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	72	
+CategoryGroup	interface	platform	true		src/ui/registry/index.ts	77	
+componentsByCategory	function	platform	true		src/ui/registry/index.ts	91	
+findComponent	function	platform	true		src/ui/registry/index.ts	108	
+RegistryTotals	interface	platform	true		src/ui/registry/index.ts	112	
+registryTotals	function	platform	true		src/ui/registry/index.ts	138	
+isPattern	function	platform	false		src/ui/registry/index.ts	139	registryTotals
+s	function	platform	false		src/ui/registry/navigation.defs.tsx	24	
+b	function	platform	false		src/ui/registry/navigation.defs.tsx	25	
+noop	function	platform	false		src/ui/registry/navigation.defs.tsx	26	
+CASE_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	30	
+PLAIN_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	38	
+MANY_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	44	
+tabsDef	object	platform	true		src/ui/registry/navigation.defs.tsx	56	
+NAVIGATION_DEFS	array	platform	true		src/ui/registry/navigation.defs.tsx	269	
 noop	function	platform	false		src/ui/registry/page-header.def.tsx	8	
 previewActions	variable	platform	false		src/ui/registry/page-header.def.tsx	10	
 pageHeaderDef	object	platform	true		src/ui/registry/page-header.def.tsx	19	
@@ -13119,17 +13096,12 @@ KeyBinding	interface	platform	true		src/ui/registry/types.ts	75
 A11yInfo	interface	platform	true		src/ui/registry/types.ts	80	
 ComponentExample	interface	platform	true		src/ui/registry/types.ts	99	
 MigrationInfo	interface	platform	true		src/ui/registry/types.ts	118	
-ImplGeneration	type	platform	true		src/ui/registry/types.ts	145	
-ImplSpecimen	interface	platform	true		src/ui/registry/types.ts	152	
-ComparisonAspect	interface	platform	true		src/ui/registry/types.ts	181	
-RetiredImpl	interface	platform	true		src/ui/registry/types.ts	198	
-ComparisonSet	interface	platform	true		src/ui/registry/types.ts	207	
-ComponentCategory	type	platform	true		src/ui/registry/types.ts	225	
-ComponentStatus	type	platform	true		src/ui/registry/types.ts	237	
-ComponentDef	interface	platform	true		src/ui/registry/types.ts	239	
-defaultProps	function	platform	true		src/ui/registry/types.ts	302	
-styleVarNames	function	platform	true		src/ui/registry/types.ts	309	
-isBuilt	function	platform	true		src/ui/registry/types.ts	314	
+ComponentCategory	type	platform	true		src/ui/registry/types.ts	138	
+ComponentStatus	type	platform	true		src/ui/registry/types.ts	150	
+ComponentDef	interface	platform	true		src/ui/registry/types.ts	152	
+defaultProps	function	platform	true		src/ui/registry/types.ts	205	
+styleVarNames	function	platform	true		src/ui/registry/types.ts	212	
+isBuilt	function	platform	true		src/ui/registry/types.ts	217	
 s	function	platform	false		src/ui/registry/wizard.def.tsx	16	
 b	function	platform	false		src/ui/registry/wizard.def.tsx	17	
 noop	function	platform	false		src/ui/registry/wizard.def.tsx	18	
@@ -13205,18 +13177,18 @@ ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx
 Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	147	
 PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	202	
 Studio	function	platform	true	component	src/ui/studio/Studio.tsx	211	
-Tab	type	platform	false		src/ui/studio/Workbench.tsx	32	
-TABS	array	platform	false		src/ui/studio/Workbench.tsx	33	
-CONTROL_GROUPS	array	platform	false		src/ui/studio/Workbench.tsx	54	
-groupControls	function	platform	false		src/ui/studio/Workbench.tsx	61	
-Control	function	platform	false	component	src/ui/studio/Workbench.tsx	77	
-Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	133	
-set	function	platform	false		src/ui/studio/Workbench.tsx	137	Workbench
-specimen	function	platform	false		src/ui/studio/Workbench.tsx	141	Workbench
-Block	function	platform	false	component	src/ui/studio/Workbench.tsx	252	
-OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	270	
-UsageTab	function	platform	false	component	src/ui/studio/Workbench.tsx	363	
-A11yTab	function	platform	false	component	src/ui/studio/Workbench.tsx	405	
+Tab	type	platform	false		src/ui/studio/Workbench.tsx	31	
+TABS	array	platform	false		src/ui/studio/Workbench.tsx	32	
+CONTROL_GROUPS	array	platform	false		src/ui/studio/Workbench.tsx	49	
+groupControls	function	platform	false		src/ui/studio/Workbench.tsx	56	
+Control	function	platform	false	component	src/ui/studio/Workbench.tsx	72	
+Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	128	
+set	function	platform	false		src/ui/studio/Workbench.tsx	132	Workbench
+specimen	function	platform	false		src/ui/studio/Workbench.tsx	136	Workbench
+Block	function	platform	false	component	src/ui/studio/Workbench.tsx	244	
+OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	262	
+UsageTab	function	platform	false	component	src/ui/studio/Workbench.tsx	355	
+A11yTab	function	platform	false	component	src/ui/studio/Workbench.tsx	397	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	

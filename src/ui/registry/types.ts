@@ -133,93 +133,6 @@ export interface MigrationInfo {
 
 /* ── Existing-implementation comparison ────────────────────────────────────── */
 
-/**
- * Where an implementation sits in the app's history.
- *
- * This is NOT a ranking. It exists because "which is newer?" was being used as
- * a proxy for "which is better", in both directions — the kit's own component
- * was assumed to be the visual authority because it lived in `@ui`, and a newer
- * module component was assumed to be an improvement because it was newer.
- * Neither is a design decision. Age is context; the choice is the user's.
- */
-export type ImplGeneration =
-  | 'original'      // pre-kit, usually a raw class family
-  | 'kit-legacy'    // lived in @ui before UI Kit v2, small consumer count
-  | 'module'        // a module built its own, often for a real reason
-  | 'recent'        // built during the current enterprise screens
-  | 'v2';           // the UI Kit v2 rebuild
-
-export interface ImplSpecimen {
-  /** Stable within the family — the letter shown in the comparison ("A", "B"). */
-  id: string;
-  name: string;
-  /** Repo-relative source, or the stylesheet + class family for a CSS-only one. */
-  source: string;
-  generation: ImplGeneration;
-  /** How many files use it, and how that was counted. */
-  consumers: number;
-  consumerNote?: string;
-  /** Whether the newest enterprise screens are built on it. */
-  usedByRecentScreens: boolean;
-
-  /** What it actually supports — states, sizes, capabilities. */
-  features: readonly string[];
-  /** What it does about keyboard, ARIA and focus. Blunt: "none" is an answer. */
-  a11y: readonly string[];
-  /** Known defects, measured rather than suspected. */
-  defects?: readonly string[];
-
-  /** Live preview. Renders the REAL implementation, not a mock of it. */
-  render: () => VNode;
-}
-
-/**
- * One decision the user makes about a family. Aspects are deliberately
- * separate, because the point of the comparison is that the answer can be
- * "visual design from B, behaviour from E, spacing from C".
- */
-export interface ComparisonAspect {
-  id: string;
-  label: string;
-  /** What the choice actually decides, in one sentence. */
-  question: string;
-  /** Specimen ids that are plausible answers. Omit to offer all of them. */
-  candidates?: readonly string[];
-}
-
-/**
- * An implementation that is NOT a candidate — it belongs to a legacy page and is
- * being removed rather than chosen from.
- *
- * Listed rather than silently omitted: the comparison has to show the work the
- * decision creates, and "156 raw .vt-table uses" is the real cost of retiring
- * the HSE register.
- */
-export interface RetiredImpl {
-  name: string;
-  source: string;
-  /** The pages that still carry it. */
-  usedBy: string;
-  /** Occurrences to remove. */
-  uses: number;
-}
-
-export interface ComparisonSet {
-  /** One line on why this family has more than one implementation. */
-  summary: string;
-  /** ONLY the treatments on currently-built pages. Legacy ones go in `retire`. */
-  specimens: readonly ImplSpecimen[];
-  aspects: readonly ComparisonAspect[];
-  /** Legacy-page implementations to be removed, not chosen between. */
-  retire?: readonly RetiredImpl[];
-  /**
-   * Things that are NOT up for selection, and why — the accessibility engine,
-   * the test suite, the registry wiring. Stated so a visual choice is never
-   * mistaken for a decision to throw those away.
-   */
-  keepRegardless?: readonly string[];
-}
-
 /* ── Component definition ──────────────────────────────────────────────────── */
 
 export type ComponentCategory =
@@ -268,16 +181,6 @@ export interface ComponentDef {
   a11y?: A11yInfo;
   examples?: readonly ComponentExample[];
   migration?: MigrationInfo;
-
-  /**
-   * Every materially different EXISTING implementation of this family, for the
-   * Compare Existing mode.
-   *
-   * A family is not ready to be consolidated until this is filled in and the
-   * user has chosen. Building the canonical component first and comparing
-   * afterwards is the mistake this field exists to prevent.
-   */
-  comparison?: ComparisonSet;
 
   /**
    * Render the component for the given prop values and forced state.

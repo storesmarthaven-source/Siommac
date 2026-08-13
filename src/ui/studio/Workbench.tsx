@@ -27,19 +27,14 @@ import {
   defaultProps, type ComponentDef, type PropValues, type PropControl,
 } from '../registry';
 import { type UiState } from '../tokens';
-import { CompareExisting } from '../gallery/CompareExisting';
 
-type Tab = 'overview' | 'playground' | 'usage' | 'accessibility' | 'code' | 'compare';
+type Tab = 'overview' | 'playground' | 'usage' | 'accessibility' | 'code';
 const TABS: { id: Tab; label: string }[] = [
   { id: 'overview',      label: 'Overview' },
   { id: 'playground',    label: 'Playground' },
   { id: 'usage',         label: 'Usage' },
   { id: 'accessibility', label: 'Accessibility' },
   { id: 'code',          label: 'Code' },
-  /* Kept from the retired Gallery: a family is not ready to consolidate until
-     its existing implementations have been surveyed and one chosen. Drawer
-     still has seven, so this tool has a live job. */
-  { id: 'compare',       label: 'Compare' },
 ];
 
 /**
@@ -223,9 +218,6 @@ export function Workbench({ def, onBack }: { def: ComponentDef; onBack: () => vo
         </div>
       )}
 
-      {tab === 'compare' && (
-        <section class="sds-wb__panel"><CompareExisting def={def} /></section>
-      )}
       {tab === 'usage' && <UsageTab def={def} />}
       {tab === 'accessibility' && <A11yTab def={def} specimen={specimen} />}
 

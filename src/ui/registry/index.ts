@@ -21,7 +21,6 @@ export {
   type ComponentDef, type ComponentCategory, type ComponentStatus,
   type PropControl, type PropValues, type StyleControl, type StyleGroup,
   type A11yInfo, type KeyBinding, type ComponentExample, type MigrationInfo,
-  type ComparisonSet, type ComparisonAspect, type ImplSpecimen, type ImplGeneration, type RetiredImpl,
   defaultProps, styleVarNames, isBuilt,
 } from './types';
 

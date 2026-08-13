@@ -19,7 +19,6 @@ import {
 } from '../navigation/Tabs';
 import { wizardDef } from './wizard.def';
 import { pageActionBarDef, pageHeaderDef } from './page-header.def';
-import { TABS_COMPARISON } from './comparisons';
 import { type ComponentDef, type PropValues } from './types';
 
 const s = (v: PropValues[string] | undefined, f = ''): string => (typeof v === 'string' ? v : f);
@@ -74,9 +73,6 @@ export const tabsDef: ComponentDef = {
       'Use activation="manual" when a panel fires a network request — under the default, arrowing past four tabs selects four tabs.',
     ],
   },
-
-
-  comparison: TABS_COMPARISON,
   props: {
     orientation: { type: 'segmented', label: 'Orientation', options: ['horizontal', 'vertical'], default: 'horizontal' },
     variant:     { type: 'segmented', label: 'Variant', options: ['underline', 'contained', 'subtle'], default: 'underline' },

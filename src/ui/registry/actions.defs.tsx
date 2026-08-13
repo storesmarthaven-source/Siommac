@@ -19,7 +19,6 @@ import { LucideIcon } from '../LucideIcon';
 import { Button, ButtonGroup } from '../primitives/Button';
 import { SegmentedControl, DropdownButton, SplitButton } from '../primitives/actions';
 import { type MenuItems } from '../overlays/DropdownMenu';
-import { BUTTON_COMPARISON } from './comparisons';
 import { type ComponentDef, type PropValues } from './types';
 import { type ControlSize } from '../tokens';
 
@@ -72,9 +71,6 @@ export const buttonDef: ComponentDef = {
       '151 distinct *btn* class families exist across the app; every one of them is this component with different props.',
     ],
   },
-
-
-  comparison: BUTTON_COMPARISON,
   props: {
     variant:   { type: 'select',    label: 'Variant', options: ['primary', 'secondary', 'outline', 'ghost', 'danger', 'link'], default: 'primary',
                  help: 'danger uses the status red, primary the brand red — one means "main action", the other "this destroys something".' },
