@@ -67,7 +67,7 @@ export {
 // `IconButton`, `LinkButton` and `ToggleButton` were deleted because each was a
 // fixed-prop wrapper that delegated straight back to Button.
 export {
-  Button, ButtonGroup,
+  Button,
   type ButtonVariant, type ButtonProps,
 } from './primitives/Button';
 export {

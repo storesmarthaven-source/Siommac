@@ -382,20 +382,3 @@
   /* ── Button group ─────────────────────────────────────────────────────────
      Joins adjacent buttons into one control. Squares the inner corners so the
      seam reads as a single segmented control rather than overlapping pills. */
-  .ui-btn-group {
-    display: inline-flex;
-    align-items: center;
-  }
-  .ui-btn-group > .ui-btn:not(:first-child) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    margin-left: calc(var(--ui-button-border-width) * -1);
-  }
-  .ui-btn-group > .ui-btn:not(:last-child) {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-  /* The hovered/focused segment must paint over its neighbour's shared border. */
-  .ui-btn-group > .ui-btn:hover,
-  .ui-btn-group > .ui-btn:focus-visible { z-index: 1; }
-}

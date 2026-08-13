@@ -11,7 +11,7 @@
  *
  * The three that remain each own real behaviour a caller would otherwise
  * reimplement. SegmentedControl carries radiogroup semantics and arrow-key
- * movement — which is what separates it from a `ButtonGroup` of independent
+ * movement — which is what separates it from a row of independent
  * actions, and changes what a screen reader announces. DropdownButton and
  * SplitButton own the anchor, the open state, the `aria-expanded`/`aria-controls`
  * pair and focus return; inline that is five things per call site to get wrong.

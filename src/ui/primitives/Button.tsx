@@ -235,22 +235,3 @@ export function Button(props: ButtonProps): VNode {
     </button>
   );
 }
-
-/**
- * Joins adjacent buttons into one silhouette (squared inner corners, shared
- * borders). A LAYOUT wrapper, not a control — each child keeps its own handler
- * and its own place in the tab order.
- *
- * For one value with several options, use `SegmentedControl` instead: that is a
- * radiogroup with roving focus, and the difference changes what a screen reader
- * announces, not just the borders.
- */
-export function ButtonGroup(
-  { children, class: extra, label }: { children: ComponentChildren; class?: string; label?: string },
-): VNode {
-  return (
-    <div class={`ui-btn-group${extra ? ` ${extra}` : ''}`} role="group" aria-label={label}>
-      {children}
-    </div>
-  );
-}

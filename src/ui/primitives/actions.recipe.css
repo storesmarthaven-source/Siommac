@@ -1,7 +1,7 @@
 /**
  * src/ui/primitives/actions.recipe.css — the rest of the Actions family.
  *
- * Button/IconButton/ButtonGroup live in Button.recipe.css; this covers the
+ * Button lives in Button.recipe.css; this covers the
  * composed action controls that sit on top of them: SegmentedControl,
  * ToggleButton, DropdownButton, SplitButton and the menu surface they share.
  *
@@ -48,7 +48,7 @@
 
   /* ── SegmentedControl ─────────────────────────────────────────────────────
      A single-choice control that looks like a switch, not a set of buttons.
-     Distinct from ButtonGroup: a group is several INDEPENDENT actions joined
+     Distinct from a row of independent Buttons: those are several SEPARATE actions
      visually; a segmented control is ONE value with several options, so it
      carries radiogroup semantics and roving focus. */
   .ui-segmented {

@@ -180,7 +180,7 @@ size, state, icon-only, tone, orientation, density — is a prop.
 
 **Is a new component** — the interaction genuinely differs:
 
-- `SegmentedControl` vs a `ButtonGroup` of Buttons — radiogroup semantics, roving
+- `SegmentedControl` vs a row of Buttons — radiogroup semantics, roving
   focus, arrow-key movement. A screen reader announces them differently.
 - `Menu` vs `Select` — a menu moves REAL focus onto its items; a listbox keeps
   focus on the trigger and uses `aria-activedescendant`.

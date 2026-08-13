@@ -12,7 +12,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/preact';
 import { type VNode } from 'preact';
-import { Button, ButtonGroup } from './Button';
+import { Button } from './Button';
 
 const Icon = (): VNode => <svg data-testid="icon" />;
 
@@ -229,15 +229,3 @@ describe('Button — link', () => {
   });
 });
 
-describe('ButtonGroup', () => {
-  it('groups its children with an accessible name', () => {
-    render(
-      <ButtonGroup label="View mode">
-        <Button>Grid</Button>
-        <Button>List</Button>
-      </ButtonGroup>,
-    );
-    const group = screen.getByRole('group', { name: 'View mode' });
-    expect(group.querySelectorAll('button')).toHaveLength(2);
-  });
-});

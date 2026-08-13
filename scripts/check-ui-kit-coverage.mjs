@@ -220,7 +220,7 @@ for (const f of appFiles) {
 }
 
 /** Kit adoption: files importing a canonical component from the barrel. */
-const KIT_SYMBOLS = ['Button', 'IconButton', 'TextInput', 'Select', 'Combobox', 'PersonSearchSelect', 'Dialog', 'SegmentedControl', 'DropdownButton', 'SplitButton', 'ToggleButton', 'LinkButton', 'ButtonGroup', 'FormField'];
+const KIT_SYMBOLS = ['Button', 'IconButton', 'TextInput', 'Select', 'Combobox', 'PersonSearchSelect', 'Dialog', 'SegmentedControl', 'DropdownButton', 'SplitButton', 'ToggleButton', 'LinkButton', 'FormField'];
 const adoptingFiles = appFiles.filter(f =>
   /from\s+'@ui'/.test(f.text) && KIT_SYMBOLS.some(sym => new RegExp(`\\b${sym}\\b`).test(f.text)),
 ).length;
