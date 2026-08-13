@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "3e0d56857953ccfe5e1da487e7098716baf5f574",
+    "head": "4df59c8b9d283cbf32204d05e1be3333154ab94c",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "0c081c547ea5c19085328e6d",
+    "fingerprint": "ac0626a7b6690bd696e8734b",
     "indexedFiles": 1859
   },
   "summary": {
     "files": 1504,
-    "symbols": 14895,
+    "symbols": 14898,
     "widgets": 68,
     "routes": 983,
     "routeDefinitions": 984,
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 442,
-        "symbols": 3871,
+        "symbols": 3874,
         "widgets": 17,
         "routes": 38,
         "routeDefinitions": 53,
@@ -9260,8 +9260,8 @@
       "path": "src/ui/registry/compound.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 231,
-      "hash": "cea39d584ff8cb38"
+      "lines": 238,
+      "hash": "ca94e0f02ee3c631"
     },
     {
       "path": "src/ui/registry/containers.defs.tsx",
@@ -9456,8 +9456,8 @@
       "path": "src/ui/studio/Workbench.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 430,
-      "hash": "c96f199bf7b524c3"
+      "lines": 575,
+      "hash": "cf2fbe6c24ebec68"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -9484,8 +9484,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 313,
-      "hash": "d39a22ab5354048e"
+      "lines": 338,
+      "hash": "0cf8229bad3abe22"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -148065,7 +148065,7 @@
       "name": "RECORD_MENU",
       "kind": "array",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 38,
+      "line": 42,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148075,7 +148075,7 @@
       "name": "SAVE_ALTERNATIVES",
       "kind": "array",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 50,
+      "line": 54,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148085,7 +148085,7 @@
       "name": "DROPDOWN_VARIANTS",
       "kind": "variable",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 58,
+      "line": 62,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148097,7 +148097,7 @@
       "name": "SPLIT_VARIANTS",
       "kind": "variable",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 59,
+      "line": 63,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148109,7 +148109,7 @@
       "name": "dropdownButtonDef",
       "kind": "object",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 63,
+      "line": 67,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148119,7 +148119,7 @@
       "name": "splitButtonDef",
       "kind": "object",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 144,
+      "line": 148,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148129,7 +148129,7 @@
       "name": "COMPOUND_DEFS",
       "kind": "array",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 223,
+      "line": 230,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148139,7 +148139,7 @@
       "name": "COMPOUND_OF",
       "kind": "object",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 226,
+      "line": 233,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150766,10 +150766,42 @@
       "tags": []
     },
     {
+      "name": "CompoundButtonEditorProps",
+      "kind": "interface",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 166,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CompoundButtonEditor",
+      "kind": "function",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 180,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "reset",
+      "kind": "function",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 193,
+      "module": "platform",
+      "exported": false,
+      "container": "CompoundButtonEditor",
+      "tags": []
+    },
+    {
       "name": "Workbench",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 166,
+      "line": 307,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150781,7 +150813,7 @@
       "name": "setValues",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 180,
+      "line": 321,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -150791,7 +150823,7 @@
       "name": "set",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 183,
+      "line": 324,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -150801,7 +150833,7 @@
       "name": "specimen",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 196,
+      "line": 337,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -150811,7 +150843,7 @@
       "name": "Block",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 350,
+      "line": 494,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150823,7 +150855,7 @@
       "name": "OverviewSpecimens",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 368,
+      "line": 512,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -166971,7 +167003,7 @@
       "kind": "registry",
       "render": "() => <SplitButton action={{ label: 'Create' }} items={SAVE_ALTERNATIVES} variant=\"secondary\" />",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 218
+      "line": 225
     },
     {
       "id": "dialog-footer",
@@ -167011,7 +167043,7 @@
       "kind": "registry",
       "render": "() => <DropdownButton label=\"Export\" variant=\"secondary\" items={RECORD_MENU} />",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 133
+      "line": 137
     },
     {
       "id": "filter",
@@ -167021,7 +167053,7 @@
       "kind": "registry",
       "render": "() => <DropdownButton label=\"Status: All\" variant=\"secondary\" matchWidth items={RECORD_MENU} />",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 137
+      "line": 141
     },
     {
       "id": "finance.payroll.assignedWork",
@@ -167511,7 +167543,7 @@
       "kind": "registry",
       "render": "() => <DropdownButton label=\"Actions\" variant=\"outline\" items={RECORD_MENU} />",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 135
+      "line": 139
     },
     {
       "id": "save",
@@ -167521,7 +167553,7 @@
       "kind": "registry",
       "render": "() => <SplitButton action={{ label: 'Save' }} items={SAVE_ALTERNATIVES} />",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 216
+      "line": 223
     },
     {
       "id": "select-all",

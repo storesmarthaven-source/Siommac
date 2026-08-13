@@ -13117,14 +13117,14 @@ s	function	platform	false		src/ui/registry/compound.defs.tsx	31
 b	function	platform	false		src/ui/registry/compound.defs.tsx	33	
 size	function	platform	false		src/ui/registry/compound.defs.tsx	34	
 icon	function	platform	false		src/ui/registry/compound.defs.tsx	36	
-RECORD_MENU	array	platform	false		src/ui/registry/compound.defs.tsx	38	
-SAVE_ALTERNATIVES	array	platform	false		src/ui/registry/compound.defs.tsx	50	
-DROPDOWN_VARIANTS	variable	platform	false	component	src/ui/registry/compound.defs.tsx	58	
-SPLIT_VARIANTS	variable	platform	false	component	src/ui/registry/compound.defs.tsx	59	
-dropdownButtonDef	object	platform	false		src/ui/registry/compound.defs.tsx	63	
-splitButtonDef	object	platform	false		src/ui/registry/compound.defs.tsx	144	
-COMPOUND_DEFS	array	platform	true		src/ui/registry/compound.defs.tsx	223	
-COMPOUND_OF	object	platform	true		src/ui/registry/compound.defs.tsx	226	
+RECORD_MENU	array	platform	false		src/ui/registry/compound.defs.tsx	42	
+SAVE_ALTERNATIVES	array	platform	false		src/ui/registry/compound.defs.tsx	54	
+DROPDOWN_VARIANTS	variable	platform	false	component	src/ui/registry/compound.defs.tsx	62	
+SPLIT_VARIANTS	variable	platform	false	component	src/ui/registry/compound.defs.tsx	63	
+dropdownButtonDef	object	platform	false		src/ui/registry/compound.defs.tsx	67	
+splitButtonDef	object	platform	false		src/ui/registry/compound.defs.tsx	148	
+COMPOUND_DEFS	array	platform	true		src/ui/registry/compound.defs.tsx	230	
+COMPOUND_OF	object	platform	true		src/ui/registry/compound.defs.tsx	233	
 s	function	platform	false		src/ui/registry/containers.defs.tsx	18	
 b	function	platform	false		src/ui/registry/containers.defs.tsx	19	
 noop	function	platform	false		src/ui/registry/containers.defs.tsx	20	
@@ -13377,12 +13377,15 @@ friendlyValue	function	platform	false		src/ui/studio/Workbench.tsx	53
 groupControls	function	platform	false		src/ui/studio/Workbench.tsx	59	
 Control	function	platform	false	component	src/ui/studio/Workbench.tsx	79	
 WorkbenchProps	interface	platform	true		src/ui/studio/Workbench.tsx	156	
-Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	166	
-setValues	function	platform	false		src/ui/studio/Workbench.tsx	180	Workbench
-set	function	platform	false		src/ui/studio/Workbench.tsx	183	Workbench
-specimen	function	platform	false		src/ui/studio/Workbench.tsx	196	Workbench
-Block	function	platform	false	component	src/ui/studio/Workbench.tsx	350	
-OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	368	
+CompoundButtonEditorProps	interface	platform	false		src/ui/studio/Workbench.tsx	166	
+CompoundButtonEditor	function	platform	false	component	src/ui/studio/Workbench.tsx	180	
+reset	function	platform	false		src/ui/studio/Workbench.tsx	193	CompoundButtonEditor
+Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	307	
+setValues	function	platform	false		src/ui/studio/Workbench.tsx	321	Workbench
+set	function	platform	false		src/ui/studio/Workbench.tsx	324	Workbench
+specimen	function	platform	false		src/ui/studio/Workbench.tsx	337	Workbench
+Block	function	platform	false	component	src/ui/studio/Workbench.tsx	494	
+OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	512	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	

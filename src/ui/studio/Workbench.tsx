@@ -27,7 +27,7 @@ import {
 import { type UiState } from '../tokens';
 import { SpecialTreatments } from '../special/SpecialTreatments';
 import { type GalleryDraft } from '../gallery/galleryStore';
-import { RecipeStyleEditor } from './RecipeStyleEditor';
+import { IconPicker, RecipeStyleEditor, StudioColorControl } from './RecipeStyleEditor';
 
 /**
  * Playground controls, grouped for a narrow inspector.
@@ -163,6 +163,147 @@ export interface WorkbenchProps {
   draft: GalleryDraft;
 }
 
+interface CompoundButtonEditorProps {
+  def: ComponentDef;
+  shown: PropValues;
+  specimen: (props: PropValues, state?: UiState) => VNode | null;
+  onSet: (name: string, value: string | number | boolean) => void;
+  onReset: () => void;
+}
+
+/**
+ * Dropdown and Split Button are separate interaction contracts, but they are
+ * still members of the Button family. Keep their focused editing experience in
+ * the same preview-first shell as the governed Button patterns instead of
+ * falling back to the catalogue's generic component page.
+ */
+function CompoundButtonEditor({ def, shown, specimen, onSet, onReset }: CompoundButtonEditorProps): VNode {
+  const ownership = COMPOUND_OF[def.id] ?? 'Button family';
+  const [previewState, setPreviewState] = useState<UiState>('default');
+  const [iconTreatment, setIconTreatment] = useState('outline');
+  const [iconColor, setIconColor] = useState('#1b2d54');
+  const variantControl = def.props?.variant;
+  const variants = variantControl && (variantControl.type === 'select' || variantControl.type === 'segmented')
+    ? variantControl.options : [];
+  const iconControl = def.props?.iconLeft;
+  const recommendedIcons = iconControl && (iconControl.type === 'select' || iconControl.type === 'segmented')
+    ? iconControl.options.filter(option => option !== 'None') : [];
+  const previewProps: PropValues = { ...shown, iconTreatment, iconColor };
+
+  const reset = (): void => {
+    onReset();
+    setPreviewState('default');
+    setIconTreatment('outline');
+    setIconColor('#1b2d54');
+  };
+
+  return (
+    <div class="sds-owned-button" data-ui-preview-scope>
+      <section class="sds-owned-button__editor" aria-label={`${def.name} editor`}>
+        <div class="sds-owned-button__stage">
+          <header>
+            <div><span>Live preview</span><strong>{def.name}</strong></div>
+            <small>Updates instantly</small>
+          </header>
+          <div class="sds-owned-button__canvas">
+            <div class="sds-owned-button__specimen">{specimen(previewProps, previewState)}</div>
+          </div>
+          {variants.length > 0 && (
+            <section class="sds-owned-button__variants" aria-labelledby={`${def.id}-variants-title`}>
+              <header>
+                <div><h3 id={`${def.id}-variants-title`}>Variants</h3><p>Select a style to preview it.</p></div>
+                <span>{variants.length} available</span>
+              </header>
+              <div role="radiogroup" aria-label={`${def.name} variant`}>
+                {variants.map(variant => (
+                  <article key={variant} class={shown.variant === variant ? 'is-on' : ''}>
+                    <div>{specimen({ ...previewProps, variant }, 'default')}</div>
+                    <strong>{friendlyValue(variant)}</strong>
+                    <button type="button" role="radio" aria-checked={shown.variant === variant}
+                      aria-label={`Select ${friendlyValue(variant)} variant`}
+                      onClick={() => onSet('variant', variant)} />
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+          <aside>
+            <strong>{ownership}</strong>
+            <p>
+              This component inherits the published Action Button appearance and adds its own
+              menu behaviour. Settings here only change this preview.
+            </p>
+            <span>Button styling stays linked</span>
+          </aside>
+        </div>
+
+        <aside class="sds-owned-button__settings" aria-label={`${def.name} settings`}>
+          <header>
+            <div><span>Preview settings</span><strong>Try the {def.name}</strong></div>
+            <button type="button" onClick={reset}>Reset</button>
+          </header>
+          <div class="sds-owned-button__controls">
+            <section class="sds-owned-button__preview-options">
+              <h4>Preview</h4>
+              <label class="sds-ctl" for={`${def.id}-state`}>
+                <span class="sds-ctl__label">State</span>
+                <select id={`${def.id}-state`} class="sds-ctl__input" value={previewState}
+                  onChange={event => setPreviewState((event.target as HTMLSelectElement).value as UiState)}>
+                  {def.states.map(state => <option value={state}>{friendlyValue(state)}</option>)}
+                </select>
+              </label>
+              <div class="sds-owned-button__icon-picker">
+                <span>Leading icon</span>
+                <IconPicker id={`${def.id}-leading-icon`} label="Leading icon"
+                  value={String(shown.iconLeft ?? 'None')} variant={String(shown.variant ?? 'primary') as never}
+                  position="leading" recommendations={recommendedIcons}
+                  onChange={value => onSet('iconLeft', value)} />
+              </div>
+              <div class="sds-owned-button__icon-style">
+                <span>Icon treatment</span>
+                <div role="radiogroup" aria-label="Icon treatment">
+                  {['outline', 'circle', 'filled-circle'].map(treatment => (
+                    <button type="button" role="radio" aria-checked={iconTreatment === treatment}
+                      class={iconTreatment === treatment ? 'is-on' : ''} onClick={() => setIconTreatment(treatment)}>
+                      {friendlyValue(treatment)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <StudioColorControl id={`${def.id}-icon-color`} label="Icon"
+                value={iconColor} onChange={setIconColor} />
+            </section>
+            {groupControls(def)
+              .map(group => ({
+                ...group,
+                entries: group.entries.filter(([name, control]) =>
+                  name !== 'iconLeft' && name !== 'variant' && control.type !== 'text'),
+              }))
+              .filter(group => group.entries.length > 0)
+              .map(group => (
+              <section key={group.title}>
+                <h4>{group.title}</h4>
+                {group.entries.map(([name, control]) => (
+                  <Control key={name} name={name} control={control}
+                    value={shown[name] ?? ''} onChange={value => onSet(name, value)} />
+                ))}
+              </section>
+            ))}
+          </div>
+          <footer>
+            <span aria-hidden="true">↳</span>
+            <p><strong>Linked to Action Button</strong><small>Shape, color and states come from the published Button recipe.</small></p>
+          </footer>
+        </aside>
+      </section>
+
+      <section class="sds-owned-button__reference" aria-label={`${def.name} examples`}>
+        <OverviewSpecimens def={def} specimen={specimen} hideVariants />
+      </section>
+    </div>
+  );
+}
+
 export function Workbench({ def, family, onSelectMember, onBack, backLabel = 'Components', draft }: WorkbenchProps): VNode {
   /*
     Prop values are kept PER COMPONENT, not reset on every switch.
@@ -258,6 +399,9 @@ export function Workbench({ def, family, onSelectMember, onBack, backLabel = 'Co
           props, one scroll. */}
       {def.id === 'button' && def.style?.length ? (
         <RecipeStyleEditor def={def} draft={draft} />
+      ) : COMPOUND_OF[def.id] ? (
+        <CompoundButtonEditor def={def} shown={shown} specimen={specimen}
+          onSet={set} onReset={() => setValues(defaultProps(def))} />
       ) : (
         <div data-ui-preview-scope>
           <div class="sds-pg">
@@ -365,9 +509,10 @@ function Block({ title, hint, children }: {
  * The variant × size matrix is derived from the definition's own `select` and
  * `segmented` options, so it cannot list a variant the component does not have.
  */
-function OverviewSpecimens({ def, specimen }: {
+function OverviewSpecimens({ def, specimen, hideVariants = false }: {
   def: ComponentDef;
   specimen: (p: PropValues, s?: UiState) => VNode | null;
+  hideVariants?: boolean;
 }): VNode {
   const variantCtl = def.props?.variant;
   const variants = variantCtl && (variantCtl.type === 'select' || variantCtl.type === 'segmented')
@@ -375,7 +520,7 @@ function OverviewSpecimens({ def, specimen }: {
 
   return (
     <div class="sds-ov">
-      {variants.length > 0 && (
+      {!hideVariants && variants.length > 0 && (
         <Block title="Variants" hint="Choose the amount of emphasis that matches the action. The labels below show typical uses.">
           <div class="sds-axis">
             {variants.map(v => {

@@ -898,3 +898,137 @@
 
 /* Minimum readable type for Button Browser and isolated owned editors. */
 .sds-button-browser__badge { font-size: 10px; }.sds-button-browser__copy p, .sds-button-browser__copy > span { font-size: 12px; }.sds-button-pattern__stage > header span, .sds-button-pattern__settings > header span { font-size: 10px; }.sds-button-pattern__stage > header small, .sds-button-pattern__settings > header button { font-size: 11px; }.sds-button-pattern__stage > aside p { font-size: 12px; }.sds-button-pattern__stage > aside span { font-size: 10px; }.sds-pattern-field > span, .sds-pattern-toggle > span { font-size: 12px; }.sds-pattern-field > select, .sds-pattern-field > input { font-size: 12px; }.sds-pattern-field > small { font-size: 10px; }.sds-button-pattern__settings > footer strong { font-size: 11px; }.sds-button-pattern__settings > footer span { font-size: 10px; }.sds-button-pattern__examples article > span { font-size: 11px; }
+
+/* Focused compound Button editors use the same preview-first language as the
+   Action Button editor and governed pattern pages. */
+.sds-wb--dropdown-button,
+.sds-wb--split-button { max-width: 1180px; margin: 0 auto; }
+.sds-wb--dropdown-button > .sds-wb__head,
+.sds-wb--split-button > .sds-wb__head {
+  margin: 10px 0 24px; padding-bottom: 18px; border-bottom: 1px solid #e2e5ea;
+}
+.sds-wb--dropdown-button > .sds-wb__head h2,
+.sds-wb--split-button > .sds-wb__head h2 { font-size: 30px; letter-spacing: -.025em; }
+.sds-wb--dropdown-button > .sds-wb__head p,
+.sds-wb--split-button > .sds-wb__head p {
+  max-width: 760px; color: var(--sds-ink-3); font-size: 14px; line-height: 1.55;
+}
+.sds-owned-button { display: grid; gap: 30px; }
+.sds-owned-button__editor {
+  display: grid; grid-template-columns: minmax(0, 1fr) 330px; align-items: start; gap: 16px;
+}
+.sds-owned-button__stage,
+.sds-owned-button__settings {
+  overflow: hidden; border: 1px solid #dfe3e9; border-radius: 12px; background: #fff;
+}
+.sds-owned-button__stage > header,
+.sds-owned-button__settings > header {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 58px; padding: 12px 15px; border-bottom: 1px solid #e3e6eb;
+}
+.sds-owned-button__stage > header > div,
+.sds-owned-button__settings > header > div { display: grid; gap: 2px; }
+.sds-owned-button__stage > header span,
+.sds-owned-button__settings > header span {
+  color: var(--sds-ink-3); font-size: 11px; font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase;
+}
+.sds-owned-button__stage > header strong,
+.sds-owned-button__settings > header strong { font-size: 14px; }
+.sds-owned-button__stage > header small { color: var(--sds-ink-3); font-size: 12px; }
+.sds-owned-button__canvas {
+  position: relative; min-height: 310px; display: grid; place-items: center; padding: 42px;
+  background-color: #f6f8fc;
+  background-image: radial-gradient(circle at center, rgb(47 74 125 / .1) 1.2px, transparent 1.2px);
+  background-size: 20px 20px;
+}
+.sds-owned-button__specimen { position: relative; z-index: 1; transform: scale(1.12); }
+.sds-owned-button__stage > aside { padding: 17px 19px; border-top: 1px solid #e2e5ea; }
+.sds-owned-button__stage > aside strong { font-size: 13px; }
+.sds-owned-button__stage > aside p {
+  max-width: 68ch; margin: 5px 0 11px; color: var(--sds-ink-3); font-size: 12px; line-height: 1.55;
+}
+.sds-owned-button__stage > aside span {
+  display: inline-flex; padding: 6px 9px; border-radius: 6px;
+  background: #f1f4f8; color: var(--sds-accent); font-size: 11px; font-weight: 700;
+}
+.sds-owned-button__settings { position: sticky; top: 0; overflow: visible; }
+.sds-owned-button__settings > header button {
+  padding: 0; border: 0; background: transparent; color: var(--sds-accent);
+  font: inherit; font-size: 12px; font-weight: 650; cursor: pointer;
+}
+.sds-owned-button__controls { display: grid; }
+.sds-owned-button__controls > section { padding: 14px 15px; border-bottom: 1px solid #eef0f3; }
+.sds-owned-button__controls > section h4 {
+  margin: 0 0 10px; color: var(--sds-ink-2); font-size: 12px; font-weight: 700;
+}
+.sds-owned-button__controls .sds-ctl + .sds-ctl,
+.sds-owned-button__controls .sds-toggle-row + .sds-toggle-row { margin-top: 11px; }
+.sds-owned-button__controls .sds-ctl__label,
+.sds-owned-button__controls .sds-toggle-row { font-size: 12px; }
+.sds-owned-button__controls .sds-ctl__input,
+.sds-owned-button__controls .sds-seg__btn { min-height: 36px; font-size: 12px; }
+.sds-owned-button__controls .sds-ctl__help summary,
+.sds-owned-button__controls .sds-ctl__help p { font-size: 11px; }
+.sds-owned-button__settings > footer {
+  display: flex; align-items: flex-start; gap: 9px; padding: 13px 15px;
+  border-radius: 0 0 12px 12px; background: #f8fafc; color: var(--sds-accent);
+}
+.sds-owned-button__settings > footer > span { flex: none; font-size: 16px; line-height: 1; }
+.sds-owned-button__settings > footer p { display: grid; gap: 2px; margin: 0; }
+.sds-owned-button__settings > footer strong { color: var(--sds-ink-2); font-size: 12px; }
+.sds-owned-button__settings > footer small { color: var(--sds-ink-3); font-size: 11px; line-height: 1.4; }
+.sds-owned-button__reference .sds-ov { display: grid; gap: 24px; }
+.sds-owned-button__reference .sds-ov__hd h4 { font-size: 18px; }
+.sds-owned-button__reference .sds-ov__hd p { font-size: 13px; }
+.sds-owned-button__reference .sds-axis__cell strong,
+.sds-owned-button__reference .sds-pattern-grid article > span:first-child { font-size: 13px; }
+.sds-owned-button__reference .sds-axis__cell > span,
+.sds-owned-button__reference .sds-pattern-grid small { font-size: 12px; }
+@media (max-width: 900px) {
+  .sds-owned-button__editor { grid-template-columns: 1fr; }
+  .sds-owned-button__settings { position: static; }
+}
+
+.sds-owned-button__variants { padding: 18px; border-top: 1px solid #e2e5ea; }
+.sds-owned-button__variants > header {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 12px;
+}
+.sds-owned-button__variants > header h3 { margin: 0; font-size: 16px; }
+.sds-owned-button__variants > header p { margin: 3px 0 0; color: var(--sds-ink-3); font-size: 12px; }
+.sds-owned-button__variants > header > span { color: var(--sds-ink-3); font-size: 11px; }
+.sds-owned-button__variants > div {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 8px;
+}
+.sds-owned-button__variants article {
+  position: relative; min-width: 0; min-height: 102px; display: grid; place-items: center; align-content: center; gap: 9px;
+  padding: 10px 7px; border: 1px solid #dfe3e9; border-radius: 9px;
+  background: #fff; color: var(--sds-ink); transition: border-color .15s, background .15s;
+}
+.sds-owned-button__variants article:hover { border-color: #aebbd0; background: #fafbfc; }
+.sds-owned-button__variants article.is-on { border-color: var(--sds-accent); box-shadow: inset 0 0 0 1px var(--sds-accent); }
+.sds-owned-button__variants article > div { pointer-events: none; transform: scale(.86); }
+.sds-owned-button__variants article > strong { font-size: 12px; font-weight: 650; }
+.sds-owned-button__variants article > button {
+  position: absolute; inset: 0; width: 100%; height: 100%; padding: 0;
+  border: 0; border-radius: inherit; background: transparent; cursor: pointer;
+}
+.sds-owned-button__variants article > button:focus-visible { outline: 2px solid var(--sds-accent); outline-offset: 2px; }
+.sds-owned-button__preview-options { display: grid; gap: 13px; }
+.sds-owned-button__preview-options > h4 { margin-bottom: 0 !important; }
+.sds-owned-button__icon-picker,
+.sds-owned-button__icon-style { display: grid; gap: 6px; }
+.sds-owned-button__icon-picker > span,
+.sds-owned-button__icon-style > span { color: var(--sds-ink-2); font-size: 12px; font-weight: 600; }
+.sds-owned-button__icon-style > div { display: grid; grid-template-columns: repeat(3, 1fr); }
+.sds-owned-button__icon-style button {
+  min-width: 0; min-height: 34px; padding: 6px 4px; border: 1px solid #d5dae3; border-right: 0;
+  background: #fff; color: var(--sds-ink-2); font: inherit; font-size: 10px; cursor: pointer;
+}
+.sds-owned-button__icon-style button:first-child { border-radius: 7px 0 0 7px; }
+.sds-owned-button__icon-style button:last-child { border-right: 1px solid #d5dae3; border-radius: 0 7px 7px 0; }
+.sds-owned-button__icon-style button.is-on { background: #eef3fb; color: var(--sds-accent); box-shadow: inset 0 0 0 1px var(--sds-accent); }
+.sds-owned-button__preview-options .sds-color-control > label { font-size: 12px; }
+@media (max-width: 620px) {
+  .sds-owned-button__variants > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

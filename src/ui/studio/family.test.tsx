@@ -211,24 +211,49 @@ describe('Buttons family — Studio', () => {
     openButtonMember(container, 'Split Button');
 
     // Split Button's own schema replaced it — not merged with it.
-    expect(container.querySelector('.sds-pg__who strong')?.textContent).toBe('Try the Split Button');
-    expect(queryByText('Menu accessible name')).not.toBeNull();
+    expect(container.querySelector('.sds-owned-button__settings strong')?.textContent).toBe('Try the Split Button');
+    expect(container.querySelector('.sds-owned-button__stage')?.textContent).toContain('Live preview');
+    expect(container.querySelector('.sds-pg')).toBeNull();
+    expect(queryByText('Menu accessible name')).toBeNull();
     expect(queryByText('Background')).toBeNull();
     expect(container.querySelector('.sds-family')).toBeNull();
   });
 
-  it('renders every Properties control from the selected definition', () => {
-    const { container } = render(<Studio />);
+  it('renders governed non-text controls without exposing button labels for editing', () => {
+    const { container, queryByLabelText } = render(<Studio />);
     openButtonBrowser(container);
     openButtonMember(container, 'Dropdown Button');
 
-    // Every declared prop reaches the panel. A hand-built family properties
-    // system would drift from the definition the moment a prop was added.
+    // Behavioural controls stay schema-driven, while product copy is fixed in
+    // the preview and cannot become a published styling choice.
     const def = findComponent('dropdown-button');
-    const labels = [...container.querySelectorAll('.sds-pg__panel label, .sds-pg__panel h4')]
+    const labels = [...container.querySelectorAll('.sds-owned-button__settings label, .sds-owned-button__settings h4, .sds-owned-button__settings [role="radiogroup"]')]
       .map(el => el.textContent).join(' | ');
-    for (const control of Object.values(def?.props ?? {})) {
+    for (const control of Object.values(def?.props ?? {}).filter(control =>
+      control.type !== 'text' && control.label !== 'Variant' && control.label !== 'Leading icon')) {
       expect(labels).toContain(control.label);
+    }
+    expect(container.querySelector('[role="radiogroup"][aria-label="Dropdown Button variant"]')).not.toBeNull();
+    expect(container.querySelector('button[aria-label="Choose Leading icon"]')).not.toBeNull();
+    expect(queryByLabelText('Trigger label')).toBeNull();
+    expect(queryByLabelText('Primary action')).toBeNull();
+    expect(queryByLabelText('Menu accessible name')).toBeNull();
+  });
+
+  it('uses the same modern live-preview shell for both compound Button editors', () => {
+    for (const name of ['Dropdown Button', 'Split Button']) {
+      const { container, unmount } = render(<Studio />);
+      openButtonBrowser(container);
+      openButtonMember(container, name);
+
+      expect(container.querySelector('.sds-owned-button__editor')).not.toBeNull();
+      expect(container.querySelector('.sds-owned-button__canvas')).not.toBeNull();
+      expect(container.querySelector('.sds-owned-button__settings')?.textContent).toContain('Linked to Action Button');
+      expect(container.querySelector('.sds-owned-button__reference')).not.toBeNull();
+      expect(container.querySelector('.sds-owned-button__variants')).not.toBeNull();
+      expect(container.querySelector('.sds-owned-button__settings')?.textContent).toContain('Icon treatment');
+      expect(container.querySelector('button[aria-label="Choose Icon color"]')).not.toBeNull();
+      unmount();
     }
   });
 

@@ -33,7 +33,11 @@ const s = (v: PropValues[string] | undefined, fallback = ''): string =>
 const b = (v: PropValues[string] | undefined): boolean => v === true;
 const size = (v: PropValues[string] | undefined): ControlSize => (v === 'sm' || v === 'lg' ? v : 'md');
 /** A control that offers an icon must actually render one, or it is decoration. */
-const icon = (n: string): VNode | undefined => (n !== 'None' ? <LucideIcon name={n as never} /> : undefined);
+const icon = (n: string, treatment = 'outline', color = 'currentColor'): VNode | undefined => (
+  n !== 'None'
+    ? <span class={`sds-preview-icon sds-preview-icon--${treatment}`} style={{ color }}><LucideIcon name={n as never} /></span>
+    : undefined
+);
 
 const RECORD_MENU: MenuItems = [
   { label: 'Record', items: [
@@ -105,7 +109,7 @@ const dropdownButtonDef: ComponentDef = {
       items={RECORD_MENU}
       variant={s(p.variant, 'secondary') as never}
       size={size(p.size)}
-      iconLeft={icon(s(p.iconLeft, 'None'))}
+      iconLeft={icon(s(p.iconLeft, 'None'), s(p.iconTreatment, 'outline'), s(p.iconColor, 'currentColor'))}
       matchWidth={b(p.matchWidth)}
       disabled={b(p.disabled) || state === 'disabled'}
       forceState={state}
@@ -185,7 +189,10 @@ const splitButtonDef: ComponentDef = {
 
   render: (p, state) => (
     <SplitButton
-      action={{ label: s(p.label, 'Save changes'), icon: icon(s(p.iconLeft, 'None')) }}
+      action={{
+        label: s(p.label, 'Save changes'),
+        icon: icon(s(p.iconLeft, 'None'), s(p.iconTreatment, 'outline'), s(p.iconColor, 'currentColor')),
+      }}
       items={SAVE_ALTERNATIVES}
       variant={s(p.variant, 'primary') as never}
       size={size(p.size)}

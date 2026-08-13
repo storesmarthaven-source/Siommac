@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `3e0d56857953ccfe5e1da487e7098716baf5f574`  
-Source fingerprint: `0c081c547ea5c19085328e6d`  
+Source HEAD: `4df59c8b9d283cbf32204d05e1be3333154ab94c`  
+Source fingerprint: `ac0626a7b6690bd696e8734b`  
 Generator version: `1`
 
 ## Use
@@ -19,7 +19,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1504 | 14895 | 68 | 983 | 984 | 17 | 361 | 1445 | 92 | 2748 |
+| 1504 | 14898 | 68 | 983 | 984 | 17 | 361 | 1445 | 92 | 2748 |
 
 ## Modules
 
@@ -34,7 +34,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | security | 46 | 387 | 0 | 51 | 51 | 31 | 65 | 4 | [open](modules/security.md) |
 | settings | 44 | 252 | 0 | 26 | 26 | 18 | 21 | 2 | [open](modules/settings.md) |
 | widgets | 73 | 588 | 21 | 20 | 20 | 11 | 23 | 1 | [open](modules/widgets.md) |
-| platform | 442 | 3871 | 17 | 38 | 53 | 55 | 327 | 0 | [open](modules/platform.md) |
+| platform | 442 | 3874 | 17 | 38 | 53 | 55 | 327 | 0 | [open](modules/platform.md) |
 | testing | 48 | 227 | 0 | 0 | 0 | 0 | 0 | 17 | [open](modules/testing.md) |
 | enterprise | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | [open](modules/enterprise.md) |
 
@@ -46,12 +46,12 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `bundle.hr.attendance.ops` | Attendance & Leave Ops | registry | hr | `` | `src/ui/widgets/bundles.ts:116` |
 | `bundle.hr.employees.essentials` | Employee Master Essentials | registry | hr | `` | `src/ui/widgets/bundles.ts:90` |
 | `bundle.hr.onboarding.manager` | Onboarding Manager Pack | registry | hr | `` | `src/ui/widgets/bundles.ts:76` |
-| `create` | Create with options | registry | platform | `() => <SplitButton action={{ label: 'Create' }} items={SAVE_ALTERNATIVES} variant="secondary" />` | `src/ui/registry/compound.defs.tsx:218` |
+| `create` | Create with options | registry | platform | `() => <SplitButton action={{ label: 'Create' }} items={SAVE_ALTERNATIVES} variant="secondary" />` | `src/ui/registry/compound.defs.tsx:225` |
 | `dialog-footer` | Dialog footer | registry | platform | `() => (         <>           <Button variant="secondary">Cancel</Button>           <Button variant="primary">Save</Button>         </>       )` | `src/ui/registry/actions.defs.tsx:226` |
 | `enterprise.calendar.taskPlanner` | Task Planner | registry | widgets | `TaskPlannerWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:291` |
 | `enterprise.calendar.upcomingDeadlines` | Schedule & Deadlines | registry | widgets | `DeadlineWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:290` |
-| `export` | Export menu | registry | platform | `() => <DropdownButton label="Export" variant="secondary" items={RECORD_MENU} />` | `src/ui/registry/compound.defs.tsx:133` |
-| `filter` | Filter picker | registry | platform | `() => <DropdownButton label="Status: All" variant="secondary" matchWidth items={RECORD_MENU} />` | `src/ui/registry/compound.defs.tsx:137` |
+| `export` | Export menu | registry | platform | `() => <DropdownButton label="Export" variant="secondary" items={RECORD_MENU} />` | `src/ui/registry/compound.defs.tsx:137` |
+| `filter` | Filter picker | registry | platform | `() => <DropdownButton label="Status: All" variant="secondary" matchWidth items={RECORD_MENU} />` | `src/ui/registry/compound.defs.tsx:141` |
 | `finance.payroll.assignedWork` | Approval and Activity | local | payroll | `() => <ApprovalsWidget data={data} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:512` |
 | `finance.payroll.deadlines` | Upcoming Deadlines | local | payroll | `() => <DeadlinesWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:513` |
 | `finance.payroll.kpi.activeRuns` | Active Runs | local | payroll | `() => <KpiTile icon="fa-layer-group" tone="teal" label="Active Runs" value={kk?.activeRuns ?? 0} sub="In the reporting window" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:494` |
@@ -100,8 +100,8 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `platform.weather.strip` | Weather · Strip | registry | widgets | `WeatherStripWidget` | `src/ui/widgets/registry.weather.tsx:495` |
 | `platform.weather.uv` | Weather · UV index | registry | widgets | `metricWidget('uv')` | `src/ui/widgets/registry.weather.tsx:510` |
 | `platform.weather.wind` | Weather · Wind | registry | widgets | `metricWidget('wind')` | `src/ui/widgets/registry.weather.tsx:518` |
-| `row` | Row actions | registry | platform | `() => <DropdownButton label="Actions" variant="outline" items={RECORD_MENU} />` | `src/ui/registry/compound.defs.tsx:135` |
-| `save` | Save with options | registry | platform | `() => <SplitButton action={{ label: 'Save' }} items={SAVE_ALTERNATIVES} />` | `src/ui/registry/compound.defs.tsx:216` |
+| `row` | Row actions | registry | platform | `() => <DropdownButton label="Actions" variant="outline" items={RECORD_MENU} />` | `src/ui/registry/compound.defs.tsx:139` |
+| `save` | Save with options | registry | platform | `() => <SplitButton action={{ label: 'Save' }} items={SAVE_ALTERNATIVES} />` | `src/ui/registry/compound.defs.tsx:223` |
 | `select-all` | Select-all with a partial selection | registry | platform | `() => (         <CheckboxGroup           label="Modules"           selectAllLabel="All modules"           values={['hr']}           onChange={noop}           options={[             { value: 'hr', label: 'Human Resources' },             { value: 'hse', label: 'HSE' },             { value: 'fin', label: 'Finance', disabled: true },           ]}         />       )` | `src/ui/registry/forms.defs.tsx:115` |
 | `status-set` | A status set | registry | platform | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>           <Badge tone="success" dot>Active</Badge>           <Badge tone="warning" dot>Probation</Badge>           <Badge tone="info" dot>On leave</Badge>           <Badge tone="neutral" dot>Inactive</Badge>           <Badge tone="danger" dot>Terminated</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:330` |
 | `test.widget` | Test | registry | enterprise/test | `() => <div>live</div>` | `src/ui/widgets/platform.test.tsx:14` |
