@@ -14,7 +14,7 @@
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
-import { PageHeader, Modal, Field, TextareaInput } from '@ui';
+import { Button, PageHeader, Modal, Field, TextareaInput } from '@ui';
 import {
   useOnboardingBlockersList,
   useOnboardingResolveBlocker, useOnboardingEscalateBlocker, useOnboardingWaiveBlocker, useOnboardingNotifyBlockerOwner,
@@ -98,11 +98,11 @@ export function OnboardingBlockedBoard({
         <div class="obx-blockcard-row"><span>Owner: {b.ownerName ?? 'Unassigned'}</span><span>{b.ageDays}d old</span></div>
         {b.dueAt && <div class="obx-blockcard-row"><span>Due {fmtDate(b.dueAt)}</span><span class="obx-pill amber" style={{ height: 18 }}>{humanize(b.status)}</span></div>}
         <div class="obx-blockcard-foot">
-          <button class="obx-mini" onClick={() => onOpenCase(b.caseId)}>Open Case</button>
-          <button class="obx-mini" onClick={() => void handleNotify(b)} disabled={!b.ownerId} title={b.ownerId ? '' : 'No owner to notify — escalate to assign one'}>Notify Owner</button>
-          <button class="obx-mini" onClick={() => void handleEscalate(b)}>Escalate</button>
-          <button class="obx-mini" onClick={() => void handleResolve(b)}>Resolve</button>
-          <button class="obx-mini" onClick={() => openWaive(b)}>Waive</button>
+          <Button variant="secondary" size="sm" onClick={() => onOpenCase(b.caseId)}>Open Case</Button>
+          <Button variant="secondary" size="sm" onClick={() => void handleNotify(b)} disabled={!b.ownerId} title={b.ownerId ? '' : 'No owner to notify — escalate to assign one'}>Notify Owner</Button>
+          <Button variant="secondary" size="sm" onClick={() => void handleEscalate(b)}>Escalate</Button>
+          <Button variant="secondary" size="sm" onClick={() => void handleResolve(b)}>Resolve</Button>
+          <Button variant="secondary" size="sm" onClick={() => openWaive(b)}>Waive</Button>
         </div>
       </div>
     );

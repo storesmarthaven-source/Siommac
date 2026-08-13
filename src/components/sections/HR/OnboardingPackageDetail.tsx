@@ -14,7 +14,7 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
-import { PageHeader, Modal, Field, FormGrid, TextInput, SelectInput, Tabs, type TabDef } from '@ui';
+import { Button, PageHeader, Modal, Field, FormGrid, TextInput, SelectInput, Tabs, type TabDef } from '@ui';
 import {
   useOnboardingPackageDetail, useOnboardingUpdatePackage, useOnboardingSetPackageStatus,
   useOnboardingCreateTaskTemplate, useOnboardingUpdateTaskTemplate, useOnboardingDeleteTaskTemplate,
@@ -198,8 +198,8 @@ export function OnboardingPackageDetail({
                     <td>{YN(t.isBlocking)}</td>
                     <td>{YN(t.requiresEvidence)}</td>
                     <td><div class="obx-rowbtns">
-                      <button class="obx-mini" onClick={() => openEditTask(t)}>Edit</button>
-                      <button class="obx-mini" onClick={() => void deleteTask(t)}>Delete</button>
+                      <Button variant="secondary" size="sm" onClick={() => openEditTask(t)}>Edit</Button>
+                      <Button variant="secondary" size="sm" onClick={() => void deleteTask(t)}>Delete</Button>
                     </div></td>
                   </tr>
                 ))}</tbody>
@@ -224,8 +224,8 @@ export function OnboardingPackageDetail({
                     <td class="obx-meta">{humanize(h.handoffType)}</td>
                     <td>{YN(h.isRequired)}</td>
                     <td><div class="obx-rowbtns">
-                      <button class="obx-mini" onClick={() => openEditHandoff(h)}>Edit</button>
-                      <button class="obx-mini" onClick={() => void deleteHandoff(h)}>Delete</button>
+                      <Button variant="secondary" size="sm" onClick={() => openEditHandoff(h)}>Edit</Button>
+                      <Button variant="secondary" size="sm" onClick={() => void deleteHandoff(h)}>Delete</Button>
                     </div></td>
                   </tr>
                 ))}</tbody>
@@ -252,8 +252,8 @@ export function OnboardingPackageDetail({
                     <td>{YN(a.blocksOnboarding)}</td>
                     <td>{YN(a.isActive)}</td>
                     <td><div class="obx-rowbtns">
-                      <button class="obx-mini" onClick={() => openEditAction(a)}>Edit</button>
-                      {a.isActive && <button class="obx-mini" onClick={() => void retireAction(a)}>Retire</button>}
+                      <Button variant="secondary" size="sm" onClick={() => openEditAction(a)}>Edit</Button>
+                      {a.isActive && <Button variant="secondary" size="sm" onClick={() => void retireAction(a)}>Retire</Button>}
                     </div></td>
                   </tr>
                 ))}</tbody>
