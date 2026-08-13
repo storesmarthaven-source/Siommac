@@ -2,7 +2,7 @@
 
 # platform Module Map
 
-Source fingerprint: `a1ad9e239ca06252474d5452`
+Source fingerprint: `c8b64ca148d7c2d0d399981d`
 
 Files: 410 | Symbols: 3669 | Widgets: 12 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
 
@@ -559,7 +559,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/SuperadminConsole/queryKeys.ts` | 25 |
 | frontend-page | `src/components/sections/UiKit/index.ts` | 9 |
 | frontend-page | `src/components/sections/UiKit/module.ts` | 60 |
-| frontend-page | `src/components/sections/UiKit/mount.ts` | 43 |
+| frontend-page | `src/components/sections/UiKit/mount.ts` | 51 |
 | frontend-page | `src/components/sections/index.ts` | 19 |
 | shared-types | `types/api.ts` | 158 |
 | shared-types | `types/calendar.ts` | 181 |

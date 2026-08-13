@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "840f2499f4b94893367190b4f77af5002bf8e8b5",
+    "head": "7e598efb6b64fe53354b869ffe87c40f250ff186",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "a1ad9e239ca06252474d5452",
+    "fingerprint": "c8b64ca148d7c2d0d399981d",
     "indexedFiles": 1825
   },
   "summary": {
@@ -7608,8 +7608,8 @@
       "path": "src/components/sections/UiKit/mount.ts",
       "module": "platform",
       "role": "frontend-page",
-      "lines": 43,
-      "hash": "0d1577e6195d95d0"
+      "lines": 51,
+      "hash": "882929a8bfbdbc3f"
     },
     {
       "path": "src/components/sections/index.ts",
@@ -131062,7 +131062,7 @@
       "name": "unmountUiKitSection",
       "kind": "function",
       "file": "src/components/sections/UiKit/mount.ts",
-      "line": 40,
+      "line": 47,
       "module": "platform",
       "exported": true,
       "container": "",

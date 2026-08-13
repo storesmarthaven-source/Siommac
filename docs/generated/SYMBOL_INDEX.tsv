@@ -11517,7 +11517,7 @@ ITEMS	array	platform	false		src/components/sections/UiKit/module.ts	23
 uiKitModule	object	platform	true		src/components/sections/UiKit/module.ts	33	
 EXIT_SECTION	variable	platform	false		src/components/sections/UiKit/mount.ts	25	
 mountUiKitSection	function	platform	true		src/components/sections/UiKit/mount.ts	27	
-unmountUiKitSection	function	platform	true		src/components/sections/UiKit/mount.ts	40	
+unmountUiKitSection	function	platform	true		src/components/sections/UiKit/mount.ts	47	
 lIco	function	platform	false		src/components/shared/AccountPill.tsx	36	
 IcUser	function	platform	false	component	src/components/shared/AccountPill.tsx	40	
 IcSettings	function	platform	false	component	src/components/shared/AccountPill.tsx	41	

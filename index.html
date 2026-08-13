@@ -55,6 +55,26 @@
   <!-- Restore dashboard panel theme before first paint to avoid flash -->
   <script>(function(){try{var t=localStorage.getItem('siomac-theme');if(t==='dark')document.body.setAttribute('data-theme','dark');}catch(_){}})();</script>
 
+  <!-- Design System Studio: cover the shell before first paint.
+       The Studio is a full-page takeover, but the section restore runs through
+       whenNavReady() long after the FOUC guard lifts, so refreshing inside the
+       Studio showed the dashboard until the module mounted. This paints an
+       opaque cover at z-index 999 — directly beneath the Studio's own 1000 — so
+       the shell is never seen; mountUiKitSection lifts it once the Studio has
+       actually rendered. The timeout is the safety valve: a stale flag must
+       never be able to white out the app permanently. -->
+  <style>html.studio-boot body::after{content:'';position:fixed;inset:0;background:#fff;z-index:999;}</style>
+  <script>(function(){try{
+    var keys=Object.keys(localStorage);
+    for(var i=0;i<keys.length;i++){
+      if(keys[i].indexOf('siomac_last_section_')===0&&localStorage.getItem(keys[i])==='s-ui-kit'){
+        document.documentElement.classList.add('studio-boot');
+        setTimeout(function(){document.documentElement.classList.remove('studio-boot');},5000);
+        break;
+      }
+    }
+  }catch(_){}})();</script>
+
   <!-- Preconnect so font bytes arrive as early as possible -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

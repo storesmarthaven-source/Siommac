@@ -35,8 +35,16 @@ export function mountUiKitSection(container: Element, opts: { queryClient: Query
     ),
     container,
   );
+
+  /* Lift the boot cover (see index.html) only once the Studio has actually
+     painted — removing it on mount alone would expose the shell for the frame
+     between render() and paint, which is the flash this exists to prevent. */
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => document.documentElement.classList.remove('studio-boot'));
+  });
 }
 
 export function unmountUiKitSection(container: Element): void {
   render(null, container);
+  document.documentElement.classList.remove('studio-boot');
 }
