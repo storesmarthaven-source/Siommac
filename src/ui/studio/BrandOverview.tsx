@@ -28,34 +28,8 @@ import {
 import { type GalleryDraft } from '../gallery/galleryStore';
 import { BrandThemePanel } from '../gallery/BrandThemePanel';
 import { findComponent, defaultProps } from '../registry';
+import { DIRECTIONS, tokensForDirection, directionById, type ThemeDirection } from './brandDirections';
 
-/* ── Theme direction ────────────────────────────────────────────────────────
-   Three MAPPING POLICIES over one generated palette — not three themes and not
-   three engines. Each is a subset of what the engine already emitted, so the
-   colours are identical and only their REACH changes.
-
-   None of them can touch success/warning/danger/info (the engine never emits
-   those) or card/dialog/table/input surfaces (`NEUTRAL_BY_POLICY` throws). That
-   protection is structural, not a rule this file has to remember. */
-
-const ROLE_ACTION = ['--ui-color-action-primary', '--ui-color-action-primary-hover', '--ui-color-action-primary-text'];
-const ROLE_FOCUS = ['--ui-color-focus-outline', '--ui-color-focus-ring'];
-const ROLE_SELECTION_EDGE = ['--ui-color-selection-border'];
-const ROLE_SELECTION_FILL = ['--ui-color-selection-background'];
-const ROLE_NAV_ACTIVE = ['--ui-color-nav-active-background', '--ui-color-nav-active-indicator', '--ui-color-nav-active-text'];
-const ROLE_LINK = ['--ui-color-text-link'];
-const SEEDS = [SEED_PRIMARY_TOKEN, SEED_ACCENT_TOKEN];
-
-export type ThemeDirection = 'enterprise' | 'balanced' | 'forward';
-
-export const DIRECTIONS: { id: ThemeDirection; label: string; blurb: string; roles: string[] }[] = [
-  { id: 'enterprise', label: 'Enterprise', blurb: 'Most restrained. A neutral application shell, with the brand carried by key actions, focus and selection.',
-    roles: [...SEEDS, ...ROLE_ACTION, ...ROLE_FOCUS, ...ROLE_SELECTION_EDGE] },
-  { id: 'balanced', label: 'Balanced', blurb: 'Stronger branded indicators and more visible active states. Data and form surfaces stay neutral.',
-    roles: [...SEEDS, ...ROLE_ACTION, ...ROLE_FOCUS, ...ROLE_SELECTION_EDGE, ...ROLE_SELECTION_FILL, ...ROLE_NAV_ACTIVE] },
-  { id: 'forward', label: 'Brand Forward', blurb: 'The strongest professional brand presence. Still no branded dialog, card, table or input surfaces, and operational colours are untouched.',
-    roles: [...SEEDS, ...ROLE_ACTION, ...ROLE_FOCUS, ...ROLE_SELECTION_EDGE, ...ROLE_SELECTION_FILL, ...ROLE_NAV_ACTIVE, ...ROLE_LINK] },
-];
 
 /* ── Component System board ─────────────────────────────────────────────────
    Registry ids per tile. A tile shows nothing rather than a fake if a component
@@ -130,12 +104,7 @@ export function BrandOverview({ draft, logoUrl, onUploadLogo }: {
   const applyDirection = (id: ThemeDirection): void => {
     setDirection(id);
     if (!build) return;
-    const allowed = new Set(DIRECTIONS.find(d => d.id === id)!.roles);
-    const filtered: Record<string, string> = {};
-    for (const [name, value] of Object.entries(build.tokens)) {
-      if (allowed.has(name)) filtered[name] = value;
-    }
-    replaceGroup(brandTokenNames(), filtered);
+    replaceGroup(brandTokenNames(), tokensForDirection(build.tokens, id));
   };
 
   const publish = async (): Promise<void> => {
@@ -180,7 +149,7 @@ export function BrandOverview({ draft, logoUrl, onUploadLogo }: {
           </button>
         </div>
       </header>
-      <p class="sds-bo__blurb">{DIRECTIONS.find(d => d.id === direction)?.blurb}</p>
+      <p class="sds-bo__blurb">{directionById(direction).blurb}</p>
 
       {!theme && (
         <div class="sds-placeholder">

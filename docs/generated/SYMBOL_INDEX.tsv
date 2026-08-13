@@ -13199,21 +13199,29 @@ Forms	function	platform	false	component	src/ui/studio/AppPreview.tsx	130
 Data	function	platform	false	component	src/ui/studio/AppPreview.tsx	195	
 Workflow	function	platform	false	component	src/ui/studio/AppPreview.tsx	223	
 AppPreview	function	platform	true	component	src/ui/studio/AppPreview.tsx	264	
-ROLE_ACTION	array	platform	false		src/ui/studio/BrandOverview.tsx	41	
-ROLE_FOCUS	array	platform	false		src/ui/studio/BrandOverview.tsx	42	
-ROLE_SELECTION_EDGE	array	platform	false		src/ui/studio/BrandOverview.tsx	43	
-ROLE_SELECTION_FILL	array	platform	false		src/ui/studio/BrandOverview.tsx	44	
-ROLE_NAV_ACTIVE	array	platform	false		src/ui/studio/BrandOverview.tsx	45	
-ROLE_LINK	array	platform	false		src/ui/studio/BrandOverview.tsx	46	
-SEEDS	array	platform	false		src/ui/studio/BrandOverview.tsx	47	
-ThemeDirection	type	platform	true		src/ui/studio/BrandOverview.tsx	49	
-DIRECTIONS	array	platform	true		src/ui/studio/BrandOverview.tsx	51	
-BOARD	array	platform	false		src/ui/studio/BrandOverview.tsx	64	
-Specimen	function	platform	false	component	src/ui/studio/BrandOverview.tsx	75	
-Swatch	function	platform	false	component	src/ui/studio/BrandOverview.tsx	88	
-BrandOverview	function	platform	true	component	src/ui/studio/BrandOverview.tsx	102	
-applyDirection	function	platform	false		src/ui/studio/BrandOverview.tsx	130	BrandOverview
-publish	function	platform	false		src/ui/studio/BrandOverview.tsx	141	BrandOverview
+SEEDS	array	platform	false	test	src/ui/studio/brandDirections.test.ts	27	
+IDS	array	platform	false	test	src/ui/studio/brandDirections.test.ts	35	
+keys	function	platform	false	test	src/ui/studio/brandDirections.test.ts	77	
+ThemeDirection	type	platform	true		src/ui/studio/brandDirections.ts	28	
+ROLE_ACTION	array	platform	false		src/ui/studio/brandDirections.ts	30	
+ROLE_FOCUS	array	platform	false		src/ui/studio/brandDirections.ts	31	
+ROLE_SELECTION_EDGE	array	platform	false		src/ui/studio/brandDirections.ts	32	
+ROLE_SELECTION_FILL	array	platform	false		src/ui/studio/brandDirections.ts	33	
+ROLE_NAV_ACTIVE	array	platform	false		src/ui/studio/brandDirections.ts	34	
+ROLE_LINK	array	platform	false		src/ui/studio/brandDirections.ts	35	
+SEEDS	array	platform	false		src/ui/studio/brandDirections.ts	36	
+LOCKED_OPERATIONAL	variable	platform	true		src/ui/studio/brandDirections.ts	39	
+LOCKED_NEUTRAL	variable	platform	true		src/ui/studio/brandDirections.ts	44	
+DirectionDef	interface	platform	true		src/ui/studio/brandDirections.ts	50	
+DIRECTIONS	array	platform	true		src/ui/studio/brandDirections.ts	57	
+directionById	function	platform	true		src/ui/studio/brandDirections.ts	75	
+tokensForDirection	function	platform	true		src/ui/studio/brandDirections.ts	88	
+BOARD	array	platform	false		src/ui/studio/BrandOverview.tsx	38	
+Specimen	function	platform	false	component	src/ui/studio/BrandOverview.tsx	49	
+Swatch	function	platform	false	component	src/ui/studio/BrandOverview.tsx	62	
+BrandOverview	function	platform	true	component	src/ui/studio/BrandOverview.tsx	76	
+applyDirection	function	platform	false		src/ui/studio/BrandOverview.tsx	104	BrandOverview
+publish	function	platform	false		src/ui/studio/BrandOverview.tsx	110	BrandOverview
 PreviewScope	function	platform	true	component	src/ui/studio/PreviewScope.tsx	20	
 StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	44	
 SectionId	type	platform	false		src/ui/studio/Studio.tsx	54	

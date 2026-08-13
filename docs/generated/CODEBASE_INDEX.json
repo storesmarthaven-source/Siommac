@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "a6018742c155bbfd1f04dc329dab1363402870f0",
+    "head": "f86fa159e8bacea31fa59a75436e6039594557f8",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "db858944a012e023db8c4c27",
-    "indexedFiles": 1830
+    "fingerprint": "080a12abf5bbd313f1b1ca32",
+    "indexedFiles": 1832
   },
   "summary": {
-    "files": 1475,
-    "symbols": 14729,
+    "files": 1477,
+    "symbols": 14737,
     "widgets": 63,
     "routes": 978,
     "routeDefinitions": 979,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 415,
-        "symbols": 3715,
+        "files": 417,
+        "symbols": 3723,
         "widgets": 12,
         "routes": 38,
         "routeDefinitions": 53,
@@ -9274,8 +9274,8 @@
       "path": "src/ui/studio/BrandOverview.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 271,
-      "hash": "e471e004d66d4932"
+      "lines": 240,
+      "hash": "b395ef41e0892bf3"
     },
     {
       "path": "src/ui/studio/PreviewScope.tsx",
@@ -9297,6 +9297,20 @@
       "role": "frontend",
       "lines": 388,
       "hash": "075c799275e3d6a5"
+    },
+    {
+      "path": "src/ui/studio/brandDirections.test.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 104,
+      "hash": "8bdad45cef7669da"
+    },
+    {
+      "path": "src/ui/studio/brandDirections.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 99,
+      "hash": "0ef7a7f701516b39"
     },
     {
       "path": "src/ui/table/FilterBar.tsx",
@@ -148731,10 +148745,56 @@
       ]
     },
     {
+      "name": "SEEDS",
+      "kind": "array",
+      "file": "src/ui/studio/brandDirections.test.ts",
+      "line": 27,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "IDS",
+      "kind": "array",
+      "file": "src/ui/studio/brandDirections.test.ts",
+      "line": 35,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "keys",
+      "kind": "function",
+      "file": "src/ui/studio/brandDirections.test.ts",
+      "line": 77,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "ThemeDirection",
+      "kind": "type",
+      "file": "src/ui/studio/brandDirections.ts",
+      "line": 28,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "ROLE_ACTION",
       "kind": "array",
-      "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 41,
+      "file": "src/ui/studio/brandDirections.ts",
+      "line": 30,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148743,8 +148803,8 @@
     {
       "name": "ROLE_FOCUS",
       "kind": "array",
-      "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 42,
+      "file": "src/ui/studio/brandDirections.ts",
+      "line": 31,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148753,8 +148813,8 @@
     {
       "name": "ROLE_SELECTION_EDGE",
       "kind": "array",
-      "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 43,
+      "file": "src/ui/studio/brandDirections.ts",
+      "line": 32,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148763,8 +148823,8 @@
     {
       "name": "ROLE_SELECTION_FILL",
       "kind": "array",
-      "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 44,
+      "file": "src/ui/studio/brandDirections.ts",
+      "line": 33,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148773,8 +148833,8 @@
     {
       "name": "ROLE_NAV_ACTIVE",
       "kind": "array",
-      "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 45,
+      "file": "src/ui/studio/brandDirections.ts",
+      "line": 34,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148783,8 +148843,8 @@
     {
       "name": "ROLE_LINK",
       "kind": "array",
-      "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 46,
+      "file": "src/ui/studio/brandDirections.ts",
+      "line": 35,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148793,18 +148853,38 @@
     {
       "name": "SEEDS",
       "kind": "array",
-      "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 47,
+      "file": "src/ui/studio/brandDirections.ts",
+      "line": 36,
       "module": "platform",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "ThemeDirection",
-      "kind": "type",
-      "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 49,
+      "name": "LOCKED_OPERATIONAL",
+      "kind": "variable",
+      "file": "src/ui/studio/brandDirections.ts",
+      "line": 39,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "LOCKED_NEUTRAL",
+      "kind": "variable",
+      "file": "src/ui/studio/brandDirections.ts",
+      "line": 44,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DirectionDef",
+      "kind": "interface",
+      "file": "src/ui/studio/brandDirections.ts",
+      "line": 50,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148813,8 +148893,28 @@
     {
       "name": "DIRECTIONS",
       "kind": "array",
-      "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 51,
+      "file": "src/ui/studio/brandDirections.ts",
+      "line": 57,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "directionById",
+      "kind": "function",
+      "file": "src/ui/studio/brandDirections.ts",
+      "line": 75,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "tokensForDirection",
+      "kind": "function",
+      "file": "src/ui/studio/brandDirections.ts",
+      "line": 88,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148824,7 +148924,7 @@
       "name": "BOARD",
       "kind": "array",
       "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 64,
+      "line": 38,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148834,7 +148934,7 @@
       "name": "Specimen",
       "kind": "function",
       "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 75,
+      "line": 49,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148846,7 +148946,7 @@
       "name": "Swatch",
       "kind": "function",
       "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 88,
+      "line": 62,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148858,7 +148958,7 @@
       "name": "BrandOverview",
       "kind": "function",
       "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 102,
+      "line": 76,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148870,7 +148970,7 @@
       "name": "applyDirection",
       "kind": "function",
       "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 130,
+      "line": 104,
       "module": "platform",
       "exported": false,
       "container": "BrandOverview",
@@ -148880,7 +148980,7 @@
       "name": "publish",
       "kind": "function",
       "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 141,
+      "line": 110,
       "module": "platform",
       "exported": false,
       "container": "BrandOverview",
