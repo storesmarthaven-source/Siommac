@@ -46,7 +46,7 @@ const PLANNED: Planned[] = [
   /* ── Selection ──────────────────────────────────────────────────────────*/
   /* ── People ─────────────────────────────────────────────────────────────*/
   { id: 'avatar-group', name: 'AvatarGroup', category: 'people',
-    description: 'Overlapping avatars with a +N overflow.',
+    description: 'RECONCILED 2026-08-12 — BLOCKED behind Avatar itself. Five Avatar implementations exist (HR/shared, messenger, TicketCenter, shared/Avatar, PersonSearchSelect) and only one is in @ui. Building AvatarGroup first would wrap an unconsolidated primitive and lock the duplication in. Consolidate Avatar, then this is a small wrapper. Overlapping avatars with a +N overflow.',
     plannedApi: `<AvatarGroup people={crew} max={4} />` },
 
   /* ── Overlays ───────────────────────────────────────────────────────────*/
@@ -56,7 +56,7 @@ const PLANNED: Planned[] = [
     deprecatedImports: ['HseDrawer', 'DetailDrawer'],
     replaces: ['.ui-rdrawer'] },
   { id: 'popover', name: 'Popover', category: 'overlays',
-    description: 'Anchored, dismissible surface for rich content. AnchoredPopup exists as the primitive; the public component does not.',
+    description: 'RECONCILED 2026-08-12: the runtime ALREADY EXISTS and ships. `AnchoredPopup` is exported from @ui and powers Select, Combobox, MultiSelect, DropdownMenu, Dialog and DataTableToolbar. This is a NAMING/registration gap, not a missing capability — register the existing component, never build a second anchoring runtime.',
     plannedApi: `<Popover anchor={el} open={o} onClose={close}>…</Popover>` },
   { id: 'tooltip', name: 'Tooltip', category: 'overlays',
     description: 'Hover/focus hint on any element. `InfoTip` covers only the info-icon case.',
@@ -72,7 +72,7 @@ const PLANNED: Planned[] = [
     description: 'ONE message component. Inline vs page-level banner is a `placement` prop, not a second component.',
     plannedApi: `<Alert tone="warning" placement="inline|page" title="Approval required" onDismiss={hide}>…</Alert>` },
   { id: 'progress', name: 'Progress', category: 'feedback',
-    description: 'Determinate and indeterminate progress. Bar, ring and meter are a `shape` prop — the same value rendered three ways.',
+    description: 'RECONCILED 2026-08-12 — a GENUINE gap, despite the name collision. `ProgressBar` (@ui/charts) is NOT this: it hard-codes `hse-spark-bar-*` classes, takes a raw hex `color`, and has no recipe, tokens or `role="progressbar"`. It is an HSE sparkline helper wearing the name; registering it as canonical would be accept-and-drop. Determinate and indeterminate progress — bar, ring and meter are a `shape` prop, the same value rendered three ways.',
     plannedApi: `<Progress value={0.4} shape="bar|ring|meter" label="Uploading evidence" />` },
 
   /* ── Containers ─────────────────────────────────────────────────────────*/

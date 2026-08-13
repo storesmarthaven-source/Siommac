@@ -12794,21 +12794,6 @@ DecisionPanel	function	platform	false	component	src/ui/gallery/CompareExisting.t
 brief	function	platform	false		src/ui/gallery/CompareExisting.tsx	150	DecisionPanel
 copy	function	platform	false		src/ui/gallery/CompareExisting.tsx	166	DecisionPanel
 CompareExisting	function	platform	true	component	src/ui/gallery/CompareExisting.tsx	243	
-InspectorTab	type	platform	true		src/ui/gallery/ComponentInspector.tsx	25	
-INSPECTOR_TABS	array	platform	true		src/ui/gallery/ComponentInspector.tsx	27	
-ComponentInspectorProps	interface	platform	true		src/ui/gallery/ComponentInspector.tsx	36	
-ComponentInspector	function	platform	true	component	src/ui/gallery/ComponentInspector.tsx	51	
-PropsTab	function	platform	false	component	src/ui/gallery/ComponentInspector.tsx	87	
-PropRow	function	platform	false	component	src/ui/gallery/ComponentInspector.tsx	116	
-StyleTab	function	platform	false	component	src/ui/gallery/ComponentInspector.tsx	203	
-StyleRow	function	platform	false	component	src/ui/gallery/ComponentInspector.tsx	226	
-toHex	function	platform	false		src/ui/gallery/ComponentInspector.tsx	278	
-hex	function	platform	false		src/ui/gallery/ComponentInspector.tsx	284	toHex
-STATE_NOTE	object	platform	false		src/ui/gallery/ComponentInspector.tsx	292	
-StatesTab	function	platform	false	component	src/ui/gallery/ComponentInspector.tsx	305	
-A11yTab	function	platform	false	component	src/ui/gallery/ComponentInspector.tsx	332	
-CodeTab	function	platform	false	component	src/ui/gallery/ComponentInspector.tsx	377	
-MigrationTab	function	platform	false	component	src/ui/gallery/ComponentInspector.tsx	406	
 FoundationsPanel	function	platform	true	component	src/ui/gallery/FoundationsPanel.tsx	21	
 TokenCard	function	platform	false	component,ui-tile	src/ui/gallery/FoundationsPanel.tsx	75	
 hexOf	function	platform	false		src/ui/gallery/FoundationsPanel.tsx	134	
@@ -12825,26 +12810,6 @@ Harness	function	platform	false	component,test	src/ui/gallery/semanticDraft.test
 ACTION_PRIMARY	variable	platform	false	component,test	src/ui/gallery/semanticDraft.test.tsx	52	
 NAV_BG	variable	platform	false	component,test	src/ui/gallery/semanticDraft.test.tsx	53	
 BORDER	variable	platform	false	component,test	src/ui/gallery/semanticDraft.test.tsx	54	
-Mode	type	platform	false		src/ui/gallery/UiKitGallery.tsx	48	
-OVERVIEW	variable	platform	false	component	src/ui/gallery/UiKitGallery.tsx	49	
-FOUNDATIONS	variable	platform	false	component	src/ui/gallery/UiKitGallery.tsx	50	
-BRAND_THEME	variable	platform	false	component	src/ui/gallery/UiKitGallery.tsx	53	
-CATEGORY_ICON	object	platform	false		src/ui/gallery/UiKitGallery.tsx	55	
-UiKitGalleryProps	interface	platform	true		src/ui/gallery/UiKitGallery.tsx	69	
-UiKitGallery	function	platform	true	component	src/ui/gallery/UiKitGallery.tsx	82	
-select	function	platform	false		src/ui/gallery/UiKitGallery.tsx	120	UiKitGallery
-GallerySidebar	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	307	
-Overview	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	381	
-ComponentCard	function	platform	false	component,ui-tile	src/ui/gallery/UiKitGallery.tsx	453	
-migrationSummary	function	platform	false		src/ui/gallery/UiKitGallery.tsx	490	
-StatusPill	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	499	
-MissingDetail	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	508	
-Examples	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	542	
-BackBar	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	561	
-GalleryActions	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	570	
-exportTheme	function	platform	false		src/ui/gallery/UiKitGallery.tsx	571	GalleryActions
-GridMode	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	600	
-CompareMode	function	platform	false	component	src/ui/gallery/UiKitGallery.tsx	636	
 ActivityItem	interface	platform	true		src/ui/hrfin/ActivityFeed.tsx	9	
 ActivityFeed	function	platform	true	component	src/ui/hrfin/ActivityFeed.tsx	15	
 DonutRingProps	interface	platform	true		src/ui/hrfin/charts/DonutRing.tsx	9	
@@ -13233,16 +13198,16 @@ ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx
 Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	127	
 PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	169	
 Studio	function	platform	true	component	src/ui/studio/Studio.tsx	178	
-Tab	type	platform	false		src/ui/studio/Workbench.tsx	31	
-TABS	array	platform	false		src/ui/studio/Workbench.tsx	32	
-VIEWPORTS	array	platform	false		src/ui/studio/Workbench.tsx	47	
-Control	function	platform	false	component	src/ui/studio/Workbench.tsx	56	
-Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	112	
-set	function	platform	false		src/ui/studio/Workbench.tsx	118	Workbench
-specimen	function	platform	false		src/ui/studio/Workbench.tsx	122	Workbench
-OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	211	
-UsageTab	function	platform	false	component	src/ui/studio/Workbench.tsx	298	
-A11yTab	function	platform	false	component	src/ui/studio/Workbench.tsx	340	
+Tab	type	platform	false		src/ui/studio/Workbench.tsx	32	
+TABS	array	platform	false		src/ui/studio/Workbench.tsx	33	
+VIEWPORTS	array	platform	false		src/ui/studio/Workbench.tsx	52	
+Control	function	platform	false	component	src/ui/studio/Workbench.tsx	61	
+Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	117	
+set	function	platform	false		src/ui/studio/Workbench.tsx	123	Workbench
+specimen	function	platform	false		src/ui/studio/Workbench.tsx	127	Workbench
+OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	219	
+UsageTab	function	platform	false	component	src/ui/studio/Workbench.tsx	306	
+A11yTab	function	platform	false	component	src/ui/studio/Workbench.tsx	348	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	

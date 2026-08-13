@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `080a12abf5bbd313f1b1ca32`
+Source fingerprint: `54d63f3c2061e7625138b10b`
 
-Files: 417 | Symbols: 3723 | Widgets: 12 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
+Files: 415 | Symbols: 3688 | Widgets: 12 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 50 | DB objects: 327 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -302,7 +302,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `Wizard` | function / component | `src/ui/components/Wizard.tsx:44` | `-` |
 | `WizardShell` | function / component | `src/ui/components/WizardShell.tsx:44` | `-` |
 | `CardVariant` | type / ui-tile | `src/ui/containers/Card/Card.tsx:47` | `-` |
-| ... | 106 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 104 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 

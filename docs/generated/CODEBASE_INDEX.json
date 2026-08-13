@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "f86fa159e8bacea31fa59a75436e6039594557f8",
+    "head": "c8e8d665adeca8d772359f4916ca22f2d03710b5",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "080a12abf5bbd313f1b1ca32",
-    "indexedFiles": 1832
+    "fingerprint": "54d63f3c2061e7625138b10b",
+    "indexedFiles": 1830
   },
   "summary": {
-    "files": 1477,
-    "symbols": 14737,
+    "files": 1475,
+    "symbols": 14702,
     "widgets": 63,
     "routes": 978,
     "routeDefinitions": 979,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 417,
-        "symbols": 3723,
+        "files": 415,
+        "symbols": 3688,
         "widgets": 12,
         "routes": 38,
         "routeDefinitions": 53,
@@ -8753,25 +8753,11 @@
       "hash": "04da5af94a3142ab"
     },
     {
-      "path": "src/ui/gallery/ComponentInspector.tsx",
-      "module": "platform",
-      "role": "frontend",
-      "lines": 480,
-      "hash": "527a0b24e9cda950"
-    },
-    {
       "path": "src/ui/gallery/FoundationsPanel.tsx",
       "module": "platform",
       "role": "frontend",
       "lines": 145,
       "hash": "7d7a2948c9a2b9be"
-    },
-    {
-      "path": "src/ui/gallery/UiKitGallery.tsx",
-      "module": "platform",
-      "role": "frontend",
-      "lines": 649,
-      "hash": "cf0c44d9055aec97"
     },
     {
       "path": "src/ui/gallery/galleryStore.ts",
@@ -9233,7 +9219,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 163,
-      "hash": "c9480f8df11e1143"
+      "hash": "7dc92b5114a35860"
     },
     {
       "path": "src/ui/registry/types.ts",
@@ -9295,8 +9281,8 @@
       "path": "src/ui/studio/Workbench.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 388,
-      "hash": "075c799275e3d6a5"
+      "lines": 396,
+      "hash": "3566a1ba2db694fa"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -144421,174 +144407,6 @@
       ]
     },
     {
-      "name": "InspectorTab",
-      "kind": "type",
-      "file": "src/ui/gallery/ComponentInspector.tsx",
-      "line": 25,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "INSPECTOR_TABS",
-      "kind": "array",
-      "file": "src/ui/gallery/ComponentInspector.tsx",
-      "line": 27,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "ComponentInspectorProps",
-      "kind": "interface",
-      "file": "src/ui/gallery/ComponentInspector.tsx",
-      "line": 36,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "ComponentInspector",
-      "kind": "function",
-      "file": "src/ui/gallery/ComponentInspector.tsx",
-      "line": 51,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "PropsTab",
-      "kind": "function",
-      "file": "src/ui/gallery/ComponentInspector.tsx",
-      "line": 87,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "PropRow",
-      "kind": "function",
-      "file": "src/ui/gallery/ComponentInspector.tsx",
-      "line": 116,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "StyleTab",
-      "kind": "function",
-      "file": "src/ui/gallery/ComponentInspector.tsx",
-      "line": 203,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "StyleRow",
-      "kind": "function",
-      "file": "src/ui/gallery/ComponentInspector.tsx",
-      "line": 226,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "toHex",
-      "kind": "function",
-      "file": "src/ui/gallery/ComponentInspector.tsx",
-      "line": 278,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "hex",
-      "kind": "function",
-      "file": "src/ui/gallery/ComponentInspector.tsx",
-      "line": 284,
-      "module": "platform",
-      "exported": false,
-      "container": "toHex",
-      "tags": []
-    },
-    {
-      "name": "STATE_NOTE",
-      "kind": "object",
-      "file": "src/ui/gallery/ComponentInspector.tsx",
-      "line": 292,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "StatesTab",
-      "kind": "function",
-      "file": "src/ui/gallery/ComponentInspector.tsx",
-      "line": 305,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "A11yTab",
-      "kind": "function",
-      "file": "src/ui/gallery/ComponentInspector.tsx",
-      "line": 332,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "CodeTab",
-      "kind": "function",
-      "file": "src/ui/gallery/ComponentInspector.tsx",
-      "line": 377,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "MigrationTab",
-      "kind": "function",
-      "file": "src/ui/gallery/ComponentInspector.tsx",
-      "line": 406,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
       "name": "FoundationsPanel",
       "kind": "function",
       "file": "src/ui/gallery/FoundationsPanel.tsx",
@@ -144771,235 +144589,6 @@
       "tags": [
         "component",
         "test"
-      ]
-    },
-    {
-      "name": "Mode",
-      "kind": "type",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 48,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "OVERVIEW",
-      "kind": "variable",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 49,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "FOUNDATIONS",
-      "kind": "variable",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 50,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "BRAND_THEME",
-      "kind": "variable",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 53,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "CATEGORY_ICON",
-      "kind": "object",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 55,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "UiKitGalleryProps",
-      "kind": "interface",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 69,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "UiKitGallery",
-      "kind": "function",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 82,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "select",
-      "kind": "function",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 120,
-      "module": "platform",
-      "exported": false,
-      "container": "UiKitGallery",
-      "tags": []
-    },
-    {
-      "name": "GallerySidebar",
-      "kind": "function",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 307,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "Overview",
-      "kind": "function",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 381,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "ComponentCard",
-      "kind": "function",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 453,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component",
-        "ui-tile"
-      ]
-    },
-    {
-      "name": "migrationSummary",
-      "kind": "function",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 490,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "StatusPill",
-      "kind": "function",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 499,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "MissingDetail",
-      "kind": "function",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 508,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "Examples",
-      "kind": "function",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 542,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "BackBar",
-      "kind": "function",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 561,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "GalleryActions",
-      "kind": "function",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 570,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "exportTheme",
-      "kind": "function",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 571,
-      "module": "platform",
-      "exported": false,
-      "container": "GalleryActions",
-      "tags": []
-    },
-    {
-      "name": "GridMode",
-      "kind": "function",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 600,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "CompareMode",
-      "kind": "function",
-      "file": "src/ui/gallery/UiKitGallery.tsx",
-      "line": 636,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
       ]
     },
     {
@@ -149113,7 +148702,7 @@
       "name": "Tab",
       "kind": "type",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 31,
+      "line": 32,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149123,7 +148712,7 @@
       "name": "TABS",
       "kind": "array",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 32,
+      "line": 33,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149133,7 +148722,7 @@
       "name": "VIEWPORTS",
       "kind": "array",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 47,
+      "line": 52,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149143,7 +148732,7 @@
       "name": "Control",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 56,
+      "line": 61,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149155,7 +148744,7 @@
       "name": "Workbench",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 112,
+      "line": 117,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149167,7 +148756,7 @@
       "name": "set",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 118,
+      "line": 123,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -149177,7 +148766,7 @@
       "name": "specimen",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 122,
+      "line": 127,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -149187,7 +148776,7 @@
       "name": "OverviewSpecimens",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 211,
+      "line": 219,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149199,7 +148788,7 @@
       "name": "UsageTab",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 298,
+      "line": 306,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149211,7 +148800,7 @@
       "name": "A11yTab",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 340,
+      "line": 348,
       "module": "platform",
       "exported": false,
       "container": "",
