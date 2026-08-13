@@ -2,6 +2,80 @@
 
 Updated: 2026-08-12
 
+## ⭐ BUTTON RETIREMENT PROGRAMME — slice log
+
+The Studio exposes exactly one Buttons family: Action Button (`Button`),
+Dropdown Button, Split Button. Everything else Button-shaped is retired,
+migrated, or recorded below. One inventory drives it —
+`scripts/scan-button-usage.mjs`, extended with a four-bucket `retirement`
+block. ⛔ Do NOT start a second scanner; the earlier one was folded in and
+deleted.
+
+```
+active-legacy      1383   migrate the consumer, then delete the family at zero
+legacy-page-only     11   4 unreachable pages — CONFIRM, never auto-delete
+unresolved          463   268 no class · 195 class={expr} — decision per site
+in-flight excluded    2   Email Studio (built, not yet wired; holds stash@{0})
+canonical Button    287   was 230
+```
+
+⚠ The long-quoted `544 / 121` figure is a SUBSET: it only ever matched
+`class="…btn…"`, missing every module family (`hse-btn`, `hrfin-action`).
+The honest denominator is ~1,500 raw `<button>` across ~220 app files.
+
+### Slices landed
+| | |
+|---|---|
+| `17281903` | ButtonGroup retired — zero consumers, no migration needed |
+| `b490f7ee` | obx-mini migrated, 8 of 10 files |
+| `38a6bdc8` | prerequisite: redundant loading guard removed |
+| `17e69720` | fix: `@layer` left unclosed by the ButtonGroup CSS deletion |
+| `6faa85a4` | obx-mini complete — zero consumers, CSS deleted |
+
+### ⭐⭐ Finding — four destructive actions were visually broken
+`Delete`, `Cancel`, `Reject` and `Finalize` carried
+`class="obx-mini danger"`, but **`.obx-mini.danger` has no CSS rule anywhere**
+— only `.obx-btn.danger` exists. All four had been rendering as ordinary
+buttons for as long as the class existed.
+
+They are now `variant="outline" tone="danger"`. This is an **intentional
+semantic correction**, not a like-for-like migration: it honours what the
+author wrote rather than preserving the defect, and matches the app's
+dominant destructive idiom (outline + danger, 14 measured sites) rather than
+the single filled-danger outlier. It is the one change in this family a
+reviewer should actually look at.
+
+⭐ The general lesson: a modifier class with no rule is a silent product bug.
+Grep for the *selector*, not just the class token, before assuming a legacy
+modifier carries styling.
+
+### ⚠ Finding — sm is 32px, legacy obx-mini was 28px
+Canonical `size="sm"` is 32px; `.obx-mini` predated the kit at 28px. Dense HR
+rows therefore gain 4px. Intended — adopting the canonical control means
+adopting its metrics — but **visual verification is PENDING, not passed**:
+this worktree's API proxy 502s, so the migrated HR surfaces do not load with
+data and could not be eyeballed. Recorded as pending QA, NOT as a failure.
+The migration is proven by typecheck, changed-file lint, tests and a
+zero-consumer grep.
+
+### ⛔ CSS deletions need a brace-balance check
+`17281903` deleted a CSS block by scanning for a terminator line, ran off the
+end, and took the enclosing `@layer recipes {` closing brace with it. An
+unterminated at-rule fails silently: the browser swallowed every following
+declaration, `.ui-split` ended up with zero rules, and the Split Button
+rendered as two separate pills. **typecheck, eslint and 771 vitest tests were
+all green the whole time** — none of them parse CSS. Count braces before and
+after any CSS deletion, and confirm in the browser.
+
+### Next
+`hse-btn` 134 · `primary` 117 · `hrfin-action` 110 · `btn` 92 · `is-primary` 65.
+⭐ Slice cost tracks CONTEXTUAL CSS OVERRIDES, not call-site count —
+`sm-icon-button` is 26 uses but 19 rules including absolute positioning.
+⛔ Several heavy families sit in `do_not_touch` files (Incidents, PPEManager,
+AccessControl 52 errors, EmailTemplateBuilder 17).
+
+---
+
 ## ⭐⭐⭐ SESSION HANDOFF — 2026-08-12 (read this first)
 
 ```
