@@ -19,7 +19,7 @@ export function SpecialTreatments({ componentId }: SpecialTreatmentsProps): VNod
     <section class="sds-ov__sec sds-special" aria-labelledby="special-treatments-title">
       <div class="sds-ov__hd">
         <h4 id="special-treatments-title">Special treatments</h4>
-        <p>Non-canonical application-specific button treatments.</p>
+        <p>Custom looks reserved for a named product experience.</p>
       </div>
 
       <article class="sds-special__card">

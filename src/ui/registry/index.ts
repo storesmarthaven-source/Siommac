@@ -20,8 +20,8 @@
 export {
   type ComponentDef, type ComponentCategory, type ComponentStatus,
   type PropControl, type PropValues, type StyleControl, type StyleGroup,
-  type A11yInfo, type KeyBinding, type ComponentExample, type MigrationInfo,
-  defaultProps, styleVarNames, isBuilt,
+  type A11yInfo, type KeyBinding, type ComponentExample, type VariantSample, type MigrationInfo,
+  defaultProps, propsForVariant, styleVarNames, isBuilt,
 } from './types';
 
 export { DEMO_PEOPLE, DEMO_DEPARTMENTS } from './definitions';

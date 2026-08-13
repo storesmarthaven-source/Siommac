@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "d69354b07c9c0f7f55c32d31045e688d71ff7236",
+    "head": "a73e44d45a7ea8a67d01dec64221acd4c1ec6a33",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "7376a206d8ae63e734b051fa",
+    "fingerprint": "d9639ab354c6f0bddb618573",
     "indexedFiles": 1857
   },
   "summary": {
@@ -9246,8 +9246,8 @@
       "path": "src/ui/registry/actions.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 460,
-      "hash": "6e2b218309364f01"
+      "lines": 468,
+      "hash": "2011753801f8482c"
     },
     {
       "path": "src/ui/registry/compound.defs.tsx",
@@ -9281,8 +9281,8 @@
       "path": "src/ui/registry/families.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 89,
-      "hash": "1b3b9c39284f68bb"
+      "lines": 87,
+      "hash": "ea29a0c4375d63c1"
     },
     {
       "path": "src/ui/registry/feedback.defs.tsx",
@@ -9303,7 +9303,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 200,
-      "hash": "cbe5254765c2ddea"
+      "hash": "aaca32c667f6fa84"
     },
     {
       "path": "src/ui/registry/navigation.defs.tsx",
@@ -9351,8 +9351,8 @@
       "path": "src/ui/registry/types.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 241,
-      "hash": "2aa2696730e0aace"
+      "lines": 265,
+      "hash": "de07283e888497a0"
     },
     {
       "path": "src/ui/registry/wizard.def.tsx",
@@ -9380,7 +9380,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 42,
-      "hash": "301cb436de188e8b"
+      "hash": "1e14ce7ba1a80977"
     },
     {
       "path": "src/ui/status/statusBridge.test.tsx",
@@ -9428,8 +9428,8 @@
       "path": "src/ui/studio/RecipeStyleEditor.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 146,
-      "hash": "2c62a8ca21e5a2a5"
+      "lines": 171,
+      "hash": "7e6c46eaadf40788"
     },
     {
       "path": "src/ui/studio/Studio.tsx",
@@ -9442,8 +9442,8 @@
       "path": "src/ui/studio/Workbench.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 599,
-      "hash": "545b0d59de592f57"
+      "lines": 420,
+      "hash": "1fb36d7244be810b"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -9470,8 +9470,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 179,
-      "hash": "632562d980d27b06"
+      "lines": 194,
+      "hash": "b1d70fbd6577eb1e"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -147849,7 +147849,7 @@
       "name": "segmentedDef",
       "kind": "object",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 254,
+      "line": 262,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147859,7 +147859,7 @@
       "name": "menuDef",
       "kind": "object",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 329,
+      "line": 337,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147869,7 +147869,7 @@
       "name": "ACTION_DEFS",
       "kind": "array",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 455,
+      "line": 463,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148299,7 +148299,7 @@
       "name": "COMPONENT_FAMILIES",
       "kind": "array",
       "file": "src/ui/registry/families.ts",
-      "line": 64,
+      "line": 62,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148309,7 +148309,7 @@
       "name": "findFamily",
       "kind": "function",
       "file": "src/ui/registry/families.ts",
-      "line": 66,
+      "line": 64,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148319,7 +148319,7 @@
       "name": "familyOfComponent",
       "kind": "function",
       "file": "src/ui/registry/families.ts",
-      "line": 71,
+      "line": 69,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148329,7 +148329,7 @@
       "name": "familyMembers",
       "kind": "function",
       "file": "src/ui/registry/families.ts",
-      "line": 81,
+      "line": 79,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149170,10 +149170,20 @@
       "tags": []
     },
     {
+      "name": "VariantSample",
+      "kind": "interface",
+      "file": "src/ui/registry/types.ts",
+      "line": 121,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "MigrationInfo",
       "kind": "interface",
       "file": "src/ui/registry/types.ts",
-      "line": 124,
+      "line": 138,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149183,7 +149193,7 @@
       "name": "ComponentCategory",
       "kind": "type",
       "file": "src/ui/registry/types.ts",
-      "line": 144,
+      "line": 158,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149193,7 +149203,7 @@
       "name": "ComponentStatus",
       "kind": "type",
       "file": "src/ui/registry/types.ts",
-      "line": 156,
+      "line": 170,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149203,7 +149213,17 @@
       "name": "ComponentDef",
       "kind": "interface",
       "file": "src/ui/registry/types.ts",
-      "line": 158,
+      "line": 172,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "propsForVariant",
+      "kind": "function",
+      "file": "src/ui/registry/types.ts",
+      "line": 241,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149213,7 +149233,7 @@
       "name": "defaultProps",
       "kind": "function",
       "file": "src/ui/registry/types.ts",
-      "line": 226,
+      "line": 250,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149223,7 +149243,7 @@
       "name": "styleVarNames",
       "kind": "function",
       "file": "src/ui/registry/types.ts",
-      "line": 233,
+      "line": 257,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149233,7 +149253,7 @@
       "name": "isBuilt",
       "kind": "function",
       "file": "src/ui/registry/types.ts",
-      "line": 238,
+      "line": 262,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149987,7 +150007,7 @@
       "name": "openButtons",
       "kind": "function",
       "file": "src/ui/studio/family.test.tsx",
-      "line": 36,
+      "line": 37,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149999,7 +150019,7 @@
       "name": "activeSubtype",
       "kind": "function",
       "file": "src/ui/studio/family.test.tsx",
-      "line": 42,
+      "line": 43,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150115,20 +150135,30 @@
       ]
     },
     {
-      "name": "Scope",
+      "name": "Target",
       "kind": "type",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 11,
+      "line": 12,
       "module": "platform",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "stateForPreview",
+      "name": "friendly",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 13,
+      "line": 14,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "friendlyGroup",
+      "kind": "function",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 18,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150138,17 +150168,17 @@
       "name": "belongs",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 17,
+      "line": 25,
       "module": "platform",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "valueType",
+      "name": "friendlyError",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 26,
+      "line": 40,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150158,7 +150188,7 @@
       "name": "TokenControl",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 30,
+      "line": 46,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150170,7 +150200,7 @@
       "name": "RecipeStyleEditor",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 60,
+      "line": 79,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150182,7 +150212,7 @@
       "name": "act",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 73,
+      "line": 94,
       "module": "platform",
       "exported": false,
       "container": "RecipeStyleEditor",
@@ -150366,28 +150396,28 @@
       ]
     },
     {
-      "name": "Tab",
-      "kind": "type",
-      "file": "src/ui/studio/Workbench.tsx",
-      "line": 35,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "TABS",
-      "kind": "array",
-      "file": "src/ui/studio/Workbench.tsx",
-      "line": 36,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
       "name": "CONTROL_GROUPS",
       "kind": "array",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 41,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "FRIENDLY_VALUES",
+      "kind": "object",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 48,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "friendlyValue",
+      "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
       "line": 53,
       "module": "platform",
@@ -150399,7 +150429,7 @@
       "name": "groupControls",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 60,
+      "line": 59,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150409,7 +150439,7 @@
       "name": "Control",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 80,
+      "line": 79,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150418,20 +150448,10 @@
       ]
     },
     {
-      "name": "symbolOf",
-      "kind": "function",
-      "file": "src/ui/studio/Workbench.tsx",
-      "line": 155,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
       "name": "WorkbenchProps",
       "kind": "interface",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 162,
+      "line": 156,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150441,7 +150461,7 @@
       "name": "Workbench",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 171,
+      "line": 165,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150453,7 +150473,7 @@
       "name": "setValues",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 191,
+      "line": 179,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -150463,7 +150483,7 @@
       "name": "set",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 194,
+      "line": 182,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -150473,7 +150493,7 @@
       "name": "specimen",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 207,
+      "line": 195,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -150483,7 +150503,7 @@
       "name": "Block",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 424,
+      "line": 340,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150495,31 +150515,7 @@
       "name": "OverviewSpecimens",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 442,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "UsageTab",
-      "kind": "function",
-      "file": "src/ui/studio/Workbench.tsx",
-      "line": 509,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "A11yTab",
-      "kind": "function",
-      "file": "src/ui/studio/Workbench.tsx",
-      "line": 551,
+      "line": 358,
       "module": "platform",
       "exported": false,
       "container": "",

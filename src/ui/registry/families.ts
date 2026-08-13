@@ -49,9 +49,7 @@ export const BUTTON_FAMILY: ComponentFamily = {
   id: 'buttons',
   name: 'Buttons',
   category: 'actions',
-  description:
-    'Action, dropdown and split controls for executing or selecting actions. Three separate ' +
-    'components — they share an appearance, not an interaction model.',
+  description: 'Choose the button type that fits the task. They share the same visual style, while each behaves in the way users expect.',
   defaultComponentId: 'button',
   componentIds: ['button', 'dropdown-button', 'split-button'],
   roles: {

@@ -13097,9 +13097,9 @@ VARIANTS	variable	platform	false	component	src/ui/registry/actions.defs.tsx	51
 buttonDef	object	platform	true		src/ui/registry/actions.defs.tsx	55	
 icon	function	platform	false		src/ui/registry/actions.defs.tsx	179	buttonDef
 jsx	function	platform	false		src/ui/registry/actions.defs.tsx	201	buttonDef
-segmentedDef	object	platform	true		src/ui/registry/actions.defs.tsx	254	
-menuDef	object	platform	true		src/ui/registry/actions.defs.tsx	329	
-ACTION_DEFS	array	platform	true		src/ui/registry/actions.defs.tsx	455	
+segmentedDef	object	platform	true		src/ui/registry/actions.defs.tsx	262	
+menuDef	object	platform	true		src/ui/registry/actions.defs.tsx	337	
+ACTION_DEFS	array	platform	true		src/ui/registry/actions.defs.tsx	463	
 s	function	platform	false		src/ui/registry/compound.defs.tsx	31	
 b	function	platform	false		src/ui/registry/compound.defs.tsx	33	
 size	function	platform	false		src/ui/registry/compound.defs.tsx	34	
@@ -13141,10 +13141,10 @@ dialogDef	object	platform	false		src/ui/registry/definitions.tsx	178
 COMPONENT_DEFS	array	platform	true		src/ui/registry/definitions.tsx	311	
 ComponentFamily	interface	platform	true		src/ui/registry/families.ts	23	
 BUTTON_FAMILY	object	platform	true		src/ui/registry/families.ts	48	
-COMPONENT_FAMILIES	array	platform	true		src/ui/registry/families.ts	64	
-findFamily	function	platform	true		src/ui/registry/families.ts	66	
-familyOfComponent	function	platform	true		src/ui/registry/families.ts	71	
-familyMembers	function	platform	true		src/ui/registry/families.ts	81	
+COMPONENT_FAMILIES	array	platform	true		src/ui/registry/families.ts	62	
+findFamily	function	platform	true		src/ui/registry/families.ts	64	
+familyOfComponent	function	platform	true		src/ui/registry/families.ts	69	
+familyMembers	function	platform	true		src/ui/registry/families.ts	79	
 s	function	platform	false		src/ui/registry/feedback.defs.tsx	9	
 b	function	platform	false		src/ui/registry/feedback.defs.tsx	10	
 emptyStateDef	object	platform	true		src/ui/registry/feedback.defs.tsx	12	
@@ -13228,13 +13228,15 @@ StyleGroup	interface	platform	true		src/ui/registry/types.ts	74
 KeyBinding	interface	platform	true		src/ui/registry/types.ts	81	
 A11yInfo	interface	platform	true		src/ui/registry/types.ts	86	
 ComponentExample	interface	platform	true		src/ui/registry/types.ts	105	
-MigrationInfo	interface	platform	true		src/ui/registry/types.ts	124	
-ComponentCategory	type	platform	true		src/ui/registry/types.ts	144	
-ComponentStatus	type	platform	true		src/ui/registry/types.ts	156	
-ComponentDef	interface	platform	true		src/ui/registry/types.ts	158	
-defaultProps	function	platform	true		src/ui/registry/types.ts	226	
-styleVarNames	function	platform	true		src/ui/registry/types.ts	233	
-isBuilt	function	platform	true		src/ui/registry/types.ts	238	
+VariantSample	interface	platform	true		src/ui/registry/types.ts	121	
+MigrationInfo	interface	platform	true		src/ui/registry/types.ts	138	
+ComponentCategory	type	platform	true		src/ui/registry/types.ts	158	
+ComponentStatus	type	platform	true		src/ui/registry/types.ts	170	
+ComponentDef	interface	platform	true		src/ui/registry/types.ts	172	
+propsForVariant	function	platform	true		src/ui/registry/types.ts	241	
+defaultProps	function	platform	true		src/ui/registry/types.ts	250	
+styleVarNames	function	platform	true		src/ui/registry/types.ts	257	
+isBuilt	function	platform	true		src/ui/registry/types.ts	262	
 s	function	platform	false		src/ui/registry/wizard.def.tsx	16	
 b	function	platform	false		src/ui/registry/wizard.def.tsx	17	
 noop	function	platform	false		src/ui/registry/wizard.def.tsx	18	
@@ -13305,8 +13307,8 @@ applyDirection	function	platform	false		src/ui/studio/BrandOverview.tsx	104	Bran
 publish	function	platform	false		src/ui/studio/BrandOverview.tsx	110	BrandOverview
 MEMBERS	variable	platform	false	component,test	src/ui/studio/family.test.tsx	25	
 subtype	function	platform	false	test	src/ui/studio/family.test.tsx	28	
-openButtons	function	platform	false	test	src/ui/studio/family.test.tsx	36	
-activeSubtype	function	platform	false	test	src/ui/studio/family.test.tsx	42	
+openButtons	function	platform	false	test	src/ui/studio/family.test.tsx	37	
+activeSubtype	function	platform	false	test	src/ui/studio/family.test.tsx	43	
 Shape	interface	platform	false		src/ui/studio/InAppUsage.tsx	31	
 DATA	object	platform	false		src/ui/studio/InAppUsage.tsx	39	
 describe	function	platform	false		src/ui/studio/InAppUsage.tsx	43	
@@ -13317,13 +13319,14 @@ copySelection	function	platform	false		src/ui/studio/InAppUsage.tsx	93	InAppUsag
 settle	function	platform	false		src/ui/studio/InAppUsage.tsx	110	copySelection
 root	variable	platform	false		src/ui/studio/preview.tsx	12	
 PreviewScope	function	platform	true	component	src/ui/studio/PreviewScope.tsx	20	
-Scope	type	platform	false		src/ui/studio/RecipeStyleEditor.tsx	11	
-stateForPreview	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	13	
-belongs	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	17	
-valueType	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	26	
-TokenControl	function	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	30	
-RecipeStyleEditor	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	60	
-act	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	73	RecipeStyleEditor
+Target	type	platform	false		src/ui/studio/RecipeStyleEditor.tsx	12	
+friendly	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	14	
+friendlyGroup	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	18	
+belongs	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	25	
+friendlyError	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	40	
+TokenControl	function	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	46	
+RecipeStyleEditor	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	79	
+act	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	94	RecipeStyleEditor
 StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	43	
 SectionId	type	platform	false		src/ui/studio/Studio.tsx	52	
 NavItem	interface	platform	false		src/ui/studio/Studio.tsx	58	
@@ -13340,21 +13343,18 @@ CatalogueNodeCard	function	platform	false	component,ui-tile	src/ui/studio/Studio
 Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	204	
 PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	260	
 Studio	function	platform	true	component	src/ui/studio/Studio.tsx	269	
-Tab	type	platform	false		src/ui/studio/Workbench.tsx	35	
-TABS	array	platform	false		src/ui/studio/Workbench.tsx	36	
-CONTROL_GROUPS	array	platform	false		src/ui/studio/Workbench.tsx	53	
-groupControls	function	platform	false		src/ui/studio/Workbench.tsx	60	
-Control	function	platform	false	component	src/ui/studio/Workbench.tsx	80	
-symbolOf	function	platform	false		src/ui/studio/Workbench.tsx	155	
-WorkbenchProps	interface	platform	true		src/ui/studio/Workbench.tsx	162	
-Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	171	
-setValues	function	platform	false		src/ui/studio/Workbench.tsx	191	Workbench
-set	function	platform	false		src/ui/studio/Workbench.tsx	194	Workbench
-specimen	function	platform	false		src/ui/studio/Workbench.tsx	207	Workbench
-Block	function	platform	false	component	src/ui/studio/Workbench.tsx	424	
-OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	442	
-UsageTab	function	platform	false	component	src/ui/studio/Workbench.tsx	509	
-A11yTab	function	platform	false	component	src/ui/studio/Workbench.tsx	551	
+CONTROL_GROUPS	array	platform	false		src/ui/studio/Workbench.tsx	41	
+FRIENDLY_VALUES	object	platform	false		src/ui/studio/Workbench.tsx	48	
+friendlyValue	function	platform	false		src/ui/studio/Workbench.tsx	53	
+groupControls	function	platform	false		src/ui/studio/Workbench.tsx	59	
+Control	function	platform	false	component	src/ui/studio/Workbench.tsx	79	
+WorkbenchProps	interface	platform	true		src/ui/studio/Workbench.tsx	156	
+Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	165	
+setValues	function	platform	false		src/ui/studio/Workbench.tsx	179	Workbench
+set	function	platform	false		src/ui/studio/Workbench.tsx	182	Workbench
+specimen	function	platform	false		src/ui/studio/Workbench.tsx	195	Workbench
+Block	function	platform	false	component	src/ui/studio/Workbench.tsx	340	
+OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	358	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	

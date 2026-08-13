@@ -111,6 +111,20 @@ export interface ComponentExample {
   code?: string;
 }
 
+/**
+ * A purposeful specimen for one value on a component's variant axis.
+ *
+ * The props are registry data because the same samples appear in Overview and
+ * in the governed Style preview. This avoids the misleading fallback where six
+ * differently styled controls all say the same thing.
+ */
+export interface VariantSample {
+  value: string;
+  title: string;
+  description?: string;
+  props: PropValues;
+}
+
 /* ── Migration ─────────────────────────────────────────────────────────────── */
 
 /**
@@ -186,6 +200,7 @@ export interface ComponentDef {
 
   a11y?: A11yInfo;
   examples?: readonly ComponentExample[];
+  variantSamples?: readonly VariantSample[];
   migration?: MigrationInfo;
 
   /**
@@ -220,6 +235,15 @@ export interface ComponentDef {
    * axis IS that block, and showing both would state the same thing twice.
    */
   previewAxis?: 'variant';
+}
+
+/** Resolve a meaningful variant specimen, falling back to declared defaults. */
+export function propsForVariant(def: ComponentDef, value: string): PropValues {
+  return {
+    ...defaultProps(def),
+    ...(def.variantSamples?.find(sample => sample.value === value)?.props ?? {}),
+    variant: value,
+  };
 }
 
 /** Resolve a definition's declared defaults into a starting prop set. */

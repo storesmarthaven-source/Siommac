@@ -26,8 +26,9 @@ const MEMBERS = ['button', 'dropdown-button', 'split-button'] as const;
 
 /** The subtype selector option for `name`. Fails loudly rather than silently. */
 function subtype(container: Element, name: string): HTMLElement {
-  const found = [...container.querySelectorAll<HTMLElement>('.sds-family__type')]
-    .find(el => el.querySelector('.sds-family__copy strong')?.textContent === name);
+  const shortName = name.replace(' Button', '');
+  const found = [...container.querySelectorAll<HTMLElement>('.sds-family-switch button')]
+    .find(el => el.querySelector('strong')?.textContent === shortName);
   if (!found) throw new Error(`No "${name}" subtype option is rendered`);
   return found;
 }
@@ -40,7 +41,7 @@ function openButtons(container: Element): void {
 }
 
 const activeSubtype = (c: Element): string | undefined =>
-  c.querySelector('.sds-family__type.is-on .sds-family__copy strong')?.textContent ?? undefined;
+  c.querySelector('.sds-family-switch .is-on strong')?.textContent ?? undefined;
 
 describe('Buttons family — registry', () => {
   it('collapses the three button components into one catalogue node', () => {
@@ -119,32 +120,28 @@ describe('Buttons family — Studio', () => {
     openButtons(container);
 
     expect(container.querySelector('.sds-wb__head h2')?.textContent).toBe('Buttons');
-    expect(activeSubtype(container)).toBe('Action Button');
-    expect(container.querySelector('.sds-pg__who strong')?.textContent).toBe('Action Button');
-    // The catalogue rename must never hide what to import.
-    expect(container.querySelector('.sds-who-badge')?.textContent).toBe('Button');
+    expect(activeSubtype(container)).toBe('Action');
+    expect(container.querySelector('.sds-button-settings__head strong')?.textContent).toBe('Primary button');
+    expect(container.querySelector('.sds-button-picker .is-on strong')?.textContent).toBe('Primary');
   });
 
   it('swaps the active def AND the Properties schema on subtype change', () => {
     const { container, queryByText } = render(<Studio />);
     openButtons(container);
 
-    // Action Button's schema — "Tone" is its alone (all three now offer a
-    // leading icon, so that is no longer the discriminator).
-    expect(queryByText('Tone')).not.toBeNull();
+    expect(queryByText('Style settings')).toBeNull();
+    expect(queryByText('Background')).not.toBeNull();
     expect(queryByText('Menu accessible name')).toBeNull();
 
     fireEvent.click(subtype(container, 'Split Button'));
 
     // Split Button's own schema replaced it — not merged with it.
-    expect(activeSubtype(container)).toBe('Split Button');
-    expect(container.querySelector('.sds-pg__who strong')?.textContent).toBe('Split Button');
+    expect(activeSubtype(container)).toBe('Split');
+    expect(container.querySelector('.sds-pg__who strong')?.textContent).toBe('Try the Split Button');
     expect(queryByText('Menu accessible name')).not.toBeNull();
-    expect(queryByText('Tone')).toBeNull();
+    expect(queryByText('Background')).toBeNull();
 
-    // And the compound identity line survives the switch.
-    expect(container.querySelector('.sds-pg__who span')?.textContent)
-      .toContain('Button + Menu');
+    expect(subtype(container, 'Split Button').textContent).toContain('Default action + alternatives');
   });
 
   it('renders every Properties control from the selected definition', () => {
@@ -167,12 +164,30 @@ describe('Buttons family — Studio', () => {
     const { container, queryByText } = render(<Studio />);
     openButtons(container);
 
-    expect(queryByText('Special treatments')).not.toBeNull();
-    expect(queryByText('Non-canonical application-specific button treatments.')).not.toBeNull();
-    expect(container.querySelector('.sds-special .ui-credits')).not.toBeNull();
+    expect(container.querySelectorAll('.sds-button-picker [role="radio"]')).toHaveLength(7);
+    expect(queryByText('Credits')).toBeNull();
 
     fireEvent.click(subtype(container, 'Dropdown Button'));
     expect(queryByText('Special treatments')).toBeNull();
     expect(container.querySelector('.sds-special .ui-credits')).toBeNull();
+  });
+
+  it('uses purposeful content for every Button variant', () => {
+    const { container } = render(<Studio />);
+    openButtons(container);
+
+    const labels = [...container.querySelectorAll('.sds-button-picker .ui-btn')]
+      .map(button => button.textContent.trim());
+    expect(labels).toEqual(['Save', 'Cancel', 'Preview', 'Back', 'Delete', 'View record']);
+  });
+
+  it('selects the exact Button variant to edit', () => {
+    const { container, getByRole } = render(<Studio />);
+    openButtons(container);
+
+    fireEvent.click(getByRole('radio', { name: /Danger/ }));
+
+    expect(container.querySelector('.sds-button-settings__head strong')?.textContent).toBe('Danger button');
+    expect(container.querySelector('.sds-button-picker .is-on strong')?.textContent).toBe('Danger');
   });
 });

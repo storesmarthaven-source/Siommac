@@ -113,13 +113,13 @@ export const buttonDef: ComponentDef = {
 
   style: [
     { label: 'Geometry', controls: [
-      { name: '--ui-button-height-md',    label: 'Height (md)', kind: 'size', scope: 'shared', linkedTo: 'var(--ui-control-md)', help: 'Set to var(--ui-control-md) to align buttons with the 40px input rhythm.' },
-      { name: '--ui-button-pad-x-md',     label: 'Padding X (md)', kind: 'size', scope: 'shared' },
-      { name: '--ui-button-radius',       label: 'Corner radius', kind: 'size', scope: 'shared', linkedTo: 'var(--radius-sm)' },
-      { name: '--ui-button-gap',          label: 'Icon gap', kind: 'size', scope: 'shared', linkedTo: 'var(--space-2)' },
+      { name: '--ui-button-height-md',    label: 'Button height', kind: 'size', scope: 'shared', linkedTo: 'var(--ui-control-md)', help: 'Uses the same height as medium form controls by default.' },
+      { name: '--ui-button-pad-x-md',     label: 'Horizontal padding', kind: 'size', scope: 'shared' },
+      { name: '--ui-button-radius',       label: 'Corner roundness', kind: 'size', scope: 'shared', linkedTo: 'var(--radius-sm)' },
+      { name: '--ui-button-gap',          label: 'Icon spacing', kind: 'size', scope: 'shared', linkedTo: 'var(--space-2)' },
       { name: '--ui-button-icon-size',    label: 'Icon size', kind: 'size', scope: 'shared', linkedTo: 'var(--ui-icon-md)' },
-      { name: '--ui-button-font-size-md', label: 'Font size (md)', kind: 'size', scope: 'shared' },
-      { name: '--ui-button-border-width', label: 'Border width', kind: 'size', scope: 'shared', linkedTo: 'var(--ui-border-width)' },
+      { name: '--ui-button-font-size-md', label: 'Text size', kind: 'size', scope: 'shared' },
+      { name: '--ui-button-border-width', label: 'Border thickness', kind: 'size', scope: 'shared', linkedTo: 'var(--ui-border-width)' },
     ] },
     { label: 'Primary', controls: [
       { name: '--ui-button-primary-bg',        label: 'Background', kind: 'color' },
@@ -246,6 +246,14 @@ export const buttonDef: ComponentDef = {
       title: 'Page action',
       render: () => <Button variant="primary" iconLeft={<LucideIcon name="Plus" />}>Add employee</Button>,
     },
+  ],
+  variantSamples: [
+    { value: 'primary', title: 'Primary', description: 'Main action', props: { label: 'Save', iconLeft: 'Save' } },
+    { value: 'secondary', title: 'Secondary', description: 'Supporting action', props: { label: 'Cancel', iconLeft: 'None' } },
+    { value: 'outline', title: 'Outline', description: 'Alternative action', props: { label: 'Preview', iconLeft: 'None' } },
+    { value: 'ghost', title: 'Ghost', description: 'Quiet navigation', props: { label: 'Back', iconLeft: 'None' } },
+    { value: 'danger', title: 'Danger', description: 'Destructive action', props: { label: 'Delete', iconLeft: 'Trash2' } },
+    { value: 'link', title: 'Link', description: 'Inline navigation', props: { label: 'View record', iconLeft: 'None', iconRight: 'ArrowRight' } },
   ],
 };
 
