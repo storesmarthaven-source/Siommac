@@ -379,6 +379,4 @@
     .ui-btn-spinner::after { animation-duration: 2.4s; }
   }
 
-  /* ── Button group ─────────────────────────────────────────────────────────
-     Joins adjacent buttons into one control. Squares the inner corners so the
-     seam reads as a single segmented control rather than overlapping pills. */
+}
