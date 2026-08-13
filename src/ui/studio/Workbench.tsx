@@ -21,7 +21,7 @@
  * specimen without touching Studio chrome, and none of this needs revisiting.
  */
 
-import { type VNode } from 'preact';
+import { type VNode, type ComponentChildren } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import {
   defaultProps, type ComponentDef, type PropValues, type PropControl,
@@ -43,18 +43,34 @@ const TABS: { id: Tab; label: string }[] = [
 ];
 
 /**
- * Viewport presets CONSTRAIN the canvas rather than scaling the Studio with a
- * transform. A transform would lie: it shrinks pixels instead of changing the
- * width the component actually lays out in, so media queries never fire and a
- * responsive bug stays invisible — which is exactly the class of defect the
- * Phase 1 mobile overflow turned out to be.
+ * Playground controls, grouped for a narrow inspector.
+ *
+ * The grouping is PRESENTATION ONLY — a control whose name is unrecognised lands
+ * in "Options" rather than being hidden or mislabelled, so a new prop can never
+ * disappear from the panel. Deliberately not stored in the registry: how to lay
+ * out an inspector is not part of a component's contract, and adding a `group`
+ * field would mean editing 23 definitions to describe a side panel.
  */
-const VIEWPORTS: { id: string; label: string; width: number | null }[] = [
-  { id: 'fill',    label: 'Fill',    width: null },
-  { id: 'desktop', label: 'Desktop', width: 1280 },
-  { id: 'tablet',  label: 'Tablet',  width: 768 },
-  { id: 'mobile',  label: 'Mobile',  width: 375 },
+const CONTROL_GROUPS: { title: string; names: string[] }[] = [
+  { title: 'Appearance', names: ['variant', 'tone', 'size', 'contrast', 'shape', 'density', 'accent'] },
+  { title: 'Content',    names: ['label', 'text', 'placeholder', 'icon', 'iconSide', 'iconOnly', 'helpText', 'suffix', 'prefix'] },
+  { title: 'State',      names: ['disabled', 'loading', 'loadingText', 'pressed', 'readOnly', 'required', 'error', 'checked', 'selected'] },
+  { title: 'Behaviour',  names: ['href', 'fullWidth', 'clearable', 'multiline', 'rows'] },
 ];
+
+function groupControls(def: ComponentDef): { title: string; entries: [string, PropControl][] }[] {
+  const all = Object.entries(def.props ?? {});
+  const taken = new Set<string>();
+  const out = CONTROL_GROUPS.map(g => {
+    const entries = all.filter(([n]) => g.names.includes(n));
+    entries.forEach(([n]) => taken.add(n));
+    return { title: g.title, entries };
+  }).filter(g => g.entries.length > 0);
+
+  const rest = all.filter(([n]) => !taken.has(n));
+  if (rest.length > 0) out.push({ title: 'Options', entries: rest });
+  return out;
+}
 
 /* ── Playground controls ───────────────────────────────────────────────────── */
 
@@ -117,9 +133,7 @@ function Control({ name, control, value, onChange }: {
 export function Workbench({ def, onBack }: { def: ComponentDef; onBack: () => void }): VNode {
   const [tab, setTab] = useState<Tab>('overview');
   const [values, setValues] = useState<PropValues>(() => defaultProps(def));
-  const [viewport, setViewport] = useState('fill');
 
-  const vp = VIEWPORTS.find(v => v.id === viewport) ?? VIEWPORTS[0]!;
   const set = (k: string, v: string | number | boolean): void =>
     setValues(prev => ({ ...prev, [k]: v }));
 
@@ -152,45 +166,61 @@ export function Workbench({ def, onBack }: { def: ComponentDef; onBack: () => vo
         ))}
       </div>
 
-      {/* Preview — the canvas is the ONLY themed surface. */}
-      {(tab === 'overview' || tab === 'playground' || tab === 'code') && (
-        <>
-          <div class="sds-canvas-wrap">
-            <div class="sds-canvas" data-ui-preview-scope
-              style={vp.width ? { maxWidth: `${vp.width}px` } : undefined}>
-              {tab === 'overview'
-                ? <OverviewSpecimens def={def} specimen={specimen} />
-                : <div class="sds-canvas__single">{specimen(values)}</div>}
-            </div>
+      {/* Overview and Code show the canvas full width; Playground docks the
+          inspector on the right, so a prop change and its result are in the same
+          glance instead of separated by a scroll. */}
+      {/* Overview is a SEQUENCE of labelled sections, each with its own surface —
+          not one box with five stacked blocks in it. Each aspect gets a heading,
+          a one-line explanation of what it is for, and its own bordered canvas. */}
+      {tab === 'overview' && (
+        <div data-ui-preview-scope>
+          <OverviewSpecimens def={def} specimen={specimen} />
+        </div>
+      )}
+
+      {tab === 'code' && (
+        <div class="sds-canvas-wrap">
+          <div class="sds-canvas" data-ui-preview-scope>
+            <div class="sds-canvas__single">{specimen(values)}</div>
           </div>
-          <div class="sds-vps" role="group" aria-label="Preview width">
-            {VIEWPORTS.map(v => (
-              <button type="button" key={v.id}
-                class={`sds-vp${v.id === viewport ? ' is-on' : ''}`}
-                aria-pressed={v.id === viewport}
-                onClick={() => setViewport(v.id)}>{v.label}</button>
-            ))}
-          </div>
-        </>
+        </div>
       )}
 
       {tab === 'playground' && (
-        <section class="sds-wb__panel">
-          {def.presets && def.presets.length > 0 && (
-            <div class="sds-presets">
-              {def.presets.map(p => (
-                <button type="button" key={p.label} class="sds-preset"
-                  onClick={() => setValues({ ...defaultProps(def), ...p.props })}>{p.label}</button>
-              ))}
+        <div class="sds-pg">
+          <div class="sds-pg__stage">
+            <div class="sds-canvas" data-ui-preview-scope>
+              <div class="sds-canvas__single">{specimen(values)}</div>
             </div>
-          )}
-          <div class="sds-ctls">
-            {Object.entries(def.props ?? {}).map(([name, control]) => (
-              <Control key={name} name={name} control={control}
-                value={values[name] ?? ''} onChange={v => set(name, v)} />
-            ))}
           </div>
-        </section>
+
+          <aside class="sds-pg__panel" aria-label={`${def.name} properties`}>
+            {def.presets && def.presets.length > 0 && (
+              <section class="sds-pg__grp">
+                <h4>Presets</h4>
+                <div class="sds-presets">
+                  {def.presets.map(p => (
+                    <button type="button" key={p.label} class="sds-preset"
+                      onClick={() => setValues({ ...defaultProps(def), ...p.props })}>{p.label}</button>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {groupControls(def).map(group => (
+              <section class="sds-pg__grp" key={group.title}>
+                <h4>{group.title}</h4>
+                {group.entries.map(([name, control]) => (
+                  <Control key={name} name={name} control={control}
+                    value={values[name] ?? ''} onChange={v => set(name, v)} />
+                ))}
+              </section>
+            ))}
+
+            <button type="button" class="sds-pg__reset"
+              onClick={() => setValues(defaultProps(def))}>Reset to defaults</button>
+          </aside>
+        </div>
       )}
 
       {tab === 'compare' && (
@@ -213,6 +243,27 @@ export function Workbench({ def, onBack }: { def: ComponentDef; onBack: () => vo
 /* ── Overview ──────────────────────────────────────────────────────────────── */
 
 /**
+ * One labelled Overview section: heading, what it is FOR, then its own surface.
+ *
+ * Module scope, not defined inside the render: a component created during render
+ * is a new type every pass, so Preact would unmount and remount its whole
+ * subtree on every keystroke.
+ */
+function Block({ title, hint, children }: {
+  title: string; hint: string; children: ComponentChildren;
+}): VNode {
+  return (
+    <section class="sds-ov__sec">
+      <div class="sds-ov__hd">
+        <h4>{title}</h4>
+        <p>{hint}</p>
+      </div>
+      <div class="sds-ov__surface">{children}</div>
+    </section>
+  );
+}
+
+/**
  * The variant × size matrix is derived from the definition's own `select` and
  * `segmented` options, so it cannot list a variant the component does not have.
  */
@@ -230,67 +281,73 @@ function OverviewSpecimens({ def, specimen }: {
   return (
     <div class="sds-ov">
       {variants.length > 0 && (
-        <div class="sds-ov__block">
-          <h4>Variants</h4>
-          <div class="sds-ov__rows">
+        <Block title="Variants" hint="How loud the control is. One component — these are values of the `variant` prop, not separate components.">
+          <dl class="sds-ov__rows">
             {variants.map(v => (
               <div class="sds-ov__row" key={v}>
-                <code>{v}</code>
-                <div>{specimen({ ...base, variant: v })}</div>
+                <dt><code>{v}</code></dt>
+                <dd>{specimen({ ...base, variant: v })}</dd>
               </div>
             ))}
-          </div>
-        </div>
+          </dl>
+        </Block>
       )}
 
       {sizes.length > 0 && (
-        <div class="sds-ov__block">
-          <h4>Sizes</h4>
+        <Block title="Sizes" hint="The same control at each supported size, side by side so the rhythm is comparable.">
           <div class="sds-ov__inline">
-            {sizes.map(s => <div key={s}>{specimen({ ...base, size: s })}</div>)}
+            {sizes.map(s => (
+              <div class="sds-ov__chip" key={s}>
+                <span>{s}</span>
+                {specimen({ ...base, size: s })}
+              </div>
+            ))}
           </div>
-        </div>
+        </Block>
       )}
 
       {def.presets && def.presets.length > 0 && (
-        <div class="sds-ov__block">
-          <h4>Key combinations</h4>
-          <div class="sds-ov__rows">
+        <Block title="Key combinations" hint="The configurations worth knowing — each is a real preset you can load in the Playground.">
+          <dl class="sds-ov__rows">
             {def.presets.map(p => (
               <div class="sds-ov__row" key={p.label}>
-                <code>{p.label}</code>
-                <div>{specimen({ ...base, ...p.props })}</div>
+                <dt><code>{p.label}</code></dt>
+                <dd>{specimen({ ...base, ...p.props })}</dd>
               </div>
             ))}
-          </div>
-        </div>
+          </dl>
+        </Block>
       )}
 
       {def.states && def.states.length > 0 && (
-        <div class="sds-ov__block">
-          <h4>States</h4>
-          <div class="sds-ov__rows">
+        <Block title="States" hint="Every state the component can be previewed in. Listing one here is a promise that render() honours it.">
+          <dl class="sds-ov__rows">
             {def.states.map(s => (
               <div class="sds-ov__row" key={s}>
-                <code>{s}</code>
-                <div>{specimen(base, s)}</div>
+                <dt><code>{s}</code></dt>
+                <dd>{specimen(base, s)}</dd>
               </div>
             ))}
-          </div>
-        </div>
+          </dl>
+        </Block>
       )}
 
       {def.examples && def.examples.length > 0 && (
-        <div class="sds-ov__block">
-          <h4>In context</h4>
+        <section class="sds-ov__sec">
+          <div class="sds-ov__hd">
+            <h4>In context</h4>
+            <p>Real compositions, not isolated specimens — where this component actually appears.</p>
+          </div>
           {def.examples.map(ex => (
-            <div class="sds-ov__example" key={ex.id}>
-              <strong>{ex.title}</strong>
-              {ex.description && <p>{ex.description}</p>}
-              <div class="sds-ov__exrender">{ex.render()}</div>
-            </div>
+            <article class="sds-ov__example" key={ex.id}>
+              <header>
+                <strong>{ex.title}</strong>
+                {ex.description && <p>{ex.description}</p>}
+              </header>
+              <div class="sds-ov__surface">{ex.render()}</div>
+            </article>
           ))}
-        </div>
+        </section>
       )}
     </div>
   );

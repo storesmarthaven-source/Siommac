@@ -13188,26 +13188,31 @@ BrandOverview	function	platform	true	component	src/ui/studio/BrandOverview.tsx	7
 applyDirection	function	platform	false		src/ui/studio/BrandOverview.tsx	104	BrandOverview
 publish	function	platform	false		src/ui/studio/BrandOverview.tsx	110	BrandOverview
 PreviewScope	function	platform	true	component	src/ui/studio/PreviewScope.tsx	20	
-StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	44	
-SectionId	type	platform	false		src/ui/studio/Studio.tsx	54	
-NavGroup	interface	platform	false		src/ui/studio/Studio.tsx	60	
-NAV	array	platform	false		src/ui/studio/Studio.tsx	62	
-APP_SCENE	object	platform	false		src/ui/studio/Studio.tsx	84	
-StatusChip	function	platform	false	component	src/ui/studio/Studio.tsx	91	
-ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	102	
-Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	127	
-PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	169	
-Studio	function	platform	true	component	src/ui/studio/Studio.tsx	178	
+StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	42	
+SectionId	type	platform	false		src/ui/studio/Studio.tsx	51	
+NavItem	interface	platform	false		src/ui/studio/Studio.tsx	57	
+NavGroup	interface	platform	false		src/ui/studio/Studio.tsx	58	
+NAV	array	platform	false		src/ui/studio/Studio.tsx	60	
+BUILT_COMPONENTS	variable	platform	false	component	src/ui/studio/Studio.tsx	82	
+APP_SCENE	object	platform	false		src/ui/studio/Studio.tsx	87	
+SECTION_COPY	object	platform	false		src/ui/studio/Studio.tsx	93	
+variantCount	function	platform	false		src/ui/studio/Studio.tsx	113	
+ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	119	
+Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	147	
+PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	202	
+Studio	function	platform	true	component	src/ui/studio/Studio.tsx	211	
 Tab	type	platform	false		src/ui/studio/Workbench.tsx	32	
 TABS	array	platform	false		src/ui/studio/Workbench.tsx	33	
-VIEWPORTS	array	platform	false		src/ui/studio/Workbench.tsx	52	
-Control	function	platform	false	component	src/ui/studio/Workbench.tsx	61	
-Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	117	
-set	function	platform	false		src/ui/studio/Workbench.tsx	123	Workbench
-specimen	function	platform	false		src/ui/studio/Workbench.tsx	127	Workbench
-OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	219	
-UsageTab	function	platform	false	component	src/ui/studio/Workbench.tsx	306	
-A11yTab	function	platform	false	component	src/ui/studio/Workbench.tsx	348	
+CONTROL_GROUPS	array	platform	false		src/ui/studio/Workbench.tsx	54	
+groupControls	function	platform	false		src/ui/studio/Workbench.tsx	61	
+Control	function	platform	false	component	src/ui/studio/Workbench.tsx	77	
+Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	133	
+set	function	platform	false		src/ui/studio/Workbench.tsx	137	Workbench
+specimen	function	platform	false		src/ui/studio/Workbench.tsx	141	Workbench
+Block	function	platform	false	component	src/ui/studio/Workbench.tsx	252	
+OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	270	
+UsageTab	function	platform	false	component	src/ui/studio/Workbench.tsx	363	
+A11yTab	function	platform	false	component	src/ui/studio/Workbench.tsx	405	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	

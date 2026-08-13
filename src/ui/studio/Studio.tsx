@@ -1,29 +1,26 @@
 /**
  * src/ui/studio/Studio.tsx — the SIOMAC Design System Studio shell.
  *
- * Phase 1 of the Studio programme: structure, navigation, neutral chrome and
- * REAL registry integration. The workbench, brand workflow and application
- * preview layer on top of this in later commits (see the report's §"NEXT
- * SESSION" mandate).
+ * Layout replicates the Untitled UI documentation site supplied as the
+ * reference: a 248px white rail of iconed, grouped nav items; a breadcrumb
+ * topbar; a two-tone hero with a CTA; then category sections, each a heading
+ * plus description over a grid of preview cards captioned with a component and
+ * variant count. Measured from the reference rather than eyeballed — its rhythm
+ * (16px body, 24px/600 hero, 16px/600 section, 14px/600 card label, 12px count,
+ * 32px nav rows) supersedes the earlier larger-control direction.
  *
  * Two rules this file exists to enforce:
  *
  *  1. The catalogue is READ FROM THE REGISTRY. There is no second list here. A
- *     component appears in the Studio because a definition exists, never because
- *     someone remembered to add a card — that is the whole reason the registry
- *     is authoritative.
+ *     component appears because a definition exists, never because someone
+ *     remembered to add a card — the whole reason the registry is authoritative.
+ *     The card previews are LIVE `def.render()` calls, so unlike the reference's
+ *     static thumbnails they cannot go stale.
  *
  *  2. `patterns` are NOT kit gaps. PayrollApprovalTable belongs to payroll and
  *     DayOneGateCard to onboarding; they are built FROM primitives by the module
- *     that owns the domain. The Studio shows them in their own shelf, clearly
- *     labelled as application patterns, so nobody reads them as missing
- *     primitives and builds business features into the design system. This
- *     mirrors `registryTotals()` and `check-ui-kit-coverage.mjs`; all three must
- *     agree or the Studio is lying about its own catalogue.
- *
- * Existing panels are REUSED, not reimplemented — Foundations and Brand already
- * exist and work, and duplicating them to fill out a shell would be exactly the
- * "duplicate mock components" failure the mandate forbids.
+ *     that owns the domain. They get their own section, exactly as the reference
+ *     separates "Base components" from "Application UI components".
  */
 
 import { type VNode } from 'preact';
@@ -34,8 +31,9 @@ import { AppPreview, type Scene } from './AppPreview';
 import { PreviewScope } from './PreviewScope';
 import {
   COMPONENT_DEFS, componentsByCategory, registryTotals, findComponent,
-  isBuilt, type ComponentDef,
+  isBuilt, defaultProps, type ComponentDef,
 } from '../registry';
+import { LucideIcon, type LucideName } from '../LucideIcon';
 import { useGalleryDraft } from '../gallery/galleryStore';
 import { FoundationsPanel } from '../gallery/FoundationsPanel';
 import { BrandThemePanel } from '../gallery/BrandThemePanel';
@@ -48,8 +46,7 @@ export interface StudioProps {
   onUploadLogo?: (dataUrl: string) => Promise<string>;
 }
 
-/* ── Navigation ─────────────────────────────────────────────────────────────
-   The four-section structure is a product decision, not a folder listing. */
+/* ── Navigation ───────────────────────────────────────────────────────────── */
 
 type SectionId =
   | 'brand-overview' | 'brand-theme' | 'brand-assets'
@@ -57,28 +54,34 @@ type SectionId =
   | 'components'
   | 'app-shell' | 'app-dashboard' | 'app-forms' | 'app-data' | 'app-workflow';
 
-interface NavGroup { label: string; items: { id: SectionId; label: string; phase?: number }[] }
+interface NavItem { id: SectionId; label: string; icon: LucideName; phase?: number }
+interface NavGroup { label: string; items: NavItem[] }
 
 const NAV: NavGroup[] = [
   { label: 'Brand', items: [
-    { id: 'brand-overview', label: 'Brand Overview' },
-    { id: 'brand-theme',    label: 'Theme Generator' },
-    { id: 'brand-assets',   label: 'Logo & Assets', phase: 3 },
+    { id: 'brand-overview', label: 'Brand Overview',  icon: 'Sparkles' },
+    { id: 'brand-theme',    label: 'Theme Generator', icon: 'Palette' },
+    { id: 'brand-assets',   label: 'Logo & Assets',   icon: 'Image', phase: 3 },
   ] },
   { label: 'Foundations', items: [
-    { id: 'foundations', label: 'Tokens' },
+    { id: 'foundations', label: 'Tokens', icon: 'Ruler' },
   ] },
   { label: 'Components', items: [
-    { id: 'components', label: 'Catalogue' },
+    { id: 'components', label: 'Overview', icon: 'LayoutGrid' },
   ] },
   { label: 'Application', items: [
-    { id: 'app-shell',    label: 'App Shell' },
-    { id: 'app-dashboard',label: 'Dashboard' },
-    { id: 'app-forms',    label: 'Forms' },
-    { id: 'app-data',     label: 'Data Views' },
-    { id: 'app-workflow', label: 'Workflow' },
+    { id: 'app-shell',     label: 'App Shell',  icon: 'PanelsTopLeft' },
+    { id: 'app-dashboard', label: 'Dashboard',  icon: 'LayoutDashboard' },
+    { id: 'app-forms',     label: 'Forms',      icon: 'TextCursorInput' },
+    { id: 'app-data',      label: 'Data Views', icon: 'Table' },
+    { id: 'app-workflow',  label: 'Workflow',   icon: 'GitBranch' },
   ] },
 ];
+
+/** Built components, in catalogue order — one nav row each. */
+const BUILT_COMPONENTS: ComponentDef[] = componentsByCategory()
+  .filter(g => g.category !== 'patterns')
+  .flatMap(g => g.items.filter(isBuilt));
 
 /** Which scene each Application nav item opens on. */
 const APP_SCENE: Partial<Record<SectionId, Scene>> = {
@@ -86,42 +89,59 @@ const APP_SCENE: Partial<Record<SectionId, Scene>> = {
   'app-data': 'data', 'app-workflow': 'workflow',
 };
 
-/* ── Catalogue ──────────────────────────────────────────────────────────────*/
+/** Section copy, mirroring the reference's per-tier descriptions. */
+const SECTION_COPY: Record<string, string> = {
+  actions:    'Buttons and action controls — everything that performs or triggers work.',
+  forms:      'Inputs, selects and pickers for capturing and editing data.',
+  selection:  'Choice controls — one value or many, from a small set.',
+  people:     'Avatars, person pickers and everything that represents a human.',
+  overlays:   'Dialogs, drawers and anchored surfaces layered over the page.',
+  data:       'Tables and data display for registers, reports and records.',
+  navigation: 'Tabs, wizards and headers that move a user through the product.',
+  feedback:   'Empty, loading and status states — what the product says back.',
+  containers: 'Cards and surfaces that group and frame content.',
+  status:     'Badges and indicators that carry operational meaning.',
+};
 
-function StatusChip({ def }: { def: ComponentDef }): VNode {
-  if (isBuilt(def)) return <span class="sds-chip sds-chip--built">Built</span>;
-  if (def.category === 'patterns') return <span class="sds-chip sds-chip--pattern">Application pattern</span>;
-  return <span class="sds-chip sds-chip--planned">Planned</span>;
-}
+/* ── Catalogue ────────────────────────────────────────────────────────────── */
 
 /**
- * Built components open the workbench; planned ones and application patterns do
- * not, because there is nothing real to put in it. A card that opened an empty
- * workbench would be a control that lies about what exists.
+ * "1 component · N variants", counted the way the reference counts it: variants
+ * are PROPS of one component, never separate components. Derived from the
+ * definition's own `variant` options, so it cannot disagree with the API.
  */
+function variantCount(def: ComponentDef): number {
+  const v = def.props?.variant;
+  if (!v || (v.type !== 'select' && v.type !== 'segmented')) return 0;
+  return v.options.length;
+}
+
 function ComponentCard({ def, onOpen }: { def: ComponentDef; onOpen?: (id: string) => void }): VNode {
   const built = isBuilt(def);
+  const variants = variantCount(def);
+  const caption = built
+    ? (variants > 0 ? `1 component · ${variants} variants` : '1 component')
+    : def.category === 'patterns' ? 'Application pattern' : 'Planned';
+
   const body = (
     <>
-      <header class="sds-card__head">
-        <h4>{def.name}</h4>
-        <StatusChip def={def} />
-      </header>
-      <p class="sds-card__desc">{def.description}</p>
-      {!built && def.plannedApi && (
-        /* An honest planned state — never a fabricated specimen. */
-        <pre class="sds-card__api">{def.plannedApi}</pre>
-      )}
+      <div class="sds-card__preview">
+        {built && def.render
+          /* A LIVE canonical render, not a screenshot — it cannot go stale. */
+          ? <div class="sds-card__specimen">{def.render(defaultProps(def), 'default')}</div>
+          : <span class="sds-card__missing">
+              {def.category === 'patterns' ? 'Owned by its module' : 'Not built yet'}
+            </span>}
+      </div>
+      <div class="sds-card__foot">
+        <strong>{def.name}</strong>
+        <span>{caption}</span>
+      </div>
     </>
   );
 
   if (!built || !onOpen) return <article class="sds-card sds-card--unbuilt">{body}</article>;
-
-  return (
-    <button type="button" class="sds-card sds-card--open" onClick={() => onOpen(def.id)}>
-      {body}
-    </button>
-  );
+  return <button type="button" class="sds-card sds-card--open" onClick={() => onOpen(def.id)}>{body}</button>;
 }
 
 function Catalogue({ onOpen }: { onOpen: (id: string) => void }): VNode {
@@ -131,30 +151,44 @@ function Catalogue({ onOpen }: { onOpen: (id: string) => void }): VNode {
   const t = registryTotals();
 
   return (
-    <div class="sds-catalogue">
-      <div class="sds-metrics">
-        <div class="sds-metric"><b>{t.canonical + t.beta}</b><span>Canonical components</span></div>
-        <div class="sds-metric"><b>{t.missingPrimitives}</b><span>Primitive gaps</span></div>
-        <div class="sds-metric"><b>{Math.round(t.completeness * 100)}%</b><span>Catalogue complete</span></div>
-        <div class="sds-metric sds-metric--muted"><b>{t.modulePatterns}</b><span>Application patterns</span></div>
-      </div>
+    <div class="sds-cat">
+      <header class="sds-hero">
+        <h1><strong>SIOMAC</strong> Design System</h1>
+        <p>
+          {t.canonical + t.beta} canonical components built on semantic tokens and CSS recipes,
+          with {t.missingPrimitives} primitive gaps recorded honestly. Every card below is a live
+          render of the real component — change its recipe and this page changes with it.
+        </p>
+        <button type="button" class="sds-hero__cta"
+          onClick={() => document.querySelector('.sds-sec--first')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+          Explore components
+        </button>
+      </header>
+
+      <div class="sds-rule" />
+
+      <section class="sds-sec sds-sec--first">
+        <h2>Base components</h2>
+        <p>Buttons, inputs, badges — the primitives every SIOMAC surface is built from.</p>
+      </section>
 
       {primitives.map(g => (
-        <section class="sds-shelf" key={g.category}>
-          <h3 class="sds-shelf__title">{g.label}<small>{g.built}/{g.total} built</small></h3>
+        <section class="sds-sec" key={g.category}>
+          <h3>{g.label} <span>{g.built}/{g.total} built</span></h3>
+          {SECTION_COPY[g.category] && <p>{SECTION_COPY[g.category]}</p>}
           <div class="sds-grid">{g.items.map(d => <ComponentCard def={d} key={d.id} onOpen={onOpen} />)}</div>
         </section>
       ))}
 
+      <div class="sds-rule" />
+
       {patterns.map(g => (
-        <section class="sds-shelf sds-shelf--patterns" key={g.category}>
-          <h3 class="sds-shelf__title">
-            {g.label}<small>owned by their module — not kit gaps</small>
-          </h3>
-          <p class="sds-shelf__note">
-            These are compositions built FROM canonical primitives by the domain that owns
-            them. They are listed so the catalogue is honest about what exists in the
-            application, not because the design system should implement them.
+        <section class="sds-sec" key={g.category}>
+          <h2>Application patterns</h2>
+          <p>
+            Compositions built FROM canonical primitives by the module that owns the domain —
+            payroll owns PayrollApprovalTable, onboarding owns DayOneGateCard. Listed so the
+            catalogue is honest about the application, never counted as design-system gaps.
           </p>
           <div class="sds-grid">{g.items.map(d => <ComponentCard def={d} key={d.id} />)}</div>
         </section>
@@ -164,8 +198,7 @@ function Catalogue({ onOpen }: { onOpen: (id: string) => void }): VNode {
 }
 
 /** Sections whose Studio implementation is a later phase. States the phase
- *  rather than pretending to be a feature — a panel that lies is worse than a
- *  panel that is honestly not built yet. */
+ *  rather than pretending to be a feature. */
 function PhasePlaceholder({ title, phase }: { title: string; phase: number }): VNode {
   return (
     <div class="sds-placeholder">
@@ -178,14 +211,17 @@ function PhasePlaceholder({ title, phase }: { title: string; phase: number }): V
 export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNode {
   const [active, setActive] = useState<SectionId>('components');
   const [openId, setOpenId] = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const draft = useGalleryDraft();
   /* Destructured so the lint rule can tell a scope-callback from a ref: every
-     preview surface below must ATTACH the scope, not merely carry the attribute
-     — the draft applies its values to the one element handed to attachScope. */
+     preview surface must ATTACH the scope, not merely carry the attribute — the
+     draft applies its values to the one element handed to attachScope. */
   const attachScope = draft.attachScope;
 
   const flat = NAV.flatMap(g => g.items);
   const current = flat.find(i => i.id === active) ?? flat[0]!;
+  const openDef = openId ? findComponent(openId) : undefined;
+  const groupOf = NAV.find(g => g.items.some(i => i.id === active))?.label ?? '';
 
   return (
     <div class="sds">
@@ -194,48 +230,70 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
           <span class="sds-nav__mark">SIOMAC</span>
           <span class="sds-nav__sub">Design System</span>
         </div>
+
         {NAV.map(group => (
           <nav class="sds-nav__group" key={group.label}>
-            <h2>{group.label}</h2>
-            <ul>
-              {group.items.map(item => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    class={`sds-nav__item${item.id === active ? ' is-active' : ''}`}
-                    aria-current={item.id === active ? 'page' : undefined}
-                    onClick={() => setActive(item.id)}
-                  >
-                    {item.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <button type="button" class="sds-nav__gh"
+              aria-expanded={!collapsed[group.label]}
+              onClick={() => setCollapsed(c => ({ ...c, [group.label]: !c[group.label] }))}>
+              {group.label}
+              <LucideIcon name={collapsed[group.label] ? 'ChevronDown' : 'ChevronUp'} size={14} />
+            </button>
+            {!collapsed[group.label] && (
+              <ul>
+                {group.items.map(item => (
+                  <li key={item.id}>
+                    <button type="button"
+                      class={`sds-nav__item${item.id === active && !openId ? ' is-active' : ''}`}
+                      aria-current={item.id === active && !openId ? 'page' : undefined}
+                      onClick={() => { setActive(item.id); setOpenId(null); }}>
+                      <LucideIcon name={item.icon} size={16} />
+                      {item.label}
+                    </button>
+                  </li>
+                ))}
+
+                {/* Every built component gets its OWN row, as the reference does
+                    — one list of everything was a catalogue, not navigation.
+                    Built only: a planned component has no workbench to open, and
+                    a nav row that opens nothing is a dead control. Read from the
+                    registry, so a new component appears here by existing. */}
+                {group.label === 'Components' && BUILT_COMPONENTS.map(d => (
+                  <li key={d.id}>
+                    <button type="button"
+                      class={`sds-nav__item sds-nav__item--sub${openId === d.id ? ' is-active' : ''}`}
+                      aria-current={openId === d.id ? 'page' : undefined}
+                      onClick={() => { setActive('components'); setOpenId(d.id); }}>
+                      {d.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </nav>
         ))}
+
         {onExit && (
-          <button type="button" class="sds-nav__exit" onClick={onExit}>← Back to SIOMAC</button>
+          <button type="button" class="sds-nav__exit" onClick={onExit}>
+            <LucideIcon name="ArrowLeft" size={16} /> Back to SIOMAC
+          </button>
         )}
       </aside>
 
-      <main class="sds-main">
-        {/* The workbench carries its own title and breadcrumb, so the section
-            header stands down rather than showing "Catalogue" above "Button". */}
-        {!openId && (
-          <header class="sds-head">
-            <h1>{current.label}</h1>
-            <p class="sds-head__sub">
-              {COMPONENT_DEFS.length} registered definitions · the registry is the source of truth
-            </p>
-          </header>
-        )}
+      <div class="sds-col">
+        <header class="sds-top">
+          <nav class="sds-crumbs" aria-label="Breadcrumb">
+            <span>{groupOf}</span>
+            <LucideIcon name="ChevronRight" size={14} />
+            <span class="is-current">{openDef ? openDef.name : current.label}</span>
+          </nav>
+          <span class="sds-top__meta">{COMPONENT_DEFS.length} registered definitions</span>
+        </header>
 
-        {/* Only preview surfaces carry the customer draft scope — the Studio
-            chrome itself stays neutral. See the second-root note in semantic.css. */}
-        <div class="sds-body">
+        <main class="sds-main">
           {APP_SCENE[active] && (
-            /* One preview; the nav item chooses its opening scene. `key` remounts it
-               so switching nav actually moves the scene rather than keeping stale state. */
+            /* One preview; the nav item chooses its opening scene. `key` remounts
+               it so switching nav moves the scene rather than keeping stale state. */
             <PreviewScope attach={attachScope}>
               <AppPreview key={active} initialScene={APP_SCENE[active]} />
             </PreviewScope>
@@ -243,18 +301,20 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
           {active === 'brand-overview' && (
             <BrandOverview draft={draft} logoUrl={logoUrl} onUploadLogo={onUploadLogo} />
           )}
-          {active === 'components' && (openId
-            ? <Workbench def={findComponent(openId)!} onBack={() => setOpenId(null)} />
+          {active === 'components' && (openDef
+            ? <Workbench def={openDef} onBack={() => setOpenId(null)} />
             : <Catalogue onOpen={setOpenId} />)}
-          {active === 'foundations' && <PreviewScope attach={attachScope}><FoundationsPanel draft={draft} /></PreviewScope>}
+          {active === 'foundations' && (
+            <PreviewScope attach={attachScope}><FoundationsPanel draft={draft} /></PreviewScope>
+          )}
           {active === 'brand-theme' && (
             <PreviewScope attach={attachScope}>
               <BrandThemePanel draft={draft} logoUrl={logoUrl ?? null} onUploadLogo={onUploadLogo} />
             </PreviewScope>
           )}
           {current.phase != null && <PhasePlaceholder title={current.label} phase={current.phase} />}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
