@@ -99,6 +99,15 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
   return (
     <section class="sds-button-editor" aria-label="Button editor">
       <div class="sds-button-editor__main">
+        <PreviewScope class="sds-button-preview" attach={studio.attachScope}>
+          <header><div><span>Live preview</span><strong>{target === 'all' ? 'All buttons' : `${selectedSample?.title ?? friendly(target)} button`}</strong></div><small>Draft preview</small></header>
+          {target === 'all' ? (
+            <div class="sds-button-preview__all">{BUTTON_VARIANTS.map(variant => def.render?.(propsForVariant(def, variant), 'default'))}</div>
+          ) : (
+            <div class="sds-button-preview__single">{def.render?.(previewProps, state === 'default' ? 'default' : state)}</div>
+          )}
+        </PreviewScope>
+
         <header class="sds-button-editor__intro">
           <div><h3>Choose a button to edit</h3><p>Select one style, then change its settings on the right.</p></div>
           <span>Published v{studio.publishedVersion}</span>
@@ -122,14 +131,6 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
           })}
         </div>
 
-        <PreviewScope class="sds-button-preview" attach={studio.attachScope}>
-          <header><div><span>Preview</span><strong>{target === 'all' ? 'All buttons' : `${selectedSample?.title ?? friendly(target)} button`}</strong></div><small>Draft preview</small></header>
-          {target === 'all' ? (
-            <div class="sds-button-preview__all">{BUTTON_VARIANTS.map(variant => def.render?.(propsForVariant(def, variant), 'default'))}</div>
-          ) : (
-            <div class="sds-button-preview__single">{def.render?.(previewProps, state === 'default' ? 'default' : state)}</div>
-          )}
-        </PreviewScope>
       </div>
 
       <aside class="sds-button-settings" aria-label="Button settings">

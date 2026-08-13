@@ -27,7 +27,7 @@ const MEMBERS = ['button', 'dropdown-button', 'split-button'] as const;
 /** The subtype selector option for `name`. Fails loudly rather than silently. */
 function subtype(container: Element, name: string): HTMLElement {
   const shortName = name.replace(' Button', '');
-  const found = [...container.querySelectorAll<HTMLElement>('.sds-family-switch button')]
+  const found = [...container.querySelectorAll<HTMLElement>('.sds-family__type')]
     .find(el => el.querySelector('strong')?.textContent === shortName);
   if (!found) throw new Error(`No "${name}" subtype option is rendered`);
   return found;
@@ -41,7 +41,7 @@ function openButtons(container: Element): void {
 }
 
 const activeSubtype = (c: Element): string | undefined =>
-  c.querySelector('.sds-family-switch .is-on strong')?.textContent ?? undefined;
+  c.querySelector('.sds-family .is-on .sds-family__copy strong')?.textContent ?? undefined;
 
 describe('Buttons family — registry', () => {
   it('collapses the three button components into one catalogue node', () => {
@@ -123,6 +123,20 @@ describe('Buttons family — Studio', () => {
     expect(activeSubtype(container)).toBe('Action');
     expect(container.querySelector('.sds-button-settings__head strong')?.textContent).toBe('Primary button');
     expect(container.querySelector('.sds-button-picker .is-on strong')?.textContent).toBe('Primary');
+  });
+
+  it('puts the live preview before the Button chooser', () => {
+    const { container } = render(<Studio />);
+    openButtons(container);
+
+    const main = container.querySelector('.sds-button-editor__main');
+    const preview = main?.querySelector('.sds-button-preview');
+    const picker = main?.querySelector('.sds-button-picker');
+    expect(main?.firstElementChild).toBe(preview);
+    expect(preview).not.toBeNull();
+    expect(picker).not.toBeNull();
+    if (!preview || !picker) throw new Error('Button preview or chooser is missing');
+    expect(preview.compareDocumentPosition(picker) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('swaps the active def AND the Properties schema on subtype change', () => {

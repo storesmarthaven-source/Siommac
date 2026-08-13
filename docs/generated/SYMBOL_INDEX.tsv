@@ -13353,8 +13353,8 @@ Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	165
 setValues	function	platform	false		src/ui/studio/Workbench.tsx	179	Workbench
 set	function	platform	false		src/ui/studio/Workbench.tsx	182	Workbench
 specimen	function	platform	false		src/ui/studio/Workbench.tsx	195	Workbench
-Block	function	platform	false	component	src/ui/studio/Workbench.tsx	340	
-OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	358	
+Block	function	platform	false	component	src/ui/studio/Workbench.tsx	344	
+OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	362	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	

@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "a73e44d45a7ea8a67d01dec64221acd4c1ec6a33",
+    "head": "40980aafa8346db4f27955512100929ca8f1e3b2",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "d9639ab354c6f0bddb618573",
+    "fingerprint": "a3753c0271631c46d432c50e",
     "indexedFiles": 1857
   },
   "summary": {
@@ -9428,8 +9428,8 @@
       "path": "src/ui/studio/RecipeStyleEditor.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 171,
-      "hash": "7e6c46eaadf40788"
+      "lines": 172,
+      "hash": "0494879a3576338f"
     },
     {
       "path": "src/ui/studio/Studio.tsx",
@@ -9442,8 +9442,8 @@
       "path": "src/ui/studio/Workbench.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 420,
-      "hash": "1fb36d7244be810b"
+      "lines": 424,
+      "hash": "089f94f6b67fbad0"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -9470,8 +9470,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 194,
-      "hash": "b1d70fbd6577eb1e"
+      "lines": 208,
+      "hash": "32d7ab049f3045ba"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -150503,7 +150503,7 @@
       "name": "Block",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 340,
+      "line": 344,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150515,7 +150515,7 @@
       "name": "OverviewSpecimens",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 358,
+      "line": 362,
       "module": "platform",
       "exported": false,
       "container": "",

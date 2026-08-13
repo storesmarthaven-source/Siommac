@@ -221,16 +221,20 @@ export function Workbench({ def, family, onSelectMember, onBack, draft }: Workbe
           `tablist`, not a radiogroup: these are three components, not three
           values of one setting. Each option swaps the subject of the panel below.
         */
-        <div class="sds-family-switch" role="tablist" aria-label={`${family.name} types`}>
+        <div class="sds-family" role="tablist" aria-label={`${family.name} types`}>
           {members.map(m => (
             <button type="button" key={m.id} role="tab"
               aria-selected={m.id === def.id}
-              class={m.id === def.id ? 'is-on' : ''}
+              class={`sds-family__type${m.id === def.id ? ' is-on' : ''}`}
               onClick={() => onSelectMember?.(m.id)}>
               {/* Pointer-events off in CSS — the specimen illustrates the
                   option; the option itself takes the click. */}
-              <strong>{m.name.replace(' Button', '')}</strong>
-              <span>{family.roles[m.id] ?? CATEGORY_LABELS[m.category]}</span>
+              <span class="sds-family__preview">{m.render?.(defaultProps(m), 'default')}</span>
+              <span class="sds-family__copy">
+                <strong>{m.name.replace(' Button', '')}</strong>
+                <small>{family.roles[m.id] ?? CATEGORY_LABELS[m.category]}</small>
+              </span>
+              <span class="sds-family__state">{COMPOUND_OF[m.id] ?? 'Canonical'}</span>
             </button>
           ))}
         </div>
