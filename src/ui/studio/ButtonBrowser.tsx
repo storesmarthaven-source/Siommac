@@ -59,7 +59,7 @@ function ButtonPatternEditor({ pattern, onBack, onEditFoundation }: { pattern: B
       <button type="button" class="sds-wb__back" onClick={onBack}>← All buttons</button>
       <header class="sds-button-pattern__head">
         <div><span>{pattern.badge}</span><h2>{pattern.name}</h2><p>{pattern.description}</p></div>
-        <button type="button" onClick={onEditFoundation}>Edit Action Button foundation <LucideIcon name="ArrowRight" size={15} /></button>
+        <button type="button" onClick={onEditFoundation}>Edit button appearance <LucideIcon name="ArrowRight" size={15} /></button>
       </header>
       <section class="sds-button-pattern__editor" aria-label={`${pattern.name} editor`}>
         <div class="sds-button-pattern__stage">

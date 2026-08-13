@@ -157,7 +157,7 @@ describe('Buttons family — Studio', () => {
     fireEvent.click(getByRole('button', { name: /AI Action/ }));
 
     expect(getByRole('heading', { name: 'AI Action' })).toBeTruthy();
-    expect(getByRole('button', { name: /Edit Action Button foundation/ })).toBeTruthy();
+    expect(getByRole('button', { name: /Edit button appearance/ })).toBeTruthy();
     expect(queryByRole('radio', { name: /AI/ })).toBeNull();
     expect(container.querySelectorAll('.sds-button-pattern__examples article')).toHaveLength(2);
     expect(getByRole('complementary', { name: 'AI Action settings' })).toBeTruthy();
@@ -257,6 +257,16 @@ describe('Buttons family — Studio', () => {
     }
   });
 
+  it('keeps variant tiles at canonical medium size when the live preview size changes', () => {
+    const { container, getByRole } = render(<Studio />);
+    openButtonBrowser(container);
+    openButtonMember(container, 'Split Button');
+
+    fireEvent.click(getByRole('button', { name: 'Large' }));
+    expect(container.querySelector('.sds-owned-button__canvas .ui-btn--lg')).not.toBeNull();
+    expect(container.querySelector('.sds-owned-button__variants .ui-btn--lg')).toBeNull();
+  });
+
   it('separates the Credits treatment from Action Button variants', () => {
     const { container, queryByText } = render(<Studio />);
     openButtons(container);
@@ -292,12 +302,15 @@ describe('Buttons family — Studio', () => {
   });
 
   it('opens the Studio color picker for a component override', () => {
-    const { container, getAllByLabelText, getByRole } = render(<Studio />);
+    const { container, getByRole } = render(<Studio />);
     openButtons(container);
 
-    const firstThemeToggle = getAllByLabelText('Use theme')[0];
-    if (!firstThemeToggle) throw new Error('Expected a theme toggle');
-    fireEvent.click(firstThemeToggle);
+    const backgroundLabel = [...container.querySelectorAll('label')]
+      .find(label => label.textContent === 'Background');
+    const backgroundField = backgroundLabel?.closest('.sds-edit-field');
+    const backgroundThemeToggle = backgroundField?.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    if (!backgroundThemeToggle) throw new Error('Expected the Background theme toggle');
+    fireEvent.click(backgroundThemeToggle);
     fireEvent.click(getByRole('button', { name: 'Choose Background color' }));
 
     expect(getByRole('group', { name: 'Background color picker' })).toBeTruthy();
@@ -332,6 +345,41 @@ describe('Buttons family — Studio', () => {
     expect(getByRole('button', { name: 'Clear Trailing icon' })).toBeTruthy();
     fireEvent.click(getByRole('button', { name: 'Clear Trailing icon' }));
     expect(getByRole('button', { name: 'Choose Trailing icon' }).textContent).toContain('No icon');
-    expect(container.querySelector('.sds-button-settings__actions > span')?.textContent).toBe('Up to date');
+    expect(container.querySelector('.sds-button-settings__actions > span')?.textContent).toBe('Button family draft · Up to date');
+  });
+
+  it('uses one Button-family publishing surface and links compound editors to it', () => {
+    const { container, getByRole, queryByText } = render(<Studio />);
+    openButtonBrowser(container);
+    openButtonMember(container, 'Dropdown Button');
+
+    expect(queryByText('Publish')).toBeNull();
+    fireEvent.click(getByRole('button', { name: 'Edit button appearance' }));
+
+    expect(container.querySelector('.sds-button-settings__head')?.textContent).toContain('Button family styles');
+    expect(getByRole('button', { name: 'Publish' })).toBeTruthy();
+    expect(queryByText('Preview example')).toBeNull();
+    expect(getByRole('heading', { name: 'Preview' })).toBeTruthy();
+  });
+
+  it('keeps recipe edits on the selected Button variant', () => {
+    const { container, getAllByLabelText, getByRole } = render(<Studio />);
+    openButtons(container);
+
+    const primaryHeightTheme = getAllByLabelText('Use theme')[0];
+    if (!primaryHeightTheme) throw new Error('Expected Primary height theme control');
+    fireEvent.click(primaryHeightTheme);
+    const primaryHeight = container.querySelector<HTMLInputElement>('#style---ui-button-primary-height-md');
+    if (!primaryHeight) throw new Error('Expected Primary height override input');
+    fireEvent.input(primaryHeight, { target: { value: '44px' } });
+
+    const scope = container.querySelector<HTMLElement>('.sds-button-preview[data-ui-preview-scope]');
+    expect(scope?.style.getPropertyValue('--ui-button-primary-height-md')).toBe('44px');
+    expect(scope?.style.getPropertyValue('--ui-button-secondary-height-md')).toBe('');
+
+    fireEvent.click(getByRole('radio', { name: /Secondary/ }));
+    expect(container.querySelector('#style---ui-button-primary-height-md')).toBeNull();
+    expect(container.querySelector('#style---ui-button-secondary-height-md')).toBeNull();
+    expect(container.querySelector('.sds-button-settings__actions > span')?.textContent).toContain('1 unsaved');
   });
 });

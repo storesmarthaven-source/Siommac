@@ -28,6 +28,7 @@ import { type UiState } from '../tokens';
 import { SpecialTreatments } from '../special/SpecialTreatments';
 import { type GalleryDraft } from '../gallery/galleryStore';
 import { IconPicker, RecipeStyleEditor, StudioColorControl } from './RecipeStyleEditor';
+import { LUCIDE_NAMES, type LucideName } from '../LucideIcon';
 
 /**
  * Playground controls, grouped for a narrow inspector.
@@ -169,6 +170,7 @@ interface CompoundButtonEditorProps {
   specimen: (props: PropValues, state?: UiState) => VNode | null;
   onSet: (name: string, value: string | number | boolean) => void;
   onReset: () => void;
+  onEditFoundation?: () => void;
 }
 
 /**
@@ -177,7 +179,7 @@ interface CompoundButtonEditorProps {
  * the same preview-first shell as the governed Button patterns instead of
  * falling back to the catalogue's generic component page.
  */
-function CompoundButtonEditor({ def, shown, specimen, onSet, onReset }: CompoundButtonEditorProps): VNode {
+function CompoundButtonEditor({ def, shown, specimen, onSet, onReset, onEditFoundation }: CompoundButtonEditorProps): VNode {
   const ownership = COMPOUND_OF[def.id] ?? 'Button family';
   const [previewState, setPreviewState] = useState<UiState>('default');
   const [iconTreatment, setIconTreatment] = useState('outline');
@@ -187,7 +189,8 @@ function CompoundButtonEditor({ def, shown, specimen, onSet, onReset }: Compound
     ? variantControl.options : [];
   const iconControl = def.props?.iconLeft;
   const recommendedIcons = iconControl && (iconControl.type === 'select' || iconControl.type === 'segmented')
-    ? iconControl.options.filter(option => option !== 'None') : [];
+    ? iconControl.options.filter((option): option is LucideName =>
+      option !== 'None' && LUCIDE_NAMES.includes(option as LucideName)) : [];
   const previewProps: PropValues = { ...shown, iconTreatment, iconColor };
 
   const reset = (): void => {
@@ -217,8 +220,8 @@ function CompoundButtonEditor({ def, shown, specimen, onSet, onReset }: Compound
               <div role="radiogroup" aria-label={`${def.name} variant`}>
                 {variants.map(variant => (
                   <article key={variant} class={shown.variant === variant ? 'is-on' : ''}>
-                    <div>{specimen({ ...previewProps, variant }, 'default')}</div>
-                    <strong>{friendlyValue(variant)}</strong>
+                    <div class="sds-owned-button__variant-preview">{specimen({ ...previewProps, variant, size: 'md' }, 'default')}</div>
+                    <footer><strong>{friendlyValue(variant)}</strong></footer>
                     <button type="button" role="radio" aria-checked={shown.variant === variant}
                       aria-label={`Select ${friendlyValue(variant)} variant`}
                       onClick={() => onSet('variant', variant)} />
@@ -249,7 +252,7 @@ function CompoundButtonEditor({ def, shown, specimen, onSet, onReset }: Compound
                 <span class="sds-ctl__label">State</span>
                 <select id={`${def.id}-state`} class="sds-ctl__input" value={previewState}
                   onChange={event => setPreviewState((event.target as HTMLSelectElement).value as UiState)}>
-                  {def.states.map(state => <option value={state}>{friendlyValue(state)}</option>)}
+                  {(def.states ?? ['default']).map(state => <option value={state}>{friendlyValue(state)}</option>)}
                 </select>
               </label>
               <div class="sds-owned-button__icon-picker">
@@ -293,6 +296,7 @@ function CompoundButtonEditor({ def, shown, specimen, onSet, onReset }: Compound
           <footer>
             <span aria-hidden="true">↳</span>
             <p><strong>Linked to Action Button</strong><small>Shape, color and states come from the published Button recipe.</small></p>
+            {onEditFoundation && <button type="button" onClick={onEditFoundation}>Edit button appearance</button>}
           </footer>
         </aside>
       </section>
@@ -401,7 +405,8 @@ export function Workbench({ def, family, onSelectMember, onBack, backLabel = 'Co
         <RecipeStyleEditor def={def} draft={draft} />
       ) : COMPOUND_OF[def.id] ? (
         <CompoundButtonEditor def={def} shown={shown} specimen={specimen}
-          onSet={set} onReset={() => setValues(defaultProps(def))} />
+          onSet={set} onReset={() => setValues(defaultProps(def))}
+          onEditFoundation={onSelectMember ? () => onSelectMember('button') : undefined} />
       ) : (
         <div data-ui-preview-scope>
           <div class="sds-pg">

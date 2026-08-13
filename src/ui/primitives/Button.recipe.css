@@ -148,15 +148,15 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--ui-button-gap);
+    gap: var(--_ui-button-gap, var(--ui-button-gap));
     box-sizing: border-box;
-    min-height: var(--ui-button-height-md);
-    padding: 0 var(--ui-button-pad-x-md);
-    border: var(--ui-button-border-width) solid transparent;
-    border-radius: var(--ui-button-radius);
+    min-height: var(--_ui-button-height-md, var(--ui-button-height-md));
+    padding: 0 var(--_ui-button-pad-x-md, var(--ui-button-pad-x-md));
+    border: var(--_ui-button-border-width, var(--ui-button-border-width)) solid transparent;
+    border-radius: var(--_ui-button-radius, var(--ui-button-radius));
     box-shadow: var(--ui-button-shadow);
     font-family: inherit;
-    font-size: var(--ui-button-font-size-md);
+    font-size: var(--_ui-button-font-size-md, var(--ui-button-font-size-md));
     font-weight: var(--ui-button-font-weight);
     line-height: 1;
     white-space: nowrap;
@@ -173,8 +173,8 @@
   /* Icons size from the recipe, not from the icon component's own attributes,
      so icon scale is a token decision rather than 1,679 individual choices. */
   .ui-btn > svg {
-    width: var(--ui-button-icon-size);
-    height: var(--ui-button-icon-size);
+    width: var(--_ui-button-icon-size, var(--ui-button-icon-size));
+    height: var(--_ui-button-icon-size, var(--ui-button-icon-size));
     flex-shrink: 0;
   }
 
@@ -194,7 +194,7 @@
   /* Icon-only: square, no horizontal padding, still meets the height target. */
   .ui-btn--icon {
     padding: 0;
-    width: var(--ui-button-height-md);
+    width: var(--_ui-button-height-md, var(--ui-button-height-md));
   }
   .ui-btn--icon.ui-btn--sm { width: var(--ui-button-height-sm); }
   .ui-btn--icon.ui-btn--lg { width: var(--ui-button-height-lg); }
@@ -208,6 +208,20 @@
      mode would be showing something no user ever sees. See RECIPES.md §5. */
 
   .ui-btn--primary {
+    --_ui-button-height-md: var(--ui-button-primary-height-md, var(--ui-button-height-md));
+    --_ui-button-pad-x-md: var(--ui-button-primary-pad-x-md, var(--ui-button-pad-x-md));
+    --_ui-button-radius: var(--ui-button-primary-radius, var(--ui-button-radius));
+    --_ui-button-gap: var(--ui-button-primary-gap, var(--ui-button-gap));
+    --_ui-button-icon-size: var(--ui-button-primary-icon-size, var(--ui-button-icon-size));
+    --_ui-button-font-size-md: var(--ui-button-primary-font-size-md, var(--ui-button-font-size-md));
+    --_ui-button-border-width: var(--ui-button-primary-border-width, var(--ui-button-border-width));
+    --_ui-button-focus-ring-color: var(--ui-button-primary-focus-ring-color, var(--ui-button-focus-ring-color));
+    --_ui-button-focus-ring-width: var(--ui-button-primary-focus-ring-width, var(--ui-button-focus-ring-width));
+    --_ui-button-disabled-bg: var(--ui-button-primary-disabled-bg, var(--ui-button-disabled-bg));
+    --_ui-button-disabled-fg: var(--ui-button-primary-disabled-fg, var(--ui-button-disabled-fg));
+    --_ui-button-disabled-border: var(--ui-button-primary-disabled-border, var(--ui-button-disabled-border));
+    --_ui-button-disabled-icon: var(--ui-button-primary-disabled-icon, var(--ui-button-disabled-icon));
+    --_ui-button-loading-spinner: var(--ui-button-primary-loading-spinner, var(--ui-button-loading-spinner));
     background: var(--ui-button-primary-bg);
     color: var(--ui-button-primary-fg);
     border-color: var(--ui-button-primary-border);
@@ -218,6 +232,20 @@
   .ui-btn--primary[data-ui-state~='active'] { background: var(--ui-button-primary-bg-active); }
 
   .ui-btn--secondary {
+    --_ui-button-height-md: var(--ui-button-secondary-height-md, var(--ui-button-height-md));
+    --_ui-button-pad-x-md: var(--ui-button-secondary-pad-x-md, var(--ui-button-pad-x-md));
+    --_ui-button-radius: var(--ui-button-secondary-radius, var(--ui-button-radius));
+    --_ui-button-gap: var(--ui-button-secondary-gap, var(--ui-button-gap));
+    --_ui-button-icon-size: var(--ui-button-secondary-icon-size, var(--ui-button-icon-size));
+    --_ui-button-font-size-md: var(--ui-button-secondary-font-size-md, var(--ui-button-font-size-md));
+    --_ui-button-border-width: var(--ui-button-secondary-border-width, var(--ui-button-border-width));
+    --_ui-button-focus-ring-color: var(--ui-button-secondary-focus-ring-color, var(--ui-button-focus-ring-color));
+    --_ui-button-focus-ring-width: var(--ui-button-secondary-focus-ring-width, var(--ui-button-focus-ring-width));
+    --_ui-button-disabled-bg: var(--ui-button-secondary-disabled-bg, var(--ui-button-disabled-bg));
+    --_ui-button-disabled-fg: var(--ui-button-secondary-disabled-fg, var(--ui-button-disabled-fg));
+    --_ui-button-disabled-border: var(--ui-button-secondary-disabled-border, var(--ui-button-disabled-border));
+    --_ui-button-disabled-icon: var(--ui-button-secondary-disabled-icon, var(--ui-button-disabled-icon));
+    --_ui-button-loading-spinner: var(--ui-button-secondary-loading-spinner, var(--ui-button-loading-spinner));
     background: var(--ui-button-secondary-bg);
     color: var(--ui-button-secondary-fg);
     border-color: var(--ui-button-secondary-border);
@@ -232,6 +260,20 @@
   .ui-btn--secondary[data-ui-state~='active'] { background: var(--ui-button-secondary-bg-active); }
 
   .ui-btn--outline {
+    --_ui-button-height-md: var(--ui-button-outline-height-md, var(--ui-button-height-md));
+    --_ui-button-pad-x-md: var(--ui-button-outline-pad-x-md, var(--ui-button-pad-x-md));
+    --_ui-button-radius: var(--ui-button-outline-radius, var(--ui-button-radius));
+    --_ui-button-gap: var(--ui-button-outline-gap, var(--ui-button-gap));
+    --_ui-button-icon-size: var(--ui-button-outline-icon-size, var(--ui-button-icon-size));
+    --_ui-button-font-size-md: var(--ui-button-outline-font-size-md, var(--ui-button-font-size-md));
+    --_ui-button-border-width: var(--ui-button-outline-border-width, var(--ui-button-border-width));
+    --_ui-button-focus-ring-color: var(--ui-button-outline-focus-ring-color, var(--ui-button-focus-ring-color));
+    --_ui-button-focus-ring-width: var(--ui-button-outline-focus-ring-width, var(--ui-button-focus-ring-width));
+    --_ui-button-disabled-bg: var(--ui-button-outline-disabled-bg, var(--ui-button-disabled-bg));
+    --_ui-button-disabled-fg: var(--ui-button-outline-disabled-fg, var(--ui-button-disabled-fg));
+    --_ui-button-disabled-border: var(--ui-button-outline-disabled-border, var(--ui-button-disabled-border));
+    --_ui-button-disabled-icon: var(--ui-button-outline-disabled-icon, var(--ui-button-disabled-icon));
+    --_ui-button-loading-spinner: var(--ui-button-outline-loading-spinner, var(--ui-button-loading-spinner));
     background: var(--ui-button-outline-bg);
     color: var(--ui-button-outline-fg);
     border-color: var(--ui-button-outline-border);
@@ -246,6 +288,20 @@
   .ui-btn--outline[data-ui-state~='active'] { background: var(--ui-button-outline-bg-active); }
 
   .ui-btn--ghost {
+    --_ui-button-height-md: var(--ui-button-ghost-height-md, var(--ui-button-height-md));
+    --_ui-button-pad-x-md: var(--ui-button-ghost-pad-x-md, var(--ui-button-pad-x-md));
+    --_ui-button-radius: var(--ui-button-ghost-radius, var(--ui-button-radius));
+    --_ui-button-gap: var(--ui-button-ghost-gap, var(--ui-button-gap));
+    --_ui-button-icon-size: var(--ui-button-ghost-icon-size, var(--ui-button-icon-size));
+    --_ui-button-font-size-md: var(--ui-button-ghost-font-size-md, var(--ui-button-font-size-md));
+    --_ui-button-border-width: var(--ui-button-ghost-border-width, var(--ui-button-border-width));
+    --_ui-button-focus-ring-color: var(--ui-button-ghost-focus-ring-color, var(--ui-button-focus-ring-color));
+    --_ui-button-focus-ring-width: var(--ui-button-ghost-focus-ring-width, var(--ui-button-focus-ring-width));
+    --_ui-button-disabled-bg: var(--ui-button-ghost-disabled-bg, var(--ui-button-disabled-bg));
+    --_ui-button-disabled-fg: var(--ui-button-ghost-disabled-fg, var(--ui-button-disabled-fg));
+    --_ui-button-disabled-border: var(--ui-button-ghost-disabled-border, var(--ui-button-disabled-border));
+    --_ui-button-disabled-icon: var(--ui-button-ghost-disabled-icon, var(--ui-button-disabled-icon));
+    --_ui-button-loading-spinner: var(--ui-button-ghost-loading-spinner, var(--ui-button-loading-spinner));
     background: var(--ui-button-ghost-bg);
     color: var(--ui-button-ghost-fg);
     border-color: var(--ui-button-ghost-border);
@@ -263,6 +319,20 @@
   .ui-btn--ghost[data-ui-state~='active'] { background: var(--ui-button-ghost-bg-active); }
 
   .ui-btn--danger {
+    --_ui-button-height-md: var(--ui-button-danger-height-md, var(--ui-button-height-md));
+    --_ui-button-pad-x-md: var(--ui-button-danger-pad-x-md, var(--ui-button-pad-x-md));
+    --_ui-button-radius: var(--ui-button-danger-radius, var(--ui-button-radius));
+    --_ui-button-gap: var(--ui-button-danger-gap, var(--ui-button-gap));
+    --_ui-button-icon-size: var(--ui-button-danger-icon-size, var(--ui-button-icon-size));
+    --_ui-button-font-size-md: var(--ui-button-danger-font-size-md, var(--ui-button-font-size-md));
+    --_ui-button-border-width: var(--ui-button-danger-border-width, var(--ui-button-border-width));
+    --_ui-button-focus-ring-color: var(--ui-button-danger-focus-ring-color, var(--ui-button-focus-ring-color));
+    --_ui-button-focus-ring-width: var(--ui-button-danger-focus-ring-width, var(--ui-button-focus-ring-width));
+    --_ui-button-disabled-bg: var(--ui-button-danger-disabled-bg, var(--ui-button-disabled-bg));
+    --_ui-button-disabled-fg: var(--ui-button-danger-disabled-fg, var(--ui-button-disabled-fg));
+    --_ui-button-disabled-border: var(--ui-button-danger-disabled-border, var(--ui-button-disabled-border));
+    --_ui-button-disabled-icon: var(--ui-button-danger-disabled-icon, var(--ui-button-disabled-icon));
+    --_ui-button-loading-spinner: var(--ui-button-danger-loading-spinner, var(--ui-button-loading-spinner));
     background: var(--ui-button-danger-bg);
     color: var(--ui-button-danger-fg);
     border-color: var(--ui-button-danger-border);
@@ -273,6 +343,14 @@
   .ui-btn--danger[data-ui-state~='active'] { background: var(--ui-button-danger-bg-active); }
 
   .ui-btn--link {
+    --_ui-button-gap: var(--ui-button-link-gap, var(--ui-button-gap));
+    --_ui-button-icon-size: var(--ui-button-link-icon-size, var(--ui-button-icon-size));
+    --_ui-button-font-size-md: var(--ui-button-link-font-size-md, var(--ui-button-font-size-md));
+    --_ui-button-focus-ring-color: var(--ui-button-link-focus-ring-color, var(--ui-button-focus-ring-color));
+    --_ui-button-focus-ring-width: var(--ui-button-link-focus-ring-width, var(--ui-button-focus-ring-width));
+    --_ui-button-disabled-fg: var(--ui-button-link-disabled-fg, var(--ui-button-disabled-fg));
+    --_ui-button-disabled-icon: var(--ui-button-link-disabled-icon, var(--ui-button-disabled-icon));
+    --_ui-button-loading-spinner: var(--ui-button-link-loading-spinner, var(--ui-button-loading-spinner));
     background: transparent;
     border-color: transparent;
     box-shadow: none;
@@ -330,7 +408,7 @@
   .ui-btn[data-ui-state~='focus'] {
     outline: var(--ui-focus-outline-width) solid var(--ui-focus-outline-color);
     outline-offset: 2px;
-    box-shadow: 0 0 0 var(--ui-button-focus-ring-width) var(--ui-button-focus-ring-color);
+    box-shadow: 0 0 0 var(--_ui-button-focus-ring-width, var(--ui-button-focus-ring-width)) var(--_ui-button-focus-ring-color, var(--ui-button-focus-ring-color));
   }
 
   /* ── Disabled ─────────────────────────────────────────────────────────────
@@ -339,14 +417,14 @@
      illegible; and it leaves the control looking active on dark surfaces. */
   .ui-btn:disabled,
   .ui-btn[data-ui-state~='disabled'] {
-    background: var(--ui-button-disabled-bg);
-    color: var(--ui-button-disabled-fg);
-    border-color: var(--ui-button-disabled-border);
+    background: var(--_ui-button-disabled-bg, var(--ui-button-disabled-bg));
+    color: var(--_ui-button-disabled-fg, var(--ui-button-disabled-fg));
+    border-color: var(--_ui-button-disabled-border, var(--ui-button-disabled-border));
     cursor: var(--ui-disabled-cursor);
     box-shadow: none;
   }
   .ui-btn:disabled > svg,
-  .ui-btn[data-ui-state~='disabled'] > svg { color: var(--ui-button-disabled-icon); }
+  .ui-btn[data-ui-state~='disabled'] > svg { color: var(--_ui-button-disabled-icon, var(--ui-button-disabled-icon)); }
 
   .ui-btn--link:disabled,
   .ui-btn--link[data-ui-state~='disabled'] {
@@ -367,7 +445,7 @@
      `loadingText` is a genuine opt-in override. */
   .ui-btn[aria-busy='true'],
   .ui-btn[data-ui-state~='loading'] { cursor: progress; }
-  .ui-btn[data-ui-state~='loading'] .ui-btn__spinner { color: var(--ui-button-loading-spinner); }
+  .ui-btn[data-ui-state~='loading'] .ui-btn__spinner { color: var(--_ui-button-loading-spinner, var(--ui-button-loading-spinner)); }
 
   /* Forced state for the Gallery: no real `loading` prop is set, so the spinner
      is not in the DOM and the icon must be hidden to show the same geometry. */
@@ -381,8 +459,8 @@
   }
   .ui-btn-spinner::after {
     content: '';
-    width: var(--ui-button-icon-size);
-    height: var(--ui-button-icon-size);
+    width: var(--_ui-button-icon-size, var(--ui-button-icon-size));
+    height: var(--_ui-button-icon-size, var(--ui-button-icon-size));
     border-radius: 50%;
     border: 2px solid currentColor;
     border-top-color: transparent;

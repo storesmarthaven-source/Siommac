@@ -20,7 +20,7 @@ import { LucideIcon } from '../LucideIcon';
 import { Button } from '../primitives/Button';
 import { SegmentedControl, DropdownButton, SplitButton } from '../primitives/actions';
 import { type MenuItems } from '../overlays/DropdownMenu';
-import { type ComponentDef, type PropValues } from './types';
+import { type ComponentDef, type PropValues, type StyleGroup } from './types';
 import { type ControlSize } from '../tokens';
 
 const s = (v: PropValues[string] | undefined, f = ''): string => (typeof v === 'string' ? v : f);
@@ -49,6 +49,39 @@ const noop = (): void => { /* preview */ };
 
 /** Action Button's variant list, per the approved mockup. */
 const VARIANTS = ['primary', 'secondary', 'outline', 'ghost', 'danger', 'link'] as const;
+
+const VARIANT_GEOMETRY: StyleGroup[] = VARIANTS.map(variant => ({
+  label: 'Size and shape',
+  controls: [
+    ...(variant === 'link' ? [] : [
+      { name: `--ui-button-${variant}-height-md`, label: 'Button height', kind: 'size' as const, scope: 'variant' as const, variant, linkedTo: 'var(--ui-button-height-md)' },
+      { name: `--ui-button-${variant}-pad-x-md`, label: 'Horizontal padding', kind: 'size' as const, scope: 'variant' as const, variant, linkedTo: 'var(--ui-button-pad-x-md)' },
+      { name: `--ui-button-${variant}-radius`, label: 'Corner roundness', kind: 'size' as const, scope: 'variant' as const, variant, linkedTo: 'var(--ui-button-radius)' },
+      { name: `--ui-button-${variant}-border-width`, label: 'Border thickness', kind: 'size' as const, scope: 'variant' as const, variant, linkedTo: 'var(--ui-button-border-width)' },
+    ]),
+    { name: `--ui-button-${variant}-gap`, label: 'Icon spacing', kind: 'size' as const, scope: 'variant' as const, variant, linkedTo: 'var(--ui-button-gap)' },
+    { name: `--ui-button-${variant}-icon-size`, label: 'Icon size', kind: 'size' as const, scope: 'variant' as const, variant, linkedTo: 'var(--ui-button-icon-size)' },
+    { name: `--ui-button-${variant}-font-size-md`, label: 'Text size', kind: 'size' as const, scope: 'variant' as const, variant, linkedTo: 'var(--ui-button-font-size-md)' },
+  ],
+}));
+
+const VARIANT_STATES: StyleGroup[] = VARIANTS.flatMap(variant => [
+  { label: 'Focus', controls: [
+    { name: `--ui-button-${variant}-focus-ring-color`, label: 'Focus ring', kind: 'color-alpha' as const, scope: 'state' as const, variant, state: 'focus' as const, linkedTo: 'var(--ui-button-focus-ring-color)' },
+    { name: `--ui-button-${variant}-focus-ring-width`, label: 'Focus ring width', kind: 'size' as const, scope: 'state' as const, variant, state: 'focus' as const, linkedTo: 'var(--ui-button-focus-ring-width)' },
+  ] },
+  { label: 'Disabled', controls: [
+    ...(variant === 'link' ? [] : [
+      { name: `--ui-button-${variant}-disabled-bg`, label: 'Disabled background', kind: 'color' as const, scope: 'state' as const, variant, state: 'disabled' as const, linkedTo: 'var(--ui-button-disabled-bg)' },
+      { name: `--ui-button-${variant}-disabled-border`, label: 'Disabled border', kind: 'color' as const, scope: 'state' as const, variant, state: 'disabled' as const, linkedTo: 'var(--ui-button-disabled-border)' },
+    ]),
+    { name: `--ui-button-${variant}-disabled-fg`, label: 'Disabled text', kind: 'color' as const, scope: 'state' as const, variant, state: 'disabled' as const, linkedTo: 'var(--ui-button-disabled-fg)' },
+    { name: `--ui-button-${variant}-disabled-icon`, label: 'Disabled icon', kind: 'color' as const, scope: 'state' as const, variant, state: 'disabled' as const, linkedTo: 'var(--ui-button-disabled-icon)' },
+  ] },
+  { label: 'Loading', controls: [
+    { name: `--ui-button-${variant}-loading-spinner`, label: 'Loading spinner', kind: 'color' as const, scope: 'state' as const, variant, state: 'loading' as const, linkedTo: 'var(--ui-button-loading-spinner)' },
+  ] },
+]);
 
 /* ── Button ────────────────────────────────────────────────────────────────*/
 
@@ -112,27 +145,12 @@ export const buttonDef: ComponentDef = {
   },
 
   style: [
-    { label: 'Geometry', controls: [
-      { name: '--ui-button-height-md',    label: 'Button height', kind: 'size', scope: 'shared', linkedTo: 'var(--ui-control-md)', help: 'Uses the same height as medium form controls by default.' },
-      { name: '--ui-button-pad-x-md',     label: 'Horizontal padding', kind: 'size', scope: 'shared' },
-      { name: '--ui-button-radius',       label: 'Corner roundness', kind: 'size', scope: 'shared', linkedTo: 'var(--radius-sm)' },
-      { name: '--ui-button-gap',          label: 'Icon spacing', kind: 'size', scope: 'shared', linkedTo: 'var(--space-2)' },
-      { name: '--ui-button-icon-size',    label: 'Icon size', kind: 'size', scope: 'shared', linkedTo: 'var(--ui-icon-md)' },
-      { name: '--ui-button-font-size-md', label: 'Text size', kind: 'size', scope: 'shared' },
-      { name: '--ui-button-border-width', label: 'Border thickness', kind: 'size', scope: 'shared', linkedTo: 'var(--ui-border-width)' },
-    ] },
+    ...VARIANT_GEOMETRY,
     { label: 'Primary', controls: [
       { name: '--ui-button-primary-bg',        label: 'Background', kind: 'color' },
       { name: '--ui-button-primary-fg',        label: 'Text', kind: 'color' },
       { name: '--ui-button-primary-bg-hover',  label: 'Background — hover', kind: 'color' },
       { name: '--ui-button-primary-bg-active', label: 'Background — pressed', kind: 'color' },
-    ] },
-    { label: 'Interaction states', controls: [
-      { name: '--ui-button-focus-ring-color', label: 'Focus ring', kind: 'color-alpha', scope: 'state', state: 'focus', linkedTo: 'var(--ui-focus-ring-color)' },
-      { name: '--ui-button-focus-ring-width', label: 'Focus ring width', kind: 'size', scope: 'state', state: 'focus', linkedTo: 'var(--ui-focus-ring-width)' },
-      { name: '--ui-button-disabled-bg', label: 'Disabled background', kind: 'color', scope: 'state', state: 'disabled', linkedTo: 'var(--ui-disabled-bg)' },
-      { name: '--ui-button-disabled-fg', label: 'Disabled text', kind: 'color', scope: 'state', state: 'disabled', linkedTo: 'var(--ui-disabled-fg)' },
-      { name: '--ui-button-loading-spinner', label: 'Loading spinner', kind: 'color', scope: 'state', state: 'loading', linkedTo: 'currentColor' },
     ] },
     { label: 'Secondary', controls: [
       { name: '--ui-button-secondary-bg',       label: 'Background', kind: 'color' },
@@ -154,6 +172,7 @@ export const buttonDef: ComponentDef = {
       { name: '--ui-toggle-bg-on',           label: 'Toggle — pressed fill', kind: 'color-alpha' },
       { name: '--ui-toggle-fg-on',           label: 'Toggle — pressed text', kind: 'color' },
     ] },
+    ...VARIANT_STATES,
   ],
 
   states: ['default', 'hover', 'focus', 'active', 'selected', 'disabled', 'loading'],

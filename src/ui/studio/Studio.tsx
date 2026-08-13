@@ -399,6 +399,7 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
                 def={openDef}
                 draft={draft}
                 backLabel={openFamily?.name}
+                onSelectMember={setOpenId}
                 onBack={() => setOpenId(openFamily?.id ?? null)}
               />
             )
