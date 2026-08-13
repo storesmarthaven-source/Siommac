@@ -39,7 +39,9 @@
     --ui-tab-bg-hover: var(--ui-color-surface-subtle);
     --ui-tab-bg-selected: transparent;
 
-    --ui-tab-indicator: var(--ui-color-action-primary);
+    /* The navigation role, NOT action-primary. Tabs mark where you are; a
+       button performs an action. They shared a colour, not a job. */
+    --ui-tab-indicator: var(--ui-color-navigation-active);
     --ui-tab-indicator-size: 2px;
 
     --ui-tab-desc-fg: var(--ui-color-text-secondary);

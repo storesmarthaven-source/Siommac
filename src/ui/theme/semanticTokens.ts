@@ -68,6 +68,11 @@ export const SEMANTIC_ROLES: readonly SemanticRole[] = [
   { name: '--ui-color-action-secondary',      group: 'action', label: 'Secondary action fill',          defaultsFrom: '--siomac-navy',      brandDriven: true  },
   { name: '--ui-color-action-secondary-text', group: 'action', label: 'Text/icon on a secondary fill',  defaultsFrom: '#ffffff',            brandDriven: true  },
 
+  /* Split out of `action-primary`: a tab marks WHERE YOU ARE, a button performs
+     an action. They shared a colour, not a job, so restyling Buttons was
+     silently restyling navigation. */
+  { name: '--ui-color-navigation-active',     group: 'navigation', label: 'Active navigation indicator', defaultsFrom: '--siomac-red',      brandDriven: true  },
+
   /* ── Surface ──────────────────────────────────────────────────────────────*/
   { name: '--ui-color-surface-page',    group: 'surface', label: 'Page backdrop',                  defaultsFrom: '--bg-app',    brandDriven: false },
   { name: '--ui-color-surface-default', group: 'surface', label: 'Card / panel fill',              defaultsFrom: '--bg-card',   brandDriven: false },

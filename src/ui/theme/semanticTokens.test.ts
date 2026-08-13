@@ -125,7 +125,7 @@ describe('semantic layer — introducing it changed nothing visually', () => {
     ['--ui-card-footer-bg',           '#F8FAFE'],
     ['--ui-dt-header-fg',             '#5E6F8D'],
     ['--ui-dt-row-selected',          'rgba(27, 45, 84, .06)'],
-    ['--ui-tab-indicator',            '#1b2d54'],
+    ['--ui-tab-indicator',            '#E40C0C'],
     ['--ui-control-border-focus',     '#1b2d54'],
     ['--ui-control-placeholder',      '#AAB4C8'],
     ['--ui-badge-success-solid',      '#15803d'],
@@ -145,14 +145,22 @@ describe('semantic layer — the layer actually conducts', () => {
    * The proof that matters: publish ONE semantic override and check it reaches
    * the component variables that play that role — and only those.
    */
-  it('an action-primary override repaints primary buttons and the tab indicator', () => {
+  it('an action-primary override repaints primary buttons and NOT navigation', () => {
     const brand = { '--ui-color-action-primary': '#0F766E' };
     expect(resolveToken('--ui-button-primary-bg', decls, brand).value).toBe('#0F766E');
-    expect(resolveToken('--ui-tab-indicator', decls, brand).value).toBe('#0F766E');
     expect(resolveToken('--ui-button-link-fg-hover', decls, brand).value).toBe('#0F766E');
+    /* The ownership boundary, asserted. Restyling the primary ACTION must not
+       move the tab indicator — that is navigation's own role now. */
+    expect(resolveToken('--ui-tab-indicator', decls, brand).value).toBe('#E40C0C');
     // …and leaves the destructive action alone. A rebrand must never make
     // "delete" and "save" the same colour.
     expect(resolveToken('--ui-button-danger-bg', decls, brand).value).toBe('#dc2626');
+  });
+
+  it('a navigation override repaints the tab indicator and NOT buttons', () => {
+    const brand = { '--ui-color-navigation-active': '#0F766E' };
+    expect(resolveToken('--ui-tab-indicator', decls, brand).value).toBe('#0F766E');
+    expect(resolveToken('--ui-button-primary-bg', decls, brand).value).toBe('#1b2d54');
   });
 
   it('an action-secondary override no longer reaches any filled control', () => {

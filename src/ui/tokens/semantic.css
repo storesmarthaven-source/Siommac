@@ -91,6 +91,18 @@
     --ui-color-action-secondary:      var(--siomac-navy);
     --ui-color-action-secondary-text: #ffffff;
 
+    /* ── navigation — "where you are", not "what you can do" ────────────────
+       Split out from `action-primary` when the Buttons mockup made the primary
+       ACTION navy and silently took the tab indicator with it. The propagation
+       was correct — one role, every surface that plays it — but the OWNERSHIP
+       was wrong: a tab indicator marks the current location, a button performs
+       an action, and those are different jobs that happen to have shared a
+       colour. Restyling Buttons must not restyle navigation.
+
+       Still brand red, exactly as it was before the Buttons change. It moves
+       when navigation's own role moves, or when the brand mapping does. */
+    --ui-color-navigation-active:     var(--siomac-red);
+
     /* ── SURFACE ──────────────────────────────────────────────────────────────
        Four planes, from the page backdrop up to floating overlays. `default`
        and `raised` share a value today but are different ROLES: changing what
