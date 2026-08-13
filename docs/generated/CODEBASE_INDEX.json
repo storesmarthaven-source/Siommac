@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "1ca096d475b341e01386609ffdc0dd536783ef85",
+    "head": "338477346fc7035a0475fb9f3db9ecb6522d49ac",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "8f06b3fcc69877a4f74df3cf",
-    "indexedFiles": 1834
+    "fingerprint": "f066d2c3ce568b555f27d0ff",
+    "indexedFiles": 1839
   },
   "summary": {
-    "files": 1479,
-    "symbols": 14761,
+    "files": 1484,
+    "symbols": 14780,
     "widgets": 68,
     "routes": 978,
     "routeDefinitions": 979,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 419,
-        "symbols": 3747,
+        "files": 424,
+        "symbols": 3766,
         "widgets": 17,
         "routes": 38,
         "routeDefinitions": 53,
@@ -8329,8 +8329,8 @@
       "path": "src/ui/InfoTip.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 32,
-      "hash": "1f0819e95ef316f8"
+      "lines": 33,
+      "hash": "fc5ebcb4997a27dc"
     },
     {
       "path": "src/ui/LucideIcon.tsx",
@@ -8903,8 +8903,8 @@
       "path": "src/ui/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 252,
-      "hash": "3287eeecd5ee58db"
+      "lines": 254,
+      "hash": "b29d36aff7a78cf4"
     },
     {
       "path": "src/ui/layouts/ModulePageLayout.tsx",
@@ -9008,8 +9008,8 @@
       "path": "src/ui/overlays/AnchoredPopup.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 164,
-      "hash": "93a50b29397ac8e0"
+      "lines": 202,
+      "hash": "576c7a8e36753b9a"
     },
     {
       "path": "src/ui/overlays/Dialog.test.tsx",
@@ -9031,6 +9031,34 @@
       "role": "frontend",
       "lines": 194,
       "hash": "63188768e2cf5b8e"
+    },
+    {
+      "path": "src/ui/overlays/Popover.test.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 49,
+      "hash": "b0c14bf265cf6033"
+    },
+    {
+      "path": "src/ui/overlays/Popover.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 76,
+      "hash": "9aa62f86f0501f28"
+    },
+    {
+      "path": "src/ui/overlays/Tooltip.test.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 55,
+      "hash": "54027515017b254e"
+    },
+    {
+      "path": "src/ui/overlays/Tooltip.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 101,
+      "hash": "d4e002d7b1d2fe88"
     },
     {
       "path": "src/ui/overlays/portalRoot.test.tsx",
@@ -9183,8 +9211,8 @@
       "path": "src/ui/registry/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 194,
-      "hash": "a8391a38ebc050f6"
+      "lines": 196,
+      "hash": "fcc74fbd668d44d3"
     },
     {
       "path": "src/ui/registry/navigation.defs.tsx",
@@ -9192,6 +9220,13 @@
       "role": "frontend",
       "lines": 275,
       "hash": "f628e1a22af18d8f"
+    },
+    {
+      "path": "src/ui/registry/overlays.defs.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 143,
+      "hash": "51274f6ba97db17b"
     },
     {
       "path": "src/ui/registry/page-header.def.tsx",
@@ -9204,8 +9239,8 @@
       "path": "src/ui/registry/planned.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 163,
-      "hash": "7dc92b5114a35860"
+      "lines": 157,
+      "hash": "59e9f1ebc27b94cd"
     },
     {
       "path": "src/ui/registry/types.ts",
@@ -145454,7 +145489,7 @@
       "name": "InfoTipProps",
       "kind": "interface",
       "file": "src/ui/InfoTip.tsx",
-      "line": 12,
+      "line": 7,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145464,7 +145499,7 @@
       "name": "InfoTip",
       "kind": "function",
       "file": "src/ui/InfoTip.tsx",
-      "line": 22,
+      "line": 19,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146048,7 +146083,7 @@
       "name": "Position",
       "kind": "interface",
       "file": "src/ui/overlays/AnchoredPopup.tsx",
-      "line": 58,
+      "line": 64,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146058,7 +146093,7 @@
       "name": "AnchoredPopup",
       "kind": "function",
       "file": "src/ui/overlays/AnchoredPopup.tsx",
-      "line": 66,
+      "line": 73,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146070,7 +146105,7 @@
       "name": "place",
       "kind": "function",
       "file": "src/ui/overlays/AnchoredPopup.tsx",
-      "line": 79,
+      "line": 86,
       "module": "platform",
       "exported": false,
       "container": "AnchoredPopup",
@@ -146080,7 +146115,7 @@
       "name": "onScroll",
       "kind": "function",
       "file": "src/ui/overlays/AnchoredPopup.tsx",
-      "line": 111,
+      "line": 129,
       "module": "platform",
       "exported": false,
       "container": "AnchoredPopup",
@@ -146090,7 +146125,7 @@
       "name": "onPointerDown",
       "kind": "function",
       "file": "src/ui/overlays/AnchoredPopup.tsx",
-      "line": 122,
+      "line": 156,
       "module": "platform",
       "exported": false,
       "container": "AnchoredPopup",
@@ -146349,6 +146384,62 @@
       "tags": []
     },
     {
+      "name": "anchor",
+      "kind": "function",
+      "file": "src/ui/overlays/Popover.test.tsx",
+      "line": 5,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "PopoverProps",
+      "kind": "interface",
+      "file": "src/ui/overlays/Popover.tsx",
+      "line": 14,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "FOCUSABLE",
+      "kind": "variable",
+      "file": "src/ui/overlays/Popover.tsx",
+      "line": 31,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "Popover",
+      "kind": "function",
+      "file": "src/ui/overlays/Popover.tsx",
+      "line": 36,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "onKeyDown",
+      "kind": "function",
+      "file": "src/ui/overlays/Popover.tsx",
+      "line": 48,
+      "module": "platform",
+      "exported": false,
+      "container": "Popover",
+      "tags": []
+    },
+    {
       "name": "noop",
       "kind": "function",
       "file": "src/ui/overlays/portalRoot.test.tsx",
@@ -146417,6 +146508,88 @@
       "tags": [
         "hook"
       ]
+    },
+    {
+      "name": "TriggerEvent",
+      "kind": "type",
+      "file": "src/ui/overlays/Tooltip.tsx",
+      "line": 8,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TriggerHandler",
+      "kind": "type",
+      "file": "src/ui/overlays/Tooltip.tsx",
+      "line": 9,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TooltipTriggerProps",
+      "kind": "interface",
+      "file": "src/ui/overlays/Tooltip.tsx",
+      "line": 10,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TooltipProps",
+      "kind": "interface",
+      "file": "src/ui/overlays/Tooltip.tsx",
+      "line": 20,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Tooltip",
+      "kind": "function",
+      "file": "src/ui/overlays/Tooltip.tsx",
+      "line": 32,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "clearTimers",
+      "kind": "function",
+      "file": "src/ui/overlays/Tooltip.tsx",
+      "line": 43,
+      "module": "platform",
+      "exported": false,
+      "container": "Tooltip",
+      "tags": []
+    },
+    {
+      "name": "show",
+      "kind": "function",
+      "file": "src/ui/overlays/Tooltip.tsx",
+      "line": 52,
+      "module": "platform",
+      "exported": false,
+      "container": "Tooltip",
+      "tags": []
+    },
+    {
+      "name": "hide",
+      "kind": "function",
+      "file": "src/ui/overlays/Tooltip.tsx",
+      "line": 60,
+      "module": "platform",
+      "exported": false,
+      "container": "Tooltip",
+      "tags": []
     },
     {
       "name": "OPTIONS",
@@ -147844,7 +148017,7 @@
       "name": "COMPONENT_DEFS",
       "kind": "array",
       "file": "src/ui/registry/index.ts",
-      "line": 53,
+      "line": 54,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147854,7 +148027,7 @@
       "name": "CATEGORY_LABELS",
       "kind": "object",
       "file": "src/ui/registry/index.ts",
-      "line": 65,
+      "line": 67,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147864,7 +148037,7 @@
       "name": "CATEGORY_ORDER",
       "kind": "array",
       "file": "src/ui/registry/index.ts",
-      "line": 81,
+      "line": 83,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147874,7 +148047,7 @@
       "name": "CatalogueNode",
       "kind": "type",
       "file": "src/ui/registry/index.ts",
-      "line": 91,
+      "line": 93,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147884,7 +148057,7 @@
       "name": "CategoryGroup",
       "kind": "interface",
       "file": "src/ui/registry/index.ts",
-      "line": 95,
+      "line": 97,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147894,7 +148067,7 @@
       "name": "componentsByCategory",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 116,
+      "line": 118,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147904,7 +148077,7 @@
       "name": "findComponent",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 150,
+      "line": 152,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147914,7 +148087,7 @@
       "name": "RegistryTotals",
       "kind": "interface",
       "file": "src/ui/registry/index.ts",
-      "line": 154,
+      "line": 156,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147924,7 +148097,7 @@
       "name": "registryTotals",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 180,
+      "line": 182,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147934,7 +148107,7 @@
       "name": "isPattern",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 181,
+      "line": 183,
       "module": "platform",
       "exported": false,
       "container": "registryTotals",
@@ -148021,6 +148194,68 @@
       "tags": []
     },
     {
+      "name": "s",
+      "kind": "function",
+      "file": "src/ui/registry/overlays.defs.tsx",
+      "line": 9,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "b",
+      "kind": "function",
+      "file": "src/ui/registry/overlays.defs.tsx",
+      "line": 10,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PopoverPreview",
+      "kind": "function",
+      "file": "src/ui/registry/overlays.defs.tsx",
+      "line": 12,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "popoverDef",
+      "kind": "object",
+      "file": "src/ui/registry/overlays.defs.tsx",
+      "line": 46,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "tooltipDef",
+      "kind": "object",
+      "file": "src/ui/registry/overlays.defs.tsx",
+      "line": 93,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "OVERLAY_DEFS",
+      "kind": "array",
+      "file": "src/ui/registry/overlays.defs.tsx",
+      "line": 142,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "noop",
       "kind": "function",
       "file": "src/ui/registry/page-header.def.tsx",
@@ -148084,7 +148319,7 @@
       "name": "PLANNED_DEFS",
       "kind": "variable",
       "file": "src/ui/registry/planned.ts",
-      "line": 149,
+      "line": 143,
       "module": "platform",
       "exported": true,
       "container": "",

@@ -12889,8 +12889,8 @@ RailCard	function	platform	true	component,ui-tile	src/ui/hrfin/RailCard.tsx	18
 RowActionItem	interface	platform	true		src/ui/hrfin/RowActionMenu.tsx	12	
 RowActionMenu	function	platform	true	component	src/ui/hrfin/RowActionMenu.tsx	22	
 DtColumn	interface	platform	true		src/ui/index.ts	86	
-InfoTipProps	interface	platform	true		src/ui/InfoTip.tsx	12	
-InfoTip	function	platform	true	component	src/ui/InfoTip.tsx	22	
+InfoTipProps	interface	platform	true		src/ui/InfoTip.tsx	7	
+InfoTip	function	platform	true	component	src/ui/InfoTip.tsx	19	
 ModulePageLayoutProps	interface	widgets	true		src/ui/layouts/ModulePageLayout.tsx	24	
 ModulePageLayout	function	widgets	true	component	src/ui/layouts/ModulePageLayout.tsx	33	
 RegisterLayoutProps	interface	widgets	false		src/ui/layouts/RegisterLayout.tsx	17	
@@ -12945,11 +12945,11 @@ advance	function	platform	false		src/ui/navigation/Wizard/Wizard.tsx	229	Wizard
 skip	function	platform	false		src/ui/navigation/Wizard/Wizard.tsx	245	Wizard
 submit	function	platform	false		src/ui/navigation/Wizard/Wizard.tsx	251	Wizard
 AnchoredPopupProps	interface	platform	true		src/ui/overlays/AnchoredPopup.tsx	33	
-Position	interface	platform	false		src/ui/overlays/AnchoredPopup.tsx	58	
-AnchoredPopup	function	platform	true	component	src/ui/overlays/AnchoredPopup.tsx	66	
-place	function	platform	false		src/ui/overlays/AnchoredPopup.tsx	79	AnchoredPopup
-onScroll	function	platform	false		src/ui/overlays/AnchoredPopup.tsx	111	AnchoredPopup
-onPointerDown	function	platform	false		src/ui/overlays/AnchoredPopup.tsx	122	AnchoredPopup
+Position	interface	platform	false		src/ui/overlays/AnchoredPopup.tsx	64	
+AnchoredPopup	function	platform	true	component	src/ui/overlays/AnchoredPopup.tsx	73	
+place	function	platform	false		src/ui/overlays/AnchoredPopup.tsx	86	AnchoredPopup
+onScroll	function	platform	false		src/ui/overlays/AnchoredPopup.tsx	129	AnchoredPopup
+onPointerDown	function	platform	false		src/ui/overlays/AnchoredPopup.tsx	156	AnchoredPopup
 Basic	function	platform	false	component,test	src/ui/overlays/Dialog.test.tsx	15	
 Harness	function	platform	false	component,test	src/ui/overlays/Dialog.test.tsx	98	
 DialogSize	type	platform	true		src/ui/overlays/Dialog.tsx	40	
@@ -12973,12 +12973,25 @@ DropdownMenuProps	interface	platform	true		src/ui/overlays/DropdownMenu.tsx	56
 DropdownMenu	function	platform	true	component	src/ui/overlays/DropdownMenu.tsx	68	
 activate	function	platform	false		src/ui/overlays/DropdownMenu.tsx	100	DropdownMenu
 onKeyDown	function	platform	false		src/ui/overlays/DropdownMenu.tsx	108	DropdownMenu
+anchor	function	platform	false	test	src/ui/overlays/Popover.test.tsx	5	
+PopoverProps	interface	platform	true		src/ui/overlays/Popover.tsx	14	
+FOCUSABLE	variable	platform	false	component	src/ui/overlays/Popover.tsx	31	
+Popover	function	platform	true	component	src/ui/overlays/Popover.tsx	36	
+onKeyDown	function	platform	false		src/ui/overlays/Popover.tsx	48	Popover
 noop	function	platform	false	test	src/ui/overlays/portalRoot.test.tsx	25	
 Scoped	function	platform	false	component,test	src/ui/overlays/portalRoot.test.tsx	27	
 Harness	function	platform	false	component,test	src/ui/overlays/portalRoot.test.tsx	80	
 PortalRootContext	variable	platform	true		src/ui/overlays/portalRoot.ts	37	
 PREVIEW_PORTAL_ATTR	variable	platform	true		src/ui/overlays/portalRoot.ts	40	
 usePortalRoot	function	platform	true	hook	src/ui/overlays/portalRoot.ts	48	
+TriggerEvent	type	platform	false		src/ui/overlays/Tooltip.tsx	8	
+TriggerHandler	type	platform	false		src/ui/overlays/Tooltip.tsx	9	
+TooltipTriggerProps	interface	platform	false		src/ui/overlays/Tooltip.tsx	10	
+TooltipProps	interface	platform	true		src/ui/overlays/Tooltip.tsx	20	
+Tooltip	function	platform	true	component	src/ui/overlays/Tooltip.tsx	32	
+clearTimers	function	platform	false		src/ui/overlays/Tooltip.tsx	43	Tooltip
+show	function	platform	false		src/ui/overlays/Tooltip.tsx	52	Tooltip
+hide	function	platform	false		src/ui/overlays/Tooltip.tsx	60	Tooltip
 OPTIONS	variable	platform	false	component,test	src/ui/primitives/actions.test.tsx	15	
 MENU	array	platform	false	test	src/ui/primitives/actions.test.tsx	21	
 open	function	platform	false	test	src/ui/primitives/actions.test.tsx	71	
@@ -13115,16 +13128,16 @@ GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	661
 selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	679	
 search	function	platform	false		src/ui/registry/forms.defs.tsx	782	selectDef
 FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	813	
-COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	53	
-CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	65	
-CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	81	
-CatalogueNode	type	platform	true		src/ui/registry/index.ts	91	
-CategoryGroup	interface	platform	true		src/ui/registry/index.ts	95	
-componentsByCategory	function	platform	true		src/ui/registry/index.ts	116	
-findComponent	function	platform	true		src/ui/registry/index.ts	150	
-RegistryTotals	interface	platform	true		src/ui/registry/index.ts	154	
-registryTotals	function	platform	true		src/ui/registry/index.ts	180	
-isPattern	function	platform	false		src/ui/registry/index.ts	181	registryTotals
+COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	54	
+CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	67	
+CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	83	
+CatalogueNode	type	platform	true		src/ui/registry/index.ts	93	
+CategoryGroup	interface	platform	true		src/ui/registry/index.ts	97	
+componentsByCategory	function	platform	true		src/ui/registry/index.ts	118	
+findComponent	function	platform	true		src/ui/registry/index.ts	152	
+RegistryTotals	interface	platform	true		src/ui/registry/index.ts	156	
+registryTotals	function	platform	true		src/ui/registry/index.ts	182	
+isPattern	function	platform	false		src/ui/registry/index.ts	183	registryTotals
 s	function	platform	false		src/ui/registry/navigation.defs.tsx	24	
 b	function	platform	false		src/ui/registry/navigation.defs.tsx	25	
 noop	function	platform	false		src/ui/registry/navigation.defs.tsx	26	
@@ -13133,13 +13146,19 @@ PLAIN_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	38
 MANY_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	44	
 tabsDef	object	platform	true		src/ui/registry/navigation.defs.tsx	56	
 NAVIGATION_DEFS	array	platform	true		src/ui/registry/navigation.defs.tsx	269	
+s	function	platform	false		src/ui/registry/overlays.defs.tsx	9	
+b	function	platform	false		src/ui/registry/overlays.defs.tsx	10	
+PopoverPreview	function	platform	false	component	src/ui/registry/overlays.defs.tsx	12	
+popoverDef	object	platform	true		src/ui/registry/overlays.defs.tsx	46	
+tooltipDef	object	platform	true		src/ui/registry/overlays.defs.tsx	93	
+OVERLAY_DEFS	array	platform	true		src/ui/registry/overlays.defs.tsx	142	
 noop	function	platform	false		src/ui/registry/page-header.def.tsx	8	
 previewActions	variable	platform	false		src/ui/registry/page-header.def.tsx	10	
 pageHeaderDef	object	platform	true		src/ui/registry/page-header.def.tsx	19	
 pageActionBarDef	object	platform	true		src/ui/registry/page-header.def.tsx	70	
 Planned	interface	platform	false		src/ui/registry/planned.ts	33	
 PLANNED	array	platform	false		src/ui/registry/planned.ts	44	
-PLANNED_DEFS	variable	platform	true		src/ui/registry/planned.ts	149	
+PLANNED_DEFS	variable	platform	true		src/ui/registry/planned.ts	143	
 PropControl	type	platform	true		src/ui/registry/types.ts	41	
 PropValues	type	platform	true		src/ui/registry/types.ts	49	
 StyleControl	interface	platform	true		src/ui/registry/types.ts	60	

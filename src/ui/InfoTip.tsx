@@ -1,31 +1,32 @@
-// src/ui/InfoTip.tsx — the STANDARD info-icon + tooltip.
-//
-// A small Lucide "i" that reveals a dark tooltip on hover/focus (keyboard-accessible).
-// The look matches the wizard forms' field-hint icon (see statutoryForms.css .sfp-info),
-// promoted here so every surface uses ONE info-icon + tooltip design. Pure CSS tooltip
-// (no portal) — for icons inside `overflow:hidden` cards, pass placement to point the
-// bubble where there's room.
+// The standard information-icon treatment, composed with canonical Tooltip.
 import type { VNode } from 'preact';
 import { LucideIcon } from './LucideIcon';
+import { Tooltip } from './overlays/Tooltip';
 import './InfoTip.css';
 
 export interface InfoTipProps {
-  /** Tooltip text. Required — we never render a dead, tip-less info icon. */
+  /** Tooltip text. Required: a dead information icon is not rendered. */
   tip: string;
   /** Icon size in px (default 15). */
   size?: number;
-  /** Which side the bubble points (default 'top'). Use 'bottom' near a container's top edge. */
+  /** Retained for source compatibility; collision now chooses the safe side. */
   placement?: 'top' | 'bottom';
+  /** Accessible name for the information trigger. */
+  label?: string;
   class?: string;
 }
 
-export function InfoTip({ tip, size = 15, placement = 'top', class: cls }: InfoTipProps): VNode {
+export function InfoTip({ tip, size = 15, placement = 'top', label = 'More information', class: cls }: InfoTipProps): VNode {
   return (
-    <span
-      class={`ui-infotip ui-infotip--${placement}${cls ? ` ${cls}` : ''}`}
-      data-tip={tip} tabIndex={0} role="img" aria-label={tip}
-    >
-      <LucideIcon name="Info" size={size} strokeWidth={2} />
-    </span>
+    <Tooltip content={tip} placement={placement}>
+      <span
+        class={`ui-infotip ui-infotip--${placement}${cls ? ` ${cls}` : ''}`}
+        tabIndex={0}
+        role="img"
+        aria-label={label}
+      >
+        <LucideIcon name="Info" size={size} strokeWidth={2} />
+      </span>
+    </Tooltip>
   );
 }

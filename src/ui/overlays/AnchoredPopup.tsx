@@ -37,6 +37,10 @@ export interface AnchoredPopupProps {
   onDismiss: () => void;
   /** Match the anchor's width (dropdowns) or size to content (menus). */
   matchAnchorWidth?: boolean;
+  /** Horizontal relationship to the anchor when the surface sizes to content. */
+  align?: 'start' | 'center' | 'end';
+  /** Prefer a side or let collision detection choose one. */
+  placement?: 'auto' | 'top' | 'bottom';
   /** Gap between anchor and surface, in px. */
   offset?: number;
   /** Max height before the surface scrolls internally. */
@@ -52,11 +56,14 @@ export interface AnchoredPopupProps {
    * reaches it. A handler on a child only sees events that originate below it.
    */
   onKeyDown?: (e: KeyboardEvent) => void;
+  /** Exposes the real portalled surface to semantic wrappers such as Popover. */
+  onSurfaceMount?: (surface: HTMLDivElement | null) => void;
   children: ComponentChildren;
 }
 
 interface Position {
-  top: number;
+  top: number | undefined;
+  bottom: number | undefined;
   left: number;
   width: number | undefined;
   maxHeight: number;
@@ -65,8 +72,8 @@ interface Position {
 
 export function AnchoredPopup({
   open, anchor, onDismiss,
-  matchAnchorWidth = true, offset = 4, maxHeight = 280,
-  class: extra, id, role, onKeyDown, children, ...aria
+  matchAnchorWidth = true, align = 'start', placement = 'auto', offset = 4, maxHeight = 280,
+  class: extra, id, role, onKeyDown, onSurfaceMount, children, ...aria
 }: AnchoredPopupProps): VNode | null {
   const surfaceRef = useRef<HTMLDivElement | null>(null);
   const [pos, setPos] = useState<Position | null>(null);
@@ -86,17 +93,28 @@ export function AnchoredPopup({
       // Flip up only when below genuinely cannot hold a usable list AND above is
       // roomier — flipping for a few pixels makes the surface jump around as the
       // list is filtered.
-      const flip = spaceBelow < Math.min(maxHeight, 160) && spaceAbove > spaceBelow;
+      const flip = placement === 'top'
+        || (placement === 'auto' && spaceBelow < Math.min(maxHeight, 160) && spaceAbove > spaceBelow);
       const available = Math.max(120, flip ? spaceAbove : spaceBelow);
       const height = Math.min(maxHeight, available);
 
       const width = matchAnchorWidth ? r.width : undefined;
       const rawLeft = r.left;
       const surfaceWidth = width ?? surfaceRef.current?.offsetWidth ?? r.width;
-      const left = Math.max(8, Math.min(rawLeft, window.innerWidth - surfaceWidth - 8));
+      const alignedLeft = matchAnchorWidth || align === 'start'
+        ? rawLeft
+        : align === 'center'
+          ? r.left + (r.width - surfaceWidth) / 2
+          : r.right - surfaceWidth;
+      const left = Math.max(8, Math.min(alignedLeft, window.innerWidth - surfaceWidth - 8));
 
       setPos({
-        top: flip ? r.top - offset - height : r.bottom + offset,
+        // A top-placed surface uses `bottom`, not an estimated `top`. Its
+        // content height is unknown until the portal renders; subtracting the
+        // maximum height left short popovers floating hundreds of pixels above
+        // their trigger.
+        top: flip ? undefined : r.bottom + offset,
+        bottom: flip ? window.innerHeight - r.top + offset : undefined,
         left,
         width,
         maxHeight: height,
@@ -115,7 +133,23 @@ export function AnchoredPopup({
       window.removeEventListener('scroll', onScroll, true);
       window.removeEventListener('resize', place);
     };
-  }, [open, anchor, matchAnchorWidth, offset, maxHeight, onDismiss]);
+  }, [open, anchor, matchAnchorWidth, align, placement, offset, maxHeight, onDismiss]);
+
+  // Content-sized surfaces cannot be horizontally centred/clamped until their
+  // real width exists. Correct the provisional anchor-width measurement in the
+  // same layout phase, before the browser paints the portal.
+  useLayoutEffect(() => {
+    if (!open || !anchor || !pos || matchAnchorWidth || !surfaceRef.current) return;
+    const r = anchor.getBoundingClientRect();
+    const surfaceWidth = surfaceRef.current.offsetWidth;
+    const raw = align === 'center'
+      ? r.left + (r.width - surfaceWidth) / 2
+      : align === 'end'
+        ? r.right - surfaceWidth
+        : r.left;
+    const left = Math.max(8, Math.min(raw, window.innerWidth - surfaceWidth - 8));
+    if (Math.abs(left - pos.left) > 0.5) setPos(current => current ? { ...current, left } : current);
+  }, [open, anchor, matchAnchorWidth, align, pos]);
 
   useEffect(() => {
     if (!open) return;
@@ -139,14 +173,18 @@ export function AnchoredPopup({
 
   return createPortal(
     <div
-      ref={surfaceRef}
+      ref={(node) => {
+        surfaceRef.current = node;
+        onSurfaceMount?.(node);
+      }}
       id={id}
       role={role}
       class={`ui-popup${extra ? ` ${extra}` : ''}`}
       data-placement={pos.placement}
       style={{
         position: 'fixed',
-        top: `${pos.top}px`,
+        top: pos.top == null ? undefined : `${pos.top}px`,
+        bottom: pos.bottom == null ? undefined : `${pos.bottom}px`,
         left: `${pos.left}px`,
         width: pos.width != null ? `${pos.width}px` : undefined,
         maxHeight: `${pos.maxHeight}px`,

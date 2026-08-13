@@ -203,6 +203,8 @@ export {
 // ── Overlays (canonical, v2) ──
 export { Dialog, type DialogProps, type DialogSize, type DialogVariant } from './overlays/Dialog';
 export { AnchoredPopup, type AnchoredPopupProps } from './overlays/AnchoredPopup';
+export { Popover, type PopoverProps } from './overlays/Popover';
+export { Tooltip, type TooltipProps } from './overlays/Tooltip';
 
 // ── Loading placeholders (cold-path only) ──
 export {

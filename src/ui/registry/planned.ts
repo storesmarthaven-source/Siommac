@@ -55,12 +55,6 @@ const PLANNED: Planned[] = [
     plannedApi: `<Drawer open={o} side="right" size="lg" onClose={close}>…</Drawer>`,
     deprecatedImports: ['HseDrawer', 'DetailDrawer'],
     replaces: ['.ui-rdrawer'] },
-  { id: 'popover', name: 'Popover', category: 'overlays',
-    description: 'RECONCILED 2026-08-12: the runtime ALREADY EXISTS and ships. `AnchoredPopup` is exported from @ui and powers Select, Combobox, MultiSelect, DropdownMenu, Dialog and DataTableToolbar. This is a NAMING/registration gap, not a missing capability — register the existing component, never build a second anchoring runtime.',
-    plannedApi: `<Popover anchor={el} open={o} onClose={close}>…</Popover>` },
-  { id: 'tooltip', name: 'Tooltip', category: 'overlays',
-    description: 'Hover/focus hint on any element. `InfoTip` covers only the info-icon case.',
-    plannedApi: `<Tooltip content="Locked after approval"><IconButton … /></Tooltip>` },
   /* ── Data ───────────────────────────────────────────────────────────────*/
   /* ── Navigation ─────────────────────────────────────────────────────────*/
   { id: 'breadcrumbs', name: 'Breadcrumbs', category: 'navigation',

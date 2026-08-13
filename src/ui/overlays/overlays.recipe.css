@@ -1,0 +1,43 @@
+/** Canonical content recipes layered over the shared AnchoredPopup frame. */
+@layer recipes {
+  :root,
+  [data-ui-preview-scope] {
+    --ui-popover-min-width: 240px;
+    --ui-popover-max-width: 420px;
+    --ui-popover-padding: var(--space-4);
+    --ui-popover-fg: var(--ui-color-text-primary);
+
+    --ui-tooltip-bg: var(--ui-color-text-primary);
+    --ui-tooltip-fg: var(--ui-color-surface-raised);
+    --ui-tooltip-radius: var(--radius-xs);
+    --ui-tooltip-padding: 7px 10px;
+    --ui-tooltip-font-size: var(--ui-font-size-caption);
+    --ui-tooltip-shadow: var(--elev-3);
+  }
+
+  .ui-popup.ui-popover {
+    min-width: min(var(--ui-popover-min-width), calc(100vw - 16px));
+    max-width: min(var(--ui-popover-max-width), calc(100vw - 16px));
+    padding: var(--ui-popover-padding);
+    color: var(--ui-popover-fg);
+  }
+
+  .ui-popup.ui-tooltip {
+    z-index: var(--z-tooltip);
+    width: max-content;
+    max-width: calc(100vw - 16px);
+    overflow: visible;
+    padding: var(--ui-tooltip-padding);
+    border: 0;
+    border-radius: var(--ui-tooltip-radius);
+    background: var(--ui-tooltip-bg);
+    color: var(--ui-tooltip-fg);
+    box-shadow: var(--ui-tooltip-shadow);
+    font-size: var(--ui-tooltip-font-size);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.4;
+    pointer-events: none;
+  }
+
+  .ui-tooltip > [role='tooltip'] { display: block; }
+}
