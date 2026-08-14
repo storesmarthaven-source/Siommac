@@ -45,7 +45,7 @@ function PatternControl({ pattern, control, values, draft, onChange }: {
       onChange={event => onChange(control.name, (event.target as HTMLInputElement).checked)} /></label>;
   }
   return <label class="sds-pattern-field" for={id}><span>{control.label}</span><select id={id} aria-label={control.label} value={String(value)}
-    onChange={event => onChange(control.name, (event.target as HTMLSelectElement).value)}>
+    onInput={event => onChange(control.name, (event.target as HTMLSelectElement).value)}>
     {control.options.map(option => <option value={option.value}>{option.label}</option>)}
   </select></label>;
 }
@@ -106,7 +106,7 @@ function ButtonPatternEditor({ pattern, draft, onEditFoundation }: { pattern: Bu
           </section>
         </div>
         <aside class="sds-owned-button__settings" aria-label={`${pattern.name} settings`}>
-          <header><div><span>{pattern.id === 'ai-action' ? 'Component settings' : 'Preview settings'}</span><strong>Try the {pattern.name}</strong></div><button type="button" onClick={reset}>Reset</button></header>
+          <header><div><span>Preview settings</span><strong>Try the {pattern.name}</strong></div><button type="button" onClick={reset}>Reset</button></header>
           <div class="sds-owned-button__controls"><section class="sds-button-pattern__controls">
             <h4>Preview options</h4>
             {pattern.presets && <div class="sds-pattern-presets" aria-label={`${pattern.name} color presets`}>

@@ -311,7 +311,8 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
      resetting it, opening a card near the bottom of Overview lands halfway down
      the editor and hides the live-preview header and component title. */
   useEffect(() => {
-    mainRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+    const main = mainRef.current;
+    if (typeof main?.scrollTo === 'function') main.scrollTo({ top: 0, behavior: 'auto' });
   }, [active, openId]);
 
   return (

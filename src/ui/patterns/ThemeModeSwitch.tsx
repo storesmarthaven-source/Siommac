@@ -39,7 +39,7 @@ export function ThemeModeSwitch({
       aria-busy={pending || undefined}
       disabled={disabled || pending}
       data-theme-mode={theme}
-      onClick={() => onChange(dark ? 'light' : 'dark')}
+      onClick={() => { if (!disabled && !pending) onChange(dark ? 'light' : 'dark'); }}
     >
       <span class="ui-theme-mode-switch__moon" aria-hidden="true"><LucideIcon name="Moon" size={19} strokeWidth={2} /></span>
       <span class="ui-theme-mode-switch__sun" aria-hidden="true"><LucideIcon name="Sun" size={20} strokeWidth={2} /></span>

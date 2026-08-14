@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "0fd235dce75deb3035b2db3a192cf1c07266d697",
+    "head": "47108ffab601c5644fbc24b58e08353396cc4ef1",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "c3bdaca3a71ec5d95e85c1e8",
+    "fingerprint": "a90bee77c59ee41fca583f63",
     "indexedFiles": 1871
   },
   "summary": {
@@ -9198,7 +9198,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 50,
-      "hash": "78dfd96210970315"
+      "hash": "92a5e6087b6afe45"
     },
     {
       "path": "src/ui/people/Avatar.test.tsx",
@@ -9478,7 +9478,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 185,
-      "hash": "f0b584be64eda161"
+      "hash": "13e364107b183caf"
     },
     {
       "path": "src/ui/studio/FamilyBrowser.tsx",
@@ -9512,8 +9512,8 @@
       "path": "src/ui/studio/Studio.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 460,
-      "hash": "f114406b1bce11aa"
+      "lines": 461,
+      "hash": "1848b296f9b7a76b"
     },
     {
       "path": "src/ui/studio/StudioPublishBar.tsx",
@@ -9569,7 +9569,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 480,
-      "hash": "1565300c9033644f"
+      "hash": "1c54bd659088cb9a"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -10590,8 +10590,8 @@
       "path": "types/designSystem.ts",
       "module": "platform",
       "role": "shared-types",
-      "lines": 141,
-      "hash": "05d5cab8ba986714"
+      "lines": 143,
+      "hash": "85812377bdcaf12e"
     },
     {
       "path": "types/emailTemplates.ts",
@@ -162160,7 +162160,7 @@
       "name": "configurationToOverrides",
       "kind": "function",
       "file": "types/designSystem.ts",
-      "line": 138,
+      "line": 140,
       "module": "platform",
       "exported": true,
       "container": "",

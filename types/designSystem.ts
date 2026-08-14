@@ -113,7 +113,9 @@ export function sanitizeDesignSystemConfiguration(value: unknown): {
   const themeTokens = cleanTokenMap(theme.tokens, errors, 'theme.tokens');
   const savedColors = cleanSavedColors(theme.savedColors, errors);
   const buttonOverrides = cleanTokenMap(button.overrides, errors, 'recipes.button.overrides');
-  const aiActionOverrides = cleanTokenMap(aiAction.overrides, errors, 'recipes.aiAction.overrides');
+  const aiActionOverrides = aiAction.overrides === undefined
+    ? {}
+    : cleanTokenMap(aiAction.overrides, errors, 'recipes.aiAction.overrides');
   for (const name of Object.keys(buttonOverrides)) {
     if (!name.startsWith('--ui-button-') && !name.startsWith('--ui-toggle-')) {
       errors.push(`recipes.button.overrides.${name} is not owned by Button.`);

@@ -135,9 +135,9 @@ describe('Buttons family — Studio', () => {
     expect(container.querySelector('.sds-card--family .sds-card__specimen')).toBeNull();
     expect(container.querySelectorAll('.sds-card__preview .sds-card__art').length).toBe(container.querySelectorAll('.sds-card').length);
     const previewImages = [...container.querySelectorAll<HTMLImageElement>('.sds-card__preview img')];
-    expect(previewImages).toHaveLength(2);
+    expect(previewImages).toHaveLength(1);
     expect(previewImages.map(image => image.closest('.sds-card')?.querySelector('.sds-card__foot strong')?.textContent))
-      .toEqual(expect.arrayContaining(['FileInput', 'ColorPicker']));
+      .toEqual(['FileInput']);
     expect(container.querySelector('.sds-card__preview .ui-btn')).toBeNull();
     const navRows = [...container.querySelectorAll('.sds-nav__item--sub')]
       .map(el => el.textContent);
@@ -226,7 +226,7 @@ describe('Buttons family — Studio', () => {
     expect(container.querySelectorAll('.sds-button-use article')).toHaveLength(3);
     expect(getByRole('complementary', { name: 'AI Action settings' })).toBeTruthy();
     expect(queryByRole('button', { name: 'Choose AI icon' })).toBeNull();
-    fireEvent.change(getByRole('combobox', { name: 'Icon style' }), { target: { value: 'lucide' } });
+    fireEvent.input(getByRole('combobox', { name: 'Icon style' }), { target: { value: 'lucide' } });
     fireEvent.click(getByRole('button', { name: 'Choose AI icon' }));
     fireEvent.click(getByRole('button', { name: 'Use recommended BrainCircuit' }));
     expect(container.querySelector('.sds-owned-button__stage .ui-ai-action-button svg')).not.toBeNull();
@@ -251,8 +251,8 @@ describe('Buttons family — Studio', () => {
     fireEvent.click(getByRole('button', { name: /Special Treatments/ }));
 
     expect(getByRole('complementary', { name: 'Special Treatments settings' })).toBeTruthy();
-    fireEvent.click(getByRole('button', { name: 'Choose Accent color' }));
-    fireEvent.click(getByRole('button', { name: 'Set color to #7c3aed' }));
+    fireEvent.click(getByRole('button', { name: 'Choose Base color' }));
+    fireEvent.input(getByRole('textbox', { name: 'Hex color' }), { target: { value: '#7c3aed' } });
     expect(container.querySelector<HTMLElement>('.sds-credits-preview')?.style.cssText).toContain('#7c3aed');
     expect(JSON.stringify(findComponent('button')?.props?.variant)).not.toContain('credits');
   });
@@ -341,7 +341,7 @@ describe('Buttons family — Studio', () => {
     openButtonMember(container, 'Dropdown Button');
 
     fireEvent.click(getByRole('button', { name: 'Choose Icon color' }));
-    fireEvent.click(getByRole('button', { name: 'Set color to #dc2626' }));
+    fireEvent.input(getByRole('textbox', { name: 'Hex color' }), { target: { value: '#dc2626' } });
     expect(getByRole('button', { name: 'Choose Icon color' }).textContent).toContain('#dc2626');
 
     fireEvent.click(getByRole('radio', { name: 'Select Primary variant' }));
@@ -399,7 +399,7 @@ describe('Buttons family — Studio', () => {
     fireEvent.click(getByRole('button', { name: 'Choose Background color' }));
 
     expect(getByRole('group', { name: 'Background color picker' })).toBeTruthy();
-    fireEvent.click(getByRole('button', { name: 'Set color to #dc2626' }));
+    fireEvent.input(getByRole('textbox', { name: 'Hex color' }), { target: { value: '#dc2626' } });
     expect(getByRole('button', { name: 'Choose Background color' }).textContent).toContain('#dc2626');
   });
 
@@ -420,7 +420,7 @@ describe('Buttons family — Studio', () => {
     fireEvent.click(getByRole('button', { name: 'Use recommended ArrowLeft' }));
     fireEvent.click(getByRole('radio', { name: 'Filled circle' }));
     fireEvent.click(getByRole('button', { name: 'Choose Icon color' }));
-    fireEvent.click(getByRole('button', { name: 'Set color to #dc2626' }));
+    fireEvent.input(getByRole('textbox', { name: 'Hex color' }), { target: { value: '#dc2626' } });
     expect(container.querySelector('.sds-button-preview__single .ui-btn-label')?.textContent).toBe('Cancel');
     expect(container.querySelector('.sds-button-preview__single .sds-preview-icon--filled-circle')).not.toBeNull();
     const previewIcon = container.querySelector<HTMLElement>('.sds-button-preview__single .sds-preview-icon');
@@ -465,7 +465,7 @@ describe('Buttons family — Studio', () => {
     expect((getByRole('combobox', { name: 'Button height unit' }) as HTMLSelectElement).value).toBe('px');
     fireEvent.input(primaryHeight, { target: { value: '44' } });
 
-    const scope = container.querySelector<HTMLElement>('.sds-button-preview[data-ui-preview-scope]');
+    const scope = container.querySelector<HTMLElement>('.sds-button-editor__main[data-ui-preview-scope]');
     expect(scope?.style.getPropertyValue('--ui-button-primary-height-md')).toBe('44px');
     expect(scope?.style.getPropertyValue('--ui-button-secondary-height-md')).toBe('');
 

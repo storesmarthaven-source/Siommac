@@ -14405,7 +14405,7 @@ UNSAFE_VALUE	variable	platform	false		types/designSystem.ts	60
 cleanTokenMap	function	platform	false		types/designSystem.ts	62	
 cleanSavedColors	function	platform	false		types/designSystem.ts	82	
 sanitizeDesignSystemConfiguration	function	platform	true		types/designSystem.ts	100	
-configurationToOverrides	function	platform	true		types/designSystem.ts	138	
+configurationToOverrides	function	platform	true		types/designSystem.ts	140	
 EmailTemplateFamily	type	platform	true		types/emailTemplates.ts	1	
 EmailTemplateStatus	type	platform	true		types/emailTemplates.ts	2	
 EmailApprovalState	type	platform	true		types/emailTemplates.ts	10	
