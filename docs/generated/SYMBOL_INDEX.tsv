@@ -13320,11 +13320,12 @@ Swatch	function	platform	false	component	src/ui/studio/BrandOverview.tsx	62
 BrandOverview	function	platform	true	component	src/ui/studio/BrandOverview.tsx	76	
 applyDirection	function	platform	false		src/ui/studio/BrandOverview.tsx	104	BrandOverview
 publish	function	platform	false		src/ui/studio/BrandOverview.tsx	110	BrandOverview
-ButtonBrowserProps	interface	platform	true		src/ui/studio/ButtonBrowser.tsx	11	
-PatternControl	function	platform	false	component	src/ui/studio/ButtonBrowser.tsx	19	
-ButtonPatternEditor	function	platform	false	component	src/ui/studio/ButtonBrowser.tsx	49	
-set	function	platform	false		src/ui/studio/ButtonBrowser.tsx	51	ButtonPatternEditor
-ButtonBrowser	function	platform	true	component	src/ui/studio/ButtonBrowser.tsx	82	
+ButtonBrowserProps	interface	platform	true		src/ui/studio/ButtonBrowser.tsx	12	
+PatternControl	function	platform	false	component	src/ui/studio/ButtonBrowser.tsx	20	
+ButtonPatternEditor	function	platform	false	component	src/ui/studio/ButtonBrowser.tsx	50	
+set	function	platform	false		src/ui/studio/ButtonBrowser.tsx	52	ButtonPatternEditor
+ButtonBrowser	function	platform	true	component	src/ui/studio/ButtonBrowser.tsx	83	
+buttonFamilyPreviewProps	function	platform	true		src/ui/studio/buttonFamilyPreview.ts	9	
 MEMBERS	variable	platform	false	component,test	src/ui/studio/family.test.tsx	26	
 openButtonBrowser	function	platform	false	test	src/ui/studio/family.test.tsx	29	
 openButtons	function	platform	false	test	src/ui/studio/family.test.tsx	36	
@@ -13348,48 +13349,55 @@ friendly	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	46
 friendlyGroup	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	50	
 belongs	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	57	
 friendlyError	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	64	
-StudioColorControl	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	70	
-TokenControl	function	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	107	
-ICON_RECOMMENDATIONS	object	platform	false		src/ui/studio/RecipeStyleEditor.tsx	137	
-IconPicker	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	146	
-choose	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	168	IconPicker
-RecipeStyleEditor	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	197	
-previewPropsFor	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	211	RecipeStyleEditor
-setPreviewProp	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	217	RecipeStyleEditor
-act	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	224	RecipeStyleEditor
-StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	44	
-SectionId	type	platform	false		src/ui/studio/Studio.tsx	53	
-NavItem	interface	platform	false		src/ui/studio/Studio.tsx	59	
-NavGroup	interface	platform	false		src/ui/studio/Studio.tsx	60	
-NAV	array	platform	false		src/ui/studio/Studio.tsx	62	
-NavComponentRow	type	platform	false		src/ui/studio/Studio.tsx	91	
-COMPONENT_ROWS	variable	platform	false	component	src/ui/studio/Studio.tsx	95	
-APP_SCENE	object	platform	false		src/ui/studio/Studio.tsx	106	
-SECTION_COPY	object	platform	false		src/ui/studio/Studio.tsx	112	
-variantCount	function	platform	false		src/ui/studio/Studio.tsx	132	
-ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	138	
-FamilyCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	178	
-CatalogueNodeCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	198	
-Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	205	
-PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	261	
-Studio	function	platform	true	component	src/ui/studio/Studio.tsx	270	
-CONTROL_GROUPS	array	platform	false		src/ui/studio/Workbench.tsx	42	
-FRIENDLY_VALUES	object	platform	false		src/ui/studio/Workbench.tsx	49	
-friendlyValue	function	platform	false		src/ui/studio/Workbench.tsx	54	
-groupControls	function	platform	false		src/ui/studio/Workbench.tsx	60	
-Control	function	platform	false	component	src/ui/studio/Workbench.tsx	80	
-WorkbenchProps	interface	platform	true		src/ui/studio/Workbench.tsx	157	
-CompoundButtonEditorProps	interface	platform	false		src/ui/studio/Workbench.tsx	167	
-CompoundButtonEditor	function	platform	false	component	src/ui/studio/Workbench.tsx	181	
-previewPropsFor	function	platform	false		src/ui/studio/Workbench.tsx	191	CompoundButtonEditor
-setPreviewProp	function	platform	false		src/ui/studio/Workbench.tsx	199	CompoundButtonEditor
-reset	function	platform	false		src/ui/studio/Workbench.tsx	209	CompoundButtonEditor
-Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	326	
-setValues	function	platform	false		src/ui/studio/Workbench.tsx	340	Workbench
-set	function	platform	false		src/ui/studio/Workbench.tsx	343	Workbench
-specimen	function	platform	false		src/ui/studio/Workbench.tsx	356	Workbench
-Block	function	platform	false	component	src/ui/studio/Workbench.tsx	514	
-OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	532	
+SIZE_FALLBACKS	object	platform	false		src/ui/studio/RecipeStyleEditor.tsx	70	
+SizeUnit	type	platform	false		src/ui/studio/RecipeStyleEditor.tsx	81	
+SizeValue	interface	platform	false		src/ui/studio/RecipeStyleEditor.tsx	82	
+cssVariableName	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	84	
+resolveThemeValue	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	88	
+parseSizeValue	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	103	
+readableThemeValue	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	110	
+StudioColorControl	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	116	
+TokenControl	function	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	153	
+ICON_RECOMMENDATIONS	object	platform	false		src/ui/studio/RecipeStyleEditor.tsx	201	
+IconPicker	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	210	
+choose	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	232	IconPicker
+RecipeStyleEditor	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	261	
+previewPropsFor	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	275	RecipeStyleEditor
+setPreviewProp	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	281	RecipeStyleEditor
+act	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	288	RecipeStyleEditor
+StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	45	
+SectionId	type	platform	false		src/ui/studio/Studio.tsx	54	
+NavItem	interface	platform	false		src/ui/studio/Studio.tsx	60	
+NavGroup	interface	platform	false		src/ui/studio/Studio.tsx	61	
+NAV	array	platform	false		src/ui/studio/Studio.tsx	63	
+NavComponentRow	type	platform	false		src/ui/studio/Studio.tsx	92	
+COMPONENT_ROWS	variable	platform	false	component	src/ui/studio/Studio.tsx	96	
+APP_SCENE	object	platform	false		src/ui/studio/Studio.tsx	107	
+SECTION_COPY	object	platform	false		src/ui/studio/Studio.tsx	113	
+variantCount	function	platform	false		src/ui/studio/Studio.tsx	133	
+ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	139	
+FamilyCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	179	
+CatalogueNodeCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	199	
+Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	206	
+PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	262	
+Studio	function	platform	true	component	src/ui/studio/Studio.tsx	271	
+CONTROL_GROUPS	array	platform	false		src/ui/studio/Workbench.tsx	43	
+FRIENDLY_VALUES	object	platform	false		src/ui/studio/Workbench.tsx	50	
+friendlyValue	function	platform	false		src/ui/studio/Workbench.tsx	55	
+groupControls	function	platform	false		src/ui/studio/Workbench.tsx	61	
+Control	function	platform	false	component	src/ui/studio/Workbench.tsx	81	
+WorkbenchProps	interface	platform	true		src/ui/studio/Workbench.tsx	158	
+CompoundButtonEditorProps	interface	platform	false		src/ui/studio/Workbench.tsx	168	
+CompoundButtonEditor	function	platform	false	component	src/ui/studio/Workbench.tsx	182	
+previewPropsFor	function	platform	false		src/ui/studio/Workbench.tsx	192	CompoundButtonEditor
+setPreviewProp	function	platform	false		src/ui/studio/Workbench.tsx	200	CompoundButtonEditor
+reset	function	platform	false		src/ui/studio/Workbench.tsx	210	CompoundButtonEditor
+Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	327	
+setValues	function	platform	false		src/ui/studio/Workbench.tsx	341	Workbench
+set	function	platform	false		src/ui/studio/Workbench.tsx	344	Workbench
+specimen	function	platform	false		src/ui/studio/Workbench.tsx	357	Workbench
+Block	function	platform	false	component	src/ui/studio/Workbench.tsx	510	
+OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	528	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	

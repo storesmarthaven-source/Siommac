@@ -135,6 +135,15 @@ describe('Buttons family — Studio', () => {
       .find(card => card.querySelector('.sds-button-browser__copy strong')?.textContent === 'Action Button');
     if (!actionCard) throw new Error('Expected the Action Button browser card');
     expect(actionCard.textContent).not.toContain('Save changes');
+    expect(actionCard.querySelector('.sds-button-browser__specimen')?.textContent).toContain('Button');
+    expect(actionCard.querySelector('.sds-button-browser__specimen .ui-btn svg')).toBeNull();
+
+    const splitCard = [...container.querySelectorAll<HTMLElement>('.sds-button-browser__card')]
+      .find(card => card.querySelector('.sds-button-browser__copy strong')?.textContent === 'Split Button');
+    if (!splitCard) throw new Error('Expected the Split Button browser card');
+    expect(splitCard.querySelector('.ui-split > .ui-btn:first-child')?.textContent).toContain('Split button');
+    expect(splitCard.querySelector('.ui-split > .ui-btn:first-child svg')).toBeNull();
+    expect(splitCard.querySelector('.sds-button-browser__canvas-label')?.textContent).toBe('Component preview');
     expect(container.querySelector('.sds-button-editor')).toBeNull();
   });
 
@@ -393,10 +402,14 @@ describe('Buttons family — Studio', () => {
 
     const primaryHeightTheme = getAllByLabelText('Use brand theme')[0];
     if (!primaryHeightTheme) throw new Error('Expected Primary height theme control');
+    expect(primaryHeightTheme.closest('.sds-edit-field')?.querySelector('.sds-edit-field__theme strong')?.textContent).toBe('40 px');
     fireEvent.click(primaryHeightTheme);
     const primaryHeight = container.querySelector<HTMLInputElement>('#style---ui-button-primary-height-md');
     if (!primaryHeight) throw new Error('Expected Primary height override input');
-    fireEvent.input(primaryHeight, { target: { value: '44px' } });
+    expect(primaryHeight.type).toBe('number');
+    expect(primaryHeight.value).toBe('40');
+    expect((getByRole('combobox', { name: 'Button height unit' }) as HTMLSelectElement).value).toBe('px');
+    fireEvent.input(primaryHeight, { target: { value: '44' } });
 
     const scope = container.querySelector<HTMLElement>('.sds-button-preview[data-ui-preview-scope]');
     expect(scope?.style.getPropertyValue('--ui-button-primary-height-md')).toBe('44px');

@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `74de5290cb3ab860fdff639c`
+Source fingerprint: `8c759379303f9ef55501b90e`
 
-Files: 442 | Symbols: 3878 | Widgets: 17 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 55 | DB objects: 327 | E2E suites: 0
+Files: 443 | Symbols: 3886 | Widgets: 17 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 55 | DB objects: 327 | E2E suites: 0
 
 ## Widgets and Tiles
 

@@ -1,12 +1,13 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  BUTTON_PATTERNS, COMPOUND_OF, defaultProps, findComponent,
+  BUTTON_PATTERNS, COMPOUND_OF, findComponent,
   type ButtonPattern, type ButtonPatternControl, type ButtonPatternValues,
   type ComponentDef, type ComponentFamily,
 } from '../registry';
 import { LucideIcon } from '../LucideIcon';
 import { IconPicker, StudioColorControl } from './RecipeStyleEditor';
+import { buttonFamilyPreviewProps } from './buttonFamilyPreview';
 
 export interface ButtonBrowserProps {
   family: ComponentFamily;
@@ -103,7 +104,10 @@ export function ButtonBrowser({ family, selectedPattern, onOpenComponent, onOpen
           {members.map(component => (
             <button type="button" class="sds-button-browser__card" key={component.id} onClick={() => onOpenComponent(component.id)}>
               <span class="sds-button-browser__badge">{COMPOUND_OF[component.id] ?? 'Canonical'}</span>
-              <div class="sds-button-browser__specimen">{component.render?.(defaultProps(component), 'default')}</div>
+              <div class="sds-button-browser__specimen">
+                <span class="sds-button-browser__canvas-label" aria-hidden="true">Component preview</span>
+                <span class="sds-button-browser__canvas-control">{component.render?.(buttonFamilyPreviewProps(component), 'default')}</span>
+              </div>
               <div class="sds-button-browser__copy"><strong>{component.name}</strong><p>{family.roles[component.id]}</p><span>Open editor <LucideIcon name="ArrowRight" size={14} /></span></div>
             </button>
           ))}
@@ -116,7 +120,10 @@ export function ButtonBrowser({ family, selectedPattern, onOpenComponent, onOpen
           {BUTTON_PATTERNS.map(pattern => (
             <button type="button" class="sds-button-browser__card sds-button-browser__card--pattern" key={pattern.id} onClick={() => onOpenPattern(pattern.id)}>
               <span class="sds-button-browser__badge">{pattern.badge}</span>
-              <div class="sds-button-browser__specimen">{pattern.preview()}</div>
+              <div class="sds-button-browser__specimen">
+                <span class="sds-button-browser__canvas-label" aria-hidden="true">Pattern preview</span>
+                <span class="sds-button-browser__canvas-control">{pattern.preview()}</span>
+              </div>
               <div class="sds-button-browser__copy"><strong>{pattern.name}</strong><p>{pattern.role}</p><span>View pattern <LucideIcon name="ArrowRight" size={14} /></span></div>
             </button>
           ))}

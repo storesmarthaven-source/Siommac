@@ -67,6 +67,52 @@ function friendlyError(error: string): string {
     : error;
 }
 
+const SIZE_FALLBACKS: Readonly<Record<string, string>> = {
+  '--ui-button-height-md': '40px',
+  '--ui-button-pad-x-md': '14px',
+  '--ui-button-radius': '8px',
+  '--ui-button-border-width': '1px',
+  '--ui-button-gap': '8px',
+  '--ui-button-icon-size': '16px',
+  '--ui-button-font-size-md': '13px',
+  '--ui-button-focus-ring-width': '3px',
+};
+
+type SizeUnit = 'px' | 'rem' | 'em' | '%';
+interface SizeValue { amount: string; unit: SizeUnit }
+
+function cssVariableName(value: string): string | undefined {
+  return /^var\(\s*(--[^,\s)]+)(?:\s*,[^)]*)?\s*\)$/.exec(value.trim())?.[1];
+}
+
+function resolveThemeValue(value: string, studio: GalleryDraft): string {
+  let resolved = value;
+  const visited = new Set<string>();
+
+  for (let depth = 0; depth < 6; depth += 1) {
+    const token = cssVariableName(resolved);
+    if (!token || visited.has(token)) break;
+    visited.add(token);
+    const next = studio.read(token);
+    resolved = next.length > 0 && next !== resolved ? next : (SIZE_FALLBACKS[token] ?? resolved);
+  }
+
+  return resolved;
+}
+
+function parseSizeValue(value: string): SizeValue {
+  const match = /^(-?\d*\.?\d+)\s*(px|rem|em|%)$/.exec(value.trim());
+  return match
+    ? { amount: match[1] ?? '0', unit: (match[2] ?? 'px') as SizeUnit }
+    : { amount: '0', unit: 'px' };
+}
+
+function readableThemeValue(value: string, kind: StyleControl['kind']): string {
+  if (kind !== 'size') return value;
+  const size = parseSizeValue(value);
+  return `${size.amount} ${size.unit}`;
+}
+
 export function StudioColorControl({ id, label, value, onChange }: { id: string; label: string; value: string; onChange: (value: string) => void }): VNode {
   const [pickerOpen, setPickerOpen] = useState(false);
   const displayColor = /^#[0-9a-f]{6}$/i.test(value) ? value : '#000000';
@@ -107,8 +153,10 @@ export function StudioColorControl({ id, label, value, onChange }: { id: string;
 function TokenControl({ control, studio }: { control: StyleControl; studio: GalleryDraft }): VNode {
   const custom = Object.prototype.hasOwnProperty.call(studio.values, control.name);
   const read = studio.read(control.name);
-  const value = read.length > 0 ? read : (control.linkedTo ?? '');
+  const linkedValue = resolveThemeValue(control.linkedTo ?? read, studio);
+  const value = custom ? read : linkedValue;
   const isColor = control.kind.startsWith('color');
+  const size = parseSizeValue(value);
 
   return (
     <div class="sds-edit-field">
@@ -117,7 +165,7 @@ function TokenControl({ control, studio }: { control: StyleControl; studio: Gall
         <label class="sds-theme-switch">
           <input type="checkbox" checked={!custom} onChange={() => {
             if (custom) studio.link(control.name, control.linkedTo ?? 'initial');
-            else studio.set(control.name, value.length > 0 ? value : (control.linkedTo ?? 'initial'));
+            else studio.set(control.name, linkedValue.length > 0 ? linkedValue : 'initial');
           }} />
           <span>Use brand theme</span>
         </label>
@@ -125,10 +173,26 @@ function TokenControl({ control, studio }: { control: StyleControl; studio: Gall
       {custom ? (
         isColor
           ? <StudioColorControl id={`style-${control.name}`} label={control.label} value={value} onChange={next => studio.set(control.name, next)} />
+          : control.kind === 'size'
+            ? <div class="sds-edit-field__control sds-size-control">
+                <input id={`style-${control.name}`} type="number" min="0" step="0.5" value={size.amount}
+                  aria-label={`${control.label} value`}
+                  onInput={event => studio.set(control.name, `${(event.target as HTMLInputElement).value}${size.unit}`)} />
+                <select aria-label={`${control.label} unit`} value={size.unit}
+                  onChange={event => studio.set(control.name, `${size.amount}${(event.target as HTMLSelectElement).value}`)}>
+                  <option value="px">px</option><option value="rem">rem</option><option value="em">em</option><option value="%">%</option>
+                </select>
+              </div>
           : <div class="sds-edit-field__control"><input id={`style-${control.name}`} type="text" value={value}
             onInput={event => studio.set(control.name, (event.target as HTMLInputElement).value)} /></div>
       ) : (
-        <div class="sds-edit-field__theme"><span>From theme</span><strong>{value.startsWith('var(') ? 'Brand default' : (value.length > 0 ? value : 'Brand default')}</strong></div>
+        <div class="sds-edit-field__theme">
+          <span>From brand theme</span>
+          <strong class={isColor ? 'is-color' : ''}>
+            {isColor && value.length > 0 ? <i aria-hidden="true" style={{ backgroundColor: value }} /> : null}
+            <em>{value.length > 0 ? readableThemeValue(value, control.kind) : 'Brand default'}</em>
+          </strong>
+        </div>
       )}
     </div>
   );

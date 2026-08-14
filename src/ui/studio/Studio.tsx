@@ -40,6 +40,7 @@ import { useGalleryDraft } from '../gallery/galleryStore';
 import { FoundationsPanel } from '../gallery/FoundationsPanel';
 import { BrandThemePanel } from '../gallery/BrandThemePanel';
 import './studio.css';
+import { buttonFamilyPreviewProps } from './buttonFamilyPreview';
 
 export interface StudioProps {
   onExit?: () => void;
@@ -185,7 +186,7 @@ function FamilyCard(
     <button type="button" class="sds-card sds-card--open sds-card--family"
       onClick={() => onOpen(family.id)}>
       <div class="sds-card__preview">
-        <div class="sds-card__specimen">{lead?.render?.(defaultProps(lead), 'default')}</div>
+        <div class="sds-card__specimen">{lead?.render?.(buttonFamilyPreviewProps(lead), 'default')}</div>
       </div>
       <div class="sds-card__foot">
         <strong>{family.name}</strong>
