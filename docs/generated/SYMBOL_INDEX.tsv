@@ -13324,6 +13324,13 @@ ButtonPatternEditor	function	platform	false	component	src/ui/studio/ButtonBrowse
 set	function	platform	false		src/ui/studio/ButtonBrowser.tsx	52	ButtonPatternEditor
 ButtonBrowser	function	platform	true	component	src/ui/studio/ButtonBrowser.tsx	83	
 buttonFamilyPreviewProps	function	platform	true		src/ui/studio/buttonFamilyPreview.ts	9	
+line	variable	platform	false		src/ui/studio/componentThumbnail.ts	3	
+ink	variable	platform	false		src/ui/studio/componentThumbnail.ts	4	
+navy	variable	platform	false		src/ui/studio/componentThumbnail.ts	5	
+red	variable	platform	false		src/ui/studio/componentThumbnail.ts	6	
+field	function	platform	false		src/ui/studio/componentThumbnail.ts	8	
+artFor	function	platform	false		src/ui/studio/componentThumbnail.ts	12	
+componentThumbnailSrc	function	platform	true		src/ui/studio/componentThumbnail.ts	53	
 MEMBERS	variable	platform	false	component,test	src/ui/studio/family.test.tsx	26	
 openButtonBrowser	function	platform	false	test	src/ui/studio/family.test.tsx	29	
 openButtons	function	platform	false	test	src/ui/studio/family.test.tsx	36	
@@ -13372,11 +13379,11 @@ APP_SCENE	object	platform	false		src/ui/studio/Studio.tsx	108
 SECTION_COPY	object	platform	false		src/ui/studio/Studio.tsx	114	
 variantCount	function	platform	false		src/ui/studio/Studio.tsx	134	
 ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	140	
-FamilyCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	180	
-CatalogueNodeCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	200	
-Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	207	
-PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	263	
-Studio	function	platform	true	component	src/ui/studio/Studio.tsx	272	
+FamilyCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	175	
+CatalogueNodeCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	193	
+Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	200	
+PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	256	
+Studio	function	platform	true	component	src/ui/studio/Studio.tsx	265	
 friendlyError	function	platform	false		src/ui/studio/StudioPublishBar.tsx	7	
 StudioPublishBar	function	platform	true	component	src/ui/studio/StudioPublishBar.tsx	16	
 act	function	platform	false		src/ui/studio/StudioPublishBar.tsx	29	StudioPublishBar

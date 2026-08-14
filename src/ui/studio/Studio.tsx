@@ -14,8 +14,8 @@
  *  1. The catalogue is READ FROM THE REGISTRY. There is no second list here. A
  *     component appears because a definition exists, never because someone
  *     remembered to add a card — the whole reason the registry is authoritative.
- *     The card previews are LIVE `def.render()` calls, so unlike the reference's
- *     static thumbnails they cannot go stale.
+ *     Cards use purpose-built static catalogue art for fast visual scanning;
+ *     live canonical renders belong to the focused editors.
  *
  *  2. `patterns` are NOT kit gaps. PayrollApprovalTable belongs to payroll and
  *     DayOneGateCard to onboarding; they are built FROM primitives by the module
@@ -32,7 +32,7 @@ import { AppPreview, type Scene } from './AppPreview';
 import { PreviewScope } from './PreviewScope';
 import {
   COMPONENT_DEFS, componentsByCategory, registryTotals, findComponent,
-  isBuilt, defaultProps, familyOfComponent, findFamily, findButtonPattern,
+  isBuilt, familyOfComponent, findFamily, findButtonPattern,
   type ComponentDef, type ComponentFamily, type CatalogueNode,
 } from '../registry';
 import { LucideIcon, type LucideName } from '../LucideIcon';
@@ -40,8 +40,8 @@ import { useGalleryDraft } from '../gallery/galleryStore';
 import { FoundationsPanel } from '../gallery/FoundationsPanel';
 import { BrandThemePanel } from '../gallery/BrandThemePanel';
 import './studio.css';
-import { buttonFamilyPreviewProps } from './buttonFamilyPreview';
 import { StudioPublishBar } from './StudioPublishBar';
+import { componentThumbnailSrc } from './componentThumbnail';
 
 export interface StudioProps {
   onExit?: () => void;
@@ -147,12 +147,8 @@ function ComponentCard({ def, onOpen }: { def: ComponentDef; onOpen?: (id: strin
   const body = (
     <>
       <div class="sds-card__preview">
-        {built && def.render
-          /* A LIVE canonical render, not a screenshot — it cannot go stale. */
-          ? <div class="sds-card__specimen">{def.render(defaultProps(def), 'default')}</div>
-          : <span class="sds-card__missing">
-              {def.category === 'patterns' ? 'Owned by its module' : 'Not built yet'}
-            </span>}
+        <img class="sds-card__image" src={componentThumbnailSrc(def.id, def.category, built)} alt="" loading="lazy" decoding="async" />
+        {!built && <span class="sds-card__missing">{def.category === 'patterns' ? 'Owned by its module' : 'Planned'}</span>}
       </div>
       <div class="sds-card__foot">
         <strong>{def.name}</strong>
@@ -166,28 +162,25 @@ function ComponentCard({ def, onOpen }: { def: ComponentDef; onOpen?: (id: strin
 }
 
 /**
- * A family's catalogue card — one entry, one specimen.
+ * A family's catalogue card — one entry, one thumbnail.
  *
  * The catalogue answers "what is in the kit", so a family reads as ONE thing
- * here, exactly like every other card: a single specimen and a caption saying
+ * here, exactly like every other card: a single image and a caption saying
  * how many types it holds. Previewing all three turned one card into a stacked
  * list and broke the grid's rhythm — the family browser is the place to compare
  * real members with governed usage patterns.
  *
- * The specimen is the default member; selecting the card opens the browser
- * before any focused editor.
+ * Selecting the card opens the browser before any focused editor.
  */
 function FamilyCard(
   { family, members, onOpen }:
   { family: ComponentFamily; members: ComponentDef[]; onOpen: (id: string) => void },
 ): VNode {
-  const lead = members.find(m => m.id === family.defaultComponentId) ?? members[0];
-
   return (
     <button type="button" class="sds-card sds-card--open sds-card--family"
       onClick={() => onOpen(family.id)}>
       <div class="sds-card__preview">
-        <div class="sds-card__specimen">{lead?.render?.(buttonFamilyPreviewProps(lead), 'default')}</div>
+        <img class="sds-card__image" src={componentThumbnailSrc(family.id, 'family')} alt="" loading="lazy" decoding="async" />
       </div>
       <div class="sds-card__foot">
         <strong>{family.name}</strong>
@@ -215,8 +208,8 @@ function Catalogue({ onOpen }: { onOpen: (id: string) => void }): VNode {
         <h1><strong>SIOMAC</strong> Design System</h1>
         <p>
           {t.canonical + t.beta} canonical components built on semantic tokens and CSS recipes,
-          with {t.missingPrimitives} primitive gaps recorded honestly. Every card below is a live
-          render of the real component — change its recipe and this page changes with it.
+          with {t.missingPrimitives} primitive gaps recorded honestly. The catalogue uses clear
+          visual thumbnails; open a component to work with its live canonical preview.
         </p>
         <button type="button" class="sds-hero__cta"
           onClick={() => document.querySelector('.sds-sec--first')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>

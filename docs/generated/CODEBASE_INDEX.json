@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "d4c6c9ddc0205ca856a2f890e945e6e5ebc3fb1b",
+    "head": "ac1b73a070307c6a0daee4b4bda036f473ff75ae",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "55823c75947987c8acaeb4b5",
-    "indexedFiles": 1861
+    "fingerprint": "ff86a5b722118782827014a9",
+    "indexedFiles": 1862
   },
   "summary": {
-    "files": 1506,
-    "symbols": 14909,
+    "files": 1507,
+    "symbols": 14916,
     "widgets": 68,
     "routes": 983,
     "routeDefinitions": 984,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 444,
-        "symbols": 3885,
+        "files": 445,
+        "symbols": 3892,
         "widgets": 17,
         "routes": 38,
         "routeDefinitions": 53,
@@ -9449,8 +9449,8 @@
       "path": "src/ui/studio/Studio.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 426,
-      "hash": "4c0cf0bd5e3e5bac"
+      "lines": 419,
+      "hash": "976a8a15ddf89ba1"
     },
     {
       "path": "src/ui/studio/StudioPublishBar.tsx",
@@ -9488,6 +9488,13 @@
       "hash": "dfaf54b25f44d2f0"
     },
     {
+      "path": "src/ui/studio/componentThumbnail.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 58,
+      "hash": "069876f6a4e355bf"
+    },
+    {
       "path": "src/ui/studio/designSystemConfig.test.ts",
       "module": "platform",
       "role": "frontend",
@@ -9498,8 +9505,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 431,
-      "hash": "8e800cb90415690b"
+      "lines": 433,
+      "hash": "989b8ebc22f17fe4"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -150207,6 +150214,76 @@
       "tags": []
     },
     {
+      "name": "line",
+      "kind": "variable",
+      "file": "src/ui/studio/componentThumbnail.ts",
+      "line": 3,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ink",
+      "kind": "variable",
+      "file": "src/ui/studio/componentThumbnail.ts",
+      "line": 4,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "navy",
+      "kind": "variable",
+      "file": "src/ui/studio/componentThumbnail.ts",
+      "line": 5,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "red",
+      "kind": "variable",
+      "file": "src/ui/studio/componentThumbnail.ts",
+      "line": 6,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "field",
+      "kind": "function",
+      "file": "src/ui/studio/componentThumbnail.ts",
+      "line": 8,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "artFor",
+      "kind": "function",
+      "file": "src/ui/studio/componentThumbnail.ts",
+      "line": 12,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "componentThumbnailSrc",
+      "kind": "function",
+      "file": "src/ui/studio/componentThumbnail.ts",
+      "line": 53,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "MEMBERS",
       "kind": "variable",
       "file": "src/ui/studio/family.test.tsx",
@@ -150721,7 +150798,7 @@
       "name": "FamilyCard",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 180,
+      "line": 175,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150734,7 +150811,7 @@
       "name": "CatalogueNodeCard",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 200,
+      "line": 193,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150747,7 +150824,7 @@
       "name": "Catalogue",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 207,
+      "line": 200,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150759,7 +150836,7 @@
       "name": "PhasePlaceholder",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 263,
+      "line": 256,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150771,7 +150848,7 @@
       "name": "Studio",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 272,
+      "line": 265,
       "module": "platform",
       "exported": true,
       "container": "",
