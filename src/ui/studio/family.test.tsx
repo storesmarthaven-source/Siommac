@@ -173,6 +173,16 @@ describe('Buttons family — Studio', () => {
     expect(cardNamed('Checkbox')?.querySelector('.sds-thumb-choice--check .is-on')).toBeNull();
   });
 
+  it('keeps the Checkbox application example in a canonical vertical group', () => {
+    const { container, getByRole } = render(<Studio />);
+    fireEvent.click(getByRole('button', { name: 'Checkbox', exact: true }));
+
+    const specimen = container.querySelector('.sds-use-context__spec');
+    expect(specimen?.querySelector('[role="group"][aria-label="Modules"]')).toBeTruthy();
+    expect(specimen?.querySelectorAll('.ui-choice--checkbox')).toHaveLength(4);
+    expect(specimen?.querySelector('.ui-choice-group--inline')).toBeNull();
+  });
+
   it('opens a visual browser before any Button editor', () => {
     const { container, getByRole } = render(<Studio />);
 

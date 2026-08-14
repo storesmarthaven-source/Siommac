@@ -615,7 +615,8 @@ function UsageSpecimens({ def }: { def: ComponentDef }): VNode {
             ? `sds-pattern-grid${def.examples.length === 2 ? ' sds-pattern-grid--two' : ''}`
             : 'sds-use-context'}>
             {def.examples.map(example => <article key={example.id}>
-              <span class="ctx-kicker">{example.title}</span><div>{example.render()}</div>
+              <span class="ctx-kicker">{example.title}</span>
+              <div class="sds-use-context__spec">{example.render()}</div>
               {example.description && <small>{example.description}</small>}
             </article>)}
           </div>
