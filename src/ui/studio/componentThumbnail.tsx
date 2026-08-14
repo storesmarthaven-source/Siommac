@@ -2,6 +2,7 @@ import { type VNode } from 'preact';
 import { type ComponentCategory } from '../registry';
 import { LucideIcon } from '../LucideIcon';
 import { Breadcrumbs } from '../navigation/Breadcrumbs';
+import { ThemeModeSwitchArtwork } from '../patterns/ThemeModeSwitch';
 import fileUploadersPreview from './assets/file-uploaders.webp';
 
 type ThumbnailKind =
@@ -104,7 +105,7 @@ export function ComponentThumbnail({ id, built = true }: {
       </div>}
       {kind === 'otp' && <div class="sds-thumb-otp"><div>{['8', '2', '4', '', '', ''].map((value, index) => <i class={`${value ? 'is-filled' : ''}${index === 3 ? ' is-active' : ''}`.trim()} key={index}>{value}</i>)}</div></div>}
       {(['check', 'radio', 'switch'] as ThumbnailKind[]).includes(kind) && <ChoiceScene kind={kind as 'check' | 'radio' | 'switch'} />}
-      {kind === 'theme-switch' && <div class="sds-thumb-theme-switch"><LucideIcon name="Moon" size={19} /><i /><LucideIcon name="Sun" size={20} /></div>}
+      {kind === 'theme-switch' && <div class="ui-theme-mode-switch sds-thumb-theme-switch" data-theme-mode="light"><ThemeModeSwitchArtwork /></div>}
       {kind === 'people' && <div class="sds-thumb-people"><i>SJ</i><i>AD</i><i>PR</i><strong>+2</strong></div>}
       {kind === 'dialog' && <div class="sds-thumb-dialog"><strong>Confirm action</strong><span>This change will be recorded.</span><footer><i>Cancel</i><b>Confirm</b></footer></div>}
       {kind === 'drawer' && <div class="sds-thumb-drawer"><aside /><div><strong>Employee details</strong><span>Sarah James</span><span>Safety Officer</span><b>Active</b></div></div>}

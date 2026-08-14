@@ -12,6 +12,17 @@ describe('ThemeModeSwitch', () => {
     expect(onChange).toHaveBeenCalledWith('dark');
   });
 
+  it('uses one nine-part icon that morphs between sun and moon', () => {
+    const { container, rerender } = render(<ThemeModeSwitch theme="light" onChange={vi.fn()} />);
+    expect(container.querySelectorAll('.ui-theme-mode-switch__icon-part')).toHaveLength(9);
+    expect(container.querySelector('svg')).toBeNull();
+    expect(container.querySelector('.ui-theme-mode-switch')?.getAttribute('data-theme-mode')).toBe('light');
+
+    rerender(<ThemeModeSwitch theme="dark" onChange={vi.fn()} />);
+    expect(container.querySelector('.ui-theme-mode-switch')?.getAttribute('data-theme-mode')).toBe('dark');
+    expect(container.querySelectorAll('.ui-theme-mode-switch__icon-part')).toHaveLength(9);
+  });
+
   it('blocks interaction while persistence is pending', () => {
     const onChange = vi.fn();
     render(<ThemeModeSwitch theme="dark" onChange={onChange} pending />);

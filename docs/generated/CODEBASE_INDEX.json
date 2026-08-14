@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "02b95ddce949350f7c7e78ecceefc6957a93abee",
+    "head": "cd5ff63e4786828fffb324794e84267d84260491",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "0e17307840e4aa536a518621",
+    "fingerprint": "499211c62e060d6bf2d69906",
     "indexedFiles": 1871
   },
   "summary": {
     "files": 1516,
-    "symbols": 14986,
+    "symbols": 14987,
     "widgets": 71,
     "routes": 983,
     "routeDefinitions": 984,
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 454,
-        "symbols": 3962,
+        "symbols": 3963,
         "widgets": 18,
         "routes": 38,
         "routeDefinitions": 53,
@@ -9190,15 +9190,15 @@
       "path": "src/ui/patterns/ThemeModeSwitch.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 25,
-      "hash": "50726fe65ba6b30e"
+      "lines": 36,
+      "hash": "e54ac4f4726ec01a"
     },
     {
       "path": "src/ui/patterns/ThemeModeSwitch.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 50,
-      "hash": "92a5e6087b6afe45"
+      "lines": 59,
+      "hash": "e01cc8c409f29cd5"
     },
     {
       "path": "src/ui/people/Avatar.test.tsx",
@@ -9359,7 +9359,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 1049,
-      "hash": "8985e153fc5c5c35"
+      "hash": "c81ac63f732ca693"
     },
     {
       "path": "src/ui/registry/index.ts",
@@ -9554,8 +9554,8 @@
       "path": "src/ui/studio/componentThumbnail.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 131,
-      "hash": "463d4b5e61d452e7"
+      "lines": 132,
+      "hash": "3eb8872f267e70b7"
     },
     {
       "path": "src/ui/studio/designSystemConfig.test.ts",
@@ -147471,7 +147471,7 @@
       "name": "ThemeMode",
       "kind": "type",
       "file": "src/ui/patterns/ThemeModeSwitch.tsx",
-      "line": 5,
+      "line": 4,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147481,17 +147481,29 @@
       "name": "ThemeModeSwitchProps",
       "kind": "interface",
       "file": "src/ui/patterns/ThemeModeSwitch.tsx",
-      "line": 7,
+      "line": 6,
       "module": "platform",
       "exported": true,
       "container": "",
       "tags": []
     },
     {
+      "name": "ThemeModeSwitchArtwork",
+      "kind": "function",
+      "file": "src/ui/patterns/ThemeModeSwitch.tsx",
+      "line": 18,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "ThemeModeSwitch",
       "kind": "function",
       "file": "src/ui/patterns/ThemeModeSwitch.tsx",
-      "line": 19,
+      "line": 30,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150810,7 +150822,7 @@
       "name": "ThumbnailKind",
       "kind": "type",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 7,
+      "line": 8,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150820,7 +150832,7 @@
       "name": "kindFor",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 13,
+      "line": 14,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150830,7 +150842,7 @@
       "name": "FieldScene",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 47,
+      "line": 48,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150842,7 +150854,7 @@
       "name": "SelectScene",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 53,
+      "line": 54,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150854,7 +150866,7 @@
       "name": "ChoiceScene",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 67,
+      "line": 68,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150866,7 +150878,7 @@
       "name": "ColorPickerScene",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 71,
+      "line": 72,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150878,7 +150890,7 @@
       "name": "ComponentThumbnail",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 80,
+      "line": 81,
       "module": "platform",
       "exported": true,
       "container": "",

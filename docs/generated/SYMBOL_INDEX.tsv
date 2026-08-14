@@ -13054,9 +13054,10 @@ AiActionButton	function	platform	true	component	src/ui/patterns/AiActionButton.t
 NextActionIconTreatment	type	platform	true		src/ui/patterns/NextActionButton.tsx	7	
 NextActionButtonProps	interface	platform	true		src/ui/patterns/NextActionButton.tsx	9	
 NextActionButton	function	platform	true	component	src/ui/patterns/NextActionButton.tsx	29	
-ThemeMode	type	platform	true		src/ui/patterns/ThemeModeSwitch.tsx	5	
-ThemeModeSwitchProps	interface	platform	true		src/ui/patterns/ThemeModeSwitch.tsx	7	
-ThemeModeSwitch	function	platform	true	component	src/ui/patterns/ThemeModeSwitch.tsx	19	
+ThemeMode	type	platform	true		src/ui/patterns/ThemeModeSwitch.tsx	4	
+ThemeModeSwitchProps	interface	platform	true		src/ui/patterns/ThemeModeSwitch.tsx	6	
+ThemeModeSwitchArtwork	function	platform	true	component	src/ui/patterns/ThemeModeSwitch.tsx	18	
+ThemeModeSwitch	function	platform	true	component	src/ui/patterns/ThemeModeSwitch.tsx	30	
 AvatarVariant	type	platform	true		src/ui/people/Avatar.tsx	6	
 AvatarNamedSize	type	platform	true		src/ui/people/Avatar.tsx	7	
 AvatarSize	type	platform	true		src/ui/people/Avatar.tsx	8	
@@ -13375,13 +13376,13 @@ applyPreset	function	platform	false		src/ui/studio/ButtonBrowser.tsx	73	ButtonPa
 presetIsActive	function	platform	false		src/ui/studio/ButtonBrowser.tsx	86	ButtonPatternEditor
 ButtonBrowser	function	platform	true	component	src/ui/studio/ButtonBrowser.tsx	132	
 buttonFamilyPreviewProps	function	platform	true		src/ui/studio/buttonFamilyPreview.ts	9	
-ThumbnailKind	type	platform	false		src/ui/studio/componentThumbnail.tsx	7	
-kindFor	function	platform	false		src/ui/studio/componentThumbnail.tsx	13	
-FieldScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	47	
-SelectScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	53	
-ChoiceScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	67	
-ColorPickerScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	71	
-ComponentThumbnail	function	platform	true	component	src/ui/studio/componentThumbnail.tsx	80	
+ThumbnailKind	type	platform	false		src/ui/studio/componentThumbnail.tsx	8	
+kindFor	function	platform	false		src/ui/studio/componentThumbnail.tsx	14	
+FieldScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	48	
+SelectScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	54	
+ChoiceScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	68	
+ColorPickerScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	72	
+ComponentThumbnail	function	platform	true	component	src/ui/studio/componentThumbnail.tsx	81	
 MEMBERS	variable	platform	false	component,test	src/ui/studio/family.test.tsx	26	
 openButtonBrowser	function	platform	false	test	src/ui/studio/family.test.tsx	29	
 openButtons	function	platform	false	test	src/ui/studio/family.test.tsx	36	
