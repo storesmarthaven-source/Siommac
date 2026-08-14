@@ -83,6 +83,18 @@ const CHOICE_STYLE = [
   ] },
 ];
 
+const CHECKBOX_STYLE = [
+  { label: 'Checkbox', controls: [
+    { name: '--ui-checkbox-size',       label: 'Size', kind: 'size' as const },
+    { name: '--ui-checkbox-radius',     label: 'Corner radius', kind: 'size' as const },
+    { name: '--ui-checkbox-border',     label: 'Border', kind: 'color' as const },
+    { name: '--ui-checkbox-color',      label: 'Checked fill', kind: 'color' as const },
+    { name: '--ui-checkbox-focus-bg',   label: 'Focus ring', kind: 'color' as const },
+    { name: '--ui-choice-mark',         label: 'Mark', kind: 'color' as const },
+    { name: '--ui-choice-gap',          label: 'Label gap', kind: 'size' as const },
+  ] },
+];
+
 const CONTROL_STYLE = [
   { label: 'Control', controls: [
     { name: '--ui-control-md',           label: 'Height (md)', kind: 'size' as const },
@@ -121,7 +133,7 @@ export const checkboxDef: ComponentDef = {
     disabled:      { type: 'boolean', label: 'Disabled', default: false },
     readOnly:      { type: 'boolean', label: 'Read-only', default: false },
   },
-  style: CHOICE_STYLE,
+  style: CHECKBOX_STYLE,
   states: ['default', 'selected', 'hover', 'focus', 'disabled', 'error'],
   compare: ['default', 'selected', 'hover', 'focus', 'disabled', 'error'],
   a11y: {

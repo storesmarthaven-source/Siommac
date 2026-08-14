@@ -2,7 +2,7 @@
 
 # enterprise Module Map
 
-Source fingerprint: `80da9cd3bed649ff89d3c730`
+Source fingerprint: `5578b3f3eee96ba6f71bd42f`
 
 Files: 0 | Symbols: 0 | Widgets: 1 | Unique mounted endpoints: 0 | Route definitions: 0 mounted + 0 unmounted | API calls: 0 | DB objects: 0 | E2E suites: 0
 

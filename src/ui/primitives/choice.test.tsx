@@ -12,6 +12,13 @@ describe('choice controls', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it('renders the governed animated checkbox treatment without a decorative container', () => {
+    const { container } = render(<Checkbox checked onChange={vi.fn()} aria-label="Selection" />);
+    expect(container.querySelector('.ui-choice--checkbox')).toBeTruthy();
+    expect(container.querySelector('.ui-choice-box .ui-choice-mark')).toBeTruthy();
+    expect(container.querySelector('.checkbox-container')).toBeNull();
+  });
+
   it('keeps a radio set natively grouped and reports the selected value', () => {
     const onChange = vi.fn();
     render(

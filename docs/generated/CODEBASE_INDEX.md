@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `67bf4141c37574014b24810991ced5f1eacab36c`  
-Source fingerprint: `80da9cd3bed649ff89d3c730`  
+Source HEAD: `c6e66f5447fdb5924ccfaf0c0040914e44bacdec`  
+Source fingerprint: `5578b3f3eee96ba6f71bd42f`  
 Generator version: `1`
 
 ## Use
@@ -19,7 +19,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1516 | 14988 | 71 | 983 | 984 | 17 | 361 | 1445 | 92 | 2748 |
+| 1516 | 14989 | 71 | 983 | 984 | 17 | 361 | 1445 | 92 | 2748 |
 
 ## Modules
 
@@ -34,7 +34,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | security | 46 | 387 | 0 | 51 | 51 | 31 | 65 | 4 | [open](modules/security.md) |
 | settings | 44 | 252 | 0 | 26 | 26 | 18 | 21 | 2 | [open](modules/settings.md) |
 | widgets | 73 | 588 | 21 | 20 | 20 | 11 | 23 | 1 | [open](modules/widgets.md) |
-| platform | 454 | 3964 | 18 | 38 | 53 | 55 | 327 | 0 | [open](modules/platform.md) |
+| platform | 454 | 3965 | 18 | 38 | 53 | 55 | 327 | 0 | [open](modules/platform.md) |
 | testing | 48 | 227 | 0 | 0 | 0 | 0 | 0 | 17 | [open](modules/testing.md) |
 | enterprise | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | [open](modules/enterprise.md) |
 
@@ -48,7 +48,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `bundle.hr.onboarding.manager` | Onboarding Manager Pack | registry | hr | `` | `src/ui/widgets/bundles.ts:76` |
 | `create` | Create with options | registry | platform | `() => <SplitButton action={{ label: 'Create' }} items={SAVE_ALTERNATIVES} variant="secondary" />` | `src/ui/registry/compound.defs.tsx:225` |
 | `dialog-footer` | Dialog footer | registry | platform | `() => (         <>           <Button variant="secondary">Cancel</Button>           <Button variant="primary">Save</Button>         </>       )` | `src/ui/registry/actions.defs.tsx:266` |
-| `employee-name` | Employee record | registry | hr | `() => <FormField label="Employee name" required helpText="As shown on government ID"><TextInput value="Sarah James" onInput={noop} /></FormField>` | `src/ui/registry/forms.defs.tsx:500` |
+| `employee-name` | Employee record | registry | hr | `() => <FormField label="Employee name" required helpText="As shown on government ID"><TextInput value="Sarah James" onInput={noop} /></FormField>` | `src/ui/registry/forms.defs.tsx:512` |
 | `enterprise.calendar.taskPlanner` | Task Planner | registry | widgets | `TaskPlannerWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:291` |
 | `enterprise.calendar.upcomingDeadlines` | Schedule & Deadlines | registry | widgets | `DeadlineWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:290` |
 | `export` | Export menu | registry | platform | `() => <DropdownButton label="Export" variant="secondary" items={RECORD_MENU} />` | `src/ui/registry/compound.defs.tsx:137` |
@@ -96,16 +96,16 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `one-surface` | One surface, four rhythms | registry | platform | `() => (         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px' }}>           <Card variant="metric" density="compact" header={<CardHeader title="Open incidents" level={null} />}>             <Figure value="18" caption="4 overdue" />           </Card>           <Card variant="surface" header={<CardHeader title="Site note" />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Night shift handover completed.</span>           </Card>           <Card variant="panel" density="compact" header={<CardHeader title="Corrective actions" actions={<Badge tone="warning" size="sm">2 open</Badge>} />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Both due this Friday.</span>           </Card>           <Card variant="action" onClick={noop} actionLabel="Start a new inspection"             header={<CardHeader icon={<LucideIcon name="ClipboardCheck" />} title="New inspection" description="Start from a template" />} />         </div>       )` | `src/ui/registry/containers.defs.tsx:215` |
 | `overflow` | Nine tabs in a drawer | registry | platform | `() => (         <Tabs           id="ex-overflow"           label="Rate version sections"           variant="contained"           size="sm"           items={MANY_TABS}           maxVisible={4}           value="timeline"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:332` |
 | `page-action` | Page action | registry | platform | `() => <Button variant="primary" iconLeft={<LucideIcon name="Plus" />}>Add employee</Button>` | `src/ui/registry/actions.defs.tsx:286` |
-| `payroll-amount` | Payroll amount | registry | payroll | `() => <FormField label="Gross pay"><CurrencyInput valueMinor={845000} onChange={noop} currency="TTD" /></FormField>` | `src/ui/registry/forms.defs.tsx:512` |
+| `payroll-amount` | Payroll amount | registry | payroll | `() => <FormField label="Gross pay"><CurrencyInput valueMinor={845000} onChange={noop} currency="TTD" /></FormField>` | `src/ui/registry/forms.defs.tsx:524` |
 | `platform.weather.current` | Weather | registry | widgets | `WeatherBandWidget` | `src/ui/widgets/registry.weather.tsx:488` |
 | `platform.weather.precipitation` | Weather · Precipitation | registry | widgets | `metricWidget('precipitation')` | `src/ui/widgets/registry.weather.tsx:502` |
 | `platform.weather.strip` | Weather · Strip | registry | widgets | `WeatherStripWidget` | `src/ui/widgets/registry.weather.tsx:495` |
 | `platform.weather.uv` | Weather · UV index | registry | widgets | `metricWidget('uv')` | `src/ui/widgets/registry.weather.tsx:510` |
 | `platform.weather.wind` | Weather · Wind | registry | widgets | `metricWidget('wind')` | `src/ui/widgets/registry.weather.tsx:518` |
-| `register-search` | Register search | registry | platform | `() => <FormField label="Search employees"><SearchField value="Sarah" onInput={noop} /></FormField>` | `src/ui/registry/forms.defs.tsx:506` |
+| `register-search` | Register search | registry | platform | `() => <FormField label="Search employees"><SearchField value="Sarah" onInput={noop} /></FormField>` | `src/ui/registry/forms.defs.tsx:518` |
 | `row` | Row actions | registry | platform | `() => <DropdownButton label="Actions" variant="outline" items={RECORD_MENU} />` | `src/ui/registry/compound.defs.tsx:139` |
 | `save` | Save with options | registry | platform | `() => <SplitButton action={{ label: 'Save' }} items={SAVE_ALTERNATIVES} />` | `src/ui/registry/compound.defs.tsx:223` |
-| `select-all` | Select-all with a partial selection | registry | platform | `() => (         <CheckboxGroup           label="Modules"           selectAllLabel="All modules"           values={['hr']}           onChange={noop}           options={[             { value: 'hr', label: 'Human Resources' },             { value: 'hse', label: 'HSE' },             { value: 'fin', label: 'Finance', disabled: true },           ]}         />       )` | `src/ui/registry/forms.defs.tsx:156` |
+| `select-all` | Select-all with a partial selection | registry | platform | `() => (         <CheckboxGroup           label="Modules"           selectAllLabel="All modules"           values={['hr']}           onChange={noop}           options={[             { value: 'hr', label: 'Human Resources' },             { value: 'hse', label: 'HSE' },             { value: 'fin', label: 'Finance', disabled: true },           ]}         />       )` | `src/ui/registry/forms.defs.tsx:168` |
 | `status-set` | A status set | registry | platform | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>           <Badge tone="success" dot>Active</Badge>           <Badge tone="warning" dot>Probation</Badge>           <Badge tone="info" dot>On leave</Badge>           <Badge tone="neutral" dot>Inactive</Badge>           <Badge tone="danger" dot>Terminated</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:330` |
 | `test.widget` | Test | registry | enterprise/test | `() => <div>live</div>` | `src/ui/widgets/platform.test.tsx:14` |
 | `tone-scale` | Tone is meaning, not decoration | registry | platform | `() => (         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>           {(['success', 'warning', 'danger', 'info'] as CardTone[]).map(tone => (             <Card key={tone} variant="metric" density="compact" tone={tone}               header={<CardHeader title={`${tone[0]!.toUpperCase()}${tone.slice(1)} signal`} level={null} />}>               <Figure value="7" caption="this week" />             </Card>           ))}         </div>       )` | `src/ui/registry/containers.defs.tsx:235` |

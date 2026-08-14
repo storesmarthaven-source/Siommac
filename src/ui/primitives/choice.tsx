@@ -80,6 +80,7 @@ export function Checkbox({
     <label
       class={[
         'ui-choice',
+        'ui-choice--checkbox',
         label != null ? 'ui-choice--block' : '',
         inert ? 'ui-choice--disabled' : '',
         invalid ? 'ui-choice--error' : '',

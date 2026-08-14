@@ -13105,17 +13105,17 @@ FORCEABLE	variable	platform	false	component	src/ui/primitives/choice.tsx	27
 forcedAttr	function	platform	false		src/ui/primitives/choice.tsx	29	
 CheckboxProps	interface	platform	true		src/ui/primitives/choice.tsx	35	
 Checkbox	function	platform	true	component	src/ui/primitives/choice.tsx	58	
-RadioProps	interface	platform	true		src/ui/primitives/choice.tsx	126	
-Radio	function	platform	true	component	src/ui/primitives/choice.tsx	138	
-SwitchProps	interface	platform	true		src/ui/primitives/choice.tsx	189	
-SwitchArtwork	function	platform	true	component	src/ui/primitives/choice.tsx	205	
-Switch	function	platform	true	component	src/ui/primitives/choice.tsx	223	
-ChoiceOption	interface	platform	true		src/ui/primitives/choice.tsx	272	
-CheckboxGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	279	
-CheckboxGroup	function	platform	true	component	src/ui/primitives/choice.tsx	294	
-toggle	function	platform	false		src/ui/primitives/choice.tsx	302	CheckboxGroup
-RadioGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	340	
-RadioGroup	function	platform	true	component	src/ui/primitives/choice.tsx	354	
+RadioProps	interface	platform	true		src/ui/primitives/choice.tsx	127	
+Radio	function	platform	true	component	src/ui/primitives/choice.tsx	139	
+SwitchProps	interface	platform	true		src/ui/primitives/choice.tsx	190	
+SwitchArtwork	function	platform	true	component	src/ui/primitives/choice.tsx	206	
+Switch	function	platform	true	component	src/ui/primitives/choice.tsx	224	
+ChoiceOption	interface	platform	true		src/ui/primitives/choice.tsx	273	
+CheckboxGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	280	
+CheckboxGroup	function	platform	true	component	src/ui/primitives/choice.tsx	295	
+toggle	function	platform	false		src/ui/primitives/choice.tsx	303	CheckboxGroup
+RadioGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	341	
+RadioGroup	function	platform	true	component	src/ui/primitives/choice.tsx	355	
 read	function	platform	false	test	src/ui/primitives/choiceMigration.test.ts	4	
 read	function	platform	false	test	src/ui/primitives/menuMigration.test.ts	4	
 TextInputType	type	platform	true		src/ui/primitives/TextInput.tsx	41	
@@ -13217,22 +13217,23 @@ OtpPreviewProps	interface	platform	false		src/ui/registry/forms.defs.tsx	38
 OtpPreview	function	platform	false	component	src/ui/registry/forms.defs.tsx	46	
 ThemeModePreview	function	platform	false	component	src/ui/registry/forms.defs.tsx	64	
 CHOICE_STYLE	array	platform	false		src/ui/registry/forms.defs.tsx	75	
-CONTROL_STYLE	array	platform	false		src/ui/registry/forms.defs.tsx	86	
-checkboxDef	object	platform	true		src/ui/registry/forms.defs.tsx	98	
-radioGroupDef	object	platform	true		src/ui/registry/forms.defs.tsx	179	
-switchDef	object	platform	true		src/ui/registry/forms.defs.tsx	240	
-textInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	314	
-shell	function	platform	false		src/ui/registry/forms.defs.tsx	442	textInputDef
-dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	531	
-fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	618	
-themeModeSwitchDef	object	platform	true		src/ui/registry/forms.defs.tsx	737	
-colorPickerDef	object	platform	true		src/ui/registry/forms.defs.tsx	787	
-otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	823	
-DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	875	
-GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	884	
-selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	902	
-search	function	platform	false		src/ui/registry/forms.defs.tsx	1005	selectDef
-FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	1036	
+CHECKBOX_STYLE	array	platform	false		src/ui/registry/forms.defs.tsx	86	
+CONTROL_STYLE	array	platform	false		src/ui/registry/forms.defs.tsx	98	
+checkboxDef	object	platform	true		src/ui/registry/forms.defs.tsx	110	
+radioGroupDef	object	platform	true		src/ui/registry/forms.defs.tsx	191	
+switchDef	object	platform	true		src/ui/registry/forms.defs.tsx	252	
+textInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	326	
+shell	function	platform	false		src/ui/registry/forms.defs.tsx	454	textInputDef
+dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	543	
+fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	630	
+themeModeSwitchDef	object	platform	true		src/ui/registry/forms.defs.tsx	749	
+colorPickerDef	object	platform	true		src/ui/registry/forms.defs.tsx	799	
+otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	835	
+DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	887	
+GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	896	
+selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	914	
+search	function	platform	false		src/ui/registry/forms.defs.tsx	1017	selectDef
+FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	1048	
 COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	61	
 CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	76	
 CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	92	

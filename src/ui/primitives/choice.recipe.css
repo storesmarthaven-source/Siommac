@@ -31,6 +31,12 @@
     --ui-choice-label-fg: var(--ui-color-text-primary);
     --ui-choice-desc-fg: var(--ui-color-text-secondary);
 
+    --ui-checkbox-size: 20px;
+    --ui-checkbox-radius: 6px;
+    --ui-checkbox-color: #737373;
+    --ui-checkbox-focus-bg: #f5f5f5;
+    --ui-checkbox-border: #a3a3a3;
+
     --ui-switch-w: 46px;
     --ui-switch-h: 24px;
     --ui-switch-bg: #838383;
@@ -91,6 +97,42 @@
   }
   .ui-choice-box--radio { border-radius: 50%; }
 
+  /* Checkbox has its own governed treatment. Radio remains on the shared
+     choice tokens, so changing either component cannot restyle the other. */
+  .ui-choice--checkbox .ui-choice-input {
+    width: var(--ui-checkbox-size);
+    height: var(--ui-checkbox-size);
+  }
+  .ui-choice--checkbox .ui-choice-box {
+    width: var(--ui-checkbox-size);
+    height: var(--ui-checkbox-size);
+    border: 2px solid var(--ui-checkbox-border);
+    border-radius: var(--ui-checkbox-radius);
+    transform: scale(1);
+    transition:
+      transform 200ms ease,
+      background-color 200ms ease,
+      border-color 200ms ease,
+      box-shadow 200ms ease;
+  }
+  .ui-choice.ui-choice--checkbox:hover .ui-choice-box,
+  .ui-choice.ui-choice--checkbox[data-ui-state~='hover'] .ui-choice-box {
+    border-color: var(--ui-checkbox-color);
+    transform: scale(1.05);
+  }
+  .ui-choice--checkbox:active .ui-choice-box { transform: scale(.95); }
+  .ui-choice--checkbox .ui-choice-input:focus-visible + .ui-choice-box,
+  .ui-choice--checkbox[data-ui-state~='focus'] .ui-choice-box {
+    outline: 0;
+    box-shadow: 0 0 0 4px var(--ui-checkbox-focus-bg);
+  }
+  .ui-choice--checkbox .ui-choice-input:checked + .ui-choice-box,
+  .ui-choice--checkbox .ui-choice-input:indeterminate + .ui-choice-box,
+  .ui-choice--checkbox[data-ui-state~='selected'] .ui-choice-box {
+    background: var(--ui-checkbox-color);
+    border-color: var(--ui-checkbox-color);
+  }
+
   .ui-choice:hover .ui-choice-box,
   .ui-choice[data-ui-state~='hover'] .ui-choice-box { border-color: var(--ui-choice-border-hover); }
 
@@ -121,6 +163,19 @@
   }
   .ui-choice-input:checked + .ui-choice-box .ui-choice-mark,
   .ui-choice[data-ui-state~='selected'] .ui-choice-box .ui-choice-mark { opacity: 1; transform: scale(1); }
+  .ui-choice--checkbox .ui-choice-mark path {
+    stroke-dasharray: 40;
+    stroke-dashoffset: 40;
+    transition: stroke-dashoffset 300ms ease 100ms;
+  }
+  .ui-choice--checkbox .ui-choice-input:checked + .ui-choice-box .ui-choice-mark path,
+  .ui-choice--checkbox[data-ui-state~='selected'] .ui-choice-box .ui-choice-mark path {
+    stroke-dashoffset: 0;
+  }
+  .ui-choice--checkbox .ui-choice-input:checked + .ui-choice-box,
+  .ui-choice--checkbox[data-ui-state~='selected'] .ui-choice-box {
+    animation: ui-checkbox-bounce 300ms cubic-bezier(.4, 0, .2, 1);
+  }
   /* Indeterminate hides the tick and shows the dash instead — they are different
      statements ("some selected" vs "all selected"), so they must not co-render. */
   .ui-choice-input:indeterminate + .ui-choice-box .ui-choice-mark { opacity: 0; }
@@ -165,6 +220,11 @@
   .ui-choice--error .ui-choice-box { border-color: var(--ui-validation-error-border); }
   .ui-choice--error .ui-choice-input:focus-visible + .ui-choice-box {
     box-shadow: 0 0 0 var(--ui-focus-ring-width) var(--ui-validation-error-ring);
+  }
+
+  @keyframes ui-checkbox-bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
   }
 
   /* ── Switch ────────────────────────────────────────────────────────────────*/
@@ -235,6 +295,11 @@
   .ui-choice-input:disabled:checked ~ .ui-switch-track { background: var(--ui-disabled-fg); }
 
   @media (prefers-reduced-motion: reduce) {
+    .ui-choice--checkbox .ui-choice-box,
+    .ui-choice--checkbox .ui-choice-mark path {
+      animation: none;
+      transition-duration: 0ms;
+    }
     .ui-switch-track,
     .ui-switch-track::before,
     .ui-switch-knob,
