@@ -130,7 +130,7 @@ export const buttonDef: ComponentDef = {
                  help: 'What KIND of action it is, kept separate from emphasis. Composes with the quiet variants for a low-emphasis destructive action; redundant on variant="danger".' },
     size:      { type: 'segmented', label: 'Size', options: ['sm', 'md', 'lg'], default: 'md' },
 
-    label:     { type: 'text',      label: 'Label', default: 'Save changes' },
+    label:     { type: 'text',      label: 'Label', default: 'Button' },
     iconLeft:  { type: 'select',    label: 'Leading icon', options: ['None', 'Save', 'Plus', 'Trash2', 'Download', 'Check', 'Pencil'], default: 'Save' },
     iconRight: { type: 'select',    label: 'Trailing icon', options: ['None', 'ArrowRight', 'ChevronRight'], default: 'None' },
 

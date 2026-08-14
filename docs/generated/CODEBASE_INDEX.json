@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "fb47070367f9eade44071817bd60159f7b749f3e",
+    "head": "6be058e1f88443849eaba95e14a09e8f67a1c2ce",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "44215edd39c65b6d7aa5207f",
+    "fingerprint": "ef5755b471b9c96d287c52e5",
     "indexedFiles": 1859
   },
   "summary": {
@@ -9247,7 +9247,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 489,
-      "hash": "c9a66b3e4dcbe9b9"
+      "hash": "8c833452a7735b13"
     },
     {
       "path": "src/ui/registry/button-patterns.tsx",
@@ -9484,8 +9484,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 386,
-      "hash": "cdbb829255e0b4e1"
+      "lines": 390,
+      "hash": "0949efd4132f8cb3"
     },
     {
       "path": "src/ui/studio/preview.tsx",

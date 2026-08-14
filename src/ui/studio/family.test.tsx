@@ -131,6 +131,10 @@ describe('Buttons family — Studio', () => {
     expect(container.querySelectorAll('.sds-button-browser__card')).toHaveLength(6);
     expect(getByRole('heading', { name: 'Button components' })).toBeTruthy();
     expect(getByRole('heading', { name: 'Governed patterns' })).toBeTruthy();
+    const actionCard = [...container.querySelectorAll<HTMLElement>('.sds-button-browser__card')]
+      .find(card => card.querySelector('.sds-button-browser__copy strong')?.textContent === 'Action Button');
+    if (!actionCard) throw new Error('Expected the Action Button browser card');
+    expect(actionCard.textContent).not.toContain('Save changes');
     expect(container.querySelector('.sds-button-editor')).toBeNull();
   });
 
