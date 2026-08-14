@@ -108,9 +108,11 @@ describe('Buttons family — Studio', () => {
 
     // One family card and one nav row — not one per member in either place.
     expect(container.querySelectorAll('.sds-card--family')).toHaveLength(1);
-    expect(container.querySelectorAll('.sds-card--family .sds-card__image')).toHaveLength(1);
+    expect(container.querySelectorAll('.sds-card--family .sds-card__art')).toHaveLength(1);
     expect(container.querySelector('.sds-card--family .sds-card__specimen')).toBeNull();
-    expect(container.querySelectorAll('.sds-card__preview img').length).toBe(container.querySelectorAll('.sds-card').length);
+    expect(container.querySelectorAll('.sds-card__preview .sds-card__art').length).toBe(container.querySelectorAll('.sds-card').length);
+    expect(container.querySelector('.sds-card__preview img')).toBeNull();
+    expect(container.querySelector('.sds-card__preview .ui-btn')).toBeNull();
     const navRows = [...container.querySelectorAll('.sds-nav__item--sub')]
       .map(el => el.textContent);
     expect(navRows.filter(t => t.startsWith('Buttons'))).toHaveLength(1);

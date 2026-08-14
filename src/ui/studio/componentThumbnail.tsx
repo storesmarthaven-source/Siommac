@@ -1,0 +1,90 @@
+import { type VNode } from 'preact';
+import { type ComponentCategory } from '../registry';
+import { LucideIcon } from '../LucideIcon';
+
+type ThumbnailKind =
+  | 'buttons' | 'segmented' | 'menu' | 'field' | 'date' | 'select' | 'upload' | 'otp'
+  | 'check' | 'radio' | 'switch' | 'people' | 'dialog' | 'drawer' | 'tooltip'
+  | 'table' | 'badge' | 'tabs' | 'wizard' | 'header' | 'alert' | 'progress'
+  | 'spinner' | 'skeleton' | 'card' | 'accordion' | 'planned';
+
+function kindFor(id: string, built: boolean): ThumbnailKind {
+  if (!built) return 'planned';
+  if (id === 'buttons' || id === 'button') return 'buttons';
+  if (id === 'segmented-control') return 'segmented';
+  if (['menu', 'dropdown-button', 'split-button'].includes(id)) return 'menu';
+  if (id === 'text-input') return 'field';
+  if (id === 'date-input') return 'date';
+  if (id === 'select') return 'select';
+  if (id === 'file-input') return 'upload';
+  if (id === 'otp-input') return 'otp';
+  if (id === 'checkbox') return 'check';
+  if (id === 'radio-group') return 'radio';
+  if (id === 'switch') return 'switch';
+  if (['avatar', 'avatar-group', 'person-search-select'].includes(id)) return 'people';
+  if (id === 'drawer') return 'drawer';
+  if (id === 'tooltip') return 'tooltip';
+  if (['dialog', 'popover'].includes(id)) return 'dialog';
+  if (id === 'data-table') return 'table';
+  if (id === 'badge') return 'badge';
+  if (['tabs', 'breadcrumbs'].includes(id)) return 'tabs';
+  if (id === 'wizard') return 'wizard';
+  if (['page-header', 'page-action-bar'].includes(id)) return 'header';
+  if (id === 'alert') return 'alert';
+  if (id === 'progress') return 'progress';
+  if (id === 'spinner') return 'spinner';
+  if (id === 'skeleton') return 'skeleton';
+  if (id === 'accordion') return 'accordion';
+  return 'card';
+}
+
+function FieldScene({ kind }: { kind: 'field' | 'date' }): VNode {
+  const label = kind === 'field' ? 'Employee name' : 'Start date';
+  const value = kind === 'field' ? 'Sarah James' : '13 Aug 2026';
+  return <div class="sds-thumb-field"><strong>{label}</strong><span>{value}{kind === 'date' ? <LucideIcon name="Calendar" size={13} /> : null}</span><small>{kind === 'field' ? 'As shown on government ID' : 'Required'}</small></div>;
+}
+
+function SelectScene(): VNode {
+  return <div class="sds-thumb-select"><strong>Department</strong><button type="button">2 selected <small>4 teams</small><LucideIcon name="ChevronDown" size={12} /></button><div><span><i />Health &amp; Safety <small>12 people</small></span><span class="is-on"><i>✓</i>Operations <small>26 people</small></span><span class="is-on"><i>✓</i>Projects <small>18 people</small></span></div></div>;
+}
+
+function ChoiceScene({ kind }: { kind: 'check' | 'radio' | 'switch' }): VNode {
+  return <div class={`sds-thumb-choice sds-thumb-choice--${kind}`}><span><i />Email notifications</span><span class="is-on"><i />Approval alerts</span></div>;
+}
+
+/** Theme-aware catalogue illustration; deliberately not the interactive runtime component. */
+export function ComponentThumbnail({ id, built = true }: {
+  id: string;
+  category: ComponentCategory | 'family';
+  built?: boolean;
+}): VNode {
+  const kind = kindFor(id, built);
+  return (
+    <div class={`sds-card__art sds-thumb sds-thumb--${kind}`} aria-hidden="true">
+      {kind === 'buttons' && <div class="sds-thumb-buttons"><span>Cancel</span><strong><LucideIcon name="Check" size={13} />Continue</strong></div>}
+      {kind === 'segmented' && <div class="sds-thumb-segmented"><strong><LucideIcon name="Grid2X2" size={11} />Grid</strong><span>List</span><span>Board</span></div>}
+      {kind === 'menu' && <div class="sds-thumb-menu"><strong>Actions <LucideIcon name="ChevronDown" size={12} /></strong><div><span>View record</span><span>Edit details</span><span class="is-danger">Delete</span></div></div>}
+      {(['field', 'date'] as ThumbnailKind[]).includes(kind) && <FieldScene kind={kind as 'field' | 'date'} />}
+      {kind === 'select' && <SelectScene />}
+      {kind === 'upload' && <div class="sds-thumb-upload"><section><LucideIcon name="UploadCloud" size={21} /><span><strong>Choose a file</strong> or drag and drop</span><small>PDF, DOCX or PNG · 10 MB max</small></section><article><LucideIcon name="FileText" size={18} /><div><strong>Inspection evidence.pdf</strong><span>2.4 MB · <b>Complete</b></span><i><em /></i></div></article></div>}
+      {kind === 'otp' && <div class="sds-thumb-otp"><span>Enter verification code</span><div>{['8', '2', '4', '', '', ''].map((value, index) => <i class={index === 0 ? 'is-active' : ''} key={index}>{value}</i>)}</div></div>}
+      {(['check', 'radio', 'switch'] as ThumbnailKind[]).includes(kind) && <ChoiceScene kind={kind as 'check' | 'radio' | 'switch'} />}
+      {kind === 'people' && <div class="sds-thumb-people"><i>SJ</i><i>AD</i><i>PR</i><strong>+2</strong></div>}
+      {kind === 'dialog' && <div class="sds-thumb-dialog"><strong>Confirm action</strong><span>This change will be recorded.</span><footer><i>Cancel</i><b>Confirm</b></footer></div>}
+      {kind === 'drawer' && <div class="sds-thumb-drawer"><aside /><div><strong>Employee details</strong><span>Sarah James</span><span>Safety Officer</span><b>Active</b></div></div>}
+      {kind === 'tooltip' && <div class="sds-thumb-tooltip">More information<i /></div>}
+      {kind === 'table' && <div class="sds-thumb-table"><header><span>Employee</span><span>Status</span><span>Site</span></header><p><span>Sarah James</span><b>Active</b><span>Point Lisas</span></p><p><span>Amara Diallo</span><b>Leave</b><span>Chaguaramas</span></p></div>}
+      {kind === 'badge' && <div class="sds-thumb-badges"><span>● Active</span><strong>● Overdue</strong></div>}
+      {kind === 'tabs' && <div class="sds-thumb-tabs"><span class="is-on">Overview</span><span>People</span><span>Evidence</span><i /></div>}
+      {kind === 'wizard' && <div class="sds-thumb-wizard"><i class="is-done">✓</i><em /><i class="is-on">2</i><em /><i>3</i><small><span>Details</span><span>Evidence</span><span>Review</span></small></div>}
+      {kind === 'header' && <div class="sds-thumb-header"><small>Human Resources / Employees</small><strong>Employee records</strong><span>Manage people, roles and employment details.</span><b>Add employee</b></div>}
+      {kind === 'alert' && <div class="sds-thumb-alert"><LucideIcon name="TriangleAlert" size={18} /><div><strong>Approval required</strong><span>A second approver must review this payroll run.</span></div></div>}
+      {kind === 'progress' && <div class="sds-thumb-progress"><span>Uploading evidence <b>64%</b></span><i><em /></i></div>}
+      {kind === 'spinner' && <div class="sds-thumb-spinner"><i /><span>Loading records…</span></div>}
+      {kind === 'skeleton' && <div class="sds-thumb-skeleton"><i /><div><span /><span /></div><footer><span /><span /></footer></div>}
+      {kind === 'card' && <div class="sds-thumb-card"><small>OPEN INCIDENTS</small><strong>24</strong><span><b>↓ 8%</b> from last month</span></div>}
+      {kind === 'accordion' && <div class="sds-thumb-accordion"><span>Scope and eligibility <b>⌄</b></span><span>Approval rules <b>⌄</b></span><span>Audit retention <b>⌄</b></span></div>}
+      {kind === 'planned' && <div class="sds-thumb-planned"><LucideIcon name="Plus" size={18} /><span>Planned component</span></div>}
+    </div>
+  );
+}

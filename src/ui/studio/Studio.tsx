@@ -14,7 +14,7 @@
  *  1. The catalogue is READ FROM THE REGISTRY. There is no second list here. A
  *     component appears because a definition exists, never because someone
  *     remembered to add a card — the whole reason the registry is authoritative.
- *     Cards use purpose-built static catalogue art for fast visual scanning;
+ *     Cards use theme-aware HTML/CSS catalogue scenes for fast visual scanning;
  *     live canonical renders belong to the focused editors.
  *
  *  2. `patterns` are NOT kit gaps. PayrollApprovalTable belongs to payroll and
@@ -41,7 +41,7 @@ import { FoundationsPanel } from '../gallery/FoundationsPanel';
 import { BrandThemePanel } from '../gallery/BrandThemePanel';
 import './studio.css';
 import { StudioPublishBar } from './StudioPublishBar';
-import { componentThumbnailSrc } from './componentThumbnail';
+import { ComponentThumbnail } from './componentThumbnail';
 
 export interface StudioProps {
   onExit?: () => void;
@@ -147,7 +147,7 @@ function ComponentCard({ def, onOpen }: { def: ComponentDef; onOpen?: (id: strin
   const body = (
     <>
       <div class="sds-card__preview">
-        <img class="sds-card__image" src={componentThumbnailSrc(def.id, def.category, built)} alt="" loading="lazy" decoding="async" />
+        <ComponentThumbnail id={def.id} category={def.category} built={built} />
         {!built && <span class="sds-card__missing">{def.category === 'patterns' ? 'Owned by its module' : 'Planned'}</span>}
       </div>
       <div class="sds-card__foot">
@@ -180,7 +180,7 @@ function FamilyCard(
     <button type="button" class="sds-card sds-card--open sds-card--family"
       onClick={() => onOpen(family.id)}>
       <div class="sds-card__preview">
-        <img class="sds-card__image" src={componentThumbnailSrc(family.id, 'family')} alt="" loading="lazy" decoding="async" />
+        <ComponentThumbnail id={family.id} category="family" />
       </div>
       <div class="sds-card__foot">
         <strong>{family.name}</strong>

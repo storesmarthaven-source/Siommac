@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "ac1b73a070307c6a0daee4b4bda036f473ff75ae",
+    "head": "465f3ce5e9ed01d52d62946895ce7e7f876b0e45",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "ff86a5b722118782827014a9",
+    "fingerprint": "fc71602be7a24bcaae986ecc",
     "indexedFiles": 1862
   },
   "summary": {
     "files": 1507,
-    "symbols": 14916,
+    "symbols": 14915,
     "widgets": 68,
     "routes": 983,
     "routeDefinitions": 984,
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 445,
-        "symbols": 3892,
+        "symbols": 3891,
         "widgets": 17,
         "routes": 38,
         "routeDefinitions": 53,
@@ -9450,7 +9450,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 419,
-      "hash": "976a8a15ddf89ba1"
+      "hash": "74aeaccaf4b001a5"
     },
     {
       "path": "src/ui/studio/StudioPublishBar.tsx",
@@ -9488,11 +9488,11 @@
       "hash": "dfaf54b25f44d2f0"
     },
     {
-      "path": "src/ui/studio/componentThumbnail.ts",
+      "path": "src/ui/studio/componentThumbnail.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 58,
-      "hash": "069876f6a4e355bf"
+      "lines": 91,
+      "hash": "c6d638e6129b1e3c"
     },
     {
       "path": "src/ui/studio/designSystemConfig.test.ts",
@@ -9505,8 +9505,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 433,
-      "hash": "989b8ebc22f17fe4"
+      "lines": 435,
+      "hash": "14a351d0f310cd12"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -150214,29 +150214,9 @@
       "tags": []
     },
     {
-      "name": "line",
-      "kind": "variable",
-      "file": "src/ui/studio/componentThumbnail.ts",
-      "line": 3,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "ink",
-      "kind": "variable",
-      "file": "src/ui/studio/componentThumbnail.ts",
-      "line": 4,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "navy",
-      "kind": "variable",
-      "file": "src/ui/studio/componentThumbnail.ts",
+      "name": "ThumbnailKind",
+      "kind": "type",
+      "file": "src/ui/studio/componentThumbnail.tsx",
       "line": 5,
       "module": "platform",
       "exported": false,
@@ -150244,44 +150224,62 @@
       "tags": []
     },
     {
-      "name": "red",
-      "kind": "variable",
-      "file": "src/ui/studio/componentThumbnail.ts",
-      "line": 6,
+      "name": "kindFor",
+      "kind": "function",
+      "file": "src/ui/studio/componentThumbnail.tsx",
+      "line": 11,
       "module": "platform",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "field",
+      "name": "FieldScene",
       "kind": "function",
-      "file": "src/ui/studio/componentThumbnail.ts",
-      "line": 8,
+      "file": "src/ui/studio/componentThumbnail.tsx",
+      "line": 41,
       "module": "platform",
       "exported": false,
       "container": "",
-      "tags": []
+      "tags": [
+        "component"
+      ]
     },
     {
-      "name": "artFor",
+      "name": "SelectScene",
       "kind": "function",
-      "file": "src/ui/studio/componentThumbnail.ts",
-      "line": 12,
+      "file": "src/ui/studio/componentThumbnail.tsx",
+      "line": 47,
       "module": "platform",
       "exported": false,
       "container": "",
-      "tags": []
+      "tags": [
+        "component"
+      ]
     },
     {
-      "name": "componentThumbnailSrc",
+      "name": "ChoiceScene",
       "kind": "function",
-      "file": "src/ui/studio/componentThumbnail.ts",
-      "line": 53,
+      "file": "src/ui/studio/componentThumbnail.tsx",
+      "line": 51,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ComponentThumbnail",
+      "kind": "function",
+      "file": "src/ui/studio/componentThumbnail.tsx",
+      "line": 56,
       "module": "platform",
       "exported": true,
       "container": "",
-      "tags": []
+      "tags": [
+        "component"
+      ]
     },
     {
       "name": "MEMBERS",

@@ -13324,13 +13324,12 @@ ButtonPatternEditor	function	platform	false	component	src/ui/studio/ButtonBrowse
 set	function	platform	false		src/ui/studio/ButtonBrowser.tsx	52	ButtonPatternEditor
 ButtonBrowser	function	platform	true	component	src/ui/studio/ButtonBrowser.tsx	83	
 buttonFamilyPreviewProps	function	platform	true		src/ui/studio/buttonFamilyPreview.ts	9	
-line	variable	platform	false		src/ui/studio/componentThumbnail.ts	3	
-ink	variable	platform	false		src/ui/studio/componentThumbnail.ts	4	
-navy	variable	platform	false		src/ui/studio/componentThumbnail.ts	5	
-red	variable	platform	false		src/ui/studio/componentThumbnail.ts	6	
-field	function	platform	false		src/ui/studio/componentThumbnail.ts	8	
-artFor	function	platform	false		src/ui/studio/componentThumbnail.ts	12	
-componentThumbnailSrc	function	platform	true		src/ui/studio/componentThumbnail.ts	53	
+ThumbnailKind	type	platform	false		src/ui/studio/componentThumbnail.tsx	5	
+kindFor	function	platform	false		src/ui/studio/componentThumbnail.tsx	11	
+FieldScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	41	
+SelectScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	47	
+ChoiceScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	51	
+ComponentThumbnail	function	platform	true	component	src/ui/studio/componentThumbnail.tsx	56	
 MEMBERS	variable	platform	false	component,test	src/ui/studio/family.test.tsx	26	
 openButtonBrowser	function	platform	false	test	src/ui/studio/family.test.tsx	29	
 openButtons	function	platform	false	test	src/ui/studio/family.test.tsx	36	
