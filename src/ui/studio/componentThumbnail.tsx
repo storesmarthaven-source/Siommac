@@ -53,7 +53,7 @@ function SelectScene(): VNode {
       <span><i />Engineering <small>12 users</small></span>
       <span class="is-on"><i>✓</i>Design <small>10 users</small></span>
       <span class="is-on"><i>✓</i>Product <small>6 users</small></span>
-      <span><i />Marketing <small>8 users</small></span>
+      <span class="is-preview-blurred"><i />Marketing <small>8 users</small></span>
     </div>
   </div>;
 }
@@ -77,7 +77,7 @@ export function ComponentThumbnail({ id, built = true }: {
       {kind === 'menu' && <div class="sds-thumb-menu"><strong>Actions <LucideIcon name="ChevronDown" size={12} /></strong><div><span>View record</span><span>Edit details</span><span class="is-danger">Delete</span></div></div>}
       {(['field', 'date'] as ThumbnailKind[]).includes(kind) && <FieldScene kind={kind as 'field' | 'date'} />}
       {kind === 'select' && <SelectScene />}
-      {kind === 'upload' && <div class="sds-thumb-upload"><section><LucideIcon name="UploadCloud" size={21} /><span><strong>Click to upload</strong> or drag and drop</span><small>SVG, PNG, JPG or PDF · 10 MB max</small></section><article><LucideIcon name="FileText" size={18} /><div><strong>Inspection evidence.pdf</strong><span>2.4 MB of 2.4 MB · <b>Complete</b></span><i><em /></i></div></article><article><LucideIcon name="FileVideo" size={18} /><div><strong>Site walkthrough.mp4</strong><span>6.4 MB of 16 MB · Uploading</span><i><em /></i></div></article></div>}
+      {kind === 'upload' && <div class="sds-thumb-upload"><section><LucideIcon name="UploadCloud" size={21} /><span><strong>Click to upload</strong> or drag and drop</span><small>SVG, PNG, JPG or PDF · 10 MB max</small></section><article><LucideIcon name="FileText" size={18} /><div><strong>Inspection evidence.pdf</strong><span>2.4 MB of 2.4 MB · <b>Complete</b></span><i><em /></i></div></article><article class="is-preview-blurred"><LucideIcon name="FileVideo" size={18} /><div><strong>Site walkthrough.mp4</strong><span>6.4 MB of 16 MB · Uploading</span><i><em /></i></div></article></div>}
       {kind === 'otp' && <div class="sds-thumb-otp"><span>Enter verification code</span><div>{['8', '2', '4', '', '', ''].map((value, index) => <i class={index === 0 ? 'is-active' : ''} key={index}>{value}</i>)}</div></div>}
       {(['check', 'radio', 'switch'] as ThumbnailKind[]).includes(kind) && <ChoiceScene kind={kind as 'check' | 'radio' | 'switch'} />}
       {kind === 'people' && <div class="sds-thumb-people"><i>SJ</i><i>AD</i><i>PR</i><strong>+2</strong></div>}

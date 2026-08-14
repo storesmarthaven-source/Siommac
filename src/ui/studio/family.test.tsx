@@ -136,6 +136,8 @@ describe('Buttons family — Studio', () => {
     expect(cardNamed('Select')?.textContent).toContain('Does not contain');
     expect(cardNamed('Select')?.textContent).toContain('Search');
     expect(cardNamed('Select')?.textContent).toContain('Product');
+    expect(cardNamed('FileInput')?.querySelectorAll('.is-preview-blurred')).toHaveLength(1);
+    expect(cardNamed('Select')?.querySelectorAll('.is-preview-blurred')).toHaveLength(1);
   });
 
   it('opens a visual browser before any Button editor', () => {

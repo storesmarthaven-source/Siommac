@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "d4bbaa28512ea3e4b2b4b659c279d220a233f9f9",
+    "head": "f811fe222c481d63bb8fe6481ac95a66927e9f24",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "3c187e6966131fac13146eec",
+    "fingerprint": "bd38c50979f88541c37bbdf0",
     "indexedFiles": 1862
   },
   "summary": {
@@ -9492,7 +9492,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 102,
-      "hash": "5e02b81c9e33e819"
+      "hash": "dd08240bc2d1f316"
     },
     {
       "path": "src/ui/studio/designSystemConfig.test.ts",
@@ -9505,8 +9505,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 447,
-      "hash": "f9068d06ac72341b"
+      "lines": 449,
+      "hash": "5c13f40ebce2fec6"
     },
     {
       "path": "src/ui/studio/preview.tsx",
