@@ -17,7 +17,7 @@ describe('NextActionButton', () => {
 
   it('preserves native disabled semantics', () => {
     render(<NextActionButton disabled />);
-    expect(screen.getByRole('button', { name: 'Next' }).disabled).toBe(true);
+    expect(screen.getByRole('button', { name: 'Next' }).getAttribute('disabled')).not.toBeNull();
   });
 
   it('supports governed outline, circle and filled-circle icon treatments', () => {

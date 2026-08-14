@@ -319,6 +319,19 @@ export const textInputDef: ComponentDef = {
   status: 'stable',
   componentPath: 'src/ui/primitives/TextInput.tsx',
   importFrom: '@ui',
+  previewAxis: 'type',
+  previewSamples: [
+    { value: 'Text', title: 'Text', description: 'Names and short answers', props: { type: 'Text' } },
+    { value: 'Search', title: 'Search', description: 'Find and filter records', props: { type: 'Search' } },
+    { value: 'Password', title: 'Password', description: 'Protected entry', props: { type: 'Password' } },
+    { value: 'Number', title: 'Number', description: 'Measured quantities', props: { type: 'Number' } },
+    { value: 'Currency', title: 'Currency', description: 'Money in minor units', props: { type: 'Currency' } },
+    { value: 'Percentage', title: 'Percentage', description: 'Rates stored as ratios', props: { type: 'Percentage' } },
+    { value: 'Email', title: 'Email', description: 'Validated email entry', props: { type: 'Email' } },
+    { value: 'URL', title: 'URL', description: 'Web addresses', props: { type: 'URL' } },
+    { value: 'Phone', title: 'Phone', description: 'Dial code and number', props: { type: 'Phone' } },
+    { value: 'Multi-line', title: 'Multi-line', description: 'Notes and longer context', props: { type: 'Multi-line' } },
+  ],
   migration: {
     replaces: ['.ui-input', '.ui-textarea'],
     rawPatterns: ['<input', '<textarea', 'type="password"', 'type="number"', 'type="tel"'],
@@ -464,6 +477,27 @@ export const textInputDef: ComponentDef = {
     if (type === 'Text') return '<FormField label="Employee name" required error={errors.name}>\n  <TextInput value={name} onInput={setName} placeholder="e.g. Sarah James" />\n</FormField>';
     return '<FormField label="' + type + '">\n  <' + type + 'Input value={v} onInput={set} />\n</FormField>';
   },
+
+  examples: [
+    {
+      id: 'employee-name',
+      title: 'Employee record',
+      description: 'A required identity field with visible guidance.',
+      render: () => <FormField label="Employee name" required helpText="As shown on government ID"><TextInput value="Sarah James" onInput={noop} /></FormField>,
+    },
+    {
+      id: 'register-search',
+      title: 'Register search',
+      description: 'Search remains a TextInput type rather than a separate visual system.',
+      render: () => <FormField label="Search employees"><SearchField value="Sarah" onInput={noop} /></FormField>,
+    },
+    {
+      id: 'payroll-amount',
+      title: 'Payroll amount',
+      description: 'Currency keeps money in minor units while displaying a familiar value.',
+      render: () => <FormField label="Gross pay"><CurrencyInput valueMinor={845000} onChange={noop} currency="TTD" /></FormField>,
+    },
+  ],
 
   presets: [
     { label: 'Required text',  props: { type: 'Text', label: 'Employee name', placeholder: 'e.g. Sarah James', helpText: '', size: 'md', validation: 'none', message: '', required: true, clearable: false, charCount: false, loading: false, disabled: false, readOnly: false } },

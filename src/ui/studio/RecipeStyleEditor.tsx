@@ -196,6 +196,22 @@ function TokenControl({ control, studio }: { control: StyleControl; studio: Gall
   );
 }
 
+/** Schema-driven styling shared by every component editor. */
+export function GeneratedStyleControls({ def, draft: studio }: { def: ComponentDef; draft: GalleryDraft }): VNode {
+  return (
+    <>
+      {(def.style ?? []).map(group => (
+        <section key={group.label}>
+          <h4>{friendlyGroup(group.label)}</h4>
+          {group.controls.map(control => control.name.endsWith('-hover')
+            ? <HoverColorControl key={control.name} control={control} studio={studio} />
+            : <TokenControl key={control.name} control={control} studio={studio} />)}
+        </section>
+      ))}
+    </>
+  );
+}
+
 type HoverColorMode = 'lighter' | 'darker' | 'manual';
 
 function HoverColorControl({ control, studio }: { control: StyleControl; studio: GalleryDraft }): VNode {

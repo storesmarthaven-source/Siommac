@@ -200,6 +200,8 @@ export interface ComponentDef {
 
   a11y?: A11yInfo;
   examples?: readonly ComponentExample[];
+  /** Samples for the governed preview axis, regardless of the prop's name. */
+  previewSamples?: readonly VariantSample[];
   variantSamples?: readonly VariantSample[];
   migration?: MigrationInfo;
 
@@ -234,16 +236,22 @@ export interface ComponentDef {
    * Where it is on, the Studio drops the separate Variants reference block: the
    * axis IS that block, and showing both would state the same thing twice.
    */
-  previewAxis?: 'variant';
+  previewAxis?: string;
+}
+
+/** Resolve one governed preview-axis value without assuming it is a variant. */
+export function propsForAxis(def: ComponentDef, axis: string, value: string): PropValues {
+  const samples = def.previewSamples ?? def.variantSamples;
+  return {
+    ...defaultProps(def),
+    ...(samples?.find(sample => sample.value === value)?.props ?? {}),
+    [axis]: value,
+  };
 }
 
 /** Resolve a meaningful variant specimen, falling back to declared defaults. */
 export function propsForVariant(def: ComponentDef, value: string): PropValues {
-  return {
-    ...defaultProps(def),
-    ...(def.variantSamples?.find(sample => sample.value === value)?.props ?? {}),
-    variant: value,
-  };
+  return propsForAxis(def, 'variant', value);
 }
 
 /** Resolve a definition's declared defaults into a starting prop set. */

@@ -13217,17 +13217,17 @@ checkboxDef	object	platform	true		src/ui/registry/forms.defs.tsx	97
 radioGroupDef	object	platform	true		src/ui/registry/forms.defs.tsx	178	
 switchDef	object	platform	true		src/ui/registry/forms.defs.tsx	239	
 textInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	314	
-shell	function	platform	false		src/ui/registry/forms.defs.tsx	415	textInputDef
-dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	479	
-fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	555	
-themeModeSwitchDef	object	platform	true		src/ui/registry/forms.defs.tsx	644	
-colorPickerDef	object	platform	true		src/ui/registry/forms.defs.tsx	694	
-otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	730	
-DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	782	
-GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	791	
-selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	809	
-search	function	platform	false		src/ui/registry/forms.defs.tsx	912	selectDef
-FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	943	
+shell	function	platform	false		src/ui/registry/forms.defs.tsx	428	textInputDef
+dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	513	
+fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	589	
+themeModeSwitchDef	object	platform	true		src/ui/registry/forms.defs.tsx	678	
+colorPickerDef	object	platform	true		src/ui/registry/forms.defs.tsx	728	
+otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	764	
+DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	816	
+GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	825	
+selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	843	
+search	function	platform	false		src/ui/registry/forms.defs.tsx	946	selectDef
+FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	977	
 COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	61	
 CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	76	
 CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	92	
@@ -13291,10 +13291,11 @@ MigrationInfo	interface	platform	true		src/ui/registry/types.ts	138
 ComponentCategory	type	platform	true		src/ui/registry/types.ts	158	
 ComponentStatus	type	platform	true		src/ui/registry/types.ts	170	
 ComponentDef	interface	platform	true		src/ui/registry/types.ts	172	
-propsForVariant	function	platform	true		src/ui/registry/types.ts	241	
-defaultProps	function	platform	true		src/ui/registry/types.ts	250	
-styleVarNames	function	platform	true		src/ui/registry/types.ts	257	
-isBuilt	function	platform	true		src/ui/registry/types.ts	262	
+propsForAxis	function	platform	true		src/ui/registry/types.ts	243	
+propsForVariant	function	platform	true		src/ui/registry/types.ts	253	
+defaultProps	function	platform	true		src/ui/registry/types.ts	258	
+styleVarNames	function	platform	true		src/ui/registry/types.ts	265	
+isBuilt	function	platform	true		src/ui/registry/types.ts	270	
 s	function	platform	false		src/ui/registry/wizard.def.tsx	16	
 b	function	platform	false		src/ui/registry/wizard.def.tsx	17	
 noop	function	platform	false		src/ui/registry/wizard.def.tsx	18	
@@ -13412,15 +13413,16 @@ position	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	96	StudioC
 closeOnOutside	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	111	StudioColorControl
 closeOnEscape	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	115	StudioColorControl
 TokenControl	function	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	150	
-HoverColorMode	type	platform	false		src/ui/studio/RecipeStyleEditor.tsx	199	
-HoverColorControl	function	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	201	
-setMode	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	205	HoverColorControl
-ICON_RECOMMENDATIONS	object	platform	false		src/ui/studio/RecipeStyleEditor.tsx	228	
-IconPicker	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	237	
-choose	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	259	IconPicker
-RecipeStyleEditor	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	288	
-previewPropsFor	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	297	RecipeStyleEditor
-setPreviewProp	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	303	RecipeStyleEditor
+GeneratedStyleControls	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	200	
+HoverColorMode	type	platform	false		src/ui/studio/RecipeStyleEditor.tsx	215	
+HoverColorControl	function	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	217	
+setMode	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	221	HoverColorControl
+ICON_RECOMMENDATIONS	object	platform	false		src/ui/studio/RecipeStyleEditor.tsx	244	
+IconPicker	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	253	
+choose	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	275	IconPicker
+RecipeStyleEditor	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	304	
+previewPropsFor	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	313	RecipeStyleEditor
+setPreviewProp	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	319	RecipeStyleEditor
 StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	48	
 SectionId	type	platform	false		src/ui/studio/Studio.tsx	57	
 NavItem	interface	platform	false		src/ui/studio/Studio.tsx	63	
@@ -13458,12 +13460,12 @@ previewPropsFor	function	platform	false		src/ui/studio/Workbench.tsx	191	Compoun
 setPreviewProp	function	platform	false		src/ui/studio/Workbench.tsx	199	CompoundButtonEditor
 reset	function	platform	false		src/ui/studio/Workbench.tsx	209	CompoundButtonEditor
 Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	332	
-setValues	function	platform	false		src/ui/studio/Workbench.tsx	346	Workbench
-set	function	platform	false		src/ui/studio/Workbench.tsx	349	Workbench
-specimen	function	platform	false		src/ui/studio/Workbench.tsx	362	Workbench
-Block	function	platform	false	component	src/ui/studio/Workbench.tsx	455	
-VariantSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	470	
-UsageSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	501	
+setValues	function	platform	false		src/ui/studio/Workbench.tsx	348	Workbench
+set	function	platform	false		src/ui/studio/Workbench.tsx	351	Workbench
+specimen	function	platform	false		src/ui/studio/Workbench.tsx	364	Workbench
+Block	function	platform	false	component	src/ui/studio/Workbench.tsx	462	
+VariantSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	477	
+UsageSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	514	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	
