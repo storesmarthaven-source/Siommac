@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "51cef8e0a17d0f274b6e3dc7b58646030194251a",
+    "head": "b738ce46c2efd568bf92c02202b1fb58c385de81",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "50532273aa2c491c7925d9d6",
+    "fingerprint": "74de5290cb3ab860fdff639c",
     "indexedFiles": 1859
   },
   "summary": {
     "files": 1504,
-    "symbols": 14900,
+    "symbols": 14902,
     "widgets": 68,
     "routes": 983,
     "routeDefinitions": 984,
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 442,
-        "symbols": 3876,
+        "symbols": 3878,
         "widgets": 17,
         "routes": 38,
         "routeDefinitions": 53,
@@ -9456,8 +9456,8 @@
       "path": "src/ui/studio/Workbench.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 580,
-      "hash": "ff5eaca0ee36520b"
+      "lines": 595,
+      "hash": "56644f5324f75b4f"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -9484,8 +9484,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 394,
-      "hash": "29626a057a997b68"
+      "lines": 411,
+      "hash": "a4f26014eb0da30c"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -150803,7 +150803,7 @@
       "name": "CompoundButtonEditor",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 182,
+      "line": 181,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150812,10 +150812,30 @@
       ]
     },
     {
+      "name": "previewPropsFor",
+      "kind": "function",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 191,
+      "module": "platform",
+      "exported": false,
+      "container": "CompoundButtonEditor",
+      "tags": []
+    },
+    {
+      "name": "setPreviewProp",
+      "kind": "function",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 199,
+      "module": "platform",
+      "exported": false,
+      "container": "CompoundButtonEditor",
+      "tags": []
+    },
+    {
       "name": "reset",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 196,
+      "line": 209,
       "module": "platform",
       "exported": false,
       "container": "CompoundButtonEditor",
@@ -150825,7 +150845,7 @@
       "name": "Workbench",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 311,
+      "line": 326,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150837,7 +150857,7 @@
       "name": "setValues",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 325,
+      "line": 340,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -150847,7 +150867,7 @@
       "name": "set",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 328,
+      "line": 343,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -150857,7 +150877,7 @@
       "name": "specimen",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 341,
+      "line": 356,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -150867,7 +150887,7 @@
       "name": "Block",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 499,
+      "line": 514,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150879,7 +150899,7 @@
       "name": "OverviewSpecimens",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 517,
+      "line": 532,
       "module": "platform",
       "exported": false,
       "container": "",

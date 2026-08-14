@@ -13380,14 +13380,16 @@ groupControls	function	platform	false		src/ui/studio/Workbench.tsx	60
 Control	function	platform	false	component	src/ui/studio/Workbench.tsx	80	
 WorkbenchProps	interface	platform	true		src/ui/studio/Workbench.tsx	157	
 CompoundButtonEditorProps	interface	platform	false		src/ui/studio/Workbench.tsx	167	
-CompoundButtonEditor	function	platform	false	component	src/ui/studio/Workbench.tsx	182	
-reset	function	platform	false		src/ui/studio/Workbench.tsx	196	CompoundButtonEditor
-Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	311	
-setValues	function	platform	false		src/ui/studio/Workbench.tsx	325	Workbench
-set	function	platform	false		src/ui/studio/Workbench.tsx	328	Workbench
-specimen	function	platform	false		src/ui/studio/Workbench.tsx	341	Workbench
-Block	function	platform	false	component	src/ui/studio/Workbench.tsx	499	
-OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	517	
+CompoundButtonEditor	function	platform	false	component	src/ui/studio/Workbench.tsx	181	
+previewPropsFor	function	platform	false		src/ui/studio/Workbench.tsx	191	CompoundButtonEditor
+setPreviewProp	function	platform	false		src/ui/studio/Workbench.tsx	199	CompoundButtonEditor
+reset	function	platform	false		src/ui/studio/Workbench.tsx	209	CompoundButtonEditor
+Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	326	
+setValues	function	platform	false		src/ui/studio/Workbench.tsx	340	Workbench
+set	function	platform	false		src/ui/studio/Workbench.tsx	343	Workbench
+specimen	function	platform	false		src/ui/studio/Workbench.tsx	356	Workbench
+Block	function	platform	false	component	src/ui/studio/Workbench.tsx	514	
+OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	532	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	

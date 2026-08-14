@@ -275,6 +275,22 @@ describe('Buttons family — Studio', () => {
     expect(container.querySelector('.sds-owned-button__variants .ui-btn--lg')).toBeNull();
   });
 
+  it('keeps compound Button icon colors isolated by variant', () => {
+    const { container, getByRole } = render(<Studio />);
+    openButtonBrowser(container);
+    openButtonMember(container, 'Dropdown Button');
+
+    fireEvent.click(getByRole('button', { name: 'Choose Icon color' }));
+    fireEvent.click(getByRole('button', { name: 'Set color to #dc2626' }));
+    expect(getByRole('button', { name: 'Choose Icon color' }).textContent).toContain('#dc2626');
+
+    fireEvent.click(getByRole('radio', { name: 'Select Primary variant' }));
+    expect(getByRole('button', { name: 'Choose Icon color' }).textContent).toContain('#ffffff');
+
+    fireEvent.click(getByRole('radio', { name: 'Select Secondary variant' }));
+    expect(getByRole('button', { name: 'Choose Icon color' }).textContent).toContain('#dc2626');
+  });
+
   it('separates the Credits treatment from Action Button variants', () => {
     const { container, queryByText } = render(<Studio />);
     openButtons(container);
@@ -350,6 +366,7 @@ describe('Buttons family — Studio', () => {
     expect(previewIcon?.style.color).toBe('rgb(220, 38, 38)');
 
     fireEvent.click(getByRole('radio', { name: /Primary/ }));
+    expect(getByRole('button', { name: 'Choose Icon color' }).textContent).toContain('#ffffff');
     expect(getByRole('button', { name: 'Clear Trailing icon' })).toBeTruthy();
     fireEvent.click(getByRole('button', { name: 'Clear Trailing icon' }));
     expect(getByRole('button', { name: 'Choose Trailing icon' }).textContent).toContain('No icon');

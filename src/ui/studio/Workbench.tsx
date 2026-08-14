@@ -169,7 +169,6 @@ interface CompoundButtonEditorProps {
   shown: PropValues;
   specimen: (props: PropValues, state?: UiState) => VNode | null;
   onSet: (name: string, value: string | number | boolean) => void;
-  onReset: () => void;
   onEditFoundation?: () => void;
 }
 
@@ -179,25 +178,41 @@ interface CompoundButtonEditorProps {
  * the same preview-first shell as the governed Button patterns instead of
  * falling back to the catalogue's generic component page.
  */
-function CompoundButtonEditor({ def, shown, specimen, onSet, onReset, onEditFoundation }: CompoundButtonEditorProps): VNode {
+function CompoundButtonEditor({ def, shown, specimen, onSet, onEditFoundation }: CompoundButtonEditorProps): VNode {
   const ownership = COMPOUND_OF[def.id] ?? 'Button family';
-  const [previewState, setPreviewState] = useState<UiState>('default');
-  const [iconTreatment, setIconTreatment] = useState('outline');
-  const [iconColor, setIconColor] = useState('#1b2d54');
+  const [previewByVariant, setPreviewByVariant] = useState<Record<string, PropValues>>({});
+  const [stateByVariant, setStateByVariant] = useState<Record<string, UiState>>({});
   const variantControl = def.props?.variant;
   const variants = variantControl && (variantControl.type === 'select' || variantControl.type === 'segmented')
     ? variantControl.options : [];
+  const selectedVariant = String(shown.variant ?? variants[0] ?? 'primary');
+  const defaultIconColor = selectedVariant === 'primary' || selectedVariant === 'danger' ? '#ffffff' : '#1b2d54';
+  const previewState = stateByVariant[selectedVariant] ?? 'default';
+  const previewPropsFor = (variant: string): PropValues => ({
+    ...shown,
+    variant,
+    iconTreatment: 'outline',
+    iconColor: variant === 'primary' || variant === 'danger' ? '#ffffff' : '#1b2d54',
+    ...(previewByVariant[variant] ?? {}),
+  });
+  const previewProps = previewPropsFor(selectedVariant);
+  const setPreviewProp = (name: string, value: string | number | boolean): void => {
+    setPreviewByVariant(previous => ({
+      ...previous,
+      [selectedVariant]: { ...(previous[selectedVariant] ?? {}), [name]: value },
+    }));
+  };
   const iconControl = def.props?.iconLeft;
   const recommendedIcons = iconControl && (iconControl.type === 'select' || iconControl.type === 'segmented')
     ? iconControl.options.filter((option): option is LucideName =>
       option !== 'None' && LUCIDE_NAMES.includes(option as LucideName)) : [];
-  const previewProps: PropValues = { ...shown, iconTreatment, iconColor };
-
   const reset = (): void => {
-    onReset();
-    setPreviewState('default');
-    setIconTreatment('outline');
-    setIconColor('#1b2d54');
+    setPreviewByVariant(previous => {
+      return Object.fromEntries(
+        Object.entries(previous).filter(([variant]) => variant !== selectedVariant),
+      );
+    });
+    setStateByVariant(previous => ({ ...previous, [selectedVariant]: 'default' }));
   };
 
   return (
@@ -220,7 +235,7 @@ function CompoundButtonEditor({ def, shown, specimen, onSet, onReset, onEditFoun
               <div role="radiogroup" aria-label={`${def.name} variant`}>
                 {variants.map(variant => (
                   <article key={variant} class={shown.variant === variant ? 'is-on' : ''}>
-                    <div class="sds-owned-button__variant-preview">{specimen({ ...previewProps, variant, size: 'md' }, 'default')}</div>
+                    <div class="sds-owned-button__variant-preview">{specimen({ ...previewPropsFor(variant), size: 'md' }, 'default')}</div>
                     <footer><strong>{friendlyValue(variant)}</strong></footer>
                     <button type="button" role="radio" aria-checked={shown.variant === variant}
                       aria-label={`Select ${friendlyValue(variant)} variant`}
@@ -251,30 +266,30 @@ function CompoundButtonEditor({ def, shown, specimen, onSet, onReset, onEditFoun
               <label class="sds-ctl" for={`${def.id}-state`}>
                 <span class="sds-ctl__label">State</span>
                 <select id={`${def.id}-state`} class="sds-ctl__input" value={previewState}
-                  onChange={event => setPreviewState((event.target as HTMLSelectElement).value as UiState)}>
+                  onChange={event => setStateByVariant(previous => ({ ...previous, [selectedVariant]: (event.target as HTMLSelectElement).value as UiState }))}>
                   {(def.states ?? ['default']).map(state => <option value={state}>{friendlyValue(state)}</option>)}
                 </select>
               </label>
               <div class="sds-owned-button__icon-picker">
                 <span>Leading icon</span>
                 <IconPicker id={`${def.id}-leading-icon`} label="Leading icon"
-                  value={String(shown.iconLeft ?? 'None')} variant={String(shown.variant ?? 'primary') as never}
+                  value={String(previewProps.iconLeft ?? 'None')} variant={selectedVariant as never}
                   position="leading" recommendations={recommendedIcons}
-                  onChange={value => onSet('iconLeft', value)} />
+                  onChange={value => setPreviewProp('iconLeft', value)} />
               </div>
               <div class="sds-owned-button__icon-style">
                 <span>Icon treatment</span>
                 <div role="radiogroup" aria-label="Icon treatment">
                   {['outline', 'circle', 'filled-circle'].map(treatment => (
-                    <button type="button" role="radio" aria-checked={iconTreatment === treatment}
-                      class={iconTreatment === treatment ? 'is-on' : ''} onClick={() => setIconTreatment(treatment)}>
+                    <button type="button" role="radio" aria-checked={previewProps.iconTreatment === treatment}
+                      class={previewProps.iconTreatment === treatment ? 'is-on' : ''} onClick={() => setPreviewProp('iconTreatment', treatment)}>
                       {friendlyValue(treatment)}
                     </button>
                   ))}
                 </div>
               </div>
               <StudioColorControl id={`${def.id}-icon-color`} label="Icon"
-                value={iconColor} onChange={setIconColor} />
+                value={String(previewProps.iconColor ?? defaultIconColor)} onChange={value => setPreviewProp('iconColor', value)} />
             </section>
             {groupControls(def)
               .map(group => ({
@@ -288,7 +303,7 @@ function CompoundButtonEditor({ def, shown, specimen, onSet, onReset, onEditFoun
                 <h4>{group.title}</h4>
                 {group.entries.map(([name, control]) => (
                   <Control key={name} name={name} control={control}
-                    value={shown[name] ?? ''} onChange={value => onSet(name, value)} />
+                    value={previewProps[name] ?? ''} onChange={value => setPreviewProp(name, value)} />
                 ))}
               </section>
             ))}
@@ -405,7 +420,7 @@ export function Workbench({ def, family, onSelectMember, onBack, backLabel = 'Co
         <RecipeStyleEditor def={def} draft={draft} />
       ) : COMPOUND_OF[def.id] ? (
         <CompoundButtonEditor def={def} shown={shown} specimen={specimen}
-          onSet={set} onReset={() => setValues(defaultProps(def))}
+          onSet={set}
           onEditFoundation={onSelectMember ? () => onSelectMember('button') : undefined} />
       ) : (
         <div data-ui-preview-scope>
