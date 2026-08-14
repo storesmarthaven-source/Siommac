@@ -13438,8 +13438,8 @@ CatalogueNodeCard	function	platform	false	component,ui-tile	src/ui/studio/Studio
 Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	206	
 PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	258	
 Studio	function	platform	true	component	src/ui/studio/Studio.tsx	267	
-openComponents	function	platform	false		src/ui/studio/Studio.tsx	295	Studio
-openGroup	function	platform	false		src/ui/studio/Studio.tsx	296	Studio
+openComponents	function	platform	false		src/ui/studio/Studio.tsx	296	Studio
+openGroup	function	platform	false		src/ui/studio/Studio.tsx	297	Studio
 friendlyError	function	platform	false		src/ui/studio/StudioPublishBar.tsx	7	
 revisionEntries	function	platform	false		src/ui/studio/StudioPublishBar.tsx	13	
 revisionChangeCount	function	platform	false		src/ui/studio/StudioPublishBar.tsx	22	

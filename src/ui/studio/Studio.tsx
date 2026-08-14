@@ -24,7 +24,7 @@
  */
 
 import { type VNode } from 'preact';
-import { useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { Workbench } from './Workbench';
 import { ButtonBrowser } from './ButtonBrowser';
 import { FamilyBrowser } from './FamilyBrowser';
@@ -265,6 +265,7 @@ function PhasePlaceholder({ title, phase }: { title: string; phase: number }): V
 }
 
 export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNode {
+  const mainRef = useRef<HTMLElement>(null);
   const [active, setActive] = useState<SectionId>('components');
   const [openId, setOpenId] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -305,6 +306,13 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
     ...(openFamily && openId !== openFamily.id ? [{ label: openFamily.name, onSelect: () => setOpenId(openFamily.id) }] : []),
     { label: openDef?.name ?? openPattern?.name ?? openFamily?.name ?? current.label },
   ];
+
+  /* The Studio swaps views inside one persistent scrolling main element. Without
+     resetting it, opening a card near the bottom of Overview lands halfway down
+     the editor and hides the live-preview header and component title. */
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+  }, [active, openId]);
 
   return (
     <div class="sds">
@@ -395,7 +403,7 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
           </div>
         </header>
 
-        <main class="sds-main">
+        <main ref={mainRef} class="sds-main">
           {active === 'components' && openId && (
             <div class="sds-component-nav" aria-label="Component navigation">
               <button type="button" class="sds-component-nav__all" onClick={openComponents}>

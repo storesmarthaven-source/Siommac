@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "4398dadc08be64204356be20f307f4c577231cdc",
+    "head": "ad31cc6a698ebaf4e2bf12d8d142cd27a91221df",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "bb26e79359e309cc339b9292",
+    "fingerprint": "ccde06e76a12ce6e894ed7b7",
     "indexedFiles": 1871
   },
   "summary": {
@@ -9512,8 +9512,8 @@
       "path": "src/ui/studio/Studio.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 452,
-      "hash": "3a3bf669dcd74845"
+      "lines": 460,
+      "hash": "f114406b1bce11aa"
     },
     {
       "path": "src/ui/studio/StudioPublishBar.tsx",
@@ -151502,7 +151502,7 @@
       "name": "openComponents",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 295,
+      "line": 296,
       "module": "platform",
       "exported": false,
       "container": "Studio",
@@ -151512,7 +151512,7 @@
       "name": "openGroup",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 296,
+      "line": 297,
       "module": "platform",
       "exported": false,
       "container": "Studio",
