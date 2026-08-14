@@ -30,12 +30,7 @@
   [data-ui-preview-scope] {
     --ui-control-radius: var(--radius-sm);
     --ui-control-font-size: var(--ui-font-size-body);
-    /* The subtle resting fill provides the hover transition the field needs.
-       Both interaction colours stay theme-derived, so the treatment follows
-       a published theme instead of baking in a light-mode value. */
-    --ui-control-bg: var(--ui-color-surface-subtle);
-    --ui-control-bg-hover: var(--ui-color-surface-default);
-    --ui-control-bg-focus: var(--ui-color-surface-default);
+    --ui-control-bg: var(--ui-color-surface-default);
     /* Deliberately NOT repointed at a semantic role. The value typed into an
        input renders navy (#1b2d54), not body text (#1F2A44) — so mapping it to
        `--ui-color-text-primary` would silently change the colour, and mapping
@@ -157,8 +152,7 @@
     position: relative;
     transition:
       border-color var(--ui-motion-fast) var(--ui-ease-standard),
-      box-shadow   var(--ui-motion-fast) var(--ui-ease-standard),
-      background-color var(--ui-motion-fast) var(--ui-ease-standard);
+      box-shadow   var(--ui-motion-fast) var(--ui-ease-standard);
   }
 
   .ui-ctrl--sm { min-height: var(--ui-control-sm); padding: 0 var(--ui-control-pad-sm); font-size: var(--ui-font-size-body-sm); }
@@ -170,7 +164,6 @@
   .ui-ctrl:hover:not(.ui-ctrl--disabled):not(.ui-ctrl--readonly),
   .ui-ctrl[data-ui-state~='hover'] {
     border-color: var(--ui-control-border-hover);
-    background: var(--ui-control-bg-hover);
   }
 
   /* Focus lives on the WRAPPER, driven by :focus-within, because the visible
@@ -181,7 +174,6 @@
     /* Keep the brand-owned focus colour, but reserve its full strength for the
        halo. A lighter 1px edge avoids a black-looking frame after pointer exit. */
     border-color: color-mix(in srgb, var(--ui-control-border-focus) 40%, transparent);
-    background: var(--ui-control-bg-focus);
     box-shadow: 0 0 0 var(--ui-control-focus-ring-width) var(--ui-control-focus-ring-color);
   }
 
