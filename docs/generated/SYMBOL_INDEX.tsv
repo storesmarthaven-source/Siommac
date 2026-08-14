@@ -13450,22 +13450,25 @@ act	function	platform	false		src/ui/studio/StudioPublishBar.tsx	56	StudioPublish
 openHistory	function	platform	false		src/ui/studio/StudioPublishBar.tsx	60	StudioPublishBar
 CONTROL_GROUPS	array	platform	false		src/ui/studio/Workbench.tsx	44	
 FRIENDLY_VALUES	object	platform	false		src/ui/studio/Workbench.tsx	51	
-friendlyValue	function	platform	false		src/ui/studio/Workbench.tsx	56	
-groupControls	function	platform	false		src/ui/studio/Workbench.tsx	62	
-Control	function	platform	false	component	src/ui/studio/Workbench.tsx	82	
-WorkbenchProps	interface	platform	true		src/ui/studio/Workbench.tsx	159	
-CompoundButtonEditorProps	interface	platform	false		src/ui/studio/Workbench.tsx	167	
-CompoundButtonEditor	function	platform	false	component	src/ui/studio/Workbench.tsx	181	
-previewPropsFor	function	platform	false		src/ui/studio/Workbench.tsx	191	CompoundButtonEditor
-setPreviewProp	function	platform	false		src/ui/studio/Workbench.tsx	199	CompoundButtonEditor
-reset	function	platform	false		src/ui/studio/Workbench.tsx	209	CompoundButtonEditor
-Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	332	
-setValues	function	platform	false		src/ui/studio/Workbench.tsx	348	Workbench
-set	function	platform	false		src/ui/studio/Workbench.tsx	351	Workbench
-specimen	function	platform	false		src/ui/studio/Workbench.tsx	364	Workbench
-Block	function	platform	false	component	src/ui/studio/Workbench.tsx	475	
-VariantSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	490	
-UsageSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	534	
+TEXT_INPUT_VARIANT_ICONS	object	platform	false		src/ui/studio/Workbench.tsx	56	
+friendlyValue	function	platform	false		src/ui/studio/Workbench.tsx	69	
+groupControls	function	platform	false		src/ui/studio/Workbench.tsx	75	
+isStateControlCoveredByPreview	function	platform	false		src/ui/studio/Workbench.tsx	93	
+isRelevantPreviewControl	function	platform	false		src/ui/studio/Workbench.tsx	108	
+Control	function	platform	false	component	src/ui/studio/Workbench.tsx	125	
+WorkbenchProps	interface	platform	true		src/ui/studio/Workbench.tsx	202	
+CompoundButtonEditorProps	interface	platform	false		src/ui/studio/Workbench.tsx	210	
+CompoundButtonEditor	function	platform	false	component	src/ui/studio/Workbench.tsx	224	
+previewPropsFor	function	platform	false		src/ui/studio/Workbench.tsx	234	CompoundButtonEditor
+setPreviewProp	function	platform	false		src/ui/studio/Workbench.tsx	242	CompoundButtonEditor
+reset	function	platform	false		src/ui/studio/Workbench.tsx	252	CompoundButtonEditor
+Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	375	
+setValues	function	platform	false		src/ui/studio/Workbench.tsx	391	Workbench
+set	function	platform	false		src/ui/studio/Workbench.tsx	394	Workbench
+specimen	function	platform	false		src/ui/studio/Workbench.tsx	407	Workbench
+Block	function	platform	false	component	src/ui/studio/Workbench.tsx	518	
+VariantSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	533	
+UsageSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	580	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	

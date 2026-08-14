@@ -28,7 +28,7 @@ import { type UiState } from '../tokens';
 import { SpecialTreatments } from '../special/SpecialTreatments';
 import { type GalleryDraft } from '../gallery/galleryStore';
 import { GeneratedStyleControls, IconPicker, RecipeStyleEditor, StudioColorControl } from './RecipeStyleEditor';
-import { LUCIDE_NAMES, type LucideName } from '../LucideIcon';
+import { LucideIcon, LUCIDE_NAMES, type LucideName } from '../LucideIcon';
 import { buttonFamilyPreviewProps } from './buttonFamilyPreview';
 import { PreviewScope } from './PreviewScope';
 
@@ -42,15 +42,28 @@ import { PreviewScope } from './PreviewScope';
  * field would mean editing 23 definitions to describe a side panel.
  */
 const CONTROL_GROUPS: { title: string; names: string[] }[] = [
-  { title: 'Content', names: ['label', 'text', 'placeholder', 'iconLeft', 'iconRight', 'icon', 'iconSide', 'iconOnly', 'helpText', 'suffix', 'prefix'] },
+  { title: 'Content', names: ['label', 'text', 'placeholder', 'iconLeft', 'iconRight', 'icon', 'iconSide', 'iconOnly', 'helpText', 'suffix', 'prefix', 'required'] },
   { title: 'Appearance', names: ['variant', 'tone', 'size', 'contrast', 'shape', 'density', 'accent'] },
-  { title: 'States', names: ['disabled', 'loading', 'loadingText', 'pressed', 'readOnly', 'required', 'error', 'checked', 'selected'] },
+  { title: 'States', names: ['disabled', 'loading', 'loadingText', 'pressed', 'readOnly', 'error', 'checked', 'selected', 'validation'] },
   { title: 'More options', names: ['action', 'href', 'fullWidth', 'clearable', 'multiline', 'rows'] },
 ];
 
 const FRIENDLY_VALUES: Record<string, string> = {
   sm: 'Small', md: 'Medium', lg: 'Large',
   None: 'No icon', Trash2: 'Trash', ArrowRight: 'Arrow right', ChevronRight: 'Chevron right',
+};
+
+const TEXT_INPUT_VARIANT_ICONS: Record<string, LucideName> = {
+  Text: 'Type',
+  Search: 'Search',
+  Password: 'LockKeyhole',
+  Number: 'Hash',
+  Currency: 'BadgeDollarSign',
+  Percentage: 'Percent',
+  Email: 'Mail',
+  URL: 'Link',
+  Phone: 'Phone',
+  'Multi-line': 'AlignLeft',
 };
 
 function friendlyValue(value: string): string {
@@ -75,6 +88,36 @@ function groupControls(
   const rest = all.filter(([n]) => !taken.has(n));
   if (rest.length > 0) out.push({ title: 'Options', entries: rest });
   return out;
+}
+
+function isStateControlCoveredByPreview(def: ComponentDef, name: string): boolean {
+  const states = new Set(def.states ?? []);
+  const representedState: Record<string, string> = {
+    disabled: 'disabled',
+    loading: 'loading',
+    readOnly: 'readonly',
+    error: 'error',
+  };
+  if (name === 'validation') {
+    return ['error', 'warning', 'success'].some(state => states.has(state as UiState));
+  }
+  const state = representedState[name];
+  return state ? states.has(state as UiState) : false;
+}
+
+function isRelevantPreviewControl(def: ComponentDef, shown: PropValues, previewState: UiState, name: string): boolean {
+  if (name === 'label') return false;
+  if (isStateControlCoveredByPreview(def, name)) return false;
+  if (def.id !== 'text-input') return true;
+
+  const type = String(shown.type ?? 'Text');
+  if (name === 'message') return previewState === 'error' || previewState === 'warning' || previewState === 'success';
+  if (name === 'charCount') return type === 'Multi-line';
+  if (name === 'prefix') return type === 'Currency' || type === 'Phone';
+  if (name === 'suffix') return type === 'Number' || type === 'Percentage';
+  if (name === 'clearable') return type === 'Search';
+  if (name === 'multiline' || name === 'rows') return type === 'Multi-line';
+  return true;
 }
 
 /* ── Playground controls ───────────────────────────────────────────────────── */
@@ -367,10 +410,10 @@ export function Workbench({ def, family, onSelectMember, draft }: WorkbenchProps
   const previewGroups = groupControls(def, def.previewAxis ? [def.previewAxis] : []);
   const quickPreviewNames = new Set(['label', 'text', 'placeholder', 'size', 'tone']);
   const quickPreviewGroups = previewGroups
-    .map(group => ({ ...group, entries: group.entries.filter(([name]) => quickPreviewNames.has(name)) }))
+    .map(group => ({ ...group, entries: group.entries.filter(([name]) => quickPreviewNames.has(name) && isRelevantPreviewControl(def, shown, previewState, name)) }))
     .filter(group => group.entries.length > 0);
   const morePreviewGroups = previewGroups
-    .map(group => ({ ...group, entries: group.entries.filter(([name]) => !quickPreviewNames.has(name)) }))
+    .map(group => ({ ...group, entries: group.entries.filter(([name]) => !quickPreviewNames.has(name) && isRelevantPreviewControl(def, shown, previewState, name)) }))
     .filter(group => group.entries.length > 0);
 
   return (
@@ -503,15 +546,18 @@ function VariantSpecimens({ def, specimen, selected, onSelect }: {
     <div class="sds-ov">
       {axis && values.length > 0 && (
         <Block title="Variants" hint="Choose a version to preview and edit.">
-          {values.length > 6 ? <label class="sds-axis-select">
-            <span>Variant</span>
-            <select value={String(selected ?? values[0])} onChange={event => onSelect(axis, (event.target as HTMLSelectElement).value)}>
+          {values.length > 6 ? <div class="sds-axis-icons" role="radiogroup" aria-label={`${def.name} variants`}>
               {values.map(v => {
                 const sample = samples?.find(item => item.value === v);
-                return <option value={v} key={v}>{sample?.title ?? friendlyValue(v)}</option>;
+                const title = sample?.title ?? friendlyValue(v);
+                const icon = def.id === 'text-input' ? TEXT_INPUT_VARIANT_ICONS[v] : undefined;
+                return <button type="button" role="radio" aria-checked={String(selected) === v}
+                  class={String(selected) === v ? 'is-on' : ''} key={v} onClick={() => onSelect(axis, v)}>
+                  {icon && <LucideIcon name={icon} size={17} strokeWidth={1.8} />}
+                  <span>{title}</span>
+                </button>;
               })}
-            </select>
-          </label> : <div class="sds-axis" role="radiogroup" aria-label={`${def.name} ${axisControl?.label ?? 'variants'}`}>
+            </div> : <div class="sds-axis" role="radiogroup" aria-label={`${def.name} ${axisControl?.label ?? 'variants'}`}>
               {values.map(v => {
                 const sample = samples?.find(item => item.value === v);
                 return (
