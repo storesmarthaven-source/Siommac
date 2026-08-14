@@ -1,6 +1,7 @@
 import { type VNode } from 'preact';
 import { type ComponentCategory } from '../registry';
 import { LucideIcon } from '../LucideIcon';
+import fileUploadersPreview from './assets/file-uploaders.webp';
 
 type ThumbnailKind =
   | 'buttons' | 'segmented' | 'menu' | 'field' | 'date' | 'select' | 'upload' | 'otp'
@@ -69,7 +70,7 @@ export function ComponentThumbnail({ id, built = true }: {
   built?: boolean;
 }): VNode {
   const kind = kindFor(id, built);
-  const fogged = id === 'file-input' || id === 'select';
+  const fogged = id === 'select';
   return (
     <div class={`sds-card__art sds-thumb sds-thumb--${kind}${fogged ? ' is-fogged' : ''}`} aria-hidden="true">
       {kind === 'buttons' && <div class="sds-thumb-buttons"><span>Cancel</span><strong><LucideIcon name="Check" size={13} />Continue</strong></div>}
@@ -77,7 +78,7 @@ export function ComponentThumbnail({ id, built = true }: {
       {kind === 'menu' && <div class="sds-thumb-menu"><strong>Actions <LucideIcon name="ChevronDown" size={12} /></strong><div><span>View record</span><span>Edit details</span><span class="is-danger">Delete</span></div></div>}
       {(['field', 'date'] as ThumbnailKind[]).includes(kind) && <FieldScene kind={kind as 'field' | 'date'} />}
       {kind === 'select' && <SelectScene />}
-      {kind === 'upload' && <div class="sds-thumb-upload"><section><LucideIcon name="UploadCloud" size={21} /><span><strong>Click to upload</strong> or drag and drop</span><small>SVG, PNG, JPG or PDF · 10 MB max</small></section><article><LucideIcon name="FileText" size={18} /><div><strong>Inspection evidence.pdf</strong><span>2.4 MB of 2.4 MB · <b>Complete</b></span><i><em /></i></div></article><article class="is-preview-blurred"><LucideIcon name="FileVideo" size={18} /><div><strong>Site walkthrough.mp4</strong><span>6.4 MB of 16 MB · Uploading</span><i><em /></i></div></article></div>}
+      {kind === 'upload' && <img class="sds-thumb-upload-image" src={fileUploadersPreview} alt="" />}
       {kind === 'otp' && <div class="sds-thumb-otp"><span>Enter verification code</span><div>{['8', '2', '4', '', '', ''].map((value, index) => <i class={index === 0 ? 'is-active' : ''} key={index}>{value}</i>)}</div></div>}
       {(['check', 'radio', 'switch'] as ThumbnailKind[]).includes(kind) && <ChoiceScene kind={kind as 'check' | 'radio' | 'switch'} />}
       {kind === 'people' && <div class="sds-thumb-people"><i>SJ</i><i>AD</i><i>PR</i><strong>+2</strong></div>}

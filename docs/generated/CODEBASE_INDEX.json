@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "2d209d07e4a5a552a78d81b1f42d117af71537cf",
+    "head": "db85ef28720b75e42fb80415ed4557f737e63fd8",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "1234274c147447caff753be5",
+    "fingerprint": "f30e39d59b0b3858f85a7d86",
     "indexedFiles": 1862
   },
   "summary": {
@@ -9491,8 +9491,8 @@
       "path": "src/ui/studio/componentThumbnail.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 102,
-      "hash": "dd08240bc2d1f316"
+      "lines": 103,
+      "hash": "6c2d3955cdb08258"
     },
     {
       "path": "src/ui/studio/designSystemConfig.test.ts",
@@ -9505,8 +9505,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 449,
-      "hash": "5c13f40ebce2fec6"
+      "lines": 451,
+      "hash": "efb6e249401d4563"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -150217,7 +150217,7 @@
       "name": "ThumbnailKind",
       "kind": "type",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 5,
+      "line": 6,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150227,7 +150227,7 @@
       "name": "kindFor",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 11,
+      "line": 12,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150237,7 +150237,7 @@
       "name": "FieldScene",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 41,
+      "line": 42,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150249,7 +150249,7 @@
       "name": "SelectScene",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 47,
+      "line": 48,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150261,7 +150261,7 @@
       "name": "ChoiceScene",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 61,
+      "line": 62,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150273,7 +150273,7 @@
       "name": "ComponentThumbnail",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 66,
+      "line": 67,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150334,7 +150334,7 @@
       "name": "cardNamed",
       "kind": "function",
       "file": "src/ui/studio/family.test.tsx",
-      "line": 132,
+      "line": 134,
       "module": "platform",
       "exported": false,
       "container": "",

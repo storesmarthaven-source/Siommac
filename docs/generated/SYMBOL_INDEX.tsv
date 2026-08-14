@@ -13324,17 +13324,17 @@ ButtonPatternEditor	function	platform	false	component	src/ui/studio/ButtonBrowse
 set	function	platform	false		src/ui/studio/ButtonBrowser.tsx	52	ButtonPatternEditor
 ButtonBrowser	function	platform	true	component	src/ui/studio/ButtonBrowser.tsx	83	
 buttonFamilyPreviewProps	function	platform	true		src/ui/studio/buttonFamilyPreview.ts	9	
-ThumbnailKind	type	platform	false		src/ui/studio/componentThumbnail.tsx	5	
-kindFor	function	platform	false		src/ui/studio/componentThumbnail.tsx	11	
-FieldScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	41	
-SelectScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	47	
-ChoiceScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	61	
-ComponentThumbnail	function	platform	true	component	src/ui/studio/componentThumbnail.tsx	66	
+ThumbnailKind	type	platform	false		src/ui/studio/componentThumbnail.tsx	6	
+kindFor	function	platform	false		src/ui/studio/componentThumbnail.tsx	12	
+FieldScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	42	
+SelectScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	48	
+ChoiceScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	62	
+ComponentThumbnail	function	platform	true	component	src/ui/studio/componentThumbnail.tsx	67	
 MEMBERS	variable	platform	false	component,test	src/ui/studio/family.test.tsx	26	
 openButtonBrowser	function	platform	false	test	src/ui/studio/family.test.tsx	29	
 openButtons	function	platform	false	test	src/ui/studio/family.test.tsx	36	
 openButtonMember	function	platform	false	test	src/ui/studio/family.test.tsx	41	
-cardNamed	function	platform	false	ui-tile,test	src/ui/studio/family.test.tsx	132	
+cardNamed	function	platform	false	ui-tile,test	src/ui/studio/family.test.tsx	134	
 Shape	interface	platform	false		src/ui/studio/InAppUsage.tsx	31	
 DATA	object	platform	false		src/ui/studio/InAppUsage.tsx	39	
 describe	function	platform	false		src/ui/studio/InAppUsage.tsx	43	

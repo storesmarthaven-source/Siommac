@@ -111,7 +111,9 @@ describe('Buttons family — Studio', () => {
     expect(container.querySelectorAll('.sds-card--family .sds-card__art')).toHaveLength(1);
     expect(container.querySelector('.sds-card--family .sds-card__specimen')).toBeNull();
     expect(container.querySelectorAll('.sds-card__preview .sds-card__art').length).toBe(container.querySelectorAll('.sds-card').length);
-    expect(container.querySelector('.sds-card__preview img')).toBeNull();
+    const previewImages = [...container.querySelectorAll<HTMLImageElement>('.sds-card__preview img')];
+    expect(previewImages).toHaveLength(1);
+    expect(previewImages[0]?.closest('.sds-card')?.querySelector('.sds-card__foot strong')?.textContent).toBe('FileInput');
     expect(container.querySelector('.sds-card__preview .ui-btn')).toBeNull();
     const navRows = [...container.querySelectorAll('.sds-nav__item--sub')]
       .map(el => el.textContent);
@@ -132,11 +134,11 @@ describe('Buttons family — Studio', () => {
     const cardNamed = (name: string) => cards.find(card =>
       card.querySelector('.sds-card__foot strong')?.textContent === name);
 
-    expect(cardNamed('FileInput')?.textContent).toContain('Site walkthrough.mp4');
+    expect(cardNamed('FileInput')?.querySelector('.sds-thumb-upload-image')).toBeTruthy();
     expect(cardNamed('Select')?.textContent).toContain('Does not contain');
     expect(cardNamed('Select')?.textContent).toContain('Search');
     expect(cardNamed('Select')?.textContent).toContain('Product');
-    expect(cardNamed('FileInput')?.querySelectorAll('.is-preview-blurred')).toHaveLength(1);
+    expect(cardNamed('FileInput')?.querySelectorAll('.is-preview-blurred')).toHaveLength(0);
     expect(cardNamed('Select')?.querySelectorAll('.is-preview-blurred')).toHaveLength(1);
   });
 
