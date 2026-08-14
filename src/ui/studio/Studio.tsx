@@ -207,9 +207,10 @@ function Catalogue({ onOpen }: { onOpen: (id: string) => void }): VNode {
       <header class="sds-hero">
         <h1><strong>SIOMAC</strong> Design System</h1>
         <p>
-          {t.canonical + t.beta} canonical components built on semantic tokens and CSS recipes,
-          with {t.missingPrimitives} primitive gaps recorded honestly. The catalogue uses clear
-          visual thumbnails; open a component to work with its live canonical preview.
+          {t.canonical + t.beta} canonical base components — buttons, inputs, badges and the
+          primitives every SIOMAC surface is built from — use semantic tokens and CSS recipes,
+          with {t.missingPrimitives} primitive gaps. Browse the visual catalogue and open any
+          component to edit its live canonical preview.
         </p>
         <button type="button" class="sds-hero__cta"
           onClick={() => document.querySelector('.sds-sec--first')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
@@ -219,13 +220,8 @@ function Catalogue({ onOpen }: { onOpen: (id: string) => void }): VNode {
 
       <div class="sds-rule" />
 
-      <section class="sds-sec sds-sec--first">
-        <h2>Base components</h2>
-        <p>Buttons, inputs, badges — the primitives every SIOMAC surface is built from.</p>
-      </section>
-
-      {primitives.map(g => (
-        <section class="sds-sec" key={g.category}>
+      {primitives.map((g, index) => (
+        <section class={`sds-sec${index === 0 ? ' sds-sec--first' : ''}`} key={g.category}>
           <h3>{g.label} <span>{g.built}/{g.total} built</span></h3>
           {SECTION_COPY[g.category] && <p>{SECTION_COPY[g.category]}</p>}
           <div class="sds-grid">

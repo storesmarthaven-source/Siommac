@@ -13382,8 +13382,8 @@ ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx
 FamilyCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	175	
 CatalogueNodeCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	193	
 Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	200	
-PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	256	
-Studio	function	platform	true	component	src/ui/studio/Studio.tsx	265	
+PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	252	
+Studio	function	platform	true	component	src/ui/studio/Studio.tsx	261	
 friendlyError	function	platform	false		src/ui/studio/StudioPublishBar.tsx	7	
 StudioPublishBar	function	platform	true	component	src/ui/studio/StudioPublishBar.tsx	16	
 act	function	platform	false		src/ui/studio/StudioPublishBar.tsx	29	StudioPublishBar
