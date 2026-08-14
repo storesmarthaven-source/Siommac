@@ -43,7 +43,7 @@ import { PreviewScope } from './PreviewScope';
  */
 const CONTROL_GROUPS: { title: string; names: string[] }[] = [
   { title: 'Content', names: ['label', 'text', 'placeholder', 'iconLeft', 'iconRight', 'icon', 'iconSide', 'iconOnly', 'helpText', 'tooltipEnabled', 'tooltipText', 'suffix', 'prefix', 'required'] },
-  { title: 'Appearance', names: ['variant', 'tier', 'tone', 'mode', 'size', 'contrast', 'shape', 'density', 'accent'] },
+  { title: 'Appearance', names: ['variant', 'layout', 'tier', 'tone', 'mode', 'size', 'contrast', 'shape', 'density', 'accent'] },
   { title: 'Timing', names: ['timer', 'duration', 'progress'] },
   { title: 'States', names: ['disabled', 'loading', 'loadingText', 'pressed', 'readOnly', 'error', 'checked', 'selected', 'validation'] },
   { title: 'Content options', names: ['chips', 'details', 'note', 'file', 'action', 'inputType'] },
@@ -591,7 +591,10 @@ function VariantSpecimens({ def, specimen, selected, onSelect }: {
   return (
     <div class="sds-ov">
       {axis && values.length > 0 && (
-        <Block title="Variants" hint="Choose a version to preview and edit.">
+        <Block
+          title={axis === 'layout' ? 'Layouts' : 'Variants'}
+          hint={axis === 'layout' ? 'Choose a frame layout to preview and edit.' : 'Choose a version to preview and edit.'}
+        >
           {values.length > 6 ? <div class="sds-axis-icons" role="radiogroup" aria-label={`${def.name} variants`}>
               {values.map(v => {
                 const sample = samples?.find(item => item.value === v);
@@ -610,7 +613,11 @@ function VariantSpecimens({ def, specimen, selected, onSelect }: {
                   <button type="button" role="radio" aria-checked={String(selected) === v}
                     class={`sds-axis__cell${String(selected) === v ? ' is-on' : ''}`} key={v}
                     onClick={() => onSelect(axis, v)}>
-                    <div class="sds-axis__spec">{specimen(propsForAxis(def, axis, v))}</div>
+                    <div class="sds-axis__spec">
+                      {def.id === 'dialog' && axis === 'layout'
+                        ? <ModalLayoutThumbnail layout={v} />
+                        : specimen(propsForAxis(def, axis, v))}
+                    </div>
                     <strong>{sample?.title ?? friendlyValue(v)}</strong>
                   </button>
                 );
@@ -620,6 +627,20 @@ function VariantSpecimens({ def, specimen, selected, onSelect }: {
       )}
 
     </div>
+  );
+}
+
+function ModalLayoutThumbnail({ layout }: { layout: string }): VNode {
+  const hasSidebar = layout === 'sidebar-left' || layout === 'sidebar-right' || layout === 'split';
+  return (
+    <span class={`sds-modal-layout-thumb sds-modal-layout-thumb--${layout}`} aria-hidden="true">
+      <i class="sds-modal-layout-thumb__head"><b /><b /></i>
+      <i class="sds-modal-layout-thumb__body">
+        <b class="sds-modal-layout-thumb__content"><em /><em /><em /></b>
+        {hasSidebar && <b class="sds-modal-layout-thumb__side"><em /><em /></b>}
+      </i>
+      <i class="sds-modal-layout-thumb__foot"><b /><b /></i>
+    </span>
   );
 }
 

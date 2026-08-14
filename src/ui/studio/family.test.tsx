@@ -220,6 +220,24 @@ describe('Buttons family — Studio', () => {
     expect(getByLabelText('Timer progress')).toBeTruthy();
   });
 
+  it('offers governed Modal Frame layouts without separate sidebar components', () => {
+    const { container, getByRole } = render(<Studio />);
+    fireEvent.click(getByRole('button', { name: 'Modal Frame', exact: true }));
+
+    const layouts = getByRole('radiogroup', { name: 'Modal Frame Layout' });
+    expect(layouts.querySelectorAll('[role="radio"]')).toHaveLength(5);
+    expect(layouts.querySelectorAll('.sds-modal-layout-thumb')).toHaveLength(5);
+    fireEvent.click(getByRole('radio', { name: /Sidebar right/ }));
+
+    const frame = container.querySelector('.ui-dialog--layout-sidebar-right');
+    expect(frame).toBeTruthy();
+    expect(frame?.querySelector('.ui-dialog-head')).toBeTruthy();
+    expect(frame?.querySelector('.ui-dialog-content')).toBeTruthy();
+    expect(frame?.querySelector('.ui-dialog-sidebar')).toBeTruthy();
+    expect(frame?.querySelector('.ui-dialog-foot')).toBeTruthy();
+    expect(container.querySelector('.sds-nav button')?.textContent).not.toBe('Dialog Sidebar');
+  });
+
   it('keeps the Checkbox application example in a canonical vertical group', () => {
     const { container, getByRole } = render(<Studio />);
     fireEvent.click(getByRole('button', { name: 'Checkbox', exact: true }));

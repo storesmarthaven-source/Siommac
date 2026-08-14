@@ -13008,16 +13008,20 @@ Basic	function	platform	false	component,test	src/ui/overlays/Dialog.test.tsx	15
 Harness	function	platform	false	component,test	src/ui/overlays/Dialog.test.tsx	98	
 DialogSize	type	platform	true		src/ui/overlays/Dialog.tsx	40	
 DialogVariant	type	platform	true		src/ui/overlays/Dialog.tsx	41	
-DialogProps	interface	platform	true		src/ui/overlays/Dialog.tsx	43	
-DialogTitleId	variable	platform	false	component	src/ui/overlays/Dialog.tsx	73	
-DialogComponent	interface	platform	false		src/ui/overlays/Dialog.tsx	75	
-DialogRoot	function	platform	false	component	src/ui/overlays/Dialog.tsx	83	
-DialogHeaderProps	interface	platform	true		src/ui/overlays/Dialog.tsx	137	
-DialogHeader	function	platform	false	component	src/ui/overlays/Dialog.tsx	147	
-DialogBody	function	platform	false	component	src/ui/overlays/Dialog.tsx	168	
-DialogFooter	function	platform	false	component	src/ui/overlays/Dialog.tsx	172	
-DialogSection	function	platform	false	component	src/ui/overlays/Dialog.tsx	182	
-Dialog	variable	platform	true	component	src/ui/overlays/Dialog.tsx	196	
+DialogLayout	type	platform	true		src/ui/overlays/Dialog.tsx	42	
+DialogProps	interface	platform	true		src/ui/overlays/Dialog.tsx	44	
+DialogTitleId	variable	platform	false	component	src/ui/overlays/Dialog.tsx	76	
+DialogComponent	interface	platform	false		src/ui/overlays/Dialog.tsx	78	
+DialogRoot	function	platform	false	component	src/ui/overlays/Dialog.tsx	89	
+DialogHeaderProps	interface	platform	true		src/ui/overlays/Dialog.tsx	143	
+DialogHeader	function	platform	false	component	src/ui/overlays/Dialog.tsx	153	
+DialogBody	function	platform	false	component	src/ui/overlays/Dialog.tsx	174	
+DialogFooter	function	platform	false	component	src/ui/overlays/Dialog.tsx	178	
+DialogLayoutRegion	function	platform	false	component	src/ui/overlays/Dialog.tsx	188	
+DialogSidebar	function	platform	false	component	src/ui/overlays/Dialog.tsx	192	
+DialogContent	function	platform	false	component	src/ui/overlays/Dialog.tsx	196	
+DialogSection	function	platform	false	component	src/ui/overlays/Dialog.tsx	201	
+Dialog	variable	platform	true	component	src/ui/overlays/Dialog.tsx	215	
 MenuAction	interface	platform	true		src/ui/overlays/DropdownMenu.tsx	25	
 MenuGroup	interface	platform	true		src/ui/overlays/DropdownMenu.tsx	39	
 MenuItems	type	platform	true		src/ui/overlays/DropdownMenu.tsx	45	
@@ -13193,7 +13197,7 @@ DEMO_PEOPLE	array	platform	false		src/ui/registry/definitions.tsx	39
 DEMO_DEPARTMENTS	array	platform	false		src/ui/registry/definitions.tsx	47	
 personDef	object	platform	false		src/ui/registry/definitions.tsx	62	
 dialogDef	object	platform	false		src/ui/registry/definitions.tsx	178	
-COMPONENT_DEFS	array	platform	true		src/ui/registry/definitions.tsx	311	
+COMPONENT_DEFS	array	platform	true		src/ui/registry/definitions.tsx	338	
 ComponentFamily	interface	platform	true		src/ui/registry/families.ts	23	
 BUTTON_FAMILY	object	platform	true		src/ui/registry/families.ts	48	
 SWITCH_FAMILY	object	platform	true		src/ui/registry/families.ts	62	
@@ -13397,7 +13401,7 @@ openButtonMember	function	platform	false	test	src/ui/studio/family.test.tsx	41
 labels	function	platform	false	test	src/ui/studio/family.test.tsx	108	
 navTo	function	platform	false	test	src/ui/studio/family.test.tsx	110	
 cardNamed	function	platform	false	ui-tile,test	src/ui/studio/family.test.tsx	158	
-navigate	function	platform	false	test	src/ui/studio/family.test.tsx	409	
+navigate	function	platform	false	test	src/ui/studio/family.test.tsx	427	
 FamilyBrowser	function	platform	true	component	src/ui/studio/FamilyBrowser.tsx	5	
 Shape	interface	platform	false		src/ui/studio/InAppUsage.tsx	31	
 DATA	object	platform	false		src/ui/studio/InAppUsage.tsx	39	
@@ -13480,7 +13484,8 @@ resetPreview	function	platform	false		src/ui/studio/Workbench.tsx	443	Workbench
 specimen	function	platform	false		src/ui/studio/Workbench.tsx	459	Workbench
 Block	function	platform	false	component	src/ui/studio/Workbench.tsx	564	
 VariantSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	579	
-UsageSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	626	
+ModalLayoutThumbnail	function	platform	false	component	src/ui/studio/Workbench.tsx	633	
+UsageSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	647	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	

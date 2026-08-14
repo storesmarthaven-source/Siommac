@@ -177,9 +177,9 @@ const personDef: ComponentDef = {
 
 const dialogDef: ComponentDef = {
   id: 'dialog',
-  name: 'Dialog',
+  name: 'Modal Frame',
   category: 'overlays',
-  description: 'The one dialog frame. Replaces six implementations and 225 ad-hoc overlay class families — no module invents dialog chrome again.',
+  description: 'One accessible window frame with a shared header, scrolling body and pinned footer across standard, sidebar, split and wide layouts.',
   status: 'stable',
   componentPath: 'src/ui/overlays/Dialog.tsx',
   importFrom: '@ui',
@@ -199,6 +199,7 @@ const dialogDef: ComponentDef = {
     sub:     { type: 'text',   label: 'Subtitle', default: 'PAY-2026-0041 · 148 employees' },
     size:    { type: 'select', label: 'Size', options: ['sm', 'md', 'lg', 'xl', 'fullscreen'], default: 'md' },
     variant: { type: 'select', label: 'Variant', options: ['standard', 'form', 'confirm', 'destructive', 'info', 'workspace'], default: 'standard' },
+    layout:  { type: 'segmented', label: 'Layout', options: ['standard', 'sidebar-left', 'sidebar-right', 'split', 'wide'], default: 'standard' },
     icon:    { type: 'select', label: 'Header icon', options: ['none', 'CircleCheck', 'TriangleAlert', 'Trash2', 'Info'], default: 'CircleCheck' },
     showClose: { type: 'boolean', label: 'Close button', default: true },
     busy:    { type: 'boolean', label: 'Busy (submitting)', default: false },
@@ -220,6 +221,10 @@ const dialogDef: ComponentDef = {
       { name: '--ui-dialog-foot-pad', label: 'Footer padding', kind: 'text' },
       { name: '--ui-dialog-foot-min-height', label: 'Footer min height', kind: 'size' },
       { name: '--ui-dialog-gap',      label: 'Footer button gap', kind: 'size' },
+      { name: '--ui-dialog-column-gap', label: 'Column gap', kind: 'size' },
+      { name: '--ui-dialog-sidebar-width', label: 'Sidebar width', kind: 'size' },
+      { name: '--ui-dialog-sidebar-pad', label: 'Sidebar padding', kind: 'text' },
+      { name: '--ui-dialog-sidebar-bg', label: 'Sidebar background', kind: 'color' },
     ] },
     { label: 'Header icon & backdrop', controls: [
       { name: '--ui-dialog-icon-bg',       label: 'Icon chip fill', kind: 'color-alpha' },
@@ -230,6 +235,7 @@ const dialogDef: ComponentDef = {
   ],
 
   states: ['default', 'loading'],
+  previewAxis: 'layout',
 
   a11y: {
     role: 'dialog, aria-modal="true"',
@@ -250,9 +256,11 @@ const dialogDef: ComponentDef = {
   render: (p, state) => {
     const iconName = s(p.icon, 'none');
     const busy = b(p.busy) || state === 'loading';
+    const layout = s(p.layout, 'standard');
+    const hasSidebar = layout === 'sidebar-left' || layout === 'sidebar-right' || layout === 'split';
     return (
       <div class="ui-gallery-dialog-frame">
-        <section class={`ui-dialog ui-dialog--${s(p.size, 'md')} ui-dialog--${s(p.variant, 'standard')}`} role="group" aria-label="Dialog preview">
+        <section class={`ui-dialog ui-dialog--${s(p.size, 'md')} ui-dialog--${s(p.variant, 'standard')} ui-dialog--layout-${layout}`} role="group" aria-label="Modal frame preview">
           <header class="ui-dialog-head">
             {iconName !== 'none' && <span class="ui-dialog-icon" aria-hidden="true"><LucideIcon name={iconName as never} /></span>}
             <div class="ui-dialog-titles">
@@ -264,17 +272,34 @@ const dialogDef: ComponentDef = {
             )}
           </header>
           <div class="ui-dialog-body">
-            <FormGrid>
-              <FormField label="Payment date" required>
-                <TextInput value="2026-08-28" onInput={() => { /* preview */ }} />
-              </FormField>
-              <FormField label="Approver" required>
-                <PersonSearchSelect value="p1" onChange={() => { /* preview */ }} people={DEMO_PEOPLE} />
-              </FormField>
-              <FormField label="Reason" wide helpText="Recorded on the audit trail.">
-                <TextInput multiline value="" onInput={() => { /* preview */ }} placeholder="Add context for the approver…" />
-              </FormField>
-            </FormGrid>
+            <div class="ui-dialog-layout">
+              <div class="ui-dialog-content">
+                <FormGrid>
+                  <FormField label="Payment date" required>
+                    <TextInput value="2026-08-28" onInput={() => { /* preview */ }} />
+                  </FormField>
+                  <FormField label="Approver" required>
+                    <PersonSearchSelect value="p1" onChange={() => { /* preview */ }} people={DEMO_PEOPLE} />
+                  </FormField>
+                  <FormField label="Reason" wide helpText="Recorded on the audit trail.">
+                    <TextInput multiline value="" onInput={() => { /* preview */ }} placeholder="Add context for the approver…" />
+                  </FormField>
+                </FormGrid>
+              </div>
+              {hasSidebar && (
+                <aside class="ui-dialog-sidebar">
+                  <div class="ui-dialog-section-head">
+                    <h4>{layout === 'split' ? 'Approval summary' : 'Details'}</h4>
+                    <p>Supporting information stays visible beside the main content.</p>
+                  </div>
+                  <dl class="sds-modal-summary">
+                    <div><dt>Employees</dt><dd>148</dd></div>
+                    <div><dt>Gross total</dt><dd>$284,930</dd></div>
+                    <div><dt>Status</dt><dd>Ready</dd></div>
+                  </dl>
+                </aside>
+              )}
+            </div>
           </div>
           <footer class="ui-dialog-foot">
             {b(p.backLink) && <div class="ui-dialog-foot-left"><Button variant="link">Back</Button></div>}
@@ -289,12 +314,14 @@ const dialogDef: ComponentDef = {
     );
   },
 
-  code: (p) => `<Dialog open={open} onClose={close} size="${s(p.size, 'md')}"${s(p.variant) !== 'standard' ? ` variant="${s(p.variant)}"` : ''}${b(p.busy) ? ' busy={saving}' : ''}>
+  code: (p) => `<Dialog open={open} onClose={close} size="${s(p.size, 'md')}"${s(p.variant) !== 'standard' ? ` variant="${s(p.variant)}"` : ''}${s(p.layout) !== 'standard' ? ` layout="${s(p.layout)}"` : ''}${b(p.busy) ? ' busy={saving}' : ''}>
   <Dialog.Header
     title="${s(p.title, 'Title')}"${s(p.sub) ? `\n    sub="${s(p.sub)}"` : ''}${s(p.icon) !== 'none' ? `\n    icon={<LucideIcon name="${s(p.icon)}" />}` : ''}${b(p.showClose) ? '\n    onClose={close}' : ''}
   />
   <Dialog.Body>
-    {/* form fields */}
+    <Dialog.Layout>
+      <Dialog.Content>{/* form fields */}</Dialog.Content>${['sidebar-left', 'sidebar-right', 'split'].includes(s(p.layout)) ? '\n      <Dialog.Sidebar>{/* supporting details */}</Dialog.Sidebar>' : ''}
+    </Dialog.Layout>
   </Dialog.Body>
   <Dialog.Footer${b(p.backLink) ? ' left={<Button variant="link">Back</Button>}' : ''}>
     <Button variant="outline" onClick={close}>Cancel</Button>

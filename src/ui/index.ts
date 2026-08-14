@@ -216,7 +216,7 @@ export {
 export { Accordion, type AccordionProps, type AccordionItem } from './containers/Accordion';
 
 // ── Overlays (canonical, v2) ──
-export { Dialog, type DialogProps, type DialogSize, type DialogVariant } from './overlays/Dialog';
+export { Dialog, type DialogProps, type DialogSize, type DialogVariant, type DialogLayout } from './overlays/Dialog';
 export { AnchoredPopup, type AnchoredPopupProps } from './overlays/AnchoredPopup';
 export { Popover, type PopoverProps } from './overlays/Popover';
 export { Tooltip, type TooltipProps } from './overlays/Tooltip';

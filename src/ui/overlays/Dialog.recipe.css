@@ -33,6 +33,10 @@
     --ui-dialog-foot-pad: 14px 22px;
     --ui-dialog-foot-min-height: 64px;
     --ui-dialog-gap: 10px;
+    --ui-dialog-column-gap: 0px;
+    --ui-dialog-sidebar-width: 220px;
+    --ui-dialog-sidebar-pad: 20px;
+    --ui-dialog-sidebar-bg: var(--bg-subtle);
 
     --ui-dialog-accent-height: 0px;
     --ui-dialog-accent-color: var(--ui-color-selection-border);
@@ -89,6 +93,7 @@
     max-height: 100%;
     border-radius: 0;
   }
+  .ui-dialog--layout-wide:not(.ui-dialog--fullscreen) { width: var(--ui-dialog-width-xl); }
   .ui-dialog--fullscreen ~ *, .ui-dialog-backdrop:has(.ui-dialog--fullscreen) { padding: 0; }
 
   /* Optional top accent stripe — off by default (0px), turned on per variant. */
@@ -172,6 +177,40 @@
     overscroll-behavior: contain;
   }
 
+  /* Body layouts are structural variants of the same modal frame. The grid
+     areas keep content before or after its sidebar without duplicating DOM. */
+  .ui-dialog-layout {
+    display: grid;
+    min-height: 0;
+    gap: var(--ui-dialog-column-gap);
+  }
+  .ui-dialog-content { grid-area: content; min-width: 0; }
+  .ui-dialog-sidebar {
+    grid-area: sidebar;
+    min-width: 0;
+    padding: var(--ui-dialog-sidebar-pad);
+    background: var(--ui-dialog-sidebar-bg);
+  }
+  .ui-dialog--layout-standard .ui-dialog-layout,
+  .ui-dialog--layout-wide .ui-dialog-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'content';
+  }
+  .ui-dialog--layout-sidebar-left .ui-dialog-layout {
+    grid-template-columns: var(--ui-dialog-sidebar-width) minmax(0, 1fr);
+    grid-template-areas: 'sidebar content';
+  }
+  .ui-dialog--layout-sidebar-right .ui-dialog-layout {
+    grid-template-columns: minmax(0, 1fr) var(--ui-dialog-sidebar-width);
+    grid-template-areas: 'content sidebar';
+  }
+  .ui-dialog--layout-split .ui-dialog-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas: 'content sidebar';
+  }
+  .ui-dialog-layout > .ui-dialog-content { padding: var(--ui-dialog-body-pad); }
+  .ui-dialog-body:has(> .ui-dialog-layout) { padding: 0; }
+
   /* ── Footer ────────────────────────────────────────────────────────────────
      Always visible: it is a flex sibling of the scrolling body, not an element
      inside it, so it stays pinned without `position: sticky` and without the
@@ -229,5 +268,12 @@
   @media (max-width: 560px) {
     .ui-dialog-backdrop { padding: 0; align-items: flex-end; }
     .ui-dialog { width: 100%; max-height: 92vh; border-radius: var(--radius-md) var(--radius-md) 0 0; }
+    .ui-dialog-layout,
+    .ui-dialog--layout-sidebar-left .ui-dialog-layout,
+    .ui-dialog--layout-sidebar-right .ui-dialog-layout,
+    .ui-dialog--layout-split .ui-dialog-layout {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: 'content' 'sidebar';
+    }
   }
 }

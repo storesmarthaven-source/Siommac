@@ -194,6 +194,27 @@ describe('Dialog', () => {
     expect(dlg.className).toContain('ui-dialog--destructive');
   });
 
+  it('applies a governed body layout without changing the dialog contract', () => {
+    render(
+      <Dialog open onClose={vi.fn()} layout="sidebar-right">
+        <Dialog.Header title="Employee details" />
+        <Dialog.Body>
+          <Dialog.Layout>
+            <Dialog.Content>Main form</Dialog.Content>
+            <Dialog.Sidebar>Summary</Dialog.Sidebar>
+          </Dialog.Layout>
+        </Dialog.Body>
+        <Dialog.Footer><button type="button">Save</button></Dialog.Footer>
+      </Dialog>,
+    );
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.className).toContain('ui-dialog--layout-sidebar-right');
+    expect(dialog.querySelector('.ui-dialog-content')?.textContent).toBe('Main form');
+    expect(dialog.querySelector('.ui-dialog-sidebar')?.textContent).toBe('Summary');
+    expect(dialog.querySelector('.ui-dialog-head')).toBeTruthy();
+    expect(dialog.querySelector('.ui-dialog-foot')).toBeTruthy();
+  });
+
   it('renders a left-aligned footer slot', () => {
     render(
       <Dialog open onClose={vi.fn()}>

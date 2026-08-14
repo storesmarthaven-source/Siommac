@@ -39,12 +39,15 @@ import '../primitives/control.recipe.css';
 
 export type DialogSize = 'sm' | 'md' | 'lg' | 'xl' | 'fullscreen';
 export type DialogVariant = 'standard' | 'form' | 'confirm' | 'destructive' | 'info' | 'workspace';
+export type DialogLayout = 'standard' | 'sidebar-left' | 'sidebar-right' | 'split' | 'wide';
 
 export interface DialogProps {
   open: boolean;
   onClose: () => void;
   size?: DialogSize;
   variant?: DialogVariant;
+  /** Governed body arrangement. Header, footer and accessibility never change. */
+  layout?: DialogLayout;
 
   /**
    * Blocks interaction with the sheet while a submit is in flight. The close
@@ -77,11 +80,14 @@ interface DialogComponent {
   Header: typeof DialogHeader;
   Body: typeof DialogBody;
   Footer: typeof DialogFooter;
+  Layout: typeof DialogLayoutRegion;
+  Sidebar: typeof DialogSidebar;
+  Content: typeof DialogContent;
   Section: typeof DialogSection;
 }
 
 function DialogRoot({
-  open, onClose, size = 'md', variant = 'standard', busy = false,
+  open, onClose, size = 'md', variant = 'standard', layout = 'standard', busy = false,
   closeOnBackdrop = true, closeOnEscape = true,
   overlayClass, class: extra, children,
 }: DialogProps): VNode | null {
@@ -115,7 +121,7 @@ function DialogRoot({
     >
       <section
         ref={panelRef}
-        class={`ui-dialog ui-dialog--${size} ui-dialog--${variant}${extra ? ` ${extra}` : ''}`}
+        class={`ui-dialog ui-dialog--${size} ui-dialog--${variant} ui-dialog--layout-${layout}${extra ? ` ${extra}` : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -178,6 +184,19 @@ function DialogFooter({ children, left }: { children: ComponentChildren; left?: 
   );
 }
 
+/** The governed body grid. Sidebars and content stack automatically on mobile. */
+function DialogLayoutRegion({ children, class: extra }: { children: ComponentChildren; class?: string }): VNode {
+  return <div class={`ui-dialog-layout${extra ? ` ${extra}` : ''}`}>{children}</div>;
+}
+
+function DialogSidebar({ children, class: extra }: { children: ComponentChildren; class?: string }): VNode {
+  return <aside class={`ui-dialog-sidebar${extra ? ` ${extra}` : ''}`}>{children}</aside>;
+}
+
+function DialogContent({ children, class: extra }: { children: ComponentChildren; class?: string }): VNode {
+  return <div class={`ui-dialog-content${extra ? ` ${extra}` : ''}`}>{children}</div>;
+}
+
 /** A titled group inside a dialog body — the standard way to structure a form. */
 function DialogSection(
   { title, desc, children }: { title: string; desc?: string; children: ComponentChildren },
@@ -197,4 +216,7 @@ export const Dialog = DialogRoot as DialogComponent;
 Dialog.Header = DialogHeader;
 Dialog.Body = DialogBody;
 Dialog.Footer = DialogFooter;
+Dialog.Layout = DialogLayoutRegion;
+Dialog.Sidebar = DialogSidebar;
+Dialog.Content = DialogContent;
 Dialog.Section = DialogSection;

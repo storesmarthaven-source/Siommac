@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "78cef1ac84b4a89d515d346d1f1d2b38e30b5cb5",
+    "head": "da208e889ba10994de4947e99122bd3db65c7c9a",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "cd1be03bb92d1acdbc72510a",
+    "fingerprint": "b878f410fcf0e8280f593efd",
     "indexedFiles": 1872
   },
   "summary": {
     "files": 1517,
-    "symbols": 14995,
+    "symbols": 15000,
     "widgets": 71,
     "routes": 983,
     "routeDefinitions": 984,
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 455,
-        "symbols": 3971,
+        "symbols": 3976,
         "widgets": 18,
         "routes": 38,
         "routeDefinitions": 53,
@@ -8967,7 +8967,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 274,
-      "hash": "e10fe6efde7f9867"
+      "hash": "699b11612df5d843"
     },
     {
       "path": "src/ui/layouts/ModulePageLayout.tsx",
@@ -9106,15 +9106,15 @@
       "path": "src/ui/overlays/Dialog.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 228,
-      "hash": "b4dc3f1df52885c8"
+      "lines": 249,
+      "hash": "e0cb65d74f00b59d"
     },
     {
       "path": "src/ui/overlays/Dialog.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 201,
-      "hash": "2fce59263a1bb80e"
+      "lines": 223,
+      "hash": "fed7544fe6bb59d6"
     },
     {
       "path": "src/ui/overlays/DropdownMenu.tsx",
@@ -9337,8 +9337,8 @@
       "path": "src/ui/registry/definitions.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 317,
-      "hash": "5bf0a63b325dfd47"
+      "lines": 344,
+      "hash": "bf2088c180811382"
     },
     {
       "path": "src/ui/registry/families.ts",
@@ -9533,8 +9533,8 @@
       "path": "src/ui/studio/Workbench.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 647,
-      "hash": "b226f69de3808637"
+      "lines": 668,
+      "hash": "aee15db28d0e90f5"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -9575,8 +9575,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 624,
-      "hash": "482e2597b2875943"
+      "lines": 642,
+      "hash": "9b618009208a6328"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -146975,10 +146975,20 @@
       "tags": []
     },
     {
+      "name": "DialogLayout",
+      "kind": "type",
+      "file": "src/ui/overlays/Dialog.tsx",
+      "line": 42,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "DialogProps",
       "kind": "interface",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 43,
+      "line": 44,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146988,7 +146998,7 @@
       "name": "DialogTitleId",
       "kind": "variable",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 73,
+      "line": 76,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147000,7 +147010,7 @@
       "name": "DialogComponent",
       "kind": "interface",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 75,
+      "line": 78,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147010,7 +147020,7 @@
       "name": "DialogRoot",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 83,
+      "line": 89,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147022,7 +147032,7 @@
       "name": "DialogHeaderProps",
       "kind": "interface",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 137,
+      "line": 143,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147032,7 +147042,7 @@
       "name": "DialogHeader",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 147,
+      "line": 153,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147044,7 +147054,7 @@
       "name": "DialogBody",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 168,
+      "line": 174,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147056,7 +147066,43 @@
       "name": "DialogFooter",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 172,
+      "line": 178,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "DialogLayoutRegion",
+      "kind": "function",
+      "file": "src/ui/overlays/Dialog.tsx",
+      "line": 188,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "DialogSidebar",
+      "kind": "function",
+      "file": "src/ui/overlays/Dialog.tsx",
+      "line": 192,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "DialogContent",
+      "kind": "function",
+      "file": "src/ui/overlays/Dialog.tsx",
+      "line": 196,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147068,7 +147114,7 @@
       "name": "DialogSection",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 182,
+      "line": 201,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147080,7 +147126,7 @@
       "name": "Dialog",
       "kind": "variable",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 196,
+      "line": 215,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148948,7 +148994,7 @@
       "name": "COMPONENT_DEFS",
       "kind": "array",
       "file": "src/ui/registry/definitions.tsx",
-      "line": 311,
+      "line": 338,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151069,7 +151115,7 @@
       "name": "navigate",
       "kind": "function",
       "file": "src/ui/studio/family.test.tsx",
-      "line": 409,
+      "line": 427,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151950,10 +151996,22 @@
       ]
     },
     {
+      "name": "ModalLayoutThumbnail",
+      "kind": "function",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 633,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "UsageSpecimens",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 626,
+      "line": 647,
       "module": "platform",
       "exported": false,
       "container": "",
