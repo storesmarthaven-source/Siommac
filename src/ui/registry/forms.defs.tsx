@@ -23,6 +23,7 @@ import { Select } from '../forms/Select';
 import { Combobox } from '../forms/Combobox';
 import { type ComponentDef, type PropValues } from './types';
 import { type ControlSize, type ValidationState } from '../tokens';
+import { LucideIcon } from '../LucideIcon';
 import { useEffect, useState } from 'preact/hooks';
 
 const s = (v: PropValues[string] | undefined, f = ''): string => (typeof v === 'string' ? v : f);
@@ -322,14 +323,14 @@ export const textInputDef: ComponentDef = {
   previewAxis: 'type',
   previewSamples: [
     { value: 'Text', title: 'Text', description: 'Names and short answers', props: { type: 'Text' } },
-    { value: 'Search', title: 'Search', description: 'Find and filter records', props: { type: 'Search' } },
+    { value: 'Search', title: 'Search', description: 'Find and filter records', props: { type: 'Search', iconLeft: 'Search' } },
     { value: 'Password', title: 'Password', description: 'Protected entry', props: { type: 'Password' } },
     { value: 'Number', title: 'Number', description: 'Measured quantities', props: { type: 'Number' } },
     { value: 'Currency', title: 'Currency', description: 'Money in minor units', props: { type: 'Currency' } },
     { value: 'Percentage', title: 'Percentage', description: 'Rates stored as ratios', props: { type: 'Percentage' } },
     { value: 'Email', title: 'Email', description: 'Validated email entry', props: { type: 'Email' } },
-    { value: 'URL', title: 'URL', description: 'Web addresses', props: { type: 'URL' } },
-    { value: 'Phone', title: 'Phone', description: 'Dial code and number', props: { type: 'Phone' } },
+    { value: 'URL', title: 'URL', description: 'Web addresses', props: { type: 'URL', iconLeft: 'Link' } },
+    { value: 'Phone', title: 'Phone', description: 'Dial code and number', props: { type: 'Phone', iconLeft: 'Phone' } },
     { value: 'Multi-line', title: 'Multi-line', description: 'Notes and longer context', props: { type: 'Multi-line' } },
   ],
   migration: {
@@ -347,6 +348,10 @@ export const textInputDef: ComponentDef = {
                   help: 'Chooses inputMode, autoComplete and how the value is parsed. Not a styling switch.' },
     label:      { type: 'text',      label: 'Field label', default: 'Employee name' },
     placeholder:{ type: 'text',      label: 'Placeholder', default: 'e.g. Sarah James' },
+    iconLeft:   { type: 'icon',      label: 'Leading icon', default: 'None', recommendations: ['Search', 'User', 'Mail', 'Phone', 'LockKeyhole', 'Link'],
+                  help: 'Choose from the full Lucide library. Recommended field icons appear first.' },
+    tooltipEnabled: { type: 'boolean', label: 'Field tooltip', default: false, help: 'Adds keyboard-accessible guidance inside the field.' },
+    tooltipText: { type: 'text', label: 'Tooltip text', default: 'This is a hint to help the user complete this field.' },
     prefix:     { type: 'text',      label: 'Prefix affix', default: '' },
     suffix:     { type: 'text',      label: 'Suffix affix', default: '' },
     helpText:   { type: 'text',      label: 'Help text', default: 'Shown under the label — always visible, never a tooltip.' },
@@ -367,11 +372,18 @@ export const textInputDef: ComponentDef = {
       { name: '--ui-control-pad-md',      label: 'Padding X (md)', kind: 'size' },
       { name: '--ui-control-radius',      label: 'Corner radius', kind: 'size' },
       { name: '--ui-control-font-size',   label: 'Font size', kind: 'size' },
-      { name: '--ui-control-bg',          label: 'Background', kind: 'color' },
+      { name: '--ui-control-bg',          label: 'Resting background', kind: 'color' },
       { name: '--ui-control-border',      label: 'Border', kind: 'color' },
-      { name: '--ui-control-border-focus',label: 'Border — focus', kind: 'color' },
       { name: '--ui-control-placeholder', label: 'Placeholder text', kind: 'color' },
       { name: '--ui-control-icon',        label: 'Icons', kind: 'color' },
+    ] },
+    { label: 'Hover & focus', controls: [
+      { name: '--ui-control-bg-hover',         label: 'Hover background', kind: 'color' },
+      { name: '--ui-control-border-hover',     label: 'Hover border', kind: 'color' },
+      { name: '--ui-control-bg-focus',         label: 'Focus background', kind: 'color' },
+      { name: '--ui-control-border-focus',     label: 'Focus border', kind: 'color' },
+      { name: '--ui-control-focus-ring-color', label: 'Focus halo', kind: 'color' },
+      { name: '--ui-control-focus-ring-width', label: 'Focus halo width', kind: 'size' },
     ] },
     { label: 'Label & help', controls: [
       { name: '--ui-label-fg',          label: 'Label colour', kind: 'color' },
@@ -408,7 +420,7 @@ export const textInputDef: ComponentDef = {
     notes: [
       'aria-invalid is set for `error` only — a warning is advisory and must not mark the field invalid.',
       'aria-describedby references only elements that actually render; a dangling id silences the whole field.',
-      'Trailing affordances have a fixed priority (spinner → clear → validation icon → custom), enforced in TS, so two can never overlap.',
+      'Trailing affordances have a fixed priority (spinner → clear → validation icon → field help → custom), enforced in TS, so two can never overlap.',
       'Currency stores MINOR units and percentage stores a RATIO. Each holds the in-progress TEXT locally, so a half-typed "12." is not round-tripped through a number and truncated.',
     ],
   },
@@ -416,14 +428,19 @@ export const textInputDef: ComponentDef = {
   render: (p, st) => {
     const v = val(p.validation) === 'none' && (st === 'error' || st === 'warning' || st === 'success') ? st : val(p.validation);
     const msg = s(p.message);
+    const disabled = b(p.disabled) || st === 'disabled';
+    const readOnly = b(p.readOnly) || st === 'readonly';
+    const type = s(p.type, 'Text');
+    const iconName = s(p.iconLeft, 'None');
+    const leadingIcon = iconName === 'None' ? null : <LucideIcon name={iconName as never} />;
+    const helpTooltip = b(p.tooltipEnabled) ? s(p.tooltipText, 'This is a hint to help the user complete this field.') : undefined;
     const common = {
       size: size(p.size),
       loading: b(p.loading) || st === 'loading',
       forceState: st,
+      iconLeft: leadingIcon,
+      helpTooltip,
     };
-    const disabled = b(p.disabled) || st === 'disabled';
-    const readOnly = b(p.readOnly) || st === 'readonly';
-    const type = s(p.type, 'Text');
 
     const shell = (node: preact.JSX.Element, label?: string, help?: string): preact.JSX.Element => (
       <FormField
@@ -468,14 +485,18 @@ export const textInputDef: ComponentDef = {
 
   code: p => {
     const type = s(p.type, 'Text');
-    if (type === 'Currency') return '<FormField label="Gross pay">\n  <CurrencyInput valueMinor={grossCents} onChange={setGrossCents} currency="TTD" />\n</FormField>';
-    if (type === 'Percentage') return '<FormField label="NIS rate">\n  <PercentageInput value={rate} onChange={setRate} />\n</FormField>';
-    if (type === 'Number') return '<FormField label="Notice period">\n  <NumberInput value={days} onChange={setDays} unit="days" min={0} />\n</FormField>';
-    if (type === 'Multi-line') return '<FormField label="Notes">\n  <Textarea value={notes} onInput={setNotes} rows={3} />\n</FormField>';
-    if (type === 'Password') return '<FormField label="Password">\n  <PasswordInput value={pw} onInput={setPw} />\n</FormField>';
-    if (type === 'Search') return '<SearchField value={q} onInput={setQ} aria-label="Search employees" />';
-    if (type === 'Text') return '<FormField label="Employee name" required error={errors.name}>\n  <TextInput value={name} onInput={setName} placeholder="e.g. Sarah James" />\n</FormField>';
-    return '<FormField label="' + type + '">\n  <' + type + 'Input value={v} onInput={set} />\n</FormField>';
+    const chosenIcon = s(p.iconLeft, 'None');
+    const iconProp = chosenIcon === 'None' ? '' : ` iconLeft={<LucideIcon name="${chosenIcon}" />}`;
+    const tooltipProp = b(p.tooltipEnabled) ? ` helpTooltip=${JSON.stringify(s(p.tooltipText, 'This is a hint to help the user complete this field.'))}` : '';
+    const extras = `${iconProp}${tooltipProp}`;
+    if (type === 'Currency') return `<FormField label="Gross pay">\n  <CurrencyInput valueMinor={grossCents} onChange={setGrossCents} currency="TTD"${extras} />\n</FormField>`;
+    if (type === 'Percentage') return `<FormField label="NIS rate">\n  <PercentageInput value={rate} onChange={setRate}${extras} />\n</FormField>`;
+    if (type === 'Number') return `<FormField label="Notice period">\n  <NumberInput value={days} onChange={setDays} unit="days" min={0}${extras} />\n</FormField>`;
+    if (type === 'Multi-line') return `<FormField label="Notes">\n  <Textarea value={notes} onInput={setNotes} rows={3}${extras} />\n</FormField>`;
+    if (type === 'Password') return `<FormField label="Password">\n  <PasswordInput value={pw} onInput={setPw}${extras} />\n</FormField>`;
+    if (type === 'Search') return `<SearchField value={q} onInput={setQ} aria-label="Search employees"${extras} />`;
+    if (type === 'Text') return `<FormField label="Employee name" required error={errors.name}>\n  <TextInput value={name} onInput={setName} placeholder="e.g. Sarah James"${extras} />\n</FormField>`;
+    return `<FormField label="${type}">\n  <${type}Input value={v} onInput={set}${extras} />\n</FormField>`;
   },
 
   examples: [

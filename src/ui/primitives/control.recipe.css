@@ -30,7 +30,12 @@
   [data-ui-preview-scope] {
     --ui-control-radius: var(--radius-sm);
     --ui-control-font-size: var(--ui-font-size-body);
-    --ui-control-bg: var(--ui-color-surface-default);
+    /* A quiet resting surface makes the editable area legible without relying
+       on a heavy border. Hover and focus lift the control onto the default
+       surface, matching the interaction across every canonical form control. */
+    --ui-control-bg: var(--ui-color-surface-subtle);
+    --ui-control-bg-hover: var(--ui-color-surface-default);
+    --ui-control-bg-focus: var(--ui-color-surface-default);
     /* Deliberately NOT repointed at a semantic role. The value typed into an
        input renders navy (#1b2d54), not body text (#1F2A44) — so mapping it to
        `--ui-color-text-primary` would silently change the colour, and mapping
@@ -42,6 +47,8 @@
     --ui-control-border: var(--ui-color-border-default);
     --ui-control-border-hover: var(--ui-color-border-strong);
     --ui-control-border-focus: var(--ui-color-focus-outline);
+    --ui-control-focus-ring-color: color-mix(in srgb, var(--ui-color-focus-outline) 10%, transparent);
+    --ui-control-focus-ring-width: 4px;
     /* Also left on its foundation token: no semantic role yet claims
        "decorative icon inside a control", and inventing one to make the drift
        guard pass would be conformance for its own sake. */
@@ -161,7 +168,10 @@
   .ui-ctrl--multiline { align-items: stretch; padding: 8px var(--ui-control-pad-md); }
 
   .ui-ctrl:hover:not(.ui-ctrl--disabled):not(.ui-ctrl--readonly),
-  .ui-ctrl[data-ui-state~='hover'] { border-color: var(--ui-control-border-hover); }
+  .ui-ctrl[data-ui-state~='hover'] {
+    border-color: var(--ui-control-border-hover);
+    background: var(--ui-control-bg-hover);
+  }
 
   /* Focus lives on the WRAPPER, driven by :focus-within, because the visible
      box is the wrapper while the focusable element is the inner input. Styling
@@ -169,7 +179,8 @@
   .ui-ctrl:focus-within,
   .ui-ctrl[data-ui-state~='focus'] {
     border-color: var(--ui-control-border-focus);
-    box-shadow: 0 0 0 var(--ui-focus-ring-width) var(--ui-focus-ring-color);
+    background: var(--ui-control-bg-focus);
+    box-shadow: 0 0 0 var(--ui-control-focus-ring-width) var(--ui-control-focus-ring-color);
   }
 
   /* ── The inner field ───────────────────────────────────────────────────────*/
@@ -202,6 +213,29 @@
     align-items: center;
     flex-shrink: 0;
     color: var(--ui-control-icon);
+  }
+  .ui-ctrl-help {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    margin: -3px;
+    border-radius: var(--radius-xs);
+    color: var(--ui-control-icon);
+    cursor: help;
+    outline: none;
+    transition:
+      color var(--ui-motion-fast) var(--ui-ease-standard),
+      background-color var(--ui-motion-fast) var(--ui-ease-standard),
+      box-shadow var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+  .ui-ctrl-help > svg { width: var(--ui-icon-sm); height: var(--ui-icon-sm); }
+  .ui-ctrl-help:hover { color: var(--ui-control-fg); background: var(--ui-color-surface-subtle); }
+  .ui-ctrl-help:focus-visible {
+    color: var(--ui-control-fg);
+    box-shadow: 0 0 0 2px var(--ui-control-focus-ring-color);
   }
   .ui-ctrl-affix {
     color: var(--ui-color-text-secondary);
@@ -316,7 +350,7 @@
   .ui-ctrl--readonly:focus-within {
     /* Still show focus — a read-only field IS reachable and copyable. */
     border-color: var(--ui-control-border-focus);
-    box-shadow: 0 0 0 var(--ui-focus-ring-width) var(--ui-focus-ring-color);
+    box-shadow: 0 0 0 var(--ui-control-focus-ring-width) var(--ui-control-focus-ring-color);
   }
 
   /* ── Select arrow ──────────────────────────────────────────────────────────*/

@@ -12796,8 +12796,8 @@ EmailInput	function	platform	true	component	src/ui/forms/inputs.tsx	189
 UrlInput	function	platform	true	component	src/ui/forms/inputs.tsx	193	
 PhoneInputProps	interface	platform	true		src/ui/forms/inputs.tsx	197	
 PhoneInput	function	platform	true	component	src/ui/forms/inputs.tsx	202	
-TextareaProps	interface	platform	true		src/ui/forms/inputs.tsx	218	
-Textarea	function	platform	true	component	src/ui/forms/inputs.tsx	223	
+TextareaProps	interface	platform	true		src/ui/forms/inputs.tsx	220	
+Textarea	function	platform	true	component	src/ui/forms/inputs.tsx	225	
 MultiSelectProps	interface	platform	true		src/ui/forms/MultiSelect.tsx	32	
 MultiSelect	function	platform	true	component	src/ui/forms/MultiSelect.tsx	57	
 OptionListProps	interface	platform	true		src/ui/forms/OptionList.tsx	18	
@@ -13113,13 +13113,13 @@ RadioGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	328
 RadioGroup	function	platform	true	component	src/ui/primitives/choice.tsx	342	
 read	function	platform	false	test	src/ui/primitives/choiceMigration.test.ts	4	
 read	function	platform	false	test	src/ui/primitives/menuMigration.test.ts	4	
-TextInputType	type	platform	true		src/ui/primitives/TextInput.tsx	40	
-TextInputProps	interface	platform	true		src/ui/primitives/TextInput.tsx	44	
-FORCEABLE	variable	platform	false	component	src/ui/primitives/TextInput.tsx	97	
-VALIDATION_ICON	variable	platform	false	component	src/ui/primitives/TextInput.tsx	99	
-TextInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	105	
-handleClear	function	platform	false		src/ui/primitives/TextInput.tsx	144	TextInput
-SearchInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	238	
+TextInputType	type	platform	true		src/ui/primitives/TextInput.tsx	41	
+TextInputProps	interface	platform	true		src/ui/primitives/TextInput.tsx	45	
+FORCEABLE	variable	platform	false	component	src/ui/primitives/TextInput.tsx	100	
+VALIDATION_ICON	variable	platform	false	component	src/ui/primitives/TextInput.tsx	102	
+TextInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	108	
+handleClear	function	platform	false		src/ui/primitives/TextInput.tsx	148	TextInput
+SearchInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	249	
 s	function	platform	false		src/ui/registry/actions.defs.tsx	27	
 b	function	platform	false		src/ui/registry/actions.defs.tsx	28	
 size	function	platform	false		src/ui/registry/actions.defs.tsx	29	
@@ -13202,32 +13202,32 @@ emptyStateDef	object	platform	true		src/ui/registry/feedback.defs.tsx	12
 skeletonDef	object	platform	true		src/ui/registry/feedback.defs.tsx	75	
 spinnerDef	object	platform	true		src/ui/registry/feedback.defs.tsx	114	
 FEEDBACK_DEFS	array	platform	true		src/ui/registry/feedback.defs.tsx	144	
-s	function	platform	false		src/ui/registry/forms.defs.tsx	28	
-b	function	platform	false		src/ui/registry/forms.defs.tsx	29	
-n	function	platform	false		src/ui/registry/forms.defs.tsx	30	
-size	function	platform	false		src/ui/registry/forms.defs.tsx	31	
-val	function	platform	false		src/ui/registry/forms.defs.tsx	32	
-noop	function	platform	false		src/ui/registry/forms.defs.tsx	35	
-OtpPreviewProps	interface	platform	false		src/ui/registry/forms.defs.tsx	37	
-OtpPreview	function	platform	false	component	src/ui/registry/forms.defs.tsx	45	
-ThemeModePreview	function	platform	false	component	src/ui/registry/forms.defs.tsx	63	
-CHOICE_STYLE	array	platform	false		src/ui/registry/forms.defs.tsx	74	
-CONTROL_STYLE	array	platform	false		src/ui/registry/forms.defs.tsx	85	
-checkboxDef	object	platform	true		src/ui/registry/forms.defs.tsx	97	
-radioGroupDef	object	platform	true		src/ui/registry/forms.defs.tsx	178	
-switchDef	object	platform	true		src/ui/registry/forms.defs.tsx	239	
-textInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	314	
-shell	function	platform	false		src/ui/registry/forms.defs.tsx	428	textInputDef
-dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	513	
-fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	589	
-themeModeSwitchDef	object	platform	true		src/ui/registry/forms.defs.tsx	678	
-colorPickerDef	object	platform	true		src/ui/registry/forms.defs.tsx	728	
-otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	764	
-DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	816	
-GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	825	
-selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	843	
-search	function	platform	false		src/ui/registry/forms.defs.tsx	946	selectDef
-FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	977	
+s	function	platform	false		src/ui/registry/forms.defs.tsx	29	
+b	function	platform	false		src/ui/registry/forms.defs.tsx	30	
+n	function	platform	false		src/ui/registry/forms.defs.tsx	31	
+size	function	platform	false		src/ui/registry/forms.defs.tsx	32	
+val	function	platform	false		src/ui/registry/forms.defs.tsx	33	
+noop	function	platform	false		src/ui/registry/forms.defs.tsx	36	
+OtpPreviewProps	interface	platform	false		src/ui/registry/forms.defs.tsx	38	
+OtpPreview	function	platform	false	component	src/ui/registry/forms.defs.tsx	46	
+ThemeModePreview	function	platform	false	component	src/ui/registry/forms.defs.tsx	64	
+CHOICE_STYLE	array	platform	false		src/ui/registry/forms.defs.tsx	75	
+CONTROL_STYLE	array	platform	false		src/ui/registry/forms.defs.tsx	86	
+checkboxDef	object	platform	true		src/ui/registry/forms.defs.tsx	98	
+radioGroupDef	object	platform	true		src/ui/registry/forms.defs.tsx	179	
+switchDef	object	platform	true		src/ui/registry/forms.defs.tsx	240	
+textInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	315	
+shell	function	platform	false		src/ui/registry/forms.defs.tsx	445	textInputDef
+dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	534	
+fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	610	
+themeModeSwitchDef	object	platform	true		src/ui/registry/forms.defs.tsx	699	
+colorPickerDef	object	platform	true		src/ui/registry/forms.defs.tsx	749	
+otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	785	
+DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	837	
+GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	846	
+selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	864	
+search	function	platform	false		src/ui/registry/forms.defs.tsx	967	selectDef
+FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	998	
 COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	61	
 CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	76	
 CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	92	
@@ -13456,19 +13456,19 @@ groupControls	function	platform	false		src/ui/studio/Workbench.tsx	75
 isStateControlCoveredByPreview	function	platform	false		src/ui/studio/Workbench.tsx	93	
 isRelevantPreviewControl	function	platform	false		src/ui/studio/Workbench.tsx	108	
 Control	function	platform	false	component	src/ui/studio/Workbench.tsx	125	
-WorkbenchProps	interface	platform	true		src/ui/studio/Workbench.tsx	202	
-CompoundButtonEditorProps	interface	platform	false		src/ui/studio/Workbench.tsx	210	
-CompoundButtonEditor	function	platform	false	component	src/ui/studio/Workbench.tsx	224	
-previewPropsFor	function	platform	false		src/ui/studio/Workbench.tsx	234	CompoundButtonEditor
-setPreviewProp	function	platform	false		src/ui/studio/Workbench.tsx	242	CompoundButtonEditor
-reset	function	platform	false		src/ui/studio/Workbench.tsx	252	CompoundButtonEditor
-Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	375	
-setValues	function	platform	false		src/ui/studio/Workbench.tsx	391	Workbench
-set	function	platform	false		src/ui/studio/Workbench.tsx	394	Workbench
-specimen	function	platform	false		src/ui/studio/Workbench.tsx	407	Workbench
-Block	function	platform	false	component	src/ui/studio/Workbench.tsx	518	
-VariantSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	533	
-UsageSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	580	
+WorkbenchProps	interface	platform	true		src/ui/studio/Workbench.tsx	209	
+CompoundButtonEditorProps	interface	platform	false		src/ui/studio/Workbench.tsx	217	
+CompoundButtonEditor	function	platform	false	component	src/ui/studio/Workbench.tsx	231	
+previewPropsFor	function	platform	false		src/ui/studio/Workbench.tsx	241	CompoundButtonEditor
+setPreviewProp	function	platform	false		src/ui/studio/Workbench.tsx	249	CompoundButtonEditor
+reset	function	platform	false		src/ui/studio/Workbench.tsx	259	CompoundButtonEditor
+Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	382	
+setValues	function	platform	false		src/ui/studio/Workbench.tsx	398	Workbench
+set	function	platform	false		src/ui/studio/Workbench.tsx	401	Workbench
+specimen	function	platform	false		src/ui/studio/Workbench.tsx	414	Workbench
+Block	function	platform	false	component	src/ui/studio/Workbench.tsx	525	
+VariantSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	540	
+UsageSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	587	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	

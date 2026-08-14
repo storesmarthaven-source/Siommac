@@ -17,7 +17,7 @@
  * ── Trailing affordance priority ────────────────────────────────────────────
  * Exactly one trailing element renders, chosen in this fixed order:
  *
- *     loading spinner  →  clear button  →  validation icon  →  iconRight
+ *     loading spinner  →  clear button  →  validation icon  →  help tooltip → iconRight
  *
  * Enforced here in TS, never by CSS stacking — that is what guarantees they can
  * never overlap, which was the visible bug in the old person-search control.
@@ -28,6 +28,7 @@
 import { type ComponentChildren, type CSSProperties, type VNode } from 'preact';
 import { useRef, useState } from 'preact/hooks';
 import { LucideIcon } from '../LucideIcon';
+import { Tooltip } from '../overlays/Tooltip';
 import { type ControlSize, type UiState, type ValidationState } from '../tokens';
 import { useFieldContext, resolveFieldState } from '../forms/fieldContext';
 import './control.recipe.css';
@@ -56,13 +57,15 @@ export interface TextInputProps {
   multiline?: boolean;
   rows?: number;
 
-  iconLeft?: VNode;
-  iconRight?: VNode;
+  iconLeft?: VNode | null;
+  iconRight?: VNode | null;
   /** Persistent display affixes. Unlike icons, these never yield to validation or loading. */
   prefix?: ComponentChildren;
   suffix?: ComponentChildren;
   /** Show a clear button once there is a value. */
   clearable?: boolean;
+  /** Optional field guidance opened from a keyboard-accessible trailing help icon. */
+  helpTooltip?: string;
 
   disabled?: boolean;
   readOnly?: boolean;
@@ -106,7 +109,7 @@ export function TextInput({
   value: controlledValue, defaultValue = '', onInput,
   size = 'md', type = 'text', placeholder,
   multiline = false, rows = 3,
-  iconLeft, iconRight, prefix, suffix, clearable = false,
+  iconLeft, iconRight, prefix, suffix, clearable = false, helpTooltip,
   disabled: ownDisabled, readOnly: ownReadOnly, loading = false,
   validation: ownValidation,
   maxLength, minLength, min, max, step, autoComplete, name, id: ownId, inputMode,
@@ -127,7 +130,8 @@ export function TextInput({
   const showSpinner   = loading;
   const showClear     = !showSpinner && clearable && value.length > 0 && !disabled && !readOnly;
   const showValidIcon = !showSpinner && !showClear && validation !== 'none';
-  const showOwnIcon   = !showSpinner && !showClear && !showValidIcon && iconRight != null;
+  const showHelpTip   = !showSpinner && !showClear && !showValidIcon && Boolean(helpTooltip?.trim());
+  const showOwnIcon   = !showSpinner && !showClear && !showValidIcon && !showHelpTip && iconRight != null;
 
   const forced = forceState && FORCEABLE.has(forceState) ? forceState : undefined;
 
@@ -223,6 +227,13 @@ export function TextInput({
         </span>
       )}
 
+      {showHelpTip && (
+        <Tooltip content={helpTooltip} placement="top">
+          <span class="ui-ctrl-help" role="button" tabIndex={0} aria-label="Field help">
+            <LucideIcon name="CircleHelp" />
+          </span>
+        </Tooltip>
+      )}
       {showOwnIcon && <span class="ui-ctrl-trail" aria-hidden="true">{iconRight}</span>}
     </div>
   );
@@ -236,7 +247,7 @@ export function TextInput({
  * and giving it one obvious name is what stops the next one being written by hand.
  */
 export function SearchInput(
-  props: Omit<TextInputProps, 'type' | 'iconLeft' | 'clearable'> & { clearable?: boolean },
+  props: Omit<TextInputProps, 'type' | 'clearable'> & { clearable?: boolean },
 ): VNode {
   return (
     <TextInput
@@ -244,7 +255,7 @@ export function SearchInput(
       type="search"
       inputMode="search"
       clearable={props.clearable ?? true}
-      iconLeft={<LucideIcon name="Search" />}
+      iconLeft={props.iconLeft === undefined ? <LucideIcon name="Search" /> : props.iconLeft}
       placeholder={props.placeholder ?? 'Search…'}
     />
   );

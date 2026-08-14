@@ -42,7 +42,7 @@ import { PreviewScope } from './PreviewScope';
  * field would mean editing 23 definitions to describe a side panel.
  */
 const CONTROL_GROUPS: { title: string; names: string[] }[] = [
-  { title: 'Content', names: ['label', 'text', 'placeholder', 'iconLeft', 'iconRight', 'icon', 'iconSide', 'iconOnly', 'helpText', 'suffix', 'prefix', 'required'] },
+  { title: 'Content', names: ['label', 'text', 'placeholder', 'iconLeft', 'iconRight', 'icon', 'iconSide', 'iconOnly', 'helpText', 'tooltipEnabled', 'tooltipText', 'suffix', 'prefix', 'required'] },
   { title: 'Appearance', names: ['variant', 'tone', 'size', 'contrast', 'shape', 'density', 'accent'] },
   { title: 'States', names: ['disabled', 'loading', 'loadingText', 'pressed', 'readOnly', 'error', 'checked', 'selected', 'validation'] },
   { title: 'More options', names: ['action', 'href', 'fullWidth', 'clearable', 'multiline', 'rows'] },
@@ -179,8 +179,15 @@ function Control({ name, control, value, onChange, disabled = false }: {
       )}
 
       {control.type === 'icon' && (
-        <input id={id} type="text" class="sds-ctl__input" value={String(value)} disabled={disabled}
-          onInput={e => onChange((e.target as HTMLInputElement).value)} />
+        <IconPicker
+          id={id}
+          label={control.label}
+          value={String(value)}
+          variant="outline"
+          position="leading"
+          recommendations={control.recommendations?.filter((name): name is LucideName => LUCIDE_NAMES.includes(name as LucideName))}
+          onChange={onChange}
+        />
       )}
 
       {control.help && <details class="sds-ctl__help"><summary>About this setting</summary><p>{control.help}</p></details>}

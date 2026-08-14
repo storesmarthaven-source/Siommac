@@ -191,7 +191,7 @@ export function EmailInput(props: Base): VNode {
 }
 
 export function UrlInput(props: Base): VNode {
-  return <TextInput {...props} type="url" inputMode="url" iconLeft={props.iconLeft ?? <LucideIcon name="Link" />} />;
+  return <TextInput {...props} type="url" inputMode="url" iconLeft={props.iconLeft === undefined ? <LucideIcon name="Link" /> : props.iconLeft} />;
 }
 
 export interface PhoneInputProps extends Base {
@@ -206,16 +206,18 @@ export function PhoneInput({ dialCode, ...rest }: PhoneInputProps): VNode {
       type="tel"
       inputMode="tel"
       autoComplete={rest.autoComplete ?? 'tel'}
-      iconLeft={dialCode
-        ? <span style={{ fontSize: 'var(--ui-font-size-caption)' }}>{dialCode}</span>
-        : <LucideIcon name="Phone" />}
+      iconLeft={rest.iconLeft === undefined
+        ? (dialCode
+          ? <span style={{ fontSize: 'var(--ui-font-size-caption)' }}>{dialCode}</span>
+          : <LucideIcon name="Phone" />)
+        : rest.iconLeft}
     />
   );
 }
 
 /* ── Textarea ──────────────────────────────────────────────────────────────*/
 
-export interface TextareaProps extends Omit<TextInputProps, 'type' | 'multiline' | 'clearable' | 'iconLeft' | 'iconRight'> {
+export interface TextareaProps extends Omit<TextInputProps, 'type' | 'multiline' | 'clearable' | 'iconRight'> {
   rows?: number;
 }
 

@@ -44,7 +44,7 @@ export type PropControl =
   | { type: 'boolean';   label: string; default: boolean; help?: string }
   | { type: 'text';      label: string; default: string; placeholder?: string; help?: string }
   | { type: 'number';    label: string; default: number; min?: number; max?: number; step?: number; help?: string }
-  | { type: 'icon';      label: string; default: string; help?: string };
+  | { type: 'icon';      label: string; default: string; recommendations?: readonly string[]; help?: string };
 
 export type PropValues = Record<string, string | number | boolean>;
 

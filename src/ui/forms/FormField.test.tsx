@@ -8,9 +8,9 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/preact';
+import { act, render, screen, fireEvent } from '@testing-library/preact';
 import { FormField } from './FormField';
-import { TextInput } from '../primitives/TextInput';
+import { SearchInput, TextInput } from '../primitives/TextInput';
 import { Field, SelectInput, TextareaInput } from '../components/Field';
 
 describe('FormField', () => {
@@ -220,6 +220,28 @@ describe('TextInput', () => {
     expect(ro.container.querySelector('.ui-ctrl')?.className).toContain('ui-ctrl--readonly');
     const dis = render(<TextInput disabled value="v" onInput={vi.fn()} aria-label="B" />);
     expect(dis.container.querySelector('.ui-ctrl')?.className).toContain('ui-ctrl--disabled');
+  });
+
+  it('offers field guidance from a keyboard-accessible tooltip affordance', async () => {
+    render(<TextInput helpTooltip="Use the employee's legal name." value="" onInput={vi.fn()} aria-label="Name" />);
+    const help = screen.getByRole('button', { name: 'Field help' });
+    await act(() => Promise.resolve().then(() => { help.focus(); }));
+    expect(screen.getByRole('tooltip').textContent).toContain("Use the employee's legal name.");
+  });
+
+  it('keeps validation ahead of field help in the trailing affordance priority', () => {
+    const { container } = render(
+      <TextInput helpTooltip="Formatting guidance" validation="error" value="" onInput={vi.fn()} aria-label="Name" />,
+    );
+    expect(container.querySelector('.ui-ctrl-validation-icon--error')).not.toBeNull();
+    expect(screen.queryByRole('button', { name: 'Field help' })).toBeNull();
+  });
+
+  it('lets a SearchInput replace or clear its recommended leading icon', () => {
+    const custom = render(<SearchInput value="" onInput={vi.fn()} iconLeft={<span data-testid="custom-icon" />} aria-label="Search" />);
+    expect(screen.getByTestId('custom-icon')).toBeTruthy();
+    custom.rerender(<SearchInput value="" onInput={vi.fn()} iconLeft={null} aria-label="Search" />);
+    expect(custom.container.querySelector('.ui-ctrl-lead')).toBeNull();
   });
 
   it('renders persistent prefix and suffix affixes alongside a validation affordance', () => {
