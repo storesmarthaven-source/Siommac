@@ -77,7 +77,7 @@ function groupControls(
   /** Props the preview already exposes as an axis — a control would fight it. */
   omit: readonly string[] = [],
 ): { title: string; entries: [string, PropControl][] }[] {
-  const all = Object.entries(def.props ?? {}).filter(([n]) => n !== 'size' && !omit.includes(n));
+  const all = Object.entries(def.props ?? {}).filter(([n]) => n !== 'size' && n !== 'suffix' && !omit.includes(n));
   const taken = new Set<string>();
   const out = CONTROL_GROUPS.map(g => {
     const entries = all.filter(([n]) => g.names.includes(n));

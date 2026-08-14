@@ -125,6 +125,57 @@
   }
   .ui-file-trigger--disabled > svg { color: var(--ui-disabled-icon); }
 
+  /* Integrated field treatment: the visible split is one native file-picker
+     label, not a text box plus a button pretending to share a value. */
+  .ui-file-field {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: var(--ui-control-md);
+    overflow: hidden;
+    border: var(--ui-border-width) solid var(--ui-control-border);
+    border-radius: var(--ui-control-radius);
+    background: var(--ui-control-bg);
+    color: var(--ui-control-fg);
+    box-shadow: var(--ui-control-shadow);
+    cursor: pointer;
+    transition: border-color var(--ui-motion-fast) var(--ui-ease-standard), box-shadow var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+  .ui-file-field:hover:not(.ui-file-field--disabled),
+  .ui-file-field[data-ui-state~='hover'] { border-color: var(--ui-control-border-hover); }
+  .ui-file-field:focus-within,
+  .ui-file-field[data-ui-state~='focus'] {
+    border-color: var(--ui-control-border-focus);
+    box-shadow: 0 0 0 var(--ui-focus-ring-width) var(--ui-focus-ring-color);
+  }
+  .ui-file-field__value,
+  .ui-file-field__action { display: flex; align-items: center; min-width: 0; padding: 0 var(--ui-control-pad-md); }
+  .ui-file-field__value {
+    overflow: hidden;
+    color: var(--ui-control-placeholder);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ui-file-field__value.has-file { color: var(--ui-control-fg); }
+  .ui-file-field__action {
+    border-left: var(--ui-border-width) solid var(--ui-control-border);
+    background: var(--ui-color-surface-subtle);
+    color: var(--ui-control-fg);
+    font-weight: 650;
+    white-space: nowrap;
+  }
+  .ui-file-field--error { border-color: var(--ui-validation-error-border); }
+  .ui-file-field--warning { border-color: var(--ui-validation-warning-border); }
+  .ui-file-field--success { border-color: var(--ui-validation-success-border); }
+  .ui-file-field--disabled {
+    border-color: var(--ui-disabled-border);
+    background: var(--ui-disabled-bg);
+    color: var(--ui-disabled-fg);
+    cursor: var(--ui-disabled-cursor);
+  }
+  .ui-file-field--disabled .ui-file-field__value,
+  .ui-file-field--disabled .ui-file-field__action { color: var(--ui-disabled-fg); }
+
   .ui-file:hover:not(.ui-file--disabled),
   .ui-file--dragging,
   .ui-file[data-ui-state~='hover'] { border-color: var(--ui-file-border-active); background: #fff; }

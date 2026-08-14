@@ -341,6 +341,34 @@ describe('Buttons family — Studio', () => {
     expect(container.querySelector('[role="group"][aria-label="Size"]')).toBeNull();
   });
 
+  it('exposes date and file treatments as focused variants and hides suffix editing', () => {
+    const { container, queryByLabelText } = render(<Studio />);
+    const navigate = (name: string): void => {
+      const target = [...container.querySelectorAll<HTMLButtonElement>('.sds-nav button')]
+        .find(button => button.textContent.trim() === name);
+      if (!target) throw new Error(`No ${name} navigation item is rendered`);
+      fireEvent.click(target);
+    };
+
+    navigate('DateInput');
+    expect(container.querySelectorAll('.sds-axis [role="radio"]')).toHaveLength(4);
+    expect(container.querySelector('.sds-axis')?.textContent).toContain('Date & time');
+    const dateTime = [...container.querySelectorAll<HTMLButtonElement>('.sds-axis [role="radio"]')]
+      .find(button => button.querySelector('strong')?.textContent === 'Date & time');
+    if (!dateTime) throw new Error('No Date & time variant is rendered');
+    fireEvent.click(dateTime);
+    expect(container.querySelector('.sds-button-preview__single')?.textContent).toContain('Date & time');
+
+    navigate('FileInput');
+    expect(container.querySelectorAll('.sds-axis [role="radio"]')).toHaveLength(3);
+    expect(container.querySelector('.sds-button-preview__single .ui-file-field')?.textContent).toContain('Choose a file');
+    expect(container.querySelector('.sds-button-preview__single .ui-file-field')?.textContent).toContain('Upload');
+
+    navigate('TextInput');
+    expect(queryByLabelText('Suffix affix')).toBeNull();
+    expect(container.querySelector('.sds-button-settings')?.textContent).not.toContain('Suffix affix');
+  });
+
   it('keeps compound Button icon colors isolated by variant', () => {
     const { container, getByRole } = render(<Studio />);
     openButtonBrowser(container);

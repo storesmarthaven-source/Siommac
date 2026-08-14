@@ -532,6 +532,13 @@ export const textInputDef: ComponentDef = {
 export const dateInputDef: ComponentDef = {
   id: 'date-input',
   name: 'DateInput',
+  previewAxis: 'which',
+  previewSamples: [
+    { value: 'Date', title: 'Date', description: 'A calendar date', props: { which: 'Date' } },
+    { value: 'Time', title: 'Time', description: 'A time of day', props: { which: 'Time' } },
+    { value: 'DateTime', title: 'Date & time', description: 'Date and time together', props: { which: 'DateTime' } },
+    { value: 'Range', title: 'Date range', description: 'A start and end date', props: { which: 'Range' } },
+  ],
   category: 'forms',
   description: 'Date, time and datetime entry in the kit control shell. Built on the native input, so locale, keyboard and the mobile picker are the platform’s — what the app lacked was the shell.',
   status: 'stable',
@@ -540,7 +547,7 @@ export const dateInputDef: ComponentDef = {
   migration: { rawPatterns: ['type="date"', 'type="time"'], nextSurface: 'HR Onboarding' },
 
   props: {
-    which:      { type: 'select',    label: 'Control', options: ['Date', 'Time', 'DateTime', 'Range'], default: 'Date' },
+    which:      { type: 'select',    label: 'Variant', options: ['Date', 'Time', 'DateTime', 'Range'], default: 'Date' },
     size:       { type: 'segmented', label: 'Size', options: ['sm', 'md', 'lg'], default: 'md' },
     clearable:  { type: 'boolean',   label: 'Clearable', default: true },
     validation: { type: 'select',    label: 'Validation', options: ['none', 'error', 'warning', 'success'], default: 'none' },
@@ -587,10 +594,10 @@ export const dateInputDef: ComponentDef = {
       );
     }
     if (which === 'Time') {
-      return <FormField label="Shift start" disabled={common.disabled} readOnly={common.readOnly}><TimeInput value="08:30" onChange={noop} step={900} {...common} /></FormField>;
+      return <FormField label="Time" required helpText="This is a hint text to help the user." disabled={common.disabled} readOnly={common.readOnly}><TimeInput value="" onChange={noop} step={900} {...common} /></FormField>;
     }
     if (which === 'DateTime') {
-      return <FormField label="Incident at" disabled={common.disabled} readOnly={common.readOnly}><DateTimeInput value="2026-08-09T14:20" onChange={noop} {...common} /></FormField>;
+      return <FormField label="Date & time" required helpText="This is a hint text to help the user." disabled={common.disabled} readOnly={common.readOnly}><DateTimeInput value="" onChange={noop} helpTooltip="Choose a date and time." {...common} /></FormField>;
     }
     return (
       <FormField label="Date" required helpText="This is a hint text to help the user." disabled={common.disabled} readOnly={common.readOnly}>
@@ -598,9 +605,13 @@ export const dateInputDef: ComponentDef = {
       </FormField>
     );
   },
-  code: p => s(p.which) === 'Range'
-    ? `<DateRangeInput value={range} onChange={setRange} maxSpanDays={366} />`
-    : `<FormField label="Start date" required>\n  <DateInput value={startDate} onChange={setStartDate} min={today} />\n</FormField>`,
+  code: p => {
+    const which = s(p.which, 'Date');
+    if (which === 'Range') return `<DateRangeInput value={range} onChange={setRange} maxSpanDays={366} />`;
+    if (which === 'Time') return `<FormField label="Time" required>\n  <TimeInput value={time} onChange={setTime} step={900} />\n</FormField>`;
+    if (which === 'DateTime') return `<FormField label="Date & time" required>\n  <DateTimeInput value={dateTime} onChange={setDateTime} />\n</FormField>`;
+    return `<FormField label="Date" required>\n  <DateInput value={date} onChange={setDate} min={today} />\n</FormField>`;
+  },
 };
 
 /* ── File & OTP ────────────────────────────────────────────────────────────*/
@@ -608,21 +619,27 @@ export const dateInputDef: ComponentDef = {
 export const fileInputDef: ComponentDef = {
   id: 'file-input',
   name: 'FileInput',
+  previewAxis: 'treatment',
+  previewSamples: [
+    { value: 'Upload field', title: 'Upload field', description: 'Compact form entry', props: { treatment: 'Upload field' } },
+    { value: 'Drop zone', title: 'Drop zone', description: 'Drag and drop files', props: { treatment: 'Drop zone' } },
+    { value: 'Compact trigger', title: 'Compact trigger', description: 'Toolbar and row action', props: { treatment: 'Compact trigger' } },
+  ],
   category: 'forms',
-  description: 'File selection with drag-drop, type/size validation and a removable list. Validates BEFORE handing anything to the caller — a silent drop is the worst outcome for an evidence upload.',
+  description: 'File selection as an upload field, drop zone or compact trigger, with type/size validation and a removable list. Invalid files are rejected before reaching the caller.',
   status: 'stable',
   componentPath: 'src/ui/forms/FileInput.tsx',
   importFrom: '@ui',
   migration: { rawPatterns: ['type="file"'], nextSurface: 'HR Onboarding' },
 
   props: {
+    treatment:  { type: 'select',  label: 'Variant', options: ['Upload field', 'Drop zone', 'Compact trigger'], default: 'Upload field' },
     accept:     { type: 'text',    label: 'Accept', default: '.pdf,.png,.jpg' },
     multiple:   { type: 'boolean', label: 'Multiple', default: true },
     maxSizeMb:  { type: 'number',  label: 'Max size (MB)', default: 10, min: 1, max: 100 },
     maxFiles:   { type: 'number',  label: 'Max files', default: 5, min: 1, max: 20 },
     validation: { type: 'select',  label: 'Validation', options: ['none', 'error', 'warning', 'success'], default: 'none' },
     disabled:   { type: 'boolean', label: 'Disabled', default: false },
-    trigger:    { type: 'boolean', label: 'Compact trigger', default: false },
     size:       { type: 'select',  label: 'Trigger size', options: ['sm', 'md', 'lg'], default: 'md' },
   },
   style: [
@@ -649,7 +666,7 @@ export const fileInputDef: ComponentDef = {
       'The compact trigger is a <label> wrapping the real input, NOT a Button. Activating a file picker is native label behaviour; Button renders <button>/<a> and does not take a polymorphic escape hatch. It borrows the --ui-button-* tokens so the two stay visually identical without sharing an element.',
     ],
   },
-  render: (p, st) => b(p.trigger) ? (
+  render: (p, st) => s(p.treatment, 'Upload field') === 'Compact trigger' ? (
     <FileInput
       files={[]}
       onChange={noop}
@@ -662,6 +679,22 @@ export const fileInputDef: ComponentDef = {
       forceState={st}
       aria-label="Attach file"
     />
+  ) : s(p.treatment, 'Upload field') === 'Upload field' ? (
+    <FormField label="Upload file" required helpText="SVG, PNG, JPG or GIF (max. 800×400px)." disabled={b(p.disabled) || st === 'disabled'}>
+      <FileInput
+        files={[]}
+        onChange={noop}
+        accept={s(p.accept, '.pdf')}
+        multiple={b(p.multiple)}
+        maxSizeMb={n(p.maxSizeMb, 10)}
+        maxFiles={n(p.maxFiles, 5)}
+        validation={val(p.validation) === 'none' && st === 'error' ? 'error' : val(p.validation)}
+        disabled={b(p.disabled) || st === 'disabled'}
+        fieldLabel="Choose a file"
+        fieldActionLabel="Upload"
+        forceState={st}
+      />
+    </FormField>
   ) : (
     <FormField label="Evidence" helpText="Attached to the requirement and recorded on the audit trail." disabled={b(p.disabled) || st === 'disabled'}>
       <FileInput
@@ -677,13 +710,21 @@ export const fileInputDef: ComponentDef = {
       />
     </FormField>
   ),
-  code: p => b(p.trigger) ? `<FileInput
+  code: p => s(p.treatment, 'Upload field') === 'Compact trigger' ? `<FileInput
   files={files}
   onChange={setFiles}
   accept="${s(p.accept, '.pdf')}"
   triggerLabel="Attach file"
   size="${s(p.size, 'md')}"
-/>` : `<FormField label="Evidence">
+/>` : s(p.treatment, 'Upload field') === 'Upload field' ? `<FormField label="Upload file" required helpText="SVG, PNG, JPG or GIF (max. 800×400px).">
+  <FileInput
+    files={files}
+    onChange={setFiles}
+    accept="${s(p.accept, '.pdf')}"
+    fieldLabel="Choose a file"
+    fieldActionLabel="Upload"
+  />
+</FormField>` : `<FormField label="Evidence">
   <FileInput
     files={files}
     onChange={setFiles}

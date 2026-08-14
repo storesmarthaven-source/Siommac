@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "789cfe213c50258b96fa9135b867c70351551e59",
+    "head": "cdb0af005a743dfdadb16b9e52120363605f13fb",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "a3647767c1d9b719b13e792e",
+    "fingerprint": "0e17307840e4aa536a518621",
     "indexedFiles": 1871
   },
   "summary": {
     "files": 1516,
-    "symbols": 14985,
+    "symbols": 14986,
     "widgets": 71,
     "routes": 983,
     "routeDefinitions": 984,
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 454,
-        "symbols": 3961,
+        "symbols": 3962,
         "widgets": 18,
         "routes": 38,
         "routeDefinitions": 53,
@@ -8714,8 +8714,8 @@
       "path": "src/ui/forms/FileInput.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 313,
-      "hash": "19d4722ce8379b54"
+      "lines": 345,
+      "hash": "c391215236ef1678"
     },
     {
       "path": "src/ui/forms/FormField.test.tsx",
@@ -8784,8 +8784,8 @@
       "path": "src/ui/forms/forms.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 649,
-      "hash": "a494ba8fdd4a514b"
+      "lines": 670,
+      "hash": "35954bcb738c69b0"
     },
     {
       "path": "src/ui/forms/inputs.tsx",
@@ -9358,8 +9358,8 @@
       "path": "src/ui/registry/forms.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 1008,
-      "hash": "9cf459be15e0b758"
+      "lines": 1049,
+      "hash": "8985e153fc5c5c35"
     },
     {
       "path": "src/ui/registry/index.ts",
@@ -9527,7 +9527,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 628,
-      "hash": "da483d249f059f0f"
+      "hash": "8faea86bcc8acf72"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -9568,8 +9568,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 533,
-      "hash": "2c4a2e8f7c7faa02"
+      "lines": 561,
+      "hash": "96dfcb5ce4d1071f"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -144358,7 +144358,7 @@
       "name": "formatBytes",
       "kind": "function",
       "file": "src/ui/forms/FileInput.tsx",
-      "line": 67,
+      "line": 75,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -144368,7 +144368,7 @@
       "name": "matchesAccept",
       "kind": "function",
       "file": "src/ui/forms/FileInput.tsx",
-      "line": 74,
+      "line": 82,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -144378,7 +144378,7 @@
       "name": "FileInput",
       "kind": "function",
       "file": "src/ui/forms/FileInput.tsx",
-      "line": 84,
+      "line": 92,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -144390,7 +144390,7 @@
       "name": "accept_",
       "kind": "function",
       "file": "src/ui/forms/FileInput.tsx",
-      "line": 99,
+      "line": 107,
       "module": "platform",
       "exported": false,
       "container": "FileInput",
@@ -144400,7 +144400,7 @@
       "name": "OtpInputProps",
       "kind": "interface",
       "file": "src/ui/forms/FileInput.tsx",
-      "line": 240,
+      "line": 272,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -144410,7 +144410,7 @@
       "name": "OtpInput",
       "kind": "function",
       "file": "src/ui/forms/FileInput.tsx",
-      "line": 258,
+      "line": 290,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -144422,7 +144422,7 @@
       "name": "commit",
       "kind": "function",
       "file": "src/ui/forms/FileInput.tsx",
-      "line": 265,
+      "line": 297,
       "module": "platform",
       "exported": false,
       "container": "OtpInput",
@@ -149231,7 +149231,7 @@
       "name": "fileInputDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 608,
+      "line": 619,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149241,7 +149241,7 @@
       "name": "themeModeSwitchDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 697,
+      "line": 738,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149251,7 +149251,7 @@
       "name": "colorPickerDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 747,
+      "line": 788,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149261,7 +149261,7 @@
       "name": "otpInputDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 783,
+      "line": 824,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149271,7 +149271,7 @@
       "name": "DEPARTMENTS",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 835,
+      "line": 876,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149281,7 +149281,7 @@
       "name": "GROUPED_DEPARTMENTS",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 844,
+      "line": 885,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149291,7 +149291,7 @@
       "name": "selectDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 862,
+      "line": 903,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149301,7 +149301,7 @@
       "name": "search",
       "kind": "function",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 965,
+      "line": 1006,
       "module": "platform",
       "exported": false,
       "container": "selectDef",
@@ -149311,7 +149311,7 @@
       "name": "FORM_DEFS",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 996,
+      "line": 1037,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150969,6 +150969,18 @@
       "container": "",
       "tags": [
         "ui-tile",
+        "test"
+      ]
+    },
+    {
+      "name": "navigate",
+      "kind": "function",
+      "file": "src/ui/studio/family.test.tsx",
+      "line": 346,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
         "test"
       ]
     },

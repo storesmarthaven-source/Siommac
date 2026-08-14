@@ -55,6 +55,14 @@ export interface FileInputProps {
    * tokens so the two stay visually identical without sharing an element.
    */
   triggerLabel?: string;
+  /**
+   * Renders a full-width field treatment with the chosen filename on the left
+   * and a visually separated picker action on the right. Like the compact
+   * trigger, the whole visible control is a native label for the file input.
+   */
+  fieldLabel?: string;
+  /** Field treatment only. Defaults to "Upload". */
+  fieldActionLabel?: string;
   /** Trigger only — matches Button's control sizes. */
   size?: ControlSize;
   id?: string;
@@ -84,7 +92,7 @@ function matchesAccept(file: File, accept: string | undefined): boolean {
 export function FileInput({
   files, onChange, accept, multiple = false, maxSizeMb, maxFiles,
   onReject, disabled: ownDisabled, readOnly: ownReadOnly, validation: ownValidation,
-  hint, triggerLabel, size = 'md', id: ownId, name, forceState, class: extra, ...aria
+  hint, triggerLabel, fieldLabel, fieldActionLabel = 'Upload', size = 'md', id: ownId, name, forceState, class: extra, ...aria
 }: FileInputProps): VNode {
   const ctx = useFieldContext();
   const { id, describedBy, validation, disabled, readOnly } =
@@ -130,7 +138,29 @@ export function FileInput({
 
   const forced = forceState === 'hover' || forceState === 'focus' ? forceState : undefined;
 
-  /* The native input, shared by both treatments. `hidden` is deliberately NOT
+  const selectedFiles = files.length > 0 && (
+    <ul class="ui-file-list">
+      {files.map((f, i) => (
+        <li key={`${f.name}-${f.size}-${i}`} class="ui-file-row">
+          <LucideIcon name="FileText" class="ui-file-row-icon" />
+          <span class="ui-file-row-name" title={f.name}>{f.name}</span>
+          <span class="ui-file-row-size">{formatBytes(f.size)}</span>
+          {!inert && (
+            <button
+              type="button"
+              class="ui-ctrl-clear"
+              aria-label={`Remove ${f.name}`}
+              onClick={() => onChange(files.filter((_, j) => j !== i))}
+            >
+              <LucideIcon name="X" />
+            </button>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+
+  /* The native input, shared by all three treatments. `hidden` is deliberately NOT
      used on the trigger: a `hidden` input is not focusable, so keyboard users
      would lose the picker entirely. It is clipped instead and the label makes
      the whole control activate it. */
@@ -173,6 +203,28 @@ export function FileInput({
     );
   }
 
+  if (fieldLabel !== undefined) {
+    return (
+      <div class={extra}>
+        <label
+          class={[
+            'ui-file-field',
+            validation !== 'none' ? `ui-file-field--${validation}` : '',
+            inert ? 'ui-file-field--disabled' : '',
+          ].filter(Boolean).join(' ')}
+          data-ui-state={forced}
+        >
+          {nativeInput}
+          <span class={`ui-file-field__value${files.length ? ' has-file' : ''}`}>
+            {files[0]?.name ?? fieldLabel}
+          </span>
+          <span class="ui-file-field__action">{fieldActionLabel}</span>
+        </label>
+        {selectedFiles}
+      </div>
+    );
+  }
+
   return (
     <div class={extra}>
       <div
@@ -210,27 +262,7 @@ export function FileInput({
         </div>
       </div>
 
-      {files.length > 0 && (
-        <ul class="ui-file-list">
-          {files.map((f, i) => (
-            <li key={`${f.name}-${f.size}-${i}`} class="ui-file-row">
-              <LucideIcon name="FileText" class="ui-file-row-icon" />
-              <span class="ui-file-row-name" title={f.name}>{f.name}</span>
-              <span class="ui-file-row-size">{formatBytes(f.size)}</span>
-              {!inert && (
-                <button
-                  type="button"
-                  class="ui-ctrl-clear"
-                  aria-label={`Remove ${f.name}`}
-                  onClick={() => onChange(files.filter((_, j) => j !== i))}
-                >
-                  <LucideIcon name="X" />
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+      {selectedFiles}
     </div>
   );
 }

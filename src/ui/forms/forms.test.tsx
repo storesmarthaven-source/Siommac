@@ -517,6 +517,27 @@ describe('FileInput', () => {
     expect(container.querySelector('.ui-file')).toBeTruthy();
   });
 
+  it('renders the upload field as one native label with an integrated action', () => {
+    const { container } = render(
+      <FileInput files={[]} onChange={vi.fn()} fieldLabel="Choose a file" fieldActionLabel="Upload" aria-label="Upload file" />,
+    );
+    const field = container.querySelector('label.ui-file-field');
+    expect(field).toBeTruthy();
+    expect(field?.querySelector('input[type="file"]')).toBeTruthy();
+    expect(field?.textContent).toContain('Choose a file');
+    expect(field?.textContent).toContain('Upload');
+    expect(container.querySelector('button')).toBeNull();
+  });
+
+  it('shows the selected filename in the upload field', () => {
+    const chosen = file('requirements.pdf', 'application/pdf', 2048);
+    const { container } = render(
+      <FileInput files={[chosen]} onChange={vi.fn()} fieldLabel="Choose a file" aria-label="Upload file" />,
+    );
+    expect(container.querySelector('.ui-file-field__value')?.textContent).toBe('requirements.pdf');
+    expect(container.querySelector('.ui-file-field__value.has-file')).toBeTruthy();
+  });
+
   it('lists selected files with a remove control', () => {
     const onChange = vi.fn();
     render(<FileInput files={[file('report.pdf', 'application/pdf', 2048)]} onChange={onChange} aria-label="E" />);
