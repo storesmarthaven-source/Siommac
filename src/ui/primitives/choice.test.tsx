@@ -16,6 +16,7 @@ describe('choice controls', () => {
     const { container } = render(<Checkbox checked onChange={vi.fn()} aria-label="Selection" />);
     expect(container.querySelector('.ui-choice--checkbox')).toBeTruthy();
     expect(container.querySelector('.ui-choice-box .ui-choice-mark')).toBeTruthy();
+    expect(container.querySelector('.ui-choice-mark path')?.getAttribute('d')).toBe('M4 12L10 18L20 6');
     expect(container.querySelector('.checkbox-container')).toBeNull();
   });
 

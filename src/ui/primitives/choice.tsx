@@ -109,7 +109,9 @@ export function Checkbox({
         }}
       />
       <span class="ui-choice-box" aria-hidden="true">
-        <LucideIcon name="Check" class="ui-choice-mark" strokeWidth={3} />
+        <svg class="ui-choice-mark" viewBox="0 0 24 24" fill="none">
+          <path d="M4 12L10 18L20 6" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
         <span class="ui-choice-dash" />
       </span>
       {(label != null || description) && (

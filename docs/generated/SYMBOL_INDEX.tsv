@@ -13105,17 +13105,17 @@ FORCEABLE	variable	platform	false	component	src/ui/primitives/choice.tsx	27
 forcedAttr	function	platform	false		src/ui/primitives/choice.tsx	29	
 CheckboxProps	interface	platform	true		src/ui/primitives/choice.tsx	35	
 Checkbox	function	platform	true	component	src/ui/primitives/choice.tsx	58	
-RadioProps	interface	platform	true		src/ui/primitives/choice.tsx	127	
-Radio	function	platform	true	component	src/ui/primitives/choice.tsx	139	
-SwitchProps	interface	platform	true		src/ui/primitives/choice.tsx	190	
-SwitchArtwork	function	platform	true	component	src/ui/primitives/choice.tsx	206	
-Switch	function	platform	true	component	src/ui/primitives/choice.tsx	224	
-ChoiceOption	interface	platform	true		src/ui/primitives/choice.tsx	273	
-CheckboxGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	280	
-CheckboxGroup	function	platform	true	component	src/ui/primitives/choice.tsx	295	
-toggle	function	platform	false		src/ui/primitives/choice.tsx	303	CheckboxGroup
-RadioGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	341	
-RadioGroup	function	platform	true	component	src/ui/primitives/choice.tsx	355	
+RadioProps	interface	platform	true		src/ui/primitives/choice.tsx	129	
+Radio	function	platform	true	component	src/ui/primitives/choice.tsx	141	
+SwitchProps	interface	platform	true		src/ui/primitives/choice.tsx	192	
+SwitchArtwork	function	platform	true	component	src/ui/primitives/choice.tsx	208	
+Switch	function	platform	true	component	src/ui/primitives/choice.tsx	226	
+ChoiceOption	interface	platform	true		src/ui/primitives/choice.tsx	275	
+CheckboxGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	282	
+CheckboxGroup	function	platform	true	component	src/ui/primitives/choice.tsx	297	
+toggle	function	platform	false		src/ui/primitives/choice.tsx	305	CheckboxGroup
+RadioGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	343	
+RadioGroup	function	platform	true	component	src/ui/primitives/choice.tsx	357	
 read	function	platform	false	test	src/ui/primitives/choiceMigration.test.ts	4	
 read	function	platform	false	test	src/ui/primitives/menuMigration.test.ts	4	
 TextInputType	type	platform	true		src/ui/primitives/TextInput.tsx	41	
