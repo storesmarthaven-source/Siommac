@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "4ff2ad56e46bea721ca2b6109c913433dbde76de",
+    "head": "3dfa512eb6eedbc76e26ff46f61b15a971fd59cd",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "8c759379303f9ef55501b90e",
+    "fingerprint": "e45676714b730f70932b9d57",
     "indexedFiles": 1860
   },
   "summary": {
@@ -9422,7 +9422,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 137,
-      "hash": "5b72216351e1e3a1"
+      "hash": "be159436dcecccf2"
     },
     {
       "path": "src/ui/studio/InAppUsage.tsx",
@@ -9457,7 +9457,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 591,
-      "hash": "1829425d3bbfb08a"
+      "hash": "40a9b4b60bd79ab5"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -9491,8 +9491,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 424,
-      "hash": "319da26c6ef184a8"
+      "lines": 427,
+      "hash": "3da81bf9de67cc48"
     },
     {
       "path": "src/ui/studio/preview.tsx",

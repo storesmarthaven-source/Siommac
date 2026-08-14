@@ -20,7 +20,7 @@
 import { type VNode, type ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  defaultProps, CATEGORY_LABELS, COMPOUND_OF, findComponent,
+  CATEGORY_LABELS, COMPOUND_OF, findComponent,
   propsForVariant,
   type ComponentDef, type ComponentFamily, type PropValues, type PropControl,
 } from '../registry';
@@ -334,7 +334,7 @@ export function Workbench({ def, family, onSelectMember, onBack, backLabel = 'Co
     Keying by id gives each subtype its own complete schema AND its own edits.
   */
   const [valuesById, setValuesById] = useState<Record<string, PropValues>>({});
-  const values = valuesById[def.id] ?? defaultProps(def);
+  const values = valuesById[def.id] ?? buttonFamilyPreviewProps(def);
 
   const shown = values;
 
@@ -344,7 +344,7 @@ export function Workbench({ def, family, onSelectMember, onBack, backLabel = 'Co
   const set = (k: string, v: string | number | boolean): void =>
     setValuesById(prev => ({
       ...prev,
-      [def.id]: { ...(prev[def.id] ?? defaultProps(def)), [k]: v },
+      [def.id]: { ...(prev[def.id] ?? buttonFamilyPreviewProps(def)), [k]: v },
     }));
 
   const members = family
@@ -469,7 +469,7 @@ export function Workbench({ def, family, onSelectMember, onBack, backLabel = 'Co
                   <p>These choices only change the example.</p>
                 </div>
                 <button type="button" class="sds-pg__clear"
-                  onClick={() => setValues(defaultProps(def))}>Reset</button>
+                  onClick={() => setValues(buttonFamilyPreviewProps(def))}>Reset</button>
               </header>
               {/*
                 Editing mode. A REAL control, not the mockup's placeholder:

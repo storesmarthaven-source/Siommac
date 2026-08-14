@@ -108,7 +108,7 @@ export function ButtonBrowser({ family, selectedPattern, onOpenComponent, onOpen
                 <span class="sds-button-browser__canvas-label" aria-hidden="true">Component preview</span>
                 <span class="sds-button-browser__canvas-control">{component.render?.(buttonFamilyPreviewProps(component), 'default')}</span>
               </div>
-              <div class="sds-button-browser__copy"><strong>{component.name}</strong><p>{family.roles[component.id]}</p><span>Open editor <LucideIcon name="ArrowRight" size={14} /></span></div>
+              <div class="sds-button-browser__copy"><strong>{component.name}</strong><p>{family.roles[component.id]}</p></div>
             </button>
           ))}
         </div>
@@ -124,7 +124,7 @@ export function ButtonBrowser({ family, selectedPattern, onOpenComponent, onOpen
                 <span class="sds-button-browser__canvas-label" aria-hidden="true">Pattern preview</span>
                 <span class="sds-button-browser__canvas-control">{pattern.preview()}</span>
               </div>
-              <div class="sds-button-browser__copy"><strong>{pattern.name}</strong><p>{pattern.role}</p><span>View pattern <LucideIcon name="ArrowRight" size={14} /></span></div>
+              <div class="sds-button-browser__copy"><strong>{pattern.name}</strong><p>{pattern.role}</p></div>
             </button>
           ))}
         </div>

@@ -135,6 +135,7 @@ describe('Buttons family — Studio', () => {
       .find(card => card.querySelector('.sds-button-browser__copy strong')?.textContent === 'Action Button');
     if (!actionCard) throw new Error('Expected the Action Button browser card');
     expect(actionCard.textContent).not.toContain('Save changes');
+    expect(actionCard.textContent).not.toContain('Open editor');
     expect(actionCard.querySelector('.sds-button-browser__specimen')?.textContent).toContain('Button');
     expect(actionCard.querySelector('.sds-button-browser__specimen .ui-btn svg')).toBeNull();
 
@@ -230,6 +231,8 @@ describe('Buttons family — Studio', () => {
     // Split Button's own schema replaced it — not merged with it.
     expect(container.querySelector('.sds-owned-button__settings strong')?.textContent).toBe('Try the Split Button');
     expect(container.querySelector('.sds-owned-button__stage')?.textContent).toContain('Live preview');
+    expect(container.querySelector('.sds-owned-button__specimen .ui-split > .ui-btn:first-child')?.textContent).toContain('Split button');
+    expect(container.querySelector('.sds-owned-button__specimen .ui-split > .ui-btn:first-child svg')).toBeNull();
     expect(container.querySelector('.sds-pg')).toBeNull();
     expect(queryByText('Menu accessible name')).toBeNull();
     expect(queryByText('Background')).toBeNull();
