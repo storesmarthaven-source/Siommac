@@ -11565,25 +11565,25 @@ uiKitModule	object	platform	true		src/components/sections/UiKit/module.ts	33
 EXIT_SECTION	variable	platform	false		src/components/sections/UiKit/mount.ts	25	
 mountUiKitSection	function	platform	true		src/components/sections/UiKit/mount.ts	27	
 unmountUiKitSection	function	platform	true		src/components/sections/UiKit/mount.ts	47	
-lIco	function	platform	false		src/components/shared/AccountPill.tsx	36	
-IcUser	function	platform	false	component	src/components/shared/AccountPill.tsx	40	
-IcSettings	function	platform	false	component	src/components/shared/AccountPill.tsx	41	
-IcAbout	function	platform	false	component	src/components/shared/AccountPill.tsx	42	
-IcMoon	function	platform	false	component	src/components/shared/AccountPill.tsx	43	
-IcLogout	function	platform	false	component	src/components/shared/AccountPill.tsx	44	
-roleLabel	function	platform	false		src/components/shared/AccountPill.tsx	46	
-nav	function	platform	false		src/components/shared/AccountPill.tsx	56	
-doLogout	function	platform	false		src/components/shared/AccountPill.tsx	59	
-badgeText	function	platform	false		src/components/shared/AccountPill.tsx	63	
-badgeStyle	function	platform	false		src/components/shared/AccountPill.tsx	68	
-actionLabel	function	platform	false		src/components/shared/AccountPill.tsx	72	
-AccountPillProps	interface	platform	true		src/components/shared/AccountPill.tsx	77	
-AccountPill	function	platform	true	component	src/components/shared/AccountPill.tsx	93	
-openMenu	function	platform	false		src/components/shared/AccountPill.tsx	120	AccountPill
-close	function	platform	false		src/components/shared/AccountPill.tsx	132	AccountPill
-onDoc	function	platform	false		src/components/shared/AccountPill.tsx	133	AccountPill
-onKey	function	platform	false		src/components/shared/AccountPill.tsx	134	AccountPill
-confirmLogout	function	platform	false		src/components/shared/AccountPill.tsx	147	AccountPill
+lIco	function	platform	false		src/components/shared/AccountPill.tsx	37	
+IcUser	function	platform	false	component	src/components/shared/AccountPill.tsx	41	
+IcSettings	function	platform	false	component	src/components/shared/AccountPill.tsx	42	
+IcAbout	function	platform	false	component	src/components/shared/AccountPill.tsx	43	
+IcMoon	function	platform	false	component	src/components/shared/AccountPill.tsx	44	
+IcLogout	function	platform	false	component	src/components/shared/AccountPill.tsx	45	
+roleLabel	function	platform	false		src/components/shared/AccountPill.tsx	47	
+nav	function	platform	false		src/components/shared/AccountPill.tsx	57	
+doLogout	function	platform	false		src/components/shared/AccountPill.tsx	60	
+badgeText	function	platform	false		src/components/shared/AccountPill.tsx	64	
+badgeStyle	function	platform	false		src/components/shared/AccountPill.tsx	69	
+actionLabel	function	platform	false		src/components/shared/AccountPill.tsx	73	
+AccountPillProps	interface	platform	true		src/components/shared/AccountPill.tsx	78	
+AccountPill	function	platform	true	component	src/components/shared/AccountPill.tsx	94	
+openMenu	function	platform	false		src/components/shared/AccountPill.tsx	121	AccountPill
+close	function	platform	false		src/components/shared/AccountPill.tsx	133	AccountPill
+onDoc	function	platform	false		src/components/shared/AccountPill.tsx	134	AccountPill
+onKey	function	platform	false		src/components/shared/AccountPill.tsx	135	AccountPill
+confirmLogout	function	platform	false		src/components/shared/AccountPill.tsx	148	AccountPill
 AuthGateProps	interface	security	false		src/components/shared/AuthGate.tsx	49	
 ROLE_RANK	object	security	false		src/components/shared/AuthGate.tsx	69	
 roleAtLeast	function	security	false		src/components/shared/AuthGate.tsx	81	
@@ -11639,11 +11639,11 @@ itemsOn	function	platform	false		src/components/shared/UpcomingDeadlinesCard.tsx
 shiftWeek	function	platform	false		src/components/shared/UpcomingDeadlinesCard.tsx	64	UpcomingDeadlinesCard
 showUpcoming	function	platform	false		src/components/shared/UpcomingDeadlinesCard.tsx	71	UpcomingDeadlinesCard
 showToday	function	platform	false		src/components/shared/UpcomingDeadlinesCard.tsx	72	UpcomingDeadlinesCard
-openSearch	function	platform	false		src/components/shared/UserPill.tsx	21	
-openAI	function	platform	false		src/components/shared/UserPill.tsx	25	
-UserPillProps	interface	platform	true		src/components/shared/UserPill.tsx	31	
-UserPillMetaChip	interface	platform	true		src/components/shared/UserPill.tsx	49	
-UserPill	function	platform	true	component	src/components/shared/UserPill.tsx	51	
+openSearch	function	platform	false		src/components/shared/UserPill.tsx	22	
+openAI	function	platform	false		src/components/shared/UserPill.tsx	26	
+UserPillProps	interface	platform	true		src/components/shared/UserPill.tsx	32	
+UserPillMetaChip	interface	platform	true		src/components/shared/UserPill.tsx	50	
+UserPill	function	platform	true	component	src/components/shared/UserPill.tsx	52	
 TaskCard	function	workflow	false	component,ui-tile	src/components/workflow/ApprovalInbox.tsx	16	
 ApprovalInbox	function	workflow	true	component	src/components/workflow/ApprovalInbox.tsx	31	
 act	function	workflow	false		src/components/workflow/ApprovalInbox.tsx	39	ApprovalInbox
@@ -12739,6 +12739,16 @@ ProgressTone	type	platform	true		src/ui/feedback/Progress.tsx	5
 ProgressSize	type	platform	true		src/ui/feedback/Progress.tsx	6	
 ProgressProps	interface	platform	true		src/ui/feedback/Progress.tsx	8	
 Progress	function	platform	true	component	src/ui/feedback/Progress.tsx	21	
+HsvColor	interface	platform	true		src/ui/forms/ColorPicker.tsx	6	
+ColorPickerProps	interface	platform	true		src/ui/forms/ColorPicker.tsx	12	
+clamp	function	platform	false		src/ui/forms/ColorPicker.tsx	26	
+hexToHsv	function	platform	true		src/ui/forms/ColorPicker.tsx	28	
+hsvToHex	function	platform	true		src/ui/forms/ColorPicker.tsx	45	
+normalizedHex	function	platform	false		src/ui/forms/ColorPicker.tsx	59	
+ColorPicker	function	platform	true	component	src/ui/forms/ColorPicker.tsx	66	
+commit	function	platform	false		src/ui/forms/ColorPicker.tsx	89	ColorPicker
+updateArea	function	platform	false		src/ui/forms/ColorPicker.tsx	97	ColorPicker
+pickFromScreen	function	platform	false		src/ui/forms/ColorPicker.tsx	106	ColorPicker
 ComboboxProps	interface	platform	true		src/ui/forms/Combobox.tsx	35	
 Combobox	function	platform	true	component	src/ui/forms/Combobox.tsx	72	
 NativeDateType	type	platform	false		src/ui/forms/dateInputs.tsx	28	
@@ -12769,8 +12779,8 @@ FormFieldProps	interface	platform	true		src/ui/forms/FormField.tsx	26
 VALIDATION_ICON	variable	platform	false	component	src/ui/forms/FormField.tsx	53	
 FormField	function	platform	true	component	src/ui/forms/FormField.tsx	59	
 FormGrid	function	platform	true	component	src/ui/forms/FormField.tsx	137	
-file	function	platform	false	test	src/ui/forms/forms.test.tsx	308	
-pickFiles	function	platform	false	test	src/ui/forms/forms.test.tsx	319	
+file	function	platform	false	test	src/ui/forms/forms.test.tsx	357	
+pickFiles	function	platform	false	test	src/ui/forms/forms.test.tsx	368	
 Base	type	platform	false		src/ui/forms/inputs.tsx	24	
 PasswordInputProps	interface	platform	true		src/ui/forms/inputs.tsx	28	
 PasswordInput	function	platform	true	component	src/ui/forms/inputs.tsx	34	
@@ -12843,11 +12853,12 @@ TokenCard	function	platform	false	component,ui-tile	src/ui/gallery/FoundationsPa
 hexOf	function	platform	false		src/ui/gallery/FoundationsPanel.tsx	134	
 hx	function	platform	false		src/ui/gallery/FoundationsPanel.tsx	140	hexOf
 RECOVERY_KEY	variable	platform	false		src/ui/gallery/galleryStore.ts	17	
-GalleryDraft	interface	platform	true		src/ui/gallery/galleryStore.ts	19	
-readRecovery	function	platform	false		src/ui/gallery/galleryStore.ts	46	
-storeRecovery	function	platform	false		src/ui/gallery/galleryStore.ts	51	
-cloneConfiguration	function	platform	false		src/ui/gallery/galleryStore.ts	55	
-useGalleryDraft	function	platform	true	hook	src/ui/gallery/galleryStore.ts	59	
+DraftRecoveryV1	interface	platform	false		src/ui/gallery/galleryStore.ts	19	
+GalleryDraft	interface	platform	true		src/ui/gallery/galleryStore.ts	25	
+readRecovery	function	platform	false		src/ui/gallery/galleryStore.ts	55	
+storeRecovery	function	platform	false		src/ui/gallery/galleryStore.ts	71	
+cloneConfiguration	function	platform	false		src/ui/gallery/galleryStore.ts	76	
+useGalleryDraft	function	platform	true	hook	src/ui/gallery/galleryStore.ts	80	
 savedConfiguration	variable	platform	false	test	src/ui/gallery/semanticDraft.test.tsx	29	
 loadDesignSystemStudio	variable	platform	false	test	src/ui/gallery/semanticDraft.test.tsx	30	
 saveDesignSystemDraft	variable	platform	false	test	src/ui/gallery/semanticDraft.test.tsx	34	
@@ -12911,7 +12922,7 @@ RailCardProps	interface	platform	true	ui-tile	src/ui/hrfin/RailCard.tsx	9
 RailCard	function	platform	true	component,ui-tile	src/ui/hrfin/RailCard.tsx	18	
 RowActionItem	interface	platform	true		src/ui/hrfin/RowActionMenu.tsx	12	
 RowActionMenu	function	platform	true	component	src/ui/hrfin/RowActionMenu.tsx	22	
-DtColumn	interface	platform	true		src/ui/index.ts	86	
+DtColumn	interface	platform	true		src/ui/index.ts	90	
 InfoTipProps	interface	platform	true		src/ui/InfoTip.tsx	7	
 InfoTip	function	platform	true	component	src/ui/InfoTip.tsx	19	
 ModulePageLayoutProps	interface	widgets	true		src/ui/layouts/ModulePageLayout.tsx	24	
@@ -12934,9 +12945,9 @@ LUCIDE_NAMES	variable	platform	true	component	src/ui/LucideIcon.tsx	13
 LucideIcon	function	platform	true	component	src/ui/LucideIcon.tsx	18	
 ITEMS	array	platform	false	test	src/ui/navigation/Breadcrumbs.test.tsx	5	
 BreadcrumbItem	interface	platform	true		src/ui/navigation/Breadcrumbs.tsx	7	
-BreadcrumbsProps	interface	platform	true		src/ui/navigation/Breadcrumbs.tsx	14	
-Crumb	function	platform	false	component	src/ui/navigation/Breadcrumbs.tsx	23	
-Breadcrumbs	function	platform	true	component	src/ui/navigation/Breadcrumbs.tsx	31	
+BreadcrumbsProps	interface	platform	true		src/ui/navigation/Breadcrumbs.tsx	16	
+Crumb	function	platform	false	component	src/ui/navigation/Breadcrumbs.tsx	25	
+Breadcrumbs	function	platform	true	component	src/ui/navigation/Breadcrumbs.tsx	33	
 PageActionBarProps	interface	platform	true		src/ui/navigation/PageActionBar/PageActionBar.tsx	15	
 PageActionBar	function	platform	true	component	src/ui/navigation/PageActionBar/PageActionBar.tsx	29	
 ITEMS	array	platform	false	test	src/ui/navigation/Tabs/Tabs.test.tsx	15	
@@ -12955,6 +12966,17 @@ onKeyDown	function	platform	false		src/ui/navigation/Tabs/Tabs.tsx	167	Tabs
 renderTab	function	platform	false		src/ui/navigation/Tabs/Tabs.tsx	201	Tabs
 TabPanelProps	interface	platform	true		src/ui/navigation/Tabs/Tabs.tsx	295	
 TabPanel	function	platform	true	component	src/ui/navigation/Tabs/Tabs.tsx	317	
+NODES	array	platform	false	test	src/ui/navigation/TreeView.test.tsx	5	
+TreeNode	interface	platform	true		src/ui/navigation/TreeView.tsx	6	
+TreeViewProps	interface	platform	true		src/ui/navigation/TreeView.tsx	14	
+collectVisible	function	platform	false		src/ui/navigation/TreeView.tsx	26	
+TreeView	function	platform	true	component	src/ui/navigation/TreeView.tsx	34	
+setExpanded	function	platform	false		src/ui/navigation/TreeView.tsx	56	TreeView
+toggle	function	platform	false		src/ui/navigation/TreeView.tsx	62	TreeView
+select	function	platform	false		src/ui/navigation/TreeView.tsx	71	TreeView
+focusById	function	platform	false		src/ui/navigation/TreeView.tsx	77	TreeView
+onKeyDown	function	platform	false		src/ui/navigation/TreeView.tsx	84	TreeView
+renderNodes	function	platform	false		src/ui/navigation/TreeView.tsx	118	TreeView
 step	function	platform	false	test	src/ui/navigation/Wizard/Wizard.test.tsx	15	
 STEPS	array	platform	false	test	src/ui/navigation/Wizard/Wizard.test.tsx	22	
 wiz	function	platform	false	test	src/ui/navigation/Wizard/Wizard.test.tsx	24	
@@ -13021,6 +13043,17 @@ Tooltip	function	platform	true	component	src/ui/overlays/Tooltip.tsx	32
 clearTimers	function	platform	false		src/ui/overlays/Tooltip.tsx	43	Tooltip
 show	function	platform	false		src/ui/overlays/Tooltip.tsx	52	Tooltip
 hide	function	platform	false		src/ui/overlays/Tooltip.tsx	60	Tooltip
+AiActionIconTreatment	type	platform	true		src/ui/patterns/AiActionButton.tsx	7	
+AiActionShape	type	platform	true		src/ui/patterns/AiActionButton.tsx	8	
+AI_PARTICLES	variable	platform	false	component	src/ui/patterns/AiActionButton.tsx	10	
+AiActionButtonProps	interface	platform	true		src/ui/patterns/AiActionButton.tsx	12	
+AiActionButton	function	platform	true	component	src/ui/patterns/AiActionButton.tsx	38	
+NextActionIconTreatment	type	platform	true		src/ui/patterns/NextActionButton.tsx	7	
+NextActionButtonProps	interface	platform	true		src/ui/patterns/NextActionButton.tsx	9	
+NextActionButton	function	platform	true	component	src/ui/patterns/NextActionButton.tsx	29	
+ThemeMode	type	platform	true		src/ui/patterns/ThemeModeSwitch.tsx	5	
+ThemeModeSwitchProps	interface	platform	true		src/ui/patterns/ThemeModeSwitch.tsx	7	
+ThemeModeSwitch	function	platform	true	component	src/ui/patterns/ThemeModeSwitch.tsx	19	
 AvatarVariant	type	platform	true		src/ui/people/Avatar.tsx	6	
 AvatarNamedSize	type	platform	true		src/ui/people/Avatar.tsx	7	
 AvatarSize	type	platform	true		src/ui/people/Avatar.tsx	8	
@@ -13087,33 +13120,36 @@ VALIDATION_ICON	variable	platform	false	component	src/ui/primitives/TextInput.ts
 TextInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	105	
 handleClear	function	platform	false		src/ui/primitives/TextInput.tsx	144	TextInput
 SearchInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	238	
-s	function	platform	false		src/ui/registry/actions.defs.tsx	26	
-b	function	platform	false		src/ui/registry/actions.defs.tsx	27	
-size	function	platform	false		src/ui/registry/actions.defs.tsx	28	
-DEMO_MENU	array	platform	false		src/ui/registry/actions.defs.tsx	30	
-SAVE_MENU	array	platform	false		src/ui/registry/actions.defs.tsx	42	
-noop	function	platform	false		src/ui/registry/actions.defs.tsx	48	
-VARIANTS	variable	platform	false	component	src/ui/registry/actions.defs.tsx	51	
-VARIANT_GEOMETRY	variable	platform	false	component	src/ui/registry/actions.defs.tsx	53	
-VARIANT_STATES	variable	platform	false	component	src/ui/registry/actions.defs.tsx	68	
-buttonDef	object	platform	true		src/ui/registry/actions.defs.tsx	88	
-icon	function	platform	false		src/ui/registry/actions.defs.tsx	200	buttonDef
-jsx	function	platform	false		src/ui/registry/actions.defs.tsx	222	buttonDef
-segmentedDef	object	platform	true		src/ui/registry/actions.defs.tsx	283	
-menuDef	object	platform	true		src/ui/registry/actions.defs.tsx	358	
-ACTION_DEFS	array	platform	true		src/ui/registry/actions.defs.tsx	484	
-ButtonPatternValue	type	platform	true		src/ui/registry/button-patterns.tsx	7	
-ButtonPatternValues	type	platform	true		src/ui/registry/button-patterns.tsx	8	
-ButtonPatternControl	type	platform	true		src/ui/registry/button-patterns.tsx	10	
-ButtonPatternExample	interface	platform	true		src/ui/registry/button-patterns.tsx	16	
-ButtonPattern	interface	platform	true		src/ui/registry/button-patterns.tsx	26	
-text	function	platform	false		src/ui/registry/button-patterns.tsx	40	
-yes	function	platform	false		src/ui/registry/button-patterns.tsx	42	
-size	function	platform	false		src/ui/registry/button-patterns.tsx	43	
-variant	function	platform	false		src/ui/registry/button-patterns.tsx	44	
-patternIcon	function	platform	false		src/ui/registry/button-patterns.tsx	46	
-BUTTON_PATTERNS	array	platform	true		src/ui/registry/button-patterns.tsx	53	
-findButtonPattern	function	platform	true		src/ui/registry/button-patterns.tsx	123	
+s	function	platform	false		src/ui/registry/actions.defs.tsx	27	
+b	function	platform	false		src/ui/registry/actions.defs.tsx	28	
+size	function	platform	false		src/ui/registry/actions.defs.tsx	29	
+DEMO_MENU	array	platform	false		src/ui/registry/actions.defs.tsx	31	
+SAVE_MENU	array	platform	false		src/ui/registry/actions.defs.tsx	43	
+noop	function	platform	false		src/ui/registry/actions.defs.tsx	49	
+VARIANTS	variable	platform	false	component	src/ui/registry/actions.defs.tsx	52	
+VARIANT_GEOMETRY	variable	platform	false	component	src/ui/registry/actions.defs.tsx	54	
+VARIANT_STATES	variable	platform	false	component	src/ui/registry/actions.defs.tsx	69	
+buttonDef	object	platform	true		src/ui/registry/actions.defs.tsx	89	
+icon	function	platform	false		src/ui/registry/actions.defs.tsx	201	buttonDef
+jsx	function	platform	false		src/ui/registry/actions.defs.tsx	238	buttonDef
+segmentedDef	object	platform	true		src/ui/registry/actions.defs.tsx	304	
+menuDef	object	platform	true		src/ui/registry/actions.defs.tsx	379	
+ACTION_DEFS	array	platform	true		src/ui/registry/actions.defs.tsx	505	
+ButtonPatternValue	type	platform	true		src/ui/registry/button-patterns.tsx	8	
+ButtonPatternValues	type	platform	true		src/ui/registry/button-patterns.tsx	9	
+ButtonPatternControl	type	platform	true		src/ui/registry/button-patterns.tsx	11	
+ButtonPatternExample	interface	platform	true		src/ui/registry/button-patterns.tsx	17	
+ButtonPatternPreset	interface	platform	true		src/ui/registry/button-patterns.tsx	23	
+ButtonPattern	interface	platform	true		src/ui/registry/button-patterns.tsx	33	
+text	function	platform	false		src/ui/registry/button-patterns.tsx	49	
+yes	function	platform	false		src/ui/registry/button-patterns.tsx	51	
+size	function	platform	false		src/ui/registry/button-patterns.tsx	52	
+variant	function	platform	false		src/ui/registry/button-patterns.tsx	53	
+aiSize	function	platform	false		src/ui/registry/button-patterns.tsx	55	
+patternIcon	function	platform	false		src/ui/registry/button-patterns.tsx	56	
+aiAction	function	platform	false		src/ui/registry/button-patterns.tsx	62	
+BUTTON_PATTERNS	array	platform	true		src/ui/registry/button-patterns.tsx	74	
+findButtonPattern	function	platform	true		src/ui/registry/button-patterns.tsx	159	
 s	function	platform	false		src/ui/registry/compound.defs.tsx	31	
 b	function	platform	false		src/ui/registry/compound.defs.tsx	33	
 size	function	platform	false		src/ui/registry/compound.defs.tsx	34	
@@ -13155,37 +13191,43 @@ dialogDef	object	platform	false		src/ui/registry/definitions.tsx	178
 COMPONENT_DEFS	array	platform	true		src/ui/registry/definitions.tsx	311	
 ComponentFamily	interface	platform	true		src/ui/registry/families.ts	23	
 BUTTON_FAMILY	object	platform	true		src/ui/registry/families.ts	48	
-COMPONENT_FAMILIES	array	platform	true		src/ui/registry/families.ts	62	
-findFamily	function	platform	true		src/ui/registry/families.ts	64	
-familyOfComponent	function	platform	true		src/ui/registry/families.ts	69	
-familyMembers	function	platform	true		src/ui/registry/families.ts	79	
+SWITCH_FAMILY	object	platform	true		src/ui/registry/families.ts	62	
+COMPONENT_FAMILIES	array	platform	true		src/ui/registry/families.ts	75	
+findFamily	function	platform	true		src/ui/registry/families.ts	77	
+familyOfComponent	function	platform	true		src/ui/registry/families.ts	82	
+familyMembers	function	platform	true		src/ui/registry/families.ts	92	
 s	function	platform	false		src/ui/registry/feedback.defs.tsx	9	
 b	function	platform	false		src/ui/registry/feedback.defs.tsx	10	
 emptyStateDef	object	platform	true		src/ui/registry/feedback.defs.tsx	12	
 skeletonDef	object	platform	true		src/ui/registry/feedback.defs.tsx	75	
 spinnerDef	object	platform	true		src/ui/registry/feedback.defs.tsx	114	
 FEEDBACK_DEFS	array	platform	true		src/ui/registry/feedback.defs.tsx	144	
-s	function	platform	false		src/ui/registry/forms.defs.tsx	25	
-b	function	platform	false		src/ui/registry/forms.defs.tsx	26	
-n	function	platform	false		src/ui/registry/forms.defs.tsx	27	
-size	function	platform	false		src/ui/registry/forms.defs.tsx	28	
-val	function	platform	false		src/ui/registry/forms.defs.tsx	29	
-noop	function	platform	false		src/ui/registry/forms.defs.tsx	32	
-CHOICE_STYLE	array	platform	false		src/ui/registry/forms.defs.tsx	34	
-CONTROL_STYLE	array	platform	false		src/ui/registry/forms.defs.tsx	45	
-checkboxDef	object	platform	true		src/ui/registry/forms.defs.tsx	57	
-radioGroupDef	object	platform	true		src/ui/registry/forms.defs.tsx	138	
-switchDef	object	platform	true		src/ui/registry/forms.defs.tsx	199	
-textInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	274	
-shell	function	platform	false		src/ui/registry/forms.defs.tsx	375	textInputDef
-dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	439	
-fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	515	
-otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	604	
-DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	652	
-GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	661	
-selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	679	
-search	function	platform	false		src/ui/registry/forms.defs.tsx	782	selectDef
-FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	813	
+s	function	platform	false		src/ui/registry/forms.defs.tsx	28	
+b	function	platform	false		src/ui/registry/forms.defs.tsx	29	
+n	function	platform	false		src/ui/registry/forms.defs.tsx	30	
+size	function	platform	false		src/ui/registry/forms.defs.tsx	31	
+val	function	platform	false		src/ui/registry/forms.defs.tsx	32	
+noop	function	platform	false		src/ui/registry/forms.defs.tsx	35	
+OtpPreviewProps	interface	platform	false		src/ui/registry/forms.defs.tsx	37	
+OtpPreview	function	platform	false	component	src/ui/registry/forms.defs.tsx	45	
+ThemeModePreview	function	platform	false	component	src/ui/registry/forms.defs.tsx	63	
+CHOICE_STYLE	array	platform	false		src/ui/registry/forms.defs.tsx	74	
+CONTROL_STYLE	array	platform	false		src/ui/registry/forms.defs.tsx	85	
+checkboxDef	object	platform	true		src/ui/registry/forms.defs.tsx	97	
+radioGroupDef	object	platform	true		src/ui/registry/forms.defs.tsx	178	
+switchDef	object	platform	true		src/ui/registry/forms.defs.tsx	239	
+textInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	314	
+shell	function	platform	false		src/ui/registry/forms.defs.tsx	415	textInputDef
+dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	479	
+fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	555	
+themeModeSwitchDef	object	platform	true		src/ui/registry/forms.defs.tsx	644	
+colorPickerDef	object	platform	true		src/ui/registry/forms.defs.tsx	694	
+otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	730	
+DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	782	
+GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	791	
+selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	809	
+search	function	platform	false		src/ui/registry/forms.defs.tsx	912	selectDef
+FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	943	
 COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	61	
 CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	76	
 CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	92	
@@ -13196,14 +13238,16 @@ findComponent	function	platform	true		src/ui/registry/index.ts	161
 RegistryTotals	interface	platform	true		src/ui/registry/index.ts	165	
 registryTotals	function	platform	true		src/ui/registry/index.ts	191	
 isPattern	function	platform	false		src/ui/registry/index.ts	192	registryTotals
-s	function	platform	false		src/ui/registry/navigation.defs.tsx	24	
-b	function	platform	false		src/ui/registry/navigation.defs.tsx	25	
-noop	function	platform	false		src/ui/registry/navigation.defs.tsx	26	
-CASE_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	30	
-PLAIN_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	38	
-MANY_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	44	
-tabsDef	object	platform	true		src/ui/registry/navigation.defs.tsx	56	
-NAVIGATION_DEFS	array	platform	true		src/ui/registry/navigation.defs.tsx	269	
+s	function	platform	false		src/ui/registry/navigation.defs.tsx	25	
+b	function	platform	false		src/ui/registry/navigation.defs.tsx	26	
+noop	function	platform	false		src/ui/registry/navigation.defs.tsx	27	
+FILE_TREE	array	platform	false		src/ui/registry/navigation.defs.tsx	29	
+treeViewDef	object	platform	true		src/ui/registry/navigation.defs.tsx	48	
+CASE_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	113	
+PLAIN_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	121	
+MANY_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	127	
+tabsDef	object	platform	true		src/ui/registry/navigation.defs.tsx	139	
+NAVIGATION_DEFS	array	platform	true		src/ui/registry/navigation.defs.tsx	352	
 s	function	platform	false		src/ui/registry/overlays.defs.tsx	9	
 b	function	platform	false		src/ui/registry/overlays.defs.tsx	10	
 PopoverPreview	function	platform	false	component	src/ui/registry/overlays.defs.tsx	12	
@@ -13231,10 +13275,10 @@ b	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	10
 n	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	11	
 noop	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	12	
 breadcrumbsDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	14	
-alertDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	51	
-progressDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	82	
-accordionDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	111	
-REMAINING_PRIMITIVE_DEFS	array	platform	true		src/ui/registry/remaining-primitives.defs.tsx	143	
+alertDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	55	
+progressDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	86	
+accordionDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	115	
+REMAINING_PRIMITIVE_DEFS	array	platform	true		src/ui/registry/remaining-primitives.defs.tsx	147	
 PropControl	type	platform	true		src/ui/registry/types.ts	41	
 PropValues	type	platform	true		src/ui/registry/types.ts	49	
 StyleControl	interface	platform	true		src/ui/registry/types.ts	60	
@@ -13259,9 +13303,9 @@ ReviewBody	function	platform	false	component	src/ui/registry/wizard.def.tsx	30
 wizardDef	object	platform	true		src/ui/registry/wizard.def.tsx	44	
 ROOT	variable	platform	false	component,test	src/ui/special/CreditsButton.test.tsx	8	
 read	function	platform	false	test	src/ui/special/CreditsButton.test.tsx	9	
-CreditsButtonProps	interface	platform	true		src/ui/special/CreditsButton.tsx	33	
-PARTICLES	variable	platform	false	component	src/ui/special/CreditsButton.tsx	41	
-CreditsButton	function	platform	true	component	src/ui/special/CreditsButton.tsx	43	
+CreditsButtonProps	interface	platform	true		src/ui/special/CreditsButton.tsx	9	
+PARTICLES	variable	platform	false	component	src/ui/special/CreditsButton.tsx	16	
+CreditsButton	function	platform	true	component	src/ui/special/CreditsButton.tsx	18	
 SpecialTreatmentsProps	interface	platform	true		src/ui/special/SpecialTreatments.tsx	10	
 SpecialTreatments	function	platform	true	component	src/ui/special/SpecialTreatments.tsx	15	
 Tone	type	platform	true		src/ui/status/statusTokens.ts	31	
@@ -13318,23 +13362,30 @@ Specimen	function	platform	false	component	src/ui/studio/BrandOverview.tsx	49
 Swatch	function	platform	false	component	src/ui/studio/BrandOverview.tsx	62	
 BrandOverview	function	platform	true	component	src/ui/studio/BrandOverview.tsx	76	
 applyDirection	function	platform	false		src/ui/studio/BrandOverview.tsx	103	BrandOverview
-ButtonBrowserProps	interface	platform	true		src/ui/studio/ButtonBrowser.tsx	12	
-PatternControl	function	platform	false	component	src/ui/studio/ButtonBrowser.tsx	20	
-ButtonPatternEditor	function	platform	false	component	src/ui/studio/ButtonBrowser.tsx	50	
-set	function	platform	false		src/ui/studio/ButtonBrowser.tsx	52	ButtonPatternEditor
-ButtonBrowser	function	platform	true	component	src/ui/studio/ButtonBrowser.tsx	83	
+ButtonBrowserProps	interface	platform	true		src/ui/studio/ButtonBrowser.tsx	13	
+PatternControl	function	platform	false	component	src/ui/studio/ButtonBrowser.tsx	21	
+ButtonPatternEditor	function	platform	false	component	src/ui/studio/ButtonBrowser.tsx	53	
+set	function	platform	false		src/ui/studio/ButtonBrowser.tsx	64	ButtonPatternEditor
+reset	function	platform	false		src/ui/studio/ButtonBrowser.tsx	69	ButtonPatternEditor
+applyPreset	function	platform	false		src/ui/studio/ButtonBrowser.tsx	73	ButtonPatternEditor
+presetIsActive	function	platform	false		src/ui/studio/ButtonBrowser.tsx	86	ButtonPatternEditor
+ButtonBrowser	function	platform	true	component	src/ui/studio/ButtonBrowser.tsx	132	
 buttonFamilyPreviewProps	function	platform	true		src/ui/studio/buttonFamilyPreview.ts	9	
-ThumbnailKind	type	platform	false		src/ui/studio/componentThumbnail.tsx	6	
-kindFor	function	platform	false		src/ui/studio/componentThumbnail.tsx	12	
-FieldScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	42	
-SelectScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	48	
-ChoiceScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	62	
-ComponentThumbnail	function	platform	true	component	src/ui/studio/componentThumbnail.tsx	67	
+ThumbnailKind	type	platform	false		src/ui/studio/componentThumbnail.tsx	7	
+kindFor	function	platform	false		src/ui/studio/componentThumbnail.tsx	13	
+FieldScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	47	
+SelectScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	53	
+ChoiceScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	67	
+ColorPickerScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	71	
+ComponentThumbnail	function	platform	true	component	src/ui/studio/componentThumbnail.tsx	80	
 MEMBERS	variable	platform	false	component,test	src/ui/studio/family.test.tsx	26	
 openButtonBrowser	function	platform	false	test	src/ui/studio/family.test.tsx	29	
 openButtons	function	platform	false	test	src/ui/studio/family.test.tsx	36	
 openButtonMember	function	platform	false	test	src/ui/studio/family.test.tsx	41	
-cardNamed	function	platform	false	ui-tile,test	src/ui/studio/family.test.tsx	134	
+labels	function	platform	false	test	src/ui/studio/family.test.tsx	108	
+navTo	function	platform	false	test	src/ui/studio/family.test.tsx	110	
+cardNamed	function	platform	false	ui-tile,test	src/ui/studio/family.test.tsx	158	
+FamilyBrowser	function	platform	true	component	src/ui/studio/FamilyBrowser.tsx	5	
 Shape	interface	platform	false		src/ui/studio/InAppUsage.tsx	31	
 DATA	object	platform	false		src/ui/studio/InAppUsage.tsx	39	
 describe	function	platform	false		src/ui/studio/InAppUsage.tsx	43	
@@ -13345,65 +13396,74 @@ copySelection	function	platform	false		src/ui/studio/InAppUsage.tsx	93	InAppUsag
 settle	function	platform	false		src/ui/studio/InAppUsage.tsx	110	copySelection
 root	variable	platform	false		src/ui/studio/preview.tsx	12	
 PreviewScope	function	platform	true	component	src/ui/studio/PreviewScope.tsx	20	
-Target	type	platform	false		src/ui/studio/RecipeStyleEditor.tsx	11	
-COLOR_SWATCHES	variable	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	13	
-HslColor	interface	platform	false		src/ui/studio/RecipeStyleEditor.tsx	15	
-hexToHsl	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	17	
-hslToHex	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	32	
-friendly	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	44	
-friendlyGroup	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	48	
-belongs	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	55	
-SIZE_FALLBACKS	object	platform	false		src/ui/studio/RecipeStyleEditor.tsx	62	
-SizeUnit	type	platform	false		src/ui/studio/RecipeStyleEditor.tsx	73	
-SizeValue	interface	platform	false		src/ui/studio/RecipeStyleEditor.tsx	74	
-cssVariableName	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	76	
-resolveThemeValue	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	80	
-parseSizeValue	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	95	
-readableThemeValue	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	102	
-StudioColorControl	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	108	
-TokenControl	function	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	145	
-ICON_RECOMMENDATIONS	object	platform	false		src/ui/studio/RecipeStyleEditor.tsx	193	
-IconPicker	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	202	
-choose	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	224	IconPicker
-RecipeStyleEditor	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	253	
-previewPropsFor	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	262	RecipeStyleEditor
-setPreviewProp	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	268	RecipeStyleEditor
-StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	46	
-SectionId	type	platform	false		src/ui/studio/Studio.tsx	55	
-NavItem	interface	platform	false		src/ui/studio/Studio.tsx	61	
-NavGroup	interface	platform	false		src/ui/studio/Studio.tsx	62	
-NAV	array	platform	false		src/ui/studio/Studio.tsx	64	
-NavComponentRow	type	platform	false		src/ui/studio/Studio.tsx	93	
-COMPONENT_ROWS	variable	platform	false	component	src/ui/studio/Studio.tsx	97	
-APP_SCENE	object	platform	false		src/ui/studio/Studio.tsx	108	
-SECTION_COPY	object	platform	false		src/ui/studio/Studio.tsx	114	
-variantCount	function	platform	false		src/ui/studio/Studio.tsx	134	
-ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	140	
-FamilyCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	175	
-CatalogueNodeCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	193	
-Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	200	
-PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	252	
-Studio	function	platform	true	component	src/ui/studio/Studio.tsx	261	
+Target	type	platform	false		src/ui/studio/RecipeStyleEditor.tsx	13	
+friendly	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	15	
+friendlyGroup	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	19	
+belongs	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	26	
+SIZE_FALLBACKS	object	platform	false		src/ui/studio/RecipeStyleEditor.tsx	33	
+SizeUnit	type	platform	false		src/ui/studio/RecipeStyleEditor.tsx	44	
+SizeValue	interface	platform	false		src/ui/studio/RecipeStyleEditor.tsx	45	
+cssVariableName	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	47	
+resolveThemeValue	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	51	
+parseSizeValue	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	66	
+readableThemeValue	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	73	
+StudioColorControl	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	79	
+position	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	96	StudioColorControl
+closeOnOutside	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	111	StudioColorControl
+closeOnEscape	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	115	StudioColorControl
+TokenControl	function	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	150	
+HoverColorMode	type	platform	false		src/ui/studio/RecipeStyleEditor.tsx	199	
+HoverColorControl	function	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	201	
+setMode	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	205	HoverColorControl
+ICON_RECOMMENDATIONS	object	platform	false		src/ui/studio/RecipeStyleEditor.tsx	228	
+IconPicker	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	237	
+choose	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	259	IconPicker
+RecipeStyleEditor	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	288	
+previewPropsFor	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	297	RecipeStyleEditor
+setPreviewProp	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	303	RecipeStyleEditor
+StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	48	
+SectionId	type	platform	false		src/ui/studio/Studio.tsx	57	
+NavItem	interface	platform	false		src/ui/studio/Studio.tsx	63	
+NavGroup	interface	platform	false		src/ui/studio/Studio.tsx	64	
+NAV	array	platform	false		src/ui/studio/Studio.tsx	66	
+NavComponentRow	type	platform	false		src/ui/studio/Studio.tsx	95	
+COMPONENT_ROWS	variable	platform	false	component	src/ui/studio/Studio.tsx	99	
+COMPONENT_ORDER	variable	platform	false	component	src/ui/studio/Studio.tsx	109	
+APP_SCENE	object	platform	false		src/ui/studio/Studio.tsx	114	
+SECTION_COPY	object	platform	false		src/ui/studio/Studio.tsx	120	
+variantCount	function	platform	false		src/ui/studio/Studio.tsx	140	
+ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	146	
+FamilyCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	181	
+CatalogueNodeCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	199	
+Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	206	
+PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	258	
+Studio	function	platform	true	component	src/ui/studio/Studio.tsx	267	
+openComponents	function	platform	false		src/ui/studio/Studio.tsx	295	Studio
+openGroup	function	platform	false		src/ui/studio/Studio.tsx	296	Studio
 friendlyError	function	platform	false		src/ui/studio/StudioPublishBar.tsx	7	
-StudioPublishBar	function	platform	true	component	src/ui/studio/StudioPublishBar.tsx	16	
-act	function	platform	false		src/ui/studio/StudioPublishBar.tsx	29	StudioPublishBar
-CONTROL_GROUPS	array	platform	false		src/ui/studio/Workbench.tsx	43	
-FRIENDLY_VALUES	object	platform	false		src/ui/studio/Workbench.tsx	50	
-friendlyValue	function	platform	false		src/ui/studio/Workbench.tsx	55	
-groupControls	function	platform	false		src/ui/studio/Workbench.tsx	61	
-Control	function	platform	false	component	src/ui/studio/Workbench.tsx	81	
-WorkbenchProps	interface	platform	true		src/ui/studio/Workbench.tsx	158	
-CompoundButtonEditorProps	interface	platform	false		src/ui/studio/Workbench.tsx	168	
-CompoundButtonEditor	function	platform	false	component	src/ui/studio/Workbench.tsx	182	
-previewPropsFor	function	platform	false		src/ui/studio/Workbench.tsx	192	CompoundButtonEditor
-setPreviewProp	function	platform	false		src/ui/studio/Workbench.tsx	200	CompoundButtonEditor
-reset	function	platform	false		src/ui/studio/Workbench.tsx	210	CompoundButtonEditor
-Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	327	
-setValues	function	platform	false		src/ui/studio/Workbench.tsx	341	Workbench
-set	function	platform	false		src/ui/studio/Workbench.tsx	344	Workbench
-specimen	function	platform	false		src/ui/studio/Workbench.tsx	357	Workbench
-Block	function	platform	false	component	src/ui/studio/Workbench.tsx	510	
-OverviewSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	528	
+revisionEntries	function	platform	false		src/ui/studio/StudioPublishBar.tsx	13	
+revisionChangeCount	function	platform	false		src/ui/studio/StudioPublishBar.tsx	22	
+StudioPublishBar	function	platform	true	component	src/ui/studio/StudioPublishBar.tsx	34	
+act	function	platform	false		src/ui/studio/StudioPublishBar.tsx	56	StudioPublishBar
+openHistory	function	platform	false		src/ui/studio/StudioPublishBar.tsx	60	StudioPublishBar
+CONTROL_GROUPS	array	platform	false		src/ui/studio/Workbench.tsx	44	
+FRIENDLY_VALUES	object	platform	false		src/ui/studio/Workbench.tsx	51	
+friendlyValue	function	platform	false		src/ui/studio/Workbench.tsx	56	
+groupControls	function	platform	false		src/ui/studio/Workbench.tsx	62	
+Control	function	platform	false	component	src/ui/studio/Workbench.tsx	82	
+WorkbenchProps	interface	platform	true		src/ui/studio/Workbench.tsx	159	
+CompoundButtonEditorProps	interface	platform	false		src/ui/studio/Workbench.tsx	167	
+CompoundButtonEditor	function	platform	false	component	src/ui/studio/Workbench.tsx	181	
+previewPropsFor	function	platform	false		src/ui/studio/Workbench.tsx	191	CompoundButtonEditor
+setPreviewProp	function	platform	false		src/ui/studio/Workbench.tsx	199	CompoundButtonEditor
+reset	function	platform	false		src/ui/studio/Workbench.tsx	209	CompoundButtonEditor
+Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	332	
+setValues	function	platform	false		src/ui/studio/Workbench.tsx	346	Workbench
+set	function	platform	false		src/ui/studio/Workbench.tsx	349	Workbench
+specimen	function	platform	false		src/ui/studio/Workbench.tsx	362	Workbench
+Block	function	platform	false	component	src/ui/studio/Workbench.tsx	455	
+VariantSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	470	
+UsageSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	501	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	
@@ -13526,8 +13586,8 @@ BASE_CSS	variable	platform	false	test	src/ui/theme/semanticTokens.test.ts	29
 TOKENS_CSS	variable	platform	false	test	src/ui/theme/semanticTokens.test.ts	30	
 SEMANTIC_CSS	variable	platform	false	test	src/ui/theme/semanticTokens.test.ts	31	
 RECIPES	array	platform	false	test	src/ui/theme/semanticTokens.test.ts	33	
-decls	variable	platform	false	test	src/ui/theme/semanticTokens.test.ts	50	
-resolveRole	function	platform	false	test	src/ui/theme/semanticTokens.test.ts	231	
+decls	variable	platform	false	test	src/ui/theme/semanticTokens.test.ts	51	
+resolveRole	function	platform	false	test	src/ui/theme/semanticTokens.test.ts	232	
 SemanticGroupId	type	platform	true		src/ui/theme/semanticTokens.ts	28	
 SemanticRole	interface	platform	true		src/ui/theme/semanticTokens.ts	32	
 SemanticGroup	interface	platform	true		src/ui/theme/semanticTokens.ts	46	
@@ -14331,15 +14391,16 @@ ButtonRecipeState	type	platform	true		types/designSystem.ts	7
 TokenMap	type	platform	true		types/designSystem.ts	9	
 ComponentRecipeConfiguration	interface	platform	true		types/designSystem.ts	11	
 DesignSystemConfigurationV1	interface	platform	true		types/designSystem.ts	16	
-DesignSystemRevision	interface	platform	true		types/designSystem.ts	22	
-DesignSystemDraft	interface	platform	true		types/designSystem.ts	30	
-DesignSystemValidation	interface	platform	true		types/designSystem.ts	41	
-emptyDesignSystemConfiguration	function	platform	true		types/designSystem.ts	47	
-TOKEN_NAME	variable	platform	false		types/designSystem.ts	51	
-UNSAFE_VALUE	variable	platform	false		types/designSystem.ts	52	
-cleanTokenMap	function	platform	false		types/designSystem.ts	54	
-sanitizeDesignSystemConfiguration	function	platform	true		types/designSystem.ts	74	
-configurationToOverrides	function	platform	true		types/designSystem.ts	103	
+DesignSystemRevision	interface	platform	true		types/designSystem.ts	30	
+DesignSystemDraft	interface	platform	true		types/designSystem.ts	38	
+DesignSystemValidation	interface	platform	true		types/designSystem.ts	49	
+emptyDesignSystemConfiguration	function	platform	true		types/designSystem.ts	55	
+TOKEN_NAME	variable	platform	false		types/designSystem.ts	59	
+UNSAFE_VALUE	variable	platform	false		types/designSystem.ts	60	
+cleanTokenMap	function	platform	false		types/designSystem.ts	62	
+cleanSavedColors	function	platform	false		types/designSystem.ts	82	
+sanitizeDesignSystemConfiguration	function	platform	true		types/designSystem.ts	100	
+configurationToOverrides	function	platform	true		types/designSystem.ts	138	
 EmailTemplateFamily	type	platform	true		types/emailTemplates.ts	1	
 EmailTemplateStatus	type	platform	true		types/emailTemplates.ts	2	
 EmailApprovalState	type	platform	true		types/emailTemplates.ts	10	

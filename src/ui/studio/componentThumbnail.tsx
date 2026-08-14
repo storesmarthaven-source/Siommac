@@ -1,13 +1,14 @@
 import { type VNode } from 'preact';
 import { type ComponentCategory } from '../registry';
 import { LucideIcon } from '../LucideIcon';
+import { Breadcrumbs } from '../navigation/Breadcrumbs';
 import fileUploadersPreview from './assets/file-uploaders.webp';
 
 type ThumbnailKind =
   | 'buttons' | 'segmented' | 'menu' | 'field' | 'date' | 'select' | 'upload' | 'otp'
-  | 'check' | 'radio' | 'switch' | 'people' | 'dialog' | 'drawer' | 'tooltip'
+  | 'check' | 'radio' | 'switch' | 'theme-switch' | 'people' | 'dialog' | 'drawer' | 'tooltip'
   | 'table' | 'badge' | 'tabs' | 'wizard' | 'header' | 'alert' | 'progress'
-  | 'spinner' | 'skeleton' | 'card' | 'accordion' | 'planned';
+  | 'spinner' | 'skeleton' | 'card' | 'accordion' | 'color-picker' | 'breadcrumbs' | 'tree' | 'planned';
 
 function kindFor(id: string, built: boolean): ThumbnailKind {
   if (!built) return 'planned';
@@ -18,17 +19,21 @@ function kindFor(id: string, built: boolean): ThumbnailKind {
   if (id === 'date-input') return 'date';
   if (id === 'select') return 'select';
   if (id === 'file-input') return 'upload';
+  if (id === 'color-picker') return 'color-picker';
   if (id === 'otp-input') return 'otp';
   if (id === 'checkbox') return 'check';
   if (id === 'radio-group') return 'radio';
   if (id === 'switch') return 'switch';
+  if (id === 'theme-mode-switch' || id === 'switches') return 'theme-switch';
   if (['avatar', 'avatar-group', 'person-search-select'].includes(id)) return 'people';
   if (id === 'drawer') return 'drawer';
   if (id === 'tooltip') return 'tooltip';
   if (['dialog', 'popover'].includes(id)) return 'dialog';
   if (id === 'data-table') return 'table';
   if (id === 'badge') return 'badge';
-  if (['tabs', 'breadcrumbs'].includes(id)) return 'tabs';
+  if (id === 'tabs') return 'tabs';
+  if (id === 'breadcrumbs') return 'breadcrumbs';
+  if (id === 'tree-view') return 'tree';
   if (id === 'wizard') return 'wizard';
   if (['page-header', 'page-action-bar'].includes(id)) return 'header';
   if (id === 'alert') return 'alert';
@@ -63,6 +68,14 @@ function ChoiceScene({ kind }: { kind: 'check' | 'radio' | 'switch' }): VNode {
   return <div class={`sds-thumb-choice sds-thumb-choice--${kind}`}><span><i />Email notifications</span><span class="is-on"><i />Approval alerts</span></div>;
 }
 
+function ColorPickerScene(): VNode {
+  return <div class="sds-thumb-color-picker">
+    <header><strong>Choose color</strong><i aria-hidden="true">×</i></header>
+    <div class="sds-thumb-color-picker__spectrum"><span /></div>
+    <footer><i aria-hidden="true" /><span><small>HEX</small><b>#7F56D9</b></span></footer>
+  </div>;
+}
+
 /** Theme-aware catalogue illustration; deliberately not the interactive runtime component. */
 export function ComponentThumbnail({ id, built = true }: {
   id: string;
@@ -79,8 +92,19 @@ export function ComponentThumbnail({ id, built = true }: {
       {(['field', 'date'] as ThumbnailKind[]).includes(kind) && <FieldScene kind={kind as 'field' | 'date'} />}
       {kind === 'select' && <SelectScene />}
       {kind === 'upload' && <img class="sds-thumb-upload-image" src={fileUploadersPreview} alt="" />}
-      {kind === 'otp' && <div class="sds-thumb-otp"><span>Enter verification code</span><div>{['8', '2', '4', '', '', ''].map((value, index) => <i class={index === 0 ? 'is-active' : ''} key={index}>{value}</i>)}</div></div>}
+      {kind === 'color-picker' && <ColorPickerScene />}
+      {kind === 'tree' && <div class="sds-thumb-tree">
+        <span class="is-folder is-open"><LucideIcon name="FolderOpen" size={13} />src</span>
+        <div>
+          <span class="is-folder is-open"><LucideIcon name="FolderOpen" size={13} />components</span>
+          <div><span class="is-selected"><LucideIcon name="File" size={13} />button.tsx</span></div>
+          <span><LucideIcon name="File" size={13} />header.tsx</span>
+        </div>
+        <span class="is-folder"><LucideIcon name="Folder" size={13} />lib</span>
+      </div>}
+      {kind === 'otp' && <div class="sds-thumb-otp"><div>{['8', '2', '4', '', '', ''].map((value, index) => <i class={`${value ? 'is-filled' : ''}${index === 3 ? ' is-active' : ''}`.trim()} key={index}>{value}</i>)}</div></div>}
       {(['check', 'radio', 'switch'] as ThumbnailKind[]).includes(kind) && <ChoiceScene kind={kind as 'check' | 'radio' | 'switch'} />}
+      {kind === 'theme-switch' && <div class="sds-thumb-theme-switch"><LucideIcon name="Moon" size={19} /><i /><LucideIcon name="Sun" size={20} /></div>}
       {kind === 'people' && <div class="sds-thumb-people"><i>SJ</i><i>AD</i><i>PR</i><strong>+2</strong></div>}
       {kind === 'dialog' && <div class="sds-thumb-dialog"><strong>Confirm action</strong><span>This change will be recorded.</span><footer><i>Cancel</i><b>Confirm</b></footer></div>}
       {kind === 'drawer' && <div class="sds-thumb-drawer"><aside /><div><strong>Employee details</strong><span>Sarah James</span><span>Safety Officer</span><b>Active</b></div></div>}
@@ -88,6 +112,10 @@ export function ComponentThumbnail({ id, built = true }: {
       {kind === 'table' && <div class="sds-thumb-table"><header><span>Employee</span><span>Status</span><span>Site</span></header><p><span>Sarah James</span><b>Active</b><span>Point Lisas</span></p><p><span>Amara Diallo</span><b>Leave</b><span>Chaguaramas</span></p></div>}
       {kind === 'badge' && <div class="sds-thumb-badges"><span>● Active</span><strong>● Overdue</strong></div>}
       {kind === 'tabs' && <div class="sds-thumb-tabs"><span class="is-on">Overview</span><span>People</span><span>Evidence</span><i /></div>}
+      {kind === 'breadcrumbs' && <Breadcrumbs class="sds-thumb-breadcrumbs" items={[
+        { label: 'Home', icon: <LucideIcon name="Home" size={19} />, iconOnly: true },
+        { label: 'Settings' }, { label: 'Team members' }, { label: 'Olivia Rhye' },
+      ]} />}
       {kind === 'wizard' && <div class="sds-thumb-wizard"><i class="is-done">✓</i><em /><i class="is-on">2</i><em /><i>3</i><small><span>Details</span><span>Evidence</span><span>Review</span></small></div>}
       {kind === 'header' && <div class="sds-thumb-header"><small>Human Resources / Employees</small><strong>Employee records</strong><span>Manage people, roles and employment details.</span><b>Add employee</b></div>}
       {kind === 'alert' && <div class="sds-thumb-alert"><LucideIcon name="TriangleAlert" size={18} /><div><strong>Approval required</strong><span>A second approver must review this payroll run.</span></div></div>}

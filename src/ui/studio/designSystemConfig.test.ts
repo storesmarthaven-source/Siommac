@@ -41,4 +41,28 @@ describe('design-system configuration contract', () => {
     expect(result.validation.valid).toBe(true);
     expect(result.validation.warnings[0]).toContain('independent navigation semantic token');
   });
+
+  it('publishes AI Action styling without adding another Button variant', () => {
+    const result = sanitizeDesignSystemConfiguration({
+      schemaVersion: 1,
+      theme: { tokens: {}, savedColors: [] },
+      recipes: {
+        button: { overrides: {} },
+        aiAction: { overrides: { '--ui-ai-action-surface-start': '#4e5871', '--ui-ai-action-radius': '10px' } },
+      },
+    });
+    expect(result.validation.valid).toBe(true);
+    expect(configurationToOverrides(result.configuration)['--ui-ai-action-surface-start']).toBe('#4e5871');
+    expect(BUTTON_VARIANTS).toHaveLength(6);
+  });
+
+  it('normalizes and deduplicates the persisted custom palette', () => {
+    const result = sanitizeDesignSystemConfiguration({
+      schemaVersion: 1,
+      theme: { tokens: {}, savedColors: ['#ABCDEF', '#abcdef', '#123456'] },
+      recipes: { button: { overrides: {} } },
+    });
+    expect(result.validation.valid).toBe(true);
+    expect(result.configuration.theme.savedColors).toEqual(['#abcdef', '#123456']);
+  });
 });

@@ -66,28 +66,6 @@
 .app-topbar-search-text { flex: 1; text-align: left; }
 .app-topbar-kbd { font-size: 0.74rem; font-weight: 600; color: #fff; border: 1px solid rgba(255,255,255,0.12); border-radius: 5px; padding: 1px 6px; background: rgba(255,255,255,0.08); font-family: inherit; }
 
-/* AI assistant — its own standalone button beside the search field. Navy gradient (deep
-   siomac-navy → a lighter blue accent) with a light accent outline, so it reads as a raised
-   on-brand chip on the navy top bar rather than a foreign colour. Icon = currentColor (white). */
-.app-topbar-ai {
-  align-self: center; flex: 0 0 auto;
-  width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;
-  border: 1px solid rgba(190,198,220,0.5);
-  background: linear-gradient(135deg, #4e5871 0%, #646f8e 100%);
-  border-radius: 10px; padding: 0; cursor: pointer; color: #fff;
-  box-shadow: 0 1px 2px rgba(20,35,60,0.18);
-  transition: filter 0.15s, box-shadow 0.15s, border-color 0.15s, transform 0.15s ease;
-}
-.app-topbar-ai:hover { filter: brightness(1.1); border-color: rgba(214,220,236,0.85); box-shadow: 0 1px 3px rgba(20,35,60,0.24); }
-.app-topbar-ai:active { transform: scale(0.94); }
-/* Custom AI sparkle glyph (provided asset). Rendered via mask so it takes the
-   button's colour (currentColor) and stays crisp at any size. */
-.app-topbar-ai-glyph {
-  width: 27px; height: 27px; display: block; background: currentColor;
-  -webkit-mask: url(../icons/ai-sparkle.svg) center / contain no-repeat;
-          mask: url(../icons/ai-sparkle.svg) center / contain no-repeat;
-}
-
 /* Profile section — integrated, square, flush navy block filling the bar height.
    margin-left:auto pushes it to the right corner (no separator before it). */
 .app-topbar-pill { display: flex; align-items: stretch; margin-left: auto; }
@@ -318,18 +296,8 @@ body:not([data-theme="dark"]) .app-topbar-footer { background: rgba(27,45,84,.03
 .pnp-menu-item svg { flex-shrink: 0; color: #667085; }
 .pnp-menu-item:hover { background: #f5f7fa; }
 .pnp-menu-item:hover svg { color: #475467; }
-/* Appearance toggle switch (Dark Mode row) — pushed to the row's right edge. */
-.pnp-switch {
-  margin-left: auto; flex: none; width: 34px; height: 19px; border-radius: 999px;
-  background: #d5dbe6; position: relative; transition: background .16s ease;
-}
-.pnp-switch::after {
-  content: ""; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px;
-  border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(16, 24, 40, .2);
-  transition: transform .16s ease;
-}
-.pnp-switch.on { background: #1b2d54; }
-.pnp-switch.on::after { transform: translateX(15px); }
+.pnp-menu-theme { cursor: default; }
+.pnp-menu-theme .ui-theme-mode-switch { margin-left: auto; transform: scale(.82); transform-origin: right center; }
 .pnp-menu-item.pnp-menu-danger { color: #d13438; }
 .pnp-menu-item.pnp-menu-danger svg { color: #d13438; }
 .pnp-menu-item.pnp-menu-danger:hover { background: #fdf2f2; }

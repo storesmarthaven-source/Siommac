@@ -36,4 +36,10 @@ describe('Breadcrumbs', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Picker' }));
     expect(onSelect).toHaveBeenCalledOnce();
   });
+
+  it('supports an icon-only home item without losing its accessible name', () => {
+    render(<Breadcrumbs items={[{ label: 'Home', href: '/', icon: <span aria-hidden="true">H</span>, iconOnly: true }, { label: 'Settings' }]} />);
+    expect(screen.getByRole('link', { name: 'Home' })).toBeTruthy();
+    expect(screen.getByText('Home').classList.contains('ui-breadcrumbs__sr-only')).toBe(true);
+  });
 });

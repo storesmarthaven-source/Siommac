@@ -16,11 +16,14 @@ import {
 } from '../forms/inputs';
 import { DateInput, TimeInput, DateTimeInput, DateRangeInput } from '../forms/dateInputs';
 import { FileInput, OtpInput } from '../forms/FileInput';
+import { ColorPicker } from '../forms/ColorPicker';
+import { ThemeModeSwitch, type ThemeMode } from '../patterns/ThemeModeSwitch';
 import { MultiSelect } from '../forms/MultiSelect';
 import { Select } from '../forms/Select';
 import { Combobox } from '../forms/Combobox';
 import { type ComponentDef, type PropValues } from './types';
 import { type ControlSize, type ValidationState } from '../tokens';
+import { useEffect, useState } from 'preact/hooks';
 
 const s = (v: PropValues[string] | undefined, f = ''): string => (typeof v === 'string' ? v : f);
 const b = (v: PropValues[string] | undefined): boolean => v === true;
@@ -30,6 +33,43 @@ const val = (v: PropValues[string] | undefined): ValidationState =>
   (v === 'error' || v === 'warning' || v === 'success' ? v : 'none');
 
 const noop = (): void => { /* preview */ };
+
+interface OtpPreviewProps {
+  initialValue: string;
+  length: number;
+  disabled: boolean;
+  validation: ValidationState;
+  forceFocus: boolean;
+}
+
+function OtpPreview({ initialValue, length, disabled, validation, forceFocus }: OtpPreviewProps) {
+  const normalizedInitialValue = initialValue.replace(/\D/g, '').slice(0, length);
+  const [value, setValue] = useState(normalizedInitialValue);
+
+  useEffect(() => setValue(normalizedInitialValue), [normalizedInitialValue, length]);
+
+  return (
+    <OtpInput
+      value={value}
+      onChange={setValue}
+      length={length}
+      disabled={disabled}
+      validation={validation}
+      class={forceFocus ? 'is-force-focus' : undefined}
+    />
+  );
+}
+
+function ThemeModePreview({ initialTheme, disabled, pending, forceFocus }: {
+  initialTheme: ThemeMode;
+  disabled: boolean;
+  pending: boolean;
+  forceFocus: boolean;
+}) {
+  const [theme, setTheme] = useState<ThemeMode>(initialTheme);
+  useEffect(() => setTheme(initialTheme), [initialTheme]);
+  return <ThemeModeSwitch theme={theme} onChange={setTheme} disabled={disabled} pending={pending} forceFocus={forceFocus} />;
+}
 
 const CHOICE_STYLE = [
   { label: 'Box', controls: [
@@ -601,6 +641,92 @@ export const fileInputDef: ComponentDef = {
 </FormField>`,
 };
 
+export const themeModeSwitchDef: ComponentDef = {
+  id: 'theme-mode-switch',
+  name: 'Theme Mode Switch',
+  category: 'selection',
+  description: 'The app appearance control for switching immediately between light and dark mode. Its consumer owns authenticated preference persistence.',
+  status: 'stable',
+  componentPath: 'src/ui/patterns/ThemeModeSwitch.tsx',
+  importFrom: '@ui',
+  props: {
+    theme: { type: 'select', label: 'Theme', options: ['light', 'dark'], default: 'light' },
+    pending: { type: 'boolean', label: 'Saving', default: false },
+    disabled: { type: 'boolean', label: 'Disabled', default: false },
+  },
+  style: [
+    { label: 'Track', controls: [
+      { name: '--ui-theme-switch-width', label: 'Width', kind: 'size' },
+      { name: '--ui-theme-switch-height', label: 'Height', kind: 'size' },
+      { name: '--ui-theme-switch-light-bg', label: 'Light fill', kind: 'color' },
+      { name: '--ui-theme-switch-dark-bg', label: 'Dark fill', kind: 'color' },
+      { name: '--ui-theme-switch-knob', label: 'Knob', kind: 'color' },
+    ] },
+    { label: 'Icons', controls: [
+      { name: '--ui-theme-switch-sun', label: 'Sun', kind: 'color' },
+      { name: '--ui-theme-switch-moon', label: 'Moon', kind: 'color' },
+    ] },
+  ],
+  states: ['default', 'selected', 'focus', 'disabled', 'loading'],
+  compare: ['default', 'selected', 'focus', 'disabled'],
+  a11y: {
+    role: 'switch',
+    name: 'Dark mode by default; consumers may supply a context-specific label.',
+    keyboard: [{ keys: 'Space / Enter', does: 'Toggles the appearance preference using native button behaviour.' }],
+    focus: 'A visible focus ring surrounds the whole track.',
+    notes: ['Animation is disabled when the user prefers reduced motion.', 'Use role="menuitemcheckbox" when this control appears inside an ARIA menu.'],
+  },
+  render: (p, st) => (
+    <ThemeModePreview
+      initialTheme={st === 'selected' ? 'dark' : s(p.theme, 'light') === 'dark' ? 'dark' : 'light'}
+      pending={b(p.pending) || st === 'loading'}
+      disabled={b(p.disabled) || st === 'disabled'}
+      forceFocus={st === 'focus'}
+    />
+  ),
+  code: () => `<ThemeModeSwitch
+  theme={theme}
+  onChange={setTheme}
+  label="Dark mode"
+/>`,
+};
+
+export const colorPickerDef: ComponentDef = {
+  id: 'color-picker',
+  name: 'ColorPicker',
+  category: 'forms',
+  description: 'Accessible spectrum, hue, opacity and a user-curated saved-color palette for styling workflows.',
+  status: 'stable',
+  componentPath: 'src/ui/forms/ColorPicker.tsx',
+  importFrom: '@ui',
+  props: {
+    defaultValue: { type: 'text', label: 'Starting color', default: '#7f56d9' },
+    alpha: { type: 'boolean', label: 'Opacity control', default: true },
+    disabled: { type: 'boolean', label: 'Disabled', default: false },
+  },
+  style: [{ label: 'Picker surface', controls: [
+    { name: '--ui-picker-bg', label: 'Background', kind: 'color', linkedTo: 'var(--ui-color-surface-default)' },
+    { name: '--ui-picker-border', label: 'Border', kind: 'color', linkedTo: 'var(--ui-color-border-default)' },
+    { name: '--ui-picker-radius', label: 'Corner radius', kind: 'size' },
+    { name: '--ui-picker-focus', label: 'Focus color', kind: 'color', linkedTo: 'var(--ui-color-selection-border)' },
+  ] }],
+  states: ['default', 'focus', 'disabled'],
+  a11y: {
+    role: 'group',
+    name: 'Required aria-label identifies the color purpose.',
+    keyboard: [
+      { keys: 'Tab', does: 'Moves through the spectrum, sliders, value field and saved colors.' },
+      { keys: 'Arrow keys', does: 'Adjusts the focused hue or opacity range control.' },
+    ],
+    focus: 'Every interactive control has a visible focus treatment; disabled removes the spectrum from the tab order.',
+    notes: ['The component is controlled or uncontrolled. Preview content is never part of published styling configuration.'],
+  },
+  render: (p, state) => <ColorPicker defaultValue={s(p.defaultValue, '#7f56d9')} alpha={b(p.alpha)}
+    disabled={b(p.disabled) || state === 'disabled'} class={state === 'focus' ? 'is-force-focus' : undefined}
+    aria-label="Color picker" />,
+  code: p => `<ColorPicker\n  value={selectedColor}\n  onChange={setSelectedColor}\n  savedColors={savedColors}\n  onSaveColor={saveColor}\n  onRemoveSavedColor={removeColor}${b(p.alpha) ? '\n  alpha' : ''}\n  aria-label="Choose color"\n/>`,
+};
+
 export const otpInputDef: ComponentDef = {
   id: 'otp-input',
   name: 'OtpInput',
@@ -621,6 +747,10 @@ export const otpInputDef: ComponentDef = {
       { name: '--ui-otp-size',   label: 'Box size', kind: 'size' },
       { name: '--ui-otp-gap',    label: 'Gap', kind: 'size' },
       { name: '--ui-otp-radius', label: 'Corner radius', kind: 'size' },
+      { name: '--ui-otp-bg', label: 'Field background', kind: 'color' },
+      { name: '--ui-otp-border', label: 'Field border', kind: 'color' },
+      { name: '--ui-otp-active-bg', label: 'Active background', kind: 'color' },
+      { name: '--ui-otp-caret', label: 'Caret color', kind: 'color' },
     ] },
   ],
   states: ['default', 'focus', 'disabled', 'error'],
@@ -636,12 +766,12 @@ export const otpInputDef: ComponentDef = {
     notes: ['The first box carries autoComplete="one-time-code" so the OS can offer the SMS code.'],
   },
   render: (p, st) => (
-    <OtpInput
-      value={s(p.value, '1234')}
-      onChange={noop}
+    <OtpPreview
+      initialValue={s(p.value, '1234')}
       length={n(p.length, 6)}
       disabled={b(p.disabled) || st === 'disabled'}
       validation={st === 'error' ? 'error' : (s(p.validation, 'none') as never)}
+      forceFocus={st === 'focus'}
     />
   ),
   code: p => `<OtpInput value={code} onChange={setCode} length={${n(p.length, 6)}} onComplete={verify} />`,
@@ -814,9 +944,11 @@ export const FORM_DEFS: readonly ComponentDef[] = [
   textInputDef,
   dateInputDef,
   fileInputDef,
+  colorPickerDef,
   otpInputDef,
   checkboxDef,
   radioGroupDef,
   switchDef,
+  themeModeSwitchDef,
   selectDef,
 ];

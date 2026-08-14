@@ -21,9 +21,9 @@ vi.mock('@store/session', () => ({
 vi.mock('@store/ui', () => ({
   selectTheme: (s: { theme: string }) => s.theme,
   useUiStore: Object.assign(
-    (selector: (s: { theme: string; toggleTheme: () => void }) => unknown) =>
-      selector({ theme: 'light', toggleTheme: vi.fn() }),
-    { getState: () => ({ toggleTheme: vi.fn() }) },
+    (selector: (s: { theme: string; toggleTheme: () => void; setTheme: (theme: string) => void }) => unknown) =>
+      selector({ theme: 'light', toggleTheme: vi.fn(), setTheme: vi.fn() }),
+    { getState: () => ({ toggleTheme: vi.fn(), setTheme: vi.fn() }) },
   ),
 }));
 

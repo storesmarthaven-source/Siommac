@@ -1,29 +1,92 @@
 @layer recipes {
   :root,
   [data-ui-preview-scope] {
-    --ui-breadcrumb-gap: 7px;
+    --ui-breadcrumb-gap: 2px;
     --ui-breadcrumb-fg: var(--ui-color-text-secondary);
     --ui-breadcrumb-current-fg: var(--ui-color-text-primary);
-    --ui-breadcrumb-hover-fg: var(--ui-color-navigation-active);
-    --ui-breadcrumb-font-size: var(--ui-font-size-body-sm);
+    --ui-breadcrumb-hover-fg: var(--ui-color-text-primary);
+    --ui-breadcrumb-font-size: 13px;
+    --ui-breadcrumb-surface: transparent;
+    --ui-breadcrumb-border: transparent;
+    --ui-breadcrumb-radius: 0;
+    --ui-breadcrumb-shadow: none;
+    --ui-breadcrumb-current-bg: transparent;
   }
-  .ui-breadcrumbs { min-width: 0; color: var(--ui-breadcrumb-fg); font-size: var(--ui-breadcrumb-font-size); }
+
+  .ui-breadcrumbs {
+    min-width: 0;
+    width: max-content;
+    max-width: 100%;
+    display: inline-flex;
+    overflow: visible;
+    padding: 0;
+    border: 0;
+    border-radius: var(--ui-breadcrumb-radius);
+    background: var(--ui-breadcrumb-surface);
+    box-shadow: var(--ui-breadcrumb-shadow);
+    color: var(--ui-breadcrumb-fg);
+    font-size: var(--ui-breadcrumb-font-size);
+  }
   .ui-breadcrumbs__list,
-  .ui-breadcrumbs__hidden-list { display: flex; align-items: center; gap: var(--ui-breadcrumb-gap); margin: 0; padding: 0; list-style: none; }
-  .ui-breadcrumbs__item { display: inline-flex; align-items: center; min-width: 0; gap: var(--ui-breadcrumb-gap); }
-  .ui-breadcrumbs__separator { color: var(--ui-color-border-strong); user-select: none; }
+  .ui-breadcrumbs__hidden-list {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-breadcrumb-gap);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ui-breadcrumbs__item { min-width: 0; display: inline-flex; align-items: center; gap: var(--ui-breadcrumb-gap); }
+  .ui-breadcrumbs__separator { display: inline-grid; place-items: center; margin-inline: 3px; color: #c8cbd0; user-select: none; }
+  .ui-breadcrumbs__separator svg { display: block; }
   .ui-breadcrumbs__link,
   .ui-breadcrumbs__label,
-  .ui-breadcrumbs__current { display: inline-flex; align-items: center; gap: 5px; min-width: 0; }
-  .ui-breadcrumbs__link { padding: 2px; border: 0; background: none; color: inherit; font: inherit; text-decoration: none; cursor: pointer; border-radius: var(--radius-xs); }
-  .ui-breadcrumbs__link:hover { color: var(--ui-breadcrumb-hover-fg); text-decoration: underline; }
+  .ui-breadcrumbs__current {
+    min-width: 0;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 7px;
+    border-radius: 0;
+    white-space: nowrap;
+  }
+  .ui-breadcrumbs__link {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color .15s ease;
+  }
+  .ui-breadcrumbs__link:hover { background: transparent; color: var(--ui-breadcrumb-hover-fg); }
   .ui-breadcrumbs__link:focus-visible,
-  .ui-breadcrumbs__overflow:focus-visible { outline: var(--ui-focus-ring-width) solid var(--ui-color-focus-outline); outline-offset: var(--ui-focus-ring-offset); }
-  .ui-breadcrumbs__current { overflow: hidden; color: var(--ui-breadcrumb-current-fg); font-weight: var(--font-weight-semibold); text-overflow: ellipsis; white-space: nowrap; }
-  .ui-breadcrumbs__overflow { display: grid; place-items: center; width: 26px; height: 24px; padding: 0; border: 0; border-radius: var(--radius-xs); background: transparent; color: inherit; cursor: pointer; }
-  .ui-breadcrumbs__overflow:hover { background: var(--row-hover); color: var(--ui-breadcrumb-hover-fg); }
+  .ui-breadcrumbs__overflow:focus-visible { outline: var(--ui-focus-ring-width, 2px) solid var(--ui-color-focus-outline, #667085); outline-offset: 1px; }
+  .ui-breadcrumbs__label { font-weight: 600; }
+  .ui-breadcrumbs__current {
+    overflow: hidden;
+    background: var(--ui-breadcrumb-current-bg);
+    color: var(--ui-breadcrumb-current-fg);
+    font-weight: 800;
+    text-overflow: ellipsis;
+  }
+  .ui-breadcrumbs__link > svg,
+  .ui-breadcrumbs__label > svg,
+  .ui-breadcrumbs__current > svg { flex: none; color: #8a8f98; }
+  .ui-breadcrumbs__overflow { width: 34px; height: 34px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 8px; background: transparent; color: inherit; cursor: pointer; }
+  .ui-breadcrumbs__overflow:hover { background: transparent; color: var(--ui-breadcrumb-hover-fg); }
+  .ui-breadcrumbs__sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; padding: 0; margin: -1px; border: 0; clip: rect(0 0 0 0); white-space: nowrap; }
   .ui-popup.ui-breadcrumbs__popover { min-width: 190px; padding: var(--space-2); }
   .ui-breadcrumbs__hidden-list { align-items: stretch; flex-direction: column; gap: 2px; }
   .ui-breadcrumbs__hidden-list .ui-breadcrumbs__link,
-  .ui-breadcrumbs__hidden-list .ui-breadcrumbs__label { width: 100%; padding: 7px 8px; }
+  .ui-breadcrumbs__hidden-list .ui-breadcrumbs__label { width: 100%; min-height: 36px; padding: 7px 8px; }
+
+  @media (max-width: 620px) {
+    .ui-breadcrumbs__link,
+    .ui-breadcrumbs__label,
+    .ui-breadcrumbs__current { min-height: 30px; padding: 3px 6px; }
+  }
 }

@@ -14,6 +14,7 @@
 import { LucideIcon } from '../LucideIcon';
 import { Button } from '../primitives/Button';
 import { Tabs, TabPanel, type TabItem } from '../navigation/Tabs';
+import { TreeView, type TreeNode } from '../navigation/TreeView';
 import {
   type TabsOrientation, type TabsVariant, type TabsSize, type TabsActivation,
 } from '../navigation/Tabs';
@@ -24,6 +25,88 @@ import { type ComponentDef, type PropValues } from './types';
 const s = (v: PropValues[string] | undefined, f = ''): string => (typeof v === 'string' ? v : f);
 const b = (v: PropValues[string] | undefined): boolean => v === true;
 const noop = (): void => { /* preview */ };
+
+const FILE_TREE: readonly TreeNode[] = [{
+  id: 'src', label: 'src', kind: 'folder', children: [
+    { id: 'app', label: 'app', kind: 'folder', children: [
+      { id: 'layout', label: 'layout.tsx', kind: 'file' },
+      { id: 'page', label: 'page.tsx', kind: 'file' },
+    ] },
+    { id: 'components', label: 'components', kind: 'folder', children: [
+      { id: 'ui', label: 'ui', kind: 'folder', children: [
+        { id: 'button', label: 'button.tsx', kind: 'file' },
+      ] },
+      { id: 'header', label: 'header.tsx', kind: 'file' },
+      { id: 'footer', label: 'footer.tsx', kind: 'file' },
+    ] },
+    { id: 'lib', label: 'lib', kind: 'folder', children: [
+      { id: 'utils', label: 'utils.ts', kind: 'file' },
+    ] },
+  ],
+}];
+
+export const treeViewDef: ComponentDef = {
+  id: 'tree-view',
+  name: 'TreeView',
+  category: 'navigation',
+  description: 'Hierarchical navigation and selection with expandable branches, connector lines and a complete keyboard tree model.',
+  status: 'stable',
+  componentPath: 'src/ui/navigation/TreeView.tsx',
+  importFrom: '@ui',
+  props: {
+    expanded: { type: 'boolean', label: 'Start expanded', default: true },
+    selected: { type: 'select', label: 'Selected item', options: ['button', 'page', 'header', 'utils'], default: 'button' },
+  },
+  style: [
+    { label: 'Tree surface', controls: [
+      { name: '--ui-tree-width', label: 'Width', kind: 'size' },
+      { name: '--ui-tree-padding', label: 'Padding', kind: 'size' },
+      { name: '--ui-tree-bg', label: 'Background', kind: 'color', linkedTo: 'var(--ui-color-surface-default)' },
+      { name: '--ui-tree-border', label: 'Border', kind: 'color', linkedTo: 'var(--ui-color-border-default)' },
+    ] },
+    { label: 'Rows and hierarchy', controls: [
+      { name: '--ui-tree-indent', label: 'Indent', kind: 'size' },
+      { name: '--ui-tree-row-height', label: 'Row height', kind: 'size' },
+      { name: '--ui-tree-row-radius', label: 'Row radius', kind: 'size' },
+      { name: '--ui-tree-fg', label: 'Text', kind: 'color', linkedTo: 'var(--ui-color-text-primary)' },
+      { name: '--ui-tree-icon', label: 'Icons', kind: 'color', linkedTo: 'var(--ui-color-text-muted)' },
+      { name: '--ui-tree-connector', label: 'Connector lines', kind: 'color', linkedTo: 'var(--ui-color-border-default)' },
+      { name: '--ui-tree-hover-bg', label: 'Hover background', kind: 'color-alpha' },
+      { name: '--ui-tree-selected-bg', label: 'Selected background', kind: 'color-alpha' },
+    ] },
+  ],
+  states: ['default', 'focus'],
+  a11y: {
+    role: 'tree',
+    name: 'The tree requires a concise label describing the hierarchy.',
+    keyboard: [
+      { keys: '↑ / ↓', does: 'Moves focus through visible items.' },
+      { keys: '→', does: 'Expands a closed folder or moves to its first child.' },
+      { keys: '←', does: 'Collapses an open folder or moves to its parent.' },
+      { keys: 'Home / End', does: 'Moves to the first or last visible item.' },
+      { keys: 'Enter / Space', does: 'Selects the item and toggles folders.' },
+    ],
+    focus: 'Uses one roving tab stop; collapsed descendants leave the focus and accessibility sequences.',
+  },
+  render: (p, state) => (
+    <TreeView
+      key={`${b(p.expanded)}-${s(p.selected, 'button')}`}
+      nodes={FILE_TREE}
+      defaultSelectedId={s(p.selected, 'button')}
+      defaultExpandedIds={b(p.expanded) ? ['src', 'app', 'components', 'ui', 'lib'] : []}
+      label="Project files"
+      class={state === 'focus' ? 'is-force-focus' : undefined}
+    />
+  ),
+  code: () => `<TreeView
+  nodes={projectTree}
+  selectedId={selectedId}
+  onSelect={node => setSelectedId(node.id)}
+  expandedIds={expandedIds}
+  onExpandedChange={setExpandedIds}
+  label="Project files"
+/>`,
+};
 
 /* Realistic tabs, because "Tab 1 / Tab 2" hides every layout problem a nine-word
    label with a four-digit count causes. */
@@ -268,6 +351,7 @@ export const tabsDef: ComponentDef = {
 
 export const NAVIGATION_DEFS: readonly ComponentDef[] = [
   tabsDef,
+  treeViewDef,
   wizardDef,
   pageHeaderDef,
   pageActionBarDef,

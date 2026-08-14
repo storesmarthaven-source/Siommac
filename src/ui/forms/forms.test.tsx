@@ -14,8 +14,57 @@ import { Checkbox, Switch, CheckboxGroup, RadioGroup } from '../primitives/choic
 import { PasswordInput, NumberInput, CurrencyInput, PercentageInput, PhoneInput } from './inputs';
 import { DateInput, TimeInput, DateRangeInput } from './dateInputs';
 import { FileInput, OtpInput, type FileRejection } from './FileInput';
+import { ColorPicker, hexToHsv, hsvToHex } from './ColorPicker';
 import { MultiSelect } from './MultiSelect';
 import { FormField } from './FormField';
+
+describe('ColorPicker', () => {
+  it('supports controlled saved colors, hue and opacity controls', () => {
+    const onChange = vi.fn();
+    render(<ColorPicker value="#7f56d9" onChange={onChange} alpha savedColors={['#dc2626']} aria-label="Accent color" />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Set color to #dc2626' }));
+    expect(onChange).toHaveBeenLastCalledWith('#dc2626');
+
+    fireEvent.input(screen.getByRole('slider', { name: 'Hue' }), { target: { value: '180' } });
+    expect(onChange).toHaveBeenCalled();
+    fireEvent.input(screen.getByRole('slider', { name: 'Opacity' }), { target: { value: '65' } });
+    expect(screen.getByLabelText<HTMLInputElement>('Opacity percentage').value).toBe('65');
+  });
+
+  it('supports keyboard changes on the two-dimensional color area', () => {
+    const onChange = vi.fn();
+    render(<ColorPicker value="#7f56d9" onChange={onChange} />);
+    fireEvent.keyDown(screen.getByRole('slider', { name: 'Saturation and brightness' }), { key: 'ArrowLeft' });
+    expect(onChange).toHaveBeenCalledWith(expect.stringMatching(/^#[\da-f]{6}$/));
+  });
+
+  it('accepts valid hex text but does not publish an incomplete value', () => {
+    const onChange = vi.fn();
+    render(<ColorPicker defaultValue="#2563eb" onChange={onChange} />);
+    const field = screen.getByLabelText('Hex color');
+
+    fireEvent.input(field, { target: { value: '#12' } });
+    expect(onChange).not.toHaveBeenCalled();
+    fireEvent.input(field, { target: { value: '#123456' } });
+    expect(onChange).toHaveBeenLastCalledWith('#123456');
+  });
+
+  it('round-trips canonical six-digit colors', () => {
+    expect(hsvToHex(hexToHsv('#7f56d9'))).toBe('#7f56d9');
+    expect(hsvToHex(hexToHsv('#ffffff'))).toBe('#ffffff');
+  });
+
+  it('delegates saved-color persistence to the owning configuration store', () => {
+    const onSaveColor = vi.fn();
+    const onRemoveSavedColor = vi.fn();
+    render(<ColorPicker value="#123456" savedColors={['#abcdef']} onSaveColor={onSaveColor} onRemoveSavedColor={onRemoveSavedColor} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Save #123456 to custom colors' }));
+    expect(onSaveColor).toHaveBeenCalledWith('#123456');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove saved color #abcdef' }));
+    expect(onRemoveSavedColor).toHaveBeenCalledWith('#abcdef');
+  });
+});
 
 /* ── Choice controls ───────────────────────────────────────────────────────*/
 
@@ -438,6 +487,14 @@ describe('OtpInput', () => {
   it('renders one box per digit', () => {
     render(<OtpInput value="" onChange={vi.fn()} length={6} />);
     expect(screen.getAllByRole('textbox')).toHaveLength(6);
+  });
+
+  it('marks populated fields for the animated active treatment', () => {
+    render(<OtpInput value="12" onChange={vi.fn()} length={4} />);
+    const boxes = screen.getAllByRole('textbox');
+    expect(boxes[0]!.classList.contains('is-filled')).toBe(true);
+    expect(boxes[1]!.classList.contains('is-filled')).toBe(true);
+    expect(boxes[2]!.classList.contains('is-filled')).toBe(false);
   });
 
   it('fills every box from a single paste', () => {

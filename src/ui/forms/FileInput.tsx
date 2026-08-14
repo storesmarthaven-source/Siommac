@@ -278,7 +278,7 @@ export function OtpInput({
         <input
           key={i}
           ref={el => { refs.current[i] = el; }}
-          class="ui-otp-box"
+          class={`ui-otp-box${c.trim() ? ' is-filled' : ''}`}
           type="text"
           inputMode="numeric"
           autoComplete={i === 0 ? 'one-time-code' : 'off'}
@@ -289,10 +289,9 @@ export function OtpInput({
           value={c.trim()}
           onInput={e => {
             const t = (e.target as HTMLInputElement).value.replace(/\D/g, '');
-            if (!t) return;
-            const next = (value.slice(0, i) + t + value.slice(i + 1)).slice(0, length);
+            const next = refs.current.map(input => input?.value ?? '').join('');
             commit(next);
-            refs.current[Math.min(i + t.length, length - 1)]?.focus();
+            if (t) refs.current[Math.min(i + t.length, length - 1)]?.focus();
           }}
           onKeyDown={e => {
             if (e.key === 'Backspace' && !value[i]) { refs.current[i - 1]?.focus(); return; }

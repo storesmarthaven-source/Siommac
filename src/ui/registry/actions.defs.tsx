@@ -18,6 +18,7 @@
 import { type VNode } from 'preact';
 import { LucideIcon } from '../LucideIcon';
 import { Button } from '../primitives/Button';
+import { NextActionButton } from '../patterns/NextActionButton';
 import { SegmentedControl, DropdownButton, SplitButton } from '../primitives/actions';
 import { type MenuItems } from '../overlays/DropdownMenu';
 import { type ComponentDef, type PropValues, type StyleGroup } from './types';
@@ -200,6 +201,21 @@ export const buttonDef: ComponentDef = {
     const icon = (n: string): VNode | undefined =>
       n !== 'None' ? <span class={`sds-preview-icon sds-preview-icon--${iconTreatment}`} style={{ color: iconColor }}><LucideIcon name={n as never} /></span> : undefined;
     const isLink = s(p.action, 'Button action') === 'Link / href';
+    const isNextAction = s(p.label, 'Button') === 'Next'
+      && s(p.variant, 'primary') === 'primary'
+      && s(p.iconRight, 'None') === 'ArrowRight'
+      && !isLink;
+    if (isNextAction) return (
+      <NextActionButton
+        size={size(p.size)}
+        iconTreatment={s(p.iconTreatment, 'outline') as never}
+        iconColor={s(p.iconColor, 'currentColor')}
+        leadingIcon={s(p.iconLeft, 'None') === 'None' ? null : s(p.iconLeft) as never}
+        loading={b(p.loading) || state === 'loading'}
+        disabled={b(p.disabled) || state === 'disabled'}
+        forceState={state}
+      />
+    );
     return (
       <Button
         variant={s(p.variant, 'primary') as never}
@@ -222,6 +238,11 @@ export const buttonDef: ComponentDef = {
     const jsx = (n: string): string | undefined =>
       n !== 'None' ? `<LucideIcon name="${n}" />` : undefined;
     const isLink = s(p.action, 'Button action') === 'Link / href';
+    const isNextAction = s(p.label, 'Button') === 'Next'
+      && s(p.variant, 'primary') === 'primary'
+      && s(p.iconRight, 'None') === 'ArrowRight'
+      && !isLink;
+    if (isNextAction) return `<NextActionButton${size(p.size) !== 'md' ? ` size="${size(p.size)}"` : ''}${s(p.iconLeft, 'None') !== 'None' ? ` leadingIcon="${s(p.iconLeft)}"` : ''}${s(p.iconTreatment, 'outline') !== 'outline' ? ` iconTreatment="${s(p.iconTreatment)}"` : ''}${s(p.iconColor, '#ffffff').toLowerCase() !== '#ffffff' ? ` iconColor="${s(p.iconColor)}"` : ''}${b(p.loading) || state === 'loading' ? ' loading={saving}' : ''}${b(p.disabled) || state === 'disabled' ? ' disabled' : ''} onClick={goToNextStep} />`;
     const left = jsx(s(p.iconLeft, 'None'));
     const right = jsx(s(p.iconRight, 'None'));
     const lines = [
@@ -258,7 +279,7 @@ export const buttonDef: ComponentDef = {
       render: () => (
         <>
           <Button variant="ghost">Back</Button>
-          <Button variant="primary" iconRight={<LucideIcon name="ArrowRight" />}>Continue</Button>
+          <NextActionButton label="Continue" />
         </>
       ),
     },

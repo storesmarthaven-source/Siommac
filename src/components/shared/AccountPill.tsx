@@ -31,6 +31,7 @@ import { useSessionStore, selectFullName, selectRole } from '@store/session';
 import { useUiStore, selectTheme } from '@store/ui';
 import { dialog } from '@lib/dialog';
 import { useCommsSummary } from '@api/communications';
+import { ThemeModeSwitch } from '@ui';
 
 // ── Lucide line-icons (the app's icon language) ───────────────────────────────
 const lIco = (inner: ComponentChildren, sw = 1.8, size = 19): VNode => (
@@ -188,11 +189,15 @@ export function AccountPill({
           </div>
           <div class="pnp-menu-sep" />
           <div class="pnp-menu-group">
-            <button type="button" class="pnp-menu-item" role="menuitemcheckbox" aria-checked={darkMode}
-              onClick={() => useUiStore.getState().toggleTheme()}>
+            <div class="pnp-menu-item pnp-menu-theme" role="none">
               <IcMoon /><span>Dark Mode</span>
-              <span class={`pnp-switch${darkMode ? ' on' : ''}`} aria-hidden="true" />
-            </button>
+              <ThemeModeSwitch
+                theme={darkMode ? 'dark' : 'light'}
+                onChange={theme => useUiStore.getState().setTheme(theme)}
+                role="menuitemcheckbox"
+                label="Dark Mode"
+              />
+            </div>
           </div>
           <div class="pnp-menu-sep" />
           <div class="pnp-menu-group">

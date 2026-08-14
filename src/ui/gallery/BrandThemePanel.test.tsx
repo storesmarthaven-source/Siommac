@@ -22,9 +22,9 @@ import { BRAND_LOCKED_ROLES, SEMANTIC_TOKEN_NAMES } from '../theme/semanticToken
 import { SEED_PRIMARY_TOKEN, SEED_ACCENT_TOKEN } from '../theme/brand/brandTheme';
 
 vi.mock('@api/theme', () => ({
-  loadDesignSystemStudio: () => Promise.resolve({ published: { version: 0, configuration: { schemaVersion: 1, theme: { tokens: {} }, recipes: { button: { overrides: {} } } }, publishedAt: null, publishedBy: null, summary: null }, draft: null }),
+  loadDesignSystemStudio: () => Promise.resolve({ published: { version: 0, configuration: { schemaVersion: 1, theme: { tokens: {}, savedColors: [] }, recipes: { button: { overrides: {} } } }, publishedAt: null, publishedBy: null, summary: null }, draft: null }),
   saveDesignSystemDraft: (configuration: unknown) => Promise.resolve({ id: 'draft', baseVersion: 0, revision: 1, status: 'draft', configuration, validation: { valid: true, errors: [], warnings: [] }, updatedAt: '', updatedBy: 'USR-A' }),
-  publishDesignSystemDraft: (_id: string, _revision: number, _summary: string) => Promise.resolve({ version: 1, configuration: { schemaVersion: 1, theme: { tokens: {} }, recipes: { button: { overrides: {} } } }, publishedAt: '', publishedBy: 'USR-A', summary: 'test' }),
+  publishDesignSystemDraft: (_id: string, _revision: number, _summary: string) => Promise.resolve({ version: 1, configuration: { schemaVersion: 1, theme: { tokens: {}, savedColors: [] }, recipes: { button: { overrides: {} } } }, publishedAt: '', publishedBy: 'USR-A', summary: 'test' }),
 }));
 
 /**

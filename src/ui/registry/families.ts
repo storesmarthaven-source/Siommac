@@ -59,7 +59,20 @@ export const BUTTON_FAMILY: ComponentFamily = {
   },
 };
 
-export const COMPONENT_FAMILIES: readonly ComponentFamily[] = [BUTTON_FAMILY];
+export const SWITCH_FAMILY: ComponentFamily = {
+  id: 'switches',
+  name: 'Switches',
+  category: 'selection',
+  description: 'Choose a general immediate-setting switch or the dedicated app appearance control. Both preserve native switch semantics.',
+  defaultComponentId: 'switch',
+  componentIds: ['switch', 'theme-mode-switch'],
+  roles: {
+    'switch': 'Immediate setting',
+    'theme-mode-switch': 'Light and dark appearance',
+  },
+};
+
+export const COMPONENT_FAMILIES: readonly ComponentFamily[] = [BUTTON_FAMILY, SWITCH_FAMILY];
 
 export function findFamily(id: string): ComponentFamily | undefined {
   return COMPONENT_FAMILIES.find(f => f.id === id);

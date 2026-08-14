@@ -1,0 +1,62 @@
+:root,
+[data-ui-preview-scope] {
+  --ui-theme-switch-width: 64px;
+  --ui-theme-switch-height: 34px;
+  --ui-theme-switch-light-bg: #73c0fc;
+  --ui-theme-switch-dark-bg: #183153;
+  --ui-theme-switch-knob: #f4f5f7;
+  --ui-theme-switch-sun: #ffd43b;
+  --ui-theme-switch-moon: #73c0fc;
+  --ui-theme-switch-focus: #5b8def;
+  --ui-theme-switch-duration: 400ms;
+}
+
+.ui-theme-mode-switch {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: var(--ui-theme-switch-width);
+  height: var(--ui-theme-switch-height);
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ui-theme-switch-light-bg);
+  color: inherit;
+  cursor: pointer;
+  transition: background-color var(--ui-theme-switch-duration) ease, box-shadow 160ms ease;
+}
+
+.ui-theme-mode-switch[data-theme-mode='dark'] { background: var(--ui-theme-switch-dark-bg); }
+.ui-theme-mode-switch:focus-visible,
+.ui-theme-mode-switch.is-force-focus { outline: 3px solid color-mix(in srgb, var(--ui-theme-switch-focus) 35%, transparent); outline-offset: 2px; }
+.ui-theme-mode-switch:disabled { cursor: not-allowed; opacity: .55; }
+
+.ui-theme-mode-switch__knob {
+  position: absolute;
+  z-index: 2;
+  left: 2px;
+  bottom: 2px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--ui-theme-switch-knob);
+  box-shadow: 0 1px 3px rgb(16 24 40 / 24%);
+  transition: transform var(--ui-theme-switch-duration) cubic-bezier(.2, .8, .2, 1);
+}
+
+.ui-theme-mode-switch[data-theme-mode='dark'] .ui-theme-mode-switch__knob { transform: translateX(30px); }
+.ui-theme-mode-switch__moon,
+.ui-theme-mode-switch__sun { position: absolute; z-index: 1; display: grid; place-items: center; }
+.ui-theme-mode-switch__moon { top: 7px; left: 7px; color: var(--ui-theme-switch-moon); animation: ui-theme-moon-tilt 5s linear infinite; }
+.ui-theme-mode-switch__sun { top: 7px; right: 6px; color: var(--ui-theme-switch-sun); animation: ui-theme-sun-rotate 15s linear infinite; }
+
+@keyframes ui-theme-sun-rotate { to { transform: rotate(360deg); } }
+@keyframes ui-theme-moon-tilt { 25% { transform: rotate(-10deg); } 75% { transform: rotate(10deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-theme-mode-switch,
+  .ui-theme-mode-switch__knob { transition-duration: 0ms; }
+  .ui-theme-mode-switch__moon,
+  .ui-theme-mode-switch__sun { animation: none; }
+}

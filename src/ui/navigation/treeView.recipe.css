@@ -1,0 +1,67 @@
+@layer recipes {
+  :root,
+  [data-ui-preview-scope] {
+    --ui-tree-width: 440px;
+    --ui-tree-padding: 20px;
+    --ui-tree-indent: 20px;
+    --ui-tree-row-height: 32px;
+    --ui-tree-row-radius: 5px;
+    --ui-tree-bg: var(--ui-color-surface-default, #fff);
+    --ui-tree-border: var(--ui-color-border-default, #e4e4e7);
+    --ui-tree-connector: var(--ui-color-border-default, #e4e4e7);
+    --ui-tree-fg: var(--ui-color-text-primary, #18181b);
+    --ui-tree-icon: var(--ui-color-text-muted, #71717a);
+    --ui-tree-hover-bg: color-mix(in srgb, var(--ui-color-text-primary, #18181b) 5%, var(--ui-tree-bg));
+    --ui-tree-selected-bg: color-mix(in srgb, var(--ui-color-text-primary, #18181b) 7%, var(--ui-tree-bg));
+  }
+
+  .ui-tree,
+  .ui-tree__group {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ui-tree {
+    box-sizing: border-box;
+    width: var(--ui-tree-width);
+    max-width: 100%;
+    padding: var(--ui-tree-padding);
+    border: 1px solid var(--ui-tree-border);
+    border-radius: 9px;
+    background: var(--ui-tree-bg);
+    color: var(--ui-tree-fg);
+    box-shadow: 0 1px 2px rgb(16 24 40 / .05);
+  }
+  .ui-tree__item { position: relative; margin-top: 3px; }
+  .ui-tree > .ui-tree__item:first-child { margin-top: 0; }
+  .ui-tree__row {
+    width: 100%; min-height: var(--ui-tree-row-height); display: flex; align-items: center; gap: 8px;
+    padding: 4px 8px; border: 0; border-radius: var(--ui-tree-row-radius); background: transparent;
+    color: var(--ui-tree-fg); font: inherit; font-size: 14px; text-align: left; cursor: pointer;
+    transition: background-color var(--ui-motion-fast, .2s) ease, color var(--ui-motion-fast, .2s) ease;
+  }
+  .ui-tree__row > svg { flex: none; color: var(--ui-tree-icon); }
+  .ui-tree__row[aria-expanded='true'] > svg { color: var(--ui-tree-fg); }
+  .ui-tree__row:hover { background: var(--ui-tree-hover-bg); }
+  .ui-tree__row.is-selected { background: var(--ui-tree-selected-bg); font-weight: 600; }
+  .ui-tree__row:focus-visible,
+  .ui-tree.is-force-focus .ui-tree__row[tabindex='0'] { outline: 2px solid var(--ui-color-focus-outline, #667085); outline-offset: 1px; }
+  .ui-tree__row:disabled { opacity: .48; cursor: not-allowed; }
+  .ui-tree__branch { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease-in-out; }
+  .ui-tree__branch[data-open='true'] { grid-template-rows: 1fr; }
+  .ui-tree__group {
+    min-height: 0; overflow: hidden; visibility: hidden; margin-left: calc(var(--ui-tree-indent) / 2);
+    padding-left: calc(var(--ui-tree-indent) / 2); border-left: 1px solid var(--ui-tree-connector);
+    transition: visibility 0s linear .3s;
+  }
+  .ui-tree__branch[data-open='true'] > .ui-tree__group { visibility: visible; transition-delay: 0s; }
+  .ui-tree__group > .ui-tree__item::before {
+    content: ''; position: absolute; left: calc(var(--ui-tree-indent) / -2); top: calc(var(--ui-tree-row-height) / 2);
+    width: calc(var(--ui-tree-indent) / 2); height: 1px; background: var(--ui-tree-connector);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ui-tree__branch { transition: none; }
+    .ui-tree__group { transition: none; }
+  }
+}

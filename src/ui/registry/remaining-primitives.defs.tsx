@@ -16,7 +16,7 @@ export const breadcrumbsDef: ComponentDef = {
   componentPath: 'src/ui/navigation/Breadcrumbs.tsx', importFrom: '@ui',
   description: 'An ancestor trail that marks the current page and collapses long middle paths into a keyboard-accessible Popover.',
   props: {
-    depth: { type: 'number', label: 'Trail depth', default: 5, min: 2, max: 7, step: 1 },
+    depth: { type: 'number', label: 'Trail depth', default: 4, min: 2, max: 7, step: 1 },
     maxVisible: { type: 'number', label: 'Visible items', default: 4, min: 3, max: 7, step: 1 },
   },
   style: [{ label: 'Trail', controls: [
@@ -25,6 +25,10 @@ export const breadcrumbsDef: ComponentDef = {
     { name: '--ui-breadcrumb-current-fg', label: 'Current text', kind: 'color' },
     { name: '--ui-breadcrumb-hover-fg', label: 'Hover text', kind: 'color' },
     { name: '--ui-breadcrumb-font-size', label: 'Text size', kind: 'size' },
+    { name: '--ui-breadcrumb-surface', label: 'Surface', kind: 'color' },
+    { name: '--ui-breadcrumb-border', label: 'Border', kind: 'color' },
+    { name: '--ui-breadcrumb-current-bg', label: 'Current background', kind: 'color' },
+    { name: '--ui-breadcrumb-radius', label: 'Corner radius', kind: 'size' },
   ] }],
   states: ['default'], compare: ['default'],
   a11y: {
@@ -35,15 +39,15 @@ export const breadcrumbsDef: ComponentDef = {
   },
   render: p => {
     const all = [
-      { label: 'SIOMAC', href: '#siomac' }, { label: 'Human Resources', href: '#hr' },
-      { label: 'People', href: '#people' }, { label: 'Employees', href: '#employees' },
-      { label: 'Sarah James', href: '#sarah' }, { label: 'Employment', href: '#employment' },
-      { label: 'Overview' },
+      { label: 'Home', href: '#home', icon: <LucideIcon name="Home" size={19} />, iconOnly: true },
+      { label: 'Settings', href: '#settings' }, { label: 'Team members', href: '#team' },
+      { label: 'Olivia Rhye' }, { label: 'Access', href: '#access' },
+      { label: 'Permissions', href: '#permissions' }, { label: 'Overview' },
     ];
-    return <Breadcrumbs items={all.slice(0, n(p.depth, 5))} maxVisible={n(p.maxVisible, 4)} />;
+    return <Breadcrumbs items={all.slice(0, n(p.depth, 4))} maxVisible={n(p.maxVisible, 4)} />;
   },
   code: p => `<Breadcrumbs
-  items={[{ label: 'Human Resources', href: '/hr' }, { label: 'Employees', href: '/hr/employees' }, { label: 'Profile' }]}
+  items={[{ label: 'Home', href: '/', icon: <HomeIcon />, iconOnly: true }, { label: 'Settings', href: '/settings' }, { label: 'Team members', href: '/settings/team' }, { label: 'Olivia Rhye' }]}
   maxVisible={${n(p.maxVisible, 4)}}
 />`,
 };

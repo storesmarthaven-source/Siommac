@@ -1,0 +1,52 @@
+@layer recipes {
+  .ui-ai-action-scope { align-self: center; flex: 0 0 auto; display: inline-flex; }
+
+  .ui-btn.ui-ai-action-button {
+    --ui-ai-action-fill:
+      radial-gradient(82% 72% at 50% 100%, color-mix(in srgb, var(--ui-ai-action-glow, #fff0a5) 96%, transparent) 0%, color-mix(in srgb, var(--ui-ai-action-glow, #fff0a5) 46%, transparent) 48%, transparent 100%),
+      linear-gradient(135deg, var(--ui-ai-action-surface-start, #f7c63d) 0%, color-mix(in srgb, var(--ui-ai-action-surface-start, #f7c63d) 48%, var(--ui-ai-action-surface-end, #d88900)) 48%, var(--ui-ai-action-surface-end, #d88900) 100%);
+    width: 34px; min-width: 34px; height: 34px; min-height: 34px; padding: 0;
+    overflow: hidden;
+    border-color: transparent;
+    background: var(--ui-ai-action-fill);
+    color: var(--ui-ai-action-icon, #fff);
+    box-shadow: 0 2px 5px color-mix(in srgb, var(--ui-ai-action-surface-end, #d88900) 28%, transparent);
+    isolation: isolate;
+    transition: filter .2s, box-shadow .2s, border-color .2s, transform .2s ease;
+  }
+  .ui-btn.ui-ai-action-button.ui-btn--md { width: 40px; min-width: 40px; height: 40px; min-height: 40px; }
+  .ui-btn.ui-ai-action-button--rounded { border-radius: var(--ui-ai-action-radius, 7px); }
+  .ui-btn.ui-ai-action-button--soft { border-radius: var(--ui-ai-action-radius, 5px); }
+  .ui-btn.ui-ai-action-button--circle { border-radius: var(--ui-ai-action-radius, 999px); }
+  .ui-btn.ui-ai-action-button:hover:not(:disabled),
+  .ui-btn.ui-ai-action-button[data-ui-state~='hover'] {
+    border-color: transparent;
+    background: var(--ui-ai-action-fill);
+    filter: saturate(1.04) brightness(1.025);
+    box-shadow: 0 5px 11px color-mix(in srgb, var(--ui-ai-action-surface-end, #d88900) 38%, transparent);
+    transform: translateY(-1px) scale(1.035);
+  }
+  .ui-btn.ui-ai-action-button:active:not(:disabled), .ui-btn.ui-ai-action-button[data-ui-state~='active'] { background: var(--ui-ai-action-fill); filter: saturate(1.02) brightness(.98); transform: translateY(0) scale(.96); }
+  .ui-btn.ui-ai-action-button:focus-visible, .ui-btn.ui-ai-action-button[data-ui-state~='focus'] { outline: 3px solid color-mix(in srgb, var(--ui-ai-action-border, #d99608) 42%, transparent); outline-offset: 2px; }
+  .ui-ai-action-button__icon { z-index: 2; width: 23px; height: 23px; display: grid; place-items: center; color: var(--ui-ai-action-icon, #fff); border-radius: 50%; filter: drop-shadow(0 1px 1px rgb(0 0 0 / .2)); transition: transform .2s ease; }
+  .ui-ai-action-button__icon > svg,
+  .ui-ai-action-button__brand-glyph { position: relative; z-index: 3; }
+  .ui-ai-action-button__brand-glyph { width: 27px; height: 27px; display: block; background: currentColor; -webkit-mask: url('../../../assets/icons/ai-sparkle.svg') center / contain no-repeat; mask: url('../../../assets/icons/ai-sparkle.svg') center / contain no-repeat; }
+  .ui-ai-action-button__particles { position: absolute; z-index: 2; inset: 0; overflow: hidden; border-radius: inherit; opacity: 1; pointer-events: none; }
+  .ui-ai-action-button__particles i { position: absolute; bottom: -4px; width: 2.5px; height: 2.5px; border-radius: 50%; background: color-mix(in srgb, var(--ui-ai-action-glow, #fff0a5) 62%, #fff); animation: ui-ai-action-particle 2.2s infinite ease-in-out; }
+  .ui-ai-action-button__particles i:nth-child(1) { left: 12%; animation-delay: .2s; }
+  .ui-ai-action-button__particles i:nth-child(2) { left: 27%; animation-delay: .7s; animation-duration: 2.5s; }
+  .ui-ai-action-button__particles i:nth-child(3) { left: 40%; animation-delay: .1s; animation-duration: 1.9s; }
+  .ui-ai-action-button__particles i:nth-child(4) { left: 54%; animation-delay: 1.1s; }
+  .ui-ai-action-button__particles i:nth-child(5) { left: 68%; animation-delay: .4s; animation-duration: 1.8s; }
+  .ui-ai-action-button__particles i:nth-child(6) { left: 81%; animation-delay: 1.4s; animation-duration: 2.4s; }
+  .ui-ai-action-button__particles i:nth-child(7) { left: 91%; animation-delay: .3s; }
+  .ui-ai-action-button__particles i:nth-child(8) { left: 61%; animation-delay: 1.7s; animation-duration: 2.6s; }
+  .ui-btn.ui-ai-action-button:hover:not(:disabled) .ui-ai-action-button__icon,
+  .ui-btn.ui-ai-action-button[data-ui-state~='hover'] .ui-ai-action-button__icon { transform: scale(1.07); }
+  .ui-ai-action-button__icon--circle { border: 1px solid currentColor; }
+  .ui-ai-action-button__icon--filled-circle { background: currentColor; }
+  .ui-ai-action-button__icon--filled-circle > svg { color: var(--ui-ai-action-surface-start, #f7c63d); }
+  @keyframes ui-ai-action-particle { 0% { transform: translateY(0); } 82% { opacity: 0; } 100% { transform: translateY(-38px); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .ui-ai-action-button__particles i { display: none; animation: none; } }
+}

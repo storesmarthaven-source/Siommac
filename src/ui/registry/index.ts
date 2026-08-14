@@ -28,12 +28,12 @@ export { DEMO_PEOPLE, DEMO_DEPARTMENTS } from './definitions';
 export { COMPOUND_OF } from './compound.defs';
 export {
   BUTTON_PATTERNS, findButtonPattern,
-  type ButtonPattern, type ButtonPatternExample, type ButtonPatternControl,
+  type ButtonPattern, type ButtonPatternExample, type ButtonPatternPreset, type ButtonPatternControl,
   type ButtonPatternValue, type ButtonPatternValues,
 } from './button-patterns';
 
 export {
-  type ComponentFamily, COMPONENT_FAMILIES, BUTTON_FAMILY,
+  type ComponentFamily, COMPONENT_FAMILIES, BUTTON_FAMILY, SWITCH_FAMILY,
   findFamily, familyOfComponent, familyMembers,
 } from './families';
 

@@ -16,13 +16,22 @@ import {
 
 const RECOVERY_KEY = 'siomac.uikit.draft-recovery';
 
+interface DraftRecoveryV1 {
+  version: 1;
+  values: ThemeOverrides;
+  savedColors: string[];
+}
+
 export interface GalleryDraft {
   values: ThemeOverrides;
+  savedColors: readonly string[];
   dirtyCount: number;
   read: (name: string) => string;
   set: (name: string, value: string) => void;
   link: (name: string, previewValue: string) => void;
   replaceGroup: (owned: readonly string[], values: ThemeOverrides) => void;
+  addSavedColor: (color: string) => void;
+  removeSavedColor: (color: string) => void;
   revert: (name: string) => void;
   resetAll: () => void;
   loading: boolean;
@@ -43,13 +52,25 @@ export interface GalleryDraft {
   importJson: (json: string) => { ok: true; count: number } | { ok: false; error: string };
 }
 
-function readRecovery(): ThemeOverrides {
-  try { return JSON.parse(localStorage.getItem(RECOVERY_KEY) ?? '{}') as ThemeOverrides; }
-  catch { return {}; }
+function readRecovery(): DraftRecoveryV1 {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(RECOVERY_KEY) ?? '{}') as Record<string, unknown>;
+    if (parsed.version === 1 && typeof parsed.values === 'object' && parsed.values !== null && Array.isArray(parsed.savedColors)) {
+      const colors = parsed.savedColors
+        .filter((color): color is string => typeof color === 'string' && /^#[\da-f]{6}$/i.test(color.trim()))
+        .map(color => color.trim().toLowerCase());
+      return { version: 1, values: parsed.values as ThemeOverrides, savedColors: [...new Set(colors)].slice(0, 32) };
+    }
+    // Backwards compatibility with the original token-only recovery object.
+    const values: ThemeOverrides = {};
+    for (const [name, value] of Object.entries(parsed)) if (name.startsWith('--') && typeof value === 'string') values[name] = value;
+    return { version: 1, values, savedColors: [] };
+  } catch { return { version: 1, values: {}, savedColors: [] }; }
 }
 
-function storeRecovery(values: ThemeOverrides): void {
-  try { localStorage.setItem(RECOVERY_KEY, JSON.stringify(values)); } catch { /* browser recovery is best-effort */ }
+function storeRecovery(values: ThemeOverrides, savedColors: readonly string[]): void {
+  const recovery: DraftRecoveryV1 = { version: 1, values, savedColors: [...savedColors] };
+  try { localStorage.setItem(RECOVERY_KEY, JSON.stringify(recovery)); } catch { /* browser recovery is best-effort */ }
 }
 
 function cloneConfiguration(value: DesignSystemConfigurationV1): DesignSystemConfigurationV1 {
@@ -57,7 +78,9 @@ function cloneConfiguration(value: DesignSystemConfigurationV1): DesignSystemCon
 }
 
 export function useGalleryDraft(): GalleryDraft {
-  const [values, setValues] = useState<ThemeOverrides>(readRecovery);
+  const [recovery] = useState(readRecovery);
+  const [values, setValues] = useState<ThemeOverrides>(recovery.values);
+  const [savedColors, setSavedColors] = useState<string[]>(recovery.savedColors);
   const [scopeEl, setScopeEl] = useState<HTMLElement | null>(null);
   const [removed, setRemoved] = useState<Set<string>>(() => new Set());
   const [previewLinks, setPreviewLinks] = useState<ThemeOverrides>({});
@@ -83,7 +106,7 @@ export function useGalleryDraft(): GalleryDraft {
     applyScopedOverrides(scopeEl, values);
     applyScopedOverrides(scopeEl, previewLinks);
   }, [values, previewLinks, scopeEl]);
-  useEffect(() => { storeRecovery(values); }, [values]);
+  useEffect(() => { storeRecovery(values, savedColors); }, [values, savedColors]);
 
   useEffect(() => {
     void (async () => {
@@ -99,6 +122,9 @@ export function useGalleryDraft(): GalleryDraft {
           for (const [name, value] of Object.entries(saved)) if (base[name] !== value) delta[name] = value;
           setRemoved(new Set(Object.keys(base).filter(name => !(name in saved))));
           setValues(delta);
+          setSavedColors([...state.draft.configuration.theme.savedColors]);
+        } else {
+          setSavedColors([...state.published.configuration.theme.savedColors]);
         }
         setError(null);
       } catch (reason) {
@@ -127,25 +153,38 @@ export function useGalleryDraft(): GalleryDraft {
       return { ...out, ...next };
     });
   }, []);
+  const addSavedColor = useCallback((color: string) => {
+    const normalized = color.trim().toLowerCase();
+    if (!/^#[\da-f]{6}$/.test(normalized)) return;
+    setSavedColors(previous => previous.includes(normalized) || previous.length >= 32 ? previous : [...previous, normalized]);
+  }, []);
+  const removeSavedColor = useCallback((color: string) => {
+    const normalized = color.trim().toLowerCase();
+    setSavedColors(previous => previous.filter(item => item !== normalized));
+  }, []);
   const revert = useCallback((name: string) => {
     setValues(prev => { const next = { ...prev }; Reflect.deleteProperty(next, name); return next; });
     setPreviewLinks(prev => { const next = { ...prev }; Reflect.deleteProperty(next, name); return next; });
     setRemoved(prev => { const next = new Set(prev); next.delete(name); return next; });
   }, []);
-  const resetAll = useCallback(() => { clearAllScopedOverrides(scopeEl); setValues({}); setPreviewLinks({}); setRemoved(new Set()); setBlockersBySource({}); }, [scopeEl]);
+  const resetAll = useCallback(() => { clearAllScopedOverrides(scopeEl); setValues({}); setSavedColors([...published.configuration.theme.savedColors]); setPreviewLinks({}); setRemoved(new Set()); setBlockersBySource({}); }, [scopeEl, published]);
 
   const configuration = useCallback((): DesignSystemConfigurationV1 => {
     const next = cloneConfiguration(published.configuration);
+    next.recipes.aiAction ??= { overrides: {} };
+    next.theme.savedColors = [...savedColors];
     for (const name of removed) {
       Reflect.deleteProperty(next.theme.tokens, name);
       Reflect.deleteProperty(next.recipes.button.overrides, name);
+      Reflect.deleteProperty(next.recipes.aiAction.overrides, name);
     }
     for (const [name, value] of Object.entries(values)) {
-      if (name.startsWith('--ui-button-') || name.startsWith('--ui-toggle-')) next.recipes.button.overrides[name] = value;
+      if (name.startsWith('--ui-ai-action-')) next.recipes.aiAction.overrides[name] = value;
+      else if (name.startsWith('--ui-button-') || name.startsWith('--ui-toggle-')) next.recipes.button.overrides[name] = value;
       else next.theme.tokens[name] = value;
     }
     return next;
-  }, [published, removed, values]);
+  }, [published, removed, savedColors, values]);
 
   const saveDraft = useCallback(async (): Promise<DesignSystemDraft> => {
     if (loading) throw new Error('Studio configuration is still loading.');
@@ -165,7 +204,7 @@ export function useGalleryDraft(): GalleryDraft {
     try {
       const saved = await saveDesignSystemDraft(configuration(), serverDraft?.revision ?? 0);
       const next = await publishDesignSystemDraft(saved.id, saved.revision, summary);
-      setPublished(next); setServerDraft(null); setValidation(null);
+      setPublished(next); setServerDraft(null); setValidation(null); setSavedColors([...next.configuration.theme.savedColors]);
       const runtime = configurationToOverrides(next.configuration);
       applyThemeOverrides(runtime); cacheTheme(runtime); clearAllScopedOverrides(scopeEl); setValues({}); setPreviewLinks({}); setRemoved(new Set()); setBlockersBySource({});
     } catch (reason) {
@@ -180,7 +219,7 @@ export function useGalleryDraft(): GalleryDraft {
     setSaving(true); setError(null);
     try {
       const next = await rollbackDesignSystem(version, summary);
-      setPublished(next); setServerDraft(null); setValidation(null); setValues({}); setPreviewLinks({}); setRemoved(new Set()); setBlockersBySource({});
+      setPublished(next); setServerDraft(null); setValidation(null); setValues({}); setSavedColors([...next.configuration.theme.savedColors]); setPreviewLinks({}); setRemoved(new Set()); setBlockersBySource({});
       const runtime = configurationToOverrides(next.configuration);
       applyThemeOverrides(runtime); cacheTheme(runtime); clearAllScopedOverrides(scopeEl);
     } catch (reason) {
@@ -201,8 +240,11 @@ export function useGalleryDraft(): GalleryDraft {
     } catch { return { ok: false as const, error: 'Invalid JSON.' }; }
   }, []);
 
+  const publishedColors = published.configuration.theme.savedColors;
+  const colorsDirty = savedColors.length !== publishedColors.length || savedColors.some((color, index) => color !== publishedColors[index]);
+
   return {
-    values, dirtyCount: Object.keys(values).length + removed.size, read, set, link, replaceGroup, revert, resetAll,
+    values, savedColors, dirtyCount: Object.keys(values).length + removed.size + Number(colorsDirty), read, set, link, replaceGroup, addSavedColor, removeSavedColor, revert, resetAll,
     loading, saving, error, publishedVersion: published.version, serverDraft, validation, publishBlockers, setPublishBlockers,
     saveDraft, publish, history, rollback, attachScope, exportJson, exportCss, importJson,
   };

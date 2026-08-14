@@ -9,6 +9,8 @@ export interface BreadcrumbItem {
   href?: string;
   onSelect?: () => void;
   icon?: VNode;
+  /** Keep the accessible label while showing only the icon. */
+  iconOnly?: boolean;
 }
 
 export interface BreadcrumbsProps {
@@ -21,14 +23,14 @@ export interface BreadcrumbsProps {
 }
 
 function Crumb({ item, current, onSelect }: { item: BreadcrumbItem; current: boolean; onSelect?: () => void }): VNode {
-  const copy = <>{item.icon}<span>{item.label}</span></>;
+  const copy = <>{item.icon}<span class={item.iconOnly ? 'ui-breadcrumbs__sr-only' : undefined}>{item.label}</span></>;
   if (current) return <span class="ui-breadcrumbs__current" aria-current="page">{copy}</span>;
   if (item.href) return <a class="ui-breadcrumbs__link" href={item.href} onClick={onSelect}>{copy}</a>;
   if (item.onSelect) return <button class="ui-breadcrumbs__link" type="button" onClick={() => { onSelect?.(); item.onSelect?.(); }}>{copy}</button>;
   return <span class="ui-breadcrumbs__label">{copy}</span>;
 }
 
-export function Breadcrumbs({ items, maxVisible = 4, label = 'Breadcrumb', separator = '/', class: extra }: BreadcrumbsProps): VNode | null {
+export function Breadcrumbs({ items, maxVisible = 4, label = 'Breadcrumb', separator = <LucideIcon name="ChevronRight" size={17} strokeWidth={2.25} />, class: extra }: BreadcrumbsProps): VNode | null {
   const uid = useId();
   const [overflowAnchor, setOverflowAnchor] = useState<HTMLElement | null>(null);
   const [overflowOpen, setOverflowOpen] = useState(false);

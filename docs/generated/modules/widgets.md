@@ -2,7 +2,7 @@
 
 # widgets Module Map
 
-Source fingerprint: `f30e39d59b0b3858f85a7d86`
+Source fingerprint: `bb26e79359e309cc339b9292`
 
 Files: 73 | Symbols: 588 | Widgets: 21 | Unique mounted endpoints: 20 | Route definitions: 20 mounted + 0 unmounted | API calls: 11 | DB objects: 23 | E2E suites: 1
 
@@ -257,7 +257,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 
 | Role | Path | Lines |
 |---|---|---:|
-| backend-route | `netlify/functions/routes/uiPrefs.studio.test.ts` | 48 |
+| backend-route | `netlify/functions/routes/uiPrefs.studio.test.ts` | 60 |
 | backend-route | `netlify/functions/routes/uiPrefs.ts` | 441 |
 | backend-route | `netlify/functions/routes/widgetPackages.ts` | 179 |
 | e2e-suite | `scripts/e2e/suites/widgets.mjs` | 212 |

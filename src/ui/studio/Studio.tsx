@@ -27,6 +27,7 @@ import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { Workbench } from './Workbench';
 import { ButtonBrowser } from './ButtonBrowser';
+import { FamilyBrowser } from './FamilyBrowser';
 import { BrandOverview } from './BrandOverview';
 import { AppPreview, type Scene } from './AppPreview';
 import { PreviewScope } from './PreviewScope';
@@ -36,6 +37,7 @@ import {
   type ComponentDef, type ComponentFamily, type CatalogueNode,
 } from '../registry';
 import { LucideIcon, type LucideName } from '../LucideIcon';
+import { Breadcrumbs, type BreadcrumbItem } from '../navigation/Breadcrumbs';
 import { useGalleryDraft } from '../gallery/galleryStore';
 import { FoundationsPanel } from '../gallery/FoundationsPanel';
 import { BrandThemePanel } from '../gallery/BrandThemePanel';
@@ -103,6 +105,10 @@ const COMPONENT_ROWS: NavComponentRow[] = componentsByCategory()
     const children = node.members.filter(isBuilt);
     return children.length > 0 ? [{ kind: 'family', family: node.family, children }] : [];
   }));
+
+const COMPONENT_ORDER: ComponentDef[] = COMPONENT_ROWS.flatMap(row =>
+  row.kind === 'family' ? row.children : [row.def],
+);
 
 /** Which scene each Application nav item opens on. */
 const APP_SCENE: Partial<Record<SectionId, Scene>> = {
@@ -278,7 +284,27 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
   const openFamily = openId
     ? (findFamily(openId) ?? familyOfComponent(openId) ?? (openPattern ? findFamily('buttons') : undefined))
     : undefined;
+  const resolvedDef = openDef ?? (openFamily?.id === openId
+    ? findComponent(openFamily.defaultComponentId)
+    : undefined);
   const groupOf = NAV.find(g => g.items.some(i => i.id === active))?.label ?? '';
+  const componentIndex = resolvedDef ? COMPONENT_ORDER.findIndex(def => def.id === resolvedDef.id) : -1;
+  const previousComponent = componentIndex > 0 ? COMPONENT_ORDER[componentIndex - 1] : undefined;
+  const nextComponent = componentIndex >= 0 && componentIndex < COMPONENT_ORDER.length - 1
+    ? COMPONENT_ORDER[componentIndex + 1] : undefined;
+  const openComponents = (): void => { setActive('components'); setOpenId(null); };
+  const openGroup = (): void => {
+    if (groupOf === 'Components') return openComponents();
+    const first = NAV.find(group => group.label === groupOf)?.items[0];
+    if (first) { setActive(first.id); setOpenId(null); }
+  };
+  const isComponentPath = groupOf === 'Components';
+  const breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Studio home', icon: <LucideIcon name="Home" size={19} />, iconOnly: true, onSelect: openComponents },
+    ...(!isComponentPath ? [{ label: groupOf, onSelect: openGroup }] : []),
+    ...(openFamily && openId !== openFamily.id ? [{ label: openFamily.name, onSelect: () => setOpenId(openFamily.id) }] : []),
+    { label: openDef?.name ?? openPattern?.name ?? openFamily?.name ?? current.label },
+  ];
 
   return (
     <div class="sds">
@@ -289,7 +315,7 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
         </div>
 
         {NAV.map(group => (
-          <nav class="sds-nav__group" key={group.label}>
+          <nav class="sds-nav__group" data-nav-group={group.label} key={group.label}>
             <button type="button" class="sds-nav__gh"
               aria-expanded={!collapsed[group.label]}
               onClick={() => setCollapsed(c => ({ ...c, [group.label]: !c[group.label] }))}>
@@ -362,19 +388,30 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
 
       <div class="sds-col">
         <header class="sds-top">
+          <StudioPublishBar draft={draft} />
           <div class="sds-top__navrow">
-            <nav class="sds-crumbs" aria-label="Breadcrumb">
-              <span>{groupOf}</span>
-              <LucideIcon name="ChevronRight" size={14} />
-              {openFamily && openId !== openFamily.id && <><span>{openFamily.name}</span><LucideIcon name="ChevronRight" size={14} /></>}
-              <span class="is-current">{openDef?.name ?? openPattern?.name ?? openFamily?.name ?? current.label}</span>
-            </nav>
+            <Breadcrumbs class="sds-crumbs" items={breadcrumbItems} maxVisible={4} />
             <span class="sds-top__meta">{COMPONENT_DEFS.length} definitions</span>
           </div>
-          <StudioPublishBar draft={draft} />
         </header>
 
         <main class="sds-main">
+          {active === 'components' && openId && (
+            <div class="sds-component-nav" aria-label="Component navigation">
+              <button type="button" class="sds-component-nav__all" onClick={openComponents}>
+                <LucideIcon name="LayoutGrid" size={15} /> Components
+              </button>
+              <span aria-hidden="true" />
+              <button type="button" aria-label={previousComponent ? `Previous component: ${previousComponent.name}` : 'No previous component'}
+                title={previousComponent?.name} disabled={!previousComponent} onClick={() => previousComponent && setOpenId(previousComponent.id)}>
+                <LucideIcon name="ArrowLeft" size={16} />
+              </button>
+              <button type="button" aria-label={nextComponent ? `Next component: ${nextComponent.name}` : 'No next component'}
+                title={nextComponent?.name} disabled={!nextComponent} onClick={() => nextComponent && setOpenId(nextComponent.id)}>
+                <LucideIcon name="ArrowRight" size={16} />
+              </button>
+            </div>
+          )}
           {APP_SCENE[active] && (
             /* One preview; the nav item chooses its opening scene. `key` remounts
                it so switching nav moves the scene rather than keeping stale state. */
@@ -385,16 +422,16 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
           {active === 'brand-overview' && (
             <BrandOverview draft={draft} logoUrl={logoUrl} onUploadLogo={onUploadLogo} />
           )}
-          {active === 'components' && (openFamily && (openFamily.id === openId || openPattern)
-            ? <ButtonBrowser family={openFamily} selectedPattern={openPattern}
-                onOpenComponent={setOpenId} onOpenPattern={setOpenId} onBack={() => setOpenId(null)} />
-            : openDef ? (
+          {active === 'components' && (openFamily?.id === 'buttons' && (openFamily.id === openId || openPattern)
+            ? <ButtonBrowser family={openFamily} draft={draft} selectedPattern={openPattern}
+                onOpenComponent={setOpenId} onOpenPattern={setOpenId} />
+            : openFamily?.id === openId
+              ? <FamilyBrowser family={openFamily} onOpenComponent={setOpenId} />
+            : resolvedDef ? (
               <Workbench
-                def={openDef}
+                def={resolvedDef}
                 draft={draft}
-                backLabel={openFamily?.name}
                 onSelectMember={setOpenId}
-                onBack={() => setOpenId(openFamily?.id ?? null)}
               />
             )
             : <Catalogue onOpen={setOpenId} />)}

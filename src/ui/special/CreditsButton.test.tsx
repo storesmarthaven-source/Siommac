@@ -17,7 +17,7 @@ describe('Credits special treatment', () => {
     fireEvent.click(button);
     expect(onClick).toHaveBeenCalledOnce();
     expect(button.classList.contains('ui-credits')).toBe(true);
-    expect(container.querySelectorAll('[aria-hidden="true"]')).toHaveLength(4);
+    expect(container.querySelectorAll('[aria-hidden="true"]')).toHaveLength(3);
   });
 
   it('honours native disabled behaviour', () => {
@@ -45,14 +45,13 @@ describe('Credits special treatment', () => {
     expect(buttonSource.toLowerCase()).not.toContain('credits');
   });
 
-  it('uses flat SIOMAC-aware tokens and no purple or gradient styling', () => {
+  it('reproduces the supplied purple layered-gradient treatment', () => {
     const css = read('src/ui/special/credits.recipe.css');
     const declarations = css.replace(/\/\*[\s\S]*?\*\//g, '');
-    expect(css).toContain('--ui-credits-bg: var(--ui-color-action-primary)');
-    expect(css).toContain('var(--siomac-gold)');
-    expect(css).toContain('var(--siomac-red)');
-    expect(declarations).not.toMatch(/#[0-9a-f]{6}/i);
-    expect(declarations).not.toMatch(/(?:linear|radial|conic)-gradient/i);
-    expect(declarations).not.toMatch(/purple/i);
+    expect(css).toContain('--ui-credits-bg: #7a5af8');
+    expect(css).toContain('--ui-credits-glow: #df71ff');
+    expect(declarations).toMatch(/radial-gradient/i);
+    expect(declarations).toMatch(/linear-gradient/i);
+    expect(css).toContain('ui-credits-floating-points');
   });
 });

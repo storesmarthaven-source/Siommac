@@ -28,7 +28,7 @@ import type { DesignSystemConfigurationV1 } from '../../../types/designSystem';
 
 let savedConfiguration: DesignSystemConfigurationV1;
 const loadDesignSystemStudio = vi.fn(() => Promise.resolve({
-  published: { version: 2, configuration: { schemaVersion: 1, theme: { tokens: { '--siomac-gold': '#FFB712' } }, recipes: { button: { overrides: {} } } }, publishedAt: null, publishedBy: null, summary: null },
+  published: { version: 2, configuration: { schemaVersion: 1, theme: { tokens: { '--siomac-gold': '#FFB712' }, savedColors: [] }, recipes: { button: { overrides: {} } } }, publishedAt: null, publishedBy: null, summary: null },
   draft: null,
 }));
 const saveDesignSystemDraft = vi.fn((configuration: DesignSystemConfigurationV1, _revision?: number) => {
@@ -133,6 +133,24 @@ describe('semantic tokens in the draft layer', () => {
     expect(second.scope.style.getPropertyValue(ACTION_PRIMARY)).toBe('#0F766E');
     expect(document.documentElement.style.getPropertyValue(ACTION_PRIMARY)).toBe('');
     expect(saveDesignSystemDraft).not.toHaveBeenCalled();
+  });
+
+  it('persists custom saved colors inside the versioned Studio draft', async () => {
+    const { draft } = mountDraft();
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    void act(() => {
+      draft().addSavedColor('#123456');
+      draft().addSavedColor('#ABCDEF');
+      draft().addSavedColor('#123456');
+    });
+
+    expect(draft().savedColors).toEqual(['#123456', '#abcdef']);
+    expect(draft().dirtyCount).toBe(1);
+    await act(async () => { await draft().saveDraft(); });
+    expect(savedConfiguration.theme.savedColors).toEqual(['#123456', '#abcdef']);
+
+    void act(() => { draft().removeSavedColor('#123456'); });
+    expect(draft().savedColors).toEqual(['#abcdef']);
   });
 
   it('Apply promotes the draft to :root and persists it, merged with what is published', async () => {

@@ -71,6 +71,10 @@ export {
   type ButtonVariant, type ButtonProps,
 } from './primitives/Button';
 export {
+  AiActionButton,
+  type AiActionButtonProps, type AiActionIconTreatment, type AiActionShape,
+} from './patterns/AiActionButton';
+export {
   SegmentedControl, DropdownButton, SplitButton,
   type SegmentedControlProps, type SegmentedOption,
   type DropdownButtonProps, type SplitButtonProps,
@@ -157,6 +161,10 @@ export {
   FileInput, OtpInput,
   type FileInputProps, type FileRejection, type OtpInputProps,
 } from './forms/FileInput';
+export {
+  ColorPicker,
+  type ColorPickerProps, type HsvColor,
+} from './forms/ColorPicker';
 
 // ── Status (canonical, v2) ──
 // ONE badge system: status pill, tag, chip, priority and risk are tone/variant.
@@ -183,6 +191,9 @@ export {
   type TabsOrientation, type TabsVariant, type TabsSize, type TabsActivation,
 } from './navigation/Tabs';
 export { Breadcrumbs, type BreadcrumbsProps, type BreadcrumbItem } from './navigation/Breadcrumbs';
+export { TreeView, type TreeViewProps, type TreeNode } from './navigation/TreeView';
+export { NextActionButton, type NextActionButtonProps, type NextActionIconTreatment } from './patterns/NextActionButton';
+export { ThemeModeSwitch, type ThemeModeSwitchProps, type ThemeMode } from './patterns/ThemeModeSwitch';
 
 // ONE Wizard. Step validation, navigation gating, optional/skipped steps and the
 // Back/Continue/Submit footer are its behaviour. It owns NO overlay — a modal

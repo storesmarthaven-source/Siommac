@@ -30,6 +30,7 @@ import { type GalleryDraft } from '../gallery/galleryStore';
 import { IconPicker, RecipeStyleEditor, StudioColorControl } from './RecipeStyleEditor';
 import { LUCIDE_NAMES, type LucideName } from '../LucideIcon';
 import { buttonFamilyPreviewProps } from './buttonFamilyPreview';
+import { PreviewScope } from './PreviewScope';
 
 /**
  * Playground controls, grouped for a narrow inspector.
@@ -160,8 +161,6 @@ export interface WorkbenchProps {
   /** Set when `def` belongs to a family — renders the subtype selector. */
   family?: ComponentFamily;
   onSelectMember?: (componentId: string) => void;
-  onBack: () => void;
-  backLabel?: string;
   draft: GalleryDraft;
 }
 
@@ -219,7 +218,8 @@ function CompoundButtonEditor({ def, shown, specimen, onSet, onEditFoundation }:
   return (
     <div class="sds-owned-button" data-ui-preview-scope>
       <section class="sds-owned-button__editor" aria-label={`${def.name} editor`}>
-        <div class="sds-owned-button__stage">
+        <div class="sds-button-editor__main">
+          <div class="sds-owned-button__stage">
           <header>
             <div><span>Live preview</span><strong>{def.name}</strong></div>
             <small>Updates instantly</small>
@@ -254,6 +254,14 @@ function CompoundButtonEditor({ def, shown, specimen, onSet, onEditFoundation }:
             </p>
             <span>Button styling stays linked</span>
           </aside>
+          </div>
+
+          {def.examples && def.examples.length > 0 && <section class="sds-button-use" aria-labelledby={`${def.id}-use-title`}>
+            <header><h3 id={`${def.id}-use-title`}>Common application use</h3><p>Real examples of how this control appears in SIOMAC.</p></header>
+            <div class="sds-use-context">
+              {def.examples.map(example => <article key={example.id}><span class="ctx-kicker">{example.title}</span><div>{example.render()}</div></article>)}
+            </div>
+          </section>}
         </div>
 
         <aside class="sds-owned-button__settings" aria-label={`${def.name} settings`}>
@@ -317,14 +325,11 @@ function CompoundButtonEditor({ def, shown, specimen, onSet, onEditFoundation }:
         </aside>
       </section>
 
-      <section class="sds-owned-button__reference" aria-label={`${def.name} examples`}>
-        <OverviewSpecimens def={def} specimen={specimen} hideVariants />
-      </section>
     </div>
   );
 }
 
-export function Workbench({ def, family, onSelectMember, onBack, backLabel = 'Components', draft }: WorkbenchProps): VNode {
+export function Workbench({ def, family, onSelectMember, draft }: WorkbenchProps): VNode {
   /*
     Prop values are kept PER COMPONENT, not reset on every switch.
     `useState(() => defaultProps(def))` would keep the first subtype's values
@@ -359,10 +364,6 @@ export function Workbench({ def, family, onSelectMember, onBack, backLabel = 'Co
 
   return (
     <div class={`sds-wb sds-wb--${def.id}`}>
-      <button type="button" class="sds-wb__back" onClick={onBack}>
-        ← {backLabel}
-      </button>
-
       {/* On a family page the heading is the FAMILY. The selector names the
           subtype, and the description below it follows the selection — so the
           page says what "Buttons" contains before it says what one of them does. */}
@@ -419,78 +420,22 @@ export function Workbench({ def, family, onSelectMember, onBack, backLabel = 'Co
           onSet={set}
           onEditFoundation={onSelectMember ? () => onSelectMember('button') : undefined} />
       ) : (
-        <div data-ui-preview-scope>
-          <div class="sds-pg">
-            <div class="sds-pg__stage">
-              <section class="sds-preview-block">
-              {/* Names the specimen and its ownership right above the canvas.
-                  On a family page the page heading is the family, so without
-                  this the viewport would show an unlabelled control. */}
-              <header class="sds-preview-block__head">
-                <div>
-                  <span class="sds-preview-block__eyebrow">Live preview</span>
-                  <strong>{def.name}</strong>
-                </div>
-                <span class="sds-preview-block__meta">Preview updates instantly</span>
-              </header>
-
-              <div class="sds-canvas sds-canvas--hero">
-                {/* ONE specimen. The hero answers "what is this control", and a
-                    row of six answers a different question — which is what the
-                    Variants section below is for. */}
-                <div class="sds-canvas__single">{specimen(shown)}</div>
-              </div>
-              <p class="sds-wb__note">
-                Use the settings on the right to try this component. Preview changes never affect the app.
-              </p>
-              </section>
-
-              {/* Reference sections live in the STAGE column, beside the sticky
-                  Properties rail — not full-width beneath it. A variant strip that
-                  runs under the inspector reads as page content rather than as
-                  documentation of the specimen above it. */}
-              <div class="sds-wb__rule" />
-              <OverviewSpecimens def={def} specimen={specimen} />
+        <div class="sds-button-editor">
+          <PreviewScope class="sds-button-editor__main" attach={draft.attachScope}>
+            <section class="sds-button-preview sds-button-preview--with-variants">
+              <header><div><span>Live preview</span><strong>{def.name}</strong></div><small>Updates instantly</small></header>
+              <div class="sds-button-preview__single">{specimen(shown)}</div>
+              <VariantSpecimens def={def} specimen={specimen} />
+            </section>
+            <UsageSpecimens def={def} />
+          </PreviewScope>
+          <aside class="sds-button-settings" aria-label={`${def.name} properties`}>
+            <header class="sds-button-settings__head"><div><span>Preview settings</span><strong>Try the {def.name}</strong></div></header>
+            <section class="sds-button-settings__example" aria-label="Preview options"><div class="sds-button-settings__example-head"><div><h4>Preview options</h4><p>These choices only change the example.</p></div><button type="button" onClick={() => setValues(buttonFamilyPreviewProps(def))}>Reset</button></div></section>
+            <div class="sds-button-settings__body">
+              {groupControls(def).map(group => <section key={group.title}><h4>{group.title}</h4>{group.entries.map(([name, control]) => <Control key={name} name={name} control={control} value={shown[name] ?? ''} onChange={value => set(name, value)} />)}</section>)}
             </div>
-
-            <aside class="sds-pg__panel" aria-label={`${def.name} properties`}>
-              {/* Say what is being configured. Without this the panel reads as a
-                  generic box of controls, and "Continue", "Cancel" and "Save"
-                  start to look like they might be different components. They are
-                  not: they are this one, with different props. */}
-              {/* Ownership, not just a name. "Compound control · uses Button +
-                  Menu" is what stops someone reading DropdownButton as a third
-                  kind of button rather than a composition of two things they
-                  already know. */}
-              <header class="sds-pg__who">
-                <div>
-                  <span class="sds-pg__eyebrow">Preview settings</span>
-                  <strong>Try the {def.name}</strong>
-                  <p>These choices only change the example.</p>
-                </div>
-                <button type="button" class="sds-pg__clear"
-                  onClick={() => setValues(buttonFamilyPreviewProps(def))}>Reset</button>
-              </header>
-              {/*
-                Editing mode. A REAL control, not the mockup's placeholder:
-                "Canonical defaults" renders the component at its declared
-                defaults and locks the inspector, so you can see what a developer
-                gets by writing the component with no props — then switch back
-                and your edits are still there. It does NOT publish anything,
-                which is exactly what the caption says.
-              */}
-              {groupControls(def).map(group => (
-                <section class="sds-pg__grp" key={group.title}>
-                  <h4>{group.title}</h4>
-                  {group.entries.map(([name, control]) => (
-                    <Control key={name} name={name} control={control}
-                      value={shown[name] ?? ''} onChange={v => set(name, v)} />
-                  ))}
-                </section>
-              ))}
-            </aside>
-          </div>
-
+          </aside>
         </div>
       )}
 
@@ -511,11 +456,8 @@ function Block({ title, hint, children }: {
   title: string; hint: string; children: ComponentChildren;
 }): VNode {
   return (
-    <section class="sds-ov__sec">
-      <div class="sds-ov__hd">
-        <h4>{title}</h4>
-        <p>{hint}</p>
-      </div>
+    <section class="sds-button-preview__variants">
+      <header class="sds-button-editor__intro"><div><h3>{title}</h3><p>{hint}</p></div></header>
       <div class="sds-ov__surface">{children}</div>
     </section>
   );
@@ -525,10 +467,9 @@ function Block({ title, hint, children }: {
  * The variant × size matrix is derived from the definition's own `select` and
  * `segmented` options, so it cannot list a variant the component does not have.
  */
-function OverviewSpecimens({ def, specimen, hideVariants = false }: {
+function VariantSpecimens({ def, specimen }: {
   def: ComponentDef;
   specimen: (p: PropValues, s?: UiState) => VNode | null;
-  hideVariants?: boolean;
 }): VNode {
   const variantCtl = def.props?.variant;
   const variants = variantCtl && (variantCtl.type === 'select' || variantCtl.type === 'segmented')
@@ -536,7 +477,7 @@ function OverviewSpecimens({ def, specimen, hideVariants = false }: {
 
   return (
     <div class="sds-ov">
-      {!hideVariants && variants.length > 0 && (
+      {variants.length > 0 && (
         <Block title="Variants" hint="Choose the amount of emphasis that matches the action. The labels below show typical uses.">
           <div class="sds-axis">
             {variants.map(v => {
@@ -553,38 +494,27 @@ function OverviewSpecimens({ def, specimen, hideVariants = false }: {
         </Block>
       )}
 
+    </div>
+  );
+}
+
+function UsageSpecimens({ def }: { def: ComponentDef }): VNode {
+  return (
+    <>
       {def.examples && def.examples.length > 0 && (
-        /* A compound's examples are PATTERNS ("Export menu", "Row actions") —
-           each is a whole control with a caption. A canonical component's are
-           CONTEXTS ("Dialog footer") — a row of controls in a situation. Same
-           data, two layouts, chosen from what the component is rather than from
-           a flag someone has to remember to set. */
-        <section class="sds-ov__sec">
-          <div class="sds-ov__hd">
-            <h4>{COMPOUND_OF[def.id] ? 'Typical patterns' : 'Common application use'}</h4>
-            <p>
-              {COMPOUND_OF[def.id]
-                ? 'The button keeps the same look; only the menu choices change.'
-                : 'See how the same button works in familiar product moments.'}
-            </p>
-          </div>
+        <section class="sds-button-use" aria-labelledby={`${def.id}-use-title`}>
+          <header><h3 id={`${def.id}-use-title`}>Common application use</h3><p>Real examples of how this control appears in SIOMAC.</p></header>
           <div class={COMPOUND_OF[def.id]
             ? `sds-pattern-grid${def.examples.length === 2 ? ' sds-pattern-grid--two' : ''}`
             : 'sds-use-context'}>
-            {def.examples.map(ex => (
-              <article key={ex.id}>
-                <span class="ctx-kicker">{ex.title}</span>
-                <div>{ex.render()}</div>
-                {ex.description && <small>{ex.description}</small>}
-              </article>
-            ))}
+            {def.examples.map(example => <article key={example.id}>
+              <span class="ctx-kicker">{example.title}</span><div>{example.render()}</div>
+              {example.description && <small>{example.description}</small>}
+            </article>)}
           </div>
         </section>
       )}
-
-      {/* Explicitly outside the variant axis and the canonical registry. The
-          special-treatment owner decides whether this component has any. */}
       <SpecialTreatments componentId={def.id} />
-    </div>
+    </>
   );
 }

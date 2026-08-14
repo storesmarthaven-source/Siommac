@@ -1,0 +1,77 @@
+@layer recipes {
+  :root,
+  [data-ui-preview-scope] {
+    --ui-next-action-arrow-width: 12px;
+    --ui-next-action-arrow-stroke: 2px;
+    --ui-next-action-arrow-travel: 4px;
+    --ui-next-action-motion: 200ms;
+    --ui-next-action-icon: currentColor;
+    --ui-next-action-filled-arrow: var(--ui-button-primary-bg);
+  }
+
+  .ui-next-action-button__icon,
+  .ui-next-action-button__leading {
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex: none;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    color: var(--ui-next-action-icon);
+    transition: background-color var(--ui-next-action-motion) ease, border-color var(--ui-next-action-motion) ease;
+  }
+  .ui-next-action-button__leading > svg { width: 15px; height: 15px; }
+  .ui-next-action-button__leading--circle,
+  .ui-next-action-button__icon--circle {
+    width: 24px;
+    height: 24px;
+    border-color: currentColor;
+  }
+  .ui-next-action-button__leading--filled-circle,
+  .ui-next-action-button__icon--filled-circle {
+    width: 24px;
+    height: 24px;
+    border-color: currentColor;
+    background: currentColor;
+  }
+  .ui-next-action-button__leading--filled-circle > svg,
+  .ui-next-action-button__icon--filled-circle > i { color: var(--ui-next-action-filled-arrow); }
+  .ui-next-action-button__icon > i {
+    position: relative;
+    width: var(--ui-next-action-arrow-width);
+    height: var(--ui-next-action-arrow-stroke);
+    display: block;
+    background: transparent;
+    transition: background-color var(--ui-next-action-motion) ease;
+  }
+  .ui-next-action-button__icon > i::before {
+    content: '';
+    box-sizing: border-box;
+    position: absolute;
+    top: 50%;
+    right: var(--ui-next-action-arrow-travel);
+    width: 8px;
+    height: 8px;
+    border: solid currentColor;
+    border-width: 0 var(--ui-next-action-arrow-stroke) var(--ui-next-action-arrow-stroke) 0;
+    transform: translateY(-50%) rotate(-45deg);
+    transition: right var(--ui-next-action-motion) ease;
+  }
+  .ui-next-action-button:hover:not(:disabled):not([aria-busy='true']) .ui-next-action-button__icon > i,
+  .ui-next-action-button[data-ui-state~='hover'] .ui-next-action-button__icon > i {
+    background: currentColor;
+  }
+  .ui-next-action-button:hover:not(:disabled):not([aria-busy='true']) .ui-next-action-button__icon > i::before,
+  .ui-next-action-button[data-ui-state~='hover'] .ui-next-action-button__icon > i::before {
+    right: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ui-next-action-button__icon > i,
+    .ui-next-action-button__icon > i::before,
+    .ui-next-action-button__icon,
+    .ui-next-action-button__leading { transition: none; }
+  }
+}

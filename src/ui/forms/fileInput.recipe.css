@@ -20,6 +20,10 @@
     --ui-otp-size: 44px;
     --ui-otp-gap: 8px;
     --ui-otp-radius: var(--radius-sm);
+    --ui-otp-bg: color-mix(in srgb, var(--ui-color-text-primary, #101828) 10%, var(--ui-color-surface, #fff));
+    --ui-otp-border: color-mix(in srgb, var(--ui-color-text-primary, #101828) 14%, var(--ui-color-surface, #fff));
+    --ui-otp-active-bg: color-mix(in srgb, var(--ui-color-selection-border) 16%, var(--ui-color-surface-default, #fff));
+    --ui-otp-caret: var(--ui-color-selection-border);
   }
 
   .ui-file {
@@ -177,23 +181,26 @@
   .ui-otp-box {
     width: var(--ui-otp-size);
     height: var(--ui-otp-size);
-    border: var(--ui-border-width) solid var(--ui-control-border);
+    box-sizing: border-box;
+    border: var(--ui-border-width, 1px) solid var(--ui-otp-border);
     border-radius: var(--ui-otp-radius);
-    background: var(--ui-control-bg);
+    background: var(--ui-otp-bg);
+    caret-color: var(--ui-otp-caret);
     color: var(--ui-control-fg);
     font-family: var(--font-mono);
     font-size: 18px;
     font-variant-numeric: tabular-nums;
     text-align: center;
     outline: none;
-    transition: border-color var(--ui-motion-fast), box-shadow var(--ui-motion-fast);
+    transition: background-color .3s ease, box-shadow .3s ease, color .3s ease;
   }
-  .ui-otp-box:focus {
-    border-color: var(--ui-control-border-focus);
-    box-shadow: 0 0 0 var(--ui-focus-ring-width) var(--ui-focus-ring-color);
+  .ui-otp-box:focus,
+  .ui-otp-box.is-filled,
+  .ui-otp.is-force-focus .ui-otp-box:first-child {
+    background: var(--ui-otp-active-bg);
   }
-  .ui-otp-box:disabled { background: var(--ui-disabled-bg); border-color: var(--ui-disabled-border); color: var(--ui-disabled-fg); }
-  .ui-otp--error .ui-otp-box { border-color: var(--ui-validation-error-border); }
+  .ui-otp-box:disabled { background: var(--ui-disabled-bg); color: var(--ui-disabled-fg); }
+  .ui-otp--error .ui-otp-box { box-shadow: inset 0 0 0 var(--ui-border-width) var(--ui-validation-error-border); }
   .ui-otp--error .ui-otp-box:focus { box-shadow: 0 0 0 var(--ui-focus-ring-width) var(--ui-validation-error-ring); }
-  .ui-otp--success .ui-otp-box { border-color: var(--ui-validation-success-border); }
+  .ui-otp--success .ui-otp-box { box-shadow: inset 0 0 0 var(--ui-border-width) var(--ui-validation-success-border); }
 }

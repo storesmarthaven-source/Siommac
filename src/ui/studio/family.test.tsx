@@ -103,17 +103,41 @@ describe('Buttons family — registry', () => {
 });
 
 describe('Buttons family — Studio', () => {
+  it('uses a concise breadcrumb hierarchy without a redundant Components crumb', () => {
+    const { container } = render(<Studio />);
+    const labels = (): string[] => [...container.querySelectorAll<HTMLElement>('.sds-crumbs > ol > li')]
+      .map(item => item.textContent.trim());
+    const navTo = (label: string): void => {
+      const target = [...container.querySelectorAll<HTMLButtonElement>('.sds-nav button')]
+        .find(button => button.textContent.trim() === label);
+      if (!target) throw new Error(`No ${label} navigation item is rendered`);
+      fireEvent.click(target);
+    };
+
+    expect(labels()).toEqual(['Studio home', 'Overview']);
+
+    openButtons(container);
+    expect(labels()).toEqual(['Studio home', 'Buttons', 'Action Button']);
+
+    navTo('Breadcrumbs');
+    expect(labels()).toEqual(['Studio home', 'Breadcrumbs']);
+
+    navTo('Theme Generator');
+    expect(labels()).toEqual(['Studio home', 'Brand', 'Theme Generator']);
+  });
+
   it('shows Buttons once, and its members are not sibling cards', () => {
     const { container } = render(<Studio />);
 
     // One family card and one nav row — not one per member in either place.
-    expect(container.querySelectorAll('.sds-card--family')).toHaveLength(1);
-    expect(container.querySelectorAll('.sds-card--family .sds-card__art')).toHaveLength(1);
+    expect(container.querySelectorAll('.sds-card--family')).toHaveLength(2);
+    expect(container.querySelectorAll('.sds-card--family .sds-card__art')).toHaveLength(2);
     expect(container.querySelector('.sds-card--family .sds-card__specimen')).toBeNull();
     expect(container.querySelectorAll('.sds-card__preview .sds-card__art').length).toBe(container.querySelectorAll('.sds-card').length);
     const previewImages = [...container.querySelectorAll<HTMLImageElement>('.sds-card__preview img')];
-    expect(previewImages).toHaveLength(1);
-    expect(previewImages[0]?.closest('.sds-card')?.querySelector('.sds-card__foot strong')?.textContent).toBe('FileInput');
+    expect(previewImages).toHaveLength(2);
+    expect(previewImages.map(image => image.closest('.sds-card')?.querySelector('.sds-card__foot strong')?.textContent))
+      .toEqual(expect.arrayContaining(['FileInput', 'ColorPicker']));
     expect(container.querySelector('.sds-card__preview .ui-btn')).toBeNull();
     const navRows = [...container.querySelectorAll('.sds-nav__item--sub')]
       .map(el => el.textContent);
@@ -135,6 +159,8 @@ describe('Buttons family — Studio', () => {
       card.querySelector('.sds-card__foot strong')?.textContent === name);
 
     expect(cardNamed('FileInput')?.querySelector('.sds-thumb-upload-image')).toBeTruthy();
+    expect(cardNamed('ColorPicker')?.querySelector('.sds-thumb-color-picker__spectrum')).toBeTruthy();
+    expect(cardNamed('Breadcrumbs')?.querySelector('.ui-breadcrumbs')).toBeTruthy();
     expect(cardNamed('Select')?.textContent).toContain('Does not contain');
     expect(cardNamed('Select')?.textContent).toContain('Search');
     expect(cardNamed('Select')?.textContent).toContain('Product');
@@ -175,7 +201,8 @@ describe('Buttons family — Studio', () => {
 
     expect(container.querySelector('.sds-wb__head h2')?.textContent).toBe('Action Button');
     expect(container.querySelector('.sds-family')).toBeNull();
-    expect(container.querySelector('.sds-wb__back')?.textContent).toContain('Buttons');
+    expect(container.querySelector('.sds-component-nav__all')?.textContent).toContain('Components');
+    expect(container.querySelectorAll('.sds-component-nav button')).toHaveLength(3);
     expect(container.querySelector('.sds-button-settings__head strong')?.textContent).toBe('Try the Primary button');
     expect(container.querySelector('.sds-button-picker .is-on strong')?.textContent).toBe('Primary');
     expect(container.querySelector('.sds-button-editor__intro h3')?.textContent).toBe('Variants');
@@ -192,17 +219,18 @@ describe('Buttons family — Studio', () => {
     fireEvent.click(getByRole('button', { name: /AI Action/ }));
 
     expect(getByRole('heading', { name: 'AI Action' })).toBeTruthy();
-    expect(getByRole('button', { name: /Change shape and colors/ })).toBeTruthy();
+    expect(container.querySelector('.ui-ai-action-button__brand-glyph')).not.toBeNull();
     expect(container.querySelector('.sds-owned-button__canvas')).not.toBeNull();
     expect(container.querySelector('.sds-owned-button__settings')?.textContent).toContain('Preview settings');
     expect(queryByRole('radio', { name: /AI/ })).toBeNull();
-    expect(container.querySelectorAll('.sds-button-pattern__examples article')).toHaveLength(2);
+    expect(container.querySelectorAll('.sds-button-use article')).toHaveLength(3);
     expect(getByRole('complementary', { name: 'AI Action settings' })).toBeTruthy();
-    fireEvent.change(getByRole('combobox', { name: 'Emphasis' }), { target: { value: 'primary' } });
-    expect((getByRole('combobox', { name: 'Emphasis' }) as HTMLSelectElement).value).toBe('primary');
+    expect(queryByRole('button', { name: 'Choose AI icon' })).toBeNull();
+    fireEvent.change(getByRole('combobox', { name: 'Icon style' }), { target: { value: 'lucide' } });
     fireEvent.click(getByRole('button', { name: 'Choose AI icon' }));
     fireEvent.click(getByRole('button', { name: 'Use recommended BrainCircuit' }));
-    expect(container.querySelector('.sds-owned-button__stage .sds-preview-icon')).not.toBeNull();
+    expect(container.querySelector('.sds-owned-button__stage .ui-ai-action-button svg')).not.toBeNull();
+    expect(container.querySelector('.sds-button-use')?.textContent).toContain('Ask SIOMAC');
   });
 
   it('keeps Icon Button labels locked while exposing its icon editor', () => {
@@ -289,7 +317,7 @@ describe('Buttons family — Studio', () => {
       expect(container.querySelector('.sds-owned-button__editor')).not.toBeNull();
       expect(container.querySelector('.sds-owned-button__canvas')).not.toBeNull();
       expect(container.querySelector('.sds-owned-button__settings')?.textContent).toContain('Shape and colors');
-      expect(container.querySelector('.sds-owned-button__reference')).not.toBeNull();
+      expect(container.querySelector('.sds-button-use')).not.toBeNull();
       expect(container.querySelector('.sds-owned-button__variants')).not.toBeNull();
       expect(container.querySelector('.sds-owned-button__settings')?.textContent).toContain('Icon treatment');
       expect(container.querySelector('button[aria-label="Choose Icon color"]')).not.toBeNull();
@@ -330,7 +358,8 @@ describe('Buttons family — Studio', () => {
     expect(container.querySelectorAll('.sds-button-picker [role="radio"]')).toHaveLength(6);
     expect(queryByText('Credits')).toBeNull();
 
-    const backToButtons = container.querySelector<HTMLElement>('.sds-wb__back');
+    const backToButtons = [...container.querySelectorAll<HTMLElement>('.sds-crumbs button')]
+      .find(button => button.textContent.trim() === 'Buttons');
     if (!backToButtons) throw new Error('No back to Buttons control is rendered');
     fireEvent.click(backToButtons);
     openButtonMember(container, 'Dropdown Button');
@@ -402,7 +431,7 @@ describe('Buttons family — Studio', () => {
     expect(getByRole('button', { name: 'Clear Trailing icon' })).toBeTruthy();
     fireEvent.click(getByRole('button', { name: 'Clear Trailing icon' }));
     expect(getByRole('button', { name: 'Choose Trailing icon' }).textContent).toContain('No icon');
-    expect(container.querySelector('.sds-publish__status')?.textContent).not.toContain('unpublished');
+    expect(container.querySelector('.sds-publish__status')?.textContent).not.toContain('draft change');
   });
 
   it('uses one Button-family publishing surface and links compound editors to it', () => {
@@ -443,7 +472,7 @@ describe('Buttons family — Studio', () => {
     fireEvent.click(getByRole('radio', { name: /Secondary/ }));
     expect(container.querySelector('#style---ui-button-primary-height-md')).toBeNull();
     expect(container.querySelector('#style---ui-button-secondary-height-md')).toBeNull();
-    expect(container.querySelector('.sds-publish__status')?.textContent).toContain('1 unpublished change');
+    expect(container.querySelector('.sds-publish__status')?.textContent).toContain('1 draft change');
     fireEvent.click(getByRole('button', { name: 'Review & publish' }));
     expect(getByRole('dialog', { name: 'Publish Studio changes?' })).toBeTruthy();
   });

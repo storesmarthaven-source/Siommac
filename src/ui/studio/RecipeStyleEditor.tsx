@@ -1,5 +1,6 @@
-import { type VNode } from 'preact';
-import { useMemo, useState } from 'preact/hooks';
+import { type CSSProperties, type VNode } from 'preact';
+import { createPortal } from 'preact/compat';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { propsForVariant, type ComponentDef, type PropValues, type StyleControl } from '../registry';
 import { type GalleryDraft } from '../gallery/galleryStore';
 import {
@@ -7,39 +8,9 @@ import {
 } from '../../../types/designSystem';
 import { PreviewScope } from './PreviewScope';
 import { LUCIDE_NAMES, LucideIcon, type LucideName } from '../LucideIcon';
+import { ColorPicker } from '../forms/ColorPicker';
 
 type Target = CanonicalButtonVariant;
-
-const COLOR_SWATCHES = ['#1b2d54', '#2f4a7d', '#2563eb', '#0f766e', '#15803d', '#d97706', '#dc2626', '#7c3aed', '#111827', '#64748b', '#e2e8f0', '#ffffff'] as const;
-
-interface HslColor { h: number; s: number; l: number }
-
-function hexToHsl(hex: string): HslColor {
-  const clean = /^#[0-9a-f]{6}$/i.test(hex) ? hex.slice(1) : '000000';
-  const [r, g, b] = [0, 2, 4].map(index => parseInt(clean.slice(index, index + 2), 16) / 255) as [number, number, number];
-  const max = Math.max(r, g, b); const min = Math.min(r, g, b); const delta = max - min;
-  let h = 0;
-  if (delta) {
-    if (max === r) h = 60 * (((g - b) / delta) % 6);
-    else if (max === g) h = 60 * (((b - r) / delta) + 2);
-    else h = 60 * (((r - g) / delta) + 4);
-  }
-  const l = (max + min) / 2;
-  const s = delta === 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
-  return { h: Math.round((h + 360) % 360), s: Math.round(s * 100), l: Math.round(l * 100) };
-}
-
-function hslToHex({ h, s, l }: HslColor): string {
-  const saturation = s / 100; const lightness = l / 100;
-  const chroma = (1 - Math.abs(2 * lightness - 1)) * saturation;
-  const x = chroma * (1 - Math.abs(((h / 60) % 2) - 1));
-  const offset = lightness - chroma / 2;
-  let channels: [number, number, number];
-  if (h < 60) channels = [chroma, x, 0]; else if (h < 120) channels = [x, chroma, 0];
-  else if (h < 180) channels = [0, chroma, x]; else if (h < 240) channels = [0, x, chroma];
-  else if (h < 300) channels = [x, 0, chroma]; else channels = [chroma, 0, x];
-  return `#${channels.map(channel => Math.round((channel + offset) * 255).toString(16).padStart(2, '0')).join('')}`;
-}
 
 function friendly(value: string): string {
   return value.replace(/[-_]/g, ' ').replace(/^./, first => first.toUpperCase());
@@ -105,38 +76,72 @@ function readableThemeValue(value: string, kind: StyleControl['kind']): string {
   return `${size.amount} ${size.unit}`;
 }
 
-export function StudioColorControl({ id, label, value, onChange }: { id: string; label: string; value: string; onChange: (value: string) => void }): VNode {
+export function StudioColorControl({ id, label, value, savedColors = [], onChange, onSaveColor, onRemoveSavedColor }: {
+  id: string; label: string; value: string; savedColors?: readonly string[];
+  onChange: (value: string) => void; onSaveColor?: (color: string) => void; onRemoveSavedColor?: (color: string) => void;
+}): VNode {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const [pickerStyle, setPickerStyle] = useState<CSSProperties>({});
+  const [portalHost, setPortalHost] = useState<Element | null>(null);
   const displayColor = /^#[0-9a-f]{6}$/i.test(value) ? value : '#000000';
-  const hsl = hexToHsl(displayColor);
+
+  useEffect(() => {
+    setPortalHost(triggerRef.current?.closest('.sds') ?? document.body);
+  }, []);
+
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const position = (): void => {
+      const anchor = triggerRef.current?.getBoundingClientRect();
+      if (!anchor) return;
+      const gap = 7;
+      const edge = 12;
+      const width = Math.min(286, window.innerWidth - edge * 2);
+      const below = window.innerHeight - anchor.bottom - edge - gap;
+      const above = anchor.top - edge - gap;
+      const desiredHeight = 320;
+      const flip = below < desiredHeight && above > below;
+      const maxHeight = Math.max(220, Math.min(desiredHeight, flip ? above : below));
+      const left = Math.min(window.innerWidth - width - edge, Math.max(edge, anchor.right - width));
+      const top = flip ? Math.max(edge, anchor.top - maxHeight - gap) : anchor.bottom + gap;
+      setPickerStyle({ width: `${width}px`, maxHeight: `${maxHeight}px`, left: `${left}px`, top: `${top}px` });
+    };
+    const closeOnOutside = (event: PointerEvent): void => {
+      const target = event.target as Node;
+      if (!triggerRef.current?.contains(target) && !pickerRef.current?.contains(target)) setPickerOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape') return;
+      setPickerOpen(false);
+      triggerRef.current?.focus();
+    };
+    position();
+    window.addEventListener('resize', position);
+    document.addEventListener('scroll', position, true);
+    document.addEventListener('pointerdown', closeOnOutside, true);
+    document.addEventListener('keydown', closeOnEscape, true);
+    return () => {
+      window.removeEventListener('resize', position);
+      document.removeEventListener('scroll', position, true);
+      document.removeEventListener('pointerdown', closeOnOutside, true);
+      document.removeEventListener('keydown', closeOnEscape, true);
+    };
+  }, [pickerOpen]);
 
   return (
     <div class="sds-edit-field__control sds-edit-field__control--color">
-      <button type="button" class="sds-color-trigger" aria-label={`Choose ${label} color`} aria-expanded={pickerOpen}
+      <button ref={triggerRef} type="button" class="sds-color-trigger" aria-label={`Choose ${label} color`} aria-expanded={pickerOpen}
         aria-controls={`picker-${id}`} onClick={() => setPickerOpen(open => !open)}>
         <span class="sds-color-trigger__swatch" style={{ backgroundColor: displayColor }} />
         <span>{value}</span><span aria-hidden="true">⌄</span>
       </button>
-      {pickerOpen && (
-        <div class="sds-color-picker" id={`picker-${id}`} role="group" aria-label={`${label} color picker`}>
-          <div class="sds-color-picker__swatches" aria-label="Suggested colors">
-            {COLOR_SWATCHES.map(color => <button type="button" key={color} aria-label={`Set color to ${color}`} aria-pressed={displayColor.toLowerCase() === color}
-              style={{ backgroundColor: color }} onClick={() => onChange(color)} />)}
-          </div>
-          <label class="sds-color-picker__native"><span>Pick any color</span><input type="color" value={displayColor}
-            aria-label={`Pick custom ${label} color`} onInput={event => onChange((event.target as HTMLInputElement).value)}
-            onChange={event => onChange((event.target as HTMLInputElement).value)} /></label>
-          <label class="sds-color-picker__hex"><span>Hex</span><input id={id} value={value}
-            onInput={event => onChange((event.target as HTMLInputElement).value)} /></label>
-          <div class="sds-color-picker__sliders">
-            <label><span>Hue <b>{hsl.h}°</b></span><input class="is-hue" type="range" min="0" max="360" value={hsl.h}
-              onInput={event => onChange(hslToHex({ ...hsl, h: Number((event.target as HTMLInputElement).value) }))} /></label>
-            <label><span>Saturation <b>{hsl.s}%</b></span><input type="range" min="0" max="100" value={hsl.s}
-              onInput={event => onChange(hslToHex({ ...hsl, s: Number((event.target as HTMLInputElement).value) }))} /></label>
-            <label><span>Lightness <b>{hsl.l}%</b></span><input type="range" min="0" max="100" value={hsl.l}
-              onInput={event => onChange(hslToHex({ ...hsl, l: Number((event.target as HTMLInputElement).value) }))} /></label>
-          </div>
-        </div>
+      {pickerOpen && portalHost && createPortal(
+        <div ref={pickerRef} class="sds-color-picker" id={`picker-${id}`} role="group" aria-label={`${label} color picker`} style={pickerStyle}>
+          <ColorPicker value={displayColor} onChange={onChange} alpha savedColors={savedColors} savedColorsLabel="Saved colors"
+            onSaveColor={onSaveColor} onRemoveSavedColor={onRemoveSavedColor} aria-label={`${label} color controls`} />
+        </div>, portalHost,
       )}
     </div>
   );
@@ -164,7 +169,8 @@ function TokenControl({ control, studio }: { control: StyleControl; studio: Gall
       </div>
       {custom ? (
         isColor
-          ? <StudioColorControl id={`style-${control.name}`} label={control.label} value={value} onChange={next => studio.set(control.name, next)} />
+          ? <StudioColorControl id={`style-${control.name}`} label={control.label} value={value} savedColors={studio.savedColors}
+              onSaveColor={studio.addSavedColor} onRemoveSavedColor={studio.removeSavedColor} onChange={next => studio.set(control.name, next)} />
           : control.kind === 'size'
             ? <div class="sds-edit-field__control sds-size-control">
                 <input id={`style-${control.name}`} type="number" min="0" step="0.5" value={size.amount}
@@ -186,6 +192,35 @@ function TokenControl({ control, studio }: { control: StyleControl; studio: Gall
           </strong>
         </div>
       )}
+    </div>
+  );
+}
+
+type HoverColorMode = 'lighter' | 'darker' | 'manual';
+
+function HoverColorControl({ control, studio }: { control: StyleControl; studio: GalleryDraft }): VNode {
+  const value = studio.read(control.name);
+  const baseName = control.name.replace(/-hover$/, '');
+  const mode: HoverColorMode = value.includes('#fff') ? 'lighter' : value.includes('#000') ? 'darker' : 'manual';
+  const setMode = (next: HoverColorMode): void => {
+    if (next === 'lighter') studio.set(control.name, `color-mix(in srgb, var(${baseName}) 88%, #fff)`);
+    else if (next === 'darker') studio.set(control.name, `color-mix(in srgb, var(${baseName}) 88%, #000)`);
+    else {
+      const resolved = resolveThemeValue(value, studio);
+      studio.set(control.name, /^#[0-9a-f]{6}$/i.test(resolved) ? resolved : '#162646');
+    }
+  };
+
+  return (
+    <div class="sds-hover-color">
+      <div class="sds-hover-color__head"><label>Hover color behavior</label><span>Follows this variant’s background</span></div>
+      <div class="sds-hover-color__modes" role="radiogroup" aria-label="Hover color behavior">
+        {(['lighter', 'darker', 'manual'] as const).map(option => <button type="button" role="radio" aria-checked={mode === option}
+          class={mode === option ? 'is-on' : ''} onClick={() => setMode(option)}>{friendly(option)}</button>)}
+      </div>
+      {mode === 'manual'
+        ? <TokenControl control={control} studio={studio} />
+        : <div class="sds-hover-color__derived"><i style={{ background: value }} /><span>Automatically updates when the background changes.</span></div>}
     </div>
   );
 }
@@ -274,8 +309,8 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
 
   return (
     <section class="sds-button-editor" aria-label="Button editor">
-      <div class="sds-button-editor__main">
-        <PreviewScope class="sds-button-preview sds-button-preview--with-variants" attach={studio.attachScope}>
+      <PreviewScope class="sds-button-editor__main" attach={studio.attachScope}>
+        <section class="sds-button-preview sds-button-preview--with-variants">
           <header><div><span>Live preview</span><strong>{selectedSample?.title ?? friendly(target)} button</strong></div><small>Updates instantly</small></header>
           <div class="sds-button-preview__single">
             {def.render?.(previewProps, state === 'default' ? 'default' : state)}
@@ -298,16 +333,16 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
               })}
             </div>
           </section>
-        </PreviewScope>
+        </section>
 
         <section class="sds-button-use" aria-labelledby="button-use-title">
-          <header><h3 id="button-use-title">Common application use</h3><p>Real examples of how these variants work together in SIOMAC.</p></header>
+          <header><h3 id="button-use-title">Common application use</h3><p>Real examples of how this control appears in SIOMAC.</p></header>
           <div class="sds-use-context">
             {(def.examples ?? []).map(example => <article key={example.id}><span class="ctx-kicker">{example.title}</span><div>{example.render()}</div></article>)}
           </div>
         </section>
 
-      </div>
+      </PreviewScope>
 
       <aside class="sds-button-settings" aria-label="Button settings">
         <header class="sds-button-settings__head">
@@ -327,12 +362,15 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
               <div><span>Trailing icon</span><IconPicker id={`trailing-icon-${target}`} label="Trailing icon" value={String(previewProps.iconRight ?? 'None')} variant={target} position="trailing" onChange={value => setPreviewProp('iconRight', value)} /></div>
             </div>
             <div class="sds-button-settings__icon-style"><span>Icon treatment</span><div role="radiogroup" aria-label="Icon treatment">{(['outline', 'circle', 'filled-circle'] as const).map(treatment => <button type="button" role="radio" aria-checked={previewProps.iconTreatment === treatment} class={previewProps.iconTreatment === treatment ? 'is-on' : ''} onClick={() => setPreviewProp('iconTreatment', treatment)}>{friendly(treatment)}</button>)}</div></div>
-            <div class="sds-button-settings__icon-color"><span>Icon color</span><StudioColorControl id={`preview-icon-color-${target}`} label="Icon" value={String(previewProps.iconColor ?? '#1b2d54')} onChange={value => setPreviewProp('iconColor', value)} /></div>
+            <div class="sds-button-settings__icon-color"><span>Icon color</span><StudioColorControl id={`preview-icon-color-${target}`} label="Icon" value={String(previewProps.iconColor ?? '#1b2d54')} savedColors={studio.savedColors}
+              onSaveColor={studio.addSavedColor} onRemoveSavedColor={studio.removeSavedColor} onChange={value => setPreviewProp('iconColor', value)} /></div>
         </section>
 
         <div class="sds-button-settings__body">
           {groups.length ? groups.map(group => (
-            <section key={group.label}><h4>{friendlyGroup(group.label)}</h4>{group.controls.map(control => <TokenControl key={control.name} control={control} studio={studio} />)}</section>
+            <section key={group.label}><h4>{friendlyGroup(group.label)}</h4>{group.controls.map(control => control.name.endsWith('-bg-hover')
+              ? <HoverColorControl key={control.name} control={control} studio={studio} />
+              : <TokenControl key={control.name} control={control} studio={studio} />)}</section>
           )) : <div class="sds-button-settings__empty"><strong>This state uses the default style</strong><p>There is nothing extra to change here.</p></div>}
         </div>
 

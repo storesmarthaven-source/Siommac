@@ -16,6 +16,7 @@
 
 import { type VNode } from 'preact';
 import { dialog } from '@lib/dialog';
+import { AiActionButton } from '@ui';
 import { AccountPill } from './AccountPill';
 
 function openSearch(): void {
@@ -74,9 +75,7 @@ export function UserPill({ icon, title, sub, module, crumbs = [], meta = [], nav
           </button>
           <kbd class="app-topbar-kbd">⌘K</kbd>
         </div>
-        <button type="button" class="app-topbar-ai" onClick={openAI} title="AI Assistant" aria-label="AI Assistant">
-          <span class="app-topbar-ai-glyph" aria-hidden="true" />
-        </button>
+        <AiActionButton onClick={openAI} />
         <div class="app-topbar-pill"><AccountPill iconsFirst /></div>
       </div>
 

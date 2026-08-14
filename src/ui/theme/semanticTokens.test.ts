@@ -44,6 +44,7 @@ const RECIPES = [
   'src/ui/forms/listbox.recipe.css',
   'src/ui/forms/multiSelect.recipe.css',
   'src/ui/forms/fileInput.recipe.css',
+  'src/ui/forms/colorPicker.recipe.css',
 ];
 
 /** The whole cascade, in app load order: palette → foundation → semantic → recipes. */
