@@ -364,6 +364,15 @@ export function Workbench({ def, family, onSelectMember, draft }: WorkbenchProps
   const specimen = (props: PropValues, state: UiState = 'default'): VNode | null =>
     def.render ? def.render(props, state) : null;
 
+  const previewGroups = groupControls(def, def.previewAxis ? [def.previewAxis] : []);
+  const quickPreviewNames = new Set(['label', 'text', 'placeholder', 'size', 'tone']);
+  const quickPreviewGroups = previewGroups
+    .map(group => ({ ...group, entries: group.entries.filter(([name]) => quickPreviewNames.has(name)) }))
+    .filter(group => group.entries.length > 0);
+  const morePreviewGroups = previewGroups
+    .map(group => ({ ...group, entries: group.entries.filter(([name]) => !quickPreviewNames.has(name)) }))
+    .filter(group => group.entries.length > 0);
+
   return (
     <div class={`sds-wb sds-wb--${def.id}`}>
       {/* On a family page the heading is the FAMILY. The selector names the
@@ -435,12 +444,16 @@ export function Workbench({ def, family, onSelectMember, draft }: WorkbenchProps
           <aside class="sds-button-settings" aria-label={`${def.name} properties`}>
             <header class="sds-button-settings__head"><div><span>Preview settings</span><strong>Try the {def.name}</strong></div></header>
             <section class="sds-button-settings__example" aria-label="Preview options">
-              <div class="sds-button-settings__example-head"><div><h4>Preview options</h4><p>These choices only change the example.</p></div><button type="button" onClick={() => { setValues(buttonFamilyPreviewProps(def)); setStateById(previous => ({ ...previous, [def.id]: 'default' })); }}>Reset</button></div>
+              <div class="sds-button-settings__example-head"><div><h4>Preview options</h4><p>Try this example without changing the app.</p></div><button type="button" onClick={() => { setValues(buttonFamilyPreviewProps(def)); setStateById(previous => ({ ...previous, [def.id]: 'default' })); }}>Reset</button></div>
               {def.states && def.states.length > 1 && <div class="sds-button-settings__state"><label for={`${def.id}-preview-state`}>State</label><select id={`${def.id}-preview-state`} value={previewState} onChange={event => setStateById(previous => ({ ...previous, [def.id]: (event.target as HTMLSelectElement).value as UiState }))}>{def.states.map(state => <option value={state}>{friendlyValue(state)}</option>)}</select></div>}
             </section>
             <div class="sds-button-settings__body">
-              {groupControls(def, def.previewAxis ? [def.previewAxis] : []).map(group => <section key={group.title}><h4>{group.title}</h4>{group.entries.map(([name, control]) => <Control key={name} name={name} control={control} value={shown[name] ?? ''} onChange={value => set(name, value)} />)}</section>)}
-              {def.style && def.style.length > 0 && <><div class="sds-button-settings__mode"><strong>Component style</strong><span>Saved to this design-system draft</span></div><GeneratedStyleControls def={def} draft={draft} /></>}
+              {quickPreviewGroups.map(group => <section key={group.title}><h4>{group.title}</h4>{group.entries.map(([name, control]) => <Control key={name} name={name} control={control} value={shown[name] ?? ''} onChange={value => set(name, value)} />)}</section>)}
+              {morePreviewGroups.length > 0 && <details class="sds-button-settings__advanced">
+                <summary><span>More preview options</span><small>{morePreviewGroups.reduce((total, group) => total + group.entries.length, 0)} settings</small></summary>
+                <div>{morePreviewGroups.map(group => <section key={group.title}><h4>{group.title}</h4>{group.entries.map(([name, control]) => <Control key={name} name={name} control={control} value={shown[name] ?? ''} onChange={value => set(name, value)} />)}</section>)}</div>
+              </details>}
+              {def.style && def.style.length > 0 && <><div class="sds-button-settings__mode"><strong>Component style</strong><span>Changes are saved to the design-system draft.</span></div><GeneratedStyleControls def={def} draft={draft} /></>}
             </div>
           </aside>
         </div>
@@ -489,21 +502,28 @@ function VariantSpecimens({ def, specimen, selected, onSelect }: {
   return (
     <div class="sds-ov">
       {axis && values.length > 0 && (
-        <Block title={axisControl?.label ?? 'Variants'} hint={`Select the ${axisControl?.label.toLowerCase() ?? 'variant'} to preview and edit it.`}>
-          <div class="sds-axis" role="radiogroup" aria-label={`${def.name} ${axisControl?.label ?? 'variants'}`}>
-            {values.map(v => {
-              const sample = samples?.find(item => item.value === v);
-              return (
-                <button type="button" role="radio" aria-checked={String(selected) === v}
-                  class={`sds-axis__cell${String(selected) === v ? ' is-on' : ''}`} key={v}
-                  onClick={() => onSelect(axis, v)}>
-                  <div class="sds-axis__spec">{specimen(propsForAxis(def, axis, v))}</div>
-                  <strong>{sample?.title ?? friendlyValue(v)}</strong>
-                  {sample?.description && <span>{sample.description}</span>}
-                </button>
-              );
-            })}
-          </div>
+        <Block title="Variants" hint="Choose a version to preview and edit.">
+          {values.length > 6 ? <label class="sds-axis-select">
+            <span>Variant</span>
+            <select value={String(selected ?? values[0])} onChange={event => onSelect(axis, (event.target as HTMLSelectElement).value)}>
+              {values.map(v => {
+                const sample = samples?.find(item => item.value === v);
+                return <option value={v} key={v}>{sample?.title ?? friendlyValue(v)}</option>;
+              })}
+            </select>
+          </label> : <div class="sds-axis" role="radiogroup" aria-label={`${def.name} ${axisControl?.label ?? 'variants'}`}>
+              {values.map(v => {
+                const sample = samples?.find(item => item.value === v);
+                return (
+                  <button type="button" role="radio" aria-checked={String(selected) === v}
+                    class={`sds-axis__cell${String(selected) === v ? ' is-on' : ''}`} key={v}
+                    onClick={() => onSelect(axis, v)}>
+                    <div class="sds-axis__spec">{specimen(propsForAxis(def, axis, v))}</div>
+                    <strong>{sample?.title ?? friendlyValue(v)}</strong>
+                  </button>
+                );
+              })}
+            </div>}
         </Block>
       )}
 

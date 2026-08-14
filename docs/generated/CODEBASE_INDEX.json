@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "0a03c97a2fd55caab850735b7b45c4f6b3129dff",
+    "head": "0c1ffd731336043ed529054171f46963d71e5580",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "74db379372c0bf54dc4fd3ad",
+    "fingerprint": "6006671a3e4f9bda0dd77789",
     "indexedFiles": 1871
   },
   "summary": {
@@ -9526,8 +9526,8 @@
       "path": "src/ui/studio/Workbench.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 534,
-      "hash": "17a2839d3c50f937"
+      "lines": 554,
+      "hash": "9c63de195ad76d4f"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -151762,7 +151762,7 @@
       "name": "Block",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 462,
+      "line": 475,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151774,7 +151774,7 @@
       "name": "VariantSpecimens",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 477,
+      "line": 490,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151786,7 +151786,7 @@
       "name": "UsageSpecimens",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 514,
+      "line": 534,
       "module": "platform",
       "exported": false,
       "container": "",
