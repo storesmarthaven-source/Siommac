@@ -629,10 +629,10 @@
 .sds-button-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
 .sds-button-picker > button { position: relative; min-width: 0; min-height: 98px; overflow: hidden; display: flex; flex-direction: column; align-items: stretch; padding: 0; border: 1px solid #e0e4ea; border-radius: 9px; background: #fff; color: var(--sds-ink); font: inherit; cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
 .sds-button-picker > button:hover { border-color: #d2d7de; box-shadow: 0 3px 8px rgb(15 23 42 / .045); transform: translateY(-1px); }.sds-button-picker > button.is-on { border-color: #d1d6de; background: #fff; box-shadow: none; }
-.sds-button-picker > button::before { content: ""; position: absolute; z-index: 2; top: 8px; left: 8px; width: 13px; height: 13px; border: 1px solid #c4cbd5; border-radius: 50%; background: #fff; opacity: 0; transform: scale(0); transition: opacity .15s ease, transform .2s ease, border-color .15s ease, background .15s ease; }
+.sds-button-picker > button::before { content: ""; position: absolute; z-index: 2; top: 8px; left: 8px; width: 13px; height: 13px; border: 1px solid #d0d2d5; border-radius: 50%; background: #fff; opacity: 0; transform: scale(0); transition: opacity .15s ease, transform .2s ease, border-color .15s ease, background .15s ease; }
 .sds-button-picker > button::after { content: none; }
-.sds-button-picker > button:hover::before, .sds-button-picker > button:focus-visible::before { opacity: 1; transform: scale(1); border-color: #aeb8c6; background: transparent; }
-.sds-button-picker > button.is-on::before { opacity: 1; transform: scale(1); border-color: #9cabc1; background: #aebbd0; }
+.sds-button-picker > button:hover::before, .sds-button-picker > button:focus-visible::before { opacity: 1; transform: scale(1); border-color: #c7c9cc; background: transparent; }
+.sds-button-picker > button.is-on::before { opacity: 1; transform: scale(1); border-color: #c1c4c8; background: #d7d9dc; }
 .sds-button-picker > button:focus-visible { outline: 0; border-color: #c5cbd4; box-shadow: 0 0 0 2px rgb(148 163 184 / .13); }
 .sds-button-picker__preview { flex: 1; min-height: 64px; display: grid; place-items: center; padding: 9px 8px 6px; }
 .sds-button-picker__copy { display: grid; gap: 1px; padding: 6px 7px 7px; border-top: 1px solid #e8ebef; background: #fcfcfd; }
@@ -1028,13 +1028,13 @@
 .sds-owned-button__variants article.is-on { border-color: #d1d6de; box-shadow: none; }
 .sds-owned-button__variants article::before {
   content: ""; position: absolute; z-index: 2; top: 8px; left: 8px; width: 13px; height: 13px;
-  border: 1px solid #c4cbd5; border-radius: 50%; background: #fff; opacity: 0; transform: scale(0);
+  border: 1px solid #d0d2d5; border-radius: 50%; background: #fff; opacity: 0; transform: scale(0);
   transition: opacity .15s ease, transform .2s ease, border-color .15s ease, background .15s ease;
 }
 .sds-owned-button__variants article::after { content: none; }
 .sds-owned-button__variants article:hover::before,
-.sds-owned-button__variants article:has(> button:focus-visible)::before { opacity: 1; transform: scale(1); border-color: #aeb8c6; background: transparent; }
-.sds-owned-button__variants article.is-on::before { opacity: 1; transform: scale(1); border-color: #9cabc1; background: #aebbd0; }
+.sds-owned-button__variants article:has(> button:focus-visible)::before { opacity: 1; transform: scale(1); border-color: #c7c9cc; background: transparent; }
+.sds-owned-button__variants article.is-on::before { opacity: 1; transform: scale(1); border-color: #c1c4c8; background: #d7d9dc; }
 .sds-owned-button__variants article:has(> button:focus-visible) {
   border-color: #c5cbd4; box-shadow: 0 0 0 2px rgb(148 163 184 / .13);
 }
