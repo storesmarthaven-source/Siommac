@@ -145,7 +145,8 @@
   .ui-file-field[data-ui-state~='hover'] { border-color: var(--ui-control-border-hover); }
   .ui-file-field:focus-within,
   .ui-file-field[data-ui-state~='focus'] {
-    border-color: var(--ui-control-border-focus);
+    border-color: color-mix(in srgb, var(--ui-control-border-focus) 40%, transparent);
+    background: var(--ui-control-bg-focus);
     box-shadow: 0 0 0 var(--ui-focus-ring-width) var(--ui-focus-ring-color);
   }
   .ui-file-field__value,
