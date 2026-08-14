@@ -80,9 +80,8 @@ export function BrandOverview({ draft, logoUrl, onUploadLogo }: {
 }): VNode {
   /* Destructured up front: the lint rule cannot tell a function-valued member
      of a PROP object from a ref callback, and these read better besides. */
-  const { read, attachScope, replaceGroup, publish: publishDraft, dirtyCount } = draft;
+  const { read, attachScope, replaceGroup, dirtyCount } = draft;
   const [direction, setDirection] = useState<ThemeDirection>('balanced');
-  const [publishing, setPublishing] = useState(false);
   const [advanced, setAdvanced] = useState(false);
 
   /* The seeds in force — drafted if the operator is mid-edit, published
@@ -105,11 +104,6 @@ export function BrandOverview({ draft, logoUrl, onUploadLogo }: {
     setDirection(id);
     if (!build) return;
     replaceGroup(brandTokenNames(), tokensForDirection(build.tokens, id));
-  };
-
-  const publish = async (): Promise<void> => {
-    setPublishing(true);
-    try { await publishDraft(); } finally { setPublishing(false); }
   };
 
   const primary = read('--ui-color-action-primary');
@@ -142,11 +136,6 @@ export function BrandOverview({ draft, logoUrl, onUploadLogo }: {
                 onClick={() => applyDirection(d.id)}>{d.label}</button>
             ))}
           </div>
-          <button type="button" class="sds-bo__publish"
-            disabled={dirtyCount === 0 || publishing}
-            onClick={() => { void publish(); }}>
-            {publishing ? 'Publishing…' : 'Apply & Publish'}
-          </button>
         </div>
       </header>
       <p class="sds-bo__blurb">{directionById(direction).blurb}</p>
@@ -154,7 +143,7 @@ export function BrandOverview({ draft, logoUrl, onUploadLogo }: {
       {!theme && (
         <div class="sds-placeholder">
           <h3>No brand theme yet</h3>
-          <p>Upload a company logo in <strong>Advanced Theme Details</strong> below to extract a palette. Nothing is published until you choose Apply &amp; Publish.</p>
+          <p>Upload a company logo in <strong>Advanced Theme Details</strong> below to extract a palette. Use the Studio publishing bar when the theme is ready.</p>
         </div>
       )}
 

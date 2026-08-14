@@ -24,7 +24,7 @@
  */
 
 import { type VNode } from 'preact';
-import { useCallback, useMemo, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { LucideIcon } from '../LucideIcon';
 import { Button } from '../primitives/Button';
 import { TextInput } from '../primitives/TextInput';
@@ -167,6 +167,11 @@ export function BrandThemePanel({ draft, logoUrl, onUploadLogo }: BrandThemePane
     [draft.values, seeds],
   );
   const blocked = publishBlocked(results);
+  const blockedIds = blocked.map(result => result.id).join('|');
+  useEffect(() => {
+    draft.setPublishBlockers('brand-contrast', blocked.map(result => `${result.label} does not meet its required contrast ratio.`));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable ids represent the blocker set
+  }, [blockedIds, draft.setPublishBlockers]);
 
   return (
     <div class="ui-brand">
@@ -373,14 +378,7 @@ export function BrandThemePanel({ draft, logoUrl, onUploadLogo }: BrandThemePane
             {blocked.length} critical contrast {blocked.length === 1 ? 'failure' : 'failures'} — fix before publishing
           </span>
         )}
-        <Button
-          variant="primary"
-          disabled={draft.loading || blocked.length > 0 || draft.dirtyCount === 0}
-          onClick={() => { void draft.publish(); }}
-          iconLeft={<LucideIcon name="Check" />}
-        >
-          Apply &amp; publish
-        </Button>
+        <span class="ui-brand-note">Save or publish from the Studio bar above.</span>
       </div>
     </div>
   );

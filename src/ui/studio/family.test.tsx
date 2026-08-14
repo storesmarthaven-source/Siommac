@@ -382,7 +382,7 @@ describe('Buttons family — Studio', () => {
     expect(getByRole('button', { name: 'Clear Trailing icon' })).toBeTruthy();
     fireEvent.click(getByRole('button', { name: 'Clear Trailing icon' }));
     expect(getByRole('button', { name: 'Choose Trailing icon' }).textContent).toContain('No icon');
-    expect(container.querySelector('.sds-button-settings__actions > span')?.textContent).toBe('No unpublished changes');
+    expect(container.querySelector('.sds-publish__status')?.textContent).not.toContain('unpublished');
   });
 
   it('uses one Button-family publishing surface and links compound editors to it', () => {
@@ -390,11 +390,13 @@ describe('Buttons family — Studio', () => {
     openButtonBrowser(container);
     openButtonMember(container, 'Dropdown Button');
 
-    expect(queryByText('Publish')).toBeNull();
+    expect(container.querySelectorAll('.sds-publish')).toHaveLength(1);
+    expect(container.querySelector('.sds-owned-button__settings .sds-button-settings__actions')).toBeNull();
+    expect(getByRole('button', { name: 'Review & publish' })).toBeTruthy();
     fireEvent.click(getByRole('button', { name: 'Change shape and colors' }));
 
     expect(container.querySelector('.sds-button-settings__head')?.textContent).toContain('Preview settings');
-    expect(getByRole('button', { name: 'Publish' })).toBeTruthy();
+    expect(getByRole('button', { name: 'Review & publish' })).toBeTruthy();
     expect(queryByText('Preview example')).toBeNull();
     expect(getByRole('heading', { name: 'Preview options' })).toBeTruthy();
   });
@@ -421,6 +423,8 @@ describe('Buttons family — Studio', () => {
     fireEvent.click(getByRole('radio', { name: /Secondary/ }));
     expect(container.querySelector('#style---ui-button-primary-height-md')).toBeNull();
     expect(container.querySelector('#style---ui-button-secondary-height-md')).toBeNull();
-    expect(container.querySelector('.sds-button-settings__actions > span')?.textContent).toContain('1 change ready to save');
+    expect(container.querySelector('.sds-publish__status')?.textContent).toContain('1 unpublished change');
+    fireEvent.click(getByRole('button', { name: 'Review & publish' }));
+    expect(getByRole('dialog', { name: 'Publish Studio changes?' })).toBeTruthy();
   });
 });

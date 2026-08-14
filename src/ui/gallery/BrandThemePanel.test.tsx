@@ -114,23 +114,23 @@ describe('Brand Theme workspace', () => {
     expect(document.documentElement.style.getPropertyValue('--ui-color-action-primary')).toBe('');
   });
 
-  it('allows publishing when every critical pairing passes', async () => {
-    const { container } = mountPanel();
+  it('clears the Studio publishing gate when every critical pairing passes', async () => {
+    const { container, draft } = mountPanel();
     await act(async () => { await Promise.resolve(); await Promise.resolve(); });
     void act(() => { setSeed(container as HTMLElement, 'Primary seed hex', '#0F766E'); });
 
     expect(container.textContent).not.toContain('critical contrast');
-    expect(publishButton(container as HTMLElement).disabled).toBe(false);
+    expect(draft().publishBlockers).toHaveLength(0);
   });
 
   it('blocks publishing when a critical pairing cannot be measured', () => {
     // No neutrals seeded → link and selection are judged against an unresolvable
     // surface. An unmeasurable pairing must never read as a pass.
-    const { container } = mountPanel(false);
+    const { container, draft } = mountPanel(false);
     void act(() => { setSeed(container as HTMLElement, 'Primary seed hex', '#0F766E'); });
 
     expect(container.textContent).toContain('critical contrast');
-    expect(publishButton(container as HTMLElement).disabled).toBe(true);
+    expect(draft().publishBlockers.length).toBeGreaterThan(0);
   });
 
   it('blocks publishing when the navigation pair fails outright', () => {
@@ -140,7 +140,7 @@ describe('Brand Theme workspace', () => {
     void act(() => { draft().set('--ui-color-nav-background', '#FFFFFF'); });
 
     expect(container.textContent).toContain('critical contrast');
-    expect(publishButton(container as HTMLElement).disabled).toBe(true);
+    expect(draft().publishBlockers.length).toBeGreaterThan(0);
   });
 
   it('Reset removes the brand it wrote and leaves unrelated draft edits alone', () => {
@@ -241,10 +241,6 @@ async function selectLogoFile(container: HTMLElement): Promise<void> {
     // render — flush a real timer, not just a microtask.
     await new Promise(r => setTimeout(r, 20));
   });
-}
-
-function publishButton(container: HTMLElement): HTMLButtonElement {
-  return byText(container, 'button', 'Apply & publish') as HTMLButtonElement;
 }
 
 function byText(container: HTMLElement, selector: string, text: string): HTMLElement {

@@ -31,6 +31,8 @@ export interface GalleryDraft {
   publishedVersion: number;
   serverDraft: DesignSystemDraft | null;
   validation: DesignSystemValidation | null;
+  publishBlockers: readonly string[];
+  setPublishBlockers: (source: string, blockers: readonly string[]) => void;
   saveDraft: () => Promise<DesignSystemDraft>;
   publish: (summary?: string) => Promise<void>;
   history: () => Promise<DesignSystemRevision[]>;
@@ -67,6 +69,11 @@ export function useGalleryDraft(): GalleryDraft {
   });
   const [serverDraft, setServerDraft] = useState<DesignSystemDraft | null>(null);
   const [validation, setValidation] = useState<DesignSystemValidation | null>(null);
+  const [blockersBySource, setBlockersBySource] = useState<Record<string, readonly string[]>>({});
+  const publishBlockers = Object.values(blockersBySource).flat();
+  const setPublishBlockers = useCallback((source: string, blockers: readonly string[]) => {
+    setBlockersBySource(previous => ({ ...previous, [source]: [...blockers] }));
+  }, []);
 
   const attachScope = useCallback((el: HTMLElement | null) => { setScopeEl(el); }, []);
 
@@ -125,7 +132,7 @@ export function useGalleryDraft(): GalleryDraft {
     setPreviewLinks(prev => { const next = { ...prev }; Reflect.deleteProperty(next, name); return next; });
     setRemoved(prev => { const next = new Set(prev); next.delete(name); return next; });
   }, []);
-  const resetAll = useCallback(() => { clearAllScopedOverrides(scopeEl); setValues({}); setPreviewLinks({}); setRemoved(new Set()); }, [scopeEl]);
+  const resetAll = useCallback(() => { clearAllScopedOverrides(scopeEl); setValues({}); setPreviewLinks({}); setRemoved(new Set()); setBlockersBySource({}); }, [scopeEl]);
 
   const configuration = useCallback((): DesignSystemConfigurationV1 => {
     const next = cloneConfiguration(published.configuration);
@@ -153,17 +160,18 @@ export function useGalleryDraft(): GalleryDraft {
 
   const publish = useCallback(async (summary = 'Design system update from Studio') => {
     if (loading) throw new Error('Studio configuration is still loading.');
+    if (publishBlockers.length > 0) throw new Error(publishBlockers.join(' '));
     setSaving(true); setError(null);
     try {
       const saved = await saveDesignSystemDraft(configuration(), serverDraft?.revision ?? 0);
       const next = await publishDesignSystemDraft(saved.id, saved.revision, summary);
       setPublished(next); setServerDraft(null); setValidation(null);
       const runtime = configurationToOverrides(next.configuration);
-      applyThemeOverrides(runtime); cacheTheme(runtime); clearAllScopedOverrides(scopeEl); setValues({}); setPreviewLinks({}); setRemoved(new Set());
+      applyThemeOverrides(runtime); cacheTheme(runtime); clearAllScopedOverrides(scopeEl); setValues({}); setPreviewLinks({}); setRemoved(new Set()); setBlockersBySource({});
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Publish failed.'); throw reason;
     } finally { setSaving(false); }
-  }, [configuration, serverDraft, scopeEl, loading]);
+  }, [configuration, serverDraft, scopeEl, loading, publishBlockers]);
 
   const history = useCallback(async () => {
     return loadDesignSystemHistory();
@@ -172,7 +180,7 @@ export function useGalleryDraft(): GalleryDraft {
     setSaving(true); setError(null);
     try {
       const next = await rollbackDesignSystem(version, summary);
-      setPublished(next); setServerDraft(null); setValidation(null); setValues({}); setPreviewLinks({}); setRemoved(new Set());
+      setPublished(next); setServerDraft(null); setValidation(null); setValues({}); setPreviewLinks({}); setRemoved(new Set()); setBlockersBySource({});
       const runtime = configurationToOverrides(next.configuration);
       applyThemeOverrides(runtime); cacheTheme(runtime); clearAllScopedOverrides(scopeEl);
     } catch (reason) {
@@ -195,7 +203,7 @@ export function useGalleryDraft(): GalleryDraft {
 
   return {
     values, dirtyCount: Object.keys(values).length + removed.size, read, set, link, replaceGroup, revert, resetAll,
-    loading, saving, error, publishedVersion: published.version, serverDraft, validation,
+    loading, saving, error, publishedVersion: published.version, serverDraft, validation, publishBlockers, setPublishBlockers,
     saveDraft, publish, history, rollback, attachScope, exportJson, exportCss, importJson,
   };
 }

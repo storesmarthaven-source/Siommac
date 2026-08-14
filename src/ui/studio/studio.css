@@ -92,16 +92,22 @@
    refuses to shrink below its content, so the row never bounds .sds-main and
    its overflow-y:auto never engages — the page simply cannot scroll. */
 .sds-col { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; }
-.sds-top {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 12px 24px; border-bottom: 1px solid var(--sds-line);
-}
+.sds-top { display: grid; border-bottom: 1px solid var(--sds-line); background: #fff; }
+.sds-top__navrow { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 24px; }
 .sds-crumbs { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--sds-ink-3); }
 .sds-crumbs .is-current {
   padding: 2px 8px; border-radius: 6px;
   background: #f5f5f5; color: var(--sds-ink); font-weight: 500;
 }
 .sds-top__meta { font-size: 13px; color: var(--sds-ink-3); }
+.sds-publish { min-width: 0; display: grid; grid-template-columns: minmax(240px, 1fr) auto auto; align-items: center; gap: 8px 16px; padding: 12px 24px; border-top: 1px solid #ededed; background: #fafafa; }
+.sds-publish__intro { min-width: 0; display: flex; align-items: center; gap: 10px; }.sds-publish__intro > span { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border: 1px solid #dedede; border-radius: 8px; background: #fff; color: #444a53; }.sds-publish__intro > div { min-width: 0; display: grid; gap: 2px; }.sds-publish__intro strong { color: #272b32; font-size: 14px; line-height: 1.25; }.sds-publish__intro small { overflow: hidden; color: #70757e; font-size: 12px; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
+.sds-publish__status { min-height: 36px; display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; border: 1px solid #dfdfdf; border-radius: 8px; background: #fff; color: #4c515a; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.sds-publish__status i { width: 7px; height: 7px; border-radius: 50%; background: #a3a3a3; }.sds-publish.is-dirty .sds-publish__status i { background: #d18b35; }.sds-publish__status small { padding-left: 6px; border-left: 1px solid #dedede; color: #7a7f88; font-size: 9px; }
+.sds-publish__actions { display: inline-flex; align-items: center; gap: 7px; }.sds-publish__actions button { min-height: 36px; padding: 7px 11px; border: 1px solid #d5d5d5; border-radius: 8px; background: #fff; color: #30343b; font: inherit; font-size: 13px; font-weight: 650; white-space: nowrap; cursor: pointer; }.sds-publish__actions button:hover:not(:disabled) { border-color: #b8b8b8; background: #f7f7f7; }.sds-publish__actions button.is-quiet { border-color: transparent; background: transparent; color: #5e646d; }.sds-publish__actions button.is-primary { min-width: 132px; border-color: #1b2d54; background: #1b2d54; color: #fff; }.sds-publish__actions button:disabled { opacity: .4; cursor: not-allowed; }
+.sds-publish__message { grid-column: 1 / -1; justify-self: end; max-width: 720px; overflow: hidden; color: #357052; font-size: 12px; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }.sds-publish__message.is-error { color: #a13a32; }
+@media (max-width: 1150px) { .sds-publish { grid-template-columns: minmax(180px, 1fr) auto; }.sds-publish__status { display: none; }.sds-publish__intro small, .sds-top__meta { display: none; } }
+@media (max-width: 820px) { .sds-publish { grid-template-columns: 1fr; }.sds-publish__actions { display: grid; grid-template-columns: 1fr 1fr; }.sds-publish__actions button { width: 100%; }.sds-publish__message { justify-self: stretch; max-width: none; white-space: normal; }.sds-top__navrow { padding-inline: 16px; }.sds-publish { padding-inline: 16px; } }
 
 .sds-main { min-width: 0; min-height: 0; padding: 32px 24px 64px; overflow-y: auto; }
 
@@ -295,12 +301,6 @@
   font-size: 12px; color: var(--sds-ink-2); text-align: center;
 }
 .sds-bo__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.sds-bo__publish {
-  min-height: 40px; padding: 9px 16px;
-  border: 1px solid var(--sds-accent); border-radius: 8px;
-  background: var(--sds-accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer;
-}
-.sds-bo__publish:disabled { background: #eef1f6; border-color: var(--sds-line); color: var(--sds-ink-2); cursor: not-allowed; }
 .sds-bo__blurb { max-width: 88ch; margin: 10px 0 22px; color: var(--sds-ink-2); }
 
 .sds-bo__section { margin-bottom: 30px; }
@@ -706,7 +706,6 @@
 .sds-color-picker__sliders input[type='range'] { width: 100%; height: 5px; margin: 0; border-radius: 999px; accent-color: #2f4a7d; cursor: pointer; }.sds-color-picker__sliders input.is-hue { appearance: none; background: linear-gradient(90deg, #ef4444, #eab308, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444); }.sds-color-picker__sliders input.is-hue::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; border: 2px solid #fff; border-radius: 50%; background: #2f4a7d; box-shadow: 0 0 0 1px rgb(15 23 42 / .25); }
 .sds-button-settings__empty { margin: 15px; padding: 16px; border-radius: 8px; background: #f6f7f9; }.sds-button-settings__empty p { margin: 4px 0 0; color: var(--sds-ink-3); font-size: 12px; }
 .sds-button-settings__inherit { flex: none; margin: 0; padding: 10px 15px; border-top: 1px solid var(--sds-line); color: var(--sds-ink-3); font-size: 10px; }
-.sds-button-settings__actions { flex: none; display: grid; gap: 8px; padding: 11px 12px; border-top: 1px solid var(--sds-line); background: #fafbfc; }.sds-button-settings__actions > span { color: var(--sds-ink-3); font-size: 10px; }.sds-button-settings__actions > div { display: flex; gap: 6px; }.sds-button-settings__actions button { flex: 1; min-height: 35px; padding: 7px 8px; border: 1px solid #d4d9e1; border-radius: 7px; background: #fff; color: var(--sds-ink-2); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }.sds-button-settings__actions button.is-primary { border-color: #22375f; background: #22375f; color: #fff; }.sds-button-settings__actions button:disabled { opacity: .45; cursor: not-allowed; }
 
 @media (max-width: 1050px) { .sds-button-editor { grid-template-columns: 1fr; }.sds-button-settings { position: static; max-height: none; }.sds-button-settings__body { overflow: visible; }.sds-button-picker { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 700px) { .sds-button-editor__intro { display: grid; }.sds-button-editor__meta { flex-wrap: wrap; }.sds-button-picker, .sds-button-preview__variants .sds-button-picker { grid-template-columns: 1fr 1fr; }.sds-button-preview__single, .sds-button-preview__all { min-height: 250px; padding: 26px; } }
@@ -914,7 +913,7 @@
 @media (max-width: 900px) { .sds-button-pattern__editor { grid-template-columns: 1fr; }.sds-button-pattern__settings { position: static; } }
 /* Focused Action Button editor — same framing and readable type as pattern editors. */
 .sds-wb--button { max-width: 1180px; margin: 0 auto; }.sds-wb--button > .sds-wb__head { margin: 10px 0 24px; padding-bottom: 18px; border-bottom: 1px solid #e2e5ea; }.sds-wb--button > .sds-wb__head h2 { font-size: 30px; letter-spacing: -.025em; }.sds-wb--button > .sds-wb__head p { max-width: 720px; color: var(--sds-ink-3); font-size: 14px; line-height: 1.55; }
-.sds-wb--button .sds-button-preview > header span, .sds-wb--button .sds-button-settings__head span { font-size: 11px; }.sds-wb--button .sds-button-preview > header strong { font-size: 14px; }.sds-wb--button .sds-button-picker > button > strong { font-size: 13px; }.sds-wb--button .sds-button-picker > button > small { font-size: 11px; }.sds-wb--button .sds-button-settings__example-head h4 { font-size: 13px; }.sds-wb--button .sds-button-settings__example-head p, .sds-wb--button .sds-button-settings__example-head button { font-size: 11px; }.sds-wb--button .sds-button-settings__example label > span, .sds-wb--button .sds-button-settings__example-icons > div > span, .sds-wb--button .sds-button-settings__icon-style > span, .sds-wb--button .sds-button-settings__icon-color > span { font-size: 11px; }.sds-wb--button .sds-icon-trigger__main, .sds-wb--button .sds-button-settings__icon-style button { font-size: 11px; }.sds-wb--button .sds-theme-switch, .sds-wb--button .sds-edit-field__theme span, .sds-wb--button .sds-button-settings__inherit, .sds-wb--button .sds-button-settings__actions > span { font-size: 11px; }
+.sds-wb--button .sds-button-preview > header span, .sds-wb--button .sds-button-settings__head span { font-size: 11px; }.sds-wb--button .sds-button-preview > header strong { font-size: 14px; }.sds-wb--button .sds-button-picker > button > strong { font-size: 13px; }.sds-wb--button .sds-button-picker > button > small { font-size: 11px; }.sds-wb--button .sds-button-settings__example-head h4 { font-size: 13px; }.sds-wb--button .sds-button-settings__example-head p, .sds-wb--button .sds-button-settings__example-head button { font-size: 11px; }.sds-wb--button .sds-button-settings__example label > span, .sds-wb--button .sds-button-settings__example-icons > div > span, .sds-wb--button .sds-button-settings__icon-style > span, .sds-wb--button .sds-button-settings__icon-color > span { font-size: 11px; }.sds-wb--button .sds-icon-trigger__main, .sds-wb--button .sds-button-settings__icon-style button { font-size: 11px; }.sds-wb--button .sds-theme-switch, .sds-wb--button .sds-edit-field__theme span, .sds-wb--button .sds-button-settings__inherit { font-size: 11px; }
 
 /* Minimum readable type for Button Browser and isolated owned editors. */
 .sds-button-browser__badge { font-size: 10px; }.sds-button-browser__copy p, .sds-button-browser__copy > span { font-size: 12px; }.sds-button-pattern__stage > header span, .sds-button-pattern__settings > header span { font-size: 10px; }.sds-button-pattern__stage > header small, .sds-button-pattern__settings > header button { font-size: 11px; }.sds-button-pattern__stage > aside p { font-size: 12px; }.sds-button-pattern__stage > aside span { font-size: 10px; }.sds-pattern-field > span, .sds-pattern-toggle > span { font-size: 12px; }.sds-pattern-field > select, .sds-pattern-field > input { font-size: 12px; }.sds-pattern-field > small { font-size: 10px; }.sds-button-pattern__settings > footer strong { font-size: 11px; }.sds-button-pattern__settings > footer span { font-size: 10px; }.sds-button-pattern__examples article > span { font-size: 11px; }

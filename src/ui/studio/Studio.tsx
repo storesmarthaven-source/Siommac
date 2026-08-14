@@ -41,6 +41,7 @@ import { FoundationsPanel } from '../gallery/FoundationsPanel';
 import { BrandThemePanel } from '../gallery/BrandThemePanel';
 import './studio.css';
 import { buttonFamilyPreviewProps } from './buttonFamilyPreview';
+import { StudioPublishBar } from './StudioPublishBar';
 
 export interface StudioProps {
   onExit?: () => void;
@@ -372,13 +373,16 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
 
       <div class="sds-col">
         <header class="sds-top">
-          <nav class="sds-crumbs" aria-label="Breadcrumb">
-            <span>{groupOf}</span>
-            <LucideIcon name="ChevronRight" size={14} />
-            {openFamily && openId !== openFamily.id && <><span>{openFamily.name}</span><LucideIcon name="ChevronRight" size={14} /></>}
-            <span class="is-current">{openDef?.name ?? openPattern?.name ?? openFamily?.name ?? current.label}</span>
-          </nav>
-          <span class="sds-top__meta">{COMPONENT_DEFS.length} registered definitions</span>
+          <div class="sds-top__navrow">
+            <nav class="sds-crumbs" aria-label="Breadcrumb">
+              <span>{groupOf}</span>
+              <LucideIcon name="ChevronRight" size={14} />
+              {openFamily && openId !== openFamily.id && <><span>{openFamily.name}</span><LucideIcon name="ChevronRight" size={14} /></>}
+              <span class="is-current">{openDef?.name ?? openPattern?.name ?? openFamily?.name ?? current.label}</span>
+            </nav>
+            <span class="sds-top__meta">{COMPONENT_DEFS.length} definitions</span>
+          </div>
+          <StudioPublishBar draft={draft} />
         </header>
 
         <main class="sds-main">
