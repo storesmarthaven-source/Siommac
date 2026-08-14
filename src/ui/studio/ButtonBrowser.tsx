@@ -65,7 +65,7 @@ function ButtonPatternEditor({ pattern, onBack, onEditFoundation }: { pattern: B
         <aside class="sds-owned-button__settings" aria-label={`${pattern.name} settings`}>
           <header><div><span>Preview settings</span><strong>Try the {pattern.name}</strong></div><button type="button" onClick={() => setValues({ ...pattern.defaults })}>Reset</button></header>
           <div class="sds-owned-button__controls"><section class="sds-button-pattern__controls">
-            <h4>Preview</h4>
+            <h4>Preview options</h4>
             {pattern.controls.map(control => <PatternControl key={control.name} pattern={pattern} control={control} values={values} onChange={set} />)}
           </section></div>
           <footer><LucideIcon name="Link2" size={15} /><p><strong>Shape and colors</strong><small>Change them in Action Button. The settings above only change this preview.</small></p><button type="button" onClick={onEditFoundation}>Change shape and colors</button></footer>

@@ -627,7 +627,7 @@
 .sds-button-editor__meta > button:hover, .sds-button-editor__meta > button.is-on { border-color: #8295b2; background: #f7f9fc; color: var(--sds-ink); }
 
 .sds-button-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
-.sds-button-picker > button { position: relative; min-width: 0; min-height: 102px; overflow: hidden; display: flex; flex-direction: column; align-items: stretch; padding: 0; border: 1px solid #e0e4ea; border-radius: 10px; background: #fff; color: var(--sds-ink); font: inherit; cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.sds-button-picker > button { position: relative; min-width: 0; min-height: 98px; overflow: hidden; display: flex; flex-direction: column; align-items: stretch; padding: 0; border: 1px solid #e0e4ea; border-radius: 9px; background: #fff; color: var(--sds-ink); font: inherit; cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
 .sds-button-picker > button:hover { border-color: #d2d7de; box-shadow: 0 3px 8px rgb(15 23 42 / .045); transform: translateY(-1px); }.sds-button-picker > button.is-on { border-color: #d1d6de; background: #fff; box-shadow: none; }
 .sds-button-picker > button::before { content: ""; position: absolute; z-index: 2; top: 8px; left: 8px; width: 13px; height: 13px; border: 1px solid #c4cbd5; border-radius: 50%; background: #fff; opacity: 0; transform: scale(0); transition: opacity .15s ease, transform .2s ease, border-color .15s ease, background .15s ease; }
 .sds-button-picker > button::after { content: none; }
@@ -645,6 +645,11 @@
 .sds-button-preview__all { position: relative; min-height: 300px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px 18px; overflow: hidden; padding: 36px; background-color: #fff; background-image: radial-gradient(circle at center, rgb(100 116 139 / .07) 1.2px, transparent 1.2px); background-size: 20px 20px; }
 .sds-button-preview__single > :not(.sds-button-preview__guides), .sds-button-preview__all > :not(.sds-button-preview__guides) { position: relative; z-index: 2; }
 .sds-button-preview__single > .ui-btn { transform: scale(1.2); transform-origin: center; }
+.sds-button-preview__variants { padding: 18px; border-top: 1px solid var(--sds-line); }
+.sds-button-preview__variants .sds-button-editor__intro { align-items: flex-end; margin-bottom: 12px; }
+.sds-button-preview__variants .sds-button-editor__intro h3 { font-size: 16px; }
+.sds-button-preview__variants .sds-button-editor__intro p { font-size: 12px; }
+.sds-button-preview__variants .sds-button-picker { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
 .sds-button-preview__guides { position: absolute; inset: 0; pointer-events: none; }
 .sds-button-preview__guides i { position: absolute; display: block; }
 .sds-button-preview__guides .v { top: 26px; bottom: 26px; left: 50%; width: 1px; background: rgb(15 23 42 / .055); }
@@ -660,9 +665,9 @@
 .sds-button-use > header h3 { margin: 0; font-size: 17px; }.sds-button-use > header p { margin: 3px 0 0; color: var(--sds-ink-3); font-size: 13px; }
 
 .sds-button-settings { position: sticky; top: 0; max-height: calc(100vh - 90px); display: flex; flex-direction: column; overflow: visible; border: 1px solid var(--sds-line); border-radius: 12px; background: #fff; }
-.sds-button-settings__head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 15px; border-bottom: 1px solid var(--sds-line); }.sds-button-settings__head > div { display: grid; gap: 2px; }.sds-button-settings__head strong { font-size: 15px; }.sds-button-settings__head button { padding: 4px 0; border: 0; background: transparent; color: var(--sds-accent); font: inherit; font-size: 11px; cursor: pointer; }
+.sds-button-settings__head { flex: none; min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 15px; border-bottom: 1px solid var(--sds-line); }.sds-button-settings__head > div { display: grid; gap: 2px; }.sds-button-settings__head strong { font-size: 14px; }.sds-button-settings__head button { padding: 4px 0; border: 0; background: transparent; color: var(--sds-accent); font: inherit; font-size: 12px; cursor: pointer; }
 .sds-button-settings__state { flex: none; display: grid; gap: 5px; padding: 12px 15px; border-bottom: 1px solid var(--sds-line); }.sds-button-settings__state label { font-size: 12px; font-weight: 600; }.sds-button-settings__state select { min-height: 38px; padding: 7px 9px; border: 1px solid #d9dde4; border-radius: 7px; background: #fff; font: inherit; font-size: 13px; }
-.sds-button-settings__example { position: relative; flex: none; display: grid; gap: 10px; padding: 12px 15px 14px; border-bottom: 1px solid var(--sds-line); background: #fbfcfd; }
+.sds-button-settings__example { position: relative; flex: none; display: grid; gap: 10px; padding: 14px 15px; border-bottom: 1px solid var(--sds-line); background: #fbfcfd; }
 .sds-button-settings__example .sds-button-settings__state { padding: 0; border: 0; }
 .sds-button-settings__example-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }.sds-button-settings__example-head h4 { margin: 0; color: var(--sds-ink); font-size: 12px; }.sds-button-settings__example-head p { margin: 2px 0 0; color: var(--sds-ink-3); font-size: 10px; }.sds-button-settings__example-head button { padding: 2px 0; border: 0; background: transparent; color: var(--sds-accent); font: inherit; font-size: 10px; cursor: pointer; }
 .sds-button-settings__example > label, .sds-button-settings__example-icons > div, .sds-button-settings__icon-style, .sds-button-settings__icon-color { display: grid; gap: 5px; }.sds-button-settings__example label > span, .sds-button-settings__example-icons > div > span, .sds-button-settings__icon-style > span, .sds-button-settings__icon-color > span { color: var(--sds-ink-2); font-size: 10px; font-weight: 600; }.sds-button-settings__example input, .sds-button-settings__example select { width: 100%; min-width: 0; min-height: 35px; padding: 7px 8px; border: 1px solid #d5dae3; border-radius: 7px; background: #fff; color: var(--sds-ink); font: inherit; font-size: 11px; }
@@ -699,7 +704,7 @@
 .sds-button-settings__actions { flex: none; display: grid; gap: 8px; padding: 11px 12px; border-top: 1px solid var(--sds-line); background: #fafbfc; }.sds-button-settings__actions > span { color: var(--sds-ink-3); font-size: 10px; }.sds-button-settings__actions > div { display: flex; gap: 6px; }.sds-button-settings__actions button { flex: 1; min-height: 35px; padding: 7px 8px; border: 1px solid #d4d9e1; border-radius: 7px; background: #fff; color: var(--sds-ink-2); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }.sds-button-settings__actions button.is-primary { border-color: #22375f; background: #22375f; color: #fff; }.sds-button-settings__actions button:disabled { opacity: .45; cursor: not-allowed; }
 
 @media (max-width: 1050px) { .sds-button-editor { grid-template-columns: 1fr; }.sds-button-settings { position: static; max-height: none; }.sds-button-settings__body { overflow: visible; }.sds-button-picker { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 700px) { .sds-button-editor__intro { display: grid; }.sds-button-editor__meta { flex-wrap: wrap; }.sds-button-picker { grid-template-columns: 1fr 1fr; }.sds-button-preview__single, .sds-button-preview__all { min-height: 250px; padding: 26px; } }
+@media (max-width: 700px) { .sds-button-editor__intro { display: grid; }.sds-button-editor__meta { flex-wrap: wrap; }.sds-button-picker, .sds-button-preview__variants .sds-button-picker { grid-template-columns: 1fr 1fr; }.sds-button-preview__single, .sds-button-preview__all { min-height: 250px; padding: 26px; } }
 .sds-nav__kids { margin: 2px 0 4px; padding: 0 0 0 14px; list-style: none; border-left: 1px solid var(--sds-line); }
 .sds-nav__item--kid { min-height: 28px; font-size: 14px; color: var(--sds-ink-2); }
 
@@ -1043,6 +1048,8 @@
 }
 .sds-owned-button__variants article > button:focus-visible { outline: 0; }
 .sds-owned-button__preview-options { display: grid; gap: 13px; }
+.sds-owned-button__preview-options,
+.sds-button-pattern__controls { background: #fbfcfd; }
 .sds-owned-button__preview-options > h4 { margin-bottom: 0 !important; }
 .sds-owned-button__icon-picker,
 .sds-owned-button__icon-style { display: grid; gap: 6px; }

@@ -229,33 +229,31 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
   return (
     <section class="sds-button-editor" aria-label="Button editor">
       <div class="sds-button-editor__main">
-        <PreviewScope class="sds-button-preview" attach={studio.attachScope}>
+        <PreviewScope class="sds-button-preview sds-button-preview--with-variants" attach={studio.attachScope}>
           <header><div><span>Live preview</span><strong>{selectedSample?.title ?? friendly(target)} button</strong></div><small>Updates instantly</small></header>
           <div class="sds-button-preview__single">
             {def.render?.(previewProps, state === 'default' ? 'default' : state)}
           </div>
+          <section class="sds-button-preview__variants" aria-labelledby="button-variants-title">
+            <header class="sds-button-editor__intro">
+              <div><h3 id="button-variants-title">Variants</h3><p>Select a style to preview and edit it.</p></div>
+              <div class="sds-button-editor__meta"><span>Published v{studio.publishedVersion}</span></div>
+            </header>
+            <div class="sds-button-picker" role="radiogroup" aria-label="Button to edit">
+              {BUTTON_VARIANTS.map(variant => {
+                const sample = def.variantSamples?.find(item => item.value === variant);
+                const variantPreview = previewPropsFor(variant);
+                return (
+                  <button type="button" role="radio" aria-checked={target === variant} class={target === variant ? 'is-on' : ''}
+                    onClick={() => { setTarget(variant); setState('default'); }}>
+                    <span class="sds-button-picker__preview"><span class={`ui-btn ui-btn--${variant}`} aria-hidden="true">{String(variantPreview.label ?? sample?.props.label ?? friendly(variant))}</span></span>
+                    <span class="sds-button-picker__copy"><strong>{sample?.title ?? friendly(variant)}</strong></span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
         </PreviewScope>
-
-        <header class="sds-button-editor__intro">
-          <div><h3>Variants</h3><p>The six canonical Button styles. Select one to edit it.</p></div>
-          <div class="sds-button-editor__meta">
-            <span>Published v{studio.publishedVersion}</span>
-          </div>
-        </header>
-
-        <div class="sds-button-picker" role="radiogroup" aria-label="Button to edit">
-          {BUTTON_VARIANTS.map(variant => {
-            const sample = def.variantSamples?.find(item => item.value === variant);
-            const variantPreview = previewPropsFor(variant);
-            return (
-              <button type="button" role="radio" aria-checked={target === variant} class={target === variant ? 'is-on' : ''}
-                onClick={() => { setTarget(variant); setState('default'); }}>
-                <span class="sds-button-picker__preview"><span class={`ui-btn ui-btn--${variant}`} aria-hidden="true">{String(variantPreview.label ?? sample?.props.label ?? friendly(variant))}</span></span>
-                <span class="sds-button-picker__copy"><strong>{sample?.title ?? friendly(variant)}</strong><small>{sample?.description ?? 'Button style'}</small></span>
-              </button>
-            );
-          })}
-        </div>
 
         <section class="sds-button-use" aria-labelledby="button-use-title">
           <header><h3 id="button-use-title">Common application use</h3><p>Real examples of how these variants work together in SIOMAC.</p></header>
@@ -268,7 +266,7 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
 
       <aside class="sds-button-settings" aria-label="Button settings">
         <header class="sds-button-settings__head">
-          <div><span>Edit button</span><strong>{selectedSample?.title ?? friendly(target)} button</strong></div>
+          <div><span>Preview settings</span><strong>Try the {selectedSample?.title ?? friendly(target)} button</strong></div>
           <button type="button" onClick={() => act(async () => { setHistory(await studio.history()); }, 'Version history loaded.')}>History</button>
         </header>
 

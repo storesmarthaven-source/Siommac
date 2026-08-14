@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "0a85dcf1ea3ffcb51571293f933c4e6782cce326",
+    "head": "51cef8e0a17d0f274b6e3dc7b58646030194251a",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "489135f4c923820823632abb",
+    "fingerprint": "50532273aa2c491c7925d9d6",
     "indexedFiles": 1859
   },
   "summary": {
@@ -9422,7 +9422,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 130,
-      "hash": "d18efe61da42f0a2"
+      "hash": "e7d5b0d0f706b861"
     },
     {
       "path": "src/ui/studio/InAppUsage.tsx",
@@ -9442,8 +9442,8 @@
       "path": "src/ui/studio/RecipeStyleEditor.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 312,
-      "hash": "440334a85851f5d3"
+      "lines": 310,
+      "hash": "d67092b01039320c"
     },
     {
       "path": "src/ui/studio/Studio.tsx",
@@ -9457,7 +9457,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 580,
-      "hash": "1c190081af01acc5"
+      "hash": "ff5eaca0ee36520b"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -9484,8 +9484,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 393,
-      "hash": "3ece239861159e55"
+      "lines": 394,
+      "hash": "29626a057a997b68"
     },
     {
       "path": "src/ui/studio/preview.tsx",

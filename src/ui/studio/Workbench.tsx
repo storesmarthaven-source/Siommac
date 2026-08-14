@@ -247,7 +247,7 @@ function CompoundButtonEditor({ def, shown, specimen, onSet, onReset, onEditFoun
           </header>
           <div class="sds-owned-button__controls">
             <section class="sds-owned-button__preview-options">
-              <h4>Preview</h4>
+              <h4>Preview options</h4>
               <label class="sds-ctl" for={`${def.id}-state`}>
                 <span class="sds-ctl__label">State</span>
                 <select id={`${def.id}-state`} class="sds-ctl__input" value={previewState}

@@ -146,9 +146,10 @@ describe('Buttons family — Studio', () => {
     expect(container.querySelector('.sds-wb__head h2')?.textContent).toBe('Action Button');
     expect(container.querySelector('.sds-family')).toBeNull();
     expect(container.querySelector('.sds-wb__back')?.textContent).toContain('Buttons');
-    expect(container.querySelector('.sds-button-settings__head strong')?.textContent).toBe('Primary button');
+    expect(container.querySelector('.sds-button-settings__head strong')?.textContent).toBe('Try the Primary button');
     expect(container.querySelector('.sds-button-picker .is-on strong')?.textContent).toBe('Primary');
     expect(container.querySelector('.sds-button-editor__intro h3')?.textContent).toBe('Variants');
+    expect(container.querySelector('.sds-button-preview .sds-button-picker')).not.toBeNull();
     expect(container.querySelectorAll('.sds-button-picker [role="radio"]')).toHaveLength(6);
     expect(container.querySelector('.sds-button-use h3')?.textContent).toBe('Common application use');
     expect(container.querySelectorAll('.sds-button-use article')).toHaveLength(3);
@@ -304,7 +305,7 @@ describe('Buttons family — Studio', () => {
 
     fireEvent.click(getByRole('radio', { name: /Danger/ }));
 
-    expect(container.querySelector('.sds-button-settings__head strong')?.textContent).toBe('Danger button');
+    expect(container.querySelector('.sds-button-settings__head strong')?.textContent).toBe('Try the Danger button');
     expect(container.querySelector('.sds-button-picker .is-on strong')?.textContent).toBe('Danger');
   });
 
@@ -363,7 +364,7 @@ describe('Buttons family — Studio', () => {
     expect(queryByText('Publish')).toBeNull();
     fireEvent.click(getByRole('button', { name: 'Change shape and colors' }));
 
-    expect(container.querySelector('.sds-button-settings__head')?.textContent).toContain('Edit button');
+    expect(container.querySelector('.sds-button-settings__head')?.textContent).toContain('Preview settings');
     expect(getByRole('button', { name: 'Publish' })).toBeTruthy();
     expect(queryByText('Preview example')).toBeNull();
     expect(getByRole('heading', { name: 'Preview options' })).toBeTruthy();
