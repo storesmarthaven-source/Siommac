@@ -13106,15 +13106,15 @@ ACTION_DEFS	array	platform	true		src/ui/registry/actions.defs.tsx	484
 ButtonPatternValue	type	platform	true		src/ui/registry/button-patterns.tsx	7	
 ButtonPatternValues	type	platform	true		src/ui/registry/button-patterns.tsx	8	
 ButtonPatternControl	type	platform	true		src/ui/registry/button-patterns.tsx	10	
-ButtonPatternExample	interface	platform	true		src/ui/registry/button-patterns.tsx	17	
-ButtonPattern	interface	platform	true		src/ui/registry/button-patterns.tsx	27	
-text	function	platform	false		src/ui/registry/button-patterns.tsx	41	
-yes	function	platform	false		src/ui/registry/button-patterns.tsx	43	
-size	function	platform	false		src/ui/registry/button-patterns.tsx	44	
-variant	function	platform	false		src/ui/registry/button-patterns.tsx	45	
-patternIcon	function	platform	false		src/ui/registry/button-patterns.tsx	47	
-BUTTON_PATTERNS	array	platform	true		src/ui/registry/button-patterns.tsx	54	
-findButtonPattern	function	platform	true		src/ui/registry/button-patterns.tsx	125	
+ButtonPatternExample	interface	platform	true		src/ui/registry/button-patterns.tsx	16	
+ButtonPattern	interface	platform	true		src/ui/registry/button-patterns.tsx	26	
+text	function	platform	false		src/ui/registry/button-patterns.tsx	40	
+yes	function	platform	false		src/ui/registry/button-patterns.tsx	42	
+size	function	platform	false		src/ui/registry/button-patterns.tsx	43	
+variant	function	platform	false		src/ui/registry/button-patterns.tsx	44	
+patternIcon	function	platform	false		src/ui/registry/button-patterns.tsx	46	
+BUTTON_PATTERNS	array	platform	true		src/ui/registry/button-patterns.tsx	53	
+findButtonPattern	function	platform	true		src/ui/registry/button-patterns.tsx	123	
 s	function	platform	false		src/ui/registry/compound.defs.tsx	31	
 b	function	platform	false		src/ui/registry/compound.defs.tsx	33	
 size	function	platform	false		src/ui/registry/compound.defs.tsx	34	
@@ -13322,9 +13322,9 @@ applyDirection	function	platform	false		src/ui/studio/BrandOverview.tsx	104	Bran
 publish	function	platform	false		src/ui/studio/BrandOverview.tsx	110	BrandOverview
 ButtonBrowserProps	interface	platform	true		src/ui/studio/ButtonBrowser.tsx	11	
 PatternControl	function	platform	false	component	src/ui/studio/ButtonBrowser.tsx	19	
-ButtonPatternEditor	function	platform	false	component	src/ui/studio/ButtonBrowser.tsx	53	
-set	function	platform	false		src/ui/studio/ButtonBrowser.tsx	55	ButtonPatternEditor
-ButtonBrowser	function	platform	true	component	src/ui/studio/ButtonBrowser.tsx	84	
+ButtonPatternEditor	function	platform	false	component	src/ui/studio/ButtonBrowser.tsx	49	
+set	function	platform	false		src/ui/studio/ButtonBrowser.tsx	51	ButtonPatternEditor
+ButtonBrowser	function	platform	true	component	src/ui/studio/ButtonBrowser.tsx	82	
 MEMBERS	variable	platform	false	component,test	src/ui/studio/family.test.tsx	26	
 openButtonBrowser	function	platform	false	test	src/ui/studio/family.test.tsx	29	
 openButtons	function	platform	false	test	src/ui/studio/family.test.tsx	36	

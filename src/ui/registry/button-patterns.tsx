@@ -11,7 +11,6 @@ export type ButtonPatternControl =
   | { name: string; label: string; type: 'select'; options: readonly { value: string; label: string }[] }
   | { name: string; label: string; type: 'icon'; recommendations: readonly LucideName[] }
   | { name: string; label: string; type: 'color' }
-  | { name: string; label: string; type: 'text'; help?: string }
   | { name: string; label: string; type: 'boolean' };
 
 export interface ButtonPatternExample {
@@ -84,7 +83,6 @@ export const BUTTON_PATTERNS: readonly ButtonPattern[] = [
     guidance: 'Reserve icon-only actions for familiar symbols in constrained toolbars. Every instance requires a specific accessible name.',
     defaults: { accessibleLabel: 'Notifications', emphasis: 'ghost', size: 'md', icon: 'Bell', iconTreatment: 'outline', iconColor: '#1b2d54' },
     controls: [
-      { name: 'accessibleLabel', label: 'Accessible name', type: 'text', help: 'Required for screen readers; this does not display text in the button.' },
       { name: 'emphasis', label: 'Emphasis', type: 'select', options: [{ value: 'ghost', label: 'Ghost' }, { value: 'outline', label: 'Outline' }, { value: 'secondary', label: 'Secondary' }] },
       { name: 'size', label: 'Size', type: 'select', options: [{ value: 'sm', label: 'Compact' }, { value: 'md', label: 'Regular' }, { value: 'lg', label: 'Large' }] },
       { name: 'icon', label: 'Icon', type: 'icon', recommendations: ['Bell', 'RefreshCw', 'Settings', 'X'] },

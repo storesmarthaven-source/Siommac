@@ -40,10 +40,6 @@ function PatternControl({ pattern, control, values, onChange }: {
     return <label class="sds-pattern-toggle" for={id}><span>{control.label}</span><input id={id} aria-label={control.label} type="checkbox" checked={value === true}
       onChange={event => onChange(control.name, (event.target as HTMLInputElement).checked)} /></label>;
   }
-  if (control.type === 'text') {
-    return <label class="sds-pattern-field" for={id}><span>{control.label}</span><input id={id} aria-label={control.label} value={String(value)}
-      onInput={event => onChange(control.name, (event.target as HTMLInputElement).value)} />{control.help && <small>{control.help}</small>}</label>;
-  }
   return <label class="sds-pattern-field" for={id}><span>{control.label}</span><select id={id} aria-label={control.label} value={String(value)}
     onChange={event => onChange(control.name, (event.target as HTMLSelectElement).value)}>
     {control.options.map(option => <option value={option.value}>{option.label}</option>)}
@@ -55,22 +51,24 @@ function ButtonPatternEditor({ pattern, onBack, onEditFoundation }: { pattern: B
   const set = (name: string, value: string | boolean): void => setValues(previous => ({ ...previous, [name]: value }));
 
   return (
-    <div class="sds-button-pattern">
+    <div class="sds-button-pattern sds-owned-button" data-ui-preview-scope>
       <button type="button" class="sds-wb__back" onClick={onBack}>← All buttons</button>
       <header class="sds-button-pattern__head">
         <div><span>{pattern.badge}</span><h2>{pattern.name}</h2><p>{pattern.description}</p></div>
-        <button type="button" onClick={onEditFoundation}>Edit button appearance <LucideIcon name="ArrowRight" size={15} /></button>
       </header>
-      <section class="sds-button-pattern__editor" aria-label={`${pattern.name} editor`}>
-        <div class="sds-button-pattern__stage">
-          <header><div><span>Live preview</span><strong>{pattern.name}</strong></div><small>Preview only</small></header>
-          <div>{pattern.preview(values)}</div>
+      <section class="sds-owned-button__editor" aria-label={`${pattern.name} editor`}>
+        <div class="sds-owned-button__stage">
+          <header><div><span>Live preview</span><strong>{pattern.name}</strong></div><small>Updates instantly</small></header>
+          <div class="sds-owned-button__canvas"><div class="sds-owned-button__specimen">{pattern.preview(values)}</div></div>
           <aside><strong>How it is governed</strong><p>{pattern.guidance}</p><span>Inherits the published Action Button recipe</span></aside>
         </div>
-        <aside class="sds-button-pattern__settings" aria-label={`${pattern.name} settings`}>
-          <header><div><span>Editing</span><strong>{pattern.name}</strong></div><button type="button" onClick={() => setValues({ ...pattern.defaults })}>Reset</button></header>
-          <div>{pattern.controls.map(control => <PatternControl key={control.name} pattern={pattern} control={control} values={values} onChange={set} />)}</div>
-          <footer><LucideIcon name="Link2" size={15} /><p><strong>Linked to Action Button</strong><span>Geometry, states and accessibility stay inherited. These preview choices are not published.</span></p></footer>
+        <aside class="sds-owned-button__settings" aria-label={`${pattern.name} settings`}>
+          <header><div><span>Preview settings</span><strong>Try the {pattern.name}</strong></div><button type="button" onClick={() => setValues({ ...pattern.defaults })}>Reset</button></header>
+          <div class="sds-owned-button__controls"><section class="sds-button-pattern__controls">
+            <h4>Preview</h4>
+            {pattern.controls.map(control => <PatternControl key={control.name} pattern={pattern} control={control} values={values} onChange={set} />)}
+          </section></div>
+          <footer><LucideIcon name="Link2" size={15} /><p><strong>Published with Action Button</strong><small>These choices are preview-only. Shared shape, color and states are published once from Action Button.</small></p><button type="button" onClick={onEditFoundation}>Edit button appearance</button></footer>
         </aside>
       </section>
       <section class="sds-button-pattern__examples" aria-labelledby="pattern-examples-title">

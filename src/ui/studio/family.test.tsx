@@ -162,6 +162,8 @@ describe('Buttons family — Studio', () => {
 
     expect(getByRole('heading', { name: 'AI Action' })).toBeTruthy();
     expect(getByRole('button', { name: /Edit button appearance/ })).toBeTruthy();
+    expect(container.querySelector('.sds-owned-button__canvas')).not.toBeNull();
+    expect(container.querySelector('.sds-owned-button__settings')?.textContent).toContain('Preview settings');
     expect(queryByRole('radio', { name: /AI/ })).toBeNull();
     expect(container.querySelectorAll('.sds-button-pattern__examples article')).toHaveLength(2);
     expect(getByRole('complementary', { name: 'AI Action settings' })).toBeTruthy();
@@ -169,18 +171,19 @@ describe('Buttons family — Studio', () => {
     expect((getByRole('combobox', { name: 'Emphasis' }) as HTMLSelectElement).value).toBe('primary');
     fireEvent.click(getByRole('button', { name: 'Choose AI icon' }));
     fireEvent.click(getByRole('button', { name: 'Use recommended BrainCircuit' }));
-    expect(container.querySelector('.sds-button-pattern__stage .sds-preview-icon')).not.toBeNull();
+    expect(container.querySelector('.sds-owned-button__stage .sds-preview-icon')).not.toBeNull();
   });
 
-  it('gives Icon Button its own accessible-name and icon editor', () => {
-    const { container, getByRole } = render(<Studio />);
+  it('keeps Icon Button labels locked while exposing its icon editor', () => {
+    const { container, getByRole, queryByRole } = render(<Studio />);
     openButtonBrowser(container);
     fireEvent.click(getByRole('button', { name: /Icon Button/ }));
 
     expect(getByRole('complementary', { name: 'Icon Button settings' })).toBeTruthy();
-    fireEvent.input(getByRole('textbox', { name: 'Accessible name' }), { target: { value: 'Refresh records' } });
-    expect(getByRole('button', { name: 'Refresh records' })).toBeTruthy();
-    expect(container.querySelector('.sds-button-pattern__settings footer')?.textContent).toContain('Linked to Action Button');
+    expect(queryByRole('textbox', { name: 'Accessible name' })).toBeNull();
+    expect(getByRole('button', { name: 'Notifications' })).toBeTruthy();
+    expect(container.querySelector('.sds-owned-button__settings footer')?.textContent).toContain('Published with Action Button');
+    expect(getByRole('button', { name: 'Edit button appearance' })).toBeTruthy();
   });
 
   it('isolates Credits controls without adding a Credits ButtonVariant', () => {
@@ -252,7 +255,7 @@ describe('Buttons family — Studio', () => {
 
       expect(container.querySelector('.sds-owned-button__editor')).not.toBeNull();
       expect(container.querySelector('.sds-owned-button__canvas')).not.toBeNull();
-      expect(container.querySelector('.sds-owned-button__settings')?.textContent).toContain('Linked to Action Button');
+      expect(container.querySelector('.sds-owned-button__settings')?.textContent).toContain('Published with Action Button');
       expect(container.querySelector('.sds-owned-button__reference')).not.toBeNull();
       expect(container.querySelector('.sds-owned-button__variants')).not.toBeNull();
       expect(container.querySelector('.sds-owned-button__settings')?.textContent).toContain('Icon treatment');

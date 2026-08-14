@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "6be058e1f88443849eaba95e14a09e8f67a1c2ce",
+    "head": "de3a7e0d16d908f5b3357cbe2e8313c55ebe088e",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "ef5755b471b9c96d287c52e5",
+    "fingerprint": "a895747c3dc36cab5fb48d29",
     "indexedFiles": 1859
   },
   "summary": {
@@ -9253,8 +9253,8 @@
       "path": "src/ui/registry/button-patterns.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 128,
-      "hash": "1fa46ac2ff36ce6d"
+      "lines": 126,
+      "hash": "827923e079ae32f1"
     },
     {
       "path": "src/ui/registry/compound.defs.tsx",
@@ -9421,8 +9421,8 @@
       "path": "src/ui/studio/ButtonBrowser.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 132,
-      "hash": "c41e1b89776f60b3"
+      "lines": 130,
+      "hash": "5d9ab623da3d8462"
     },
     {
       "path": "src/ui/studio/InAppUsage.tsx",
@@ -9457,7 +9457,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 580,
-      "hash": "c37c567b7e038001"
+      "hash": "12f7b995e1e31bbd"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -9484,8 +9484,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 390,
-      "hash": "0949efd4132f8cb3"
+      "lines": 393,
+      "hash": "71a87449f0f27c2b"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -147959,7 +147959,7 @@
       "name": "ButtonPatternExample",
       "kind": "interface",
       "file": "src/ui/registry/button-patterns.tsx",
-      "line": 17,
+      "line": 16,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147969,7 +147969,7 @@
       "name": "ButtonPattern",
       "kind": "interface",
       "file": "src/ui/registry/button-patterns.tsx",
-      "line": 27,
+      "line": 26,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147979,7 +147979,7 @@
       "name": "text",
       "kind": "function",
       "file": "src/ui/registry/button-patterns.tsx",
-      "line": 41,
+      "line": 40,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147989,7 +147989,7 @@
       "name": "yes",
       "kind": "function",
       "file": "src/ui/registry/button-patterns.tsx",
-      "line": 43,
+      "line": 42,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147999,7 +147999,7 @@
       "name": "size",
       "kind": "function",
       "file": "src/ui/registry/button-patterns.tsx",
-      "line": 44,
+      "line": 43,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148009,7 +148009,7 @@
       "name": "variant",
       "kind": "function",
       "file": "src/ui/registry/button-patterns.tsx",
-      "line": 45,
+      "line": 44,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148019,7 +148019,7 @@
       "name": "patternIcon",
       "kind": "function",
       "file": "src/ui/registry/button-patterns.tsx",
-      "line": 47,
+      "line": 46,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148029,7 +148029,7 @@
       "name": "BUTTON_PATTERNS",
       "kind": "array",
       "file": "src/ui/registry/button-patterns.tsx",
-      "line": 54,
+      "line": 53,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148039,7 +148039,7 @@
       "name": "findButtonPattern",
       "kind": "function",
       "file": "src/ui/registry/button-patterns.tsx",
-      "line": 125,
+      "line": 123,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150174,7 +150174,7 @@
       "name": "ButtonPatternEditor",
       "kind": "function",
       "file": "src/ui/studio/ButtonBrowser.tsx",
-      "line": 53,
+      "line": 49,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150186,7 +150186,7 @@
       "name": "set",
       "kind": "function",
       "file": "src/ui/studio/ButtonBrowser.tsx",
-      "line": 55,
+      "line": 51,
       "module": "platform",
       "exported": false,
       "container": "ButtonPatternEditor",
@@ -150196,7 +150196,7 @@
       "name": "ButtonBrowser",
       "kind": "function",
       "file": "src/ui/studio/ButtonBrowser.tsx",
-      "line": 84,
+      "line": 82,
       "module": "platform",
       "exported": true,
       "container": "",

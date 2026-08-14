@@ -979,7 +979,7 @@
 .sds-owned-button__controls .sds-ctl__help summary,
 .sds-owned-button__controls .sds-ctl__help p { font-size: 11px; }
 .sds-owned-button__settings > footer {
-  display: flex; align-items: flex-start; gap: 9px; padding: 13px 15px;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: flex-start; gap: 9px; padding: 13px 15px;
   border-radius: 0 0 12px 12px; background: #f8fafc; color: var(--sds-accent);
 }
 .sds-owned-button__settings > footer > span { flex: none; font-size: 16px; line-height: 1; }
@@ -987,7 +987,7 @@
 .sds-owned-button__settings > footer strong { color: var(--sds-ink-2); font-size: 12px; }
 .sds-owned-button__settings > footer small { color: var(--sds-ink-3); font-size: 11px; line-height: 1.4; }
 .sds-owned-button__settings > footer button {
-  flex: none; align-self: center; margin-left: auto; min-height: 32px; padding: 6px 10px;
+  grid-column: 2; width: 100%; min-height: 34px; padding: 6px 10px;
   border: 1px solid #d7dce4; border-radius: 7px; background: #fff; color: var(--sds-ink-2);
   font: inherit; font-size: 11px; font-weight: 650; cursor: pointer;
 }
@@ -1057,6 +1057,22 @@
 .sds-owned-button__icon-style button:last-child { border-right: 1px solid #d5dae3; border-radius: 0 7px 7px 0; }
 .sds-owned-button__icon-style button.is-on { background: #eef3fb; color: var(--sds-accent); box-shadow: inset 0 0 0 1px var(--sds-accent); }
 .sds-owned-button__preview-options .sds-color-control > label { font-size: 12px; }
+.sds-button-pattern.sds-owned-button { max-width: 1180px; }
+.sds-button-pattern .sds-button-pattern__head { margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px solid #e2e5ea; }
+.sds-button-pattern .sds-button-pattern__head > div { max-width: 760px; }
+.sds-button-pattern .sds-button-pattern__head h2 { font-size: 30px; letter-spacing: -.025em; }
+.sds-button-pattern .sds-button-pattern__head p { font-size: 14px; }
+.sds-button-pattern__controls { display: grid; gap: 13px; }
+.sds-button-pattern__controls > h4 { margin-bottom: 0 !important; }
+.sds-button-pattern__controls .sds-pattern-field,
+.sds-button-pattern__controls .sds-pattern-toggle { padding: 0; border: 0; }
+.sds-button-pattern__controls .sds-pattern-field { gap: 6px; }
+.sds-button-pattern__controls .sds-pattern-field > span,
+.sds-button-pattern__controls .sds-pattern-toggle > span { font-size: 12px; font-weight: 600; }
+.sds-button-pattern__controls .sds-pattern-field > select,
+.sds-button-pattern__controls .sds-pattern-field > input { min-height: 36px; font-size: 12px; }
+.sds-button-pattern .sds-owned-button__settings > footer > svg { flex: none; margin-top: 1px; }
+.sds-button-pattern .sds-button-pattern__examples { margin-top: 0; }
 @media (max-width: 620px) {
   .sds-owned-button__variants > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
