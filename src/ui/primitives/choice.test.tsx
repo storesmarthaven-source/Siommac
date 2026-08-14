@@ -37,4 +37,14 @@ describe('choice controls', () => {
     fireEvent.click(input);
     expect(onChange).not.toHaveBeenCalled();
   });
+
+  it('renders the cross and check morph inside the canonical switch knob', () => {
+    const { container, rerender } = render(<Switch checked={false} onChange={vi.fn()} aria-label="Setting" />);
+    expect(container.querySelector('.ui-switch-cross')).toBeTruthy();
+    expect(container.querySelector('.ui-switch-check')).toBeTruthy();
+    expect(screen.getByRole<HTMLInputElement>('switch', { name: 'Setting' }).checked).toBe(false);
+
+    rerender(<Switch checked onChange={vi.fn()} aria-label="Setting" />);
+    expect(screen.getByRole<HTMLInputElement>('switch', { name: 'Setting' }).checked).toBe(true);
+  });
 });

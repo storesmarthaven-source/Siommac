@@ -268,6 +268,8 @@ export const switchDef: ComponentDef = {
       { name: '--ui-switch-bg',    label: 'Off fill', kind: 'color' },
       { name: '--ui-switch-bg-on', label: 'On fill', kind: 'color' },
       { name: '--ui-switch-knob',  label: 'Knob', kind: 'color' },
+      { name: '--ui-switch-cross', label: 'Off icon', kind: 'color' },
+      { name: '--ui-switch-check', label: 'On icon', kind: 'color' },
     ] },
   ],
   states: ['default', 'selected', 'focus', 'disabled', 'loading'],

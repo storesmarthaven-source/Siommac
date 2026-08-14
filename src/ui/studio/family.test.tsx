@@ -166,6 +166,8 @@ describe('Buttons family — Studio', () => {
     expect(cardNamed('Select')?.textContent).toContain('Product');
     expect(cardNamed('FileInput')?.querySelectorAll('.is-preview-blurred')).toHaveLength(0);
     expect(cardNamed('Select')?.querySelectorAll('.is-preview-blurred')).toHaveLength(1);
+    expect(cardNamed('Switches')?.querySelector('.sds-thumb-switch-family__general .ui-switch-check')).toBeTruthy();
+    expect(cardNamed('Switches')?.querySelector('.sds-thumb-switch-family__theme .ui-theme-mode-switch__icon')).toBeTruthy();
   });
 
   it('opens a visual browser before any Button editor', () => {

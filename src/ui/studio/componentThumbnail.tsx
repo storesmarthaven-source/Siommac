@@ -3,11 +3,12 @@ import { type ComponentCategory } from '../registry';
 import { LucideIcon } from '../LucideIcon';
 import { Breadcrumbs } from '../navigation/Breadcrumbs';
 import { ThemeModeSwitchArtwork } from '../patterns/ThemeModeSwitch';
+import { SwitchArtwork } from '../primitives/choice';
 import fileUploadersPreview from './assets/file-uploaders.webp';
 
 type ThumbnailKind =
   | 'buttons' | 'segmented' | 'menu' | 'field' | 'date' | 'select' | 'upload' | 'otp'
-  | 'check' | 'radio' | 'switch' | 'theme-switch' | 'people' | 'dialog' | 'drawer' | 'tooltip'
+  | 'check' | 'radio' | 'switch' | 'switch-family' | 'theme-switch' | 'people' | 'dialog' | 'drawer' | 'tooltip'
   | 'table' | 'badge' | 'tabs' | 'wizard' | 'header' | 'alert' | 'progress'
   | 'spinner' | 'skeleton' | 'card' | 'accordion' | 'color-picker' | 'breadcrumbs' | 'tree' | 'planned';
 
@@ -25,7 +26,8 @@ function kindFor(id: string, built: boolean): ThumbnailKind {
   if (id === 'checkbox') return 'check';
   if (id === 'radio-group') return 'radio';
   if (id === 'switch') return 'switch';
-  if (id === 'theme-mode-switch' || id === 'switches') return 'theme-switch';
+  if (id === 'switches') return 'switch-family';
+  if (id === 'theme-mode-switch') return 'theme-switch';
   if (['avatar', 'avatar-group', 'person-search-select'].includes(id)) return 'people';
   if (id === 'drawer') return 'drawer';
   if (id === 'tooltip') return 'tooltip';
@@ -106,6 +108,10 @@ export function ComponentThumbnail({ id, built = true }: {
       {kind === 'otp' && <div class="sds-thumb-otp"><div>{['8', '2', '4', '', '', ''].map((value, index) => <i class={`${value ? 'is-filled' : ''}${index === 3 ? ' is-active' : ''}`.trim()} key={index}>{value}</i>)}</div></div>}
       {(['check', 'radio', 'switch'] as ThumbnailKind[]).includes(kind) && <ChoiceScene kind={kind as 'check' | 'radio' | 'switch'} />}
       {kind === 'theme-switch' && <div class="ui-theme-mode-switch sds-thumb-theme-switch" data-theme-mode="light"><ThemeModeSwitchArtwork /></div>}
+      {kind === 'switch-family' && <div class="sds-thumb-switch-family">
+        <div class="ui-choice sds-thumb-switch-family__general" data-ui-state="selected"><SwitchArtwork /></div>
+        <div class="ui-theme-mode-switch sds-thumb-switch-family__theme" data-theme-mode="dark"><ThemeModeSwitchArtwork /></div>
+      </div>}
       {kind === 'people' && <div class="sds-thumb-people"><i>SJ</i><i>AD</i><i>PR</i><strong>+2</strong></div>}
       {kind === 'dialog' && <div class="sds-thumb-dialog"><strong>Confirm action</strong><span>This change will be recorded.</span><footer><i>Cancel</i><b>Confirm</b></footer></div>}
       {kind === 'drawer' && <div class="sds-thumb-drawer"><aside /><div><strong>Employee details</strong><span>Sarah James</span><span>Safety Officer</span><b>Active</b></div></div>}

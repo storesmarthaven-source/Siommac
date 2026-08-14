@@ -201,6 +201,18 @@ export interface SwitchProps {
   class?: string;
 }
 
+/** Shared visual artwork so catalogue thumbnails render the canonical switch. */
+export function SwitchArtwork(): VNode {
+  return (
+    <span class="ui-switch-track" aria-hidden="true">
+      <span class="ui-switch-knob">
+        <LucideIcon name="X" class="ui-switch-cross" strokeWidth={3} />
+        <LucideIcon name="Check" class="ui-switch-check" strokeWidth={3} />
+      </span>
+    </span>
+  );
+}
+
 /**
  * An on/off setting that takes effect IMMEDIATELY.
  *
@@ -244,7 +256,7 @@ export function Switch({
           onChange((e.target as HTMLInputElement).checked);
         }}
       />
-      <span class="ui-switch-track" aria-hidden="true"><span class="ui-switch-knob" /></span>
+      <SwitchArtwork />
       {(label != null || description) && (
         <span class="ui-choice-copy">
           {label != null && <span class="ui-choice-label">{label}</span>}

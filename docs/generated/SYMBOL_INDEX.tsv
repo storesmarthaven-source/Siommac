@@ -13108,13 +13108,14 @@ Checkbox	function	platform	true	component	src/ui/primitives/choice.tsx	58
 RadioProps	interface	platform	true		src/ui/primitives/choice.tsx	126	
 Radio	function	platform	true	component	src/ui/primitives/choice.tsx	138	
 SwitchProps	interface	platform	true		src/ui/primitives/choice.tsx	189	
-Switch	function	platform	true	component	src/ui/primitives/choice.tsx	211	
-ChoiceOption	interface	platform	true		src/ui/primitives/choice.tsx	260	
-CheckboxGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	267	
-CheckboxGroup	function	platform	true	component	src/ui/primitives/choice.tsx	282	
-toggle	function	platform	false		src/ui/primitives/choice.tsx	290	CheckboxGroup
-RadioGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	328	
-RadioGroup	function	platform	true	component	src/ui/primitives/choice.tsx	342	
+SwitchArtwork	function	platform	true	component	src/ui/primitives/choice.tsx	205	
+Switch	function	platform	true	component	src/ui/primitives/choice.tsx	223	
+ChoiceOption	interface	platform	true		src/ui/primitives/choice.tsx	272	
+CheckboxGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	279	
+CheckboxGroup	function	platform	true	component	src/ui/primitives/choice.tsx	294	
+toggle	function	platform	false		src/ui/primitives/choice.tsx	302	CheckboxGroup
+RadioGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	340	
+RadioGroup	function	platform	true	component	src/ui/primitives/choice.tsx	354	
 read	function	platform	false	test	src/ui/primitives/choiceMigration.test.ts	4	
 read	function	platform	false	test	src/ui/primitives/menuMigration.test.ts	4	
 TextInputType	type	platform	true		src/ui/primitives/TextInput.tsx	41	
@@ -13220,18 +13221,18 @@ CONTROL_STYLE	array	platform	false		src/ui/registry/forms.defs.tsx	86
 checkboxDef	object	platform	true		src/ui/registry/forms.defs.tsx	98	
 radioGroupDef	object	platform	true		src/ui/registry/forms.defs.tsx	179	
 switchDef	object	platform	true		src/ui/registry/forms.defs.tsx	240	
-textInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	315	
-shell	function	platform	false		src/ui/registry/forms.defs.tsx	443	textInputDef
-dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	532	
-fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	619	
-themeModeSwitchDef	object	platform	true		src/ui/registry/forms.defs.tsx	738	
-colorPickerDef	object	platform	true		src/ui/registry/forms.defs.tsx	788	
-otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	824	
-DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	876	
-GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	885	
-selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	903	
-search	function	platform	false		src/ui/registry/forms.defs.tsx	1006	selectDef
-FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	1037	
+textInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	317	
+shell	function	platform	false		src/ui/registry/forms.defs.tsx	445	textInputDef
+dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	534	
+fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	621	
+themeModeSwitchDef	object	platform	true		src/ui/registry/forms.defs.tsx	740	
+colorPickerDef	object	platform	true		src/ui/registry/forms.defs.tsx	790	
+otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	826	
+DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	878	
+GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	887	
+selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	905	
+search	function	platform	false		src/ui/registry/forms.defs.tsx	1008	selectDef
+FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	1039	
 COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	61	
 CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	76	
 CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	92	
@@ -13376,13 +13377,13 @@ applyPreset	function	platform	false		src/ui/studio/ButtonBrowser.tsx	73	ButtonPa
 presetIsActive	function	platform	false		src/ui/studio/ButtonBrowser.tsx	86	ButtonPatternEditor
 ButtonBrowser	function	platform	true	component	src/ui/studio/ButtonBrowser.tsx	132	
 buttonFamilyPreviewProps	function	platform	true		src/ui/studio/buttonFamilyPreview.ts	9	
-ThumbnailKind	type	platform	false		src/ui/studio/componentThumbnail.tsx	8	
-kindFor	function	platform	false		src/ui/studio/componentThumbnail.tsx	14	
-FieldScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	48	
-SelectScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	54	
-ChoiceScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	68	
-ColorPickerScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	72	
-ComponentThumbnail	function	platform	true	component	src/ui/studio/componentThumbnail.tsx	81	
+ThumbnailKind	type	platform	false		src/ui/studio/componentThumbnail.tsx	9	
+kindFor	function	platform	false		src/ui/studio/componentThumbnail.tsx	15	
+FieldScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	50	
+SelectScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	56	
+ChoiceScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	70	
+ColorPickerScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	74	
+ComponentThumbnail	function	platform	true	component	src/ui/studio/componentThumbnail.tsx	83	
 MEMBERS	variable	platform	false	component,test	src/ui/studio/family.test.tsx	26	
 openButtonBrowser	function	platform	false	test	src/ui/studio/family.test.tsx	29	
 openButtons	function	platform	false	test	src/ui/studio/family.test.tsx	36	
@@ -13390,7 +13391,7 @@ openButtonMember	function	platform	false	test	src/ui/studio/family.test.tsx	41
 labels	function	platform	false	test	src/ui/studio/family.test.tsx	108	
 navTo	function	platform	false	test	src/ui/studio/family.test.tsx	110	
 cardNamed	function	platform	false	ui-tile,test	src/ui/studio/family.test.tsx	158	
-navigate	function	platform	false	test	src/ui/studio/family.test.tsx	346	
+navigate	function	platform	false	test	src/ui/studio/family.test.tsx	348	
 FamilyBrowser	function	platform	true	component	src/ui/studio/FamilyBrowser.tsx	5	
 Shape	interface	platform	false		src/ui/studio/InAppUsage.tsx	31	
 DATA	object	platform	false		src/ui/studio/InAppUsage.tsx	39	
