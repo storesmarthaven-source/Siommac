@@ -23,6 +23,15 @@ import { TextInput, type TextInputProps } from '../primitives/TextInput';
 
 type Base = Omit<TextInputProps, 'type' | 'inputMode' | 'multiline' | 'rows'>;
 
+function NumberStepper({ onIncrease, onDecrease }: { onIncrease: () => void; onDecrease: () => void }): VNode {
+  return (
+    <span class="ui-number-stepper">
+      <button type="button" aria-label="Increase value" onClick={onIncrease}><LucideIcon name="ChevronUp" /></button>
+      <button type="button" aria-label="Decrease value" onClick={onDecrease}><LucideIcon name="ChevronDown" /></button>
+    </span>
+  );
+}
+
 /* ── Password ──────────────────────────────────────────────────────────────*/
 
 export interface PasswordInputProps extends Omit<Base, 'iconRight' | 'clearable'> {
@@ -106,12 +115,7 @@ export function NumberInput({ value, onChange, unit, showSteppers = true, ...res
       inputMode="decimal"
       value={text}
       suffix={unit}
-      trailingAccessory={showSteppers ? (
-        <span class="ui-number-stepper">
-          <button type="button" aria-label="Increase value" onClick={() => adjust(1)}><LucideIcon name="ChevronUp" /></button>
-          <button type="button" aria-label="Decrease value" onClick={() => adjust(-1)}><LucideIcon name="ChevronDown" /></button>
-        </span>
-      ) : undefined}
+      trailingAccessory={showSteppers ? <NumberStepper onIncrease={() => adjust(1)} onDecrease={() => adjust(-1)} /> : undefined}
       onInput={t => {
         const clean = t.replace(/[^\d.-]/g, '');
         setText(clean);
@@ -186,12 +190,22 @@ export interface PercentageInputProps extends Omit<Base, 'value' | 'onInput'> {
   value: number | null;
   onChange: (value: number | null) => void;
   decimals?: number;
+  /** Adds the same accessible step controls used by NumberInput. */
+  showSteppers?: boolean;
 }
 
-export function PercentageInput({ value, onChange, decimals = 2, ...rest }: PercentageInputProps): VNode {
+export function PercentageInput({ value, onChange, decimals = 2, showSteppers = true, ...rest }: PercentageInputProps): VNode {
   const toText = (v: number | null): string => (v === null ? '' : String(Number((v * 100).toFixed(decimals))));
   const [text, setText] = useState(toText(value));
   useEffect(() => { setText(prev => (Number(prev || '0') / 100 === value ? prev : toText(value))); }, [value]);
+
+  const adjust = (direction: 1 | -1): void => {
+    const step = rest.step ?? 1;
+    const currentPercent = value === null ? 0 : value * 100;
+    const nextPercent = Math.min(rest.max ?? Infinity, Math.max(rest.min ?? -Infinity, currentPercent + direction * step));
+    setText(String(Number(nextPercent.toFixed(decimals))));
+    onChange(nextPercent / 100);
+  };
 
   return (
     <TextInput
@@ -200,6 +214,7 @@ export function PercentageInput({ value, onChange, decimals = 2, ...rest }: Perc
       inputMode="decimal"
       value={text}
       suffix="%"
+      trailingAccessory={showSteppers ? <NumberStepper onIncrease={() => adjust(1)} onDecrease={() => adjust(-1)} /> : undefined}
       onInput={t => {
         const clean = t.replace(/[^\d.]/g, '');
         setText(clean);

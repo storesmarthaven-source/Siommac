@@ -15,6 +15,10 @@ source of truth.
    - all relevant preview options visible in clear groups;
    - **Component style** as the single collapsed section.
 
+Component size remains part of the typed runtime API, but Small/Medium/Large is
+not a preview property control. The Studio previews the canonical default size;
+geometry is governed through the collapsed recipe section.
+
 Do not create a separate “More preview options” drawer. Collapsing ordinary
 preview controls hides the most common work while leaving the riskier published
 style controls exposed.

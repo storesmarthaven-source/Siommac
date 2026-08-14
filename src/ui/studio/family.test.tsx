@@ -298,7 +298,7 @@ describe('Buttons family — Studio', () => {
     const labels = [...container.querySelectorAll('.sds-owned-button__settings label, .sds-owned-button__settings h4, .sds-owned-button__settings [role="radiogroup"]')]
       .map(el => el.textContent).join(' | ');
     for (const control of Object.values(def?.props ?? {}).filter(control =>
-      control.type !== 'text' && control.label !== 'Variant' && control.label !== 'Leading icon')) {
+      control.type !== 'text' && control.label !== 'Variant' && control.label !== 'Leading icon' && control.label !== 'Size')) {
       expect(labels).toContain(control.label);
     }
     expect(container.querySelector('[role="radiogroup"][aria-label="Dropdown Button variant"]')).not.toBeNull();
@@ -325,14 +325,20 @@ describe('Buttons family — Studio', () => {
     }
   });
 
-  it('keeps variant tiles at canonical medium size when the live preview size changes', () => {
-    const { container, getByRole } = render(<Studio />);
+  it('keeps component sizing functional but removes size controls from properties panels', () => {
+    const { container, queryByRole } = render(<Studio />);
     openButtonBrowser(container);
     openButtonMember(container, 'Split Button');
 
-    fireEvent.click(getByRole('button', { name: 'Large' }));
-    expect(container.querySelector('.sds-owned-button__canvas .ui-btn--lg')).not.toBeNull();
-    expect(container.querySelector('.sds-owned-button__variants .ui-btn--lg')).toBeNull();
+    expect(queryByRole('button', { name: 'Small' })).toBeNull();
+    expect(queryByRole('button', { name: 'Medium' })).toBeNull();
+    expect(queryByRole('button', { name: 'Large' })).toBeNull();
+
+    const textInputNav = [...container.querySelectorAll<HTMLButtonElement>('.sds-nav button')]
+      .find(button => button.textContent.trim() === 'TextInput');
+    if (!textInputNav) throw new Error('No TextInput navigation item is rendered');
+    fireEvent.click(textInputNav);
+    expect(container.querySelector('[role="group"][aria-label="Size"]')).toBeNull();
   });
 
   it('keeps compound Button icon colors isolated by variant', () => {

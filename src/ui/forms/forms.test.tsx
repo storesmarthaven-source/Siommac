@@ -299,6 +299,15 @@ describe('PercentageInput', () => {
     render(<PercentageInput value={0.0825} onChange={vi.fn()} aria-label="Rate" />);
     expect(screen.getByLabelText<HTMLInputElement>('Rate').value).toBe('8.25');
   });
+
+  it('uses the same accessible stepper treatment as NumberInput', () => {
+    const onChange = vi.fn();
+    render(<PercentageInput value={0.08} onChange={onChange} step={0.5} aria-label="Rate" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Increase value' }));
+    expect(onChange).toHaveBeenCalledWith(0.085);
+    fireEvent.click(screen.getByRole('button', { name: 'Decrease value' }));
+    expect(onChange).toHaveBeenCalledWith(0.075);
+  });
 });
 
 describe('PhoneInput', () => {

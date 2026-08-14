@@ -12779,26 +12779,28 @@ FormFieldProps	interface	platform	true		src/ui/forms/FormField.tsx	26
 VALIDATION_ICON	variable	platform	false	component	src/ui/forms/FormField.tsx	53	
 FormField	function	platform	true	component	src/ui/forms/FormField.tsx	59	
 FormGrid	function	platform	true	component	src/ui/forms/FormField.tsx	137	
-file	function	platform	false	test	src/ui/forms/forms.test.tsx	391	
-pickFiles	function	platform	false	test	src/ui/forms/forms.test.tsx	402	
+file	function	platform	false	test	src/ui/forms/forms.test.tsx	400	
+pickFiles	function	platform	false	test	src/ui/forms/forms.test.tsx	411	
 Base	type	platform	false		src/ui/forms/inputs.tsx	24	
-PasswordInputProps	interface	platform	true		src/ui/forms/inputs.tsx	28	
-PasswordInput	function	platform	true	component	src/ui/forms/inputs.tsx	34	
-NumberInputProps	interface	platform	true		src/ui/forms/inputs.tsx	66	
-NumberInput	function	platform	true	component	src/ui/forms/inputs.tsx	78	
-adjust	function	platform	false		src/ui/forms/inputs.tsx	90	NumberInput
-CurrencyInputProps	interface	platform	true		src/ui/forms/inputs.tsx	137	
-CurrencyInput	function	platform	true	component	src/ui/forms/inputs.tsx	148	
-toText	function	platform	false		src/ui/forms/inputs.tsx	149	CurrencyInput
-PercentageInputProps	interface	platform	true		src/ui/forms/inputs.tsx	184	
-PercentageInput	function	platform	true	component	src/ui/forms/inputs.tsx	191	
-toText	function	platform	false		src/ui/forms/inputs.tsx	192	PercentageInput
-EmailInput	function	platform	true	component	src/ui/forms/inputs.tsx	216	
-UrlInput	function	platform	true	component	src/ui/forms/inputs.tsx	220	
-PhoneInputProps	interface	platform	true		src/ui/forms/inputs.tsx	224	
-PhoneInput	function	platform	true	component	src/ui/forms/inputs.tsx	232	
-TextareaProps	interface	platform	true		src/ui/forms/inputs.tsx	256	
-Textarea	function	platform	true	component	src/ui/forms/inputs.tsx	261	
+NumberStepper	function	platform	false	component	src/ui/forms/inputs.tsx	26	
+PasswordInputProps	interface	platform	true		src/ui/forms/inputs.tsx	37	
+PasswordInput	function	platform	true	component	src/ui/forms/inputs.tsx	43	
+NumberInputProps	interface	platform	true		src/ui/forms/inputs.tsx	75	
+NumberInput	function	platform	true	component	src/ui/forms/inputs.tsx	87	
+adjust	function	platform	false		src/ui/forms/inputs.tsx	99	NumberInput
+CurrencyInputProps	interface	platform	true		src/ui/forms/inputs.tsx	141	
+CurrencyInput	function	platform	true	component	src/ui/forms/inputs.tsx	152	
+toText	function	platform	false		src/ui/forms/inputs.tsx	153	CurrencyInput
+PercentageInputProps	interface	platform	true		src/ui/forms/inputs.tsx	188	
+PercentageInput	function	platform	true	component	src/ui/forms/inputs.tsx	197	
+toText	function	platform	false		src/ui/forms/inputs.tsx	198	PercentageInput
+adjust	function	platform	false		src/ui/forms/inputs.tsx	202	PercentageInput
+EmailInput	function	platform	true	component	src/ui/forms/inputs.tsx	231	
+UrlInput	function	platform	true	component	src/ui/forms/inputs.tsx	235	
+PhoneInputProps	interface	platform	true		src/ui/forms/inputs.tsx	239	
+PhoneInput	function	platform	true	component	src/ui/forms/inputs.tsx	247	
+TextareaProps	interface	platform	true		src/ui/forms/inputs.tsx	271	
+Textarea	function	platform	true	component	src/ui/forms/inputs.tsx	276	
 MultiSelectProps	interface	platform	true		src/ui/forms/MultiSelect.tsx	32	
 MultiSelect	function	platform	true	component	src/ui/forms/MultiSelect.tsx	57	
 OptionListProps	interface	platform	true		src/ui/forms/OptionList.tsx	18	

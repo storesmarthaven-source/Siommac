@@ -190,6 +190,7 @@
     line-height: var(--ui-line-height-base);
   }
   .ui-ctrl-input::placeholder { color: var(--ui-control-placeholder); }
+  input.ui-ctrl-input[type='password'] { font-size: calc(var(--ui-control-font-size) * .82); letter-spacing: .08em; }
   textarea.ui-ctrl-input { resize: vertical; min-height: 60px; padding: 0; }
 
   /* Native select needs its own arrow removed — the control draws one. */
