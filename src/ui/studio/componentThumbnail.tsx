@@ -59,8 +59,9 @@ export function ComponentThumbnail({ id, built = true }: {
   built?: boolean;
 }): VNode {
   const kind = kindFor(id, built);
+  const fogged = id === 'file-input' || id === 'select';
   return (
-    <div class={`sds-card__art sds-thumb sds-thumb--${kind}`} aria-hidden="true">
+    <div class={`sds-card__art sds-thumb sds-thumb--${kind}${fogged ? ' is-fogged' : ''}`} aria-hidden="true">
       {kind === 'buttons' && <div class="sds-thumb-buttons"><span>Cancel</span><strong><LucideIcon name="Check" size={13} />Continue</strong></div>}
       {kind === 'segmented' && <div class="sds-thumb-segmented"><strong><LucideIcon name="Grid2X2" size={11} />Grid</strong><span>List</span><span>Board</span></div>}
       {kind === 'menu' && <div class="sds-thumb-menu"><strong>Actions <LucideIcon name="ChevronDown" size={12} /></strong><div><span>View record</span><span>Edit details</span><span class="is-danger">Delete</span></div></div>}
