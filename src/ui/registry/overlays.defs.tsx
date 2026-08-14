@@ -45,14 +45,26 @@ function PopoverPreview({ props, initiallyOpen = false }: { props: PropValues; i
 }
 
 function SweetAlertPreview({ props }: { props: PropValues }): VNode {
+  const mode = s(props.mode, 'confirm');
+  const showIcon = b(props.showIcon);
+  const tone = s(props.tone, 'question');
+  const timed = mode === 'timed';
+  const prompt = mode === 'prompt';
+  const loading = mode === 'loading';
   const options: CpopOptions = {
-    icon: s(props.tone, 'question'),
-    title: 'Publish these changes?',
-    text: 'This version will update every canonical consumer in the application.',
-    showCancelButton: b(props.showCancel),
+    icon: showIcon ? tone : false,
+    loading,
+    title: loading ? 'Updating application' : prompt ? 'Name this version' : 'Publish these changes?',
+    text: loading ? 'Please wait while the design system is updated.' : 'This version will update every canonical consumer in the application.',
+    input: prompt ? s(props.inputType, 'text') as CpopOptions['input'] : undefined,
+    inputPlaceholder: prompt ? 'Version name' : undefined,
+    showConfirmButton: !loading,
+    showCancelButton: (mode === 'confirm' || prompt) && b(props.showCancel),
     confirmButtonText: 'Publish',
     cancelButtonText: 'Cancel',
-    allowOutsideClick: b(props.allowDismiss),
+    allowOutsideClick: !loading && b(props.allowDismiss),
+    timer: timed && typeof props.duration === 'number' ? props.duration : undefined,
+    timerProgressBar: timed && b(props.progress),
   };
   return (
     <div style={{ minHeight: '190px', display: 'grid', placeItems: 'center' }}>
@@ -173,12 +185,38 @@ export const sweetAlertDef: ComponentDef = {
   componentPath: 'src/lib/popup.ts',
   importFrom: '@lib/popup',
   props: {
-    tone: { type: 'segmented', label: 'Variant', options: ['success', 'error', 'warning', 'info', 'question'], default: 'question' },
+    mode: { type: 'segmented', label: 'Type', options: ['alert', 'confirm', 'prompt', 'loading', 'timed'], default: 'confirm' },
+    tone: { type: 'segmented', label: 'Icon', options: ['success', 'error', 'warning', 'info', 'question'], default: 'question' },
+    showIcon: { type: 'boolean', label: 'Show icon', default: true },
     showCancel: { type: 'boolean', label: 'Cancel action', default: true },
     allowDismiss: { type: 'boolean', label: 'Backdrop dismiss', default: true },
+    inputType: { type: 'select', label: 'Input type', options: ['text', 'email', 'password', 'number', 'textarea'], default: 'text' },
+    duration: { type: 'number', label: 'Duration (ms)', default: 4000, min: 1000, max: 15000, step: 500 },
+    progress: { type: 'boolean', label: 'Timer progress', default: true },
   },
-  style: [],
-  states: ['default', 'open'],
+  style: [
+    { label: 'Surface', controls: [
+      { name: '--ui-sweet-alert-width', label: 'Maximum width', kind: 'size' },
+      { name: '--ui-sweet-alert-radius', label: 'Corner radius', kind: 'size' },
+      { name: '--ui-sweet-alert-padding', label: 'Content padding', kind: 'text' },
+      { name: '--ui-sweet-alert-background', label: 'Background', kind: 'color' },
+      { name: '--ui-sweet-alert-backdrop', label: 'Backdrop', kind: 'color-alpha' },
+      { name: '--ui-sweet-alert-backdrop-blur', label: 'Backdrop blur', kind: 'size' },
+    ] },
+    { label: 'Icon and type', controls: [
+      { name: '--ui-sweet-alert-icon-size', label: 'Icon size', kind: 'size' },
+      { name: '--ui-sweet-alert-title-size', label: 'Title size', kind: 'size' },
+      { name: '--ui-sweet-alert-text-size', label: 'Message size', kind: 'size' },
+      { name: '--ui-sweet-alert-title-color', label: 'Title color', kind: 'color' },
+      { name: '--ui-sweet-alert-text-color', label: 'Message color', kind: 'color' },
+    ] },
+    { label: 'Actions', controls: [
+      { name: '--ui-sweet-alert-action-radius', label: 'Button radius', kind: 'size' },
+      { name: '--ui-sweet-alert-action-height', label: 'Button height', kind: 'size' },
+      { name: '--ui-sweet-alert-action-gap', label: 'Button gap', kind: 'size' },
+    ] },
+  ],
+  states: ['default'],
   compare: ['default'],
   a11y: {
     role: 'dialog with aria-modal="true".',
@@ -191,9 +229,9 @@ export const sweetAlertDef: ComponentDef = {
     focus: 'The prompt receives focus when present; the popup remains modal until it resolves.',
     notes: ['Errors, warnings and loading alerts require an explicit resolution and cannot be dismissed through the backdrop.'],
   },
-  migration: { notes: ['The existing SweetAlert2-compatible runtime remains in place; its styling will be brought onto Studio tokens in the popup styling pass.'] },
+  migration: { notes: ['The existing SweetAlert2-compatible runtime remains in place and now consumes the published Studio variables for its surface, typography, icon, backdrop and actions.'] },
   render: p => <SweetAlertPreview props={p} />,
-  code: p => `await cpop.fire({\n  icon: '${s(p.tone, 'question')}',\n  title: 'Publish these changes?',${b(p.showCancel) ? '\n  showCancelButton: true,' : ''}\n  confirmButtonText: 'Publish'\n});`,
+  code: p => `await cpop.fire({\n  icon: ${b(p.showIcon) ? `'${s(p.tone, 'question')}'` : 'false'},\n  title: 'Publish these changes?',${b(p.showCancel) ? '\n  showCancelButton: true,' : ''}${s(p.mode) === 'prompt' ? `\n  input: '${s(p.inputType, 'text')}',` : ''}${s(p.mode) === 'timed' ? `\n  timer: ${typeof p.duration === 'number' ? p.duration : 4000},\n  timerProgressBar: ${b(p.progress)},` : ''}\n  confirmButtonText: 'Publish'\n});`,
 };
 
 export const OVERLAY_DEFS: readonly ComponentDef[] = [popoverDef, tooltipDef, sweetAlertDef];

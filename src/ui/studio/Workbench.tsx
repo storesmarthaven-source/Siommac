@@ -43,9 +43,11 @@ import { PreviewScope } from './PreviewScope';
  */
 const CONTROL_GROUPS: { title: string; names: string[] }[] = [
   { title: 'Content', names: ['label', 'text', 'placeholder', 'iconLeft', 'iconRight', 'icon', 'iconSide', 'iconOnly', 'helpText', 'tooltipEnabled', 'tooltipText', 'suffix', 'prefix', 'required'] },
-  { title: 'Appearance', names: ['variant', 'tone', 'size', 'contrast', 'shape', 'density', 'accent'] },
+  { title: 'Appearance', names: ['variant', 'tier', 'tone', 'mode', 'size', 'contrast', 'shape', 'density', 'accent'] },
+  { title: 'Timing', names: ['timer', 'duration', 'progress'] },
   { title: 'States', names: ['disabled', 'loading', 'loadingText', 'pressed', 'readOnly', 'error', 'checked', 'selected', 'validation'] },
-  { title: 'More options', names: ['action', 'href', 'fullWidth', 'clearable', 'multiline', 'rows'] },
+  { title: 'Content options', names: ['chips', 'details', 'note', 'file', 'action', 'inputType'] },
+  { title: 'More options', names: ['dismissible', 'showIcon', 'showCancel', 'allowDismiss', 'href', 'fullWidth', 'clearable', 'multiline', 'rows'] },
 ];
 
 const FRIENDLY_VALUES: Record<string, string> = {
@@ -108,6 +110,22 @@ function isStateControlCoveredByPreview(def: ComponentDef, name: string): boolea
 function isRelevantPreviewControl(def: ComponentDef, shown: PropValues, previewState: UiState, name: string): boolean {
   if (name === 'label') return false;
   if (isStateControlCoveredByPreview(def, name)) return false;
+  if (def.id === 'toast') {
+    const tier = String(shown.tier ?? 'normal');
+    if (name === 'duration' || name === 'progress') return shown.timer === true;
+    if (name === 'chips' || name === 'details' || name === 'action') return tier !== 'normal';
+    if (name === 'note') return tier === 'action';
+    if (name === 'file') return tier === 'rich';
+    return true;
+  }
+  if (def.id === 'sweet-alert') {
+    const mode = String(shown.mode ?? 'confirm');
+    if (name === 'inputType') return mode === 'prompt';
+    if (name === 'duration' || name === 'progress') return mode === 'timed';
+    if (name === 'showCancel') return mode === 'confirm' || mode === 'prompt';
+    if (name === 'allowDismiss') return mode !== 'loading';
+    return true;
+  }
   if (def.id !== 'text-input') return true;
 
   const type = String(shown.type ?? 'Text');

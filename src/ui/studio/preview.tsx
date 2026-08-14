@@ -8,8 +8,9 @@ import { render } from 'preact';
 import '@/styles/index.css';
 import '../tokens';
 import { Studio } from './Studio';
+import { Toaster } from '../toast';
 
 const root = document.getElementById('studio-root');
 if (!root) throw new Error('Studio preview root is missing');
 
-render(<Studio />, root);
+render(<><Studio /><Toaster /></>, root);

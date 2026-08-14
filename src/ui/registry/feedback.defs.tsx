@@ -3,13 +3,53 @@ import { EmptyState, type EmptyStateSize, type EmptyTone } from '../components/E
 import { ListSkeleton, Skeleton, SkeletonText } from '../components/Skeleton';
 import { Spinner } from '../components/Spinner';
 import { ToastCard } from '../toast/ToastCard';
+import { toast as notify } from '../toast/toastStore';
 import type { ToastRecord, ToastTier, ToastVariant } from '../toast/toastTypes';
-import { LucideIcon } from '../LucideIcon';
+import { LucideIcon, type LucideName } from '../LucideIcon';
 import { Button } from '../primitives/Button';
 import { type ComponentDef, type PropValues } from './types';
 
 const s = (value: PropValues[string] | undefined, fallback = ''): string => typeof value === 'string' ? value : fallback;
 const b = (value: PropValues[string] | undefined): boolean => value === true;
+
+function toastRecord(p: PropValues): ToastRecord {
+  const tier = s(p.tier, 'normal') as ToastTier;
+  const tone = s(p.tone, 'success') as ToastVariant;
+  const icon = s(p.icon, 'CircleCheck');
+  const timer = b(p.timer);
+  const duration = timer && typeof p.duration === 'number' ? p.duration : 0;
+  return {
+    id: 'studio-toast', tier, variant: tone,
+    title: tone === 'loading' ? 'Updating records' : 'Changes saved',
+    description: 'Your changes are now available across SIOMAC.',
+    duration, dismissible: b(p.dismissible), ariaLive: tone === 'error' ? 'assertive' : 'polite', createdAt: 0,
+    icon: icon === 'None' ? null : icon as LucideName,
+    progress: b(p.progress),
+    moduleLabel: tier !== 'normal' && b(p.chips) ? 'Employees' : undefined,
+    statusLabel: tier !== 'normal' && b(p.chips) ? 'Complete' : undefined,
+    details: tier !== 'normal' && b(p.details) ? [{ label: 'Records', value: '18 updated' }] : undefined,
+    note: tier === 'action' && b(p.note) ? 'You can review the audit entry.' : undefined,
+    file: tier === 'rich' && b(p.file) ? { name: 'employee-import.csv', sizeLabel: '24 KB', subtitle: 'Import complete' } : undefined,
+    actions: tier !== 'normal' && b(p.action) ? [{ label: 'View details', dismissOnClick: true }] : undefined,
+  };
+}
+
+function triggerToast(record: ToastRecord): void {
+  const actionVariant = record.variant === 'loading' ? 'info' : record.variant;
+  const common = {
+    title: record.title, description: record.description, variant: actionVariant,
+    duration: record.duration, dismissible: record.dismissible, icon: record.icon, progress: record.progress,
+  };
+  if (record.tier === 'action') {
+    notify.action({ ...common, moduleLabel: record.moduleLabel, statusLabel: record.statusLabel, details: record.details,
+      note: record.note, actions: record.actions ?? [{ label: 'View details' }] });
+  } else if (record.tier === 'rich') {
+    notify.rich({ ...common, moduleLabel: record.moduleLabel, statusLabel: record.statusLabel, details: record.details,
+      file: record.file, actions: record.actions });
+  } else {
+    notify(record.title, { ...common, variant: record.variant, title: record.title });
+  }
+}
 
 export const emptyStateDef: ComponentDef = {
   id: 'empty-state',
@@ -154,12 +194,29 @@ export const toastDef: ComponentDef = {
   props: {
     tier: { type: 'segmented', label: 'Variant', options: ['normal', 'action', 'rich'], default: 'normal' },
     tone: { type: 'segmented', label: 'Tone', options: ['success', 'info', 'warning', 'error', 'loading'], default: 'success' },
+    icon: { type: 'icon', label: 'Icon', default: 'CircleCheck', recommendations: ['CircleCheck', 'Info', 'TriangleAlert', 'CircleX', 'Bell', 'FileCheck2'] },
+    timer: { type: 'boolean', label: 'Auto dismiss', default: true, help: 'Set a duration and pause it automatically on hover or focus.' },
+    duration: { type: 'number', label: 'Duration (ms)', default: 4000, min: 1000, max: 15000, step: 500 },
+    progress: { type: 'boolean', label: 'Timer progress', default: true },
     dismissible: { type: 'boolean', label: 'Dismiss button', default: true },
+    chips: { type: 'boolean', label: 'Module and status', default: true },
+    details: { type: 'boolean', label: 'Summary details', default: true },
+    note: { type: 'boolean', label: 'Supporting note', default: true },
+    file: { type: 'boolean', label: 'File preview', default: true },
+    action: { type: 'boolean', label: 'Action button', default: true },
   },
   style: [
     { label: 'Surface', controls: [
+      { name: '--siomac-toast-width', label: 'Width', kind: 'size' },
+      { name: '--siomac-toast-radius', label: 'Corner radius', kind: 'size' },
+      { name: '--siomac-toast-padding', label: 'Content padding', kind: 'text' },
       { name: '--siomac-toast-card', label: 'Background', kind: 'color' },
       { name: '--siomac-toast-border', label: 'Border', kind: 'color' },
+      { name: '--siomac-toast-icon-size', label: 'Icon size', kind: 'size' },
+    ] },
+    { label: 'Typography', controls: [
+      { name: '--siomac-toast-title-size', label: 'Title size', kind: 'size' },
+      { name: '--siomac-toast-text-size', label: 'Supporting text size', kind: 'size' },
       { name: '--siomac-toast-navy', label: 'Title', kind: 'color' },
       { name: '--siomac-toast-muted', label: 'Supporting text', kind: 'color' },
     ] },
@@ -178,27 +235,39 @@ export const toastDef: ComponentDef = {
     keyboard: [{ keys: 'Escape', does: 'Dismisses a dismissible toast while it contains focus.' }],
     focus: 'Actions and the dismiss control are keyboard reachable; timers pause on hover and focus.',
   },
-  migration: { notes: ['Application notifications already use the globally mounted canonical Toaster. SweetAlert2 popup styling remains a separate follow-up.'] },
+  migration: { notes: ['Application notifications already use the globally mounted canonical Toaster; Studio edits the same runtime contract rather than a parallel preview implementation.'] },
   render: p => {
-    const tier = s(p.tier, 'normal') as ToastTier;
-    const tone = s(p.tone, 'success') as ToastVariant;
-    const record: ToastRecord = {
-      id: 'studio-toast', tier, variant: tone,
-      title: tone === 'loading' ? 'Updating records' : 'Changes saved',
-      description: 'Your changes are now available across SIOMAC.',
-      duration: 0, dismissible: b(p.dismissible), ariaLive: tone === 'error' ? 'assertive' : 'polite', createdAt: 0,
-      moduleLabel: tier === 'normal' ? undefined : 'Employees',
-      statusLabel: tier === 'normal' ? undefined : 'Complete',
-      details: tier === 'normal' ? undefined : [{ label: 'Records', value: '18 updated' }],
-      note: tier === 'action' ? 'You can review the audit entry.' : undefined,
-      file: tier === 'rich' ? { name: 'employee-import.csv', sizeLabel: '24 KB', subtitle: 'Import complete' } : undefined,
-      actions: tier === 'normal' ? undefined : [{ label: 'View details', dismissOnClick: false }],
-    };
-    return <div style={{ position: 'relative', width: '344px', minHeight: tier === 'normal' ? '86px' : '170px' }}>
-      <ToastCard toast={record} standalone onDismiss={() => undefined} />
+    const record = toastRecord(p);
+    return <div class="sds-toast-specimen">
+      <div style={{ position: 'relative', width: '344px', minHeight: record.tier === 'normal' ? '122px' : '190px' }}>
+        <ToastCard toast={record} standalone onDismiss={() => undefined} />
+      </div>
+      <Button variant="secondary" iconLeft={<LucideIcon name="BellRing" />} onClick={() => triggerToast(record)}>Trigger toast</Button>
     </div>;
   },
-  code: p => `toast.${s(p.tone, 'success')}('Changes saved', {\n  description: 'Your changes are now available across SIOMAC.'\n});`,
+  code: p => {
+    const tier = s(p.tier, 'normal');
+    const tone = s(p.tone, 'success');
+    const options = [
+      `variant: '${tier === 'normal' ? tone : tone === 'loading' ? 'info' : tone}'`,
+      "description: 'Your changes are now available across SIOMAC.'",
+      `icon: ${s(p.icon, 'CircleCheck') === 'None' ? 'null' : `'${s(p.icon, 'CircleCheck')}'`}`,
+      `duration: ${b(p.timer) && typeof p.duration === 'number' ? p.duration : 0}`,
+      `progress: ${b(p.timer) && b(p.progress)}`,
+      `dismissible: ${b(p.dismissible)}`,
+    ];
+    if (tier === 'action' || tier === 'rich') {
+      if (b(p.chips)) options.push("moduleLabel: 'Employees'", "statusLabel: 'Complete'");
+      if (b(p.details)) options.push("details: [{ label: 'Records', value: '18 updated' }]");
+      if (b(p.action)) options.push("actions: [{ label: 'View details', onClick: openAuditLog }]");
+    }
+    if (tier === 'action' && b(p.note)) options.push("note: 'You can review the audit entry.'");
+    if (tier === 'rich' && b(p.file)) options.push("file: { name: 'employee-import.csv', sizeLabel: '24 KB' }");
+    const body = options.map(option => `  ${option},`).join('\n');
+    return tier === 'normal'
+      ? `toast('Changes saved', {\n${body}\n});`
+      : `toast.${tier}({\n  title: 'Changes saved',\n${body}\n});`;
+  },
 };
 
 export const FEEDBACK_DEFS: readonly ComponentDef[] = [emptyStateDef, skeletonDef, spinnerDef, toastDef];

@@ -134,6 +134,8 @@ function buildNormal(message: string, options: ToastOptions = {}): ToastRecord {
     duration: options.duration ?? DEFAULT_DURATIONS[variant],
     dismissible: options.dismissible ?? true,
     ariaLive: options.ariaLive ?? (variant === "error" ? "assertive" : "polite"),
+    icon: options.icon,
+    progress: options.progress ?? true,
     createdAt: Date.now()
   };
 }
@@ -170,6 +172,8 @@ notify.action = (options: ToastActionOptions) => {
     duration: options.duration ?? DEFAULT_DURATIONS[variant],
     dismissible: options.dismissible ?? true,
     ariaLive: options.ariaLive ?? (variant === "error" ? "assertive" : "polite"),
+    icon: options.icon,
+    progress: options.progress ?? true,
     createdAt: Date.now(),
     moduleLabel: options.moduleLabel,
     statusLabel: options.statusLabel,
@@ -190,6 +194,8 @@ notify.rich = (options: ToastRichOptions) => {
     duration: options.duration ?? DEFAULT_DURATIONS[variant],
     dismissible: options.dismissible ?? true,
     ariaLive: options.ariaLive ?? (variant === "error" ? "assertive" : "polite"),
+    icon: options.icon,
+    progress: options.progress ?? true,
     createdAt: Date.now(),
     moduleLabel: options.moduleLabel,
     statusLabel: options.statusLabel,

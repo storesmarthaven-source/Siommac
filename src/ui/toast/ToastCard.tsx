@@ -180,7 +180,7 @@ export function ToastCard({ toast, onDismiss, onPositionUpdate, standalone = fal
       tabIndex={-1}
     >
       <div className="siomac-toast__main">
-        <ToastIcon variant={toast.variant} />
+        <ToastIcon variant={toast.variant} icon={toast.icon} />
 
         <div className="siomac-toast__body">
           <div className="siomac-toast__title-row">
@@ -224,7 +224,7 @@ export function ToastCard({ toast, onDismiss, onPositionUpdate, standalone = fal
           <button type="button" onClick={handleToggleStop}>
             {stopped ? "Resume." : "Click to stop."}
           </button>
-          <ToastProgress duration={toast.duration} paused={paused} />
+          {toast.progress !== false ? <ToastProgress duration={toast.duration} paused={paused} /> : null}
         </footer>
       ) : null}
 
@@ -251,7 +251,7 @@ export function ToastCard({ toast, onDismiss, onPositionUpdate, standalone = fal
               {action.label}
             </button>
           ))}
-          {hasTimer ? <ToastProgress duration={toast.duration} paused={paused} /> : null}
+          {hasTimer && toast.progress !== false ? <ToastProgress duration={toast.duration} paused={paused} /> : null}
         </footer>
       ) : null}
     </article>

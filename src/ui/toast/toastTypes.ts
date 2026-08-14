@@ -1,3 +1,5 @@
+import type { LucideName } from '../LucideIcon';
+
 export type ToastId = string;
 
 export type ToastVariant = "success" | "error" | "warning" | "info" | "loading";
@@ -35,6 +37,10 @@ export interface ToastOptions {
   duration?: number;
   dismissible?: boolean;
   ariaLive?: "polite" | "assertive";
+  /** Override the tone icon with any Lucide icon; null hides the icon. */
+  icon?: LucideName | null;
+  /** Show the progress line when duration is greater than zero. */
+  progress?: boolean;
 }
 
 export interface ToastActionOptions extends ToastOptions {
@@ -70,6 +76,8 @@ export interface ToastRecord {
   dismissible: boolean;
   ariaLive: "polite" | "assertive";
   createdAt: number;
+  icon?: LucideName | null;
+  progress?: boolean;
   moduleLabel?: string;
   statusLabel?: string;
   details?: ToastDetailItem[];

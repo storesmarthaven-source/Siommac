@@ -1,17 +1,34 @@
 /* ─── Custom popup (replaces SweetAlert2) ─── */
+:root,
+[data-ui-preview-scope] {
+  --ui-sweet-alert-width: 420px;
+  --ui-sweet-alert-radius: var(--radius-lg);
+  --ui-sweet-alert-padding: 30px 28px 24px;
+  --ui-sweet-alert-background: var(--bg-card);
+  --ui-sweet-alert-backdrop: rgba(16,29,59,.55);
+  --ui-sweet-alert-backdrop-blur: 3px;
+  --ui-sweet-alert-icon-size: 78px;
+  --ui-sweet-alert-title-size: 21px;
+  --ui-sweet-alert-text-size: 14px;
+  --ui-sweet-alert-title-color: var(--siomac-navy);
+  --ui-sweet-alert-text-color: var(--text-muted);
+  --ui-sweet-alert-action-radius: var(--radius-md);
+  --ui-sweet-alert-action-height: 42px;
+  --ui-sweet-alert-action-gap: 10px;
+}
 .cpop { position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 16px; }
 .cpop.cpop-hidden { display: none !important; }
-.cpop-backdrop { position: absolute; inset: 0; background: rgba(16,29,59,.55); backdrop-filter: blur(3px); animation: cpopFadeIn .2s ease; }
+.cpop-backdrop { position: absolute; inset: 0; background: var(--ui-sweet-alert-backdrop); backdrop-filter: blur(var(--ui-sweet-alert-backdrop-blur)); animation: cpopFadeIn .2s ease; }
 .cpop.cpop-closing .cpop-backdrop { animation: cpopFadeOut .15s ease forwards; }
 @keyframes cpopFadeIn  { from { opacity: 0 } to { opacity: 1 } }
 @keyframes cpopFadeOut { from { opacity: 1 } to { opacity: 0 } }
 
 .cpop-box {
-  position: relative; background: var(--bg-card);
-  border-radius: var(--radius-lg);
+  position: relative; background: var(--ui-sweet-alert-background);
+  border-radius: var(--ui-sweet-alert-radius);
   box-shadow: 0 20px 60px rgba(16,29,59,.22);
-  width: 100%; max-width: 420px;
-  padding: 30px 28px 24px; text-align: center;
+  width: 100%; max-width: var(--ui-sweet-alert-width);
+  padding: var(--ui-sweet-alert-padding); text-align: center;
   animation: cpopBoxIn .25s cubic-bezier(.34,1.56,.64,1);
 }
 .cpop.cpop-closing .cpop-box { animation: cpopBoxOut .15s ease forwards; }
@@ -19,7 +36,7 @@
 @keyframes cpopBoxOut { 0% { opacity: 1; transform: scale(1) } 100% { opacity: 0; transform: scale(.94) } }
 
 /* Icon circle */
-.cpop-icon { width: 78px; height: 78px; margin: 0 auto 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.cpop-icon { width: var(--ui-sweet-alert-icon-size); height: var(--ui-sweet-alert-icon-size); margin: 0 auto 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 .cpop-icon svg { width: 60%; height: 60%; stroke-width: 4; fill: none; }
 .cpop-icon.cpop-icon-success  { background: rgba(46,125,50,.1); }
 .cpop-icon.cpop-icon-success  svg { stroke: var(--success); }
@@ -38,8 +55,8 @@
 .cpop-loading { width: 56px; height: 56px; border: 5px solid var(--border); border-top-color: var(--siomac-red); border-radius: 50%; animation: cpopSpin .8s linear infinite; }
 @keyframes cpopSpin { to { transform: rotate(360deg) } }
 
-.cpop-title { font-size: 21px; font-weight: var(--font-weight-bold); color: var(--siomac-navy); margin: 0 0 8px; line-height: 1.3; }
-.cpop-text  { color: var(--text-muted); font-size: 14px; line-height: 1.6; margin: 0 0 22px; word-wrap: break-word; }
+.cpop-title { font-size: var(--ui-sweet-alert-title-size); font-weight: var(--font-weight-bold); color: var(--ui-sweet-alert-title-color); margin: 0 0 8px; line-height: 1.3; }
+.cpop-text  { color: var(--ui-sweet-alert-text-color); font-size: var(--ui-sweet-alert-text-size); line-height: 1.6; margin: 0 0 22px; word-wrap: break-word; }
 .cpop-text:empty { display: none; }
 .cpop-text strong { color: var(--text-primary); }
 
@@ -57,10 +74,10 @@
 .cpop-progress span { display: block; height: 100%; background: var(--siomac-red); width: 100%; }
 
 /* Buttons */
-.cpop-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.cpop-actions { display: flex; gap: var(--ui-sweet-alert-action-gap); justify-content: center; flex-wrap: wrap; }
 .cpop-btn {
-  min-width: 110px; padding: 11px 22px;
-  border-radius: var(--radius-md);
+  min-width: 110px; min-height: var(--ui-sweet-alert-action-height); padding: 8px 22px;
+  border-radius: var(--ui-sweet-alert-action-radius);
   border: none; font-size: 14px; font-weight: 600;
   cursor: pointer; transition: all .2s;
   font-family: inherit; -webkit-tap-highlight-color: transparent;

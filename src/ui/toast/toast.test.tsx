@@ -115,6 +115,13 @@ describe("toast API", () => {
     expect(t?.duration).toBe(4000);
   });
 
+  it("stores custom icon and progress behavior on the real toast record", () => {
+    toast.success("Saved", { icon: 'BellRing', progress: false });
+    const t = getToasts()[0];
+    expect(t?.icon).toBe('BellRing');
+    expect(t?.progress).toBe(false);
+  });
+
   it("toast.error() creates an error toast with 6s default and assertive aria-live", () => {
     toast.error("Failed");
     const t = getToasts()[0];

@@ -1,6 +1,9 @@
 import type { ToastVariant } from "./toastTypes";
+import { LucideIcon, type LucideName } from '../LucideIcon';
 
-export function ToastIcon({ variant }: { variant: ToastVariant }) {
+export function ToastIcon({ variant, icon }: { variant: ToastVariant; icon?: LucideName | null }) {
+  if (icon === null) return null;
+  if (icon) return <div className="siomac-toast__icon" aria-hidden="true"><LucideIcon name={icon} /></div>;
   if (variant === "success") {
     return (
       <div className="siomac-toast__icon" aria-hidden="true">

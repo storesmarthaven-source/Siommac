@@ -1,6 +1,12 @@
 /* ── Design tokens ────────────────────────────────────────────────────────── */
 
 :root {
+  --siomac-toast-width: 344px;
+  --siomac-toast-radius: 16px;
+  --siomac-toast-padding: 12px 13px 11px;
+  --siomac-toast-icon-size: 30px;
+  --siomac-toast-title-size: 13px;
+  --siomac-toast-text-size: 12px;
   --siomac-toast-card: #ffffff;
   --siomac-toast-border: #e9eef3;
   --siomac-toast-muted: #5e6f8d;
@@ -22,7 +28,7 @@
   position:       fixed;
   top:            80px;
   right:          20px;
-  width:          344px;
+  width:          var(--siomac-toast-width);
   max-width:      calc(100% - 28px);
   z-index:        100001;
   pointer-events: none;
@@ -35,10 +41,10 @@
   --toast-accent: var(--siomac-toast-info);
   --toast-tint: var(--siomac-toast-info-tint);
 
-  width:          344px;
+  width:          var(--siomac-toast-width);
   max-width:      100%;
   background:     var(--siomac-toast-card);
-  border-radius:  16px;
+  border-radius:  var(--siomac-toast-radius);
   border:         1px solid var(--siomac-toast-border);
   box-shadow:
     0 8px 28px rgba(0, 0, 0, .14),
@@ -103,7 +109,7 @@
   display:     flex;
   gap:         11px;
   align-items: flex-start;
-  padding:     12px 13px 11px;
+  padding:     var(--siomac-toast-padding);
 }
 
 /* Normal toasts: vertically centre the icon with the title (single-line);
@@ -116,8 +122,8 @@
 
 .siomac-toast__icon {
   flex-shrink:  0;
-  width:        30px;
-  height:       30px;
+  width:        var(--siomac-toast-icon-size);
+  height:       var(--siomac-toast-icon-size);
   border-radius: 50%;
   display:      grid;
   place-items:  center;
@@ -163,7 +169,7 @@
 
 .siomac-toast__title {
   color:          var(--siomac-toast-navy);
-  font-size:      13px;
+  font-size:      var(--siomac-toast-title-size);
   font-weight:    600;
   text-transform: capitalize;
   line-height:    1.3;
@@ -171,7 +177,7 @@
 
 .siomac-toast__description {
   color:       var(--siomac-toast-muted);
-  font-size:   12px;
+  font-size:   var(--siomac-toast-text-size);
   line-height: 1.4;
 }
 

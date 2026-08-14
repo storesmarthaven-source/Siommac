@@ -175,6 +175,51 @@ describe('Buttons family — Studio', () => {
     expect(cardNamed('SweetAlert2 Popup')?.querySelector('.sds-thumb-sweet-alert')).toBeTruthy();
   });
 
+  it('exposes the real Toast variants, icons, timer and tier-specific content controls', () => {
+    const { getByLabelText, getByRole, getByText, queryByLabelText } = render(<Studio />);
+    fireEvent.click(getByRole('button', { name: 'Toast', exact: true }));
+
+    expect(getByRole('button', { name: 'Trigger toast' })).toBeTruthy();
+    expect(getByRole('button', { name: 'Choose Icon' })).toBeTruthy();
+    expect(getByLabelText('Auto dismiss')).toBeTruthy();
+    expect(getByLabelText('Duration (ms)')).toBeTruthy();
+    expect(getByLabelText('Timer progress')).toBeTruthy();
+
+    fireEvent.click(getByRole('button', { name: 'Action', exact: true }));
+    expect(getByText('Module and status')).toBeTruthy();
+    expect(getByText('Summary details')).toBeTruthy();
+    expect(getByText('Supporting note')).toBeTruthy();
+    expect(queryByLabelText('File preview')).toBeNull();
+
+    fireEvent.click(getByRole('button', { name: 'Rich', exact: true }));
+    expect(getByText('File preview')).toBeTruthy();
+    expect(queryByLabelText('Supporting note')).toBeNull();
+
+    fireEvent.click(getByLabelText('Auto dismiss'));
+    expect(queryByLabelText('Duration (ms)')).toBeNull();
+    expect(queryByLabelText('Timer progress')).toBeNull();
+  });
+
+  it('exposes SweetAlert alert, confirm, prompt, loading and timed behaviors', () => {
+    const { getByLabelText, getByRole, queryByLabelText } = render(<Studio />);
+    fireEvent.click(getByRole('button', { name: 'SweetAlert2 Popup', exact: true }));
+
+    expect(getByRole('button', { name: 'Preview alert' })).toBeTruthy();
+    expect(getByLabelText('Show icon')).toBeTruthy();
+
+    fireEvent.click(getByRole('button', { name: 'Prompt', exact: true }));
+    expect(getByLabelText('Input type')).toBeTruthy();
+    expect(getByLabelText('Cancel action')).toBeTruthy();
+
+    fireEvent.click(getByRole('button', { name: 'Loading', exact: true }));
+    expect(queryByLabelText('Backdrop dismiss')).toBeNull();
+    expect(queryByLabelText('Cancel action')).toBeNull();
+
+    fireEvent.click(getByRole('button', { name: 'Timed', exact: true }));
+    expect(getByLabelText('Duration (ms)')).toBeTruthy();
+    expect(getByLabelText('Timer progress')).toBeTruthy();
+  });
+
   it('keeps the Checkbox application example in a canonical vertical group', () => {
     const { container, getByRole } = render(<Studio />);
     fireEvent.click(getByRole('button', { name: 'Checkbox', exact: true }));
