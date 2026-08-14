@@ -295,8 +295,8 @@ function CompoundButtonEditor({ def, shown, specimen, onSet, onReset, onEditFoun
           </div>
           <footer>
             <span aria-hidden="true">↳</span>
-            <p><strong>Published with Action Button</strong><small>Shared shape, color and states are published once from Action Button. Preview settings stay local.</small></p>
-            {onEditFoundation && <button type="button" onClick={onEditFoundation}>Edit button appearance</button>}
+            <p><strong>Shape and colors</strong><small>Change them in Action Button. The settings above only change this preview.</small></p>
+            {onEditFoundation && <button type="button" onClick={onEditFoundation}>Change shape and colors</button>}
           </footer>
         </aside>
       </section>

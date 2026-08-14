@@ -161,7 +161,7 @@ describe('Buttons family — Studio', () => {
     fireEvent.click(getByRole('button', { name: /AI Action/ }));
 
     expect(getByRole('heading', { name: 'AI Action' })).toBeTruthy();
-    expect(getByRole('button', { name: /Edit button appearance/ })).toBeTruthy();
+    expect(getByRole('button', { name: /Change shape and colors/ })).toBeTruthy();
     expect(container.querySelector('.sds-owned-button__canvas')).not.toBeNull();
     expect(container.querySelector('.sds-owned-button__settings')?.textContent).toContain('Preview settings');
     expect(queryByRole('radio', { name: /AI/ })).toBeNull();
@@ -182,8 +182,8 @@ describe('Buttons family — Studio', () => {
     expect(getByRole('complementary', { name: 'Icon Button settings' })).toBeTruthy();
     expect(queryByRole('textbox', { name: 'Accessible name' })).toBeNull();
     expect(getByRole('button', { name: 'Notifications' })).toBeTruthy();
-    expect(container.querySelector('.sds-owned-button__settings footer')?.textContent).toContain('Published with Action Button');
-    expect(getByRole('button', { name: 'Edit button appearance' })).toBeTruthy();
+    expect(container.querySelector('.sds-owned-button__settings footer')?.textContent).toContain('Shape and colors');
+    expect(getByRole('button', { name: 'Change shape and colors' })).toBeTruthy();
   });
 
   it('isolates Credits controls without adding a Credits ButtonVariant', () => {
@@ -255,7 +255,7 @@ describe('Buttons family — Studio', () => {
 
       expect(container.querySelector('.sds-owned-button__editor')).not.toBeNull();
       expect(container.querySelector('.sds-owned-button__canvas')).not.toBeNull();
-      expect(container.querySelector('.sds-owned-button__settings')?.textContent).toContain('Published with Action Button');
+      expect(container.querySelector('.sds-owned-button__settings')?.textContent).toContain('Shape and colors');
       expect(container.querySelector('.sds-owned-button__reference')).not.toBeNull();
       expect(container.querySelector('.sds-owned-button__variants')).not.toBeNull();
       expect(container.querySelector('.sds-owned-button__settings')?.textContent).toContain('Icon treatment');
@@ -352,7 +352,7 @@ describe('Buttons family — Studio', () => {
     expect(getByRole('button', { name: 'Clear Trailing icon' })).toBeTruthy();
     fireEvent.click(getByRole('button', { name: 'Clear Trailing icon' }));
     expect(getByRole('button', { name: 'Choose Trailing icon' }).textContent).toContain('No icon');
-    expect(container.querySelector('.sds-button-settings__actions > span')?.textContent).toBe('Button family draft · Up to date');
+    expect(container.querySelector('.sds-button-settings__actions > span')?.textContent).toBe('No unpublished changes');
   });
 
   it('uses one Button-family publishing surface and links compound editors to it', () => {
@@ -361,19 +361,19 @@ describe('Buttons family — Studio', () => {
     openButtonMember(container, 'Dropdown Button');
 
     expect(queryByText('Publish')).toBeNull();
-    fireEvent.click(getByRole('button', { name: 'Edit button appearance' }));
+    fireEvent.click(getByRole('button', { name: 'Change shape and colors' }));
 
-    expect(container.querySelector('.sds-button-settings__head')?.textContent).toContain('Button family styles');
+    expect(container.querySelector('.sds-button-settings__head')?.textContent).toContain('Edit button');
     expect(getByRole('button', { name: 'Publish' })).toBeTruthy();
     expect(queryByText('Preview example')).toBeNull();
-    expect(getByRole('heading', { name: 'Preview' })).toBeTruthy();
+    expect(getByRole('heading', { name: 'Preview options' })).toBeTruthy();
   });
 
   it('keeps recipe edits on the selected Button variant', () => {
     const { container, getAllByLabelText, getByRole } = render(<Studio />);
     openButtons(container);
 
-    const primaryHeightTheme = getAllByLabelText('Use theme')[0];
+    const primaryHeightTheme = getAllByLabelText('Use brand theme')[0];
     if (!primaryHeightTheme) throw new Error('Expected Primary height theme control');
     fireEvent.click(primaryHeightTheme);
     const primaryHeight = container.querySelector<HTMLInputElement>('#style---ui-button-primary-height-md');
@@ -387,6 +387,6 @@ describe('Buttons family — Studio', () => {
     fireEvent.click(getByRole('radio', { name: /Secondary/ }));
     expect(container.querySelector('#style---ui-button-primary-height-md')).toBeNull();
     expect(container.querySelector('#style---ui-button-secondary-height-md')).toBeNull();
-    expect(container.querySelector('.sds-button-settings__actions > span')?.textContent).toContain('1 unsaved');
+    expect(container.querySelector('.sds-button-settings__actions > span')?.textContent).toContain('1 change ready to save');
   });
 });

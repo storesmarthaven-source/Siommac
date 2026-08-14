@@ -119,7 +119,7 @@ function TokenControl({ control, studio }: { control: StyleControl; studio: Gall
             if (custom) studio.link(control.name, control.linkedTo ?? 'initial');
             else studio.set(control.name, value.length > 0 ? value : (control.linkedTo ?? 'initial'));
           }} />
-          <span>Use theme</span>
+          <span>Use brand theme</span>
         </label>
       </div>
       {custom ? (
@@ -128,7 +128,7 @@ function TokenControl({ control, studio }: { control: StyleControl; studio: Gall
           : <div class="sds-edit-field__control"><input id={`style-${control.name}`} type="text" value={value}
             onInput={event => studio.set(control.name, (event.target as HTMLInputElement).value)} /></div>
       ) : (
-        <div class="sds-edit-field__theme"><span>Theme value</span><strong>{value.length > 0 ? value : 'Default'}</strong></div>
+        <div class="sds-edit-field__theme"><span>From theme</span><strong>{value.startsWith('var(') ? 'Brand default' : (value.length > 0 ? value : 'Brand default')}</strong></div>
       )}
     </div>
   );
@@ -230,7 +230,7 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
     <section class="sds-button-editor" aria-label="Button editor">
       <div class="sds-button-editor__main">
         <PreviewScope class="sds-button-preview" attach={studio.attachScope}>
-          <header><div><span>Live preview</span><strong>{selectedSample?.title ?? friendly(target)} button</strong></div><small>Draft preview</small></header>
+          <header><div><span>Live preview</span><strong>{selectedSample?.title ?? friendly(target)} button</strong></div><small>Updates instantly</small></header>
           <div class="sds-button-preview__single">
             {def.render?.(previewProps, state === 'default' ? 'default' : state)}
           </div>
@@ -268,12 +268,12 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
 
       <aside class="sds-button-settings" aria-label="Button settings">
         <header class="sds-button-settings__head">
-          <div><span>Button family styles</span><strong>{selectedSample?.title ?? friendly(target)} button</strong></div>
+          <div><span>Edit button</span><strong>{selectedSample?.title ?? friendly(target)} button</strong></div>
           <button type="button" onClick={() => act(async () => { setHistory(await studio.history()); }, 'Version history loaded.')}>History</button>
         </header>
 
         <section class="sds-button-settings__example" aria-labelledby="button-preview-title">
-            <div class="sds-button-settings__example-head"><div><h4 id="button-preview-title">Preview</h4><p>State and icons only — never published.</p></div><button type="button" onClick={() => setPreviewByVariant(previous => ({ ...previous, [target]: undefined }))}>Reset</button></div>
+            <div class="sds-button-settings__example-head"><div><h4 id="button-preview-title">Preview options</h4><p>Try states and icons without changing the app.</p></div><button type="button" onClick={() => setPreviewByVariant(previous => ({ ...previous, [target]: undefined }))}>Reset</button></div>
             <div class="sds-button-settings__state">
               <label for="button-state">State</label>
               <select id="button-state" value={state} onChange={event => setState((event.target as HTMLSelectElement).value as ButtonRecipeState)}>
@@ -298,14 +298,14 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
         {studio.error && <p class="sds-style__error" role="alert">{friendlyError(studio.error)}</p>}
         {notice && <p class="sds-style__notice" role="status">{notice}</p>}
         <footer class="sds-button-settings__actions">
-          <span>Button family draft · {studio.dirtyCount ? `${studio.dirtyCount} unsaved` : 'Up to date'}</span>
+          <span>{studio.dirtyCount ? `${studio.dirtyCount} change${studio.dirtyCount === 1 ? '' : 's'} ready to save` : 'No unpublished changes'}</span>
           <div><button type="button" onClick={studio.resetAll} disabled={!studio.dirtyCount}>Discard</button><button type="button" onClick={() => act(studio.saveDraft, 'Draft saved.')} disabled={studio.loading || studio.saving || !studio.dirtyCount}>Save draft</button><button type="button" class="is-primary" onClick={() => setReview(true)} disabled={studio.loading || studio.saving || !studio.dirtyCount}>Publish</button></div>
         </footer>
       </aside>
 
       {history && <div class="sds-review" role="dialog" aria-modal="true" aria-labelledby="history-title"><div class="sds-review__card"><h3 id="history-title">Version history</h3><div class="sds-history__list">{history.map(item => <article key={item.version}><div><strong>v{item.version}</strong><span>{item.summary ?? 'No summary'}</span><small>{item.publishedAt ? new Date(item.publishedAt).toLocaleString() : 'Unknown date'}</small></div>{item.version !== studio.publishedVersion && <button type="button" onClick={() => act(() => studio.rollback(item.version, `Rollback to v${item.version} from Studio`), `Restored v${item.version}.`)}>Restore</button>}</article>)}</div><div class="sds-style__dialog-actions"><button type="button" onClick={() => setHistory(null)}>Close</button></div></div></div>}
 
-      {review && <div class="sds-review" role="dialog" aria-modal="true" aria-labelledby="publish-title"><div class="sds-review__card"><h3 id="publish-title">Publish Button family styles?</h3><p>{studio.dirtyCount} style change{studio.dirtyCount === 1 ? '' : 's'} will update {totals.canonicalSites} Button uses, including linked Dropdown and Split Buttons. Preview state and icons are not included.</p><label>Describe this change<input value={summary} onInput={event => setSummary((event.target as HTMLInputElement).value)} /></label><div class="sds-style__dialog-actions"><button type="button" onClick={() => setReview(false)}>Cancel</button><button type="button" class="is-primary" disabled={summary.trim().length === 0 || studio.saving} onClick={() => { act(() => studio.publish(summary), 'Published successfully.'); setReview(false); }}>Publish v{studio.publishedVersion + 1}</button></div></div></div>}
+      {review && <div class="sds-review" role="dialog" aria-modal="true" aria-labelledby="publish-title"><div class="sds-review__card"><h3 id="publish-title">Publish button changes?</h3><p>{studio.dirtyCount} style change{studio.dirtyCount === 1 ? '' : 's'} will update {totals.canonicalSites} Button uses, including Dropdown and Split Buttons. Preview states and icons will stay unchanged.</p><label>Describe this change<input value={summary} onInput={event => setSummary((event.target as HTMLInputElement).value)} /></label><div class="sds-style__dialog-actions"><button type="button" onClick={() => setReview(false)}>Cancel</button><button type="button" class="is-primary" disabled={summary.trim().length === 0 || studio.saving} onClick={() => { act(() => studio.publish(summary), 'Published successfully.'); setReview(false); }}>Publish v{studio.publishedVersion + 1}</button></div></div></div>}
     </section>
   );
 }

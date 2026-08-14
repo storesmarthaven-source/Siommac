@@ -68,7 +68,7 @@ function ButtonPatternEditor({ pattern, onBack, onEditFoundation }: { pattern: B
             <h4>Preview</h4>
             {pattern.controls.map(control => <PatternControl key={control.name} pattern={pattern} control={control} values={values} onChange={set} />)}
           </section></div>
-          <footer><LucideIcon name="Link2" size={15} /><p><strong>Published with Action Button</strong><small>These choices are preview-only. Shared shape, color and states are published once from Action Button.</small></p><button type="button" onClick={onEditFoundation}>Edit button appearance</button></footer>
+          <footer><LucideIcon name="Link2" size={15} /><p><strong>Shape and colors</strong><small>Change them in Action Button. The settings above only change this preview.</small></p><button type="button" onClick={onEditFoundation}>Change shape and colors</button></footer>
         </aside>
       </section>
       <section class="sds-button-pattern__examples" aria-labelledby="pattern-examples-title">

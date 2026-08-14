@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "de3a7e0d16d908f5b3357cbe2e8313c55ebe088e",
+    "head": "0a85dcf1ea3ffcb51571293f933c4e6782cce326",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "a895747c3dc36cab5fb48d29",
+    "fingerprint": "489135f4c923820823632abb",
     "indexedFiles": 1859
   },
   "summary": {
@@ -9247,7 +9247,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 489,
-      "hash": "8c833452a7735b13"
+      "hash": "e8196c16b4df25fc"
     },
     {
       "path": "src/ui/registry/button-patterns.tsx",
@@ -9422,7 +9422,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 130,
-      "hash": "5d9ab623da3d8462"
+      "hash": "d18efe61da42f0a2"
     },
     {
       "path": "src/ui/studio/InAppUsage.tsx",
@@ -9443,7 +9443,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 312,
-      "hash": "71d982e9a1cb92c4"
+      "hash": "440334a85851f5d3"
     },
     {
       "path": "src/ui/studio/Studio.tsx",
@@ -9457,7 +9457,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 580,
-      "hash": "12f7b995e1e31bbd"
+      "hash": "1c190081af01acc5"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -9485,7 +9485,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 393,
-      "hash": "71a87449f0f27c2b"
+      "hash": "3ece239861159e55"
     },
     {
       "path": "src/ui/studio/preview.tsx",

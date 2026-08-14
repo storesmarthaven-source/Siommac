@@ -94,7 +94,7 @@ export const buttonDef: ComponentDef = {
   name: 'Action Button',
   previewAxis: 'variant',
   category: 'actions',
-  description: 'Performs ONE action immediately — Save, Cancel, Next, Delete. Icon-only, link, toggle, loading and destructive are props; there is no IconButton, LinkButton or ToggleButton, because none of them changed how the control behaves.',
+  description: 'Choose and style the six button types used for actions such as Next, Save, Cancel and Delete.',
   status: 'stable',
   componentPath: 'src/ui/primitives/Button.tsx',
   importFrom: '@ui',
