@@ -613,7 +613,7 @@ function UsageSpecimens({ def }: { def: ComponentDef }): VNode {
           <header><h3 id={`${def.id}-use-title`}>Common application use</h3><p>Real examples of how this control appears in SIOMAC.</p></header>
           <div class={COMPOUND_OF[def.id]
             ? `sds-pattern-grid${def.examples.length === 2 ? ' sds-pattern-grid--two' : ''}`
-            : 'sds-use-context'}>
+            : `sds-use-context${def.examples.length === 1 ? ' sds-use-context--single' : ''}`}>
             {def.examples.map(example => <article key={example.id}>
               <span class="ctx-kicker">{example.title}</span>
               <div class="sds-use-context__spec">{example.render()}</div>

@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "1cfe2fcd96903195081ed4f26563701b280e5b11",
+    "head": "a97343fe0f901db4a90fd80094a230b482c84214",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "d8431dd0896556feaddea929",
+    "fingerprint": "706282419433e00ca3c67077",
     "indexedFiles": 1871
   },
   "summary": {
@@ -9527,7 +9527,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 629,
-      "hash": "cbf416c061a22676"
+      "hash": "2f466a10211ea9e4"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -9568,8 +9568,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 576,
-      "hash": "fa7bfdc958655ad1"
+      "lines": 577,
+      "hash": "bb75f91a6b71ee96"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -151010,7 +151010,7 @@
       "name": "navigate",
       "kind": "function",
       "file": "src/ui/studio/family.test.tsx",
-      "line": 361,
+      "line": 362,
       "module": "platform",
       "exported": false,
       "container": "",

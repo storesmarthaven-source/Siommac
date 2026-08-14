@@ -930,11 +930,13 @@
 
 /* Common application use — context cards, ported from the mockup. */
 .sds-use-context { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.sds-use-context--single { grid-template-columns: minmax(0, 1fr); }
 .sds-use-context article {
   min-width: 0; min-height: 118px; display: grid; grid-template-rows: auto 1fr; padding: 14px;
   border: 1px solid var(--sds-line); border-radius: 10px; background: #fff;
 }
 .sds-use-context article > .sds-use-context__spec { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
+.sds-use-context--single article > .sds-use-context__spec { justify-content: flex-start; }
 .sds-use-context__spec > .ui-choice-group,
 .sds-use-context__spec > [role='group'] { width: min(100%, 220px); }
 .ctx-kicker { font-size: 12px; font-weight: 600; color: var(--sds-ink-2); }
