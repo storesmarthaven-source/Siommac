@@ -381,28 +381,55 @@ function CompoundButtonEditor({ def, shown, specimen, onSet, onEditFoundation }:
 
 export function Workbench({ def, family, onSelectMember, draft }: WorkbenchProps): VNode {
   /*
-    Prop values are kept PER COMPONENT, not reset on every switch.
+    Preview values are kept PER COMPONENT + PREVIEW VARIANT.
     `useState(() => defaultProps(def))` would keep the first subtype's values
     when `def` changed — Action Button's `iconSide` surviving into Split Button.
-    Remounting on `key={def.id}` would fix that but throw away the tab, so
-    switching subtype while reading Accessibility would bounce you to Overview.
-    Keying by id gives each subtype its own complete schema AND its own edits.
+    A component-only key has the same defect one level down: Search input
+    settings would leak into Email. The composite key gives every variant its
+    own props and UI state without remounting the workbench.
   */
-  const [valuesById, setValuesById] = useState<Record<string, PropValues>>({});
-  const [stateById, setStateById] = useState<Record<string, UiState>>({});
-  const values = valuesById[def.id] ?? buttonFamilyPreviewProps(def);
-  const previewState = stateById[def.id] ?? 'default';
+  const [valuesByPreview, setValuesByPreview] = useState<Record<string, PropValues>>({});
+  const [stateByPreview, setStateByPreview] = useState<Record<string, UiState>>({});
+  const [selectedAxisById, setSelectedAxisById] = useState<Record<string, string>>({});
+  const previewAxis = def.previewAxis ?? (def.props?.variant ? 'variant' : undefined);
+  const componentDefaults = buttonFamilyPreviewProps(def);
+  const axisControl = previewAxis ? def.props?.[previewAxis] : undefined;
+  const firstAxisValue = axisControl && (axisControl.type === 'select' || axisControl.type === 'segmented')
+    ? axisControl.options[0]
+    : undefined;
+  const selectedAxis = previewAxis
+    ? (selectedAxisById[def.id] ?? String(componentDefaults[previewAxis] ?? firstAxisValue ?? 'default'))
+    : undefined;
+  const previewKey = selectedAxis === undefined ? def.id : `${def.id}:${previewAxis}:${selectedAxis}`;
+  const previewDefaults = previewAxis && selectedAxis !== undefined
+    ? {
+        ...propsForAxis(def, previewAxis, selectedAxis),
+        ...((def.id === 'button' || def.id === 'split-button') ? componentDefaults : {}),
+        [previewAxis]: selectedAxis,
+      }
+    : componentDefaults;
+  const shown = valuesByPreview[previewKey] ?? previewDefaults;
+  const previewState = stateByPreview[previewKey] ?? 'default';
 
-  const shown = values;
-
-  const setValues = (next: PropValues): void =>
-    setValuesById(prev => ({ ...prev, [def.id]: next }));
-
-  const set = (k: string, v: string | number | boolean): void =>
-    setValuesById(prev => ({
-      ...prev,
-      [def.id]: { ...(prev[def.id] ?? buttonFamilyPreviewProps(def)), [k]: v },
+  const set = (k: string, v: string | number | boolean): void => {
+    if (k === previewAxis) {
+      setSelectedAxisById(previous => ({ ...previous, [def.id]: String(v) }));
+      return;
+    }
+    setValuesByPreview(previous => ({
+      ...previous,
+      [previewKey]: { ...(previous[previewKey] ?? previewDefaults), [k]: v },
     }));
+  };
+
+  const resetPreview = (): void => {
+    setValuesByPreview(previous => Object.fromEntries(
+      Object.entries(previous).filter(([key]) => key !== previewKey),
+    ));
+    setStateByPreview(previous => Object.fromEntries(
+      Object.entries(previous).filter(([key]) => key !== previewKey),
+    ));
+  };
 
   const members = family
     ? family.componentIds
@@ -414,13 +441,8 @@ export function Workbench({ def, family, onSelectMember, draft }: WorkbenchProps
   const specimen = (props: PropValues, state: UiState = 'default'): VNode | null =>
     def.render ? def.render(props, state) : null;
 
-  const previewGroups = groupControls(def, def.previewAxis ? [def.previewAxis] : []);
-  const quickPreviewNames = new Set(['label', 'text', 'placeholder', 'size', 'tone']);
-  const quickPreviewGroups = previewGroups
-    .map(group => ({ ...group, entries: group.entries.filter(([name]) => quickPreviewNames.has(name) && isRelevantPreviewControl(def, shown, previewState, name)) }))
-    .filter(group => group.entries.length > 0);
-  const morePreviewGroups = previewGroups
-    .map(group => ({ ...group, entries: group.entries.filter(([name]) => !quickPreviewNames.has(name) && isRelevantPreviewControl(def, shown, previewState, name)) }))
+  const previewGroups = groupControls(def, previewAxis ? [previewAxis] : [])
+    .map(group => ({ ...group, entries: group.entries.filter(([name]) => isRelevantPreviewControl(def, shown, previewState, name)) }))
     .filter(group => group.entries.length > 0);
 
   return (
@@ -486,7 +508,7 @@ export function Workbench({ def, family, onSelectMember, draft }: WorkbenchProps
             <section class="sds-button-preview sds-button-preview--with-variants">
               <header><div><span>Live preview</span><strong>{def.name}</strong></div><small>Updates instantly</small></header>
               <div class="sds-button-preview__single">{specimen(shown, previewState)}</div>
-              <VariantSpecimens def={def} specimen={specimen} selected={shown[def.previewAxis ?? 'variant']}
+              <VariantSpecimens def={def} specimen={specimen} selected={selectedAxis ?? shown.variant}
                 onSelect={(axis, value) => set(axis, value)} />
             </section>
             <UsageSpecimens def={def} />
@@ -494,16 +516,15 @@ export function Workbench({ def, family, onSelectMember, draft }: WorkbenchProps
           <aside class="sds-button-settings" aria-label={`${def.name} properties`}>
             <header class="sds-button-settings__head"><div><span>Preview settings</span><strong>Try the {def.name}</strong></div></header>
             <section class="sds-button-settings__example" aria-label="Preview options">
-              <div class="sds-button-settings__example-head"><div><h4>Preview options</h4><p>Try this example without changing the app.</p></div><button type="button" onClick={() => { setValues(buttonFamilyPreviewProps(def)); setStateById(previous => ({ ...previous, [def.id]: 'default' })); }}>Reset</button></div>
-              {def.states && def.states.length > 1 && <div class="sds-button-settings__state"><label for={`${def.id}-preview-state`}>State</label><select id={`${def.id}-preview-state`} value={previewState} onChange={event => setStateById(previous => ({ ...previous, [def.id]: (event.target as HTMLSelectElement).value as UiState }))}>{def.states.map(state => <option value={state}>{friendlyValue(state)}</option>)}</select></div>}
+              <div class="sds-button-settings__example-head"><div><h4>Preview options</h4><p>Only this {selectedAxis ? friendlyValue(selectedAxis).toLowerCase() : 'example'} preview changes.</p></div><button type="button" onClick={resetPreview}>Reset</button></div>
+              {def.states && def.states.length > 1 && <div class="sds-button-settings__state"><label for={`${def.id}-preview-state`}>State</label><select id={`${def.id}-preview-state`} value={previewState} onChange={event => setStateByPreview(previous => ({ ...previous, [previewKey]: (event.target as HTMLSelectElement).value as UiState }))}>{def.states.map(state => <option value={state}>{friendlyValue(state)}</option>)}</select></div>}
             </section>
             <div class="sds-button-settings__body">
-              {quickPreviewGroups.map(group => <section key={group.title}><h4>{group.title}</h4>{group.entries.map(([name, control]) => <Control key={name} name={name} control={control} value={shown[name] ?? ''} onChange={value => set(name, value)} />)}</section>)}
-              {morePreviewGroups.length > 0 && <details class="sds-button-settings__advanced">
-                <summary><span>More preview options</span><small>{morePreviewGroups.reduce((total, group) => total + group.entries.length, 0)} settings</small></summary>
-                <div>{morePreviewGroups.map(group => <section key={group.title}><h4>{group.title}</h4>{group.entries.map(([name, control]) => <Control key={name} name={name} control={control} value={shown[name] ?? ''} onChange={value => set(name, value)} />)}</section>)}</div>
+              {previewGroups.map(group => <section key={group.title}><h4>{group.title}</h4>{group.entries.map(([name, control]) => <Control key={name} name={name} control={control} value={shown[name] ?? ''} onChange={value => set(name, value)} />)}</section>)}
+              {def.style && def.style.length > 0 && <details class="sds-button-settings__style">
+                <summary><span><strong>Component style</strong><small>Shape, colours and interaction states</small></span><em>{def.style.reduce((total, group) => total + group.controls.length, 0)} settings</em></summary>
+                <div><GeneratedStyleControls def={def} draft={draft} /></div>
               </details>}
-              {def.style && def.style.length > 0 && <><div class="sds-button-settings__mode"><strong>Component style</strong><span>Changes are saved to the design-system draft.</span></div><GeneratedStyleControls def={def} draft={draft} /></>}
             </div>
           </aside>
         </div>

@@ -12751,17 +12751,17 @@ updateArea	function	platform	false		src/ui/forms/ColorPicker.tsx	97	ColorPicker
 pickFromScreen	function	platform	false		src/ui/forms/ColorPicker.tsx	106	ColorPicker
 ComboboxProps	interface	platform	true		src/ui/forms/Combobox.tsx	35	
 Combobox	function	platform	true	component	src/ui/forms/Combobox.tsx	72	
-NativeDateType	type	platform	false		src/ui/forms/dateInputs.tsx	28	
-BaseDateProps	interface	platform	false		src/ui/forms/dateInputs.tsx	30	
-ICON	object	platform	false		src/ui/forms/dateInputs.tsx	50	
-NativeDateControl	function	platform	false	component	src/ui/forms/dateInputs.tsx	58	
-DateInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	109	
-TimeInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	114	
-DateTimeInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	119	
-MonthInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	124	
-DateRange	interface	platform	true		src/ui/forms/dateInputs.tsx	130	
-DateRangeInputProps	interface	platform	true		src/ui/forms/dateInputs.tsx	135	
-DateRangeInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	159	
+NativeDateType	type	platform	false		src/ui/forms/dateInputs.tsx	29	
+BaseDateProps	interface	platform	false		src/ui/forms/dateInputs.tsx	31	
+ICON	object	platform	false		src/ui/forms/dateInputs.tsx	52	
+NativeDateControl	function	platform	false	component	src/ui/forms/dateInputs.tsx	60	
+DateInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	118	
+TimeInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	123	
+DateTimeInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	128	
+MonthInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	133	
+DateRange	interface	platform	true		src/ui/forms/dateInputs.tsx	139	
+DateRangeInputProps	interface	platform	true		src/ui/forms/dateInputs.tsx	144	
+DateRangeInput	function	platform	true	component	src/ui/forms/dateInputs.tsx	168	
 FieldContextValue	interface	platform	true		src/ui/forms/fieldContext.ts	27	
 FieldContext	variable	platform	true		src/ui/forms/fieldContext.ts	43	
 useFieldContext	function	platform	true	hook	src/ui/forms/fieldContext.ts	45	
@@ -12779,25 +12779,26 @@ FormFieldProps	interface	platform	true		src/ui/forms/FormField.tsx	26
 VALIDATION_ICON	variable	platform	false	component	src/ui/forms/FormField.tsx	53	
 FormField	function	platform	true	component	src/ui/forms/FormField.tsx	59	
 FormGrid	function	platform	true	component	src/ui/forms/FormField.tsx	137	
-file	function	platform	false	test	src/ui/forms/forms.test.tsx	357	
-pickFiles	function	platform	false	test	src/ui/forms/forms.test.tsx	368	
+file	function	platform	false	test	src/ui/forms/forms.test.tsx	391	
+pickFiles	function	platform	false	test	src/ui/forms/forms.test.tsx	402	
 Base	type	platform	false		src/ui/forms/inputs.tsx	24	
 PasswordInputProps	interface	platform	true		src/ui/forms/inputs.tsx	28	
 PasswordInput	function	platform	true	component	src/ui/forms/inputs.tsx	34	
-NumberInputProps	interface	platform	true		src/ui/forms/inputs.tsx	65	
-NumberInput	function	platform	true	component	src/ui/forms/inputs.tsx	75	
-CurrencyInputProps	interface	platform	true		src/ui/forms/inputs.tsx	120	
-CurrencyInput	function	platform	true	component	src/ui/forms/inputs.tsx	129	
-toText	function	platform	false		src/ui/forms/inputs.tsx	130	CurrencyInput
-PercentageInputProps	interface	platform	true		src/ui/forms/inputs.tsx	157	
-PercentageInput	function	platform	true	component	src/ui/forms/inputs.tsx	164	
-toText	function	platform	false		src/ui/forms/inputs.tsx	165	PercentageInput
-EmailInput	function	platform	true	component	src/ui/forms/inputs.tsx	189	
-UrlInput	function	platform	true	component	src/ui/forms/inputs.tsx	193	
-PhoneInputProps	interface	platform	true		src/ui/forms/inputs.tsx	197	
-PhoneInput	function	platform	true	component	src/ui/forms/inputs.tsx	202	
-TextareaProps	interface	platform	true		src/ui/forms/inputs.tsx	220	
-Textarea	function	platform	true	component	src/ui/forms/inputs.tsx	225	
+NumberInputProps	interface	platform	true		src/ui/forms/inputs.tsx	66	
+NumberInput	function	platform	true	component	src/ui/forms/inputs.tsx	78	
+adjust	function	platform	false		src/ui/forms/inputs.tsx	90	NumberInput
+CurrencyInputProps	interface	platform	true		src/ui/forms/inputs.tsx	137	
+CurrencyInput	function	platform	true	component	src/ui/forms/inputs.tsx	148	
+toText	function	platform	false		src/ui/forms/inputs.tsx	149	CurrencyInput
+PercentageInputProps	interface	platform	true		src/ui/forms/inputs.tsx	184	
+PercentageInput	function	platform	true	component	src/ui/forms/inputs.tsx	191	
+toText	function	platform	false		src/ui/forms/inputs.tsx	192	PercentageInput
+EmailInput	function	platform	true	component	src/ui/forms/inputs.tsx	216	
+UrlInput	function	platform	true	component	src/ui/forms/inputs.tsx	220	
+PhoneInputProps	interface	platform	true		src/ui/forms/inputs.tsx	224	
+PhoneInput	function	platform	true	component	src/ui/forms/inputs.tsx	232	
+TextareaProps	interface	platform	true		src/ui/forms/inputs.tsx	256	
+Textarea	function	platform	true	component	src/ui/forms/inputs.tsx	261	
 MultiSelectProps	interface	platform	true		src/ui/forms/MultiSelect.tsx	32	
 MultiSelect	function	platform	true	component	src/ui/forms/MultiSelect.tsx	57	
 OptionListProps	interface	platform	true		src/ui/forms/OptionList.tsx	18	
@@ -13039,10 +13040,10 @@ TriggerEvent	type	platform	false		src/ui/overlays/Tooltip.tsx	8
 TriggerHandler	type	platform	false		src/ui/overlays/Tooltip.tsx	9	
 TooltipTriggerProps	interface	platform	false		src/ui/overlays/Tooltip.tsx	10	
 TooltipProps	interface	platform	true		src/ui/overlays/Tooltip.tsx	20	
-Tooltip	function	platform	true	component	src/ui/overlays/Tooltip.tsx	32	
-clearTimers	function	platform	false		src/ui/overlays/Tooltip.tsx	43	Tooltip
-show	function	platform	false		src/ui/overlays/Tooltip.tsx	52	Tooltip
-hide	function	platform	false		src/ui/overlays/Tooltip.tsx	60	Tooltip
+Tooltip	function	platform	true	component	src/ui/overlays/Tooltip.tsx	37	
+clearTimers	function	platform	false		src/ui/overlays/Tooltip.tsx	48	Tooltip
+show	function	platform	false		src/ui/overlays/Tooltip.tsx	57	Tooltip
+hide	function	platform	false		src/ui/overlays/Tooltip.tsx	65	Tooltip
 AiActionIconTreatment	type	platform	true		src/ui/patterns/AiActionButton.tsx	7	
 AiActionShape	type	platform	true		src/ui/patterns/AiActionButton.tsx	8	
 AI_PARTICLES	variable	platform	false	component	src/ui/patterns/AiActionButton.tsx	10	
@@ -13115,11 +13116,11 @@ read	function	platform	false	test	src/ui/primitives/choiceMigration.test.ts	4
 read	function	platform	false	test	src/ui/primitives/menuMigration.test.ts	4	
 TextInputType	type	platform	true		src/ui/primitives/TextInput.tsx	41	
 TextInputProps	interface	platform	true		src/ui/primitives/TextInput.tsx	45	
-FORCEABLE	variable	platform	false	component	src/ui/primitives/TextInput.tsx	100	
-VALIDATION_ICON	variable	platform	false	component	src/ui/primitives/TextInput.tsx	102	
-TextInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	108	
-handleClear	function	platform	false		src/ui/primitives/TextInput.tsx	148	TextInput
-SearchInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	249	
+FORCEABLE	variable	platform	false	component	src/ui/primitives/TextInput.tsx	103	
+VALIDATION_ICON	variable	platform	false	component	src/ui/primitives/TextInput.tsx	105	
+TextInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	111	
+handleClear	function	platform	false		src/ui/primitives/TextInput.tsx	151	TextInput
+SearchInput	function	platform	true	component	src/ui/primitives/TextInput.tsx	254	
 s	function	platform	false		src/ui/registry/actions.defs.tsx	27	
 b	function	platform	false		src/ui/registry/actions.defs.tsx	28	
 size	function	platform	false		src/ui/registry/actions.defs.tsx	29	
@@ -13217,17 +13218,17 @@ checkboxDef	object	platform	true		src/ui/registry/forms.defs.tsx	98
 radioGroupDef	object	platform	true		src/ui/registry/forms.defs.tsx	179	
 switchDef	object	platform	true		src/ui/registry/forms.defs.tsx	240	
 textInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	315	
-shell	function	platform	false		src/ui/registry/forms.defs.tsx	445	textInputDef
-dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	534	
-fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	610	
-themeModeSwitchDef	object	platform	true		src/ui/registry/forms.defs.tsx	699	
-colorPickerDef	object	platform	true		src/ui/registry/forms.defs.tsx	749	
-otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	785	
-DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	837	
-GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	846	
-selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	864	
-search	function	platform	false		src/ui/registry/forms.defs.tsx	967	selectDef
-FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	998	
+shell	function	platform	false		src/ui/registry/forms.defs.tsx	443	textInputDef
+dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	532	
+fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	608	
+themeModeSwitchDef	object	platform	true		src/ui/registry/forms.defs.tsx	697	
+colorPickerDef	object	platform	true		src/ui/registry/forms.defs.tsx	747	
+otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	783	
+DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	835	
+GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	844	
+selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	862	
+search	function	platform	false		src/ui/registry/forms.defs.tsx	965	selectDef
+FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	996	
 COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	61	
 CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	76	
 CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	92	
@@ -13253,7 +13254,7 @@ b	function	platform	false		src/ui/registry/overlays.defs.tsx	10
 PopoverPreview	function	platform	false	component	src/ui/registry/overlays.defs.tsx	12	
 popoverDef	object	platform	true		src/ui/registry/overlays.defs.tsx	46	
 tooltipDef	object	platform	true		src/ui/registry/overlays.defs.tsx	93	
-OVERLAY_DEFS	array	platform	true		src/ui/registry/overlays.defs.tsx	142	
+OVERLAY_DEFS	array	platform	true		src/ui/registry/overlays.defs.tsx	147	
 noop	function	platform	false		src/ui/registry/page-header.def.tsx	8	
 previewActions	variable	platform	false		src/ui/registry/page-header.def.tsx	10	
 pageHeaderDef	object	platform	true		src/ui/registry/page-header.def.tsx	19	
@@ -13463,12 +13464,12 @@ previewPropsFor	function	platform	false		src/ui/studio/Workbench.tsx	241	Compoun
 setPreviewProp	function	platform	false		src/ui/studio/Workbench.tsx	249	CompoundButtonEditor
 reset	function	platform	false		src/ui/studio/Workbench.tsx	259	CompoundButtonEditor
 Workbench	function	platform	true	component	src/ui/studio/Workbench.tsx	382	
-setValues	function	platform	false		src/ui/studio/Workbench.tsx	398	Workbench
-set	function	platform	false		src/ui/studio/Workbench.tsx	401	Workbench
-specimen	function	platform	false		src/ui/studio/Workbench.tsx	414	Workbench
-Block	function	platform	false	component	src/ui/studio/Workbench.tsx	525	
-VariantSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	540	
-UsageSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	587	
+set	function	platform	false		src/ui/studio/Workbench.tsx	414	Workbench
+resetPreview	function	platform	false		src/ui/studio/Workbench.tsx	425	Workbench
+specimen	function	platform	false		src/ui/studio/Workbench.tsx	441	Workbench
+Block	function	platform	false	component	src/ui/studio/Workbench.tsx	546	
+VariantSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	561	
+UsageSpecimens	function	platform	false	component	src/ui/studio/Workbench.tsx	608	
 registerTabs	function	platform	false	test	src/ui/table/filterBar.test.tsx	12	
 Harness	function	platform	false	component,test	src/ui/table/filterBar.test.tsx	34	
 openFilters	function	platform	false	test	src/ui/table/filterBar.test.tsx	51	

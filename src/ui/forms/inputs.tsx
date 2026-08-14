@@ -38,6 +38,7 @@ export function PasswordInput({ revealable = true, autoComplete = 'current-passw
       {...rest}
       type={shown ? 'text' : 'password'}
       autoComplete={autoComplete}
+      iconLeft={rest.iconLeft === undefined ? <LucideIcon name="LockKeyhole" /> : rest.iconLeft}
       iconRight={revealable
         ? (
           // A span, not a button: TextInput's trailing slot is inside the label's
@@ -70,9 +71,11 @@ export interface NumberInputProps extends Omit<Base, 'value' | 'onInput'> {
   step?: number;
   /** Suffix shown inside the field — "days", "hrs". Display only. */
   unit?: string;
+  /** Adds accessible increment/decrement controls without native sanitising. */
+  showSteppers?: boolean;
 }
 
-export function NumberInput({ value, onChange, unit, ...rest }: NumberInputProps): VNode {
+export function NumberInput({ value, onChange, unit, showSteppers = true, ...rest }: NumberInputProps): VNode {
   // The typed text is held locally so "-", "1." and "" survive; only a complete
   // number is emitted. Deriving the text from the number instead would delete
   // the character the user just typed.
@@ -83,6 +86,14 @@ export function NumberInput({ value, onChange, unit, ...rest }: NumberInputProps
       setText(value === null ? '' : String(value));
     }
   }, [value]);
+
+  const adjust = (direction: 1 | -1): void => {
+    const step = rest.step ?? 1;
+    const startingValue = value ?? 0;
+    const next = Math.min(rest.max ?? Infinity, Math.max(rest.min ?? -Infinity, startingValue + direction * step));
+    setText(String(next));
+    onChange(next);
+  };
 
   // `type="text"` with a numeric inputMode, NOT `type="number"`. A native number
   // input SANITISES its own value, so a lone "-" or a trailing "." is erased as
@@ -95,6 +106,12 @@ export function NumberInput({ value, onChange, unit, ...rest }: NumberInputProps
       inputMode="decimal"
       value={text}
       suffix={unit}
+      trailingAccessory={showSteppers ? (
+        <span class="ui-number-stepper">
+          <button type="button" aria-label="Increase value" onClick={() => adjust(1)}><LucideIcon name="ChevronUp" /></button>
+          <button type="button" aria-label="Decrease value" onClick={() => adjust(-1)}><LucideIcon name="ChevronDown" /></button>
+        </span>
+      ) : undefined}
       onInput={t => {
         const clean = t.replace(/[^\d.-]/g, '');
         setText(clean);
@@ -122,11 +139,13 @@ export interface CurrencyInputProps extends Omit<Base, 'value' | 'onInput'> {
   valueMinor: number | null;
   onChange: (valueMinor: number | null) => void;
   currency?: string;
+  currencies?: readonly string[];
+  onCurrencyChange?: (currency: string) => void;
   min?: number;
   max?: number;
 }
 
-export function CurrencyInput({ valueMinor, onChange, currency = 'TTD', ...rest }: CurrencyInputProps): VNode {
+export function CurrencyInput({ valueMinor, onChange, currency = 'TTD', currencies, onCurrencyChange, ...rest }: CurrencyInputProps): VNode {
   const toText = (m: number | null): string => (m === null ? '' : (m / 100).toFixed(2));
   const [text, setText] = useState(toText(valueMinor));
   useEffect(() => { setText(prev => (Math.round(Number(prev || '0') * 100) === valueMinor ? prev : toText(valueMinor))); }, [valueMinor]);
@@ -137,7 +156,15 @@ export function CurrencyInput({ valueMinor, onChange, currency = 'TTD', ...rest 
       type="text"
       inputMode="decimal"
       value={text}
-      prefix={currency}
+      prefix="$"
+      trailingAccessory={currencies && currencies.length > 0 ? (
+        <span class="ui-input-select">
+          <select aria-label="Currency" value={currency} onInput={event => onCurrencyChange?.((event.target as HTMLSelectElement).value)}>
+            {currencies.map(option => <option value={option}>{option}</option>)}
+          </select>
+          <LucideIcon name="ChevronDown" />
+        </span>
+      ) : <span class="ui-ctrl-affix">{currency}</span>}
       onInput={t => {
         // Accept only what a money amount can contain, so a stray letter never
         // silently becomes NaN → 0.
@@ -197,20 +224,29 @@ export function UrlInput(props: Base): VNode {
 export interface PhoneInputProps extends Base {
   /** Dial prefix shown in the field, e.g. "+1 868". Display only — store E.164. */
   dialCode?: string;
+  country?: string;
+  countries?: readonly { code: string; dialCode: string }[];
+  onCountryChange?: (code: string) => void;
 }
 
-export function PhoneInput({ dialCode, ...rest }: PhoneInputProps): VNode {
+export function PhoneInput({ dialCode, country, countries, onCountryChange, ...rest }: PhoneInputProps): VNode {
+  const countryPicker = country && countries && countries.length > 0 ? (
+    <span class="ui-input-select">
+      <select aria-label="Country calling code" value={country} onInput={event => onCountryChange?.((event.target as HTMLSelectElement).value)}>
+        {countries.map(option => <option value={option.code}>{option.code}</option>)}
+      </select>
+      <LucideIcon name="ChevronDown" />
+    </span>
+  ) : undefined;
   return (
     <TextInput
       {...rest}
       type="tel"
       inputMode="tel"
       autoComplete={rest.autoComplete ?? 'tel'}
-      iconLeft={rest.iconLeft === undefined
-        ? (dialCode
-          ? <span style={{ fontSize: 'var(--ui-font-size-caption)' }}>{dialCode}</span>
-          : <LucideIcon name="Phone" />)
-        : rest.iconLeft}
+      leadingAccessory={countryPicker}
+      prefix={dialCode}
+      iconLeft={countryPicker || dialCode ? null : (rest.iconLeft === undefined ? <LucideIcon name="Phone" /> : rest.iconLeft)}
     />
   );
 }

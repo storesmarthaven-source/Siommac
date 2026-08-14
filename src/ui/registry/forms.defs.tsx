@@ -324,13 +324,13 @@ export const textInputDef: ComponentDef = {
   previewSamples: [
     { value: 'Text', title: 'Text', description: 'Names and short answers', props: { type: 'Text' } },
     { value: 'Search', title: 'Search', description: 'Find and filter records', props: { type: 'Search', iconLeft: 'Search' } },
-    { value: 'Password', title: 'Password', description: 'Protected entry', props: { type: 'Password' } },
+    { value: 'Password', title: 'Password', description: 'Protected entry', props: { type: 'Password', iconLeft: 'LockKeyhole' } },
     { value: 'Number', title: 'Number', description: 'Measured quantities', props: { type: 'Number' } },
     { value: 'Currency', title: 'Currency', description: 'Money in minor units', props: { type: 'Currency' } },
     { value: 'Percentage', title: 'Percentage', description: 'Rates stored as ratios', props: { type: 'Percentage' } },
-    { value: 'Email', title: 'Email', description: 'Validated email entry', props: { type: 'Email' } },
+    { value: 'Email', title: 'Email', description: 'Validated email entry', props: { type: 'Email', iconLeft: 'Mail' } },
     { value: 'URL', title: 'URL', description: 'Web addresses', props: { type: 'URL', iconLeft: 'Link' } },
-    { value: 'Phone', title: 'Phone', description: 'Dial code and number', props: { type: 'Phone', iconLeft: 'Phone' } },
+    { value: 'Phone', title: 'Phone', description: 'Dial code and number', props: { type: 'Phone' } },
     { value: 'Multi-line', title: 'Multi-line', description: 'Notes and longer context', props: { type: 'Multi-line' } },
   ],
   migration: {
@@ -378,9 +378,7 @@ export const textInputDef: ComponentDef = {
       { name: '--ui-control-icon',        label: 'Icons', kind: 'color' },
     ] },
     { label: 'Hover & focus', controls: [
-      { name: '--ui-control-bg-hover',         label: 'Hover background', kind: 'color' },
       { name: '--ui-control-border-hover',     label: 'Hover border', kind: 'color' },
-      { name: '--ui-control-bg-focus',         label: 'Focus background', kind: 'color' },
       { name: '--ui-control-border-focus',     label: 'Focus border', kind: 'color' },
       { name: '--ui-control-focus-ring-color', label: 'Focus halo', kind: 'color' },
       { name: '--ui-control-focus-ring-width', label: 'Focus halo width', kind: 'size' },
@@ -442,14 +440,14 @@ export const textInputDef: ComponentDef = {
       helpTooltip,
     };
 
-    const shell = (node: preact.JSX.Element, label?: string, help?: string): preact.JSX.Element => (
+    const shell = (node: preact.JSX.Element, label?: string, help?: string, defaultSuccess?: string): preact.JSX.Element => (
       <FormField
         label={label ?? s(p.label, 'Label')}
         required={b(p.required)}
         helpText={help ?? (s(p.helpText) || undefined)}
         error={v === 'error' ? msg : undefined}
         warning={v === 'warning' ? msg : undefined}
-        success={v === 'success' ? msg : undefined}
+        success={v === 'success' ? msg : (v === 'none' ? defaultSuccess : undefined)}
         disabled={disabled}
         readOnly={readOnly}
         charCount={b(p.charCount) ? { value: 0, max: 120 } : undefined}
@@ -457,13 +455,13 @@ export const textInputDef: ComponentDef = {
     );
 
     switch (type) {
-      case 'Password':   return shell(<PasswordInput value="hunter2" onInput={noop} disabled={disabled} readOnly={readOnly} {...common} />, 'Password');
-      case 'Number':     return shell(<NumberInput value={14} onChange={noop} unit="days" min={0} disabled={disabled} readOnly={readOnly} {...common} />, 'Notice period');
-      case 'Currency':   return shell(<CurrencyInput valueMinor={845000} onChange={noop} currency="TTD" disabled={disabled} readOnly={readOnly} {...common} />, 'Gross pay', 'Stored in cents — money never touches a float.');
+      case 'Password':   return shell(<PasswordInput value="correct-horse" onInput={noop} disabled={disabled} readOnly={readOnly} {...common} />, 'Password', undefined, 'Must be at least 8 characters.');
+      case 'Number':     return shell(<NumberInput value={100} onChange={noop} min={0} disabled={disabled} readOnly={readOnly} {...common} />, 'Number', 'This is a hint text to help the user.');
+      case 'Currency':   return shell(<CurrencyInput {...common} valueMinor={100000} onChange={noop} currency="USD" currencies={['USD', 'TTD', 'EUR']} onCurrencyChange={noop} helpTooltip={helpTooltip ?? 'Choose the currency for this amount.'} disabled={disabled} readOnly={readOnly} />, 'Sale amount', 'This is a hint text to help the user.');
       case 'Percentage': return shell(<PercentageInput value={0.0825} onChange={noop} disabled={disabled} readOnly={readOnly} {...common} />, 'NIS rate', 'Stored as a ratio (0.0825), displayed as a percentage.');
       case 'Email':      return shell(<EmailInput value="sarah.james@siomac.com" onInput={noop} disabled={disabled} readOnly={readOnly} {...common} />, 'Work email');
       case 'URL':        return shell(<UrlInput value="https://siomac.com/policy" onInput={noop} disabled={disabled} readOnly={readOnly} {...common} />, 'Policy link');
-      case 'Phone':      return shell(<PhoneInput value="620 1184" onInput={noop} dialCode="+1 868" disabled={disabled} readOnly={readOnly} {...common} />, 'Mobile');
+      case 'Phone':      return shell(<PhoneInput {...common} value="(555) 000-0000" onInput={noop} country="US" dialCode="+1" countries={[{ code: 'US', dialCode: '+1' }, { code: 'TT', dialCode: '+1 868' }]} onCountryChange={noop} helpTooltip={helpTooltip ?? 'Include the country code.'} disabled={disabled} readOnly={readOnly} />, 'Phone number', 'This is a hint text to help the user.');
       case 'Multi-line': return shell(<Textarea value="" onInput={noop} placeholder="Add context for the approver..." rows={3} disabled={disabled} readOnly={readOnly} {...common} />, 'Notes');
       case 'Search':     return shell(<SearchField value="" onInput={noop} disabled={disabled} readOnly={readOnly} {...common} />, 'Search');
       default:
@@ -595,8 +593,8 @@ export const dateInputDef: ComponentDef = {
       return <FormField label="Incident at" disabled={common.disabled} readOnly={common.readOnly}><DateTimeInput value="2026-08-09T14:20" onChange={noop} {...common} /></FormField>;
     }
     return (
-      <FormField label="Start date" required helpText="Day one on site." disabled={common.disabled} readOnly={common.readOnly}>
-        <DateInput value="2026-09-01" onChange={noop} min="2026-01-01" {...common} />
+      <FormField label="Date" required helpText="This is a hint text to help the user." disabled={common.disabled} readOnly={common.readOnly}>
+        <DateInput value="" onChange={noop} min="2026-01-01" helpTooltip="Choose a date from the calendar." {...common} />
       </FormField>
     );
   },

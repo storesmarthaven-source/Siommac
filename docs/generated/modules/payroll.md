@@ -2,7 +2,7 @@
 
 # payroll Module Map
 
-Source fingerprint: `83a1580544d19a675f51b9a5`
+Source fingerprint: `129f5a120f6f8a1f33716ca3`
 
 Files: 196 | Symbols: 1986 | Widgets: 12 | Unique mounted endpoints: 140 | Route definitions: 140 mounted + 0 unmounted | API calls: 2 | DB objects: 260 | E2E suites: 29
 
@@ -21,7 +21,7 @@ Files: 196 | Symbols: 1986 | Widgets: 12 | Unique mounted endpoints: 140 | Route
 | `finance.payroll.releaseReadiness` | Release Readiness | local | `() => <ReadinessWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:514` |
 | `finance.payroll.runRegister` | Payroll Runs | local | `() => <RunRegister data={data} tab={tab} setTab={setTab} searchInput={searchInput} setSearchInput={setSearchInput} cursor={cursor} setCursor={setCursor} onOpen={openRun} onNewRun={() => setWizOpen(true)} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:516` |
 | `hr.employeeMaster.payrollReadinessWide` | Not Payroll-Ready | registry | `PayrollReadinessKpi` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:629` |
-| `payroll-amount` | Payroll amount | registry | `() => <FormField label="Gross pay"><CurrencyInput valueMinor={845000} onChange={noop} currency="TTD" /></FormField>` | `src/ui/registry/forms.defs.tsx:515` |
+| `payroll-amount` | Payroll amount | registry | `() => <FormField label="Gross pay"><CurrencyInput valueMinor={845000} onChange={noop} currency="TTD" /></FormField>` | `src/ui/registry/forms.defs.tsx:513` |
 
 ## Route Definitions
 

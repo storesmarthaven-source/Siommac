@@ -8,6 +8,11 @@ This folder defines **look, spacing, layout, states, interaction patterns**.
 > ProfilePill, all cards use `Card`, rearrangeable 4-card rows, standard window for overlays),
 > and a copy-paste skeleton.
 
+> **Building or changing a Design System Studio editor? Read
+> [studio/STUDIO_PAGE_STANDARD.md](./studio/STUDIO_PAGE_STANDARD.md).** It defines the
+> shared live-preview layout, per-variant option ownership, and the boundary between
+> preview-only props and publishable component recipes.
+
 ## The page standard
 
 Two page shapes, applied uniformly across every module (HSE, HR, Finance, Operations):

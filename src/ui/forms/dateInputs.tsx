@@ -20,6 +20,7 @@
 import { type CSSProperties, type VNode } from 'preact';
 import { useId } from 'preact/hooks';
 import { LucideIcon } from '../LucideIcon';
+import { Tooltip } from '../overlays/Tooltip';
 import { type ControlSize, type UiState, type ValidationState } from '../tokens';
 import { useFieldContext, resolveFieldState } from './fieldContext';
 import { FormField } from './FormField';
@@ -39,6 +40,7 @@ interface BaseDateProps {
   readOnly?: boolean;
   validation?: ValidationState;
   clearable?: boolean;
+  helpTooltip?: string;
   name?: string;
   id?: string;
   'aria-label'?: string;
@@ -100,6 +102,13 @@ function NativeDateControl({ type, ...p }: BaseDateProps & { type: NativeDateTyp
             <LucideIcon name="X" />
           </button>
         </span>
+      )}
+      {!showClear && p.helpTooltip && (
+        <Tooltip content={p.helpTooltip} placement="top">
+          <span class="ui-ctrl-help" role="button" tabIndex={0} aria-label="Field help">
+            <LucideIcon name="CircleHelp" />
+          </span>
+        </Tooltip>
       )}
     </div>
   );

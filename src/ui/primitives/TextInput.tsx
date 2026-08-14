@@ -62,6 +62,9 @@ export interface TextInputProps {
   /** Persistent display affixes. Unlike icons, these never yield to validation or loading. */
   prefix?: ComponentChildren;
   suffix?: ComponentChildren;
+  /** Interactive or structured controls that remain beside the entered value. */
+  leadingAccessory?: ComponentChildren;
+  trailingAccessory?: ComponentChildren;
   /** Show a clear button once there is a value. */
   clearable?: boolean;
   /** Optional field guidance opened from a keyboard-accessible trailing help icon. */
@@ -109,7 +112,7 @@ export function TextInput({
   value: controlledValue, defaultValue = '', onInput,
   size = 'md', type = 'text', placeholder,
   multiline = false, rows = 3,
-  iconLeft, iconRight, prefix, suffix, clearable = false, helpTooltip,
+  iconLeft, iconRight, prefix, suffix, leadingAccessory, trailingAccessory, clearable = false, helpTooltip,
   disabled: ownDisabled, readOnly: ownReadOnly, loading = false,
   validation: ownValidation,
   maxLength, minLength, min, max, step, autoComplete, name, id: ownId, inputMode,
@@ -177,6 +180,7 @@ export function TextInput({
   return (
     <div class={boxClass} data-ui-state={forced} style={style}>
       {iconLeft && <span class="ui-ctrl-lead" aria-hidden="true">{iconLeft}</span>}
+      {leadingAccessory != null && <span class="ui-ctrl-accessory ui-ctrl-accessory--leading">{leadingAccessory}</span>}
       {prefix != null && <span class="ui-ctrl-affix ui-ctrl-prefix" aria-hidden="true">{prefix}</span>}
 
       {multiline
@@ -234,6 +238,7 @@ export function TextInput({
           </span>
         </Tooltip>
       )}
+      {trailingAccessory != null && <span class="ui-ctrl-accessory ui-ctrl-accessory--trailing">{trailingAccessory}</span>}
       {showOwnIcon && <span class="ui-ctrl-trail" aria-hidden="true">{iconRight}</span>}
     </div>
   );

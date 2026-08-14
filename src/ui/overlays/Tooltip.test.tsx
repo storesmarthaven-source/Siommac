@@ -51,4 +51,19 @@ describe('Tooltip', () => {
     await act(() => Promise.resolve().then(() => { trigger.focus(); }));
     expect(screen.queryByRole('tooltip')).toBeNull();
   });
+
+  it('renders the reference title, supporting text and optional arrow anatomy', async () => {
+    render(
+      <Tooltip content="Approval locked" description="Published records cannot be edited." arrow>
+        <button>Policy</button>
+      </Tooltip>,
+    );
+    const trigger = screen.getByRole('button', { name: 'Policy' });
+    await act(() => Promise.resolve().then(() => { trigger.focus(); }));
+    const tip = screen.getByRole('tooltip');
+    expect(tip.querySelector('.ui-tooltip__title')?.textContent).toBe('Approval locked');
+    expect(tip.querySelector('.ui-tooltip__description')?.textContent).toBe('Published records cannot be edited.');
+    expect(tip.parentElement?.classList.contains('ui-tooltip--supporting')).toBe(true);
+    expect(tip.parentElement?.querySelector('.ui-tooltip__arrow')).not.toBeNull();
+  });
 });

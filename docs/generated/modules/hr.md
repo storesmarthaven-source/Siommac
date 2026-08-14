@@ -2,7 +2,7 @@
 
 # hr Module Map
 
-Source fingerprint: `83a1580544d19a675f51b9a5`
+Source fingerprint: `129f5a120f6f8a1f33716ca3`
 
 Files: 265 | Symbols: 3077 | Widgets: 10 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 37 | DB objects: 196 | E2E suites: 16
 
@@ -13,7 +13,7 @@ Files: 265 | Symbols: 3077 | Widgets: 10 | Unique mounted endpoints: 275 | Route
 | `bundle.hr.attendance.ops` | Attendance & Leave Ops | registry | `` | `src/ui/widgets/bundles.ts:116` |
 | `bundle.hr.employees.essentials` | Employee Master Essentials | registry | `` | `src/ui/widgets/bundles.ts:90` |
 | `bundle.hr.onboarding.manager` | Onboarding Manager Pack | registry | `` | `src/ui/widgets/bundles.ts:76` |
-| `employee-name` | Employee record | registry | `() => <FormField label="Employee name" required helpText="As shown on government ID"><TextInput value="Sarah James" onInput={noop} /></FormField>` | `src/ui/registry/forms.defs.tsx:503` |
+| `employee-name` | Employee record | registry | `() => <FormField label="Employee name" required helpText="As shown on government ID"><TextInput value="Sarah James" onInput={noop} /></FormField>` | `src/ui/registry/forms.defs.tsx:501` |
 | `hr.employeeMaster.lifecycleActivity` | Workforce Activity | registry | `LifecycleActivity` | `src/ui/widgets/registry.hrEmployeeMaster.tsx:533` |
 | `hr.employees.register` | Employee Register | local | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:855` |
 | `hr.onboarding.case.activeTasks` | Active Tasks | local | `() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <Button variant="primary" size="sm" onClick={openAddTask} iconLeft={<i class="fas fa-plus" />}>Add</Button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:332` |

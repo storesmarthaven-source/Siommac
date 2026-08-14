@@ -97,9 +97,9 @@ export function FormField({
         )}
       </label>
 
-      {helpText && <div class="ui-field2-help" id={helpId}>{helpText}</div>}
-
       <FieldContext.Provider value={ctx}>{children}</FieldContext.Provider>
+
+      {helpText && <div class="ui-field2-help" id={helpId}>{helpText}</div>}
 
       {(message !== undefined || charCount !== undefined) && (
         <div class="ui-field2-foot">

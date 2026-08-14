@@ -222,6 +222,17 @@ describe('TextInput', () => {
     expect(dis.container.querySelector('.ui-ctrl')?.className).toContain('ui-ctrl--disabled');
   });
 
+  it('places visible help below the control', () => {
+    const { container } = render(
+      <FormField label="Email" helpText="Work address">
+        <TextInput value="" onInput={vi.fn()} />
+      </FormField>,
+    );
+    const control = container.querySelector('.ui-ctrl');
+    const help = container.querySelector('.ui-field2-help');
+    expect(control?.nextElementSibling).toBe(help);
+  });
+
   it('offers field guidance from a keyboard-accessible tooltip affordance', async () => {
     render(<TextInput helpTooltip="Use the employee's legal name." value="" onInput={vi.fn()} aria-label="Name" />);
     const help = screen.getByRole('button', { name: 'Field help' });

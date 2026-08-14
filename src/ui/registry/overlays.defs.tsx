@@ -99,10 +99,12 @@ export const tooltipDef: ComponentDef = {
   componentPath: 'src/ui/overlays/Tooltip.tsx',
   importFrom: '@ui',
   props: {
-    content: { type: 'text', label: 'Content', default: 'Locked after approval' },
+    content: { type: 'text', label: 'Title', default: 'Locked after approval' },
+    description: { type: 'text', label: 'Supporting text', default: '' },
+    arrow: { type: 'boolean', label: 'Show arrow', default: false },
     disabled: { type: 'boolean', label: 'Disabled', default: false },
-    showDelay: { type: 'number', label: 'Hover delay', default: 350, min: 0, max: 1000, step: 50 },
-    maxWidth: { type: 'number', label: 'Maximum width', default: 260, min: 140, max: 420, step: 10 },
+    showDelay: { type: 'number', label: 'Hover delay', default: 300, min: 0, max: 1000, step: 50 },
+    maxWidth: { type: 'number', label: 'Maximum width', default: 320, min: 140, max: 420, step: 10 },
   },
   style: [{ label: 'Bubble', controls: [
     { name: '--ui-tooltip-bg', label: 'Background', kind: 'color' },
@@ -110,6 +112,7 @@ export const tooltipDef: ComponentDef = {
     { name: '--ui-tooltip-radius', label: 'Corner radius', kind: 'size' },
     { name: '--ui-tooltip-padding', label: 'Padding', kind: 'text' },
     { name: '--ui-tooltip-font-size', label: 'Text size', kind: 'size' },
+    { name: '--ui-tooltip-supporting-fg', label: 'Supporting text', kind: 'color' },
   ] }],
   states: ['default'],
   compare: ['default'],
@@ -127,14 +130,16 @@ export const tooltipDef: ComponentDef = {
   render: p => (
     <Tooltip
       content={s(p.content, 'Locked after approval')}
+      description={s(p.description) || undefined}
+      arrow={b(p.arrow)}
       disabled={b(p.disabled)}
-      showDelay={typeof p.showDelay === 'number' ? p.showDelay : 350}
-      maxWidth={typeof p.maxWidth === 'number' ? p.maxWidth : 260}
+      showDelay={typeof p.showDelay === 'number' ? p.showDelay : 300}
+      maxWidth={typeof p.maxWidth === 'number' ? p.maxWidth : 320}
     >
       <Button variant="ghost" iconOnly aria-label="Approval policy" iconLeft={<LucideIcon name="LockKeyhole" />} />
     </Tooltip>
   ),
-  code: p => `<Tooltip content="${s(p.content, 'Locked after approval')}"${b(p.disabled) ? ' disabled' : ''}>
+  code: p => `<Tooltip content="${s(p.content, 'Locked after approval')}"${s(p.description) ? ` description="${s(p.description)}"` : ''}${b(p.arrow) ? ' arrow' : ''}${b(p.disabled) ? ' disabled' : ''}>
   <Button variant="ghost" iconOnly aria-label="Approval policy" iconLeft={<LockKeyhole />} />
 </Tooltip>`,
 };

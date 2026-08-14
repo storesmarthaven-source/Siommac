@@ -213,6 +213,7 @@ describe('PasswordInput', () => {
     expect(input.getAttribute('type')).toBe('password');
     fireEvent.click(screen.getByLabelText('Show password'));
     expect(screen.getByLabelText('Password').getAttribute('type')).toBe('text');
+    expect(document.querySelector('.ui-ctrl-lead svg')).not.toBeNull();
   });
 
   it('omits the reveal when it must not be shown', () => {
@@ -244,6 +245,15 @@ describe('NumberInput', () => {
     fireEvent.input(input, { target: { value: '-' } });
     expect(input.value).toBe('-');
   });
+
+  it('offers accessible step controls', () => {
+    const onChange = vi.fn();
+    render(<NumberInput value={100} onChange={onChange} step={5} aria-label="N" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Increase value' }));
+    expect(onChange).toHaveBeenCalledWith(105);
+    fireEvent.click(screen.getByRole('button', { name: 'Decrease value' }));
+    expect(onChange).toHaveBeenCalledWith(95);
+  });
 });
 
 describe('CurrencyInput', () => {
@@ -266,6 +276,15 @@ describe('CurrencyInput', () => {
     fireEvent.input(input, { target: { value: '1a2' } });
     expect(input.value).toBe('12');
   });
+
+  it('renders a currency symbol and supports a governed currency selector', () => {
+    const onCurrencyChange = vi.fn();
+    const { container } = render(<CurrencyInput valueMinor={100000} onChange={vi.fn()} currency="USD"
+      currencies={['USD', 'TTD']} onCurrencyChange={onCurrencyChange} aria-label="Amount" />);
+    expect(container.querySelector('.ui-ctrl-prefix')?.textContent).toBe('$');
+    fireEvent.input(screen.getByLabelText('Currency'), { target: { value: 'TTD' } });
+    expect(onCurrencyChange).toHaveBeenCalledWith('TTD');
+  });
 });
 
 describe('PercentageInput', () => {
@@ -287,6 +306,16 @@ describe('PhoneInput', () => {
     render(<PhoneInput value="" onInput={vi.fn()} aria-label="Mobile" />);
     expect(screen.getByLabelText('Mobile').getAttribute('inputmode')).toBe('tel');
   });
+
+  it('supports a country selector and dial prefix', () => {
+    const onCountryChange = vi.fn();
+    const { container } = render(<PhoneInput value="" onInput={vi.fn()} aria-label="Mobile"
+      country="US" dialCode="+1" countries={[{ code: 'US', dialCode: '+1' }, { code: 'TT', dialCode: '+1 868' }]}
+      onCountryChange={onCountryChange} />);
+    expect(container.querySelector('.ui-ctrl-prefix')?.textContent).toBe('+1');
+    fireEvent.input(screen.getByLabelText('Country calling code'), { target: { value: 'TT' } });
+    expect(onCountryChange).toHaveBeenCalledWith('TT');
+  });
 });
 
 /* ── Date & time ───────────────────────────────────────────────────────────*/
@@ -302,6 +331,11 @@ describe('DateInput', () => {
     render(<DateInput value="" onChange={onChange} aria-label="Start" />);
     fireEvent.input(screen.getByLabelText('Start'), { target: { value: '2026-09-01' } });
     expect(onChange).toHaveBeenCalledWith('2026-09-01');
+  });
+
+  it('offers optional field guidance', () => {
+    render(<DateInput value="" onChange={vi.fn()} helpTooltip="Choose a date" aria-label="Start" />);
+    expect(screen.getByLabelText('Field help')).toBeTruthy();
   });
 
   it('clears from the clear affordance', () => {

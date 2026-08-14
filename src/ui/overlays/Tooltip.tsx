@@ -18,7 +18,12 @@ interface TooltipTriggerProps {
 }
 
 export interface TooltipProps {
+  /** Compact semibold title. Kept as `content` for source compatibility. */
   content: ComponentChildren;
+  /** Optional supporting line beneath the title. */
+  description?: ComponentChildren;
+  /** Draw a directional pointer toward the trigger. */
+  arrow?: boolean;
   /** Exactly one element. Its existing event handlers are preserved. */
   children: VNode<TooltipTriggerProps>;
   id?: string;
@@ -30,8 +35,8 @@ export interface TooltipProps {
 }
 
 export function Tooltip({
-  content, children, id: providedId, disabled = false,
-  showDelay = 350, hideDelay = 80, maxWidth = 260, placement = 'auto',
+  content, description, arrow = false, children, id: providedId, disabled = false,
+  showDelay = 300, hideDelay = 0, maxWidth = 320, placement = 'auto',
 }: TooltipProps): VNode {
   const uid = useId();
   const id = providedId ?? `ui-tooltip-${uid}`;
@@ -88,12 +93,16 @@ export function Tooltip({
         matchAnchorWidth={false}
         align="center"
         placement={placement}
-        offset={8}
-        maxHeight={120}
+        offset={6}
+        maxHeight={160}
         id={id}
-        class="ui-tooltip"
+        class={`ui-tooltip${description ? ' ui-tooltip--supporting' : ''}${arrow ? ' ui-tooltip--arrow' : ''}`}
       >
-        <span role="tooltip" style={{ maxWidth: `${maxWidth}px` }}>{content}</span>
+        <span role="tooltip" class="ui-tooltip__content" style={{ maxWidth: `${maxWidth}px` }}>
+          <span class="ui-tooltip__title">{content}</span>
+          {description && <span class="ui-tooltip__description">{description}</span>}
+        </span>
+        {arrow && <span class="ui-tooltip__arrow" aria-hidden="true" />}
       </AnchoredPopup>
     </>
   );

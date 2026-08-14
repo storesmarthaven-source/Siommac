@@ -9,10 +9,12 @@
 
     --ui-tooltip-bg: var(--ui-color-text-primary);
     --ui-tooltip-fg: var(--ui-color-surface-raised);
-    --ui-tooltip-radius: var(--radius-xs);
-    --ui-tooltip-padding: 7px 10px;
+    --ui-tooltip-radius: 8px;
+    --ui-tooltip-padding: 8px 12px;
+    --ui-tooltip-padding-supporting: 12px;
     --ui-tooltip-font-size: var(--ui-font-size-caption);
-    --ui-tooltip-shadow: var(--elev-3);
+    --ui-tooltip-supporting-fg: color-mix(in srgb, var(--ui-tooltip-fg) 72%, transparent);
+    --ui-tooltip-shadow: var(--elev-4);
   }
 
   .ui-popup.ui-popover {
@@ -34,10 +36,42 @@
     color: var(--ui-tooltip-fg);
     box-shadow: var(--ui-tooltip-shadow);
     font-size: var(--ui-tooltip-font-size);
-    font-weight: var(--font-weight-medium);
     line-height: 1.4;
     pointer-events: none;
+    animation: ui-tooltip-enter 120ms var(--ui-ease-standard) both;
   }
 
-  .ui-tooltip > [role='tooltip'] { display: block; }
+  .ui-popup.ui-tooltip--supporting { padding: var(--ui-tooltip-padding-supporting); }
+  .ui-tooltip__content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .ui-tooltip__title { color: var(--ui-tooltip-fg); font-weight: var(--font-weight-semibold); }
+  .ui-tooltip__description { color: var(--ui-tooltip-supporting-fg); font-weight: var(--font-weight-medium); }
+
+  .ui-tooltip__arrow {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    left: calc(50% - 5px);
+    background: var(--ui-tooltip-bg);
+    transform: rotate(45deg);
+    border-radius: 2px;
+  }
+  .ui-tooltip[data-placement='top'] .ui-tooltip__arrow { bottom: -4px; }
+  .ui-tooltip[data-placement='bottom'] .ui-tooltip__arrow { top: -4px; }
+
+  .ui-tooltip[data-placement='top'] { --ui-tooltip-enter-y: 2px; transform-origin: center bottom; }
+  .ui-tooltip[data-placement='bottom'] { --ui-tooltip-enter-y: -2px; transform-origin: center top; }
+
+  @keyframes ui-tooltip-enter {
+    from { opacity: 0; transform: translateY(var(--ui-tooltip-enter-y, 0)) scale(.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ui-popup.ui-tooltip { animation-duration: 0ms; }
+  }
 }

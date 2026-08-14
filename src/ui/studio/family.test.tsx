@@ -450,6 +450,53 @@ describe('Buttons family — Studio', () => {
     expect(getByRole('heading', { name: 'Preview options' })).toBeTruthy();
   });
 
+  it('keeps generic preview options and state isolated by variant', () => {
+    const { container, getByLabelText, getByRole } = render(<Studio />);
+    const textInputNav = [...container.querySelectorAll<HTMLButtonElement>('.sds-nav button')]
+      .find(button => button.textContent.trim() === 'TextInput');
+    if (!textInputNav) throw new Error('No TextInput navigation item is rendered');
+    fireEvent.click(textInputNav);
+
+    const placeholder = getByLabelText('Placeholder') as HTMLInputElement;
+    fireEvent.input(placeholder, { target: { value: 'Text-only placeholder' } });
+
+    fireEvent.click(getByRole('radio', { name: 'Search' }));
+    expect((getByLabelText('Placeholder') as HTMLInputElement).value).toBe('e.g. Sarah James');
+    expect(getByRole('button', { name: 'Choose Leading icon' }).textContent).toContain('Search');
+    fireEvent.input(getByLabelText('Placeholder'), { target: { value: 'Search-only placeholder' } });
+
+    fireEvent.click(getByRole('radio', { name: 'Text' }));
+    expect((getByLabelText('Placeholder') as HTMLInputElement).value).toBe('Text-only placeholder');
+
+    fireEvent.click(getByRole('button', { name: 'Reset' }));
+    expect((getByLabelText('Placeholder') as HTMLInputElement).value).toBe('e.g. Sarah James');
+    fireEvent.click(getByRole('radio', { name: 'Search' }));
+    expect((getByLabelText('Placeholder') as HTMLInputElement).value).toBe('Search-only placeholder');
+
+    const expectedIcons: Record<string, string> = {
+      Password: 'LockKeyhole', Email: 'Mail', URL: 'Link',
+    };
+    for (const [variant, icon] of Object.entries(expectedIcons)) {
+      fireEvent.click(getByRole('radio', { name: variant }));
+      expect(getByRole('button', { name: 'Choose Leading icon' }).textContent).toContain(icon);
+    }
+  });
+
+  it('shows preview controls directly and collapses only Component style', () => {
+    const { container, queryByText } = render(<Studio />);
+    const textInputNav = [...container.querySelectorAll<HTMLButtonElement>('.sds-nav button')]
+      .find(button => button.textContent.trim() === 'TextInput');
+    if (!textInputNav) throw new Error('No TextInput navigation item is rendered');
+    fireEvent.click(textInputNav);
+
+    expect(queryByText('More preview options')).toBeNull();
+    expect(container.querySelector('.sds-button-settings__body [aria-label="Choose Leading icon"]')).not.toBeNull();
+    const componentStyle = container.querySelector<HTMLDetailsElement>('.sds-button-settings__style');
+    expect(componentStyle).not.toBeNull();
+    expect(componentStyle?.open).toBe(false);
+    expect(componentStyle?.querySelector('summary')?.textContent).toContain('Component style');
+  });
+
   it('keeps recipe edits on the selected Button variant', () => {
     const { container, getAllByLabelText, getByRole } = render(<Studio />);
     openButtons(container);
