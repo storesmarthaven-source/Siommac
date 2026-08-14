@@ -171,6 +171,8 @@ describe('Buttons family — Studio', () => {
     expect(cardNamed('Switches')?.querySelector('.ui-theme-mode-switch')).toBeNull();
     expect(cardNamed('Checkbox')?.querySelectorAll('.ui-choice--checkbox')).toHaveLength(2);
     expect(cardNamed('Checkbox')?.querySelector('.sds-thumb-choice--check .is-on')).toBeNull();
+    expect(cardNamed('Toast')?.querySelector('.sds-thumb-toast')).toBeTruthy();
+    expect(cardNamed('SweetAlert2 Popup')?.querySelector('.sds-thumb-sweet-alert')).toBeTruthy();
   });
 
   it('keeps the Checkbox application example in a canonical vertical group', () => {

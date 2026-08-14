@@ -10,7 +10,7 @@ type ThumbnailKind =
   | 'buttons' | 'segmented' | 'menu' | 'field' | 'date' | 'select' | 'upload' | 'otp'
   | 'check' | 'radio' | 'switch' | 'switch-family' | 'theme-switch' | 'people' | 'dialog' | 'drawer' | 'tooltip'
   | 'table' | 'badge' | 'tabs' | 'wizard' | 'header' | 'alert' | 'progress'
-  | 'spinner' | 'skeleton' | 'card' | 'accordion' | 'color-picker' | 'breadcrumbs' | 'tree' | 'planned';
+  | 'spinner' | 'skeleton' | 'toast' | 'sweet-alert' | 'card' | 'accordion' | 'color-picker' | 'breadcrumbs' | 'tree' | 'planned';
 
 function kindFor(id: string, built: boolean): ThumbnailKind {
   if (!built) return 'planned';
@@ -31,6 +31,7 @@ function kindFor(id: string, built: boolean): ThumbnailKind {
   if (['avatar', 'avatar-group', 'person-search-select'].includes(id)) return 'people';
   if (id === 'drawer') return 'drawer';
   if (id === 'tooltip') return 'tooltip';
+  if (id === 'sweet-alert') return 'sweet-alert';
   if (['dialog', 'popover'].includes(id)) return 'dialog';
   if (id === 'data-table') return 'table';
   if (id === 'badge') return 'badge';
@@ -43,6 +44,7 @@ function kindFor(id: string, built: boolean): ThumbnailKind {
   if (id === 'progress') return 'progress';
   if (id === 'spinner') return 'spinner';
   if (id === 'skeleton') return 'skeleton';
+  if (id === 'toast') return 'toast';
   if (id === 'accordion') return 'accordion';
   return 'card';
 }
@@ -121,6 +123,7 @@ export function ComponentThumbnail({ id, built = true }: {
       {kind === 'dialog' && <div class="sds-thumb-dialog"><strong>Confirm action</strong><span>This change will be recorded.</span><footer><i>Cancel</i><b>Confirm</b></footer></div>}
       {kind === 'drawer' && <div class="sds-thumb-drawer"><aside /><div><strong>Employee details</strong><span>Sarah James</span><span>Safety Officer</span><b>Active</b></div></div>}
       {kind === 'tooltip' && <div class="sds-thumb-tooltip">More information<i /></div>}
+      {kind === 'sweet-alert' && <div class="sds-thumb-sweet-alert"><i><LucideIcon name="CircleHelp" size={19} /></i><strong>Publish changes?</strong><span>This version will update the application.</span><footer><em>Cancel</em><b>Publish</b></footer></div>}
       {kind === 'table' && <div class="sds-thumb-table"><header><span>Employee</span><span>Status</span><span>Site</span></header><p><span>Sarah James</span><b>Active</b><span>Point Lisas</span></p><p><span>Amara Diallo</span><b>Leave</b><span>Chaguaramas</span></p></div>}
       {kind === 'badge' && <div class="sds-thumb-badges"><span>● Active</span><strong>● Overdue</strong></div>}
       {kind === 'tabs' && <div class="sds-thumb-tabs"><span class="is-on">Overview</span><span>People</span><span>Evidence</span><i /></div>}
@@ -134,6 +137,7 @@ export function ComponentThumbnail({ id, built = true }: {
       {kind === 'progress' && <div class="sds-thumb-progress"><span>Uploading evidence <b>64%</b></span><i><em /></i></div>}
       {kind === 'spinner' && <div class="sds-thumb-spinner"><i /><span>Loading records…</span></div>}
       {kind === 'skeleton' && <div class="sds-thumb-skeleton"><i /><div><span /><span /></div><footer><span /><span /></footer></div>}
+      {kind === 'toast' && <div class="sds-thumb-toast"><i><LucideIcon name="CircleCheck" size={16} /></i><div><strong>Changes saved</strong><span>Your changes are now available.</span></div><LucideIcon name="X" size={14} /></div>}
       {kind === 'card' && <div class="sds-thumb-card"><small>OPEN INCIDENTS</small><strong>24</strong><span><b>↓ 8%</b> from last month</span></div>}
       {kind === 'accordion' && <div class="sds-thumb-accordion"><span>Scope and eligibility <b>⌄</b></span><span>Approval rules <b>⌄</b></span><span>Audit retention <b>⌄</b></span></div>}
       {kind === 'planned' && <div class="sds-thumb-planned"><LucideIcon name="Plus" size={18} /><span>Planned component</span></div>}

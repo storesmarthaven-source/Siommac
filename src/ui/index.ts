@@ -224,6 +224,7 @@ export { Tooltip, type TooltipProps } from './overlays/Tooltip';
 // ── Feedback (canonical, v2) ──
 export { Alert, type AlertProps, type AlertTone, type AlertPlacement } from './feedback/Alert';
 export { Progress, type ProgressProps, type ProgressShape, type ProgressTone, type ProgressSize } from './feedback/Progress';
+export { Toaster, ToastCard, toast, type ToastRecord, type ToastTier, type ToastVariant } from './toast';
 
 // ── Loading placeholders (cold-path only) ──
 export {

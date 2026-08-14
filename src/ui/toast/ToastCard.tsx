@@ -23,18 +23,21 @@ import type { ToastActionButton, ToastRecord }       from "./toastTypes";
 import { ToastIcon }                                from "./ToastIcon";
 import { ToastProgress }                            from "./ToastProgress";
 import { dismissToast, getGlobalPaused, updateToast } from "./toastStore";
+import "./toast.css";
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
-interface Props {
+export interface ToastCardProps {
   toast: ToastRecord;
   onDismiss?: () => void;
-  onPositionUpdate: () => void;
+  onPositionUpdate?: () => void;
+  /** Render as an in-flow specimen instead of an absolutely positioned stack card. */
+  standalone?: boolean;
 }
 
 // ── ToastCard ─────────────────────────────────────────────────────────────────
 
-export function ToastCard({ toast, onPositionUpdate }: Props) {
+export function ToastCard({ toast, onDismiss, onPositionUpdate, standalone = false }: ToastCardProps) {
   const [paused, setPaused]           = useState(false);
   const [remainingMs, setRemainingMs] = useState(toast.duration);
   const [stopped, setStopped]         = useState(false);
@@ -50,17 +53,18 @@ export function ToastCard({ toast, onPositionUpdate }: Props) {
 
   // ── Enter animation: add class on mount, remove after animation ──────────────
   useEffect(() => {
+    if (standalone) return;
     const el = cardRef.current;
     if (!el) return;
     el.classList.add("entering");
     const t = setTimeout(() => {
       el.classList.remove("entering");
-      onPositionUpdate();
+      onPositionUpdate?.();
     }, 420); // slightly past the 0.4s animation
     return () => clearTimeout(t);
     // Run once on mount only
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [standalone]);
 
   // ── Timer: rAF-based countdown (mirrors spec's ToastCard) ────────────────────
   useEffect(() => {
@@ -93,7 +97,7 @@ export function ToastCard({ toast, onPositionUpdate }: Props) {
     const globalPaused = getGlobalPaused();
     if (globalPaused) {
       setTimerPaused(true);
-    } else if (!stoppedRef.current) {
+    } else {
       setTimerPaused(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -114,8 +118,9 @@ export function ToastCard({ toast, onPositionUpdate }: Props) {
 
   // ── Dismiss (animated exit via store) ────────────────────────────────────────
   const handleDismiss = useCallback(() => {
-    dismissToast(toast.id);
-  }, [toast.id]);
+    if (onDismiss) onDismiss();
+    else dismissToast(toast.id);
+  }, [toast.id, onDismiss]);
 
   // ── Action button click ───────────────────────────────────────────────────────
   function handleActionClick(action: ToastActionButton) {
@@ -161,6 +166,7 @@ export function ToastCard({ toast, onPositionUpdate }: Props) {
         "siomac-toast",
         `siomac-toast--${toast.variant}`,
         `siomac-toast--${toast.tier}`,
+        standalone ? "siomac-toast--standalone" : "",
         toast.exiting ? "exiting" : "",
         paused ? "is-paused" : ""
       ].filter(Boolean).join(" ")}

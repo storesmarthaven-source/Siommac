@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "a97343fe0f901db4a90fd80094a230b482c84214",
+    "head": "cf2ebe44bff61a9e56bcd45a55f067386586e632",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "706282419433e00ca3c67077",
-    "indexedFiles": 1871
+    "fingerprint": "11e41d295f4343e704a4fc13",
+    "indexedFiles": 1872
   },
   "summary": {
-    "files": 1516,
-    "symbols": 14989,
+    "files": 1517,
+    "symbols": 14993,
     "widgets": 71,
     "routes": 983,
     "routeDefinitions": 984,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 454,
-        "symbols": 3965,
+        "files": 455,
+        "symbols": 3969,
         "widgets": 18,
         "routes": 38,
         "routeDefinitions": 53,
@@ -8966,8 +8966,8 @@
       "path": "src/ui/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 273,
-      "hash": "e21867b402b58b02"
+      "lines": 274,
+      "hash": "e10fe6efde7f9867"
     },
     {
       "path": "src/ui/layouts/ModulePageLayout.tsx",
@@ -9351,8 +9351,8 @@
       "path": "src/ui/registry/feedback.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 145,
-      "hash": "cdc648384c1b6001"
+      "lines": 205,
+      "hash": "228b8ded6327f432"
     },
     {
       "path": "src/ui/registry/forms.defs.tsx",
@@ -9379,8 +9379,8 @@
       "path": "src/ui/registry/overlays.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 148,
-      "hash": "ab6094c7c5bf5108"
+      "lines": 200,
+      "hash": "3c8339fdbf5a4afd"
     },
     {
       "path": "src/ui/registry/page-header.def.tsx",
@@ -9409,6 +9409,13 @@
       "role": "frontend",
       "lines": 148,
       "hash": "34a1a2a186b50f30"
+    },
+    {
+      "path": "src/ui/registry/runtime-feedback.test.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 18,
+      "hash": "c547dab4b533a4dc"
     },
     {
       "path": "src/ui/registry/types.ts",
@@ -9554,8 +9561,8 @@
       "path": "src/ui/studio/componentThumbnail.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 143,
-      "hash": "a1dfe213108045d9"
+      "lines": 147,
+      "hash": "31d1a5783204bbd2"
     },
     {
       "path": "src/ui/studio/designSystemConfig.test.ts",
@@ -9568,8 +9575,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 577,
-      "hash": "bb75f91a6b71ee96"
+      "lines": 579,
+      "hash": "0f8ad6d4846c7b64"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -9680,8 +9687,8 @@
       "path": "src/ui/toast/ToastCard.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 318,
-      "hash": "4376b5928b1dc4db"
+      "lines": 324,
+      "hash": "0b50777813f82c6c"
     },
     {
       "path": "src/ui/toast/ToastIcon.tsx",
@@ -9708,15 +9715,15 @@
       "path": "src/ui/toast/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 15,
-      "hash": "561771ad9b7cb468"
+      "lines": 16,
+      "hash": "d419d9fddb103444"
     },
     {
       "path": "src/ui/toast/toast.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 626,
-      "hash": "8ed766517431f414"
+      "lines": 642,
+      "hash": "663f2d322a668fba"
     },
     {
       "path": "src/ui/toast/toastStore.ts",
@@ -149021,7 +149028,7 @@
       "name": "s",
       "kind": "function",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 9,
+      "line": 11,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149031,7 +149038,7 @@
       "name": "b",
       "kind": "function",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 10,
+      "line": 12,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149041,7 +149048,7 @@
       "name": "emptyStateDef",
       "kind": "object",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 12,
+      "line": 14,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149051,7 +149058,7 @@
       "name": "skeletonDef",
       "kind": "object",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 75,
+      "line": 77,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149061,7 +149068,17 @@
       "name": "spinnerDef",
       "kind": "object",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 114,
+      "line": 116,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "toastDef",
+      "kind": "object",
+      "file": "src/ui/registry/feedback.defs.tsx",
+      "line": 146,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149071,7 +149088,7 @@
       "name": "FEEDBACK_DEFS",
       "kind": "array",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 144,
+      "line": 204,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149555,7 +149572,7 @@
       "name": "s",
       "kind": "function",
       "file": "src/ui/registry/overlays.defs.tsx",
-      "line": 9,
+      "line": 10,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149565,7 +149582,7 @@
       "name": "b",
       "kind": "function",
       "file": "src/ui/registry/overlays.defs.tsx",
-      "line": 10,
+      "line": 11,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149575,7 +149592,19 @@
       "name": "PopoverPreview",
       "kind": "function",
       "file": "src/ui/registry/overlays.defs.tsx",
-      "line": 12,
+      "line": 13,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "SweetAlertPreview",
+      "kind": "function",
+      "file": "src/ui/registry/overlays.defs.tsx",
+      "line": 47,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149587,7 +149616,7 @@
       "name": "popoverDef",
       "kind": "object",
       "file": "src/ui/registry/overlays.defs.tsx",
-      "line": 46,
+      "line": 66,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149597,7 +149626,17 @@
       "name": "tooltipDef",
       "kind": "object",
       "file": "src/ui/registry/overlays.defs.tsx",
-      "line": 93,
+      "line": 113,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sweetAlertDef",
+      "kind": "object",
+      "file": "src/ui/registry/overlays.defs.tsx",
+      "line": 167,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149607,7 +149646,7 @@
       "name": "OVERLAY_DEFS",
       "kind": "array",
       "file": "src/ui/registry/overlays.defs.tsx",
-      "line": 147,
+      "line": 199,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150864,7 +150903,7 @@
       "name": "FieldScene",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 50,
+      "line": 52,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150876,7 +150915,7 @@
       "name": "SelectScene",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 56,
+      "line": 58,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150888,7 +150927,7 @@
       "name": "ChoiceScene",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 70,
+      "line": 72,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150900,7 +150939,7 @@
       "name": "ColorPickerScene",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 80,
+      "line": 82,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150912,7 +150951,7 @@
       "name": "ComponentThumbnail",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 89,
+      "line": 91,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151010,7 +151049,7 @@
       "name": "navigate",
       "kind": "function",
       "file": "src/ui/studio/family.test.tsx",
-      "line": 362,
+      "line": 364,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -153413,20 +153452,34 @@
       ]
     },
     {
-      "name": "Props",
-      "kind": "interface",
-      "file": "src/ui/toast/ToastCard.tsx",
-      "line": 29,
+      "name": "STANDALONE_TOAST",
+      "kind": "object",
+      "file": "src/ui/toast/toast.test.tsx",
+      "line": 44,
       "module": "platform",
       "exported": false,
       "container": "",
-      "tags": []
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "ToastCardProps",
+      "kind": "interface",
+      "file": "src/ui/toast/ToastCard.tsx",
+      "line": 30,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
     },
     {
       "name": "ToastCard",
       "kind": "function",
       "file": "src/ui/toast/ToastCard.tsx",
-      "line": 37,
+      "line": 40,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -153439,7 +153492,7 @@
       "name": "tick",
       "kind": "function",
       "file": "src/ui/toast/ToastCard.tsx",
-      "line": 69,
+      "line": 73,
       "module": "platform",
       "exported": false,
       "container": "ToastCard",
@@ -153449,7 +153502,7 @@
       "name": "setTimerPaused",
       "kind": "function",
       "file": "src/ui/toast/ToastCard.tsx",
-      "line": 103,
+      "line": 107,
       "module": "platform",
       "exported": false,
       "container": "ToastCard",
@@ -153459,7 +153512,7 @@
       "name": "handleActionClick",
       "kind": "function",
       "file": "src/ui/toast/ToastCard.tsx",
-      "line": 121,
+      "line": 126,
       "module": "platform",
       "exported": false,
       "container": "ToastCard",
@@ -153469,7 +153522,7 @@
       "name": "handleToggleStop",
       "kind": "function",
       "file": "src/ui/toast/ToastCard.tsx",
-      "line": 143,
+      "line": 148,
       "module": "platform",
       "exported": false,
       "container": "ToastCard",
@@ -153479,7 +153532,7 @@
       "name": "ToastChips",
       "kind": "function",
       "file": "src/ui/toast/ToastCard.tsx",
-      "line": 257,
+      "line": 263,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -153491,7 +153544,7 @@
       "name": "ToastSummary",
       "kind": "function",
       "file": "src/ui/toast/ToastCard.tsx",
-      "line": 267,
+      "line": 273,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -153503,7 +153556,7 @@
       "name": "ToastNote",
       "kind": "function",
       "file": "src/ui/toast/ToastCard.tsx",
-      "line": 281,
+      "line": 287,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -153515,7 +153568,7 @@
       "name": "ToastFile",
       "kind": "function",
       "file": "src/ui/toast/ToastCard.tsx",
-      "line": 286,
+      "line": 292,
       "module": "platform",
       "exported": false,
       "container": "",

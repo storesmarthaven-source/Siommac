@@ -4,6 +4,7 @@ import { LucideIcon } from '../LucideIcon';
 import { Button } from '../primitives/Button';
 import { Popover } from '../overlays/Popover';
 import { Tooltip } from '../overlays/Tooltip';
+import type { CpopOptions } from '../../lib/popup';
 import { type ComponentDef, type PropValues } from './types';
 
 const s = (v: PropValues[string] | undefined, fallback = ''): string => typeof v === 'string' ? v : fallback;
@@ -39,6 +40,25 @@ function PopoverPreview({ props, initiallyOpen = false }: { props: PropValues; i
           <Button variant="primary" size="sm">Review change</Button>
         </div>
       </Popover>
+    </div>
+  );
+}
+
+function SweetAlertPreview({ props }: { props: PropValues }): VNode {
+  const options: CpopOptions = {
+    icon: s(props.tone, 'question'),
+    title: 'Publish these changes?',
+    text: 'This version will update every canonical consumer in the application.',
+    showCancelButton: b(props.showCancel),
+    confirmButtonText: 'Publish',
+    cancelButtonText: 'Cancel',
+    allowOutsideClick: b(props.allowDismiss),
+  };
+  return (
+    <div style={{ minHeight: '190px', display: 'grid', placeItems: 'center' }}>
+      <Button variant="primary" onClick={() => {
+        void import('../../lib/popup').then(({ cpop }) => cpop.fire(options));
+      }}>Preview alert</Button>
     </div>
   );
 }
@@ -144,4 +164,36 @@ export const tooltipDef: ComponentDef = {
 </Tooltip>`,
 };
 
-export const OVERLAY_DEFS: readonly ComponentDef[] = [popoverDef, tooltipDef];
+export const sweetAlertDef: ComponentDef = {
+  id: 'sweet-alert',
+  name: 'SweetAlert2 Popup',
+  category: 'overlays',
+  description: 'The existing app popup for alerts, confirmations, prompts and blocking progress, exposed through the SweetAlert2-compatible API.',
+  status: 'stable',
+  componentPath: 'src/lib/popup.ts',
+  importFrom: '@lib/popup',
+  props: {
+    tone: { type: 'segmented', label: 'Variant', options: ['success', 'error', 'warning', 'info', 'question'], default: 'question' },
+    showCancel: { type: 'boolean', label: 'Cancel action', default: true },
+    allowDismiss: { type: 'boolean', label: 'Backdrop dismiss', default: true },
+  },
+  style: [],
+  states: ['default', 'open'],
+  compare: ['default'],
+  a11y: {
+    role: 'dialog with aria-modal="true".',
+    name: 'The visible popup title labels the dialog.',
+    keyboard: [
+      { keys: 'Escape', does: 'Dismisses only when the alert contract allows dismissal.' },
+      { keys: 'Tab / Shift+Tab', does: 'Cycles within the alert.' },
+      { keys: 'Enter', does: 'Confirms a single-line prompt.' },
+    ],
+    focus: 'The prompt receives focus when present; the popup remains modal until it resolves.',
+    notes: ['Errors, warnings and loading alerts require an explicit resolution and cannot be dismissed through the backdrop.'],
+  },
+  migration: { notes: ['The existing SweetAlert2-compatible runtime remains in place; its styling will be brought onto Studio tokens in the popup styling pass.'] },
+  render: p => <SweetAlertPreview props={p} />,
+  code: p => `await cpop.fire({\n  icon: '${s(p.tone, 'question')}',\n  title: 'Publish these changes?',${b(p.showCancel) ? '\n  showCancelButton: true,' : ''}\n  confirmButtonText: 'Publish'\n});`,
+};
+
+export const OVERLAY_DEFS: readonly ComponentDef[] = [popoverDef, tooltipDef, sweetAlertDef];

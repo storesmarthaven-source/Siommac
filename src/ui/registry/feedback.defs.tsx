@@ -2,6 +2,8 @@
 import { EmptyState, type EmptyStateSize, type EmptyTone } from '../components/EmptyState';
 import { ListSkeleton, Skeleton, SkeletonText } from '../components/Skeleton';
 import { Spinner } from '../components/Spinner';
+import { ToastCard } from '../toast/ToastCard';
+import type { ToastRecord, ToastTier, ToastVariant } from '../toast/toastTypes';
 import { LucideIcon } from '../LucideIcon';
 import { Button } from '../primitives/Button';
 import { type ComponentDef, type PropValues } from './types';
@@ -141,4 +143,62 @@ export const spinnerDef: ComponentDef = {
   code: p => `<Spinner label="${s(p.label, 'Loading workflow…')}" size={${typeof p.size === 'number' ? p.size : 18}}${b(p.center) ? ' center' : ''} />`,
 };
 
-export const FEEDBACK_DEFS: readonly ComponentDef[] = [emptyStateDef, skeletonDef, spinnerDef];
+export const toastDef: ComponentDef = {
+  id: 'toast',
+  name: 'Toast',
+  category: 'feedback',
+  description: 'The app-wide transient notification: normal, actionable and rich messages share one accessible stacking and dismissal engine.',
+  status: 'stable',
+  componentPath: 'src/ui/toast/Toaster.tsx',
+  importFrom: '@ui',
+  props: {
+    tier: { type: 'segmented', label: 'Variant', options: ['normal', 'action', 'rich'], default: 'normal' },
+    tone: { type: 'segmented', label: 'Tone', options: ['success', 'info', 'warning', 'error', 'loading'], default: 'success' },
+    dismissible: { type: 'boolean', label: 'Dismiss button', default: true },
+  },
+  style: [
+    { label: 'Surface', controls: [
+      { name: '--siomac-toast-card', label: 'Background', kind: 'color' },
+      { name: '--siomac-toast-border', label: 'Border', kind: 'color' },
+      { name: '--siomac-toast-navy', label: 'Title', kind: 'color' },
+      { name: '--siomac-toast-muted', label: 'Supporting text', kind: 'color' },
+    ] },
+    { label: 'Tones', controls: [
+      { name: '--siomac-toast-success', label: 'Success', kind: 'color' },
+      { name: '--siomac-toast-info', label: 'Information', kind: 'color' },
+      { name: '--siomac-toast-warning', label: 'Warning', kind: 'color' },
+      { name: '--siomac-toast-red', label: 'Error', kind: 'color' },
+    ] },
+  ],
+  states: ['default'],
+  compare: ['default'],
+  a11y: {
+    role: 'status for routine messages; alert for errors.',
+    name: 'The visible title and description are announced through the global live region.',
+    keyboard: [{ keys: 'Escape', does: 'Dismisses a dismissible toast while it contains focus.' }],
+    focus: 'Actions and the dismiss control are keyboard reachable; timers pause on hover and focus.',
+  },
+  migration: { notes: ['Application notifications already use the globally mounted canonical Toaster. SweetAlert2 popup styling remains a separate follow-up.'] },
+  render: p => {
+    const tier = s(p.tier, 'normal') as ToastTier;
+    const tone = s(p.tone, 'success') as ToastVariant;
+    const record: ToastRecord = {
+      id: 'studio-toast', tier, variant: tone,
+      title: tone === 'loading' ? 'Updating records' : 'Changes saved',
+      description: 'Your changes are now available across SIOMAC.',
+      duration: 0, dismissible: b(p.dismissible), ariaLive: tone === 'error' ? 'assertive' : 'polite', createdAt: 0,
+      moduleLabel: tier === 'normal' ? undefined : 'Employees',
+      statusLabel: tier === 'normal' ? undefined : 'Complete',
+      details: tier === 'normal' ? undefined : [{ label: 'Records', value: '18 updated' }],
+      note: tier === 'action' ? 'You can review the audit entry.' : undefined,
+      file: tier === 'rich' ? { name: 'employee-import.csv', sizeLabel: '24 KB', subtitle: 'Import complete' } : undefined,
+      actions: tier === 'normal' ? undefined : [{ label: 'View details', dismissOnClick: false }],
+    };
+    return <div style={{ position: 'relative', width: '344px', minHeight: tier === 'normal' ? '86px' : '170px' }}>
+      <ToastCard toast={record} standalone onDismiss={() => undefined} />
+    </div>;
+  },
+  code: p => `toast.${s(p.tone, 'success')}('Changes saved', {\n  description: 'Your changes are now available across SIOMAC.'\n});`,
+};
+
+export const FEEDBACK_DEFS: readonly ComponentDef[] = [emptyStateDef, skeletonDef, spinnerDef, toastDef];

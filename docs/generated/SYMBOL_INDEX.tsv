@@ -13201,12 +13201,13 @@ COMPONENT_FAMILIES	array	platform	true		src/ui/registry/families.ts	75
 findFamily	function	platform	true		src/ui/registry/families.ts	77	
 familyOfComponent	function	platform	true		src/ui/registry/families.ts	82	
 familyMembers	function	platform	true		src/ui/registry/families.ts	92	
-s	function	platform	false		src/ui/registry/feedback.defs.tsx	9	
-b	function	platform	false		src/ui/registry/feedback.defs.tsx	10	
-emptyStateDef	object	platform	true		src/ui/registry/feedback.defs.tsx	12	
-skeletonDef	object	platform	true		src/ui/registry/feedback.defs.tsx	75	
-spinnerDef	object	platform	true		src/ui/registry/feedback.defs.tsx	114	
-FEEDBACK_DEFS	array	platform	true		src/ui/registry/feedback.defs.tsx	144	
+s	function	platform	false		src/ui/registry/feedback.defs.tsx	11	
+b	function	platform	false		src/ui/registry/feedback.defs.tsx	12	
+emptyStateDef	object	platform	true		src/ui/registry/feedback.defs.tsx	14	
+skeletonDef	object	platform	true		src/ui/registry/feedback.defs.tsx	77	
+spinnerDef	object	platform	true		src/ui/registry/feedback.defs.tsx	116	
+toastDef	object	platform	true		src/ui/registry/feedback.defs.tsx	146	
+FEEDBACK_DEFS	array	platform	true		src/ui/registry/feedback.defs.tsx	204	
 s	function	platform	false		src/ui/registry/forms.defs.tsx	29	
 b	function	platform	false		src/ui/registry/forms.defs.tsx	30	
 n	function	platform	false		src/ui/registry/forms.defs.tsx	31	
@@ -13254,12 +13255,14 @@ PLAIN_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	121
 MANY_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	127	
 tabsDef	object	platform	true		src/ui/registry/navigation.defs.tsx	139	
 NAVIGATION_DEFS	array	platform	true		src/ui/registry/navigation.defs.tsx	352	
-s	function	platform	false		src/ui/registry/overlays.defs.tsx	9	
-b	function	platform	false		src/ui/registry/overlays.defs.tsx	10	
-PopoverPreview	function	platform	false	component	src/ui/registry/overlays.defs.tsx	12	
-popoverDef	object	platform	true		src/ui/registry/overlays.defs.tsx	46	
-tooltipDef	object	platform	true		src/ui/registry/overlays.defs.tsx	93	
-OVERLAY_DEFS	array	platform	true		src/ui/registry/overlays.defs.tsx	147	
+s	function	platform	false		src/ui/registry/overlays.defs.tsx	10	
+b	function	platform	false		src/ui/registry/overlays.defs.tsx	11	
+PopoverPreview	function	platform	false	component	src/ui/registry/overlays.defs.tsx	13	
+SweetAlertPreview	function	platform	false	component	src/ui/registry/overlays.defs.tsx	47	
+popoverDef	object	platform	true		src/ui/registry/overlays.defs.tsx	66	
+tooltipDef	object	platform	true		src/ui/registry/overlays.defs.tsx	113	
+sweetAlertDef	object	platform	true		src/ui/registry/overlays.defs.tsx	167	
+OVERLAY_DEFS	array	platform	true		src/ui/registry/overlays.defs.tsx	199	
 noop	function	platform	false		src/ui/registry/page-header.def.tsx	8	
 previewActions	variable	platform	false		src/ui/registry/page-header.def.tsx	10	
 pageHeaderDef	object	platform	true		src/ui/registry/page-header.def.tsx	19	
@@ -13380,11 +13383,11 @@ ButtonBrowser	function	platform	true	component	src/ui/studio/ButtonBrowser.tsx	1
 buttonFamilyPreviewProps	function	platform	true		src/ui/studio/buttonFamilyPreview.ts	9	
 ThumbnailKind	type	platform	false		src/ui/studio/componentThumbnail.tsx	9	
 kindFor	function	platform	false		src/ui/studio/componentThumbnail.tsx	15	
-FieldScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	50	
-SelectScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	56	
-ChoiceScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	70	
-ColorPickerScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	80	
-ComponentThumbnail	function	platform	true	component	src/ui/studio/componentThumbnail.tsx	89	
+FieldScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	52	
+SelectScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	58	
+ChoiceScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	72	
+ColorPickerScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	82	
+ComponentThumbnail	function	platform	true	component	src/ui/studio/componentThumbnail.tsx	91	
 MEMBERS	variable	platform	false	component,test	src/ui/studio/family.test.tsx	26	
 openButtonBrowser	function	platform	false	test	src/ui/studio/family.test.tsx	29	
 openButtons	function	platform	false	test	src/ui/studio/family.test.tsx	36	
@@ -13392,7 +13395,7 @@ openButtonMember	function	platform	false	test	src/ui/studio/family.test.tsx	41
 labels	function	platform	false	test	src/ui/studio/family.test.tsx	108	
 navTo	function	platform	false	test	src/ui/studio/family.test.tsx	110	
 cardNamed	function	platform	false	ui-tile,test	src/ui/studio/family.test.tsx	158	
-navigate	function	platform	false	test	src/ui/studio/family.test.tsx	362	
+navigate	function	platform	false	test	src/ui/studio/family.test.tsx	364	
 FamilyBrowser	function	platform	true	component	src/ui/studio/FamilyBrowser.tsx	5	
 Shape	interface	platform	false		src/ui/studio/InAppUsage.tsx	31	
 DATA	object	platform	false		src/ui/studio/InAppUsage.tsx	39	
@@ -13621,16 +13624,17 @@ reconcile	function	widgets	false		src/ui/theme/useModuleLayout.ts	19
 ModuleLayout	interface	widgets	true		src/ui/theme/useModuleLayout.ts	28	
 useModuleLayout	function	widgets	true	hook	src/ui/theme/useModuleLayout.ts	39	
 renderToaster	function	platform	false	test	src/ui/toast/toast.test.tsx	40	
-Props	interface	platform	false		src/ui/toast/ToastCard.tsx	29	
-ToastCard	function	platform	true	component,ui-tile	src/ui/toast/ToastCard.tsx	37	
-tick	function	platform	false		src/ui/toast/ToastCard.tsx	69	ToastCard
-setTimerPaused	function	platform	false		src/ui/toast/ToastCard.tsx	103	ToastCard
-handleActionClick	function	platform	false		src/ui/toast/ToastCard.tsx	121	ToastCard
-handleToggleStop	function	platform	false		src/ui/toast/ToastCard.tsx	143	ToastCard
-ToastChips	function	platform	false	component	src/ui/toast/ToastCard.tsx	257	
-ToastSummary	function	platform	false	component	src/ui/toast/ToastCard.tsx	267	
-ToastNote	function	platform	false	component	src/ui/toast/ToastCard.tsx	281	
-ToastFile	function	platform	false	component	src/ui/toast/ToastCard.tsx	286	
+STANDALONE_TOAST	object	platform	false	test	src/ui/toast/toast.test.tsx	44	
+ToastCardProps	interface	platform	true	ui-tile	src/ui/toast/ToastCard.tsx	30	
+ToastCard	function	platform	true	component,ui-tile	src/ui/toast/ToastCard.tsx	40	
+tick	function	platform	false		src/ui/toast/ToastCard.tsx	73	ToastCard
+setTimerPaused	function	platform	false		src/ui/toast/ToastCard.tsx	107	ToastCard
+handleActionClick	function	platform	false		src/ui/toast/ToastCard.tsx	126	ToastCard
+handleToggleStop	function	platform	false		src/ui/toast/ToastCard.tsx	148	ToastCard
+ToastChips	function	platform	false	component	src/ui/toast/ToastCard.tsx	263	
+ToastSummary	function	platform	false	component	src/ui/toast/ToastCard.tsx	273	
+ToastNote	function	platform	false	component	src/ui/toast/ToastCard.tsx	287	
+ToastFile	function	platform	false	component	src/ui/toast/ToastCard.tsx	292	
 MAX_VISIBLE_TOASTS	variable	platform	false	component	src/ui/toast/Toaster.tsx	27	
 TOAST_GAP	variable	platform	false	component	src/ui/toast/Toaster.tsx	28	
 STACK_ITEM_OFFSET_Y	variable	platform	false	component	src/ui/toast/Toaster.tsx	29	

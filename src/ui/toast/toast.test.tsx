@@ -20,7 +20,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, act, cleanup }         from "@testing-library/preact";
-import { toast, Toaster }                                  from "@ui/toast";
+import { toast, ToastCard, Toaster, type ToastRecord }    from "@ui/toast";
 import { getToasts, removeToast, TOAST_EXIT_MS }           from "./toastStore";
 
 // ── Reset store between tests ─────────────────────────────────────────────────
@@ -40,6 +40,22 @@ afterEach(() => {
 function renderToaster() {
   return render(<Toaster />);
 }
+
+const STANDALONE_TOAST: ToastRecord = {
+  id: 'standalone', tier: 'normal', variant: 'success', title: 'Saved',
+  duration: 0, dismissible: true, ariaLive: 'polite', createdAt: 0,
+};
+
+describe('ToastCard standalone specimen', () => {
+  it('renders in normal flow and delegates dismissal without mutating the global store', () => {
+    const onDismiss = vi.fn();
+    const { container } = render(<ToastCard toast={STANDALONE_TOAST} standalone onDismiss={onDismiss} />);
+    expect(container.querySelector('.siomac-toast--standalone')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss notification' }));
+    expect(onDismiss).toHaveBeenCalledOnce();
+    expect(getToasts()).toHaveLength(0);
+  });
+});
 
 // ── Store: basic CRUD ─────────────────────────────────────────────────────────
 
