@@ -225,8 +225,10 @@ describe('Buttons family — Studio', () => {
     fireEvent.click(getByRole('button', { name: 'Modal Frame', exact: true }));
 
     const layouts = getByRole('radiogroup', { name: 'Modal Frame Layout' });
-    expect(layouts.querySelectorAll('[role="radio"]')).toHaveLength(5);
-    expect(layouts.querySelectorAll('.sds-modal-layout-thumb')).toHaveLength(5);
+    expect(layouts.querySelectorAll('[role="radio"]')).toHaveLength(6);
+    expect(layouts.querySelectorAll('.sds-modal-layout-thumb')).toHaveLength(6);
+    expect(getByRole('radio', { name: /Frame/ }).getAttribute('aria-checked')).toBe('true');
+    expect(container.querySelector('.sds-button-preview__single .sds-modal-frame-canvas')).toBeTruthy();
     fireEvent.click(getByRole('radio', { name: /Sidebar right/ }));
 
     const frame = container.querySelector('.ui-dialog--layout-sidebar-right');

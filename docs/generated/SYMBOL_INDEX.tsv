@@ -13005,7 +13005,7 @@ place	function	platform	false		src/ui/overlays/AnchoredPopup.tsx	86	AnchoredPopu
 onScroll	function	platform	false		src/ui/overlays/AnchoredPopup.tsx	129	AnchoredPopup
 onPointerDown	function	platform	false		src/ui/overlays/AnchoredPopup.tsx	156	AnchoredPopup
 Basic	function	platform	false	component,test	src/ui/overlays/Dialog.test.tsx	15	
-Harness	function	platform	false	component,test	src/ui/overlays/Dialog.test.tsx	98	
+Harness	function	platform	false	component,test	src/ui/overlays/Dialog.test.tsx	110	
 DialogSize	type	platform	true		src/ui/overlays/Dialog.tsx	40	
 DialogVariant	type	platform	true		src/ui/overlays/Dialog.tsx	41	
 DialogLayout	type	platform	true		src/ui/overlays/Dialog.tsx	42	
@@ -13197,7 +13197,7 @@ DEMO_PEOPLE	array	platform	false		src/ui/registry/definitions.tsx	39
 DEMO_DEPARTMENTS	array	platform	false		src/ui/registry/definitions.tsx	47	
 personDef	object	platform	false		src/ui/registry/definitions.tsx	62	
 dialogDef	object	platform	false		src/ui/registry/definitions.tsx	178	
-COMPONENT_DEFS	array	platform	true		src/ui/registry/definitions.tsx	338	
+COMPONENT_DEFS	array	platform	true		src/ui/registry/definitions.tsx	340	
 ComponentFamily	interface	platform	true		src/ui/registry/families.ts	23	
 BUTTON_FAMILY	object	platform	true		src/ui/registry/families.ts	48	
 SWITCH_FAMILY	object	platform	true		src/ui/registry/families.ts	62	
@@ -13401,7 +13401,7 @@ openButtonMember	function	platform	false	test	src/ui/studio/family.test.tsx	41
 labels	function	platform	false	test	src/ui/studio/family.test.tsx	108	
 navTo	function	platform	false	test	src/ui/studio/family.test.tsx	110	
 cardNamed	function	platform	false	ui-tile,test	src/ui/studio/family.test.tsx	158	
-navigate	function	platform	false	test	src/ui/studio/family.test.tsx	427	
+navigate	function	platform	false	test	src/ui/studio/family.test.tsx	429	
 FamilyBrowser	function	platform	true	component	src/ui/studio/FamilyBrowser.tsx	5	
 Shape	interface	platform	false		src/ui/studio/InAppUsage.tsx	31	
 DATA	object	platform	false		src/ui/studio/InAppUsage.tsx	39	

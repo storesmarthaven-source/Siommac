@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "da208e889ba10994de4947e99122bd3db65c7c9a",
+    "head": "de394ca884c26c03231b2cb4b742be79a8259380",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "b878f410fcf0e8280f593efd",
+    "fingerprint": "ae71f01638b7e5b7378aac83",
     "indexedFiles": 1872
   },
   "summary": {
@@ -9106,15 +9106,15 @@
       "path": "src/ui/overlays/Dialog.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 249,
-      "hash": "e0cb65d74f00b59d"
+      "lines": 261,
+      "hash": "bfe8eb15ef804694"
     },
     {
       "path": "src/ui/overlays/Dialog.tsx",
       "module": "platform",
       "role": "frontend",
       "lines": 223,
-      "hash": "fed7544fe6bb59d6"
+      "hash": "6dabbcad4463e859"
     },
     {
       "path": "src/ui/overlays/DropdownMenu.tsx",
@@ -9337,8 +9337,8 @@
       "path": "src/ui/registry/definitions.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 344,
-      "hash": "bf2088c180811382"
+      "lines": 346,
+      "hash": "3e6732e6a8448357"
     },
     {
       "path": "src/ui/registry/families.ts",
@@ -9534,7 +9534,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 668,
-      "hash": "aee15db28d0e90f5"
+      "hash": "a73779715fbdf28d"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -9575,8 +9575,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 642,
-      "hash": "9b618009208a6328"
+      "lines": 644,
+      "hash": "43b8fefa57336c36"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -146945,7 +146945,7 @@
       "name": "Harness",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.test.tsx",
-      "line": 98,
+      "line": 110,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148994,7 +148994,7 @@
       "name": "COMPONENT_DEFS",
       "kind": "array",
       "file": "src/ui/registry/definitions.tsx",
-      "line": 338,
+      "line": 340,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151115,7 +151115,7 @@
       "name": "navigate",
       "kind": "function",
       "file": "src/ui/studio/family.test.tsx",
-      "line": 427,
+      "line": 429,
       "module": "platform",
       "exported": false,
       "container": "",

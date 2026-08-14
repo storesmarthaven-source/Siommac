@@ -636,7 +636,7 @@ function ModalLayoutThumbnail({ layout }: { layout: string }): VNode {
     <span class={`sds-modal-layout-thumb sds-modal-layout-thumb--${layout}`} aria-hidden="true">
       <i class="sds-modal-layout-thumb__head"><b /><b /></i>
       <i class="sds-modal-layout-thumb__body">
-        <b class="sds-modal-layout-thumb__content"><em /><em /><em /></b>
+        <b class="sds-modal-layout-thumb__content">{layout !== 'frame' && <><em /><em /><em /></>}</b>
         {hasSidebar && <b class="sds-modal-layout-thumb__side"><em /><em /></b>}
       </i>
       <i class="sds-modal-layout-thumb__foot"><b /><b /></i>

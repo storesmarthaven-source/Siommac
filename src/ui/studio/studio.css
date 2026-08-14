@@ -279,6 +279,7 @@
 .sds-modal-summary > div { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--border); }
 .sds-modal-summary dt { color: var(--text-muted); font-size: var(--ui-font-size-caption); }
 .sds-modal-summary dd { margin: 0; color: var(--siomac-navy); font-size: var(--ui-font-size-body-sm); font-weight: var(--font-weight-semibold); }
+.sds-modal-frame-canvas { min-height: 180px; }
 .sds-modal-layout-thumb { width: 100%; max-width: 170px; height: 94px; display: grid; grid-template-rows: 21px minmax(0, 1fr) 22px; overflow: hidden; border: 1px solid #d9dee5; border-radius: 7px; background: #fff; box-shadow: 0 3px 8px rgb(15 23 42 / .05); }
 .sds-modal-layout-thumb i, .sds-modal-layout-thumb b, .sds-modal-layout-thumb em { display: block; box-sizing: border-box; }
 .sds-modal-layout-thumb__head { display: flex !important; align-items: center; justify-content: space-between; padding: 0 7px; border-bottom: 1px solid #e6e9ed; }

@@ -38,6 +38,18 @@ describe('Dialog', () => {
     render(<Basic />);
     const dlg = screen.getByRole('dialog');
     expect(dlg.getAttribute('aria-modal')).toBe('true');
+    expect(dlg.className).toContain('ui-dialog--layout-frame');
+  });
+
+  it('allows an empty body as the base frame', () => {
+    render(
+      <Dialog open onClose={vi.fn()}>
+        <Dialog.Header title="New modal" />
+        <Dialog.Body />
+        <Dialog.Footer><button type="button">Done</button></Dialog.Footer>
+      </Dialog>,
+    );
+    expect(screen.getByRole('dialog').querySelector('.ui-dialog-body')).toBeTruthy();
   });
 
   it('labels itself with its own title', () => {

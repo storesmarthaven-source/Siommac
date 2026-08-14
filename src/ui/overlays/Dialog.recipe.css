@@ -191,6 +191,7 @@
     padding: var(--ui-dialog-sidebar-pad);
     background: var(--ui-dialog-sidebar-bg);
   }
+  .ui-dialog--layout-frame .ui-dialog-layout,
   .ui-dialog--layout-standard .ui-dialog-layout,
   .ui-dialog--layout-wide .ui-dialog-layout {
     grid-template-columns: minmax(0, 1fr);

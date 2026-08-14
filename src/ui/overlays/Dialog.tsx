@@ -39,7 +39,7 @@ import '../primitives/control.recipe.css';
 
 export type DialogSize = 'sm' | 'md' | 'lg' | 'xl' | 'fullscreen';
 export type DialogVariant = 'standard' | 'form' | 'confirm' | 'destructive' | 'info' | 'workspace';
-export type DialogLayout = 'standard' | 'sidebar-left' | 'sidebar-right' | 'split' | 'wide';
+export type DialogLayout = 'frame' | 'standard' | 'sidebar-left' | 'sidebar-right' | 'split' | 'wide';
 
 export interface DialogProps {
   open: boolean;
@@ -87,7 +87,7 @@ interface DialogComponent {
 }
 
 function DialogRoot({
-  open, onClose, size = 'md', variant = 'standard', layout = 'standard', busy = false,
+  open, onClose, size = 'md', variant = 'standard', layout = 'frame', busy = false,
   closeOnBackdrop = true, closeOnEscape = true,
   overlayClass, class: extra, children,
 }: DialogProps): VNode | null {
@@ -171,7 +171,7 @@ function DialogHeader({ title, sub, icon, onClose, actions }: DialogHeaderProps)
   );
 }
 
-function DialogBody({ children, class: extra }: { children: ComponentChildren; class?: string }): VNode {
+function DialogBody({ children, class: extra }: { children?: ComponentChildren; class?: string }): VNode {
   return <div class={`ui-dialog-body${extra ? ` ${extra}` : ''}`}>{children}</div>;
 }
 

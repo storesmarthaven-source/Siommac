@@ -195,11 +195,11 @@ const dialogDef: ComponentDef = {
   },
 
   props: {
-    title:   { type: 'text',   label: 'Title', default: 'Approve payment run' },
-    sub:     { type: 'text',   label: 'Subtitle', default: 'PAY-2026-0041 · 148 employees' },
+    title:   { type: 'text',   label: 'Title', default: 'Modal title' },
+    sub:     { type: 'text',   label: 'Subtitle', default: 'Add supporting context when needed.' },
     size:    { type: 'select', label: 'Size', options: ['sm', 'md', 'lg', 'xl', 'fullscreen'], default: 'md' },
     variant: { type: 'select', label: 'Variant', options: ['standard', 'form', 'confirm', 'destructive', 'info', 'workspace'], default: 'standard' },
-    layout:  { type: 'segmented', label: 'Layout', options: ['standard', 'sidebar-left', 'sidebar-right', 'split', 'wide'], default: 'standard' },
+    layout:  { type: 'segmented', label: 'Layout', options: ['frame', 'standard', 'sidebar-left', 'sidebar-right', 'split', 'wide'], default: 'frame' },
     icon:    { type: 'select', label: 'Header icon', options: ['none', 'CircleCheck', 'TriangleAlert', 'Trash2', 'Info'], default: 'CircleCheck' },
     showClose: { type: 'boolean', label: 'Close button', default: true },
     busy:    { type: 'boolean', label: 'Busy (submitting)', default: false },
@@ -256,7 +256,7 @@ const dialogDef: ComponentDef = {
   render: (p, state) => {
     const iconName = s(p.icon, 'none');
     const busy = b(p.busy) || state === 'loading';
-    const layout = s(p.layout, 'standard');
+    const layout = s(p.layout, 'frame');
     const hasSidebar = layout === 'sidebar-left' || layout === 'sidebar-right' || layout === 'split';
     return (
       <div class="ui-gallery-dialog-frame">
@@ -264,7 +264,7 @@ const dialogDef: ComponentDef = {
           <header class="ui-dialog-head">
             {iconName !== 'none' && <span class="ui-dialog-icon" aria-hidden="true"><LucideIcon name={iconName as never} /></span>}
             <div class="ui-dialog-titles">
-              <h2 class="ui-dialog-title">{s(p.title, 'Dialog')}</h2>
+              <h2 class="ui-dialog-title">{s(p.title, 'Modal title')}</h2>
               {s(p.sub) && <p class="ui-dialog-sub">{s(p.sub)}</p>}
             </div>
             {b(p.showClose) && (
@@ -274,17 +274,19 @@ const dialogDef: ComponentDef = {
           <div class="ui-dialog-body">
             <div class="ui-dialog-layout">
               <div class="ui-dialog-content">
-                <FormGrid>
-                  <FormField label="Payment date" required>
-                    <TextInput value="2026-08-28" onInput={() => { /* preview */ }} />
-                  </FormField>
-                  <FormField label="Approver" required>
-                    <PersonSearchSelect value="p1" onChange={() => { /* preview */ }} people={DEMO_PEOPLE} />
-                  </FormField>
-                  <FormField label="Reason" wide helpText="Recorded on the audit trail.">
-                    <TextInput multiline value="" onInput={() => { /* preview */ }} placeholder="Add context for the approver…" />
-                  </FormField>
-                </FormGrid>
+                {layout === 'frame'
+                  ? <div class="sds-modal-frame-canvas" aria-label="Empty modal body" />
+                  : <FormGrid>
+                      <FormField label="Payment date" required>
+                        <TextInput value="2026-08-28" onInput={() => { /* preview */ }} />
+                      </FormField>
+                      <FormField label="Approver" required>
+                        <PersonSearchSelect value="p1" onChange={() => { /* preview */ }} people={DEMO_PEOPLE} />
+                      </FormField>
+                      <FormField label="Reason" wide helpText="Recorded on the audit trail.">
+                        <TextInput multiline value="" onInput={() => { /* preview */ }} placeholder="Add context for the approver…" />
+                      </FormField>
+                    </FormGrid>}
               </div>
               {hasSidebar && (
                 <aside class="ui-dialog-sidebar">
@@ -304,8 +306,8 @@ const dialogDef: ComponentDef = {
           <footer class="ui-dialog-foot">
             {b(p.backLink) && <div class="ui-dialog-foot-left"><Button variant="link">Back</Button></div>}
             <Button variant="outline">Cancel</Button>
-            <Button variant={s(p.variant) === 'destructive' ? 'danger' : 'primary'} loading={busy} loadingText="Approving…">
-              {s(p.variant) === 'destructive' ? 'Delete' : 'Approve'}
+            <Button variant={s(p.variant) === 'destructive' ? 'danger' : 'primary'} loading={busy} loadingText="Saving…">
+              {s(p.variant) === 'destructive' ? 'Delete' : s(p.variant) === 'confirm' ? 'Confirm' : 'Save'}
             </Button>
           </footer>
           {busy && <div class="ui-dialog-busy"><span class="ui-ctrl-spinner" /></div>}
@@ -314,14 +316,14 @@ const dialogDef: ComponentDef = {
     );
   },
 
-  code: (p) => `<Dialog open={open} onClose={close} size="${s(p.size, 'md')}"${s(p.variant) !== 'standard' ? ` variant="${s(p.variant)}"` : ''}${s(p.layout) !== 'standard' ? ` layout="${s(p.layout)}"` : ''}${b(p.busy) ? ' busy={saving}' : ''}>
+  code: (p) => `<Dialog open={open} onClose={close} size="${s(p.size, 'md')}"${s(p.variant) !== 'standard' ? ` variant="${s(p.variant)}"` : ''}${s(p.layout) !== 'frame' ? ` layout="${s(p.layout)}"` : ''}${b(p.busy) ? ' busy={saving}' : ''}>
   <Dialog.Header
     title="${s(p.title, 'Title')}"${s(p.sub) ? `\n    sub="${s(p.sub)}"` : ''}${s(p.icon) !== 'none' ? `\n    icon={<LucideIcon name="${s(p.icon)}" />}` : ''}${b(p.showClose) ? '\n    onClose={close}' : ''}
   />
-  <Dialog.Body>
+  <Dialog.Body>${s(p.layout, 'frame') === 'frame' ? '\n    {/* Start with your content here. */}' : `
     <Dialog.Layout>
       <Dialog.Content>{/* form fields */}</Dialog.Content>${['sidebar-left', 'sidebar-right', 'split'].includes(s(p.layout)) ? '\n      <Dialog.Sidebar>{/* supporting details */}</Dialog.Sidebar>' : ''}
-    </Dialog.Layout>
+    </Dialog.Layout>`}
   </Dialog.Body>
   <Dialog.Footer${b(p.backLink) ? ' left={<Button variant="link">Back</Button>}' : ''}>
     <Button variant="outline" onClick={close}>Cancel</Button>
