@@ -126,6 +126,18 @@ describe('Buttons family — Studio', () => {
     }
   });
 
+  it('uses complete fitted compositions for complex catalogue previews', () => {
+    const { container } = render(<Studio />);
+    const cards = [...container.querySelectorAll<HTMLElement>('.sds-card')];
+    const cardNamed = (name: string) => cards.find(card =>
+      card.querySelector('.sds-card__foot strong')?.textContent === name);
+
+    expect(cardNamed('FileInput')?.textContent).toContain('Site walkthrough.mp4');
+    expect(cardNamed('Select')?.textContent).toContain('Does not contain');
+    expect(cardNamed('Select')?.textContent).toContain('Search');
+    expect(cardNamed('Select')?.textContent).toContain('Product');
+  });
+
   it('opens a visual browser before any Button editor', () => {
     const { container, getByRole } = render(<Studio />);
 

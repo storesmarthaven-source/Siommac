@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "f9946e59de1c64a8d554373c199d869c84cb99ae",
+    "head": "687fb1f35af1bb631259bc49d1ef955950d33596",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "bafe86d61df0828adf3ef4c6",
+    "fingerprint": "3c187e6966131fac13146eec",
     "indexedFiles": 1862
   },
   "summary": {
     "files": 1507,
-    "symbols": 14915,
+    "symbols": 14916,
     "widgets": 68,
     "routes": 983,
     "routeDefinitions": 984,
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 445,
-        "symbols": 3891,
+        "symbols": 3892,
         "widgets": 17,
         "routes": 38,
         "routeDefinitions": 53,
@@ -9491,8 +9491,8 @@
       "path": "src/ui/studio/componentThumbnail.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 92,
-      "hash": "4511494222483146"
+      "lines": 102,
+      "hash": "5e02b81c9e33e819"
     },
     {
       "path": "src/ui/studio/designSystemConfig.test.ts",
@@ -9505,8 +9505,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 435,
-      "hash": "14a351d0f310cd12"
+      "lines": 447,
+      "hash": "f9068d06ac72341b"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -150261,7 +150261,7 @@
       "name": "ChoiceScene",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 51,
+      "line": 61,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150273,7 +150273,7 @@
       "name": "ComponentThumbnail",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 56,
+      "line": 66,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150327,6 +150327,19 @@
       "exported": false,
       "container": "",
       "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "cardNamed",
+      "kind": "function",
+      "file": "src/ui/studio/family.test.tsx",
+      "line": 132,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "ui-tile",
         "test"
       ]
     },
