@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "29129d05ba2a1571a98e86b83a378381a1d26e8b",
+    "head": "67bf4141c37574014b24810991ced5f1eacab36c",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "41acd81d840105299ae36cf3",
+    "fingerprint": "80da9cd3bed649ff89d3c730",
     "indexedFiles": 1871
   },
   "summary": {
@@ -9554,8 +9554,8 @@
       "path": "src/ui/studio/componentThumbnail.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 138,
-      "hash": "646366a7e1a59e59"
+      "lines": 137,
+      "hash": "aeafc6aee74a287a"
     },
     {
       "path": "src/ui/studio/designSystemConfig.test.ts",
@@ -9568,8 +9568,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 563,
-      "hash": "521ffcb079acfd63"
+      "lines": 564,
+      "hash": "e39f7d5a9abbbdf6"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -151000,7 +151000,7 @@
       "name": "navigate",
       "kind": "function",
       "file": "src/ui/studio/family.test.tsx",
-      "line": 348,
+      "line": 349,
       "module": "platform",
       "exported": false,
       "container": "",

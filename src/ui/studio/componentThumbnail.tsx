@@ -110,7 +110,6 @@ export function ComponentThumbnail({ id, built = true }: {
       {kind === 'theme-switch' && <div class="ui-theme-mode-switch sds-thumb-theme-switch" data-theme-mode="light"><ThemeModeSwitchArtwork /></div>}
       {kind === 'switch-family' && <div class="sds-thumb-switch-family">
         <div class="ui-choice sds-thumb-switch-family__general" data-ui-state="selected"><SwitchArtwork /></div>
-        <div class="ui-theme-mode-switch sds-thumb-switch-family__theme" data-theme-mode="dark"><ThemeModeSwitchArtwork /></div>
       </div>}
       {kind === 'people' && <div class="sds-thumb-people"><i>SJ</i><i>AD</i><i>PR</i><strong>+2</strong></div>}
       {kind === 'dialog' && <div class="sds-thumb-dialog"><strong>Confirm action</strong><span>This change will be recorded.</span><footer><i>Cancel</i><b>Confirm</b></footer></div>}
