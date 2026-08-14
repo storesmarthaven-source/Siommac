@@ -13221,18 +13221,18 @@ CONTROL_STYLE	array	platform	false		src/ui/registry/forms.defs.tsx	86
 checkboxDef	object	platform	true		src/ui/registry/forms.defs.tsx	98	
 radioGroupDef	object	platform	true		src/ui/registry/forms.defs.tsx	179	
 switchDef	object	platform	true		src/ui/registry/forms.defs.tsx	240	
-textInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	317	
-shell	function	platform	false		src/ui/registry/forms.defs.tsx	445	textInputDef
-dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	534	
-fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	621	
-themeModeSwitchDef	object	platform	true		src/ui/registry/forms.defs.tsx	740	
-colorPickerDef	object	platform	true		src/ui/registry/forms.defs.tsx	790	
-otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	826	
-DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	878	
-GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	887	
-selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	905	
-search	function	platform	false		src/ui/registry/forms.defs.tsx	1008	selectDef
-FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	1039	
+textInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	314	
+shell	function	platform	false		src/ui/registry/forms.defs.tsx	442	textInputDef
+dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	531	
+fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	618	
+themeModeSwitchDef	object	platform	true		src/ui/registry/forms.defs.tsx	737	
+colorPickerDef	object	platform	true		src/ui/registry/forms.defs.tsx	787	
+otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	823	
+DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	875	
+GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	884	
+selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	902	
+search	function	platform	false		src/ui/registry/forms.defs.tsx	1005	selectDef
+FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	1036	
 COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	61	
 CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	76	
 CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	92	

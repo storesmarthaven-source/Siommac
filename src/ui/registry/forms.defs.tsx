@@ -255,8 +255,6 @@ export const switchDef: ComponentDef = {
   },
 
   props: {
-    label:       { type: 'text',    label: 'Label', default: 'Require MFA for admins' },
-    description: { type: 'text',    label: 'Description', default: 'Applies at the next sign-in.' },
     checked:     { type: 'boolean', label: 'On', default: true },
     pending:     { type: 'boolean', label: 'Pending', default: false, help: 'While the change is being persisted. Sets aria-busy and blocks re-toggling.' },
     disabled:    { type: 'boolean', label: 'Disabled', default: false },
@@ -285,17 +283,16 @@ export const switchDef: ComponentDef = {
     <Switch
       checked={b(p.checked) || st === 'selected'}
       onChange={noop}
-      label={s(p.label, 'Setting')}
-      description={s(p.description) || undefined}
+      aria-label="Example setting"
       pending={b(p.pending) || st === 'loading'}
       disabled={b(p.disabled) || st === 'disabled'}
       forceState={st}
     />
   ),
-  code: p => `<Switch
+  code: _p => `<Switch
   checked={requireMfa}
   onChange={setRequireMfa}
-  label="${s(p.label, 'Setting')}"
+  aria-label="Require MFA for admins"
 />`,
 };
 

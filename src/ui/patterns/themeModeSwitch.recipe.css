@@ -1,10 +1,10 @@
 :root,
 [data-ui-preview-scope] {
-  --ui-theme-switch-width: 72px;
-  --ui-theme-switch-height: 36px;
-  --ui-theme-switch-pad: 3px;
-  --ui-theme-switch-knob-size: 30px;
-  --ui-theme-switch-icon-size: 12px;
+  --ui-theme-switch-width: 46px;
+  --ui-theme-switch-height: 24px;
+  --ui-theme-switch-pad: 2px;
+  --ui-theme-switch-knob-size: 20px;
+  --ui-theme-switch-icon-size: 8px;
   --ui-theme-switch-light-bg: hsl(48 90% 85%);
   --ui-theme-switch-dark-bg: hsl(198 90% 15%);
   --ui-theme-switch-light-knob: hsl(48 90% 55%);

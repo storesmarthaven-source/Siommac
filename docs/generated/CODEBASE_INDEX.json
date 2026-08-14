@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "de4ce45f9aa823270491e029566e6f791ee9ab17",
+    "head": "29129d05ba2a1571a98e86b83a378381a1d26e8b",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "59c34d351415d5e93590c5f0",
+    "fingerprint": "41acd81d840105299ae36cf3",
     "indexedFiles": 1871
   },
   "summary": {
@@ -9358,8 +9358,8 @@
       "path": "src/ui/registry/forms.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 1051,
-      "hash": "880a759b8406fe10"
+      "lines": 1048,
+      "hash": "5500f11a89de4332"
     },
     {
       "path": "src/ui/registry/index.ts",
@@ -149225,7 +149225,7 @@
       "name": "textInputDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 317,
+      "line": 314,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149235,7 +149235,7 @@
       "name": "shell",
       "kind": "function",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 445,
+      "line": 442,
       "module": "platform",
       "exported": false,
       "container": "textInputDef",
@@ -149245,7 +149245,7 @@
       "name": "dateInputDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 534,
+      "line": 531,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149255,7 +149255,7 @@
       "name": "fileInputDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 621,
+      "line": 618,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149265,7 +149265,7 @@
       "name": "themeModeSwitchDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 740,
+      "line": 737,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149275,7 +149275,7 @@
       "name": "colorPickerDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 790,
+      "line": 787,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149285,7 +149285,7 @@
       "name": "otpInputDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 826,
+      "line": 823,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149295,7 +149295,7 @@
       "name": "DEPARTMENTS",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 878,
+      "line": 875,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149305,7 +149305,7 @@
       "name": "GROUPED_DEPARTMENTS",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 887,
+      "line": 884,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149315,7 +149315,7 @@
       "name": "selectDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 905,
+      "line": 902,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149325,7 +149325,7 @@
       "name": "search",
       "kind": "function",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 1008,
+      "line": 1005,
       "module": "platform",
       "exported": false,
       "container": "selectDef",
@@ -149335,7 +149335,7 @@
       "name": "FORM_DEFS",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 1039,
+      "line": 1036,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -168062,7 +168062,7 @@
       "kind": "registry",
       "render": "() => <FormField label=\"Employee name\" required helpText=\"As shown on government ID\"><TextInput value=\"Sarah James\" onInput={noop} /></FormField>",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 503
+      "line": 500
     },
     {
       "id": "enterprise.calendar.taskPlanner",
@@ -168542,7 +168542,7 @@
       "kind": "registry",
       "render": "() => <FormField label=\"Gross pay\"><CurrencyInput valueMinor={845000} onChange={noop} currency=\"TTD\" /></FormField>",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 515
+      "line": 512
     },
     {
       "id": "platform.weather.current",
@@ -168602,7 +168602,7 @@
       "kind": "registry",
       "render": "() => <FormField label=\"Search employees\"><SearchField value=\"Sarah\" onInput={noop} /></FormField>",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 509
+      "line": 506
     },
     {
       "id": "row",

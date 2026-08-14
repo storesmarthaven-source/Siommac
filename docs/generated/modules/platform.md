@@ -2,7 +2,7 @@
 
 # platform Module Map
 
-Source fingerprint: `59c34d351415d5e93590c5f0`
+Source fingerprint: `41acd81d840105299ae36cf3`
 
 Files: 454 | Symbols: 3964 | Widgets: 18 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 55 | DB objects: 327 | E2E suites: 0
 
@@ -19,7 +19,7 @@ Files: 454 | Symbols: 3964 | Widgets: 18 | Unique mounted endpoints: 38 | Route 
 | `one-surface` | One surface, four rhythms | registry | `() => (         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px' }}>           <Card variant="metric" density="compact" header={<CardHeader title="Open incidents" level={null} />}>             <Figure value="18" caption="4 overdue" />           </Card>           <Card variant="surface" header={<CardHeader title="Site note" />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Night shift handover completed.</span>           </Card>           <Card variant="panel" density="compact" header={<CardHeader title="Corrective actions" actions={<Badge tone="warning" size="sm">2 open</Badge>} />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Both due this Friday.</span>           </Card>           <Card variant="action" onClick={noop} actionLabel="Start a new inspection"             header={<CardHeader icon={<LucideIcon name="ClipboardCheck" />} title="New inspection" description="Start from a template" />} />         </div>       )` | `src/ui/registry/containers.defs.tsx:215` |
 | `overflow` | Nine tabs in a drawer | registry | `() => (         <Tabs           id="ex-overflow"           label="Rate version sections"           variant="contained"           size="sm"           items={MANY_TABS}           maxVisible={4}           value="timeline"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:332` |
 | `page-action` | Page action | registry | `() => <Button variant="primary" iconLeft={<LucideIcon name="Plus" />}>Add employee</Button>` | `src/ui/registry/actions.defs.tsx:286` |
-| `register-search` | Register search | registry | `() => <FormField label="Search employees"><SearchField value="Sarah" onInput={noop} /></FormField>` | `src/ui/registry/forms.defs.tsx:509` |
+| `register-search` | Register search | registry | `() => <FormField label="Search employees"><SearchField value="Sarah" onInput={noop} /></FormField>` | `src/ui/registry/forms.defs.tsx:506` |
 | `row` | Row actions | registry | `() => <DropdownButton label="Actions" variant="outline" items={RECORD_MENU} />` | `src/ui/registry/compound.defs.tsx:139` |
 | `save` | Save with options | registry | `() => <SplitButton action={{ label: 'Save' }} items={SAVE_ALTERNATIVES} />` | `src/ui/registry/compound.defs.tsx:223` |
 | `select-all` | Select-all with a partial selection | registry | `() => (         <CheckboxGroup           label="Modules"           selectAllLabel="All modules"           values={['hr']}           onChange={noop}           options={[             { value: 'hr', label: 'Human Resources' },             { value: 'hse', label: 'HSE' },             { value: 'fin', label: 'Finance', disabled: true },           ]}         />       )` | `src/ui/registry/forms.defs.tsx:156` |
