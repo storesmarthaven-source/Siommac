@@ -141,7 +141,7 @@ Published tokens   ── app_theme table ──▶ :root (every user)
 Gallery draft      ── inline style ─────▶ [data-ui-preview-scope]  (this browser tab only)
        │
        ▼
-Apply / Publish    ── promotes draft ───▶ :root + app_theme
+Review & publish   ── promotes draft ───▶ :root + app_theme
 ```
 
 Because recipe variables are ordinary custom properties, one mechanism covers both

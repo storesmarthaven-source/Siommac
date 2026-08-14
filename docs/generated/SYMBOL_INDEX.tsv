@@ -12825,30 +12825,29 @@ mountPanel	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	
 Harness	function	platform	false	component,test	src/ui/gallery/BrandThemePanel.test.tsx	51	mountPanel
 setSeed	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	67	
 selectLogoFile	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	229	
-publishButton	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	246	
-byText	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	250	
+byText	function	platform	false	test	src/ui/gallery/BrandThemePanel.test.tsx	246	
 DEFAULT_SEEDS	object	platform	false		src/ui/gallery/BrandThemePanel.tsx	49	
 BrandThemePanelProps	interface	platform	true		src/ui/gallery/BrandThemePanel.tsx	53	
 BrandThemePanel	function	platform	true	component	src/ui/gallery/BrandThemePanel.tsx	61	
-SeedCard	function	platform	false	component,ui-tile	src/ui/gallery/BrandThemePanel.tsx	391	
-ScaleRow	function	platform	false	component	src/ui/gallery/BrandThemePanel.tsx	416	
-RoleMapping	function	platform	false	component	src/ui/gallery/BrandThemePanel.tsx	439	
-source	function	platform	false		src/ui/gallery/BrandThemePanel.tsx	442	RoleMapping
-ACCENT_ROLES	variable	platform	false	component	src/ui/gallery/BrandThemePanel.tsx	483	
-PairingTable	function	platform	false	component	src/ui/gallery/BrandThemePanel.tsx	490	
-Crew	interface	platform	false		src/ui/gallery/BrandThemePanel.tsx	518	
-CREW	array	platform	false		src/ui/gallery/BrandThemePanel.tsx	520	
-LivePreview	function	platform	false	component	src/ui/gallery/BrandThemePanel.tsx	539	
+SeedCard	function	platform	false	component,ui-tile	src/ui/gallery/BrandThemePanel.tsx	389	
+ScaleRow	function	platform	false	component	src/ui/gallery/BrandThemePanel.tsx	414	
+RoleMapping	function	platform	false	component	src/ui/gallery/BrandThemePanel.tsx	437	
+source	function	platform	false		src/ui/gallery/BrandThemePanel.tsx	440	RoleMapping
+ACCENT_ROLES	variable	platform	false	component	src/ui/gallery/BrandThemePanel.tsx	481	
+PairingTable	function	platform	false	component	src/ui/gallery/BrandThemePanel.tsx	488	
+Crew	interface	platform	false		src/ui/gallery/BrandThemePanel.tsx	516	
+CREW	array	platform	false		src/ui/gallery/BrandThemePanel.tsx	518	
+LivePreview	function	platform	false	component	src/ui/gallery/BrandThemePanel.tsx	537	
 FoundationsPanel	function	platform	true	component	src/ui/gallery/FoundationsPanel.tsx	21	
 TokenCard	function	platform	false	component,ui-tile	src/ui/gallery/FoundationsPanel.tsx	75	
 hexOf	function	platform	false		src/ui/gallery/FoundationsPanel.tsx	134	
 hx	function	platform	false		src/ui/gallery/FoundationsPanel.tsx	140	hexOf
 RECOVERY_KEY	variable	platform	false		src/ui/gallery/galleryStore.ts	17	
 GalleryDraft	interface	platform	true		src/ui/gallery/galleryStore.ts	19	
-readRecovery	function	platform	false		src/ui/gallery/galleryStore.ts	44	
-storeRecovery	function	platform	false		src/ui/gallery/galleryStore.ts	49	
-cloneConfiguration	function	platform	false		src/ui/gallery/galleryStore.ts	53	
-useGalleryDraft	function	platform	true	hook	src/ui/gallery/galleryStore.ts	57	
+readRecovery	function	platform	false		src/ui/gallery/galleryStore.ts	46	
+storeRecovery	function	platform	false		src/ui/gallery/galleryStore.ts	51	
+cloneConfiguration	function	platform	false		src/ui/gallery/galleryStore.ts	55	
+useGalleryDraft	function	platform	true	hook	src/ui/gallery/galleryStore.ts	59	
 savedConfiguration	variable	platform	false	test	src/ui/gallery/semanticDraft.test.tsx	29	
 loadDesignSystemStudio	variable	platform	false	test	src/ui/gallery/semanticDraft.test.tsx	30	
 saveDesignSystemDraft	variable	platform	false	test	src/ui/gallery/semanticDraft.test.tsx	34	
@@ -13318,8 +13317,7 @@ BOARD	array	platform	false		src/ui/studio/BrandOverview.tsx	38
 Specimen	function	platform	false	component	src/ui/studio/BrandOverview.tsx	49	
 Swatch	function	platform	false	component	src/ui/studio/BrandOverview.tsx	62	
 BrandOverview	function	platform	true	component	src/ui/studio/BrandOverview.tsx	76	
-applyDirection	function	platform	false		src/ui/studio/BrandOverview.tsx	104	BrandOverview
-publish	function	platform	false		src/ui/studio/BrandOverview.tsx	110	BrandOverview
+applyDirection	function	platform	false		src/ui/studio/BrandOverview.tsx	103	BrandOverview
 ButtonBrowserProps	interface	platform	true		src/ui/studio/ButtonBrowser.tsx	12	
 PatternControl	function	platform	false	component	src/ui/studio/ButtonBrowser.tsx	20	
 ButtonPatternEditor	function	platform	false	component	src/ui/studio/ButtonBrowser.tsx	50	
@@ -13340,47 +13338,48 @@ copySelection	function	platform	false		src/ui/studio/InAppUsage.tsx	93	InAppUsag
 settle	function	platform	false		src/ui/studio/InAppUsage.tsx	110	copySelection
 root	variable	platform	false		src/ui/studio/preview.tsx	12	
 PreviewScope	function	platform	true	component	src/ui/studio/PreviewScope.tsx	20	
-Target	type	platform	false		src/ui/studio/RecipeStyleEditor.tsx	13	
-COLOR_SWATCHES	variable	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	15	
-HslColor	interface	platform	false		src/ui/studio/RecipeStyleEditor.tsx	17	
-hexToHsl	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	19	
-hslToHex	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	34	
-friendly	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	46	
-friendlyGroup	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	50	
-belongs	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	57	
-friendlyError	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	64	
-SIZE_FALLBACKS	object	platform	false		src/ui/studio/RecipeStyleEditor.tsx	70	
-SizeUnit	type	platform	false		src/ui/studio/RecipeStyleEditor.tsx	81	
-SizeValue	interface	platform	false		src/ui/studio/RecipeStyleEditor.tsx	82	
-cssVariableName	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	84	
-resolveThemeValue	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	88	
-parseSizeValue	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	103	
-readableThemeValue	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	110	
-StudioColorControl	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	116	
-TokenControl	function	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	153	
-ICON_RECOMMENDATIONS	object	platform	false		src/ui/studio/RecipeStyleEditor.tsx	201	
-IconPicker	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	210	
-choose	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	232	IconPicker
-RecipeStyleEditor	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	261	
-previewPropsFor	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	275	RecipeStyleEditor
-setPreviewProp	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	281	RecipeStyleEditor
-act	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	288	RecipeStyleEditor
-StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	45	
-SectionId	type	platform	false		src/ui/studio/Studio.tsx	54	
-NavItem	interface	platform	false		src/ui/studio/Studio.tsx	60	
-NavGroup	interface	platform	false		src/ui/studio/Studio.tsx	61	
-NAV	array	platform	false		src/ui/studio/Studio.tsx	63	
-NavComponentRow	type	platform	false		src/ui/studio/Studio.tsx	92	
-COMPONENT_ROWS	variable	platform	false	component	src/ui/studio/Studio.tsx	96	
-APP_SCENE	object	platform	false		src/ui/studio/Studio.tsx	107	
-SECTION_COPY	object	platform	false		src/ui/studio/Studio.tsx	113	
-variantCount	function	platform	false		src/ui/studio/Studio.tsx	133	
-ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	139	
-FamilyCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	179	
-CatalogueNodeCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	199	
-Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	206	
-PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	262	
-Studio	function	platform	true	component	src/ui/studio/Studio.tsx	271	
+Target	type	platform	false		src/ui/studio/RecipeStyleEditor.tsx	11	
+COLOR_SWATCHES	variable	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	13	
+HslColor	interface	platform	false		src/ui/studio/RecipeStyleEditor.tsx	15	
+hexToHsl	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	17	
+hslToHex	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	32	
+friendly	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	44	
+friendlyGroup	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	48	
+belongs	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	55	
+SIZE_FALLBACKS	object	platform	false		src/ui/studio/RecipeStyleEditor.tsx	62	
+SizeUnit	type	platform	false		src/ui/studio/RecipeStyleEditor.tsx	73	
+SizeValue	interface	platform	false		src/ui/studio/RecipeStyleEditor.tsx	74	
+cssVariableName	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	76	
+resolveThemeValue	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	80	
+parseSizeValue	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	95	
+readableThemeValue	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	102	
+StudioColorControl	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	108	
+TokenControl	function	platform	false	component	src/ui/studio/RecipeStyleEditor.tsx	145	
+ICON_RECOMMENDATIONS	object	platform	false		src/ui/studio/RecipeStyleEditor.tsx	193	
+IconPicker	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	202	
+choose	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	224	IconPicker
+RecipeStyleEditor	function	platform	true	component	src/ui/studio/RecipeStyleEditor.tsx	253	
+previewPropsFor	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	262	RecipeStyleEditor
+setPreviewProp	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	268	RecipeStyleEditor
+StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	46	
+SectionId	type	platform	false		src/ui/studio/Studio.tsx	55	
+NavItem	interface	platform	false		src/ui/studio/Studio.tsx	61	
+NavGroup	interface	platform	false		src/ui/studio/Studio.tsx	62	
+NAV	array	platform	false		src/ui/studio/Studio.tsx	64	
+NavComponentRow	type	platform	false		src/ui/studio/Studio.tsx	93	
+COMPONENT_ROWS	variable	platform	false	component	src/ui/studio/Studio.tsx	97	
+APP_SCENE	object	platform	false		src/ui/studio/Studio.tsx	108	
+SECTION_COPY	object	platform	false		src/ui/studio/Studio.tsx	114	
+variantCount	function	platform	false		src/ui/studio/Studio.tsx	134	
+ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	140	
+FamilyCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	180	
+CatalogueNodeCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	200	
+Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	207	
+PhasePlaceholder	function	platform	false	component	src/ui/studio/Studio.tsx	263	
+Studio	function	platform	true	component	src/ui/studio/Studio.tsx	272	
+friendlyError	function	platform	false		src/ui/studio/StudioPublishBar.tsx	7	
+StudioPublishBar	function	platform	true	component	src/ui/studio/StudioPublishBar.tsx	16	
+act	function	platform	false		src/ui/studio/StudioPublishBar.tsx	29	StudioPublishBar
 CONTROL_GROUPS	array	platform	false		src/ui/studio/Workbench.tsx	43	
 FRIENDLY_VALUES	object	platform	false		src/ui/studio/Workbench.tsx	50	
 friendlyValue	function	platform	false		src/ui/studio/Workbench.tsx	55	
