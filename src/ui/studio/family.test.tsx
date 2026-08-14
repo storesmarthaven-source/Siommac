@@ -169,6 +169,8 @@ describe('Buttons family — Studio', () => {
     expect(cardNamed('Switches')?.querySelector('.sds-thumb-switch-family__general .ui-switch-check')).toBeTruthy();
     expect(cardNamed('Switches')?.querySelectorAll('.ui-switch-track')).toHaveLength(1);
     expect(cardNamed('Switches')?.querySelector('.ui-theme-mode-switch')).toBeNull();
+    expect(cardNamed('Checkbox')?.querySelectorAll('.ui-choice--checkbox')).toHaveLength(2);
+    expect(cardNamed('Checkbox')?.querySelector('.sds-thumb-choice--check .is-on')).toBeNull();
   });
 
   it('opens a visual browser before any Button editor', () => {

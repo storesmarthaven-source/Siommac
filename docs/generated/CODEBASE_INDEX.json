@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "c6e66f5447fdb5924ccfaf0c0040914e44bacdec",
+    "head": "a80fb3748a36cc346081670b17e52a7c000e6790",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "5578b3f3eee96ba6f71bd42f",
+    "fingerprint": "6dc019c84a77aac474d4119b",
     "indexedFiles": 1871
   },
   "summary": {
@@ -9554,8 +9554,8 @@
       "path": "src/ui/studio/componentThumbnail.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 137,
-      "hash": "aeafc6aee74a287a"
+      "lines": 143,
+      "hash": "a1dfe213108045d9"
     },
     {
       "path": "src/ui/studio/designSystemConfig.test.ts",
@@ -9568,8 +9568,8 @@
       "path": "src/ui/studio/family.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 564,
-      "hash": "e39f7d5a9abbbdf6"
+      "lines": 566,
+      "hash": "a9de8a6ccd1b93f8"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -150900,7 +150900,7 @@
       "name": "ColorPickerScene",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 74,
+      "line": 80,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150912,7 +150912,7 @@
       "name": "ComponentThumbnail",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 83,
+      "line": 89,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151010,7 +151010,7 @@
       "name": "navigate",
       "kind": "function",
       "file": "src/ui/studio/family.test.tsx",
-      "line": 349,
+      "line": 351,
       "module": "platform",
       "exported": false,
       "container": "",

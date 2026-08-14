@@ -13383,8 +13383,8 @@ kindFor	function	platform	false		src/ui/studio/componentThumbnail.tsx	15
 FieldScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	50	
 SelectScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	56	
 ChoiceScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	70	
-ColorPickerScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	74	
-ComponentThumbnail	function	platform	true	component	src/ui/studio/componentThumbnail.tsx	83	
+ColorPickerScene	function	platform	false	component	src/ui/studio/componentThumbnail.tsx	80	
+ComponentThumbnail	function	platform	true	component	src/ui/studio/componentThumbnail.tsx	89	
 MEMBERS	variable	platform	false	component,test	src/ui/studio/family.test.tsx	26	
 openButtonBrowser	function	platform	false	test	src/ui/studio/family.test.tsx	29	
 openButtons	function	platform	false	test	src/ui/studio/family.test.tsx	36	
@@ -13392,7 +13392,7 @@ openButtonMember	function	platform	false	test	src/ui/studio/family.test.tsx	41
 labels	function	platform	false	test	src/ui/studio/family.test.tsx	108	
 navTo	function	platform	false	test	src/ui/studio/family.test.tsx	110	
 cardNamed	function	platform	false	ui-tile,test	src/ui/studio/family.test.tsx	158	
-navigate	function	platform	false	test	src/ui/studio/family.test.tsx	349	
+navigate	function	platform	false	test	src/ui/studio/family.test.tsx	351	
 FamilyBrowser	function	platform	true	component	src/ui/studio/FamilyBrowser.tsx	5	
 Shape	interface	platform	false		src/ui/studio/InAppUsage.tsx	31	
 DATA	object	platform	false		src/ui/studio/InAppUsage.tsx	39	

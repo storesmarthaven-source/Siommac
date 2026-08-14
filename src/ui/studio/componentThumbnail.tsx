@@ -3,7 +3,7 @@ import { type ComponentCategory } from '../registry';
 import { LucideIcon } from '../LucideIcon';
 import { Breadcrumbs } from '../navigation/Breadcrumbs';
 import { ThemeModeSwitchArtwork } from '../patterns/ThemeModeSwitch';
-import { SwitchArtwork } from '../primitives/choice';
+import { Checkbox, SwitchArtwork } from '../primitives/choice';
 import fileUploadersPreview from './assets/file-uploaders.webp';
 
 type ThumbnailKind =
@@ -68,6 +68,12 @@ function SelectScene(): VNode {
 }
 
 function ChoiceScene({ kind }: { kind: 'check' | 'radio' | 'switch' }): VNode {
+  if (kind === 'check') {
+    return <div class="sds-thumb-choice sds-thumb-choice--check">
+      <Checkbox checked={false} onChange={() => undefined} label="Email notifications" />
+      <Checkbox checked onChange={() => undefined} label="Approval alerts" />
+    </div>;
+  }
   return <div class={`sds-thumb-choice sds-thumb-choice--${kind}`}><span><i />Email notifications</span><span class="is-on"><i />Approval alerts</span></div>;
 }
 
