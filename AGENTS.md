@@ -38,6 +38,12 @@ NEVER touch `C:\Users\MSI Laptop\Desktop\Siomac` (main-branch production copy).
 ⚠ Confirm `git rev-parse --abbrev-ref HEAD` matches the branch you were given
 before your first edit; a worktree named in a doc is not evidence of where you are.
 
+### Approved local main integration
+The user approved the UI Kit completion branch for local integration into `main`.
+It may be fast-forwarded or merged into the local `main` ref after verifying that
+the operation preserves all commits and unrelated work. Do not force-update,
+reset, rewrite, or push `main`, and do not modify the protected Desktop worktree.
+
 ## Commit Message Rule
 Every commit produced by an AI coding agent MUST end with an **accurate**
 `Co-Authored-By` trailer identifying the agent/model that actually did the work:
