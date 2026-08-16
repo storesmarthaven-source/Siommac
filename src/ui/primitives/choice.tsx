@@ -155,6 +155,7 @@ export function Radio({
     <label
       class={[
         'ui-choice', 'ui-choice--block',
+        'ui-choice--radio',
         inert ? 'ui-choice--disabled' : '',
         invalid ? 'ui-choice--error' : '',
         extra ?? '',
@@ -276,6 +277,10 @@ export interface ChoiceOption<T extends string> {
   value: T;
   label: string;
   description?: string;
+  /** Optional secondary value shown beside the label in card presentations. */
+  meta?: ComponentChildren;
+  /** Optional governed leading visual, such as an Avatar or Lucide icon. */
+  media?: ComponentChildren;
   disabled?: boolean;
 }
 
@@ -346,6 +351,13 @@ export interface RadioGroupProps<T extends string> {
   options: readonly ChoiceOption<T>[];
   label: string;
   inline?: boolean;
+  /** Standard rows or selectable cards. All presentations retain native radios. */
+  presentation?: 'standard' | 'cards' | 'icon-cards' | 'people';
+  /** Card presentations can use either a radio dot or check artwork. */
+  indicator?: 'radio' | 'check';
+  indicatorPosition?: 'start' | 'end';
+  density?: 'comfortable' | 'compact';
+  selectionTreatment?: 'outline' | 'tint' | 'filled';
   disabled?: boolean;
   readOnly?: boolean;
   error?: boolean;
@@ -356,6 +368,8 @@ export interface RadioGroupProps<T extends string> {
 
 export function RadioGroup<T extends string>({
   value, onChange, options, label, inline = false,
+  presentation = 'standard', indicator = 'radio', indicatorPosition = 'start',
+  density = 'comfortable', selectionTreatment = 'tint',
   disabled = false, readOnly = false, error = false, name, class: extra,
 }: RadioGroupProps<T>): VNode {
   const uid = useId();
@@ -364,22 +378,80 @@ export function RadioGroup<T extends string>({
   return (
     // Native radios already provide roving focus and arrow-key movement within
     // a shared `name`, so this deliberately adds no key handling of its own.
-    <div class={extra} role="radiogroup" aria-label={label} aria-invalid={error || undefined}>
-      <div class={`ui-choice-group${inline ? ' ui-choice-group--inline' : ''}`}>
-        {options.map(o => (
-          <Radio
-            key={o.value}
-            name={groupName}
-            value={o.value}
-            checked={value === o.value}
-            onChange={() => onChange(o.value)}
-            label={o.label}
-            description={o.description}
-            disabled={disabled || o.disabled}
-            readOnly={readOnly}
-            error={error}
-          />
-        ))}
+    <div
+      class={extra}
+      role="radiogroup"
+      aria-label={label}
+      aria-invalid={error || undefined}
+      aria-readonly={readOnly || undefined}
+    >
+      <div class={[
+        'ui-choice-group',
+        inline ? 'ui-choice-group--inline' : '',
+        presentation !== 'standard' ? `ui-radio-cards ui-radio-cards--${presentation} ui-radio-cards--${density} ui-radio-cards--selection-${selectionTreatment}` : '',
+      ].filter(Boolean).join(' ')}>
+        {options.map((o, index) => {
+          if (presentation === 'standard') {
+            return (
+              <Radio
+                key={o.value}
+                name={groupName}
+                value={o.value}
+                checked={value === o.value}
+                onChange={() => onChange(o.value)}
+                label={o.label}
+                description={o.description}
+                disabled={disabled || o.disabled}
+                readOnly={readOnly}
+                error={error}
+              />
+            );
+          }
+
+          const descId = o.description ? `${groupName}-${index}-desc` : undefined;
+          const inert = disabled || o.disabled;
+          const indicatorNode = (
+            <span class={`ui-radio-card__indicator ui-radio-card__indicator--${indicator}`} aria-hidden="true">
+              {indicator === 'check'
+                ? <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5 9.5 17 19 7" /></svg>
+                : <span />}
+            </span>
+          );
+
+          return (
+            <label
+              key={o.value}
+              class={[
+                'ui-radio-card',
+                `ui-radio-card--indicator-${indicatorPosition}`,
+                inert || readOnly ? 'ui-radio-card--disabled' : '',
+                error ? 'ui-radio-card--error' : '',
+              ].filter(Boolean).join(' ')}
+            >
+              <input
+                class="ui-radio-card__input"
+                type="radio"
+                name={groupName}
+                value={o.value}
+                checked={value === o.value}
+                disabled={inert}
+                aria-describedby={descId}
+                aria-invalid={error || undefined}
+                onChange={() => { if (!readOnly) onChange(o.value); }}
+              />
+              {indicatorPosition === 'start' && indicatorNode}
+              {o.media != null && <span class="ui-radio-card__media" aria-hidden="true">{o.media}</span>}
+              <span class="ui-radio-card__copy">
+                <span class="ui-radio-card__title">
+                  <strong>{o.label}</strong>
+                  {o.meta != null && <span>{o.meta}</span>}
+                </span>
+                {o.description && <span class="ui-radio-card__description" id={descId}>{o.description}</span>}
+              </span>
+              {indicatorPosition === 'end' && indicatorNode}
+            </label>
+          );
+        })}
       </div>
     </div>
   );

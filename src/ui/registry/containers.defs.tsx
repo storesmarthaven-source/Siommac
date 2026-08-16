@@ -34,6 +34,7 @@ function Figure({ value, caption, delta }: { value: string; caption: string; del
 
 export const cardDef: ComponentDef = {
   id: 'card',
+  thumbnail: 'card',
   name: 'Card',
   category: 'containers',
   description: 'ONE surface container. It owns padding, border, radius, background, elevation, header/footer spacing, the interactive/selected/disabled states and the semantic accent — and nothing about content. KPI, metric, panel and action are variants of it, not components beside it.',

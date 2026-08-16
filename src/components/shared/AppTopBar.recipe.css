@@ -1,0 +1,78 @@
+/** Canonical App Top Bar compositions that must outrank the generic Button recipes. */
+@layer recipes {
+  .app-topbar .pnp-profile-split {
+    display: inline-flex;
+    align-items: stretch;
+    gap: 0;
+    overflow: hidden;
+    padding: 0;
+    border-radius: 999px 12px 12px 999px;
+    background: transparent;
+  }
+
+  .app-topbar .pnp-profile-split > .ui-btn {
+    height: 44px;
+    min-height: 44px;
+    border-color: transparent;
+    color: var(--ui-app-topbar-fg);
+    box-shadow: none;
+  }
+
+  .app-topbar .pnp-profile-split > .pnp-profile-main {
+    gap: 0;
+    padding: 5px 14px 5px 5px;
+    border-radius: 999px 0 0 999px;
+    background: var(--ui-app-topbar-profile-bg);
+  }
+
+  .app-topbar .pnp-profile-main > .ui-btn-label {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    text-align: left;
+  }
+
+  .app-topbar .pnp-profile-split > .pnp-profile-main:hover:not(:disabled):not([aria-busy='true']) {
+    border-color: transparent;
+    background: var(--ui-app-topbar-profile-bg-hover);
+    color: var(--ui-app-topbar-fg);
+  }
+
+  .app-topbar .pnp-profile-split > .pnp-profile-menu-trigger {
+    width: var(--ui-app-topbar-caret-width);
+    min-width: var(--ui-app-topbar-caret-width);
+    height: 44px;
+    margin-left: 0;
+    padding: 0;
+    border: 0;
+    border-left: 1px solid var(--ui-app-topbar-divider);
+    border-radius: 0 12px 12px 0;
+    background: var(--ui-app-topbar-caret-bg);
+    color: var(--ui-app-topbar-caret-fg);
+    box-shadow: none;
+  }
+
+  .app-topbar .pnp-profile-split > .pnp-profile-menu-trigger:hover:not(:disabled):not([aria-busy='true']),
+  .app-topbar .pnp-profile-split > .pnp-profile-menu-trigger[aria-expanded='true'] {
+    border-color: transparent;
+    border-left-color: var(--ui-app-topbar-divider);
+    background: var(--ui-app-topbar-caret-bg-hover);
+    color: var(--ui-app-topbar-caret-fg);
+    box-shadow: none;
+  }
+
+  .app-topbar .pnp-profile-menu-trigger .pnp-caret {
+    width: 14px;
+    height: 14px;
+    color: var(--ui-app-topbar-caret-fg);
+    stroke-width: 2;
+  }
+
+  .app-topbar .pnp-menu--preview {
+    position: absolute;
+    top: calc(100% - 1px);
+    left: 0;
+    width: 100%;
+  }
+}

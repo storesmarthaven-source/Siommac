@@ -7,6 +7,7 @@ import {
 } from '../registry';
 import { LucideIcon } from '../LucideIcon';
 import { IconPicker, StudioColorControl } from './RecipeStyleEditor';
+import { StudioSelect } from './StudioSelect';
 import { buttonFamilyPreviewProps } from './buttonFamilyPreview';
 import { type GalleryDraft } from '../gallery/galleryStore';
 
@@ -44,10 +45,10 @@ function PatternControl({ pattern, control, values, draft, onChange }: {
     return <label class="sds-pattern-toggle" for={id}><span>{control.label}</span><input id={id} aria-label={control.label} type="checkbox" checked={value === true}
       onChange={event => onChange(control.name, (event.target as HTMLInputElement).checked)} /></label>;
   }
-  return <label class="sds-pattern-field" for={id}><span>{control.label}</span><select id={id} aria-label={control.label} value={String(value)}
-    onInput={event => onChange(control.name, (event.target as HTMLSelectElement).value)}>
+  return <label class="sds-pattern-field" for={id}><span>{control.label}</span><StudioSelect id={id} aria-label={control.label} value={String(value)}
+    onChange={event => onChange(control.name, (event.target as HTMLSelectElement).value)}>
     {control.options.map(option => <option value={option.value}>{option.label}</option>)}
-  </select></label>;
+  </StudioSelect></label>;
 }
 
 function ButtonPatternEditor({ pattern, draft, onEditFoundation }: { pattern: ButtonPattern; draft: GalleryDraft; onEditFoundation: () => void }): VNode {
@@ -101,7 +102,7 @@ function ButtonPatternEditor({ pattern, draft, onEditFoundation }: { pattern: Bu
           <section class="sds-button-use" aria-labelledby={`${pattern.id}-use-title`}>
             <header><h3 id={`${pattern.id}-use-title`}>Common application use</h3><p>Real examples of how this control appears in SIOMAC.</p></header>
             <div class="sds-use-context">
-              {pattern.examples.map(example => <article key={example.id}><span class="ctx-kicker">{example.label}</span><div>{example.render()}</div></article>)}
+              {pattern.examples.map(example => <article key={example.id}><span class="ctx-kicker">{example.label}</span><div class="sds-use-context__spec">{example.render()}</div></article>)}
             </div>
           </section>
         </div>

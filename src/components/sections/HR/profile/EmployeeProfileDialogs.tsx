@@ -915,7 +915,7 @@ function ServiceAreaForm({ employeeId, shell, detail, onBack, onClose }: {
           <Field id="service-probation-end" label="Probation End Date" error={errors.probationEnd}>
             <input id="service-probation-end" type="date" value={probationEnd} onInput={event => setProbationEnd(event.currentTarget.value)} />
           </Field>
-          <Field id="service-basis" label="Employment Basis">
+          <Field id="service-basis" label="Employment Type">
             <select id="service-basis" value={employmentType} onChange={event => setEmploymentType(event.currentTarget.value)}>
               {EMPLOYMENT_TYPES.map(option => <option key={option} value={option}>{titleCase(option)}</option>)}
             </select>
@@ -1589,7 +1589,7 @@ const CHANGE_TYPES = [
   { value: 'department_transfer',    label: 'Department Transfer' },
   { value: 'site_transfer',          label: 'Work Location Transfer' },
   { value: 'supervisor_change',      label: 'Reporting Line Change' },
-  { value: 'employment_type_change', label: 'Employment Basis Change' },
+  { value: 'employment_type_change', label: 'Employment Type Change' },
   { value: 'status_change',          label: 'Employment Status Change' },
 ];
 

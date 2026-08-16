@@ -33,6 +33,15 @@ export interface MenuAction {
   disabled?: boolean;
   /** Renders in the danger colour. Destructive actions must look destructive. */
   danger?: boolean;
+  /**
+   * A real focusable control rendered at the trailing edge of a governed menu
+   * row. The menu supplies its roving-focus ref and tab index; consumers keep
+   * the control's interaction semantics (for example menuitemcheckbox).
+   */
+  control?: (props: {
+    ref: (element: HTMLButtonElement | null) => void;
+    tabIndex: number;
+  }) => VNode;
   onSelect?: () => void;
 }
 
@@ -161,6 +170,24 @@ export function DropdownMenu({
             {group.label && <div class="ui-menu-label">{group.label}</div>}
             {group.items.map((item, oi) => {
               const i = (offsets[gi] ?? 0) + oi;
+              if (item.control) {
+                return (
+                  <div
+                    key={item.id}
+                    role="none"
+                    class="ui-menu-item ui-menu-control-row"
+                    data-active={i === activeIndex ? 'true' : 'false'}
+                    onPointerEnter={() => { if (!item.disabled) setActiveIndex(i); }}
+                  >
+                    {item.icon}
+                    <span class="ui-menu-item-copy"><span>{item.label}</span></span>
+                    {item.control({
+                      ref: element => { itemRefs.current[i] = element; },
+                      tabIndex: i === activeIndex ? 0 : -1,
+                    })}
+                  </div>
+                );
+              }
               return (
                 <button
                   key={item.id}

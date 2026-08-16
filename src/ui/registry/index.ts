@@ -18,8 +18,8 @@
  */
 
 export {
-  type ComponentDef, type ComponentCategory, type ComponentStatus,
-  type PropControl, type PropValues, type StyleControl, type StyleGroup,
+  type ComponentDef, type ComponentCategory, type ComponentStatus, type ThumbnailKind,
+  type PropControl, type PropCondition, type PropValues, type StyleControl, type StyleGroup,
   type A11yInfo, type KeyBinding, type ComponentExample, type VariantSample, type MigrationInfo,
   defaultProps, propsForAxis, propsForVariant, styleVarNames, isBuilt,
 } from './types';
@@ -51,6 +51,7 @@ import { COMPOUND_DEFS } from './compound.defs';
 import { PLANNED_DEFS } from './planned';
 import { type ComponentCategory, type ComponentDef, isBuilt } from './types';
 import { type ComponentFamily, familyOfComponent, familyMembers } from './families';
+import { assertComponentRegistry } from './validate';
 
 /**
  * The whole catalogue, built and planned.
@@ -73,6 +74,8 @@ export const COMPONENT_DEFS: readonly ComponentDef[] = [
   ...PLANNED_DEFS,
 ];
 
+assertComponentRegistry(COMPONENT_DEFS);
+
 export const CATEGORY_LABELS: Record<ComponentCategory, string> = {
   foundations: 'Foundations',
   actions:     'Actions',
@@ -90,8 +93,8 @@ export const CATEGORY_LABELS: Record<ComponentCategory, string> = {
 
 /** Left-nav order. A design decision, not alphabetical. */
 export const CATEGORY_ORDER: ComponentCategory[] = [
-  'actions', 'forms', 'selection', 'people', 'overlays',
-  'data', 'navigation', 'feedback', 'containers', 'status', 'patterns',
+  'actions', 'patterns', 'forms', 'selection', 'people', 'overlays',
+  'data', 'navigation', 'feedback', 'containers', 'status',
 ];
 
 /**

@@ -40,6 +40,7 @@ import '../primitives/control.recipe.css';
 export type DialogSize = 'sm' | 'md' | 'lg' | 'xl' | 'fullscreen';
 export type DialogVariant = 'standard' | 'form' | 'confirm' | 'destructive' | 'info' | 'workspace';
 export type DialogLayout = 'frame' | 'standard' | 'sidebar-left' | 'sidebar-right' | 'split' | 'wide';
+export type DialogIconStyle = 'rounded' | 'circle' | 'plain';
 
 export interface DialogProps {
   open: boolean;
@@ -144,17 +145,18 @@ export interface DialogHeaderProps {
   title: string;
   sub?: string;
   icon?: VNode;
+  iconStyle?: DialogIconStyle;
   /** Omit the close button for a dialog that must be resolved by its actions. */
   onClose?: () => void;
   /** Right-aligned extras beside the close button (e.g. a status pill). */
   actions?: ComponentChildren;
 }
 
-function DialogHeader({ title, sub, icon, onClose, actions }: DialogHeaderProps): VNode {
+function DialogHeader({ title, sub, icon, iconStyle = 'rounded', onClose, actions }: DialogHeaderProps): VNode {
   const titleId = useContext(DialogTitleId);
   return (
     <header class="ui-dialog-head">
-      {icon && <span class="ui-dialog-icon" aria-hidden="true">{icon}</span>}
+      {icon && <span class={`ui-dialog-icon ui-dialog-icon--${iconStyle}`} aria-hidden="true">{icon}</span>}
       <div class="ui-dialog-titles">
         {/* id matches the sheet's aria-labelledby, so the dialog announces its
             own title on open instead of "dialog". */}

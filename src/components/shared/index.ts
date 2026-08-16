@@ -14,3 +14,5 @@ export * from './Spinner';
 export * from './Avatar';
 export * from './Modal';
 export * from './ConfirmDialog';
+export * from './AppTopBar';
+export * from './UserPill';

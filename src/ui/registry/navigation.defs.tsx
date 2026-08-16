@@ -19,6 +19,7 @@ import {
   type TabsOrientation, type TabsVariant, type TabsSize, type TabsActivation,
 } from '../navigation/Tabs';
 import { wizardDef } from './wizard.def';
+import { progressStepsDef } from './progress-steps.def';
 import { pageActionBarDef, pageHeaderDef } from './page-header.def';
 import { type ComponentDef, type PropValues } from './types';
 
@@ -47,6 +48,7 @@ const FILE_TREE: readonly TreeNode[] = [{
 
 export const treeViewDef: ComponentDef = {
   id: 'tree-view',
+  thumbnail: 'tree',
   name: 'TreeView',
   category: 'navigation',
   description: 'Hierarchical navigation and selection with expandable branches, connector lines and a complete keyboard tree model.',
@@ -138,12 +140,19 @@ const MANY_TABS: TabItem[] = [
 
 export const tabsDef: ComponentDef = {
   id: 'tabs',
+  thumbnail: 'tabs',
   name: 'Tabs',
   category: 'navigation',
   description: 'ONE tab component. Orientation, appearance, size, icons, count badges and the "More" overflow are configuration. It also owns the accessibility contract — tablist/tab/tabpanel, roving tabindex and arrow-key navigation — which three of the five implementations it replaces did not have at all.',
   status: 'stable',
   componentPath: 'src/ui/navigation/Tabs/Tabs.tsx',
   importFrom: '@ui',
+  previewLayout: 'diagram',
+  previewSamples: [
+    { value: 'underline', title: 'Underline', props: { variant: 'underline' }, diagram: 'tabs-variant' },
+    { value: 'contained', title: 'Contained', props: { variant: 'contained' }, diagram: 'tabs-variant' },
+    { value: 'subtle', title: 'Subtle', props: { variant: 'subtle' }, diagram: 'tabs-variant' },
+  ],
   migration: {
     replaces: ['.inv-tab-bar', '.inv-tab-btn', '.hse-tabs-bar', '.hse-tab', '.ui-panel-tab', '.record-tabs', '.run-tabs'],
     deprecatedImports: ['LegacyTabs', 'ModuleTabs', 'TabBar', 'AreaTabs', 'PanelTabs', 'VerticalTabs'],
@@ -294,54 +303,63 @@ export const tabsDef: ComponentDef = {
 
   examples: [
     {
-      id: 'one-component',
-      title: 'One component, three appearances',
-      description: 'Underline for a page, contained for a dense drawer, subtle for tabs inside an already-bordered surface. Five implementations existed to express exactly this.',
-      render: () => (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-          <Tabs id="ex-underline" label="Underline" items={PLAIN_TABS} value="overview" onChange={noop} />
-          <Tabs id="ex-contained" label="Contained" variant="contained" size="sm" items={PLAIN_TABS} value="tasks" onChange={noop} />
-          <Tabs id="ex-subtle" label="Subtle" variant="subtle" size="sm" items={PLAIN_TABS} value="files" onChange={noop} />
-        </div>
-      ),
-    },
-    {
-      id: 'vertical',
-      title: 'Vertical is an orientation, not a component',
-      description: 'The same props. Only the arrow-key axis changes with it — ↑/↓ move, ←/→ are ignored.',
-      render: () => (
-        <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-          <Tabs
-            id="ex-vertical"
-            label="Settings sections"
-            orientation="vertical"
-            items={[
-              { id: 'general', label: 'General', icon: <LucideIcon name="Settings" /> },
-              { id: 'security', label: 'Security', icon: <LucideIcon name="ShieldCheck" />, badge: 2 },
-              { id: 'notifications', label: 'Notifications', icon: <LucideIcon name="Bell" /> },
-            ]}
-            value="security"
-            onChange={noop}
-          />
-          <TabPanel tabsId="ex-vertical" tabId="security" value="security">
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Two security settings need review.</span>
-          </TabPanel>
-        </div>
-      ),
-    },
-    {
-      id: 'overflow',
-      title: 'Nine tabs in a drawer',
-      description: '`maxVisible={4}` collapses the rest into the canonical menu, and the trigger shows the active tab when it is one of the hidden ones — otherwise the strip claims nothing is selected while a panel is open.',
+      id: 'employee-drawer-sections',
+      title: 'Employee drawer sections',
+      description: 'Underline tabs sit directly below the profile summary and keep record sections visible without adding another container.',
       render: () => (
         <Tabs
-          id="ex-overflow"
-          label="Rate version sections"
+          id="ex-employee-drawer"
+          label="Employee profile sections"
+          class="sds-tabs-use-example"
+          size="sm"
+          items={[
+            { id: 'overview', label: 'Overview', icon: <LucideIcon name="LayoutGrid" /> },
+            { id: 'documents', label: 'Documents', icon: <LucideIcon name="FileText" />, badge: 3 },
+            { id: 'activity', label: 'Activity', icon: <LucideIcon name="History" /> },
+          ]}
+          value="overview"
+          onChange={noop}
+        />
+      ),
+    },
+    {
+      id: 'employee-register-views',
+      title: 'Employee register views',
+      description: 'Contained tabs switch the dataset shown in one register while keeping the user on the same page.',
+      render: () => (
+        <Tabs
+          id="ex-employee-register"
+          label="Employee register views"
+          class="sds-tabs-use-example"
           variant="contained"
           size="sm"
-          items={MANY_TABS}
-          maxVisible={4}
-          value="timeline"
+          items={[
+            { id: 'all', label: 'All' },
+            { id: 'attention', label: 'Attention', badge: 8 },
+            { id: 'archived', label: 'Archived' },
+          ]}
+          value="attention"
+          onChange={noop}
+        />
+      ),
+    },
+    {
+      id: 'case-workspace-panels',
+      title: 'Case workspace panels',
+      description: 'Subtle tabs separate activity, approvals and audit content inside an already-bordered case workspace.',
+      render: () => (
+        <Tabs
+          id="ex-case-workspace"
+          label="Case workspace panels"
+          class="sds-tabs-use-example"
+          variant="subtle"
+          size="sm"
+          items={[
+            { id: 'activity', label: 'Activity' },
+            { id: 'approvals', label: 'Approvals', badge: 2 },
+            { id: 'audit', label: 'Audit' },
+          ]}
+          value="approvals"
           onChange={noop}
         />
       ),
@@ -352,6 +370,7 @@ export const tabsDef: ComponentDef = {
 export const NAVIGATION_DEFS: readonly ComponentDef[] = [
   tabsDef,
   treeViewDef,
+  progressStepsDef,
   wizardDef,
   pageHeaderDef,
   pageActionBarDef,

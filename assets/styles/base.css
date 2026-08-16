@@ -194,8 +194,8 @@ textarea:-webkit-autofill:focus,
 select:-webkit-autofill,
 select:-webkit-autofill:hover,
 select:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 1000px #F8FAFE inset !important;
-  box-shadow: 0 0 0 1000px #F8FAFE inset !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--ui-color-surface-default, #FFFFFF) inset !important;
+  box-shadow: 0 0 0 1000px var(--ui-color-surface-default, #FFFFFF) inset !important;
   -webkit-text-fill-color: var(--text-primary) !important;
   transition: background-color 9999s ease-in-out 0s;
 }

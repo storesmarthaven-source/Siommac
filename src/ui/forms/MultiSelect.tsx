@@ -18,7 +18,7 @@
    cannot tell the two apart; the callback form is the pattern it wants. */
 import { type VNode } from 'preact';
 import { useCallback, useId, useMemo, useState } from 'preact/hooks';
-import { LucideIcon } from '../LucideIcon';
+import { LucideIcon, type LucideName } from '../LucideIcon';
 import { AnchoredPopup } from '../overlays/AnchoredPopup';
 import { type ControlSize, type UiState, type ValidationState } from '../tokens';
 import { useFieldContext, resolveFieldState } from './fieldContext';
@@ -38,6 +38,8 @@ export interface MultiSelectProps<T extends string = string> {
   placeholder?: string;
   emptyLabel?: string;
   size?: ControlSize;
+  /** Decorative affordance on the listbox trigger. */
+  chevronIcon?: LucideName;
   /** Chips shown before collapsing to "+N more". */
   maxChips?: number;
   /** Refuse further selection past this count. */
@@ -57,7 +59,7 @@ export interface MultiSelectProps<T extends string = string> {
 export function MultiSelect<T extends string = string>({
   values, onChange, options,
   searchable = true, placeholder = 'Select…', emptyLabel = 'No options',
-  size = 'md', maxChips = 3, maxSelected,
+  size = 'md', maxChips = 3, maxSelected, chevronIcon = 'ChevronDown',
   disabled: ownDisabled, readOnly: ownReadOnly, validation: ownValidation,
   id: ownId, name, forceState, class: extra, ...aria
 }: MultiSelectProps<T>): VNode {
@@ -173,7 +175,7 @@ export function MultiSelect<T extends string = string>({
             </span>
           </span>
         )}
-        {!inert && <span class="ui-ctrl-arrow" aria-hidden="true"><LucideIcon name="ChevronDown" /></span>}
+        {!inert && <span class="ui-ctrl-arrow" aria-hidden="true"><LucideIcon name={chevronIcon} /></span>}
       </button>
 
       <AnchoredPopup

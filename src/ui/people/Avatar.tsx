@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'preact/hooks';
 import { LucideIcon } from '../LucideIcon';
 import './Avatar.recipe.css';
 
-export type AvatarVariant = 'circle' | 'square';
+export type AvatarVariant = 'circle';
 export type AvatarNamedSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 export type AvatarSize = AvatarNamedSize | number;
 export type AvatarPresence = 'online' | 'away' | 'busy' | 'offline';
@@ -62,7 +62,7 @@ export function Avatar({
   const textSize = fontSize ?? (numericSize ? Math.round(numericSize * 0.38) : undefined);
   const style = [
     numericSize ? `width:${numericSize}px;height:${numericSize}px` : '',
-    `border-radius:${variant === 'circle' ? '50%' : '6px'}`,
+    'border-radius:50%',
     textSize ? `font-size:${textSize}px` : '',
   ].filter(Boolean).join(';');
   const trimmedSeed = seed?.trim();

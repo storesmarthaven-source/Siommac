@@ -147,12 +147,27 @@ export function useGalleryDraft(): GalleryDraft {
     setPreviewLinks(prev => ({ ...prev, [name]: previewValue }));
   }, []);
   const replaceGroup = useCallback((owned: readonly string[], next: ThemeOverrides) => {
+    setRemoved(previous => {
+      const out = new Set(previous);
+      const publishedOverrides = configurationToOverrides(published.configuration);
+      for (const name of owned) {
+        if (name in next) out.delete(name);
+        else if (name in publishedOverrides) out.add(name);
+        else out.delete(name);
+      }
+      return out;
+    });
+    setPreviewLinks(previous => {
+      const out = { ...previous };
+      for (const name of owned) Reflect.deleteProperty(out, name);
+      return out;
+    });
     setValues(prev => {
       const out = { ...prev };
       for (const name of owned) Reflect.deleteProperty(out, name);
       return { ...out, ...next };
     });
-  }, []);
+  }, [published]);
   const addSavedColor = useCallback((color: string) => {
     const normalized = color.trim().toLowerCase();
     if (!/^#[\da-f]{6}$/.test(normalized)) return;

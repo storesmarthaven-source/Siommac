@@ -26,12 +26,18 @@
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import { useSessionStore, selectFullName, selectRole } from '@store/session';
 import { useUiStore, selectTheme } from '@store/ui';
 import { dialog } from '@lib/dialog';
 import { useCommsSummary } from '@api/communications';
-import { ThemeModeSwitch } from '@ui';
+import { Avatar } from '../../ui/people/Avatar';
+import { Button } from '../../ui/primitives/Button';
+import { LucideIcon } from '../../ui/LucideIcon';
+import { DropdownMenu, type MenuItems } from '../../ui/overlays/DropdownMenu';
+import { ThemeModeSwitch } from '../../ui/patterns/ThemeModeSwitch';
+import '../../ui/primitives/actions.recipe.css';
+import './AppTopBar.recipe.css';
 
 // ── Lucide line-icons (the app's icon language) ───────────────────────────────
 const lIco = (inner: ComponentChildren, sw = 1.8, size = 19): VNode => (
@@ -41,7 +47,6 @@ const lIco = (inner: ComponentChildren, sw = 1.8, size = 19): VNode => (
 const IcUser     = (): VNode => lIco(<><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>);
 const IcSettings = (): VNode => lIco(<><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></>, 1.5);
 const IcAbout    = (): VNode => lIco(<><circle cx="12" cy="12" r="9" /><path d="M12 16v-4M12 8h.01" /></>);
-const IcMoon     = (): VNode => lIco(<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />);
 const IcLogout   = (): VNode => lIco(<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></>);
 
 function roleLabel(role: string | null): string {
@@ -106,7 +111,6 @@ export function AccountPill({
   const summaryQ  = useCommsSummary();
 
   const name    = fullName ?? username ?? 'User';
-  const initial = (name.trim()[0] ?? 'U').toUpperCase();
   const notifBadge  = badgeText(summaryQ.data?.notificationsUnread);
   const msgBadge    = badgeText(summaryQ.data?.messagesUnread);
   const ticketBadge = badgeText(summaryQ.data?.ticketsUnread);
@@ -115,35 +119,11 @@ export function AccountPill({
   // Appearance: the authoritative per-user theme (store → DB via system.user_theme).
   // Menu stays open on toggle so the switch flip is visible.
   const darkMode = useUiStore(selectTheme) === 'dark';
-  const [menuPos, setMenuPos] = useState<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 0 });
-  const wrapRef = useRef<HTMLDivElement>(null);
+  const [menuAnchor, setMenuAnchor] = useState<HTMLDivElement | null>(null);
 
   const openMenu = (): void => {
-    if (wrapRef.current) {
-      const r = wrapRef.current.getBoundingClientRect();
-      const left  = Math.round(r.left);
-      const width = Math.round(r.right) - left;
-      setMenuPos({ top: Math.round(r.bottom), left, width });
-    }
     setMenuOpen(true);
   };
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const close = () => setMenuOpen(false);
-    const onDoc = (e: MouseEvent) => { if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) close(); };
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
-    document.addEventListener('mousedown', onDoc);
-    document.addEventListener('keydown', onKey);
-    window.addEventListener('scroll', close, true);
-    window.addEventListener('resize', close);
-    return () => {
-      document.removeEventListener('mousedown', onDoc);
-      document.removeEventListener('keydown', onKey);
-      window.removeEventListener('scroll', close, true);
-      window.removeEventListener('resize', close);
-    };
-  }, [menuOpen]);
 
   const confirmLogout = async (): Promise<void> => {
     setMenuOpen(false);
@@ -155,58 +135,62 @@ export function AccountPill({
     if (ok) doLogout();
   };
 
+  const menuItems: MenuItems = [
+    { items: [
+      { id: 'profile', label: 'My Profile', icon: <IcUser />, onSelect: () => nav('s-profile') },
+      { id: 'settings', label: 'Settings', icon: <IcSettings />, onSelect: () => nav('s-settings') },
+      { id: 'about', label: 'About', icon: <IcAbout />, onSelect: () => nav('s-about') },
+    ] },
+    { items: [
+      {
+        id: 'theme',
+        label: 'Dark Mode',
+        icon: <LucideIcon name="Moon" />,
+        control: ({ ref, tabIndex }) => (
+          <ThemeModeSwitch
+            theme={darkMode ? 'dark' : 'light'}
+            onChange={theme => useUiStore.getState().setTheme(theme)}
+            role="menuitemcheckbox"
+            label="Dark Mode"
+            class="app-topbar-theme-switch"
+            buttonRef={ref}
+            tabIndex={tabIndex}
+          />
+        ),
+      },
+    ] },
+    { items: [
+      { id: 'logout', label: 'Log out', icon: <IcLogout />, danger: true, onSelect: () => void confirmLogout() },
+    ] },
+  ];
+
   const profile = (
-    <div class="pnp-profile-wrap" ref={wrapRef}>
-      <button type="button" class="pnp-profile" onClick={() => menuOpen ? setMenuOpen(false) : openMenu()} title="Account menu"
-        aria-haspopup="menu" aria-expanded={menuOpen}>
-        <span class="pnp-avatar">
-          {avatarUrl
-            ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
-            : initial}
-        </span>
-        {!compact && (
-          <span class="pnp-info">
-            <span class="pnp-name">{name}</span>
-            <span class="pnp-role">{roleLabel(role)}</span>
-          </span>
-        )}
-        <span class="pnp-caret-box">
-          <i class={`fas fa-chevron-${menuOpen ? 'up' : 'down'} pnp-caret`} aria-hidden="true" />
-        </span>
-      </button>
-      {menuOpen && (
-        <div class="pnp-menu" role="menu" style={{ top: menuPos.top, left: menuPos.left, width: menuPos.width }}>
-          <div class="pnp-menu-group">
-            <button type="button" class="pnp-menu-item" role="menuitem" onClick={() => { setMenuOpen(false); nav('s-profile'); }}>
-              <IcUser /><span>My Profile</span>
-            </button>
-            <button type="button" class="pnp-menu-item" role="menuitem" onClick={() => { setMenuOpen(false); nav('s-settings'); }}>
-              <IcSettings /><span>Settings</span>
-            </button>
-            <button type="button" class="pnp-menu-item" role="menuitem" onClick={() => { setMenuOpen(false); nav('s-about'); }}>
-              <IcAbout /><span>About</span>
-            </button>
-          </div>
-          <div class="pnp-menu-sep" />
-          <div class="pnp-menu-group">
-            <div class="pnp-menu-item pnp-menu-theme" role="none">
-              <IcMoon /><span>Dark Mode</span>
-              <ThemeModeSwitch
-                theme={darkMode ? 'dark' : 'light'}
-                onChange={theme => useUiStore.getState().setTheme(theme)}
-                role="menuitemcheckbox"
-                label="Dark Mode"
-              />
-            </div>
-          </div>
-          <div class="pnp-menu-sep" />
-          <div class="pnp-menu-group">
-            <button type="button" class="pnp-menu-item pnp-menu-danger" role="menuitem" onClick={() => void confirmLogout()}>
-              <IcLogout /><span>Log out</span>
-            </button>
-          </div>
-        </div>
-      )}
+    <div class="pnp-profile-wrap" ref={setMenuAnchor}>
+      <span class="pnp-profile pnp-profile-split ui-split">
+        <Button variant="ghost" size="md" class="pnp-profile-main" onClick={() => nav('s-profile')} title="My profile">
+          <Avatar name={name} src={avatarUrl} size={34} class="pnp-avatar" />
+          {!compact && (
+            <span class="pnp-info">
+              <span class="pnp-name">{name}</span>
+              <span class="pnp-role">{roleLabel(role)}</span>
+            </span>
+          )}
+        </Button>
+        <Button variant="ghost" size="md" class="pnp-profile-menu-trigger" iconOnly
+          onClick={() => menuOpen ? setMenuOpen(false) : openMenu()} title="Account menu"
+          aria-label="Open account menu" aria-haspopup="menu" aria-expanded={menuOpen}
+          aria-controls="app-topbar-account-menu"
+          iconLeft={<LucideIcon name="ChevronDown" class="ui-btn-chevron pnp-caret" aria-hidden="true" />} />
+      </span>
+      <DropdownMenu
+        id="app-topbar-account-menu"
+        open={menuOpen}
+        anchor={menuAnchor}
+        onClose={() => setMenuOpen(false)}
+        items={menuItems}
+        label={`${name} account menu`}
+        matchAnchorWidth
+      />
     </div>
   );
 

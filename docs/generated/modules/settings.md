@@ -2,9 +2,9 @@
 
 # settings Module Map
 
-Source fingerprint: `ae71f01638b7e5b7378aac83`
+Source fingerprint: `dfa9cd3ead99b98830efc082`
 
-Files: 44 | Symbols: 252 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 0 unmounted | API calls: 18 | DB objects: 21 | E2E suites: 2
+Files: 45 | Symbols: 272 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 0 unmounted | API calls: 18 | DB objects: 21 | E2E suites: 2
 
 ## Widgets and Tiles
 
@@ -92,6 +92,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `SwzCatalogPage` | function / component | `src/components/sections/Settings/SwzCatalogPage.tsx:39` | `-` |
 | `SwzIcon` | function / component | `src/components/sections/Settings/swzIcons.tsx:34` | `-` |
 | `swzCardIconName` | function / ui-tile | `src/components/sections/Settings/swzIcons.tsx:40` | `-` |
+| `CatalogueShowcase` | function / component | `src/ui/studio/CatalogueShowcase.tsx:259` | `-` |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 

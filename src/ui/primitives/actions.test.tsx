@@ -9,7 +9,7 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/preact';
-import { SegmentedControl, DropdownButton, SplitButton } from './actions';
+import { ButtonGroup, SegmentedControl, DropdownButton, SplitButton } from './actions';
 import { DropdownMenu, type MenuItems } from '../overlays/DropdownMenu';
 
 const OPTIONS = [
@@ -23,6 +23,31 @@ const MENU: MenuItems = [
   { id: 'lock',   label: 'Locked action', disabled: true },
   { id: 'delete', label: 'Delete', danger: true },
 ];
+
+describe('ButtonGroup', () => {
+  it('names the group while preserving independent button semantics', () => {
+    render(<ButtonGroup label="Record actions" items={[
+      { id: 'archive', label: 'Archive' },
+      { id: 'edit', label: 'Edit' },
+      { id: 'delete', label: 'Delete' },
+    ]} />);
+    expect(screen.getByRole('group', { name: 'Record actions' })).toBeTruthy();
+    expect(screen.getAllByRole('button')).toHaveLength(3);
+  });
+
+  it('activates only the selected action and honours disabled items', () => {
+    const archive = vi.fn();
+    const edit = vi.fn();
+    render(<ButtonGroup label="Record actions" items={[
+      { id: 'archive', label: 'Archive', onClick: archive },
+      { id: 'edit', label: 'Edit', onClick: edit, disabled: true },
+    ]} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Archive' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    expect(archive).toHaveBeenCalledOnce();
+    expect(edit).not.toHaveBeenCalled();
+  });
+});
 
 describe('SegmentedControl', () => {
   it('is a radiogroup, not a row of buttons', () => {

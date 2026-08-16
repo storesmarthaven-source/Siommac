@@ -137,7 +137,7 @@ body[data-theme="dark"] .epd-root.epd-dark-on .badge.neutral {
   box-sizing: border-box;
 }
 
-.epd-root button {
+.epd-root button:not(.ui-btn) {
   font: inherit;
 }
 

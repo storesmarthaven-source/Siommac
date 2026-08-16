@@ -7,6 +7,8 @@
  * built — the two files are the same list, split by whether it exists.
  */
 
+import type { VNode } from 'preact';
+
 import { FormField } from '../forms/FormField';
 import { TextInput, SearchInput as SearchField } from '../primitives/TextInput';
 import { Checkbox, Switch, CheckboxGroup, RadioGroup } from '../primitives/choice';
@@ -14,7 +16,8 @@ import {
   PasswordInput, NumberInput, CurrencyInput, PercentageInput,
   EmailInput, UrlInput, PhoneInput, Textarea,
 } from '../forms/inputs';
-import { DateInput, TimeInput, DateTimeInput, DateRangeInput } from '../forms/dateInputs';
+import { TimeInput } from '../forms/dateInputs';
+import { DatePicker } from '../forms/DatePicker';
 import { FileInput, OtpInput } from '../forms/FileInput';
 import { ColorPicker } from '../forms/ColorPicker';
 import { ThemeModeSwitch, type ThemeMode } from '../patterns/ThemeModeSwitch';
@@ -23,8 +26,12 @@ import { Select } from '../forms/Select';
 import { Combobox } from '../forms/Combobox';
 import { type ComponentDef, type PropValues } from './types';
 import { type ControlSize, type ValidationState } from '../tokens';
-import { LucideIcon } from '../LucideIcon';
+import { LucideIcon, type LucideName } from '../LucideIcon';
+import { Avatar } from '../people/Avatar';
 import { useEffect, useState } from 'preact/hooks';
+import avatarOlivia from '../../assets/avatars/untitled-ui/Olivia Rhye.jpg';
+import avatarPhoenix from '../../assets/avatars/untitled-ui/Phoenix Baker.jpg';
+import avatarLana from '../../assets/avatars/untitled-ui/Lana Steiner.jpg';
 
 const s = (v: PropValues[string] | undefined, f = ''): string => (typeof v === 'string' ? v : f);
 const b = (v: PropValues[string] | undefined): boolean => v === true;
@@ -32,6 +39,8 @@ const n = (v: PropValues[string] | undefined, f = 0): number => (typeof v === 'n
 const size = (v: PropValues[string] | undefined): ControlSize => (v === 'sm' || v === 'lg' ? v : 'md');
 const val = (v: PropValues[string] | undefined): ValidationState =>
   (v === 'error' || v === 'warning' || v === 'success' ? v : 'none');
+const chevronIcon = (v: PropValues[string] | undefined): LucideName =>
+  (s(v, 'ChevronDown') as LucideName);
 
 const noop = (): void => { /* preview */ };
 
@@ -109,6 +118,7 @@ const CONTROL_STYLE = [
 
 export const checkboxDef: ComponentDef = {
   id: 'checkbox',
+  thumbnail: 'check',
   name: 'Checkbox',
   category: 'selection',
   description: 'A boolean you are editing and will submit. Wraps a real native input, so keyboard, form participation and the indeterminate property come for free.',
@@ -190,9 +200,10 @@ export const checkboxDef: ComponentDef = {
 
 export const radioGroupDef: ComponentDef = {
   id: 'radio-group',
-  name: 'RadioGroup',
+  thumbnail: 'radio',
+  name: 'Radio Group',
   category: 'selection',
-  description: 'One value from a small, always-visible set. Native radios supply roving focus and arrow movement, so none of it is reimplemented.',
+  description: 'Choose one option from a short visible list. Use simple rows, approval routes, workflow priorities or people.',
   status: 'stable',
   componentPath: 'src/ui/primitives/choice.tsx',
   importFrom: '@ui',
@@ -206,13 +217,29 @@ export const radioGroupDef: ComponentDef = {
   },
 
   props: {
-    value:    { type: 'select',  label: 'Selected', options: ['weekly', 'fortnightly', 'monthly'], default: 'fortnightly' },
-    inline:   { type: 'boolean', label: 'Inline layout', default: false },
+    presentation: { type: 'select', label: 'Layout', options: ['standard', 'cards', 'icon-cards', 'people'], default: 'cards' },
+    value:    { type: 'select',  label: 'Selected', options: ['manager', 'dual', 'committee'], default: 'manager' },
+    indicator:{ type: 'select',  label: 'Selection mark', options: ['radio', 'check'], default: 'radio' },
+    indicatorPosition: { type: 'select', label: 'Selection position', options: ['start', 'end'], default: 'start' },
+    density: { type: 'select', label: 'Density', options: ['comfortable', 'compact'], default: 'comfortable' },
+    selectionTreatment: { type: 'select', label: 'Selected style', options: ['outline', 'tint', 'filled'], default: 'tint' },
+    inline:   { type: 'boolean', label: 'Columns', default: false },
     withDesc: { type: 'boolean', label: 'Show descriptions', default: true },
     error:    { type: 'boolean', label: 'Error', default: false },
     disabled: { type: 'boolean', label: 'Disabled', default: false },
   },
-  style: CHOICE_STYLE,
+  style: [
+    ...CHOICE_STYLE,
+    { label: 'Cards', controls: [
+      { name: '--ui-radio-card-bg', label: 'Surface', kind: 'color' },
+      { name: '--ui-radio-card-border', label: 'Border', kind: 'color' },
+      { name: '--ui-radio-card-border-selected', label: 'Selected border', kind: 'color' },
+      { name: '--ui-radio-card-bg-selected', label: 'Selected surface', kind: 'color' },
+      { name: '--ui-radio-card-radius', label: 'Corner radius', kind: 'size' },
+      { name: '--ui-radio-card-padding-x', label: 'Horizontal padding', kind: 'size' },
+      { name: '--ui-radio-card-padding-y', label: 'Vertical padding', kind: 'size' },
+    ] },
+  ],
   states: ['default', 'hover', 'focus', 'disabled', 'error'],
   a11y: {
     role: 'radiogroup + radio',
@@ -224,21 +251,56 @@ export const radioGroupDef: ComponentDef = {
     focus: 'Native roving focus. No custom key handling, deliberately.',
     notes: ['Prefer a Select above ~6 options — a radio group is for choices worth reading all of.'],
   },
-  render: (p, st) => (
-    <RadioGroup
-      label="Pay frequency"
-      value={s(p.value, 'fortnightly')}
-      onChange={noop}
-      inline={b(p.inline)}
-      error={b(p.error) || st === 'error'}
-      disabled={b(p.disabled) || st === 'disabled'}
-      options={[
-        { value: 'weekly',      label: 'Weekly',      description: b(p.withDesc) ? 'Paid every Friday.' : undefined },
-        { value: 'fortnightly', label: 'Fortnightly', description: b(p.withDesc) ? 'Paid every second Friday.' : undefined },
-        { value: 'monthly',     label: 'Monthly',     description: b(p.withDesc) ? 'Paid on the last working day.' : undefined },
-      ]}
-    />
-  ),
+  previewAxis: 'presentation',
+  previewSamples: [
+    { value: 'standard', title: 'Standard', props: { presentation: 'standard', indicator: 'radio', indicatorPosition: 'start' } },
+    { value: 'cards', title: 'Approval routes', props: { presentation: 'cards', indicator: 'radio', indicatorPosition: 'start' } },
+    { value: 'icon-cards', title: 'Workflow priority', props: { presentation: 'icon-cards', indicator: 'check', indicatorPosition: 'end' } },
+    { value: 'people', title: 'Assign owner', props: { presentation: 'people', indicator: 'check', indicatorPosition: 'end' } },
+  ],
+  render: (p, st) => {
+    const presentation = s(p.presentation, 'cards') as 'standard' | 'cards' | 'icon-cards' | 'people';
+    const descriptions = b(p.withDesc);
+    const approvalRoutes = [
+      { value: 'manager', label: 'Manager approval', meta: '1 approver', description: descriptions ? 'Routes to the employee’s reporting manager.' : undefined },
+      { value: 'dual', label: 'Dual approval', meta: '2 approvers', description: descriptions ? 'Requires manager and department-head approval.' : undefined },
+      { value: 'committee', label: 'Review committee', meta: 'Governed', description: descriptions ? 'Routes high-impact changes through maker-checker review.' : undefined },
+    ];
+    const priorities = [
+      { value: 'manager', label: 'Routine workflow', meta: 'Standard', description: descriptions ? 'Normal SLA and standard notification rules.' : undefined },
+      { value: 'dual', label: 'Urgent workflow', meta: 'Priority', description: descriptions ? 'Shortened SLA with escalation reminders.' : undefined },
+      { value: 'committee', label: 'Critical workflow', meta: 'Immediate', description: descriptions ? 'Immediate escalation and full audit visibility.' : undefined },
+    ];
+    const icons = ['Layers3', 'BriefcaseBusiness', 'Zap'] as const;
+    const people = [
+      { value: 'manager', label: 'Olivia Rhye', meta: '@olivia', description: descriptions ? 'HSE Manager · Point Lisas' : undefined, media: <Avatar name="Olivia Rhye" src={avatarOlivia} decorative /> },
+      { value: 'dual', label: 'Phoenix Baker', meta: '@phoenix', description: descriptions ? 'Operations Supervisor · Chaguaramas' : undefined, media: <Avatar name="Phoenix Baker" src={avatarPhoenix} decorative /> },
+      { value: 'committee', label: 'Lana Steiner', meta: '@lana', description: descriptions ? 'HR Business Partner · Head Office' : undefined, media: <Avatar name="Lana Steiner" src={avatarLana} decorative /> },
+    ];
+    const options = presentation === 'people'
+      ? people
+      : (presentation === 'icon-cards' ? priorities : approvalRoutes).map((option, index) => ({
+          ...option,
+          media: presentation === 'icon-cards' ? <LucideIcon name={icons[index] ?? 'Layers3'} size={20} /> : undefined,
+        }));
+
+    return (
+      <RadioGroup
+        label={presentation === 'people' ? 'Assign owner' : 'Choose plan'}
+        value={s(p.value, 'manager')}
+        onChange={noop}
+        presentation={presentation}
+        indicator={s(p.indicator, 'radio') === 'check' ? 'check' : 'radio'}
+        indicatorPosition={s(p.indicatorPosition, 'start') === 'end' ? 'end' : 'start'}
+        density={s(p.density, 'comfortable') === 'compact' ? 'compact' : 'comfortable'}
+        selectionTreatment={s(p.selectionTreatment, 'tint') as 'outline' | 'tint' | 'filled'}
+        inline={b(p.inline)}
+        error={b(p.error) || st === 'error'}
+        disabled={b(p.disabled) || st === 'disabled'}
+        options={options}
+      />
+    );
+  },
   code: () => `<RadioGroup
   label="Pay frequency"
   value={frequency}
@@ -251,6 +313,7 @@ export const radioGroupDef: ComponentDef = {
 
 export const switchDef: ComponentDef = {
   id: 'switch',
+  thumbnail: 'switch',
   name: 'Switch',
   category: 'selection',
   description: 'A setting that takes effect IMMEDIATELY. Not a Checkbox with different styling — using one inside a form with a Save button lies about when the change lands.',
@@ -325,6 +388,7 @@ export const switchDef: ComponentDef = {
  */
 export const textInputDef: ComponentDef = {
   id: 'text-input',
+  thumbnail: 'field',
   name: 'TextInput',
   category: 'forms',
   description: 'One text control for every kind of text. Password, number, currency, percentage, email, URL, phone and multi-line are TYPES of it, not separate components.',
@@ -333,16 +397,16 @@ export const textInputDef: ComponentDef = {
   importFrom: '@ui',
   previewAxis: 'type',
   previewSamples: [
-    { value: 'Text', title: 'Text', description: 'Names and short answers', props: { type: 'Text' } },
-    { value: 'Search', title: 'Search', description: 'Find and filter records', props: { type: 'Search', iconLeft: 'Search' } },
-    { value: 'Password', title: 'Password', description: 'Protected entry', props: { type: 'Password', iconLeft: 'LockKeyhole' } },
-    { value: 'Number', title: 'Number', description: 'Measured quantities', props: { type: 'Number' } },
-    { value: 'Currency', title: 'Currency', description: 'Money in minor units', props: { type: 'Currency' } },
-    { value: 'Percentage', title: 'Percentage', description: 'Rates stored as ratios', props: { type: 'Percentage' } },
-    { value: 'Email', title: 'Email', description: 'Validated email entry', props: { type: 'Email', iconLeft: 'Mail' } },
-    { value: 'URL', title: 'URL', description: 'Web addresses', props: { type: 'URL', iconLeft: 'Link' } },
-    { value: 'Phone', title: 'Phone', description: 'Dial code and number', props: { type: 'Phone' } },
-    { value: 'Multi-line', title: 'Multi-line', description: 'Notes and longer context', props: { type: 'Multi-line' } },
+    { value: 'Text', title: 'Text', description: 'Names and short answers', props: { type: 'Text' }, icon: 'Type' },
+    { value: 'Search', title: 'Search', description: 'Find and filter records', props: { type: 'Search', iconLeft: 'Search' }, icon: 'Search' },
+    { value: 'Password', title: 'Password', description: 'Protected entry', props: { type: 'Password', iconLeft: 'LockKeyhole' }, icon: 'LockKeyhole' },
+    { value: 'Number', title: 'Number', description: 'Measured quantities', props: { type: 'Number' }, icon: 'Hash' },
+    { value: 'Currency', title: 'Currency', description: 'Money in minor units', props: { type: 'Currency' }, icon: 'CircleDollarSign' },
+    { value: 'Percentage', title: 'Percentage', description: 'Rates stored as ratios', props: { type: 'Percentage' }, icon: 'Percent' },
+    { value: 'Email', title: 'Email', description: 'Validated email entry', props: { type: 'Email', iconLeft: 'Mail' }, icon: 'Mail' },
+    { value: 'URL', title: 'URL', description: 'Web addresses', props: { type: 'URL', iconLeft: 'Link' }, icon: 'Link' },
+    { value: 'Phone', title: 'Phone', description: 'Dial code and number', props: { type: 'Phone' }, icon: 'Phone' },
+    { value: 'Multi-line', title: 'Multi-line', description: 'Notes and longer context', props: { type: 'Multi-line' }, icon: 'AlignLeft' },
   ],
   migration: {
     replaces: ['.ui-input', '.ui-textarea'],
@@ -362,16 +426,16 @@ export const textInputDef: ComponentDef = {
     iconLeft:   { type: 'icon',      label: 'Leading icon', default: 'None', recommendations: ['Search', 'User', 'Mail', 'Phone', 'LockKeyhole', 'Link'],
                   help: 'Choose from the full Lucide library. Recommended field icons appear first.' },
     tooltipEnabled: { type: 'boolean', label: 'Field tooltip', default: false, help: 'Adds keyboard-accessible guidance inside the field.' },
-    tooltipText: { type: 'text', label: 'Tooltip text', default: 'This is a hint to help the user complete this field.' },
-    prefix:     { type: 'text',      label: 'Prefix affix', default: '' },
-    suffix:     { type: 'text',      label: 'Suffix affix', default: '' },
+    tooltipText: { type: 'text', label: 'Tooltip text', default: 'This is a hint to help the user complete this field.', visibleWhen: { prop: 'tooltipEnabled', equals: true } },
+    prefix:     { type: 'text',      label: 'Prefix affix', default: '', visibleWhen: { prop: 'type', in: ['Currency', 'Phone'] } },
+    suffix:     { type: 'text',      label: 'Suffix affix', default: '', visibleWhen: { prop: 'type', in: ['Number', 'Percentage'] } },
     helpText:   { type: 'text',      label: 'Help text', default: 'Shown under the label — always visible, never a tooltip.' },
     size:       { type: 'segmented', label: 'Size', options: ['sm', 'md', 'lg'], default: 'md' },
     validation: { type: 'select',    label: 'Validation', options: ['none', 'error', 'warning', 'success'], default: 'none' },
-    message:    { type: 'text',      label: 'Validation message', default: 'This field is required.' },
+    message:    { type: 'text',      label: 'Validation message', default: 'This field is required.', visibleWhen: { prop: 'validation', in: ['error', 'warning', 'success'] } },
     required:   { type: 'boolean',   label: 'Required', default: true },
-    clearable:  { type: 'boolean',   label: 'Clearable', default: false },
-    charCount:  { type: 'boolean',   label: 'Character count', default: false },
+    clearable:  { type: 'boolean',   label: 'Clearable', default: false, visibleWhen: { prop: 'type', equals: 'Search' } },
+    charCount:  { type: 'boolean',   label: 'Character count', default: false, visibleWhen: { prop: 'type', equals: 'Multi-line' } },
     loading:    { type: 'boolean',   label: 'Loading', default: false },
     disabled:   { type: 'boolean',   label: 'Disabled', default: false },
     readOnly:   { type: 'boolean',   label: 'Read-only', default: false, help: 'A DIFFERENT state from disabled — the value stays legible and copyable.' },
@@ -540,18 +604,36 @@ export const textInputDef: ComponentDef = {
 
 /* ── Date & time ───────────────────────────────────────────────────────────*/
 
+function DateInputCalendarPreview({ range = false, withTime = false, disabled = false, initiallyOpen = false, months = 1, showToday = true, showFooter = true, showOutsideDates = true, showPresets = false, timeInterval = 30 }: { range?: boolean; withTime?: boolean; disabled?: boolean; initiallyOpen?: boolean; months?: 1 | 2; showToday?: boolean; showFooter?: boolean; showOutsideDates?: boolean; showPresets?: boolean; timeInterval?: number }): VNode {
+  const [single, setSingle] = useState('2026-08-12');
+  const [dateRange, setDateRange] = useState({ from: '2026-08-05', to: '2026-08-12' });
+  const [open, setOpen] = useState(initiallyOpen);
+  const [selectedTime, setSelectedTime] = useState('10:30 AM');
+  useEffect(() => setOpen(initiallyOpen), [initiallyOpen]);
+  const timeSlots = Array.from({ length: Math.floor((13 * 60) / timeInterval) + 1 }, (_, index) => {
+    const total = 9 * 60 + index * timeInterval;
+    const hour = Math.floor(total / 60);
+    const minute = total % 60;
+    return `${hour % 12 || 12}:${String(minute).padStart(2, '0')} ${hour < 12 ? 'AM' : 'PM'}`;
+  });
+  return range
+    ? <DatePicker mode="range" value={dateRange} onChange={setDateRange} months={months} disabled={disabled} open={open} onOpenChange={setOpen} showPresets={showPresets} showFooter={showFooter} showOutsideDates={showOutsideDates} />
+    : <DatePicker value={single} onChange={setSingle} months={1} disabled={disabled} open={open} onOpenChange={setOpen} showToday={showToday} showFooter={showFooter} showOutsideDates={showOutsideDates} timeSlots={withTime ? timeSlots : undefined} selectedTime={withTime ? selectedTime : undefined} onTimeChange={withTime ? setSelectedTime : undefined} triggerTreatment={withTime ? 'website-date-time' : 'siomac'} />;
+}
+
 export const dateInputDef: ComponentDef = {
   id: 'date-input',
+  thumbnail: 'date',
   name: 'DateInput',
   previewAxis: 'which',
   previewSamples: [
-    { value: 'Date', title: 'Date', description: 'A calendar date', props: { which: 'Date' } },
+    { value: 'Date', title: 'Date', description: 'Date field with calendar', props: { which: 'Date' } },
     { value: 'Time', title: 'Time', description: 'A time of day', props: { which: 'Time' } },
     { value: 'DateTime', title: 'Date & time', description: 'Date and time together', props: { which: 'DateTime' } },
-    { value: 'Range', title: 'Date range', description: 'A start and end date', props: { which: 'Range' } },
+    { value: 'Range', title: 'Date range', description: 'Start and end dates', props: { which: 'Range' } },
   ],
   category: 'forms',
-  description: 'Date, time and datetime entry in the kit control shell. Built on the native input, so locale, keyboard and the mobile picker are the platform’s — what the app lacked was the shell.',
+  description: 'Date and time inputs. Date keeps the SIOMAC field treatment while Date & time uses the compact website-style trigger; both open the same accessible calendar.',
   status: 'stable',
   componentPath: 'src/ui/forms/dateInputs.tsx',
   importFrom: '@ui',
@@ -565,8 +647,27 @@ export const dateInputDef: ComponentDef = {
     disabled:   { type: 'boolean',   label: 'Disabled', default: false },
     readOnly:   { type: 'boolean',   label: 'Read-only', default: false },
     invertRange:{ type: 'boolean',   label: 'Range: end before start', default: false, help: 'Shows the built-in cross-field error.' },
+    openCalendar: { type: 'boolean', label: 'Show calendar', default: true, visibleWhen: { prop: 'which', in: ['Date', 'DateTime', 'Range'] } },
+    calendarMonths: { type: 'select', label: 'Months shown', options: ['1', '2'], default: '2', visibleWhen: { prop: 'which', equals: 'Range' } },
+    showToday: { type: 'boolean', label: 'Today shortcut', default: true, visibleWhen: { prop: 'which', in: ['Date', 'DateTime'] } },
+    showFooter: { type: 'boolean', label: 'Cancel and Apply', default: true, visibleWhen: { prop: 'which', in: ['Date', 'DateTime', 'Range'] } },
+    showOutsideDates: { type: 'boolean', label: 'Outside-month dates', default: true, visibleWhen: { prop: 'which', in: ['Date', 'DateTime', 'Range'] } },
+    showPresets: { type: 'boolean', label: 'Quick ranges', default: true, visibleWhen: { prop: 'which', equals: 'Range' } },
+    timeInterval: { type: 'select', label: 'Time intervals', options: ['15', '30', '60'], default: '30', visibleWhen: { prop: 'which', equals: 'DateTime' } },
   },
-  style: CONTROL_STYLE,
+  style: [...CONTROL_STYLE,
+    { label: 'Calendar surface', controls: [
+      { name: '--ui-calendar-panel-bg', label: 'Panel background', kind: 'color' },
+      { name: '--ui-calendar-border', label: 'Border', kind: 'color' },
+      { name: '--ui-calendar-radius', label: 'Corner radius', kind: 'size' },
+    ] },
+    { label: 'Calendar selection', controls: [
+      { name: '--ui-calendar-accent', label: 'Selected date', kind: 'color' },
+      { name: '--ui-calendar-accent-fg', label: 'Selected text', kind: 'color' },
+      { name: '--ui-calendar-range', label: 'Range fill', kind: 'color-alpha' },
+      { name: '--ui-calendar-hover', label: 'Hover', kind: 'color-alpha' },
+    ] },
+  ],
   states: ['default', 'hover', 'focus', 'disabled', 'readonly', 'error'],
   compare: ['default', 'focus', 'error', 'disabled', 'readonly'],
   a11y: {
@@ -592,36 +693,25 @@ export const dateInputDef: ComponentDef = {
       forceState: st,
     };
     const which = s(p.which, 'Date');
-    if (which === 'Range') {
-      return (
-        <DateRangeInput
-          value={b(p.invertRange) ? { from: '2026-08-28', to: '2026-08-01' } : { from: '2026-08-01', to: '2026-08-28' }}
-          onChange={noop}
-          size={size(p.size)}
-          maxSpanDays={366}
-          disabled={common.disabled}
-          readOnly={common.readOnly}
-        />
-      );
-    }
+    const calendarOptions = {
+      initiallyOpen: b(p.openCalendar),
+      showToday: b(p.showToday),
+      showFooter: b(p.showFooter),
+      showOutsideDates: b(p.showOutsideDates),
+    };
+    if (which === 'Range') return <DateInputCalendarPreview range disabled={common.disabled} months={s(p.calendarMonths, '2') === '1' ? 1 : 2} showPresets={b(p.showPresets)} {...calendarOptions} />;
     if (which === 'Time') {
       return <FormField label="Time" required helpText="This is a hint text to help the user." disabled={common.disabled} readOnly={common.readOnly}><TimeInput value="" onChange={noop} step={900} {...common} /></FormField>;
     }
-    if (which === 'DateTime') {
-      return <FormField label="Date & time" required helpText="This is a hint text to help the user." disabled={common.disabled} readOnly={common.readOnly}><DateTimeInput value="" onChange={noop} helpTooltip="Choose a date and time." {...common} /></FormField>;
-    }
-    return (
-      <FormField label="Date" required helpText="This is a hint text to help the user." disabled={common.disabled} readOnly={common.readOnly}>
-        <DateInput value="" onChange={noop} min="2026-01-01" helpTooltip="Choose a date from the calendar." {...common} />
-      </FormField>
-    );
+    if (which === 'DateTime') return <DateInputCalendarPreview withTime disabled={common.disabled} timeInterval={Number(s(p.timeInterval, '30')) || 30} {...calendarOptions} />;
+    return <DateInputCalendarPreview disabled={common.disabled} {...calendarOptions} />;
   },
   code: p => {
     const which = s(p.which, 'Date');
-    if (which === 'Range') return `<DateRangeInput value={range} onChange={setRange} maxSpanDays={366} />`;
+    if (which === 'Range') return `<DateRangeInput value={range} onChange={setRange} />`;
     if (which === 'Time') return `<FormField label="Time" required>\n  <TimeInput value={time} onChange={setTime} step={900} />\n</FormField>`;
     if (which === 'DateTime') return `<FormField label="Date & time" required>\n  <DateTimeInput value={dateTime} onChange={setDateTime} />\n</FormField>`;
-    return `<FormField label="Date" required>\n  <DateInput value={date} onChange={setDate} min={today} />\n</FormField>`;
+    return `<DateInput value={date} onChange={setDate} min={today} />`;
   },
 };
 
@@ -629,6 +719,7 @@ export const dateInputDef: ComponentDef = {
 
 export const fileInputDef: ComponentDef = {
   id: 'file-input',
+  thumbnail: 'upload',
   name: 'FileInput',
   previewAxis: 'treatment',
   previewSamples: [
@@ -748,6 +839,7 @@ export const fileInputDef: ComponentDef = {
 
 export const themeModeSwitchDef: ComponentDef = {
   id: 'theme-mode-switch',
+  thumbnail: 'theme-switch',
   name: 'Theme Mode Switch',
   category: 'selection',
   description: 'The app appearance control for switching immediately between light and dark mode. Its consumer owns authenticated preference persistence.',
@@ -798,6 +890,7 @@ export const themeModeSwitchDef: ComponentDef = {
 
 export const colorPickerDef: ComponentDef = {
   id: 'color-picker',
+  thumbnail: 'color-picker',
   name: 'ColorPicker',
   category: 'forms',
   description: 'Accessible spectrum, hue, opacity and a user-curated saved-color palette for styling workflows.',
@@ -834,6 +927,7 @@ export const colorPickerDef: ComponentDef = {
 
 export const otpInputDef: ComponentDef = {
   id: 'otp-input',
+  thumbnail: 'otp',
   name: 'OtpInput',
   category: 'forms',
   description: 'Segmented one-time-code entry. Pasting a whole code fills every box, and Backspace on an empty box steps back — the two things that make or break these.',
@@ -842,7 +936,7 @@ export const otpInputDef: ComponentDef = {
   importFrom: '@ui',
 
   props: {
-    length:     { type: 'number', label: 'Length', default: 6, min: 4, max: 8 },
+    length:     { type: 'number', label: 'Length', default: 4, min: 4, max: 8 },
     value:      { type: 'text',   label: 'Value', default: '1234' },
     validation: { type: 'select', label: 'Validation', options: ['none', 'error', 'success'], default: 'none' },
     disabled:   { type: 'boolean', label: 'Disabled', default: false },
@@ -873,13 +967,13 @@ export const otpInputDef: ComponentDef = {
   render: (p, st) => (
     <OtpPreview
       initialValue={s(p.value, '1234')}
-      length={n(p.length, 6)}
+      length={n(p.length, 4)}
       disabled={b(p.disabled) || st === 'disabled'}
       validation={st === 'error' ? 'error' : (s(p.validation, 'none') as never)}
       forceFocus={st === 'focus'}
     />
   ),
-  code: p => `<OtpInput value={code} onChange={setCode} length={${n(p.length, 6)}} onComplete={verify} />`,
+  code: p => `<OtpInput value={code} onChange={setCode} length={${n(p.length, 4)}} onComplete={verify} />`,
 };
 
 /* ── Select ────────────────────────────────────────────────────────────────*/
@@ -913,6 +1007,7 @@ const GROUPED_DEPARTMENTS = [
  */
 export const selectDef: ComponentDef = {
   id: 'select',
+  thumbnail: 'select',
   name: 'Select',
   category: 'selection',
   description: 'Choosing from a list — ONE control, four modes. Single, searchable, async and multiple share one keyboard core, one popup, one option list and one recipe.',
@@ -934,6 +1029,7 @@ export const selectDef: ComponentDef = {
                   help: 'Single = Select · Searchable/Async = Combobox · Multiple = MultiSelect. Same core, different interaction.' },
     grouped:    { type: 'boolean',   label: 'Grouped options', default: true },
     clearable:  { type: 'boolean',   label: 'Clearable', default: true },
+    chevronIcon:{ type: 'icon',      label: 'Chevron icon', default: 'ChevronDown', recommendations: ['ChevronDown', 'ChevronUp', 'ChevronsUpDown'], visibleWhen: { prop: 'mode', in: ['Single', 'Multiple'] } },
     size:       { type: 'segmented', label: 'Size', options: ['sm', 'md', 'lg'], default: 'md' },
     validation: { type: 'select',    label: 'Validation', options: ['none', 'error', 'warning', 'success'], default: 'none' },
     required:   { type: 'boolean',   label: 'Required', default: false },
@@ -1009,7 +1105,7 @@ export const selectDef: ComponentDef = {
     if (mode === 'Multiple') {
       return (
         <FormField label="Departments" required={b(p.required)} helpText="Restricts the report to these departments." disabled={common.disabled} readOnly={common.readOnly}>
-          <MultiSelect values={['ops', 'hse', 'fin', 'hr']} onChange={noop} options={DEPARTMENTS} maxChips={3} {...common} />
+          <MultiSelect values={['ops', 'hse', 'fin', 'hr']} onChange={noop} options={DEPARTMENTS} maxChips={3} chevronIcon={chevronIcon(p.chevronIcon)} {...common} />
         </FormField>
       );
     }
@@ -1031,17 +1127,19 @@ export const selectDef: ComponentDef = {
     }
     return (
       <FormField label="Department" required={b(p.required)} disabled={common.disabled} readOnly={common.readOnly}>
-        <Select value="ops" onChange={noop} options={opts} placeholder="Select a department..." clearable={b(p.clearable)} loading={b(p.loading)} {...common} />
+        <Select value="ops" onChange={noop} options={opts} placeholder="Select a department..." clearable={b(p.clearable)} loading={b(p.loading)} chevronIcon={chevronIcon(p.chevronIcon)} {...common} />
       </FormField>
     );
   },
 
   code: p => {
     const mode = s(p.mode, 'Single');
-    if (mode === 'Multiple') return '<FormField label="Departments">\n  <MultiSelect values={deptIds} onChange={setDeptIds} options={DEPARTMENTS} maxChips={3} />\n</FormField>';
+    const chevron = s(p.chevronIcon, 'ChevronDown');
+    const chevronProp = chevron === 'ChevronDown' ? '' : ` chevronIcon="${chevron}"`;
+    if (mode === 'Multiple') return `<FormField label="Departments">\n  <MultiSelect values={deptIds} onChange={setDeptIds} options={DEPARTMENTS} maxChips={3}${chevronProp} />\n</FormField>`;
     if (mode === 'Async') return '<FormField label="Department">\n  <Combobox value={deptId} onChange={setDeptId} search={q => api.searchDepartments(q)} />\n</FormField>';
     if (mode === 'Searchable') return '<FormField label="Department">\n  <Combobox value={deptId} onChange={setDeptId} options={DEPARTMENTS} />\n</FormField>';
-    return '<FormField label="Department">\n  <Select value={deptId} onChange={setDeptId} options={DEPARTMENTS} clearable />\n</FormField>';
+    return `<FormField label="Department">\n  <Select value={deptId} onChange={setDeptId} options={DEPARTMENTS} clearable${chevronProp} />\n</FormField>`;
   },
 };
 

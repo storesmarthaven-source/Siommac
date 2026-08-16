@@ -21,29 +21,52 @@
 .em-headrow-name { font-size: 1.2rem; font-weight: 600; color: var(--text-primary); line-height: 1.2; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .em-headrow-sub { font-size: 0.78rem; color: var(--text-muted); line-height: 1.3; margin-top: 2px; }
 
+:root,
+[data-ui-preview-scope] {
+  --ui-app-topbar-bg: var(--ui-color-nav-background, var(--siomac-navy));
+  --ui-app-topbar-fg: var(--ui-color-text-inverse, #fff);
+  --ui-app-topbar-muted-fg: rgba(255,255,255,0.68);
+  --ui-app-topbar-radius: 12px;
+  --ui-app-topbar-height: 60px;
+  --ui-app-topbar-search-bg: rgba(255,255,255,0.10);
+  --ui-app-topbar-search-border: rgba(255,255,255,0.14);
+  --ui-app-topbar-search-radius: 10px;
+  --ui-app-topbar-action-bg: rgba(255,255,255,0.12);
+  --ui-app-topbar-action-fg: var(--ui-color-text-inverse, #fff);
+  --ui-app-topbar-profile-bg: transparent;
+  --ui-app-topbar-profile-bg-hover: rgba(255,255,255,0.10);
+  --ui-app-topbar-avatar-ring: #647394;
+  --ui-app-topbar-divider: rgba(255,255,255,0.20);
+  --ui-app-topbar-caret-bg: rgba(255,255,255,0.11);
+  --ui-app-topbar-caret-bg-hover: rgba(255,255,255,0.17);
+  --ui-app-topbar-caret-fg: var(--ui-color-text-inverse, #fff);
+  --ui-app-topbar-caret-width: 42px;
+}
+
 .app-topbar {
   display: flex; flex-direction: column;
-  background: var(--siomac-navy);   /* same token as .sidebar — cannot drift */
+  background: var(--ui-app-topbar-bg);
+  color: var(--ui-app-topbar-fg);
   /* A rounded card within the page padding (not full-bleed / pinned). overflow:hidden
      keeps the flush navy profile pill clipped to the rounded corners. */
-  border-radius: 12px; overflow: hidden;
+  border-radius: var(--ui-app-topbar-radius); overflow: hidden;
   margin: 0 0 16px;
 }
 
 .app-topbar-main {
   display: flex; align-items: stretch; gap: 14px;
-  height: 60px; padding: 0 0 0 18px;
+  height: var(--ui-app-topbar-height); padding: 0 0 0 18px;
 }
 
 /* Page title/subtext — the bar's left edge, replacing the page header's own title. */
 .app-topbar-title { align-self: center; min-width: 0; flex: 0 1 auto; margin-right: 8px; }
 .app-topbar-title-text {
   display: flex; align-items: center; gap: 9px;
-  color: #fff; font-size: 1rem; font-weight: 600; line-height: 1.25;
+  color: var(--ui-app-topbar-fg); font-size: 1rem; font-weight: 600; line-height: 1.25;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .app-topbar-title-icon { font-size: 0.92rem; color: rgba(255,255,255,0.75); flex-shrink: 0; }
-.app-topbar-sub-text { color: rgba(255,255,255,0.68); font-size: 0.74rem; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app-topbar-sub-text { color: var(--ui-app-topbar-muted-fg); font-size: 0.74rem; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Search — styled like the sidebar nav search (translucent white on navy). A flex
    container holding the search trigger, the ⌘K hint, and the AI button on the right.
@@ -51,8 +74,8 @@
 .app-topbar-search {
   align-self: center; display: inline-flex; align-items: center; gap: 8px;
   height: 38px; flex: 1 1 auto; max-width: 760px; min-width: 180px;
-  background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.14); border-radius: 10px;
-  padding: 0 6px 0 14px; color: #fff; font-size: 0.9rem; font-family: inherit;
+  background: var(--ui-app-topbar-search-bg); border: 1px solid var(--ui-app-topbar-search-border); border-radius: var(--ui-app-topbar-search-radius);
+  padding: 0 6px 0 14px; color: var(--ui-app-topbar-fg); font-size: 0.9rem; font-family: inherit;
   transition: background 0.15s, border-color 0.15s;
 }
 .app-topbar-search:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.22); }
@@ -71,31 +94,39 @@
 .app-topbar-pill { display: flex; align-items: stretch; margin-left: auto; }
 .app-topbar .profile-notif-pill {
   border-radius: 0; box-shadow: none; align-self: stretch; height: auto;
-  padding: 0 30px 0 18px; gap: 22px; align-items: center;
+  padding: 0 30px 0 18px; gap: 22px; align-items: center; background: transparent;
 }
 /* Profile pill button — rounded with a light highlight on hover (was flush/square). */
 .app-topbar .pnp-profile {
-  border-radius: 12px; padding: 5px 12px 5px 14px; gap: 13px;
+  border-radius: 12px; padding: 0; gap: 0; overflow: hidden;
   transition: background 0.15s ease;
 }
-.app-topbar .pnp-profile:hover { background: rgba(255,255,255,0.10); }
+.app-topbar .pnp-profile:hover { background: transparent; }
 /* Accent ring around the avatar — a muted slate-blue on a thin navy gap so it floats
    and reads against the navy bar (the old --siomac-blue #1a2c53 ring was ≈ navy, i.e.
    invisible). Ring brightens/thickens on hover. */
 .app-topbar .pnp-avatar {
   width: 34px; height: 34px; font-size: 0.82rem;
-  box-shadow: 0 0 0 2px var(--siomac-navy), 0 0 0 3.5px #647394;
+  box-shadow: 0 0 0 2px var(--ui-app-topbar-bg), 0 0 0 3.5px var(--ui-app-topbar-avatar-ring);
   transition: box-shadow 0.15s ease;
 }
 .app-topbar .pnp-profile:hover .pnp-avatar {
-  box-shadow: 0 0 0 2px var(--siomac-navy), 0 0 0 4px #7d8cad, 0 0 10px rgba(100, 115, 148, 0.40);
+  box-shadow: 0 0 0 2px var(--ui-app-topbar-bg), 0 0 0 4px var(--ui-app-topbar-avatar-ring), 0 0 10px rgba(100, 115, 148, 0.40);
 }
+.app-topbar-main--search-only { padding-right: 18px; }
+.app-topbar-main--search-only .app-topbar-search { width: 100%; max-width: none; }
+.app-topbar-main--actions-only { justify-content: flex-end; padding-right: 18px; }
+.app-topbar-main--account-only { justify-content: center; padding-inline: 18px; }
+.app-topbar-main--full { padding-right: 0; }
+.app-topbar-main--full .app-topbar-search { margin-right: 4px; }
 /* Fixed-width identity column so the pill (and therefore its dropdown) is a
    constant width regardless of name length — long names ellipsize instead of
    widening the pill. */
 .app-topbar .pnp-info { width: 132px; min-width: 132px; overflow: hidden; }
 .app-topbar .pnp-name { font-size: 0.78rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .app-topbar .pnp-role { font-size: 0.62rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.app-topbar .pnp-name { color: var(--ui-app-topbar-fg); }
+.app-topbar .pnp-role { color: var(--ui-app-topbar-muted-fg); }
 /* Chevron sectioned into its own right region — a divider + subtle background that
    fills the full pill height (negative margins cancel the button padding to reach the
    rounded right edge). */
@@ -104,19 +135,20 @@
   display: inline-flex; align-items: center; justify-content: center;
   margin: -5px -12px -5px 4px; padding: 0 13px;
   border-left: 1px solid rgba(255,255,255,0.14);
-  background: rgba(255,255,255,0.11);
+  background: var(--ui-app-topbar-caret-bg);
   border-radius: 0 12px 12px 0;
   transition: background 0.15s ease;
 }
 .app-topbar .pnp-profile:hover .pnp-caret-box { background: rgba(255,255,255,0.17); }
-.app-topbar .pnp-caret { font-size: 0.66rem; opacity: 0.9; margin: 0; color: #fff; }
+.app-topbar .pnp-caret { width: 14px; height: 14px; opacity: 0.9; margin: 0; color: var(--ui-app-topbar-caret-fg); stroke-width: 2; }
 /* When the menu is open, square the pill's BOTTOM corners + keep the highlight so it
    merges flush into the square-topped menu (no navy notches between them). */
-.app-topbar .pnp-profile[aria-expanded="true"] { border-radius: 12px 12px 0 0; background: rgba(255,255,255,0.10); }
+.app-topbar .pnp-profile[aria-expanded="true"] { border-radius: 12px 12px 0 0; background: var(--ui-app-topbar-profile-bg-hover); }
 .app-topbar .pnp-profile[aria-expanded="true"] .pnp-caret-box { border-radius: 0 12px 0 0; background: rgba(255,255,255,0.17); }
-.app-topbar .pnp-divider { height: 32px; margin: 0; }
+.app-topbar .pnp-divider { height: 32px; margin: 0; background: var(--ui-app-topbar-divider); }
 .app-topbar .pnp-icons { gap: 10px; padding-right: 0; }
-.app-topbar .pnp-icon-btn { width: 39px; height: 39px; font-size: 1.2rem; }
+.app-topbar .pnp-icon-btn { width: 39px; height: 39px; font-size: 1.2rem; background: var(--ui-app-topbar-action-bg); color: var(--ui-app-topbar-action-fg); }
+.app-topbar .pnp-icon-btn > svg { width: 18px; height: 18px; stroke-width: 1.8; }
 .app-topbar .pnp-badge { min-width: 16px; height: 16px; font-size: 0.55rem; padding: 0 4px; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -146,17 +178,128 @@ body:not([data-theme="dark"]) .app-topbar .pnp-icon-btn:hover { background: rgba
 /* Profile pill + identity */
 body:not([data-theme="dark"]) .app-topbar .pnp-name { color: #1f2a44; }
 body:not([data-theme="dark"]) .app-topbar .pnp-role { color: #5e6f8d; }
-body:not([data-theme="dark"]) .app-topbar .pnp-profile { background: rgba(27,45,84,.06); }
-body:not([data-theme="dark"]) .app-topbar .pnp-profile:hover { background: rgba(27,45,84,.10); }
+body:not([data-theme="dark"]) .app-topbar .pnp-profile { background: var(--ui-app-topbar-profile-bg); }
+body:not([data-theme="dark"]) .app-topbar .pnp-profile:hover { background: var(--ui-app-topbar-profile-bg-hover); }
 body:not([data-theme="dark"]) .app-topbar .pnp-avatar { box-shadow: 0 0 0 2px #DEE3EC, 0 0 0 3.5px #b9c4d6; }
 body:not([data-theme="dark"]) .app-topbar .pnp-profile:hover .pnp-avatar { box-shadow: 0 0 0 2px #DEE3EC, 0 0 0 4px #93a2bd; }
 body:not([data-theme="dark"]) .app-topbar .pnp-caret { color: #fff; }
 body:not([data-theme="dark"]) .app-topbar .pnp-caret-box { border-left-color: rgba(255,255,255,.14); background: rgb(55 68 104); }
-body:not([data-theme="dark"]) .app-topbar .pnp-profile:hover .pnp-caret-box { background: rgb(70 84 124); }
-body:not([data-theme="dark"]) .app-topbar .pnp-profile[aria-expanded="true"] { background: rgba(27,45,84,.06); }
-body:not([data-theme="dark"]) .app-topbar .pnp-profile[aria-expanded="true"] .pnp-caret-box { background: rgb(70 84 124); }
+body:not([data-theme="dark"]) .app-topbar .pnp-profile:hover .pnp-caret-box { background: var(--ui-app-topbar-caret-bg-hover); }
+body:not([data-theme="dark"]) .app-topbar .pnp-profile[aria-expanded="true"] { background: var(--ui-app-topbar-profile-bg-hover); }
+body:not([data-theme="dark"]) .app-topbar .pnp-profile[aria-expanded="true"] .pnp-caret-box { background: var(--ui-app-topbar-caret-bg-hover); }
 /* Footer band under the main row */
 body:not([data-theme="dark"]) .app-topbar-footer { background: rgba(27,45,84,.035); border-top-color: #d7dfea; }
+}
+
+/* Explicit light surface for Studio plus automatic production theming. The
+   class-scoped contract prevents a light preview from recolouring Studio chrome. */
+.app-topbar--light,
+body:not([data-theme="dark"]) .app-topbar--auto {
+  --ui-app-topbar-bg: #f4f6f8;
+  --ui-app-topbar-fg: #1f2a44;
+  --ui-app-topbar-muted-fg: #667085;
+  --ui-app-topbar-search-bg: #fff;
+  --ui-app-topbar-search-border: #d7dfea;
+  --ui-app-topbar-action-bg: rgba(27,45,84,.07);
+  --ui-app-topbar-action-fg: #33456b;
+  --ui-app-topbar-profile-bg: rgba(27,45,84,.055);
+  --ui-app-topbar-profile-bg-hover: rgba(27,45,84,.10);
+  --ui-app-topbar-avatar-ring: #aeb9ca;
+  --ui-app-topbar-divider: rgba(27,45,84,.14);
+  --ui-app-topbar-caret-bg: #344467;
+  --ui-app-topbar-caret-bg-hover: #46557a;
+  --ui-app-topbar-caret-fg: #fff;
+  border: 1px solid #d8dee7;
+  box-shadow: 0 1px 2px rgba(20,35,60,.06);
+}
+.app-topbar--light .app-topbar-search:hover,
+body:not([data-theme="dark"]) .app-topbar--auto .app-topbar-search:hover {
+  background: #fff;
+  border-color: #bfc9d7;
+}
+.app-topbar--light .app-topbar-kbd,
+body:not([data-theme="dark"]) .app-topbar--auto .app-topbar-kbd {
+  color: #5e6f8d;
+  border-color: #dbe2ec;
+  background: #eef2f6;
+}
+.app-topbar--light .pnp-icon-btn:hover,
+body:not([data-theme="dark"]) .app-topbar--auto .pnp-icon-btn:hover {
+  background: rgba(27,45,84,.12);
+}
+
+/* Light-mode combinations share one brand input. `theme` follows the semantic
+   primary token populated by Theme Generator; Blue and Green are Studio-only
+   direction samples. Surface, action and chevron treatments are independent. */
+.app-topbar--brand-theme { --ui-app-topbar-brand: var(--ui-color-primary, #1b2d54); }
+.app-topbar--brand-blue { --ui-app-topbar-brand: #2f5faa; }
+.app-topbar--brand-green { --ui-app-topbar-brand: #506b39; }
+
+.app-topbar--light.app-topbar--surface-white,
+body:not([data-theme="dark"]) .app-topbar--auto.app-topbar--surface-white { --ui-app-topbar-bg: #fff; }
+.app-topbar--light.app-topbar--surface-neutral,
+body:not([data-theme="dark"]) .app-topbar--auto.app-topbar--surface-neutral { --ui-app-topbar-bg: #f8f9fb; }
+.app-topbar--light.app-topbar--surface-brand-tint,
+body:not([data-theme="dark"]) .app-topbar--auto.app-topbar--surface-brand-tint {
+  --ui-app-topbar-bg: color-mix(in srgb, var(--ui-app-topbar-brand) 7%, #fff);
+  --ui-app-topbar-profile-bg: color-mix(in srgb, var(--ui-app-topbar-brand) 9%, #fff);
+  --ui-app-topbar-profile-bg-hover: color-mix(in srgb, var(--ui-app-topbar-brand) 15%, #fff);
+}
+
+.app-topbar--light.app-topbar--actions-outline,
+body:not([data-theme="dark"]) .app-topbar--auto.app-topbar--actions-outline {
+  --ui-app-topbar-action-bg: transparent;
+  --ui-app-topbar-action-fg: var(--ui-app-topbar-brand);
+}
+.app-topbar--light.app-topbar--actions-outline .pnp-icon-btn,
+body:not([data-theme="dark"]) .app-topbar--auto.app-topbar--actions-outline .pnp-icon-btn {
+  border: 1px solid color-mix(in srgb, var(--ui-app-topbar-brand) 28%, #d8dee7);
+}
+.app-topbar--light.app-topbar--actions-outline .pnp-icon-btn:hover,
+body:not([data-theme="dark"]) .app-topbar--auto.app-topbar--actions-outline .pnp-icon-btn:hover {
+  background: color-mix(in srgb, var(--ui-app-topbar-brand) 9%, #fff);
+}
+.app-topbar--light.app-topbar--actions-ghost,
+body:not([data-theme="dark"]) .app-topbar--auto.app-topbar--actions-ghost {
+  --ui-app-topbar-action-bg: transparent;
+  --ui-app-topbar-action-fg: var(--ui-app-topbar-brand);
+}
+.app-topbar--light.app-topbar--actions-ghost .pnp-icon-btn:hover,
+body:not([data-theme="dark"]) .app-topbar--auto.app-topbar--actions-ghost .pnp-icon-btn:hover {
+  background: color-mix(in srgb, var(--ui-app-topbar-brand) 8%, #fff);
+}
+.app-topbar--light.app-topbar--actions-soft,
+body:not([data-theme="dark"]) .app-topbar--auto.app-topbar--actions-soft {
+  --ui-app-topbar-action-bg: color-mix(in srgb, var(--ui-app-topbar-brand) 12%, #fff);
+  --ui-app-topbar-action-fg: var(--ui-app-topbar-brand);
+}
+.app-topbar--light.app-topbar--actions-soft .pnp-icon-btn:hover,
+body:not([data-theme="dark"]) .app-topbar--auto.app-topbar--actions-soft .pnp-icon-btn:hover {
+  background: color-mix(in srgb, var(--ui-app-topbar-brand) 20%, #fff);
+}
+
+.app-topbar--light.app-topbar--chevron-solid,
+body:not([data-theme="dark"]) .app-topbar--auto.app-topbar--chevron-solid {
+  --ui-app-topbar-caret-bg: var(--ui-app-topbar-brand);
+  --ui-app-topbar-caret-bg-hover: color-mix(in srgb, var(--ui-app-topbar-brand) 82%, #000);
+  --ui-app-topbar-caret-fg: #fff;
+}
+.app-topbar--light.app-topbar--chevron-outline,
+body:not([data-theme="dark"]) .app-topbar--auto.app-topbar--chevron-outline {
+  --ui-app-topbar-caret-bg: transparent;
+  --ui-app-topbar-caret-bg-hover: color-mix(in srgb, var(--ui-app-topbar-brand) 9%, #fff);
+  --ui-app-topbar-caret-fg: var(--ui-app-topbar-brand);
+}
+.app-topbar--light.app-topbar--chevron-outline .pnp-profile-menu-trigger,
+body:not([data-theme="dark"]) .app-topbar--auto.app-topbar--chevron-outline .pnp-profile-menu-trigger {
+  border: 1px solid color-mix(in srgb, var(--ui-app-topbar-brand) 38%, #d8dee7);
+  border-left-color: var(--ui-app-topbar-divider);
+}
+.app-topbar--light.app-topbar--chevron-soft,
+body:not([data-theme="dark"]) .app-topbar--auto.app-topbar--chevron-soft {
+  --ui-app-topbar-caret-bg: color-mix(in srgb, var(--ui-app-topbar-brand) 12%, #fff);
+  --ui-app-topbar-caret-bg-hover: color-mix(in srgb, var(--ui-app-topbar-brand) 20%, #fff);
+  --ui-app-topbar-caret-fg: var(--ui-app-topbar-brand);
 }
 /* Footer strip — breadcrumb (left) + meta chips (right), sits on a subtly darker
    band beneath the main row. */

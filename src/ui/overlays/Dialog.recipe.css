@@ -24,25 +24,37 @@
 
     --ui-dialog-radius: var(--radius-md);
     --ui-dialog-bg: var(--ui-color-surface-raised);
+    --ui-dialog-border-width: 1px;
+    --ui-dialog-border-color: color-mix(in srgb, var(--siomac-navy) 20%, white);
     --ui-dialog-shadow: var(--elev-5);
     --ui-dialog-backdrop: rgba(16, 29, 59, .42);
     --ui-dialog-backdrop-blur: 2px;
 
     --ui-dialog-head-pad: 18px 22px;
+    --ui-dialog-head-bg: var(--siomac-navy);
+    --ui-dialog-head-title: #fff;
+    --ui-dialog-head-sub: rgba(255, 255, 255, .72);
+    --ui-dialog-head-separator: color-mix(in srgb, var(--siomac-navy) 22%, white);
+    --ui-dialog-head-separator-width: 1px;
     --ui-dialog-body-pad: 20px 22px 22px;
     --ui-dialog-foot-pad: 14px 22px;
     --ui-dialog-foot-min-height: 64px;
+    --ui-dialog-foot-bg-start: #fff;
+    --ui-dialog-foot-bg: #f7f7f8;
     --ui-dialog-gap: 10px;
     --ui-dialog-column-gap: 0px;
     --ui-dialog-sidebar-width: 220px;
     --ui-dialog-sidebar-pad: 20px;
-    --ui-dialog-sidebar-bg: var(--bg-subtle);
+    --ui-dialog-sidebar-bg: color-mix(in srgb, var(--siomac-navy) 4%, white);
 
     --ui-dialog-accent-height: 0px;
     --ui-dialog-accent-color: var(--ui-color-selection-border);
 
-    --ui-dialog-icon-bg: var(--ui-color-selection-background);
-    --ui-dialog-icon-fg: var(--ui-color-selection-border);
+    --ui-dialog-icon-bg: rgba(255, 255, 255, .12);
+    --ui-dialog-icon-fg: #fff;
+    --ui-dialog-icon-border: rgba(255, 255, 255, .22);
+    --ui-dialog-close-fg: rgba(255, 255, 255, .78);
+    --ui-dialog-close-hover-bg: rgba(255, 255, 255, .1);
   }
 
   .ui-dialog-backdrop {
@@ -72,6 +84,7 @@
        unreachable Save button. */
     max-height: calc(100vh - var(--space-10));
     overflow: hidden;
+    border: var(--ui-dialog-border-width) solid var(--ui-dialog-border-color);
     border-radius: var(--ui-dialog-radius);
     background: var(--ui-dialog-bg);
     box-shadow: var(--ui-dialog-shadow);
@@ -91,6 +104,7 @@
     width: 100%;
     height: 100%;
     max-height: 100%;
+    border: 0;
     border-radius: 0;
   }
   .ui-dialog--layout-wide:not(.ui-dialog--fullscreen) { width: var(--ui-dialog-width-xl); }
@@ -117,6 +131,8 @@
     gap: 13px;
     flex-shrink: 0;
     padding: var(--ui-dialog-head-pad);
+    border-bottom: var(--ui-dialog-head-separator-width) solid var(--ui-dialog-head-separator);
+    background: var(--ui-dialog-head-bg);
   }
   .ui-dialog-icon {
     flex-shrink: 0;
@@ -126,15 +142,21 @@
     height: 40px;
     border-radius: 12px;
     background: var(--ui-dialog-icon-bg);
-    box-shadow: inset 0 0 0 1px var(--ui-color-selection-background);
+    box-shadow: inset 0 0 0 1px var(--ui-dialog-icon-border);
     color: var(--ui-dialog-icon-fg);
   }
   .ui-dialog-icon > svg { width: var(--ui-icon-lg); height: var(--ui-icon-lg); }
+  .ui-dialog-icon--circle { border-radius: 50%; }
+  .ui-dialog-icon--plain {
+    width: 28px;
+    background: transparent;
+    box-shadow: none;
+  }
 
   .ui-dialog-titles { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; }
   .ui-dialog-title {
     margin: 0;
-    color: var(--siomac-navy);
+    color: var(--ui-dialog-head-title);
     font-size: var(--ui-font-size-title);
     font-weight: var(--font-weight-semibold);
     line-height: var(--ui-line-height-tight);
@@ -142,7 +164,7 @@
   }
   .ui-dialog-sub {
     margin: 0;
-    color: var(--text-muted);
+    color: var(--ui-dialog-head-sub);
     font-size: var(--ui-font-size-body-sm);
     line-height: 1.45;
   }
@@ -154,17 +176,26 @@
     width: 32px;
     height: 32px;
     padding: 0;
-    border: 1px solid transparent;
+    border: 1px solid rgba(255, 255, 255, .22);
     border-radius: 9px;
-    background: transparent;
-    color: var(--text-muted);
+    background: var(--ui-dialog-close-hover-bg);
+    color: var(--ui-dialog-close-fg);
     cursor: pointer;
-    transition: color var(--ui-motion-fast), background-color var(--ui-motion-fast);
+    box-shadow: 0 2px 8px rgba(8, 18, 40, .18);
+    transition: color var(--ui-motion-fast), background-color var(--ui-motion-fast), border-color var(--ui-motion-fast), box-shadow var(--ui-motion-fast);
   }
-  .ui-dialog-close:hover { color: var(--ui-color-action-secondary); background: var(--ui-color-selection-background); }
+  .ui-dialog-close:hover {
+    border-color: rgba(255, 255, 255, .34);
+    background: rgba(255, 255, 255, .16);
+    box-shadow: 0 3px 10px rgba(8, 18, 40, .24);
+    color: #fff;
+  }
   .ui-dialog-close:focus-visible {
-    outline: var(--ui-focus-outline-width) solid var(--ui-focus-outline-color);
-    outline-offset: 1px;
+    border-color: rgba(255, 255, 255, .28);
+    outline: 2px solid rgba(255, 255, 255, .45);
+    outline-offset: 2px;
+    background: var(--ui-dialog-close-hover-bg);
+    color: #fff;
   }
   .ui-dialog-close > svg { width: var(--ui-icon-md); height: var(--ui-icon-md); }
 
@@ -224,7 +255,7 @@
     flex-shrink: 0;
     min-height: var(--ui-dialog-foot-min-height);
     padding: var(--ui-dialog-foot-pad);
-    background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-subtle) 100%);
+    background: linear-gradient(180deg, var(--ui-dialog-foot-bg-start) 0%, var(--ui-dialog-foot-bg) 100%);
     border-top: var(--ui-border-width) solid var(--border);
   }
   /* A left-aligned slot (Back, secondary info) pushes the rest right. */

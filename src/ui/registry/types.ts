@@ -38,13 +38,28 @@ import { type UiState } from '../tokens';
  * component's own default so the initial preview and the initial code example
  * agree with what a developer gets by writing the component with no props.
  */
-export type PropControl =
+export type PropCondition =
+  | { prop: string; equals: string | number | boolean }
+  | { prop: string; in: readonly (string | number | boolean)[] }
+  | { stateIn: readonly UiState[] }
+  | { all: readonly PropCondition[] }
+  | { any: readonly PropCondition[] };
+
+export interface PropControlMeta {
+  /** Declarative inspector visibility. The shared engine is the only evaluator. */
+  visibleWhen?: PropCondition;
+}
+
+export type PropControl = (
   | { type: 'select';    label: string; options: readonly string[]; default: string; help?: string }
   | { type: 'segmented'; label: string; options: readonly string[]; default: string; help?: string }
   | { type: 'boolean';   label: string; default: boolean; help?: string }
   | { type: 'text';      label: string; default: string; placeholder?: string; help?: string }
   | { type: 'number';    label: string; default: number; min?: number; max?: number; step?: number; help?: string }
-  | { type: 'icon';      label: string; default: string; recommendations?: readonly string[]; help?: string };
+  | { type: 'color';     label: string; default: string; help?: string }
+  | { type: 'icon';      label: string; default: string; recommendations?: readonly string[]; allowNone?: boolean; help?: string }
+  | { type: 'country';   label: string; default: string; help?: string }
+) & PropControlMeta;
 
 export type PropValues = Record<string, string | number | boolean>;
 
@@ -123,6 +138,12 @@ export interface VariantSample {
   title: string;
   description?: string;
   props: PropValues;
+  /** Optional compact icon used when a large axis is rendered as a picker. */
+  icon?: string;
+  /** Extra preview-only props for the comparison card; never published. */
+  comparisonProps?: PropValues;
+  /** Registry-selected diagram when a full canonical specimen would be unreadable. */
+  diagram?: 'modal-layout' | 'topbar-layout' | 'empty-state-visual' | 'progress-steps-layout' | 'tabs-variant';
 }
 
 /* ── Migration ─────────────────────────────────────────────────────────────── */
@@ -169,9 +190,18 @@ export type ComponentCategory =
  */
 export type ComponentStatus = 'stable' | 'beta' | 'deprecated' | 'missing';
 
+/** Theme-aware catalogue scene selected by the component definition itself. */
+export type ThumbnailKind =
+  | 'buttons' | 'button-group' | 'segmented' | 'menu' | 'field' | 'date' | 'calendar' | 'select' | 'upload' | 'otp'
+  | 'check' | 'radio' | 'switch' | 'switch-family' | 'theme-switch' | 'avatar' | 'people' | 'person-select' | 'dialog' | 'popover' | 'drawer' | 'employee-drawer' | 'tooltip'
+  | 'table' | 'badge' | 'tabs' | 'wizard' | 'progress-steps' | 'header' | 'alert' | 'progress' | 'activity-gauge' | 'illustration' | 'qr-code' | 'file-icon' | 'flag-icons'
+  | 'spinner' | 'skeleton' | 'toast' | 'sweet-alert' | 'empty-state' | 'card' | 'accordion' | 'breadcrumbs' | 'app-top-bar' | 'user-pill' | 'color-picker' | 'tree' | 'planned';
+
 export interface ComponentDef {
   /** Stable id — also the recipe variable prefix (`button` → `--ui-button-*`). */
   id: string;
+  /** Catalogue artwork contract. The renderer never infers this from `id`. */
+  thumbnail: ThumbnailKind;
   name: string;
   category: ComponentCategory;
   /** One sentence: what it is FOR. Shown under the canvas title. */
@@ -203,6 +233,13 @@ export interface ComponentDef {
   /** Samples for the governed preview axis, regardless of the prop's name. */
   previewSamples?: readonly VariantSample[];
   variantSamples?: readonly VariantSample[];
+  /**
+   * How preview-axis specimens should be compared in Studio.
+   * `compact` is the default three-card grid for small controls. `wide` gives
+   * compound controls a full-width row so Studio never scales the real UI down.
+   * `diagram` is reserved for definitions with a purpose-built visual summary.
+   */
+  previewLayout?: 'compact' | 'wide' | 'diagram';
   migration?: MigrationInfo;
 
   /**

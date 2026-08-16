@@ -1,0 +1,39 @@
+@layer recipes {
+  :root,
+  [data-ui-preview-scope] {
+    --ui-illustration-accent: var(--ui-color-action-primary);
+    --ui-illustration-accent-fg: var(--ui-color-text-inverse);
+    --ui-illustration-line: var(--ui-color-border-default);
+    --ui-illustration-halo: var(--ui-color-surface-subtle);
+    --ui-illustration-surface-top: var(--ui-color-surface-default);
+    --ui-illustration-surface-bottom: var(--ui-color-surface-subtle);
+    --ui-illustration-size: 280px;
+  }
+  .ui-illustration { position: relative; width: min(var(--ui-illustration-size), 100%); aspect-ratio: 280 / 190; display: grid; place-items: center; color: var(--ui-illustration-accent); }
+  .ui-illustration--generated { aspect-ratio: 1.12; }
+  .ui-illustration__asset { width: 100%; height: 100%; display: block; object-fit: contain; user-select: none; }
+  .ui-illustration > svg { width: 100%; height: 100%; overflow: visible; }
+  .ui-illustration__halo { fill: var(--ui-illustration-halo); opacity: .72; }
+  .ui-illustration__dot { fill: var(--ui-illustration-halo); }.ui-illustration__dot.d2 { opacity: .72; }.ui-illustration__dot.d3 { opacity: .9; }.ui-illustration__dot.d4 { opacity: .56; }
+  .ui-illustration__floor { fill: color-mix(in srgb, var(--ui-illustration-line) 16%, transparent); filter: blur(4px); }
+  .ui-illustration__object-back { stroke: color-mix(in srgb, var(--ui-illustration-line) 72%, transparent); stroke-width: 1.5; opacity: .48; transform: translate(5px, 3px); }
+  .ui-illustration__object { stroke: var(--ui-illustration-line); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .ui-illustration__highlight { fill: none; stroke: color-mix(in srgb, var(--ui-color-surface-default) 82%, transparent); stroke-width: 3; stroke-linecap: round; opacity: .9; }
+  .ui-illustration--success .ui-illustration__object { fill: none; stroke: var(--ui-color-success); stroke-width: 5; }
+  .ui-illustration--error .ui-illustration__object { stroke: var(--ui-color-danger); }
+  .ui-illustration__badge { position: absolute; left: 50%; top: 61%; width: 54px; height: 54px; display: grid; place-items: center; border: 5px solid color-mix(in srgb, var(--ui-illustration-accent) 20%, transparent); border-radius: 50%; background: var(--ui-illustration-accent); color: var(--ui-illustration-accent-fg); transform: translate(-50%, -50%); box-shadow: var(--elev-2); }
+  .ui-illustration__badge > svg { width: 24px; height: 24px; }
+  .ui-illustration--minimal .ui-illustration__halo,
+  .ui-illustration--minimal .ui-illustration__dot,
+  .ui-illustration--minimal .ui-illustration__floor,
+  .ui-illustration--minimal .ui-illustration__object-back,
+  .ui-illustration--minimal .ui-illustration__highlight { opacity: 0; }
+  .ui-illustration--minimal .ui-illustration__object { fill: none; stroke-width: 2.5; }
+  .ui-illustration--minimal .ui-illustration__badge { border-width: 3px; box-shadow: none; }
+  .ui-illustration--soft .ui-illustration__object { filter: drop-shadow(0 7px 7px color-mix(in srgb, var(--ui-illustration-line) 18%, transparent)); }
+  .ui-illustration--contrast .ui-illustration__halo { fill: color-mix(in srgb, var(--ui-illustration-accent) 12%, var(--ui-illustration-halo)); opacity: 1; }
+  .ui-illustration--contrast .ui-illustration__object { stroke: color-mix(in srgb, var(--ui-illustration-accent) 54%, var(--ui-illustration-line)); }
+  .ui-illustration--contrast .ui-illustration__badge { box-shadow: 0 8px 22px color-mix(in srgb, var(--ui-illustration-accent) 28%, transparent); }
+  .ui-illustration--success { --ui-illustration-accent: var(--ui-color-success); }
+  .ui-illustration--error { --ui-illustration-accent: var(--ui-color-danger); }
+}

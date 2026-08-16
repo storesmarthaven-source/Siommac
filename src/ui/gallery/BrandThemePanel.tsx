@@ -44,9 +44,10 @@ import {
 import { evaluatePairings, publishBlocked, type PairingResult } from '../theme/brand/contrast';
 import { SEMANTIC_GROUPS, semanticRolesIn } from '../theme/semanticTokens';
 import './brandTheme.css';
+import './professionalTheme.css';
 
 /** Seeds used when nothing has been extracted yet — the current SIOMAC brand. */
-const DEFAULT_SEEDS: BrandSeeds = { primary: '#E40C0C', accent: '#1b2d54' };
+const DEFAULT_SEEDS: BrandSeeds = { primary: '#1b2d54', accent: '#E40C0C' };
 /** Roles the engine may emit; anything else it writes is a policy bug. */
 
 
@@ -148,8 +149,12 @@ export function BrandThemePanel({ draft, logoUrl, onUploadLogo }: BrandThemePane
     }
   }, [pendingFile, onUploadLogo]);
 
-  const reset = useCallback(() => {
-    brandTokenNames().forEach(n => draft.revert(n));
+  const restoreDefaults = useCallback(() => {
+    /* `revert` means "use the published value", which may itself be a
+       logo-generated brand. An empty owned-group replacement instead records
+       those published overrides for removal, allowing the built-in SIOMAC
+       declarations to show through in preview and in the next saved revision. */
+    draft.replaceGroup(brandTokenNames(), {});
     seedsRef.current = DEFAULT_SEEDS;
     setSeeds(DEFAULT_SEEDS);
     setCandidates([]);
@@ -173,8 +178,50 @@ export function BrandThemePanel({ draft, logoUrl, onUploadLogo }: BrandThemePane
     // eslint-disable-next-line react-hooks/exhaustive-deps -- stable ids represent the blocker set
   }, [blockedIds, draft.setPublishBlockers]);
 
+  const professionalGenerator = (
+    <ProfessionalThemeGenerator
+      draft={draft}
+      previewLogo={previewLogo}
+      pendingFile={pendingFile}
+      busy={busy}
+      error={error}
+      candidates={candidates}
+      seeds={seeds}
+      built={built}
+      results={results}
+      blocked={blocked}
+      accentIsDistinct={accentIsDistinct}
+      canSaveLogo={Boolean(onUploadLogo)}
+      onFile={onFile}
+      onExtract={extractFrom}
+      onSaveLogo={saveLogo}
+      onApply={apply}
+      onRestore={restoreDefaults}
+    />
+  );
+
+  if (draft.read('--ui-studio-brand-editor') !== 'legacy') return professionalGenerator;
+
+  /* Previous implementation retained temporarily below while the new workspace
+     is verified against every persisted workflow. It is unreachable. */
   return (
     <div class="ui-brand">
+      <header class="ui-brand-hero">
+        <div class="ui-brand-hero__identity">
+          <div class="ui-brand-hero__logo" aria-hidden="true">
+            {previewLogo ? <img src={previewLogo} alt="" /> : <LucideIcon name="Palette" size={22} />}
+          </div>
+          <div>
+            <span class="ui-brand-hero__eyebrow">SIOMAC company theme</span>
+            <h1>Build your company theme</h1>
+            <p>Upload a logo or choose your colours. The generator turns them into an accessible theme for the whole app.</p>
+          </div>
+        </div>
+        <div class="ui-brand-hero__meta">
+          <strong>{pendingFile ? 'Logo ready to save' : previewLogo ? 'Logo connected' : 'Using SIOMAC defaults'}</strong>
+          <span>{draft.dirtyCount > 0 ? `${draft.dirtyCount} unpublished ${draft.dirtyCount === 1 ? 'change' : 'changes'}` : 'No unpublished changes'}</span>
+        </div>
+      </header>
       <p class="ui-brand-intro">
         Generates the semantic colour roles from your logo. Operational colours —
         success, warning, danger, info — are never derived from a brand: a
@@ -188,9 +235,27 @@ export function BrandThemePanel({ draft, logoUrl, onUploadLogo }: BrandThemePane
         </div>
       )}
 
+      <section class="ui-brand-stepper" aria-label="Theme generator steps">
+        <span class="is-active"><b>1</b> Choose colours</span>
+        <span><b>2</b> Check the result</span>
+        <span><b>3</b> Save or publish</span>
+      </section>
+
+      <div class="ui-brand-builder">
+      <section class="ui-brand-role-board" aria-labelledby="theme-roles-heading">
+        <div class="ui-brand-role-board__head">
+          <div>
+            <span class="ui-brand-hero__eyebrow">Theme roles</span>
+            <h2 id="theme-roles-heading">Where your colours will appear</h2>
+          </div>
+          <p>These are the key roles the generator updates. Status colours remain independent so their meaning stays clear.</p>
+        </div>
+        <ThemeRoleBoard tokens={built.tokens} />
+      </section>
+
       <div class="ui-brand-grid">
         <Card variant="panel">
-          <CardHeader title="Logo" description="Colours are read from this image. Nothing is uploaded until you save it." />
+          <CardHeader title="Your logo" description="We use it to suggest a starting palette. It is not changed until you save." />
           <div class="ui-brand-logo-row">
             <div class="ui-brand-logo-frame">
               {previewLogo
@@ -237,7 +302,7 @@ export function BrandThemePanel({ draft, logoUrl, onUploadLogo }: BrandThemePane
         </Card>
 
         <Card variant="panel">
-          <CardHeader title="Extracted colours" description="Ranked by how much identity each carries, not by how much of the image it covers." />
+          <CardHeader title="Colours from your logo" description="Pick one as your main colour, then optionally choose a supporting colour." />
           {candidates.length === 0
             ? <p class="ui-brand-note">Upload a logo to extract its palette. Until then the seeds below are editable directly.</p>
             : (
@@ -259,14 +324,14 @@ export function BrandThemePanel({ draft, logoUrl, onUploadLogo }: BrandThemePane
 
       <div class="ui-brand-grid">
         <SeedCard
-          label="Primary"
-          hint="Primary actions, links, focus, selection and the active-navigation indicator."
+          label="Main colour"
+          hint="Used for primary buttons, links, focus and the active page."
           value={seeds.primary}
           onChange={v => apply({ primary: v })}
         />
         <Card variant="panel">
           <CardHeader
-            title="Accent seed"
+            title="Supporting colour"
             description="Optional. Only set this when the logo genuinely has a second colour — a darker copy of the primary is not an accent."
           />
           {seeds.accent === undefined
@@ -310,6 +375,14 @@ export function BrandThemePanel({ draft, logoUrl, onUploadLogo }: BrandThemePane
         </Card>
       </div>
 
+      </div>
+
+      <details class="ui-brand-advanced">
+        <summary>
+          <span>Advanced theme details</span>
+          <small>Scales, role mapping and accessibility</small>
+        </summary>
+        <div class="ui-brand-advanced__body">
       <Card variant="panel">
         <CardHeader
           title="Generated scales"
@@ -363,13 +436,24 @@ export function BrandThemePanel({ draft, logoUrl, onUploadLogo }: BrandThemePane
         )}
       </Card>
 
-      <Card variant="panel">
-        <CardHeader title="Live preview" description="Real canonical components, reading the drafted roles." />
-        <LivePreview />
-      </Card>
+        </div>
+      </details>
+
+      <section class="ui-brand-result" aria-labelledby="theme-preview-heading">
+        <div class="ui-brand-result__bar">
+          <div>
+            <span class="ui-brand-hero__eyebrow">Live application preview</span>
+            <h2 id="theme-preview-heading">See the theme in context</h2>
+          </div>
+          <span class="ui-brand-result__status"><i /> Draft preview</span>
+        </div>
+        <div class="ui-brand-result__canvas">
+          <LivePreview />
+        </div>
+      </section>
 
       <div class="ui-brand-actions">
-        <Button variant="outline" onClick={reset} iconLeft={<LucideIcon name="RotateCcw" />}>Reset</Button>
+        <Button variant="outline" onClick={restoreDefaults} iconLeft={<LucideIcon name="RotateCcw" />}>Restore SIOMAC defaults</Button>
         <Button variant="outline" onClick={() => apply({})} iconLeft={<LucideIcon name="RefreshCw" />}>Regenerate</Button>
         <div class="ui-brand-actions-spacer" />
         {blocked.length > 0 && (
@@ -386,13 +470,105 @@ export function BrandThemePanel({ draft, logoUrl, onUploadLogo }: BrandThemePane
 
 /* ── Pieces ────────────────────────────────────────────────────────────────*/
 
+interface ProfessionalThemeGeneratorProps {
+  draft: GalleryDraft;
+  previewLogo: string | null;
+  pendingFile: { name: string; dataUrl: string } | null;
+  busy: 'extracting' | 'uploading' | null;
+  error: string | null;
+  candidates: readonly string[];
+  seeds: BrandSeeds;
+  built: ReturnType<typeof brandThemeToTokens>;
+  results: readonly PairingResult[];
+  blocked: readonly PairingResult[];
+  accentIsDistinct: boolean;
+  canSaveLogo: boolean;
+  onFile: (file: File) => Promise<void>;
+  onExtract: (source: Blob | string) => Promise<void>;
+  onSaveLogo: () => Promise<void>;
+  onApply: (patch: Partial<BrandSeeds>) => void;
+  onRestore: () => void;
+}
+
+function ProfessionalThemeGenerator({
+  draft, previewLogo, pendingFile, busy, error, candidates, seeds, built,
+  results, blocked, accentIsDistinct, canSaveLogo, onFile, onExtract,
+  onSaveLogo, onApply, onRestore,
+}: ProfessionalThemeGeneratorProps): VNode {
+  const [previewPage, setPreviewPage] = useState<'dashboard' | 'form'>('dashboard');
+  const [previewName, setPreviewName] = useState('North Terminal inspection');
+  const passedChecks = results.filter(result => result.pass).length;
+
+  return (
+    <div class="theme-pro">
+      <header class="theme-pro__header">
+        <div><span class="theme-pro__kicker">Company theme</span><h1>Create a theme that feels like your brand</h1><p>Choose the identity colours once. SIOMAC creates accessible states and applies them across the application.</p></div>
+        <div class="theme-pro__header-status"><span class={draft.dirtyCount > 0 ? 'is-dirty' : ''}><i />{draft.dirtyCount > 0 ? 'Draft in progress' : 'Published theme'}</span><small>{draft.dirtyCount > 0 ? `${draft.dirtyCount} unpublished ${draft.dirtyCount === 1 ? 'change' : 'changes'}` : 'Everything is up to date'}</small></div>
+      </header>
+
+      {error && <div class="theme-pro__error" role="alert"><LucideIcon name="TriangleAlert" size={17} /><span>{error}</span></div>}
+
+      <div class="theme-pro__workspace">
+        <aside class="theme-pro__controls" aria-label="Theme controls">
+          <section class="theme-pro__section">
+            <div class="theme-pro__section-head"><span>01</span><div><h2>Brand source</h2><p>Start with a logo, or choose colours manually.</p></div></div>
+            <label class="theme-pro__upload">
+              <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" onChange={event => { const file = (event.target as HTMLInputElement).files?.[0]; if (file) void onFile(file); }} />
+              <div class="theme-pro__upload-logo">{previewLogo ? <img src={previewLogo} alt="Company logo preview" /> : <LucideIcon name="ImagePlus" size={25} />}</div>
+              <div><strong>{previewLogo ? 'Replace company logo' : 'Upload company logo'}</strong><small>PNG, JPG, SVG or WebP</small></div><LucideIcon name="Upload" size={18} />
+            </label>
+            {previewLogo && <div class="theme-pro__source-actions"><Button variant="ghost" size="sm" loading={busy === 'extracting'} onClick={() => { void onExtract(pendingFile?.dataUrl ?? previewLogo); }}>Read colours again</Button>{pendingFile && canSaveLogo && <Button variant="outline" size="sm" loading={busy === 'uploading'} onClick={() => { void onSaveLogo(); }}>Save logo</Button>}</div>}
+          </section>
+
+          <section class="theme-pro__section">
+            <div class="theme-pro__section-head"><span>02</span><div><h2>Brand colours</h2><p>Select the colours that should carry your identity.</p></div></div>
+            {candidates.length > 0 && <div class="theme-pro__palette" aria-label="Colours extracted from logo">{candidates.map(colour => <button key={colour} type="button" style={{ background: colour }} aria-label={`Use ${colour} as main colour`} title={colour} onClick={() => onApply({ primary: colour })} />)}</div>}
+            <div class="theme-pro__colour-field"><label><span>Main colour</span><small>Buttons, active navigation and key actions</small></label><div><input type="color" value={seeds.primary} aria-label="Main colour" onInput={event => onApply({ primary: (event.target as HTMLInputElement).value })} /><TextInput value={seeds.primary} aria-label="Main colour hex" onInput={value => { if (/^#[0-9a-fA-F]{6}$/.test(value)) onApply({ primary: value }); }} /></div></div>
+            <div class="theme-pro__colour-field"><label><span>Supporting colour</span><small>Links, focus and selected items</small></label>{seeds.accent ? <div><input type="color" value={seeds.accent} aria-label="Supporting colour" onInput={event => onApply({ accent: (event.target as HTMLInputElement).value })} /><TextInput value={seeds.accent} aria-label="Supporting colour hex" onInput={value => { if (/^#[0-9a-fA-F]{6}$/.test(value)) onApply({ accent: value }); }} /><button type="button" class="theme-pro__clear" aria-label="Remove supporting colour" onClick={() => onApply({ accent: undefined })}><LucideIcon name="X" size={15} /></button></div> : <Button variant="outline" size="sm" onClick={() => onApply({ accent: candidates[1] ?? '#E40C0C' })}>Add supporting colour</Button>}{seeds.accent && !accentIsDistinct && <p class="theme-pro__warning">Choose a colour that is more distinct from the main colour.</p>}</div>
+          </section>
+
+          <section class="theme-pro__section theme-pro__quality">
+            <div class="theme-pro__section-head"><span>03</span><div><h2>Theme quality</h2><p>Automatic checks protect readability before publishing.</p></div></div>
+            <div class="theme-pro__quality-row"><div class="theme-pro__quality-score">{passedChecks}<small>of {results.length}</small></div><div><strong>{blocked.length === 0 ? 'Ready to review' : 'Needs attention'}</strong><p>{blocked.length === 0 ? 'All critical colour pairs are readable.' : `${blocked.length} critical contrast ${blocked.length === 1 ? 'check needs' : 'checks need'} adjustment.`}</p></div></div>
+            <details><summary>View technical details</summary><div class="theme-pro__details"><ScaleRow label="Main" scale={built.primaryScale} />{built.accentScale && <ScaleRow label="Supporting" scale={built.accentScale} />}<PairingTable results={results} /></div></details>
+          </section>
+        </aside>
+
+        <main class="theme-pro__preview" aria-label="Live theme preview">
+          <div class="theme-pro__preview-head"><div><span class="theme-pro__kicker">Live preview</span><h2>Your SIOMAC workspace</h2></div><div class="theme-pro__preview-tabs"><button type="button" class={previewPage === 'dashboard' ? 'is-active' : ''} onClick={() => setPreviewPage('dashboard')}>Dashboard</button><button type="button" class={previewPage === 'form' ? 'is-active' : ''} onClick={() => setPreviewPage('form')}>Form</button></div></div>
+          <div class="theme-pro__screen">
+            <div class="theme-pro__appbar"><div class="theme-pro__appmark">{previewLogo ? <img src={previewLogo} alt="" /> : <span>S</span>}<strong>SIOMAC</strong></div><div class="theme-pro__app-actions"><button type="button" aria-label="Search"><LucideIcon name="Search" size={16} /></button><button type="button" aria-label="Notifications"><LucideIcon name="Bell" size={16} /></button><span>AM</span></div></div>
+            <div class="theme-pro__appbody"><nav class="theme-pro__rail"><span>Workspace</span><a class="is-active"><LucideIcon name="LayoutDashboard" size={16} />Dashboard</a><a><LucideIcon name="ClipboardList" size={16} />Inspections</a><a><LucideIcon name="Users" size={16} />People</a><a><LucideIcon name="BarChart3" size={16} />Reports</a></nav><div class="theme-pro__content">{previewPage === 'dashboard' ? <ThemeDashboardPreview /> : <ThemeFormPreview name={previewName} onNameChange={setPreviewName} />}</div></div>
+          </div>
+          <div class="theme-pro__roles"><ThemeRoleBoard tokens={built.tokens} /></div>
+        </main>
+      </div>
+
+      <footer class="theme-pro__footer"><div><strong>Theme changes remain in this draft</strong><span>Nothing reaches the application until it is reviewed and published.</span></div><Button variant="ghost" onClick={onRestore} iconLeft={<LucideIcon name="RotateCcw" />}>Restore SIOMAC defaults</Button></footer>
+    </div>
+  );
+}
+
+function ThemeDashboardPreview(): VNode {
+  const items = [
+    { name: 'North Terminal inspection', meta: 'Updated 12 minutes ago', icon: 'ClipboardCheck', tone: 'success', status: 'Complete' },
+    { name: 'Equipment maintenance review', meta: 'Updated 1 hour ago', icon: 'Wrench', tone: 'warning', status: 'In progress' },
+    { name: 'Safety permit renewal', meta: 'Updated yesterday', icon: 'ShieldCheck', tone: 'success', status: 'Complete' },
+  ] as const;
+  return <><div class="theme-pro__page-title"><div><span>Operations</span><h3>Good morning, Aaliyah</h3><p>Here is what needs your attention today.</p></div><Button variant="primary" iconLeft={<LucideIcon name="Plus" />}>New inspection</Button></div><div class="theme-pro__metrics"><article><span>Open inspections</span><strong>24</strong><small>4 due today</small></article><article><span>Actions completed</span><strong>86%</strong><small>Up 12% this month</small></article><article><span>Active locations</span><strong>12</strong><small>All systems online</small></article></div><section class="theme-pro__activity"><div class="theme-pro__activity-head"><div><h4>Recent activity</h4><p>Latest updates across your locations</p></div><Button variant="outline" size="sm">View all</Button></div>{items.map((item, index) => <div class="theme-pro__activity-row" key={item.name}><span class={`theme-pro__activity-icon is-${index + 1}`}><LucideIcon name={item.icon} size={16} /></span><div><strong>{item.name}</strong><small>{item.meta}</small></div><Badge tone={item.tone} variant="soft" size="sm">{item.status}</Badge></div>)}</section></>;
+}
+
+function ThemeFormPreview({ name, onNameChange }: { name: string; onNameChange: (value: string) => void }): VNode {
+  return <><div class="theme-pro__page-title"><div><span>New record</span><h3>Create inspection</h3><p>Complete the details below to begin a new inspection.</p></div></div><section class="theme-pro__form"><label><span>Inspection name</span><TextInput value={name} onInput={onNameChange} /></label><label><span>Location</span><Select value="north" onChange={() => undefined} options={[{ value: 'north', label: 'North Terminal' }, { value: 'south', label: 'South Yard' }]} /></label><label class="is-wide"><span>Notes</span><textarea rows={4} placeholder="Add instructions for the inspection team" /></label><div class="theme-pro__form-actions"><Button variant="outline">Cancel</Button><Button variant="primary">Create inspection</Button></div></section></>;
+}
+
 function SeedCard(
   { label, hint, value, onChange }:
   { label: string; hint: string; value: string; onChange: (v: string) => void },
 ): VNode {
   return (
     <Card variant="panel">
-      <CardHeader title={`${label} seed`} description={hint} />
+      <CardHeader title={label} description={hint} />
       <div class="ui-brand-seed">
         <input
           type="color"
@@ -423,6 +599,32 @@ function ScaleRow({ label, scale }: { label: string; scale: Record<number, strin
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** A plain-language summary of the roles that receive a brand value. */
+function ThemeRoleBoard({ tokens }: { tokens: Record<string, string> }): VNode {
+  const groups = [
+    { label: 'Actions', items: [['Primary action', '--ui-color-action-primary'], ['Action hover', '--ui-color-action-primary-hover']] },
+    { label: 'Selection & focus', items: [['Selected item', '--ui-color-selection-background'], ['Focus ring', '--ui-color-focus-ring']] },
+    { label: 'Navigation', items: [['Active page', '--ui-color-nav-active-background'], ['Active indicator', '--ui-color-nav-active-indicator']] },
+    { label: 'Content', items: [['Links', '--ui-color-text-link'], ['Accent text', '--ui-color-action-secondary']] },
+  ] as const;
+
+  return (
+    <div class="ui-brand-role-board__grid">
+      {groups.map(group => (
+        <article key={group.label} class="ui-brand-role-card">
+          <h3>{group.label}</h3>
+          {group.items.map(([label, token]) => (
+            <div key={token} class="ui-brand-role-card__item">
+              <span class="ui-brand-role-card__swatch" style={{ background: tokens[token] }} />
+              <span>{label}</span>
+            </div>
+          ))}
+        </article>
+      ))}
     </div>
   );
 }

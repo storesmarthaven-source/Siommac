@@ -12,7 +12,11 @@ export type EmptyStateSize = 'compact' | 'default';
 
 export interface EmptyStateProps {
   /** Font Awesome class, e.g. 'fa-folder-open', or a canonical icon node. */
-  icon: string | ComponentChildren;
+  icon?: string | ComponentChildren;
+  /** Rich visual header such as an avatar composition, illustration or file icon. */
+  visual?: ComponentChildren;
+  /** Quiet concentric guide behind the visual header. */
+  pattern?: boolean;
   title: string;
   text?: string;
   note?: string;
@@ -27,15 +31,18 @@ export interface EmptyStateProps {
 }
 
 export function EmptyState({
-  icon, title, text, note, tone = 'blue', size = 'default', headingLevel = 3, actions, role,
+  icon, visual, pattern = false, title, text, note, tone = 'gray', size = 'default', headingLevel = 3, actions, role,
 }: EmptyStateProps): VNode {
   const Heading = `h${headingLevel}` as keyof JSX.IntrinsicElements;
   return (
     <div class={`ui-empty ui-empty--${size}`} role={role}>
       <div class="ui-empty-inner">
-        <span class={`ui-empty-icon tone-${tone}`} aria-hidden="true">
-          {typeof icon === 'string' ? <i class={`fas ${icon}`} /> : icon}
-        </span>
+        {(visual ?? icon) && <div class={`ui-empty-visual${pattern ? ' has-pattern' : ''}`} aria-hidden="true">
+          {pattern && <span class="ui-empty-pattern" />}
+          {visual ?? <span class={`ui-empty-icon tone-${tone}`} aria-hidden="true">
+            {typeof icon === 'string' ? <i class={`fas ${icon}`} /> : icon}
+          </span>}
+        </div>}
         <Heading class="ui-empty-title">{title}</Heading>
         {text && <p class="ui-empty-text">{text}</p>}
         {note && <p class="ui-empty-note">{note}</p>}

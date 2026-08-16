@@ -9,6 +9,10 @@ import {
 import { PreviewScope } from './PreviewScope';
 import { LUCIDE_NAMES, LucideIcon, type LucideName } from '../LucideIcon';
 import { ColorPicker } from '../forms/ColorPicker';
+import { converter, formatHex, parse } from 'culori';
+import { BackActionArtwork } from '../patterns/BackActionButton';
+import { StudioSelect } from './StudioSelect';
+import { StudioInspector, StudioInspectorBody } from './StudioInspector';
 
 type Target = CanonicalButtonVariant;
 
@@ -70,10 +74,21 @@ function parseSizeValue(value: string): SizeValue {
     : { amount: '0', unit: 'px' };
 }
 
-function readableThemeValue(value: string, kind: StyleControl['kind']): string {
-  if (kind !== 'size') return value;
-  const size = parseSizeValue(value);
-  return `${size.amount} ${size.unit}`;
+const THEME_TOKEN_LABELS: Record<string, string> = {
+  '--ui-color-nav-background': 'Navigation background',
+  '--ui-color-text-inverse': 'Text on brand colour',
+  '--ui-color-primary': 'Primary brand colour',
+  '--ui-color-surface': 'Page surface',
+  '--ui-color-border': 'Default border',
+};
+
+function _readableTokenName(value: string): string | undefined {
+  const token = cssVariableName(value) ?? (/^--[a-z0-9-]+$/i.test(value.trim()) ? value.trim() : undefined);
+  if (!token) return undefined;
+  return THEME_TOKEN_LABELS[token] ?? token
+    .replace(/^--ui-/, '')
+    .replace(/-/g, ' ')
+    .replace(/^./, first => first.toUpperCase());
 }
 
 export function StudioColorControl({ id, label, value, savedColors = [], onChange, onSaveColor, onRemoveSavedColor }: {
@@ -85,7 +100,12 @@ export function StudioColorControl({ id, label, value, savedColors = [], onChang
   const pickerRef = useRef<HTMLDivElement>(null);
   const [pickerStyle, setPickerStyle] = useState<CSSProperties>({});
   const [portalHost, setPortalHost] = useState<Element | null>(null);
-  const displayColor = /^#[0-9a-f]{6}$/i.test(value) ? value : '#000000';
+  /* Theme values can resolve to rgb()/hsl() as well as hex. Falling back to
+     black for every non-hex value made the inspector misrepresent valid theme
+     colours such as SIOMAC navy. */
+  const parsedColor = parse(value);
+  const pickerColor = parsedColor ? formatHex(parsedColor) : '#000000';
+  const swatchColor = typeof CSS !== 'undefined' && CSS.supports('color', value) ? value : pickerColor;
 
   useEffect(() => {
     setPortalHost(triggerRef.current?.closest('.sds') ?? document.body);
@@ -134,12 +154,12 @@ export function StudioColorControl({ id, label, value, savedColors = [], onChang
     <div class="sds-edit-field__control sds-edit-field__control--color">
       <button ref={triggerRef} type="button" class="sds-color-trigger" aria-label={`Choose ${label} color`} aria-expanded={pickerOpen}
         aria-controls={`picker-${id}`} onClick={() => setPickerOpen(open => !open)}>
-        <span class="sds-color-trigger__swatch" style={{ backgroundColor: displayColor }} />
-        <span>{value}</span><span aria-hidden="true">⌄</span>
+        <span class="sds-color-trigger__swatch" style={{ backgroundColor: swatchColor }} />
+        <span>{value}</span><span class="sds-color-trigger__chevron" aria-hidden="true"><LucideIcon name="ChevronDown" size={15} /></span>
       </button>
       {pickerOpen && portalHost && createPortal(
         <div ref={pickerRef} class="sds-color-picker" id={`picker-${id}`} role="group" aria-label={`${label} color picker`} style={pickerStyle}>
-          <ColorPicker value={displayColor} onChange={onChange} alpha savedColors={savedColors} savedColorsLabel="Saved colors"
+          <ColorPicker value={pickerColor} onChange={onChange} alpha savedColors={savedColors} savedColorsLabel="Saved colors"
             onSaveColor={onSaveColor} onRemoveSavedColor={onRemoveSavedColor} aria-label={`${label} color controls`} />
         </div>, portalHost,
       )}
@@ -176,20 +196,16 @@ function TokenControl({ control, studio }: { control: StyleControl; studio: Gall
                 <input id={`style-${control.name}`} type="number" min="0" step="0.5" value={size.amount}
                   aria-label={`${control.label} value`}
                   onInput={event => studio.set(control.name, `${(event.target as HTMLInputElement).value}${size.unit}`)} />
-                <select aria-label={`${control.label} unit`} value={size.unit}
+                <StudioSelect class="sds-edit-field__unit" aria-label={`${control.label} unit`} value={size.unit}
                   onChange={event => studio.set(control.name, `${size.amount}${(event.target as HTMLSelectElement).value}`)}>
                   <option value="px">px</option><option value="rem">rem</option><option value="em">em</option><option value="%">%</option>
-                </select>
+                </StudioSelect>
               </div>
           : <div class="sds-edit-field__control"><input id={`style-${control.name}`} type="text" value={value}
             onInput={event => studio.set(control.name, (event.target as HTMLInputElement).value)} /></div>
       ) : (
         <div class="sds-edit-field__theme">
-          <span>From brand theme</span>
-          <strong class={isColor ? 'is-color' : ''}>
-            {isColor && value.length > 0 ? <i aria-hidden="true" style={{ backgroundColor: value }} /> : null}
-            <em>{value.length > 0 ? readableThemeValue(value, control.kind) : 'Brand default'}</em>
-          </strong>
+          <span>Theme controlled</span>
         </div>
       )}
     </div>
@@ -198,45 +214,88 @@ function TokenControl({ control, studio }: { control: StyleControl; studio: Gall
 
 /** Schema-driven styling shared by every component editor. */
 export function GeneratedStyleControls({ def, draft: studio }: { def: ComponentDef; draft: GalleryDraft }): VNode {
+  const groups = def.style ?? [];
+  const hoverControls = groups.flatMap(group => group.controls.filter(control => control.name.endsWith('-hover')));
+  const standardGroups = groups.map(group => ({
+    ...group,
+    controls: group.controls.filter(control => !control.name.endsWith('-hover')),
+  })).filter(group => group.controls.length > 0);
   return (
     <>
-      {(def.style ?? []).map(group => (
+      {hoverControls.length > 0 && <section class="sds-style-hover-section">
+        {hoverControls.map(control => <HoverColorControl key={control.name} control={control} studio={studio} />)}
+      </section>}
+      {standardGroups.map(group => (
         <section key={group.label}>
           <h4>{friendlyGroup(group.label)}</h4>
-          {group.controls.map(control => control.name.endsWith('-hover')
-            ? <HoverColorControl key={control.name} control={control} studio={studio} />
-            : <TokenControl key={control.name} control={control} studio={studio} />)}
+          {group.controls.map(control => <TokenControl key={control.name} control={control} studio={studio} />)}
         </section>
       ))}
     </>
   );
 }
 
-type HoverColorMode = 'lighter' | 'darker' | 'manual';
+type HoverColorMode = 'automatic' | 'lighter' | 'darker' | 'manual';
+
+const toRgb = converter('rgb');
+
+function hoverBaseName(name: string): string {
+  if (name.includes('-outline-bg-hover') || name.includes('-ghost-bg-hover')) return '--ui-color-surface-default';
+  return name.replace(/-hover$/, '');
+}
+
+function automaticHoverDirection(value: string): 'lighter' | 'darker' {
+  const color = toRgb(parse(value));
+  if (!color) return 'lighter';
+  const channel = (item: number): number => item <= 0.04045 ? item / 12.92 : ((item + 0.055) / 1.055) ** 2.4;
+  const luminance = 0.2126 * channel(color.r) + 0.7152 * channel(color.g) + 0.0722 * channel(color.b);
+  return luminance < 0.42 ? 'lighter' : 'darker';
+}
 
 function HoverColorControl({ control, studio }: { control: StyleControl; studio: GalleryDraft }): VNode {
   const value = studio.read(control.name);
-  const baseName = control.name.replace(/-hover$/, '');
-  const mode: HoverColorMode = value.includes('#fff') ? 'lighter' : value.includes('#000') ? 'darker' : 'manual';
+  const baseName = hoverBaseName(control.name);
+  const modeName = `${control.name}-mode`;
+  const storedMode = studio.values[modeName];
+  const mode: HoverColorMode = storedMode === 'automatic' || storedMode === 'lighter' || storedMode === 'darker' || storedMode === 'manual'
+    ? storedMode
+    : Object.prototype.hasOwnProperty.call(studio.values, control.name)
+      ? value.includes('#fff') ? 'lighter' : value.includes('#000') ? 'darker' : 'manual'
+      : 'automatic';
+  const resolvedBase = resolveThemeValue(studio.read(baseName), studio);
+  const autoDirection = automaticHoverDirection(resolvedBase);
+  const expression = (direction: 'lighter' | 'darker'): string =>
+    `color-mix(in srgb, var(${baseName}) 88%, ${direction === 'lighter' ? '#fff' : '#000'})`;
   const setMode = (next: HoverColorMode): void => {
-    if (next === 'lighter') studio.set(control.name, `color-mix(in srgb, var(${baseName}) 88%, #fff)`);
-    else if (next === 'darker') studio.set(control.name, `color-mix(in srgb, var(${baseName}) 88%, #000)`);
+    studio.set(modeName, next);
+    if (next === 'automatic') studio.set(control.name, expression(autoDirection));
+    else if (next === 'lighter') studio.set(control.name, expression('lighter'));
+    else if (next === 'darker') studio.set(control.name, expression('darker'));
     else {
-      const resolved = resolveThemeValue(value, studio);
-      studio.set(control.name, /^#[0-9a-f]{6}$/i.test(resolved) ? resolved : '#162646');
+      const parsed = parse(resolveThemeValue(value, studio)) ?? parse(resolvedBase);
+      studio.set(control.name, parsed ? formatHex(parsed) : '#1b2d54');
     }
   };
 
+  useEffect(() => {
+    if (storedMode !== 'automatic') return;
+    const next = expression(autoDirection);
+    if (studio.values[control.name] !== next) studio.set(control.name, next);
+  }, [autoDirection, baseName, control.name, storedMode, studio]);
+
   return (
     <div class="sds-hover-color">
-      <div class="sds-hover-color__head"><label>Hover color behavior</label><span>Follows this variant’s background</span></div>
+      <div class="sds-hover-color__head"><label>Hover color</label><span>Choose how the button responds when someone points to it.</span></div>
       <div class="sds-hover-color__modes" role="radiogroup" aria-label="Hover color behavior">
-        {(['lighter', 'darker', 'manual'] as const).map(option => <button type="button" role="radio" aria-checked={mode === option}
-          class={mode === option ? 'is-on' : ''} onClick={() => setMode(option)}>{friendly(option)}</button>)}
+        {(['automatic', 'lighter', 'darker', 'manual'] as const).map(option => <button type="button" role="radio" aria-checked={mode === option}
+          class={mode === option ? 'is-on' : ''} onClick={() => setMode(option)}>
+            <strong>{option === 'automatic' ? 'Automatic' : option === 'manual' ? 'Custom' : friendly(option)}</strong>
+            <small>{option === 'automatic' ? 'Best contrast' : option === 'lighter' ? 'Lift the color' : option === 'darker' ? 'Deepen the color' : 'Choose a color'}</small>
+          </button>)}
       </div>
       {mode === 'manual'
         ? <TokenControl control={control} studio={studio} />
-        : <div class="sds-hover-color__derived"><i style={{ background: value }} /><span>Automatically updates when the background changes.</span></div>}
+        : <div class="sds-hover-color__derived"><i style={{ background: value }} /><span>{mode === 'automatic' ? `Using the ${autoDirection} treatment for this background.` : `Always uses a ${mode} treatment.`}</span></div>}
     </div>
   );
 }
@@ -250,13 +309,15 @@ const ICON_RECOMMENDATIONS: Record<CanonicalButtonVariant, readonly LucideName[]
   link: ['ArrowRight', 'ExternalLink', 'Link', 'ChevronRight'],
 };
 
-export function IconPicker({ id, label, value, variant, position, recommendations: customRecommendations, onChange }: {
+export function IconPicker({ id, label, value, variant, position, recommendations: customRecommendations, allowClear = true, onChange }: {
   id: string;
   label: string;
   value: string;
   variant: CanonicalButtonVariant;
   position: 'leading' | 'trailing';
   recommendations?: readonly LucideName[];
+  /** A dropdown affordance must always remain visible; content icons may be removed. */
+  allowClear?: boolean;
   onChange: (value: string) => void;
 }): VNode {
   const [open, setOpen] = useState(false);
@@ -281,15 +342,17 @@ export function IconPicker({ id, label, value, variant, position, recommendation
           <span class="sds-icon-trigger__preview">{value === 'None' ? '—' : <LucideIcon name={value as LucideName} size={16} />}</span>
           <span>{value === 'None' ? 'No icon' : friendly(value)}</span>
         </button>
-        {value !== 'None' && <button type="button" class="sds-icon-trigger__clear" aria-label={`Clear ${label}`} onClick={() => choose('None')}><LucideIcon name="X" size={13} /></button>}
+        {allowClear && value !== 'None' && <button type="button" class="sds-icon-trigger__clear" aria-label={`Clear ${label}`} onClick={() => choose('None')}><LucideIcon name="X" size={13} /></button>}
         <button type="button" class="sds-icon-trigger__menu" aria-label={`Open ${label} menu`} aria-expanded={open} onClick={() => setOpen(value => !value)}><LucideIcon name="ChevronDown" size={14} /></button>
       </div>
       {open && (
         <div class="sds-icon-browser" role="group" aria-label={`${label} Lucide icon browser`}>
-          <div class="sds-icon-browser__head"><div><strong>Choose an icon</strong><span>{LUCIDE_NAMES.length.toLocaleString()} Lucide icons</span></div><button type="button" onClick={() => setOpen(false)} aria-label="Close icon browser">×</button></div>
+          <div class="sds-icon-browser__head"><div><strong>Choose an icon</strong><span>{LUCIDE_NAMES.length.toLocaleString()} Lucide icons</span></div></div>
           <label class="sds-icon-search"><span aria-hidden="true">⌕</span><input value={query} placeholder="Search icons…" aria-label="Search Lucide icons" onInput={event => { setQuery((event.target as HTMLInputElement).value); setVisibleCount(72); }} /></label>
           <section><h5>Recommended for {friendly(variant)}</h5><div class="sds-icon-grid sds-icon-grid--recommended">
+            {allowClear && (
             <button type="button" aria-label="Use no icon" class={value === 'None' ? 'is-on' : ''} onClick={() => choose('None')}><span>—</span><small>None</small></button>
+            )}
             {recommendations.map(name => <button type="button" key={name} aria-label={`Use recommended ${name}`} class={value === name ? 'is-on' : ''} onClick={() => choose(name)}><LucideIcon name={name} size={18} /><small>{friendly(name)}</small></button>)}
           </div></section>
           <section><h5>{normalized ? `${matches.length} results` : 'All icons'}</h5><div class="sds-icon-grid">
@@ -309,6 +372,13 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
     ...group,
     controls: group.controls.filter(control => belongs(control, target, state)),
   })).filter(group => group.controls.length > 0), [def, target, state]);
+  const hoverControls = useMemo(() => target === 'primary'
+    ? groups.flatMap(group => group.controls.filter(control => control.name.endsWith('-bg-hover')))
+    : [], [groups, target]);
+  const standardGroups = useMemo(() => groups.map(group => ({
+    ...group,
+    controls: group.controls.filter(control => !(target === 'primary' && control.name.endsWith('-bg-hover'))),
+  })).filter(group => group.controls.length > 0), [groups, target]);
   const selectedSample = def.variantSamples?.find(sample => sample.value === target);
   const previewPropsFor = (variant: CanonicalButtonVariant): PropValues => ({
     ...propsForVariant(def, variant),
@@ -342,7 +412,11 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
                 return (
                   <button type="button" role="radio" aria-checked={target === variant} class={target === variant ? 'is-on' : ''}
                     onClick={() => { setTarget(variant); setState('default'); }}>
-                    <span class="sds-button-picker__preview"><span class={`ui-btn ui-btn--${variant}`} aria-hidden="true">{String(variantPreview.label ?? sample?.props.label ?? friendly(variant))}</span></span>
+                    <span class="sds-button-picker__preview">
+                      {variant === 'ghost'
+                        ? <span class="ui-btn ui-btn--ghost ui-back-action-button" aria-hidden="true"><BackActionArtwork icon={String(variantPreview.iconLeft ?? 'ArrowLeft') === 'None' ? null : String(variantPreview.iconLeft ?? 'ArrowLeft') as LucideName} iconTreatment={String(variantPreview.iconTreatment ?? 'outline') as never} iconColor={String(variantPreview.iconColor ?? '#5e6f8d')} /></span>
+                        : <span class={`ui-btn ui-btn--${variant}`} aria-hidden="true">{String(variantPreview.label ?? sample?.props.label ?? friendly(variant))}</span>}
+                    </span>
                     <span class="sds-button-picker__copy"><strong>{sample?.title ?? friendly(variant)}</strong></span>
                   </button>
                 );
@@ -354,44 +428,58 @@ export function RecipeStyleEditor({ def, draft: studio }: { def: ComponentDef; d
         <section class="sds-button-use" aria-labelledby="button-use-title">
           <header><h3 id="button-use-title">Common application use</h3><p>Real examples of how this control appears in SIOMAC.</p></header>
           <div class="sds-use-context">
-            {(def.examples ?? []).map(example => <article key={example.id}><span class="ctx-kicker">{example.title}</span><div>{example.render()}</div></article>)}
+            {(def.examples ?? []).map(example => <article key={example.id}><span class="ctx-kicker">{example.title}</span><div class="sds-use-context__spec">{example.render()}</div></article>)}
           </div>
         </section>
 
       </PreviewScope>
 
-      <aside class="sds-button-settings" aria-label="Button settings">
-        <header class="sds-button-settings__head">
-          <div><span>Preview settings</span><strong>Try the {selectedSample?.title ?? friendly(target)} button</strong></div>
-        </header>
+      <StudioInspector ariaLabel="Button settings" title={`Try the ${selectedSample?.title ?? friendly(target)} button`}>
 
         <section class="sds-button-settings__example" aria-labelledby="button-preview-title">
-            <div class="sds-button-settings__example-head"><div><h4 id="button-preview-title">Preview options</h4><p>Try states and icons without changing the app.</p></div><button type="button" onClick={() => setPreviewByVariant(previous => ({ ...previous, [target]: undefined }))}>Reset</button></div>
+            <div class="sds-button-settings__example-head"><div><h4 id="button-preview-title">Preview options</h4><p>Only this {friendly(target).toLowerCase()} preview changes.</p></div><button type="button" onClick={() => setPreviewByVariant(previous => ({ ...previous, [target]: undefined }))}>Reset</button></div>
             <div class="sds-button-settings__state">
               <label for="button-state">State</label>
-              <select id="button-state" value={state} onChange={event => setState((event.target as HTMLSelectElement).value as ButtonRecipeState)}>
+              <StudioSelect id="button-state" class="sds-ctl__input" value={state} onChange={event => setState((event.target as HTMLSelectElement).value as ButtonRecipeState)}>
                 {BUTTON_STATES.map(item => <option value={item}>{friendly(item)}</option>)}
-              </select>
+              </StudioSelect>
             </div>
+        </section>
+
+        <StudioInspectorBody>
+          <section>
+            <h4>Content</h4>
             <div class="sds-button-settings__example-icons">
               <div><span>Leading icon</span><IconPicker id={`leading-icon-${target}`} label="Leading icon" value={String(previewProps.iconLeft ?? 'None')} variant={target} position="leading" onChange={value => setPreviewProp('iconLeft', value)} /></div>
               <div><span>Trailing icon</span><IconPicker id={`trailing-icon-${target}`} label="Trailing icon" value={String(previewProps.iconRight ?? 'None')} variant={target} position="trailing" onChange={value => setPreviewProp('iconRight', value)} /></div>
             </div>
-            <div class="sds-button-settings__icon-style"><span>Icon treatment</span><div role="radiogroup" aria-label="Icon treatment">{(['outline', 'circle', 'filled-circle'] as const).map(treatment => <button type="button" role="radio" aria-checked={previewProps.iconTreatment === treatment} class={previewProps.iconTreatment === treatment ? 'is-on' : ''} onClick={() => setPreviewProp('iconTreatment', treatment)}>{friendly(treatment)}</button>)}</div></div>
+          </section>
+          <section>
+            <h4>Appearance</h4>
+            {target === 'ghost' && <div class="sds-button-settings__icon-style"><span>Back content</span><div role="radiogroup" aria-label="Back content">
+              <button type="button" role="radio" aria-checked={previewProps.iconLeft !== 'None'} class={previewProps.iconLeft !== 'None' ? 'is-on' : ''} onClick={() => setPreviewProp('iconLeft', previewProps.iconLeft === 'None' ? 'ArrowLeft' : String(previewProps.iconLeft ?? 'ArrowLeft'))}>Text + icon</button>
+              <button type="button" role="radio" aria-checked={previewProps.iconLeft === 'None'} class={previewProps.iconLeft === 'None' ? 'is-on' : ''} onClick={() => setPreviewProp('iconLeft', 'None')}>Text only</button>
+            </div></div>}
+            <div class="sds-button-settings__icon-style"><span>Icon treatment</span><div role="radiogroup" aria-label="Icon treatment">{(['outline', 'circle', 'filled-circle'] as const).map(treatment => <button type="button" role="radio" aria-checked={previewProps.iconTreatment === treatment} class={previewProps.iconTreatment === treatment ? 'is-on' : ''} onClick={() => setPreviewProp('iconTreatment', treatment)}>{target === 'ghost' ? treatment === 'outline' ? 'Plain' : treatment === 'circle' ? 'Outline circle' : 'Filled circle' : friendly(treatment)}</button>)}</div></div>
             <div class="sds-button-settings__icon-color"><span>Icon color</span><StudioColorControl id={`preview-icon-color-${target}`} label="Icon" value={String(previewProps.iconColor ?? '#1b2d54')} savedColors={studio.savedColors}
               onSaveColor={studio.addSavedColor} onRemoveSavedColor={studio.removeSavedColor} onChange={value => setPreviewProp('iconColor', value)} /></div>
-        </section>
-
-        <div class="sds-button-settings__body">
-          {groups.length ? groups.map(group => (
-            <section key={group.label}><h4>{friendlyGroup(group.label)}</h4>{group.controls.map(control => control.name.endsWith('-bg-hover')
-              ? <HoverColorControl key={control.name} control={control} studio={studio} />
-              : <TokenControl key={control.name} control={control} studio={studio} />)}</section>
-          )) : <div class="sds-button-settings__empty"><strong>This state uses the default style</strong><p>There is nothing extra to change here.</p></div>}
-        </div>
+          </section>
+          <details class="sds-button-settings__style">
+            <summary><span><strong>Component style</strong><small>Shape, colours and interaction states</small></span><em>{groups.reduce((total, group) => total + group.controls.length, 0)} settings</em></summary>
+            <div>
+              {hoverControls.length > 0 && <section class="sds-style-hover-section">
+                {hoverControls.map(control => <HoverColorControl key={control.name} control={control} studio={studio} />)}
+              </section>}
+              {standardGroups.length ? standardGroups.map(group => (
+                <section key={group.label}><h4>{friendlyGroup(group.label)}</h4>{group.controls
+                  .map(control => <TokenControl key={control.name} control={control} studio={studio} />)}</section>
+              )) : <div class="sds-button-settings__empty"><strong>This state uses the default style</strong><p>There is nothing extra to change here.</p></div>}
+            </div>
+          </details>
+        </StudioInspectorBody>
 
         <p class="sds-button-settings__inherit">Dropdown and Split Button use these styles automatically.</p>
-      </aside>
+      </StudioInspector>
     </section>
   );
 }

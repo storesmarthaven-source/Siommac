@@ -2,32 +2,30 @@
 
 # platform Module Map
 
-Source fingerprint: `ae71f01638b7e5b7378aac83`
+Source fingerprint: `dfa9cd3ead99b98830efc082`
 
-Files: 455 | Symbols: 3976 | Widgets: 18 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 55 | DB objects: 327 | E2E suites: 0
+Files: 471 | Symbols: 4121 | Widgets: 16 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 55 | DB objects: 327 | E2E suites: 0
 
 ## Widgets and Tiles
 
 | ID | Title | Kind | Render | Location |
 |---|---|---|---|---|
-| `actionable-with-controls` | An actionable card that still has its own controls | registry | `() => (         <div style={{ maxWidth: '320px' }}>           <Card             variant="action"             onClick={noop}             actionLabel="View Sarah James"             header={<CardHeader               icon={<LucideIcon name="User" />}               title="Sarah James"               description="Safety Officer · EMP-00484"               actions={<Button variant="ghost" size="sm" iconOnly aria-label="Edit Sarah James" iconLeft={<LucideIcon name="Pencil" />} />}             />}             footer={<CardFooter><span>Started 8 Mar 2021</span><Badge tone="success" size="sm" dot>Active</Badge></CardFooter>}           >             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>HSE · Georgetown</span>           </Card>         </div>       )` | `src/ui/registry/containers.defs.tsx:250` |
-| `create` | Create with options | registry | `() => <SplitButton action={{ label: 'Create' }} items={SAVE_ALTERNATIVES} variant="secondary" />` | `src/ui/registry/compound.defs.tsx:225` |
-| `dialog-footer` | Dialog footer | registry | `() => (         <>           <Button variant="secondary">Cancel</Button>           <Button variant="primary">Save</Button>         </>       )` | `src/ui/registry/actions.defs.tsx:266` |
-| `export` | Export menu | registry | `() => <DropdownButton label="Export" variant="secondary" items={RECORD_MENU} />` | `src/ui/registry/compound.defs.tsx:137` |
-| `filter` | Filter picker | registry | `() => <DropdownButton label="Status: All" variant="secondary" matchWidth items={RECORD_MENU} />` | `src/ui/registry/compound.defs.tsx:141` |
-| `one-component` | One component, three appearances | registry | `() => (         <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>           <Tabs id="ex-underline" label="Underline" items={PLAIN_TABS} value="overview" onChange={noop} />           <Tabs id="ex-contained" label="Contained" variant="contained" size="sm" items={PLAIN_TABS} value="tasks" onChange={noop} />           <Tabs id="ex-subtle" label="Subtle" variant="subtle" size="sm" items={PLAIN_TABS} value="files" onChange={noop} />         </div>       )` | `src/ui/registry/navigation.defs.tsx:296` |
-| `one-surface` | One surface, four rhythms | registry | `() => (         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px' }}>           <Card variant="metric" density="compact" header={<CardHeader title="Open incidents" level={null} />}>             <Figure value="18" caption="4 overdue" />           </Card>           <Card variant="surface" header={<CardHeader title="Site note" />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Night shift handover completed.</span>           </Card>           <Card variant="panel" density="compact" header={<CardHeader title="Corrective actions" actions={<Badge tone="warning" size="sm">2 open</Badge>} />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Both due this Friday.</span>           </Card>           <Card variant="action" onClick={noop} actionLabel="Start a new inspection"             header={<CardHeader icon={<LucideIcon name="ClipboardCheck" />} title="New inspection" description="Start from a template" />} />         </div>       )` | `src/ui/registry/containers.defs.tsx:215` |
-| `overflow` | Nine tabs in a drawer | registry | `() => (         <Tabs           id="ex-overflow"           label="Rate version sections"           variant="contained"           size="sm"           items={MANY_TABS}           maxVisible={4}           value="timeline"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:332` |
-| `page-action` | Page action | registry | `() => <Button variant="primary" iconLeft={<LucideIcon name="Plus" />}>Add employee</Button>` | `src/ui/registry/actions.defs.tsx:286` |
-| `register-search` | Register search | registry | `() => <FormField label="Search employees"><SearchField value="Sarah" onInput={noop} /></FormField>` | `src/ui/registry/forms.defs.tsx:518` |
-| `row` | Row actions | registry | `() => <DropdownButton label="Actions" variant="outline" items={RECORD_MENU} />` | `src/ui/registry/compound.defs.tsx:139` |
-| `save` | Save with options | registry | `() => <SplitButton action={{ label: 'Save' }} items={SAVE_ALTERNATIVES} />` | `src/ui/registry/compound.defs.tsx:223` |
-| `select-all` | Select-all with a partial selection | registry | `() => (         <CheckboxGroup           label="Modules"           selectAllLabel="All modules"           values={['hr']}           onChange={noop}           options={[             { value: 'hr', label: 'Human Resources' },             { value: 'hse', label: 'HSE' },             { value: 'fin', label: 'Finance', disabled: true },           ]}         />       )` | `src/ui/registry/forms.defs.tsx:168` |
-| `status-set` | A status set | registry | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>           <Badge tone="success" dot>Active</Badge>           <Badge tone="warning" dot>Probation</Badge>           <Badge tone="info" dot>On leave</Badge>           <Badge tone="neutral" dot>Inactive</Badge>           <Badge tone="danger" dot>Terminated</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:330` |
-| `tone-scale` | Tone is meaning, not decoration | registry | `() => (         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>           {(['success', 'warning', 'danger', 'info'] as CardTone[]).map(tone => (             <Card key={tone} variant="metric" density="compact" tone={tone}               header={<CardHeader title={`${tone[0]!.toUpperCase()}${tone.slice(1)} signal`} level={null} />}>               <Figure value="7" caption="this week" />             </Card>           ))}         </div>       )` | `src/ui/registry/containers.defs.tsx:235` |
-| `variants` | Soft, solid, outline — and tags | registry | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>           <Badge tone="danger" variant="soft">Overdue</Badge>           <Badge tone="danger" variant="solid">Critical</Badge>           <Badge tone="danger" variant="outline">Escalated</Badge>           <Badge tone="accent" size="sm" onRemove={noop}>Night shift</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:344` |
-| `vertical` | Vertical is an orientation, not a component | registry | `() => (         <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>           <Tabs             id="ex-vertical"             label="Settings sections"             orientation="vertical"             items={[               { id: 'general', label: 'General', icon: <LucideIcon name="Settings" /> },               { id: 'security', label: 'Security', icon: <LucideIcon name="ShieldCheck" />, badge: 2 },               { id: 'notifications', label: 'Notifications', icon: <LucideIcon name="Bell" /> },             ]}             value="security"             onChange={noop}           />           <TabPanel tabsId="ex-vertical" tabId="security" value="security">             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Two security settings need review.</span>           </TabPanel>         </div>       )` | `src/ui/registry/navigation.defs.tsx:308` |
-| `wizard-nav` | Wizard navigation | registry | `() => (         <>           <Button variant="ghost">Back</Button>           <NextActionButton label="Continue" />         </>       )` | `src/ui/registry/actions.defs.tsx:276` |
+| `actionable-with-controls` | An actionable card that still has its own controls | registry | `() => (         <div style={{ maxWidth: '320px' }}>           <Card             variant="action"             onClick={noop}             actionLabel="View Sarah James"             header={<CardHeader               icon={<LucideIcon name="User" />}               title="Sarah James"               description="Safety Officer · EMP-00484"               actions={<Button variant="ghost" size="sm" iconOnly aria-label="Edit Sarah James" iconLeft={<LucideIcon name="Pencil" />} />}             />}             footer={<CardFooter><span>Started 8 Mar 2021</span><Badge tone="success" size="sm" dot>Active</Badge></CardFooter>}           >             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>HSE · Georgetown</span>           </Card>         </div>       )` | `src/ui/registry/containers.defs.tsx:251` |
+| `case-workspace-panels` | Case workspace panels | registry | `() => (         <Tabs           id="ex-case-workspace"           label="Case workspace panels"           class="sds-tabs-use-example"           variant="subtle"           size="sm"           items={[             { id: 'activity', label: 'Activity' },             { id: 'approvals', label: 'Approvals', badge: 2 },             { id: 'audit', label: 'Audit' },           ]}           value="approvals"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:346` |
+| `create` | Create with options | registry | `() => <SplitButton action={{ label: 'Create' }} items={SAVE_ALTERNATIVES} variant="secondary" />` | `src/ui/registry/compound.defs.tsx:235` |
+| `dialog-footer` | Dialog footer | registry | `() => (         <>           <Button variant="secondary">Cancel</Button>           <Button variant="primary">Save</Button>         </>       )` | `src/ui/registry/actions.defs.tsx:276` |
+| `export` | Export menu | registry | `() => <DropdownButton label="Export" variant="secondary" items={RECORD_MENU} />` | `src/ui/registry/compound.defs.tsx:143` |
+| `filter` | Filter picker | registry | `() => <DropdownButton label="Status: All" variant="secondary" matchWidth items={RECORD_MENU} />` | `src/ui/registry/compound.defs.tsx:147` |
+| `one-surface` | One surface, four rhythms | registry | `() => (         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px' }}>           <Card variant="metric" density="compact" header={<CardHeader title="Open incidents" level={null} />}>             <Figure value="18" caption="4 overdue" />           </Card>           <Card variant="surface" header={<CardHeader title="Site note" />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Night shift handover completed.</span>           </Card>           <Card variant="panel" density="compact" header={<CardHeader title="Corrective actions" actions={<Badge tone="warning" size="sm">2 open</Badge>} />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Both due this Friday.</span>           </Card>           <Card variant="action" onClick={noop} actionLabel="Start a new inspection"             header={<CardHeader icon={<LucideIcon name="ClipboardCheck" />} title="New inspection" description="Start from a template" />} />         </div>       )` | `src/ui/registry/containers.defs.tsx:216` |
+| `page-action` | Page action | registry | `() => <Button variant="primary" iconLeft={<LucideIcon name="Plus" />}>Add employee</Button>` | `src/ui/registry/actions.defs.tsx:296` |
+| `register-search` | Register search | registry | `() => <FormField label="Search employees"><SearchField value="Sarah" onInput={noop} /></FormField>` | `src/ui/registry/forms.defs.tsx:582` |
+| `row` | Row actions | registry | `() => <DropdownButton label="Actions" variant="outline" items={RECORD_MENU} />` | `src/ui/registry/compound.defs.tsx:145` |
+| `save` | Save with options | registry | `() => <SplitButton action={{ label: 'Save' }} items={SAVE_ALTERNATIVES} />` | `src/ui/registry/compound.defs.tsx:233` |
+| `select-all` | Select-all with a partial selection | registry | `() => (         <CheckboxGroup           label="Modules"           selectAllLabel="All modules"           values={['hr']}           onChange={noop}           options={[             { value: 'hr', label: 'Human Resources' },             { value: 'hse', label: 'HSE' },             { value: 'fin', label: 'Finance', disabled: true },           ]}         />       )` | `src/ui/registry/forms.defs.tsx:178` |
+| `status-set` | A status set | registry | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>           <Badge tone="success" dot>Active</Badge>           <Badge tone="warning" dot>Probation</Badge>           <Badge tone="info" dot>On leave</Badge>           <Badge tone="neutral" dot>Inactive</Badge>           <Badge tone="danger" dot>Terminated</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:427` |
+| `tone-scale` | Tone is meaning, not decoration | registry | `() => (         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>           {(['success', 'warning', 'danger', 'info'] as CardTone[]).map(tone => (             <Card key={tone} variant="metric" density="compact" tone={tone}               header={<CardHeader title={`${tone[0]!.toUpperCase()}${tone.slice(1)} signal`} level={null} />}>               <Figure value="7" caption="this week" />             </Card>           ))}         </div>       )` | `src/ui/registry/containers.defs.tsx:236` |
+| `variants` | Soft, solid, outline — and tags | registry | `() => (         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>           <Badge tone="danger" variant="soft">Overdue</Badge>           <Badge tone="danger" variant="solid">Critical</Badge>           <Badge tone="danger" variant="outline">Escalated</Badge>           <Badge tone="accent" size="sm" onRemove={noop}>Night shift</Badge>         </div>       )` | `src/ui/registry/data.defs.tsx:441` |
+| `wizard-nav` | Wizard navigation | registry | `() => (         <>           <BackActionButton />           <NextActionButton label="Continue" />         </>       )` | `src/ui/registry/actions.defs.tsx:286` |
 
 ## Route Definitions
 
@@ -215,7 +213,10 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useApproveGrant` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:287` | `-` |
 | `useRejectGrant` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:315` | `-` |
 | `useCancelGrant` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:339` | `-` |
-| `AccountPill` | function / component | `src/components/shared/AccountPill.tsx:94` | `-` |
+| `AccountPill` | function / component | `src/components/shared/AccountPill.tsx:99` | `-` |
+| `AppTopBar` | function / component | `src/components/shared/AppTopBar.tsx:28` | `-` |
+| `UserPillArtwork` | function / component | `src/components/shared/AppTopBar.tsx:36` | `-` |
+| `AppTopBarArtwork` | function / component | `src/components/shared/AppTopBar.tsx:110` | `-` |
 | `ConfirmDialog` | function / component | `src/components/shared/ConfirmDialog.tsx:72` | `-` |
 | `ErrorBoundary` | class / component | `src/components/shared/ErrorBoundary.tsx:65` | `-` |
 | `Modal` | function / component | `src/components/shared/Modal.tsx:110` | `-` |
@@ -223,7 +224,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `UpcomingDeadlineCardItem` | interface / ui-tile | `src/components/shared/UpcomingDeadlinesCard.tsx:5` | `-` |
 | `UpcomingDeadlinesCardProps` | interface / ui-tile | `src/components/shared/UpcomingDeadlinesCard.tsx:16` | `-` |
 | `UpcomingDeadlinesCard` | function / component, ui-tile | `src/components/shared/UpcomingDeadlinesCard.tsx:36` | `-` |
-| `UserPill` | function / component | `src/components/shared/UserPill.tsx:52` | `-` |
+| `UserPill` | function / component | `src/components/shared/UserPill.tsx:54` | `-` |
 | `useHeaderModalOpen` | function / hook | `src/hooks/useHeaderModalOpen.ts:21` | `-` |
 | `StepUpProvider` | function / component | `src/hooks/useStepUp.tsx:47` | `-` |
 | `useStepUp` | function / hook | `src/hooks/useStepUp.tsx:308` | `-` |
@@ -244,7 +245,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `Sparkline` | function / component | `src/ui/charts/Sparkline.tsx:18` | `-` |
 | `DetailGrid` | function / component | `src/ui/components/DetailGrid.tsx:40` | `-` |
 | `Drawer` | function / component | `src/ui/components/Drawer.tsx:71` | `-` |
-| `EmptyState` | function / component | `src/ui/components/EmptyState.tsx:29` | `-` |
+| `EmptyState` | function / component | `src/ui/components/EmptyState.tsx:33` | `-` |
 | `EntityHead` | function / component | `src/ui/components/EntityHead.tsx:29` | `-` |
 | `PanelStats` | function / component | `src/ui/components/EntityHead.tsx:61` | `-` |
 | `Field` | function / component | `src/ui/components/Field.tsx:12` | `-` |
@@ -310,10 +311,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `Wizard` | function / component | `src/ui/components/Wizard.tsx:44` | `-` |
 | `WizardShell` | function / component | `src/ui/components/WizardShell.tsx:44` | `-` |
 | `Accordion` | function / component | `src/ui/containers/Accordion.tsx:26` | `-` |
-| `CardVariant` | type / ui-tile | `src/ui/containers/Card/Card.tsx:47` | `-` |
-| `CardTone` | type / ui-tile | `src/ui/containers/Card/Card.tsx:48` | `-` |
-| `CardAccent` | type / ui-tile | `src/ui/containers/Card/Card.tsx:49` | `-` |
-| ... | 126 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 147 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 

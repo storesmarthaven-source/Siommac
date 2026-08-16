@@ -32,7 +32,7 @@
  * for navigation breaks middle-click and open-in-new-tab.
  */
 
-import { type VNode, type ComponentChildren } from 'preact';
+import { type VNode, type ComponentChildren, type CSSProperties } from 'preact';
 import { type ControlSize, type UiState } from '../tokens';
 import './Button.recipe.css';
 
@@ -97,6 +97,8 @@ interface ButtonBase {
   'aria-controls'?: string;
   id?: string;
   class?: string;
+  /** Scoped recipe values for an embedded Button preview or owned composition. */
+  style?: CSSProperties;
 
   /**
    * Gallery-only: force a visual state that cannot be triggered synthetically
@@ -155,6 +157,7 @@ export function Button(props: ButtonProps): VNode {
     title,
     id,
     class: extra,
+    style,
     forceState,
     children,
     ...aria
@@ -205,6 +208,7 @@ export function Button(props: ButtonProps): VNode {
         rel={target === '_blank' ? 'noopener noreferrer' : undefined}
         data-ui-state={forced}
         title={title}
+        style={style}
         onClick={onClick}
         {...aria}
       >
@@ -227,6 +231,7 @@ export function Button(props: ButtonProps): VNode {
       aria-busy={loading ? 'true' : undefined}
       aria-pressed={pressed}
       data-ui-state={forced}
+      style={style}
       onClick={handleClick}
       title={title}
       {...aria}

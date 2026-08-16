@@ -15,16 +15,18 @@
  * there is no half-attached state to forget.
  */
 
-import { type VNode, type ComponentChildren } from 'preact';
+import { type VNode, type ComponentChildren, type CSSProperties } from 'preact';
 
-export function PreviewScope({ attach, children, class: extra }: {
+export function PreviewScope({ attach, children, class: extra, style }: {
   /** `draft.attachScope`. */
   attach: (el: HTMLElement | null) => void;
   children: ComponentChildren;
   class?: string;
+  /** Preview-only variables; never written into the draft or published runtime. */
+  style?: CSSProperties;
 }): VNode {
   return (
-    <div data-ui-preview-scope ref={attach} class={extra}>
+    <div data-ui-preview-scope ref={attach} class={extra} style={style}>
       {children}
     </div>
   );

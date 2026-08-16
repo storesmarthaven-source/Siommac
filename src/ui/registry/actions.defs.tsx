@@ -19,7 +19,8 @@ import { type VNode } from 'preact';
 import { LucideIcon } from '../LucideIcon';
 import { Button } from '../primitives/Button';
 import { NextActionButton } from '../patterns/NextActionButton';
-import { SegmentedControl, DropdownButton, SplitButton } from '../primitives/actions';
+import { BackActionButton } from '../patterns/BackActionButton';
+import { ButtonGroup, SegmentedControl, DropdownButton, SplitButton } from '../primitives/actions';
 import { type MenuItems } from '../overlays/DropdownMenu';
 import { type ComponentDef, type PropValues, type StyleGroup } from './types';
 import { type ControlSize } from '../tokens';
@@ -88,6 +89,7 @@ const VARIANT_STATES: StyleGroup[] = VARIANTS.flatMap(variant => [
 
 export const buttonDef: ComponentDef = {
   id: 'button',
+  thumbnail: 'buttons',
   /* Shown as "Action Button" so it reads as a sibling of Dropdown and Split
      Button rather than the generic they are variants of. The exported symbol is
      still `Button`, and the Code tab shows that — the catalogue name cannot
@@ -148,30 +150,30 @@ export const buttonDef: ComponentDef = {
   style: [
     ...VARIANT_GEOMETRY,
     { label: 'Primary', controls: [
-      { name: '--ui-button-primary-bg',        label: 'Background', kind: 'color' },
-      { name: '--ui-button-primary-fg',        label: 'Text', kind: 'color' },
-      { name: '--ui-button-primary-bg-hover',  label: 'Background — hover', kind: 'color' },
-      { name: '--ui-button-primary-bg-active', label: 'Background — pressed', kind: 'color' },
+      { name: '--ui-button-primary-bg',        label: 'Background', kind: 'color', linkedTo: 'var(--ui-color-action-primary)' },
+      { name: '--ui-button-primary-fg',        label: 'Text', kind: 'color', linkedTo: 'var(--ui-color-action-primary-text)' },
+      { name: '--ui-button-primary-bg-hover',  label: 'Background — hover', kind: 'color', linkedTo: 'var(--ui-color-action-primary-hover)' },
+      { name: '--ui-button-primary-bg-active', label: 'Background — pressed', kind: 'color', linkedTo: 'color-mix(in srgb, var(--ui-color-action-primary-hover) 88%, #000)' },
     ] },
     { label: 'Secondary', controls: [
-      { name: '--ui-button-secondary-bg',       label: 'Background', kind: 'color' },
-      { name: '--ui-button-secondary-fg',       label: 'Text', kind: 'color' },
-      { name: '--ui-button-secondary-bg-hover', label: 'Background — hover', kind: 'color' },
+      { name: '--ui-button-secondary-bg',       label: 'Background', kind: 'color', linkedTo: 'var(--ui-color-surface-default)' },
+      { name: '--ui-button-secondary-fg',       label: 'Text', kind: 'color', linkedTo: 'var(--ui-color-text-primary)' },
+      { name: '--ui-button-secondary-bg-hover', label: 'Background — hover', kind: 'color', linkedTo: 'var(--ui-color-surface-subtle)' },
     ] },
     { label: 'Outline & ghost', controls: [
-      { name: '--ui-button-outline-border',       label: 'Outline — border', kind: 'color' },
-      { name: '--ui-button-outline-bg-hover',     label: 'Outline — hover fill', kind: 'color' },
-      { name: '--ui-button-outline-border-hover', label: 'Outline — hover border', kind: 'color' },
-      { name: '--ui-button-ghost-fg',             label: 'Ghost — text', kind: 'color' },
-      { name: '--ui-button-ghost-bg-hover',       label: 'Ghost — hover fill', kind: 'color-alpha' },
+      { name: '--ui-button-outline-border',       label: 'Outline — border', kind: 'color', linkedTo: 'var(--ui-color-action-primary)' },
+      { name: '--ui-button-outline-bg-hover',     label: 'Outline — hover fill', kind: 'color', linkedTo: 'var(--ui-color-selection-background)' },
+      { name: '--ui-button-outline-border-hover', label: 'Outline — hover border', kind: 'color', linkedTo: 'var(--ui-color-selection-border)' },
+      { name: '--ui-button-ghost-fg',             label: 'Ghost — text', kind: 'color', linkedTo: 'var(--ui-color-text-secondary)' },
+      { name: '--ui-button-ghost-bg-hover',       label: 'Ghost — hover fill', kind: 'color-alpha', linkedTo: 'var(--ui-color-selection-background)' },
     ] },
     { label: 'Danger, link & toggle', controls: [
-      { name: '--ui-button-danger-bg',       label: 'Danger — background', kind: 'color' },
-      { name: '--ui-button-danger-bg-hover', label: 'Danger — hover', kind: 'color' },
-      { name: '--ui-button-link-fg',         label: 'Link — colour', kind: 'color' },
-      { name: '--ui-button-link-fg-hover',   label: 'Link — hover', kind: 'color' },
-      { name: '--ui-toggle-bg-on',           label: 'Toggle — pressed fill', kind: 'color-alpha' },
-      { name: '--ui-toggle-fg-on',           label: 'Toggle — pressed text', kind: 'color' },
+      { name: '--ui-button-danger-bg',       label: 'Danger — background', kind: 'color', linkedTo: 'var(--ui-color-danger)' },
+      { name: '--ui-button-danger-bg-hover', label: 'Danger — hover', kind: 'color', linkedTo: 'color-mix(in srgb, var(--ui-color-danger) 88%, #000)' },
+      { name: '--ui-button-link-fg',         label: 'Link — colour', kind: 'color', linkedTo: 'var(--ui-color-text-link)' },
+      { name: '--ui-button-link-fg-hover',   label: 'Link — hover', kind: 'color', linkedTo: 'var(--ui-color-action-primary)' },
+      { name: '--ui-toggle-bg-on',           label: 'Toggle — pressed fill', kind: 'color-alpha', linkedTo: 'rgba(27, 45, 84, .10)' },
+      { name: '--ui-toggle-fg-on',           label: 'Toggle — pressed text', kind: 'color', linkedTo: 'var(--ui-color-selection-border)' },
     ] },
     ...VARIANT_STATES,
   ],
@@ -205,6 +207,9 @@ export const buttonDef: ComponentDef = {
       && s(p.variant, 'primary') === 'primary'
       && s(p.iconRight, 'None') === 'ArrowRight'
       && !isLink;
+    const isBackAction = s(p.label, 'Button') === 'Back'
+      && s(p.variant, 'primary') === 'ghost'
+      && !isLink;
     if (isNextAction) return (
       <NextActionButton
         size={size(p.size)}
@@ -216,6 +221,7 @@ export const buttonDef: ComponentDef = {
         forceState={state}
       />
     );
+    if (isBackAction) return <BackActionButton size={size(p.size)} icon={s(p.iconLeft, 'ArrowLeft') === 'None' ? null : s(p.iconLeft, 'ArrowLeft') as never} iconTreatment={s(p.iconTreatment, 'outline') as never} iconColor={s(p.iconColor, 'currentColor')} disabled={b(p.disabled) || state === 'disabled'} forceState={state} />;
     return (
       <Button
         variant={s(p.variant, 'primary') as never}
@@ -242,7 +248,11 @@ export const buttonDef: ComponentDef = {
       && s(p.variant, 'primary') === 'primary'
       && s(p.iconRight, 'None') === 'ArrowRight'
       && !isLink;
+    const isBackAction = s(p.label, 'Button') === 'Back'
+      && s(p.variant, 'primary') === 'ghost'
+      && !isLink;
     if (isNextAction) return `<NextActionButton${size(p.size) !== 'md' ? ` size="${size(p.size)}"` : ''}${s(p.iconLeft, 'None') !== 'None' ? ` leadingIcon="${s(p.iconLeft)}"` : ''}${s(p.iconTreatment, 'outline') !== 'outline' ? ` iconTreatment="${s(p.iconTreatment)}"` : ''}${s(p.iconColor, '#ffffff').toLowerCase() !== '#ffffff' ? ` iconColor="${s(p.iconColor)}"` : ''}${b(p.loading) || state === 'loading' ? ' loading={saving}' : ''}${b(p.disabled) || state === 'disabled' ? ' disabled' : ''} onClick={goToNextStep} />`;
+    if (isBackAction) return `<BackActionButton${s(p.iconLeft, 'ArrowLeft') === 'None' ? ' icon={null}' : s(p.iconLeft, 'ArrowLeft') !== 'ArrowLeft' ? ` icon="${s(p.iconLeft)}"` : ''}${s(p.iconTreatment, 'outline') !== 'outline' ? ` iconTreatment="${s(p.iconTreatment)}"` : ''}${s(p.iconColor, '#5e6f8d').toLowerCase() !== '#5e6f8d' ? ` iconColor="${s(p.iconColor)}"` : ''}${size(p.size) !== 'md' ? ` size="${size(p.size)}"` : ''}${b(p.disabled) || state === 'disabled' ? ' disabled' : ''} onClick={goToPreviousStep} />`;
     const left = jsx(s(p.iconLeft, 'None'));
     const right = jsx(s(p.iconRight, 'None'));
     const lines = [
@@ -278,7 +288,7 @@ export const buttonDef: ComponentDef = {
       title: 'Wizard navigation',
       render: () => (
         <>
-          <Button variant="ghost">Back</Button>
+          <BackActionButton />
           <NextActionButton label="Continue" />
         </>
       ),
@@ -293,16 +303,99 @@ export const buttonDef: ComponentDef = {
     { value: 'primary', title: 'Primary', description: 'Main action', props: { label: 'Next', iconLeft: 'None', iconRight: 'ArrowRight', iconTreatment: 'outline', iconColor: '#ffffff' } },
     { value: 'secondary', title: 'Secondary', description: 'Supporting action', props: { label: 'Cancel', iconLeft: 'None', iconTreatment: 'outline', iconColor: '#334155' } },
     { value: 'outline', title: 'Outline', description: 'Alternative action', props: { label: 'Preview', iconLeft: 'None', iconTreatment: 'outline', iconColor: '#1b2d54' } },
-    { value: 'ghost', title: 'Ghost', description: 'Quiet navigation', props: { label: 'Back', iconLeft: 'None', iconTreatment: 'outline', iconColor: '#5e6f8d' } },
+    { value: 'ghost', title: 'Ghost', description: 'Quiet navigation', props: { label: 'Back', iconLeft: 'ArrowLeft', iconTreatment: 'outline', iconColor: '#5e6f8d' } },
     { value: 'danger', title: 'Danger', description: 'Destructive action', props: { label: 'Delete', iconLeft: 'Trash2', iconTreatment: 'outline', iconColor: '#ffffff' } },
     { value: 'link', title: 'Link', description: 'Inline navigation', props: { label: 'View record', iconLeft: 'None', iconRight: 'ArrowRight', iconTreatment: 'outline', iconColor: '#1b2d54' } },
   ],
+};
+
+/* ── ButtonGroup ───────────────────────────────────────────────────────────*/
+
+export const buttonGroupDef: ComponentDef = {
+  id: 'button-group',
+  thumbnail: 'button-group',
+  name: 'Button Group',
+  category: 'actions',
+  description: 'Keep related record actions together in one compact, consistent control.',
+  status: 'stable',
+  componentPath: 'src/ui/primitives/actions.tsx',
+  importFrom: '@ui',
+  migration: { rawPatterns: ['joined button rows', 'adjacent toolbar action buttons'] },
+  previewAxis: 'variant',
+  previewLayout: 'compact',
+  previewSamples: [
+    { value: 'outline', title: 'Outline', description: 'A clear joined boundary for utility actions.', props: { variant: 'outline' }, comparisonProps: { size: 'sm', withIcons: true, cardPreview: true } },
+    { value: 'soft', title: 'Soft', description: 'A lower-emphasis grouped surface.', props: { variant: 'soft' }, comparisonProps: { size: 'sm', withIcons: true, cardPreview: true } },
+    { value: 'ghost', title: 'Ghost', description: 'Independent actions with shared spacing only.', props: { variant: 'ghost' }, comparisonProps: { size: 'sm', withIcons: true, cardPreview: true } },
+  ],
+
+  props: {
+    variant: { type: 'segmented', label: 'Style', options: ['outline', 'soft', 'ghost'], default: 'outline' },
+    withIcons: { type: 'boolean', label: 'Show icons', default: true },
+    fullWidth: { type: 'boolean', label: 'Full width', default: false },
+    dangerLast: { type: 'boolean', label: 'Danger last action', default: false },
+    disabled: { type: 'boolean', label: 'Disabled', default: false },
+  },
+
+  style: [
+    { label: 'Container', controls: [
+      { name: '--ui-button-group-bg', label: 'Background', kind: 'color' },
+      { name: '--ui-button-group-fg', label: 'Text and icons', kind: 'color' },
+      { name: '--ui-button-group-border', label: 'Outer border', kind: 'color' },
+      { name: '--ui-button-group-separator', label: 'Separators', kind: 'color' },
+      { name: '--ui-button-group-radius', label: 'Corner radius', kind: 'size' },
+      { name: '--ui-button-group-hover', label: 'Hover color', kind: 'color-alpha' },
+      { name: '--ui-button-group-soft-bg', label: 'Soft background', kind: 'color-alpha' },
+    ] },
+  ],
+
+  states: ['default', 'hover', 'focus', 'disabled'],
+  a11y: {
+    role: 'group + native buttons',
+    name: 'The required `label` names the related set; each item supplies its own visible name.',
+    keyboard: [
+      { keys: 'Tab / Shift+Tab', does: 'Moves through each independent action.' },
+      { keys: 'Enter / Space', does: 'Activates the focused action.' },
+    ],
+    focus: 'Every enabled action stays in the normal tab order. Focus is not roved because this is not single-choice.',
+    notes: ['Use SegmentedControl instead when the choices represent one selected value.'],
+  },
+
+  render: (p, state) => (
+    <ButtonGroup
+      label="Record actions"
+      size={s(p.size, 'lg') as ControlSize}
+      variant={s(p.variant, 'outline') as 'outline' | 'soft' | 'ghost'}
+      fullWidth={b(p.fullWidth)}
+      disabled={b(p.disabled) || state === 'disabled'}
+      forceState={state}
+      items={b(p.cardPreview)
+        ? [
+            { id: 'archive', label: 'Archive', icon: b(p.withIcons) ? <LucideIcon name="Archive" /> : undefined },
+            { id: 'edit', label: 'Edit', icon: b(p.withIcons) ? <LucideIcon name="Pencil" /> : undefined },
+          ]
+        : [
+            { id: 'archive', label: 'Archive', icon: b(p.withIcons) ? <LucideIcon name="Archive" /> : undefined },
+            { id: 'edit', label: 'Edit', icon: b(p.withIcons) ? <LucideIcon name="Pencil" /> : undefined },
+            { id: 'delete', label: 'Delete', tone: b(p.dangerLast) ? 'danger' : 'default', icon: b(p.withIcons) ? <LucideIcon name="Trash2" /> : undefined },
+          ]}
+    />
+  ),
+  code: () => `<ButtonGroup
+  label="Record actions"
+  items={[
+    { id: 'archive', label: 'Archive', icon: <LucideIcon name="Archive" />, onClick: archive },
+    { id: 'edit', label: 'Edit', icon: <LucideIcon name="Pencil" />, onClick: edit },
+    { id: 'delete', label: 'Delete', icon: <LucideIcon name="Trash2" />, onClick: remove },
+  ]}
+/>`,
 };
 
 /* ── SegmentedControl ──────────────────────────────────────────────────────*/
 
 export const segmentedDef: ComponentDef = {
   id: 'segmented-control',
+  thumbnail: 'segmented',
   name: 'SegmentedControl',
   previewAxis: 'variant',
   category: 'actions',
@@ -314,14 +407,21 @@ export const segmentedDef: ComponentDef = {
 
   props: {
     value:     { type: 'select',  label: 'Selected', options: ['grid', 'list', 'board'], default: 'grid' },
+    variant:   { type: 'segmented', label: 'Style', options: ['filled', 'outline', 'ghost'], default: 'filled' },
     fullWidth: { type: 'boolean', label: 'Full width', default: false },
     withIcons: { type: 'boolean', label: 'Show icons', default: true },
     disabled:  { type: 'boolean', label: 'Disabled', default: false },
   },
 
+  variantSamples: [
+    { value: 'filled', title: 'Background', props: { variant: 'filled' } },
+    { value: 'outline', title: 'Outline', props: { variant: 'outline' } },
+    { value: 'ghost', title: 'Ghost', props: { variant: 'ghost' } },
+  ],
+
   style: [
     { label: 'Track', controls: [
-      { name: '--ui-segmented-bg',     label: 'Track fill', kind: 'color' },
+      { name: '--ui-segmented-bg',     label: 'Background', kind: 'color' },
       { name: '--ui-segmented-border', label: 'Track border', kind: 'color' },
       { name: '--ui-segmented-radius', label: 'Corner radius', kind: 'size' },
       { name: '--ui-segmented-pad',    label: 'Track padding', kind: 'size' },
@@ -353,6 +453,7 @@ export const segmentedDef: ComponentDef = {
       label="View mode"
       value={s(p.value, 'grid')}
       onChange={noop}
+      variant={s(p.variant, 'filled') as 'filled' | 'outline' | 'ghost'}
       fullWidth={b(p.fullWidth)}
       disabled={b(p.disabled) || state === 'disabled'}
       forceState={state}
@@ -367,6 +468,7 @@ export const segmentedDef: ComponentDef = {
   label="View mode"
   value={view}
   onChange={setView}
+  variant="filled"
   options={[
     { value: 'grid', label: 'Grid', icon: <LucideIcon name="LayoutGrid" /> },
     { value: 'list', label: 'List', icon: <LucideIcon name="List" /> },
@@ -378,6 +480,7 @@ export const segmentedDef: ComponentDef = {
 
 export const menuDef: ComponentDef = {
   id: 'menu',
+  thumbnail: 'menu',
   name: 'Menu',
   category: 'overlays',
   description: 'The action-menu SURFACE — grouping, icons, shortcuts, destructive items, keyboard and focus. Its triggers are their own components: see Dropdown Button and Split Button under Buttons.',
@@ -398,6 +501,7 @@ export const menuDef: ComponentDef = {
     trigger:    { type: 'select',    label: 'Trigger', options: ['Dropdown button', 'Split button', 'Icon only'], default: 'Dropdown button',
                   help: 'All three are the same Menu with a different Button composition in front of it.' },
     label:      { type: 'text',      label: 'Trigger label', default: 'Actions' },
+    chevronIcon:{ type: 'icon',      label: 'Chevron icon', default: 'ChevronDown', recommendations: ['ChevronDown', 'ChevronUp', 'ChevronsUpDown'] },
     variant:    { type: 'select',    label: 'Trigger variant', options: ['outline', 'secondary', 'primary', 'ghost'], default: 'outline' },
     size:       { type: 'segmented', label: 'Size', options: ['sm', 'md', 'lg'], default: 'md' },
     matchWidth: { type: 'boolean',   label: 'Menu matches trigger width', default: false, help: 'Right for filter menus, wrong for action menus.' },
@@ -450,6 +554,7 @@ export const menuDef: ComponentDef = {
           items={SAVE_MENU}
           variant={s(p.variant) === 'outline' ? 'primary' : (s(p.variant, 'primary') as never)}
           size={size(p.size)}
+          chevronIcon={s(p.chevronIcon, 'ChevronDown') as never}
           disabled={b(p.disabled) || state === 'disabled'}
           forceState={state}
         />
@@ -462,6 +567,7 @@ export const menuDef: ComponentDef = {
           items={DEMO_MENU}
           variant="ghost"
           size={size(p.size)}
+          chevronIcon={s(p.chevronIcon, 'ChevronDown') as never}
           disabled={b(p.disabled) || state === 'disabled'}
           forceState={state}
         />
@@ -473,6 +579,7 @@ export const menuDef: ComponentDef = {
         items={DEMO_MENU}
         variant={s(p.variant, 'outline') as never}
         size={size(p.size)}
+        chevronIcon={s(p.chevronIcon, 'ChevronDown') as never}
         matchWidth={b(p.matchWidth)}
         disabled={b(p.disabled) || state === 'disabled'}
         forceState={state}
@@ -504,6 +611,7 @@ export const menuDef: ComponentDef = {
 
 export const ACTION_DEFS: readonly ComponentDef[] = [
   buttonDef,
+  buttonGroupDef,
   segmentedDef,
   menuDef,
 ];

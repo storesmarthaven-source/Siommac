@@ -6,6 +6,11 @@ import './treeView.recipe.css';
 export interface TreeNode {
   id: string;
   label: string;
+  /** Optional supporting text for record trees and other information hierarchies. */
+  description?: string;
+  /** Compact status/count displayed at the trailing edge of the row. */
+  meta?: string;
+  metaTone?: 'neutral' | 'success' | 'warning' | 'danger';
   kind?: 'folder' | 'file';
   children?: readonly TreeNode[];
   disabled?: boolean;
@@ -137,7 +142,11 @@ export function TreeView({
           onKeyDown={event => onKeyDown(event, node)}
         >
           <LucideIcon name={folder ? (open ? 'FolderOpen' : 'Folder') : 'File'} size={16} strokeWidth={2} />
-          <span>{node.label}</span>
+          <span class="ui-tree__copy">
+            <span class="ui-tree__label">{node.label}</span>
+            {node.description && <small>{node.description}</small>}
+          </span>
+          {node.meta && <span class={`ui-tree__meta is-${node.metaTone ?? 'neutral'}`}>{node.meta}</span>}
         </button>
         {folder && node.children && (
           <div class="ui-tree__branch" data-open={open ? 'true' : 'false'}>

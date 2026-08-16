@@ -26,9 +26,9 @@
  */
 
 import { type VNode } from 'preact';
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import { toast } from '@store';
-import { ListSkeleton, Skeleton, SkeletonFields, SkeletonText } from '@ui';
+import { Avatar, Badge, Button, ListSkeleton, ProgressSteps, Skeleton, SkeletonFields, SkeletonText, Tabs, TreeView, type BadgeTone, type TabItem, type TreeNode } from '@ui';
 import {
   useEmployeeProfileShell, useEmployeeAttention, tabIndicatorFor,
   type ProfileTabKey, type EmployeeAttentionItem, type EmployeeProfileShell,
@@ -44,15 +44,14 @@ import {
   DASH, DRAWER_TABS, DRAWER_TAB_LABEL, titleCase, formatDate, formatDateTime,
   formatTenure, formatNoticePeriod, formatWeeklyHours, formatArrangementAndFte,
   probationState, readinessLabel, readinessExplanation, readinessHeadline,
-  attentionSubtitle, severityToneClass, tabAriaLabel, visibleTabs, identitySubtitle,
+  attentionSubtitle, visibleTabs, identitySubtitle,
 } from './employeeProfileModel';
 import {
   exportDocumentIndex, exportReadinessBreakdown, exportAuditHistory,
 } from '@api/hr/employeeExports';
-import { ProfileIconSprite, Icon, type ProfileIconId } from './profile/ProfileIconSprite';
+import { Icon, type ProfileIconId } from './profile/ProfileIconSprite';
+import { EmployeeSideDrawerFrame } from './EmployeeSideDrawerFrame';
 import type { EmployeeMasterAccess } from './employeeMasterAccess';
-import './ProfileDrawer.mockup.css';
-import './ProfileDrawer.css';
 
 export interface ProfileDrawerProps {
   employeeId: string | null;
@@ -88,6 +87,41 @@ const DOC_STATE_LABEL: Record<string, { label: string; tone: string }> = {
   unverified: { label: 'Unverified', tone: 'warn' },
   missing:    { label: 'Missing',    tone: 'danger' },
 };
+
+function employmentStatusTone(status: string | null | undefined): BadgeTone {
+  const value = status?.trim().toLowerCase() ?? '';
+  if (value === 'active') return 'success';
+  if (value.includes('leave') || value.includes('pending')) return 'warning';
+  if (value.includes('terminated') || value.includes('dismissed')) return 'danger';
+  return 'neutral';
+}
+
+function documentHealthTree(groups: readonly DocumentHealthGroup[]): TreeNode[] {
+  return groups.map(group => ({
+    id: `document-group:${group.key}`,
+    label: group.label,
+    kind: 'folder',
+    meta: group.missingCount > 0
+      ? `${group.missingCount} Missing`
+      : group.expiringCount > 0
+        ? `${group.expiringCount} Expiring`
+        : `${group.currentCount} Current`,
+    metaTone: group.missingCount > 0 ? 'danger' : group.expiringCount > 0 ? 'warning' : 'success',
+    children: group.items.map(item => {
+      const state = DOC_STATE_LABEL[item.state] ?? { label: titleCase(item.state), tone: '' };
+      return {
+        id: `document:${group.key}:${item.documentId ?? item.requirementId ?? item.title}`,
+        label: item.title,
+        description: item.detail,
+        kind: 'file' as const,
+        meta: state.label,
+        metaTone: state.tone === 'danger' ? 'danger' as const
+          : state.tone === 'warn' ? 'warning' as const
+            : 'success' as const,
+      };
+    }),
+  }));
+}
 
 /** Activity area → timeline icon and tone, from the record's own area field. */
 function activityVisual(area: string): { icon: ProfileIconId; tone: string } {
@@ -228,6 +262,14 @@ export function ProfileDrawer({
   }, [employeeId]);
 
   const tabs = useMemo(() => visibleTabs(shell, DRAWER_TABS), [shell]);
+  const tabItems = useMemo<readonly TabItem[]>(() => tabs.map(key => {
+    const indicator = tabIndicatorFor(shell?.tabIndicators, key);
+    return {
+      id: key,
+      label: DRAWER_TAB_LABEL[key],
+      badge: indicator?.unresolvedCount,
+    };
+  }), [shell?.tabIndicators, tabs]);
   // A capability-gated tab can disappear once the shell resolves; fall back to
   // overview rather than render an empty panel for a tab that no longer exists.
   useEffect(() => { if (!tabs.includes(tab)) setTab('overview'); }, [tabs, tab]);
@@ -245,29 +287,25 @@ export function ProfileDrawer({
     employeeId, false, access.viewAccessAssignments && tab === 'access');
   const audit = useHrAudit(tab === 'activity' && access.viewAudit ? employeeId : null);
 
+  const documentHealthData = documentHealth.data;
+  const employmentData = employment.data;
+  const readinessData = readiness.data;
+  const assignmentsData = assignments.data;
+  const auditData = audit.data;
+
   const followUp = useReadinessFollowUp();
   const updateContact = useUpdateHrContact();
 
-  // The header no longer carries a close button, so focus lands on the dialog
-  // itself. Without this the keyboard would stay behind the drawer on the
-  // register underneath it.
-  const panelRef = useRef<HTMLDivElement>(null);
-  useEffect(() => { panelRef.current?.focus(); }, [employeeId]);
-
-  // Escape closes the contact dialog first, then the drawer. With no visible
-  // close control this and the backdrop click are the only ways out, so the
-  // listener is not optional.
-  useEffect(() => {
-    function onKey(e: KeyboardEvent): void {
-      if (e.key !== 'Escape') return;
-      if (contactOpen) { setContactOpen(false); return; }
-      onClose();
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [contactOpen, onClose]);
-
-  if (!employeeId) return null;
+  // Keep the shared frame mounted for its closing phase. It retains the last
+  // open composition for 150ms, so the production employee drawer exits with
+  // the same complete right-edge motion as the Studio template.
+  if (!employeeId) {
+    return (
+      <EmployeeSideDrawerFrame open={false} onClose={onClose}>
+        {null}
+      </EmployeeSideDrawerFrame>
+    );
+  }
 
   const identity = shell?.identity;
   const facts = shell?.employment;
@@ -367,17 +405,15 @@ export function ProfileDrawer({
   }
 
   // ONE overlay and root for both states. The loading body swaps inside them, so
-  // the slide-in on `.epd-overlay > .epd-root` runs once per open rather than
-  // again when the data lands.
+  // the shared frame's entrance runs once per open rather than again when the
+  // data lands.
   const loading = !shellQuery.ready && !shellQuery.isError;
 
   return (
-    <div class="epd-overlay" role="presentation" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div
-        ref={panelRef} tabIndex={-1} role="dialog" aria-modal="true"
-        aria-label="Employee profile" class="epd-root"
-      >
-        <ProfileIconSprite />
+    <EmployeeSideDrawerFrame
+      onClose={onClose}
+      onEscape={() => { if (contactOpen) setContactOpen(false); else onClose(); }}
+    >
 
         {loading ? <DrawerSkeletonBody /> : (
         <main class="drawer" aria-label="Employee profile">
@@ -387,17 +423,17 @@ export function ProfileDrawer({
 
           <section class="identity">
             <div class="identity-grid">
-              <div class="portrait-shell">
-                {identity?.profileImageUrl
-                  ? <img src={identity.profileImageUrl} alt={identity.displayName} />
-                  : <span class="portrait-fallback" aria-hidden="true">
-                      {(identity?.displayName ?? '?').slice(0, 1).toUpperCase()}
-                    </span>}
-              </div>
+              <Avatar
+                name={identity?.displayName ?? 'Employee'}
+                src={identity?.profileImageUrl}
+                seed={identity?.employeeNo ?? identity?.displayName}
+                size={84}
+                class="portrait-shell"
+              />
               <div>
                 <div class="name-line">
                   <h1>{identity?.displayName ?? DASH}</h1>
-                  <span class="status">{titleCase(identity?.employmentStatus)}</span>
+                  <Badge tone={employmentStatusTone(identity?.employmentStatus)} contrast="inverse" size="sm" dot>{titleCase(identity?.employmentStatus)}</Badge>
                 </div>
                 <div class="employee-no">{identity?.employeeNo ?? DASH}</div>
                 <div class="identity-lines">
@@ -407,33 +443,23 @@ export function ProfileDrawer({
               </div>
             </div>
             <div class="facts">
-              <div class="fact"><Icon id="shield" /><span>Employment Basis</span><strong>{titleCase(facts?.employmentBasis)}</strong></div>
-              <div class="fact"><Icon id="clock" /><span>Work Arrangement</span><strong>{facts?.workArrangement ?? DASH}</strong></div>
+              <div class="fact"><Icon id="shield" /><span>Employment Type</span><strong>{titleCase(facts?.employmentBasis)}</strong></div>
+              <div class="fact"><Icon id="clock" /><span>Work Schedule</span><strong>{facts?.workArrangement ?? DASH}</strong></div>
               <div class="fact"><Icon id="calendar" /><span>Start Date</span><strong>{formatDate(facts?.startDate)}</strong></div>
               <div class="fact"><Icon id="clock" /><span>Tenure</span><strong>{formatTenure(facts?.tenureMonths)}</strong></div>
             </div>
           </section>
 
-          <nav class="tabs" role="tablist" aria-label="Employee profile sections">
-            {tabs.map(key => {
-              const indicator = tabIndicatorFor(shell?.tabIndicators, key);
-              return (
-                <button
-                  key={key} class={`tab${tab === key ? ' active' : ''}`} role="tab"
-                  aria-selected={tab === key} data-tab={key}
-                  aria-label={tabAriaLabel(key, indicator)}
-                  onClick={() => setTab(key)}
-                >
-                  {DRAWER_TAB_LABEL[key]}
-                  {indicator && (
-                    <span class={`badge ${severityToneClass(indicator.highestSeverity)}`.trim()}>
-                      {indicator.unresolvedCount}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
+          <Tabs
+            id="employee-profile"
+            items={tabItems}
+            value={tab}
+            onChange={id => setTab(id as ProfileTabKey)}
+            label="Employee profile sections"
+            variant="underline"
+            size="sm"
+            class="epd-drawer-tabs"
+          />
 
           <div class="scroll">
             {shellQuery.isError && (
@@ -443,7 +469,7 @@ export function ProfileDrawer({
             )}
 
             {shell && tab === 'overview' && (
-              <section class="panel active" id="panel-overview" role="tabpanel">
+              <section class="panel active" id="employee-profile-panel-overview" role="tabpanel" aria-labelledby="employee-profile-tab-overview" tabIndex={0}>
                 {attentionTotal > 0 && <section class="attention-strip">
                   <div class="attention-title">
                     <span class="attention-heading-icon"><Icon id="alert" /></span>
@@ -545,40 +571,18 @@ export function ProfileDrawer({
                       <div class="card-head"><Icon id="file" /><h3>Document Health</h3>
                         <button class="text-btn" type="button" onClick={() => onOpenFullRecord?.('documents')}>Documents<Icon id="chevron" /></button>
                       </div>
-                      <div class="doc-tree" aria-label="Employee document tree">
+                      <div class="employee-document-tree">
                         {documentHealth.isPending && <DrawerSectionSkeleton label="Loading documents…" />}
-                        {documentHealth.data?.groups.length === 0 && (
+                        {documentHealthData?.groups.length === 0 && (
                           <div class="epd-empty">No document requirements apply to this employee.</div>
                         )}
-                        {/* Collapsed by default: the card is a health SUMMARY, and
-                            expanding every category buried the rest of the overview.
-                            The count on each folder carries its state. */}
-                        {documentHealth.data?.groups.map((group: DocumentHealthGroup) => (
-                          <details key={group.key}>
-                            <summary>
-                              <Icon id="folder" /><strong>{group.label}</strong>
-                              <span class="folder-count">
-                                {group.missingCount > 0
-                                  ? `${group.missingCount} Missing`
-                                  : group.expiringCount > 0
-                                    ? `${group.expiringCount} Expiring`
-                                    : `${group.currentCount} Current`}
-                              </span>
-                            </summary>
-                            <div class="doc-tree-children">
-                              {group.items.map(item => {
-                                const state = DOC_STATE_LABEL[item.state] ?? { label: titleCase(item.state), tone: '' };
-                                return (
-                                  <div class="doc-leaf" key={`${group.key}:${item.documentId ?? item.requirementId ?? item.title}`}>
-                                    <Icon id="file" class="doc-file-icon" />
-                                    <div><strong>{item.title}</strong><span>{item.detail}</span></div>
-                                    <span class={`doc-state ${state.tone}`.trim()}>{state.label}</span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </details>
-                        ))}
+                        {documentHealthData && documentHealthData.groups.length > 0 && (
+                          <TreeView
+                            nodes={documentHealthTree(documentHealthData.groups)}
+                            label="Employee document health"
+                            class="employee-document-health-tree"
+                          />
+                        )}
                       </div>
                     </section>
                   )}
@@ -602,21 +606,21 @@ export function ProfileDrawer({
                       <div class="card-head"><Icon id="clock" /><h3>Recent Activity</h3>
                         <button class="text-btn" type="button" onClick={() => onOpenFullRecord?.('activity')}>View All<Icon id="chevron" /></button>
                       </div>
-                      <div class="activity-list">
+                      <div class="recent-activity-steps">
                         {shell.recentActivity.length === 0 && <div class="epd-empty">No recorded activity yet.</div>}
-                        {shell.recentActivity.map(entry => {
-                          const visual = activityVisual(entry.area);
-                          return (
-                            <div class="activity-row" key={entry.id}>
-                              <span class={`activity-icon ${visual.tone}`.trim()}><Icon id={visual.icon} /></span>
-                              <div class="activity-copy">
-                                <strong>{titleCase(entry.action.split('.').pop() ?? entry.action)}</strong>
-                                <span>{titleCase(entry.area)}{entry.actorName ? ` · By ${entry.actorName}` : ''}</span>
-                              </div>
-                              <time class="activity-time">{formatDateTime(entry.occurredAt)}</time>
-                            </div>
-                          );
-                        })}
+                        {shell.recentActivity.length > 0 && (
+                          <ProgressSteps
+                            label="Recent employee activity"
+                            variant="icon-with-number"
+                            value={shell.recentActivity[0]?.id ?? '__no_activity__'}
+                            completed={[]}
+                            steps={shell.recentActivity.map(entry => ({
+                              id: entry.id,
+                              label: titleCase(entry.action.split('.').pop() ?? entry.action),
+                              description: `${titleCase(entry.area)}${entry.actorName ? ` · By ${entry.actorName}` : ''} · ${formatDateTime(entry.occurredAt)}`,
+                            }))}
+                          />
+                        )}
                       </div>
                     </section>
                   )}
@@ -625,7 +629,7 @@ export function ProfileDrawer({
             )}
 
             {shell && tab === 'employment' && (
-              <section class="panel active" id="panel-employment" role="tabpanel">
+              <section class="panel active" id="employee-profile-panel-employment" role="tabpanel" aria-labelledby="employee-profile-tab-employment" tabIndex={0}>
                 <div class="tab-heading">
                   <div><h2>Employment</h2><p>Current assignment, employment terms, payroll placement and effective-dated history.</p></div>
                   <div class="tab-heading-actions">
@@ -655,8 +659,8 @@ export function ProfileDrawer({
                     <div class="card-head"><Icon id="shield" /><h3>Employment Terms</h3></div>
                     <div class="data-list">
                       <DataRow label="Legal Employer" value={facts?.legalEmployer ?? DASH} />
-                      <DataRow label="Employment Basis" value={titleCase(facts?.employmentBasis)} />
-                      <DataRow label="Work Arrangement" value={facts?.workArrangement ?? DASH} />
+                      <DataRow label="Employment Type" value={titleCase(facts?.employmentBasis)} />
+                      <DataRow label="Work Schedule" value={facts?.workArrangement ?? DASH} />
                       <DataRow label="Standard Hours" value={formatWeeklyHours(facts?.weeklyHours)} />
                       <DataRow label="Work Schedule" value={titleCase(facts?.workSchedule)} />
                       <DataRow label="Notice Period" value={formatNoticePeriod(facts?.noticePeriodDays)} />
@@ -680,22 +684,22 @@ export function ProfileDrawer({
                   <section class="card">
                     <div class="card-head"><Icon id="key" /><h3>Bank &amp; Pay Administration</h3></div>
                     {employment.isPending && <DrawerSectionSkeleton label="Loading payroll context…" />}
-                    {employment.data && !employment.data.bank && (
+                    {employmentData && !employmentData.bank && (
                       <div class="epd-empty">Payroll context is not available to your role.</div>
                     )}
-                    {employment.data?.bank && (
+                    {employmentData?.bank && (
                       <div class="data-list">
-                        <DataRow label="Primary Bank" value={employment.data.bank.bankName ?? DASH} />
+                        <DataRow label="Primary Bank" value={employmentData.bank.bankName ?? DASH} />
                         {/* Masked only — HR never receives the full account number. */}
-                        <DataRow label="Account" value={employment.data.bank.accountNumberMasked ?? DASH} />
-                        <DataRow label="Account Type" value={titleCase(employment.data.bank.accountType)} />
-                        <DataRow label="Payment Method" value={employment.data.bank.hasPrimaryAccount ? 'Direct Deposit' : DASH} />
+                        <DataRow label="Account" value={employmentData.bank.accountNumberMasked ?? DASH} />
+                        <DataRow label="Account Type" value={titleCase(employmentData.bank.accountType)} />
+                        <DataRow label="Payment Method" value={employmentData.bank.hasPrimaryAccount ? 'Direct Deposit' : DASH} />
                         <DataRow label="Bank Record" value={
-                          <span class={`badge${employment.data.bank.verificationState === 'verified' ? '' : employment.data.bank.verificationState === 'missing' ? ' danger' : ' warning'}`}>
-                            {employment.data.bank.verificationState === 'verified' ? 'Verified'
-                              : employment.data.bank.verificationState === 'missing' ? 'Missing' : 'Reverify'}
+                          <span class={`badge${employmentData.bank.verificationState === 'verified' ? '' : employmentData.bank.verificationState === 'missing' ? ' danger' : ' warning'}`}>
+                            {employmentData.bank.verificationState === 'verified' ? 'Verified'
+                              : employmentData.bank.verificationState === 'missing' ? 'Missing' : 'Reverify'}
                           </span>} />
-                        <DataRow label="Last Verified" value={formatDate(employment.data.bank.lastVerifiedAt)} />
+                        <DataRow label="Last Verified" value={formatDate(employmentData.bank.lastVerifiedAt)} />
                       </div>
                     )}
                   </section>
@@ -703,8 +707,8 @@ export function ProfileDrawer({
                     <div class="card-head"><Icon id="clock" /><h3>Employment History</h3></div>
                     <div class="history">
                       {employment.isPending && <DrawerSectionSkeleton label="Loading history…" />}
-                      {employment.data?.history.length === 0 && <div class="epd-empty">No recorded employment changes.</div>}
-                      {employment.data?.history.map(entry => (
+                      {employmentData?.history.length === 0 && <div class="epd-empty">No recorded employment changes.</div>}
+                      {employmentData?.history.map(entry => (
                         <div class="history-row" key={entry.id}>
                           <span class="history-dot"><Icon id={entry.kind === 'assignment' ? 'briefcase' : 'check'} /></span>
                           <div><strong>{entry.title}</strong><span>{entry.detail}{entry.actorName ? ` · ${entry.actorName}` : ''}</span></div>
@@ -718,7 +722,7 @@ export function ProfileDrawer({
             )}
 
             {shell && tab === 'documents' && access.viewDocuments && (
-              <section class="panel active" id="panel-documents" role="tabpanel">
+              <section class="panel active" id="employee-profile-panel-documents" role="tabpanel" aria-labelledby="employee-profile-tab-documents" tabIndex={0}>
                 <div class="tab-heading">
                   <div><h2>Documents</h2><p>Authorised employee records, verification state, expiry dates and missing evidence.</p></div>
                   <div class="tab-heading-actions">
@@ -732,16 +736,16 @@ export function ProfileDrawer({
                   </div>
                 </div>
                 {documentHealth.isPending && <DrawerSectionSkeleton label="Loading document health…" />}
-                {documentHealth.data && (
+                {documentHealthData && (
                   <>
                     <div class="summary-grid">
-                      <div class="summary-stat"><span>Total Documents</span><strong>{documentHealth.data.totalDocuments}</strong><small>Across {documentHealth.data.categoryCount} Categories</small></div>
-                      <div class="summary-stat green"><span>Verified</span><strong>{documentHealth.data.verifiedCount}</strong><small>{documentHealth.data.verifiedPercent}% Verified</small></div>
-                      <div class="summary-stat amber"><span>Expiring Soon</span><strong>{documentHealth.data.expiringCount}</strong><small>Within 30 Days</small></div>
-                      <div class="summary-stat"><span>Missing</span><strong>{documentHealth.data.missingCount}</strong><small>Required Evidence</small></div>
+                      <div class="summary-stat"><span>Total Documents</span><strong>{documentHealthData.totalDocuments}</strong><small>Across {documentHealthData.categoryCount} Categories</small></div>
+                      <div class="summary-stat green"><span>Verified</span><strong>{documentHealthData.verifiedCount}</strong><small>{documentHealthData.verifiedPercent}% Verified</small></div>
+                      <div class="summary-stat amber"><span>Expiring Soon</span><strong>{documentHealthData.expiringCount}</strong><small>Within 30 Days</small></div>
+                      <div class="summary-stat"><span>Missing</span><strong>{documentHealthData.missingCount}</strong><small>Required Evidence</small></div>
                     </div>
                     <div class="record-list">
-                      {documentHealth.data.groups.flatMap(group => group.items.map(item => {
+                      {documentHealthData.groups.flatMap(group => group.items.map(item => {
                         const state = DOC_STATE_LABEL[item.state] ?? { label: titleCase(item.state), tone: '' };
                         return (
                           <article class="record-row" key={`${group.key}:${item.documentId ?? item.requirementId ?? item.title}`}>
@@ -760,7 +764,7 @@ export function ProfileDrawer({
             )}
 
             {shell && tab === 'readiness' && access.viewReadiness && (
-              <section class="panel active" id="panel-readiness" role="tabpanel">
+              <section class="panel active" id="employee-profile-panel-readiness" role="tabpanel" aria-labelledby="employee-profile-tab-readiness" tabIndex={0}>
                 <div class="tab-heading">
                   <div><h2>Readiness</h2><p>Evidence-based controls showing whether this employee record can support HR and operational workflows.</p></div>
                   <div class="tab-heading-actions">
@@ -771,17 +775,17 @@ export function ProfileDrawer({
                   </div>
                 </div>
                 {readiness.isPending && <DrawerSectionSkeleton label="Loading readiness controls…" />}
-                {readiness.data && (
+                {readinessData && (
                   <div class="tab-grid">
                     <section class="card">
                       <div class="card-head"><Icon id="shield" /><h3>Overall Readiness</h3></div>
                       <div class="readiness-body">
                         <ReadinessGauge
-                          percent={readiness.data.coverage.percent}
+                          percent={readinessData.coverage.percent}
                           label={readinessLabel(shell.readiness)}
                         />
                         <div class="readiness-copy">
-                          <strong>{readiness.data.coverage.readyControls} Of {readiness.data.coverage.totalControls} Controls Ready</strong>
+                          <strong>{readinessData.coverage.readyControls} Of {readinessData.coverage.totalControls} Controls Ready</strong>
                           <p>Readiness is shared work: HR coordinates, and each department resolves the controls in its own domain.</p>
                         </div>
                       </div>
@@ -789,7 +793,7 @@ export function ProfileDrawer({
                     <section class="card wide">
                       <div class="card-head"><Icon id="shield" /><h3>Readiness Control Matrix</h3></div>
                       <div class="progress-list">
-                        {readiness.data.controls.map(entry => (
+                        {readinessData.controls.map(entry => (
                           <div class="progress-row" key={entry.control.controlKey}>
                             <span>{entry.control.label}</span>
                             <div class="progress-track">
@@ -800,7 +804,7 @@ export function ProfileDrawer({
                         ))}
                       </div>
                       <div class="record-list" style="margin-top:14px">
-                        {readiness.data.controls.map(entry => (
+                        {readinessData.controls.map(entry => (
                           <article class="record-row" key={`row:${entry.control.controlKey}`}>
                             <span class="record-icon"><Icon id={CONTROL_ICON[entry.control.domain] ?? 'shield'} /></span>
                             <div class="record-copy">
@@ -835,7 +839,7 @@ export function ProfileDrawer({
             )}
 
             {shell && tab === 'access' && (
-              <section class="panel active" id="panel-access" role="tabpanel">
+              <section class="panel active" id="employee-profile-panel-access" role="tabpanel" aria-labelledby="employee-profile-tab-access" tabIndex={0}>
                 <div class="tab-heading">
                   <div><h2>Access</h2><p>Authoritative account state, assigned access and capability-gated support workflows.</p></div>
                 </div>
@@ -851,9 +855,9 @@ export function ProfileDrawer({
                     <section class="card wide">
                       <div class="card-head"><Icon id="shield" /><h3>Access Assignments</h3></div>
                       {assignments.isPending && <DrawerSectionSkeleton label="Loading access assignments…" />}
-                      {assignments.data?.length === 0 && <div class="epd-empty">No access assignments are recorded.</div>}
+                      {assignmentsData?.length === 0 && <div class="epd-empty">No access assignments are recorded.</div>}
                       <div class="record-list">
-                        {assignments.data?.map(a => (
+                        {assignmentsData?.map(a => (
                           <article class="record-row" key={a.id}>
                             <span class="record-icon"><Icon id="shield" /></span>
                             <div class="record-copy">
@@ -877,7 +881,7 @@ export function ProfileDrawer({
             )}
 
             {shell && tab === 'activity' && access.viewAudit && (
-              <section class="panel active" id="panel-activity" role="tabpanel">
+              <section class="panel active" id="employee-profile-panel-activity" role="tabpanel" aria-labelledby="employee-profile-tab-activity" tabIndex={0}>
                 <div class="tab-heading">
                   <div><h2>Activity &amp; Audit</h2><p>Employee record history with actor, source, outcome and correlation details.</p></div>
                   <div class="tab-heading-actions">
@@ -888,9 +892,9 @@ export function ProfileDrawer({
                   </div>
                 </div>
                 {audit.isPending && <DrawerSectionSkeleton label="Loading audit history…" rows={5} />}
-                {audit.data?.length === 0 && <div class="epd-empty">No audit entries recorded.</div>}
+                {auditData?.length === 0 && <div class="epd-empty">No audit entries recorded.</div>}
                 <div class="record-list">
-                  {audit.data?.map(entry => (
+                  {auditData?.map(entry => (
                     <article class="record-row" key={entry.id}>
                       <span class="record-icon"><Icon id={activityVisual(entry.submodule_key ?? '').icon} /></span>
                       <div class="record-copy">
@@ -911,12 +915,12 @@ export function ProfileDrawer({
           <footer class="footer">
             <div class="left-actions">
               {onOpenFullRecord && (
-                <button class="outline-btn" type="button" onClick={() => onOpenFullRecord('overview')}>View Full Employee Record</button>
+                <Button variant="outline" onClick={() => onOpenFullRecord('overview')}>View Full Employee Record</Button>
               )}
             </div>
             <div class="right-actions">
               {access.requestChange && (
-                <button class="primary-btn" type="button" onClick={() => runAction('Request Change')}>Request Change</button>
+                <Button variant="primary" onClick={() => runAction('Request Change')}>Request Change</Button>
               )}
             </div>
           </footer>
@@ -1063,8 +1067,7 @@ export function ProfileDrawer({
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </EmployeeSideDrawerFrame>
   );
 }
 

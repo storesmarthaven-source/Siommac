@@ -1,6 +1,7 @@
 /**
  * src/ui/primitives/actions.tsx — action controls that are NOT just a Button.
  *
+ *   ButtonGroup       several independent actions presented as one joined set
  *   SegmentedControl  ONE value, several options — a radiogroup with roving focus
  *   DropdownButton    a trigger that owns menu state and its ARIA wiring
  *   SplitButton       a default action plus a menu of alternatives
@@ -19,12 +20,64 @@
 
 import { type VNode } from 'preact';
 import { useCallback, useId, useRef, useState } from 'preact/hooks';
-import { LucideIcon } from '../LucideIcon';
+import { LucideIcon, type LucideName } from '../LucideIcon';
 import { type ControlSize, type UiState } from '../tokens';
 import { DropdownMenu, type MenuItems, type MenuAction } from '../overlays/DropdownMenu';
 import { Button, type ButtonVariant } from './Button';
 import './Button.recipe.css';
 import './actions.recipe.css';
+
+/* ── ButtonGroup ───────────────────────────────────────────────────────────*/
+
+export interface ButtonGroupItem {
+  id: string;
+  label: string;
+  icon?: VNode;
+  disabled?: boolean;
+  tone?: 'default' | 'danger';
+  onClick?: (event: MouseEvent) => void;
+}
+
+export interface ButtonGroupProps {
+  items: readonly ButtonGroupItem[];
+  /** Accessible name for the set, for example "Record actions". */
+  label: string;
+  size?: ControlSize;
+  /** Surface treatment only; the actions and keyboard contract never change. */
+  variant?: 'outline' | 'soft' | 'ghost';
+  fullWidth?: boolean;
+  disabled?: boolean;
+  forceState?: UiState;
+  class?: string;
+}
+
+/**
+ * A joined set of independent actions. Unlike SegmentedControl, every item is
+ * a normal button and remains in the tab order because activating one performs
+ * an action rather than choosing one value.
+ */
+export function ButtonGroup({
+  items, label, size = 'md', variant = 'outline', fullWidth = false, disabled = false, forceState, class: extra,
+}: ButtonGroupProps): VNode {
+  return (
+    <div class={`ui-button-group ui-button-group--${variant}${fullWidth ? ' ui-button-group--full' : ''}${extra ? ` ${extra}` : ''}`} role="group" aria-label={label}>
+      {items.map(item => (
+        <Button
+          key={item.id}
+          variant="outline"
+          tone={item.tone ?? 'default'}
+          size={size}
+          iconLeft={item.icon}
+          disabled={disabled || item.disabled}
+          forceState={forceState}
+          onClick={item.onClick}
+        >
+          {item.label}
+        </Button>
+      ))}
+    </div>
+  );
+}
 
 /* ── SegmentedControl ──────────────────────────────────────────────────────*/
 
@@ -42,6 +95,12 @@ export interface SegmentedControlProps<T extends string> {
   /** Accessible name for the group. Required — an unnamed radiogroup is unusable. */
   label: string;
   size?: ControlSize;
+  /**
+   * `filled` matches the catalogue specimen. `outline` keeps every surface
+   * transparent and uses borders for selection. `ghost` removes the container
+   * entirely and marks the active option with an indicator.
+   */
+  variant?: 'filled' | 'outline' | 'ghost';
   fullWidth?: boolean;
   disabled?: boolean;
   forceState?: UiState;
@@ -49,7 +108,7 @@ export interface SegmentedControlProps<T extends string> {
 }
 
 export function SegmentedControl<T extends string>({
-  value, onChange, options, label, fullWidth = false, disabled = false, forceState, class: extra,
+  value, onChange, options, label, size = 'md', fullWidth = false, disabled = false, variant = 'filled', forceState, class: extra,
 }: SegmentedControlProps<T>): VNode {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -72,7 +131,7 @@ export function SegmentedControl<T extends string>({
 
   return (
     <div
-      class={`ui-segmented${fullWidth ? ' ui-segmented--full' : ''}${extra ? ` ${extra}` : ''}`}
+      class={`ui-segmented ui-segmented--${variant} ui-segmented--${size}${fullWidth ? ' ui-segmented--full' : ''}${extra ? ` ${extra}` : ''}`}
       role="radiogroup"
       aria-label={label}
     >
@@ -112,6 +171,8 @@ export interface DropdownButtonProps {
   variant?: ButtonVariant;
   size?: ControlSize;
   iconLeft?: VNode;
+  /** Decorative affordance on the menu trigger. The menu behaviour stays unchanged. */
+  chevronIcon?: LucideName;
   disabled?: boolean;
   /** Match the menu width to the trigger — right for filters, wrong for actions. */
   matchWidth?: boolean;
@@ -121,7 +182,7 @@ export interface DropdownButtonProps {
 
 /** A button whose only job is to open a menu. */
 export function DropdownButton({
-  label, items, variant = 'outline', size = 'md', iconLeft,
+  label, items, variant = 'outline', size = 'md', iconLeft, chevronIcon = 'ChevronDown',
   disabled = false, matchWidth = false, forceState, class: extra,
 }: DropdownButtonProps): VNode {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
@@ -137,7 +198,7 @@ export function DropdownButton({
           size={size}
           disabled={disabled}
           iconLeft={iconLeft}
-          iconRight={<LucideIcon name="ChevronDown" class="ui-btn-chevron" />}
+          iconRight={<LucideIcon name={chevronIcon} class="ui-btn-chevron" />}
           forceState={forceState}
           class={extra}
           aria-haspopup="menu"
@@ -174,6 +235,8 @@ export interface SplitButtonProps {
   loading?: boolean;
   /** Accessible name for the menu half, e.g. "More save options". */
   menuLabel?: string;
+  /** Decorative affordance on the menu half. The menu behaviour stays unchanged. */
+  chevronIcon?: LucideName;
   forceState?: UiState;
   class?: string;
 }
@@ -188,7 +251,7 @@ export interface SplitButtonProps {
  */
 export function SplitButton({
   action, items, variant = 'primary', size = 'md',
-  disabled = false, loading = false, menuLabel, forceState, class: extra,
+  disabled = false, loading = false, menuLabel, chevronIcon = 'ChevronDown', forceState, class: extra,
 }: SplitButtonProps): VNode {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const [open, setOpen] = useState(false);
@@ -219,7 +282,7 @@ export function SplitButton({
           aria-haspopup="menu"
           aria-expanded={open}
           aria-controls={open ? menuId : undefined}
-          iconLeft={<LucideIcon name="ChevronDown" class="ui-btn-chevron" />}
+          iconLeft={<LucideIcon name={chevronIcon} class="ui-btn-chevron" />}
           onClick={() => setOpen(o => !o)}
         />
       </span>

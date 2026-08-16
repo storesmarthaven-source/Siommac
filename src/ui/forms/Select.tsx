@@ -20,7 +20,7 @@
    cannot tell the two apart; the callback form is the pattern it wants. */
 import { type CSSProperties, type VNode } from 'preact';
 import { useId, useMemo, useState, useCallback } from 'preact/hooks';
-import { LucideIcon } from '../LucideIcon';
+import { LucideIcon, type LucideName } from '../LucideIcon';
 import { AnchoredPopup } from '../overlays/AnchoredPopup';
 import { type ControlSize, type UiState, type ValidationState } from '../tokens';
 import { useFieldContext, resolveFieldState } from './fieldContext';
@@ -43,6 +43,8 @@ export interface SelectProps<T extends string = string> {
   placeholder?: string;
   emptyLabel?: string;
   size?: ControlSize;
+  /** Decorative affordance on the listbox trigger. */
+  chevronIcon?: LucideName;
 
   disabled?: boolean;
   readOnly?: boolean;
@@ -63,7 +65,7 @@ export interface SelectProps<T extends string = string> {
 export function Select<T extends string = string>({
   value, onChange, options,
   searchable = false, clearable = false,
-  placeholder = 'Select…', emptyLabel = 'No options', size = 'md',
+  placeholder = 'Select…', emptyLabel = 'No options', size = 'md', chevronIcon = 'ChevronDown',
   disabled: ownDisabled, readOnly: ownReadOnly, loading = false, error = null,
   validation: ownValidation,
   id: ownId, name, forceState, class: extra, style, title,
@@ -179,7 +181,7 @@ export function Select<T extends string = string>({
           </span>
         )}
 
-        {!inert && <span class="ui-ctrl-arrow" aria-hidden="true"><LucideIcon name="ChevronDown" /></span>}
+        {!inert && <span class="ui-ctrl-arrow" aria-hidden="true"><LucideIcon name={chevronIcon} /></span>}
       </button>
 
       <AnchoredPopup

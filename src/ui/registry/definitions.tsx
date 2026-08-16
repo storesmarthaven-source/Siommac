@@ -17,11 +17,17 @@
 
 import { LucideIcon } from '../LucideIcon';
 import { Button } from '../primitives/Button';
+import { BackActionButton } from '../patterns/BackActionButton';
 import { FormField, FormGrid } from '../forms/FormField';
 import { TextInput } from '../primitives/TextInput';
 import { PersonSearchSelect, type PersonOption } from '../forms/PersonSearchSelect';
 import { type ComponentDef, type PropValues } from './types';
 import { type ValidationState, type ControlSize } from '../tokens';
+import avatarOlivia from '../../assets/avatars/untitled-ui/Olivia Rhye.jpg';
+import avatarPhoenix from '../../assets/avatars/untitled-ui/Phoenix Baker.jpg';
+import avatarLana from '../../assets/avatars/untitled-ui/Lana Steiner.jpg';
+import avatarDemi from '../../assets/avatars/untitled-ui/Demi Wilkinson.jpg';
+import avatarSarah from '../../assets/avatars/untitled-ui/Sarah Page.jpg';
 
 /* Helpers — the props bag is loosely typed by design (it is user-edited), so
    these narrow it once at the boundary rather than casting at every use. */
@@ -37,11 +43,11 @@ const validation = (v: PropValue): ValidationState =>
    layout problem that real names and job titles cause. */
 
 const DEMO_PEOPLE: PersonOption[] = [
-  { id: 'p1', name: 'Sarah James',       employeeNo: 'EMP-00484', jobTitle: 'Safety Officer',      department: 'HSE',        site: 'Point Lisas' },
-  { id: 'p2', name: 'Amara Diallo',      employeeNo: 'EMP-00010', jobTitle: 'Field Engineer',      department: 'Operations', badges: ['On leave'] },
-  { id: 'p3', name: 'Priya Ramkissoon',  employeeNo: 'EMP-00034', jobTitle: 'HR Officer',          department: 'People' },
-  { id: 'p4', name: 'Jordan Alexander',  employeeNo: 'EMP-00021', jobTitle: 'Shift Supervisor',    department: 'Operations' },
-  { id: 'p5', name: 'Kwame Boateng',     employeeNo: 'EMP-00097', jobTitle: 'Maintenance Planner', department: 'Engineering', disabled: true },
+  { id: 'p1', name: 'Olivia Rhye',       employeeNo: 'EMP-00484', jobTitle: 'Safety Officer',      department: 'HSE',        site: 'Point Lisas', photoUrl: avatarOlivia },
+  { id: 'p2', name: 'Phoenix Baker',     employeeNo: 'EMP-00010', jobTitle: 'Field Engineer',      department: 'Operations', badges: ['On leave'], photoUrl: avatarPhoenix },
+  { id: 'p3', name: 'Lana Steiner',      employeeNo: 'EMP-00034', jobTitle: 'HR Officer',          department: 'People', photoUrl: avatarLana },
+  { id: 'p4', name: 'Demi Wilkinson',    employeeNo: 'EMP-00021', jobTitle: 'Shift Supervisor',    department: 'Operations', photoUrl: avatarDemi },
+  { id: 'p5', name: 'Sarah Page',        employeeNo: 'EMP-00097', jobTitle: 'Maintenance Planner', department: 'Engineering', disabled: true, photoUrl: avatarSarah },
 ];
 
 const DEMO_DEPARTMENTS = [
@@ -61,6 +67,7 @@ const DEMO_DEPARTMENTS = [
 
 const personDef: ComponentDef = {
   id: 'person-search-select',
+  thumbnail: 'person-select',
   name: 'PersonSearchSelect',
   category: 'people',
   description: 'The canonical person / employee picker. Use it anywhere a person FK is set — free text for employee ownership is a data-integrity bug.',
@@ -177,6 +184,7 @@ const personDef: ComponentDef = {
 
 const dialogDef: ComponentDef = {
   id: 'dialog',
+  thumbnail: 'dialog',
   name: 'Modal Frame',
   category: 'overlays',
   description: 'One accessible window frame with a shared header, scrolling body and pinned footer across standard, sidebar, split and wide layouts.',
@@ -201,7 +209,8 @@ const dialogDef: ComponentDef = {
     variant: { type: 'select', label: 'Variant', options: ['standard', 'form', 'confirm', 'destructive', 'info', 'workspace'], default: 'standard' },
     layout:  { type: 'segmented', label: 'Layout', options: ['frame', 'standard', 'sidebar-left', 'sidebar-right', 'split', 'wide'], default: 'frame' },
     icon:    { type: 'select', label: 'Header icon', options: ['none', 'CircleCheck', 'TriangleAlert', 'Trash2', 'Info'], default: 'CircleCheck' },
-    showClose: { type: 'boolean', label: 'Close button', default: true },
+    iconStyle: { type: 'segmented', label: 'Icon treatment', options: ['rounded', 'circle', 'plain'], default: 'rounded' },
+    showClose: { type: 'boolean', label: 'Show close button', default: true },
     busy:    { type: 'boolean', label: 'Busy (submitting)', default: false },
     backLink:{ type: 'boolean', label: 'Left footer slot', default: false },
   },
@@ -212,6 +221,8 @@ const dialogDef: ComponentDef = {
       { name: '--ui-dialog-width-lg', label: 'Width (lg)', kind: 'size' },
       { name: '--ui-dialog-radius',   label: 'Corner radius', kind: 'size' },
       { name: '--ui-dialog-bg',       label: 'Background', kind: 'color' },
+      { name: '--ui-dialog-border-width', label: 'Window border width', kind: 'size' },
+      { name: '--ui-dialog-border-color', label: 'Window border', kind: 'color' },
       { name: '--ui-dialog-accent-height', label: 'Top accent height', kind: 'size' },
       { name: '--ui-dialog-accent-color',  label: 'Top accent colour', kind: 'color' },
     ] },
@@ -220,15 +231,25 @@ const dialogDef: ComponentDef = {
       { name: '--ui-dialog-body-pad', label: 'Body padding', kind: 'text' },
       { name: '--ui-dialog-foot-pad', label: 'Footer padding', kind: 'text' },
       { name: '--ui-dialog-foot-min-height', label: 'Footer min height', kind: 'size' },
+      { name: '--ui-dialog-foot-bg-start', label: 'Footer fade start', kind: 'color' },
+      { name: '--ui-dialog-foot-bg', label: 'Footer fade end', kind: 'color' },
       { name: '--ui-dialog-gap',      label: 'Footer button gap', kind: 'size' },
       { name: '--ui-dialog-column-gap', label: 'Column gap', kind: 'size' },
       { name: '--ui-dialog-sidebar-width', label: 'Sidebar width', kind: 'size' },
       { name: '--ui-dialog-sidebar-pad', label: 'Sidebar padding', kind: 'text' },
       { name: '--ui-dialog-sidebar-bg', label: 'Sidebar background', kind: 'color' },
     ] },
-    { label: 'Header icon & backdrop', controls: [
+    { label: 'Header', controls: [
+      { name: '--ui-dialog-head-bg', label: 'Solid background', kind: 'color' },
+      { name: '--ui-dialog-head-title', label: 'Title', kind: 'color' },
+      { name: '--ui-dialog-head-sub', label: 'Subtitle', kind: 'color-alpha' },
+      { name: '--ui-dialog-head-separator', label: 'Separator', kind: 'color' },
+      { name: '--ui-dialog-head-separator-width', label: 'Separator width', kind: 'size' },
       { name: '--ui-dialog-icon-bg',       label: 'Icon chip fill', kind: 'color-alpha' },
       { name: '--ui-dialog-icon-fg',       label: 'Icon colour', kind: 'color' },
+      { name: '--ui-dialog-icon-border',   label: 'Icon chip border', kind: 'color-alpha' },
+    ] },
+    { label: 'Backdrop', controls: [
       { name: '--ui-dialog-backdrop',      label: 'Backdrop', kind: 'color-alpha' },
       { name: '--ui-dialog-backdrop-blur', label: 'Backdrop blur', kind: 'size' },
     ] },
@@ -236,6 +257,15 @@ const dialogDef: ComponentDef = {
 
   states: ['default', 'loading'],
   previewAxis: 'layout',
+  previewLayout: 'diagram',
+  previewSamples: [
+    { value: 'frame', title: 'Frame', props: { layout: 'frame' }, diagram: 'modal-layout' },
+    { value: 'standard', title: 'Standard', props: { layout: 'standard' }, diagram: 'modal-layout' },
+    { value: 'sidebar-left', title: 'Left sidebar', props: { layout: 'sidebar-left' }, diagram: 'modal-layout' },
+    { value: 'sidebar-right', title: 'Right sidebar', props: { layout: 'sidebar-right' }, diagram: 'modal-layout' },
+    { value: 'split', title: 'Split', props: { layout: 'split' }, diagram: 'modal-layout' },
+    { value: 'wide', title: 'Wide', props: { layout: 'wide' }, diagram: 'modal-layout' },
+  ],
 
   a11y: {
     role: 'dialog, aria-modal="true"',
@@ -262,7 +292,7 @@ const dialogDef: ComponentDef = {
       <div class="ui-gallery-dialog-frame">
         <section class={`ui-dialog ui-dialog--${s(p.size, 'md')} ui-dialog--${s(p.variant, 'standard')} ui-dialog--layout-${layout}`} role="group" aria-label="Modal frame preview">
           <header class="ui-dialog-head">
-            {iconName !== 'none' && <span class="ui-dialog-icon" aria-hidden="true"><LucideIcon name={iconName as never} /></span>}
+            {iconName !== 'none' && <span class={`ui-dialog-icon ui-dialog-icon--${s(p.iconStyle, 'rounded')}`} aria-hidden="true"><LucideIcon name={iconName as never} /></span>}
             <div class="ui-dialog-titles">
               <h2 class="ui-dialog-title">{s(p.title, 'Modal title')}</h2>
               {s(p.sub) && <p class="ui-dialog-sub">{s(p.sub)}</p>}
@@ -304,7 +334,7 @@ const dialogDef: ComponentDef = {
             </div>
           </div>
           <footer class="ui-dialog-foot">
-            {b(p.backLink) && <div class="ui-dialog-foot-left"><Button variant="link">Back</Button></div>}
+            {b(p.backLink) && <div class="ui-dialog-foot-left"><BackActionButton /></div>}
             <Button variant="outline">Cancel</Button>
             <Button variant={s(p.variant) === 'destructive' ? 'danger' : 'primary'} loading={busy} loadingText="Saving…">
               {s(p.variant) === 'destructive' ? 'Delete' : s(p.variant) === 'confirm' ? 'Confirm' : 'Save'}
@@ -318,14 +348,14 @@ const dialogDef: ComponentDef = {
 
   code: (p) => `<Dialog open={open} onClose={close} size="${s(p.size, 'md')}"${s(p.variant) !== 'standard' ? ` variant="${s(p.variant)}"` : ''}${s(p.layout) !== 'frame' ? ` layout="${s(p.layout)}"` : ''}${b(p.busy) ? ' busy={saving}' : ''}>
   <Dialog.Header
-    title="${s(p.title, 'Title')}"${s(p.sub) ? `\n    sub="${s(p.sub)}"` : ''}${s(p.icon) !== 'none' ? `\n    icon={<LucideIcon name="${s(p.icon)}" />}` : ''}${b(p.showClose) ? '\n    onClose={close}' : ''}
+    title="${s(p.title, 'Title')}"${s(p.sub) ? `\n    sub="${s(p.sub)}"` : ''}${s(p.icon) !== 'none' ? `\n    icon={<LucideIcon name="${s(p.icon)}" />}${s(p.iconStyle, 'rounded') !== 'rounded' ? `\n    iconStyle="${s(p.iconStyle)}"` : ''}` : ''}${b(p.showClose) ? '\n    onClose={close}' : ''}
   />
   <Dialog.Body>${s(p.layout, 'frame') === 'frame' ? '\n    {/* Start with your content here. */}' : `
     <Dialog.Layout>
       <Dialog.Content>{/* form fields */}</Dialog.Content>${['sidebar-left', 'sidebar-right', 'split'].includes(s(p.layout)) ? '\n      <Dialog.Sidebar>{/* supporting details */}</Dialog.Sidebar>' : ''}
     </Dialog.Layout>`}
   </Dialog.Body>
-  <Dialog.Footer${b(p.backLink) ? ' left={<Button variant="link">Back</Button>}' : ''}>
+  <Dialog.Footer${b(p.backLink) ? ' left={<BackActionButton />}' : ''}>
     <Button variant="outline" onClick={close}>Cancel</Button>
     <Button variant="primary" onClick={submit}>Approve</Button>
   </Dialog.Footer>

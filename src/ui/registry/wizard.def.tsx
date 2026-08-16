@@ -43,6 +43,7 @@ function ReviewBody(): preact.JSX.Element {
 
 export const wizardDef: ComponentDef = {
   id: 'wizard',
+  thumbnail: 'wizard',
   name: 'Wizard',
   category: 'navigation',
   description: 'ONE multi-step flow. Step validation, navigation gating, optional/skipped steps, an async on-the-way-out check and the Back/Skip/Continue/Submit footer are its behaviour. It owns NO overlay — a modal wizard is <Dialog><Wizard /></Dialog>.',

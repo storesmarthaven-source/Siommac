@@ -143,13 +143,13 @@ describe('Brand Theme workspace', () => {
     expect(draft().publishBlockers.length).toBeGreaterThan(0);
   });
 
-  it('Reset removes the brand it wrote and leaves unrelated draft edits alone', () => {
+  it('Restore SIOMAC defaults removes the brand it wrote and leaves unrelated draft edits alone', () => {
     const { container, draft } = mountPanel();
     void act(() => { draft().set('--siomac-gold', '#123456'); });
     void act(() => { setSeed(container as HTMLElement, 'Primary seed hex', '#0F766E'); });
     expect(draft().values['--ui-color-action-primary']).toBeTruthy();
 
-    void act(() => { fireEvent.click(byText(container as HTMLElement, 'button', 'Reset')); });
+    void act(() => { fireEvent.click(byText(container as HTMLElement, 'button', 'Restore SIOMAC defaults')); });
 
     expect(draft().values['--ui-color-action-primary']).toBeUndefined();
     expect(draft().values['--ui-brand-primary-500']).toBeUndefined();

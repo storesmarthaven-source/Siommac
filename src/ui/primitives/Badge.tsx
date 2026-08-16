@@ -19,7 +19,7 @@
  * same component, because "status shown small" is not a different concept.
  */
 
-import { type VNode, type ComponentChildren } from 'preact';
+import { type VNode, type ComponentChildren, type CSSProperties } from 'preact';
 import { LucideIcon } from '../LucideIcon';
 import './Badge.recipe.css';
 
@@ -49,11 +49,13 @@ export interface BadgeProps {
   /** Accessible name for the remove control — defaults from the label. */
   removeLabel?: string;
   class?: string;
+  /** Scoped recipe values for an embedded Badge preview or owned composition. */
+  style?: CSSProperties;
 }
 
 export function Badge({
   children, tone = 'neutral', variant = 'soft', contrast = 'default', icon, dot = false,
-  size = 'md', onRemove, removeLabel, class: extra,
+  size = 'md', onRemove, removeLabel, class: extra, style,
 }: BadgeProps): VNode {
   return (
     <span
@@ -65,6 +67,7 @@ export function Badge({
         size !== 'md' ? `ui-badge--${size}` : '',
         extra ?? '',
       ].filter(Boolean).join(' ')}
+      style={style}
     >
       {dot && <span class="ui-badge-dot" aria-hidden="true" />}
       {icon}

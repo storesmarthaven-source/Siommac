@@ -5,6 +5,8 @@
   --ui-theme-switch-pad: 2px;
   --ui-theme-switch-knob-size: 20px;
   --ui-theme-switch-icon-size: 8px;
+  --ui-theme-switch-travel: calc(var(--ui-theme-switch-width) - var(--ui-theme-switch-knob-size) - (var(--ui-theme-switch-pad) * 2));
+  --ui-theme-switch-center-y: 50%;
   --ui-theme-switch-light-bg: hsl(48 90% 85%);
   --ui-theme-switch-dark-bg: hsl(198 90% 15%);
   --ui-theme-switch-light-knob: hsl(48 90% 55%);
@@ -37,6 +39,23 @@
 }
 
 .ui-theme-mode-switch[data-theme-mode='dark'] { background: var(--ui-theme-switch-dark-bg); }
+
+/* The account-menu control is deliberately more compact than the standalone
+   component while retaining a real layout box (no transform scaling). */
+.ui-theme-mode-switch.app-topbar-theme-switch {
+  --ui-theme-switch-width: 36px;
+  --ui-theme-switch-height: 20px;
+  --ui-theme-switch-pad: 1px;
+  --ui-theme-switch-knob-size: 16px;
+  --ui-theme-switch-icon-size: 6px;
+  --ui-theme-switch-travel: calc(var(--ui-theme-switch-width) - var(--ui-theme-switch-knob-size) - (var(--ui-theme-switch-pad) * 2) - 2px);
+  --ui-theme-switch-center-y: 50%;
+  border: 1px solid color-mix(in srgb, var(--ui-theme-switch-light-bg) 62%, hsl(42 46% 46%));
+}
+
+.ui-theme-mode-switch.app-topbar-theme-switch[data-theme-mode='dark'] {
+  border-color: color-mix(in srgb, var(--ui-theme-switch-dark-bg) 68%, hsl(198 72% 62%));
+}
 .ui-theme-mode-switch:focus { outline: transparent; }
 .ui-theme-mode-switch:focus-visible,
 .ui-theme-mode-switch.is-force-focus {
@@ -62,7 +81,7 @@
 .ui-theme-mode-switch__icon {
   position: absolute;
   z-index: 2;
-  top: 50%;
+  top: var(--ui-theme-switch-center-y);
   left: calc(var(--ui-theme-switch-pad) + (var(--ui-theme-switch-knob-size) - (var(--ui-theme-switch-icon-size) * 1.5)) / 2);
   display: block;
   width: calc(var(--ui-theme-switch-icon-size) * 1.5);
@@ -110,15 +129,15 @@
 
 .ui-theme-mode-switch[data-theme-mode='dark'] .ui-theme-mode-switch__knob,
 .ui-theme-mode-switch[data-theme-mode='dark'] .ui-theme-mode-switch__icon {
-  transform: translateX(calc(var(--ui-theme-switch-width) - var(--ui-theme-switch-knob-size) - (var(--ui-theme-switch-pad) * 2)));
+  transform: translateX(var(--ui-theme-switch-travel));
 }
 .ui-theme-mode-switch[data-theme-mode='dark'] .ui-theme-mode-switch__knob { background: var(--ui-theme-switch-dark-knob); }
 .ui-theme-mode-switch[data-theme-mode='dark'] .ui-theme-mode-switch__icon {
-  transform: translateX(calc(var(--ui-theme-switch-width) - var(--ui-theme-switch-knob-size) - (var(--ui-theme-switch-pad) * 2))) translateY(-50%);
+  transform: translateX(var(--ui-theme-switch-travel)) translateY(-50%);
 }
 .ui-theme-mode-switch[data-theme-mode='dark'] .ui-theme-mode-switch__icon-part:first-child {
-  top: .2em;
-  left: -.2em;
+  top: calc(50% - .5em);
+  left: calc(50% - .5em);
   box-shadow: .2em -.2em 0 .2em currentColor inset;
   transform: scale(1);
 }

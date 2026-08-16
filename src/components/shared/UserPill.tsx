@@ -7,7 +7,7 @@
  *               tickets + profile + account menu) in the corner.
  *   footer strip — optional breadcrumb trail · meta chips · module sub-nav, capped by
  *               a thin brand-accent line along the bar's bottom edge.
- * Search opens the command palette (⌘K).
+ * Search opens the command palette using the platform shortcut (Ctrl K or ⌘ K).
  *
  * Mounted ONCE in the app shell (AppShell) as the global top bar; the account cluster
  * lives in AccountPill.tsx. All props are optional — bare <UserPill /> is the search +
@@ -16,8 +16,10 @@
 
 import { type VNode } from 'preact';
 import { dialog } from '@lib/dialog';
-import { AiActionButton } from '@ui';
+import { AiActionButton } from '../../ui/patterns/AiActionButton';
 import { AccountPill } from './AccountPill';
+import { AppTopBar } from './AppTopBar';
+import { searchShortcutLabel } from './searchShortcut';
 
 function openSearch(): void {
   (window as unknown as { openCommandPalette?: () => void }).openCommandPalette?.();
@@ -53,9 +55,10 @@ export function UserPill({ icon, title, sub, module, crumbs = [], meta = [], nav
   // Breadcrumb trail ends at the current page (title) — the footer strip is now
   // the dedicated "where am I" row, so it repeats the title as the final, current segment.
   const trail = [module, ...crumbs, title].filter(Boolean) as string[];
+  const shortcut = searchShortcutLabel();
 
   return (
-    <header class="app-topbar">
+    <AppTopBar>
       <div class="app-topbar-main">
         {(title ?? sub) && (
           <div class="app-topbar-title">
@@ -69,11 +72,11 @@ export function UserPill({ icon, title, sub, module, crumbs = [], meta = [], nav
           </div>
         )}
         <div class="app-topbar-search">
-          <button type="button" class="app-topbar-search-trigger" onClick={openSearch} title="Search & jump to (Ctrl/⌘K)">
+          <button type="button" class="app-topbar-search-trigger" onClick={openSearch} title={`Search & jump to (${shortcut})`}>
             <i class="fas fa-search" aria-hidden="true" />
             <span class="app-topbar-search-text">Search &amp; jump to…</span>
           </button>
-          <kbd class="app-topbar-kbd">⌘K</kbd>
+          <kbd class="app-topbar-kbd">{shortcut}</kbd>
         </div>
         <AiActionButton onClick={openAI} />
         <div class="app-topbar-pill"><AccountPill iconsFirst /></div>
@@ -108,6 +111,6 @@ export function UserPill({ icon, title, sub, module, crumbs = [], meta = [], nav
           )}
         </div>
       )}
-    </header>
+    </AppTopBar>
   );
 }

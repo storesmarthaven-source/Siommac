@@ -25,7 +25,7 @@ export function InfoTip({ tip, size = 15, placement = 'top', label = 'More infor
         role="img"
         aria-label={label}
       >
-        <LucideIcon name="Info" size={size} strokeWidth={2} />
+        <LucideIcon name="CircleHelp" size={size} strokeWidth={2} />
       </span>
     </Tooltip>
   );

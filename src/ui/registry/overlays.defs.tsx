@@ -77,6 +77,7 @@ function SweetAlertPreview({ props }: { props: PropValues }): VNode {
 
 export const popoverDef: ComponentDef = {
   id: 'popover',
+  thumbnail: 'popover',
   name: 'Popover',
   category: 'overlays',
   description: 'A named, non-modal dialog anchored to a control. It shares the portal, collision and dismissal engine used by every canonical dropdown.',
@@ -124,6 +125,7 @@ export const popoverDef: ComponentDef = {
 
 export const tooltipDef: ComponentDef = {
   id: 'tooltip',
+  thumbnail: 'tooltip',
   name: 'Tooltip',
   category: 'overlays',
   description: 'A short, non-interactive explanation for any single control, shown on hover and keyboard focus and portalled beyond clipping ancestors.',
@@ -178,6 +180,7 @@ export const tooltipDef: ComponentDef = {
 
 export const sweetAlertDef: ComponentDef = {
   id: 'sweet-alert',
+  thumbnail: 'sweet-alert',
   name: 'SweetAlert2 Popup',
   category: 'overlays',
   description: 'The existing app popup for alerts, confirmations, prompts and blocking progress, exposed through the SweetAlert2-compatible API.',
@@ -188,11 +191,11 @@ export const sweetAlertDef: ComponentDef = {
     mode: { type: 'segmented', label: 'Type', options: ['alert', 'confirm', 'prompt', 'loading', 'timed'], default: 'confirm' },
     tone: { type: 'segmented', label: 'Icon', options: ['success', 'error', 'warning', 'info', 'question'], default: 'question' },
     showIcon: { type: 'boolean', label: 'Show icon', default: true },
-    showCancel: { type: 'boolean', label: 'Cancel action', default: true },
-    allowDismiss: { type: 'boolean', label: 'Backdrop dismiss', default: true },
-    inputType: { type: 'select', label: 'Input type', options: ['text', 'email', 'password', 'number', 'textarea'], default: 'text' },
-    duration: { type: 'number', label: 'Duration (ms)', default: 4000, min: 1000, max: 15000, step: 500 },
-    progress: { type: 'boolean', label: 'Timer progress', default: true },
+    showCancel: { type: 'boolean', label: 'Cancel action', default: true, visibleWhen: { prop: 'mode', in: ['confirm', 'prompt'] } },
+    allowDismiss: { type: 'boolean', label: 'Backdrop dismiss', default: true, visibleWhen: { prop: 'mode', in: ['confirm', 'prompt', 'timed'] } },
+    inputType: { type: 'select', label: 'Input type', options: ['text', 'email', 'password', 'number', 'textarea'], default: 'text', visibleWhen: { prop: 'mode', equals: 'prompt' } },
+    duration: { type: 'number', label: 'Duration (ms)', default: 4000, min: 1000, max: 15000, step: 500, visibleWhen: { prop: 'mode', equals: 'timed' } },
+    progress: { type: 'boolean', label: 'Timer progress', default: true, visibleWhen: { prop: 'mode', equals: 'timed' } },
   },
   style: [
     { label: 'Surface', controls: [

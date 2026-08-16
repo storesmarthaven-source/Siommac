@@ -18,11 +18,12 @@
  * reverse lookup is derived, so there is still exactly one place to edit.
  */
 
-import { type ComponentCategory, type ComponentDef } from './types';
+import { type ComponentCategory, type ComponentDef, type ThumbnailKind } from './types';
 
 export interface ComponentFamily {
   /** Nav/route key. Must not collide with a component id — asserted in tests. */
   id: string;
+  thumbnail: ThumbnailKind;
   /** Catalogue name, e.g. "Buttons". */
   name: string;
   /** The section the family card appears in. Members must share it. */
@@ -47,13 +48,15 @@ export interface ComponentFamily {
 
 export const BUTTON_FAMILY: ComponentFamily = {
   id: 'buttons',
+  thumbnail: 'buttons',
   name: 'Buttons',
   category: 'actions',
   description: 'Choose the button type that fits the task. They share the same visual style, while each behaves in the way users expect.',
   defaultComponentId: 'button',
-  componentIds: ['button', 'dropdown-button', 'split-button'],
+  componentIds: ['button', 'button-group', 'dropdown-button', 'split-button'],
   roles: {
     'button':          'Performs one action',
+    'button-group':    'Related independent actions',
     'dropdown-button': 'Reveals related actions',
     'split-button':    'Default action + alternatives',
   },
@@ -61,6 +64,7 @@ export const BUTTON_FAMILY: ComponentFamily = {
 
 export const SWITCH_FAMILY: ComponentFamily = {
   id: 'switches',
+  thumbnail: 'switch-family',
   name: 'Switches',
   category: 'selection',
   description: 'Choose a general immediate-setting switch or the dedicated app appearance control. Both preserve native switch semantics.',

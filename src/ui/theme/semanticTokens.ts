@@ -62,8 +62,8 @@ export const SEMANTIC_GROUPS: readonly SemanticGroup[] = [
 
 export const SEMANTIC_ROLES: readonly SemanticRole[] = [
   /* ── Action ───────────────────────────────────────────────────────────────*/
-  { name: '--ui-color-action-primary',        group: 'action', label: 'Primary action fill',            defaultsFrom: '--siomac-red',       brandDriven: true  },
-  { name: '--ui-color-action-primary-hover',  group: 'action', label: 'Primary action — hover/pressed', defaultsFrom: '--siomac-red-dark',  brandDriven: true  },
+  { name: '--ui-color-action-primary',        group: 'action', label: 'Primary action fill',            defaultsFrom: '--siomac-navy',      brandDriven: true  },
+  { name: '--ui-color-action-primary-hover',  group: 'action', label: 'Primary action — hover/pressed', defaultsFrom: 'darker --siomac-navy', brandDriven: true  },
   { name: '--ui-color-action-primary-text',   group: 'action', label: 'Text/icon on a primary fill',    defaultsFrom: '#ffffff',            brandDriven: true  },
   { name: '--ui-color-action-secondary',      group: 'action', label: 'Secondary action fill',          defaultsFrom: '--siomac-navy',      brandDriven: true  },
   { name: '--ui-color-action-secondary-text', group: 'action', label: 'Text/icon on a secondary fill',  defaultsFrom: '#ffffff',            brandDriven: true  },

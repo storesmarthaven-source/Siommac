@@ -1,7 +1,7 @@
 import { type VNode } from 'preact';
 import './feedback.recipe.css';
 
-export type ProgressShape = 'bar' | 'ring' | 'meter';
+export type ProgressShape = 'bar' | 'ring' | 'gauge' | 'meter';
 export type ProgressTone = 'accent' | 'success' | 'warning' | 'danger';
 export type ProgressSize = 'sm' | 'md' | 'lg';
 
@@ -43,6 +43,11 @@ export function Progress({
         <svg class="ui-progress__ring" viewBox="0 0 36 36" aria-hidden="true">
           <circle class="ui-progress__ring-track" cx="18" cy="18" r="15.5" />
           <circle class="ui-progress__ring-value" cx="18" cy="18" r="15.5" pathLength="100" />
+        </svg>
+      ) : shape === 'gauge' ? (
+        <svg class="ui-progress__gauge" viewBox="0 0 100 58" aria-hidden="true">
+          <path class="ui-progress__gauge-track" d="M10 50a40 40 0 0 1 80 0" pathLength="100" />
+          <path class="ui-progress__gauge-value" d="M10 50a40 40 0 0 1 80 0" pathLength="100" />
         </svg>
       ) : (
         <div class="ui-progress__track" aria-hidden="true"><span class="ui-progress__value" /></div>

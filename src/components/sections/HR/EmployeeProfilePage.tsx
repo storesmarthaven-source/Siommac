@@ -417,8 +417,8 @@ export function EmployeeProfilePage({
               </div>
             </div>
             <div class="hero-facts">
-              <div class="hero-fact"><PageIcon id="shield" /><span>Employment Basis</span><strong>{titleCase(facts.employmentBasis)}</strong></div>
-              <div class="hero-fact"><PageIcon id="clock" /><span>Work Arrangement</span><strong>{facts.workArrangement ?? DASH}</strong></div>
+              <div class="hero-fact"><PageIcon id="shield" /><span>Employment Type</span><strong>{titleCase(facts.employmentBasis)}</strong></div>
+              <div class="hero-fact"><PageIcon id="clock" /><span>Work Schedule</span><strong>{facts.workArrangement ?? DASH}</strong></div>
               <div class="hero-fact"><PageIcon id="calendar" /><span>Start Date</span><strong>{formatDate(facts.startDate)}</strong></div>
               <div class="hero-fact"><PageIcon id="clock" /><span>Tenure</span><strong>{formatTenure(facts.tenureMonths)}</strong></div>
             </div>
@@ -509,8 +509,8 @@ export function EmployeeProfilePage({
                   />
                   <dl class="definition-list">
                     <Row label="Legal Employer" value={facts.legalEmployer ?? DASH} />
-                    <Row label="Employment Basis" value={titleCase(facts.employmentBasis)} />
-                    <Row label="Work Arrangement" value={facts.workArrangement ?? DASH} />
+                    <Row label="Employment Type" value={titleCase(facts.employmentBasis)} />
+                    <Row label="Work Schedule" value={facts.workArrangement ?? DASH} />
                     <Row label="Cost Centre" value={facts.costCentre ?? DASH} />
                     <Row label="Work Location" value={identity.siteName ?? DASH} />
                     <Row label="Pay Group" value={facts.payGroupName ?? DASH} />

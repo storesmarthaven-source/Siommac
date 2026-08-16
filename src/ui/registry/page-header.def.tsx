@@ -18,6 +18,7 @@ const previewActions = (
 
 export const pageHeaderDef: ComponentDef = {
   id: 'page-header',
+  thumbnail: 'header',
   name: 'PageHeader',
   category: 'navigation',
   description: 'The semantic page identity surface: one h1, its parent breadcrumb trail, supporting description and an optional PageActionBar.',
@@ -69,6 +70,7 @@ export const pageHeaderDef: ComponentDef = {
 
 export const pageActionBarDef: ComponentDef = {
   id: 'page-action-bar',
+  thumbnail: 'header',
   name: 'PageActionBar',
   category: 'navigation',
   description: 'The standard page-level action composition: context, visible secondary actions, one primary action and a lower-frequency overflow menu.',

@@ -26,7 +26,6 @@
   .ui-avatar--lg { width: var(--ui-avatar-lg); height: var(--ui-avatar-lg); font-size: 0.9rem; }
   .ui-avatar--xl { width: var(--ui-avatar-xl); height: var(--ui-avatar-xl); font-size: 1.15rem; }
   .ui-avatar--circle { border-radius: 50%; }
-  .ui-avatar--square { border-radius: var(--radius-sm); }
   .ui-avatar[data-palette='1'] { --ui-avatar-color: var(--ui-avatar-palette-1); }
   .ui-avatar[data-palette='2'] { --ui-avatar-color: var(--ui-avatar-palette-2); }
   .ui-avatar[data-palette='3'] { --ui-avatar-color: var(--ui-avatar-palette-3); }

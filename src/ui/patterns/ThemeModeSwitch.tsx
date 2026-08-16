@@ -1,4 +1,4 @@
-import { type VNode } from 'preact';
+import { type Ref, type VNode } from 'preact';
 import './themeModeSwitch.recipe.css';
 
 export type ThemeMode = 'light' | 'dark';
@@ -12,6 +12,9 @@ export interface ThemeModeSwitchProps {
   role?: 'switch' | 'menuitemcheckbox';
   class?: string;
   forceFocus?: boolean;
+  /** Allows composite controls such as Menu to own roving focus. */
+  buttonRef?: Ref<HTMLButtonElement>;
+  tabIndex?: number;
 }
 
 /** The nine parts morph between a sun and crescent without swapping icons. */
@@ -36,13 +39,17 @@ export function ThemeModeSwitch({
   role = 'switch',
   class: className,
   forceFocus = false,
+  buttonRef,
+  tabIndex,
 }: ThemeModeSwitchProps): VNode {
   const dark = theme === 'dark';
   const classes = ['ui-theme-mode-switch', forceFocus && 'is-force-focus', className].filter(Boolean).join(' ');
 
   return (
     <button
+      ref={buttonRef}
       type="button"
+      tabIndex={tabIndex}
       class={classes}
       role={role}
       aria-label={label}

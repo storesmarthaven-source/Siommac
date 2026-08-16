@@ -75,7 +75,8 @@ export {
   type AiActionButtonProps, type AiActionIconTreatment, type AiActionShape,
 } from './patterns/AiActionButton';
 export {
-  SegmentedControl, DropdownButton, SplitButton,
+  ButtonGroup, SegmentedControl, DropdownButton, SplitButton,
+  type ButtonGroupProps, type ButtonGroupItem,
   type SegmentedControlProps, type SegmentedOption,
   type DropdownButtonProps, type SplitButtonProps,
 } from './primitives/actions';
@@ -155,6 +156,23 @@ export {
   DateInput, TimeInput, DateTimeInput, MonthInput, DateRangeInput,
   type DateRange, type DateRangeInputProps,
 } from './forms/dateInputs';
+export {
+  Illustration,
+  type IllustrationProps, type IllustrationVariant, type IllustrationTreatment,
+} from './feedback/Illustration';
+export { QrCode, type QrCodeProps } from './data/QrCode';
+export {
+  FileTypeIcon, FILE_TYPE_ICON_TYPES, fileTypeIconTypeFromName,
+  type FileTypeIconProps, type FileTypeIconType, type FileTypeIconVariant, type FileTypeIconTheme,
+} from './data/FileTypeIcon';
+export {
+  CountryFlag, COUNTRY_FLAG_CODES, COUNTRY_FLAG_OPTIONS,
+  type CountryFlagProps, type CountryFlagCode, type CountryFlagShape,
+} from './data/CountryFlag';
+export {
+  ActivityGauge,
+  type ActivityGaugeProps, type ActivityGaugeSize, type ActivityGaugeSeries,
+} from './data/ActivityGauge';
 
 // ── File & code entry (canonical, v2) ──
 export {
@@ -192,7 +210,15 @@ export {
 } from './navigation/Tabs';
 export { Breadcrumbs, type BreadcrumbsProps, type BreadcrumbItem } from './navigation/Breadcrumbs';
 export { TreeView, type TreeViewProps, type TreeNode } from './navigation/TreeView';
+export {
+  ProgressSteps,
+  type ProgressStepsProps,
+  type ProgressStepsVariant,
+  type ProgressStepItem,
+  type ProgressStepStatus,
+} from './navigation/ProgressSteps';
 export { NextActionButton, type NextActionButtonProps, type NextActionIconTreatment } from './patterns/NextActionButton';
+export { BackActionButton, BackActionArtwork, BackActionIcon, type BackActionButtonProps, type BackActionIconTreatment } from './patterns/BackActionButton';
 export { ThemeModeSwitch, type ThemeModeSwitchProps, type ThemeMode } from './patterns/ThemeModeSwitch';
 
 // ONE Wizard. Step validation, navigation gating, optional/skipped steps and the
@@ -216,7 +242,7 @@ export {
 export { Accordion, type AccordionProps, type AccordionItem } from './containers/Accordion';
 
 // ── Overlays (canonical, v2) ──
-export { Dialog, type DialogProps, type DialogSize, type DialogVariant, type DialogLayout } from './overlays/Dialog';
+export { Dialog, type DialogProps, type DialogSize, type DialogVariant, type DialogLayout, type DialogIconStyle } from './overlays/Dialog';
 export { AnchoredPopup, type AnchoredPopupProps } from './overlays/AnchoredPopup';
 export { Popover, type PopoverProps } from './overlays/Popover';
 export { Tooltip, type TooltipProps } from './overlays/Tooltip';

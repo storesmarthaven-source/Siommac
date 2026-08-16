@@ -41,6 +41,13 @@
     transition: background-color var(--ui-motion-fast, .2s) ease, color var(--ui-motion-fast, .2s) ease;
   }
   .ui-tree__row > svg { flex: none; color: var(--ui-tree-icon); }
+  .ui-tree__copy { display: flex; min-width: 0; flex: 1; flex-direction: column; }
+  .ui-tree__label, .ui-tree__copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ui-tree__copy small { margin-top: 1px; color: var(--ui-color-text-muted, #667085); font-size: 11px; font-weight: 400; }
+  .ui-tree__meta { flex: none; color: var(--ui-color-text-muted, #667085); font-size: 11px; font-weight: 600; }
+  .ui-tree__meta.is-success { color: var(--ui-color-status-success, #079455); }
+  .ui-tree__meta.is-warning { color: var(--ui-color-status-warning, #b54708); }
+  .ui-tree__meta.is-danger { color: var(--ui-color-status-danger, #d92d20); }
   .ui-tree__row[aria-expanded='true'] > svg { color: var(--ui-tree-fg); }
   .ui-tree__row:hover { background: var(--ui-tree-hover-bg); }
   .ui-tree__row.is-selected { background: var(--ui-tree-selected-bg); font-weight: 600; }

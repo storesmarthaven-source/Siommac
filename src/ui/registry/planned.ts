@@ -122,6 +122,7 @@ const PLANNED: Planned[] = [
 
 export const PLANNED_DEFS: readonly ComponentDef[] = PLANNED.map(p => ({
   id: p.id,
+  thumbnail: 'planned',
   name: p.name,
   category: p.category,
   description: p.description,

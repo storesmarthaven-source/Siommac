@@ -22,7 +22,7 @@ import { useState } from 'preact/hooks';
 import {
   CATEGORY_LABELS, COMPOUND_OF, findComponent,
   propsForAxis,
-  type ComponentDef, type ComponentFamily, type PropValues, type PropControl,
+  type ComponentDef, type ComponentFamily, type PropValues, type PropControl, type PropCondition,
 } from '../registry';
 import { type UiState } from '../tokens';
 import { SpecialTreatments } from '../special/SpecialTreatments';
@@ -31,6 +31,10 @@ import { GeneratedStyleControls, IconPicker, RecipeStyleEditor, StudioColorContr
 import { LucideIcon, LUCIDE_NAMES, type LucideName } from '../LucideIcon';
 import { buttonFamilyPreviewProps } from './buttonFamilyPreview';
 import { PreviewScope } from './PreviewScope';
+import { StudioSelect } from './StudioSelect';
+import { StudioInspector, StudioInspectorBody } from './StudioInspector';
+import { InfoTip } from '../InfoTip';
+import { CountryPicker } from './CountryPicker';
 
 /**
  * Playground controls, grouped for a narrow inspector.
@@ -42,30 +46,23 @@ import { PreviewScope } from './PreviewScope';
  * field would mean editing 23 definitions to describe a side panel.
  */
 const CONTROL_GROUPS: { title: string; names: string[] }[] = [
-  { title: 'Content', names: ['label', 'text', 'placeholder', 'iconLeft', 'iconRight', 'icon', 'iconSide', 'iconOnly', 'helpText', 'tooltipEnabled', 'tooltipText', 'suffix', 'prefix', 'required'] },
-  { title: 'Appearance', names: ['variant', 'layout', 'tier', 'tone', 'mode', 'size', 'contrast', 'shape', 'density', 'accent'] },
+  { title: 'Content', names: ['label', 'title', 'text', 'placeholder', 'iconLeft', 'iconRight', 'icon', 'iconSide', 'iconOnly', 'chevronIcon', 'helpText', 'tooltipEnabled', 'tooltipText', 'suffix', 'prefix', 'required'] },
+  { title: 'Visual', names: ['pattern', 'featuredIcon', 'avatarCount', 'addAvatar', 'fileIcon', 'fileColorMode', 'fileThemeTone', 'fileBackground', 'fileIconColor'] },
+  { title: 'Appearance', names: ['variant', 'layout', 'appearance', 'lightSurface', 'actionTreatment', 'actionIconStyle', 'chevronTreatment', 'brandPreview', 'iconStyle', 'tier', 'tone', 'mode', 'size', 'contrast', 'shape', 'density', 'accent'] },
   { title: 'Timing', names: ['timer', 'duration', 'progress'] },
   { title: 'States', names: ['disabled', 'loading', 'loadingText', 'pressed', 'readOnly', 'error', 'checked', 'selected', 'validation'] },
+  { title: 'Elements', names: ['showNotifications', 'showMessages', 'showTickets', 'menuOpen'] },
   { title: 'Content options', names: ['chips', 'details', 'note', 'file', 'action', 'inputType'] },
   { title: 'More options', names: ['dismissible', 'showIcon', 'showCancel', 'allowDismiss', 'href', 'fullWidth', 'clearable', 'multiline', 'rows'] },
 ];
 
 const FRIENDLY_VALUES: Record<string, string> = {
   sm: 'Small', md: 'Medium', lg: 'Large',
+  theme: 'Theme colour', blue: 'Blue sample', green: 'Green sample',
+  white: 'White', neutral: 'Soft neutral', 'brand-tint': 'Logo tint',
+  outline: 'Outline border', ghost: 'Ghost', soft: 'Soft tint', solid: 'Bold brand',
+  line: 'Outline icons', app: 'Original app icons',
   None: 'No icon', Trash2: 'Trash', ArrowRight: 'Arrow right', ChevronRight: 'Chevron right',
-};
-
-const TEXT_INPUT_VARIANT_ICONS: Record<string, LucideName> = {
-  Text: 'Type',
-  Search: 'Search',
-  Password: 'LockKeyhole',
-  Number: 'Hash',
-  Currency: 'BadgeDollarSign',
-  Percentage: 'Percent',
-  Email: 'Mail',
-  URL: 'Link',
-  Phone: 'Phone',
-  'Multi-line': 'AlignLeft',
 };
 
 function friendlyValue(value: string): string {
@@ -107,35 +104,19 @@ function isStateControlCoveredByPreview(def: ComponentDef, name: string): boolea
   return state ? states.has(state as UiState) : false;
 }
 
+function matchesCondition(condition: PropCondition, shown: PropValues, previewState: UiState): boolean {
+  if ('prop' in condition && 'equals' in condition) return shown[condition.prop] === condition.equals;
+  if ('prop' in condition && 'in' in condition) return condition.in.includes(shown[condition.prop]!);
+  if ('stateIn' in condition) return condition.stateIn.includes(previewState);
+  if ('all' in condition) return condition.all.every(item => matchesCondition(item, shown, previewState));
+  return condition.any.some(item => matchesCondition(item, shown, previewState));
+}
+
 function isRelevantPreviewControl(def: ComponentDef, shown: PropValues, previewState: UiState, name: string): boolean {
   if (name === 'label') return false;
   if (isStateControlCoveredByPreview(def, name)) return false;
-  if (def.id === 'toast') {
-    const tier = String(shown.tier ?? 'normal');
-    if (name === 'duration' || name === 'progress') return shown.timer === true;
-    if (name === 'chips' || name === 'details' || name === 'action') return tier !== 'normal';
-    if (name === 'note') return tier === 'action';
-    if (name === 'file') return tier === 'rich';
-    return true;
-  }
-  if (def.id === 'sweet-alert') {
-    const mode = String(shown.mode ?? 'confirm');
-    if (name === 'inputType') return mode === 'prompt';
-    if (name === 'duration' || name === 'progress') return mode === 'timed';
-    if (name === 'showCancel') return mode === 'confirm' || mode === 'prompt';
-    if (name === 'allowDismiss') return mode !== 'loading';
-    return true;
-  }
-  if (def.id !== 'text-input') return true;
-
-  const type = String(shown.type ?? 'Text');
-  if (name === 'message') return previewState === 'error' || previewState === 'warning' || previewState === 'success';
-  if (name === 'charCount') return type === 'Multi-line';
-  if (name === 'prefix') return type === 'Currency' || type === 'Phone';
-  if (name === 'suffix') return type === 'Number' || type === 'Percentage';
-  if (name === 'clearable') return type === 'Search';
-  if (name === 'multiline' || name === 'rows') return type === 'Multi-line';
-  return true;
+  const control = def.props?.[name];
+  return control?.visibleWhen ? matchesCondition(control.visibleWhen, shown, previewState) : true;
 }
 
 /* ── Playground controls ───────────────────────────────────────────────────── */
@@ -152,24 +133,25 @@ function Control({ name, control, value, onChange, disabled = false }: {
     return (
       <>
         <label class="sds-toggle-row" for={id}>
-          <span>{control.label}</span>
+          <span>{control.label}{control.help && <InfoTip tip={control.help} label={`Help for ${control.label}`} class="sds-ctl__help-icon" />}</span>
           <input id={id} type="checkbox" checked={Boolean(value)} disabled={disabled}
             onChange={e => onChange((e.target as HTMLInputElement).checked)} />
         </label>
-        {control.help && <details class="sds-ctl__help"><summary>About this setting</summary><p>{control.help}</p></details>}
       </>
     );
   }
 
+  const isChevronIcon = name === 'chevronIcon';
+
   return (
     <div class="sds-ctl">
-      <label class="sds-ctl__label" for={id}>{control.label}</label>
+      <label class="sds-ctl__label" for={id}>{control.label}{control.help && <InfoTip tip={control.help} label={`Help for ${control.label}`} class="sds-ctl__help-icon" />}</label>
 
       {control.type === 'select' && (
-        <select id={id} class="sds-ctl__input" value={String(value)} disabled={disabled}
+        <StudioSelect id={id} class="sds-ctl__input" value={String(value)} disabled={disabled}
           onChange={e => onChange((e.target as HTMLSelectElement).value)}>
           {control.options.map(o => <option value={o} key={o}>{friendlyValue(o)}</option>)}
-        </select>
+        </StudioSelect>
       )}
 
       {control.type === 'segmented' && (
@@ -196,19 +178,30 @@ function Control({ name, control, value, onChange, disabled = false }: {
           onInput={e => onChange(Number((e.target as HTMLInputElement).value))} />
       )}
 
+      {control.type === 'color' && (
+        <StudioColorControl id={id} label={control.label} value={String(value)} onChange={onChange} />
+      )}
+
       {control.type === 'icon' && (
         <IconPicker
           id={id}
           label={control.label}
           value={String(value)}
           variant="outline"
-          position="leading"
-          recommendations={control.recommendations?.filter((name): name is LucideName => LUCIDE_NAMES.includes(name as LucideName))}
+          position={isChevronIcon ? 'trailing' : 'leading'}
+          allowClear={!isChevronIcon && control.allowNone !== false}
+          recommendations={(isChevronIcon
+            ? ['ChevronDown', 'ChevronUp', 'ChevronsUpDown']
+            : control.recommendations ?? []
+          ).filter((iconName): iconName is LucideName => LUCIDE_NAMES.includes(iconName as LucideName))}
           onChange={onChange}
         />
       )}
 
-      {control.help && <details class="sds-ctl__help"><summary>About this setting</summary><p>{control.help}</p></details>}
+      {control.type === 'country' && (
+        <CountryPicker id={id} value={String(value)} disabled={disabled} onChange={onChange} />
+      )}
+
     </div>
   );
 }
@@ -332,20 +325,22 @@ function CompoundButtonEditor({ def, shown, specimen, onSet, onEditFoundation }:
           </section>}
         </div>
 
-        <aside class="sds-owned-button__settings" aria-label={`${def.name} settings`}>
-          <header>
-            <div><span>Preview settings</span><strong>Try the {def.name}</strong></div>
-            <button type="button" onClick={reset}>Reset</button>
-          </header>
-          <div class="sds-owned-button__controls">
+        <StudioInspector className="sds-owned-button__settings" ariaLabel={`${def.name} settings`}
+          title={`Try the ${def.name}`} onReset={reset}
+          footer={<footer>
+            <span aria-hidden="true">↳</span>
+            <p><strong>Shape and colors</strong><small>Change them in Action Button. The settings above only change this preview.</small></p>
+            {onEditFoundation && <button type="button" onClick={onEditFoundation}>Change shape and colors</button>}
+          </footer>}>
+          <StudioInspectorBody className="sds-owned-button__controls">
             <section class="sds-owned-button__preview-options">
               <h4>Preview options</h4>
               <label class="sds-ctl" for={`${def.id}-state`}>
                 <span class="sds-ctl__label">State</span>
-                <select id={`${def.id}-state`} class="sds-ctl__input" value={previewState}
+                <StudioSelect id={`${def.id}-state`} class="sds-ctl__input" value={previewState}
                   onChange={event => setStateByVariant(previous => ({ ...previous, [selectedVariant]: (event.target as HTMLSelectElement).value as UiState }))}>
                   {(def.states ?? ['default']).map(state => <option value={state}>{friendlyValue(state)}</option>)}
-                </select>
+                </StudioSelect>
               </label>
               <div class="sds-owned-button__icon-picker">
                 <span>Leading icon</span>
@@ -384,13 +379,8 @@ function CompoundButtonEditor({ def, shown, specimen, onSet, onEditFoundation }:
                 ))}
               </section>
             ))}
-          </div>
-          <footer>
-            <span aria-hidden="true">↳</span>
-            <p><strong>Shape and colors</strong><small>Change them in Action Button. The settings above only change this preview.</small></p>
-            {onEditFoundation && <button type="button" onClick={onEditFoundation}>Change shape and colors</button>}
-          </footer>
-        </aside>
+          </StudioInspectorBody>
+        </StudioInspector>
       </section>
 
     </div>
@@ -409,6 +399,7 @@ export function Workbench({ def, family, onSelectMember, draft }: WorkbenchProps
   const [valuesByPreview, setValuesByPreview] = useState<Record<string, PropValues>>({});
   const [stateByPreview, setStateByPreview] = useState<Record<string, UiState>>({});
   const [selectedAxisById, setSelectedAxisById] = useState<Record<string, string>>({});
+  const [fullTopBarPreviewOpen, setFullTopBarPreviewOpen] = useState(false);
   const previewAxis = def.previewAxis ?? (def.props?.variant ? 'variant' : undefined);
   const componentDefaults = buttonFamilyPreviewProps(def);
   const axisControl = previewAxis ? def.props?.[previewAxis] : undefined;
@@ -442,10 +433,10 @@ export function Workbench({ def, family, onSelectMember, draft }: WorkbenchProps
 
   const resetPreview = (): void => {
     setValuesByPreview(previous => Object.fromEntries(
-      Object.entries(previous).filter(([key]) => key !== previewKey),
+      Object.entries(previous).filter(([key]) => def.id === 'app-top-bar' ? !key.startsWith('app-top-bar:layout:') : key !== previewKey),
     ));
     setStateByPreview(previous => Object.fromEntries(
-      Object.entries(previous).filter(([key]) => key !== previewKey),
+      Object.entries(previous).filter(([key]) => def.id === 'app-top-bar' ? !key.startsWith('app-top-bar:layout:') : key !== previewKey),
     ));
   };
 
@@ -524,27 +515,57 @@ export function Workbench({ def, family, onSelectMember, draft }: WorkbenchProps
         <div class="sds-button-editor">
           <PreviewScope class="sds-button-editor__main" attach={draft.attachScope}>
             <section class="sds-button-preview sds-button-preview--with-variants">
-              <header><div><span>Live preview</span><strong>{def.name}</strong></div><small>Updates instantly</small></header>
-              <div class="sds-button-preview__single">{specimen(shown, previewState)}</div>
+              <header>
+                <div><span>Live preview</span><strong>{def.name}</strong></div>
+                <small>Updates instantly</small>
+              </header>
+              <div class="sds-button-preview__single">
+                {specimen(shown, previewState)}
+              </div>
+              {def.id === 'app-top-bar' && <div class="sds-topbar-preview-tools">
+                <button type="button" onClick={() => setFullTopBarPreviewOpen(true)}><LucideIcon name="Maximize2" />Full preview</button>
+              </div>}
               <VariantSpecimens def={def} specimen={specimen} selected={selectedAxis ?? shown.variant}
                 onSelect={(axis, value) => set(axis, value)} />
             </section>
             <UsageSpecimens def={def} />
           </PreviewScope>
-          <aside class="sds-button-settings" aria-label={`${def.name} properties`}>
-            <header class="sds-button-settings__head"><div><span>Preview settings</span><strong>Try the {def.name}</strong></div></header>
+          <StudioInspector ariaLabel={`${def.name} properties`} title={`Try the ${def.name}`}>
             <section class="sds-button-settings__example" aria-label="Preview options">
-              <div class="sds-button-settings__example-head"><div><h4>Preview options</h4><p>Only this {selectedAxis ? friendlyValue(selectedAxis).toLowerCase() : 'example'} preview changes.</p></div><button type="button" onClick={resetPreview}>Reset</button></div>
-              {def.states && def.states.length > 1 && <div class="sds-button-settings__state"><label for={`${def.id}-preview-state`}>State</label><select id={`${def.id}-preview-state`} value={previewState} onChange={event => setStateByPreview(previous => ({ ...previous, [previewKey]: (event.target as HTMLSelectElement).value as UiState }))}>{def.states.map(state => <option value={state}>{friendlyValue(state)}</option>)}</select></div>}
+              <div class="sds-button-settings__example-head"><div><h4>Preview options</h4><p>{def.id === 'app-top-bar' ? 'Top bar styling is shared across all layouts.' : `Only this ${selectedAxis ? friendlyValue(selectedAxis).toLowerCase() : 'example'} preview changes.`}</p></div><button type="button" onClick={resetPreview}>Reset</button></div>
+              {def.states && def.states.length > 1 && <div class="sds-button-settings__state"><label for={`${def.id}-preview-state`}>State</label><StudioSelect id={`${def.id}-preview-state`} class="sds-ctl__input" value={previewState} onChange={event => setStateByPreview(previous => ({ ...previous, [previewKey]: (event.target as HTMLSelectElement).value as UiState }))}>{def.states.map(state => <option value={state}>{friendlyValue(state)}</option>)}</StudioSelect></div>}
             </section>
-            <div class="sds-button-settings__body">
+            <StudioInspectorBody>
               {previewGroups.map(group => <section key={group.title}><h4>{group.title}</h4>{group.entries.map(([name, control]) => <Control key={name} name={name} control={control} value={shown[name] ?? ''} onChange={value => set(name, value)} />)}</section>)}
               {def.style && def.style.length > 0 && <details class="sds-button-settings__style">
                 <summary><span><strong>Component style</strong><small>Shape, colours and interaction states</small></span><em>{def.style.reduce((total, group) => total + group.controls.length, 0)} settings</em></summary>
                 <div><GeneratedStyleControls def={def} draft={draft} /></div>
               </details>}
-            </div>
-          </aside>
+            </StudioInspectorBody>
+          </StudioInspector>
+        </div>
+      )}
+
+      {def.id === 'app-top-bar' && fullTopBarPreviewOpen && (
+        <div class="sds-full-topbar-preview" role="presentation" onMouseDown={event => {
+          if (event.target === event.currentTarget) setFullTopBarPreviewOpen(false);
+        }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="full-topbar-preview-title">
+            <header>
+              <div><span>Application preview</span><h3 id="full-topbar-preview-title">Full App Top Bar</h3></div>
+              <button type="button" aria-label="Close full top bar preview" onClick={() => setFullTopBarPreviewOpen(false)}><LucideIcon name="X" /></button>
+            </header>
+            <PreviewScope class="sds-full-topbar-preview__canvas" attach={draft.attachScope}>
+              {specimen({ ...shown, layout: 'full', showNotifications: true, showMessages: true, showTickets: true, menuOpen: false }, previewState)}
+            </PreviewScope>
+            <footer>
+              <span>Search, quick actions and account controls shown together.</span>
+              <div class="sds-full-topbar-preview__mode" role="group" aria-label="Full top bar surface mode">
+                {(['dark', 'light'] as const).map(mode => <button type="button" aria-pressed={shown.appearance === mode}
+                  onClick={() => set('appearance', mode)}>{friendlyValue(mode)}</button>)}
+              </div>
+            </footer>
+          </section>
         </div>
       )}
 
@@ -599,14 +620,16 @@ function VariantSpecimens({ def, specimen, selected, onSelect }: {
               {values.map(v => {
                 const sample = samples?.find(item => item.value === v);
                 const title = sample?.title ?? friendlyValue(v);
-                const icon = def.id === 'text-input' ? TEXT_INPUT_VARIANT_ICONS[v] : undefined;
+                const icon = sample?.icon && LUCIDE_NAMES.includes(sample.icon as LucideName)
+                  ? sample.icon as LucideName
+                  : undefined;
                 return <button type="button" role="radio" aria-checked={String(selected) === v}
                   class={String(selected) === v ? 'is-on' : ''} key={v} onClick={() => onSelect(axis, v)}>
                   {icon && <LucideIcon name={icon} size={17} strokeWidth={1.8} />}
                   <span>{title}</span>
                 </button>;
               })}
-            </div> : <div class="sds-axis" role="radiogroup" aria-label={`${def.name} ${axisControl?.label ?? 'variants'}`}>
+            </div> : <div class={`sds-axis sds-axis--cards${def.previewLayout === 'wide' ? ' sds-axis--wide' : ''}${def.previewLayout === 'diagram' ? ' sds-axis--diagram' : ''}${def.id === 'dialog' && axis === 'layout' ? ' sds-axis--modal-layouts' : ''}${def.id === 'app-top-bar' && axis === 'layout' ? ' sds-axis--topbar-layouts' : ''}${def.id === 'empty-state' && axis === 'visual' ? ' sds-axis--empty-state-visuals' : ''}${def.id === 'progress-steps' ? ' sds-axis--progress-steps' : ''}`} role="radiogroup" aria-label={`${def.name} ${axisControl?.label ?? 'variants'}`}>
               {values.map(v => {
                 const sample = samples?.find(item => item.value === v);
                 return (
@@ -614,9 +637,17 @@ function VariantSpecimens({ def, specimen, selected, onSelect }: {
                     class={`sds-axis__cell${String(selected) === v ? ' is-on' : ''}`} key={v}
                     onClick={() => onSelect(axis, v)}>
                     <div class="sds-axis__spec">
-                      {def.id === 'dialog' && axis === 'layout'
+                      {sample?.diagram === 'modal-layout'
                         ? <ModalLayoutThumbnail layout={v} />
-                        : specimen(propsForAxis(def, axis, v))}
+                        : sample?.diagram === 'topbar-layout'
+                          ? <AppTopBarLayoutThumbnail layout={v} />
+                          : sample?.diagram === 'empty-state-visual'
+                            ? <EmptyStateVisualThumbnail visual={v} />
+                            : sample?.diagram === 'progress-steps-layout'
+                              ? <ProgressStepsLayoutThumbnail variant={v} />
+                            : sample?.diagram === 'tabs-variant'
+                              ? <TabsVariantThumbnail variant={v} />
+                          : specimen({ ...propsForAxis(def, axis, v), ...sample?.comparisonProps, ...(def.id === 'date-input' ? { openCalendar: false } : {}) })}
                     </div>
                     <strong>{sample?.title ?? friendlyValue(v)}</strong>
                   </button>
@@ -627,6 +658,16 @@ function VariantSpecimens({ def, specimen, selected, onSelect }: {
       )}
 
     </div>
+  );
+}
+
+function AppTopBarLayoutThumbnail({ layout }: { layout: string }): VNode {
+  return (
+    <span class={`sds-topbar-layout-thumb sds-topbar-layout-thumb--${layout}`} aria-hidden="true">
+      {layout === 'search' && <i class="sds-topbar-layout-thumb__search"><b /><em /></i>}
+      {layout === 'actions' && <i class="sds-topbar-layout-thumb__actions"><b /><b /><b /></i>}
+      {layout === 'user-pill' && <i class="sds-topbar-layout-thumb__user"><b /><em><b /><b /></em><strong /></i>}
+    </span>
   );
 }
 
@@ -644,11 +685,54 @@ function ModalLayoutThumbnail({ layout }: { layout: string }): VNode {
   );
 }
 
+function EmptyStateVisualThumbnail({ visual }: { visual: string }): VNode {
+  const kind = visual.toLowerCase().replace(/\s+/g, '-');
+  return (
+    <span class={`sds-empty-visual-thumb sds-empty-visual-thumb--${kind}`} aria-hidden="true">
+      <i class="sds-empty-visual-thumb__stage">
+        {visual === 'Illustration' && <b class="sds-empty-visual-thumb__illustration"><em /><strong /></b>}
+        {visual === 'Featured icon' && <><b class="sds-empty-visual-thumb__rings" /><em class="sds-empty-visual-thumb__icon" /></>}
+        {visual === 'Avatar radius' && <b class="sds-empty-visual-thumb__radius"><em /><em /><em /><em /></b>}
+        {visual === 'Avatar row' && <b class="sds-empty-visual-thumb__row"><em /><em /><strong>+</strong><em /><em /></b>}
+        {visual === 'File type' && <b class="sds-empty-visual-thumb__file"><em /></b>}
+      </i>
+      <i class="sds-empty-visual-thumb__copy"><b /><em /></i>
+      <i class="sds-empty-visual-thumb__actions"><b /><b /></i>
+    </span>
+  );
+}
+
+function ProgressStepsLayoutThumbnail({ variant }: { variant: string }): VNode {
+  const centered = variant === 'icon-centered-number';
+  const text = variant === 'icon-with-text';
+  return (
+    <span class={`sds-progress-steps-layout sds-progress-steps-layout--${variant}`} aria-hidden="true">
+      {[0, 1, 2, 3].map(index => (
+        <i class={index === 0 ? 'is-done' : index === 1 ? 'is-current' : 'is-next'} key={index}>
+          <b>{index === 0 ? '✓' : text ? <em /> : index + 1}</b>
+          <span><strong /><small /></span>
+          {index < 3 && <u class={centered ? 'is-dotted-horizontal' : text ? 'is-solid-vertical' : 'is-dotted-vertical'} />}
+        </i>
+      ))}
+    </span>
+  );
+}
+
+function TabsVariantThumbnail({ variant }: { variant: string }): VNode {
+  return (
+    <span class={`sds-tabs-variant sds-tabs-variant--${variant}`} aria-hidden="true">
+      <i class="is-selected"><b /><em /></i>
+      <i><b /><em /></i>
+      <i><b /><em /></i>
+    </span>
+  );
+}
+
 function UsageSpecimens({ def }: { def: ComponentDef }): VNode {
   return (
     <>
       {def.examples && def.examples.length > 0 && (
-        <section class="sds-button-use" aria-labelledby={`${def.id}-use-title`}>
+        <section class={`sds-button-use sds-button-use--${def.id}`} aria-labelledby={`${def.id}-use-title`}>
           <header><h3 id={`${def.id}-use-title`}>Common application use</h3><p>Real examples of how this control appears in SIOMAC.</p></header>
           <div class={COMPOUND_OF[def.id]
             ? `sds-pattern-grid${def.examples.length === 2 ? ' sds-pattern-grid--two' : ''}`

@@ -22,7 +22,7 @@
  */
 
 import { type VNode } from 'preact';
-import { LucideIcon } from '../LucideIcon';
+import { LucideIcon, type LucideName } from '../LucideIcon';
 import { DropdownButton, SplitButton } from '../primitives/actions';
 import { type MenuItems } from '../overlays/DropdownMenu';
 import { type ControlSize } from '../tokens';
@@ -32,6 +32,8 @@ const s = (v: PropValues[string] | undefined, fallback = ''): string =>
   typeof v === 'string' && v !== '' ? v : fallback;
 const b = (v: PropValues[string] | undefined): boolean => v === true;
 const size = (v: PropValues[string] | undefined): ControlSize => (v === 'sm' || v === 'lg' ? v : 'md');
+const chevronIcon = (v: PropValues[string] | undefined): LucideName =>
+  (s(v, 'ChevronDown') as LucideName);
 /** A control that offers an icon must actually render one, or it is decoration. */
 const icon = (n: string, treatment = 'outline', color = 'currentColor'): VNode | undefined => (
   n !== 'None'
@@ -66,6 +68,7 @@ const SPLIT_VARIANTS = ['primary', 'secondary', 'outline', 'danger'] as const;
 
 const dropdownButtonDef: ComponentDef = {
   id: 'dropdown-button',
+  thumbnail: 'menu',
   name: 'Dropdown Button',
   category: 'actions',
   description:
@@ -79,6 +82,7 @@ const dropdownButtonDef: ComponentDef = {
   props: {
     label:      { type: 'text',      label: 'Trigger label', default: 'Export' },
     iconLeft:   { type: 'select',    label: 'Leading icon', options: ['Download', 'None', 'EllipsisVertical', 'Filter'], default: 'Download' },
+    chevronIcon:{ type: 'icon',      label: 'Chevron icon', default: 'ChevronDown', recommendations: ['ChevronDown', 'ChevronUp', 'ChevronsUpDown'] },
     variant:    { type: 'select',    label: 'Variant', options: [...DROPDOWN_VARIANTS], default: 'secondary',
                   help: 'The trigger borrows Button\'s appearance, so it can never drift into a third button look.' },
     size:       { type: 'segmented', label: 'Size', options: ['sm', 'md', 'lg'], default: 'md' },
@@ -110,6 +114,7 @@ const dropdownButtonDef: ComponentDef = {
       variant={s(p.variant, 'secondary') as never}
       size={size(p.size)}
       iconLeft={icon(s(p.iconLeft, 'None'), s(p.iconTreatment, 'outline'), s(p.iconColor, 'currentColor'))}
+      chevronIcon={chevronIcon(p.chevronIcon)}
       matchWidth={b(p.matchWidth)}
       disabled={b(p.disabled) || state === 'disabled'}
       forceState={state}
@@ -120,6 +125,7 @@ const dropdownButtonDef: ComponentDef = {
   label="${s(p.label, 'Export')}"
   variant="${s(p.variant, 'secondary')}"${s(p.iconLeft, 'None') !== 'None' ? `
   iconLeft={<LucideIcon name="${s(p.iconLeft)}" />}` : ''}${b(p.matchWidth) ? '\n  matchWidth' : ''}${b(p.disabled) ? '\n  disabled' : ''}
+  chevronIcon="${s(p.chevronIcon, 'ChevronDown')}"
   items={[
     { id: 'edit', label: 'Edit details' },
     { id: 'export', label: 'Export to CSV' },
@@ -147,6 +153,7 @@ const dropdownButtonDef: ComponentDef = {
 
 const splitButtonDef: ComponentDef = {
   id: 'split-button',
+  thumbnail: 'menu',
   name: 'Split Button',
   category: 'actions',
   description:
@@ -159,6 +166,7 @@ const splitButtonDef: ComponentDef = {
 
   props: {
     iconLeft:  { type: 'select',    label: 'Leading icon', options: ['Save', 'None', 'Plus'], default: 'Save' },
+    chevronIcon:{ type: 'icon',     label: 'Chevron icon', default: 'ChevronDown', recommendations: ['ChevronDown', 'ChevronUp', 'ChevronsUpDown'] },
     label:     { type: 'text',      label: 'Primary action', default: 'Save changes',
                  help: 'The action the left half performs immediately — not a menu heading.' },
     variant:   { type: 'select',    label: 'Variant', options: [...SPLIT_VARIANTS], default: 'primary' },
@@ -197,6 +205,7 @@ const splitButtonDef: ComponentDef = {
       variant={s(p.variant, 'primary') as never}
       size={size(p.size)}
       menuLabel={s(p.menuLabel, 'More save options')}
+      chevronIcon={chevronIcon(p.chevronIcon)}
       loading={b(p.loading) || state === 'loading'}
       disabled={b(p.disabled) || state === 'disabled'}
       forceState={state}
@@ -206,6 +215,7 @@ const splitButtonDef: ComponentDef = {
   code: (p) => `<SplitButton
   action={{ label: '${s(p.label, 'Save changes')}',${s(p.iconLeft, 'None') !== 'None' ? ` icon: <LucideIcon name="${s(p.iconLeft)}" />,` : ''} onSelect: save }}
   menuLabel="${s(p.menuLabel, 'More save options')}"
+  chevronIcon="${s(p.chevronIcon, 'ChevronDown')}"
   variant="${s(p.variant, 'primary')}"${b(p.loading) ? '\n  loading' : ''}${b(p.disabled) ? '\n  disabled' : ''}
   items={[
     { id: 'save-close', label: 'Save and close' },

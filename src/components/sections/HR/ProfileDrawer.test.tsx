@@ -174,7 +174,7 @@ describe('Employee profile drawer', () => {
   it('renders the approved facts strip with the FTE-derived work arrangement', () => {
     renderDrawer();
     const facts = document.querySelector<HTMLElement>('.facts')!;
-    expect(within(facts).getByText('Work Arrangement')).toBeTruthy();
+    expect(within(facts).getByText('Work Schedule')).toBeTruthy();
     expect(within(facts).getByText('Full-Time')).toBeTruthy();
   });
 

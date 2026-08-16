@@ -13,7 +13,14 @@
     --ui-progress-fill: var(--ui-color-action-primary);
     --ui-progress-radius: var(--radius-pill);
     --ui-progress-bar-height: 8px;
-    --ui-progress-ring-size: 54px;
+    --ui-progress-ring-size: 108px;
+    --ui-progress-gauge-size: 144px;
+
+    --ui-activity-gauge-track: var(--ui-color-surface-subtle);
+    --ui-activity-gauge-fill: #7f56d9;
+    --ui-activity-gauge-label: var(--ui-color-text-secondary);
+    --ui-activity-gauge-value-color: var(--ui-color-text-primary);
+    --ui-activity-gauge-stroke: 10;
   }
   .ui-alert { display: flex; align-items: flex-start; gap: var(--ui-alert-gap); padding: var(--ui-alert-padding); border: var(--ui-border-width) solid var(--ui-alert-border); border-left: 4px solid var(--ui-alert-accent); border-radius: var(--ui-alert-radius); background: var(--ui-alert-bg); color: var(--ui-alert-fg); }
   .ui-alert--page { border-radius: 0; border-right: 0; border-left-width: 4px; border-left-color: var(--ui-alert-accent); }
@@ -41,19 +48,47 @@
   .ui-progress__copy { display: flex; justify-content: space-between; gap: var(--space-3); font-size: var(--ui-font-size-caption); }
   .ui-progress__label { font-weight: var(--font-weight-medium); }
   .ui-progress__text { color: var(--ui-color-text-secondary); font-variant-numeric: tabular-nums; }
-  .ui-progress--ring { position: relative; display: inline-grid; grid-template-columns: var(--ui-progress-ring-size) auto; align-items: center; width: max-content; }
+  .ui-progress--ring { position: relative; display: inline-grid; place-items: center; width: var(--ui-progress-ring-size); height: var(--ui-progress-ring-size); }
   .ui-progress__ring { width: var(--ui-progress-ring-size); height: var(--ui-progress-ring-size); transform: rotate(-90deg); }
   .ui-progress__ring-track,
   .ui-progress__ring-value { fill: none; stroke-width: 3; }
   .ui-progress__ring-track { stroke: var(--ui-progress-track); }
   .ui-progress__ring-value { stroke: var(--ui-progress-fill); stroke-linecap: round; stroke-dasharray: calc(var(--ui-progress-value) * 1) 100; transition: stroke-dasharray 180ms ease; }
-  .ui-progress--ring .ui-progress__copy { display: grid; }
-  .ui-progress--sm { --ui-progress-bar-height: 5px; --ui-progress-ring-size: 42px; }
-  .ui-progress--lg { --ui-progress-bar-height: 12px; --ui-progress-ring-size: 68px; }
+  .ui-progress--ring .ui-progress__copy { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 0; text-align: center; }
+  .ui-progress--ring .ui-progress__label { max-width: 76%; color: var(--ui-color-text-secondary); font-size: 10px; line-height: 1.2; }
+  .ui-progress--ring .ui-progress__text { color: var(--ui-color-text-primary); font-size: 20px; font-weight: var(--font-weight-semibold); }
+  .ui-progress--ring.ui-progress--lg .ui-progress__label { font-size: 11px; }
+  .ui-progress--ring.ui-progress--lg .ui-progress__text { font-size: 25px; }
+  .ui-progress--gauge { position: relative; display: inline-grid; width: var(--ui-progress-gauge-size); min-height: calc(var(--ui-progress-gauge-size) * .58); place-items: end center; }
+  .ui-progress__gauge { width: var(--ui-progress-gauge-size); height: auto; overflow: visible; }
+  .ui-progress__gauge-track, .ui-progress__gauge-value { fill: none; stroke-width: 9; stroke-linecap: round; }
+  .ui-progress__gauge-track { stroke: var(--ui-progress-track); }
+  .ui-progress__gauge-value { stroke: var(--ui-progress-fill); stroke-dasharray: calc(var(--ui-progress-value) * 1) 100; transition: stroke-dasharray 180ms ease; }
+  .ui-progress--gauge .ui-progress__copy { position: absolute; inset: auto 0 0; display: grid; justify-items: center; gap: 0; }
+  .ui-progress--gauge .ui-progress__label { color: var(--ui-color-text-secondary); font-size: 10px; }
+  .ui-progress--gauge .ui-progress__text { color: var(--ui-color-text-primary); font-size: 20px; font-weight: var(--font-weight-semibold); }
+  .ui-progress--sm { --ui-progress-bar-height: 5px; --ui-progress-ring-size: 72px; --ui-progress-gauge-size: 104px; }
+  .ui-progress--lg { --ui-progress-bar-height: 12px; --ui-progress-ring-size: 144px; --ui-progress-gauge-size: 184px; }
   .ui-progress--indeterminate .ui-progress__value { width: 35%; animation: ui-progress-slide 1.2s ease-in-out infinite; }
   .ui-progress--indeterminate .ui-progress__ring-value { stroke-dasharray: 24 76; animation: ui-progress-spin 1s linear infinite; transform-origin: center; }
+  .ui-progress--indeterminate .ui-progress__gauge-value { stroke-dasharray: 24 76; animation: ui-progress-gauge 1.2s ease-in-out infinite; }
+
+  .ui-activity-gauge {
+    --ui-activity-gauge-fill-secondary: color-mix(in srgb, var(--ui-activity-gauge-fill) 80%, white);
+    --ui-activity-gauge-fill-tertiary: color-mix(in srgb, var(--ui-activity-gauge-fill) 58%, white);
+    position: relative; width: min(100%, 400px); color: var(--ui-activity-gauge-value-color);
+  }
+  .ui-activity-gauge__label { fill: var(--ui-activity-gauge-label); font-size: 12px; font-weight: var(--font-weight-medium); }
+  .ui-activity-gauge__text { fill: var(--ui-activity-gauge-value-color); font-size: 28px; font-weight: var(--font-weight-semibold); font-variant-numeric: tabular-nums; }
+  .ui-activity-gauge--xs .ui-activity-gauge__text { font-size: 20px; }
+  .ui-activity-gauge--lg .ui-activity-gauge__label { font-size: 14px; }
+  .ui-activity-gauge--lg .ui-activity-gauge__text { font-size: 36px; }
+  .ui-activity-gauge__legend-label { color: var(--ui-activity-gauge-label); font-size: 12px; }
+  .ui-activity-gauge .recharts-legend-item { margin-right: 12px !important; }
+  .ui-activity-gauge .recharts-default-legend { transform: translateY(12px); }
   @keyframes ui-progress-slide { from { transform: translateX(-110%); } to { transform: translateX(300%); } }
   @keyframes ui-progress-spin { to { transform: rotate(360deg); } }
+  @keyframes ui-progress-gauge { 50% { stroke-dasharray: 72 28; } }
   @media (prefers-reduced-motion: reduce) {
     .ui-progress__value,
     .ui-progress__ring-value { transition: none; animation-duration: 2.4s; }

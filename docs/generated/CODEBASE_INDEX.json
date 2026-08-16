@@ -1,15 +1,15 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "de394ca884c26c03231b2cb4b742be79a8259380",
+    "head": "f1644042c99030412a357b7c04c6a6acf35456da",
     "branch": "codex/ui-kit-v2-completion",
-    "fingerprint": "ae71f01638b7e5b7378aac83",
-    "indexedFiles": 1872
+    "fingerprint": "dfa9cd3ead99b98830efc082",
+    "indexedFiles": 1891
   },
   "summary": {
-    "files": 1517,
-    "symbols": 15000,
-    "widgets": 71,
+    "files": 1536,
+    "symbols": 15177,
+    "widgets": 72,
     "routes": 983,
     "routeDefinitions": 984,
     "unmountedRoutes": 17,
@@ -22,9 +22,9 @@
     {
       "id": "hr",
       "counts": {
-        "files": 265,
-        "symbols": 3077,
-        "widgets": 10,
+        "files": 267,
+        "symbols": 3089,
+        "widgets": 13,
         "routes": 275,
         "routeDefinitions": 275,
         "apiCalls": 37,
@@ -113,8 +113,8 @@
     {
       "id": "settings",
       "counts": {
-        "files": 44,
-        "symbols": 252,
+        "files": 45,
+        "symbols": 272,
         "widgets": 0,
         "routes": 26,
         "routeDefinitions": 26,
@@ -139,9 +139,9 @@
     {
       "id": "platform",
       "counts": {
-        "files": 455,
-        "symbols": 3976,
-        "widgets": 18,
+        "files": 471,
+        "symbols": 4121,
+        "widgets": 16,
         "routes": 38,
         "routeDefinitions": 53,
         "apiCalls": 55,
@@ -5439,7 +5439,14 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 1694,
-      "hash": "2382139e5f0d4002"
+      "hash": "4235301785c67df6"
+    },
+    {
+      "path": "src/components/sections/HR/EmployeeSideDrawerFrame.tsx",
+      "module": "hr",
+      "role": "frontend-page",
+      "lines": 168,
+      "hash": "13356f93e5375bf4"
     },
     {
       "path": "src/components/sections/HR/HRDocumentsOverview.tsx",
@@ -5593,14 +5600,21 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 307,
-      "hash": "e83c78691b621516"
+      "hash": "9ca9b45b4d7cbfaa"
     },
     {
       "path": "src/components/sections/HR/ProfileDrawer.tsx",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 1072,
-      "hash": "fc1c3a992d540edb"
+      "lines": 1075,
+      "hash": "cd0bfa8952c559dd"
+    },
+    {
+      "path": "src/components/sections/HR/ProfileDrawerTemplate.tsx",
+      "module": "hr",
+      "role": "frontend-page",
+      "lines": 102,
+      "hash": "48b60d756706d51b"
     },
     {
       "path": "src/components/sections/HR/RosterOverview.tsx",
@@ -5908,7 +5922,7 @@
       "module": "hr",
       "role": "frontend-page",
       "lines": 1989,
-      "hash": "d643742a90cc5e54"
+      "hash": "7d0a5afc5c9ee848"
     },
     {
       "path": "src/components/sections/HR/profile/ProfileIconSprite.tsx",
@@ -7650,8 +7664,15 @@
       "path": "src/components/shared/AccountPill.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 247,
-      "hash": "02e48343f548d1ee"
+      "lines": 231,
+      "hash": "939c31a93e618977"
+    },
+    {
+      "path": "src/components/shared/AppTopBar.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 164,
+      "hash": "aa2a094d879f9064"
     },
     {
       "path": "src/components/shared/AuthGate.tsx",
@@ -7741,15 +7762,15 @@
       "path": "src/components/shared/UserPill.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 114,
-      "hash": "423459a93bdb0282"
+      "lines": 117,
+      "hash": "af14fe2ad27d9e2b"
     },
     {
       "path": "src/components/shared/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 17,
-      "hash": "d2acddaf06b8ca6e"
+      "lines": 19,
+      "hash": "2c654322ddd8a87d"
     },
     {
       "path": "src/components/shared/orchestration/ActivityTimeline.tsx",
@@ -7757,6 +7778,13 @@
       "role": "frontend",
       "lines": 204,
       "hash": "901a726f787dba5f"
+    },
+    {
+      "path": "src/components/shared/searchShortcut.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 6,
+      "hash": "0263c344a3acd01a"
     },
     {
       "path": "src/components/workflow/ApprovalInbox.tsx",
@@ -8344,7 +8372,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 33,
-      "hash": "fc5ebcb4997a27dc"
+      "hash": "fca661d581373c04"
     },
     {
       "path": "src/ui/LucideIcon.tsx",
@@ -8406,8 +8434,8 @@
       "path": "src/ui/components/EmptyState.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 47,
-      "hash": "11b815627f878550"
+      "lines": 54,
+      "hash": "8967353f6b57708a"
     },
     {
       "path": "src/ui/components/EntityHead.tsx",
@@ -8634,6 +8662,20 @@
       "hash": "ed8cf1aec9e2c6e8"
     },
     {
+      "path": "src/ui/data/ActivityGauge.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 62,
+      "hash": "2e7fa2debb2f44eb"
+    },
+    {
+      "path": "src/ui/data/CountryFlag.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 73,
+      "hash": "a55dd9463e4e2410"
+    },
+    {
       "path": "src/ui/data/DataTable/DataTable.test.tsx",
       "module": "platform",
       "role": "frontend",
@@ -8676,6 +8718,20 @@
       "hash": "e2c22d1386418dd5"
     },
     {
+      "path": "src/ui/data/FileTypeIcon.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 66,
+      "hash": "a9bbc3dfab6a7a46"
+    },
+    {
+      "path": "src/ui/data/QrCode.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 38,
+      "hash": "04e3e911e5f2a368"
+    },
+    {
       "path": "src/ui/feedback/Alert.tsx",
       "module": "platform",
       "role": "frontend",
@@ -8683,11 +8739,18 @@
       "hash": "079470acda796615"
     },
     {
+      "path": "src/ui/feedback/Illustration.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 80,
+      "hash": "41754084dbdd7c38"
+    },
+    {
       "path": "src/ui/feedback/Progress.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 57,
-      "hash": "17fa17a0dcb06517"
+      "lines": 62,
+      "hash": "0c4de35dac9b378a"
     },
     {
       "path": "src/ui/feedback/feedback.test.tsx",
@@ -8709,6 +8772,13 @@
       "role": "frontend",
       "lines": 262,
       "hash": "a01999b398203d33"
+    },
+    {
+      "path": "src/ui/forms/DatePicker.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 217,
+      "hash": "f510d3d6249bed40"
     },
     {
       "path": "src/ui/forms/FileInput.tsx",
@@ -8735,8 +8805,8 @@
       "path": "src/ui/forms/MultiSelect.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 246,
-      "hash": "1b8f3aba3ffd9357"
+      "lines": 248,
+      "hash": "0a4968bf4a4fb6c1"
     },
     {
       "path": "src/ui/forms/OptionList.tsx",
@@ -8763,8 +8833,8 @@
       "path": "src/ui/forms/Select.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 228,
-      "hash": "71bcc31ebdb61db8"
+      "lines": 230,
+      "hash": "2e4f78f7a80b39ff"
     },
     {
       "path": "src/ui/forms/dateInputs.tsx",
@@ -8813,28 +8883,28 @@
       "module": "platform",
       "role": "frontend",
       "lines": 252,
-      "hash": "63278451a4e084f3"
+      "hash": "290642ffb68fde03"
     },
     {
       "path": "src/ui/gallery/BrandThemePanel.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 674,
-      "hash": "82a49c6fe90ce513"
+      "lines": 876,
+      "hash": "0bbee6ec97254966"
     },
     {
       "path": "src/ui/gallery/FoundationsPanel.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 145,
-      "hash": "7d7a2948c9a2b9be"
+      "lines": 308,
+      "hash": "cdba8417b432af82"
     },
     {
       "path": "src/ui/gallery/galleryStore.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 252,
-      "hash": "449345f4b51b27d3"
+      "lines": 267,
+      "hash": "e277ac30f140e102"
     },
     {
       "path": "src/ui/gallery/semanticDraft.test.tsx",
@@ -8966,8 +9036,8 @@
       "path": "src/ui/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 274,
-      "hash": "699b11612df5d843"
+      "lines": 300,
+      "hash": "ccbe349756a9f16b"
     },
     {
       "path": "src/ui/layouts/ModulePageLayout.tsx",
@@ -9040,6 +9110,20 @@
       "hash": "bc775eca07158dce"
     },
     {
+      "path": "src/ui/navigation/ProgressSteps/ProgressSteps.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 103,
+      "hash": "020034fbae0567e7"
+    },
+    {
+      "path": "src/ui/navigation/ProgressSteps/index.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 8,
+      "hash": "b924fa62f376e0cd"
+    },
+    {
       "path": "src/ui/navigation/Tabs/Tabs.test.tsx",
       "module": "platform",
       "role": "frontend",
@@ -9071,8 +9155,8 @@
       "path": "src/ui/navigation/TreeView.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 159,
-      "hash": "0f2977c63197b5a7"
+      "lines": 168,
+      "hash": "0d2da716ca92a0d7"
     },
     {
       "path": "src/ui/navigation/Wizard/Wizard.test.tsx",
@@ -9113,15 +9197,15 @@
       "path": "src/ui/overlays/Dialog.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 223,
-      "hash": "6dabbcad4463e859"
+      "lines": 225,
+      "hash": "650e2c50a958baaf"
     },
     {
       "path": "src/ui/overlays/DropdownMenu.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 194,
-      "hash": "63188768e2cf5b8e"
+      "lines": 221,
+      "hash": "b1fce4ee358e1c1f"
     },
     {
       "path": "src/ui/overlays/Popover.test.tsx",
@@ -9173,6 +9257,13 @@
       "hash": "7fabd5178102b857"
     },
     {
+      "path": "src/ui/patterns/BackActionButton.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 62,
+      "hash": "dd9bd7a526481be0"
+    },
+    {
       "path": "src/ui/patterns/NextActionButton.test.tsx",
       "module": "platform",
       "role": "frontend",
@@ -9197,8 +9288,8 @@
       "path": "src/ui/patterns/ThemeModeSwitch.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 59,
-      "hash": "e01cc8c409f29cd5"
+      "lines": 66,
+      "hash": "752dc39988c0736c"
     },
     {
       "path": "src/ui/people/Avatar.test.tsx",
@@ -9212,7 +9303,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 94,
-      "hash": "1b19ddeda1870cf0"
+      "hash": "d965188710b78563"
     },
     {
       "path": "src/ui/people/AvatarGroup.tsx",
@@ -9232,8 +9323,8 @@
       "path": "src/ui/primitives/Badge.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 85,
-      "hash": "a0336c5c922195a6"
+      "lines": 88,
+      "hash": "5d935dff3c002a64"
     },
     {
       "path": "src/ui/primitives/Button.test.tsx",
@@ -9246,8 +9337,8 @@
       "path": "src/ui/primitives/Button.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 238,
-      "hash": "3915c94483fd086c"
+      "lines": 243,
+      "hash": "7723350fda98d4db"
     },
     {
       "path": "src/ui/primitives/TextInput.tsx",
@@ -9260,15 +9351,15 @@
       "path": "src/ui/primitives/actions.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 207,
-      "hash": "6d1faa193a013a5c"
+      "lines": 232,
+      "hash": "4e12c78070c7e304"
     },
     {
       "path": "src/ui/primitives/actions.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 237,
-      "hash": "d6ab88a6a4c54eaf"
+      "lines": 300,
+      "hash": "eeb6d527b3ad2988"
     },
     {
       "path": "src/ui/primitives/choice.test.tsx",
@@ -9281,8 +9372,8 @@
       "path": "src/ui/primitives/choice.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 387,
-      "hash": "417a1c16e34a3fc7"
+      "lines": 459,
+      "hash": "c185340da28c7cc4"
     },
     {
       "path": "src/ui/primitives/choiceMigration.test.ts",
@@ -9302,8 +9393,8 @@
       "path": "src/ui/registry/actions.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 510,
-      "hash": "9e9943d1f9543da2"
+      "lines": 618,
+      "hash": "3e61efd756f31c9e"
     },
     {
       "path": "src/ui/registry/button-patterns.tsx",
@@ -9316,99 +9407,106 @@
       "path": "src/ui/registry/compound.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 238,
-      "hash": "ca94e0f02ee3c631"
+      "lines": 248,
+      "hash": "e71421ec99fc15ac"
     },
     {
       "path": "src/ui/registry/containers.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 277,
-      "hash": "2de72222eaec4dc4"
+      "lines": 278,
+      "hash": "5da4c02b65d9c6a4"
     },
     {
       "path": "src/ui/registry/data.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 361,
-      "hash": "81426b0c42344712"
+      "lines": 458,
+      "hash": "5ca7789e45e2a54d"
     },
     {
       "path": "src/ui/registry/definitions.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 346,
-      "hash": "3e6732e6a8448357"
+      "lines": 376,
+      "hash": "991b06123813efb6"
     },
     {
       "path": "src/ui/registry/families.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 100,
-      "hash": "cdfcf096d5fe4c60"
+      "lines": 104,
+      "hash": "27d46bd7b0b1d9d0"
     },
     {
       "path": "src/ui/registry/feedback.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 274,
-      "hash": "69cb6ebcead615fd"
+      "lines": 360,
+      "hash": "134e0661b5e99c67"
     },
     {
       "path": "src/ui/registry/forms.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 1060,
-      "hash": "c59fa11618a95524"
+      "lines": 1158,
+      "hash": "e603a1b3ec8e20d2"
     },
     {
       "path": "src/ui/registry/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 205,
-      "hash": "0bfd05a6e2ea748b"
+      "lines": 208,
+      "hash": "3ed0f6654357859c"
     },
     {
       "path": "src/ui/registry/navigation.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 359,
-      "hash": "b885aceafd5efa12"
+      "lines": 378,
+      "hash": "07c56257846b1ec4"
     },
     {
       "path": "src/ui/registry/overlays.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 238,
-      "hash": "dbb8053bd261a389"
+      "lines": 241,
+      "hash": "9ea157a05ea6d456"
     },
     {
       "path": "src/ui/registry/page-header.def.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 116,
-      "hash": "27b24d12a26f8985"
+      "lines": 118,
+      "hash": "55d1d374c892c059"
     },
     {
       "path": "src/ui/registry/people-drawer.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 134,
-      "hash": "9142a2400a45f713"
+      "lines": 185,
+      "hash": "2b257683eb090fdf"
     },
     {
       "path": "src/ui/registry/planned.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 137,
-      "hash": "f6b87fa53719219d"
+      "lines": 138,
+      "hash": "a7ede79925f49956"
+    },
+    {
+      "path": "src/ui/registry/progress-steps.def.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 158,
+      "hash": "ff01ddfaa62d042f"
     },
     {
       "path": "src/ui/registry/remaining-primitives.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 148,
-      "hash": "34a1a2a186b50f30"
+      "lines": 283,
+      "hash": "8c847ca09a5395b4"
     },
     {
       "path": "src/ui/registry/runtime-feedback.test.ts",
@@ -9421,15 +9519,22 @@
       "path": "src/ui/registry/types.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 273,
-      "hash": "6e278fd09f1e9e7b"
+      "lines": 310,
+      "hash": "fa221a84154485d1"
+    },
+    {
+      "path": "src/ui/registry/validate.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 44,
+      "hash": "447c399511fbd037"
     },
     {
       "path": "src/ui/registry/wizard.def.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 236,
-      "hash": "5683fc4d5872f41a"
+      "lines": 237,
+      "hash": "d8ffafedace1f861"
     },
     {
       "path": "src/ui/special/CreditsButton.test.tsx",
@@ -9477,15 +9582,29 @@
       "path": "src/ui/studio/BrandOverview.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 229,
-      "hash": "f7f47ace18a4cc59"
+      "lines": 62,
+      "hash": "820917d35ad23d0e"
     },
     {
       "path": "src/ui/studio/ButtonBrowser.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 185,
-      "hash": "13e364107b183caf"
+      "lines": 186,
+      "hash": "e11dfc6a9fe42723"
+    },
+    {
+      "path": "src/ui/studio/CatalogueShowcase.tsx",
+      "module": "settings",
+      "role": "frontend",
+      "lines": 280,
+      "hash": "b9b0603200c80704"
+    },
+    {
+      "path": "src/ui/studio/CountryPicker.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 81,
+      "hash": "f46b606b0eb82701"
     },
     {
       "path": "src/ui/studio/FamilyBrowser.tsx",
@@ -9505,22 +9624,29 @@
       "path": "src/ui/studio/PreviewScope.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 32,
-      "hash": "4fde2c84284e7843"
+      "lines": 34,
+      "hash": "67a2efa534b674ae"
     },
     {
       "path": "src/ui/studio/RecipeStyleEditor.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 398,
-      "hash": "9710b1ee1ba31c4d"
+      "lines": 486,
+      "hash": "fefb94e9fa7ae722"
     },
     {
       "path": "src/ui/studio/Studio.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 461,
-      "hash": "1848b296f9b7a76b"
+      "lines": 564,
+      "hash": "4ea9f9b7b4e60122"
+    },
+    {
+      "path": "src/ui/studio/StudioInspector.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 47,
+      "hash": "7fdcd403bd75ab87"
     },
     {
       "path": "src/ui/studio/StudioPublishBar.tsx",
@@ -9530,11 +9656,18 @@
       "hash": "06cd12f0d8496dd7"
     },
     {
+      "path": "src/ui/studio/StudioSelect.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 25,
+      "hash": "d3be1e0f98f4b12b"
+    },
+    {
       "path": "src/ui/studio/Workbench.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 668,
-      "hash": "a73779715fbdf28d"
+      "lines": 752,
+      "hash": "dfef784af26d821b"
     },
     {
       "path": "src/ui/studio/brandDirections.test.ts",
@@ -9561,8 +9694,8 @@
       "path": "src/ui/studio/componentThumbnail.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 147,
-      "hash": "31d1a5783204bbd2"
+      "lines": 196,
+      "hash": "ff2d21f148e036d7"
     },
     {
       "path": "src/ui/studio/designSystemConfig.test.ts",
@@ -9667,7 +9800,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 132,
-      "hash": "4bf1ea0cf7677fac"
+      "hash": "63a9d9dbf8c2a635"
     },
     {
       "path": "src/ui/theme/tokens.ts",
@@ -102122,6 +102255,62 @@
       "tags": []
     },
     {
+      "name": "DRAWER_MOTION_MS",
+      "kind": "variable",
+      "file": "src/components/sections/HR/EmployeeSideDrawerFrame.tsx",
+      "line": 9,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "FOCUSABLE_SELECTOR",
+      "kind": "variable",
+      "file": "src/components/sections/HR/EmployeeSideDrawerFrame.tsx",
+      "line": 10,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "EmployeeSideDrawerFrameProps",
+      "kind": "interface",
+      "file": "src/components/sections/HR/EmployeeSideDrawerFrame.tsx",
+      "line": 19,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EmployeeSideDrawerFrame",
+      "kind": "function",
+      "file": "src/components/sections/HR/EmployeeSideDrawerFrame.tsx",
+      "line": 43,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "keepFocusInside",
+      "kind": "function",
+      "file": "src/components/sections/HR/EmployeeSideDrawerFrame.tsx",
+      "line": 109,
+      "module": "hr",
+      "exported": false,
+      "container": "EmployeeSideDrawerFrame",
+      "tags": []
+    },
+    {
       "name": "HR_EMPLOYEE_DEEPLINK_KEY",
       "kind": "variable",
       "file": "src/components/sections/HR/hrDeepLink.ts",
@@ -108511,7 +108700,7 @@
       "name": "ProfileDrawerProps",
       "kind": "interface",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 57,
+      "line": 56,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -108521,7 +108710,7 @@
       "name": "DOMAIN_ICON",
       "kind": "object",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 71,
+      "line": 70,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -108531,7 +108720,7 @@
       "name": "CONTROL_ICON",
       "kind": "object",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 77,
+      "line": 76,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -108541,7 +108730,27 @@
       "name": "DOC_STATE_LABEL",
       "kind": "object",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 83,
+      "line": 82,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "employmentStatusTone",
+      "kind": "function",
+      "file": "src/components/sections/HR/ProfileDrawer.tsx",
+      "line": 91,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "documentHealthTree",
+      "kind": "function",
+      "file": "src/components/sections/HR/ProfileDrawer.tsx",
+      "line": 99,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -108551,7 +108760,7 @@
       "name": "activityVisual",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 93,
+      "line": 127,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -108561,7 +108770,7 @@
       "name": "DataRow",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 102,
+      "line": 136,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -108573,7 +108782,7 @@
       "name": "ReadinessGauge",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 112,
+      "line": 146,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -108585,7 +108794,7 @@
       "name": "DrawerSkeletonBody",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 145,
+      "line": 179,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -108597,7 +108806,7 @@
       "name": "SkeletonStatStrip",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 185,
+      "line": 219,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -108609,7 +108818,7 @@
       "name": "DrawerSectionSkeleton",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 199,
+      "line": 233,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -108621,7 +108830,7 @@
       "name": "ProfileDrawer",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 208,
+      "line": 242,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -108630,20 +108839,10 @@
       ]
     },
     {
-      "name": "onKey",
-      "kind": "function",
-      "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 261,
-      "module": "hr",
-      "exported": false,
-      "container": "ProfileDrawer",
-      "tags": []
-    },
-    {
       "name": "runAction",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 279,
+      "line": 317,
       "module": "hr",
       "exported": false,
       "container": "ProfileDrawer",
@@ -108653,7 +108852,7 @@
       "name": "runExport",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 288,
+      "line": 326,
       "module": "hr",
       "exported": false,
       "container": "ProfileDrawer",
@@ -108663,7 +108862,7 @@
       "name": "openAttention",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 301,
+      "line": 339,
       "module": "hr",
       "exported": false,
       "container": "ProfileDrawer",
@@ -108673,7 +108872,7 @@
       "name": "showNextAttentionPage",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 305,
+      "line": 343,
       "module": "hr",
       "exported": false,
       "container": "ProfileDrawer",
@@ -108683,7 +108882,7 @@
       "name": "sendReadinessReminder",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 319,
+      "line": 357,
       "module": "hr",
       "exported": false,
       "container": "ProfileDrawer",
@@ -108693,7 +108892,7 @@
       "name": "submitContact",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 337,
+      "line": 375,
       "module": "hr",
       "exported": false,
       "container": "ProfileDrawer",
@@ -108703,7 +108902,7 @@
       "name": "str",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 342,
+      "line": 380,
       "module": "hr",
       "exported": false,
       "container": "submitContact",
@@ -108713,11 +108912,77 @@
       "name": "pick",
       "kind": "function",
       "file": "src/components/sections/HR/ProfileDrawer.tsx",
-      "line": 1011,
+      "line": 1015,
       "module": "hr",
       "exported": false,
       "container": "ProfileDrawer",
       "tags": []
+    },
+    {
+      "name": "ProfileDrawerTemplateProps",
+      "kind": "interface",
+      "file": "src/components/sections/HR/ProfileDrawerTemplate.tsx",
+      "line": 14,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TEMPLATE_TABS",
+      "kind": "variable",
+      "file": "src/components/sections/HR/ProfileDrawerTemplate.tsx",
+      "line": 22,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "TemplateTab",
+      "kind": "type",
+      "file": "src/components/sections/HR/ProfileDrawerTemplate.tsx",
+      "line": 23,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TAB_EMPTY_STATE",
+      "kind": "object",
+      "file": "src/components/sections/HR/ProfileDrawerTemplate.tsx",
+      "line": 25,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TEMPLATE_TAB_ITEMS",
+      "kind": "variable",
+      "file": "src/components/sections/HR/ProfileDrawerTemplate.tsx",
+      "line": 34,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ProfileDrawerTemplate",
+      "kind": "function",
+      "file": "src/components/sections/HR/ProfileDrawerTemplate.tsx",
+      "line": 47,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
     },
     {
       "name": "Rgb",
@@ -131881,7 +132146,7 @@
       "name": "lIco",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 37,
+      "line": 43,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -131891,7 +132156,7 @@
       "name": "IcUser",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 41,
+      "line": 47,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -131903,7 +132168,7 @@
       "name": "IcSettings",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 42,
+      "line": 48,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -131915,19 +132180,7 @@
       "name": "IcAbout",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 43,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "IcMoon",
-      "kind": "function",
-      "file": "src/components/shared/AccountPill.tsx",
-      "line": 44,
+      "line": 49,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -131939,7 +132192,7 @@
       "name": "IcLogout",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 45,
+      "line": 50,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -131951,7 +132204,7 @@
       "name": "roleLabel",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 47,
+      "line": 52,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -131961,7 +132214,7 @@
       "name": "nav",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 57,
+      "line": 62,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -131971,7 +132224,7 @@
       "name": "doLogout",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 60,
+      "line": 65,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -131981,7 +132234,7 @@
       "name": "badgeText",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 64,
+      "line": 69,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -131991,7 +132244,7 @@
       "name": "badgeStyle",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 69,
+      "line": 74,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -132001,7 +132254,7 @@
       "name": "actionLabel",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 73,
+      "line": 78,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -132011,7 +132264,7 @@
       "name": "AccountPillProps",
       "kind": "interface",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 78,
+      "line": 83,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -132021,7 +132274,7 @@
       "name": "AccountPill",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 94,
+      "line": 99,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -132033,37 +132286,7 @@
       "name": "openMenu",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 121,
-      "module": "platform",
-      "exported": false,
-      "container": "AccountPill",
-      "tags": []
-    },
-    {
-      "name": "close",
-      "kind": "function",
-      "file": "src/components/shared/AccountPill.tsx",
-      "line": 133,
-      "module": "platform",
-      "exported": false,
-      "container": "AccountPill",
-      "tags": []
-    },
-    {
-      "name": "onDoc",
-      "kind": "function",
-      "file": "src/components/shared/AccountPill.tsx",
-      "line": 134,
-      "module": "platform",
-      "exported": false,
-      "container": "AccountPill",
-      "tags": []
-    },
-    {
-      "name": "onKey",
-      "kind": "function",
-      "file": "src/components/shared/AccountPill.tsx",
-      "line": 135,
+      "line": 124,
       "module": "platform",
       "exported": false,
       "container": "AccountPill",
@@ -132073,11 +132296,67 @@
       "name": "confirmLogout",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 148,
+      "line": 128,
       "module": "platform",
       "exported": false,
       "container": "AccountPill",
       "tags": []
+    },
+    {
+      "name": "AppTopBarProps",
+      "kind": "interface",
+      "file": "src/components/shared/AppTopBar.tsx",
+      "line": 18,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AppTopBar",
+      "kind": "function",
+      "file": "src/components/shared/AppTopBar.tsx",
+      "line": 28,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "UserPillArtwork",
+      "kind": "function",
+      "file": "src/components/shared/AppTopBar.tsx",
+      "line": 36,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "AppTopBarArtworkProps",
+      "kind": "interface",
+      "file": "src/components/shared/AppTopBar.tsx",
+      "line": 96,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AppTopBarArtwork",
+      "kind": "function",
+      "file": "src/components/shared/AppTopBar.tsx",
+      "line": 110,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
     },
     {
       "name": "AuthGateProps",
@@ -132545,6 +132824,16 @@
       "tags": []
     },
     {
+      "name": "searchShortcutLabel",
+      "kind": "function",
+      "file": "src/components/shared/searchShortcut.ts",
+      "line": 2,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "SpinnerProps",
       "kind": "interface",
       "file": "src/components/shared/Spinner.tsx",
@@ -132667,7 +132956,7 @@
       "name": "openSearch",
       "kind": "function",
       "file": "src/components/shared/UserPill.tsx",
-      "line": 22,
+      "line": 24,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -132677,7 +132966,7 @@
       "name": "openAI",
       "kind": "function",
       "file": "src/components/shared/UserPill.tsx",
-      "line": 26,
+      "line": 28,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -132687,7 +132976,7 @@
       "name": "UserPillProps",
       "kind": "interface",
       "file": "src/components/shared/UserPill.tsx",
-      "line": 32,
+      "line": 34,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -132697,7 +132986,7 @@
       "name": "UserPillMetaChip",
       "kind": "interface",
       "file": "src/components/shared/UserPill.tsx",
-      "line": 50,
+      "line": 52,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -132707,7 +132996,7 @@
       "name": "UserPill",
       "kind": "function",
       "file": "src/components/shared/UserPill.tsx",
-      "line": 52,
+      "line": 54,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -141978,7 +142267,7 @@
       "name": "EmptyState",
       "kind": "function",
       "file": "src/ui/components/EmptyState.tsx",
-      "line": 29,
+      "line": 33,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -143646,6 +143935,258 @@
       ]
     },
     {
+      "name": "ActivityGaugeSize",
+      "kind": "type",
+      "file": "src/ui/data/ActivityGauge.tsx",
+      "line": 5,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ActivityGaugeSeries",
+      "kind": "interface",
+      "file": "src/ui/data/ActivityGauge.tsx",
+      "line": 6,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ActivityGaugeProps",
+      "kind": "interface",
+      "file": "src/ui/data/ActivityGauge.tsx",
+      "line": 7,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SIZE_CONFIG",
+      "kind": "object",
+      "file": "src/ui/data/ActivityGauge.tsx",
+      "line": 15,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DEFAULT_SERIES",
+      "kind": "array",
+      "file": "src/ui/data/ActivityGauge.tsx",
+      "line": 21,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SERIES_COLORS",
+      "kind": "variable",
+      "file": "src/ui/data/ActivityGauge.tsx",
+      "line": 24,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ActivityGauge",
+      "kind": "function",
+      "file": "src/ui/data/ActivityGauge.tsx",
+      "line": 27,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "clamp",
+      "kind": "function",
+      "file": "src/ui/data/ActivityGauge.tsx",
+      "line": 33,
+      "module": "platform",
+      "exported": false,
+      "container": "ActivityGauge",
+      "tags": []
+    },
+    {
+      "name": "FlagSvgProps",
+      "kind": "type",
+      "file": "src/ui/data/CountryFlag.tsx",
+      "line": 6,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "FlagMap",
+      "kind": "type",
+      "file": "src/ui/data/CountryFlag.tsx",
+      "line": 7,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CIRCLE_FLAGS",
+      "kind": "variable",
+      "file": "src/ui/data/CountryFlag.tsx",
+      "line": 9,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "RECTANGLE_FLAGS",
+      "kind": "variable",
+      "file": "src/ui/data/CountryFlag.tsx",
+      "line": 10,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "SQUARE_FLAGS",
+      "kind": "variable",
+      "file": "src/ui/data/CountryFlag.tsx",
+      "line": 11,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "REGIONAL_CODES",
+      "kind": "variable",
+      "file": "src/ui/data/CountryFlag.tsx",
+      "line": 13,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "EXPORTED_CODES",
+      "kind": "variable",
+      "file": "src/ui/data/CountryFlag.tsx",
+      "line": 14,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "DISPLAY_NAMES",
+      "kind": "variable",
+      "file": "src/ui/data/CountryFlag.tsx",
+      "line": 15,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "COUNTRY_FLAG_CODES",
+      "kind": "variable",
+      "file": "src/ui/data/CountryFlag.tsx",
+      "line": 20,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "COUNTRY_FLAG_OPTIONS",
+      "kind": "variable",
+      "file": "src/ui/data/CountryFlag.tsx",
+      "line": 25,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "CountryFlagCode",
+      "kind": "type",
+      "file": "src/ui/data/CountryFlag.tsx",
+      "line": 30,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CountryFlagShape",
+      "kind": "type",
+      "file": "src/ui/data/CountryFlag.tsx",
+      "line": 31,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CountryFlagProps",
+      "kind": "interface",
+      "file": "src/ui/data/CountryFlag.tsx",
+      "line": 33,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "circleExportName",
+      "kind": "function",
+      "file": "src/ui/data/CountryFlag.tsx",
+      "line": 43,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CountryFlag",
+      "kind": "function",
+      "file": "src/ui/data/CountryFlag.tsx",
+      "line": 51,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "Row",
       "kind": "interface",
       "file": "src/ui/data/DataTable/DataTable.test.tsx",
@@ -143950,6 +144491,102 @@
       ]
     },
     {
+      "name": "FILE_TYPE_ICON_TYPES",
+      "kind": "variable",
+      "file": "src/ui/data/FileTypeIcon.tsx",
+      "line": 4,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "FileTypeIconType",
+      "kind": "type",
+      "file": "src/ui/data/FileTypeIcon.tsx",
+      "line": 13,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "FileTypeIconVariant",
+      "kind": "type",
+      "file": "src/ui/data/FileTypeIcon.tsx",
+      "line": 14,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "FileTypeIconTheme",
+      "kind": "type",
+      "file": "src/ui/data/FileTypeIcon.tsx",
+      "line": 15,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "FileTypeIconProps",
+      "kind": "interface",
+      "file": "src/ui/data/FileTypeIcon.tsx",
+      "line": 17,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "FileTypeIcon",
+      "kind": "function",
+      "file": "src/ui/data/FileTypeIcon.tsx",
+      "line": 36,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "fileTypeIconTypeFromName",
+      "kind": "function",
+      "file": "src/ui/data/FileTypeIcon.tsx",
+      "line": 60,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "QrCodeProps",
+      "kind": "interface",
+      "file": "src/ui/data/QrCode.tsx",
+      "line": 6,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "QrCode",
+      "kind": "function",
+      "file": "src/ui/data/QrCode.tsx",
+      "line": 16,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "AlertTone",
       "kind": "type",
       "file": "src/ui/feedback/Alert.tsx",
@@ -143994,6 +144631,68 @@
       "kind": "function",
       "file": "src/ui/feedback/Alert.tsx",
       "line": 27,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "IllustrationVariant",
+      "kind": "type",
+      "file": "src/ui/feedback/Illustration.tsx",
+      "line": 12,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "IllustrationTreatment",
+      "kind": "type",
+      "file": "src/ui/feedback/Illustration.tsx",
+      "line": 23,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "IllustrationProps",
+      "kind": "interface",
+      "file": "src/ui/feedback/Illustration.tsx",
+      "line": 25,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ICONS",
+      "kind": "object",
+      "file": "src/ui/feedback/Illustration.tsx",
+      "line": 32,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "GENERATED_ASSETS",
+      "kind": "object",
+      "file": "src/ui/feedback/Illustration.tsx",
+      "line": 37,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Illustration",
+      "kind": "function",
+      "file": "src/ui/feedback/Illustration.tsx",
+      "line": 47,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -144298,6 +144997,258 @@
       "tags": [
         "component"
       ]
+    },
+    {
+      "name": "DatePickerPreset",
+      "kind": "interface",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 8,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DatePickerBaseProps",
+      "kind": "interface",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 14,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SingleDatePickerProps",
+      "kind": "interface",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 37,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "RangeDatePickerProps",
+      "kind": "interface",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 43,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DatePickerProps",
+      "kind": "type",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 49,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WEEKDAYS",
+      "kind": "array",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 51,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "iso",
+      "kind": "function",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 53,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fromIso",
+      "kind": "function",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 57,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "monthStart",
+      "kind": "function",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 64,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "addMonths",
+      "kind": "function",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 65,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "addDays",
+      "kind": "function",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 66,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "calendarDays",
+      "kind": "function",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 73,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "displayDate",
+      "kind": "function",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 79,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "defaultPresets",
+      "kind": "function",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 81,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DatePicker",
+      "kind": "function",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 93,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "setOpen",
+      "kind": "function",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 107,
+      "module": "platform",
+      "exported": false,
+      "container": "DatePicker",
+      "tags": []
+    },
+    {
+      "name": "onPointerDown",
+      "kind": "function",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 114,
+      "module": "platform",
+      "exported": false,
+      "container": "DatePicker",
+      "tags": []
+    },
+    {
+      "name": "onKeyDown",
+      "kind": "function",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 117,
+      "module": "platform",
+      "exported": false,
+      "container": "DatePicker",
+      "tags": []
+    },
+    {
+      "name": "select",
+      "kind": "function",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 131,
+      "module": "platform",
+      "exported": false,
+      "container": "DatePicker",
+      "tags": []
+    },
+    {
+      "name": "selected",
+      "kind": "function",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 143,
+      "module": "platform",
+      "exported": false,
+      "container": "DatePicker",
+      "tags": []
+    },
+    {
+      "name": "insideRange",
+      "kind": "function",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 146,
+      "module": "platform",
+      "exported": false,
+      "container": "DatePicker",
+      "tags": []
+    },
+    {
+      "name": "unavailable",
+      "kind": "function",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 147,
+      "module": "platform",
+      "exported": false,
+      "container": "DatePicker",
+      "tags": []
+    },
+    {
+      "name": "presetUnavailable",
+      "kind": "function",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 148,
+      "module": "platform",
+      "exported": false,
+      "container": "DatePicker",
+      "tags": []
+    },
+    {
+      "name": "focusDate",
+      "kind": "function",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 150,
+      "module": "platform",
+      "exported": false,
+      "container": "DatePicker",
+      "tags": []
+    },
+    {
+      "name": "handleDateKey",
+      "kind": "function",
+      "file": "src/ui/forms/DatePicker.tsx",
+      "line": 160,
+      "module": "platform",
+      "exported": false,
+      "container": "DatePicker",
+      "tags": []
     },
     {
       "name": "FieldContextValue",
@@ -144737,7 +145688,7 @@
       "name": "MultiSelect",
       "kind": "function",
       "file": "src/ui/forms/MultiSelect.tsx",
-      "line": 57,
+      "line": 59,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -144991,7 +145942,7 @@
       "name": "Select",
       "kind": "function",
       "file": "src/ui/forms/Select.tsx",
-      "line": 63,
+      "line": 65,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145003,7 +145954,7 @@
       "name": "handleClear",
       "kind": "function",
       "file": "src/ui/forms/Select.tsx",
-      "line": 128,
+      "line": 130,
       "module": "platform",
       "exported": false,
       "container": "Select",
@@ -145138,7 +146089,7 @@
       "name": "DEFAULT_SEEDS",
       "kind": "object",
       "file": "src/ui/gallery/BrandThemePanel.tsx",
-      "line": 49,
+      "line": 50,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -145148,7 +146099,7 @@
       "name": "BrandThemePanelProps",
       "kind": "interface",
       "file": "src/ui/gallery/BrandThemePanel.tsx",
-      "line": 53,
+      "line": 54,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145158,9 +146109,55 @@
       "name": "BrandThemePanel",
       "kind": "function",
       "file": "src/ui/gallery/BrandThemePanel.tsx",
-      "line": 61,
+      "line": 62,
       "module": "platform",
       "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ProfessionalThemeGeneratorProps",
+      "kind": "interface",
+      "file": "src/ui/gallery/BrandThemePanel.tsx",
+      "line": 473,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ProfessionalThemeGenerator",
+      "kind": "function",
+      "file": "src/ui/gallery/BrandThemePanel.tsx",
+      "line": 493,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ThemeDashboardPreview",
+      "kind": "function",
+      "file": "src/ui/gallery/BrandThemePanel.tsx",
+      "line": 552,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ThemeFormPreview",
+      "kind": "function",
+      "file": "src/ui/gallery/BrandThemePanel.tsx",
+      "line": 561,
+      "module": "platform",
+      "exported": false,
       "container": "",
       "tags": [
         "component"
@@ -145170,7 +146167,7 @@
       "name": "SeedCard",
       "kind": "function",
       "file": "src/ui/gallery/BrandThemePanel.tsx",
-      "line": 389,
+      "line": 565,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -145183,7 +146180,19 @@
       "name": "ScaleRow",
       "kind": "function",
       "file": "src/ui/gallery/BrandThemePanel.tsx",
-      "line": 414,
+      "line": 590,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ThemeRoleBoard",
+      "kind": "function",
+      "file": "src/ui/gallery/BrandThemePanel.tsx",
+      "line": 607,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -145195,7 +146204,7 @@
       "name": "RoleMapping",
       "kind": "function",
       "file": "src/ui/gallery/BrandThemePanel.tsx",
-      "line": 437,
+      "line": 639,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -145207,7 +146216,7 @@
       "name": "source",
       "kind": "function",
       "file": "src/ui/gallery/BrandThemePanel.tsx",
-      "line": 440,
+      "line": 642,
       "module": "platform",
       "exported": false,
       "container": "RoleMapping",
@@ -145217,7 +146226,7 @@
       "name": "ACCENT_ROLES",
       "kind": "variable",
       "file": "src/ui/gallery/BrandThemePanel.tsx",
-      "line": 481,
+      "line": 683,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -145229,7 +146238,7 @@
       "name": "PairingTable",
       "kind": "function",
       "file": "src/ui/gallery/BrandThemePanel.tsx",
-      "line": 488,
+      "line": 690,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -145241,7 +146250,7 @@
       "name": "Crew",
       "kind": "interface",
       "file": "src/ui/gallery/BrandThemePanel.tsx",
-      "line": 516,
+      "line": 718,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -145251,7 +146260,7 @@
       "name": "CREW",
       "kind": "array",
       "file": "src/ui/gallery/BrandThemePanel.tsx",
-      "line": 518,
+      "line": 720,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -145261,7 +146270,7 @@
       "name": "LivePreview",
       "kind": "function",
       "file": "src/ui/gallery/BrandThemePanel.tsx",
-      "line": 537,
+      "line": 739,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -145270,10 +146279,64 @@
       ]
     },
     {
+      "name": "FoundationSectionId",
+      "kind": "type",
+      "file": "src/ui/gallery/FoundationsPanel.tsx",
+      "line": 18,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "FoundationSection",
+      "kind": "interface",
+      "file": "src/ui/gallery/FoundationsPanel.tsx",
+      "line": 20,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "COLOUR_GROUPS",
+      "kind": "variable",
+      "file": "src/ui/gallery/FoundationsPanel.tsx",
+      "line": 28,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "TYPE_GROUPS",
+      "kind": "variable",
+      "file": "src/ui/gallery/FoundationsPanel.tsx",
+      "line": 29,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "FOUNDATION_SECTIONS",
+      "kind": "array",
+      "file": "src/ui/gallery/FoundationsPanel.tsx",
+      "line": 30,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "FoundationsPanel",
       "kind": "function",
       "file": "src/ui/gallery/FoundationsPanel.tsx",
-      "line": 21,
+      "line": 63,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145282,36 +146345,111 @@
       ]
     },
     {
-      "name": "TokenCard",
+      "name": "TokenGroupPanel",
       "kind": "function",
       "file": "src/ui/gallery/FoundationsPanel.tsx",
-      "line": 75,
+      "line": 131,
       "module": "platform",
       "exported": false,
       "container": "",
       "tags": [
-        "component",
-        "ui-tile"
+        "component"
       ]
     },
     {
-      "name": "hexOf",
+      "name": "TokenRow",
       "kind": "function",
       "file": "src/ui/gallery/FoundationsPanel.tsx",
-      "line": 134,
+      "line": 157,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "TokenImpactPreview",
+      "kind": "function",
+      "file": "src/ui/gallery/FoundationsPanel.tsx",
+      "line": 188,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "BrandFoundationPreview",
+      "kind": "function",
+      "file": "src/ui/gallery/FoundationsPanel.tsx",
+      "line": 265,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "previewVars",
+      "kind": "function",
+      "file": "src/ui/gallery/FoundationsPanel.tsx",
+      "line": 274,
       "module": "platform",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "hx",
+      "name": "statusTone",
       "kind": "function",
       "file": "src/ui/gallery/FoundationsPanel.tsx",
-      "line": 140,
+      "line": 278,
       "module": "platform",
       "exported": false,
-      "container": "hexOf",
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "statusLabel",
+      "kind": "function",
+      "file": "src/ui/gallery/FoundationsPanel.tsx",
+      "line": 287,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "cleanGroupLabel",
+      "kind": "function",
+      "file": "src/ui/gallery/FoundationsPanel.tsx",
+      "line": 296,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "cleanTokenLabel",
+      "kind": "function",
+      "file": "src/ui/gallery/FoundationsPanel.tsx",
+      "line": 300,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "cleanHint",
+      "kind": "function",
+      "file": "src/ui/gallery/FoundationsPanel.tsx",
+      "line": 304,
+      "module": "platform",
+      "exported": false,
+      "container": "",
       "tags": []
     },
     {
@@ -146094,7 +147232,7 @@
       "name": "DtColumn",
       "kind": "interface",
       "file": "src/ui/index.ts",
-      "line": 90,
+      "line": 91,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146393,6 +147531,68 @@
       ]
     },
     {
+      "name": "ProgressStepsVariant",
+      "kind": "type",
+      "file": "src/ui/navigation/ProgressSteps/ProgressSteps.tsx",
+      "line": 5,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ProgressStepStatus",
+      "kind": "type",
+      "file": "src/ui/navigation/ProgressSteps/ProgressSteps.tsx",
+      "line": 10,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ProgressStepItem",
+      "kind": "interface",
+      "file": "src/ui/navigation/ProgressSteps/ProgressSteps.tsx",
+      "line": 12,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ProgressStepsProps",
+      "kind": "interface",
+      "file": "src/ui/navigation/ProgressSteps/ProgressSteps.tsx",
+      "line": 19,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "statusFor",
+      "kind": "function",
+      "file": "src/ui/navigation/ProgressSteps/ProgressSteps.tsx",
+      "line": 37,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ProgressSteps",
+      "kind": "function",
+      "file": "src/ui/navigation/ProgressSteps/ProgressSteps.tsx",
+      "line": 50,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "ITEMS",
       "kind": "array",
       "file": "src/ui/navigation/Tabs/Tabs.test.tsx",
@@ -146588,7 +147788,7 @@
       "name": "TreeViewProps",
       "kind": "interface",
       "file": "src/ui/navigation/TreeView.tsx",
-      "line": 14,
+      "line": 19,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146598,7 +147798,7 @@
       "name": "collectVisible",
       "kind": "function",
       "file": "src/ui/navigation/TreeView.tsx",
-      "line": 26,
+      "line": 31,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -146608,7 +147808,7 @@
       "name": "TreeView",
       "kind": "function",
       "file": "src/ui/navigation/TreeView.tsx",
-      "line": 34,
+      "line": 39,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146620,7 +147820,7 @@
       "name": "setExpanded",
       "kind": "function",
       "file": "src/ui/navigation/TreeView.tsx",
-      "line": 56,
+      "line": 61,
       "module": "platform",
       "exported": false,
       "container": "TreeView",
@@ -146630,7 +147830,7 @@
       "name": "toggle",
       "kind": "function",
       "file": "src/ui/navigation/TreeView.tsx",
-      "line": 62,
+      "line": 67,
       "module": "platform",
       "exported": false,
       "container": "TreeView",
@@ -146640,7 +147840,7 @@
       "name": "select",
       "kind": "function",
       "file": "src/ui/navigation/TreeView.tsx",
-      "line": 71,
+      "line": 76,
       "module": "platform",
       "exported": false,
       "container": "TreeView",
@@ -146650,7 +147850,7 @@
       "name": "focusById",
       "kind": "function",
       "file": "src/ui/navigation/TreeView.tsx",
-      "line": 77,
+      "line": 82,
       "module": "platform",
       "exported": false,
       "container": "TreeView",
@@ -146660,7 +147860,7 @@
       "name": "onKeyDown",
       "kind": "function",
       "file": "src/ui/navigation/TreeView.tsx",
-      "line": 84,
+      "line": 89,
       "module": "platform",
       "exported": false,
       "container": "TreeView",
@@ -146670,7 +147870,7 @@
       "name": "renderNodes",
       "kind": "function",
       "file": "src/ui/navigation/TreeView.tsx",
-      "line": 118,
+      "line": 123,
       "module": "platform",
       "exported": false,
       "container": "TreeView",
@@ -146985,10 +148185,20 @@
       "tags": []
     },
     {
+      "name": "DialogIconStyle",
+      "kind": "type",
+      "file": "src/ui/overlays/Dialog.tsx",
+      "line": 43,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "DialogProps",
       "kind": "interface",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 44,
+      "line": 45,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146998,7 +148208,7 @@
       "name": "DialogTitleId",
       "kind": "variable",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 76,
+      "line": 77,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147010,7 +148220,7 @@
       "name": "DialogComponent",
       "kind": "interface",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 78,
+      "line": 79,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147020,7 +148230,7 @@
       "name": "DialogRoot",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 89,
+      "line": 90,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147032,7 +148242,7 @@
       "name": "DialogHeaderProps",
       "kind": "interface",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 143,
+      "line": 144,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147042,7 +148252,7 @@
       "name": "DialogHeader",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 153,
+      "line": 155,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147054,7 +148264,7 @@
       "name": "DialogBody",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 174,
+      "line": 176,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147066,7 +148276,7 @@
       "name": "DialogFooter",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 178,
+      "line": 180,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147078,7 +148288,7 @@
       "name": "DialogLayoutRegion",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 188,
+      "line": 190,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147090,7 +148300,7 @@
       "name": "DialogSidebar",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 192,
+      "line": 194,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147102,7 +148312,7 @@
       "name": "DialogContent",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 196,
+      "line": 198,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147114,7 +148324,7 @@
       "name": "DialogSection",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 201,
+      "line": 203,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147126,7 +148336,7 @@
       "name": "Dialog",
       "kind": "variable",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 215,
+      "line": 217,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147148,7 +148358,7 @@
       "name": "MenuGroup",
       "kind": "interface",
       "file": "src/ui/overlays/DropdownMenu.tsx",
-      "line": 39,
+      "line": 48,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147158,7 +148368,7 @@
       "name": "MenuItems",
       "kind": "type",
       "file": "src/ui/overlays/DropdownMenu.tsx",
-      "line": 45,
+      "line": 54,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147168,7 +148378,7 @@
       "name": "isGrouped",
       "kind": "function",
       "file": "src/ui/overlays/DropdownMenu.tsx",
-      "line": 47,
+      "line": 56,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147178,7 +148388,7 @@
       "name": "toGroups",
       "kind": "function",
       "file": "src/ui/overlays/DropdownMenu.tsx",
-      "line": 52,
+      "line": 61,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147188,7 +148398,7 @@
       "name": "DropdownMenuProps",
       "kind": "interface",
       "file": "src/ui/overlays/DropdownMenu.tsx",
-      "line": 56,
+      "line": 65,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147198,7 +148408,7 @@
       "name": "DropdownMenu",
       "kind": "function",
       "file": "src/ui/overlays/DropdownMenu.tsx",
-      "line": 68,
+      "line": 77,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147210,7 +148420,7 @@
       "name": "activate",
       "kind": "function",
       "file": "src/ui/overlays/DropdownMenu.tsx",
-      "line": 100,
+      "line": 109,
       "module": "platform",
       "exported": false,
       "container": "DropdownMenu",
@@ -147220,7 +148430,7 @@
       "name": "onKeyDown",
       "kind": "function",
       "file": "src/ui/overlays/DropdownMenu.tsx",
-      "line": 108,
+      "line": 117,
       "module": "platform",
       "exported": false,
       "container": "DropdownMenu",
@@ -147489,6 +148699,62 @@
       ]
     },
     {
+      "name": "BackActionIconTreatment",
+      "kind": "type",
+      "file": "src/ui/patterns/BackActionButton.tsx",
+      "line": 7,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "BackActionButtonProps",
+      "kind": "interface",
+      "file": "src/ui/patterns/BackActionButton.tsx",
+      "line": 9,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "BackActionIcon",
+      "kind": "function",
+      "file": "src/ui/patterns/BackActionButton.tsx",
+      "line": 23,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "BackActionArtwork",
+      "kind": "function",
+      "file": "src/ui/patterns/BackActionButton.tsx",
+      "line": 32,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "BackActionButton",
+      "kind": "function",
+      "file": "src/ui/patterns/BackActionButton.tsx",
+      "line": 42,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "NextActionIconTreatment",
       "kind": "type",
       "file": "src/ui/patterns/NextActionButton.tsx",
@@ -147544,7 +148810,7 @@
       "name": "ThemeModeSwitchArtwork",
       "kind": "function",
       "file": "src/ui/patterns/ThemeModeSwitch.tsx",
-      "line": 18,
+      "line": 21,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147556,7 +148822,7 @@
       "name": "ThemeModeSwitch",
       "kind": "function",
       "file": "src/ui/patterns/ThemeModeSwitch.tsx",
-      "line": 30,
+      "line": 33,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147751,7 +149017,7 @@
       "name": "open",
       "kind": "function",
       "file": "src/ui/primitives/actions.test.tsx",
-      "line": 71,
+      "line": 96,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147760,10 +149026,42 @@
       ]
     },
     {
+      "name": "ButtonGroupItem",
+      "kind": "interface",
+      "file": "src/ui/primitives/actions.tsx",
+      "line": 32,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ButtonGroupProps",
+      "kind": "interface",
+      "file": "src/ui/primitives/actions.tsx",
+      "line": 41,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ButtonGroup",
+      "kind": "function",
+      "file": "src/ui/primitives/actions.tsx",
+      "line": 59,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "SegmentedOption",
       "kind": "interface",
       "file": "src/ui/primitives/actions.tsx",
-      "line": 31,
+      "line": 84,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147773,7 +149071,7 @@
       "name": "SegmentedControlProps",
       "kind": "interface",
       "file": "src/ui/primitives/actions.tsx",
-      "line": 38,
+      "line": 91,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147783,7 +149081,7 @@
       "name": "SegmentedControl",
       "kind": "function",
       "file": "src/ui/primitives/actions.tsx",
-      "line": 51,
+      "line": 110,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147795,7 +149093,7 @@
       "name": "DropdownButtonProps",
       "kind": "interface",
       "file": "src/ui/primitives/actions.tsx",
-      "line": 109,
+      "line": 168,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147805,7 +149103,7 @@
       "name": "DropdownButton",
       "kind": "function",
       "file": "src/ui/primitives/actions.tsx",
-      "line": 123,
+      "line": 184,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147817,7 +149115,7 @@
       "name": "SplitButtonProps",
       "kind": "interface",
       "file": "src/ui/primitives/actions.tsx",
-      "line": 166,
+      "line": 227,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147827,7 +149125,7 @@
       "name": "SplitButton",
       "kind": "function",
       "file": "src/ui/primitives/actions.tsx",
-      "line": 189,
+      "line": 252,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147903,7 +149201,7 @@
       "name": "Badge",
       "kind": "function",
       "file": "src/ui/primitives/Badge.tsx",
-      "line": 54,
+      "line": 56,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147958,7 +149256,7 @@
       "name": "IconOnlyButton",
       "kind": "interface",
       "file": "src/ui/primitives/Button.tsx",
-      "line": 114,
+      "line": 116,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147968,7 +149266,7 @@
       "name": "LabelledButton",
       "kind": "interface",
       "file": "src/ui/primitives/Button.tsx",
-      "line": 120,
+      "line": 122,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -147978,7 +149276,7 @@
       "name": "ButtonProps",
       "kind": "type",
       "file": "src/ui/primitives/Button.tsx",
-      "line": 126,
+      "line": 128,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147988,7 +149286,7 @@
       "name": "FORCEABLE",
       "kind": "variable",
       "file": "src/ui/primitives/Button.tsx",
-      "line": 129,
+      "line": 131,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148000,7 +149298,7 @@
       "name": "ResolvedButtonProps",
       "kind": "type",
       "file": "src/ui/primitives/Button.tsx",
-      "line": 132,
+      "line": 134,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148010,7 +149308,7 @@
       "name": "Button",
       "kind": "function",
       "file": "src/ui/primitives/Button.tsx",
-      "line": 138,
+      "line": 140,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148022,7 +149320,7 @@
       "name": "handleClick",
       "kind": "function",
       "file": "src/ui/primitives/Button.tsx",
-      "line": 216,
+      "line": 220,
       "module": "platform",
       "exported": false,
       "container": "Button",
@@ -148098,7 +149396,7 @@
       "name": "SwitchProps",
       "kind": "interface",
       "file": "src/ui/primitives/choice.tsx",
-      "line": 192,
+      "line": 193,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148108,7 +149406,7 @@
       "name": "SwitchArtwork",
       "kind": "function",
       "file": "src/ui/primitives/choice.tsx",
-      "line": 208,
+      "line": 209,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148120,7 +149418,7 @@
       "name": "Switch",
       "kind": "function",
       "file": "src/ui/primitives/choice.tsx",
-      "line": 226,
+      "line": 227,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148132,7 +149430,7 @@
       "name": "ChoiceOption",
       "kind": "interface",
       "file": "src/ui/primitives/choice.tsx",
-      "line": 275,
+      "line": 276,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148142,7 +149440,7 @@
       "name": "CheckboxGroupProps",
       "kind": "interface",
       "file": "src/ui/primitives/choice.tsx",
-      "line": 282,
+      "line": 287,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148152,7 +149450,7 @@
       "name": "CheckboxGroup",
       "kind": "function",
       "file": "src/ui/primitives/choice.tsx",
-      "line": 297,
+      "line": 302,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148164,7 +149462,7 @@
       "name": "toggle",
       "kind": "function",
       "file": "src/ui/primitives/choice.tsx",
-      "line": 305,
+      "line": 310,
       "module": "platform",
       "exported": false,
       "container": "CheckboxGroup",
@@ -148174,7 +149472,7 @@
       "name": "RadioGroupProps",
       "kind": "interface",
       "file": "src/ui/primitives/choice.tsx",
-      "line": 343,
+      "line": 348,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148184,7 +149482,7 @@
       "name": "RadioGroup",
       "kind": "function",
       "file": "src/ui/primitives/choice.tsx",
-      "line": 357,
+      "line": 369,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148298,7 +149596,7 @@
       "name": "s",
       "kind": "function",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 27,
+      "line": 28,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148308,7 +149606,7 @@
       "name": "b",
       "kind": "function",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 28,
+      "line": 29,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148318,7 +149616,7 @@
       "name": "size",
       "kind": "function",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 29,
+      "line": 30,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148328,7 +149626,7 @@
       "name": "DEMO_MENU",
       "kind": "array",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 31,
+      "line": 32,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148338,7 +149636,7 @@
       "name": "SAVE_MENU",
       "kind": "array",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 43,
+      "line": 44,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148348,7 +149646,7 @@
       "name": "noop",
       "kind": "function",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 49,
+      "line": 50,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148358,7 +149656,7 @@
       "name": "VARIANTS",
       "kind": "variable",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 52,
+      "line": 53,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148370,7 +149668,7 @@
       "name": "VARIANT_GEOMETRY",
       "kind": "variable",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 54,
+      "line": 55,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148382,7 +149680,7 @@
       "name": "VARIANT_STATES",
       "kind": "variable",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 69,
+      "line": 70,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148394,7 +149692,7 @@
       "name": "buttonDef",
       "kind": "object",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 89,
+      "line": 90,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148404,7 +149702,7 @@
       "name": "icon",
       "kind": "function",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 201,
+      "line": 203,
       "module": "platform",
       "exported": false,
       "container": "buttonDef",
@@ -148414,17 +149712,27 @@
       "name": "jsx",
       "kind": "function",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 238,
+      "line": 244,
       "module": "platform",
       "exported": false,
       "container": "buttonDef",
       "tags": []
     },
     {
+      "name": "buttonGroupDef",
+      "kind": "object",
+      "file": "src/ui/registry/actions.defs.tsx",
+      "line": 314,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "segmentedDef",
       "kind": "object",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 304,
+      "line": 396,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148434,7 +149742,7 @@
       "name": "menuDef",
       "kind": "object",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 379,
+      "line": 481,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148444,7 +149752,7 @@
       "name": "ACTION_DEFS",
       "kind": "array",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 505,
+      "line": 612,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148631,10 +149939,20 @@
       "tags": []
     },
     {
+      "name": "chevronIcon",
+      "kind": "function",
+      "file": "src/ui/registry/compound.defs.tsx",
+      "line": 35,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "icon",
       "kind": "function",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 36,
+      "line": 38,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148644,7 +149962,7 @@
       "name": "RECORD_MENU",
       "kind": "array",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 42,
+      "line": 44,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148654,7 +149972,7 @@
       "name": "SAVE_ALTERNATIVES",
       "kind": "array",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 54,
+      "line": 56,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148664,7 +149982,7 @@
       "name": "DROPDOWN_VARIANTS",
       "kind": "variable",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 62,
+      "line": 64,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148676,7 +149994,7 @@
       "name": "SPLIT_VARIANTS",
       "kind": "variable",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 63,
+      "line": 65,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148688,7 +150006,7 @@
       "name": "dropdownButtonDef",
       "kind": "object",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 67,
+      "line": 69,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148698,7 +150016,7 @@
       "name": "splitButtonDef",
       "kind": "object",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 148,
+      "line": 154,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148708,7 +150026,7 @@
       "name": "COMPOUND_DEFS",
       "kind": "array",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 230,
+      "line": 240,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148718,7 +150036,7 @@
       "name": "COMPOUND_OF",
       "kind": "object",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 233,
+      "line": 243,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148782,7 +150100,7 @@
       "name": "CONTAINER_DEFS",
       "kind": "array",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 276,
+      "line": 277,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148792,7 +150110,7 @@
       "name": "s",
       "kind": "function",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 19,
+      "line": 22,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148802,7 +150120,7 @@
       "name": "b",
       "kind": "function",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 20,
+      "line": 23,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148812,9 +150130,39 @@
       "name": "noop",
       "kind": "function",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 21,
+      "line": 24,
       "module": "platform",
       "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "qrCodeDef",
+      "kind": "object",
+      "file": "src/ui/registry/data.defs.tsx",
+      "line": 26,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fileTypeIconDef",
+      "kind": "object",
+      "file": "src/ui/registry/data.defs.tsx",
+      "line": 56,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "countryFlagDef",
+      "kind": "object",
+      "file": "src/ui/registry/data.defs.tsx",
+      "line": 90,
+      "module": "platform",
+      "exported": true,
       "container": "",
       "tags": []
     },
@@ -148822,7 +150170,7 @@
       "name": "DemoEmployee",
       "kind": "interface",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 26,
+      "line": 121,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148832,7 +150180,7 @@
       "name": "EMPLOYEES",
       "kind": "array",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 37,
+      "line": 132,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148842,7 +150190,7 @@
       "name": "STATUS_TONE",
       "kind": "object",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 45,
+      "line": 140,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148852,7 +150200,7 @@
       "name": "COLUMNS",
       "kind": "array",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 56,
+      "line": 151,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148862,7 +150210,7 @@
       "name": "ROW_ACTIONS",
       "kind": "function",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 79,
+      "line": 174,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148874,7 +150222,7 @@
       "name": "dataTableDef",
       "kind": "object",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 87,
+      "line": 182,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148884,7 +150232,7 @@
       "name": "badgeDef",
       "kind": "object",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 251,
+      "line": 347,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148894,7 +150242,7 @@
       "name": "DATA_DEFS",
       "kind": "array",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 360,
+      "line": 457,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -148904,7 +150252,7 @@
       "name": "PropValue",
       "kind": "type",
       "file": "src/ui/registry/definitions.tsx",
-      "line": 28,
+      "line": 34,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148914,7 +150262,7 @@
       "name": "s",
       "kind": "function",
       "file": "src/ui/registry/definitions.tsx",
-      "line": 29,
+      "line": 35,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148924,7 +150272,7 @@
       "name": "b",
       "kind": "function",
       "file": "src/ui/registry/definitions.tsx",
-      "line": 30,
+      "line": 36,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148934,7 +150282,7 @@
       "name": "size",
       "kind": "function",
       "file": "src/ui/registry/definitions.tsx",
-      "line": 31,
+      "line": 37,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148944,7 +150292,7 @@
       "name": "validation",
       "kind": "function",
       "file": "src/ui/registry/definitions.tsx",
-      "line": 32,
+      "line": 38,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148954,7 +150302,7 @@
       "name": "DEMO_PEOPLE",
       "kind": "array",
       "file": "src/ui/registry/definitions.tsx",
-      "line": 39,
+      "line": 45,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148964,7 +150312,7 @@
       "name": "DEMO_DEPARTMENTS",
       "kind": "array",
       "file": "src/ui/registry/definitions.tsx",
-      "line": 47,
+      "line": 53,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148974,7 +150322,7 @@
       "name": "personDef",
       "kind": "object",
       "file": "src/ui/registry/definitions.tsx",
-      "line": 62,
+      "line": 68,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148984,7 +150332,7 @@
       "name": "dialogDef",
       "kind": "object",
       "file": "src/ui/registry/definitions.tsx",
-      "line": 178,
+      "line": 185,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -148994,7 +150342,7 @@
       "name": "COMPONENT_DEFS",
       "kind": "array",
       "file": "src/ui/registry/definitions.tsx",
-      "line": 340,
+      "line": 370,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149014,7 +150362,7 @@
       "name": "BUTTON_FAMILY",
       "kind": "object",
       "file": "src/ui/registry/families.ts",
-      "line": 48,
+      "line": 49,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149024,7 +150372,7 @@
       "name": "SWITCH_FAMILY",
       "kind": "object",
       "file": "src/ui/registry/families.ts",
-      "line": 62,
+      "line": 65,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149034,7 +150382,7 @@
       "name": "COMPONENT_FAMILIES",
       "kind": "array",
       "file": "src/ui/registry/families.ts",
-      "line": 75,
+      "line": 79,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149044,7 +150392,7 @@
       "name": "findFamily",
       "kind": "function",
       "file": "src/ui/registry/families.ts",
-      "line": 77,
+      "line": 81,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149054,7 +150402,7 @@
       "name": "familyOfComponent",
       "kind": "function",
       "file": "src/ui/registry/families.ts",
-      "line": 82,
+      "line": 86,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149064,7 +150412,7 @@
       "name": "familyMembers",
       "kind": "function",
       "file": "src/ui/registry/families.ts",
-      "line": 92,
+      "line": 96,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149074,7 +150422,7 @@
       "name": "s",
       "kind": "function",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 12,
+      "line": 18,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149084,9 +150432,19 @@
       "name": "b",
       "kind": "function",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 13,
+      "line": 19,
       "module": "platform",
       "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "illustrationDef",
+      "kind": "object",
+      "file": "src/ui/registry/feedback.defs.tsx",
+      "line": 21,
+      "module": "platform",
+      "exported": true,
       "container": "",
       "tags": []
     },
@@ -149094,7 +150452,7 @@
       "name": "toastRecord",
       "kind": "function",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 15,
+      "line": 53,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149104,7 +150462,7 @@
       "name": "triggerToast",
       "kind": "function",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 37,
+      "line": 75,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149114,7 +150472,7 @@
       "name": "emptyStateDef",
       "kind": "object",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 54,
+      "line": 92,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149124,7 +150482,7 @@
       "name": "skeletonDef",
       "kind": "object",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 117,
+      "line": 200,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149134,7 +150492,7 @@
       "name": "spinnerDef",
       "kind": "object",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 156,
+      "line": 240,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149144,7 +150502,7 @@
       "name": "toastDef",
       "kind": "object",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 186,
+      "line": 271,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149154,7 +150512,7 @@
       "name": "FEEDBACK_DEFS",
       "kind": "array",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 273,
+      "line": 359,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149164,7 +150522,7 @@
       "name": "s",
       "kind": "function",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 29,
+      "line": 36,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149174,7 +150532,7 @@
       "name": "b",
       "kind": "function",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 30,
+      "line": 37,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149184,7 +150542,7 @@
       "name": "n",
       "kind": "function",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 31,
+      "line": 38,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149194,7 +150552,7 @@
       "name": "size",
       "kind": "function",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 32,
+      "line": 39,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149204,7 +150562,17 @@
       "name": "val",
       "kind": "function",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 33,
+      "line": 40,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "chevronIcon",
+      "kind": "function",
+      "file": "src/ui/registry/forms.defs.tsx",
+      "line": 42,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149214,7 +150582,7 @@
       "name": "noop",
       "kind": "function",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 36,
+      "line": 45,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149224,7 +150592,7 @@
       "name": "OtpPreviewProps",
       "kind": "interface",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 38,
+      "line": 47,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149234,7 +150602,7 @@
       "name": "OtpPreview",
       "kind": "function",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 46,
+      "line": 55,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149246,7 +150614,7 @@
       "name": "ThemeModePreview",
       "kind": "function",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 64,
+      "line": 73,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149258,7 +150626,7 @@
       "name": "CHOICE_STYLE",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 75,
+      "line": 84,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149268,7 +150636,7 @@
       "name": "CHECKBOX_STYLE",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 86,
+      "line": 95,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149278,7 +150646,7 @@
       "name": "CONTROL_STYLE",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 98,
+      "line": 107,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149288,7 +150656,7 @@
       "name": "checkboxDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 110,
+      "line": 119,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149298,7 +150666,7 @@
       "name": "radioGroupDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 191,
+      "line": 201,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149308,7 +150676,7 @@
       "name": "switchDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 252,
+      "line": 314,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149318,7 +150686,7 @@
       "name": "textInputDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 326,
+      "line": 389,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149328,17 +150696,29 @@
       "name": "shell",
       "kind": "function",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 454,
+      "line": 518,
       "module": "platform",
       "exported": false,
       "container": "textInputDef",
       "tags": []
     },
     {
+      "name": "DateInputCalendarPreview",
+      "kind": "function",
+      "file": "src/ui/registry/forms.defs.tsx",
+      "line": 607,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "dateInputDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 543,
+      "line": 624,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149348,7 +150728,7 @@
       "name": "fileInputDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 630,
+      "line": 720,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149358,7 +150738,7 @@
       "name": "themeModeSwitchDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 749,
+      "line": 840,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149368,7 +150748,7 @@
       "name": "colorPickerDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 799,
+      "line": 891,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149378,7 +150758,7 @@
       "name": "otpInputDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 835,
+      "line": 928,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149388,7 +150768,7 @@
       "name": "DEPARTMENTS",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 887,
+      "line": 981,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149398,7 +150778,7 @@
       "name": "GROUPED_DEPARTMENTS",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 896,
+      "line": 990,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149408,7 +150788,7 @@
       "name": "selectDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 914,
+      "line": 1008,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149418,7 +150798,7 @@
       "name": "search",
       "kind": "function",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 1017,
+      "line": 1113,
       "module": "platform",
       "exported": false,
       "container": "selectDef",
@@ -149428,7 +150808,7 @@
       "name": "FORM_DEFS",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 1048,
+      "line": 1146,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149438,7 +150818,7 @@
       "name": "COMPONENT_DEFS",
       "kind": "array",
       "file": "src/ui/registry/index.ts",
-      "line": 61,
+      "line": 62,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149448,7 +150828,7 @@
       "name": "CATEGORY_LABELS",
       "kind": "object",
       "file": "src/ui/registry/index.ts",
-      "line": 76,
+      "line": 79,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149458,7 +150838,7 @@
       "name": "CATEGORY_ORDER",
       "kind": "array",
       "file": "src/ui/registry/index.ts",
-      "line": 92,
+      "line": 95,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149468,7 +150848,7 @@
       "name": "CatalogueNode",
       "kind": "type",
       "file": "src/ui/registry/index.ts",
-      "line": 102,
+      "line": 105,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149478,7 +150858,7 @@
       "name": "CategoryGroup",
       "kind": "interface",
       "file": "src/ui/registry/index.ts",
-      "line": 106,
+      "line": 109,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149488,7 +150868,7 @@
       "name": "componentsByCategory",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 127,
+      "line": 130,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149498,7 +150878,7 @@
       "name": "findComponent",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 161,
+      "line": 164,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149508,7 +150888,7 @@
       "name": "RegistryTotals",
       "kind": "interface",
       "file": "src/ui/registry/index.ts",
-      "line": 165,
+      "line": 168,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149518,7 +150898,7 @@
       "name": "registryTotals",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 191,
+      "line": 194,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149528,7 +150908,7 @@
       "name": "isPattern",
       "kind": "function",
       "file": "src/ui/registry/index.ts",
-      "line": 192,
+      "line": 195,
       "module": "platform",
       "exported": false,
       "container": "registryTotals",
@@ -149538,7 +150918,7 @@
       "name": "s",
       "kind": "function",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 25,
+      "line": 26,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149548,7 +150928,7 @@
       "name": "b",
       "kind": "function",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 26,
+      "line": 27,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149558,7 +150938,7 @@
       "name": "noop",
       "kind": "function",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 27,
+      "line": 28,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149568,7 +150948,7 @@
       "name": "FILE_TREE",
       "kind": "array",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 29,
+      "line": 30,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149578,7 +150958,7 @@
       "name": "treeViewDef",
       "kind": "object",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 48,
+      "line": 49,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149588,7 +150968,7 @@
       "name": "CASE_TABS",
       "kind": "array",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 113,
+      "line": 115,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149598,7 +150978,7 @@
       "name": "PLAIN_TABS",
       "kind": "array",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 121,
+      "line": 123,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149608,7 +150988,7 @@
       "name": "MANY_TABS",
       "kind": "array",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 127,
+      "line": 129,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149618,7 +150998,7 @@
       "name": "tabsDef",
       "kind": "object",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 139,
+      "line": 141,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149628,7 +151008,7 @@
       "name": "NAVIGATION_DEFS",
       "kind": "array",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 352,
+      "line": 370,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149692,7 +151072,7 @@
       "name": "tooltipDef",
       "kind": "object",
       "file": "src/ui/registry/overlays.defs.tsx",
-      "line": 125,
+      "line": 126,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149702,7 +151082,7 @@
       "name": "sweetAlertDef",
       "kind": "object",
       "file": "src/ui/registry/overlays.defs.tsx",
-      "line": 179,
+      "line": 181,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149712,7 +151092,7 @@
       "name": "OVERLAY_DEFS",
       "kind": "array",
       "file": "src/ui/registry/overlays.defs.tsx",
-      "line": 237,
+      "line": 240,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149752,7 +151132,7 @@
       "name": "pageActionBarDef",
       "kind": "object",
       "file": "src/ui/registry/page-header.def.tsx",
-      "line": 70,
+      "line": 71,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149762,7 +151142,7 @@
       "name": "s",
       "kind": "function",
       "file": "src/ui/registry/people-drawer.defs.tsx",
-      "line": 10,
+      "line": 16,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149772,7 +151152,7 @@
       "name": "b",
       "kind": "function",
       "file": "src/ui/registry/people-drawer.defs.tsx",
-      "line": 11,
+      "line": 17,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149782,7 +151162,7 @@
       "name": "n",
       "kind": "function",
       "file": "src/ui/registry/people-drawer.defs.tsx",
-      "line": 12,
+      "line": 18,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149792,7 +151172,7 @@
       "name": "PEOPLE",
       "kind": "array",
       "file": "src/ui/registry/people-drawer.defs.tsx",
-      "line": 14,
+      "line": 20,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149802,7 +151182,19 @@
       "name": "DrawerPreview",
       "kind": "function",
       "file": "src/ui/registry/people-drawer.defs.tsx",
-      "line": 22,
+      "line": 28,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "EmployeeSideDrawerPreview",
+      "kind": "function",
+      "file": "src/ui/registry/people-drawer.defs.tsx",
+      "line": 56,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149814,7 +151206,7 @@
       "name": "avatarDef",
       "kind": "object",
       "file": "src/ui/registry/people-drawer.defs.tsx",
-      "line": 50,
+      "line": 73,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149824,7 +151216,7 @@
       "name": "avatarGroupDef",
       "kind": "object",
       "file": "src/ui/registry/people-drawer.defs.tsx",
-      "line": 79,
+      "line": 102,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149834,7 +151226,17 @@
       "name": "drawerDef",
       "kind": "object",
       "file": "src/ui/registry/people-drawer.defs.tsx",
-      "line": 101,
+      "line": 125,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "employeeSideDrawerDef",
+      "kind": "object",
+      "file": "src/ui/registry/people-drawer.defs.tsx",
+      "line": 157,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149844,7 +151246,7 @@
       "name": "PEOPLE_DRAWER_DEFS",
       "kind": "array",
       "file": "src/ui/registry/people-drawer.defs.tsx",
-      "line": 132,
+      "line": 184,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149883,8 +151285,8 @@
     {
       "name": "s",
       "kind": "function",
-      "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 9,
+      "file": "src/ui/registry/progress-steps.def.tsx",
+      "line": 8,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149893,17 +151295,7 @@
     {
       "name": "b",
       "kind": "function",
-      "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 10,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "n",
-      "kind": "function",
-      "file": "src/ui/registry/remaining-primitives.defs.tsx",
+      "file": "src/ui/registry/progress-steps.def.tsx",
       "line": 11,
       "module": "platform",
       "exported": false,
@@ -149913,8 +151305,68 @@
     {
       "name": "noop",
       "kind": "function",
+      "file": "src/ui/registry/progress-steps.def.tsx",
+      "line": 12,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "STEPS",
+      "kind": "array",
+      "file": "src/ui/registry/progress-steps.def.tsx",
+      "line": 14,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "progressStepsDef",
+      "kind": "object",
+      "file": "src/ui/registry/progress-steps.def.tsx",
+      "line": 21,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "s",
+      "kind": "function",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
       "line": 12,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "b",
+      "kind": "function",
+      "file": "src/ui/registry/remaining-primitives.defs.tsx",
+      "line": 13,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "n",
+      "kind": "function",
+      "file": "src/ui/registry/remaining-primitives.defs.tsx",
+      "line": 14,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "noop",
+      "kind": "function",
+      "file": "src/ui/registry/remaining-primitives.defs.tsx",
+      "line": 15,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -149924,7 +151376,7 @@
       "name": "breadcrumbsDef",
       "kind": "object",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 14,
+      "line": 17,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149934,7 +151386,7 @@
       "name": "alertDef",
       "kind": "object",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 55,
+      "line": 59,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149944,7 +151396,7 @@
       "name": "progressDef",
       "kind": "object",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 86,
+      "line": 91,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149954,7 +151406,57 @@
       "name": "accordionDef",
       "kind": "object",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 115,
+      "line": 129,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "shellPreview",
+      "kind": "function",
+      "file": "src/ui/registry/remaining-primitives.defs.tsx",
+      "line": 162,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "activityGaugeDef",
+      "kind": "object",
+      "file": "src/ui/registry/remaining-primitives.defs.tsx",
+      "line": 176,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "userPillPreview",
+      "kind": "function",
+      "file": "src/ui/registry/remaining-primitives.defs.tsx",
+      "line": 213,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "appTopBarDef",
+      "kind": "object",
+      "file": "src/ui/registry/remaining-primitives.defs.tsx",
+      "line": 215,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "userPillDef",
+      "kind": "object",
+      "file": "src/ui/registry/remaining-primitives.defs.tsx",
+      "line": 272,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149964,14 +151466,14 @@
       "name": "REMAINING_PRIMITIVE_DEFS",
       "kind": "array",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 147,
+      "line": 282,
       "module": "platform",
       "exported": true,
       "container": "",
       "tags": []
     },
     {
-      "name": "PropControl",
+      "name": "PropCondition",
       "kind": "type",
       "file": "src/ui/registry/types.ts",
       "line": 41,
@@ -149981,10 +151483,30 @@
       "tags": []
     },
     {
+      "name": "PropControlMeta",
+      "kind": "interface",
+      "file": "src/ui/registry/types.ts",
+      "line": 48,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PropControl",
+      "kind": "type",
+      "file": "src/ui/registry/types.ts",
+      "line": 53,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "PropValues",
       "kind": "type",
       "file": "src/ui/registry/types.ts",
-      "line": 49,
+      "line": 64,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149994,7 +151516,7 @@
       "name": "StyleControl",
       "kind": "interface",
       "file": "src/ui/registry/types.ts",
-      "line": 60,
+      "line": 75,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150004,7 +151526,7 @@
       "name": "StyleGroup",
       "kind": "interface",
       "file": "src/ui/registry/types.ts",
-      "line": 74,
+      "line": 89,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150014,7 +151536,7 @@
       "name": "KeyBinding",
       "kind": "interface",
       "file": "src/ui/registry/types.ts",
-      "line": 81,
+      "line": 96,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150024,7 +151546,7 @@
       "name": "A11yInfo",
       "kind": "interface",
       "file": "src/ui/registry/types.ts",
-      "line": 86,
+      "line": 101,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150034,7 +151556,7 @@
       "name": "ComponentExample",
       "kind": "interface",
       "file": "src/ui/registry/types.ts",
-      "line": 105,
+      "line": 120,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150044,7 +151566,7 @@
       "name": "VariantSample",
       "kind": "interface",
       "file": "src/ui/registry/types.ts",
-      "line": 121,
+      "line": 136,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150054,7 +151576,7 @@
       "name": "MigrationInfo",
       "kind": "interface",
       "file": "src/ui/registry/types.ts",
-      "line": 138,
+      "line": 159,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150064,7 +151586,7 @@
       "name": "ComponentCategory",
       "kind": "type",
       "file": "src/ui/registry/types.ts",
-      "line": 158,
+      "line": 179,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150074,7 +151596,17 @@
       "name": "ComponentStatus",
       "kind": "type",
       "file": "src/ui/registry/types.ts",
-      "line": 170,
+      "line": 191,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ThumbnailKind",
+      "kind": "type",
+      "file": "src/ui/registry/types.ts",
+      "line": 194,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150084,7 +151616,7 @@
       "name": "ComponentDef",
       "kind": "interface",
       "file": "src/ui/registry/types.ts",
-      "line": 172,
+      "line": 200,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150094,7 +151626,7 @@
       "name": "propsForAxis",
       "kind": "function",
       "file": "src/ui/registry/types.ts",
-      "line": 243,
+      "line": 280,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150104,7 +151636,7 @@
       "name": "propsForVariant",
       "kind": "function",
       "file": "src/ui/registry/types.ts",
-      "line": 253,
+      "line": 290,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150114,7 +151646,7 @@
       "name": "defaultProps",
       "kind": "function",
       "file": "src/ui/registry/types.ts",
-      "line": 258,
+      "line": 295,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150124,7 +151656,7 @@
       "name": "styleVarNames",
       "kind": "function",
       "file": "src/ui/registry/types.ts",
-      "line": 265,
+      "line": 302,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150134,7 +151666,27 @@
       "name": "isBuilt",
       "kind": "function",
       "file": "src/ui/registry/types.ts",
-      "line": 270,
+      "line": 307,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "conditionProps",
+      "kind": "function",
+      "file": "src/ui/registry/validate.ts",
+      "line": 3,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "assertComponentRegistry",
+      "kind": "function",
+      "file": "src/ui/registry/validate.ts",
+      "line": 10,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150794,44 +152346,10 @@
       "tags": []
     },
     {
-      "name": "BOARD",
-      "kind": "array",
-      "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 38,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "Specimen",
-      "kind": "function",
-      "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 49,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "Swatch",
-      "kind": "function",
-      "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 62,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
       "name": "BrandOverview",
       "kind": "function",
       "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 76,
+      "line": 10,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150840,20 +152358,10 @@
       ]
     },
     {
-      "name": "applyDirection",
-      "kind": "function",
-      "file": "src/ui/studio/BrandOverview.tsx",
-      "line": 103,
-      "module": "platform",
-      "exported": false,
-      "container": "BrandOverview",
-      "tags": []
-    },
-    {
       "name": "ButtonBrowserProps",
       "kind": "interface",
       "file": "src/ui/studio/ButtonBrowser.tsx",
-      "line": 13,
+      "line": 14,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150863,7 +152371,7 @@
       "name": "PatternControl",
       "kind": "function",
       "file": "src/ui/studio/ButtonBrowser.tsx",
-      "line": 21,
+      "line": 22,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150875,7 +152383,7 @@
       "name": "ButtonPatternEditor",
       "kind": "function",
       "file": "src/ui/studio/ButtonBrowser.tsx",
-      "line": 53,
+      "line": 54,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150887,7 +152395,7 @@
       "name": "set",
       "kind": "function",
       "file": "src/ui/studio/ButtonBrowser.tsx",
-      "line": 64,
+      "line": 65,
       "module": "platform",
       "exported": false,
       "container": "ButtonPatternEditor",
@@ -150897,7 +152405,7 @@
       "name": "reset",
       "kind": "function",
       "file": "src/ui/studio/ButtonBrowser.tsx",
-      "line": 69,
+      "line": 70,
       "module": "platform",
       "exported": false,
       "container": "ButtonPatternEditor",
@@ -150907,7 +152415,7 @@
       "name": "applyPreset",
       "kind": "function",
       "file": "src/ui/studio/ButtonBrowser.tsx",
-      "line": 73,
+      "line": 74,
       "module": "platform",
       "exported": false,
       "container": "ButtonPatternEditor",
@@ -150917,7 +152425,7 @@
       "name": "presetIsActive",
       "kind": "function",
       "file": "src/ui/studio/ButtonBrowser.tsx",
-      "line": 86,
+      "line": 87,
       "module": "platform",
       "exported": false,
       "container": "ButtonPatternEditor",
@@ -150927,7 +152435,7 @@
       "name": "ButtonBrowser",
       "kind": "function",
       "file": "src/ui/studio/ButtonBrowser.tsx",
-      "line": 132,
+      "line": 133,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150946,30 +152454,234 @@
       "tags": []
     },
     {
-      "name": "ThumbnailKind",
-      "kind": "type",
-      "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 9,
-      "module": "platform",
+      "name": "CatalogueShowcaseProps",
+      "kind": "interface",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 17,
+      "module": "settings",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "kindFor",
+      "name": "SectionHeading",
       "kind": "function",
-      "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 15,
-      "module": "platform",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 22,
+      "module": "settings",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "BUTTON_VARIANTS",
+      "kind": "array",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 31,
+      "module": "settings",
       "exported": false,
       "container": "",
       "tags": []
+    },
+    {
+      "name": "ButtonsShowcase",
+      "kind": "function",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 40,
+      "module": "settings",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "FIELD_OPTIONS",
+      "kind": "variable",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 66,
+      "module": "settings",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "InputsShowcase",
+      "kind": "function",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 72,
+      "module": "settings",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ProjectRow",
+      "kind": "interface",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 103,
+      "module": "settings",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PROJECTS",
+      "kind": "array",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 111,
+      "module": "settings",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PROJECT_COLUMNS",
+      "kind": "array",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 118,
+      "module": "settings",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TableShowcase",
+      "kind": "function",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 129,
+      "module": "settings",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "NavigationControlsShowcase",
+      "kind": "function",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 152,
+      "module": "settings",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "StatusShowcase",
+      "kind": "function",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 170,
+      "module": "settings",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ShellShowcase",
+      "kind": "function",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 186,
+      "module": "settings",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "MenuShowcase",
+      "kind": "function",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 203,
+      "module": "settings",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "DialogShowcase",
+      "kind": "function",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 223,
+      "module": "settings",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "FormShowcase",
+      "kind": "function",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 236,
+      "module": "settings",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "nodeId",
+      "kind": "function",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 255,
+      "module": "settings",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "nodeName",
+      "kind": "function",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 256,
+      "module": "settings",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "nodeCount",
+      "kind": "function",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 257,
+      "module": "settings",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CatalogueShowcase",
+      "kind": "function",
+      "file": "src/ui/studio/CatalogueShowcase.tsx",
+      "line": 259,
+      "module": "settings",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
     },
     {
       "name": "FieldScene",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 52,
+      "line": 19,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150981,7 +152693,31 @@
       "name": "SelectScene",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 58,
+      "line": 25,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ActivityGaugeScene",
+      "kind": "function",
+      "file": "src/ui/studio/componentThumbnail.tsx",
+      "line": 39,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "PersonSelectScene",
+      "kind": "function",
+      "file": "src/ui/studio/componentThumbnail.tsx",
+      "line": 55,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150993,7 +152729,19 @@
       "name": "ChoiceScene",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 72,
+      "line": 66,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "CalendarScene",
+      "kind": "function",
+      "file": "src/ui/studio/componentThumbnail.tsx",
+      "line": 85,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151005,7 +152753,7 @@
       "name": "ColorPickerScene",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 82,
+      "line": 95,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151017,13 +152765,55 @@
       "name": "ComponentThumbnail",
       "kind": "function",
       "file": "src/ui/studio/componentThumbnail.tsx",
-      "line": 91,
+      "line": 104,
       "module": "platform",
       "exported": true,
       "container": "",
       "tags": [
         "component"
       ]
+    },
+    {
+      "name": "CountryPickerProps",
+      "kind": "interface",
+      "file": "src/ui/studio/CountryPicker.tsx",
+      "line": 6,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CountryPicker",
+      "kind": "function",
+      "file": "src/ui/studio/CountryPicker.tsx",
+      "line": 14,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "closeOnOutsidePress",
+      "kind": "function",
+      "file": "src/ui/studio/CountryPicker.tsx",
+      "line": 28,
+      "module": "platform",
+      "exported": false,
+      "container": "CountryPicker",
+      "tags": []
+    },
+    {
+      "name": "choose",
+      "kind": "function",
+      "file": "src/ui/studio/CountryPicker.tsx",
+      "line": 35,
+      "module": "platform",
+      "exported": false,
+      "container": "CountryPicker",
+      "tags": []
     },
     {
       "name": "MEMBERS",
@@ -151246,7 +153036,7 @@
       "name": "Target",
       "kind": "type",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 13,
+      "line": 17,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151256,7 +153046,7 @@
       "name": "friendly",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 15,
+      "line": 19,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151266,7 +153056,7 @@
       "name": "friendlyGroup",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 19,
+      "line": 23,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151276,7 +153066,7 @@
       "name": "belongs",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 26,
+      "line": 30,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151286,7 +153076,7 @@
       "name": "SIZE_FALLBACKS",
       "kind": "object",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 33,
+      "line": 37,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151296,7 +153086,7 @@
       "name": "SizeUnit",
       "kind": "type",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 44,
+      "line": 48,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151306,7 +153096,7 @@
       "name": "SizeValue",
       "kind": "interface",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 45,
+      "line": 49,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151316,7 +153106,7 @@
       "name": "cssVariableName",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 47,
+      "line": 51,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151326,7 +153116,7 @@
       "name": "resolveThemeValue",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 51,
+      "line": 55,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151336,17 +153126,27 @@
       "name": "parseSizeValue",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 66,
+      "line": 70,
       "module": "platform",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "readableThemeValue",
+      "name": "THEME_TOKEN_LABELS",
+      "kind": "object",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 77,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "_readableTokenName",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 73,
+      "line": 85,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151356,7 +153156,7 @@
       "name": "StudioColorControl",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 79,
+      "line": 94,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151368,7 +153168,7 @@
       "name": "position",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 96,
+      "line": 116,
       "module": "platform",
       "exported": false,
       "container": "StudioColorControl",
@@ -151378,7 +153178,7 @@
       "name": "closeOnOutside",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 111,
+      "line": 131,
       "module": "platform",
       "exported": false,
       "container": "StudioColorControl",
@@ -151388,7 +153188,7 @@
       "name": "closeOnEscape",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 115,
+      "line": 135,
       "module": "platform",
       "exported": false,
       "container": "StudioColorControl",
@@ -151398,7 +153198,7 @@
       "name": "TokenControl",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 150,
+      "line": 170,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151410,7 +153210,7 @@
       "name": "GeneratedStyleControls",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 200,
+      "line": 216,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151422,17 +153222,57 @@
       "name": "HoverColorMode",
       "kind": "type",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 215,
+      "line": 238,
       "module": "platform",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
+      "name": "toRgb",
+      "kind": "variable",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 240,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "hoverBaseName",
+      "kind": "function",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 242,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "automaticHoverDirection",
+      "kind": "function",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 247,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "channel",
+      "kind": "function",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 250,
+      "module": "platform",
+      "exported": false,
+      "container": "automaticHoverDirection",
+      "tags": []
+    },
+    {
       "name": "HoverColorControl",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 217,
+      "line": 255,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151441,10 +153281,20 @@
       ]
     },
     {
+      "name": "expression",
+      "kind": "function",
+      "file": "src/ui/studio/RecipeStyleEditor.tsx",
+      "line": 267,
+      "module": "platform",
+      "exported": false,
+      "container": "HoverColorControl",
+      "tags": []
+    },
+    {
       "name": "setMode",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 221,
+      "line": 269,
       "module": "platform",
       "exported": false,
       "container": "HoverColorControl",
@@ -151454,7 +153304,7 @@
       "name": "ICON_RECOMMENDATIONS",
       "kind": "object",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 244,
+      "line": 303,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151464,7 +153314,7 @@
       "name": "IconPicker",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 253,
+      "line": 312,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151476,7 +153326,7 @@
       "name": "choose",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 275,
+      "line": 336,
       "module": "platform",
       "exported": false,
       "container": "IconPicker",
@@ -151486,7 +153336,7 @@
       "name": "RecipeStyleEditor",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 304,
+      "line": 367,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151498,7 +153348,7 @@
       "name": "previewPropsFor",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 313,
+      "line": 383,
       "module": "platform",
       "exported": false,
       "container": "RecipeStyleEditor",
@@ -151508,7 +153358,7 @@
       "name": "setPreviewProp",
       "kind": "function",
       "file": "src/ui/studio/RecipeStyleEditor.tsx",
-      "line": 319,
+      "line": 389,
       "module": "platform",
       "exported": false,
       "container": "RecipeStyleEditor",
@@ -151518,7 +153368,7 @@
       "name": "StudioProps",
       "kind": "interface",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 48,
+      "line": 50,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151528,7 +153378,7 @@
       "name": "SectionId",
       "kind": "type",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 57,
+      "line": 59,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151538,7 +153388,7 @@
       "name": "NavItem",
       "kind": "interface",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 63,
+      "line": 65,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151548,7 +153398,7 @@
       "name": "NavGroup",
       "kind": "interface",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 64,
+      "line": 66,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151558,7 +153408,7 @@
       "name": "NAV",
       "kind": "array",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 66,
+      "line": 68,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151568,7 +153418,7 @@
       "name": "NavComponentRow",
       "kind": "type",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 95,
+      "line": 96,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151578,7 +153428,7 @@
       "name": "COMPONENT_ROWS",
       "kind": "variable",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 99,
+      "line": 100,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151590,7 +153440,7 @@
       "name": "COMPONENT_ORDER",
       "kind": "variable",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 109,
+      "line": 110,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151602,7 +153452,7 @@
       "name": "APP_SCENE",
       "kind": "object",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 114,
+      "line": 115,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151619,10 +153469,94 @@
       "tags": []
     },
     {
+      "name": "PaletteItem",
+      "kind": "interface",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 135,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "BRAND_PALETTE",
+      "kind": "array",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 141,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SEMANTIC_ROLES",
+      "kind": "array",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 150,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "resolvedToken",
+      "kind": "function",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 171,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PaletteBoard",
+      "kind": "function",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 176,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "SemanticBoard",
+      "kind": "function",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 199,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "builtNodes",
+      "kind": "function",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 223,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "_RetiredCatalogue",
+      "kind": "function",
+      "file": "src/ui/studio/Studio.tsx",
+      "line": 236,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "variantCount",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 140,
+      "line": 296,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151632,7 +153566,7 @@
       "name": "ComponentCard",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 146,
+      "line": 302,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151645,7 +153579,7 @@
       "name": "FamilyCard",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 181,
+      "line": 319,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151658,7 +153592,7 @@
       "name": "CatalogueNodeCard",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 199,
+      "line": 326,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151671,19 +153605,7 @@
       "name": "Catalogue",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 206,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "PhasePlaceholder",
-      "kind": "function",
-      "file": "src/ui/studio/Studio.tsx",
-      "line": 258,
+      "line": 332,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151695,7 +153617,7 @@
       "name": "Studio",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 267,
+      "line": 352,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151707,7 +153629,7 @@
       "name": "openComponents",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 296,
+      "line": 386,
       "module": "platform",
       "exported": false,
       "container": "Studio",
@@ -151717,11 +153639,45 @@
       "name": "openGroup",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 297,
+      "line": 387,
       "module": "platform",
       "exported": false,
       "container": "Studio",
       "tags": []
+    },
+    {
+      "name": "StudioInspectorProps",
+      "kind": "interface",
+      "file": "src/ui/studio/StudioInspector.tsx",
+      "line": 3,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "StudioInspector",
+      "kind": "function",
+      "file": "src/ui/studio/StudioInspector.tsx",
+      "line": 20,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "StudioInspectorBody",
+      "kind": "function",
+      "file": "src/ui/studio/StudioInspector.tsx",
+      "line": 41,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
     },
     {
       "name": "friendlyError",
@@ -151786,10 +153742,32 @@
       "tags": []
     },
     {
+      "name": "StudioSelectProps",
+      "kind": "interface",
+      "file": "src/ui/studio/StudioSelect.tsx",
+      "line": 4,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "StudioSelect",
+      "kind": "function",
+      "file": "src/ui/studio/StudioSelect.tsx",
+      "line": 15,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "CONTROL_GROUPS",
       "kind": "array",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 44,
+      "line": 48,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151799,17 +153777,7 @@
       "name": "FRIENDLY_VALUES",
       "kind": "object",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 53,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "TEXT_INPUT_VARIANT_ICONS",
-      "kind": "object",
-      "file": "src/ui/studio/Workbench.tsx",
-      "line": 58,
+      "line": 59,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151819,7 +153787,7 @@
       "name": "friendlyValue",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 71,
+      "line": 68,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151829,7 +153797,7 @@
       "name": "groupControls",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 77,
+      "line": 74,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151839,7 +153807,17 @@
       "name": "isStateControlCoveredByPreview",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 95,
+      "line": 92,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "matchesCondition",
+      "kind": "function",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 107,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151849,7 +153827,7 @@
       "name": "isRelevantPreviewControl",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 110,
+      "line": 115,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151859,7 +153837,7 @@
       "name": "Control",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 143,
+      "line": 124,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151871,7 +153849,7 @@
       "name": "WorkbenchProps",
       "kind": "interface",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 227,
+      "line": 220,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151881,7 +153859,7 @@
       "name": "CompoundButtonEditorProps",
       "kind": "interface",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 235,
+      "line": 228,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151891,7 +153869,7 @@
       "name": "CompoundButtonEditor",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 249,
+      "line": 242,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151903,7 +153881,7 @@
       "name": "previewPropsFor",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 259,
+      "line": 252,
       "module": "platform",
       "exported": false,
       "container": "CompoundButtonEditor",
@@ -151913,7 +153891,7 @@
       "name": "setPreviewProp",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 267,
+      "line": 260,
       "module": "platform",
       "exported": false,
       "container": "CompoundButtonEditor",
@@ -151923,7 +153901,7 @@
       "name": "reset",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 277,
+      "line": 270,
       "module": "platform",
       "exported": false,
       "container": "CompoundButtonEditor",
@@ -151933,7 +153911,7 @@
       "name": "Workbench",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 400,
+      "line": 390,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151945,7 +153923,7 @@
       "name": "set",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 432,
+      "line": 423,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -151955,7 +153933,7 @@
       "name": "resetPreview",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 443,
+      "line": 434,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -151965,7 +153943,7 @@
       "name": "specimen",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 459,
+      "line": 450,
       "module": "platform",
       "exported": false,
       "container": "Workbench",
@@ -151975,7 +153953,7 @@
       "name": "Block",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 564,
+      "line": 585,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151987,7 +153965,19 @@
       "name": "VariantSpecimens",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 579,
+      "line": 600,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "AppTopBarLayoutThumbnail",
+      "kind": "function",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 664,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151999,7 +153989,43 @@
       "name": "ModalLayoutThumbnail",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 633,
+      "line": 674,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "EmptyStateVisualThumbnail",
+      "kind": "function",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 688,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ProgressStepsLayoutThumbnail",
+      "kind": "function",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 705,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "TabsVariantThumbnail",
+      "kind": "function",
+      "file": "src/ui/studio/Workbench.tsx",
+      "line": 721,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -152011,7 +154037,7 @@
       "name": "UsageSpecimens",
       "kind": "function",
       "file": "src/ui/studio/Workbench.tsx",
-      "line": 647,
+      "line": 731,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -168143,7 +170169,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ maxWidth: '320px' }}>\n          <Card\n            variant=\"action\"\n            onClick={noop}\n            actionLabel=\"View Sarah James\"\n            header={<CardHeader\n              icon={<LucideIcon name=\"User\" />}\n              title=\"Sarah James\"\n              description=\"Safety Officer · EMP-00484\"\n              actions={<Button variant=\"ghost\" size=\"sm\" iconOnly aria-label=\"Edit Sarah James\" iconLeft={<LucideIcon name=\"Pencil\" />} />}\n            />}\n            footer={<CardFooter><span>Started 8 Mar 2021</span><Badge tone=\"success\" size=\"sm\" dot>Active</Badge></CardFooter>}\n          >\n            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>HSE · Georgetown</span>\n          </Card>\n        </div>\n      )",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 250
+      "line": 251
     },
     {
       "id": "bundle.hr.attendance.ops",
@@ -168176,6 +170202,16 @@
       "line": 76
     },
     {
+      "id": "case-workspace-panels",
+      "title": "Case workspace panels",
+      "module": "platform",
+      "area": "",
+      "kind": "registry",
+      "render": "() => (\n        <Tabs\n          id=\"ex-case-workspace\"\n          label=\"Case workspace panels\"\n          class=\"sds-tabs-use-example\"\n          variant=\"subtle\"\n          size=\"sm\"\n          items={[\n            { id: 'activity', label: 'Activity' },\n            { id: 'approvals', label: 'Approvals', badge: 2 },\n            { id: 'audit', label: 'Audit' },\n          ]}\n          value=\"approvals\"\n          onChange={noop}\n        />\n      )",
+      "file": "src/ui/registry/navigation.defs.tsx",
+      "line": 346
+    },
+    {
       "id": "create",
       "title": "Create with options",
       "module": "platform",
@@ -168183,7 +170219,7 @@
       "kind": "registry",
       "render": "() => <SplitButton action={{ label: 'Create' }} items={SAVE_ALTERNATIVES} variant=\"secondary\" />",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 225
+      "line": 235
     },
     {
       "id": "dialog-footer",
@@ -168193,7 +170229,17 @@
       "kind": "registry",
       "render": "() => (\n        <>\n          <Button variant=\"secondary\">Cancel</Button>\n          <Button variant=\"primary\">Save</Button>\n        </>\n      )",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 266
+      "line": 276
+    },
+    {
+      "id": "employee-drawer-sections",
+      "title": "Employee drawer sections",
+      "module": "hr",
+      "area": "",
+      "kind": "registry",
+      "render": "() => (\n        <Tabs\n          id=\"ex-employee-drawer\"\n          label=\"Employee profile sections\"\n          class=\"sds-tabs-use-example\"\n          size=\"sm\"\n          items={[\n            { id: 'overview', label: 'Overview', icon: <LucideIcon name=\"LayoutGrid\" /> },\n            { id: 'documents', label: 'Documents', icon: <LucideIcon name=\"FileText\" />, badge: 3 },\n            { id: 'activity', label: 'Activity', icon: <LucideIcon name=\"History\" /> },\n          ]}\n          value=\"overview\"\n          onChange={noop}\n        />\n      )",
+      "file": "src/ui/registry/navigation.defs.tsx",
+      "line": 305
     },
     {
       "id": "employee-name",
@@ -168203,7 +170249,27 @@
       "kind": "registry",
       "render": "() => <FormField label=\"Employee name\" required helpText=\"As shown on government ID\"><TextInput value=\"Sarah James\" onInput={noop} /></FormField>",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 512
+      "line": 576
+    },
+    {
+      "id": "employee-onboarding",
+      "title": "Employee onboarding",
+      "module": "hr",
+      "area": "",
+      "kind": "registry",
+      "render": "() => <ProgressSteps steps={STEPS} value=\"documents\" label=\"Employee onboarding progress\" variant=\"icon-with-number\" />",
+      "file": "src/ui/registry/progress-steps.def.tsx",
+      "line": 150
+    },
+    {
+      "id": "employee-register-views",
+      "title": "Employee register views",
+      "module": "hr",
+      "area": "",
+      "kind": "registry",
+      "render": "() => (\n        <Tabs\n          id=\"ex-employee-register\"\n          label=\"Employee register views\"\n          class=\"sds-tabs-use-example\"\n          variant=\"contained\"\n          size=\"sm\"\n          items={[\n            { id: 'all', label: 'All' },\n            { id: 'attention', label: 'Attention', badge: 8 },\n            { id: 'archived', label: 'Archived' },\n          ]}\n          value=\"attention\"\n          onChange={noop}\n        />\n      )",
+      "file": "src/ui/registry/navigation.defs.tsx",
+      "line": 325
     },
     {
       "id": "enterprise.calendar.taskPlanner",
@@ -168233,7 +170299,7 @@
       "kind": "registry",
       "render": "() => <DropdownButton label=\"Export\" variant=\"secondary\" items={RECORD_MENU} />",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 137
+      "line": 143
     },
     {
       "id": "filter",
@@ -168243,7 +170309,7 @@
       "kind": "registry",
       "render": "() => <DropdownButton label=\"Status: All\" variant=\"secondary\" matchWidth items={RECORD_MENU} />",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 141
+      "line": 147
     },
     {
       "id": "finance.payroll.assignedWork",
@@ -168636,16 +170702,6 @@
       "line": 334
     },
     {
-      "id": "one-component",
-      "title": "One component, three appearances",
-      "module": "platform",
-      "area": "",
-      "kind": "registry",
-      "render": "() => (\n        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>\n          <Tabs id=\"ex-underline\" label=\"Underline\" items={PLAIN_TABS} value=\"overview\" onChange={noop} />\n          <Tabs id=\"ex-contained\" label=\"Contained\" variant=\"contained\" size=\"sm\" items={PLAIN_TABS} value=\"tasks\" onChange={noop} />\n          <Tabs id=\"ex-subtle\" label=\"Subtle\" variant=\"subtle\" size=\"sm\" items={PLAIN_TABS} value=\"files\" onChange={noop} />\n        </div>\n      )",
-      "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 296
-    },
-    {
       "id": "one-surface",
       "title": "One surface, four rhythms",
       "module": "platform",
@@ -168653,17 +170709,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px' }}>\n          <Card variant=\"metric\" density=\"compact\" header={<CardHeader title=\"Open incidents\" level={null} />}>\n            <Figure value=\"18\" caption=\"4 overdue\" />\n          </Card>\n          <Card variant=\"surface\" header={<CardHeader title=\"Site note\" />}>\n            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Night shift handover completed.</span>\n          </Card>\n          <Card variant=\"panel\" density=\"compact\" header={<CardHeader title=\"Corrective actions\" actions={<Badge tone=\"warning\" size=\"sm\">2 open</Badge>} />}>\n            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Both due this Friday.</span>\n          </Card>\n          <Card variant=\"action\" onClick={noop} actionLabel=\"Start a new inspection\"\n            header={<CardHeader icon={<LucideIcon name=\"ClipboardCheck\" />} title=\"New inspection\" description=\"Start from a template\" />} />\n        </div>\n      )",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 215
-    },
-    {
-      "id": "overflow",
-      "title": "Nine tabs in a drawer",
-      "module": "platform",
-      "area": "",
-      "kind": "registry",
-      "render": "() => (\n        <Tabs\n          id=\"ex-overflow\"\n          label=\"Rate version sections\"\n          variant=\"contained\"\n          size=\"sm\"\n          items={MANY_TABS}\n          maxVisible={4}\n          value=\"timeline\"\n          onChange={noop}\n        />\n      )",
-      "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 332
+      "line": 216
     },
     {
       "id": "page-action",
@@ -168673,7 +170719,7 @@
       "kind": "registry",
       "render": "() => <Button variant=\"primary\" iconLeft={<LucideIcon name=\"Plus\" />}>Add employee</Button>",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 286
+      "line": 296
     },
     {
       "id": "payroll-amount",
@@ -168683,7 +170729,7 @@
       "kind": "registry",
       "render": "() => <FormField label=\"Gross pay\"><CurrencyInput valueMinor={845000} onChange={noop} currency=\"TTD\" /></FormField>",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 524
+      "line": 588
     },
     {
       "id": "platform.weather.current",
@@ -168743,7 +170789,7 @@
       "kind": "registry",
       "render": "() => <FormField label=\"Search employees\"><SearchField value=\"Sarah\" onInput={noop} /></FormField>",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 518
+      "line": 582
     },
     {
       "id": "row",
@@ -168753,7 +170799,7 @@
       "kind": "registry",
       "render": "() => <DropdownButton label=\"Actions\" variant=\"outline\" items={RECORD_MENU} />",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 139
+      "line": 145
     },
     {
       "id": "save",
@@ -168763,7 +170809,7 @@
       "kind": "registry",
       "render": "() => <SplitButton action={{ label: 'Save' }} items={SAVE_ALTERNATIVES} />",
       "file": "src/ui/registry/compound.defs.tsx",
-      "line": 223
+      "line": 233
     },
     {
       "id": "select-all",
@@ -168773,7 +170819,7 @@
       "kind": "registry",
       "render": "() => (\n        <CheckboxGroup\n          label=\"Modules\"\n          selectAllLabel=\"All modules\"\n          values={['hr']}\n          onChange={noop}\n          options={[\n            { value: 'hr', label: 'Human Resources' },\n            { value: 'hse', label: 'HSE' },\n            { value: 'fin', label: 'Finance', disabled: true },\n          ]}\n        />\n      )",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 168
+      "line": 178
     },
     {
       "id": "status-set",
@@ -168783,7 +170829,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>\n          <Badge tone=\"success\" dot>Active</Badge>\n          <Badge tone=\"warning\" dot>Probation</Badge>\n          <Badge tone=\"info\" dot>On leave</Badge>\n          <Badge tone=\"neutral\" dot>Inactive</Badge>\n          <Badge tone=\"danger\" dot>Terminated</Badge>\n        </div>\n      )",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 330
+      "line": 427
     },
     {
       "id": "test.widget",
@@ -168803,7 +170849,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>\n          {(['success', 'warning', 'danger', 'info'] as CardTone[]).map(tone => (\n            <Card key={tone} variant=\"metric\" density=\"compact\" tone={tone}\n              header={<CardHeader title={`${tone[0]!.toUpperCase()}${tone.slice(1)} signal`} level={null} />}>\n              <Figure value=\"7\" caption=\"this week\" />\n            </Card>\n          ))}\n        </div>\n      )",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 235
+      "line": 236
     },
     {
       "id": "variants",
@@ -168813,17 +170859,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>\n          <Badge tone=\"danger\" variant=\"soft\">Overdue</Badge>\n          <Badge tone=\"danger\" variant=\"solid\">Critical</Badge>\n          <Badge tone=\"danger\" variant=\"outline\">Escalated</Badge>\n          <Badge tone=\"accent\" size=\"sm\" onRemove={noop}>Night shift</Badge>\n        </div>\n      )",
       "file": "src/ui/registry/data.defs.tsx",
-      "line": 344
-    },
-    {
-      "id": "vertical",
-      "title": "Vertical is an orientation, not a component",
-      "module": "platform",
-      "area": "",
-      "kind": "registry",
-      "render": "() => (\n        <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>\n          <Tabs\n            id=\"ex-vertical\"\n            label=\"Settings sections\"\n            orientation=\"vertical\"\n            items={[\n              { id: 'general', label: 'General', icon: <LucideIcon name=\"Settings\" /> },\n              { id: 'security', label: 'Security', icon: <LucideIcon name=\"ShieldCheck\" />, badge: 2 },\n              { id: 'notifications', label: 'Notifications', icon: <LucideIcon name=\"Bell\" /> },\n            ]}\n            value=\"security\"\n            onChange={noop}\n          />\n          <TabPanel tabsId=\"ex-vertical\" tabId=\"security\" value=\"security\">\n            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Two security settings need review.</span>\n          </TabPanel>\n        </div>\n      )",
-      "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 308
+      "line": 441
     },
     {
       "id": "w.floored",
@@ -168841,9 +170877,9 @@
       "module": "platform",
       "area": "",
       "kind": "registry",
-      "render": "() => (\n        <>\n          <Button variant=\"ghost\">Back</Button>\n          <NextActionButton label=\"Continue\" />\n        </>\n      )",
+      "render": "() => (\n        <>\n          <BackActionButton />\n          <NextActionButton label=\"Continue\" />\n        </>\n      )",
       "file": "src/ui/registry/actions.defs.tsx",
-      "line": 276
+      "line": 286
     }
   ],
   "routes": [

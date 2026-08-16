@@ -31,6 +31,16 @@
     --ui-choice-label-fg: var(--ui-color-text-primary);
     --ui-choice-desc-fg: var(--ui-color-text-secondary);
 
+    --ui-radio-card-bg: var(--ui-color-surface-default);
+    --ui-radio-card-border: var(--ui-color-border-default);
+    --ui-radio-card-border-selected: var(--ui-color-selection-border);
+    --ui-radio-card-bg-selected: var(--ui-color-selection-background);
+    --ui-radio-card-radius: var(--radius-md);
+    --ui-radio-card-padding-x: 18px;
+    --ui-radio-card-padding-y: 16px;
+    --ui-radio-card-gap: 14px;
+    --ui-radio-card-media-bg: var(--ui-color-surface-subtle);
+
     --ui-checkbox-size: 28px;
     --ui-checkbox-radius: 8px;
     --ui-checkbox-color: #3b82f6;
@@ -206,6 +216,39 @@
   }
   .ui-choice-input:checked + .ui-choice-box .ui-choice-dot { opacity: 1; transform: scale(1); }
 
+  /* Radio treatment: one neutral ring with a single animated selection dot.
+     No per-option colours and no focus-grey treatment. */
+  .ui-choice--radio .ui-choice-box {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #aaa;
+    background: transparent;
+  }
+  .ui-choice--radio .ui-choice-dot {
+    width: 12px;
+    height: 12px;
+    background: var(--siomac-blue, #1a2c53);
+    transform: translateZ(0) scale(0);
+    transition: transform 200ms ease-in-out;
+  }
+  .ui-choice--radio .ui-choice-input:checked + .ui-choice-box .ui-choice-dot,
+  .ui-choice--radio[data-ui-state~='selected'] .ui-choice-box .ui-choice-dot {
+    opacity: 1;
+    transform: translateZ(0) scale(1);
+  }
+  .ui-choice--radio .ui-choice-input:checked + .ui-choice-box,
+  .ui-choice--radio[data-ui-state~='selected'] .ui-choice-box {
+    background: transparent;
+    border-color: #aaa;
+  }
+  .ui-choice--radio:hover .ui-choice-box,
+  .ui-choice--radio[data-ui-state~='hover'] .ui-choice-box { border-color: #aaa; }
+  .ui-choice--radio .ui-choice-input:focus-visible + .ui-choice-box,
+  .ui-choice--radio[data-ui-state~='focus'] .ui-choice-box {
+    outline: 0;
+    box-shadow: none;
+  }
+
   /* ── Disabled ──────────────────────────────────────────────────────────────*/
   .ui-choice-input:disabled + .ui-choice-box,
   .ui-choice--disabled .ui-choice-box {
@@ -319,5 +362,141 @@
     padding-bottom: 9px;
     margin-bottom: 2px;
     border-bottom: var(--ui-border-width) solid var(--border);
+  }
+
+  /* ── Radio cards ──────────────────────────────────────────────────────────
+     The input remains a real named radio. The card is only its larger label,
+     so browser roving focus, arrow navigation and form submission stay native. */
+  .ui-radio-cards { gap: 12px; }
+  .ui-radio-cards.ui-choice-group--inline {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  }
+  .ui-radio-card {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--ui-radio-card-gap);
+    min-width: 0;
+    padding: var(--ui-radio-card-padding-y) var(--ui-radio-card-padding-x);
+    border: var(--ui-border-width) solid var(--ui-radio-card-border);
+    border-radius: var(--ui-radio-card-radius);
+    background: var(--ui-radio-card-bg);
+    color: var(--ui-choice-label-fg);
+    cursor: pointer;
+    transition:
+      border-color var(--ui-motion-fast) var(--ui-ease-standard),
+      background-color var(--ui-motion-fast) var(--ui-ease-standard),
+      box-shadow var(--ui-motion-fast) var(--ui-ease-standard),
+      transform var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+  .ui-radio-card:hover { border-color: var(--ui-choice-border-hover); }
+  .ui-radio-card:active:not(.ui-radio-card--disabled) { transform: translateY(1px); }
+  .ui-radio-card:has(.ui-radio-card__input:checked) {
+    border-color: var(--ui-radio-card-border-selected);
+    background: var(--ui-radio-card-bg-selected);
+    box-shadow: 0 1px 3px color-mix(in srgb, var(--ui-radio-card-border-selected) 10%, transparent);
+  }
+  .ui-radio-cards--selection-outline .ui-radio-card:has(.ui-radio-card__input:checked) { background: var(--ui-radio-card-bg); }
+  .ui-radio-cards--selection-filled .ui-radio-card:has(.ui-radio-card__input:checked) {
+    background: var(--ui-radio-card-border-selected);
+    color: var(--ui-color-text-inverse);
+  }
+  .ui-radio-cards--selection-filled .ui-radio-card:has(.ui-radio-card__input:checked) .ui-radio-card__title > span,
+  .ui-radio-cards--selection-filled .ui-radio-card:has(.ui-radio-card__input:checked) .ui-radio-card__description {
+    color: color-mix(in srgb, var(--ui-color-text-inverse) 78%, transparent);
+  }
+  .ui-radio-card:has(.ui-radio-card__input:focus-visible) {
+    outline: var(--ui-focus-outline-width) solid var(--ui-focus-outline-color);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 var(--ui-focus-ring-width) var(--ui-focus-ring-color);
+  }
+  .ui-radio-card--disabled { opacity: .56; cursor: var(--ui-disabled-cursor); }
+  .ui-radio-card--error { border-color: var(--ui-validation-error-border); }
+  .ui-radio-card__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .ui-radio-card__indicator {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+    border: var(--ui-border-width) solid var(--ui-choice-border);
+    background: var(--ui-choice-bg);
+    color: var(--ui-choice-mark);
+    transition:
+      background-color var(--ui-motion-fast) var(--ui-ease-standard),
+      border-color var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+  .ui-radio-card__indicator--radio { border-radius: 50%; }
+  .ui-radio-card__indicator--radio > span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0;
+    transform: scale(0);
+    transition: opacity var(--ui-motion-fast), transform var(--ui-motion-fast) var(--ui-ease-emphasized);
+  }
+  .ui-radio-card__indicator--check { border-radius: var(--ui-choice-radius); }
+  .ui-radio-card__indicator--check svg { width: 15px; height: 15px; }
+  .ui-radio-card__indicator--check path {
+    stroke: currentColor;
+    stroke-width: 2.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 24;
+    stroke-dashoffset: 24;
+    transition: stroke-dashoffset 240ms var(--ui-ease-emphasized);
+  }
+  .ui-radio-card:has(.ui-radio-card__input:checked) .ui-radio-card__indicator {
+    border-color: var(--ui-choice-border-checked);
+    background: var(--ui-choice-bg-checked);
+  }
+  .ui-radio-card:has(.ui-radio-card__input:checked) .ui-radio-card__indicator--radio > span {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .ui-radio-card:has(.ui-radio-card__input:checked) .ui-radio-card__indicator--check path {
+    stroke-dashoffset: 0;
+  }
+  .ui-radio-card__media {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+    border: var(--ui-border-width) solid var(--ui-radio-card-border);
+    border-radius: var(--radius-sm);
+    background: var(--ui-radio-card-media-bg);
+  }
+  .ui-radio-cards--people .ui-radio-card__media { border-radius: 50%; }
+  .ui-radio-card__media > img,
+  .ui-radio-card__media .ui-avatar { width: 100%; height: 100%; object-fit: cover; }
+  .ui-radio-card__copy { display: grid; flex: 1 1 auto; gap: 4px; min-width: 0; }
+  .ui-radio-card__title { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; line-height: 1.35; }
+  .ui-radio-card__title strong { font-size: var(--ui-font-size-body); font-weight: 650; }
+  .ui-radio-card__title > span,
+  .ui-radio-card__description { color: var(--ui-choice-desc-fg); }
+  .ui-radio-card__description { font-size: var(--ui-font-size-body-sm); line-height: var(--ui-line-height-base); }
+  .ui-radio-card--indicator-end .ui-radio-card__indicator { margin-left: auto; }
+  .ui-radio-cards--compact { gap: 8px; }
+  .ui-radio-cards--compact .ui-radio-card {
+    --ui-radio-card-padding-x: 13px;
+    --ui-radio-card-padding-y: 10px;
+    --ui-radio-card-gap: 10px;
+  }
+  .ui-radio-cards--compact .ui-radio-card__description { font-size: var(--ui-font-size-caption); }
+  .ui-radio-cards--compact .ui-radio-card__media { width: 34px; height: 34px; }
+
+  @media (max-width: 640px) {
+    .ui-radio-card { --ui-radio-card-padding-x: 14px; --ui-radio-card-padding-y: 14px; }
   }
 }

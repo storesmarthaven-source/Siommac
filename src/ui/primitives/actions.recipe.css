@@ -15,14 +15,25 @@
   :root,
   [data-ui-preview-scope] {
     /* ── Segmented control ──────────────────────────────────────────────────*/
-    --ui-segmented-bg: var(--ui-color-surface-subtle);
+    --ui-segmented-bg: var(--ui-color-surface-default);
     --ui-segmented-border: var(--ui-color-border-default);
-    --ui-segmented-radius: var(--radius-pill);
+    /* Matches the catalogue specimen: a compact bar with a contained selection. */
+    --ui-segmented-radius: 9px;
     --ui-segmented-pad: 2px;
     --ui-segmented-item-fg: var(--ui-color-text-secondary);
     --ui-segmented-item-fg-selected: var(--ui-color-text-inverse);
     --ui-segmented-item-bg-selected: var(--ui-color-selection-border);
     --ui-segmented-item-bg-hover: rgba(27, 45, 84, .07);
+
+    /* ── Button group ──────────────────────────────────────────────────────*/
+    --ui-button-group-bg: var(--ui-color-surface-default);
+    --ui-button-group-fg: var(--ui-color-text-primary);
+    --ui-button-group-border: var(--ui-color-border-default);
+    --ui-button-group-separator: var(--ui-color-border-default);
+    --ui-button-group-hover: var(--ui-color-surface-subtle);
+    --ui-button-group-soft-bg: var(--ui-color-selection-background);
+    --ui-button-group-soft-fg: var(--ui-color-selection-text);
+    --ui-button-group-radius: var(--radius-sm);
 
     /* ── Toggle button ──────────────────────────────────────────────────────*/
     --ui-toggle-bg-on: rgba(27, 45, 84, .10);
@@ -46,6 +57,50 @@
     --ui-menu-item-bg-danger-active: var(--st-danger-tint);
   }
 
+  /* ── ButtonGroup ─────────────────────────────────────────────────────────
+     Independent actions with shared geometry. This intentionally keeps every
+     button tabbable; it is not a single-choice segmented control. */
+  .ui-button-group {
+    display: inline-flex;
+    align-items: stretch;
+    overflow: hidden;
+    border: var(--ui-border-width) solid var(--ui-button-group-border);
+    border-radius: var(--ui-button-group-radius);
+    background: var(--ui-button-group-bg);
+    box-shadow: var(--elev-1);
+  }
+  .ui-button-group .ui-btn {
+    position: relative;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--ui-button-group-fg);
+    box-shadow: none;
+  }
+  .ui-button-group .ui-btn + .ui-btn { border-left: var(--ui-border-width) solid var(--ui-button-group-separator); }
+  .ui-button-group .ui-btn:hover:not(:disabled),
+  .ui-button-group .ui-btn[data-ui-state~='hover'] { background: var(--ui-button-group-hover); }
+  .ui-button-group .ui-btn:focus-visible,
+  .ui-button-group .ui-btn[data-ui-state~='focus'] {
+    z-index: 1;
+    outline: none;
+    box-shadow: inset 0 0 0 var(--ui-focus-outline-width) var(--ui-focus-outline-color);
+  }
+  .ui-button-group .ui-btn--tone-danger { color: var(--ui-color-danger); }
+  .ui-button-group--soft {
+    border-color: transparent;
+    background: var(--ui-button-group-soft-bg);
+    box-shadow: none;
+  }
+  .ui-button-group--soft .ui-btn { color: var(--ui-button-group-soft-fg); }
+  .ui-button-group--soft .ui-btn + .ui-btn { border-color: color-mix(in srgb, var(--ui-button-group-soft-fg) 16%, transparent); }
+  .ui-button-group--ghost { overflow: visible; border-color: transparent; background: transparent; box-shadow: none; gap: 4px; }
+  .ui-button-group--ghost .ui-btn { border-radius: var(--ui-button-group-radius); }
+  .ui-button-group--ghost .ui-btn + .ui-btn { border-left: 0; }
+  .ui-button-group--full { display: flex; width: 100%; }
+  .ui-button-group--full .ui-btn { flex: 1 1 0; }
+
   /* ── SegmentedControl ─────────────────────────────────────────────────────
      A single-choice control that looks like a switch, not a set of buttons.
      Distinct from a row of independent Buttons: those are several SEPARATE actions
@@ -60,13 +115,17 @@
     border-radius: var(--ui-segmented-radius);
     background: var(--ui-segmented-bg);
   }
+  .ui-segmented--filled { border-color: var(--ui-segmented-border); background: var(--ui-segmented-bg); }
+  .ui-segmented--outline { border-color: var(--ui-segmented-border); background: transparent; }
+  .ui-segmented--ghost { padding: 0; border-color: transparent; background: transparent; }
   .ui-segmented-item {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    min-height: calc(var(--ui-control-sm) - 6px);
-    padding: 0 12px;
+    min-width: 62px;
+    min-height: 32px;
+    padding: 0 10px;
     border: none;
     border-radius: var(--ui-segmented-radius);
     background: transparent;
@@ -81,11 +140,25 @@
       color var(--ui-motion-fast) var(--ui-ease-standard);
   }
   .ui-segmented-item > svg { width: var(--ui-icon-sm); height: var(--ui-icon-sm); }
+  .ui-segmented--sm .ui-segmented-item { min-height: 28px; padding-inline: 9px; }
+  .ui-segmented--lg .ui-segmented-item { min-height: var(--ui-control-md); padding-inline: 14px; font-size: var(--ui-font-size-body); }
   .ui-segmented-item:hover:not([aria-checked='true']):not(:disabled),
   .ui-segmented-item[data-ui-state~='hover'] { background: var(--ui-segmented-item-bg-hover); }
   .ui-segmented-item[aria-checked='true'] {
     background: var(--ui-segmented-item-bg-selected);
     color: var(--ui-segmented-item-fg-selected);
+  }
+  .ui-segmented--outline .ui-segmented-item[aria-checked='true'] {
+    background: transparent;
+    box-shadow: inset 0 0 0 var(--ui-border-width) var(--ui-segmented-item-bg-selected);
+    color: var(--ui-segmented-item-bg-selected);
+  }
+  .ui-segmented-item[aria-checked='true'] { border-radius: 6px; }
+  .ui-segmented--ghost .ui-segmented-item[aria-checked='true'] {
+    border-radius: 0;
+    background: transparent;
+    box-shadow: inset 0 -2px 0 var(--ui-segmented-item-bg-selected);
+    color: var(--ui-segmented-item-bg-selected);
   }
   .ui-segmented-item:focus-visible,
   .ui-segmented-item[data-ui-state~='focus'] {
@@ -135,6 +208,9 @@
   .ui-menu-item[data-description='true'] { min-height: 48px; padding-block: 7px; align-items: flex-start; }
   .ui-menu-item[data-description='true'] > svg { margin-top: 1px; }
   .ui-menu-item-copy { display: grid; gap: 1px; min-width: 0; }
+  .ui-menu-control-row { cursor: default; }
+  .ui-menu-control-row .ui-menu-item-copy { flex: 1; }
+  .ui-menu-control-row > .ui-theme-mode-switch { flex: 0 0 auto; }
   .ui-menu-item-description { color: var(--ui-color-text-secondary); font-size: var(--ui-font-size-caption); line-height: var(--ui-line-height-base); }
   .ui-menu-item-shortcut {
     margin-left: auto;

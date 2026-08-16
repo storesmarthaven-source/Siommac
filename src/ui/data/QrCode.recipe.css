@@ -1,0 +1,25 @@
+@layer recipes {
+  :root,
+  [data-ui-preview-scope] {
+    --ui-qr-size: 180px;
+    --ui-qr-foreground: var(--ui-color-text-primary);
+    --ui-qr-background: var(--ui-color-surface-default);
+    --ui-qr-frame: var(--ui-color-action-primary);
+    --ui-qr-glow: color-mix(in srgb, var(--ui-color-action-primary) 14%, transparent);
+  }
+  .ui-qr { position: relative; width: min(var(--ui-qr-size), 100%); aspect-ratio: 1; display: grid; place-items: center; margin: 0; }
+  .ui-qr > svg { width: 86%; height: 86%; display: block; }
+  .ui-qr__background { fill: var(--ui-qr-background); }
+  .ui-qr__modules { fill: var(--ui-qr-foreground); }
+  .ui-qr--framed::after { content: ''; position: absolute; left: 50%; bottom: 7%; width: 76%; height: 26%; border-radius: 50%; background: var(--ui-qr-glow); filter: blur(18px); transform: translateX(-50%); pointer-events: none; }
+  .ui-qr--scanning::after { content: ''; position: absolute; left: 50%; bottom: 7%; width: 76%; height: 26%; border-radius: 50%; background: var(--ui-qr-glow); filter: blur(18px); transform: translateX(-50%); pointer-events: none; }
+  .ui-qr__corners { position: absolute; inset: 2%; z-index: 1; pointer-events: none; }
+  .ui-qr__corners i { position: absolute; width: 18%; height: 18%; border-color: var(--ui-qr-frame); border-style: solid; border-width: 0; }
+  .ui-qr__corners i:nth-child(1) { left: 0; top: 0; border-left-width: 3px; border-top-width: 3px; border-radius: 6px 0 0; }
+  .ui-qr__corners i:nth-child(2) { right: 0; top: 0; border-right-width: 3px; border-top-width: 3px; border-radius: 0 6px 0 0; }
+  .ui-qr__corners i:nth-child(3) { left: 0; bottom: 0; border-left-width: 3px; border-bottom-width: 3px; border-radius: 0 0 0 6px; }
+  .ui-qr__corners i:nth-child(4) { right: 0; bottom: 0; border-right-width: 3px; border-bottom-width: 3px; border-radius: 0 0 6px; }
+  .ui-qr__scan { position: absolute; z-index: 2; left: 8%; right: 8%; top: 18%; height: 1px; background: var(--ui-qr-frame); box-shadow: 0 0 10px var(--ui-qr-frame); animation: ui-qr-scan 2.2s ease-in-out infinite alternate; }
+  @keyframes ui-qr-scan { to { top: 82%; } }
+  @media (prefers-reduced-motion: reduce) { .ui-qr__scan { top: 50%; animation: none; } }
+}

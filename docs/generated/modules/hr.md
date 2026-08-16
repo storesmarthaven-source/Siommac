@@ -2,9 +2,9 @@
 
 # hr Module Map
 
-Source fingerprint: `ae71f01638b7e5b7378aac83`
+Source fingerprint: `dfa9cd3ead99b98830efc082`
 
-Files: 265 | Symbols: 3077 | Widgets: 10 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 37 | DB objects: 196 | E2E suites: 16
+Files: 267 | Symbols: 3089 | Widgets: 13 | Unique mounted endpoints: 275 | Route definitions: 275 mounted + 0 unmounted | API calls: 37 | DB objects: 196 | E2E suites: 16
 
 ## Widgets and Tiles
 
@@ -13,7 +13,10 @@ Files: 265 | Symbols: 3077 | Widgets: 10 | Unique mounted endpoints: 275 | Route
 | `bundle.hr.attendance.ops` | Attendance & Leave Ops | registry | `` | `src/ui/widgets/bundles.ts:116` |
 | `bundle.hr.employees.essentials` | Employee Master Essentials | registry | `` | `src/ui/widgets/bundles.ts:90` |
 | `bundle.hr.onboarding.manager` | Onboarding Manager Pack | registry | `` | `src/ui/widgets/bundles.ts:76` |
-| `employee-name` | Employee record | registry | `() => <FormField label="Employee name" required helpText="As shown on government ID"><TextInput value="Sarah James" onInput={noop} /></FormField>` | `src/ui/registry/forms.defs.tsx:512` |
+| `employee-drawer-sections` | Employee drawer sections | registry | `() => (         <Tabs           id="ex-employee-drawer"           label="Employee profile sections"           class="sds-tabs-use-example"           size="sm"           items={[             { id: 'overview', label: 'Overview', icon: <LucideIcon name="LayoutGrid" /> },             { id: 'documents', label: 'Documents', icon: <LucideIcon name="FileText" />, badge: 3 },             { id: 'activity', label: 'Activity', icon: <LucideIcon name="History" /> },           ]}           value="overview"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:305` |
+| `employee-name` | Employee record | registry | `() => <FormField label="Employee name" required helpText="As shown on government ID"><TextInput value="Sarah James" onInput={noop} /></FormField>` | `src/ui/registry/forms.defs.tsx:576` |
+| `employee-onboarding` | Employee onboarding | registry | `() => <ProgressSteps steps={STEPS} value="documents" label="Employee onboarding progress" variant="icon-with-number" />` | `src/ui/registry/progress-steps.def.tsx:150` |
+| `employee-register-views` | Employee register views | registry | `() => (         <Tabs           id="ex-employee-register"           label="Employee register views"           class="sds-tabs-use-example"           variant="contained"           size="sm"           items={[             { id: 'all', label: 'All' },             { id: 'attention', label: 'Attention', badge: 8 },             { id: 'archived', label: 'Archived' },           ]}           value="attention"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:325` |
 | `hr.employeeMaster.lifecycleActivity` | Workforce Activity | registry | `LifecycleActivity` | `src/ui/widgets/registry.hrEmployeeMaster.tsx:533` |
 | `hr.employees.register` | Employee Register | local | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:855` |
 | `hr.onboarding.case.activeTasks` | Active Tasks | local | `() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <Button variant="primary" size="sm" onClick={openAddTask} iconLeft={<i class="fas fa-plus" />}>Add</Button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:332` |
@@ -509,7 +512,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useOnboardingDeleteHandoffTemplate` | function / hook | `src/api/hr/onboarding.ts:376` | `-` |
 | `useOrgUnits` | function / hook | `src/api/hr/organization.ts:79` | `-` |
 | `useOrgUnit` | function / hook | `src/api/hr/organization.ts:80` | `-` |
-| ... | 144 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 146 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -721,6 +724,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/EmployeeOnboardingSummary.tsx` | 97 |
 | frontend-page | `src/components/sections/HR/EmployeeProfilePage.test.tsx` | 564 |
 | frontend-page | `src/components/sections/HR/EmployeeProfilePage.tsx` | 1694 |
+| frontend-page | `src/components/sections/HR/EmployeeSideDrawerFrame.tsx` | 168 |
 | frontend-page | `src/components/sections/HR/HRDocumentsOverview.tsx` | 728 |
 | frontend-page | `src/components/sections/HR/HRQueryState.tsx` | 54 |
 | frontend-page | `src/components/sections/HR/HRRequestsOverview.tsx` | 417 |
@@ -742,7 +746,8 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/OrgStructureOverview.tsx` | 784 |
 | frontend-page | `src/components/sections/HR/OvertimeOverview.tsx` | 233 |
 | frontend-page | `src/components/sections/HR/ProfileDrawer.test.tsx` | 307 |
-| frontend-page | `src/components/sections/HR/ProfileDrawer.tsx` | 1072 |
+| frontend-page | `src/components/sections/HR/ProfileDrawer.tsx` | 1075 |
+| frontend-page | `src/components/sections/HR/ProfileDrawerTemplate.tsx` | 102 |
 | frontend-page | `src/components/sections/HR/RosterOverview.tsx` | 683 |
 | frontend-page | `src/components/sections/HR/StartOnboardingWizard.tsx` | 974 |
 | frontend-page | `src/components/sections/HR/TransfersOverview.tsx` | 398 |

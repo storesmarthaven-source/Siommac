@@ -13,12 +13,107 @@ import { Badge } from '../primitives/Badge';
 import { Button } from '../primitives/Button';
 import { PersonCell } from '../table/PersonCell';
 import { DataTable, type DataTableColumn } from '../data/DataTable';
+import { QrCode } from '../data/QrCode';
+import { FileTypeIcon, FILE_TYPE_ICON_TYPES, type FileTypeIconVariant, type FileTypeIconTheme } from '../data/FileTypeIcon';
+import { CountryFlag, type CountryFlagShape } from '../data/CountryFlag';
 import { type ComponentDef, type PropValues } from './types';
 import { type DataTableDensity } from '../data/DataTable';
 
 const s = (v: PropValues[string] | undefined, f = ''): string => (typeof v === 'string' ? v : f);
 const b = (v: PropValues[string] | undefined): boolean => v === true;
 const noop = (): void => { /* preview */ };
+
+export const qrCodeDef: ComponentDef = {
+  id: 'qr-code', name: 'QR Code', category: 'data', status: 'stable',
+  thumbnail: 'qr-code',
+  componentPath: 'src/ui/data/QrCode.tsx', importFrom: '@ui',
+  description: 'Create scannable codes for SIOMAC assets, records and links, with plain, framed and scanning presentations.',
+  previewAxis: 'variant',
+  previewSamples: [
+    { value: 'framed', title: 'Framed', props: { variant: 'framed' } },
+    { value: 'scanning', title: 'Scanning', props: { variant: 'scanning' } },
+    { value: 'plain', title: 'Plain', props: { variant: 'plain' } },
+  ],
+  props: {
+    value: { type: 'text', label: 'Encoded value', default: 'https://siomac.app/assets/AST-00482' },
+    errorCorrection: { type: 'select', label: 'Error correction', options: ['L', 'M', 'Q', 'H'], default: 'M' },
+    quietZone: { type: 'number', label: 'Quiet zone', default: 4, min: 0, max: 12, step: 1 },
+    variant: { type: 'select', label: 'Style', options: ['framed', 'scanning', 'plain'], default: 'framed' },
+  },
+  style: [{ label: 'Code', controls: [
+    { name: '--ui-qr-size', label: 'Code size', kind: 'size' },
+    { name: '--ui-qr-foreground', label: 'Modules', kind: 'color' },
+    { name: '--ui-qr-background', label: 'Background', kind: 'color' },
+    { name: '--ui-qr-frame', label: 'Frame', kind: 'color' },
+    { name: '--ui-qr-glow', label: 'Frame glow', kind: 'color-alpha' },
+  ] }],
+  states: ['default'],
+  a11y: { role: 'img', name: 'The required label describes what scanning the code will do.', keyboard: [], focus: 'Not focusable by itself.', notes: ['Provide the same destination as a nearby text link when the QR code is actionable.'] },
+  render: p => <QrCode value={s(p.value, 'https://siomac.app/assets/AST-00482')} quietZone={typeof p.quietZone === 'number' ? p.quietZone : 4} errorCorrection={s(p.errorCorrection, 'M') as 'L' | 'M' | 'Q' | 'H'} variant={s(p.variant, 'framed') as 'plain' | 'framed' | 'scanning'} label="Open asset AST-00482" />,
+  code: p => `<QrCode value="${s(p.value, 'https://siomac.app/assets/AST-00482')}" label="Open asset AST-00482" errorCorrection="${s(p.errorCorrection, 'M')}" variant="${s(p.variant, 'framed')}" />`,
+};
+
+export const fileTypeIconDef: ComponentDef = {
+  id: 'file-type-icon', name: 'File Type Icon', category: 'data', status: 'stable',
+  thumbnail: 'file-icon',
+  componentPath: 'src/ui/data/FileTypeIcon.tsx', importFrom: '@ui',
+  description: 'Official Untitled UI file artwork for documents, media, archives and source files, exposed through one typed SIOMAC component.',
+  previewAxis: 'variant',
+  previewSamples: [
+    { value: 'default', title: 'Default', props: { variant: 'default' }, icon: 'FileImage' },
+    { value: 'gray', title: 'Gray', props: { variant: 'gray' }, icon: 'File' },
+    { value: 'solid', title: 'Solid', props: { variant: 'solid' }, icon: 'FileBadge' },
+  ],
+  props: {
+    type: { type: 'select', label: 'File type', options: FILE_TYPE_ICON_TYPES, default: 'pdf', help: 'Choose an extension or a generic file family.' },
+    variant: { type: 'segmented', label: 'Treatment', options: ['default', 'gray', 'solid'], default: 'default' },
+    theme: { type: 'segmented', label: 'Mode', options: ['light', 'dark'], default: 'light' },
+    size: { type: 'number', label: 'Icon size', default: 64, min: 20, max: 160, step: 4 },
+  },
+  states: ['default'],
+  a11y: {
+    role: 'img when labelled; decorative otherwise',
+    name: 'The optional label describes the file type when the adjacent filename does not.',
+    keyboard: [],
+    focus: 'File type icons are not interactive and never enter the tab order.',
+    notes: ['When shown beside a visible filename, leave label unset so assistive technology does not announce the same information twice.'],
+  },
+  render: p => <FileTypeIcon
+    type={s(p.type, 'pdf')}
+    variant={s(p.variant, 'default') as FileTypeIconVariant}
+    theme={s(p.theme, 'light') as FileTypeIconTheme}
+    size={typeof p.size === 'number' ? p.size : 64}
+  />,
+  code: p => `<FileTypeIcon type="${s(p.type, 'pdf')}" variant="${s(p.variant, 'default')}" theme="${s(p.theme, 'light')}" size={${typeof p.size === 'number' ? p.size : 64}} />`,
+};
+
+export const countryFlagDef: ComponentDef = {
+  id: 'country-flag', name: 'Country Flag', category: 'data', status: 'stable',
+  thumbnail: 'flag-icons',
+  componentPath: 'src/ui/data/CountryFlag.tsx', importFrom: '@ui',
+  description: 'Locally bundled country flags for locale, nationality, telephone and address interfaces, with rectangle, square and circle treatments.',
+  previewAxis: 'shape',
+  previewSamples: [
+    { value: 'rectangle', title: 'Rectangle', props: { shape: 'rectangle' } },
+    { value: 'square', title: 'Square', props: { shape: 'square' } },
+    { value: 'circle', title: 'Circle', props: { shape: 'circle' } },
+  ],
+  props: {
+    code: { type: 'country', label: 'Country', default: 'TT', help: 'Search by country name or ISO code.' },
+    shape: { type: 'segmented', label: 'Shape', options: ['rectangle', 'square', 'circle'], default: 'rectangle' },
+    size: { type: 'number', label: 'Flag size', default: 80, min: 16, max: 160, step: 4 },
+  },
+  states: ['default'],
+  a11y: {
+    role: 'img when labelled; decorative otherwise',
+    name: 'Use a label only when the country name is not already visible beside the flag.',
+    keyboard: [],
+    focus: 'Flags are not interactive and never enter the tab order.',
+    notes: ['Never use a flag as the only language selector label; countries and languages are not interchangeable.'],
+  },
+  render: p => <CountryFlag code={s(p.code, 'TT')} shape={s(p.shape, 'rectangle') as CountryFlagShape} size={typeof p.size === 'number' ? p.size : 80} label={`Country flag ${s(p.code, 'TT')}`} />,
+  code: p => `<CountryFlag code="${s(p.code, 'TT')}" shape="${s(p.shape, 'rectangle')}" size={${typeof p.size === 'number' ? p.size : 80}} />`,
+};
 
 /* ── Demo data. Realistic, because "Option 1 / Option 2" hides every layout
       problem that real names and job titles cause. ─────────────────────────*/
@@ -86,6 +181,7 @@ const ROW_ACTIONS = (row: DemoEmployee): { id: string; label: string; icon: prea
 
 export const dataTableDef: ComponentDef = {
   id: 'data-table',
+  thumbnail: 'table',
   name: 'DataTable',
   category: 'data',
   description: 'ONE table engine. Search, filters, sorting, pagination, rows-per-page, selection, bulk actions, the column chooser and row actions are optional capabilities of this component — not separate components.',
@@ -250,6 +346,7 @@ ${b(p.density) ? '' : ''}${s(p.density) !== 'standard' ? `  density="${s(p.densi
 
 export const badgeDef: ComponentDef = {
   id: 'badge',
+  thumbnail: 'badge',
   name: 'Badge',
   previewAxis: 'variant',
   category: 'status',
@@ -357,4 +454,4 @@ export const badgeDef: ComponentDef = {
   ],
 };
 
-export const DATA_DEFS: readonly ComponentDef[] = [dataTableDef, badgeDef];
+export const DATA_DEFS: readonly ComponentDef[] = [dataTableDef, badgeDef, qrCodeDef, fileTypeIconDef, countryFlagDef];
