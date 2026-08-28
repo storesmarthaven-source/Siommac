@@ -857,7 +857,20 @@
 .sds-thumb-dialog__columns main span:nth-child(4) { width: 76%; }
 .sds-thumb-dialog--sidebar-left > footer { align-items: center; margin: 0; padding: 0 9px; border-top: 1px solid #e2e3e6; background: linear-gradient(180deg, #fff 0%, #f7f7f8 100%); }
 .sds-thumb-dialog--sidebar-left > footer > * { padding: 4px 8px; font-size: 7px; line-height: 1; }
-.sds-thumb-drawer { width: 236px; height: 128px; display: grid; grid-template-columns: 42% 58%; overflow: hidden; border-radius: 9px; background: #f1f2f4; box-shadow: 0 5px 14px rgb(16 24 40 / .1); }.sds-thumb-drawer aside { background: color-mix(in srgb, var(--thumb-accent) 7%, #f4f4f4); }.sds-thumb-drawer > div { position: relative; display: grid; align-content: start; gap: 9px; padding: 16px 13px; background: var(--thumb-surface); }.sds-thumb-drawer > div span { color: var(--thumb-muted); font-size: 9px; }.sds-thumb-drawer > div b { width: fit-content; padding: 3px 6px; border-radius: 999px; background: #e9f7ef; color: #24744b; font-size: 8px; }
+.sds-thumb-drawer { width: 236px; height: 136px; display: grid; grid-template-rows: 33px 22px minmax(0, 1fr) 27px; overflow: hidden; border: 1px solid var(--thumb-border); border-radius: 9px; background: var(--thumb-surface); box-shadow: 0 6px 16px rgb(16 24 40 / .1); }
+.sds-thumb-drawer header { display: flex; align-items: center; gap: 8px; padding: 0 9px; border-bottom: 1px solid var(--thumb-border); }
+.sds-thumb-drawer header > span { display: grid; gap: 1px; }.sds-thumb-drawer header strong { color: var(--thumb-text); font-size: 8px; }.sds-thumb-drawer header small { color: var(--thumb-muted); font-size: 6px; }
+.sds-thumb-drawer header > b { width: 17px; height: 17px; display: grid; place-items: center; margin-left: auto; border: 1px solid var(--thumb-border); border-radius: 4px; color: var(--thumb-muted); font-size: 9px; }
+.sds-thumb-drawer nav { display: flex; align-items: stretch; gap: 13px; padding: 0 9px; border-bottom: 1px solid var(--thumb-border); color: var(--thumb-muted); font-size: 6px; }
+.sds-thumb-drawer nav > * { display: flex; align-items: center; }.sds-thumb-drawer nav > b { border-bottom: 2px solid var(--thumb-accent); color: var(--thumb-text); }
+.sds-thumb-drawer main { display: grid; align-content: center; padding: 7px 9px; }
+.sds-thumb-drawer main section { display: grid; grid-template-columns: 1fr 1fr; align-items: center; padding: 3px 5px; border-bottom: 1px solid color-mix(in srgb, var(--thumb-border) 72%, transparent); font-size: 6px; }
+.sds-thumb-drawer main section:last-child { border: 0; }.sds-thumb-drawer main span { color: var(--thumb-muted); }.sds-thumb-drawer main b { color: var(--thumb-text); }.sds-thumb-drawer main em { width: fit-content; padding: 2px 5px; border-radius: 999px; background: #e9f7ef; color: #24744b; font-size: 6px; font-style: normal; }
+.sds-thumb-drawer footer { display: flex; align-items: center; justify-content: flex-end; gap: 5px; padding: 0 8px; border-top: 1px solid var(--thumb-border); background: color-mix(in srgb, var(--thumb-border) 16%, var(--thumb-surface)); font-size: 6px; }
+.sds-thumb-drawer footer > * { padding: 3px 6px; border: 1px solid var(--thumb-border); border-radius: 4px; background: var(--thumb-surface); }.sds-thumb-drawer footer > b { border-color: var(--thumb-accent); background: var(--thumb-accent); color: var(--thumb-accent-fg); }
+.sds-standard-drawer-template { display: grid; gap: 14px; }
+.sds-standard-drawer-template__body { min-width: 0; }
+.sds-standard-drawer-template__note { margin: 0; color: var(--ui-color-text-secondary, var(--text-secondary)); font-size: .82rem; line-height: 1.6; }
 .sds-thumb-employee-drawer { width: 250px; height: 142px; display: grid; grid-template-rows: 51px 20px 1fr 24px; overflow: hidden; border: 1px solid #dfe3e8; border-radius: 9px; background: #f5f7fa; box-shadow: 0 6px 16px rgb(16 24 40 / .1); }
 .sds-thumb-employee-drawer > section { display: flex; padding: 7px 10px; align-items: center; gap: 8px; background: #1b2d54; color: #fff; }
 .sds-thumb-employee-drawer > section img { width: 34px; height: 34px; border: 2px solid #fff; border-radius: 50%; object-fit: cover; }

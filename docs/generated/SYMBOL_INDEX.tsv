@@ -13580,17 +13580,19 @@ noop	function	platform	false		src/ui/registry/page-header.def.tsx	8
 previewActions	variable	platform	false		src/ui/registry/page-header.def.tsx	10	
 pageHeaderDef	object	platform	true		src/ui/registry/page-header.def.tsx	19	
 pageActionBarDef	object	platform	true		src/ui/registry/page-header.def.tsx	71	
-s	function	platform	false		src/ui/registry/people-drawer.defs.tsx	16	
-b	function	platform	false		src/ui/registry/people-drawer.defs.tsx	17	
-n	function	platform	false		src/ui/registry/people-drawer.defs.tsx	18	
-PEOPLE	array	platform	false		src/ui/registry/people-drawer.defs.tsx	20	
-DrawerPreview	function	platform	false	component	src/ui/registry/people-drawer.defs.tsx	28	
-EmployeeSideDrawerPreview	function	platform	false	component	src/ui/registry/people-drawer.defs.tsx	56	
-avatarDef	object	platform	true		src/ui/registry/people-drawer.defs.tsx	73	
-avatarGroupDef	object	platform	true		src/ui/registry/people-drawer.defs.tsx	102	
-drawerDef	object	platform	true		src/ui/registry/people-drawer.defs.tsx	125	
-employeeSideDrawerDef	object	platform	true		src/ui/registry/people-drawer.defs.tsx	157	
-PEOPLE_DRAWER_DEFS	array	platform	true		src/ui/registry/people-drawer.defs.tsx	184	
+s	function	platform	false		src/ui/registry/people-drawer.defs.tsx	18	
+b	function	platform	false		src/ui/registry/people-drawer.defs.tsx	19	
+n	function	platform	false		src/ui/registry/people-drawer.defs.tsx	20	
+PEOPLE	array	platform	false		src/ui/registry/people-drawer.defs.tsx	22	
+STANDARD_DRAWER_TABS	array	platform	false		src/ui/registry/people-drawer.defs.tsx	30	
+StandardDrawerPanel	function	platform	false	component	src/ui/registry/people-drawer.defs.tsx	36	
+DrawerPreview	function	platform	false	component	src/ui/registry/people-drawer.defs.tsx	69	
+EmployeeSideDrawerPreview	function	platform	false	component	src/ui/registry/people-drawer.defs.tsx	111	
+avatarDef	object	platform	true		src/ui/registry/people-drawer.defs.tsx	128	
+avatarGroupDef	object	platform	true		src/ui/registry/people-drawer.defs.tsx	157	
+drawerDef	object	platform	true		src/ui/registry/people-drawer.defs.tsx	180	
+employeeSideDrawerDef	object	platform	true		src/ui/registry/people-drawer.defs.tsx	218	
+PEOPLE_DRAWER_DEFS	array	platform	true		src/ui/registry/people-drawer.defs.tsx	245	
 Planned	interface	platform	false		src/ui/registry/planned.ts	33	
 PLANNED	array	platform	false		src/ui/registry/planned.ts	44	
 PLANNED_DEFS	variable	platform	true		src/ui/registry/planned.ts	123	

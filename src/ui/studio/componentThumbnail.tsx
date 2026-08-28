@@ -153,7 +153,12 @@ export function ComponentThumbnail({ kind }: { kind: ThumbnailKind }): VNode {
         <footer><i>Cancel</i><b>Save</b></footer>
       </div>}
       {kind === 'popover' && <div class="sds-thumb-dialog"><strong>Confirm action</strong><span>This change will be recorded.</span><footer><i>Cancel</i><b>Confirm</b></footer></div>}
-      {kind === 'drawer' && <div class="sds-thumb-drawer"><aside /><div><strong>Employee details</strong><span>Sarah James</span><span>Safety Officer</span><b>Active</b></div></div>}
+      {kind === 'drawer' && <div class="sds-thumb-drawer">
+        <header><span><strong>Record details</strong><small>REC-001 · Standard template</small></span><b>×</b></header>
+        <nav><b>Overview</b><span>Activity</span><span>Notes</span></nav>
+        <main><section><span>Owner</span><b>Sarah James</b></section><section><span>Department</span><b>Operations</b></section><section><span>Status</span><em>Active</em></section></main>
+        <footer><span>Cancel</span><b>Save changes</b></footer>
+      </div>}
       {kind === 'employee-drawer' && <div class="sds-thumb-employee-drawer">
         <section><img src={avatarSarah} alt="" /><div><strong>Sarah Page</strong><small>EMP-0097 · Active</small><span>HR Business Partner</span></div><em>Permanent</em></section>
         <nav><b>Overview</b></nav>
