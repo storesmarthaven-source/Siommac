@@ -13805,28 +13805,33 @@ StudioProps	interface	platform	true		src/ui/studio/Studio.tsx	50
 SectionId	type	platform	false		src/ui/studio/Studio.tsx	59	
 NavItem	interface	platform	false		src/ui/studio/Studio.tsx	65	
 NavGroup	interface	platform	false		src/ui/studio/Studio.tsx	66	
-NAV	array	platform	false		src/ui/studio/Studio.tsx	68	
-NavComponentRow	type	platform	false		src/ui/studio/Studio.tsx	96	
-COMPONENT_ROWS	variable	platform	false	component	src/ui/studio/Studio.tsx	100	
-COMPONENT_ORDER	variable	platform	false	component	src/ui/studio/Studio.tsx	110	
-APP_SCENE	object	platform	false		src/ui/studio/Studio.tsx	115	
-SECTION_COPY	object	platform	false		src/ui/studio/Studio.tsx	120	
-PaletteItem	interface	platform	false		src/ui/studio/Studio.tsx	135	
-BRAND_PALETTE	array	platform	false		src/ui/studio/Studio.tsx	141	
-SEMANTIC_ROLES	array	platform	false		src/ui/studio/Studio.tsx	150	
-resolvedToken	function	platform	false		src/ui/studio/Studio.tsx	171	
-PaletteBoard	function	platform	false	component	src/ui/studio/Studio.tsx	176	
-SemanticBoard	function	platform	false	component	src/ui/studio/Studio.tsx	199	
-builtNodes	function	platform	false		src/ui/studio/Studio.tsx	223	
-_RetiredCatalogue	function	platform	false		src/ui/studio/Studio.tsx	236	
-variantCount	function	platform	false		src/ui/studio/Studio.tsx	296	
-ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	302	
-FamilyCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	319	
-CatalogueNodeCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	326	
-Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	332	
-Studio	function	platform	true	component	src/ui/studio/Studio.tsx	352	
-openComponents	function	platform	false		src/ui/studio/Studio.tsx	386	Studio
-openGroup	function	platform	false		src/ui/studio/Studio.tsx	387	Studio
+NAV_GROUP_ICONS	object	platform	false		src/ui/studio/Studio.tsx	68	
+NAV	array	platform	false		src/ui/studio/Studio.tsx	75	
+NavComponentRow	type	platform	false		src/ui/studio/Studio.tsx	103	
+COMPONENT_NAV_GROUPS	variable	platform	false	component	src/ui/studio/Studio.tsx	107	
+COMPONENT_ROWS	variable	platform	false	component	src/ui/studio/Studio.tsx	121	
+COMPONENT_ORDER	variable	platform	false	component	src/ui/studio/Studio.tsx	123	
+StudioSearchResult	type	platform	false		src/ui/studio/Studio.tsx	127	
+STUDIO_SEARCH_RESULTS	array	platform	false		src/ui/studio/Studio.tsx	131	
+APP_SCENE	object	platform	false		src/ui/studio/Studio.tsx	160	
+SECTION_COPY	object	platform	false		src/ui/studio/Studio.tsx	165	
+PaletteItem	interface	platform	false		src/ui/studio/Studio.tsx	180	
+BRAND_PALETTE	array	platform	false		src/ui/studio/Studio.tsx	186	
+SEMANTIC_ROLES	array	platform	false		src/ui/studio/Studio.tsx	195	
+resolvedToken	function	platform	false		src/ui/studio/Studio.tsx	216	
+PaletteBoard	function	platform	false	component	src/ui/studio/Studio.tsx	221	
+SemanticBoard	function	platform	false	component	src/ui/studio/Studio.tsx	244	
+builtNodes	function	platform	false		src/ui/studio/Studio.tsx	268	
+_RetiredCatalogue	function	platform	false		src/ui/studio/Studio.tsx	281	
+variantCount	function	platform	false		src/ui/studio/Studio.tsx	341	
+ComponentCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	347	
+FamilyCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	364	
+CatalogueNodeCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	371	
+Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	377	
+Studio	function	platform	true	component	src/ui/studio/Studio.tsx	397	
+openComponents	function	platform	false		src/ui/studio/Studio.tsx	439	Studio
+openSearchResult	function	platform	false		src/ui/studio/Studio.tsx	440	Studio
+openGroup	function	platform	false		src/ui/studio/Studio.tsx	453	Studio
 StudioInspectorProps	interface	platform	false		src/ui/studio/StudioInspector.tsx	3	
 StudioInspector	function	platform	true	component	src/ui/studio/StudioInspector.tsx	20	
 StudioInspectorBody	function	platform	true	component	src/ui/studio/StudioInspector.tsx	41	

@@ -65,6 +65,13 @@ type SectionId =
 interface NavItem { id: SectionId; label: string; icon: LucideName }
 interface NavGroup { label: string; items: NavItem[] }
 
+const NAV_GROUP_ICONS: Record<string, LucideName> = {
+  Brand: 'Sparkles',
+  Foundations: 'Ruler',
+  Components: 'Boxes',
+  Application: 'PanelsTopLeft',
+};
+
 const NAV: NavGroup[] = [
   { label: 'Brand', items: [
     { id: 'brand-overview', label: 'Brand Overview',  icon: 'Sparkles' },
@@ -97,19 +104,57 @@ type NavComponentRow =
   | { kind: 'one'; def: ComponentDef }
   | { kind: 'family'; family: ComponentFamily; children: ComponentDef[] };
 
-const COMPONENT_ROWS: NavComponentRow[] = componentsByCategory()
+const COMPONENT_NAV_GROUPS = componentsByCategory()
   .filter(g => g.category !== 'patterns')
-  .flatMap(g => g.nodes.flatMap((node): NavComponentRow[] => {
-    if (node.kind === 'component') {
-      return isBuilt(node.def) ? [{ kind: 'one', def: node.def }] : [];
-    }
-    const children = node.members.filter(isBuilt);
-    return children.length > 0 ? [{ kind: 'family', family: node.family, children }] : [];
-  }));
+  .map(group => ({
+    ...group,
+    rows: group.nodes.flatMap((node): NavComponentRow[] => {
+      if (node.kind === 'component') {
+        return isBuilt(node.def) ? [{ kind: 'one', def: node.def }] : [];
+      }
+      const children = node.members.filter(isBuilt);
+      return children.length > 0 ? [{ kind: 'family', family: node.family, children }] : [];
+    }),
+  }))
+  .filter(group => group.rows.length > 0);
+
+const COMPONENT_ROWS: NavComponentRow[] = COMPONENT_NAV_GROUPS.flatMap(group => group.rows);
 
 const COMPONENT_ORDER: ComponentDef[] = COMPONENT_ROWS.flatMap(row =>
   row.kind === 'family' ? row.children : [row.def],
 );
+
+type StudioSearchResult =
+  | { kind: 'section'; id: SectionId; label: string; group: string; icon: LucideName; searchText: string }
+  | { kind: 'component'; id: string; label: string; group: string; icon: LucideName; searchText: string };
+
+const STUDIO_SEARCH_RESULTS: StudioSearchResult[] = [
+  ...NAV.flatMap(group => group.items.map(item => ({
+    kind: 'section' as const,
+    id: item.id,
+    label: item.label,
+    group: group.label,
+    icon: item.icon,
+    searchText: `${group.label} ${item.label}`.toLowerCase(),
+  }))),
+  ...COMPONENT_NAV_GROUPS.flatMap(group => group.rows.map((row): StudioSearchResult => row.kind === 'family'
+    ? {
+        kind: 'component' as const,
+        id: row.family.id,
+        label: row.family.name,
+        group: group.label,
+        icon: 'Boxes',
+        searchText: `${group.label} ${row.family.name} ${row.family.description} ${row.children.map(child => child.name).join(' ')}`.toLowerCase(),
+      }
+    : {
+        kind: 'component' as const,
+        id: row.def.id,
+        label: row.def.name,
+        group: group.label,
+        icon: 'Component',
+        searchText: `${group.label} ${row.def.name} ${row.def.description}`.toLowerCase(),
+      })),
+];
 
 /** Which scene each Application nav item opens on. */
 const APP_SCENE: Partial<Record<SectionId, Scene>> = {
@@ -354,6 +399,10 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
   const [active, setActive] = useState<SectionId>('components');
   const [openId, setOpenId] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(COMPONENT_NAV_GROUPS.map((group, index) => [group.category, index !== 0])),
+  );
+  const [navQuery, setNavQuery] = useState('');
   const [tokenSectionId, setTokenSectionId] = useState<FoundationSectionId>('colours');
   const [tokenGroupId, setTokenGroupId] = useState<string | null>(null);
   const draft = useGalleryDraft();
@@ -383,7 +432,24 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
   const tokenSection = FOUNDATION_SECTIONS.find(section => section.id === tokenSectionId) ?? FOUNDATION_SECTIONS[0]!;
   const tokenGroups = TOKEN_GROUPS.filter(tokenSection.includes);
   const tokenGroup = tokenGroupId ? tokenGroups.find(group => group.id === tokenGroupId) : undefined;
+  const normalizedNavQuery = navQuery.trim().toLowerCase();
+  const navSearchResults = normalizedNavQuery
+    ? STUDIO_SEARCH_RESULTS.filter(result => result.searchText.includes(normalizedNavQuery))
+    : [];
   const openComponents = (): void => { setActive('components'); setOpenId(null); };
+  const openSearchResult = (result: StudioSearchResult): void => {
+    if (result.kind === 'component') {
+      setActive('components');
+      setOpenId(result.id);
+      setCollapsed(current => ({ ...current, Components: false }));
+    } else {
+      setActive(result.id);
+      setOpenId(null);
+      const parent = NAV.find(group => group.items.some(item => item.id === result.id));
+      if (parent) setCollapsed(current => ({ ...current, [parent.label]: false }));
+    }
+    setNavQuery('');
+  };
   const openGroup = (): void => {
     if (groupOf === 'Components') return openComponents();
     const first = NAV.find(group => group.label === groupOf)?.items[0];
@@ -406,15 +472,58 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
     if (typeof main?.scrollTo === 'function') main.scrollTo({ top: 0, behavior: 'auto' });
   }, [active, openId, tokenSectionId, tokenGroupId]);
 
+  /* Deep links and search results must reveal the selected component's category.
+     The rest stay compact, so the rail remains scannable even as the registry grows. */
+  useEffect(() => {
+    if (!openId) return;
+    const category = findFamily(openId)?.category ?? findComponent(openId)?.category;
+    if (!category) return;
+    setCollapsed(current => current.Components === false
+      ? current
+      : { ...current, Components: false });
+    setCollapsedCategories(current => current[category] === false
+      ? current
+      : { ...current, [category]: false });
+  }, [openId]);
+
   return (
     <div class="sds">
       <aside class="sds-nav">
         <div class="sds-nav__brand">
-          <span class="sds-nav__mark">SIOMAC</span>
-          <span class="sds-nav__sub">Design System</span>
+          <img class="sds-nav__logo" src={logoUrl?.trim() ? logoUrl : '/assets/images/logo.png'} alt="SIOMAC" />
+          <span class="sds-nav__sub">UI Kit</span>
         </div>
 
-        {active === 'foundations' ? (
+        <div class="sds-nav__search">
+          <LucideIcon name="Search" size={16} />
+          <input type="search" aria-label="Search UI Kit" placeholder="Search components"
+            value={navQuery} onInput={event => setNavQuery((event.target as HTMLInputElement).value)} />
+          {navQuery && <button type="button" aria-label="Clear UI Kit search" onClick={() => setNavQuery('')}>
+            <LucideIcon name="X" size={14} />
+          </button>}
+        </div>
+
+        {normalizedNavQuery ? (
+          <nav class="sds-nav__results" aria-label="UI Kit search results">
+            <header>
+              <span>Search results</span>
+              <em>{navSearchResults.length}</em>
+            </header>
+            {navSearchResults.length > 0 ? <ul>
+              {navSearchResults.map(result => <li key={`${result.kind}-${result.id}`}>
+                <button type="button" onClick={() => openSearchResult(result)}>
+                  <LucideIcon name={result.icon} size={16} />
+                  <span><strong>{result.label}</strong><small>{result.group}</small></span>
+                  <LucideIcon name="ArrowRight" size={14} />
+                </button>
+              </li>)}
+            </ul> : <div class="sds-nav__empty">
+              <LucideIcon name="SearchX" size={20} />
+              <strong>No matches</strong>
+              <span>Try a component, family or section name.</span>
+            </div>}
+          </nav>
+        ) : active === 'foundations' ? (
           <nav class="sds-token-nav" aria-label="Token modules">
             <button type="button" class="sds-token-nav__back" onClick={openComponents}>
               <LucideIcon name="ArrowLeft" size={15} /> Back to Studio
@@ -450,15 +559,13 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
               <button type="button" class="sds-nav__gh"
                 aria-expanded={!collapsed[group.label]}
                 onClick={() => setCollapsed(current => ({ ...current, [group.label]: !current[group.label] }))}>
-                {group.label}
-                <LucideIcon name={collapsed[group.label] ? 'ChevronDown' : 'ChevronUp'} size={14} />
+                <span><LucideIcon name={NAV_GROUP_ICONS[group.label] ?? 'Folder'} size={15} />{group.label}</span>
+                <em>{group.label === 'Components'
+                  ? COMPONENT_NAV_GROUPS.reduce((total, category) => total + category.rows.length, 0)
+                  : group.items.length}</em>
+                <LucideIcon name={collapsed[group.label] ? 'ChevronRight' : 'ChevronDown'} size={14} />
               </button>
               {!collapsed[group.label] && <ul>
-                {/* Every built component gets its OWN row, as the reference does
-                    — one list of everything was a catalogue, not navigation.
-                    Read from the registry, so a new component appears here by
-                    existing. A family collapses to one row with its members
-                    nested, which is the only grouping in this rail. */}
                 {group.items.filter(item => !(group.label === 'Components' && item.id === 'components')).map(item => (
                   <li key={item.id}>
                     <button type="button"
@@ -470,22 +577,33 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
                     </button>
                   </li>
                 ))}
-                {group.label === 'Components' && COMPONENT_ROWS.flatMap(row => row.kind === 'family'
-                  ? row.children.map(def => <li key={def.id}>
-                      <button type="button" class={`sds-nav__item sds-nav__item--sub${openId === def.id ? ' is-active' : ''}`}
-                        aria-current={openId === def.id ? 'page' : undefined}
-                        onClick={() => { setActive('components'); setOpenId(def.id); }}>
-                        {def.name}
-                      </button>
-                    </li>)
-                  : <li key={row.def.id}>
-                      <button type="button" class={`sds-nav__item sds-nav__item--sub${openId === row.def.id ? ' is-active' : ''}`}
-                        aria-current={openId === row.def.id ? 'page' : undefined}
-                        onClick={() => { setActive('components'); setOpenId(row.def.id); }}>
-                        {row.def.name}
-                      </button>
-                    </li>
-                )}
+                {group.label === 'Components' && COMPONENT_NAV_GROUPS.map(category => <li class="sds-nav__category" key={category.category}>
+                  <button type="button" class="sds-nav__category-head"
+                    aria-expanded={!collapsedCategories[category.category]}
+                    onClick={() => setCollapsedCategories(current => ({
+                      ...current,
+                      [category.category]: !current[category.category],
+                    }))}>
+                    <span>{category.label}</span><em>{category.rows.length}</em>
+                    <LucideIcon name={collapsedCategories[category.category] ? 'ChevronRight' : 'ChevronDown'} size={13} />
+                  </button>
+                  {!collapsedCategories[category.category] && <ul class="sds-nav__category-items">
+                    {category.rows.map(row => {
+                      const id = row.kind === 'family' ? row.family.id : row.def.id;
+                      const label = row.kind === 'family' ? row.family.name : row.def.name;
+                      const selected = openId === id || (row.kind === 'family' && row.children.some(child => child.id === openId));
+                      return <li key={id}>
+                        <button type="button" class={`sds-nav__item sds-nav__item--sub${selected ? ' is-active' : ''}`}
+                          aria-current={selected ? 'page' : undefined}
+                          onClick={() => { setActive('components'); setOpenId(id); }}>
+                          <LucideIcon name={row.kind === 'family' ? 'Boxes' : 'Component'} size={15} />
+                          <span>{label}</span>
+                          {row.kind === 'family' && <em>{row.children.length}</em>}
+                        </button>
+                      </li>;
+                    })}
+                  </ul>}
+                </li>)}
               </ul>
               }
               </nav>
