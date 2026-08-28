@@ -179,6 +179,103 @@ export function sanitizeEmployeeRegisterViews(value: unknown): EmployeeRegisterV
   return views;
 }
 
+// ── Onboarding work queue: saved views ─────────────────────────────────────
+
+export const ONBOARDING_WORK_QUEUE_VIEWS_PREFERENCE_KEY = 'hr.onboarding.work-queue.views';
+export const ONBOARDING_WORK_QUEUE_VIEWS_PREFERENCE_VERSION = 1;
+export const ONBOARDING_WORK_QUEUE_PAGE_SIZES = [25, 50, 100] as const;
+export const ONBOARDING_WORK_QUEUE_VIEW_LIMITS = {
+  maxViews: 20,
+  maxIdLength: 80,
+  maxNameLength: 48,
+  maxQueryLength: 200,
+  maxFilterValues: 50,
+  maxFilterValueLength: 120,
+} as const;
+
+const ONBOARDING_WORK_QUEUE_SCOPES = ['my', 'team', 'all'] as const;
+const ONBOARDING_WORK_QUEUE_SOURCES = ['task', 'handoff', 'blocker', 'evidence'] as const;
+const ONBOARDING_WORK_QUEUE_LIFECYCLES = ['open', 'in_progress', 'blocked', 'done', 'cancelled'] as const;
+const ONBOARDING_WORK_QUEUE_DUE_STATES = ['all', 'overdue', 'due_today', 'due_this_week', 'unscheduled'] as const;
+const ONBOARDING_WORK_QUEUE_SORT_FIELDS = [
+  'due_at', 'title', 'employee_name', 'case_no', 'source_type', 'status', 'created_at',
+] as const;
+
+export interface OnboardingWorkQueueView {
+  id: string;
+  name: string;
+  scope: typeof ONBOARDING_WORK_QUEUE_SCOPES[number];
+  filters: {
+    query: string;
+    sourceTypes: typeof ONBOARDING_WORK_QUEUE_SOURCES[number][];
+    lifecycles: typeof ONBOARDING_WORK_QUEUE_LIFECYCLES[number][];
+    dueState: typeof ONBOARDING_WORK_QUEUE_DUE_STATES[number];
+    departmentIds: string[];
+    queues: string[];
+    accountableIds: string[];
+    unassigned: boolean;
+  };
+  sortBy: typeof ONBOARDING_WORK_QUEUE_SORT_FIELDS[number];
+  sortDir: 'asc' | 'desc';
+  pageSize: number;
+}
+
+function enumValues<T extends string>(value: unknown, allowed: readonly T[]): T[] {
+  if (!Array.isArray(value)) return [];
+  const valid = new Set<string>(allowed);
+  return Array.from(new Set(value.filter((item): item is T => typeof item === 'string' && valid.has(item))))
+    .slice(0, ONBOARDING_WORK_QUEUE_VIEW_LIMITS.maxFilterValues);
+}
+
+function boundedStrings(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return Array.from(new Set(value.filter((item): item is string =>
+    typeof item === 'string' && item.length <= ONBOARDING_WORK_QUEUE_VIEW_LIMITS.maxFilterValueLength,
+  ))).slice(0, ONBOARDING_WORK_QUEUE_VIEW_LIMITS.maxFilterValues);
+}
+
+export function sanitizeOnboardingWorkQueueViews(value: unknown): OnboardingWorkQueueView[] {
+  if (!Array.isArray(value)) return [];
+  const scopes = new Set<string>(ONBOARDING_WORK_QUEUE_SCOPES);
+  const dueStates = new Set<string>(ONBOARDING_WORK_QUEUE_DUE_STATES);
+  const sortFields = new Set<string>(ONBOARDING_WORK_QUEUE_SORT_FIELDS);
+  const pageSizes = new Set<number>(ONBOARDING_WORK_QUEUE_PAGE_SIZES);
+  const seen = new Set<string>();
+  const result: OnboardingWorkQueueView[] = [];
+
+  for (const candidate of value.slice(0, ONBOARDING_WORK_QUEUE_VIEW_LIMITS.maxViews)) {
+    if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) continue;
+    const row = candidate as Record<string, unknown>;
+    const id = typeof row.id === 'string' ? row.id.slice(0, ONBOARDING_WORK_QUEUE_VIEW_LIMITS.maxIdLength) : '';
+    const name = typeof row.name === 'string' ? row.name.trim().slice(0, ONBOARDING_WORK_QUEUE_VIEW_LIMITS.maxNameLength) : '';
+    if (!id || !name || seen.has(id)) continue;
+    const raw = row.filters && typeof row.filters === 'object' && !Array.isArray(row.filters)
+      ? row.filters as Record<string, unknown>
+      : {};
+    const pageSize = Number(row.pageSize);
+    seen.add(id);
+    result.push({
+      id,
+      name,
+      scope: scopes.has(row.scope as string) ? row.scope as OnboardingWorkQueueView['scope'] : 'my',
+      filters: {
+        query: typeof raw.query === 'string' ? raw.query.slice(0, ONBOARDING_WORK_QUEUE_VIEW_LIMITS.maxQueryLength) : '',
+        sourceTypes: enumValues(raw.sourceTypes, ONBOARDING_WORK_QUEUE_SOURCES),
+        lifecycles: enumValues(raw.lifecycles, ONBOARDING_WORK_QUEUE_LIFECYCLES),
+        dueState: dueStates.has(raw.dueState as string) ? raw.dueState as OnboardingWorkQueueView['filters']['dueState'] : 'all',
+        departmentIds: boundedStrings(raw.departmentIds),
+        queues: boundedStrings(raw.queues),
+        accountableIds: boundedStrings(raw.accountableIds),
+        unassigned: raw.unassigned === true,
+      },
+      sortBy: sortFields.has(row.sortBy as string) ? row.sortBy as OnboardingWorkQueueView['sortBy'] : 'due_at',
+      sortDir: row.sortDir === 'desc' ? 'desc' : 'asc',
+      pageSize: pageSizes.has(pageSize) ? pageSize : ONBOARDING_WORK_QUEUE_PAGE_SIZES[0],
+    });
+  }
+  return result;
+}
+
 // ── The registry the endpoint validates against ─────────────────────────────
 
 /**
@@ -220,6 +317,16 @@ export const UI_PREFERENCES: readonly UiPreferenceDefinition[] = [
       if (!Array.isArray(value)) return null;
       if (value.length > EMPLOYEE_REGISTER_VIEW_LIMITS.maxViews) return null;
       const views = sanitizeEmployeeRegisterViews(value);
+      if (value.length > 0 && views.length === 0) return null;
+      return views;
+    },
+  },
+  {
+    key: ONBOARDING_WORK_QUEUE_VIEWS_PREFERENCE_KEY,
+    version: ONBOARDING_WORK_QUEUE_VIEWS_PREFERENCE_VERSION,
+    sanitize: value => {
+      if (!Array.isArray(value) || value.length > ONBOARDING_WORK_QUEUE_VIEW_LIMITS.maxViews) return null;
+      const views = sanitizeOnboardingWorkQueueViews(value);
       if (value.length > 0 && views.length === 0) return null;
       return views;
     },

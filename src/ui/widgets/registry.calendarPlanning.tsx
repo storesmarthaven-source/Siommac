@@ -9,6 +9,7 @@ import { LucideIcon, type LucideName } from '../LucideIcon';
 import { defineWidget } from './defineWidget';
 import { findWidgetDataSource, registerWidgetDataSource } from './dataSources';
 import type { WidgetDef, WidgetRenderProps, WidgetSizeDef } from './types';
+import { useOnboardingWidgetScope } from '@sections/HR/onboarding/OnboardingWidgetScope';
 import './calendarPlanningWidgets.css';
 
 const RECOMMENDED_PAGES = ['hr.employees.overview', 'hr.employees.overview.v2', 'hr.employees.overview.v3', 'finance.statutory.v2'];
@@ -190,7 +191,13 @@ export function useDeadlineWindowQuery() {
   const today = useMemo(() => startOfDay(), []);
   const from = useMemo(() => addDays(today, -14), [today]);
   const to = useMemo(() => addDays(today, 62), [today]);
-  const query = useCalendarList({ from: dateKey(from), to: dateKey(to), types: ['deadline', 'activity'] });
+  const onboardingScope = useOnboardingWidgetScope();
+  const query = useCalendarList({
+    from: dateKey(from),
+    to: dateKey(to),
+    types: ['deadline', 'activity'],
+    ...(onboardingScope ? { onboardingScope } : {}),
+  });
   return { today, query };
 }
 
@@ -273,7 +280,13 @@ function TaskPlannerWidget(props: WidgetRenderProps): VNode {
   const today = useMemo(() => startOfDay(), []);
   const from = useMemo(() => addDays(today, -7), [today]);
   const to = useMemo(() => addDays(today, 62), [today]);
-  const query = useCalendarList({ from: dateKey(from), to: dateKey(to), types: ['task', 'deadline'] });
+  const onboardingScope = useOnboardingWidgetScope();
+  const query = useCalendarList({
+    from: dateKey(from),
+    to: dateKey(to),
+    types: ['task', 'deadline'],
+    ...(onboardingScope ? { onboardingScope } : {}),
+  });
   return <TaskPlannerView items={query.data ?? []} loading={query.isLoading && !query.data} loadError={query.isError ? (query.error instanceof Error ? query.error.message : 'The authorised Calendar API is unavailable.') : null} theme={taskTheme(props.config.theme)} live />;
 }
 function TaskPlannerPreview(props: { config: Record<string, unknown> }): VNode {

@@ -8,17 +8,17 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { Drawer, DetailGrid, Tabs, type TabDef } from '@ui';
+import { Drawer, DetailGrid, Tabs, type TabItem } from '@ui';
 import { useFinding, useFindingTransition, useUpdateFindingAction, useUploadEvidence } from '@api/hse/inspections';
 import { hsePill } from '../types';
 import { AssignActionDialog, CloseFindingDialog } from './InspectionDialogs';
 
 type TabKey = 'overview' | 'actions' | 'evidence' | 'timeline';
-const TABS: TabDef<TabKey>[] = [
-  { key: 'overview', label: 'Overview' },
-  { key: 'actions',  label: 'Actions' },
-  { key: 'evidence', label: 'Evidence' },
-  { key: 'timeline', label: 'Timeline' },
+const TABS: readonly TabItem[] = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'actions',  label: 'Actions' },
+  { id: 'evidence', label: 'Evidence' },
+  { id: 'timeline', label: 'Timeline' },
 ];
 
 const fmt = (iso?: string | null) => iso ? new Date(iso).toLocaleString(undefined, { day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
@@ -58,14 +58,14 @@ export function FindingDetailDrawer({ findingId, onClose }: { findingId: string 
           {f?.severity ? <span class={`vt-pill ${f.severity === 'critical' ? 'is-critical' : f.severity === 'high' ? 'is-warn' : 'is-info'}`}>{f.severity}</span> : null}
         </div>
 
-        <Tabs<TabKey> tabs={TABS} active={tab} onChange={setTab} />
+        <Tabs id="finding-detail-tabs" label="Finding details" items={TABS} value={tab} onChange={id => setTab(id as TabKey)} />
 
         {tab === 'overview' && f && (
           <div style={{ marginTop: '12px' }}>
             <DetailGrid items={[
               { icon: 'fa-hashtag',        label: 'Reference',   value: f.finding_no ?? '—' },
               { icon: 'fa-layer-group',    label: 'Category',    value: f.category ?? '—' },
-              { icon: 'fa-gauge-high',     label: 'Severity',    value: f.severity ?? '—' },
+              { icon: 'fa-gauge-high',     label: 'Severity',    value: f.severity },
               { icon: 'fa-clipboard-list', label: 'Inspection',  value: f.inspection_id ? 'Linked' : '—' },
               { icon: 'fa-location-dot',   label: 'Site',        value: f.site_name ?? '—' },
               { icon: 'fa-map-pin',        label: 'Area',        value: f.area ?? '—' },
@@ -102,7 +102,7 @@ export function FindingDetailDrawer({ findingId, onClose }: { findingId: string 
                   onChange={e => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) uploadEvidence.mutate({ file: f, findingId }); (e.target as HTMLInputElement).value = ''; }} />
               </label>
             )}
-            {uploadEvidence.isError && <div style={{ color: 'var(--siomac-red)', fontSize: '0.78rem' }}>{(uploadEvidence.error)?.message ?? 'Upload failed'}</div>}
+            {uploadEvidence.isError && <div style={{ color: 'var(--siomac-red)', fontSize: '0.78rem' }}>{uploadEvidence.error.message}</div>}
             {(d?.evidence ?? []).length === 0 && <div class="hse-muted">No evidence attached.</div>}
             {(d?.evidence ?? []).map(ev => (
               <div key={ev.id} class="vt-table-card" style={{ padding: '8px 12px', display: 'flex', gap: '8px', alignItems: 'center' }}>

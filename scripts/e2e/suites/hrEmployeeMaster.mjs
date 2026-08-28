@@ -369,11 +369,20 @@ export default async function run(h) {
     expect(d.employment.tenureMonths === null || typeof d.employment.tenureMonths === 'number', 'tenureMonths computed server-side');
     expect('payGroupName' in d.employment, 'payGroupName explicit even when unassigned');
 
-    // readiness expressed as controls
+    // Readiness expressed as CONTROLS.
+    //
+    // `blockers` was the superseded three-factor shape; the typed readiness
+    // service (5421ebc3) replaced it with `blockedDomains` counted from real
+    // control instances, and `totalControls` is now whatever the control
+    // catalogue defines rather than a hard-coded 3. This assertion was left
+    // behind and only surfaced once the served build was current — a stale dev
+    // build had been answering with the old shape.
     expect(d.readiness && typeof d.readiness.percent === 'number', 'readiness present for a statutory-capable actor');
-    expect(typeof d.readiness.totalControls === 'number' && typeof d.readiness.readyControls === 'number', 'readiness ready/total controls');
-    expect(d.readiness.readyControls <= d.readiness.totalControls, 'readiness ready controls do not exceed total controls');
+    expect(typeof d.readiness.totalControls === 'number' && typeof d.readiness.readyControls === 'number',
+      'readiness ready/total controls');
+    expect(d.readiness.readyControls <= d.readiness.totalControls, 'ready controls cannot exceed the total');
     expect(Array.isArray(d.readiness.blockedDomains), 'readiness.blockedDomains array');
+    expect(!('blockers' in d.readiness), 'readiness.blockers is the SUPERSEDED shape and must not be served');
     expect(d.readiness.blockedDomains.includes('assignment'), 'readiness reflects the incomplete assignment');
 
     // The register and drawer are two views of the same typed readiness controls.

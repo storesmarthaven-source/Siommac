@@ -7,7 +7,7 @@
 
 import { useState } from 'preact/hooks';
 import { type VNode } from 'preact';
-import { Drawer, Tabs, DetailGrid, type TabDef, type DetailItem } from '@ui';
+import { Drawer, Tabs, DetailGrid, type TabItem, type DetailItem } from '@ui';
 import { RiskScorePill } from '../shared/RiskScorePill';
 import { useHazardDetail, type HazardRow } from '@api/hse/riskJsa';
 import { hsePill } from '../../types';
@@ -22,13 +22,13 @@ const EDITABLE = ['draft', 'registered', 'changes_requested', 'returned'];
 
 type HazardTabKey = 'overview' | 'controls' | 'capa' | 'workflow' | 'files' | 'timeline';
 
-const HAZARD_TABS: readonly TabDef<HazardTabKey>[] = [
-  { key: 'overview',  label: 'Overview'  },
-  { key: 'controls',  label: 'Controls'  },
-  { key: 'capa',      label: 'CAPA'      },
-  { key: 'workflow',  label: 'Workflow'  },
-  { key: 'files',     label: 'Files'     },
-  { key: 'timeline',  label: 'Timeline'  },
+const HAZARD_TABS: readonly TabItem[] = [
+  { id: 'overview',  label: 'Overview'  },
+  { id: 'controls',  label: 'Controls'  },
+  { id: 'capa',      label: 'CAPA'      },
+  { id: 'workflow',  label: 'Workflow'  },
+  { id: 'files',     label: 'Files'     },
+  { id: 'timeline',  label: 'Timeline'  },
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -39,12 +39,12 @@ export function HazardDrawer({ hazard, onClose }: { hazard: HazardRow; onClose: 
 
   const { data: detailRes } = useHazardDetail(hazard.id);
   const detail   = detailRes?.data as Record<string, unknown> | undefined;
-  const hzRec    = (detail?.hazard as Record<string, unknown>) ?? undefined;
+  const hzRec    = detail?.hazard as Record<string, unknown> | undefined;
   const editable = EDITABLE.includes(hazard.status);
-  const controls = (detail?.controls as unknown[]) ?? [];
-  const capa     = (detail?.capa     as unknown[]) ?? [];
-  const timeline = (detail?.timeline as unknown[]) ?? [];
-  const workflow = (detail?.workflow as Record<string, unknown> | null) ?? null;
+  const controls = (detail?.controls as unknown[] | undefined) ?? [];
+  const capa     = (detail?.capa as unknown[] | undefined) ?? [];
+  const timeline = (detail?.timeline as unknown[] | undefined) ?? [];
+  const workflow = (detail?.workflow as Record<string, unknown> | null | undefined) ?? null;
 
   return (
     <Drawer
@@ -78,15 +78,16 @@ export function HazardDrawer({ hazard, onClose }: { hazard: HazardRow; onClose: 
 
       <EditDetailsDialog open={editOpen} onClose={() => setEditOpen(false)}
         entityType="hazard" entityId={hazard.id} entityRef={hazard.ref}
-        initial={{ title: hazard.title, description: (hzRec?.description as string) ?? '', reviewDueAt: hazard.review_due_at, version: hzRec?.version as number | undefined }} />
+        initial={{ title: hazard.title, description: (hzRec?.description as string | undefined) ?? '', reviewDueAt: hazard.review_due_at, version: hzRec?.version as number | undefined }} />
 
       {/* Tab bar */}
-      <Tabs<HazardTabKey>
-        tabs={HAZARD_TABS}
-        active={activeTab}
-        onChange={setActiveTab}
-        barClass="hse-idrawer-tabbar"
-        tabClass="hse-idrawer-tab"
+      <Tabs
+        id="hazard-detail-tabs"
+        label="Hazard details"
+        items={HAZARD_TABS}
+        value={activeTab}
+        onChange={id => setActiveTab(id as HazardTabKey)}
+        class="hse-idrawer-tabbar"
       />
 
       {/* Tab bodies */}

@@ -34,10 +34,14 @@ export function OnboardingScopeSelector({
       aria-label="Onboarding work scope"
       aria-busy={busy ? 'true' : 'false'}
     >
-      <Tabs<OnboardingReadScope>
-        tabs={options.map(o => ({ key: o.key, label: o.label }))}
-        active={scope}
-        onChange={next => { if (!busy) onSelect(next); }}
+      <Tabs
+        id="onboarding-scope-tabs"
+        label="Onboarding work scope"
+        items={options.map(o => ({ id: o.key, label: o.label, disabled: busy }))}
+        value={scope}
+        onChange={next => { if (!busy) onSelect(next as OnboardingReadScope); }}
+        variant="contained"
+        size="sm"
       />
     </div>
   );

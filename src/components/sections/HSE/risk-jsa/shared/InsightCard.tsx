@@ -10,7 +10,7 @@
  */
 
 import { type VNode } from 'preact';
-import { Card, Sparkline, BarRow, ProgressBar } from '@ui';
+import { Card, CardHeader, Sparkline, BarRow, ProgressBar } from '@ui';
 import { RiskMatrixSnapshot } from './RiskMatrixSnapshot';
 import { QueueItem } from './QueueItem';
 
@@ -61,25 +61,25 @@ function Visual({ variant, data, navy }: { variant: InsightCardVariant; data: un
   const d = (data ?? {}) as Record<string, unknown>;
   switch (variant) {
     case 'donut':
-      return <Donut navy={navy} segments={(d.segments as { value: number; color: string }[]) ?? []} />;
+      return <Donut navy={navy} segments={(d.segments as { value: number; color: string }[] | undefined) ?? []} />;
     case 'bar':
       return (
         <div style={{ display: 'grid', gap: '8px', width: '100%' }}>
-          {((d.bars as { label: string; value: number; max?: number; color?: string }[]) ?? []).slice(0, 4).map((b, i) => (
-            <BarRow key={i} label={b.label} value={b.value} max={b.max ?? Math.max(...(((d.bars as { value: number }[]) ?? []).map(x => x.value)), 1)} color={b.color} />
+          {((d.bars as { label: string; value: number; max?: number; color?: string }[] | undefined) ?? []).slice(0, 4).map((b, i) => (
+            <BarRow key={i} label={b.label} value={b.value} max={b.max ?? Math.max(...(((d.bars as { value: number }[] | undefined) ?? []).map(x => x.value)), 1)} color={b.color} />
           ))}
         </div>
       );
     case 'progress':
-      return <ProgressBar pct={Number(d.pct ?? 0)} color={(d.color as string) ?? '#22c55e'} target={d.target as string} />;
+      return <ProgressBar pct={Number(d.pct ?? 0)} color={(d.color as string | undefined) ?? '#22c55e'} target={d.target as string} />;
     case 'sparkline':
-      return <Sparkline points={(d.points as number[]) ?? []} color={(d.color as string) ?? '#60a5fa'} />;
+      return <Sparkline points={(d.points as number[] | undefined) ?? []} color={(d.color as string | undefined) ?? '#60a5fa'} />;
     case 'matrix':
       return <RiskMatrixSnapshot initialScore={Number(d.initial ?? 0)} residualScore={d.residual as number | undefined} />;
     case 'queue':
       return (
         <div style={{ display: 'grid', gap: '6px', width: '100%' }}>
-          {((d.items as { ref?: string; title: string; tag?: string; tagTone?: 'danger' | 'warning' | 'info' | 'neutral' }[]) ?? []).slice(0, 2).map((it, i) => (
+          {((d.items as { ref?: string; title: string; tag?: string; tagTone?: 'danger' | 'warning' | 'info' | 'neutral' }[] | undefined) ?? []).slice(0, 2).map((it, i) => (
             <QueueItem key={i} ref={it.ref} title={it.title} tag={it.tag} tagTone={it.tagTone} onDark={navy} />
           ))}
         </div>
@@ -87,7 +87,7 @@ function Visual({ variant, data, navy }: { variant: InsightCardVariant; data: un
     case 'status-grid':
       return (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px', width: '100%' }}>
-          {((d.tiles as { value: number | string; label: string; tone?: string }[]) ?? []).slice(0, 4).map((t, i) => (
+          {((d.tiles as { value: number | string; label: string; tone?: string }[] | undefined) ?? []).slice(0, 4).map((t, i) => (
             <div key={i} style={{ padding: '8px', borderRadius: '8px', textAlign: 'center', background: navy ? 'rgba(255,255,255,.07)' : 'var(--bg-subtle)' }}>
               <div style={{ fontSize: '1.1rem', fontWeight: 600, lineHeight: 1, color: t.tone ?? (navy ? '#fff' : 'var(--siomac-navy)') }}>{t.value}</div>
               <div style={{ fontSize: '0.56rem', color: navy ? 'rgba(255,255,255,.45)' : 'var(--text-muted)', marginTop: '3px' }}>{t.label}</div>
@@ -104,7 +104,13 @@ export function InsightCard({ title, icon, value, subtitle, footer, variant, ton
   const navy = tone === 'navy';
   const isDonut = variant === 'donut';
   return (
-    <Card icon={icon} title={title} variant={navy ? 'navy' : 'default'} bodyStyle={{ display: 'flex', flexDirection: 'column', gap: '12px', minHeight: '120px' }}>
+    <Card
+      variant="surface"
+      tone={navy ? 'accent' : tone === 'neutral' ? 'neutral' : tone}
+      header={<CardHeader title={title} icon={<i class={`fas ${icon}`} />} level={null} />}
+      style={navy ? { background: 'var(--siomac-navy)', color: '#fff' } : undefined}
+      bodyStyle={{ display: 'flex', flexDirection: 'column', gap: '12px', minHeight: '120px' }}
+    >
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
         <div>
           <div style={{ fontSize: '1.8rem', fontWeight: 600, lineHeight: 1, letterSpacing: '-0.02em', color: TONE_VALUE[tone] }}>{value}</div>

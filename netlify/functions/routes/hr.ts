@@ -2663,14 +2663,19 @@ router.post('/employees/documents/upload-url', async c => {
   const v = zv(c, z.object({ employeeId: z.string().min(1), fileName: z.string().min(1), mimeType: z.string().min(1) }), (c.get('body')).args ?? {});
   if (!v.ok) return v.response;
   try {
-    const { uploadUrl, token, path } = await createAttachmentUploadUrl(HR_DOC_BUCKET, v.data.fileName, v.data.mimeType, v.data.employeeId);
+    const { uploadUrl, token, path } = await createAttachmentUploadUrl(
+      HR_DOC_BUCKET,
+      v.data.fileName,
+      v.data.mimeType,
+      hrDocumentPathPrefix(v.data.employeeId),
+    );
     return c.json({ success: true, uploadUrl, token, path, bucket: HR_DOC_BUCKET });
   } catch (err) { return c.json({ success: false, message: err instanceof Error ? err.message : 'Upload URL failed' }, 400 as 200); }
 });
 
 /** The folder `upload-url` issues for an employee. Shared so commit validates the same shape. */
 export function hrDocumentPathPrefix(employeeId: string): string {
-  return `${employeeId.replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 80)}/`;
+  return `${employeeId.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 80)}/`;
 }
 
 // POST /api/hr/employees/documents/commit
@@ -2697,7 +2702,7 @@ router.post('/employees/documents/commit', async c => {
   const objectName = v.data.filePath.slice(prefix.length);
   const { data: listed, error: listErr } = await sb.storage.from(HR_DOC_BUCKET).list(prefix.replace(/\/$/, ''), { search: objectName, limit: 1 });
   if (listErr) return c.json({ success: false, message: listErr.message }, 500 as 200);
-  if (!(listed ?? []).some(o => o.name === objectName)) {
+  if (!listed.some(o => o.name === objectName)) {
     return c.json({ success: false, message: 'No uploaded file was found at that path.' }, 400 as 200);
   }
   const { data, error } = await sb.from('hr_employee_documents').insert({

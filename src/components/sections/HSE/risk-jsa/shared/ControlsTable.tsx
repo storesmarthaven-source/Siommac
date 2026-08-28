@@ -85,7 +85,7 @@ export function ControlsTable({ controls, onChange }: ControlsTableProps): VNode
         ))}
       </div>
       <div style={{ marginTop: 'var(--space-2)' }}>
-        <Button variant="secondary" icon="fa-plus" onClick={add}>Add Control</Button>
+        <Button variant="secondary" iconLeft={<i class="fas fa-plus" />} onClick={add}>Add Control</Button>
       </div>
     </div>
   );

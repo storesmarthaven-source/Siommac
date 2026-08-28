@@ -50,6 +50,10 @@ export interface PersonSearchSelectProps {
   people?: readonly PersonOption[];
   /** Async lookup. Preferred for anything larger than a single team. */
   search?: (query: string) => Promise<readonly PersonOption[]>;
+  /** Controlled remote-query adapter for TanStack-backed lists. */
+  onSearch?: (query: string) => void;
+  loading?: boolean;
+  error?: string | null;
   minChars?: number;
 
   placeholder?: string;
@@ -104,7 +108,7 @@ function toOption(p: PersonOption): Option {
 }
 
 export function PersonSearchSelect({
-  value, onChange, people, search, minChars = 0,
+  value, onChange, people, search, onSearch, loading, error, minChars = 0,
   placeholder = 'Search by name…', emptyLabel = 'No matching people',
   size = 'md', clearable = true,
   disabled, readOnly, validation, showBadges = true,
@@ -163,6 +167,9 @@ export function PersonSearchSelect({
       onChange={v => onChange(v === '' ? null : v)}
       options={asyncSearch ? undefined : options}
       search={asyncSearch}
+      onQueryChange={onSearch}
+      loading={loading}
+      error={error}
       minChars={minChars}
       placeholder={placeholder}
       emptyLabel={emptyLabel}

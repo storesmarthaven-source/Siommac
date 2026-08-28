@@ -24,7 +24,7 @@ const stripComments = (s: string): string =>
 
 const SRC = stripComments(read('src/components/sections/HR/OnboardingCaseDetail.tsx'));
 const req = (o: Partial<CaseFocusRequest>): CaseFocusRequest =>
-  ({ sourceType: 'task', sourceId: 's-1', ...o }) as CaseFocusRequest;
+  ({ sourceType: 'task', sourceId: 's-1', ...o });
 
 describe('the seven permanent tabs', () => {
   it('declares exactly the approved seven, in order', () => {
@@ -151,7 +151,7 @@ describe('Work Queue drill-through', () => {
   // silently forced the tab back, which read as "clicking a tab does nothing".
   it('re-targets on a new focus TARGET, never on focus object identity', () => {
     expect(SRC).toMatch(/const focusKey = focus \? `\$\{focus\.sourceType\}:\$\{focus\.sourceId\}/);
-    expect(SRC).toMatch(/lastAppliedFocusKey\.current === focusKey/);
+    expect(SRC).toMatch(/lastAppliedFocusKeyRef\.current === focusKey/);
     expect(SRC).toMatch(/\}, \[focusKey, focusTabValue\]\)/);
     // The old identity-keyed effect must not come back.
     expect(SRC).not.toMatch(/setTab\(focusTab\(focus\)\); \}, \[focus\]\)/);

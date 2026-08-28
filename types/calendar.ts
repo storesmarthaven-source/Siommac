@@ -14,6 +14,8 @@
  * capability booleans the server returns.
  */
 
+import type { OnboardingReadScope } from './hrOnboarding';
+
 export type CalendarItemType   = 'deadline' | 'task' | 'activity';
 export type CalendarItemOrigin = 'calendar' | 'module' | 'workflow';
 /** Task lifecycle (overdue is DERIVED from the due date, never stored). */
@@ -97,6 +99,8 @@ export interface CalendarListRequest {
   assigneeUserId?: string;
   statuses?:      CalendarTaskStatus[];
   priorities?:    CalendarTaskPriority[];
+  /** Applies only to onboarding-backed deadline projections; resolved and enforced server-side. */
+  onboardingScope?: OnboardingReadScope;
 }
 
 export interface CalendarListResponse {

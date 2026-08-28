@@ -193,6 +193,7 @@ const ListSchema = z.object({
   assigneeUserId: z.string().optional(),
   statuses:       z.array(z.enum(['not_started', 'in_progress', 'in_review', 'blocked', 'done', 'cancelled'])).optional(),
   priorities:     z.array(z.enum(['low', 'medium', 'high'])).optional(),
+  onboardingScope: z.enum(['my', 'team', 'all']).optional(),
 });
 
 router.post('/calendar/list', async c => {
@@ -316,7 +317,13 @@ router.post('/calendar/list', async c => {
 
   // 4. Module deadlines (adapters) — each self-gates on the caller's source access.
   if (wantType('deadline')) {
-    const ctx: AdapterContext = { userId: user.id, can, fromKey: from, toKey: to };
+    const ctx: AdapterContext = {
+      userId: user.id,
+      can,
+      fromKey: from,
+      toKey: to,
+      ...(v.data.onboardingScope ? { onboardingScope: v.data.onboardingScope } : {}),
+    };
     const wantModule = (m: string) => !v.data.sourceModules || v.data.sourceModules.includes(m);
     try {
       const projections = await Promise.all(
@@ -327,6 +334,9 @@ router.post('/calendar/list', async c => {
       items.push(...projections.flat());
     } catch (e) {
       console.error('[calendar/list] deadline adapter:', (e as Error).message);
+      if ((e as { status?: number }).status === 403) {
+        return c.json({ success: false, message: (e as Error).message }, 403);
+      }
       return c.json({ success: false, message: 'Failed to load calendar.' }, 500);
     }
   }

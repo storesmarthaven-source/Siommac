@@ -212,6 +212,12 @@ export default function SharedSections() {
         <div id="preact-ui-kit-root" />
       </AppSection>
 
+      {/* My Onboarding — worker self-service. The registered module owns the
+          page UI; the shell supplies the routed panel and stable mount root. */}
+      <AppSection id="s-my-onboarding">
+        <div id="preact-my-onboarding-root" />
+      </AppSection>
+
       {/* My Profile — every role.
           NO wrapper <UserPill> here: the Preact component's <PageHeader>
           already renders the single standard pill. A second one duplicates it. */}

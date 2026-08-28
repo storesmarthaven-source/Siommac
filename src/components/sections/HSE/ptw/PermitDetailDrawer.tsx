@@ -11,7 +11,7 @@
 
 import { useState } from 'preact/hooks';
 import { type VNode } from 'preact';
-import { Drawer, Tabs, DetailGrid, type TabDef, type DetailItem } from '@ui';
+import { Drawer, Tabs, DetailGrid, type TabItem, type DetailItem } from '@ui';
 import { hsePill } from '../types';
 import {
   usePermit,
@@ -47,13 +47,13 @@ import { DiscussionButton } from '@components/sections/Messages/DiscussionButton
 
 type DrawerTabKey = 'overview' | 'hazards' | 'isolations' | 'simops' | 'approvals' | 'timeline';
 
-const DRAWER_TABS: readonly TabDef<DrawerTabKey>[] = [
-  { key: 'overview',   label: 'Overview'   },
-  { key: 'hazards',    label: 'Hazards'    },
-  { key: 'isolations', label: 'Isolations' },
-  { key: 'simops',     label: 'SIMOPS'     },
-  { key: 'approvals',  label: 'Approvals'  },
-  { key: 'timeline',   label: 'Timeline'   },
+const DRAWER_TABS: readonly TabItem[] = [
+  { id: 'overview',   label: 'Overview'   },
+  { id: 'hazards',    label: 'Hazards'    },
+  { id: 'isolations', label: 'Isolations' },
+  { id: 'simops',     label: 'SIMOPS'     },
+  { id: 'approvals',  label: 'Approvals'  },
+  { id: 'timeline',   label: 'Timeline'   },
 ];
 
 // ── Open-dialog union ─────────────────────────────────────────────────────────
@@ -223,7 +223,7 @@ function HazardsTab({ hazards, controls }: { hazards: unknown[]; controls: unkno
         <div key={i} style={{ padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: '8px', border: '1px solid var(--border)' }}>
           <div style={{ fontSize: '0.76rem', color: 'var(--siomac-red)', fontWeight: 600, marginBottom: '4px' }}>
             <i class="fas fa-triangle-exclamation" style={{ marginRight: '5px' }} />
-            {(h.description ?? h.hazard_description) as string ?? `Hazard ${i + 1}`}
+            {(h.description ?? h.hazard_description) as string | undefined ?? `Hazard ${i + 1}`}
           </div>
           {controlArr
             .filter(c => c.hazard_id === h.id)
@@ -615,13 +615,13 @@ export function PermitDetailDrawer({ permit, onClose, initialTab = 'overview' }:
         </div>
 
         {/* In-panel tab bar (mirrors JsaDrawer) */}
-        <Tabs<DrawerTabKey>
-          tabs={DRAWER_TABS}
-          active={activeTab}
-          onChange={setActiveTab}
-          counts={tabCounts}
-          barClass="hse-idrawer-tabbar"
-          tabClass="hse-idrawer-tab"
+        <Tabs
+          id="permit-detail-tabs"
+          label="Permit details"
+          items={DRAWER_TABS.map(item => ({ ...item, badge: tabCounts[item.id as DrawerTabKey] }))}
+          value={activeTab}
+          onChange={id => setActiveTab(id as DrawerTabKey)}
+          class="hse-idrawer-tabbar"
         />
 
         {/* Tab bodies */}

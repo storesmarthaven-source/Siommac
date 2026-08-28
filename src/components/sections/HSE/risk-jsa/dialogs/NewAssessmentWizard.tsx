@@ -13,7 +13,7 @@
 import { useState } from 'preact/hooks';
 import type { VNode } from 'preact';
 import {
-  Wizard, Field, TextInput, SelectInput, TextareaInput, FormGrid,
+  LegacyWizard as Wizard, Field, TextInput, SelectInput, TextareaInput, FormGrid,
   Button, StatusPill,
 } from '@ui';
 import { RiskScorePill } from '../shared/RiskScorePill';
@@ -378,8 +378,8 @@ export function NewAssessmentWizard({ open, onClose }: { open: boolean; onClose:
             />
           ))}
           <div style={{ display: 'flex', gap: '8px' }}>
-            <Button variant="outline" icon="fa-plus" onClick={addHazard}>Add Hazard</Button>
-            <Button variant="outline" icon="fa-book-open" onClick={() => setHazardLibOpen(true)}>From library</Button>
+            <Button variant="outline" iconLeft={<i class="fas fa-plus" />} onClick={addHazard}>Add Hazard</Button>
+            <Button variant="outline" iconLeft={<i class="fas fa-book-open" />} onClick={() => setHazardLibOpen(true)}>From library</Button>
           </div>
         </div>
       )}

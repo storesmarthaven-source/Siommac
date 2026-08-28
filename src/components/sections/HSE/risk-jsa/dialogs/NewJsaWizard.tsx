@@ -8,7 +8,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import { type VNode } from 'preact';
 import {
-  Wizard,
+  LegacyWizard as Wizard,
   Field,
   Select,
   TextInput,

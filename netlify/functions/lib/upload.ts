@@ -129,12 +129,23 @@ async function uploadBase64(bucket: string, base64: string, name: string): Promi
  * Presigned upload URL for an HSE document/evidence attachment. Same flow as
  * createUploadUrl but with the broader document MIME allowlist.
  */
-async function createAttachmentUploadUrl(bucket: string, name: string, mimeType: string): Promise<UploadUrlResult & { ext: string }> {
+async function createAttachmentUploadUrl(
+  bucket: string,
+  name: string,
+  mimeType: string,
+  pathPrefix = '',
+): Promise<UploadUrlResult & { ext: string }> {
   const ext = ALLOWED_ATTACHMENT_TYPES[mimeType.toLowerCase()];
   if (!ext) throw new Error(`Unsupported file type: ${mimeType}`);
 
   const safeName = name.replace(/[^a-zA-Z0-9_\-.]/g, '_').slice(0, 80);
-  const path     = `${safeName}_${Date.now()}.${ext}`;
+  const safePrefix = pathPrefix
+    .split('/')
+    .filter(Boolean)
+    .map(segment => segment.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 80))
+    .filter(Boolean)
+    .join('/');
+  const path = `${safePrefix ? `${safePrefix}/` : ''}${safeName}_${Date.now()}.${ext}`;
 
   const { data, error } = await sb.storage.from(bucket).createSignedUploadUrl(path);
   if (error) throw new Error(`Failed to create upload URL: ${error.message}`);

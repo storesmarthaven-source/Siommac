@@ -2,7 +2,7 @@
 
 # hse Module Map
 
-Source fingerprint: `dfa9cd3ead99b98830efc082`
+Source fingerprint: `22dcdd66df2af25c679dc01c`
 
 Files: 89 | Symbols: 1278 | Widgets: 0 | Unique mounted endpoints: 144 | Route definitions: 144 mounted + 0 unmounted | API calls: 107 | DB objects: 65 | E2E suites: 4
 
@@ -552,12 +552,12 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/TemplateDialog.tsx` | 76 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/dialogs/VerifyControlButton.tsx` | 68 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/drawers/DrawerActions.tsx` | 175 |
-| frontend-page | `src/components/sections/HSE/risk-jsa/drawers/HazardDrawer.tsx` | 270 |
-| frontend-page | `src/components/sections/HSE/risk-jsa/drawers/JsaDrawer.tsx` | 339 |
-| frontend-page | `src/components/sections/HSE/risk-jsa/drawers/RiskAssessmentDrawer.tsx` | 300 |
+| frontend-page | `src/components/sections/HSE/risk-jsa/drawers/HazardDrawer.tsx` | 271 |
+| frontend-page | `src/components/sections/HSE/risk-jsa/drawers/JsaDrawer.tsx` | 340 |
+| frontend-page | `src/components/sections/HSE/risk-jsa/drawers/RiskAssessmentDrawer.tsx` | 302 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/shared/AttachmentsPanel.tsx` | 87 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/shared/ControlsTable.tsx` | 93 |
-| frontend-page | `src/components/sections/HSE/risk-jsa/shared/InsightCard.tsx` | 131 |
+| frontend-page | `src/components/sections/HSE/risk-jsa/shared/InsightCard.tsx` | 137 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/shared/QueueItem.tsx` | 69 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/shared/RiskMatrixPicker.tsx` | 82 |
 | frontend-page | `src/components/sections/HSE/risk-jsa/shared/RiskMatrixSnapshot.tsx` | 37 |

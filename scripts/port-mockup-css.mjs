@@ -42,12 +42,6 @@ const TARGETS = [
     root: '.onb-ov',
   },
   {
-    name: 'onboarding-case-detail',
-    source: 'docs/mockups/onboarding-case-detail-reference-conversion.html',
-    target: 'src/components/sections/HR/onboardingCaseDetailPage.css',
-    root: '.onb-cd',
-  },
-  {
     name: 'employee-profile-drawer',
     source: 'docs/mockups/employee-profile-drawer-unified-command-brief.html',
     target: 'src/components/sections/HR/ProfileDrawer.mockup.css',

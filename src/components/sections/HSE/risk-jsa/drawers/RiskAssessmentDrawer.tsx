@@ -13,7 +13,7 @@ import { useState } from 'preact/hooks';
 import type { VNode } from 'preact';
 import {
   Drawer, Tabs, StatusPill, DetailGrid,
-  type TabDef, type DetailItem,
+  type TabItem, type DetailItem,
 } from '@ui';
 import { RiskScorePill } from '../shared/RiskScorePill';
 import { RiskMatrixPicker } from '../shared/RiskMatrixPicker';
@@ -31,13 +31,13 @@ const EDITABLE = ['draft', 'registered', 'changes_requested', 'returned'];
 
 type DrawerTab = 'overview' | 'hazards' | 'matrix' | 'controls' | 'files' | 'timeline';
 
-const DRAWER_TABS: readonly TabDef<DrawerTab>[] = [
-  { key: 'overview',  label: 'Overview'     },
-  { key: 'hazards',   label: 'Hazards'      },
-  { key: 'matrix',    label: 'Risk Matrix'  },
-  { key: 'controls',  label: 'Controls'     },
-  { key: 'files',     label: 'Files'        },
-  { key: 'timeline',  label: 'Timeline'     },
+const DRAWER_TABS: readonly TabItem[] = [
+  { id: 'overview',  label: 'Overview'     },
+  { id: 'hazards',   label: 'Hazards'      },
+  { id: 'matrix',    label: 'Risk Matrix'  },
+  { id: 'controls',  label: 'Controls'     },
+  { id: 'files',     label: 'Files'        },
+  { id: 'timeline',  label: 'Timeline'     },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -176,7 +176,7 @@ function ControlsTab({ controls }: { controls: unknown[] }): VNode {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'flex-start' }}>
               <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{desc}</div>
-              <VerifyControlButton controlId={(c.id as string) ?? ''} status={status} label={desc} />
+              <VerifyControlButton controlId={(c.id as string | undefined) ?? ''} status={status} label={desc} />
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '2px', flexWrap: 'wrap' }}>
               {controlType && (
@@ -242,11 +242,11 @@ export function RiskAssessmentDrawer({
 
   const { data: detailRes } = useAssessmentDetail(assessment.id);
   const detail   = detailRes?.data as Record<string, unknown> | undefined;
-  const raRec    = (detail?.assessment as Record<string, unknown>) ?? undefined;
+  const raRec    = detail?.assessment as Record<string, unknown> | undefined;
   const editable = EDITABLE.includes(assessment.status);
-  const hazards  = (detail?.hazards  as unknown[]) ?? [];
-  const controls = (detail?.controls as unknown[]) ?? [];
-  const timeline = (detail?.timeline as unknown[]) ?? [];
+  const hazards  = (detail?.hazards as unknown[] | undefined) ?? [];
+  const controls = (detail?.controls as unknown[] | undefined) ?? [];
+  const timeline = (detail?.timeline as unknown[] | undefined) ?? [];
 
   const headerSub = `${assessment.assessment_type.replace(/_/g, ' ')} · ${assessment.ref}`;
 
@@ -278,12 +278,14 @@ export function RiskAssessmentDrawer({
 
       <EditDetailsDialog open={editOpen} onClose={() => setEditOpen(false)}
         entityType="assessment" entityId={assessment.id} entityRef={assessment.ref}
-        initial={{ title: assessment.title, description: (raRec?.description as string) ?? '', reviewDueAt: assessment.review_due_at, version: raRec?.version as number | undefined }} />
+        initial={{ title: assessment.title, description: (raRec?.description as string | undefined) ?? '', reviewDueAt: assessment.review_due_at, version: raRec?.version as number | undefined }} />
 
-      <Tabs<DrawerTab>
-        tabs={DRAWER_TABS}
-        active={activeTab}
-        onChange={setActiveTab}
+      <Tabs
+        id="risk-assessment-detail-tabs"
+        label="Risk assessment details"
+        items={DRAWER_TABS}
+        value={activeTab}
+        onChange={id => setActiveTab(id as DrawerTab)}
       />
 
       <div style={{ padding: '16px 0' }}>

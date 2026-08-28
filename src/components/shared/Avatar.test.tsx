@@ -77,12 +77,6 @@ describe('Avatar', () => {
     expect(el.style.borderRadius).toBe('50%');
   });
 
-  it('applies square border-radius when variant="square"', () => {
-    render(<Avatar name="Jane Doe" variant="square" />);
-    const el = screen.getByLabelText('Jane Doe');
-    expect(el.style.borderRadius).toBe('6px');
-  });
-
   it('uses the given size', () => {
     render(<Avatar name="Jane Doe" size={64} />);
     const el = screen.getByLabelText('Jane Doe');

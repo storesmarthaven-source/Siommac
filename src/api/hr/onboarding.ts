@@ -36,10 +36,17 @@ async function call<T>(path: string, args: object = {}): Promise<T> {
   return res.data;
 }
 
-export interface OnboardingTaskTemplate { taskKey: string; taskTitle: string; ownerRole: string; moduleKey: string | null }
+export interface OnboardingTaskTemplate { taskKey: string; taskTitle: string; ownerRole: string; moduleKey: string | null; isBlocking: boolean }
 export interface OnboardingHandoffTemplate { targetModule: string; handoffType: string }
 export interface OnboardingPreview { package: string; label: string; tasks: OnboardingTaskTemplate[]; handoffs: OnboardingHandoffTemplate[]; taskCount: number }
-export interface OnboardingStartResult { caseId: string; caseNo: string; status: string; taskCount: number; handoffCount: number }
+export interface OnboardingStartResult {
+  caseId: string;
+  caseNo: string;
+  status: string;
+  taskCount: number;
+  handoffCount: number;
+  documentRequestCount: number;
+}
 
 /** One row of the case timeline — mirrors the orchestration TimelineItem projection
  *  (snake_case, since it comes from the generic /orchestration/timeline/get endpoint,

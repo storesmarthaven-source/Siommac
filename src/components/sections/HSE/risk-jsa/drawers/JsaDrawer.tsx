@@ -7,7 +7,7 @@
 
 import { useState } from 'preact/hooks';
 import { type VNode } from 'preact';
-import { Drawer, Tabs, DetailGrid, type TabDef, type DetailItem } from '@ui';
+import { Drawer, Tabs, DetailGrid, type TabItem, type DetailItem } from '@ui';
 import { RiskScorePill } from '../shared/RiskScorePill';
 import { useJsaDetail, useAcknowledgeJsa, type JsaRow, type JsaCrewMember } from '@api/hse/riskJsa';
 import { hsePill } from '../../types';
@@ -22,14 +22,14 @@ const EDITABLE = ['draft', 'registered', 'changes_requested', 'returned'];
 
 type JsaTabKey = 'overview' | 'steps' | 'ppe' | 'training' | 'crew' | 'files' | 'timeline';
 
-const JSA_TABS: readonly TabDef<JsaTabKey>[] = [
-  { key: 'overview',  label: 'Overview'  },
-  { key: 'steps',     label: 'Job Steps' },
-  { key: 'ppe',       label: 'PPE'       },
-  { key: 'training',  label: 'Training'  },
-  { key: 'crew',      label: 'Crew'      },
-  { key: 'files',     label: 'Files'     },
-  { key: 'timeline',  label: 'Timeline'  },
+const JSA_TABS: readonly TabItem[] = [
+  { id: 'overview',  label: 'Overview'  },
+  { id: 'steps',     label: 'Job Steps' },
+  { id: 'ppe',       label: 'PPE'       },
+  { id: 'training',  label: 'Training'  },
+  { id: 'crew',      label: 'Crew'      },
+  { id: 'files',     label: 'Files'     },
+  { id: 'timeline',  label: 'Timeline'  },
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -40,13 +40,13 @@ export function JsaDrawer({ jsa, onClose }: { jsa: JsaRow; onClose: () => void }
 
   const { data: detailRes } = useJsaDetail(jsa.id);
   const detail   = detailRes?.data as Record<string, unknown> | undefined;
-  const jsaRec   = (detail?.jsa as Record<string, unknown>) ?? undefined;
+  const jsaRec   = detail?.jsa as Record<string, unknown> | undefined;
   const editable = EDITABLE.includes(jsa.status);
-  const steps    = (detail?.steps    as unknown[]) ?? [];
-  const ppe      = (detail?.ppe      as unknown[]) ?? [];
-  const training = (detail?.training as unknown[]) ?? (detail?.trainingLinks as unknown[]) ?? [];
-  const crew     = (detail?.crew     as JsaCrewMember[]) ?? [];
-  const timeline = (detail?.timeline as unknown[]) ?? [];
+  const steps    = (detail?.steps as unknown[] | undefined) ?? [];
+  const ppe      = (detail?.ppe as unknown[] | undefined) ?? [];
+  const training = (detail?.training as unknown[] | undefined) ?? (detail?.trainingLinks as unknown[] | undefined) ?? [];
+  const crew     = (detail?.crew as JsaCrewMember[] | undefined) ?? [];
+  const timeline = (detail?.timeline as unknown[] | undefined) ?? [];
 
   return (
     <Drawer
@@ -83,15 +83,16 @@ export function JsaDrawer({ jsa, onClose }: { jsa: JsaRow; onClose: () => void }
 
       <EditDetailsDialog open={editOpen} onClose={() => setEditOpen(false)}
         entityType="jsa" entityId={jsa.id} entityRef={jsa.ref}
-        initial={{ title: jsa.title, description: (jsaRec?.description as string) ?? '', reviewDueAt: jsa.review_due_at, version: jsaRec?.version as number | undefined }} />
+        initial={{ title: jsa.title, description: (jsaRec?.description as string | undefined) ?? '', reviewDueAt: jsa.review_due_at, version: jsaRec?.version as number | undefined }} />
 
       {/* Tab bar */}
-      <Tabs<JsaTabKey>
-        tabs={JSA_TABS}
-        active={activeTab}
-        onChange={setActiveTab}
-        barClass="hse-idrawer-tabbar"
-        tabClass="hse-idrawer-tab"
+      <Tabs
+        id="jsa-detail-tabs"
+        label="JSA details"
+        items={JSA_TABS}
+        value={activeTab}
+        onChange={id => setActiveTab(id as JsaTabKey)}
+        class="hse-idrawer-tabbar"
       />
 
       {/* Tab bodies */}
@@ -159,29 +160,29 @@ function JsaStepsTab({ steps }: { steps: unknown[] }): VNode {
             {s.task_step as string}
           </div>
           {/* Nested per-step hazards (each with its controls) */}
-          {((s.hazards as Record<string, unknown>[]) ?? []).map((h, hi) => (
+          {((s.hazards as Record<string, unknown>[] | undefined) ?? []).map((h, hi) => (
             <div key={hi} style={{ marginTop: '6px', paddingLeft: '8px', borderLeft: '2px solid var(--border)' }}>
               <div style={{ fontSize: '0.76rem', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <i class="fas fa-triangle-exclamation" />
                 <span style={{ flex: 1 }}>{h.description as string}</span>
                 {h.initial_score != null && <RiskScorePill score={h.initial_score as number} />}
               </div>
-              {((h.controls as Record<string, unknown>[]) ?? []).map((c, ci) => (
+              {((h.controls as Record<string, unknown>[] | undefined) ?? []).map((c, ci) => (
                 <div key={ci} style={{ fontSize: '0.73rem', color: 'var(--color-success)', marginTop: '2px', paddingLeft: '14px' }}>
                   <i class="fas fa-shield-halved" style={{ marginRight: '4px' }} />
-                  {c.description as string} <span style={{ color: 'var(--text-muted)' }}>· {(c.control_type as string)?.replace(/_/g, ' ')}</span>
+                  {c.description as string} <span style={{ color: 'var(--text-muted)' }}>· {(c.control_type as string).replace(/_/g, ' ')}</span>
                 </div>
               ))}
             </div>
           ))}
           {/* Legacy single-hazard fallback */}
-          {!((s.hazards as unknown[])?.length) && s.hazard_description && (
+          {!((s.hazards as unknown[] | undefined)?.length) && s.hazard_description && (
             <div style={{ fontSize: '0.75rem', color: 'var(--color-danger)', marginTop: '3px' }}>
               <i class="fas fa-triangle-exclamation" style={{ marginRight: '4px' }} />
               {s.hazard_description as string}
             </div>
           )}
-          {!((s.hazards as unknown[])?.length) && s.controls_summary && (
+          {!((s.hazards as unknown[] | undefined)?.length) && s.controls_summary && (
             <div style={{ fontSize: '0.75rem', color: 'var(--color-success)', marginTop: '3px' }}>
               <i class="fas fa-shield-alt" style={{ marginRight: '4px' }} />
               {s.controls_summary as string}

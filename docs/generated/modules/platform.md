@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `dfa9cd3ead99b98830efc082`
+Source fingerprint: `22dcdd66df2af25c679dc01c`
 
-Files: 471 | Symbols: 4121 | Widgets: 16 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 55 | DB objects: 327 | E2E suites: 0
+Files: 471 | Symbols: 4134 | Widgets: 16 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 55 | DB objects: 327 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -34,17 +34,17 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | Path | Permission | Guards | Schema | Location | Frontend callers | E2E suites |
 |---|---|---|---|---|---|---|
 | `/api/addProjectSite` | `sites.add` | requirePermission | `AddSiteSchema` | `netlify/functions/routes/sites.ts:81` | res @ src/api/sites.ts:134<br>addProjectSiteApi @ src/components/sections/ProjectSites/api.ts:80 | - |
-| `/api/calendar/activity/create` | `calendar.activity.manage_own` | requirePermission, userCan | `CreateActivitySchema` | `netlify/functions/routes/calendar.ts:654` | useCreateActivity @ src/api/calendar.ts:101 | calendar |
-| `/api/calendar/activity/respond` | `calendar.view` | requirePermission | `AttendeeResponseSchema` | `netlify/functions/routes/calendar.ts:457` | useRespondToCalendarActivity @ src/api/calendar.ts:165 | calendar |
-| `/api/calendar/cancel` | `calendar.view` | requirePermission | `CancelSchema` | `netlify/functions/routes/calendar.ts:1004` | useCancelEntry @ src/api/calendar.ts:139 | calendar |
-| `/api/calendar/get` | `calendar.view` | requirePermission | `GetSchema` | `netlify/functions/routes/calendar.ts:357` | res @ src/api/calendar.ts:58 | calendar |
-| `/api/calendar/list` | `calendar.view` | requirePermission | `ListSchema` | `netlify/functions/routes/calendar.ts:198` | res @ src/api/calendar.ts:45 | calendar |
-| `/api/calendar/reminders/get` | `calendar.view` | requirePermission | `ReminderGetSchema` | `netlify/functions/routes/calendar.ts:411` | res @ src/api/calendar.ts:72 | calendar |
-| `/api/calendar/reminders/run-sweep` | `-` | - | `z.object({ now: z.string().optional() })` | `netlify/functions/routes/calendar.ts:499` | - | calendar |
-| `/api/calendar/reminders/set` | `calendar.view` | requirePermission | `ReminderSetSchema` | `netlify/functions/routes/calendar.ts:431` | useSetCalendarReminders @ src/api/calendar.ts:152 | calendar |
-| `/api/calendar/task/create` | `calendar.task.manage_own` | requirePermission, userCan | `CreateTaskSchema` | `netlify/functions/routes/calendar.ts:563` | useCreateTask @ src/api/calendar.ts:89 | calendar |
-| `/api/calendar/task/status` | `calendar.view` | requirePermission, userCan | `StatusSchema` | `netlify/functions/routes/calendar.ts:955` | useTaskStatus @ src/api/calendar.ts:126 | calendar |
-| `/api/calendar/update` | `calendar.view` | requirePermission, userCan | `UpdateSchema` | `netlify/functions/routes/calendar.ts:840` | useUpdateEntry @ src/api/calendar.ts:113 | calendar |
+| `/api/calendar/activity/create` | `calendar.activity.manage_own` | requirePermission, userCan | `CreateActivitySchema` | `netlify/functions/routes/calendar.ts:664` | useCreateActivity @ src/api/calendar.ts:101 | calendar |
+| `/api/calendar/activity/respond` | `calendar.view` | requirePermission | `AttendeeResponseSchema` | `netlify/functions/routes/calendar.ts:467` | useRespondToCalendarActivity @ src/api/calendar.ts:165 | calendar |
+| `/api/calendar/cancel` | `calendar.view` | requirePermission | `CancelSchema` | `netlify/functions/routes/calendar.ts:1014` | useCancelEntry @ src/api/calendar.ts:139 | calendar |
+| `/api/calendar/get` | `calendar.view` | requirePermission | `GetSchema` | `netlify/functions/routes/calendar.ts:367` | res @ src/api/calendar.ts:58 | calendar |
+| `/api/calendar/list` | `calendar.view` | requirePermission | `ListSchema` | `netlify/functions/routes/calendar.ts:199` | res @ src/api/calendar.ts:45 | calendar, hrOnboardingScope |
+| `/api/calendar/reminders/get` | `calendar.view` | requirePermission | `ReminderGetSchema` | `netlify/functions/routes/calendar.ts:421` | res @ src/api/calendar.ts:72 | calendar |
+| `/api/calendar/reminders/run-sweep` | `-` | - | `z.object({ now: z.string().optional() })` | `netlify/functions/routes/calendar.ts:509` | - | calendar |
+| `/api/calendar/reminders/set` | `calendar.view` | requirePermission | `ReminderSetSchema` | `netlify/functions/routes/calendar.ts:441` | useSetCalendarReminders @ src/api/calendar.ts:152 | calendar |
+| `/api/calendar/task/create` | `calendar.task.manage_own` | requirePermission, userCan | `CreateTaskSchema` | `netlify/functions/routes/calendar.ts:573` | useCreateTask @ src/api/calendar.ts:89 | calendar |
+| `/api/calendar/task/status` | `calendar.view` | requirePermission, userCan | `StatusSchema` | `netlify/functions/routes/calendar.ts:965` | useTaskStatus @ src/api/calendar.ts:126 | calendar |
+| `/api/calendar/update` | `calendar.view` | requirePermission, userCan | `UpdateSchema` | `netlify/functions/routes/calendar.ts:850` | useUpdateEntry @ src/api/calendar.ts:113 | calendar |
 | `/api/deleteProjectSite` | `sites.delete` | assertInScope, requirePermission | `DeleteSiteSchema` | `netlify/functions/routes/sites.ts:122` | res @ src/api/sites.ts:152<br>deleteProjectSiteApi @ src/components/sections/ProjectSites/api.ts:115 | - |
 | `/api/email/reconciliation` | `settings.system.view` | requirePermission | `-` | `netlify/functions/routes/emailDelivery.ts:76` | - | emailReconciliation |
 | `/api/email/retry` | `settings.system.manage` | requirePermission | `RetrySchema` | `netlify/functions/routes/emailDelivery.ts:93` | - | emailRetry, emailRetryPayslip |
@@ -138,8 +138,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/theme/studio/publish` | `apiPost` | `res` | `src/api/theme.ts:40` |
 | `/api/theme/studio/rollback` | `apiPost` | `res` | `src/api/theme.ts:52` |
 | `/api/theme/studio/validate` | `apiPost` | `res` | `src/api/theme.ts:34` |
-| `/api/ui-preferences/get` | `apiPost` | `response` | `src/api/uiPreferences.ts:35` |
-| `/api/ui-preferences/save` | `apiPost` | `response` | `src/api/uiPreferences.ts:47` |
+| `/api/ui-preferences/get` | `apiPost` | `response` | `src/api/uiPreferences.ts:38` |
+| `/api/ui-preferences/save` | `apiPost` | `response` | `src/api/uiPreferences.ts:50` |
 | `/api/updateColorScheme` | `apiPost` | `updateColorScheme` | `src/components/nav/api.ts:22` |
 | `/api/updateLayoutMode` | `apiPost` | `updateLayoutMode` | `src/components/nav/api.ts:25` |
 | `/api/updateMyProfile` | `apiPost` | `res` | `src/components/sections/Profile/api.ts:108` |
@@ -491,7 +491,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 
 | Role | Path | Lines |
 |---|---|---:|
-| backend-route | `netlify/functions/routes/calendar.ts` | 1062 |
+| backend-route | `netlify/functions/routes/calendar.ts` | 1072 |
 | backend-route | `netlify/functions/routes/emailDelivery.ts` | 369 |
 | backend-route | `netlify/functions/routes/hrContracts.ts` | 170 |
 | backend-route | `netlify/functions/routes/hrCrew.ts` | 186 |
@@ -511,7 +511,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/schemas/site.ts` | 61 |
 | frontend-api | `src/api/sites.ts` | 167 |
 | frontend-api | `src/api/theme.ts` | 56 |
-| frontend-api | `src/api/uiPreferences.ts` | 57 |
+| frontend-api | `src/api/uiPreferences.ts` | 60 |
 | frontend-api | `src/api/weather.ts` | 38 |
 | frontend-page | `src/components/sections/AccessControl/AccessControlSection.tsx` | 65 |
 | frontend-page | `src/components/sections/AccessControl/index.ts` | 10 |
@@ -571,7 +571,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/UiKit/mount.ts` | 51 |
 | frontend-page | `src/components/sections/index.ts` | 19 |
 | shared-types | `types/api.ts` | 158 |
-| shared-types | `types/calendar.ts` | 181 |
+| shared-types | `types/calendar.ts` | 185 |
 | shared-types | `types/db.ts` | 244 |
 | shared-types | `types/designSystem.ts` | 143 |
 | shared-types | `types/emailTemplates.ts` | 353 |
@@ -583,7 +583,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | shared-types | `types/mjml.d.ts` | 24 |
 | shared-types | `types/supabase.ts` | 135 |
 | shared-types | `types/trinidadPhone.ts` | 32 |
-| shared-types | `types/uiPreferences.ts` | 253 |
+| shared-types | `types/uiPreferences.ts` | 360 |
 | shared-types | `types/weather.ts` | 93 |
 | shared-types | `types/workCalendars.ts` | 145 |
 

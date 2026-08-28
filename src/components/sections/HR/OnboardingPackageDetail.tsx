@@ -13,7 +13,7 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
-import { PageHeader, Modal, Field, FormGrid, TextInput, SelectInput, Tabs, type TabDef } from '@ui';
+import { PageHeader, Modal, Field, FormGrid, TextInput, SelectInput, Tabs, type TabItem } from '@ui';
 import { useEffectiveSettings } from '@api/settingsCatalog';
 import {
   useOnboardingPackageDetail, useOnboardingUpdatePackage, useOnboardingSetPackageStatus,
@@ -32,14 +32,14 @@ import './OnboardingPackageManagement.mockup.css';
 import './OnboardingPackageManagement.page.css';
 
 type PkgTab = 'overview' | 'work' | 'handoffs' | 'requirements' | 'portal' | 'communications' | 'governance';
-const TABS: TabDef<PkgTab>[] = [
-  { key: 'overview', label: 'Overview' },
-  { key: 'work', label: 'Work Plan' },
-  { key: 'handoffs', label: 'Handoffs' },
-  { key: 'requirements', label: 'Requirements & Gates' },
-  { key: 'portal', label: 'Worker Portal & Account' },
-  { key: 'communications', label: 'Communications' },
-  { key: 'governance', label: 'Governance & Versions' },
+const TABS: readonly TabItem[] = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'work', label: 'Work Plan' },
+  { id: 'handoffs', label: 'Handoffs' },
+  { id: 'requirements', label: 'Requirements & Gates' },
+  { id: 'portal', label: 'Worker Portal & Account' },
+  { id: 'communications', label: 'Communications' },
+  { id: 'governance', label: 'Governance & Versions' },
 ];
 const ACTION_TYPES: OnboardingActionType[] = ['custom_task', 'custom_checklist_item', 'custom_external_action', 'custom_handoff', 'custom_document_request', 'custom_training_request', 'custom_approval', 'custom_notification'];
 const OWNER_TYPES: OnboardingOwnerType[] = ['role', 'employee', 'department', 'system', 'external'];
@@ -72,13 +72,21 @@ export function OnboardingPackageDetail({
   const referencesQ = useOnboardingPackageReferenceData(editable);
   const settings = settingsQ.data?.data.settings ?? [];
   const setting = (key: string): unknown => settings.find(item => item.settingKey === key)?.effectiveValue;
-  const operatingModel = String(setting('hr_onboarding.account_operating_model') ?? 'hybrid');
-  const ownerQueue = String(setting('hr_onboarding.account_owner_queue') ?? 'it_service_desk');
+  const settingString = (key: string, fallback: string): string => {
+    const value = setting(key);
+    return typeof value === 'string' ? value : fallback;
+  };
+  const settingNumber = (key: string, fallback: number): number => {
+    const value = setting(key);
+    return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+  };
+  const operatingModel = settingString('hr_onboarding.account_operating_model', 'hybrid');
+  const ownerQueue = settingString('hr_onboarding.account_owner_queue', 'it_service_desk');
   const invitationsEnabled = setting('hr_onboarding.secure_invitation_enabled') !== false;
-  const invitationOffset = Number(setting('hr_onboarding.invitation_offset_days') ?? 5);
-  const senderName = String(setting('hr_onboarding.communication_sender_name') ?? 'SIOMAC Onboarding');
-  const senderEmail = String(setting('hr_onboarding.communication_sender_email') ?? 'Not configured');
-  const escalationHours = Number(setting('hr_onboarding.default_escalation_hours') ?? 24);
+  const invitationOffset = settingNumber('hr_onboarding.invitation_offset_days', 5);
+  const senderName = settingString('hr_onboarding.communication_sender_name', 'SIOMAC Onboarding');
+  const senderEmail = settingString('hr_onboarding.communication_sender_email', 'Not configured');
+  const escalationHours = settingNumber('hr_onboarding.default_escalation_hours', 24);
 
   const updatePkgMut = useOnboardingUpdatePackage();
   const setStatusMut = useOnboardingSetPackageStatus();
@@ -219,7 +227,7 @@ export function OnboardingPackageDetail({
       </div></div>
       <div class="package-workspace-grid">
         <main class="package-content-column">
-      <div class="package-tabs"><Tabs tabs={TABS} active={tab} onChange={setTab} counts={{ work: pkg.taskTemplates.length + actions.length, handoffs: pkg.handoffTemplates.length }} /></div>
+      <div class="package-tabs"><Tabs id="onboarding-package-tabs" label="Onboarding package sections" items={TABS.map(item => ({ ...item, badge: item.id === 'work' ? pkg.taskTemplates.length + actions.length : item.id === 'handoffs' ? pkg.handoffTemplates.length : undefined }))} value={tab} onChange={id => setTab(id as PkgTab)} /></div>
 
       {tab === 'overview' && (
         <div class="obx-section">
@@ -295,7 +303,7 @@ export function OnboardingPackageDetail({
         <div class="obx-section">
           <div class="obx-section-head"><h2><i class="fas fa-bolt" />Custom actions</h2>{editable && <button class="obx-btn primary obx-btn-sm" onClick={() => openAddAction()}>+ Add</button>}</div>
           <div class="obx-section-body">
-            {actionsQ.isLoading && !actionsQ.data ? empty('Loading…') : !workActions.length ? empty('No custom action templates yet.') : (
+            {actionsQ.isLoading ? empty('Loading…') : !workActions.length ? empty('No custom action templates yet.') : (
               <table class="obx-table">
                 <thead><tr><th>Name</th><th>Type</th><th>Owner</th><th>Priority</th><th>Required</th><th>Blocks</th><th>Active</th><th>Actions</th></tr></thead>
                 <tbody>{workActions.map(a => (

@@ -76,9 +76,10 @@ describe('Command Centre source guarantees', () => {
 describe('registered calendar widgets carry the runtime scope', () => {
   const registry = repoFile('src/ui/widgets/registry.calendarPlanning.tsx');
 
-  it('both widgets forward runtime.onboardingScope to useCalendarList', () => {
-    const forwards = registry.match(/onboardingScope: (runtime|props\.runtime)\.onboardingScope/g) ?? [];
+  it('both widgets forward the host onboarding scope to useCalendarList', () => {
+    const forwards = registry.match(/\{ onboardingScope \}/g) ?? [];
     expect(forwards.length).toBe(2);   // Upcoming Deadlines + Task Planner
+    expect((registry.match(/useOnboardingWidgetScope\(\)/g) ?? []).length).toBe(2);
   });
 
   it('scope is runtime context, never persisted widget configuration', () => {

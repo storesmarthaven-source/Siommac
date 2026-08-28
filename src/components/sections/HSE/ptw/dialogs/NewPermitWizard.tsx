@@ -17,7 +17,7 @@
 import { useState, useMemo, useRef, useEffect } from 'preact/hooks';
 import type { VNode } from 'preact';
 import {
-  Wizard, Field, TextInput, SelectInput, TextareaInput, FormGrid, Button, StatusPill,
+  LegacyWizard as Wizard, Field, TextInput, SelectInput, TextareaInput, FormGrid, Button, StatusPill,
 } from '@ui';
 import {
   useCreatePermit,
@@ -1117,7 +1117,7 @@ export function NewPermitWizard({ open, onClose }: { open: boolean; onClose: () 
 
             {/* Add custom */}
             <div style={{ paddingTop: '4px' }}>
-              <Button variant="outline" icon="fa-plus" onClick={() => setShowCustom(true)}>
+              <Button variant="outline" iconLeft={<i class="fas fa-plus" />} onClick={() => setShowCustom(true)}>
                 Add custom hazard
               </Button>
             </div>
@@ -1185,7 +1185,7 @@ export function NewPermitWizard({ open, onClose }: { open: boolean; onClose: () 
             ))}
 
             <div>
-              <Button variant="outline" icon="fa-plus" onClick={addIsolation}>Add Isolation Point</Button>
+              <Button variant="outline" iconLeft={<i class="fas fa-plus" />} onClick={addIsolation}>Add Isolation Point</Button>
             </div>
           </div>
         )}

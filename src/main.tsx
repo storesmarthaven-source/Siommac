@@ -68,6 +68,7 @@ import '@sections/Calendar';            // self-registers the Calendar & Tasks m
 import '@sections/Tickets';             // self-registers the canonical Ticket Center
 import '@sections/AccessControl';       // self-registers the Access Control module (RBAC console)
 import '@sections/UiKit';               // self-registers the UI Kit workbench (design system, superadmin)
+import '@sections/WorkerOnboarding';     // self-registers My Onboarding (worker self-service)
 import { getModules } from '@lib/moduleRegistry';
 import { h, render }           from 'preact';
 import { QueryClientProvider }  from '@tanstack/preact-query';
@@ -398,7 +399,7 @@ async function bootApp(): Promise<void> {
   // panel root it declares. Additive: existing sections above are unaffected.
   for (const mod of getModules()) {
     const root = document.getElementById(mod.mount.rootId);
-    if (root) mod.mount.mount(root, { sectionId: mod.mount.rootId, queryClient });
+    if (root) mod.mount.mount(root, { sectionId: mod.mount.sectionId, queryClient });
   }
 
   // Profile section (replaces profile.js)

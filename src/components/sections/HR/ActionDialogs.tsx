@@ -226,7 +226,7 @@ export function OffboardingDialog({ employeeId, onClose, onToast }: DialogProps)
   const m = useOffboardingMutation(hrOffboardingApi.start);
   // Case owner is optional; the server defaults it to the actor. Picker, never free text.
   const ownerQ = useHrEmployees({ limit: 500 });
-  const ownerOptions = (ownerQ.data ?? []).map(o => ({ id: o.id, name: rowName(o), meta: o.position ?? undefined }));
+  const ownerOptions = (ownerQ.data ?? []).map(o => ({ id: o.id, name: rowName(o), jobTitle: o.position }));
 
   function submit() {
     setErr(null);
@@ -268,7 +268,7 @@ export function OffboardingDialog({ employeeId, onClose, onToast }: DialogProps)
           {fieldErr.noticeDays ? <div class="form-field-error full">{fieldErr.noticeDays}</div> : null}
           <div class="form-field full">
             <label>Case Owner</label>
-            <PersonSearchSelect options={ownerOptions} value={ownerId} onChange={setOwnerId}
+            <PersonSearchSelect people={ownerOptions} value={ownerId} onChange={id => setOwnerId(id ?? '')}
               placeholder="Defaults to you" emptyLabel="No employees found" />
           </div>
         </div>

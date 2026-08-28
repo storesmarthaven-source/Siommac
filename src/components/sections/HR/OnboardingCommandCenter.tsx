@@ -20,27 +20,27 @@
 import { type VNode } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import {
-  WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, insertWidgetsAtRow,
+  BoardSkeleton, WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, insertWidgetsAtRow,
 } from '@ui/widgets';
 import type {
   BoardLayout, LocalWidgetMap, PreviewWidgetInstance, WidgetInstance, WidgetSizeDef, WidgetSizeKey,
 } from '@ui/widgets';
-import { DashboardPageSkeleton } from '@ui';
+import { PageHeaderSkeleton } from '@ui';
 import { can } from '@lib/permissions';
 import {
   useOnboardingDashboard, useOnboardingCases, useOnboardingBlockersList,
   useOnboardingWorkQueue,
 } from '@api/hr/onboarding';
 import { ONBOARDING_QUEUE_FILTER_EVENT, type OnboardingQueueFilter } from '@ui/widgets/registry.hrOnboarding';
-import type { OnboardingCaseRow } from '../../../../types/hrOnboarding';
 import { OnboardingAddTaskModal } from './OnboardingAddTaskModal';
 import { OnboardingScopeSelector } from './OnboardingScopeSelector';
 import { useOnboardingScope } from './useOnboardingScope';
 import type { OnboardingCommandCenterProps, OnboardingSurface, OnboardingSurfaceFilters } from './OnboardingCommandCenter.helpers';
 import {
   StartReadinessWidget, CaseFocusWidget, BlockedCasesWidget, UpcomingStartsWidget,
-  WorkQueueWidget, daysFromToday, type QueueTab,
+  WorkQueueWidget, type QueueTab,
 } from './onboarding/CommandCentreWidgets';
+import { OnboardingWidgetScopeProvider } from './onboarding/OnboardingWidgetScope';
 
 // The mechanically-ported mockup stylesheet, imported ONLY here — together with the TSX that
 // emits its DOM — plus the production-only page shell and panel bounding. Both are LIGHT
@@ -182,7 +182,7 @@ export function OnboardingCommandCenter({
   // ── board lifecycle (Employee Master's) ────────────────────────────────────────
   const {
     layout, updateZoneLayout, saveLayout, cancelLayout, setAsDefault, resetLayout,
-    isDefaultDirty, isDirty, isSaving,
+    isDefaultDirty, isDirty, isSaving, isLoading: layoutLoading,
   } = useBoardLayout(PAGE_KEY, defaultOnboardingLayout(), BOARD_COLUMNS);
   const kpiBoard = useBoardLayout(KPI_PAGE_KEY, defaultOnboardingKpiLayout(), BOARD_COLUMNS);
   const boardItems = layout.zones.main ?? [];
@@ -215,11 +215,13 @@ export function OnboardingCommandCenter({
   const localWidgets: LocalWidgetMap = {
     'hr.onboarding.startReadiness': {
       title: 'Start Readiness', chrome: 'none', allowedSizes: size('standard', 8, 15),
+      skeletonVariant: 'card',
       render: () => <StartReadinessWidget stats={statsQ.data}
         onViewStarts={() => openSurface('cases', { startsWithinDays: 7 })} />,
     },
     'hr.onboarding.caseFocus': {
       title: 'Case Focus', chrome: 'none', allowedSizes: size('standard', 8, 30),
+      skeletonVariant: 'card',
       render: () => <CaseFocusWidget
         cases={focusCases} blockers={blockers} index={focusIndex}
         onCycle={d => setFocusIndex(i => {
@@ -231,16 +233,19 @@ export function OnboardingCommandCenter({
     },
     'hr.onboarding.blockedCases': {
       title: 'Blocked Cases', chrome: 'none', allowedSizes: size('standard', 8, 24),
+      skeletonVariant: 'list',
       render: () => <BlockedCasesWidget blockers={blockers} onOpenCase={openCase}
         onViewAll={() => openSurface('blocked')} />,
     },
     'hr.onboarding.upcomingStarts': {
       title: 'Upcoming Starts', chrome: 'none', allowedSizes: size('wide', 16, 18),
+      skeletonVariant: 'list',
       render: () => <UpcomingStartsWidget rows={starts} loading={startsQ.isPending}
         onOpenCase={openCase} onViewAll={() => openSurface('cases', { startsWithinDays: 7 })} />,
     },
     'hr.onboarding.workQueue': {
       title: isManager ? 'Team Work Queue' : 'My Work Queue', chrome: 'none', allowedSizes: size('hero', 16, 27),
+      skeletonVariant: 'table',
       render: () => <WorkQueueWidget rows={queueRows} isManager={isManager} tab={queueTab}
         onTab={setQueueTab} counts={queueCounts}
         activeFilterLabel={queueFilter?.label ?? null}
@@ -249,13 +254,26 @@ export function OnboardingCommandCenter({
     },
   };
 
-  // Employee Master's cold-state approach: gate on the page's own data queries. `layout` is
-  // never null (the hook falls back to the default), so it cannot be part of this condition.
-  if (shellPending) {
-    return <DashboardPageSkeleton title="Loading Onboarding Command Centre" kpiCount={4} widgetCount={7} includeTable />;
+  const boardSkeleton = (
+    <>
+      <div class="occ-kpi-board">
+        <BoardSkeleton layout={kpiBoard.layout} columns={BOARD_COLUMNS} cellHeight={6} gap={[12, 12]} />
+      </div>
+      <BoardSkeleton layout={layout} columns={BOARD_COLUMNS} cellHeight={6} gap={[12, 12]}
+        localWidgets={localWidgets} />
+    </>
+  );
+
+  if (layoutLoading || kpiBoard.isLoading || shellPending) {
+    return (
+      <div class="occ-root obx-page" role="status" aria-busy="true" aria-label="Loading Onboarding Command Centre">
+        <span class="sr-only">Loading Onboarding Command Centre…</span>
+        <PageHeaderSkeleton />
+        {boardSkeleton}
+      </div>
+    );
   }
 
-  const runtime = { onboardingScope: scope };
 
   return (
     <div class="occ-root obx-page">
@@ -304,22 +322,22 @@ export function OnboardingCommandCenter({
 
       {/* Keyed by scope: a scope change discards the previous tree entirely, so no cached
           All-scope rows, counts or widget data can paint while My is resolving. */}
+      <OnboardingWidgetScopeProvider scope={scope}>
       <div key={`board-${scope}`}>
         {scopeState.changing
-          ? <DashboardPageSkeleton title="Loading" kpiCount={4} widgetCount={7} includeTable />
+          ? boardSkeleton
           : (
             <>
               <div class="occ-kpi-board">
                 <WidgetBoard pageKey={KPI_PAGE_KEY} zones={['main']} editing={editing && canView}
                   defaultLayout={defaultOnboardingKpiLayout()} column={BOARD_COLUMNS}
                   cellHeight={6} gap={[12, 12]} resizable={false} maxRows={6} isBounded
-                  revealOnMount={false} runtime={runtime} />
+                  revealOnMount={false} />
               </div>
 
               <WidgetBoard pageKey={PAGE_KEY} zones={['main']} editing={editing && canView}
                 localWidgets={localWidgets} defaultLayout={defaultOnboardingLayout()}
                 column={BOARD_COLUMNS} cellHeight={6} gap={[12, 12]} revealOnMount={false}
-                runtime={runtime}
                 preview={preview} onPreviewChange={setPreview}
                 onFinishEditing={() => setEditing(false)}
                 onSaveEditing={async () => { if (await savePageLayout()) setEditing(false); }}
@@ -331,6 +349,7 @@ export function OnboardingCommandCenter({
             </>
           )}
       </div>
+      </OnboardingWidgetScopeProvider>
 
       <WidgetLibraryModal open={libOpen} pageKey={PAGE_KEY} zoneId="main"
         placedWidgetIds={placedWidgetIds} userPermissions={[]}

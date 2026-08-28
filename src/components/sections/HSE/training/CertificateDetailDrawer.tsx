@@ -6,14 +6,14 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { Drawer, DetailGrid, Tabs, type TabDef } from '@ui';
+import { Drawer, DetailGrid, Tabs, type TabItem } from '@ui';
 import { useCertificate, useCertificateAction, useUploadCertEvidence } from '@api/hse/training';
 import { RenewCertificateDialog } from './TrainingDialogs';
 
 type TabKey = 'overview' | 'evidence' | 'verification' | 'timeline';
-const TABS: TabDef<TabKey>[] = [
-  { key: 'overview', label: 'Overview' }, { key: 'evidence', label: 'Evidence' },
-  { key: 'verification', label: 'Verification' }, { key: 'timeline', label: 'Timeline' },
+const TABS: readonly TabItem[] = [
+  { id: 'overview', label: 'Overview' }, { id: 'evidence', label: 'Evidence' },
+  { id: 'verification', label: 'Verification' }, { id: 'timeline', label: 'Timeline' },
 ];
 const fmt = (iso?: string | null) => iso ? new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
 const fmtT = (iso?: string | null) => iso ? new Date(iso).toLocaleString(undefined, { day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
@@ -64,12 +64,12 @@ export function CertificateDetailDrawer({ certificateId, onClose }: { certificat
     <>
       <Drawer open={!!certificateId} onClose={onClose} title={cert?.course_name ?? (isLoading ? 'Loading…' : 'Certificate')} sub={cert?.certificate_no ?? undefined} foot={foot}>
         <div style={{ marginBottom: '12px', display: 'flex', gap: '8px', alignItems: 'center' }}>{cert ? pill(status) : null}</div>
-        <Tabs<TabKey> tabs={TABS} active={tab} onChange={setTab} />
+        <Tabs id="certificate-detail-tabs" label="Certificate details" items={TABS} value={tab} onChange={id => setTab(id as TabKey)} />
 
         {tab === 'overview' && cert && (
           <div style={{ marginTop: '12px' }}>
             <DetailGrid items={[
-              { icon: 'fa-hashtag', label: 'Reference', value: cert.certificate_no ?? '—' },
+              { icon: 'fa-hashtag', label: 'Reference', value: cert.certificate_no },
               { icon: 'fa-user', label: 'Worker', value: cert.worker_name ?? cert.worker_id },
               { icon: 'fa-graduation-cap', label: 'Course', value: cert.course_name },
               { icon: 'fa-building', label: 'Provider', value: cert.provider ?? '—' },
@@ -91,7 +91,7 @@ export function CertificateDetailDrawer({ certificateId, onClose }: { certificat
                   onChange={e => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) upload.mutate({ file: f, certificateId }); (e.target as HTMLInputElement).value = ''; }} />
               </label>
             )}
-            {upload.isError && <div style={{ color: 'var(--siomac-red)', fontSize: '0.78rem' }}>{(upload.error)?.message ?? 'Upload failed'}</div>}
+            {upload.isError && <div style={{ color: 'var(--siomac-red)', fontSize: '0.78rem' }}>{upload.error.message}</div>}
             {(d?.evidence ?? []).length === 0 && <div class="hse-muted">No evidence attached.</div>}
             {(d?.evidence ?? []).map(ev => (
               <div key={ev.id} class="vt-table-card" style={{ padding: '8px 12px', display: 'flex', gap: '8px', alignItems: 'center' }}>

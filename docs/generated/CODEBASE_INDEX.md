@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `6d95b74c36e7e06f52abc55404523daa53f7717d`  
-Source fingerprint: `dfa9cd3ead99b98830efc082`  
+Source HEAD: `59474a25e3d1de8392bb002841baa99c59aeb25b`  
+Source fingerprint: `22dcdd66df2af25c679dc01c`  
 Generator version: `1`
 
 ## Use
@@ -19,22 +19,22 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1536 | 15177 | 72 | 983 | 984 | 17 | 361 | 1445 | 92 | 2748 |
+| 1551 | 15419 | 77 | 992 | 993 | 17 | 361 | 1460 | 95 | 2846 |
 
 ## Modules
 
 | Module | Files | Symbols | Widgets | Unique routes | Route definitions | API calls | DB objects | E2E suites | Map |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| hr | 267 | 3089 | 13 | 275 | 275 | 37 | 196 | 16 | [open](modules/hr.md) |
+| hr | 280 | 3297 | 14 | 284 | 284 | 37 | 207 | 19 | [open](modules/hr.md) |
 | payroll | 196 | 1986 | 12 | 140 | 140 | 2 | 260 | 29 | [open](modules/payroll.md) |
 | finance | 141 | 1849 | 9 | 156 | 156 | 4 | 202 | 9 | [open](modules/finance.md) |
 | hse | 89 | 1278 | 0 | 144 | 144 | 107 | 65 | 4 | [open](modules/hse.md) |
 | communications | 113 | 1057 | 0 | 93 | 96 | 88 | 158 | 7 | [open](modules/communications.md) |
-| workflow | 47 | 323 | 0 | 40 | 40 | 8 | 128 | 3 | [open](modules/workflow.md) |
+| workflow | 46 | 310 | 0 | 40 | 40 | 8 | 130 | 3 | [open](modules/workflow.md) |
 | security | 46 | 387 | 0 | 51 | 51 | 31 | 65 | 4 | [open](modules/security.md) |
-| settings | 45 | 272 | 0 | 26 | 26 | 18 | 21 | 2 | [open](modules/settings.md) |
-| widgets | 73 | 588 | 21 | 20 | 20 | 11 | 23 | 1 | [open](modules/widgets.md) |
-| platform | 471 | 4121 | 16 | 38 | 53 | 55 | 327 | 0 | [open](modules/platform.md) |
+| settings | 45 | 272 | 0 | 26 | 26 | 18 | 23 | 2 | [open](modules/settings.md) |
+| widgets | 76 | 622 | 25 | 20 | 20 | 11 | 23 | 1 | [open](modules/widgets.md) |
+| platform | 471 | 4134 | 16 | 38 | 53 | 55 | 327 | 0 | [open](modules/platform.md) |
 | testing | 48 | 227 | 0 | 0 | 0 | 0 | 0 | 17 | [open](modules/testing.md) |
 | enterprise | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | [open](modules/enterprise.md) |
 
@@ -53,8 +53,8 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `employee-name` | Employee record | registry | hr | `() => <FormField label="Employee name" required helpText="As shown on government ID"><TextInput value="Sarah James" onInput={noop} /></FormField>` | `src/ui/registry/forms.defs.tsx:576` |
 | `employee-onboarding` | Employee onboarding | registry | hr | `() => <ProgressSteps steps={STEPS} value="documents" label="Employee onboarding progress" variant="icon-with-number" />` | `src/ui/registry/progress-steps.def.tsx:150` |
 | `employee-register-views` | Employee register views | registry | hr | `() => (         <Tabs           id="ex-employee-register"           label="Employee register views"           class="sds-tabs-use-example"           variant="contained"           size="sm"           items={[             { id: 'all', label: 'All' },             { id: 'attention', label: 'Attention', badge: 8 },             { id: 'archived', label: 'Archived' },           ]}           value="attention"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:325` |
-| `enterprise.calendar.taskPlanner` | Task Planner | registry | widgets | `TaskPlannerWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:291` |
-| `enterprise.calendar.upcomingDeadlines` | Schedule & Deadlines | registry | widgets | `DeadlineWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:290` |
+| `enterprise.calendar.taskPlanner` | Task Planner | registry | widgets | `TaskPlannerWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:304` |
+| `enterprise.calendar.upcomingDeadlines` | Schedule & Deadlines | registry | widgets | `DeadlineWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:303` |
 | `export` | Export menu | registry | platform | `() => <DropdownButton label="Export" variant="secondary" items={RECORD_MENU} />` | `src/ui/registry/compound.defs.tsx:143` |
 | `filter` | Filter picker | registry | platform | `() => <DropdownButton label="Status: All" variant="secondary" matchWidth items={RECORD_MENU} />` | `src/ui/registry/compound.defs.tsx:147` |
 | `finance.payroll.assignedWork` | Approval and Activity | local | payroll | `() => <ApprovalsWidget data={data} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:512` |
@@ -90,12 +90,17 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `hr.employeeMaster.readinessRadar` | Employee Readiness Radar | registry | widgets | `ReadinessRadar` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:652` |
 | `hr.employeeMaster.recordQuality` | Record Quality | registry | widgets | `RecordQuality` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:618` |
 | `hr.employeeMaster.recordReadiness` | Record Readiness | registry | widgets | `RecordReadiness` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:614` |
-| `hr.employees.register` | Employee Register | local | hr | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:855` |
+| `hr.employees.register` | Employee Register | local | hr | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:829` |
 | `hr.employees.register` |  | local | widgets | `() => <div />` | `src/ui/widgets/BoardSkeleton.test.tsx:30` |
-| `hr.onboarding.case.activeTasks` | Active Tasks | local | hr | `() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <Button variant="primary" size="sm" onClick={openAddTask} iconLeft={<i class="fas fa-plus" />}>Add</Button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:332` |
-| `hr.onboarding.case.blockersTable` | Blockers | local | hr | `() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:333` |
-| `hr.onboarding.case.customActions` | Custom Actions | local | hr | `() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <Button variant="primary" size="sm" onClick={openAddAction} iconLeft={<i class="fas fa-plus" />}>Add</Button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:335` |
-| `hr.onboarding.case.handoffsTable` | Handoffs | local | hr | `() => wcard('Handoffs', 'fa-arrow-right-arrow-left', handoffsBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:334` |
+| `hr.onboarding.blockedCases` | Blocked Cases | local | hr | `() => <BlockedCasesWidget blockers={blockers} onOpenCase={openCase}         onViewAll={() => openSurface('blocked')} />` | `src/components/sections/HR/OnboardingCommandCenter.tsx:234` |
+| `hr.onboarding.caseFocus` | Case Focus | local | hr | `() => <CaseFocusWidget         cases={focusCases} blockers={blockers} index={focusIndex}         onCycle={d => setFocusIndex(i => {           const n = focusCases.length \|\| 1;           return ((i + d) % n + n) % n;         })}         onOpenCase={openCase}         onNotifyOwner={b => openSurface('blocked', { blockerId: b.blockerId })} />` | `src/components/sections/HR/OnboardingCommandCenter.tsx:222` |
+| `hr.onboarding.dueToday` | Due Today | registry | widgets | `DueToday` | `src/ui/widgets/registry.hrOnboarding.tsx:169` |
+| `hr.onboarding.overdueActions` | Overdue Actions | registry | widgets | `OverdueActions` | `src/ui/widgets/registry.hrOnboarding.tsx:170` |
+| `hr.onboarding.ownerRequired` | Owner Required | registry | widgets | `OwnerRequired` | `src/ui/widgets/registry.hrOnboarding.tsx:172` |
+| `hr.onboarding.startReadiness` | Start Readiness | local | hr | `() => <StartReadinessWidget stats={statsQ.data}         onViewStarts={() => openSurface('cases', { startsWithinDays: 7 })} />` | `src/components/sections/HR/OnboardingCommandCenter.tsx:216` |
+| `hr.onboarding.startsWithin7Days` | Starting Within 7 Days | registry | widgets | `StartsWithinSevenDays` | `src/ui/widgets/registry.hrOnboarding.tsx:171` |
+| `hr.onboarding.upcomingStarts` | Upcoming Starts | local | hr | `() => <UpcomingStartsWidget rows={starts} loading={startsQ.isPending}         onOpenCase={openCase} onViewAll={() => openSurface('cases', { startsWithinDays: 7 })} />` | `src/components/sections/HR/OnboardingCommandCenter.tsx:240` |
+| `hr.onboarding.workQueue` |  | local | hr | `() => <WorkQueueWidget rows={queueRows} isManager={isManager} tab={queueTab}         onTab={setQueueTab} counts={queueCounts}         activeFilterLabel={queueFilter?.label ?? null}         onClearFilter={() => setQueueFilter(null)} onOpenCase={openCase}         onOpenQueue={() => openSurface('tasks')} />` | `src/components/sections/HR/OnboardingCommandCenter.tsx:246` |
 | `one-surface` | One surface, four rhythms | registry | platform | `() => (         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px' }}>           <Card variant="metric" density="compact" header={<CardHeader title="Open incidents" level={null} />}>             <Figure value="18" caption="4 overdue" />           </Card>           <Card variant="surface" header={<CardHeader title="Site note" />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Night shift handover completed.</span>           </Card>           <Card variant="panel" density="compact" header={<CardHeader title="Corrective actions" actions={<Badge tone="warning" size="sm">2 open</Badge>} />}>             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Both due this Friday.</span>           </Card>           <Card variant="action" onClick={noop} actionLabel="Start a new inspection"             header={<CardHeader icon={<LucideIcon name="ClipboardCheck" />} title="New inspection" description="Start from a template" />} />         </div>       )` | `src/ui/registry/containers.defs.tsx:216` |
 | `page-action` | Page action | registry | platform | `() => <Button variant="primary" iconLeft={<LucideIcon name="Plus" />}>Add employee</Button>` | `src/ui/registry/actions.defs.tsx:296` |
 | `payroll-amount` | Payroll amount | registry | payroll | `() => <FormField label="Gross pay"><CurrencyInput valueMinor={845000} onChange={noop} currency="TTD" /></FormField>` | `src/ui/registry/forms.defs.tsx:588` |

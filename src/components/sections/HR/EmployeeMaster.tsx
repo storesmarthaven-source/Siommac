@@ -13,19 +13,25 @@ import {
   type HrEmployeeRow, type TrainingStatus, type EmployeeSortCol, type EmployeeMissingField,
 } from '@api/hr/employees';
 import { usePrefetchEmployeeProfileShell, type ProfileTabKey } from '@api/hr/employeeProfile';
+import { EMPLOYEE_ATTENTION_ROSTER_QUERY, EMPLOYEE_DRAWER_EVENT } from '@ui/widgets/registry.hrEmployeeDashboard';
+import { useDeadlineWindowQuery } from '@ui/widgets/registry.calendarPlanning';
 import {
   humanize, rowName, statusTone, TRAINING_TONE, TRAINING_LABEL, Avatar, TinyAvatar,
 } from './shared';
 import { ProfileDrawer } from './ProfileDrawer';
-import { HR_EMPLOYEE_DEEPLINK_KEY } from './hrDeepLink';
+import {
+  HR_EMPLOYEE_DEEPLINK_KEY,
+  HR_EMPLOYEE_RECORD_DEEPLINK_KEY,
+  HR_EMPLOYEE_RECORD_TAB_DEEPLINK_KEY,
+} from './hrDeepLink';
 import { EmployeeProfilePage } from './EmployeeProfilePage';
 import { EmployeeCreatePage } from './EmployeeCreatePage';
 import { ContactDialog, StatusDialog, OffboardingDialog, ChangeRequestDialog, DocumentDialog, StatutoryDialog } from './ActionDialogs';
 import { ImportWizard } from './ImportWizard';
 import { StartOnboardingWizard } from './StartOnboardingWizard';
-import { DashboardPageSkeleton, TableSkeleton, Button, EmptyState, LucideIcon, PageHeader, Pagination } from '@ui';
+import { Badge, PageHeaderSkeleton, TableSkeleton, Button, EmptyState, LucideIcon, PageHeader, Pagination } from '@ui';
 import {
-  WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget, insertWidgetsAtRow,
+  BoardSkeleton, WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget, insertWidgetsAtRow, findWidgetDef,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeDef, type WidgetSizeKey,
 } from '@ui/widgets';
 import { TableSearch, FilterDropdown, AdvancedFilter, ActiveFilters, useFilterDropdowns, FILTER_DROPDOWN_ATTR, type AdvTab } from '@ui';
@@ -197,7 +203,7 @@ function EmployeeRow(
         ? <div class="supervisor-cell"><TinyAvatar name={supervisorName} />{supervisorName}</div>
         : <span style={{ color: '#94a3b8' }}>No supervisor</span>}</td>}
       {visibleColumns.includes('employmentType') && <td data-column="employmentType">{humanize(type)}</td>}
-      {visibleColumns.includes('status') && <td data-column="status"><span class={`pill ${statusTone(emp.status)}`}>{humanize(emp.status)}</span></td>}
+      {visibleColumns.includes('status') && <td data-column="status"><Badge tone={statusTone(emp.status)}>{humanize(emp.status)}</Badge></td>}
       {visibleColumns.includes('readiness') && <td data-column="readiness">
         {emp.readiness ? <div class="em-readiness" aria-label={`${emp.readiness.percent}% ready${emp.readiness.blockedDomains.length ? `; blockers: ${emp.readiness.blockedDomains.join(', ')}` : ''}`}>
           <div><span>Record readiness</span><strong>{emp.readiness.percent}%</strong></div>
@@ -206,7 +212,7 @@ function EmployeeRow(
           <i aria-hidden="true"><b style={readinessFillStyle(emp.readiness.percent)} /></i>
         </div> : <span class="em-readiness-restricted">Restricted</span>}
       </td>}
-      {visibleColumns.includes('trainingStatus') && <td data-column="trainingStatus"><span class={`pill ${TRAINING_TONE[emp.trainingStatus]}`}>{TRAINING_LABEL[emp.trainingStatus]}</span></td>}
+      {visibleColumns.includes('trainingStatus') && <td data-column="trainingStatus"><Badge tone={TRAINING_TONE[emp.trainingStatus]}>{TRAINING_LABEL[emp.trainingStatus]}</Badge></td>}
       {visibleColumns.includes('actions') && <td data-column="actions" class="kebab" onClick={e => e.stopPropagation()}>
         <EmployeeRowMenu emp={emp} name={name} menuId={kebabId} isOpen={isOpen} setOpenId={setOpenId}
           access={access} onSelect={onSelect} onAction={onAction} />
@@ -220,6 +226,52 @@ function EmployeeRow(
 function defInst(widgetId: string, x: number, y: number, w: number, h: number, sizeKey: WidgetSizeKey, pageKey = PAGE_KEY): WidgetInstance {
   return { instanceId: `${widgetId}#def`, widgetId, pageKey, zoneId: 'main', x, y, w, h, sizeKey, config: {} };
 }
+
+const KPI_TILE = { w: 4, h: 6 } as const;
+const KPI_SLOTS_PER_ROW = Math.max(1, Math.floor(EMPLOYEE_BOARD_COLUMNS / KPI_TILE.w));
+
+export function kpiStripMaxRows(slotsUsed: number): number {
+  return Math.max(1, Math.ceil(slotsUsed / KPI_SLOTS_PER_ROW)) * KPI_TILE.h;
+}
+
+export function kpiTileSlots(widgetId: string): number {
+  const def = findWidgetDef(widgetId);
+  if (def?.resizable !== false || def.sizeConstraints?.defaultRows !== KPI_TILE.h) return 0;
+  const slots = def.sizeConstraints.defaultColumns / KPI_TILE.w;
+  return Number.isInteger(slots) && slots >= 1 && slots <= KPI_SLOTS_PER_ROW ? slots : 0;
+}
+
+export function isKpiTileWidget(widgetId: string): boolean {
+  return kpiTileSlots(widgetId) > 0;
+}
+
+export function kpiSlotsUsed(items: readonly WidgetInstance[]): number {
+  return items.reduce(
+    (total, item) => total + (kpiTileSlots(item.widgetId) || Math.max(1, Math.round(item.w / KPI_TILE.w))),
+    0,
+  );
+}
+
+export function placeKpiTiles(
+  existing: readonly WidgetInstance[],
+  additions: readonly WidgetInstance[],
+): WidgetInstance[] {
+  let cursor = kpiSlotsUsed(existing);
+  return additions.map(item => {
+    const slots = kpiTileSlots(item.widgetId) || 1;
+    const offset = cursor % KPI_SLOTS_PER_ROW;
+    if (offset + slots > KPI_SLOTS_PER_ROW) cursor += KPI_SLOTS_PER_ROW - offset;
+    const placed = {
+      ...item,
+      x: (cursor % KPI_SLOTS_PER_ROW) * KPI_TILE.w,
+      y: Math.floor(cursor / KPI_SLOTS_PER_ROW) * KPI_TILE.h,
+      w: slots * KPI_TILE.w,
+      h: KPI_TILE.h,
+    };
+    cursor += slots;
+    return placed;
+  });
+}
 export function defaultEmployeeKpiLayout(): BoardLayout {
   return {
     pageKey: KPI_PAGE_KEY,
@@ -230,8 +282,7 @@ export function defaultEmployeeKpiLayout(): BoardLayout {
         defInst('hr.employeeMaster.recordReadiness', 4, 0, 4, 6, 'compact', KPI_PAGE_KEY),
         defInst('hr.employeeMaster.hrWorkQueue', 8, 0, 4, 6, 'compact', KPI_PAGE_KEY),
         defInst('hr.employeeMaster.exceptions', 12, 0, 4, 6, 'compact', KPI_PAGE_KEY),
-        defInst('hr.employeeMaster.newStarters', 16, 0, 4, 6, 'compact', KPI_PAGE_KEY),
-        defInst('hr.employeeMaster.departures', 20, 0, 4, 6, 'compact', KPI_PAGE_KEY),
+        defInst('hr.employeeMaster.departures', 16, 0, 4, 6, 'compact', KPI_PAGE_KEY),
       ],
     },
   };
@@ -250,8 +301,7 @@ export function defaultEmployeeLayout(): BoardLayout {
         // near-identical survivors (`lifecycleActivity`, `adminWorkload` — same titles), and the
         // two workforce charts were retired outright, so the top row closes up.
         defInst('hr.employeeMaster.lifecycleActivity', 0, 0, 12, 28, 'wide'),         // 492px
-        defInst('enterprise.calendar.upcomingDeadlines', 12, 0, 6, 28, 'standard'),
-        defInst('hr.employeeMaster.adminWorkload', 18, 0, 6, 28, 'large'),
+        defInst('enterprise.calendar.upcomingDeadlines', 12, 0, 12, 28, 'standard'),
         defInst('hr.employees.register', 0, 28, EMPLOYEE_BOARD_COLUMNS, 50, 'hero'),  // 888px
       ],
     },
@@ -346,7 +396,23 @@ export function EmployeeMaster(): VNode {
   // Subject) can request a specific profile. Consume the one-shot hint on mount.
   useEffect(() => {
     let pending: string | null = null;
+    let recordId: string | null = null;
+    let recordTab: string | null = null;
     try { pending = sessionStorage.getItem(HR_EMPLOYEE_DEEPLINK_KEY); sessionStorage.removeItem(HR_EMPLOYEE_DEEPLINK_KEY); } catch { /* ignore */ }
+    try {
+      recordId = sessionStorage.getItem(HR_EMPLOYEE_RECORD_DEEPLINK_KEY);
+      recordTab = sessionStorage.getItem(HR_EMPLOYEE_RECORD_TAB_DEEPLINK_KEY);
+      sessionStorage.removeItem(HR_EMPLOYEE_RECORD_DEEPLINK_KEY);
+      sessionStorage.removeItem(HR_EMPLOYEE_RECORD_TAB_DEEPLINK_KEY);
+    } catch { /* ignore */ }
+    if (recordId) {
+      const validTab = ['overview', 'employment', 'statutory', 'payroll', 'documents', 'training', 'readiness', 'access', 'activity'].includes(recordTab ?? '')
+        ? recordTab as ProfileTabKey
+        : 'overview';
+      setFullEmployeeTab(validTab);
+      setFullEmployeeId(recordId);
+      return;
+    }
     if (pending) setSelectedId(pending);
   }, []);
 
@@ -382,6 +448,10 @@ export function EmployeeMaster(): VNode {
     sortBy, sortDir, page, pageSize,
   });
   const dashboardQ = useHrDashboardStats();
+  // Warm the independent widget datasets so the page switches from one
+  // layout-shaped cold state to fully populated content without card flashes.
+  const attentionRosterQ = useHrEmployeesPage({ ...EMPLOYEE_ATTENTION_ROSTER_QUERY, statuses: ['active'] });
+  const deadlineQ = useDeadlineWindowQuery().query;
   const paged = listQ.data?.rows ?? [];
   const meta = listQ.data?.meta;
   const total = meta?.total ?? 0;
@@ -396,7 +466,7 @@ export function EmployeeMaster(): VNode {
   // widgets come from the global registry (browsable in the Widget Library).
   const {
     layout, updateZoneLayout, saveLayout, cancelLayout, setAsDefault, resetLayout,
-    isDefaultDirty, isDirty, isSaving,
+    isDefaultDirty, isDirty, isSaving, isLoading: layoutLoading,
   } = useBoardLayout(PAGE_KEY, defaultEmployeeLayout(), EMPLOYEE_BOARD_COLUMNS);
   const kpiBoard = useBoardLayout(KPI_PAGE_KEY, defaultEmployeeKpiLayout(), EMPLOYEE_BOARD_COLUMNS);
   const pageDefaultDirty = isDefaultDirty || kpiBoard.isDefaultDirty;
@@ -404,7 +474,15 @@ export function EmployeeMaster(): VNode {
   const pageSaving = isSaving || kpiBoard.isSaving;
   const boardItems = layout.zones.main ?? [];
   const placedWidgetIds = boardItems.map(w => w.widgetId);
+  const kpiItems = kpiBoard.layout.zones.main ?? [];
+  const allPlacedWidgetIds = [...placedWidgetIds, ...kpiItems.map(w => w.widgetId)];
   const WIDGET_SECTION_START_ROW = 0;
+  const addFromLibrary = async (instances: WidgetInstance[]): Promise<void> => {
+    const kpis = instances.filter(inst => isKpiTileWidget(inst.widgetId));
+    const rest = instances.filter(inst => !isKpiTileWidget(inst.widgetId));
+    if (kpis.length) await kpiBoard.updateZoneLayout('main', [...kpiItems, ...placeKpiTiles(kpiItems, kpis)]);
+    if (rest.length) await updateZoneLayout('main', insertWidgetsAtRow(boardItems, rest, WIDGET_SECTION_START_ROW));
+  };
   // New widgets enter the editable widget section, below the independent fixed KPI row.
   const placeInWidgetSection = <T extends { x: number; y: number }>(w: T): T => ({ ...w, x: 0, y: WIDGET_SECTION_START_ROW });
   const userPermissions = useMemo(
@@ -491,6 +569,15 @@ export function EmployeeMaster(): VNode {
     };
     window.addEventListener(REGISTER_FILTER_EVENT, onFilterRequest);
     return () => window.removeEventListener(REGISTER_FILTER_EVENT, onFilterRequest);
+  }, []);
+
+  useEffect(() => {
+    const onOpenDrawer = (event: Event): void => {
+      const employeeId = (event as CustomEvent<{ employeeId?: string }>).detail.employeeId;
+      if (employeeId) setSelectedId(employeeId);
+    };
+    window.addEventListener(EMPLOYEE_DRAWER_EVENT, onOpenDrawer);
+    return () => window.removeEventListener(EMPLOYEE_DRAWER_EVENT, onOpenDrawer);
   }, []);
 
   const chipDefs: { label: string; onRemove: () => void }[] = [
@@ -708,12 +795,12 @@ export function EmployeeMaster(): VNode {
                       {listQ.isError && !listQ.data
                         ? <EmptyState icon="fa-triangle-exclamation" tone="gray" title="Employee register unavailable"
                             text="The employee records could not be loaded. Your filters and workspace have been preserved."
-                            actions={<Button variant="outline" icon="fa-rotate-right" onClick={() => void listQ.refetch()}>Retry</Button>} />
+                            actions={<Button variant="outline" iconLeft={<i class="fas fa-rotate-right" />} onClick={() => void listQ.refetch()}>Retry</Button>} />
                         : <EmptyState icon="fa-user-group" tone="gray"
                             title={emptyRegisterCopy.title}
                             text={emptyRegisterCopy.text}
                             actions={hasActiveFilters
-                              ? <Button variant="outline" icon="fa-filter-circle-xmark" onClick={() => { setSearchDraft(''); setFiltersReset(EMPTY_FILTERS); }}>Clear filters</Button>
+                              ? <Button variant="outline" iconLeft={<i class="fas fa-filter-circle-xmark" />} onClick={() => { setSearchDraft(''); setFiltersReset(EMPTY_FILTERS); }}>Clear filters</Button>
                               : undefined} />}
                     </div>
                   </td></tr>}
@@ -739,7 +826,13 @@ export function EmployeeMaster(): VNode {
   const floor = (key: WidgetSizeKey, w: number, h: number): WidgetSizeDef[] =>
     [{ key, label: 'Default', grid: { w, h } }];
   const localWidgets: LocalWidgetMap = {
-    'hr.employees.register': { render: renderRegister, chrome: 'none', title: 'Employee Register', allowedSizes: floor('hero', 12, 12) },
+    'hr.employees.register': {
+      render: renderRegister,
+      chrome: 'none',
+      title: 'Employee Register',
+      allowedSizes: floor('hero', 12, 12),
+      skeletonVariant: 'table',
+    },
   };
 
   // Full-PAGE wizards — take over the whole view when launched.
@@ -765,8 +858,20 @@ export function EmployeeMaster(): VNode {
     );
   }
 
-  if (listQ.isLoading || dashboardQ.isLoading) {
-    return <DashboardPageSkeleton title="Loading Employee Master" kpiCount={6} widgetCount={3} includeTable />;
+  if (layoutLoading || kpiBoard.isLoading
+    || listQ.isLoading || dashboardQ.isLoading || attentionRosterQ.isLoading || deadlineQ.isLoading) {
+    return (
+      <div class="hr-emp-master" data-testid="employee-master-skeleton" role="status" aria-busy="true"
+        aria-label="Loading Employee Master">
+        <span class="sr-only">Loading Employee Master…</span>
+        <PageHeaderSkeleton />
+        <div class="em-kpi-board">
+          <BoardSkeleton layout={kpiBoard.layout} columns={EMPLOYEE_BOARD_COLUMNS} cellHeight={6} gap={[12, 12]} />
+        </div>
+        <BoardSkeleton layout={layout} columns={EMPLOYEE_BOARD_COLUMNS} cellHeight={6} gap={[12, 12]}
+          localWidgets={localWidgets} />
+      </div>
+    );
   }
 
   return (
@@ -823,7 +928,7 @@ export function EmployeeMaster(): VNode {
       {preview && (
         <div class="wmock-preview-banner">
           <span><i class="fas fa-eye" /> Previewing a widget — drag and resize it on the board, then <strong>Add to board</strong> or <strong>Discard</strong>.</span>
-          <Button variant="outline" icon="fa-xmark" onClick={discardPreview}>Discard preview</Button>
+          <Button variant="outline" iconLeft={<i class="fas fa-xmark" />} onClick={discardPreview}>Discard preview</Button>
         </div>
       )}
 
@@ -832,7 +937,8 @@ export function EmployeeMaster(): VNode {
       <div class="em-kpi-board">
         <WidgetBoard pageKey={KPI_PAGE_KEY} zones={['main']} editing={editing && canEdit}
           defaultLayout={defaultEmployeeKpiLayout()} column={EMPLOYEE_BOARD_COLUMNS}
-          cellHeight={6} gap={[12, 12]} resizable={false} maxRows={6} isBounded revealOnMount={false} />
+          cellHeight={6} gap={[12, 12]} resizable={false} maxRows={kpiStripMaxRows(kpiSlotsUsed(kpiItems))}
+          isBounded revealOnMount={false} />
       </div>
 
       {/* Fine grid at Statutory/Command-Centre parity (cellHeight 6, gap 12 → an 18px vertical
@@ -853,12 +959,12 @@ export function EmployeeMaster(): VNode {
       />
 
       <WidgetLibraryModal open={libOpen} pageKey={PAGE_KEY} zoneId="main"
-        placedWidgetIds={placedWidgetIds} userPermissions={userPermissions}
+        placedWidgetIds={allPlacedWidgetIds} userPermissions={userPermissions}
         demo={demo} onToggleDemo={() => setDemo(d => !d)}
         canManagePackages={isAdmin}
         onClose={() => setLibOpen(false)}
-        onAddWidget={inst => updateZoneLayout('main', insertWidgetsAtRow(boardItems, [inst], WIDGET_SECTION_START_ROW))}
-        onAddWidgets={instances => updateZoneLayout('main', insertWidgetsAtRow(boardItems, instances, WIDGET_SECTION_START_ROW))}
+        onAddWidget={inst => addFromLibrary([inst])}
+        onAddWidgets={instances => addFromLibrary(instances)}
         onPreviewOnBoard={p => setPreview(placeInWidgetSection(p))} />
 
       {/* Profile drawer */}

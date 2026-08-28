@@ -157,10 +157,11 @@ function changeSummary(prev: unknown, next: unknown): string | null {
   const isObj = (v: unknown): v is Record<string, unknown> =>
     !!v && typeof v === 'object' && !Array.isArray(v);
   if (!isObj(prev) || !isObj(next)) return null;
-  const scalar = (v: unknown): string | null =>
-    v === null || v === undefined ? '—'
-      : ['string', 'number', 'boolean'].includes(typeof v) ? String(v)
-        : null;
+  const scalar = (v: unknown): string | null => {
+    if (v === null || v === undefined) return '—';
+    if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') return String(v);
+    return null;
+  };
   const parts: string[] = [];
   for (const key of Object.keys(next)) {
     if (parts.length === 2) break;
@@ -250,12 +251,15 @@ export function OnboardingCaseDetail({
   // genuinely different record is drilled into.
   const focusKey = focus ? `${focus.sourceType}:${focus.sourceId}:${focus.relatedTaskId ?? ''}` : '';
   const focusTabValue = focusTab(focus);
-  const lastAppliedFocusKey = useRef<string | null>(null);
+  const lastAppliedFocusKeyRef = useRef<string | null>(null);
   useEffect(() => {
-    if (lastAppliedFocusKey.current === focusKey) return;
-    lastAppliedFocusKey.current = focusKey;
+    if (lastAppliedFocusKeyRef.current === focusKey) return;
+    lastAppliedFocusKeyRef.current = focusKey;
     setTab(focusTabValue);
   }, [focusKey, focusTabValue]);
+
+  // Range filters use a stable mount-time reference so rendering stays idempotent.
+  const [rangeReferenceMs] = useState(Date.now);
 
   const showAudit = can('hr.onboarding.audit.view');
   // Audit is ABSENT without the permission, not disabled — and a stale tab selection can
@@ -335,7 +339,7 @@ export function OnboardingCaseDetail({
     const RANK: Record<string, number> = { critical: 3, high: 2, medium: 1, low: 0 };
     for (const b of blockers) {
       if (!blockerOpen(b.status)) continue;
-      const row = rowFor(b.blockingModule ?? 'general');
+      const row = rowFor(b.blockingModule);
       row.openBlockers += 1;
       if (!row.severity || (RANK[b.severity] ?? 0) > (RANK[row.severity] ?? 0)) row.severity = b.severity;
     }
@@ -1060,7 +1064,7 @@ export function OnboardingCaseDetail({
     open: blocked.openBlockers.length,
     overdue: blocked.openBlockers.filter(b => isOverdue(b.dueAt)).length,
     escalated: blocked.openBlockers.filter(b => b.status === 'escalated').length,
-    domains: new Set(blocked.openBlockers.map(b => b.blockingModule ?? 'general')).size,
+    domains: new Set(blocked.openBlockers.map(b => b.blockingModule)).size,
   }), [blocked.openBlockers]);
   const filteredBlockers = useMemo(() => blockers.filter(b => {
     if (blockerSeverityFilter && b.severity !== blockerSeverityFilter) return false;
@@ -1348,9 +1352,9 @@ export function OnboardingCaseDetail({
 
   const timelineWorkspace = (): VNode => {
     const all = timelineQ.data ?? [];
-    const cutoff = timelineRangeFilter === 'today' ? Date.now() - DAY_MS
-      : timelineRangeFilter === '7' ? Date.now() - 7 * DAY_MS
-        : timelineRangeFilter === '30' ? Date.now() - 30 * DAY_MS
+    const cutoff = timelineRangeFilter === 'today' ? rangeReferenceMs - DAY_MS
+      : timelineRangeFilter === '7' ? rangeReferenceMs - 7 * DAY_MS
+        : timelineRangeFilter === '30' ? rangeReferenceMs - 30 * DAY_MS
           : null;
     const rows = all.filter(e => {
       if (timelineTypeFilter && e.item_type !== timelineTypeFilter) return false;
@@ -1427,8 +1431,8 @@ export function OnboardingCaseDetail({
     const areaOf = (action: string): string =>
       action.replace(/^hr\.onboarding\./, '').split('.')[0] ?? 'case';
     const areas = [...new Set(all.map(a => areaOf(a.action)))].sort((a, b) => a.localeCompare(b));
-    const cutoff = auditRangeFilter === '30' ? Date.now() - 30 * DAY_MS
-      : auditRangeFilter === '90' ? Date.now() - 90 * DAY_MS
+    const cutoff = auditRangeFilter === '30' ? rangeReferenceMs - 30 * DAY_MS
+      : auditRangeFilter === '90' ? rangeReferenceMs - 90 * DAY_MS
         : null;
     const rows = all.filter(a => {
       if (auditAreaFilter && areaOf(a.action) !== auditAreaFilter) return false;
@@ -1490,7 +1494,8 @@ export function OnboardingCaseDetail({
   const personOptions = employees.map(e => ({
     id: e.id,
     name: rowName(e),
-    subtitle: [e.employee_number, e.position].filter(Boolean).join(' · ') || null,
+    employeeNo: e.employee_number,
+    jobTitle: e.position,
     photoUrl: e.profile_image_url,
   }));
 
@@ -1510,7 +1515,7 @@ export function OnboardingCaseDetail({
       <FormGrid>
         <Field label="New case owner">
           <PersonSearchSelect
-            options={personOptions} value={ownerDraftId} onChange={setOwnerDraftId}
+            people={personOptions} value={ownerDraftId} onChange={id => setOwnerDraftId(id ?? '')}
             placeholder="Search by name or employee number…" emptyLabel="No employees found"
           />
         </Field>
@@ -1537,7 +1542,7 @@ export function OnboardingCaseDetail({
       <FormGrid>
         <Field label={`Accountable person for “${reassignTask?.taskTitle ?? ''}”`}>
           <PersonSearchSelect
-            options={personOptions} value={assigneeDraftId} onChange={setAssigneeDraftId}
+            people={personOptions} value={assigneeDraftId} onChange={id => setAssigneeDraftId(id ?? '')}
             placeholder="Search by name or employee number…" emptyLabel="No employees found"
           />
         </Field>
@@ -1737,8 +1742,8 @@ export function OnboardingCaseDetail({
           {actionForm.ownerType === 'employee'
             ? <Field label="Owner (employee)">
                 <PersonSearchSelect
-                  options={personOptions} value={actionForm.ownerEmployeeId}
-                  onChange={v => setActionForm(f => ({ ...f, ownerEmployeeId: v }))}
+                  people={personOptions} value={actionForm.ownerEmployeeId}
+                  onChange={v => setActionForm(f => ({ ...f, ownerEmployeeId: v ?? '' }))}
                   placeholder="Search by name or employee number…" emptyLabel="No employees found"
                 />
               </Field>

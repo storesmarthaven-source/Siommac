@@ -25,7 +25,10 @@ import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
 import type { VNode } from 'preact';
 import { useQueryClient } from '@tanstack/preact-query';
 
-import { DataTable, Modal, Field, TextInput, type DtAction, type DtActiveFilter, type DtColumn } from '@ui/index';
+import {
+  ActiveFilters, DataTable, LucideIcon, Modal, Field, TextInput,
+  type DataTableAction, type DataTableColumn,
+} from '@ui/index';
 import { openActionModal, toActionRecord } from '@/components/common/actions';
 import { can } from '@lib/permissions';
 import { getUiPreference, saveUiPreference } from '@api/uiPreferences';
@@ -130,7 +133,7 @@ export function OnboardingWorkQueue({ onBack, onOpenCase, onToast }: {
     let alive = true;
     void getUiPreference(ONBOARDING_WORK_QUEUE_VIEWS_PREFERENCE_KEY)
       .then(pref => { if (alive && pref) setViews(sanitizeOnboardingWorkQueueViews(pref.value)); })
-      .catch(e => {
+      .catch((e: unknown) => {
         if (!alive) return;
         onToast?.(e instanceof Error ? e.message : 'Saved views could not be loaded.');
       });
@@ -166,9 +169,9 @@ export function OnboardingWorkQueue({ onBack, onOpenCase, onToast }: {
   const applyView = useCallback((v: OnboardingWorkQueueView) => {
     setFilters({
       query: v.filters.query,
-      sourceTypes: v.filters.sourceTypes as OnboardingWorkSourceType[],
-      lifecycles: v.filters.lifecycles as OnboardingWorkLifecycle[],
-      dueState: v.filters.dueState as OnboardingWorkDueState,
+      sourceTypes: v.filters.sourceTypes,
+      lifecycles: v.filters.lifecycles,
+      dueState: v.filters.dueState,
       unassigned: v.filters.unassigned,
     });
     setSort({ field: v.sortBy, dir: v.sortDir });
@@ -176,7 +179,7 @@ export function OnboardingWorkQueue({ onBack, onOpenCase, onToast }: {
     setPage(1);
     // A view may carry a scope the current user cannot hold; select() refuses it rather
     // than requesting a scope the server would 403.
-    scopeState.select(v.scope as 'my' | 'team' | 'all');
+    scopeState.select(v.scope);
   }, [scopeState]);
 
   // ── the one server request ────────────────────────────────────────────────────
@@ -202,8 +205,6 @@ export function OnboardingWorkQueue({ onBack, onOpenCase, onToast }: {
 
   const rows = q.data?.rows ?? [];
   const total = q.data?.total ?? 0;
-  const pageCount = Math.max(1, Math.ceil(total / pageSize));
-
   const refresh = useCallback(() => {
     void qc.invalidateQueries({ queryKey: ['hr', 'onboarding', 'work-queue'] });
   }, [qc]);
@@ -220,7 +221,7 @@ export function OnboardingWorkQueue({ onBack, onOpenCase, onToast }: {
         confirmLabel: 'Return evidence',
       });
       if (!result.confirmed) return;
-      note = result.reason?.trim() || null;
+      note = result.reason?.trim() ?? null;
       if (!note) { onToast?.('A reason is required to return evidence.'); return; }
     }
     setBusy(true);
@@ -239,11 +240,11 @@ export function OnboardingWorkQueue({ onBack, onOpenCase, onToast }: {
   }, [onOpenCase]);
 
   // ── columns ───────────────────────────────────────────────────────────────────
-  const columns: DtColumn<OnboardingWorkItem>[] = useMemo(() => [
+  const columns: DataTableColumn<OnboardingWorkItem>[] = useMemo(() => [
     {
-      key: 'title', label: 'Work', width: 'minmax(240px, 2fr)', isPinned: true,
-      sortAccessor: r => r.title,
-      renderCell: r => (
+      id: 'title', header: 'Work', width: 'minmax(240px, 2fr)', pinned: true,
+      sortValue: r => r.title,
+      cell: r => (
         <div class="owq-work">
           <span class={`owq-type owq-type-${r.sourceType}`}>{SOURCE_LABEL[r.sourceType]}</span>
           <div class="owq-work-text">
@@ -254,9 +255,9 @@ export function OnboardingWorkQueue({ onBack, onOpenCase, onToast }: {
       ),
     },
     {
-      key: 'employee_name', label: 'Employee', width: 'minmax(170px, 1.2fr)',
-      sortAccessor: r => r.employeeName,
-      renderCell: r => (
+      id: 'employee_name', header: 'Employee', width: 'minmax(170px, 1.2fr)',
+      sortValue: r => r.employeeName,
+      cell: r => (
         <div class="owq-stack">
           <strong>{r.employeeName ?? '—'}</strong>
           <small>{r.caseNo}</small>
@@ -265,8 +266,8 @@ export function OnboardingWorkQueue({ onBack, onOpenCase, onToast }: {
     },
     {
       // The queue that PERFORMS the work, kept visually distinct from the person below.
-      key: 'owning_queue', label: 'Owning Queue', width: 'minmax(130px, 1fr)',
-      renderCell: r => (
+      id: 'owning_queue', header: 'Owning Queue', width: 'minmax(130px, 1fr)',
+      cell: r => (
         <div class="owq-stack">
           <span class="owq-queue">{humanQueue(r.owningQueue)}</span>
           <small>{r.departmentName ?? 'No department'}</small>
@@ -274,9 +275,9 @@ export function OnboardingWorkQueue({ onBack, onOpenCase, onToast }: {
       ),
     },
     {
-      key: 'accountable', label: 'Accountable', width: 'minmax(150px, 1fr)',
+      id: 'accountable', header: 'Accountable', width: 'minmax(150px, 1fr)',
       // Unassigned work still belongs to a queue — it is never a bare blank.
-      renderCell: r => (r.accountableName
+      cell: r => (r.accountableName
         ? <div class="owq-stack"><strong>{r.accountableName}</strong><small>Accountable</small></div>
         : <div class="owq-stack">
             <span class="owq-unassigned">Unassigned</span>
@@ -284,14 +285,14 @@ export function OnboardingWorkQueue({ onBack, onOpenCase, onToast }: {
           </div>),
     },
     {
-      key: 'due_at', label: 'Due', width: '150px',
-      sortAccessor: r => r.dueAt,
-      renderCell: r => <DueCell dueAt={r.dueAt} />,
+      id: 'due_at', header: 'Due', width: '150px',
+      sortValue: r => r.dueAt,
+      cell: r => <DueCell dueAt={r.dueAt} />,
     },
     {
-      key: 'status', label: 'Status', width: '150px', align: 'left',
-      sortAccessor: r => r.normalizedStatus,
-      renderCell: r => (
+      id: 'status', header: 'Status', width: '150px', align: 'left',
+      sortValue: r => r.normalizedStatus,
+      cell: r => (
         <span class={`owq-status owq-status-${r.normalizedStatus}`}
           title={`Source status: ${r.sourceStatus}`}>
           {LIFECYCLE_LABEL[r.normalizedStatus]}
@@ -300,22 +301,22 @@ export function OnboardingWorkQueue({ onBack, onOpenCase, onToast }: {
     },
   ], []);
 
-  const rowActions = useCallback((r: OnboardingWorkItem): DtAction<OnboardingWorkItem>[] => {
-    const acts: DtAction<OnboardingWorkItem>[] = [
-      { key: 'open', label: 'Open in Case Detail', icon: 'file', onClick: openCase },
-      { key: 'peek', label: 'Quick view', icon: 'view', onClick: row => setOpenRow(row) },
+  const rowActions = useCallback((r: OnboardingWorkItem): DataTableAction[] => {
+    const acts: DataTableAction[] = [
+      { id: 'open', label: 'Open in Case Detail', icon: <LucideIcon name="FileText" />, onSelect: () => openCase(r) },
+      { id: 'peek', label: 'Quick view', icon: <LucideIcon name="Eye" />, onSelect: () => setOpenRow(r) },
     ];
     // Evidence decisions are offered only where they are actually possible: a pending
     // submission, to a user who holds the review permission.
     if (r.sourceType === 'evidence' && r.sourceStatus === 'pending_review' && canReview) {
-      acts.push({ key: 'approve', label: 'Approve evidence', icon: 'check', onClick: row => void decide(row, 'approved') });
-      acts.push({ key: 'return', label: 'Return evidence', icon: 'reject', tone: 'danger', onClick: row => void decide(row, 'returned') });
+      acts.push({ id: 'approve', label: 'Approve evidence', icon: <LucideIcon name="Check" />, onSelect: () => void decide(r, 'approved') });
+      acts.push({ id: 'return', label: 'Return evidence', icon: <LucideIcon name="Undo2" />, tone: 'danger', onSelect: () => void decide(r, 'returned') });
     }
     return acts;
   }, [openCase, canReview, decide]);
 
   // ── active filter chips ───────────────────────────────────────────────────────
-  const activeFilters: DtActiveFilter[] = [];
+  const activeFilters: { label: string; onRemove: () => void }[] = [];
   if (filters.dueState !== 'all') {
     activeFilters.push({ label: DUE_LABEL[filters.dueState], onRemove: () => patch({ dueState: 'all' }) });
   }
@@ -354,28 +355,31 @@ export function OnboardingWorkQueue({ onBack, onOpenCase, onToast }: {
         </div>
       )}
 
+      {activeFilters.length > 0 && (
+        <ActiveFilters
+          chips={activeFilters}
+          onClearAll={() => { setFilters({ ...DEFAULT_FILTERS }); setPage(1); }}
+        />
+      )}
+
       <DataTable<OnboardingWorkItem>
-        ariaLabel="Onboarding work queue"
-        noun="work items"
+        label="Onboarding work queue"
         columns={columns}
         rows={rows}
-        rowKey={r => `${r.sourceType}:${r.sourceId}`}
-        rowStatus={r => (r.normalizedStatus === 'blocked' ? 'danger'
-          : r.dueAt && new Date(r.dueAt) < new Date() ? 'warning' : 'default')}
+        getRowId={r => `${r.sourceType}:${r.sourceId}`}
         rowActions={rowActions}
         onRowClick={openCase}
-        selectedKey={openRow ? `${openRow.sourceType}:${openRow.sourceId}` : null}
+        isRowActive={r => r.sourceType === openRow?.sourceType && r.sourceId === openRow.sourceId}
         loading={q.isPending}
-        skeletonRows={pageSize > 25 ? 12 : 8}
         emptyState={filters.query || activeFilters.length
-          ? { icon: 'search', title: 'No work matches these filters', text: 'Clear a filter or widen the scope.' }
-          : { icon: 'check', title: 'Nothing assigned to you', text: 'Work appears here as soon as it is assigned or falls due.' }}
-        globalSearch={{
+          ? { icon: 'fa-search', title: 'No work matches these filters', text: 'Clear a filter or widen the scope.' }
+          : { icon: 'fa-check', title: 'Nothing assigned to you', text: 'Work appears here as soon as it is assigned or falls due.' }}
+        search={{
           value: filters.query,
           onChange: v => patch({ query: v }),
           placeholder: 'Search work, employee or case number…',
         }}
-        filterChips={
+        toolbarContent={
           <>
             <select class="dt-filter" aria-label="Due state" value={filters.dueState}
               onChange={e => patch({ dueState: (e.target as HTMLSelectElement).value as OnboardingWorkDueState })}>
@@ -406,7 +410,7 @@ export function OnboardingWorkQueue({ onBack, onOpenCase, onToast }: {
             </label>
           </>
         }
-        toolbarRight={
+        toolbarActions={
           <div class="owq-views">
             <select class="dt-filter" aria-label="Saved views" value=""
               onChange={e => {
@@ -419,20 +423,26 @@ export function OnboardingWorkQueue({ onBack, onOpenCase, onToast }: {
             <button type="button" class="btn" onClick={() => setSaveViewOpen(true)}>Save View</button>
           </div>
         }
-        activeFilters={activeFilters}
-        onClearFilters={() => { setFilters({ ...DEFAULT_FILTERS }); setPage(1); }}
-        sort={{
-          field: sort.field, dir: sort.dir,
-          onSort: (field, dir) => { setSort({ field: field as OnboardingWorkSortField, dir }); setPage(1); },
+        sorting={{
+          value: { columnId: sort.field, direction: sort.dir },
+          onChange: next => {
+            if (!next) return;
+            setSort({ field: next.columnId as OnboardingWorkSortField, dir: next.direction });
+            setPage(1);
+          },
         }}
-        // DataTable's pagination.page is ZERO-indexed (it renders
-        // `page * pageSize + 1` and disables Prev at `page <= 0`), while the API and this
-        // component are 1-based. Converting at the boundary — passing 1-based straight
-        // through showed "Showing 26–22 of 22" on a single-page result.
-        pagination={{ page: page - 1, pageCount, total, onPage: p => setPage(p + 1) }}
-        rowsPerPage={{ value: pageSize, options: [...ONBOARDING_WORK_QUEUE_PAGE_SIZES], onChange: n => { setPageSize(n); setPage(1); } }}
-        drawerSlot={openRow && (
-          <aside class="owq-drawer" role="dialog" aria-label="Work item context">
+        pagination={{
+          page,
+          pageSize,
+          total,
+          onPageChange: setPage,
+          onPageSizeChange: n => { setPageSize(n); setPage(1); },
+          pageSizeOptions: ONBOARDING_WORK_QUEUE_PAGE_SIZES,
+        }}
+      />
+
+      {openRow && (
+        <aside class="owq-drawer" role="dialog" aria-label="Work item context">
             <header>
               <span class={`owq-type owq-type-${openRow.sourceType}`}>{SOURCE_LABEL[openRow.sourceType]}</span>
               <button type="button" class="owq-drawer-close" aria-label="Close" onClick={() => setOpenRow(null)}>×</button>
@@ -460,9 +470,8 @@ export function OnboardingWorkQueue({ onBack, onOpenCase, onToast }: {
               )}
               <button type="button" class="btn" onClick={() => openCase(openRow)}>Open in Case Detail</button>
             </footer>
-          </aside>
-        )}
-      />
+        </aside>
+      )}
 
       <Modal open={saveViewOpen} title="Save Work Queue View" icon="fa-bookmark"
         onClose={() => { setSaveViewOpen(false); setViewName(''); }}

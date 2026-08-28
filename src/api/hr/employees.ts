@@ -179,14 +179,24 @@ export interface HrEmployeeListFilter {
   workerType?: WorkerType; search?: string; limit?: number;
 }
 
+/** Shared authenticated employee lookup used by both Query hooks and async person pickers. */
+export async function searchHrEmployees(
+  filter: HrEmployeeListFilter = {},
+  options?: Parameters<typeof apiPost>[2],
+): Promise<HrEmployeeRow[]> {
+  const res = await hrPost<{ success: boolean; data: HrEmployeeRow[] }>(
+    'hr/employees/list',
+    filter as Record<string, unknown>,
+    options,
+  );
+  return res.data;
+}
+
 export function useHrEmployees(filter: HrEmployeeListFilter = {}) {
   const f = filter as Record<string, unknown>;
   return useQuery({
     queryKey: hrEmployeeKeys.list(f),
-    queryFn: async ({ signal }: QueryFunctionContext) => {
-      const res = await hrPost<{ success: boolean; data: HrEmployeeRow[] }>('hr/employees/list', f, { signal });
-      return res.data;
-    },
+    queryFn: ({ signal }: QueryFunctionContext) => searchHrEmployees(filter, { signal }),
   });
 }
 
@@ -614,7 +624,11 @@ export function useUploadHrDocument() {
     // Lambda never holds the file bytes.
     mutationFn: async (a: UploadDocArgs) => {
       const signed = await hrPost<{ success: boolean; uploadUrl: string; path: string }>(
-        'hr/employees/documents/upload-url', { fileName: a.file.name, mimeType: a.file.type || 'application/octet-stream' }, { retryable: false });
+        'hr/employees/documents/upload-url', {
+          employeeId: a.employeeId,
+          fileName: a.file.name,
+          mimeType: a.file.type || 'application/octet-stream',
+        }, { retryable: false });
       const put = await fetch(signed.uploadUrl, { method: 'PUT', headers: { 'Content-Type': a.file.type || 'application/octet-stream' }, body: a.file });
       if (!put.ok) throw new Error('File upload failed.');
       return hrPost<{ success: boolean; data: { id: string } }>('hr/employees/documents/commit', {

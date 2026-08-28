@@ -72,13 +72,15 @@ export interface OnboardingIntakeVerification { id: string; label: string; statu
 export type OnboardingDocumentState = 'present_verified' | 'present_unverified' | 'expired' | 'missing';
 
 /** Selection the wizard makes for a document requirement (how it will be satisfied at launch). */
-export type OnboardingDocumentLaunchAction = 'use_existing' | 'request_from_worker' | 'waive' | 'none';
+export type OnboardingDocumentLaunchAction = 'use_existing' | 'upload_now' | 'request_from_worker' | 'waive' | 'none';
 
 export interface OnboardingDocumentLaunchSelection {
   requirementId: string;
   action: OnboardingDocumentLaunchAction;
   /** doc ID when action === 'use_existing' */
   existingDocumentId?: string | null;
+  /** newly committed employee-document ID when action === 'upload_now' */
+  uploadedDocumentId?: string | null;
   waiverReason?: string | null;
 }
 
@@ -129,7 +131,7 @@ export interface OnboardingIntakePreview {
   preview: {
     package: string;
     label: string;
-    tasks: { taskKey: string; taskTitle: string; ownerRole: string; moduleKey: string | null }[];
+    tasks: { taskKey: string; taskTitle: string; ownerRole: string; moduleKey: string | null; isBlocking: boolean }[];
     handoffs: { targetModule: string; handoffType: string }[];
     taskCount: number;
     handoffCount: number;

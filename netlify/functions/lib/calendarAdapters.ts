@@ -16,6 +16,7 @@
 
 import { sb } from './db';
 import type { CalendarItemDTO, CalendarSourceDepartment, CalendarSourcePriority, CalendarTaskStatus } from '../../../types/calendar';
+import { resolveOnboardingScopeWith, type OnboardingScope } from './hr/onboardingScope';
 
 export interface AdapterContext {
   userId:  string;
@@ -23,6 +24,7 @@ export interface AdapterContext {
   can:     (key: string) => boolean;
   fromKey: string;   // inclusive 'YYYY-MM-DD'
   toKey:   string;   // inclusive 'YYYY-MM-DD'
+  onboardingScope?: OnboardingScope;
 }
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -151,9 +153,7 @@ function onboardingStatus(s: string): CalendarTaskStatus {
 }
 
 export async function hrOnboardingDeadlines(ctx: AdapterContext): Promise<CalendarItemDTO[]> {
-  const canAll = ctx.can('hr.onboarding.view');
-  // Without the module view, a user still sees onboarding tasks assigned to them.
-  // A plain employee with only calendar.view + no assigned tasks gets nothing.
+  const canViewOnboarding = ctx.can('hr.onboarding.view');
   let q = sb
     .from('hr_onboarding_tasks')
     .select('id, task_title, assigned_to, status, due_at, case_id, priority, owner_role, module_key, requires_evidence, is_blocking, metadata')
@@ -161,7 +161,18 @@ export async function hrOnboardingDeadlines(ctx: AdapterContext): Promise<Calend
     .gte('due_at', `${ctx.fromKey}T00:00:00`)
     .lte('due_at', `${ctx.toKey}T23:59:59.999`)
     .order('due_at', { ascending: true });
-  if (!canAll) q = q.eq('assigned_to', ctx.userId);
+
+  if (canViewOnboarding) {
+    const resolved = await resolveOnboardingScopeWith(ctx.userId, ctx.can, ctx.onboardingScope);
+    if (resolved.caseIds !== null) {
+      if (resolved.caseIds.length === 0) return [];
+      q = q.in('case_id', resolved.caseIds);
+    }
+  } else {
+    // Calendar access alone never grants module access. A worker without the HR
+    // view permission sees only tasks explicitly assigned to their own identity.
+    q = q.eq('assigned_to', ctx.userId);
+  }
 
   const { data, error } = await q;
   if (error) { console.error('[calendar/adapter onboarding] ', error.message); return []; }

@@ -20,7 +20,7 @@ import { useCan } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
 import { toast } from '@store';
 import {
-  PageHeader, Tabs, type TabDef, EmptyState, TableSkeleton,
+  PageHeader, Tabs, type TabItem, EmptyState, TableSkeleton,
   Field, TextInput, SelectInput, FormGrid,
   exportCsv,
 } from '@ui';
@@ -200,7 +200,7 @@ function RegisterTab(): VNode {
       </div>
 
       {/* Table */}
-      {isLoading && !data ? (
+      {isLoading ? (
         <table class="obx-table vt-table"><tbody><TableSkeleton rows={8} cols={8} /></tbody></table>
       ) : rows.length === 0 ? (
         <EmptyState icon="fa-folder-open" title="No documents found" text="Adjust filters or upload a document." />
@@ -313,7 +313,7 @@ function UploadModal({ onClose }: { onClose: () => void }): VNode {
     fileType: file?.type ?? undefined,
     expiryDate: expiryDate || undefined,
     expiryPreview: expiryDate ? 'Expiry will be tracked and reminders sent' : 'No expiry date provided',
-    satisfiesRequirement: matchedReq ? (matchedReq.label ?? matchedReq.documentType) : null,
+    satisfiesRequirement: matchedReq ? matchedReq.label : null,
     fileWarning,
   });
 
@@ -700,10 +700,10 @@ function StatsRow(): VNode {
 
 type DocTab = 'register' | 'expiring' | 'requirements';
 
-const TABS: TabDef<DocTab>[] = [
-  { key: 'register',     label: 'Register' },
-  { key: 'expiring',     label: 'Expiring' },
-  { key: 'requirements', label: 'Requirements' },
+const TABS: readonly TabItem[] = [
+  { id: 'register',     label: 'Register' },
+  { id: 'expiring',     label: 'Expiring' },
+  { id: 'requirements', label: 'Requirements' },
 ];
 
 export function HRDocumentsOverview(): VNode {
@@ -718,7 +718,7 @@ export function HRDocumentsOverview(): VNode {
         module="HR"
       />
       <StatsRow />
-      <Tabs<DocTab> tabs={TABS} active={tab} onChange={setTab} />
+      <Tabs id="hr-documents-tabs" label="HR document sections" items={TABS} value={tab} onChange={id => setTab(id as DocTab)} />
       {tab === 'register'     && <RegisterTab />}
       {tab === 'expiring'     && <ExpiringTab />}
       {tab === 'requirements' && <RequirementsTab />}

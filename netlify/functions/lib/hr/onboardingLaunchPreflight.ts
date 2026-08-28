@@ -3,6 +3,7 @@ import { getOnboardingIntakePreview } from './onboardingIntake';
 import { getAccountProvisioningPreflight } from './accountProvisioning';
 import { listActionTemplates } from './onboardingCustomActions';
 import { loadPackagePlan } from './onboardingPackageService';
+import { validateUploadedDocumentSelections } from './onboardingDocumentSelections';
 import type { OnboardingLaunchPreflight, OnboardingLaunchPreflightArgs } from '../../../../types/hrOnboarding';
 
 const fail = (status: number, message: string): Error => Object.assign(new Error(message), { status });
@@ -20,11 +21,21 @@ export async function getOnboardingLaunchPreflight(
     getAccountProvisioningPreflight({ employeeId: args.employeeId, packageKey: args.packageKey, ownerId }),
     sb.from('app_users').select('id, full_name').eq('id', ownerId).maybeSingle<{ id: string; full_name: string | null }>(),
   ]);
-  if (!plan || plan.status !== 'active') throw fail(400, 'Choose an active onboarding package.');
+  if (plan?.status !== 'active') throw fail(400, 'Choose an active onboarding package.');
   if (ownerResult.error) throw fail(500, ownerResult.error.message);
   if (!ownerResult.data) throw fail(409, 'Choose a valid accountable case owner.');
 
   const blockers: OnboardingLaunchPreflight['blockers'] = [];
+  const uploadedDocuments = await validateUploadedDocumentSelections(
+    args.employeeId,
+    args.documentSelections,
+    intake.documents.items.map(document => ({
+      requirementId: document.requirementId,
+      documentType: document.type,
+      label: document.label,
+    })),
+  );
+  blockers.push(...uploadedDocuments.issues.map(message => ({ step: 'documents' as const, message })));
   if (!args.targetStartDate) blockers.push({ step: 'worker', message: 'Set the target start date.' });
   for (const check of intake.verification.filter(item => item.critical && item.status !== 'verified')) {
     blockers.push({ step: 'worker', message: check.label });
@@ -62,6 +73,9 @@ export async function getOnboardingLaunchPreflight(
       blockers.push({ step: 'documents', message: `Choose how ${document.label} will be resolved.` });
       continue;
     }
+    if (selection.action === 'upload_now' && !uploadedDocuments.byRequirementId.has(document.requirementId)) {
+      continue;
+    }
     if (selection.action === 'waive' && (!document.canWaive || !authority.canWaiveDocuments || !selection.waiverReason?.trim())) {
       blockers.push({ step: 'documents', message: `An authorised waiver reason is required for ${document.label}.` });
       continue;
@@ -76,6 +90,9 @@ export async function getOnboardingLaunchPreflight(
     }
     if (selection.action === 'request_from_worker') {
       followUps.push({ step: 'documents', label: document.label, owner: ownerResult.data.full_name ?? 'Case owner', dueAt: null });
+    }
+    if (selection.action === 'upload_now') {
+      followUps.push({ step: 'documents', label: `Review ${document.label}`, owner: ownerResult.data.full_name ?? 'Case owner', dueAt: null });
     }
   }
 

@@ -20,6 +20,7 @@ import { OnboardingPackageDetail } from './OnboardingPackageDetail';
 import { OnboardingWorkQueue } from './OnboardingWorkQueue';
 import { OnboardingReportsWorkspace } from './OnboardingReportsWorkspace';
 import type { CaseFocusRequest } from './onboardingCaseFocus';
+import { HR_ONBOARDING_SURFACE_DEEPLINK_KEY } from './hrDeepLink';
 import './HR.css';
 
 type OnboardingSurface = 'overview' | 'packages' | 'work-queue' | 'insights' | 'start';
@@ -27,7 +28,13 @@ const EMAIL_STUDIO_ID = 's-hr-email-templates';
 
 export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: string | null } = {}): VNode {
   const [toast, setToast] = useState('');
-  const [surface, setSurface] = useState<OnboardingSurface>('overview');
+  const [surface, setSurface] = useState<OnboardingSurface>(() => {
+    try {
+      const requested = sessionStorage.getItem(HR_ONBOARDING_SURFACE_DEEPLINK_KEY);
+      sessionStorage.removeItem(HR_ONBOARDING_SURFACE_DEEPLINK_KEY);
+      return requested === 'packages' ? 'packages' : 'overview';
+    } catch { return 'overview'; }
+  });
   const [selectedCase, setSelectedCase] = useState<OnboardingCaseRow | null>(null);
   const [openPackageKey, setOpenPackageKey] = useState<string | null>(null);
   const [jumpCaseId, setJumpCaseId] = useState<string | null>(initialCaseId);
@@ -56,7 +63,7 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
 
   useEffect(() => {
     function onOpen(e: Event): void {
-      const caseId = (e as CustomEvent<{ caseId?: string }>).detail?.caseId;
+      const caseId = (e as CustomEvent<{ caseId?: string }>).detail.caseId;
       if (!caseId) return;
       setCaseFocus(null);
       setJumpCaseId(caseId);

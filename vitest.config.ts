@@ -65,7 +65,13 @@ export default defineConfig({
     // production build never hits this — dep pre-bundling resolves it natively.
     server: {
       deps: {
-        inline: ['zustand', '@material/material-color-utilities'],
+        inline: [
+          'zustand',
+          '@material/material-color-utilities',
+          // This package also publishes ESM with extensionless relative imports.
+          // Route it through Vite's resolver instead of Node's external resolver.
+          '@untitledui/country-flags',
+        ],
       },
     },
 

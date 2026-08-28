@@ -12,14 +12,17 @@ import { apiPost } from '@lib/api';
 import {
   EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_KEY,
   EMPLOYEE_REGISTER_VIEWS_PREFERENCE_KEY,
+  ONBOARDING_WORK_QUEUE_VIEWS_PREFERENCE_KEY,
   type EmployeeRegisterColumnKey,
   type EmployeeRegisterView,
+  type OnboardingWorkQueueView,
 } from '../../types/uiPreferences';
 
 /** Every key the endpoint accepts, and the value type stored under it. */
 export interface UiPreferenceValues {
   [EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_KEY]: EmployeeRegisterColumnKey[];
   [EMPLOYEE_REGISTER_VIEWS_PREFERENCE_KEY]: EmployeeRegisterView[];
+  [ONBOARDING_WORK_QUEUE_VIEWS_PREFERENCE_KEY]: OnboardingWorkQueueView[];
 }
 
 export type UiPreferenceKey = keyof UiPreferenceValues;

@@ -22,6 +22,7 @@ import { findWidgetDataSource, registerWidgetDataSource } from './dataSources';
 import type { WidgetDef, WidgetRenderProps, WidgetSizeDef } from './types';
 import { useOnboardingDashboard } from '@api/hr/onboarding';
 import type { OnboardingDashboardStats, OnboardingReadScope } from '../../../types/hrOnboarding';
+import { useOnboardingWidgetScope } from '@sections/HR/onboarding/OnboardingWidgetScope';
 import './hrEmployeeDashboardWidgets.css';
 
 /** Same loading/error chrome Employee Master's KPI strip uses, so the two look identical. */
@@ -128,10 +129,10 @@ function OwnerRequired({ stats }: { stats: OnboardingDashboardStats }): VNode {
     linkLabel="View Unassigned Cases" filter={{ unassignedOwner: true, label: 'Owner Required' }} />;
 }
 
-/** Scoped live data. `runtime.onboardingScope` is transient host context, never saved config. */
+/** Scoped live data comes from the page host context and is never persisted as widget config. */
 function withLiveData(View: (props: { stats: OnboardingDashboardStats }) => VNode): (props: WidgetRenderProps) => VNode {
-  return function LiveOnboardingKpi(props: WidgetRenderProps): VNode {
-    const scope: OnboardingReadScope | undefined = props.runtime?.onboardingScope;
+  return function LiveOnboardingKpi(_props: WidgetRenderProps): VNode {
+    const scope: OnboardingReadScope | undefined = useOnboardingWidgetScope();
     const query = useOnboardingDashboard(scope ? { scope } : {});
     if (query.isPending) return <WidgetState kind="loading" />;
     if (!query.data) {

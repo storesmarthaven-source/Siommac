@@ -9,7 +9,7 @@
 
 import { useState } from 'preact/hooks';
 import { type VNode } from 'preact';
-import { Wizard, FormGrid, Field, TextInput, SelectInput, TextareaInput } from '@ui';
+import { LegacyWizard as Wizard, FormGrid, Field, TextInput, SelectInput, TextareaInput } from '@ui';
 import { RiskScorePill, calculateRiskBand } from '../shared/RiskScorePill';
 import { RiskMatrixPicker } from '../shared/RiskMatrixPicker';
 import { ControlsTable, type ControlDraft, emptyControl } from '../shared/ControlsTable';

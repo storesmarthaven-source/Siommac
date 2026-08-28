@@ -420,7 +420,7 @@ function pruneEmptiedSection(
 ): EmailTemplateBlock[] {
   if (!sourceParentId || sourceParentId === targetParentId) return blocks;
   const source = findBlock(blocks, sourceParentId);
-  if (!source || source.type !== "section" || source.children.length > 0)
+  if (source?.type !== "section" || source.children.length > 0)
     return blocks;
   // A column cell must survive: its parent columns block owns the grid shape.
   const parent = findParentBlock(blocks, sourceParentId);
@@ -1595,7 +1595,7 @@ function TransactionalCanvasContent({
   block,
   editable,
   onChange,
-  onPropertiesChange,
+  onPropertiesChange: _onPropertiesChange,
 }: {
   block: EmailTemplateBlock;
   editable: boolean;
@@ -2374,7 +2374,7 @@ function CanvasBlock({
               style={`background:${block.styles.backgroundColor};color:${block.styles.color};font-family:${EMAIL_FONT_STACK};font-size:${block.styles.fontSize}px;font-weight:${block.styles.fontWeight};line-height:${block.styles.lineHeight};letter-spacing:${block.styles.letterSpacing}px;border-radius:${block.styles.borderRadius}px;padding:${block.styles.padding.top}px ${block.styles.padding.right}px ${block.styles.padding.bottom}px ${block.styles.padding.left}px`}
               onInput={(event) => {
                 if (!editable || block.locked) return;
-                const label = event.currentTarget.textContent ?? "";
+                const label = event.currentTarget.textContent;
                 if (label !== block.properties.label)
                   onChange(block.id, (current) => ({
                     ...current,
@@ -2432,7 +2432,7 @@ function CanvasBlock({
             class="etb-layout-block columns"
             style={`${style};grid-template-columns:${(block.properties.columnWidths ?? block.children.map(() => 1)).map((value) => `${value}fr`).join(" ")}`}
           >
-            {block.children.map((column, index) => (
+            {block.children.map((column) => (
               <div class="etb-layout-cell" key={column.id}>
                 <CanvasBlock
                   block={column}
@@ -3116,16 +3116,6 @@ export function EmailTemplateBuilder({
     setSelectedId(section.id);
   }
 
-  function addMany(blocks: EmailTemplateBlock[]): void {
-    const section = createEmailSection(blocks);
-    section.name = "Saved section";
-    commit({
-      ...documentRef.current,
-      blocks: [...documentRef.current.blocks, section],
-    });
-    setSelectedId(blocks[0]?.id ?? null);
-  }
-
   function updateSelected(
     change: (block: EmailTemplateBlock) => EmailTemplateBlock,
   ): void {
@@ -3348,19 +3338,7 @@ export function EmailTemplateBuilder({
       onToast(`Layout JSON copied (${json.length.toLocaleString()} chars).`);
       return;
     } catch {
-      const field = globalThis.document.createElement("textarea");
-      field.value = json;
-      field.style.position = "fixed";
-      field.style.opacity = "0";
-      globalThis.document.body.appendChild(field);
-      field.select();
-      const copied = globalThis.document.execCommand?.("copy") ?? false;
-      field.remove();
-      onToast(
-        copied
-          ? `Layout JSON copied (${json.length.toLocaleString()} chars).`
-          : "Could not copy the layout JSON.",
-      );
+      onToast("Could not copy the layout JSON.");
     }
   }
 
@@ -3512,7 +3490,7 @@ export function EmailTemplateBuilder({
   }, [draggingSource]);
 
   async function uploadBackground(
-    event: TargetedEvent<HTMLInputElement, Event>,
+    event: TargetedEvent<HTMLInputElement>,
   ): Promise<void> {
     const file = event.currentTarget.files?.[0];
     event.currentTarget.value = "";
@@ -3802,7 +3780,7 @@ export function EmailTemplateBuilder({
           {import.meta.env.DEV && (
             <Button
               variant="outline"
-              icon="fa-clipboard"
+              iconLeft={<i class="fas fa-clipboard" />}
               onClick={() => void copyLayoutJson()}
             >
               Copy Layout
@@ -3810,7 +3788,7 @@ export function EmailTemplateBuilder({
           )}
           <Button
             variant="outline"
-            icon="fa-eye"
+            iconLeft={<i class="fas fa-eye" />}
             onClick={() => setPreviewOpen(true)}
           >
             Preview
@@ -3820,16 +3798,16 @@ export function EmailTemplateBuilder({
               says so rather than silently doing nothing. */}
           <Button
             variant="outline"
-            icon="fa-paper-plane"
+            iconLeft={<i class="fas fa-paper-plane" />}
             onClick={() => onToast('Test sending is not available yet.')}
           >
             Send Test
           </Button>
           {canEdit && (
             <Button
-              variant="blue"
+              variant="primary"
               class="etb-save-draft"
-              icon="fa-floppy-disk"
+              iconLeft={<i class="fas fa-floppy-disk" />}
               onClick={() => void persist(true)}
               disabled={saveState === "saving"}
             >
@@ -3838,9 +3816,9 @@ export function EmailTemplateBuilder({
           )}
           {!canEdit && onCreateEditableCopy && (
             <Button
-              variant="blue"
+              variant="primary"
               class="etb-save-draft"
-              icon="fa-copy"
+              iconLeft={<i class="fas fa-copy" />}
               onClick={onCreateEditableCopy}
               disabled={creatingEditableCopy}
             >
@@ -4361,7 +4339,7 @@ export function EmailTemplateBuilder({
                     </p>
                     <Button
                       variant="outline"
-                      icon="fa-clone"
+                      iconLeft={<i class="fas fa-clone" />}
                       disabled={!canEdit || chromeMutation.isPending}
                       onClick={() => void applyChromeToAllTemplates()}
                     >
@@ -5932,7 +5910,7 @@ export function EmailTemplateBuilder({
           fontWeight={selected.styles.fontWeight}
           onAlignChange={(align) => updateStyle("align", align)}
           onWeightChange={(fontWeight) => updateStyle("fontWeight", fontWeight)}
-          disabled={!canEdit || selected.locked}
+          disabled={selected.locked}
           style={activeTextStyle}
           onChange={(html) =>
             updateSelected((block) => ({

@@ -2,7 +2,7 @@
 
 # communications Module Map
 
-Source fingerprint: `dfa9cd3ead99b98830efc082`
+Source fingerprint: `22dcdd66df2af25c679dc01c`
 
 Files: 113 | Symbols: 1057 | Widgets: 0 | Unique mounted endpoints: 93 | Route definitions: 94 mounted + 2 unmounted | API calls: 88 | DB objects: 158 | E2E suites: 7
 
@@ -94,10 +94,10 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/getAccountSupportRequests` | `employees.access.request` | requirePermission, userCan | `ListAccountSupportRequestsSchema` | `netlify/functions/routes/tickets.ts:749` | res @ src/api/hr/employeeAccountSupport.ts:80 | serviceRequests |
 | `/api/getMyNotifications` | `-` | requireUser | `GetNotifSchema` | `netlify/functions/routes/notify.ts:58` | res @ src/api/notifications.ts:47 | - |
 | `/api/getTickets` | `-` | requireUser, userCan | `-` | `netlify/functions/routes/tickets.ts:277` | - | serviceRequests |
-| `/api/hr/onboarding/communications/list` | `hr.onboarding.view` | requirePermission | `z.object({ caseId: z.string().uuid() })` | `netlify/functions/routes/hrOnboarding.ts:459` | - | hrOnboarding |
-| `/api/hr/onboarding/communications/preview` | `hr.onboarding.case.manage` | requirePermission | `z.object({ caseId: z.string().uuid(), communicationType: CommType, subject: nstr, body: nstr, recipientUserId: nstr })` | `netlify/functions/routes/hrOnboarding.ts:465` | - | hrOnboarding |
-| `/api/hr/onboarding/communications/resend` | `hr.onboarding.case.manage` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/hrOnboarding.ts:477` | - | hrOnboarding |
-| `/api/hr/onboarding/communications/send` | `hr.onboarding.case.manage` | requirePermission | `z.object({ caseId: z.string().uuid(), communicationType: CommType, subject: nstr, body: nstr, recipientUserId: nstr, channel: z.enum(['email', 'in_app', 'sms', 'manual']).optional() })` | `netlify/functions/routes/hrOnboarding.ts:471` | - | hrOnboarding |
+| `/api/hr/onboarding/communications/list` | `hr.onboarding.view` | requirePermission | `z.object({ caseId: z.uuid() })` | `netlify/functions/routes/hrOnboarding.ts:680` | - | hrOnboarding |
+| `/api/hr/onboarding/communications/preview` | `hr.onboarding.case.manage` | requirePermission | `z.object({ caseId: z.uuid(), communicationType: CommType, subject: nstr, body: nstr, recipientUserId: nstr })` | `netlify/functions/routes/hrOnboarding.ts:686` | - | hrOnboarding |
+| `/api/hr/onboarding/communications/resend` | `hr.onboarding.case.manage` | requirePermission | `z.object({ id: z.uuid() })` | `netlify/functions/routes/hrOnboarding.ts:698` | - | hrOnboarding |
+| `/api/hr/onboarding/communications/send` | `hr.onboarding.case.manage` | requirePermission | `z.object({ caseId: z.uuid(), communicationType: CommType, subject: nstr, body: nstr, recipientUserId: nstr, channel: z.enum(['email', 'in_app', 'sms', 'manual']).optional() })` | `netlify/functions/routes/hrOnboarding.ts:692` | - | hrOnboarding |
 | `/api/markAllNotificationsRead` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:99` | res @ src/api/notifications.ts:95 | - |
 | `/api/markNotificationRead` | `-` | requireUser | `MarkReadSchema` | `netlify/functions/routes/notify.ts:82` | res @ src/api/notifications.ts:87 | - |
 | `/api/replyTicket` | `-` | requireUser, userCan | `ReplyTicketSchema` | `netlify/functions/routes/tickets.ts:367` | - | serviceRequests |

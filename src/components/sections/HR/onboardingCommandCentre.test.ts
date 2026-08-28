@@ -21,6 +21,7 @@ const repoHas = (rel: string): boolean => existsSync(resolve(process.cwd(), rel)
 const stripComments = (src: string): string =>
   src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 const PAGE = stripComments(repoFile('src/components/sections/HR/OnboardingCommandCenter.tsx'));
+const LIVE_PAGE = PAGE.replace(/<BoardSkeleton[\s\S]*?\/>/g, '');
 const REGISTRY = stripComments(repoFile('src/ui/widgets/registry.hrOnboarding.tsx'));
 const WIDGETS = stripComments(repoFile('src/components/sections/HR/onboarding/CommandCentreWidgets.tsx'));
 
@@ -40,9 +41,9 @@ describe('board composition follows Employee Master', () => {
 
   it('uses the canonical grid settings and disables the reveal animation', () => {
     expect(PAGE).toMatch(/BOARD_COLUMNS = 24/);
-    expect((PAGE.match(/cellHeight=\{6\}/g) ?? []).length).toBe(2);
-    expect((PAGE.match(/gap=\{\[12, 12\]\}/g) ?? []).length).toBe(2);
-    expect((PAGE.match(/revealOnMount=\{false\}/g) ?? []).length).toBe(2);
+    expect((LIVE_PAGE.match(/cellHeight=\{6\}/g) ?? []).length).toBe(2);
+    expect((LIVE_PAGE.match(/gap=\{\[12, 12\]\}/g) ?? []).length).toBe(2);
+    expect((LIVE_PAGE.match(/revealOnMount=\{false\}/g) ?? []).length).toBe(2);
   });
 
   it('keeps the KPI strip bounded and reorder-only', () => {
@@ -94,13 +95,12 @@ describe('widgets mounted in the approved order', () => {
 });
 
 describe('runtime scope, never persisted config', () => {
-  it('passes runtime onboarding scope to BOTH boards', () => {
-    expect((PAGE.match(/runtime=\{runtime\}/g) ?? []).length).toBe(2);
-    expect(PAGE).toMatch(/const runtime = \{ onboardingScope: scope \}/);
+  it('provides the selected scope to both boards through their shared host context', () => {
+    expect(PAGE).toMatch(/<OnboardingWidgetScopeProvider scope=\{scope\}>[\s\S]*<WidgetBoard[\s\S]*<WidgetBoard/);
   });
 
-  it('KPI widgets read scope from runtime, and it is absent from persisted config', () => {
-    expect(REGISTRY).toMatch(/props\.runtime\?\.onboardingScope/);
+  it('KPI widgets read scope from host context, and it is absent from persisted config', () => {
+    expect(REGISTRY).toMatch(/useOnboardingWidgetScope\(\)/);
     expect(REGISTRY).not.toMatch(/defaultConfig:[^\n]*onboardingScope/);
     expect(REGISTRY).not.toMatch(/key: 'onboardingScope'/);
   });

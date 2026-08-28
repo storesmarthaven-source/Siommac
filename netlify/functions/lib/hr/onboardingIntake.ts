@@ -11,13 +11,7 @@ import { loadPackagePlan, requireCompatiblePackage } from './onboardingPackageSe
 import { getComplianceForEmployee } from './documentsCompliance';
 import { listRequirements } from './documentsRequirements';
 import { detectActiveOnboardingDuplicate } from './onboardingDuplicateCheck';
-import type {
-  OnboardingCaseStatus, OnboardingIntakePreview, OnboardingIntakePreviewArgs,
-  OnboardingDocumentState,
-} from '../../../../types/hrOnboarding';
-
-// A worker already has an in-flight case in any of these states (i.e. not completed/cancelled).
-const ACTIVE_CASE_STATUSES: OnboardingCaseStatus[] = ['draft', 'open', 'in_progress', 'blocked', 'paused', 'ready_for_activation'];
+import type { OnboardingIntakePreview, OnboardingIntakePreviewArgs } from '../../../../types/hrOnboarding';
 
 export async function getOnboardingIntakePreview(args: OnboardingIntakePreviewArgs): Promise<OnboardingIntakePreview> {
   const { employeeId, packageKey, targetStartDate } = args;
@@ -64,7 +58,7 @@ export async function getOnboardingIntakePreview(args: OnboardingIntakePreviewAr
     const expiresBeforeStart = !!targetStartDate && !!r.expiryDate
       && new Date(`${r.expiryDate.slice(0, 10)}T00:00:00.000Z`).getTime()
         < new Date(`${targetStartDate.slice(0, 10)}T00:00:00.000Z`).getTime();
-    const state = (expiresBeforeStart ? 'expired' : r.state) as OnboardingDocumentState;
+    const state = (expiresBeforeStart ? 'expired' : r.state);
     const collected = state === 'present_verified';
     return {
       requirementId: r.requirementId,
@@ -90,7 +84,7 @@ export async function getOnboardingIntakePreview(args: OnboardingIntakePreviewAr
       ? {
           package: plan.key,
           label: plan.label,
-          tasks: plan.tasks.map(t => ({ taskKey: t.taskKey, taskTitle: t.taskTitle, ownerRole: t.ownerRole, moduleKey: t.moduleKey })),
+          tasks: plan.tasks.map(t => ({ taskKey: t.taskKey, taskTitle: t.taskTitle, ownerRole: t.ownerRole, moduleKey: t.moduleKey, isBlocking: t.isBlocking })),
           handoffs: plan.handoffs.map(h => ({ targetModule: h.targetModule, handoffType: h.handoffType })),
           taskCount: plan.tasks.length,
           handoffCount: plan.handoffs.length,

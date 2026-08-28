@@ -44,6 +44,11 @@ export interface ComboboxProps<T extends string = string> {
    * never mistaken for "no matches".
    */
   search?: (query: string) => Promise<OptionsInput<T>>;
+  /** Observes query text when the caller owns a TanStack-backed remote list. */
+  onQueryChange?: (query: string) => void;
+  /** External request state for a caller-owned remote list. */
+  loading?: boolean;
+  error?: string | null;
   debounceMs?: number;
   /** Minimum characters before `search` runs. 0 searches on open. */
   minChars?: number;
@@ -70,7 +75,9 @@ export interface ComboboxProps<T extends string = string> {
 }
 
 export function Combobox<T extends string = string>({
-  value, onChange, options: staticOptions, search, debounceMs = 220, minChars = 0,
+  value, onChange, options: staticOptions, search, onQueryChange,
+  loading: externalLoading = false, error: externalError = null,
+  debounceMs = 220, minChars = 0,
   placeholder = 'Search…', emptyLabel = 'No results', size = 'md', clearable = true,
   disabled: ownDisabled, readOnly: ownReadOnly, validation: ownValidation,
   renderOption, renderSelected,
@@ -178,7 +185,7 @@ export function Combobox<T extends string = string>({
   const listId = `cb${uid}-list`;
 
   // Fixed trailing priority — exactly one renders. spinner > clear > chevron.
-  const showSpinner = loading;
+  const showSpinner = loading || externalLoading;
   const showClear = !showSpinner && clearable && !!value && !inert;
 
   return (
@@ -207,7 +214,12 @@ export function Combobox<T extends string = string>({
               readOnly={readOnly}
               placeholder={selected ? selected.label : placeholder}
               value={kb.open ? query : (selected?.label ?? '')}
-              onInput={e => { setQuery((e.target as HTMLInputElement).value); if (!kb.open) kb.setOpen(true); }}
+              onInput={e => {
+                const next = (e.target as HTMLInputElement).value;
+                setQuery(next);
+                onQueryChange?.(next);
+                if (!kb.open) kb.setOpen(true);
+              }}
               onFocus={() => { if (!inert) kb.setOpen(true); }}
               onKeyDown={kb.onKeyDown}
             />
@@ -249,8 +261,8 @@ export function Combobox<T extends string = string>({
             optionId={kb.optionId}
             onPick={commit}
             onHover={kb.setActiveIndex}
-            loading={loading}
-            error={error}
+            loading={showSpinner}
+            error={externalError ?? error}
             emptyLabel={query.trim().length < minChars ? `Type ${minChars}+ characters to search` : emptyLabel}
             renderOption={renderOption}
           />

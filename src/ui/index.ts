@@ -255,10 +255,10 @@ export { Toaster, ToastCard, toast, type ToastRecord, type ToastTier, type Toast
 // ── Loading placeholders (cold-path only) ──
 export {
   Skeleton, SkeletonText, TableSkeleton, ListSkeleton, SkeletonFields, SkeletonStatGrid,
-  WidgetSkeleton, PageHeaderSkeleton, DashboardPageSkeleton,
+  WidgetSkeleton, PageHeaderSkeleton,
   type SkeletonProps, type SkeletonTextProps, type TableSkeletonProps, type ListSkeletonProps,
   type SkeletonFieldsProps, type SkeletonStatGridProps, type WidgetSkeletonProps,
-  type WidgetSkeletonVariant, type DashboardPageSkeletonProps,
+  type WidgetSkeletonVariant,
 } from './components/Skeleton';
 export { Spinner, type SpinnerProps } from './components/Spinner';
 export { EmptyState, type EmptyStateProps, type EmptyStateSize, type EmptyTone } from './components/EmptyState';

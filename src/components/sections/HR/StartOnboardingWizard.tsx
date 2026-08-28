@@ -26,7 +26,7 @@ import { useHrEmployees, useUploadHrDocument, type HrEmployeeRow } from '@api/hr
 import { hrEmployeeKeys } from '@api/queryKeys';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
-import { PersonSearchSelect, type PersonSearchOption, LucideIcon } from '@ui';
+import { PersonSearchSelect, type PersonOption, LucideIcon } from '@ui';
 import { rowName } from './shared';
 import { openHrEmployeeRecord, openOnboardingPackages } from './hrDeepLink';
 import { humanize } from './onboardingStatus';
@@ -506,7 +506,7 @@ export function StartOnboardingWizard(
   }, [preview, documents]);
 
   // Same fallback chain as the search results: several roster rows carry only one of the three.
-  const railPhotoUrl = selectedEmp?.profile_image_thumb_url ?? selectedEmp?.profile_image_url ?? selectedEmp?.signed_url ?? null;
+  const railPhotoUrl = selectedEmp?.profile_image_url ?? null;
 
   const optionalTemplates = useMemo(() => actionTemplates.filter(t => !t.isRequired), [actionTemplates]);
 
@@ -786,10 +786,10 @@ export function StartOnboardingWizard(
                     <div class="field">
                       <label>Case owner</label>
                       <PersonSearchSelect
-                        options={owners.map(e => ({ id: e.id, name: rowName(e), subtitle: [e.employee_number, e.position, e.departmentName].filter(Boolean).join(' · '), photoUrl: e.profile_image_url }))}
-                        value={ownerId} onChange={setOwnerId} onSearch={setOwnerSearch}
+                        people={owners.map(e => ({ id: e.id, name: rowName(e), employeeNo: e.employee_number, jobTitle: e.position, department: e.departmentName, photoUrl: e.profile_image_url }))}
+                        value={ownerId} onChange={id => setOwnerId(id ?? '')} onSearch={setOwnerSearch}
                         loading={ownerQ.isFetching} error={ownerQ.error instanceof Error ? ownerQ.error.message : null}
-                        minimumQueryLength={2} placeholder="Search an accountable owner…" emptyLabel="No eligible owner found"
+                        minChars={2} placeholder="Search an accountable owner…" emptyLabel="No eligible owner found"
                       />
                       {!ownerId ? <small class="hint">Leave empty to assign the signed-in HR coordinator.</small> : null}
                     </div>
@@ -1427,7 +1427,7 @@ export function StartOnboardingWizard(
       {assignTarget ? (
         <AssignOwnerDialog
           target={assignTarget}
-          people={owners.map(o => ({ id: o.id, name: rowName(o), subtitle: [o.position, o.departmentName].filter(Boolean).join(' · ') || 'Employee' }))}
+          people={owners.map(o => ({ id: o.id, name: rowName(o), jobTitle: o.position, department: o.departmentName }))}
           onClose={() => setAssignTarget(null)}
           onAssign={(ownerRole, ownerEmployeeId) => {
             setOneOffActions(current => current.map((a, i) => i === assignTarget.index ? { ...a, ownerRole, ownerEmployeeId } : a));
@@ -1698,7 +1698,7 @@ function ActionLibraryDialog(
 function AssignOwnerDialog(
   { target, people, onAssign, onClose }: {
     target: { name: string };
-    people: { id: string; name: string; subtitle: string }[];
+    people: PersonOption[];
     onAssign: (ownerRole: string, ownerEmployeeId: string | null) => void;
     onClose: () => void;
   },
@@ -1731,7 +1731,7 @@ function AssignOwnerDialog(
               <label class={`assignee-option${assignee === person.id ? ' is-selected' : ''}`} key={person.id}>
                 <input type="radio" name="obs-accountable" value={person.id} checked={assignee === person.id} onChange={() => setAssignee(person.id)} />
                 <span class="owner-avatar">{initialsOf(person.name)}</span>
-                <div><strong>{person.name}</strong><small>{person.subtitle}</small></div>
+                <div><strong>{person.name}</strong><small>{[person.employeeNo, person.jobTitle, person.department].filter(Boolean).join(' · ')}</small></div>
               </label>
             ))}
             <label class={`assignee-option${assignee === '' ? ' is-selected' : ''}`}>
@@ -1761,30 +1761,29 @@ function WorkerSearchField(
   { employees, value, onChange, onSearch, loading, error }:
   { employees: HrEmployeeRow[]; value: string; onChange: (id: string) => void; onSearch: (query: string) => void; loading: boolean; error: string | null },
 ): VNode {
-  const options: PersonSearchOption[] = useMemo(() => employees.map(e => ({
+  const options: PersonOption[] = useMemo(() => employees.map(e => ({
     id: e.id,
     name: rowName(e),
     // Department included: the approved mockup's result line is
     // "EMP-0021 · Project Manager · Administration", and department is one of the four facts
     // that decides package eligibility — useful to see before picking, not after.
-    subtitle: [e.employee_number, e.position, e.departmentName].filter(Boolean).join(' · ') || null,
-    photoUrl: e.profile_image_thumb_url ?? e.profile_image_url ?? e.signed_url ?? null,
+    employeeNo: e.employee_number,
+    jobTitle: e.position,
+    department: e.departmentName,
+    photoUrl: e.profile_image_url,
   })), [employees]);
 
   return (
     <PersonSearchSelect
-      options={options}
+      people={options}
       value={value}
-      onChange={onChange}
+      onChange={id => { if (id) onChange(id); }}
       onSearch={onSearch}
       loading={loading}
       error={error}
-      minimumQueryLength={2}
+      minChars={2}
       placeholder="Search by name, employee number or work email…"
       emptyLabel="No workers found"
-      // The approved mockup shows a "1 matching employee" line above the results.
-      showResultCount
-      resultCountNoun="employee"
     />
   );
 }

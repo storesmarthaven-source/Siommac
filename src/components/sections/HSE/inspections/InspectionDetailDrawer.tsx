@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { Drawer, DetailGrid, Tabs, type TabDef } from '@ui';
+import { Drawer, DetailGrid, Tabs, type TabItem } from '@ui';
 import {
   useInspection, useInspectionTransition, useSaveResponse, useUploadEvidence,
   type ResponseStatus, type ChecklistItem, type InspectionResponse,
@@ -17,12 +17,12 @@ import { hsePill } from '../types';
 import { RecordFindingDialog, CloseInspectionDialog, RescheduleDialog } from './InspectionDialogs';
 
 type TabKey = 'overview' | 'checklist' | 'findings' | 'evidence' | 'timeline';
-const TABS: TabDef<TabKey>[] = [
-  { key: 'overview',  label: 'Overview' },
-  { key: 'checklist', label: 'Checklist' },
-  { key: 'findings',  label: 'Findings' },
-  { key: 'evidence',  label: 'Evidence' },
-  { key: 'timeline',  label: 'Timeline' },
+const TABS: readonly TabItem[] = [
+  { id: 'overview',  label: 'Overview' },
+  { id: 'checklist', label: 'Checklist' },
+  { id: 'findings',  label: 'Findings' },
+  { id: 'evidence',  label: 'Evidence' },
+  { id: 'timeline',  label: 'Timeline' },
 ];
 
 const fmt = (iso?: string | null) => iso ? new Date(iso).toLocaleString(undefined, { day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
@@ -128,14 +128,14 @@ export function InspectionDetailDrawer({ inspectionId, onClose }: { inspectionId
           {insp?.priority ? <span class="vt-pill is-info">{insp.priority}</span> : null}
         </div>
 
-        <Tabs<TabKey> tabs={TABS} active={tab} onChange={setTab} />
+        <Tabs id="inspection-detail-tabs" label="Inspection details" items={TABS} value={tab} onChange={id => setTab(id as TabKey)} />
 
         {tab === 'overview' && insp && (
           <div style={{ marginTop: '12px' }}>
             <DetailGrid items={[
               { icon: 'fa-hashtag',        label: 'Reference', value: insp.inspection_no ?? insp.ref ?? '—' },
               { icon: 'fa-tag',            label: 'Type',      value: insp.inspection_type ?? insp.type ?? '—' },
-              { icon: 'fa-flag',           label: 'Priority',  value: insp.priority ?? '—' },
+              { icon: 'fa-flag',           label: 'Priority',  value: insp.priority },
               { icon: 'fa-location-dot',   label: 'Site',      value: insp.site_name ?? insp.site_id ?? '—' },
               { icon: 'fa-map-pin',        label: 'Area',      value: insp.area ?? '—' },
               { icon: 'fa-user',           label: 'Assignee',  value: insp.assignee_id ?? '—' },
@@ -190,7 +190,7 @@ export function InspectionDetailDrawer({ inspectionId, onClose }: { inspectionId
                   onChange={e => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) uploadEvidence.mutate({ file: f, inspectionId }); (e.target as HTMLInputElement).value = ''; }} />
               </label>
             )}
-            {uploadEvidence.isError && <div style={{ color: 'var(--siomac-red)', fontSize: '0.78rem' }}>{(uploadEvidence.error)?.message ?? 'Upload failed'}</div>}
+            {uploadEvidence.isError && <div style={{ color: 'var(--siomac-red)', fontSize: '0.78rem' }}>{uploadEvidence.error.message}</div>}
             {(d?.evidence ?? []).length === 0 && <div class="hse-muted">No evidence attached.</div>}
             {(d?.evidence ?? []).map(ev => (
               <div key={ev.id} class="vt-table-card" style={{ padding: '8px 12px', display: 'flex', gap: '8px', alignItems: 'center' }}>

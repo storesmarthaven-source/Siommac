@@ -9,6 +9,7 @@ import { getComplianceForEmployee } from './documentsCompliance';
 import { listRequirements } from './documentsRequirements';
 import { getAccountProvisioningPreflight } from './accountProvisioning';
 import { getOnboardingLaunchPreflight } from './onboardingLaunchPreflight';
+import { validateUploadedDocumentSelections } from './onboardingDocumentSelections';
 import type { OnboardingCaseStatus, OnboardingDocumentLaunchSelection, OnboardingLaunchOneOffAction } from '../../../../types/hrOnboarding';
 
 export interface StartOnboardingArgs {
@@ -29,6 +30,7 @@ export interface StartOnboardingResult {
   caseNo: string;
   taskCount: number;
   handoffCount: number;
+  documentRequestCount: number;
 }
 
 const ACTIVE_CASE_STATUSES: OnboardingCaseStatus[] = [
@@ -36,6 +38,11 @@ const ACTIVE_CASE_STATUSES: OnboardingCaseStatus[] = [
 ];
 
 const fail = (status: number, message: string): Error => Object.assign(new Error(message), { status });
+const normalizedOptionalText = (value: string | null | undefined): string | null => {
+  if (value == null) return null;
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? null : trimmed;
+};
 
 async function validateLaunchGates(employeeId: string): Promise<void> {
   const [duplicateResult, employeeResult] = await Promise.all([
@@ -44,7 +51,7 @@ async function validateLaunchGates(employeeId: string): Promise<void> {
   ]);
   if (duplicateResult.error) throw fail(500, duplicateResult.error.message);
   if (employeeResult.error) throw fail(500, employeeResult.error.message);
-  const duplicate = duplicateResult.data?.[0] as { case_no: string; status: string } | undefined;
+  const duplicate = duplicateResult.data[0] as { case_no: string; status: string } | undefined;
   if (duplicate) throw fail(400, `This employee already has an active onboarding case (${duplicate.case_no}, status: ${duplicate.status}).`);
   if (!employeeResult.data) throw fail(404, 'Employee not found.');
   if (!employeeResult.data.employment_type) throw fail(400, 'Right to work is not verified for this worker. Set the employment type before launching.');
@@ -62,13 +69,21 @@ async function findLaunchReplay(requestId: string): Promise<StartOnboardingResul
     .maybeSingle<{ id: string; case_no: string }>();
   if (error) throw fail(500, error.message);
   if (!existing) return null;
-  const [tasks, handoffs] = await Promise.all([
+  const [tasks, handoffs, documentRequests] = await Promise.all([
     sb.from('hr_onboarding_tasks').select('id', { count: 'exact', head: true }).eq('case_id', existing.id),
     sb.from('hr_onboarding_handoffs').select('id', { count: 'exact', head: true }).eq('case_id', existing.id),
+    sb.from('hr_onboarding_document_requests').select('id', { count: 'exact', head: true }).eq('case_id', existing.id),
   ]);
   if (tasks.error) throw fail(500, tasks.error.message);
   if (handoffs.error) throw fail(500, handoffs.error.message);
-  return { caseId: existing.id, caseNo: existing.case_no, taskCount: tasks.count ?? 0, handoffCount: handoffs.count ?? 0 };
+  if (documentRequests.error) throw fail(500, documentRequests.error.message);
+  return {
+    caseId: existing.id,
+    caseNo: existing.case_no,
+    taskCount: tasks.count ?? 0,
+    handoffCount: handoffs.count ?? 0,
+    documentRequestCount: documentRequests.count ?? 0,
+  };
 }
 
 export async function startOnboardingCase(
@@ -83,15 +98,15 @@ export async function startOnboardingCase(
   if (!preflight.ready) throw fail(409, preflight.blockers[0]?.message ?? 'Onboarding launch is blocked.');
 
   const settingsScope = { moduleKey: 'hr_onboarding' };
-  const enabled = await resolveSettingValue<unknown>(sb, 'hr_onboarding.enabled', settingsScope, true);
-  if (enabled === false || enabled === 'false') throw fail(403, 'Onboarding is disabled in settings.');
+  const enabled = await resolveSettingValue(sb, 'hr_onboarding.enabled', settingsScope, true);
+  if (!enabled) throw fail(403, 'Onboarding is disabled in settings.');
 
   const ownerId = args.ownerId ?? actorId;
-  const requireOwner = await resolveSettingValue<unknown>(sb, 'hr_onboarding.require_owner_on_start', settingsScope, true);
-  if ((requireOwner === true || requireOwner === 'true') && !ownerId) throw fail(400, 'A case owner is required to start onboarding.');
+  const requireOwner = await resolveSettingValue(sb, 'hr_onboarding.require_owner_on_start', settingsScope, true);
+  if (requireOwner && !ownerId) throw fail(400, 'A case owner is required to start onboarding.');
 
   const plan = await loadPackagePlan(args.packageKey);
-  if (!plan || plan.status !== 'active') throw fail(400, 'Choose an active onboarding package.');
+  if (plan?.status !== 'active') throw fail(400, 'Choose an active onboarding package.');
   await requireCompatiblePackage(args.employeeId, args.packageKey);
 
   const activeTemplates = await listActionTemplates(args.packageKey);
@@ -119,7 +134,8 @@ export async function startOnboardingCase(
     ownerId,
   });
   if (accountPreflight.required && !accountPreflight.ready) {
-    throw fail(409, accountPreflight.blockers.join(' ') || 'Account setup policy is not ready.');
+    const message = accountPreflight.blockers.join(' ').trim();
+    throw fail(409, message.length > 0 ? message : 'Account setup policy is not ready.');
   }
 
   const [compliance, requirements] = await Promise.all([
@@ -128,10 +144,20 @@ export async function startOnboardingCase(
   ]);
   const requirementById = new Map(requirements.map(requirement => [requirement.id, requirement]));
   const selectionByRequirement = new Map((args.documentSelections ?? []).map(selection => [selection.requirementId, selection]));
-  const startDate = args.targetStartDate || null;
+  const startDate = args.targetStartDate ?? null;
   for (const selection of args.documentSelections ?? []) {
     if (!requirementById.has(selection.requirementId)) throw fail(409, 'A document requirement is no longer active. Refresh the intake preview.');
   }
+  const uploadedDocuments = await validateUploadedDocumentSelections(
+    args.employeeId,
+    args.documentSelections,
+    compliance.map(item => ({
+      requirementId: item.requirementId,
+      documentType: item.requiredType,
+      label: item.label,
+    })),
+  );
+  if (uploadedDocuments.issues[0]) throw fail(409, uploadedDocuments.issues[0]);
 
   const documentRows = compliance.map(item => {
     const requirement = requirementById.get(item.requirementId);
@@ -150,13 +176,24 @@ export async function startOnboardingCase(
       if (!requirement?.canWaive) throw fail(403, `${item.label} cannot be waived.`);
       if (!selection.waiverReason?.trim()) throw fail(400, `A waiver reason is required for ${item.label}.`);
     }
-    const status = selection?.action === 'waive' ? 'waived' : eligibleExisting || selection?.action === 'use_existing' ? 'use_existing' : 'pending';
+    const uploadedDocument = selection?.action === 'upload_now'
+      ? uploadedDocuments.byRequirementId.get(item.requirementId)
+      : undefined;
+    const status = selection?.action === 'waive'
+      ? 'waived'
+      : uploadedDocument
+        ? 'uploaded'
+        : eligibleExisting || selection?.action === 'use_existing'
+          ? 'use_existing'
+          : 'pending';
     if (requirement?.blocksOnboarding && !eligibleExisting && status !== 'use_existing' && status !== 'waived') {
       throw fail(400, `${item.label} must be attached or waived before launch.`);
     }
     return {
       id: crypto.randomUUID(), requirementId: item.requirementId, documentType: item.requiredType,
-      label: item.label, status, documentId: status === 'use_existing' ? item.documentId : null,
+      label: item.label,
+      status,
+      documentId: status === 'use_existing' ? item.documentId : uploadedDocument?.id ?? null,
       waiverReason: selection?.action === 'waive' ? selection.waiverReason!.trim() : null,
       blocksOnboarding: requirement?.blocksOnboarding ?? false, canWaive: requirement?.canWaive ?? false,
       requiresExpiry: requirement?.requiresExpiry ?? false,
@@ -165,7 +202,7 @@ export async function startOnboardingCase(
   });
 
   const caseId = crypto.randomUUID();
-  const prefixValue = await resolveSettingValue<unknown>(sb, 'hr_onboarding.case_no_prefix', settingsScope, 'ONB');
+  const prefixValue = await resolveSettingValue(sb, 'hr_onboarding.case_no_prefix', settingsScope, 'ONB');
   const caseNo = await nextRef(typeof prefixValue === 'string' && prefixValue.trim() ? prefixValue.trim() : 'ONB');
   const taskRows: Record<string, unknown>[] = plan.tasks.map(task => ({
     id: crypto.randomUUID(), taskKey: task.taskKey, taskTitle: task.taskTitle, ownerRole: task.ownerRole,
@@ -201,6 +238,18 @@ export async function startOnboardingCase(
       actionRoute: `hr/onboarding/worker/${caseId}`,
       actionRequired: true,
       dedupeKey: `hr.onboarding.launch:${args.requestId}:document:${document.id}:${employee.id}`,
+    });
+  }
+  for (const document of documentRows.filter(row => row.status === 'uploaded')) {
+    taskRows.push({
+      id: crypto.randomUUID(),
+      taskKey: `document_review_${document.id}`,
+      taskTitle: `Review ${document.label}`,
+      ownerRole: 'hr', assignedTo: ownerId, moduleKey: 'documents',
+      isBlocking: false, requiresEvidence: false, sortOrder: 900,
+      dependencyKeys: [], dueAt: resolveDueAt(startDate, -7),
+      priority: 'normal',
+      metadata: { documentRequestId: document.id, requirementId: document.requirementId, documentId: document.documentId, reviewRequired: true },
     });
   }
 
@@ -310,13 +359,13 @@ export async function startOnboardingCase(
     tasks: taskRows, handoffs: handoffRows, documents: documentRows, actions: actionRows,
   };
 
-  const { data, error } = await sb.rpc('hr_onboarding_launch_tx', {
+  const launchResult = await sb.rpc('hr_onboarding_launch_tx', {
     p_request_id: args.requestId,
     p_actor_id: actorId,
     p_case: {
       id: caseId, caseNo, employeeId: employee.id, workerType, packageKey: plan.key,
       packageId: plan.id, packageVersionNo: plan.versionNo, launchSnapshot, ownerId,
-      reason: args.reason?.trim() || null, priority: args.priority?.trim() || null,
+      reason: normalizedOptionalText(args.reason), priority: normalizedOptionalText(args.priority),
       targetStartDate: startDate,
     },
     p_tasks: taskRows,
@@ -326,11 +375,12 @@ export async function startOnboardingCase(
     p_notifications: notifications,
     p_probation_end_date: probationEndDate,
   });
+  const error = launchResult.error as { code?: string; message: string } | null;
   if (error) {
     const duplicate = error.code === '23505' || error.message.includes('already has an active onboarding case');
     throw fail(duplicate ? 409 : 500, duplicate ? 'This employee already has an active onboarding case.' : `Onboarding launch failed atomically: ${error.message}`);
   }
-  const result = data as StartOnboardingResult | null;
+  const result = launchResult.data as StartOnboardingResult | null;
   if (!result?.caseId || !result.caseNo) throw fail(500, 'Onboarding launch returned an invalid result.');
   return result;
 }
