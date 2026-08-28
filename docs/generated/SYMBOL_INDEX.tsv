@@ -9550,12 +9550,10 @@ sendReadinessReminder	function	hr	false		src/components/sections/HR/ProfileDrawe
 submitContact	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	375	ProfileDrawer
 str	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	380	submitContact
 pick	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	1015	ProfileDrawer
-ProfileDrawerTemplateProps	interface	hr	true		src/components/sections/HR/ProfileDrawerTemplate.tsx	14	
-TEMPLATE_TABS	variable	hr	false	component	src/components/sections/HR/ProfileDrawerTemplate.tsx	22	
-TemplateTab	type	hr	false		src/components/sections/HR/ProfileDrawerTemplate.tsx	23	
-TAB_EMPTY_STATE	object	hr	false		src/components/sections/HR/ProfileDrawerTemplate.tsx	25	
-TEMPLATE_TAB_ITEMS	variable	hr	false	component	src/components/sections/HR/ProfileDrawerTemplate.tsx	34	
-ProfileDrawerTemplate	function	hr	true	component	src/components/sections/HR/ProfileDrawerTemplate.tsx	47	
+ProfileDrawerTemplateProps	interface	hr	true		src/components/sections/HR/ProfileDrawerTemplate.tsx	13	
+OVERVIEW_TAB	variable	hr	false	component	src/components/sections/HR/ProfileDrawerTemplate.tsx	21	
+TEMPLATE_TAB_ITEMS	array	hr	false		src/components/sections/HR/ProfileDrawerTemplate.tsx	22	
+ProfileDrawerTemplate	function	hr	true	component	src/components/sections/HR/ProfileDrawerTemplate.tsx	35	
 Rgb	interface	hr	true		src/components/sections/HR/readinessScale.ts	12	
 READINESS_STOPS	array	hr	false		src/components/sections/HR/readinessScale.ts	15	
 clampPercent	function	hr	false		src/components/sections/HR/readinessScale.ts	23	

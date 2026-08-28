@@ -2,9 +2,9 @@
 
 # hr Module Map
 
-Source fingerprint: `a3106c8f45a1359a99f81472`
+Source fingerprint: `0982e07ba0b9bdc6e5018711`
 
-Files: 280 | Symbols: 3297 | Widgets: 14 | Unique mounted endpoints: 284 | Route definitions: 284 mounted + 0 unmounted | API calls: 37 | DB objects: 207 | E2E suites: 19
+Files: 280 | Symbols: 3295 | Widgets: 14 | Unique mounted endpoints: 284 | Route definitions: 284 mounted + 0 unmounted | API calls: 37 | DB objects: 207 | E2E suites: 19
 
 ## Widgets and Tiles
 
@@ -13,9 +13,9 @@ Files: 280 | Symbols: 3297 | Widgets: 14 | Unique mounted endpoints: 284 | Route
 | `bundle.hr.attendance.ops` | Attendance & Leave Ops | registry | `` | `src/ui/widgets/bundles.ts:116` |
 | `bundle.hr.employees.essentials` | Employee Master Essentials | registry | `` | `src/ui/widgets/bundles.ts:90` |
 | `bundle.hr.onboarding.manager` | Onboarding Manager Pack | registry | `` | `src/ui/widgets/bundles.ts:76` |
-| `employee-drawer-sections` | Employee drawer sections | registry | `() => (         <Tabs           id="ex-employee-drawer"           label="Employee profile sections"           class="sds-tabs-use-example"           size="sm"           items={[             { id: 'overview', label: 'Overview', icon: <LucideIcon name="LayoutGrid" /> },             { id: 'documents', label: 'Documents', icon: <LucideIcon name="FileText" />, badge: 3 },             { id: 'activity', label: 'Activity', icon: <LucideIcon name="History" /> },           ]}           value="overview"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:305` |
 | `employee-name` | Employee record | registry | `() => <FormField label="Employee name" required helpText="As shown on government ID"><TextInput value="Sarah James" onInput={noop} /></FormField>` | `src/ui/registry/forms.defs.tsx:576` |
 | `employee-onboarding` | Employee onboarding | registry | `() => <ProgressSteps steps={STEPS} value="documents" label="Employee onboarding progress" variant="icon-with-number" />` | `src/ui/registry/progress-steps.def.tsx:150` |
+| `employee-record-sections` | Employee record sections | registry | `() => (         <Tabs           id="ex-employee-record"           label="Employee record sections"           class="sds-tabs-use-example"           size="sm"           items={[             { id: 'overview', label: 'Overview', icon: <LucideIcon name="LayoutGrid" /> },             { id: 'documents', label: 'Documents', icon: <LucideIcon name="FileText" />, badge: 3 },             { id: 'activity', label: 'Activity', icon: <LucideIcon name="History" /> },           ]}           value="overview"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:305` |
 | `employee-register-views` | Employee register views | registry | `() => (         <Tabs           id="ex-employee-register"           label="Employee register views"           class="sds-tabs-use-example"           variant="contained"           size="sm"           items={[             { id: 'all', label: 'All' },             { id: 'attention', label: 'Attention', badge: 8 },             { id: 'archived', label: 'Archived' },           ]}           value="attention"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:325` |
 | `hr.employeeMaster.lifecycleActivity` | Workforce Activity | registry | `LifecycleActivity` | `src/ui/widgets/registry.hrEmployeeMaster.tsx:533` |
 | `hr.employees.register` | Employee Register | local | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:829` |
@@ -768,7 +768,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/OvertimeOverview.tsx` | 233 |
 | frontend-page | `src/components/sections/HR/ProfileDrawer.test.tsx` | 307 |
 | frontend-page | `src/components/sections/HR/ProfileDrawer.tsx` | 1075 |
-| frontend-page | `src/components/sections/HR/ProfileDrawerTemplate.tsx` | 102 |
+| frontend-page | `src/components/sections/HR/ProfileDrawerTemplate.tsx` | 87 |
 | frontend-page | `src/components/sections/HR/RosterOverview.tsx` | 683 |
 | frontend-page | `src/components/sections/HR/StartOnboardingWizard.tsx` | 2017 |
 | frontend-page | `src/components/sections/HR/TransfersOverview.tsx` | 398 |

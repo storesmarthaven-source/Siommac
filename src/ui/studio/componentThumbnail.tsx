@@ -156,7 +156,7 @@ export function ComponentThumbnail({ kind }: { kind: ThumbnailKind }): VNode {
       {kind === 'drawer' && <div class="sds-thumb-drawer"><aside /><div><strong>Employee details</strong><span>Sarah James</span><span>Safety Officer</span><b>Active</b></div></div>}
       {kind === 'employee-drawer' && <div class="sds-thumb-employee-drawer">
         <section><img src={avatarSarah} alt="" /><div><strong>Sarah Page</strong><small>EMP-0097 · Active</small><span>HR Business Partner</span></div><em>Permanent</em></section>
-        <nav><b>Overview</b><span>Employment</span><span>Documents</span><span>Readiness</span><span>Access</span><span>Activity</span></nav>
+        <nav><b>Overview</b></nav>
         <main><LucideIcon name="LayoutDashboard" size={13} /><strong>Build the overview</strong><small>Add employee summary components.</small></main>
         <footer><span>View Full Record</span><b>Request Change</b></footer>
       </div>}

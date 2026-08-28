@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `67b987fa5c3037485fe6cc2d05eb81868715b68a`  
-Source fingerprint: `a3106c8f45a1359a99f81472`  
+Source HEAD: `5dcce0ce5ca95088b25dbe9139880bab32f93b02`  
+Source fingerprint: `0982e07ba0b9bdc6e5018711`  
 Generator version: `1`
 
 ## Use
@@ -19,13 +19,13 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1551 | 15419 | 77 | 992 | 993 | 17 | 361 | 1460 | 95 | 2846 |
+| 1551 | 15417 | 77 | 992 | 993 | 17 | 361 | 1460 | 95 | 2846 |
 
 ## Modules
 
 | Module | Files | Symbols | Widgets | Unique routes | Route definitions | API calls | DB objects | E2E suites | Map |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| hr | 280 | 3297 | 14 | 284 | 284 | 37 | 207 | 19 | [open](modules/hr.md) |
+| hr | 280 | 3295 | 14 | 284 | 284 | 37 | 207 | 19 | [open](modules/hr.md) |
 | payroll | 196 | 1986 | 12 | 140 | 140 | 2 | 260 | 29 | [open](modules/payroll.md) |
 | finance | 141 | 1849 | 9 | 156 | 156 | 4 | 202 | 9 | [open](modules/finance.md) |
 | hse | 89 | 1278 | 0 | 144 | 144 | 107 | 65 | 4 | [open](modules/hse.md) |
@@ -49,9 +49,9 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `case-workspace-panels` | Case workspace panels | registry | platform | `() => (         <Tabs           id="ex-case-workspace"           label="Case workspace panels"           class="sds-tabs-use-example"           variant="subtle"           size="sm"           items={[             { id: 'activity', label: 'Activity' },             { id: 'approvals', label: 'Approvals', badge: 2 },             { id: 'audit', label: 'Audit' },           ]}           value="approvals"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:346` |
 | `create` | Create with options | registry | platform | `() => <SplitButton action={{ label: 'Create' }} items={SAVE_ALTERNATIVES} variant="secondary" />` | `src/ui/registry/compound.defs.tsx:235` |
 | `dialog-footer` | Dialog footer | registry | platform | `() => (         <>           <Button variant="secondary">Cancel</Button>           <Button variant="primary">Save</Button>         </>       )` | `src/ui/registry/actions.defs.tsx:276` |
-| `employee-drawer-sections` | Employee drawer sections | registry | hr | `() => (         <Tabs           id="ex-employee-drawer"           label="Employee profile sections"           class="sds-tabs-use-example"           size="sm"           items={[             { id: 'overview', label: 'Overview', icon: <LucideIcon name="LayoutGrid" /> },             { id: 'documents', label: 'Documents', icon: <LucideIcon name="FileText" />, badge: 3 },             { id: 'activity', label: 'Activity', icon: <LucideIcon name="History" /> },           ]}           value="overview"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:305` |
 | `employee-name` | Employee record | registry | hr | `() => <FormField label="Employee name" required helpText="As shown on government ID"><TextInput value="Sarah James" onInput={noop} /></FormField>` | `src/ui/registry/forms.defs.tsx:576` |
 | `employee-onboarding` | Employee onboarding | registry | hr | `() => <ProgressSteps steps={STEPS} value="documents" label="Employee onboarding progress" variant="icon-with-number" />` | `src/ui/registry/progress-steps.def.tsx:150` |
+| `employee-record-sections` | Employee record sections | registry | hr | `() => (         <Tabs           id="ex-employee-record"           label="Employee record sections"           class="sds-tabs-use-example"           size="sm"           items={[             { id: 'overview', label: 'Overview', icon: <LucideIcon name="LayoutGrid" /> },             { id: 'documents', label: 'Documents', icon: <LucideIcon name="FileText" />, badge: 3 },             { id: 'activity', label: 'Activity', icon: <LucideIcon name="History" /> },           ]}           value="overview"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:305` |
 | `employee-register-views` | Employee register views | registry | hr | `() => (         <Tabs           id="ex-employee-register"           label="Employee register views"           class="sds-tabs-use-example"           variant="contained"           size="sm"           items={[             { id: 'all', label: 'All' },             { id: 'attention', label: 'Attention', badge: 8 },             { id: 'archived', label: 'Archived' },           ]}           value="attention"           onChange={noop}         />       )` | `src/ui/registry/navigation.defs.tsx:325` |
 | `enterprise.calendar.taskPlanner` | Task Planner | registry | widgets | `TaskPlannerWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:304` |
 | `enterprise.calendar.upcomingDeadlines` | Schedule & Deadlines | registry | widgets | `DeadlineWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:303` |

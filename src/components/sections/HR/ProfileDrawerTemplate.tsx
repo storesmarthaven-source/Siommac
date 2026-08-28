@@ -1,11 +1,10 @@
 import { type VNode } from 'preact';
-import { useState } from 'preact/hooks';
 import { EmptyState } from '../../../ui/components/EmptyState';
-import { Illustration, type IllustrationVariant } from '../../../ui/feedback/Illustration';
+import { Illustration } from '../../../ui/feedback/Illustration';
 import { Button } from '../../../ui/primitives/Button';
 import { Badge } from '../../../ui/primitives/Badge';
 import { Avatar } from '../../../ui/people/Avatar';
-import { LucideIcon, type LucideName } from '../../../ui/LucideIcon';
+import { LucideIcon } from '../../../ui/LucideIcon';
 import { Tabs, TabPanel, type TabItem } from '../../../ui/navigation/Tabs';
 import avatarSarah from '../../../assets/avatars/untitled-ui/Sarah Page.jpg';
 import { EmployeeSideDrawerFrame } from './EmployeeSideDrawerFrame';
@@ -19,30 +18,19 @@ export interface ProfileDrawerTemplateProps {
   footer?: boolean;
 }
 
-const TEMPLATE_TABS = ['Overview', 'Employment', 'Documents', 'Readiness', 'Access', 'Activity'] as const;
-type TemplateTab = (typeof TEMPLATE_TABS)[number];
-
-const TAB_EMPTY_STATE: Record<TemplateTab, { icon: LucideName; illustration: IllustrationVariant; title: string; text: string }> = {
-  Overview: { icon: 'LayoutDashboard', illustration: 'profile', title: 'No profile summary yet', text: 'Employee highlights and key profile information will appear here.' },
-  Employment: { icon: 'BriefcaseBusiness', illustration: 'people', title: 'No employment details yet', text: 'Assignment, employment terms, payroll, and work history will appear here.' },
-  Documents: { icon: 'FileText', illustration: 'documents', title: 'No employee documents yet', text: 'Uploaded documents, verification status, and expiry dates will appear here.' },
-  Readiness: { icon: 'ShieldCheck', illustration: 'workflow', title: 'No readiness workflow yet', text: 'Required checks, owners, and follow-up steps will appear here.' },
-  Access: { icon: 'KeyRound', illustration: 'search', title: 'No access assignments yet', text: 'System access, roles, and support assignments will appear here.' },
-  Activity: { icon: 'History', illustration: 'schedule', title: 'No recent activity yet', text: 'Employee changes and scheduled events will appear here.' },
-};
-
-const TEMPLATE_TAB_ITEMS: readonly TabItem[] = TEMPLATE_TABS.map(tab => ({
-  id: tab,
-  label: tab,
-  icon: <LucideIcon name={TAB_EMPTY_STATE[tab].icon} />,
-}));
+const OVERVIEW_TAB = 'overview';
+const TEMPLATE_TAB_ITEMS: readonly TabItem[] = [{
+  id: OVERVIEW_TAB,
+  label: 'Overview',
+  icon: <LucideIcon name="LayoutDashboard" />,
+}];
 
 /**
  * Canonical Employee Master drawer shell.
  *
- * The frame owns the approved profile hero, facts, navigation, empty body slot,
- * and pinned footer. Domain information is composed into the active panel by a
- * consumer; it is intentionally absent from this reusable shell.
+ * The frame owns the approved profile hero, facts, one Overview panel, and pinned
+ * footer. The drawer is deliberately a quick summary; Employment, Documents,
+ * Readiness, Access, and Activity belong to the full employee record page.
  */
 export function ProfileDrawerTemplate({
   open,
@@ -51,9 +39,6 @@ export function ProfileDrawerTemplate({
   tabs = true,
   footer = true,
 }: ProfileDrawerTemplateProps): VNode | null {
-  const [activeTab, setActiveTab] = useState<TemplateTab>('Overview');
-  const emptyState = TAB_EMPTY_STATE[activeTab];
-
   return (
     <EmployeeSideDrawerFrame open={open} onClose={onClose} label="Profile drawer modal template" className="sds-employee-side-drawer-preview">
       <main class="drawer sds-employee-slideout" aria-label="Profile drawer modal template">
@@ -77,16 +62,16 @@ export function ProfileDrawerTemplate({
           </div>}
         </section>
 
-        {tabs && <Tabs id="profile-drawer-template" items={TEMPLATE_TAB_ITEMS} value={activeTab} onChange={id => setActiveTab(id as TemplateTab)} label="Profile drawer sections" variant="underline" size="sm" class="epd-drawer-tabs" />}
+        {tabs && <Tabs id="profile-drawer-template" items={TEMPLATE_TAB_ITEMS} value={OVERVIEW_TAB} onChange={() => undefined} label="Profile drawer overview" variant="underline" size="sm" class="epd-drawer-tabs" />}
 
         <div class="scroll">
-          <TabPanel tabsId="profile-drawer-template" tabId={activeTab} value={activeTab} class="panel active sds-profile-drawer-template__empty">
+          <TabPanel tabsId="profile-drawer-template" tabId={OVERVIEW_TAB} value={OVERVIEW_TAB} class="panel active sds-profile-drawer-template__empty">
             <EmptyState
               headingLevel={3}
               size="compact"
-              visual={<Illustration variant={emptyState.illustration} treatment="soft" />}
-              title={emptyState.title}
-              text={emptyState.text}
+              visual={<Illustration variant="profile" treatment="soft" />}
+              title="No profile summary yet"
+              text="Employee highlights and key profile information will appear here. Open the full record for complete employee details."
             />
           </TabPanel>
         </div>

@@ -303,13 +303,13 @@ export const tabsDef: ComponentDef = {
 
   examples: [
     {
-      id: 'employee-drawer-sections',
-      title: 'Employee drawer sections',
-      description: 'Underline tabs sit directly below the profile summary and keep record sections visible without adding another container.',
+      id: 'employee-record-sections',
+      title: 'Employee record sections',
+      description: 'Underline tabs organize the full Employee Record page. The Employee Master side drawer intentionally keeps only one Overview tab.',
       render: () => (
         <Tabs
-          id="ex-employee-drawer"
-          label="Employee profile sections"
+          id="ex-employee-record"
+          label="Employee record sections"
           class="sds-tabs-use-example"
           size="sm"
           items={[

@@ -158,10 +158,10 @@ export const employeeSideDrawerDef: ComponentDef = {
   id: 'employee-side-drawer', name: 'Profile Drawer Modal', category: 'overlays', status: 'stable',
   thumbnail: 'employee-drawer',
   componentPath: 'src/components/sections/HR/ProfileDrawerTemplate.tsx', importFrom: '@/components/sections/HR/ProfileDrawerTemplate',
-  description: 'The reusable Employee Master drawer shell: profile hero, facts, six approved sections, an empty composition area, and a pinned action footer.',
+  description: 'The reusable Employee Master quick-summary drawer: profile hero, facts, one Overview section, and a pinned action footer linking to the full employee record.',
   props: {
     facts: { type: 'boolean', label: 'Employee facts', default: true },
-    tabs: { type: 'boolean', label: 'Section tabs', default: true },
+    tabs: { type: 'boolean', label: 'Overview tab', default: true },
     footer: { type: 'boolean', label: 'Action footer', default: true },
   },
   style: [{ label: 'Slideout frame', controls: [
@@ -175,7 +175,7 @@ export const employeeSideDrawerDef: ComponentDef = {
     role: 'dialog, aria-modal="true"', name: 'A visible title or explicit accessible label.',
     keyboard: [{ keys: 'Escape', does: 'Closes the topmost inner dialog first, then the slideout.' }, { keys: 'Tab / Shift+Tab', does: 'Moves through the slideout controls.' }],
     focus: 'Moves to the sheet when opened; the production Employee drawer preserves its existing data and permission flow.',
-    notes: ['Header, summary, navigation, body and footer are composition slots. Business data and permissions never belong to the reusable frame.'],
+    notes: ['The drawer contains one Overview panel for a fast summary. Detailed employee sections belong to the full employee record page. Business data and permissions never belong to the reusable frame.'],
   },
   render: p => <EmployeeSideDrawerPreview props={p} />,
   code: () => `<ProfileDrawerTemplate open={open} onClose={close} />`,
