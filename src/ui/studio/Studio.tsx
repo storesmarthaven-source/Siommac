@@ -439,14 +439,14 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
             </ul>
             <footer><LucideIcon name="ShieldCheck" size={16} /><span><strong>Draft only</strong><small>Nothing reaches the app until publish.</small></span></footer>
           </nav>
-        ) : <>
-          <button type="button" class={`sds-nav__home${active === 'components' && !openId ? ' is-active' : ''}`}
-            aria-current={active === 'components' && !openId ? 'page' : undefined}
-            onClick={openComponents}>
-            <LucideIcon name="Home" size={16} /> Overview
-          </button>
-          {NAV.map(group => (
-            <nav class="sds-nav__group" data-nav-group={group.label} key={group.label}>
+        ) : <div class="sds-nav__menu">
+            <button type="button" class={`sds-nav__home${active === 'components' && !openId ? ' is-active' : ''}`}
+              aria-current={active === 'components' && !openId ? 'page' : undefined}
+              onClick={openComponents}>
+              <LucideIcon name="Home" size={16} /> Overview
+            </button>
+            {NAV.map(group => (
+              <nav class="sds-nav__group" data-nav-group={group.label} key={group.label}>
               <button type="button" class="sds-nav__gh"
                 aria-expanded={!collapsed[group.label]}
                 onClick={() => setCollapsed(current => ({ ...current, [group.label]: !current[group.label] }))}>
@@ -488,9 +488,9 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
                 )}
               </ul>
               }
-          </nav>
-          ))}
-        </>}
+              </nav>
+            ))}
+          </div>}
 
         {onExit && (
           <button type="button" class="sds-nav__exit" onClick={onExit}>

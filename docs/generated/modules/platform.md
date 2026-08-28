@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `fb48b27c39033ce36d821bdc`
+Source fingerprint: `d71c2eb46e0382cb768082f2`
 
-Files: 471 | Symbols: 4136 | Widgets: 16 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 55 | DB objects: 327 | E2E suites: 0
+Files: 471 | Symbols: 4145 | Widgets: 16 | Unique mounted endpoints: 38 | Route definitions: 38 mounted + 15 unmounted | API calls: 55 | DB objects: 327 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -167,8 +167,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `DialogContextPanel` | function / component | `src/components/common/dialogs/DialogContextPanel.tsx:28` | `-` |
 | `EnterpriseFormModal` | function / component | `src/components/common/dialogs/EnterpriseFormModal.tsx:32` | `-` |
 | `NavController` | function / component | `src/components/nav/NavController.tsx:55` | `-` |
-| `skelStatCards` | function / ui-tile | `src/components/nav/navCore.ts:761` | `-` |
-| `skelCards` | function / ui-tile | `src/components/nav/navCore.ts:768` | `-` |
+| `skelStatCards` | function / ui-tile | `src/components/nav/navCore.ts:829` | `-` |
+| `skelCards` | function / ui-tile | `src/components/nav/navCore.ts:836` | `-` |
 | `AccessControlSection` | function / component | `src/components/sections/AccessControl/AccessControlSection.tsx:32` | `-` |
 | `AcApprovalsPage` | function / component | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx:27` | `-` |
 | `AcAuditPage` | function / component | `src/components/sections/AccessControl/pages/AcAuditPage.tsx:17` | `-` |

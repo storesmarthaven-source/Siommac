@@ -130,8 +130,8 @@ describe('Buttons family — Studio', () => {
     const { container } = render(<Studio />);
 
     // One family card and one nav row — not one per member in either place.
-    expect(container.querySelectorAll('.sds-card--family')).toHaveLength(2);
-    expect(container.querySelectorAll('.sds-card--family .sds-card__art')).toHaveLength(2);
+    expect(container.querySelectorAll('.sds-card--family')).toHaveLength(3);
+    expect(container.querySelectorAll('.sds-card--family .sds-card__art')).toHaveLength(3);
     expect(container.querySelector('.sds-card--family .sds-card__specimen')).toBeNull();
     expect(container.querySelectorAll('.sds-card__preview .sds-card__art').length).toBe(container.querySelectorAll('.sds-card').length);
     const previewImages = [...container.querySelectorAll<HTMLImageElement>('.sds-card__preview img')];

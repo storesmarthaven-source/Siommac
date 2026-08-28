@@ -33,7 +33,7 @@ export {
 } from './button-patterns';
 
 export {
-  type ComponentFamily, COMPONENT_FAMILIES, BUTTON_FAMILY, SWITCH_FAMILY,
+  type ComponentFamily, COMPONENT_FAMILIES, BUTTON_FAMILY, SWITCH_FAMILY, DRAWER_FAMILY,
   findFamily, familyOfComponent, familyMembers,
 } from './families';
 

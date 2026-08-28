@@ -13,11 +13,11 @@
   "retirement": {
     "_comment": "active-legacy = migrate the consumer, then delete the family once it hits zero. legacy-page-only = the page itself is unreachable from src/main.tsx; retire page + component + styles together, do NOT mechanically migrate. unresolved = no class or class={expr}; needs a decision per site.",
     "counts": {
-      "activeLegacy": 1467,
+      "activeLegacy": 1507,
       "legacyPageOnly": 11,
       "unresolved": 452,
       "unreachablePages": 4,
-      "inFlightPages": 2,
+      "inFlightPages": 0,
       "unresolvedImports": 5
     },
     "activeLegacy": [
@@ -52,7 +52,7 @@
       },
       {
         "family": "primary",
-        "count": 138,
+        "count": 140,
         "files": [
           "src/components/sections/AccessControl/pages/AcApprovalsPage.tsx",
           "src/components/sections/AccessControl/pages/AcCreateRolePage.tsx",
@@ -77,6 +77,7 @@
           "src/components/sections/HR/OnboardingPackageManager.tsx",
           "src/components/sections/HR/OnboardingWorkQueue.tsx",
           "src/components/sections/HR/StartOnboardingWizard.tsx",
+          "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
           "src/components/sections/HR/onboarding/CommandCentreWidgets.tsx",
           "src/components/sections/HR/profile/EmployeeProfileDialogs.tsx",
           "src/components/sections/HSE/Contractors.tsx",
@@ -286,15 +287,8 @@
         ]
       },
       {
-        "family": "has-label",
-        "count": 13,
-        "files": [
-          "src/components/sections/HSE/PPEManager.tsx"
-        ]
-      },
-      {
         "family": "danger",
-        "count": 12,
+        "count": 16,
         "files": [
           "src/components/sections/AccessControl/pages/AcApprovalsPage.tsx",
           "src/components/sections/AccessControl/pages/AcSessionsPage.tsx",
@@ -303,9 +297,18 @@
           "src/components/sections/HR/EmployeeProfilePage.tsx",
           "src/components/sections/HR/OnboardingCaseDetail.tsx",
           "src/components/sections/HR/OnboardingWorkQueue.tsx",
+          "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
+          "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx",
           "src/components/sections/HR/profile/EmployeeProfileDialogs.tsx",
           "src/components/sections/Profile/MyProfileSection.tsx",
           "src/components/sections/Tickets/TicketCenter.tsx"
+        ]
+      },
+      {
+        "family": "has-label",
+        "count": 13,
+        "files": [
+          "src/components/sections/HSE/PPEManager.tsx"
         ]
       },
       {
@@ -554,6 +557,13 @@
         ]
       },
       {
+        "family": "etb-tool-button",
+        "count": 5,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx"
+        ]
+      },
+      {
         "family": "compact",
         "count": 5,
         "files": [
@@ -789,6 +799,20 @@
         ]
       },
       {
+        "family": "etb-layout-action",
+        "count": 3,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx"
+        ]
+      },
+      {
+        "family": "etl-card-btn",
+        "count": 3,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx"
+        ]
+      },
+      {
         "family": "menu-row",
         "count": 3,
         "files": [
@@ -993,6 +1017,41 @@
         "count": 2,
         "files": [
           "src/components/sections/Finance/StatutoryConfigOverview.tsx"
+        ]
+      },
+      {
+        "family": "wide",
+        "count": 2,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx"
+        ]
+      },
+      {
+        "family": "etb-add-row",
+        "count": 2,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx"
+        ]
+      },
+      {
+        "family": "etb-upload-button",
+        "count": 2,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx"
+        ]
+      },
+      {
+        "family": "etl-button",
+        "count": 2,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx"
+        ]
+      },
+      {
+        "family": "etl-hdr-btn",
+        "count": 2,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx"
         ]
       },
       {
@@ -1590,6 +1649,97 @@
         "count": 1,
         "files": [
           "src/components/sections/HR/ActionDialogs.tsx"
+        ]
+      },
+      {
+        "family": "etb-icon-picker-trigger",
+        "count": 1,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx"
+        ]
+      },
+      {
+        "family": "etb-drag-handle",
+        "count": 1,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx"
+        ]
+      },
+      {
+        "family": "etb-resize-handle",
+        "count": 1,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx"
+        ]
+      },
+      {
+        "family": "diagonal",
+        "count": 1,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx"
+        ]
+      },
+      {
+        "family": "etb-library-entry",
+        "count": 1,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx"
+        ]
+      },
+      {
+        "family": "etb-inspector-back",
+        "count": 1,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx"
+        ]
+      },
+      {
+        "family": "etb-reset-spacing",
+        "count": 1,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx"
+        ]
+      },
+      {
+        "family": "ets-icon-button",
+        "count": 1,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx"
+        ]
+      },
+      {
+        "family": "etb-library-cancel",
+        "count": 1,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx"
+        ]
+      },
+      {
+        "family": "etb-library-add",
+        "count": 1,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx"
+        ]
+      },
+      {
+        "family": "etl-card-hit",
+        "count": 1,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx"
+        ]
+      },
+      {
+        "family": "square",
+        "count": 1,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx"
+        ]
+      },
+      {
+        "family": "navy",
+        "count": 1,
+        "files": [
+          "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx"
         ]
       },
       {
@@ -2571,10 +2721,7 @@
         "why": "Email Template Studio — active programme; also holds the protected stash@{0}"
       }
     ],
-    "inFlightPages": [
-      "src/components/sections/HR/emailStudio/EmailTemplateBuilder.tsx",
-      "src/components/sections/HR/emailStudio/EmailTemplateLibrary.tsx"
-    ]
+    "inFlightPages": []
   },
   "structures": [
     {

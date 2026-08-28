@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "9ce06777cc494fd492f72564eb8726c1e9bef84d",
+    "head": "866b2b1eb9cf791dc2eca1ec3a6795887b90bf0b",
     "branch": "codex/onboarding-ui-kit-integration",
-    "fingerprint": "fb48b27c39033ce36d821bdc",
+    "fingerprint": "d71c2eb46e0382cb768082f2",
     "indexedFiles": 1916
   },
   "summary": {
     "files": 1551,
-    "symbols": 15419,
+    "symbols": 15428,
     "widgets": 77,
     "routes": 992,
     "routeDefinitions": 993,
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 471,
-        "symbols": 4136,
+        "symbols": 4145,
         "widgets": 16,
         "routes": 38,
         "routeDefinitions": 53,
@@ -4339,8 +4339,8 @@
       "path": "src/components/nav/navCore.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 859,
-      "hash": "3ff5d7ec5e90f849"
+      "lines": 927,
+      "hash": "f7bc09616cd273dd"
     },
     {
       "path": "src/components/nav/navIcons.ts",
@@ -4424,7 +4424,7 @@
       "module": "platform",
       "role": "frontend-page",
       "lines": 65,
-      "hash": "18204b0b39e0f033"
+      "hash": "014c7df685a65982"
     },
     {
       "path": "src/components/sections/AccessControl/index.ts",
@@ -5019,7 +5019,7 @@
       "module": "finance",
       "role": "frontend-page",
       "lines": 112,
-      "hash": "c4cf5629a0a98c8c"
+      "hash": "fd31a160a6b4b32d"
     },
     {
       "path": "src/components/sections/Finance/MyPayslipsOverview.tsx",
@@ -5627,8 +5627,8 @@
       "path": "src/components/sections/HR/OnboardingOverview.tsx",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 184,
-      "hash": "0dc0edb70144cc4c"
+      "lines": 195,
+      "hash": "a1e53899dee055b4"
     },
     {
       "path": "src/components/sections/HR/OnboardingPackageDetail.tsx",
@@ -7700,7 +7700,7 @@
       "module": "platform",
       "role": "frontend-page",
       "lines": 51,
-      "hash": "882929a8bfbdbc3f"
+      "hash": "8f1e1c1f17c71906"
     },
     {
       "path": "src/components/sections/WorkerOnboarding/WorkerDocumentUpload.tsx",
@@ -9533,8 +9533,8 @@
       "path": "src/ui/registry/families.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 104,
-      "hash": "27d46bd7b0b1d9d0"
+      "lines": 118,
+      "hash": "9a30b1672b8ae07d"
     },
     {
       "path": "src/ui/registry/feedback.defs.tsx",
@@ -9555,7 +9555,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 208,
-      "hash": "3ed0f6654357859c"
+      "hash": "55b2c56430b1510d"
     },
     {
       "path": "src/ui/registry/navigation.defs.tsx",
@@ -9583,7 +9583,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 246,
-      "hash": "db06e4345ec469b8"
+      "hash": "a4f28daef3b9718e"
     },
     {
       "path": "src/ui/registry/planned.ts",
@@ -9709,7 +9709,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 34,
-      "hash": "7b93cef7156dd47e"
+      "hash": "5e84ad0f8b22240b"
     },
     {
       "path": "src/ui/studio/InAppUsage.tsx",
@@ -9737,7 +9737,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 564,
-      "hash": "4ea9f9b7b4e60122"
+      "hash": "dd8cde7347ad9c6c"
     },
     {
       "path": "src/ui/studio/StudioInspector.tsx",
@@ -9807,7 +9807,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 644,
-      "hash": "43b8fefa57336c36"
+      "hash": "725c29c171dcc5ba"
     },
     {
       "path": "src/ui/studio/preview.tsx",
@@ -80851,10 +80851,80 @@
       "tags": []
     },
     {
+      "name": "SectionHistoryStore",
+      "kind": "interface",
+      "file": "src/components/nav/navCore.ts",
+      "line": 609,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sectionHistory",
+      "kind": "variable",
+      "file": "src/components/nav/navCore.ts",
+      "line": 623,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "persistedLogicalSection",
+      "kind": "function",
+      "file": "src/components/nav/navCore.ts",
+      "line": 627,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "currentLogicalSection",
+      "kind": "function",
+      "file": "src/components/nav/navCore.ts",
+      "line": 631,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "recordSectionChange",
+      "kind": "function",
+      "file": "src/components/nav/navCore.ts",
+      "line": 635,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "commitSection",
+      "kind": "function",
+      "file": "src/components/nav/navCore.ts",
+      "line": 646,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "requestSection",
+      "kind": "function",
+      "file": "src/components/nav/navCore.ts",
+      "line": 652,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "registerSectionNavigationGuard",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 612,
+      "line": 674,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -80864,7 +80934,17 @@
       "name": "showSection",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 619,
+      "line": 681,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "showPreviousSection",
+      "kind": "function",
+      "file": "src/components/nav/navCore.ts",
+      "line": 690,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -80874,7 +80954,7 @@
       "name": "showSectionNow",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 633,
+      "line": 701,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -80884,7 +80964,7 @@
       "name": "refreshSection",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 692,
+      "line": 760,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -80894,7 +80974,7 @@
       "name": "setSkel",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 738,
+      "line": 806,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -80904,7 +80984,7 @@
       "name": "skelStatValues",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 743,
+      "line": 811,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -80914,7 +80994,7 @@
       "name": "skelTableRows",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 750,
+      "line": 818,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -80924,7 +81004,7 @@
       "name": "skelStatCards",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 761,
+      "line": 829,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -80936,7 +81016,7 @@
       "name": "skelCards",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 768,
+      "line": 836,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -80948,7 +81028,7 @@
       "name": "skelList",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 775,
+      "line": 843,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -80958,7 +81038,7 @@
       "name": "_badgeLastCount",
       "kind": "variable",
       "file": "src/components/nav/navCore.ts",
-      "line": 784,
+      "line": 852,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -80968,7 +81048,7 @@
       "name": "setHdrBadge",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 786,
+      "line": 854,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -80978,7 +81058,7 @@
       "name": "LEAVE_SECTION_IDS",
       "kind": "array",
       "file": "src/components/nav/navCore.ts",
-      "line": 808,
+      "line": 876,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -80988,7 +81068,7 @@
       "name": "_sbBadgeLabelByBtn",
       "kind": "variable",
       "file": "src/components/nav/navCore.ts",
-      "line": 815,
+      "line": 883,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -80998,7 +81078,7 @@
       "name": "_setSbBadge",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 817,
+      "line": 885,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -81008,7 +81088,7 @@
       "name": "setNavSectionBadge",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 847,
+      "line": 915,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -81018,7 +81098,7 @@
       "name": "refreshNavBadges",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 856,
+      "line": 924,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -107684,22 +107764,10 @@
       "tags": []
     },
     {
-      "name": "EMAIL_STUDIO_ID",
-      "kind": "variable",
-      "file": "src/components/sections/HR/OnboardingOverview.tsx",
-      "line": 27,
-      "module": "hr",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
       "name": "OnboardingOverview",
       "kind": "function",
       "file": "src/components/sections/HR/OnboardingOverview.tsx",
-      "line": 29,
+      "line": 28,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -107711,7 +107779,7 @@
       "name": "onOpen",
       "kind": "function",
       "file": "src/components/sections/HR/OnboardingOverview.tsx",
-      "line": 65,
+      "line": 64,
       "module": "hr",
       "exported": false,
       "container": "OnboardingOverview",
@@ -107721,7 +107789,7 @@
       "name": "notify",
       "kind": "function",
       "file": "src/components/sections/HR/OnboardingOverview.tsx",
-      "line": 75,
+      "line": 74,
       "module": "hr",
       "exported": false,
       "container": "OnboardingOverview",
@@ -107731,7 +107799,17 @@
       "name": "openCaseById",
       "kind": "function",
       "file": "src/components/sections/HR/OnboardingOverview.tsx",
-      "line": 80,
+      "line": 79,
+      "module": "hr",
+      "exported": false,
+      "container": "OnboardingOverview",
+      "tags": []
+    },
+    {
+      "name": "openEmailStudio",
+      "kind": "function",
+      "file": "src/components/sections/HR/OnboardingOverview.tsx",
+      "line": 84,
       "module": "hr",
       "exported": false,
       "container": "OnboardingOverview",
@@ -107741,7 +107819,7 @@
       "name": "handleOpenSurface",
       "kind": "function",
       "file": "src/components/sections/HR/OnboardingOverview.tsx",
-      "line": 152,
+      "line": 163,
       "module": "hr",
       "exported": false,
       "container": "OnboardingOverview",
@@ -152568,10 +152646,20 @@
       "tags": []
     },
     {
+      "name": "DRAWER_FAMILY",
+      "kind": "object",
+      "file": "src/ui/registry/families.ts",
+      "line": 79,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "COMPONENT_FAMILIES",
       "kind": "array",
       "file": "src/ui/registry/families.ts",
-      "line": 79,
+      "line": 93,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -152581,7 +152669,7 @@
       "name": "findFamily",
       "kind": "function",
       "file": "src/ui/registry/families.ts",
-      "line": 81,
+      "line": 95,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -152591,7 +152679,7 @@
       "name": "familyOfComponent",
       "kind": "function",
       "file": "src/ui/registry/families.ts",
-      "line": 86,
+      "line": 100,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -152601,7 +152689,7 @@
       "name": "familyMembers",
       "kind": "function",
       "file": "src/ui/registry/families.ts",
-      "line": 96,
+      "line": 110,
       "module": "platform",
       "exported": true,
       "container": "",

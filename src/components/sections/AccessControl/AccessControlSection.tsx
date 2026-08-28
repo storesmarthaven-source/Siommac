@@ -20,7 +20,7 @@ import { AcApprovalsPage } from './pages/AcApprovalsPage';
 import { AcAuditPage }     from './pages/AcAuditPage';
 import { AcSessionsPage }  from './pages/AcSessionsPage';
 import { PayslipStudioSection } from '../PayslipStudio/PayslipStudioSection';
-import { showSection } from '@components/nav/navCore';
+import { showPreviousSection } from '@components/nav/navCore';
 import { useCan } from '@lib/permissions';
 import './accessControl.css';
 
@@ -59,6 +59,6 @@ export function AccessControlSection(): VNode {
   if (effectiveSectionId === APPROVALS)        return <AcApprovalsPage />;
   if (effectiveSectionId === 's-ac-audit')     return <AcAuditPage />;
   if (effectiveSectionId === 's-ac-sessions')  return <AcSessionsPage />;
-  if (effectiveSectionId === PAYSLIP_DESIGNER) return <PayslipStudioSection onBack={() => showSection('s-ac-overview')} />;
+  if (effectiveSectionId === PAYSLIP_DESIGNER) return <PayslipStudioSection onBack={() => showPreviousSection('s-ac-overview')} />;
   return <AcOverviewPage />;
 }

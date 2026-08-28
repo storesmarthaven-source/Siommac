@@ -76,7 +76,21 @@ export const SWITCH_FAMILY: ComponentFamily = {
   },
 };
 
-export const COMPONENT_FAMILIES: readonly ComponentFamily[] = [BUTTON_FAMILY, SWITCH_FAMILY];
+export const DRAWER_FAMILY: ComponentFamily = {
+  id: 'drawers',
+  thumbnail: 'drawer',
+  name: 'Drawers',
+  category: 'overlays',
+  description: 'Choose the drawer composition for the task. Every variant uses the same accessible side-sheet runtime while its content remains purpose-built.',
+  defaultComponentId: 'drawer',
+  componentIds: ['drawer', 'employee-side-drawer'],
+  roles: {
+    'drawer': 'Standard record workspace',
+    'employee-side-drawer': 'Employee quick summary',
+  },
+};
+
+export const COMPONENT_FAMILIES: readonly ComponentFamily[] = [BUTTON_FAMILY, SWITCH_FAMILY, DRAWER_FAMILY];
 
 export function findFamily(id: string): ComponentFamily | undefined {
   return COMPONENT_FAMILIES.find(f => f.id === id);

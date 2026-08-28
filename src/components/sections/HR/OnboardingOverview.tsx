@@ -7,7 +7,6 @@
  */
 import { type VNode } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { showSection } from '@components/nav/navCore';
 import { useOnboardingCases } from '@api/hr/onboarding';
 import { recordReadScope } from './useOnboardingScope';
 import type { OnboardingCaseRow, OnboardingReadScope } from '../../../../types/hrOnboarding';
@@ -19,12 +18,12 @@ import { OnboardingPackageManager } from './OnboardingPackageManager';
 import { OnboardingPackageDetail } from './OnboardingPackageDetail';
 import { OnboardingWorkQueue } from './OnboardingWorkQueue';
 import { OnboardingReportsWorkspace } from './OnboardingReportsWorkspace';
+import { EmailTemplateStudioPage } from './emailStudio/EmailTemplateStudioPage';
 import type { CaseFocusRequest } from './onboardingCaseFocus';
 import { HR_ONBOARDING_SURFACE_DEEPLINK_KEY } from './hrDeepLink';
 import './HR.css';
 
-type OnboardingSurface = 'overview' | 'packages' | 'work-queue' | 'insights' | 'start';
-const EMAIL_STUDIO_ID = 's-hr-email-templates';
+type OnboardingSurface = 'overview' | 'packages' | 'work-queue' | 'insights' | 'start' | 'email-studio';
 
 export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: string | null } = {}): VNode {
   const [toast, setToast] = useState('');
@@ -82,6 +81,18 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
     setJumpCaseId(caseId);
   }
 
+  function openEmailStudio(): void {
+    setSurface('email-studio');
+  }
+
+  if (surface === 'email-studio') {
+    return (
+      <div class="hr-onboarding-overview">
+        <EmailTemplateStudioPage onBack={() => setSurface('packages')} />
+      </div>
+    );
+  }
+
   const liveSelected = caseQ.data?.rows[0] ?? selectedCase;
   if (liveSelected) {
     return (
@@ -103,7 +114,7 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
         <OnboardingPackageDetail
           packageKey={openPackageKey}
           onBack={() => setOpenPackageKey(null)}
-          onOpenEmailTemplates={() => showSection(EMAIL_STUDIO_ID)}
+          onOpenEmailTemplates={openEmailStudio}
           onToast={notify}
         />
         <div class={`toast ${toast ? 'show' : ''}`}>{toast}</div>
@@ -117,7 +128,7 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
         <OnboardingPackageManager
           onBack={() => setSurface('overview')}
           onOpenPackage={setOpenPackageKey}
-          onOpenEmailTemplates={() => showSection(EMAIL_STUDIO_ID)}
+          onOpenEmailTemplates={openEmailStudio}
           onToast={notify}
         />
         <div class={`toast ${toast ? 'show' : ''}`}>{toast}</div>

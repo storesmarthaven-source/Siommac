@@ -178,7 +178,7 @@ export const avatarGroupDef: ComponentDef = {
 };
 
 export const drawerDef: ComponentDef = {
-  id: 'drawer', name: 'Drawer', category: 'overlays', status: 'stable',
+  id: 'drawer', name: 'Standard Drawer', category: 'overlays', status: 'stable',
   thumbnail: 'drawer',
   componentPath: 'src/ui/components/Drawer.tsx', importFrom: '@ui',
   description: 'The one focus-managed side sheet, shown as the standard tabbed detail template with summary facts, record information, and a pinned action footer.',
@@ -216,7 +216,7 @@ export const drawerDef: ComponentDef = {
 };
 
 export const employeeSideDrawerDef: ComponentDef = {
-  id: 'employee-side-drawer', name: 'Profile Drawer Modal', category: 'overlays', status: 'stable',
+  id: 'employee-side-drawer', name: 'Employee Profile Drawer', category: 'overlays', status: 'stable',
   thumbnail: 'employee-drawer',
   componentPath: 'src/components/sections/HR/ProfileDrawerTemplate.tsx', importFrom: '@/components/sections/HR/ProfileDrawerTemplate',
   description: 'The reusable Employee Master quick-summary drawer: profile hero, facts, one Overview section, and a pinned action footer linking to the full employee record.',

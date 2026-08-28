@@ -606,6 +606,68 @@ type SectionNavigationGuard = (targetSectionId: string) => boolean | Promise<boo
 let sectionNavigationGuard: SectionNavigationGuard | null = null;
 let sectionNavigationPending = false;
 
+interface SectionHistoryStore {
+  current: string;
+  stack: string[];
+}
+
+/**
+ * Logical page history for full-screen workspaces.
+ *
+ * A module panel can serve many logical pages (`s-finance` serves the Finance
+ * overview, Payslip Studio, payroll runs, etc.), so DOM panel history cannot
+ * tell a full-screen workspace where the user actually came from. Keep the
+ * logical ids alongside the existing router instead. The store lives on window
+ * so Vite HMR cannot erase the return path while a Studio is open.
+ */
+const sectionHistory: SectionHistoryStore =
+  ((window as unknown as { __siomacSectionHistory?: SectionHistoryStore }).__siomacSectionHistory ??=
+    { current: '', stack: [] });
+
+function persistedLogicalSection(): string {
+  try { return localStorage.getItem('siomac_last_section_' + getRole()) ?? ''; } catch { return ''; }
+}
+
+function currentLogicalSection(): string {
+  return sectionHistory.current || persistedLogicalSection();
+}
+
+function recordSectionChange(id: string): void {
+  const current = currentLogicalSection();
+  if (current && current !== id && sectionHistory.stack.at(-1) !== current) {
+    sectionHistory.stack.push(current);
+    // Navigation is intentionally session-scoped; cap stale depth without
+    // changing normal browser-like back behavior.
+    if (sectionHistory.stack.length > 40) sectionHistory.stack.shift();
+  }
+  sectionHistory.current = id;
+}
+
+function commitSection(id: string, recordHistory: boolean): void {
+  if (recordHistory) recordSectionChange(id);
+  else sectionHistory.current = id;
+  showSectionNow(id);
+}
+
+function requestSection(id: string, recordHistory: boolean, onAllowed?: () => void): void {
+  const guard = sectionNavigationGuard;
+  if (!guard) {
+    onAllowed?.();
+    commitSection(id, recordHistory);
+    return;
+  }
+  if (sectionNavigationPending) return;
+  sectionNavigationPending = true;
+  void Promise.resolve(guard(id))
+    .then(allowed => {
+      if (!allowed) return;
+      onAllowed?.();
+      commitSection(id, recordHistory);
+    })
+    .catch(() => { /* guard owns user-facing error handling */ })
+    .finally(() => { sectionNavigationPending = false; });
+}
+
 /** Register the active page-level navigation guard.
  *  Widget boards use this while edits are staged so sidebar navigation cannot silently
  *  carry an uncommitted cache snapshot into a later save. */
@@ -617,17 +679,23 @@ export function registerSectionNavigationGuard(guard: SectionNavigationGuard): (
 }
 
 export function showSection(id: string): void {
-  const guard = sectionNavigationGuard;
-  if (!guard) {
-    showSectionNow(id);
-    return;
+  requestSection(id, true);
+}
+
+/**
+ * Return from a full-screen workspace to the logical page that opened it.
+ * Falls back to the caller's safe landing page after a reload, when the
+ * session-only history is intentionally empty.
+ */
+export function showPreviousSection(fallbackId: string): void {
+  const current = currentLogicalSection();
+  while (sectionHistory.stack.length && sectionHistory.stack.at(-1) === current) {
+    sectionHistory.stack.pop();
   }
-  if (sectionNavigationPending) return;
-  sectionNavigationPending = true;
-  void Promise.resolve(guard(id))
-    .then(allowed => { if (allowed) showSectionNow(id); })
-    .catch(() => { /* guard owns user-facing error handling */ })
-    .finally(() => { sectionNavigationPending = false; });
+  const target = sectionHistory.stack.at(-1) ?? fallbackId;
+  requestSection(target, false, () => {
+    if (sectionHistory.stack.at(-1) === target) sectionHistory.stack.pop();
+  });
 }
 
 function showSectionNow(id: string): void {

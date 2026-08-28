@@ -6751,23 +6751,31 @@ saveLayout	function	platform	true		src/components/nav/navCore.ts	585
 SectionNavigationGuard	type	platform	false		src/components/nav/navCore.ts	604	
 sectionNavigationGuard	variable	platform	false		src/components/nav/navCore.ts	606	
 sectionNavigationPending	variable	platform	false		src/components/nav/navCore.ts	607	
-registerSectionNavigationGuard	function	platform	true		src/components/nav/navCore.ts	612	
-showSection	function	platform	true		src/components/nav/navCore.ts	619	
-showSectionNow	function	platform	false		src/components/nav/navCore.ts	633	
-refreshSection	function	platform	true		src/components/nav/navCore.ts	692	
-setSkel	function	platform	true		src/components/nav/navCore.ts	738	
-skelStatValues	function	platform	true		src/components/nav/navCore.ts	743	
-skelTableRows	function	platform	true		src/components/nav/navCore.ts	750	
-skelStatCards	function	platform	true	ui-tile	src/components/nav/navCore.ts	761	
-skelCards	function	platform	true	ui-tile	src/components/nav/navCore.ts	768	
-skelList	function	platform	true		src/components/nav/navCore.ts	775	
-_badgeLastCount	variable	platform	false		src/components/nav/navCore.ts	784	
-setHdrBadge	function	platform	true		src/components/nav/navCore.ts	786	
-LEAVE_SECTION_IDS	array	platform	false		src/components/nav/navCore.ts	808	
-_sbBadgeLabelByBtn	variable	platform	false		src/components/nav/navCore.ts	815	
-_setSbBadge	function	platform	false		src/components/nav/navCore.ts	817	
-setNavSectionBadge	function	platform	true		src/components/nav/navCore.ts	847	
-refreshNavBadges	function	platform	true		src/components/nav/navCore.ts	856	
+SectionHistoryStore	interface	platform	false		src/components/nav/navCore.ts	609	
+sectionHistory	variable	platform	false		src/components/nav/navCore.ts	623	
+persistedLogicalSection	function	platform	false		src/components/nav/navCore.ts	627	
+currentLogicalSection	function	platform	false		src/components/nav/navCore.ts	631	
+recordSectionChange	function	platform	false		src/components/nav/navCore.ts	635	
+commitSection	function	platform	false		src/components/nav/navCore.ts	646	
+requestSection	function	platform	false		src/components/nav/navCore.ts	652	
+registerSectionNavigationGuard	function	platform	true		src/components/nav/navCore.ts	674	
+showSection	function	platform	true		src/components/nav/navCore.ts	681	
+showPreviousSection	function	platform	true		src/components/nav/navCore.ts	690	
+showSectionNow	function	platform	false		src/components/nav/navCore.ts	701	
+refreshSection	function	platform	true		src/components/nav/navCore.ts	760	
+setSkel	function	platform	true		src/components/nav/navCore.ts	806	
+skelStatValues	function	platform	true		src/components/nav/navCore.ts	811	
+skelTableRows	function	platform	true		src/components/nav/navCore.ts	818	
+skelStatCards	function	platform	true	ui-tile	src/components/nav/navCore.ts	829	
+skelCards	function	platform	true	ui-tile	src/components/nav/navCore.ts	836	
+skelList	function	platform	true		src/components/nav/navCore.ts	843	
+_badgeLastCount	variable	platform	false		src/components/nav/navCore.ts	852	
+setHdrBadge	function	platform	true		src/components/nav/navCore.ts	854	
+LEAVE_SECTION_IDS	array	platform	false		src/components/nav/navCore.ts	876	
+_sbBadgeLabelByBtn	variable	platform	false		src/components/nav/navCore.ts	883	
+_setSbBadge	function	platform	false		src/components/nav/navCore.ts	885	
+setNavSectionBadge	function	platform	true		src/components/nav/navCore.ts	915	
+refreshNavBadges	function	platform	true		src/components/nav/navCore.ts	924	
 currentRole	function	platform	false		src/components/nav/NavCustomizer.tsx	39	
 rebuildSidebar	function	platform	false		src/components/nav/NavCustomizer.tsx	43	
 Svg	function	platform	false	component	src/components/nav/NavCustomizer.tsx	50	
@@ -9265,12 +9273,12 @@ WIDGETS	variable	hr	false	ui-tile,test	src/components/sections/HR/onboardingComm
 asRole	function	hr	false	test	src/components/sections/HR/onboardingCommandCentre.test.ts	30	
 presentationFor	function	hr	false	test	src/components/sections/HR/onboardingCommandCentre.test.ts	130	
 OnboardingSurface	type	hr	false		src/components/sections/HR/OnboardingOverview.tsx	26	
-EMAIL_STUDIO_ID	variable	hr	false	component	src/components/sections/HR/OnboardingOverview.tsx	27	
-OnboardingOverview	function	hr	true	component	src/components/sections/HR/OnboardingOverview.tsx	29	
-onOpen	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	65	OnboardingOverview
-notify	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	75	OnboardingOverview
-openCaseById	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	80	OnboardingOverview
-handleOpenSurface	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	152	OnboardingOverview
+OnboardingOverview	function	hr	true	component	src/components/sections/HR/OnboardingOverview.tsx	28	
+onOpen	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	64	OnboardingOverview
+notify	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	74	OnboardingOverview
+openCaseById	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	79	OnboardingOverview
+openEmailStudio	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	84	OnboardingOverview
+handleOpenSurface	function	hr	false		src/components/sections/HR/OnboardingOverview.tsx	163	OnboardingOverview
 PkgTab	type	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	34	
 TABS	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	35	
 ACTION_TYPES	array	hr	false		src/components/sections/HR/OnboardingPackageDetail.tsx	44	
@@ -13505,10 +13513,11 @@ COMPONENT_DEFS	array	platform	true		src/ui/registry/definitions.tsx	370
 ComponentFamily	interface	platform	true		src/ui/registry/families.ts	23	
 BUTTON_FAMILY	object	platform	true		src/ui/registry/families.ts	49	
 SWITCH_FAMILY	object	platform	true		src/ui/registry/families.ts	65	
-COMPONENT_FAMILIES	array	platform	true		src/ui/registry/families.ts	79	
-findFamily	function	platform	true		src/ui/registry/families.ts	81	
-familyOfComponent	function	platform	true		src/ui/registry/families.ts	86	
-familyMembers	function	platform	true		src/ui/registry/families.ts	96	
+DRAWER_FAMILY	object	platform	true		src/ui/registry/families.ts	79	
+COMPONENT_FAMILIES	array	platform	true		src/ui/registry/families.ts	93	
+findFamily	function	platform	true		src/ui/registry/families.ts	95	
+familyOfComponent	function	platform	true		src/ui/registry/families.ts	100	
+familyMembers	function	platform	true		src/ui/registry/families.ts	110	
 s	function	platform	false		src/ui/registry/feedback.defs.tsx	18	
 b	function	platform	false		src/ui/registry/feedback.defs.tsx	19	
 illustrationDef	object	platform	true		src/ui/registry/feedback.defs.tsx	21	
