@@ -2,7 +2,7 @@
 
 # workflow Module Map
 
-Source fingerprint: `9b757f9059f1c4bac60cbf7d`
+Source fingerprint: `3e1ce8cc23a1a51479ea9025`
 
 Files: 46 | Symbols: 310 | Widgets: 0 | Unique mounted endpoints: 40 | Route definitions: 40 mounted + 0 unmounted | API calls: 8 | DB objects: 130 | E2E suites: 3
 

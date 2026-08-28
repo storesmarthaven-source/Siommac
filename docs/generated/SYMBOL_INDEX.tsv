@@ -11752,8 +11752,9 @@ UI_KIT_ROOT_ID	variable	platform	false		src/components/sections/UiKit/module.ts	
 ITEMS	array	platform	false		src/components/sections/UiKit/module.ts	23	
 uiKitModule	object	platform	true		src/components/sections/UiKit/module.ts	33	
 EXIT_SECTION	variable	platform	false		src/components/sections/UiKit/mount.ts	25	
-mountUiKitSection	function	platform	true		src/components/sections/UiKit/mount.ts	27	
-unmountUiKitSection	function	platform	true		src/components/sections/UiKit/mount.ts	47	
+MountedUiKitStudio	function	platform	false		src/components/sections/UiKit/mount.ts	27	
+mountUiKitSection	function	platform	true		src/components/sections/UiKit/mount.ts	40	
+unmountUiKitSection	function	platform	true		src/components/sections/UiKit/mount.ts	56	
 SECTION_ID	variable	hr	false		src/components/sections/WorkerOnboarding/module.ts	4	
 workerOnboardingModule	object	hr	true		src/components/sections/WorkerOnboarding/module.ts	5	
 mountWorkerOnboarding	function	hr	true		src/components/sections/WorkerOnboarding/mount.ts	6	
@@ -13767,7 +13768,7 @@ InAppUsage	function	platform	true	component	src/ui/studio/InAppUsage.tsx	72
 toggle	function	platform	false		src/ui/studio/InAppUsage.tsx	82	InAppUsage
 copySelection	function	platform	false		src/ui/studio/InAppUsage.tsx	93	InAppUsage
 settle	function	platform	false		src/ui/studio/InAppUsage.tsx	110	copySelection
-root	variable	platform	false		src/ui/studio/preview.tsx	13	
+root	variable	platform	false		src/ui/studio/preview.tsx	14	
 PreviewScope	function	platform	true	component	src/ui/studio/PreviewScope.tsx	20	
 Target	type	platform	false		src/ui/studio/RecipeStyleEditor.tsx	17	
 friendly	function	platform	false		src/ui/studio/RecipeStyleEditor.tsx	19	
@@ -13829,9 +13830,9 @@ FamilyCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	36
 CatalogueNodeCard	function	platform	false	component,ui-tile	src/ui/studio/Studio.tsx	371	
 Catalogue	function	platform	false	component	src/ui/studio/Studio.tsx	377	
 Studio	function	platform	true	component	src/ui/studio/Studio.tsx	397	
-openComponents	function	platform	false		src/ui/studio/Studio.tsx	439	Studio
-openSearchResult	function	platform	false		src/ui/studio/Studio.tsx	440	Studio
-openGroup	function	platform	false		src/ui/studio/Studio.tsx	453	Studio
+openComponents	function	platform	false		src/ui/studio/Studio.tsx	450	Studio
+openSearchResult	function	platform	false		src/ui/studio/Studio.tsx	451	Studio
+openGroup	function	platform	false		src/ui/studio/Studio.tsx	464	Studio
 StudioInspectorProps	interface	platform	false		src/ui/studio/StudioInspector.tsx	3	
 StudioInspector	function	platform	true	component	src/ui/studio/StudioInspector.tsx	20	
 StudioInspectorBody	function	platform	true	component	src/ui/studio/StudioInspector.tsx	41	

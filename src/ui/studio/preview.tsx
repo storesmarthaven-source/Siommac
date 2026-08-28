@@ -9,8 +9,9 @@ import '@/styles/index.css';
 import '../tokens';
 import { Studio } from './Studio';
 import { Toaster } from '../toast';
+import { useSessionStore } from '@/store/session';
 
 const root = document.getElementById('studio-root');
 if (!root) throw new Error('Studio preview root is missing');
 
-render(<><Studio /><Toaster /></>, root);
+render(<><Studio logoUrl={useSessionStore.getState().companyLogoUrl} /><Toaster /></>, root);

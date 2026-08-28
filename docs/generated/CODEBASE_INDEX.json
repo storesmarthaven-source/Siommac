@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "eadde5dff2a8bc11a344b487c65da696f0bdf922",
+    "head": "9379dd960a8f08c94ef5852ea00dd4a353e53b86",
     "branch": "codex/onboarding-ui-kit-integration",
-    "fingerprint": "9b757f9059f1c4bac60cbf7d",
+    "fingerprint": "3e1ce8cc23a1a51479ea9025",
     "indexedFiles": 1916
   },
   "summary": {
     "files": 1551,
-    "symbols": 15433,
+    "symbols": 15434,
     "widgets": 77,
     "routes": 992,
     "routeDefinitions": 993,
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 471,
-        "symbols": 4150,
+        "symbols": 4151,
         "widgets": 16,
         "routes": 38,
         "routeDefinitions": 53,
@@ -7699,8 +7699,8 @@
       "path": "src/components/sections/UiKit/mount.ts",
       "module": "platform",
       "role": "frontend-page",
-      "lines": 51,
-      "hash": "8f1e1c1f17c71906"
+      "lines": 60,
+      "hash": "5304110313f778f5"
     },
     {
       "path": "src/components/sections/WorkerOnboarding/WorkerDocumentUpload.tsx",
@@ -9736,8 +9736,8 @@
       "path": "src/ui/studio/Studio.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 682,
-      "hash": "16d8888d524fe588"
+      "lines": 690,
+      "hash": "c45c566f149bab22"
     },
     {
       "path": "src/ui/studio/StudioInspector.tsx",
@@ -9813,8 +9813,8 @@
       "path": "src/ui/studio/preview.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 17,
-      "hash": "cc01768d48483db5"
+      "lines": 18,
+      "hash": "3ae962812d67bd4b"
     },
     {
       "path": "src/ui/table/FilterBar.tsx",
@@ -134160,10 +134160,20 @@
       "tags": []
     },
     {
-      "name": "mountUiKitSection",
+      "name": "MountedUiKitStudio",
       "kind": "function",
       "file": "src/components/sections/UiKit/mount.ts",
       "line": 27,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "mountUiKitSection",
+      "kind": "function",
+      "file": "src/components/sections/UiKit/mount.ts",
+      "line": 40,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -134173,7 +134183,7 @@
       "name": "unmountUiKitSection",
       "kind": "function",
       "file": "src/components/sections/UiKit/mount.ts",
-      "line": 47,
+      "line": 56,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -155313,7 +155323,7 @@
       "name": "root",
       "kind": "variable",
       "file": "src/ui/studio/preview.tsx",
-      "line": 13,
+      "line": 14,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -155970,7 +155980,7 @@
       "name": "openComponents",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 439,
+      "line": 450,
       "module": "platform",
       "exported": false,
       "container": "Studio",
@@ -155980,7 +155990,7 @@
       "name": "openSearchResult",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 440,
+      "line": 451,
       "module": "platform",
       "exported": false,
       "container": "Studio",
@@ -155990,7 +156000,7 @@
       "name": "openGroup",
       "kind": "function",
       "file": "src/ui/studio/Studio.tsx",
-      "line": 453,
+      "line": 464,
       "module": "platform",
       "exported": false,
       "container": "Studio",

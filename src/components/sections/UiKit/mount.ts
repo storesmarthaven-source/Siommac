@@ -24,14 +24,23 @@ import { uploadLogoApi }       from '@sections/Settings/api';
 /** Safe landing page after a reload, when session-only page history is empty. */
 const EXIT_SECTION = 's-adm-dashboard';
 
+function MountedUiKitStudio() {
+  const logoUrl = useSessionStore(state => state.companyLogoUrl);
+  return h(Studio, {
+    onExit: () => showPreviousSection(EXIT_SECTION),
+    logoUrl,
+    onUploadLogo: async (dataUrl: string) => {
+      const storedUrl = await uploadLogoApi(dataUrl);
+      useSessionStore.setState({ companyLogoUrl: storedUrl });
+      return storedUrl;
+    },
+  });
+}
+
 export function mountUiKitSection(container: Element, opts: { queryClient: QueryClient }): void {
   render(
     h(QueryClientProvider, { client: opts.queryClient },
-      h(Studio, {
-        onExit: () => showPreviousSection(EXIT_SECTION),
-        logoUrl: useSessionStore.getState().companyLogoUrl,
-        onUploadLogo: (dataUrl: string) => uploadLogoApi(dataUrl),
-      }),
+      h(MountedUiKitStudio, {}),
     ),
     container,
   );

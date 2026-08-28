@@ -396,6 +396,7 @@ function Catalogue({ onOpen }: { onOpen: (id: string) => void }): VNode {
  *  rather than pretending to be a feature. */
 export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNode {
   const mainRef = useRef<HTMLElement>(null);
+  const [brandLogoUrl, setBrandLogoUrl] = useState<string | null>(logoUrl ?? null);
   const [active, setActive] = useState<SectionId>('components');
   const [openId, setOpenId] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -410,6 +411,16 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
      preview surface must ATTACH the scope, not merely carry the attribute — the
      draft applies its values to the one element handed to attachScope. */
   const attachScope = draft.attachScope;
+
+  useEffect(() => setBrandLogoUrl(logoUrl ?? null), [logoUrl]);
+
+  const saveUploadedLogo = onUploadLogo
+    ? async (dataUrl: string): Promise<string> => {
+        const storedUrl = await onUploadLogo(dataUrl);
+        setBrandLogoUrl(storedUrl);
+        return storedUrl;
+      }
+    : undefined;
 
   const flat = NAV.flatMap(g => g.items);
   const current = flat.find(i => i.id === active) ?? flat[0];
@@ -490,8 +501,7 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
     <div class="sds">
       <aside class="sds-nav">
         <div class="sds-nav__brand">
-          <img class="sds-nav__logo" src={logoUrl?.trim() ? logoUrl : '/assets/images/logo.png'} alt="SIOMAC" />
-          <span class="sds-nav__sub">UI Kit</span>
+          <img class="sds-nav__logo" src={brandLogoUrl?.trim() ? brandLogoUrl : '/assets/images/logo.png'} alt="Company logo" />
         </div>
 
         <div class="sds-nav__search">
@@ -572,7 +582,6 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
                       class={`sds-nav__item${item.id === active && !openId ? ' is-active' : ''}`}
                       aria-current={item.id === active && !openId ? 'page' : undefined}
                       onClick={() => { setActive(item.id); setOpenId(null); }}>
-                      <LucideIcon name={item.icon} size={16} />
                       {item.label}
                     </button>
                   </li>
@@ -596,7 +605,6 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
                         <button type="button" class={`sds-nav__item sds-nav__item--sub${selected ? ' is-active' : ''}`}
                           aria-current={selected ? 'page' : undefined}
                           onClick={() => { setActive('components'); setOpenId(id); }}>
-                          <LucideIcon name={row.kind === 'family' ? 'Boxes' : 'Component'} size={15} />
                           <span>{label}</span>
                           {row.kind === 'family' && <em>{row.children.length}</em>}
                         </button>
@@ -651,7 +659,7 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
             </PreviewScope>
           )}
           {active === 'brand-overview' && (
-            <BrandOverview draft={draft} logoUrl={logoUrl} onOpenThemeGenerator={() => { setActive('brand-theme'); setOpenId(null); }} />
+            <BrandOverview draft={draft} logoUrl={brandLogoUrl} onOpenThemeGenerator={() => { setActive('brand-theme'); setOpenId(null); }} />
           )}
           {active === 'components' && (openFamily?.id === 'buttons' && (openFamily.id === openId || openPattern)
             ? <ButtonBrowser family={openFamily} draft={draft} selectedPattern={openPattern}
@@ -671,7 +679,7 @@ export function Studio({ onExit, logoUrl, onUploadLogo }: StudioProps = {}): VNo
           )}
           {active === 'brand-theme' && (
             <PreviewScope attach={attachScope}>
-              <BrandThemePanel draft={draft} logoUrl={logoUrl ?? null} onUploadLogo={onUploadLogo} />
+              <BrandThemePanel draft={draft} logoUrl={brandLogoUrl} onUploadLogo={saveUploadedLogo} />
             </PreviewScope>
           )}
         </main>

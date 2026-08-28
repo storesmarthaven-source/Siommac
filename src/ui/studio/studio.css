@@ -56,12 +56,11 @@
   overflow: hidden;
 }
 .sds-nav__brand {
-  min-height: 98px; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; gap: 7px; padding: 15px 18px 13px;
+  min-height: 84px; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 13px 18px;
   border-bottom: 1px solid rgba(255,255,255,.08);
 }
-.sds-nav__logo { display: block; width: auto; max-width: 184px; height: 44px; object-fit: contain; }
-.sds-nav__sub  { color: #aebbd0; font-size: 10px; font-weight: 700; letter-spacing: .18em; line-height: 1; text-transform: uppercase; }
+.sds-nav__logo { display: block; width: auto; max-width: 190px; height: 52px; object-fit: contain; }
 
 /* Search belongs to the rail chrome, not the scrolling tree. It stays visible
    while a long component category moves underneath it. */
@@ -115,7 +114,7 @@
 .sds-nav__gh:hover { color: rgba(255,255,255,.72); }
 .sds-nav__gh > span { min-width: 0; display: flex; align-items: center; gap: 8px; }
 .sds-nav__gh > span svg { color: #7f90ad; }
-.sds-nav__gh > em { min-width: 20px; padding: 1px 5px; border-radius: 999px; background: rgba(255,255,255,.055); color: #7f90ad; font-size: 9px; font-style: normal; font-weight: 700; text-align: center; }
+.sds-nav__gh > em { min-width: 22px; padding: 1px 7px; border: 1px solid rgba(255,255,255,.055); border-radius: 9px; background: rgba(255,255,255,.075); color: rgba(255,255,255,.56); font-family: var(--font-mono, ui-monospace, monospace); font-size: 10px; font-style: normal; font-weight: 600; line-height: 16px; text-align: center; }
 .sds-nav__gh > svg { color: #71819d; transition: transform .15s ease; }
 .sds-nav__group ul { list-style: none; margin: 0; padding: 0; }
 
@@ -128,12 +127,10 @@
 }
 .sds-nav__item--sub { min-height: 33px; gap: 8px; padding: 6px 9px 6px 12px; font-size: 12.5px; font-weight: 560; }
 .sds-nav__item--sub > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sds-nav__item--sub > em { margin-left: auto; color: #71819d; font-size: 9px; font-style: normal; }
+.sds-nav__item--sub > em { min-width: 20px; margin-left: auto; padding: 0 6px; border: 1px solid rgba(255,255,255,.045); border-radius: 9px; background: rgba(255,255,255,.065); color: #8796ae; font-family: var(--font-mono, ui-monospace, monospace); font-size: 9px; font-style: normal; line-height: 15px; text-align: center; }
 .sds-nav__item svg { width: 19px; height: 19px; flex-shrink: 0; color: currentColor; stroke-width: 1.75; }
-.sds-nav__item--sub svg { width: 15px; height: 15px; color: #71819d; }
 .sds-nav__item:hover { background: rgba(255,255,255,.045); color: #fff; }
 .sds-nav__item.is-active { background: rgba(99,112,141,.3); color: #fff; }
-.sds-nav__item--sub.is-active svg, .sds-nav__item--sub:hover svg { color: currentColor; }
 .sds-nav__item:focus-visible { outline: 2px solid #94a3bd; outline-offset: -2px; }
 
 /* Registry categories are real navigation, not headings painted over a flat
@@ -148,7 +145,7 @@
   text-align: left; text-transform: uppercase; cursor: pointer;
 }
 .sds-nav__category-head:hover { background: rgba(255,255,255,.035); color: #c6cfdd; }
-.sds-nav__category-head > em { color: #687995; font-size: 9px; font-style: normal; letter-spacing: 0; }
+.sds-nav__category-head > em { min-width: 20px; padding: 0 6px; border: 1px solid rgba(255,255,255,.045); border-radius: 9px; background: rgba(255,255,255,.065); color: #8796ae; font-family: var(--font-mono, ui-monospace, monospace); font-size: 9px; font-style: normal; line-height: 15px; letter-spacing: 0; text-align: center; }
 .sds-nav__category-head > svg { color: #687995; }
 .sds-nav__category-items { margin: 0 0 4px 9px !important; padding: 0 0 0 7px !important; border-left: 1px solid rgba(255,255,255,.075); }
 
@@ -1140,7 +1137,6 @@
   }
   .sds-nav__brand { min-height: 40px; flex: none; flex-direction: row; gap: 6px; padding: 0 10px 0 0; border-right: 1px solid rgba(255,255,255,.09); border-bottom: 0; }
   .sds-nav__logo { max-width: 116px; height: 30px; }
-  .sds-nav__sub { font-size: 8px; }
   .sds-nav__search { flex: 1; min-width: 180px; margin: 0; }
   .sds-nav__menu { flex: 1 0 100%; display: flex; align-items: center; gap: 6px; overflow-x: auto; overflow-y: hidden; }
   .sds-nav__home, .sds-nav__group { flex: none; margin: 0; }
