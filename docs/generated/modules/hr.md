@@ -2,7 +2,7 @@
 
 # hr Module Map
 
-Source fingerprint: `22dcdd66df2af25c679dc01c`
+Source fingerprint: `a3106c8f45a1359a99f81472`
 
 Files: 280 | Symbols: 3297 | Widgets: 14 | Unique mounted endpoints: 284 | Route definitions: 284 mounted + 0 unmounted | API calls: 37 | DB objects: 207 | E2E suites: 19
 

@@ -11565,11 +11565,11 @@ SwzPageKind	type	settings	true		src/components/sections/Settings/settingsNav.ts	
 SwzLegacy	type	settings	true		src/components/sections/Settings/settingsNav.ts	13	
 SwzPage	interface	settings	true		src/components/sections/Settings/settingsNav.ts	15	
 SWZ_PAGES	array	settings	true		src/components/sections/Settings/settingsNav.ts	30	
-SWZ_GROUP_ORDER	array	settings	true		src/components/sections/Settings/settingsNav.ts	91	
-getSwzPage	function	settings	true		src/components/sections/Settings/settingsNav.ts	93	
-visibleSwzPages	function	settings	true		src/components/sections/Settings/settingsNav.ts	98	
-escAttr	function	settings	false		src/components/sections/Settings/settingsNav.ts	102	
-buildSettingsMenuHtml	function	settings	true		src/components/sections/Settings/settingsNav.ts	109	
+SWZ_GROUP_ORDER	array	settings	true		src/components/sections/Settings/settingsNav.ts	89	
+getSwzPage	function	settings	true		src/components/sections/Settings/settingsNav.ts	91	
+visibleSwzPages	function	settings	true		src/components/sections/Settings/settingsNav.ts	96	
+escAttr	function	settings	false		src/components/sections/Settings/settingsNav.ts	100	
+buildSettingsMenuHtml	function	settings	true		src/components/sections/Settings/settingsNav.ts	107	
 CardLabel	function	settings	false	component,ui-tile	src/components/sections/Settings/SettingsSection.tsx	70	
 BrandingPanelProps	interface	settings	false		src/components/sections/Settings/SettingsSection.tsx	84	
 BrandingPanel	function	settings	false	component	src/components/sections/Settings/SettingsSection.tsx	89	

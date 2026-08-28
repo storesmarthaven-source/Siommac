@@ -84,8 +84,6 @@ export const SWZ_PAGES: SwzPage[] = [
     title: 'User Security', desc: 'Inspect and manage authentication factors for individual users. Revoke passkeys or trusted devices (requires step-up verification).' },
   { page: 'security-policy', label: 'Security Policy', faIcon: 'fa-shield-halved', iconKey: 'SHIELD', group: 'Administration', kind: 'console', superOnly: true,
     title: 'Security Policy', desc: 'Organisation-wide authentication policy — MFA requirements, password rules, session timeout, and lockout policy.' },
-  { page: 'ui-kit', label: 'UI Kit', faIcon: 'fa-palette', iconKey: 'GEAR', group: 'Administration', kind: 'console', superOnly: true,
-    title: 'UI Kit', desc: 'The living catalog of the Siomac design system — every shared @ui component with all its variants.' },
 ];
 
 export const SWZ_GROUP_ORDER = ['My Settings', 'General', 'Module Policy', 'Platform Policy', 'Governance', 'Administration'];

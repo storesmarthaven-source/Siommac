@@ -58,7 +58,8 @@ src/ui/
   status/         → statusTokens.ts: the ONE source of status → tone → colour/pill
   components/      → reusable presentational components (Button, Card, Tabs, …)
   layouts/         → page-shape primitives (PageHeader, RegisterLayout, …)
-  examples/        → UIKitPage.tsx — the living visual catalog (/ui-kit)
+  registry/        → authoritative component definitions consumed by the Studio
+  studio/          → the top-level Design System Studio and live preview
   index.ts         → barrel: import everything from '@ui'
 ```
 
@@ -83,8 +84,8 @@ unused components.
 - routes any status → colour through **`@ui/status/statusTokens`**. Never write a new
   local status→colour `switch`.
 - has a **clear variant API** (props), not copy-paste forks.
-- gets an entry in **`examples/UIKitPage.tsx`**. If it's not worth showing in the kit,
-  it's not a system component.
+- gets an entry in the **component registry** (`registry/*.defs.tsx`). The top-level
+  Design System Studio renders its catalog directly from that registry.
 
 ### 3. Prefer wrapping existing CSS over inventing new CSS
 Most components here are thin typed wrappers over class names that already exist in

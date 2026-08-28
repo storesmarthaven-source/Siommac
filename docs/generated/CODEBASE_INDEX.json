@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "59474a25e3d1de8392bb002841baa99c59aeb25b",
+    "head": "67b987fa5c3037485fe6cc2d05eb81868715b68a",
     "branch": "codex/onboarding-ui-kit-integration",
-    "fingerprint": "22dcdd66df2af25c679dc01c",
+    "fingerprint": "a3106c8f45a1359a99f81472",
     "indexedFiles": 1916
   },
   "summary": {
@@ -7566,8 +7566,8 @@
       "path": "src/components/sections/Settings/settingsNav.ts",
       "module": "settings",
       "role": "frontend-page",
-      "lines": 136,
-      "hash": "141cf4b72cc09d1c"
+      "lines": 134,
+      "hash": "1bed05092cb21e3b"
     },
     {
       "path": "src/components/sections/Settings/swzIcons.tsx",
@@ -132114,7 +132114,7 @@
       "name": "SWZ_GROUP_ORDER",
       "kind": "array",
       "file": "src/components/sections/Settings/settingsNav.ts",
-      "line": 91,
+      "line": 89,
       "module": "settings",
       "exported": true,
       "container": "",
@@ -132124,7 +132124,7 @@
       "name": "getSwzPage",
       "kind": "function",
       "file": "src/components/sections/Settings/settingsNav.ts",
-      "line": 93,
+      "line": 91,
       "module": "settings",
       "exported": true,
       "container": "",
@@ -132134,7 +132134,7 @@
       "name": "visibleSwzPages",
       "kind": "function",
       "file": "src/components/sections/Settings/settingsNav.ts",
-      "line": 98,
+      "line": 96,
       "module": "settings",
       "exported": true,
       "container": "",
@@ -132144,7 +132144,7 @@
       "name": "escAttr",
       "kind": "function",
       "file": "src/components/sections/Settings/settingsNav.ts",
-      "line": 102,
+      "line": 100,
       "module": "settings",
       "exported": false,
       "container": "",
@@ -132154,7 +132154,7 @@
       "name": "buildSettingsMenuHtml",
       "kind": "function",
       "file": "src/components/sections/Settings/settingsNav.ts",
-      "line": 109,
+      "line": 107,
       "module": "settings",
       "exported": true,
       "container": "",

@@ -223,8 +223,8 @@ actions (Audit Log, bulk export); leave it empty otherwise.
 | Status / risk | `StatusPill`, `riskPill` |
 | Layout inside a tab | `SplitLayout` (main + aside) |
 
-See the live catalog: **Superadmin Console → UI Kit** (every component + variants, plus the
-theme editor).
+See the live catalog in the top-level **UI Kit** workspace (every component + variants,
+plus the theme editor).
 
 ## Loading & skeletons (cold-path only)
 

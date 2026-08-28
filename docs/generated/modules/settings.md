@@ -2,7 +2,7 @@
 
 # settings Module Map
 
-Source fingerprint: `22dcdd66df2af25c679dc01c`
+Source fingerprint: `a3106c8f45a1359a99f81472`
 
 Files: 45 | Symbols: 272 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 0 unmounted | API calls: 18 | DB objects: 23 | E2E suites: 2
 
@@ -140,7 +140,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Settings/domSync.ts` | 73 |
 | frontend-page | `src/components/sections/Settings/index.ts` | 11 |
 | frontend-page | `src/components/sections/Settings/mount.ts` | 35 |
-| frontend-page | `src/components/sections/Settings/settingsNav.ts` | 136 |
+| frontend-page | `src/components/sections/Settings/settingsNav.ts` | 134 |
 | frontend-page | `src/components/sections/Settings/swzIcons.tsx` | 43 |
 | frontend-page | `src/components/sections/Settings/uploadLogoContract.test.ts` | 86 |
 
