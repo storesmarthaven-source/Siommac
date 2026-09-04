@@ -61,6 +61,8 @@
 
   .ui-notification-popover {
     --ui-tab-panel-pad-y: 0;
+    --ui-notification-popover-chrome-bg: rgba(255, 255, 255, .86);
+    --ui-notification-popover-chrome-filter: blur(12px) saturate(1.08);
     display: flex;
     width: min(100%, var(--ui-notification-popover-width));
     max-height: min(720px, calc(100vh - 154px));
@@ -71,7 +73,6 @@
     background: linear-gradient(145deg, rgba(255, 255, 255, .94), rgba(252, 253, 255, .86));
     box-shadow: var(--ui-notification-popover-shadow);
     color: var(--ui-notification-popover-fg);
-    backdrop-filter: blur(6px) saturate(1.04);
   }
 
   .ui-notification-popover__header {
@@ -80,7 +81,7 @@
     align-items: center;
     gap: 18px;
     padding: 13px 16px 11px 20px;
-    background: rgba(255, 255, 255, .72);
+    background: transparent;
   }
 
   .ui-notification-popover__header h2 {
@@ -113,7 +114,19 @@
   .ui-notification-popover__navigation {
     padding: 0 20px 13px;
     border-bottom: 1px solid rgba(31, 45, 81, .1);
-    background: rgba(255, 255, 255, .62);
+    background: transparent;
+  }
+
+  .ui-notification-popover__chrome {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    background: var(--ui-notification-popover-chrome-bg);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, .88),
+      inset 0 -1px 0 rgba(31, 45, 81, .08);
+    -webkit-backdrop-filter: var(--ui-notification-popover-chrome-filter);
+    backdrop-filter: var(--ui-notification-popover-chrome-filter);
   }
 
   .ui-notification-popover__navigation .ui-tabs {
@@ -149,8 +162,8 @@
   }
 
   .ui-notification-popover__body {
-    min-height: 250px;
-    max-height: min(470px, calc(100vh - 331px));
+    min-height: min(363px, calc(100vh - 214px));
+    max-height: min(584px, calc(100vh - 214px));
     flex: 1 1 auto;
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -159,7 +172,9 @@
     background: rgba(255, 255, 255, .5);
   }
 
-  .ui-notification-popover__body > .ui-empty {
+  .ui-notification-popover__content { position: relative; z-index: 1; }
+
+  .ui-notification-popover__content > .ui-empty {
     min-height: 250px;
   }
 

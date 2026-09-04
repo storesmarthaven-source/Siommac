@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "31708b958f582b7f45996b607a85ce19c66ca2c4",
+    "head": "f6e88b38731d1a0bfbc6a9c13b8da1a68e5790eb",
     "branch": "codex/onboarding-ui-kit-integration",
-    "fingerprint": "8384e7dbcf0574a1cc527ea5",
+    "fingerprint": "16bd08b6297d48ef1e11de0c",
     "indexedFiles": 1948
   },
   "summary": {
@@ -6950,15 +6950,15 @@
       "path": "src/components/sections/NotificationCenter/NotificationCenter.test.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 82,
-      "hash": "6fa9e888dd763cdf"
+      "lines": 105,
+      "hash": "788355e52526f8cc"
     },
     {
       "path": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 377,
-      "hash": "2f79a45811dd9c3c"
+      "lines": 409,
+      "hash": "667d98a0e9502fad"
     },
     {
       "path": "src/components/sections/NotificationCenter/NotificationDropdown.test.tsx",
@@ -8840,15 +8840,15 @@
       "path": "src/ui/containers/Accordion.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 43,
-      "hash": "907bc210aedfcb0b"
+      "lines": 55,
+      "hash": "f58785c4ecc5bfec"
     },
     {
       "path": "src/ui/containers/Accordion.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 80,
-      "hash": "ab80d29c7dbc57ce"
+      "lines": 94,
+      "hash": "e5a910232a9f42c2"
     },
     {
       "path": "src/ui/containers/Card/Card.test.tsx",
@@ -9008,8 +9008,8 @@
       "path": "src/ui/feedback/NotificationPopover.tsx",
       "module": "communications",
       "role": "frontend",
-      "lines": 45,
-      "hash": "87c1e74b9bd82993"
+      "lines": 49,
+      "hash": "9500dc99d880c907"
     },
     {
       "path": "src/ui/feedback/Progress.tsx",
@@ -9029,8 +9029,8 @@
       "path": "src/ui/feedback/notifications.test.tsx",
       "module": "communications",
       "role": "frontend",
-      "lines": 112,
-      "hash": "ab73903d424a2001"
+      "lines": 114,
+      "hash": "4ec61043190420f1"
     },
     {
       "path": "src/ui/forms/ColorPicker.tsx",
@@ -9442,15 +9442,15 @@
       "path": "src/ui/navigation/Tabs/Tabs.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 255,
-      "hash": "548b2011f7188d57"
+      "lines": 262,
+      "hash": "1f0dac4ae2cda089"
     },
     {
       "path": "src/ui/navigation/Tabs/Tabs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 331,
-      "hash": "61736cb3c97b66f8"
+      "lines": 337,
+      "hash": "77d49bdfd1bf7357"
     },
     {
       "path": "src/ui/navigation/Tabs/index.ts",
@@ -9820,8 +9820,8 @@
       "path": "src/ui/registry/remaining-primitives.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 289,
-      "hash": "d7f60e9abb3e5e8f"
+      "lines": 292,
+      "hash": "6bf9753a233de62f"
     },
     {
       "path": "src/ui/registry/runtime-feedback.test.ts",
@@ -126653,7 +126653,7 @@
       "name": "openPreferences",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
-      "line": 100,
+      "line": 101,
       "module": "communications",
       "exported": false,
       "container": "NotificationCenter",
@@ -126663,7 +126663,7 @@
       "name": "open",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
-      "line": 155,
+      "line": 156,
       "module": "communications",
       "exported": false,
       "container": "NotificationCenter",
@@ -126673,7 +126673,7 @@
       "name": "markAllRead",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
-      "line": 163,
+      "line": 164,
       "module": "communications",
       "exported": false,
       "container": "NotificationCenter",
@@ -126683,7 +126683,7 @@
       "name": "archiveOne",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
-      "line": 168,
+      "line": 169,
       "module": "communications",
       "exported": false,
       "container": "NotificationCenter",
@@ -126693,7 +126693,7 @@
       "name": "archiveAllRead",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
-      "line": 173,
+      "line": 174,
       "module": "communications",
       "exported": false,
       "container": "NotificationCenter",
@@ -126703,7 +126703,7 @@
       "name": "clearFilters",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
-      "line": 178,
+      "line": 179,
       "module": "communications",
       "exported": false,
       "container": "NotificationCenter",
@@ -147134,7 +147134,7 @@
       "name": "AccordionProps",
       "kind": "interface",
       "file": "src/ui/containers/Accordion.tsx",
-      "line": 15,
+      "line": 16,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147144,7 +147144,7 @@
       "name": "Accordion",
       "kind": "function",
       "file": "src/ui/containers/Accordion.tsx",
-      "line": 26,
+      "line": 29,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -147156,7 +147156,7 @@
       "name": "toggle",
       "kind": "function",
       "file": "src/ui/containers/Accordion.tsx",
-      "line": 35,
+      "line": 38,
       "module": "platform",
       "exported": false,
       "container": "Accordion",
@@ -151641,7 +151641,7 @@
       "name": "tabDomId",
       "kind": "function",
       "file": "src/ui/navigation/Tabs/Tabs.tsx",
-      "line": 101,
+      "line": 105,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151651,7 +151651,7 @@
       "name": "panelDomId",
       "kind": "function",
       "file": "src/ui/navigation/Tabs/Tabs.tsx",
-      "line": 102,
+      "line": 106,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151661,7 +151661,7 @@
       "name": "Tabs",
       "kind": "function",
       "file": "src/ui/navigation/Tabs/Tabs.tsx",
-      "line": 104,
+      "line": 108,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151673,7 +151673,7 @@
       "name": "onKeyDown",
       "kind": "function",
       "file": "src/ui/navigation/Tabs/Tabs.tsx",
-      "line": 167,
+      "line": 171,
       "module": "platform",
       "exported": false,
       "container": "Tabs",
@@ -151683,7 +151683,7 @@
       "name": "renderTab",
       "kind": "function",
       "file": "src/ui/navigation/Tabs/Tabs.tsx",
-      "line": 201,
+      "line": 207,
       "module": "platform",
       "exported": false,
       "container": "Tabs",
@@ -151693,7 +151693,7 @@
       "name": "TabPanelProps",
       "kind": "interface",
       "file": "src/ui/navigation/Tabs/Tabs.tsx",
-      "line": 295,
+      "line": 301,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151703,7 +151703,7 @@
       "name": "TabPanel",
       "kind": "function",
       "file": "src/ui/navigation/Tabs/Tabs.tsx",
-      "line": 317,
+      "line": 323,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -155597,7 +155597,7 @@
       "name": "shellPreview",
       "kind": "function",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 166,
+      "line": 169,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -155607,7 +155607,7 @@
       "name": "activityGaugeDef",
       "kind": "object",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 180,
+      "line": 183,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -155617,7 +155617,7 @@
       "name": "userPillPreview",
       "kind": "function",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 217,
+      "line": 220,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -155627,7 +155627,7 @@
       "name": "appTopBarDef",
       "kind": "object",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 219,
+      "line": 222,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -155637,7 +155637,7 @@
       "name": "userPillDef",
       "kind": "object",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 278,
+      "line": 281,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -155647,7 +155647,7 @@
       "name": "REMAINING_PRIMITIVE_DEFS",
       "kind": "array",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 288,
+      "line": 291,
       "module": "platform",
       "exported": true,
       "container": "",

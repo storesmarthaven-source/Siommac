@@ -3,8 +3,8 @@
 import { type VNode } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import {
-  ActivityDots, Button, EmptyState, LucideIcon, PageHeader,
-  PageActionBar, SearchField, Select, Switch, Tabs, TabPanel, type TabItem,
+  Accordion, ActivityDots, Button, EmptyState, LucideIcon, PageHeader,
+  PageActionBar, SearchField, Select, Tabs, TabPanel, type TabItem,
 } from '@ui';
 import { useCan } from '@lib/permissions';
 import {
@@ -93,6 +93,7 @@ export function NotificationCenter(): VNode {
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [showLive, setShowLive] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<readonly string[]>(() => [...GROUP_ORDER]);
   const [previewNotifications, setPreviewNotifications] = useState(createPreviewNotifications);
   const isAdmin = useCan('communications.admin');
 
@@ -210,32 +211,22 @@ export function NotificationCenter(): VNode {
             label="Notification Center Actions"
             secondary={(
               <>
-                <Button
-                  variant="secondary"
-                  iconLeft={<LucideIcon name="CheckCheck" />}
-                  disabled={unread === 0}
-                  loading={showLive && markAll.isPending}
-                  onClick={markAllRead}
-                >
-                  Mark All Read
-                </Button>
+                {isAdmin && (
+                  <Button variant="primary" iconLeft={<LucideIcon name="Megaphone" />} onClick={() => setBroadcastOpen(true)}>
+                    Send Broadcast
+                  </Button>
+                )}
                 <Button variant="secondary" iconLeft={<LucideIcon name="Settings2" />} onClick={() => setPreferencesOpen(true)}>
                   Notification Settings
                 </Button>
               </>
             )}
-            primary={isAdmin ? (
-              <Button variant="primary" iconLeft={<LucideIcon name="Megaphone" />} onClick={() => setBroadcastOpen(true)}>
-                Send Broadcast
-              </Button>
-            ) : undefined}
             overflow={[
               {
-                id: 'archive-read',
-                label: showLive && archive.isPending ? 'Archiving Read Notifications' : 'Archive All Read',
-                icon: <LucideIcon name="Archive" />,
-                disabled: (showLive && archive.isPending) || total - unread === 0,
-                onSelect: archiveAllRead,
+                id: 'notification-source',
+                label: showLive ? 'Show Feature Preview' : 'Show Live Notifications',
+                icon: <LucideIcon name={showLive ? 'PanelsTopLeft' : 'Database'} />,
+                onSelect: () => setShowLive(current => !current),
               },
               {
                 id: 'refresh',
@@ -257,13 +248,6 @@ export function NotificationCenter(): VNode {
       <section class="nc-workspace" aria-label="Notification Inbox">
         <div class="nc-toolbar">
           <div class="nc-mode-row">
-            <span class="nc-mode-copy">
-              <strong>{showLive ? 'Live Notifications' : 'Feature Preview'}</strong>
-              <small>{showLive ? 'Showing notifications from your account.' : 'Explore staged examples without changing live data.'}</small>
-            </span>
-            <Switch checked={showLive} onChange={setShowLive} aria-label="Show Live Notifications" />
-          </div>
-          <div class="nc-workspace-head">
             <Tabs
               id="notification-center-tabs"
               items={tabs}
@@ -271,6 +255,9 @@ export function NotificationCenter(): VNode {
               onChange={value => { if (isView(value)) { setView(value); setCriticalOnly(false); } }}
               label="Notification Views"
               variant="contained"
+              size="lg"
+              fullWidth
+              flush
             />
           </div>
 
@@ -299,6 +286,7 @@ export function NotificationCenter(): VNode {
             />
             <Button
               variant="outline"
+              tone="danger"
               pressed={criticalOnly}
               iconLeft={<LucideIcon name="TriangleAlert" />}
               onClick={() => setCriticalOnly(value => !value)}
@@ -314,12 +302,50 @@ export function NotificationCenter(): VNode {
         </div>
 
         <div class="nc-results-head" aria-live="polite">
-          <div>
-            <strong>{rows.length}</strong> {rows.length === 1 ? 'Notification' : 'Notifications'}
-            {hasFilters && <span> Matching This View</span>}
+          <div class="nc-results-summary">
+            <div class="nc-results-metrics" aria-label={`${rows.length} notifications, ${unread} unread, ${actionRequired} need action`}>
+              <span class="nc-summary-stat nc-summary-stat--total">
+                <LucideIcon name="Bell" />
+                <strong>{rows.length}</strong>
+                <span>{rows.length === 1 ? 'Notification' : 'Notifications'}</span>
+              </span>
+              <span class="nc-summary-stat nc-summary-stat--unread">
+                <LucideIcon name="Mail" />
+                <strong>{unread}</strong>
+                <span>Unread</span>
+              </span>
+              <span class="nc-summary-stat nc-summary-stat--action">
+                <LucideIcon name="ClipboardCheck" />
+                <strong>{actionRequired}</strong>
+                <span>Need Action</span>
+              </span>
+              {hasFilters && <span class="nc-matching-view">Matching This View</span>}
+            </div>
           </div>
           <div class="nc-results-status">
             {criticalOnly && <span class="nc-filter-note"><LucideIcon name="TriangleAlert" /> Critical Alerts Only</span>}
+            <div class="nc-results-actions" role="group" aria-label="Inbox Actions">
+              <Button
+                size="sm"
+                variant="ghost"
+                iconLeft={<LucideIcon name="CheckCheck" />}
+                disabled={unread === 0}
+                loading={showLive && markAll.isPending}
+                onClick={markAllRead}
+              >
+                Mark All as Read
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                iconLeft={<LucideIcon name="Archive" />}
+                disabled={(showLive && archive.isPending) || total - unread === 0}
+                loading={showLive && archive.isPending}
+                onClick={archiveAllRead}
+              >
+                Archive All Read
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -349,22 +375,28 @@ export function NotificationCenter(): VNode {
               />
             )}
 
-            {(!showLive || (!query.isLoading && !query.isError)) && groups.map(([label, items]) => (
-              <section class="nc-date-group" key={label} aria-label={`${label} Notifications`}>
-                <div class="nc-date-group-head">
-                  <span>{label}</span>
-                  <span>{items.length}</span>
-                </div>
-                {items.map(notification => (
-                  <NotificationItem
-                    key={notification.id}
-                    n={notification}
-                    onOpen={open}
-                    onArchive={view === 'archived' ? undefined : item => archiveOne(item.id)}
-                  />
-                ))}
-              </section>
-            ))}
+            {(!showLive || (!query.isLoading && !query.isError)) && groups.length > 0 && (
+              <Accordion
+                class="nc-date-groups"
+                variant="bare"
+                multiple
+                expanded={expandedGroups}
+                onChange={setExpandedGroups}
+                items={groups.map(([label, items]) => ({
+                  id: label,
+                  title: label,
+                  trailing: <span class="nc-date-group-count" aria-label={`${items.length} notifications`}>{items.length}</span>,
+                  content: items.map(notification => (
+                    <NotificationItem
+                      key={notification.id}
+                      n={notification}
+                      onOpen={open}
+                      onArchive={view === 'archived' ? undefined : item => archiveOne(item.id)}
+                    />
+                  )),
+                }))}
+              />
+            )}
           </div>
         </TabPanel>
       </section>

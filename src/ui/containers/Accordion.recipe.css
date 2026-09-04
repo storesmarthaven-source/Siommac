@@ -3,26 +3,53 @@
   [data-ui-preview-scope] {
     --ui-accordion-border: var(--ui-color-border-default);
     --ui-accordion-bg: var(--ui-color-surface-raised);
+    --ui-accordion-trigger-bg: transparent;
     --ui-accordion-hover-bg: var(--row-hover);
+    --ui-accordion-trigger-border-bottom: 0;
     --ui-accordion-radius: var(--radius-sm);
     --ui-accordion-trigger-padding: 14px 16px;
     --ui-accordion-panel-padding: 0 16px 16px;
     --ui-accordion-title-fg: var(--ui-color-text-primary);
+    --ui-accordion-title-font-size: var(--ui-font-size-body-sm);
+    --ui-accordion-title-font-weight: var(--font-weight-semibold);
     --ui-accordion-description-fg: var(--ui-color-text-secondary);
   }
   .ui-accordion { overflow: hidden; border: var(--ui-border-width) solid var(--ui-accordion-border); border-radius: var(--ui-accordion-radius); background: var(--ui-accordion-bg); }
   .ui-accordion__item + .ui-accordion__item { border-top: var(--ui-border-width) solid var(--ui-accordion-border); }
+  .ui-accordion--bare { overflow: visible; border: 0; border-radius: 0; background: transparent; }
+  .ui-accordion--bare .ui-accordion__item + .ui-accordion__item { border-top: 0; }
+  .ui-accordion--bare .ui-accordion__trigger { border-radius: 0; }
+  .ui-accordion--bare .ui-accordion__content { padding: 0; }
   .ui-accordion__heading { margin: 0; font: inherit; }
-  .ui-accordion__trigger { display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--ui-accordion-trigger-padding); border: 0; background: transparent; color: var(--ui-accordion-title-fg); font: inherit; text-align: left; cursor: pointer; }
+  .ui-accordion__trigger { display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--ui-accordion-trigger-padding); border: 0; border-bottom: var(--ui-accordion-trigger-border-bottom); background: var(--ui-accordion-trigger-bg); color: var(--ui-accordion-title-fg); font: inherit; text-align: left; cursor: pointer; }
   .ui-accordion__trigger:hover { background: var(--ui-accordion-hover-bg); }
   .ui-accordion__trigger:focus-visible { position: relative; z-index: 1; outline: var(--ui-focus-ring); outline-offset: calc(var(--ui-focus-ring-offset) * -1); }
   .ui-accordion__trigger:disabled { color: var(--ui-disabled-fg); cursor: var(--ui-disabled-cursor); }
   .ui-accordion__icon { display: grid; place-items: center; flex: 0 0 auto; color: var(--ui-color-navigation-active); }
   .ui-accordion__copy { display: grid; flex: 1 1 auto; gap: 2px; min-width: 0; }
-  .ui-accordion__title { font-size: var(--ui-font-size-body-sm); font-weight: var(--font-weight-semibold); }
+  .ui-accordion__title { font-size: var(--ui-accordion-title-font-size); font-weight: var(--ui-accordion-title-font-weight); }
   .ui-accordion__description { color: var(--ui-accordion-description-fg); font-size: var(--ui-font-size-caption); font-weight: var(--font-weight-normal); }
+  .ui-accordion__trailing { display: inline-flex; align-items: center; flex: 0 0 auto; }
   .ui-accordion__chevron { flex: 0 0 auto; width: 18px; height: 18px; transition: transform 160ms ease; }
   .ui-accordion__item[data-open='true'] .ui-accordion__chevron { transform: rotate(180deg); }
+  .ui-accordion--animated .ui-accordion__panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    visibility: hidden;
+    transition: grid-template-rows 220ms ease, opacity 160ms ease, visibility 0s linear 220ms;
+  }
+  .ui-accordion--animated .ui-accordion__item[data-open='true'] .ui-accordion__panel {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    visibility: visible;
+    transition: grid-template-rows 220ms ease, opacity 180ms ease 30ms, visibility 0s linear 0s;
+  }
+  .ui-accordion__panel-inner { min-height: 0; overflow: hidden; }
   .ui-accordion__content { padding: var(--ui-accordion-panel-padding); color: var(--ui-color-text-secondary); font-size: var(--ui-font-size-body-sm); line-height: 1.55; }
-  @media (prefers-reduced-motion: reduce) { .ui-accordion__chevron { transition: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .ui-accordion__chevron,
+    .ui-accordion--animated .ui-accordion__panel,
+    .ui-accordion--animated .ui-accordion__item[data-open='true'] .ui-accordion__panel { transition: none; }
+  }
 }

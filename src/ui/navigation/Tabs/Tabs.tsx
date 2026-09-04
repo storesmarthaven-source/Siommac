@@ -93,6 +93,10 @@ export interface TabsProps {
   maxVisible?: number;
   /** Right-aligned content in the bar (a filter, a count, an action). */
   actions?: ComponentChildren;
+  /** Stretch the rail and distribute visible tabs evenly across the available width. */
+  fullWidth?: boolean;
+  /** Remove the rail's outer inset and radius when it meets a parent surface edge. */
+  flush?: boolean;
   /** Forced visual state — Gallery preview only (RECIPES.md §5). Never in app code. */
   forceState?: UiState;
   class?: string;
@@ -104,7 +108,7 @@ export const panelDomId = (id: string, tabId: string): string => `${id}-panel-${
 export function Tabs({
   id, items, value, onChange, label,
   orientation = 'horizontal', variant = 'underline', size = 'md',
-  activation = 'automatic', maxVisible, actions, forceState, class: extra,
+  activation = 'automatic', maxVisible, actions, fullWidth = false, flush = false, forceState, class: extra,
 }: TabsProps): VNode {
   /**
    * Tab elements by id, for moving focus.
@@ -195,6 +199,8 @@ export function Tabs({
     `ui-tabs--${variant}`,
     `ui-tabs--${orientation}`,
     size !== 'md' ? `ui-tabs--${size}` : '',
+    fullWidth ? 'ui-tabs--full-width' : '',
+    flush ? 'ui-tabs--flush' : '',
     extra ?? '',
   ].filter(Boolean).join(' ');
 

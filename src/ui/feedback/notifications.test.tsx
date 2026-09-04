@@ -104,6 +104,8 @@ describe('NotificationPopover', () => {
     expect(screen.getByRole('button', { name: 'View All' })).toBeTruthy();
 
     const body = container.querySelector('.ui-notification-popover__body')!;
+    expect(body.querySelector(':scope > .ui-notification-popover__chrome')).toBeTruthy();
+    expect(body.querySelector(':scope > .ui-notification-popover__content')).toBeTruthy();
     body.scrollTop = 120;
     rerender(<NotificationPopover resetScrollKey="unread"><div>Unread results</div></NotificationPopover>);
     expect(body.scrollTop).toBe(0);

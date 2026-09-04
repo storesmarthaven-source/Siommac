@@ -225,12 +225,30 @@
     flex: 0 1 auto;
   }
   .ui-tabs--contained .ui-tab { --ui-tab-pad-y: 7px; }
+  .ui-tabs--contained.ui-tabs--sm .ui-tab { --ui-tab-pad-y: 6px; }
+  .ui-tabs--contained.ui-tabs--lg .ui-tab { --ui-tab-pad-y: 12px; }
   .ui-tabs--contained .ui-tab.is-selected {
     background: var(--ui-tabs-contained-selected-bg);
     box-shadow: var(--ui-tabs-contained-selected-shadow);
   }
   .ui-tabs--contained.ui-tabs--vertical > .ui-tabs-list { flex: 0 0 auto; }
   .ui-tabs--contained.ui-tabs--vertical .ui-tab { justify-content: flex-start; }
+
+  .ui-tabs--full-width { width: 100%; }
+  .ui-tabs--contained.ui-tabs--full-width > .ui-tabs-list {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+  .ui-tabs--full-width.ui-tabs--horizontal > .ui-tabs-list > .ui-tab {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+  .ui-tabs--contained.ui-tabs--flush > .ui-tabs-list {
+    padding: 0;
+    border-width: 0 0 var(--ui-border-width);
+    border-radius: 0;
+  }
+  .ui-tabs--contained.ui-tabs--flush .ui-tab { border-radius: 0; }
 
   /* ── variant: subtle ──────────────────────────────────────────────────────*/
   /* No rail, no indicator — selection is carried by a tinted chip. For tabs

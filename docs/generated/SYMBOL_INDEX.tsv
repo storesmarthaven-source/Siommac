@@ -11026,12 +11026,12 @@ dateGroup	function	communications	false		src/components/sections/NotificationCen
 groupByDate	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	72	
 isView	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	83	
 NotificationCenter	function	communications	true	component	src/components/sections/NotificationCenter/NotificationCenter.tsx	87	
-openPreferences	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	100	NotificationCenter
-open	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	155	NotificationCenter
-markAllRead	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	163	NotificationCenter
-archiveOne	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	168	NotificationCenter
-archiveAllRead	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	173	NotificationCenter
-clearFilters	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	178	NotificationCenter
+openPreferences	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	101	NotificationCenter
+open	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	156	NotificationCenter
+markAllRead	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	164	NotificationCenter
+archiveOne	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	169	NotificationCenter
+archiveAllRead	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	174	NotificationCenter
+clearFilters	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	179	NotificationCenter
 _isModalOpen	variable	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	6	
 _canBroadcast	variable	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	7	
 NotificationsArgs	type	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	12	
@@ -12981,9 +12981,9 @@ WizardShellProps	interface	platform	true		src/ui/components/WizardShell.tsx	22
 WizardShell	function	platform	true	component	src/ui/components/WizardShell.tsx	44	
 ITEMS	array	platform	false	test	src/ui/containers/Accordion.test.tsx	5	
 AccordionItem	interface	platform	true		src/ui/containers/Accordion.tsx	6	
-AccordionProps	interface	platform	true		src/ui/containers/Accordion.tsx	15	
-Accordion	function	platform	true	component	src/ui/containers/Accordion.tsx	26	
-toggle	function	platform	false		src/ui/containers/Accordion.tsx	35	Accordion
+AccordionProps	interface	platform	true		src/ui/containers/Accordion.tsx	16	
+Accordion	function	platform	true	component	src/ui/containers/Accordion.tsx	29	
+toggle	function	platform	false		src/ui/containers/Accordion.tsx	38	Accordion
 CardVariant	type	platform	true	ui-tile	src/ui/containers/Card/Card.tsx	47	
 CardTone	type	platform	true	ui-tile	src/ui/containers/Card/Card.tsx	48	
 CardAccent	type	platform	true	ui-tile	src/ui/containers/Card/Card.tsx	49	
@@ -13396,13 +13396,13 @@ TabsSize	type	platform	true		src/ui/navigation/Tabs/Tabs.tsx	42
 TabsActivation	type	platform	true		src/ui/navigation/Tabs/Tabs.tsx	48	
 TabItem	interface	platform	true		src/ui/navigation/Tabs/Tabs.tsx	50	
 TabsProps	interface	platform	true		src/ui/navigation/Tabs/Tabs.tsx	68	
-tabDomId	function	platform	true		src/ui/navigation/Tabs/Tabs.tsx	101	
-panelDomId	function	platform	true		src/ui/navigation/Tabs/Tabs.tsx	102	
-Tabs	function	platform	true	component	src/ui/navigation/Tabs/Tabs.tsx	104	
-onKeyDown	function	platform	false		src/ui/navigation/Tabs/Tabs.tsx	167	Tabs
-renderTab	function	platform	false		src/ui/navigation/Tabs/Tabs.tsx	201	Tabs
-TabPanelProps	interface	platform	true		src/ui/navigation/Tabs/Tabs.tsx	295	
-TabPanel	function	platform	true	component	src/ui/navigation/Tabs/Tabs.tsx	317	
+tabDomId	function	platform	true		src/ui/navigation/Tabs/Tabs.tsx	105	
+panelDomId	function	platform	true		src/ui/navigation/Tabs/Tabs.tsx	106	
+Tabs	function	platform	true	component	src/ui/navigation/Tabs/Tabs.tsx	108	
+onKeyDown	function	platform	false		src/ui/navigation/Tabs/Tabs.tsx	171	Tabs
+renderTab	function	platform	false		src/ui/navigation/Tabs/Tabs.tsx	207	Tabs
+TabPanelProps	interface	platform	true		src/ui/navigation/Tabs/Tabs.tsx	301	
+TabPanel	function	platform	true	component	src/ui/navigation/Tabs/Tabs.tsx	323	
 NODES	array	platform	false	test	src/ui/navigation/TreeView.test.tsx	5	
 TreeNode	interface	platform	true		src/ui/navigation/TreeView.tsx	6	
 TreeViewProps	interface	platform	true		src/ui/navigation/TreeView.tsx	19	
@@ -13773,12 +13773,12 @@ breadcrumbsDef	object	platform	true		src/ui/registry/remaining-primitives.defs.t
 alertDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	63	
 progressDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	95	
 accordionDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	133	
-shellPreview	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	166	
-activityGaugeDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	180	
-userPillPreview	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	217	
-appTopBarDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	219	
-userPillDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	278	
-REMAINING_PRIMITIVE_DEFS	array	platform	true		src/ui/registry/remaining-primitives.defs.tsx	288	
+shellPreview	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	169	
+activityGaugeDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	183	
+userPillPreview	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	220	
+appTopBarDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	222	
+userPillDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	281	
+REMAINING_PRIMITIVE_DEFS	array	platform	true		src/ui/registry/remaining-primitives.defs.tsx	291	
 PropCondition	type	platform	true		src/ui/registry/types.ts	41	
 PropControlMeta	interface	platform	true		src/ui/registry/types.ts	48	
 PropControl	type	platform	true		src/ui/registry/types.ts	53	

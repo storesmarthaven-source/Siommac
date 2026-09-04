@@ -32,12 +32,16 @@ export function NotificationPopover({
 
   return (
     <section class={`ui-notification-popover${extra ? ` ${extra}` : ''}`} role="dialog" aria-label={ariaLabel}>
-      <header class="ui-notification-popover__header">
-        <h2>{title}</h2>
-        {headerActions != null && <div class="ui-notification-popover__header-actions">{headerActions}</div>}
-      </header>
-      {navigation != null && <div class="ui-notification-popover__navigation">{navigation}</div>}
-      <div ref={bodyRef} class="ui-notification-popover__body">{children}</div>
+      <div ref={bodyRef} class="ui-notification-popover__body">
+        <div class="ui-notification-popover__chrome">
+          <header class="ui-notification-popover__header">
+            <h2>{title}</h2>
+            {headerActions != null && <div class="ui-notification-popover__header-actions">{headerActions}</div>}
+          </header>
+          {navigation != null && <div class="ui-notification-popover__navigation">{navigation}</div>}
+        </div>
+        <div class="ui-notification-popover__content">{children}</div>
+      </div>
       {footer != null && <footer class="ui-notification-popover__footer">{footer}</footer>}
     </section>
   );

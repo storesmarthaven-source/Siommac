@@ -78,6 +78,13 @@ describe('Tabs — structure', () => {
     expect(screen.getByRole('tablist').getAttribute('aria-orientation')).toBe('vertical');
   });
 
+  it('supports a full-width flush rail at a parent surface edge', () => {
+    const { container } = tabs({ variant: 'contained', fullWidth: true, flush: true });
+    const root = container.querySelector('.ui-tabs')!;
+    expect(root.classList.contains('ui-tabs--full-width')).toBe(true);
+    expect(root.classList.contains('ui-tabs--flush')).toBe(true);
+  });
+
   it('renders a badge of 0 rather than hiding it, and announces it separately', () => {
     // "0 open" is information. Treating 0 as absent is why several pages showed
     // nothing where a zero belonged — and without an explicit accessible name

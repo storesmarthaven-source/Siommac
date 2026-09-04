@@ -39,4 +39,16 @@ describe('Accordion', () => {
     render(<Accordion items={ITEMS} />);
     expect(screen.getByRole('button', { name: 'Locked' }).hasAttribute('disabled')).toBe(true);
   });
+
+  it('keeps animated panel content mounted for a smooth close transition', () => {
+    const { container } = render(<Accordion items={[{ id: 'today', title: 'Today', trailing: '6', content: 'Six alerts' }]} defaultExpanded={['today']} />);
+    const root = container.querySelector('.ui-accordion');
+    const trigger = screen.getByRole('button', { name: 'Today6' });
+
+    expect(root?.classList.contains('ui-accordion--animated')).toBe(true);
+    fireEvent.click(trigger);
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    expect(container.querySelector('.ui-accordion__panel')?.getAttribute('aria-hidden')).toBe('true');
+    expect(container.textContent).toContain('Six alerts');
+  });
 });

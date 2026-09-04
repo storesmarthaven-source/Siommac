@@ -136,6 +136,7 @@ export const accordionDef: ComponentDef = {
   componentPath: 'src/ui/containers/Accordion.tsx', importFrom: '@ui',
   description: 'Collapsible content sections with controlled or uncontrolled state and single or multiple expansion.',
   props: {
+    variant: { type: 'segmented', label: 'Appearance', options: ['card', 'bare'], default: 'card' },
     multiple: { type: 'boolean', label: 'Multiple expansion', default: false },
     firstOpen: { type: 'boolean', label: 'First section open', default: true },
     descriptions: { type: 'boolean', label: 'Descriptions', default: true },
@@ -144,7 +145,9 @@ export const accordionDef: ComponentDef = {
   style: [{ label: 'Sections', controls: [
     { name: '--ui-accordion-border', label: 'Border', kind: 'color' },
     { name: '--ui-accordion-bg', label: 'Background', kind: 'color' },
+    { name: '--ui-accordion-trigger-bg', label: 'Trigger background', kind: 'color' },
     { name: '--ui-accordion-hover-bg', label: 'Hover background', kind: 'color' },
+    { name: '--ui-accordion-trigger-border-bottom', label: 'Trigger separator', kind: 'text' },
     { name: '--ui-accordion-radius', label: 'Corner radius', kind: 'size' },
     { name: '--ui-accordion-trigger-padding', label: 'Trigger padding', kind: 'text' },
     { name: '--ui-accordion-panel-padding', label: 'Panel padding', kind: 'text' },
@@ -155,12 +158,12 @@ export const accordionDef: ComponentDef = {
     keyboard: [{ keys: 'Enter / Space', does: 'Toggles the focused section using native button behavior.' }, { keys: 'Tab', does: 'Moves through section triggers.' }],
     focus: 'Remains on the trigger after toggling.', notes: ['Choose headingLevel to preserve the surrounding document outline.'],
   },
-  render: (p, state) => <Accordion multiple={b(p.multiple)} defaultExpanded={b(p.firstOpen) || state === 'open' ? ['scope'] : []} keepMounted={b(p.keepMounted)} items={[
+  render: (p, state) => <Accordion variant={s(p.variant, 'card') as 'card' | 'bare'} multiple={b(p.multiple)} defaultExpanded={b(p.firstOpen) || state === 'open' ? ['scope'] : []} keepMounted={b(p.keepMounted)} items={[
     { id: 'scope', title: 'Scope and eligibility', description: b(p.descriptions) ? 'Who this policy applies to' : undefined, icon: <LucideIcon name="Users" />, content: 'All permanent employees assigned to active operating sites.' },
     { id: 'approval', title: 'Approval rules', description: b(p.descriptions) ? 'Maker-checker and escalation' : undefined, icon: <LucideIcon name="ShieldCheck" />, content: 'The creator cannot approve their own change. Escalation starts after two business days.' },
     { id: 'audit', title: 'Audit retention', description: b(p.descriptions) ? 'Records and evidence' : undefined, icon: <LucideIcon name="History" />, content: 'Every decision, reason and attachment remains available for seven years.' },
   ]} />,
-  code: p => `<Accordion items={sections}${b(p.multiple) ? ' multiple' : ''}${b(p.keepMounted) ? ' keepMounted' : ''} />`,
+  code: p => `<Accordion items={sections} variant="${s(p.variant, 'card')}"${b(p.multiple) ? ' multiple' : ''}${b(p.keepMounted) ? ' keepMounted' : ''} />`,
 };
 
 const shellPreview = (p: PropValues): VNode => {
