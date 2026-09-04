@@ -39,7 +39,11 @@ export default async function run(h) {
       await sb.from('ticket_comments').delete().in('ticket_id', ctx.ticketIds);
       await sb.from('tickets').delete().in('id', ctx.ticketIds);
     }
+    const taggedNotifications = (await sb.from('notifications').select('event_id').ilike('title', `${TAG}%`)).data ?? [];
+    const taggedEventIds = taggedNotifications.map(row => row.event_id).filter(Boolean);
     await sb.from('notifications').delete().ilike('title', `${TAG}%`);
+    if (taggedEventIds.length) await sb.from('app_events').delete().in('id', taggedEventIds);
+    await sb.from('notification_mutes').delete().eq('user_id', admin.id).eq('scope', 'all');
   });
 
   // ── Isolation for the one-direct-thread-per-pair invariant ──
@@ -105,9 +109,40 @@ export default async function run(h) {
       { eventType: 'test.event', in_app: true, email: false, whatsapp: false });
     ok(r);
   });
-  await test('mute then clear', async () => {
-    ok(await api('communications/notifications/mute', T.admin, { scope: 'all' }), 'mute failed');
-    ok(await api('communications/notifications/mute', T.admin, { scope: 'all', clear: true }), 'unmute failed');
+  await test('Quiet Mode preserves routine alerts unread and marks only the popup as suppressed', async () => {
+    ok(await api('communications/notifications/mute', T.admin, { scope: 'all' }), 'Quiet Mode enable failed');
+    const r = await api('communications/notifications/broadcast', T.admin, {
+      audience: { type: 'users', userIds: [admin.id] },
+      severity: 'info', title: `${TAG} quiet routine`, body: 'quiet-mode contract test',
+    });
+    ok(r);
+    const { data, error } = await sb.from('notifications')
+      .select('is_read, metadata')
+      .eq('user_id', admin.id)
+      .eq('title', `${TAG} quiet routine`)
+      .single();
+    expect(!error && data, 'Quiet Mode dropped the routine Notification Center record');
+    expect(data.is_read === false, 'Quiet Mode routine record was not unread');
+    expect(data.metadata?.deliveryProtection?.quietModeSuppressed === true, 'routine popup was not marked suppressed');
+  });
+  await test('Quiet Mode lets critical alerts through', async () => {
+    const r = await api('communications/notifications/broadcast', T.admin, {
+      audience: { type: 'users', userIds: [admin.id] },
+      severity: 'critical', title: `${TAG} quiet critical`, body: 'protected-delivery contract test',
+    });
+    ok(r);
+    const { data, error } = await sb.from('notifications')
+      .select('is_read, metadata')
+      .eq('user_id', admin.id)
+      .eq('title', `${TAG} quiet critical`)
+      .single();
+    expect(!error && data, 'Quiet Mode dropped a critical alert');
+    expect(data.is_read === false, 'critical alert was not unread');
+    expect(data.metadata?.deliveryProtection?.criticality === 'safety_critical', 'critical alert was not protected');
+    expect(data.metadata?.deliveryProtection?.quietModeSuppressed === false, 'critical alert popup was suppressed');
+  });
+  await test('Quiet Mode clears cleanly', async () => {
+    ok(await api('communications/notifications/mute', T.admin, { scope: 'all', clear: true }), 'Quiet Mode clear failed');
   });
 
   let notifId = null;

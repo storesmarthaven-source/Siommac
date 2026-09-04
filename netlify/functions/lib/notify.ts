@@ -24,6 +24,10 @@
 
 import { sendEmail, type EmailSendResult } from './email/emailService';
 import { sb }      from './db';
+import {
+  quietModeDeliveryDecision,
+  type NotificationCriticality,
+} from './deliveryProtection';
 
 const logger = {
   info:  (msg: string, ctx?: Record<string, unknown>) => console.log('[notify]',  msg, ctx ?? ''),
@@ -57,6 +61,8 @@ export interface NotifyPayload {
   dedupeKey?:      string | null;
   actionRequired?: boolean;
   dueAt?:          string | null;
+  /** Explicit delivery protection class. Older producers are classified centrally. */
+  criticality?:    NotificationCriticality;
 }
 
 interface UserDeliveryInfo {
@@ -151,11 +157,26 @@ export async function notify(payload: NotifyPayload): Promise<void> {
         .in('scope', ['all', `module:${payload.module ?? ''}`, `event:${type}`]),
     ]);
 
-    // Mute gate: any active mute (indefinite or future) silences this notification.
+    if (mutesRes.error) {
+      logger.warn('[notify] Quiet Mode state could not be loaded; delivery stopped rather than bypassing user policy', {
+        userId, type, error: mutesRes.error.message,
+      });
+      return;
+    }
+
+    // Quiet Mode changes delivery, never persistence. Routine alerts remain as
+    // unread Notification Center records; protected alerts continue normally.
     const now = Date.now();
-    const mutes = (mutesRes.data ?? []) as Array<{ scope: string; muted_until: string | null }>;
-    const muted = mutes.some(m => m.muted_until == null || new Date(m.muted_until).getTime() > now);
-    if (muted) return;
+    const mutes = mutesRes.data as { scope: string; muted_until: string | null }[];
+    const activeMutes = mutes.filter(m => m.muted_until == null || new Date(m.muted_until).getTime() > now);
+    const quietModeActive = activeMutes.length > 0;
+    const delivery = quietModeDeliveryDecision(payload, quietModeActive);
+    const quietModeUntil = activeMutes.some(m => m.muted_until == null)
+      ? null
+      : activeMutes
+        .map(m => m.muted_until)
+        .filter((value): value is string => Boolean(value))
+        .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0] ?? null;
 
     const user: UserDeliveryInfo = {
       email:    userRes.data?.email    ?? null,
@@ -165,14 +186,26 @@ export async function notify(payload: NotifyPayload): Promise<void> {
 
     // Default: in-app on, email off, whatsapp off. Specific pref overrides default.
     const prefs: DeliveryPrefs = prefRes.data ?? prefDefaultRes.data ?? { in_app: true, email: false, whatsapp: false };
-    if (!prefs.in_app && !prefs.email && !prefs.whatsapp) return;
+    const persistInApp = prefs.in_app || delivery.forceNotificationCenter;
+    const sendEmailChannel = prefs.email && !delivery.suppressExternalChannels;
+    const sendWhatsAppChannel = prefs.whatsapp && !delivery.suppressExternalChannels;
+    if (!persistInApp && !sendEmailChannel && !sendWhatsAppChannel) return;
+
+    const metadata = {
+      ...(payload.metadata ?? {}),
+      deliveryProtection: {
+        criticality: delivery.criticality,
+        quietModeSuppressed: delivery.suppressToast,
+        quietModeUntil,
+      },
+    };
 
     // 2. Persist the in-app notification (rich columns) + record the delivery.
     // The id is captured because notification_deliveries.notification_id is NOT NULL: every
     // per-channel delivery record hangs off this row, so the email leg below can only be
     // recorded when it exists.
     let notificationId: string | null = null;
-    if (prefs.in_app) {
+    if (persistInApp) {
       const insRes = await sb.from('notifications').insert({
         user_id:         userId,
         type,
@@ -186,7 +219,7 @@ export async function notify(payload: NotifyPayload): Promise<void> {
         source_type:     payload.sourceType ?? null,
         source_id:       payload.sourceId ?? null,
         action_route:    payload.actionRoute ?? null,
-        metadata:        payload.metadata ?? {},
+        metadata,
         dedupe_key:      payload.dedupeKey ? `${userId}:${payload.dedupeKey}` : null,
         action_required: payload.actionRequired ?? false,
         action_status:   payload.actionRequired ? 'pending' : 'none',
@@ -199,7 +232,7 @@ export async function notify(payload: NotifyPayload): Promise<void> {
         if ((insRes.error as { code?: string }).code !== '23505') {
           logger.warn('[notify] Failed to persist notification', { userId, type, error: insRes.error.message });
         }
-      } else if (insRes.data) {
+      } else {
         notificationId = insRes.data.id;
         void sb.from('notification_deliveries').insert({
           notification_id: insRes.data.id,
@@ -214,19 +247,19 @@ export async function notify(payload: NotifyPayload): Promise<void> {
       }
     }
 
-    // Fetch company name for email branding (best-effort)
-    const companyName = await sb.from('settings')
-      .select('value')
-      .eq('key', 'companyName')
-      .maybeSingle<{ value: string }>()
-      .then(r => r.data?.value ?? 'Siomac');
-
     // 3. Email delivery.
     // AWAITED, unlike the fire-and-forget call this replaces: an outcome you did not wait for is
     // an outcome you cannot record, and the whole point of this leg is that it leaves evidence.
     // notify() is already called as a side effect (`void notify(...)`) by its callers, so the
     // added latency never delays a business action.
-    if (prefs.email) {
+    if (sendEmailChannel) {
+      // Branding is only needed for an actual email leg. Avoid a settings query
+      // for the overwhelmingly common in-app-only path.
+      const companyName = await sb.from('settings')
+        .select('value')
+        .eq('key', 'companyName')
+        .maybeSingle<{ value: string }>()
+        .then(r => r.data?.value ?? 'Siomac');
       if (user.email) {
         await _sendEmail(payload, user, companyName, notificationId);
       } else {
@@ -239,7 +272,7 @@ export async function notify(payload: NotifyPayload): Promise<void> {
     }
 
     // 4. WhatsApp delivery (Meta Cloud API)
-    if (prefs.whatsapp && user.whatsapp) {
+    if (sendWhatsAppChannel && user.whatsapp) {
       void _sendWhatsApp(payload, user);
     }
 

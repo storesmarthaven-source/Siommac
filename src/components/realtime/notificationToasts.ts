@@ -221,6 +221,43 @@ export interface NotifToastRow {
   is_read:    boolean;
   link:       string | null;
   created_at: string | null;
+  module?:          string | null;
+  severity?:        string;
+  source_type?:     string | null;
+  source_id?:       string | null;
+  action_route?:    string | null;
+  metadata?:        Record<string, unknown> | null;
+  action_required?: boolean;
+  action_status?:   string;
+  due_at?:          string | null;
+}
+
+const PROTECTED_CRITICALITIES = new Set([
+  'workflow_required', 'safety_critical', 'compliance_required', 'emergency',
+]);
+
+function isProtectedNotification(notification: CanonicalNotification): boolean {
+  const protection = notification.metadata?.deliveryProtection;
+  if (protection && typeof protection === 'object' && !Array.isArray(protection)) {
+    const criticality = (protection as Record<string, unknown>).criticality;
+    if (typeof criticality === 'string' && PROTECTED_CRITICALITIES.has(criticality)) return true;
+  }
+  const type = notification.type.toLowerCase();
+  return notification.severity === 'critical'
+    || notification.severity === 'blocker'
+    || type.includes('emergency')
+    || type.includes('security')
+    || type.includes('compliance')
+    || (notification.action_required && Boolean(notification.due_at));
+}
+
+/** True only for routine alerts that the delivery layer marked as popup-suppressed. */
+export function isQuietModeToastSuppressed(notification: CanonicalNotification): boolean {
+  const protection = notification.metadata?.deliveryProtection;
+  if (!protection || typeof protection !== 'object' || Array.isArray(protection)) return false;
+  const value = protection as Record<string, unknown>;
+  if (isProtectedNotification(notification)) return false;
+  return value.quietModeSuppressed === true;
 }
 
 /** Ids of notifications already surfaced as generic toasts this session —
@@ -252,15 +289,15 @@ export function surfaceGenericNotificationToasts(rows: readonly NotifToastRow[])
       body:            n.body ?? null,
       created_at:      n.created_at ?? new Date().toISOString(),
       is_read:         n.is_read,
-      action_route:    n.link ?? null,
-      severity:        'info',
-      module:          null,
-      source_type:     null,
-      source_id:       null,
-      metadata:        null,
-      action_required: false,
-      action_status:   'none',
-      due_at:          null,
+      action_route:    n.action_route ?? n.link ?? null,
+      severity:        n.severity ?? 'info',
+      module:          n.module ?? null,
+      source_type:     n.source_type ?? null,
+      source_id:       n.source_id ?? null,
+      metadata:        n.metadata ?? null,
+      action_required: n.action_required ?? false,
+      action_status:   n.action_status ?? 'none',
+      due_at:          n.due_at ?? null,
     };
     // Standard coalesced path — burst window and no-backfill guard apply.
     maybeToastNotification({ notification, domain: 'notifications', coalesce: true });
@@ -283,6 +320,12 @@ export function maybeToastNotification({ notification, domain, prefs, coalesce =
   // security events, so mute/quiet-hours are bypassed too. Never coalesced.
   if (!coalesce) { fireNotificationToast(notification, domain); return; }
 
+  // The backend records muted routine alerts for Notification Center and marks
+  // only their transient popup as suppressed. This metadata check is the
+  // authoritative path because the realtime signal fetch intentionally does not
+  // make a second preferences request.
+  if (isQuietModeToastSuppressed(notification)) return;
+
   // 1. No-backfill guard: ignore signals that arrived before page-load epoch
   if (_sessionEpoch !== null) {
     const createdMs = new Date(notification.created_at).getTime();
@@ -290,7 +333,7 @@ export function maybeToastNotification({ notification, domain, prefs, coalesce =
   }
 
   // 2. Mute / quiet-hours guard
-  if (isMutedByPreferences(prefs)) return;
+  if (isMutedByPreferences(prefs) && !isProtectedNotification(notification)) return;
 
   // 3. Burst coalescing
   const existing = _bursts.get(domain);

@@ -216,12 +216,16 @@ chunkedInsert	function	platform	true		netlify/functions/lib/dbBulk.ts	45
 NotificationCriticality	type	platform	true		netlify/functions/lib/deliveryProtection.ts	9	
 UNSUPPRESSIBLE_NOTIFICATION	variable	platform	false		netlify/functions/lib/deliveryProtection.ts	12	
 canSuppressNotification	function	platform	true		netlify/functions/lib/deliveryProtection.ts	17	
-MessageDeliveryClass	type	platform	true		netlify/functions/lib/deliveryProtection.ts	21	
-UNSUPPRESSIBLE_MESSAGE	variable	platform	false		netlify/functions/lib/deliveryProtection.ts	24	
-canUserSuppressMessage	function	platform	true		netlify/functions/lib/deliveryProtection.ts	29	
-DeliveryProtectionError	class	platform	true		netlify/functions/lib/deliveryProtection.ts	33	
-ParticipantGuardRow	interface	platform	true		netlify/functions/lib/deliveryProtection.ts	38	
-assertCanRemoveParticipant	function	platform	true		netlify/functions/lib/deliveryProtection.ts	48	
+NotificationDeliveryDescriptor	interface	platform	true		netlify/functions/lib/deliveryProtection.ts	21	
+resolveNotificationCriticality	function	platform	true		netlify/functions/lib/deliveryProtection.ts	35	
+QuietModeDeliveryDecision	interface	platform	true		netlify/functions/lib/deliveryProtection.ts	55	
+quietModeDeliveryDecision	function	platform	true		netlify/functions/lib/deliveryProtection.ts	68	
+MessageDeliveryClass	type	platform	true		netlify/functions/lib/deliveryProtection.ts	84	
+UNSUPPRESSIBLE_MESSAGE	variable	platform	false		netlify/functions/lib/deliveryProtection.ts	87	
+canUserSuppressMessage	function	platform	true		netlify/functions/lib/deliveryProtection.ts	92	
+DeliveryProtectionError	class	platform	true		netlify/functions/lib/deliveryProtection.ts	96	
+ParticipantGuardRow	interface	platform	true		netlify/functions/lib/deliveryProtection.ts	101	
+assertCanRemoveParticipant	function	platform	true		netlify/functions/lib/deliveryProtection.ts	111	
 AUTHORED_PREFIX	variable	platform	false		netlify/functions/lib/email/emailAssetResolver.ts	19	
 emailAssetBaseUrl	function	platform	true		netlify/functions/lib/email/emailAssetResolver.ts	28	
 AssetResolution	interface	platform	true		netlify/functions/lib/email/emailAssetResolver.ts	36	
@@ -2687,19 +2691,19 @@ ModuleMutationResult	interface	platform	true		netlify/functions/lib/moduleServic
 runModuleMutation	function	platform	true		netlify/functions/lib/moduleServiceAdapter.ts	96	
 TimelineEntry	interface	platform	true		netlify/functions/lib/moduleTimeline.ts	12	
 getModuleTimeline	function	platform	true		netlify/functions/lib/moduleTimeline.ts	23	
-logger	object	platform	false		netlify/functions/lib/notify.ts	28	
-NotifyPayload	interface	platform	true		netlify/functions/lib/notify.ts	36	
-UserDeliveryInfo	interface	platform	false		netlify/functions/lib/notify.ts	62	
-DeliveryPrefs	interface	platform	false		netlify/functions/lib/notify.ts	68	
-buildNotificationEmailHtml	function	platform	true		netlify/functions/lib/notify.ts	84	
-buildWhatsAppText	function	platform	false		netlify/functions/lib/notify.ts	115	
-notify	function	platform	true		netlify/functions/lib/notify.ts	130	
-EmailDeliveryStatus	type	platform	false		netlify/functions/lib/notify.ts	253	
-emailDeliveryStatusFor	function	platform	true		netlify/functions/lib/notify.ts	264	
-_recordEmailDelivery	function	platform	false		netlify/functions/lib/notify.ts	282	
-_sendEmail	function	platform	false		netlify/functions/lib/notify.ts	317	
-_sendWhatsApp	function	platform	false		netlify/functions/lib/notify.ts	376	
-notifyMany	function	platform	true		netlify/functions/lib/notify.ts	427	
+logger	object	platform	false		netlify/functions/lib/notify.ts	32	
+NotifyPayload	interface	platform	true		netlify/functions/lib/notify.ts	40	
+UserDeliveryInfo	interface	platform	false		netlify/functions/lib/notify.ts	68	
+DeliveryPrefs	interface	platform	false		netlify/functions/lib/notify.ts	74	
+buildNotificationEmailHtml	function	platform	true		netlify/functions/lib/notify.ts	90	
+buildWhatsAppText	function	platform	false		netlify/functions/lib/notify.ts	121	
+notify	function	platform	true		netlify/functions/lib/notify.ts	136	
+EmailDeliveryStatus	type	platform	false		netlify/functions/lib/notify.ts	286	
+emailDeliveryStatusFor	function	platform	true		netlify/functions/lib/notify.ts	297	
+_recordEmailDelivery	function	platform	false		netlify/functions/lib/notify.ts	315	
+_sendEmail	function	platform	false		netlify/functions/lib/notify.ts	350	
+_sendWhatsApp	function	platform	false		netlify/functions/lib/notify.ts	409	
+notifyMany	function	platform	true		netlify/functions/lib/notify.ts	460	
 RecordRefInput	interface	workflow	true		netlify/functions/lib/orchestration/recordLinkService.ts	13	
 LinkActor	interface	workflow	true		netlify/functions/lib/orchestration/recordLinkService.ts	22	
 assertCanView	function	workflow	false		netlify/functions/lib/orchestration/recordLinkService.ts	24	
@@ -4236,13 +4240,13 @@ listItems	function	testing	false	test	scripts/e2e/suites/calendar.mjs	71	run
 serviceSweep	function	testing	false	test	scripts/e2e/suites/calendar.mjs	76	run
 title	variable	communications	true	test	scripts/e2e/suites/communications.mjs	16	
 run	function	communications	true	test	scripts/e2e/suites/communications.mjs	18	
-clearDirectThreadsAmong	function	communications	false	test	scripts/e2e/suites/communications.mjs	51	run
-inB	function	communications	false	test	scripts/e2e/suites/communications.mjs	474	run
-sumN	function	communications	false	test	scripts/e2e/suites/communications.mjs	530	run
-sumM	function	communications	false	test	scripts/e2e/suites/communications.mjs	531	run
-waitForSignal	function	communications	false	test	scripts/e2e/suites/communications.mjs	535	run
-unreadOf	function	communications	false	test	scripts/e2e/suites/communications.mjs	678	run
-threadUnread	function	communications	false	test	scripts/e2e/suites/communications.mjs	679	run
+clearDirectThreadsAmong	function	communications	false	test	scripts/e2e/suites/communications.mjs	55	run
+inB	function	communications	false	test	scripts/e2e/suites/communications.mjs	509	run
+sumN	function	communications	false	test	scripts/e2e/suites/communications.mjs	565	run
+sumM	function	communications	false	test	scripts/e2e/suites/communications.mjs	566	run
+waitForSignal	function	communications	false	test	scripts/e2e/suites/communications.mjs	570	run
+unreadOf	function	communications	false	test	scripts/e2e/suites/communications.mjs	713	run
+threadUnread	function	communications	false	test	scripts/e2e/suites/communications.mjs	714	run
 title	variable	communications	true	test	scripts/e2e/suites/communicationsBadges.mjs	21	
 PRIMARY	array	communications	false	test	scripts/e2e/suites/communicationsBadges.mjs	23	
 SECONDARY	array	communications	false	test	scripts/e2e/suites/communicationsBadges.mjs	24	
@@ -6351,13 +6355,13 @@ NotificationTypeSchema	variable	communications	true		src/api/schemas/notificatio
 NotificationType	type	communications	true		src/api/schemas/notification.ts	34	
 NOTIFICATION_TYPE_LABELS	object	communications	true		src/api/schemas/notification.ts	37	
 NotificationRowSchema	variable	communications	true		src/api/schemas/notification.ts	51	
-NotificationRow	type	communications	true		src/api/schemas/notification.ts	66	
-NotificationPreferenceSchema	variable	communications	true		src/api/schemas/notification.ts	70	
-NotificationPreferenceRow	type	communications	true		src/api/schemas/notification.ts	81	
-SendNotificationSchema	variable	communications	true		src/api/schemas/notification.ts	85	
-SendNotificationPayload	type	communications	true		src/api/schemas/notification.ts	93	
-UpdatePreferenceSchema	variable	communications	true		src/api/schemas/notification.ts	97	
-UpdatePreferencePayload	type	communications	true		src/api/schemas/notification.ts	105	
+NotificationRow	type	communications	true		src/api/schemas/notification.ts	75	
+NotificationPreferenceSchema	variable	communications	true		src/api/schemas/notification.ts	79	
+NotificationPreferenceRow	type	communications	true		src/api/schemas/notification.ts	90	
+SendNotificationSchema	variable	communications	true		src/api/schemas/notification.ts	94	
+SendNotificationPayload	type	communications	true		src/api/schemas/notification.ts	102	
+UpdatePreferenceSchema	variable	communications	true		src/api/schemas/notification.ts	106	
+UpdatePreferencePayload	type	communications	true		src/api/schemas/notification.ts	114	
 SettingRowSchema	variable	settings	true		src/api/schemas/settings.ts	15	
 SettingRow	type	settings	true		src/api/schemas/settings.ts	20	
 SettingsMap	type	settings	true		src/api/schemas/settings.ts	23	
@@ -6850,9 +6854,9 @@ severityFor	function	communications	false		src/components/realtime/complianceToa
 surfaceComplianceToasts	function	communications	true		src/components/realtime/complianceToasts.ts	80	
 __resetComplianceToastState	function	communications	true		src/components/realtime/complianceToasts.ts	107	
 toastMocks	variable	communications	false	test	src/components/realtime/notificationToasts.test.ts	7	
-notification	function	communications	false	test	src/components/realtime/notificationToasts.test.ts	30	
-preferences	function	communications	false	test	src/components/realtime/notificationToasts.test.ts	53	
-notifRow	function	communications	false	test	src/components/realtime/notificationToasts.test.ts	172	
+notification	function	communications	false	test	src/components/realtime/notificationToasts.test.ts	31	
+preferences	function	communications	false	test	src/components/realtime/notificationToasts.test.ts	54	
+notifRow	function	communications	false	test	src/components/realtime/notificationToasts.test.ts	194	
 COMPLIANCE_TOAST_TYPES	variable	communications	true		src/components/realtime/notificationToasts.ts	30	
 _sessionEpoch	variable	communications	false		src/components/realtime/notificationToasts.ts	38	
 resetToastSessionClock	function	communications	true		src/components/realtime/notificationToasts.ts	41	
@@ -6868,10 +6872,13 @@ fireNotificationToast	function	communications	false		src/components/realtime/not
 fireBurstToast	function	communications	false		src/components/realtime/notificationToasts.ts	174	
 MaybeToastArgs	interface	communications	true		src/components/realtime/notificationToasts.ts	192	
 NotifToastRow	interface	communications	true		src/components/realtime/notificationToasts.ts	216	
-_seenGenericIds	variable	communications	false		src/components/realtime/notificationToasts.ts	229	
-surfaceGenericNotificationToasts	function	communications	true		src/components/realtime/notificationToasts.ts	240	
-__resetGenericToastState	function	communications	true		src/components/realtime/notificationToasts.ts	271	
-maybeToastNotification	function	communications	true		src/components/realtime/notificationToasts.ts	277	
+PROTECTED_CRITICALITIES	variable	communications	false		src/components/realtime/notificationToasts.ts	235	
+isProtectedNotification	function	communications	false		src/components/realtime/notificationToasts.ts	239	
+isQuietModeToastSuppressed	function	communications	true		src/components/realtime/notificationToasts.ts	255	
+_seenGenericIds	variable	communications	false		src/components/realtime/notificationToasts.ts	266	
+surfaceGenericNotificationToasts	function	communications	true		src/components/realtime/notificationToasts.ts	277	
+__resetGenericToastState	function	communications	true		src/components/realtime/notificationToasts.ts	308	
+maybeToastNotification	function	communications	true		src/components/realtime/notificationToasts.ts	314	
 SupabaseClient	interface	communications	false		src/components/realtime/RealtimeController.ts	32	
 SupabaseChannel	interface	communications	false		src/components/realtime/RealtimeController.ts	37	
 SupabaseStatic	interface	communications	false		src/components/realtime/RealtimeController.ts	46	

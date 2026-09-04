@@ -18,6 +18,69 @@ export function canSuppressNotification(criticality: NotificationCriticality): b
   return !UNSUPPRESSIBLE_NOTIFICATION.has(criticality);
 }
 
+export interface NotificationDeliveryDescriptor {
+  type: string;
+  module?: string | null;
+  severity?: string | null;
+  actionRequired?: boolean;
+  dueAt?: string | null;
+  criticality?: NotificationCriticality;
+}
+
+/**
+ * Resolve the protection class at the delivery boundary. Callers may provide an
+ * explicit class; the fallback keeps older event producers safe while they are
+ * migrated to the richer contract.
+ */
+export function resolveNotificationCriticality(
+  notification: NotificationDeliveryDescriptor,
+): NotificationCriticality {
+  if (notification.criticality) return notification.criticality;
+
+  const type = notification.type.toLowerCase();
+  const module = notification.module?.toLowerCase() ?? '';
+  const severity = notification.severity?.toLowerCase() ?? 'info';
+
+  if (type.includes('emergency') || module === 'emergency') return 'emergency';
+  if (
+    type.includes('security') || type.includes('compliance') || type.startsWith('auth.') ||
+    module === 'security' || module === 'access_control'
+  ) return 'compliance_required';
+  if (severity === 'critical' || severity === 'blocker') return 'safety_critical';
+  if (notification.actionRequired && notification.dueAt) return 'workflow_required';
+  if (severity === 'warning' || severity === 'high') return 'important';
+  return 'normal';
+}
+
+export interface QuietModeDeliveryDecision {
+  criticality: NotificationCriticality;
+  /** A Notification Center row is mandatory while quiet, and for protected alerts. */
+  forceNotificationCenter: boolean;
+  suppressToast: boolean;
+  suppressExternalChannels: boolean;
+}
+
+/**
+ * Quiet Mode is a delivery policy, never a delete policy. Routine alerts remain
+ * unread in Notification Center while their transient popup/external fan-out is
+ * paused; protected workflow, safety, security and emergency alerts pass through.
+ */
+export function quietModeDeliveryDecision(
+  notification: NotificationDeliveryDescriptor,
+  quietModeActive: boolean,
+): QuietModeDeliveryDecision {
+  const criticality = resolveNotificationCriticality(notification);
+  const protectedDelivery = !canSuppressNotification(criticality);
+  const suppressRoutineDelivery = quietModeActive && !protectedDelivery;
+
+  return {
+    criticality,
+    forceNotificationCenter: quietModeActive || protectedDelivery,
+    suppressToast: suppressRoutineDelivery,
+    suppressExternalChannels: suppressRoutineDelivery,
+  };
+}
+
 export type MessageDeliveryClass =
   | 'personal' | 'module_context' | 'workflow_required' | 'safety_critical' | 'compliance_required' | 'admin_broadcast';
 

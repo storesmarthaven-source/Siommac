@@ -61,6 +61,15 @@ export const NotificationRowSchema = z.object({
   is_read:    z.boolean(),
   link:       z.string().nullable(),
   created_at: isoTimestamp,
+  module:          z.string().nullable().optional(),
+  severity:        z.string().optional(),
+  source_type:     z.string().nullable().optional(),
+  source_id:       z.string().nullable().optional(),
+  action_route:    z.string().nullable().optional(),
+  metadata:        z.record(z.string(), z.unknown()).nullable().optional(),
+  action_required: z.boolean().optional(),
+  action_status:   z.string().optional(),
+  due_at:          z.string().nullable().optional(),
 });
 
 export type NotificationRow = z.infer<typeof NotificationRowSchema>;

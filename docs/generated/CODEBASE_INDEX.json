@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "9379dd960a8f08c94ef5852ea00dd4a353e53b86",
+    "head": "778d1a335b1945f5724e5cfb8958900bd5a038bd",
     "branch": "codex/onboarding-ui-kit-integration",
-    "fingerprint": "3e1ce8cc23a1a51479ea9025",
-    "indexedFiles": 1916
+    "fingerprint": "996e3bfc94214f09e875a1a5",
+    "indexedFiles": 1917
   },
   "summary": {
-    "files": 1551,
-    "symbols": 15434,
+    "files": 1552,
+    "symbols": 15441,
     "widgets": 77,
     "routes": 992,
     "routeDefinitions": 993,
@@ -16,7 +16,7 @@
     "apiCalls": 361,
     "databaseObjects": 1460,
     "e2eSuites": 95,
-    "e2eTests": 2846
+    "e2eTests": 2848
   },
   "modules": [
     {
@@ -75,7 +75,7 @@
       "id": "communications",
       "counts": {
         "files": 113,
-        "symbols": 1057,
+        "symbols": 1060,
         "widgets": 0,
         "routes": 93,
         "routeDefinitions": 96,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 471,
-        "symbols": 4151,
+        "files": 472,
+        "symbols": 4155,
         "widgets": 16,
         "routes": 38,
         "routeDefinitions": 53,
@@ -304,11 +304,18 @@
       "hash": "e823519703353cd2"
     },
     {
+      "path": "netlify/functions/lib/deliveryProtection.test.ts",
+      "module": "platform",
+      "role": "backend-lib",
+      "lines": 41,
+      "hash": "7f924ac8d8c3966f"
+    },
+    {
       "path": "netlify/functions/lib/deliveryProtection.ts",
       "module": "platform",
       "role": "backend-lib",
-      "lines": 58,
-      "hash": "e02779f90f92298f"
+      "lines": 121,
+      "hash": "0e828383a5012ce3"
     },
     {
       "path": "netlify/functions/lib/email/emailAssetResolver.ts",
@@ -1525,8 +1532,8 @@
       "path": "netlify/functions/lib/notify.ts",
       "module": "platform",
       "role": "backend-lib",
-      "lines": 437,
-      "hash": "669bf70401ca31ec"
+      "lines": 470,
+      "hash": "d0d7bfda9b88565f"
     },
     {
       "path": "netlify/functions/lib/orchestration/recordLinkService.ts",
@@ -2443,7 +2450,7 @@
       "module": "platform",
       "role": "backend-route",
       "lines": 213,
-      "hash": "3f220462f5fb7a5c"
+      "hash": "e46683150f03b1b8"
     },
     {
       "path": "netlify/functions/routes/orchestration.ts",
@@ -2722,8 +2729,8 @@
       "path": "scripts/e2e/suites/communications.mjs",
       "module": "communications",
       "role": "e2e-suite",
-      "lines": 1032,
-      "hash": "0fd827a3e9031efd"
+      "lines": 1067,
+      "hash": "e78593abad890949"
     },
     {
       "path": "scripts/e2e/suites/communicationsBadges.mjs",
@@ -4017,8 +4024,8 @@
       "path": "src/api/schemas/notification.ts",
       "module": "communications",
       "role": "frontend-api",
-      "lines": 106,
-      "hash": "a5685af7792c81d3"
+      "lines": 115,
+      "hash": "7ef6e6cdeea0f9d2"
     },
     {
       "path": "src/api/schemas/settings.ts",
@@ -4409,15 +4416,15 @@
       "path": "src/components/realtime/notificationToasts.test.ts",
       "module": "communications",
       "role": "frontend",
-      "lines": 251,
-      "hash": "2ef40c9da32b2d51"
+      "lines": 273,
+      "hash": "f5890c30df3422ff"
     },
     {
       "path": "src/components/realtime/notificationToasts.ts",
       "module": "communications",
       "role": "frontend",
-      "lines": 328,
-      "hash": "be61b34dae575961"
+      "lines": 371,
+      "hash": "21820d24651e2233"
     },
     {
       "path": "src/components/sections/AccessControl/AccessControlSection.tsx",
@@ -13207,10 +13214,50 @@
       "tags": []
     },
     {
+      "name": "NotificationDeliveryDescriptor",
+      "kind": "interface",
+      "file": "netlify/functions/lib/deliveryProtection.ts",
+      "line": 21,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "resolveNotificationCriticality",
+      "kind": "function",
+      "file": "netlify/functions/lib/deliveryProtection.ts",
+      "line": 35,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "QuietModeDeliveryDecision",
+      "kind": "interface",
+      "file": "netlify/functions/lib/deliveryProtection.ts",
+      "line": 55,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "quietModeDeliveryDecision",
+      "kind": "function",
+      "file": "netlify/functions/lib/deliveryProtection.ts",
+      "line": 68,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "MessageDeliveryClass",
       "kind": "type",
       "file": "netlify/functions/lib/deliveryProtection.ts",
-      "line": 21,
+      "line": 84,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -13220,7 +13267,7 @@
       "name": "UNSUPPRESSIBLE_MESSAGE",
       "kind": "variable",
       "file": "netlify/functions/lib/deliveryProtection.ts",
-      "line": 24,
+      "line": 87,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -13230,7 +13277,7 @@
       "name": "canUserSuppressMessage",
       "kind": "function",
       "file": "netlify/functions/lib/deliveryProtection.ts",
-      "line": 29,
+      "line": 92,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -13240,7 +13287,7 @@
       "name": "DeliveryProtectionError",
       "kind": "class",
       "file": "netlify/functions/lib/deliveryProtection.ts",
-      "line": 33,
+      "line": 96,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -13250,7 +13297,7 @@
       "name": "ParticipantGuardRow",
       "kind": "interface",
       "file": "netlify/functions/lib/deliveryProtection.ts",
-      "line": 38,
+      "line": 101,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -13260,7 +13307,7 @@
       "name": "assertCanRemoveParticipant",
       "kind": "function",
       "file": "netlify/functions/lib/deliveryProtection.ts",
-      "line": 48,
+      "line": 111,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -37956,7 +38003,7 @@
       "name": "logger",
       "kind": "object",
       "file": "netlify/functions/lib/notify.ts",
-      "line": 28,
+      "line": 32,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -37966,7 +38013,7 @@
       "name": "NotifyPayload",
       "kind": "interface",
       "file": "netlify/functions/lib/notify.ts",
-      "line": 36,
+      "line": 40,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -37976,7 +38023,7 @@
       "name": "UserDeliveryInfo",
       "kind": "interface",
       "file": "netlify/functions/lib/notify.ts",
-      "line": 62,
+      "line": 68,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -37986,7 +38033,7 @@
       "name": "DeliveryPrefs",
       "kind": "interface",
       "file": "netlify/functions/lib/notify.ts",
-      "line": 68,
+      "line": 74,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -37996,7 +38043,7 @@
       "name": "buildNotificationEmailHtml",
       "kind": "function",
       "file": "netlify/functions/lib/notify.ts",
-      "line": 84,
+      "line": 90,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -38006,7 +38053,7 @@
       "name": "buildWhatsAppText",
       "kind": "function",
       "file": "netlify/functions/lib/notify.ts",
-      "line": 115,
+      "line": 121,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38016,7 +38063,7 @@
       "name": "notify",
       "kind": "function",
       "file": "netlify/functions/lib/notify.ts",
-      "line": 130,
+      "line": 136,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -38026,7 +38073,7 @@
       "name": "EmailDeliveryStatus",
       "kind": "type",
       "file": "netlify/functions/lib/notify.ts",
-      "line": 253,
+      "line": 286,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38036,7 +38083,7 @@
       "name": "emailDeliveryStatusFor",
       "kind": "function",
       "file": "netlify/functions/lib/notify.ts",
-      "line": 264,
+      "line": 297,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -38046,7 +38093,7 @@
       "name": "_recordEmailDelivery",
       "kind": "function",
       "file": "netlify/functions/lib/notify.ts",
-      "line": 282,
+      "line": 315,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38056,7 +38103,7 @@
       "name": "_sendEmail",
       "kind": "function",
       "file": "netlify/functions/lib/notify.ts",
-      "line": 317,
+      "line": 350,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38066,7 +38113,7 @@
       "name": "_sendWhatsApp",
       "kind": "function",
       "file": "netlify/functions/lib/notify.ts",
-      "line": 376,
+      "line": 409,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38076,7 +38123,7 @@
       "name": "notifyMany",
       "kind": "function",
       "file": "netlify/functions/lib/notify.ts",
-      "line": 427,
+      "line": 460,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -53506,7 +53553,7 @@
       "name": "clearDirectThreadsAmong",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 51,
+      "line": 55,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -53518,7 +53565,7 @@
       "name": "inB",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 474,
+      "line": 509,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -53530,7 +53577,7 @@
       "name": "sumN",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 530,
+      "line": 565,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -53542,7 +53589,7 @@
       "name": "sumM",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 531,
+      "line": 566,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -53554,7 +53601,7 @@
       "name": "waitForSignal",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 535,
+      "line": 570,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -53566,7 +53613,7 @@
       "name": "unreadOf",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 678,
+      "line": 713,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -53578,7 +53625,7 @@
       "name": "threadUnread",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 679,
+      "line": 714,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -76712,7 +76759,7 @@
       "name": "NotificationRow",
       "kind": "type",
       "file": "src/api/schemas/notification.ts",
-      "line": 66,
+      "line": 75,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -76722,7 +76769,7 @@
       "name": "NotificationPreferenceSchema",
       "kind": "variable",
       "file": "src/api/schemas/notification.ts",
-      "line": 70,
+      "line": 79,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -76732,7 +76779,7 @@
       "name": "NotificationPreferenceRow",
       "kind": "type",
       "file": "src/api/schemas/notification.ts",
-      "line": 81,
+      "line": 90,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -76742,7 +76789,7 @@
       "name": "SendNotificationSchema",
       "kind": "variable",
       "file": "src/api/schemas/notification.ts",
-      "line": 85,
+      "line": 94,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -76752,7 +76799,7 @@
       "name": "SendNotificationPayload",
       "kind": "type",
       "file": "src/api/schemas/notification.ts",
-      "line": 93,
+      "line": 102,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -76762,7 +76809,7 @@
       "name": "UpdatePreferenceSchema",
       "kind": "variable",
       "file": "src/api/schemas/notification.ts",
-      "line": 97,
+      "line": 106,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -76772,7 +76819,7 @@
       "name": "UpdatePreferencePayload",
       "kind": "type",
       "file": "src/api/schemas/notification.ts",
-      "line": 105,
+      "line": 114,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -81892,7 +81939,7 @@
       "name": "notification",
       "kind": "function",
       "file": "src/components/realtime/notificationToasts.test.ts",
-      "line": 30,
+      "line": 31,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -81904,7 +81951,7 @@
       "name": "preferences",
       "kind": "function",
       "file": "src/components/realtime/notificationToasts.test.ts",
-      "line": 53,
+      "line": 54,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -81916,7 +81963,7 @@
       "name": "notifRow",
       "kind": "function",
       "file": "src/components/realtime/notificationToasts.test.ts",
-      "line": 172,
+      "line": 194,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -82075,10 +82122,40 @@
       "tags": []
     },
     {
+      "name": "PROTECTED_CRITICALITIES",
+      "kind": "variable",
+      "file": "src/components/realtime/notificationToasts.ts",
+      "line": 235,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "isProtectedNotification",
+      "kind": "function",
+      "file": "src/components/realtime/notificationToasts.ts",
+      "line": 239,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "isQuietModeToastSuppressed",
+      "kind": "function",
+      "file": "src/components/realtime/notificationToasts.ts",
+      "line": 255,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "_seenGenericIds",
       "kind": "variable",
       "file": "src/components/realtime/notificationToasts.ts",
-      "line": 229,
+      "line": 266,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -82088,7 +82165,7 @@
       "name": "surfaceGenericNotificationToasts",
       "kind": "function",
       "file": "src/components/realtime/notificationToasts.ts",
-      "line": 240,
+      "line": 277,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -82098,7 +82175,7 @@
       "name": "__resetGenericToastState",
       "kind": "function",
       "file": "src/components/realtime/notificationToasts.ts",
-      "line": 271,
+      "line": 308,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -82108,7 +82185,7 @@
       "name": "maybeToastNotification",
       "kind": "function",
       "file": "src/components/realtime/notificationToasts.ts",
-      "line": 277,
+      "line": 314,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -198403,84 +198480,84 @@
       "name": "public.ticket_create_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 647,
+      "line": 664,
       "module": "communications"
     },
     {
       "name": "public.ticket_comment_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 904,
+      "line": 921,
       "module": "communications"
     },
     {
       "name": "public.ticket_command_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1100,
+      "line": 1117,
       "module": "communications"
     },
     {
       "name": "public.ticket_mark_read_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1433,
+      "line": 1450,
       "module": "communications"
     },
     {
       "name": "public.ticket_attachment_complete_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1491,
+      "line": 1508,
       "module": "communications"
     },
     {
       "name": "public.ticket_request_types_for_actor",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1609,
+      "line": 1626,
       "module": "communications"
     },
     {
       "name": "public.ticket_requester_search",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1654,
+      "line": 1671,
       "module": "communications"
     },
     {
       "name": "public.ticket_list_for_actor",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1701,
+      "line": 1718,
       "module": "communications"
     },
     {
       "name": "public.ticket_nav_context_for_actor",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1828,
+      "line": 1845,
       "module": "communications"
     },
     {
       "name": "public.ticket_get_for_actor",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1903,
+      "line": 1920,
       "module": "communications"
     },
     {
       "name": "public.ticket_summary_for_actor",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 2032,
+      "line": 2049,
       "module": "communications"
     },
     {
       "name": "public.ticket_overdue_sweep_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 2070,
+      "line": 2087,
       "module": "communications"
     },
     {
@@ -200441,415 +200518,423 @@
       "tests": [
         {
           "name": "summary returns counts object",
-          "line": 83
-        },
-        {
-          "name": "list returns array",
           "line": 87
         },
         {
-          "name": "list honors unreadOnly filter",
+          "name": "list returns array",
           "line": 91
         },
         {
-          "name": "list honors actionRequiredOnly filter",
+          "name": "list honors unreadOnly filter",
           "line": 95
         },
         {
-          "name": "preferences/get returns shape",
+          "name": "list honors actionRequiredOnly filter",
           "line": 99
         },
         {
-          "name": "preferences/set persists",
+          "name": "preferences/get returns shape",
           "line": 103
         },
         {
-          "name": "mute then clear",
-          "line": 108
+          "name": "preferences/set persists",
+          "line": 107
+        },
+        {
+          "name": "Quiet Mode preserves routine alerts unread and marks only the popup as suppressed",
+          "line": 112
+        },
+        {
+          "name": "Quiet Mode lets critical alerts through",
+          "line": 128
+        },
+        {
+          "name": "Quiet Mode clears cleanly",
+          "line": 144
         },
         {
           "name": "broadcast → single user creates a notification",
-          "line": 114
+          "line": 149
         },
         {
           "name": "SIDE-EFFECT: broadcast wrote a notifications row",
-          "line": 121
+          "line": 156
         },
         {
           "name": "the broadcast notification appears in the recipient list",
-          "line": 126
+          "line": 161
         },
         {
           "name": "markRead marks it read",
-          "line": 130
+          "line": 165
         },
         {
           "name": "markAllRead succeeds",
-          "line": 136
+          "line": 171
         },
         {
           "name": "archive the seeded notification",
-          "line": 137
+          "line": 172
         },
         {
           "name": "ACTION WIRING: every action-required notification has a navigable action_route",
-          "line": 141
+          "line": 176
         },
         {
           "name": "ACTION WIRING: notification action_routes are recognised by the FE resolver",
-          "line": 147
+          "line": 182
         },
         {
           "name": "OPENABLE: a \"new message\" notification points to its THREAD (so the FE can open the conversation)",
-          "line": 164
+          "line": 199
         },
         {
           "name": "createThread (admin → B)",
-          "line": 188
+          "line": 223
         },
         {
           "name": "SIDE-EFFECT: participant rows written for both users",
-          "line": 197
-        },
-        {
-          "name": "CONTRACT: inbox list returns indexed summaries and preview",
-          "line": 202
-        },
-        {
-          "name": "threads/${...} returns array",
-          "line": 220
-        },
-        {
-          "name": "thread detail has named participants",
-          "line": 225
-        },
-        {
-          "name": "posts returns the seeded message with author name",
           "line": 232
         },
         {
-          "name": "participant B can read posts",
+          "name": "CONTRACT: inbox list returns indexed summaries and preview",
           "line": 237
         },
         {
-          "name": "ACCESS: non-participant C is denied posts",
-          "line": 238
-        },
-        {
-          "name": "post a reply (admin)",
-          "line": 243
-        },
-        {
-          "name": "SIDE-EFFECT: thread.last_post_preview updated",
-          "line": 247
-        },
-        {
-          "name": "post count increased to >=2",
-          "line": 251
-        },
-        {
-          "name": "markRead (B reads the thread)",
+          "name": "threads/${...} returns array",
           "line": 255
         },
         {
-          "name": "participants/add (admin adds C)",
-          "line": 256
-        },
-        {
-          "name": "C can read after being added",
-          "line": 257
-        },
-        {
-          "name": "participants/remove (admin removes C)",
-          "line": 258
-        },
-        {
-          "name": "ACCESS: C denied again after removal",
-          "line": 259
-        },
-        {
-          "name": "archive then unarchive",
+          "name": "thread detail has named participants",
           "line": 260
         },
         {
-          "name": "recipients search returns array",
-          "line": 264
+          "name": "posts returns the seeded message with author name",
+          "line": 267
         },
         {
-          "name": "message search returns array",
-          "line": 268
-        },
-        {
-          "name": "attachments/upload-url returns a presigned URL",
+          "name": "participant B can read posts",
           "line": 272
         },
         {
-          "name": "compose: recipient picker returns active users and excludes self",
-          "line": 279
+          "name": "ACCESS: non-participant C is denied posts",
+          "line": 273
         },
         {
-          "name": "compose: DIRECT thread (1 recipient) → threadType direct",
+          "name": "post a reply (admin)",
+          "line": 278
+        },
+        {
+          "name": "SIDE-EFFECT: thread.last_post_preview updated",
+          "line": 282
+        },
+        {
+          "name": "post count increased to >=2",
           "line": 286
         },
         {
-          "name": "compose: GROUP thread (3 participants) → threadType group, all added",
+          "name": "markRead (B reads the thread)",
+          "line": 290
+        },
+        {
+          "name": "participants/add (admin adds C)",
+          "line": 291
+        },
+        {
+          "name": "C can read after being added",
+          "line": 292
+        },
+        {
+          "name": "participants/remove (admin removes C)",
           "line": 293
         },
         {
-          "name": "compose: thread WITHOUT a subject succeeds (subject optional)",
+          "name": "ACCESS: C denied again after removal",
+          "line": 294
+        },
+        {
+          "name": "archive then unarchive",
+          "line": 295
+        },
+        {
+          "name": "recipients search returns array",
+          "line": 299
+        },
+        {
+          "name": "message search returns array",
           "line": 303
         },
         {
+          "name": "attachments/upload-url returns a presigned URL",
+          "line": 307
+        },
+        {
+          "name": "compose: recipient picker returns active users and excludes self",
+          "line": 314
+        },
+        {
+          "name": "compose: DIRECT thread (1 recipient) → threadType direct",
+          "line": 321
+        },
+        {
+          "name": "compose: GROUP thread (3 participants) → threadType group, all added",
+          "line": 328
+        },
+        {
+          "name": "compose: thread WITHOUT a subject succeeds (subject optional)",
+          "line": 338
+        },
+        {
           "name": "compose VALIDATION: empty body is rejected by the backend",
-          "line": 308
+          "line": 343
         },
         {
           "name": "compose VALIDATION: no recipients is rejected by the backend",
-          "line": 312
+          "line": 347
         },
         {
           "name": "compose VALIDATION: an invalid recipient id is rejected (not silently dropped)",
-          "line": 316
+          "line": 351
         },
         {
           "name": "GOC 1: first call CREATES the direct thread (created=true)",
-          "line": 331
+          "line": 366
         },
         {
           "name": "GOC 2: second call returns the SAME threadId (created=false)",
-          "line": 339
+          "line": 374
         },
         {
           "name": "GOC 3: the reuse created a NEW post, not another thread",
-          "line": 348
+          "line": 383
         },
         {
           "name": "GOC 4: concurrent create calls resolve to ONE thread",
-          "line": 357
+          "line": 392
         },
         {
           "name": "GOC 5: attachment-only create reuses the thread and appends",
-          "line": 373
+          "line": 408
         },
         {
           "name": "GOC 6: idempotent retry does NOT duplicate the post",
-          "line": 388
+          "line": 423
         },
         {
           "name": "file upload: presign → PUT to storage → create record → attach → retrieve",
-          "line": 414
+          "line": 449
         },
         {
           "name": "uploaded file is actually downloadable via the signed url (bytes match)",
-          "line": 443
+          "line": 478
         },
         {
           "name": "attachments/get-url: participant gets a signed url per purpose",
-          "line": 453
+          "line": 488
         },
         {
           "name": "ACCESS: removed participant C cannot sign an attachment url (403)",
-          "line": 462
+          "line": 497
         },
         {
           "name": "status: recipient unreadCount rises on new msg, resets on read",
-          "line": 470
+          "line": 505
         },
         {
           "name": "status: archive removes from inbox → archived tab, isArchived flips, unarchive reverses",
-          "line": 482
+          "line": 517
         },
         {
           "name": "concurrency: 8 messages posted at once all land, no loss, no dupes, in order",
-          "line": 496
+          "line": 531
         },
         {
           "name": "concurrency: recipient unread reflects the bulk burst, clears on read",
-          "line": 511
+          "line": 546
         },
         {
           "name": "notification badge: unread +1 on new, −1 on read",
-          "line": 545
+          "line": 580
         },
         {
           "name": "message badge: unread +1 on new message, −1 on read (recipient B)",
-          "line": 559
+          "line": 594
         },
         {
           "name": "realtime: a new message writes a communication_signals row for the recipient",
-          "line": 577
+          "line": 612
         },
         {
           "name": "realtime: a new notification writes a communication_signals row for the recipient",
-          "line": 590
+          "line": 625
         },
         {
           "name": "realtime DELIVERY: an AUTHENTICATED subscription receives the signal (mig 351)",
-          "line": 601
+          "line": 636
         },
         {
           "name": "realtime DENIAL: an ANONYMOUS subscription receives nothing (mig 351 RLS)",
-          "line": 639
+          "line": 674
         },
         {
           "name": "latency: summary endpoint responds quickly",
-          "line": 667
+          "line": 702
         },
         {
           "name": "employee → admin: admin badge + thread unread rise, reset on read",
-          "line": 684
+          "line": 719
         },
         {
           "name": "admin → employee: employee badge + thread unread rise, reset on read",
-          "line": 696
+          "line": 731
         },
         {
           "name": "employee → employee: recipient gets unread, sender does not",
-          "line": 707
-        },
-        {
-          "name": "group (admin+B+C): a post raises unread for BOTH others, not the author; reads are per-user",
-          "line": 716
-        },
-        {
-          "name": "BADGE↔UNREAD-TAB: your OWN message must NOT inflate your badge",
-          "line": 728
-        },
-        {
-          "name": "BADGE↔UNREAD-TAB: badge equals the number of inbox threads with unreadCount>0",
           "line": 742
         },
         {
+          "name": "group (admin+B+C): a post raises unread for BOTH others, not the author; reads are per-user",
+          "line": 751
+        },
+        {
+          "name": "BADGE↔UNREAD-TAB: your OWN message must NOT inflate your badge",
+          "line": 763
+        },
+        {
+          "name": "BADGE↔UNREAD-TAB: badge equals the number of inbox threads with unreadCount>0",
+          "line": 777
+        },
+        {
           "name": "group reply re-raises unread for the other members",
-          "line": 756
+          "line": 791
         },
         {
           "name": "setup: thread (admin → B) for pins/drafts",
-          "line": 772
+          "line": 807
         },
         {
           "name": "pin a post (personal) returns a pin",
-          "line": 781
+          "line": 816
         },
         {
           "name": "CONTRACT: pins/list returns the pin with expected shape",
-          "line": 788
+          "line": 823
         },
         {
           "name": "personal pin is private to its creator (B cannot see it)",
-          "line": 794
+          "line": 829
         },
         {
           "name": "SIDE-EFFECT: pin wrote app_events communications.message_pinned",
-          "line": 798
+          "line": 833
         },
         {
           "name": "CAPABILITIES: posts DTO carries pinnedBy + allowedPinActions per caller (slice 4)",
-          "line": 804
+          "line": 839
         },
         {
           "name": "owner can thread-pin; visible to participant B",
-          "line": 837
+          "line": 872
         },
         {
           "name": "CONTRACT: pinned-summary includes the pinned thread",
-          "line": 845
+          "line": 880
         },
         {
           "name": "ACCESS: non-participant C cannot pin",
-          "line": 850
+          "line": 885
         },
         {
           "name": "VALIDATION: post pin without postId is rejected",
-          "line": 852
-        },
-        {
-          "name": "unpin own pin removes it from the list",
-          "line": 854
-        },
-        {
-          "name": "ACCESS: C (finance_manager, no unpin_any) cannot unpin admin thread-pin",
-          "line": 859
-        },
-        {
-          "name": "draft/save stores a draft",
-          "line": 867
-        },
-        {
-          "name": "draft/get returns the saved body",
-          "line": 869
-        },
-        {
-          "name": "CONTRACT: thread list surfaces hasDraft + draftPreview",
-          "line": 873
-        },
-        {
-          "name": "draft is per-user (B has no draft on this thread)",
-          "line": 878
-        },
-        {
-          "name": "empty draft body deletes the draft",
-          "line": 882
-        },
-        {
-          "name": "draft/delete removes an existing draft (the send-success path)",
           "line": 887
         },
         {
+          "name": "unpin own pin removes it from the list",
+          "line": 889
+        },
+        {
+          "name": "ACCESS: C (finance_manager, no unpin_any) cannot unpin admin thread-pin",
+          "line": 894
+        },
+        {
+          "name": "draft/save stores a draft",
+          "line": 902
+        },
+        {
+          "name": "draft/get returns the saved body",
+          "line": 904
+        },
+        {
+          "name": "CONTRACT: thread list surfaces hasDraft + draftPreview",
+          "line": 908
+        },
+        {
+          "name": "draft is per-user (B has no draft on this thread)",
+          "line": 913
+        },
+        {
+          "name": "empty draft body deletes the draft",
+          "line": 917
+        },
+        {
+          "name": "draft/delete removes an existing draft (the send-success path)",
+          "line": 922
+        },
+        {
           "name": "mute/unmute toggles the per-user thread mute",
-          "line": 895
+          "line": 930
         },
         {
           "name": "VALIDATION: mute without the muted boolean is rejected",
-          "line": 899
+          "line": 934
         },
         {
           "name": "presence/update accepts a heartbeat",
-          "line": 903
-        },
-        {
-          "name": "online: array, excludes self, includes a freshly-online peer",
-          "line": 905
-        },
-        {
-          "name": "activity: participant gets REAL derived entries (message + pin + join)",
-          "line": 916
-        },
-        {
-          "name": "activity: NON-PARTICIPANT is denied (403)",
-          "line": 932
-        },
-        {
-          "name": "record thread: threads list resolves the LIVE source record (collaboration card)",
           "line": 938
         },
         {
+          "name": "online: array, excludes self, includes a freshly-online peer",
+          "line": 940
+        },
+        {
+          "name": "activity: participant gets REAL derived entries (message + pin + join)",
+          "line": 951
+        },
+        {
+          "name": "activity: NON-PARTICIPANT is denied (403)",
+          "line": 967
+        },
+        {
+          "name": "record thread: threads list resolves the LIVE source record (collaboration card)",
+          "line": 973
+        },
+        {
           "name": "record thread with an UNKNOWN module resolves to null (no fabricated card)",
-          "line": 965
+          "line": 1000
         },
         {
           "name": "recordThread: find-or-create resolves a stable thread for a business record",
-          "line": 978
+          "line": 1013
         },
         {
           "name": "create ticket",
-          "line": 996
+          "line": 1031
         },
         {
           "name": "ticket appears in list",
-          "line": 1012
+          "line": 1047
         },
         {
           "name": "get ticket detail",
-          "line": 1016
+          "line": 1051
         },
         {
           "name": "comment on ticket",
-          "line": 1020
+          "line": 1055
         },
         {
           "name": "start ticket",
-          "line": 1025
+          "line": 1060
         }
       ],
       "apiPaths": [

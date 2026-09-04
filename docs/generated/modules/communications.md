@@ -2,9 +2,9 @@
 
 # communications Module Map
 
-Source fingerprint: `3e1ce8cc23a1a51479ea9025`
+Source fingerprint: `996e3bfc94214f09e875a1a5`
 
-Files: 113 | Symbols: 1057 | Widgets: 0 | Unique mounted endpoints: 93 | Route definitions: 94 mounted + 2 unmounted | API calls: 88 | DB objects: 158 | E2E suites: 7
+Files: 113 | Symbols: 1060 | Widgets: 0 | Unique mounted endpoints: 93 | Route definitions: 94 mounted + 2 unmounted | API calls: 88 | DB objects: 158 | E2E suites: 7
 
 ## Widgets and Tiles
 
@@ -446,25 +446,25 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | function | `ticket_internal.handler_user_ids` | `supabase/migrations/20260919000440_ticket_center_backend.sql:446` |
 | function | `ticket_internal.record_event` | `supabase/migrations/20260919000440_ticket_center_backend.sql:464` |
 | function | `ticket_internal.notify_users` | `supabase/migrations/20260919000440_ticket_center_backend.sql:535` |
-| function | `public.ticket_create_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:647` |
-| function | `public.ticket_comment_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:904` |
-| function | `public.ticket_command_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1100` |
-| function | `public.ticket_mark_read_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1433` |
-| function | `public.ticket_attachment_complete_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1491` |
-| function | `public.ticket_request_types_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1609` |
-| function | `public.ticket_requester_search` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1654` |
-| function | `public.ticket_list_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1701` |
-| function | `public.ticket_nav_context_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1828` |
-| function | `public.ticket_get_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1903` |
-| function | `public.ticket_summary_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:2032` |
-| function | `public.ticket_overdue_sweep_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:2070` |
+| function | `public.ticket_create_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:664` |
+| function | `public.ticket_comment_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:921` |
+| function | `public.ticket_command_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1117` |
+| function | `public.ticket_mark_read_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1450` |
+| function | `public.ticket_attachment_complete_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1508` |
+| function | `public.ticket_request_types_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1626` |
+| function | `public.ticket_requester_search` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1671` |
+| function | `public.ticket_list_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1718` |
+| function | `public.ticket_nav_context_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1845` |
+| function | `public.ticket_get_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1920` |
+| function | `public.ticket_summary_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:2049` |
+| function | `public.ticket_overdue_sweep_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:2087` |
 | function | `public.message_compliance_export_snapshot` | `supabase/migrations/20260919000441_messaging_internal_notes.sql:186` |
 
 ## E2E Suites
 
 | Suite | Tests | API paths | Location |
 |---|---:|---:|---|
-| Communications (Notifications · Messages · Tickets) | 103 | 40 | `scripts/e2e/suites/communications.mjs` |
+| Communications (Notifications · Messages · Tickets) | 105 | 40 | `scripts/e2e/suites/communications.mjs` |
 | Communications Badge Sync (summary endpoint) | 5 | 1 | `scripts/e2e/suites/communicationsBadges.mjs` |
 | Messenger Compliance V1 (Cases, Scoped Read, Evidence, Exports) | 45 | 19 | `scripts/e2e/suites/communicationsCompliance.mjs` |
 | Messaging — Typing & Presence slice | 8 | 1 | `scripts/e2e/suites/messagingTypingPresence.mjs` |
@@ -482,7 +482,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/communicationsCompliance.ts` | 510 |
 | backend-route | `netlify/functions/routes/notifications.ts` | 146 |
 | backend-route | `netlify/functions/routes/tickets.ts` | 1504 |
-| e2e-suite | `scripts/e2e/suites/communications.mjs` | 1032 |
+| e2e-suite | `scripts/e2e/suites/communications.mjs` | 1067 |
 | e2e-suite | `scripts/e2e/suites/communicationsBadges.mjs` | 86 |
 | e2e-suite | `scripts/e2e/suites/communicationsCompliance.mjs` | 1221 |
 | e2e-suite | `scripts/e2e/suites/messagingTypingPresence.mjs` | 160 |
@@ -493,7 +493,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/communications.ts` | 1096 |
 | frontend-api | `src/api/communicationsCompliance.ts` | 252 |
 | frontend-api | `src/api/notifications.ts` | 160 |
-| frontend-api | `src/api/schemas/notification.ts` | 106 |
+| frontend-api | `src/api/schemas/notification.ts` | 115 |
 | frontend-page | `src/components/sections/Messages/ComposeThreadDialog.tsx` | 222 |
 | frontend-page | `src/components/sections/Messages/DiscussionButton.tsx` | 60 |
 | frontend-page | `src/components/sections/Messages/MessageDropdown.test.tsx` | 86 |

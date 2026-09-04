@@ -552,6 +552,16 @@ declare
   v_notification_id text;
   v_type text := 'ticket.' || p_event_type;
   v_module text := coalesce(p_ticket.source_module, 'platform');
+  v_muted boolean;
+  v_in_app_enabled boolean;
+  v_protected boolean := p_ticket.priority = 'critical' or (p_action_required and p_due_at is not null);
+  v_quiet_suppressed boolean;
+  v_criticality text := case
+    when p_ticket.priority = 'critical' then 'safety_critical'
+    when p_action_required and p_due_at is not null then 'workflow_required'
+    when p_ticket.priority = 'high' then 'important'
+    else 'normal'
+  end;
 begin
   foreach v_user_id in array coalesce(p_user_ids, '{}'::text[])
   loop
@@ -559,17 +569,16 @@ begin
       continue;
     end if;
 
-    if exists (
+    select exists (
       select 1
       from public.notification_mutes nm
       where nm.user_id = v_user_id
         and nm.scope in ('all', 'module:' || v_module, 'event:' || v_type)
         and (nm.muted_until is null or nm.muted_until > now())
-    ) then
-      continue;
-    end if;
+    ) into v_muted;
+    v_quiet_suppressed := v_muted and not v_protected;
 
-    if not coalesce(
+    v_in_app_enabled := coalesce(
       (
         select np.in_app
         from public.notification_preferences np
@@ -581,7 +590,11 @@ begin
         where np.user_id = v_user_id and np.event_type = '*'
       ),
       true
-    ) then
+    );
+
+    -- Quiet Mode and protected delivery both require an unread Notification
+    -- Center record even when an older preference row disabled in-app delivery.
+    if not v_in_app_enabled and not v_muted and not v_protected then
       continue;
     end if;
 
@@ -613,7 +626,11 @@ begin
         'queueCode', p_ticket.queue_code,
         'requestTypeCode', p_ticket.request_type_code,
         'status', p_ticket.status,
-        'priority', p_ticket.priority
+        'priority', p_ticket.priority,
+        'deliveryProtection', jsonb_build_object(
+          'criticality', v_criticality,
+          'quietModeSuppressed', v_quiet_suppressed
+        )
       ),
       'ticket.' || p_event_type || ':' || p_ticket.id::text || ':' ||
         p_ticket.activity_sequence::text || ':' || v_user_id,

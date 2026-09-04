@@ -62,7 +62,7 @@ router.post('/getMyNotifications', async c => {
 
   let q = sb
     .from('notifications')
-    .select('id, type, title, body, is_read, link, created_at')
+    .select('id, type, title, body, is_read, link, created_at, module, severity, source_type, source_id, action_route, metadata, action_required, action_status, due_at')
     .eq('user_id', actor.id)
     .order('created_at', { ascending: false })
     .limit(v.data.limit);
@@ -74,7 +74,7 @@ router.post('/getMyNotifications', async c => {
   const { data, error } = await q;
   if (error) return c.json({ success: false, message: error.message });
 
-  return c.json({ success: true, data: data ?? [] });
+  return c.json({ success: true, data });
 });
 
 // ── Mark one notification read ────────────────────────────────────────────────
@@ -119,7 +119,7 @@ router.post('/getMyPreferences', async c => {
     .eq('user_id', actor.id);
 
   if (error) return c.json({ success: false, message: error.message });
-  return c.json({ success: true, data: data ?? [] });
+  return c.json({ success: true, data });
 });
 
 // ── Update one preference ─────────────────────────────────────────────────────

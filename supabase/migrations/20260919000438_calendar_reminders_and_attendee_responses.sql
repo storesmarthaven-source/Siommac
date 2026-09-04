@@ -305,6 +305,8 @@ declare
   v_email           boolean := false;
   v_whatsapp        boolean := false;
   v_muted           boolean := false;
+  v_quiet_suppressed boolean := false;
+  v_criticality     text := 'normal';
   v_now             timestamptz := now();
 begin
   if p_calendar_entry_id is null
@@ -377,10 +379,19 @@ begin
       and scope in ('all', 'module:calendar', 'event:' || p_event_type)
       and (muted_until is null or muted_until > v_now)
   ) into v_muted;
-  if v_muted then
-    v_in_app := false;
+  if p_severity = 'critical' then
+    v_criticality := 'safety_critical';
+    v_in_app := true;
+  elsif p_severity in ('warning', 'high') then
+    v_criticality := 'important';
+  end if;
+  if v_muted and p_severity <> 'critical' then
+    -- Quiet Mode keeps the unread Notification Center record but suppresses
+    -- transient/external routine delivery. Critical safety alerts pass through.
+    v_in_app := true;
     v_email := false;
     v_whatsapp := false;
+    v_quiet_suppressed := true;
   end if;
 
   insert into public.app_events
@@ -409,7 +420,12 @@ begin
       (p_user_id, p_event_type, p_title, coalesce(p_body, ''), false,
        's-calendar', v_event_id, 'calendar', p_severity,
        'calendar_entry', p_calendar_entry_id::text, 's-calendar',
-       coalesce(p_metadata, '{}'::jsonb), v_dedupe_key,
+       coalesce(p_metadata, '{}'::jsonb) || jsonb_build_object(
+         'deliveryProtection', jsonb_build_object(
+           'criticality', v_criticality,
+           'quietModeSuppressed', v_quiet_suppressed
+         )
+       ), v_dedupe_key,
        p_delivery_kind = 'overdue',
        case when p_delivery_kind = 'overdue' then 'pending' else 'none' end,
        p_due_at, v_now)

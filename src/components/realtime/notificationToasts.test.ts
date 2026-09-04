@@ -19,6 +19,7 @@ vi.mock('@sections/NotificationCenter/notifAction', () => ({
 
 import {
   isMutedByPreferences,
+  isQuietModeToastSuppressed,
   maybeToastNotification,
   resetToastSessionClock,
   surfaceGenericNotificationToasts,
@@ -164,6 +165,27 @@ describe('notification toast bridge', () => {
 
     expect(toastMocks.action).not.toHaveBeenCalled();
     expect(toastMocks.rich).not.toHaveBeenCalled();
+  });
+
+  it('suppresses a routine popup marked by Quiet Mode while retaining protected alerts', () => {
+    const routine = notification({
+      metadata: { deliveryProtection: { criticality: 'normal', quietModeSuppressed: true } },
+    });
+    const critical = notification({
+      severity: 'critical',
+      metadata: { deliveryProtection: { criticality: 'safety_critical', quietModeSuppressed: true } },
+    });
+
+    expect(isQuietModeToastSuppressed(routine)).toBe(true);
+    expect(isQuietModeToastSuppressed(critical)).toBe(false);
+
+    maybeToastNotification({ notification: routine, domain: 'notifications' });
+    vi.advanceTimersByTime(2_000);
+    expect(toastMocks).not.toHaveBeenCalled();
+
+    maybeToastNotification({ notification: critical, domain: 'notifications' });
+    vi.advanceTimersByTime(2_000);
+    expect(toastMocks).toHaveBeenCalled();
   });
 });
 
