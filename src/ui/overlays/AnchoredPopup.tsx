@@ -40,7 +40,7 @@ export interface AnchoredPopupProps {
   /** Horizontal relationship to the anchor when the surface sizes to content. */
   align?: 'start' | 'center' | 'end';
   /** Prefer a side or let collision detection choose one. */
-  placement?: 'auto' | 'top' | 'bottom';
+  placement?: 'auto' | 'top' | 'bottom' | 'left' | 'right';
   /** Gap between anchor and surface, in px. */
   offset?: number;
   /** Max height before the surface scrolls internally. */
@@ -67,7 +67,7 @@ interface Position {
   left: number;
   width: number | undefined;
   maxHeight: number;
-  placement: 'bottom' | 'top';
+  placement: 'bottom' | 'top' | 'left' | 'right';
 }
 
 export function AnchoredPopup({
@@ -87,6 +87,27 @@ export function AnchoredPopup({
       const el = anchor;
       if (!el) return;
       const r = el.getBoundingClientRect();
+      const surfaceWidth = matchAnchorWidth ? r.width : surfaceRef.current?.offsetWidth ?? r.width;
+
+      if (placement === 'left' || placement === 'right') {
+        const spaceRight = window.innerWidth - r.right - offset - 8;
+        const spaceLeft = r.left - offset - 8;
+        const resolvedSide = placement === 'right' && spaceRight < surfaceWidth && spaceLeft > spaceRight
+          ? 'left'
+          : placement === 'left' && spaceLeft < surfaceWidth && spaceRight > spaceLeft
+            ? 'right'
+            : placement;
+        const left = resolvedSide === 'right' ? r.right + offset : r.left - surfaceWidth - offset;
+        setPos({
+          top: Math.max(8, Math.min(r.top, window.innerHeight - Math.min(maxHeight, window.innerHeight - 16) - 8)),
+          bottom: undefined,
+          left: Math.max(8, Math.min(left, window.innerWidth - surfaceWidth - 8)),
+          width: matchAnchorWidth ? r.width : undefined,
+          maxHeight: Math.min(maxHeight, window.innerHeight - 16),
+          placement: resolvedSide,
+        });
+        return;
+      }
       const spaceBelow = window.innerHeight - r.bottom - offset - 8;
       const spaceAbove = r.top - offset - 8;
 
@@ -100,13 +121,13 @@ export function AnchoredPopup({
 
       const width = matchAnchorWidth ? r.width : undefined;
       const rawLeft = r.left;
-      const surfaceWidth = width ?? surfaceRef.current?.offsetWidth ?? r.width;
+      const resolvedSurfaceWidth = width ?? surfaceRef.current?.offsetWidth ?? r.width;
       const alignedLeft = matchAnchorWidth || align === 'start'
         ? rawLeft
         : align === 'center'
-          ? r.left + (r.width - surfaceWidth) / 2
-          : r.right - surfaceWidth;
-      const left = Math.max(8, Math.min(alignedLeft, window.innerWidth - surfaceWidth - 8));
+          ? r.left + (r.width - resolvedSurfaceWidth) / 2
+          : r.right - resolvedSurfaceWidth;
+      const left = Math.max(8, Math.min(alignedLeft, window.innerWidth - resolvedSurfaceWidth - 8));
 
       setPos({
         // A top-placed surface uses `bottom`, not an estimated `top`. Its
@@ -124,9 +145,15 @@ export function AnchoredPopup({
 
     place();
 
-    // `capture: true` on scroll so an ancestor scroll container is heard — a
-    // scroll event from a nested element does not bubble.
-    const onScroll = (): void => onDismiss();
+    // `capture: true` hears ancestor/page scrolling even though scroll events
+    // do not bubble. Scrolling the popup itself is normal list interaction and
+    // must never dismiss it (mouse-wheel scrolling used to close every Select,
+    // Combobox and action menu on the first wheel tick).
+    const onScroll = (event: Event): void => {
+      const target = event.target;
+      if (target instanceof Node && surfaceRef.current?.contains(target)) return;
+      onDismiss();
+    };
     window.addEventListener('scroll', onScroll, true);
     window.addEventListener('resize', place);
     return () => {
@@ -135,21 +162,57 @@ export function AnchoredPopup({
     };
   }, [open, anchor, matchAnchorWidth, align, placement, offset, maxHeight, onDismiss]);
 
-  // Content-sized surfaces cannot be horizontally centred/clamped until their
-  // real width exists. Correct the provisional anchor-width measurement in the
-  // same layout phase, before the browser paints the portal.
+  // Content-sized surfaces cannot be horizontally centred/clamped or reliably
+  // collision-tested until their real dimensions exist. Correct the provisional
+  // placement in the same layout phase, before the browser paints the portal.
+  // This second vertical check matters for form popovers: a surface can have
+  // more than the 160px "usable list" threshold while still clipping its footer.
   useLayoutEffect(() => {
-    if (!open || !anchor || !pos || matchAnchorWidth || !surfaceRef.current) return;
+    if (!open || !anchor || !pos || !surfaceRef.current) return;
     const r = anchor.getBoundingClientRect();
-    const surfaceWidth = surfaceRef.current.offsetWidth;
-    const raw = align === 'center'
-      ? r.left + (r.width - surfaceWidth) / 2
-      : align === 'end'
-        ? r.right - surfaceWidth
-        : r.left;
-    const left = Math.max(8, Math.min(raw, window.innerWidth - surfaceWidth - 8));
-    if (Math.abs(left - pos.left) > 0.5) setPos(current => current ? { ...current, left } : current);
-  }, [open, anchor, matchAnchorWidth, align, pos]);
+    const surface = surfaceRef.current;
+    if (pos.placement === 'left' || pos.placement === 'right') {
+      const surfaceWidth = surface.offsetWidth;
+      const surfaceHeight = Math.min(surface.offsetHeight, pos.maxHeight);
+      const left = pos.placement === 'right' ? r.right + offset : r.left - surfaceWidth - offset;
+      const top = Math.max(8, Math.min(r.top, window.innerHeight - surfaceHeight - 8));
+      const clampedLeft = Math.max(8, Math.min(left, window.innerWidth - surfaceWidth - 8));
+      if (Math.abs(clampedLeft - pos.left) > 0.5 || Math.abs(top - (pos.top ?? 0)) > 0.5) {
+        setPos(current => current ? { ...current, left: clampedLeft, top, bottom: undefined } : current);
+      }
+      return;
+    }
+    let left = pos.left;
+    if (!matchAnchorWidth) {
+      const surfaceWidth = surface.offsetWidth;
+      const raw = align === 'center'
+        ? r.left + (r.width - surfaceWidth) / 2
+        : align === 'end'
+          ? r.right - surfaceWidth
+          : r.left;
+      left = Math.max(8, Math.min(raw, window.innerWidth - surfaceWidth - 8));
+    }
+
+    const spaceBelow = window.innerHeight - r.bottom - offset - 8;
+    const spaceAbove = r.top - offset - 8;
+    const shouldFlipForMeasuredContent = placement === 'auto'
+      && pos.placement === 'bottom'
+      && surface.scrollHeight > pos.maxHeight + 1
+      && spaceAbove > spaceBelow + 24;
+
+    if (Math.abs(left - pos.left) > 0.5 || shouldFlipForMeasuredContent) {
+      setPos(current => current ? {
+        ...current,
+        left,
+        ...(shouldFlipForMeasuredContent ? {
+          top: undefined,
+          bottom: window.innerHeight - r.top + offset,
+          maxHeight: Math.min(maxHeight, Math.max(120, spaceAbove)),
+          placement: 'top' as const,
+        } : {}),
+      } : current);
+    }
+  }, [open, anchor, matchAnchorWidth, align, placement, offset, maxHeight, pos]);
 
   useEffect(() => {
     if (!open) return;

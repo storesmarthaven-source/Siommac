@@ -871,7 +871,7 @@
 .sds-thumb-app-topbar .app-topbar-sub-text { font-size: 8px; }
 .sds-thumb-app-topbar .app-topbar-search { min-width: 110px; }
 .sds-thumb-app-topbar .app-topbar-search-trigger { min-height: 28px; padding: 4px 7px; font-size: 8px; }
-.sds-thumb-app-topbar .app-topbar-kbd { display: none; }
+.sds-thumb-app-topbar .app-topbar-shortcut-icon { display: none; }
 .sds-thumb-app-topbar .app-topbar-pill { min-width: 0; }
 .sds-thumb-app-topbar .sds-library-user-pill-preview { width: 112px; padding: 5px; gap: 5px; border: 0; box-shadow: none; background: rgb(255 255 255 / .12); color: #fff; }
 .sds-thumb-app-topbar .sds-library-user-pill-preview > span { width: 20px; height: 20px; font-size: 7px; background: rgb(255 255 255 / .22); color: #fff; }

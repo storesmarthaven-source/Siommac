@@ -240,6 +240,38 @@ describe('Dialog', () => {
     expect(left?.textContent).toBe('Back');
   });
 
+  it('renders icon-led context facts without card containers', () => {
+    render(
+      <Dialog open onClose={vi.fn()} layout="sidebar-left">
+        <Dialog.Header title="Roster crews" />
+        <Dialog.Body>
+          <Dialog.Layout>
+            <Dialog.Sidebar>
+              <Dialog.SidebarHeader
+                eyebrow="Planning Scope"
+                title="Pelican Platform"
+                description="Choose the operational groups available to this roster."
+              />
+              <Dialog.ContextFacts items={[
+                { label: 'Planning Window', value: '23–29 August', icon: <span data-testid="calendar-icon" /> },
+                { label: 'Roster State', value: 'Working Draft' },
+              ]} />
+            </Dialog.Sidebar>
+            <Dialog.Content>Roster form</Dialog.Content>
+          </Dialog.Layout>
+        </Dialog.Body>
+      </Dialog>,
+    );
+
+    const facts = document.querySelector('.ui-dialog-context-facts');
+    const sidebarHeader = document.querySelector('.ui-dialog-sidebar-header');
+    expect(sidebarHeader?.textContent).toContain('Planning ScopePelican Platform');
+    expect(sidebarHeader?.textContent).toContain('Choose the operational groups available to this roster.');
+    expect(facts?.querySelectorAll('.ui-dialog-context-fact')).toHaveLength(2);
+    expect(facts?.textContent).toContain('Planning Window23–29 August');
+    expect(screen.getByTestId('calendar-icon').closest('.ui-dialog-context-fact-icon')).toBeTruthy();
+  });
+
   it('omits the close button when no onClose is given to the header', () => {
     // A dialog that must be resolved by its own actions.
     render(

@@ -18,7 +18,7 @@
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
-import { useEffect, useId, useRef } from 'preact/hooks';
+import { useEffect, useId, useRef, useState } from 'preact/hooks';
 import { LucideIcon } from '../LucideIcon';
 import { type UiState } from '../tokens';
 import { useFieldContext, resolveFieldState } from '../forms/fieldContext';
@@ -193,6 +193,7 @@ export function Radio({
 export interface SwitchProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
+  size?: SwitchSize;
   label?: ComponentChildren;
   description?: string;
   disabled?: boolean;
@@ -205,10 +206,12 @@ export interface SwitchProps {
   class?: string;
 }
 
+export type SwitchSize = 'sm' | 'md';
+
 /** Shared visual artwork so catalogue thumbnails render the canonical switch. */
-export function SwitchArtwork(): VNode {
+export function SwitchArtwork({ size = 'md' }: { size?: SwitchSize } = {}): VNode {
   return (
-    <span class="ui-switch-track" aria-hidden="true">
+    <span class={`ui-switch-track ui-switch-track--${size}`} aria-hidden="true">
       <span class="ui-switch-knob">
         <LucideIcon name="X" class="ui-switch-cross" strokeWidth={3} />
         <LucideIcon name="Check" class="ui-switch-check" strokeWidth={3} />
@@ -225,7 +228,7 @@ export function SwitchArtwork(): VNode {
  * and "this box will be submitted ticked".
  */
 export function Switch({
-  checked, onChange, label, description, disabled = false, pending = false,
+  checked, onChange, size = 'md', label, description, disabled = false, pending = false,
   name, id: ownId, forceState, class: extra, ...aria
 }: SwitchProps): VNode {
   const ctx = useFieldContext();
@@ -234,6 +237,17 @@ export function Switch({
   const uid = useId();
   const descId = description ? `sw${uid}-desc` : undefined;
   const inert = ctxDisabled || pending;
+  const [visualChecked, setVisualChecked] = useState(checked);
+  const previousCheckedRef = useRef(checked);
+
+  // A switch promises an immediate effect. Keep its visual state responsive
+  // while a controlled consumer persists the change, then reconcile with the
+  // authoritative value (including a rollback after a failed request).
+  useEffect(() => {
+    const authoritativeValueChanged = previousCheckedRef.current !== checked;
+    previousCheckedRef.current = checked;
+    if (authoritativeValueChanged || !pending) setVisualChecked(checked);
+  }, [checked, pending]);
 
   return (
     <label
@@ -247,7 +261,7 @@ export function Switch({
         type="checkbox"
         role="switch"
         class="ui-choice-input"
-        checked={checked}
+        checked={visualChecked}
         disabled={inert}
         aria-busy={pending || undefined}
         aria-describedby={[describedBy, descId].filter(Boolean).join(' ') || undefined}
@@ -256,11 +270,13 @@ export function Switch({
           // Guarded as well as `disabled`: a disabled input still fires change
           // in some environments, and a setting that applies immediately must
           // not fire twice while the first change is still in flight.
-          if (inert) { (e.target as HTMLInputElement).checked = checked; return; }
-          onChange((e.target as HTMLInputElement).checked);
+          if (inert) { (e.target as HTMLInputElement).checked = visualChecked; return; }
+          const nextChecked = (e.target as HTMLInputElement).checked;
+          setVisualChecked(nextChecked);
+          onChange(nextChecked);
         }}
       />
-      <SwitchArtwork />
+      <SwitchArtwork size={size} />
       {(label != null || description) && (
         <span class="ui-choice-copy">
           {label != null && <span class="ui-choice-label">{label}</span>}
@@ -358,6 +374,11 @@ export interface RadioGroupProps<T extends string> {
   indicatorPosition?: 'start' | 'end';
   density?: 'comfortable' | 'compact';
   selectionTreatment?: 'outline' | 'tint' | 'filled';
+  /** Controls how optional media is framed. `preview` gives rich artwork the
+      full card width; `plain` removes the tile around compact line icons. */
+  mediaTreatment?: 'tile' | 'plain' | 'preview';
+  /** Fixed card count for compact option sets; omit for responsive auto-fit. */
+  columns?: 1 | 2 | 3 | 4;
   disabled?: boolean;
   readOnly?: boolean;
   error?: boolean;
@@ -370,6 +391,7 @@ export function RadioGroup<T extends string>({
   value, onChange, options, label, inline = false,
   presentation = 'standard', indicator = 'radio', indicatorPosition = 'start',
   density = 'comfortable', selectionTreatment = 'tint',
+  mediaTreatment = 'tile', columns,
   disabled = false, readOnly = false, error = false, name, class: extra,
 }: RadioGroupProps<T>): VNode {
   const uid = useId();
@@ -388,7 +410,8 @@ export function RadioGroup<T extends string>({
       <div class={[
         'ui-choice-group',
         inline ? 'ui-choice-group--inline' : '',
-        presentation !== 'standard' ? `ui-radio-cards ui-radio-cards--${presentation} ui-radio-cards--${density} ui-radio-cards--selection-${selectionTreatment}` : '',
+        presentation !== 'standard' ? `ui-radio-cards ui-radio-cards--${presentation} ui-radio-cards--${density} ui-radio-cards--selection-${selectionTreatment} ui-radio-cards--media-${mediaTreatment}` : '',
+        presentation !== 'standard' && columns ? `ui-radio-cards--columns-${columns}` : '',
       ].filter(Boolean).join(' ')}>
         {options.map((o, index) => {
           if (presentation === 'standard') {
@@ -398,7 +421,7 @@ export function RadioGroup<T extends string>({
                 name={groupName}
                 value={o.value}
                 checked={value === o.value}
-                onChange={() => onChange(o.value)}
+                onChange={() => { if (value !== o.value) onChange(o.value); }}
                 label={o.label}
                 description={o.description}
                 disabled={disabled || o.disabled}
@@ -437,7 +460,7 @@ export function RadioGroup<T extends string>({
                 disabled={inert}
                 aria-describedby={descId}
                 aria-invalid={error || undefined}
-                onChange={() => { if (!readOnly) onChange(o.value); }}
+                onChange={() => { if (!readOnly && value !== o.value) onChange(o.value); }}
               />
               {indicatorPosition === 'start' && indicatorNode}
               {o.media != null && <span class="ui-radio-card__media" aria-hidden="true">{o.media}</span>}

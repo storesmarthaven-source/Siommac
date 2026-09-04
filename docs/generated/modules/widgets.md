@@ -2,7 +2,7 @@
 
 # widgets Module Map
 
-Source fingerprint: `996e3bfc94214f09e875a1a5`
+Source fingerprint: `8384e7dbcf0574a1cc527ea5`
 
 Files: 76 | Symbols: 622 | Widgets: 25 | Unique mounted endpoints: 20 | Route definitions: 20 mounted + 0 unmounted | API calls: 11 | DB objects: 23 | E2E suites: 1
 
@@ -57,8 +57,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/theme/studio/publish` | `-` | requireRole | `-` | `netlify/functions/routes/uiPrefs.ts:153` | res @ src/api/theme.ts:40 | designSystemStudio |
 | `/api/theme/studio/rollback` | `-` | requireRole | `-` | `netlify/functions/routes/uiPrefs.ts:178` | res @ src/api/theme.ts:52 | designSystemStudio |
 | `/api/theme/studio/validate` | `-` | requireRole | `-` | `netlify/functions/routes/uiPrefs.ts:123` | res @ src/api/theme.ts:34 | designSystemStudio |
-| `/api/ui-preferences/get` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:200` | response @ src/api/uiPreferences.ts:38 | hrEmployeeMaster, widgets |
-| `/api/ui-preferences/save` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:221` | response @ src/api/uiPreferences.ts:50 | hrEmployeeMaster, widgets |
+| `/api/ui-preferences/get` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:200` | response @ src/api/uiPreferences.ts:44 | hrEmployeeMaster, widgets |
+| `/api/ui-preferences/save` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:221` | response @ src/api/uiPreferences.ts:56 | hrEmployeeMaster, widgets |
 | `/api/widgets/packages/install` | `ui.widgets.packages.manage` | requirePermission | `-` | `netlify/functions/routes/widgetPackages.ts:95` | res @ src/api/widgets.ts:29 | widgets |
 | `/api/widgets/packages/list` | `ui.widgets.packages.view` | requirePermission | `-` | `netlify/functions/routes/widgetPackages.ts:81` | res @ src/api/widgets.ts:18 | widgets |
 | `/api/widgets/packages/uninstall` | `ui.widgets.packages.manage` | requirePermission | `-` | `netlify/functions/routes/widgetPackages.ts:142` | res @ src/api/widgets.ts:34 | widgets |

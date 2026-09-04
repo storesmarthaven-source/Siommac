@@ -22,6 +22,7 @@ export interface PopoverProps {
   class?: string;
   matchAnchorWidth?: boolean;
   align?: 'start' | 'center' | 'end';
+  placement?: 'auto' | 'top' | 'bottom' | 'left' | 'right';
   offset?: number;
   maxHeight?: number;
   /** Move focus to the first interactive descendant after opening. */
@@ -36,7 +37,7 @@ const FOCUSABLE = [
 export function Popover({
   open, anchor, onClose, label, children, id, class: extra,
   matchAnchorWidth = false, align = 'start', offset = 8, maxHeight = 360,
-  initialFocus = false,
+  placement = 'auto', initialFocus = false,
 }: PopoverProps): VNode | null {
   const surfaceRef = useRef<HTMLDivElement | null>(null);
 
@@ -60,6 +61,7 @@ export function Popover({
       onDismiss={onClose}
       matchAnchorWidth={matchAnchorWidth}
       align={align}
+      placement={placement}
       offset={offset}
       maxHeight={maxHeight}
       id={id}

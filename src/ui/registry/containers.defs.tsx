@@ -12,6 +12,7 @@ import { LucideIcon } from '../LucideIcon';
 import { Badge } from '../primitives/Badge';
 import { Button } from '../primitives/Button';
 import { Card, CardHeader, CardFooter } from '../containers/Card';
+import { FeatureSurface } from '../containers/FeatureSurface';
 import { type ComponentDef, type PropValues } from './types';
 import { type CardVariant, type CardTone, type CardDensity, type CardAccent } from '../containers/Card';
 
@@ -274,4 +275,58 @@ export const cardDef: ComponentDef = {
   ],
 };
 
-export const CONTAINER_DEFS: readonly ComponentDef[] = [cardDef];
+export const featureSurfaceDef: ComponentDef = {
+  id: 'feature-surface',
+  thumbnail: 'card',
+  name: 'FeatureSurface',
+  category: 'containers',
+  description: 'A SIOMAC navy emphasis surface for one important setting, status or policy, with canonical inverse copy and an optional action region.',
+  status: 'stable',
+  componentPath: 'src/ui/containers/FeatureSurface/FeatureSurface.tsx',
+  importFrom: '@ui',
+  props: {
+    icon: { type: 'boolean', label: 'Icon', default: true },
+    eyebrow: { type: 'text', label: 'Eyebrow', default: 'Focus protected' },
+    title: { type: 'text', label: 'Title', default: 'Quiet Mode is on' },
+    description: { type: 'text', label: 'Description', default: 'Routine popups are paused while important activity remains available.' },
+    action: { type: 'boolean', label: 'Action', default: true },
+  },
+  style: [
+    { label: 'Surface', controls: [
+      { name: '--ui-feature-surface-bg-start', label: 'Background start', kind: 'color' },
+      { name: '--ui-feature-surface-bg-end', label: 'Background end', kind: 'color' },
+      { name: '--ui-feature-surface-border', label: 'Border', kind: 'color' },
+      { name: '--ui-feature-surface-radius', label: 'Corner radius', kind: 'size' },
+    ] },
+    { label: 'Rhythm', controls: [
+      { name: '--ui-feature-surface-padding', label: 'Padding', kind: 'size' },
+      { name: '--ui-feature-surface-gap', label: 'Content gap', kind: 'size' },
+    ] },
+  ],
+  states: ['default'],
+  compare: ['default'],
+  a11y: {
+    role: 'A semantic section; consumers add a live role only when the status changes asynchronously.',
+    name: 'The visible title names the section in surrounding context.',
+    keyboard: [{ keys: 'Tab', does: 'Reaches only controls supplied through the actions slot.' }],
+    focus: 'The surface itself is not focusable; composed controls own focus.',
+    notes: ['Use for one high-emphasis policy or status. Do not stack several FeatureSurfaces in one section.'],
+  },
+  render: p => (
+    <FeatureSurface
+      icon={b(p.icon) ? <LucideIcon name="MoonStar" /> : undefined}
+      eyebrow={s(p.eyebrow, 'Focus protected')}
+      title={s(p.title, 'Quiet Mode is on')}
+      description={s(p.description, 'Routine popups are paused while important activity remains available.')}
+      actions={b(p.action) ? <Button variant="secondary" size="sm">Manage</Button> : undefined}
+    />
+  ),
+  code: p => `<FeatureSurface
+  ${b(p.icon) ? 'icon={<MoonStar />}' : ''}
+  eyebrow="${s(p.eyebrow, 'Focus protected')}"
+  title="${s(p.title, 'Quiet Mode is on')}"
+  description="${s(p.description, 'Routine popups are paused while important activity remains available.')}"${b(p.action) ? '\n  actions={<Button variant="secondary">Manage</Button>}' : ''}
+/>`,
+};
+
+export const CONTAINER_DEFS: readonly ComponentDef[] = [cardDef, featureSurfaceDef];

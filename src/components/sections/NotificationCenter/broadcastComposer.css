@@ -1,0 +1,98 @@
+@layer sections {
+  .nc-broadcast-dialog {
+    max-height: min(820px, calc(100vh - 36px));
+  }
+
+  .nc-broadcast-body > .ui-dialog-layout {
+    min-height: 520px;
+  }
+
+  .nc-broadcast-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .nc-broadcast-sidebar-heading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .nc-broadcast-sidebar-heading > div {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+  }
+
+  .nc-broadcast-sidebar-heading strong {
+    color: var(--siomac-navy);
+    font-size: var(--ui-font-size-body);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--ui-line-height-tight);
+  }
+
+  .nc-broadcast-sidebar-heading span {
+    color: var(--text-muted);
+    font-size: var(--ui-font-size-caption);
+    line-height: var(--ui-line-height-base);
+  }
+
+  .nc-broadcast-sidebar .ui-dialog-context-facts {
+    margin-top: 0;
+  }
+
+  .nc-broadcast-safety-note {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-3);
+    margin-top: auto;
+    padding-top: var(--space-4);
+    border-top: var(--ui-border-width) solid var(--ui-dialog-sidebar-divider);
+  }
+
+  .nc-broadcast-safety-note > svg {
+    box-sizing: border-box;
+    width: 32px;
+    height: 32px;
+    padding: 7px;
+    border-radius: var(--radius-sm);
+    background: var(--st-success-tint);
+    color: var(--st-success-strong);
+  }
+
+  .nc-broadcast-safety-note > span {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+  }
+
+  .nc-broadcast-safety-note strong {
+    color: var(--siomac-navy);
+    font-size: var(--ui-font-size-body-sm);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .nc-broadcast-safety-note small {
+    color: var(--text-muted);
+    font-size: var(--ui-font-size-caption);
+    line-height: var(--ui-line-height-base);
+  }
+
+  .nc-broadcast-main {
+    min-width: 0;
+  }
+
+  /* Grid children size to their own content instead of stretching to the
+     tallest helper copy in the row. This keeps every control at the governed
+     UI Kit height while the audience-specific guidance changes. */
+  .nc-broadcast-recipient-grid {
+    align-items: start;
+  }
+
+  .nc-broadcast-recipient-grid > .ui-field2 {
+    align-self: start;
+    width: 100%;
+  }
+}

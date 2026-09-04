@@ -71,11 +71,18 @@ export interface DropdownMenuProps {
   label: string;
   /** Match the trigger's width (filter menus) or size to content (action menus). */
   matchAnchorWidth?: boolean;
+  /** Align the popup edge to the trigger. Right-edge action menus should use `end`. */
+  align?: 'start' | 'center' | 'end';
+  /** Prefer a side; `auto` keeps the governed vertical collision handling. */
+  placement?: 'auto' | 'top' | 'bottom' | 'left' | 'right';
+  /** Draw a small pointer connecting the menu surface to its trigger. */
+  pointer?: boolean;
   id?: string;
 }
 
 export function DropdownMenu({
-  open, anchor, onClose, items, label, matchAnchorWidth = false, id,
+  open, anchor, onClose, items, label, matchAnchorWidth = false,
+  align = 'start', placement = 'auto', pointer = false, id,
 }: DropdownMenuProps): VNode | null {
   const groups = useMemo(() => toGroups(items), [items]);
   const flat = useMemo(() => groups.flatMap(g => g.items), [groups]);
@@ -157,10 +164,12 @@ export function DropdownMenu({
       anchor={anchor}
       onDismiss={onClose}
       matchAnchorWidth={matchAnchorWidth}
+      align={align}
+      placement={placement}
       role="menu"
       aria-label={label}
       id={id}
-      class="ui-menu"
+      class={`ui-menu${pointer ? ` ui-menu--pointer ui-menu--align-${align}` : ''}`}
       onKeyDown={onKeyDown}
     >
       <div>

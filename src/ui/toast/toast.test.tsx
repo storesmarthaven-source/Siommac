@@ -20,13 +20,19 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, act, cleanup }         from "@testing-library/preact";
-import { toast, ToastCard, Toaster, type ToastRecord }    from "@ui/toast";
+import {
+  toast, ToastCard, Toaster,
+  getToastRuntimePreferences, resetToastRuntimePreferences, setToastRuntimePreferences,
+  type ToastRecord,
+} from "@ui/toast";
 import { getToasts, removeToast, TOAST_EXIT_MS }           from "./toastStore";
+import { ToastProgress }                                  from "./ToastProgress";
 
 // ── Reset store between tests ─────────────────────────────────────────────────
 
 beforeEach(() => {
   removeToast();
+  resetToastRuntimePreferences();
   vi.useFakeTimers();
 });
 
@@ -108,11 +114,24 @@ describe("toast API", () => {
     expect(t?.tier).toBe("normal");
   });
 
-  it("toast.success() creates a success toast with 4s default", () => {
+  it("toast.success() creates a success toast with 6s default", () => {
     toast.success("Saved");
     const t = getToasts()[0];
     expect(t?.variant).toBe("success");
-    expect(t?.duration).toBe(4000);
+    expect(t?.duration).toBe(6000);
+  });
+
+  it("uses the configured display time while preserving explicit durations", () => {
+    setToastRuntimePreferences({ ...getToastRuntimePreferences(), durationMode: 'extended' });
+    toast.info("Extended");
+    toast.info("Explicit", { duration: 2500 });
+    expect(getToasts()[0]?.duration).toBe(10000);
+    expect(getToasts()[1]?.duration).toBe(2500);
+
+    removeToast();
+    setToastRuntimePreferences({ ...getToastRuntimePreferences(), durationMode: 'persistent' });
+    toast.success("Persistent");
+    expect(getToasts()[0]?.duration).toBe(0);
   });
 
   it("stores custom icon and progress behavior on the real toast record", () => {
@@ -130,18 +149,18 @@ describe("toast API", () => {
     expect(t?.ariaLive).toBe("assertive");
   });
 
-  it("toast.warning() creates a warning toast with 5s default", () => {
+  it("toast.warning() creates a warning toast with 6s default", () => {
     toast.warning("Watch out");
     const t = getToasts()[0];
     expect(t?.variant).toBe("warning");
-    expect(t?.duration).toBe(5000);
+    expect(t?.duration).toBe(6000);
   });
 
-  it("toast.info() creates an info toast with 4s default", () => {
+  it("toast.info() creates an info toast with 6s default", () => {
     toast.info("FYI");
     const t = getToasts()[0];
     expect(t?.variant).toBe("info");
-    expect(t?.duration).toBe(4000);
+    expect(t?.duration).toBe(6000);
   });
 
   it("toast.loading() creates a sticky loading toast", () => {
@@ -163,7 +182,7 @@ describe("toast API", () => {
     expect(t?.actions?.[0]?.label).toBe("Verify");
   });
 
-  it("toast.rich() creates a rich toast with 4s default", () => {
+  it("toast.rich() creates a rich toast with 6s default", () => {
     toast.rich({
       title: "Payroll report generated",
       file: { name: "PAY-2026-08.pdf", type: "pdf" }
@@ -172,6 +191,7 @@ describe("toast API", () => {
     expect(t?.tier).toBe("rich");
     expect(t?.title).toBe("Payroll report generated");
     expect(t?.file?.name).toBe("PAY-2026-08.pdf");
+    expect(t?.duration).toBe(6000);
   });
 
   it("toast.rich() stores details and note fields", () => {
@@ -219,6 +239,31 @@ describe("Toaster component", () => {
     expect(document.querySelector(".siomac-toaster")).toBeTruthy();
   });
 
+  it("uses the configured screen-position class", () => {
+    setToastRuntimePreferences({ ...getToastRuntimePreferences(), position: 'bottom-right' });
+    renderToaster();
+    void act(() => { toast.info("Positioned"); });
+    expect(document.querySelector('.siomac-toaster--bottom-right')).toBeTruthy();
+  });
+
+  it("hides record previews while keeping actionable buttons available", () => {
+    setToastRuntimePreferences({ ...getToastRuntimePreferences(), showPreviews: false });
+    renderToaster();
+    void act(() => {
+      toast.action({
+        title: 'Approval ready',
+        description: 'Private supporting detail',
+        details: [{ label: 'Employee', value: 'Jane Doe' }],
+        actions: [{ label: 'Review' }],
+        duration: 0,
+      });
+    });
+    expect(screen.queryByText('Private supporting detail')).toBeNull();
+    expect(screen.queryByText('Jane Doe')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Expand notification details' }));
+    expect(screen.getByRole('button', { name: 'Review' })).toBeTruthy();
+  });
+
   it("card element uses the siomac-toast class", () => {
     renderToaster();
     void act(() => { toast.info("Hello"); });
@@ -230,6 +275,20 @@ describe("Toaster component", () => {
     renderToaster();
     void act(() => { toast.success("Good"); });
     expect(document.querySelector(".siomac-toast--success")).toBeTruthy();
+  });
+
+  it("uses a distinct semantic outline icon for every built-in tone", () => {
+    renderToaster();
+    void act(() => {
+      toast.success("Saved", { duration: 0 });
+      toast.info("Imported", { duration: 0 });
+      toast.warning("Broken link", { duration: 0 });
+      toast.error("Expired", { duration: 0 });
+    });
+    expect(document.querySelector(".siomac-toast__icon--success")).toBeTruthy();
+    expect(document.querySelector(".siomac-toast__icon--info")).toBeTruthy();
+    expect(document.querySelector(".siomac-toast__icon--warning")).toBeTruthy();
+    expect(document.querySelector(".siomac-toast__icon--error")).toBeTruthy();
   });
 
   it("card has tier class (siomac-toast--normal for normal toasts)", () => {
@@ -282,14 +341,67 @@ describe("Toaster component", () => {
     expect(Number(span?.textContent)).toBeGreaterThan(0);
   });
 
-  it("normal footer click-to-stop pauses timer", () => {
+  it("click-to-stop permanently removes the timer band and keeps the toast", () => {
     renderToaster();
     void act(() => { toast.success("Pauseable", { duration: 5000 }); });
     const footer = document.querySelector(".siomac-toast__timer");
     const stopBtn = footer?.querySelector("button");
     expect(stopBtn?.textContent).toBe("Click to stop.");
     fireEvent.click(stopBtn!);
-    expect(footer?.querySelector("button")?.textContent).toBe("Resume.");
+    expect(document.querySelector(".siomac-toast__timer")).toBeNull();
+    expect(screen.getByText("Pauseable")).toBeTruthy();
+    expect(document.querySelector(".siomac-toast")?.classList.contains("is-paused")).toBe(true);
+  });
+
+  it("fills timer progress left-to-right from elapsed time", () => {
+    const { container, rerender } = render(<ToastProgress duration={5000} remainingMs={5000} />);
+    const progress = container.querySelector<HTMLElement>(".siomac-toast__progress");
+    expect(progress?.style.transform).toBe("scaleX(0)");
+    rerender(<ToastProgress duration={5000} remainingMs={2500} />);
+    expect(progress?.style.transform).toBe("scaleX(0.5)");
+    rerender(<ToastProgress duration={5000} remainingMs={0} />);
+    expect(progress?.style.transform).toBe("scaleX(1)");
+  });
+
+  it("advances the rendered progress while the pointer is over the toast", () => {
+    renderToaster();
+    void act(() => { toast.success("Still counting", { duration: 5000 }); });
+    const card = document.querySelector<HTMLElement>(".siomac-toast");
+    const progress = document.querySelector<HTMLElement>(".siomac-toast__progress");
+    expect(progress?.style.transform).toBe("scaleX(0)");
+    fireEvent.mouseEnter(card!);
+    void act(() => { vi.advanceTimersByTime(1000); });
+    const ratio = Number(progress?.style.transform.match(/scaleX\(([^)]+)\)/)?.[1] ?? 0);
+    expect(ratio).toBeGreaterThan(0);
+  });
+
+  it("expands and collapses supporting content beneath the stable header", () => {
+    renderToaster();
+    void act(() => {
+      toast.info("Roster ready", {
+        description: "Review the generated roster before publishing.",
+        duration: 0,
+      });
+    });
+
+    const expand = screen.getByRole("button", { name: "Expand notification details" });
+    const details = document.querySelector(".siomac-toast__details-shell");
+    expect(expand.getAttribute("aria-expanded")).toBe("false");
+    expect(details?.getAttribute("aria-hidden")).toBe("true");
+
+    fireEvent.click(expand);
+    expect(screen.getByRole("button", { name: "Collapse notification details" }).getAttribute("aria-expanded")).toBe("true");
+    expect(details?.getAttribute("aria-hidden")).toBe("false");
+    expect(document.querySelector(".siomac-toast")?.classList.contains("is-expanded")).toBe(true);
+
+    fireEvent.click(screen.getByRole("button", { name: "Collapse notification details" }));
+    expect(details?.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  it("does not show an expand control when there is no supporting content", () => {
+    renderToaster();
+    void act(() => { toast.info("Title only", { duration: 0 }); });
+    expect(screen.queryByRole("button", { name: "Expand notification details" })).toBeNull();
   });
 
   it("sticky normal toast (duration 0) does NOT show footer", () => {
@@ -300,10 +412,7 @@ describe("Toaster component", () => {
 
   // ── Action toast ──────────────────────────────────────────────────────────
 
-  it("action toast shows the countdown in its single footer band", () => {
-    // Action toasts auto-dismiss (they carry a duration), so they surface the "closing in Xs"
-    // countdown — merged INTO the actions band (one footer: countdown left, buttons right),
-    // never a second stacked .siomac-toast__timer footer.
+  it("action toast keeps actions in details and countdown in the shared timer band", () => {
     renderToaster();
     void act(() => {
       toast.action({
@@ -312,8 +421,17 @@ describe("Toaster component", () => {
         actions: [{ label: "Verify", dismissOnClick: true }]
       });
     });
-    expect(document.querySelector(".siomac-toast__actions .siomac-toast__timer-text")).not.toBeNull();
-    expect(document.querySelector(".siomac-toast__timer")).toBeNull();
+    expect(document.querySelector(".siomac-toast__actions .siomac-toast__timer-text")).toBeNull();
+    expect(document.querySelector(".siomac-toast__actions")).not.toBeNull();
+    expect(document.querySelector(".siomac-toast__timer")).not.toBeNull();
+    const details = document.querySelector(".siomac-toast__details-shell");
+    const action = document.querySelector<HTMLButtonElement>(".siomac-toast__action");
+    expect(details?.getAttribute("aria-hidden")).toBe("true");
+    expect(action?.tabIndex).toBe(-1);
+    fireEvent.click(screen.getByRole("button", { name: "Expand notification details" }));
+    expect(details?.getAttribute("aria-hidden")).toBe("false");
+    expect(screen.getByText("Verify before payroll close.")).toBeTruthy();
+    expect(action?.tabIndex).toBe(0);
   });
 
   it("action toast renders chips when moduleLabel/statusLabel set", () => {
@@ -450,6 +568,7 @@ describe("Toaster component", () => {
     expect(screen.getByText("Hello")).toBeTruthy();
     const dismissBtn = screen.getByLabelText("Dismiss notification");
     fireEvent.click(dismissBtn);
+    expect(document.querySelector(".siomac-toast.exiting")).toBeTruthy();
     void act(() => { vi.advanceTimersByTime(TOAST_EXIT_MS); });
     expect(screen.queryByText("Hello")).toBeNull();
   });
@@ -529,18 +648,18 @@ describe("Toaster component", () => {
 
   // ── Hover / focus pause ───────────────────────────────────────────────────
 
-  it("hover pauses timer via is-paused class toggle", () => {
+  it("hover does not freeze the reference timer animation", () => {
     renderToaster();
     void act(() => { toast.success("Hover me", { duration: 5000 }); });
     const card = document.querySelector<HTMLElement>(".siomac-toast");
     expect(card).toBeTruthy();
     fireEvent.mouseEnter(card!);
-    expect(card?.classList.contains("is-paused")).toBe(true);
+    expect(card?.classList.contains("is-paused")).toBe(false);
     fireEvent.mouseLeave(card!);
     expect(card?.classList.contains("is-paused")).toBe(false);
   });
 
-  it("focus pauses timer: card has CSS :focus-within rule that pauses progress", () => {
+  it("stopping a focused timer is one-way", () => {
     // Preact's event delegation in jsdom doesn't reliably fire focusin/out on
     // portalled cards. Test the CSS rule exists by verifying the card supports
     // focus (tabIndex=-1) and that a click-to-stop toggles paused state.
@@ -550,13 +669,12 @@ describe("Toaster component", () => {
     expect(card).toBeTruthy();
     // Card is focusable
     expect(card?.getAttribute("tabindex")).toBe("-1");
-    // click-to-stop in the footer sets is-paused (same underlying mechanism)
+    // Click-to-stop sets the persistent pause and removes the timer controls.
     const footer = document.querySelector(".siomac-toast__timer");
     const stopBtn = footer?.querySelector("button");
     void act(() => { fireEvent.click(stopBtn!); });
     expect(card?.classList.contains("is-paused")).toBe(true);
-    void act(() => { fireEvent.click(stopBtn!); });
-    expect(card?.classList.contains("is-paused")).toBe(false);
+    expect(document.querySelector(".siomac-toast__timer")).toBeNull();
   });
 
   // ── Stacking (archieamas deck) ────────────────────────────────────────────

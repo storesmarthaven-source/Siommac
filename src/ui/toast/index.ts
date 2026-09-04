@@ -1,6 +1,12 @@
 export { Toaster } from "./Toaster";
 export { ToastCard, type ToastCardProps } from "./ToastCard";
 export { toast } from "./toastStore";
+export {
+  getToastRuntimePreferences,
+  resetToastRuntimePreferences,
+  setToastRuntimePreferences,
+  subscribeToastRuntimePreferences,
+} from "./toastPreferences";
 export type {
   ToastActionButton,
   ToastActionOptions,

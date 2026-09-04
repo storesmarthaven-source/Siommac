@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "778d1a335b1945f5724e5cfb8958900bd5a038bd",
+    "head": "31708b958f582b7f45996b607a85ce19c66ca2c4",
     "branch": "codex/onboarding-ui-kit-integration",
-    "fingerprint": "996e3bfc94214f09e875a1a5",
-    "indexedFiles": 1917
+    "fingerprint": "8384e7dbcf0574a1cc527ea5",
+    "indexedFiles": 1948
   },
   "summary": {
-    "files": 1552,
-    "symbols": 15441,
+    "files": 1583,
+    "symbols": 15615,
     "widgets": 77,
     "routes": 992,
     "routeDefinitions": 993,
@@ -74,8 +74,8 @@
     {
       "id": "communications",
       "counts": {
-        "files": 113,
-        "symbols": 1060,
+        "files": 127,
+        "symbols": 1136,
         "widgets": 0,
         "routes": 93,
         "routeDefinitions": 96,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 472,
-        "symbols": 4155,
+        "files": 489,
+        "symbols": 4253,
         "widgets": 16,
         "routes": 38,
         "routeDefinitions": 53,
@@ -3552,18 +3552,25 @@
       "hash": "b17d316114a23bdf"
     },
     {
+      "path": "src/api/communications.authGate.test.tsx",
+      "module": "communications",
+      "role": "frontend-api",
+      "lines": 69,
+      "hash": "42b6270d38166668"
+    },
+    {
       "path": "src/api/communications.markTicketRead.test.tsx",
       "module": "communications",
       "role": "frontend-api",
-      "lines": 53,
-      "hash": "8bb421e2367ff23d"
+      "lines": 54,
+      "hash": "28630ca47b9e2310"
     },
     {
       "path": "src/api/communications.ts",
       "module": "communications",
       "role": "frontend-api",
-      "lines": 1096,
-      "hash": "3b55e68360a5109c"
+      "lines": 1182,
+      "hash": "c998de84c807e271"
     },
     {
       "path": "src/api/communicationsCompliance.ts",
@@ -4077,11 +4084,18 @@
       "hash": "a7c66f7e036d330a"
     },
     {
+      "path": "src/api/uiPreferences.navigation.test.ts",
+      "module": "platform",
+      "role": "frontend-api",
+      "lines": 37,
+      "hash": "436138cd5cda7584"
+    },
+    {
       "path": "src/api/uiPreferences.ts",
       "module": "platform",
       "role": "frontend-api",
-      "lines": 60,
-      "hash": "86061392d9dc9d7d"
+      "lines": 66,
+      "hash": "7f8444167f9455cb"
     },
     {
       "path": "src/api/weather.ts",
@@ -6919,53 +6933,95 @@
       "hash": "f914d31433c622da"
     },
     {
+      "path": "src/components/sections/NotificationCenter/BroadcastComposer.test.tsx",
+      "module": "communications",
+      "role": "frontend-page",
+      "lines": 131,
+      "hash": "305b6289ee9adcbb"
+    },
+    {
       "path": "src/components/sections/NotificationCenter/BroadcastComposer.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 106,
-      "hash": "d86769fd2308d63f"
+      "lines": 322,
+      "hash": "0c06e724b2222253"
+    },
+    {
+      "path": "src/components/sections/NotificationCenter/NotificationCenter.test.tsx",
+      "module": "communications",
+      "role": "frontend-page",
+      "lines": 82,
+      "hash": "6fa9e888dd763cdf"
     },
     {
       "path": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 255,
-      "hash": "195611bca6ebf645"
+      "lines": 377,
+      "hash": "2f79a45811dd9c3c"
     },
     {
       "path": "src/components/sections/NotificationCenter/NotificationDropdown.test.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 73,
-      "hash": "64d8bc01d63fc4ca"
+      "lines": 210,
+      "hash": "161fc04ce6538b80"
     },
     {
       "path": "src/components/sections/NotificationCenter/NotificationDropdown.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 186,
-      "hash": "5062305e2aae4285"
+      "lines": 346,
+      "hash": "04e4045882bd2277"
     },
     {
       "path": "src/components/sections/NotificationCenter/NotificationDropdownItem.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 65,
-      "hash": "5c1b06a0047090b7"
+      "lines": 62,
+      "hash": "a1822125e2768a5e"
+    },
+    {
+      "path": "src/components/sections/NotificationCenter/NotificationEmptyVisual.tsx",
+      "module": "communications",
+      "role": "frontend-page",
+      "lines": 30,
+      "hash": "b44ee63be5e31282"
+    },
+    {
+      "path": "src/components/sections/NotificationCenter/NotificationFileAttachment.tsx",
+      "module": "communications",
+      "role": "frontend-page",
+      "lines": 50,
+      "hash": "885ff96ed8854649"
+    },
+    {
+      "path": "src/components/sections/NotificationCenter/NotificationItem.test.tsx",
+      "module": "communications",
+      "role": "frontend-page",
+      "lines": 64,
+      "hash": "2bf468d53a09c89d"
     },
     {
       "path": "src/components/sections/NotificationCenter/NotificationItem.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 85,
-      "hash": "9c21362888b53506"
+      "lines": 93,
+      "hash": "618a20d8c6cf8079"
+    },
+    {
+      "path": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.test.tsx",
+      "module": "communications",
+      "role": "frontend-page",
+      "lines": 194,
+      "hash": "334e03e52ad4e219"
     },
     {
       "path": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 228,
-      "hash": "f74157aded1f678b"
+      "lines": 625,
+      "hash": "36f52d3259f07914"
     },
     {
       "path": "src/components/sections/NotificationCenter/index.ts",
@@ -6989,11 +7045,32 @@
       "hash": "d688db6f0a4cfc58"
     },
     {
+      "path": "src/components/sections/NotificationCenter/notifMeta.test.ts",
+      "module": "communications",
+      "role": "frontend-page",
+      "lines": 32,
+      "hash": "8ae522473772d5b7"
+    },
+    {
       "path": "src/components/sections/NotificationCenter/notifMeta.ts",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 48,
-      "hash": "b3a1f5a61cd9306e"
+      "lines": 83,
+      "hash": "a6546b729b9356ec"
+    },
+    {
+      "path": "src/components/sections/NotificationCenter/previewNotifications.test.ts",
+      "module": "communications",
+      "role": "frontend-page",
+      "lines": 35,
+      "hash": "e3cfbe520376d55b"
+    },
+    {
+      "path": "src/components/sections/NotificationCenter/previewNotifications.ts",
+      "module": "communications",
+      "role": "frontend-page",
+      "lines": 234,
+      "hash": "2a3b760dcd92c15b"
     },
     {
       "path": "src/components/sections/PayslipStudio/App.tsx",
@@ -8487,6 +8564,27 @@
       "hash": "b0dd21deaddd4d13"
     },
     {
+      "path": "src/ui/ai/AiAssistant/AiAssistant.test.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 60,
+      "hash": "0b109f22d3849d46"
+    },
+    {
+      "path": "src/ui/ai/AiAssistant/AiAssistant.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 348,
+      "hash": "efc45fc5bd3632b9"
+    },
+    {
+      "path": "src/ui/ai/AiAssistant/index.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 2,
+      "hash": "b29e2e909c40a894"
+    },
+    {
       "path": "src/ui/charts/BarRow.tsx",
       "module": "platform",
       "role": "frontend",
@@ -8506,6 +8604,13 @@
       "role": "frontend",
       "lines": 48,
       "hash": "92ff4c8b8b4baadc"
+    },
+    {
+      "path": "src/ui/components/ActivityDots.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 36,
+      "hash": "98e1f6344e7c930b"
     },
     {
       "path": "src/ui/components/DetailGrid.tsx",
@@ -8574,8 +8679,8 @@
       "path": "src/ui/components/LoadingStates.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 18,
-      "hash": "9c595d7235668768"
+      "lines": 49,
+      "hash": "813f6317084f5116"
     },
     {
       "path": "src/ui/components/MetricRow.tsx",
@@ -8658,8 +8763,8 @@
       "path": "src/ui/components/Skeleton.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 240,
-      "hash": "d359519d1316f1de"
+      "lines": 352,
+      "hash": "fa0f38e9347cf39b"
     },
     {
       "path": "src/ui/components/SparkCard.tsx",
@@ -8767,6 +8872,27 @@
       "hash": "ed8cf1aec9e2c6e8"
     },
     {
+      "path": "src/ui/containers/FeatureSurface/FeatureSurface.test.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 24,
+      "hash": "0d9b1ec407dd8b64"
+    },
+    {
+      "path": "src/ui/containers/FeatureSurface/FeatureSurface.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 38,
+      "hash": "d5f5df5dab4ab801"
+    },
+    {
+      "path": "src/ui/containers/FeatureSurface/index.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 2,
+      "hash": "011f9131e6704ef0"
+    },
+    {
       "path": "src/ui/data/ActivityGauge.tsx",
       "module": "platform",
       "role": "frontend",
@@ -8823,11 +8949,18 @@
       "hash": "e2c22d1386418dd5"
     },
     {
+      "path": "src/ui/data/FileTypeIcon.test.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 22,
+      "hash": "7951f8230c0cd1ea"
+    },
+    {
       "path": "src/ui/data/FileTypeIcon.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 66,
-      "hash": "a9bbc3dfab6a7a46"
+      "lines": 80,
+      "hash": "342160b32ea948b3"
     },
     {
       "path": "src/ui/data/QrCode.tsx",
@@ -8844,11 +8977,39 @@
       "hash": "079470acda796615"
     },
     {
+      "path": "src/ui/feedback/IconTile.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 44,
+      "hash": "1a0cce0653e2248c"
+    },
+    {
       "path": "src/ui/feedback/Illustration.tsx",
       "module": "platform",
       "role": "frontend",
       "lines": 80,
       "hash": "41754084dbdd7c38"
+    },
+    {
+      "path": "src/ui/feedback/NotificationIcon.tsx",
+      "module": "communications",
+      "role": "frontend",
+      "lines": 60,
+      "hash": "c155ff2820f5b6ce"
+    },
+    {
+      "path": "src/ui/feedback/NotificationListItem.tsx",
+      "module": "communications",
+      "role": "frontend",
+      "lines": 105,
+      "hash": "440c9bcd6b99c63e"
+    },
+    {
+      "path": "src/ui/feedback/NotificationPopover.tsx",
+      "module": "communications",
+      "role": "frontend",
+      "lines": 45,
+      "hash": "87c1e74b9bd82993"
     },
     {
       "path": "src/ui/feedback/Progress.tsx",
@@ -8863,6 +9024,13 @@
       "role": "frontend",
       "lines": 43,
       "hash": "020ed7eda216c91a"
+    },
+    {
+      "path": "src/ui/feedback/notifications.test.tsx",
+      "module": "communications",
+      "role": "frontend",
+      "lines": 112,
+      "hash": "ab73903d424a2001"
     },
     {
       "path": "src/ui/forms/ColorPicker.tsx",
@@ -9141,8 +9309,8 @@
       "path": "src/ui/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 300,
-      "hash": "ccbe349756a9f16b"
+      "lines": 337,
+      "hash": "90f9f47e846c5d8a"
     },
     {
       "path": "src/ui/layouts/ModulePageLayout.tsx",
@@ -9194,6 +9362,27 @@
       "hash": "46bf16c18b3aaff9"
     },
     {
+      "path": "src/ui/navigation/GlobalSearch/GlobalSearch.test.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 138,
+      "hash": "f06783a216f68676"
+    },
+    {
+      "path": "src/ui/navigation/GlobalSearch/GlobalSearch.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 408,
+      "hash": "d6aa3118c1498b61"
+    },
+    {
+      "path": "src/ui/navigation/GlobalSearch/index.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 10,
+      "hash": "7a00e030f5e96049"
+    },
+    {
       "path": "src/ui/navigation/PageActionBar/PageActionBar.test.tsx",
       "module": "platform",
       "role": "frontend",
@@ -9227,6 +9416,27 @@
       "role": "frontend",
       "lines": 8,
       "hash": "b924fa62f376e0cd"
+    },
+    {
+      "path": "src/ui/navigation/SidebarNavigation/SidebarNavigation.test.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 135,
+      "hash": "57bbd95ef3fa2ad7"
+    },
+    {
+      "path": "src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 406,
+      "hash": "f70b0995da496933"
+    },
+    {
+      "path": "src/ui/navigation/SidebarNavigation/index.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 11,
+      "hash": "cd8cb156c92be4c5"
     },
     {
       "path": "src/ui/navigation/Tabs/Tabs.test.tsx",
@@ -9288,43 +9498,43 @@
       "path": "src/ui/overlays/AnchoredPopup.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 202,
-      "hash": "576c7a8e36753b9a"
+      "lines": 265,
+      "hash": "af5a838f1fd3a3b8"
     },
     {
       "path": "src/ui/overlays/Dialog.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 261,
-      "hash": "bfe8eb15ef804694"
+      "lines": 293,
+      "hash": "f399c2ea3913c080"
     },
     {
       "path": "src/ui/overlays/Dialog.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 225,
-      "hash": "650e2c50a958baaf"
+      "lines": 283,
+      "hash": "38fad73e58e68e85"
     },
     {
       "path": "src/ui/overlays/DropdownMenu.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 221,
-      "hash": "b1fce4ee358e1c1f"
+      "lines": 230,
+      "hash": "66f47f88961e1a36"
     },
     {
       "path": "src/ui/overlays/Popover.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 49,
-      "hash": "b0c14bf265cf6033"
+      "lines": 83,
+      "hash": "cd76ae6126fb823a"
     },
     {
       "path": "src/ui/overlays/Popover.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 76,
-      "hash": "9aa62f86f0501f28"
+      "lines": 78,
+      "hash": "839f4c907cc2c4f4"
     },
     {
       "path": "src/ui/overlays/Tooltip.test.tsx",
@@ -9435,8 +9645,8 @@
       "path": "src/ui/primitives/Button.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 232,
-      "hash": "1899123307a9fb79"
+      "lines": 239,
+      "hash": "3bd5d6f043daa432"
     },
     {
       "path": "src/ui/primitives/Button.tsx",
@@ -9456,29 +9666,29 @@
       "path": "src/ui/primitives/actions.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 232,
-      "hash": "4e12c78070c7e304"
+      "lines": 268,
+      "hash": "8faab01ccf483b24"
     },
     {
       "path": "src/ui/primitives/actions.tsx",
       "module": "platform",
       "role": "frontend",
       "lines": 300,
-      "hash": "eeb6d527b3ad2988"
+      "hash": "5f734c06c60e9411"
     },
     {
       "path": "src/ui/primitives/choice.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 59,
-      "hash": "65aa82b42c58aeaa"
+      "lines": 121,
+      "hash": "73848a513bf8abb9"
     },
     {
       "path": "src/ui/primitives/choice.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 459,
-      "hash": "c185340da28c7cc4"
+      "lines": 482,
+      "hash": "7a9837c10d5a3243"
     },
     {
       "path": "src/ui/primitives/choiceMigration.test.ts",
@@ -9519,8 +9729,8 @@
       "path": "src/ui/registry/containers.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 278,
-      "hash": "5da4c02b65d9c6a4"
+      "lines": 333,
+      "hash": "a71864651b84145c"
     },
     {
       "path": "src/ui/registry/data.defs.tsx",
@@ -9533,8 +9743,8 @@
       "path": "src/ui/registry/definitions.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 376,
-      "hash": "991b06123813efb6"
+      "lines": 391,
+      "hash": "6e714d973e0e4dda"
     },
     {
       "path": "src/ui/registry/families.ts",
@@ -9547,15 +9757,15 @@
       "path": "src/ui/registry/feedback.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 360,
-      "hash": "134e0661b5e99c67"
+      "lines": 610,
+      "hash": "5f6945862e1b943c"
     },
     {
       "path": "src/ui/registry/forms.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 1158,
-      "hash": "e603a1b3ec8e20d2"
+      "lines": 1162,
+      "hash": "ff1eb08569cd3eb7"
     },
     {
       "path": "src/ui/registry/index.ts",
@@ -9568,8 +9778,8 @@
       "path": "src/ui/registry/navigation.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 378,
-      "hash": "a25b2057223813a0"
+      "lines": 637,
+      "hash": "9bd1572639a05494"
     },
     {
       "path": "src/ui/registry/overlays.defs.tsx",
@@ -9610,15 +9820,15 @@
       "path": "src/ui/registry/remaining-primitives.defs.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 283,
-      "hash": "8c847ca09a5395b4"
+      "lines": 289,
+      "hash": "d7f60e9abb3e5e8f"
     },
     {
       "path": "src/ui/registry/runtime-feedback.test.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 41,
-      "hash": "8e4f61aea58d3ad3"
+      "lines": 63,
+      "hash": "18764a5760dd7f4f"
     },
     {
       "path": "src/ui/registry/types.ts",
@@ -9744,7 +9954,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 690,
-      "hash": "c45c566f149bab22"
+      "hash": "999c56bd62fba5f3"
     },
     {
       "path": "src/ui/studio/StudioInspector.tsx",
@@ -9925,57 +10135,64 @@
       "path": "src/ui/toast/ToastCard.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 324,
-      "hash": "71ff77e0e1a2ee20"
+      "lines": 333,
+      "hash": "13414d1698f214c2"
     },
     {
       "path": "src/ui/toast/ToastIcon.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 61,
-      "hash": "2fad4b384707761f"
+      "lines": 62,
+      "hash": "b7c6b7a2f9823967"
     },
     {
       "path": "src/ui/toast/ToastProgress.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 16,
-      "hash": "21a60a5962fc58c8"
+      "lines": 20,
+      "hash": "3b0e967f8bd5910f"
     },
     {
       "path": "src/ui/toast/Toaster.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 186,
-      "hash": "d89d29460bafa379"
+      "lines": 232,
+      "hash": "2112b4e62d998764"
     },
     {
       "path": "src/ui/toast/index.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 16,
-      "hash": "d419d9fddb103444"
+      "lines": 22,
+      "hash": "23f51815ca1dcacc"
     },
     {
       "path": "src/ui/toast/toast.test.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 649,
-      "hash": "a5701519486ebf47"
+      "lines": 767,
+      "hash": "e84dd9df135a5da9"
+    },
+    {
+      "path": "src/ui/toast/toastPreferences.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 28,
+      "hash": "3d9597f8511ed099"
     },
     {
       "path": "src/ui/toast/toastStore.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 223,
-      "hash": "2f539764e4fd684d"
+      "lines": 238,
+      "hash": "1e6f509bcc435623"
     },
     {
       "path": "src/ui/toast/toastTypes.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 92,
-      "hash": "df89054f83a059ad"
+      "lines": 98,
+      "hash": "61cddca47ab65325"
     },
     {
       "path": "src/ui/tokens/index.ts",
@@ -10793,8 +11010,8 @@
       "path": "tests/vitest/uiPreferencesContract.test.ts",
       "module": "testing",
       "role": "test",
-      "lines": 165,
-      "hash": "4a6a4f3a5ee91bba"
+      "lines": 185,
+      "hash": "f88aeae47b52a959"
     },
     {
       "path": "tests/vitest/uploadBase64.regression.test.ts",
@@ -11024,8 +11241,8 @@
       "path": "types/uiPreferences.ts",
       "module": "platform",
       "role": "shared-types",
-      "lines": 360,
-      "hash": "10d85a3387061648"
+      "lines": 501,
+      "hash": "7523b6a2c2facd88"
     },
     {
       "path": "types/weather.ts",
@@ -62494,10 +62711,35 @@
       ]
     },
     {
+      "name": "apiPost",
+      "kind": "variable",
+      "file": "src/api/communications.authGate.test.tsx",
+      "line": 13,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "ProtectedCommunicationsReads",
+      "kind": "function",
+      "file": "src/api/communications.authGate.test.tsx",
+      "line": 20,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "test"
+      ]
+    },
+    {
       "name": "Mark",
       "kind": "type",
       "file": "src/api/communications.markTicketRead.test.tsx",
-      "line": 21,
+      "line": 22,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -62509,7 +62751,7 @@
       "name": "Probe",
       "kind": "function",
       "file": "src/api/communications.markTicketRead.test.tsx",
-      "line": 22,
+      "line": 23,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -62522,17 +62764,29 @@
       "name": "MessagePin",
       "kind": "type",
       "file": "src/api/communications.ts",
-      "line": 27,
+      "line": 28,
       "module": "communications",
       "exported": true,
       "container": "",
       "tags": []
     },
     {
+      "name": "useAuthenticatedQueryEnabled",
+      "kind": "function",
+      "file": "src/api/communications.ts",
+      "line": 31,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
       "name": "MessageThreadListItem",
       "kind": "type",
       "file": "src/api/communications.ts",
-      "line": 32,
+      "line": 39,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62542,7 +62796,7 @@
       "name": "MessageParticipantProfile",
       "kind": "type",
       "file": "src/api/communications.ts",
-      "line": 33,
+      "line": 40,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62552,7 +62806,7 @@
       "name": "MessagePostRow",
       "kind": "type",
       "file": "src/api/communications.ts",
-      "line": 34,
+      "line": 41,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62562,7 +62816,7 @@
       "name": "MessageAttachment",
       "kind": "type",
       "file": "src/api/communications.ts",
-      "line": 35,
+      "line": 42,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62572,7 +62826,7 @@
       "name": "MessageRecipient",
       "kind": "type",
       "file": "src/api/communications.ts",
-      "line": 36,
+      "line": 43,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62582,7 +62836,7 @@
       "name": "MessageThreadDetail",
       "kind": "type",
       "file": "src/api/communications.ts",
-      "line": 37,
+      "line": 44,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62592,7 +62846,7 @@
       "name": "CommsSummary",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 41,
+      "line": 48,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62602,7 +62856,7 @@
       "name": "CanonicalNotification",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 59,
+      "line": 66,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62612,7 +62866,7 @@
       "name": "NotificationPreference",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 77,
+      "line": 84,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62622,7 +62876,7 @@
       "name": "NotificationSnoozeState",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 84,
+      "line": 91,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62632,7 +62886,7 @@
       "name": "NotificationPreferencesData",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 88,
+      "line": 95,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62642,7 +62896,7 @@
       "name": "MessageThread",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 94,
+      "line": 101,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62652,7 +62906,7 @@
       "name": "MessagePost",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 109,
+      "line": 116,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62662,7 +62916,7 @@
       "name": "CanonicalTicket",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 117,
+      "line": 124,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62672,7 +62926,7 @@
       "name": "TicketUserProfile",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 143,
+      "line": 150,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62682,7 +62936,7 @@
       "name": "TicketRequestType",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 151,
+      "line": 158,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62692,7 +62946,7 @@
       "name": "TicketAttachment",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 166,
+      "line": 173,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62702,7 +62956,7 @@
       "name": "CanonicalTicketDetail",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 176,
+      "line": 183,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62712,7 +62966,7 @@
       "name": "useCommsSummary",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 199,
+      "line": 206,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62724,7 +62978,7 @@
       "name": "NotificationListArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 216,
+      "line": 225,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62734,7 +62988,7 @@
       "name": "useNotifications",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 227,
+      "line": 236,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62746,7 +63000,7 @@
       "name": "useNotificationPreferences",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 245,
+      "line": 255,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62758,7 +63012,7 @@
       "name": "useSetNotificationPreference",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 258,
+      "line": 270,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62770,7 +63024,7 @@
       "name": "useMuteNotifications",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 267,
+      "line": 310,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62782,7 +63036,7 @@
       "name": "BroadcastArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 276,
+      "line": 337,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62792,7 +63046,7 @@
       "name": "useBroadcastNotification",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 285,
+      "line": 346,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62804,7 +63058,7 @@
       "name": "useMarkNotificationRead",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 294,
+      "line": 355,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62816,7 +63070,7 @@
       "name": "useMarkAllNotificationsRead",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 311,
+      "line": 372,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62828,7 +63082,7 @@
       "name": "useArchiveNotification",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 328,
+      "line": 389,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62840,7 +63094,7 @@
       "name": "useMessageThreads",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 347,
+      "line": 408,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62852,7 +63106,7 @@
       "name": "useMessagePosts",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 363,
+      "line": 426,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62864,7 +63118,7 @@
       "name": "PostMessageArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 379,
+      "line": 443,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62874,7 +63128,7 @@
       "name": "usePostMessage",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 387,
+      "line": 451,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62886,7 +63140,7 @@
       "name": "AttachmentUploadUrlResult",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 404,
+      "line": 468,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62896,7 +63150,7 @@
       "name": "useMessageAttachmentUploadUrl",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 413,
+      "line": 477,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62908,7 +63162,7 @@
       "name": "useCreateMessageAttachment",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 426,
+      "line": 490,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62920,7 +63174,7 @@
       "name": "CreateThreadArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 438,
+      "line": 502,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62930,7 +63184,7 @@
       "name": "useCreateMessageThread",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 449,
+      "line": 513,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62942,7 +63196,7 @@
       "name": "ThreadFilters",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 474,
+      "line": 538,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62952,7 +63206,7 @@
       "name": "useMessageThreadsFull",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 482,
+      "line": 546,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62964,7 +63218,7 @@
       "name": "useThread",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 499,
+      "line": 564,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62976,7 +63230,7 @@
       "name": "ThreadAccessError",
       "kind": "class",
       "file": "src/api/communications.ts",
-      "line": 516,
+      "line": 582,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62986,7 +63240,7 @@
       "name": "useThreadPosts",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 526,
+      "line": 592,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -62998,7 +63252,7 @@
       "name": "useMarkThreadRead",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 545,
+      "line": 612,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63010,7 +63264,7 @@
       "name": "OnlineUser",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 570,
+      "line": 637,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63020,7 +63274,7 @@
       "name": "PinnedThreadRow",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 571,
+      "line": 638,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63030,7 +63284,7 @@
       "name": "usePinnedSummary",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 574,
+      "line": 641,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63042,7 +63296,7 @@
       "name": "usePins",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 586,
+      "line": 655,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63054,7 +63308,7 @@
       "name": "usePinMessage",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 597,
+      "line": 667,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63066,7 +63320,7 @@
       "name": "useUnpinMessage",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 610,
+      "line": 680,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63078,7 +63332,7 @@
       "name": "useDeleteMessage",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 624,
+      "line": 694,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63090,7 +63344,7 @@
       "name": "useOnlineUsers",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 639,
+      "line": 709,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63102,7 +63356,7 @@
       "name": "useDraft",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 652,
+      "line": 724,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63114,7 +63368,7 @@
       "name": "useSaveDraft",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 663,
+      "line": 736,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63126,7 +63380,7 @@
       "name": "useAttachmentUrl",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 673,
+      "line": 746,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63138,7 +63392,7 @@
       "name": "useArchiveThread",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 682,
+      "line": 755,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63150,7 +63404,7 @@
       "name": "useMuteThread",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 697,
+      "line": 770,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63162,7 +63416,7 @@
       "name": "useAddThreadParticipants",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 710,
+      "line": 783,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63174,7 +63428,7 @@
       "name": "useRemoveThreadParticipant",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 724,
+      "line": 797,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63186,7 +63440,7 @@
       "name": "useResolveRecordThread",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 748,
+      "line": 821,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63198,7 +63452,7 @@
       "name": "useMessageSearch",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 763,
+      "line": 836,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63210,7 +63464,7 @@
       "name": "useMessageRecipients",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 780,
+      "line": 854,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63222,7 +63476,7 @@
       "name": "TicketScope",
       "kind": "type",
       "file": "src/api/communications.ts",
-      "line": 798,
+      "line": 874,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63232,7 +63486,7 @@
       "name": "TicketStatusGroup",
       "kind": "type",
       "file": "src/api/communications.ts",
-      "line": 799,
+      "line": 875,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63242,7 +63496,7 @@
       "name": "TicketListArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 801,
+      "line": 877,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63252,7 +63506,7 @@
       "name": "TicketListPage",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 813,
+      "line": 889,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63262,7 +63516,7 @@
       "name": "useMyTickets",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 820,
+      "line": 896,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63274,7 +63528,7 @@
       "name": "TicketStatusGroupCounts",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 840,
+      "line": 917,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63284,7 +63538,7 @@
       "name": "TicketNavContext",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 842,
+      "line": 919,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63294,7 +63548,7 @@
       "name": "useTicketNavContext",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 858,
+      "line": 935,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63306,7 +63560,7 @@
       "name": "useTicketRequestTypes",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 872,
+      "line": 951,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63318,7 +63572,7 @@
       "name": "TicketRequesterOption",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 887,
+      "line": 971,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63328,7 +63582,7 @@
       "name": "useTicketRequesterSearch",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 891,
+      "line": 975,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63340,7 +63594,7 @@
       "name": "useTicket",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 910,
+      "line": 995,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63352,7 +63606,7 @@
       "name": "CreateTicketArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 926,
+      "line": 1012,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63362,7 +63616,7 @@
       "name": "useCreateTicket",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 939,
+      "line": 1025,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63374,7 +63628,7 @@
       "name": "CommentTicketArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 958,
+      "line": 1044,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63384,7 +63638,7 @@
       "name": "useCommentTicket",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 964,
+      "line": 1050,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63396,7 +63650,7 @@
       "name": "UpdateTicketArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 983,
+      "line": 1069,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63406,7 +63660,7 @@
       "name": "useUpdateTicket",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 992,
+      "line": 1078,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63418,7 +63672,7 @@
       "name": "useMarkTicketRead",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 1011,
+      "line": 1097,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63430,7 +63684,7 @@
       "name": "uploadTicketAttachment",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 1062,
+      "line": 1148,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -63440,7 +63694,7 @@
       "name": "getTicketAttachmentUrl",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 1089,
+      "line": 1175,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -77927,7 +78181,7 @@
       "name": "UiPreferenceValues",
       "kind": "interface",
       "file": "src/api/uiPreferences.ts",
-      "line": 22,
+      "line": 26,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -77937,7 +78191,7 @@
       "name": "UiPreferenceKey",
       "kind": "type",
       "file": "src/api/uiPreferences.ts",
-      "line": 28,
+      "line": 34,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -77947,7 +78201,7 @@
       "name": "UiPreference",
       "kind": "interface",
       "file": "src/api/uiPreferences.ts",
-      "line": 30,
+      "line": 36,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -77957,7 +78211,7 @@
       "name": "getUiPreference",
       "kind": "function",
       "file": "src/api/uiPreferences.ts",
-      "line": 37,
+      "line": 43,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -77967,7 +78221,7 @@
       "name": "saveUiPreference",
       "kind": "function",
       "file": "src/api/uiPreferences.ts",
-      "line": 47,
+      "line": 53,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -126030,10 +126284,54 @@
       "tags": []
     },
     {
+      "name": "mutateAsync",
+      "kind": "variable",
+      "file": "src/components/sections/NotificationCenter/BroadcastComposer.test.tsx",
+      "line": 4,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "reset",
+      "kind": "variable",
+      "file": "src/components/sections/NotificationCenter/BroadcastComposer.test.tsx",
+      "line": 5,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "AudienceType",
+      "kind": "type",
+      "file": "src/components/sections/NotificationCenter/BroadcastComposer.tsx",
+      "line": 14,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Severity",
+      "kind": "type",
+      "file": "src/components/sections/NotificationCenter/BroadcastComposer.tsx",
+      "line": 15,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "AUDIENCE",
       "kind": "variable",
       "file": "src/components/sections/NotificationCenter/BroadcastComposer.tsx",
-      "line": 14,
+      "line": 17,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -126042,10 +126340,76 @@
       ]
     },
     {
+      "name": "SEVERITIES",
+      "kind": "variable",
+      "file": "src/components/sections/NotificationCenter/BroadcastComposer.tsx",
+      "line": 25,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ROLES",
+      "kind": "variable",
+      "file": "src/components/sections/NotificationCenter/BroadcastComposer.tsx",
+      "line": 32,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "DEFAULT_DESTINATION",
+      "kind": "variable",
+      "file": "src/components/sections/NotificationCenter/BroadcastComposer.tsx",
+      "line": 39,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "TARGET_LABELS",
+      "kind": "object",
+      "file": "src/components/sections/NotificationCenter/BroadcastComposer.tsx",
+      "line": 41,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TARGET_PLACEHOLDERS",
+      "kind": "object",
+      "file": "src/components/sections/NotificationCenter/BroadcastComposer.tsx",
+      "line": 48,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "getDestinationOptions",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/BroadcastComposer.tsx",
+      "line": 55,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "BroadcastComposer",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/BroadcastComposer.tsx",
-      "line": 21,
+      "line": 81,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -126057,7 +126421,7 @@
       "name": "reset",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/BroadcastComposer.tsx",
-      "line": 33,
+      "line": 110,
       "module": "communications",
       "exported": false,
       "container": "BroadcastComposer",
@@ -126067,7 +126431,7 @@
       "name": "close",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/BroadcastComposer.tsx",
-      "line": 37,
+      "line": 123,
       "module": "communications",
       "exported": false,
       "container": "BroadcastComposer",
@@ -126077,7 +126441,7 @@
       "name": "send",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/BroadcastComposer.tsx",
-      "line": 39,
+      "line": 129,
       "module": "communications",
       "exported": false,
       "container": "BroadcastComposer",
@@ -126154,10 +126518,54 @@
       "tags": []
     },
     {
+      "name": "refetch",
+      "kind": "variable",
+      "file": "src/components/sections/NotificationCenter/NotificationCenter.test.tsx",
+      "line": 4,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "markAll",
+      "kind": "variable",
+      "file": "src/components/sections/NotificationCenter/NotificationCenter.test.tsx",
+      "line": 5,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "NotificationView",
+      "kind": "type",
+      "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
+      "line": 27,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SeverityFilter",
+      "kind": "type",
+      "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
+      "line": 28,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "TABS",
       "kind": "array",
       "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
-      "line": 24,
+      "line": 30,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -126165,19 +126573,33 @@
     },
     {
       "name": "MODULE_OPTIONS",
-      "kind": "array",
+      "kind": "variable",
       "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
-      "line": 31,
+      "line": 37,
       "module": "communications",
       "exported": false,
       "container": "",
-      "tags": []
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "SEVERITY_OPTIONS",
+      "kind": "variable",
+      "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
+      "line": 51,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
     },
     {
       "name": "GROUP_ORDER",
       "kind": "variable",
       "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
-      "line": 41,
+      "line": 59,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -126189,7 +126611,7 @@
       "name": "dateGroup",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
-      "line": 43,
+      "line": 61,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -126199,7 +126621,17 @@
       "name": "groupByDate",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
-      "line": 53,
+      "line": 72,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "isView",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
+      "line": 83,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -126209,7 +126641,7 @@
       "name": "NotificationCenter",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
-      "line": 62,
+      "line": 87,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -126218,10 +126650,10 @@
       ]
     },
     {
-      "name": "onDown",
+      "name": "openPreferences",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
-      "line": 80,
+      "line": 100,
       "module": "communications",
       "exported": false,
       "container": "NotificationCenter",
@@ -126231,7 +126663,37 @@
       "name": "open",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
-      "line": 127,
+      "line": 155,
+      "module": "communications",
+      "exported": false,
+      "container": "NotificationCenter",
+      "tags": []
+    },
+    {
+      "name": "markAllRead",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
+      "line": 163,
+      "module": "communications",
+      "exported": false,
+      "container": "NotificationCenter",
+      "tags": []
+    },
+    {
+      "name": "archiveOne",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
+      "line": 168,
+      "module": "communications",
+      "exported": false,
+      "container": "NotificationCenter",
+      "tags": []
+    },
+    {
+      "name": "archiveAllRead",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
+      "line": 173,
       "module": "communications",
       "exported": false,
       "container": "NotificationCenter",
@@ -126241,7 +126703,7 @@
       "name": "clearFilters",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationCenter.tsx",
-      "line": 132,
+      "line": 178,
       "module": "communications",
       "exported": false,
       "container": "NotificationCenter",
@@ -126260,10 +126722,10 @@
       ]
     },
     {
-      "name": "NotificationsArgs",
-      "kind": "type",
+      "name": "_canBroadcast",
+      "kind": "variable",
       "file": "src/components/sections/NotificationCenter/NotificationDropdown.test.tsx",
-      "line": 11,
+      "line": 7,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -126272,7 +126734,7 @@
       ]
     },
     {
-      "name": "NotificationsFn",
+      "name": "NotificationsArgs",
       "kind": "type",
       "file": "src/components/sections/NotificationCenter/NotificationDropdown.test.tsx",
       "line": 12,
@@ -126284,10 +126746,58 @@
       ]
     },
     {
+      "name": "NotificationsFn",
+      "kind": "type",
+      "file": "src/components/sections/NotificationCenter/NotificationDropdown.test.tsx",
+      "line": 13,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
       "name": "notifications",
       "kind": "variable",
       "file": "src/components/sections/NotificationCenter/NotificationDropdown.test.tsx",
-      "line": 18,
+      "line": 19,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "summary",
+      "kind": "object",
+      "file": "src/components/sections/NotificationCenter/NotificationDropdown.test.tsx",
+      "line": 22,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "quietPreferences",
+      "kind": "object",
+      "file": "src/components/sections/NotificationCenter/NotificationDropdown.test.tsx",
+      "line": 23,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "markAllMutate",
+      "kind": "variable",
+      "file": "src/components/sections/NotificationCenter/NotificationDropdown.test.tsx",
+      "line": 24,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -126299,7 +126809,7 @@
       "name": "renderDropdown",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationDropdown.test.tsx",
-      "line": 42,
+      "line": 63,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -126308,10 +126818,22 @@
       ]
     },
     {
-      "name": "TABS",
+      "name": "switchToLiveNotifications",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationDropdown.test.tsx",
+      "line": 70,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "TAB_KEYS",
       "kind": "variable",
       "file": "src/components/sections/NotificationCenter/NotificationDropdown.tsx",
-      "line": 22,
+      "line": 33,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -126320,10 +126842,40 @@
       ]
     },
     {
+      "name": "NotificationTab",
+      "kind": "type",
+      "file": "src/components/sections/NotificationCenter/NotificationDropdown.tsx",
+      "line": 34,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "unboxedHeaderActionStyle",
+      "kind": "object",
+      "file": "src/components/sections/NotificationCenter/NotificationDropdown.tsx",
+      "line": 36,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "isNotificationTab",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationDropdown.tsx",
+      "line": 42,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "closeModal",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationDropdown.tsx",
-      "line": 29,
+      "line": 46,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -126333,7 +126885,7 @@
       "name": "goToCenter",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationDropdown.tsx",
-      "line": 34,
+      "line": 51,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -126343,7 +126895,7 @@
       "name": "NotificationDropdown",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationDropdown.tsx",
-      "line": 39,
+      "line": 56,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -126352,10 +126904,20 @@
       ]
     },
     {
-      "name": "onDown",
+      "name": "onKeyDown",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationDropdown.tsx",
-      "line": 56,
+      "line": 73,
+      "module": "communications",
+      "exported": false,
+      "container": "NotificationDropdown",
+      "tags": []
+    },
+    {
+      "name": "openPreferences",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationDropdown.tsx",
+      "line": 107,
       "module": "communications",
       "exported": false,
       "container": "NotificationDropdown",
@@ -126365,50 +126927,164 @@
       "name": "open",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationDropdown.tsx",
-      "line": 85,
+      "line": 174,
       "module": "communications",
       "exported": false,
       "container": "NotificationDropdown",
       "tags": []
     },
     {
-      "name": "NotificationDropdownItem",
+      "name": "openBroadcast",
       "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationDropdown.tsx",
+      "line": 183,
+      "module": "communications",
+      "exported": false,
+      "container": "NotificationDropdown",
+      "tags": []
+    },
+    {
+      "name": "markAllRead",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationDropdown.tsx",
+      "line": 188,
+      "module": "communications",
+      "exported": false,
+      "container": "NotificationDropdown",
+      "tags": []
+    },
+    {
+      "name": "INDICATOR_TONE",
+      "kind": "object",
       "file": "src/components/sections/NotificationCenter/NotificationDropdownItem.tsx",
-      "line": 14,
-      "module": "communications",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "NotificationItem",
-      "kind": "function",
-      "file": "src/components/sections/NotificationCenter/NotificationItem.tsx",
-      "line": 14,
-      "module": "communications",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "Row",
-      "kind": "interface",
-      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
-      "line": 18,
+      "line": 17,
       "module": "communications",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "Group",
-      "kind": "interface",
-      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
+      "name": "metadataText",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationDropdownItem.tsx",
+      "line": 24,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NotificationDropdownItem",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationDropdownItem.tsx",
+      "line": 32,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "NotificationEmptyVisualKind",
+      "kind": "type",
+      "file": "src/components/sections/NotificationCenter/NotificationEmptyVisual.tsx",
+      "line": 5,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ICONS",
+      "kind": "object",
+      "file": "src/components/sections/NotificationCenter/NotificationEmptyVisual.tsx",
+      "line": 7,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NotificationEmptyVisual",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationEmptyVisual.tsx",
+      "line": 17,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "metadataText",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationFileAttachment.tsx",
+      "line": 6,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "metadataNumber",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationFileAttachment.tsx",
+      "line": 14,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "formatBytes",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationFileAttachment.tsx",
+      "line": 22,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NotificationFileAttachment",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationFileAttachment.tsx",
+      "line": 30,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "notification",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationItem.test.tsx",
+      "line": 12,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "INDICATOR_TONE",
+      "kind": "object",
+      "file": "src/components/sections/NotificationCenter/NotificationItem.tsx",
+      "line": 12,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "metadataText",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationItem.tsx",
       "line": 19,
       "module": "communications",
       "exported": false,
@@ -126416,10 +127092,152 @@
       "tags": []
     },
     {
-      "name": "CRITICAL",
+      "name": "notificationStatus",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationItem.tsx",
+      "line": 27,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NotificationItem",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationItem.tsx",
+      "line": 40,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "SetPreferenceArgs",
+      "kind": "interface",
+      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.test.tsx",
+      "line": 4,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "SetPreferenceOptions",
+      "kind": "interface",
+      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.test.tsx",
+      "line": 11,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "setPreference",
+      "kind": "variable",
+      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.test.tsx",
+      "line": 12,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "mute",
+      "kind": "variable",
+      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.test.tsx",
+      "line": 13,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "preferences",
       "kind": "object",
+      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.test.tsx",
+      "line": 16,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "DeliveryChannel",
+      "kind": "type",
       "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
-      "line": 22,
+      "line": 27,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PreferenceSection",
+      "kind": "type",
+      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
+      "line": 28,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "QuietPreset",
+      "kind": "type",
+      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
+      "line": 29,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TOAST_POSITION_OPTIONS",
+      "kind": "array",
+      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
+      "line": 31,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TOAST_DURATION_OPTIONS",
+      "kind": "array",
+      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
+      "line": 37,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PreferenceRowDef",
+      "kind": "interface",
+      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
+      "line": 43,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PreferenceGroup",
+      "kind": "interface",
+      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
+      "line": 49,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -126429,7 +127247,7 @@
       "name": "GROUPS",
       "kind": "array",
       "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
-      "line": 33,
+      "line": 57,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -126439,41 +127257,37 @@
       "name": "DEFAULT_PREF",
       "kind": "object",
       "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
-      "line": 68,
+      "line": 110,
       "module": "communications",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "COLS",
-      "kind": "variable",
-      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
-      "line": 69,
-      "module": "communications",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "Toggle",
-      "kind": "function",
-      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
-      "line": 71,
-      "module": "communications",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
       "name": "formatUntil",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
-      "line": 93,
+      "line": 117,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "oneHourFromNow",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
+      "line": 129,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "tomorrowMorning",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
+      "line": 133,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -126483,7 +127297,7 @@
       "name": "NotificationPreferencesPanel",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
-      "line": 104,
+      "line": 140,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -126492,10 +127306,20 @@
       ]
     },
     {
-      "name": "prefFor",
+      "name": "updateToastPreference",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
-      "line": 115,
+      "line": 153,
+      "module": "communications",
+      "exported": false,
+      "container": "NotificationPreferencesPanel",
+      "tags": []
+    },
+    {
+      "name": "preferenceFor",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
+      "line": 180,
       "module": "communications",
       "exported": false,
       "container": "NotificationPreferencesPanel",
@@ -126505,27 +127329,7 @@
       "name": "toggle",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
-      "line": 118,
-      "module": "communications",
-      "exported": false,
-      "container": "NotificationPreferencesPanel",
-      "tags": []
-    },
-    {
-      "name": "oneHour",
-      "kind": "function",
-      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
-      "line": 123,
-      "module": "communications",
-      "exported": false,
-      "container": "NotificationPreferencesPanel",
-      "tags": []
-    },
-    {
-      "name": "tomorrow",
-      "kind": "function",
-      "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
-      "line": 124,
+      "line": 187,
       "module": "communications",
       "exported": false,
       "container": "NotificationPreferencesPanel",
@@ -126535,7 +127339,7 @@
       "name": "snooze",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
-      "line": 125,
+      "line": 206,
       "module": "communications",
       "exported": false,
       "container": "NotificationPreferencesPanel",
@@ -126545,27 +127349,39 @@
       "name": "resume",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
-      "line": 126,
+      "line": 207,
       "module": "communications",
       "exported": false,
       "container": "NotificationPreferencesPanel",
       "tags": []
     },
     {
-      "name": "renderRow",
+      "name": "renderPreferenceRow",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx",
-      "line": 132,
+      "line": 231,
       "module": "communications",
       "exported": false,
       "container": "NotificationPreferencesPanel",
       "tags": []
+    },
+    {
+      "name": "notification",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/notifMeta.test.ts",
+      "line": 5,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
     },
     {
       "name": "SEV_COLOR",
       "kind": "object",
       "file": "src/components/sections/NotificationCenter/notifMeta.ts",
-      "line": 11,
+      "line": 12,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -126575,9 +127391,19 @@
       "name": "MODULE_META",
       "kind": "array",
       "file": "src/components/sections/NotificationCenter/notifMeta.ts",
-      "line": 15,
+      "line": 16,
       "module": "communications",
       "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "notificationIconVariant",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/notifMeta.ts",
+      "line": 32,
+      "module": "communications",
+      "exported": true,
       "container": "",
       "tags": []
     },
@@ -126585,7 +127411,7 @@
       "name": "moduleMeta",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/notifMeta.ts",
-      "line": 31,
+      "line": 52,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -126595,7 +127421,107 @@
       "name": "relativeTime",
       "kind": "function",
       "file": "src/components/sections/NotificationCenter/notifMeta.ts",
-      "line": 37,
+      "line": 72,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "minutesAgo",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/previewNotifications.ts",
+      "line": 7,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "minutesFromNow",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/previewNotifications.ts",
+      "line": 11,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "createPreviewNotifications",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/previewNotifications.ts",
+      "line": 20,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PreviewNotificationCounts",
+      "kind": "interface",
+      "file": "src/components/sections/NotificationCenter/previewNotifications.ts",
+      "line": 181,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "isArchivedNotification",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/previewNotifications.ts",
+      "line": 188,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "countPreviewNotifications",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/previewNotifications.ts",
+      "line": 192,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "markPreviewNotificationRead",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/previewNotifications.ts",
+      "line": 205,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "markAllPreviewNotificationsRead",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/previewNotifications.ts",
+      "line": 213,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "archivePreviewNotification",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/previewNotifications.ts",
+      "line": 219,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "archiveAllReadPreviewNotifications",
+      "kind": "function",
+      "file": "src/components/sections/NotificationCenter/previewNotifications.ts",
+      "line": 227,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -144438,6 +145364,106 @@
       "tags": []
     },
     {
+      "name": "DEFAULT_PROMPT",
+      "kind": "variable",
+      "file": "src/ui/ai/AiAssistant/AiAssistant.tsx",
+      "line": 13,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "AiAssistantProps",
+      "kind": "interface",
+      "file": "src/ui/ai/AiAssistant/AiAssistant.tsx",
+      "line": 15,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "GenerationPhase",
+      "kind": "type",
+      "file": "src/ui/ai/AiAssistant/AiAssistant.tsx",
+      "line": 23,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AssistantOrb",
+      "kind": "function",
+      "file": "src/ui/ai/AiAssistant/AiAssistant.tsx",
+      "line": 25,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "GeneratingIndicator",
+      "kind": "function",
+      "file": "src/ui/ai/AiAssistant/AiAssistant.tsx",
+      "line": 35,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "AssistantResponse",
+      "kind": "function",
+      "file": "src/ui/ai/AiAssistant/AiAssistant.tsx",
+      "line": 47,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "AiAssistant",
+      "kind": "function",
+      "file": "src/ui/ai/AiAssistant/AiAssistant.tsx",
+      "line": 88,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "runPreview",
+      "kind": "function",
+      "file": "src/ui/ai/AiAssistant/AiAssistant.tsx",
+      "line": 117,
+      "module": "platform",
+      "exported": false,
+      "container": "AiAssistant",
+      "tags": []
+    },
+    {
+      "name": "copyResponse",
+      "kind": "function",
+      "file": "src/ui/ai/AiAssistant/AiAssistant.tsx",
+      "line": 168,
+      "module": "platform",
+      "exported": false,
+      "container": "AiAssistant",
+      "tags": []
+    },
+    {
       "name": "BarRowProps",
       "kind": "interface",
       "file": "src/ui/charts/BarRow.tsx",
@@ -144496,6 +145522,38 @@
       "kind": "function",
       "file": "src/ui/charts/Sparkline.tsx",
       "line": 18,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ActivityDotsSize",
+      "kind": "type",
+      "file": "src/ui/components/ActivityDots.tsx",
+      "line": 4,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ActivityDotsProps",
+      "kind": "interface",
+      "file": "src/ui/components/ActivityDots.tsx",
+      "line": 6,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ActivityDots",
+      "kind": "function",
+      "file": "src/ui/components/ActivityDots.tsx",
+      "line": 19,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145495,7 +146553,7 @@
       "name": "SizeValue",
       "kind": "type",
       "file": "src/ui/components/Skeleton.tsx",
-      "line": 30,
+      "line": 31,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -145505,7 +146563,7 @@
       "name": "dim",
       "kind": "function",
       "file": "src/ui/components/Skeleton.tsx",
-      "line": 32,
+      "line": 33,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -145515,7 +146573,7 @@
       "name": "SkeletonProps",
       "kind": "interface",
       "file": "src/ui/components/Skeleton.tsx",
-      "line": 35,
+      "line": 36,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145525,7 +146583,7 @@
       "name": "Skeleton",
       "kind": "function",
       "file": "src/ui/components/Skeleton.tsx",
-      "line": 49,
+      "line": 50,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145537,7 +146595,7 @@
       "name": "SkeletonTextProps",
       "kind": "interface",
       "file": "src/ui/components/Skeleton.tsx",
-      "line": 62,
+      "line": 63,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145547,7 +146605,7 @@
       "name": "SkeletonText",
       "kind": "function",
       "file": "src/ui/components/Skeleton.tsx",
-      "line": 71,
+      "line": 72,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145559,7 +146617,7 @@
       "name": "TableSkeletonProps",
       "kind": "interface",
       "file": "src/ui/components/Skeleton.tsx",
-      "line": 81,
+      "line": 82,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145569,7 +146627,7 @@
       "name": "TableSkeleton",
       "kind": "function",
       "file": "src/ui/components/Skeleton.tsx",
-      "line": 90,
+      "line": 91,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145581,7 +146639,7 @@
       "name": "ListSkeletonProps",
       "kind": "interface",
       "file": "src/ui/components/Skeleton.tsx",
-      "line": 116,
+      "line": 117,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145591,7 +146649,7 @@
       "name": "ListSkeleton",
       "kind": "function",
       "file": "src/ui/components/Skeleton.tsx",
-      "line": 122,
+      "line": 123,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145603,7 +146661,7 @@
       "name": "SkeletonFieldsProps",
       "kind": "interface",
       "file": "src/ui/components/Skeleton.tsx",
-      "line": 138,
+      "line": 139,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145613,7 +146671,7 @@
       "name": "SkeletonFields",
       "kind": "function",
       "file": "src/ui/components/Skeleton.tsx",
-      "line": 144,
+      "line": 145,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145625,17 +146683,39 @@
       "name": "SkeletonStatGridProps",
       "kind": "interface",
       "file": "src/ui/components/Skeleton.tsx",
-      "line": 157,
+      "line": 158,
       "module": "platform",
       "exported": true,
       "container": "",
       "tags": []
     },
     {
+      "name": "WorkspaceSkeletonProps",
+      "kind": "interface",
+      "file": "src/ui/components/Skeleton.tsx",
+      "line": 163,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WorkspaceSkeleton",
+      "kind": "function",
+      "file": "src/ui/components/Skeleton.tsx",
+      "line": 188,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "SkeletonStatGrid",
       "kind": "function",
       "file": "src/ui/components/Skeleton.tsx",
-      "line": 163,
+      "line": 275,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145647,7 +146727,7 @@
       "name": "WidgetSkeletonVariant",
       "kind": "type",
       "file": "src/ui/components/Skeleton.tsx",
-      "line": 180,
+      "line": 292,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145659,7 +146739,7 @@
       "name": "WidgetSkeletonProps",
       "kind": "interface",
       "file": "src/ui/components/Skeleton.tsx",
-      "line": 182,
+      "line": 294,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145671,7 +146751,7 @@
       "name": "WidgetSkeleton",
       "kind": "function",
       "file": "src/ui/components/Skeleton.tsx",
-      "line": 189,
+      "line": 301,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -145684,7 +146764,7 @@
       "name": "PageHeaderSkeleton",
       "kind": "function",
       "file": "src/ui/components/Skeleton.tsx",
-      "line": 227,
+      "line": 339,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146289,6 +147369,38 @@
       ]
     },
     {
+      "name": "RootAttrs",
+      "kind": "type",
+      "file": "src/ui/containers/FeatureSurface/FeatureSurface.tsx",
+      "line": 12,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "FeatureSurfaceProps",
+      "kind": "interface",
+      "file": "src/ui/containers/FeatureSurface/FeatureSurface.tsx",
+      "line": 14,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "FeatureSurface",
+      "kind": "function",
+      "file": "src/ui/containers/FeatureSurface/FeatureSurface.tsx",
+      "line": 23,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "ActivityGaugeSize",
       "kind": "type",
       "file": "src/ui/data/ActivityGauge.tsx",
@@ -146848,7 +147960,7 @@
       "name": "FILE_TYPE_ICON_TYPES",
       "kind": "variable",
       "file": "src/ui/data/FileTypeIcon.tsx",
-      "line": 4,
+      "line": 5,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146860,7 +147972,7 @@
       "name": "FileTypeIconType",
       "kind": "type",
       "file": "src/ui/data/FileTypeIcon.tsx",
-      "line": 13,
+      "line": 14,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146870,7 +147982,7 @@
       "name": "FileTypeIconVariant",
       "kind": "type",
       "file": "src/ui/data/FileTypeIcon.tsx",
-      "line": 14,
+      "line": 15,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146880,7 +147992,7 @@
       "name": "FileTypeIconTheme",
       "kind": "type",
       "file": "src/ui/data/FileTypeIcon.tsx",
-      "line": 15,
+      "line": 16,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146890,7 +148002,7 @@
       "name": "FileTypeIconProps",
       "kind": "interface",
       "file": "src/ui/data/FileTypeIcon.tsx",
-      "line": 17,
+      "line": 18,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146900,7 +148012,7 @@
       "name": "FileTypeIcon",
       "kind": "function",
       "file": "src/ui/data/FileTypeIcon.tsx",
-      "line": 36,
+      "line": 39,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146912,7 +148024,7 @@
       "name": "fileTypeIconTypeFromName",
       "kind": "function",
       "file": "src/ui/data/FileTypeIcon.tsx",
-      "line": 60,
+      "line": 74,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -146993,6 +148105,67 @@
       ]
     },
     {
+      "name": "IconTileTone",
+      "kind": "type",
+      "file": "src/ui/feedback/IconTile.tsx",
+      "line": 5,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "IconTileSize",
+      "kind": "type",
+      "file": "src/ui/feedback/IconTile.tsx",
+      "line": 9,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "IconTileShape",
+      "kind": "type",
+      "file": "src/ui/feedback/IconTile.tsx",
+      "line": 10,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "IconTileProps",
+      "kind": "interface",
+      "file": "src/ui/feedback/IconTile.tsx",
+      "line": 12,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "IconTile",
+      "kind": "function",
+      "file": "src/ui/feedback/IconTile.tsx",
+      "line": 22,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
       "name": "IllustrationVariant",
       "kind": "type",
       "file": "src/ui/feedback/Illustration.tsx",
@@ -147048,6 +148221,112 @@
       "file": "src/ui/feedback/Illustration.tsx",
       "line": 47,
       "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "NotificationIconVariant",
+      "kind": "type",
+      "file": "src/ui/feedback/NotificationIcon.tsx",
+      "line": 5,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NotificationIconProps",
+      "kind": "interface",
+      "file": "src/ui/feedback/NotificationIcon.tsx",
+      "line": 19,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NotificationIconDefinition",
+      "kind": "interface",
+      "file": "src/ui/feedback/NotificationIcon.tsx",
+      "line": 26,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NOTIFICATION_ICON_DEFINITIONS",
+      "kind": "object",
+      "file": "src/ui/feedback/NotificationIcon.tsx",
+      "line": 36,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NotificationIcon",
+      "kind": "function",
+      "file": "src/ui/feedback/NotificationIcon.tsx",
+      "line": 51,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "NotificationIndicatorTone",
+      "kind": "type",
+      "file": "src/ui/feedback/NotificationListItem.tsx",
+      "line": 7,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NotificationListItemProps",
+      "kind": "interface",
+      "file": "src/ui/feedback/NotificationListItem.tsx",
+      "line": 9,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NotificationListItem",
+      "kind": "function",
+      "file": "src/ui/feedback/NotificationListItem.tsx",
+      "line": 37,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "NotificationPopoverProps",
+      "kind": "interface",
+      "file": "src/ui/feedback/NotificationPopover.tsx",
+      "line": 5,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NotificationPopover",
+      "kind": "function",
+      "file": "src/ui/feedback/NotificationPopover.tsx",
+      "line": 17,
+      "module": "communications",
       "exported": true,
       "container": "",
       "tags": [
@@ -149586,7 +150865,7 @@
       "name": "DtColumn",
       "kind": "interface",
       "file": "src/ui/index.ts",
-      "line": 91,
+      "line": 100,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -149863,6 +151142,144 @@
       ]
     },
     {
+      "name": "props",
+      "kind": "function",
+      "file": "src/ui/navigation/GlobalSearch/GlobalSearch.test.tsx",
+      "line": 10,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "GlobalSearchScope",
+      "kind": "interface",
+      "file": "src/ui/navigation/GlobalSearch/GlobalSearch.tsx",
+      "line": 13,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "GlobalSearchResult",
+      "kind": "interface",
+      "file": "src/ui/navigation/GlobalSearch/GlobalSearch.tsx",
+      "line": 19,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "GlobalSearchGroup",
+      "kind": "interface",
+      "file": "src/ui/navigation/GlobalSearch/GlobalSearch.tsx",
+      "line": 37,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "GlobalSearchQuickAction",
+      "kind": "interface",
+      "file": "src/ui/navigation/GlobalSearch/GlobalSearch.tsx",
+      "line": 44,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "GlobalSearchEmptyVariant",
+      "kind": "type",
+      "file": "src/ui/navigation/GlobalSearch/GlobalSearch.tsx",
+      "line": 51,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "GlobalSearchProps",
+      "kind": "interface",
+      "file": "src/ui/navigation/GlobalSearch/GlobalSearch.tsx",
+      "line": 62,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ResultMedia",
+      "kind": "function",
+      "file": "src/ui/navigation/GlobalSearch/GlobalSearch.tsx",
+      "line": 90,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "EmptyVisual",
+      "kind": "function",
+      "file": "src/ui/navigation/GlobalSearch/GlobalSearch.tsx",
+      "line": 97,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "GlobalSearch",
+      "kind": "function",
+      "file": "src/ui/navigation/GlobalSearch/GlobalSearch.tsx",
+      "line": 193,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "update",
+      "kind": "function",
+      "file": "src/ui/navigation/GlobalSearch/GlobalSearch.tsx",
+      "line": 235,
+      "module": "platform",
+      "exported": false,
+      "container": "GlobalSearch",
+      "tags": []
+    },
+    {
+      "name": "scrollScopes",
+      "kind": "function",
+      "file": "src/ui/navigation/GlobalSearch/GlobalSearch.tsx",
+      "line": 255,
+      "module": "platform",
+      "exported": false,
+      "container": "GlobalSearch",
+      "tags": []
+    },
+    {
+      "name": "onInputKeyDown",
+      "kind": "function",
+      "file": "src/ui/navigation/GlobalSearch/GlobalSearch.tsx",
+      "line": 261,
+      "module": "platform",
+      "exported": false,
+      "container": "GlobalSearch",
+      "tags": []
+    },
+    {
       "name": "PageActionBarProps",
       "kind": "interface",
       "file": "src/ui/navigation/PageActionBar/PageActionBar.tsx",
@@ -149945,6 +151362,184 @@
       "tags": [
         "component"
       ]
+    },
+    {
+      "name": "GROUPS",
+      "kind": "array",
+      "file": "src/ui/navigation/SidebarNavigation/SidebarNavigation.test.tsx",
+      "line": 5,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "SidebarNavigationDensity",
+      "kind": "type",
+      "file": "src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx",
+      "line": 9,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SidebarNavigationNotificationTone",
+      "kind": "type",
+      "file": "src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx",
+      "line": 10,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SidebarNavigationNotification",
+      "kind": "interface",
+      "file": "src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx",
+      "line": 12,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SidebarNavigationItem",
+      "kind": "interface",
+      "file": "src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx",
+      "line": 23,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SidebarNavigationGroup",
+      "kind": "interface",
+      "file": "src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx",
+      "line": 34,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SidebarNavigationContext",
+      "kind": "interface",
+      "file": "src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx",
+      "line": 40,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SidebarNavigationProps",
+      "kind": "interface",
+      "file": "src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx",
+      "line": 46,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "includesItem",
+      "kind": "function",
+      "file": "src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx",
+      "line": 71,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "toggleSet",
+      "kind": "function",
+      "file": "src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx",
+      "line": 77,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "displayNotificationCount",
+      "kind": "function",
+      "file": "src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx",
+      "line": 84,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NotificationIndicator",
+      "kind": "function",
+      "file": "src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx",
+      "line": 89,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "NavigationItem",
+      "kind": "function",
+      "file": "src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx",
+      "line": 103,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "closeFlyout",
+      "kind": "function",
+      "file": "src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx",
+      "line": 138,
+      "module": "platform",
+      "exported": false,
+      "container": "NavigationItem",
+      "tags": []
+    },
+    {
+      "name": "SidebarNavigation",
+      "kind": "function",
+      "file": "src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx",
+      "line": 266,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "updateGroups",
+      "kind": "function",
+      "file": "src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx",
+      "line": 309,
+      "module": "platform",
+      "exported": false,
+      "container": "SidebarNavigation",
+      "tags": []
+    },
+    {
+      "name": "updateItems",
+      "kind": "function",
+      "file": "src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx",
+      "line": 315,
+      "module": "platform",
+      "exported": false,
+      "container": "SidebarNavigation",
+      "tags": []
     },
     {
       "name": "ITEMS",
@@ -150466,7 +152061,7 @@
       "name": "onScroll",
       "kind": "function",
       "file": "src/ui/overlays/AnchoredPopup.tsx",
-      "line": 129,
+      "line": 152,
       "module": "platform",
       "exported": false,
       "container": "AnchoredPopup",
@@ -150476,7 +152071,7 @@
       "name": "onPointerDown",
       "kind": "function",
       "file": "src/ui/overlays/AnchoredPopup.tsx",
-      "line": 156,
+      "line": 219,
       "module": "platform",
       "exported": false,
       "container": "AnchoredPopup",
@@ -150584,7 +152179,7 @@
       "name": "DialogRoot",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 90,
+      "line": 92,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150596,7 +152191,7 @@
       "name": "DialogHeaderProps",
       "kind": "interface",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 144,
+      "line": 146,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150606,7 +152201,7 @@
       "name": "DialogHeader",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 155,
+      "line": 157,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150618,7 +152213,7 @@
       "name": "DialogBody",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 176,
+      "line": 178,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150630,7 +152225,7 @@
       "name": "DialogFooter",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 180,
+      "line": 182,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150642,7 +152237,7 @@
       "name": "DialogLayoutRegion",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 190,
+      "line": 192,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150654,7 +152249,41 @@
       "name": "DialogSidebar",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 194,
+      "line": 196,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "DialogSidebarHeader",
+      "kind": "function",
+      "file": "src/ui/overlays/Dialog.tsx",
+      "line": 205,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "DialogContextFactItem",
+      "kind": "interface",
+      "file": "src/ui/overlays/Dialog.tsx",
+      "line": 225,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DialogContextFacts",
+      "kind": "function",
+      "file": "src/ui/overlays/Dialog.tsx",
+      "line": 236,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150666,7 +152295,7 @@
       "name": "DialogContent",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 198,
+      "line": 254,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150678,7 +152307,7 @@
       "name": "DialogSection",
       "kind": "function",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 203,
+      "line": 259,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150690,7 +152319,7 @@
       "name": "Dialog",
       "kind": "variable",
       "file": "src/ui/overlays/Dialog.tsx",
-      "line": 217,
+      "line": 273,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150762,7 +152391,7 @@
       "name": "DropdownMenu",
       "kind": "function",
       "file": "src/ui/overlays/DropdownMenu.tsx",
-      "line": 77,
+      "line": 83,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150774,7 +152403,7 @@
       "name": "activate",
       "kind": "function",
       "file": "src/ui/overlays/DropdownMenu.tsx",
-      "line": 109,
+      "line": 116,
       "module": "platform",
       "exported": false,
       "container": "DropdownMenu",
@@ -150784,7 +152413,7 @@
       "name": "onKeyDown",
       "kind": "function",
       "file": "src/ui/overlays/DropdownMenu.tsx",
-      "line": 117,
+      "line": 124,
       "module": "platform",
       "exported": false,
       "container": "DropdownMenu",
@@ -150816,7 +152445,7 @@
       "name": "FOCUSABLE",
       "kind": "variable",
       "file": "src/ui/overlays/Popover.tsx",
-      "line": 31,
+      "line": 32,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -150828,7 +152457,7 @@
       "name": "Popover",
       "kind": "function",
       "file": "src/ui/overlays/Popover.tsx",
-      "line": 36,
+      "line": 37,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -150840,7 +152469,7 @@
       "name": "onKeyDown",
       "kind": "function",
       "file": "src/ui/overlays/Popover.tsx",
-      "line": 48,
+      "line": 49,
       "module": "platform",
       "exported": false,
       "container": "Popover",
@@ -151371,7 +153000,7 @@
       "name": "open",
       "kind": "function",
       "file": "src/ui/primitives/actions.test.tsx",
-      "line": 96,
+      "line": 103,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -151757,10 +153386,20 @@
       "tags": []
     },
     {
+      "name": "SwitchSize",
+      "kind": "type",
+      "file": "src/ui/primitives/choice.tsx",
+      "line": 209,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "SwitchArtwork",
       "kind": "function",
       "file": "src/ui/primitives/choice.tsx",
-      "line": 209,
+      "line": 212,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151772,7 +153411,7 @@
       "name": "Switch",
       "kind": "function",
       "file": "src/ui/primitives/choice.tsx",
-      "line": 227,
+      "line": 230,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151784,7 +153423,7 @@
       "name": "ChoiceOption",
       "kind": "interface",
       "file": "src/ui/primitives/choice.tsx",
-      "line": 276,
+      "line": 292,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151794,7 +153433,7 @@
       "name": "CheckboxGroupProps",
       "kind": "interface",
       "file": "src/ui/primitives/choice.tsx",
-      "line": 287,
+      "line": 303,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151804,7 +153443,7 @@
       "name": "CheckboxGroup",
       "kind": "function",
       "file": "src/ui/primitives/choice.tsx",
-      "line": 302,
+      "line": 318,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151816,7 +153455,7 @@
       "name": "toggle",
       "kind": "function",
       "file": "src/ui/primitives/choice.tsx",
-      "line": 310,
+      "line": 326,
       "module": "platform",
       "exported": false,
       "container": "CheckboxGroup",
@@ -151826,7 +153465,7 @@
       "name": "RadioGroupProps",
       "kind": "interface",
       "file": "src/ui/primitives/choice.tsx",
-      "line": 348,
+      "line": 364,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -151836,7 +153475,7 @@
       "name": "RadioGroup",
       "kind": "function",
       "file": "src/ui/primitives/choice.tsx",
-      "line": 369,
+      "line": 390,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -152400,7 +154039,7 @@
       "name": "s",
       "kind": "function",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 18,
+      "line": 19,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -152410,7 +154049,7 @@
       "name": "b",
       "kind": "function",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 19,
+      "line": 20,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -152420,7 +154059,7 @@
       "name": "noop",
       "kind": "function",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 20,
+      "line": 21,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -152430,7 +154069,7 @@
       "name": "Figure",
       "kind": "function",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 23,
+      "line": 24,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -152442,7 +154081,7 @@
       "name": "cardDef",
       "kind": "object",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 35,
+      "line": 36,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -152451,10 +154090,20 @@
       ]
     },
     {
+      "name": "featureSurfaceDef",
+      "kind": "object",
+      "file": "src/ui/registry/containers.defs.tsx",
+      "line": 278,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "CONTAINER_DEFS",
       "kind": "array",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 277,
+      "line": 332,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -152696,7 +154345,7 @@
       "name": "COMPONENT_DEFS",
       "kind": "array",
       "file": "src/ui/registry/definitions.tsx",
-      "line": 370,
+      "line": 385,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -152786,7 +154435,7 @@
       "name": "s",
       "kind": "function",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 18,
+      "line": 26,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -152796,7 +154445,7 @@
       "name": "b",
       "kind": "function",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 19,
+      "line": 27,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -152806,7 +154455,7 @@
       "name": "illustrationDef",
       "kind": "object",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 21,
+      "line": 29,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -152816,7 +154465,7 @@
       "name": "toastRecord",
       "kind": "function",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 53,
+      "line": 61,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -152826,7 +154475,7 @@
       "name": "triggerToast",
       "kind": "function",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 75,
+      "line": 96,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -152836,7 +154485,7 @@
       "name": "emptyStateDef",
       "kind": "object",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 92,
+      "line": 114,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -152846,7 +154495,7 @@
       "name": "skeletonDef",
       "kind": "object",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 200,
+      "line": 222,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -152856,7 +154505,59 @@
       "name": "spinnerDef",
       "kind": "object",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 240,
+      "line": 265,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "activityDotsDef",
+      "kind": "object",
+      "file": "src/ui/registry/feedback.defs.tsx",
+      "line": 296,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "iconTileDef",
+      "kind": "object",
+      "file": "src/ui/registry/feedback.defs.tsx",
+      "line": 322,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "notificationIconDef",
+      "kind": "object",
+      "file": "src/ui/registry/feedback.defs.tsx",
+      "line": 368,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "notificationListItemDef",
+      "kind": "object",
+      "file": "src/ui/registry/feedback.defs.tsx",
+      "line": 398,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "notificationPopoverDef",
+      "kind": "object",
+      "file": "src/ui/registry/feedback.defs.tsx",
+      "line": 436,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -152866,7 +154567,7 @@
       "name": "toastDef",
       "kind": "object",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 271,
+      "line": 501,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -152876,7 +154577,7 @@
       "name": "FEEDBACK_DEFS",
       "kind": "array",
       "file": "src/ui/registry/feedback.defs.tsx",
-      "line": 359,
+      "line": 598,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -153050,7 +154751,7 @@
       "name": "textInputDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 389,
+      "line": 393,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -153060,7 +154761,7 @@
       "name": "shell",
       "kind": "function",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 518,
+      "line": 522,
       "module": "platform",
       "exported": false,
       "container": "textInputDef",
@@ -153070,7 +154771,7 @@
       "name": "DateInputCalendarPreview",
       "kind": "function",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 607,
+      "line": 611,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -153082,7 +154783,7 @@
       "name": "dateInputDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 624,
+      "line": 628,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -153092,7 +154793,7 @@
       "name": "fileInputDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 720,
+      "line": 724,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -153102,7 +154803,7 @@
       "name": "themeModeSwitchDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 840,
+      "line": 844,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -153112,7 +154813,7 @@
       "name": "colorPickerDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 891,
+      "line": 895,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -153122,7 +154823,7 @@
       "name": "otpInputDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 928,
+      "line": 932,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -153132,7 +154833,7 @@
       "name": "DEPARTMENTS",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 981,
+      "line": 985,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -153142,7 +154843,7 @@
       "name": "GROUPED_DEPARTMENTS",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 990,
+      "line": 994,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -153152,7 +154853,7 @@
       "name": "selectDef",
       "kind": "object",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 1008,
+      "line": 1012,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -153162,7 +154863,7 @@
       "name": "search",
       "kind": "function",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 1113,
+      "line": 1117,
       "module": "platform",
       "exported": false,
       "container": "selectDef",
@@ -153172,7 +154873,7 @@
       "name": "FORM_DEFS",
       "kind": "array",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 1146,
+      "line": 1150,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -153282,7 +154983,7 @@
       "name": "s",
       "kind": "function",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 26,
+      "line": 30,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -153292,7 +154993,7 @@
       "name": "b",
       "kind": "function",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 27,
+      "line": 31,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -153302,9 +155003,103 @@
       "name": "noop",
       "kind": "function",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 28,
+      "line": 32,
       "module": "platform",
       "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SEARCH_SCOPES",
+      "kind": "array",
+      "file": "src/ui/registry/navigation.defs.tsx",
+      "line": 34,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SEARCH_GROUPS",
+      "kind": "array",
+      "file": "src/ui/registry/navigation.defs.tsx",
+      "line": 44,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SEARCH_QUICK_ACTIONS",
+      "kind": "array",
+      "file": "src/ui/registry/navigation.defs.tsx",
+      "line": 53,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "GlobalSearchPreview",
+      "kind": "function",
+      "file": "src/ui/registry/navigation.defs.tsx",
+      "line": 60,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "AiAssistantPreview",
+      "kind": "function",
+      "file": "src/ui/registry/navigation.defs.tsx",
+      "line": 67,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "aiAssistantDef",
+      "kind": "object",
+      "file": "src/ui/registry/navigation.defs.tsx",
+      "line": 82,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "globalSearchDef",
+      "kind": "object",
+      "file": "src/ui/registry/navigation.defs.tsx",
+      "line": 129,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SIDEBAR_GROUPS",
+      "kind": "array",
+      "file": "src/ui/registry/navigation.defs.tsx",
+      "line": 189,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sidebarNavigationDef",
+      "kind": "object",
+      "file": "src/ui/registry/navigation.defs.tsx",
+      "line": 215,
+      "module": "platform",
+      "exported": true,
       "container": "",
       "tags": []
     },
@@ -153312,7 +155107,7 @@
       "name": "FILE_TREE",
       "kind": "array",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 30,
+      "line": 286,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -153322,7 +155117,7 @@
       "name": "treeViewDef",
       "kind": "object",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 49,
+      "line": 305,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -153332,7 +155127,7 @@
       "name": "CASE_TABS",
       "kind": "array",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 115,
+      "line": 371,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -153342,7 +155137,7 @@
       "name": "PLAIN_TABS",
       "kind": "array",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 123,
+      "line": 379,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -153352,7 +155147,7 @@
       "name": "MANY_TABS",
       "kind": "array",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 129,
+      "line": 385,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -153362,7 +155157,7 @@
       "name": "tabsDef",
       "kind": "object",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 141,
+      "line": 397,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -153372,7 +155167,7 @@
       "name": "NAVIGATION_DEFS",
       "kind": "array",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 370,
+      "line": 626,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -153772,7 +155567,7 @@
       "name": "alertDef",
       "kind": "object",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 59,
+      "line": 63,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -153782,7 +155577,7 @@
       "name": "progressDef",
       "kind": "object",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 91,
+      "line": 95,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -153792,7 +155587,7 @@
       "name": "accordionDef",
       "kind": "object",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 129,
+      "line": 133,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -153802,7 +155597,7 @@
       "name": "shellPreview",
       "kind": "function",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 162,
+      "line": 166,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -153812,7 +155607,7 @@
       "name": "activityGaugeDef",
       "kind": "object",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 176,
+      "line": 180,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -153822,7 +155617,7 @@
       "name": "userPillPreview",
       "kind": "function",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 213,
+      "line": 217,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -153832,7 +155627,7 @@
       "name": "appTopBarDef",
       "kind": "object",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 215,
+      "line": 219,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -153842,7 +155637,7 @@
       "name": "userPillDef",
       "kind": "object",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 272,
+      "line": 278,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -153852,7 +155647,7 @@
       "name": "REMAINING_PRIMITIVE_DEFS",
       "kind": "array",
       "file": "src/ui/registry/remaining-primitives.defs.tsx",
-      "line": 282,
+      "line": 288,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -157985,7 +159780,7 @@
       "name": "renderToaster",
       "kind": "function",
       "file": "src/ui/toast/toast.test.tsx",
-      "line": 40,
+      "line": 46,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -157997,7 +159792,7 @@
       "name": "STANDALONE_TOAST",
       "kind": "object",
       "file": "src/ui/toast/toast.test.tsx",
-      "line": 44,
+      "line": 50,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158009,7 +159804,7 @@
       "name": "ToastCardProps",
       "kind": "interface",
       "file": "src/ui/toast/ToastCard.tsx",
-      "line": 30,
+      "line": 32,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -158021,7 +159816,7 @@
       "name": "ToastCard",
       "kind": "function",
       "file": "src/ui/toast/ToastCard.tsx",
-      "line": 40,
+      "line": 44,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -158034,17 +159829,7 @@
       "name": "tick",
       "kind": "function",
       "file": "src/ui/toast/ToastCard.tsx",
-      "line": 73,
-      "module": "platform",
-      "exported": false,
-      "container": "ToastCard",
-      "tags": []
-    },
-    {
-      "name": "setTimerPaused",
-      "kind": "function",
-      "file": "src/ui/toast/ToastCard.tsx",
-      "line": 107,
+      "line": 98,
       "module": "platform",
       "exported": false,
       "container": "ToastCard",
@@ -158054,17 +159839,17 @@
       "name": "handleActionClick",
       "kind": "function",
       "file": "src/ui/toast/ToastCard.tsx",
-      "line": 126,
+      "line": 140,
       "module": "platform",
       "exported": false,
       "container": "ToastCard",
       "tags": []
     },
     {
-      "name": "handleToggleStop",
+      "name": "handleStopAutoDismiss",
       "kind": "function",
       "file": "src/ui/toast/ToastCard.tsx",
-      "line": 148,
+      "line": 150,
       "module": "platform",
       "exported": false,
       "container": "ToastCard",
@@ -158074,7 +159859,7 @@
       "name": "ToastChips",
       "kind": "function",
       "file": "src/ui/toast/ToastCard.tsx",
-      "line": 263,
+      "line": 272,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158086,7 +159871,7 @@
       "name": "ToastSummary",
       "kind": "function",
       "file": "src/ui/toast/ToastCard.tsx",
-      "line": 273,
+      "line": 282,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158098,7 +159883,7 @@
       "name": "ToastNote",
       "kind": "function",
       "file": "src/ui/toast/ToastCard.tsx",
-      "line": 287,
+      "line": 296,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158110,7 +159895,7 @@
       "name": "ToastFile",
       "kind": "function",
       "file": "src/ui/toast/ToastCard.tsx",
-      "line": 292,
+      "line": 301,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158122,7 +159907,7 @@
       "name": "MAX_VISIBLE_TOASTS",
       "kind": "variable",
       "file": "src/ui/toast/Toaster.tsx",
-      "line": 27,
+      "line": 33,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158134,7 +159919,7 @@
       "name": "TOAST_GAP",
       "kind": "variable",
       "file": "src/ui/toast/Toaster.tsx",
-      "line": 28,
+      "line": 34,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158146,7 +159931,7 @@
       "name": "STACK_ITEM_OFFSET_Y",
       "kind": "variable",
       "file": "src/ui/toast/Toaster.tsx",
-      "line": 29,
+      "line": 35,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158158,7 +159943,7 @@
       "name": "STACK_ITEM_SCALE_DECREMENT",
       "kind": "variable",
       "file": "src/ui/toast/Toaster.tsx",
-      "line": 30,
+      "line": 36,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158170,7 +159955,7 @@
       "name": "STACK_ITEM_OPACITY_DECREMENT",
       "kind": "variable",
       "file": "src/ui/toast/Toaster.tsx",
-      "line": 31,
+      "line": 37,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158182,7 +159967,7 @@
       "name": "HOVER_DEBOUNCE_DELAY",
       "kind": "variable",
       "file": "src/ui/toast/Toaster.tsx",
-      "line": 32,
+      "line": 38,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158194,7 +159979,7 @@
       "name": "ToasterInnerProps",
       "kind": "interface",
       "file": "src/ui/toast/Toaster.tsx",
-      "line": 36,
+      "line": 42,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158204,7 +159989,7 @@
       "name": "ToasterInner",
       "kind": "function",
       "file": "src/ui/toast/Toaster.tsx",
-      "line": 40,
+      "line": 47,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158216,7 +160001,7 @@
       "name": "handleVisibility",
       "kind": "function",
       "file": "src/ui/toast/Toaster.tsx",
-      "line": 140,
+      "line": 149,
       "module": "platform",
       "exported": false,
       "container": "ToasterInner",
@@ -158226,13 +160011,23 @@
       "name": "Toaster",
       "kind": "function",
       "file": "src/ui/toast/Toaster.tsx",
-      "line": 171,
+      "line": 181,
       "module": "platform",
       "exported": true,
       "container": "",
       "tags": [
         "component"
       ]
+    },
+    {
+      "name": "play",
+      "kind": "function",
+      "file": "src/ui/toast/Toaster.tsx",
+      "line": 200,
+      "module": "platform",
+      "exported": false,
+      "container": "Toaster",
+      "tags": []
     },
     {
       "name": "ToastIcon",
@@ -158245,6 +160040,76 @@
       "tags": [
         "component"
       ]
+    },
+    {
+      "name": "ToastPreferenceListener",
+      "kind": "type",
+      "file": "src/ui/toast/toastPreferences.ts",
+      "line": 6,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "currentPreference",
+      "kind": "object",
+      "file": "src/ui/toast/toastPreferences.ts",
+      "line": 8,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "listeners",
+      "kind": "variable",
+      "file": "src/ui/toast/toastPreferences.ts",
+      "line": 9,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "getToastRuntimePreferences",
+      "kind": "function",
+      "file": "src/ui/toast/toastPreferences.ts",
+      "line": 11,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "setToastRuntimePreferences",
+      "kind": "function",
+      "file": "src/ui/toast/toastPreferences.ts",
+      "line": 15,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "resetToastRuntimePreferences",
+      "kind": "function",
+      "file": "src/ui/toast/toastPreferences.ts",
+      "line": 20,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "subscribeToastRuntimePreferences",
+      "kind": "function",
+      "file": "src/ui/toast/toastPreferences.ts",
+      "line": 24,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
     },
     {
       "name": "ToastProgressProps",
@@ -158272,7 +160137,7 @@
       "name": "TOAST_EXIT_MS",
       "kind": "variable",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 15,
+      "line": 16,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -158282,7 +160147,17 @@
       "name": "DEFAULT_DURATIONS",
       "kind": "object",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 19,
+      "line": 20,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "defaultDuration",
+      "kind": "function",
+      "file": "src/ui/toast/toastStore.ts",
+      "line": 28,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158292,7 +160167,7 @@
       "name": "VoidListener",
       "kind": "type",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 29,
+      "line": 38,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158302,7 +160177,7 @@
       "name": "records",
       "kind": "array",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 31,
+      "line": 40,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158312,7 +160187,7 @@
       "name": "_globalPaused",
       "kind": "variable",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 32,
+      "line": 41,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158322,7 +160197,7 @@
       "name": "listeners",
       "kind": "variable",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 33,
+      "line": 42,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158332,7 +160207,7 @@
       "name": "notifyListeners",
       "kind": "function",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 35,
+      "line": 44,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158342,7 +160217,7 @@
       "name": "createId",
       "kind": "function",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 39,
+      "line": 48,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158352,7 +160227,7 @@
       "name": "subscribe",
       "kind": "function",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 46,
+      "line": 55,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -158362,7 +160237,7 @@
       "name": "getToasts",
       "kind": "function",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 52,
+      "line": 61,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -158372,7 +160247,7 @@
       "name": "getGlobalPaused",
       "kind": "function",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 57,
+      "line": 66,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -158382,7 +160257,7 @@
       "name": "setGlobalPaused",
       "kind": "function",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 62,
+      "line": 71,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -158392,7 +160267,7 @@
       "name": "upsertToast",
       "kind": "function",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 69,
+      "line": 78,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -158402,7 +160277,7 @@
       "name": "removeToast",
       "kind": "function",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 84,
+      "line": 93,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -158412,7 +160287,7 @@
       "name": "updateToast",
       "kind": "function",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 94,
+      "line": 103,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -158422,7 +160297,7 @@
       "name": "dismissToast",
       "kind": "function",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 103,
+      "line": 112,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -158432,7 +160307,7 @@
       "name": "upsertRecord",
       "kind": "function",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 112,
+      "line": 121,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158442,7 +160317,7 @@
       "name": "buildNormal",
       "kind": "function",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 126,
+      "line": 135,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158452,7 +160327,7 @@
       "name": "notify",
       "kind": "function",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 145,
+      "line": 156,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -158462,7 +160337,7 @@
       "name": "toast",
       "kind": "variable",
       "file": "src/ui/toast/toastStore.ts",
-      "line": 222,
+      "line": 237,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -158552,7 +160427,7 @@
       "name": "ToastActionOptions",
       "kind": "interface",
       "file": "src/ui/toast/toastTypes.ts",
-      "line": 46,
+      "line": 50,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -158562,7 +160437,7 @@
       "name": "ToastRichOptions",
       "kind": "interface",
       "file": "src/ui/toast/toastTypes.ts",
-      "line": 57,
+      "line": 61,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -158572,7 +160447,7 @@
       "name": "ToastRecord",
       "kind": "interface",
       "file": "src/ui/toast/toastTypes.ts",
-      "line": 69,
+      "line": 73,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -166179,7 +168054,7 @@
       "name": "view",
       "kind": "function",
       "file": "tests/vitest/uiPreferencesContract.test.ts",
-      "line": 27,
+      "line": 30,
       "module": "testing",
       "exported": false,
       "container": "",
@@ -172792,10 +174667,200 @@
       "tags": []
     },
     {
+      "name": "NAVIGATION_PREFERENCE_KEY",
+      "kind": "variable",
+      "file": "types/uiPreferences.ts",
+      "line": 281,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NAVIGATION_PREFERENCE_VERSION",
+      "kind": "variable",
+      "file": "types/uiPreferences.ts",
+      "line": 282,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NavigationDensityPreference",
+      "kind": "type",
+      "file": "types/uiPreferences.ts",
+      "line": 284,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NavigationVisibilityPreference",
+      "kind": "interface",
+      "file": "types/uiPreferences.ts",
+      "line": 286,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NavigationOrderPreference",
+      "kind": "interface",
+      "file": "types/uiPreferences.ts",
+      "line": 292,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NavigationPreference",
+      "kind": "interface",
+      "file": "types/uiPreferences.ts",
+      "line": 297,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NAVIGATION_PREFERENCE_LIMITS",
+      "kind": "variable",
+      "file": "types/uiPreferences.ts",
+      "line": 304,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NAVIGATION_ID",
+      "kind": "variable",
+      "file": "types/uiPreferences.ts",
+      "line": 311,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "safeNavigationId",
+      "kind": "function",
+      "file": "types/uiPreferences.ts",
+      "line": 313,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sanitizeNavigationPreference",
+      "kind": "function",
+      "file": "types/uiPreferences.ts",
+      "line": 318,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TOAST_PREFERENCE_KEY",
+      "kind": "variable",
+      "file": "types/uiPreferences.ts",
+      "line": 358,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TOAST_PREFERENCE_VERSION",
+      "kind": "variable",
+      "file": "types/uiPreferences.ts",
+      "line": 359,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TOAST_POSITIONS",
+      "kind": "variable",
+      "file": "types/uiPreferences.ts",
+      "line": 361,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ToastPosition",
+      "kind": "type",
+      "file": "types/uiPreferences.ts",
+      "line": 367,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TOAST_DURATION_MODES",
+      "kind": "variable",
+      "file": "types/uiPreferences.ts",
+      "line": 369,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ToastDurationMode",
+      "kind": "type",
+      "file": "types/uiPreferences.ts",
+      "line": 370,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ToastPreference",
+      "kind": "interface",
+      "file": "types/uiPreferences.ts",
+      "line": 372,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DEFAULT_TOAST_PREFERENCE",
+      "kind": "object",
+      "file": "types/uiPreferences.ts",
+      "line": 380,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sanitizeToastPreference",
+      "kind": "function",
+      "file": "types/uiPreferences.ts",
+      "line": 388,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "UiPreferenceDefinition",
       "kind": "interface",
       "file": "types/uiPreferences.ts",
-      "line": 289,
+      "line": 420,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -172805,7 +174870,7 @@
       "name": "UI_PREFERENCES",
       "kind": "array",
       "file": "types/uiPreferences.ts",
-      "line": 295,
+      "line": 426,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -172815,7 +174880,7 @@
       "name": "UI_PREFERENCE_BY_KEY",
       "kind": "variable",
       "file": "types/uiPreferences.ts",
-      "line": 336,
+      "line": 477,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -172825,7 +174890,7 @@
       "name": "isKnownUiPreferenceKey",
       "kind": "function",
       "file": "types/uiPreferences.ts",
-      "line": 339,
+      "line": 480,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -172835,7 +174900,7 @@
       "name": "uiPreferenceDefinition",
       "kind": "function",
       "file": "types/uiPreferences.ts",
-      "line": 343,
+      "line": 484,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -172845,7 +174910,7 @@
       "name": "sanitizeUiPreference",
       "kind": "function",
       "file": "types/uiPreferences.ts",
-      "line": 354,
+      "line": 495,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -173131,7 +175196,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ maxWidth: '320px' }}>\n          <Card\n            variant=\"action\"\n            onClick={noop}\n            actionLabel=\"View Sarah James\"\n            header={<CardHeader\n              icon={<LucideIcon name=\"User\" />}\n              title=\"Sarah James\"\n              description=\"Safety Officer · EMP-00484\"\n              actions={<Button variant=\"ghost\" size=\"sm\" iconOnly aria-label=\"Edit Sarah James\" iconLeft={<LucideIcon name=\"Pencil\" />} />}\n            />}\n            footer={<CardFooter><span>Started 8 Mar 2021</span><Badge tone=\"success\" size=\"sm\" dot>Active</Badge></CardFooter>}\n          >\n            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>HSE · Georgetown</span>\n          </Card>\n        </div>\n      )",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 251
+      "line": 252
     },
     {
       "id": "bundle.hr.attendance.ops",
@@ -173171,7 +175236,7 @@
       "kind": "registry",
       "render": "() => (\n        <Tabs\n          id=\"ex-case-workspace\"\n          label=\"Case workspace panels\"\n          class=\"sds-tabs-use-example\"\n          variant=\"subtle\"\n          size=\"sm\"\n          items={[\n            { id: 'activity', label: 'Activity' },\n            { id: 'approvals', label: 'Approvals', badge: 2 },\n            { id: 'audit', label: 'Audit' },\n          ]}\n          value=\"approvals\"\n          onChange={noop}\n        />\n      )",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 346
+      "line": 602
     },
     {
       "id": "create",
@@ -173201,7 +175266,7 @@
       "kind": "registry",
       "render": "() => <FormField label=\"Employee name\" required helpText=\"As shown on government ID\"><TextInput value=\"Sarah James\" onInput={noop} /></FormField>",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 576
+      "line": 580
     },
     {
       "id": "employee-onboarding",
@@ -173221,7 +175286,7 @@
       "kind": "registry",
       "render": "() => (\n        <Tabs\n          id=\"ex-employee-record\"\n          label=\"Employee record sections\"\n          class=\"sds-tabs-use-example\"\n          size=\"sm\"\n          items={[\n            { id: 'overview', label: 'Overview', icon: <LucideIcon name=\"LayoutGrid\" /> },\n            { id: 'documents', label: 'Documents', icon: <LucideIcon name=\"FileText\" />, badge: 3 },\n            { id: 'activity', label: 'Activity', icon: <LucideIcon name=\"History\" /> },\n          ]}\n          value=\"overview\"\n          onChange={noop}\n        />\n      )",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 305
+      "line": 561
     },
     {
       "id": "employee-register-views",
@@ -173231,7 +175296,7 @@
       "kind": "registry",
       "render": "() => (\n        <Tabs\n          id=\"ex-employee-register\"\n          label=\"Employee register views\"\n          class=\"sds-tabs-use-example\"\n          variant=\"contained\"\n          size=\"sm\"\n          items={[\n            { id: 'all', label: 'All' },\n            { id: 'attention', label: 'Attention', badge: 8 },\n            { id: 'archived', label: 'Archived' },\n          ]}\n          value=\"attention\"\n          onChange={noop}\n        />\n      )",
       "file": "src/ui/registry/navigation.defs.tsx",
-      "line": 325
+      "line": 581
     },
     {
       "id": "enterprise.calendar.taskPlanner",
@@ -173721,7 +175786,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px' }}>\n          <Card variant=\"metric\" density=\"compact\" header={<CardHeader title=\"Open incidents\" level={null} />}>\n            <Figure value=\"18\" caption=\"4 overdue\" />\n          </Card>\n          <Card variant=\"surface\" header={<CardHeader title=\"Site note\" />}>\n            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Night shift handover completed.</span>\n          </Card>\n          <Card variant=\"panel\" density=\"compact\" header={<CardHeader title=\"Corrective actions\" actions={<Badge tone=\"warning\" size=\"sm\">2 open</Badge>} />}>\n            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Both due this Friday.</span>\n          </Card>\n          <Card variant=\"action\" onClick={noop} actionLabel=\"Start a new inspection\"\n            header={<CardHeader icon={<LucideIcon name=\"ClipboardCheck\" />} title=\"New inspection\" description=\"Start from a template\" />} />\n        </div>\n      )",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 216
+      "line": 217
     },
     {
       "id": "page-action",
@@ -173741,7 +175806,7 @@
       "kind": "registry",
       "render": "() => <FormField label=\"Gross pay\"><CurrencyInput valueMinor={845000} onChange={noop} currency=\"TTD\" /></FormField>",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 588
+      "line": 592
     },
     {
       "id": "platform.weather.current",
@@ -173801,7 +175866,7 @@
       "kind": "registry",
       "render": "() => <FormField label=\"Search employees\"><SearchField value=\"Sarah\" onInput={noop} /></FormField>",
       "file": "src/ui/registry/forms.defs.tsx",
-      "line": 582
+      "line": 586
     },
     {
       "id": "row",
@@ -173861,7 +175926,7 @@
       "kind": "registry",
       "render": "() => (\n        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>\n          {(['success', 'warning', 'danger', 'info'] as CardTone[]).map(tone => (\n            <Card key={tone} variant=\"metric\" density=\"compact\" tone={tone}\n              header={<CardHeader title={`${tone[0]!.toUpperCase()}${tone.slice(1)} signal`} level={null} />}>\n              <Figure value=\"7\" caption=\"this week\" />\n            </Card>\n          ))}\n        </div>\n      )",
       "file": "src/ui/registry/containers.defs.tsx",
-      "line": 236
+      "line": 237
     },
     {
       "id": "variants",
@@ -187452,7 +189517,7 @@
       "helper": "apiPost",
       "caller": "useArchiveThread",
       "file": "src/api/communications.ts",
-      "line": 686,
+      "line": 759,
       "module": "communications"
     },
     {
@@ -187468,7 +189533,7 @@
       "helper": "apiPost",
       "caller": "useCreateMessageAttachment",
       "file": "src/api/communications.ts",
-      "line": 429,
+      "line": 493,
       "module": "communications"
     },
     {
@@ -187484,7 +189549,7 @@
       "helper": "apiPost",
       "caller": "useAttachmentUrl",
       "file": "src/api/communications.ts",
-      "line": 676,
+      "line": 749,
       "module": "communications"
     },
     {
@@ -187500,7 +189565,7 @@
       "helper": "apiPost",
       "caller": "useMessageAttachmentUploadUrl",
       "file": "src/api/communications.ts",
-      "line": 416,
+      "line": 480,
       "module": "communications"
     },
     {
@@ -187516,7 +189581,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 457,
+      "line": 521,
       "module": "communications"
     },
     {
@@ -187532,7 +189597,7 @@
       "helper": "apiPost",
       "caller": "useDeleteMessage",
       "file": "src/api/communications.ts",
-      "line": 628,
+      "line": 698,
       "module": "communications"
     },
     {
@@ -187540,7 +189605,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 656,
+      "line": 729,
       "module": "communications"
     },
     {
@@ -187556,7 +189621,7 @@
       "helper": "apiPost",
       "caller": "useSaveDraft",
       "file": "src/api/communications.ts",
-      "line": 667,
+      "line": 740,
       "module": "communications"
     },
     {
@@ -187580,7 +189645,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 551,
+      "line": 618,
       "module": "communications"
     },
     {
@@ -187596,7 +189661,7 @@
       "helper": "apiPost",
       "caller": "useMuteThread",
       "file": "src/api/communications.ts",
-      "line": 701,
+      "line": 774,
       "module": "communications"
     },
     {
@@ -187612,7 +189677,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 643,
+      "line": 715,
       "module": "communications"
     },
     {
@@ -187628,7 +189693,7 @@
       "helper": "apiPost",
       "caller": "useAddThreadParticipants",
       "file": "src/api/communications.ts",
-      "line": 714,
+      "line": 787,
       "module": "communications"
     },
     {
@@ -187636,7 +189701,7 @@
       "helper": "apiPost",
       "caller": "useRemoveThreadParticipant",
       "file": "src/api/communications.ts",
-      "line": 728,
+      "line": 801,
       "module": "communications"
     },
     {
@@ -187644,7 +189709,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 590,
+      "line": 660,
       "module": "communications"
     },
     {
@@ -187660,7 +189725,7 @@
       "helper": "apiPost",
       "caller": "usePinMessage",
       "file": "src/api/communications.ts",
-      "line": 601,
+      "line": 671,
       "module": "communications"
     },
     {
@@ -187668,7 +189733,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 578,
+      "line": 647,
       "module": "communications"
     },
     {
@@ -187676,7 +189741,7 @@
       "helper": "apiPost",
       "caller": "useUnpinMessage",
       "file": "src/api/communications.ts",
-      "line": 614,
+      "line": 684,
       "module": "communications"
     },
     {
@@ -187684,7 +189749,7 @@
       "helper": "apiPost",
       "caller": "usePostMessage",
       "file": "src/api/communications.ts",
-      "line": 391,
+      "line": 455,
       "module": "communications"
     },
     {
@@ -187700,7 +189765,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 367,
+      "line": 431,
       "module": "communications"
     },
     {
@@ -187708,7 +189773,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 530,
+      "line": 597,
       "module": "communications"
     },
     {
@@ -187732,7 +189797,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 784,
+      "line": 860,
       "module": "communications"
     },
     {
@@ -187740,7 +189805,7 @@
       "helper": "apiPost",
       "caller": "useResolveRecordThread",
       "file": "src/api/communications.ts",
-      "line": 752,
+      "line": 825,
       "module": "communications"
     },
     {
@@ -187748,7 +189813,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 767,
+      "line": 841,
       "module": "communications"
     },
     {
@@ -187764,7 +189829,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 503,
+      "line": 569,
       "module": "communications"
     },
     {
@@ -187772,7 +189837,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 351,
+      "line": 414,
       "module": "communications"
     },
     {
@@ -187780,7 +189845,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 487,
+      "line": 552,
       "module": "communications"
     },
     {
@@ -187804,7 +189869,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 332,
+      "line": 393,
       "module": "communications"
     },
     {
@@ -187812,7 +189877,7 @@
       "helper": "apiPost",
       "caller": "useBroadcastNotification",
       "file": "src/api/communications.ts",
-      "line": 289,
+      "line": 350,
       "module": "communications"
     },
     {
@@ -187820,7 +189885,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 232,
+      "line": 242,
       "module": "communications"
     },
     {
@@ -187828,7 +189893,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 315,
+      "line": 376,
       "module": "communications"
     },
     {
@@ -187836,15 +189901,15 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 298,
+      "line": 359,
       "module": "communications"
     },
     {
       "path": "/api/communications/notifications/mute",
       "helper": "apiPost",
-      "caller": "useMuteNotifications",
+      "caller": "result",
       "file": "src/api/communications.ts",
-      "line": 271,
+      "line": 314,
       "module": "communications"
     },
     {
@@ -187852,15 +189917,15 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 249,
+      "line": 261,
       "module": "communications"
     },
     {
       "path": "/api/communications/notifications/preferences/set",
       "helper": "apiPost",
-      "caller": "useSetNotificationPreference",
+      "caller": "result",
       "file": "src/api/communications.ts",
-      "line": 262,
+      "line": 274,
       "module": "communications"
     },
     {
@@ -187868,7 +189933,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 203,
+      "line": 212,
       "module": "communications"
     },
     {
@@ -187884,7 +189949,7 @@
       "helper": "apiPost",
       "caller": "completed",
       "file": "src/api/communications.ts",
-      "line": 1080,
+      "line": 1166,
       "module": "communications"
     },
     {
@@ -187892,7 +189957,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 1090,
+      "line": 1176,
       "module": "communications"
     },
     {
@@ -187900,7 +189965,7 @@
       "helper": "apiPost",
       "caller": "reserved",
       "file": "src/api/communications.ts",
-      "line": 1063,
+      "line": 1149,
       "module": "communications"
     },
     {
@@ -187908,7 +189973,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 996,
+      "line": 1082,
       "module": "communications"
     },
     {
@@ -187916,7 +189981,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 968,
+      "line": 1054,
       "module": "communications"
     },
     {
@@ -187924,7 +189989,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 943,
+      "line": 1029,
       "module": "communications"
     },
     {
@@ -187940,7 +190005,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 914,
+      "line": 1000,
       "module": "communications"
     },
     {
@@ -187948,7 +190013,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 825,
+      "line": 902,
       "module": "communications"
     },
     {
@@ -187956,7 +190021,7 @@
       "helper": "apiPost",
       "caller": "useMarkTicketRead",
       "file": "src/api/communications.ts",
-      "line": 1015,
+      "line": 1101,
       "module": "communications"
     },
     {
@@ -187964,7 +190029,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 862,
+      "line": 941,
       "module": "communications"
     },
     {
@@ -187972,7 +190037,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 877,
+      "line": 961,
       "module": "communications"
     },
     {
@@ -187980,7 +190045,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 899,
+      "line": 984,
       "module": "communications"
     },
     {
@@ -189644,7 +191709,7 @@
       "helper": "apiPost",
       "caller": "response",
       "file": "src/api/uiPreferences.ts",
-      "line": 38,
+      "line": 44,
       "module": "platform"
     },
     {
@@ -189652,7 +191717,7 @@
       "helper": "apiPost",
       "caller": "response",
       "file": "src/api/uiPreferences.ts",
-      "line": 50,
+      "line": 56,
       "module": "platform"
     },
     {

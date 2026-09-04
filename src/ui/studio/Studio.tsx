@@ -199,7 +199,7 @@ const SEMANTIC_ROLES: { label: string; items: PaletteItem[] }[] = [
   ] },
   { label: 'Surfaces', items: [
     { label: 'Default', token: '--ui-color-surface-default', fallback: '#ffffff' },
-    { label: 'Subtle', token: '--ui-color-surface-subtle', fallback: '#f6f7f9' },
+    { label: 'Subtle', token: '--ui-color-surface-subtle', fallback: '#f4f6fa' },
   ] },
   { label: 'Navigation', items: [
     { label: 'Background', token: '--ui-color-nav-background', fallback: '#1b2d54' },

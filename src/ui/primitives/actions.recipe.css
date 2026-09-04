@@ -76,6 +76,7 @@
     border-radius: 0;
     background: transparent;
     color: var(--ui-button-group-fg);
+    font-weight: var(--font-weight-medium);
     box-shadow: none;
   }
   .ui-button-group .ui-btn + .ui-btn { border-left: var(--ui-border-width) solid var(--ui-button-group-separator); }
@@ -181,12 +182,40 @@
 
   /* ── Menu surface ─────────────────────────────────────────────────────────*/
   .ui-menu {
+    position: relative;
     min-width: var(--ui-menu-min-width);
     padding: var(--ui-menu-pad);
     border: var(--ui-border-width) solid var(--ui-menu-border);
     border-radius: var(--ui-menu-radius);
     background: var(--ui-menu-bg);
     box-shadow: var(--ui-menu-shadow);
+  }
+  /* The base popup scrolls/clips long lists. Pointer menus deliberately expose
+     their small connector outside the surface; only consumers that request the
+     pointer receive this overflow treatment. */
+  .ui-popup.ui-menu--pointer { overflow: visible; }
+  .ui-menu--pointer::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    width: 10px;
+    height: 10px;
+    border: var(--ui-border-width) solid var(--ui-menu-border);
+    background: var(--ui-menu-bg);
+    transform: rotate(45deg);
+  }
+  .ui-menu--pointer.ui-menu--align-start::before { left: 12px; }
+  .ui-menu--pointer.ui-menu--align-center::before { left: calc(50% - 5px); }
+  .ui-menu--pointer.ui-menu--align-end::before { right: 12px; }
+  .ui-menu--pointer[data-placement='bottom']::before {
+    top: -6px;
+    border-right: 0;
+    border-bottom: 0;
+  }
+  .ui-menu--pointer[data-placement='top']::before {
+    bottom: -6px;
+    border-left: 0;
+    border-top: 0;
   }
   .ui-menu-item {
     display: flex;

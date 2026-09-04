@@ -13,6 +13,7 @@ import { h } from 'preact';
 
 vi.mock('@lib/api', () => ({
   apiPost: vi.fn(() => Promise.resolve({ success: true, data: { lastReadSequence: 5 } })),
+  registerAuthExpiredHandler: vi.fn(),
 }));
 
 import { useMarkTicketRead } from './communications';

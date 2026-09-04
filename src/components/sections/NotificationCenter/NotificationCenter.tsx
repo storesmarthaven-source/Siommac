@@ -1,15 +1,11 @@
-/**
- * src/components/sections/NotificationCenter/NotificationCenter.tsx
- *
- * The global Notification Center (section s-notification-center) — a work inbox
- * for the ERP. Compact header with summary chips · segmented tab bar with counts
- * · filter toolbar + quick chips · a date-grouped notification stream with a calm,
- * helpful empty state. On the canonical communications backbone.
- */
+/** Enterprise notification work inbox on the canonical communications API. */
 
 import { type VNode } from 'preact';
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { PageHeader, Tabs, TabPanel, type TabItem } from '@ui';
+import { useEffect, useMemo, useState } from 'preact/hooks';
+import {
+  ActivityDots, Button, EmptyState, LucideIcon, PageHeader,
+  PageActionBar, SearchField, Select, Switch, Tabs, TabPanel, type TabItem,
+} from '@ui';
 import { useCan } from '@lib/permissions';
 import {
   useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead,
@@ -19,236 +15,362 @@ import {
 import { NotificationItem } from './NotificationItem';
 import { BroadcastComposer } from './BroadcastComposer';
 import { NotificationPreferencesPanel } from './NotificationPreferencesPanel';
+import { NotificationEmptyVisual, type NotificationEmptyVisualKind } from './NotificationEmptyVisual';
+import {
+  archiveAllReadPreviewNotifications, archivePreviewNotification, countPreviewNotifications,
+  createPreviewNotifications, isArchivedNotification, markAllPreviewNotificationsRead,
+  markPreviewNotificationRead,
+} from './previewNotifications';
 import { openNotificationTarget, openTicketNotification } from './notifAction';
+import './notificationCenter.css';
+
+type NotificationView = 'all' | 'unread' | 'action' | 'archived';
+type SeverityFilter = '' | 'critical' | 'warning' | 'success' | 'info';
 
 const TABS: readonly TabItem[] = [
-  { id: 'all', label: 'All', icon: <i class="fas fa-inbox" /> },
-  { id: 'unread', label: 'Unread', icon: <i class="fas fa-envelope" /> },
-  { id: 'action', label: 'Action Required', icon: <i class="fas fa-clipboard-check" /> },
-  { id: 'archived', label: 'Archived', icon: <i class="fas fa-box-archive" /> },
+  { id: 'all', label: 'All', icon: <LucideIcon name="Inbox" /> },
+  { id: 'unread', label: 'Unread', icon: <LucideIcon name="Mail" /> },
+  { id: 'action', label: 'Needs Action', icon: <LucideIcon name="ClipboardCheck" /> },
+  { id: 'archived', label: 'Archived', icon: <LucideIcon name="Archive" /> },
 ];
 
-const MODULE_OPTIONS: { value: string; label: string }[] = [
-  { value: 'hse.incidents',     label: 'Incidents' },
-  { value: 'hse.investigations',label: 'Investigations' },
-  { value: 'hse.capa',          label: 'CAPA' },
-  { value: 'hse.risk',          label: 'Risk / JSA' },
-  { value: 'hse.ptw',           label: 'Permit to Work' },
-  { value: 'communications',    label: 'Announcements' },
-];
+const MODULE_OPTIONS = [
+  { value: '', label: 'All Modules' },
+  { value: 'hse.incidents', label: 'Incidents' },
+  { value: 'hse.investigations', label: 'Investigations' },
+  { value: 'hse.capa', label: 'CAPA' },
+  { value: 'hse.risk', label: 'Risk & JSA' },
+  { value: 'hse.ptw', label: 'Permit to Work' },
+  { value: 'workflow', label: 'Workflow' },
+  { value: 'communications', label: 'Announcements' },
+  { value: 'hr', label: 'Human Resources' },
+  { value: 'payroll', label: 'Payroll' },
+  { value: 'finance', label: 'Finance' },
+] as const;
 
-// ── Date grouping ───────────────────────────────────────────────────────────
-const GROUP_ORDER = ['Today', 'Yesterday', 'Earlier this week', 'Older'] as const;
+const SEVERITY_OPTIONS = [
+  { value: '', label: 'All Severities' },
+  { value: 'critical', label: 'Critical' },
+  { value: 'warning', label: 'Warning' },
+  { value: 'success', label: 'Success' },
+  { value: 'info', label: 'Information' },
+] as const;
+
+const GROUP_ORDER = ['Today', 'Yesterday', 'Earlier This Week', 'Older'] as const;
 
 function dateGroup(iso: string): typeof GROUP_ORDER[number] {
-  const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
-  const t = new Date(iso).getTime();
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const value = new Date(iso).getTime();
   const today = startOfToday.getTime();
-  if (t >= today) return 'Today';
-  if (t >= today - 86_400_000) return 'Yesterday';
-  if (t >= today - 6 * 86_400_000) return 'Earlier this week';
+  if (value >= today) return 'Today';
+  if (value >= today - 86_400_000) return 'Yesterday';
+  if (value >= today - 6 * 86_400_000) return 'Earlier This Week';
   return 'Older';
 }
 
-function groupByDate(rows: CanonicalNotification[]): [string, CanonicalNotification[]][] {
+function groupByDate(rows: readonly CanonicalNotification[]): [string, CanonicalNotification[]][] {
   const buckets = new Map<string, CanonicalNotification[]>();
-  for (const n of rows) {
-    const g = dateGroup(n.created_at);
-    (buckets.get(g) ?? buckets.set(g, []).get(g)!).push(n);
+  for (const notification of rows) {
+    const group = dateGroup(notification.created_at);
+    const values = buckets.get(group) ?? [];
+    values.push(notification);
+    buckets.set(group, values);
   }
-  return GROUP_ORDER.filter(g => buckets.has(g)).map(g => [g, buckets.get(g)!]);
+  return GROUP_ORDER.filter(group => buckets.has(group)).map(group => [group, buckets.get(group) ?? []]);
+}
+
+function isView(value: string): value is NotificationView {
+  return TABS.some(tab => tab.id === value);
 }
 
 export function NotificationCenter(): VNode {
-  const [tab, setTab] = useState('all');
+  const [view, setView] = useState<NotificationView>('all');
   const [module, setModule] = useState('');
-  const [severity, setSeverity] = useState('');
+  const [severity, setSeverity] = useState<SeverityFilter>('');
   const [search, setSearch] = useState('');
   const [criticalOnly, setCriticalOnly] = useState(false);
   const [broadcastOpen, setBroadcastOpen] = useState(false);
-  const [prefsOpen, setPrefsOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const menuBtnRef = useRef<HTMLButtonElement>(null);
-
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [showLive, setShowLive] = useState(false);
+  const [previewNotifications, setPreviewNotifications] = useState(createPreviewNotifications);
   const isAdmin = useCan('communications.admin');
+
+  useEffect(() => {
+    const openPreferences = (): void => setPreferencesOpen(true);
+    window.addEventListener('siomac:openNotificationPreferences', openPreferences);
+    return () => window.removeEventListener('siomac:openNotificationPreferences', openPreferences);
+  }, []);
+
   const { data: summary } = useCommsSummary();
 
-  // Close the overflow menu on an outside click.
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onDown = (e: MouseEvent) => {
-      const t = e.target as Node;
-      if (menuRef.current?.contains(t) || menuBtnRef.current?.contains(t)) return;
-      setMenuOpen(false);
-    };
-    document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
-  }, [menuOpen]);
-
   const effectiveSeverity = criticalOnly ? 'critical' : severity;
-  const hasFilters = Boolean(module || severity || search || criticalOnly);
-
   const args: NotificationListArgs = {
     limit: 100,
-    unreadOnly:         tab === 'unread',
-    actionRequiredOnly: tab === 'action',
-    archivedOnly:       tab === 'archived',
-    module:             module || undefined,
-    severity:           (effectiveSeverity || undefined) as NotificationListArgs['severity'],
-    search:             search || undefined,
+    unreadOnly: view === 'unread',
+    actionRequiredOnly: view === 'action',
+    archivedOnly: view === 'archived',
+    module: module || undefined,
+    severity: effectiveSeverity || undefined,
+    search: search.trim() || undefined,
   };
-  const { data, isLoading, refetch } = useNotifications(args);
-  // Belt-and-suspenders: filter the active-tab predicates client-side too, so the
-  // tabs are correct even if an older deployed backend ignores the list args.
-  const rows = (data ?? []).filter(n => {
-    if (tab === 'unread') return !n.is_read;
-    if (tab === 'action') return n.action_required && n.action_status === 'pending';
-    if (severity && n.severity !== severity)             return false;
-    if (criticalOnly && n.severity !== 'critical')       return false;
-    if (module && n.module !== module)                   return false;
-    return true;
-  });
-  const groups = useMemo(() => groupByDate(rows), [rows]);
-  const unread = summary?.notificationsUnread ?? 0;
-
+  const query = useNotifications(args, { enabled: showLive });
   const markRead = useMarkNotificationRead();
   const markAll = useMarkAllNotificationsRead();
   const archive = useArchiveNotification();
+  const sourceRows = showLive ? (query.data ?? []) : previewNotifications;
+  const previewCounts = useMemo(() => countPreviewNotifications(previewNotifications), [previewNotifications]);
+  const total = showLive ? (summary?.notificationsTotal ?? 0) : previewCounts.total;
+  const unread = showLive ? (summary?.notificationsUnread ?? 0) : previewCounts.unread;
+  const actionRequired = showLive ? (summary?.notificationsActionRequired ?? 0) : previewCounts.actionRequired;
+  const archived = showLive ? (summary?.notificationsArchived ?? 0) : previewCounts.archived;
 
-  const tabCounts: Record<string, number | undefined> = {
-    all: summary?.notificationsTotal,
-    unread: summary?.notificationsUnread,
-    action: summary?.notificationsActionRequired,
-    archived: summary?.notificationsArchived,
-  };
-  const tabs = TABS.map(item => ({ ...item, badge: tabCounts[item.id] }));
+  const rows = useMemo(() => {
+    const needle = search.trim().toLocaleLowerCase();
+    return sourceRows.filter(notification => {
+      if (view === 'unread' && notification.is_read) return false;
+      if (view === 'action' && !(notification.action_required && notification.action_status === 'pending')) return false;
+      if (view === 'archived' ? !isArchivedNotification(notification) : isArchivedNotification(notification)) return false;
+      if (effectiveSeverity && notification.severity !== effectiveSeverity) return false;
+      if (module && notification.module !== module) return false;
+      if (needle) {
+        const searchable = [notification.title, notification.body, notification.source_id, notification.module]
+          .filter(Boolean).join(' ').toLocaleLowerCase();
+        if (!searchable.includes(needle)) return false;
+      }
+      return true;
+    });
+  }, [effectiveSeverity, module, search, sourceRows, view]);
+  const groups = useMemo(() => groupByDate(rows), [rows]);
+  const hasFilters = Boolean(module || severity || search.trim() || criticalOnly);
 
-  function open(n: CanonicalNotification) {
-    if (!n.is_read) markRead.mutate(n.id);
-    if (!openNotificationTarget(n)) openTicketNotification(n);
+  const tabs = TABS.map(tab => ({
+    ...tab,
+    badge: tab.id === 'all' ? total
+        : tab.id === 'unread' ? unread
+        : tab.id === 'action' ? actionRequired
+          : archived,
+  }));
+
+  function open(notification: CanonicalNotification): void {
+    if (!notification.is_read) {
+      if (showLive) markRead.mutate(notification.id);
+      else setPreviewNotifications(current => markPreviewNotificationRead(current, notification.id));
+    }
+    if (!openNotificationTarget(notification)) openTicketNotification(notification);
   }
 
-  function clearFilters() {
-    setModule(''); setSeverity(''); setSearch(''); setCriticalOnly(false);
+  function markAllRead(): void {
+    if (showLive) markAll.mutate({});
+    else setPreviewNotifications(markAllPreviewNotificationsRead);
   }
+
+  function archiveOne(notificationId: string): void {
+    if (showLive) archive.mutate({ notificationId });
+    else setPreviewNotifications(current => archivePreviewNotification(current, notificationId));
+  }
+
+  function archiveAllRead(): void {
+    if (showLive) archive.mutate({ all: true });
+    else setPreviewNotifications(archiveAllReadPreviewNotifications);
+  }
+
+  function clearFilters(): void {
+    setModule('');
+    setSeverity('');
+    setSearch('');
+    setCriticalOnly(false);
+  }
+
+  const emptyCopy = hasFilters
+    ? { title: 'No Matching Notifications', text: 'Adjust the search or filters to broaden this view.' }
+    : view === 'archived'
+      ? { title: 'Archive Is Empty', text: 'Notifications you archive will remain available here.' }
+      : view === 'action'
+        ? { title: 'No Actions Waiting', text: 'There are no notification decisions waiting for you.' }
+        : view === 'unread'
+          ? { title: 'Everything Is Read', text: 'You have reviewed every notification in your inbox.' }
+          : { title: "You're All Caught Up", text: 'New alerts, approvals, assignments and reminders will appear here.' };
+  const emptyVisualKind: NotificationEmptyVisualKind = hasFilters
+    ? 'search'
+    : view === 'archived' ? 'archived'
+      : view === 'action' ? 'action'
+        : view === 'unread' ? 'unread'
+          : 'all';
 
   return (
-    <div class="hse-tab hse-dash" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div class="nc-center">
       <PageHeader
-        icon="fa-bell"
-        module="Notifications"
+        icon={<LucideIcon name="Bell" />}
+        module="Communications"
         title="Notification Center"
-        sub="Everything across the ERP that needs your attention — alerts, approvals, assignments and reminders."
+        sub="Review alerts, approvals, assignments and updates from across SIOMAC."
+        actions={(
+          <PageActionBar
+            label="Notification Center Actions"
+            secondary={(
+              <>
+                <Button
+                  variant="secondary"
+                  iconLeft={<LucideIcon name="CheckCheck" />}
+                  disabled={unread === 0}
+                  loading={showLive && markAll.isPending}
+                  onClick={markAllRead}
+                >
+                  Mark All Read
+                </Button>
+                <Button variant="secondary" iconLeft={<LucideIcon name="Settings2" />} onClick={() => setPreferencesOpen(true)}>
+                  Notification Settings
+                </Button>
+              </>
+            )}
+            primary={isAdmin ? (
+              <Button variant="primary" iconLeft={<LucideIcon name="Megaphone" />} onClick={() => setBroadcastOpen(true)}>
+                Send Broadcast
+              </Button>
+            ) : undefined}
+            overflow={[
+              {
+                id: 'archive-read',
+                label: showLive && archive.isPending ? 'Archiving Read Notifications' : 'Archive All Read',
+                icon: <LucideIcon name="Archive" />,
+                disabled: (showLive && archive.isPending) || total - unread === 0,
+                onSelect: archiveAllRead,
+              },
+              {
+                id: 'refresh',
+                label: showLive
+                  ? (query.isFetching ? 'Refreshing Notifications' : 'Refresh Notifications')
+                  : 'Reset Feature Preview',
+                icon: <LucideIcon name="RefreshCw" />,
+                disabled: showLive && query.isFetching,
+                onSelect: () => {
+                  if (showLive) void query.refetch();
+                  else setPreviewNotifications(createPreviewNotifications());
+                },
+              },
+            ]}
+          />
+        )}
       />
 
-      {/* Tabs row — status on the left, list/utility actions on the right. */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px' }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <Tabs id="notification-center-tabs" items={tabs} value={tab} onChange={setTab} label="Notification views" />
-        </div>
-
-        {unread > 0 && (
-          <button class="hse-btn" disabled={markAll.isPending} onClick={() => markAll.mutate({})} style={{ flexShrink: 0 }}>
-            <i class="fas fa-check-double" /> Mark all read
-          </button>
-        )}
-
-        <div style={{ position: 'relative', flexShrink: 0 }}>
-          <button ref={menuBtnRef} class="hse-btn" title="More actions" onClick={() => setMenuOpen(o => !o)}>
-            <i class="fas fa-ellipsis" />
-          </button>
-          {menuOpen && (
-            <div ref={menuRef} style={{ position: 'absolute', top: '100%', right: 0, zIndex: 41, minWidth: '210px', marginTop: '4px',
-              background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', boxShadow: 'var(--elev-4)', overflow: 'hidden' }}>
-              {[
-                { icon: 'fa-sliders',     label: 'Notification preferences', onClick: () => setPrefsOpen(true), show: true },
-                { icon: 'fa-box-archive', label: 'Archive all read',         onClick: () => archive.mutate({ all: true }), show: true },
-                { icon: 'fa-rotate',      label: 'Refresh',                  onClick: () => { void refetch(); }, show: true },
-                { icon: 'fa-bullhorn',    label: 'Send broadcast',           onClick: () => setBroadcastOpen(true), show: isAdmin },
-              ].filter(it => it.show).map(it => (
-                <button key={it.label} onClick={() => { it.onClick(); setMenuOpen(false); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '9px 12px',
-                    background: 'none', border: 'none', borderBottom: '1px solid var(--border)', cursor: 'pointer',
-                    textAlign: 'left', fontSize: '0.8rem', color: 'var(--siomac-navy)', whiteSpace: 'nowrap' }}>
-                  <i class={`fas ${it.icon}`} style={{ width: '16px', color: 'var(--text-muted)', flexShrink: 0 }} /> {it.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <TabPanel tabsId="notification-center-tabs" tabId={tab} value={tab}>
-      {/* Filter toolbar */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginTop: '8px' }}>
-        <div class="vt-search" style={{ flex: '1 1 200px' }}>
-          <i class="fas fa-search" />
-          <input type="search" placeholder="Search notifications…" value={search}
-            onInput={e => setSearch((e.target as HTMLInputElement).value)} />
-        </div>
-        <select class="emp-filter-select" value={module} onChange={e => setModule((e.target as HTMLSelectElement).value)}>
-          <option value="">All modules</option>
-          {MODULE_OPTIONS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-        </select>
-        <select class="emp-filter-select" value={severity} disabled={criticalOnly}
-          onChange={e => setSeverity((e.target as HTMLSelectElement).value)}>
-          <option value="">All severities</option>
-          <option value="critical">Critical</option>
-          <option value="warning">Warning</option>
-          <option value="success">Success</option>
-          <option value="info">Info</option>
-        </select>
-        {/* Quick filter chips */}
-        <button type="button" onClick={() => setCriticalOnly(v => !v)}
-          class={`nc-chip${criticalOnly ? ' is-active' : ''}`}>
-          <i class="fas fa-triangle-exclamation" /> Critical only
-        </button>
-        {hasFilters && (
-          <button type="button" onClick={clearFilters} class="nc-chip nc-chip--ghost">
-            <i class="fas fa-xmark" /> Clear filters
-          </button>
-        )}
-      </div>
-
-      {/* List */}
-      <div class="hse-table-card" style={{ overflow: 'hidden' }}>
-        {isLoading && <div style={{ padding: '28px', textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>}
-
-        {!isLoading && rows.length === 0 && (
-          <div style={{ padding: '46px 24px', textAlign: 'center' }}>
-            <i class="fas fa-bell-slash" style={{ fontSize: '2rem', color: 'var(--text-muted)', opacity: 0.4 }} />
-            <div style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', marginTop: '12px', fontSize: '0.95rem' }}>
-              You're all caught up
-            </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '3px' }}>
-              {hasFilters
-                ? 'No notifications match this view. Try changing the filters.'
-                : tab === 'archived'
-                  ? 'Nothing has been archived yet.'
-                  : 'No notifications or required actions right now.'}
-            </div>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '14px' }}>
-              {hasFilters && <button class="hse-btn" onClick={clearFilters}><i class="fas fa-filter-circle-xmark" /> Clear filters</button>}
-              {tab !== 'archived' && <button class="hse-btn" onClick={() => setTab('archived')}><i class="fas fa-box-archive" /> Show archived</button>}
-            </div>
+      <section class="nc-workspace" aria-label="Notification Inbox">
+        <div class="nc-toolbar">
+          <div class="nc-mode-row">
+            <span class="nc-mode-copy">
+              <strong>{showLive ? 'Live Notifications' : 'Feature Preview'}</strong>
+              <small>{showLive ? 'Showing notifications from your account.' : 'Explore staged examples without changing live data.'}</small>
+            </span>
+            <Switch checked={showLive} onChange={setShowLive} aria-label="Show Live Notifications" />
           </div>
-        )}
+          <div class="nc-workspace-head">
+            <Tabs
+              id="notification-center-tabs"
+              items={tabs}
+              value={view}
+              onChange={value => { if (isView(value)) { setView(value); setCriticalOnly(false); } }}
+              label="Notification Views"
+              variant="contained"
+            />
+          </div>
 
-        {!isLoading && groups.map(([label, items]) => (
-          <div key={label}>
-            <div class="nc-group-head">{label} <span class="nc-group-count">{items.length}</span></div>
-            {items.map(n => (
-              <NotificationItem key={n.id} n={n} onOpen={open}
-                onArchive={tab === 'archived' ? undefined : (x => archive.mutate({ notificationId: x.id }))} />
+          <div class="nc-filters" aria-label="Notification Filters">
+            <SearchField
+              value={search}
+              onInput={setSearch}
+              placeholder="Search Notifications"
+              aria-label="Search Notifications"
+              class="nc-search"
+            />
+            <Select
+              value={module}
+              onChange={setModule}
+              options={MODULE_OPTIONS}
+              aria-label="Filter by Module"
+              class="nc-filter-select"
+            />
+            <Select<SeverityFilter>
+              value={severity}
+              onChange={value => setSeverity(value)}
+              options={SEVERITY_OPTIONS}
+              disabled={criticalOnly}
+              aria-label="Filter by Severity"
+              class="nc-filter-select"
+            />
+            <Button
+              variant="outline"
+              pressed={criticalOnly}
+              iconLeft={<LucideIcon name="TriangleAlert" />}
+              onClick={() => setCriticalOnly(value => !value)}
+            >
+              Critical Only
+            </Button>
+            {hasFilters && (
+              <Button variant="ghost" iconLeft={<LucideIcon name="X" />} onClick={clearFilters}>
+                Clear Filters
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div class="nc-results-head" aria-live="polite">
+          <div>
+            <strong>{rows.length}</strong> {rows.length === 1 ? 'Notification' : 'Notifications'}
+            {hasFilters && <span> Matching This View</span>}
+          </div>
+          <div class="nc-results-status">
+            {criticalOnly && <span class="nc-filter-note"><LucideIcon name="TriangleAlert" /> Critical Alerts Only</span>}
+          </div>
+        </div>
+
+        <TabPanel tabsId="notification-center-tabs" tabId={view} value={view}>
+          <div class="nc-results">
+            {showLive && query.isLoading && (
+              <div class="nc-state"><ActivityDots label="Loading Notifications" /></div>
+            )}
+
+            {showLive && !query.isLoading && query.isError && (
+              <EmptyState
+                visual={<NotificationEmptyVisual kind="error" />}
+                title="Notifications Could Not Be Loaded"
+                text="Check your connection and try again."
+                actions={<Button variant="secondary" size="sm" iconLeft={<LucideIcon name="RefreshCw" />} onClick={() => void query.refetch()}>Try Again</Button>}
+                role="alert"
+              />
+            )}
+
+            {(!showLive || (!query.isLoading && !query.isError)) && rows.length === 0 && (
+              <EmptyState
+                visual={<NotificationEmptyVisual kind={emptyVisualKind} />}
+                title={emptyCopy.title}
+                text={emptyCopy.text}
+                actions={hasFilters ? <Button variant="secondary" size="sm" onClick={clearFilters}>Clear Filters</Button> : undefined}
+                role="status"
+              />
+            )}
+
+            {(!showLive || (!query.isLoading && !query.isError)) && groups.map(([label, items]) => (
+              <section class="nc-date-group" key={label} aria-label={`${label} Notifications`}>
+                <div class="nc-date-group-head">
+                  <span>{label}</span>
+                  <span>{items.length}</span>
+                </div>
+                {items.map(notification => (
+                  <NotificationItem
+                    key={notification.id}
+                    n={notification}
+                    onOpen={open}
+                    onArchive={view === 'archived' ? undefined : item => archiveOne(item.id)}
+                  />
+                ))}
+              </section>
             ))}
           </div>
-        ))}
-      </div>
-      </TabPanel>
+        </TabPanel>
+      </section>
 
       <BroadcastComposer open={broadcastOpen} onClose={() => setBroadcastOpen(false)} />
-      <NotificationPreferencesPanel open={prefsOpen} onClose={() => setPrefsOpen(false)} />
+      <NotificationPreferencesPanel open={preferencesOpen} onClose={() => setPreferencesOpen(false)} />
     </div>
   );
 }

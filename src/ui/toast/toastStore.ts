@@ -6,6 +6,7 @@ import type {
   ToastRichOptions,
   ToastVariant
 } from "./toastTypes";
+import { getToastRuntimePreferences } from "./toastPreferences";
 
 // ── Exit animation window ─────────────────────────────────────────────────────
 
@@ -17,12 +18,20 @@ export const TOAST_EXIT_MS = 450;
 // ── Default durations ─────────────────────────────────────────────────────────
 
 const DEFAULT_DURATIONS: Record<ToastVariant, number> = {
-  success: 4000,
-  info: 4000,
-  warning: 5000,
+  success: 6000,
+  info: 6000,
+  warning: 6000,
   error: 6000,
   loading: 0
 };
+
+function defaultDuration(variant: ToastVariant): number {
+  if (variant === "loading") return 0;
+  const mode = getToastRuntimePreferences().durationMode;
+  if (mode === "persistent") return 0;
+  if (mode === "extended") return 10000;
+  return DEFAULT_DURATIONS[variant];
+}
 
 // ── Internal store ────────────────────────────────────────────────────────────
 
@@ -131,11 +140,13 @@ function buildNormal(message: string, options: ToastOptions = {}): ToastRecord {
     variant,
     title: options.title ?? message,
     description: options.description,
-    duration: options.duration ?? DEFAULT_DURATIONS[variant],
+    duration: options.duration ?? defaultDuration(variant),
     dismissible: options.dismissible ?? true,
     ariaLive: options.ariaLive ?? (variant === "error" ? "assertive" : "polite"),
     icon: options.icon,
     progress: options.progress ?? true,
+    expandable: options.expandable,
+    defaultExpanded: options.defaultExpanded,
     createdAt: Date.now()
   };
 }
@@ -169,11 +180,13 @@ notify.action = (options: ToastActionOptions) => {
     variant,
     title: options.title,
     description: options.description,
-    duration: options.duration ?? DEFAULT_DURATIONS[variant],
+    duration: options.duration ?? defaultDuration(variant),
     dismissible: options.dismissible ?? true,
     ariaLive: options.ariaLive ?? (variant === "error" ? "assertive" : "polite"),
     icon: options.icon,
     progress: options.progress ?? true,
+    expandable: options.expandable,
+    defaultExpanded: options.defaultExpanded ?? getToastRuntimePreferences().expandActionToasts,
     createdAt: Date.now(),
     moduleLabel: options.moduleLabel,
     statusLabel: options.statusLabel,
@@ -191,11 +204,13 @@ notify.rich = (options: ToastRichOptions) => {
     variant,
     title: options.title,
     description: options.description,
-    duration: options.duration ?? DEFAULT_DURATIONS[variant],
+    duration: options.duration ?? defaultDuration(variant),
     dismissible: options.dismissible ?? true,
     ariaLive: options.ariaLive ?? (variant === "error" ? "assertive" : "polite"),
     icon: options.icon,
     progress: options.progress ?? true,
+    expandable: options.expandable,
+    defaultExpanded: options.defaultExpanded ?? getToastRuntimePreferences().expandActionToasts,
     createdAt: Date.now(),
     moduleLabel: options.moduleLabel,
     statusLabel: options.statusLabel,

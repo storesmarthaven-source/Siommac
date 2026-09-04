@@ -78,14 +78,19 @@
     --ui-activity-gauge-fill-tertiary: color-mix(in srgb, var(--ui-activity-gauge-fill) 58%, white);
     position: relative; width: min(100%, 400px); color: var(--ui-activity-gauge-value-color);
   }
+  .ui-activity-gauge__chart { display: block; width: 100%; max-width: 100%; overflow: visible; }
+  .ui-activity-gauge__track, .ui-activity-gauge__arc { fill: none; }
+  .ui-activity-gauge__track { stroke: var(--ui-activity-gauge-track); }
+  .ui-activity-gauge__arc { stroke-linecap: round; transition: stroke-dashoffset var(--ui-motion-slow, 280ms) var(--ui-ease-emphasized, ease-out); }
   .ui-activity-gauge__label { fill: var(--ui-activity-gauge-label); font-size: 12px; font-weight: var(--font-weight-medium); }
   .ui-activity-gauge__text { fill: var(--ui-activity-gauge-value-color); font-size: 28px; font-weight: var(--font-weight-semibold); font-variant-numeric: tabular-nums; }
   .ui-activity-gauge--xs .ui-activity-gauge__text { font-size: 20px; }
   .ui-activity-gauge--lg .ui-activity-gauge__label { font-size: 14px; }
   .ui-activity-gauge--lg .ui-activity-gauge__text { font-size: 36px; }
   .ui-activity-gauge__legend-label { color: var(--ui-activity-gauge-label); font-size: 12px; }
-  .ui-activity-gauge .recharts-legend-item { margin-right: 12px !important; }
-  .ui-activity-gauge .recharts-default-legend { transform: translateY(12px); }
+  .ui-activity-gauge__legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 14px; margin-top: -10px; }
+  .ui-activity-gauge__legend > span { display: inline-flex; align-items: center; gap: 6px; }
+  .ui-activity-gauge__legend i { width: 8px; height: 8px; border-radius: 50%; }
   @keyframes ui-progress-slide { from { transform: translateX(-110%); } to { transform: translateX(300%); } }
   @keyframes ui-progress-spin { to { transform: rotate(360deg); } }
   @keyframes ui-progress-gauge { 50% { stroke-dasharray: 72 28; } }

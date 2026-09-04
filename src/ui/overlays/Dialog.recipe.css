@@ -43,9 +43,13 @@
     --ui-dialog-foot-bg: #f7f7f8;
     --ui-dialog-gap: 10px;
     --ui-dialog-column-gap: 0px;
-    --ui-dialog-sidebar-width: 220px;
+    --ui-dialog-sidebar-width: 260px;
     --ui-dialog-sidebar-pad: 20px;
-    --ui-dialog-sidebar-bg: color-mix(in srgb, var(--siomac-navy) 4%, white);
+    --ui-dialog-sidebar-bg: #f1f3f7;
+    --ui-dialog-sidebar-divider: color-mix(in srgb, var(--siomac-navy) 14%, white);
+    --ui-dialog-context-icon-bg: color-mix(in srgb, var(--siomac-navy) 9%, white);
+    --ui-dialog-context-icon-fg: var(--siomac-navy);
+    --ui-dialog-context-divider: color-mix(in srgb, var(--siomac-navy) 14%, white);
 
     --ui-dialog-accent-height: 0px;
     --ui-dialog-accent-color: var(--ui-color-selection-border);
@@ -77,7 +81,7 @@
     flex-direction: column;
     box-sizing: border-box;
     width: var(--ui-dialog-width-md);
-    max-width: 100%;
+    max-width: calc(100vw - var(--space-5) - var(--space-5));
     /* Cap the SHEET, not the body: the header and footer must stay pinned while
        only the body scrolls. A max-height on the body alone lets a long form
        push the action row off-screen — which is how a dialog ends up with an
@@ -161,6 +165,7 @@
     font-weight: var(--font-weight-semibold);
     line-height: var(--ui-line-height-tight);
     letter-spacing: var(--ui-letter-spacing-tight);
+    text-transform: capitalize;
   }
   .ui-dialog-sub {
     margin: 0;
@@ -222,6 +227,74 @@
     padding: var(--ui-dialog-sidebar-pad);
     background: var(--ui-dialog-sidebar-bg);
   }
+  .ui-dialog-sidebar-header {
+    display: grid;
+    min-width: 0;
+  }
+  .ui-dialog-sidebar-eyebrow {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--text-muted);
+    font-size: var(--ui-font-size-caption);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--ui-letter-spacing-caps);
+    line-height: var(--ui-line-height-tight);
+    text-transform: uppercase;
+  }
+  .ui-dialog-sidebar-header h3 {
+    margin: 0;
+    color: var(--siomac-navy);
+    font-size: var(--ui-font-size-section);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.3;
+  }
+  .ui-dialog-sidebar-header p {
+    margin: 6px 0 0;
+    color: var(--text-muted);
+    font-size: var(--ui-font-size-caption);
+    line-height: 1.48;
+  }
+  .ui-dialog-context-facts {
+    display: grid;
+    gap: 0;
+    margin: var(--space-4) 0 0;
+    border-top: var(--ui-border-width) solid var(--ui-dialog-context-divider);
+  }
+  .ui-dialog-context-fact {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: center;
+    min-width: 0;
+    padding: 11px 0;
+    border-bottom: var(--ui-border-width) solid var(--ui-dialog-context-divider);
+  }
+  .ui-dialog-context-fact-icon {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border-radius: var(--radius-sm);
+    color: var(--ui-dialog-context-icon-fg);
+    background: var(--ui-dialog-context-icon-bg);
+  }
+  .ui-dialog-context-fact-icon > svg { width: var(--ui-icon-md); height: var(--ui-icon-md); }
+  .ui-dialog-context-fact-copy { display: grid; min-width: 0; gap: 2px; }
+  .ui-dialog-context-fact dt {
+    color: var(--text-muted);
+    font-size: var(--ui-font-size-caption);
+    line-height: var(--ui-line-height-tight);
+  }
+  .ui-dialog-context-fact dd {
+    overflow: hidden;
+    margin: 0;
+    color: var(--siomac-navy);
+    font-size: var(--ui-font-size-body-sm);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--ui-line-height-base);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .ui-dialog--layout-frame .ui-dialog-layout,
   .ui-dialog--layout-standard .ui-dialog-layout,
   .ui-dialog--layout-wide .ui-dialog-layout {
@@ -231,6 +304,9 @@
   .ui-dialog--layout-sidebar-left .ui-dialog-layout {
     grid-template-columns: var(--ui-dialog-sidebar-width) minmax(0, 1fr);
     grid-template-areas: 'sidebar content';
+  }
+  .ui-dialog--layout-sidebar-left .ui-dialog-sidebar {
+    border-right: var(--ui-border-width) solid var(--ui-dialog-sidebar-divider);
   }
   .ui-dialog--layout-sidebar-right .ui-dialog-layout {
     grid-template-columns: minmax(0, 1fr) var(--ui-dialog-sidebar-width);
@@ -260,6 +336,16 @@
   }
   /* A left-aligned slot (Back, secondary info) pushes the rest right. */
   .ui-dialog-foot-left { margin-right: auto; }
+  .ui-dialog-foot-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-dialog-gap);
+    margin-left: auto;
+  }
+  .ui-dialog--layout-sidebar-right .ui-dialog-sidebar,
+  .ui-dialog--layout-split .ui-dialog-sidebar {
+    border-left: var(--ui-border-width) solid var(--ui-dialog-sidebar-divider);
+  }
 
   /* ── Busy ──────────────────────────────────────────────────────────────────
      A dialog mid-submit must not accept another click anywhere in its body, or
@@ -297,15 +383,33 @@
     line-height: var(--ui-line-height-base);
   }
 
-  @media (max-width: 560px) {
-    .ui-dialog-backdrop { padding: 0; align-items: flex-end; }
-    .ui-dialog { width: 100%; max-height: 92vh; border-radius: var(--radius-md) var(--radius-md) 0 0; }
+  /* A 260px sidebar plus a useful form needs more than phone width. Stack the
+     governed regions at tablet width, while retaining the desktop sheet frame. */
+  @media (max-width: 760px) {
     .ui-dialog-layout,
-    .ui-dialog--layout-sidebar-left .ui-dialog-layout,
-    .ui-dialog--layout-sidebar-right .ui-dialog-layout,
     .ui-dialog--layout-split .ui-dialog-layout {
       grid-template-columns: minmax(0, 1fr);
       grid-template-areas: 'content' 'sidebar';
     }
+    .ui-dialog--layout-sidebar-left .ui-dialog-layout {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: 'sidebar' 'content';
+    }
+    .ui-dialog--layout-sidebar-right .ui-dialog-layout {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: 'content' 'sidebar';
+    }
+    .ui-dialog--layout-sidebar-left .ui-dialog-sidebar,
+    .ui-dialog--layout-sidebar-right .ui-dialog-sidebar,
+    .ui-dialog--layout-split .ui-dialog-sidebar {
+      border-right: 0;
+      border-left: 0;
+      border-top: var(--ui-border-width) solid var(--ui-dialog-sidebar-divider);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .ui-dialog-backdrop { padding: 0; align-items: flex-end; }
+    .ui-dialog { width: 100%; max-width: 100%; max-height: 92vh; border-radius: var(--radius-md) var(--radius-md) 0 0; }
   }
 }

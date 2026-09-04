@@ -83,6 +83,8 @@ interface DialogComponent {
   Footer: typeof DialogFooter;
   Layout: typeof DialogLayoutRegion;
   Sidebar: typeof DialogSidebar;
+  SidebarHeader: typeof DialogSidebarHeader;
+  ContextFacts: typeof DialogContextFacts;
   Content: typeof DialogContent;
   Section: typeof DialogSection;
 }
@@ -155,9 +157,9 @@ export interface DialogHeaderProps {
 function DialogHeader({ title, sub, icon, iconStyle = 'rounded', onClose, actions }: DialogHeaderProps): VNode {
   const titleId = useContext(DialogTitleId);
   return (
-    <header class="ui-dialog-head">
-      {icon && <span class={`ui-dialog-icon ui-dialog-icon--${iconStyle}`} aria-hidden="true">{icon}</span>}
-      <div class="ui-dialog-titles">
+    <header class="ui-dialog-head rp-dialog-head">
+      {icon && <span class={`ui-dialog-icon rp-dialog-icon ui-dialog-icon--${iconStyle}`} aria-hidden="true">{icon}</span>}
+      <div class="ui-dialog-titles rp-dialog-titles">
         {/* id matches the sheet's aria-labelledby, so the dialog announces its
             own title on open instead of "dialog". */}
         <h2 class="ui-dialog-title" id={titleId}>{title}</h2>
@@ -165,7 +167,7 @@ function DialogHeader({ title, sub, icon, iconStyle = 'rounded', onClose, action
       </div>
       {actions}
       {onClose && (
-        <button type="button" class="ui-dialog-close" onClick={onClose} aria-label="Close">
+        <button type="button" class="ui-dialog-close rp-icon-control" onClick={onClose} aria-label="Close">
           <LucideIcon name="X" />
         </button>
       )}
@@ -179,9 +181,9 @@ function DialogBody({ children, class: extra }: { children?: ComponentChildren; 
 
 function DialogFooter({ children, left }: { children: ComponentChildren; left?: ComponentChildren }): VNode {
   return (
-    <footer class="ui-dialog-foot">
+    <footer class="ui-dialog-foot rp-dialog-foot">
       {left && <div class="ui-dialog-foot-left">{left}</div>}
-      {children}
+      <div class="ui-dialog-foot-actions rp-dialog-foot-right">{children}</div>
     </footer>
   );
 }
@@ -193,6 +195,60 @@ function DialogLayoutRegion({ children, class: extra }: { children: ComponentChi
 
 function DialogSidebar({ children, class: extra }: { children: ComponentChildren; class?: string }): VNode {
   return <aside class={`ui-dialog-sidebar${extra ? ` ${extra}` : ''}`}>{children}</aside>;
+}
+
+/**
+ * Standard context heading for a dialog sidebar. The eyebrow establishes the
+ * type of context, the title names the current record or scope, and the
+ * description explains why the sidebar matters to the task.
+ */
+function DialogSidebarHeader({
+  eyebrow,
+  title,
+  description,
+  class: extra,
+}: {
+  eyebrow: ComponentChildren;
+  title?: ComponentChildren;
+  description?: ComponentChildren;
+  class?: string;
+}): VNode {
+  return (
+    <div class={`ui-dialog-sidebar-header${extra ? ` ${extra}` : ''}`}>
+      <span class="ui-dialog-sidebar-eyebrow">{eyebrow}</span>
+      {title != null && <h3>{title}</h3>}
+      {description != null && <p>{description}</p>}
+    </div>
+  );
+}
+
+export interface DialogContextFactItem {
+  label: string;
+  value: ComponentChildren;
+  icon?: VNode;
+}
+
+/**
+ * Compact context displayed in a dialog sidebar. The shared icon treatment and
+ * open rows keep operational facts readable without turning every value into a
+ * separate card.
+ */
+function DialogContextFacts(
+  { items, class: extra }: { items: readonly DialogContextFactItem[]; class?: string },
+): VNode {
+  return (
+    <dl class={`ui-dialog-context-facts${extra ? ` ${extra}` : ''}`}>
+      {items.map(item => (
+        <div class="ui-dialog-context-fact" key={item.label}>
+          {item.icon && <span class="ui-dialog-context-fact-icon" aria-hidden="true">{item.icon}</span>}
+          <span class="ui-dialog-context-fact-copy">
+            <dt>{item.label}</dt>
+            <dd>{item.value}</dd>
+          </span>
+        </div>
+      ))}
+    </dl>
+  );
 }
 
 function DialogContent({ children, class: extra }: { children: ComponentChildren; class?: string }): VNode {
@@ -220,5 +276,7 @@ Dialog.Body = DialogBody;
 Dialog.Footer = DialogFooter;
 Dialog.Layout = DialogLayoutRegion;
 Dialog.Sidebar = DialogSidebar;
+Dialog.SidebarHeader = DialogSidebarHeader;
+Dialog.ContextFacts = DialogContextFacts;
 Dialog.Content = DialogContent;
 Dialog.Section = DialogSection;

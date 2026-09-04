@@ -13,9 +13,9 @@
   --siomac-toast-soft: #8a98ad;
   --siomac-toast-navy: #1b2d54;
   --siomac-toast-red: #e40c0c;
-  --siomac-toast-success: #2e7d32;
-  --siomac-toast-warning: #c67c00;
-  --siomac-toast-info: #1b2d54;
+  --siomac-toast-success: #24b86c;
+  --siomac-toast-warning: #d99f0b;
+  --siomac-toast-info: #24aec0;
   --siomac-toast-success-tint: rgba(46, 125, 50, .035);
   --siomac-toast-info-tint: rgba(27, 45, 85, .03);
   --siomac-toast-warning-tint: rgba(198, 124, 0, .04);
@@ -25,14 +25,35 @@
 /* ── Container (archieamas deck model) ───────────────────────────────────── */
 
 .siomac-toaster {
+  --siomac-toast-slide-x: calc(100% + 32px);
+  --siomac-toast-slide-y: 0;
   position:       fixed;
-  top:            80px;
-  right:          20px;
   width:          var(--siomac-toast-width);
   max-width:      calc(100% - 28px);
   z-index:        100001;
   pointer-events: none;
   transition:     height 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.siomac-toaster--top-right,
+.siomac-toaster--bottom-right {
+  right: 20px;
+}
+
+.siomac-toaster--top-right {
+  top: 80px;
+}
+
+.siomac-toaster--bottom-right {
+  bottom: 20px;
+}
+
+.siomac-toaster--bottom-center {
+  --siomac-toast-slide-x: 0;
+  --siomac-toast-slide-y: calc(100% + 32px);
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 /* ── Card base (archieamas position model) ───────────────────────────────── */
@@ -108,14 +129,9 @@
 .siomac-toast__main {
   display:     flex;
   gap:         11px;
-  align-items: flex-start;
-  padding:     var(--siomac-toast-padding);
-}
-
-/* Normal toasts: vertically centre the icon with the title (single-line);
-   action/rich keep top alignment for their taller bodies. */
-.siomac-toast--normal .siomac-toast__main {
   align-items: center;
+  min-height:   58px;
+  padding:      var(--siomac-toast-padding);
 }
 
 /* ── Icon ────────────────────────────────────────────────────────────────── */
@@ -124,19 +140,22 @@
   flex-shrink:  0;
   width:        var(--siomac-toast-icon-size);
   height:       var(--siomac-toast-icon-size);
-  border-radius: 50%;
   display:      grid;
   place-items:  center;
-  background:   color-mix(in srgb, var(--toast-accent) 8%, #ffffff);
+  background:   transparent;
   color:        var(--toast-accent);
 }
 
 .siomac-toast__icon svg {
-  width:        18px;
-  height:       18px;
+  width:        21px;
+  height:       21px;
   stroke:       currentColor;
-  stroke-width: 3.2;
+  stroke-width: 2.1;
   fill:         none;
+}
+
+.siomac-toast__icon--tone svg {
+  stroke-width: 3.85;
 }
 
 .siomac-toast__icon--loading svg {
@@ -150,23 +169,6 @@
   min-width: 0;
 }
 
-.siomac-toast__title-row {
-  display:       flex;
-  align-items:   center;
-  gap:           8px;
-  margin-bottom: 3px;
-}
-
-.siomac-toast__dot {
-  width:         6px;
-  height:        6px;
-  border-radius: 999px;
-  background:    var(--toast-accent);
-  opacity:       .78;
-  box-shadow:    0 0 0 3px color-mix(in srgb, var(--toast-accent) 5%, transparent);
-  flex:          0 0 auto;
-}
-
 .siomac-toast__title {
   color:          var(--siomac-toast-navy);
   font-size:      var(--siomac-toast-title-size);
@@ -175,14 +177,16 @@
   line-height:    1.3;
 }
 
-.siomac-toast__description {
-  color:       var(--siomac-toast-muted);
-  font-size:   var(--siomac-toast-text-size);
-  line-height: 1.4;
+.siomac-toast__header-actions {
+  display:     flex;
+  align-items: center;
+  gap:         3px;
+  flex:        0 0 auto;
 }
 
-/* ── Close button ────────────────────────────────────────────────────────── */
+/* ── Header controls ─────────────────────────────────────────────────────── */
 
+.siomac-toast__expand,
 .siomac-toast__close {
   width:         26px;
   height:        26px;
@@ -194,22 +198,67 @@
   display:       grid;
   place-items:   center;
   flex:          0 0 auto;
-  transition:    background .16s ease, color .16s ease, transform .16s ease;
+  transition:    color .16s ease;
   padding:       0;
 }
 
+.siomac-toast__expand:hover,
 .siomac-toast__close:hover {
-  background: rgba(27, 45, 85, .085);
+  background: transparent;
   color:      var(--siomac-toast-navy);
-  transform:  translateY(-1px);
 }
 
+.siomac-toast__expand:active,
+.siomac-toast__close:active {
+  background: transparent;
+}
+
+.siomac-toast__expand svg,
 .siomac-toast__close svg {
   width:        17px;
   height:       17px;
   stroke:       currentColor;
-  stroke-width: 2.35;
+  stroke-width: 1.8;
   fill:         none;
+}
+
+.siomac-toast__expand svg {
+  transition: transform .22s cubic-bezier(.2, .8, .2, 1);
+}
+
+.siomac-toast__expand[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+/* ── Expandable detail region ────────────────────────────────────────────── */
+
+.siomac-toast__details-shell {
+  display:            grid;
+  grid-template-rows: 0fr;
+  opacity:            0;
+  transition:
+    grid-template-rows .24s cubic-bezier(.2, .8, .2, 1),
+    opacity .18s ease;
+}
+
+.siomac-toast.is-expanded .siomac-toast__details-shell {
+  grid-template-rows: 1fr;
+  opacity:            1;
+}
+
+.siomac-toast__details-clip {
+  min-height: 0;
+  overflow:   hidden;
+}
+
+.siomac-toast__details {
+  padding: 11px 13px 13px 54px;
+}
+
+.siomac-toast__description {
+  color:       var(--siomac-toast-muted);
+  font-size:   var(--siomac-toast-text-size);
+  line-height: 1.45;
 }
 
 /* ── Normal timer footer ─────────────────────────────────────────────────── */
@@ -239,6 +288,10 @@
   font:         inherit;
   font-weight:  500;
   cursor:       pointer;
+}
+
+.siomac-toast__timer button:hover {
+  color: var(--toast-accent);
 }
 
 /* ── Chips (action / rich) ───────────────────────────────────────────────── */
@@ -323,50 +376,33 @@
   flex:          0 0 auto;
 }
 
-/* ── Action strip (action / rich) — ONE footer band: countdown text left, action
-   buttons right, progress bar pinned along the bottom edge. ─────────────────── */
+/* ── Actions inside the expandable detail region ────────────────────────── */
 
 .siomac-toast__actions {
-  position:        relative;
-  min-height:      34px;
-  padding:         6px 11px;
+  margin-top:      10px;
   display:         flex;
   align-items:     center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap:             7px;
-  border-top:      1px solid rgba(27, 45, 85, .045);
-  background:      var(--toast-tint);
-}
-
-.siomac-toast__actions .siomac-toast__timer-text {
-  margin-right: auto;               /* countdown sits left; buttons stay right */
-  color:        var(--siomac-toast-muted);
-  font-size:    11.5px;
-  line-height:  1.25;
-}
-
-.siomac-toast__actions .siomac-toast__progress {
-  position: absolute;
-  left:     0;
-  bottom:   0;
 }
 
 .siomac-toast__action {
-  border:        0;
-  background:    transparent;
-  color:         var(--toast-accent);
+  border:        1px solid rgba(27, 45, 85, .16);
+  background:    #ffffff;
+  color:         var(--siomac-toast-navy);
   font:          inherit;
   font-size:     11.8px;
   font-weight:   650;
   cursor:        pointer;
-  padding:       4px 8px;
-  border-radius: 999px;
+  padding:       6px 10px;
+  border-radius: 9px;
   line-height:   1.2;
   transition:    background .16s ease, transform .16s ease;
 }
 
 .siomac-toast__action:hover {
-  background: color-mix(in srgb, var(--toast-accent) 11%, transparent);
+  background: color-mix(in srgb, var(--toast-accent) 7%, #ffffff);
+  border-color: color-mix(in srgb, var(--toast-accent) 34%, rgba(27, 45, 85, .16));
   transform:  translateY(-1px);
 }
 
@@ -447,30 +483,25 @@
   font-weight: 600;
 }
 
-/* ── Progress bar ────────────────────────────────────────────────────────── */
+/* ── Elapsed timer progress: fills left-to-right ─────────────────────────── */
+
+.siomac-toast__progress-track {
+  position:   absolute;
+  left:       0;
+  right:      0;
+  bottom:     0;
+  height:     4px;
+  overflow:   hidden;
+  background: transparent;
+}
 
 .siomac-toast__progress {
-  height:           2px;
+  height:           100%;
   width:            100%;
   background:       var(--toast-accent);
-  opacity:          .68;
+  opacity:          1;
   transform-origin: left center;
-  animation-name:   siomac-toast-timer;
-  animation-timing-function: linear;
-  animation-fill-mode: forwards;
-}
-
-.siomac-toast__timer .siomac-toast__progress {
-  position: absolute;
-  left:     0;
-  bottom:   0;
-}
-
-/* Pause progress bar when toast is paused, hovered, or focused */
-.siomac-toast.is-paused .siomac-toast__progress,
-.siomac-toast:hover .siomac-toast__progress,
-.siomac-toast:focus-within .siomac-toast__progress {
-  animation-play-state: paused;
+  transition:       transform 80ms linear;
 }
 
 /* ── Focus visible ───────────────────────────────────────────────────────── */
@@ -487,11 +518,26 @@
 
 @media (max-width: 480px) {
   .siomac-toaster {
-    top:       12px;
     right:     12px;
     left:      12px;
+    transform: none;
     width:     auto;
     max-width: none;
+  }
+
+  .siomac-toaster--top-right {
+    top: 12px;
+    bottom: auto;
+  }
+
+  .siomac-toaster--bottom-right {
+    top: auto;
+    bottom: 12px;
+  }
+
+  .siomac-toaster--bottom-center {
+    top: auto;
+    bottom: 12px;
   }
 
   .siomac-toast {
@@ -504,7 +550,7 @@
 @keyframes siomac-toast-enter {
   from {
     opacity:   0;
-    transform: translateY(-100%) scale(0.9);
+    transform: translate(var(--siomac-toast-slide-x), var(--siomac-toast-slide-y)) scale(0.96);
   }
   to {
     opacity:   1;
@@ -519,13 +565,8 @@
   }
   to {
     opacity:   0;
-    transform: translateY(-100%) scale(0.9);
+    transform: translateX(var(--siomac-toast-slide-x)) scale(0.96);
   }
-}
-
-@keyframes siomac-toast-timer {
-  from { transform: scaleX(1); }
-  to   { transform: scaleX(0); }
 }
 
 @keyframes siomac-toast-spin {
@@ -541,7 +582,6 @@
 
   .siomac-toast.entering,
   .siomac-toast.exiting,
-  .siomac-toast__progress,
   .siomac-toast__icon--loading svg {
     animation: none !important;
   }
@@ -554,5 +594,10 @@
   .siomac-toast.exiting {
     opacity:        0 !important;
     pointer-events: none;
+  }
+
+  .siomac-toast__details-shell,
+  .siomac-toast__progress {
+    transition: none !important;
   }
 }

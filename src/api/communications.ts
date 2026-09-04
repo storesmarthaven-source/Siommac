@@ -15,6 +15,7 @@ import {
   type QueryFunctionContext,
 } from '@tanstack/preact-query';
 import { apiPost }            from '@lib/api';
+import { useSessionStore }    from '@store/session';
 import { communicationKeys, notificationKeys, messageKeys, ticketKeys } from './queryKeys';
 import type {
   MessageThread as MessageThreadDTO, MessageParticipant as MessageParticipantDTO,
@@ -25,6 +26,12 @@ import type {
 } from '../../types/messaging';
 
 export type MessagePin = MessagePinDTO;
+
+/** Protected communications reads must never start before login completes. */
+function useAuthenticatedQueryEnabled(requested = true): boolean {
+  const isAuthenticated = useSessionStore(state => state.isAuthenticated);
+  return isAuthenticated && requested;
+}
 
 // ── Messaging contract (shared, camelCase) ──────────────────────────────────────
 // These re-exports keep the existing import names stable across the app while the
@@ -196,9 +203,11 @@ export interface CanonicalTicketDetail {
 
 // ── Summary ───────────────────────────────────────────────────────────────────
 
-export function useCommsSummary() {
+export function useCommsSummary(opts?: { enabled?: boolean }) {
+  const enabled = useAuthenticatedQueryEnabled(opts?.enabled ?? true);
   return useQuery({
     queryKey: communicationKeys.summary(),
+    enabled,
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: CommsSummary }>(
         'communications/summary', {}, { signal },
@@ -225,9 +234,10 @@ export interface NotificationListArgs extends Record<string, unknown> {
 }
 
 export function useNotifications(args: NotificationListArgs = {}, opts?: { enabled?: boolean }) {
+  const enabled = useAuthenticatedQueryEnabled(opts?.enabled ?? true);
   return useQuery({
     queryKey: notificationKeys.mine(args),
-    enabled:  opts?.enabled,
+    enabled,
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: CanonicalNotification[]; nextCursor: string | null }>(
         'communications/notifications/list',
@@ -242,9 +252,11 @@ export function useNotifications(args: NotificationListArgs = {}, opts?: { enabl
 
 // ── Preferences · mute · broadcast ──────────────────────────────────────────────
 
-export function useNotificationPreferences() {
+export function useNotificationPreferences(opts?: { enabled?: boolean }) {
+  const enabled = useAuthenticatedQueryEnabled(opts?.enabled ?? true);
   return useQuery({
     queryKey: notificationKeys.preferences(),
+    enabled,
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: NotificationPreferencesData }>(
         'communications/notifications/preferences/get', {}, { signal },
@@ -258,18 +270,67 @@ export function useNotificationPreferences() {
 export function useSetNotificationPreference() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: NotificationPreference & { eventType: string }) =>
-      apiPost<{ success: boolean }>('communications/notifications/preferences/set', args, { retryable: false }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: notificationKeys.preferences() }),
+    mutationFn: async (args: NotificationPreference & { eventType: string }) => {
+      const result = await apiPost<{ success: boolean }>(
+        'communications/notifications/preferences/set', args, { retryable: false },
+      );
+      if (!result.success) throw new Error('Failed to save notification preference');
+      return result;
+    },
+    onMutate: async (args: NotificationPreference & { eventType: string }) => {
+      const queryKey = notificationKeys.preferences();
+      await qc.cancelQueries({ queryKey });
+      const previous = qc.getQueryData<NotificationPreferencesData>(queryKey);
+      const nextPreference: NotificationPreference = {
+        event_type: args.event_type,
+        in_app: args.in_app,
+        email: args.email,
+        whatsapp: args.whatsapp,
+      };
+      qc.setQueryData<NotificationPreferencesData>(queryKey, current => {
+        if (!current) return current;
+        if (args.eventType === '*') return { ...current, defaults: nextPreference };
+        const exists = current.preferences.some(preference => preference.event_type === args.eventType);
+        return {
+          ...current,
+          preferences: exists
+            ? current.preferences.map(preference => preference.event_type === args.eventType ? nextPreference : preference)
+            : [...current.preferences, nextPreference],
+        };
+      });
+      return { previous };
+    },
+    onError: (_error, _args, context) => {
+      if (context?.previous) qc.setQueryData(notificationKeys.preferences(), context.previous);
+    },
+    onSettled: () => void qc.invalidateQueries({ queryKey: notificationKeys.preferences() }),
   });
 }
 
 export function useMuteNotifications() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: { scope: string; mutedUntil?: string | null; clear?: boolean }) =>
-      apiPost<{ success: boolean }>('communications/notifications/mute', args, { retryable: false }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: notificationKeys.all }),
+    mutationFn: async (args: { scope: string; mutedUntil?: string | null; clear?: boolean }) => {
+      const result = await apiPost<{ success: boolean }>(
+        'communications/notifications/mute', args, { retryable: false },
+      );
+      if (!result.success) throw new Error('Failed to update quiet mode');
+      return result;
+    },
+    onMutate: async (args: { scope: string; mutedUntil?: string | null; clear?: boolean }) => {
+      const queryKey = notificationKeys.preferences();
+      await qc.cancelQueries({ queryKey });
+      const previous = qc.getQueryData<NotificationPreferencesData>(queryKey);
+      qc.setQueryData<NotificationPreferencesData>(queryKey, current => current ? {
+        ...current,
+        snooze: args.clear ? null : { mutedUntil: args.mutedUntil ?? null },
+      } : current);
+      return { previous };
+    },
+    onError: (_error, _args, context) => {
+      if (context?.previous) qc.setQueryData(notificationKeys.preferences(), context.previous);
+    },
+    onSettled: () => void qc.invalidateQueries({ queryKey: notificationKeys.all }),
   });
 }
 
@@ -345,8 +406,10 @@ export function useArchiveNotification() {
 // ── Messages ──────────────────────────────────────────────────────────────────
 
 export function useMessageThreads(limit = 50) {
+  const enabled = useAuthenticatedQueryEnabled();
   return useQuery({
     queryKey: messageKeys.inbox(),
+    enabled,
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: MessageThread[] }>(
         'communications/messages/threads',
@@ -361,6 +424,7 @@ export function useMessageThreads(limit = 50) {
 }
 
 export function useMessagePosts(threadId: string) {
+  const enabled = useAuthenticatedQueryEnabled(Boolean(threadId));
   return useQuery({
     queryKey: messageKeys.thread(threadId),
     queryFn:  async ({ signal }: QueryFunctionContext) => {
@@ -372,7 +436,7 @@ export function useMessagePosts(threadId: string) {
       if (!res.success) throw new Error('Failed to load posts');
       return res.data;
     },
-    enabled: !!threadId,
+    enabled,
   });
 }
 
@@ -480,9 +544,10 @@ export interface ThreadFilters extends Record<string, unknown> {
 
 /** Full thread list with richer typing — replaces the legacy useMessageThreads. */
 export function useMessageThreadsFull(filters: ThreadFilters = {}, opts?: { enabled?: boolean }) {
+  const enabled = useAuthenticatedQueryEnabled(opts?.enabled ?? true);
   return useQuery({
     queryKey: messageKeys.threads(filters),
-    enabled:  opts?.enabled,
+    enabled,
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: MessageThreadListItem[]; nextCursor: string | null }>(
         'communications/messages/threads',
@@ -497,6 +562,7 @@ export function useMessageThreadsFull(filters: ThreadFilters = {}, opts?: { enab
 
 /** Single thread detail (subject + participants). */
 export function useThread(threadId: string) {
+  const enabled = useAuthenticatedQueryEnabled(Boolean(threadId));
   return useQuery({
     queryKey: messageKeys.thread(threadId),
     queryFn:  async ({ signal }: QueryFunctionContext) => {
@@ -508,7 +574,7 @@ export function useThread(threadId: string) {
       if (!res.success) throw new Error('Failed to load thread');
       return res.data;
     },
-    enabled: !!threadId,
+    enabled,
   });
 }
 
@@ -524,6 +590,7 @@ export class ThreadAccessError extends Error {
 
 /** Posts for a thread — richer than useMessagePosts (author profiles, edit/delete states). */
 export function useThreadPosts(threadId: string) {
+  const enabled = useAuthenticatedQueryEnabled(Boolean(threadId));
   return useQuery({
     queryKey: messageKeys.posts(threadId),
     queryFn:  async ({ signal }: QueryFunctionContext) => {
@@ -535,7 +602,7 @@ export function useThreadPosts(threadId: string) {
       if (!res.success) throw new ThreadAccessError(res.message ?? 'Failed to load posts', res.code);
       return res.data;
     },
-    enabled: !!threadId,
+    enabled,
     // Don't burn retries on an access denial — it won't change without a grant.
     retry: (count: number, err: unknown) => !(err instanceof ThreadAccessError && err.code) && count < 2,
   });
@@ -572,8 +639,10 @@ export interface PinnedThreadRow { threadId: string; subject: string | null; not
 
 /** Pinned-conversations summary for the sidebar. */
 export function usePinnedSummary() {
+  const enabled = useAuthenticatedQueryEnabled();
   return useQuery({
     queryKey: messageKeys.pinnedSummary(),
+    enabled,
     queryFn: async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: PinnedThreadRow[] }>('communications/messages/pins/pinned-summary', {}, { signal });
       return res.success ? res.data : [];
@@ -584,13 +653,14 @@ export function usePinnedSummary() {
 
 /** Active pins (thread + own personal) for a thread. */
 export function usePins(threadId: string) {
+  const enabled = useAuthenticatedQueryEnabled(Boolean(threadId));
   return useQuery({
     queryKey: messageKeys.pins(threadId),
     queryFn: async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: MessagePin[] }>('communications/messages/pins/list', { threadId }, { signal });
       return res.success ? res.data : [];
     },
-    enabled: !!threadId,
+    enabled,
   });
 }
 
@@ -637,8 +707,10 @@ export function useDeleteMessage() {
 
 /** Online-now users (also a presence heartbeat for the caller). */
 export function useOnlineUsers() {
+  const enabled = useAuthenticatedQueryEnabled();
   return useQuery({
     queryKey: messageKeys.online(),
+    enabled,
     queryFn: async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: OnlineUser[] }>('communications/messages/online', {}, { signal });
       return res.success ? res.data : [];
@@ -650,13 +722,14 @@ export function useOnlineUsers() {
 
 /** Get the caller's draft for a thread. */
 export function useDraft(threadId: string) {
+  const enabled = useAuthenticatedQueryEnabled(Boolean(threadId));
   return useQuery({
     queryKey: messageKeys.draft(threadId),
     queryFn: async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: { body: string | null; replyToPostId: string | null } | null }>('communications/messages/draft/get', { threadId }, { signal });
       return res.success ? res.data : null;
     },
-    enabled: !!threadId,
+    enabled,
   });
 }
 
@@ -761,6 +834,7 @@ export function useResolveRecordThread() {
 
 /** Full-text search across messages. */
 export function useMessageSearch(query: string) {
+  const enabled = useAuthenticatedQueryEnabled(query.trim().length >= 2);
   return useQuery({
     queryKey: messageKeys.search(query),
     queryFn:  async ({ signal }: QueryFunctionContext) => {
@@ -772,14 +846,16 @@ export function useMessageSearch(query: string) {
       if (!res.success) throw new Error('Search failed');
       return res.data;
     },
-    enabled: query.trim().length >= 2,
+    enabled,
   });
 }
 
 /** Recipient picker — autocomplete from the backend. */
-export function useMessageRecipients(query = '') {
+export function useMessageRecipients(query = '', opts?: { enabled?: boolean }) {
+  const enabled = useAuthenticatedQueryEnabled(opts?.enabled ?? true);
   return useQuery({
     queryKey: messageKeys.recipients(query),
+    enabled,
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: MessageRecipient[] }>(
         'communications/messages/recipients',
@@ -818,9 +894,10 @@ export interface TicketListPage {
 }
 
 export function useMyTickets(args: TicketListArgs = {}, opts?: { enabled?: boolean }) {
+  const enabled = useAuthenticatedQueryEnabled(opts?.enabled ?? true);
   return useQuery({
     queryKey: ticketKeys.list(args),
-    enabled:  opts?.enabled,
+    enabled,
     queryFn:  async ({ signal }: QueryFunctionContext): Promise<TicketListPage> => {
       const res = await apiPost<{ success: boolean; data: CanonicalTicket[]; nextCursor?: string | null; total?: number }>(
         'communications/tickets/list',
@@ -855,9 +932,11 @@ export interface TicketNavContext {
 // Server-authoritative nav context: capabilities (isHandler + handled service
 // areas, from permissions) + per-scope/status-group counts over the full visible
 // set. The UI must never derive handler access or totals from a loaded page.
-export function useTicketNavContext() {
+export function useTicketNavContext(opts?: { enabled?: boolean }) {
+  const enabled = useAuthenticatedQueryEnabled(opts?.enabled ?? true);
   return useQuery({
     queryKey: [...ticketKeys.all, 'nav-context'],
+    enabled,
     queryFn: async ({ signal }: QueryFunctionContext): Promise<TicketNavContext> => {
       const res = await apiPost<{ success: boolean; data: TicketNavContext }>(
         'communications/tickets/nav-context', {}, { signal },
@@ -869,10 +948,15 @@ export function useTicketNavContext() {
   });
 }
 
-export function useTicketRequestTypes(creationMode: 'self' | 'team' | 'on_behalf' | 'internal' = 'self') {
+export function useTicketRequestTypes(
+  creationMode: 'self' | 'team' | 'on_behalf' | 'internal' = 'self',
+  opts?: { enabled?: boolean },
+) {
+  const enabled = useAuthenticatedQueryEnabled(opts?.enabled ?? true);
   return useQuery({
     // Key on the mode so switching mode in the dialog refetches the allowed types.
     queryKey: [...ticketKeys.requestTypes(), creationMode],
+    enabled,
     queryFn: async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: TicketRequestType[] }>(
         'communications/tickets/request-types', { creationMode }, { signal },
@@ -893,6 +977,7 @@ export function useTicketRequesterSearch(
   query: string,
   enabled: boolean,
 ) {
+  const queryEnabled = useAuthenticatedQueryEnabled(enabled);
   return useQuery({
     queryKey: [...ticketKeys.all, 'requester-search', creationMode, query],
     queryFn: async ({ signal }: QueryFunctionContext) => {
@@ -902,12 +987,13 @@ export function useTicketRequesterSearch(
       if (!res.success) throw new Error('Failed to search requesters');
       return res.data;
     },
-    enabled,
+    enabled: queryEnabled,
     staleTime: 30_000,
   });
 }
 
 export function useTicket(ticketId: string) {
+  const enabled = useAuthenticatedQueryEnabled(Boolean(ticketId));
   return useQuery({
     queryKey: ticketKeys.detail(ticketId),
     queryFn:  async ({ signal }: QueryFunctionContext) => {
@@ -919,7 +1005,7 @@ export function useTicket(ticketId: string) {
       if (!res.success) throw new Error('Failed to load ticket');
       return res.data;
     },
-    enabled: !!ticketId,
+    enabled,
   });
 }
 

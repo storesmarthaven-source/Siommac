@@ -238,6 +238,10 @@ const dialogDef: ComponentDef = {
       { name: '--ui-dialog-sidebar-width', label: 'Sidebar width', kind: 'size' },
       { name: '--ui-dialog-sidebar-pad', label: 'Sidebar padding', kind: 'text' },
       { name: '--ui-dialog-sidebar-bg', label: 'Sidebar background', kind: 'color' },
+      { name: '--ui-dialog-sidebar-divider', label: 'Sidebar divider', kind: 'color' },
+      { name: '--ui-dialog-context-icon-bg', label: 'Context icon background', kind: 'color' },
+      { name: '--ui-dialog-context-icon-fg', label: 'Context icon colour', kind: 'color' },
+      { name: '--ui-dialog-context-divider', label: 'Context row divider', kind: 'color' },
     ] },
     { label: 'Header', controls: [
       { name: '--ui-dialog-head-bg', label: 'Solid background', kind: 'color' },
@@ -324,10 +328,10 @@ const dialogDef: ComponentDef = {
                     <h4>{layout === 'split' ? 'Approval summary' : 'Details'}</h4>
                     <p>Supporting information stays visible beside the main content.</p>
                   </div>
-                  <dl class="sds-modal-summary">
-                    <div><dt>Employees</dt><dd>148</dd></div>
-                    <div><dt>Gross total</dt><dd>$284,930</dd></div>
-                    <div><dt>Status</dt><dd>Ready</dd></div>
+                  <dl class="ui-dialog-context-facts">
+                    <div class="ui-dialog-context-fact"><span class="ui-dialog-context-fact-icon"><LucideIcon name="UsersRound" /></span><span class="ui-dialog-context-fact-copy"><dt>Employees</dt><dd>148</dd></span></div>
+                    <div class="ui-dialog-context-fact"><span class="ui-dialog-context-fact-icon"><LucideIcon name="WalletCards" /></span><span class="ui-dialog-context-fact-copy"><dt>Gross total</dt><dd>$284,930</dd></span></div>
+                    <div class="ui-dialog-context-fact"><span class="ui-dialog-context-fact-icon"><LucideIcon name="FileCheck2" /></span><span class="ui-dialog-context-fact-copy"><dt>Status</dt><dd>Ready</dd></span></div>
                   </dl>
                 </aside>
               )}
@@ -352,7 +356,18 @@ const dialogDef: ComponentDef = {
   />
   <Dialog.Body>${s(p.layout, 'frame') === 'frame' ? '\n    {/* Start with your content here. */}' : `
     <Dialog.Layout>
-      <Dialog.Content>{/* form fields */}</Dialog.Content>${['sidebar-left', 'sidebar-right', 'split'].includes(s(p.layout)) ? '\n      <Dialog.Sidebar>{/* supporting details */}</Dialog.Sidebar>' : ''}
+      <Dialog.Content>{/* form fields */}</Dialog.Content>${['sidebar-left', 'sidebar-right', 'split'].includes(s(p.layout)) ? `
+      <Dialog.Sidebar>
+        <Dialog.SidebarHeader
+          eyebrow="Planning Scope"
+          title="Pelican Platform"
+          description="Choose the operational groups available to this workflow."
+        />
+        <Dialog.ContextFacts items={[
+          { label: 'Planning Window', value: '23–29 August', icon: <LucideIcon name="CalendarRange" /> },
+          { label: 'Roster State', value: 'Working Draft', icon: <LucideIcon name="FilePenLine" /> },
+        ]} />
+      </Dialog.Sidebar>` : ''}
     </Dialog.Layout>`}
   </Dialog.Body>
   <Dialog.Footer${b(p.backLink) ? ' left={<BackActionButton />}' : ''}>

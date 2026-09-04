@@ -30,6 +30,13 @@ export {
 } from './components/ModuleTabs';
 export { PageHeader, type PageHeaderProps } from './components/PageHeader';
 export { PageActionBar, type PageActionBarProps } from './navigation/PageActionBar';
+export {
+  SidebarNavigation,
+  type SidebarNavigationProps,
+  type SidebarNavigationGroup,
+  type SidebarNavigationItem,
+  type SidebarNavigationDensity,
+} from './navigation/SidebarNavigation';
 export { Stepper, type StepperProps, type StepperStep } from './components/Stepper';
 export { SectionHead, type SectionHeadProps } from './components/SectionHead';
 export { MetricRow, ReorderableRow, type MetricRowProps, type MetricCardItem } from './components/MetricRow';
@@ -50,6 +57,7 @@ export { StatusPill } from './components/StatusPill';
 export { SparkCard, type SparkDef } from './components/SparkCard';
 export { StatsCard, type StatsCardProps, type StatStatus } from './components/StatsCard';
 export { KpiTile, type KpiTileProps, type KpiTileLink, type KpiTone } from './components/KpiTile';
+export { FeatureSurface, type FeatureSurfaceProps } from './containers/FeatureSurface';
 
 // ── Charts ──
 export { Sparkline, type SparklineProps } from './charts/Sparkline';
@@ -74,6 +82,7 @@ export {
   AiActionButton,
   type AiActionButtonProps, type AiActionIconTreatment, type AiActionShape,
 } from './patterns/AiActionButton';
+export { AiAssistant, type AiAssistantProps } from './ai/AiAssistant';
 export {
   ButtonGroup, SegmentedControl, DropdownButton, SplitButton,
   type ButtonGroupProps, type ButtonGroupItem,
@@ -134,12 +143,13 @@ export { Combobox, type ComboboxProps } from './forms/Combobox';
 export { PersonSearchSelect, type PersonOption, type PersonSearchSelectProps } from './forms/PersonSearchSelect';
 export { Avatar, avatarInitials, type AvatarProps, type AvatarVariant, type AvatarSize, type AvatarNamedSize, type AvatarPresence } from './people/Avatar';
 export { AvatarGroup, type AvatarGroupProps, type AvatarGroupPerson } from './people/AvatarGroup';
+export { PortalRootContext, PREVIEW_PORTAL_ATTR } from './overlays/portalRoot';
 export { MultiSelect, type MultiSelectProps } from './forms/MultiSelect';
 
 // ── Choice controls (canonical, v2) ──
 export {
-  Checkbox, Radio, Switch, CheckboxGroup, RadioGroup,
-  type CheckboxProps, type RadioProps, type SwitchProps,
+  Checkbox, Radio, Switch, SwitchArtwork, CheckboxGroup, RadioGroup,
+  type CheckboxProps, type RadioProps, type SwitchProps, type SwitchSize,
   type CheckboxGroupProps, type RadioGroupProps, type ChoiceOption,
 } from './primitives/choice';
 
@@ -229,6 +239,15 @@ export {
   type WizardProps, type WizardStep, type WizardStepStatus,
   type WizardIssues, type WizardOrientation,
 } from './navigation/Wizard';
+export {
+  GlobalSearch,
+  type GlobalSearchProps,
+  type GlobalSearchScope,
+  type GlobalSearchGroup,
+  type GlobalSearchResult,
+  type GlobalSearchQuickAction,
+  type GlobalSearchEmptyVariant,
+} from './navigation/GlobalSearch';
 
 // ── Containers (canonical, v2) ──
 // ONE Card. KPI, metric, panel, action and section are VARIANTS of this surface;
@@ -242,7 +261,7 @@ export {
 export { Accordion, type AccordionProps, type AccordionItem } from './containers/Accordion';
 
 // ── Overlays (canonical, v2) ──
-export { Dialog, type DialogProps, type DialogSize, type DialogVariant, type DialogLayout, type DialogIconStyle } from './overlays/Dialog';
+export { Dialog, type DialogProps, type DialogSize, type DialogVariant, type DialogLayout, type DialogIconStyle, type DialogContextFactItem } from './overlays/Dialog';
 export { AnchoredPopup, type AnchoredPopupProps } from './overlays/AnchoredPopup';
 export { Popover, type PopoverProps } from './overlays/Popover';
 export { Tooltip, type TooltipProps } from './overlays/Tooltip';
@@ -250,17 +269,35 @@ export { Tooltip, type TooltipProps } from './overlays/Tooltip';
 // ── Feedback (canonical, v2) ──
 export { Alert, type AlertProps, type AlertTone, type AlertPlacement } from './feedback/Alert';
 export { Progress, type ProgressProps, type ProgressShape, type ProgressTone, type ProgressSize } from './feedback/Progress';
-export { Toaster, ToastCard, toast, type ToastRecord, type ToastTier, type ToastVariant } from './toast';
+export { IconTile, type IconTileProps, type IconTileTone, type IconTileSize, type IconTileShape } from './feedback/IconTile';
+export {
+  NotificationIcon,
+  NOTIFICATION_ICON_DEFINITIONS,
+  type NotificationIconProps,
+  type NotificationIconVariant,
+} from './feedback/NotificationIcon';
+export {
+  NotificationListItem,
+  type NotificationListItemProps,
+  type NotificationIndicatorTone,
+} from './feedback/NotificationListItem';
+export { NotificationPopover, type NotificationPopoverProps } from './feedback/NotificationPopover';
+export {
+  Toaster, ToastCard, toast,
+  getToastRuntimePreferences, resetToastRuntimePreferences, setToastRuntimePreferences, subscribeToastRuntimePreferences,
+  type ToastRecord, type ToastTier, type ToastVariant,
+} from './toast';
 
 // ── Loading placeholders (cold-path only) ──
 export {
   Skeleton, SkeletonText, TableSkeleton, ListSkeleton, SkeletonFields, SkeletonStatGrid,
-  WidgetSkeleton, PageHeaderSkeleton,
+  WidgetSkeleton, PageHeaderSkeleton, WorkspaceSkeleton,
   type SkeletonProps, type SkeletonTextProps, type TableSkeletonProps, type ListSkeletonProps,
   type SkeletonFieldsProps, type SkeletonStatGridProps, type WidgetSkeletonProps,
-  type WidgetSkeletonVariant,
+  type WidgetSkeletonVariant, type WorkspaceSkeletonProps,
 } from './components/Skeleton';
 export { Spinner, type SpinnerProps } from './components/Spinner';
+export { ActivityDots, type ActivityDotsProps, type ActivityDotsSize } from './components/ActivityDots';
 export { EmptyState, type EmptyStateProps, type EmptyStateSize, type EmptyTone } from './components/EmptyState';
 
 // ── Widget library (v2: instance/zone board + preview-on-board) lives under '@ui/widgets' ──

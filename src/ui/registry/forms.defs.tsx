@@ -11,7 +11,7 @@ import type { VNode } from 'preact';
 
 import { FormField } from '../forms/FormField';
 import { TextInput, SearchInput as SearchField } from '../primitives/TextInput';
-import { Checkbox, Switch, CheckboxGroup, RadioGroup } from '../primitives/choice';
+import { Checkbox, Switch, CheckboxGroup, RadioGroup, type SwitchSize } from '../primitives/choice';
 import {
   PasswordInput, NumberInput, CurrencyInput, PercentageInput,
   EmailInput, UrlInput, PhoneInput, Textarea,
@@ -316,7 +316,7 @@ export const switchDef: ComponentDef = {
   thumbnail: 'switch',
   name: 'Switch',
   category: 'selection',
-  description: 'A setting that takes effect IMMEDIATELY. Not a Checkbox with different styling — using one inside a form with a Save button lies about when the change lands.',
+  description: 'A setting that responds immediately, remains controlled by its authoritative value, and reconciles after persistence. Use Checkbox for values applied only when a form is submitted.',
   status: 'stable',
   componentPath: 'src/ui/primitives/choice.tsx',
   importFrom: '@ui',
@@ -325,13 +325,14 @@ export const switchDef: ComponentDef = {
     nextSurface: 'Menu',
     notes: [
       'The only module-local Switch, in NavCustomizer, is deleted with all .navcust-switch CSS; visibility still applies immediately.',
-      'NotificationPreferences has a second Toggle-shaped local control but is deferred because the file has an existing lint blocker.',
+      'Notification preferences use this shared control for consistent alignment, pending state, and immediate feedback.',
     ],
   },
 
   props: {
     checked:     { type: 'boolean', label: 'On', default: true },
-    pending:     { type: 'boolean', label: 'Pending', default: false, help: 'While the change is being persisted. Sets aria-busy and blocks re-toggling.' },
+    size:        { type: 'segmented', label: 'Size', options: ['sm', 'md'], default: 'md' },
+    pending:     { type: 'boolean', label: 'Pending', default: false, help: 'While the change is being persisted. Preserves the optimistic visual value, sets aria-busy, blocks re-toggling, and reconciles when persistence finishes.' },
     disabled:    { type: 'boolean', label: 'Disabled', default: false },
   },
   style: [
@@ -339,7 +340,9 @@ export const switchDef: ComponentDef = {
       { name: '--ui-switch-w',     label: 'Width', kind: 'size' },
       { name: '--ui-switch-h',     label: 'Height', kind: 'size' },
       { name: '--ui-switch-bg',    label: 'Off fill', kind: 'color' },
+      { name: '--ui-switch-border', label: 'Off border', kind: 'color' },
       { name: '--ui-switch-bg-on', label: 'On fill', kind: 'color' },
+      { name: '--ui-switch-border-on', label: 'On border', kind: 'color' },
       { name: '--ui-switch-knob',  label: 'Knob', kind: 'color' },
       { name: '--ui-switch-cross', label: 'Off icon', kind: 'color' },
       { name: '--ui-switch-check', label: 'On icon', kind: 'color' },
@@ -358,6 +361,7 @@ export const switchDef: ComponentDef = {
     <Switch
       checked={b(p.checked) || st === 'selected'}
       onChange={noop}
+      size={s(p.size, 'md') as SwitchSize}
       aria-label="Example setting"
       pending={b(p.pending) || st === 'loading'}
       disabled={b(p.disabled) || st === 'disabled'}

@@ -11,10 +11,14 @@
  * exactly the five-implementation split this component exists to remove.
  */
 
+import { useState } from 'preact/hooks';
 import { LucideIcon } from '../LucideIcon';
 import { Button } from '../primitives/Button';
+import { GlobalSearch, type GlobalSearchGroup, type GlobalSearchQuickAction } from '../navigation/GlobalSearch';
+import { AiAssistant } from '../ai/AiAssistant';
 import { Tabs, TabPanel, type TabItem } from '../navigation/Tabs';
 import { TreeView, type TreeNode } from '../navigation/TreeView';
+import { SidebarNavigation, type SidebarNavigationGroup } from '../navigation/SidebarNavigation';
 import {
   type TabsOrientation, type TabsVariant, type TabsSize, type TabsActivation,
 } from '../navigation/Tabs';
@@ -26,6 +30,258 @@ import { type ComponentDef, type PropValues } from './types';
 const s = (v: PropValues[string] | undefined, f = ''): string => (typeof v === 'string' ? v : f);
 const b = (v: PropValues[string] | undefined): boolean => v === true;
 const noop = (): void => { /* preview */ };
+
+const SEARCH_SCOPES = [
+  { id: 'all', label: 'All', icon: 'Search' as const },
+  { id: 'pages', label: 'Pages', icon: 'PanelsTopLeft' as const },
+  { id: 'people', label: 'People', icon: 'UsersRound' as const },
+  { id: 'rosters', label: 'Rosters', icon: 'CalendarRange' as const },
+  { id: 'documents', label: 'Documents', icon: 'Files' as const },
+  { id: 'files', label: 'Files', icon: 'FileStack' as const },
+  { id: 'messages', label: 'Messages', icon: 'MessagesSquare' as const },
+];
+
+const SEARCH_GROUPS: readonly GlobalSearchGroup[] = [{
+  id: 'matches', label: 'Best Matches', results: [
+    { id: 'planner', title: 'Planner', subtitle: 'Rostering · Plan and validate weekly shifts', context: 'Human Resources', icon: 'CalendarRange' },
+    { id: 'jordan', title: 'Jordan Peters', subtitle: 'Deck Supervisor · EMP-0148', context: 'Pelican Offshore Platform', icon: 'UserRound', badge: { label: 'On Shift', tone: 'success', dot: true } },
+    { id: 'roster', title: 'ROS-2026-0020', subtitle: '31 Aug–6 Sept · 3 Crews', context: 'Pelican Offshore Platform', icon: 'CalendarDays', badge: { label: 'Draft', tone: 'warning', dot: true } },
+    { id: 'file', title: 'Pelican-Crew-Roster-Sep-2026.xlsx', subtitle: 'Excel Workbook · 148 KB', context: 'Roster Attachments', fileType: 'xlsx' },
+  ],
+}];
+
+const SEARCH_QUICK_ACTIONS: readonly GlobalSearchQuickAction[] = [
+  { id: 'planner', label: 'Open Planner', description: 'Plan roster coverage', icon: 'CalendarRange' },
+  { id: 'employees', label: 'Employee Master', description: 'Find and manage people', icon: 'UsersRound' },
+  { id: 'tickets', label: 'Ticket Center', description: 'Review operational work', icon: 'TicketCheck' },
+  { id: 'messages', label: 'Message Centre', description: 'Open conversations', icon: 'MessagesSquare' },
+];
+
+function GlobalSearchPreview(): ReturnType<typeof GlobalSearch> {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [scope, setScope] = useState('all');
+  return <div style="display:grid;min-height:360px;place-items:center;background:linear-gradient(145deg,#eef1f6,#fafbfd);"><Button variant="primary" iconLeft={<LucideIcon name="Search" />} onClick={() => setOpen(true)}>Open Global Search</Button><GlobalSearch open={open} onClose={() => setOpen(false)} value={query} onValueChange={setQuery} placeholder="Search SIOMAC…" scopes={SEARCH_SCOPES} activeScope={scope} onScopeChange={setScope} groups={SEARCH_GROUPS} onSelect={noop} quickActions={SEARCH_QUICK_ACTIONS} onQuickAction={noop} footerNotice="Results are permission-aware." /></div>;
+}
+
+function AiAssistantPreview(): ReturnType<typeof AiAssistant> | ReturnType<typeof Button> {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style="display:grid;min-height:420px;place-items:center;background:linear-gradient(145deg,#eef1f6,#fafbfd);">
+      <Button variant="primary" iconLeft={<LucideIcon name="Sparkles" />} onClick={() => setOpen(true)}>Open AI Assistant</Button>
+      <AiAssistant
+        open={open}
+        onClose={() => setOpen(false)}
+        userName="Aaliyah Mohammed"
+        contextLabel="Roster Planner"
+      />
+    </div>
+  );
+}
+
+export const aiAssistantDef: ComponentDef = {
+  id: 'ai-assistant',
+  thumbnail: 'dialog',
+  name: 'AI Assistant',
+  category: 'navigation',
+  description: 'A frontend-only conversational workspace with context trace, generating state, structured results, attachments, voice preview and a docked composer.',
+  status: 'stable',
+  componentPath: 'src/ui/ai/AiAssistant/AiAssistant.tsx',
+  importFrom: '@ui',
+  previewLayout: 'diagram',
+  props: {
+    open: { type: 'boolean', label: 'Open', default: true },
+    contextLabel: { type: 'text', label: 'Context label', default: 'Roster Planner' },
+  },
+  style: [
+    { label: 'Frame', controls: [
+      { name: '--ui-ai-assistant-width', label: 'Width', kind: 'size' },
+      { name: '--ui-ai-assistant-radius', label: 'Radius', kind: 'size' },
+      { name: '--ui-ai-assistant-surface', label: 'Surface', kind: 'color-alpha' },
+      { name: '--ui-ai-assistant-backdrop', label: 'Backdrop', kind: 'color-alpha' },
+    ] },
+    { label: 'Conversation', controls: [
+      { name: '--ui-ai-assistant-composer-surface', label: 'Composer surface', kind: 'color-alpha' },
+      { name: '--ui-ai-assistant-generation-color', label: 'Generating icon', kind: 'color' },
+    ] },
+  ],
+  states: ['default', 'loading', 'open'],
+  a11y: {
+    role: 'dialog containing a conversational workspace',
+    name: 'The dialog title names the assistant and every icon-only control has an accessible label.',
+    keyboard: [
+      { keys: 'Enter', does: 'Submits the current prompt.' },
+      { keys: 'Shift+Enter', does: 'Adds a new line to the prompt.' },
+      { keys: 'Escape', does: 'Closes the assistant and returns focus to its opener.' },
+    ],
+    focus: 'Focus is trapped by Dialog while open and returned to the invoking control on close.',
+  },
+  render: () => <AiAssistantPreview />,
+  code: () => `<AiAssistant
+  open={assistantOpen}
+  onClose={() => setAssistantOpen(false)}
+  userName={currentUser.fullName}
+  userAvatarSrc={currentUser.profileImage}
+  contextLabel={currentPageLabel}
+/>`,
+};
+
+export const globalSearchDef: ComponentDef = {
+  id: 'global-search',
+  thumbnail: 'menu',
+  name: 'Global Search',
+  category: 'navigation',
+  description: 'Translucent, keyboard-first search workspace for permission-aware pages, people, operational records and documents.',
+  status: 'stable',
+  componentPath: 'src/ui/navigation/GlobalSearch/GlobalSearch.tsx',
+  importFrom: '@ui',
+  previewLayout: 'diagram',
+  props: {
+    placeholder: { type: 'text', label: 'Placeholder', default: 'Search SIOMAC…' },
+    loading: { type: 'boolean', label: 'Loading', default: false },
+    emptyVariant: { type: 'select', label: 'Empty Illustration', default: 'default', options: ['default', 'people', 'files'] },
+    notice: { type: 'boolean', label: 'Footer notice', default: true },
+  },
+  style: [
+    { label: 'Frame', controls: [
+      { name: '--ui-global-search-width', label: 'Width', kind: 'size' },
+      { name: '--ui-global-search-radius', label: 'Radius', kind: 'size' },
+      { name: '--ui-global-search-surface', label: 'Translucent surface', kind: 'color-alpha' },
+      { name: '--ui-global-search-backdrop', label: 'Backdrop', kind: 'color-alpha' },
+      { name: '--ui-global-search-backdrop-blur', label: 'Backdrop blur', kind: 'size' },
+      { name: '--ui-global-search-frame-blur', label: 'Frame blur', kind: 'size' },
+    ] },
+    { label: 'Results', controls: [
+      { name: '--ui-global-search-row-height', label: 'Row height', kind: 'size' },
+      { name: '--ui-global-search-row-radius', label: 'Row radius', kind: 'size' },
+      { name: '--ui-global-search-results-bg', label: 'Results surface', kind: 'color-alpha' },
+      { name: '--ui-global-search-active-bg', label: 'Selected row', kind: 'color-alpha' },
+      { name: '--ui-global-search-hover-bg', label: 'Row hover', kind: 'color-alpha' },
+      { name: '--ui-global-search-context-color', label: 'Context text', kind: 'color' },
+    ] },
+  ],
+  states: ['default', 'focus', 'selected', 'loading'],
+  a11y: {
+    role: 'dialog with listbox results',
+    name: 'The search input labels the workspace and each result group has a visible heading.',
+    keyboard: [
+      { keys: '↑ / ↓', does: 'Moves through enabled results.' },
+      { keys: 'Enter', does: 'Opens the active result.' },
+      { keys: 'Escape', does: 'Closes search and returns focus to its opener.' },
+      { keys: 'Tab / Shift+Tab', does: 'Moves through scopes, results and footer controls without leaving the dialog.' },
+    ],
+    focus: 'Focus enters the search field, is trapped by Dialog, and returns to the invoking control on close.',
+  },
+  render: () => <GlobalSearchPreview />,
+  code: () => `<GlobalSearch
+  open={open}
+  onClose={close}
+  value={query}
+  onValueChange={setQuery}
+  scopes={searchScopes}
+  activeScope={scope}
+  onScopeChange={setScope}
+  groups={resultGroups}
+  onSelect={openSearchResult}
+/>`,
+};
+
+const SIDEBAR_GROUPS: readonly SidebarNavigationGroup[] = [
+  {
+    id: 'overview',
+    items: [{ id: 'dashboard', label: 'Overview', icon: <LucideIcon name="LayoutDashboard" /> }],
+  },
+  {
+    id: 'workforce',
+    label: 'Workforce',
+    items: [
+      { id: 'employees', label: 'Employee Master', icon: <LucideIcon name="Users" /> },
+      {
+        id: 'rostering', label: 'Rostering', icon: <LucideIcon name="CalendarDays" />, notification: { count: 3, tone: 'danger', label: '3 roster items need attention' }, children: [
+          { id: 'planner', label: 'Planner', icon: <LucideIcon name="CalendarRange" /> },
+          { id: 'coverage', label: 'Coverage', icon: <LucideIcon name="UsersRound" /> },
+          { id: 'rotations', label: 'Crew & Rotations', icon: <LucideIcon name="RotateCw" /> },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'administration',
+    label: 'Administration',
+    items: [{ id: 'settings', label: 'Settings', icon: <LucideIcon name="Settings" /> }],
+  },
+];
+
+export const sidebarNavigationDef: ComponentDef = {
+  id: 'sidebar-navigation',
+  thumbnail: 'tree',
+  name: 'Sidebar Navigation',
+  category: 'navigation',
+  description: 'Searchable, permission-ready application navigation with groups, nested destinations, accessible notification bubbles, compact density and controlled expansion.',
+  status: 'stable',
+  componentPath: 'src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx',
+  importFrom: '@ui',
+  previewLayout: 'diagram',
+  props: {
+    density: { type: 'segmented', label: 'Density', options: ['comfortable', 'compact'], default: 'comfortable' },
+    search: { type: 'boolean', label: 'Pinned search', default: true },
+    childIcons: { type: 'boolean', label: 'Child icons', default: false },
+    collapsed: { type: 'boolean', label: 'Collapsed rail', default: false },
+  },
+  style: [
+    { label: 'Rows', controls: [
+      { name: '--ui-sidebar-nav-row-height', label: 'Row height', kind: 'size' },
+      { name: '--ui-sidebar-nav-row-gap', label: 'Row gap', kind: 'size' },
+      { name: '--ui-sidebar-nav-radius', label: 'Row radius', kind: 'size' },
+    ] },
+    { label: 'Colour', controls: [
+      { name: '--ui-sidebar-nav-text', label: 'Text', kind: 'color-alpha' },
+      { name: '--ui-sidebar-nav-hover', label: 'Hover', kind: 'color-alpha' },
+      { name: '--ui-sidebar-nav-selected', label: 'Selected', kind: 'color-alpha' },
+      { name: '--ui-sidebar-nav-accent', label: 'Active accent', kind: 'color' },
+      { name: '--ui-sidebar-nav-tree', label: 'Expanded submenu tree', kind: 'color-alpha' },
+    ] },
+    { label: 'Collapsed Menu', controls: [
+      { name: '--ui-sidebar-nav-parent-cue', label: 'Submenu cue', kind: 'color-alpha' },
+      { name: '--ui-sidebar-nav-flyout-background', label: 'Flyout surface', kind: 'color-alpha' },
+      { name: '--ui-sidebar-nav-flyout-border', label: 'Flyout border', kind: 'color-alpha' },
+      { name: '--ui-sidebar-nav-flyout-hover', label: 'Destination hover', kind: 'color-alpha' },
+      { name: '--ui-sidebar-nav-flyout-selected', label: 'Selected destination', kind: 'color-alpha' },
+      { name: '--ui-sidebar-nav-flyout-tree', label: 'Submenu tree line', kind: 'color-alpha' },
+    ] },
+  ],
+  states: ['default', 'hover', 'focus', 'selected'],
+  a11y: {
+    role: 'A named nav landmark containing native lists and buttons.',
+    name: 'The label prop names the navigation landmark; active destinations use aria-current="page".',
+    keyboard: [
+      { keys: 'Tab / Shift+Tab', does: 'Moves through search, destinations, group toggles and expansion controls.' },
+      { keys: 'Enter / Space', does: 'Navigates or expands the focused item.' },
+    ],
+    focus: 'All interactive controls use the shared visible focus treatment and collapsed content leaves the focus order.',
+  },
+  render: p => (
+    <div style={`width:${b(p.collapsed) ? '76px' : '272px'};height:620px;padding:${b(p.collapsed) ? '12px 0' : '12px'};background:#1f2d51;overflow:visible;`}>
+      <SidebarNavigation
+        groups={SIDEBAR_GROUPS}
+        activeId="planner"
+        density={s(p.density, 'comfortable') === 'compact' ? 'compact' : 'comfortable'}
+        searchable={b(p.search)}
+        showChildIcons={b(p.childIcons)}
+        collapsed={b(p.collapsed)}
+      />
+    </div>
+  ),
+  code: p => `<SidebarNavigation
+  groups={navigationGroups}
+  activeId={activeSection}
+  density="${s(p.density, 'comfortable')}"
+  searchable={${String(b(p.search))}}
+  showChildIcons={${String(b(p.childIcons))}}
+  collapsed={${String(b(p.collapsed))}}
+  onNavigate={setActiveSection}
+/>`,
+};
 
 const FILE_TREE: readonly TreeNode[] = [{
   id: 'src', label: 'src', kind: 'folder', children: [
@@ -368,6 +624,9 @@ export const tabsDef: ComponentDef = {
 };
 
 export const NAVIGATION_DEFS: readonly ComponentDef[] = [
+  sidebarNavigationDef,
+  globalSearchDef,
+  aiAssistantDef,
   tabsDef,
   treeViewDef,
   progressStepsDef,

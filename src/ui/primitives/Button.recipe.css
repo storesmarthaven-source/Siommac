@@ -159,6 +159,7 @@
     font-size: var(--_ui-button-font-size-md, var(--ui-button-font-size-md));
     font-weight: var(--ui-button-font-weight);
     line-height: 1;
+    text-transform: capitalize;
     white-space: nowrap;
     cursor: pointer;
     position: relative;

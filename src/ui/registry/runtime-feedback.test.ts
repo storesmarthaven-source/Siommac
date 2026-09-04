@@ -7,6 +7,28 @@ import { defaultProps, findComponent } from './index';
 afterEach(() => { notify.dismiss(); cleanup(); });
 
 describe('runtime feedback catalogue entries', () => {
+  it('registers the canonical notification surface and icon building blocks', () => {
+    const iconTile = findComponent('icon-tile');
+    const listItem = findComponent('notification-list-item');
+    const popover = findComponent('notification-popover');
+
+    expect(iconTile).toMatchObject({
+      status: 'stable',
+      componentPath: 'src/ui/feedback/IconTile.tsx',
+      importFrom: '@ui',
+    });
+    expect(listItem).toMatchObject({
+      status: 'stable',
+      componentPath: 'src/ui/feedback/NotificationListItem.tsx',
+      importFrom: '@ui',
+    });
+    expect(popover).toMatchObject({
+      status: 'stable',
+      componentPath: 'src/ui/feedback/NotificationPopover.tsx',
+      importFrom: '@ui',
+    });
+  });
+
   it('registers the app Toast and existing SweetAlert popup implementations', () => {
     const toast = findComponent('toast');
     const popup = findComponent('sweet-alert');

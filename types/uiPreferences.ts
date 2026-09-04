@@ -276,6 +276,137 @@ export function sanitizeOnboardingWorkQueueViews(value: unknown): OnboardingWork
   return result;
 }
 
+// ── Application navigation ──────────────────────────────────────────────────
+
+export const NAVIGATION_PREFERENCE_KEY = 'system.navigation';
+export const NAVIGATION_PREFERENCE_VERSION = 1;
+
+export type NavigationDensityPreference = 'compact' | 'comfortable';
+
+export interface NavigationVisibilityPreference {
+  namespace: string;
+  id: string;
+  visible: boolean;
+}
+
+export interface NavigationOrderPreference {
+  namespace: string;
+  ids: string[];
+}
+
+export interface NavigationPreference {
+  visibility: NavigationVisibilityPreference[];
+  order: NavigationOrderPreference[];
+  density: NavigationDensityPreference;
+  showChildIcons: boolean;
+}
+
+const NAVIGATION_PREFERENCE_LIMITS = {
+  maxNamespaces: 80,
+  maxItems: 500,
+  maxIdsPerNamespace: 120,
+  maxIdLength: 96,
+} as const;
+
+const NAVIGATION_ID = /^[a-zA-Z0-9][a-zA-Z0-9:._-]*$/;
+
+function safeNavigationId(value: unknown): string | null {
+  if (typeof value !== 'string' || value.length > NAVIGATION_PREFERENCE_LIMITS.maxIdLength || !NAVIGATION_ID.test(value)) return null;
+  return value;
+}
+
+export function sanitizeNavigationPreference(value: unknown): NavigationPreference | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const raw = value as Record<string, unknown>;
+  if (!Array.isArray(raw.visibility) || !Array.isArray(raw.order)) return null;
+  if (raw.visibility.length > NAVIGATION_PREFERENCE_LIMITS.maxItems || raw.order.length > NAVIGATION_PREFERENCE_LIMITS.maxNamespaces) return null;
+  if (raw.density !== 'compact' && raw.density !== 'comfortable') return null;
+  if (typeof raw.showChildIcons !== 'boolean') return null;
+
+  const visibility: NavigationVisibilityPreference[] = [];
+  const seenVisibility = new Set<string>();
+  for (const candidate of raw.visibility) {
+    if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) return null;
+    const row = candidate as Record<string, unknown>;
+    const namespace = safeNavigationId(row.namespace);
+    const id = safeNavigationId(row.id);
+    if (!namespace || !id || typeof row.visible !== 'boolean') return null;
+    const key = `${namespace}\u0000${id}`;
+    if (seenVisibility.has(key)) continue;
+    seenVisibility.add(key);
+    visibility.push({ namespace, id, visible: row.visible });
+  }
+
+  const order: NavigationOrderPreference[] = [];
+  const seenNamespaces = new Set<string>();
+  for (const candidate of raw.order) {
+    if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) return null;
+    const row = candidate as Record<string, unknown>;
+    const namespace = safeNavigationId(row.namespace);
+    if (!namespace || seenNamespaces.has(namespace) || !Array.isArray(row.ids) || row.ids.length > NAVIGATION_PREFERENCE_LIMITS.maxIdsPerNamespace) return null;
+    const ids = row.ids.map(safeNavigationId);
+    if (ids.some(id => id === null)) return null;
+    seenNamespaces.add(namespace);
+    order.push({ namespace, ids: [...new Set(ids as string[])] });
+  }
+
+  return { visibility, order, density: raw.density, showChildIcons: raw.showChildIcons };
+}
+
+// ── In-app toast notifications ─────────────────────────────────────────────
+
+export const TOAST_PREFERENCE_KEY = 'system.toast';
+export const TOAST_PREFERENCE_VERSION = 2;
+
+export const TOAST_POSITIONS = [
+  'top-right',
+  'bottom-right',
+  'bottom-center',
+] as const;
+
+export type ToastPosition = typeof TOAST_POSITIONS[number];
+
+export const TOAST_DURATION_MODES = ['standard', 'extended', 'persistent'] as const;
+export type ToastDurationMode = typeof TOAST_DURATION_MODES[number];
+
+export interface ToastPreference {
+  durationMode: ToastDurationMode;
+  showPreviews: boolean;
+  playSound: boolean;
+  expandActionToasts: boolean;
+  position: ToastPosition;
+}
+
+export const DEFAULT_TOAST_PREFERENCE: ToastPreference = {
+  durationMode: 'standard',
+  showPreviews: true,
+  playSound: false,
+  expandActionToasts: false,
+  position: 'top-right',
+};
+
+export function sanitizeToastPreference(value: unknown): ToastPreference | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const raw = value as Record<string, unknown>;
+  const allowedKeys = new Set(['durationMode', 'showPreviews', 'playSound', 'expandActionToasts', 'position']);
+  if (
+    Object.keys(raw).some(key => !allowedKeys.has(key))
+    || typeof raw.showPreviews !== 'boolean'
+    || typeof raw.playSound !== 'boolean'
+    || typeof raw.expandActionToasts !== 'boolean'
+    || !TOAST_DURATION_MODES.includes(raw.durationMode as ToastDurationMode)
+    || !TOAST_POSITIONS.includes(raw.position as ToastPosition)
+  ) return null;
+
+  return {
+    durationMode: raw.durationMode as ToastDurationMode,
+    showPreviews: raw.showPreviews,
+    playSound: raw.playSound,
+    expandActionToasts: raw.expandActionToasts,
+    position: raw.position as ToastPosition,
+  };
+}
+
 // ── The registry the endpoint validates against ─────────────────────────────
 
 /**
@@ -293,6 +424,16 @@ export interface UiPreferenceDefinition {
 }
 
 export const UI_PREFERENCES: readonly UiPreferenceDefinition[] = [
+  {
+    key: TOAST_PREFERENCE_KEY,
+    version: TOAST_PREFERENCE_VERSION,
+    sanitize: sanitizeToastPreference,
+  },
+  {
+    key: NAVIGATION_PREFERENCE_KEY,
+    version: NAVIGATION_PREFERENCE_VERSION,
+    sanitize: sanitizeNavigationPreference,
+  },
   {
     key: EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_KEY,
     version: EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_VERSION,

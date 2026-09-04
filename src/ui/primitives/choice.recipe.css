@@ -41,18 +41,20 @@
     --ui-radio-card-gap: 14px;
     --ui-radio-card-media-bg: var(--ui-color-surface-subtle);
 
-    --ui-checkbox-size: 28px;
-    --ui-checkbox-radius: 8px;
-    --ui-checkbox-color: #3b82f6;
-    --ui-checkbox-focus-bg: #dbeafe;
-    --ui-checkbox-border: #93c5fd;
+    --ui-checkbox-size: 16px;
+    --ui-checkbox-radius: 4px;
+    --ui-checkbox-color: var(--ui-color-action-primary, var(--siomac-blue, #1a2c53));
+    --ui-checkbox-focus-bg: var(--ui-color-selection-background);
+    --ui-checkbox-border: var(--ui-color-border-strong);
 
-    --ui-switch-w: 46px;
-    --ui-switch-h: 24px;
-    --ui-switch-bg: #838383;
+    --ui-switch-w: 36px;
+    --ui-switch-h: 20px;
+    --ui-switch-bg: #eff1f6;
+    --ui-switch-border: #cdd3e0;
     --ui-switch-bg-on: #00b950;
+    --ui-switch-border-on: #009f46;
     --ui-switch-knob: #fff;
-    --ui-switch-pad: 3px;
+    --ui-switch-pad: 2px;
     --ui-switch-cross: var(--ui-switch-bg);
     --ui-switch-check: var(--ui-switch-bg-on);
     --ui-switch-transition: 200ms cubic-bezier(.27, .2, .25, 1.51);
@@ -126,8 +128,8 @@
       box-shadow 200ms ease;
   }
   .ui-choice--checkbox .ui-choice-mark {
-    width: 80%;
-    height: 80%;
+    width: 70%;
+    height: 70%;
   }
   .ui-choice.ui-choice--checkbox:hover .ui-choice-box,
   .ui-choice.ui-choice--checkbox[data-ui-state~='hover'] .ui-choice-box {
@@ -219,15 +221,15 @@
   /* Radio treatment: one neutral ring with a single animated selection dot.
      No per-option colours and no focus-grey treatment. */
   .ui-choice--radio .ui-choice-box {
-    width: 20px;
-    height: 20px;
-    border: 2px solid #aaa;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--ui-choice-border);
     background: transparent;
   }
   .ui-choice--radio .ui-choice-dot {
-    width: 12px;
-    height: 12px;
-    background: var(--siomac-blue, #1a2c53);
+    width: 8px;
+    height: 8px;
+    background: var(--ui-color-action-primary, var(--siomac-blue, #1a2c53));
     transform: translateZ(0) scale(0);
     transition: transform 200ms ease-in-out;
   }
@@ -239,10 +241,10 @@
   .ui-choice--radio .ui-choice-input:checked + .ui-choice-box,
   .ui-choice--radio[data-ui-state~='selected'] .ui-choice-box {
     background: transparent;
-    border-color: #aaa;
+    border-color: var(--ui-color-action-primary, var(--siomac-blue, #1a2c53));
   }
   .ui-choice--radio:hover .ui-choice-box,
-  .ui-choice--radio[data-ui-state~='hover'] .ui-choice-box { border-color: #aaa; }
+  .ui-choice--radio[data-ui-state~='hover'] .ui-choice-box { border-color: var(--ui-color-action-primary, var(--siomac-blue, #1a2c53)); }
   .ui-choice--radio .ui-choice-input:focus-visible + .ui-choice-box,
   .ui-choice--radio[data-ui-state~='focus'] .ui-choice-box {
     outline: 0;
@@ -281,10 +283,11 @@
     width: var(--ui-switch-w);
     height: var(--ui-switch-h);
     margin-top: 1px;
+    border: 1px solid var(--ui-switch-border);
     border-radius: var(--radius-pill);
     background: var(--ui-switch-bg);
     cursor: pointer;
-    transition: background-color var(--ui-switch-transition);
+    transition: background-color var(--ui-switch-transition), border-color var(--ui-switch-transition);
   }
   .ui-switch-track::before {
     content: '';
@@ -316,10 +319,13 @@
     height: auto;
     transition: transform var(--ui-switch-transition);
   }
-  .ui-switch-cross { width: 7px; color: var(--ui-switch-cross); }
-  .ui-switch-check { width: 11px; color: var(--ui-switch-check); transform: scale(0); }
+  .ui-switch-cross { width: 6px; color: var(--ui-switch-cross); }
+  .ui-switch-check { width: 8px; color: var(--ui-switch-check); transform: scale(0); }
   .ui-choice-input:checked ~ .ui-switch-track,
-  .ui-choice[data-ui-state~='selected'] .ui-switch-track { background: var(--ui-switch-bg-on); }
+  .ui-choice[data-ui-state~='selected'] .ui-switch-track {
+    border-color: var(--ui-switch-border-on);
+    background: var(--ui-switch-bg-on);
+  }
   .ui-choice-input:checked ~ .ui-switch-track .ui-switch-knob,
   .ui-choice[data-ui-state~='selected'] .ui-switch-track .ui-switch-knob {
     transform: translateX(calc(var(--ui-switch-w) - var(--ui-switch-h)));
@@ -338,8 +344,8 @@
     outline: var(--ui-focus-outline-width) solid var(--ui-focus-outline-color);
     outline-offset: 2px;
   }
-  .ui-choice-input:disabled ~ .ui-switch-track { background: var(--ui-disabled-border); }
-  .ui-choice-input:disabled:checked ~ .ui-switch-track { background: var(--ui-disabled-fg); }
+  .ui-choice-input:disabled ~ .ui-switch-track { border-color: var(--ui-disabled-border); background: var(--ui-disabled-border); }
+  .ui-choice-input:disabled:checked ~ .ui-switch-track { border-color: var(--ui-disabled-fg); background: var(--ui-disabled-fg); }
 
   @media (prefers-reduced-motion: reduce) {
     .ui-choice--checkbox .ui-choice-box,
@@ -372,6 +378,15 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
   }
+  .ui-switch-track--sm {
+    --ui-switch-w: 30px;
+    --ui-switch-h: 17px;
+    --ui-switch-pad: 2px;
+  }
+  .ui-radio-cards.ui-choice-group--inline.ui-radio-cards--columns-1 { grid-template-columns: minmax(0, 1fr); }
+  .ui-radio-cards.ui-choice-group--inline.ui-radio-cards--columns-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ui-radio-cards.ui-choice-group--inline.ui-radio-cards--columns-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ui-radio-cards.ui-choice-group--inline.ui-radio-cards--columns-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .ui-radio-card {
     position: relative;
     display: flex;
@@ -424,8 +439,8 @@
     flex: 0 0 auto;
     display: grid;
     place-items: center;
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     margin-top: 1px;
     border: var(--ui-border-width) solid var(--ui-choice-border);
     background: var(--ui-choice-bg);
@@ -436,8 +451,8 @@
   }
   .ui-radio-card__indicator--radio { border-radius: 50%; }
   .ui-radio-card__indicator--radio > span {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: currentColor;
     opacity: 0;
@@ -445,7 +460,7 @@
     transition: opacity var(--ui-motion-fast), transform var(--ui-motion-fast) var(--ui-ease-emphasized);
   }
   .ui-radio-card__indicator--check { border-radius: var(--ui-choice-radius); }
-  .ui-radio-card__indicator--check svg { width: 15px; height: 15px; }
+  .ui-radio-card__indicator--check svg { width: 12px; height: 12px; }
   .ui-radio-card__indicator--check path {
     stroke: currentColor;
     stroke-width: 2.75;
@@ -496,7 +511,68 @@
   .ui-radio-cards--compact .ui-radio-card__description { font-size: var(--ui-font-size-caption); }
   .ui-radio-cards--compact .ui-radio-card__media { width: 34px; height: 34px; }
 
+  /* Rich previews are option artwork, not 34px icon tiles. This governed
+     layout keeps product illustrations full-width while preserving the native
+     radio, copy and selection semantics below the preview. */
+  .ui-radio-cards--media-preview .ui-radio-card {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+  .ui-radio-cards--media-preview .ui-radio-card:hover,
+  .ui-radio-cards--media-preview .ui-radio-card:has(.ui-radio-card__input:checked) {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+  .ui-radio-cards--media-preview .ui-radio-card__media {
+    grid-row: 1;
+    grid-column: 1 / -1;
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .ui-radio-cards--media-preview .ui-radio-card__indicator {
+    grid-row: 2;
+    grid-column: 1;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+  }
+  .ui-radio-cards--media-preview .ui-radio-card__indicator--radio > span {
+    width: 8px;
+    height: 8px;
+  }
+  .ui-radio-cards--media-preview .ui-radio-card__copy {
+    grid-row: 2;
+    grid-column: 2;
+  }
+
+  /* Plain media is for compact line icons whose own stroke and colour provide
+     the hierarchy; it deliberately has no surrounding tile. */
+  .ui-radio-cards--media-plain .ui-radio-card__media {
+    width: 20px;
+    height: 20px;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
   @media (max-width: 640px) {
     .ui-radio-card { --ui-radio-card-padding-x: 14px; --ui-radio-card-padding-y: 14px; }
+    .ui-radio-cards.ui-choice-group--inline.ui-radio-cards--columns-3,
+    .ui-radio-cards.ui-choice-group--inline.ui-radio-cards--columns-4 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 }

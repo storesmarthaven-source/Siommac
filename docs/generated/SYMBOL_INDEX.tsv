@@ -5039,92 +5039,95 @@ useTaskStatus	function	platform	true	hook	src/api/calendar.ts	122
 useCancelEntry	function	platform	true	hook	src/api/calendar.ts	135	
 useSetCalendarReminders	function	platform	true	hook	src/api/calendar.ts	148	
 useRespondToCalendarActivity	function	platform	true	hook	src/api/calendar.ts	161	
-Mark	type	communications	false	test	src/api/communications.markTicketRead.test.tsx	21	
-Probe	function	communications	false	component,test	src/api/communications.markTicketRead.test.tsx	22	
-MessagePin	type	communications	true		src/api/communications.ts	27	
-MessageThreadListItem	type	communications	true		src/api/communications.ts	32	
-MessageParticipantProfile	type	communications	true		src/api/communications.ts	33	
-MessagePostRow	type	communications	true		src/api/communications.ts	34	
-MessageAttachment	type	communications	true		src/api/communications.ts	35	
-MessageRecipient	type	communications	true		src/api/communications.ts	36	
-MessageThreadDetail	type	communications	true		src/api/communications.ts	37	
-CommsSummary	interface	communications	true		src/api/communications.ts	41	
-CanonicalNotification	interface	communications	true		src/api/communications.ts	59	
-NotificationPreference	interface	communications	true		src/api/communications.ts	77	
-NotificationSnoozeState	interface	communications	true		src/api/communications.ts	84	
-NotificationPreferencesData	interface	communications	true		src/api/communications.ts	88	
-MessageThread	interface	communications	true		src/api/communications.ts	94	
-MessagePost	interface	communications	true		src/api/communications.ts	109	
-CanonicalTicket	interface	communications	true		src/api/communications.ts	117	
-TicketUserProfile	interface	communications	true		src/api/communications.ts	143	
-TicketRequestType	interface	communications	true		src/api/communications.ts	151	
-TicketAttachment	interface	communications	true		src/api/communications.ts	166	
-CanonicalTicketDetail	interface	communications	true		src/api/communications.ts	176	
-useCommsSummary	function	communications	true	hook	src/api/communications.ts	199	
-NotificationListArgs	interface	communications	true		src/api/communications.ts	216	
-useNotifications	function	communications	true	hook	src/api/communications.ts	227	
-useNotificationPreferences	function	communications	true	hook	src/api/communications.ts	245	
-useSetNotificationPreference	function	communications	true	hook	src/api/communications.ts	258	
-useMuteNotifications	function	communications	true	hook	src/api/communications.ts	267	
-BroadcastArgs	interface	communications	true		src/api/communications.ts	276	
-useBroadcastNotification	function	communications	true	hook	src/api/communications.ts	285	
-useMarkNotificationRead	function	communications	true	hook	src/api/communications.ts	294	
-useMarkAllNotificationsRead	function	communications	true	hook	src/api/communications.ts	311	
-useArchiveNotification	function	communications	true	hook	src/api/communications.ts	328	
-useMessageThreads	function	communications	true	hook	src/api/communications.ts	347	
-useMessagePosts	function	communications	true	hook	src/api/communications.ts	363	
-PostMessageArgs	interface	communications	true		src/api/communications.ts	379	
-usePostMessage	function	communications	true	hook	src/api/communications.ts	387	
-AttachmentUploadUrlResult	interface	communications	true		src/api/communications.ts	404	
-useMessageAttachmentUploadUrl	function	communications	true	hook	src/api/communications.ts	413	
-useCreateMessageAttachment	function	communications	true	hook	src/api/communications.ts	426	
-CreateThreadArgs	interface	communications	true		src/api/communications.ts	438	
-useCreateMessageThread	function	communications	true	hook	src/api/communications.ts	449	
-ThreadFilters	interface	communications	true		src/api/communications.ts	474	
-useMessageThreadsFull	function	communications	true	hook	src/api/communications.ts	482	
-useThread	function	communications	true	hook	src/api/communications.ts	499	
-ThreadAccessError	class	communications	true		src/api/communications.ts	516	
-useThreadPosts	function	communications	true	hook	src/api/communications.ts	526	
-useMarkThreadRead	function	communications	true	hook	src/api/communications.ts	545	
-OnlineUser	interface	communications	true		src/api/communications.ts	570	
-PinnedThreadRow	interface	communications	true		src/api/communications.ts	571	
-usePinnedSummary	function	communications	true	hook	src/api/communications.ts	574	
-usePins	function	communications	true	hook	src/api/communications.ts	586	
-usePinMessage	function	communications	true	hook	src/api/communications.ts	597	
-useUnpinMessage	function	communications	true	hook	src/api/communications.ts	610	
-useDeleteMessage	function	communications	true	hook	src/api/communications.ts	624	
-useOnlineUsers	function	communications	true	hook	src/api/communications.ts	639	
-useDraft	function	communications	true	hook	src/api/communications.ts	652	
-useSaveDraft	function	communications	true	hook	src/api/communications.ts	663	
-useAttachmentUrl	function	communications	true	hook	src/api/communications.ts	673	
-useArchiveThread	function	communications	true	hook	src/api/communications.ts	682	
-useMuteThread	function	communications	true	hook	src/api/communications.ts	697	
-useAddThreadParticipants	function	communications	true	hook	src/api/communications.ts	710	
-useRemoveThreadParticipant	function	communications	true	hook	src/api/communications.ts	724	
-useResolveRecordThread	function	communications	true	hook	src/api/communications.ts	748	
-useMessageSearch	function	communications	true	hook	src/api/communications.ts	763	
-useMessageRecipients	function	communications	true	hook	src/api/communications.ts	780	
-TicketScope	type	communications	true		src/api/communications.ts	798	
-TicketStatusGroup	type	communications	true		src/api/communications.ts	799	
-TicketListArgs	interface	communications	true		src/api/communications.ts	801	
-TicketListPage	interface	communications	true		src/api/communications.ts	813	
-useMyTickets	function	communications	true	hook	src/api/communications.ts	820	
-TicketStatusGroupCounts	interface	communications	true		src/api/communications.ts	840	
-TicketNavContext	interface	communications	true		src/api/communications.ts	842	
-useTicketNavContext	function	communications	true	hook	src/api/communications.ts	858	
-useTicketRequestTypes	function	communications	true	hook	src/api/communications.ts	872	
-TicketRequesterOption	interface	communications	true		src/api/communications.ts	887	
-useTicketRequesterSearch	function	communications	true	hook	src/api/communications.ts	891	
-useTicket	function	communications	true	hook	src/api/communications.ts	910	
-CreateTicketArgs	interface	communications	true		src/api/communications.ts	926	
-useCreateTicket	function	communications	true	hook	src/api/communications.ts	939	
-CommentTicketArgs	interface	communications	true		src/api/communications.ts	958	
-useCommentTicket	function	communications	true	hook	src/api/communications.ts	964	
-UpdateTicketArgs	interface	communications	true		src/api/communications.ts	983	
-useUpdateTicket	function	communications	true	hook	src/api/communications.ts	992	
-useMarkTicketRead	function	communications	true	hook	src/api/communications.ts	1011	
-uploadTicketAttachment	function	communications	true		src/api/communications.ts	1062	
-getTicketAttachmentUrl	function	communications	true		src/api/communications.ts	1089	
+apiPost	variable	communications	false	test	src/api/communications.authGate.test.tsx	13	
+ProtectedCommunicationsReads	function	communications	false	component,test	src/api/communications.authGate.test.tsx	20	
+Mark	type	communications	false	test	src/api/communications.markTicketRead.test.tsx	22	
+Probe	function	communications	false	component,test	src/api/communications.markTicketRead.test.tsx	23	
+MessagePin	type	communications	true		src/api/communications.ts	28	
+useAuthenticatedQueryEnabled	function	communications	false	hook	src/api/communications.ts	31	
+MessageThreadListItem	type	communications	true		src/api/communications.ts	39	
+MessageParticipantProfile	type	communications	true		src/api/communications.ts	40	
+MessagePostRow	type	communications	true		src/api/communications.ts	41	
+MessageAttachment	type	communications	true		src/api/communications.ts	42	
+MessageRecipient	type	communications	true		src/api/communications.ts	43	
+MessageThreadDetail	type	communications	true		src/api/communications.ts	44	
+CommsSummary	interface	communications	true		src/api/communications.ts	48	
+CanonicalNotification	interface	communications	true		src/api/communications.ts	66	
+NotificationPreference	interface	communications	true		src/api/communications.ts	84	
+NotificationSnoozeState	interface	communications	true		src/api/communications.ts	91	
+NotificationPreferencesData	interface	communications	true		src/api/communications.ts	95	
+MessageThread	interface	communications	true		src/api/communications.ts	101	
+MessagePost	interface	communications	true		src/api/communications.ts	116	
+CanonicalTicket	interface	communications	true		src/api/communications.ts	124	
+TicketUserProfile	interface	communications	true		src/api/communications.ts	150	
+TicketRequestType	interface	communications	true		src/api/communications.ts	158	
+TicketAttachment	interface	communications	true		src/api/communications.ts	173	
+CanonicalTicketDetail	interface	communications	true		src/api/communications.ts	183	
+useCommsSummary	function	communications	true	hook	src/api/communications.ts	206	
+NotificationListArgs	interface	communications	true		src/api/communications.ts	225	
+useNotifications	function	communications	true	hook	src/api/communications.ts	236	
+useNotificationPreferences	function	communications	true	hook	src/api/communications.ts	255	
+useSetNotificationPreference	function	communications	true	hook	src/api/communications.ts	270	
+useMuteNotifications	function	communications	true	hook	src/api/communications.ts	310	
+BroadcastArgs	interface	communications	true		src/api/communications.ts	337	
+useBroadcastNotification	function	communications	true	hook	src/api/communications.ts	346	
+useMarkNotificationRead	function	communications	true	hook	src/api/communications.ts	355	
+useMarkAllNotificationsRead	function	communications	true	hook	src/api/communications.ts	372	
+useArchiveNotification	function	communications	true	hook	src/api/communications.ts	389	
+useMessageThreads	function	communications	true	hook	src/api/communications.ts	408	
+useMessagePosts	function	communications	true	hook	src/api/communications.ts	426	
+PostMessageArgs	interface	communications	true		src/api/communications.ts	443	
+usePostMessage	function	communications	true	hook	src/api/communications.ts	451	
+AttachmentUploadUrlResult	interface	communications	true		src/api/communications.ts	468	
+useMessageAttachmentUploadUrl	function	communications	true	hook	src/api/communications.ts	477	
+useCreateMessageAttachment	function	communications	true	hook	src/api/communications.ts	490	
+CreateThreadArgs	interface	communications	true		src/api/communications.ts	502	
+useCreateMessageThread	function	communications	true	hook	src/api/communications.ts	513	
+ThreadFilters	interface	communications	true		src/api/communications.ts	538	
+useMessageThreadsFull	function	communications	true	hook	src/api/communications.ts	546	
+useThread	function	communications	true	hook	src/api/communications.ts	564	
+ThreadAccessError	class	communications	true		src/api/communications.ts	582	
+useThreadPosts	function	communications	true	hook	src/api/communications.ts	592	
+useMarkThreadRead	function	communications	true	hook	src/api/communications.ts	612	
+OnlineUser	interface	communications	true		src/api/communications.ts	637	
+PinnedThreadRow	interface	communications	true		src/api/communications.ts	638	
+usePinnedSummary	function	communications	true	hook	src/api/communications.ts	641	
+usePins	function	communications	true	hook	src/api/communications.ts	655	
+usePinMessage	function	communications	true	hook	src/api/communications.ts	667	
+useUnpinMessage	function	communications	true	hook	src/api/communications.ts	680	
+useDeleteMessage	function	communications	true	hook	src/api/communications.ts	694	
+useOnlineUsers	function	communications	true	hook	src/api/communications.ts	709	
+useDraft	function	communications	true	hook	src/api/communications.ts	724	
+useSaveDraft	function	communications	true	hook	src/api/communications.ts	736	
+useAttachmentUrl	function	communications	true	hook	src/api/communications.ts	746	
+useArchiveThread	function	communications	true	hook	src/api/communications.ts	755	
+useMuteThread	function	communications	true	hook	src/api/communications.ts	770	
+useAddThreadParticipants	function	communications	true	hook	src/api/communications.ts	783	
+useRemoveThreadParticipant	function	communications	true	hook	src/api/communications.ts	797	
+useResolveRecordThread	function	communications	true	hook	src/api/communications.ts	821	
+useMessageSearch	function	communications	true	hook	src/api/communications.ts	836	
+useMessageRecipients	function	communications	true	hook	src/api/communications.ts	854	
+TicketScope	type	communications	true		src/api/communications.ts	874	
+TicketStatusGroup	type	communications	true		src/api/communications.ts	875	
+TicketListArgs	interface	communications	true		src/api/communications.ts	877	
+TicketListPage	interface	communications	true		src/api/communications.ts	889	
+useMyTickets	function	communications	true	hook	src/api/communications.ts	896	
+TicketStatusGroupCounts	interface	communications	true		src/api/communications.ts	917	
+TicketNavContext	interface	communications	true		src/api/communications.ts	919	
+useTicketNavContext	function	communications	true	hook	src/api/communications.ts	935	
+useTicketRequestTypes	function	communications	true	hook	src/api/communications.ts	951	
+TicketRequesterOption	interface	communications	true		src/api/communications.ts	971	
+useTicketRequesterSearch	function	communications	true	hook	src/api/communications.ts	975	
+useTicket	function	communications	true	hook	src/api/communications.ts	995	
+CreateTicketArgs	interface	communications	true		src/api/communications.ts	1012	
+useCreateTicket	function	communications	true	hook	src/api/communications.ts	1025	
+CommentTicketArgs	interface	communications	true		src/api/communications.ts	1044	
+useCommentTicket	function	communications	true	hook	src/api/communications.ts	1050	
+UpdateTicketArgs	interface	communications	true		src/api/communications.ts	1069	
+useUpdateTicket	function	communications	true	hook	src/api/communications.ts	1078	
+useMarkTicketRead	function	communications	true	hook	src/api/communications.ts	1097	
+uploadTicketAttachment	function	communications	true		src/api/communications.ts	1148	
+getTicketAttachmentUrl	function	communications	true		src/api/communications.ts	1175	
 asArgs	function	communications	false		src/api/communicationsCompliance.ts	34	
 ComplianceAccessError	class	communications	true		src/api/communicationsCompliance.ts	46	
 asComplianceAccessError	function	communications	true		src/api/communicationsCompliance.ts	60	
@@ -6466,11 +6469,11 @@ validateDesignSystemDraft	function	platform	true		src/api/theme.ts	33
 publishDesignSystemDraft	function	platform	true		src/api/theme.ts	39	
 loadDesignSystemHistory	function	platform	true		src/api/theme.ts	45	
 rollbackDesignSystem	function	platform	true		src/api/theme.ts	51	
-UiPreferenceValues	interface	platform	true		src/api/uiPreferences.ts	22	
-UiPreferenceKey	type	platform	true		src/api/uiPreferences.ts	28	
-UiPreference	interface	platform	true		src/api/uiPreferences.ts	30	
-getUiPreference	function	platform	true		src/api/uiPreferences.ts	37	
-saveUiPreference	function	platform	true		src/api/uiPreferences.ts	47	
+UiPreferenceValues	interface	platform	true		src/api/uiPreferences.ts	26	
+UiPreferenceKey	type	platform	true		src/api/uiPreferences.ts	34	
+UiPreference	interface	platform	true		src/api/uiPreferences.ts	36	
+getUiPreference	function	platform	true		src/api/uiPreferences.ts	43	
+saveUiPreference	function	platform	true		src/api/uiPreferences.ts	53	
 weatherKeys	object	platform	true		src/api/weather.ts	15	
 SnapshotEnvelope	interface	platform	false		src/api/weather.ts	21	
 useWeatherSnapshot	function	platform	true	hook	src/api/weather.ts	24	
@@ -10989,11 +10992,21 @@ MY_PAYSLIPS_ROOT_ID	variable	payroll	false		src/components/sections/MyPayslips/m
 myPayslipsModule	object	payroll	true		src/components/sections/MyPayslips/module.ts	18	
 mountMyPayslips	function	payroll	true		src/components/sections/MyPayslips/mount.ts	14	
 unmountMyPayslips	function	payroll	true		src/components/sections/MyPayslips/mount.ts	26	
-AUDIENCE	variable	communications	false	component	src/components/sections/NotificationCenter/BroadcastComposer.tsx	14	
-BroadcastComposer	function	communications	true	component	src/components/sections/NotificationCenter/BroadcastComposer.tsx	21	
-reset	function	communications	false		src/components/sections/NotificationCenter/BroadcastComposer.tsx	33	BroadcastComposer
-close	function	communications	false		src/components/sections/NotificationCenter/BroadcastComposer.tsx	37	BroadcastComposer
-send	function	communications	false		src/components/sections/NotificationCenter/BroadcastComposer.tsx	39	BroadcastComposer
+mutateAsync	variable	communications	false	test	src/components/sections/NotificationCenter/BroadcastComposer.test.tsx	4	
+reset	variable	communications	false	test	src/components/sections/NotificationCenter/BroadcastComposer.test.tsx	5	
+AudienceType	type	communications	false		src/components/sections/NotificationCenter/BroadcastComposer.tsx	14	
+Severity	type	communications	false		src/components/sections/NotificationCenter/BroadcastComposer.tsx	15	
+AUDIENCE	variable	communications	false	component	src/components/sections/NotificationCenter/BroadcastComposer.tsx	17	
+SEVERITIES	variable	communications	false	component	src/components/sections/NotificationCenter/BroadcastComposer.tsx	25	
+ROLES	variable	communications	false	component	src/components/sections/NotificationCenter/BroadcastComposer.tsx	32	
+DEFAULT_DESTINATION	variable	communications	false	component	src/components/sections/NotificationCenter/BroadcastComposer.tsx	39	
+TARGET_LABELS	object	communications	false		src/components/sections/NotificationCenter/BroadcastComposer.tsx	41	
+TARGET_PLACEHOLDERS	object	communications	false		src/components/sections/NotificationCenter/BroadcastComposer.tsx	48	
+getDestinationOptions	function	communications	false		src/components/sections/NotificationCenter/BroadcastComposer.tsx	55	
+BroadcastComposer	function	communications	true	component	src/components/sections/NotificationCenter/BroadcastComposer.tsx	81	
+reset	function	communications	false		src/components/sections/NotificationCenter/BroadcastComposer.tsx	110	BroadcastComposer
+close	function	communications	false		src/components/sections/NotificationCenter/BroadcastComposer.tsx	123	BroadcastComposer
+send	function	communications	false		src/components/sections/NotificationCenter/BroadcastComposer.tsx	129	BroadcastComposer
 mountNotificationCenterSection	function	communications	true		src/components/sections/NotificationCenter/mount.ts	14	
 unmountNotificationCenterSection	function	communications	true		src/components/sections/NotificationCenter/mount.ts	26	
 mountNotificationDropdown	function	communications	true		src/components/sections/NotificationCenter/mount.ts	31	
@@ -11001,48 +11014,101 @@ ROUTE_OVERRIDES	object	communications	false		src/components/sections/Notificatio
 notificationSectionId	function	communications	true		src/components/sections/NotificationCenter/notifAction.ts	27	
 openNotificationTarget	function	communications	true		src/components/sections/NotificationCenter/notifAction.ts	41	
 openTicketNotification	function	communications	true		src/components/sections/NotificationCenter/notifAction.ts	58	
-TABS	array	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	24	
-MODULE_OPTIONS	array	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	31	
-GROUP_ORDER	variable	communications	false	component	src/components/sections/NotificationCenter/NotificationCenter.tsx	41	
-dateGroup	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	43	
-groupByDate	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	53	
-NotificationCenter	function	communications	true	component	src/components/sections/NotificationCenter/NotificationCenter.tsx	62	
-onDown	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	80	NotificationCenter
-open	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	127	NotificationCenter
-clearFilters	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	132	NotificationCenter
+refetch	variable	communications	false	test	src/components/sections/NotificationCenter/NotificationCenter.test.tsx	4	
+markAll	variable	communications	false	test	src/components/sections/NotificationCenter/NotificationCenter.test.tsx	5	
+NotificationView	type	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	27	
+SeverityFilter	type	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	28	
+TABS	array	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	30	
+MODULE_OPTIONS	variable	communications	false	component	src/components/sections/NotificationCenter/NotificationCenter.tsx	37	
+SEVERITY_OPTIONS	variable	communications	false	component	src/components/sections/NotificationCenter/NotificationCenter.tsx	51	
+GROUP_ORDER	variable	communications	false	component	src/components/sections/NotificationCenter/NotificationCenter.tsx	59	
+dateGroup	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	61	
+groupByDate	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	72	
+isView	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	83	
+NotificationCenter	function	communications	true	component	src/components/sections/NotificationCenter/NotificationCenter.tsx	87	
+openPreferences	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	100	NotificationCenter
+open	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	155	NotificationCenter
+markAllRead	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	163	NotificationCenter
+archiveOne	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	168	NotificationCenter
+archiveAllRead	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	173	NotificationCenter
+clearFilters	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	178	NotificationCenter
 _isModalOpen	variable	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	6	
-NotificationsArgs	type	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	11	
-NotificationsFn	type	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	12	
-notifications	variable	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	18	
-renderDropdown	function	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	42	
-TABS	variable	communications	false	component	src/components/sections/NotificationCenter/NotificationDropdown.tsx	22	
-closeModal	function	communications	false		src/components/sections/NotificationCenter/NotificationDropdown.tsx	29	
-goToCenter	function	communications	false		src/components/sections/NotificationCenter/NotificationDropdown.tsx	34	
-NotificationDropdown	function	communications	true	component	src/components/sections/NotificationCenter/NotificationDropdown.tsx	39	
-onDown	function	communications	false		src/components/sections/NotificationCenter/NotificationDropdown.tsx	56	NotificationDropdown
-open	function	communications	false		src/components/sections/NotificationCenter/NotificationDropdown.tsx	85	NotificationDropdown
-NotificationDropdownItem	function	communications	true	component	src/components/sections/NotificationCenter/NotificationDropdownItem.tsx	14	
-NotificationItem	function	communications	true	component	src/components/sections/NotificationCenter/NotificationItem.tsx	14	
-Row	interface	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	18	
-Group	interface	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	19	
-CRITICAL	object	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	22	
-GROUPS	array	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	33	
-DEFAULT_PREF	object	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	68	
-COLS	variable	communications	false	component	src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	69	
-Toggle	function	communications	false	component	src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	71	
-formatUntil	function	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	93	
-NotificationPreferencesPanel	function	communications	true	component	src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	104	
-prefFor	function	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	115	NotificationPreferencesPanel
-toggle	function	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	118	NotificationPreferencesPanel
-oneHour	function	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	123	NotificationPreferencesPanel
-tomorrow	function	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	124	NotificationPreferencesPanel
-snooze	function	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	125	NotificationPreferencesPanel
-resume	function	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	126	NotificationPreferencesPanel
-renderRow	function	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	132	NotificationPreferencesPanel
-SEV_COLOR	object	communications	true		src/components/sections/NotificationCenter/notifMeta.ts	11	
-MODULE_META	array	communications	false		src/components/sections/NotificationCenter/notifMeta.ts	15	
-moduleMeta	function	communications	true		src/components/sections/NotificationCenter/notifMeta.ts	31	
-relativeTime	function	communications	true		src/components/sections/NotificationCenter/notifMeta.ts	37	
+_canBroadcast	variable	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	7	
+NotificationsArgs	type	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	12	
+NotificationsFn	type	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	13	
+notifications	variable	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	19	
+summary	object	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	22	
+quietPreferences	object	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	23	
+markAllMutate	variable	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	24	
+renderDropdown	function	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	63	
+switchToLiveNotifications	function	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	70	
+TAB_KEYS	variable	communications	false	component	src/components/sections/NotificationCenter/NotificationDropdown.tsx	33	
+NotificationTab	type	communications	false		src/components/sections/NotificationCenter/NotificationDropdown.tsx	34	
+unboxedHeaderActionStyle	object	communications	false		src/components/sections/NotificationCenter/NotificationDropdown.tsx	36	
+isNotificationTab	function	communications	false		src/components/sections/NotificationCenter/NotificationDropdown.tsx	42	
+closeModal	function	communications	false		src/components/sections/NotificationCenter/NotificationDropdown.tsx	46	
+goToCenter	function	communications	false		src/components/sections/NotificationCenter/NotificationDropdown.tsx	51	
+NotificationDropdown	function	communications	true	component	src/components/sections/NotificationCenter/NotificationDropdown.tsx	56	
+onKeyDown	function	communications	false		src/components/sections/NotificationCenter/NotificationDropdown.tsx	73	NotificationDropdown
+openPreferences	function	communications	false		src/components/sections/NotificationCenter/NotificationDropdown.tsx	107	NotificationDropdown
+open	function	communications	false		src/components/sections/NotificationCenter/NotificationDropdown.tsx	174	NotificationDropdown
+openBroadcast	function	communications	false		src/components/sections/NotificationCenter/NotificationDropdown.tsx	183	NotificationDropdown
+markAllRead	function	communications	false		src/components/sections/NotificationCenter/NotificationDropdown.tsx	188	NotificationDropdown
+INDICATOR_TONE	object	communications	false		src/components/sections/NotificationCenter/NotificationDropdownItem.tsx	17	
+metadataText	function	communications	false		src/components/sections/NotificationCenter/NotificationDropdownItem.tsx	24	
+NotificationDropdownItem	function	communications	true	component	src/components/sections/NotificationCenter/NotificationDropdownItem.tsx	32	
+NotificationEmptyVisualKind	type	communications	true		src/components/sections/NotificationCenter/NotificationEmptyVisual.tsx	5	
+ICONS	object	communications	false		src/components/sections/NotificationCenter/NotificationEmptyVisual.tsx	7	
+NotificationEmptyVisual	function	communications	true	component	src/components/sections/NotificationCenter/NotificationEmptyVisual.tsx	17	
+metadataText	function	communications	false		src/components/sections/NotificationCenter/NotificationFileAttachment.tsx	6	
+metadataNumber	function	communications	false		src/components/sections/NotificationCenter/NotificationFileAttachment.tsx	14	
+formatBytes	function	communications	false		src/components/sections/NotificationCenter/NotificationFileAttachment.tsx	22	
+NotificationFileAttachment	function	communications	true	component	src/components/sections/NotificationCenter/NotificationFileAttachment.tsx	30	
+notification	function	communications	false	test	src/components/sections/NotificationCenter/NotificationItem.test.tsx	12	
+INDICATOR_TONE	object	communications	false		src/components/sections/NotificationCenter/NotificationItem.tsx	12	
+metadataText	function	communications	false		src/components/sections/NotificationCenter/NotificationItem.tsx	19	
+notificationStatus	function	communications	false		src/components/sections/NotificationCenter/NotificationItem.tsx	27	
+NotificationItem	function	communications	true	component	src/components/sections/NotificationCenter/NotificationItem.tsx	40	
+SetPreferenceArgs	interface	communications	false	test	src/components/sections/NotificationCenter/NotificationPreferencesPanel.test.tsx	4	
+SetPreferenceOptions	interface	communications	false	test	src/components/sections/NotificationCenter/NotificationPreferencesPanel.test.tsx	11	
+setPreference	variable	communications	false	test	src/components/sections/NotificationCenter/NotificationPreferencesPanel.test.tsx	12	
+mute	variable	communications	false	test	src/components/sections/NotificationCenter/NotificationPreferencesPanel.test.tsx	13	
+preferences	object	communications	false	test	src/components/sections/NotificationCenter/NotificationPreferencesPanel.test.tsx	16	
+DeliveryChannel	type	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	27	
+PreferenceSection	type	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	28	
+QuietPreset	type	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	29	
+TOAST_POSITION_OPTIONS	array	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	31	
+TOAST_DURATION_OPTIONS	array	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	37	
+PreferenceRowDef	interface	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	43	
+PreferenceGroup	interface	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	49	
+GROUPS	array	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	57	
+DEFAULT_PREF	object	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	110	
+formatUntil	function	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	117	
+oneHourFromNow	function	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	129	
+tomorrowMorning	function	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	133	
+NotificationPreferencesPanel	function	communications	true	component	src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	140	
+updateToastPreference	function	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	153	NotificationPreferencesPanel
+preferenceFor	function	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	180	NotificationPreferencesPanel
+toggle	function	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	187	NotificationPreferencesPanel
+snooze	function	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	206	NotificationPreferencesPanel
+resume	function	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	207	NotificationPreferencesPanel
+renderPreferenceRow	function	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	231	NotificationPreferencesPanel
+notification	function	communications	false	test	src/components/sections/NotificationCenter/notifMeta.test.ts	5	
+SEV_COLOR	object	communications	true		src/components/sections/NotificationCenter/notifMeta.ts	12	
+MODULE_META	array	communications	false		src/components/sections/NotificationCenter/notifMeta.ts	16	
+notificationIconVariant	function	communications	true		src/components/sections/NotificationCenter/notifMeta.ts	32	
+moduleMeta	function	communications	true		src/components/sections/NotificationCenter/notifMeta.ts	52	
+relativeTime	function	communications	true		src/components/sections/NotificationCenter/notifMeta.ts	72	
+minutesAgo	function	communications	false		src/components/sections/NotificationCenter/previewNotifications.ts	7	
+minutesFromNow	function	communications	false		src/components/sections/NotificationCenter/previewNotifications.ts	11	
+createPreviewNotifications	function	communications	true		src/components/sections/NotificationCenter/previewNotifications.ts	20	
+PreviewNotificationCounts	interface	communications	true		src/components/sections/NotificationCenter/previewNotifications.ts	181	
+isArchivedNotification	function	communications	true		src/components/sections/NotificationCenter/previewNotifications.ts	188	
+countPreviewNotifications	function	communications	true		src/components/sections/NotificationCenter/previewNotifications.ts	192	
+markPreviewNotificationRead	function	communications	true		src/components/sections/NotificationCenter/previewNotifications.ts	205	
+markAllPreviewNotificationsRead	function	communications	true		src/components/sections/NotificationCenter/previewNotifications.ts	213	
+archivePreviewNotification	function	communications	true		src/components/sections/NotificationCenter/previewNotifications.ts	219	
+archiveAllReadPreviewNotifications	function	communications	true		src/components/sections/NotificationCenter/previewNotifications.ts	227	
 AppProps	interface	payroll	false		src/components/sections/PayslipStudio/App.tsx	10	
 App	function	payroll	true	component	src/components/sections/PayslipStudio/App.tsx	18	
 Rect	interface	payroll	false		src/components/sections/PayslipStudio/components/canvas/Canvas.tsx	8	
@@ -12755,12 +12821,24 @@ disconnect	method	platform	false		src/test-setup.ts	51
 observe	method	platform	false		src/test-setup.ts	56	
 unobserve	method	platform	false		src/test-setup.ts	57	
 disconnect	method	platform	false		src/test-setup.ts	58	
+DEFAULT_PROMPT	variable	platform	false	component	src/ui/ai/AiAssistant/AiAssistant.tsx	13	
+AiAssistantProps	interface	platform	true		src/ui/ai/AiAssistant/AiAssistant.tsx	15	
+GenerationPhase	type	platform	false		src/ui/ai/AiAssistant/AiAssistant.tsx	23	
+AssistantOrb	function	platform	false	component	src/ui/ai/AiAssistant/AiAssistant.tsx	25	
+GeneratingIndicator	function	platform	false	component	src/ui/ai/AiAssistant/AiAssistant.tsx	35	
+AssistantResponse	function	platform	false	component	src/ui/ai/AiAssistant/AiAssistant.tsx	47	
+AiAssistant	function	platform	true	component	src/ui/ai/AiAssistant/AiAssistant.tsx	88	
+runPreview	function	platform	false		src/ui/ai/AiAssistant/AiAssistant.tsx	117	AiAssistant
+copyResponse	function	platform	false		src/ui/ai/AiAssistant/AiAssistant.tsx	168	AiAssistant
 BarRowProps	interface	platform	true		src/ui/charts/BarRow.tsx	11	
 BarRow	function	platform	true	component	src/ui/charts/BarRow.tsx	18	
 ProgressBarProps	interface	platform	true		src/ui/charts/ProgressBar.tsx	10	
 ProgressBar	function	platform	true	component	src/ui/charts/ProgressBar.tsx	17	
 SparklineProps	interface	platform	true		src/ui/charts/Sparkline.tsx	11	
 Sparkline	function	platform	true	component	src/ui/charts/Sparkline.tsx	18	
+ActivityDotsSize	type	platform	true		src/ui/components/ActivityDots.tsx	4	
+ActivityDotsProps	interface	platform	true		src/ui/components/ActivityDots.tsx	6	
+ActivityDots	function	platform	true	component	src/ui/components/ActivityDots.tsx	19	
 DetailItem	interface	platform	true		src/ui/components/DetailGrid.tsx	21	
 DetailGridProps	interface	platform	true		src/ui/components/DetailGrid.tsx	28	
 DetailGrid	function	platform	true	component	src/ui/components/DetailGrid.tsx	40	
@@ -12850,24 +12928,26 @@ SectionHead	function	platform	true	component	src/ui/components/SectionHead.tsx	2
 SidePanelSection	interface	platform	true		src/ui/components/SidePanel.tsx	24	
 SidePanelProps	interface	platform	true		src/ui/components/SidePanel.tsx	41	
 SidePanel	function	platform	true	component	src/ui/components/SidePanel.tsx	50	
-SizeValue	type	platform	false		src/ui/components/Skeleton.tsx	30	
-dim	function	platform	false		src/ui/components/Skeleton.tsx	32	
-SkeletonProps	interface	platform	true		src/ui/components/Skeleton.tsx	35	
-Skeleton	function	platform	true	component	src/ui/components/Skeleton.tsx	49	
-SkeletonTextProps	interface	platform	true		src/ui/components/Skeleton.tsx	62	
-SkeletonText	function	platform	true	component	src/ui/components/Skeleton.tsx	71	
-TableSkeletonProps	interface	platform	true		src/ui/components/Skeleton.tsx	81	
-TableSkeleton	function	platform	true	component	src/ui/components/Skeleton.tsx	90	
-ListSkeletonProps	interface	platform	true		src/ui/components/Skeleton.tsx	116	
-ListSkeleton	function	platform	true	component	src/ui/components/Skeleton.tsx	122	
-SkeletonFieldsProps	interface	platform	true		src/ui/components/Skeleton.tsx	138	
-SkeletonFields	function	platform	true	component	src/ui/components/Skeleton.tsx	144	
-SkeletonStatGridProps	interface	platform	true		src/ui/components/Skeleton.tsx	157	
-SkeletonStatGrid	function	platform	true	component	src/ui/components/Skeleton.tsx	163	
-WidgetSkeletonVariant	type	platform	true	ui-tile	src/ui/components/Skeleton.tsx	180	
-WidgetSkeletonProps	interface	platform	true	ui-tile	src/ui/components/Skeleton.tsx	182	
-WidgetSkeleton	function	platform	true	component,ui-tile	src/ui/components/Skeleton.tsx	189	
-PageHeaderSkeleton	function	platform	true	component	src/ui/components/Skeleton.tsx	227	
+SizeValue	type	platform	false		src/ui/components/Skeleton.tsx	31	
+dim	function	platform	false		src/ui/components/Skeleton.tsx	33	
+SkeletonProps	interface	platform	true		src/ui/components/Skeleton.tsx	36	
+Skeleton	function	platform	true	component	src/ui/components/Skeleton.tsx	50	
+SkeletonTextProps	interface	platform	true		src/ui/components/Skeleton.tsx	63	
+SkeletonText	function	platform	true	component	src/ui/components/Skeleton.tsx	72	
+TableSkeletonProps	interface	platform	true		src/ui/components/Skeleton.tsx	82	
+TableSkeleton	function	platform	true	component	src/ui/components/Skeleton.tsx	91	
+ListSkeletonProps	interface	platform	true		src/ui/components/Skeleton.tsx	117	
+ListSkeleton	function	platform	true	component	src/ui/components/Skeleton.tsx	123	
+SkeletonFieldsProps	interface	platform	true		src/ui/components/Skeleton.tsx	139	
+SkeletonFields	function	platform	true	component	src/ui/components/Skeleton.tsx	145	
+SkeletonStatGridProps	interface	platform	true		src/ui/components/Skeleton.tsx	158	
+WorkspaceSkeletonProps	interface	platform	true		src/ui/components/Skeleton.tsx	163	
+WorkspaceSkeleton	function	platform	true	component	src/ui/components/Skeleton.tsx	188	
+SkeletonStatGrid	function	platform	true	component	src/ui/components/Skeleton.tsx	275	
+WidgetSkeletonVariant	type	platform	true	ui-tile	src/ui/components/Skeleton.tsx	292	
+WidgetSkeletonProps	interface	platform	true	ui-tile	src/ui/components/Skeleton.tsx	294	
+WidgetSkeleton	function	platform	true	component,ui-tile	src/ui/components/Skeleton.tsx	301	
+PageHeaderSkeleton	function	platform	true	component	src/ui/components/Skeleton.tsx	339	
 SparkDef	interface	platform	true		src/ui/components/SparkCard.tsx	14	
 SparkCard	function	platform	true	component,ui-tile	src/ui/components/SparkCard.tsx	28	
 SpinnerProps	interface	platform	true		src/ui/components/Spinner.tsx	14	
@@ -12921,6 +13001,9 @@ CardHeaderProps	interface	platform	true	ui-tile	src/ui/containers/Card/Card.tsx	
 CardHeader	function	platform	true	component,ui-tile	src/ui/containers/Card/Card.tsx	276	
 CardFooterProps	interface	platform	true	ui-tile	src/ui/containers/Card/Card.tsx	294	
 CardFooter	function	platform	true	component,ui-tile	src/ui/containers/Card/Card.tsx	305	
+RootAttrs	type	platform	false		src/ui/containers/FeatureSurface/FeatureSurface.tsx	12	
+FeatureSurfaceProps	interface	platform	true		src/ui/containers/FeatureSurface/FeatureSurface.tsx	14	
+FeatureSurface	function	platform	true	component	src/ui/containers/FeatureSurface/FeatureSurface.tsx	23	
 ActivityGaugeSize	type	platform	true		src/ui/data/ActivityGauge.tsx	5	
 ActivityGaugeSeries	interface	platform	true		src/ui/data/ActivityGauge.tsx	6	
 ActivityGaugeProps	interface	platform	true		src/ui/data/ActivityGauge.tsx	7	
@@ -12972,13 +13055,13 @@ Params	interface	platform	false		src/ui/data/DataTable/useDataTable.ts	15
 DataTableState	interface	platform	true		src/ui/data/DataTable/useDataTable.ts	25	
 compareValues	function	platform	false		src/ui/data/DataTable/useDataTable.ts	47	
 useDataTable	function	platform	true	hook	src/ui/data/DataTable/useDataTable.ts	57	
-FILE_TYPE_ICON_TYPES	variable	platform	true	component	src/ui/data/FileTypeIcon.tsx	4	
-FileTypeIconType	type	platform	true		src/ui/data/FileTypeIcon.tsx	13	
-FileTypeIconVariant	type	platform	true		src/ui/data/FileTypeIcon.tsx	14	
-FileTypeIconTheme	type	platform	true		src/ui/data/FileTypeIcon.tsx	15	
-FileTypeIconProps	interface	platform	true		src/ui/data/FileTypeIcon.tsx	17	
-FileTypeIcon	function	platform	true	component	src/ui/data/FileTypeIcon.tsx	36	
-fileTypeIconTypeFromName	function	platform	true		src/ui/data/FileTypeIcon.tsx	60	
+FILE_TYPE_ICON_TYPES	variable	platform	true	component	src/ui/data/FileTypeIcon.tsx	5	
+FileTypeIconType	type	platform	true		src/ui/data/FileTypeIcon.tsx	14	
+FileTypeIconVariant	type	platform	true		src/ui/data/FileTypeIcon.tsx	15	
+FileTypeIconTheme	type	platform	true		src/ui/data/FileTypeIcon.tsx	16	
+FileTypeIconProps	interface	platform	true		src/ui/data/FileTypeIcon.tsx	18	
+FileTypeIcon	function	platform	true	component	src/ui/data/FileTypeIcon.tsx	39	
+fileTypeIconTypeFromName	function	platform	true		src/ui/data/FileTypeIcon.tsx	74	
 QrCodeProps	interface	platform	true		src/ui/data/QrCode.tsx	6	
 QrCode	function	platform	true	component	src/ui/data/QrCode.tsx	16	
 AlertTone	type	platform	true		src/ui/feedback/Alert.tsx	6	
@@ -12986,12 +13069,27 @@ AlertPlacement	type	platform	true		src/ui/feedback/Alert.tsx	7
 AlertProps	interface	platform	true		src/ui/feedback/Alert.tsx	9	
 ICONS	object	platform	false		src/ui/feedback/Alert.tsx	23	
 Alert	function	platform	true	component	src/ui/feedback/Alert.tsx	27	
+IconTileTone	type	platform	true	ui-tile	src/ui/feedback/IconTile.tsx	5	
+IconTileSize	type	platform	true	ui-tile	src/ui/feedback/IconTile.tsx	9	
+IconTileShape	type	platform	true	ui-tile	src/ui/feedback/IconTile.tsx	10	
+IconTileProps	interface	platform	true	ui-tile	src/ui/feedback/IconTile.tsx	12	
+IconTile	function	platform	true	component,ui-tile	src/ui/feedback/IconTile.tsx	22	
 IllustrationVariant	type	platform	true		src/ui/feedback/Illustration.tsx	12	
 IllustrationTreatment	type	platform	true		src/ui/feedback/Illustration.tsx	23	
 IllustrationProps	interface	platform	true		src/ui/feedback/Illustration.tsx	25	
 ICONS	object	platform	false		src/ui/feedback/Illustration.tsx	32	
 GENERATED_ASSETS	object	platform	false		src/ui/feedback/Illustration.tsx	37	
 Illustration	function	platform	true	component	src/ui/feedback/Illustration.tsx	47	
+NotificationIconVariant	type	communications	true		src/ui/feedback/NotificationIcon.tsx	5	
+NotificationIconProps	interface	communications	true		src/ui/feedback/NotificationIcon.tsx	19	
+NotificationIconDefinition	interface	communications	false		src/ui/feedback/NotificationIcon.tsx	26	
+NOTIFICATION_ICON_DEFINITIONS	object	communications	true		src/ui/feedback/NotificationIcon.tsx	36	
+NotificationIcon	function	communications	true	component	src/ui/feedback/NotificationIcon.tsx	51	
+NotificationIndicatorTone	type	communications	true		src/ui/feedback/NotificationListItem.tsx	7	
+NotificationListItemProps	interface	communications	true		src/ui/feedback/NotificationListItem.tsx	9	
+NotificationListItem	function	communications	true	component	src/ui/feedback/NotificationListItem.tsx	37	
+NotificationPopoverProps	interface	communications	true		src/ui/feedback/NotificationPopover.tsx	5	
+NotificationPopover	function	communications	true	component	src/ui/feedback/NotificationPopover.tsx	17	
 ProgressShape	type	platform	true		src/ui/feedback/Progress.tsx	4	
 ProgressTone	type	platform	true		src/ui/feedback/Progress.tsx	5	
 ProgressSize	type	platform	true		src/ui/feedback/Progress.tsx	6	
@@ -13225,7 +13323,7 @@ RailCardProps	interface	platform	true	ui-tile	src/ui/hrfin/RailCard.tsx	9
 RailCard	function	platform	true	component,ui-tile	src/ui/hrfin/RailCard.tsx	18	
 RowActionItem	interface	platform	true		src/ui/hrfin/RowActionMenu.tsx	12	
 RowActionMenu	function	platform	true	component	src/ui/hrfin/RowActionMenu.tsx	22	
-DtColumn	interface	platform	true		src/ui/index.ts	91	
+DtColumn	interface	platform	true		src/ui/index.ts	100	
 InfoTipProps	interface	platform	true		src/ui/InfoTip.tsx	7	
 InfoTip	function	platform	true	component	src/ui/InfoTip.tsx	19	
 ModulePageLayoutProps	interface	widgets	true		src/ui/layouts/ModulePageLayout.tsx	24	
@@ -13251,6 +13349,19 @@ BreadcrumbItem	interface	platform	true		src/ui/navigation/Breadcrumbs.tsx	7
 BreadcrumbsProps	interface	platform	true		src/ui/navigation/Breadcrumbs.tsx	16	
 Crumb	function	platform	false	component	src/ui/navigation/Breadcrumbs.tsx	25	
 Breadcrumbs	function	platform	true	component	src/ui/navigation/Breadcrumbs.tsx	33	
+props	function	platform	false	test	src/ui/navigation/GlobalSearch/GlobalSearch.test.tsx	10	
+GlobalSearchScope	interface	platform	true		src/ui/navigation/GlobalSearch/GlobalSearch.tsx	13	
+GlobalSearchResult	interface	platform	true		src/ui/navigation/GlobalSearch/GlobalSearch.tsx	19	
+GlobalSearchGroup	interface	platform	true		src/ui/navigation/GlobalSearch/GlobalSearch.tsx	37	
+GlobalSearchQuickAction	interface	platform	true		src/ui/navigation/GlobalSearch/GlobalSearch.tsx	44	
+GlobalSearchEmptyVariant	type	platform	true		src/ui/navigation/GlobalSearch/GlobalSearch.tsx	51	
+GlobalSearchProps	interface	platform	true		src/ui/navigation/GlobalSearch/GlobalSearch.tsx	62	
+ResultMedia	function	platform	false	component	src/ui/navigation/GlobalSearch/GlobalSearch.tsx	90	
+EmptyVisual	function	platform	false	component	src/ui/navigation/GlobalSearch/GlobalSearch.tsx	97	
+GlobalSearch	function	platform	true	component	src/ui/navigation/GlobalSearch/GlobalSearch.tsx	193	
+update	function	platform	false		src/ui/navigation/GlobalSearch/GlobalSearch.tsx	235	GlobalSearch
+scrollScopes	function	platform	false		src/ui/navigation/GlobalSearch/GlobalSearch.tsx	255	GlobalSearch
+onInputKeyDown	function	platform	false		src/ui/navigation/GlobalSearch/GlobalSearch.tsx	261	GlobalSearch
 PageActionBarProps	interface	platform	true		src/ui/navigation/PageActionBar/PageActionBar.tsx	15	
 PageActionBar	function	platform	true	component	src/ui/navigation/PageActionBar/PageActionBar.tsx	29	
 ProgressStepsVariant	type	platform	true		src/ui/navigation/ProgressSteps/ProgressSteps.tsx	5	
@@ -13259,6 +13370,23 @@ ProgressStepItem	interface	platform	true		src/ui/navigation/ProgressSteps/Progre
 ProgressStepsProps	interface	platform	true		src/ui/navigation/ProgressSteps/ProgressSteps.tsx	19	
 statusFor	function	platform	false		src/ui/navigation/ProgressSteps/ProgressSteps.tsx	37	
 ProgressSteps	function	platform	true	component	src/ui/navigation/ProgressSteps/ProgressSteps.tsx	50	
+GROUPS	array	platform	false	test	src/ui/navigation/SidebarNavigation/SidebarNavigation.test.tsx	5	
+SidebarNavigationDensity	type	platform	true		src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx	9	
+SidebarNavigationNotificationTone	type	platform	true		src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx	10	
+SidebarNavigationNotification	interface	platform	true		src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx	12	
+SidebarNavigationItem	interface	platform	true		src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx	23	
+SidebarNavigationGroup	interface	platform	true		src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx	34	
+SidebarNavigationContext	interface	platform	true		src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx	40	
+SidebarNavigationProps	interface	platform	true		src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx	46	
+includesItem	function	platform	false		src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx	71	
+toggleSet	function	platform	false		src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx	77	
+displayNotificationCount	function	platform	false		src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx	84	
+NotificationIndicator	function	platform	false	component	src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx	89	
+NavigationItem	function	platform	false	component	src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx	103	
+closeFlyout	function	platform	false		src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx	138	NavigationItem
+SidebarNavigation	function	platform	true	component	src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx	266	
+updateGroups	function	platform	false		src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx	309	SidebarNavigation
+updateItems	function	platform	false		src/ui/navigation/SidebarNavigation/SidebarNavigation.tsx	315	SidebarNavigation
 ITEMS	array	platform	false	test	src/ui/navigation/Tabs/Tabs.test.tsx	15	
 tabs	function	platform	false	test	src/ui/navigation/Tabs/Tabs.test.tsx	22	
 tabEl	function	platform	false	test	src/ui/navigation/Tabs/Tabs.test.tsx	30	
@@ -13308,8 +13436,8 @@ AnchoredPopupProps	interface	platform	true		src/ui/overlays/AnchoredPopup.tsx	33
 Position	interface	platform	false		src/ui/overlays/AnchoredPopup.tsx	64	
 AnchoredPopup	function	platform	true	component	src/ui/overlays/AnchoredPopup.tsx	73	
 place	function	platform	false		src/ui/overlays/AnchoredPopup.tsx	86	AnchoredPopup
-onScroll	function	platform	false		src/ui/overlays/AnchoredPopup.tsx	129	AnchoredPopup
-onPointerDown	function	platform	false		src/ui/overlays/AnchoredPopup.tsx	156	AnchoredPopup
+onScroll	function	platform	false		src/ui/overlays/AnchoredPopup.tsx	152	AnchoredPopup
+onPointerDown	function	platform	false		src/ui/overlays/AnchoredPopup.tsx	219	AnchoredPopup
 Basic	function	platform	false	component,test	src/ui/overlays/Dialog.test.tsx	15	
 Harness	function	platform	false	component,test	src/ui/overlays/Dialog.test.tsx	110	
 DialogSize	type	platform	true		src/ui/overlays/Dialog.tsx	40	
@@ -13319,30 +13447,33 @@ DialogIconStyle	type	platform	true		src/ui/overlays/Dialog.tsx	43
 DialogProps	interface	platform	true		src/ui/overlays/Dialog.tsx	45	
 DialogTitleId	variable	platform	false	component	src/ui/overlays/Dialog.tsx	77	
 DialogComponent	interface	platform	false		src/ui/overlays/Dialog.tsx	79	
-DialogRoot	function	platform	false	component	src/ui/overlays/Dialog.tsx	90	
-DialogHeaderProps	interface	platform	true		src/ui/overlays/Dialog.tsx	144	
-DialogHeader	function	platform	false	component	src/ui/overlays/Dialog.tsx	155	
-DialogBody	function	platform	false	component	src/ui/overlays/Dialog.tsx	176	
-DialogFooter	function	platform	false	component	src/ui/overlays/Dialog.tsx	180	
-DialogLayoutRegion	function	platform	false	component	src/ui/overlays/Dialog.tsx	190	
-DialogSidebar	function	platform	false	component	src/ui/overlays/Dialog.tsx	194	
-DialogContent	function	platform	false	component	src/ui/overlays/Dialog.tsx	198	
-DialogSection	function	platform	false	component	src/ui/overlays/Dialog.tsx	203	
-Dialog	variable	platform	true	component	src/ui/overlays/Dialog.tsx	217	
+DialogRoot	function	platform	false	component	src/ui/overlays/Dialog.tsx	92	
+DialogHeaderProps	interface	platform	true		src/ui/overlays/Dialog.tsx	146	
+DialogHeader	function	platform	false	component	src/ui/overlays/Dialog.tsx	157	
+DialogBody	function	platform	false	component	src/ui/overlays/Dialog.tsx	178	
+DialogFooter	function	platform	false	component	src/ui/overlays/Dialog.tsx	182	
+DialogLayoutRegion	function	platform	false	component	src/ui/overlays/Dialog.tsx	192	
+DialogSidebar	function	platform	false	component	src/ui/overlays/Dialog.tsx	196	
+DialogSidebarHeader	function	platform	false	component	src/ui/overlays/Dialog.tsx	205	
+DialogContextFactItem	interface	platform	true		src/ui/overlays/Dialog.tsx	225	
+DialogContextFacts	function	platform	false	component	src/ui/overlays/Dialog.tsx	236	
+DialogContent	function	platform	false	component	src/ui/overlays/Dialog.tsx	254	
+DialogSection	function	platform	false	component	src/ui/overlays/Dialog.tsx	259	
+Dialog	variable	platform	true	component	src/ui/overlays/Dialog.tsx	273	
 MenuAction	interface	platform	true		src/ui/overlays/DropdownMenu.tsx	25	
 MenuGroup	interface	platform	true		src/ui/overlays/DropdownMenu.tsx	48	
 MenuItems	type	platform	true		src/ui/overlays/DropdownMenu.tsx	54	
 isGrouped	function	platform	false		src/ui/overlays/DropdownMenu.tsx	56	
 toGroups	function	platform	false		src/ui/overlays/DropdownMenu.tsx	61	
 DropdownMenuProps	interface	platform	true		src/ui/overlays/DropdownMenu.tsx	65	
-DropdownMenu	function	platform	true	component	src/ui/overlays/DropdownMenu.tsx	77	
-activate	function	platform	false		src/ui/overlays/DropdownMenu.tsx	109	DropdownMenu
-onKeyDown	function	platform	false		src/ui/overlays/DropdownMenu.tsx	117	DropdownMenu
+DropdownMenu	function	platform	true	component	src/ui/overlays/DropdownMenu.tsx	83	
+activate	function	platform	false		src/ui/overlays/DropdownMenu.tsx	116	DropdownMenu
+onKeyDown	function	platform	false		src/ui/overlays/DropdownMenu.tsx	124	DropdownMenu
 anchor	function	platform	false	test	src/ui/overlays/Popover.test.tsx	5	
 PopoverProps	interface	platform	true		src/ui/overlays/Popover.tsx	14	
-FOCUSABLE	variable	platform	false	component	src/ui/overlays/Popover.tsx	31	
-Popover	function	platform	true	component	src/ui/overlays/Popover.tsx	36	
-onKeyDown	function	platform	false		src/ui/overlays/Popover.tsx	48	Popover
+FOCUSABLE	variable	platform	false	component	src/ui/overlays/Popover.tsx	32	
+Popover	function	platform	true	component	src/ui/overlays/Popover.tsx	37	
+onKeyDown	function	platform	false		src/ui/overlays/Popover.tsx	49	Popover
 noop	function	platform	false	test	src/ui/overlays/portalRoot.test.tsx	25	
 Scoped	function	platform	false	component,test	src/ui/overlays/portalRoot.test.tsx	27	
 Harness	function	platform	false	component,test	src/ui/overlays/portalRoot.test.tsx	80	
@@ -13391,7 +13522,7 @@ AvatarGroupProps	interface	platform	true		src/ui/people/AvatarGroup.tsx	12
 AvatarGroup	function	platform	true	component	src/ui/people/AvatarGroup.tsx	21	
 OPTIONS	variable	platform	false	component,test	src/ui/primitives/actions.test.tsx	15	
 MENU	array	platform	false	test	src/ui/primitives/actions.test.tsx	21	
-open	function	platform	false	test	src/ui/primitives/actions.test.tsx	96	
+open	function	platform	false	test	src/ui/primitives/actions.test.tsx	103	
 ButtonGroupItem	interface	platform	true		src/ui/primitives/actions.tsx	32	
 ButtonGroupProps	interface	platform	true		src/ui/primitives/actions.tsx	41	
 ButtonGroup	function	platform	true	component	src/ui/primitives/actions.tsx	59	
@@ -13427,14 +13558,15 @@ Checkbox	function	platform	true	component	src/ui/primitives/choice.tsx	58
 RadioProps	interface	platform	true		src/ui/primitives/choice.tsx	129	
 Radio	function	platform	true	component	src/ui/primitives/choice.tsx	141	
 SwitchProps	interface	platform	true		src/ui/primitives/choice.tsx	193	
-SwitchArtwork	function	platform	true	component	src/ui/primitives/choice.tsx	209	
-Switch	function	platform	true	component	src/ui/primitives/choice.tsx	227	
-ChoiceOption	interface	platform	true		src/ui/primitives/choice.tsx	276	
-CheckboxGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	287	
-CheckboxGroup	function	platform	true	component	src/ui/primitives/choice.tsx	302	
-toggle	function	platform	false		src/ui/primitives/choice.tsx	310	CheckboxGroup
-RadioGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	348	
-RadioGroup	function	platform	true	component	src/ui/primitives/choice.tsx	369	
+SwitchSize	type	platform	true		src/ui/primitives/choice.tsx	209	
+SwitchArtwork	function	platform	true	component	src/ui/primitives/choice.tsx	212	
+Switch	function	platform	true	component	src/ui/primitives/choice.tsx	230	
+ChoiceOption	interface	platform	true		src/ui/primitives/choice.tsx	292	
+CheckboxGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	303	
+CheckboxGroup	function	platform	true	component	src/ui/primitives/choice.tsx	318	
+toggle	function	platform	false		src/ui/primitives/choice.tsx	326	CheckboxGroup
+RadioGroupProps	interface	platform	true		src/ui/primitives/choice.tsx	364	
+RadioGroup	function	platform	true	component	src/ui/primitives/choice.tsx	390	
 read	function	platform	false	test	src/ui/primitives/choiceMigration.test.ts	4	
 read	function	platform	false	test	src/ui/primitives/menuMigration.test.ts	4	
 TextInputType	type	platform	true		src/ui/primitives/TextInput.tsx	41	
@@ -13488,12 +13620,13 @@ dropdownButtonDef	object	platform	false		src/ui/registry/compound.defs.tsx	69
 splitButtonDef	object	platform	false		src/ui/registry/compound.defs.tsx	154	
 COMPOUND_DEFS	array	platform	true		src/ui/registry/compound.defs.tsx	240	
 COMPOUND_OF	object	platform	true		src/ui/registry/compound.defs.tsx	243	
-s	function	platform	false		src/ui/registry/containers.defs.tsx	18	
-b	function	platform	false		src/ui/registry/containers.defs.tsx	19	
-noop	function	platform	false		src/ui/registry/containers.defs.tsx	20	
-Figure	function	platform	false	component	src/ui/registry/containers.defs.tsx	23	
-cardDef	object	platform	true	ui-tile	src/ui/registry/containers.defs.tsx	35	
-CONTAINER_DEFS	array	platform	true		src/ui/registry/containers.defs.tsx	277	
+s	function	platform	false		src/ui/registry/containers.defs.tsx	19	
+b	function	platform	false		src/ui/registry/containers.defs.tsx	20	
+noop	function	platform	false		src/ui/registry/containers.defs.tsx	21	
+Figure	function	platform	false	component	src/ui/registry/containers.defs.tsx	24	
+cardDef	object	platform	true	ui-tile	src/ui/registry/containers.defs.tsx	36	
+featureSurfaceDef	object	platform	true		src/ui/registry/containers.defs.tsx	278	
+CONTAINER_DEFS	array	platform	true		src/ui/registry/containers.defs.tsx	332	
 s	function	platform	false		src/ui/registry/data.defs.tsx	22	
 b	function	platform	false		src/ui/registry/data.defs.tsx	23	
 noop	function	platform	false		src/ui/registry/data.defs.tsx	24	
@@ -13517,7 +13650,7 @@ DEMO_PEOPLE	array	platform	false		src/ui/registry/definitions.tsx	45
 DEMO_DEPARTMENTS	array	platform	false		src/ui/registry/definitions.tsx	53	
 personDef	object	platform	false		src/ui/registry/definitions.tsx	68	
 dialogDef	object	platform	false		src/ui/registry/definitions.tsx	185	
-COMPONENT_DEFS	array	platform	true		src/ui/registry/definitions.tsx	370	
+COMPONENT_DEFS	array	platform	true		src/ui/registry/definitions.tsx	385	
 ComponentFamily	interface	platform	true		src/ui/registry/families.ts	23	
 BUTTON_FAMILY	object	platform	true		src/ui/registry/families.ts	49	
 SWITCH_FAMILY	object	platform	true		src/ui/registry/families.ts	65	
@@ -13526,16 +13659,21 @@ COMPONENT_FAMILIES	array	platform	true		src/ui/registry/families.ts	93
 findFamily	function	platform	true		src/ui/registry/families.ts	95	
 familyOfComponent	function	platform	true		src/ui/registry/families.ts	100	
 familyMembers	function	platform	true		src/ui/registry/families.ts	110	
-s	function	platform	false		src/ui/registry/feedback.defs.tsx	18	
-b	function	platform	false		src/ui/registry/feedback.defs.tsx	19	
-illustrationDef	object	platform	true		src/ui/registry/feedback.defs.tsx	21	
-toastRecord	function	platform	false		src/ui/registry/feedback.defs.tsx	53	
-triggerToast	function	platform	false		src/ui/registry/feedback.defs.tsx	75	
-emptyStateDef	object	platform	true		src/ui/registry/feedback.defs.tsx	92	
-skeletonDef	object	platform	true		src/ui/registry/feedback.defs.tsx	200	
-spinnerDef	object	platform	true		src/ui/registry/feedback.defs.tsx	240	
-toastDef	object	platform	true		src/ui/registry/feedback.defs.tsx	271	
-FEEDBACK_DEFS	array	platform	true		src/ui/registry/feedback.defs.tsx	359	
+s	function	platform	false		src/ui/registry/feedback.defs.tsx	26	
+b	function	platform	false		src/ui/registry/feedback.defs.tsx	27	
+illustrationDef	object	platform	true		src/ui/registry/feedback.defs.tsx	29	
+toastRecord	function	platform	false		src/ui/registry/feedback.defs.tsx	61	
+triggerToast	function	platform	false		src/ui/registry/feedback.defs.tsx	96	
+emptyStateDef	object	platform	true		src/ui/registry/feedback.defs.tsx	114	
+skeletonDef	object	platform	true		src/ui/registry/feedback.defs.tsx	222	
+spinnerDef	object	platform	true		src/ui/registry/feedback.defs.tsx	265	
+activityDotsDef	object	platform	true		src/ui/registry/feedback.defs.tsx	296	
+iconTileDef	object	platform	true	ui-tile	src/ui/registry/feedback.defs.tsx	322	
+notificationIconDef	object	platform	true		src/ui/registry/feedback.defs.tsx	368	
+notificationListItemDef	object	platform	true		src/ui/registry/feedback.defs.tsx	398	
+notificationPopoverDef	object	platform	true		src/ui/registry/feedback.defs.tsx	436	
+toastDef	object	platform	true		src/ui/registry/feedback.defs.tsx	501	
+FEEDBACK_DEFS	array	platform	true		src/ui/registry/feedback.defs.tsx	598	
 s	function	platform	false		src/ui/registry/forms.defs.tsx	36	
 b	function	platform	false		src/ui/registry/forms.defs.tsx	37	
 n	function	platform	false		src/ui/registry/forms.defs.tsx	38	
@@ -13552,19 +13690,19 @@ CONTROL_STYLE	array	platform	false		src/ui/registry/forms.defs.tsx	107
 checkboxDef	object	platform	true		src/ui/registry/forms.defs.tsx	119	
 radioGroupDef	object	platform	true		src/ui/registry/forms.defs.tsx	201	
 switchDef	object	platform	true		src/ui/registry/forms.defs.tsx	314	
-textInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	389	
-shell	function	platform	false		src/ui/registry/forms.defs.tsx	518	textInputDef
-DateInputCalendarPreview	function	platform	false	component	src/ui/registry/forms.defs.tsx	607	
-dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	624	
-fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	720	
-themeModeSwitchDef	object	platform	true		src/ui/registry/forms.defs.tsx	840	
-colorPickerDef	object	platform	true		src/ui/registry/forms.defs.tsx	891	
-otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	928	
-DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	981	
-GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	990	
-selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	1008	
-search	function	platform	false		src/ui/registry/forms.defs.tsx	1113	selectDef
-FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	1146	
+textInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	393	
+shell	function	platform	false		src/ui/registry/forms.defs.tsx	522	textInputDef
+DateInputCalendarPreview	function	platform	false	component	src/ui/registry/forms.defs.tsx	611	
+dateInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	628	
+fileInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	724	
+themeModeSwitchDef	object	platform	true		src/ui/registry/forms.defs.tsx	844	
+colorPickerDef	object	platform	true		src/ui/registry/forms.defs.tsx	895	
+otpInputDef	object	platform	true		src/ui/registry/forms.defs.tsx	932	
+DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	985	
+GROUPED_DEPARTMENTS	array	platform	false		src/ui/registry/forms.defs.tsx	994	
+selectDef	object	platform	true		src/ui/registry/forms.defs.tsx	1012	
+search	function	platform	false		src/ui/registry/forms.defs.tsx	1117	selectDef
+FORM_DEFS	array	platform	true		src/ui/registry/forms.defs.tsx	1150	
 COMPONENT_DEFS	array	platform	true		src/ui/registry/index.ts	62	
 CATEGORY_LABELS	object	platform	true		src/ui/registry/index.ts	79	
 CATEGORY_ORDER	array	platform	true		src/ui/registry/index.ts	95	
@@ -13575,16 +13713,25 @@ findComponent	function	platform	true		src/ui/registry/index.ts	164
 RegistryTotals	interface	platform	true		src/ui/registry/index.ts	168	
 registryTotals	function	platform	true		src/ui/registry/index.ts	194	
 isPattern	function	platform	false		src/ui/registry/index.ts	195	registryTotals
-s	function	platform	false		src/ui/registry/navigation.defs.tsx	26	
-b	function	platform	false		src/ui/registry/navigation.defs.tsx	27	
-noop	function	platform	false		src/ui/registry/navigation.defs.tsx	28	
-FILE_TREE	array	platform	false		src/ui/registry/navigation.defs.tsx	30	
-treeViewDef	object	platform	true		src/ui/registry/navigation.defs.tsx	49	
-CASE_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	115	
-PLAIN_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	123	
-MANY_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	129	
-tabsDef	object	platform	true		src/ui/registry/navigation.defs.tsx	141	
-NAVIGATION_DEFS	array	platform	true		src/ui/registry/navigation.defs.tsx	370	
+s	function	platform	false		src/ui/registry/navigation.defs.tsx	30	
+b	function	platform	false		src/ui/registry/navigation.defs.tsx	31	
+noop	function	platform	false		src/ui/registry/navigation.defs.tsx	32	
+SEARCH_SCOPES	array	platform	false		src/ui/registry/navigation.defs.tsx	34	
+SEARCH_GROUPS	array	platform	false		src/ui/registry/navigation.defs.tsx	44	
+SEARCH_QUICK_ACTIONS	array	platform	false		src/ui/registry/navigation.defs.tsx	53	
+GlobalSearchPreview	function	platform	false	component	src/ui/registry/navigation.defs.tsx	60	
+AiAssistantPreview	function	platform	false	component	src/ui/registry/navigation.defs.tsx	67	
+aiAssistantDef	object	platform	true		src/ui/registry/navigation.defs.tsx	82	
+globalSearchDef	object	platform	true		src/ui/registry/navigation.defs.tsx	129	
+SIDEBAR_GROUPS	array	platform	false		src/ui/registry/navigation.defs.tsx	189	
+sidebarNavigationDef	object	platform	true		src/ui/registry/navigation.defs.tsx	215	
+FILE_TREE	array	platform	false		src/ui/registry/navigation.defs.tsx	286	
+treeViewDef	object	platform	true		src/ui/registry/navigation.defs.tsx	305	
+CASE_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	371	
+PLAIN_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	379	
+MANY_TABS	array	platform	false		src/ui/registry/navigation.defs.tsx	385	
+tabsDef	object	platform	true		src/ui/registry/navigation.defs.tsx	397	
+NAVIGATION_DEFS	array	platform	true		src/ui/registry/navigation.defs.tsx	626	
 s	function	platform	false		src/ui/registry/overlays.defs.tsx	10	
 b	function	platform	false		src/ui/registry/overlays.defs.tsx	11	
 PopoverPreview	function	platform	false	component	src/ui/registry/overlays.defs.tsx	13	
@@ -13623,15 +13770,15 @@ b	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	13
 n	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	14	
 noop	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	15	
 breadcrumbsDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	17	
-alertDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	59	
-progressDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	91	
-accordionDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	129	
-shellPreview	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	162	
-activityGaugeDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	176	
-userPillPreview	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	213	
-appTopBarDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	215	
-userPillDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	272	
-REMAINING_PRIMITIVE_DEFS	array	platform	true		src/ui/registry/remaining-primitives.defs.tsx	282	
+alertDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	63	
+progressDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	95	
+accordionDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	133	
+shellPreview	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	166	
+activityGaugeDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	180	
+userPillPreview	function	platform	false		src/ui/registry/remaining-primitives.defs.tsx	217	
+appTopBarDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	219	
+userPillDef	object	platform	true		src/ui/registry/remaining-primitives.defs.tsx	278	
+REMAINING_PRIMITIVE_DEFS	array	platform	true		src/ui/registry/remaining-primitives.defs.tsx	288	
 PropCondition	type	platform	true		src/ui/registry/types.ts	41	
 PropControlMeta	interface	platform	true		src/ui/registry/types.ts	48	
 PropControl	type	platform	true		src/ui/registry/types.ts	53	
@@ -14021,51 +14168,59 @@ LS	function	widgets	false		src/ui/theme/useModuleLayout.ts	16
 reconcile	function	widgets	false		src/ui/theme/useModuleLayout.ts	19	
 ModuleLayout	interface	widgets	true		src/ui/theme/useModuleLayout.ts	28	
 useModuleLayout	function	widgets	true	hook	src/ui/theme/useModuleLayout.ts	39	
-renderToaster	function	platform	false	test	src/ui/toast/toast.test.tsx	40	
-STANDALONE_TOAST	object	platform	false	test	src/ui/toast/toast.test.tsx	44	
-ToastCardProps	interface	platform	true	ui-tile	src/ui/toast/ToastCard.tsx	30	
-ToastCard	function	platform	true	component,ui-tile	src/ui/toast/ToastCard.tsx	40	
-tick	function	platform	false		src/ui/toast/ToastCard.tsx	73	ToastCard
-setTimerPaused	function	platform	false		src/ui/toast/ToastCard.tsx	107	ToastCard
-handleActionClick	function	platform	false		src/ui/toast/ToastCard.tsx	126	ToastCard
-handleToggleStop	function	platform	false		src/ui/toast/ToastCard.tsx	148	ToastCard
-ToastChips	function	platform	false	component	src/ui/toast/ToastCard.tsx	263	
-ToastSummary	function	platform	false	component	src/ui/toast/ToastCard.tsx	273	
-ToastNote	function	platform	false	component	src/ui/toast/ToastCard.tsx	287	
-ToastFile	function	platform	false	component	src/ui/toast/ToastCard.tsx	292	
-MAX_VISIBLE_TOASTS	variable	platform	false	component	src/ui/toast/Toaster.tsx	27	
-TOAST_GAP	variable	platform	false	component	src/ui/toast/Toaster.tsx	28	
-STACK_ITEM_OFFSET_Y	variable	platform	false	component	src/ui/toast/Toaster.tsx	29	
-STACK_ITEM_SCALE_DECREMENT	variable	platform	false	component	src/ui/toast/Toaster.tsx	30	
-STACK_ITEM_OPACITY_DECREMENT	variable	platform	false	component	src/ui/toast/Toaster.tsx	31	
-HOVER_DEBOUNCE_DELAY	variable	platform	false	component	src/ui/toast/Toaster.tsx	32	
-ToasterInnerProps	interface	platform	false		src/ui/toast/Toaster.tsx	36	
-ToasterInner	function	platform	false	component	src/ui/toast/Toaster.tsx	40	
-handleVisibility	function	platform	false		src/ui/toast/Toaster.tsx	140	ToasterInner
-Toaster	function	platform	true	component	src/ui/toast/Toaster.tsx	171	
+renderToaster	function	platform	false	test	src/ui/toast/toast.test.tsx	46	
+STANDALONE_TOAST	object	platform	false	test	src/ui/toast/toast.test.tsx	50	
+ToastCardProps	interface	platform	true	ui-tile	src/ui/toast/ToastCard.tsx	32	
+ToastCard	function	platform	true	component,ui-tile	src/ui/toast/ToastCard.tsx	44	
+tick	function	platform	false		src/ui/toast/ToastCard.tsx	98	ToastCard
+handleActionClick	function	platform	false		src/ui/toast/ToastCard.tsx	140	ToastCard
+handleStopAutoDismiss	function	platform	false		src/ui/toast/ToastCard.tsx	150	ToastCard
+ToastChips	function	platform	false	component	src/ui/toast/ToastCard.tsx	272	
+ToastSummary	function	platform	false	component	src/ui/toast/ToastCard.tsx	282	
+ToastNote	function	platform	false	component	src/ui/toast/ToastCard.tsx	296	
+ToastFile	function	platform	false	component	src/ui/toast/ToastCard.tsx	301	
+MAX_VISIBLE_TOASTS	variable	platform	false	component	src/ui/toast/Toaster.tsx	33	
+TOAST_GAP	variable	platform	false	component	src/ui/toast/Toaster.tsx	34	
+STACK_ITEM_OFFSET_Y	variable	platform	false	component	src/ui/toast/Toaster.tsx	35	
+STACK_ITEM_SCALE_DECREMENT	variable	platform	false	component	src/ui/toast/Toaster.tsx	36	
+STACK_ITEM_OPACITY_DECREMENT	variable	platform	false	component	src/ui/toast/Toaster.tsx	37	
+HOVER_DEBOUNCE_DELAY	variable	platform	false	component	src/ui/toast/Toaster.tsx	38	
+ToasterInnerProps	interface	platform	false		src/ui/toast/Toaster.tsx	42	
+ToasterInner	function	platform	false	component	src/ui/toast/Toaster.tsx	47	
+handleVisibility	function	platform	false		src/ui/toast/Toaster.tsx	149	ToasterInner
+Toaster	function	platform	true	component	src/ui/toast/Toaster.tsx	181	
+play	function	platform	false		src/ui/toast/Toaster.tsx	200	Toaster
 ToastIcon	function	platform	true	component	src/ui/toast/ToastIcon.tsx	4	
+ToastPreferenceListener	type	platform	false		src/ui/toast/toastPreferences.ts	6	
+currentPreference	object	platform	false		src/ui/toast/toastPreferences.ts	8	
+listeners	variable	platform	false		src/ui/toast/toastPreferences.ts	9	
+getToastRuntimePreferences	function	platform	true		src/ui/toast/toastPreferences.ts	11	
+setToastRuntimePreferences	function	platform	true		src/ui/toast/toastPreferences.ts	15	
+resetToastRuntimePreferences	function	platform	true		src/ui/toast/toastPreferences.ts	20	
+subscribeToastRuntimePreferences	function	platform	true		src/ui/toast/toastPreferences.ts	24	
 ToastProgressProps	interface	platform	false		src/ui/toast/ToastProgress.tsx	1	
 ToastProgress	function	platform	true	component	src/ui/toast/ToastProgress.tsx	6	
-TOAST_EXIT_MS	variable	platform	true		src/ui/toast/toastStore.ts	15	
-DEFAULT_DURATIONS	object	platform	false		src/ui/toast/toastStore.ts	19	
-VoidListener	type	platform	false		src/ui/toast/toastStore.ts	29	
-records	array	platform	false		src/ui/toast/toastStore.ts	31	
-_globalPaused	variable	platform	false		src/ui/toast/toastStore.ts	32	
-listeners	variable	platform	false		src/ui/toast/toastStore.ts	33	
-notifyListeners	function	platform	false		src/ui/toast/toastStore.ts	35	
-createId	function	platform	false		src/ui/toast/toastStore.ts	39	
-subscribe	function	platform	true		src/ui/toast/toastStore.ts	46	
-getToasts	function	platform	true		src/ui/toast/toastStore.ts	52	
-getGlobalPaused	function	platform	true		src/ui/toast/toastStore.ts	57	
-setGlobalPaused	function	platform	true		src/ui/toast/toastStore.ts	62	
-upsertToast	function	platform	true		src/ui/toast/toastStore.ts	69	
-removeToast	function	platform	true		src/ui/toast/toastStore.ts	84	
-updateToast	function	platform	true		src/ui/toast/toastStore.ts	94	
-dismissToast	function	platform	true		src/ui/toast/toastStore.ts	103	
-upsertRecord	function	platform	false		src/ui/toast/toastStore.ts	112	
-buildNormal	function	platform	false		src/ui/toast/toastStore.ts	126	
-notify	function	platform	false		src/ui/toast/toastStore.ts	145	
-toast	variable	platform	true		src/ui/toast/toastStore.ts	222	
+TOAST_EXIT_MS	variable	platform	true		src/ui/toast/toastStore.ts	16	
+DEFAULT_DURATIONS	object	platform	false		src/ui/toast/toastStore.ts	20	
+defaultDuration	function	platform	false		src/ui/toast/toastStore.ts	28	
+VoidListener	type	platform	false		src/ui/toast/toastStore.ts	38	
+records	array	platform	false		src/ui/toast/toastStore.ts	40	
+_globalPaused	variable	platform	false		src/ui/toast/toastStore.ts	41	
+listeners	variable	platform	false		src/ui/toast/toastStore.ts	42	
+notifyListeners	function	platform	false		src/ui/toast/toastStore.ts	44	
+createId	function	platform	false		src/ui/toast/toastStore.ts	48	
+subscribe	function	platform	true		src/ui/toast/toastStore.ts	55	
+getToasts	function	platform	true		src/ui/toast/toastStore.ts	61	
+getGlobalPaused	function	platform	true		src/ui/toast/toastStore.ts	66	
+setGlobalPaused	function	platform	true		src/ui/toast/toastStore.ts	71	
+upsertToast	function	platform	true		src/ui/toast/toastStore.ts	78	
+removeToast	function	platform	true		src/ui/toast/toastStore.ts	93	
+updateToast	function	platform	true		src/ui/toast/toastStore.ts	103	
+dismissToast	function	platform	true		src/ui/toast/toastStore.ts	112	
+upsertRecord	function	platform	false		src/ui/toast/toastStore.ts	121	
+buildNormal	function	platform	false		src/ui/toast/toastStore.ts	135	
+notify	function	platform	false		src/ui/toast/toastStore.ts	156	
+toast	variable	platform	true		src/ui/toast/toastStore.ts	237	
 ToastId	type	platform	true		src/ui/toast/toastTypes.ts	3	
 ToastVariant	type	platform	true		src/ui/toast/toastTypes.ts	5	
 ToastTier	type	platform	true		src/ui/toast/toastTypes.ts	7	
@@ -14074,9 +14229,9 @@ ToastActionButton	interface	platform	true		src/ui/toast/toastTypes.ts	11
 ToastDetailItem	interface	platform	true		src/ui/toast/toastTypes.ts	19	
 ToastFilePreview	interface	platform	true		src/ui/toast/toastTypes.ts	24	
 ToastOptions	interface	platform	true		src/ui/toast/toastTypes.ts	32	
-ToastActionOptions	interface	platform	true		src/ui/toast/toastTypes.ts	46	
-ToastRichOptions	interface	platform	true		src/ui/toast/toastTypes.ts	57	
-ToastRecord	interface	platform	true		src/ui/toast/toastTypes.ts	69	
+ToastActionOptions	interface	platform	true		src/ui/toast/toastTypes.ts	50	
+ToastRichOptions	interface	platform	true		src/ui/toast/toastTypes.ts	61	
+ToastRecord	interface	platform	true		src/ui/toast/toastTypes.ts	73	
 BREAKPOINTS	variable	platform	true		src/ui/tokens/index.ts	27	
 BreakpointKey	type	platform	true		src/ui/tokens/index.ts	36	
 PREVIEW_WIDTHS	array	platform	true		src/ui/tokens/index.ts	39	
@@ -14748,7 +14903,7 @@ ASSIGNEE	variable	testing	false	test	tests/vitest/recipientResolverActorConfirma
 ResolveInput	type	testing	false	test	tests/vitest/recipientResolverActorConfirmation.test.ts	29	
 input	function	testing	false	test	tests/vitest/recipientResolverActorConfirmation.test.ts	31	
 CONFIRMATION_EVENTS	array	testing	false	test	tests/vitest/recipientResolverActorConfirmation.test.ts	43	
-view	function	testing	false	test	tests/vitest/uiPreferencesContract.test.ts	27	
+view	function	testing	false	test	tests/vitest/uiPreferencesContract.test.ts	30	
 SECRET	variable	testing	false	test	tests/vitest/webhookSignature.test.ts	13	
 ID	variable	testing	false	test	tests/vitest/webhookSignature.test.ts	14	
 NOW	variable	testing	false	test	tests/vitest/webhookSignature.test.ts	15	
@@ -15407,12 +15562,31 @@ OnboardingWorkQueueView	interface	platform	true		types/uiPreferences.ts	204
 enumValues	function	platform	false		types/uiPreferences.ts	223	
 boundedStrings	function	platform	false		types/uiPreferences.ts	230	
 sanitizeOnboardingWorkQueueViews	function	platform	true		types/uiPreferences.ts	237	
-UiPreferenceDefinition	interface	platform	true		types/uiPreferences.ts	289	
-UI_PREFERENCES	array	platform	true		types/uiPreferences.ts	295	
-UI_PREFERENCE_BY_KEY	variable	platform	false		types/uiPreferences.ts	336	
-isKnownUiPreferenceKey	function	platform	true		types/uiPreferences.ts	339	
-uiPreferenceDefinition	function	platform	true		types/uiPreferences.ts	343	
-sanitizeUiPreference	function	platform	true		types/uiPreferences.ts	354	
+NAVIGATION_PREFERENCE_KEY	variable	platform	true		types/uiPreferences.ts	281	
+NAVIGATION_PREFERENCE_VERSION	variable	platform	true		types/uiPreferences.ts	282	
+NavigationDensityPreference	type	platform	true		types/uiPreferences.ts	284	
+NavigationVisibilityPreference	interface	platform	true		types/uiPreferences.ts	286	
+NavigationOrderPreference	interface	platform	true		types/uiPreferences.ts	292	
+NavigationPreference	interface	platform	true		types/uiPreferences.ts	297	
+NAVIGATION_PREFERENCE_LIMITS	variable	platform	false		types/uiPreferences.ts	304	
+NAVIGATION_ID	variable	platform	false		types/uiPreferences.ts	311	
+safeNavigationId	function	platform	false		types/uiPreferences.ts	313	
+sanitizeNavigationPreference	function	platform	true		types/uiPreferences.ts	318	
+TOAST_PREFERENCE_KEY	variable	platform	true		types/uiPreferences.ts	358	
+TOAST_PREFERENCE_VERSION	variable	platform	true		types/uiPreferences.ts	359	
+TOAST_POSITIONS	variable	platform	true		types/uiPreferences.ts	361	
+ToastPosition	type	platform	true		types/uiPreferences.ts	367	
+TOAST_DURATION_MODES	variable	platform	true		types/uiPreferences.ts	369	
+ToastDurationMode	type	platform	true		types/uiPreferences.ts	370	
+ToastPreference	interface	platform	true		types/uiPreferences.ts	372	
+DEFAULT_TOAST_PREFERENCE	object	platform	true		types/uiPreferences.ts	380	
+sanitizeToastPreference	function	platform	true		types/uiPreferences.ts	388	
+UiPreferenceDefinition	interface	platform	true		types/uiPreferences.ts	420	
+UI_PREFERENCES	array	platform	true		types/uiPreferences.ts	426	
+UI_PREFERENCE_BY_KEY	variable	platform	false		types/uiPreferences.ts	477	
+isKnownUiPreferenceKey	function	platform	true		types/uiPreferences.ts	480	
+uiPreferenceDefinition	function	platform	true		types/uiPreferences.ts	484	
+sanitizeUiPreference	function	platform	true		types/uiPreferences.ts	495	
 WeatherLocation	interface	platform	true		types/weather.ts	15	
 WeatherCurrent	interface	platform	true		types/weather.ts	29	
 WeatherDay	interface	platform	true		types/weather.ts	48	

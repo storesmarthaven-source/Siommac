@@ -190,6 +190,13 @@ describe('Button — icon-only', () => {
     render(<Button iconOnly aria-label="Close" iconLeft={<Icon />} />);
     expect(screen.getByRole('button').className).toContain('ui-btn--icon');
   });
+
+  it('keeps destructive intent on an icon-only row action', () => {
+    render(<Button variant="ghost" tone="danger" iconOnly aria-label="Remove person" iconLeft={<Icon />} />);
+    const btn = screen.getByRole('button', { name: 'Remove person' });
+    expect(btn.className).toContain('ui-btn--icon');
+    expect(btn.className).toContain('ui-btn--tone-danger');
+  });
 });
 
 describe('Button — toggle', () => {

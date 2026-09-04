@@ -1,4 +1,5 @@
 import { FileIcon as UntitledFileIcon } from '@untitledui/file-icons';
+import './FileTypeIcon.recipe.css';
 
 /** Kept explicit because the package's public entry point currently types only FileIcon. */
 export const FILE_TYPE_ICON_TYPES = [
@@ -24,6 +25,8 @@ export interface FileTypeIconProps {
   /** Omit for decorative icons. */
   label?: string;
   class?: string;
+  /** Fill only the document sheet behind the official artwork. */
+  sheetBackground?: 'white' | 'transparent';
 }
 
 /**
@@ -40,19 +43,30 @@ export function FileTypeIcon({
   size = 48,
   label,
   class: className,
+  sheetBackground = 'white',
 }: FileTypeIconProps) {
   return (
-    <UntitledFileIcon
-      type={type}
-      variant={variant}
-      theme={theme}
-      size={size}
-      className={className}
+    <span
+      className={`ui-file-type-icon ui-file-type-icon--sheet-${sheetBackground}${className ? ` ${className}` : ''}`}
+      style={{ '--ui-file-type-icon-size': `${size}px` }}
       role={label ? 'img' : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}
-      focusable="false"
-    />
+    >
+      {sheetBackground === 'white' && (
+        <svg className="ui-file-type-icon__sheet" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+          <path d="M7 4a4 4 0 0 1 4-4h16.2L39 11.8V36a4 4 0 0 1-4 4H11a4 4 0 0 1-4-4V4Z" />
+        </svg>
+      )}
+      <UntitledFileIcon
+        type={type}
+        variant={variant}
+        theme={theme}
+        size={size}
+        aria-hidden="true"
+        focusable="false"
+      />
+    </span>
   );
 }
 

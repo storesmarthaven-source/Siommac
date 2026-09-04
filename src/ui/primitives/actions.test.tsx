@@ -90,6 +90,13 @@ describe('SegmentedControl', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'List' }));
     expect(onChange).toHaveBeenCalledWith('list');
   });
+
+  it('does not reselect an already active option', () => {
+    const onChange = vi.fn();
+    render(<SegmentedControl label="View" value="grid" onChange={onChange} options={OPTIONS} />);
+    fireEvent.click(screen.getByRole('radio', { name: 'Grid' }));
+    expect(onChange).not.toHaveBeenCalled();
+  });
 });
 
 describe('DropdownMenu', () => {
@@ -104,6 +111,35 @@ describe('DropdownMenu', () => {
     open();
     expect(screen.getByRole('menu', { name: 'Row actions' })).toBeTruthy();
     expect(screen.getAllByRole('menuitem')).toHaveLength(3);
+  });
+
+  it('can end-align a right-edge action menu so it opens inward', () => {
+    const trigger = document.createElement('button');
+    document.body.appendChild(trigger);
+    vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({
+      x: 400, y: 80, top: 80, bottom: 120, left: 400, right: 500,
+      width: 100, height: 40, toJSON: () => ({}),
+    });
+    const offsetWidth = vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(200);
+
+    render(
+      <DropdownMenu
+        open
+        anchor={trigger}
+        onClose={vi.fn()}
+        items={[{ id: 'settings', label: 'Settings' }]}
+        label="Actions"
+        align="end"
+        pointer
+      />,
+    );
+
+    const menu = screen.getByRole('menu', { name: 'Actions' });
+    expect(menu.style.left).toBe('300px');
+    expect(menu.classList.contains('ui-menu--pointer')).toBe(true);
+    expect(menu.classList.contains('ui-menu--align-end')).toBe(true);
+    offsetWidth.mockRestore();
+    trigger.remove();
   });
 
   it('focuses the first enabled item on open', () => {

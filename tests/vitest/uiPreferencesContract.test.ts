@@ -18,6 +18,9 @@ import {
   EMPLOYEE_REGISTER_VIEWS_PREFERENCE_VERSION,
   EMPLOYEE_REGISTER_VIEW_LIMITS,
   UI_PREFERENCES,
+  DEFAULT_TOAST_PREFERENCE,
+  TOAST_PREFERENCE_KEY,
+  TOAST_PREFERENCE_VERSION,
   isKnownUiPreferenceKey,
   sanitizeEmployeeRegisterViews,
   sanitizeUiPreference,
@@ -59,6 +62,23 @@ describe('UI preference registry', () => {
     // view payload, and vice versa.
     expect(sanitizeUiPreference(EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_KEY, [view()])).toBeNull();
     expect(sanitizeUiPreference(EMPLOYEE_REGISTER_VIEWS_PREFERENCE_KEY, ['employee', 'actions'])).toBeNull();
+  });
+});
+
+describe('toast preference', () => {
+  it('accepts the complete typed toast configuration', () => {
+    expect(sanitizeUiPreference(TOAST_PREFERENCE_KEY, DEFAULT_TOAST_PREFERENCE)).toEqual({
+      version: TOAST_PREFERENCE_VERSION,
+      value: DEFAULT_TOAST_PREFERENCE,
+    });
+  });
+
+  it('accepts the supported toast positions and rejects unknown or partial values', () => {
+    for (const position of ['top-right', 'bottom-right', 'bottom-center']) {
+      expect(sanitizeUiPreference(TOAST_PREFERENCE_KEY, { ...DEFAULT_TOAST_PREFERENCE, position })).not.toBeNull();
+    }
+    expect(sanitizeUiPreference(TOAST_PREFERENCE_KEY, { ...DEFAULT_TOAST_PREFERENCE, position: 'middle' })).toBeNull();
+    expect(sanitizeUiPreference(TOAST_PREFERENCE_KEY, { position: 'top-right' })).toBeNull();
   });
 });
 

@@ -148,7 +148,7 @@ export function SegmentedControl<T extends string>({
             disabled={disabled || opt.disabled}
             tabIndex={checked || (selectedIndex < 0 && i === 0) ? 0 : -1}
             data-ui-state={forceState === 'hover' || forceState === 'focus' ? forceState : undefined}
-            onClick={() => onChange(opt.value)}
+            onClick={() => { if (!checked) onChange(opt.value); }}
             onKeyDown={e => {
               if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); move(i, 1); }
               if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { e.preventDefault(); move(i, -1); }

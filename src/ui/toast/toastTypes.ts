@@ -41,6 +41,10 @@ export interface ToastOptions {
   icon?: LucideName | null;
   /** Show the progress line when duration is greater than zero. */
   progress?: boolean;
+  /** Allow supporting content and actions to expand beneath the stable header. */
+  expandable?: boolean;
+  /** Start with supporting content expanded. Only applies to expandable toasts. */
+  defaultExpanded?: boolean;
 }
 
 export interface ToastActionOptions extends ToastOptions {
@@ -78,6 +82,8 @@ export interface ToastRecord {
   createdAt: number;
   icon?: LucideName | null;
   progress?: boolean;
+  expandable?: boolean;
+  defaultExpanded?: boolean;
   moduleLabel?: string;
   statusLabel?: string;
   details?: ToastDetailItem[];

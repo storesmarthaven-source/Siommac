@@ -12,17 +12,19 @@
  *   - Inline bottom/transform/opacity/zIndex are set by Toaster's
  *     updateToastPositions(); cards must NOT set those themselves.
  *
- * Three-tier layout:
- *   normal:  icon + title-row + description + close X + timer footer + progress bar
- *   action:  + chips + summary rows + note + tinted action strip
- *   rich:    + chips + summary rows + file preview + tinted action strip
+ * Shared interaction model:
+ *   stable header: status icon + title + disclosure + explicit close
+ *   expandable body: description, metadata, file preview and actions
+ *   timer footer: elapsed progress + one-way stop control
  */
 
+import type { VNode }                                from "preact";
 import { useEffect, useRef, useState, useCallback } from "preact/hooks";
-import type { ToastActionButton, ToastRecord }       from "./toastTypes";
+import { LucideIcon }                               from "../LucideIcon";
+import type { ToastActionButton, ToastRecord }      from "./toastTypes";
 import { ToastIcon }                                from "./ToastIcon";
 import { ToastProgress }                            from "./ToastProgress";
-import { dismissToast, getGlobalPaused, updateToast } from "./toastStore";
+import { dismissToast, getGlobalPaused }            from "./toastStore";
 import "./toast.css";
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -33,23 +35,42 @@ export interface ToastCardProps {
   onPositionUpdate?: () => void;
   /** Render as an in-flow specimen instead of an absolutely positioned stack card. */
   standalone?: boolean;
+  /** Hide descriptive and record-preview content while retaining available actions. */
+  showPreviews?: boolean;
 }
 
 // ── ToastCard ─────────────────────────────────────────────────────────────────
 
-export function ToastCard({ toast, onDismiss, onPositionUpdate, standalone = false }: ToastCardProps) {
-  const [paused, setPaused]           = useState(false);
+export function ToastCard({ toast, onDismiss, onPositionUpdate, standalone = false, showPreviews = true }: ToastCardProps): VNode {
   const [remainingMs, setRemainingMs] = useState(toast.duration);
   const [stopped, setStopped]         = useState(false);
+  const [expanded, setExpanded]       = useState(toast.defaultExpanded ?? false);
 
   const cardRef        = useRef<HTMLElement | null>(null);
-  const startedAt      = useRef(Date.now());
-  const pausedAt       = useRef<number | null>(null);
-  const totalPaused    = useRef(0);
-  const stoppedRef     = useRef(false);
+  const startedAtRef   = useRef<number | null>(null);
+  const pausedAtRef    = useRef<number | null>(null);
+  const totalPausedRef = useRef(0);
   const rafRef         = useRef<number>(0);
 
   const hasTimer = toast.duration > 0;
+  const hasPreviewContent = showPreviews && Boolean(
+    toast.description
+      ?? toast.moduleLabel
+      ?? toast.statusLabel
+      ?? toast.details?.length
+      ?? toast.note
+      ?? toast.file,
+  );
+  const hasExpandableContent = hasPreviewContent || Boolean(toast.actions?.length);
+  const canExpand = hasExpandableContent && toast.expandable !== false;
+  const shouldPause = stopped || getGlobalPaused();
+  const detailsId = `siomac-toast-details-${toast.id}`;
+
+  // ── Dismiss (animated exit via store) ──────────────────────────────────────
+  const handleDismiss = useCallback(() => {
+    if (onDismiss) onDismiss();
+    else dismissToast(toast.id);
+  }, [toast.id, onDismiss]);
 
   // ── Enter animation: add class on mount, remove after animation ──────────────
   useEffect(() => {
@@ -70,10 +91,15 @@ export function ToastCard({ toast, onDismiss, onPositionUpdate, standalone = fal
   useEffect(() => {
     if (!hasTimer) return;
 
+    startedAtRef.current = Date.now();
+    pausedAtRef.current = null;
+    totalPausedRef.current = 0;
+
     const tick = () => {
       const now = Date.now();
-      const pausedDuration = pausedAt.current ? now - pausedAt.current : 0;
-      const elapsed = now - startedAt.current - totalPaused.current - pausedDuration;
+      const startedAt = startedAtRef.current ?? now;
+      const pausedDuration = pausedAtRef.current === null ? 0 : now - pausedAtRef.current;
+      const elapsed = now - startedAt - totalPausedRef.current - pausedDuration;
       const nextRemaining = Math.max(0, toast.duration - elapsed);
 
       setRemainingMs(nextRemaining);
@@ -88,39 +114,27 @@ export function ToastCard({ toast, onDismiss, onPositionUpdate, standalone = fal
 
     rafRef.current = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(rafRef.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasTimer, toast.duration]);
+  }, [hasTimer, toast.duration, toast.createdAt, handleDismiss]);
 
-  // ── React to globalPaused changes ─────────────────────────────────────────────
+  // ── Keep the rAF timer's pause accounting in sync with all pause sources ─────
   useEffect(() => {
-    if (!hasTimer || stoppedRef.current) return;
-    const globalPaused = getGlobalPaused();
-    if (globalPaused) {
-      setTimerPaused(true);
-    } else {
-      setTimerPaused(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ── Timer pause/resume ────────────────────────────────────────────────────────
-  function setTimerPaused(nextPaused: boolean) {
     if (!hasTimer) return;
-    setPaused(nextPaused);
 
-    if (nextPaused && !pausedAt.current) {
-      pausedAt.current = Date.now();
-    } else if (!nextPaused && pausedAt.current) {
-      totalPaused.current += Date.now() - pausedAt.current;
-      pausedAt.current = null;
+    if (shouldPause && pausedAtRef.current === null) {
+      pausedAtRef.current = Date.now();
+    } else if (!shouldPause && pausedAtRef.current !== null) {
+      totalPausedRef.current += Date.now() - pausedAtRef.current;
+      pausedAtRef.current = null;
     }
-  }
+  }, [hasTimer, shouldPause]);
 
-  // ── Dismiss (animated exit via store) ────────────────────────────────────────
-  const handleDismiss = useCallback(() => {
-    if (onDismiss) onDismiss();
-    else dismissToast(toast.id);
-  }, [toast.id, onDismiss]);
+  // Expansion and timer-stop change card height; recalculate the deck twice so
+  // both the first layout and the end of the CSS transition are captured.
+  useEffect(() => {
+    onPositionUpdate?.();
+    const timeout = window.setTimeout(() => onPositionUpdate?.(), 260);
+    return () => window.clearTimeout(timeout);
+  }, [expanded, stopped, onPositionUpdate]);
 
   // ── Action button click ───────────────────────────────────────────────────────
   function handleActionClick(action: ToastActionButton) {
@@ -132,24 +146,9 @@ export function ToastCard({ toast, onDismiss, onPositionUpdate, standalone = fal
     }
   }
 
-  // ── Hover / focus pause ───────────────────────────────────────────────────────
-  const handleMouseEnter = useCallback(() => {
-    if (stoppedRef.current) return;
-    setTimerPaused(true);
-    updateToast(toast.id, { exiting: toast.exiting });
-  }, [toast.id, toast.exiting]);
-
-  const handleMouseLeave = useCallback(() => {
-    if (stoppedRef.current) return;
-    setTimerPaused(false);
-  }, []);
-
-  // ── "Click to stop" — persistent pause ───────────────────────────────────────
-  function handleToggleStop() {
-    const next = !stoppedRef.current;
-    stoppedRef.current = next;
-    setStopped(next);
-    setTimerPaused(next);
+  // ── "Click to stop" — one-way persistent stop, matching the reference ───────
+  function handleStopAutoDismiss() {
+    setStopped(true);
   }
 
   // ── Keyboard dismiss ──────────────────────────────────────────────────────────
@@ -168,14 +167,11 @@ export function ToastCard({ toast, onDismiss, onPositionUpdate, standalone = fal
         `siomac-toast--${toast.tier}`,
         standalone ? "siomac-toast--standalone" : "",
         toast.exiting ? "exiting" : "",
-        paused ? "is-paused" : ""
+        shouldPause ? "is-paused" : "",
+        expanded ? "is-expanded" : ""
       ].filter(Boolean).join(" ")}
       role={toast.variant === "error" ? "alert" : "status"}
       aria-live={toast.ariaLive}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onFocusIn={() => { if (!stoppedRef.current) setTimerPaused(true); }}
-      onFocusOut={() => { if (!stoppedRef.current) setTimerPaused(false); }}
       onKeyDown={handleKeyDown}
       tabIndex={-1}
     >
@@ -183,75 +179,88 @@ export function ToastCard({ toast, onDismiss, onPositionUpdate, standalone = fal
         <ToastIcon variant={toast.variant} icon={toast.icon} />
 
         <div className="siomac-toast__body">
-          <div className="siomac-toast__title-row">
-            <span className="siomac-toast__dot" />
-            <div className="siomac-toast__title">{toast.title}</div>
-          </div>
-
-          {toast.description ? (
-            <div className="siomac-toast__description">{toast.description}</div>
-          ) : null}
-
-          {toast.tier !== "normal" ? (
-            <>
-              <ToastChips toast={toast} />
-              <ToastSummary toast={toast} />
-              <ToastFile toast={toast} />
-              <ToastNote toast={toast} />
-            </>
-          ) : null}
+          <div className="siomac-toast__title">{toast.title}</div>
         </div>
 
-        {toast.dismissible ? (
-          <button
-            className="siomac-toast__close"
-            type="button"
-            aria-label="Dismiss notification"
-            onClick={handleDismiss}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" />
-            </svg>
-          </button>
-        ) : null}
+        <div className="siomac-toast__header-actions">
+          {canExpand ? (
+            <button
+              className="siomac-toast__expand"
+              type="button"
+              aria-label={expanded ? "Collapse notification details" : "Expand notification details"}
+              aria-expanded={expanded}
+              aria-controls={detailsId}
+              onClick={() => setExpanded((value) => !value)}
+            >
+              <LucideIcon name="ChevronDown" />
+            </button>
+          ) : null}
+          {toast.dismissible ? (
+            <button
+              className="siomac-toast__close"
+              type="button"
+              aria-label="Dismiss notification"
+              onClick={handleDismiss}
+            >
+              <LucideIcon name="X" />
+            </button>
+          ) : null}
+        </div>
       </div>
 
-      {toast.tier === "normal" && hasTimer ? (
+      {canExpand ? (
+        <div
+          id={detailsId}
+          className="siomac-toast__details-shell"
+          aria-hidden={!expanded}
+        >
+          <div className="siomac-toast__details-clip">
+            <div className="siomac-toast__details">
+              {showPreviews && toast.description ? (
+                <div className="siomac-toast__description">{toast.description}</div>
+              ) : null}
+              {showPreviews && toast.tier !== "normal" ? (
+                <>
+                  <ToastChips toast={toast} />
+                  <ToastSummary toast={toast} />
+                  <ToastFile toast={toast} />
+                  <ToastNote toast={toast} />
+                </>
+              ) : null}
+              {toast.actions?.length ? (
+                <div className="siomac-toast__actions">
+                  {toast.actions.map((action) => (
+                    <button
+                      key={action.label}
+                      type="button"
+                      className={[
+                        "siomac-toast__action",
+                        action.tone ? `siomac-toast__action--${action.tone}` : ""
+                      ].filter(Boolean).join(" ")}
+                      tabIndex={expanded ? 0 : -1}
+                      onClick={() => handleActionClick(action)}
+                    >
+                      {action.label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {hasTimer && !stopped ? (
         <footer className="siomac-toast__timer">
           <span className="siomac-toast__timer-text">
             This message will close in <span>{seconds}</span> seconds.
           </span>
-          <button type="button" onClick={handleToggleStop}>
-            {stopped ? "Resume." : "Click to stop."}
+          <button type="button" onClick={handleStopAutoDismiss}>
+            Click to stop.
           </button>
-          {toast.progress !== false ? <ToastProgress duration={toast.duration} paused={paused} /> : null}
-        </footer>
-      ) : null}
-
-      {/* Action/rich footer — ONE band: countdown text on the left, action buttons on the
-          right, progress bar along the bottom edge. (Two stacked bands — actions + a separate
-          timer footer — read as a big empty gap.) */}
-      {toast.tier !== "normal" && (toast.actions?.length || hasTimer) ? (
-        <footer className="siomac-toast__actions">
-          {hasTimer ? (
-            <span className="siomac-toast__timer-text">
-              Closing in <span>{seconds}</span> second{seconds === 1 ? "" : "s"}.
-            </span>
+          {toast.progress !== false ? (
+            <ToastProgress duration={toast.duration} remainingMs={remainingMs} />
           ) : null}
-          {(toast.actions ?? []).map((action) => (
-            <button
-              key={action.label}
-              type="button"
-              className={[
-                "siomac-toast__action",
-                action.tone ? `siomac-toast__action--${action.tone}` : ""
-              ].filter(Boolean).join(" ")}
-              onClick={() => handleActionClick(action)}
-            >
-              {action.label}
-            </button>
-          ))}
-          {hasTimer && toast.progress !== false ? <ToastProgress duration={toast.duration} paused={paused} /> : null}
         </footer>
       ) : null}
     </article>
